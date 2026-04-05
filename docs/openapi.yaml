@@ -1,0 +1,423 @@
+openapi: 3.1.0
+info:
+  title: NPLatform API
+  version: 1.0.0
+  description: |
+    국내 최초 AI 기반 NPL(부실채권) 투자 분석 및 거래 플랫폼 API.
+
+    ## 인증
+    Supabase JWT를 Authorization 헤더에 Bearer 토큰으로 전달합니다.
+    ```
+    Authorization: Bearer <supabase-jwt>
+    ```
+
+    ## 에러 응답 형식
+    모든 에러 응답은 동일한 형식을 따릅니다:
+    ```json
+    { "error": { "code": "NOT_FOUND", "message": "리소스를 찾을 수 없습니다." } }
+    ```
+
+  contact:
+    name: NPLatform 개발팀
+    email: dev@nplatform.co.kr
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://nplatform.co.kr/api/v1
+    description: Production
+  - url: http://localhost:3000/api/v1
+    description: Local development
+
+tags:
+  - name: listings
+    description: NPL 매물 (거래소)
+  - name: deals
+    description: 딜룸 (거래 관리)
+  - name: analysis
+    description: NPL AI 분석
+  - name: statistics
+    description: 시장 통계
+  - name: auth
+    description: 인증
+  - name: credits
+    description: 크레딧
+  - name: health
+    description: 시스템
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - BAD_REQUEST
+                - UNAUTHORIZED
+                - FORBIDDEN
+                - NOT_FOUND
+                - CONFLICT
+                - RATE_LIMITED
+                - VALIDATION_ERROR
+                - INTERNAL_ERROR
+                - MISSING_FIELD
+                - INSUFFICIENT_CREDITS
+            message:
+              type: string
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        totalPages:
+          type: integer
+        page:
+          type: integer
+
+    DealListing:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        listing_number:
+          type: string
+          example: NPL-202601-4382
+        title:
+          type: string
+        listing_type:
+          type: string
+          enum: [NPL, REO, UPL]
+        collateral_type:
+          type: string
+          enum: [아파트, 오피스텔, 다세대, 단독주택, 상가, 오피스, 토지, 공장, 호텔, 기타]
+        address:
+          type: string
+        principal_amount:
+          type: integer
+          description: 채권원금 (원)
+        appraised_value:
+          type: integer
+          description: 감정가 (원)
+        ltv_ratio:
+          type: number
+          description: LTV (%)
+        risk_grade:
+          type: string
+          enum: [AAA, AA, A, BBB, BB, B, CCC, CC, C, D]
+        status:
+          type: string
+          enum: [PENDING_REVIEW, ACTIVE, SOLD, EXPIRED, REJECTED]
+        visibility:
+          type: string
+          enum: [PUBLIC, INTERNAL, TARGETED, VIP]
+        created_at:
+          type: string
+          format: date-time
+
+paths:
+  # ── Health ──────────────────────────────────────────────
+  /health:
+    get:
+      tags: [health]
+      summary: 서비스 상태 확인
+      operationId: getHealth
+      responses:
+        '200':
+          description: 정상 동작
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  version:
+                    type: string
+                  uptime:
+                    type: integer
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  # ── Exchange Listings ────────────────────────────────────
+  /exchange/listings:
+    get:
+      tags: [listings]
+      summary: 매물 목록 조회
+      operationId: getListings
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+        - name: status
+          in: query
+          schema: { type: string, enum: [ACTIVE, SOLD, EXPIRED] }
+        - name: collateral_type
+          in: query
+          schema: { type: string }
+        - name: risk_grade
+          in: query
+          schema: { type: string }
+        - name: price_min
+          in: query
+          schema: { type: integer }
+        - name: price_max
+          in: query
+          schema: { type: integer }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [newest, price_asc, price_desc, risk], default: newest }
+      responses:
+        '200':
+          description: 매물 목록
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DealListing'
+
+    post:
+      tags: [listings]
+      summary: 매물 등록
+      operationId: createListing
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [collateral_type, principal_amount]
+              properties:
+                collateral_type:
+                  type: string
+                  enum: [아파트, 오피스텔, 다세대, 단독주택, 상가, 오피스, 토지, 공장, 호텔, 기타]
+                principal_amount:
+                  type: integer
+                  minimum: 1000000
+                title:
+                  type: string
+                  maxLength: 200
+                description:
+                  type: string
+                  maxLength: 5000
+                location:
+                  type: string
+                risk_grade:
+                  type: string
+                  enum: [AAA, AA, A, BBB, BB, B, CCC, CC, C, D]
+                  default: B
+                listing_type:
+                  type: string
+                  enum: [NPL, REO, UPL]
+                  default: NPL
+      responses:
+        '201':
+          description: 매물 등록 완료
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DealListing'
+                  message:
+                    type: string
+        '400':
+          description: 입력값 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /exchange/listings/{id}:
+    get:
+      tags: [listings]
+      summary: 매물 상세 조회
+      operationId: getListing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: 매물 상세
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DealListing'
+        '404':
+          description: 매물 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  # ── Statistics ────────────────────────────────────────────
+  /statistics:
+    get:
+      tags: [statistics]
+      summary: 시장 통계 조회
+      operationId: getStatistics
+      parameters:
+        - name: range
+          in: query
+          schema:
+            type: string
+            enum: [1m, 3m, 6m, 1y, all]
+            default: all
+      responses:
+        '200':
+          description: 통계 데이터
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: public, s-maxage=60, stale-while-revalidate=120
+          content:
+            application/json:
+              schema:
+                type: object
+
+  # ── Credits ───────────────────────────────────────────────
+  /billing/credits/purchase:
+    get:
+      tags: [credits]
+      summary: 크레딧 잔액 조회
+      operationId: getCreditsBalance
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 크레딧 잔액 및 내역
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: integer
+                    description: 현재 잔액
+                  transactions:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          description: 미인증
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  # ── AI ────────────────────────────────────────────────────
+  /ai/sample-analysis:
+    post:
+      tags: [analysis]
+      summary: NPL AI 분석 실행
+      operationId: runAiAnalysis
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                listingId:
+                  type: string
+                  format: uuid
+                collateralType:
+                  type: string
+                principalAmount:
+                  type: integer
+                appraisedValue:
+                  type: integer
+                ltv:
+                  type: number
+                overdueMons:
+                  type: integer
+      responses:
+        '200':
+          description: AI 분석 결과
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  risk_grade:
+                    type: string
+                  ai_estimate:
+                    type: object
+                  recommendation:
+                    type: string
+        '402':
+          description: 크레딧 부족
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  # ── Reputation ────────────────────────────────────────────
+  /reputation:
+    get:
+      tags: [listings]
+      summary: 평판 정보 조회
+      operationId: getReputation
+      parameters:
+        - name: action
+          in: query
+          schema:
+            type: string
+            enum: [score, reviews, leaderboard]
+        - name: userId
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 10 }
+      responses:
+        '200':
+          description: 평판 데이터
+
+  # ── Health (v1 alias) ────────────────────────────────────
+  /health:
+    get:
+      tags: [health]
+      summary: API 서버 상태
+      operationId: getApiHealth
+      responses:
+        '200':
+          description: 정상

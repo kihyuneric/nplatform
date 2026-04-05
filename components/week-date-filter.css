@@ -1,0 +1,199 @@
+/* week-date-filter.css: 기본 스타일 샘플 */
+.week-date-wrap {
+  position: relative;
+  display: inline-block;
+}
+.week-date-btn {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.week-date-calendar-icon {
+  height: 16px;
+}
+.week-date-popup {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  width: 360px;
+  background: #fff;
+  border: 1px solid #e8e9ed;
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0px 8px 32px 0px #272c3614, 0px 2px 4px 0px #272c361f,
+    0px 4px 12px 0px #272c360d;
+  z-index: 1000;
+}
+.week-date-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.week-date-title {
+  font-weight: 700;
+  font-size: 18px;
+  color: #0c0e12;
+}
+.week-date-header-right {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+.week-date-month-title {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #424854;
+  font-weight: 500;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+.week-date-nav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.week-date-nav-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 4px;
+  width: 32px;
+  height: 32px;
+}
+.week-date-arrow {
+  width: 18px;
+  height: 18px;
+}
+.week-date-grid {
+  display: grid;
+  gap: 6px;
+}
+.week-date-week-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  border-radius: 8px;
+  padding: 2px 0;
+}
+.week-date-highlight {
+  background: #e4edfd;
+}
+.week-date-cell {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px 0px;
+   width: 100%;
+}
+.week-date-inweek {
+  font-weight: 500;
+  color: #3f6ef1;
+}
+.week-date-dim {
+  opacity: 0.4;
+}
+.week-date-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: transparent;
+  color: inherit;
+}
+.week-date-cell:hover {
+  background: #e8e9ed;
+}
+.week-date-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+}
+.week-date-cancel {
+  height: 44px;
+  border-radius: 8px;
+  padding: 11px 0px;
+  font-weight: 500;
+  font-size: 15px;
+  cursor: pointer;
+  border: 1px solid #e8e9ed;
+  background: #f4f5f7;
+  color: #424854;
+  width: 70px;
+  text-align: center;
+}
+.week-date-apply {
+  height: 44px;
+  border-radius: 8px;
+  padding: 11px 0px;
+  font-weight: 500;
+  font-size: 15px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  border: 1px solid #111827;
+  background: #111827;
+  color: #fff;
+}
+.week-date-monthyear-wrap {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+}
+.week-date-year-scroller {
+  overflow-y: auto;
+  padding-right: 6px;
+  max-height: 260px;
+  scrollbar-width: none;
+}
+.week-date-year-item {
+  padding: 8px 10px;
+  text-align: center;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #a7adb8;
+  position: relative;
+}
+.week-date-selected {
+  color: #3f6ef1;
+}
+.week-date-month-scroller {
+  overflow-y: auto;
+  max-height: 260px;
+  padding-right: 6px;
+  scrollbar-width: none;
+}
+.week-date-month-item {
+  padding: 8px 10px;
+  text-align: center;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  color: #a7adb8;
+  position: relative;
+  font-size: 14px;
+}
+.week-date-month-item.week-date-selected {
+  color: #3f6ef1;
+}

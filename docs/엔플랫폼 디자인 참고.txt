@@ -1,0 +1,29 @@
+홈페이지 메인 참고
+https://www.figma.com/design/4f3dXg1X5pgVnwjeif9QKV/%EC%97%94%ED%94%8C%EB%9E%AB%ED%8F%BC?node-id=2-3
+
+NPL 검색 search 참고
+https://www.figma.com/design/4f3dXg1X5pgVnwjeif9QKV/%EC%97%94%ED%94%8C%EB%9E%AB%ED%8F%BC?node-id=1526-66057
+
+NPL 목록 List 참고
+https://www.figma.com/design/4f3dXg1X5pgVnwjeif9QKV/%EC%97%94%ED%94%8C%EB%9E%AB%ED%8F%BC?node-id=5-6340
+
+NPL 관리(매각사, 관리자) 참고
+https://www.figma.com/design/4f3dXg1X5pgVnwjeif9QKV/%EC%97%94%ED%94%8C%EB%9E%AB%ED%8F%BC?node-id=1363-45591
+
+NPL 계약 요청(매입사) 참고
+https://www.figma.com/design/4f3dXg1X5pgVnwjeif9QKV/%EC%97%94%ED%94%8C%EB%9E%AB%ED%8F%BC?node-id=1452-37184
+
+지도 Map 참고
+https://www.figma.com/design/4f3dXg1X5pgVnwjeif9QKV/%EC%97%94%ED%94%8C%EB%9E%AB%ED%8F%BC?node-id=301-5104
+
+경공매 통계 참고
+https://www.figma.com/design/4f3dXg1X5pgVnwjeif9QKV/%EC%97%94%ED%94%8C%EB%9E%AB%ED%8F%BC?node-id=314-1974
+
+NPL 대시보드 참고
+https://www.figma.com/design/4f3dXg1X5pgVnwjeif9QKV/%EC%97%94%ED%94%8C%EB%9E%AB%ED%8F%BC?node-id=1337-8820
+
+NPL 상세 참고
+https://www.figma.com/design/4f3dXg1X5pgVnwjeif9QKV/%EC%97%94%ED%94%8C%EB%9E%AB%ED%8F%BC?node-id=1075-14975
+
+Signup 참고
+https://www.figma.com/design/4f3dXg1X5pgVnwjeif9QKV/%EC%97%94%ED%94%8C%EB%9E%AB%ED%8F%BC?node-id=5-6341

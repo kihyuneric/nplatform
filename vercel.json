@@ -1,0 +1,28 @@
+{
+  "crons": [
+    {
+      "path": "/api/v1/cron/daily",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/v1/cron/weekly",
+      "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/v1/cron/data-pipeline?mode=daily",
+      "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/v1/cron/data-pipeline?mode=weekly",
+      "schedule": "0 18 * * 0"
+    },
+    {
+      "path": "/api/v1/cron/data-pipeline?mode=monthly",
+      "schedule": "0 19 1 * *"
+    },
+    {
+      "path": "/api/v1/cron/ai-screen",
+      "schedule": "0 */2 * * *"
+    }
+  ]
+}
