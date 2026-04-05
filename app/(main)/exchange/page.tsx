@@ -839,8 +839,8 @@ export default function ExchangePage() {
                     </thead>
                     <tbody>
                       {(sortKey ? [...paginated].sort((a, b) => {
-                        const va = (a as Record<string, unknown>)[sortKey]
-                        const vb = (b as Record<string, unknown>)[sortKey]
+                        const va = (a as unknown as Record<string, unknown>)[sortKey]
+                        const vb = (b as unknown as Record<string, unknown>)[sortKey]
                         const cmp = typeof va === "number" && typeof vb === "number" ? va - vb : String(va ?? "").localeCompare(String(vb ?? ""))
                         return sortDir === "asc" ? cmp : -cmp
                       }) : paginated).map(l => {
