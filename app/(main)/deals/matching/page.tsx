@@ -151,6 +151,83 @@ function SkeletonCard() {
   )
 }
 
+// ─── Sample Data — DB 없을 때 AI 매칭 화면을 즉시 확인할 수 있도록 ──────────
+
+const SAMPLE_MATCHES: MatchPair[] = [
+  {
+    id: 'sample-match-001',
+    sellerId: 'seller-1',
+    buyerId: 'buyer-1',
+    sellerName: '하나저축은행',
+    buyerName: '강남 자산운용',
+    totalScore: 92,
+    grade: 'EXCELLENT',
+    factors: [
+      { name: 'collateral', score: 95, weight: 30, maxScore: 30 },
+      { name: 'region',     score: 90, weight: 25, maxScore: 25 },
+      { name: 'price',      score: 88, weight: 25, maxScore: 25 },
+      { name: 'urgency',    score: 95, weight: 20, maxScore: 20 },
+    ],
+    recommendedAction: '즉시 딜룸 개설 권장 — 4개 핵심 지표 모두 최상위 매칭',
+  },
+  {
+    id: 'sample-match-002',
+    sellerId: 'seller-2',
+    buyerId: 'buyer-2',
+    sellerName: '한국자산관리공사',
+    buyerName: '프라임 캐피탈',
+    totalScore: 81,
+    grade: 'GOOD',
+    factors: [
+      { name: 'collateral', score: 80, weight: 30, maxScore: 30 },
+      { name: 'region',     score: 85, weight: 25, maxScore: 25 },
+      { name: 'price',      score: 75, weight: 25, maxScore: 25 },
+      { name: 'urgency',    score: 85, weight: 20, maxScore: 20 },
+    ],
+    recommendedAction: 'NDA 체결 후 실사 진행 — 가격 협상 여지 있음',
+  },
+  {
+    id: 'sample-match-003',
+    sellerId: 'seller-3',
+    buyerId: 'buyer-3',
+    sellerName: '신한은행',
+    buyerName: '마리나 PE',
+    totalScore: 68,
+    grade: 'FAIR',
+    factors: [
+      { name: 'collateral', score: 65, weight: 30, maxScore: 30 },
+      { name: 'region',     score: 70, weight: 25, maxScore: 25 },
+      { name: 'price',      score: 60, weight: 25, maxScore: 25 },
+      { name: 'urgency',    score: 80, weight: 20, maxScore: 20 },
+    ],
+    recommendedAction: '추가 실사로 담보 가치 재검토 필요',
+  },
+  {
+    id: 'sample-match-004',
+    sellerId: 'seller-4',
+    buyerId: 'buyer-4',
+    sellerName: '대신F&I',
+    buyerName: '서울 인베스트먼트',
+    totalScore: 88,
+    grade: 'EXCELLENT',
+    factors: [
+      { name: 'collateral', score: 92, weight: 30, maxScore: 30 },
+      { name: 'region',     score: 85, weight: 25, maxScore: 25 },
+      { name: 'price',      score: 88, weight: 25, maxScore: 25 },
+      { name: 'urgency',    score: 85, weight: 20, maxScore: 20 },
+    ],
+    recommendedAction: '딜룸 개설 후 오퍼 교환 단계 진입 가능',
+  },
+]
+
+const SAMPLE_SUMMARY: MatchSummary = {
+  total: SAMPLE_MATCHES.length,
+  excellent: SAMPLE_MATCHES.filter(m => m.grade === 'EXCELLENT').length,
+  good: SAMPLE_MATCHES.filter(m => m.grade === 'GOOD').length,
+  fair: SAMPLE_MATCHES.filter(m => m.grade === 'FAIR').length,
+  averageScore: SAMPLE_MATCHES.reduce((s, m) => s + m.totalScore, 0) / SAMPLE_MATCHES.length,
+}
+
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function MatchingPage() {
@@ -189,14 +266,30 @@ export default function MatchingPage() {
 
   // ── Fetch stored results on mount ────────────────────────────────────────
   useEffect(() => {
+    let cancelled = false
     async function load() {
+      let loaded = false
       try {
         const res = await fetch("/api/v1/matching/results")
-        if (res.ok) parseResponse(await res.json())
-      } catch { /* silent */ }
-      setInitialLoading(false)
+        if (res.ok) {
+          const json = await res.json()
+          const hasItems = Array.isArray(json?.results ?? json?.data) && (json.results ?? json.data).length > 0
+          if (hasItems) {
+            parseResponse(json)
+            loaded = true
+          }
+        }
+      } catch { /* fall through to sample */ }
+
+      // 비어있거나 실패 시 샘플로 채워 "AI 매칭" 화면을 즉시 확인 가능
+      if (!loaded && !cancelled) {
+        setResults(SAMPLE_MATCHES)
+        setSummary(SAMPLE_SUMMARY)
+      }
+      if (!cancelled) setInitialLoading(false)
     }
     load()
+    return () => { cancelled = true }
   }, [parseResponse])
 
   // ── Run matching ─────────────────────────────────────────────────────────

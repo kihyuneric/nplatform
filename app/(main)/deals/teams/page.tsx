@@ -26,8 +26,80 @@ interface Team {
   return_rate?: number
 }
 
-// Empty fallback — teams loaded from Supabase only
-const EMPTY_TEAMS: Team[] = []
+// DB 없는 dev/demo 환경에서 공동투자팀 화면이 비어 보이지 않도록 샘플 제공
+const SAMPLE_TEAMS: Team[] = [
+  {
+    id: 'sample-team-001',
+    name: '강남 아파트 NPL 공동투자 1호',
+    description: '서울 강남권 담보 NPL 채권을 공동으로 매입하여 경매 낙찰 후 시세차익을 목표로 합니다.',
+    member_count: 7,
+    max_members: 10,
+    target_amount: 3_000_000_000,
+    raised_amount: 2_100_000_000,
+    is_private: false,
+    status: '모집중',
+    investment_type: 'NPL 채권',
+    listing_id: 'npl-2026-0412',
+    listing_title: '강남구 아파트 NPL 채권',
+    leader_name: '리드 인베스트',
+    co_count: 3,
+    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+    return_rate: 18.5,
+  },
+  {
+    id: 'sample-team-002',
+    name: '성남 오피스 NPL 2호',
+    description: '분당/성남 권역 프라임 오피스 담보 채권 공동투자. 실사 완료, 계약 진행 중.',
+    member_count: 12,
+    max_members: 12,
+    target_amount: 8_000_000_000,
+    raised_amount: 8_000_000_000,
+    is_private: false,
+    status: '운용중',
+    investment_type: 'NPL 채권',
+    listing_id: 'npl-2026-0411',
+    listing_title: '성남시 사무실 NPL 채권',
+    leader_name: '프라임 캐피탈',
+    co_count: 5,
+    created_at: new Date(Date.now() - 28 * 86400000).toISOString(),
+    return_rate: 22.3,
+  },
+  {
+    id: 'sample-team-003',
+    name: '부산 상가 NPL 3호',
+    description: '해운대 상권 NPL 매입 후 리모델링하여 재임대 전략으로 안정적 현금흐름을 추구합니다.',
+    member_count: 4,
+    max_members: 8,
+    target_amount: 1_500_000_000,
+    raised_amount: 900_000_000,
+    is_private: false,
+    status: '모집중',
+    investment_type: 'NPL 채권',
+    listing_id: 'npl-2026-0410',
+    listing_title: '해운대구 상가 NPL 채권',
+    leader_name: '마리나 PE',
+    co_count: 2,
+    created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
+    return_rate: 15.8,
+  },
+  {
+    id: 'sample-team-004',
+    name: '서초 오피스 공동투자 4호',
+    description: '서초구 중심업무지구 오피스 NPL. 이미 상환 완료되어 성과 확인 가능한 과거 사례.',
+    member_count: 9,
+    target_amount: 12_000_000_000,
+    raised_amount: 12_000_000_000,
+    is_private: false,
+    status: '상환완료',
+    investment_type: 'NPL 채권',
+    listing_id: 'npl-2026-0409',
+    listing_title: '서초구 오피스텔 NPL 채권',
+    leader_name: '서울 자산운용',
+    co_count: 6,
+    created_at: new Date(Date.now() - 180 * 86400000).toISOString(),
+    return_rate: 27.4,
+  },
+]
 
 const STATUS_BADGE: Record<TeamStatus, string> = {
   "모집중":   DS.status.active,
@@ -60,11 +132,18 @@ export default function TeamsPage() {
   const [tab, setTab] = useState<FilterTab>("전체")
 
   useEffect(() => {
+    let cancelled = false
     fetch("/api/v1/teams")
       .then(r => r.json())
-      .then(d => setTeams(d.data || d.teams || []))
-      .catch(() => setTeams(EMPTY_TEAMS))
-      .finally(() => setLoading(false))
+      .then(d => {
+        if (cancelled) return
+        const list: Team[] = d.data || d.teams || []
+        // 비어있으면 샘플로 폴백 — "모두 샘플로 진행되게" 요구사항
+        setTeams(list.length > 0 ? list : SAMPLE_TEAMS)
+      })
+      .catch(() => { if (!cancelled) setTeams(SAMPLE_TEAMS) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [])
 
   const DONE_STATUSES: TeamStatus[] = ["상환완료", "취소"]

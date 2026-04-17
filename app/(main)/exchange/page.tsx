@@ -310,17 +310,22 @@ export default function ExchangePage() {
   const [aiRecommendation, setAiRecommendation] = useState("")
 
   // ── Real listings data ──────────────────────────────────────
+  // 초기값을 MOCK으로 두면 API 응답 전/후로 매물이 바뀌는 것처럼 보임(flicker).
+  // 대신 MOCK + isDemoMode=true 로 즉시 시작 → API가 실데이터를 돌려주면 교체,
+  // 실패/empty면 그대로 MOCK 유지. 사용자 입장에서는 "데모 모드 → 실제 모드"
+  // 한 방향 전환만 발생하므로 매물이 사라지거나 배너가 깜빡이지 않음.
   const [listings, setListings] = useState<CardListing[]>(MOCK)
   const [listingsLoading, setListingsLoading] = useState(true)
-  const [isDemoMode, setIsDemoMode] = useState(false)
+  const [isDemoMode, setIsDemoMode] = useState(true)
   const [demoDismissed, setDemoDismissed] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
     fetch('/api/v1/exchange/listings?limit=100&status=ACTIVE')
       .then(r => r.json())
       .then(d => {
+        if (cancelled) return
         if (d.data && d.data.length > 0) {
-          setIsDemoMode(false)
           const mapped: CardListing[] = d.data.map((r: Record<string, unknown>) => {
             // Map collateral_type to major category
             const ct = (r.collateral_type as string) || ''
@@ -390,13 +395,13 @@ export default function ExchangePage() {
             } satisfies CardListing
           })
           setListings(mapped)
-        } else {
-          // API returned empty — stay with MOCK, enable demo mode
-          setIsDemoMode(true)
+          setIsDemoMode(false)
         }
+        // else: API 빈 결과 → MOCK 유지, isDemoMode=true 유지 (state 이미 true)
       })
-      .catch(() => { setIsDemoMode(true) /* keep MOCK on error */ })
-      .finally(() => setListingsLoading(false))
+      .catch(() => { /* 네트워크 오류 → MOCK 유지, isDemoMode=true 유지 */ })
+      .finally(() => { if (!cancelled) setListingsLoading(false) })
+    return () => { cancelled = true }
   }, [])
 
   const handleAISearch = useCallback(async () => {

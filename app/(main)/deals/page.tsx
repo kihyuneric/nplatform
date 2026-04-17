@@ -112,8 +112,95 @@ interface Deal {
 
 // ─── Constants ────────────────────────────────────────────────
 
-// Empty fallback — never show fabricated deal data
-const EMPTY_DEALS: Deal[] = []
+// DB에 실거래 없을 때 4개 상태(진행중/완료/매칭/취소)를 골고루 보여주는 샘플.
+// _sample 플래그가 있어 상세 페이지로 이동하면 deals/[id] 가 샘플 DealInfo를 보여줌.
+const SAMPLE_DEALS: Deal[] = [
+  {
+    id: 'npl-2026-0412',
+    listing_name: '강남구 아파트 NPL 채권',
+    counterparty: '하나저축은행',
+    counterparty_masked: '하나저***',
+    current_stage: 'INTEREST',
+    progress: 10,
+    next_action: 'NDA 체결 필요',
+    deadline: new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10),
+    notification: '매도자가 응답 대기 중',
+    amount: 1_200_000_000,
+    type: 'buy',
+    asset_type: '아파트',
+    location: '서울 강남구',
+  },
+  {
+    id: 'npl-2026-0411',
+    listing_name: '성남시 사무실 NPL 채권',
+    counterparty: '한국자산관리공사',
+    counterparty_masked: '한국자***',
+    current_stage: 'NDA',
+    progress: 28,
+    next_action: '실사 자료 검토',
+    deadline: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+    amount: 3_800_000_000,
+    type: 'buy',
+    asset_type: '사무실',
+    location: '경기 성남시',
+  },
+  {
+    id: 'npl-2026-0410',
+    listing_name: '해운대구 상가 NPL 채권',
+    counterparty: '대신F&I',
+    counterparty_masked: '대신***',
+    current_stage: 'DUE_DILIGENCE',
+    progress: 48,
+    next_action: '감정평가 결과 확인',
+    deadline: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
+    amount: 780_000_000,
+    type: 'buy',
+    asset_type: '상가',
+    location: '부산 해운대구',
+  },
+  {
+    id: 'npl-2026-0409',
+    listing_name: '서초구 오피스텔 NPL 채권',
+    counterparty: '신한은행',
+    counterparty_masked: '신한***',
+    current_stage: 'NEGOTIATION',
+    progress: 65,
+    next_action: '최종 오퍼 확정',
+    deadline: new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10),
+    amount: 5_200_000_000,
+    type: 'sell',
+    asset_type: '오피스텔',
+    location: '서울 서초구',
+  },
+  {
+    id: 'npl-2026-0408',
+    listing_name: '마포구 오피스텔 NPL 채권',
+    counterparty: '국민은행',
+    counterparty_masked: '국민***',
+    current_stage: 'CONTRACT',
+    progress: 82,
+    next_action: '계약서 전자서명',
+    deadline: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10),
+    amount: 1_800_000_000,
+    type: 'buy',
+    asset_type: '오피스텔',
+    location: '서울 마포구',
+  },
+  {
+    id: 'npl-2026-0405',
+    listing_name: '용인시 상가 NPL 채권 (완료)',
+    counterparty: 'IBK기업은행',
+    counterparty_masked: 'IBK***',
+    current_stage: 'COMPLETED',
+    progress: 100,
+    next_action: '거래 완료',
+    deadline: new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10),
+    amount: 2_100_000_000,
+    type: 'buy',
+    asset_type: '상가',
+    location: '경기 용인시',
+  },
+]
 
 // ─── Helpers ──────────────────────────────────────────────────
 
@@ -287,7 +374,8 @@ function KpiMetric({
 // ─── Main Component ───────────────────────────────────────────
 
 export default function DealsPage() {
-  const [deals, setDeals] = useState<Deal[]>(EMPTY_DEALS)
+  // 초기값을 SAMPLE_DEALS 로 시작 → 비어 보이는 순간 없이 즉시 4개 상태 확인 가능
+  const [deals, setDeals] = useState<Deal[]>(SAMPLE_DEALS)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<"buy" | "sell">("buy")
   const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban")
@@ -298,7 +386,7 @@ export default function DealsPage() {
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setDeals([]); return }
+      if (!user) { setDeals(SAMPLE_DEALS); return }
 
       const { data } = await supabase
         .from("deals")
@@ -344,10 +432,11 @@ export default function DealsPage() {
         }))
         setDeals(mapped)
       } else {
-        setDeals([])
+        // 실 데이터 없으면 샘플 유지 (빈 화면 방지)
+        setDeals(SAMPLE_DEALS)
       }
     } catch {
-      setDeals([])
+      setDeals(SAMPLE_DEALS)
     } finally {
       setLoading(false)
     }
@@ -546,24 +635,26 @@ export default function DealsPage() {
             {/* Deal flow template */}
             <div className={`${DS.card.base} p-6`}>
               <h3 className={`${DS.text.cardTitle} mb-4`}>딜룸 진행 흐름</h3>
-              <div className="grid grid-cols-5 gap-3">
+              <div className="grid grid-cols-5 gap-3 items-stretch">
                 {KANBAN_STAGES.map((stage, idx) => {
                   const config = STAGE_CONFIG[stage]
                   return (
-                    <div key={stage} className="relative">
-                      <div className={`border-t-2 ${config.topBorderColor} rounded-xl border border-[var(--color-border-subtle)] border-t-0 p-4`}>
+                    <div key={stage} className="relative flex">
+                      {/* flex-1 + h-full 로 모든 박스 동일 높이 유지, 설명 길이에 흔들리지 않게 */}
+                      <div className={`flex-1 flex flex-col border-t-2 ${config.topBorderColor} rounded-xl border border-[var(--color-border-subtle)] border-t-0 p-4`}>
                         <div className="flex items-center gap-2 mb-3">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[0.6875rem] font-bold ${config.dotBg}`}>
                             {idx + 1}
                           </div>
                           <span className={`${DS.text.label} !font-bold`}>{config.label}</span>
                         </div>
-                        <p className={`${DS.text.micro} leading-relaxed`}>
-                          {stage === "INTEREST" && "매물에 관심표명을 하면 딜룸이 시작됩니다."}
-                          {stage === "NDA" && "비밀유지계약(NDA)을 체결하고 상세 자료에 접근합니다."}
-                          {stage === "DUE_DILIGENCE" && "감정평가, 등기, 권리관계 등 실사를 진행합니다."}
-                          {stage === "NEGOTIATION" && "가격 협상 및 오퍼를 교환합니다."}
-                          {stage === "CONTRACT" && "계약서를 작성하고 서명 후 거래를 완료합니다."}
+                        {/* min-h-[3.5rem] 로 2줄까지 공간 확보 → 모든 카드 높이 균일 */}
+                        <p className={`${DS.text.micro} leading-relaxed min-h-[3.5rem]`}>
+                          {stage === "INTEREST" && "매물에 관심을 표명하면 딜룸이 자동으로 개설됩니다."}
+                          {stage === "NDA" && "비밀유지계약을 체결하고 상세 자료 열람 권한을 얻습니다."}
+                          {stage === "DUE_DILIGENCE" && "감정평가·등기·권리관계 등 전문 실사를 진행합니다."}
+                          {stage === "NEGOTIATION" && "가격 협상과 조건 교환으로 오퍼를 최종 확정합니다."}
+                          {stage === "CONTRACT" && "전자서명으로 계약을 체결하고 잔금을 집행합니다."}
                         </p>
                       </div>
                       {idx < 4 && (
