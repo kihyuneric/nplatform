@@ -94,11 +94,18 @@ select {
   color: #0F172A;  /* slate-900 기본 */
   caret-color: #1B3A5C;
 }
-.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not(.bg-white):not(.!bg-white):not([class*="bg-white"]),
-.dark textarea:not(.bg-white):not([class*="bg-white"]),
-.dark select:not(.bg-white):not([class*="bg-white"]) {
-  color: #F1F5F9;  /* 다크모드: slate-100 — 단, bg-white가 명시된 입력은 제외 */
+/* 다크모드: bg-white 명시된 입력은 slate-900 유지, 나머지는 slate-100 */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
+.dark textarea,
+.dark select {
+  color: #F1F5F9;
   caret-color: #F1F5F9;
+}
+.dark input.bg-white,
+.dark textarea.bg-white,
+.dark select.bg-white {
+  color: #0F172A !important;
+  caret-color: #1B3A5C;
 }
 /* placeholder 가독성 — 투명한 회색이 아니라 읽을 수 있는 slate-400 */
 input::placeholder, textarea::placeholder {
@@ -107,6 +114,9 @@ input::placeholder, textarea::placeholder {
 }
 .dark input::placeholder, .dark textarea::placeholder {
   color: #64748B;  /* slate-500 */
+}
+.dark input.bg-white::placeholder, .dark textarea.bg-white::placeholder {
+  color: #94A3B8;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
