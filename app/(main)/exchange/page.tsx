@@ -485,7 +485,7 @@ export default function ExchangePage() {
           padding: "10px 24px",
         }}>
           <div style={{ maxWidth: 1440, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#D97706", fontWeight: 600 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--color-warning)", fontWeight: 600 }}>
               <Zap size={14} />
               <span>
                 데모 체험 모드 — 샘플 매물 <strong>{MOCK.length}건</strong>을 표시 중입니다. 실제 등록된 매물이 없습니다.
@@ -494,13 +494,13 @@ export default function ExchangePage() {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Link
                 href="/exchange/sell"
-                style={{ fontSize: 12, fontWeight: 700, color: "#92400E", textDecoration: "underline" }}
+                style={{ fontSize: 12, fontWeight: 700, color: "var(--color-warning-dark, #92400E)", textDecoration: "underline" }}
               >
                 매물 등록하기 →
               </Link>
               <button
                 onClick={() => setDemoDismissed(true)}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "#D97706", fontSize: 14, lineHeight: 1 }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-warning)", fontSize: 14, lineHeight: 1 }}
                 aria-label="배너 닫기"
               >
                 ✕
