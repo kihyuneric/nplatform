@@ -90,7 +90,6 @@ function ContentEditorModal({
 }) {
   const [form, setForm] = useState(state)
   const [saving, setSaving] = useState(false)
-  const supabase = createClient()
   const categories = categoryListForTab(tab)
   const isNew = !state.id
 
@@ -108,6 +107,7 @@ function ContentEditorModal({
         updated_at: new Date().toISOString(),
       }
 
+      const supabase = createClient()
       let result: CommunityPost | null = null
       if (isNew) {
         const { data, error } = await supabase
@@ -245,12 +245,11 @@ export default function AdminContentPage() {
   const [loading, setLoading] = useState(false)
   const [editor, setEditor] = useState<EditorState | null>(null)
 
-  const supabase = createClient()
-
   /* ── Fetch posts for current tab ──────────────────────────────── */
   const fetchPosts = useCallback(async () => {
     setLoading(true)
     try {
+      const supabase = createClient()
       const categories = categoryListForTab(tab)
       const { data, error } = await supabase
         .from("community_posts")
@@ -277,34 +276,42 @@ export default function AdminContentPage() {
   /* ── Toggle publish status ────────────────────────────────────── */
   async function toggleStatus(post: CommunityPost) {
     const newStatus = post.status === "published" ? "hidden" : "published"
+    // Optimistic update
+    setPosts(prev => prev.map(p => p.id === post.id ? { ...p, status: newStatus } : p))
+    const supabase = createClient()
     const { error } = await supabase
       .from("community_posts")
       .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq("id", post.id)
 
     if (error) {
+      // Revert
+      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, status: post.status } : p))
       toast.error(`상태 변경 실패: ${error.message}`)
       return
     }
     toast.success(`"${post.title}" ${STATUS_LABEL[newStatus]} 처리 완료`)
-    setPosts(prev => prev.map(p => p.id === post.id ? { ...p, status: newStatus } : p))
   }
 
   /* ── Delete post ──────────────────────────────────────────────── */
   async function deletePost(post: CommunityPost) {
     if (!confirm(`"${post.title}" 을(를) 삭제하시겠습니까?`)) return
 
+    // Optimistic update
+    setPosts(prev => prev.filter(p => p.id !== post.id))
+    const supabase = createClient()
     const { error } = await supabase
       .from("community_posts")
       .delete()
       .eq("id", post.id)
 
     if (error) {
+      // Revert
+      fetchPosts()
       toast.error(`삭제 실패: ${error.message}`)
       return
     }
     toast.success(`"${post.title}" 삭제 완료`)
-    setPosts(prev => prev.filter(p => p.id !== post.id))
   }
 
   /* ── Open editor ─────────────────────────────────────────────── */
@@ -338,17 +345,21 @@ export default function AdminContentPage() {
   /* ── Toggle pin ───────────────────────────────────────────────── */
   async function togglePin(post: CommunityPost) {
     const newPinned = !post.is_pinned
+    // Optimistic update
+    setPosts(prev => prev.map(p => p.id === post.id ? { ...p, is_pinned: newPinned } : p))
+    const supabase = createClient()
     const { error } = await supabase
       .from("community_posts")
       .update({ is_pinned: newPinned, updated_at: new Date().toISOString() })
       .eq("id", post.id)
 
     if (error) {
+      // Revert
+      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, is_pinned: post.is_pinned } : p))
       toast.error(`고정 상태 변경 실패: ${error.message}`)
       return
     }
     toast.success(newPinned ? "상단 고정 완료" : "고정 해제 완료")
-    setPosts(prev => prev.map(p => p.id === post.id ? { ...p, is_pinned: newPinned } : p))
   }
 
   /* ── Render table rows per tab ────────────────────────────────── */

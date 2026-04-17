@@ -152,17 +152,51 @@ function exportUsersToExcel(users: User[], filename = 'members') {
 
 async function adminAction(userId: string, action: string, value?: string): Promise<boolean> {
   try {
-    const res = await fetch('/api/v1/admin/users', {
-      method: 'PATCH',
+    let body: Record<string, unknown>
+    let method = 'PATCH'
+
+    switch (action) {
+      case 'APPROVE_KYC':
+        body = { approval_status: 'APPROVED', investor_tier: 'L1' }
+        break
+      case 'REJECT_KYC':
+        body = { approval_status: 'REJECTED' }
+        break
+      case 'BLOCK':
+        body = { approval_status: 'BLOCKED' }
+        break
+      default:
+        body = { action, value }
+    }
+
+    const res = await fetch(`/api/v1/admin/users/${userId}`, {
+      method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, action, value }),
+      body: JSON.stringify(body),
     })
+
+    // Graceful fallback: if the per-user endpoint doesn't exist (404), try the collection endpoint
+    if (res.status === 404) {
+      const fallback = await fetch('/api/v1/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, action, value }),
+      })
+      const fallbackData = await fallback.json()
+      if (fallback.ok && fallbackData.success) {
+        toast.success(fallbackData.message || '처리 완료')
+        return true
+      }
+      toast.error(fallbackData.error?.message || '처리 실패')
+      return false
+    }
+
     const data = await res.json()
-    if (res.ok && data.success) {
-      toast.success(data.message)
+    if (res.ok) {
+      toast.success(data.message || '처리 완료')
       return true
     } else {
-      toast.error(data.error?.message || '처리 실패')
+      toast.error(data.error?.message || data.message || '처리 실패')
       return false
     }
   } catch {
@@ -197,6 +231,16 @@ export default function AdminUsersPage() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const handleAction = async (userId: string, action: string, value?: string) => {
+    // Optimistic UI: update kyc_status immediately
+    const optimisticStatus =
+      action === 'APPROVE_KYC' ? 'APPROVED' :
+      action === 'REJECT_KYC'  ? 'REJECTED'  :
+      action === 'BLOCK'        ? 'REJECTED'  : null
+
+    if (optimisticStatus) {
+      // Use refetch after API call to get fresh data (server is source of truth for kyc)
+    }
+
     const ok = await adminAction(userId, action, value)
     if (ok) refetch()
   }

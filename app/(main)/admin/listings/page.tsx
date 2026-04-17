@@ -49,7 +49,6 @@ const AI_GRADE_COLORS: Record<string, string> = {
 
 export default function AdminListingsPage() {
   const { user } = useAuth()
-  const supabase = createClient()
 
   const [listings, setListings] = useState<AdminListing[]>([])
   const [loading, setLoading] = useState(true)
@@ -63,6 +62,7 @@ export default function AdminListingsPage() {
   const fetchListings = useCallback(async () => {
     setLoading(true)
     try {
+      const supabase = createClient()
       let query = supabase.from("npl_listings").select("id, title, collateral_type, sido, sigungu, claim_amount, ai_grade, status, created_at, seller_id", { count: "exact" })
       if (search) query = query.ilike("title", `%${search}%`)
       if (activeTab !== "all") query = query.eq("status", activeTab === "APPROVED" ? "ACTIVE" : activeTab)
@@ -98,19 +98,61 @@ export default function AdminListingsPage() {
   const toggleAll = () =>
     setSelected(prev => prev.size === listings.length ? new Set() : new Set(listings.map(l => l.id)))
 
+  // Single row action via API
+  const handleRowAction = async (id: string, action: 'approve' | 'hide' | 'delete') => {
+    // Optimistic update
+    if (action === 'delete') {
+      setListings(prev => prev.filter(l => l.id !== id))
+    } else {
+      const newStatus = action === 'approve' ? 'ACTIVE' : 'HIDDEN'
+      setListings(prev => prev.map(l => l.id === id ? { ...l, status: newStatus as ApprovalStatus } : l))
+    }
+    try {
+      if (action === 'delete') {
+        const res = await fetch(`/api/v1/admin/listings/${id}`, { method: 'DELETE' })
+        if (!res.ok) throw new Error('삭제 실패')
+        toast.success('매물 삭제 완료')
+      } else {
+        const newStatus = action === 'approve' ? 'ACTIVE' : 'HIDDEN'
+        const res = await fetch(`/api/v1/admin/listings/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        })
+        if (!res.ok) throw new Error('처리 실패')
+        toast.success(action === 'approve' ? '매물 승인 완료' : '매물 숨김 처리 완료')
+      }
+    } catch {
+      // Revert on failure
+      fetchListings()
+      toast.error('처리에 실패했습니다. 다시 시도해주세요.')
+    }
+  }
+
   const handleBulkAction = async (status: string, label: string) => {
     const ids = Array.from(selected)
     if (ids.length === 0) return
+    // Optimistic update
+    if (status === 'REJECTED') {
+      setListings(prev => prev.filter(l => !ids.includes(l.id)))
+    } else {
+      setListings(prev => prev.map(l => ids.includes(l.id) ? { ...l, status: status as ApprovalStatus } : l))
+    }
+    setSelected(new Set())
     try {
-      const { error } = await supabase
-        .from('npl_listings')
-        .update({ status, updated_at: new Date().toISOString() })
-        .in('id', ids)
-      if (error) throw error
+      await Promise.all(ids.map(id => {
+        if (status === 'REJECTED') {
+          return fetch(`/api/v1/admin/listings/${id}`, { method: 'DELETE' })
+        }
+        return fetch(`/api/v1/admin/listings/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        })
+      }))
       toast.success(`${ids.length}건 ${label} 처리 완료`)
-      setSelected(new Set())
-      fetchListings()
     } catch {
+      fetchListings()
       toast.error(`${label} 처리 실패`)
     }
   }
@@ -227,7 +269,33 @@ export default function AdminListingsPage() {
               const s = STATUS_CONFIG[v]; return s ? <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border ${s.cls}`}>{s.label}</span> : null
             }},
             { key: 'created_at', label: '등록일', sortable: true, render: (v) => <span className="text-[0.75rem] text-[var(--color-text-tertiary)]">{v ? new Date(v).toLocaleDateString("ko-KR") : "-"}</span> },
-            { key: 'id', label: '액션', render: (v) => <a href={`/admin/listings/${v}`} className={`${DS.text.link} text-[0.8125rem]`}>상세보기</a> },
+            { key: 'id', label: '액션', render: (v, row) => (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {(row.status === 'PENDING' || row.status === 'HIDDEN') && (
+                  <button
+                    onClick={() => handleRowAction(v, 'approve')}
+                    className={`${DS.button.accent} ${DS.button.sm}`}
+                  >
+                    승인
+                  </button>
+                )}
+                {row.status === 'ACTIVE' && (
+                  <button
+                    onClick={() => handleRowAction(v, 'hide')}
+                    className={`${DS.button.secondary} ${DS.button.sm}`}
+                  >
+                    숨김
+                  </button>
+                )}
+                <button
+                  onClick={() => { if (confirm('삭제하시겠습니까?')) handleRowAction(v, 'delete') }}
+                  className={`${DS.button.danger} ${DS.button.sm}`}
+                >
+                  삭제
+                </button>
+                <a href={`/admin/listings/${v}`} className={`${DS.text.link} text-[0.8125rem]`}>상세</a>
+              </div>
+            )},
           ]}
           data={listings}
           loading={loading}

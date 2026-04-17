@@ -86,8 +86,6 @@ type Tab = typeof TABS[number]
 // ─── Supabase Hook ────────────────────────────────────────────────────────────
 
 function useAdminDeals() {
-  const supabase = createClient()
-
   const [activeDeals, setActiveDeals] = useState<Deal[]>([])
   const [completedDeals, setCompletedDeals] = useState<Deal[]>([])
   const [disputes, setDisputes] = useState<Dispute[]>([])
@@ -97,6 +95,7 @@ function useAdminDeals() {
   const fetchDeals = useCallback(async () => {
     setLoading(true)
     try {
+      const supabase = createClient()
       // Fetch deal rooms with participants count
       const { data: rooms, error: roomsErr } = await supabase
         .from("deal_rooms")
@@ -212,48 +211,65 @@ function useAdminDeals() {
     } finally {
       setLoading(false)
     }
-  }, [supabase])
+  }, [])
 
   const updateDealStatus = useCallback(async (dealId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from("deal_rooms")
-        .update({ status: newStatus })
-        .eq("id", dealId)
-
-      if (error) throw error
+      // Optimistic update
+      setActiveDeals(prev => prev.map(d =>
+        d.id === dealId ? { ...d, stage: STATUS_TO_STAGE[newStatus] || d.stage } : d
+      ))
+      const res = await fetch(`/api/v1/admin/deals/${dealId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage: newStatus }),
+      })
+      if (!res.ok) {
+        // Fallback to direct Supabase
+        const supabase = createClient()
+        const { error } = await supabase
+          .from("deal_rooms")
+          .update({ status: newStatus })
+          .eq("id", dealId)
+        if (error) throw error
+      }
       toast.success("거래 상태가 업데이트되었습니다.")
       await fetchDeals()
     } catch (err) {
       console.error("Failed to update deal:", err)
       toast.error("상태 업데이트에 실패했습니다.")
     }
-  }, [supabase, fetchDeals])
+  }, [fetchDeals])
 
   const resolveDispute = useCallback(async (dealId: string) => {
     try {
-      // Update the deal room status to completed (resolved)
-      const { error } = await supabase
-        .from("deal_rooms")
-        .update({ status: "completed" })
-        .eq("id", dealId)
+      const res = await fetch(`/api/v1/admin/deals/${dealId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage: 'completed' }),
+      })
+      if (!res.ok) {
+        // Fallback to direct Supabase
+        const supabase = createClient()
+        const { error } = await supabase
+          .from("deal_rooms")
+          .update({ status: "completed" })
+          .eq("id", dealId)
+        if (error) throw error
 
-      if (error) throw error
-
-      // Also update any dispute contract requests
-      await supabase
-        .from("contract_requests")
-        .update({ status: "resolved" })
-        .eq("deal_room_id", dealId)
-        .in("status", ["dispute", "pending", "reviewing"])
-
+        await supabase
+          .from("contract_requests")
+          .update({ status: "resolved" })
+          .eq("deal_room_id", dealId)
+          .in("status", ["dispute", "pending", "reviewing"])
+      }
       toast.success("분쟁이 해결 처리되었습니다.")
       await fetchDeals()
     } catch (err) {
       console.error("Failed to resolve dispute:", err)
       toast.error("분쟁 처리에 실패했습니다.")
     }
-  }, [supabase, fetchDeals])
+  }, [fetchDeals])
 
   useEffect(() => {
     fetchDeals()

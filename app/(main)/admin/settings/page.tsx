@@ -107,7 +107,6 @@ export default function AdminSettingsPage() {
     } catch { toast.error('네트워크 오류') }
     finally { setSaving(false) }
   }
-  const supabase = createClient()
   const [navToggles, setNavToggles] = useState<Record<string, boolean>>(
     Object.fromEntries(NAV_ITEMS.map(n => [n.label, true]))
   )
@@ -140,6 +139,7 @@ export default function AdminSettingsPage() {
   const loadAdmins = useCallback(async () => {
     setLoadingAdmins(true)
     try {
+      const supabase = createClient()
       const { data } = await supabase
         .from("users")
         .select("id, full_name, email, role, created_at")
@@ -166,6 +166,7 @@ export default function AdminSettingsPage() {
 
   const handleRevokeAdmin = useCallback(async (adminId: string, adminName: string) => {
     try {
+      const supabase = createClient()
       await supabase.from("users").update({ role: "MEMBER" }).eq("id", adminId)
       setAdmins(prev => prev.filter(a => a.id !== adminId))
       toast.success(`${adminName} 관리자 권한 해제 완료`)
@@ -443,6 +444,7 @@ export default function AdminSettingsPage() {
                       "콘텐츠관리자": "ADMIN", "모니터링": "MONITORING",
                     }
                     try {
+                      const supabase = createClient()
                       // Check if user exists by email
                       const { data: existing } = await supabase
                         .from("users").select("id").eq("email", newAdmin.email).single()
