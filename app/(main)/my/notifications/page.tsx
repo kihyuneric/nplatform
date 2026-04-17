@@ -104,6 +104,7 @@ export default function NotificationsPage() {
   }, [filtered])
 
   const markAllRead = useCallback(async () => {
+    if (!user?.id) return
     setItems(prev => prev.map(n => ({ ...n, is_read: true })))
     setSelectedIds(new Set())
     try {
@@ -111,7 +112,7 @@ export default function NotificationsPage() {
       const { error } = await supabase
         .from("notifications")
         .update({ is_read: true })
-        .eq("user_id", user!.id)
+        .eq("user_id", user.id)
         .eq("is_read", false)
       if (error) throw error
     } catch {

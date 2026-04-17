@@ -8,12 +8,12 @@
  * - 상태별 필터: 진행 중 / 승인 / 거절 / 만료
  */
 
-import { useState, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import {
   ChevronLeft, FileSignature, FileText, ExternalLink,
-  CheckCircle2, Clock, XCircle, AlertCircle, Filter,
+  CheckCircle2, Clock, XCircle, AlertCircle, Filter, Loader2,
 } from "lucide-react"
 
 const C = {
@@ -40,7 +40,8 @@ interface AgreementRow {
   status: DocStatus
 }
 
-const AGREEMENTS: AgreementRow[] = [
+// Sample data used as fallback when API is unavailable
+const SAMPLE_AGREEMENTS: AgreementRow[] = [
   {
     id: "nda-2026-0412-001",
     type: "NDA",
@@ -132,20 +133,42 @@ const FILTERS = [
 
 export default function AgreementsPage() {
   const [filter, setFilter] = useState<typeof FILTERS[number]["key"]>("ALL")
+  const [agreements, setAgreements] = useState<AgreementRow[]>(SAMPLE_AGREEMENTS)
+  const [loadingData, setLoadingData] = useState(true)
+
+  // Fetch real agreements from API; fall back to sample data on failure
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/v1/my/agreements")
+        if (res.ok) {
+          const json = await res.json()
+          if (Array.isArray(json.data) && json.data.length > 0) {
+            setAgreements(json.data as AgreementRow[])
+          }
+        }
+      } catch {
+        // Keep sample data on error
+      } finally {
+        setLoadingData(false)
+      }
+    }
+    load()
+  }, [])
 
   const rows = useMemo(() => {
-    if (filter === "ALL") return AGREEMENTS
-    if (filter === "NDA" || filter === "LOI") return AGREEMENTS.filter(a => a.type === filter)
-    if (filter === "REJECTED") return AGREEMENTS.filter(a => a.status === "REJECTED" || a.status === "EXPIRED")
-    return AGREEMENTS.filter(a => a.status === filter)
-  }, [filter])
+    if (filter === "ALL") return agreements
+    if (filter === "NDA" || filter === "LOI") return agreements.filter(a => a.type === filter)
+    if (filter === "REJECTED") return agreements.filter(a => a.status === "REJECTED" || a.status === "EXPIRED")
+    return agreements.filter(a => a.status === filter)
+  }, [filter, agreements])
 
   const stats = useMemo(() => ({
-    nda: AGREEMENTS.filter(a => a.type === "NDA").length,
-    loi: AGREEMENTS.filter(a => a.type === "LOI").length,
-    pending: AGREEMENTS.filter(a => a.status === "PENDING").length,
-    signed: AGREEMENTS.filter(a => a.status === "SIGNED" || a.status === "APPROVED").length,
-  }), [])
+    nda: agreements.filter(a => a.type === "NDA").length,
+    loi: agreements.filter(a => a.type === "LOI").length,
+    pending: agreements.filter(a => a.status === "PENDING").length,
+    signed: agreements.filter(a => a.status === "SIGNED" || a.status === "APPROVED").length,
+  }), [agreements])
 
   return (
     <main style={{ backgroundColor: C.bg0, color: "#E2E8F0", minHeight: "100vh" }}>
@@ -186,6 +209,15 @@ export default function AgreementsPage() {
             모든 계약은 전자서명법에 따라 5년간 보관됩니다.
           </p>
         </motion.div>
+
+        {/* Loading indicator */}
+        {loadingData && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, fontSize: 11, color: C.lt4 }}>
+            <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} />
+            계약 이력 불러오는 중...
+            <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+          </div>
+        )}
 
         {/* Stat cards */}
         <div

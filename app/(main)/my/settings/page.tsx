@@ -45,7 +45,6 @@ const ROLES = [
 export default function SettingsPage() {
   const { user } = useAuth()
   const searchParams = useSearchParams()
-  const supabase = createClient()
   const initialTab = SETTINGS_TAB_MAP[searchParams?.get("tab") ?? ""] ?? "기본 정보"
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
   const [form, setForm] = useState({ name: "", email: "", phone: "", bio: "" })
@@ -68,6 +67,7 @@ export default function SettingsPage() {
       setProfileLoading(false)
       return
     }
+    const supabase = createClient()
     const loadProfile = async () => {
       try {
         const { data, error } = await supabase
@@ -132,6 +132,7 @@ export default function SettingsPage() {
     setNotifToggles(prev => ({ ...prev, [id]: newVal }))
     if (!user?.id) return
     try {
+      const supabase = createClient()
       await supabase.from("notification_preferences").upsert({
         user_id: user.id,
         key: id,
@@ -150,6 +151,7 @@ export default function SettingsPage() {
     setNotifChannels(prev => ({ ...prev, [id]: newChannels }))
     if (!user?.id) return
     try {
+      const supabase = createClient()
       await supabase.from("notification_preferences").upsert({
         user_id: user.id,
         key: id,
@@ -167,6 +169,7 @@ export default function SettingsPage() {
     if (!user?.id) { toast.error("로그인이 필요합니다."); return }
     setSaving(true)
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from("users")
         .update({
@@ -189,6 +192,7 @@ export default function SettingsPage() {
     if (!pwForm.next || pwForm.next.length < 8) { toast.error("새 비밀번호는 8자 이상이어야 합니다."); return }
     setPwSaving(true)
     try {
+      const supabase = createClient()
       const { error } = await supabase.auth.updateUser({ password: pwForm.next })
       if (error) throw error
       toast.success("비밀번호가 변경되었습니다.")

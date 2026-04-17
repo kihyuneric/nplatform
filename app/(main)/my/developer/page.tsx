@@ -24,12 +24,12 @@ const AVAILABLE_EVENTS = [
   'analysis.completed', 'payment.succeeded', 'payment.failed',
 ]
 
-const USAGE_DATA = [
+// Fallback usage data (last 30 days) — replaced with real data when API is available
+const FALLBACK_usageData = [
   3200, 4100, 3800, 5200, 4700, 6100, 5500, 4900, 6800, 7200,
   6500, 7800, 8100, 6900, 7400, 8800, 9100, 7600, 8400, 9300,
   8700, 10200, 9600, 11100, 10400, 9800, 11800, 12100, 11400, 12480,
 ]
-const maxUsage = Math.max(...USAGE_DATA)
 
 const TABS = ['API 키', 'Webhook', 'API 문서', '사용량'] as const
 type Tab = typeof TABS[number]
@@ -109,6 +109,28 @@ export default function DeveloperPage() {
   const [selectedEvents, setSelectedEvents] = useState<string[]>(['deal.created', 'listing.published'])
   const [copied, setCopied] = useState(false)
 
+  // Usage chart data (dynamic)
+  const [usageData, setUsageData] = useState<number[]>(FALLBACK_usageData)
+  const [totalCalls, setTotalCalls] = useState(124840)
+  const [usageLoading, setUsageLoading] = useState(true)
+
+  // Load API usage data on mount
+  useEffect(() => {
+    if (!user) { setUsageLoading(false); return }
+    fetch('/api/v1/my/api-usage')
+      .then(r => r.ok ? r.json() : null)
+      .then(json => {
+        if (json?.data?.daily && Array.isArray(json.data.daily) && json.data.daily.length > 0) {
+          setUsageData(json.data.daily as number[])
+        }
+        if (typeof json?.data?.total === 'number') {
+          setTotalCalls(json.data.total)
+        }
+      })
+      .catch(() => { /* Keep fallback data */ })
+      .finally(() => setUsageLoading(false))
+  }, [user])
+
   // Load real API keys on mount
   useEffect(() => {
     if (!user) { setKeysLoading(false); return }
@@ -177,9 +199,9 @@ export default function DeveloperPage() {
   const toggleEvent = (ev: string) =>
     setSelectedEvents(prev => prev.includes(ev) ? prev.filter(e => e !== ev) : [...prev, ev])
 
-  const totalCalls = 124840
   const remaining = 1000000 - totalCalls
   const usedPct = Math.round((totalCalls / 1000000) * 100)
+  const maxUsage = usageData.length > 0 ? Math.max(...usageData) : 1
 
   if (profileLoading) {
     return (
@@ -439,7 +461,10 @@ export default function DeveloperPage() {
             <div className={DS.card.elevated + " " + DS.card.padding}>
               <div className="flex items-center justify-between mb-3">
                 <p className={DS.text.cardSubtitle}>이번달 API 사용량</p>
-                <span className={DS.text.caption}>{displayTier} Plan · 월 1,000,000건</span>
+                <div className="flex items-center gap-2">
+                  {usageLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--color-text-muted)]" />}
+                  <span className={DS.text.caption}>{displayTier} Plan · 월 1,000,000건</span>
+                </div>
               </div>
               <div className="h-2 bg-[var(--color-surface-sunken)] rounded-full overflow-hidden mb-2">
                 <div className="h-full bg-[var(--color-brand-mid)] rounded-full transition-all" style={{ width: `${usedPct}%` }} />
@@ -458,7 +483,7 @@ export default function DeveloperPage() {
                 <p className={DS.text.cardSubtitle}>API 호출 현황 (최근 30일)</p>
               </div>
               <div className="relative h-36">
-                <svg viewBox={`0 0 ${USAGE_DATA.length * 16} 120`} className="w-full h-full" preserveAspectRatio="none">
+                <svg viewBox={`0 0 ${usageData.length * 16} 120`} className="w-full h-full" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="var(--color-brand-mid)" stopOpacity="0.3" />
@@ -467,12 +492,12 @@ export default function DeveloperPage() {
                   </defs>
                   {/* Area fill */}
                   <path
-                    d={`M0,120 ${USAGE_DATA.map((v, i) => `L${i * 16},${120 - (v / maxUsage) * 110}`).join(' ')} L${(USAGE_DATA.length - 1) * 16},120 Z`}
+                    d={`M0,120 ${usageData.map((v, i) => `L${i * 16},${120 - (v / maxUsage) * 110}`).join(' ')} L${(usageData.length - 1) * 16},120 Z`}
                     fill="url(#lineGrad)"
                   />
                   {/* Line */}
                   <polyline
-                    points={USAGE_DATA.map((v, i) => `${i * 16},${120 - (v / maxUsage) * 110}`).join(' ')}
+                    points={usageData.map((v, i) => `${i * 16},${120 - (v / maxUsage) * 110}`).join(' ')}
                     fill="none" stroke="var(--color-brand-mid)" strokeWidth="2" strokeLinejoin="round"
                   />
                 </svg>

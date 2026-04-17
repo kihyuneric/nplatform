@@ -7,12 +7,12 @@
  * 신용정보법 제35조(신용정보 열람청구권) 준수
  */
 
-import { useState, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import {
   ChevronLeft, ShieldCheck, Eye, Download, Trash2,
-  AlertCircle, Clock, FileText, Filter, CheckCircle2,
+  AlertCircle, Clock, FileText, Filter, CheckCircle2, Loader2,
 } from "lucide-react"
 
 const C = {
@@ -37,7 +37,8 @@ interface AccessLogRow {
   ip: string
 }
 
-const ACCESS_LOG: AccessLogRow[] = [
+// Sample data used as fallback when API is unavailable
+const SAMPLE_ACCESS_LOG: AccessLogRow[] = [
   { id: "log-001", time: "2026-04-07 14:32", listing_id: "npl-2026-0412", field: "등기부등본 원본",      tier: "L2", action: "VIEW",          ip: "203.***.***.41" },
   { id: "log-002", time: "2026-04-07 14:28", listing_id: "npl-2026-0412", field: "감정평가서 원본",        tier: "L2", action: "DOWNLOAD",      ip: "203.***.***.41" },
   { id: "log-003", time: "2026-04-07 14:15", listing_id: "npl-2026-0412", field: "데이터룸 입장",          tier: "L3", action: "VIEW",          ip: "203.***.***.41" },
@@ -69,11 +70,33 @@ const PII_CATEGORIES = [
 export default function PrivacyPage() {
   const [filter, setFilter] = useState<"ALL" | LogAction>("ALL")
   const [requested, setRequested] = useState(false)
+  const [accessLog, setAccessLog] = useState<AccessLogRow[]>(SAMPLE_ACCESS_LOG)
+  const [logLoading, setLogLoading] = useState(true)
+
+  // Fetch real PII access log from API; fall back to sample data on failure
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/v1/my/pii-log")
+        if (res.ok) {
+          const json = await res.json()
+          if (Array.isArray(json.data) && json.data.length > 0) {
+            setAccessLog(json.data as AccessLogRow[])
+          }
+        }
+      } catch {
+        // Keep sample data on error
+      } finally {
+        setLogLoading(false)
+      }
+    }
+    load()
+  }, [])
 
   const rows = useMemo(() => {
-    if (filter === "ALL") return ACCESS_LOG
-    return ACCESS_LOG.filter(r => r.action === filter)
-  }, [filter])
+    if (filter === "ALL") return accessLog
+    return accessLog.filter(r => r.action === filter)
+  }, [filter, accessLog])
 
   return (
     <main style={{ backgroundColor: C.bg0, color: "#E2E8F0", minHeight: "100vh" }}>
@@ -130,11 +153,13 @@ export default function PrivacyPage() {
                 marginBottom: 14, flexWrap: "wrap", gap: 12,
               }}
             >
-              <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", gap: 8 }}>
                 PII Access Log
+                {logLoading && <Loader2 size={12} style={{ animation: "spin 1s linear infinite", color: C.lt4 }} />}
                 <span style={{ marginLeft: 10, fontSize: 11, color: C.lt4, fontWeight: 600 }}>
                   내가 열람한 L1~L3 자료 이력
                 </span>
+                <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <Filter size={13} color={C.lt4} />
