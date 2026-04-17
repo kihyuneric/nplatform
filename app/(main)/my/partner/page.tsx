@@ -541,7 +541,10 @@ export default function PartnerDashboardPage() {
                     <p className={DS.text.body}>{asset.name}</p>
                     <p className={DS.text.captionLight}>{asset.format} · {asset.size}</p>
                   </div>
-                  <button className={DS.text.link + ' flex items-center gap-1.5 text-[0.8125rem]'}>
+                  <button
+                    onClick={() => toast('준비 중입니다')}
+                    className={DS.text.link + ' flex items-center gap-1.5 text-[0.8125rem]'}
+                  >
                     <Download className="h-3.5 w-3.5" />다운로드
                   </button>
                 </div>

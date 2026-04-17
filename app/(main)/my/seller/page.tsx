@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Plus, Heart, Gavel, CheckCircle2, TrendingUp, Package, Download } from 'lucide-react'
+import { Plus, Heart, Gavel, CheckCircle2, TrendingUp, Package, Download, Loader2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import DS, { formatKRW } from '@/lib/design-system'
 
@@ -150,11 +150,25 @@ export default function SellerDashboardPage() {
   }))
   const CHART: { month: string; views: number; interests: number }[] = []
   const VISITORS = [
-    { label: '총 매물 조회', value: `${sellerStats.views}회` },
-    { label: '활성 매물', value: `${sellerStats.active}건` },
-    { label: '총 관심', value: `${sellerStats.interests}건` },
-    { label: '완료 거래', value: `${sellerStats.completed}건` },
+    { label: '총 매물 조회', value: `${sellerStats?.views ?? 0}회` },
+    { label: '활성 매물', value: `${sellerStats?.active ?? 0}건` },
+    { label: '총 관심', value: `${sellerStats?.interests ?? 0}건` },
+    { label: '완료 거래', value: `${sellerStats?.completed ?? 0}건` },
   ]
+
+  if (sellerLoading) {
+    return (
+      <div className={DS.page.wrapper}>
+        <div className={DS.page.container + ' ' + DS.page.paddingTop}>
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="h-6 w-6 animate-spin text-[var(--color-brand-mid)]" />
+            <span className="ml-3 text-[var(--color-text-muted)]">매도자 데이터를 불러오는 중...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={DS.page.wrapper}>
       {/* Header */}

@@ -53,71 +53,6 @@ interface NotificationCenterProps {
   userId?: string | null
 }
 
-// ─── Mock Data ────────────────────────────────────────────────────────────
-
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    user_id: 'u1',
-    type: 'MATCHING',
-    title: '새로운 매칭 매물이 있습니다',
-    body: '강남 아파트 NPL 매물이 귀하의 투자 조건과 87% 일치합니다.',
-    link: '/market/search',
-    is_read: false,
-    created_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '2',
-    user_id: 'u1',
-    type: 'CONTRACT',
-    title: '계약 상태가 업데이트되었습니다',
-    body: '딜룸 #DR-2024-001의 계약이 "검토중" 상태로 변경되었습니다.',
-    link: '/deals/1',
-    is_read: false,
-    created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '3',
-    user_id: 'u1',
-    type: 'DEAL_ROOM',
-    title: '딜룸에 새 메시지',
-    body: '김철수님이 딜룸에 새 메시지를 남겼습니다.',
-    link: '/deals/1',
-    is_read: true,
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '4',
-    user_id: 'u1',
-    type: 'KYC',
-    title: 'KYC 인증이 승인되었습니다',
-    body: '귀하의 기관 인증이 완료되어 모든 서비스를 이용하실 수 있습니다.',
-    link: '/profile',
-    is_read: true,
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '5',
-    user_id: 'u1',
-    type: 'ALERT',
-    title: '맞춤 알림: 새 경매 매물',
-    body: '설정하신 조건(경기 아파트, 5억 이하)에 맞는 매물 3건이 등록되었습니다.',
-    link: '/market/search',
-    is_read: false,
-    created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '6',
-    user_id: 'u1',
-    type: 'SYSTEM',
-    title: '시스템 점검 안내',
-    body: '2024년 3월 25일 새벽 2시~4시 정기 점검이 있을 예정입니다.',
-    link: undefined,
-    is_read: true,
-    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-]
-
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 const TAB_CONFIG: Record<NotificationTab, { label: string; types?: NotificationType[] }> = {
@@ -372,7 +307,12 @@ export function NotificationCenter({
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     )
-    onMarkRead?.(id)
+    if (onMarkRead) {
+      onMarkRead(id)
+    } else {
+      // Fallback: call the read endpoint directly
+      fetch(`/api/v1/notifications/${id}/read`, { method: 'PATCH' }).catch(() => {/* silent */})
+    }
   }
 
   const handleMarkAllRead = async () => {
