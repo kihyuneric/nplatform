@@ -25,8 +25,10 @@ interface MonteCarloChartProps {
   probabilities: { positive: number; above10: number; loss: number }
 }
 
+// 단위: due-diligence report에서 bin/statistics/percentiles = 금액(원), frequency/probabilities = 0~1 분수.
 function toEok(v: number): string {
-  return (v / 100000000).toFixed(1)
+  const safe = isFinite(v) ? v : 0
+  return (safe / 100000000).toFixed(1)
 }
 
 function formatBin(start: number, end: number): string {
@@ -39,9 +41,10 @@ export default function MonteCarloChart({
   percentiles,
   probabilities,
 }: MonteCarloChartProps) {
+  // frequency는 0~1 분수이므로 × 100 으로 %로 변환 후 표시
   const data = histogram.map((bin) => ({
     name: formatBin(bin.binStart, bin.binEnd),
-    frequency: +(bin.frequency * 100).toFixed(2),
+    frequency: +(Math.max(0, Math.min(1, isFinite(bin.frequency) ? bin.frequency : 0)) * 100).toFixed(2),
     binMid: (bin.binStart + bin.binEnd) / 2,
   }))
 
@@ -63,6 +66,10 @@ export default function MonteCarloChart({
     histogram.find((b) => b.binStart <= statistics.median && b.binEnd > statistics.median)?.binEnd ?? statistics.median
   )
 
+  // probabilities.loss는 0~1 분수. NaN/Infinity/범위 이탈 방어 후 × 100으로 %.
+  const rawLoss = isFinite(probabilities.loss) ? probabilities.loss : 0
+  const lossPct = Math.max(0, Math.min(100, rawLoss * 100))
+
   const stats = [
     {
       label: "평균",
@@ -81,7 +88,7 @@ export default function MonteCarloChart({
     },
     {
       label: "손실확률",
-      value: `${(probabilities.loss * 100).toFixed(1)}%`,
+      value: `${lossPct.toFixed(1)}%`,
       color: "var(--color-negative)",
     },
   ]

@@ -146,12 +146,16 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── 3.5. Admin route protection ──────────────────
-  // Requires Supabase session. Dev mode skips check to allow page previews.
+  // Requires Supabase session OR dev_user_active cookie (admin/admin 개발 바이패스).
   if (!isApi && isPathMatch(pathname, ['/admin']) && process.env.NODE_ENV !== 'development') {
-    const hasSession = request.cookies.getAll().some(
+    const hasSupabaseSession = request.cookies.getAll().some(
       c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
     )
-    if (!hasSession) {
+    const hasDevUser = request.cookies.get('dev_user_active')?.value === '1'
+    const devRole = request.cookies.get('active_role')?.value
+    const isDevAdmin = hasDevUser && (devRole === 'SUPER_ADMIN' || devRole === 'ADMIN')
+
+    if (!hasSupabaseSession && !isDevAdmin) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('redirect', pathname)
@@ -162,14 +166,15 @@ export async function middleware(request: NextRequest) {
 
   // ── 3.6. Auth-required routes: only /my/* strictly requires session ──
   // All feature pages (/analysis, /deals, etc.) are publicly browsable.
-  // /my requires actual login — personal data & settings.
-  // Dev mode skips check to allow page previews.
+  // /my requires actual login (Supabase session or dev_user_active cookie).
   const AUTH_REQUIRED = ['/my']
   if (!isApi && isPathMatch(pathname, AUTH_REQUIRED) && process.env.NODE_ENV !== 'development') {
-    const hasSession = request.cookies.getAll().some(
+    const hasSupabaseSession = request.cookies.getAll().some(
       c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
     )
-    if (!hasSession) {
+    const hasDevUser = request.cookies.get('dev_user_active')?.value === '1'
+
+    if (!hasSupabaseSession && !hasDevUser) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('redirect', pathname)

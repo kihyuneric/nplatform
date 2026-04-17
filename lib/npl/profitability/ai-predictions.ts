@@ -158,20 +158,32 @@ export async function runMonteCarloSimulation(
 
   const mcResult = runMonteCarlo(mcInput)
 
-  // 기존 MC 결과를 수익성 분석 형태로 변환
-  const distribution = mcResult.sampleResults.map(s => s.return_pct * 100)
+  // ⚠️ monte-carlo.ts 내부에서 이미 % 단위 변환 완료:
+  //  - calculateReturn()의 annualizedReturn이 이미 × 100 적용됨
+  //  - probabilities.loss도 이미 0~100 스케일
+  // 여기서 다시 × 100을 곱하면 10000%가 되는 버그였음.
+  const sanitize = (v: number): number => {
+    if (!isFinite(v) || isNaN(v)) return 0
+    return Math.max(-500, Math.min(500, v))
+  }
+  const sanitizeProb = (v: number): number => {
+    if (!isFinite(v) || isNaN(v)) return 0
+    return Math.max(0, Math.min(100, v))
+  }
+
+  const distribution = mcResult.sampleResults.map(s => sanitize(s.return_pct))
   distribution.sort((a, b) => a - b)
 
   return {
     iterations: mcResult.iterations,
-    p10: mcResult.percentiles.p10 * 100,
-    p25: mcResult.percentiles.p25 * 100,
-    p50: mcResult.percentiles.p50 * 100,
-    p75: mcResult.percentiles.p75 * 100,
-    p90: mcResult.percentiles.p90 * 100,
-    mean: mcResult.statistics.mean * 100,
-    stdDev: mcResult.statistics.stdDev * 100,
-    lossProb: mcResult.probabilities.loss * 100,
+    p10: sanitize(mcResult.percentiles.p10),
+    p25: sanitize(mcResult.percentiles.p25),
+    p50: sanitize(mcResult.percentiles.p50),
+    p75: sanitize(mcResult.percentiles.p75),
+    p90: sanitize(mcResult.percentiles.p90),
+    mean: sanitize(mcResult.statistics.mean),
+    stdDev: sanitize(mcResult.statistics.stdDev),
+    lossProb: sanitizeProb(mcResult.probabilities.loss),
     distribution,
   }
 }
