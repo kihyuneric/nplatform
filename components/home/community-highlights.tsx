@@ -12,8 +12,8 @@ const HIGHLIGHTS = [
     date: '2026.03.18',
     icon: BookOpen,
     href: '/community/expert',
-    color: 'text-blue-600',
-    bg: 'bg-blue-50',
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10',
   },
   {
     category: '시장 분석',
@@ -22,8 +22,8 @@ const HIGHLIGHTS = [
     date: '2026.03.15',
     icon: Award,
     href: '/market-intelligence/reports',
-    color: 'text-emerald-600',
-    bg: 'bg-emerald-50',
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-500/10',
   },
   {
     category: '커뮤니티',
@@ -32,8 +32,8 @@ const HIGHLIGHTS = [
     date: '2026.03.12',
     icon: MessageCircle,
     href: '/community',
-    color: 'text-violet-600',
-    bg: 'bg-violet-50',
+    color: 'text-violet-400',
+    bg: 'bg-violet-500/10',
   },
 ]
 
@@ -42,8 +42,8 @@ export function CommunityHighlights() {
     <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">커뮤니티 & 인사이트</h2>
-          <p className="mt-1 text-sm text-gray-500">전문가 분석과 커뮤니티 소식</p>
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">커뮤니티 & 인사이트</h2>
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">전문가 분석과 커뮤니티 소식</p>
         </div>
         <Link href="/community" className="text-sm text-[#2E75B6] hover:underline flex items-center gap-1">
           더보기 <ArrowRight className="w-4 h-4" />
@@ -59,17 +59,17 @@ export function CommunityHighlights() {
           >
             <Link
               href={item.href}
-              className="block bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 h-full"
+              className="block bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border-subtle)] p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 h-full"
             >
               <div className="flex items-center gap-2 mb-3">
                 <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${item.bg} ${item.color}`}>
                   <item.icon className="w-3 h-3" />
                   {item.category}
                 </span>
-                <span className="text-xs text-gray-400">{item.date}</span>
+                <span className="text-xs text-[var(--color-text-muted)]">{item.date}</span>
               </div>
-              <h3 className="font-semibold text-gray-900 text-[15px] mb-2 line-clamp-2">{item.title}</h3>
-              <p className="text-xs text-gray-500">{item.author}</p>
+              <h3 className="font-semibold text-[var(--color-text-primary)] text-[15px] mb-2 line-clamp-2">{item.title}</h3>
+              <p className="text-xs text-[var(--color-text-muted)]">{item.author}</p>
             </Link>
           </motion.div>
         ))}

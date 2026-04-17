@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Errors, fromUnknown } from '@/lib/api-error'
-import { query, update } from '@/lib/data-layer'
+import { Errors } from '@/lib/api-error'
+import { getAuthUserWithRole } from '@/lib/auth/get-user'
+import { getSupabaseAdmin } from '@/lib/supabase/server'
 
 // ─── Mock Fallback Data ─────────────────────────────────────
 const MOCK_SETTLEMENTS = [
@@ -48,26 +49,52 @@ const MOCK_SETTLEMENTS = [
   },
 ]
 
-// ─── GET: List pending settlements ──────────────────────────
+// ─── Admin check helper ──────────────────────────────────────
+async function requireAdmin() {
+  const user = await getAuthUserWithRole()
+  if (!user) return { err: Errors.unauthorized('인증이 필요합니다.'), user: null }
+  if (user.role !== 'admin') return { err: Errors.forbidden('관리자만 접근할 수 있습니다.'), user: null }
+  return { err: null, user }
+}
+
+// ─── GET: List all partner settlements (admin) ───────────────
 export async function GET(request: NextRequest) {
+  const { err } = await requireAdmin()
+  if (err) return err
+
   const { searchParams } = new URL(request.url)
   const status = searchParams.get('status') || 'PENDING'
+  const page = parseInt(searchParams.get('page') ?? '1', 10)
+  const limit = parseInt(searchParams.get('limit') ?? '20', 10)
+  const offset = (page - 1) * limit
 
   try {
-    const { data, total, _source } = await query('partner_settlements', {
-      filters: status !== 'ALL' ? { status: status === 'PENDING' ? '대기' : status } : undefined,
-      orderBy: 'requested_at',
-      order: 'desc',
-    })
+    const supabase = getSupabaseAdmin()
 
-    if (_source === 'supabase' && data.length > 0) {
-      const totalAmount = data.reduce((sum: number, s: Record<string, unknown>) => sum + ((s.amount as number) || 0), 0)
+    let query = supabase
+      .from('partner_settlements')
+      .select(`
+        *,
+        partners!inner(id, company_name, contact_name, tier)
+      `, { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+
+    if (status !== 'ALL') {
+      query = query.eq('status', status)
+    }
+
+    const { data, error, count } = await query
+
+    if (!error && data) {
+      const totalAmount = data.reduce((sum, s) => sum + ((s.amount as number) || 0), 0)
       return NextResponse.json({
         settlements: data,
         summary: {
-          total_pending: data.length,
+          total_count: count ?? data.length,
           total_amount: totalAmount,
         },
+        pagination: { page, limit, total: count ?? data.length },
         _source: 'supabase',
       })
     }
@@ -83,15 +110,18 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     settlements: filtered,
     summary: {
-      total_pending: filtered.length,
+      total_count: filtered.length,
       total_amount: filtered.reduce((sum, s) => sum + s.amount, 0),
     },
     _mock: true,
   })
 }
 
-// ─── POST: Process settlement (approve/reject) ─────────────
-export async function POST(request: NextRequest) {
+// ─── PATCH: Approve or reject a settlement (admin) ──────────
+export async function PATCH(request: NextRequest) {
+  const { err } = await requireAdmin()
+  if (err) return err
+
   try {
     const body = await request.json()
 
@@ -107,43 +137,51 @@ export async function POST(request: NextRequest) {
     }
 
     const isApprove = body.action === 'approve'
-    const newStatus = isApprove ? '완료' : '반려'
+    const newStatus = isApprove ? 'APPROVED' : 'REJECTED'
 
-    // Try to update via data-layer
-    try {
-      const { data, _source } = await update('partner_settlements', body.settlement_id, {
+    const supabase = getSupabaseAdmin()
+    const now = new Date().toISOString()
+
+    const { data, error } = await supabase
+      .from('partner_settlements')
+      .update({
         status: newStatus,
-        processed_at: new Date().toISOString(),
-        ...(body.reason && { reason: body.reason }),
+        approved_at: now,
+        ...(body.reason && { note: body.reason }),
       })
+      .eq('id', body.settlement_id)
+      .select()
+      .single()
 
-      if (_source === 'supabase') {
-        return NextResponse.json({
-          success: true,
-          settlement: data,
-          _source: 'supabase',
-        })
-      }
-    } catch {
-      // Fall through to mock response
+    if (!error && data) {
+      return NextResponse.json({
+        success: true,
+        settlement: data,
+        _source: 'supabase',
+      })
     }
 
+    // Mock fallback
     return NextResponse.json({
       success: true,
       settlement: {
         id: body.settlement_id,
-        status: isApprove ? 'APPROVED' : 'REJECTED',
-        processed_at: new Date().toISOString(),
-        processed_by: 'admin',
+        status: newStatus,
+        approved_at: now,
         ...(isApprove && {
           transfer_reference: `TRF-${Date.now()}`,
           estimated_transfer_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
         }),
-        ...(body.reason && { rejection_reason: body.reason }),
+        ...(body.reason && { note: body.reason }),
       },
       _mock: true,
     })
   } catch {
     return Errors.internal('Internal server error')
   }
+}
+
+// ─── POST: Alias kept for backwards-compat ──────────────────
+export async function POST(request: NextRequest) {
+  return PATCH(request)
 }

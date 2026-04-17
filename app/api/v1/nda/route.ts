@@ -10,7 +10,10 @@ export async function GET(request: NextRequest) {
     let userId = 'anonymous'
     try { const { data: { user } } = await supabase.auth.getUser(); if (user) userId = user.id } catch {}
     if (userId === 'anonymous') {
-      return NextResponse.json({ data: { signed: false, nda: null }, _mock: true })
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } },
+        { status: 401 }
+      )
     }
 
     const listingId = request.nextUrl.searchParams.get('listing_id')

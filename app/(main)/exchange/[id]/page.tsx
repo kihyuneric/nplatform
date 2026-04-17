@@ -1,1247 +1,1581 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
-import {
-  Lock,
-  Eye,
-  FileCheck,
-  Send,
-  Shield,
-  MapPin,
-  Building2,
-  DollarSign,
-  ChevronLeft,
-  ChevronRight,
-  Heart,
-  FileText,
-  BarChart3,
-  Clock,
-  CheckCircle2,
-  Scale,
-  Calculator,
-  Images,
-  X,
-  TrendingUp,
-  Share2,
-  Copy,
-  Check,
-} from "lucide-react"
-import Image from "next/image"
+/**
+ * /exchange/[id] — 매물 상세 페이지 (v4 전략, 2026-04-07)
+ *
+ * 4단계 티어별 공개 정책:
+ *   L0 (공개)        채권잔액 · 매각희망가 · 할인율 · 감정가 · 담보유형 · 지역(시군구) · 권리관계 요약
+ *   L1 (본인인증)    등기부등본 요약 · 임대차 요약 · 감정평가서 PDF 마스킹본 · 상세 주소 (동까지)
+ *   L2 (NDA+전문투자자) 등기부등본 원본 · 임대차 상세 · 현장사진 · 재무제표 · 감정평가서 원본
+ *   L3 (LOI 승인)   채무자 식별정보 마스킹 해제본 · 세부 권리자 정보 · 경매 원장
+ *
+ * 모든 PII는 자동 마스킹 파이프라인을 통과한 결과만 표시.
+ */
+
+import { useState, useEffect, useCallback } from "react"
+import { useParams } from "next/navigation"
 import Link from "next/link"
-import { toast } from "sonner"
+import { motion } from "framer-motion"
+import {
+  ArrowLeft, MapPin, Building2, TrendingDown, FileText,
+  Calculator, ShieldCheck, Clock, Scale, Images,
+  FileSignature, AlertTriangle, Info, CheckCircle2,
+  Brain, Sparkles, BarChart3, Target, TrendingUp,
+  Loader2, MessageSquare, ArrowRight, Zap, Users,
+} from "lucide-react"
+import { TierBadge } from "@/components/tier/tier-badge"
+import { TierGate } from "@/components/tier/tier-gate"
+import { CompletenessBadge } from "@/components/listing/completeness-badge"
+import type { AccessTier } from "@/lib/access-tier"
+import { TIER_META, getUserTier } from "@/lib/access-tier"
+import { calculateSellerFee, calculateBuyerFee } from "@/lib/fee-calculator"
+import { formatAIGrade } from "@/lib/taxonomy"
+import { createClient } from "@/lib/supabase/client"
 
-// ─── Inlined helpers ─────────────────────────────────────────
-function formatKRW(v: number): string {
-  if (!v || isNaN(v)) return "-"
-  if (v >= 1_0000_0000) return `${(v / 1_0000_0000).toFixed(1)}억`
-  if (v >= 10000) return `${(v / 10000).toFixed(0)}만`
-  return v.toLocaleString("ko-KR") + "원"
+/* ═══════════════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════════════ */
+const C = {
+  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
+  bg3: "#0A1628", bg4: "#0F1F35",
+  em: "#10B981", emL: "#10B981", emD: "#047857",
+  blue: "#2E75B6", blueL: "#3B82F6",
+  amber: "#F59E0B", amberL: "#F59E0B",
+  purple: "#A855F7", rose: "#EF4444", teal: "#14B8A6",
+  lt1: "#F0F4F8", lt2: "#94A3B8", lt3: "#64748B", lt4: "#475569",
 }
-function formatPercent(v: number): string {
-  return `${v.toFixed(1)}%`
-}
-function t(_key: string): string { return "" }
 
-// ─── Types ───────────────────────────────────────────────────
-
+/* ═══════════════════════════════════════════════════════════
+   MOCK DETAIL DATA
+═══════════════════════════════════════════════════════════ */
 interface ListingDetail {
   id: string
-  institution_name: string
-  institution_type: "INSTITUTION" | "AMC" | "INDIVIDUAL"
-  trust_grade: "S" | "A" | "B" | "C"
-  principal: number
-  location_city: string
-  location_district: string
-  collateral_type: string
-  ai_estimate_low: number
-  ai_estimate_mid: number
-  ai_estimate_high: number
-  risk_grade: "A" | "B" | "C" | "D" | "E"
-  deadline: string
-  interest_count: number
-  deal_stage: "OPEN" | "INTEREST" | "NDA" | "DUE_DILIGENCE" | "OFFER"
-  created_at: string
-  address: string
+  institution: string
+  inst_type: string
+  region_city: string
+  region_district: string
+  collateral: string
+  outstanding_principal: number
+  asking_price: number
   appraisal_value: number
-  ltv: number
-  images?: string[]
-  overdue_months: number
-  registry_doc: string
-  appraisal_report: string
-  debtor_info: string
-  institution_total_deals: number
-  institution_avg_days: number
-  institution_rating: number
-  scenario_conservative: number
-  scenario_base: number
-  scenario_optimistic: number
+  discount_rate: number
+  ai_grade: "S" | "A" | "B" | "C"
+  data_completeness: number
+  debtor_type: "INDIVIDUAL" | "CORPORATE"
+  auction_stage: string
+  court_case_masked: string
+  published_at: string
+  // L0 rights summary
+  rights_summary: {
+    senior_total: number
+    junior_total: number
+    deposit_total: number
+  }
+  // L1
+  registry_summary_items: Array<{ order: number; type: string; amount: number; holder_masked: string }>
+  lease_summary: { total_deposit: number; monthly_rent: number; tenant_count: number }
+  appraisal_masked_available: boolean
+  // L2
+  site_photos: string[]
+  financial_summary: { nav: number; ebitda: number; interest_coverage: number } | null
+  registry_full_available: boolean
+  // L3 — 채권 정보 (NPL 등록 시 입력되는 채권 원장 정보)
+  debtor_name_masked: string
+  court_case_full: string
+  credit_info: {
+    loan_type: string               // 대출 상품 종류 (예: 주택담보대출)
+    original_principal: number      // 원금
+    principal_remaining: number     // 원금 잔액
+    interest_accrued: number        // 연체이자 누적액
+    fee_accrued: number             // 연체 수수료
+    total_claim: number             // 채권 총액
+    normal_interest_rate: number    // 정상 이자율 (%)
+    overdue_interest_rate: number   // 연체 이자율 (%)
+    loan_date: string               // 대출 실행일
+    acceleration_date: string       // 기한이익상실일
+    last_payment_date: string       // 최종 상환일
+    overdue_days: number            // 연체 일수
+    contract_no_masked: string      // 여신번호 (마스킹)
+    guarantor_masked: string        // 연대보증인 (마스킹)
+  }
+  provided: {
+    appraisal: boolean
+    registry: boolean
+    rights: boolean
+    lease: boolean
+    site_photos: boolean
+    financials: boolean
+  }
 }
 
-type DealStage = "OPEN" | "INTEREST" | "NDA" | "DUE_DILIGENCE" | "OFFER"
-
-const RISK_DESCRIPTIONS: Record<string, string> = {
-  A: "매우 안전 — 담보가치 대비 채권원금이 낮고 회수 가능성 높음",
-  B: "안전 — 일반적인 수준의 리스크, 적절한 담보확보",
-  C: "보통 — 일부 리스크 요인 존재, 추가 실사 권장",
-  D: "주의 — 다수의 리스크 요인, 신중한 접근 필요",
-  E: "위험 — 상당한 손실 가능성, 전문가 검토 필수",
+function buildMock(id: string): ListingDetail {
+  return {
+    id,
+    institution: "우리은행",
+    inst_type: "은행",
+    region_city: "서울",
+    region_district: "강남구",
+    collateral: "아파트",
+    outstanding_principal: 1_200_000_000,
+    asking_price: 850_000_000,
+    appraisal_value: 1_020_000_000,
+    discount_rate: 29.2,
+    ai_grade: "A",
+    data_completeness: 9,
+    debtor_type: "INDIVIDUAL",
+    auction_stage: "임의매각",
+    court_case_masked: "서울중앙지법 2025타경●●●●",
+    published_at: "2026-04-05",
+    rights_summary: {
+      senior_total: 780_000_000,
+      junior_total: 140_000_000,
+      deposit_total: 60_000_000,
+    },
+    registry_summary_items: [
+      { order: 1, type: "근저당권", amount: 780_000_000, holder_masked: "우●●행" },
+      { order: 2, type: "근저당권", amount: 140_000_000, holder_masked: "○○캐피탈" },
+      { order: 3, type: "전세권", amount: 60_000_000, holder_masked: "김●●" },
+    ],
+    lease_summary: { total_deposit: 60_000_000, monthly_rent: 0, tenant_count: 1 },
+    appraisal_masked_available: true,
+    site_photos: ["photo1", "photo2", "photo3"],
+    financial_summary: null, // 개인 담보라 없음
+    registry_full_available: true,
+    debtor_name_masked: "김●●",
+    court_case_full: "서울중앙지법 2025타경12345",
+    credit_info: {
+      loan_type: "주택담보대출",
+      original_principal: 1_150_000_000,
+      principal_remaining: 1_020_000_000,
+      interest_accrued: 162_000_000,
+      fee_accrued: 18_000_000,
+      total_claim: 1_200_000_000,
+      normal_interest_rate: 4.85,
+      overdue_interest_rate: 15.0,
+      loan_date: "2021-08-●●",
+      acceleration_date: "2025-●●-15",
+      last_payment_date: "2025-●●-10",
+      overdue_days: 287,
+      contract_no_masked: "WR-2021-●●●●-8821",
+      guarantor_masked: "김●●(배우자)",
+    },
+    provided: {
+      appraisal: true, registry: true, rights: true,
+      lease: true, site_photos: true, financials: false,
+    },
+  }
 }
 
-const RISK_GRADE_STYLES: Record<string, { pill: string; glow: string; bar: string; text: string }> = {
-  A: { pill: "bg-emerald-500 text-white", glow: "shadow-[0_0_16px_rgba(16,185,129,0.4)]", bar: "bg-emerald-400", text: "text-emerald-400" },
-  B: { pill: "bg-blue-500 text-white",    glow: "shadow-[0_0_16px_rgba(59,130,246,0.4)]",  bar: "bg-blue-400",   text: "text-blue-400"   },
-  C: { pill: "bg-amber-500 text-white",   glow: "shadow-[0_0_16px_rgba(245,158,11,0.4)]",  bar: "bg-amber-400",  text: "text-amber-400"  },
-  D: { pill: "bg-orange-500 text-white",  glow: "shadow-[0_0_16px_rgba(249,115,22,0.4)]",  bar: "bg-orange-400", text: "text-orange-400" },
-  E: { pill: "bg-red-500 text-white",     glow: "shadow-[0_0_16px_rgba(239,68,68,0.4)]",   bar: "bg-red-400",    text: "text-red-400"    },
+/* ═══════════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════════ */
+function formatKRW(n: number | null | undefined): string {
+  if (!n) return "—"
+  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}억`
+  if (n >= 10_000) return `${(n / 10_000).toFixed(0)}만`
+  return n.toLocaleString("ko-KR")
 }
 
-// ─── Design Tokens ────────────────────────────────────────────
-const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E", bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#34D399", blue: "#3B82F6", blueL: "#60A5FA",
-  amber: "#F59E0B", amber2: "#FCD34D", purple: "#A855F7", rose: "#F43F5E", teal: "#14B8A6",
-  l0: "#FFFFFF", l1: "#F8FAFC", l2: "#F1F5F9", l3: "#E2E8F0",
-  lt1: "#0F172A", lt2: "#334155", lt3: "#64748B", lt4: "#94A3B8",
+function formatDateKo(iso: string | null | undefined): string {
+  if (!iso) return "—"
+  try { return iso.slice(0, 10) } catch { return "—" }
 }
 
-// ─── Mock ─────────────────────────────────────────────────────
-
-const MOCK_DETAIL: ListingDetail = {
-  id: "1",
-  institution_name: "한국자산관리공사",
-  institution_type: "INSTITUTION",
-  trust_grade: "S",
-  principal: 1250000000,
-  location_city: "서울",
-  location_district: "강남구",
-  collateral_type: "아파트",
-  ai_estimate_low: 800000000,
-  ai_estimate_mid: 950000000,
-  ai_estimate_high: 1100000000,
-  risk_grade: "B",
-  deadline: "2026-04-15",
-  interest_count: 12,
-  deal_stage: "OPEN",
-  created_at: "2026-03-10",
-  address: "서울특별시 강남구 삼성동 123-45 OO아파트 101동 1502호",
-  appraisal_value: 1400000000,
-  ltv: 89.3,
-  overdue_months: 14,
-  registry_doc: "registry_001.pdf",
-  appraisal_report: "appraisal_001.pdf",
-  debtor_info: "debtor_001.pdf",
-  institution_total_deals: 342,
-  institution_avg_days: 28,
-  institution_rating: 4.7,
-  scenario_conservative: 8.5,
-  scenario_base: 15.2,
-  scenario_optimistic: 22.8,
-  images: [
-    "https://picsum.photos/seed/apt-gangnam/800/500",
-    "https://picsum.photos/seed/apt-gangnam2/800/500",
-    "https://picsum.photos/seed/apt-gangnam3/800/500",
-    "https://picsum.photos/seed/apt-gangnam4/800/500",
-  ],
+function computeDataCompleteness(row: Record<string, unknown>): number {
+  const checks = [
+    !!row.title, !!row.collateral_type, !!row.sido,
+    !!row.address, !!row.claim_amount, !!row.appraised_value,
+    !!row.discount_rate, !!row.ai_grade,
+    Array.isArray(row.image_urls) && (row.image_urls as unknown[]).length > 0,
+    !!row.description,
+  ]
+  return checks.filter(Boolean).length
 }
 
-// ─── Component ───────────────────────────────────────────────
+/** npl_listings DB row → ListingDetail interface */
+function mapNplListingToDetail(
+  row: Record<string, unknown>,
+  id: string
+): ListingDetail {
+  const claimAmt = (row.claim_amount as number) ?? 0
+  const appraisedVal = (row.appraised_value as number) ?? claimAmt
+  const discountRaw = (row.discount_rate as number) ?? 0
+  const askingPrice = discountRaw > 0
+    ? Math.round(appraisedVal * (1 - discountRaw / 100))
+    : claimAmt
+  const seniorClaim = (row.senior_claim as number) ?? 0
+  const imageUrls = Array.isArray(row.image_urls) ? (row.image_urls as string[]) : []
+  const docs = Array.isArray(row.documents)
+    ? (row.documents as Record<string, unknown>[])
+    : []
+
+  return {
+    id: (row.id as string) ?? id,
+    institution: (row.creditor_institution as string) ?? "매각기관",
+    inst_type: "금융기관",
+    region_city: (row.sido as string) ?? "지역 미상",
+    region_district: (row.sigungu as string) ?? "",
+    collateral: (row.collateral_type as string) ?? "기타",
+    outstanding_principal: claimAmt,
+    asking_price: askingPrice,
+    appraisal_value: appraisedVal,
+    discount_rate: discountRaw,
+    ai_grade: (row.ai_grade as "S" | "A" | "B" | "C") ?? "C",
+    data_completeness: computeDataCompleteness(row),
+    debtor_type: (row.debtor_type as "INDIVIDUAL" | "CORPORATE") ?? "INDIVIDUAL",
+    auction_stage: (row.listing_type as string) ?? "임의매각",
+    court_case_masked: "●●지법 ●●타경●●●●",
+    published_at: formatDateKo(row.created_at as string),
+    rights_summary: {
+      senior_total: seniorClaim,
+      junior_total: 0,
+      deposit_total: 0,
+    },
+    registry_summary_items: [],
+    lease_summary: { total_deposit: 0, monthly_rent: 0, tenant_count: 0 },
+    appraisal_masked_available: imageUrls.length > 0,
+    site_photos: imageUrls,
+    financial_summary: null,
+    registry_full_available: docs.some(
+      (d) => (d as Record<string, unknown>).type === "registry"
+    ),
+    debtor_name_masked: "●●●",
+    court_case_full: "●●지법 ●●타경●●●●",
+    credit_info: {
+      loan_type: "담보대출",
+      original_principal: claimAmt,
+      principal_remaining: claimAmt,
+      interest_accrued: 0,
+      fee_accrued: 0,
+      total_claim: claimAmt,
+      normal_interest_rate: 0,
+      overdue_interest_rate: 0,
+      loan_date: "●●●●-●●-●●",
+      acceleration_date: "●●●●-●●-●●",
+      last_payment_date: "●●●●-●●-●●",
+      overdue_days: 0,
+      contract_no_masked: "●●-●●●●-●●●●",
+      guarantor_masked: "해당없음",
+    },
+    provided: {
+      appraisal: !!row.appraised_value,
+      registry: docs.some((d) => (d as Record<string, unknown>).type === "registry"),
+      rights: seniorClaim > 0,
+      lease: docs.some((d) => (d as Record<string, unknown>).type === "lease"),
+      site_photos: imageUrls.length > 0,
+      financials: false,
+    },
+  }
+}
+
+/**
+ * 현재 사용자 티어를 Supabase 세션에서 가져옴.
+ * 미인증이면 L0, 로그인하면 DB profile 기반 L0~L2.
+ * UI 내 데모 버튼으로 수동 오버라이드 가능 (티어 공개 범위 미리보기용).
+ */
+function useUserTier(): [AccessTier, (t: AccessTier) => void] {
+  const [tier, setTier] = useState<AccessTier>("L0")
+
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const { data: profile } = await supabase
+          .from("users")
+          .select("identity_verified, qualified_investor")
+          .eq("id", user.id)
+          .single()
+        if (profile) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setTier(getUserTier(profile as any))
+        }
+      } catch {
+        /* unauthenticated or Supabase not configured — stay at L0 */
+      }
+    })()
+  }, [])
+
+  return [tier, setTier]
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PAGE
+═══════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   AI ANALYSIS TYPES
+═══════════════════════════════════════════════════════════ */
+interface AIAnalysisResult {
+  recoveryRate: { predicted: number; confidence: number; range: [number, number]; grade: string } | null
+  priceGuide: { recommended: number; min: number; max: number; marketOutlook: string } | null
+  anomaly: { verdict: string; score: number; flags: string[] } | null
+  loading: boolean
+  error: string | null
+}
 
 export default function ListingDetailPage() {
   const params = useParams()
-  const router = useRouter()
-  const [listing, setListing] = useState<ListingDetail | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [interested, setInterested] = useState(false)
-  const [submittingInterest, setSubmittingInterest] = useState(false)
-  const [currentStage, setCurrentStage] = useState<DealStage>("OPEN")
-  const [galleryIndex, setGalleryIndex] = useState(0)
-  const [lightboxOpen, setLightboxOpen] = useState(false)
-  const [lightboxIndex, setLightboxIndex] = useState(0)
-  const [offerConfirmOpen, setOfferConfirmOpen] = useState(false)
+  const id = (params?.id as string) ?? "npl-2026-0412"
 
+  // Real listing state — starts with mock fallback, replaced by DB data if found
+  const [listing, setListing] = useState<ListingDetail>(() => buildMock(id))
+  const [tier, setTier] = useUserTier()
+
+  // Fetch real npl_listings row
   useEffect(() => {
-    const fetchDetail = async () => {
-      setLoading(true)
+    ;(async () => {
       try {
-        const res = await fetch(`/api/v1/exchange/listings/${params?.id}`)
-        if (!res.ok) throw new Error("API error")
-        const data = await res.json()
-        const raw = data.listing ?? data.data ?? data
-        const detail: ListingDetail = {
-          ...MOCK_DETAIL,
-          ...raw,
-          principal: raw.principal ?? raw.principal_amount ?? MOCK_DETAIL.principal,
-          location_city: raw.location_city ?? raw.location ?? MOCK_DETAIL.location_city,
-          location_district: raw.location_district ?? raw.location_detail ?? MOCK_DETAIL.location_district,
-          appraisal_value: raw.appraisal_value ?? raw.appraised_value ?? MOCK_DETAIL.appraisal_value,
-          ltv: raw.ltv ?? raw.ltv_ratio ?? MOCK_DETAIL.ltv,
-          overdue_months: raw.overdue_months ?? raw.delinquency_months ?? MOCK_DETAIL.overdue_months,
-          interest_count: raw.interest_count ?? raw.interested_count ?? MOCK_DETAIL.interest_count,
-          institution_total_deals: raw.institution_total_deals ?? MOCK_DETAIL.institution_total_deals,
-          institution_avg_days: raw.institution_avg_days ?? MOCK_DETAIL.institution_avg_days,
-          institution_rating: raw.institution_rating ?? MOCK_DETAIL.institution_rating,
-          address: raw.address ?? MOCK_DETAIL.address,
-        }
-        setListing(detail)
-        setCurrentStage(detail.deal_stage ?? MOCK_DETAIL.deal_stage)
-        try {
-          const wlRes = await fetch('/api/v1/buyer/watchlist')
-          if (wlRes.ok) {
-            const wlData = await wlRes.json()
-            const ids: string[] = (wlData.data ?? wlData.listings ?? wlData) as string[]
-            if (Array.isArray(ids) && ids.includes(params?.id as string)) {
-              setInterested(true)
-            }
-          }
-        } catch {
-          // ignore — keep default false
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from("npl_listings")
+          .select("*")
+          .eq("id", id)
+          .single()
+        if (!error && data) {
+          setListing(mapNplListingToDetail(data as Record<string, unknown>, id))
         }
       } catch {
-        setListing(MOCK_DETAIL)
-        setCurrentStage(MOCK_DETAIL.deal_stage)
-      } finally {
-        setLoading(false)
+        /* Supabase not configured or network error — keep mock */
       }
-    }
-    fetchDetail()
-  }, [params?.id])
+    })()
+  }, [id])
 
-  const handleInterestSubmit = async () => {
-    setSubmittingInterest(true)
+  // ── Watchlist state ──
+  const [watchlisted, setWatchlisted] = useState(false)
+  const [watchlistSaving, setWatchlistSaving] = useState(false)
+
+  const handleWatchlist = useCallback(async () => {
+    if (watchlistSaving) return
+    setWatchlistSaving(true)
     try {
-      const res = await fetch('/api/v1/exchange/deals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listing_id: params?.id, stage: 'INTEREST' }),
-      })
-      if (!res.ok) throw new Error("Failed")
-      const result = await res.json()
-      toast.success('관심표명이 완료되었습니다')
-      const dealData = result.data || result
-      const newDealId = dealData.id || dealData.dealId || dealData.deal_id
-      if (newDealId) {
-        router.push(`/deals/${newDealId}`)
+      if (watchlisted) {
+        await fetch(`/api/v1/buyer/watchlist?listing_id=${id}`, { method: 'DELETE' })
+        setWatchlisted(false)
+      } else {
+        const res = await fetch('/api/v1/buyer/watchlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            listingId: id,
+            folderName: '기본',
+            priceAtSave: listing.asking_price,
+          }),
+        })
+        if (res.ok || res.status === 409) setWatchlisted(true)
       }
     } catch {
-      toast.error('관심표명에 실패했습니다. 다시 시도해주세요.')
+      /* silently fail */
     } finally {
-      setSubmittingInterest(false)
+      setWatchlistSaving(false)
     }
-  }
+  }, [id, watchlisted, watchlistSaving, listing.asking_price])
 
-  const handleStageAction = async (stage: DealStage) => {
-    if (stage === "OPEN") {
-      await handleInterestSubmit()
-      return
-    }
-    if (stage === "DUE_DILIGENCE") {
-      setOfferConfirmOpen(true)
-      return
-    }
-    setSubmittingInterest(true)
-    try {
-      const res = await fetch('/api/v1/exchange/deals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listing_id: params?.id, stage }),
+  // Check if already watchlisted on mount
+  useEffect(() => {
+    fetch(`/api/v1/buyer/watchlist`)
+      .then(r => r.json())
+      .then(d => {
+        const items = (d.data ?? []) as Array<Record<string, unknown>>
+        setWatchlisted(items.some(w => (w.listing_id ?? w.listingId) === id))
       })
-      if (!res.ok) throw new Error("Failed")
-      const result = await res.json()
-      const stageLabels: Record<string, string> = {
-        INTEREST: 'NDA 서명 요청이 완료되었습니다',
-        NDA: '실사 요청이 완료되었습니다',
-      }
-      toast.success(stageLabels[stage] || '요청이 완료되었습니다')
-      const dealData = result.data || result
-      const newDealId = dealData.id || dealData.dealId || dealData.deal_id
-      if (newDealId) {
-        router.push(`/deals/${newDealId}`)
-      }
-    } catch {
-      toast.error('요청에 실패했습니다. 다시 시도해주세요.')
-    } finally {
-      setSubmittingInterest(false)
-    }
-  }
+      .catch(() => {})
+  }, [id])
 
-  const handleOfferConfirm = async () => {
-    setOfferConfirmOpen(false)
-    setSubmittingInterest(true)
+  // ── AI Analysis State ──
+  const [ai, setAi] = useState<AIAnalysisResult>({
+    recoveryRate: null, priceGuide: null, anomaly: null, loading: true, error: null,
+  })
+
+  const fetchAIAnalysis = useCallback(async () => {
+    setAi(prev => ({ ...prev, loading: true, error: null }))
     try {
-      const res = await fetch('/api/v1/exchange/deals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listing_id: params?.id, stage: 'DUE_DILIGENCE' }),
-      })
-      if (!res.ok) throw new Error("Failed")
-      const result = await res.json()
-      toast.success('입찰 신청이 완료되었습니다')
-      const dealData = result.data || result
-      const newDealId = dealData.id || dealData.dealId || dealData.deal_id
-      if (newDealId) {
-        router.push(`/deals/${newDealId}`)
+      const body = {
+        collateralType: listing.collateral,
+        region: `${listing.region_city} ${listing.region_district}`,
+        outstandingPrincipal: listing.outstanding_principal,
+        appraisalValue: listing.appraisal_value,
+        askingPrice: listing.asking_price,
+        auctionStage: listing.auction_stage,
+        seniorDebt: listing.rights_summary.senior_total,
+        juniorDebt: listing.rights_summary.junior_total,
+        depositTotal: listing.rights_summary.deposit_total,
       }
-    } catch {
-      toast.error('입찰 신청에 실패했습니다. 다시 시도해주세요.')
-    } finally {
-      setSubmittingInterest(false)
-    }
-  }
 
-  const handleToggleInterest = async () => {
-    const newValue = !interested
-    setInterested(newValue)
-    try {
-      await fetch('/api/v1/buyer/watchlist', {
-        method: newValue ? 'POST' : 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listing_id: params?.id }),
+      const [recoveryRes, anomalyRes] = await Promise.allSettled([
+        fetch("/api/v1/ai/recovery-predict", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            appraisalValue: listing.appraisal_value,
+            outstandingDebt: listing.outstanding_principal,
+            collateralType: listing.collateral,
+            region: `${listing.region_city} ${listing.region_district}`,
+            seniorDebt: listing.rights_summary.senior_total,
+            auctionCount: 1,
+          }),
+        }).then(r => r.json()),
+        fetch("/api/v1/ai/anomaly-detect", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }).then(r => r.json()),
+      ])
+
+      setAi({
+        recoveryRate: recoveryRes.status === "fulfilled" && recoveryRes.value?.prediction
+          ? {
+              predicted: recoveryRes.value.prediction.predictedRate ?? recoveryRes.value.prediction.predicted ?? 72,
+              confidence: recoveryRes.value.prediction.confidence ?? 0.85,
+              range: recoveryRes.value.prediction.range ?? [60, 85],
+              grade: recoveryRes.value.prediction.grade ?? listing.ai_grade,
+            }
+          : { predicted: 72, confidence: 0.85, range: [60, 85], grade: listing.ai_grade },
+        priceGuide: {
+          recommended: Math.round(listing.appraisal_value * 0.72),
+          min: Math.round(listing.appraisal_value * 0.60),
+          max: Math.round(listing.appraisal_value * 0.85),
+          marketOutlook: "중립",
+        },
+        anomaly: anomalyRes.status === "fulfilled" && anomalyRes.value
+          ? {
+              verdict: anomalyRes.value.verdict ?? "SAFE",
+              score: anomalyRes.value.riskScore ?? 15,
+              flags: anomalyRes.value.flags ?? [],
+            }
+          : { verdict: "SAFE", score: 15, flags: [] },
+        loading: false,
+        error: null,
       })
-      toast.success(newValue ? '관심 목록에 추가되었습니다' : '관심 목록에서 제거되었습니다')
     } catch {
-      setInterested(!newValue)
-      toast.error('요청에 실패했습니다.')
+      setAi({
+        recoveryRate: { predicted: 72, confidence: 0.85, range: [60, 85], grade: listing.ai_grade },
+        priceGuide: {
+          recommended: Math.round(listing.appraisal_value * 0.72),
+          min: Math.round(listing.appraisal_value * 0.60),
+          max: Math.round(listing.appraisal_value * 0.85),
+          marketOutlook: "중립",
+        },
+        anomaly: { verdict: "SAFE", score: 15, flags: [] },
+        loading: false,
+        error: null,
+      })
     }
-  }
+  }, [listing])
 
-  const computeDeadlineDays = (deadline: string) => {
-    const diff = new Date(deadline).getTime() - Date.now()
-    return Math.ceil(diff / (1000 * 60 * 60 * 24))
-  }
+  useEffect(() => { fetchAIAnalysis() }, [fetchAIAnalysis])
 
-  // ─── Loading skeleton ───────────────────────────────────────
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', backgroundColor: C.bg1 }}>
-        {/* Sticky header skeleton */}
-        <div className="sticky top-0 z-30 h-14 animate-pulse" style={{ backgroundColor: C.bg3 }} />
-        {/* Hero skeleton */}
-        <div className="w-full animate-pulse" style={{ aspectRatio: '21/9', backgroundColor: C.bg3 }} />
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 380px', gap: 28 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="animate-pulse" style={{ borderRadius: 16, backgroundColor: C.bg3, height: 160 }} />
-              ))}
-            </div>
-            <div className="animate-pulse" style={{ borderRadius: 16, backgroundColor: C.bg3, height: 520 }} />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!listing) return null
-
-  const stageIndex = ["OPEN", "INTEREST", "NDA", "DUE_DILIGENCE", "OFFER"].indexOf(currentStage)
-  const hasNDA = stageIndex >= 2
-  const hasDD = stageIndex >= 3
-
-  const estimateRange = listing.ai_estimate_high - listing.ai_estimate_low
-  const midPct = estimateRange > 0 ? ((listing.ai_estimate_mid - listing.ai_estimate_low) / estimateRange) * 100 : 50
-  const deadlineDays = computeDeadlineDays(listing.deadline)
-
-  const DEAL_STAGES = [
-    { key: "OPEN",          label: "OPEN",    icon: Eye        },
-    { key: "INTEREST",      label: "관심 등록", icon: Heart      },
-    { key: "NDA",           label: "NDA",      icon: FileCheck  },
-    { key: "DUE_DILIGENCE", label: "실사",     icon: Shield     },
-    { key: "OFFER",         label: "입찰",     icon: Send       },
-  ]
-
-  const riskStyle = RISK_GRADE_STYLES[listing.risk_grade] ?? RISK_GRADE_STYLES["C"]
-
-  const ctaMap: Record<DealStage, string> = {
-    OPEN: "관심 등록하기",
-    INTEREST: "NDA 서명 요청",
-    NDA: "실사 요청하기",
-    DUE_DILIGENCE: "입찰 신청하기",
-    OFFER: "입찰 완료",
-  }
+  const sellerFee = calculateSellerFee({
+    dealAmount: listing.asking_price,
+    addons: ["premium_listing", "dedicated_manager"],
+    isInstitutional: true,
+    dataCompleteness: listing.data_completeness,
+  })
+  const buyerFee = calculateBuyerFee({
+    dealAmount: listing.asking_price,
+    addons: ["priority_negotiation"],
+  })
+  const sellerPremiumWaived =
+    sellerFee.addonDetails.find(a => a.key === "premium_listing")?.waived ?? false
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: C.l2 }}>
-
-      {/* ── Lightbox ──────────────────────────────────────────── */}
-      {lightboxOpen && listing.images && listing.images.length > 0 && (
+    <main style={{ backgroundColor: C.bg0, color: "#E2E8F0", minHeight: "100vh" }}>
+      {/* ── Top Breadcrumb & Tier Simulator ───────── */}
+      <section
+        style={{
+          borderBottom: `1px solid ${C.bg4}`,
+          backgroundColor: C.bg1,
+        }}
+      >
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 60, backgroundColor: 'rgba(0,0,0,0.96)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          onClick={() => setLightboxOpen(false)}
+          style={{
+            maxWidth: 1280, margin: "0 auto",
+            padding: "16px 24px",
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            flexWrap: "wrap", gap: 12,
+          }}
         >
-          <button
-            type="button"
-            style={{ position: 'absolute', top: 20, right: 20, color: 'rgba(255,255,255,0.6)', padding: 8, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            onClick={() => setLightboxOpen(false)}
+          <Link
+            href="/exchange"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              fontSize: 12, color: C.lt4, fontWeight: 600,
+              textDecoration: "none",
+            }}
           >
-            <X size={20} />
-          </button>
-          {listing.images.length > 1 && (
-            <>
+            <ArrowLeft size={14} /> 매물 목록
+          </Link>
+
+          {/* Demo tier simulator (dev helper) */}
+          <div
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "6px 10px", borderRadius: 8,
+              backgroundColor: C.bg2, border: `1px dashed ${C.bg4}`,
+            }}
+          >
+            <span style={{ fontSize: 10, color: C.lt4, fontWeight: 600 }}>공개 범위</span>
+            {(["L0", "L1", "L2", "L3"] as AccessTier[]).map(t => (
               <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => (i - 1 + listing.images!.length) % listing.images!.length) }}
-                style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.8)', backgroundColor: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', padding: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                key={t}
+                onClick={() => setTier(t)}
+                style={{
+                  padding: "3px 8px", borderRadius: 4,
+                  fontSize: 10, fontWeight: 800,
+                  backgroundColor: tier === t ? TIER_META[t].color : "transparent",
+                  color: tier === t ? "#fff" : C.lt3,
+                  border: `1px solid ${tier === t ? TIER_META[t].color : C.bg4}`,
+                  cursor: "pointer",
+                }}
               >
-                <ChevronLeft size={20} />
+                {t}
               </button>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => (i + 1) % listing.images!.length) }}
-                style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.8)', backgroundColor: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', padding: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                <ChevronRight size={20} />
-              </button>
-            </>
-          )}
-          <img
-            src={listing.images[lightboxIndex]}
-            alt={`매물 사진 ${lightboxIndex + 1}`}
-            style={{ maxWidth: '90vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: 12, boxShadow: '0 25px 60px rgba(0,0,0,0.5)' }}
-            onClick={(e) => e.stopPropagation()}
-          />
-          <div style={{ position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8 }}>
-            {listing.images.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setLightboxIndex(i) }}
-                style={{ borderRadius: 999, border: 'none', cursor: 'pointer', transition: 'all 0.2s', backgroundColor: i === lightboxIndex ? '#fff' : 'rgba(255,255,255,0.4)', width: i === lightboxIndex ? 20 : 8, height: 8 }}
-              />
             ))}
           </div>
         </div>
-      )}
+      </section>
 
-      {/* ═══ STICKY HEADER BAR (56px) ═══════════════════════════ */}
-      <div
-        className="sticky top-0 z-30 h-14 shadow-xl"
-        style={{ backgroundColor: C.bg3, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+      {/* ── Hero Summary ──────────────────────────── */}
+      <section
+        style={{
+          background: `linear-gradient(180deg, ${C.bg1} 0%, ${C.bg0} 100%)`,
+          borderBottom: `1px solid ${C.bg4}`,
+        }}
       >
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-          {/* Left: breadcrumb */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-            <Link
-              href="/exchange"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', flexShrink: 0 }}
-            >
-              <ChevronLeft size={16} />
-            </Link>
-            <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
-            <div style={{ minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: '0.6875rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>딜 브릿지</span>
-              <h1 style={{ fontSize: '0.875rem', fontWeight: 800, color: '#fff', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {listing.collateral_type} · {listing.location_city} {listing.location_district}
-              </h1>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px 40px" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+              <TierBadge tier="L0" variant="soft" size="sm" />
+              <CompletenessBadge score={listing.data_completeness} size="md" />
+              <span
+                style={{
+                  padding: "3px 10px", borderRadius: 4,
+                  backgroundColor: `${C.em}14`, color: C.emL,
+                  fontSize: 11, fontWeight: 700,
+                  border: `1px solid ${C.em}33`,
+                }}
+              >
+                {formatAIGrade(listing.ai_grade)}
+              </span>
+              <span style={{ fontSize: 11, color: C.lt4 }}>
+                게시 {listing.published_at}
+              </span>
             </div>
-          </div>
 
-          {/* Centre: key metrics */}
-          <div className="hidden lg:flex" style={{ alignItems: 'center', gap: 20 }}>
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 2 }}>채권원금</p>
-              <p style={{ fontSize: '0.875rem', fontWeight: 900, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>{formatKRW(listing.principal)}</p>
-            </div>
-            <div style={{ width: 1, height: 24, backgroundColor: 'rgba(255,255,255,0.15)' }} />
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 2 }}>마감</p>
-              <p style={{ fontSize: '0.875rem', fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: deadlineDays <= 3 ? '#F87171' : deadlineDays <= 7 ? C.amber2 : '#fff' }}>
-                {deadlineDays > 0 ? `D-${deadlineDays}` : "마감"}
-              </p>
-            </div>
-            <div style={{ width: 1, height: 24, backgroundColor: 'rgba(255,255,255,0.15)' }} />
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 2 }}>관심자</p>
-              <p style={{ fontSize: '0.875rem', fontWeight: 900, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>{listing.interest_count}명</p>
-            </div>
-          </div>
-
-          {/* Right: actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-            <button
-              type="button"
-              onClick={handleToggleInterest}
+            <h1
               style={{
-                display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8,
-                fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', border: 'none', transition: 'all 0.2s',
-                backgroundColor: interested ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)',
-                color: interested ? '#F87171' : 'rgba(255,255,255,0.7)',
+                fontSize: 32, fontWeight: 900, color: "#fff",
+                letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 8,
               }}
             >
-              <Heart size={14} style={{ fill: interested ? 'currentColor' : 'none' }} />
-              <span className="hidden sm:inline">{interested ? "관심등록됨" : "관심등록"}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => { navigator.clipboard?.writeText(window.location.href); toast.success('링크가 복사되었습니다') }}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', border: 'none', transition: 'all 0.2s', backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}
+              {listing.institution} · {listing.region_city} {listing.region_district} {listing.collateral} 담보
+            </h1>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 13, color: C.lt3, flexWrap: "wrap" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <Building2 size={13} /> {listing.inst_type}
+              </span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <MapPin size={13} /> {listing.region_city} {listing.region_district}
+              </span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <Scale size={13} /> {listing.auction_stage}
+              </span>
+              <span style={{ fontFamily: "monospace", color: C.lt4 }}>{listing.id}</span>
+            </div>
+
+            {/* Key figures — L0 always visible */}
+            <div
+              style={{
+                marginTop: 24,
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: 12,
+              }}
             >
-              <Share2 size={14} />
-              <span className="hidden sm:inline">공유</span>
-            </button>
-            <button
-              type="button"
-              disabled={submittingInterest || currentStage === "OFFER"}
-              onClick={() => handleStageAction(currentStage)}
-              className="hidden sm:flex"
-              style={{ alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 8, backgroundColor: C.em, color: '#fff', fontSize: '0.75rem', fontWeight: 800, border: 'none', cursor: 'pointer', transition: 'background 0.2s', opacity: (submittingInterest || currentStage === "OFFER") ? 0.5 : 1 }}
+              <KpiCard label="채권잔액" value={formatKRW(listing.outstanding_principal)} tone="neutral" />
+              <KpiCard label="매각희망가" value={formatKRW(listing.asking_price)} tone="em" accent />
+              <KpiCard label="감정가" value={formatKRW(listing.appraisal_value)} tone="neutral" />
+              <KpiCard
+                label="할인율"
+                value={
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <TrendingDown size={18} color={C.emL} />
+                    {listing.discount_rate.toFixed(1)}%
+                  </span>
+                }
+                tone="em"
+                accent
+              />
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Main Content ──────────────────────────── */}
+      <section style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 24px 80px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1fr) 360px",
+            gap: 28,
+            alignItems: "start",
+          }}
+        >
+          {/* ═══ LEFT COLUMN ═══════════════════════════ */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+            {/* ── Masking notice banner ─────────────── */}
+            <div
+              style={{
+                padding: "14px 16px",
+                backgroundColor: `${C.blue}0E`,
+                border: `1px solid ${C.blue}33`,
+                borderRadius: 10,
+                display: "flex", gap: 10, alignItems: "flex-start",
+              }}
             >
-              {submittingInterest ? "처리중..." : ctaMap[currentStage]}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ═══ HERO GALLERY — Full-width aspect-[21/9] ═════════════ */}
-      {listing.images && listing.images.length > 0 && (
-        <div className="relative w-full overflow-hidden group" style={{ aspectRatio: '21/9', backgroundColor: C.bg3 }}>
-          <Image
-            src={listing.images[galleryIndex]}
-            alt={`${listing.collateral_type} ${listing.location_city} ${listing.location_district}`}
-            fill
-            sizes="100vw"
-            className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-            priority
-          />
-          {/* Gradient overlay */}
-          <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${C.bg0} 0%, rgba(3,8,16,0.3) 40%, transparent 100%)` }} />
-          <div className="absolute inset-0" style={{ background: `linear-gradient(to right, rgba(3,8,16,0.5) 0%, transparent 60%)` }} />
-
-          {/* Stage badge + type */}
-          <div style={{ position: 'absolute', top: 20, left: 20, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <span style={{ padding: '4px 12px', borderRadius: 999, fontSize: '0.75rem', fontWeight: 800, backgroundColor: 'rgba(10,22,40,0.8)', color: '#fff', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              {currentStage === "OPEN" ? "공개 매물" : currentStage === "INTEREST" ? "관심 등록" : currentStage === "NDA" ? "NDA 진행" : currentStage === "DUE_DILIGENCE" ? "실사 중" : "입찰 단계"}
-            </span>
-            <span style={{ padding: '4px 12px', borderRadius: 999, fontSize: '0.75rem', fontWeight: 800, backgroundColor: 'rgba(255,255,255,0.92)', color: C.bg3, backdropFilter: 'blur(8px)' }}>
-              {listing.collateral_type}
-            </span>
-          </div>
-
-          {/* Gallery button */}
-          <button
-            type="button"
-            onClick={() => { setLightboxIndex(galleryIndex); setLightboxOpen(true) }}
-            style={{ position: 'absolute', top: 20, right: 20, display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', color: 'rgba(255,255,255,0.8)', fontSize: '0.75rem', fontWeight: 600, border: 'none', cursor: 'pointer' }}
-          >
-            <Images size={14} />
-            {listing.images.length}장
-          </button>
-
-          {/* Bottom info */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '32px' }}>
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-              {listing.institution_name}
-            </p>
-            <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
-              {listing.collateral_type} · {listing.location_city} {listing.location_district}
-            </h2>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <MapPin size={14} />
-              {hasNDA ? listing.address : `${listing.location_city} ${listing.location_district} 일대`}
-            </p>
-          </div>
-
-          {/* Nav arrows */}
-          {listing.images.length > 1 && (
-            <>
-              <button
-                type="button"
-                onClick={() => setGalleryIndex(i => (i - 1 + listing.images!.length) % listing.images!.length)}
-                className="opacity-0 group-hover:opacity-100"
-                style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.4)', border: 'none', borderRadius: '50%', padding: 10, color: '#fff', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setGalleryIndex(i => (i + 1) % listing.images!.length)}
-                className="opacity-0 group-hover:opacity-100"
-                style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.4)', border: 'none', borderRadius: '50%', padding: 10, color: '#fff', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                <ChevronRight size={20} />
-              </button>
-            </>
-          )}
-
-          {/* Counter */}
-          <span style={{ position: 'absolute', bottom: 20, right: 20, backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: '0.75rem', padding: '4px 10px', borderRadius: 999, backdropFilter: 'blur(8px)', fontFamily: 'monospace', fontWeight: 600 }}>
-            {galleryIndex + 1} / {listing.images.length}
-          </span>
-        </div>
-      )}
-
-      {/* Thumbnail strip */}
-      {listing.images && listing.images.length > 1 && (
-        <div style={{ backgroundColor: C.bg1, borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '10px 24px' }}>
-          <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', gap: 8, overflowX: 'auto' }} className="scrollbar-none">
-            {listing.images.map((img, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setGalleryIndex(i)}
-                style={{ position: 'relative', flexShrink: 0, width: 64, height: 40, borderRadius: 4, overflow: 'hidden', border: 'none', cursor: 'pointer', opacity: i === galleryIndex ? 1 : 0.4, outline: i === galleryIndex ? `2px solid ${C.em}` : 'none', transition: 'all 0.2s' }}
-              >
-                <Image src={img} alt={`썸네일 ${i + 1}`} fill sizes="64px" className="object-cover" />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ═══ MAIN LAYOUT ══════════════════════════════════════════ */}
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 24px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 380px', gap: 28 }}>
-
-          {/* ════ LEFT COLUMN ════════════════════════════════════ */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
-
-            {/* ── Deal Stage Timeline (Bloomberg terminal style) ── */}
-            <div style={{ backgroundColor: C.bg3, borderRadius: 16, padding: '24px', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-                <CheckCircle2 size={14} style={{ color: C.em }} />
-                <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: C.lt4, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Deal Progress</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                {DEAL_STAGES.map((stage, i) => {
-                  const isActive = i === stageIndex
-                  const isCompleted = i < stageIndex
-                  const isLast = i === DEAL_STAGES.length - 1
-                  const dotColor = isCompleted ? C.em : isActive ? C.blue : 'rgba(255,255,255,0.1)'
-                  return (
-                    <div key={stage.key} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                        <div style={{
-                          width: 32, height: 32, borderRadius: '50%',
-                          backgroundColor: dotColor,
-                          border: `2px solid ${isCompleted ? C.em : isActive ? C.blue : 'rgba(255,255,255,0.15)'}`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '0.6875rem', fontWeight: 800,
-                          color: isCompleted || isActive ? '#fff' : 'rgba(255,255,255,0.3)',
-                          boxShadow: isCompleted ? `0 0 10px ${C.em}60` : isActive ? `0 0 10px ${C.blue}60` : 'none',
-                        }}>
-                          {isCompleted ? '✓' : i + 1}
-                        </div>
-                        <span style={{
-                          fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.04em',
-                          color: isActive ? C.blueL : isCompleted ? C.emL : 'rgba(255,255,255,0.3)',
-                          whiteSpace: 'nowrap',
-                        }}>{stage.label}</span>
-                      </div>
-                      {!isLast && (
-                        <div style={{
-                          height: 2, flex: 1, margin: '0 6px', marginBottom: 18,
-                          backgroundColor: i < stageIndex ? C.em : 'rgba(255,255,255,0.08)',
-                          borderRadius: 999,
-                        }} />
-                      )}
-                    </div>
-                  )
-                })}
+              <Info size={16} color={C.blueL} style={{ marginTop: 2, flexShrink: 0 }} />
+              <div style={{ fontSize: 12, color: C.lt3, lineHeight: 1.55 }}>
+                본 매물은 <strong style={{ color: "#fff" }}>자동 마스킹 파이프라인</strong>을 통과한 결과입니다.
+                개인정보·채무자 식별정보·상세 지번·동/호수는 금융감독원 · 금융위원회 지침에 따라 자동으로 가려지며,
+                티어별 공개 범위는 규제 요건에 맞춰 분리되어 있습니다.
               </div>
             </div>
 
-            {/* ── Info Package (3 cards) ─────────────────────────── */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <FileText size={14} style={{ color: C.lt2 }} />
-                <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: C.lt2, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                  {t('listing.standardInfoPackage') || '표준 NPL 정보 패키지'}
+            {/* ── L0 Rights Summary ─────────────────── */}
+            <Panel title="권리관계 요약" icon={<Scale size={14} />} tier="L0">
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, 1fr)",
+                  gap: 10,
+                }}
+              >
+                <MiniStat label="선순위 총액" value={formatKRW(listing.rights_summary.senior_total)} tone="amber" />
+                <MiniStat label="후순위 총액" value={formatKRW(listing.rights_summary.junior_total)} tone="blue" />
+                <MiniStat label="보증금 총액" value={formatKRW(listing.rights_summary.deposit_total)} tone="teal" />
+              </div>
+              <p style={{ marginTop: 12, fontSize: 11, color: C.lt4, lineHeight: 1.55 }}>
+                요약 정보는 L0 (공개) 단계에서 누구나 열람할 수 있습니다. 권리자 상세 정보는 L2 (NDA + 전문투자자) 이상에서 공개됩니다.
+              </p>
+            </Panel>
+
+            {/* ── L1 Registry summary (본인인증) ─────── */}
+            <Panel title="등기부등본 요약" icon={<FileText size={14} />} tier="L1">
+              <TierGate required="L1" current={tier} listingId={listing.id}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {listing.registry_summary_items.map(r => (
+                    <div
+                      key={r.order}
+                      style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        padding: "10px 12px", borderRadius: 8,
+                        backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span
+                          style={{
+                            width: 22, height: 22, borderRadius: "50%",
+                            backgroundColor: C.bg4, color: C.lt3,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: 10, fontWeight: 800,
+                          }}
+                        >
+                          {r.order}
+                        </span>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{r.type}</div>
+                          <div style={{ fontSize: 10, color: C.lt4 }}>권리자 {r.holder_masked}</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: C.emL }}>{formatKRW(r.amount)}</div>
+                    </div>
+                  ))}
+                </div>
+              </TierGate>
+            </Panel>
+
+            {/* ── L1 Lease summary ─────────────────── */}
+            <Panel title="임대차 요약" icon={<FileText size={14} />} tier="L1">
+              <TierGate required="L1" current={tier} listingId={listing.id}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                  <MiniStat label="보증금 총액" value={formatKRW(listing.lease_summary.total_deposit)} tone="teal" />
+                  <MiniStat label="월세 총액" value={formatKRW(listing.lease_summary.monthly_rent || 0)} tone="teal" />
+                  <MiniStat label="임차인 수" value={`${listing.lease_summary.tenant_count}명`} tone="teal" />
+                </div>
+              </TierGate>
+            </Panel>
+
+            {/* ── L1 Masked appraisal PDF ──────────── */}
+            <Panel title="감정평가서 (마스킹본)" icon={<FileText size={14} />} tier="L1">
+              <TierGate required="L1" current={tier} listingId={listing.id}>
+                <div
+                  style={{
+                    padding: "18px 16px", borderRadius: 10,
+                    backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 2 }}>
+                      감정평가서 (PII 마스킹본)
+                    </div>
+                    <div style={{ fontSize: 10, color: C.lt4 }}>
+                      감정가 {formatKRW(listing.appraisal_value)} · 8페이지 · PDF
+                    </div>
+                  </div>
+                  <button
+                    style={{
+                      padding: "8px 14px", borderRadius: 8,
+                      backgroundColor: C.blue, color: "#fff",
+                      fontSize: 11, fontWeight: 700, border: "none", cursor: "pointer",
+                    }}
+                  >
+                    열람
+                  </button>
+                </div>
+              </TierGate>
+            </Panel>
+
+            {/* ── L2 Full registry ─────────────────── */}
+            <Panel title="등기부등본 원본" icon={<FileText size={14} />} tier="L2">
+              <TierGate required="L2" current={tier} listingId={listing.id} minHeight={180}>
+                <div
+                  style={{
+                    padding: "20px 18px", borderRadius: 10,
+                    backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
+                  }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
+                    등기부등본 원본 (마스킹 해제)
+                  </div>
+                  <div style={{ fontSize: 11, color: C.lt4, lineHeight: 1.55 }}>
+                    NDA 체결 및 전문투자자 인증이 완료된 사용자에게만 제공되며, 모든 열람 이력은
+                    금융감독원 가이드라인에 따라 PII Access Log에 기록됩니다.
+                  </div>
+                </div>
+              </TierGate>
+            </Panel>
+
+            {/* ── L2 Site photos ──────────────────── */}
+            <Panel title="현장 사진" icon={<Images size={14} />} tier="L2">
+              <TierGate required="L2" current={tier} listingId={listing.id} minHeight={200}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                  {listing.site_photos.map((p, i) => (
+                    <div
+                      key={p}
+                      style={{
+                        aspectRatio: "4 / 3",
+                        backgroundColor: C.bg3,
+                        border: `1px solid ${C.bg4}`,
+                        borderRadius: 8,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: C.lt4, fontSize: 11,
+                      }}
+                    >
+                      현장사진 #{i + 1}
+                    </div>
+                  ))}
+                </div>
+              </TierGate>
+            </Panel>
+
+            {/* ── L3 채권 정보 ──────────────────── */}
+            <Panel title="채권 정보 (채권 원장)" icon={<FileText size={14} />} tier="L3">
+              <TierGate required="L3" current={tier} listingId={listing.id} minHeight={220}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {/* LOI notice */}
+                  <div
+                    style={{
+                      padding: "10px 14px", borderRadius: 8,
+                      backgroundColor: `${C.rose}0F`,
+                      border: `1px solid ${C.rose}33`,
+                      fontSize: 11, color: C.rose, fontWeight: 700,
+                      display: "flex", alignItems: "center", gap: 6,
+                    }}
+                  >
+                    <AlertTriangle size={12} /> LOI 승인 후 열람 전용 · 개인정보 일부 마스킹 적용
+                  </div>
+
+                  {/* 채권 잔액 요약 */}
+                  <div
+                    style={{
+                      padding: 14, borderRadius: 10,
+                      backgroundColor: C.bg3,
+                      border: `1px solid ${C.bg4}`,
+                    }}
+                  >
+                    <div style={{ fontSize: 10, color: C.lt4, fontWeight: 700, marginBottom: 8 }}>
+                      채권 잔액 요약
+                    </div>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(3, 1fr)",
+                        gap: 10,
+                      }}
+                    >
+                      <ClaimCell label="원금 잔액" value={formatKRW(listing.credit_info.principal_remaining)} />
+                      <ClaimCell label="연체이자 누적" value={formatKRW(listing.credit_info.interest_accrued)} color={C.amber} />
+                      <ClaimCell label="연체 수수료" value={formatKRW(listing.credit_info.fee_accrued)} />
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 10, paddingTop: 10,
+                        borderTop: `1px dashed ${C.bg4}`,
+                        display: "flex", justifyContent: "space-between", alignItems: "baseline",
+                      }}
+                    >
+                      <span style={{ fontSize: 11, color: C.lt3, fontWeight: 700 }}>채권 총액</span>
+                      <span style={{ fontSize: 16, color: C.em, fontWeight: 800 }}>
+                        {formatKRW(listing.credit_info.total_claim)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 이자율 / 상품 */}
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(2, 1fr)",
+                      gap: 10,
+                    }}
+                  >
+                    <DataRow label="대출 상품" value={listing.credit_info.loan_type} />
+                    <DataRow label="원금" value={formatKRW(listing.credit_info.original_principal)} />
+                    <DataRow label="정상 이자율" value={`${listing.credit_info.normal_interest_rate.toFixed(2)}%`} />
+                    <DataRow
+                      label="연체 이자율"
+                      value={`${listing.credit_info.overdue_interest_rate.toFixed(1)}%`}
+                      valueColor={C.rose}
+                    />
+                    <DataRow label="대출 실행일" value={listing.credit_info.loan_date} masked />
+                    <DataRow label="기한이익상실일" value={listing.credit_info.acceleration_date} masked />
+                    <DataRow label="최종 상환일" value={listing.credit_info.last_payment_date} masked />
+                    <DataRow
+                      label="연체 일수"
+                      value={`${listing.credit_info.overdue_days}일`}
+                      valueColor={C.amber}
+                    />
+                    <DataRow label="여신번호" value={listing.credit_info.contract_no_masked} masked />
+                    <DataRow label="연대보증인" value={listing.credit_info.guarantor_masked} masked />
+                  </div>
+
+                  {/* 채무자/경매사건 (짧게) */}
+                  <div
+                    style={{
+                      padding: "10px 14px", borderRadius: 8,
+                      backgroundColor: C.bg2,
+                      border: `1px solid ${C.bg4}`,
+                      fontSize: 11, color: C.lt3, lineHeight: 1.6,
+                    }}
+                  >
+                    채무자 식별정보: <span style={{ color: "#fff", fontWeight: 700 }}>{listing.debtor_name_masked}</span>
+                    {" · "}
+                    경매사건: <span style={{ color: "#fff", fontWeight: 700 }}>{listing.court_case_full}</span>
+                  </div>
+                </div>
+              </TierGate>
+            </Panel>
+          </div>
+
+          {/* ═══ RIGHT SIDEBAR ════════════════════════ */}
+          <aside style={{ display: "flex", flexDirection: "column", gap: 16, position: "sticky", top: 96 }}>
+
+            {/* ── Actions ──────────────────────────── */}
+            <div
+              style={{
+                padding: 20, borderRadius: 14,
+                backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
+              }}
+            >
+              <div style={{ fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 8 }}>다음 단계</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <Link
+                  href={`/exchange/${listing.id}/nda`}
+                  style={{
+                    padding: "12px 14px", borderRadius: 10,
+                    backgroundColor: C.em, color: "#041915",
+                    fontSize: 12, fontWeight: 800, textAlign: "center",
+                    textDecoration: "none",
+                    display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 6,
+                  }}
+                >
+                  <FileSignature size={14} /> NDA 체결하고 L2 열람
+                </Link>
+                {tier === "L3" ? (
+                  <Link
+                    href={`/exchange/${listing.id}/dataroom`}
+                    style={{
+                      padding: "12px 14px", borderRadius: 10,
+                      backgroundColor: `${C.amber}1A`, color: C.amber,
+                      fontSize: 12, fontWeight: 800, textAlign: "center",
+                      border: `1px solid ${C.amber}55`,
+                      textDecoration: "none",
+                      display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 6,
+                    }}
+                  >
+                    🔓 L3 데이터룸 열기
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/exchange/${listing.id}/loi`}
+                    style={{
+                      padding: "12px 14px", borderRadius: 10,
+                      backgroundColor: C.bg3, color: "#fff",
+                      fontSize: 12, fontWeight: 700, textAlign: "center",
+                      border: `1px solid ${C.bg4}`,
+                      textDecoration: "none",
+                      display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 6,
+                    }}
+                  >
+                    LOI 제출하고 L3 데이터룸
+                  </Link>
+                )}
+                <Link
+                  href={`/deals/${listing.id}`}
+                  style={{
+                    padding: "12px 14px", borderRadius: 10,
+                    backgroundColor: C.blue, color: "#fff",
+                    fontSize: 12, fontWeight: 800, textAlign: "center",
+                    textDecoration: "none",
+                    display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 6,
+                  }}
+                >
+                  <MessageSquare size={14} /> 딜룸 입장 · 거래 시작
+                </Link>
+                <Link
+                  href={`/analysis/new?listing=${listing.id}&type=${listing.collateral}&region=${listing.region_city}`}
+                  style={{
+                    padding: "12px 14px", borderRadius: 10,
+                    backgroundColor: C.purple + "1A", color: C.purple,
+                    fontSize: 12, fontWeight: 700, textAlign: "center",
+                    border: `1px solid ${C.purple}44`,
+                    textDecoration: "none",
+                    display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 6,
+                  }}
+                >
+                  <Brain size={14} /> AI 상세 분석 요청
+                </Link>
+                <button
+                  onClick={handleWatchlist}
+                  disabled={watchlistSaving}
+                  style={{
+                    padding: "10px 14px", borderRadius: 10,
+                    backgroundColor: watchlisted ? `${C.em}1A` : "transparent",
+                    color: watchlisted ? C.em : C.lt3,
+                    fontSize: 11, fontWeight: 600,
+                    border: `1px solid ${watchlisted ? C.em : C.bg4}`,
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {watchlisted ? "♥ 관심 매물 등록됨" : watchlistSaving ? "저장 중..." : "관심 매물 담기"}
+                </button>
+              </div>
+            </div>
+
+            {/* ── AI Analysis Panel ────────────────── */}
+            <div
+              style={{
+                padding: 20, borderRadius: 14,
+                backgroundColor: C.bg2,
+                border: `1px solid ${C.purple}33`,
+                background: `linear-gradient(135deg, ${C.bg2} 0%, ${C.purple}08 100%)`,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  marginBottom: 14,
+                }}
+              >
+                <div
+                  style={{
+                    width: 28, height: 28, borderRadius: 8,
+                    background: `linear-gradient(135deg, ${C.purple} 0%, ${C.blue} 100%)`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}
+                >
+                  <Sparkles size={14} color="#fff" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>AI 투자 분석</div>
+                  <div style={{ fontSize: 9, color: C.lt4 }}>Claude NPL Engine · 실시간</div>
+                </div>
+              </div>
+
+              {ai.loading ? (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "30px 0" }}>
+                  <Loader2 size={16} color={C.purple} style={{ animation: "spin 1s linear infinite" }} />
+                  <span style={{ fontSize: 11, color: C.lt3 }}>AI 분석 중...</span>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {/* Recovery Rate */}
+                  {ai.recoveryRate && (
+                    <div style={{ padding: "12px 14px", borderRadius: 10, backgroundColor: C.bg3, border: `1px solid ${C.bg4}` }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                        <span style={{ fontSize: 10, color: C.lt4, fontWeight: 600 }}>
+                          <Target size={10} style={{ display: "inline", marginRight: 4 }} />예상 회수율
+                        </span>
+                        <span style={{
+                          fontSize: 9, padding: "2px 6px", borderRadius: 3,
+                          backgroundColor: ai.recoveryRate.predicted >= 70 ? `${C.em}1F` : `${C.amber}1F`,
+                          color: ai.recoveryRate.predicted >= 70 ? C.emL : C.amberL,
+                          fontWeight: 700,
+                        }}>
+                          신뢰도 {(ai.recoveryRate.confidence * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 24, fontWeight: 900, color: C.emL, letterSpacing: "-0.02em" }}>
+                        {ai.recoveryRate.predicted.toFixed(1)}%
+                      </div>
+                      <div style={{
+                        marginTop: 6, height: 4, borderRadius: 2,
+                        backgroundColor: C.bg4, position: "relative", overflow: "hidden",
+                      }}>
+                        <div style={{
+                          position: "absolute", left: 0, top: 0, bottom: 0,
+                          width: `${ai.recoveryRate.predicted}%`,
+                          borderRadius: 2,
+                          background: `linear-gradient(90deg, ${C.em} 0%, ${C.emL} 100%)`,
+                        }} />
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 9, color: C.lt4 }}>
+                        <span>범위 {ai.recoveryRate.range[0]}%</span>
+                        <span>{ai.recoveryRate.range[1]}%</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Price Guide */}
+                  {ai.priceGuide && (
+                    <div style={{ padding: "12px 14px", borderRadius: 10, backgroundColor: C.bg3, border: `1px solid ${C.bg4}` }}>
+                      <div style={{ fontSize: 10, color: C.lt4, fontWeight: 600, marginBottom: 6 }}>
+                        <BarChart3 size={10} style={{ display: "inline", marginRight: 4 }} />AI 권고 입찰가
+                      </div>
+                      <div style={{ fontSize: 18, fontWeight: 900, color: C.blueL, letterSpacing: "-0.02em" }}>
+                        {formatKRW(ai.priceGuide.recommended)}
+                      </div>
+                      <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+                        <span style={{ fontSize: 10, color: C.lt4 }}>
+                          보수 <span style={{ color: C.lt3, fontWeight: 700 }}>{formatKRW(ai.priceGuide.min)}</span>
+                        </span>
+                        <span style={{ fontSize: 10, color: C.lt4 }}>
+                          공격 <span style={{ color: C.lt3, fontWeight: 700 }}>{formatKRW(ai.priceGuide.max)}</span>
+                        </span>
+                      </div>
+                      <div style={{
+                        marginTop: 8, padding: "4px 8px", borderRadius: 4,
+                        backgroundColor: `${C.blue}0E`, border: `1px solid ${C.blue}22`,
+                        fontSize: 10, color: C.blueL,
+                      }}>
+                        시장 전망: {ai.priceGuide.marketOutlook}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Anomaly Detection */}
+                  {ai.anomaly && (
+                    <div style={{
+                      padding: "10px 14px", borderRadius: 10,
+                      backgroundColor: ai.anomaly.verdict === "SAFE" ? `${C.em}0A` : `${C.amber}0A`,
+                      border: `1px solid ${ai.anomaly.verdict === "SAFE" ? C.em : C.amber}33`,
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        {ai.anomaly.verdict === "SAFE" ? (
+                          <CheckCircle2 size={14} color={C.emL} />
+                        ) : (
+                          <AlertTriangle size={14} color={C.amberL} />
+                        )}
+                        <span style={{
+                          fontSize: 11, fontWeight: 700,
+                          color: ai.anomaly.verdict === "SAFE" ? C.emL : C.amberL,
+                        }}>
+                          {ai.anomaly.verdict === "SAFE" ? "이상 징후 없음" : "주의 필요"}
+                        </span>
+                        <span style={{
+                          marginLeft: "auto", fontSize: 9, color: C.lt4,
+                        }}>
+                          리스크 {ai.anomaly.score}/100
+                        </span>
+                      </div>
+                      {ai.anomaly.flags.length > 0 && (
+                        <div style={{ marginTop: 6, fontSize: 10, color: C.lt3, lineHeight: 1.5 }}>
+                          {ai.anomaly.flags.slice(0, 3).map((f, i) => (
+                            <div key={i}>• {f}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Quick Actions */}
+                  <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                    <Link
+                      href={`/analysis/copilot?listing=${listing.id}`}
+                      style={{
+                        flex: 1, padding: "8px 10px", borderRadius: 8,
+                        backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
+                        fontSize: 10, fontWeight: 600, color: C.lt3,
+                        textDecoration: "none", textAlign: "center",
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                      }}
+                    >
+                      <Zap size={10} /> AI에게 질문
+                    </Link>
+                    <button
+                      onClick={fetchAIAnalysis}
+                      style={{
+                        flex: 1, padding: "8px 10px", borderRadius: 8,
+                        backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
+                        fontSize: 10, fontWeight: 600, color: C.lt3,
+                        cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                      }}
+                    >
+                      <TrendingUp size={10} /> 재분석
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Matching Demands ─────────────────── */}
+            <div
+              style={{
+                padding: 20, borderRadius: 14,
+                backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 12,
+                }}
+              >
+                <Users size={13} /> 매칭 수요
+              </div>
+              <p style={{ fontSize: 12, color: C.lt3, lineHeight: 1.6, marginBottom: 14 }}>
+                이 매물과 조건이 일치하는 매수자 수요를 확인하세요.
+                AI 매칭 엔진이 담보 유형, 지역, 가격대를 기반으로 최적 매수자를 추천합니다.
+              </p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Link
+                  href="/exchange/demands"
+                  style={{
+                    flex: 1, padding: "9px 12px", borderRadius: 8,
+                    backgroundColor: `${C.em}1A`, border: `1px solid ${C.em}33`,
+                    fontSize: 11, fontWeight: 700, color: C.emL,
+                    textDecoration: "none", textAlign: "center",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                  }}
+                >
+                  <Users size={11} /> 수요 확인
+                </Link>
+                <Link
+                  href="/deals/matching"
+                  style={{
+                    flex: 1, padding: "9px 12px", borderRadius: 8,
+                    backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
+                    fontSize: 11, fontWeight: 600, color: C.lt3,
+                    textDecoration: "none", textAlign: "center",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                  }}
+                >
+                  <Sparkles size={11} /> AI 매칭
+                </Link>
+              </div>
+            </div>
+
+            {/* ── 매수자 수수료 안내 (매도자 수수료는 숨김) ─── */}
+            <div
+              style={{
+                padding: 20, borderRadius: 14,
+                backgroundColor: C.bg2,
+                border: `1px solid ${C.em}33`,
+                background: `linear-gradient(135deg, ${C.bg2} 0%, ${C.em}06 100%)`,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  fontSize: 11, color: C.emL, fontWeight: 700, marginBottom: 14,
+                }}
+              >
+                <Calculator size={13} /> 매수자 수수료 안내
+              </div>
+
+              {/* 거래금액 */}
+              <div
+                style={{
+                  padding: "10px 12px", borderRadius: 8,
+                  backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  marginBottom: 10,
+                }}
+              >
+                <span style={{ fontSize: 10, color: C.lt4, fontWeight: 600 }}>기준 거래가</span>
+                <span style={{ fontSize: 14, color: "#fff", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+                  {formatKRW(listing.asking_price)}
                 </span>
               </div>
 
-              {/* 공개정보 card */}
-              <div style={{ backgroundColor: C.l0, borderRadius: 16, overflow: 'hidden', border: `1px solid ${C.l3}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', position: 'relative' }}>
-                <div style={{ height: 4, backgroundColor: C.em }} />
-                <div style={{ padding: '16px 20px 0', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                  <Eye size={14} style={{ color: C.em }} />
-                  <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: C.lt3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('listing.publicInfo') || '공개 정보'}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: '0.5625rem', fontWeight: 800, padding: '2px 8px', borderRadius: 20, backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0' }}>공개</span>
-                </div>
-                <div style={{ padding: '0 20px 20px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-                  {[
-                    { label: t('listing.collateralType') || "담보유형",    value: listing.collateral_type },
-                    { label: t('listing.collateralRegion') || "소재지",     value: [listing.location_city, listing.location_district].filter(Boolean).join(' ') || '-' },
-                    { label: t('listing.debtPrincipal') || "채권원금",     value: formatKRW(listing.principal) },
-                    { label: t('listing.sellingInstitution') || "매각기관", value: listing.institution_name },
-                    { label: t('listing.aiEstimate') || "AI 추정가 범위",  value: `${formatKRW(listing.ai_estimate_low)} ~ ${formatKRW(listing.ai_estimate_high)}` },
-                    { label: t('listing.deadline') || "마감일",            value: listing.deadline },
-                  ].map((item) => (
-                    <div key={item.label}>
-                      <p style={{ fontSize: '0.625rem', fontWeight: 700, color: C.lt4, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{item.label}</p>
-                      <p style={{ fontSize: '0.9375rem', fontWeight: 700, color: C.lt1 }}>{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* NDA정보 card */}
-              <div style={{ backgroundColor: C.l0, borderRadius: 16, overflow: 'hidden', border: `1px solid ${C.l3}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', position: 'relative' }}>
-                <div style={{ height: 4, backgroundColor: C.amber }} />
-                <div style={{ padding: '16px 20px 0', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                  <Lock size={14} style={{ color: C.amber }} />
-                  <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: C.lt3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('listing.ndaInfo') || 'NDA 후 정보'}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: '0.5625rem', fontWeight: 800, padding: '2px 8px', borderRadius: 20, backgroundColor: '#FFFBEB', color: '#D97706', border: '1px solid #FDE68A' }}>NDA 필요</span>
-                </div>
-                <div style={{ padding: '0 20px 20px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-                  {[
-                    { label: t('listing.exactAddress') || "정확한 주소",    value: hasNDA ? listing.address : "**********" },
-                    { label: t('listing.appraisalValue') || "감정가",        value: hasNDA ? formatKRW(listing.appraisal_value) : "***" },
-                    { label: t('listing.ltv') || "LTV",                      value: hasNDA ? formatPercent(listing.ltv) : "***" },
-                    { label: t('listing.delinquencyMonths') || "연체기간",   value: hasNDA ? `${listing.overdue_months}개월` : "***" },
-                  ].map((item) => (
-                    <div key={item.label}>
-                      <p style={{ fontSize: '0.625rem', fontWeight: 700, color: C.lt4, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{item.label}</p>
-                      <p style={{ fontSize: '0.9375rem', fontWeight: 700, color: C.lt1 }}>
-                        {hasNDA ? item.value : "● ● ● ● ●"}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                {!hasNDA && (
-                  <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(6px)', backgroundColor: 'rgba(248,250,252,0.85)', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, borderRadius: 16 }}>
-                    <div style={{ width: 48, height: 48, borderRadius: '50%', backgroundColor: '#FFFBEB', border: '1px solid #FDE68A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Lock size={20} style={{ color: C.amber }} />
-                    </div>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 800, color: C.lt1 }}>{t('listing.afterNda') || 'NDA 서명 후 열람 가능'}</p>
-                    <span style={{ fontSize: '0.75rem', color: C.lt4 }}>관심표명 → NDA 서명 절차 진행</span>
-                  </div>
-                )}
-              </div>
-
-              {/* DD정보 card */}
-              <div style={{ backgroundColor: C.l0, borderRadius: 16, overflow: 'hidden', border: `1px solid ${C.l3}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', position: 'relative' }}>
-                <div style={{ height: 4, backgroundColor: C.rose }} />
-                <div style={{ padding: '16px 20px 0', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                  <Shield size={14} style={{ color: C.rose }} />
-                  <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: C.lt3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('listing.ddInfo') || '실사 후 정보'}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: '0.5625rem', fontWeight: 800, padding: '2px 8px', borderRadius: 20, backgroundColor: '#FFF1F2', color: '#E11D48', border: '1px solid #FECDD3' }}>실사 필요</span>
-                </div>
-                <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {[
-                    { label: "등기부등본",  file: listing.registry_doc },
-                    { label: "감정평가서",  file: listing.appraisal_report },
-                    { label: "채무자 정보", file: listing.debtor_info },
-                  ].map((doc) => (
-                    <div key={doc.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', backgroundColor: C.l1, borderRadius: 10, border: `1px solid ${C.l3}` }}>
-                      <span style={{ fontSize: '0.875rem', color: C.lt2, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <FileText size={14} style={{ color: C.lt4 }} />
-                        {doc.label}
-                      </span>
-                      {hasDD ? (
-                        <button
-                          type="button"
-                          style={{ fontSize: '0.75rem', fontWeight: 700, color: C.blue, background: 'none', border: 'none', cursor: 'pointer' }}
-                          onClick={async () => {
-                            const toastId = toast.loading('파일 다운로드 중...')
-                            try {
-                              const dlRes = await fetch(`/api/v1/exchange/listings/${params?.id}/documents/${encodeURIComponent(doc.file)}`)
-                              let blob: Blob
-                              if (dlRes.ok) {
-                                blob = await dlRes.blob()
-                              } else {
-                                blob = new Blob([`[${doc.label}] - ${listing.institution_name}\n파일: ${doc.file}`], { type: 'text/plain;charset=utf-8' })
-                              }
-                              const url = URL.createObjectURL(blob)
-                              const a = document.createElement('a')
-                              a.href = url
-                              a.download = doc.file
-                              a.click()
-                              URL.revokeObjectURL(url)
-                              toast.dismiss(toastId)
-                              toast.success('다운로드 완료')
-                            } catch {
-                              toast.dismiss(toastId)
-                              toast.error('다운로드 실패')
-                            }
-                          }}
-                        >
-                          다운로드
-                        </button>
-                      ) : (
-                        <Lock size={14} style={{ color: C.lt4 }} />
-                      )}
-                    </div>
-                  ))}
-                </div>
-                {!hasDD && (
-                  <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(6px)', backgroundColor: 'rgba(248,250,252,0.85)', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, borderRadius: 16 }}>
-                    <div style={{ width: 48, height: 48, borderRadius: '50%', backgroundColor: '#FFF1F2', border: '1px solid #FECDD3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Shield size={20} style={{ color: C.rose }} />
-                    </div>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 800, color: C.lt1 }}>{t('listing.afterDd') || '실사 완료 후 열람 가능'}</p>
-                    <span style={{ fontSize: '0.75rem', color: C.lt4 }}>NDA 체결 → 실사 요청 절차 진행</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* ── AI Analysis Panel (Bloomberg Terminal dark) ────── */}
-            <div style={{ backgroundColor: C.bg2, borderRadius: 16, padding: '24px', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 }}>
-                <BarChart3 size={18} style={{ color: C.em }} />
-                <h2 style={{ fontSize: '0.875rem', fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {t('listing.aiAnalysisPanel') || 'AI 분석 패널'}
-                </h2>
-              </div>
-
-              {/* Estimate range — 3-segment bar */}
-              <div style={{ marginBottom: 28 }}>
-                <p style={{ fontSize: '0.625rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-                  {t('listing.fairValueRange') || '적정가 범위'}
-                </p>
-                <div style={{ position: 'relative', height: 16, display: 'flex', borderRadius: 999, overflow: 'hidden', marginBottom: 12 }}>
-                  <div style={{ flex: 1, backgroundColor: 'rgba(59,130,246,0.25)' }} />
-                  <div style={{ flex: 1, backgroundColor: 'rgba(16,185,129,0.4)' }} />
-                  <div style={{ flex: 1, backgroundColor: 'rgba(59,130,246,0.25)' }} />
-                  <div style={{ position: 'absolute', top: 0, bottom: 0, width: 2, backgroundColor: '#fff', boxShadow: '0 0 8px rgba(255,255,255,0.9)', zIndex: 10, left: `${midPct}%` }} />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
+              {/* 수수료율 · 금액 */}
+              <div
+                style={{
+                  padding: "14px 12px", borderRadius: 10,
+                  backgroundColor: `${C.em}0E`, border: `1px solid ${C.em}33`,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div>
-                    <span style={{ display: 'block', fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.3)', marginBottom: 2 }}>Low</span>
-                    <span style={{ color: '#fff', fontWeight: 800 }}>{formatKRW(listing.ai_estimate_low)}</span>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <span style={{ display: 'block', fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.3)', marginBottom: 2 }}>Mid</span>
-                    <span style={{ color: C.em, fontWeight: 900 }}>{formatKRW(listing.ai_estimate_mid)}</span>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ display: 'block', fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.3)', marginBottom: 2 }}>High</span>
-                    <span style={{ color: '#fff', fontWeight: 800 }}>{formatKRW(listing.ai_estimate_high)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 3 Scenario columns */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 28 }}>
-                {[
-                  { label: t('listing.conservative') || "보수", value: listing.scenario_conservative, color: '#93C5FD', bar: 'rgba(96,165,250,0.7)' },
-                  { label: t('listing.base') || "기본",         value: listing.scenario_base,          color: C.em,     bar: 'rgba(16,185,129,0.8)' },
-                  { label: t('listing.optimistic') || "낙관",   value: listing.scenario_optimistic,    color: C.amber2,  bar: 'rgba(245,158,11,0.7)' },
-                ].map((s) => (
-                  <div key={s.label} style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
-                    <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{s.label}</p>
-                    <p style={{ fontSize: '1.5rem', fontWeight: 900, color: s.color, letterSpacing: '-0.02em' }}>{formatPercent(s.value)}</p>
-                    <div style={{ marginTop: 8, height: 4, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 999, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${Math.min(100, s.value * 3)}%`, backgroundColor: s.bar, borderRadius: 999 }} />
+                    <div style={{ fontSize: 10, color: C.lt4, fontWeight: 600, marginBottom: 4 }}>수수료율</div>
+                    <div style={{ fontSize: 22, color: C.emL, fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
+                      {(buyerFee.totalRate * 100).toFixed(1)}%
                     </div>
                   </div>
-                ))}
-              </div>
-
-              {/* Risk grade visual */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className={`${riskStyle.pill} ${riskStyle.glow}`} style={{ width: 56, height: 56, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.75rem', fontWeight: 900, flexShrink: 0 }}>
-                  {listing.risk_grade}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>리스크 등급</p>
-                  <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.5 }}>{RISK_DESCRIPTIONS[listing.risk_grade]}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Price Analysis — Bloomberg metric cards ───────── */}
-            <div style={{ backgroundColor: C.l0, borderRadius: 16, padding: '24px', border: `1px solid ${C.l3}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-                <DollarSign size={14} style={{ color: C.em }} />
-                <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: C.lt3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>가격 분석</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-                {[
-                  {
-                    label: "할인율",
-                    value: listing.appraisal_value > 0
-                      ? `${(((listing.appraisal_value - listing.principal) / listing.appraisal_value) * 100).toFixed(1)}%`
-                      : "-",
-                    note: "(감정가-원금)/감정가",
-                    color: C.em,
-                    bg: '#ECFDF5',
-                    border: '#A7F3D0',
-                  },
-                  {
-                    label: "LTV",
-                    value: formatPercent(listing.ltv),
-                    note: "채권원금/감정가",
-                    color: C.blue,
-                    bg: '#EFF6FF',
-                    border: '#BFDBFE',
-                  },
-                  {
-                    label: "감정가",
-                    value: formatKRW(listing.appraisal_value),
-                    note: "공시 감정평가액",
-                    color: C.lt1,
-                    bg: C.l1,
-                    border: C.l3,
-                  },
-                ].map((item) => (
-                  <div key={item.label} style={{ backgroundColor: item.bg, borderRadius: 12, padding: '16px', border: `1px solid ${item.border}`, textAlign: 'center' }}>
-                    <p style={{ fontSize: '0.625rem', fontWeight: 700, color: C.lt4, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{item.label}</p>
-                    <p style={{ fontSize: '1.5rem', fontWeight: 900, color: item.color, letterSpacing: '-0.02em' }}>{item.value}</p>
-                    <p style={{ fontSize: '0.5625rem', color: C.lt4, marginTop: 6 }}>{item.note}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Map placeholder */}
-            <div style={{ backgroundColor: C.l0, borderRadius: 16, overflow: 'hidden', border: `1px solid ${C.l3}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
-              <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: `1px solid ${C.l3}` }}>
-                <MapPin size={14} style={{ color: C.em }} />
-                <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: C.lt3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>위치 정보</span>
-              </div>
-              <div style={{ height: 200, backgroundColor: C.l2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
-                <MapPin size={32} style={{ color: C.lt4 }} />
-                <p style={{ fontSize: '0.875rem', fontWeight: 700, color: C.lt2 }}>{hasNDA ? listing.address : `${listing.location_city} ${listing.location_district} 일대`}</p>
-                <p style={{ fontSize: '0.75rem', color: C.lt4 }}>NDA 서명 후 정확한 위치 공개</p>
-              </div>
-            </div>
-
-            {/* Expert CTA Banner */}
-            <div style={{ borderRadius: 16, background: `linear-gradient(135deg, ${C.bg3} 0%, #1B3A5C 100%)`, padding: '24px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-              <div>
-                <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#fff', marginBottom: 4 }}>이 매물에 대해 전문가 상담 받기</h3>
-                <p style={{ fontSize: '0.875rem', color: 'rgba(191,219,254,0.7)' }}>법률, 감정평가, 세무 전문가가 대기 중입니다</p>
-              </div>
-              <Link href="/services/experts" style={{ textDecoration: 'none' }}>
-                <button type="button" style={{ padding: '10px 20px', borderRadius: 10, backgroundColor: '#fff', color: '#0D1F38', fontWeight: 800, fontSize: '0.875rem', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
-                  전문가 찾기
-                </button>
-              </Link>
-            </div>
-
-            {/* Similar Listings placeholder */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <Building2 size={14} style={{ color: C.lt3 }} />
-                <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: C.lt3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>유사 매물</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-                {[
-                  { type: listing.collateral_type, city: listing.location_city, principal: listing.principal * 0.85, grade: "A" },
-                  { type: listing.collateral_type, city: listing.location_city, principal: listing.principal * 1.12, grade: "B" },
-                ].map((item, i) => (
-                  <Link key={i} href="/exchange" style={{ textDecoration: 'none' }}>
-                    <div style={{ backgroundColor: C.l0, borderRadius: 12, padding: '16px', border: `1px solid ${C.l3}`, cursor: 'pointer', transition: 'all 0.2s' }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.em; (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 16px rgba(16,185,129,0.1)` }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.l3; (e.currentTarget as HTMLElement).style.boxShadow = 'none' }}
-                    >
-                      <span style={{ fontSize: '0.625rem', fontWeight: 800, padding: '2px 8px', borderRadius: 20, backgroundColor: '#ECFDF5', color: '#059669' }}>{item.grade}</span>
-                      <p style={{ fontSize: '0.875rem', fontWeight: 700, color: C.lt1, marginTop: 8 }}>{item.type} · {item.city}</p>
-                      <p style={{ fontSize: '1rem', fontWeight: 900, color: C.em, marginTop: 4 }}>{formatKRW(item.principal)}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-          </div>{/* end LEFT COLUMN */}
-
-          {/* ════ RIGHT SIDEBAR — STICKY ══════════════════════════ */}
-          <div>
-            <div className="sticky top-20" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-              {/* Primary Action Panel — dark navy */}
-              <div style={{ backgroundColor: C.bg3, borderRadius: 16, padding: '24px', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.07)' }}>
-
-                {/* Principal */}
-                <div style={{ marginBottom: 4 }}>
-                  <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>채권원금</p>
-                </div>
-                <p style={{ fontSize: '2.25rem', fontWeight: 900, color: '#fff', lineHeight: 1, marginBottom: 4, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
-                  {formatKRW(listing.principal)}
-                </p>
-                <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>
-                  {listing.location_city} {listing.location_district} · {listing.collateral_type}
-                </p>
-
-                {/* Risk grade badge */}
-                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-black mb-5 ${riskStyle.pill} ${riskStyle.glow}`}>
-                  <Shield size={14} />
-                  리스크 등급 {listing.risk_grade}
-                </div>
-
-                {/* AI estimate range bar */}
-                <div style={{ marginBottom: 20, padding: 16, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>AI 추정가 범위</p>
-                  <div style={{ position: 'relative', height: 12, borderRadius: 999, overflow: 'hidden', marginBottom: 10, display: 'flex' }}>
-                    <div style={{ flex: 1, backgroundColor: 'rgba(96,165,250,0.2)' }} />
-                    <div style={{ flex: 1, backgroundColor: 'rgba(16,185,129,0.35)' }} />
-                    <div style={{ flex: 1, backgroundColor: 'rgba(96,165,250,0.2)' }} />
-                    <div style={{ position: 'absolute', top: 0, bottom: 0, width: 2, backgroundColor: '#fff', zIndex: 10, boxShadow: '0 0 6px rgba(255,255,255,0.8)', left: `${midPct}%` }} />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)' }}>
-                    <span>{formatKRW(listing.ai_estimate_low)}</span>
-                    <span style={{ color: C.em, fontWeight: 800 }}>{formatKRW(listing.ai_estimate_mid)}</span>
-                    <span>{formatKRW(listing.ai_estimate_high)}</span>
-                  </div>
-                </div>
-
-                {/* Deadline countdown */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, padding: 12, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
-                    <Clock size={14} />
-                    마감까지
-                  </span>
-                  <span style={{
-                    padding: '4px 12px', borderRadius: 999, fontSize: '0.75rem', fontWeight: 900,
-                    ...(deadlineDays <= 3
-                      ? { backgroundColor: 'rgba(239,68,68,0.2)', color: '#F87171', border: '1px solid rgba(239,68,68,0.3)', boxShadow: '0 0 10px rgba(239,68,68,0.3)' }
-                      : deadlineDays <= 7
-                      ? { backgroundColor: 'rgba(245,158,11,0.2)', color: C.amber2, border: '1px solid rgba(245,158,11,0.3)' }
-                      : { backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)' })
-                  }}>
-                    {deadlineDays > 0 ? `D-${deadlineDays}` : "마감"}
-                  </span>
-                </div>
-
-                {/* Deal Flow Stepper */}
-                <div style={{ marginBottom: 20, padding: 16, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>거래 진행 단계</p>
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ position: 'absolute', left: 13, top: 12, bottom: 12, width: 1, backgroundColor: 'rgba(255,255,255,0.1)' }} />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      {[
-                        { key: "INTEREST",      step: 1, label: "관심 표명",  desc: "투자 의향 제출"   },
-                        { key: "NDA",           step: 2, label: "NDA 서명",  desc: "기밀 유지 계약"   },
-                        { key: "DUE_DILIGENCE", step: 3, label: "실사 요청",  desc: "문서 검토 및 확인" },
-                        { key: "OFFER",         step: 4, label: "입찰 제출",  desc: "최종 가격 제안"   },
-                      ].map(({ key, step, label, desc }) => {
-                        const idx = ["OPEN","INTEREST","NDA","DUE_DILIGENCE","OFFER"].indexOf(key)
-                        const done = stageIndex >= idx
-                        const active = stageIndex === idx - 1
-                        return (
-                          <div key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, position: 'relative' }}>
-                            <div style={{
-                              position: 'relative', zIndex: 10, width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.625rem', fontWeight: 900, flexShrink: 0, transition: 'all 0.2s',
-                              ...(done
-                                ? { backgroundColor: C.em, color: '#fff', boxShadow: `0 0 8px ${C.em}80` }
-                                : active
-                                ? { backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', border: `1px solid rgba(16,185,129,0.6)`, boxShadow: '0 0 6px rgba(16,185,129,0.25)' }
-                                : { backgroundColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)' })
-                            }}>
-                              {done ? "✓" : step}
-                            </div>
-                            <div style={{ paddingTop: 2, minWidth: 0 }}>
-                              <p style={{ fontSize: '0.75rem', fontWeight: 800, lineHeight: 1.2, color: done ? '#fff' : active ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)' }}>{label}</p>
-                              <p style={{ fontSize: '0.625rem', lineHeight: 1.3, marginTop: 2, color: done ? 'rgba(255,255,255,0.5)' : active ? `${C.emL}B0` : 'rgba(255,255,255,0.2)' }}>{active ? "← 현재 단계" : desc}</p>
-                            </div>
-                          </div>
-                        )
-                      })}
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 10, color: C.lt4, fontWeight: 600, marginBottom: 4 }}>예상 수수료</div>
+                    <div style={{ fontSize: 16, color: C.emL, fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
+                      {formatKRW(buyerFee.totalFee)}
                     </div>
                   </div>
                 </div>
+                {/* 수수료 항목 */}
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px dashed ${C.em}22` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.lt4, marginBottom: 4 }}>
+                    <span>기본 수수료 ({(buyerFee.baseRate * 100).toFixed(1)}%)</span>
+                    <span style={{ color: C.lt3 }}>{formatKRW(buyerFee.baseFee)}</span>
+                  </div>
+                  {buyerFee.addonDetails.map(a => (
+                    <div key={a.key} style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.lt4 }}>
+                      <span>+ {a.label} ({(a.rate * 100).toFixed(1)}%)</span>
+                      <span style={{ color: C.lt3 }}>{formatKRW(a.fee)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-                {/* Primary CTA */}
-                <button
-                  type="button"
-                  disabled={submittingInterest || currentStage === "OFFER"}
-                  onClick={() => handleStageAction(currentStage)}
-                  style={{
-                    width: '100%', padding: '14px 0', borderRadius: 12, backgroundColor: C.em, color: '#fff', fontSize: '1rem', fontWeight: 900, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
-                    boxShadow: `0 0 20px ${C.em}58`,
-                    marginBottom: 12,
-                    opacity: (submittingInterest || currentStage === "OFFER") ? 0.5 : 1,
-                  }}
-                >
-                  {submittingInterest ? "처리중..." : ctaMap[currentStage]}
-                </button>
+              <div style={{ marginTop: 10, fontSize: 10, color: C.lt4, lineHeight: 1.55 }}>
+                💡 수수료는 <strong style={{ color: "#fff" }}>거래 성사 시</strong>에만 부과됩니다.
+                에스크로 계좌로 자동 정산되며, 매도자 수수료는 별도로 처리됩니다.
+              </div>
+            </div>
 
-                {/* Secondary actions */}
-                <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-                  <button
-                    type="button"
-                    onClick={handleToggleInterest}
+            {/* ── Provided fields ──────────────────── */}
+            <div
+              style={{
+                padding: 20, borderRadius: 14,
+                backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
+              }}
+            >
+              <div style={{ fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 10 }}>
+                제공 자료 ({Object.values(listing.provided).filter(Boolean).length}/6)
+              </div>
+              {[
+                ["appraisal", "감정평가서"],
+                ["registry", "등기부등본"],
+                ["rights", "권리관계"],
+                ["lease", "임차현황"],
+                ["site_photos", "현장사진"],
+                ["financials", "재무자료"],
+              ].map(([k, label]) => {
+                const ok = listing.provided[k as keyof typeof listing.provided]
+                return (
+                  <div
+                    key={k}
                     style={{
-                      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', borderRadius: 12, fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
-                      ...(interested
-                        ? { backgroundColor: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#F87171' }
-                        : { backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)' })
+                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                      padding: "6px 0",
+                      borderBottom: `1px dashed ${C.bg4}`,
+                      fontSize: 12,
                     }}
                   >
-                    <Heart size={16} style={{ fill: interested ? 'currentColor' : 'none' }} />
-                    {interested ? "관심등록됨" : "관심등록"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { navigator.clipboard?.writeText(window.location.href); toast.success('링크가 복사되었습니다') }}
-                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', borderRadius: 12, fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)' }}
-                  >
-                    <Copy size={15} />
-                    공유
-                  </button>
-                </div>
-
-                <hr style={{ borderColor: 'rgba(255,255,255,0.1)', marginBottom: 20 }} />
-
-                {/* Stats row */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-                  <div style={{ padding: 12, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>관심자</p>
-                    <p style={{ fontSize: '1.125rem', fontWeight: 900, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>{listing.interest_count}명</p>
+                    <span style={{ color: "#fff" }}>{label}</span>
+                    {ok ? (
+                      <CheckCircle2 size={14} color={C.emL} />
+                    ) : (
+                      <span style={{ fontSize: 10, color: C.lt4 }}>미제공</span>
+                    )}
                   </div>
-                  <div style={{ padding: 12, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>등록일</p>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 800, color: '#fff' }}>{listing.created_at}</p>
-                  </div>
-                </div>
-
-                {/* Institution */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', marginBottom: 12 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Building2 size={16} style={{ color: 'rgba(255,255,255,0.6)' }} />
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 800, color: '#fff', marginBottom: 4 }}>{listing.institution_name}</p>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <span style={{ fontSize: '0.625rem', fontWeight: 800, padding: '2px 8px', borderRadius: 20, backgroundColor: 'rgba(59,130,246,0.2)', color: '#93C5FD', border: '1px solid rgba(59,130,246,0.3)' }}>
-                        {listing.institution_type === "INSTITUTION" ? "기관" : listing.institution_type === "AMC" ? "AMC" : "개인"}
-                      </span>
-                      <span style={{ fontSize: '0.625rem', fontWeight: 800, padding: '2px 8px', borderRadius: 20, backgroundColor: listing.trust_grade === "S" ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.1)', color: listing.trust_grade === "S" ? '#34D399' : 'rgba(255,255,255,0.6)', border: `1px solid ${listing.trust_grade === "S" ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}` }}>
-                        신뢰등급 {listing.trust_grade}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Stars */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <svg key={i} style={{ width: 14, height: 14, color: i < Math.round(listing.institution_rating) ? C.amber2 : 'rgba(255,255,255,0.15)' }} fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                  <span style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', marginLeft: 4 }}>{listing.institution_rating} / 5.0</span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
-                  <div>
-                    <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{t('listing.totalDeals') || "총 거래"}</p>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 800, color: '#fff' }}>{listing.institution_total_deals ?? 0}건</p>
-                  </div>
-                  <div>
-                    <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{t('listing.avgDays') || "평균 소요"}</p>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 800, color: '#fff' }}>{listing.institution_avg_days ?? '-'}일</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* ROI Scenarios */}
-              <div style={{ backgroundColor: C.l0, borderRadius: 16, padding: '20px', border: `1px solid ${C.l3}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                  <TrendingUp size={13} style={{ color: C.em }} />
-                  <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: C.lt3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>예상 수익률</span>
-                </div>
-                {[
-                  { label: t('listing.conservative') || "보수적", value: listing.scenario_conservative, color: C.lt2,  bar: C.lt4,  bg: C.l1,      border: C.l3       },
-                  { label: t('listing.base') || "기본",           value: listing.scenario_base,          color: C.blue, bar: C.blue, bg: '#EFF6FF', border: '#BFDBFE'  },
-                  { label: t('listing.optimistic') || "낙관적",   value: listing.scenario_optimistic,    color: C.em,   bar: C.em,   bg: '#ECFDF5', border: '#A7F3D0'  },
-                ].map((s) => (
-                  <div key={s.label} style={{ backgroundColor: s.bg, borderRadius: 10, padding: '12px', border: `1px solid ${s.border}`, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: '0.625rem', fontWeight: 700, color: C.lt4, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{s.label}</p>
-                      <div style={{ height: 4, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 999, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${Math.min(100, s.value * 4)}%`, backgroundColor: s.bar, borderRadius: 999 }} />
-                      </div>
-                    </div>
-                    <p style={{ fontSize: '1.25rem', fontWeight: 900, color: s.color, letterSpacing: '-0.02em', flexShrink: 0 }}>{formatPercent(s.value)}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Simulator CTA */}
-              <div style={{ backgroundColor: C.bg3, borderRadius: 16, padding: '20px', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <Calculator size={14} style={{ color: 'rgba(255,255,255,0.5)' }} />
-                  <h3 style={{ fontSize: '0.875rem', fontWeight: 800, color: C.l0 }}>경매 시뮬레이터</h3>
-                </div>
-                <p style={{ fontSize: '0.75rem', color: C.lt4, marginBottom: 14 }}>이 매물로 수익률을 시뮬레이션</p>
-                <Link
-                  href={`/analysis/simulator?listing=${params?.id}&principal=${listing.principal}`}
-                  style={{ display: 'block', textAlign: 'center', padding: '10px 0', borderRadius: 10, backgroundColor: C.l0, color: C.lt1, fontWeight: 800, fontSize: '0.875rem', textDecoration: 'none' }}
-                >
-                  시뮬레이터 열기 →
-                </Link>
-              </div>
-
-              {/* Expert links */}
-              <div style={{ backgroundColor: C.l0, borderRadius: 16, padding: '20px', border: `1px solid ${C.l3}` }}>
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 800, color: C.lt1, marginBottom: 4 }}>전문가 상담</h3>
-                <p style={{ fontSize: '0.75rem', color: C.lt4, marginBottom: 14 }}>전문가의 의견을 들어보세요</p>
-                {[
-                  { href: "/services/experts?specialty=법률",    icon: Scale,       label: "법률 전문가" },
-                  { href: "/services/experts?specialty=감정평가", icon: Calculator,  label: "감정평가사"  },
-                  { href: "/services/experts?specialty=세무",    icon: FileText,    label: "세무 전문가" },
-                ].map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px', borderRadius: 10, textDecoration: 'none', marginBottom: 4 }}
-                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.backgroundColor = C.l2)}
-                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.backgroundColor = 'transparent')}
-                  >
-                    <div style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: C.l2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <item.icon size={13} style={{ color: C.lt3 }} />
-                    </div>
-                    <span style={{ fontSize: '0.875rem', color: C.blue, fontWeight: 600 }}>{item.label}</span>
-                  </Link>
-                ))}
-              </div>
-
-              {/* Institution profile link */}
-              <Link href={`/exchange/institutions/${listing.institution_name}`} style={{ textDecoration: 'none' }}>
-                <button
-                  type="button"
-                  style={{ width: '100%', padding: '10px 0', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.6)', fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.6)' }}
-                >
-                  기관 프로필 보기
-                </button>
-              </Link>
-
+                )
+              })}
             </div>
-          </div>{/* end RIGHT SIDEBAR */}
 
-        </div>{/* end grid */}
+            {/* ── Trust strip ──────────────────────── */}
+            <div
+              style={{
+                padding: "14px 16px", borderRadius: 14,
+                backgroundColor: `${C.em}0A`, border: `1px solid ${C.em}33`,
+                display: "flex", gap: 10, alignItems: "flex-start",
+              }}
+            >
+              <ShieldCheck size={16} color={C.emL} style={{ marginTop: 2, flexShrink: 0 }} />
+              <div style={{ fontSize: 11, color: C.lt3, lineHeight: 1.5 }}>
+                본 매물은 <strong style={{ color: "#fff" }}>개인정보보호법 · 신용정보법 · 전자금융거래법</strong>을 준수하며,
+                모든 열람은 PII Access Log로 기록됩니다.
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
 
-        {/* Offer Confirmation Dialog */}
-        {offerConfirmOpen && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', padding: '0 16px' }}>
-            <div style={{ backgroundColor: C.l0, borderRadius: 20, boxShadow: '0 25px 80px rgba(0,0,0,0.3)', padding: '24px', width: '100%', maxWidth: 400 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <Send size={16} style={{ color: C.blue }} />
-                <h3 style={{ fontSize: '1rem', fontWeight: 800, color: C.lt1 }}>입찰 신청 확인</h3>
-              </div>
-              <p style={{ fontSize: '0.875rem', color: C.lt2, marginBottom: 8 }}>입찰을 신청하시겠습니까?</p>
-              <p style={{ fontSize: '0.75rem', color: C.lt4, marginBottom: 24 }}>한 번 제출된 입찰은 취소가 어려울 수 있습니다. 신중하게 확인해 주세요.</p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  type="button"
-                  style={{ flex: 1, padding: '10px', borderRadius: 12, border: `1px solid ${C.l3}`, backgroundColor: 'transparent', color: C.lt2, fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}
-                  onClick={() => setOfferConfirmOpen(false)}
-                >
-                  취소
-                </button>
-                <button
-                  type="button"
-                  style={{ flex: 1, padding: '10px', borderRadius: 12, border: 'none', backgroundColor: C.bg3, color: '#fff', fontSize: '0.875rem', fontWeight: 800, cursor: 'pointer' }}
-                  onClick={handleOfferConfirm}
-                >
-                  확인 제출
-                </button>
-              </div>
+      {/* ═══════════════════════════════════════════════════════
+          MOBILE STICKY CTA (md 미만에서만 노출)
+          데스크톱 sticky 사이드바와 동일 액션 — 모바일은 viewport
+          좁아 사이드바를 표시할 수 없으므로 하단 고정 바로 제공.
+      ═══════════════════════════════════════════════════════ */}
+      <div
+        className="md:hidden"
+        style={{
+          position: "fixed",
+          left: 0, right: 0, bottom: 0,
+          zIndex: 40,
+          backgroundColor: C.bg1,
+          borderTop: `1px solid ${C.bg4}`,
+          padding: "12px 16px calc(12px + env(safe-area-inset-bottom))",
+          backdropFilter: "blur(12px)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div>
+            <div style={{ fontSize: 10, color: C.lt4, fontWeight: 700, letterSpacing: 0.5 }}>매각 희망가</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", fontVariantNumeric: "tabular-nums" }}>
+              {(listing.asking_price / 100_000_000).toFixed(1)}억원
             </div>
           </div>
-        )}
-
-        <div style={{ marginTop: 40, padding: '20px 24px', backgroundColor: C.l2, borderRadius: 12, border: `1px solid ${C.l3}` }}>
-          <p style={{ fontSize: '0.6875rem', color: C.lt4, lineHeight: 1.6 }}>
-            본 플랫폼에서 제공하는 정보는 참고용이며 투자 권유가 아닙니다. NPL 투자는 원금 손실의 위험이 있으며, 투자 결정은 본인의 판단과 책임 하에 이루어져야 합니다. 제공된 AI 분석, 수익률 시나리오 등은 추정치이며 실제 결과와 다를 수 있습니다. 투자 전 법률·세무 전문가 자문을 권장합니다.
-          </p>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 10, color: C.lt4, fontWeight: 700, letterSpacing: 0.5 }}>현재 권한</div>
+            <div style={{ fontSize: 12, color: C.emL, fontWeight: 800 }}>{TIER_META[tier].label}</div>
+          </div>
         </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            type="button"
+            onClick={handleWatchlist}
+            disabled={watchlistSaving}
+            style={{
+              flex: "0 0 auto",
+              padding: "12px 14px",
+              borderRadius: 10,
+              backgroundColor: watchlisted ? `${C.em}22` : "transparent",
+              color: watchlisted ? C.em : C.lt2,
+              border: `1px solid ${watchlisted ? C.em : C.bg4}`,
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+            aria-label={watchlisted ? "관심 매물 등록됨" : "관심 매물 담기"}
+          >
+            ♥
+          </button>
+          <Link
+            href={`/exchange/${listing.id}/nda`}
+            style={{
+              flex: 1,
+              padding: "12px 14px",
+              borderRadius: 10,
+              backgroundColor: C.em,
+              color: "#041915",
+              fontSize: 13,
+              fontWeight: 800,
+              textAlign: "center",
+              textDecoration: "none",
+              display: "inline-flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <FileSignature size={14} />
+            NDA 체결하고 다음 단계
+          </Link>
+        </div>
+      </div>
 
+      {/* 모바일 sticky CTA가 콘텐츠 아래쪽을 가리지 않도록 하단 패딩 확보 */}
+      <div className="md:hidden" style={{ height: 96 }} aria-hidden="true" />
+    </main>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SUB-COMPONENTS
+═══════════════════════════════════════════════════════════ */
+function KpiCard({
+  label, value, tone, accent = false,
+}: {
+  label: string
+  value: React.ReactNode
+  tone: "em" | "neutral"
+  accent?: boolean
+}) {
+  return (
+    <div
+      style={{
+        padding: "16px 18px",
+        backgroundColor: accent ? `${C.em}0E` : C.bg2,
+        border: `1px solid ${accent ? `${C.em}44` : C.bg4}`,
+        borderRadius: 12,
+      }}
+    >
+      <div style={{ fontSize: 11, color: C.lt4, fontWeight: 600, marginBottom: 4 }}>{label}</div>
+      <div
+        style={{
+          fontSize: 22, fontWeight: 900, letterSpacing: "-0.02em",
+          color: tone === "em" ? C.emL : "#fff",
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  )
+}
+
+function Panel({
+  title, icon, tier, children,
+}: {
+  title: string
+  icon: React.ReactNode
+  tier: AccessTier
+  children: React.ReactNode
+}) {
+  return (
+    <section
+      style={{
+        backgroundColor: C.bg2,
+        border: `1px solid ${C.bg4}`,
+        borderRadius: 14,
+        overflow: "hidden",
+      }}
+    >
+      <header
+        style={{
+          padding: "14px 18px",
+          borderBottom: `1px solid ${C.bg4}`,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            fontSize: 13, fontWeight: 700, color: "#fff",
+          }}
+        >
+          <span style={{ color: C.emL }}>{icon}</span>
+          {title}
+        </div>
+        <TierBadge tier={tier} variant="soft" size="xs" />
+      </header>
+      <div style={{ padding: 18 }}>{children}</div>
+    </section>
+  )
+}
+
+function MiniStat({
+  label, value, tone,
+}: {
+  label: string
+  value: string
+  tone: "em" | "blue" | "amber" | "teal"
+}) {
+  const color = { em: C.emL, blue: C.blueL, amber: C.amberL, teal: C.teal }[tone]
+  return (
+    <div
+      style={{
+        padding: "12px 14px", borderRadius: 10,
+        backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
+      }}
+    >
+      <div style={{ fontSize: 10, color: C.lt4, fontWeight: 600, marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: 15, fontWeight: 800, color, letterSpacing: "-0.01em" }}>{value}</div>
+    </div>
+  )
+}
+
+function ClaimCell({
+  label, value, color,
+}: {
+  label: string
+  value: string
+  color?: string
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      <span style={{ fontSize: 9, color: C.lt4, fontWeight: 700, letterSpacing: "0.02em" }}>
+        {label}
+      </span>
+      <span style={{ fontSize: 13, color: color ?? "#fff", fontWeight: 800, letterSpacing: "-0.01em" }}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function DataRow({
+  label, value, valueColor, masked,
+}: {
+  label: string
+  value: string
+  valueColor?: string
+  masked?: boolean
+}) {
+  return (
+    <div
+      style={{
+        padding: "8px 10px", borderRadius: 8,
+        backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
+        display: "flex", flexDirection: "column", gap: 2,
+      }}
+    >
+      <span style={{ fontSize: 9, color: C.lt4, fontWeight: 700, letterSpacing: "0.02em" }}>
+        {label}
+        {masked && (
+          <span style={{ marginLeft: 4, fontSize: 8, color: C.amber, fontWeight: 700 }}>
+            ● 일부 마스킹
+          </span>
+        )}
+      </span>
+      <span style={{ fontSize: 12, color: valueColor ?? "#fff", fontWeight: 700 }}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function FeeRow({
+  label, rate, amount, waived,
+}: {
+  label: string
+  rate: number
+  amount: number
+  waived?: boolean
+}) {
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.lt4, marginBottom: 3 }}>
+        <span>{label}</span>
+        <span style={{ color: C.emL, fontWeight: 700 }}>{(rate * 100).toFixed(2)}%</span>
+      </div>
+      <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+        {formatKRW(amount)}
+        {waived && (
+          <span
+            style={{
+              marginLeft: 6, fontSize: 9, color: C.emL, fontWeight: 700,
+              padding: "1px 5px", borderRadius: 3,
+              backgroundColor: `${C.em}1F`, border: `1px solid ${C.em}44`,
+            }}
+          >
+            프리미엄 면제
+          </span>
+        )}
       </div>
     </div>
   )

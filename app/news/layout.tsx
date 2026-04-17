@@ -5,7 +5,7 @@ import { NewsTicker } from '@/components/news-ticker';
 export default function NewsLayout({ children }: { children: React.ReactNode }) {
   return (
     <NewsProvider>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="min-h-screen bg-[var(--color-surface-base)]">
         <NewsNavigation />
         <NewsTicker />
         <main>{children}</main>

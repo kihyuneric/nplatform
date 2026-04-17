@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { EnhancedStatsOverview } from '@/components/enhanced-stats-overview';
 import { NewsFilters, DEFAULT_FILTERS, type FilterState } from '@/components/news-filters';
 import NewsList from '@/components/news-list';
@@ -59,7 +58,6 @@ const MarketInsightPanel = dynamic(
 );
 import type { DummyArticle } from '@/lib/dummy-data';
 import { X, ChevronDown, ChevronUp, Printer, TrendingUp, BarChart3, Newspaper } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 // 활성 필터 칩 레이블 생성
 function buildChips(f: FilterState): { key: string; label: string }[] {
@@ -171,15 +169,13 @@ export default function NewsPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 no-print">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 h-8 text-xs text-[#7BA7C7] hover:text-white hover:bg-[#1a3a5c]"
+              <button
+                className="gap-1.5 h-8 px-2 rounded-md flex items-center text-xs text-[#7BA7C7] hover:text-white hover:bg-[#1a3a5c] transition-colors"
                 onClick={() => window.print()}
               >
                 <Printer className="h-3.5 w-3.5" />
                 PDF
-              </Button>
+              </button>
               <KeywordAlertModal />
             </div>
           </div>
@@ -328,14 +324,14 @@ export default function NewsPage() {
                 <div className="flex flex-wrap gap-2 items-center">
                   <span className="text-xs text-[#4a7a9b]">적용된 필터:</span>
                   {chips.map((chip) => (
-                    <Badge
+                    <button
                       key={chip.key}
-                      className="gap-1 pr-1.5 text-xs cursor-pointer bg-[#1a3a5c] text-[#7BA7C7] hover:bg-[#2E75B6]/20 hover:text-white border border-[#2E75B6]/30"
+                      className="inline-flex items-center gap-1 pr-1.5 pl-2 py-0.5 text-xs cursor-pointer bg-[#1a3a5c] text-[#7BA7C7] hover:bg-[#2E75B6]/20 hover:text-white border border-[#2E75B6]/30 rounded-full transition-colors"
                       onClick={() => removeChip(chip.key)}
                     >
                       {chip.label}
                       <X className="h-2.5 w-2.5" />
-                    </Badge>
+                    </button>
                   ))}
                 </div>
               )}

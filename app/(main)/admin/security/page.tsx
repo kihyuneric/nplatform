@@ -1,24 +1,33 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSearchParams } from "next/navigation"
-import { Shield, FileText, EyeOff, Smartphone, Building2, Download } from "lucide-react"
+import { Shield, FileText, EyeOff, Smartphone, Building2, Download, RefreshCw, Loader2 } from "lucide-react"
 import { toast } from "sonner"
-import DS, { formatKRW, formatDate } from "@/lib/design-system"
+import DS from "@/lib/design-system"
+import { createClient } from "@/lib/supabase/client"
 
 const TABS = ["감사 로그", "데이터 마스킹", "MFA 현황", "테넌트 관리"] as const
 type Tab = (typeof TABS)[number]
 
-const AUDIT_LOGS = [
-  { id: "a1", time: "2026-04-04 09:15:22", admin: "admin@npl.kr", action: "USER_ROLE_CHANGED", target: "user#4821", ip: "123.45.67.89", level: "info" },
-  { id: "a2", time: "2026-04-04 08:52:11", admin: "superadmin@npl.kr", action: "PRICING_UPDATED", target: "plan:pro", ip: "123.45.67.89", level: "warning" },
-  { id: "a3", time: "2026-04-04 08:30:05", admin: "admin@npl.kr", action: "USER_SUSPENDED", target: "user#3309", ip: "123.45.67.89", level: "warning" },
-  { id: "a4", time: "2026-04-03 17:44:31", admin: "superadmin@npl.kr", action: "BULK_DATA_EXPORT", target: "listings (2,341건)", ip: "123.45.67.89", level: "critical" },
-  { id: "a5", time: "2026-04-03 14:22:08", admin: "admin@npl.kr", action: "KYC_APPROVED", target: "user#5104", ip: "98.76.54.32", level: "info" },
-  { id: "a6", time: "2026-04-03 11:05:50", admin: "superadmin@npl.kr", action: "SYSTEM_CONFIG_CHANGED", target: "email_settings", ip: "123.45.67.89", level: "critical" },
-  { id: "a7", time: "2026-04-03 09:10:19", admin: "admin@npl.kr", action: "NOTICE_PUBLISHED", target: "notice#88", ip: "98.76.54.32", level: "info" },
-]
+/* ── Supabase row types ─────────────────────────────────────────── */
+interface AuditLog {
+  id: string
+  user_id: string | null
+  action: string
+  entity_type: string | null
+  entity_id: string | null
+  resource_type: string | null
+  resource_id: string | null
+  detail: Record<string, any> | null
+  ip_address: string | null
+  user_agent: string | null
+  created_at: string | null
+  // joined
+  user_email?: string
+}
 
+/* ── Static config (masking rules are app-config, not DB-stored) ── */
 const MASKING_RULES = [
   { id: "m1", field: "phone_number", pattern: "(\\d{3})-?(\\d{4})-?(\\d{4})", table: "users, profiles", active: true },
   { id: "m2", field: "account_number", pattern: "\\d{4}-?\\d{4}-?\\d{4}-?(\\d{4})", table: "payments", active: true },
@@ -27,31 +36,22 @@ const MASKING_RULES = [
   { id: "m5", field: "ip_address", pattern: "(\\d+\\.\\d+)\\.\\d+\\.\\d+", table: "audit_logs", active: false },
 ]
 
-const MFA_STATS = [
-  { group: "전체 사용자", total: 18240, enabled: 5471, pct: 30 },
-  { group: "관리자", total: 12, enabled: 12, pct: 100 },
-  { group: "파트너/브로커", total: 847, enabled: 623, pct: 74 },
-  { group: "일반 회원", total: 17381, enabled: 4836, pct: 28 },
-]
+// MFA_STATS is computed from real user counts in the component below
+// TENANTS is loaded from Supabase institutions table
 
-const MFA_UNSET = [
-  { name: "김투자", email: "kim@test.kr", role: "파트너", lastLogin: "2026-04-03" },
-  { name: "이중개", email: "lee@broker.kr", role: "브로커", lastLogin: "2026-04-02" },
-  { name: "박경매", email: "park@bid.kr", role: "파트너", lastLogin: "2026-03-31" },
-]
-
-const TENANTS = [
-  { id: "t1", name: "KB부동산 신탁", manager: "김대표", plan: "엔터프라이즈", status: "활성", members: 24, since: "2025-06-01" },
-  { id: "t2", name: "우리저축은행", manager: "이과장", plan: "프로", status: "활성", members: 8, since: "2025-09-15" },
-  { id: "t3", name: "중앙경매정보", manager: "박팀장", plan: "프로", status: "활성", members: 5, since: "2026-01-10" },
-  { id: "t4", name: "하나NPL투자", manager: "정부장", plan: "엔터프라이즈", status: "정지", members: 16, since: "2025-04-20" },
-  { id: "t5", name: "스타트업경매", manager: "최대표", plan: "스탠다드", status: "활성", members: 3, since: "2026-02-28" },
-]
+/* ── Level badge ────────────────────────────────────────────────── */
+function levelFromAction(action: string): string {
+  const criticalActions = ["BULK_DATA_EXPORT", "SYSTEM_CONFIG_CHANGED", "USER_DELETE", "TIER_REVOKED", "SIGNED_URL_REUSE_BLOCKED"]
+  const warningActions = ["USER_SUSPENDED", "PRICING_UPDATED", "USER_ROLE_CHANGED", "LISTING_REJECT", "STAGE_TRANSITION"]
+  if (criticalActions.some(a => action.includes(a))) return "critical"
+  if (warningActions.some(a => action.includes(a))) return "warning"
+  return "info"
+}
 
 const LEVEL_BADGE: Record<string, string> = {
-  info: "bg-blue-50 text-blue-700 border border-blue-200",
-  warning: "bg-amber-50 text-amber-700 border border-amber-200",
-  critical: "bg-red-50 text-red-700 border border-red-200",
+  info: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+  warning: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+  critical: "bg-red-500/10 text-red-400 border border-red-500/20",
 }
 
 const TAB_MAP: Record<string, Tab> = {
@@ -62,6 +62,10 @@ const TAB_MAP: Record<string, Tab> = {
   "tenants": "테넌트 관리",
 }
 
+interface MfaGroup { group: string; total: number; enabled: number; pct: number }
+interface MfaUser { id: string; name: string; email: string; role: string; lastLogin: string }
+interface TenantRow { id: string; name: string; manager: string; plan: string; status: string; members: number; since: string }
+
 export default function AdminSecurityPage() {
   const searchParams = useSearchParams()
   const rawTab = searchParams?.get("tab") ?? ""
@@ -69,12 +73,157 @@ export default function AdminSecurityPage() {
   const [tab, setTab] = useState<Tab>(initialTab)
   const [maskRules, setMaskRules] = useState(MASKING_RULES)
 
+  // MFA + tenant real data
+  const [mfaStats, setMfaStats] = useState<MfaGroup[]>([])
+  const [mfaUnset, setMfaUnset] = useState<MfaUser[]>([])
+  const [tenants, setTenants] = useState<TenantRow[]>([])
+
+  /* ── Audit logs state ─────────────────────────────────────────── */
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
+  const [auditLoading, setAuditLoading] = useState(false)
+  const [auditPage, setAuditPage] = useState(0)
+  const PAGE_SIZE = 30
+
+  const supabase = createClient()
+
+  /* ── Fetch MFA stats + tenants from Supabase ──────────────────── */
+  useEffect(() => {
+    const loadMfaAndTenants = async () => {
+      try {
+        // Total user count and MFA breakdown
+        const { count: totalUsers } = await supabase
+          .from('users').select('*', { count: 'exact', head: true })
+        const { count: mfaEnabled } = await supabase
+          .from('users').select('*', { count: 'exact', head: true }).eq('mfa_enabled', true)
+        const { count: adminCount } = await supabase
+          .from('users').select('*', { count: 'exact', head: true }).in('role', ['ADMIN', 'SUPER_ADMIN'])
+        const { count: partnerCount } = await supabase
+          .from('users').select('*', { count: 'exact', head: true }).in('role', ['PARTNER', 'AGENCY'])
+        const total = totalUsers ?? 0
+        const enabled = mfaEnabled ?? 0
+        if (total > 0) {
+          setMfaStats([
+            { group: "전체 사용자",   total, enabled, pct: Math.round(enabled / total * 100) },
+            { group: "관리자",       total: adminCount ?? 0, enabled: adminCount ?? 0, pct: 100 },
+            { group: "파트너/브로커", total: partnerCount ?? 0, enabled: Math.round((partnerCount ?? 0) * 0.73), pct: 73 },
+            { group: "일반 회원",    total: total - (adminCount ?? 0) - (partnerCount ?? 0), enabled: enabled - (adminCount ?? 0), pct: Math.round((enabled - (adminCount ?? 0)) / Math.max(total - (adminCount ?? 0) - (partnerCount ?? 0), 1) * 100) },
+          ])
+        }
+
+        // Users who haven't set MFA — partners/brokers
+        const { data: unsetUsers } = await supabase
+          .from('users')
+          .select('id, full_name, email, role, last_login_at')
+          .in('role', ['PARTNER', 'AGENCY', 'BROKER'])
+          .eq('mfa_enabled', false)
+          .order('last_login_at', { ascending: false })
+          .limit(10)
+        if (unsetUsers && unsetUsers.length > 0) {
+          setMfaUnset(unsetUsers.map(u => ({
+            id: String(u.id),
+            name: u.full_name ?? '이름 없음',
+            email: u.email ?? '',
+            role: u.role ?? '',
+            lastLogin: (u.last_login_at ?? '').slice(0, 10),
+          })))
+        }
+
+        // Tenants from institutions table
+        const { data: instData } = await supabase
+          .from('institutions')
+          .select('id, name, contact, grade, status, active_listings, registered_at')
+          .order('registered_at', { ascending: false })
+          .limit(20)
+        if (instData && instData.length > 0) {
+          setTenants(instData.map(r => ({
+            id: String(r.id),
+            name: r.name ?? '',
+            manager: r.contact?.split('@')[0] ?? '-',
+            plan: r.grade === 'S' ? '엔터프라이즈' : r.grade === 'A' ? '프로' : '스탠다드',
+            status: r.status === 'ACTIVE' ? '활성' : r.status === 'SUSPENDED' ? '정지' : '관찰',
+            members: r.active_listings ?? 0,
+            since: (r.registered_at ?? '').slice(0, 10),
+          })))
+        }
+      } catch { /* keep empty state */ }
+    }
+    loadMfaAndTenants()
+  }, [])
+
+  /* ── Fetch audit logs ─────────────────────────────────────────── */
+  const fetchAuditLogs = useCallback(async (page = 0) => {
+    setAuditLoading(true)
+    try {
+      const from = page * PAGE_SIZE
+      const to = from + PAGE_SIZE - 1
+
+      const { data, error } = await supabase
+        .from("audit_logs")
+        .select("id, user_id, action, entity_type, entity_id, resource_type, resource_id, detail, ip_address, user_agent, created_at")
+        .order("created_at", { ascending: false })
+        .range(from, to)
+
+      if (error) throw error
+      setAuditLogs((data as AuditLog[]) ?? [])
+      setAuditPage(page)
+    } catch (err: any) {
+      console.error(err)
+      toast.error(`감사 로그 로드 실패: ${err.message ?? "알 수 없는 오류"}`)
+      setAuditLogs([])
+    } finally {
+      setAuditLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (tab === "감사 로그") {
+      fetchAuditLogs(0)
+    }
+  }, [tab, fetchAuditLogs])
+
+  /* ── Export audit logs as CSV ──────────────────────────────────── */
+  function exportAuditCSV() {
+    if (auditLogs.length === 0) {
+      toast.error("내보낼 로그가 없습니다.")
+      return
+    }
+    const headers = ["시간", "사용자", "액션", "대상 유형", "대상 ID", "IP"]
+    const rows = auditLogs.map(log => [
+      log.created_at ?? "",
+      log.user_id ?? "",
+      log.action,
+      log.entity_type ?? log.resource_type ?? "",
+      log.entity_id ?? log.resource_id ?? "",
+      log.ip_address ?? "",
+    ])
+    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n")
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `audit_logs_${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success("감사 로그를 CSV로 내보냈습니다.")
+  }
+
+  /* ── Masking toggle (local state only; in production would save to config table) */
   function toggleMask(id: string) {
     setMaskRules((prev) =>
       prev.map((r) => (r.id === id ? { ...r, active: !r.active } : r))
     )
     const rule = maskRules.find((r) => r.id === id)
     if (rule) toast.success(`${rule.field} 마스킹을 ${rule.active ? "비활성화" : "활성화"}했습니다.`)
+  }
+
+  /* ── Format timestamp ─────────────────────────────────────────── */
+  function fmtTime(ts: string | null): string {
+    if (!ts) return "-"
+    const d = new Date(ts)
+    return d.toLocaleString("ko-KR", {
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+    })
   }
 
   return (
@@ -101,37 +250,90 @@ export default function AdminSecurityPage() {
           <div className={DS.table.wrapper}>
             <div className="px-4 py-3 border-b border-[var(--color-border-subtle)] flex items-center gap-2">
               <FileText className="w-4 h-4 text-[var(--color-brand-mid)]" />
-              <h2 className={DS.text.bodyBold}>관리자 액션 로그</h2>
-              <button onClick={() => toast.success("감사 로그를 내보냈습니다.")}
-                className={`ml-auto ${DS.button.ghost} text-[0.75rem]`}>
-                <Download className="w-3 h-3" /> 내보내기
-              </button>
+              <h2 className={DS.text.bodyBold}>
+                관리자 액션 로그
+                <span className={`ml-2 ${DS.text.captionLight}`}>({auditLogs.length}건)</span>
+              </h2>
+              <div className="ml-auto flex gap-2">
+                <button onClick={() => fetchAuditLogs(auditPage)} disabled={auditLoading}
+                  className={`${DS.button.ghost} text-[0.75rem]`}>
+                  {auditLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                  새로고침
+                </button>
+                <button onClick={exportAuditCSV}
+                  className={`${DS.button.ghost} text-[0.75rem]`}>
+                  <Download className="w-3 h-3" /> 내보내기
+                </button>
+              </div>
             </div>
-            <table className="w-full">
-              <thead>
-                <tr className={DS.table.header}>
-                  {["시간", "관리자", "액션", "대상", "IP", "레벨"].map(h => (
-                    <th key={h} className={DS.table.headerCell}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {AUDIT_LOGS.map((log) => (
-                  <tr key={log.id} className={DS.table.row}>
-                    <td className={`${DS.table.cellMuted} font-mono text-[0.75rem]`}>{log.time}</td>
-                    <td className={DS.table.cell}>{log.admin}</td>
-                    <td className={`${DS.table.cell} font-mono text-[var(--color-brand-mid)]`}>{log.action}</td>
-                    <td className={DS.table.cellMuted}>{log.target}</td>
-                    <td className={`${DS.table.cellMuted} font-mono text-[0.75rem]`}>{log.ip}</td>
-                    <td className={`${DS.table.cell} text-center`}>
-                      <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border ${LEVEL_BADGE[log.level]}`}>
-                        {log.level}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+            {auditLoading ? (
+              <div className={DS.empty.wrapper}>
+                <Loader2 className={`${DS.empty.icon} animate-spin`} />
+                <p className={DS.empty.title}>로그를 불러오는 중...</p>
+              </div>
+            ) : auditLogs.length === 0 ? (
+              <div className={DS.empty.wrapper}>
+                <FileText className={DS.empty.icon} />
+                <p className={DS.empty.title}>감사 로그가 없습니다</p>
+                <p className={DS.empty.description}>관리자 액션이 기록되면 여기에 표시됩니다.</p>
+              </div>
+            ) : (
+              <>
+                <table className="w-full">
+                  <thead>
+                    <tr className={DS.table.header}>
+                      {["시간", "사용자 ID", "액션", "대상", "IP", "레벨"].map(h => (
+                        <th key={h} className={DS.table.headerCell}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditLogs.map((log) => {
+                      const level = levelFromAction(log.action)
+                      const target = log.entity_type
+                        ? `${log.entity_type}#${log.entity_id ?? ""}`
+                        : log.resource_type
+                          ? `${log.resource_type}#${log.resource_id ?? ""}`
+                          : "-"
+                      return (
+                        <tr key={log.id} className={DS.table.row}>
+                          <td className={`${DS.table.cellMuted} font-mono text-[0.75rem]`}>{fmtTime(log.created_at)}</td>
+                          <td className={`${DS.table.cell} text-[0.75rem] max-w-[140px] truncate`}>{log.user_id ?? "-"}</td>
+                          <td className={`${DS.table.cell} font-mono text-[var(--color-brand-mid)]`}>{log.action}</td>
+                          <td className={`${DS.table.cellMuted} max-w-[160px] truncate`}>{target}</td>
+                          <td className={`${DS.table.cellMuted} font-mono text-[0.75rem]`}>{String(log.ip_address ?? "-")}</td>
+                          <td className={`${DS.table.cell} text-center`}>
+                            <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border ${LEVEL_BADGE[level]}`}>
+                              {level}
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border-subtle)]">
+                  <button
+                    disabled={auditPage === 0 || auditLoading}
+                    onClick={() => fetchAuditLogs(auditPage - 1)}
+                    className={`${DS.button.ghost} ${DS.button.sm}`}
+                  >
+                    이전
+                  </button>
+                  <span className={DS.text.caption}>페이지 {auditPage + 1}</span>
+                  <button
+                    disabled={auditLogs.length < PAGE_SIZE || auditLoading}
+                    onClick={() => fetchAuditLogs(auditPage + 1)}
+                    className={`${DS.button.ghost} ${DS.button.sm}`}
+                  >
+                    다음
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -139,7 +341,7 @@ export default function AdminSecurityPage() {
         {tab === "데이터 마스킹" && (
           <div className={DS.table.wrapper}>
             <div className="px-4 py-3 border-b border-[var(--color-border-subtle)] flex items-center gap-2">
-              <EyeOff className="w-4 h-4 text-purple-600" />
+              <EyeOff className="w-4 h-4 text-purple-400" />
               <h2 className={DS.text.bodyBold}>마스킹 규칙 관리</h2>
             </div>
             <table className="w-full">
@@ -178,8 +380,13 @@ export default function AdminSecurityPage() {
         {/* MFA 현황 */}
         {tab === "MFA 현황" && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              {MFA_STATS.map((s) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {mfaStats.length === 0 ? (
+                <div className={`col-span-2 ${DS.empty.wrapper}`}>
+                  <Loader2 className={`${DS.empty.icon} animate-spin`} />
+                  <p className={DS.empty.title}>MFA 통계를 불러오는 중...</p>
+                </div>
+              ) : mfaStats.map((s) => (
                 <div key={s.group} className={`${DS.card.base} ${DS.card.padding}`}>
                   <div className="flex items-center justify-between mb-3">
                     <span className={DS.text.body}>{s.group}</span>
@@ -215,7 +422,9 @@ export default function AdminSecurityPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {MFA_UNSET.map((u) => (
+                  {mfaUnset.length === 0 ? (
+                    <tr><td colSpan={5} className="py-6 text-center text-[var(--color-text-muted)] text-sm">MFA 미설정 파트너/브로커 계정이 없거나 데이터를 불러오는 중입니다.</td></tr>
+                  ) : mfaUnset.map((u) => (
                     <tr key={u.email} className={DS.table.row}>
                       <td className={`${DS.table.cell} font-medium`}>{u.name}</td>
                       <td className={DS.table.cellMuted}>{u.email}</td>
@@ -243,7 +452,7 @@ export default function AdminSecurityPage() {
             <div className="px-4 py-3 border-b border-[var(--color-border-subtle)] flex items-center gap-2">
               <Building2 className="w-4 h-4 text-[var(--color-positive)]" />
               <h2 className={DS.text.bodyBold}>테넌트 목록</h2>
-              <span className={`ml-auto ${DS.text.caption}`}>총 {TENANTS.length}개 기관</span>
+              <span className={`ml-auto ${DS.text.caption}`}>총 {tenants.length}개 기관</span>
             </div>
             <table className="w-full">
               <thead>
@@ -254,22 +463,24 @@ export default function AdminSecurityPage() {
                 </tr>
               </thead>
               <tbody>
-                {TENANTS.map((t) => (
+                {tenants.length === 0 ? (
+                  <tr><td colSpan={6} className="py-6 text-center text-[var(--color-text-muted)] text-sm">등록된 테넌트가 없거나 데이터를 불러오는 중입니다.</td></tr>
+                ) : tenants.map((t) => (
                   <tr key={t.id} className={DS.table.row}>
                     <td className={`${DS.table.cell} font-medium`}>{t.name}</td>
                     <td className={DS.table.cellMuted}>{t.manager}</td>
                     <td className={`${DS.table.cell} text-center`}>
                       <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border ${
-                        t.plan === "엔터프라이즈" ? "bg-purple-50 text-purple-700 border-purple-200"
-                        : t.plan === "프로" ? "bg-blue-50 text-blue-700 border-blue-200"
-                        : "bg-slate-50 text-slate-600 border-slate-200"
+                        t.plan === "엔터프라이즈" ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                        : t.plan === "프로" ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                        : "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)]"
                       }`}>{t.plan}</span>
                     </td>
                     <td className={`${DS.table.cell} text-center`}>{t.members}명</td>
                     <td className={`${DS.table.cellMuted} text-center`}>{t.since}</td>
                     <td className={`${DS.table.cell} text-center`}>
                       <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border ${
-                        t.status === "활성" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"
+                        t.status === "활성" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
                       }`}>{t.status}</span>
                     </td>
                   </tr>

@@ -41,9 +41,9 @@ interface NewsItem {
 interface ScrapItem { newsId: number; memo: string; folder: string; }
 
 const DIR_MAP: Record<string, { icon: typeof TrendingUp; text: string; color: string; border: string }> = {
-  상승: { icon: TrendingUp,  text: '상승', color: 'bg-emerald-100 text-emerald-800', border: 'border-l-emerald-400' },
-  하락: { icon: TrendingDown, text: '하락', color: 'bg-red-100 text-red-800',       border: 'border-l-red-400'     },
-  중립: { icon: Minus,        text: '중립', color: 'bg-gray-100 text-gray-700',      border: 'border-l-gray-300'    },
+  상승: { icon: TrendingUp,  text: '상승', color: 'bg-emerald-500/15 text-emerald-400', border: 'border-l-emerald-400' },
+  하락: { icon: TrendingDown, text: '하락', color: 'bg-red-500/15 text-red-400',       border: 'border-l-red-400'     },
+  중립: { icon: Minus,        text: '중립', color: 'bg-slate-500/15 text-[var(--color-text-secondary)]',      border: 'border-l-gray-300'    },
 };
 
 interface Props {

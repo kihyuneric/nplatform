@@ -99,7 +99,7 @@ export function PullToRefresh({
                 'flex h-9 w-9 items-center justify-center rounded-full shadow-md transition-colors',
                 isPastThreshold || isRefreshing
                   ? 'bg-[#10B981] text-white'
-                  : 'bg-white text-[#1B3A5C]'
+                  : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)]'
               )}
             >
               <motion.div

@@ -17,10 +17,15 @@ export async function GET(request: NextRequest) {
   }
 
   // Get deal rooms where user is a participant
-  const { data: participations } = await supabase
+  const { data: participations, error: partError } = await supabase
     .from('deal_room_participants')
     .select('deal_room_id')
     .eq('user_id', userId)
+
+  if (partError) {
+    console.error('[deal-rooms] participants DB error:', partError.message)
+    return NextResponse.json({ dealRooms: [], _mock: true })
+  }
 
   if (!participations || participations.length === 0) {
     return NextResponse.json({ dealRooms: [] })
@@ -40,7 +45,10 @@ export async function GET(request: NextRequest) {
     .in('id', roomIds)
     .order('created_at', { ascending: false })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[deal-rooms] rooms DB error:', error.message)
+    return NextResponse.json({ dealRooms: [], _mock: true })
+  }
 
   return NextResponse.json({ dealRooms: data || [] })
 }

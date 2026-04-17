@@ -86,7 +86,7 @@ export default function MFAVerifyPage() {
   return (
     <div className="flex min-h-screen">
       {/* Left panel */}
-      <div className="hidden md:flex md:w-2/5 flex-col bg-[#060E1C] relative overflow-hidden">
+      <div className="hidden md:flex md:w-2/5 flex-col bg-[var(--color-brand-deepest)] relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-1/3 -left-20 w-72 h-72 rounded-full bg-blue-500/5" />
           <div className="absolute bottom-1/4 -right-20 w-96 h-96 rounded-full bg-blue-400/5" />
@@ -95,7 +95,7 @@ export default function MFAVerifyPage() {
         <div className="relative flex flex-col flex-1 px-10 py-12 justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[var(--color-brand-bright)] flex items-center justify-center">
               <span className="text-white font-black text-sm">N</span>
             </div>
             <span className="text-white font-bold text-lg">NPLatform</span>
@@ -112,7 +112,7 @@ export default function MFAVerifyPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white mb-3">2단계 인증으로</h1>
-              <p className="text-2xl font-bold text-[#3B82F6] mb-4">계정을 보호합니다</p>
+              <p className="text-2xl font-bold text-[var(--color-brand-bright)] mb-4">계정을 보호합니다</p>
               <p className="text-sm text-blue-200/60 leading-relaxed">
                 인증 앱(Google Authenticator, Authy 등)에서 6자리 코드를 확인하세요.
               </p>
@@ -138,21 +138,21 @@ export default function MFAVerifyPage() {
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="md:hidden flex items-center justify-center gap-2 mb-8">
-            <div className="w-8 h-8 rounded-lg bg-[#060E1C] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[var(--color-brand-deepest)] flex items-center justify-center">
               <Shield className="h-4 w-4 text-white" />
             </div>
-            <span className="text-base font-bold text-[#0D1F38]">NPLatform</span>
+            <span className="text-base font-bold text-[var(--color-brand-deep)]">NPLatform</span>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-3xl font-black text-[#0D1F38] mb-2">인증 코드 입력</h2>
+            <h2 className="text-3xl font-black text-[var(--color-brand-deep)] mb-2">인증 코드 입력</h2>
             <p className="text-sm text-gray-500">인증 앱에서 6자리 코드를 입력하세요</p>
           </div>
 
           {/* Timer */}
           <div className="flex items-center justify-between mb-6">
             <span className="text-xs text-gray-400">TOTP 인증 코드</span>
-            <span className={`text-xs font-mono font-semibold ${timeLeft <= 20 ? 'text-red-500' : 'text-[#0D1F38]'}`}>
+            <span className={`text-xs font-mono font-semibold ${timeLeft <= 20 ? 'text-red-500' : 'text-[var(--color-brand-deep)]'}`}>
               {timeLeft > 0 ? timerDisplay : '만료됨'}
             </span>
           </div>
@@ -186,8 +186,8 @@ export default function MFAVerifyPage() {
                   ${error
                     ? 'border-red-400 bg-red-50 text-red-600'
                     : digit
-                      ? 'border-[#0D1F38] bg-[#0D1F38]/5 text-[#0D1F38]'
-                      : 'border-gray-200 bg-gray-50 text-[#0D1F38] focus:border-[#0D1F38] focus:bg-white focus:shadow-sm'
+                      ? 'border-[var(--color-brand-deep)] bg-[var(--color-brand-deep)]/5 text-[var(--color-brand-deep)]'
+                      : 'border-gray-200 bg-gray-50 text-[var(--color-brand-deep)] focus:border-[var(--color-brand-deep)] focus:bg-white focus:shadow-sm'
                   }`}
               />
             ))}
@@ -203,8 +203,8 @@ export default function MFAVerifyPage() {
           <button
             onClick={() => handleVerify(digits.join(''))}
             disabled={loading || digits.some((d) => !d)}
-            className="w-full h-12 rounded-xl bg-[#0D1F38] text-white text-sm font-semibold
-              hover:bg-[#0D1F38]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed
+            className="w-full h-12 rounded-xl bg-[var(--color-brand-deep)] text-white text-sm font-semibold
+              hover:bg-[var(--color-brand-deep)]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed
               flex items-center justify-center gap-2 mb-4"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
@@ -214,7 +214,7 @@ export default function MFAVerifyPage() {
           <button
             type="button"
             onClick={() => { setTimeLeft(108); setDigits(['', '', '', '', '', '']); setError(''); inputRefs.current[0]?.focus() }}
-            className="w-full flex items-center justify-center gap-2 text-sm text-gray-400 hover:text-[#0D1F38] transition-colors py-2"
+            className="w-full flex items-center justify-center gap-2 text-sm text-gray-400 hover:text-[var(--color-brand-deep)] transition-colors py-2"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             인증 코드 재발송
@@ -227,14 +227,14 @@ export default function MFAVerifyPage() {
           </div>
 
           <div className="text-center">
-            <Link href="/login" className="text-sm text-gray-400 hover:text-[#0D1F38] transition-colors">
+            <Link href="/login" className="text-sm text-gray-400 hover:text-[var(--color-brand-deep)] transition-colors">
               로그인 페이지로 돌아가기
             </Link>
           </div>
 
           <p className="mt-8 text-center text-[11px] text-gray-300 leading-relaxed">
             계정 접근에 문제가 있으신가요?{' '}
-            <a href="mailto:support@nplatform.co.kr" className="text-[#0D1F38]/50 hover:text-[#0D1F38] transition-colors">
+            <a href="mailto:support@nplatform.co.kr" className="text-[var(--color-brand-deep)]/50 hover:text-[var(--color-brand-deep)] transition-colors">
               고객센터 문의
             </a>
           </p>

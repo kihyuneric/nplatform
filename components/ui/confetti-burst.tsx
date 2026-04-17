@@ -248,10 +248,10 @@ export function SuccessBurst({ active, message = '거래 완료!', onComplete }:
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-            className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl px-8 py-6 text-center pointer-events-auto"
+            className="bg-[var(--color-surface-elevated)] rounded-2xl shadow-2xl px-8 py-6 text-center pointer-events-auto"
           >
             <div className="text-4xl mb-2">🎉</div>
-            <div className="text-xl font-bold text-[#1B3A5C] dark:text-white">{message}</div>
+            <div className="text-xl font-bold text-[var(--color-text-primary)]">{message}</div>
           </motion.div>
         </motion.div>
       )}

@@ -32,7 +32,7 @@ export function FeatureCard({ icon, title, description, href, gradient, classNam
       onMouseLeave={handleMouseLeave}
       style={{ transform, transition: "transform 0.2s ease-out" }}
       className={cn(
-        "group relative rounded-2xl border border-gray-200/50 bg-white p-6 dark:bg-gray-900 dark:border-gray-800/50",
+        "group relative rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-6",
         "shadow-sm hover:shadow-xl transition-shadow duration-300",
         className
       )}
@@ -46,8 +46,8 @@ export function FeatureCard({ icon, title, description, href, gradient, classNam
         <div className="mb-4 inline-flex items-center justify-center rounded-xl bg-gradient-to-br from-[#1B3A5C] to-[#2E75B6] p-3 text-white shadow-lg">
           {icon}
         </div>
-        <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">{title}</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{description}</p>
+        <h3 className="mb-2 text-lg font-bold text-[var(--color-text-primary)]">{title}</h3>
+        <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{description}</p>
       </div>
     </div>
   )

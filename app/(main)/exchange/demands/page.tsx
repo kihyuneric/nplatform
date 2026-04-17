@@ -1,527 +1,613 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { motion, useInView, AnimatePresence } from 'framer-motion'
-import { MapPin, Building2, Plus, Target, Clock, Search, TrendingUp, Users, DollarSign, ChevronRight, ArrowUpRight, FileText, CheckCircle2 } from 'lucide-react'
+import DS, { formatKRW, formatDate } from '@/lib/design-system'
+import { MapPin, Building2, Plus, Target, Search, Users, DollarSign, ArrowUpRight, FileText, X, Sparkles, Loader2, ChevronLeft, ChevronRight, AlertCircle, LayoutGrid, List } from 'lucide-react'
+import { COLLATERAL_OPTIONS, REGIONS } from '@/lib/taxonomy'
 
-const C = {
-  bg0:"#030810", bg1:"#050D1A", bg2:"#080F1E", bg3:"#0A1628", bg4:"#0F1F35",
-  em:"#10B981", emL:"#34D399", blue:"#3B82F6", blueL:"#60A5FA",
-  amber:"#F59E0B", amber2:"#FCD34D", purple:"#A855F7", rose:"#F43F5E", teal:"#14B8A6",
-  l0:"#FFFFFF", l1:"#F8FAFC", l2:"#F1F5F9", l3:"#E2E8F0",
-  lt1:"#0F172A", lt2:"#334155", lt3:"#64748B", lt4:"#94A3B8",
-}
-
-type Urgency = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
-type Tier = 'BASIC' | 'STANDARD' | 'PREMIUM'
+type Urgency = 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW'
 
 interface Demand {
   id: string
-  buyer_tier: Tier
   collateral_types: string[]
   regions: string[]
   min_amount: number
   max_amount: number
-  target_discount_rate: number
-  recovery_period: string
   urgency: Urgency
-  description: string
-  proposal_count: number
+  memo: string
+  matching_count: number
   created_at: string
 }
 
-const URGENCY_CFG: Record<Urgency, { label: string; color: string; dot: string }> = {
-  LOW:    { label: '일반',     color: C.blue,  dot: C.blue  },
-  MEDIUM: { label: '보통',     color: C.teal,  dot: C.teal  },
-  HIGH:   { label: '급함',     color: C.amber, dot: C.amber },
-  URGENT: { label: '매우급함', color: C.rose,  dot: C.rose  },
+interface DemandsResponse {
+  data: Demand[]
+  total: number
+  page: number
+  limit: number
+  total_pages: number
 }
 
-const TIER_CFG: Record<Tier, { label: string; bg: string; color: string; border: string }> = {
-  BASIC:    { label: 'Basic',    bg: C.l2,      color: C.lt3,  border: C.l3        },
-  STANDARD: { label: 'Standard', bg: '#EFF6FF', color: C.blue, border: '#BFDBFE'   },
-  PREMIUM:  { label: 'Premium',  bg: '#FFFBEB', color: C.amber,border: '#FDE68A'   },
+const URGENCY_MAP: Record<Urgency, { label: string; badge: string }> = {
+  URGENT: { label: '긴급', badge: 'bg-red-500/10 text-red-400 border border-red-500/20' },
+  HIGH:   { label: '높음', badge: 'bg-orange-500/10 text-orange-400 border border-orange-500/20' },
+  MEDIUM: { label: '보통', badge: 'bg-blue-500/10 text-blue-400 border border-blue-500/20' },
+  LOW:    { label: '낮음', badge: 'bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]' },
 }
 
-const COLLATERAL_OPTS = ['전체', '아파트', '오피스텔', '상가', '토지', '공장', '기타']
-const REGION_OPTS = ['전체', '서울', '경기', '인천', '부산', '대구', '대전', '광주']
-const AMOUNT_OPTS = [
-  { label: '전체', min: 0, max: Infinity },
-  { label: '1억 이하', min: 0, max: 100_000_000 },
-  { label: '1~5억', min: 100_000_000, max: 500_000_000 },
-  { label: '5~20억', min: 500_000_000, max: 2_000_000_000 },
-  { label: '20억 이상', min: 2_000_000_000, max: Infinity },
-]
+// Use taxonomy collateral options (exclude 'ALL' sentinel)
+const COLLATERAL_FILTER_OPTIONS = COLLATERAL_OPTIONS.filter(o => o.value !== 'ALL').map(o => o.label)
+const REGION_OPTIONS = REGIONS.map(r => r.short)
+const PER_PAGE = 12
 
-const DEMO: Demand[] = [
-  {
-    id: '1', buyer_tier: 'PREMIUM',
-    collateral_types: ['아파트', '오피스텔'], regions: ['서울', '경기'],
-    min_amount: 500_000_000, max_amount: 3_000_000_000,
-    target_discount_rate: 25, recovery_period: '12개월', urgency: 'HIGH',
-    description: '서울 수도권 아파트 담보 NPL 매수 희망. 감정가 70% 이하 물건 집중 검토. 경매 진행 중인 건도 가능.',
-    proposal_count: 3, created_at: '2026-04-03',
-  },
-  {
-    id: '2', buyer_tier: 'STANDARD',
-    collateral_types: ['상가', '오피스'], regions: ['서울', '부산'],
-    min_amount: 1_000_000_000, max_amount: 10_000_000_000,
-    target_discount_rate: 35, recovery_period: '18개월', urgency: 'URGENT',
-    description: '상업용 부동산 담보 채권 대규모 매입 검토 중. 복수 물건 일괄 거래 환영. 협상 가능.',
-    proposal_count: 7, created_at: '2026-04-02',
-  },
-  {
-    id: '3', buyer_tier: 'BASIC',
-    collateral_types: ['아파트'], regions: ['경기'],
-    min_amount: 100_000_000, max_amount: 500_000_000,
-    target_discount_rate: 30, recovery_period: '6개월', urgency: 'MEDIUM',
-    description: '경기도 아파트 소액 NPL 매수. 개인 투자자로 첫 진입. 법무사 연계 경매 대행 가능.',
-    proposal_count: 1, created_at: '2026-04-02',
-  },
-  {
-    id: '4', buyer_tier: 'PREMIUM',
-    collateral_types: ['토지', '공장'], regions: ['경기', '충남', '경북'],
-    min_amount: 2_000_000_000, max_amount: 15_000_000_000,
-    target_discount_rate: 40, recovery_period: '24개월', urgency: 'MEDIUM',
-    description: '수도권 인접 산업용지 및 공장 담보 채권 선별 매입. 개발 가능성 높은 토지 우선 검토.',
-    proposal_count: 5, created_at: '2026-04-01',
-  },
-  {
-    id: '5', buyer_tier: 'STANDARD',
-    collateral_types: ['오피스텔'], regions: ['서울', '인천'],
-    min_amount: 200_000_000, max_amount: 1_500_000_000,
-    target_discount_rate: 28, recovery_period: '9개월', urgency: 'LOW',
-    description: '수도권 오피스텔 NPL 소규모 포트폴리오 구성 중. 임대 수익 연계 물건 선호.',
-    proposal_count: 2, created_at: '2026-03-30',
-  },
-  {
-    id: '6', buyer_tier: 'PREMIUM',
-    collateral_types: ['아파트', '토지', '상가'], regions: ['전국'],
-    min_amount: 5_000_000_000, max_amount: 50_000_000_000,
-    target_discount_rate: 38, recovery_period: '36개월', urgency: 'URGENT',
-    description: '전국 단위 대형 NPL 포트폴리오 매입 검토. 1천억 이하 전국 분산 포트폴리오 우선. 신속 결정 가능.',
-    proposal_count: 11, created_at: '2026-03-29',
-  },
-  {
-    id: '7', buyer_tier: 'BASIC',
-    collateral_types: ['상가'], regions: ['부산', '대구', '광주'],
-    min_amount: 300_000_000, max_amount: 2_000_000_000,
-    target_discount_rate: 32, recovery_period: '15개월', urgency: 'MEDIUM',
-    description: '지방 광역시 소형 상업용 NPL 투자. 상권 분석 후 입찰 예정. 지역 분산 전략.',
-    proposal_count: 0, created_at: '2026-03-28',
-  },
-  {
-    id: '8', buyer_tier: 'STANDARD',
-    collateral_types: ['아파트'], regions: ['강남구', '서초구', '송파구'],
-    min_amount: 1_000_000_000, max_amount: 5_000_000_000,
-    target_discount_rate: 22, recovery_period: '9개월', urgency: 'HIGH',
-    description: '강남 3구 아파트 담보 NPL 집중 매입. 낙찰가율 90% 이상 우량 물건 선호. 즉시 검토 가능.',
-    proposal_count: 4, created_at: '2026-03-27',
-  },
-  {
-    id: '9', buyer_tier: 'BASIC',
-    collateral_types: ['공장', '토지'], regions: ['경기', '충북'],
-    min_amount: 500_000_000, max_amount: 3_000_000_000,
-    target_discount_rate: 45, recovery_period: '30개월', urgency: 'LOW',
-    description: '산업단지 내 공장·창고 담보 NPL. 경매 진행 중인 물건도 적극 검토. 장기 보유 가능.',
-    proposal_count: 2, created_at: '2026-03-25',
-  },
-]
-
-function fmtKRW(n: number) {
-  if (n >= 1_0000_0000) return `${(n / 1_0000_0000).toFixed(0)}억`
-  if (n >= 10_000) return `${Math.floor(n / 10_000)}만`
-  return n.toLocaleString()
+function CardSkeleton() {
+  const b = 'bg-[var(--color-surface-sunken)] rounded'
+  return (
+    <div className={`${DS.card.base} ${DS.card.padding} animate-pulse`}>
+      <div className="flex items-center gap-2 mb-4"><div className={`h-5 w-14 ${b}-full`} /><div className={`h-5 w-10 ${b}-full`} /></div>
+      <div className={`h-7 w-3/4 ${b} mb-3`} />
+      <div className="flex gap-2 mb-3"><div className={`h-6 w-16 ${b}`} /><div className={`h-6 w-16 ${b}`} /></div>
+      <div className={`h-4 w-1/2 ${b} mb-3`} /><div className={`h-4 w-full ${b} mb-2`} /><div className={`h-4 w-2/3 ${b}`} />
+    </div>
+  )
 }
-
-const PER_PAGE = 9
 
 export default function DemandsPage() {
-  const [collateral, setCollateral] = useState('전체')
-  const [region, setRegion] = useState('전체')
-  const [amountIdx, setAmountIdx] = useState(0)
-  const [search, setSearch] = useState('')
+  const [demands, setDemands] = useState<Demand[]>([])
+  const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
   const [page, setPage] = useState(1)
-  const heroRef = useRef(null)
-  const heroInView = useInView(heroRef, { once: true })
-  const gridRef = useRef(null)
-  const gridInView = useInView(gridRef, { once: true })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [urgencyFilter, setUrgencyFilter] = useState<Urgency | ''>('')
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card')
+  const [showModal, setShowModal] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [formCollateral, setFormCollateral] = useState<string[]>([])
+  const [formRegions, setFormRegions] = useState<string[]>([])
+  const [formMinAmount, setFormMinAmount] = useState('')
+  const [formMaxAmount, setFormMaxAmount] = useState('')
+  const [formUrgency, setFormUrgency] = useState<Urgency>('MEDIUM')
+  const [formMemo, setFormMemo] = useState('')
+  const [matchingId, setMatchingId] = useState<string | null>(null)
 
-  const filtered = useMemo(() => {
-    let d = DEMO
-    if (collateral !== '전체') d = d.filter(x => x.collateral_types.includes(collateral))
-    if (region !== '전체') d = d.filter(x => x.regions.some(r => r.includes(region)))
-    const amt = AMOUNT_OPTS[amountIdx]
-    if (amt.min > 0 || amt.max < Infinity) {
-      d = d.filter(x => x.min_amount >= amt.min && x.min_amount < amt.max)
+  const fetchDemands = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: String(PER_PAGE) })
+      if (urgencyFilter) params.set('urgency', urgencyFilter)
+      const res = await fetch(`/api/v1/exchange/demands?${params}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json: DemandsResponse = await res.json()
+      setDemands(json.data)
+      setTotal(json.total)
+      setTotalPages(json.total_pages)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '데이터를 불러올 수 없습니다')
+      setDemands([])
+    } finally {
+      setLoading(false)
     }
-    if (search) d = d.filter(x => x.description.includes(search) || x.regions.join('').includes(search))
-    return d
-  }, [collateral, region, amountIdx, search])
+  }, [page, urgencyFilter])
 
-  const totalPages = Math.ceil(filtered.length / PER_PAGE)
-  const paged = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+  useEffect(() => { fetchDemands() }, [fetchDemands])
+
+  const handleSubmit = async () => {
+    if (formCollateral.length === 0 || formRegions.length === 0) return
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/v1/exchange/demands', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          collateral_types: formCollateral,
+          regions: formRegions,
+          min_amount: Number(formMinAmount) || 0,
+          max_amount: Number(formMaxAmount) || 0,
+          urgency: formUrgency,
+          memo: formMemo,
+        }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      setShowModal(false)
+      resetForm()
+      setPage(1)
+      fetchDemands()
+    } catch {
+      alert('수요 등록에 실패했습니다. 다시 시도해 주세요.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const resetForm = () => {
+    setFormCollateral([])
+    setFormRegions([])
+    setFormMinAmount('')
+    setFormMaxAmount('')
+    setFormUrgency('MEDIUM')
+    setFormMemo('')
+  }
+
+  const runMatching = async (demandId: string) => {
+    setMatchingId(demandId)
+    try {
+      const res = await fetch('/api/v1/matching/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ demand_id: demandId }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      fetchDemands()
+    } catch {
+      alert('AI 매칭 실행에 실패했습니다.')
+    } finally {
+      setMatchingId(null)
+    }
+  }
+
+  const toggleItem = (arr: string[], item: string, setter: (v: string[]) => void) => {
+    setter(arr.includes(item) ? arr.filter(x => x !== item) : [...arr, item])
+  }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: C.l2 }}>
+    <div className={DS.page.wrapper}>
+      <div className={`${DS.page.container} ${DS.page.paddingTop} pb-16`}>
 
-      {/* ── DARK HERO ── */}
-      <section ref={heroRef} style={{ backgroundColor: C.bg1, position: 'relative', overflow: 'hidden' }}>
-        <div style={{
-          position: 'absolute', inset: 0, opacity: 0.04,
-          backgroundImage: `linear-gradient(${C.em} 1px, transparent 1px), linear-gradient(90deg, ${C.em} 1px, transparent 1px)`,
-          backgroundSize: '60px 60px',
-        }} />
-        <div style={{
-          position: 'absolute', top: -120, left: '20%', width: 400, height: 400,
-          borderRadius: '50%', background: `radial-gradient(circle, ${C.em}18 0%, transparent 70%)`,
-        }} />
-
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 32px 48px' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={heroInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6 }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              <span style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.12em', color: C.em, textTransform: 'uppercase' }}>
-                Buyer Demand Board
-              </span>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                backgroundColor: `${C.em}18`, border: `1px solid ${C.em}40`,
-                borderRadius: 20, padding: '3px 10px',
-              }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: C.em }} />
-                <span style={{ fontSize: '0.6875rem', fontWeight: 600, color: C.emL }}>LIVE</span>
-              </div>
-            </div>
-
-            <h1 style={{
-              fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 800,
-              color: C.l0, letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: 12,
-            }}>매수 수요</h1>
-
-            <p style={{ fontSize: '1.0625rem', color: C.lt4, lineHeight: 1.7, maxWidth: 560, marginBottom: 40 }}>
-              매수 의향이 있는 투자자들의 NPL 매수 조건을 확인하고 직접 제안을 보내세요
-            </p>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
-              {[
-                { icon: <Users size={16} />, label: '등록된 수요', value: `${DEMO.length}건`, sub: '이번 달 등록', color: C.em },
-                { icon: <Target size={16} />, label: '평균 목표 할인율', value: `${Math.round(DEMO.reduce((s,d)=>s+d.target_discount_rate,0)/DEMO.length)}%`, sub: '전체 평균', color: C.blue },
-                { icon: <DollarSign size={16} />, label: '평균 희망 금액', value: `${fmtKRW(Math.round(DEMO.reduce((s,d)=>s+(d.min_amount+d.max_amount)/2,0)/DEMO.length))}`, sub: '원 기준', color: C.amber },
-              ].map((kpi, i) => (
-                <motion.div
-                  key={kpi.label}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={heroInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
-                  style={{
-                    backgroundColor: `${C.bg4}cc`, border: `1px solid ${C.bg4}`,
-                    borderRadius: 12, padding: '16px 20px',
-                    display: 'flex', alignItems: 'center', gap: 14, minWidth: 200,
-                  }}
-                >
-                  <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: `${kpi.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: kpi.color }}>
-                    {kpi.icon}
-                  </div>
-                  <div>
-                    <p style={{ fontSize: '0.75rem', color: C.lt4, marginBottom: 2 }}>{kpi.label}</p>
-                    <p style={{ fontSize: '1.375rem', fontWeight: 800, color: C.l0, lineHeight: 1, marginBottom: 2 }}>{kpi.value}</p>
-                    <p style={{ fontSize: '0.6875rem', color: `${kpi.color}99` }}>{kpi.sub}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── STICKY FILTER BAR ── */}
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 40,
-        backgroundColor: C.l0, borderBottom: `1px solid ${C.l3}`,
-        boxShadow: '0 1px 12px rgba(0,0,0,0.07)',
-      }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '12px 32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            {/* Search */}
-            <div style={{ position: 'relative', flex: '1 1 200px', maxWidth: 260 }}>
-              <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: C.lt4 }} />
-              <input
-                type="text"
-                placeholder="지역, 담보유형 검색..."
-                value={search}
-                onChange={e => { setSearch(e.target.value); setPage(1) }}
-                style={{
-                  width: '100%', paddingLeft: 36, paddingRight: 12, paddingTop: 8, paddingBottom: 8,
-                  fontSize: '0.875rem', borderRadius: 8, border: `1px solid ${C.l3}`,
-                  outline: 'none', backgroundColor: C.l1, color: C.lt1,
-                }}
-              />
-            </div>
-
-            {/* Collateral chips */}
-            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-              {COLLATERAL_OPTS.slice(0, 5).map(opt => (
-                <button
-                  key={opt}
-                  onClick={() => { setCollateral(opt); setPage(1) }}
-                  style={{
-                    padding: '6px 12px', borderRadius: 20, fontSize: '0.8125rem', fontWeight: 600,
-                    border: `1.5px solid ${collateral === opt ? C.em : C.l3}`,
-                    backgroundColor: collateral === opt ? `${C.em}12` : 'transparent',
-                    color: collateral === opt ? C.em : C.lt3,
-                    cursor: 'pointer', transition: 'all 0.15s',
-                  }}
-                >{opt}</button>
-              ))}
-            </div>
-
-            {/* Region select */}
-            <select
-              value={region}
-              onChange={e => { setRegion(e.target.value); setPage(1) }}
-              style={{
-                padding: '7px 12px', borderRadius: 8, fontSize: '0.8125rem', fontWeight: 500,
-                border: `1px solid ${C.l3}`, backgroundColor: C.l1, color: C.lt2, outline: 'none',
-              }}
-            >
-              {REGION_OPTS.map(r => <option key={r} value={r}>{r === '전체' ? '전체 지역' : r}</option>)}
-            </select>
-
-            {/* Amount select */}
-            <select
-              value={amountIdx}
-              onChange={e => { setAmountIdx(Number(e.target.value)); setPage(1) }}
-              style={{
-                padding: '7px 12px', borderRadius: 8, fontSize: '0.8125rem', fontWeight: 500,
-                border: `1px solid ${C.l3}`, backgroundColor: C.l1, color: C.lt2, outline: 'none',
-              }}
-            >
-              {AMOUNT_OPTS.map((a, i) => <option key={i} value={i}>{a.label}</option>)}
-            </select>
-
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: '0.8125rem', color: C.lt4 }}>{filtered.length}건</span>
-              <Link href="/exchange/demands/new" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 7,
-                padding: '8px 18px', borderRadius: 8, fontWeight: 700, fontSize: '0.875rem',
-                color: C.l0, textDecoration: 'none',
-                background: `linear-gradient(135deg, ${C.em} 0%, ${C.teal} 100%)`,
-                boxShadow: `0 4px 14px ${C.em}40`,
-              }}>
-                <Plus size={15} /> 수요 등록
-              </Link>
-            </div>
+        {/* Header */}
+        <div className={DS.header.wrapper}>
+          <p className={DS.header.eyebrow}>Buyer Demand Board</p>
+          <h1 className={DS.header.title}>매수 수요</h1>
+          <p className={DS.header.subtitle}>
+            매수 의향이 있는 투자자들의 NPL 매수 조건을 확인하고 직접 제안을 보내세요
+          </p>
+          <div className="flex items-center gap-3 mt-3">
+            <Link href="/exchange/sell" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>
+              매물 등록 →
+            </Link>
+            <Link href="/deals/matching" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>
+              AI 매칭 결과 →
+            </Link>
           </div>
         </div>
-      </div>
 
-      {/* ── CONTENT ── */}
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 32px' }} ref={gridRef}>
-        <AnimatePresence mode="wait">
-          {paged.length === 0 ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              style={{ textAlign: 'center', padding: '80px 0' }}
-            >
-              <p style={{ fontSize: '1.125rem', color: C.lt3, fontWeight: 600, marginBottom: 8 }}>조건에 맞는 수요가 없습니다</p>
+        {/* Stats row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div className={DS.stat.card}>
+            <div className="flex items-center gap-2 mb-1">
+              <Users size={14} className="text-[var(--color-brand-mid)]" />
+              <p className={DS.stat.label}>등록된 수요</p>
+            </div>
+            <p className={DS.stat.value}>{loading ? '—' : `${total}건`}</p>
+          </div>
+          <div className={DS.stat.card}>
+            <div className="flex items-center gap-2 mb-1">
+              <Target size={14} className="text-[var(--color-warning)]" />
+              <p className={DS.stat.label}>긴급 수요</p>
+            </div>
+            <p className={DS.stat.value}>
+              {loading ? '—' : `${demands.filter(d => d.urgency === 'URGENT' || d.urgency === 'HIGH').length}건`}
+            </p>
+          </div>
+          <div className={DS.stat.card}>
+            <div className="flex items-center gap-2 mb-1">
+              <DollarSign size={14} className="text-[var(--color-positive)]" />
+              <p className={DS.stat.label}>평균 희망 금액</p>
+            </div>
+            <p className={DS.stat.value}>
+              {loading || demands.length === 0 ? '—' : formatKRW(
+                Math.round(demands.reduce((s, d) => s + (d.min_amount + d.max_amount) / 2, 0) / demands.length)
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Filter bar */}
+        <div className={`${DS.filter.bar} mb-6`}>
+          <div className="flex items-center gap-2 flex-wrap flex-1">
+            <span className={DS.text.caption}>긴급도:</span>
+            {(['', 'URGENT', 'HIGH', 'MEDIUM', 'LOW'] as const).map(u => (
               <button
-                onClick={() => { setCollateral('전체'); setRegion('전체'); setAmountIdx(0); setSearch('') }}
-                style={{ color: C.em, fontWeight: 600, fontSize: '0.875rem', background: 'none', border: 'none', cursor: 'pointer' }}
+                key={u || 'ALL'}
+                onClick={() => { setUrgencyFilter(u as Urgency | ''); setPage(1) }}
+                className={`${DS.filter.chip} ${urgencyFilter === u ? DS.filter.chipActive : DS.filter.chipInactive}`}
               >
-                필터 초기화
+                {u ? URGENCY_MAP[u].label : '전체'}
               </button>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="grid"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 18 }}
-            >
-              {paged.map((d, i) => {
-                const urg = URGENCY_CFG[d.urgency]
-                const tier = TIER_CFG[d.buyer_tier]
-                return (
-                  <motion.div
-                    key={d.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={gridInView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ duration: 0.4, delay: i * 0.05 }}
-                    whileHover={{ y: -3, boxShadow: `0 16px 40px rgba(0,0,0,0.12), 0 0 0 2px ${C.em}30` }}
-                    style={{
-                      backgroundColor: C.l0, borderRadius: 14,
-                      border: `1px solid ${C.l3}`,
-                      boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
-                      overflow: 'hidden', cursor: 'pointer',
-                      transition: 'box-shadow 0.2s, transform 0.2s',
-                    }}
-                  >
-                    {/* Accent top bar */}
-                    <div style={{ height: 4, background: `linear-gradient(90deg, ${C.em} 0%, ${C.teal}80 100%)` }} />
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <span className={DS.text.captionLight}>{total}건</span>
+            {/* View toggle */}
+            <div className="flex items-center border border-[var(--color-border-subtle)] rounded-lg overflow-hidden">
+              <button
+                onClick={() => setViewMode('card')}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[0.75rem] font-semibold transition-colors ${
+                  viewMode === 'card'
+                    ? 'bg-[var(--color-brand-dark)] text-white'
+                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-elevated)]'
+                }`}
+              >
+                <LayoutGrid size={13} /> 카드
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[0.75rem] font-semibold transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-[var(--color-brand-dark)] text-white'
+                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-elevated)]'
+                }`}
+              >
+                <List size={13} /> 리스트
+              </button>
+            </div>
+            <button onClick={() => setShowModal(true)} className={`${DS.button.accent} ${DS.button.sm}`}>
+              <Plus size={14} /> 수요 등록
+            </button>
+          </div>
+        </div>
 
-                    <div style={{ padding: '18px 20px' }}>
-                      {/* Row 1: badges + urgency */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
-                        <span style={{
-                          fontSize: '0.6875rem', fontWeight: 700, padding: '3px 10px', borderRadius: 20,
-                          backgroundColor: tier.bg, color: tier.color, border: `1px solid ${tier.border}`,
-                        }}>{tier.label}</span>
-                        <span style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 4,
-                          fontSize: '0.6875rem', fontWeight: 600, padding: '3px 10px', borderRadius: 20,
-                          backgroundColor: `${urg.color}12`, color: urg.color,
-                        }}>
-                          <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: urg.dot }} />
-                          {urg.label}
-                        </span>
-                        <span style={{ marginLeft: 'auto', fontSize: '0.6875rem', color: C.lt4 }}>{d.created_at}</span>
-                      </div>
-
-                      {/* Amount BIG */}
-                      <p style={{ fontSize: '1.5rem', fontWeight: 800, color: C.lt1, marginBottom: 6, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-                        <span style={{ color: C.em }}>{fmtKRW(d.min_amount)}</span>
-                        <span style={{ color: C.lt4, fontSize: '1rem' }}> ~ </span>
-                        <span>{fmtKRW(d.max_amount)}</span>
-                        <span style={{ fontSize: '0.875rem', color: C.lt4, fontWeight: 500 }}>원</span>
-                      </p>
-
-                      {/* Collateral tags */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 10 }}>
-                        {d.collateral_types.map(ct => (
-                          <span key={ct} style={{
-                            fontSize: '0.75rem', padding: '3px 9px', borderRadius: 6,
-                            backgroundColor: '#EFF6FF', color: C.blue, border: '1px solid #BFDBFE',
-                            display: 'inline-flex', alignItems: 'center', gap: 4,
-                          }}>
-                            <Building2 size={10} />{ct}
+        {/* Content area */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+          </div>
+        ) : error ? (
+          <div className={DS.empty.wrapper}>
+            <AlertCircle className={DS.empty.icon} />
+            <p className={DS.empty.title}>데이터를 불러올 수 없습니다</p>
+            <p className={DS.empty.description}>{error}</p>
+            <button onClick={fetchDemands} className={`${DS.button.secondary} mt-4`}>다시 시도</button>
+          </div>
+        ) : demands.length === 0 ? (
+          <div className={DS.empty.wrapper}>
+            <Search className={DS.empty.icon} />
+            <p className={DS.empty.title}>등록된 수요가 없습니다</p>
+            <p className={DS.empty.description}>첫 번째 매수 수요를 등록하고 AI 매칭을 받아보세요</p>
+            <button onClick={() => setShowModal(true)} className={`${DS.button.accent} mt-4`}>
+              <Plus size={14} /> 수요 등록하기
+            </button>
+          </div>
+        ) : viewMode === 'list' ? (
+          /* ── LIST VIEW ── */
+          <>
+            <div className={DS.table.wrapper}>
+              <table className="w-full text-[0.8125rem]">
+                <thead className={DS.table.header}>
+                  <tr>
+                    <th className={DS.table.headerCell}>긴급도</th>
+                    <th className={DS.table.headerCell}>담보 유형</th>
+                    <th className={DS.table.headerCell}>지역</th>
+                    <th className={DS.table.headerCell}>희망 금액 범위</th>
+                    <th className={DS.table.headerCell}>매칭</th>
+                    <th className={DS.table.headerCell}>등록일</th>
+                    <th className={DS.table.headerCell}>액션</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {demands.map(d => {
+                    const urg = URGENCY_MAP[d.urgency]
+                    return (
+                      <tr key={d.id} className={DS.table.row}>
+                        <td className={DS.table.cell}>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6875rem] font-bold ${urg.badge}`}>
+                            {urg.label}
                           </span>
-                        ))}
-                      </div>
-
-                      {/* Regions */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 10, color: C.lt3, fontSize: '0.8125rem' }}>
-                        <MapPin size={13} style={{ color: C.em }} />
-                        <span>{d.regions.join(', ')}</span>
-                      </div>
-
-                      {/* Meta */}
-                      <div style={{ display: 'flex', gap: 14, marginBottom: 12 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.8125rem', color: C.lt3 }}>
-                          <Target size={12} style={{ color: C.amber }} />
-                          <span>할인율 <strong style={{ color: C.lt2 }}>{d.target_discount_rate}%</strong></span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.8125rem', color: C.lt3 }}>
-                          <Clock size={12} />
-                          <span>{d.recovery_period}</span>
-                        </div>
-                      </div>
-
-                      {/* Description */}
-                      <p style={{
-                        fontSize: '0.8125rem', color: C.lt4, lineHeight: 1.6, marginBottom: 16,
-                        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                      }}>{d.description}</p>
-
-                      {/* Bottom */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTop: `1px solid ${C.l3}` }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.75rem', color: C.lt4 }}>
-                          <FileText size={12} />
-                          {d.proposal_count > 0
-                            ? <span>제안 <strong style={{ color: C.lt2 }}>{d.proposal_count}건</strong> 접수</span>
-                            : <span>제안 없음</span>
+                        </td>
+                        <td className={DS.table.cell}>
+                          <div className="flex flex-wrap gap-1">
+                            {d.collateral_types.slice(0, 3).map(ct => (
+                              <span key={ct} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[0.625rem] font-semibold border ${DS.collateral[ct as keyof typeof DS.collateral] || DS.collateral['기타']}`}>
+                                {ct}
+                              </span>
+                            ))}
+                            {d.collateral_types.length > 3 && (
+                              <span className={DS.text.micro}>+{d.collateral_types.length - 3}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className={DS.table.cell}>
+                          <div className="flex items-center gap-1">
+                            <MapPin size={11} className="text-[var(--color-brand-mid)] shrink-0" />
+                            <span className={DS.text.caption}>{d.regions.slice(0, 4).join(', ')}{d.regions.length > 4 ? ` +${d.regions.length - 4}` : ''}</span>
+                          </div>
+                        </td>
+                        <td className={DS.table.cell}>
+                          <span className="font-semibold text-[0.8125rem]">
+                            {formatKRW(d.min_amount)} ~ {formatKRW(d.max_amount)}
+                          </span>
+                        </td>
+                        <td className={DS.table.cell}>
+                          {d.matching_count > 0
+                            ? <span className={DS.badge.positive}>{d.matching_count}건</span>
+                            : <span className={DS.text.muted}>-</span>
                           }
-                        </div>
-                        <Link href={`/exchange/demands/${d.id}`} style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 5,
-                          padding: '7px 14px', borderRadius: 8, fontWeight: 700, fontSize: '0.8125rem',
-                          color: C.l0, textDecoration: 'none',
-                          background: `linear-gradient(135deg, ${C.em} 0%, ${C.teal} 100%)`,
-                        }}>
-                          매물 제안 <ArrowUpRight size={13} />
+                        </td>
+                        <td className={`${DS.table.cellMuted}`}>{formatDate(d.created_at)}</td>
+                        <td className={DS.table.cell}>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => runMatching(d.id)}
+                              disabled={matchingId === d.id}
+                              className={`${DS.button.ghost} ${DS.button.sm} gap-1`}
+                            >
+                              {matchingId === d.id ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+                              매칭
+                            </button>
+                            <a href={`/exchange/demands/${d.id}`} className={`${DS.button.primary} ${DS.button.sm}`}>
+                              상세 <ArrowUpRight size={11} />
+                            </a>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          /* ── CARD VIEW ── */
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {demands.map(d => {
+                const urg = URGENCY_MAP[d.urgency]
+                return (
+                  <div key={d.id} className={`${DS.card.interactive} ${DS.card.padding} flex flex-col`}>
+                    {/* Top: urgency + date */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[0.6875rem] font-bold ${urg.badge}`}>
+                        {urg.label}
+                      </span>
+                      {d.matching_count > 0 && (
+                        <Link href="/deals/matching" className={`${DS.badge.positive} hover:opacity-80 transition-opacity cursor-pointer`}>
+                          매칭 {d.matching_count}건 →
                         </Link>
+                      )}
+                      <span className={`${DS.text.micro} ml-auto`}>{formatDate(d.created_at)}</span>
+                    </div>
+
+                    {/* Amount */}
+                    <p className={`${DS.text.metricLarge} mb-2`}>
+                      <span className="text-[var(--color-brand-mid)]">{formatKRW(d.min_amount)}</span>
+                      <span className={DS.text.muted}> ~ </span>
+                      <span>{formatKRW(d.max_amount)}</span>
+                    </p>
+
+                    {/* Collateral tags */}
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {d.collateral_types.map(ct => (
+                        <span key={ct} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[0.6875rem] font-semibold border ${DS.collateral[ct as keyof typeof DS.collateral] || DS.collateral['기타']}`}>
+                          <Building2 size={10} />{ct}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Regions */}
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <MapPin size={13} className="text-[var(--color-brand-mid)] shrink-0" />
+                      <span className={DS.text.caption}>{d.regions.join(', ')}</span>
+                    </div>
+
+                    {/* Memo */}
+                    {d.memo && (
+                      <p className={`${DS.text.captionLight} line-clamp-2 mb-4`}>{d.memo}</p>
+                    )}
+
+                    {/* Spacer */}
+                    <div className="flex-1" />
+
+                    {/* Bottom actions */}
+                    <div className={`flex items-center justify-between pt-3 mt-auto ${DS.divider.default}`}>
+                      <div className="flex items-center gap-1.5">
+                        <FileText size={12} className="text-[var(--color-text-muted)]" />
+                        <span className={DS.text.micro}>
+                          {d.matching_count > 0 ? `매칭 ${d.matching_count}건` : '매칭 없음'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); runMatching(d.id) }}
+                          disabled={matchingId === d.id}
+                          className={`${DS.button.ghost} ${DS.button.sm} gap-1`}
+                        >
+                          {matchingId === d.id
+                            ? <Loader2 size={12} className="animate-spin" />
+                            : <Sparkles size={12} />}
+                          AI 매칭
+                        </button>
+                        <a href={`/exchange/demands/${d.id}`} className={`${DS.button.primary} ${DS.button.sm}`}>
+                          상세 <ArrowUpRight size={12} />
+                        </a>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 )
               })}
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div style={{ marginTop: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage(p => p - 1)}
-              style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${C.l3}`, backgroundColor: C.l0, color: C.lt3, cursor: page <= 1 ? 'not-allowed' : 'pointer', opacity: page <= 1 ? 0.4 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >‹</button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-              <button
-                key={p}
-                onClick={() => setPage(p)}
-                style={{ width: 36, height: 36, borderRadius: 8, fontWeight: 700, fontSize: '0.875rem', border: `1px solid ${p === page ? C.em : C.l3}`, backgroundColor: p === page ? C.em : C.l0, color: p === page ? C.l0 : C.lt3, cursor: 'pointer' }}
-              >{p}</button>
-            ))}
-            <button
-              disabled={page >= totalPages}
-              onClick={() => setPage(p => p + 1)}
-              style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${C.l3}`, backgroundColor: C.l0, color: C.lt3, cursor: page >= totalPages ? 'not-allowed' : 'pointer', opacity: page >= totalPages ? 0.4 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >›</button>
-          </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-10">
+                <button
+                  disabled={page <= 1}
+                  onClick={() => setPage(p => p - 1)}
+                  className={`${DS.button.secondary} ${DS.button.sm} disabled:opacity-40`}
+                >
+                  <ChevronLeft size={14} />
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
+                  .reduce<(number | 'dots')[]>((acc, p, i, arr) => {
+                    if (i > 0 && p - (arr[i - 1]) > 1) acc.push('dots')
+                    acc.push(p)
+                    return acc
+                  }, [])
+                  .map((p, i) =>
+                    p === 'dots' ? (
+                      <span key={`dots-${i}`} className={DS.text.muted}>...</span>
+                    ) : (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={`w-9 h-9 rounded-lg text-[0.8125rem] font-bold transition-colors ${
+                          p === page
+                            ? 'bg-[var(--color-brand-dark)] text-white'
+                            : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)] hover:border-[var(--color-brand-bright)]'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  )}
+                <button
+                  disabled={page >= totalPages}
+                  onClick={() => setPage(p => p + 1)}
+                  className={`${DS.button.secondary} ${DS.button.sm} disabled:opacity-40`}
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            )}
+          </>
         )}
 
-        {/* How to register CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          style={{
-            marginTop: 48, backgroundColor: C.bg3, borderRadius: 16,
-            padding: '32px 36px', border: '1px solid rgba(255,255,255,0.07)',
-            display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 20,
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <CheckCircle2 size={16} style={{ color: C.em }} />
-              <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: C.emL, letterSpacing: '0.1em', textTransform: 'uppercase' }}>매수 수요 등록 안내</span>
-            </div>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 800, color: C.l0, marginBottom: 6 }}>
-              NPL 매수 조건을 등록하고 매물 제안을 받아보세요
-            </h3>
-            <p style={{ fontSize: '0.875rem', color: C.lt4, lineHeight: 1.6 }}>
-              원하는 담보 유형, 지역, 금액 범위를 등록하면 조건에 맞는 NPL 매도자가 직접 제안을 보냅니다.
-            </p>
-          </div>
-          <Link href="/exchange/demands/new" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '12px 28px', borderRadius: 10, fontWeight: 800, fontSize: '0.9375rem',
-            color: C.l0, textDecoration: 'none',
-            background: `linear-gradient(135deg, ${C.em} 0%, ${C.teal} 100%)`,
-            boxShadow: `0 6px 20px ${C.em}45`, flexShrink: 0,
-          }}>
-            <Plus size={16} /> 수요 등록하기
-          </Link>
-        </motion.div>
-
         {/* Notice */}
-        <div style={{ marginTop: 24, padding: '14px 18px', backgroundColor: C.l1, borderRadius: 10, border: `1px solid ${C.l3}` }}>
-          <p style={{ fontSize: '0.6875rem', fontWeight: 700, color: C.lt4, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.08em' }}>이용 안내</p>
-          <p style={{ fontSize: '0.8125rem', color: C.lt4, lineHeight: 1.7 }}>
+        <div className={`${DS.card.flat} p-4 mt-10`}>
+          <p className={`${DS.text.label} mb-1`}>이용 안내</p>
+          <p className={DS.text.captionLight}>
             매수 수요 게시판은 NPL 투자자가 매수 조건을 공개하고 매도자의 제안을 받는 서비스입니다. 게시된 정보는 참고용이며 실제 거래 조건은 당사자 간 협의에 따릅니다.
           </p>
         </div>
-      </main>
+      </div>
+
+      {showModal && (
+        <div className={DS.modal.overlay} onClick={() => setShowModal(false)}>
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <div
+              className={`${DS.modal.content} w-full max-w-lg max-h-[90vh] overflow-y-auto`}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Modal header */}
+              <div className="flex items-center justify-between mb-6">
+                <h2 className={DS.modal.title}>매수 수요 등록</h2>
+                <button onClick={() => setShowModal(false)} className={DS.button.icon}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Collateral multi-select */}
+              <div className="mb-5">
+                <label className={DS.input.label}>담보 유형 (복수 선택)</label>
+                <div className="flex flex-wrap gap-2 mt-1.5">
+                  {COLLATERAL_FILTER_OPTIONS.map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => toggleItem(formCollateral, opt, setFormCollateral)}
+                      className={`${DS.filter.chip} ${formCollateral.includes(opt) ? DS.filter.chipActive : DS.filter.chipInactive}`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+                {formCollateral.length === 0 && (
+                  <p className={DS.input.error}>최소 1개 선택 필요</p>
+                )}
+              </div>
+
+              {/* Region multi-select */}
+              <div className="mb-5">
+                <label className={DS.input.label}>지역 (복수 선택)</label>
+                <div className="flex flex-wrap gap-2 mt-1.5">
+                  {REGION_OPTIONS.map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => toggleItem(formRegions, opt, setFormRegions)}
+                      className={`${DS.filter.chip} ${formRegions.includes(opt) ? DS.filter.chipActive : DS.filter.chipInactive}`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+                {formRegions.length === 0 && (
+                  <p className={DS.input.error}>최소 1개 선택 필요</p>
+                )}
+              </div>
+
+              {/* Amount range */}
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div>
+                  <label className={DS.input.label}>최소 금액 (원)</label>
+                  <input
+                    type="number"
+                    placeholder="100000000"
+                    value={formMinAmount}
+                    onChange={e => setFormMinAmount(e.target.value)}
+                    className={DS.input.base}
+                  />
+                  <p className={DS.input.helper}>예: 1억 = 100000000</p>
+                </div>
+                <div>
+                  <label className={DS.input.label}>최대 금액 (원)</label>
+                  <input
+                    type="number"
+                    placeholder="500000000"
+                    value={formMaxAmount}
+                    onChange={e => setFormMaxAmount(e.target.value)}
+                    className={DS.input.base}
+                  />
+                </div>
+              </div>
+
+              {/* Urgency select */}
+              <div className="mb-5">
+                <label className={DS.input.label}>긴급도</label>
+                <select
+                  value={formUrgency}
+                  onChange={e => setFormUrgency(e.target.value as Urgency)}
+                  className={DS.input.base}
+                >
+                  <option value="URGENT">긴급</option>
+                  <option value="HIGH">높음</option>
+                  <option value="MEDIUM">보통</option>
+                  <option value="LOW">낮음</option>
+                </select>
+              </div>
+
+              {/* Memo */}
+              <div className="mb-6">
+                <label className={DS.input.label}>메모</label>
+                <textarea
+                  rows={3}
+                  placeholder="매수 조건, 선호 물건 유형 등을 자유롭게 기재해 주세요"
+                  value={formMemo}
+                  onChange={e => setFormMemo(e.target.value)}
+                  className={`${DS.input.base} resize-none`}
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-3">
+                <button onClick={() => setShowModal(false)} className={DS.button.secondary}>취소</button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitting || formCollateral.length === 0 || formRegions.length === 0}
+                  className={`${DS.button.primary} ${DS.button.lg} disabled:opacity-50`}
+                >
+                  {submitting ? (
+                    <><Loader2 size={16} className="animate-spin" /> 등록 중...</>
+                  ) : (
+                    <><Plus size={16} /> 수요 등록</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

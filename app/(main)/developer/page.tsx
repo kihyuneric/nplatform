@@ -29,10 +29,10 @@ import {
 } from "lucide-react"
 
 const stats = [
-  { label: "API 호출 수/월", value: "12.8M+", icon: Zap, color: "text-emerald-600" },
-  { label: "등록 개발자", value: "2,340+", icon: Users, color: "text-blue-600" },
-  { label: "평균 응답시간", value: "45ms", icon: Clock, color: "text-amber-600" },
-  { label: "API 가용률", value: "99.97%", icon: Shield, color: "text-emerald-600" },
+  { label: "API 호출 수/월", value: "12.8M+", icon: Zap, color: "text-emerald-400" },
+  { label: "등록 개발자", value: "2,340+", icon: Users, color: "text-blue-400" },
+  { label: "평균 응답시간", value: "45ms", icon: Clock, color: "text-amber-400" },
+  { label: "API 가용률", value: "99.97%", icon: Shield, color: "text-emerald-400" },
 ]
 
 const apiFeatures = [
@@ -42,8 +42,8 @@ const apiFeatures = [
     description: "NPL 매물 목록 조회, 상세 정보, 필터링 및 정렬 기능을 제공합니다. 지역, 채권 유형, 가격대 등 다양한 조건으로 검색할 수 있습니다.",
     endpoint: "GET /api/v1/listings",
     pricing: "무료 100회/일",
-    iconBg: "bg-blue-50",
-    iconColor: "text-blue-600",
+    iconBg: "bg-blue-500/10",
+    iconColor: "text-blue-400",
   },
   {
     icon: BarChart3,
@@ -51,8 +51,8 @@ const apiFeatures = [
     description: "부동산 시세 데이터, 추이 분석, 감정가 대비 낙찰률 등 심층 분석 데이터를 실시간으로 제공합니다.",
     endpoint: "GET /api/v1/analytics/pricing",
     pricing: "Pro 이상",
-    iconBg: "bg-emerald-50",
-    iconColor: "text-emerald-600",
+    iconBg: "bg-emerald-500/10",
+    iconColor: "text-emerald-400",
   },
   {
     icon: Gavel,
@@ -60,8 +60,8 @@ const apiFeatures = [
     description: "전국 법원 경매 정보, 입찰 내역, 낙찰 통계를 조회합니다. 실시간 경매 일정 및 결과를 확인할 수 있습니다.",
     endpoint: "GET /api/v1/auctions",
     pricing: "무료 50회/일",
-    iconBg: "bg-amber-50",
-    iconColor: "text-amber-600",
+    iconBg: "bg-amber-500/10",
+    iconColor: "text-amber-400",
   },
   {
     icon: Handshake,
@@ -69,8 +69,8 @@ const apiFeatures = [
     description: "매수자-매도자 자동 매칭, 거래 조건 비교, 최적 거래 상대방 추천 기능을 제공합니다.",
     endpoint: "POST /api/v1/matching",
     pricing: "Pro 이상",
-    iconBg: "bg-purple-50",
-    iconColor: "text-purple-600",
+    iconBg: "bg-purple-500/10",
+    iconColor: "text-purple-400",
   },
   {
     icon: ScanText,
@@ -78,8 +78,8 @@ const apiFeatures = [
     description: "등기부등본, 감정평가서, 채권양도계약서 등 부동산 관련 문서를 자동으로 인식하고 구조화된 데이터로 변환합니다.",
     endpoint: "POST /api/v1/ocr/extract",
     pricing: "건당 50 크레딧",
-    iconBg: "bg-rose-50",
-    iconColor: "text-rose-600",
+    iconBg: "bg-rose-500/10",
+    iconColor: "text-rose-400",
   },
   {
     icon: Bell,
@@ -87,8 +87,8 @@ const apiFeatures = [
     description: "관심 매물 상태 변경, 새로운 매물 등록, 가격 변동 등의 이벤트를 실시간으로 수신할 수 있는 Webhook을 설정합니다.",
     endpoint: "POST /api/v1/webhooks",
     pricing: "무료 5개 / Pro 무제한",
-    iconBg: "bg-cyan-50",
-    iconColor: "text-cyan-600",
+    iconBg: "bg-cyan-500/10",
+    iconColor: "text-cyan-400",
   },
 ]
 
@@ -288,7 +288,7 @@ export default function DeveloperPortalPage() {
                 {feature.description}
               </p>
               <div className={`flex items-center justify-between pt-4 ${DS.divider.default}`}>
-                <code className="text-[0.75rem] text-emerald-700 font-mono bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
+                <code className="text-[0.75rem] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">
                   {feature.endpoint}
                 </code>
                 <span className={DS.text.captionLight}>{feature.pricing}</span>

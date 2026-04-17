@@ -391,11 +391,11 @@ function MobileSimpleView({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEd
   return (
     <div className="space-y-2 text-sm">
       {prereqs.length > 0 && (
-        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-          <div className="text-xs font-medium text-green-700 dark:text-green-400 mb-1">선수 개념</div>
+        <div className="bg-green-500/10 rounded-lg p-3">
+          <div className="text-xs font-medium text-green-400 mb-1">선수 개념</div>
           <div className="flex flex-wrap gap-1">
             {prereqs.map(n => (
-              <span key={n.id} className="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-0.5 rounded text-xs">
+              <span key={n.id} className="bg-green-500/15 text-green-300 px-2 py-0.5 rounded text-xs">
                 {n.name}
               </span>
             ))}
@@ -405,19 +405,19 @@ function MobileSimpleView({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEd
 
       <div className="text-center text-gray-400">↓</div>
 
-      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border-2 border-blue-300 dark:border-blue-600">
-        <div className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-1">★ 현재 학습</div>
-        <div className="font-medium text-blue-900 dark:text-blue-100">{currentNode.name}</div>
+      <div className="bg-blue-500/10 rounded-lg p-3 border-2 border-blue-500/40">
+        <div className="text-xs font-medium text-blue-400 mb-1">★ 현재 학습</div>
+        <div className="font-medium text-blue-300">{currentNode.name}</div>
       </div>
 
       <div className="text-center text-gray-400">↓</div>
 
       {succs.length > 0 && (
-        <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3">
-          <div className="text-xs font-medium text-orange-700 dark:text-orange-400 mb-1">후속 개념</div>
+        <div className="bg-orange-500/10 rounded-lg p-3">
+          <div className="text-xs font-medium text-orange-400 mb-1">후속 개념</div>
           <div className="flex flex-wrap gap-1">
             {succs.map(n => (
-              <span key={n.id} className="bg-orange-100 dark:bg-orange-800 text-orange-800 dark:text-orange-200 px-2 py-0.5 rounded text-xs">
+              <span key={n.id} className="bg-orange-500/15 text-orange-300 px-2 py-0.5 rounded text-xs">
                 {n.name}
               </span>
             ))}
@@ -426,11 +426,11 @@ function MobileSimpleView({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEd
       )}
 
       {related.length > 0 && (
-        <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
-          <div className="text-xs font-medium text-purple-700 dark:text-purple-400 mb-1">연관 개념</div>
+        <div className="bg-purple-500/10 rounded-lg p-3">
+          <div className="text-xs font-medium text-purple-400 mb-1">연관 개념</div>
           <div className="flex flex-wrap gap-1">
             {related.map(n => (
-              <span key={n.id} className="bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded text-xs">
+              <span key={n.id} className="bg-purple-500/15 text-purple-300 px-2 py-0.5 rounded text-xs">
                 {n.name}
               </span>
             ))}
@@ -482,7 +482,7 @@ function MobileTreeView({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEdge
 
 export function OntologyGraphLegend() {
   return (
-    <div className="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400 mt-2">
+    <div className="flex flex-wrap gap-3 text-xs text-[var(--color-text-secondary)] mt-2">
       <div className="flex items-center gap-1">
         <div className="w-8 h-0.5 bg-gray-500" />
         <span>선수 관계</span>

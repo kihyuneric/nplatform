@@ -206,7 +206,7 @@ export default function CurriculumPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-10 dark:bg-gray-950">
+    <div className="max-w-6xl mx-auto px-4 py-8 space-y-10">
       {/* ── Hero ──────────────────────────────── */}
       <div className="relative bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 rounded-3xl overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{
@@ -267,14 +267,14 @@ export default function CurriculumPage() {
 
       {/* ── 학습 추천 (Atomic 캡슐 기반) ── */}
       {recommendations.length > 0 && (
-        <div className="bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 dark:from-purple-950/40 dark:via-indigo-950/40 dark:to-blue-950/40 rounded-2xl border border-purple-100 dark:border-purple-800 p-6">
+        <div className="bg-gradient-to-br from-purple-500/10 via-indigo-500/10 to-blue-500/10 rounded-2xl border border-purple-500/30 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
               <Zap className="w-5 h-5 text-purple-500" />
               다음 학습 추천
             </h2>
             {recStats && (
-              <span className="text-xs text-purple-500 dark:text-purple-400">
+              <span className="text-xs text-purple-400">
                 전체 진도 {recStats.mastery_pct}% · 마스터 {recStats.mastered}개
               </span>
             )}
@@ -284,18 +284,18 @@ export default function CurriculumPage() {
               <Link
                 key={rec.atomic_id || i}
                 href={`/curriculum/study/${rec.atomic_id}`}
-                className="bg-white dark:bg-gray-900 rounded-xl p-4 border dark:border-gray-800 hover:border-purple-300 dark:hover:border-purple-700 hover:shadow-md transition-all group"
+                className="bg-[var(--color-surface-elevated)] rounded-xl p-4 border border-[var(--color-border-subtle)] hover:border-purple-500/50 hover:shadow-md transition-all group"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-300 font-bold text-sm shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-300 font-bold text-sm shrink-0">
                     {i + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-purple-500 dark:text-purple-400 mb-0.5">{rec.reason}</p>
-                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors truncate">
+                    <p className="text-xs text-purple-400 mb-0.5">{rec.reason}</p>
+                    <p className="text-sm font-semibold text-[var(--color-text-primary)] group-hover:text-purple-400 transition-colors truncate">
                       {rec.topic}
                     </p>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-400 dark:text-gray-500">
+                    <div className="flex items-center gap-2 mt-1 text-xs text-[var(--color-text-muted)]">
                       <span>{rec.concept_level}</span>
                       <span>·</span>
                       <span className="flex items-center gap-0.5">
@@ -304,7 +304,7 @@ export default function CurriculumPage() {
                       </span>
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-purple-400 mt-1 shrink-0" />
+                  <ArrowRight className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-purple-400 mt-1 shrink-0" />
                 </div>
               </Link>
             ))}
@@ -313,8 +313,8 @@ export default function CurriculumPage() {
       )}
 
       {/* ── Atomic 캡슐 빠른 검색 ── */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border dark:border-gray-800 shadow-sm p-6">
-        <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+      <div className="bg-[var(--color-surface-elevated)] rounded-2xl border border-[var(--color-border-subtle)] shadow-sm p-6">
+        <h2 className="text-base font-bold text-[var(--color-text-primary)] flex items-center gap-2 mb-3">
           <Search className="w-5 h-5 text-gray-400" />
           학습 캡슐 빠른 검색
         </h2>
@@ -325,7 +325,7 @@ export default function CurriculumPage() {
             onChange={e => setCapsuleSearch(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleCapsuleSearch()}
             placeholder="원하는 주제를 검색하세요 (예: 등기, 전세, 세금, 대출)"
-            className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none bg-white dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500"
+            className="flex-1 px-4 py-2.5 border border-[var(--color-border-subtle)] rounded-xl text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] placeholder:text-[var(--color-text-muted)]"
           />
           <button
             onClick={handleCapsuleSearch}
@@ -341,15 +341,15 @@ export default function CurriculumPage() {
               <Link
                 key={r.atomic_id}
                 href={`/curriculum/study/${r.atomic_id}`}
-                className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-purple-200 dark:hover:border-purple-700 hover:bg-purple-50/30 dark:hover:bg-purple-950/30 transition-colors group"
+                className="flex items-center gap-3 p-3 rounded-xl border border-[var(--color-border-subtle)] hover:border-purple-500/50 hover:bg-purple-500/5 transition-colors group"
               >
-                <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 flex items-center justify-center shrink-0">
+                <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-300 flex items-center justify-center shrink-0">
                   <Zap className="w-3.5 h-3.5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-purple-700 dark:group-hover:text-purple-400 truncate">{r.topic}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1.5 mt-0.5">
-                    <span className="text-purple-500 dark:text-purple-400">{r.concept_name}</span>
+                  <p className="text-sm font-medium text-[var(--color-text-primary)] group-hover:text-purple-400 truncate">{r.topic}</p>
+                  <p className="text-xs text-[var(--color-text-muted)] flex items-center gap-1.5 mt-0.5">
+                    <span className="text-purple-400">{r.concept_name}</span>
                     <span>·</span>
                     <span>{r.concept_level}</span>
                     <span>·</span>
@@ -364,15 +364,15 @@ export default function CurriculumPage() {
       </div>
 
       {/* ── 5단계 레벨 (클릭 → 온톨로지 대시보드) ── */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border dark:border-gray-800 shadow-sm p-6">
+      <div className="bg-[var(--color-surface-elevated)] rounded-2xl border border-[var(--color-border-subtle)] shadow-sm p-6">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">5단계 학습 레벨</h2>
-          <span className="text-xs text-gray-400 dark:text-gray-500">레벨을 클릭하면 온톨로지 분석 결과를 확인할 수 있습니다</span>
+          <h2 className="text-lg font-bold text-[var(--color-text-primary)]">5단계 학습 레벨</h2>
+          <span className="text-xs text-[var(--color-text-muted)]">레벨을 클릭하면 온톨로지 분석 결과를 확인할 수 있습니다</span>
         </div>
 
         {/* Level Timeline */}
         <div className="relative flex items-start justify-between px-2 md:px-8 py-2">
-          <div className="absolute top-9 left-12 right-12 h-1 bg-gray-200 dark:bg-gray-700 hidden md:block" />
+          <div className="absolute top-9 left-12 right-12 h-1 bg-[var(--color-surface-overlay)] hidden md:block" />
           {levelStats.map((level) => {
             const Icon = level.icon
             const isSelected = selectedLevel === level.key
@@ -392,8 +392,8 @@ export default function CurriculumPage() {
                 >
                   <Icon className="w-6 h-6" />
                 </div>
-                <span className={`text-sm font-bold ${isSelected ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>{level.label}</span>
-                <span className="text-xs text-gray-400 dark:text-gray-500">
+                <span className={`text-sm font-bold ${isSelected ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)]'}`}>{level.label}</span>
+                <span className="text-xs text-[var(--color-text-muted)]">
                   {level.count}개 · {level.hours}h
                 </span>
                 {isSelected && (
@@ -410,7 +410,7 @@ export default function CurriculumPage() {
           <div className={`mt-6 rounded-xl border ${selectedLevelMeta.border} ${selectedLevelMeta.bg} p-5 space-y-5`}>
             <div className="flex items-center gap-2">
               <selectedLevelMeta.icon className="w-5 h-5" style={{ color: selectedLevelMeta.color }} />
-              <h3 className="font-bold text-gray-900 dark:text-white">{selectedLevel} 과정 — 온톨로지 분석</h3>
+              <h3 className="font-bold text-[var(--color-text-primary)]">{selectedLevel} 과정 — 온톨로지 분석</h3>
               <span className={`ml-auto px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedLevelMeta.badge}`}>
                 {levelConcepts.length}개 개념
               </span>
@@ -426,25 +426,25 @@ export default function CurriculumPage() {
               <>
                 {/* 통계 카드 */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-3 text-center shadow-sm">
+                  <div className="bg-[var(--color-surface-overlay)] rounded-xl p-3 text-center shadow-sm">
                     <div className="text-2xl font-bold" style={{ color: selectedLevelMeta.color }}>
                       {levelOverview.total_concepts}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">총 개념 수</div>
+                    <div className="text-xs text-[var(--color-text-muted)] mt-0.5">총 개념 수</div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-3 text-center shadow-sm">
+                  <div className="bg-[var(--color-surface-overlay)] rounded-xl p-3 text-center shadow-sm">
                     <div className="text-2xl font-bold text-blue-600">
                       {levelOverview.total_hours}h
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">총 학습시간</div>
+                    <div className="text-xs text-[var(--color-text-muted)] mt-0.5">총 학습시간</div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-3 text-center shadow-sm">
+                  <div className="bg-[var(--color-surface-overlay)] rounded-xl p-3 text-center shadow-sm">
                     <div className="text-2xl font-bold text-green-600">
                       {levelOverview.expert_count}명
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">참여 전문가</div>
+                    <div className="text-xs text-[var(--color-text-muted)] mt-0.5">참여 전문가</div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-3 text-center shadow-sm">
+                  <div className="bg-[var(--color-surface-overlay)] rounded-xl p-3 text-center shadow-sm">
                     <div className="text-2xl font-bold text-amber-600 flex items-center justify-center gap-0.5">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Star
@@ -455,14 +455,14 @@ export default function CurriculumPage() {
                         />
                       ))}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">평균 난이도</div>
+                    <div className="text-xs text-[var(--color-text-muted)] mt-0.5">평균 난이도</div>
                   </div>
                 </div>
 
                 {/* 도메인 분포 */}
                 {levelOverview.domain_distribution.length > 0 && (
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
-                    <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-3 flex items-center gap-1">
+                  <div className="bg-[var(--color-surface-overlay)] rounded-xl p-4 shadow-sm">
+                    <h4 className="text-xs font-semibold text-[var(--color-text-secondary)] mb-3 flex items-center gap-1">
                       <Activity className="w-3.5 h-3.5" />
                       도메인별 개념 분포
                     </h4>
@@ -471,8 +471,8 @@ export default function CurriculumPage() {
                         const pct = Math.round((d.concept_count / (levelOverview.total_concepts || 1)) * 100)
                         return (
                           <div key={d.domain_name} className="flex items-center gap-2 text-xs">
-                            <span className="w-20 text-gray-600 dark:text-gray-300 truncate flex-shrink-0">{d.domain_name}</span>
-                            <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                            <span className="w-20 text-[var(--color-text-secondary)] truncate flex-shrink-0">{d.domain_name}</span>
+                            <div className="flex-1 bg-[var(--color-surface-overlay)] rounded-full h-2 overflow-hidden">
                               <div
                                 className="h-full rounded-full transition-all duration-500"
                                 style={{ width: `${pct}%`, backgroundColor: d.color || selectedLevelMeta.color }}
@@ -488,13 +488,13 @@ export default function CurriculumPage() {
 
                 {/* 개념 관계 그래프 */}
                 {levelOverview.graph_nodes.length > 0 && (
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
-                    <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2 flex items-center gap-1">
+                  <div className="bg-[var(--color-surface-overlay)] rounded-xl p-4 shadow-sm">
+                    <h4 className="text-xs font-semibold text-[var(--color-text-secondary)] mb-2 flex items-center gap-1">
                       <GitBranch className="w-3.5 h-3.5" />
                       개념 관계 그래프
                       <span className="ml-1 text-gray-400 font-normal">({levelOverview.graph_nodes.length}개 개념)</span>
                     </h4>
-                    <div className="border border-gray-100 dark:border-gray-700 rounded-lg overflow-hidden">
+                    <div className="border border-[var(--color-border-subtle)] rounded-lg overflow-hidden">
                       <OntologyGraph
                         nodes={levelOverview.graph_nodes}
                         edges={levelOverview.graph_edges}
@@ -508,8 +508,8 @@ export default function CurriculumPage() {
                 )}
 
                 {/* 개념 목록 (최대 10개 미리보기) */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
-                  <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2 flex items-center gap-1 justify-between">
+                <div className="bg-[var(--color-surface-overlay)] rounded-xl p-4 shadow-sm">
+                  <h4 className="text-xs font-semibold text-[var(--color-text-secondary)] mb-2 flex items-center gap-1 justify-between">
                     <span className="flex items-center gap-1">
                       <BookOpen className="w-3.5 h-3.5" />
                       {selectedLevel} 과정 강의 목록
@@ -531,7 +531,7 @@ export default function CurriculumPage() {
                         <Link
                           key={concept.concept_id}
                           href={`/curriculum/concept/${concept.concept_id}`}
-                          className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 group text-xs"
+                          className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--color-surface-overlay)] group text-xs"
                         >
                           <span
                             className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
@@ -539,7 +539,7 @@ export default function CurriculumPage() {
                           >
                             {idx + 1}
                           </span>
-                          <span className="flex-1 font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white truncate">{concept.name}</span>
+                          <span className="flex-1 font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] truncate">{concept.name}</span>
                           {domain && (
                             <span
                               className="px-1.5 py-0.5 rounded text-[10px] font-medium flex-shrink-0"
@@ -571,8 +571,8 @@ export default function CurriculumPage() {
 
       {/* ── 5개 도메인 카드 ───────────────────── */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">학습 도메인</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">관심 분야를 선택하면 맞춤 학습 경로를 안내합니다</p>
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">학습 도메인</h2>
+        <p className="text-sm text-[var(--color-text-muted)] mb-5">관심 분야를 선택하면 맞춤 학습 경로를 안내합니다</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {domains.map(d => {
             const Icon = DOMAIN_ICONS[d.name] || BookOpen
@@ -585,7 +585,7 @@ export default function CurriculumPage() {
               <Link
                 key={d.domain_id}
                 href={`/curriculum/roadmap?domain=${encodeURIComponent(d.name)}`}
-                className="group bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 p-5 hover:shadow-lg transition-all hover:border-purple-200 dark:hover:border-purple-700"
+                className="group bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border-subtle)] p-5 hover:shadow-lg transition-all hover:border-purple-500/50"
               >
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white flex-shrink-0"
@@ -593,13 +593,13 @@ export default function CurriculumPage() {
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                    <h3 className="font-bold text-[var(--color-text-primary)] group-hover:text-purple-400 transition-colors">
                       {d.name}
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
+                    <p className="text-sm text-[var(--color-text-muted)] mt-0.5 line-clamp-2">
                       {DOMAIN_DESCRIPTIONS[d.name] || d.description}
                     </p>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-gray-400 dark:text-gray-500">
+                    <div className="flex items-center gap-3 mt-2 text-xs text-[var(--color-text-muted)]">
                       <span>{conceptCount}개 개념</span>
                       <span>{hours}시간</span>
                     </div>
@@ -613,14 +613,14 @@ export default function CurriculumPage() {
       </div>
 
       {/* ── 4단계 온톨로지 계층 ─────────────────── */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border dark:border-gray-800 shadow-sm p-6">
+      <div className="bg-[var(--color-surface-elevated)] rounded-2xl border border-[var(--color-border-subtle)] shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
               <Zap className="w-5 h-5 text-purple-500" />
               Atomic 캡슐 학습 트리
             </h2>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
               도메인 → 개념 → Atomic 캡슐 4단계 계층 · 캡슐을 클릭하면 바로 학습을 시작합니다
             </p>
           </div>
@@ -628,8 +628,8 @@ export default function CurriculumPage() {
             onClick={() => setShowHierarchy(!showHierarchy)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               showHierarchy
-                ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
-                : 'bg-gray-100 text-gray-600 hover:bg-purple-50 hover:text-purple-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-purple-950 dark:hover:text-purple-400'
+                ? 'bg-purple-500/10 text-purple-300'
+                : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] hover:bg-purple-500/5 hover:text-purple-400'
             }`}
           >
             {showHierarchy ? '접기' : '펼쳐보기'}
@@ -637,7 +637,7 @@ export default function CurriculumPage() {
         </div>
 
         {showHierarchy && (
-          <div className="border dark:border-gray-700 rounded-xl p-4 bg-gray-50/50 dark:bg-gray-800/50">
+          <div className="border border-[var(--color-border-subtle)] rounded-xl p-4 bg-[var(--color-surface-overlay)]/50">
             <OntologyHierarchy
               domains={hierarchyDomains}
               concepts={hierarchyConcepts}
@@ -655,11 +655,11 @@ export default function CurriculumPage() {
                 <button
                   key={d.domain_id}
                   onClick={() => setShowHierarchy(true)}
-                  className="text-left p-3 rounded-xl border dark:border-gray-700 hover:border-purple-200 dark:hover:border-purple-700 hover:bg-purple-50/30 dark:hover:bg-purple-950/30 transition-colors"
+                  className="text-left p-3 rounded-xl border border-[var(--color-border-subtle)] hover:border-purple-500/50 hover:bg-purple-500/5 transition-colors"
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{d.domain_name}</span>
+                    <span className="text-sm font-semibold text-[var(--color-text-primary)]">{d.domain_name}</span>
                   </div>
                   <span className="text-xs text-gray-400">{domConcepts.length}개 개념</span>
                 </button>
@@ -694,8 +694,8 @@ export default function CurriculumPage() {
       </div>
 
       {/* ── 데이터 플로우 설명 ──────────────────── */}
-      <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl border dark:border-gray-800 p-6">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">학습 플랫폼 흐름</h2>
+      <div className="bg-[var(--color-surface-elevated)] rounded-2xl border border-[var(--color-border-subtle)] p-6">
+        <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 text-center">학습 플랫폼 흐름</h2>
         <div className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-2">
           {[
             { icon: Upload, label: '대본 분석', desc: 'YouTube 대본 업로드', color: '#10B981' },
@@ -710,8 +710,8 @@ export default function CurriculumPage() {
                   style={{ backgroundColor: step.color }}>
                   <step.icon className="w-5 h-5" />
                 </div>
-                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{step.label}</span>
-                <span className="text-[10px] text-gray-400 dark:text-gray-500">{step.desc}</span>
+                <span className="text-xs font-semibold text-[var(--color-text-secondary)]">{step.label}</span>
+                <span className="text-[10px] text-[var(--color-text-muted)]">{step.desc}</span>
               </div>
               {i < 4 && <ArrowRight className="w-4 h-4 text-gray-300 hidden md:block mt-[-20px]" />}
             </div>

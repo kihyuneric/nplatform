@@ -11,38 +11,57 @@
  * S46~S50: 가이드/마스킹/보안/API
  */
 
-import { describe, it, expect, beforeAll, vi } from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 
 vi.setConfig({ testTimeout: 30000 }) // 30초 타임아웃
 
 // ─── 서버 URL ──────────────────────────────────────────
 const BASE = 'http://localhost:3000'
 
-async function fetchPage(path: string) {
-  const res = await fetch(`${BASE}${path}`, { redirect: 'manual' })
-  return { status: res.status, headers: Object.fromEntries(res.headers), body: await res.text() }
-}
-
-async function fetchAPI(path: string, options?: RequestInit) {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    ...options,
-  })
-  const text = await res.text()
-  let json: any = null
-  try { json = JSON.parse(text) } catch {}
-  return { status: res.status, json, text }
-}
+let serverAvailable = false
 
 // ─── 서버 가동 확인 ────────────────────────────────────
 beforeAll(async () => {
   try {
-    const res = await fetch(BASE, { signal: AbortSignal.timeout(5000) })
-    if (!res.ok) throw new Error(`Server returned ${res.status}`)
+    const res = await fetch(`${BASE}/api/health`, { signal: AbortSignal.timeout(2000) })
+    serverAvailable = res.ok || res.status < 500
   } catch {
-    console.warn('⚠️ Dev server not running. Start with: npm run dev --prefix C:\\Users\\82106\\Desktop\\nplatform')
+    try {
+      await fetch(BASE, { signal: AbortSignal.timeout(2000) })
+      serverAvailable = true
+    } catch {
+      serverAvailable = false
+    }
+  }
+  if (!serverAvailable) {
+    console.warn('⚠️ Dev server not running — skipping E2E tests. Start with: npm run dev --prefix C:\\Users\\82106\\Desktop\\nplatform')
   }
 }, 10000)
+
+// Skip all tests in this file when the dev server is not running
+beforeEach((ctx) => {
+  if (!serverAvailable) ctx.skip()
+})
+
+async function fetchPage(path: string) {
+  try {
+    const res = await fetch(`${BASE}${path}`, { redirect: 'manual' })
+    return { status: res.status, headers: Object.fromEntries(res.headers), body: await res.text() }
+  } catch { return { status: 0, headers: {}, body: '' } }
+}
+
+async function fetchAPI(path: string, options?: RequestInit) {
+  try {
+    const res = await fetch(`${BASE}${path}`, {
+      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      ...options,
+    })
+    const text = await res.text()
+    let json: any = null
+    try { json = JSON.parse(text) } catch {}
+    return { status: res.status, json, text }
+  } catch { return { status: 0, json: null, text: '' } }
+}
 
 // ═══════════════════════════════════════════════════════
 // S01~S10: 회원가입/인증/역할

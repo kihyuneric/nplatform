@@ -16,7 +16,7 @@ export function SubNav({ items }: SubNavProps) {
   const pathname = usePathname() ?? ''
 
   return (
-    <div className="border-b bg-white dark:bg-gray-900 sticky top-16 z-30">
+    <div className="border-b bg-[var(--color-surface-elevated)] sticky top-16 z-30">
       <div className="container mx-auto px-4">
         <nav className="flex gap-1 overflow-x-auto py-2 scrollbar-hide" aria-label="서브 메뉴">
           {items.map((item) => {
@@ -29,7 +29,7 @@ export function SubNav({ items }: SubNavProps) {
                 className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-[#1B3A5C] text-white'
-                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
+                    : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)]'
                 }`}
               >
                 {item.label}

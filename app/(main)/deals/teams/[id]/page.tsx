@@ -1,87 +1,261 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { useParams } from "next/navigation"
 import {
   Users, MessageSquare, TrendingUp, DollarSign, Building2,
   ArrowLeft, Send, UserPlus, ChevronRight, PieChart,
-  Loader2, Crown, Target, Zap, ChevronUp, LogOut
+  Loader2, Crown, Target, Zap, LogOut, Shield,
+  MapPin, ExternalLink, CheckCircle2, CircleDot,
+  BadgePercent, Clock, Copy, Mail, Star, AlertCircle,
+  Banknote,
 } from "lucide-react"
 import Link from "next/link"
-import { formatKRW } from "@/lib/constants"
+import { toast } from "sonner"
 
+/* ─── 유틸 ─────────────────────────────────────────────────── */
+const fmt = (n: number) =>
+  n >= 100_000_000
+    ? `${(n / 100_000_000).toFixed(0)}억원`
+    : n >= 10_000
+    ? `${(n / 10_000).toFixed(0)}만원`
+    : `${n.toLocaleString()}원`
+
+/* ─── 타입 ─────────────────────────────────────────────────── */
 interface Member {
-  id: string; name: string; role: "리더" | "멤버"
-  contribution: number; joined_at: string
-}
-interface Message {
-  id: string; sender: string; content: string; created_at: string; is_me?: boolean
-}
-interface TeamDetail {
-  id: string; name: string; description: string; status: "모집중" | "투자중" | "완료"
-  target_amount: number; raised_amount: number; members: Member[]
-  return_rate?: number; listing_id?: string; listing_title?: string; created_at: string
+  id: string
+  name: string
+  company_name?: string
+  role: "LEADER" | "MEMBER"
+  investor_tier?: number
+  contribution: number
+  status?: "COMMITTED" | "PENDING"
+  joined_at: string
+  intro?: string
+  contact_email?: string
 }
 
-const MOCK: TeamDetail = {
-  id: "t1", name: "강남 아파트 NPL 공동투자팀",
-  description: "강남구 A아파트 NPL 채권 공동매입 및 경매 진행. 예상 수익률 18.5%, 6개월 내 회수 목표.",
-  status: "모집중", target_amount: 500000000, raised_amount: 320000000,
-  listing_id: "1", listing_title: "한국자산관리공사 강남구 아파트 NPL",
-  created_at: "2026-03-20", return_rate: 18.5,
-  members: [
-    { id: "m1", name: "김대표", role: "리더", contribution: 150000000, joined_at: "2026-03-20" },
-    { id: "m2", name: "이투자", role: "멤버", contribution: 100000000, joined_at: "2026-03-22" },
-    { id: "m3", name: "박성장", role: "멤버", contribution: 70000000, joined_at: "2026-03-25" },
-  ],
+interface Listing {
+  id: string
+  title: string
+  collateral_type?: string
+  address?: string
+  institution?: string
+  principal_amount?: number
+  appraised_value?: number
+  discount_rate?: number
+  risk_grade?: string
 }
-const MOCK_MSGS: Message[] = [
-  { id: "1", sender: "김대표", content: "실사 체크리스트 공유합니다. 모두 확인해 주세요.", created_at: "04-01 10:23", is_me: false },
-  { id: "2", sender: "이투자", content: "확인했습니다. 6번 항목 추가 검토 필요할 것 같습니다.", created_at: "04-01 10:45", is_me: false },
-  { id: "3", sender: "나", content: "동의합니다. 법무사 검토 요청할게요.", created_at: "04-01 11:02", is_me: true },
-  { id: "4", sender: "김대표", content: "서비스 전문가 탭에서 법무사 연결하면 됩니다!", created_at: "04-01 11:15", is_me: false },
+
+interface Message {
+  id: string
+  sender: string
+  content: string
+  created_at: string
+  is_me?: boolean
+}
+
+type TeamStatus = "모집중" | "모집완료" | "운용중" | "상환완료" | "취소"
+
+interface TeamDetail {
+  id: string
+  name: string
+  description: string
+  status: TeamStatus
+  investment_type?: string
+  target_amount: number
+  raised_amount: number
+  return_rate?: number
+  deadline?: string | null
+  min_per_member?: number
+  max_per_member?: number
+  is_private: boolean
+  members: Member[]
+  listing?: Listing
+  listing_id?: string
+  listing_title?: string
+  created_at: string
+}
+
+/* ─── 상수 ─────────────────────────────────────────────────── */
+const TIER_LABEL: Record<number, string> = {
+  0: "L0 일반", 1: "L1 개인전문", 2: "L2 기관전문", 3: "L3 기관"
+}
+const GRADE_COLOR: Record<string, string> = {
+  A: "#10B981", "B+": "#14B8A6", B: "#3B82F6", C: "#F59E0B", D: "#EF4444", F: "#6B7280",
+}
+const STATUS_STYLE: Record<TeamStatus, string> = {
+  "모집중":   "border-amber-500/30 bg-amber-500/10 text-amber-400",
+  "모집완료": "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
+  "운용중":   "border-[#2E75B6]/30 bg-[#2E75B6]/10 text-[#5B9BD5]",
+  "상환완료": "border-slate-500/30 bg-slate-500/10 text-slate-400",
+  "취소":     "border-red-500/30 bg-red-500/10 text-red-400",
+}
+const AVATAR_COLORS = [
+  "bg-[#2E75B6]", "bg-purple-600", "bg-emerald-600", "bg-amber-600", "bg-pink-600", "bg-teal-600",
 ]
 
-const COLORS = ["bg-[#2E75B6]","bg-purple-600","bg-emerald-600","bg-amber-600","bg-pink-600"]
-function Avatar({ name, size="md" }: { name: string; size?: "sm"|"md"|"lg" }) {
-  const sz = size==="lg" ? "h-12 w-12 text-sm" : size==="sm" ? "h-7 w-7 text-[10px]" : "h-9 w-9 text-xs"
-  const c = COLORS[name.charCodeAt(0) % COLORS.length]
-  return <div className={`${sz} ${c} shrink-0 flex items-center justify-center rounded-full font-bold text-white`}>{name[0]}</div>
-}
-
-const STATUS_STYLE: Record<string,string> = {
-  "모집중": "border-amber-500/30 bg-amber-500/10 text-amber-400",
-  "투자중": "border-[#2E75B6]/30 bg-[#2E75B6]/10 text-[#5B9BD5]",
-  "완료":  "border-slate-500/30 bg-slate-500/10 text-slate-400",
+function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md" | "lg" }) {
+  const sz = size === "lg" ? "h-14 w-14 text-base" : size === "sm" ? "h-7 w-7 text-[10px]" : "h-10 w-10 text-sm"
+  const c = AVATAR_COLORS[(name?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length]
+  return (
+    <div className={`${sz} ${c} shrink-0 flex items-center justify-center rounded-full font-bold text-white`}>
+      {(name ?? "?")[0]}
+    </div>
+  )
 }
 
 const TABS = [
-  { id: "chat",    label: "팀 채팅",   icon: MessageSquare },
-  { id: "invest",  label: "투자 현황", icon: TrendingUp },
-  { id: "returns", label: "정산",      icon: PieChart },
-  { id: "members", label: "멤버",      icon: Users },
-  { id: "listing", label: "투자 매물", icon: Building2 },
+  { id: "overview", label: "팀 현황",   icon: TrendingUp },
+  { id: "leader",   label: "리더 투자사", icon: Crown },
+  { id: "members",  label: "공동 투자사", icon: Users },
+  { id: "listing",  label: "연동 매물",  icon: Building2 },
+  { id: "chat",     label: "팀 채팅",   icon: MessageSquare },
+  { id: "returns",  label: "정산",      icon: PieChart },
 ]
 
+function mapStatus(raw: string): TeamStatus {
+  const map: Record<string, TeamStatus> = {
+    RECRUITING: "모집중", COMMITTED: "모집완료", ACTIVE: "운용중",
+    COMPLETED: "상환완료", CANCELLED: "취소",
+    모집중: "모집중", 모집완료: "모집완료", 운용중: "운용중", 상환완료: "상환완료", 취소: "취소",
+    // legacy 3-value mapping
+    투자중: "운용중", 완료: "상환완료",
+  }
+  return map[raw] ?? "모집중"
+}
+
+/* ─── 팀 상세 페이지 ────────────────────────────────────────── */
 export default function TeamDetailPage() {
   const { id } = useParams() as { id: string }
   const [team, setTeam] = useState<TeamDetail | null>(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState("chat")
-  const [messages, setMessages] = useState<Message[]>(MOCK_MSGS)
+  const [tab, setTab] = useState("overview")
+  const [messages, setMessages] = useState<Message[]>([])
   const [chatInput, setChatInput] = useState("")
-  const isMember = true // mock: current user is member
+  const [isMember, setIsMember] = useState(false)
+  const [joining, setJoining] = useState(false)
+  const [joinAmount, setJoinAmount] = useState("")
+  const [showJoinModal, setShowJoinModal] = useState(false)
 
-  useEffect(() => {
-    fetch(`/api/v1/teams/${id}`)
-      .then(r => r.json()).then(d => setTeam(d.data || d.team || MOCK))
-      .catch(() => setTeam(MOCK)).finally(() => setLoading(false))
+  const loadTeam = useCallback(async () => {
+    if (!id) return
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      const [teamRes, membersRes, msgsRes] = await Promise.allSettled([
+        supabase.from("investment_teams").select("*").eq("id", id).single(),
+        supabase.from("team_members").select("id, user_id, role, contribution, status, joined_at, profiles(name, company_name, investor_tier, contact_email)").eq("team_id", id),
+        supabase.from("team_messages").select("id, sender_id, content, created_at, profiles(name)").eq("team_id", id).order("created_at", { ascending: true }).limit(100),
+      ])
+
+      if (teamRes.status === "fulfilled" && teamRes.value.data) {
+        const r = teamRes.value.data as any
+        const membersData = membersRes.status === "fulfilled" ? ((membersRes.value as any).data ?? []) : []
+
+        const members: Member[] = membersData.map((m: any) => ({
+          id: String(m.id),
+          name: m.profiles?.name ?? "—",
+          company_name: m.profiles?.company_name ?? undefined,
+          role: m.role === "LEADER" ? "LEADER" : "MEMBER",
+          investor_tier: m.profiles?.investor_tier ?? 0,
+          contribution: m.contribution ?? 0,
+          status: (m.status ?? "COMMITTED") as Member["status"],
+          joined_at: String(m.joined_at ?? "").slice(0, 10),
+          intro: m.profiles?.intro ?? undefined,
+          contact_email: m.profiles?.contact_email ?? undefined,
+        }))
+
+        // 거래소 매물 정보 조회
+        let listing: Listing | undefined
+        if (r.listing_id) {
+          const { data: listingData } = await supabase
+            .from("npl_listings")
+            .select("id, title, collateral_type, address, institution, principal_amount, appraised_value, discount_rate, risk_grade")
+            .eq("id", r.listing_id)
+            .single()
+          if (listingData) listing = listingData as Listing
+        }
+
+        setTeam({
+          id: String(r.id),
+          name: r.name ?? "—",
+          description: r.description ?? "",
+          status: mapStatus(r.status ?? "RECRUITING"),
+          target_amount: r.target_amount ?? 0,
+          raised_amount: r.raised_amount ?? 0,
+          return_rate: r.expected_return_rate ?? undefined,
+          deadline: r.deadline ?? undefined,
+          min_per_member: r.min_per_member ?? undefined,
+          max_per_member: r.max_per_member ?? undefined,
+          is_private: r.is_private ?? false,
+          members,
+          listing,
+          listing_id: r.listing_id ? String(r.listing_id) : undefined,
+          listing_title: r.listing_title ?? listing?.title ?? undefined,
+          created_at: String(r.created_at ?? "").slice(0, 10),
+        })
+
+        if (user) {
+          setIsMember(membersData.some((m: any) => m.user_id === user.id) || r.creator_id === user.id)
+        }
+      } else {
+        // API 폴백
+        const res = await fetch(`/api/v1/teams/${id}`)
+        if (res.ok) {
+          const { data } = await res.json()
+          if (data) setTeam(data)
+        }
+      }
+
+      if (msgsRes.status === "fulfilled" && (msgsRes.value as any).data?.length) {
+        const { data: { user: u2 } } = await supabase.auth.getUser()
+        const msgs: Message[] = ((msgsRes.value as any).data ?? []).map((m: any) => ({
+          id: String(m.id),
+          sender: m.profiles?.name ?? "—",
+          content: m.content ?? "",
+          created_at: String(m.created_at ?? "").replace("T", " ").slice(0, 16),
+          is_me: u2 ? m.sender_id === u2.id : false,
+        }))
+        setMessages(msgs)
+      }
+    } catch { /* no-op */ } finally {
+      setLoading(false)
+    }
   }, [id])
+
+  useEffect(() => { loadTeam() }, [loadTeam])
 
   const sendMsg = () => {
     if (!chatInput.trim()) return
     setMessages(p => [...p, { id: Date.now().toString(), sender: "나", content: chatInput, created_at: "방금", is_me: true }])
     setChatInput("")
+  }
+
+  async function handleJoin() {
+    const amount = Number(joinAmount.replace(/,/g, ""))
+    if (!amount || amount <= 0) {
+      toast.error("투자 금액을 입력해주세요.")
+      return
+    }
+    setJoining(true)
+    try {
+      const res = await fetch("/api/v1/teams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId: id, amount }),
+      })
+      if (res.ok) {
+        toast.success("공동 투자 참여 신청이 완료됐습니다. 리더의 확인 후 확정됩니다.")
+        setShowJoinModal(false)
+        setJoinAmount("")
+      } else {
+        const d = await res.json()
+        toast.error(d.error?.message ?? "참여 신청 실패")
+      }
+    } catch { toast.error("네트워크 오류") } finally { setJoining(false) }
   }
 
   if (loading) return (
@@ -91,98 +265,130 @@ export default function TeamDetailPage() {
   )
   if (!team) return null
 
-  const pct = Math.round((team.raised_amount / team.target_amount) * 100)
-  const myContrib = 80000000
+  const leader = team.members.find(m => m.role === "LEADER")
+  const coInvestors = team.members.filter(m => m.role !== "LEADER")
+  const pct = team.target_amount > 0 ? Math.round((team.raised_amount / team.target_amount) * 100) : 0
 
+  /* ─── JSX ────────────────────────────────────────────────── */
   return (
     <div className="min-h-screen bg-[#080F1A]">
 
-      {/* ── Sticky Header ───────────────────────────── */}
+      {/* ── Sticky Header ─────────────────────────────────── */}
       <header className="sticky top-0 z-30 bg-[#0D1F38] h-14 flex items-center px-6 border-b border-white/[0.06]">
         <Link href="/deals/teams" className="mr-3 flex items-center text-slate-400 hover:text-white transition-colors">
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <span className="flex-1 font-semibold text-white text-sm truncate">{team.name}</span>
-        <span className={`mr-4 inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-normal ${STATUS_STYLE[team.status]}`}>
+        <span className={`mr-4 inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_STYLE[team.status]}`}>
           <Zap className="h-2.5 w-2.5" />{team.status}
         </span>
         {isMember ? (
           <button className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-red-500/20 bg-red-500/10 px-3 text-xs font-medium text-red-400 hover:bg-red-500/20 transition-colors">
             <LogOut className="h-3.5 w-3.5" />팀 나가기
           </button>
-        ) : (
-          <button className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#2E75B6] px-3 text-xs font-semibold text-white hover:bg-[#3A85C8] transition-colors">
+        ) : team.status === "모집중" ? (
+          <button
+            onClick={() => setShowJoinModal(true)}
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#10B981] px-3 text-xs font-semibold text-black hover:bg-[#0d9e6e] transition-colors"
+          >
             <UserPlus className="h-3.5 w-3.5" />참여하기
           </button>
-        )}
+        ) : null}
       </header>
 
-      {/* ── Team Hero ───────────────────────────────── */}
+      {/* ── Hero ──────────────────────────────────────────── */}
       <div className="bg-[#0D1F38] px-6 pt-6 pb-10">
         <div className="mx-auto max-w-4xl">
-          <h1 className="text-3xl font-black text-white tracking-normal leading-tight">{team.name}</h1>
+          <div className="flex items-center gap-2 flex-wrap mb-2">
+            {team.listing && (
+              <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold"
+                style={{ background: "#3B82F620", color: "#93C5FD" }}>
+                {team.listing.collateral_type ?? "NPL"}
+              </span>
+            )}
+            {team.listing?.risk_grade && (
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                style={{
+                  background: `${GRADE_COLOR[team.listing.risk_grade] ?? "#6B7280"}20`,
+                  color: GRADE_COLOR[team.listing.risk_grade] ?? "#6B7280",
+                }}>
+                {team.listing.risk_grade}등급
+              </span>
+            )}
+          </div>
+          <h1 className="text-2xl font-black text-white leading-tight">{team.name}</h1>
           <p className="mt-2 text-sm text-slate-400 max-w-xl">{team.description}</p>
 
-          {/* Leader row */}
-          <div className="mt-4 flex items-center gap-2">
-            <Crown className="h-3.5 w-3.5 text-amber-400" />
-            <span className="text-xs text-slate-500 tracking-normal">팀장</span>
-            <Avatar name={team.members[0]?.name ?? "??"} size="sm" />
-            <span className="text-sm font-semibold text-slate-200">{team.members[0]?.name}</span>
-          </div>
+          {/* 리더 한 줄 요약 */}
+          {leader && (
+            <div className="mt-3 flex items-center gap-2">
+              <Crown className="h-3.5 w-3.5 text-amber-400" />
+              <span className="text-xs text-slate-500">리더 투자사</span>
+              <Avatar name={leader.company_name ?? leader.name} size="sm" />
+              <span className="text-sm font-semibold text-slate-200">
+                {leader.company_name ?? leader.name}
+              </span>
+              {leader.investor_tier !== undefined && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
+                  style={{
+                    background: (leader.investor_tier ?? 0) >= 2 ? "#A855F720" : "#3B82F620",
+                    color: (leader.investor_tier ?? 0) >= 2 ? "#A855F7" : "#93C5FD",
+                  }}>
+                  {TIER_LABEL[leader.investor_tier ?? 0]}
+                </span>
+              )}
+            </div>
+          )}
 
-          {/* Stats row */}
+          {/* 진행률 */}
           <div className="mt-5 flex flex-wrap items-center gap-5 text-sm">
             <span className="flex items-center gap-1.5 text-slate-300">
               <Users className="h-4 w-4 text-[#2E75B6]" />
-              <span className="font-semibold text-white">{team.members.length}</span>
-              <span className="text-slate-500">/ 8명</span>
+              <span className="font-semibold text-white">1+{coInvestors.length}</span>
+              <span className="text-slate-500">개사 참여</span>
             </span>
-            <span className="text-slate-700">|</span>
             <span className="flex items-center gap-1.5 text-slate-300">
               <Target className="h-4 w-4 text-purple-400" />
-              <span className="text-slate-500 tracking-normal">목표금액</span>
-              <span className="font-semibold text-white">{formatKRW(team.target_amount)}</span>
+              <span className="text-slate-500">목표</span>
+              <span className="font-semibold text-white">{fmt(team.target_amount)}</span>
             </span>
-            <span className="text-slate-700">|</span>
             <span className="flex items-center gap-1.5">
               <TrendingUp className="h-4 w-4 text-emerald-400" />
-              <span className="text-slate-500 tracking-normal">현재 모집</span>
-              <span className="font-semibold text-emerald-400">{formatKRW(team.raised_amount)}</span>
+              <span className="text-slate-500">확약</span>
+              <span className="font-semibold text-emerald-400">{fmt(team.raised_amount)}</span>
               <span className="text-xs text-emerald-500">({pct}%)</span>
             </span>
           </div>
 
-          {/* Progress bar */}
-          <div className="mt-5">
-            <div className="progress-bar h-2 w-full rounded-full bg-white/[0.06] overflow-hidden">
+          <div className="mt-4">
+            <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden">
               <div className="h-full rounded-full bg-gradient-to-r from-[#2E75B6] to-emerald-500 transition-all duration-700"
-                   style={{ width: `${Math.min(pct, 100)}%` }} />
+                style={{ width: `${Math.min(pct, 100)}%` }} />
             </div>
             <div className="mt-1.5 flex justify-between text-[11px]">
-              <span className="text-slate-600 tracking-normal">모집 현황</span>
+              <span className="text-slate-600">모집 현황</span>
               <span className="font-semibold text-emerald-400">{pct}% 달성</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── KPI Cards ──────────────────────────────── */}
+      {/* ── KPI Cards ─────────────────────────────────────── */}
       <div className="relative z-10 -mt-6 mx-auto max-w-4xl px-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { label: "내 투자금", value: formatKRW(myContrib), icon: DollarSign, accent: "bg-[#2E75B6]" },
-            { label: "기대수익", value: "+14.2%", sub: "연 환산", icon: TrendingUp, accent: "bg-emerald-500" },
-            { label: "팀 순위", value: "#3", sub: "활성 팀 중", icon: PieChart, accent: "bg-purple-500" },
-            { label: "예상완료", value: "2025.03", icon: Target, accent: "bg-amber-500" },
+            { label: "목표 금액", value: fmt(team.target_amount), icon: Banknote, accent: "bg-[#2E75B6]" },
+            { label: "예상 수익률", value: `${team.return_rate ?? "—"}%`, sub: "연 환산", icon: TrendingUp, accent: "bg-emerald-500" },
+            { label: "공동 투자사", value: `${coInvestors.length}개사`, sub: `리더 포함 ${team.members.length}개사`, icon: Users, accent: "bg-purple-500" },
+            { label: "모집 마감", value: team.deadline ? `D-${Math.max(0, Math.ceil((new Date(team.deadline).getTime() - Date.now()) / 86400000))}` : "—", icon: Clock, accent: "bg-amber-500" },
           ].map(k => (
-            <div key={k.label} className="stat-card-dark relative overflow-hidden rounded-xl border border-white/[0.06] bg-[#0F1C2E] p-4">
+            <div key={k.label} className="relative overflow-hidden rounded-xl border border-white/[0.06] bg-[#0F1C2E] p-4">
               <div className={`absolute left-0 top-0 h-full w-[3px] ${k.accent}`} />
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-normal text-slate-600">{k.label}</p>
-                  <p className="mt-1.5 text-xl font-bold text-white leading-none">{k.value}</p>
-                  {k.sub && <p className="mt-1 text-[10px] text-slate-600 tracking-normal">{k.sub}</p>}
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">{k.label}</p>
+                  <p className="mt-1.5 text-lg font-bold text-white leading-none">{k.value}</p>
+                  {k.sub && <p className="mt-1 text-[10px] text-slate-600">{k.sub}</p>}
                 </div>
                 <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${k.accent} bg-opacity-20`}>
                   <k.icon className="h-4 w-4 text-white opacity-60" />
@@ -193,16 +399,16 @@ export default function TeamDetailPage() {
         </div>
       </div>
 
-      {/* ── Tab Bar ────────────────────────────────── */}
+      {/* ── Tab Bar ───────────────────────────────────────── */}
       <div className="mx-auto max-w-4xl px-6 mt-8">
         <div className="flex gap-0 border-b border-white/[0.06] overflow-x-auto">
           {TABS.map(t => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`tab-line whitespace-nowrap inline-flex items-center gap-1.5 px-4 py-3 text-xs font-semibold tracking-normal border-b-2 transition-colors
+              className={`whitespace-nowrap inline-flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 transition-colors
                 ${tab === t.id
-                  ? "border-[#2E75B6] text-[#5B9BD5]"
+                  ? "border-[#10B981] text-[#10B981]"
                   : "border-transparent text-slate-500 hover:text-slate-300"}`}
             >
               <t.icon className="h-3.5 w-3.5" />{t.label}
@@ -211,30 +417,386 @@ export default function TeamDetailPage() {
         </div>
       </div>
 
-      {/* ── Tab Content ────────────────────────────── */}
-      <div className="mx-auto max-w-4xl px-6 py-6 pb-20">
+      {/* ── Tab Content ───────────────────────────────────── */}
+      <div className="mx-auto max-w-4xl px-6 py-6 pb-28">
 
-        {/* 팀 채팅 */}
+        {/* ══ 팀 현황 ══ */}
+        {tab === "overview" && (
+          <div className="space-y-5">
+            {/* 모집 현황 */}
+            <div className="rounded-xl border border-white/[0.06] bg-[#0A1624] p-5 space-y-4">
+              <p className="text-sm font-semibold text-white">모집 현황</p>
+              <div className="h-3 rounded-full overflow-hidden" style={{ background: "#10B98120" }}>
+                <div className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${Math.min(pct, 100)}%`, background: "linear-gradient(90deg,#10B981,#34D399)" }} />
+              </div>
+              <div className="flex justify-between text-xs text-slate-500">
+                <span>확약 {fmt(team.raised_amount)}</span>
+                {team.target_amount - team.raised_amount > 0 && (
+                  <span>잔여 {fmt(team.target_amount - team.raised_amount)}</span>
+                )}
+                <span>목표 {fmt(team.target_amount)}</span>
+              </div>
+            </div>
+
+            {/* 투자 비율 테이블 */}
+            <div className="rounded-xl border border-white/[0.06] bg-[#0A1624] overflow-hidden">
+              <div className="border-b border-white/[0.06] px-5 py-3.5">
+                <p className="text-sm font-semibold text-white">투자사별 참여 현황</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/[0.06] text-[11px] text-slate-600 uppercase">
+                      <th className="px-5 py-3 text-left">투자사</th>
+                      <th className="px-5 py-3 text-right">역할</th>
+                      <th className="px-5 py-3 text-right">투자금</th>
+                      <th className="px-5 py-3 text-right">비율</th>
+                      <th className="px-5 py-3 text-right">상태</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.04]">
+                    {team.members.map(m => {
+                      const share = team.raised_amount > 0
+                        ? ((m.contribution / team.raised_amount) * 100).toFixed(1)
+                        : "0.0"
+                      return (
+                        <tr key={m.id} className="hover:bg-white/[0.02] transition-colors">
+                          <td className="px-5 py-3.5">
+                            <div className="flex items-center gap-2.5">
+                              <Avatar name={m.company_name ?? m.name} size="sm" />
+                              <div>
+                                <p className="font-medium text-slate-200">{m.company_name ?? m.name}</p>
+                                {m.company_name && <p className="text-[10px] text-slate-600">{m.name}</p>}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            {m.role === "LEADER"
+                              ? <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-400"><Crown className="h-2.5 w-2.5" />리더</span>
+                              : <span className="text-[10px] text-slate-500">공동</span>
+                            }
+                          </td>
+                          <td className="px-5 py-3.5 text-right font-semibold text-white">{fmt(m.contribution)}</td>
+                          <td className="px-5 py-3.5 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <div className="w-14 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                                <div className="h-full rounded-full bg-[#2E75B6]" style={{ width: `${share}%` }} />
+                              </div>
+                              <span className="text-slate-300 w-10 text-right">{share}%</span>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            {m.status === "COMMITTED"
+                              ? <span className="flex items-center justify-end gap-1 text-[11px] text-emerald-400"><CheckCircle2 className="h-3 w-3" />확약</span>
+                              : <span className="flex items-center justify-end gap-1 text-[11px] text-amber-400"><CircleDot className="h-3 w-3" />검토중</span>
+                            }
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══ 리더 투자사 ══ */}
+        {tab === "leader" && (
+          <div className="space-y-4">
+            {leader ? (
+              <>
+                {/* 리더 카드 */}
+                <div className="rounded-2xl border p-6 space-y-5"
+                  style={{ background: "linear-gradient(135deg,#0A1628,#0F1F35)", borderColor: "#F59E0B30", boxShadow: "0 0 0 1px #F59E0B10 inset" }}>
+                  <div className="flex items-center gap-2">
+                    <Crown className="h-4 w-4 text-amber-400" />
+                    <h2 className="text-sm font-bold uppercase tracking-widest text-amber-400">리더 투자사</h2>
+                    <Star className="h-3.5 w-3.5 text-amber-400 ml-auto" />
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <Avatar name={leader.company_name ?? leader.name} size="lg" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-white text-base">{leader.company_name ?? leader.name}</p>
+                        {leader.investor_tier !== undefined && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                            style={{
+                              background: (leader.investor_tier ?? 0) >= 2 ? "#A855F720" : "#3B82F620",
+                              color: (leader.investor_tier ?? 0) >= 2 ? "#A855F7" : "#93C5FD",
+                            }}>
+                            {TIER_LABEL[leader.investor_tier ?? 0]}
+                          </span>
+                        )}
+                      </div>
+                      {leader.company_name && (
+                        <p className="text-xs text-slate-500 mt-0.5">담당자: {leader.name}</p>
+                      )}
+                      {leader.intro && (
+                        <p className="text-xs text-slate-400 mt-2 leading-relaxed">{leader.intro}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl p-4 space-y-3" style={{ background: "#0F1F35", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-500">참여 금액</span>
+                      <span className="font-bold text-sm text-emerald-400">{fmt(leader.contribution)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-500">전체 대비</span>
+                      <span className="text-sm font-semibold text-white">
+                        {team.target_amount > 0 ? Math.round((leader.contribution / team.target_amount) * 100) : 0}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-500">참여 일자</span>
+                      <span className="text-xs text-slate-500">{leader.joined_at}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-500">상태</span>
+                      <span className="flex items-center gap-1 text-xs text-emerald-400">
+                        <CheckCircle2 className="h-3 w-3" />확약
+                      </span>
+                    </div>
+                  </div>
+
+                  {leader.contact_email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3.5 w-3.5 text-slate-500" />
+                      <span className="text-xs text-slate-500">{leader.contact_email}</span>
+                      <button
+                        className="ml-auto"
+                        onClick={() => { navigator.clipboard.writeText(leader.contact_email!); toast.success("이메일이 복사됐습니다.") }}
+                      >
+                        <Copy className="h-3.5 w-3.5 text-slate-600 hover:text-slate-300 transition-colors" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* 리더 역할 안내 */}
+                <div className="rounded-xl p-4 border border-amber-500/20 bg-amber-500/5 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-amber-400" />
+                    <p className="text-xs font-semibold text-amber-400">리더 투자사 역할</p>
+                  </div>
+                  {["매물 발굴 및 실사 주도", "공동 투자사 모집 및 심사", "투자 의사결정 및 협상", "수익 배분 및 정산 관리"].map((t, i) => (
+                    <p key={i} className="flex items-start gap-1.5 text-xs text-slate-500">
+                      <span className="text-amber-400 mt-0.5">•</span>{t}
+                    </p>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center py-16 text-center">
+                <Crown className="h-10 w-10 text-slate-700 mb-3" />
+                <p className="text-slate-500 text-sm">리더 투자사 정보가 없습니다.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══ 공동 투자사 ══ */}
+        {tab === "members" && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-[#3B82F6]" />
+                <p className="text-sm font-semibold text-white">공동 투자사</p>
+                <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "#3B82F620", color: "#93C5FD" }}>
+                  {coInvestors.length}개사
+                </span>
+              </div>
+              {team.status === "모집중" && (
+                <button
+                  onClick={() => setShowJoinModal(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#10B981] px-3 py-1.5 text-xs font-semibold text-black hover:bg-[#0d9e6e] transition-colors"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />참여 신청
+                </button>
+              )}
+            </div>
+
+            {coInvestors.length === 0 ? (
+              <div className="flex flex-col items-center py-16 text-center">
+                <Users className="h-10 w-10 text-slate-700 mb-3" />
+                <p className="text-slate-500 text-sm">아직 공동 투자사가 없습니다.</p>
+                {team.status === "모집중" && (
+                  <p className="text-[#10B981] text-xs mt-1">첫 번째 공동 투자사로 참여하세요!</p>
+                )}
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-3">
+                {coInvestors.map(m => (
+                  <div key={m.id} className="rounded-xl border border-white/[0.06] bg-[#0A1624] p-5 flex items-start gap-4">
+                    <Avatar name={m.company_name ?? m.name} size="lg" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-white">{m.company_name ?? m.name}</span>
+                        {m.investor_tier !== undefined && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                            style={{
+                              background: (m.investor_tier ?? 0) >= 2 ? "#A855F720" : "#3B82F620",
+                              color: (m.investor_tier ?? 0) >= 2 ? "#A855F7" : "#93C5FD",
+                            }}>
+                            {TIER_LABEL[m.investor_tier ?? 0]}
+                          </span>
+                        )}
+                        <span className="ml-auto">
+                          {m.status === "COMMITTED"
+                            ? <span className="flex items-center gap-1 text-[11px] text-emerald-400"><CheckCircle2 className="h-3 w-3" />확약</span>
+                            : <span className="flex items-center gap-1 text-[11px] text-amber-400"><CircleDot className="h-3 w-3" />검토중</span>
+                          }
+                        </span>
+                      </div>
+                      {m.company_name && <p className="text-[11px] text-slate-500 mt-0.5">{m.name}</p>}
+                      <p className="text-sm font-bold text-slate-200 mt-1.5">{fmt(m.contribution)}</p>
+                      <p className="text-[11px] text-slate-600 mt-0.5">참여일 {m.joined_at}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 잔여 모집 안내 */}
+            {team.status === "모집중" && (team.target_amount - team.raised_amount) > 0 && (
+              <div className="rounded-xl p-4" style={{ background: "#10B98110", border: "1px solid #10B98125" }}>
+                <p className="text-xs text-emerald-400">
+                  잔여 모집: <span className="font-bold">{fmt(team.target_amount - team.raised_amount)}</span>
+                  {team.min_per_member && team.max_per_member && (
+                    <span className="ml-2 text-[10px] text-slate-500">
+                      ({fmt(team.min_per_member)} ~ {fmt(team.max_per_member)})
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══ 연동 매물 ══ */}
+        {tab === "listing" && (
+          <div className="space-y-4">
+            {team.listing ? (
+              <>
+                <div className="rounded-2xl border p-5 space-y-4"
+                  style={{ background: "#0A1628", borderColor: "#3B82F625" }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-[#3B82F6]" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-slate-400">거래소 연동 매물</span>
+                    </div>
+                    <Link href={`/exchange/${team.listing.id}`}
+                      className="flex items-center gap-1 text-xs font-medium text-[#3B82F6] hover:opacity-80 transition-opacity">
+                      거래소에서 보기 <ExternalLink className="h-3 w-3" />
+                    </Link>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      {team.listing.risk_grade && (
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                          style={{
+                            background: `${GRADE_COLOR[team.listing.risk_grade] ?? "#6B7280"}20`,
+                            color: GRADE_COLOR[team.listing.risk_grade] ?? "#6B7280",
+                          }}>
+                          {team.listing.risk_grade}등급
+                        </span>
+                      )}
+                      {team.listing.collateral_type && (
+                        <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "#3B82F620", color: "#93C5FD" }}>
+                          {team.listing.collateral_type}
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-bold text-base text-white">{team.listing.title}</p>
+                    {team.listing.address && (
+                      <div className="flex items-center gap-1 mt-1 text-xs text-slate-500">
+                        <MapPin className="h-3 w-3" />{team.listing.address}
+                      </div>
+                    )}
+                    {team.listing.institution && (
+                      <p className="text-xs text-slate-500 mt-0.5">금융기관: {team.listing.institution}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                      { label: "채권금액", value: team.listing.principal_amount ? fmt(team.listing.principal_amount) : "—", color: "text-white" },
+                      { label: "감정가", value: team.listing.appraised_value ? fmt(team.listing.appraised_value) : "—", color: "text-white" },
+                      { label: "할인율", value: team.listing.discount_rate ? `${team.listing.discount_rate}%` : "—", color: "text-emerald-400" },
+                      { label: "리스크 등급", value: team.listing.risk_grade ?? "—", color: GRADE_COLOR[team.listing.risk_grade ?? ""] ?? "text-white" },
+                    ].map((k, i) => (
+                      <div key={i} className="rounded-lg p-3" style={{ background: "#0F1F35", border: "1px solid rgba(255,255,255,0.05)" }}>
+                        <p className="text-[10px] text-slate-600 mb-0.5">{k.label}</p>
+                        <p className={`text-sm font-bold ${typeof k.color === "string" && k.color.startsWith("text-") ? k.color : ""}`}
+                          style={typeof k.color === "string" && !k.color.startsWith("text-") ? { color: k.color } : {}}>
+                          {k.value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-xl p-4 border border-amber-500/20 bg-amber-500/5 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-amber-400" />
+                    <p className="text-xs font-semibold text-amber-400">투자 유의사항</p>
+                  </div>
+                  {[
+                    "매물 정보는 거래소와 실시간 연동됩니다.",
+                    "투자 원금 손실 가능성이 있으며 예상 수익률은 보장되지 않습니다.",
+                    "상세 실사 자료는 거래소 매물 페이지에서 확인하세요.",
+                  ].map((t, i) => (
+                    <p key={i} className="flex items-start gap-1.5 text-xs text-slate-500">
+                      <span className="text-amber-400 mt-0.5">•</span>{t}
+                    </p>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center py-16 text-center">
+                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.06] bg-[#0D1F38]">
+                  <Building2 className="h-6 w-6 text-slate-600" />
+                </div>
+                <p className="text-sm text-slate-500">연결된 매물이 없습니다</p>
+                <Link href="/exchange">
+                  <button className="mt-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-slate-400 hover:bg-white/10 transition-colors">
+                    매물 탐색하기
+                  </button>
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══ 팀 채팅 ══ */}
         {tab === "chat" && (
-          <div className="card-interactive-dark rounded-xl border border-white/[0.06] bg-[#0A1624] overflow-hidden">
+          <div className="rounded-xl border border-white/[0.06] bg-[#0A1624] overflow-hidden">
             <div className="border-b border-white/[0.06] px-5 py-3.5 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-sm font-semibold text-slate-200 tracking-normal">{team.name}</span>
+                <span className="text-sm font-semibold text-slate-200">{team.name}</span>
               </div>
-              <span className="text-[11px] text-slate-600 tracking-normal">{team.members.length}명 참여 중</span>
+              <span className="text-[11px] text-slate-600">{team.members.length}개사 참여 중</span>
             </div>
             <div className="h-80 overflow-y-auto p-5 space-y-4">
+              {messages.length === 0 && (
+                <p className="text-center text-xs text-slate-600 mt-20">첫 메시지를 보내보세요</p>
+              )}
               {messages.map(msg => (
                 <div key={msg.id} className={`flex gap-3 ${msg.is_me ? "flex-row-reverse" : ""}`}>
                   {!msg.is_me && <Avatar name={msg.sender} size="sm" />}
                   <div className={`max-w-[70%] flex flex-col gap-1 ${msg.is_me ? "items-end" : "items-start"}`}>
-                    {!msg.is_me && <span className="text-[10px] font-medium text-slate-600 tracking-normal">{msg.sender}</span>}
+                    {!msg.is_me && <span className="text-[10px] font-medium text-slate-600">{msg.sender}</span>}
                     <div className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed
-                      ${msg.is_me ? "rounded-tr-sm bg-[#2E75B6] text-white" : "rounded-tl-sm bg-[#0D1F38] border border-white/[0.06] text-slate-300"}`}>
+                      ${msg.is_me ? "rounded-tr-sm bg-[#10B981] text-black" : "rounded-tl-sm bg-[#0D1F38] border border-white/[0.06] text-slate-300"}`}>
                       {msg.content}
                     </div>
-                    <span className="text-[10px] text-slate-700 tracking-normal">{msg.created_at}</span>
+                    <span className="text-[10px] text-slate-700">{msg.created_at}</span>
                   </div>
                 </div>
               ))}
@@ -244,198 +806,131 @@ export default function TeamDetailPage() {
                 value={chatInput} onChange={e => setChatInput(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && sendMsg()}
                 placeholder="메시지를 입력하세요..."
-                className="flex-1 rounded-xl border border-white/10 bg-[#0D1F38] px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-[#2E75B6]/50"
+                className="flex-1 rounded-xl border border-white/10 bg-[#0D1F38] px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-[#10B981]/50"
               />
               <button onClick={sendMsg} disabled={!chatInput.trim()}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2E75B6] text-white hover:bg-[#3A85C8] disabled:opacity-40 transition-colors">
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#10B981] text-black hover:bg-[#0d9e6e] disabled:opacity-40 transition-colors">
                 <Send className="h-4 w-4" />
               </button>
             </div>
           </div>
         )}
 
-        {/* 투자 현황 */}
-        {tab === "invest" && (
-          <div className="space-y-4">
-            <div className="card-interactive-dark rounded-xl border border-white/[0.06] bg-[#0A1624] overflow-hidden">
-              <div className="border-b border-white/[0.06] px-6 py-4">
-                <p className="text-sm font-semibold text-white tracking-normal">멤버별 투자 비율</p>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="data-table w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/[0.06] text-[11px] text-slate-600 uppercase tracking-normal">
-                      <th className="px-6 py-3 text-left font-semibold">이름</th>
-                      <th className="px-6 py-3 text-right font-semibold">투자금</th>
-                      <th className="px-6 py-3 text-right font-semibold">비율</th>
-                      <th className="px-6 py-3 text-right font-semibold">가입일</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/[0.04]">
-                    {team.members.map(m => {
-                      const share = ((m.contribution / team.raised_amount) * 100).toFixed(1)
-                      return (
-                        <tr key={m.id} className="hover:bg-white/[0.02] transition-colors">
-                          <td className="px-6 py-3.5">
-                            <div className="flex items-center gap-2.5">
-                              <Avatar name={m.name} size="sm" />
-                              <span className="font-medium text-slate-200 tracking-normal">{m.name}</span>
-                              {m.role === "리더" && <Crown className="h-3 w-3 text-amber-400" />}
-                            </div>
-                          </td>
-                          <td className="px-6 py-3.5 text-right font-semibold text-white">{formatKRW(m.contribution)}</td>
-                          <td className="px-6 py-3.5 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <div className="w-16 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                                <div className="h-full rounded-full bg-[#2E75B6]" style={{ width: `${share}%` }} />
-                              </div>
-                              <span className="text-slate-300 w-10 text-right">{share}%</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-3.5 text-right text-slate-500 tracking-normal">{m.joined_at}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 정산 */}
+        {/* ══ 정산 ══ */}
         {tab === "returns" && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: "예상 총 수익", value: formatKRW(team.raised_amount * ((team.return_rate ?? 0) / 100)), accent: "text-emerald-400" },
-                { label: "내 분배금", value: formatKRW(myContrib * ((team.return_rate ?? 0) / 100)), accent: "text-[#5B9BD5]" },
+                { label: "예상 총 수익", value: fmt(team.raised_amount * ((team.return_rate ?? 0) / 100)), color: "text-emerald-400" },
+                { label: "공동 투자사 합산", value: fmt(coInvestors.reduce((s, m) => s + m.contribution, 0) * ((team.return_rate ?? 0) / 100)), color: "text-[#5B9BD5]" },
               ].map(s => (
-                <div key={s.label} className="stat-card-dark rounded-xl border border-white/[0.06] bg-[#0A1624] p-5">
-                  <p className="text-[11px] text-slate-600 font-semibold uppercase tracking-normal">{s.label}</p>
-                  <p className={`mt-2 text-2xl font-black tracking-normal ${s.accent}`}>{s.value}</p>
+                <div key={s.label} className="rounded-xl border border-white/[0.06] bg-[#0A1624] p-5">
+                  <p className="text-[11px] text-slate-600 font-semibold uppercase">{s.label}</p>
+                  <p className={`mt-2 text-2xl font-black ${s.color}`}>{s.value}</p>
                 </div>
               ))}
             </div>
-            <div className="card-interactive-dark rounded-xl border border-white/[0.06] bg-[#0A1624] overflow-hidden">
+            <div className="rounded-xl border border-white/[0.06] bg-[#0A1624] overflow-hidden">
               <div className="border-b border-white/[0.06] px-6 py-4">
-                <p className="text-sm font-semibold text-white tracking-normal">멤버별 분배 내역</p>
+                <p className="text-sm font-semibold text-white">투자사별 분배 내역</p>
               </div>
               <div className="overflow-x-auto">
-                <table className="data-table w-full text-sm">
+                <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/[0.06] text-[11px] text-slate-600 uppercase tracking-normal">
-                      <th className="px-6 py-3 text-left font-semibold">멤버</th>
-                      <th className="px-6 py-3 text-right font-semibold">투자금</th>
-                      <th className="px-6 py-3 text-right font-semibold">지분</th>
-                      <th className="px-6 py-3 text-right font-semibold">예상 분배금</th>
+                    <tr className="border-b border-white/[0.06] text-[11px] text-slate-600 uppercase">
+                      <th className="px-5 py-3 text-left">투자사</th>
+                      <th className="px-5 py-3 text-right">역할</th>
+                      <th className="px-5 py-3 text-right">투자금</th>
+                      <th className="px-5 py-3 text-right">지분</th>
+                      <th className="px-5 py-3 text-right">예상 분배금</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.04]">
                     {team.members.map(m => {
-                      const share = (m.contribution / team.raised_amount) * 100
+                      const share = team.raised_amount > 0 ? (m.contribution / team.raised_amount) * 100 : 0
                       const ret = m.contribution * ((team.return_rate ?? 0) / 100)
                       return (
                         <tr key={m.id} className="hover:bg-white/[0.02] transition-colors">
-                          <td className="px-6 py-3.5">
+                          <td className="px-5 py-3.5">
                             <div className="flex items-center gap-2.5">
-                              <Avatar name={m.name} size="sm" />
-                              <span className="font-medium text-slate-200 tracking-normal">{m.name}</span>
+                              <Avatar name={m.company_name ?? m.name} size="sm" />
+                              <span className="font-medium text-slate-200">{m.company_name ?? m.name}</span>
+                              {m.role === "LEADER" && <Crown className="h-3 w-3 text-amber-400" />}
                             </div>
                           </td>
-                          <td className="px-6 py-3.5 text-right text-slate-300">{formatKRW(m.contribution)}</td>
-                          <td className="px-6 py-3.5 text-right text-slate-400">{share.toFixed(1)}%</td>
-                          <td className="px-6 py-3.5 text-right font-semibold text-emerald-400">+{formatKRW(ret)}</td>
+                          <td className="px-5 py-3.5 text-right text-xs text-slate-500">
+                            {m.role === "LEADER" ? "리더" : "공동"}
+                          </td>
+                          <td className="px-5 py-3.5 text-right text-slate-300">{fmt(m.contribution)}</td>
+                          <td className="px-5 py-3.5 text-right text-slate-400">{share.toFixed(1)}%</td>
+                          <td className="px-5 py-3.5 text-right font-semibold text-emerald-400">+{fmt(ret)}</td>
                         </tr>
                       )
                     })}
                   </tbody>
                 </table>
               </div>
-              <p className="px-6 py-4 text-[11px] leading-relaxed text-slate-600 border-t border-white/[0.04] tracking-normal">
+              <p className="px-6 py-4 text-[11px] text-slate-600 border-t border-white/[0.04]">
                 예상 수익은 경매 낙찰 및 회수 완료 후 지분 비율에 따라 정산됩니다. 실제 수익은 시장 상황에 따라 달라질 수 있습니다.
               </p>
             </div>
           </div>
         )}
+      </div>
 
-        {/* 멤버 */}
-        {tab === "members" && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold text-white tracking-normal">총 {team.members.length}명 참여 중</p>
-              <button className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-400 hover:bg-white/10 transition-colors">
-                <UserPlus className="h-3.5 w-3.5" />초대하기
-              </button>
+      {/* ── 참여 모달 ─────────────────────────────────────── */}
+      {showJoinModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowJoinModal(false)} />
+          <div className="relative w-full max-w-md rounded-2xl p-6 space-y-5 shadow-2xl"
+            style={{ background: "#080F1E", border: "1px solid #10B98130" }}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-white">공동 투자 참여 신청</h3>
+              <button onClick={() => setShowJoinModal(false)} className="text-slate-500 hover:text-white">✕</button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {team.members.map(m => {
-                const share = ((m.contribution / team.raised_amount) * 100).toFixed(1)
-                return (
-                  <div key={m.id} className="card-interactive-dark rounded-xl border border-white/[0.06] bg-[#0A1624] p-5 flex items-start gap-4">
-                    <Avatar name={m.name} size="lg" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-white tracking-normal">{m.name}</span>
-                        {m.role === "리더" ? (
-                          <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-400 tracking-normal">
-                            <Crown className="h-2.5 w-2.5" />리더
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-slate-500 tracking-normal">
-                            멤버
-                          </span>
-                        )}
-                        <span className="ml-auto text-[10px] text-emerald-500 font-semibold">{share}% 지분</span>
-                      </div>
-                      <p className="mt-1.5 text-sm font-bold text-slate-200">{formatKRW(m.contribution)}</p>
-                      <p className="mt-0.5 text-[11px] text-slate-600 tracking-normal">가입일 {m.joined_at}</p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
 
-        {/* 투자 매물 */}
-        {tab === "listing" && (
-          <div className="card-interactive-dark rounded-xl border border-white/[0.06] bg-[#0A1624] overflow-hidden">
-            <div className="border-b border-white/[0.06] px-6 py-4">
-              <p className="text-sm font-semibold text-white tracking-normal">연결 매물</p>
-              <p className="text-[11px] text-slate-500 mt-0.5 tracking-normal">팀이 검토 중인 NPL 채권</p>
-            </div>
-            <div className="p-6">
-              {team.listing_id ? (
-                <Link href={`/exchange/${team.listing_id}`}>
-                  <div className="flex items-center gap-4 rounded-xl border border-white/[0.06] bg-[#0D1F38] p-4 hover:border-white/10 transition-colors cursor-pointer">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#2E75B6]/20 bg-[#2E75B6]/10">
-                      <Building2 className="h-6 w-6 text-[#2E75B6]" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-white truncate tracking-normal">{team.listing_title}</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5 tracking-normal">매물 상세 보기</p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-slate-600" />
-                  </div>
-                </Link>
-              ) : (
-                <div className="flex flex-col items-center py-12 text-center">
-                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.06] bg-[#0D1F38]">
-                    <Building2 className="h-6 w-6 text-slate-600" />
-                  </div>
-                  <p className="text-sm text-slate-500 tracking-normal">연결된 매물이 없습니다</p>
-                  <Link href="/exchange">
-                    <button className="mt-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-slate-400 hover:bg-white/10 transition-colors">
-                      매물 찾기
-                    </button>
-                  </Link>
-                </div>
+            {leader && (
+              <div className="rounded-xl p-4 space-y-2" style={{ background: "#0F1F35", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <p className="text-xs text-slate-500">리더 투자사</p>
+                <p className="text-sm font-semibold text-white">{leader.company_name ?? leader.name}</p>
+                {team.return_rate && (
+                  <p className="text-xs text-slate-500">예상 수익률: <span className="text-emerald-400 font-bold">{team.return_rate}%</span></p>
+                )}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-white">투자 금액 (원)</label>
+              <input
+                type="text"
+                placeholder={team.min_per_member ? `최소 ${fmt(team.min_per_member)}` : "금액 입력"}
+                value={joinAmount}
+                onChange={e => setJoinAmount(e.target.value)}
+                className="w-full rounded-xl px-4 py-3 text-sm outline-none"
+                style={{ background: "#0F1F35", border: "1px solid #10B98130", color: "#fff" }}
+              />
+              {team.min_per_member && team.max_per_member && (
+                <p className="text-xs text-slate-500">
+                  {fmt(team.min_per_member)} ~ {fmt(team.max_per_member)}
+                </p>
               )}
             </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => setShowJoinModal(false)}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold border border-white/10 text-slate-400">
+                취소
+              </button>
+              <button onClick={handleJoin} disabled={joining}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+                style={{ background: "#10B981", color: "#000" }}>
+                {joining ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                참여 신청
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

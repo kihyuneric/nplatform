@@ -18,10 +18,10 @@ interface Props {
 }
 
 const CATEGORY_STYLES: Record<KeywordCategory, { bg: string; text: string; border: string }> = {
-  '거래/시장': { bg: 'bg-blue-50',   text: 'text-blue-700',   border: 'border-blue-200'   },
-  '개발/지역': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-  '정책/규제': { bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200'   },
-  '투자/금융': { bg: 'bg-purple-50',  text: 'text-purple-700',  border: 'border-purple-200'  },
+  '거래/시장': { bg: 'bg-blue-500/10',   text: 'text-blue-400',   border: 'border-blue-500/20'   },
+  '개발/지역': { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+  '정책/규제': { bg: 'bg-amber-500/10',   text: 'text-amber-400',   border: 'border-amber-500/20'   },
+  '투자/금융': { bg: 'bg-purple-500/10',  text: 'text-purple-400',  border: 'border-purple-500/20'  },
 };
 
 const CATEGORY_LEGEND: { category: KeywordCategory; label: string }[] = [

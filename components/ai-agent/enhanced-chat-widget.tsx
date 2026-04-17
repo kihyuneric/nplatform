@@ -65,7 +65,7 @@ export function EnhancedChatWidget() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-50 flex items-center gap-2 rounded-full bg-[#1B3A5C] px-4 py-3 text-white shadow-lg hover:bg-[#2E75B6] transition-all md:bottom-6"
+        className="fixed bottom-20 right-4 z-50 flex items-center gap-2 rounded-full bg-[var(--color-brand-dark)] px-4 py-3 text-white shadow-lg hover:bg-[#2E75B6] transition-all md:bottom-6"
       >
         <Sparkles className="h-5 w-5" />
         <span className="text-sm font-medium hidden sm:inline">AI 어시스턴트</span>
@@ -74,17 +74,17 @@ export function EnhancedChatWidget() {
   }
 
   return (
-    <div className={`fixed z-50 bg-white dark:bg-gray-950 shadow-2xl border dark:border-gray-800 flex flex-col transition-all duration-200 ${
+    <div className={`fixed z-50 bg-[var(--color-surface-base)] shadow-2xl border border-[var(--color-border-subtle)] flex flex-col transition-all duration-200 ${
       expanded
         ? "inset-4 rounded-2xl"
         : "bottom-20 right-4 w-[380px] h-[520px] rounded-2xl md:bottom-6"
     }`}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b dark:border-gray-800 bg-[#1B3A5C] text-white rounded-t-2xl">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border-subtle)] bg-[var(--color-brand-dark)] text-white rounded-t-2xl">
         <div className="flex items-center gap-2">
           <Bot className="h-5 w-5" />
           <span className="font-semibold text-sm">AI 어시스턴트</span>
-          <Badge className="bg-[#10B981] text-white text-[10px]">Beta</Badge>
+          <Badge className="bg-[var(--color-positive)] text-white text-[10px]">Beta</Badge>
         </div>
         <div className="flex items-center gap-1">
           <button onClick={() => setExpanded(!expanded)} className="p-1 hover:bg-white/20 rounded">
@@ -102,8 +102,8 @@ export function EnhancedChatWidget() {
           <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
               msg.role === "user"
-                ? "bg-[#1B3A5C] text-white rounded-br-sm"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-sm"
+                ? "bg-[var(--color-brand-dark)] text-white rounded-br-sm"
+                : "bg-[var(--color-surface-overlay)] text-[var(--color-text-primary)] rounded-bl-sm"
             }`}>
               {msg.content}
             </div>
@@ -111,11 +111,11 @@ export function EnhancedChatWidget() {
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-bl-sm px-4 py-3">
+            <div className="bg-[var(--color-surface-overlay)] rounded-2xl rounded-bl-sm px-4 py-3">
               <div className="flex gap-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}} />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}} />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}} />
+                <div className="w-2 h-2 bg-[var(--color-text-muted)] rounded-full animate-bounce" style={{animationDelay: '0ms'}} />
+                <div className="w-2 h-2 bg-[var(--color-text-muted)] rounded-full animate-bounce" style={{animationDelay: '150ms'}} />
+                <div className="w-2 h-2 bg-[var(--color-text-muted)] rounded-full animate-bounce" style={{animationDelay: '300ms'}} />
               </div>
             </div>
           </div>
@@ -130,7 +130,7 @@ export function EnhancedChatWidget() {
             <button
               key={action.label}
               onClick={() => { setInput(action.prompt); }}
-              className="text-xs px-3 py-1.5 rounded-full border border-[#1B3A5C]/30 text-[#1B3A5C] dark:text-blue-400 dark:border-blue-800 hover:bg-[#1B3A5C]/10 transition-colors"
+              className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-brand-dark)]/30 text-[var(--color-brand-dark)] hover:bg-[var(--color-brand-dark)]/10 transition-colors"
             >
               {action.label}
             </button>
@@ -139,7 +139,7 @@ export function EnhancedChatWidget() {
       )}
 
       {/* Input */}
-      <div className="p-3 border-t dark:border-gray-800">
+      <div className="p-3 border-t border-[var(--color-border-subtle)]">
         <div className="flex gap-2">
           <Input
             value={input}
@@ -151,7 +151,7 @@ export function EnhancedChatWidget() {
           <Button
             onClick={sendMessage}
             disabled={!input.trim() || loading}
-            className="bg-[#1B3A5C] hover:bg-[#2E75B6] shrink-0"
+            className="bg-[var(--color-brand-dark)] hover:bg-[#2E75B6] shrink-0"
             size="icon"
           >
             <Send className="h-4 w-4" />

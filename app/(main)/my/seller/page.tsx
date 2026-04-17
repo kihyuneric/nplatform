@@ -1,38 +1,102 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Plus, Heart, Gavel, CheckCircle2, TrendingUp, Package } from 'lucide-react'
+import { Plus, Heart, Gavel, CheckCircle2, TrendingUp, Package, Download } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import DS, { formatKRW } from '@/lib/design-system'
 
-const STATS = [
-  { label: '등록 매물', value: 12, icon: Package, color: 'text-[var(--color-brand-mid)]' },
-  { label: '관심 수신', value: 38, icon: Heart, color: 'text-pink-600' },
-  { label: '오퍼 받은 수', value: 7, icon: Gavel, color: 'text-amber-600' },
-  { label: '완료 거래', value: 8, icon: CheckCircle2, color: 'text-[var(--color-positive)]' },
-]
-const LISTINGS = [
-  { id: 'L001', name: '서울 강남구 역삼동 오피스 NPL', claim: '32억', grade: 'A+', status: '공개중', interests: 34, date: '2025-02-10' },
-  { id: 'L002', name: '부산 해운대 아파트 경매 NPL', claim: '18.5억', grade: 'A', status: '진행중', interests: 67, date: '2025-01-22' },
-  { id: 'L003', name: '경기 성남 상가 NPL 포트폴리오', claim: '56억', grade: 'B+', status: '공개중', interests: 21, date: '2025-03-01' },
-  { id: 'L004', name: '대구 수성구 오피스텔 NPL', claim: '9.8억', grade: 'B', status: '초안', interests: 0, date: '2025-03-15' },
-  { id: 'L005', name: '인천 연수구 공장 담보 채권', claim: '42억', grade: 'A', status: '완료', interests: 98, date: '2024-11-15' },
-]
-const CHART = [
-  { month: '10월', views: 1200, interests: 45 }, { month: '11월', views: 1580, interests: 62 },
-  { month: '12월', views: 2100, interests: 89 }, { month: '1월', views: 1750, interests: 71 },
-  { month: '2월', views: 2340, interests: 104 }, { month: '3월', views: 2890, interests: 132 },
-]
-const VISITORS = [
-  { label: '오늘 방문자', value: '142명' }, { label: '주간 방문자', value: '891명' },
-  { label: '월간 방문자', value: '3,204명' }, { label: '평균 체류시간', value: '4분 12초' },
-]
+// Data hook for seller dashboard
+interface SellerListing {
+  id: string; title: string; claim_amount: number; ai_grade: string | null
+  status: string; interest_count: number; view_count: number; created_at: string
+}
+
+interface SettlementRecord {
+  id: string
+  settled_at: string
+  listing_title: string
+  deal_amount: number
+  commission: number
+  net_amount: number
+  status: 'COMPLETED' | 'PENDING' | 'CANCELLED'
+}
+
+
+function useSellerData() {
+  const [listings, setListings] = useState<SellerListing[]>([])
+  const [settlements, setSettlements] = useState<SettlementRecord[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Use the correct listings endpoint (seller_id filter applied server-side via session)
+        const r = await fetch('/api/v1/exchange/listings?limit=50&seller_id=me')
+        const d = await r.json()
+        if (d.data) setListings(d.data.map((l: Record<string, unknown>) => ({
+          id: l.id as string,
+          title: (l.title as string) || `매물 ${l.id}`,
+          claim_amount: (l.principal_amount as number) || (l.claim_amount as number) || 0,
+          ai_grade: l.risk_grade as string | null,
+          status: l.status as string,
+          interest_count: (l.interest_count as number) || 0,
+          view_count: (l.view_count as number) || 0,
+          created_at: l.created_at as string,
+        })))
+      } catch (e) {
+        console.error(e)
+      }
+
+      try {
+        const settleRes = await fetch('/api/v1/seller/settlements')
+        const settleData = await settleRes.json()
+        if (settleData.data?.length > 0) setSettlements(settleData.data)
+      } catch {
+        // settlements stays empty — empty state shown in UI
+      }
+
+      setLoading(false)
+    }
+
+    fetchData()
+  }, [])
+
+  const activeCount = listings.filter(l => l.status === 'ACTIVE' || l.status === 'APPROVED').length
+  const completedCount = listings.filter(l => l.status === 'SOLD' || l.status === 'COMPLETED').length
+  const totalInterests = listings.reduce((s, l) => s + (l.interest_count || 0), 0)
+  const totalViews = listings.reduce((s, l) => s + (l.view_count || 0), 0)
+
+  // Billing stats derived from real settlements data
+  const now = new Date()
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const monthSettlement = settlements
+    .filter(s => s.status === 'COMPLETED' && s.settled_at?.startsWith(thisMonth))
+    .reduce((sum, s) => sum + s.net_amount, 0)
+  const totalSettlement = settlements
+    .filter(s => s.status === 'COMPLETED')
+    .reduce((sum, s) => sum + s.net_amount, 0)
+  const pendingSettlement = settlements
+    .filter(s => s.status === 'PENDING')
+    .reduce((sum, s) => sum + s.net_amount, 0)
+
+  return {
+    listings, settlements, loading,
+    stats: { total: listings.length, active: activeCount, completed: completedCount, interests: totalInterests, views: totalViews },
+    billing: { monthSettlement, totalSettlement, pendingSettlement },
+  }
+}
+
+const STATUS_MAP: Record<string, string> = {
+  ACTIVE: '공개중', PENDING: '대기', SOLD: '완료', CANCELLED: '취소', DRAFT: '초안',
+}
+
+const formatClaim = (v: number) => v >= 100000000 ? `${(v / 100000000).toFixed(1)}억` : `${(v / 10000).toFixed(0)}만`
 const STATUS_CLR: Record<string, string> = {
-  '공개중': 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-  '진행중': 'bg-blue-50 text-blue-700 border border-blue-200',
-  '초안': 'bg-slate-50 text-slate-500 border border-slate-200',
-  '완료': 'bg-violet-50 text-violet-700 border border-violet-200',
+  '공개중': 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+  '진행중': 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+  '초안': 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]',
+  '완료': 'bg-violet-500/10 text-violet-400 border border-violet-500/20',
 }
 const GRADE_CLR: Record<string, string> = {
   'A+': 'text-emerald-600 font-bold', 'A': 'text-blue-600 font-bold',
@@ -43,8 +107,54 @@ const TABS = [
   { id: 'billing', label: '정산 관리' }, { id: 'settings', label: '설정' },
 ]
 
+// ─── Toggle helper component ──────────────────────────────────
+function SellerSettingToggle({ id, label, desc, defaultOn }: { id: string; label: string; desc: string; defaultOn: boolean }) {
+  const [on, setOn] = useState(defaultOn)
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex-1 min-w-0">
+        <p className={DS.text.bodyBold}>{label}</p>
+        <p className={DS.text.caption + ' mt-0.5'}>{desc}</p>
+      </div>
+      <button
+        role="switch"
+        aria-checked={on}
+        onClick={() => setOn(prev => !prev)}
+        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${on ? 'bg-blue-600' : 'bg-[var(--color-surface-overlay)]'}`}
+      >
+        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${on ? 'translate-x-5' : 'translate-x-0'}`} />
+      </button>
+    </div>
+  )
+}
+
 export default function SellerDashboardPage() {
+  const { listings: sellerListings, settlements, loading: sellerLoading, stats: sellerStats, billing } = useSellerData()
   const [tab, setTab] = useState('listings')
+
+  // Map real data to display format
+  const STATS = [
+    { label: '등록 매물', value: sellerStats.total, icon: Package, color: 'text-[var(--color-brand-mid)]' },
+    { label: '관심 수신', value: sellerStats.interests, icon: Heart, color: 'text-pink-600' },
+    { label: '조회수', value: sellerStats.views, icon: TrendingUp, color: 'text-amber-600' },
+    { label: '완료 거래', value: sellerStats.completed, icon: CheckCircle2, color: 'text-[var(--color-positive)]' },
+  ]
+  const LISTINGS = sellerListings.map(l => ({
+    id: l.id,
+    name: l.title,
+    claim: formatClaim(l.claim_amount),
+    grade: l.ai_grade || '-',
+    status: STATUS_MAP[l.status] || l.status,
+    interests: l.interest_count || 0,
+    date: l.created_at?.slice(0, 10) || '-',
+  }))
+  const CHART: { month: string; views: number; interests: number }[] = []
+  const VISITORS = [
+    { label: '총 매물 조회', value: `${sellerStats.views}회` },
+    { label: '활성 매물', value: `${sellerStats.active}건` },
+    { label: '총 관심', value: `${sellerStats.interests}건` },
+    { label: '완료 거래', value: `${sellerStats.completed}건` },
+  ]
   return (
     <div className={DS.page.wrapper}>
       {/* Header */}
@@ -57,7 +167,12 @@ export default function SellerDashboardPage() {
               <p className={DS.header.subtitle}>(주)한국자산신탁AMC · Gold Seller</p>
             </div>
             <div className="flex flex-wrap gap-4">
-              {[['등록 매물', '12건', ''], ['진행중', '3건', '!text-[var(--color-brand-mid)]'], ['완료', '8건', '!text-[var(--color-positive)]'], ['이번달 정산', '₩12.4M', '!text-amber-600']].map(([lbl, val, cls]) => (
+              {[
+                ['등록 매물', `${sellerStats.total}건`, ''],
+                ['진행중', `${sellerStats.active}건`, '!text-[var(--color-brand-mid)]'],
+                ['완료', `${sellerStats.completed}건`, '!text-[var(--color-positive)]'],
+                ['이번달 정산', billing.monthSettlement > 0 ? formatKRW(billing.monthSettlement) : '—', '!text-amber-600'],
+              ].map(([lbl, val, cls]) => (
                 <div key={lbl} className="text-center">
                   <div className={DS.text.caption}>{lbl}</div>
                   <div className={DS.text.metricMedium + " " + cls}>{val}</div>
@@ -120,7 +235,7 @@ export default function SellerDashboardPage() {
                       <td className={DS.table.cell}><span className="font-medium">{l.name}</span><span className={"block text-[0.6875rem] text-[var(--color-text-muted)]"}>{l.id}</span></td>
                       <td className={DS.table.cell + " font-semibold tabular-nums"}>{l.claim}</td>
                       <td className={DS.table.cell + " " + (GRADE_CLR[l.grade] ?? 'text-[var(--color-text-tertiary)]')}>{l.grade}</td>
-                      <td className={DS.table.cell}><span className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-bold ${STATUS_CLR[l.status] ?? 'bg-slate-50 text-slate-500 border border-slate-200'}`}>{l.status}</span></td>
+                      <td className={DS.table.cell}><span className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-bold ${STATUS_CLR[l.status] ?? 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]'}`}>{l.status}</span></td>
                       <td className={DS.table.cell + " tabular-nums"}><span className="flex items-center gap-1"><Heart className="h-3 w-3 text-pink-500" />{l.interests}</span></td>
                       <td className={DS.table.cellMuted + " tabular-nums"}>{l.date}</td>
                       <td className={DS.table.cell}>
@@ -129,7 +244,7 @@ export default function SellerDashboardPage() {
                           <span className="text-[var(--color-border-default)]">|</span>
                           <button className={DS.text.caption + " hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"}>수정</button>
                           <span className="text-[var(--color-border-default)]">|</span>
-                          <button className="text-[0.8125rem] text-[var(--color-danger)] hover:text-red-700 transition-colors cursor-pointer">종료</button>
+                          <button className="text-[0.8125rem] text-[var(--color-danger)] hover:text-red-400 transition-colors cursor-pointer">종료</button>
                         </div>
                       </td>
                     </tr>
@@ -167,8 +282,142 @@ export default function SellerDashboardPage() {
           </div>
         )}
 
-        {tab === 'billing' && <div className={DS.card.elevated + " " + DS.card.padding + " flex items-center justify-center h-40"}><p className={DS.text.body}>정산 내역을 불러오는 중...</p></div>}
-        {tab === 'settings' && <div className={DS.card.elevated + " " + DS.card.padding + " flex items-center justify-center h-40"}><p className={DS.text.body}>설정 기능은 준비 중입니다.</p></div>}
+        {/* Billing Tab */}
+        {tab === 'billing' && (
+          <div className="space-y-5">
+            {/* Settlement Summary */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { label: '이번 달 정산 예정', value: billing.monthSettlement > 0 ? formatKRW(billing.monthSettlement) : '—', sub: '완료 기준', color: 'text-[var(--color-positive)]' },
+                { label: '누적 정산 완료', value: billing.totalSettlement > 0 ? formatKRW(billing.totalSettlement) : '—', sub: '전체 기간', color: 'text-[var(--color-text-primary)]' },
+                { label: '미지급 금액', value: billing.pendingSettlement > 0 ? formatKRW(billing.pendingSettlement) : '—', sub: '정산 대기 중', color: 'text-amber-600' },
+              ].map(c => (
+                <div key={c.label} className={DS.stat.card}>
+                  <div className={DS.stat.value + ' ' + c.color}>{c.value}</div>
+                  <div className={DS.stat.label}>{c.label}</div>
+                  <div className={DS.text.captionLight + ' mt-1'}>{c.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Settlement History Table */}
+            <div className={DS.card.elevated + ' ' + DS.card.padding}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={DS.text.cardTitle}>정산 내역</h2>
+                <button className={DS.button.secondary + ' ' + DS.button.sm}>
+                  <Download className="h-3.5 w-3.5" /> 내보내기
+                </button>
+              </div>
+              <div className={DS.table.wrapper}>
+                <table className="w-full">
+                  <thead>
+                    <tr className={DS.table.header}>
+                      <th className={DS.table.headerCell}>정산일</th>
+                      <th className={DS.table.headerCell}>매물명</th>
+                      <th className={DS.table.headerCell}>거래금액</th>
+                      <th className={DS.table.headerCell}>수수료</th>
+                      <th className={DS.table.headerCell}>정산액</th>
+                      <th className={DS.table.headerCell}>상태</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {settlements.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="py-10 text-center text-sm text-[var(--color-text-muted)]">
+                          정산 내역이 없습니다.
+                        </td>
+                      </tr>
+                    )}
+                    {settlements.map((row, i) => {
+                      const statusLabel = row.status === 'COMPLETED' ? '완료' : row.status === 'PENDING' ? '대기' : '취소'
+                      const statusCls = row.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                        : row.status === 'CANCELLED' ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                        : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                      const fmtKRW = (v: number) => `₩${v.toLocaleString()}`
+                      return (
+                        <tr key={row.id ?? i} className={DS.table.row}>
+                          <td className={DS.table.cellMuted + ' tabular-nums'}>{row.settled_at?.slice(0, 10) || '-'}</td>
+                          <td className={DS.table.cell + ' font-medium'}>{row.listing_title}</td>
+                          <td className={DS.table.cell + ' tabular-nums'}>{fmtKRW(row.deal_amount)}</td>
+                          <td className={DS.table.cellMuted + ' tabular-nums text-[var(--color-danger)]'}>-{fmtKRW(row.commission)}</td>
+                          <td className={DS.table.cell + ' tabular-nums font-semibold text-[var(--color-positive)]'}>{fmtKRW(row.net_amount)}</td>
+                          <td className={DS.table.cell}>
+                            <span className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-bold ${statusCls}`}>{statusLabel}</span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Bank Account Info */}
+            <div className={DS.card.elevated + ' ' + DS.card.padding}>
+              <h2 className={DS.text.cardTitle + ' mb-3'}>정산 계좌 정보</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { label: '은행', value: '신한은행' },
+                  { label: '계좌번호', value: '110-***-*****' },
+                  { label: '예금주', value: '(주)한국자산신탁' },
+                ].map(f => (
+                  <div key={f.label}>
+                    <p className={DS.text.caption}>{f.label}</p>
+                    <p className={DS.text.bodyBold}>{f.value}</p>
+                  </div>
+                ))}
+              </div>
+              <button className={DS.button.secondary + ' mt-4 ' + DS.button.sm}>계좌 변경 요청</button>
+            </div>
+          </div>
+        )}
+
+        {/* Settings Tab */}
+        {tab === 'settings' && (
+          <div className="space-y-5">
+            <div className={DS.card.elevated + ' ' + DS.card.padding + ' space-y-4'}>
+              <h2 className={DS.text.cardTitle}>매물 공개 설정</h2>
+              {[
+                { id: 'auto_approve', label: '신규 관심 자동 승인', desc: '매수자의 관심 신청을 자동으로 수락합니다', defaultOn: true },
+                { id: 'show_price', label: '가격 공개', desc: '채권 금액을 목록에서 공개합니다', defaultOn: true },
+                { id: 'show_contact', label: '연락처 공개 (L1 이상)', desc: 'L1 이상 투자자에게 담당자 연락처를 공개합니다', defaultOn: false },
+                { id: 'allow_negotiation', label: '가격 협상 허용', desc: '매수자의 가격 협상 요청을 허용합니다', defaultOn: true },
+              ].map(s => (
+                <SellerSettingToggle key={s.id} {...s} />
+              ))}
+            </div>
+
+            <div className={DS.card.elevated + ' ' + DS.card.padding + ' space-y-4'}>
+              <h2 className={DS.text.cardTitle}>알림 설정</h2>
+              {[
+                { id: 'notif_interest', label: '관심 수신 알림', desc: '매수자가 매물에 관심을 등록하면 알림을 받습니다', defaultOn: true },
+                { id: 'notif_inquiry', label: '문의 알림', desc: '매수자가 문의를 남기면 알림을 받습니다', defaultOn: true },
+                { id: 'notif_deal', label: '거래 진행 알림', desc: '거래 단계가 변경될 때 알림을 받습니다', defaultOn: true },
+                { id: 'notif_settlement', label: '정산 알림', desc: '정산 처리 시 이메일·SMS를 받습니다', defaultOn: true },
+              ].map(s => (
+                <SellerSettingToggle key={s.id} {...s} />
+              ))}
+            </div>
+
+            <div className={DS.card.elevated + ' ' + DS.card.padding}>
+              <h2 className={DS.text.cardTitle + ' mb-3'}>사업자 정보</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { label: '법인명', value: '(주)한국자산신탁AMC' },
+                  { label: '사업자등록번호', value: '123-**-*****' },
+                  { label: '담당자', value: '김관리' },
+                  { label: '연락처', value: '02-****-****' },
+                ].map(f => (
+                  <div key={f.label}>
+                    <p className={DS.text.caption}>{f.label}</p>
+                    <p className={DS.text.bodyBold}>{f.value}</p>
+                  </div>
+                ))}
+              </div>
+              <button className={DS.button.secondary + ' mt-4 ' + DS.button.sm}>정보 수정 요청</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

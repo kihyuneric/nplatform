@@ -63,8 +63,8 @@ export default function ExternalSlot({
 
   if (!config) {
     return (
-      <div className={`rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center ${className}`}>
-        <p className="text-sm text-gray-500">알 수 없는 슬롯: {slotId}</p>
+      <div className={`rounded-lg border-2 border-dashed border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] p-6 text-center ${className}`}>
+        <p className="text-sm text-[var(--color-text-muted)]">알 수 없는 슬롯: {slotId}</p>
       </div>
     );
   }
@@ -73,7 +73,7 @@ export default function ExternalSlot({
   if (config.enabled && config.url) {
     if (config.type === 'iframe') {
       return (
-        <div className={`overflow-hidden rounded-lg border border-gray-200 ${className}`} data-slot={config.id}>
+        <div className={`overflow-hidden rounded-lg border border-[var(--color-border-subtle)] ${className}`} data-slot={config.id}>
           <iframe
             ref={iframeRef}
             src={config.url}
@@ -90,7 +90,7 @@ export default function ExternalSlot({
 
     if (config.type === 'widget') {
       return (
-        <div className={`overflow-hidden rounded-lg border border-gray-200 ${className}`} data-slot={config.id}>
+        <div className={`overflow-hidden rounded-lg border border-[var(--color-border-subtle)] ${className}`} data-slot={config.id}>
           <iframe
             ref={iframeRef}
             src={config.url}
@@ -108,14 +108,14 @@ export default function ExternalSlot({
     if (config.type === 'api') {
       return (
         <div
-          className={`rounded-lg border border-gray-200 p-4 ${className}`}
+          className={`rounded-lg border border-[var(--color-border-subtle)] p-4 ${className}`}
           style={{ minHeight: config.height }}
           data-slot={config.id}
         >
-          <h3 className="mb-2 text-sm font-semibold text-gray-700">{config.label}</h3>
-          {apiLoading && <p className="text-xs text-gray-400">데이터 로딩 중...</p>}
+          <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">{config.label}</h3>
+          {apiLoading && <p className="text-xs text-[var(--color-text-muted)]">데이터 로딩 중...</p>}
           {!apiLoading && apiData !== null && (
-            <pre className="max-h-80 overflow-auto rounded bg-gray-50 p-3 text-xs text-gray-600">
+            <pre className="max-h-80 overflow-auto rounded bg-[var(--color-surface-base)] p-3 text-xs text-[var(--color-text-secondary)]">
               {JSON.stringify(apiData, null, 2)}
             </pre>
           )}
@@ -127,14 +127,14 @@ export default function ExternalSlot({
   // Placeholder for disabled or unconfigured slots
   return (
     <div
-      className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center ${className}`}
+      className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] p-8 text-center ${className}`}
       style={{ minHeight: config.height }}
       data-slot={config.id}
     >
-      <div className="mb-2 text-2xl text-gray-300">&#9645;</div>
-      <h3 className="mb-1 text-sm font-semibold text-gray-600">{label}</h3>
-      <p className="mb-3 text-xs text-gray-400">{description}</p>
-      <p className="rounded bg-gray-100 px-3 py-1.5 text-xs text-gray-500">
+      <div className="mb-2 text-2xl text-[var(--color-text-muted)]">&#9645;</div>
+      <h3 className="mb-1 text-sm font-semibold text-[var(--color-text-secondary)]">{label}</h3>
+      <p className="mb-3 text-xs text-[var(--color-text-muted)]">{description}</p>
+      <p className="rounded bg-[var(--color-surface-overlay)] px-3 py-1.5 text-xs text-[var(--color-text-muted)]">
         관리자 설정에서 연동 URL을 등록하세요
       </p>
     </div>

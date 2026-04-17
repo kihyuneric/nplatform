@@ -27,7 +27,7 @@ export default function ServicesLayout({ children }: { children: React.ReactNode
     <>
       <BannerSlot position="services-top" className="mx-auto max-w-7xl px-4 pt-4" />
 
-      <div className="sticky top-[60px] z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+      <div className="sticky top-[60px] z-10 bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex gap-1 overflow-x-auto scrollbar-hide">
             {tabs.map(({ href, label, icon: Icon, exact }) => {
@@ -38,8 +38,8 @@ export default function ServicesLayout({ children }: { children: React.ReactNode
                   href={href}
                   className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                     isActive
-                      ? "border-[#1B3A5C] text-[#1B3A5C] dark:border-blue-400 dark:text-blue-400"
-                      : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                      ? "border-[#1B3A5C] text-[#1B3A5C]"
+                      : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
                   }`}
                 >
                   <Icon className="w-4 h-4" />

@@ -26,11 +26,11 @@ interface SimilarListingsProps {
 }
 
 const RISK_COLORS: Record<string, string> = {
-  A: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-  B: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  C: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300",
-  D: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
-  E: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+  A: "bg-emerald-500/10 text-emerald-400",
+  B: "bg-blue-500/10 text-blue-400",
+  C: "bg-yellow-500/10 text-yellow-400",
+  D: "bg-orange-500/10 text-orange-400",
+  E: "bg-red-500/10 text-red-400",
 }
 
 export function SimilarListings({ collateralType, excludeId }: SimilarListingsProps) {
@@ -70,7 +70,7 @@ export function SimilarListings({ collateralType, excludeId }: SimilarListingsPr
 
   if (listings.length === 0) {
     return (
-      <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
+      <p className="text-sm text-[var(--color-text-secondary)] text-center py-8">
         유사한 매물이 없습니다.
       </p>
     )
@@ -91,7 +91,7 @@ export function SimilarListings({ collateralType, excludeId }: SimilarListingsPr
             href={`/exchange/${item.id}`}
             className="min-w-[240px] snap-start md:min-w-0"
           >
-            <Card className="h-full bg-white dark:bg-gray-900 hover:shadow-md transition-shadow border-gray-200 dark:border-gray-700">
+            <Card className="h-full bg-[var(--color-surface-elevated)] hover:shadow-md transition-shadow border-[var(--color-border-subtle)]">
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <Badge variant="outline" className="text-xs">
@@ -104,18 +104,18 @@ export function SimilarListings({ collateralType, excludeId }: SimilarListingsPr
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                <p className="text-sm font-semibold text-[var(--color-text-primary)] truncate">
                   {item.title || `${item.collateral_type} 채권`}
                 </p>
-                <p className="text-sm font-medium text-[#1B3A5C] dark:text-blue-300">
+                <p className="text-sm font-medium text-[#1B3A5C]">
                   {formatKRW(item.principal_amount)}
                 </p>
                 {item.institution && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  <p className="text-xs text-[var(--color-text-secondary)] truncate">
                     {item.institution}
                   </p>
                 )}
-                <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 truncate">
+                <p className="text-xs text-[var(--color-text-muted)] flex items-center gap-1 truncate">
                   <MapPin className="h-3 w-3 flex-shrink-0" />
                   {loc}
                 </p>

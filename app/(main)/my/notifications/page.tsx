@@ -6,7 +6,7 @@ import { Bell, CheckCheck, Check, Trash2, Clock, FileText, Gavel, Shield, Trendi
 import { useAuth } from "@/components/auth/auth-provider"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
-import DS, { formatKRW } from "@/lib/design-system"
+import DS from "@/lib/design-system"
 
 type NotificationType = "contract" | "listing" | "analysis" | "system"
 
@@ -21,24 +21,12 @@ interface Notification {
 }
 
 const TYPE_META: Record<NotificationType, { icon: any; color: string; bg: string; label: string }> = {
-  contract: { icon: Gavel,      color: "text-blue-600",    bg: "bg-blue-50",    label: "거래" },
-  listing:  { icon: FileText,   color: "text-emerald-600", bg: "bg-emerald-50", label: "매물" },
-  analysis: { icon: TrendingUp, color: "text-purple-600",  bg: "bg-purple-50",  label: "분석" },
+  contract: { icon: Gavel,      color: "text-blue-400",    bg: "bg-blue-500/10",    label: "거래" },
+  listing:  { icon: FileText,   color: "text-emerald-400", bg: "bg-emerald-500/10", label: "매물" },
+  analysis: { icon: TrendingUp, color: "text-purple-400",  bg: "bg-purple-500/10",  label: "분석" },
   system:   { icon: Shield,     color: "text-[var(--color-text-tertiary)]",    bg: "bg-[var(--color-surface-sunken)]",    label: "시스템" },
 }
 
-const MOCK: Notification[] = [
-  { id: "n1",  type: "listing",  title: "새 NPL 매물 등록",    message: "서울 강남구 아파트 NPL 매물이 신규 등록되었습니다. 감정가 대비 35% 할인된 가격입니다.",  is_read: false, created_at: new Date(Date.now() - 5*60000).toISOString(),   link: "/listings/1" },
-  { id: "n2",  type: "contract", title: "계약 상태 변경",       message: "건물 NPL-2024-0512 계약이 '검토 중' 상태로 변경되었습니다.",                          is_read: false, created_at: new Date(Date.now() - 30*60000).toISOString(),  link: "/deal-rooms/2" },
-  { id: "n3",  type: "analysis", title: "분석 리포트 완료",     message: "요청하신 부산 해운대구 오피스텔 NPL 분석 리포트가 완료되었습니다.",                     is_read: false, created_at: new Date(Date.now() - 2*3600000).toISOString(), link: "/npl-analysis/3" },
-  { id: "n4",  type: "system",   title: "시스템 점검 안내",     message: "4월 15일 02:00~04:00 서버 점검이 예정되어 있습니다.",                                 is_read: true,  created_at: new Date(Date.now() - 5*3600000).toISOString() },
-  { id: "n5",  type: "listing",  title: "관심 매물 가격 변동",  message: "관심 등록하신 NPL-2024-0498 매물의 매각 희망가가 10% 인하되었습니다.",                 is_read: true,  created_at: new Date(Date.now() - 8*3600000).toISOString(),  link: "/listings/5" },
-  { id: "n6",  type: "contract", title: "입찰 결과 안내",       message: "NPL-2024-0487 입찰에 참여하신 건의 낙찰 결과가 발표되었습니다.",                       is_read: true,  created_at: new Date(Date.now() - 24*3600000).toISOString(), link: "/deal-rooms/6" },
-  { id: "n7",  type: "analysis", title: "시장 동향 리포트",     message: "2026년 3월 수도권 NPL 시장 동향 월간 리포트가 발행되었습니다.",                        is_read: true,  created_at: new Date(Date.now() - 48*3600000).toISOString(), link: "/npl-analysis/7" },
-  { id: "n8",  type: "system",   title: "본인 인증 완료",       message: "KYC 본인 인증이 정상적으로 처리되었습니다.",                                          is_read: true,  created_at: new Date(Date.now() - 72*3600000).toISOString() },
-  { id: "n9",  type: "listing",  title: "매물 마감 임박",       message: "관심 매물 NPL-2024-0501의 입찰 마감이 24시간 남았습니다.",                            is_read: false, created_at: new Date(Date.now() - 10*60000).toISOString(),  link: "/listings/9" },
-  { id: "n10", type: "contract", title: "서류 보완 요청",       message: "계약 NPL-2024-0520에 대해 추가 서류 제출이 필요합니다.",                              is_read: false, created_at: new Date(Date.now() - 45*60000).toISOString(),  link: "/deal-rooms/10" },
-]
 
 const FILTER_TABS = [
   { value: "all",      label: "전체" },
@@ -68,9 +56,38 @@ function dateGroup(s: string) {
 
 export default function NotificationsPage() {
   const { user } = useAuth()
-  const [items, setItems] = useState<Notification[]>(MOCK)
+  const [items, setItems] = useState<Notification[]>([])
+  const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<"all" | NotificationType>("all")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+
+  // Fetch notifications from Supabase
+  useEffect(() => {
+    if (!user) { setLoading(false); return }
+    let cancelled = false
+    const fetchNotifications = async () => {
+      setLoading(true)
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from("notifications")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+        if (error) throw error
+        if (!cancelled && data) {
+          setItems(data as Notification[])
+        }
+      } catch (err) {
+        console.error("Failed to fetch notifications:", err)
+        if (!cancelled) toast.error("알림을 불러오는데 실패했습니다.")
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchNotifications()
+    return () => { cancelled = true }
+  }, [user])
 
   const unreadCount = items.filter(n => !n.is_read).length
   const filtered = activeTab === "all" ? items : items.filter(n => n.type === activeTab)
@@ -86,22 +103,56 @@ export default function NotificationsPage() {
     return order.filter(g => map[g]).map(g => ({ group: g, list: map[g] }))
   }, [filtered])
 
-  const markAllRead = useCallback(() => {
+  const markAllRead = useCallback(async () => {
     setItems(prev => prev.map(n => ({ ...n, is_read: true })))
     setSelectedIds(new Set())
-    fetch("/api/v1/notifications/read-all", { method: "PATCH" }).catch(() => toast.error("읽음 처리에 실패했습니다."))
-  }, [])
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("user_id", user!.id)
+        .eq("is_read", false)
+      if (error) throw error
+    } catch {
+      toast.error("읽음 처리에 실패했습니다.")
+    }
+  }, [user])
 
-  const deleteSelected = useCallback(() => {
+  const deleteSelected = useCallback(async () => {
+    const idsToDelete = Array.from(selectedIds)
     setItems(prev => prev.filter(n => !selectedIds.has(n.id)))
     setSelectedIds(new Set())
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .in("id", idsToDelete)
+      if (error) throw error
+    } catch {
+      toast.error("삭제에 실패했습니다.")
+    }
   }, [selectedIds])
 
   const toggleSelect = (id: string) =>
     setSelectedIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s })
 
-  const markRead = (id: string) =>
+  const markRead = async (id: string) => {
+    const item = items.find(n => n.id === id)
+    if (!item || item.is_read) return
     setItems(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", id)
+      if (error) throw error
+    } catch {
+      toast.error("읽음 처리에 실패했습니다.")
+    }
+  }
 
   if (!user) {
     return (
@@ -114,6 +165,15 @@ export default function NotificationsPage() {
         <Link href="/login" className={DS.button.primary}>
           로그인
         </Link>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className={DS.page.wrapper + " flex flex-col items-center justify-center py-20"}>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-border-default)] border-t-[var(--color-brand-mid)]" />
+        <p className={DS.text.caption + " mt-4"}>알림을 불러오는 중...</p>
       </div>
     )
   }
@@ -145,6 +205,14 @@ export default function NotificationsPage() {
       </div>
 
       <div className={DS.page.container + " py-5 space-y-4"}>
+        {/* Cross-links */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link href="/my" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>← 내 정보</Link>
+          <Link href="/exchange" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>매물 탐색 →</Link>
+          <Link href="/deals" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>거래 현황 →</Link>
+          <Link href="/deals/matching" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>AI 매칭 →</Link>
+        </div>
+
         {/* Filter tabs */}
         <div className={DS.tabs.list}>
           {FILTER_TABS.map(tab => {
@@ -159,7 +227,7 @@ export default function NotificationsPage() {
               >
                 {tab.label}
                 {unread > 0 && (
-                  <span className="h-4 min-w-4 flex items-center justify-center rounded-full bg-red-50 text-[var(--color-danger)] text-[0.6875rem] font-bold px-1">
+                  <span className="h-4 min-w-4 flex items-center justify-center rounded-full bg-red-500/10 text-[var(--color-danger)] text-[0.6875rem] font-bold px-1">
                     {unread}
                   </span>
                 )}
@@ -170,10 +238,10 @@ export default function NotificationsPage() {
 
         {/* Batch bar */}
         {selectedIds.size > 0 && (
-          <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5">
+          <div className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/20 rounded-xl px-4 py-2.5">
             <span className={DS.text.bodyMedium + " !text-[var(--color-brand-mid)]"}>{selectedIds.size}개 선택됨</span>
             <div className="h-4 w-px bg-[var(--color-border-subtle)]" />
-            <button onClick={deleteSelected} className="flex items-center gap-1 text-[0.8125rem] text-[var(--color-danger)] hover:text-red-700 transition-colors">
+            <button onClick={deleteSelected} className="flex items-center gap-1 text-[0.8125rem] text-[var(--color-danger)] hover:text-red-300 transition-colors">
               <Trash2 className="h-3.5 w-3.5" /> 삭제
             </button>
           </div>

@@ -2,12 +2,13 @@
 
 import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import {
   Brain, ArrowRight, ChevronRight, Search, Map, Gavel,
-  Shield, Building2, TrendingUp, CheckCircle2, Sparkles,
+  Shield, ShieldCheck, Building2, TrendingUp, TrendingDown, CheckCircle2, Sparkles,
   Lock, Star, MessageSquare, Zap, Activity, DollarSign,
-  Layers, RefreshCw, ArrowUpRight, Cpu, Globe,
+  Layers, RefreshCw, ArrowUpRight, Cpu, Globe, MapPin,
   Play, ChevronUp,
 } from "lucide-react";
 
@@ -114,152 +115,120 @@ function LiveTicker() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   DEAL CARD MOCKUP  (Bloomberg-style)
+   DEAL CARD MOCKUP  — 실제 매물 페이지(exchange) 카드 디자인 반영
 ═══════════════════════════════════════════════════════════════════════════ */
 function DealCard() {
-  const [tab, setTab] = useState(0);
   return (
     <motion.div
       animate={{ y: [-6, 6, -6] }}
       transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      className="relative w-full max-w-[360px] mx-auto select-none"
+      className="relative w-full max-w-[370px] mx-auto select-none"
     >
-      {/* Ambient glow layers */}
+      {/* Ambient glow */}
       <div className="absolute -inset-8 rounded-3xl blur-3xl" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)' }} />
-      <div className="absolute -inset-4 rounded-2xl blur-2xl" style={{ background: 'rgba(59,130,246,0.04)' }} />
 
       <div className="relative rounded-2xl overflow-hidden shadow-2xl"
-        style={{ background: 'rgba(15,31,53,0.9)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)' }}>
-        {/* Top gradient line */}
-        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(16,185,129,0.6), rgba(59,130,246,0.4), transparent)' }} />
+        style={{ background: C.bg3, border: '1px solid rgba(255,255,255,0.08)' }}>
 
-        {/* Header bar */}
-        <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: C.em }} />
-            <span className="text-[10px] font-bold" style={{ color: 'rgba(255,255,255,0.4)', letterSpacing: '0.08em' }}>NPL #2024-A-0847</span>
+        {/* Header strip — institution */}
+        <div className="flex items-center justify-between px-4 py-3"
+          style={{ background: C.bg2, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: C.bg1 }}>
+              <Building2 size={13} style={{ color: 'rgba(255,255,255,0.4)' }} />
+            </div>
+            <div>
+              <div className="text-[11px] font-bold" style={{ color: 'rgba(255,255,255,0.85)' }}>우리은행</div>
+              <div className="text-[9px]" style={{ color: 'rgba(255,255,255,0.35)' }}>금융기관 · D-5</div>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>
-            <span className="text-xs font-black" style={{ color: C.em }}>A+</span>
-            <span className="text-[9px] font-medium" style={{ color: 'rgba(16,185,129,0.7)' }}>등급</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] px-2 py-0.5 rounded font-bold"
+              style={{ background: 'rgba(16,185,129,0.12)', color: C.em, border: '1px solid rgba(16,185,129,0.25)' }}>
+              L0
+            </span>
           </div>
         </div>
 
-        <div className="p-4">
-          {/* Property info */}
-          <div className="mb-4">
-            <div className="text-xs font-medium mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>서울특별시 강남구 역삼동</div>
-            <div className="text-base font-bold leading-snug" style={{ color: 'rgba(255,255,255,0.92)' }}>역삼 래미안 아파트 101동 1502호</div>
-            <div className="flex items-center gap-3 mt-2">
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(59,130,246,0.12)', color: C.blue, border: '1px solid rgba(59,130,246,0.2)' }}>아파트</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(245,158,11,0.12)', color: C.amber, border: '1px solid rgba(245,158,11,0.2)' }}>2순위 담보</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(16,185,129,0.1)', color: C.emL, border: '1px solid rgba(16,185,129,0.2)' }}>저위험</span>
+        <div className="p-4 flex flex-col gap-3">
+          {/* Title row */}
+          <div className="flex justify-between items-start gap-2">
+            <div>
+              <div className="flex items-center gap-1 text-[11px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                <MapPin size={10} /> 서울 강남구 · 아파트
+              </div>
+              <div className="text-[13px] font-extrabold" style={{ color: 'rgba(255,255,255,0.92)', letterSpacing: '-0.01em' }}>
+                임의매각 · 아파트 담보
+              </div>
+              <div className="text-[9px] mt-1 font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                npl-2026-0412
+              </div>
+            </div>
+            <div className="shrink-0 px-2 py-1 rounded-md text-[10px] font-extrabold"
+              style={{ background: 'rgba(16,185,129,0.12)', color: C.em, border: '1px solid rgba(16,185,129,0.3)' }}>
+              AI A
             </div>
           </div>
 
-          {/* Key metrics - Bloomberg style */}
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {[
-              { label: "감정가", val: "12.4억", sub: "기준일 2024.11", color: 'rgba(255,255,255,0.75)' },
-              { label: "최저 입찰가", val: "9.1억", sub: "낙찰가율 73.4%", color: C.blue },
-              { label: "예상 수익률", val: "+18.4%", sub: "AI 시뮬레이션", color: C.em },
-            ].map(m => (
-              <div key={m.label} className="rounded-xl p-2.5 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="text-[9px] mb-1 font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>{m.label}</div>
-                <div className="text-sm font-black tabular-nums" style={{ color: m.color }}>{m.val}</div>
-                <div className="text-[9px] mt-0.5" style={{ color: 'rgba(255,255,255,0.2)' }}>{m.sub}</div>
+          {/* Key figures */}
+          <div className="rounded-xl p-3" style={{ background: C.bg2, border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="grid grid-cols-2 gap-2.5">
+              {[
+                { label: "채권잔액", value: "12.0억", color: 'rgba(255,255,255,0.75)' },
+                { label: "매각희망가", value: "8.5억", color: C.em },
+                { label: "감정가", value: "10.2억", color: 'rgba(255,255,255,0.75)' },
+                { label: "할인율", value: "29.2%", color: C.em, icon: true },
+              ].map(f => (
+                <div key={f.label}>
+                  <div className="text-[9px] font-semibold mb-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>{f.label}</div>
+                  <div className="text-sm font-black tabular-nums flex items-center gap-1" style={{ color: f.color }}>
+                    {f.icon && <TrendingDown size={12} style={{ color: C.em }} />}
+                    {f.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-between items-center mt-2.5 pt-2.5" style={{ borderTop: '1px dashed rgba(255,255,255,0.08)' }}>
+              <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>예상 절감액</span>
+              <span className="text-[10px] font-bold" style={{ color: C.em }}>3.5억</span>
+            </div>
+          </div>
+
+          {/* Completeness bar */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-md" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                <Shield size={10} style={{ color: C.em }} />
+                <span className="text-[10px] font-bold" style={{ color: C.em }}>9/10</span>
               </div>
-            ))}
+              <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.3)' }}>자료 완성도</span>
+            </div>
+            <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.3)' }}>자료 5/6</span>
           </div>
 
-          {/* Tabs */}
-          <div className="flex rounded-lg mb-3 p-0.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            {["AI 분석", "권리관계", "입찰 현황"].map((t, i) => (
-              <button key={t} onClick={() => setTab(i)}
-                className="flex-1 text-[10px] font-bold py-1.5 rounded-md transition-all"
-                style={tab === i ? { background: C.bg4, color: 'rgba(255,255,255,0.85)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' } : { color: 'rgba(255,255,255,0.3)' }}
-              >{t}</button>
+          {/* Provided chips */}
+          <div className="flex flex-wrap gap-1">
+            {[
+              { label: "감정평가", ok: true }, { label: "등기", ok: true },
+              { label: "권리", ok: true }, { label: "임차", ok: true },
+              { label: "사진", ok: true }, { label: "재무", ok: false },
+            ].map(c => (
+              <span key={c.label} className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
+                style={{
+                  background: c.ok ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.04)',
+                  color: c.ok ? C.em : 'rgba(255,255,255,0.3)',
+                  border: `1px solid ${c.ok ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.08)'}`,
+                }}>
+                {c.ok ? "✓" : "·"} {c.label}
+              </span>
             ))}
           </div>
-
-          <AnimatePresence mode="wait">
-            {tab === 0 && (
-              <motion.div key="ai" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <div className="rounded-xl p-3" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.12)' }}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-1.5">
-                      <Brain size={11} style={{ color: C.em }} />
-                      <span className="text-[10px] font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>AI 리스크 스코어</span>
-                    </div>
-                    <span className="text-[11px] font-black" style={{ color: C.em }}>낮음 · 78/100</span>
-                  </div>
-                  <div className="h-1.5 rounded-full mb-2" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                    <motion.div className="h-full rounded-full" style={{ background: `linear-gradient(90deg, ${C.em}, ${C.emL})` }}
-                      initial={{ width: 0 }} animate={{ width: "78%" }} transition={{ delay: 0.5, duration: 1.2, ease: "easeOut" }} />
-                  </div>
-                  <div className="flex gap-2">
-                    {[{ l: "담보 충분", ok: true }, { l: "권리 복잡도 낮음", ok: true }, { l: "경매 이력 없음", ok: true }].map(i => (
-                      <div key={i.l} className="flex items-center gap-1">
-                        <CheckCircle2 size={9} style={{ color: C.em }} />
-                        <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{i.l}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-            {tab === 1 && (
-              <motion.div key="rights" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <div className="rounded-xl p-3 space-y-1.5" style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.12)' }}>
-                  {[["1순위", "KB국민은행 근저당", "3.2억", true], ["2순위", "우리은행 근저당", "9.1억", false], ["3순위", "가압류", "없음", true]].map(([r, desc, amt, ok]) => (
-                    <div key={String(r)} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] w-8 font-bold" style={{ color: 'rgba(255,255,255,0.35)' }}>{r}</span>
-                        <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.6)' }}>{desc}</span>
-                      </div>
-                      <span className="text-[10px] font-bold" style={{ color: ok ? C.em : C.blue }}>{amt}</span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-            {tab === 2 && (
-              <motion.div key="bid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <div className="rounded-xl p-3" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.12)' }}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>현재 입찰 현황</span>
-                    <div className="flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: C.rose }} />
-                      <span className="text-[10px] font-bold" style={{ color: C.rose }}>D-3 마감임박</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex -space-x-1.5">
-                      {["KB", "신한", "현대", "개인", "기타", "+2"].map((b, i) => (
-                        <div key={b} className="w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-bold"
-                          style={{ background: C.bg4, border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', zIndex: 6 - i }}>
-                          {b}
-                        </div>
-                      ))}
-                    </div>
-                    <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.5)' }}>입찰자 <strong style={{ color: 'rgba(255,255,255,0.8)' }}>7명</strong></span>
-                  </div>
-                  <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>최고 입찰가: <span style={{ color: C.amber }} className="font-bold">9.87억</span></div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           {/* CTA */}
-          <div className="grid grid-cols-2 gap-2 mt-3">
-            <div className="py-2.5 rounded-xl text-center cursor-pointer font-bold text-xs transition-all hover:brightness-110"
-              style={{ background: `linear-gradient(135deg, ${C.em}, #059669)`, color: 'white', boxShadow: `0 4px 12px rgba(16,185,129,0.25)` }}>
-              입찰 참여하기
-            </div>
-            <div className="py-2.5 rounded-xl text-center cursor-pointer text-xs font-medium transition-all"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>
-              딜룸 입장
-            </div>
+          <div className="py-2.5 rounded-xl text-center cursor-pointer font-extrabold text-xs transition-all hover:brightness-110 flex items-center justify-center gap-1.5"
+            style={{ background: `linear-gradient(135deg, ${C.em}, #059669)`, color: 'white', boxShadow: '0 4px 12px rgba(16,185,129,0.25)' }}>
+            상세 보기 <ArrowRight size={13} />
           </div>
         </div>
       </div>
@@ -267,7 +236,7 @@ function DealCard() {
       {/* Floating badges */}
       <motion.div className="absolute -top-4 -right-4 rounded-xl px-3 py-2 shadow-xl"
         animate={{ rotate: [-1.5, 1.5, -1.5] }} transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-        style={{ background: C.bg4, border: `1px solid rgba(16,185,129,0.3)`, boxShadow: `0 0 20px rgba(16,185,129,0.15)` }}>
+        style={{ background: C.bg4, border: '1px solid rgba(16,185,129,0.3)', boxShadow: '0 0 20px rgba(16,185,129,0.15)' }}>
         <div className="flex items-center gap-1.5">
           <Sparkles size={10} style={{ color: C.em }} />
           <span className="text-[11px] font-bold" style={{ color: 'rgba(255,255,255,0.85)' }}>AI 분석 완료</span>
@@ -279,7 +248,7 @@ function DealCard() {
         style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)' }}>
         <div className="flex items-center gap-1.5">
           <Activity size={10} style={{ color: C.amber }} />
-          <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.75)' }}>입찰자 <strong>7명</strong> 실시간</span>
+          <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.75)' }}>할인율 <strong>29.2%</strong> 실시간</span>
         </div>
       </motion.div>
     </motion.div>
@@ -299,10 +268,14 @@ function AISearch() {
   const [q, setQ] = useState("");
   const [idx, setIdx] = useState(0);
   const [focused, setFocused] = useState(false);
+  const router = useRouter();
   useEffect(() => {
     const id = setInterval(() => setIdx(p => (p + 1) % SUGGESTIONS.length), 3200);
     return () => clearInterval(id);
   }, []);
+  const submit = () => {
+    router.push(`/exchange${q ? `?q=${encodeURIComponent(q)}` : ""}`);
+  };
   return (
     <div className="w-full max-w-xl">
       <div className="flex items-center gap-2 mb-2.5">
@@ -324,10 +297,11 @@ function AISearch() {
         <input
           type="text" value={q} onChange={e => setQ(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          placeholder={!focused ? SUGGESTIONS[idx] : "검색어를 입력하세요..."}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } }}
+          placeholder={!focused ? SUGGESTIONS[idx] : "예: 서울 강남 아파트 NPL 수익률 20% 이상 A등급"}
           className="flex-1 bg-transparent text-sm outline-none px-3 py-3.5"
           style={{ color: 'rgba(255,255,255,0.85)', caretColor: C.em }}
-          aria-label="NPL 검색"
+          aria-label="NPL 자연어 검색"
         />
         <div className="flex items-center gap-1.5 mx-2 px-2.5 py-1.5 rounded-lg flex-shrink-0"
           style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
@@ -385,20 +359,56 @@ export default function LandingPage() {
   ];
 
   const features = [
-    { icon: <Search size={20} style={{ color: C.em }} />, tag: "LIVE", tagColor: C.em, title: "NPL 통합 검색", desc: "전국 매물 30+ 조건 정밀 필터링. 면적, 감정가, 수익률, 지역을 복합 검색.", href: "/exchange", accent: C.em },
-    { icon: <Brain size={20} style={{ color: C.purple }} />, tag: "AI", tagColor: C.purple, title: "AI 분석 엔진", desc: "법원 경매 이력, 권리 분석, 수익률 시뮬레이션을 AI가 30초 내 자동 생성.", href: "/analysis", accent: C.purple },
-    { icon: <Map size={20} style={{ color: C.blue }} />, tag: "MAP", tagColor: C.blue, title: "NPL 지도", desc: "카카오맵 기반 매물 위치 시각화. 지역별 밀집도, 시세 히트맵으로 투자 지역 파악.", href: "/exchange/map", accent: C.blue },
-    { icon: <Gavel size={20} style={{ color: C.amber }} />, tag: "LIVE", tagColor: C.amber, title: "NPL 입찰 장터", desc: "실시간 경쟁 입찰. 자동 입찰 에이전트 설정으로 원하는 조건의 매물을 놓치지 마세요.", href: "/exchange/auction", accent: C.amber },
-    { icon: <MessageSquare size={20} style={{ color: C.teal }} />, tag: "SECURE", tagColor: C.teal, title: "딜룸", desc: "매각자-투자자 간 보안 채널. NDA 서명, 문서 공유, 협상, 계약서 생성까지 원스톱 처리.", href: "/deals", accent: C.teal },
-    { icon: <Sparkles size={20} style={{ color: C.rose }} />, tag: "GPT-4", tagColor: C.rose, title: "AI Copilot", desc: "자연어로 물어보세요. '강남구 아파트 NPL 중 수익률 15% 이상인 것' 처럼 대화하듯 검색.", href: "/analysis/copilot", accent: C.rose },
+    {
+      icon: <Search size={20} style={{ color: C.em }} />, tag: "매물 탐색", tagColor: C.em,
+      title: "NPL 매물 거래소",
+      desc: "채권잔액·매각희망가·할인율·담보LTV까지 30+ 조건 복합 필터. 자연어 입력으로 \"서울 A등급 5억 이하 수익률 20%+\" 한 번에 찾기.",
+      href: "/exchange", accent: C.em,
+      meta: "등록 1,234건 · 신규 매일 ~20건",
+    },
+    {
+      icon: <Brain size={20} style={{ color: C.purple }} />, tag: "딜 분석", tagColor: C.purple,
+      title: "AI 딜 분석 리포트",
+      desc: "감정가·배당요구·권리분석·수익률·회수 확률까지 30초 내 자동 리포트. 몬테카를로 10,000회 시뮬레이션으로 IRR 분포 시각화.",
+      href: "/analysis", accent: C.purple,
+      meta: "평균 분석 시간 27초 · 28,391건 분석",
+    },
+    {
+      icon: <Gavel size={20} style={{ color: C.amber }} />, tag: "입찰", tagColor: C.amber,
+      title: "실시간 경쟁 입찰",
+      desc: "온라인 경쟁 입찰 + 프라이빗 협상. 자동 입찰 에이전트로 가격 상한·기준일 설정만 하면 조건 맞는 매물 자동 응찰.",
+      href: "/exchange/auction", accent: C.amber,
+      meta: "진행 중 입찰 42건 · 평균 낙찰 7일",
+    },
+    {
+      icon: <MessageSquare size={20} style={{ color: C.teal }} />, tag: "딜룸", tagColor: C.teal,
+      title: "딜룸 · NDA · 전자계약",
+      desc: "매도자·매수자 1:1 보안 채널. NDA 전자서명 → 권리증·등기부 공유 → LOI → 매매계약서 자동 생성까지 원스톱.",
+      href: "/deals", accent: C.teal,
+      meta: "전자서명 법적 효력 인정 (전자문서법)",
+    },
+    {
+      icon: <ShieldCheck size={20} style={{ color: C.blue }} />, tag: "보호", tagColor: C.blue,
+      title: "에스크로 · PII 마스킹",
+      desc: "대금은 에스크로 계좌로 보호, 개인정보는 L0~L3 4단계 접근통제로 보호. 채무자 정보는 NDA + LOI 승인 후에만 열람.",
+      href: "/support", accent: C.blue,
+      meta: "자금 보호 · 정보보호 2중 안전장치",
+    },
+    {
+      icon: <Sparkles size={20} style={{ color: C.rose }} />, tag: "AI 상담", tagColor: C.rose,
+      title: "AI Copilot — 거래 어시스턴트",
+      desc: "\"이 매물 수익률 15% 가능해?\" \"감정가 대비 할인율 적정선은?\" 처럼 대화하듯 물어보세요. 매물 데이터 + 시세 DB 실시간 조회.",
+      href: "/analysis/copilot", accent: C.rose,
+      meta: "GPT-4 + 자체 NPL 코퍼스 학습",
+    },
   ];
 
   const steps = [
-    { n: "01", t: "매물 등록", d: "금융기관이 NPL 정보를 플랫폼에 업로드", icon: <Layers size={16} /> },
-    { n: "02", t: "검색 · 분석", d: "AI가 자동으로 리스크 등급과 수익률 분석", icon: <Search size={16} /> },
-    { n: "03", t: "입찰 참여", d: "온라인 경쟁 입찰 또는 직접 협상 진행", icon: <Gavel size={16} /> },
-    { n: "04", t: "딜룸 협상", d: "보안 채널에서 조건 협의 및 문서 교환", icon: <MessageSquare size={16} /> },
-    { n: "05", t: "전자계약", d: "전자계약서 생성으로 거래를 최종 완결", icon: <CheckCircle2 size={16} /> },
+    { n: "01", t: "매물 등록", d: "매도자(금융기관)가 NPL을 L0 카드 형태로 공개. PII는 자동 마스킹.", icon: <Layers size={16} />, sla: "등록 10분" },
+    { n: "02", t: "AI 딜 분석", d: "담보·권리·시세·회수확률을 30초 내 리포트. 투자자가 본인인증(L1)만으로 열람.", icon: <Brain size={16} />, sla: "리포트 30초" },
+    { n: "03", t: "경쟁 입찰", d: "공개 경쟁 입찰 또는 NDA(L2) 프라이빗 협상. 자동 입찰 에이전트 지원.", icon: <Gavel size={16} />, sla: "평균 7일" },
+    { n: "04", t: "딜룸 · LOI", d: "LOI(L3) 승인 후 채권서류·권리관계 전체 열람. 보안 채널 협상 + 문서 교환.", icon: <MessageSquare size={16} />, sla: "조건 협의 3일" },
+    { n: "05", t: "전자계약 · 에스크로", d: "전자계약서 자동 생성 → 서명 → 에스크로 대금 지급 → 채권양도 완결.", icon: <CheckCircle2 size={16} />, sla: "당일 클로징" },
   ];
 
   return (
@@ -561,9 +571,33 @@ export default function LandingPage() {
 
           <motion.div variants={stagger} className="grid md:grid-cols-3 gap-6">
             {[
-              { icon: <Brain size={24} style={{ color: C.em }} />, tag: "GPT-4 기반", tagBg: 'rgba(16,185,129,0.08)', tagColor: '#059669', tagBorder: 'rgba(16,185,129,0.2)', title: "AI 자동 분석", desc: "법원 경매 데이터, 시세, 권리관계를 AI가 실시간으로 분석. 리스크 등급과 예상 수익률을 30초 내 자동 산출합니다.", iconBg: 'rgba(16,185,129,0.06)', borderHover: '#10B981' },
-              { icon: <Building2 size={24} style={{ color: C.blue }} />, tag: "47개 기관", tagBg: 'rgba(59,130,246,0.08)', tagColor: '#2563EB', tagBorder: 'rgba(59,130,246,0.2)', title: "금융기관 직거래", desc: "은행, 저축은행, 캐피탈 47개사와 직접 연결. 중개 없이 매각자와 투자자가 1:1로 거래합니다.", iconBg: 'rgba(59,130,246,0.06)', borderHover: '#3B82F6' },
-              { icon: <CheckCircle2 size={24} style={{ color: C.purple }} />, tag: "Full-cycle", tagBg: 'rgba(168,85,247,0.08)', tagColor: '#9333EA', tagBorder: 'rgba(168,85,247,0.2)', title: "원스톱 딜클로징", desc: "검색부터 입찰, 딜룸, 계약서 생성까지 모든 거래 프로세스를 하나의 플랫폼에서 완결합니다.", iconBg: 'rgba(168,85,247,0.06)', borderHover: '#A855F7' },
+              {
+                icon: <TrendingUp size={24} style={{ color: C.em }} />,
+                tag: "거래 효율 3배",
+                tagBg: 'rgba(16,185,129,0.08)', tagColor: '#059669', tagBorder: 'rgba(16,185,129,0.2)',
+                title: "빠른 거래, 낮은 수수료",
+                desc: "평균 딜 클로징 24일 → 7일로 단축. 중개 수수료 2~3% → 최대 0.9%. 에스크로·전자계약으로 거래 리스크도 함께 낮춥니다.",
+                iconBg: 'rgba(16,185,129,0.06)', borderHover: '#10B981',
+                bullets: ["매물 공개 → 낙찰 평균 7일", "수수료 0.9% 캡 · 매도자 0%", "에스크로 · 전자계약 기본 제공"],
+              },
+              {
+                icon: <Building2 size={24} style={{ color: C.blue }} />,
+                tag: "47개 금융기관",
+                tagBg: 'rgba(59,130,246,0.08)', tagColor: '#2563EB', tagBorder: 'rgba(59,130,246,0.2)',
+                title: "매도자 → 투자자 직거래",
+                desc: "은행·저축은행·캐피탈 47개사가 직접 매각. 중간 유통 없이 1차 공급자 가격으로 매입하고, 매도자는 LLR(Loan Loss Reserve) 회수를 극대화합니다.",
+                iconBg: 'rgba(59,130,246,0.06)', borderHover: '#3B82F6',
+                bullets: ["중간 유통 없는 1차 공급 가격", "기관 KYC · 자격 검증 완료", "실시간 경쟁 입찰 / 프라이빗 협상"],
+              },
+              {
+                icon: <ShieldCheck size={24} style={{ color: C.purple }} />,
+                tag: "L0→L3 4단계 접근",
+                tagBg: 'rgba(168,85,247,0.08)', tagColor: '#9333EA', tagBorder: 'rgba(168,85,247,0.2)',
+                title: "거래 안전 · PII 보호",
+                desc: "담보 부동산은 공개, 채무자 개인정보는 가린다. 본인인증(L1) → NDA(L2) → LOI(L3) 단계별로만 권리관계·채권서류에 접근합니다.",
+                iconBg: 'rgba(168,85,247,0.06)', borderHover: '#A855F7',
+                bullets: ["금감원·신용정보법 가이드 준수", "자동 PII 마스킹 파이프라인", "NDA 전자서명 + 감사로그 영구 보관"],
+              },
             ].map((r, i) => (
               <motion.div key={r.title} variants={up} custom={i}
                 className="rounded-2xl p-7 transition-all duration-300"
@@ -574,7 +608,15 @@ export default function LandingPage() {
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{ background: r.iconBg }}>{r.icon}</div>
                 <div className="inline-flex items-center text-[10px] font-bold rounded-full px-2.5 py-1 mb-3" style={{ background: r.tagBg, color: r.tagColor, border: `1px solid ${r.tagBorder}` }}>{r.tag}</div>
                 <h3 className="font-bold text-lg mb-2.5" style={{ color: '#0A1628' }}>{r.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: '#64748B' }}>{r.desc}</p>
+                <p className="text-sm leading-relaxed mb-4" style={{ color: '#64748B' }}>{r.desc}</p>
+                <ul className="space-y-1.5 pt-3 border-t border-slate-100">
+                  {r.bullets?.map((b, j) => (
+                    <li key={j} className="flex items-start gap-2 text-[12.5px]" style={{ color: '#475569' }}>
+                      <CheckCircle2 size={13} className="flex-shrink-0 mt-0.5" style={{ color: r.borderHover }} />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
               </motion.div>
             ))}
           </motion.div>
@@ -618,7 +660,14 @@ export default function LandingPage() {
                   </div>
                   <h3 className="font-bold text-sm mb-2 transition-colors" style={{ color: 'rgba(255,255,255,0.9)' }}>{f.title}</h3>
                   <p className="text-sm leading-relaxed flex-1" style={{ color: 'rgba(255,255,255,0.35)' }}>{f.desc}</p>
-                  <div className="mt-4 flex items-center gap-1 text-xs font-medium transition-colors" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                  {f.meta && (
+                    <div className="mt-4 pt-3 border-t flex items-center gap-1.5 text-[11px] font-medium tabular-nums"
+                      style={{ borderColor: 'rgba(255,255,255,0.05)', color: f.accent }}>
+                      <span className="w-1 h-1 rounded-full" style={{ background: f.accent }} />
+                      {f.meta}
+                    </div>
+                  )}
+                  <div className="mt-3 flex items-center gap-1 text-xs font-medium transition-colors" style={{ color: 'rgba(255,255,255,0.2)' }}>
                     자세히 보기 <ArrowUpRight size={12} />
                   </div>
                 </Link>
@@ -750,7 +799,12 @@ export default function LandingPage() {
                 </div>
                 <div className="text-[10px] font-black mb-1" style={{ color: C.em, letterSpacing: '0.08em' }}>{s.n}</div>
                 <div className="text-sm font-bold mb-1.5" style={{ color: 'rgba(255,255,255,0.85)' }}>{s.t}</div>
-                <div className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.3)' }}>{s.d}</div>
+                <div className="text-xs leading-relaxed mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>{s.d}</div>
+                {s.sla && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.08)', color: C.em, border: '1px solid rgba(16,185,129,0.2)' }}>
+                    <Zap size={9} />{s.sla}
+                  </span>
+                )}
               </motion.div>
             ))}
           </motion.div>
@@ -763,8 +817,15 @@ export default function LandingPage() {
                 style={{ background: C.bg3, border: '1px solid rgba(255,255,255,0.07)' }}>
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-white"
                   style={{ background: C.bg4, border: '1px solid rgba(255,255,255,0.08)' }}>{s.icon}</div>
-                <div>
-                  <div className="text-[10px] font-black mb-0.5" style={{ color: C.em }}>{s.n}</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="text-[10px] font-black" style={{ color: C.em }}>{s.n}</div>
+                    {s.sla && (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.08)', color: C.em, border: '1px solid rgba(16,185,129,0.2)' }}>
+                        <Zap size={8} />{s.sla}
+                      </span>
+                    )}
+                  </div>
                   <div className="text-sm font-bold mb-1" style={{ color: 'rgba(255,255,255,0.85)' }}>{s.t}</div>
                   <div className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.d}</div>
                 </div>

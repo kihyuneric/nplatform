@@ -1,14 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { useParams } from "next/navigation"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { BannerSlot } from "@/components/banners/banner-slot"
 import { InstitutionBadge } from "@/components/exchange/institution-badge"
 import { EmptyState } from "@/components/shared/empty-state"
-import { formatKRW } from "@/lib/constants"
+import { formatKRW } from "@/lib/design-system"
 import {
   Building2,
   Star,
@@ -65,29 +64,7 @@ const RISK_BADGE: Record<string, string> = {
   D: "bg-red-500/20 text-red-300 border-red-500/30",
 }
 
-// ─── Mock Data ───────────────────────────────────────────────
-
-const MOCK_INSTITUTION: InstitutionDetail = {
-  slug: "kamco",
-  name: "한국자산관리공사",
-  type: "INSTITUTION",
-  trust_grade: "S",
-  total_deals: 342,
-  avg_deal_days: 28,
-  response_rate: 96.5,
-  buyer_rating: 4.8,
-  listing_count: 156,
-  description: "한국자산관리공사(KAMCO)는 금융기관의 부실채권을 인수하여 효율적으로 정리하는 공공기관입니다.",
-}
-
-const MOCK_LISTINGS: InstitutionListing[] = [
-  { id: "1", collateral_type: "아파트", location: "서울 강남구", principal: 1250000000, risk_grade: "B", deadline: "2026-04-15", interest_count: 12 },
-  { id: "2", collateral_type: "오피스", location: "서울 서초구", principal: 5200000000, risk_grade: "A", deadline: "2026-05-01", interest_count: 22 },
-  { id: "3", collateral_type: "상가", location: "부산 해운대구", principal: 780000000, risk_grade: "C", deadline: "2026-04-10", interest_count: 5 },
-  { id: "4", collateral_type: "아파트", location: "경기 분당구", principal: 920000000, risk_grade: "B", deadline: "2026-04-20", interest_count: 8 },
-  { id: "5", collateral_type: "토지", location: "인천 남동구", principal: 650000000, risk_grade: "C", deadline: "2026-04-25", interest_count: 4 },
-  { id: "6", collateral_type: "오피스텔", location: "서울 마포구", principal: 1800000000, risk_grade: "A", deadline: "2026-04-30", interest_count: 15 },
-]
+// No mock data — all loaded from Supabase
 
 // ─── Component ───────────────────────────────────────────────
 
@@ -98,22 +75,65 @@ export default function InstitutionProfilePage() {
   const [loading, setLoading] = useState(true)
   const [isFavorite, setIsFavorite] = useState(false)
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setInstitution(MOCK_INSTITUTION)
-      setListings(MOCK_LISTINGS)
+  const loadData = useCallback(async () => {
+    const slug = params?.slug as string
+    if (!slug) { setLoading(false); return }
+    setLoading(true)
+    try {
+      const supabase = createClient()
+      const [instRes, listingsRes] = await Promise.allSettled([
+        supabase.from("institutions")
+          .select("slug, name, type, trust_grade, total_deals, avg_deal_days, response_rate, buyer_rating, listing_count, description")
+          .eq("slug", slug)
+          .single(),
+        supabase.from("npl_listings")
+          .select("id, collateral_type, region, principal_amount, risk_grade, auction_deadline, watchlist_count")
+          .eq("status", "ACTIVE")
+          .eq("institution_slug", slug)
+          .order("created_at", { ascending: false })
+          .limit(20),
+      ])
+
+      if (instRes.status === "fulfilled" && instRes.value.data) {
+        const r = instRes.value.data as any
+        setInstitution({
+          slug: r.slug ?? slug, name: r.name ?? "—",
+          type: (r.type ?? "INSTITUTION") as InstitutionDetail["type"],
+          trust_grade: (r.trust_grade ?? "B") as InstitutionDetail["trust_grade"],
+          total_deals: r.total_deals ?? 0,
+          avg_deal_days: r.avg_deal_days ?? 0,
+          response_rate: r.response_rate ?? 0,
+          buyer_rating: r.buyer_rating ?? 0,
+          listing_count: r.listing_count ?? 0,
+          description: r.description ?? "",
+        })
+      }
+
+      if (listingsRes.status === "fulfilled" && listingsRes.value.data?.length) {
+        setListings(listingsRes.value.data.map((r: any) => ({
+          id: String(r.id),
+          collateral_type: r.collateral_type ?? "기타",
+          location: r.region ?? "—",
+          principal: r.principal_amount ?? 0,
+          risk_grade: r.risk_grade ?? "C",
+          deadline: String(r.auction_deadline ?? "").slice(0, 10),
+          interest_count: r.watchlist_count ?? 0,
+        })))
+      }
+    } catch { /* stays null/empty */ } finally {
       setLoading(false)
-    }, 500)
-    return () => clearTimeout(timer)
+    }
   }, [params?.slug])
+
+  useEffect(() => { loadData() }, [loadData])
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#060E1A]">
-        <div className="h-64 bg-[#0D1F38] animate-pulse" />
+        <div className="h-64 bg-[var(--color-brand-deep)] animate-pulse" />
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4 -mt-8">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-40 bg-[#0D1F38] rounded-2xl animate-pulse" />
+            <div key={i} className="h-40 bg-[var(--color-brand-deep)] rounded-2xl animate-pulse" />
           ))}
         </div>
       </div>
@@ -127,7 +147,7 @@ export default function InstitutionProfilePage() {
   return (
     <div className="min-h-screen bg-[#060E1A]">
       {/* Hero Banner */}
-      <div className="bg-[#0D1F38] border-b border-[#1E3A5F]/60">
+      <div className="bg-[var(--color-brand-deep)] border-b border-[#1E3A5F]/60">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-0">
           <Link
             href="/exchange/institutions"
@@ -154,16 +174,16 @@ export default function InstitutionProfilePage() {
             {/* Name & Badges */}
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-2">
-                <Badge className={`text-xs px-2.5 py-0.5 ${GRADE_COLORS[institution.trust_grade]}`}>
+                <span className={`text-xs px-2.5 py-0.5 inline-flex items-center ${GRADE_COLORS[institution.trust_grade]}`}>
                   <Shield className="w-3 h-3 mr-1" />
                   신뢰등급 {institution.trust_grade}
-                </Badge>
-                <Badge className="text-xs px-2.5 py-0.5 bg-[#1E3A5F]/60 text-[#94B4CC] border border-[#2E5A8E]/40">
+                </span>
+                <span className="text-xs px-2.5 py-0.5 inline-flex items-center bg-[#1E3A5F]/60 text-[#94B4CC] border border-[#2E5A8E]/40">
                   {institution.type === "INSTITUTION" ? "금융기관" : "자산관리사"}
-                </Badge>
-                <Badge className="text-xs px-2.5 py-0.5 bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20">
+                </span>
+                <span className="text-xs px-2.5 py-0.5 inline-flex items-center bg-[var(--color-positive)]/10 text-[var(--color-positive)] border border-[var(--color-positive)]/20">
                   <CheckCircle2 className="w-3 h-3 mr-1" /> 인증완료
-                </Badge>
+                </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{institution.name}</h1>
               <p className="text-sm text-[#4A7FA5] mt-1.5 max-w-lg">{institution.description}</p>
@@ -221,13 +241,13 @@ export default function InstitutionProfilePage() {
               <h2 className="text-base font-bold text-white">매각 공고</h2>
               <p className="text-xs text-[#4A7FA5] mt-0.5">현재 활성 매물 {listings.length}건</p>
             </div>
-            <Badge className="bg-[#1E3A5F]/60 text-[#94B4CC] border border-[#2E5A8E]/40 text-xs">
+            <span className="bg-[#1E3A5F]/60 text-[#94B4CC] border border-[#2E5A8E]/40 text-xs inline-flex items-center px-2.5 py-0.5">
               {listings.length}건
-            </Badge>
+            </span>
           </div>
 
           {listings.length === 0 ? (
-            <div className="bg-[#0D1F38] border border-[#1E3A5F]/60 rounded-2xl p-12 flex items-center justify-center">
+            <div className="bg-[var(--color-brand-deep)] border border-[#1E3A5F]/60 rounded-2xl p-12 flex items-center justify-center">
               <EmptyState icon={Building2} title="등록된 매각 공고가 없습니다" />
             </div>
           ) : (
@@ -235,7 +255,7 @@ export default function InstitutionProfilePage() {
               {listings.map((listing) => (
                 <div
                   key={listing.id}
-                  className="bg-[#0D1F38] border border-[#1E3A5F]/60 rounded-2xl overflow-hidden hover:border-[#2E75B6]/50 hover:shadow-lg hover:shadow-black/20 transition-all group"
+                  className="bg-[var(--color-brand-deep)] border border-[#1E3A5F]/60 rounded-2xl overflow-hidden hover:border-[#2E75B6]/50 hover:shadow-lg hover:shadow-black/20 transition-all group"
                 >
                   {/* Card Top */}
                   <div className="px-4 pt-4 pb-3 border-b border-[#1E3A5F]/40">
@@ -280,7 +300,7 @@ export default function InstitutionProfilePage() {
         </div>
 
         {/* Institution History */}
-        <div className="bg-[#0D1F38] border border-[#1E3A5F]/60 rounded-2xl overflow-hidden">
+        <div className="bg-[var(--color-brand-deep)] border border-[#1E3A5F]/60 rounded-2xl overflow-hidden">
           <div className="px-6 py-5 border-b border-[#1E3A5F]/60">
             <h3 className="text-sm font-bold text-white">기관 정보</h3>
           </div>
@@ -302,7 +322,7 @@ export default function InstitutionProfilePage() {
         </div>
 
         {/* Contact CTA */}
-        <div className="bg-gradient-to-r from-[#0D1F38] to-[#0A1A30] border border-[#1E3A5F]/60 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="bg-gradient-to-r from-[var(--color-brand-deep)] to-[#0A1A30] border border-[#1E3A5F]/60 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-sm font-bold text-white mb-1">거래 문의하기</h3>
             <p className="text-xs text-[#4A7FA5]">{institution.name}에 직접 채권 거래 문의를 보내세요.</p>
@@ -313,7 +333,7 @@ export default function InstitutionProfilePage() {
             </button>
             <button
               onClick={() => setIsFavorite(!isFavorite)}
-              className="px-4 py-2 text-sm font-semibold bg-[#10B981] hover:bg-[#0d9668] text-white rounded-xl transition-colors"
+              className="px-4 py-2 text-sm font-semibold bg-[var(--color-positive)] hover:bg-[#0d9668] text-white rounded-xl transition-colors"
             >
               {isFavorite ? "팔로잉" : "팔로우"}
             </button>

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server"
 import { logger } from '@/lib/logger'
 
 // ─── Mock Stored Results ──────────────────────────────────────
@@ -101,29 +102,103 @@ const MOCK_RESULTS = [
   },
 ]
 
+// ─── DB row → API shape ───────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function rowToResult(row: any) {
+  return {
+    id: row.id,
+    sellerId: row.seller_id,
+    buyerId: row.buyer_id,
+    sellerName: row.seller_name ?? null,
+    buyerName: row.buyer_name ?? null,
+    totalScore: row.total_score,
+    grade: row.grade,
+    factors: row.factors ?? [],
+    recommendedAction: row.recommended_action ?? null,
+    status: row.status,
+    createdAt: row.created_at,
+  }
+}
+
 // ─── Route Handler ────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+
+  const minScore = Number(searchParams.get("minScore") ?? 0)
+  const grade    = searchParams.get("grade") ?? ""
+  const sellerId = searchParams.get("sellerId") ?? ""
+  const buyerId  = searchParams.get("buyerId") ?? ""
+  const page     = Math.max(1, Number(searchParams.get("page") ?? 1))
+  const limit    = Math.min(50, Math.max(1, Number(searchParams.get("limit") ?? 20)))
+
   try {
-    const { searchParams } = new URL(req.url)
+    const supabase = await createClient()
 
-    const minScore = Number(searchParams.get("minScore") ?? 0)
-    const grade = searchParams.get("grade") ?? ""
-    const sellerId = searchParams.get("sellerId") ?? ""
-    const buyerId = searchParams.get("buyerId") ?? ""
-    const page = Math.max(1, Number(searchParams.get("page") ?? 1))
-    const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit") ?? 20)))
+    // ── Build query ─────────────────────────────────────────
+    let query = supabase
+      .from("seller_buyer_matching_results")
+      .select("*", { count: "exact" })
+      .order("total_score", { ascending: false })
 
+    if (minScore > 0)  query = query.gte("total_score", minScore)
+    if (grade)         query = query.eq("grade", grade.toUpperCase())
+    if (sellerId)      query = query.eq("seller_id", sellerId)
+    if (buyerId)       query = query.eq("buyer_id", buyerId)
+
+    // ── Pagination ──────────────────────────────────────────
+    const from = (page - 1) * limit
+    const to   = from + limit - 1
+    query = query.range(from, to)
+
+    const { data, error, count } = await query
+
+    if (error) throw error
+
+    const total      = count ?? 0
+    const results    = (data ?? []).map(rowToResult)
+
+    // ── Summary counts (all rows, no pagination) ────────────
+    const { data: allData } = await supabase
+      .from("seller_buyer_matching_results")
+      .select("grade")
+
+    const allGrades = (allData ?? []).map((r: { grade: string }) => r.grade)
+    const summary = {
+      total:     allGrades.length,
+      excellent: allGrades.filter(g => g === "EXCELLENT").length,
+      good:      allGrades.filter(g => g === "GOOD").length,
+      fair:      allGrades.filter(g => g === "FAIR").length,
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: results,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: from + limit < total,
+      },
+      summary,
+      source: "db",
+    })
+  } catch (err) {
+    logger.error("[GET /api/v1/matching/results] DB error, falling back to mock", { error: err })
+
+    // ── Mock fallback ───────────────────────────────────────
     let results = [...MOCK_RESULTS]
 
     if (minScore > 0) results = results.filter(r => r.totalScore >= minScore)
-    if (grade) results = results.filter(r => r.grade === grade.toUpperCase())
-    if (sellerId) results = results.filter(r => r.sellerId === sellerId)
-    if (buyerId) results = results.filter(r => r.buyerId === buyerId)
+    if (grade)        results = results.filter(r => r.grade === grade.toUpperCase())
+    if (sellerId)     results = results.filter(r => r.sellerId === sellerId)
+    if (buyerId)      results = results.filter(r => r.buyerId === buyerId)
 
-    const total = results.length
-    const start = (page - 1) * limit
-    const paginated = results.slice(start, start + limit)
+    const total      = results.length
+    const start      = (page - 1) * limit
+    const paginated  = results.slice(start, start + limit)
 
     return NextResponse.json({
       success: true,
@@ -136,17 +211,12 @@ export async function GET(req: NextRequest) {
         hasNext: start + limit < total,
       },
       summary: {
-        total: MOCK_RESULTS.length,
+        total:     MOCK_RESULTS.length,
         excellent: MOCK_RESULTS.filter(r => r.grade === "EXCELLENT").length,
-        good: MOCK_RESULTS.filter(r => r.grade === "GOOD").length,
-        fair: MOCK_RESULTS.filter(r => r.grade === "FAIR").length,
+        good:      MOCK_RESULTS.filter(r => r.grade === "GOOD").length,
+        fair:      MOCK_RESULTS.filter(r => r.grade === "FAIR").length,
       },
+      source: "mock",
     })
-  } catch (err) {
-    logger.error("[GET /api/v1/matching/results]", { error: err })
-    return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "결과 조회 중 오류가 발생했습니다." } },
-      { status: 500 }
-    )
   }
 }

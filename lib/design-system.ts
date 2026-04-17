@@ -114,9 +114,9 @@ export const CARD = {
 // ── 버튼 ─────────────────────────────────────────────────────────────────────
 export const BUTTON = {
   /** Primary: 진한 네이비, 흰 텍스트 */
-  primary: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-brand-dark)] text-white text-[0.8125rem] font-semibold rounded-lg shadow-[var(--shadow-brand)] hover:bg-[var(--color-brand-mid)] hover:shadow-[var(--shadow-brand-lg)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150',
+  primary: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-brand-dark)] text-white text-[0.8125rem] font-semibold rounded-lg shadow-[var(--shadow-brand)] hover:bg-[var(--color-brand-mid)] hover:shadow-[var(--shadow-brand-lg)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150 relative overflow-hidden',
   /** Secondary: 흰 배경, 테두리 */
-  secondary: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-surface-elevated)] text-[var(--color-brand-dark)] text-[0.8125rem] font-semibold rounded-lg border border-[var(--color-border-default)] shadow-[var(--shadow-xs)] hover:bg-[var(--color-surface-sunken)] hover:border-[var(--color-border-strong)] transition-all duration-150',
+  secondary: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-surface-elevated)] text-[var(--color-brand-dark)] text-[0.8125rem] font-semibold rounded-lg border border-[var(--color-border-default)] shadow-[var(--shadow-xs)] hover:bg-[var(--color-surface-sunken)] hover:border-[var(--color-border-strong)] transition-all duration-150 relative overflow-hidden',
   /** Ghost: 텍스트만 */
   ghost: 'inline-flex items-center justify-center gap-2 px-4 py-2 text-[var(--color-text-secondary)] text-[0.8125rem] font-medium rounded-lg hover:bg-[var(--color-surface-sunken)] hover:text-[var(--color-text-primary)] transition-all duration-150',
   /** Accent: 에메랄드 */
@@ -128,7 +128,7 @@ export const BUTTON = {
   /** 큰 버튼 */
   lg: 'text-[0.9375rem] px-7 py-3.5 rounded-xl',
   /** 아이콘 버튼 */
-  icon: 'inline-flex items-center justify-center w-9 h-9 rounded-lg hover:bg-[var(--color-surface-sunken)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors',
+  icon: 'inline-flex items-center justify-center w-11 h-11 rounded-lg hover:bg-[var(--color-surface-sunken)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors',
 } as const
 
 // ── 배지 ─────────────────────────────────────────────────────────────────────
@@ -156,8 +156,10 @@ export const STAT = {
 } as const
 
 // ── 입력/폼 ──────────────────────────────────────────────────────────────────
+// 입력 텍스트 색상은 반드시 명시적(text-slate-900)으로 둬서
+// 다크모드/OS 기본 스타일 때문에 흰색으로 보이지 않도록 방지.
 export const INPUT = {
-  base: 'w-full px-4 py-2.5 bg-[var(--color-surface-elevated)] border border-[var(--color-border-default)] rounded-lg text-[0.9375rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-bright)] focus:border-transparent transition-all',
+  base: 'w-full px-4 py-2.5 bg-white border border-[var(--color-border-default)] rounded-lg text-[0.9375rem] !text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-bright)] focus:border-transparent transition-all',
   label: 'text-[0.8125rem] font-semibold text-[var(--color-text-primary)] mb-1.5',
   helper: 'text-[0.75rem] text-[var(--color-text-muted)] mt-1',
   error: 'text-[0.75rem] text-[var(--color-danger)] mt-1',
@@ -255,6 +257,7 @@ export const STATUS = {
 // ── 유틸리티 ─────────────────────────────────────────────────────────────────
 /** 한국 원화 포맷 */
 export function formatKRW(n: number): string {
+  if (n == null || isNaN(n)) return '-'
   if (n >= 100000000) return `${(n / 100000000).toFixed(1)}억`
   if (n >= 10000) return `${Math.round(n / 10000).toLocaleString()}만`
   return `${n.toLocaleString()}원`

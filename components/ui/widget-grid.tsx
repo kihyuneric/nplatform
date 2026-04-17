@@ -23,7 +23,7 @@ export function WidgetGrid({ widgets, editable = false, onRemove, onAdd }: Widge
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {widgets.map(w => (
-        <Card key={w.id} className={`${sizeClasses[w.size]} dark:bg-gray-900 dark:border-gray-800`}>
+        <Card key={w.id} className={`${sizeClasses[w.size]} bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]`}>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <div className="flex items-center gap-2">
               {editable && <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />}
@@ -39,7 +39,7 @@ export function WidgetGrid({ widgets, editable = false, onRemove, onAdd }: Widge
         </Card>
       ))}
       {editable && onAdd && (
-        <Card className="border-dashed border-2 flex items-center justify-center cursor-pointer hover:border-[#10B981] transition-colors min-h-[120px] dark:border-gray-700" onClick={onAdd}>
+        <Card className="border-dashed border-2 flex items-center justify-center cursor-pointer hover:border-[#10B981] transition-colors min-h-[120px] border-[var(--color-border-subtle)]" onClick={onAdd}>
           <div className="text-center text-muted-foreground">
             <Plus className="h-8 w-8 mx-auto mb-1" />
             <span className="text-xs">위젯 추가</span>

@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUserWithRole } from '@/lib/auth/get-user'
+import { Errors } from '@/lib/api-error'
 import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
@@ -39,49 +41,43 @@ export async function GET(req: NextRequest) {
   const daysMap: Record<string, number> = { '7d': 7, '30d': 30, '90d': 90 }
   const days = daysMap[period] || 7
 
+  // Auth + role check
+  const authUser = await getAuthUserWithRole()
+  if (!authUser) {
+    return Errors.unauthorized('로그인이 필요합니다.')
+  }
+  if (!authUser.role || !['SUPER_ADMIN', 'ADMIN'].includes(authUser.role)) {
+    return Errors.forbidden('관리자 권한이 필요합니다.')
+  }
+
   try {
     const supabase = await createClient()
 
-    // Auth check
-    let userId = 'anonymous'
-    try { const { data: { user } } = await supabase.auth.getUser(); if (user) userId = user.id } catch {}
-    if (userId === 'anonymous') {
-      return NextResponse.json({ data: generateMockStats(days), period, days, _mock: true })
-    }
-
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', userId)
-      .single()
-
-    if (!profile || !['SUPER_ADMIN', 'ADMIN'].includes(profile.role)) {
-      return NextResponse.json(
-        { error: { code: 'FORBIDDEN', message: '관리자 권한이 필요합니다.' } },
-        { status: 403 }
-      )
-    }
-
-    // Try to fetch real daily stats
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
     const startISO = startDate.toISOString()
 
-    // Attempt to get user registration counts per day
+    // Get user registration counts per day
     const { data: usersByDay, error: usersError } = await supabase
       .from('users')
       .select('created_at')
       .gte('created_at', startISO)
       .order('created_at', { ascending: true })
 
-    if (usersError || !usersByDay || usersByDay.length === 0) {
-      throw new Error('No data available')
+    if (usersError) {
+      throw new Error(usersError.message)
     }
 
-    // Build daily aggregation
-    const dailyMap = new Map<string, { registrations: number; activeUsers: number; newListings: number; deals: number; revenue: number; pageViews: number }>()
+    // Build daily aggregation — initialize all days
+    const dailyMap = new Map<string, {
+      registrations: number
+      activeUsers: number
+      newListings: number
+      deals: number
+      revenue: number
+      pageViews: number
+    }>()
 
-    // Initialize all days
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date()
       d.setDate(d.getDate() - i)
@@ -90,43 +86,69 @@ export async function GET(req: NextRequest) {
     }
 
     // Count registrations per day
-    for (const u of usersByDay) {
-      const day = u.created_at.split('T')[0]
+    for (const u of (usersByDay || [])) {
+      const day = (u.created_at as string).split('T')[0]
       const entry = dailyMap.get(day)
       if (entry) entry.registrations++
     }
 
-    // Try to get listing counts per day
+    // Get listing counts per day
     try {
       const { data: listingsByDay } = await supabase
         .from('npl_listings')
         .select('created_at')
         .gte('created_at', startISO)
 
-      if (listingsByDay) {
-        for (const l of listingsByDay) {
-          const day = l.created_at.split('T')[0]
-          const entry = dailyMap.get(day)
-          if (entry) entry.newListings++
-        }
+      for (const l of (listingsByDay || [])) {
+        const day = (l.created_at as string).split('T')[0]
+        const entry = dailyMap.get(day)
+        if (entry) entry.newListings++
       }
-    } catch { /* ignore */ }
+    } catch { /* table may not exist yet */ }
 
-    // Try to get deal counts per day
+    // Get deal counts per day — try deal_rooms first, fallback to contract_requests
     try {
-      const { data: dealsByDay } = await supabase
-        .from('contract_requests')
+      const { data: dealsByDay, error: dealsErr } = await supabase
+        .from('deal_rooms')
         .select('created_at')
         .gte('created_at', startISO)
 
-      if (dealsByDay) {
-        for (const d of dealsByDay) {
-          const day = d.created_at.split('T')[0]
+      const dealSource = dealsErr ? null : dealsByDay
+
+      if (!dealSource) {
+        const { data: contractsByDay } = await supabase
+          .from('contract_requests')
+          .select('created_at')
+          .gte('created_at', startISO)
+
+        for (const d of (contractsByDay || [])) {
+          const day = (d.created_at as string).split('T')[0]
+          const entry = dailyMap.get(day)
+          if (entry) entry.deals++
+        }
+      } else {
+        for (const d of dealSource) {
+          const day = (d.created_at as string).split('T')[0]
           const entry = dailyMap.get(day)
           if (entry) entry.deals++
         }
       }
     } catch { /* ignore */ }
+
+    // Get revenue per day from invoices
+    try {
+      const { data: invoicesByDay } = await supabase
+        .from('invoices')
+        .select('amount, created_at')
+        .eq('status', 'PAID')
+        .gte('created_at', startISO)
+
+      for (const inv of (invoicesByDay || [])) {
+        const day = (inv.created_at as string).split('T')[0]
+        const entry = dailyMap.get(day)
+        if (entry) entry.revenue += Number(inv.amount) || 0
+      }
+    } catch { /* table may not exist yet */ }
 
     const data = Array.from(dailyMap.entries()).map(([dateISO, counts]) => {
       const d = new Date(dateISO)
@@ -139,7 +161,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ data, period, days, _source: 'supabase' })
   } catch {
-    // Mock fallback
+    // Mock fallback on DB error
     const data = generateMockStats(days)
     return NextResponse.json({ data, period, days, _mock: true })
   }

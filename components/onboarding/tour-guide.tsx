@@ -143,17 +143,17 @@ function TourTooltip({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 8 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-      className="fixed z-[9999] w-[320px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-border overflow-hidden"
+      className="fixed z-[9999] w-[320px] bg-[var(--color-surface-elevated)] rounded-2xl shadow-2xl border border-border overflow-hidden"
       style={{
         top: position.top,
         left: position.left,
       }}
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#1B3A5C] to-[#2E75B6] px-4 pt-4 pb-3">
+      <div className="bg-gradient-to-r from-[var(--color-brand-dark)] to-[#2E75B6] px-4 pt-4 pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[#10B981]" />
+            <Sparkles className="h-4 w-4 text-[var(--color-positive)]" />
             <span className="text-white/80 text-xs font-medium">
               {stepIndex + 1} / {totalSteps} 단계
             </span>
@@ -178,7 +178,7 @@ function TourTooltip({
         {step.action && step.actionLabel && (
           <button
             onClick={step.action}
-            className="mt-2 text-xs text-[#10B981] hover:underline font-medium"
+            className="mt-2 text-xs text-[var(--color-positive)] hover:underline font-medium"
           >
             {step.actionLabel} →
           </button>
@@ -193,7 +193,7 @@ function TourTooltip({
             className={cn(
               'rounded-full transition-all duration-300',
               i === stepIndex
-                ? 'w-4 h-1.5 bg-[#10B981]'
+                ? 'w-4 h-1.5 bg-[var(--color-positive)]'
                 : 'w-1.5 h-1.5 bg-muted-foreground/30'
             )}
           />
@@ -225,7 +225,7 @@ function TourTooltip({
           <Button
             size="sm"
             onClick={onNext}
-            className="h-8 bg-[#1B3A5C] hover:bg-[#2E75B6] text-white text-xs gap-1"
+            className="h-8 bg-[var(--color-brand-dark)] hover:bg-[#2E75B6] text-white text-xs gap-1"
           >
             {isLast ? '완료' : '다음'}
             {!isLast && <ChevronRight className="h-3.5 w-3.5" />}

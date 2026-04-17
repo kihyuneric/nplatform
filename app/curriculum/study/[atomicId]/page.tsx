@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { createClient as createClientBrowser } from '@/lib/supabase/client'
 import {
   ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Circle, AlertCircle,
   Award, Clock, FileText, Lightbulb, Scale, Target, ChevronDown, ChevronUp,
@@ -73,7 +74,14 @@ export default function AtomicStudyPage() {
   const [quizSubmitted, setQuizSubmitted] = useState(false)
   const [quizScore, setQuizScore] = useState<number | null>(null)
 
-  const userId = 'anonymous'  // TODO: 실제 인증 연동
+  const [userId, setUserId] = useState<string>('anonymous')
+
+  useEffect(() => {
+    const supabase = createClientBrowser()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.id) setUserId(user.id)
+    })
+  }, [])
 
   useEffect(() => {
     if (!atomicId || isNaN(atomicId)) return

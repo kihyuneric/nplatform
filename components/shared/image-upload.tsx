@@ -136,8 +136,8 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
       <div
         className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
           dragActive
-            ? "border-[#10B981] bg-emerald-50 dark:bg-emerald-900/10"
-            : "border-gray-300 dark:border-gray-700 hover:border-gray-400"
+            ? "border-[#10B981] bg-emerald-500/10"
+            : "border-[var(--color-border-subtle)] hover:border-[var(--color-text-muted)]"
         }`}
         onDragOver={(e) => {
           e.preventDefault()
@@ -158,14 +158,14 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
             e.target.value = ""
           }}
         />
-        <ImagePlus className="w-10 h-10 mx-auto text-gray-400 mb-3" />
-        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <ImagePlus className="w-10 h-10 mx-auto text-[var(--color-text-muted)] mb-3" />
+        <p className="text-sm font-medium text-[var(--color-text-secondary)]">
           이미지를 드래그하거나 클릭하여 업로드
         </p>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+        <p className="text-xs text-[var(--color-text-muted)] mt-1">
           JPG, PNG, WebP (최대 5MB, {MAX_IMAGES}장)
         </p>
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-[var(--color-text-muted)] mt-1">
           {value.length}/{MAX_IMAGES}장 업로드됨
         </p>
       </div>
@@ -173,7 +173,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
       {/* Upload progress */}
       {uploading && (
         <div className="space-y-1">
-          <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
             <span>업로드 중...</span>
             <span>{uploadProgress}%</span>
           </div>
@@ -183,7 +183,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
 
       {/* Error */}
       {error && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-sm text-red-600 dark:text-red-400">
+        <div className="flex items-center gap-2 p-3 bg-red-500/10 rounded-lg text-sm text-red-400">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>
@@ -206,7 +206,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
               className={`relative group rounded-lg border overflow-hidden aspect-square ${
                 dragOverIdx === idx
                   ? "border-[#10B981] border-2"
-                  : "border-gray-200 dark:border-gray-700"
+                  : "border-[var(--color-border-subtle)]"
               } ${dragIdx === idx ? "opacity-50" : ""}`}
             >
               <img

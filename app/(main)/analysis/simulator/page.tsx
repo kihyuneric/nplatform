@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation"
 import {
   ArrowLeft, RotateCcw, Download, Save, ChevronDown, ChevronUp,
   TrendingUp, TrendingDown, AlertTriangle, CheckCircle, XCircle,
-  Building2, Home, Gavel, Info, FileText, Calculator,
+  Building2, Home, Gavel, Info, FileText, Calculator, Zap, X,
 } from "lucide-react"
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -16,9 +16,22 @@ import {
   calcAuction, buildSensitivityTable, AUCTION_PRESETS,
   type AuctionInput, type AuctionResult, type PropertyType, type AuctionScenario,
 } from "@/lib/auction-calculator"
-import WaterfallChart, { WaterfallSummaryCards } from "@/components/charts/WaterfallChart"
-import YieldCurveChart from "@/components/charts/YieldCurveChart"
+import { COLLATERAL_CATEGORIES } from "@/lib/taxonomy"
+import dynamic from "next/dynamic"
 import DS from "@/lib/design-system"
+
+const WaterfallChart = dynamic(() => import("@/components/charts/WaterfallChart"), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-[var(--color-surface-overlay)] rounded-xl h-64" />,
+})
+const WaterfallSummaryCards = dynamic(
+  () => import("@/components/charts/WaterfallChart").then(m => ({ default: m.WaterfallSummaryCards })),
+  { ssr: false }
+)
+const YieldCurveChart = dynamic(() => import("@/components/charts/YieldCurveChart"), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-[var(--color-surface-overlay)] rounded-xl h-56" />,
+})
 
 // ─────────────────────────────────────────────────────
 // 포맷 유틸
@@ -33,6 +46,13 @@ function fmt(n: number, short = false): string {
 }
 function fmtPct(n: number) { return `${n >= 0 ? "+" : ""}${n.toFixed(1)}%` }
 
+// taxonomy 기반 플랫 목록 (대분류 헤더 + 세부 유형)
+const PROPERTY_TYPES_GROUPED = COLLATERAL_CATEGORIES.map(cat => ({
+  groupLabel: cat.label,
+  items: cat.items.map(i => i.label),
+}))
+
+// 기존 PropertyType union 호환을 위해 label 배열도 유지
 const PROPERTY_TYPES: PropertyType[] = [
   "아파트", "오피스텔", "빌라/다세대", "단독주택",
   "상가", "사무실", "공장/창고", "토지", "임야", "농지",
@@ -40,11 +60,11 @@ const PROPERTY_TYPES: PropertyType[] = [
 ]
 
 const VERDICT_CONFIG = {
-  STRONG_BUY: { icon: CheckCircle, bg: "bg-emerald-50 border-emerald-200", text: "text-emerald-700" },
-  BUY:        { icon: TrendingUp,  bg: "bg-green-50 border-green-200",   text: "text-green-700" },
-  CONSIDER:   { icon: AlertTriangle,bg:"bg-amber-50 border-amber-200",   text: "text-amber-700" },
-  CAUTION:    { icon: AlertTriangle,bg:"bg-orange-50 border-orange-200", text: "text-orange-700" },
-  STOP:       { icon: XCircle,     bg: "bg-red-50 border-red-200",       text: "text-red-700" },
+  STRONG_BUY: { icon: CheckCircle, bg: "bg-emerald-500/10 border-emerald-500/20", text: "text-emerald-400" },
+  BUY:        { icon: TrendingUp,  bg: "bg-green-500/10 border-green-500/20",   text: "text-green-400" },
+  CONSIDER:   { icon: AlertTriangle,bg:"bg-amber-500/10 border-amber-500/20",   text: "text-amber-400" },
+  CAUTION:    { icon: AlertTriangle,bg:"bg-orange-500/10 border-orange-500/20", text: "text-orange-400" },
+  STOP:       { icon: XCircle,     bg: "bg-red-500/10 border-red-500/20",       text: "text-red-400" },
 }
 
 // ─────────────────────────────────────────────────────
@@ -76,6 +96,16 @@ function NumberInput({
   label: string; value: number; onChange: (v: number) => void;
   hint?: string; prefix?: string; min?: number
 }) {
+  const [raw, setRaw] = useState(value > 0 ? String(value) : "")
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const stripped = e.target.value.replace(/,/g, "")
+    if (/^\d*$/.test(stripped)) {
+      setRaw(stripped)
+      onChange(Math.max(min, Number(stripped) || 0))
+    }
+  }
+
   return (
     <div className="space-y-1">
       <label className={DS.text.label}>{label}</label>
@@ -84,13 +114,19 @@ function NumberInput({
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-[0.8125rem]">{prefix}</span>
         )}
         <input
-          type="number"
+          inputMode="numeric"
           min={min}
-          value={value}
-          onChange={(e) => onChange(Math.max(min, Number(e.target.value) || 0))}
+          value={raw}
+          onChange={handleChange}
+          onBlur={() => setRaw(value > 0 ? String(value) : "")}
           className={`${DS.input.base} pl-8 tabular-nums`}
         />
       </div>
+      {value > 0 && (
+        <p className="text-[0.75rem] font-semibold text-[var(--color-brand-mid)] tabular-nums">
+          {value.toLocaleString("ko-KR")}원
+        </p>
+      )}
       {hint && <p className={DS.input.helper}>{hint}</p>}
     </div>
   )
@@ -101,6 +137,8 @@ function NumberInput({
 // ─────────────────────────────────────────────────────
 export default function AuctionSimulatorPage() {
   const searchParams = useSearchParams()
+  const isDemo = searchParams?.get("demo") === "1"
+  const [demoBannerDismissed, setDemoBannerDismissed] = useState(false)
   const [input, setInput] = useState<AuctionInput>(() => {
     const dealId       = searchParams?.get("dealId") ?? undefined
     const appraisal    = searchParams?.get("appraisal")
@@ -114,7 +152,15 @@ export default function AuctionSimulatorPage() {
   })
   const [scenarios, setScenarios] = useState<AuctionScenario[]>([])
   const [showAdvanced, setShowAdvanced] = useState(false)
-  const [activePreset, setActivePreset] = useState<number | null>(null)
+  const [activePreset, setActivePreset] = useState<number | null>(() => isDemo ? 0 : null)
+
+  // Auto-apply first preset when demo mode
+  useEffect(() => {
+    if (isDemo && AUCTION_PRESETS.length > 0) {
+      setInput({ ...DEFAULT_INPUT, ...AUCTION_PRESETS[0].input })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const set = useCallback(<K extends keyof AuctionInput>(key: K, value: AuctionInput[K]) => {
     setInput(prev => ({ ...prev, [key]: value }))
@@ -153,6 +199,27 @@ export default function AuctionSimulatorPage() {
 
   return (
     <div className={DS.page.wrapper}>
+
+      {/* ── 데모 배너 ─────────────────────────────────────────────── */}
+      {isDemo && !demoBannerDismissed && (
+        <div className="bg-amber-500/10 border-b border-amber-500/25">
+          <div className="max-w-[1440px] mx-auto px-6 py-2.5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 font-medium">
+              <Zap className="w-4 h-4 shrink-0" />
+              <span>
+                데모 체험 모드 — <strong>{AUCTION_PRESETS[0]?.name ?? "강남 아파트"}</strong> 프리셋이 자동으로 적용되었습니다. 값을 직접 바꿔보세요.
+              </span>
+            </div>
+            <button
+              onClick={() => setDemoBannerDismissed(true)}
+              className="text-amber-600 dark:text-amber-400 hover:opacity-70 transition-opacity shrink-0"
+              aria-label="배너 닫기"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] px-6 py-5">
@@ -233,7 +300,7 @@ export default function AuctionSimulatorPage() {
                 기본 정보
               </h3>
 
-              {/* 부동산 유형 */}
+              {/* 부동산 유형 (taxonomy 기반 그룹) */}
               <div className="space-y-1">
                 <label className={DS.text.label}>부동산 유형</label>
                 <select
@@ -241,7 +308,13 @@ export default function AuctionSimulatorPage() {
                   onChange={(e) => set("propertyType", e.target.value as PropertyType)}
                   className={DS.input.base}
                 >
-                  {PROPERTY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  {PROPERTY_TYPES_GROUPED.map(group => (
+                    <optgroup key={group.groupLabel} label={`── ${group.groupLabel}`}>
+                      {group.items.map(item => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </optgroup>
+                  ))}
                 </select>
               </div>
 
@@ -491,8 +564,8 @@ export default function AuctionSimulatorPage() {
                       </Pie>
                       <Tooltip
                         formatter={(v: number) => [fmt(v, true), ""]}
-                        contentStyle={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 11 }}
-                        itemStyle={{ color: "#6b7280" }}
+                        contentStyle={{ background: "var(--color-surface-elevated)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, fontSize: 11 }}
+                        itemStyle={{ color: "var(--color-text-secondary)" }}
                       />
                     </PieChart>
                   </ResponsiveContainer>

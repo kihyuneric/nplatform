@@ -14,9 +14,9 @@ interface RiskChecklistProps {
 }
 
 const levelConfig = {
-  '높음': { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-700' },
-  '주의': { icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700' },
-  '양호': { icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', badge: 'bg-green-100 text-green-700' },
+  '높음': { icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', badge: 'bg-red-500/15 text-red-400' },
+  '주의': { icon: AlertCircle, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', badge: 'bg-amber-500/15 text-amber-400' },
+  '양호': { icon: CheckCircle2, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20', badge: 'bg-green-500/15 text-green-400' },
 }
 
 export function RiskChecklist({ risks }: RiskChecklistProps) {
@@ -36,7 +36,7 @@ export function RiskChecklist({ risks }: RiskChecklistProps) {
           <p className={`text-sm font-semibold ${overallConfig.color}`}>
             전체 리스크 등급: {overallLevel}
           </p>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
             높음 {highCount} / 주의 {warnCount} / 양호 {goodCount}
           </p>
         </div>
@@ -52,12 +52,12 @@ export function RiskChecklist({ risks }: RiskChecklistProps) {
               <Icon className={`mt-0.5 h-4 w-4 flex-shrink-0 ${config.color}`} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-900">{risk.category}</span>
+                  <span className="text-sm font-medium text-[var(--color-text-primary)]">{risk.category}</span>
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${config.badge}`}>
                     {risk.level}
                   </span>
                 </div>
-                <p className="mt-0.5 text-xs text-gray-500">{risk.detail}</p>
+                <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">{risk.detail}</p>
               </div>
             </div>
           )

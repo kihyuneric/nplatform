@@ -216,9 +216,9 @@ export function RichEditor({
   }, [handleImageUpload])
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="rounded-lg border border-[var(--color-border-subtle)] overflow-hidden">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 border-b bg-gray-50 px-2 py-1.5 dark:bg-gray-800 dark:border-gray-700">
+      <div className="flex flex-wrap items-center gap-1 border-b bg-[var(--color-surface-overlay)] px-2 py-1.5 border-[var(--color-border-subtle)]">
         {TOOLBAR_GROUPS.map((group, gi) => (
           <div key={gi} className="flex items-center gap-0.5">
             {group.items.map((item) => (
@@ -227,24 +227,24 @@ export function RichEditor({
                 type="button"
                 onClick={() => execCommand(item.command)}
                 title={item.label}
-                className="rounded p-1.5 text-gray-600 hover:bg-gray-200 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white transition-colors"
+                className="rounded p-1.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] hover:text-[var(--color-text-primary)] transition-colors"
               >
                 <item.icon className="h-4 w-4" />
               </button>
             ))}
             {gi < TOOLBAR_GROUPS.length - 1 && (
-              <div className="mx-1 h-5 w-px bg-gray-300 dark:bg-gray-600" />
+              <div className="mx-1 h-5 w-px bg-[var(--color-border-subtle)]" />
             )}
           </div>
         ))}
 
         {/* Image button */}
-        <div className="mx-1 h-5 w-px bg-gray-300 dark:bg-gray-600" />
+        <div className="mx-1 h-5 w-px bg-[var(--color-border-subtle)]" />
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           title="이미지 삽입"
-          className="rounded p-1.5 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-colors"
+          className="rounded p-1.5 text-blue-400 hover:bg-blue-500/10 transition-colors"
         >
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
         </button>
@@ -254,14 +254,14 @@ export function RichEditor({
           type="button"
           onClick={() => setShowLinkInput(!showLinkInput)}
           title="링크 삽입"
-          className="rounded p-1.5 text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors"
+          className="rounded p-1.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] transition-colors"
         >
           <Link2 className="h-4 w-4" />
         </button>
 
         {/* Image count */}
         {images.length > 0 && (
-          <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">
+          <span className="ml-auto text-xs text-[var(--color-text-muted)]">
             이미지 {images.length}/{maxImages}
           </span>
         )}
@@ -279,13 +279,13 @@ export function RichEditor({
 
       {/* Link input bar */}
       {showLinkInput && (
-        <div className="flex items-center gap-2 border-b bg-gray-50 px-3 py-2 dark:bg-gray-800 dark:border-gray-700">
+        <div className="flex items-center gap-2 border-b bg-[var(--color-surface-overlay)] px-3 py-2 border-[var(--color-border-subtle)]">
           <Link2 className="h-4 w-4 text-gray-400" />
           <Input
             value={linkUrl}
             onChange={(e) => setLinkUrl(e.target.value)}
             placeholder="https://example.com"
-            className="h-8 text-sm flex-1 dark:bg-gray-700 dark:border-gray-600"
+            className="h-8 text-sm flex-1"
             onKeyDown={(e) => e.key === "Enter" && handleInsertLink()}
           />
           <Button size="sm" className="h-8 bg-[#1B3A5C]" onClick={handleInsertLink}>
@@ -307,12 +307,12 @@ export function RichEditor({
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
         data-placeholder={placeholder}
-        className="rich-editor-content prose prose-sm max-w-none p-4 focus:outline-none dark:prose-invert dark:bg-gray-900 dark:text-gray-200"
+        className="rich-editor-content prose prose-sm max-w-none p-4 focus:outline-none"
         style={{ minHeight }}
       />
 
       {/* Drag hint */}
-      <div className="border-t bg-gray-50 px-3 py-1.5 text-xs text-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-500">
+      <div className="border-t bg-[var(--color-surface-overlay)] px-3 py-1.5 text-xs text-[var(--color-text-muted)] border-[var(--color-border-subtle)]">
         이미지를 드래그하거나 클립보드에서 붙여넣기(Ctrl+V)할 수 있습니다 &middot; Markdown 미지원
       </div>
     </div>

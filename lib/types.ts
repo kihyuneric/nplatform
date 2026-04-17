@@ -276,6 +276,13 @@ export interface DealRoom {
   listing_id: string
   title: string
   status: DealRoomStatus
+  /** v6: 8-stage lock-in funnel — added in migration 022 */
+  stage?: DealRoomStage
+  stage_changed_at?: string
+  /** v6: Exclusive Deal 우선공개 윈도우 종료 시각 */
+  exclusive_until?: string
+  /** v6: 외부 채널(이메일/전화)로 LOI/오퍼 제출 차단 */
+  external_offer_blocked?: boolean
   nda_required: boolean
   created_by: string
   max_participants: number
@@ -293,6 +300,19 @@ export interface DealRoom {
 
 export type DealRoomStatus = 'OPEN' | 'IN_PROGRESS' | 'CLOSING' | 'CLOSED' | 'CANCELLED'
 
+/** v6 8-stage lock-in funnel */
+export type DealRoomStage =
+  | 'REGISTERED'  // 등록 — 매도자 매물 업로드
+  | 'TEASER'      // L0 익명 요약 공개
+  | 'GRANTED'     // PASS/KYB 통과 → L1~L2 권한 부여
+  | 'DEALROOM'    // 딜룸 진입 (자료/AI/Q&A)
+  | 'LOI'         // LOI 제출
+  | 'MATCHED'     // 매칭 확정 (선정)
+  | 'CONTRACT'    // 계약 체결
+  | 'SETTLED'     // 정산 완료
+
+export type AccessTier = 'L0' | 'L1' | 'L2' | 'L3'
+
 export interface DealRoomParticipant {
   id: string
   deal_room_id: string
@@ -302,8 +322,158 @@ export interface DealRoomParticipant {
   kyc_verified: boolean
   loi_submitted: boolean
   access_level: string
+  /** v6: L0~L3 명시적 티어 (legacy access_level과 병행) */
+  tier?: AccessTier
+  tier_granted_at?: string
+  tier_granted_by?: string
   joined_at: string
   user?: User
+}
+
+// ─── v6: Document tiers + access audit ───────────────────────
+
+export type DocumentTier = AccessTier
+export type DocumentCategory =
+  | 'TEASER' | 'OVERVIEW' | 'COLLATERAL' | 'FINANCIAL'
+  | 'LEGAL' | 'DUE_DILIGENCE' | 'CONTRACT' | 'OTHER'
+
+export interface ListingDocument {
+  id: string
+  listing_id: string
+  uploaded_by: string
+  tier: DocumentTier
+  category: DocumentCategory
+  storage_path: string
+  file_name: string
+  file_size: number
+  mime_type: string
+  content_hash: string
+  pii_masked: boolean
+  pii_masked_at?: string
+  pii_masked_version?: string
+  watermark_required: boolean
+  download_blocked: boolean
+  status: 'ACTIVE' | 'ARCHIVED' | 'REVOKED'
+  created_at: string
+  updated_at?: string
+}
+
+export interface SignedUrlGrant {
+  id: string
+  document_id: string
+  user_id: string
+  deal_room_id?: string
+  token_hash: string
+  issued_at: string
+  expires_at: string
+  consumed_at?: string
+  consumed_ip?: string
+  consumed_user_agent?: string
+  watermark_fingerprint?: string
+  reason?: string
+}
+
+// ─── v6: Lock-in score ───────────────────────────────────────
+
+export type AccessScoreTier = 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND'
+
+export interface DealAccessScore {
+  user_id: string
+  total_score: number
+  identity_score: number
+  history_score: number
+  diligence_score: number
+  reputation_score: number
+  exclusive_score: number
+  ai_usage_score: number
+  tier: AccessScoreTier
+  last_event_at?: string
+  updated_at: string
+}
+
+export interface DealAccessScoreEvent {
+  id: string
+  user_id: string
+  event_type: string
+  delta: number
+  reason?: string
+  metadata: Record<string, unknown>
+  created_at: string
+}
+
+// ─── v6: 8-stage funnel transition + offers + meetings ──────
+
+export interface DealRoomStageHistory {
+  id: string
+  deal_room_id: string
+  from_stage?: DealRoomStage
+  to_stage: DealRoomStage
+  changed_by: string
+  reason?: string
+  metadata: Record<string, unknown>
+  created_at: string
+}
+
+export type DealRoomOfferType = 'LOI' | 'COUNTER' | 'FINAL' | 'WITHDRAW'
+export type DealRoomOfferStatus =
+  | 'PENDING' | 'ACCEPTED' | 'REJECTED'
+  | 'EXPIRED' | 'WITHDRAWN' | 'SUPERSEDED'
+
+export interface DealRoomOffer {
+  id: string
+  deal_room_id: string
+  participant_id: string
+  offer_type: DealRoomOfferType
+  parent_offer_id?: string
+  price: number
+  payment_terms: Record<string, unknown>
+  contingencies: unknown[]
+  expires_at?: string
+  attached_document_id?: string
+  status: DealRoomOfferStatus
+  responded_at?: string
+  created_at: string
+}
+
+export type DealRoomMeetingMode = 'ONLINE' | 'OFFLINE' | 'HYBRID'
+export type DealRoomMeetingStatus =
+  | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
+
+export interface DealRoomMeeting {
+  id: string
+  deal_room_id: string
+  organized_by: string
+  title: string
+  agenda?: string
+  mode: DealRoomMeetingMode
+  scheduled_at: string
+  duration_minutes: number
+  timezone: string
+  online_url?: string
+  online_provider?: string
+  recording_url?: string
+  recording_consent: boolean
+  offline_address?: string
+  offline_lat?: number
+  offline_lng?: number
+  offline_contact?: string
+  ai_transcript_id?: string
+  ai_summary?: string
+  status: DealRoomMeetingStatus
+  started_at?: string
+  ended_at?: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface DealRoomMeetingAttendee {
+  id: string
+  meeting_id: string
+  user_id: string
+  rsvp: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'TENTATIVE'
+  attended: boolean
+  joined_at?: string
+  left_at?: string
 }
 
 export interface DealRoomMessage {

@@ -30,6 +30,7 @@ import { AuthProvider } from '@/components/auth/auth-provider'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from '@/components/theme/theme-provider'
+import { AutoTranslateProvider } from '@/components/translate/auto-translate-provider'
 import { Analytics } from '@vercel/analytics/next'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nplatform.co.kr'
@@ -86,6 +87,12 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: SITE_URL,
+    languages: {
+      'ko': SITE_URL,
+      'en': `${SITE_URL}/en`,
+      'ja': `${SITE_URL}/ja`,
+      'x-default': SITE_URL,
+    },
   },
 }
 
@@ -102,7 +109,7 @@ const organizationJsonLd = {
     '@type': 'ContactPoint',
     contactType: 'customer service',
     email: 'support@nplatform.co.kr',
-    availableLanguage: 'Korean',
+    availableLanguage: ['Korean', 'English', 'Japanese'],
   },
   sameAs: [],
 }
@@ -113,7 +120,7 @@ const websiteJsonLd = {
   name: 'NPLatform',
   url: SITE_URL,
   description: 'AI 기반 NPL 투자 분석 및 거래 플랫폼',
-  inLanguage: 'ko',
+  inLanguage: ['ko', 'en', 'ja'],
   potentialAction: {
     '@type': 'SearchAction',
     target: {
@@ -135,6 +142,11 @@ export default async function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
+        {/* hreflang for multi-language SEO */}
+        <link rel="alternate" hrefLang="ko" href={SITE_URL} />
+        <link rel="alternate" hrefLang="en" href={`${SITE_URL}/en`} />
+        <link rel="alternate" hrefLang="ja" href={`${SITE_URL}/ja`} />
+        <link rel="alternate" hrefLang="x-default" href={SITE_URL} />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#1B3A5C" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -153,6 +165,20 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
+        {/* Anti-FOUC: 다크모드 클래스를 hydration 전에 즉시 적용 */}
+        <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            try {
+              var s = localStorage.getItem('nplatform-theme');
+              var t = s ? s.replace(/"/g,'') : 'dark';
+              if (t === 'dark' || t !== 'light') {
+                document.documentElement.classList.add('dark');
+              }
+            } catch(e) {
+              document.documentElement.classList.add('dark');
+            }
+          })();
+        `}} />
         <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: `
           if ('serviceWorker' in navigator && location.hostname !== 'localhost') {
             window.addEventListener('load', function() {
@@ -165,13 +191,14 @@ export default async function RootLayout({
         {/* OfflineBanner and SkipLinks removed to fix webpack RSC error */}
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
-          enableSystem
+          defaultTheme="dark"
+          enableSystem={false}
           storageKey="nplatform-theme"
           disableTransitionOnChange={false}
         >
           <QueryProvider>
             <AuthProvider>
+              <AutoTranslateProvider />
               <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-[#1B3A5C] focus:text-white focus:rounded-md">본문으로 건너뛰기</a>
               <main id="main-content" role="main">
                 {children}
@@ -191,11 +218,11 @@ export default async function RootLayout({
                       boxShadow: '0 8px 32px rgba(13,31,56,0.14), 0 2px 8px rgba(13,31,56,0.08)',
                     },
                     classNames: {
-                      toast: 'border border-[#E8EDF3]',
-                      success: '!bg-[#F0FDF4] !text-[#166534] !border-[#BBF7D0]',
-                      error: '!bg-[#FEF2F2] !text-[#991B1B] !border-[#FECACA]',
-                      warning: '!bg-[#FFFBEB] !text-[#92400E] !border-[#FDE68A]',
-                      info: '!bg-[#EFF6FF] !text-[#1E40AF] !border-[#BFDBFE]',
+                      toast: 'border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)]',
+                      success: '!bg-emerald-950 !text-emerald-300 !border-emerald-800',
+                      error: '!bg-red-950 !text-red-300 !border-red-900',
+                      warning: '!bg-amber-950 !text-amber-300 !border-amber-800',
+                      info: '!bg-blue-950 !text-blue-300 !border-blue-800',
                     },
                   }}
                 />

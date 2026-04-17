@@ -7,9 +7,9 @@ import {
 import { PieChart as PieIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 const DATA = [
-  { name: '상승', value: 10, color: '#3b82f6', bg: 'bg-blue-50',   text: 'text-blue-700',   icon: TrendingUp   },
-  { name: '하락', value:  5, color: '#ef4444', bg: 'bg-red-50',    text: 'text-red-700',    icon: TrendingDown },
-  { name: '중립', value:  8, color: '#94a3b8', bg: 'bg-slate-100', text: 'text-slate-600',  icon: Minus        },
+  { name: '상승', value: 10, color: '#3b82f6', bg: 'bg-blue-500/10',   text: 'text-blue-400',   icon: TrendingUp   },
+  { name: '하락', value:  5, color: '#ef4444', bg: 'bg-red-500/10',    text: 'text-red-400',    icon: TrendingDown },
+  { name: '중립', value:  8, color: '#94a3b8', bg: 'bg-slate-500/15', text: 'text-[var(--color-text-secondary)]',  icon: Minus        },
 ];
 
 const total = DATA.reduce((s, d) => s + d.value, 0);
@@ -32,7 +32,7 @@ function CustomTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <div className="bg-white border shadow-lg rounded-lg px-3 py-2 text-xs">
+    <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] shadow-lg rounded-lg px-3 py-2 text-xs">
       <p className="font-semibold" style={{ color: d.color }}>{d.name} 전망</p>
       <p>{d.value}건 ({((d.value / total) * 100).toFixed(1)}%)</p>
     </div>
@@ -92,7 +92,7 @@ export function DirectionDonutChart() {
             {/* 합계 */}
             <div className="flex items-center justify-between px-2.5 pt-1 border-t">
               <span className="text-xs text-muted-foreground">전체</span>
-              <span className="text-sm font-bold text-gray-800">{total}건</span>
+              <span className="text-sm font-bold text-[var(--color-text-secondary)]">{total}건</span>
             </div>
 
             {/* 상승비율 프로그레스 */}
@@ -101,7 +101,7 @@ export function DirectionDonutChart() {
                 <span>상승 우세도</span>
                 <span>{((DATA[0].value / total) * 100).toFixed(0)}%</span>
               </div>
-              <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-[var(--color-border-subtle)] rounded-full overflow-hidden">
                 <div
                   className="h-full bg-blue-500 rounded-full transition-all"
                   style={{ width: `${(DATA[0].value / total) * 100}%` }}

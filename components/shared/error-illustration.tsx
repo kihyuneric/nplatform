@@ -29,7 +29,7 @@ export function ErrorIllustration({
         <circle cx="60" cy="72" r="2" fill="#EF4444" />
       </svg>
 
-      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{title}</h2>
+      <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">{title}</h2>
       <p className="text-sm text-muted-foreground max-w-md mb-6">{description}</p>
 
       <div className="flex gap-3">

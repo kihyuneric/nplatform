@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { logger } from '@/lib/logger'
-import { MATCHING_WEIGHTS } from "@/lib/constants"
+
+/* 매칭 가중치 (인라인 정의) */
+const MATCHING_WEIGHTS = {
+  collateral: 0.35,
+  region:     0.25,
+  amount:     0.20,
+  discount:   0.15,
+  avoidance:  0.05,
+} as const
 
 // ─── Types ────────────────────────────────────────────────────
 

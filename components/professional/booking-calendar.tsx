@@ -96,7 +96,7 @@ export function BookingCalendar({ professionalId, onSelect }: BookingCalendarPro
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{weekLabel}</span>
+        <span className="text-sm font-medium text-[var(--color-text-secondary)]">{weekLabel}</span>
         <Button
           variant="ghost"
           size="sm"
@@ -114,8 +114,8 @@ export function BookingCalendar({ professionalId, onSelect }: BookingCalendarPro
           <div className="grid grid-cols-5 gap-1 mb-2">
             {weekDates.map((date, i) => (
               <div key={i} className="text-center">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{DAY_NAMES[i]}</p>
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">{formatDate(date)}</p>
+                <p className="text-xs font-medium text-[var(--color-text-secondary)]">{DAY_NAMES[i]}</p>
+                <p className="text-sm font-semibold text-[var(--color-text-primary)]">{formatDate(date)}</p>
               </div>
             ))}
           </div>
@@ -140,8 +140,8 @@ export function BookingCalendar({ professionalId, onSelect }: BookingCalendarPro
                         isSelected
                           ? 'bg-[#2E75B6] text-white ring-2 ring-[#2E75B6]/30'
                           : isAvailable && !isPast
-                          ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40'
-                          : 'bg-gray-100 text-gray-400 line-through dark:bg-gray-800 dark:text-gray-600 cursor-not-allowed'
+                          ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                          : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] line-through cursor-not-allowed'
                       )}
                     >
                       {time}
@@ -155,13 +155,13 @@ export function BookingCalendar({ professionalId, onSelect }: BookingCalendarPro
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 pt-1">
+      <div className="flex items-center gap-4 text-xs text-[var(--color-text-secondary)] pt-1">
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded bg-emerald-50 border border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800" />
+          <span className="inline-block w-3 h-3 rounded bg-emerald-500/10 border border-emerald-500/20" />
           예약 가능
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded bg-gray-100 border border-gray-200 dark:bg-gray-800 dark:border-gray-700" />
+          <span className="inline-block w-3 h-3 rounded bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)]" />
           예약 불가
         </span>
         <span className="flex items-center gap-1">

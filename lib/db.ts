@@ -47,7 +47,7 @@ export async function safeQuery<T>(
 export async function safeInsert<T>(table: string, record: Partial<T>): Promise<{ data: T | null; error: string | null }> {
   try {
     const supabase = createClient()
-    const { data, error } = await supabase.from(table).insert(record).select().single()
+    const { data, error } = await supabase.from(table).insert(record as any).select().single()
     if (!error && data) return { data: data as T, error: null }
     if (error) return { data: null, error: error.message }
   } catch (e: any) {
@@ -62,7 +62,7 @@ export async function safeInsert<T>(table: string, record: Partial<T>): Promise<
 export async function safeUpdate<T>(table: string, id: string, updates: Partial<T>): Promise<{ data: T | null; error: string | null }> {
   try {
     const supabase = createClient()
-    const { data, error } = await supabase.from(table).update(updates).eq('id', id).select().single()
+    const { data, error } = await supabase.from(table).update(updates as any).eq('id', id).select().single()
     if (!error && data) return { data: data as T, error: null }
     if (error) return { data: null, error: error.message }
   } catch (e: any) {

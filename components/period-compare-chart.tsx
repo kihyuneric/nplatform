@@ -32,8 +32,8 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   const diff = payload[0]?.value - (payload[1]?.value ?? 0);
   return (
-    <div className="bg-white border shadow-lg rounded-lg px-3 py-2 text-xs">
-      <p className="font-semibold mb-1 text-gray-800">{label}</p>
+    <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] shadow-lg rounded-lg px-3 py-2 text-xs">
+      <p className="font-semibold mb-1 text-[var(--color-text-secondary)]">{label}</p>
       {payload.map((p: any) => (
         <p key={p.name} className="flex justify-between gap-4">
           <span style={{ color: p.fill }}>{p.name}</span>
@@ -71,7 +71,7 @@ export function PeriodCompareChart() {
                 className={`text-xs px-2.5 py-1 rounded-md border transition-all ${
                   mode === m
                     ? 'bg-blue-600 text-white border-blue-600'
-                    : 'text-gray-600 border-gray-200 hover:bg-gray-50'
+                    : 'text-[var(--color-text-secondary)] border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-base)]'
                 }`}
               >
                 {m === 'weekly' ? '주간' : '월간'}
@@ -105,9 +105,9 @@ export function PeriodCompareChart() {
               <span
                 key={d.keyword}
                 className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                  diff > 0 ? 'bg-blue-50 text-blue-700' :
-                  diff < 0 ? 'bg-red-50 text-red-700' :
-                  'bg-gray-100 text-gray-500'
+                  diff > 0 ? 'bg-blue-500/10 text-blue-400' :
+                  diff < 0 ? 'bg-red-500/10 text-red-400' :
+                  'bg-slate-500/15 text-[var(--color-text-muted)]'
                 }`}
               >
                 {d.keyword} {diff > 0 ? '+' : ''}{diff}

@@ -39,7 +39,7 @@ export default function BidHistory({ bids, newBidId }: BidHistoryProps) {
 
   if (bids.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500">
+      <div className="flex flex-col items-center justify-center py-12 text-[var(--color-text-muted)]">
         <Gavel className="w-8 h-8 mb-2 opacity-40" />
         <p className="text-sm">아직 입찰이 없습니다</p>
       </div>
@@ -48,8 +48,8 @@ export default function BidHistory({ bids, newBidId }: BidHistoryProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border-subtle)]">
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
           <Gavel className="w-4 h-4" />
           입찰 내역
         </h3>
@@ -70,15 +70,15 @@ export default function BidHistory({ bids, newBidId }: BidHistoryProps) {
                 className={`
                   relative rounded-lg p-3 transition-all duration-500
                   ${bid.isCurrentUser
-                    ? "bg-[#1B3A5C]/10 border border-[#1B3A5C]/30 dark:bg-[#1B3A5C]/20 dark:border-[#1B3A5C]/40"
-                    : "bg-gray-50 dark:bg-gray-800/50 border border-transparent"
+                    ? "bg-[var(--color-brand-dark)]/20 border border-[var(--color-brand-dark)]/40"
+                    : "bg-[var(--color-surface-overlay)] border border-transparent"
                   }
-                  ${isNew ? "animate-slide-in-bid ring-2 ring-[#10B981]/50" : ""}
+                  ${isNew ? "animate-slide-in-bid ring-2 ring-[var(--color-positive)]/50" : ""}
                 `}
               >
                 {isNew && (
                   <div className="absolute -top-2 -right-2">
-                    <Badge className="bg-[#10B981] text-white text-[10px] px-1.5 py-0.5 animate-bounce">
+                    <Badge className="bg-[var(--color-positive)] text-white text-[10px] px-1.5 py-0.5 animate-bounce">
                       새로운 입찰
                     </Badge>
                   </div>
@@ -87,12 +87,12 @@ export default function BidHistory({ bids, newBidId }: BidHistoryProps) {
                 <div className="flex items-center justify-between mb-1">
                   <span className={`text-sm font-medium ${
                     bid.isCurrentUser
-                      ? "text-[#1B3A5C] dark:text-blue-300"
-                      : "text-gray-700 dark:text-gray-300"
+                      ? "text-[var(--color-brand-dark)]"
+                      : "text-[var(--color-text-secondary)]"
                   }`}>
                     {bid.isCurrentUser ? "나 (내 입찰)" : maskBidderName(bid.bidderName)}
                   </span>
-                  <span className="text-[11px] text-gray-400 dark:text-gray-500">
+                  <span className="text-[11px] text-[var(--color-text-muted)]">
                     {formatTimeAgo(bid.timestamp)}
                   </span>
                 </div>
@@ -100,22 +100,22 @@ export default function BidHistory({ bids, newBidId }: BidHistoryProps) {
                 <div className="flex items-center justify-between">
                   <span className={`text-sm font-bold ${
                     isHighest
-                      ? "text-[#10B981]"
+                      ? "text-[var(--color-positive)]"
                       : bid.isCurrentUser
-                        ? "text-[#1B3A5C] dark:text-blue-300"
-                        : "text-gray-900 dark:text-gray-100"
+                        ? "text-[var(--color-brand-dark)]"
+                        : "text-[var(--color-text-primary)]"
                   }`}>
                     {formatKRW(bid.amount)}
                   </span>
                   {isHighest && (
-                    <span className="flex items-center gap-0.5 text-[11px] text-[#10B981] font-medium">
+                    <span className="flex items-center gap-0.5 text-[11px] text-[var(--color-positive)] font-medium">
                       <ArrowUp className="w-3 h-3" /> 최고가
                     </span>
                   )}
                 </div>
 
                 {index > 0 && (
-                  <div className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+                  <div className="text-[11px] text-[var(--color-text-muted)] mt-1">
                     +{formatKRW(bid.amount - bids[index - 1].amount)} 상승
                   </div>
                 )}

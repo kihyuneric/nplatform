@@ -225,6 +225,52 @@ export async function POST(req: NextRequest) {
     }
     const { title, category, priority, description } = validated.data
 
+    // Map API category values → DB CHECK constraint values
+    const categoryMap: Record<string, string> = {
+      '서비스 이용': 'SERVICE',
+      '인증/KYC': 'SERVICE',
+      '거래/계약': 'TRANSACTION',
+      '계정 관리': 'SERVICE',
+      '기술 문제': 'TECHNICAL',
+      '요금/결제': 'BILLING',
+      '기타': 'OTHER',
+    }
+    // Map API priority values → DB CHECK constraint values
+    const priorityMap: Record<string, string> = {
+      URGENT: 'URGENT',
+      HIGH: 'HIGH',
+      NORMAL: 'MEDIUM',
+      LOW: 'LOW',
+    }
+
+    const dbCategory = categoryMap[category] || 'OTHER'
+    const dbPriority = priorityMap[priority] || 'MEDIUM'
+
+    // Try to persist to Supabase
+    try {
+      const { data: dbTicket, error: dbError } = await supabase
+        .from('support_tickets')
+        .insert({
+          user_id: postUserId,
+          title,
+          content: description,
+          category: dbCategory,
+          priority: dbPriority,
+          status: 'OPEN',
+        })
+        .select()
+        .single()
+
+      if (!dbError && dbTicket) {
+        logger.info('[support POST] ticket saved to DB', { id: dbTicket.id })
+        return NextResponse.json({ success: true, ticket: dbTicket }, { status: 201 })
+      }
+      logger.error('[support POST] DB insert failed, falling back to mock', { error: dbError })
+    } catch (dbErr) {
+      logger.error('[support POST] DB insert exception, falling back to mock', { error: dbErr })
+    }
+
+    // Fallback: return in-memory ticket when DB is unavailable
     const ticket: SupportTicket = {
       id: `TKT-${Date.now()}`,
       title,
@@ -246,7 +292,7 @@ export async function POST(req: NextRequest) {
       ],
     }
 
-    return NextResponse.json({ success: true, ticket }, { status: 201 })
+    return NextResponse.json({ success: true, ticket, _mock: true }, { status: 201 })
   } catch (err) {
     logger.error('[support POST]', { error: err })
     return NextResponse.json(
@@ -287,6 +333,114 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
+    const isAdmin = profile && ['SUPER_ADMIN', 'ADMIN'].includes(profile.role)
+
+    // ── Try Supabase DB first ──
+    try {
+      const { data: dbTicket, error: ticketFetchError } = await supabase
+        .from('support_tickets')
+        .select('id, user_id, status')
+        .eq('id', ticket_id)
+        .maybeSingle()
+
+      if (!ticketFetchError && dbTicket) {
+        // Ownership check: non-admins can only act on their own tickets
+        if (!isAdmin && dbTicket.user_id !== patchUserId) {
+          return NextResponse.json(
+            { error: { code: 'FORBIDDEN', message: '접근 권한이 없습니다.' } },
+            { status: 403 }
+          )
+        }
+
+        if (action === 'reply') {
+          if (!content) {
+            return NextResponse.json(
+              { error: { code: 'VALIDATION_ERROR', message: '답변 내용은 필수입니다.' } },
+              { status: 400 }
+            )
+          }
+          // Insert comment into support_ticket_comments
+          const { data: comment, error: commentError } = await supabase
+            .from('support_ticket_comments')
+            .insert({
+              ticket_id,
+              author_id: patchUserId,
+              content,
+              is_internal: false,
+            })
+            .select()
+            .single()
+
+          if (commentError) {
+            logger.error('[support PATCH] comment insert error', { error: commentError })
+          }
+
+          // If admin replies, update ticket status to IN_PROGRESS
+          const newStatus = isAdmin ? 'IN_PROGRESS' : dbTicket.status
+          if (isAdmin) {
+            await supabase
+              .from('support_tickets')
+              .update({ status: newStatus, updated_at: new Date().toISOString() })
+              .eq('id', ticket_id)
+          }
+
+          return NextResponse.json({
+            success: true,
+            ticket_id,
+            new_message: comment ?? { ticket_id, content, author_id: patchUserId },
+            new_status: newStatus,
+          })
+        }
+
+        if (action === 'update_status') {
+          if (!isAdmin) {
+            return NextResponse.json(
+              { error: { code: 'FORBIDDEN', message: '관리자만 상태를 변경할 수 있습니다.' } },
+              { status: 403 }
+            )
+          }
+          if (!status) {
+            return NextResponse.json(
+              { error: { code: 'VALIDATION_ERROR', message: 'status는 필수입니다.' } },
+              { status: 400 }
+            )
+          }
+          const validDbStatuses = ['OPEN', 'IN_PROGRESS', 'WAITING', 'RESOLVED', 'CLOSED', 'ESCALATED']
+          if (!validDbStatuses.includes(status)) {
+            return NextResponse.json(
+              { error: { code: 'INVALID_STATUS', message: '유효하지 않은 상태입니다.' } },
+              { status: 400 }
+            )
+          }
+          const now = new Date().toISOString()
+          const updateData: Record<string, string | null> = { status, updated_at: now }
+          if (status === 'RESOLVED') updateData.resolved_at = now
+
+          const { error: updateError } = await supabase
+            .from('support_tickets')
+            .update(updateData)
+            .eq('id', ticket_id)
+
+          if (updateError) {
+            return NextResponse.json(
+              { error: { code: 'UPDATE_ERROR', message: updateError.message } },
+              { status: 500 }
+            )
+          }
+
+          return NextResponse.json({ success: true, ticket_id, new_status: status, updated_at: now })
+        }
+
+        return NextResponse.json(
+          { error: { code: 'INVALID_ACTION', message: '유효하지 않은 action입니다. (reply, update_status)' } },
+          { status: 400 }
+        )
+      }
+    } catch (dbErr) {
+      logger.error('[support PATCH] DB error, falling back to mock', { error: dbErr })
+    }
+
+    // ── Mock fallback (DB unavailable or ticket not in DB) ──
     const ticket = MOCK_TICKETS.find(t => t.id === ticket_id)
     if (!ticket) {
       return NextResponse.json(
@@ -294,8 +448,6 @@ export async function PATCH(req: NextRequest) {
         { status: 404 }
       )
     }
-
-    const isAdmin = profile && ['SUPER_ADMIN', 'ADMIN'].includes(profile.role)
 
     if (action === 'reply') {
       if (!content) {
@@ -316,6 +468,7 @@ export async function PATCH(req: NextRequest) {
         ticket_id,
         new_message: reply,
         new_status: isAdmin ? 'ANSWERED' : ticket.status,
+        _mock: true,
       })
     }
 
@@ -344,6 +497,7 @@ export async function PATCH(req: NextRequest) {
         ticket_id,
         new_status: status,
         updated_at: new Date().toISOString(),
+        _mock: true,
       })
     }
 

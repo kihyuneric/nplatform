@@ -2,8 +2,19 @@ import type { Metadata } from "next"
 import { SubNav } from '@/components/layout/sub-nav'
 import { BannerSlot } from '@/components/banners/banner-slot'
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nplatform.co.kr'
+
 export const metadata: Metadata = {
-  title: "내 정보 | NPLatform",
+  title: "마이 페이지 | NPLatform",
+  description: "내 거래, 관심 매물, 포트폴리오, 결제 내역을 한 눈에 확인하세요.",
+  alternates: {
+    canonical: `${SITE_URL}/my`,
+    languages: {
+      'ko': `${SITE_URL}/my`,
+      'en': `${SITE_URL}/en/my`,
+      'ja': `${SITE_URL}/ja/my`,
+    },
+  },
 }
 
 const MY_NAV = [

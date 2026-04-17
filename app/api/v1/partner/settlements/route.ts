@@ -70,33 +70,48 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get("status");
   const period = searchParams.get("period");
 
-  // Try Supabase first
+  // Auth check + Supabase query
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (user) {
+    if (!user) {
+      return NextResponse.json(
+        { error: { code: "UNAUTHORIZED", message: "인증이 필요합니다." } },
+        { status: 401 }
+      );
+    }
+
+    // Resolve partner record (partner_settlements uses partners.id, not user.id)
+    const { data: partner } = await supabase
+      .from('partners')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const partnerId = partner?.id;
+
+    if (partnerId) {
       if (action === "monthly") {
-        // Monthly summary query
+        // Monthly summary query — group by period_start (YYYY-MM)
         const { data, error } = await supabase
           .from('partner_settlements')
-          .select('amount, status, requested_at')
-          .eq('partner_id', user.id)
-          .order('requested_at', { ascending: false });
+          .select('amount, status, period_start')
+          .eq('partner_id', partnerId)
+          .order('period_start', { ascending: false });
 
         if (!error && data && data.length > 0) {
-          // Group by month
           const monthMap = new Map<string, { total: number; settled: number; pending: number; rejected: number; count: number }>();
           for (const s of data) {
-            const month = (s.requested_at as string).slice(0, 7);
+            const month = (s.period_start as string).slice(0, 7);
             if (!monthMap.has(month)) {
               monthMap.set(month, { total: 0, settled: 0, pending: 0, rejected: 0, count: 0 });
             }
             const m = monthMap.get(month)!;
             m.total += s.amount;
             m.count += 1;
-            if (s.status === '완료') m.settled += s.amount;
-            else if (s.status === '반려') m.rejected += s.amount;
+            if (s.status === 'PAID') m.settled += s.amount;
+            else if (s.status === 'REJECTED') m.rejected += s.amount;
             else m.pending += s.amount;
           }
           const summary = Array.from(monthMap.entries()).map(([month, v]) => ({ month, ...v }));
@@ -106,20 +121,20 @@ export async function GET(req: NextRequest) {
         let query = supabase
           .from('partner_settlements')
           .select('*')
-          .eq('partner_id', user.id)
-          .order('requested_at', { ascending: false });
+          .eq('partner_id', partnerId)
+          .order('created_at', { ascending: false });
 
         if (status) query = query.eq('status', status);
         if (period === "this_month") {
           const now = new Date();
           const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-          query = query.gte('requested_at', monthStart);
+          query = query.gte('period_start', monthStart);
         } else if (period === "last_month") {
           const now = new Date();
           now.setMonth(now.getMonth() - 1);
           const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-          const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
-          query = query.gte('requested_at', monthStart).lte('requested_at', monthEnd);
+          const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+          query = query.gte('period_start', monthStart).lte('period_start', monthEnd);
         }
 
         const { data, error } = await query;
@@ -180,21 +195,42 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Try Supabase first
+    // Auth check + Supabase insert
     try {
       const supabase = await createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
-      if (user) {
+      if (!user) {
+        return NextResponse.json(
+          { error: { code: "UNAUTHORIZED", message: "인증이 필요합니다." } },
+          { status: 401 }
+        );
+      }
+
+      // Resolve partner record
+      const { data: partner } = await supabase
+        .from('partners')
+        .select('id, account_holder')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (partner) {
+        // period_start/end default to current month
+        const now = new Date();
+        const periodStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+        const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+
         const { data, error } = await supabase
           .from('partner_settlements')
           .insert({
-            partner_id: user.id,
+            partner_id: partner.id,
             amount,
             bank_name,
             account_number,
-            status: '대기',
-            requested_at: new Date().toISOString(),
+            account_holder: body.account_holder ?? partner.account_holder ?? null,
+            status: 'PENDING',
+            period_start: periodStart,
+            period_end: periodEnd,
           })
           .select()
           .single();

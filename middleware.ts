@@ -32,7 +32,7 @@ const FEATURE_ROUTES: Record<string, string[]> = {
 
 // Rate Limit 유형별 경로
 const RATE_LIMIT_ROUTES: Record<string, string[]> = {
-  ai: ['/api/v1/ai/', '/api/v1/ocr/'],
+  ai: ['/api/v1/ai/', '/api/v1/ocr/', '/api/v1/npl/profitability'],
   auth: ['/api/v1/auth/'],
   search: ['/api/v1/search', '/api/v1/market/search'],
 }
@@ -146,10 +146,12 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── 3.5. Admin route protection ──────────────────
-  // Cookie check is a fast pre-check; the admin layout does server-side Supabase auth
-  if (!isApi && isPathMatch(pathname, ['/admin'])) {
-    const activeRole = getActiveRole(request)
-    if (activeRole !== 'ADMIN' && activeRole !== 'SUPER_ADMIN') {
+  // Requires Supabase session. Dev mode skips check to allow page previews.
+  if (!isApi && isPathMatch(pathname, ['/admin']) && process.env.NODE_ENV !== 'development') {
+    const hasSession = request.cookies.getAll().some(
+      c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
+    )
+    if (!hasSession) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('redirect', pathname)
@@ -161,9 +163,12 @@ export async function middleware(request: NextRequest) {
   // ── 3.6. Auth-required routes: only /my/* strictly requires session ──
   // All feature pages (/analysis, /deals, etc.) are publicly browsable.
   // /my requires actual login — personal data & settings.
+  // Dev mode skips check to allow page previews.
   const AUTH_REQUIRED = ['/my']
-  if (!isApi && isPathMatch(pathname, AUTH_REQUIRED)) {
-    const hasSession = request.cookies.getAll().some(c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'))
+  if (!isApi && isPathMatch(pathname, AUTH_REQUIRED) && process.env.NODE_ENV !== 'development') {
+    const hasSession = request.cookies.getAll().some(
+      c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
+    )
     if (!hasSession) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'

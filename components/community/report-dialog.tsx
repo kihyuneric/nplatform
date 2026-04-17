@@ -100,8 +100,8 @@ export function ReportDialog({ open, onOpenChange, targetId, targetType }: Repor
                 onClick={() => setReason(r.value)}
                 className={`w-full text-left rounded-lg border px-4 py-3 text-sm transition-colors ${
                   reason === r.value
-                    ? "border-red-300 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300"
-                    : "border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-gray-300"
+                    ? "border-red-500/50 bg-red-500/10 text-red-400"
+                    : "border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]"
                 }`}
               >
                 {r.label}
@@ -112,7 +112,7 @@ export function ReportDialog({ open, onOpenChange, targetId, targetType }: Repor
           {/* Details textarea for "OTHER" */}
           {reason === "OTHER" && (
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">
+              <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1.5 block">
                 상세 사유
               </label>
               <textarea
@@ -121,7 +121,7 @@ export function ReportDialog({ open, onOpenChange, targetId, targetType }: Repor
                 placeholder="신고 사유를 자세히 입력해주세요..."
                 rows={3}
                 maxLength={500}
-                className="w-full rounded-lg border bg-background p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300/50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500"
+                className="w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300/50 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
               />
               <p className="text-xs text-muted-foreground mt-1 text-right">
                 {details.length}/500

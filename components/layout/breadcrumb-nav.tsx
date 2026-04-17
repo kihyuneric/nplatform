@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation'
 import { Home, ChevronRight } from 'lucide-react'
 
 const segmentLabels: Record<string, string> = {
-  // NPL 매물
-  market: 'NPL 매물',
-  exchange: 'NPL 매물',
+  // 거래소
+  market: '거래소',
+  exchange: '거래소',
   search: '검색',
   map: '지도',
   bidding: '입찰',
@@ -30,8 +30,9 @@ const segmentLabels: Record<string, string> = {
   dashboard: '대시보드',
   analytics: '분석',
   settlement: '정산',
-  // 거래·매칭
+  // 딜룸
   marketplace: '거래소',
+  deals: '딜룸',
   matching: '매칭',
   calendar: '캘린더',
   'co-invest': '공동투자',
@@ -82,10 +83,9 @@ const segmentLabels: Record<string, string> = {
   surveys: '설문 목록',
   matches: '매칭결과',
   services: '전문가 서비스',
-  deals: '거래 현황',
   analysis: '투자 분석',
   pricing: '요금제',
-  my: '내 정보',
+  my: '마이 페이지',
   guide: '이용 가이드',
 }
 
@@ -107,25 +107,25 @@ export function BreadcrumbNav() {
 
   return (
     <nav aria-label="Breadcrumb" className="px-4 py-2 md:px-6">
-      <ol className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+      <ol className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)]">
         <li>
           <Link
             href="/"
             aria-label="홈"
-            className="flex items-center text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none rounded"
+            className="flex items-center text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-secondary)] focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none rounded"
           >
             <Home className="h-3.5 w-3.5" />
           </Link>
         </li>
         {breadcrumbs.map((crumb) => (
           <li key={crumb.href} className="flex items-center gap-1">
-            <ChevronRight className="h-3 w-3 text-gray-300 dark:text-gray-600" />
+            <ChevronRight className="h-3 w-3 text-[var(--color-text-muted)]" />
             {crumb.isLast ? (
-              <span className="font-bold text-gray-700 dark:text-gray-200">{crumb.label}</span>
+              <span aria-current="page" className="font-bold text-[var(--color-text-primary)]">{crumb.label}</span>
             ) : (
               <Link
                 href={crumb.href}
-                className="text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none rounded"
+                className="text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)] focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none rounded"
               >
                 {crumb.label}
               </Link>

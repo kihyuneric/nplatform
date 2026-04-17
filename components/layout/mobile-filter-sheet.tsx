@@ -46,7 +46,7 @@ export function MobileFilterSheet({
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          'relative inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-[#1B3A5C] shadow-sm transition-colors hover:bg-gray-50 active:bg-gray-100',
+          'relative inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] shadow-sm transition-colors hover:bg-[var(--color-surface-sunken)]',
           triggerClassName
         )}
       >
@@ -71,18 +71,18 @@ export function MobileFilterSheet({
         <div className="py-4">{children}</div>
 
         {/* Sticky action bar */}
-        <div className="sticky bottom-0 flex gap-3 border-t border-gray-100 bg-white py-4">
+        <div className="sticky bottom-0 flex gap-3 border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] py-4">
           <button
             type="button"
             onClick={handleReset}
-            className="flex-1 rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50"
+            className="flex-1 rounded-xl border border-[var(--color-border-subtle)] py-3 text-sm font-medium text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-sunken)]"
           >
             초기화
           </button>
           <button
             type="button"
             onClick={handleApply}
-            className="flex-[2] rounded-xl bg-[#1B3A5C] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#2E75B6]"
+            className="flex-[2] rounded-xl bg-[var(--color-brand-deep)] py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-brand-bright)]"
           >
             {activeFilterCount > 0 ? `적용 (${activeFilterCount})` : '적용'}
           </button>

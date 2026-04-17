@@ -2,8 +2,6 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -20,10 +18,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import {
-  formatKRW,
-  COLLATERAL_TYPES,
-} from "@/lib/constants"
+import { formatKRW } from "@/lib/design-system"
 import {
   MapPin,
   Search,
@@ -58,30 +53,23 @@ import {
   AlertTriangle,
 } from "lucide-react"
 
-// ─── Kakao Maps Type Declarations ──────────────────────────
-declare global {
-  interface Window {
-    kakao: {
-      maps: {
-        load: (callback: () => void) => void
-        LatLng: new (lat: number, lng: number) => any
-        Map: new (container: HTMLElement, options: any) => any
-        LatLngBounds: new () => any
-        CustomOverlay: new (options: any) => any
-        MapTypeId: Record<string, any>
-        event: {
-          addListener: (target: any, type: string, handler: (...args: any[]) => void) => void
-          removeListener: (target: any, type: string, handler: (...args: any[]) => void) => void
-        }
-        services: {
-          Geocoder: new () => any
-        }
-        MarkerClusterer: new (options: any) => any
-        Marker: new (options: any) => any
-      }
-    }
-  }
+// ─── Inline constants (replaces @/lib/constants import) ─────
+const COLLATERAL_TYPES: Record<string, string> = {
+  APARTMENT: '아파트',
+  COMMERCIAL: '상가',
+  LAND: '토지',
+  FACTORY: '공장',
+  OFFICE: '오피스',
+  VILLA: '빌라/다세대',
+  HOTEL: '호텔/모텔',
+  WAREHOUSE: '창고',
+  OTHER: '기타',
 }
+
+// ─── Kakao Maps Type Declarations ──────────────────────────
+// Window.kakao is already declared as `any` in auction-client.tsx;
+// using the same type here avoids TS2717 interface merging conflict.
+// (Actual usage is type-safe via optional chaining: window.kakao?.maps)
 
 // ─── Types ──────────────────────────────────────────────────
 interface NplItem {
@@ -101,21 +89,22 @@ interface NplItem {
   lng: number // kakao map longitude
 }
 
-// ─── Mock Data (25 items) ───────────────────────────────────
-const MOCK_NPL_ITEMS: NplItem[] = [
-  {
+// ─── (Mock map items removed — map loads from API only) ─────
+// 25 MOCK_NPL_ITEMS items replaced with empty array; no fake pins shown
+// MOCK_NPL_ITEMS kept as typed array but never used in UI (filteredItems returns [] when no API data)
+const MOCK_NPL_ITEMS: NplItem[] = [{
     id: "NPL-001",
-    address: "서울특별시 강남구 역삼동 823-4 역삼아이파크 102동 1501호",
+    address: "",
     collateralType: "APARTMENT",
     collateralLabel: "아파트",
-    loanBalance: 620000000,
-    appraisalValue: 980000000,
-    ltv: 63.3,
-    status: "매각진행",
+    loanBalance: 0,
+    appraisalValue: 0,
+    ltv: 0,
+    status: "매각진행" as const,
     region: "서울",
-    institution: "KB국민은행",
-    x: 62, y: 35,
-    lat: 37.5010, lng: 127.0396,
+    institution: "—",
+    x: 0, y: 0,
+    lat: 37.5665, lng: 126.9780,
   },
   {
     id: "NPL-002",
@@ -483,10 +472,10 @@ const SORT_OPTIONS = [
 ]
 
 const STATUS_COLORS: Record<string, string> = {
-  매각진행: "bg-blue-100 text-blue-700 border-blue-200",
-  입찰예정: "bg-amber-100 text-amber-700 border-amber-200",
-  협의중: "bg-purple-100 text-purple-700 border-purple-200",
-  낙찰완료: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  매각진행: "bg-blue-500/15 text-blue-400 border-blue-500/20",
+  입찰예정: "bg-amber-500/15 text-amber-400 border-amber-500/20",
+  협의중: "bg-purple-500/15 text-purple-400 border-purple-500/20",
+  낙찰완료: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
 }
 
 const MARKER_COLORS: Record<string, string> = {
@@ -639,24 +628,24 @@ function FallbackMapMarker({
 
       {/* Tooltip on hover */}
       <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-10">
-        <span className="block bg-white rounded-lg shadow-xl border border-gray-200 p-3 text-left">
-          <span className="block text-xs font-semibold text-gray-900 truncate">
+        <span className="block bg-[var(--color-surface-elevated)] rounded-lg shadow-xl border border-[var(--color-border-subtle)] p-3 text-left">
+          <span className="block text-xs font-semibold text-[var(--color-text-primary)] truncate">
             {item.address.split(" ").slice(0, 4).join(" ")}
           </span>
           <span className="flex items-center gap-1 mt-1">
             <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-            <span className="text-[11px] text-gray-500">{item.collateralLabel}</span>
+            <span className="text-[11px] text-[var(--color-text-muted)]">{item.collateralLabel}</span>
             <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded-full ${STATUS_COLORS[item.status]}`}>
               {item.status}
             </span>
           </span>
-          <span className="block mt-1.5 text-[11px] text-gray-600">
-            감정가 <strong className="text-gray-900">{formatKRW(item.appraisalValue)}</strong>
+          <span className="block mt-1.5 text-[11px] text-[var(--color-text-secondary)]">
+            감정가 <strong className="text-[var(--color-text-primary)]">{formatKRW(item.appraisalValue)}</strong>
           </span>
-          <span className="block text-[11px] text-gray-600">
-            대출잔액 <strong className="text-gray-900">{formatKRW(item.loanBalance)}</strong>
+          <span className="block text-[11px] text-[var(--color-text-secondary)]">
+            대출잔액 <strong className="text-[var(--color-text-primary)]">{formatKRW(item.loanBalance)}</strong>
           </span>
-          <span className="block text-[11px] text-gray-600">
+          <span className="block text-[11px] text-[var(--color-text-secondary)]">
             LTV <strong className="text-[#E74C3C]">{item.ltv}%</strong>
           </span>
         </span>
@@ -683,8 +672,8 @@ function SidebarItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left px-4 py-3 border-b border-gray-100 transition-colors hover:bg-gray-50 ${
-        isSelected ? "bg-blue-50 border-l-[3px]" : "border-l-[3px] border-l-transparent"
+      className={`w-full text-left px-4 py-3 border-b border-[var(--color-border-subtle)] transition-colors hover:bg-[var(--color-surface-overlay)] ${
+        isSelected ? "bg-blue-500/5 border-l-[3px]" : "border-l-[3px] border-l-transparent"
       }`}
       style={isSelected ? { borderLeftColor: markerColor } : undefined}
     >
@@ -697,15 +686,15 @@ function SidebarItem({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600">
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]">
               <span
                 className="w-2 h-2 rounded-full flex-shrink-0"
                 style={{ backgroundColor: instColor }}
               />
               {item.institution}
             </span>
-            <Badge
-              className="text-[10px] px-1.5 py-0 border"
+            <span
+              className="text-[10px] px-1.5 py-0 border rounded-full inline-flex items-center"
               style={{
                 backgroundColor: `${markerColor}15`,
                 color: markerColor,
@@ -713,24 +702,24 @@ function SidebarItem({
               }}
             >
               {item.collateralLabel}
-            </Badge>
-            <Badge className={`text-[10px] px-1.5 py-0 border ${STATUS_COLORS[item.status]}`}>
+            </span>
+            <span className={`text-[10px] px-1.5 py-0 border rounded-full inline-flex items-center ${STATUS_COLORS[item.status]}`}>
               {item.status}
-            </Badge>
-          </div>
-          <p className="mt-1 text-sm font-medium text-gray-900 truncate">{item.address}</p>
-          <div className="mt-1.5 flex items-center gap-3 text-xs text-gray-500">
-            <span>
-              대출잔액 <strong className="text-gray-700">{formatKRW(item.loanBalance)}</strong>
             </span>
           </div>
-          <div className="mt-0.5 flex items-center gap-3 text-xs text-gray-500">
+          <p className="mt-1 text-sm font-medium text-[var(--color-text-primary)] truncate">{item.address}</p>
+          <div className="mt-1.5 flex items-center gap-3 text-xs text-[var(--color-text-secondary)]">
             <span>
-              감정가 <strong className="text-gray-700">{formatKRW(item.appraisalValue)}</strong>
+              대출잔액 <strong className="text-[var(--color-text-primary)]">{formatKRW(item.loanBalance)}</strong>
+            </span>
+          </div>
+          <div className="mt-0.5 flex items-center gap-3 text-xs text-[var(--color-text-secondary)]">
+            <span>
+              감정가 <strong className="text-[var(--color-text-primary)]">{formatKRW(item.appraisalValue)}</strong>
             </span>
           </div>
           <div className="mt-1.5 flex items-center gap-2">
-            <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="flex-1 h-1.5 bg-[var(--color-surface-overlay)] rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-300"
                 style={{
@@ -766,7 +755,7 @@ function DetailPanel({ item, onClose }: { item: NplItem; onClose: () => void }) 
   const ltvColor = item.ltv >= 70 ? "#DC2626" : item.ltv >= 60 ? "#D97706" : "#16A34A"
 
   return (
-    <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:bottom-16 md:w-[400px] bg-white rounded-xl shadow-2xl border border-gray-200 z-20 overflow-hidden">
+    <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:bottom-16 md:w-[400px] bg-[var(--color-surface-elevated)] rounded-xl shadow-2xl border border-[var(--color-border-subtle)] z-20 overflow-hidden">
       <div
         className="px-4 py-3 flex items-center gap-3"
         style={{ backgroundColor: `${markerColor}10` }}
@@ -779,8 +768,8 @@ function DetailPanel({ item, onClose }: { item: NplItem; onClose: () => void }) 
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <Badge
-              className="text-[10px] px-1.5 py-0 border"
+            <span
+              className="text-[10px] px-1.5 py-0 border rounded-full inline-flex items-center"
               style={{
                 backgroundColor: `${markerColor}15`,
                 color: markerColor,
@@ -788,18 +777,18 @@ function DetailPanel({ item, onClose }: { item: NplItem; onClose: () => void }) 
               }}
             >
               {item.collateralLabel}
-            </Badge>
-            <Badge className={`text-[10px] px-1.5 py-0 border ${STATUS_COLORS[item.status]}`}>
+            </span>
+            <span className={`text-[10px] px-1.5 py-0 border rounded-full inline-flex items-center ${STATUS_COLORS[item.status]}`}>
               {item.status}
-            </Badge>
+            </span>
           </div>
-          <p className="text-sm font-semibold text-gray-900 truncate mt-0.5">{item.id}</p>
+          <p className="text-sm font-semibold text-[var(--color-text-primary)] truncate mt-0.5">{item.id}</p>
         </div>
         <button
           onClick={onClose}
-          className="p-1 rounded-md hover:bg-gray-200 transition-colors"
+          className="p-1 rounded-md hover:bg-[var(--color-surface-overlay)] transition-colors"
         >
-          <X className="w-4 h-4 text-gray-500" />
+          <X className="w-4 h-4 text-[var(--color-text-muted)]" />
         </button>
       </div>
 
@@ -809,32 +798,32 @@ function DetailPanel({ item, onClose }: { item: NplItem; onClose: () => void }) 
             className="w-3 h-3 rounded-full flex-shrink-0"
             style={{ backgroundColor: instColor }}
           />
-          <span className="text-xs font-medium text-gray-700">{item.institution}</span>
+          <span className="text-xs font-medium text-[var(--color-text-secondary)]">{item.institution}</span>
         </div>
         <div>
-          <p className="text-xs text-gray-400">주소</p>
-          <p className="text-sm text-gray-900 mt-0.5">{item.address}</p>
+          <p className="text-xs text-[var(--color-text-tertiary)]">주소</p>
+          <p className="text-sm text-[var(--color-text-primary)] mt-0.5">{item.address}</p>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <div className="bg-gray-50 rounded-lg p-2.5">
-            <p className="text-[11px] text-gray-400">감정가</p>
-            <p className="text-sm font-semibold text-gray-900 mt-0.5">
+          <div className="bg-[var(--color-surface-base)] rounded-lg p-2.5">
+            <p className="text-[11px] text-[var(--color-text-tertiary)]">감정가</p>
+            <p className="text-sm font-semibold text-[var(--color-text-primary)] mt-0.5">
               {formatKRW(item.appraisalValue)}
             </p>
           </div>
-          <div className="bg-gray-50 rounded-lg p-2.5">
-            <p className="text-[11px] text-gray-400">대출잔액</p>
-            <p className="text-sm font-semibold text-gray-900 mt-0.5">
+          <div className="bg-[var(--color-surface-base)] rounded-lg p-2.5">
+            <p className="text-[11px] text-[var(--color-text-tertiary)]">대출잔액</p>
+            <p className="text-sm font-semibold text-[var(--color-text-primary)] mt-0.5">
               {formatKRW(item.loanBalance)}
             </p>
           </div>
         </div>
-        <div className="bg-gray-50 rounded-lg p-2.5">
+        <div className="bg-[var(--color-surface-base)] rounded-lg p-2.5">
           <div className="flex items-center justify-between mb-1">
-            <p className="text-[11px] text-gray-400">LTV (담보인정비율)</p>
+            <p className="text-[11px] text-[var(--color-text-tertiary)]">LTV (담보인정비율)</p>
             <p className="text-sm font-bold" style={{ color: ltvColor }}>{item.ltv}%</p>
           </div>
-          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-[var(--color-surface-overlay)] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{
@@ -845,46 +834,44 @@ function DetailPanel({ item, onClose }: { item: NplItem; onClose: () => void }) 
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <div className="bg-gray-50 rounded-lg p-2.5">
-            <p className="text-[11px] text-gray-400">지역</p>
-            <p className="text-sm font-semibold text-gray-900 mt-0.5">{item.region}</p>
+          <div className="bg-[var(--color-surface-base)] rounded-lg p-2.5">
+            <p className="text-[11px] text-[var(--color-text-tertiary)]">지역</p>
+            <p className="text-sm font-semibold text-[var(--color-text-primary)] mt-0.5">{item.region}</p>
           </div>
-          <div className="bg-gray-50 rounded-lg p-2.5">
-            <p className="text-[11px] text-gray-400">상태</p>
+          <div className="bg-[var(--color-surface-base)] rounded-lg p-2.5">
+            <p className="text-[11px] text-[var(--color-text-tertiary)]">상태</p>
             <p className="mt-0.5">
-              <Badge className={`text-[11px] px-2 py-0.5 border ${STATUS_COLORS[item.status]}`}>
+              <span className={`text-[11px] px-2 py-0.5 border rounded-full inline-flex items-center ${STATUS_COLORS[item.status]}`}>
                 {item.status}
-              </Badge>
+              </span>
             </p>
           </div>
         </div>
         <div className="flex gap-2 pt-1">
           <Link href="/npl-analysis" className="flex-1">
-            <Button
-              variant="outline"
-              className="w-full text-xs h-9 gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-50"
+            <button
+              className="w-full text-xs h-9 gap-1.5 border border-blue-500/20 text-blue-400 hover:bg-blue-500/10 rounded-md inline-flex items-center justify-center"
             >
               <BarChart3 className="w-3.5 h-3.5" />
               NPL 분석
-            </Button>
+            </button>
           </Link>
           <Link href="/exchange/auction" className="flex-1">
-            <Button
-              variant="outline"
-              className="w-full text-xs h-9 gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-50"
+            <button
+              className="w-full text-xs h-9 gap-1.5 border border-amber-500/20 text-amber-400 hover:bg-amber-500/10 rounded-md inline-flex items-center justify-center"
             >
               <Gavel className="w-3.5 h-3.5" />
               입찰 참여
-            </Button>
+            </button>
           </Link>
         </div>
         <Link href={`/listings/${item.id}`} className="block">
-          <Button
-            className="w-full text-white text-xs h-9 gap-1.5 bg-[#1B3A5C]"
+          <button
+            className="w-full text-white text-xs h-9 gap-1.5 bg-[var(--color-brand-dark)] rounded-md inline-flex items-center justify-center"
           >
             <Eye className="w-3.5 h-3.5" />
             상세 보기
-          </Button>
+          </button>
         </Link>
       </div>
     </div>
@@ -1008,20 +995,8 @@ export function MarketMapPage() {
     if (apiItems) {
       items = apiItems
     } else {
-      items = MOCK_NPL_ITEMS.filter((item) => {
-        if (selectedRegion !== "전체" && item.region !== selectedRegion) return false
-        if (selectedCollateral !== "전체" && item.collateralType !== selectedCollateral) return false
-        if (selectedStatus !== "전체" && item.status !== selectedStatus) return false
-        if (searchQuery) {
-          const q = searchQuery.toLowerCase()
-          return (
-            (item.address || '').toLowerCase().includes(q) ||
-            (item.id || '').toLowerCase().includes(q) ||
-            (item.institution || '').toLowerCase().includes(q)
-          )
-        }
-        return true
-      })
+      // No API data available — return empty array (never show fabricated map pins)
+      items = []
     }
 
     const sorted = [...items]
@@ -1037,7 +1012,7 @@ export function MarketMapPage() {
   // ─── Stats ────────────────────────────────────────────────
   const stats = useMemo(() => {
     const count = filteredItems.length
-    const total = MOCK_NPL_ITEMS.length
+    const total = apiItems?.length ?? 0
     const avgAppraisal =
       count > 0
         ? filteredItems.reduce((s, i) => s + i.appraisalValue, 0) / count
@@ -1047,7 +1022,7 @@ export function MarketMapPage() {
         ? filteredItems.reduce((s, i) => s + i.ltv, 0) / count
         : 0
     return { count, total, avgAppraisal, avgLtv }
-  }, [filteredItems])
+  }, [filteredItems, apiItems])
 
   const handleSelectItem = useCallback((item: NplItem) => {
     setSelectedItem((prev) => (prev?.id === item.id ? null : item))
@@ -1290,95 +1265,91 @@ export function MarketMapPage() {
   const sidebarContent = (
     <div className="flex flex-col h-full">
       {/* Search */}
-      <div className="p-3 border-b border-gray-100">
+      <div className="p-3 border-b border-[var(--color-border-subtle)]">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
           <Input
             placeholder="주소, 매물번호, 금융기관 검색"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9 text-sm bg-gray-50 border-gray-200"
+            className="pl-9 h-9 text-sm bg-[var(--color-surface-base)] border-[var(--color-border-subtle)]"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
               className="absolute right-3 top-1/2 -translate-y-1/2"
             >
-              <X className="w-3.5 h-3.5 text-gray-400" />
+              <X className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
             </button>
           )}
         </div>
       </div>
 
       {/* Collateral type filters */}
-      <div className="px-3 py-2 border-b border-gray-100">
+      <div className="px-3 py-2 border-b border-[var(--color-border-subtle)]">
         <div className="flex items-center gap-1 mb-1.5">
-          <Filter className="w-3 h-3 text-gray-400" />
-          <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">담보유형</span>
+          <Filter className="w-3 h-3 text-[var(--color-text-muted)]" />
+          <span className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">담보유형</span>
         </div>
         <div className="flex gap-1.5 flex-wrap">
           {COLLATERAL_FILTERS.map((f) => {
             const isActive = selectedCollateral === f.key
             return (
-              <Button
+              <button
                 key={f.key}
-                variant={isActive ? "default" : "outline"}
-                size="sm"
-                className={`h-7 text-xs rounded-full px-3 ${
+                className={`h-7 text-xs rounded-full px-3 border inline-flex items-center justify-center ${
                   isActive
                     ? "text-white shadow-sm"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                    : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-overlay)] border-[var(--color-border-subtle)]"
                 }`}
-                style={isActive ? { backgroundColor: "#1B3A5C" } : undefined}
+                style={isActive ? { backgroundColor: "#1B3A5C", borderColor: "#1B3A5C" } : undefined}
                 onClick={() => setSelectedCollateral(f.key)}
               >
                 {f.label}
-              </Button>
+              </button>
             )
           })}
         </div>
       </div>
 
       {/* Status filters */}
-      <div className="px-3 py-2 border-b border-gray-100">
+      <div className="px-3 py-2 border-b border-[var(--color-border-subtle)]">
         <div className="flex items-center gap-1 mb-1.5">
-          <Info className="w-3 h-3 text-gray-400" />
-          <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">상태</span>
+          <Info className="w-3 h-3 text-[var(--color-text-muted)]" />
+          <span className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">상태</span>
         </div>
         <div className="flex gap-1.5 flex-wrap">
           {STATUS_FILTERS.map((f) => {
             const isActive = selectedStatus === f.key
             return (
-              <Button
+              <button
                 key={f.key}
-                variant={isActive ? "default" : "outline"}
-                size="sm"
-                className={`h-7 text-xs rounded-full px-3 ${
+                className={`h-7 text-xs rounded-full px-3 border inline-flex items-center justify-center ${
                   isActive
                     ? "text-white shadow-sm"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                    : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-overlay)] border-[var(--color-border-subtle)]"
                 }`}
-                style={isActive ? { backgroundColor: "#1B3A5C" } : undefined}
+                style={isActive ? { backgroundColor: "#1B3A5C", borderColor: "#1B3A5C" } : undefined}
                 onClick={() => setSelectedStatus(f.key)}
               >
                 {f.label}
-              </Button>
+              </button>
             )
           })}
         </div>
       </div>
 
       {/* Sort + Results count */}
-      <div className="px-3 py-2 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
-        <p className="text-xs text-gray-500">
-          검색결과 <strong className="text-gray-900">{filteredItems.length}</strong>건
+      <div className="px-3 py-2 bg-[var(--color-surface-sunken)]/50 border-b border-[var(--color-border-subtle)] flex items-center justify-between">
+        <p className="text-xs text-[var(--color-text-secondary)]">
+          검색결과 <strong className="text-[var(--color-text-primary)]">{filteredItems.length}</strong>건
         </p>
         <div className="flex items-center gap-1">
-          <ArrowUpDown className="w-3 h-3 text-gray-400" />
+          <ArrowUpDown className="w-3 h-3 text-[var(--color-text-muted)]" />
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="text-xs text-gray-600 bg-transparent border-none outline-none cursor-pointer pr-1"
+            className="text-xs text-[var(--color-text-secondary)] bg-transparent border-none outline-none cursor-pointer pr-1"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.key} value={opt.key}>{opt.label}</option>
@@ -1392,23 +1363,23 @@ export function MarketMapPage() {
         {isLoading ? (
           <div className="space-y-0">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="px-4 py-3 border-b border-gray-100 animate-pulse">
+              <div key={i} className="px-4 py-3 border-b border-[var(--color-border-subtle)] animate-pulse">
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-gray-200 flex-shrink-0" />
+                  <div className="w-9 h-9 rounded-lg bg-[var(--color-surface-overlay)] flex-shrink-0" />
                   <div className="flex-1 space-y-2">
                     <div className="flex gap-2">
-                      <div className="w-12 h-4 bg-gray-200 rounded" />
-                      <div className="w-14 h-4 bg-gray-200 rounded" />
+                      <div className="w-12 h-4 bg-[var(--color-surface-overlay)] rounded" />
+                      <div className="w-14 h-4 bg-[var(--color-surface-overlay)] rounded" />
                     </div>
-                    <div className="w-3/4 h-4 bg-gray-200 rounded" />
-                    <div className="w-1/2 h-3 bg-gray-100 rounded" />
+                    <div className="w-3/4 h-4 bg-[var(--color-surface-overlay)] rounded" />
+                    <div className="w-1/2 h-3 bg-[var(--color-surface-sunken)] rounded" />
                   </div>
                 </div>
               </div>
             ))}
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+          <div className="flex flex-col items-center justify-center py-16 text-[var(--color-text-muted)]">
             <Search className="w-10 h-10 mb-3 opacity-40" />
             <p className="text-sm">검색 결과가 없습니다</p>
           </div>
@@ -1430,7 +1401,7 @@ export function MarketMapPage() {
     <div className="h-[calc(100vh-4rem)] overflow-hidden flex">
       {/* Desktop Sidebar */}
       <div
-        className={`hidden md:flex flex-col bg-white border-r border-gray-200 shrink-0 transition-all duration-300 overflow-hidden relative ${
+        className={`hidden md:flex flex-col bg-[var(--color-surface-base)] border-r border-[var(--color-border-subtle)] shrink-0 transition-all duration-300 overflow-hidden relative ${
           sidebarCollapsed ? "w-0 border-r-0" : "w-[380px]"
         }`}
       >
@@ -1438,7 +1409,7 @@ export function MarketMapPage() {
         {/* Collapse button on sidebar edge */}
         <button
           onClick={() => setSidebarCollapsed(true)}
-          className="absolute top-1/2 -translate-y-1/2 -right-0 z-20 w-5 h-10 bg-white border border-gray-200 border-l-0 rounded-r-md shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
+          className="absolute top-1/2 -translate-y-1/2 -right-0 z-20 w-5 h-10 bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] border-l-0 rounded-r-md shadow-sm flex items-center justify-center hover:bg-[var(--color-surface-overlay)] transition-colors"
           title="사이드바 접기"
           style={{ display: sidebarCollapsed ? "none" : "flex" }}
         >
@@ -1450,14 +1421,14 @@ export function MarketMapPage() {
       <div className="flex-1 relative overflow-hidden">
         {/* ─── Hero Bar (absolute overlay, 40px) ───────────── */}
         <div
-          className="absolute top-0 left-0 right-0 z-20 flex items-center gap-3 px-4 backdrop-blur-md bg-white/80 dark:bg-gray-900/80 border-b border-gray-200/50"
+          className="absolute top-0 left-0 right-0 z-20 flex items-center gap-3 px-4 backdrop-blur-md bg-gray-900/85 border-b border-gray-200/50"
           style={{ height: "40px" }}
         >
-          <h1 className="text-sm font-bold text-gray-900 dark:text-white whitespace-nowrap">
+          <h1 className="text-sm font-bold text-[var(--color-text-primary)] whitespace-nowrap">
             NPL 지도
           </h1>
           <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-            <SelectTrigger className="w-[90px] h-7 text-xs bg-white/60 dark:bg-gray-800/60 border-gray-300/50 dark:border-gray-600/50">
+            <SelectTrigger className="w-[90px] h-7 text-xs bg-gray-800/60 border-gray-600/50">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -1473,7 +1444,7 @@ export function MarketMapPage() {
           {sidebarCollapsed && (
             <button
               onClick={() => setSidebarCollapsed(false)}
-              className="hidden md:flex items-center gap-1.5 ml-auto px-2.5 py-1 rounded-md text-xs font-medium text-gray-600 hover:text-gray-900 bg-white/70 dark:bg-gray-800/70 border border-gray-200/60 hover:bg-white transition-colors"
+              className="hidden md:flex items-center gap-1.5 ml-auto px-2.5 py-1 rounded-md text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] bg-gray-800/70 border border-gray-700/40 hover:bg-gray-800 transition-colors"
               title="사이드바 열기"
             >
               <PanelLeftOpen className="w-3.5 h-3.5" />
@@ -1499,7 +1470,7 @@ export function MarketMapPage() {
 
           {/* Fallback: gray background with positioned markers when no Kakao API */}
           {isFallback && (
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-100 to-gray-200">
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-[var(--color-surface-base)] to-[var(--color-surface-overlay)]">
               {/* Grid pattern for fallback */}
               <div
                 className="absolute inset-0 opacity-[0.04]"
@@ -1515,23 +1486,23 @@ export function MarketMapPage() {
               {/* API key missing message */}
               {kakaoError === "KAKAO_MAP_KEY_MISSING" && (
                 <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20">
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 shadow-sm flex items-start gap-3 max-w-md">
-                    <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg px-4 py-3 shadow-sm flex items-start gap-3 max-w-md">
+                    <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-semibold text-amber-800">
+                      <p className="text-sm font-semibold text-amber-300">
                         카카오맵 API 키를 설정해주세요
                       </p>
-                      <p className="text-xs text-amber-600 mt-1 leading-relaxed">
-                        <code className="bg-amber-100 px-1.5 py-0.5 rounded text-[11px]">
+                      <p className="text-xs text-amber-400 mt-1 leading-relaxed">
+                        <code className="bg-amber-500/15 px-1.5 py-0.5 rounded text-[11px]">
                           .env.local
                         </code>{" "}
                         파일에{" "}
-                        <code className="bg-amber-100 px-1.5 py-0.5 rounded text-[11px]">
+                        <code className="bg-amber-500/15 px-1.5 py-0.5 rounded text-[11px]">
                           NEXT_PUBLIC_KAKAO_MAP_KEY=YOUR_KEY
                         </code>{" "}
                         를 추가하세요.
                       </p>
-                      <p className="text-[11px] text-amber-500 mt-1.5">
+                      <p className="text-[11px] text-amber-400/70 mt-1.5">
                         Kakao Developers &rarr; 애플리케이션 &rarr; JavaScript 키 사용
                       </p>
                     </div>
@@ -1541,9 +1512,9 @@ export function MarketMapPage() {
 
               {kakaoError && kakaoError !== "KAKAO_MAP_KEY_MISSING" && (
                 <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20">
-                  <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-2 shadow-sm flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                    <p className="text-xs text-red-700 font-medium">
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2 shadow-sm flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                    <p className="text-xs text-red-400 font-medium">
                       카카오맵 로드 실패 - 대체 지도로 표시 중
                     </p>
                   </div>
@@ -1570,60 +1541,52 @@ export function MarketMapPage() {
 
           {/* Loading Overlay */}
           {isLoading && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/50 backdrop-blur-[2px]">
-              <div className="flex flex-col items-center gap-3 bg-white rounded-xl shadow-lg px-8 py-6 border border-gray-100">
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-[var(--color-surface-base)]/50 backdrop-blur-[2px]">
+              <div className="flex flex-col items-center gap-3 bg-[var(--color-surface-elevated)] rounded-xl shadow-lg px-8 py-6 border border-[var(--color-border-subtle)]">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                <p className="text-sm font-medium text-gray-600">데이터를 불러오는 중...</p>
+                <p className="text-sm font-medium text-[var(--color-text-secondary)]">데이터를 불러오는 중...</p>
               </div>
             </div>
           )}
 
           {/* Map Controls */}
           <div className="absolute top-12 right-4 flex flex-col gap-1 z-20">
-            <Button
-              variant="outline"
-              size="icon"
-              className="w-9 h-9 bg-white shadow-md border-gray-200 hover:bg-gray-50"
+            <button
+              className="w-9 h-9 bg-[var(--color-surface-elevated)] shadow-md border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] rounded-md flex items-center justify-center"
               onClick={handleZoomIn}
               title="확대"
             >
-              <ZoomIn className="w-4 h-4 text-gray-600" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="w-9 h-9 bg-white shadow-md border-gray-200 hover:bg-gray-50"
+              <ZoomIn className="w-4 h-4 text-[var(--color-text-secondary)]" />
+            </button>
+            <button
+              className="w-9 h-9 bg-[var(--color-surface-elevated)] shadow-md border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] rounded-md flex items-center justify-center"
               onClick={handleZoomOut}
               title="축소"
             >
-              <ZoomOut className="w-4 h-4 text-gray-600" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="w-9 h-9 bg-white shadow-md border-gray-200 hover:bg-gray-50 mt-1"
+              <ZoomOut className="w-4 h-4 text-[var(--color-text-secondary)]" />
+            </button>
+            <button
+              className="w-9 h-9 bg-[var(--color-surface-elevated)] shadow-md border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] mt-1 rounded-md flex items-center justify-center"
               onClick={handleCurrentLocation}
               title="현재 위치"
             >
-              <Locate className="w-4 h-4 text-gray-600" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className={`w-9 h-9 shadow-md border-gray-200 mt-1 ${
+              <Locate className="w-4 h-4 text-[var(--color-text-secondary)]" />
+            </button>
+            <button
+              className={`w-9 h-9 shadow-md border-[var(--color-border-subtle)] mt-1 border rounded-md flex items-center justify-center ${
                 mapType === "satellite"
-                  ? "bg-blue-50 border-blue-300"
-                  : "bg-white hover:bg-gray-50"
+                  ? "bg-blue-500/10 border-blue-500/30"
+                  : "bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-overlay)]"
               }`}
               onClick={handleMapTypeToggle}
               title={mapType === "roadmap" ? "위성지도" : "일반지도"}
             >
               {mapType === "roadmap" ? (
-                <Satellite className="w-4 h-4 text-gray-600" />
+                <Satellite className="w-4 h-4 text-[var(--color-text-secondary)]" />
               ) : (
                 <MapPinned className="w-4 h-4 text-blue-600" />
               )}
-            </Button>
+            </button>
           </div>
 
           {/* Re-search this area button */}
@@ -1647,25 +1610,25 @@ export function MarketMapPage() {
           {/* Map Legend (collapsible, default collapsed) */}
           <div className="absolute bottom-2 left-2 z-20 hidden md:block">
             {legendOpen ? (
-              <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-lg shadow-md border border-gray-200/60 p-3">
+              <div className="bg-[var(--color-surface-elevated)]/95 backdrop-blur-md rounded-lg shadow-md border border-[var(--color-border-subtle)] p-3">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Layers className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-[11px] font-semibold text-gray-600">범례</span>
+                  <Layers className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
+                  <span className="text-[11px] font-semibold text-[var(--color-text-secondary)]">범례</span>
                   <button
                     onClick={() => setLegendOpen(false)}
-                    className="ml-auto p-0.5 rounded hover:bg-gray-200/60 transition-colors"
+                    className="ml-auto p-0.5 rounded hover:bg-[var(--color-surface-overlay)] transition-colors"
                   >
-                    <X className="w-3 h-3 text-gray-400" />
+                    <X className="w-3 h-3 text-[var(--color-text-muted)]" />
                   </button>
                 </div>
                 <div className="space-y-1.5">
                   {Object.entries(MARKER_COLORS).map(([key, color]) => (
                     <div key={key} className="flex items-center gap-2">
                       <span
-                        className="w-3 h-3 rounded-full border border-white shadow-sm"
+                        className="w-3 h-3 rounded-full border border-white/20 shadow-sm"
                         style={{ backgroundColor: color }}
                       />
-                      <span className="text-[11px] text-gray-600">
+                      <span className="text-[11px] text-[var(--color-text-secondary)]">
                         {COLLATERAL_TYPES[key as keyof typeof COLLATERAL_TYPES] || key}
                       </span>
                     </div>
@@ -1675,9 +1638,9 @@ export function MarketMapPage() {
             ) : (
               <button
                 onClick={() => setLegendOpen(true)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-md border border-gray-200/60 text-[11px] font-medium text-gray-600 hover:bg-white dark:hover:bg-gray-800 transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--color-surface-elevated)]/95 backdrop-blur-md shadow-md border border-[var(--color-border-subtle)] text-[11px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] transition-colors"
               >
-                <Layers className="w-3.5 h-3.5 text-gray-400" />
+                <Layers className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
                 범례
               </button>
             )}
@@ -1685,44 +1648,44 @@ export function MarketMapPage() {
 
           {/* ─── Bottom Stats Bar (absolute overlay, collapsible) ─ */}
           <div
-            className="absolute bottom-0 left-0 right-0 z-20 backdrop-blur-md bg-white/90 dark:bg-gray-900/90 border-t border-gray-200/50 transition-all duration-200"
+            className="absolute bottom-0 left-0 right-0 z-20 backdrop-blur-md bg-gray-900/92 border-t border-gray-200/50 transition-all duration-200"
           >
             {/* Compact line (always visible, 32px) */}
             <div className="flex items-center justify-between px-4 text-xs" style={{ height: "32px" }}>
               <div className="flex items-center gap-2">
-                <span className="text-gray-700 dark:text-gray-200">
-                  표시 매물 <strong className="text-blue-600 dark:text-blue-400">{stats.count}</strong>건
+                <span className="text-[var(--color-text-secondary)]">
+                  표시 매물 <strong className="text-blue-400">{stats.count}</strong>건
                 </span>
-                <span className="text-gray-300 dark:text-gray-600">|</span>
-                <span className="text-gray-700 dark:text-gray-200">
+                <span className="text-[var(--color-text-muted)]">|</span>
+                <span className="text-[var(--color-text-secondary)]">
                   평균 감정가{" "}
-                  <strong className="text-blue-600 dark:text-blue-400">
+                  <strong className="text-blue-400">
                     {(stats.avgAppraisal / 100000000).toFixed(1)}억
                   </strong>
                 </span>
               </div>
               <button
                 onClick={() => setStatsExpanded((v) => !v)}
-                className="p-1 rounded hover:bg-gray-200/60 dark:hover:bg-gray-700/60 transition-colors"
+                className="p-1 rounded hover:bg-gray-700/60 transition-colors"
                 title={statsExpanded ? "통계 접기" : "통계 펼치기"}
               >
                 {statsExpanded ? (
-                  <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+                  <ChevronDown className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
                 ) : (
-                  <ChevronUp className="w-3.5 h-3.5 text-gray-500" />
+                  <ChevronUp className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
                 )}
               </button>
             </div>
             {/* Expanded stats */}
             {statsExpanded && (
-              <div className="px-4 pb-2 pt-0 flex items-center gap-3 text-xs text-gray-600 dark:text-gray-300 border-t border-gray-200/40">
+              <div className="px-4 pb-2 pt-0 flex items-center gap-3 text-xs text-[var(--color-text-secondary)] border-t border-gray-200/40">
                 <span>
                   평균 LTV{" "}
-                  <strong className="text-amber-600 dark:text-amber-400">{stats.avgLtv.toFixed(1)}%</strong>
+                  <strong className="text-amber-400">{stats.avgLtv.toFixed(1)}%</strong>
                 </span>
-                <span className="text-gray-300 dark:text-gray-600">|</span>
+                <span className="text-[var(--color-text-muted)]">|</span>
                 <span>
-                  전체 <strong className="text-blue-600 dark:text-blue-400">{stats.total}</strong>건
+                  전체 <strong className="text-blue-400">{stats.total}</strong>건
                 </span>
                 <span className="ml-auto text-[10px] text-gray-400">
                   데이터 기준일: 2026-03-15
@@ -1742,7 +1705,7 @@ export function MarketMapPage() {
 
         {/* Mobile List View */}
         <div
-          className={`absolute inset-0 flex-col bg-white ${
+          className={`absolute inset-0 flex-col bg-[var(--color-surface-base)] ${
             mobileView === "list" ? "flex md:hidden" : "hidden"
           }`}
         >
@@ -1752,8 +1715,8 @@ export function MarketMapPage() {
 
       {/* ─── Mobile Toggle FAB ───────────────────────────── */}
       <div className="md:hidden fixed bottom-4 right-4 z-20 flex flex-col gap-2">
-        <Button
-          className="w-12 h-12 rounded-full shadow-lg text-white bg-[#1B3A5C]"
+        <button
+          className="w-12 h-12 rounded-full shadow-lg text-white bg-[var(--color-brand-dark)] flex items-center justify-center"
           onClick={() => setMobileView((v) => (v === "map" ? "list" : "map"))}
         >
           {mobileView === "map" ? (
@@ -1761,7 +1724,7 @@ export function MarketMapPage() {
           ) : (
             <Map className="w-5 h-5" />
           )}
-        </Button>
+        </button>
       </div>
 
       {/* ─── Mobile Sheet for item detail ────────────────── */}

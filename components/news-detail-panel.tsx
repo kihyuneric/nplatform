@@ -19,16 +19,16 @@ interface Props {
 }
 
 const CATEGORY_STYLES: Record<KeywordCategory, { bg: string; text: string; border: string }> = {
-  '거래/시장': { bg: 'bg-blue-50',   text: 'text-blue-700',   border: 'border-blue-200'   },
-  '개발/지역': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-  '정책/규제': { bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200'   },
-  '투자/금융': { bg: 'bg-purple-50',  text: 'text-purple-700',  border: 'border-purple-200'  },
+  '거래/시장': { bg: 'bg-blue-500/10',   text: 'text-blue-400',   border: 'border-blue-500/20'   },
+  '개발/지역': { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+  '정책/규제': { bg: 'bg-amber-500/10',   text: 'text-amber-400',   border: 'border-amber-500/20'   },
+  '투자/금융': { bg: 'bg-purple-500/10',  text: 'text-purple-400',  border: 'border-purple-500/20'  },
 };
 
 const DIR_INFO: Record<string, { icon: typeof TrendingUp; color: string; bg: string }> = {
-  '상승': { icon: TrendingUp,  color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
-  '하락': { icon: TrendingDown, color: 'text-red-700',     bg: 'bg-red-50 border-red-200'         },
-  '중립': { icon: Minus,        color: 'text-gray-600',    bg: 'bg-gray-50 border-gray-200'        },
+  '상승': { icon: TrendingUp,  color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+  '하락': { icon: TrendingDown, color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/20'         },
+  '중립': { icon: Minus,        color: 'text-[var(--color-text-secondary)]',    bg: 'bg-[var(--color-surface-base)] border-[var(--color-border-subtle)]'        },
 };
 
 /** SVG 원형 게이지 (0~1) */
@@ -135,7 +135,7 @@ export function NewsDetailPanel({ article, open, onClose }: Props) {
           {/* 요약 */}
           <section>
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">기사 요약</h4>
-            <p className="text-sm leading-relaxed text-gray-700">{article.summary}</p>
+            <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">{article.summary}</p>
           </section>
 
           {/* 방향성 뱃지 */}

@@ -1,15 +1,11 @@
 // ============================================================
 // lib/vdr/watermark.ts
 // VDR PDF Watermarking – 문서 보안을 위한 사용자 정보 워터마크
-//
-// NOTE: pdf-lib이 package.json에 없습니다.
-// 현재 구현은 스텁(stub)으로, 원본 바이트를 그대로 반환합니다.
-// pdf-lib 추가 후 아래 TODO 구현을 활성화하세요:
-//   npm install pdf-lib
-//
-// TODO(watermark): pdf-lib 설치 후 아래 주석 처리된 구현으로 교체
-// import { PDFDocument, rgb, StandardFonts, degrees } from 'pdf-lib'
 // ============================================================
+
+import { PDFDocument, rgb, StandardFonts, degrees } from 'pdf-lib'
+
+// ─── 타입 정의 ────────────────────────────────────────────
 
 export interface WatermarkOptions {
   /** Supabase user UUID */
@@ -54,98 +50,176 @@ function buildWatermarkText(options: WatermarkOptions): string {
     .join('  |  ')
 }
 
-// ─── 메인 워터마크 함수 ───────────────────────────────────
+// ─── 그리드 워터마크 적용 (내부 헬퍼) ──────────────────────
+
+async function applyWatermarkGrid(
+  pdfDoc: PDFDocument,
+  watermarkText: string,
+  timestampText: string,
+  opacity: number,
+  position: 'diagonal' | 'center' | 'footer'
+): Promise<void> {
+  const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+  const pages = pdfDoc.getPages()
+
+  for (const page of pages) {
+    const { width, height } = page.getSize()
+
+    if (position !== 'footer') {
+      // 그리드 패턴: 150px 수평 간격, 200px 수직 간격
+      const gridSpacingX = 150
+      const gridSpacingY = 200
+      const fontSize = 48
+
+      // 대각선(-45도) 텍스트를 그리드 전체에 반복
+      for (let y = 0; y < height + gridSpacingY; y += gridSpacingY) {
+        for (let x = -gridSpacingX; x < width + gridSpacingX; x += gridSpacingX) {
+          page.drawText(watermarkText, {
+            x,
+            y,
+            size: fontSize,
+            font,
+            color: rgb(0.5, 0.5, 0.5),
+            opacity,
+            rotate: degrees(-45),
+          })
+        }
+      }
+
+      // 타임스탬프 라인 (작은 크기, 같은 그리드)
+      const tsFontSize = 14
+      for (let y = gridSpacingY / 2; y < height + gridSpacingY; y += gridSpacingY) {
+        for (let x = -gridSpacingX; x < width + gridSpacingX; x += gridSpacingX) {
+          page.drawText(timestampText, {
+            x,
+            y,
+            size: tsFontSize,
+            font,
+            color: rgb(0.5, 0.5, 0.5),
+            opacity: opacity * 0.8,
+            rotate: degrees(-45),
+          })
+        }
+      }
+    }
+
+    // 하단 footer 워터마크 (항상 추가)
+    const footerFontSize = 8
+    const footerText = `${watermarkText}  |  ${timestampText}`
+    const footerTextWidth = font.widthOfTextAtSize(footerText, footerFontSize)
+    page.drawText(footerText, {
+      x: Math.max(10, (width - footerTextWidth) / 2),
+      y: 10,
+      size: footerFontSize,
+      font,
+      color: rgb(0.3, 0.3, 0.3),
+      opacity: 0.3,
+    })
+  }
+}
+
+// ─── 메인 워터마크 함수 (WatermarkOptions 형태) ──────────────
 
 /**
  * PDF에 사용자 정보 워터마크를 추가합니다.
  *
- * pdf-lib이 설치되지 않아 현재는 스텁 동작:
- * - 원본 바이트를 그대로 반환
- * - 워터마크 텍스트와 옵션을 콘솔에 로깅
- *
- * TODO(watermark): pdf-lib 설치 후 아래 구현으로 교체
- * ```typescript
- * import { PDFDocument, rgb, StandardFonts, degrees } from 'pdf-lib'
- *
- * const pdfDoc = await PDFDocument.load(inputBytes)
- * const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
- * const pages = pdfDoc.getPages()
- * const watermarkText = options.text ?? buildWatermarkText(options)
- * const opacity = options.opacity ?? 0.15
- *
- * for (const page of pages) {
- *   const { width, height } = page.getSize()
- *   const fontSize = Math.min(width, height) * 0.035
- *   const textWidth = font.widthOfTextAtSize(watermarkText, fontSize)
- *
- *   // 대각선 중앙 워터마크
- *   if (options.position !== 'footer') {
- *     page.drawText(watermarkText, {
- *       x: (width - textWidth) / 2,
- *       y: height / 2,
- *       size: fontSize,
- *       font,
- *       color: rgb(0.5, 0.5, 0.5),
- *       opacity,
- *       rotate: degrees(45),
- *     })
- *   }
- *
- *   // 하단 footer 워터마크 (항상)
- *   const footerSize = Math.min(width, height) * 0.018
- *   page.drawText(watermarkText, {
- *     x: 20,
- *     y: 12,
- *     size: footerSize,
- *     font,
- *     color: rgb(0.4, 0.4, 0.4),
- *     opacity: 0.3,
- *   })
- * }
- *
- * const watermarkedBytes = await pdfDoc.save()
- * ```
+ * @param pdfBytes - 원본 PDF 바이트
+ * @param options  - WatermarkOptions (userId, userName, userEmail, documentId 필수)
  */
 export async function addWatermarkToPdf(
   pdfBytes: Uint8Array | ArrayBuffer,
   options: WatermarkOptions
-): Promise<WatermarkResult> {
+): Promise<WatermarkResult>
+
+/**
+ * PDF에 커스텀 텍스트 워터마크를 추가합니다.
+ *
+ * @param pdfBytes      - 원본 PDF 바이트
+ * @param watermarkText - 워터마크 텍스트
+ * @param options       - 선택적 WatermarkOptions
+ */
+export async function addWatermarkToPdf(
+  pdfBytes: Uint8Array,
+  watermarkText: string,
+  options?: Partial<WatermarkOptions>
+): Promise<Uint8Array>
+
+// ─── 구현 ─────────────────────────────────────────────────
+
+export async function addWatermarkToPdf(
+  pdfBytes: Uint8Array | ArrayBuffer,
+  optionsOrText: WatermarkOptions | string,
+  extraOptions?: Partial<WatermarkOptions>
+): Promise<WatermarkResult | Uint8Array> {
+  // 오버로드 분기: 두 번째 인자가 string이면 단순 텍스트 오버로드
+  const isTextOverload = typeof optionsOrText === 'string'
+
   try {
-    const watermarkText = options.text ?? buildWatermarkText(options)
-
-    // 스텁 로깅 (pdf-lib 미설치)
-    console.warn(
-      '[VDR Watermark] pdf-lib이 설치되지 않아 워터마크 없이 원본 반환:\n' +
-        `  documentId: ${options.documentId}\n` +
-        `  userId:     ${options.userId}\n` +
-        `  text:       ${watermarkText}`
-    )
-
-    // 원본 바이트를 Uint8Array로 정규화
     const inputBytes =
       pdfBytes instanceof Uint8Array ? pdfBytes : new Uint8Array(pdfBytes)
 
-    // base64 변환
+    let watermarkText: string
+    let timestampText: string
+    let opacity: number
+    let position: 'diagonal' | 'center' | 'footer'
+
+    if (isTextOverload) {
+      const rawText = optionsOrText as string
+      const opts = extraOptions ?? {}
+      const ts = new Date()
+      watermarkText = rawText
+      timestampText = ts.toLocaleString('ko-KR')
+      opacity = opts.opacity ?? 0.15
+      position = opts.position ?? 'diagonal'
+    } else {
+      const opts = optionsOrText as WatermarkOptions
+      const ts = opts.timestamp ?? new Date()
+      watermarkText = opts.text ?? buildWatermarkText({ ...opts, timestamp: ts })
+      timestampText = ts.toLocaleString('ko-KR')
+      opacity = opts.opacity ?? 0.15
+      position = opts.position ?? 'diagonal'
+    }
+
+    // PDF 로드 및 워터마크 적용
+    const pdfDoc = await PDFDocument.load(inputBytes, {
+      ignoreEncryption: true,
+    })
+
+    await applyWatermarkGrid(pdfDoc, watermarkText, timestampText, opacity, position)
+
+    const watermarkedBytes = await pdfDoc.save()
+
+    if (isTextOverload) {
+      // 단순 텍스트 오버로드: Uint8Array 직접 반환
+      return watermarkedBytes
+    }
+
+    // WatermarkOptions 오버로드: WatermarkResult 반환
     let base64 = ''
     try {
-      // Node.js 환경
-      base64 = Buffer.from(inputBytes).toString('base64')
+      base64 = Buffer.from(watermarkedBytes).toString('base64')
     } catch {
-      // 브라우저 환경 (엣지 케이스)
-      base64 = btoa(String.fromCharCode(...inputBytes))
+      base64 = btoa(String.fromCharCode(...watermarkedBytes))
     }
 
     return {
       success: true,
-      watermarkedPdfBytes: inputBytes,
+      watermarkedPdfBytes: watermarkedBytes,
       watermarkedPdfBase64: base64,
-    }
+    } satisfies WatermarkResult
+
   } catch (err) {
     const message = err instanceof Error ? err.message : '워터마크 처리 중 알 수 없는 오류'
-    console.error('[VDR Watermark] 오류:', err)
+    console.error('[VDR Watermark] 오류 – 원본 반환:', err)
+
+    if (isTextOverload) {
+      // 폴백: 원본 바이트 반환
+      return pdfBytes instanceof Uint8Array ? pdfBytes : new Uint8Array(pdfBytes)
+    }
+
     return {
       success: false,
       error: message,
-    }
+    } satisfies WatermarkResult
   }
 }

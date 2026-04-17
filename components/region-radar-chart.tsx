@@ -54,8 +54,8 @@ function toRadarData(rows: RegionData[], regions: Region[]) {
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border shadow-lg rounded-lg px-3 py-2 text-xs">
-      <p className="font-semibold mb-1 text-gray-700">{label}</p>
+    <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] shadow-lg rounded-lg px-3 py-2 text-xs">
+      <p className="font-semibold mb-1 text-[var(--color-text-secondary)]">{label}</p>
       {payload.map((p: any) => (
         <p key={p.name} className="flex items-center justify-between gap-3">
           <span style={{ color: p.color }}>{p.name}</span>
@@ -100,7 +100,7 @@ export function RegionRadarChart() {
                 className={`text-xs px-2.5 py-1 rounded-md border transition-all ${
                   week === w
                     ? 'bg-blue-600 text-white border-blue-600'
-                    : 'text-gray-600 border-gray-200 hover:bg-gray-50'
+                    : 'text-[var(--color-text-secondary)] border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-base)]'
                 }`}
               >
                 {w === 'this' ? '이번 주' : '지난 주'}
@@ -118,7 +118,7 @@ export function RegionRadarChart() {
                 key={r}
                 onClick={() => toggleRegion(r)}
                 className={`text-[10px] px-2 py-0.5 rounded-full border transition-all ${
-                  on ? 'text-white border-transparent' : 'bg-gray-100 text-gray-400 border-gray-200'
+                  on ? 'text-white border-transparent' : 'bg-slate-500/15 text-[var(--color-text-muted)] border-[var(--color-border-subtle)]'
                 }`}
                 style={on ? { backgroundColor: REGION_COLORS[r] } : {}}
               >

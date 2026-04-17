@@ -18,7 +18,7 @@ export function GradientButton({ children, className, variant = "primary", size 
   const variants = {
     primary: "bg-gradient-to-r from-[#1B3A5C] via-[#2E75B6] to-[#10B981] text-white shadow-lg hover:shadow-xl hover:shadow-[#10B981]/20 active:scale-[0.98]",
     accent: "bg-gradient-to-r from-[#10B981] to-[#059669] text-white shadow-lg hover:shadow-xl hover:shadow-[#10B981]/20 active:scale-[0.98]",
-    outline: "border-2 border-[#1B3A5C]/30 text-[#1B3A5C] dark:text-white dark:border-white/30 hover:border-[#10B981] hover:text-[#10B981] bg-transparent",
+    outline: "border-2 border-white/30 text-[var(--color-text-primary)] hover:border-[#10B981] hover:text-[#10B981] bg-transparent",
   }
 
   const sizes = {

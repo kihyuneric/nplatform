@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from '@/lib/logger'
+import { createClient } from "@/lib/supabase/server";
 
 // ─── Mock Data ────────────────────────────────────────────────
 const MOCK_EARNINGS = [
@@ -15,11 +16,68 @@ const MOCK_EARNINGS = [
 
 // ─── GET /api/v1/referrals/earnings ───────────────────────────
 export async function GET(req: NextRequest) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const type = searchParams.get("type");
-    const period = searchParams.get("period");
+  const { searchParams } = new URL(req.url);
+  const type = searchParams.get("type");
+  const period = searchParams.get("period");
 
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: { code: "UNAUTHORIZED", message: "인증이 필요합니다." } },
+        { status: 401 }
+      );
+    }
+
+    let query = supabase
+      .from('referral_earnings')
+      .select('*')
+      .eq('referrer_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (type) query = query.eq('event_type', type);
+
+    if (period === "this_month") {
+      const now = new Date();
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      query = query.gte('created_at', monthStart);
+    } else if (period === "last_month") {
+      const now = new Date();
+      now.setMonth(now.getMonth() - 1);
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
+      query = query.gte('created_at', monthStart).lte('created_at', monthEnd);
+    }
+
+    const { data, error } = await query;
+
+    if (!error && data) {
+      const totalAmount = data.reduce((sum, e) => sum + ((e.amount as number) || 0), 0);
+      const pendingAmount = data
+        .filter((e) => e.status === 'PENDING')
+        .reduce((sum, e) => sum + ((e.amount as number) || 0), 0);
+      const settledAmount = data
+        .filter((e) => e.status === 'SETTLED')
+        .reduce((sum, e) => sum + ((e.amount as number) || 0), 0);
+
+      return NextResponse.json({
+        data,
+        total: data.length,
+        totalAmount,
+        pendingAmount,
+        settledAmount,
+        _source: 'supabase',
+      });
+    }
+  } catch (e) {
+    logger.error("[referrals/earnings] GET supabase error:", { error: e });
+    // Fall through to mock
+  }
+
+  // Mock fallback
+  try {
     let filtered = [...MOCK_EARNINGS];
 
     if (type) {

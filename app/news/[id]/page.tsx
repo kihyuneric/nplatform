@@ -6,8 +6,6 @@ import {
   ArrowLeft, Calendar, Building, MapPin, TrendingUp, TrendingDown, Minus,
   Share2, Bookmark, Twitter, Link2, Clock, ChevronRight,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { getDummyArticleById, KEYWORD_CATEGORY_MAP } from "@/lib/dummy-data"
 import type { KeywordCategory } from "@/lib/dummy-data"
 import { toast } from "sonner"
@@ -43,9 +41,9 @@ export default function NewsDetailPage() {
       <div className="min-h-screen bg-[#060E1C] flex items-center justify-center">
         <div className="text-center">
           <p className="text-lg text-slate-400 mb-4">기사를 찾을 수 없습니다.</p>
-          <Button asChild variant="outline" className="border-[#1a3a5c] text-slate-300 hover:bg-[#0D1F38]">
-            <Link href="/news">뉴스 목록으로</Link>
-          </Button>
+          <Link href="/news" className="px-3 py-1.5 rounded-lg border border-[var(--color-border-default)] text-sm transition-colors border-[#1a3a5c] text-slate-300 hover:bg-[#0D1F38]">
+            뉴스 목록으로
+          </Link>
         </div>
       </div>
     )

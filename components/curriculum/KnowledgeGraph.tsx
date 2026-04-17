@@ -264,9 +264,9 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
       const scaleM = Math.min(mw / graphW, mh / graphH)
 
       mctx.clearRect(0, 0, mw, mh)
-      mctx.fillStyle = 'rgba(255,255,255,0.85)'
+      mctx.fillStyle = 'rgba(15,23,42,0.85)'
       mctx.fillRect(0, 0, mw, mh)
-      mctx.strokeStyle = '#E5E7EB'
+      mctx.strokeStyle = '#334155'
       mctx.lineWidth = 1
       mctx.strokeRect(0, 0, mw, mh)
 
@@ -416,7 +416,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
         const alpha = dimmed ? '30' : (isHovered ? 'CC' : '80')
         ctx.fillStyle = node.domain_color + alpha
         ctx.fill()
-        ctx.strokeStyle = isSelected ? '#1F2937' : isPathNode ? '#7C3AED' : (dimmed ? node.domain_color + '40' : node.domain_color)
+        ctx.strokeStyle = isSelected ? '#E2E8F0' : isPathNode ? '#7C3AED' : (dimmed ? node.domain_color + '40' : node.domain_color)
         ctx.lineWidth = isSelected ? 3 : isPathNode ? 2.5 : Math.max(1, node.difficulty)
         ctx.stroke()
 
@@ -427,7 +427,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
         const showLabel = !dimmed && (isHovered || isSelected || isPathNode || scale >= 0.8 || node.importance_score >= 50 || node.expert_count > 0)
         if (showLabel) {
           const fontSize = Math.max(9, Math.min(r * 0.7, 14))
-          ctx.fillStyle = dimmed ? '#9CA3AF' : (isHovered || isSelected ? '#111827' : '#374151')
+          ctx.fillStyle = dimmed ? '#475569' : (isHovered || isSelected ? '#F1F5F9' : '#94A3B8')
           ctx.font = `${isHovered || isPathNode ? 'bold ' : ''}${fontSize}px "Pretendard", sans-serif`
           ctx.textAlign = 'center'
           let label = node.label
@@ -658,16 +658,16 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
         width={150}
         height={100}
         onClick={handleMinimapClick}
-        className="absolute bottom-3 right-3 rounded-lg shadow-md cursor-crosshair border border-gray-200"
+        className="absolute bottom-3 right-3 rounded-lg shadow-md cursor-crosshair border border-[var(--color-border-subtle)]"
       />
       {/* Tooltip */}
       {tooltipInfo && (
         <div
-          className="absolute pointer-events-none bg-white/95 backdrop-blur border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-xs z-10"
+          className="absolute pointer-events-none bg-[var(--color-surface-elevated)] backdrop-blur border border-[var(--color-border-subtle)] rounded-lg shadow-lg px-3 py-2 text-xs z-10"
           style={{ left: tooltipInfo.x + 12, top: tooltipInfo.y - 8 }}
         >
           <div className="font-bold text-sm">{tooltipInfo.node.label}</div>
-          <div className="text-gray-500 mt-1">
+          <div className="text-[var(--color-text-muted)] mt-1">
             {tooltipInfo.node.domain_name} | {tooltipInfo.node.level}
           </div>
           {tooltipInfo.node.expert_count > 0 && (

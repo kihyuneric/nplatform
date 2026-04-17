@@ -17,10 +17,7 @@ import {
   BarChart2,
   Pin,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { GuideButton } from "@/components/guide/guide-button";
-import { t } from "@/lib/i18n";
 import { SampleBadge } from "@/components/shared/sample-badge";
 import { fetchSafe } from "@/lib/fetch-safe";
 import DS, { formatKRW, formatDate } from "@/lib/design-system";
@@ -35,21 +32,21 @@ const SORT_OPTIONS = [
 ] as const;
 
 const CATEGORY_COLORS: Record<string, string> = {
-  자유: "bg-gray-100 text-gray-600",
-  질문: "bg-amber-100 text-amber-700",
-  정보공유: "bg-blue-100 text-blue-700",
-  거래후기: "bg-purple-100 text-purple-700",
-  법률상담: "bg-indigo-100 text-indigo-700",
-  투자전략: "bg-blue-100 text-blue-700",
-  시장분석: "bg-emerald-100 text-emerald-700",
-  질문답변: "bg-amber-100 text-amber-700",
-  후기: "bg-purple-100 text-purple-700",
-  일반: "bg-gray-100 text-gray-600",
-  뉴스: "bg-red-100 text-red-700",
-  법률: "bg-indigo-100 text-indigo-700",
-  "Q&A": "bg-amber-100 text-amber-700",
-  판례분석: "bg-violet-100 text-violet-700",
-  자유게시판: "bg-gray-100 text-gray-600",
+  자유: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]",
+  질문: "bg-amber-500/10 text-amber-400",
+  정보공유: "bg-blue-500/10 text-blue-400",
+  거래후기: "bg-purple-500/10 text-purple-400",
+  법률상담: "bg-indigo-500/10 text-indigo-400",
+  투자전략: "bg-blue-500/10 text-blue-400",
+  시장분석: "bg-emerald-500/10 text-emerald-400",
+  질문답변: "bg-amber-500/10 text-amber-400",
+  후기: "bg-purple-500/10 text-purple-400",
+  일반: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]",
+  뉴스: "bg-red-500/10 text-red-400",
+  법률: "bg-indigo-500/10 text-indigo-400",
+  "Q&A": "bg-amber-500/10 text-amber-400",
+  판례분석: "bg-violet-500/10 text-violet-400",
+  자유게시판: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]",
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -189,7 +186,7 @@ export default function CommunityPage() {
 
   const getCategoryColor = (apiCategory: string) => {
     const label = getCategoryLabel(apiCategory);
-    return CATEGORY_COLORS[label] ?? "bg-gray-100 text-gray-600";
+    return CATEGORY_COLORS[label] ?? "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]";
   };
 
   return (
@@ -201,7 +198,7 @@ export default function CommunityPage() {
           <div className="flex items-center gap-2.5">
             <Users className="h-6 w-6 text-[var(--color-brand-dark)]" />
             <h1 className={DS.text.pageSubtitle}>
-              {t("community.nplCommunity") || "NPL 투자 커뮤니티"}
+              {"NPL 투자 커뮤니티"}
             </h1>
             <SampleBadge />
           </div>
@@ -214,6 +211,13 @@ export default function CommunityPage() {
               </button>
             </Link>
           </div>
+        </div>
+
+        {/* ── Cross-links ───────────────────────────────────── */}
+        <div className="flex items-center gap-3 flex-wrap mb-4">
+          <Link href="/services/experts" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>전문가 찾기 →</Link>
+          <Link href="/exchange" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>매물 탐색 →</Link>
+          <Link href="/analysis" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>분석 허브 →</Link>
         </div>
 
         {/* ── Category Tabs + Sort/Search Bar ─────────────── */}
@@ -283,7 +287,7 @@ export default function CommunityPage() {
             {/* Error state */}
             {fetchError && !isLoading && (
               <div className={DS.empty.wrapper}>
-                <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center mb-3">
+                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center mb-3">
                   <svg className="w-5 h-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
@@ -466,7 +470,7 @@ export default function CommunityPage() {
                       <p className={`${DS.text.caption} truncate`}>{user.name}</p>
                       <p className={DS.text.micro}>{user.posts}개 작성</p>
                     </div>
-                    <span className="text-[0.625rem] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 font-medium shrink-0">
+                    <span className="text-[0.625rem] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 font-medium shrink-0">
                       {user.badge}
                     </span>
                   </li>

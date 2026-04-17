@@ -9,8 +9,8 @@ const SERVICE_LINKS = [
   { href: '/exchange', label: 'NPL 매물 탐색' },
   { href: '/exchange/sell', label: '매물 등록' },
   { href: '/deals', label: '거래 현황' },
-  { href: '/analysis', label: '투자 분석' },
-  { href: '/services', label: '전문가 서비스' },
+  { href: '/deals/matching', label: 'AI 매칭' },
+  { href: '/analysis', label: '분석' },
   { href: '/pricing', label: '요금제' },
 ]
 
@@ -34,13 +34,16 @@ export function Footer() {
       .catch(() => {})
   }, [])
 
-  const companyName = settings?.companyName || '(주)트랜스파머 | TransFarmer Inc.'
+  const companyName = settings?.companyName || '트랜스파머(주) | TransFarmer Inc.'
   const siteDescription = settings?.siteDescription || '금융기관과 투자자를 직접 연결하는 NPL 거래 플랫폼'
-  const businessNumber = settings?.businessNumber || ''
-  const ceoName = settings?.ceoName || ''
-  const companyAddress = settings?.companyAddress || ''
-  const contactPhone = settings?.contactPhone || ''
-  const contactEmail = settings?.contactEmail || ''
+  const businessNumber = settings?.businessNumber || '507-87-02631'
+  const ceoName = settings?.ceoName || '박성필'
+  const companyAddress = settings?.companyAddress || '서울 마포구 백범로31길 21, 서울창업허브 별관 108호'
+  const companyAddress2 = settings?.companyAddress2 || '서울 종로구 서린동 154-1, 스타트업빌리지 5층'
+  const contactPhone = settings?.contactPhone || '02-555-2822'
+  const contactEmail = settings?.contactEmail || 'ceo@transfarmer.co.kr'
+  const dpoName = settings?.dpoName || '박성필'
+  const dpoEmail = settings?.dpoEmail || 'sp.park@transfarmer.co.kr'
 
   return (
     <footer
@@ -61,22 +64,22 @@ export function Footer() {
               </div>
               <div>
                 <span className="font-black text-white text-base tracking-tight">NPL</span>
-                <span className="font-light text-slate-400 text-base">atform</span>
+                <span className="font-light text-[var(--color-text-muted)] text-base">atform</span>
               </div>
             </Link>
 
             {/* Tagline */}
-            <p className="text-sm text-slate-400 leading-relaxed">
+            <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
               {siteDescription}
             </p>
 
             {/* Company name */}
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[var(--color-text-muted)]">
               {companyName}
             </p>
 
             {/* Brief description */}
-            <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
+            <p className="text-xs text-[var(--color-text-muted)] leading-relaxed max-w-xs">
               정보의 비대칭 속에서 금융기관과 투자자를 직접 연결합니다. NPL 매물 탐색부터 거래 완결까지 — AI가 지원하는 국내 최초 NPL 거래 플랫폼입니다.
             </p>
           </div>
@@ -85,7 +88,7 @@ export function Footer() {
           <div className="grid grid-cols-2 gap-8">
             {/* 서비스 */}
             <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-4">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-4">
                 서비스
               </h4>
               <ul className="space-y-2.5">
@@ -93,7 +96,7 @@ export function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-slate-400 hover:text-white transition-colors"
+                      className="text-sm text-[var(--color-text-muted)] hover:text-white transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -104,7 +107,7 @@ export function Footer() {
 
             {/* 회사 */}
             <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-4">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-4">
                 회사
               </h4>
               <ul className="space-y-2.5">
@@ -112,7 +115,7 @@ export function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-slate-400 hover:text-white transition-colors"
+                      className="text-sm text-[var(--color-text-muted)] hover:text-white transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -124,74 +127,103 @@ export function Footer() {
 
           {/* Column 3 — Legal & Contact */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-4">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-4">
               사업자 정보
             </h4>
             <div className="space-y-2">
-              {(businessNumber || !settings) && (
-                <p className="text-xs text-slate-500">
-                  사업자등록번호: {businessNumber || '000-00-00000'}
+              <p className="text-xs text-[var(--color-text-muted)]">
+                사업자등록번호: {businessNumber}
+              </p>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                대표: {ceoName}
+              </p>
+              <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+                {companyAddress}
+              </p>
+              {companyAddress2 && (
+                <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+                  {companyAddress2}
                 </p>
               )}
-              {(ceoName || !settings) && (
-                <p className="text-xs text-slate-500">
-                  대표: {ceoName || '—'}
-                </p>
-              )}
-              {(companyAddress || !settings) && (
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  {companyAddress || '서울특별시'}
-                </p>
-              )}
-              {(contactPhone || !settings) && (
-                <p className="text-xs text-slate-500">
-                  Tel: {contactPhone || '—'}
-                </p>
-              )}
-              {(contactEmail || !settings) && (
-                <p className="text-xs text-slate-500">
-                  Email:{' '}
-                  <a
-                    href={`mailto:${contactEmail || 'contact@nplatform.kr'}`}
-                    className="hover:text-slate-300 transition-colors"
-                  >
-                    {contactEmail || 'contact@nplatform.kr'}
-                  </a>
-                </p>
-              )}
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Tel: <a href={`tel:${contactPhone.replace(/[^0-9]/g, '')}`} className="hover:text-white transition-colors">{contactPhone}</a>
+              </p>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Email:{' '}
+                <a
+                  href={`mailto:${contactEmail}`}
+                  className="hover:text-white transition-colors"
+                >
+                  {contactEmail}
+                </a>
+              </p>
             </div>
 
             {/* Legal notice */}
-            <p className="mt-6 text-[11px] text-slate-600 leading-relaxed">
+            <p className="mt-6 text-[11px] text-[var(--color-text-muted)] leading-relaxed">
               본 플랫폼은 투자 정보 제공을 목적으로 하며, 투자 결과에 대한 법적 책임을 지지 않습니다. 모든 투자 판단은 이용자 본인에게 있습니다.
             </p>
+
+            {/* DPO / regulator contact */}
+            <div className="mt-4 space-y-1">
+              <p className="text-[11px] text-[var(--color-text-muted)]">
+                개인정보보호책임자 ({dpoName}):{' '}
+                <a href={`mailto:${dpoEmail}`} className="hover:text-white transition-colors">
+                  {dpoEmail}
+                </a>
+              </p>
+              <p className="text-[11px] text-[var(--color-text-muted)]">
+                통신판매중개업 신고번호: 제2026-서울-0000호
+              </p>
+            </div>
           </div>
+        </div>
+
+        {/* ── Regulatory compliance strip ─────────────── */}
+        <div className="mt-10 pt-6 border-t border-[#1A2E4A]">
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <ComplianceBadge label="개인정보보호법 준수" color="#10B981" />
+            <ComplianceBadge label="신용정보법 준수" color="#10B981" />
+            <ComplianceBadge label="전자금융거래법 준수" color="#10B981" />
+            <ComplianceBadge label="ISMS-P 준비 중" color="#F59E0B" />
+            <ComplianceBadge label="에스크로 자금보호" color="#3B82F6" />
+          </div>
+          <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed max-w-4xl">
+            NPLatform은 금융감독원 · 금융위원회의 개인정보 · 채무자정보 보호 지침에 따라 모든 매물 데이터에 대해
+            자동 마스킹 파이프라인을 운영하며, 담보 부동산 정보는 공개하되 채무자 개인정보는 4단계 접근 통제
+            (L0 공개 / L1 본인인증 / L2 NDA · 전문투자자 / L3 LOI · 승인) 모델로 보호합니다.
+            등기부등본 · 권리관계 요약 등 추가 자료는 금융기관 정보 제공 수준에 따라 다를 수 있습니다.
+          </p>
+          <p className="mt-3 text-[11px] text-[var(--color-text-muted)] leading-relaxed max-w-4xl">
+            ※ 본 서비스는 「전자상거래 등에서의 소비자보호에 관한 법률」상 통신판매중개자이며, 거래 당사자가 아닙니다.
+            매매 · 권리 · 의무의 당사자는 매도자(금융기관 등)와 매수자이며, 플랫폼은 중개 · 정보 제공 · 에스크로 역할만 수행합니다.
+          </p>
         </div>
 
         {/* ── Bottom bar ───────────────────────────────── */}
         <div className="mt-12 pt-6 border-t border-[#1A2E4A] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
-            <p className="text-xs text-slate-500">
-              &copy; 2026 TransFarmer Inc. All rights reserved.
+            <p className="text-xs text-[var(--color-text-muted)]">
+              &copy; 2026 트랜스파머(주) TransFarmer Inc. All rights reserved.
             </p>
             <div className="flex items-center gap-3">
               <Link
                 href="/terms/service"
-                className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                className="text-xs text-[var(--color-text-muted)] hover:text-white transition-colors"
               >
                 이용약관
               </Link>
-              <span className="text-slate-700 text-xs">|</span>
+              <span className="text-[var(--color-border-subtle)] text-xs">|</span>
               <Link
                 href="/terms/privacy"
-                className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                className="text-xs text-[var(--color-text-muted)] hover:text-white transition-colors"
               >
                 개인정보처리방침
               </Link>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[11px] text-slate-700 font-mono tracking-wide">
+            <span className="text-[11px] text-[var(--color-text-muted)] font-mono tracking-wide">
               NPLatform v12.0
             </span>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#1A2E4A] text-[10px] text-slate-400 font-medium">
@@ -202,5 +234,25 @@ export function Footer() {
         </div>
       </div>
     </footer>
+  )
+}
+
+// ─── Compliance badge pill ──────────────────────────────────
+function ComplianceBadge({ label, color }: { label: string; color: string }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold"
+      style={{
+        backgroundColor: `${color}14`,
+        color,
+        border: `1px solid ${color}33`,
+      }}
+    >
+      <span
+        className="w-1.5 h-1.5 rounded-full inline-block"
+        style={{ backgroundColor: color }}
+      />
+      {label}
+    </span>
   )
 }

@@ -13,16 +13,16 @@ interface InstitutionBadgeProps {
 }
 
 const TYPE_CONFIG = {
-  INSTITUTION: { icon: Building2, label: "금융기관", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300" },
-  AMC: { icon: BarChart3, label: "자산관리", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300" },
-  INDIVIDUAL: { icon: User, label: "개인", color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300" },
+  INSTITUTION: { icon: Building2, label: "금융기관", color: "bg-blue-500/10 text-blue-300" },
+  AMC: { icon: BarChart3, label: "자산관리", color: "bg-purple-500/10 text-purple-300" },
+  INDIVIDUAL: { icon: User, label: "개인", color: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]" },
 }
 
 const GRADE_COLORS: Record<string, string> = {
-  S: "bg-amber-100 text-amber-700 border-amber-300",
-  A: "bg-emerald-100 text-emerald-700 border-emerald-300",
-  B: "bg-blue-100 text-blue-700 border-blue-300",
-  C: "bg-gray-100 text-gray-600 border-gray-300",
+  S: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  A: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  B: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  C: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)]",
 }
 
 export function InstitutionBadge({ type, name, trustGrade, logoUrl, size = "sm", showGrade = true }: InstitutionBadgeProps) {

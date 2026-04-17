@@ -157,7 +157,7 @@ export function NewsHeatmap({ onDateClick }: Props) {
           <p className="mt-3 text-xs text-blue-600 font-medium">
             📌 {selectedDate} 선택됨 — 검색 필터에 날짜가 적용됩니다
             <button
-              className="ml-2 text-muted-foreground hover:text-gray-700 underline"
+              className="ml-2 text-muted-foreground hover:text-[var(--color-text-secondary)] underline"
               onClick={() => setSelected(null)}
             >해제</button>
           </p>

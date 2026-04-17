@@ -59,26 +59,52 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (user) {
-      let query = supabase
-        .from('buyer_watchlist')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+    if (!user) {
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } },
+        { status: 401 }
+      )
+    }
 
-      if (folder && folder !== 'all') {
-        query = query.eq('folder_name', folder)
-      }
+    let query = supabase
+      .from('favorites')
+      .select(`
+        id,
+        listing_id,
+        folder_name,
+        memo,
+        price_at_save,
+        created_at,
+        listing:npl_listings (
+          id,
+          title,
+          address_masked,
+          collateral_type,
+          claim_amount,
+          appraised_value,
+          ai_grade,
+          status
+        )
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
 
-      const { data, error } = await query
-      if (!error && data && data.length > 0) {
-        const folderSummary = data.reduce<Record<string, number>>((acc, e: Record<string, unknown>) => {
-          const fn = (e.folder_name as string) ?? 'default'
-          acc[fn] = (acc[fn] ?? 0) + 1
-          return acc
-        }, {})
-        return NextResponse.json({ data, total: data.length, folders: folderSummary })
-      }
+    if (folder && folder !== 'all') {
+      query = query.eq('folder_name', folder)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      logger.error('Watchlist GET Supabase error:', { error })
+      // fall through to mock below
+    } else {
+      const folderSummary = (data ?? []).reduce<Record<string, number>>((acc, e: Record<string, unknown>) => {
+        const fn = (e.folder_name as string) ?? '기본'
+        acc[fn] = (acc[fn] ?? 0) + 1
+        return acc
+      }, {})
+      return NextResponse.json({ data: data ?? [], total: (data ?? []).length, folders: folderSummary })
     }
   } catch {
     // Supabase not available, fall through to mock
@@ -132,30 +158,37 @@ export async function POST(request: NextRequest) {
       const supabase = await createClient()
       const { data: { user } } = await supabase.auth.getUser()
 
-      if (user) {
-        const { data, error } = await supabase
-          .from('buyer_watchlist')
-          .insert({
-            user_id: user.id,
-            listing_id: listingId,
-            folder_name: folderName,
-            memo,
-            price_at_save: priceAtSave ?? 0,
-          })
-          .select()
-          .single()
-
-        if (!error && data) {
-          return NextResponse.json({ data }, { status: 201 })
-        }
-        // If unique constraint violation
-        if (error?.code === '23505') {
-          return NextResponse.json(
-            { error: { code: 'DUPLICATE', message: '이미 관심 목록에 추가된 매물입니다.' } },
-            { status: 409 }
-          )
-        }
+      if (!user) {
+        return NextResponse.json(
+          { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } },
+          { status: 401 }
+        )
       }
+
+      const { data, error } = await supabase
+        .from('favorites')
+        .insert({
+          user_id: user.id,
+          listing_id: listingId,
+          folder_name: folderName,
+          memo,
+          price_at_save: priceAtSave ?? 0,
+        })
+        .select()
+        .single()
+
+      if (!error && data) {
+        return NextResponse.json({ data }, { status: 201 })
+      }
+      // If unique constraint violation
+      if (error?.code === '23505') {
+        return NextResponse.json(
+          { error: { code: 'DUPLICATE', message: '이미 관심 목록에 추가된 매물입니다.' } },
+          { status: 409 }
+        )
+      }
+      // Other DB error → fall through to mock
+      logger.error('Watchlist POST Supabase error:', { error })
     } catch {
       // fall through to mock
     }
@@ -208,6 +241,47 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
+    // ── Supabase-first ──
+    try {
+      const supabase = await createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        return NextResponse.json(
+          { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } },
+          { status: 401 }
+        )
+      }
+
+      let query = supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+
+      if (id) {
+        query = query.eq('id', id)
+      } else {
+        query = query.eq('listing_id', listingId as string)
+      }
+
+      const { error, count } = await query
+
+      if (error) {
+        logger.error('Watchlist DELETE Supabase error:', { error })
+        // fall through to mock
+      } else if (count === 0) {
+        return NextResponse.json(
+          { error: { code: 'NOT_FOUND', message: '관심 목록 항목을 찾을 수 없습니다.' } },
+          { status: 404 }
+        )
+      } else {
+        return NextResponse.json({ success: true, message: '관심 목록에서 삭제되었습니다.' })
+      }
+    } catch {
+      // fall through to mock
+    }
+
+    // ── Mock fallback ──
     const idx = id
       ? watchlistStore.findIndex((e) => e.id === id && e.userId === 'user-1')
       : watchlistStore.findIndex((e) => e.listingId === listingId && e.userId === 'user-1')
@@ -221,7 +295,7 @@ export async function DELETE(request: NextRequest) {
 
     watchlistStore.splice(idx, 1)
 
-    return NextResponse.json({ success: true, message: '관심 목록에서 삭제되었습니다.' })
+    return NextResponse.json({ success: true, message: '관심 목록에서 삭제되었습니다.', _mock: true })
   } catch (error) {
     logger.error('Watchlist DELETE error:', { error: error })
     return NextResponse.json(
@@ -246,6 +320,47 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
+    // ── Supabase-first ──
+    try {
+      const supabase = await createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        return NextResponse.json(
+          { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } },
+          { status: 401 }
+        )
+      }
+
+      const updates: Record<string, unknown> = {}
+      if (folderName !== undefined) updates.folder_name = folderName
+      if (memo !== undefined) updates.memo = memo
+
+      const { data, error } = await supabase
+        .from('favorites')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return NextResponse.json(
+            { error: { code: 'NOT_FOUND', message: '항목을 찾을 수 없습니다.' } },
+            { status: 404 }
+          )
+        }
+        logger.error('Watchlist PATCH Supabase error:', { error })
+        // fall through to mock
+      } else {
+        return NextResponse.json({ data })
+      }
+    } catch {
+      // fall through to mock
+    }
+
+    // ── Mock fallback ──
     const entry = watchlistStore.find((e) => e.id === id && e.userId === 'user-1')
     if (!entry) {
       return NextResponse.json(
@@ -257,7 +372,7 @@ export async function PATCH(request: NextRequest) {
     if (folderName !== undefined) entry.folderName = folderName
     if (memo !== undefined) entry.memo = memo
 
-    return NextResponse.json({ data: entry })
+    return NextResponse.json({ data: entry, _mock: true })
   } catch (error) {
     logger.error('Watchlist PATCH error:', { error: error })
     return NextResponse.json(

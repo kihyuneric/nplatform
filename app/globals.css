@@ -84,6 +84,31 @@ input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; }
 
+/* ── Form input visibility guarantee ─────────────────────────────────────────
+   입력 텍스트가 다크모드/OS 자동 스타일 때문에 보이지 않는 문제 방지.
+   Tailwind로 명시적 색상을 지정한 경우 (text-slate-900 등) 우선 적용됨.
+*/
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
+textarea,
+select {
+  color: #0F172A;  /* slate-900 기본 */
+  caret-color: #1B3A5C;
+}
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not(.bg-white):not(.!bg-white):not([class*="bg-white"]),
+.dark textarea:not(.bg-white):not([class*="bg-white"]),
+.dark select:not(.bg-white):not([class*="bg-white"]) {
+  color: #F1F5F9;  /* 다크모드: slate-100 — 단, bg-white가 명시된 입력은 제외 */
+  caret-color: #F1F5F9;
+}
+/* placeholder 가독성 — 투명한 회색이 아니라 읽을 수 있는 slate-400 */
+input::placeholder, textarea::placeholder {
+  color: #94A3B8;  /* slate-400 */
+  opacity: 1;
+}
+.dark input::placeholder, .dark textarea::placeholder {
+  color: #64748B;  /* slate-500 */
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    DESIGN TOKENS
    ───────────────────────────────────────────────────────────────────────────── */
@@ -115,6 +140,12 @@ input[type="number"] { -moz-appearance: textfield; }
     --tracking-wide:     0.02em;   /* 기존 0.04 → 한글 음절 사이 과도한 공백 방지 */
     --tracking-wider:    0.04em;   /* 기존 0.08 */
     --tracking-widest:   0.06em;   /* 기존 0.12 → 한글 음절 사이 공백처럼 보이는 문제 방지 */
+
+    /* ── Nav — 항상 어두운 배경 위에 사용. 라이트/다크 모드 모두 동일한 밝은 값 ── */
+    --color-nav-text:      rgba(255, 255, 255, 0.92);  /* 기본 nav 텍스트 */
+    --color-nav-text-dim:  rgba(255, 255, 255, 0.58);  /* 보조 nav 텍스트 */
+    --color-nav-active:    #93C5FD;                    /* 활성 nav 항목 (blue-300) */
+    --color-nav-hover-bg:  rgba(255, 255, 255, 0.08);  /* hover 배경 */
 
     /* ── Brand Palette ─────────────────────────────────────────────────────── */
     --color-brand-deepest: #060E1C;
@@ -240,29 +271,63 @@ input[type="number"] { -moz-appearance: textfield; }
     --warning-foreground:  0 0% 100%;
   }
 
-  /* ── Dark Mode Tokens ────────────────────────────────────────────────────── */
+  /* ── Dark Mode Tokens (v5 — 5-layer depth system) ─────────────────────── */
+  /* 핵심 원칙: 각 depth 레이어 간 명도 차이 최소 8포인트 이상 확보.
+     어두운 배경에서 2단/3단 박스가 눈에 보이도록 명확한 계층 분리. */
   .dark {
-    /* Surfaces */
-    --color-surface-base:     #060E1C;
-    --color-surface-elevated: #0D1F38;
-    --color-surface-sunken:   #030910;
-    --color-surface-overlay:  rgba(6, 14, 28, 0.90);
+    /* ── Brand 색상 (다크 모드 — 텍스트/인터랙티브 요소 가시성 확보) ──────── */
+    /* 라이트 모드의 brand-dark(#1B3A5C)는 어두운 배경에서 보이지 않음.
+       다크 모드에서는 더 밝은 중간 톤 블루로 오버라이드 */
+    --color-brand-deepest: #1A2A40;
+    --color-brand-deep:    #1E3A5A;
+    --color-brand-dark:    #2E75B6;   /* 텍스트/버튼 → 어두운 배경에서 명확히 보임 */
+    --color-brand-mid:     #4A90D9;   /* 링크, 강조 텍스트 */
+    --color-brand-bright:  #60A5FA;   /* 하이라이트 */
+    --color-brand-light:   #93C5FD;
 
-    /* Text */
-    --color-text-primary:   #F0F4F8;
-    --color-text-secondary: #94A3B8;
-    --color-text-tertiary:  #64748B;
-    --color-text-muted:     #475569;
+    /* ── Surface 5단계 계층 (페이지 → L1카드 → L2중첩 → L3딥) ── */
+    --color-surface-sunken:   #05080F;   /* 최하단 페이지 배경 */
+    --color-surface-base:     #0D1525;   /* L1 카드 기본 */
+    --color-surface-elevated: #162035;   /* L2 중첩 카드 */
+    --color-surface-overlay:  #1E2D47;   /* L3 딥 카드 / 모달 내부 */
+    --color-surface-float:    #273C5A;   /* 최상단 (드롭다운, 툴팁) */
 
-    /* Border */
-    --color-border-subtle:  #1A2E4A;
-    --color-border-default: #1E3755;
-    --color-border-strong:  #2D4A6E;
+    /* ── 배경 계층 (page-level bg tiers) ── */
+    --color-bg-deepest:   #02050C;
+    --color-bg-deep:      #05080F;
+    --color-bg-base:      #0D1525;
+    --color-bg-elevated:  #162035;
+    --color-bg-border:    #1E2D47;
 
-    /* Semantic backgrounds */
-    --color-positive-bg:  #022C22;
-    --color-warning-bg:   #1A1200;
-    --color-danger-bg:    #1A0505;
+    /* ── 텍스트 (WCAG AA 대비비 확보) ── */
+    --color-text-primary:   #F1F5F9;   /* slate-100 — 헤딩, 중요 수치 */
+    --color-text-secondary: #CBD5E1;   /* slate-300 — 본문 (기존 #94A3B8보다 밝게) */
+    --color-text-tertiary:  #94A3B8;   /* slate-400 — 보조 설명 (기존 #64748B보다 밝게) */
+    --color-text-muted:     #64748B;   /* slate-500 — 플레이스홀더 (기존 #475569보다 밝게) */
+    --color-text-disabled:  #334155;   /* slate-700 — 비활성 */
+
+    /* ── 테두리 (불투명도 기반, 배경색 무관하게 항상 보임) ── */
+    --color-border-subtle:  rgba(255,255,255,0.07);
+    --color-border-default: rgba(255,255,255,0.12);
+    --color-border-strong:  rgba(255,255,255,0.22);
+    --color-border-focus:   #6366F1;
+
+    /* ── 시맨틱 색상 (다크 최적화 — 배경 위에서 밝게 보임) ── */
+    --color-positive:        #34D399;   /* emerald-400 — 기존 #10B981보다 밝음 */
+    --color-positive-dark:   #34D399;   /* 다크모드 override: 라이트의 #065F46 대신 밝은 색 */
+    --color-positive-bg:     rgba(52,211,153,0.12);
+    --color-positive-border: rgba(52,211,153,0.25);
+    --color-warning:         #FBBF24;   /* amber-400 */
+    --color-warning-dark:    #FBBF24;
+    --color-warning-bg:      rgba(251,191,36,0.12);
+    --color-warning-border:  rgba(251,191,36,0.25);
+    --color-danger:          #F87171;   /* red-400 */
+    --color-danger-bg:       rgba(248,113,113,0.12);
+    --color-danger-border:   rgba(248,113,113,0.25);
+    --color-brand-bright:    #818CF8;   /* indigo-400 */
+    --color-brand-mid:       #6366F1;
+    --color-brand-light:     #A5B4FC;   /* indigo-300 */
+    --color-purple:          #C084FC;   /* purple-400 */
 
     /* NPL aliases */
     --npl-primary:           #2A5A8C;
@@ -274,29 +339,29 @@ input[type="number"] { -moz-appearance: textfield; }
     --npl-text-secondary:    var(--color-text-secondary);
     --npl-border-subtle:     var(--color-border-subtle);
 
-    /* Shadcn HSL */
-    --background:          215 28% 7%;
-    --foreground:          210 20% 96%;
-    --card:                215 28% 10%;
-    --card-foreground:     210 20% 96%;
-    --popover:             215 28% 10%;
-    --popover-foreground:  210 20% 96%;
-    --primary:             211 53% 35%;
+    /* ── Shadcn HSL (다크 최적화) ── */
+    --background:          220 32% 6%;    /* #05080F */
+    --foreground:          210 40% 96%;   /* #F1F5F9 */
+    --card:                220 30% 12%;   /* #0D1525 */
+    --card-foreground:     210 40% 96%;
+    --popover:             220 30% 15%;   /* #162035 */
+    --popover-foreground:  210 40% 96%;
+    --primary:             239 84% 67%;   /* #6366F1 */
     --primary-foreground:  0 0% 100%;
-    --secondary:           210 59% 55%;
-    --secondary-foreground:0 0% 100%;
-    --muted:               215 25% 15%;
-    --muted-foreground:    215 16% 60%;
-    --accent:              160 84% 45%;
+    --secondary:           215 25% 20%;
+    --secondary-foreground:210 40% 80%;
+    --muted:               220 25% 15%;
+    --muted-foreground:    215 20% 65%;   /* #94A3B8 수준 */
+    --accent:              160 64% 52%;   /* #34D399 */
     --accent-foreground:   0 0% 100%;
-    --destructive:         0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border:              215 25% 18%;
-    --input:               215 25% 18%;
-    --ring:                211 53% 35%;
-    --success:             160 84% 45%;
+    --destructive:         0 72% 70%;     /* #F87171 */
+    --destructive-foreground: 0 0% 100%;
+    --border:              220 20% 18%;   /* rgba(255,255,255,0.12) 수준 */
+    --input:               220 20% 16%;
+    --ring:                239 84% 67%;
+    --success:             160 64% 52%;
     --success-foreground:  0 0% 100%;
-    --warning:             27 96% 65%;
+    --warning:             38 92% 60%;    /* #FBBF24 수준 */
     --warning-foreground:  0 0% 100%;
   }
 }
@@ -304,80 +369,140 @@ input[type="number"] { -moz-appearance: textfield; }
 /* ─────────────────────────────────────────────────────────────────────────────
    DARK MODE — Independent design (NOT just color inversion)
    ───────────────────────────────────────────────────────────────────────────── */
-.dark .card-elevated {
-  background: linear-gradient(145deg, #0F2540 0%, #0D1F38 100%);
-  border-color: rgba(255,255,255,0.06);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-}
-.dark .card-elevated:hover {
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,130,246,0.12);
-  border-color: rgba(59,130,246,0.15);
-}
+/* ── 다크 카드 깊이 시스템 ─────────────────────────────────────────────────
+   L1: 기본 카드 (페이지 배경 위)
+   L2: 중첩 카드 (L1 카드 내부)
+   L3: 딥 카드  (L2 카드 내부 — 최소 3단계 구분 보장)
+   각 레이어는 명도 차이 + 테두리 강도 + 왼쪽 악센트로 깊이 시각화
+   ────────────────────────────────────────────────────────────────────────── */
+.dark .card-l1,
+.dark .card-elevated,
 .dark .card-flat {
-  background: #0A1628;
-  border-color: rgba(255,255,255,0.05);
+  background: #0D1525;
+  border-color: rgba(255,255,255,0.09);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+.dark .card-l1:hover,
+.dark .card-elevated:hover {
+  background: #111B2D;
+  border-color: rgba(255,255,255,0.15);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.18);
+}
+.dark .card-l2 {
+  background: #162035;
+  border-color: rgba(255,255,255,0.11);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+.dark .card-l3 {
+  background: #1E2D47;
+  border-color: rgba(255,255,255,0.14);
+  border-left-width: 2px;
+  border-left-color: rgba(99,102,241,0.45);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
 }
 .dark .stat-card {
-  background: linear-gradient(145deg, #112236 0%, #0D1F38 100%);
-  border-color: rgba(255,255,255,0.12);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  background: linear-gradient(145deg, #18243A 0%, #0D1525 100%);
+  border-color: rgba(255,255,255,0.13);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4);
 }
 .dark .card-interactive {
-  background: linear-gradient(145deg, #0F2540 0%, #0D1F38 100%);
-  border-color: rgba(255,255,255,0.12);
+  background: #0D1525;
+  border-color: rgba(255,255,255,0.10);
+  transition: all 0.2s ease;
 }
 .dark .card-interactive:hover {
-  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,130,246,0.3);
-  border-color: rgba(59,130,246,0.3);
+  background: #162035;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.3);
+  border-color: rgba(99,102,241,0.35);
   transform: translateY(-2px);
 }
-/* Dark nav underline tab */
-.dark .tab-line { color: rgba(255,255,255,0.45); }
-.dark .tab-line:hover { color: rgba(255,255,255,0.85); }
-.dark .tab-line.active { color: #93C5FD; }
-.dark .tab-line.active::after { background-color: #3B82F6; }
-/* Dark pill tab */
-.dark .tab-pill { color: rgba(255,255,255,0.45); }
-.dark .tab-pill:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
-.dark .tab-pill.active { background: rgba(59,130,246,0.2); color: #93C5FD; }
-/* Dark data table */
-.dark .data-table thead th { color: rgba(255,255,255,0.4); border-bottom-color: rgba(255,255,255,0.08); }
-.dark .data-table tbody tr { border-bottom-color: rgba(255,255,255,0.04); }
-.dark .data-table tbody tr:hover { background: rgba(59,130,246,0.06); }
-.dark .data-table tbody td { color: rgba(255,255,255,0.85); }
-/* Dark progress bar track */
-.dark .progress-bar { background: rgba(255,255,255,0.08); }
-/* Dark skeleton */
-.dark .skeleton { background-color: #0A1628; }
-/* Dark section headers */
-.dark .section-eyebrow { color: #60A5FA; }
-.dark .section-title { color: #F0F4F8; }
-.dark .section-lead { color: rgba(255,255,255,0.55); }
-/* Dark badges */
+
+/* ── 수익성 분석 결과 전용 깊이 카드 ──────────────────────────────────── */
+.dark .metric-card-positive {
+  background: rgba(52,211,153,0.08);
+  border-color: rgba(52,211,153,0.25);
+  border-left: 3px solid #34D399;
+}
+.dark .metric-card-negative {
+  background: rgba(248,113,113,0.08);
+  border-color: rgba(248,113,113,0.25);
+  border-left: 3px solid #F87171;
+}
+.dark .metric-card-neutral {
+  background: #162035;
+  border-color: rgba(255,255,255,0.11);
+  border-left: 3px solid rgba(99,102,241,0.5);
+}
+/* 2단 섹션: 부모 카드(L1) 안의 하위 항목(L2) */
+.dark .section-card {
+  background: #162035;
+  border-color: rgba(255,255,255,0.09);
+}
+/* 3단 섹션: L2 안의 더 깊은 항목(L3) */
+.dark .inner-card {
+  background: #1E2D47;
+  border-color: rgba(255,255,255,0.12);
+  border-left: 2px solid rgba(99,102,241,0.4);
+}
+/* ── 탭 (다크 가시성 강화) ────────────────────────────────────────────── */
+.dark .tab-line { color: rgba(255,255,255,0.50); }
+.dark .tab-line:hover { color: rgba(255,255,255,0.90); }
+.dark .tab-line.active { color: #A5B4FC; font-weight: 700; }
+.dark .tab-line.active::after { background-color: #6366F1; }
+.dark .tab-pill { color: rgba(255,255,255,0.55); }
+.dark .tab-pill:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.90); }
+.dark .tab-pill.active { background: rgba(99,102,241,0.22); color: #A5B4FC; border-color: rgba(99,102,241,0.35); }
+
+/* ── 데이터 테이블 ──────────────────────────────────────────────────────── */
+.dark .data-table thead th {
+  color: #94A3B8;  /* slate-400 — 이전 rgba(255,255,255,0.4)보다 밝음 */
+  border-bottom-color: rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.02);
+}
+.dark .data-table tbody tr { border-bottom-color: rgba(255,255,255,0.05); }
+.dark .data-table tbody tr:hover { background: rgba(99,102,241,0.07); }
+.dark .data-table tbody td { color: #CBD5E1; }  /* slate-300 — 이전보다 밝음 */
+
+/* ── 기타 ────────────────────────────────────────────────────────────────── */
+.dark .progress-bar { background: rgba(255,255,255,0.10); }
+.dark .skeleton { background-color: #162035; }
+
+/* ── 섹션 헤더 ───────────────────────────────────────────────────────────── */
+.dark .section-eyebrow { color: #818CF8; }  /* indigo-400 — 더 밝게 */
+.dark .section-title   { color: #F1F5F9; }  /* slate-100 */
+.dark .section-lead    { color: #94A3B8; }  /* slate-400 — 이전 55%보다 밝음 */
+
+/* ── 배지 (다크 최적화 — 배경 위에서 텍스트가 반드시 보임) ──────────────── */
 .dark .badge-positive {
-  background-color: rgba(16,185,129,0.12);
-  color: #6EE7B7;
-  border-color: rgba(16,185,129,0.2);
+  background-color: rgba(52,211,153,0.15);
+  color: #6EE7B7;    /* emerald-300 */
+  border-color: rgba(52,211,153,0.30);
 }
 .dark .badge-negative {
-  background-color: rgba(239,68,68,0.12);
-  color: #FCA5A5;
-  border-color: rgba(239,68,68,0.2);
+  background-color: rgba(248,113,113,0.15);
+  color: #FCA5A5;    /* red-300 */
+  border-color: rgba(248,113,113,0.30);
+}
+.dark .badge-warning {
+  background-color: rgba(251,191,36,0.15);
+  color: #FDE68A;    /* amber-200 */
+  border-color: rgba(251,191,36,0.30);
 }
 .dark .badge-info {
-  background-color: rgba(59,130,246,0.12);
-  color: #93C5FD;
-  border-color: rgba(59,130,246,0.2);
+  background-color: rgba(99,102,241,0.18);
+  color: #A5B4FC;    /* indigo-300 */
+  border-color: rgba(99,102,241,0.35);
 }
 .dark .badge-neutral {
-  background-color: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.5);
-  border-color: rgba(255,255,255,0.08);
+  background-color: rgba(255,255,255,0.08);
+  color: #CBD5E1;    /* slate-300 — 이전 50%보다 훨씬 밝음 */
+  border-color: rgba(255,255,255,0.14);
 }
-/* Dark buttons */
+
+/* ── 버튼 ──────────────────────────────────────────────────────────────── */
 .dark .btn-secondary {
-  background-color: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.85);
+  background-color: rgba(255,255,255,0.07);
+  color: #CBD5E1;    /* slate-300 */
   border-color: rgba(255,255,255,0.1);
 }
 .dark .btn-secondary:hover {
@@ -652,6 +777,43 @@ input[type="number"] { -moz-appearance: textfield; }
     text-transform: uppercase;
     border-radius: var(--radius-full);
     border: 1px solid var(--color-border-default);
+  }
+
+  /* ── Range Slider ────────────────────────────────────────────────────────── */
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--color-border-default);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-brand-dark);
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    cursor: pointer;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-brand-dark);
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    cursor: pointer;
+  }
+  input[type="range"]::-moz-range-track {
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--color-border-default);
   }
 
   /* ── Buttons ─────────────────────────────────────────────────────────────── */
@@ -1272,12 +1434,17 @@ button[role="switch"][data-state="unchecked"] { background-color: #CBD5E1 !impor
 /* ─────────────────────────────────────────────────────────────────────────────
    PAGE TRANSITION — Next.js App Router soft fade
    ───────────────────────────────────────────────────────────────────────────── */
+/* IMPORTANT: Do NOT animate transform on #main-content.
+   Any non-`none` transform on <main> creates a CSS containing block,
+   which breaks descendant `position: fixed` modals (they get positioned
+   relative to <main> instead of the viewport, appearing far down the page).
+   Opacity-only fade is safe. */
 #main-content {
   animation: page-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 @keyframes page-enter {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -1842,4 +2009,173 @@ button[role="switch"][data-state="unchecked"] { background-color: #CBD5E1 !impor
   h3 { font-size: var(--font-size-xl); }
   .data-metric { font-size: var(--font-size-3xl); }
   .section-title, .section-title-dark { font-size: var(--font-size-2xl); }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MOBILE × DARK MODE — OLED 친화 + 가독성 보정
+   - safe-area inset 처리
+   - 카드 그라디언트 약화 (배터리/eye-strain 절감)
+   - 본문 채도 보정
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .dark {
+    /* OLED true-black surface */
+    --color-surface-base:     #000000;
+    --color-surface-sunken:   #050810;
+    --color-surface-elevated: #0A1424;
+  }
+  .dark body {
+    background: #000000;
+  }
+  .dark .card-elevated {
+    background: #0A1424;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 2px 8px rgba(0,0,0,0.6);
+  }
+  .dark .card-elevated:hover {
+    box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 4px 16px rgba(0,0,0,0.7);
+  }
+  /* iOS safe-area */
+  .mobile-safe-bottom {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+  .mobile-safe-top {
+    padding-top: calc(16px + env(safe-area-inset-top));
+  }
+  /* 모바일 터치 타깃 (≥44px) */
+  .dark button, .dark a[role="button"], button, a[role="button"] {
+    min-height: 44px;
+  }
+  /* 텍스트 가독성 — 모바일 다크 환경에서 회색 대비 강화 */
+  .dark .data-table tbody td { color: rgba(255,255,255,0.92); }
+  .dark .section-lead { color: rgba(255,255,255,0.7); }
+}
+
+/* prefers-color-scheme:dark 자동 감지 (next-themes 미초기화 fallback) */
+@media (prefers-color-scheme: dark) {
+  html:not(.light):not(.dark) {
+    color-scheme: dark;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MICRO-INTERACTIONS — NPL Domain
+   - 카드 hover lift, 버튼 ripple, 배지 pulse, 가격 셔머
+   - 모두 prefers-reduced-motion 존중
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* 카드 hover — 1px lift + brand glow */
+  .npl-lift {
+    transition:
+      transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 200ms ease;
+    will-change: transform;
+  }
+  .npl-lift:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 12px 28px -8px rgba(15, 31, 53, 0.18),
+      0 0 0 1px rgba(74, 154, 222, 0.18);
+  }
+  .npl-lift:active {
+    transform: translateY(0);
+    transition-duration: 80ms;
+  }
+
+  /* 가격 셔머 — '입찰 임박' 가격 강조 */
+  @keyframes npl-shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
+  }
+  .npl-price-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--color-text-primary) 0%,
+      var(--color-text-primary) 40%,
+      #4A9ADE 50%,
+      var(--color-text-primary) 60%,
+      var(--color-text-primary) 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: npl-shimmer 2.4s linear infinite;
+  }
+
+  /* D-day pulse — 마감 임박 (≤3일) */
+  @keyframes npl-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.55); }
+    70%      { box-shadow: 0 0 0 8px rgba(244, 63, 94, 0); }
+  }
+  .npl-pulse-urgent {
+    animation: npl-pulse 1.8s cubic-bezier(0.66, 0, 0, 1) infinite;
+  }
+
+  /* 단계 전환 — 칸반/티어 셀 */
+  @keyframes npl-stage-flash {
+    0%   { background-color: rgba(74, 154, 222, 0); }
+    20%  { background-color: rgba(74, 154, 222, 0.18); }
+    100% { background-color: rgba(74, 154, 222, 0); }
+  }
+  .npl-stage-enter {
+    animation: npl-stage-flash 1.2s ease-out;
+  }
+
+  /* 버튼 ripple-lite (CSS만) */
+  .npl-btn-press {
+    transition: transform 120ms ease, box-shadow 120ms ease;
+  }
+  .npl-btn-press:active {
+    transform: scale(0.97);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.12);
+  }
+
+  /* 숫자 카운트업 (스파클 형) — 단순 fadeUp */
+  @keyframes npl-count-fade-up {
+    0%   { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .npl-count-up {
+    animation: npl-count-fade-up 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* skeleton shimmer */
+  @keyframes npl-skeleton-shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
+  }
+  .npl-skel {
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-sunken) 0%,
+      rgba(74, 154, 222, 0.08) 50%,
+      var(--color-surface-sunken) 100%
+    );
+    background-size: 200% 100%;
+    animation: npl-skeleton-shimmer 1.6s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  /* focus-visible ring — 키보드 a11y */
+  .npl-focus:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-surface-base), 0 0 0 4px #4A9ADE;
+    border-radius: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .npl-lift,
+  .npl-price-shimmer,
+  .npl-pulse-urgent,
+  .npl-stage-enter,
+  .npl-btn-press,
+  .npl-count-up,
+  .npl-skel {
+    animation: none !important;
+    transition: none !important;
+  }
 }

@@ -36,7 +36,7 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
         variant="ghost"
         size="sm"
         onClick={handleCopyLink}
-        className="h-8 px-2 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        className="h-8 px-2 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
         title="링크 복사"
       >
         <Link2 className="h-3.5 w-3.5 mr-1" />
@@ -46,7 +46,7 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
         variant="ghost"
         size="sm"
         onClick={handleKakaoShare}
-        className="h-8 px-2 text-xs text-gray-500 hover:text-yellow-600 dark:text-gray-400"
+        className="h-8 px-2 text-xs text-[var(--color-text-secondary)] hover:text-yellow-600"
         title="카카오톡 공유"
       >
         <MessageCircle className="h-3.5 w-3.5 mr-1" />
@@ -56,7 +56,7 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
         variant="ghost"
         size="sm"
         onClick={handleNaverShare}
-        className="h-8 px-2 text-xs text-gray-500 hover:text-green-600 dark:text-gray-400"
+        className="h-8 px-2 text-xs text-[var(--color-text-secondary)] hover:text-green-600"
         title="네이버 블로그"
       >
         <Newspaper className="h-3.5 w-3.5 mr-1" />

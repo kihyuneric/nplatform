@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Errors, fromUnknown } from '@/lib/api-error'
 import { query, insert } from '@/lib/data-layer'
+import { createClient } from '@/lib/supabase/server'
 
 // ─── Plans ──────────────────────────────────────────────────
 const PLANS: Record<string, { name: string; monthly_price: number; annual_price: number; credits: number }> = {
@@ -12,8 +13,14 @@ const PLANS: Record<string, { name: string; monthly_price: number; annual_price:
 // ─── GET: Get current subscription ──────────────────────────
 export async function GET() {
   try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return Errors.unauthorized('로그인이 필요합니다.')
+    }
+
     const { data } = await query('subscriptions', {
-      filters: { status: 'ACTIVE' },
+      filters: { status: 'ACTIVE', user_id: user.id },
       orderBy: 'created_at',
       order: 'desc',
       limit: 1,
@@ -53,6 +60,12 @@ export async function GET() {
 // ─── POST: Subscribe to a plan ──────────────────────────────
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return Errors.unauthorized('로그인이 필요합니다.')
+    }
+
     const body = await request.json()
 
     if (!body.plan_id || !body.billing_cycle) {
@@ -61,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     const plan = PLANS[body.plan_id.toLowerCase()]
     if (!plan) {
-      return Errors.badRequest('Invalid plan_id: ${body.plan_id}. Valid: free, pro, enterprise')
+      return Errors.badRequest(`Invalid plan_id: ${body.plan_id}. Valid: free, pro, enterprise`)
     }
 
     if (!['MONTHLY', 'ANNUAL'].includes(body.billing_cycle)) {
@@ -79,7 +92,7 @@ export async function POST(request: NextRequest) {
     const price = body.billing_cycle === 'MONTHLY' ? plan.monthly_price : plan.annual_price
 
     const { data } = await insert('subscriptions', {
-      user_id: 'current-user',
+      user_id: user.id,
       plan_id: body.plan_id,
       plan_name: plan.name,
       billing_cycle: body.billing_cycle,

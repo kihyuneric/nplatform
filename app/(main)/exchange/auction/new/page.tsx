@@ -18,7 +18,6 @@ import {
   ClipboardList,
   FileCheck,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -31,7 +30,6 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 
@@ -344,8 +342,8 @@ export default function BiddingNewPage() {
                   isCompleted
                     ? "border-emerald-500 bg-emerald-500 text-white"
                     : isActive
-                      ? "border-[#1B3A5C] bg-[#1B3A5C] text-white shadow-lg shadow-[#1B3A5C]/30"
-                      : "border-gray-300 bg-white text-gray-400"
+                      ? "border-[var(--color-brand-dark)] bg-[var(--color-brand-dark)] text-white shadow-lg shadow-[var(--color-brand-dark)]/30"
+                      : "border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)]"
                 }`}
               >
                 {isCompleted ? (
@@ -357,7 +355,7 @@ export default function BiddingNewPage() {
               <span
                 className={`text-xs font-medium ${
                   isActive
-                    ? "text-[#1B3A5C]"
+                    ? "text-[var(--color-brand-dark)]"
                     : isCompleted
                       ? "text-emerald-600"
                       : "text-gray-400"
@@ -384,7 +382,7 @@ export default function BiddingNewPage() {
   const renderStep1 = () => (
     <Card className="border-0 shadow-md">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg text-[#1B3A5C]">
+        <CardTitle className="flex items-center gap-2 text-lg text-[var(--color-brand-dark)]">
           <Building2 className="h-5 w-5" />
           기본정보
         </CardTitle>
@@ -492,13 +490,13 @@ export default function BiddingNewPage() {
 
         {/* Navigation */}
         <div className="flex justify-end pt-4">
-          <Button
+          <button
             onClick={handleNext}
-            className="bg-[#1B3A5C] hover:bg-[#1B3A5C]/90"
+            className="bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-dark)]/90 inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white transition-colors"
           >
             다음
             <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
+          </button>
         </div>
       </CardContent>
     </Card>
@@ -509,7 +507,7 @@ export default function BiddingNewPage() {
   const renderStep2 = () => (
     <Card className="border-0 shadow-md">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg text-[#1B3A5C]">
+        <CardTitle className="flex items-center gap-2 text-lg text-[var(--color-brand-dark)]">
           <Banknote className="h-5 w-5" />
           채권정보
         </CardTitle>
@@ -612,25 +610,25 @@ export default function BiddingNewPage() {
 
         {/* Auto calculations */}
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-          <div className="rounded-lg border bg-blue-50/70 p-4">
-            <p className="text-xs text-gray-500 font-medium mb-1">
+          <div className="rounded-lg border border-[var(--color-border-subtle)] bg-blue-500/10 p-4">
+            <p className="text-xs text-[var(--color-text-muted)] font-medium mb-1">
               LTV (자동계산)
             </p>
-            <p className="text-2xl font-bold text-[#1B3A5C]">
+            <p className="text-2xl font-bold text-[var(--color-brand-dark)]">
               {ltvValue ? `${ltvValue}%` : "-"}
             </p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-[var(--color-text-muted)] mt-1">
               대출원금 / 감정가 x 100
             </p>
           </div>
-          <div className="rounded-lg border bg-emerald-50/70 p-4">
-            <p className="text-xs text-gray-500 font-medium mb-1">
+          <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4">
+            <p className="text-xs text-[var(--color-text-muted)] font-medium mb-1">
               할인율 (자동계산)
             </p>
-            <p className="text-2xl font-bold text-emerald-700">
+            <p className="text-2xl font-bold text-emerald-400">
               {discountRate ? `${discountRate}%` : "-"}
             </p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-[var(--color-text-muted)] mt-1">
               (감정가 - 희망매각가) / 감정가 x 100
             </p>
           </div>
@@ -638,16 +636,19 @@ export default function BiddingNewPage() {
 
         {/* Navigation */}
         <div className="flex justify-between pt-4">
-          <Button variant="outline" onClick={handlePrev}>
+          <button
+            onClick={handlePrev}
+            className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] transition-colors"
+          >
             이전
-          </Button>
-          <Button
+          </button>
+          <button
             onClick={handleNext}
-            className="bg-[#1B3A5C] hover:bg-[#1B3A5C]/90"
+            className="bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-dark)]/90 inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white transition-colors"
           >
             다음
             <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
+          </button>
         </div>
       </CardContent>
     </Card>
@@ -658,7 +659,7 @@ export default function BiddingNewPage() {
   const renderStep3 = () => (
     <Card className="border-0 shadow-md">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg text-[#1B3A5C]">
+        <CardTitle className="flex items-center gap-2 text-lg text-[var(--color-brand-dark)]">
           <ClipboardList className="h-5 w-5" />
           입찰조건
         </CardTitle>
@@ -785,16 +786,19 @@ export default function BiddingNewPage() {
 
         {/* Navigation */}
         <div className="flex justify-between pt-4">
-          <Button variant="outline" onClick={handlePrev}>
+          <button
+            onClick={handlePrev}
+            className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] transition-colors"
+          >
             이전
-          </Button>
-          <Button
+          </button>
+          <button
             onClick={handleNext}
-            className="bg-[#1B3A5C] hover:bg-[#1B3A5C]/90"
+            className="bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-dark)]/90 inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white transition-colors"
           >
             다음: 확인
             <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
+          </button>
         </div>
       </CardContent>
     </Card>
@@ -805,8 +809,8 @@ export default function BiddingNewPage() {
   const renderStep4 = () => {
     const summaryRow = (label: string, value: string | null | undefined) => (
       <div className="flex justify-between py-1.5">
-        <span className="text-sm text-gray-500">{label}</span>
-        <span className="text-sm font-medium text-gray-900">
+        <span className="text-sm text-[var(--color-text-muted)]">{label}</span>
+        <span className="text-sm font-medium text-[var(--color-text-primary)]">
           {value || "-"}
         </span>
       </div>
@@ -834,7 +838,7 @@ export default function BiddingNewPage() {
         {/* Summary Card */}
         <Card className="border-0 shadow-md">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-[#1B3A5C]">
+            <CardTitle className="flex items-center gap-2 text-lg text-[var(--color-brand-dark)]">
               <FileCheck className="h-5 w-5" />
               등록 정보 확인
             </CardTitle>
@@ -842,9 +846,9 @@ export default function BiddingNewPage() {
           <CardContent className="space-y-4">
             {/* 기본정보 */}
             <div>
-              <Badge className="bg-[#1B3A5C]/10 text-[#1B3A5C] border-[#1B3A5C]/20 mb-2">
+              <span className="inline-flex items-center bg-[var(--color-brand-dark)]/10 text-[var(--color-brand-dark)] border border-[var(--color-brand-dark)]/20 mb-2 px-2 py-0.5 rounded text-xs font-medium">
                 기본정보
-              </Badge>
+              </span>
               <div className="rounded-lg border p-4 space-y-0.5">
                 {summaryRow("매물명", form.name)}
                 {summaryRow("담보유형", form.collateralType)}
@@ -866,9 +870,9 @@ export default function BiddingNewPage() {
 
             {/* 채권정보 */}
             <div>
-              <Badge className="bg-[#1B3A5C]/10 text-[#1B3A5C] border-[#1B3A5C]/20 mb-2">
+              <span className="inline-flex items-center bg-[var(--color-brand-dark)]/10 text-[var(--color-brand-dark)] border border-[var(--color-brand-dark)]/20 mb-2 px-2 py-0.5 rounded text-xs font-medium">
                 채권정보
-              </Badge>
+              </span>
               <div className="rounded-lg border p-4 space-y-0.5">
                 {amountSummary("대출원금", form.loanPrincipal)}
                 {amountSummary("감정가", form.appraisalValue)}
@@ -888,9 +892,9 @@ export default function BiddingNewPage() {
 
             {/* 입찰조건 */}
             <div>
-              <Badge className="bg-[#1B3A5C]/10 text-[#1B3A5C] border-[#1B3A5C]/20 mb-2">
+              <span className="inline-flex items-center bg-[var(--color-brand-dark)]/10 text-[var(--color-brand-dark)] border border-[var(--color-brand-dark)]/20 mb-2 px-2 py-0.5 rounded text-xs font-medium">
                 입찰조건
-              </Badge>
+              </span>
               <div className="rounded-lg border p-4 space-y-0.5">
                 {summaryRow("입찰 시작일", form.biddingStart)}
                 {summaryRow("입찰 마감일", form.biddingEnd)}
@@ -947,24 +951,26 @@ export default function BiddingNewPage() {
 
         {/* Action Buttons */}
         <div className="flex gap-3 pb-8">
-          <Button variant="outline" onClick={handlePrev} className="flex-1">
+          <button
+            onClick={handlePrev}
+            className="flex-1 inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] transition-colors"
+          >
             이전
-          </Button>
-          <Button
-            variant="outline"
+          </button>
+          <button
             onClick={saveDraft}
             disabled={submitting}
-            className="flex-1 border-[#1B3A5C] text-[#1B3A5C] hover:bg-[#1B3A5C]/5"
+            className="flex-1 inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium border border-[var(--color-brand-dark)] text-[var(--color-brand-dark)] hover:bg-[var(--color-brand-dark)]/5 transition-colors disabled:opacity-50"
           >
             <Save className="mr-2 h-4 w-4" />
             임시저장
-          </Button>
-          <Button
+          </button>
+          <button
             onClick={handleSubmit}
             disabled={
               submitting || !form.confirmAccuracy || !form.confirmTerms
             }
-            className="flex-[2] bg-[#1B3A5C] hover:bg-[#1B3A5C]/90"
+            className="flex-[2] inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-dark)]/90 text-white transition-colors disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -972,7 +978,7 @@ export default function BiddingNewPage() {
               <Send className="mr-2 h-4 w-4" />
             )}
             {submitting ? "등록 중..." : "등록하기"}
-          </Button>
+          </button>
         </div>
       </div>
     )
@@ -981,9 +987,9 @@ export default function BiddingNewPage() {
   // ─── Render ──────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--color-surface-base)]">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-[#1B3A5C] to-[#2E75B6] text-white">
+      <section className="bg-gradient-to-br from-[var(--color-brand-dark)] to-[#2E75B6] text-white">
         <div className="container mx-auto px-4 py-10 md:py-14">
           <Link
             href="/exchange/auction"

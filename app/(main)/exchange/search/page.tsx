@@ -15,7 +15,7 @@ import { GuideButton } from '@/components/guide/guide-button'
 const C = {
   bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E", bg3: "#0A1628", bg4: "#0F1F35",
   em: "#10B981", emL: "#34D399", blue: "#3B82F6", amber: "#F59E0B",
-  purple: "#A855F7", rose: "#F43F5E",
+  purple: "#A855F7", rose: "#EF4444",
   l0: "#FFFFFF", l1: "#F8FAFC", l2: "#F1F5F9", l3: "#E2E8F0",
   lt1: "#0F172A", lt2: "#334155", lt3: "#64748B", lt4: "#94A3B8",
 }
@@ -390,12 +390,12 @@ function getStatusBadge(status: string) {
 }
 
 function getTypeBadge(type: string) {
-  if (!type) return 'bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+  if (!type) return 'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)]'
   if (['아파트', '빌라(다세대)', '다가구', '오피스텔', '단독주택', '타운하우스'].includes(type))
-    return 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+    return 'bg-blue-500/10 text-blue-300'
   if (['상가', '오피스', '공장', '지식산업센터', '창고', '물류센터', '호텔·숙박'].includes(type))
-    return 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300'
-  return 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300'
+    return 'bg-amber-500/10 text-amber-300'
+  return 'bg-green-500/10 text-green-400'
 }
 
 const emptyFilters: FilterValues = {

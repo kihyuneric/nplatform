@@ -31,30 +31,51 @@ export default function LoginPage() {
         PARTNER: '/partner/dashboard', VIEWER: '/',
       }
 
-      if (email === 'admin' && password === 'admin') {
+      // ─── Dev bypass: admin/admin (SUPER_ADMIN) and demo/demo (BUYER_INDV) ───
+      const devCreds: Record<string, { role: string; name: string; tier: string }> = {
+        'admin|admin': { role: 'SUPER_ADMIN', name: '관리자', tier: 'L3' },
+        'demo|demo':   { role: 'BUYER_INDV', name: '데모 사용자', tier: 'L1' },
+        'seller|seller': { role: 'SELLER', name: '매도자 데모', tier: 'L1' },
+      }
+      const devKey = `${email.trim().toLowerCase()}|${password}`
+      const devMatch = devCreds[devKey]
+      if (devMatch) {
         const devUser = {
-          id: '00000000-0000-0000-0000-000000000001',
-          email: 'admin@nplatform.dev', name: '관리자',
-          role: 'SUPER_ADMIN' as const, company_name: 'NPLatform',
-          phone: '010-0000-0000', is_verified: true,
-          kyc_status: 'APPROVED' as const, mfa_enabled: false,
-          phone_verified: true, preferred_language: 'ko',
-          created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+          id: `dev-${devMatch.role.toLowerCase()}-uuid`,
+          email: `${email}@nplatform.dev`,
+          name: devMatch.name,
+          role: devMatch.role,
+          approval_status: 'APPROVED',
+          identity_verified: true,
+          kyc_status: 'APPROVED',
+          investor_tier: devMatch.tier,
+          created_at: new Date().toISOString(),
         }
         localStorage.setItem('dev_user', JSON.stringify(devUser))
-        document.cookie = 'dev_user_active=true; path=/; max-age=86400'
-        document.cookie = 'active_role=SUPER_ADMIN; path=/; max-age=86400'
+        document.cookie = `active_role=${devMatch.role};path=/;max-age=${60 * 60 * 24 * 30}`
+        document.cookie = `dev_user_active=1;path=/;max-age=${60 * 60 * 24 * 30}`
         window.dispatchEvent(new Event('dev-login'))
-        router.push('/admin')
+        router.push(roleDashboard[devMatch.role] || '/')
         router.refresh()
         return
       }
 
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password })
 
-      if (authError) { setError('이메일 또는 비밀번호가 올바르지 않습니다.'); return }
+      if (authError) { setError('이메일 또는 비밀번호가 올바르지 않습니다. (개발: admin/admin, demo/demo, seller/seller 사용 가능)'); return }
 
-      const userRole = authData.user?.user_metadata?.role
+      // user_metadata.role 우선 사용, 없으면 DB에서 조회
+      let userRole: string | undefined = authData.user?.user_metadata?.role
+
+      if (!userRole) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', authData.user.id)
+          .single()
+        userRole = profile?.role
+      }
+
       if (!userRole) { router.push('/select-role'); return }
 
       document.cookie = `active_role=${userRole};path=/;max-age=${60 * 60 * 24 * 30}`
@@ -67,14 +88,15 @@ export default function LoginPage() {
     }
   }
 
-  const inputCls = 'border border-[#E2E8F0] rounded-xl px-4 py-3 w-full focus:ring-2 focus:ring-[#2E75B6] focus:border-transparent outline-none text-[#0D1F38] placeholder:text-[#CBD5E1] text-sm transition-all'
+  // 입력 텍스트가 확실히 보이도록 bg-white + slate-900 명시 (다크모드에서도 유지)
+  const inputCls = 'border border-[#E2E8F0] rounded-xl px-4 py-3 w-full focus:ring-2 focus:ring-[#2E75B6] focus:border-transparent outline-none bg-white !text-slate-900 placeholder:text-slate-400 text-sm transition-all'
 
   return (
     <div className="min-h-screen flex">
       {/* LEFT PANEL — only xl+ (≥1280px) */}
-      <div className="hidden xl:flex xl:w-[420px] 2xl:w-[480px] shrink-0 bg-[#060E1C] flex-col justify-between p-10 2xl:p-12 relative overflow-hidden">
+      <div className="hidden xl:flex xl:w-[420px] 2xl:w-[480px] shrink-0 bg-[var(--color-brand-deepest)] flex-col justify-between p-10 2xl:p-12 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#2E75B6]/15 blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full bg-[#1B3A5C]/40 blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full bg-[var(--color-brand-dark)]/40 blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
 
         {/* Logo */}
@@ -123,14 +145,14 @@ export default function LoginPage() {
 
           {/* Mobile/tablet logo — hidden on xl+ */}
           <div className="flex items-center gap-2 mb-8 xl:hidden">
-            <div className="w-8 h-8 rounded-xl bg-[#0D1F38] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-[var(--color-brand-deep)] flex items-center justify-center">
               <span className="text-white font-black text-sm">N</span>
             </div>
-            <span className="text-lg font-black text-[#0D1F38]">NPLatform</span>
+            <span className="text-lg font-black text-[var(--color-brand-deep)]">NPLatform</span>
           </div>
 
           <div className="mb-8">
-            <h1 className="text-3xl font-black text-[#0D1F38] tracking-normal">로그인</h1>
+            <h1 className="text-3xl font-black text-[var(--color-brand-deep)] tracking-normal">로그인</h1>
             <p className="mt-2 text-sm text-[#64748B] tracking-normal">NPLatform에 오신 것을 환영합니다</p>
           </div>
 
@@ -209,7 +231,7 @@ export default function LoginPage() {
                 <input type="checkbox" checked={saveId} onChange={(e) => setSaveId(e.target.checked)} className="w-4 h-4 rounded border-[#E2E8F0] accent-[#2E75B6]" />
                 아이디 저장
               </label>
-              <Link href="/forgot-password" className="text-sm text-[#2E75B6] hover:text-[#1B3A5C] transition-colors font-medium">비밀번호 찾기</Link>
+              <Link href="/forgot-password" className="text-sm text-[#2E75B6] hover:text-[var(--color-brand-dark)] transition-colors font-medium">비밀번호 찾기</Link>
             </div>
 
             {error && (
@@ -222,22 +244,31 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#1B3A5C] text-white py-4 rounded-xl text-lg font-bold hover:bg-[#2E75B6] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-[var(--color-brand-dark)] text-white py-4 rounded-xl text-lg font-bold hover:bg-[#2E75B6] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> 로그인 중...</> : '로그인'}
             </button>
+
+            {/* Dev credentials hint */}
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800 leading-relaxed">
+              <p className="font-bold mb-1">🔓 개발용 테스트 계정</p>
+              <button type="button" onClick={() => { setEmail('admin'); setPassword('admin') }} className="block hover:underline">
+                <code className="font-mono">admin / admin</code> — 관리자 (SUPER_ADMIN)
+              </button>
+              <button type="button" onClick={() => { setEmail('demo'); setPassword('demo') }} className="block hover:underline">
+                <code className="font-mono">demo / demo</code> — 개인 투자자 (BUYER)
+              </button>
+              <button type="button" onClick={() => { setEmail('seller'); setPassword('seller') }} className="block hover:underline">
+                <code className="font-mono">seller / seller</code> — 매도자 (SELLER)
+              </button>
+            </div>
           </form>
 
           <div className="mt-6 text-center text-sm text-[#64748B]">
             계정이 없으신가요?{' '}
-            <Link href="/signup" className="text-[#2E75B6] font-bold hover:text-[#1B3A5C] transition-colors">회원가입</Link>
+            <Link href="/signup" className="text-[#2E75B6] font-bold hover:text-[var(--color-brand-dark)] transition-colors">회원가입</Link>
           </div>
 
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-3 text-center">
-              <Link href="/dev-login" className="text-xs text-amber-500 hover:text-amber-600 font-medium">개발 테스트 계정으로 로그인</Link>
-            </div>
-          )}
         </div>
       </div>
     </div>

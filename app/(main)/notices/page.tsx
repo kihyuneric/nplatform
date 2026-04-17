@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import DS from '@/lib/design-system'
 
 interface Notice {
@@ -14,15 +15,8 @@ interface Notice {
   createdAt: string
 }
 
-const MOCK_NOTICES: Notice[] = [
-  { id: 'n1', title: '[긴급] 시스템 정기 점검 안내 (3/22 02:00~06:00)', summary: '서비스 안정성 향상을 위한 정기 점검이 진행됩니다. 점검 시간 동안 서비스 이용이 제한됩니다.', category: 'MAINTENANCE', isPinned: true, isNew: true, isImportant: true, createdAt: '2026-03-20' },
-  { id: 'n2', title: 'NPLatform v5.0 업데이트 — 실시간 기능 & 다크모드 출시', summary: '실시간 알림, 다크모드, 로딩 스켈레톤 등 다양한 신규 기능이 추가되었습니다.', category: 'UPDATE', isPinned: true, isNew: true, isImportant: false, createdAt: '2026-03-19' },
-  { id: 'n3', title: 'AI 매칭 알고리즘 v3.0 적용 안내', summary: '더욱 정교해진 AI 매칭 알고리즘이 적용되어 매수자·매도자 간 최적 매칭 정확도가 15% 향상되었습니다.', category: 'SERVICE', isPinned: false, isNew: false, createdAt: '2026-03-15' },
-  { id: 'n4', title: '모바일 앱 PWA 지원 시작', summary: '이제 모바일 브라우저에서 "홈 화면에 추가"로 앱처럼 사용할 수 있습니다.', category: 'UPDATE', isPinned: false, isNew: false, createdAt: '2026-03-12' },
-  { id: 'n5', title: '개인정보 처리방침 변경 안내', summary: '2026년 4월 1일부터 적용되는 개인정보 처리방침 변경 사항을 안내드립니다.', category: 'SERVICE', isPinned: false, isNew: false, createdAt: '2026-03-10' },
-  { id: 'n6', title: '2026년 1분기 NPL 시장 리포트 발행', summary: '전국 NPL 시장 동향, 지역별 할인율 분석, 투자 트렌드를 담은 분기 리포트가 발행되었습니다.', category: 'SERVICE', isPinned: false, isNew: false, createdAt: '2026-03-08' },
-  { id: 'n7', title: '투자자 인증 등급 체계 개편 안내', summary: '투자자 인증 등급이 3단계에서 4단계로 세분화되며, 등급별 혜택이 확대됩니다.', category: 'SERVICE', isPinned: false, isNew: false, createdAt: '2026-03-05' },
-]
+// Empty fallback — notices loaded from Supabase/API only
+const EMPTY_NOTICES: Notice[] = []
 
 const NOTICE_TABS = [
   { value: 'ALL', label: '전체' },
@@ -32,9 +26,9 @@ const NOTICE_TABS = [
 ]
 
 const CATEGORY_STYLE: Record<string, { label: string; bg: string; text: string; border: string }> = {
-  SERVICE:     { label: '서비스 공지', bg: 'bg-blue-50',  text: 'text-blue-700', border: 'border-blue-200' },
-  MAINTENANCE: { label: '점검 안내',   bg: 'bg-red-50',   text: 'text-red-700', border: 'border-red-200' },
-  UPDATE:      { label: '업데이트',    bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+  SERVICE:     { label: '서비스 공지', bg: 'bg-blue-500/10',  text: 'text-blue-400', border: 'border-blue-500/20' },
+  MAINTENANCE: { label: '점검 안내',   bg: 'bg-red-500/10',   text: 'text-red-400', border: 'border-red-500/20' },
+  UPDATE:      { label: '업데이트',    bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
 }
 
 const PAGE_SIZE = 5
@@ -103,15 +97,47 @@ function Pagination({ total, page, onPage }: { total: number; page: number; onPa
 
 export default function NoticesPage() {
   const [tab, setTab] = useState('ALL')
-  const [notices, setNotices] = useState<Notice[]>(MOCK_NOTICES)
+  const [notices, setNotices] = useState<Notice[]>(EMPTY_NOTICES)
+  const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
 
-  useEffect(() => {
-    fetch('/api/v1/notices')
-      .then((r) => r.json())
-      .then(({ data }) => { if (Array.isArray(data) && data.length > 0) setNotices(data) })
-      .catch(() => {})
+  const loadNotices = useCallback(async () => {
+    setLoading(true)
+    try {
+      // Primary: Supabase notices table
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('notices')
+        .select('id, title, summary, category, is_pinned, created_at, is_important')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(50)
+      if (data && data.length > 0) {
+        const now = new Date()
+        setNotices(data.map((r: any) => ({
+          id: String(r.id),
+          title: r.title ?? '—',
+          summary: r.summary ?? '',
+          category: (r.category ?? 'SERVICE') as Notice['category'],
+          isPinned: Boolean(r.is_pinned),
+          isNew: new Date(r.created_at) > new Date(now.getTime() - 7 * 86400000),
+          isImportant: Boolean(r.is_important),
+          createdAt: String(r.created_at ?? '').slice(0, 10),
+        })))
+        return
+      }
+      // Secondary: API route
+      const res = await fetch('/api/v1/notices')
+      if (res.ok) {
+        const { data: apiData } = await res.json()
+        if (Array.isArray(apiData) && apiData.length > 0) setNotices(apiData)
+      }
+    } catch { /* stays empty */ } finally {
+      setLoading(false)
+    }
   }, [])
+
+  useEffect(() => { loadNotices() }, [loadNotices])
 
   const filtered = notices.filter((n) => tab === 'ALL' || n.category === tab)
   const pinned = filtered.filter((n) => n.isPinned)

@@ -126,7 +126,7 @@ export function KeywordAlertModal() {
                   className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none ${
                     a.active
                       ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                      : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)]'
                   }`}
                 >
                   {a.active ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}

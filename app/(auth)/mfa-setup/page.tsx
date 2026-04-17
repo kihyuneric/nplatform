@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Loader2, Shield, Copy, Check, ArrowRight } from 'lucide-react'
@@ -123,13 +122,13 @@ export default function MFASetupPage() {
                       {mfaData.secret}
                     </p>
                   </div>
-                  <Button
-                    className="w-full"
+                  <button
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#1B3A5C] hover:bg-[#2E75B6] text-white text-sm font-medium transition-colors"
                     onClick={() => setStep('verify')}
                   >
                     다음
                     <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
+                  </button>
                 </>
               ) : null}
             </>
@@ -156,8 +155,8 @@ export default function MFASetupPage() {
                 {error && (
                   <p className="text-center text-sm text-destructive">{error}</p>
                 )}
-                <Button
-                  className="w-full"
+                <button
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#1B3A5C] hover:bg-[#2E75B6] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleVerify}
                   disabled={loading || code.length !== 6}
                 >
@@ -165,7 +164,7 @@ export default function MFASetupPage() {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
                   인증 확인
-                </Button>
+                </button>
               </div>
             </>
           )}
@@ -189,9 +188,8 @@ export default function MFASetupPage() {
                   ))}
                 </div>
               </div>
-              <Button
-                variant="outline"
-                className="w-full"
+              <button
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[var(--color-border-default)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-sunken)] text-sm transition-colors"
                 onClick={copyBackupCodes}
               >
                 {copied ? (
@@ -205,10 +203,13 @@ export default function MFASetupPage() {
                     복사
                   </>
                 )}
-              </Button>
-              <Button className="w-full" onClick={handleComplete}>
+              </button>
+              <button
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#1B3A5C] hover:bg-[#2E75B6] text-white text-sm font-medium transition-colors"
+                onClick={handleComplete}
+              >
                 설정 완료
-              </Button>
+              </button>
             </>
           )}
         </CardContent>

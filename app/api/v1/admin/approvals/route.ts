@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { logger } from '@/lib/logger'
-import { query, insert, update } from "@/lib/data-layer"
+import { query, update } from "@/lib/data-layer"
 import { requireAdmin } from "@/lib/auth-guard"
+import { createClient } from "@/lib/supabase/server"
+import { sendEmail, getUserEmail } from "@/lib/email/email-service"
+import { kycStatusEmail } from "@/lib/email/templates"
 
 // ─── GET /api/v1/admin/approvals ──────────────────────────────
 export async function GET(req: NextRequest) {
@@ -79,6 +82,26 @@ export async function POST(req: NextRequest) {
         reason: action === "reject" ? reason : undefined,
         updated_at: new Date().toISOString(),
       })
+    }
+
+    // Send KYC result email (best-effort)
+    try {
+      const supabase = await createClient()
+      const { email, name } = await getUserEmail(supabase, user_id)
+      if (email) {
+        await sendEmail({
+          to: email,
+          ...kycStatusEmail({
+            name,
+            status: action === 'approve' ? 'APPROVED' : 'REJECTED',
+            reason: action === 'reject' ? reason : undefined,
+            tier: action === 'approve' ? 'L1' : undefined,
+          }),
+          tags: [{ name: 'type', value: 'kyc_result' }],
+        })
+      }
+    } catch (emailErr) {
+      logger.warn('[admin/approvals] KYC email failed:', { error: emailErr })
     }
 
     return NextResponse.json({

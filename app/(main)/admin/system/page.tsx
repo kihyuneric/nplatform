@@ -54,7 +54,7 @@ export default function AdminSystemPage() {
         {/* 데이터베이스 Tab */}
         {tab === "데이터베이스" && (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 { icon: <CheckCircle2 className="h-5 w-5 text-[var(--color-positive)] mx-auto mb-1" />, label: "연결 정상" },
                 { value: "42", label: "테이블 수" },
@@ -84,7 +84,7 @@ export default function AdminSystemPage() {
         {/* API 연동 Tab */}
         {tab === "API 연동" && (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 { value: "5", label: "활성 API", color: "text-[var(--color-positive)]" },
                 { value: "1", label: "오류", color: "text-[var(--color-danger)]" },
@@ -117,7 +117,7 @@ export default function AdminSystemPage() {
                   <div key={api.name} className={`flex items-center justify-between py-2 border-b border-[var(--color-border-subtle)] last:border-0`}>
                     <span className={DS.text.body}>{api.name}</span>
                     <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border ${
-                      api.status === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"
+                      api.status === "active" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
                     }`}>
                       {api.status === "active" ? "정상" : "오류"}
                     </span>
@@ -131,7 +131,7 @@ export default function AdminSystemPage() {
         {/* 모듈 관리 Tab */}
         {tab === "모듈 관리" && (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 { value: "14", label: "전체 모듈", color: "" },
                 { value: "12", label: "활성화", color: "text-[var(--color-positive)]" },
@@ -163,7 +163,7 @@ export default function AdminSystemPage() {
                   <div key={mod.name} className={`flex items-center justify-between py-2 border-b border-[var(--color-border-subtle)] last:border-0`}>
                     <span className={DS.text.body}>{mod.name}</span>
                     <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border ${
-                      mod.enabled ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-50 text-slate-600 border-slate-200"
+                      mod.enabled ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)]"
                     }`}>
                       {mod.enabled ? "활성" : "비활성"}
                     </span>
@@ -177,7 +177,7 @@ export default function AdminSystemPage() {
         {/* 자동화 Tab */}
         {tab === "자동화" && (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 { value: "8", label: "등록 작업", color: "" },
                 { value: "6", label: "활성 작업", color: "text-[var(--color-positive)]" },
@@ -206,7 +206,7 @@ export default function AdminSystemPage() {
         {/* 에러 Tab */}
         {tab === "에러" && (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 { value: "3", label: "미해결 에러", color: "text-[var(--color-danger)]" },
                 { value: "24", label: "해결 완료", color: "text-[var(--color-positive)]" },

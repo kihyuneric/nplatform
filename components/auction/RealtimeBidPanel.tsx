@@ -177,7 +177,7 @@ export default function RealtimeBidPanel({
                   key={bid.id}
                   className={`flex items-center justify-between rounded-lg px-3 py-2 transition-colors ${
                     isMine
-                      ? 'bg-[#1B3A5C]/40 border border-[#2E75B6]/30'
+                      ? 'bg-[var(--color-brand-dark)]/40 border border-[#2E75B6]/30'
                       : 'bg-white/[0.04] border border-transparent'
                   }`}
                 >

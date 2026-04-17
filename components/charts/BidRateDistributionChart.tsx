@@ -125,7 +125,7 @@ export default function BidRateDistributionChart({
 
   if (values.length === 0) {
     return (
-      <div className={`h-36 flex items-center justify-center text-sm text-slate-400 tracking-normal ${className}`}>
+      <div className={`h-36 flex items-center justify-center text-sm text-[var(--color-text-muted)] tracking-normal ${className}`}>
         낙찰 데이터 없음
       </div>
     )
@@ -145,12 +145,12 @@ export default function BidRateDistributionChart({
       {showStats && stats && (
         <div className="grid grid-cols-4 gap-2 mb-4">
           {[
-            { label: '평균', value: `${(stats.mean * 100).toFixed(1)}%`,   color: 'text-blue-600' },
-            { label: '중앙값', value: `${(stats.median * 100).toFixed(1)}%`, color: 'text-emerald-600' },
-            { label: 'Q1~Q3', value: `${(stats.q1 * 100).toFixed(0)}~${(stats.q3 * 100).toFixed(0)}%`, color: 'text-slate-700' },
-            { label: '표본 수', value: `${stats.n}건`,                   color: 'text-slate-700' },
+            { label: '평균', value: `${(stats.mean * 100).toFixed(1)}%`,   color: 'text-blue-400' },
+            { label: '중앙값', value: `${(stats.median * 100).toFixed(1)}%`, color: 'text-emerald-400' },
+            { label: 'Q1~Q3', value: `${(stats.q1 * 100).toFixed(0)}~${(stats.q3 * 100).toFixed(0)}%`, color: 'text-slate-400' },
+            { label: '표본 수', value: `${stats.n}건`,                   color: 'text-slate-400' },
           ].map(k => (
-            <div key={k.label} className="bg-slate-50 rounded-lg px-3 py-2 text-center">
+            <div key={k.label} className="bg-[var(--color-surface-overlay)] rounded-lg px-3 py-2 text-center">
               <p className="text-[10px] text-slate-400 mb-0.5 tracking-normal">{k.label}</p>
               <p className={`text-sm font-bold tabular-nums tracking-normal ${k.color}`}>{k.value}</p>
             </div>
@@ -203,7 +203,7 @@ export default function BidRateDistributionChart({
       </ResponsiveContainer>
 
       {/* 범례 */}
-      <div className="mt-2 flex items-center gap-4 justify-end text-[10px] text-slate-400 tracking-normal">
+      <div className="mt-2 flex items-center gap-4 justify-end text-[10px] text-[var(--color-text-muted)] tracking-normal">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400" />저가 낙찰 (&lt;중앙값)</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" />적정 구간</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400" />고가 낙찰 (&gt;중앙값)</span>
@@ -236,8 +236,8 @@ export function BidRateByTypeComparison({
     <div className={`space-y-1 ${className}`}>
       {stats.map(s => (
         <div key={s.type} className="flex items-center gap-3">
-          <span className="text-xs font-medium text-slate-600 w-16 shrink-0 tracking-normal">{s.type}</span>
-          <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden relative">
+          <span className="text-xs font-medium text-[var(--color-text-secondary)] w-16 shrink-0 tracking-normal">{s.type}</span>
+          <div className="flex-1 h-6 bg-[var(--color-surface-overlay)] rounded-full overflow-hidden relative">
             {s.n > 0 && s.q1 !== undefined && s.q3 !== undefined && s.mean !== undefined ? (
               <>
                 {/* IQR 박스 */}
@@ -255,20 +255,20 @@ export function BidRateByTypeComparison({
                 />
               </>
             ) : (
-              <div className="h-full bg-slate-200 rounded-full" />
+              <div className="h-full bg-[var(--color-surface-elevated)] rounded-full" />
             )}
           </div>
-          <span className="text-xs tabular-nums text-slate-500 w-12 text-right tracking-normal">
+          <span className="text-xs tabular-nums text-[var(--color-text-secondary)] w-12 text-right tracking-normal">
             {s.n > 0 && s.median !== undefined ? `${(s.median * 100).toFixed(0)}%` : '—'}
           </span>
-          <span className="text-[10px] tabular-nums text-slate-400 w-8 text-right tracking-normal">
+          <span className="text-[10px] tabular-nums text-[var(--color-text-muted)] w-8 text-right tracking-normal">
             {s.n > 0 ? `${s.n}건` : '—'}
           </span>
         </div>
       ))}
       <div className="flex items-center gap-3 pt-1">
         <span className="w-16" />
-        <div className="flex-1 flex justify-between text-[9px] text-slate-300 tabular-nums px-0.5">
+        <div className="flex-1 flex justify-between text-[9px] text-[var(--color-text-muted)] tabular-nums px-0.5">
           <span>50%</span>
           <span>65%</span>
           <span>80%</span>

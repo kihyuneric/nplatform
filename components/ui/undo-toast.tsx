@@ -112,7 +112,7 @@ function UndoToastContent({
           className={cn(
             'mt-1.5 text-xs font-semibold underline underline-offset-2',
             'flex items-center gap-1 transition-opacity',
-            type === 'destructive' ? 'text-red-600 dark:text-red-400' : 'text-[#1B3A5C] dark:text-blue-300',
+            type === 'destructive' ? 'text-red-400' : 'text-blue-300',
             (loading || done) && 'opacity-50 cursor-not-allowed',
           )}
         >
@@ -154,8 +154,8 @@ export function showUndoToast({
       classNames: {
         toast: cn(
           'relative overflow-hidden',
-          type === 'destructive' && 'border-red-200 dark:border-red-800',
-          type === 'success' && 'border-emerald-200 dark:border-emerald-800',
+          type === 'destructive' && 'border-red-800',
+          type === 'success' && 'border-emerald-800',
         ),
       },
     }

@@ -3,15 +3,13 @@
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { toast } from "sonner"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { VisibilitySelector } from "@/components/exchange/visibility-selector"
 import { ImageUpload, type ImageItem } from "@/components/shared/image-upload"
-import { formatKRW } from "@/lib/constants"
+import { formatKRW } from "@/lib/design-system"
 import {
   Building2, FileText, Home, DollarSign, Upload, Shield,
   ChevronLeft, ChevronRight, Check, AlertCircle, Sparkles,
@@ -105,12 +103,12 @@ export default function EditListingPage() {
   useEffect(() => {
     async function fetchListing() {
       try {
-        const res = await fetch(`/api/v1/exchange/listings?limit=100`)
+        // Fetch specific listing by ID
+        const res = await fetch(`/api/v1/exchange/listings/${listingId}`)
         if (!res.ok) throw new Error("fetch failed")
         const json = await res.json()
-        const listings = json.data || []
-        const listing = listings.find((l: any) => l.id === listingId || l.listing_id === listingId)
-        if (!listing) {
+        const listing = json.data || json
+        if (!listing || !listing.id) {
           toast.error("매물을 찾을 수 없습니다.")
           router.push("/exchange")
           return
@@ -299,7 +297,7 @@ export default function EditListingPage() {
   return (
     <div className="min-h-screen bg-[#060E1A]">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-40 bg-[#0D1F38] border-b border-[#1E3A5F]/60 shadow-lg shadow-black/20">
+      <div className="sticky top-0 z-40 bg-[var(--color-brand-deep)] border-b border-[#1E3A5F]/60 shadow-lg shadow-black/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <button
@@ -323,14 +321,14 @@ export default function EditListingPage() {
 
           <div className="flex items-center gap-2">
             {originalStatus === "REJECTED" && (
-              <Badge className="bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] px-2 py-0.5 hidden sm:flex">
+              <span className="bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] px-2 py-0.5 hidden sm:flex">
                 반려됨
-              </Badge>
+              </span>
             )}
             {originalStatus === "REVISION_REQUESTED" && (
-              <Badge className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] px-2 py-0.5 hidden sm:flex">
+              <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] px-2 py-0.5 hidden sm:flex">
                 수정요청
-              </Badge>
+              </span>
             )}
             <button
               onClick={() => router.push('/exchange')}
@@ -342,7 +340,7 @@ export default function EditListingPage() {
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="px-4 py-1.5 text-xs font-semibold bg-[#10B981] hover:bg-[#0d9668] text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                className="px-4 py-1.5 text-xs font-semibold bg-[var(--color-positive)] hover:bg-[#0d9668] text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
                 <Save className="w-3.5 h-3.5" />
                 {submitting ? '수정 중...' : '수정 저장'}
@@ -362,7 +360,7 @@ export default function EditListingPage() {
         {/* Progress bar */}
         <div className="h-0.5 bg-[#0A1628]">
           <div
-            className="h-full bg-gradient-to-r from-[#2E75B6] to-[#10B981] transition-all duration-500"
+            className="h-full bg-gradient-to-r from-[#2E75B6] to-[var(--color-positive)] transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -383,12 +381,12 @@ export default function EditListingPage() {
                     isActive
                       ? "bg-[#1E4A7A] text-white border border-[#2E75B6]/50"
                       : isDone
-                      ? "bg-[#0D1F38] text-[#10B981] border border-[#10B981]/20 cursor-pointer hover:border-[#10B981]/40"
-                      : "bg-[#0D1F38] text-[#3A5A7A] border border-[#1E3A5F]/40 cursor-default"
+                      ? "bg-[var(--color-brand-deep)] text-[var(--color-positive)] border border-[var(--color-positive)]/20 cursor-pointer hover:border-[var(--color-positive)]/40"
+                      : "bg-[var(--color-brand-deep)] text-[#3A5A7A] border border-[#1E3A5F]/40 cursor-default"
                   }`}
                 >
                   <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[10px] ${
-                    isDone ? "bg-[#10B981]/20" : isActive ? "bg-white/20" : "bg-[#1E3A5F]"
+                    isDone ? "bg-[var(--color-positive)]/20" : isActive ? "bg-white/20" : "bg-[#1E3A5F]"
                   }`}>
                     {isDone ? <Check className="w-2.5 h-2.5" /> : <SIcon className="w-2.5 h-2.5" />}
                   </span>
@@ -396,7 +394,7 @@ export default function EditListingPage() {
                   <span className="sm:hidden">{i + 1}</span>
                 </button>
                 {i < STEPS.length - 1 && (
-                  <ChevronRight className={`w-3 h-3 flex-shrink-0 ${isDone ? "text-[#10B981]/40" : "text-[#1E3A5F]"}`} />
+                  <ChevronRight className={`w-3 h-3 flex-shrink-0 ${isDone ? "text-[var(--color-positive)]/40" : "text-[#1E3A5F]"}`} />
                 )}
               </div>
             )
@@ -404,7 +402,7 @@ export default function EditListingPage() {
         </div>
 
         {/* Step Content Card */}
-        <div className="bg-[#0D1F38] border border-[#1E3A5F]/60 rounded-2xl overflow-hidden">
+        <div className="bg-[var(--color-brand-deep)] border border-[#1E3A5F]/60 rounded-2xl overflow-hidden">
           {/* Card Header */}
           <div className="px-6 py-5 border-b border-[#1E3A5F]/60 flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[#1E4A7A]/50 flex items-center justify-center">
@@ -510,7 +508,7 @@ export default function EditListingPage() {
                       <SelectTrigger className={`bg-[#060E1A] border-[#1E3A5F] text-white hover:border-[#2E75B6] focus:border-[#2E75B6] ${formErrors.collateralType ? 'border-red-500/60' : ''}`}>
                         <SelectValue placeholder="선택" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#0D1F38] border-[#1E3A5F]">
+                      <SelectContent className="bg-[var(--color-brand-deep)] border-[#1E3A5F]">
                         {COLLATERAL_TYPES.map((t) => (
                           <SelectItem key={t} value={t} className="text-white hover:bg-[#1E3A5F]">{t}</SelectItem>
                         ))}
@@ -526,7 +524,7 @@ export default function EditListingPage() {
                       <SelectTrigger className={`bg-[#060E1A] border-[#1E3A5F] text-white hover:border-[#2E75B6] focus:border-[#2E75B6] ${formErrors.location ? 'border-red-500/60' : ''}`}>
                         <SelectValue placeholder="선택" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#0D1F38] border-[#1E3A5F]">
+                      <SelectContent className="bg-[var(--color-brand-deep)] border-[#1E3A5F]">
                         {LOCATIONS.map((l) => (
                           <SelectItem key={l} value={l} className="text-white hover:bg-[#1E3A5F]">{l}</SelectItem>
                         ))}
@@ -634,7 +632,7 @@ export default function EditListingPage() {
                 <div
                   className={`border-2 border-dashed rounded-xl p-10 text-center transition-all ${
                     dragActive
-                      ? "border-[#10B981] bg-[#10B981]/5"
+                      ? "border-[var(--color-positive)] bg-[var(--color-positive)]/5"
                       : "border-[#1E3A5F] hover:border-[#2E75B6]/50"
                   }`}
                   onDragOver={(e) => { e.preventDefault(); setDragActive(true) }}
@@ -670,7 +668,7 @@ export default function EditListingPage() {
             {step === 7 && (
               <div className="space-y-5">
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-5 h-5 text-[#10B981]" />
+                  <Sparkles className="w-5 h-5 text-[var(--color-positive)]" />
                   <h3 className="text-sm font-semibold text-white">입력 정보 확인</h3>
                 </div>
 
@@ -703,7 +701,7 @@ export default function EditListingPage() {
                 )}
 
                 <button
-                  className="w-full h-12 bg-[#10B981] hover:bg-[#0d9668] text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                  className="w-full h-12 bg-[var(--color-positive)] hover:bg-[#0d9668] text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                   disabled={submitting}
                   onClick={handleSubmit}
                 >

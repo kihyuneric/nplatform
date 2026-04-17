@@ -3,13 +3,11 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
 import OntologyGraph, { OntologyGraphLegend } from '@/components/ontology-graph'
 import type { LecturePlanResult, RelatedTranscript, ConceptOntologyContext } from '@/lib/ebook-types'
 import type { LectureCapsuleRecord } from '@/lib/ontology-db'
@@ -218,20 +216,20 @@ function LecturePlanPage() {
                 placeholder="개념 ID 입력"
               />
             </div>
-            <Button onClick={loadCapsuleData} disabled={!conceptId}>
+            <button onClick={loadCapsuleData} disabled={!conceptId} className="px-3 py-1.5 rounded-lg border border-[var(--color-border-default)] text-sm transition-colors">
               불러오기
-            </Button>
+            </button>
             {capsule && (
-              <Button variant="outline" onClick={() => { loadHistory(); setShowHistory(!showHistory) }}>
+              <button onClick={() => { loadHistory(); setShowHistory(!showHistory) }} className="px-3 py-1.5 rounded-lg border border-[var(--color-border-default)] text-sm transition-colors">
                 이전 강의안 ({history.length})
-              </Button>
+              </button>
             )}
           </div>
 
           {capsule && (
-            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div className="mt-4 p-3 bg-blue-500/10 rounded-lg">
               <div className="font-medium">{capsule.capsule_title}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="text-sm text-[var(--color-text-secondary)]">
                 레벨: {capsule.level} | 추천 시간: {capsule.recommended_duration}분
               </div>
               <div className="text-sm text-gray-500 mt-1">{capsule.overview?.slice(0, 150)}...</div>
@@ -239,7 +237,7 @@ function LecturePlanPage() {
           )}
 
           {error && (
-            <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg text-sm">
+            <div className="mt-3 p-3 bg-red-500/10 text-red-400 rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -257,7 +255,7 @@ function LecturePlanPage() {
               {history.map((item: any) => (
                 <div
                   key={item.plan_id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-[var(--color-surface-overlay)] cursor-pointer"
                   onClick={() => restoreFromHistory(item)}
                 >
                   <div>
@@ -270,7 +268,7 @@ function LecturePlanPage() {
                       {item.status}
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm">복원</Button>
+                  <button className="px-3 py-1.5 rounded-lg hover:bg-white/5 text-sm transition-colors flex items-center gap-1.5">복원</button>
                 </div>
               ))}
             </div>
@@ -286,19 +284,19 @@ function LecturePlanPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-              <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+              <div className="text-center p-2 bg-[var(--color-surface-overlay)] rounded">
                 <div className="text-2xl font-bold">{ontologyContext.expert_count}</div>
                 <div className="text-xs text-gray-500">참여 전문가</div>
               </div>
-              <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+              <div className="text-center p-2 bg-[var(--color-surface-overlay)] rounded">
                 <div className="text-2xl font-bold">{ontologyContext.video_count}</div>
                 <div className="text-xs text-gray-500">관련 영상</div>
               </div>
-              <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+              <div className="text-center p-2 bg-[var(--color-surface-overlay)] rounded">
                 <div className="text-2xl font-bold">{ontologyContext.avg_relevance.toFixed(2)}</div>
                 <div className="text-xs text-gray-500">평균 관련도</div>
               </div>
-              <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+              <div className="text-center p-2 bg-[var(--color-surface-overlay)] rounded">
                 <div className="text-2xl font-bold">{ontologyContext.roadmap_position.level}</div>
                 <div className="text-xs text-gray-500">{ontologyContext.roadmap_position.lecture_level}</div>
               </div>
@@ -342,7 +340,7 @@ function LecturePlanPage() {
             {ontologyContext.keywords.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-1">
                 {ontologyContext.keywords.slice(0, 10).map((kw, i) => (
-                  <Badge key={i} variant="secondary" className="text-xs">{kw}</Badge>
+                  <span key={i} className="text-xs inline-flex items-center px-2 py-0.5 rounded bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]">{kw}</span>
                 ))}
               </div>
             )}
@@ -360,9 +358,9 @@ function LecturePlanPage() {
           </CardHeader>
           <CardContent>
             <div className="mb-3 flex items-center gap-3">
-              <Button variant="outline" size="sm" onClick={toggleAllTranscripts}>
+              <button onClick={toggleAllTranscripts} className="px-3 py-1.5 rounded-lg border border-[var(--color-border-default)] text-sm transition-colors">
                 {selectedIds.size === transcripts.length ? '전체 해제' : '전체 선택'}
-              </Button>
+              </button>
               <span className="text-xs text-gray-500">
                 ※ 채널명은 관리자에게만 표시, 생성물에는 미노출
               </span>
@@ -370,7 +368,7 @@ function LecturePlanPage() {
 
             <div className="border rounded-lg overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-800">
+                <thead className="bg-[var(--color-surface-overlay)]">
                   <tr>
                     <th className="w-10 p-2"></th>
                     <th className="text-left p-2">대본 제목</th>
@@ -383,8 +381,8 @@ function LecturePlanPage() {
                   {transcripts.map(t => (
                     <tr
                       key={t.youtube_id}
-                      className={`border-t cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                        selectedIds.has(t.youtube_id) ? 'bg-blue-50 dark:bg-blue-900/10' : ''
+                      className={`border-t cursor-pointer hover:bg-[var(--color-surface-overlay)] ${
+                        selectedIds.has(t.youtube_id) ? 'bg-blue-500/10' : ''
                       }`}
                       onClick={() => toggleTranscript(t.youtube_id)}
                     >
@@ -401,12 +399,12 @@ function LecturePlanPage() {
                         {t.channel_name}
                       </td>
                       <td className="p-2 text-center">
-                        <Badge variant={t.relevance >= 0.8 ? 'default' : 'secondary'}>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${t.relevance >= 0.8 ? 'bg-blue-500/10 text-blue-400' : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]'}`}>
                           {t.relevance.toFixed(2)}
-                        </Badge>
+                        </span>
                       </td>
                       <td className="p-2 text-center hidden sm:table-cell">
-                        <Badge variant="outline">{t.lecture_type}</Badge>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-secondary)]">{t.lecture_type}</span>
                       </td>
                     </tr>
                   ))}
@@ -507,10 +505,10 @@ function LecturePlanPage() {
           </CardHeader>
           <CardContent>
             <div className="flex gap-3 mb-4">
-              <Button
+              <button
                 onClick={generatePlan}
                 disabled={isGenerating || selectedIds.size === 0}
-                className="gap-2"
+                className="px-3 py-1.5 rounded-lg border border-[var(--color-border-default)] text-sm transition-colors gap-2 inline-flex items-center"
               >
                 {isGenerating ? (
                   <>
@@ -520,11 +518,11 @@ function LecturePlanPage() {
                 ) : (
                   '🤖 AI 강의안 생성'
                 )}
-              </Button>
+              </button>
               {generatedPlan && (
-                <Button variant="outline" onClick={generatePlan} disabled={isGenerating}>
+                <button onClick={generatePlan} disabled={isGenerating} className="px-3 py-1.5 rounded-lg border border-[var(--color-border-default)] text-sm transition-colors">
                   🔄 재생성
-                </Button>
+                </button>
               )}
             </div>
 
@@ -534,7 +532,7 @@ function LecturePlanPage() {
                 <h3 className="font-bold text-lg">📋 {capsule.capsule_title} — 강의안</h3>
 
                 {/* 온톨로지 개요 */}
-                <div className="bg-gray-50 dark:bg-gray-800 rounded p-3">
+                <div className="bg-[var(--color-surface-overlay)] rounded p-3">
                   <div className="text-sm font-medium mb-2">온톨로지 분석 개요</div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
                     <div>선별 대본: <strong>{generatedPlan.ontology_summary?.selected_transcript_count || selectedIds.size}개</strong></div>
@@ -550,13 +548,13 @@ function LecturePlanPage() {
                 {/* 강의 목표 */}
                 <div>
                   <div className="text-sm font-medium">강의 목표</div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">{generatedPlan.lecture_goal}</p>
+                  <p className="text-sm text-[var(--color-text-secondary)]">{generatedPlan.lecture_goal}</p>
                 </div>
 
                 {/* 대상 */}
                 <div>
                   <div className="text-sm font-medium">대상</div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">{generatedPlan.target_description}</p>
+                  <p className="text-sm text-[var(--color-text-secondary)]">{generatedPlan.target_description}</p>
                 </div>
 
                 {/* 커리큘럼 테이블 */}
@@ -564,7 +562,7 @@ function LecturePlanPage() {
                   <div className="text-sm font-medium mb-2">커리큘럼 ({generatedPlan.total_duration_min}분)</div>
                   <div className="border rounded-lg overflow-hidden">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50 dark:bg-gray-800">
+                      <thead className="bg-[var(--color-surface-overlay)]">
                         <tr>
                           <th className="text-left p-2">시간</th>
                           <th className="text-left p-2">내용</th>
@@ -587,12 +585,12 @@ function LecturePlanPage() {
                               )}
                             </td>
                             <td className="p-2 text-center">
-                              <Badge variant="outline" className="text-xs">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-secondary)]">
                                 {item.content_type === 'opening' ? '설명' :
                                  item.content_type === 'theory' ? '강의' :
                                  item.content_type === 'case' ? '사례' :
                                  item.content_type === 'practice' ? '참여' : '요약'}
-                              </Badge>
+                              </span>
                             </td>
                           </tr>
                         ))}
@@ -604,34 +602,34 @@ function LecturePlanPage() {
                 {generatedPlan.supplementary_notes && (
                   <div>
                     <div className="text-sm font-medium">참고 자료</div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{generatedPlan.supplementary_notes}</p>
+                    <p className="text-sm text-[var(--color-text-secondary)]">{generatedPlan.supplementary_notes}</p>
                   </div>
                 )}
 
                 {/* 다운로드 */}
                 <div className="flex gap-3 pt-3 border-t">
-                  <Button
-                    variant="outline"
+                  <button
                     onClick={() => {
                       window.open(
                         `/api/ontology/capsules/export?concept_id=${conceptId}&level=${capsule.level}&ai=true&lecture_plan=true`,
                         '_blank'
                       )
                     }}
+                    className="px-3 py-1.5 rounded-lg border border-[var(--color-border-default)] text-sm transition-colors"
                   >
                     📥 DOCX 다운로드
-                  </Button>
-                  <Button
-                    variant="outline"
+                  </button>
+                  <button
                     onClick={() => {
                       window.open(
                         `/api/ontology/capsules/export-pdf?concept_id=${conceptId}&level=${capsule.level}&ai=true&lecture_plan=true`,
                         '_blank'
                       )
                     }}
+                    className="px-3 py-1.5 rounded-lg border border-[var(--color-border-default)] text-sm transition-colors"
                   >
                     📥 PDF 다운로드
-                  </Button>
+                  </button>
                 </div>
               </div>
             )}

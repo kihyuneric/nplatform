@@ -86,32 +86,32 @@ export function StrategyComparison({ nplReturn, directReturn, investmentPeriodMo
       {/* Side by Side Cards */}
       <div className="grid gap-4 sm:grid-cols-2">
         {/* NPL */}
-        <Card className={`border-2 ${recommendation === 'NPL' ? 'border-blue-500' : 'border-gray-200'}`}>
+        <Card className={`border-2 ${recommendation === 'NPL' ? 'border-blue-500' : 'border-[var(--color-border-subtle)]'}`}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">NPL 채권매입</CardTitle>
               {recommendation === 'NPL' && <Badge className="bg-blue-500">추천</Badge>}
             </div>
-            <p className="text-xs text-gray-500">단기 고수익 전략</p>
+            <p className="text-xs text-[var(--color-text-muted)]">단기 고수익 전략</p>
           </CardHeader>
           <CardContent>
             <div className="mb-4 text-center">
               <p className="text-3xl font-bold text-blue-600">
                 {nplReturn ? formatPercent(nplReturn.annualized_irr) : '-'}
               </p>
-              <p className="text-xs text-gray-500">연환산 IRR</p>
+              <p className="text-xs text-[var(--color-text-muted)]">연환산 IRR</p>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">에쿼티</span>
+                <span className="text-[var(--color-text-muted)]">에쿼티</span>
                 <span className="font-medium">{nplReturn ? formatBillion(nplReturn.equity_amount) : '-'}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">MOIC</span>
+                <span className="text-[var(--color-text-muted)]">MOIC</span>
                 <span className="font-medium">{nplReturn ? `${nplReturn.moic.toFixed(2)}x` : '-'}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">투자기간</span>
+                <span className="text-[var(--color-text-muted)]">투자기간</span>
                 <span className="font-medium">{investmentPeriodMonths}개월</span>
               </div>
             </div>
@@ -119,37 +119,37 @@ export function StrategyComparison({ nplReturn, directReturn, investmentPeriodMo
         </Card>
 
         {/* Direct */}
-        <Card className={`border-2 ${recommendation === '직접낙찰' ? 'border-green-500' : 'border-gray-200'}`}>
+        <Card className={`border-2 ${recommendation === '직접낙찰' ? 'border-green-500' : 'border-[var(--color-border-subtle)]'}`}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">직접 낙찰</CardTitle>
               {recommendation === '직접낙찰' && <Badge className="bg-green-500">추천</Badge>}
             </div>
-            <p className="text-xs text-gray-500">중장기 안정 전략</p>
+            <p className="text-xs text-[var(--color-text-muted)]">중장기 안정 전략</p>
           </CardHeader>
           <CardContent>
             <div className="mb-4 text-center">
               <p className="text-3xl font-bold text-green-600">
                 {directReturn ? formatPercent(directReturn.annualized_irr) : '-'}
               </p>
-              <p className="text-xs text-gray-500">연환산 IRR</p>
+              <p className="text-xs text-[var(--color-text-muted)]">연환산 IRR</p>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">총취득원가</span>
+                <span className="text-[var(--color-text-muted)]">총취득원가</span>
                 <span className="font-medium">{directReturn ? formatBillion(directReturn.investment_amount) : '-'}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">MOIC</span>
+                <span className="text-[var(--color-text-muted)]">MOIC</span>
                 <span className="font-medium">{directReturn ? `${directReturn.moic.toFixed(2)}x` : '-'}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">보유기간</span>
+                <span className="text-[var(--color-text-muted)]">보유기간</span>
                 <span className="font-medium">{holdingPeriodYears}년</span>
               </div>
               {directReturn?.cash_yield && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">현금수익률</span>
+                  <span className="text-[var(--color-text-muted)]">현금수익률</span>
                   <span className="font-medium">{formatPercent(directReturn.cash_yield)}</span>
                 </div>
               )}
@@ -168,16 +168,16 @@ export function StrategyComparison({ nplReturn, directReturn, investmentPeriodMo
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="py-2 text-left font-medium text-gray-500">지표</th>
+                  <th className="py-2 text-left font-medium text-[var(--color-text-muted)]">지표</th>
                   <th className="py-2 text-right font-medium text-blue-600">NPL 채권매입</th>
                   <th className="py-2 text-right font-medium text-green-600">직접 낙찰</th>
                 </tr>
               </thead>
               <tbody>
                 {metrics.map((m, i) => (
-                  <tr key={i} className={`border-b ${m.highlight ? 'bg-gray-50 font-semibold' : ''}`}>
+                  <tr key={i} className={`border-b ${m.highlight ? 'bg-[var(--color-surface-overlay)] font-semibold' : ''}`}>
                     <td className="py-2.5 flex items-center gap-2">
-                      <m.icon className="h-4 w-4 text-gray-400" />
+                      <m.icon className="h-4 w-4 text-[var(--color-text-muted)]" />
                       {m.label}
                     </td>
                     <td className="py-2.5 text-right">{m.npl}</td>

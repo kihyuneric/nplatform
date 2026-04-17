@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { SHIMMER_DURATION } from '@/lib/animations'
 
 // ─── Base Skeleton ────────────────────────────────────────────────────────
 
@@ -54,7 +55,7 @@ export function SkeletonPulse({
           animate={{ x: ['-100%', '200%'] }}
           transition={{
             repeat: Infinity,
-            duration: 1.5,
+            duration: parseFloat(SHIMMER_DURATION),
             ease: 'linear',
           }}
         />

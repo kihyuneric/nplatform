@@ -104,21 +104,21 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
                   done
                     ? 'bg-[#2E75B6] text-white shadow-md shadow-[#2E75B6]/30'
                     : active
-                    ? 'bg-[#0D1F38] text-white shadow-lg shadow-[#0D1F38]/25 ring-4 ring-[#0D1F38]/10'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                    ? 'bg-[var(--color-brand-deep)] text-white shadow-lg shadow-[var(--color-brand-deep)]/25 ring-4 ring-[var(--color-brand-deep)]/10'
+                    : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)]'
                 }`}
               >
                 {done ? <CheckCircle2 className="w-4 h-4" /> : step}
               </div>
               <span className={`text-[10px] font-medium hidden sm:block transition-colors ${
-                active ? 'text-[#0D1F38] dark:text-white' : done ? 'text-[#2E75B6]' : 'text-gray-300 dark:text-gray-600'
+                active ? 'text-[var(--color-text-primary)]' : done ? 'text-[#2E75B6]' : 'text-[var(--color-text-muted)]'
               }`}>
                 {STEP_LABELS[i]}
               </span>
             </div>
             {i < total - 1 && (
               <div className={`flex-1 h-0.5 mx-2 mb-4 rounded-full transition-all duration-500 ${
-                done ? 'bg-[#2E75B6]' : 'bg-gray-100 dark:bg-gray-800'
+                done ? 'bg-[#2E75B6]' : 'bg-[var(--color-surface-overlay)]'
               }`} />
             )}
           </div>
@@ -149,7 +149,7 @@ function PasswordStrength({ password }: { password: string }) {
           <div
             key={i}
             className={`flex-1 h-1 rounded-full transition-all duration-300 ${
-              i < score ? colors[score - 1] : 'bg-gray-100 dark:bg-gray-800'
+              i < score ? colors[score - 1] : 'bg-[var(--color-surface-overlay)]'
             }`}
           />
         ))}
@@ -492,9 +492,9 @@ export default function SignupPage() {
     return (
       <div className="min-h-screen flex">
         {/* Left panel */}
-        <div className="hidden xl:flex xl:w-[420px] 2xl:w-[480px] shrink-0 flex-col justify-between p-10 2xl:p-12 bg-[#060E1C] text-white relative overflow-hidden">
+        <div className="hidden xl:flex xl:w-[420px] 2xl:w-[480px] shrink-0 flex-col justify-between p-10 2xl:p-12 bg-[var(--color-brand-deepest)] text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#2E75B6]/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-72 h-72 bg-[#1B3A5C]/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-[var(--color-brand-dark)]/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
           <div className="relative flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#2E75B6] flex items-center justify-center shadow-lg shadow-[#2E75B6]/30">
               <span className="text-white font-black text-base tracking-tight">N</span>
@@ -512,8 +512,8 @@ export default function SignupPage() {
         {/* Right panel */}
         <div className="flex flex-1 items-center justify-center px-6 py-12 bg-white">
           <div className="w-full max-w-[400px] text-center space-y-6">
-            <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-[#0D1F38]/10 to-[#2E75B6]/10 flex items-center justify-center ring-8 ring-[#0D1F38]/5">
-              <Mail className="h-9 w-9 text-[#0D1F38]" />
+            <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-[var(--color-brand-deep)]/10 to-[#2E75B6]/10 flex items-center justify-center ring-8 ring-[var(--color-brand-deep)]/5">
+              <Mail className="h-9 w-9 text-[var(--color-brand-deep)]" />
             </div>
             <div className="space-y-2">
               <h2 className="text-2xl font-bold text-gray-900">이메일을 확인해주세요</h2>
@@ -547,7 +547,7 @@ export default function SignupPage() {
                 )}
               </button>
               <Link href="/login">
-                <button className="w-full h-12 rounded-xl bg-[#0D1F38] hover:bg-[#1B3A5C] text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#0D1F38]/20">
+                <button className="w-full h-12 rounded-xl bg-[var(--color-brand-deep)] hover:bg-[var(--color-brand-dark)] text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[var(--color-brand-deep)]/20">
                   로그인 페이지로 이동 <ArrowRight className="h-4 w-4" />
                 </button>
               </Link>
@@ -564,11 +564,11 @@ export default function SignupPage() {
     <div className="min-h-screen flex">
 
       {/* ── LEFT PANEL ─────────────────────────────────────────────────────── */}
-      <div className="hidden xl:flex xl:w-[420px] 2xl:w-[480px] shrink-0 flex-col justify-between p-10 2xl:p-12 bg-[#060E1C] text-white relative overflow-hidden">
+      <div className="hidden xl:flex xl:w-[420px] 2xl:w-[480px] shrink-0 flex-col justify-between p-10 2xl:p-12 bg-[var(--color-brand-deepest)] text-white relative overflow-hidden">
 
         {/* Atmosphere orbs */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#2E75B6]/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-[#1B3A5C]/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-[var(--color-brand-dark)]/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
         <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-[#2E75B6]/8 rounded-full blur-2xl pointer-events-none" />
 
         {/* Logo */}
@@ -600,10 +600,10 @@ export default function SignupPage() {
 
         {/* Mobile logo */}
         <div className="flex items-center gap-2 mb-8 lg:hidden">
-          <div className="w-8 h-8 rounded-xl bg-[#0D1F38] flex items-center justify-center">
+          <div className="w-8 h-8 rounded-xl bg-[var(--color-brand-deep)] flex items-center justify-center">
             <span className="text-white font-black text-sm">N</span>
           </div>
-          <span className="text-lg font-bold text-[#0D1F38]">NPLatform</span>
+          <span className="text-lg font-bold text-[var(--color-brand-deep)]">NPLatform</span>
         </div>
 
         <div className="w-full max-w-[400px] mx-auto">
@@ -701,14 +701,14 @@ export default function SignupPage() {
 
               <button
                 type="submit"
-                className="w-full h-12 rounded-xl bg-[#0D1F38] hover:bg-[#1B3A5C] text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0D1F38]/20 hover:shadow-xl active:scale-[0.99] mt-2"
+                className="w-full h-12 rounded-xl bg-[var(--color-brand-deep)] hover:bg-[var(--color-brand-dark)] text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-[var(--color-brand-deep)]/20 hover:shadow-xl active:scale-[0.99] mt-2"
               >
                 다음 단계 <ArrowRight className="h-4 w-4" />
               </button>
 
               <p className="text-center text-sm text-gray-400">
                 이미 계정이 있으신가요?{' '}
-                <Link href="/login" className="font-semibold text-[#2E75B6] hover:text-[#0D1F38] transition-colors">
+                <Link href="/login" className="font-semibold text-[#2E75B6] hover:text-[var(--color-brand-deep)] transition-colors">
                   로그인
                 </Link>
               </p>
@@ -734,16 +734,16 @@ export default function SignupPage() {
                         onClick={() => updateField('role', value)}
                         className={`group rounded-2xl p-3.5 text-left border transition-all duration-200 ${
                           selected
-                            ? 'border-[#1B3A5C] bg-[#EFF6FF] ring-2 ring-[#1B3A5C]/20'
+                            ? 'border-[var(--color-brand-dark)] bg-[#EFF6FF] ring-2 ring-[var(--color-brand-dark)]/20'
                             : 'border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-gray-50'
                         }`}
                       >
                         <div className={`w-7 h-7 rounded-lg flex items-center justify-center mb-2 transition-colors ${
-                          selected ? 'bg-[#1B3A5C] shadow-md shadow-[#1B3A5C]/30' : 'bg-gray-200 group-hover:bg-gray-300'
+                          selected ? 'bg-[var(--color-brand-dark)] shadow-md shadow-[var(--color-brand-dark)]/30' : 'bg-gray-200 group-hover:bg-gray-300'
                         }`}>
                           <Icon className={`w-3.5 h-3.5 ${selected ? 'text-white' : 'text-gray-500'}`} />
                         </div>
-                        <p className={`text-xs font-bold leading-tight ${selected ? 'text-[#0D1F38]' : 'text-gray-700'}`}>
+                        <p className={`text-xs font-bold leading-tight ${selected ? 'text-[var(--color-brand-deep)]' : 'text-gray-700'}`}>
                           {label}
                         </p>
                         <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">{desc}</p>
@@ -761,17 +761,17 @@ export default function SignupPage() {
                       onClick={() => updateField('role', r.value)}
                       className={`w-full group rounded-2xl p-3.5 text-left border transition-all duration-200 flex items-center gap-3 ${
                         selected
-                          ? 'border-[#1B3A5C] bg-[#EFF6FF] ring-2 ring-[#1B3A5C]/20'
+                          ? 'border-[var(--color-brand-dark)] bg-[#EFF6FF] ring-2 ring-[var(--color-brand-dark)]/20'
                           : 'border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-gray-50'
                       }`}
                     >
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                        selected ? 'bg-[#1B3A5C] shadow-md shadow-[#1B3A5C]/30' : 'bg-gray-200 group-hover:bg-gray-300'
+                        selected ? 'bg-[var(--color-brand-dark)] shadow-md shadow-[var(--color-brand-dark)]/30' : 'bg-gray-200 group-hover:bg-gray-300'
                       }`}>
                         <r.icon className={`w-3.5 h-3.5 ${selected ? 'text-white' : 'text-gray-500'}`} />
                       </div>
                       <div>
-                        <p className={`text-xs font-bold ${selected ? 'text-[#0D1F38]' : 'text-gray-700'}`}>{r.label}</p>
+                        <p className={`text-xs font-bold ${selected ? 'text-[var(--color-brand-deep)]' : 'text-gray-700'}`}>{r.label}</p>
                         <p className="text-[10px] text-gray-400 mt-0.5">{r.desc}</p>
                       </div>
                     </button>
@@ -852,7 +852,7 @@ export default function SignupPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-[2] h-12 rounded-xl bg-[#0D1F38] hover:bg-[#1B3A5C] text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0D1F38]/20 active:scale-[0.99]"
+                  className="flex-[2] h-12 rounded-xl bg-[var(--color-brand-deep)] hover:bg-[var(--color-brand-dark)] text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-[var(--color-brand-deep)]/20 active:scale-[0.99]"
                 >
                   다음 단계 <ArrowRight className="h-4 w-4" />
                 </button>
@@ -899,7 +899,7 @@ export default function SignupPage() {
                               {isImageDataUrl(uploaded.data) ? (
                                 <img src={uploaded.data} alt={uploaded.name} className="h-10 w-10 object-cover rounded-lg border border-gray-100" />
                               ) : (
-                                <div className="h-10 w-10 flex items-center justify-center bg-[#0D1F38]/5 rounded-lg border border-[#0D1F38]/10">
+                                <div className="h-10 w-10 flex items-center justify-center bg-[var(--color-brand-deep)]/5 rounded-lg border border-[var(--color-brand-deep)]/10">
                                   <FileText className="h-5 w-5 text-[#2E75B6]" />
                                 </div>
                               )}
@@ -907,7 +907,7 @@ export default function SignupPage() {
                               <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
                             </div>
                           ) : (
-                            <label className="flex flex-col items-center justify-center gap-1.5 py-5 border-2 border-dashed border-[#D0D8E4] rounded-xl cursor-pointer hover:border-[#2E75B6]/40 hover:bg-white transition-all group">
+                            <label className="flex flex-col items-center justify-center gap-1.5 py-5 border-2 border-dashed border-[var(--color-border-default)] rounded-xl cursor-pointer hover:border-[#2E75B6]/40 hover:bg-white transition-all group">
                               <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-[#2E75B6]/10 transition-colors">
                                 <Upload className="h-4 w-4 text-gray-400 group-hover:text-[#2E75B6] transition-colors" />
                               </div>
@@ -971,7 +971,7 @@ export default function SignupPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-[2] h-12 rounded-xl bg-[#0D1F38] hover:bg-[#1B3A5C] text-white font-semibold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#0D1F38]/20 active:scale-[0.99]"
+                  className="flex-[2] h-12 rounded-xl bg-[var(--color-brand-deep)] hover:bg-[var(--color-brand-dark)] text-white font-semibold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[var(--color-brand-deep)]/20 active:scale-[0.99]"
                 >
                   {loading ? (
                     <><Loader2 className="h-4 w-4 animate-spin" />가입 처리 중...</>

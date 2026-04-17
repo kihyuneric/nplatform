@@ -23,13 +23,16 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({
-      success: true,
+      ok: true,
       data,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      total,
+      page,
+      limit,
+      total_pages: Math.ceil(total / limit),
       _source,
     })
   } catch (error) {
-    return NextResponse.json({ success: false, error: 'Failed to fetch demands' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: 'Failed to fetch demands' }, { status: 500 })
   }
 }
 

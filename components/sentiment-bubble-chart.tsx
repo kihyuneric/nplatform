@@ -36,8 +36,8 @@ function CustomTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <div className="bg-white border shadow-lg rounded-lg px-3 py-2 text-xs max-w-[200px]">
-      <p className="font-semibold text-gray-800 mb-1 leading-tight">{d.title}</p>
+    <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] shadow-lg rounded-lg px-3 py-2 text-xs max-w-[200px]">
+      <p className="font-semibold text-[var(--color-text-secondary)] mb-1 leading-tight">{d.title}</p>
       <p className="text-muted-foreground mb-1">{d.sido}</p>
       <div className="flex gap-2 text-[11px]">
         <span className="text-blue-600">방향성 {(d.x * 100).toFixed(0)}%</span>
@@ -47,7 +47,7 @@ function CustomTooltip({ active, payload }: any) {
       </div>
       <div className="mt-1 flex flex-wrap gap-1">
         {d.keywords?.slice(0, 3).map((k: string) => (
-          <span key={k} className="bg-gray-100 text-gray-600 rounded px-1">{k}</span>
+          <span key={k} className="bg-slate-500/15 text-[var(--color-text-secondary)] rounded px-1">{k}</span>
         ))}
       </div>
     </div>
@@ -105,7 +105,7 @@ export function SentimentBubbleChart({ onKeywordClick }: Props) {
                 onClick={() => toggleSido(sido)}
                 className={`text-[10px] px-2 py-0.5 rounded-full border transition-all ${
                   hidden
-                    ? 'bg-gray-100 text-gray-400 border-gray-200'
+                    ? 'bg-slate-500/15 text-[var(--color-text-muted)] border-[var(--color-border-subtle)]'
                     : 'text-white border-transparent'
                 }`}
                 style={hidden ? {} : { backgroundColor: getColor(sido) }}

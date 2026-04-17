@@ -124,6 +124,20 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
+    // Try to update Supabase user metadata
+    try {
+      const supabase = await createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const currentRoles: string[] = user.user_metadata?.roles ?? [user.user_metadata?.role].filter(Boolean)
+        const updatedRoles = currentRoles.filter((r: string) => r !== role)
+        const { error } = await supabase.auth.updateUser({ data: { roles: updatedRoles, role: updatedRoles[0] ?? null } })
+        if (!error) {
+          return NextResponse.json({ data: { roles: updatedRoles, removedRole: role }, success: true, _source: 'supabase' })
+        }
+      }
+    } catch { /* fall through to mock */ }
+
     MOCK_ROLES = MOCK_ROLES.filter((r) => r !== role);
 
     return NextResponse.json({

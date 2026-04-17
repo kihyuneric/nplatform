@@ -152,8 +152,8 @@ export function AmountDisplay({
   const fullAmount = formatAmount(amount, 'full', currency)
 
   const colorClass = cn(
-    positiveColor && isPositive && 'text-emerald-600 dark:text-emerald-400',
-    negativeColor && isNegative && 'text-red-600 dark:text-red-400',
+    positiveColor && isPositive && 'text-emerald-400',
+    negativeColor && isNegative && 'text-red-400',
     !positiveColor && !negativeColor && '',
   )
 
@@ -225,10 +225,10 @@ export function DiscountBadge({
   if (rate == null) return null
 
   const color = rate >= 30
-    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+    ? 'bg-red-500/10 text-red-400'
     : rate >= 20
-    ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+    ? 'bg-orange-500/10 text-orange-400'
+    : 'bg-emerald-500/10 text-emerald-400'
 
   return (
     <span

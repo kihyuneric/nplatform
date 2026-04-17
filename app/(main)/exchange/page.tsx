@@ -1,1025 +1,1605 @@
 "use client"
 
-import { useState, useRef } from "react"
+/**
+ * /exchange — NPL 매물 탐색 (v4 전략, 2026-04-07)
+ *
+ * 설계 원칙:
+ *   - 4단계 티어 모델 (L0→L3) 을 목록 단계부터 노출
+ *   - 핵심 L0 필드: 채권잔액 · 매각희망가 · 할인율 · 감정가
+ *   - 자료 완성도 점수(0-10) 로 매물 품질 시각화
+ *   - 담보는 열고 · 사람은 가린다 (PII 마스킹 일관 적용)
+ *   - 수수료 0.9% 캡 고지
+ */
+
+import { useMemo, useState, useCallback, useEffect } from "react"
 import Link from "next/link"
-import { motion, useInView, AnimatePresence } from "framer-motion"
+import { useSearchParams } from "next/navigation"
+import { motion } from "framer-motion"
+import { useTranslation } from "@/lib/hooks/use-translate"
 import {
-  List, LayoutGrid, SlidersHorizontal, Heart, MapPin,
-  TrendingUp, BarChart2, ArrowRight, Search, Plus,
-  ChevronsUpDown, ChevronUp, ChevronDown, ExternalLink,
-  Gavel, Home, Building2, Eye, Brain, Sparkles, Activity,
-  Shield, Zap, ChevronRight, CheckCircle2,
+  Search, SlidersHorizontal, TrendingDown, Building2,
+  MapPin, ShieldCheck, ArrowRight, Sparkles, Filter,
+  LayoutGrid, List as ListIcon, Brain, Loader2, Zap,
 } from "lucide-react"
+import { TierBadge } from "@/components/tier/tier-badge"
+import { CompletenessBadge } from "@/components/listing/completeness-badge"
+import type { AccessTier } from "@/lib/access-tier"
+import {
+  REGION_SHORT_LIST,
+  SALE_METHODS,
+  SELLER_INSTITUTIONS,
+  LISTING_CATEGORIES,
+  formatAIGrade,
+  AI_GRADE_COLORS,
+  type AIGrade,
+} from "@/lib/taxonomy"
 
 /* ═══════════════════════════════════════════════════════════
-   DESIGN TOKENS  (주 페이지와 동일)
+   DESIGN TOKENS — CSS variable references for theme support
 ═══════════════════════════════════════════════════════════ */
-const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#34D399",
-  blue: "#3B82F6", blueL: "#60A5FA",
-  amber: "#F59E0B", amberL: "#FCD34D",
-  purple: "#A855F7", rose: "#F43F5E",
-  teal: "#14B8A6",
-  /* light palette */
-  l0: "#FFFFFF", l1: "#F8FAFC", l2: "#F1F5F9", l3: "#E2E8F0",
-  lt1: "#0F172A", lt2: "#334155", lt3: "#64748B", lt4: "#94A3B8",
-}
-
-const up = {
-  hidden: { opacity: 0, y: 16 },
-  visible: (i = 0) => ({
-    opacity: 1, y: 0,
-    transition: { delay: i * 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const },
-  }),
-}
-const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }
-
-/* ═══════════════════════════════════════════════════════════
-   TYPES
-═══════════════════════════════════════════════════════════ */
-type AssetTab = "npl" | "realestate"
-
-interface Listing {
-  id: string; institution_name: string; institution_type: "INSTITUTION" | "AMC" | "INDIVIDUAL"
-  trust_grade: "S" | "A" | "B" | "C"; principal: number
-  location_city: string; location_district: string; collateral_type: string
-  ai_estimate_low: number; ai_estimate_high: number
-  risk_grade: "A" | "B" | "C" | "D" | "E"; deadline: string
-  interest_count: number; deal_stage: string; created_at: string
-  ltv?: number; overdue_months?: number
-}
-interface ReListing {
-  id: string; type: string; dealType: string; address: string; price: number
-  monthlyRent?: number; area: number; floor: string; direction: string
-  viewCount: number; likeCount: number; daysAgo: number
+const V = {
+  surfaceSunken:  "var(--color-surface-sunken)",
+  surfaceBase:    "var(--color-surface-base)",
+  surfaceElevated:"var(--color-surface-elevated)",
+  borderSubtle:   "var(--color-border-subtle)",
+  borderDefault:  "var(--color-border-default)",
+  textPrimary:    "var(--color-text-primary)",
+  textSecondary:  "var(--color-text-secondary)",
+  textTertiary:   "var(--color-text-tertiary)",
+  textMuted:      "var(--color-text-muted)",
+  positive:       "var(--color-positive)",
+  warning:        "var(--color-warning)",
+  danger:         "var(--color-danger)",
+  brandBright:    "var(--color-brand-bright)",
+  purple:         "var(--color-purple, #A855F7)",
+  onPositive:     "#041915", // accessible dark text on positive (green) bg
+  onDark:         "#ffffff",
 }
 
 /* ═══════════════════════════════════════════════════════════
-   CONSTANTS & MOCK DATA
+   MOCK DATA (DealListingRecord-compatible)
 ═══════════════════════════════════════════════════════════ */
-const COLLATERAL_CHIPS = ["전체", "아파트", "상가", "토지", "기타"]
-const RE_CHIPS_TYPE = ["전체", "아파트", "오피스텔", "상가", "토지"]
-const RE_CHIPS_DEAL = ["전체", "매매", "전세", "월세"]
-
-const RISK_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; glow: string }> = {
-  A: { label: "A등급", color: "#10B981", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.3)", glow: "rgba(16,185,129,0.15)" },
-  B: { label: "B등급", color: "#3B82F6", bg: "rgba(59,130,246,0.08)", border: "rgba(59,130,246,0.3)", glow: "rgba(59,130,246,0.15)" },
-  C: { label: "C등급", color: "#F59E0B", bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.3)", glow: "rgba(245,158,11,0.15)" },
-  D: { label: "D등급", color: "#F97316", bg: "rgba(249,115,22,0.08)", border: "rgba(249,115,22,0.3)", glow: "rgba(249,115,22,0.15)" },
-  E: { label: "E등급", color: "#F43F5E", bg: "rgba(244,63,94,0.08)", border: "rgba(244,63,94,0.3)", glow: "rgba(244,63,94,0.15)" },
+interface CardListing {
+  id: string
+  institution: string
+  inst_kind: keyof typeof SELLER_INSTITUTIONS  // BANK / SAVINGS_BANK / MUTUAL_CREDIT / AMC / MONEY_LENDER
+  listing_category: keyof typeof LISTING_CATEGORIES  // NPL / GENERAL
+  region: string           // 시/군/구 수준만
+  regionCode: string       // SEOUL / GYEONGGI ...
+  collateral: string       // 상세 담보 라벨 (아파트·오피스 등)
+  collateralMajor: "RESIDENTIAL" | "COMMERCIAL" | "LAND" | "ETC"
+  outstanding_principal: number   // 채권잔액
+  asking_price: number            // 매각희망가
+  appraisal_value: number         // 감정가
+  discount_rate: number           // 할인율 (%)
+  ai_grade: AIGrade
+  data_completeness: number       // 0-10
+  access_tier_required: AccessTier
+  provided: {
+    appraisal: boolean
+    registry: boolean
+    rights: boolean
+    lease: boolean
+    site_photos: boolean
+    financials: boolean
+  }
+  sale_method: keyof typeof SALE_METHODS  // NPLATFORM / AUCTION / PUBLIC
+  created_days_ago: number
 }
 
-const MOCK_LISTINGS: Listing[] = [
-  { id:"1", institution_name:"한국자산관리공사", institution_type:"INSTITUTION", trust_grade:"S", principal:1250000000, location_city:"서울", location_district:"강남구", collateral_type:"아파트", ai_estimate_low:800000000, ai_estimate_high:1100000000, risk_grade:"B", deadline:"2026-04-15", interest_count:12, deal_stage:"공고중", created_at:"2026-03-10", ltv:58.7, overdue_months:14 },
-  { id:"2", institution_name:"우리은행", institution_type:"INSTITUTION", trust_grade:"A", principal:3500000000, location_city:"경기", location_district:"성남시", collateral_type:"오피스", ai_estimate_low:2200000000, ai_estimate_high:2800000000, risk_grade:"A", deadline:"2026-04-20", interest_count:8, deal_stage:"공고중", created_at:"2026-03-12", ltv:43.2, overdue_months:8 },
-  { id:"3", institution_name:"하나은행", institution_type:"INSTITUTION", trust_grade:"A", principal:780000000, location_city:"부산", location_district:"해운대구", collateral_type:"상가", ai_estimate_low:450000000, ai_estimate_high:600000000, risk_grade:"C", deadline:"2026-04-10", interest_count:5, deal_stage:"관심표명", created_at:"2026-03-08", ltv:72.1, overdue_months:22 },
-  { id:"4", institution_name:"신한은행", institution_type:"INSTITUTION", trust_grade:"S", principal:5200000000, location_city:"서울", location_district:"서초구", collateral_type:"오피스", ai_estimate_low:3800000000, ai_estimate_high:4500000000, risk_grade:"A", deadline:"2026-05-01", interest_count:22, deal_stage:"공고중", created_at:"2026-03-15", ltv:39.8, overdue_months:6 },
-  { id:"5", institution_name:"대신F&I", institution_type:"AMC", trust_grade:"B", principal:320000000, location_city:"대전", location_district:"유성구", collateral_type:"아파트", ai_estimate_low:200000000, ai_estimate_high:280000000, risk_grade:"D", deadline:"2026-04-05", interest_count:3, deal_stage:"NDA체결", created_at:"2026-03-05", ltv:81.3, overdue_months:31 },
-  { id:"6", institution_name:"국민은행", institution_type:"INSTITUTION", trust_grade:"S", principal:1800000000, location_city:"서울", location_district:"마포구", collateral_type:"오피스텔", ai_estimate_low:1200000000, ai_estimate_high:1500000000, risk_grade:"B", deadline:"2026-04-25", interest_count:15, deal_stage:"공고중", created_at:"2026-03-18", ltv:61.5, overdue_months:17 },
-  { id:"7", institution_name:"연합자산관리", institution_type:"AMC", trust_grade:"A", principal:950000000, location_city:"인천", location_district:"남동구", collateral_type:"토지", ai_estimate_low:550000000, ai_estimate_high:720000000, risk_grade:"C", deadline:"2026-04-18", interest_count:7, deal_stage:"공고중", created_at:"2026-03-14", ltv:68.4, overdue_months:19 },
-  { id:"8", institution_name:"IBK기업은행", institution_type:"INSTITUTION", trust_grade:"A", principal:2100000000, location_city:"경기", location_district:"용인시", collateral_type:"상가", ai_estimate_low:1400000000, ai_estimate_high:1800000000, risk_grade:"B", deadline:"2026-04-30", interest_count:10, deal_stage:"실사진행", created_at:"2026-03-11", ltv:55.2, overdue_months:12 },
-  { id:"9", institution_name:"키움캐피탈", institution_type:"AMC", trust_grade:"B", principal:640000000, location_city:"대구", location_district:"수성구", collateral_type:"아파트", ai_estimate_low:390000000, ai_estimate_high:520000000, risk_grade:"C", deadline:"2026-04-22", interest_count:6, deal_stage:"관심표명", created_at:"2026-03-09", ltv:66.8, overdue_months:20 },
-  { id:"10", institution_name:"우리금융F&I", institution_type:"AMC", trust_grade:"A", principal:4100000000, location_city:"서울", location_district:"영등포구", collateral_type:"오피스", ai_estimate_low:2900000000, ai_estimate_high:3600000000, risk_grade:"A", deadline:"2026-05-10", interest_count:18, deal_stage:"공고중", created_at:"2026-03-20", ltv:44.6, overdue_months:9 },
-]
-
-const POPULAR_REGIONS = [
-  { rank:1, name:"서울 강남구", count:412, change:"+8.2%" },
-  { rank:2, name:"경기 성남시", count:287, change:"+3.1%" },
-  { rank:3, name:"서울 서초구", count:241, change:"+5.7%" },
-  { rank:4, name:"부산 해운대구", count:198, change:"+1.4%" },
-  { rank:5, name:"경기 용인시", count:176, change:"-0.9%" },
-]
-
-const RECENT_BIDS = [
-  { property:"서울 송파 아파트", bid_rate:82.4, date:"04/03" },
-  { property:"경기 분당 오피스", bid_rate:76.1, date:"04/02" },
-  { property:"부산 해운대 상가", bid_rate:71.8, date:"04/01" },
-  { property:"서울 강남 오피스텔", bid_rate:88.3, date:"03/31" },
-]
-
-const MOCK_RE_LISTINGS: ReListing[] = [
-  { id:"r1", type:"아파트", dealType:"매매", address:"서울 마포구 합정동 355-4", price:1280000000, area:84.9, floor:"12층", direction:"남향", viewCount:243, likeCount:18, daysAgo:1 },
-  { id:"r2", type:"아파트", dealType:"전세", address:"서울 용산구 이촌동 302-1", price:720000000, area:59.7, floor:"7층", direction:"남동향", viewCount:187, likeCount:12, daysAgo:2 },
-  { id:"r3", type:"아파트", dealType:"월세", address:"경기 성남시 분당구 정자동 7", price:30000000, monthlyRent:1800000, area:49.5, floor:"4층", direction:"동향", viewCount:95, likeCount:5, daysAgo:0 },
-  { id:"r4", type:"상가", dealType:"매매", address:"서울 강남구 압구정동 429", price:2150000000, area:125.3, floor:"1층", direction:"남향", viewCount:156, likeCount:9, daysAgo:3 },
-  { id:"r5", type:"오피스텔", dealType:"월세", address:"서울 서초구 반포동 19-3", price:5000000, monthlyRent:950000, area:33.2, floor:"15층", direction:"남서향", viewCount:78, likeCount:4, daysAgo:1 },
-  { id:"r6", type:"토지", dealType:"매매", address:"경기 파주시 운정3동 1486", price:580000000, area:350.0, floor:"—", direction:"—", viewCount:42, likeCount:3, daysAgo:5 },
-  { id:"r7", type:"아파트", dealType:"매매", address:"경기 수원시 영통구 이의동 142", price:850000000, area:84.7, floor:"8층", direction:"남향", viewCount:121, likeCount:8, daysAgo:2 },
-  { id:"r8", type:"상가", dealType:"월세", address:"부산 해운대구 중동 1418", price:20000000, monthlyRent:3500000, area:89.1, floor:"1층", direction:"동향", viewCount:68, likeCount:6, daysAgo:4 },
-  { id:"r9", type:"오피스텔", dealType:"매매", address:"서울 영등포구 여의도동 30", price:680000000, area:57.4, floor:"21층", direction:"서향", viewCount:104, likeCount:7, daysAgo:1 },
-  { id:"r10", type:"아파트", dealType:"전세", address:"인천 연수구 송도동 7-3", price:520000000, area:74.3, floor:"5층", direction:"남향", viewCount:89, likeCount:5, daysAgo:3 },
+const MOCK: CardListing[] = [
+  {
+    id: "npl-2026-0412", institution: "우리은행", inst_kind: "BANK", listing_category: "NPL",
+    region: "서울 강남구", regionCode: "SEOUL",
+    collateral: "아파트", collateralMajor: "RESIDENTIAL",
+    outstanding_principal: 1_200_000_000, asking_price: 850_000_000,
+    appraisal_value: 1_020_000_000, discount_rate: 29.2,
+    ai_grade: "A", data_completeness: 9, access_tier_required: "L0",
+    provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: false },
+    sale_method: "NPLATFORM", created_days_ago: 2,
+  },
+  {
+    id: "npl-2026-0411", institution: "한국자산관리공사", inst_kind: "AMC", listing_category: "NPL",
+    region: "경기 성남시", regionCode: "GYEONGGI",
+    collateral: "사무실/사무소", collateralMajor: "COMMERCIAL",
+    outstanding_principal: 3_800_000_000, asking_price: 2_600_000_000,
+    appraisal_value: 3_100_000_000, discount_rate: 31.6,
+    ai_grade: "A", data_completeness: 10, access_tier_required: "L0",
+    provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: true },
+    sale_method: "AUCTION", created_days_ago: 1,
+  },
+  {
+    id: "npl-2026-0410", institution: "대신F&I", inst_kind: "AMC", listing_category: "NPL",
+    region: "부산 해운대구", regionCode: "BUSAN",
+    collateral: "근린시설/상가", collateralMajor: "COMMERCIAL",
+    outstanding_principal: 780_000_000, asking_price: 510_000_000,
+    appraisal_value: 640_000_000, discount_rate: 34.6,
+    ai_grade: "B", data_completeness: 6, access_tier_required: "L0",
+    provided: { appraisal: true, registry: true, rights: false, lease: false, site_photos: true, financials: false },
+    sale_method: "NPLATFORM", created_days_ago: 4,
+  },
+  {
+    id: "npl-2026-0409", institution: "신한은행", inst_kind: "BANK", listing_category: "NPL",
+    region: "서울 서초구", regionCode: "SEOUL",
+    collateral: "오피스텔(업무용)", collateralMajor: "COMMERCIAL",
+    outstanding_principal: 5_200_000_000, asking_price: 4_100_000_000,
+    appraisal_value: 4_600_000_000, discount_rate: 21.2,
+    ai_grade: "A", data_completeness: 10, access_tier_required: "L0",
+    provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: true },
+    sale_method: "NPLATFORM", created_days_ago: 1,
+  },
+  {
+    id: "npl-2026-0408", institution: "국민은행", inst_kind: "BANK", listing_category: "NPL",
+    region: "서울 마포구", regionCode: "SEOUL",
+    collateral: "오피스텔(주거용)", collateralMajor: "RESIDENTIAL",
+    outstanding_principal: 1_800_000_000, asking_price: 1_280_000_000,
+    appraisal_value: 1_520_000_000, discount_rate: 28.9,
+    ai_grade: "A", data_completeness: 8, access_tier_required: "L0",
+    provided: { appraisal: true, registry: true, rights: true, lease: false, site_photos: true, financials: false },
+    sale_method: "NPLATFORM", created_days_ago: 3,
+  },
+  {
+    id: "npl-2026-0407", institution: "연합자산관리", inst_kind: "AMC", listing_category: "NPL",
+    region: "인천 남동구", regionCode: "INCHEON",
+    collateral: "대지", collateralMajor: "LAND",
+    outstanding_principal: 950_000_000, asking_price: 620_000_000,
+    appraisal_value: 780_000_000, discount_rate: 34.7,
+    ai_grade: "B", data_completeness: 5, access_tier_required: "L0",
+    provided: { appraisal: true, registry: false, rights: false, lease: false, site_photos: false, financials: false },
+    sale_method: "PUBLIC", created_days_ago: 6,
+  },
+  {
+    id: "npl-2026-0406", institution: "하나은행", inst_kind: "BANK", listing_category: "NPL",
+    region: "대전 유성구", regionCode: "DAEJEON",
+    collateral: "아파트", collateralMajor: "RESIDENTIAL",
+    outstanding_principal: 420_000_000, asking_price: 280_000_000,
+    appraisal_value: 360_000_000, discount_rate: 33.3,
+    ai_grade: "B", data_completeness: 7, access_tier_required: "L0",
+    provided: { appraisal: true, registry: true, rights: true, lease: false, site_photos: false, financials: false },
+    sale_method: "NPLATFORM", created_days_ago: 2,
+  },
+  {
+    id: "npl-2026-0405", institution: "IBK기업은행", inst_kind: "BANK", listing_category: "NPL",
+    region: "경기 용인시", regionCode: "GYEONGGI",
+    collateral: "근린시설/상가", collateralMajor: "COMMERCIAL",
+    outstanding_principal: 2_100_000_000, asking_price: 1_450_000_000,
+    appraisal_value: 1_700_000_000, discount_rate: 30.9,
+    ai_grade: "A", data_completeness: 8, access_tier_required: "L0",
+    provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: false, financials: false },
+    sale_method: "NPLATFORM", created_days_ago: 3,
+  },
+  {
+    id: "npl-2026-0404", institution: "키움상호저축은행", inst_kind: "SAVINGS_BANK", listing_category: "NPL",
+    region: "대구 수성구", regionCode: "DAEGU",
+    collateral: "아파트", collateralMajor: "RESIDENTIAL",
+    outstanding_principal: 640_000_000, asking_price: 420_000_000,
+    appraisal_value: 520_000_000, discount_rate: 34.3,
+    ai_grade: "C", data_completeness: 4, access_tier_required: "L0",
+    provided: { appraisal: false, registry: true, rights: false, lease: false, site_photos: false, financials: false },
+    sale_method: "NPLATFORM", created_days_ago: 5,
+  },
+  {
+    id: "npl-2026-0403", institution: "우리금융F&I", inst_kind: "AMC", listing_category: "NPL",
+    region: "서울 영등포구", regionCode: "SEOUL",
+    collateral: "상업용빌딩(통건물)", collateralMajor: "COMMERCIAL",
+    outstanding_principal: 4_100_000_000, asking_price: 2_950_000_000,
+    appraisal_value: 3_550_000_000, discount_rate: 28.0,
+    ai_grade: "A", data_completeness: 9, access_tier_required: "L0",
+    provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: false },
+    sale_method: "AUCTION", created_days_ago: 2,
+  },
+  {
+    id: "npl-2026-0402", institution: "신한은행", inst_kind: "BANK", listing_category: "NPL",
+    region: "서울 송파구", regionCode: "SEOUL",
+    collateral: "아파트", collateralMajor: "RESIDENTIAL",
+    outstanding_principal: 1_550_000_000, asking_price: 1_050_000_000,
+    appraisal_value: 1_280_000_000, discount_rate: 32.3,
+    ai_grade: "A", data_completeness: 10, access_tier_required: "L0",
+    provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: true },
+    sale_method: "NPLATFORM", created_days_ago: 1,
+  },
+  {
+    id: "npl-2026-0401", institution: "새마을금고", inst_kind: "MUTUAL_CREDIT", listing_category: "NPL",
+    region: "경기 수원시", regionCode: "GYEONGGI",
+    collateral: "근린시설/상가", collateralMajor: "COMMERCIAL",
+    outstanding_principal: 890_000_000, asking_price: 590_000_000,
+    appraisal_value: 730_000_000, discount_rate: 33.7,
+    ai_grade: "B", data_completeness: 7, access_tier_required: "L0",
+    provided: { appraisal: true, registry: true, rights: false, lease: true, site_photos: false, financials: false },
+    sale_method: "NPLATFORM", created_days_ago: 4,
+  },
 ]
 
 /* ═══════════════════════════════════════════════════════════
    HELPERS
 ═══════════════════════════════════════════════════════════ */
 function formatKRW(n: number): string {
-  if (n >= 100000000) return `${(n / 100000000).toFixed(1)}억`
-  if (n >= 10000) return `${(n / 10000).toFixed(0)}만`
-  return `${n.toLocaleString()}원`
-}
-function getDaysLeft(deadline: string): number {
-  return Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000)
-}
-function getAIReturn(principal: number, low: number): number {
-  if (!low || principal <= 0) return 0
-  return Math.round(((principal - low) / low) * 100 * 10) / 10
-}
-function formatRe(l: ReListing): string {
-  const e = (n: number) => n >= 100000000 ? `${(n/100000000).toFixed(1)}억` : `${(n/10000).toFixed(0)}만`
-  if (l.dealType === "월세") return `${e(l.price)} / ${((l.monthlyRent ?? 0)/10000).toFixed(0)}만`
-  return e(l.price)
+  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}억`
+  if (n >= 10_000) return `${(n / 10_000).toFixed(0)}만`
+  return n.toLocaleString("ko-KR")
 }
 
-/* ─── mini sparkline ─── */
-function Spark({ color }: { color: string }) {
-  const pts = [30, 42, 35, 55, 48, 63, 57, 72, 66, 80]
-  const max = Math.max(...pts), min = Math.min(...pts)
-  const norm = (v: number) => 100 - ((v - min) / (max - min + 1)) * 80 - 10
-  const w = 100 / (pts.length - 1)
-  const d = pts.map((v, i) => `${i === 0 ? "M" : "L"} ${i * w} ${norm(v)}`).join(" ")
-  return (
-    <svg viewBox="0 0 100 100" className="w-12 h-6" preserveAspectRatio="none">
-      <path d={d} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-      <path d={`${d} L 100 100 L 0 100 Z`} fill={color} opacity="0.07" />
-    </svg>
-  )
+// ─── Filter Options (derived from central taxonomy) ──────────
+const LISTING_CATEGORY_FILTER: { value: string; label: string }[] = [
+  { value: "ALL",     label: "전체" },
+  { value: "NPL",     label: "NPL" },
+  { value: "GENERAL", label: "일반 부동산" },
+]
+const COLLATERAL_MAJOR_FILTER: { value: string; label: string; icon: string }[] = [
+  { value: "ALL",         label: "전체",       icon: "◈" },
+  { value: "RESIDENTIAL", label: "주거용",     icon: "🏠" },
+  { value: "COMMERCIAL",  label: "상업/산업용", icon: "🏢" },
+  { value: "LAND",        label: "토지",       icon: "🌿" },
+  { value: "ETC",         label: "기타",       icon: "📦" },
+]
+
+// 담보 소분류 — 대분류 선택 시 표시
+const COLLATERAL_MINOR_MAP: Record<string, { value: string; label: string }[]> = {
+  RESIDENTIAL: [
+    { value: "ALL",             label: "전체" },
+    { value: "아파트",           label: "아파트" },
+    { value: "오피스텔(주거용)",  label: "오피스텔(주거용)" },
+    { value: "빌라/연립",        label: "빌라·연립" },
+    { value: "단독/다가구",      label: "단독·다가구" },
+    { value: "도시형생활주택",    label: "도시형생활주택" },
+  ],
+  COMMERCIAL: [
+    { value: "ALL",              label: "전체" },
+    { value: "근린시설",         label: "근린시설/상가" },
+    { value: "사무실",           label: "사무실/사무소" },
+    { value: "오피스텔(업무용)", label: "오피스텔(업무용)" },
+    { value: "상업용빌딩",       label: "상업용빌딩" },
+    { value: "공장",             label: "공장/창고" },
+    { value: "호텔",             label: "호텔/숙박" },
+  ],
+  LAND: [
+    { value: "ALL",   label: "전체" },
+    { value: "대지",  label: "대지" },
+    { value: "임야",  label: "임야" },
+    { value: "농지",  label: "농지(전/답)" },
+    { value: "잡종지", label: "잡종지" },
+  ],
+  ETC: [
+    { value: "ALL",  label: "전체" },
+    { value: "기타", label: "기타" },
+  ],
 }
-
-/* ═══════════════════════════════════════════════════════════
-   NPL LISTING CARD  — DealCard 스타일 통일 (다크 + 탭)
-═══════════════════════════════════════════════════════════ */
-function NplCard({ listing, watchlist, onToggle }: {
-  listing: Listing; watchlist: Set<string>; onToggle: (id: string) => void
-}) {
-  const [tab, setTab] = useState(0)
-  const daysLeft = getDaysLeft(listing.deadline)
-  const aiReturn = getAIReturn(listing.principal, listing.ai_estimate_low)
-  const risk = RISK_CONFIG[listing.risk_grade] ?? RISK_CONFIG["C"]
-  const isWatched = watchlist.has(listing.id)
-  const isUrgent = daysLeft >= 0 && daysLeft <= 3
-  const deadlineLabel = daysLeft < 0 ? "마감" : daysLeft === 0 ? "오늘 마감" : `D-${daysLeft}`
-
-  return (
-    <motion.div variants={up}>
-      <div className="relative select-none">
-        {/* Ambient glow */}
-        <div className="absolute -inset-3 rounded-3xl blur-2xl pointer-events-none"
-          style={{ background: `radial-gradient(circle, ${risk.glow} 0%, transparent 70%)` }} />
-
-        <div className="relative rounded-2xl overflow-hidden"
-          style={{
-            background: "rgba(10,22,40,0.95)",
-            border: "1px solid rgba(255,255,255,0.09)",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
-            backdropFilter: "blur(20px)",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 12px 40px rgba(0,0,0,0.35), 0 0 0 1px ${risk.border}`; e.currentTarget.style.transform = "translateY(-3px)" }}
-          onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 4px 24px rgba(0,0,0,0.25)"; e.currentTarget.style.transform = "translateY(0)" }}
-        >
-          {/* Top gradient line (risk color) */}
-          <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${risk.color}90, transparent)` }} />
-
-          {/* Header bar */}
-          <div className="flex items-center justify-between px-4 py-2.5"
-            style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)" }}>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: C.em }} />
-              <span className="text-[10px] font-bold" style={{ color: "rgba(255,255,255,0.35)", letterSpacing: "0.07em" }}>
-                NPL #{listing.id.padStart(4, "0")}-A-{(parseInt(listing.id) * 847).toString().slice(-4)}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* D-day badge */}
-              {isUrgent && (
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg"
-                  style={{ background: "rgba(244,63,94,0.12)", border: "1px solid rgba(244,63,94,0.25)" }}>
-                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: C.rose }} />
-                  <span className="text-[10px] font-bold" style={{ color: C.rose }}>{deadlineLabel}</span>
-                </div>
-              )}
-              {/* Risk grade */}
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg"
-                style={{ background: risk.bg, border: `1px solid ${risk.border}` }}>
-                <span className="text-xs font-black" style={{ color: risk.color }}>{listing.risk_grade}+</span>
-                <span className="text-[9px] font-medium" style={{ color: `${risk.color}99` }}>등급</span>
-              </div>
-              {/* Watchlist */}
-              <button onClick={() => onToggle(listing.id)}
-                className="p-1 rounded-lg transition-all"
-                style={isWatched ? { color: C.rose } : { color: "rgba(255,255,255,0.25)" }}>
-                <Heart size={12} fill={isWatched ? "currentColor" : "none"} />
-              </button>
-            </div>
-          </div>
-
-          <div className="p-4">
-            {/* Institution + location */}
-            <div className="mb-3">
-              <div className="text-xs font-medium mb-1" style={{ color: "rgba(255,255,255,0.35)" }}>
-                {listing.institution_name} · {listing.location_city} {listing.location_district}
-              </div>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                  style={{ background: "rgba(59,130,246,0.12)", color: C.blue, border: "1px solid rgba(59,130,246,0.2)" }}>
-                  {listing.collateral_type}
-                </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                  style={{ background: "rgba(245,158,11,0.12)", color: C.amber, border: "1px solid rgba(245,158,11,0.2)" }}>
-                  2순위 담보
-                </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                  style={{ background: risk.bg, color: risk.color, border: `1px solid ${risk.border}` }}>
-                  {listing.risk_grade === "A" || listing.risk_grade === "B" ? "저위험" : listing.risk_grade === "C" ? "중위험" : "고위험"}
-                </span>
-              </div>
-            </div>
-
-            {/* Bloomberg 3-metric grid */}
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              {[
-                { label:"감정가", val:`${formatKRW(listing.ai_estimate_high)}`, sub:`LTV ${listing.ltv}%`, color:"rgba(255,255,255,0.75)" },
-                { label:"최저 입찰가", val:`${formatKRW(listing.ai_estimate_low)}`, sub:`낙찰가율 ${listing.ltv ? (100 - listing.ltv + 40).toFixed(1) : "—"}%`, color: C.blue },
-                { label:"예상 수익률", val:`+${aiReturn}%`, sub:"AI 시뮬레이션", color: C.em },
-              ].map(m => (
-                <div key={m.label} className="rounded-xl p-2.5 text-center"
-                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <div className="text-[9px] mb-1 font-medium" style={{ color: "rgba(255,255,255,0.3)" }}>{m.label}</div>
-                  <div className="text-sm font-black tabular-nums" style={{ color: m.color }}>{m.val}</div>
-                  <div className="text-[9px] mt-0.5" style={{ color: "rgba(255,255,255,0.2)" }}>{m.sub}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Tab switcher */}
-            <div className="flex rounded-lg mb-3 p-0.5"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              {["AI 분석", "권리관계", "입찰 현황"].map((t, i) => (
-                <button key={t} onClick={() => setTab(i)}
-                  className="flex-1 text-[10px] font-bold py-1.5 rounded-md transition-all"
-                  style={tab === i
-                    ? { background: C.bg4, color: "rgba(255,255,255,0.85)", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }
-                    : { color: "rgba(255,255,255,0.3)" }}>
-                  {t}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab content */}
-            <AnimatePresence mode="wait">
-              {tab === 0 && (
-                <motion.div key="ai" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}>
-                  <div className="rounded-xl p-3" style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.12)" }}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1.5">
-                        <Brain size={11} style={{ color: C.em }} />
-                        <span className="text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.5)" }}>AI 리스크 스코어</span>
-                      </div>
-                      <span className="text-[11px] font-black" style={{ color: C.em }}>
-                        {listing.risk_grade === "A" ? "낮음 · 88/100" : listing.risk_grade === "B" ? "낮음 · 74/100" : listing.risk_grade === "C" ? "중간 · 58/100" : "높음 · 40/100"}
-                      </span>
-                    </div>
-                    <div className="h-1.5 rounded-full mb-2" style={{ background: "rgba(255,255,255,0.08)" }}>
-                      <motion.div className="h-full rounded-full"
-                        style={{ background: `linear-gradient(90deg, ${C.em}, ${C.emL})` }}
-                        initial={{ width:0 }}
-                        animate={{ width: listing.risk_grade === "A" ? "88%" : listing.risk_grade === "B" ? "74%" : listing.risk_grade === "C" ? "58%" : "40%" }}
-                        transition={{ delay:0.3, duration:1, ease:"easeOut" }} />
-                    </div>
-                    <div className="flex gap-3 flex-wrap">
-                      {["담보 충분", "권리 복잡도 낮음", "경매 이력 없음"].map(txt => (
-                        <div key={txt} className="flex items-center gap-1">
-                          <CheckCircle2 size={9} style={{ color: C.em }} />
-                          <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.4)" }}>{txt}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-              {tab === 1 && (
-                <motion.div key="rights" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}>
-                  <div className="rounded-xl p-3 space-y-1.5" style={{ background: "rgba(59,130,246,0.05)", border: "1px solid rgba(59,130,246,0.12)" }}>
-                    {[
-                      ["1순위", `${listing.institution_name} 근저당`, `${formatKRW(listing.ai_estimate_low * 0.3)}`, true],
-                      ["2순위", "담보 채권", `${formatKRW(listing.principal)}`, false],
-                      ["가압류", "해당없음", "—", true],
-                    ].map(([rank, desc, amt, ok]) => (
-                      <div key={String(rank)} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] w-8 font-bold" style={{ color: "rgba(255,255,255,0.35)" }}>{rank}</span>
-                          <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.6)" }}>{desc}</span>
-                        </div>
-                        <span className="text-[10px] font-bold" style={{ color: ok ? C.em : C.blue }}>{amt}</span>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-              {tab === 2 && (
-                <motion.div key="bid" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}>
-                  <div className="rounded-xl p-3" style={{ background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.12)" }}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.4)" }}>현재 입찰 현황</span>
-                      <div className="flex items-center gap-1">
-                        {!isUrgent && (
-                          <span className="text-[10px] font-bold" style={{ color: C.amber }}>{deadlineLabel}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex -space-x-1.5">
-                        {Array.from({ length: Math.min(listing.interest_count, 5) }).map((_, i) => (
-                          <div key={i} className="w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-bold"
-                            style={{ background: C.bg4, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", zIndex: 5 - i }}>
-                            {["KB","신한","하나","우리","기타"][i]}
-                          </div>
-                        ))}
-                      </div>
-                      <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.5)" }}>
-                        입찰자 <strong style={{ color: "rgba(255,255,255,0.85)" }}>{listing.interest_count}명</strong>
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* CTA buttons */}
-            <div className="grid grid-cols-2 gap-2 mt-3">
-              <Link href={`/exchange/${listing.id}`}
-                className="py-2.5 rounded-xl text-center font-bold text-xs transition-all"
-                style={{ background: `linear-gradient(135deg, ${C.em}, #059669)`, color: "white", boxShadow: `0 4px 12px rgba(16,185,129,0.25)` }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.1)" }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = "brightness(1)" }}>
-                입찰 참여하기
-              </Link>
-              <Link href={`/deals`}
-                className="py-2.5 rounded-xl text-center text-xs font-medium transition-all"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.10)" }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)" }}>
-                딜룸 입장
-              </Link>
-            </div>
-          </div>
-
-          {/* Live badge bottom */}
-          <div className="flex items-center justify-between px-4 py-2"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.01)" }}>
-            <div className="flex items-center gap-1.5">
-              <Activity size={10} style={{ color: C.amber }} />
-              <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.4)" }}>
-                입찰자 <span style={{ color: "rgba(255,255,255,0.75)", fontWeight:700 }}>{listing.interest_count}명</span> 실시간
-              </span>
-            </div>
-            <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>
-              {listing.overdue_months}개월 연체
-            </span>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  )
-}
-
-/* ═══════════════════════════════════════════════════════════
-   RE CARD
-═══════════════════════════════════════════════════════════ */
-function ReCard({ l }: { l: ReListing }) {
-  const dealColor = l.dealType === "매매" ? C.blue : l.dealType === "전세" ? C.amber : C.rose
-  const typeColor = l.type === "아파트" ? C.blue : l.type === "상가" ? C.amber : l.type === "오피스텔" ? C.purple : C.em
-  return (
-    <motion.div variants={up}>
-      <div className="group rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer"
-        style={{ background: C.l0, border: `1px solid ${C.l3}`, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
-        onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.10)"; e.currentTarget.style.transform = "translateY(-3px)" }}
-        onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)"; e.currentTarget.style.transform = "translateY(0)" }}
-      >
-        <div className="h-0.5" style={{ background: `linear-gradient(90deg, ${typeColor}, transparent)` }} />
-        <div className="p-4">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-1.5">
-              <span className="px-2 py-1 rounded-lg text-xs font-bold"
-                style={{ background: `${typeColor}12`, color: typeColor, border: `1px solid ${typeColor}30` }}>
-                {l.type}
-              </span>
-              <span className="px-2 py-1 rounded-lg text-xs font-medium"
-                style={{ background: `${dealColor}10`, color: dealColor, border: `1px solid ${dealColor}28` }}>
-                {l.dealType}
-              </span>
-            </div>
-            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-              style={{ background: C.l2, color: C.lt4 }}>
-              {l.daysAgo === 0 ? "오늘" : `${l.daysAgo}일 전`}
-            </span>
-          </div>
-          <div className="flex items-start gap-1.5 mb-3">
-            <MapPin size={12} style={{ color: C.em, marginTop: 2, flexShrink: 0 }} />
-            <span className="text-sm leading-snug" style={{ color: C.lt2 }}>{l.address}</span>
-          </div>
-          <div className="mb-3">
-            <div className="text-[10px] mb-0.5 font-medium" style={{ color: C.lt4 }}>
-              {l.dealType === "매매" ? "매매가" : l.dealType === "전세" ? "전세금" : "보증금 / 월세"}
-            </div>
-            <div className="text-xl font-black tabular-nums" style={{ color: C.lt1 }}>{formatRe(l)}</div>
-          </div>
-          <div className="flex items-center gap-2 text-xs mb-3" style={{ color: C.lt3 }}>
-            <span>{l.area}㎡</span>
-            <span style={{ color: C.l3 }}>·</span>
-            <span>{l.floor}</span>
-            <span style={{ color: C.l3 }}>·</span>
-            <span>{l.direction}</span>
-          </div>
-          <div className="flex items-center justify-between pt-2.5" style={{ borderTop: `1px solid ${C.l2}` }}>
-            <div className="flex items-center gap-3 text-xs" style={{ color: C.lt4 }}>
-              <span className="flex items-center gap-1"><Eye size={11} />{l.viewCount}</span>
-              <span className="flex items-center gap-1"><Heart size={11} />{l.likeCount}</span>
-            </div>
-            <span className="text-xs font-semibold" style={{ color: C.blue }}>상세보기 →</span>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  )
-}
+const REGION_FILTER: { value: string; label: string }[] = [
+  { value: "ALL", label: "전체" },
+  ...REGION_SHORT_LIST.map(s => ({ value: s, label: s })),
+]
+const INST_FILTER: { value: string; label: string }[] = [
+  { value: "ALL", label: "전체" },
+  ...Object.entries(SELLER_INSTITUTIONS).map(([v, l]) => ({ value: v, label: l })),
+]
+const SALE_METHOD_FILTER: { value: string; label: string }[] = [
+  { value: "ALL", label: "전체" },
+  ...Object.entries(SALE_METHODS).map(([v, l]) => ({ value: v, label: l })),
+]
+type SortKey = "recent" | "discount" | "completeness" | "principal_desc"
+type ViewMode = "card" | "list"
 
 /* ═══════════════════════════════════════════════════════════
    PAGE
 ═══════════════════════════════════════════════════════════ */
 export default function ExchangePage() {
-  const [tabMode, setTabMode] = useState<AssetTab>("npl")
-  const [viewMode, setViewMode] = useState<"list" | "card">("card")
-  const [sortKey, setSortKey] = useState<keyof Listing | "">("")
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
-  const [activeChip, setActiveChip] = useState("전체")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [showFilters, setShowFilters] = useState(false)
-  const [watchlist, setWatchlist] = useState<Set<string>>(new Set())
+  const { t: tr, locale } = useTranslation()
+  const searchParams = useSearchParams()
+  const initialQ = searchParams?.get("q") || ""
+  const [q, setQ] = useState(initialQ)
+  // keep q in sync with URL changes (e.g. re-enter from home with a different query)
+  useEffect(() => {
+    const urlQ = searchParams?.get("q") || ""
+    if (urlQ && urlQ !== q) setQ(urlQ)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+  const [listingCategory, setListingCategory] = useState("ALL")
+  const [collateral, setCollateral] = useState("ALL")       // RESIDENTIAL / COMMERCIAL / LAND / ETC
+  const [collateralMinor, setCollateralMinor] = useState("ALL") // 소분류
+  const [region, setRegion] = useState("ALL")                // 서울 / 경기 ...
+  const [instType, setInstType] = useState("ALL")            // BANK / SAVINGS_BANK / ...
+  const [stage, setStage] = useState("ALL")                  // NPLATFORM / AUCTION / PUBLIC
+  const [minCompleteness, setMinCompleteness] = useState(0)
+  const [sort, setSort] = useState<SortKey>("recent")
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [view, setView] = useState<ViewMode>("card")
   const [page, setPage] = useState(1)
-  const [reTypeChip, setReTypeChip] = useState("전체")
-  const [reDealChip, setReDealChip] = useState("전체")
-  const [reSearchQuery, setReSearchQuery] = useState("")
-  const [rePage, setRePage] = useState(1)
-  const PER_PAGE = 6; const RE_PER_PAGE = 6
+  const [perPage, setPerPage] = useState<number>(30) // 카드 30, 리스트 50
+  const [aiSearchMode, setAiSearchMode] = useState(false)
+  const [aiSearching, setAiSearching] = useState(false)
+  const [aiRecommendation, setAiRecommendation] = useState("")
 
-  const headerRef = useRef(null)
-  const headerInView = useInView(headerRef, { once: true })
+  // ── Real listings data ──────────────────────────────────────
+  const [listings, setListings] = useState<CardListing[]>(MOCK)
+  const [listingsLoading, setListingsLoading] = useState(true)
+  const [isDemoMode, setIsDemoMode] = useState(false)
+  const [demoDismissed, setDemoDismissed] = useState(false)
 
-  const filtered = MOCK_LISTINGS.filter(l => {
-    const matchChip = activeChip === "전체" || l.collateral_type === activeChip
-    const matchSearch = !searchQuery || l.institution_name.includes(searchQuery) ||
-      l.location_city.includes(searchQuery) || l.location_district.includes(searchQuery) || l.collateral_type.includes(searchQuery)
-    return matchChip && matchSearch
-  })
-  const totalPages = Math.ceil(filtered.length / PER_PAGE)
-  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+  useEffect(() => {
+    fetch('/api/v1/exchange/listings?limit=100&status=ACTIVE')
+      .then(r => r.json())
+      .then(d => {
+        if (d.data && d.data.length > 0) {
+          setIsDemoMode(false)
+          const mapped: CardListing[] = d.data.map((r: Record<string, unknown>) => {
+            // Map collateral_type to major category
+            const ct = (r.collateral_type as string) || ''
+            const collateralMajor: CardListing['collateralMajor'] =
+              /아파트|빌라|다세대|단독|오피스텔.*주거/.test(ct) ? 'RESIDENTIAL'
+              : /상가|오피스|사무|근린|교회|호텔|숙박/.test(ct) ? 'COMMERCIAL'
+              : /토지|임야|전|답|과수/.test(ct) ? 'LAND' : 'ETC'
 
-  const filteredRe = MOCK_RE_LISTINGS.filter(l => {
-    if (reTypeChip !== "전체" && l.type !== reTypeChip) return false
-    if (reDealChip !== "전체" && l.dealType !== reDealChip) return false
-    if (reSearchQuery && !l.address.includes(reSearchQuery) && !l.type.includes(reSearchQuery)) return false
-    return true
-  })
-  const reTotalPages = Math.ceil(filteredRe.length / RE_PER_PAGE)
-  const rePaginated = filteredRe.slice((rePage - 1) * RE_PER_PAGE, rePage * RE_PER_PAGE)
+            // Map institution to type
+            const inst = (r.institution_name as string) || (r.institution as string) || '기관'
+            const inst_kind: CardListing['inst_kind'] =
+              /저축은행/.test(inst) ? 'SAVINGS_BANK'
+              : /은행/.test(inst) ? 'BANK'
+              : /새마을|신협/.test(inst) ? 'MUTUAL_CREDIT'
+              : /AMC|자산관리|F&I|대부/.test(inst) ? 'AMC' : 'AMC'
 
-  function toggleWatch(id: string) {
-    setWatchlist(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
-  }
-  function handleSort(key: keyof Listing) {
-    if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc")
-    else { setSortKey(key); setSortDir("desc") }
-  }
+            // Map risk_grade to ai_grade
+            const rg = (r.risk_grade as string) || 'B'
+            const ai_grade: AIGrade =
+              /^AAA?$/.test(rg) ? 'A' : /^BB?B?$/.test(rg) ? 'B' : /^CCC?/.test(rg) ? 'C' : 'B'
 
-  const TABLE_COLS: { key: keyof Listing | ""; label: string; sortable?: boolean; right?: boolean }[] = [
-    { key:"risk_grade", label:"등급", sortable:true },
-    { key:"institution_name", label:"기관명", sortable:true },
-    { key:"collateral_type", label:"담보", sortable:true },
-    { key:"location_city", label:"지역", sortable:true },
-    { key:"principal", label:"채권원금", sortable:true, right:true },
-    { key:"ltv", label:"LTV", sortable:true, right:true },
-    { key:"interest_count", label:"관심", sortable:true, right:true },
-    { key:"deadline", label:"D-day", sortable:true, right:true },
-    { key:"", label:"" },
-  ]
+            // Extract region — prefer collateral_region field, fallback to address
+            const regionSrc = (r.collateral_region as string) || (r.address as string) || (r.location as string) || ''
+            const regionMatch = regionSrc.match(/^([가-힣]+(특별시|광역시|특별자치시|도|시|군|구))/)
+            const region = regionMatch?.[1] || regionSrc.split(' ').slice(0, 2).join(' ') || '지역미상'
+            const regionCode = /서울/.test(regionSrc) ? '서울'
+              : /경기/.test(regionSrc) ? '경기' : /부산/.test(regionSrc) ? '부산'
+              : /인천/.test(regionSrc) ? '인천' : /대전/.test(regionSrc) ? '대전'
+              : /대구/.test(regionSrc) ? '대구' : /광주/.test(regionSrc) ? '광주'
+              : /충청|충북|충남/.test(regionSrc) ? '충청'
+              : /전라|전북|전남/.test(regionSrc) ? '전라'
+              : /경상|경북|경남/.test(regionSrc) ? '경상' : '기타'
 
-  const nplStats = [
-    { label:"총 NPL 매물", value:"3,240건", color: C.em, icon: <BarChart2 size={14} /> },
-    { label:"이번 주 신규", value:"142건",  color: C.blue, icon: <TrendingUp size={14} /> },
-    { label:"평균 낙찰가율", value:"78.3%", color: C.amber, icon: <Activity size={14} /> },
-    { label:"AI 분석완료", value:"2,891건", color: C.purple, icon: <Brain size={14} /> },
-  ]
-  const reStats = [
-    { label:"총 부동산 매물", value:"1,840건", color: C.em, icon: <Building2 size={14} /> },
-    { label:"오늘 신규", value:"36건",         color: C.blue, icon: <TrendingUp size={14} /> },
-    { label:"평균 매매가", value:"9.4억원",     color: C.amber, icon: <Activity size={14} /> },
-    { label:"이번 주 거래", value:"124건",      color: C.purple, icon: <Zap size={14} /> },
-  ]
-  const currentStats = tabMode === "npl" ? nplStats : reStats
+            const createdAt = new Date(r.created_at as string)
+            const daysAgo = Math.floor((Date.now() - createdAt.getTime()) / 86400000)
+
+            // Completeness derived from filled fields (0-10)
+            const fields = [r.appraised_value, r.address, r.collateral_type, r.risk_grade, r.principal_amount, r.asking_price_min, r.description, r.institution_name]
+            const completeness = Math.round((fields.filter(Boolean).length / fields.length) * 10)
+
+            return {
+              id: r.id as string,
+              institution: inst,
+              inst_kind,
+              listing_category: ((r.listing_type as string) === 'NPL' || !r.listing_type) ? 'NPL' : 'GENERAL',
+              region,
+              regionCode,
+              collateral: ct || '기타',
+              collateralMajor,
+              outstanding_principal: (r.principal_amount as number) || (r.claim_amount as number) || 0,
+              asking_price: (r.asking_price_min as number) || (r.principal_amount as number) || (r.claim_amount as number) || 0,
+              appraisal_value: (r.appraised_value as number) || (r.appraisal_value as number) || 0,
+              discount_rate: (r.discount_rate as number) || 0,
+              ai_grade,
+              data_completeness: completeness,
+              access_tier_required: 'L0' as const,
+              provided: {
+                appraisal: !!(r.appraised_value),
+                registry: !!(r.address),
+                rights: false,
+                lease: false,
+                site_photos: !!(r.images),
+                financials: !!(r.description),
+              },
+              sale_method: 'NPLATFORM' as const,
+              created_days_ago: Math.max(0, daysAgo),
+            } satisfies CardListing
+          })
+          setListings(mapped)
+        } else {
+          // API returned empty — stay with MOCK, enable demo mode
+          setIsDemoMode(true)
+        }
+      })
+      .catch(() => { setIsDemoMode(true) /* keep MOCK on error */ })
+      .finally(() => setListingsLoading(false))
+  }, [])
+
+  const handleAISearch = useCallback(async () => {
+    if (!q.trim() || aiSearching) return
+    setAiSearching(true)
+    setAiRecommendation("")
+    try {
+      const res = await fetch("/api/v1/ai/nl-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: q, type: "listings" }),
+      })
+      const data = await res.json()
+      if (data.recommendation) setAiRecommendation(data.recommendation)
+      if (data.filters) {
+        if (data.filters.region) setRegion(data.filters.region)
+        if (data.filters.collateral) { setCollateral(data.filters.collateral); setCollateralMinor("ALL") }
+      }
+    } catch {
+      setAiRecommendation("AI 검색을 처리하는 중 오류가 발생했습니다. 일반 검색을 이용해주세요.")
+    } finally {
+      setAiSearching(false)
+    }
+  }, [q, aiSearching])
+
+  const filtered = useMemo(() => {
+    let arr = [...listings]
+    if (q) {
+      const t = q.toLowerCase()
+      arr = arr.filter(x =>
+        x.institution.toLowerCase().includes(t) ||
+        x.region.toLowerCase().includes(t) ||
+        x.collateral.toLowerCase().includes(t) ||
+        x.id.toLowerCase().includes(t)
+      )
+    }
+    if (listingCategory !== "ALL") arr = arr.filter(x => x.listing_category === listingCategory)
+    if (collateral !== "ALL") {
+      arr = arr.filter(x => x.collateralMajor === collateral)
+      if (collateralMinor !== "ALL") {
+        arr = arr.filter(x => x.collateral.includes(collateralMinor))
+      }
+    }
+    if (region !== "ALL") arr = arr.filter(x => x.region.startsWith(region))
+    if (instType !== "ALL") arr = arr.filter(x => x.inst_kind === instType)
+    if (stage !== "ALL") arr = arr.filter(x => x.sale_method === stage)
+    if (minCompleteness > 0) arr = arr.filter(x => x.data_completeness >= minCompleteness)
+
+    switch (sort) {
+      case "discount": arr.sort((a, b) => b.discount_rate - a.discount_rate); break
+      case "completeness": arr.sort((a, b) => b.data_completeness - a.data_completeness); break
+      case "principal_desc": arr.sort((a, b) => b.outstanding_principal - a.outstanding_principal); break
+      default: arr.sort((a, b) => a.created_days_ago - b.created_days_ago)
+    }
+    return arr
+  }, [q, listingCategory, collateral, collateralMinor, region, instType, stage, minCompleteness, sort, listings])
+
+  // 페이지네이션 계산
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage))
+  const safePage = Math.min(page, totalPages)
+  const paginatedItems = filtered.slice((safePage - 1) * perPage, safePage * perPage)
+
+  // 뷰 전환 시 기본 perPage 변경 + 페이지 리셋
+  const handleViewChange = useCallback((v: ViewMode) => {
+    setView(v)
+    setPerPage(v === "card" ? 30 : 50)
+    setPage(1)
+  }, [])
+
+  // 필터 변경 시 페이지 리셋
+  const resetPage = useCallback(() => setPage(1), [])
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: C.l2, fontFamily: "'Pretendard Variable','Pretendard',sans-serif" }}>
+    <main style={{ backgroundColor: V.surfaceSunken, color: V.textPrimary, minHeight: "100vh" }}>
 
-      {/* ══════════════════════════════════════════════════════
-          DARK HERO HEADER
-      ══════════════════════════════════════════════════════ */}
-      <div ref={headerRef} style={{ backgroundColor: C.bg1, position: "relative", overflow: "hidden" }}>
-        {/* Background orbs */}
-        <div style={{ position:"absolute", inset:0, pointerEvents:"none" }}>
-          <div style={{ position:"absolute", top:"-40%", left:"5%", width:"500px", height:"300px", background:"radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%)", borderRadius:"50%", filter:"blur(60px)" }} />
-          <div style={{ position:"absolute", top:"-20%", right:"10%", width:"400px", height:"250px", background:"radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 70%)", borderRadius:"50%", filter:"blur(60px)" }} />
-          <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"1px", background:"linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)" }} />
+      {/* ── 데모 모드 배너 ────────────────────────────── */}
+      {isDemoMode && !demoDismissed && (
+        <div style={{
+          backgroundColor: "rgba(245,158,11,0.08)",
+          borderBottom: "1px solid rgba(245,158,11,0.22)",
+          padding: "10px 24px",
+        }}>
+          <div style={{ maxWidth: 1440, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#D97706", fontWeight: 600 }}>
+              <Zap size={14} />
+              <span>
+                데모 체험 모드 — 샘플 매물 <strong>{MOCK.length}건</strong>을 표시 중입니다. 실제 등록된 매물이 없습니다.
+              </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Link
+                href="/exchange/sell"
+                style={{ fontSize: 12, fontWeight: 700, color: "#92400E", textDecoration: "underline" }}
+              >
+                매물 등록하기 →
+              </Link>
+              <button
+                onClick={() => setDemoDismissed(true)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#D97706", fontSize: 14, lineHeight: 1 }}
+                aria-label="배너 닫기"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
         </div>
+      )}
 
-        <div style={{ maxWidth:"1440px", margin:"0 auto", padding:"1.5rem 1.5rem 0" }}>
-          {/* Breadcrumb */}
-          <motion.div initial={{ opacity:0 }} animate={headerInView ? { opacity:1 } : {}} transition={{ duration:0.4 }}
-            className="flex items-center gap-1.5 mb-4" style={{ color:"rgba(255,255,255,0.3)", fontSize:"12px" }}>
-            <span>홈</span>
-            <ChevronRight size={12} />
-            <span style={{ color:"rgba(255,255,255,0.6)" }}>매물 허브</span>
-          </motion.div>
-
-          {/* Title row */}
-          <motion.div initial={{ opacity:0, y:12 }} animate={headerInView ? { opacity:1, y:0 } : {}} transition={{ duration:0.5 }}
-            className="flex items-start justify-between mb-5 flex-wrap gap-4">
+      {/* ── Header ─────────────────────────────────── */}
+      <section
+        style={{
+          background: `linear-gradient(180deg, ${V.surfaceBase} 0%, ${V.surfaceSunken} 100%)`,
+          borderBottom: `1px solid ${V.borderSubtle}`,
+        }}
+      >
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "56px 24px 40px" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}
+          >
             <div>
-              <div className="flex items-center gap-2.5 mb-2">
-                <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: C.em }} />
-                <span className="text-xs font-bold" style={{ color: C.em, letterSpacing:"0.08em" }}>LIVE · 실시간 매물</span>
+              <div
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "4px 10px", borderRadius: 999,
+                  backgroundColor: `color-mix(in srgb, ${V.positive} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${V.positive} 20%, transparent)`,
+                  fontSize: 11, fontWeight: 700, color: V.positive, marginBottom: 12,
+                }}
+              >
+                <Sparkles size={12} /> {tr("규제 준수형 NPL 거래소")}
               </div>
-              <h1 className="font-black leading-tight" style={{ fontSize:"clamp(1.5rem, 3vw, 2rem)", color:"rgba(255,255,255,0.95)" }}>
-                {tabMode === "npl" ? "NPL 채권 거래소" : "부동산 직거래 매물"}
+              <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-0.03em", color: V.textPrimary, marginBottom: 8 }}>
+                {tr("거래소")}
               </h1>
-              <p className="text-sm mt-1" style={{ color:"rgba(255,255,255,0.4)" }}>
-                {tabMode === "npl" ? "금융기관 직판 NPL 채권 · AI 리스크 분석 · 실시간 입찰" : "아파트 · 상가 · 오피스텔 · 토지 직거래 매물"}
+              <p style={{ fontSize: 14, color: V.textMuted, maxWidth: 560, lineHeight: 1.6 }}>
+                {tr("담보 정보는 공개 · 개인정보는 자동 마스킹.")}{" "}
+                <span style={{ color: V.positive, fontWeight: 600 }}>{tr("4단계 티어 모델")}</span>{tr("로 규제 준수와 거래 편의를 동시에 확보합니다.")}
               </p>
             </div>
 
-            {/* Quick actions */}
-            <div className="flex items-center gap-2">
-              <Link href="/exchange/map"
-                className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-all"
-                style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", color:"rgba(255,255,255,0.65)" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.10)" }}
-                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)" }}
+            <div style={{ display: "flex", gap: 8 }}>
+              <Link
+                href="/exchange/sell"
+                style={{
+                  padding: "10px 16px", borderRadius: 10,
+                  backgroundColor: V.positive, color: V.onPositive, fontSize: 13, fontWeight: 700,
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                }}
               >
-                <MapPin size={13} /> 지도 보기
+                {tr("매물 등록")} <ArrowRight size={14} />
               </Link>
-              <Link href="/exchange/sell"
-                className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold transition-all"
-                style={{ background:`linear-gradient(135deg, ${C.em}, #059669)`, color:"white", boxShadow:`0 4px 16px rgba(16,185,129,0.25)` }}
-                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)" }}
-                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)" }}
+              <Link
+                href="/exchange/map"
+                style={{
+                  padding: "10px 16px", borderRadius: 10,
+                  backgroundColor: V.surfaceElevated, color: V.textPrimary, fontSize: 13, fontWeight: 600,
+                  border: `1px solid ${V.borderSubtle}`,
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                }}
               >
-                <Plus size={14} /> 매물 등록
+                <MapPin size={14} /> {tr("지도에서 보기")}
               </Link>
             </div>
           </motion.div>
 
-          {/* Asset type tabs */}
-          <div className="flex items-center gap-1">
+          {/* ── KPI strip ───────────────────────────── */}
+          <div
+            style={{
+              marginTop: 28,
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: 12,
+            }}
+          >
             {[
-              { key:"npl" as AssetTab, label:"NPL 채권", icon:<Gavel size={13} />, color: C.em },
-              { key:"realestate" as AssetTab, label:"부동산 매물", icon:<Home size={13} />, color: C.blue },
-            ].map(t => (
-              <button key={t.key} onClick={() => setTabMode(t.key)}
-                className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all relative"
-                style={tabMode === t.key ? { color: t.color } : { color:"rgba(255,255,255,0.4)" }}
+              { label: tr("전체 매물"), value: `${MOCK.length}건`, sub: tr("실시간") },
+              { label: tr("평균 할인율"), value: "31.2%", sub: tr("채권잔액 대비") },
+              { label: tr("평균 완성도"), value: "7.6 / 10", sub: tr("자료 제공 지수") },
+              { label: tr("참여 기관"), value: "12곳", sub: tr("은행·AMC") },
+            ].map((k, i) => (
+              <div
+                key={i}
+                style={{
+                  padding: "14px 16px",
+                  backgroundColor: V.surfaceElevated,
+                  border: `1px solid ${V.borderSubtle}`,
+                  borderRadius: 12,
+                }}
               >
-                {t.icon} {t.label}
-                {tabMode === t.key && (
-                  <motion.div layoutId="tab-underline" className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
-                    style={{ background: t.color }} />
-                )}
-              </button>
-            ))}
-            <Link href="/exchange/auction"
-              className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all"
-              style={{ color:"rgba(255,255,255,0.35)" }}
-              onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.65)" }}
-              onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.35)" }}
-            >
-              <Gavel size={13} /> 법원경매
-              <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full" style={{ background: C.blue, color:"white" }}>AI</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* ── Dark KPI strip ── */}
-        <div style={{ borderTop:"1px solid rgba(255,255,255,0.05)", backgroundColor: C.bg2 }}>
-          <div style={{ maxWidth:"1440px", margin:"0 auto", padding:"0.75rem 1.5rem" }}>
-            <motion.div variants={stagger} initial="hidden" animate={headerInView ? "visible" : "hidden"}
-              className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {currentStats.map((s, i) => (
-                <motion.div key={s.label} variants={up} custom={i}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2"
-                  style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.05)" }}>
-                  <div className="p-1.5 rounded-lg" style={{ background:"rgba(255,255,255,0.04)", color: s.color }}>{s.icon}</div>
-                  <div>
-                    <div className="text-[10px] font-medium" style={{ color:"rgba(255,255,255,0.35)" }}>{s.label}</div>
-                    <div className="text-sm font-black tabular-nums" style={{ color: s.color }}>{s.value}</div>
-                  </div>
-                  <Spark color={s.color} />
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </div>
-      </div>
-
-      {/* ══════════════════════════════════════════════════════
-          LIGHT FILTER BAR
-      ══════════════════════════════════════════════════════ */}
-      <div style={{ backgroundColor: C.l0, borderBottom:`1px solid ${C.l3}`, position:"sticky", top:0, zIndex:30, boxShadow:"0 1px 8px rgba(0,0,0,0.06)" }}>
-        <div style={{ maxWidth:"1440px", margin:"0 auto", padding:"0.75rem 1.5rem" }}>
-          <div className="flex items-center gap-3 flex-wrap">
-
-            {/* Search */}
-            <div className="relative flex-1 min-w-48">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.lt4 }} />
-              <input
-                type="text"
-                placeholder={tabMode === "npl" ? "기관명, 지역, 담보 유형 검색" : "주소, 매물유형 검색"}
-                value={tabMode === "npl" ? searchQuery : reSearchQuery}
-                onChange={e => { tabMode === "npl" ? (setSearchQuery(e.target.value), setPage(1)) : (setReSearchQuery(e.target.value), setRePage(1)) }}
-                className="w-full pl-9 pr-3 py-2 rounded-xl text-sm outline-none transition-all"
-                style={{ background: C.l1, border:`1px solid ${C.l3}`, color: C.lt1 }}
-                onFocus={e => { e.currentTarget.style.border = `1px solid ${C.em}`; e.currentTarget.style.boxShadow = `0 0 0 3px rgba(16,185,129,0.08)` }}
-                onBlur={e => { e.currentTarget.style.border = `1px solid ${C.l3}`; e.currentTarget.style.boxShadow = "none" }}
-              />
-              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 px-1.5 py-0.5 rounded-md"
-                style={{ background:"rgba(16,185,129,0.08)", border:"1px solid rgba(16,185,129,0.15)" }}>
-                <Sparkles size={9} style={{ color: C.em }} />
-                <span className="text-[9px] font-black" style={{ color: C.em }}>AI</span>
+                <div style={{ fontSize: 11, color: V.textMuted, fontWeight: 600, marginBottom: 4 }}>{k.label}</div>
+                <div style={{ fontSize: 22, color: V.textPrimary, fontWeight: 800, letterSpacing: "-0.02em" }}>{k.value}</div>
+                <div style={{ fontSize: 10, color: V.textTertiary, marginTop: 2 }}>{k.sub}</div>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            {/* Chips */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {(tabMode === "npl" ? COLLATERAL_CHIPS : RE_CHIPS_TYPE).map(chip => {
-                const active = tabMode === "npl" ? activeChip === chip : reTypeChip === chip
-                return (
-                  <button key={chip} onClick={() => tabMode === "npl" ? (setActiveChip(chip), setPage(1)) : (setReTypeChip(chip), setRePage(1))}
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-                    style={active
-                      ? { background: C.lt1, color: C.l0, border:`1px solid ${C.lt1}` }
-                      : { background: C.l1, color: C.lt2, border:`1px solid ${C.l3}` }}
-                    onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.borderColor = C.lt3 }}
-                    onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.borderColor = C.l3 }}
-                  >{chip}</button>
-                )
-              })}
-              {tabMode === "realestate" && (
-                <>
-                  <div style={{ width:"1px", height:"20px", background: C.l3, margin:"0 4px" }} />
-                  {RE_CHIPS_DEAL.map(chip => {
-                    const active = reDealChip === chip
-                    const color = chip === "매매" ? C.blue : chip === "전세" ? C.amber : chip === "월세" ? C.rose : C.lt2
-                    return (
-                      <button key={chip} onClick={() => { setReDealChip(chip); setRePage(1) }}
-                        className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-                        style={active
-                          ? { background: `${color}15`, color, border:`1px solid ${color}40` }
-                          : { background: C.l1, color: C.lt2, border:`1px solid ${C.l3}` }}
-                      >{chip}</button>
-                    )
-                  })}
-                </>
+      {/* ── Filter bar ─────────────────────────────── */}
+      <section
+        style={{
+          position: "sticky", top: 64, zIndex: 10,
+          backgroundColor: V.surfaceBase,
+          backdropFilter: "blur(12px)",
+          borderBottom: `1px solid ${V.borderSubtle}`,
+        }}
+      >
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "16px 24px" }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            {/* Search with AI Toggle */}
+            <div
+              style={{
+                flex: "1 1 280px", minWidth: 240,
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "9px 12px",
+                backgroundColor: aiSearchMode ? `color-mix(in srgb, ${V.purple} 6%, transparent)` : V.surfaceElevated,
+                border: `1px solid ${aiSearchMode ? `color-mix(in srgb, ${V.purple} 27%, transparent)` : V.borderSubtle}`,
+                borderRadius: 10,
+                transition: "all 0.2s",
+              }}
+            >
+              {aiSearchMode ? (
+                <Brain size={15} color={V.purple} />
+              ) : (
+                <Search size={15} color={V.textMuted} />
+              )}
+              <input
+                value={q}
+                onChange={e => { setQ(e.target.value); setPage(1) }}
+                onKeyDown={e => { if (e.key === "Enter" && aiSearchMode) handleAISearch() }}
+                placeholder={aiSearchMode ? "자연어로 검색: '강남 아파트 할인율 30% 이상'" : "기관명 · 지역 · 담보 · ID 검색"}
+                style={{
+                  flex: 1, background: "transparent", border: "none", outline: "none",
+                  color: V.textPrimary, fontSize: 13,
+                }}
+              />
+              {aiSearchMode && q && (
+                <button
+                  onClick={handleAISearch}
+                  disabled={aiSearching}
+                  style={{
+                    padding: "4px 10px", borderRadius: 6,
+                    backgroundColor: V.purple, color: V.onDark,
+                    fontSize: 10, fontWeight: 700, border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: 4,
+                    opacity: aiSearching ? 0.5 : 1,
+                  }}
+                >
+                  {aiSearching ? <Loader2 size={10} style={{ animation: "spin 1s linear infinite" }} /> : <Zap size={10} />}
+                  AI
+                </button>
               )}
             </div>
-
-            {/* Divider */}
-            <div style={{ width:"1px", height:"24px", background: C.l3 }} />
-
-            {/* View toggle */}
-            <div className="flex items-center rounded-xl overflow-hidden" style={{ border:`1px solid ${C.l3}` }}>
-              <button onClick={() => setViewMode("list")} className="p-2 transition-all"
-                style={viewMode === "list" ? { background: C.lt1, color: C.l0 } : { background: C.l0, color: C.lt3 }}>
-                <List size={14} />
-              </button>
-              <button onClick={() => setViewMode("card")} className="p-2 transition-all"
-                style={viewMode === "card" ? { background: C.lt1, color: C.l0 } : { background: C.l0, color: C.lt3 }}>
-                <LayoutGrid size={14} />
-              </button>
-            </div>
-
-            {/* Filter toggle */}
-            <button onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
-              style={showFilters
-                ? { background: C.lt1, color: C.l0, border:`1px solid ${C.lt1}` }
-                : { background: C.l0, color: C.lt2, border:`1px solid ${C.l3}` }}>
-              <SlidersHorizontal size={13} /> 필터
-              {showFilters && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: C.em }} />}
+            <button
+              onClick={() => setAiSearchMode(v => !v)}
+              style={{
+                padding: "9px 12px", borderRadius: 10,
+                backgroundColor: aiSearchMode ? `color-mix(in srgb, ${V.purple} 10%, transparent)` : V.surfaceElevated,
+                border: `1px solid ${aiSearchMode ? `color-mix(in srgb, ${V.purple} 27%, transparent)` : V.borderSubtle}`,
+                color: aiSearchMode ? V.purple : V.textMuted,
+                fontSize: 11, fontWeight: 700,
+                display: "inline-flex", alignItems: "center", gap: 5,
+                cursor: "pointer",
+              }}
+              title="AI 자연어 검색"
+            >
+              <Brain size={14} /> AI
             </button>
+
+            <button
+              onClick={() => setFiltersOpen(v => !v)}
+              style={{
+                padding: "9px 14px", borderRadius: 10,
+                backgroundColor: filtersOpen ? V.surfaceSunken : V.surfaceElevated,
+                border: `1px solid ${V.borderSubtle}`,
+                color: V.textPrimary, fontSize: 12, fontWeight: 600,
+                display: "inline-flex", alignItems: "center", gap: 6,
+                cursor: "pointer",
+              }}
+            >
+              <SlidersHorizontal size={14} /> 필터
+            </button>
+
+            <select
+              value={sort}
+              onChange={e => setSort(e.target.value as SortKey)}
+              style={{
+                padding: "9px 14px", borderRadius: 10,
+                backgroundColor: V.surfaceElevated, border: `1px solid ${V.borderSubtle}`,
+                color: V.textPrimary, fontSize: 12, fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              <option value="recent">최신순</option>
+              <option value="discount">할인율 높은순</option>
+              <option value="completeness">완성도 높은순</option>
+              <option value="principal_desc">채권잔액 큰순</option>
+            </select>
           </div>
 
-          {/* Extended filter panel */}
-          {showFilters && (
-            <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:"auto" }} exit={{ opacity:0, height:0 }}
-              className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-3 mt-3"
-              style={{ borderTop:`1px solid ${C.l2}` }}>
-              {[
-                { label:"지역", options:["전체","서울","경기","부산","대구","인천"] },
-                { label:"금액범위", options:["전체","1억 미만","1~5억","5~10억","10억 이상"] },
-                { label:"경매단계", options:["전체","공고중","관심표명","NDA체결","실사진행"] },
-                { label:"AI등급", options:["전체","A","B","C","D","E"] },
-              ].map(({ label, options }) => (
-                <select key={label}
-                  className="px-3 py-2 rounded-xl text-xs font-medium outline-none transition-all"
-                  style={{ border:`1px solid ${C.l3}`, background: C.l0, color: C.lt1 }}
-                  defaultValue="전체">
-                  <option value="전체">{label}: 전체</option>
-                  {options.slice(1).map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-              ))}
+          {filtersOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              transition={{ duration: 0.25 }}
+              style={{
+                marginTop: 12, paddingTop: 12,
+                borderTop: `1px solid ${V.borderSubtle}`,
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: 12,
+              }}
+            >
+              <FilterGroup label={tr("매물 유형")} options={LISTING_CATEGORY_FILTER.map(o => ({ ...o, label: tr(o.label) }))} value={listingCategory} onChange={v => { setListingCategory(v); setPage(1) }} />
+              <CollateralFilterGroup
+                major={collateral}
+                minor={collateralMinor}
+                onMajorChange={v => { setCollateral(v); setCollateralMinor("ALL"); setPage(1) }}
+                onMinorChange={v => { setCollateralMinor(v); setPage(1) }}
+                tr={tr}
+              />
+              <FilterGroup label={tr("지역")} options={REGION_FILTER} value={region} onChange={v => { setRegion(v); setPage(1) }} />
+              <FilterGroup label={tr("기관 유형")} options={INST_FILTER} value={instType} onChange={v => { setInstType(v); setPage(1) }} />
+              <FilterGroup label={tr("매각 방식")} options={SALE_METHOD_FILTER} value={stage} onChange={v => { setStage(v); setPage(1) }} />
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: V.textMuted, marginBottom: 6 }}>
+                  {tr("최소 자료 완성도")}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <input
+                    type="range"
+                    min={0}
+                    max={10}
+                    value={minCompleteness}
+                    onChange={e => setMinCompleteness(Number(e.target.value))}
+                    style={{ flex: 1 }}
+                  />
+                  <span style={{ color: V.positive, fontSize: 12, fontWeight: 700, minWidth: 36 }}>
+                    {minCompleteness}/10
+                  </span>
+                </div>
+              </div>
             </motion.div>
           )}
         </div>
-      </div>
+      </section>
 
-      {/* ══════════════════════════════════════════════════════
-          MAIN CONTENT (LIGHT)
-      ══════════════════════════════════════════════════════ */}
-      <main style={{ maxWidth:"1440px", margin:"0 auto", padding:"1.5rem" }}>
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
-
-          {/* ── LEFT: listing grid / table ── */}
-          <div>
-            {/* Result meta row */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold" style={{ color: C.lt1 }}>
-                  {tabMode === "npl" ? filtered.length : filteredRe.length}건
-                </span>
-                <span className="text-sm" style={{ color: C.lt3 }}>검색됨</span>
-                {(activeChip !== "전체" || searchQuery) && (
-                  <button onClick={() => { setActiveChip("전체"); setSearchQuery(""); setPage(1) }}
-                    className="text-xs px-2 py-0.5 rounded-lg font-medium"
-                    style={{ background:"rgba(244,63,94,0.08)", color: C.rose, border:"1px solid rgba(244,63,94,0.2)" }}>
-                    필터 초기화 ×
-                  </button>
-                )}
-              </div>
-              <select className="text-xs rounded-xl px-3 py-2 outline-none font-medium"
-                style={{ border:`1px solid ${C.l3}`, background: C.l0, color: C.lt1 }}>
-                <option>최신순</option>
-                <option>원금 높은순</option>
-                <option>마감임박순</option>
-                <option>수익률 높은순</option>
-              </select>
+      {/* ── Listing Grid ───────────────────────────── */}
+      <section>
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "32px 24px 80px" }}>
+          {/* ── 활성 필터 태그 ─────────────────────────── */}
+          {(collateral !== "ALL" || collateralMinor !== "ALL" || region !== "ALL" || instType !== "ALL" || stage !== "ALL" || listingCategory !== "ALL" || minCompleteness > 0) && (
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginBottom: 14 }}>
+              <span style={{ fontSize: 10, color: V.textMuted, fontWeight: 700, marginRight: 2 }}>{tr("적용 필터:")}</span>
+              {listingCategory !== "ALL" && (
+                <ActiveFilterChip
+                  label={`유형: ${LISTING_CATEGORY_FILTER.find(o => o.value === listingCategory)?.label}`}
+                  onRemove={() => setListingCategory("ALL")}
+                />
+              )}
+              {collateral !== "ALL" && (
+                <ActiveFilterChip
+                  label={`담보: ${COLLATERAL_MAJOR_FILTER.find(o => o.value === collateral)?.icon} ${COLLATERAL_MAJOR_FILTER.find(o => o.value === collateral)?.label}${collateralMinor !== "ALL" ? ` › ${COLLATERAL_MINOR_MAP[collateral]?.find(o => o.value === collateralMinor)?.label ?? collateralMinor}` : ""}`}
+                  onRemove={() => { setCollateral("ALL"); setCollateralMinor("ALL") }}
+                />
+              )}
+              {collateral !== "ALL" && collateralMinor !== "ALL" && (
+                <ActiveFilterChip
+                  label={`세부: ${COLLATERAL_MINOR_MAP[collateral]?.find(o => o.value === collateralMinor)?.label ?? collateralMinor}`}
+                  onRemove={() => setCollateralMinor("ALL")}
+                  color="brand"
+                />
+              )}
+              {region !== "ALL" && (
+                <ActiveFilterChip
+                  label={`지역: ${region}`}
+                  onRemove={() => setRegion("ALL")}
+                />
+              )}
+              {instType !== "ALL" && (
+                <ActiveFilterChip
+                  label={`기관: ${SELLER_INSTITUTIONS[instType as keyof typeof SELLER_INSTITUTIONS]}`}
+                  onRemove={() => setInstType("ALL")}
+                />
+              )}
+              {stage !== "ALL" && (
+                <ActiveFilterChip
+                  label={`매각: ${SALE_METHODS[stage as keyof typeof SALE_METHODS]}`}
+                  onRemove={() => setStage("ALL")}
+                />
+              )}
+              {minCompleteness > 0 && (
+                <ActiveFilterChip
+                  label={`완성도 ${minCompleteness}+`}
+                  onRemove={() => setMinCompleteness(0)}
+                />
+              )}
+              <button
+                onClick={() => {
+                  setListingCategory("ALL"); setCollateral("ALL"); setCollateralMinor("ALL")
+                  setRegion("ALL"); setInstType("ALL"); setStage("ALL"); setMinCompleteness(0); setPage(1)
+                }}
+                style={{
+                  padding: "3px 9px", borderRadius: 999, fontSize: 10, fontWeight: 700,
+                  backgroundColor: `color-mix(in srgb, ${V.danger} 10%, transparent)`,
+                  color: V.danger,
+                  border: `1px solid color-mix(in srgb, ${V.danger} 25%, transparent)`,
+                  cursor: "pointer",
+                }}
+              >
+                {tr("전체 초기화")}
+              </button>
             </div>
+          )}
 
-            {tabMode === "realestate" ? (
-              /* ─ 부동산 카드 그리드 ─ */
-              <>
-                {filteredRe.length === 0 ? (
-                  <div className="flex flex-col items-center py-24 text-center">
-                    <Home size={40} style={{ color: C.lt4 }} />
-                    <p className="mt-3 text-sm" style={{ color: C.lt3 }}>검색 결과가 없습니다</p>
-                    <button onClick={() => { setReSearchQuery(""); setReTypeChip("전체"); setReDealChip("전체") }}
-                      className="mt-3 text-xs font-semibold" style={{ color: C.em }}>필터 초기화</button>
-                  </div>
-                ) : (
-                  <motion.div variants={stagger} initial="hidden" animate="visible"
-                    className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {rePaginated.map(l => <ReCard key={l.id} l={l} />)}
-                  </motion.div>
-                )}
-                {reTotalPages > 1 && <Pagination page={rePage} total={reTotalPages} onPage={setRePage} />}
-              </>
-
-            ) : viewMode === "card" ? (
-              /* ─ NPL 카드 그리드 ─ */
-              <>
-                {filtered.length === 0 ? (
-                  <div className="flex flex-col items-center py-24 text-center">
-                    <Search size={40} style={{ color: C.lt4 }} />
-                    <p className="mt-3 text-sm" style={{ color: C.lt3 }}>검색 결과가 없습니다</p>
-                  </div>
-                ) : (
-                  <motion.div variants={stagger} initial="hidden" animate="visible"
-                    className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {paginated.map(l => <NplCard key={l.id} listing={l} watchlist={watchlist} onToggle={toggleWatch} />)}
-                  </motion.div>
-                )}
-                {totalPages > 1 && <Pagination page={page} total={totalPages} onPage={setPage} />}
-              </>
-
-            ) : (
-              /* ─ Bloomberg 테이블 뷰 ─ */
-              <div className="rounded-2xl overflow-hidden" style={{ background: C.l0, border:`1px solid ${C.l3}`, boxShadow:"0 1px 6px rgba(0,0,0,0.05)" }}>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr style={{ background: C.l1, borderBottom:`1px solid ${C.l2}` }}>
-                        {TABLE_COLS.map(col => (
-                          <th key={col.label}
-                            onClick={() => col.sortable && col.key && handleSort(col.key as keyof Listing)}
-                            className={`px-4 py-3 text-xs font-semibold whitespace-nowrap select-none transition-colors ${col.right ? "text-right" : "text-left"} ${col.sortable ? "cursor-pointer" : ""}`}
-                            style={{ color: C.lt3 }}
-                            onMouseEnter={e => { if (col.sortable) (e.currentTarget as HTMLElement).style.color = C.lt1 }}
-                            onMouseLeave={e => { if (col.sortable) (e.currentTarget as HTMLElement).style.color = C.lt3 }}
-                          >
-                            <span className="inline-flex items-center gap-1">
-                              {col.label}
-                              {col.sortable && col.key && (
-                                sortKey === col.key
-                                  ? (sortDir === "asc" ? <ChevronUp size={11} style={{ color: C.blue }} /> : <ChevronDown size={11} style={{ color: C.blue }} />)
-                                  : <ChevronsUpDown size={11} style={{ opacity:0.3 }} />
-                              )}
-                            </span>
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(sortKey ? [...paginated].sort((a, b) => {
-                        const va = (a as unknown as Record<string, unknown>)[sortKey]
-                        const vb = (b as unknown as Record<string, unknown>)[sortKey]
-                        const cmp = typeof va === "number" && typeof vb === "number" ? va - vb : String(va ?? "").localeCompare(String(vb ?? ""))
-                        return sortDir === "asc" ? cmp : -cmp
-                      }) : paginated).map(l => {
-                        const risk = RISK_CONFIG[l.risk_grade] ?? RISK_CONFIG["C"]
-                        const daysLeft = getDaysLeft(l.deadline)
-                        const deadlineLabel = daysLeft < 0 ? "마감" : daysLeft === 0 ? "오늘" : `D-${daysLeft}`
-                        const deadlineColor = daysLeft < 0 ? C.lt4 : daysLeft <= 3 ? C.rose : daysLeft <= 7 ? C.amber : C.lt1
-                        return (
-                          <tr key={l.id} className="group transition-colors"
-                            style={{ borderBottom:`1px solid ${C.l2}` }}
-                            onMouseEnter={e => { e.currentTarget.style.background = C.l1 }}
-                            onMouseLeave={e => { e.currentTarget.style.background = "transparent" }}
-                          >
-                            <td className="px-4 py-3">
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-black"
-                                style={{ background: risk.bg, color: risk.color, border:`1px solid ${risk.border}` }}>
-                                {l.risk_grade}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3">
-                              <span className="text-xs font-semibold" style={{ color: C.lt1 }}>{l.institution_name}</span>
-                            </td>
-                            <td className="px-4 py-3">
-                              <span className="text-xs px-2 py-0.5 rounded-lg" style={{ background: C.l2, color: C.lt2 }}>{l.collateral_type}</span>
-                            </td>
-                            <td className="px-4 py-3 text-xs" style={{ color: C.lt2 }}>{l.location_city} {l.location_district}</td>
-                            <td className="px-4 py-3 text-right font-black text-xs tabular-nums" style={{ color: C.lt1 }}>{formatKRW(l.principal)}</td>
-                            <td className="px-4 py-3 text-right text-xs font-semibold tabular-nums"
-                              style={{ color: (l.ltv ?? 0) > 75 ? C.rose : (l.ltv ?? 0) > 60 ? C.amber : C.em }}>
-                              {l.ltv != null ? `${l.ltv}%` : "—"}
-                            </td>
-                            <td className="px-4 py-3 text-right text-xs tabular-nums" style={{ color: C.lt3 }}>{l.interest_count}명</td>
-                            <td className="px-4 py-3 text-right text-xs font-bold tabular-nums" style={{ color: deadlineColor }}>{deadlineLabel}</td>
-                            <td className="px-4 py-3 text-right">
-                              <Link href={`/exchange/${l.id}`}
-                                className="inline-flex items-center gap-1 text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
-                                style={{ color: C.blue }}>
-                                상세 <ExternalLink size={10} />
-                              </Link>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+          <div
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              marginBottom: 20,
+            }}
+          >
+            <div style={{ fontSize: 13, color: V.textTertiary }}>
+              <span style={{ color: V.textPrimary, fontWeight: 700 }}>{filtered.length}</span>건 매칭
+            </div>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 14 }}>
+              {/* View toggle */}
+              <div
+                role="tablist"
+                aria-label="보기 방식"
+                style={{
+                  display: "inline-flex",
+                  padding: 3,
+                  backgroundColor: V.surfaceElevated,
+                  border: `1px solid ${V.borderSubtle}`,
+                  borderRadius: 10,
+                  gap: 2,
+                }}
+              >
+                {([
+                  { key: "card" as ViewMode, label: tr("카드"), Icon: LayoutGrid },
+                  { key: "list" as ViewMode, label: tr("리스트"), Icon: ListIcon },
+                ]).map(({ key, label, Icon }) => {
+                  const active = view === key
+                  return (
+                    <button
+                      key={key}
+                      role="tab"
+                      aria-selected={active}
+                      aria-label={`${label} 보기`}
+                      onClick={() => handleViewChange(key)}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 5,
+                        padding: "6px 11px",
+                        borderRadius: 8,
+                        fontSize: 11, fontWeight: 700,
+                        backgroundColor: active ? V.surfaceSunken : "transparent",
+                        color: active ? V.textPrimary : V.textMuted,
+                        border: "none", cursor: "pointer",
+                        transition: "all 0.15s",
+                      }}
+                    >
+                      <Icon size={13} />
+                      {label}
+                    </button>
+                  )
+                })}
               </div>
-            )}
+              <div
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  fontSize: 11, color: V.textMuted,
+                }}
+              >
+                <ShieldCheck size={13} color={V.positive} />
+                수수료 상한 매도·매수 각 0.9% 적용
+              </div>
+            </div>
           </div>
 
-          {/* ── RIGHT SIDEBAR ── */}
-          <aside className="space-y-4">
-
-            {/* AI 시장 인사이트 */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: C.bg2, border:"1px solid rgba(255,255,255,0.06)" }}>
-              {/* Dark header */}
-              <div className="px-4 pt-4 pb-3" style={{ borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-                <div className="flex items-center gap-2 mb-1">
-                  <Brain size={12} style={{ color: C.purple }} />
-                  <span className="text-[10px] font-bold" style={{ color: C.purple, letterSpacing:"0.08em" }}>AI 시장 인사이트</span>
-                </div>
-                <h3 className="text-sm font-bold" style={{ color:"rgba(255,255,255,0.9)" }}>현재 시장 동향</h3>
+          {/* AI Recommendation Banner */}
+          {aiRecommendation && (
+            <div
+              style={{
+                marginBottom: 16, padding: "14px 16px",
+                backgroundColor: `color-mix(in srgb, ${V.purple} 4%, transparent)`,
+                border: `1px solid color-mix(in srgb, ${V.purple} 20%, transparent)`,
+                borderRadius: 12,
+                display: "flex", gap: 10, alignItems: "flex-start",
+              }}
+            >
+              <Sparkles size={16} color={V.purple} style={{ marginTop: 2, flexShrink: 0 }} />
+              <div style={{ fontSize: 12, color: V.textTertiary, lineHeight: 1.55 }}>
+                <strong style={{ color: V.textPrimary }}>AI 추천:</strong> {aiRecommendation}
               </div>
-              {/* Light body */}
-              <div className="p-4" style={{ background: C.l0 }}>
-                <ul className="space-y-3">
-                  {[
-                    { icon:"↑", color: C.em, text:"강남권 NPL 낙찰가율 전주 대비 +2.1%p 상승" },
-                    { icon:"→", color: C.amber, text:"상가 물건 공급 증가, 경쟁 심화 예상" },
-                    { icon:"↓", color: C.blue, text:"LTV 60% 이하 우량 물건 수요 집중" },
-                    { icon:"●", color: C.lt3, text:"4월 경매 일정 집중 — 빠른 의사결정 권장" },
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-2.5">
-                      <span className="text-xs font-black mt-0.5 flex-shrink-0 w-4 text-center" style={{ color: item.color }}>{item.icon}</span>
-                      <span className="text-xs leading-relaxed" style={{ color: C.lt2 }}>{item.text}</span>
-                    </li>
+              <button
+                onClick={() => setAiRecommendation("")}
+                style={{ background: "none", border: "none", cursor: "pointer", color: V.textMuted, fontSize: 11, flexShrink: 0 }}
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          {listingsLoading && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", backgroundColor: V.surfaceElevated, borderRadius: 10, marginBottom: 16, fontSize: 12, color: V.textMuted }}>
+              <Loader2 size={14} className="animate-spin" />
+              매물 목록을 불러오는 중...
+            </div>
+          )}
+
+          {filtered.length === 0 ? (
+            <div
+              style={{
+                padding: "80px 24px", textAlign: "center",
+                backgroundColor: V.surfaceElevated, border: `1px dashed ${V.borderSubtle}`, borderRadius: 14,
+              }}
+            >
+              <Filter size={32} color={V.textMuted} style={{ margin: "0 auto 12px" }} />
+              <div style={{ fontSize: 14, color: V.textTertiary }}>검색 조건에 맞는 매물이 없습니다</div>
+            </div>
+          ) : view === "card" ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+                gap: 18,
+              }}
+            >
+              {paginatedItems.map((x, i) => (
+                <ListingCard key={x.id} item={x} index={i} />
+              ))}
+            </div>
+          ) : (
+            <div
+              style={{
+                backgroundColor: V.surfaceElevated,
+                border: `1px solid ${V.borderSubtle}`,
+                borderRadius: 14,
+                overflow: "hidden",
+              }}
+            >
+              {/* Table header */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1.4fr 1.4fr 0.9fr 0.9fr 0.9fr 0.7fr 0.7fr 0.6fr",
+                  gap: 12,
+                  padding: "12px 18px",
+                  backgroundColor: V.surfaceSunken,
+                  borderBottom: `1px solid ${V.borderSubtle}`,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: V.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                <div>매물 / 기관</div>
+                <div>지역 · 담보</div>
+                <div style={{ textAlign: "right" }}>채권잔액</div>
+                <div style={{ textAlign: "right" }}>매각희망가</div>
+                <div style={{ textAlign: "right" }}>할인율</div>
+                <div style={{ textAlign: "center" }}>완성도</div>
+                <div style={{ textAlign: "center" }}>등급</div>
+                <div></div>
+              </div>
+              {paginatedItems.map((x, i) => (
+                <ListingRow key={x.id} item={x} index={i} />
+              ))}
+            </div>
+          )}
+
+          {/* ── Pagination ────────────────────────────── */}
+          {filtered.length > 0 && (
+            <div
+              style={{
+                marginTop: 24,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 12,
+              }}
+            >
+              {/* Per page selector */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 12, color: V.textMuted }}>페이지당</span>
+                <select
+                  value={perPage}
+                  onChange={e => { setPerPage(Number(e.target.value)); setPage(1) }}
+                  style={{
+                    padding: "6px 10px", borderRadius: 8,
+                    backgroundColor: V.surfaceElevated, border: `1px solid ${V.borderSubtle}`,
+                    color: V.textPrimary, fontSize: 12, fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  {[10, 30, 50, 100].map(n => (
+                    <option key={n} value={n}>{n}개</option>
                   ))}
-                </ul>
-                <Link href="/analysis/npl-index"
-                  className="flex items-center gap-1 mt-4 text-xs font-semibold"
-                  style={{ color: C.blue }}>
-                  NPL 가격지수 보기 <ArrowRight size={11} />
-                </Link>
+                </select>
+                <span style={{ fontSize: 11, color: V.textTertiary }}>
+                  총 {filtered.length}건 중 {(safePage - 1) * perPage + 1}–{Math.min(safePage * perPage, filtered.length)}
+                </span>
               </div>
-            </div>
 
-            {/* 인기 지역 Top 5 */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: C.l0, border:`1px solid ${C.l3}`, boxShadow:"0 1px 4px rgba(0,0,0,0.05)" }}>
-              <div className="px-4 py-3" style={{ borderBottom:`1px solid ${C.l2}`, background: C.l1 }}>
-                <div className="flex items-center gap-1.5">
-                  <TrendingUp size={12} style={{ color: C.em }} />
-                  <span className="text-xs font-bold" style={{ color: C.lt2 }}>인기 지역 Top 5</span>
+              {/* Page buttons */}
+              {totalPages > 1 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <PaginationBtn
+                    label="‹"
+                    disabled={safePage <= 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                  />
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
+                    .reduce<(number | "...")[]>((acc, p, idx, arr) => {
+                      if (idx > 0 && p - (arr[idx - 1]) > 1) acc.push("...")
+                      acc.push(p)
+                      return acc
+                    }, [])
+                    .map((p, i) =>
+                      p === "..." ? (
+                        <span key={`dots-${i}`} style={{ padding: "0 4px", color: V.textMuted, fontSize: 12 }}>…</span>
+                      ) : (
+                        <PaginationBtn
+                          key={p}
+                          label={String(p)}
+                          active={p === safePage}
+                          onClick={() => setPage(p as number)}
+                        />
+                      )
+                    )}
+                  <PaginationBtn
+                    label="›"
+                    disabled={safePage >= totalPages}
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  />
                 </div>
-              </div>
-              <div className="p-4">
-                <ol className="space-y-3">
-                  {POPULAR_REGIONS.map(r => (
-                    <li key={r.rank} className="flex items-center gap-3">
-                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0"
-                        style={r.rank === 1
-                          ? { background: C.lt1, color: C.l0 }
-                          : { background: C.l2, color: C.lt3 }}>
-                        {r.rank}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="h-1 rounded-full mb-1.5" style={{ background: C.l2 }}>
-                          <div className="h-full rounded-full" style={{ width:`${(r.count / 412) * 100}%`, background: r.rank === 1 ? `linear-gradient(90deg, ${C.em}, ${C.emL})` : `${C.blue}70` }} />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold" style={{ color: C.lt1 }}>{r.name}</span>
-                          <span className="text-[10px]" style={{ color: C.lt4 }}>{r.count}건</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold flex-shrink-0"
-                        style={{ color: r.change.startsWith("+") ? C.em : C.rose }}>
-                        {r.change}
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
+              )}
             </div>
-
-            {/* 최근 낙찰 현황 */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: C.l0, border:`1px solid ${C.l3}`, boxShadow:"0 1px 4px rgba(0,0,0,0.05)" }}>
-              <div className="px-4 py-3" style={{ borderBottom:`1px solid ${C.l2}`, background: C.l1 }}>
-                <div className="flex items-center gap-1.5">
-                  <Gavel size={12} style={{ color: C.amber }} />
-                  <span className="text-xs font-bold" style={{ color: C.lt2 }}>최근 낙찰 현황</span>
-                </div>
-              </div>
-              <div className="p-4 space-y-3">
-                {RECENT_BIDS.map((b, i) => (
-                  <div key={i} className="flex items-center justify-between py-1.5"
-                    style={{ borderBottom: i < RECENT_BIDS.length - 1 ? `1px solid ${C.l2}` : "none" }}>
-                    <div>
-                      <div className="text-xs font-semibold" style={{ color: C.lt1 }}>{b.property}</div>
-                      <div className="text-[10px] mt-0.5" style={{ color: C.lt4 }}>{b.date}</div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Spark color={b.bid_rate >= 80 ? C.em : b.bid_rate >= 70 ? C.amber : C.rose} />
-                      <span className="text-xs font-black tabular-nums"
-                        style={{ color: b.bid_rate >= 80 ? C.em : b.bid_rate >= 70 ? C.amber : C.rose }}>
-                        {b.bid_rate}%
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </aside>
+          )}
         </div>
-      </main>
+      </section>
+    </main>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ActiveFilterChip — 활성 필터 태그
+═══════════════════════════════════════════════════════════ */
+function ActiveFilterChip({
+  label, onRemove, color = "default",
+}: {
+  label: React.ReactNode
+  onRemove: () => void
+  color?: "default" | "brand"
+}) {
+  const accent = color === "brand" ? V.brandBright : V.positive
+  return (
+    <span
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 5,
+        padding: "3px 8px 3px 10px", borderRadius: 999,
+        fontSize: 10, fontWeight: 700,
+        backgroundColor: `color-mix(in srgb, ${accent} 10%, transparent)`,
+        color: accent,
+        border: `1px solid color-mix(in srgb, ${accent} 28%, transparent)`,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {label}
+      <button
+        onClick={onRemove}
+        style={{
+          background: "none", border: "none", cursor: "pointer",
+          color: accent, fontSize: 10, lineHeight: 1, padding: 0,
+          display: "flex", alignItems: "center",
+          opacity: 0.75,
+        }}
+        aria-label="필터 제거"
+      >
+        ✕
+      </button>
+    </span>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FilterGroup (chip style)
+═══════════════════════════════════════════════════════════ */
+function FilterGroup({
+  label, options, value, onChange,
+}: {
+  label: string
+  options: { value: string; label: string }[]
+  value: string
+  onChange: (v: string) => void
+}) {
+  return (
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: V.textMuted, marginBottom: 6 }}>{label}</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {options.map(op => {
+          const active = op.value === value
+          return (
+            <button
+              key={op.value}
+              onClick={() => onChange(op.value)}
+              style={{
+                padding: "5px 10px", borderRadius: 999, fontSize: 11, fontWeight: 600,
+                backgroundColor: active ? `color-mix(in srgb, ${V.positive} 12%, transparent)` : V.surfaceElevated,
+                color: active ? V.positive : V.textTertiary,
+                border: `1px solid ${active ? `color-mix(in srgb, ${V.positive} 33%, transparent)` : V.borderSubtle}`,
+                cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+            >
+              {op.label}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
 
 /* ═══════════════════════════════════════════════════════════
-   PAGINATION
+   CollateralFilterGroup — 2단계 담보 유형 필터
 ═══════════════════════════════════════════════════════════ */
-function Pagination({ page, total, onPage }: { page: number; total: number; onPage: (n: number) => void }) {
+function CollateralFilterGroup({
+  major, minor, onMajorChange, onMinorChange, tr: _tr,
+}: {
+  major: string
+  minor: string
+  onMajorChange: (v: string) => void
+  onMinorChange: (v: string) => void
+  tr?: (text: string) => string
+}) {
+  const minorOptions = major !== "ALL" ? COLLATERAL_MINOR_MAP[major] : null
+
   return (
-    <div className="flex items-center justify-center gap-1.5 mt-8">
-      <button onClick={() => onPage(Math.max(1, page - 1))} disabled={page === 1}
-        className="px-3 py-1.5 rounded-xl text-xs font-semibold disabled:opacity-30 transition-all"
-        style={{ border:`1px solid ${C.l3}`, background: C.l0, color: C.lt2 }}>이전</button>
-      {Array.from({ length: total }, (_, i) => i + 1).map(n => (
-        <button key={n} onClick={() => onPage(n)}
-          className="w-8 h-8 rounded-xl text-xs font-semibold transition-all"
-          style={n === page
-            ? { background: C.lt1, color: C.l0, border:`1px solid ${C.lt1}` }
-            : { border:`1px solid ${C.l3}`, background: C.l0, color: C.lt2 }}>
-          {n}
-        </button>
-      ))}
-      <button onClick={() => onPage(Math.min(total, page + 1))} disabled={page === total}
-        className="px-3 py-1.5 rounded-xl text-xs font-semibold disabled:opacity-30 transition-all"
-        style={{ border:`1px solid ${C.l3}`, background: C.l0, color: C.lt2 }}>다음</button>
+    <div style={{ gridColumn: minorOptions ? "span 2" : "span 1" }}>
+      {/* 대분류 */}
+      <div style={{ fontSize: 11, fontWeight: 700, color: V.textMuted, marginBottom: 6 }}>{_tr ? _tr("담보 유형") : "담보 유형"}</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {COLLATERAL_MAJOR_FILTER.map(op => {
+          const active = op.value === major
+          return (
+            <button
+              key={op.value}
+              onClick={() => onMajorChange(op.value)}
+              style={{
+                padding: "5px 11px", borderRadius: 999, fontSize: 11, fontWeight: 600,
+                display: "inline-flex", alignItems: "center", gap: 4,
+                backgroundColor: active
+                  ? `color-mix(in srgb, ${V.positive} 14%, transparent)`
+                  : V.surfaceElevated,
+                color: active ? V.positive : V.textTertiary,
+                border: `1px solid ${active
+                  ? `color-mix(in srgb, ${V.positive} 35%, transparent)`
+                  : V.borderSubtle}`,
+                cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+            >
+              <span style={{ fontSize: 12 }}>{op.icon}</span>
+              {_tr ? _tr(op.label) : op.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* 소분류 — 대분류 선택 시 슬라이드인 */}
+      {minorOptions && (
+        <div
+          style={{
+            marginTop: 8,
+            paddingTop: 8,
+            paddingLeft: 12,
+            borderLeft: `2px solid color-mix(in srgb, ${V.positive} 28%, transparent)`,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 5,
+            animation: "fadeIn 0.2s ease",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 9, fontWeight: 700, color: V.textMuted,
+              alignSelf: "center", marginRight: 4, whiteSpace: "nowrap",
+            }}
+          >
+            {_tr ? _tr("세부") : "세부"}
+          </span>
+          {minorOptions.map(op => {
+            const active = op.value === minor
+            return (
+              <button
+                key={op.value}
+                onClick={() => onMinorChange(op.value)}
+                style={{
+                  padding: "4px 9px", borderRadius: 999, fontSize: 10, fontWeight: 600,
+                  backgroundColor: active
+                    ? `color-mix(in srgb, ${V.brandBright} 14%, transparent)`
+                    : `color-mix(in srgb, ${V.textMuted} 6%, transparent)`,
+                  color: active ? V.brandBright : V.textTertiary,
+                  border: `1px solid ${active
+                    ? `color-mix(in srgb, ${V.brandBright} 35%, transparent)`
+                    : `color-mix(in srgb, ${V.textMuted} 14%, transparent)`}`,
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+              >
+                {op.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ListingCard
+═══════════════════════════════════════════════════════════ */
+function ListingCard({ item, index }: { item: CardListing; index: number }) {
+  const principal = formatKRW(item.outstanding_principal)
+  const asking = formatKRW(item.asking_price)
+  const appraisal = formatKRW(item.appraisal_value)
+  const savings = formatKRW(item.outstanding_principal - item.asking_price)
+
+  const gradeMeta = AI_GRADE_COLORS[item.ai_grade] ?? AI_GRADE_COLORS.C
+  const saleMethodLabel = SALE_METHODS[item.sale_method]
+  const instLabel = SELLER_INSTITUTIONS[item.inst_kind]
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: Math.min(index * 0.03, 0.3), duration: 0.4 }}
+      style={{
+        backgroundColor: V.surfaceElevated,
+        border: `1px solid ${V.borderSubtle}`,
+        borderRadius: 14,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* Header strip */}
+      <div
+        style={{
+          padding: "12px 14px",
+          backgroundColor: V.surfaceSunken,
+          borderBottom: `1px solid ${V.borderSubtle}`,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div
+            style={{
+              width: 28, height: 28, borderRadius: 8,
+              backgroundColor: V.surfaceSunken,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}
+          >
+            <Building2 size={14} color={V.textMuted} />
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: V.textPrimary, lineHeight: 1.2 }}>
+              {item.institution}
+            </div>
+            <div style={{ fontSize: 9, color: V.textMuted, marginTop: 1 }}>
+              {instLabel} · D-{7 - item.created_days_ago}
+            </div>
+          </div>
+        </div>
+        <TierBadge tier={item.access_tier_required} variant="soft" size="xs" />
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: "16px 16px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
+        {/* Title row */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 12, color: V.textMuted, marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
+              <MapPin size={11} /> {item.region} · {item.collateral}
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: V.textPrimary, letterSpacing: "-0.01em" }}>
+              {saleMethodLabel} · {item.collateral} 담보
+            </div>
+            <div style={{ fontSize: 10, color: V.textMuted, marginTop: 3, fontFamily: "monospace" }}>
+              {item.id}
+            </div>
+          </div>
+          <div
+            style={{
+              padding: "4px 8px", borderRadius: 6,
+              backgroundColor: gradeMeta.bg,
+              color: gradeMeta.text, fontSize: 10, fontWeight: 800,
+              border: `1px solid ${gradeMeta.border}`,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {formatAIGrade(item.ai_grade)}
+          </div>
+        </div>
+
+        {/* Key figures (L0 core) */}
+        <div
+          style={{
+            padding: "12px 14px",
+            backgroundColor: V.surfaceBase,
+            border: `1px solid ${V.borderSubtle}`,
+            borderRadius: 10,
+          }}
+        >
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <Figure label="채권잔액" value={principal} tone="neutral" />
+            <Figure label="매각희망가" value={asking} tone="em" />
+            <Figure label="감정가" value={appraisal} tone="neutral" />
+            <Figure
+              label="할인율"
+              value={
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+                  <TrendingDown size={13} color={V.positive} />
+                  {item.discount_rate.toFixed(1)}%
+                </span>
+              }
+              tone="em"
+            />
+          </div>
+          <div
+            style={{
+              marginTop: 10, paddingTop: 10,
+              borderTop: `1px dashed ${V.borderSubtle}`,
+              display: "flex", justifyContent: "space-between",
+              fontSize: 10, color: V.textMuted,
+            }}
+          >
+            <span>예상 절감액</span>
+            <span style={{ color: V.positive, fontWeight: 700 }}>{savings}</span>
+          </div>
+        </div>
+
+        {/* Completeness */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <CompletenessBadge score={item.data_completeness} size="sm" />
+          <div style={{ fontSize: 10, color: V.textMuted }}>
+            자료 {Object.values(item.provided).filter(Boolean).length}/6
+          </div>
+        </div>
+
+        <InlineProvidedChips fields={item.provided} />
+
+        {/* CTA */}
+        <Link
+          href={`/exchange/${item.id}`}
+          style={{
+            marginTop: 4,
+            padding: "11px 14px",
+            borderRadius: 10,
+            backgroundColor: V.positive,
+            color: V.onPositive,
+            fontSize: 12, fontWeight: 800,
+            textAlign: "center",
+            display: "flex", justifyContent: "center", alignItems: "center", gap: 6,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          상세 보기 <ArrowRight size={14} />
+        </Link>
+      </div>
+    </motion.article>
+  )
+}
+
+function InlineProvidedChips({ fields }: { fields: CardListing["provided"] }) {
+  const items: Array<[keyof CardListing["provided"], string]> = [
+    ["appraisal", "감정평가"],
+    ["registry", "등기"],
+    ["rights", "권리"],
+    ["lease", "임차"],
+    ["site_photos", "사진"],
+    ["financials", "재무"],
+  ]
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+      {items.map(([k, label]) => {
+        const ok = fields[k]
+        return (
+          <span
+            key={k}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 3,
+              padding: "2px 7px", borderRadius: 4,
+              fontSize: 10, fontWeight: 600, lineHeight: 1.3,
+              backgroundColor: ok ? `color-mix(in srgb, ${V.positive} 10%, transparent)` : `color-mix(in srgb, ${V.textMuted} 8%, transparent)`,
+              color: ok ? V.positive : V.textTertiary,
+              border: `1px solid ${ok ? `color-mix(in srgb, ${V.positive} 25%, transparent)` : `color-mix(in srgb, ${V.textMuted} 18%, transparent)`}`,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span>{ok ? "✓" : "·"}</span>
+            {label}
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ListingRow (list/table view)
+═══════════════════════════════════════════════════════════ */
+function ListingRow({ item, index }: { item: CardListing; index: number }) {
+  const gradeMeta = AI_GRADE_COLORS[item.ai_grade] ?? AI_GRADE_COLORS.C
+  const providedCount = Object.values(item.provided).filter(Boolean).length
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: Math.min(index * 0.015, 0.2), duration: 0.25 }}
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1.4fr 1.4fr 0.9fr 0.9fr 0.9fr 0.7fr 0.7fr 0.6fr",
+        gap: 12,
+        padding: "14px 18px",
+        borderBottom: `1px solid ${V.borderSubtle}`,
+        alignItems: "center",
+        fontSize: 12,
+      }}
+    >
+      {/* 매물 / 기관 */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+        <div
+          style={{
+            width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+            backgroundColor: V.surfaceSunken,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <Building2 size={14} color={V.textMuted} />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: V.textPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {item.institution}
+          </div>
+          <div style={{ fontSize: 10, color: V.textMuted, fontFamily: "monospace", marginTop: 2 }}>
+            {item.id}
+          </div>
+        </div>
+      </div>
+
+      {/* 지역 · 담보 */}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, color: V.textPrimary, fontWeight: 600 }}>
+          <MapPin size={11} color={V.textMuted} /> {item.region}
+        </div>
+        <div style={{ fontSize: 10, color: V.textMuted, marginTop: 2 }}>
+          {item.collateral} · {SALE_METHODS[item.sale_method]}
+        </div>
+      </div>
+
+      {/* 채권잔액 */}
+      <div style={{ textAlign: "right", color: V.textPrimary, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+        {formatKRW(item.outstanding_principal)}
+      </div>
+
+      {/* 매각희망가 */}
+      <div style={{ textAlign: "right", color: V.positive, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+        {formatKRW(item.asking_price)}
+      </div>
+
+      {/* 할인율 */}
+      <div style={{ textAlign: "right" }}>
+        <span
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 3,
+            color: V.positive, fontWeight: 700,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          <TrendingDown size={12} />
+          {item.discount_rate.toFixed(1)}%
+        </span>
+      </div>
+
+      {/* 완성도 */}
+      <div style={{ textAlign: "center" }}>
+        <span
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 3,
+            padding: "3px 8px", borderRadius: 999,
+            fontSize: 11, fontWeight: 700,
+            backgroundColor: item.data_completeness >= 8 ? `color-mix(in srgb, ${V.positive} 12%, transparent)` : item.data_completeness >= 5 ? `color-mix(in srgb, ${V.warning} 12%, transparent)` : `color-mix(in srgb, ${V.danger} 12%, transparent)`,
+            color: item.data_completeness >= 8 ? V.positive : item.data_completeness >= 5 ? V.warning : V.danger,
+            border: `1px solid ${item.data_completeness >= 8 ? `color-mix(in srgb, ${V.positive} 27%, transparent)` : item.data_completeness >= 5 ? `color-mix(in srgb, ${V.warning} 27%, transparent)` : `color-mix(in srgb, ${V.danger} 27%, transparent)`}`,
+          }}
+          title={`자료 ${providedCount}/6 제공`}
+        >
+          {item.data_completeness}/10
+        </span>
+      </div>
+
+      {/* AI 등급 */}
+      <div style={{ textAlign: "center" }}>
+        <span
+          style={{
+            display: "inline-block",
+            padding: "3px 9px",
+            borderRadius: 6,
+            backgroundColor: gradeMeta.bg,
+            color: gradeMeta.text,
+            fontSize: 11, fontWeight: 800,
+            border: `1px solid ${gradeMeta.border}`,
+            whiteSpace: "nowrap",
+          }}
+          title="AI 종합 등급"
+        >
+          {formatAIGrade(item.ai_grade)}
+        </span>
+      </div>
+
+      {/* CTA */}
+      <div style={{ textAlign: "right" }}>
+        <Link
+          href={`/exchange/${item.id}`}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 4,
+            padding: "7px 12px",
+            borderRadius: 8,
+            backgroundColor: V.positive,
+            color: V.onPositive,
+            fontSize: 11, fontWeight: 800,
+            whiteSpace: "nowrap",
+          }}
+        >
+          상세 <ArrowRight size={12} />
+        </Link>
+      </div>
+    </motion.div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PaginationBtn
+═══════════════════════════════════════════════════════════ */
+function PaginationBtn({ label, active, disabled, onClick }: {
+  label: string
+  active?: boolean
+  disabled?: boolean
+  onClick?: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        minWidth: 32, height: 32,
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        borderRadius: 8,
+        fontSize: 12, fontWeight: active ? 800 : 600,
+        backgroundColor: active ? V.positive : V.surfaceElevated,
+        color: active ? V.onPositive : disabled ? V.textMuted : V.textPrimary,
+        border: `1px solid ${active ? V.positive : V.borderSubtle}`,
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.4 : 1,
+        transition: "all 0.15s",
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+function Figure({
+  label, value, tone,
+}: {
+  label: string
+  value: React.ReactNode
+  tone: "em" | "neutral"
+}) {
+  return (
+    <div>
+      <div style={{ fontSize: 10, color: V.textMuted, fontWeight: 600, marginBottom: 2 }}>{label}</div>
+      <div
+        style={{
+          fontSize: 15,
+          fontWeight: 800,
+          color: tone === "em" ? V.positive : V.textPrimary,
+          letterSpacing: "-0.01em",
+        }}
+      >
+        {value}
+      </div>
     </div>
   )
 }

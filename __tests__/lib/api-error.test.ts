@@ -113,12 +113,19 @@ describe('fromUnknown()', () => {
     // @ts-expect-error — override for test
     process.env.NODE_ENV = 'production'
 
+    // captureSentryException has a server-only guard: `if (typeof window !== 'undefined') return`
+    // In jsdom environment window is defined, so we stub it out to simulate server context
+    vi.stubGlobal('window', undefined)
+
     const { captureException } = await import('@sentry/nextjs')
     const err = new Error('prod error')
     fromUnknown(err)
+    // captureSentryException uses void (fire-and-forget async), so flush microtasks
+    await new Promise((r) => setTimeout(r, 0))
     expect(captureException).toHaveBeenCalledWith(err)
 
     // @ts-expect-error — restore
     process.env.NODE_ENV = original
+    vi.unstubAllGlobals()
   })
 })

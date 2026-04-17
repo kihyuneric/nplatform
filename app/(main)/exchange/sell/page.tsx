@@ -1,922 +1,1283 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
-import { Check, ChevronRight, Upload, Sparkles, FileText, Home, AlertCircle, Building2 } from "lucide-react"
+/**
+ * /exchange/sell — 매물 등록 마법사 (v4 전략, 2026-04-07)
+ *
+ * 5단계 마법사:
+ *   1. 기관 확인       (매각 주체 / 전속 여부)
+ *   2. 담보 · 지역     (L0 필수 공개 필드)
+ *   3. 채권 · 금액     (채권잔액 / 매각희망가 / 감정가)
+ *   4. 선택 자료       (등기 / 권리 / 임차 / 사진 / 재무)
+ *   5. 검토 · 제출     (자동 마스킹 + 완성도 점수 + 수수료 견적)
+ */
+
+import { useMemo, useState, useCallback, useRef } from "react"
+import Link from "next/link"
+import { motion } from "framer-motion"
+import {
+  Building2, MapPin, Scale, FileText, Camera, Briefcase,
+  Check, ChevronRight, ChevronLeft, ShieldCheck, Sparkles,
+  Calculator, Send, AlertCircle, List,
+} from "lucide-react"
+import { CompletenessBadge } from "@/components/listing/completeness-badge"
+import { calculateSellerFee } from "@/lib/fee-calculator"
+import {
+  COLLATERAL_CATEGORIES, SELLER_INSTITUTION_OPTIONS,
+  LISTING_CATEGORY_OPTIONS, SALE_METHOD_OPTIONS,
+  type SellerInstitution, type SaleMethod, type CollateralType,
+  REGIONS,
+} from "@/lib/taxonomy"
 
 const C = {
-  bg0:"#030810", bg1:"#050D1A", bg2:"#080F1E", bg3:"#0A1628", bg4:"#0F1F35",
-  em:"#10B981", emL:"#34D399", blue:"#3B82F6", blueL:"#60A5FA",
-  amber:"#F59E0B", amber2:"#FCD34D", purple:"#A855F7", rose:"#F43F5E", teal:"#14B8A6",
-  l0:"#FFFFFF", l1:"#F8FAFC", l2:"#F1F5F9", l3:"#E2E8F0",
-  lt1:"#0F172A", lt2:"#334155", lt3:"#64748B", lt4:"#94A3B8",
+  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
+  bg3: "#0A1628", bg4: "#0F1F35",
+  em: "#10B981", emL: "#34D399",
+  blue: "#3B82F6", blueL: "#93C5FD",
+  amber: "#F59E0B", rose: "#EF4444", teal: "#14B8A6",
+  lt3: "#64748B", lt4: "#94A3B8",
 }
 
-type Step = 1 | 2 | 3 | 4
-type AssetType = "아파트" | "상가" | "토지" | "기타"
-type ListingMode = "" | "npl" | "realestate"
-type DealType = "매매" | "전세" | "월세"
-type RealEstateType = "아파트" | "오피스텔" | "상가" | "토지" | "단독주택" | "빌라"
-
-interface NplFormState {
-  assetType: AssetType | ""
-  principal: string
-  caseNumber: string
-  auctionDate: string
-  address: string
-  appraisalValue: string
-  seniorClaim: string
-  buildingArea: string
-  docs: { reg: File | null; appraisal: File | null; notice: File | null }
-  requestAiGrade: boolean
+interface WizardState {
+  institution: string
+  inst_type: SellerInstitution | ""
+  listing_category: "NPL" | "GENERAL" | ""
+  exclusive: boolean
+  collateral: CollateralType | ""
+  region_city: string
+  region_district: string
+  debtor_type: "INDIVIDUAL" | "CORPORATE" | ""
+  outstanding_principal: number
+  asking_price: number
+  appraisal_value: number
+  sale_method: SaleMethod | ""
+  // ── 채권 상세 (수익성 분석용) ──
+  interest_rate: number          // 약정금리 (%)
+  penalty_rate: number           // 연체금리 (%)
+  default_start_date: string     // 연체시작일
+  // ── 권리관계 (수익성 분석용) ──
+  mortgage_rank: number          // 근저당 순위
+  mortgage_amount: number        // 근저당 설정액
+  senior_claims_total: number    // 선순위 채권 총액
+  tenant_deposit_total: number   // 임차보증금 총액
+  exclusive_area: number         // 전용면적 (㎡)
+  build_year: number             // 건축년도
+  provided: {
+    appraisal: boolean
+    registry: boolean
+    rights: boolean
+    lease: boolean
+    site_photos: boolean
+    financials: boolean
+  }
 }
 
-const NPL_INITIAL: NplFormState = {
-  assetType: "",
-  principal: "",
-  caseNumber: "",
-  auctionDate: "",
-  address: "",
-  appraisalValue: "",
-  seniorClaim: "",
-  buildingArea: "",
-  docs: { reg: null, appraisal: null, notice: null },
-  requestAiGrade: false,
+const initial: WizardState = {
+  institution: "",
+  inst_type: "",
+  listing_category: "",
+  exclusive: false,
+  collateral: "",
+  region_city: "",
+  region_district: "",
+  debtor_type: "",
+  outstanding_principal: 0,
+  asking_price: 0,
+  appraisal_value: 0,
+  sale_method: "NPLATFORM",
+  interest_rate: 0,
+  penalty_rate: 0,
+  default_start_date: "",
+  mortgage_rank: 1,
+  mortgage_amount: 0,
+  senior_claims_total: 0,
+  tenant_deposit_total: 0,
+  exclusive_area: 0,
+  build_year: 0,
+  provided: {
+    appraisal: false, registry: false, rights: false,
+    lease: false, site_photos: false, financials: false,
+  },
 }
 
-interface RealEstateFormState {
-  realEstateType: RealEstateType | ""
-  dealType: DealType
-  address: string
-  price: string
-  monthlyRent: string
-  area: string
-  floor: string
-  totalFloors: string
-  direction: string
-  availableDate: string
-  maintenanceFee: string
-  description: string
-  photos: File[]
-}
-
-const RE_INITIAL: RealEstateFormState = {
-  realEstateType: "",
-  dealType: "매매",
-  address: "",
-  price: "",
-  monthlyRent: "",
-  area: "",
-  floor: "",
-  totalFloors: "",
-  direction: "",
-  availableDate: "",
-  maintenanceFee: "",
-  description: "",
-  photos: [],
-}
-
-const NPL_STEPS = ["기본정보", "담보정보", "서류첨부", "검토 및 제출"]
-const RE_STEPS = ["기본정보", "상세정보", "사진첨부", "검토 및 제출"]
-const NPL_ASSET_TYPES: AssetType[] = ["아파트", "상가", "토지", "기타"]
-const RE_TYPES: RealEstateType[] = ["아파트", "오피스텔", "상가", "토지", "단독주택", "빌라"]
-const DEAL_TYPES: DealType[] = ["매매", "전세", "월세"]
-const DIRECTIONS = ["동향", "서향", "남향", "북향", "남동향", "남서향"]
-
-const REQUIRED_DOCS = [
-  { icon: "📋", label: "등기부등본", desc: "최근 3개월 이내" },
-  { icon: "📊", label: "감정평가서", desc: "공인 감정 기관 발급" },
-  { icon: "⚖️", label: "경매 공고문", desc: "법원 발급" },
+const STEPS = [
+  { id: 1, label: "기관 확인", icon: Building2 },
+  { id: 2, label: "담보 · 지역", icon: MapPin },
+  { id: 3, label: "채권 · 금액", icon: Scale },
+  { id: 4, label: "채권상세·권리", icon: Briefcase },
+  { id: 5, label: "선택 자료", icon: FileText },
+  { id: 6, label: "검토 · 제출", icon: Send },
 ]
 
-function formatKRW(v: string) {
-  const n = Number(v.replace(/[^0-9]/g, ""))
-  if (!n) return ""
-  if (n >= 1_0000_0000) return `${(n / 1_0000_0000).toFixed(1)}억원`
-  if (n >= 10000) return `${Math.floor(n / 10000)}만원`
-  return `${n.toLocaleString()}원`
-}
+export default function SellWizardPage() {
+  const [step, setStep] = useState(1)
+  const [state, setState] = useState<WizardState>(initial)
+  const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState("")
 
-// ─── Step Progress (Stripe style) ─────────────────────────────────────────────
+  const handleSubmit = useCallback(async () => {
+    setSubmitting(true)
+    setSubmitError("")
+    try {
+      const location = [state.region_city, state.region_district].filter(Boolean).join(' ')
+      const body = {
+        collateral_type: state.collateral || '기타',
+        principal_amount: state.outstanding_principal,
+        title: `${location} ${state.collateral} 채권`,
+        institution_name: state.institution,
+        listing_type: state.listing_category || 'NPL',
+        location,
+        address: location,
+        appraisal_value: state.appraisal_value,
+        asking_price_min: state.asking_price,
+        asking_price_max: state.asking_price,
+      }
+      const res = await fetch('/api/v1/exchange/listings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setSubmitError(data.error?.message || '제출 실패. 다시 시도해주세요.')
+        setSubmitting(false)
+        return
+      }
+      setSubmitted(true)
+    } catch {
+      setSubmitError('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+      setSubmitting(false)
+    }
+  }, [state])
 
-function StepProgress({ steps, step }: { steps: string[]; step: Step }) {
+  const update = <K extends keyof WizardState>(k: K, v: WizardState[K]) =>
+    setState(s => ({ ...s, [k]: v }))
+
+  const completeness = useMemo(() => {
+    let score = 0
+    if (state.outstanding_principal > 0) score++
+    if (state.asking_price > 0) score++
+    if (state.collateral) score++
+    if (state.region_city) score++
+    if (state.debtor_type) score++
+    // 채권 상세·권리관계 필드 반영
+    if (state.penalty_rate > 0 && state.default_start_date) score++
+    if (state.mortgage_amount > 0) score++
+    const pf = state.provided
+    if (pf.appraisal) score++
+    if (pf.registry) score++
+    if (pf.rights || pf.lease || pf.site_photos || pf.financials) score++
+    return score
+  }, [state])
+
+  const canProceed = useMemo(() => {
+    if (step === 1) return !!state.institution && !!state.inst_type && !!state.listing_category
+    if (step === 2) return !!state.collateral && !!state.region_city && !!state.debtor_type
+    if (step === 3)
+      return state.outstanding_principal > 0 && state.asking_price > 0 && state.appraisal_value > 0
+    if (step === 4) return true // 채권상세·권리관계는 선택 입력 (입력할수록 완성도 향상)
+    if (step === 5) return true
+    return true
+  }, [step, state])
+
+  const feeEstimate = useMemo(() => {
+    if (state.asking_price <= 0) return null
+    return calculateSellerFee({
+      dealAmount: state.asking_price,
+      addons: ["premium_listing", "dedicated_manager"],
+      isInstitutional: state.exclusive,
+      dataCompleteness: completeness,
+    })
+  }, [state.asking_price, state.exclusive, completeness])
+
+  const discountRate = useMemo(() => {
+    if (!state.outstanding_principal || !state.asking_price) return 0
+    return ((state.outstanding_principal - state.asking_price) / state.outstanding_principal) * 100
+  }, [state.outstanding_principal, state.asking_price])
+
+  if (submitted) {
+    return <SubmittedScreen completeness={completeness} />
+  }
+
   return (
-    <div className="flex items-center w-full">
-      {steps.map((label, i) => {
-        const n = (i + 1) as Step
-        const active = step === n
-        const done = step > n
-        return (
-          <div key={n} className="flex items-center flex-1 last:flex-none">
-            <div className="flex flex-col items-center gap-2 shrink-0">
-              <div
-                className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300"
-                style={{
-                  backgroundColor: done ? C.em : active ? C.blue : "transparent",
-                  border: done ? `2px solid ${C.em}` : active ? `2px solid ${C.blue}` : `2px solid rgba(255,255,255,0.15)`,
-                  color: done || active ? C.l0 : "rgba(255,255,255,0.35)",
-                  boxShadow: active ? `0 0 0 4px rgba(59,130,246,0.2)` : done ? `0 0 0 4px rgba(16,185,129,0.15)` : "none",
-                }}
-              >
-                {done ? <Check className="w-4 h-4" /> : n}
-              </div>
-              <span
-                className="text-xs whitespace-nowrap font-medium transition-all duration-300"
-                style={{ color: active ? C.blueL : done ? C.emL : "rgba(255,255,255,0.35)" }}
-              >
-                {label}
-              </span>
-            </div>
-            {i < steps.length - 1 && (
-              <div
-                className="flex-1 h-px mx-3 mb-6 transition-all duration-500"
-                style={{ backgroundColor: done ? C.em : "rgba(255,255,255,0.1)" }}
+    <main style={{ backgroundColor: C.bg0, color: "#E2E8F0", minHeight: "100vh" }}>
+      <section style={{ borderBottom: `1px solid ${C.bg4}`, backgroundColor: C.bg1 }}>
+        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "40px 24px 32px" }}>
+          <Link
+            href="/exchange"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              fontSize: 12, color: C.lt4, fontWeight: 600, textDecoration: "none",
+              marginBottom: 16,
+            }}
+          >
+            <ChevronLeft size={14} /> 매물 목록
+          </Link>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <span
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "4px 10px", borderRadius: 999,
+                backgroundColor: `${C.em}14`, border: `1px solid ${C.em}33`,
+                fontSize: 11, fontWeight: 700, color: C.emL,
+              }}
+            >
+              <Sparkles size={12} /> 규제 준수형 매물 등록
+            </span>
+          </div>
+
+          <h1 style={{ fontSize: 32, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 8 }}>
+            매물 등록 마법사
+          </h1>
+          <p style={{ fontSize: 13, color: C.lt4, maxWidth: 620, lineHeight: 1.6 }}>
+            필수 5항목(L0)만 입력하면 즉시 공개 가능하며, 선택 5항목을 추가할수록 자료 완성도와
+            매수자 매칭률이 높아집니다. 모든 개인정보는 자동 마스킹 파이프라인으로 처리됩니다.
+          </p>
+
+          <div style={{ marginTop: 28, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            {STEPS.map((s, i) => {
+              const done = step > s.id
+              const active = step === s.id
+              const Icon = s.icon
+              return (
+                <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 8,
+                      padding: "8px 14px", borderRadius: 999,
+                      backgroundColor: active ? `${C.em}1A` : done ? `${C.em}0A` : C.bg2,
+                      border: `1px solid ${active ? C.em : done ? `${C.em}44` : C.bg4}`,
+                      color: active ? C.emL : done ? C.em : C.lt4,
+                      fontSize: 11, fontWeight: 700,
+                    }}
+                  >
+                    {done ? <Check size={12} /> : <Icon size={12} />}
+                    {s.label}
+                  </div>
+                  {i < STEPS.length - 1 && <ChevronRight size={12} color={C.bg4} />}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section style={{ maxWidth: 1120, margin: "0 auto", padding: "40px 24px 80px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: 24, alignItems: "start" }}>
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              backgroundColor: C.bg2,
+              border: `1px solid ${C.bg4}`,
+              borderRadius: 14,
+              padding: 28,
+            }}
+          >
+            {step === 1 && <Step1 state={state} update={update} />}
+            {step === 2 && <Step2 state={state} update={update} />}
+            {step === 3 && <Step3 state={state} update={update} discountRate={discountRate} />}
+            {step === 4 && <Step4BondRights state={state} update={update} />}
+            {step === 5 && <Step5Docs state={state} update={update} />}
+            {step === 6 && (
+              <Step6Review
+                state={state}
+                completeness={completeness}
+                discountRate={discountRate}
+                feeEstimate={feeEstimate}
               />
             )}
+
+            <div
+              style={{
+                marginTop: 32, paddingTop: 20,
+                borderTop: `1px solid ${C.bg4}`,
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+              }}
+            >
+              <button
+                onClick={() => setStep(s => Math.max(1, s - 1))}
+                disabled={step === 1}
+                style={{
+                  padding: "10px 18px", borderRadius: 10,
+                  backgroundColor: "transparent", color: step === 1 ? C.bg4 : C.lt3,
+                  fontSize: 12, fontWeight: 600,
+                  border: `1px solid ${C.bg4}`,
+                  cursor: step === 1 ? "not-allowed" : "pointer",
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                }}
+              >
+                <ChevronLeft size={14} /> 이전
+              </button>
+              {step < 6 ? (
+                <button
+                  onClick={() => canProceed && setStep(s => s + 1)}
+                  disabled={!canProceed}
+                  style={{
+                    padding: "11px 20px", borderRadius: 10,
+                    backgroundColor: canProceed ? C.em : C.bg4,
+                    color: canProceed ? "#041915" : C.lt4,
+                    fontSize: 12, fontWeight: 800,
+                    border: "none",
+                    cursor: canProceed ? "pointer" : "not-allowed",
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                  }}
+                >
+                  다음 단계 <ChevronRight size={14} />
+                </button>
+              ) : (
+                <div>
+                  {submitError && (
+                    <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, backgroundColor: `${C.rose}14`, border: `1px solid ${C.rose}44`, color: C.rose, fontSize: 11, fontWeight: 600 }}>
+                      {submitError}
+                    </div>
+                  )}
+                  <button
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    style={{
+                      padding: "11px 22px", borderRadius: 10,
+                      backgroundColor: submitting ? C.bg4 : C.em,
+                      color: submitting ? C.lt4 : "#041915",
+                      fontSize: 12, fontWeight: 800, border: "none",
+                      cursor: submitting ? "not-allowed" : "pointer",
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                    }}
+                  >
+                    {submitting ? (
+                      <><span className="animate-spin" style={{ display: "inline-block", width: 14, height: 14, borderRadius: "50%", border: `2px solid ${C.lt4}`, borderTopColor: "transparent" }} />처리 중...</>
+                    ) : (
+                      <><Send size={14} /> 제출하고 마스킹 파이프라인 실행</>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          <aside style={{ display: "flex", flexDirection: "column", gap: 14, position: "sticky", top: 96 }}>
+            <div style={{ padding: 18, borderRadius: 14, backgroundColor: C.bg2, border: `1px solid ${C.bg4}` }}>
+              <div style={{ fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 10 }}>
+                실시간 자료 완성도
+              </div>
+              <CompletenessBadge score={completeness} size="md" />
+              <div style={{ marginTop: 14, height: 6, backgroundColor: C.bg4, borderRadius: 999, overflow: "hidden" }}>
+                <div
+                  style={{
+                    height: "100%", width: `${(completeness / 10) * 100}%`,
+                    backgroundColor: completeness >= 9 ? C.em : completeness >= 5 ? C.amber : C.rose,
+                    transition: "width 0.3s ease",
+                  }}
+                />
+              </div>
+              <div style={{ marginTop: 8, fontSize: 10, color: C.lt4, lineHeight: 1.5 }}>
+                {completeness >= 9
+                  ? "핵심 자료 완비 — 프리미엄 노출 무료 적용"
+                  : completeness >= 5
+                  ? "기본 자료 충족 — 추가 자료 권장"
+                  : "자료 부족 — 매수자 실사 부담 증가"}
+              </div>
+            </div>
+
+            {feeEstimate && (
+              <div style={{ padding: 18, borderRadius: 14, backgroundColor: C.bg2, border: `1px solid ${C.bg4}` }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 10 }}>
+                  <Calculator size={13} /> 매각자 수수료 견적
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.lt4, marginBottom: 3 }}>
+                  <span>실효 요율</span>
+                  <span style={{ color: C.emL, fontWeight: 700 }}>{(feeEstimate.totalRate * 100).toFixed(2)}%</span>
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", letterSpacing: "-0.01em" }}>
+                  {formatKRW(feeEstimate.totalFee)}
+                </div>
+                <div style={{ marginTop: 8, fontSize: 9, color: C.lt4, lineHeight: 1.5 }}>
+                  기본 {(feeEstimate.baseRate * 100).toFixed(2)}% · 상한 0.9% 적용 · 에스크로 0.3% 별도
+                </div>
+              </div>
+            )}
+
+            <div
+              style={{
+                padding: "14px 16px", borderRadius: 14,
+                backgroundColor: `${C.em}0A`, border: `1px solid ${C.em}33`,
+                display: "flex", gap: 10, alignItems: "flex-start",
+              }}
+            >
+              <ShieldCheck size={16} color={C.emL} style={{ marginTop: 1, flexShrink: 0 }} />
+              <div style={{ fontSize: 11, color: C.lt3, lineHeight: 1.55 }}>
+                제출 시 <strong style={{ color: "#fff" }}>자동 마스킹 파이프라인</strong>이 실행되어
+                채무자 식별정보 · 상세 지번 · 동/호수가 자동으로 가려집니다.
+                마스킹 결과는 DPO 검수 후 L0 공개됩니다.
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+  )
+}
+
+function Step1({ state, update }: { state: WizardState; update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void }) {
+  return (
+    <>
+      <StepHeader num={1} title="매각 주체 확인" desc="매각 주체(기관/개인/법인)와 매물 종류를 선택하세요. 전속 계약 시 수수료가 0.3%로 할인됩니다." />
+      <FormGrid cols={1}>
+        <Field label="기관명" required>
+          <TextInput value={state.institution} onChange={v => update("institution", v)} placeholder="예: 우리은행, 한국자산관리공사, 홍길동" />
+        </Field>
+        <Field label="기관 유형" required>
+          <SelectInput
+            value={state.inst_type}
+            options={SELLER_INSTITUTION_OPTIONS.filter(o => o.value !== 'ALL')}
+            onChange={v => update("inst_type", v as SellerInstitution)}
+            placeholder="기관 유형 선택"
+          />
+        </Field>
+        <Field label="매물 종류" required hint="NPL: 부실채권 / 일반 부동산: 경매·공매·수의계약 물건">
+          <RadioPills
+            value={state.listing_category}
+            options={[
+              { value: "NPL",     label: "NPL (부실채권)" },
+              { value: "GENERAL", label: "일반 부동산" },
+            ]}
+            onChange={v => update("listing_category", v as "NPL" | "GENERAL")}
+          />
+        </Field>
+        <Field label="NPLatform 전속 계약">
+          <Toggle
+            value={state.exclusive}
+            onChange={v => update("exclusive", v)}
+            label="전속 계약 매물로 등록 (수수료 0.3% 할인)"
+          />
+        </Field>
+      </FormGrid>
+    </>
+  )
+}
+
+function Step2({ state, update }: { state: WizardState; update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void }) {
+  return (
+    <>
+      <StepHeader num={2} title="담보 · 지역" desc="담보 부동산 정보는 L0(공개) 단계로 노출됩니다. 상세 지번 · 동/호수는 자동 마스킹됩니다." />
+      <FormGrid cols={2}>
+        <Field label="담보 종류" required style={{ gridColumn: "1 / -1" }}>
+          <CollateralSelect
+            value={state.collateral}
+            onChange={v => update("collateral", v as CollateralType)}
+          />
+        </Field>
+        <Field label="채무자 유형" required>
+          <RadioPills
+            value={state.debtor_type}
+            options={[
+              { value: "INDIVIDUAL", label: "개인" },
+              { value: "CORPORATE", label: "법인" },
+            ]}
+            onChange={v => update("debtor_type", v as "INDIVIDUAL" | "CORPORATE")}
+          />
+        </Field>
+        <div />
+        <Field label="시·도" required>
+          <SelectInput
+            value={state.region_city}
+            options={REGIONS.map(r => ({ value: r.short, label: r.full }))}
+            onChange={v => update("region_city", v)}
+            placeholder="시·도 선택"
+          />
+        </Field>
+        <Field label="시·군·구" hint="선택사항 (L0에서 마스킹됨)">
+          <TextInput value={state.region_district} onChange={v => update("region_district", v)} placeholder="예: 강남구" />
+        </Field>
+      </FormGrid>
+      <div
+        style={{
+          marginTop: 18, padding: "12px 14px",
+          backgroundColor: `${C.blue}0E`, border: `1px solid ${C.blue}33`,
+          borderRadius: 10, display: "flex", gap: 10, alignItems: "flex-start",
+        }}
+      >
+        <AlertCircle size={14} color={C.blueL} style={{ marginTop: 1, flexShrink: 0 }} />
+        <div style={{ fontSize: 11, color: C.lt3, lineHeight: 1.55 }}>
+          시·도 수준까지만 L0 공개됩니다. 상세 지번·동·호수는 L2(NDA+전문투자자) 이상에서만 공개되며,
+          자동 마스킹 엔진이 규제 준수 여부를 검증합니다.
+        </div>
+      </div>
+    </>
+  )
+}
+
+function Step3({
+  state, update, discountRate,
+}: {
+  state: WizardState
+  update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
+  discountRate: number
+}) {
+  return (
+    <>
+      <StepHeader num={3} title="채권 · 금액" desc="채권잔액 · 매각희망가 · 감정가는 L0(공개) 핵심 필드입니다. 할인율이 자동 계산됩니다." />
+      <FormGrid cols={2}>
+        <Field label="채권잔액" required hint="원금 + 미수이자">
+          <NumberInput value={state.outstanding_principal} onChange={v => update("outstanding_principal", v)} placeholder="예: 1200000000" suffix="원" />
+        </Field>
+        <Field label="매각희망가" required hint="매수자에게 공개될 가격">
+          <NumberInput value={state.asking_price} onChange={v => update("asking_price", v)} placeholder="예: 850000000" suffix="원" />
+        </Field>
+        <Field label="감정가" required hint="최근 3개월 내 평가">
+          <NumberInput value={state.appraisal_value} onChange={v => update("appraisal_value", v)} placeholder="예: 1020000000" suffix="원" />
+        </Field>
+        <Field label="매각 방식">
+          <RadioPills
+            value={state.sale_method}
+            options={[
+              { value: "NPLATFORM", label: "엔플랫폼" },
+              { value: "AUCTION",   label: "경매" },
+              { value: "PUBLIC",    label: "공매" },
+            ]}
+            onChange={v => update("sale_method", v as SaleMethod)}
+          />
+        </Field>
+      </FormGrid>
+
+      {state.outstanding_principal > 0 && state.asking_price > 0 && (
+        <div
+          style={{
+            marginTop: 20, padding: "18px 20px", borderRadius: 12,
+            backgroundColor: `${C.em}0A`, border: `1px solid ${C.em}33`,
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 3 }}>자동 계산 할인율</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: C.emL, letterSpacing: "-0.02em" }}>
+              {discountRate.toFixed(1)}%
+            </div>
           </div>
+          <div style={{ textAlign: "right", fontSize: 11, color: C.lt4 }}>
+            채권잔액 대비
+            <br />
+            매수자 절감액 {formatKRW(state.outstanding_principal - state.asking_price)}
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+function Step4BondRights({ state, update }: { state: WizardState; update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void }) {
+  return (
+    <>
+      <StepHeader
+        num={4}
+        title="채권 상세 · 권리관계 (L3 데이터룸)"
+        desc="여기서 입력한 정보는 LOI 승인 투자자(L3)에게만 공개되는 데이터룸 원장 자료입니다. AI 수익성 분석 및 회수율 예측에 활용됩니다. 선택 입력이지만 강력 권장합니다."
+      />
+      <div
+        style={{
+          marginBottom: 18, padding: "10px 14px", borderRadius: 8,
+          backgroundColor: `${C.amber}0A`, border: `1px solid ${C.amber}33`,
+          display: "flex", gap: 8, alignItems: "center", fontSize: 10, color: C.lt3,
+        }}
+      >
+        <span style={{ color: C.amber, fontWeight: 800 }}>🔒 L3 데이터룸 정보</span>
+        {"  "}이 정보는 LOI 승인 투자자에게만 공개됩니다. 채무자 개인정보는 자동 마스킹 파이프라인이 처리합니다.
+      </div>
+      <FormGrid cols={2}>
+        <Field label="약정금리" hint="연이율 (%)">
+          <NumberInput value={state.interest_rate} onChange={v => update("interest_rate", v)} placeholder="예: 5.5" suffix="%" />
+        </Field>
+        <Field label="연체금리" hint="연이율 (%)">
+          <NumberInput value={state.penalty_rate} onChange={v => update("penalty_rate", v)} placeholder="예: 12.0" suffix="%" />
+        </Field>
+        <Field label="연체시작일">
+          <TextInput value={state.default_start_date} onChange={v => update("default_start_date", v)} placeholder="예: 2024-06-15" />
+        </Field>
+        <Field label="전용면적" hint="㎡">
+          <NumberInput value={state.exclusive_area} onChange={v => update("exclusive_area", v)} placeholder="예: 84.5" suffix="㎡" />
+        </Field>
+        <Field label="건축년도">
+          <NumberInput value={state.build_year} onChange={v => update("build_year", v)} placeholder="예: 2015" suffix="년" />
+        </Field>
+        <Field label="근저당 순위">
+          <NumberInput value={state.mortgage_rank} onChange={v => update("mortgage_rank", v)} placeholder="예: 1" suffix="순위" />
+        </Field>
+        <Field label="근저당 설정액">
+          <NumberInput value={state.mortgage_amount} onChange={v => update("mortgage_amount", v)} placeholder="예: 1500000000" suffix="원" />
+        </Field>
+        <Field label="선순위 채권 총액" hint="당해 채권 앞 순위 합계">
+          <NumberInput value={state.senior_claims_total} onChange={v => update("senior_claims_total", v)} placeholder="예: 500000000" suffix="원" />
+        </Field>
+        <Field label="임차보증금 총액" hint="대항력 있는 임차인 합계">
+          <NumberInput value={state.tenant_deposit_total} onChange={v => update("tenant_deposit_total", v)} placeholder="예: 200000000" suffix="원" />
+        </Field>
+      </FormGrid>
+      <div
+        style={{
+          marginTop: 18, padding: "12px 14px",
+          backgroundColor: `${C.blue}0E`, border: `1px solid ${C.blue}33`,
+          borderRadius: 10, display: "flex", gap: 10, alignItems: "flex-start",
+        }}
+      >
+        <AlertCircle size={14} color={C.blueL} style={{ marginTop: 1, flexShrink: 0 }} />
+        <div style={{ fontSize: 11, color: C.lt3, lineHeight: 1.55 }}>
+          이 정보들은 <strong style={{ color: "#fff" }}>NPL 수익성 분석</strong>(ROI, IRR, 배당표 시뮬레이션)에 직접 사용됩니다.
+          입력하지 않으면 매수자가 별도 분석해야 하므로 매칭률이 낮아질 수 있습니다.
+        </div>
+      </div>
+    </>
+  )
+}
+
+// OCR 결과 미리보기 텍스트 생성
+function ocrPreview(data: Record<string, unknown>, docType: string): string {
+  if (data.error) return data.error as string
+  if (data.warning) return data.warning as string
+  const parts: string[] = []
+  if (docType === "appraisal") {
+    if (data.appraisal_value) parts.push(`감정가 ${Number(data.appraisal_value).toLocaleString()}원`)
+    if (data.address) parts.push(`${data.address}`)
+    if (data.property_type) parts.push(`${data.property_type}`)
+    if (data.appraisal_date) parts.push(`평가일 ${data.appraisal_date}`)
+  } else if (docType === "registry") {
+    const r = data.rights
+    if (Array.isArray(r)) parts.push(`권리 ${r.length}건 추출`)
+  } else if (docType === "lease") {
+    const t = data.tenants
+    if (Array.isArray(t)) parts.push(`임차인 ${t.length}명 추출`)
+  } else if (docType === "bond") {
+    if (data.case_number) parts.push(`${data.case_number}`)
+    if (data.appraisal_value) parts.push(`감정가 ${Number(data.appraisal_value).toLocaleString()}원`)
+  }
+  if (parts.length === 0 && data.raw_text) parts.push("텍스트 추출 완료")
+  return parts.length > 0 ? parts.join(" · ") : "데이터 추출 완료"
+}
+
+const OCR_DOC_TYPE: Record<string, string> = {
+  appraisal: "appraisal",
+  registry: "registry",
+  rights: "registry",
+  lease: "lease",
+  site_photos: "generic",
+  financials: "generic",
+}
+
+const OCR_ACCEPT: Record<string, string> = {
+  appraisal: ".pdf,.jpg,.jpeg,.png,.docx,.hwp",
+  registry: ".pdf,.jpg,.jpeg,.png,.docx,.hwp",
+  rights: ".pdf,.jpg,.jpeg,.png,.docx,.hwp",
+  lease: ".pdf,.jpg,.jpeg,.png,.docx,.hwp",
+  site_photos: ".jpg,.jpeg,.png,.gif,.webp",
+  financials: ".pdf,.xls,.xlsx,.csv,.docx,.hwp",
+}
+
+interface OcrState {
+  loading: boolean
+  filename?: string
+  preview?: string
+}
+
+function Step5Docs({ state, update }: { state: WizardState; update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void }) {
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
+  const [ocr, setOcr] = useState<Record<string, OcrState>>({})
+
+  const handleUpload = useCallback(async (key: string, docType: string, file: File) => {
+    setOcr(prev => ({ ...prev, [key]: { loading: true } }))
+    // 업로드하면 체크 자동 설정
+    update("provided", { ...state.provided, [key]: true })
+
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      fd.append("doc_type", docType)
+      const res = await fetch("/api/v1/ocr", { method: "POST", body: fd })
+      const json = await res.json()
+      const preview = json.success && json.data
+        ? ocrPreview(json.data as Record<string, unknown>, docType)
+        : (json.error || "업로드 완료")
+      setOcr(prev => ({ ...prev, [key]: { loading: false, filename: file.name, preview } }))
+    } catch {
+      setOcr(prev => ({ ...prev, [key]: { loading: false, filename: file.name, preview: "업로드 완료 (OCR 처리 중 오류)" } }))
+    }
+  }, [state.provided, update])
+
+  const items: Array<{ key: keyof WizardState["provided"]; label: string; desc: string; tier: string; icon: any }> = [
+    { key: "appraisal", label: "감정평가서", desc: "PII 마스킹 자동 적용", tier: "L1 공개", icon: FileText },
+    { key: "registry", label: "등기부등본", desc: "요약(L1) / 원본(L2)", tier: "L1 / L2", icon: FileText },
+    { key: "rights", label: "권리관계 분석", desc: "선·후순위 · 보증금", tier: "L0 요약", icon: Scale },
+    { key: "lease", label: "임대차 내역", desc: "요약(L1) / 상세(L2)", tier: "L1 / L2", icon: Briefcase },
+    { key: "site_photos", label: "현장 사진", desc: "L2 이상에서만 공개", tier: "L2", icon: Camera },
+    { key: "financials", label: "재무 자료", desc: "법인 담보의 경우", tier: "L2", icon: Briefcase },
+  ]
+
+  return (
+    <>
+      <StepHeader
+        num={5}
+        title="선택 자료 제공"
+        desc="파일을 업로드하면 AI OCR이 핵심 정보를 자동 추출합니다. 체크만 해도 완성도에 반영됩니다."
+      />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+        {items.map(it => {
+          const Icon = it.icon
+          const checked = state.provided[it.key]
+          const s = ocr[it.key]
+
+          return (
+            <div
+              key={it.key}
+              style={{
+                padding: "16px 18px", borderRadius: 12,
+                backgroundColor: checked ? `${C.em}0E` : C.bg3,
+                border: `1px solid ${checked ? C.em : C.bg4}`,
+                display: "flex", flexDirection: "column", gap: 10,
+              }}
+            >
+              {/* 히든 파일 인풋 */}
+              <input
+                ref={el => { inputRefs.current[it.key] = el }}
+                type="file"
+                accept={OCR_ACCEPT[it.key]}
+                style={{ display: "none" }}
+                onChange={e => {
+                  const f = e.target.files?.[0]
+                  if (f) handleUpload(it.key, OCR_DOC_TYPE[it.key], f)
+                  e.target.value = ""
+                }}
+              />
+
+              {/* 상단: 토글 버튼 */}
+              <button
+                onClick={() => update("provided", { ...state.provided, [it.key]: !checked })}
+                style={{
+                  display: "flex", gap: 12, alignItems: "flex-start",
+                  background: "none", border: "none", cursor: "pointer",
+                  padding: 0, color: "#fff", textAlign: "left",
+                }}
+              >
+                <div
+                  style={{
+                    width: 36, height: 36, borderRadius: 8,
+                    backgroundColor: checked ? `${C.em}1F` : C.bg4,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Icon size={16} color={checked ? C.emL : C.lt4} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700 }}>{it.label}</span>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: C.lt4, padding: "2px 6px", borderRadius: 4, backgroundColor: C.bg4 }}>
+                      {it.tier}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 10, color: C.lt4 }}>{it.desc}</div>
+                </div>
+                <div
+                  style={{
+                    width: 18, height: 18, borderRadius: 4,
+                    backgroundColor: checked ? C.em : "transparent",
+                    border: `1px solid ${checked ? C.em : C.bg4}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  {checked && <Check size={12} color="#041915" />}
+                </div>
+              </button>
+
+              {/* 하단: OCR 결과 또는 업로드 버튼 */}
+              {s?.filename ? (
+                <div
+                  style={{
+                    padding: "8px 10px", borderRadius: 8,
+                    backgroundColor: s.loading ? `${C.bg4}` : `${C.em}14`,
+                    border: `1px solid ${s.loading ? C.bg4 : `${C.em}33`}`,
+                    fontSize: 10, color: C.lt3,
+                  }}
+                >
+                  {s.loading ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ display: "inline-block", width: 12, height: 12, borderRadius: "50%", border: `2px solid ${C.lt4}`, borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
+                      <span style={{ color: C.lt4 }}>AI OCR 분석 중...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
+                        <Check size={11} color={C.em} />
+                        <span style={{ fontWeight: 700, color: C.emL }}>OCR 완료</span>
+                        <span style={{ color: C.lt4, marginLeft: "auto", fontSize: 9, maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.filename}</span>
+                      </div>
+                      <div style={{ color: C.lt4, lineHeight: 1.4 }}>{s.preview}</div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => inputRefs.current[it.key]?.click()}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    padding: "7px 12px", borderRadius: 8,
+                    backgroundColor: `${C.blue}14`,
+                    border: `1px solid ${C.blue}33`,
+                    color: C.blueL, fontSize: 11, fontWeight: 700, cursor: "pointer",
+                  }}
+                >
+                  <List size={12} /> 파일 업로드 (선택 · OCR 자동 추출)
+                </button>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      <div
+        style={{
+          marginTop: 14, padding: "10px 14px", borderRadius: 8,
+          backgroundColor: `${C.blue}08`, border: `1px solid ${C.blue}22`,
+          fontSize: 10, color: C.lt3, lineHeight: 1.5,
+        }}
+      >
+        지원 형식: <strong style={{ color: C.lt4 }}>PDF · JPG/PNG · DOCX · HWP</strong> (재무 자료는 + XLS/XLSX/CSV)
+      </div>
+    </>
+  )
+}
+
+function Step6Review({
+  state, completeness, discountRate, feeEstimate,
+}: {
+  state: WizardState
+  completeness: number
+  discountRate: number
+  feeEstimate: ReturnType<typeof calculateSellerFee> | null
+}) {
+  return (
+    <>
+      <StepHeader
+        num={6}
+        title="검토 및 제출"
+        desc="입력 내용을 확인하고 제출하세요. 제출 즉시 자동 마스킹 파이프라인이 실행되고, DPO 검수 후 공개됩니다."
+      />
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <ReviewRow label="기관">
+          {state.institution} · {SELLER_INSTITUTION_OPTIONS.find(o => o.value === state.inst_type)?.label ?? state.inst_type}
+          {state.exclusive && (
+            <span
+              style={{
+                marginLeft: 6, fontSize: 9, padding: "2px 6px", borderRadius: 3,
+                backgroundColor: `${C.em}1F`, color: C.emL, fontWeight: 800,
+              }}
+            >
+              전속
+            </span>
+          )}
+        </ReviewRow>
+        <ReviewRow label="매물 종류">{state.listing_category === "NPL" ? "NPL (부실채권)" : "일반 부동산"}</ReviewRow>
+        <ReviewRow label="담보 · 지역">
+          {state.region_city} {state.region_district} · {COLLATERAL_CATEGORIES.flatMap(c => c.items).find(i => i.value === state.collateral)?.label ?? state.collateral} ·{" "}
+          {state.debtor_type === "INDIVIDUAL" ? "개인" : "법인"}
+        </ReviewRow>
+        <ReviewRow label="매각 방식">
+          {state.sale_method === "NPLATFORM" ? "엔플랫폼" : state.sale_method === "AUCTION" ? "경매" : "공매"}
+        </ReviewRow>
+        <ReviewRow label="채권잔액">{formatKRW(state.outstanding_principal)}</ReviewRow>
+        <ReviewRow label="매각희망가">{formatKRW(state.asking_price)}</ReviewRow>
+        <ReviewRow label="감정가">{formatKRW(state.appraisal_value)}</ReviewRow>
+        {state.penalty_rate > 0 && <ReviewRow label="연체금리">{state.penalty_rate}%</ReviewRow>}
+        {state.default_start_date && <ReviewRow label="연체시작일">{state.default_start_date}</ReviewRow>}
+        {state.mortgage_amount > 0 && <ReviewRow label="근저당 설정액">{formatKRW(state.mortgage_amount)} ({state.mortgage_rank}순위)</ReviewRow>}
+        {state.senior_claims_total > 0 && <ReviewRow label="선순위 총액">{formatKRW(state.senior_claims_total)}</ReviewRow>}
+        {state.tenant_deposit_total > 0 && <ReviewRow label="임차보증금 총액">{formatKRW(state.tenant_deposit_total)}</ReviewRow>}
+        {state.exclusive_area > 0 && <ReviewRow label="전용면적">{state.exclusive_area}㎡</ReviewRow>}
+        <ReviewRow label="할인율" accent>{discountRate.toFixed(1)}% (채권잔액 대비)</ReviewRow>
+        <ReviewRow label="자료 완성도" accent>{completeness}/10 점</ReviewRow>
+        {feeEstimate && (
+          <>
+            <ReviewRow label="예상 수수료 (매도자)" accent>
+              {formatKRW(feeEstimate.totalFee)} ({(feeEstimate.totalRate * 100).toFixed(2)}%)
+            </ReviewRow>
+            {/* 수수료 상세 breakdown */}
+            <div
+              style={{
+                marginTop: 8, padding: "14px 16px", borderRadius: 12,
+                backgroundColor: `${C.em}0A`, border: `1px solid ${C.em}25`,
+              }}
+            >
+              <div style={{ fontSize: 10, color: C.lt3, fontWeight: 700, marginBottom: 8 }}>
+                📋 매도자 수수료 항목 상세
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.lt4 }}>
+                  <span>기본 수수료 ({(feeEstimate.baseRate * 100).toFixed(1)}%)</span>
+                  <span style={{ color: C.lt3, fontVariantNumeric: "tabular-nums" }}>{formatKRW(feeEstimate.baseFee)}</span>
+                </div>
+                {feeEstimate.addonDetails.map(a => (
+                  <div key={a.key} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.lt4 }}>
+                    <span>
+                      {a.waived ? "✓ " : "+ "}{a.label} ({(a.rate * 100).toFixed(1)}%)
+                      {a.waived && <span style={{ color: C.emL, fontSize: 9, marginLeft: 4 }}>무료 (완성도 9+)</span>}
+                    </span>
+                    <span style={{ color: a.waived ? C.emL : C.lt3, fontVariantNumeric: "tabular-nums" }}>
+                      {a.waived ? "0원" : formatKRW(a.fee)}
+                    </span>
+                  </div>
+                ))}
+                <div
+                  style={{
+                    marginTop: 6, paddingTop: 6, borderTop: `1px dashed ${C.em}22`,
+                    display: "flex", justifyContent: "space-between",
+                    fontSize: 13, fontWeight: 800,
+                  }}
+                >
+                  <span style={{ color: "#fff" }}>합계</span>
+                  <span style={{ color: C.emL, fontVariantNumeric: "tabular-nums" }}>
+                    {formatKRW(feeEstimate.totalFee)} ({(feeEstimate.totalRate * 100).toFixed(2)}%)
+                  </span>
+                </div>
+              </div>
+              <div style={{ marginTop: 10, fontSize: 10, color: C.lt4, lineHeight: 1.5 }}>
+                ※ 거래 성사 시에만 청구되며 에스크로로 정산됩니다. 매수자 수수료({(0.02 * 100).toFixed(0)}%)는 매수자 부담입니다.
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  )
+}
+
+function SubmittedScreen({ completeness }: { completeness: number }) {
+  return (
+    <main
+      style={{
+        backgroundColor: C.bg0, color: "#E2E8F0", minHeight: "100vh",
+        display: "flex", alignItems: "center", justifyContent: "center", padding: 40,
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+        style={{
+          maxWidth: 520, width: "100%",
+          padding: 48, borderRadius: 20,
+          backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            width: 72, height: 72, borderRadius: "50%",
+            backgroundColor: `${C.em}1F`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 20px",
+          }}
+        >
+          <Check size={36} color={C.em} />
+        </div>
+        <h2 style={{ fontSize: 24, fontWeight: 900, color: "#fff", marginBottom: 10 }}>
+          마스킹 파이프라인 대기열 등록 완료
+        </h2>
+        <p style={{ fontSize: 13, color: C.lt4, lineHeight: 1.6, marginBottom: 24 }}>
+          제출하신 매물은 자동 마스킹 엔진에서 1차 처리 후 DPO 검수를 거쳐{" "}
+          <strong style={{ color: "#fff" }}>평균 2시간 이내</strong>에 L0(공개) 단계로 노출됩니다.
+        </p>
+        <div
+          style={{
+            padding: 16, borderRadius: 12,
+            backgroundColor: `${C.em}0A`, border: `1px solid ${C.em}33`,
+            marginBottom: 24,
+          }}
+        >
+          <div style={{ fontSize: 11, color: C.lt4, marginBottom: 6 }}>현재 자료 완성도</div>
+          <div style={{ fontSize: 28, fontWeight: 900, color: C.emL }}>{completeness}/10</div>
+        </div>
+        <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+          <Link
+            href="/exchange"
+            style={{
+              padding: "11px 20px", borderRadius: 10,
+              backgroundColor: C.em, color: "#041915",
+              fontSize: 12, fontWeight: 800, textDecoration: "none",
+            }}
+          >
+            매물 목록으로
+          </Link>
+          <Link
+            href="/exchange/my"
+            style={{
+              padding: "11px 20px", borderRadius: 10,
+              backgroundColor: C.bg3, color: "#fff",
+              fontSize: 12, fontWeight: 700, textDecoration: "none",
+              border: `1px solid ${C.bg4}`,
+            }}
+          >
+            내 매물 관리
+          </Link>
+        </div>
+        <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 16, flexWrap: "wrap" }}>
+          <Link
+            href="/exchange/bulk-upload"
+            style={{
+              padding: "9px 16px", borderRadius: 8,
+              backgroundColor: "transparent", color: C.lt3,
+              fontSize: 11, fontWeight: 600, textDecoration: "none",
+              border: `1px solid ${C.bg4}`,
+              display: "flex", alignItems: "center", gap: 6,
+            }}
+          >
+            📦 대량 등록하기
+          </Link>
+          <Link
+            href="/exchange/demands"
+            style={{
+              padding: "9px 16px", borderRadius: 8,
+              backgroundColor: "transparent", color: C.lt3,
+              fontSize: 11, fontWeight: 600, textDecoration: "none",
+              border: `1px solid ${C.bg4}`,
+              display: "flex", alignItems: "center", gap: 6,
+            }}
+          >
+            🔍 매수 수요 확인
+          </Link>
+        </div>
+      </motion.div>
+    </main>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SHARED FORM PRIMITIVES
+═══════════════════════════════════════════════════════════ */
+function StepHeader({ num, title, desc }: { num: number; title: string; desc: string }) {
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ fontSize: 11, color: C.emL, fontWeight: 800, marginBottom: 6, letterSpacing: "0.1em" }}>
+        STEP {num} / 6
+      </div>
+      <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff", marginBottom: 6, letterSpacing: "-0.01em" }}>
+        {title}
+      </h2>
+      <p style={{ fontSize: 12, color: C.lt4, lineHeight: 1.6 }}>{desc}</p>
+    </div>
+  )
+}
+
+function FormGrid({ cols, children }: { cols: 1 | 2; children: React.ReactNode }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: cols === 1 ? "1fr" : "repeat(2, 1fr)", gap: 16 }}>
+      {children}
+    </div>
+  )
+}
+
+function Field({ label, required, hint, children, style }: { label: string; required?: boolean; hint?: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={style}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 6 }}>
+        {label}
+        {required && <span style={{ color: C.rose }}>*</span>}
+        {hint && <span style={{ color: C.lt4, fontWeight: 500, opacity: 0.75 }}>· {hint}</span>}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function TextInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return (
+    <input
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      style={{
+        width: "100%", padding: "11px 14px", borderRadius: 10,
+        backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
+        color: "#fff", fontSize: 13, outline: "none",
+      }}
+    />
+  )
+}
+
+function NumberInput({ value, onChange, placeholder, suffix }: { value: number; onChange: (v: number) => void; placeholder?: string; suffix?: string }) {
+  // Display with commas, store as raw number
+  const [raw, setRaw] = useState(value ? String(value) : "")
+  const displayValue = raw ? Number(raw.replace(/,/g, '')).toLocaleString('ko-KR') : ""
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const stripped = e.target.value.replace(/,/g, '').replace(/[^0-9.]/g, '')
+    setRaw(stripped)
+    onChange(Number(stripped) || 0)
+  }
+
+  return (
+    <div style={{ position: "relative" }}>
+      <input
+        type="text"
+        inputMode="numeric"
+        value={displayValue}
+        onChange={handleChange}
+        placeholder={placeholder ? Number(placeholder.replace(/[^0-9]/g, '') || '0').toLocaleString('ko-KR') || placeholder : ""}
+        style={{
+          width: "100%", padding: "11px 40px 11px 14px", borderRadius: 10,
+          backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
+          color: "#fff", fontSize: 13, outline: "none",
+        }}
+      />
+      {suffix && (
+        <span
+          style={{
+            position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
+            fontSize: 11, color: C.lt4, fontWeight: 600,
+          }}
+        >
+          {suffix}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function SelectInput({ value, options, onChange, placeholder }: {
+  value: string
+  options: readonly { value: string; label: string }[]
+  onChange: (v: string) => void
+  placeholder?: string
+}) {
+  return (
+    <select
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      style={{
+        width: "100%", padding: "11px 14px", borderRadius: 10,
+        backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
+        color: value ? "#fff" : C.lt4, fontSize: 13, outline: "none",
+        appearance: "none", cursor: "pointer",
+      }}
+    >
+      {placeholder && <option value="" disabled>{placeholder}</option>}
+      {options.map(opt => (
+        <option key={opt.value} value={opt.value} style={{ backgroundColor: C.bg3 }}>{opt.label}</option>
+      ))}
+    </select>
+  )
+}
+
+function CollateralSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      {COLLATERAL_CATEGORIES.map(cat => (
+        <div key={cat.value} style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 10, color: C.lt4, fontWeight: 800, marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            {cat.label}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {cat.items.map(item => {
+              const active = item.value === value
+              return (
+                <button
+                  key={item.value}
+                  onClick={() => onChange(item.value)}
+                  style={{
+                    padding: "7px 12px", borderRadius: 8,
+                    backgroundColor: active ? `${C.em}1A` : C.bg3,
+                    color: active ? C.emL : C.lt3,
+                    border: `1px solid ${active ? C.em : C.bg4}`,
+                    fontSize: 11, fontWeight: 700, cursor: "pointer",
+                  }}
+                >
+                  {item.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function RadioPills({ value, options, onChange }: { value: string; options: Array<{ value: string; label: string }>; onChange: (v: string) => void }) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      {options.map(op => {
+        const active = op.value === value
+        return (
+          <button
+            key={op.value}
+            onClick={() => onChange(op.value)}
+            style={{
+              padding: "9px 14px", borderRadius: 10,
+              backgroundColor: active ? `${C.em}1A` : C.bg3,
+              color: active ? C.emL : C.lt3,
+              border: `1px solid ${active ? C.em : C.bg4}`,
+              fontSize: 11, fontWeight: 700, cursor: "pointer",
+            }}
+          >
+            {op.label}
+          </button>
         )
       })}
     </div>
   )
 }
 
-// ─── Field wrapper ─────────────────────────────────────────────────────────────
-
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
-    <div className="space-y-1.5">
-      <label className="block text-sm font-semibold" style={{ color: C.lt2 }}>{label}</label>
-      {children}
-      {hint && <p className="text-xs" style={{ color: C.lt4 }}>{hint}</p>}
+    <button
+      onClick={() => onChange(!value)}
+      style={{
+        display: "flex", alignItems: "center", gap: 10,
+        padding: "11px 14px", borderRadius: 10,
+        backgroundColor: value ? `${C.em}0E` : C.bg3,
+        border: `1px solid ${value ? C.em : C.bg4}`,
+        color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", width: "100%",
+        textAlign: "left",
+      }}
+    >
+      <div
+        style={{
+          width: 36, height: 20, borderRadius: 999,
+          backgroundColor: value ? C.em : C.bg4,
+          position: "relative", transition: "background-color 0.2s",
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            position: "absolute", top: 2, left: value ? 18 : 2,
+            width: 16, height: 16, borderRadius: "50%",
+            backgroundColor: "#fff", transition: "left 0.2s",
+          }}
+        />
+      </div>
+      {label}
+    </button>
+  )
+}
+
+function ReviewRow({ label, children, accent = false }: { label: string; children: React.ReactNode; accent?: boolean }) {
+  return (
+    <div
+      style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: "12px 14px", borderRadius: 10,
+        backgroundColor: accent ? `${C.em}0A` : C.bg3,
+        border: `1px solid ${accent ? `${C.em}33` : C.bg4}`,
+      }}
+    >
+      <span style={{ fontSize: 11, color: C.lt4, fontWeight: 700 }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 700, color: accent ? C.emL : "#fff" }}>{children}</span>
     </div>
   )
 }
 
-// ─── Input base styles ─────────────────────────────────────────────────────────
-
-const inputCls = `w-full h-12 px-4 rounded-xl border text-sm font-medium outline-none transition-all duration-200
-  focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500`
-const inputStyle = {
-  backgroundColor: C.l1,
-  borderColor: C.l3,
-  color: C.lt1,
-}
-
-// ─── Chip selector ────────────────────────────────────────────────────────────
-
-function ChipGroup<T extends string>({
-  items, value, onChange, cols = 4,
-  color = "blue"
-}: {
-  items: T[]
-  value: T | ""
-  onChange: (v: T) => void
-  cols?: number
-  color?: "blue" | "emerald"
-}) {
-  const activeStyle = color === "emerald"
-    ? { backgroundColor: "#ECFDF5", borderColor: C.em, color: "#065F46" }
-    : { backgroundColor: "#EFF6FF", borderColor: C.blue, color: "#1D4ED8" }
-  const inactiveStyle = { backgroundColor: C.l0, borderColor: C.l3, color: C.lt2 }
-  return (
-    <div className={`grid gap-2`} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-      {items.map((item) => (
-        <button
-          key={item}
-          type="button"
-          onClick={() => onChange(item)}
-          className="h-11 rounded-xl border text-sm font-semibold transition-all duration-200 hover:shadow-sm"
-          style={value === item ? activeStyle : inactiveStyle}
-        >
-          {item}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
-
-export default function SellWizardPage() {
-  const router = useRouter()
-  const [mode, setMode] = useState<ListingMode>("")
-  const [step, setStep] = useState<Step>(1)
-  const [npl, setNpl] = useState<NplFormState>(NPL_INITIAL)
-  const [re, setRe] = useState<RealEstateFormState>(RE_INITIAL)
-  const [submitted, setSubmitted] = useState(false)
-
-  const setN = (key: keyof NplFormState, value: any) =>
-    setNpl((f) => ({ ...f, [key]: value }))
-  const setNDoc = (key: keyof NplFormState["docs"], file: File | null) =>
-    setNpl((f) => ({ ...f, docs: { ...f.docs, [key]: file } }))
-  const setR = (key: keyof RealEstateFormState, value: any) =>
-    setRe((f) => ({ ...f, [key]: value }))
-
-  const canNext = () => {
-    if (mode === "npl") {
-      if (step === 1) return !!npl.assetType && !!npl.principal && !!npl.caseNumber
-      if (step === 2) return !!npl.address && !!npl.appraisalValue
-      return true
-    }
-    if (mode === "realestate") {
-      if (step === 1) return !!re.realEstateType && !!re.address && !!re.price
-      if (step === 2) return !!re.area
-      return true
-    }
-    return false
-  }
-
-  const handleSubmit = () => setSubmitted(true)
-
-  // ── Success screen ──
-  if (submitted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: C.l2 }}>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="text-center max-w-sm"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-            style={{ backgroundColor: "#ECFDF5", border: `2px solid ${C.em}` }}
-          >
-            <Check className="w-9 h-9" style={{ color: C.em }} />
-          </motion.div>
-          <h2 className="text-2xl font-bold mb-3" style={{ color: C.lt1 }}>
-            {mode === "npl" ? "매물 등록 완료" : "부동산 매물 등록 완료"}
-          </h2>
-          <p className="text-sm mb-8" style={{ color: C.lt3 }}>
-            {mode === "npl"
-              ? "검토 후 3영업일 내 결과를 안내드립니다."
-              : "등록된 매물은 즉시 게시됩니다."}
-          </p>
-          <button
-            onClick={() => router.push("/exchange")}
-            className="h-12 px-8 rounded-xl text-sm font-bold text-white transition-all hover:shadow-lg hover:-translate-y-0.5"
-            style={{ background: `linear-gradient(135deg, ${C.em}, ${C.teal})` }}
-          >
-            거래소로 돌아가기
-          </button>
-        </motion.div>
-      </div>
-    )
-  }
-
-  // ── Mode selector ──
-  if (!mode) {
-    return (
-      <div className="min-h-screen" style={{ backgroundColor: C.l2 }}>
-        {/* Dark hero */}
-        <div style={{ backgroundColor: C.bg1 }}>
-          <div className="max-w-4xl mx-auto px-6 pt-14 pb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"
-              style={{ backgroundColor: "rgba(59,130,246,0.15)", color: C.blueL, border: "1px solid rgba(59,130,246,0.3)" }}>
-              NPL Exchange
-            </div>
-            <h1 className="text-4xl font-black mb-3" style={{ color: C.l0 }}>
-              매물 등록
-            </h1>
-            <p className="text-base" style={{ color: "rgba(255,255,255,0.5)" }}>
-              어떤 유형의 매물을 등록하시겠습니까?
-            </p>
-          </div>
-        </div>
-
-        {/* Mode cards */}
-        <div className="max-w-4xl mx-auto px-6 -mt-2 pb-16">
-          <div className="grid sm:grid-cols-2 gap-5 pt-8">
-            {/* NPL */}
-            <motion.button
-              whileHover={{ y: -3, boxShadow: "0 20px 40px rgba(0,0,0,0.12)" }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setMode("npl")}
-              className="text-left rounded-2xl p-8 transition-all"
-              style={{ backgroundColor: C.l0, border: `1px solid ${C.l3}` }}
-            >
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
-                style={{ backgroundColor: "#EFF6FF", border: "1px solid #BFDBFE" }}>
-                <FileText className="w-7 h-7" style={{ color: C.blue }} />
-              </div>
-              <h2 className="text-xl font-bold mb-2" style={{ color: C.lt1 }}>NPL 채권 매각</h2>
-              <p className="text-sm leading-relaxed mb-6" style={{ color: C.lt3 }}>
-                부실채권(NPL)을 기관·투자자에게 직접 매각합니다.<br />
-                경매 진행 중인 담보물 포함.
-              </p>
-              <div className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: C.blue }}>
-                등록하기 <ChevronRight className="w-4 h-4" />
-              </div>
-            </motion.button>
-
-            {/* 부동산 */}
-            <motion.button
-              whileHover={{ y: -3, boxShadow: "0 20px 40px rgba(0,0,0,0.12)" }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setMode("realestate")}
-              className="text-left rounded-2xl p-8 transition-all"
-              style={{ backgroundColor: C.l0, border: `1px solid ${C.l3}` }}
-            >
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
-                style={{ backgroundColor: "#ECFDF5", border: "1px solid #A7F3D0" }}>
-                <Home className="w-7 h-7" style={{ color: C.em }} />
-              </div>
-              <h2 className="text-xl font-bold mb-2" style={{ color: C.lt1 }}>부동산 직거래</h2>
-              <p className="text-sm leading-relaxed mb-6" style={{ color: C.lt3 }}>
-                아파트·상가·토지 등 부동산 매물을 직접 등록합니다.<br />
-                매매·전세·월세 모두 가능.
-              </p>
-              <div className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: C.em }}>
-                등록하기 <ChevronRight className="w-4 h-4" />
-              </div>
-            </motion.button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const steps = mode === "npl" ? NPL_STEPS : RE_STEPS
-  const isNpl = mode === "npl"
-
-  return (
-    <div className="min-h-screen" style={{ backgroundColor: C.l2 }}>
-
-      {/* Dark Hero */}
-      <div style={{ backgroundColor: C.bg1 }}>
-        <div className="max-w-6xl mx-auto px-6 pt-12 pb-10">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-3"
-                style={{
-                  backgroundColor: isNpl ? "rgba(59,130,246,0.15)" : "rgba(16,185,129,0.15)",
-                  color: isNpl ? C.blueL : C.emL,
-                  border: `1px solid ${isNpl ? "rgba(59,130,246,0.3)" : "rgba(16,185,129,0.3)"}`,
-                }}>
-                {isNpl ? "NPL 채권 매각" : "부동산 직거래"}
-              </div>
-              <h1 className="text-3xl font-black" style={{ color: C.l0 }}>매물 등록</h1>
-            </div>
-            <button
-              onClick={() => { setMode(""); setStep(1) }}
-              className="text-sm font-medium px-4 py-2 rounded-xl transition-all hover:bg-white/10"
-              style={{ color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.1)" }}
-            >
-              ← 유형 변경
-            </button>
-          </div>
-
-          {/* Step Progress */}
-          <StepProgress steps={steps} step={step} />
-        </div>
-      </div>
-
-      {/* Light Form Area */}
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex gap-8">
-
-          {/* Main form */}
-          <div className="flex-1 min-w-0">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`${mode}-${step}`}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.25 }}
-              >
-
-                {/* ── NPL Steps ── */}
-                {isNpl && (
-                  <>
-                    {step === 1 && (
-                      <div className="rounded-2xl p-8 space-y-6" style={{ backgroundColor: C.l0, border: `1px solid ${C.l3}` }}>
-                        <div>
-                          <h2 className="text-xl font-bold mb-1" style={{ color: C.lt1 }}>기본 정보</h2>
-                          <p className="text-sm" style={{ color: C.lt3 }}>채권의 기본 정보를 입력하세요</p>
-                        </div>
-                        <Field label="담보물 유형">
-                          <ChipGroup items={NPL_ASSET_TYPES} value={npl.assetType} onChange={(v) => setN("assetType", v)} cols={4} color="blue" />
-                        </Field>
-                        <Field label="채권 원금" hint={npl.principal ? `= ${formatKRW(npl.principal)}` : undefined}>
-                          <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold" style={{ color: C.lt4 }}>₩</span>
-                            <input
-                              type="text"
-                              placeholder="500,000,000"
-                              value={npl.principal}
-                              onChange={(e) => setN("principal", e.target.value.replace(/[^0-9]/g, ""))}
-                              className={inputCls + " pl-9"}
-                              style={inputStyle}
-                            />
-                          </div>
-                        </Field>
-                        <Field label="경매 사건 번호">
-                          <input
-                            type="text"
-                            placeholder="예: 2024타경12345"
-                            value={npl.caseNumber}
-                            onChange={(e) => setN("caseNumber", e.target.value)}
-                            className={inputCls}
-                            style={inputStyle}
-                          />
-                        </Field>
-                        <Field label="경매 기일">
-                          <input
-                            type="date"
-                            value={npl.auctionDate}
-                            onChange={(e) => setN("auctionDate", e.target.value)}
-                            className={inputCls}
-                            style={inputStyle}
-                          />
-                        </Field>
-                      </div>
-                    )}
-
-                    {step === 2 && (
-                      <div className="rounded-2xl p-8 space-y-6" style={{ backgroundColor: C.l0, border: `1px solid ${C.l3}` }}>
-                        <div>
-                          <h2 className="text-xl font-bold mb-1" style={{ color: C.lt1 }}>담보물 정보</h2>
-                          <p className="text-sm" style={{ color: C.lt3 }}>담보물의 위치와 가치 정보를 입력하세요</p>
-                        </div>
-                        <Field label="소재지 *">
-                          <input
-                            type="text"
-                            placeholder="예: 서울시 강남구 역삼동 123-4"
-                            value={npl.address}
-                            onChange={(e) => setN("address", e.target.value)}
-                            className={inputCls}
-                            style={inputStyle}
-                          />
-                        </Field>
-                        <div className="grid grid-cols-2 gap-4">
-                          <Field label="감정 평가액 *" hint={npl.appraisalValue ? formatKRW(npl.appraisalValue) : undefined}>
-                            <div className="relative">
-                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold" style={{ color: C.lt4 }}>₩</span>
-                              <input
-                                type="text"
-                                placeholder="0"
-                                value={npl.appraisalValue}
-                                onChange={(e) => setN("appraisalValue", e.target.value)}
-                                className={inputCls + " pl-9"}
-                                style={inputStyle}
-                              />
-                            </div>
-                          </Field>
-                          <Field label="선순위 채권" hint={npl.seniorClaim ? formatKRW(npl.seniorClaim) : undefined}>
-                            <div className="relative">
-                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold" style={{ color: C.lt4 }}>₩</span>
-                              <input
-                                type="text"
-                                placeholder="0"
-                                value={npl.seniorClaim}
-                                onChange={(e) => setN("seniorClaim", e.target.value)}
-                                className={inputCls + " pl-9"}
-                                style={inputStyle}
-                              />
-                            </div>
-                          </Field>
-                        </div>
-                        <Field label="건물 면적 (㎡)">
-                          <input
-                            type="text"
-                            placeholder="0"
-                            value={npl.buildingArea}
-                            onChange={(e) => setN("buildingArea", e.target.value)}
-                            className={inputCls}
-                            style={inputStyle}
-                          />
-                        </Field>
-                      </div>
-                    )}
-
-                    {step === 3 && (
-                      <div className="rounded-2xl p-8 space-y-5" style={{ backgroundColor: C.l0, border: `1px solid ${C.l3}` }}>
-                        <div>
-                          <h2 className="text-xl font-bold mb-1" style={{ color: C.lt1 }}>서류 첨부</h2>
-                          <p className="text-sm" style={{ color: C.lt3 }}>필수 서류를 첨부하면 매칭 확률이 높아집니다</p>
-                        </div>
-                        {([
-                          { key: "reg", label: "등기부등본", hint: "최근 3개월 이내 발급본" },
-                          { key: "appraisal", label: "감정평가서", hint: "공인 감정 기관 발급" },
-                          { key: "notice", label: "경매 공고문", hint: "법원 발급 공고문" },
-                        ] as const).map(({ key, label, hint }) => (
-                          <label
-                            key={key}
-                            className="flex items-center gap-5 rounded-xl p-5 cursor-pointer transition-all hover:shadow-sm"
-                            style={{
-                              border: npl.docs[key] ? `2px solid ${C.em}` : `2px dashed ${C.l3}`,
-                              backgroundColor: npl.docs[key] ? "#ECFDF5" : C.l1,
-                            }}
-                          >
-                            <input
-                              type="file"
-                              accept=".pdf,.jpg,.png"
-                              className="hidden"
-                              onChange={(e) => setNDoc(key, e.target.files?.[0] ?? null)}
-                            />
-                            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                              style={{
-                                backgroundColor: npl.docs[key] ? "#D1FAE5" : C.l3,
-                                color: npl.docs[key] ? C.em : C.lt4,
-                              }}>
-                              {npl.docs[key] ? <Check className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold" style={{ color: npl.docs[key] ? "#065F46" : C.lt2 }}>
-                                {npl.docs[key] ? npl.docs[key]!.name : label}
-                              </p>
-                              <p className="text-xs mt-0.5" style={{ color: npl.docs[key] ? "#059669" : C.lt4 }}>
-                                {npl.docs[key] ? "파일 선택됨 · 변경하려면 클릭" : hint}
-                              </p>
-                            </div>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-
-                    {step === 4 && (
-                      <div className="space-y-4">
-                        <div className="rounded-2xl p-8" style={{ backgroundColor: C.l0, border: `1px solid ${C.l3}` }}>
-                          <h2 className="text-xl font-bold mb-6" style={{ color: C.lt1 }}>입력 정보 확인</h2>
-                          <dl className="space-y-0">
-                            {[
-                              ["담보물 유형", npl.assetType || "—"],
-                              ["채권 원금", npl.principal ? formatKRW(npl.principal) : "—"],
-                              ["경매 사건 번호", npl.caseNumber || "—"],
-                              ["경매 기일", npl.auctionDate || "—"],
-                              ["소재지", npl.address || "—"],
-                              ["감정 평가액", npl.appraisalValue ? formatKRW(npl.appraisalValue) : "—"],
-                              ["선순위 채권", npl.seniorClaim ? formatKRW(npl.seniorClaim) : "—"],
-                              ["건물 면적", npl.buildingArea ? `${npl.buildingArea}㎡` : "—"],
-                              ["등기부등본", npl.docs.reg?.name || "미첨부"],
-                              ["감정평가서", npl.docs.appraisal?.name || "미첨부"],
-                              ["경매 공고문", npl.docs.notice?.name || "미첨부"],
-                            ].map(([k, v], i, arr) => (
-                              <div key={k} className="flex items-center justify-between py-3.5"
-                                style={{ borderBottom: i < arr.length - 1 ? `1px solid ${C.l3}` : "none" }}>
-                                <dt className="text-sm" style={{ color: C.lt3 }}>{k}</dt>
-                                <dd className="text-sm font-semibold text-right max-w-[60%] truncate" style={{ color: C.lt1 }}>{v}</dd>
-                              </div>
-                            ))}
-                          </dl>
-                        </div>
-
-                        {/* AI Grade option */}
-                        <label className="flex items-center gap-4 rounded-2xl p-6 cursor-pointer transition-all hover:shadow-sm"
-                          style={{
-                            backgroundColor: npl.requestAiGrade ? "#FFFBEB" : C.l0,
-                            border: npl.requestAiGrade ? `2px solid ${C.amber}` : `1px solid ${C.l3}`,
-                          }}>
-                          <input
-                            type="checkbox"
-                            checked={npl.requestAiGrade}
-                            onChange={(e) => setN("requestAiGrade", e.target.checked)}
-                            className="w-5 h-5 rounded accent-amber-500 shrink-0"
-                          />
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <Sparkles className="w-4 h-4" style={{ color: C.amber }} />
-                              <span className="text-sm font-bold" style={{ color: C.lt1 }}>AI 등급 평가 요청</span>
-                            </div>
-                            <p className="text-xs" style={{ color: C.lt3 }}>AI가 채권 등급을 분석하여 매칭 가능성을 높여드립니다.</p>
-                          </div>
-                        </label>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* ── 부동산 Steps ── */}
-                {!isNpl && (
-                  <>
-                    {step === 1 && (
-                      <div className="rounded-2xl p-8 space-y-6" style={{ backgroundColor: C.l0, border: `1px solid ${C.l3}` }}>
-                        <div>
-                          <h2 className="text-xl font-bold mb-1" style={{ color: C.lt1 }}>기본 정보</h2>
-                          <p className="text-sm" style={{ color: C.lt3 }}>매물의 기본 정보를 입력하세요</p>
-                        </div>
-
-                        <Field label="매물 유형">
-                          <ChipGroup items={RE_TYPES} value={re.realEstateType} onChange={(v) => setR("realEstateType", v)} cols={3} color="emerald" />
-                        </Field>
-
-                        <Field label="거래 유형">
-                          <div className="flex gap-2">
-                            {DEAL_TYPES.map((t) => (
-                              <button
-                                key={t}
-                                type="button"
-                                onClick={() => setR("dealType", t)}
-                                className="flex-1 h-11 rounded-xl border text-sm font-semibold transition-all"
-                                style={re.dealType === t
-                                  ? { backgroundColor: "#ECFDF5", borderColor: C.em, color: "#065F46" }
-                                  : { backgroundColor: C.l0, borderColor: C.l3, color: C.lt2 }}
-                              >
-                                {t}
-                              </button>
-                            ))}
-                          </div>
-                        </Field>
-
-                        <Field label="소재지 *">
-                          <input
-                            type="text"
-                            placeholder="예: 서울특별시 강남구 역삼동 123-45"
-                            value={re.address}
-                            onChange={(e) => setR("address", e.target.value)}
-                            className={inputCls}
-                            style={inputStyle}
-                          />
-                        </Field>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <Field label={re.dealType === "매매" ? "매매가 *" : "보증금 *"}
-                            hint={re.price ? formatKRW(re.price) : undefined}>
-                            <div className="relative">
-                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold" style={{ color: C.lt4 }}>₩</span>
-                              <input
-                                type="text"
-                                placeholder="0"
-                                value={re.price}
-                                onChange={(e) => setR("price", e.target.value.replace(/[^0-9]/g, ""))}
-                                className={inputCls + " pl-9"}
-                                style={inputStyle}
-                              />
-                            </div>
-                          </Field>
-                          {re.dealType === "월세" && (
-                            <Field label="월세" hint={re.monthlyRent ? `/월 ${formatKRW(re.monthlyRent)}` : undefined}>
-                              <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold" style={{ color: C.lt4 }}>₩</span>
-                                <input
-                                  type="text"
-                                  placeholder="0"
-                                  value={re.monthlyRent}
-                                  onChange={(e) => setR("monthlyRent", e.target.value.replace(/[^0-9]/g, ""))}
-                                  className={inputCls + " pl-9"}
-                                  style={inputStyle}
-                                />
-                              </div>
-                            </Field>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {step === 2 && (
-                      <div className="rounded-2xl p-8 space-y-6" style={{ backgroundColor: C.l0, border: `1px solid ${C.l3}` }}>
-                        <div>
-                          <h2 className="text-xl font-bold mb-1" style={{ color: C.lt1 }}>상세 정보</h2>
-                          <p className="text-sm" style={{ color: C.lt3 }}>매물의 상세 사항을 입력하세요</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <Field label="전용면적 (㎡) *">
-                            <input type="text" placeholder="59.4" value={re.area}
-                              onChange={(e) => setR("area", e.target.value)}
-                              className={inputCls} style={inputStyle} />
-                          </Field>
-                          <Field label="층수">
-                            <input type="text" placeholder="10" value={re.floor}
-                              onChange={(e) => setR("floor", e.target.value)}
-                              className={inputCls} style={inputStyle} />
-                          </Field>
-                          <Field label="총 층수">
-                            <input type="text" placeholder="25" value={re.totalFloors}
-                              onChange={(e) => setR("totalFloors", e.target.value)}
-                              className={inputCls} style={inputStyle} />
-                          </Field>
-                          <Field label="방향">
-                            <select value={re.direction} onChange={(e) => setR("direction", e.target.value)}
-                              className={inputCls + " appearance-none"} style={inputStyle}>
-                              <option value="">선택</option>
-                              {DIRECTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
-                            </select>
-                          </Field>
-                        </div>
-                        <Field label="입주 가능일">
-                          <input type="date" value={re.availableDate}
-                            onChange={(e) => setR("availableDate", e.target.value)}
-                            className={inputCls} style={inputStyle} />
-                        </Field>
-                        <Field label="관리비 (월, 원)">
-                          <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold" style={{ color: C.lt4 }}>₩</span>
-                            <input type="text" placeholder="0" value={re.maintenanceFee}
-                              onChange={(e) => setR("maintenanceFee", e.target.value.replace(/[^0-9]/g, ""))}
-                              className={inputCls + " pl-9"} style={inputStyle} />
-                          </div>
-                        </Field>
-                        <Field label="상세 설명">
-                          <textarea
-                            rows={4}
-                            placeholder="매물의 특징, 주변 환경, 거래 조건 등을 자유롭게 작성해주세요."
-                            value={re.description}
-                            onChange={(e) => setR("description", e.target.value)}
-                            className={inputCls + " resize-none h-auto py-3"}
-                            style={inputStyle}
-                          />
-                        </Field>
-                      </div>
-                    )}
-
-                    {step === 3 && (
-                      <div className="rounded-2xl p-8 space-y-5" style={{ backgroundColor: C.l0, border: `1px solid ${C.l3}` }}>
-                        <div>
-                          <h2 className="text-xl font-bold mb-1" style={{ color: C.lt1 }}>사진 첨부</h2>
-                          <p className="text-sm" style={{ color: C.lt3 }}>사진이 많을수록 거래 성사율이 높아집니다 (최대 10장)</p>
-                        </div>
-                        <label
-                          className="flex flex-col items-center justify-center rounded-2xl p-12 cursor-pointer transition-all"
-                          style={{
-                            border: re.photos.length > 0 ? `2px solid ${C.em}` : `2px dashed ${C.l3}`,
-                            backgroundColor: re.photos.length > 0 ? "#ECFDF5" : C.l1,
-                          }}
-                        >
-                          <input
-                            type="file" accept="image/*" multiple className="hidden"
-                            onChange={(e) => {
-                              const files = Array.from(e.target.files || []).slice(0, 10)
-                              setR("photos", files)
-                            }}
-                          />
-                          <Upload className="w-10 h-10 mb-4" style={{ color: re.photos.length > 0 ? C.em : C.lt4 }} />
-                          {re.photos.length > 0 ? (
-                            <p className="text-base font-bold" style={{ color: "#065F46" }}>{re.photos.length}장 선택됨</p>
-                          ) : (
-                            <>
-                              <p className="text-sm font-semibold mb-1" style={{ color: C.lt2 }}>클릭하여 사진 업로드</p>
-                              <p className="text-xs" style={{ color: C.lt4 }}>JPG, PNG, WEBP · 장당 최대 10MB</p>
-                            </>
-                          )}
-                        </label>
-                        {re.photos.length > 0 && (
-                          <div className="grid grid-cols-5 gap-2">
-                            {re.photos.map((f, i) => (
-                              <div key={i} className="aspect-square rounded-xl flex items-center justify-center overflow-hidden"
-                                style={{ backgroundColor: C.l2, border: `1px solid ${C.l3}` }}>
-                                <p className="text-xs text-center px-1 truncate w-full" style={{ color: C.lt4 }}>{f.name}</p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {step === 4 && (
-                      <div className="rounded-2xl p-8" style={{ backgroundColor: C.l0, border: `1px solid ${C.l3}` }}>
-                        <h2 className="text-xl font-bold mb-6" style={{ color: C.lt1 }}>입력 정보 확인</h2>
-                        <dl className="space-y-0">
-                          {[
-                            ["매물 유형", re.realEstateType || "—"],
-                            ["거래 유형", re.dealType],
-                            ["소재지", re.address || "—"],
-                            ["가격", re.price ? formatKRW(re.price) : "—"],
-                            ...(re.dealType === "월세" ? [["월세", re.monthlyRent ? formatKRW(re.monthlyRent) : "—"]] : []),
-                            ["전용면적", re.area ? `${re.area}㎡` : "—"],
-                            ["층수", re.floor ? `${re.floor}층` : "—"],
-                            ["방향", re.direction || "—"],
-                            ["입주 가능일", re.availableDate || "—"],
-                            ["관리비", re.maintenanceFee ? `${formatKRW(re.maintenanceFee)}/월` : "—"],
-                            ["사진", re.photos.length > 0 ? `${re.photos.length}장` : "없음"],
-                          ].map(([k, v], i, arr) => (
-                            <div key={k} className="flex items-center justify-between py-3.5"
-                              style={{ borderBottom: i < arr.length - 1 ? `1px solid ${C.l3}` : "none" }}>
-                              <dt className="text-sm" style={{ color: C.lt3 }}>{k}</dt>
-                              <dd className="text-sm font-semibold text-right max-w-[60%] truncate" style={{ color: C.lt1 }}>{v}</dd>
-                            </div>
-                          ))}
-                        </dl>
-                      </div>
-                    )}
-                  </>
-                )}
-
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Navigation */}
-            <div className="flex items-center justify-between mt-6">
-              <button
-                onClick={() => setStep((s) => Math.max(1, s - 1) as Step)}
-                disabled={step === 1}
-                className="h-11 px-6 rounded-xl text-sm font-semibold transition-all hover:shadow-sm disabled:opacity-0"
-                style={{ border: `1px solid ${C.l3}`, backgroundColor: C.l0, color: C.lt2 }}
-              >
-                ← 이전
-              </button>
-              {step < 4 ? (
-                <button
-                  onClick={() => setStep((s) => (s + 1) as Step)}
-                  disabled={!canNext()}
-                  className="h-11 px-8 rounded-xl text-sm font-bold text-white flex items-center gap-2 transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
-                  style={{ background: `linear-gradient(135deg, ${C.blue}, #6366F1)` }}
-                >
-                  다음 단계 <ChevronRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  className="h-11 px-8 rounded-xl text-sm font-bold text-white flex items-center gap-2 transition-all hover:shadow-lg hover:-translate-y-0.5"
-                  style={{ background: `linear-gradient(135deg, ${C.em}, ${C.teal})` }}
-                >
-                  <Check className="w-4 h-4" /> 등록 제출
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Right Sidebar */}
-          <div className="w-72 shrink-0 hidden lg:block">
-            <div className="sticky top-6 space-y-4">
-
-              {/* Progress card */}
-              <div className="rounded-2xl p-6" style={{ backgroundColor: C.bg3, border: `1px solid rgba(255,255,255,0.06)` }}>
-                <h3 className="text-sm font-bold mb-5" style={{ color: C.l1 }}>등록 진행 현황</h3>
-                <div className="space-y-3">
-                  {steps.map((label, i) => {
-                    const n = (i + 1) as Step
-                    const done = step > n
-                    const active = step === n
-                    return (
-                      <div key={n} className="flex items-center gap-3">
-                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all"
-                          style={{
-                            backgroundColor: done ? C.em : active ? C.blue : "rgba(255,255,255,0.08)",
-                            color: done || active ? C.l0 : "rgba(255,255,255,0.3)",
-                          }}>
-                          {done ? <Check className="w-3 h-3" /> : n}
-                        </div>
-                        <span className="text-sm font-medium transition-all"
-                          style={{ color: active ? C.l1 : done ? C.emL : "rgba(255,255,255,0.3)" }}>
-                          {label}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* Progress bar */}
-                <div className="mt-5 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ background: `linear-gradient(90deg, ${C.em}, ${C.teal})` }}
-                    animate={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}
-                    transition={{ duration: 0.4 }}
-                  />
-                </div>
-                <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.3)" }}>
-                  {step}/{steps.length} 단계
-                </p>
-              </div>
-
-              {/* Required docs */}
-              {isNpl && (
-                <div className="rounded-2xl p-6" style={{ backgroundColor: C.bg3, border: `1px solid rgba(255,255,255,0.06)` }}>
-                  <h3 className="text-sm font-bold mb-4" style={{ color: C.l1 }}>필요 서류</h3>
-                  <div className="space-y-3">
-                    {REQUIRED_DOCS.map((doc, i) => {
-                      const docKeys: Array<keyof NplFormState["docs"]> = ["reg", "appraisal", "notice"]
-                      const attached = npl.docs[docKeys[i]] !== null
-                      return (
-                        <div key={i} className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base"
-                            style={{ backgroundColor: attached ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.06)" }}>
-                            {doc.icon}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold" style={{ color: attached ? C.emL : C.l2 }}>{doc.label}</p>
-                            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{doc.desc}</p>
-                          </div>
-                          {attached && <Check className="w-4 h-4 shrink-0" style={{ color: C.em }} />}
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Tip */}
-              <div className="rounded-2xl p-5" style={{ backgroundColor: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}>
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: C.blueL }} />
-                  <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
-                    {isNpl
-                      ? "서류를 모두 첨부하면 매칭 가능성이 2.4배 높아집니다."
-                      : "사진을 5장 이상 첨부하면 거래 성사율이 크게 높아집니다."}
-                  </p>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  )
+function formatKRW(n: number): string {
+  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}억원`
+  if (n >= 10_000) return `${(n / 10_000).toFixed(0)}만원`
+  return `${n.toLocaleString("ko-KR")}원`
 }

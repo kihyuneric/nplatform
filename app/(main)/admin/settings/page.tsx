@@ -1,20 +1,22 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
-import { Settings, Navigation, Shield, UserCog, Save, Plus } from "lucide-react"
+import { Settings, Navigation, Shield, UserCog, Save, Plus, Loader2, Percent, TrendingUp, DollarSign, BarChart3 } from "lucide-react"
 import DS, { formatKRW, formatDate } from "@/lib/design-system"
+import { createClient } from "@/lib/supabase/client"
+import { DEFAULT_FEE_CONFIG, loadFeeConfig, saveFeeConfig, type FeeConfig } from "@/lib/fee-calculator"
 
-type Tab = "기본 설정" | "네비게이션" | "권한 설정" | "관리자 계정"
-const TABS: Tab[] = ["기본 설정", "네비게이션", "권한 설정", "관리자 계정"]
+type Tab = "기본 설정" | "네비게이션" | "권한 설정" | "관리자 계정" | "수수료 설정"
+const TABS: Tab[] = ["기본 설정", "네비게이션", "권한 설정", "관리자 계정", "수수료 설정"]
 
 const NAV_ITEMS = [
   { label: "뉴스",      path: "/news" },
   { label: "시장분석",  path: "/market" },
   { label: "매물",      path: "/listings" },
   { label: "NPL분석",   path: "/npl-analysis" },
-  { label: "거래실",    path: "/deal-rooms" },
+  { label: "딜룸",      path: "/deals" },
   { label: "통계",      path: "/statistics" },
   { label: "도구",      path: "/tools" },
   { label: "커뮤니티",  path: "/community" },
@@ -22,7 +24,7 @@ const NAV_ITEMS = [
 ]
 
 const ROLES = ["일반회원", "투자자", "전문가", "파트너", "관리자"]
-const FEATURES = ["뉴스 조회", "매물 조회", "NPL 분석", "거래실", "AI 분석", "관리자 패널"]
+const FEATURES = ["뉴스 조회", "매물 조회", "NPL 분석", "딜룸", "AI 분석", "관리자 패널"]
 const PERM_MATRIX: Record<string, boolean[]> = {
   일반회원: [true,  true,  false, false, false, false],
   투자자:   [true,  true,  true,  true,  true,  false],
@@ -31,11 +33,8 @@ const PERM_MATRIX: Record<string, boolean[]> = {
   관리자:   [true,  true,  true,  true,  true,  true ],
 }
 
-const ADMINS = [
-  { name: "박관리",   email: "admin@nplatform.co.kr",  role: "슈퍼관리자",   joined: "2025-10-01" },
-  { name: "이운영",   email: "ops@nplatform.co.kr",    role: "운영관리자",   joined: "2025-11-15" },
-  { name: "최모니터", email: "monitor@nplatform.co.kr", role: "모니터링",     joined: "2026-01-20" },
-]
+interface AdminUser { id: string; name: string; email: string; role: string; joined: string }
+const FALLBACK_ADMINS: AdminUser[] = []
 
 function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
@@ -66,11 +65,127 @@ export default function AdminSettingsPage() {
   const [noticeBanner, setNoticeBanner] = useState(true)
   const [registration, setRegistration] = useState(true)
   const [maintenance, setMaintenance] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  // Load settings from API (site config + permissions)
+  useEffect(() => {
+    fetch('/api/v1/admin/site-settings')
+      .then(r => r.json())
+      .then(d => {
+        if (d.data) {
+          if (d.data.siteName) setSiteName(d.data.siteName)
+          setNoticeBanner(d.data.noticeBanner !== 'false')
+          setRegistration(d.data.registration !== 'false')
+          setMaintenance(d.data.maintenance === 'true')
+          if (d.data.permissions) {
+            try {
+              const loaded = JSON.parse(d.data.permissions) as Record<string, boolean[]>
+              setPerms(prev => ({ ...prev, ...loaded }))
+            } catch { /* keep defaults */ }
+          }
+        }
+      })
+      .catch(console.error)
+  }, [])
+
+  const saveSettings = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/v1/admin/site-settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siteName,
+          noticeBanner: String(noticeBanner),
+          registration: String(registration),
+          maintenance: String(maintenance),
+        }),
+      })
+      const data = await res.json()
+      if (res.ok) toast.success(data.message || '설정이 저장되었습니다')
+      else toast.error(data.error?.message || '저장 실패')
+    } catch { toast.error('네트워크 오류') }
+    finally { setSaving(false) }
+  }
+  const supabase = createClient()
   const [navToggles, setNavToggles] = useState<Record<string, boolean>>(
     Object.fromEntries(NAV_ITEMS.map(n => [n.label, true]))
   )
   const [perms, setPerms] = useState(PERM_MATRIX)
   const [newAdmin, setNewAdmin] = useState({ name: "", email: "", role: "운영관리자" })
+  // ── 수수료 설정 state ──────────────────────────────────────
+  const [feeConfig, setFeeConfig] = useState<FeeConfig>(DEFAULT_FEE_CONFIG)
+  const [savingFee, setSavingFee] = useState(false)
+
+  useEffect(() => { setFeeConfig(loadFeeConfig()) }, [])
+
+  const saveFeeSettings = () => {
+    setSavingFee(true)
+    saveFeeConfig(feeConfig)
+    setTimeout(() => { setSavingFee(false); toast.success('수수료 설정이 저장되었습니다') }, 400)
+  }
+
+  // 예상 매출 계산 (샘플 12건 기준)
+  const MOCK_AVG_DEAL = 1_500_000_000   // 평균 거래가 15억
+  const MOCK_MONTHLY_DEALS = 8          // 월 성사 거래 건수
+  const estMonthlyBuyerFee = Math.round(MOCK_AVG_DEAL * feeConfig.buyerBaseRate * MOCK_MONTHLY_DEALS)
+  const estMonthlySellerFee = Math.round(MOCK_AVG_DEAL * feeConfig.sellerBaseRate * MOCK_MONTHLY_DEALS)
+  const estMonthlyTotal = estMonthlyBuyerFee + estMonthlySellerFee
+  const estAnnualTotal = estMonthlyTotal * 12
+
+  const [savingPerms, setSavingPerms] = useState(false)
+  const [admins, setAdmins] = useState<AdminUser[]>(FALLBACK_ADMINS)
+  const [loadingAdmins, setLoadingAdmins] = useState(false)
+
+  const loadAdmins = useCallback(async () => {
+    setLoadingAdmins(true)
+    try {
+      const { data } = await supabase
+        .from("users")
+        .select("id, full_name, email, role, created_at")
+        .in("role", ["SUPER_ADMIN", "ADMIN", "MONITORING", "OPS"])
+        .order("created_at", { ascending: true })
+      if (data && data.length > 0) {
+        const roleLabel: Record<string, string> = {
+          SUPER_ADMIN: "슈퍼관리자", ADMIN: "운영관리자",
+          OPS: "운영관리자", MONITORING: "모니터링",
+        }
+        setAdmins(data.map(u => ({
+          id: String(u.id),
+          name: u.full_name ?? u.email?.split("@")[0] ?? "관리자",
+          email: u.email ?? "",
+          role: roleLabel[u.role ?? "ADMIN"] ?? u.role ?? "관리자",
+          joined: (u.created_at ?? "").slice(0, 10),
+        })))
+      }
+    } catch { /* keep fallback */ }
+    finally { setLoadingAdmins(false) }
+  }, [])
+
+  useEffect(() => { loadAdmins() }, [loadAdmins])
+
+  const handleRevokeAdmin = useCallback(async (adminId: string, adminName: string) => {
+    try {
+      await supabase.from("users").update({ role: "MEMBER" }).eq("id", adminId)
+      setAdmins(prev => prev.filter(a => a.id !== adminId))
+      toast.success(`${adminName} 관리자 권한 해제 완료`)
+    } catch { toast.error("권한 해제 실패") }
+  }, [])
+
+  const savePermissions = async () => {
+    setSavingPerms(true)
+    try {
+      const res = await fetch('/api/v1/admin/site-settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permissions: JSON.stringify(perms) }),
+      })
+      const data = await res.json()
+      if (res.ok) toast.success('권한 설정이 저장되었습니다')
+      else toast.error(data.error?.message || '저장 실패')
+    } catch { toast.error('네트워크 오류') }
+    finally { setSavingPerms(false) }
+  }
 
   const togglePerm = (role: string, idx: number) => {
     if (role === "관리자") return
@@ -150,8 +265,8 @@ export default function AdminSettingsPage() {
                 </div>
               ))}
               <div className="flex justify-end pt-2">
-                <button onClick={() => toast.success("설정이 저장되었습니다")} className={DS.button.primary}>
-                  <Save className="w-3.5 h-3.5" /> 저장
+                <button onClick={saveSettings} disabled={saving} className={DS.button.primary}>
+                  <Save className="w-3.5 h-3.5" /> {saving ? '저장 중...' : '저장'}
                 </button>
               </div>
             </div>
@@ -213,7 +328,7 @@ export default function AdminSettingsPage() {
                 {ROLES.map(role => (
                   <tr key={role} className={DS.table.row}>
                     <td className={DS.table.cell}>
-                      <span className={DS.badge.inline("bg-slate-50", "text-slate-700", "border-slate-200")}>{role}</span>
+                      <span className={DS.badge.inline("bg-[var(--color-surface-overlay)]", "text-[var(--color-text-secondary)]", "border-[var(--color-border-subtle)]")}>{role}</span>
                     </td>
                     {FEATURES.map((f, idx) => (
                       <td key={f} className={`${DS.table.cell} text-center`}>
@@ -231,8 +346,8 @@ export default function AdminSettingsPage() {
               </tbody>
             </table>
             <div className="px-4 py-3 border-t border-[var(--color-border-subtle)] flex justify-end">
-              <button onClick={() => toast.success("권한 설정이 저장되었습니다")} className={DS.button.primary}>
-                <Save className="w-3.5 h-3.5" /> 저장
+              <button onClick={savePermissions} disabled={savingPerms} className={DS.button.primary}>
+                <Save className="w-3.5 h-3.5" /> {savingPerms ? '저장 중...' : '저장'}
               </button>
             </div>
           </div>
@@ -245,7 +360,14 @@ export default function AdminSettingsPage() {
               <div className="flex items-center gap-2 border-b border-[var(--color-border-subtle)] px-4 py-3">
                 <UserCog className="w-3.5 h-3.5 text-[var(--color-brand-mid)]" />
                 <span className={`${DS.text.label} text-[var(--color-brand-mid)]`}>현재 관리자 목록</span>
+                {loadingAdmins && <Loader2 className="w-3 h-3 animate-spin text-[var(--color-text-muted)] ml-auto" />}
               </div>
+              {admins.length === 0 && !loadingAdmins ? (
+                <div className={DS.empty.wrapper}>
+                  <UserCog className={DS.empty.icon} />
+                  <p className={DS.empty.title}>관리자 계정이 없습니다</p>
+                </div>
+              ) : (
               <table className="w-full">
                 <thead>
                   <tr className={DS.table.header}>
@@ -255,17 +377,17 @@ export default function AdminSettingsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {ADMINS.map((a, i) => (
-                    <tr key={i} className={DS.table.row}>
+                  {admins.map((a) => (
+                    <tr key={a.id} className={DS.table.row}>
                       <td className={`${DS.table.cell} font-semibold`}>{a.name}</td>
                       <td className={`${DS.table.cellMuted} font-mono text-[0.75rem]`}>{a.email}</td>
                       <td className={DS.table.cell}>
-                        <span className={DS.badge.inline("bg-blue-50", "text-blue-700", "border-blue-200")}>{a.role}</span>
+                        <span className={DS.badge.inline("bg-blue-500/10", "text-blue-400", "border-blue-500/20")}>{a.role}</span>
                       </td>
                       <td className={`${DS.table.cellMuted} font-mono`}>{a.joined}</td>
                       <td className={DS.table.cell}>
                         <button
-                          onClick={() => toast.error(`${a.name} 관리자 권한 해제`)}
+                          onClick={() => handleRevokeAdmin(a.id, a.name)}
                           className={`${DS.button.danger} ${DS.button.sm}`}
                         >
                           해제
@@ -275,6 +397,7 @@ export default function AdminSettingsPage() {
                   ))}
                 </tbody>
               </table>
+              )}
             </div>
 
             {/* 새 관리자 추가 폼 */}
@@ -313,15 +436,228 @@ export default function AdminSettingsPage() {
               </div>
               <div className="px-4 pb-4 flex justify-end">
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (!newAdmin.name || !newAdmin.email) return toast.error("이름과 이메일을 입력하세요")
-                    toast.success(`${newAdmin.name} 관리자 추가 완료`)
+                    const roleMap: Record<string, string> = {
+                      "슈퍼관리자": "SUPER_ADMIN", "운영관리자": "ADMIN",
+                      "콘텐츠관리자": "ADMIN", "모니터링": "MONITORING",
+                    }
+                    try {
+                      // Check if user exists by email
+                      const { data: existing } = await supabase
+                        .from("users").select("id").eq("email", newAdmin.email).single()
+                      if (existing) {
+                        await supabase.from("users").update({ role: roleMap[newAdmin.role] ?? "ADMIN" }).eq("id", existing.id)
+                        toast.success(`${newAdmin.name} 관리자 권한 부여 완료`)
+                        loadAdmins()
+                      } else {
+                        toast.error("해당 이메일로 가입된 사용자를 찾을 수 없습니다")
+                        return
+                      }
+                    } catch { toast.error("관리자 추가 실패") }
                     setNewAdmin({ name: "", email: "", role: "운영관리자" })
                   }}
                   className={DS.button.primary}
                 >
                   <Plus className="w-3.5 h-3.5" /> 추가
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 수수료 설정 */}
+        {tab === "수수료 설정" && (
+          <div className="space-y-5">
+            {/* 규제 안내 */}
+            <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/5`}>
+              <span className="text-amber-400 text-sm mt-0.5">⚠️</span>
+              <div>
+                <p className="text-xs font-bold text-amber-400 mb-0.5">규제 준수 고지</p>
+                <p className="text-[0.72rem] text-[var(--color-text-muted)] leading-relaxed">
+                  금융위원회 가이드라인에 따라 매도자 수수료는 <strong className="text-amber-400">0.9% 상한</strong>이 적용됩니다.
+                  매수자 수수료는 플랫폼 정책에 따라 최대 3%까지 설정 가능합니다.
+                </p>
+              </div>
+            </div>
+
+            {/* 수수료 요율 설정 */}
+            <div className={`${DS.card.base} overflow-hidden`}>
+              <div className="flex items-center gap-2 border-b border-[var(--color-border-subtle)] px-4 py-3">
+                <Percent className="w-3.5 h-3.5 text-[var(--color-brand-mid)]" />
+                <span className={`${DS.text.label} text-[var(--color-brand-mid)]`}>수수료 요율 설정</span>
+              </div>
+              <div className="px-4 py-4 space-y-5">
+
+                {/* 매수자 기본 수수료 */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <label className={DS.input.label}>매수자 기본 수수료율</label>
+                      <p className={`${DS.text.micro} mt-0.5`}>거래 성사 시 매수자에게 청구되는 기본 수수료</p>
+                    </div>
+                    <span className="text-lg font-black text-[var(--color-positive)] tabular-nums">
+                      {(feeConfig.buyerBaseRate * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range" min={0.5} max={3} step={0.1}
+                    value={feeConfig.buyerBaseRate * 100}
+                    onChange={e => setFeeConfig(p => ({ ...p, buyerBaseRate: Number(e.target.value) / 100 }))}
+                    className="w-full accent-[var(--color-positive)]"
+                  />
+                  <div className="flex justify-between text-[0.65rem] text-[var(--color-text-muted)] mt-1">
+                    <span>0.5%</span><span className="text-[var(--color-positive)] font-bold">기본 2.0%</span><span>3.0%</span>
+                  </div>
+                </div>
+
+                {/* 매도자 기본 수수료 */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <label className={DS.input.label}>매도자 기본 수수료율</label>
+                      <p className={`${DS.text.micro} mt-0.5`}>매물 등록자에게 청구 · 규제상한 0.9% 적용</p>
+                    </div>
+                    <span className="text-lg font-black text-[var(--color-brand-mid)] tabular-nums">
+                      {(feeConfig.sellerBaseRate * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range" min={0.3} max={0.9} step={0.05}
+                    value={feeConfig.sellerBaseRate * 100}
+                    onChange={e => setFeeConfig(p => ({ ...p, sellerBaseRate: Math.min(Number(e.target.value) / 100, 0.009) }))}
+                    className="w-full accent-[var(--color-brand-mid)]"
+                  />
+                  <div className="flex justify-between text-[0.65rem] text-[var(--color-text-muted)] mt-1">
+                    <span>0.3%</span><span className="text-amber-400 font-bold">상한 0.9%</span>
+                  </div>
+                </div>
+
+                {/* NPL 추가 수수료 */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <label className={DS.input.label}>NPL 매물 추가 수수료</label>
+                      <p className={`${DS.text.micro} mt-0.5`}>NPL 전용 심사·마스킹 처리 비용 (매도자 부담)</p>
+                    </div>
+                    <span className="text-lg font-black text-[var(--color-text-secondary)] tabular-nums">
+                      +{(feeConfig.nplPremium * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range" min={0} max={0.5} step={0.05}
+                    value={feeConfig.nplPremium * 100}
+                    onChange={e => setFeeConfig(p => ({ ...p, nplPremium: Number(e.target.value) / 100 }))}
+                    className="w-full accent-[var(--color-text-tertiary)]"
+                  />
+                  <div className="flex justify-between text-[0.65rem] text-[var(--color-text-muted)] mt-1">
+                    <span>0%</span><span>0.5%</span>
+                  </div>
+                </div>
+
+                {/* 전속계약 할인 */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <label className={DS.input.label}>전속계약 매도자 할인율</label>
+                      <p className={`${DS.text.micro} mt-0.5`}>전속계약 체결 기관의 매도자 수수료 차감</p>
+                    </div>
+                    <span className="text-lg font-black text-[var(--color-positive)] tabular-nums">
+                      -{(feeConfig.institutionalDiscount * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range" min={0} max={0.5} step={0.05}
+                    value={feeConfig.institutionalDiscount * 100}
+                    onChange={e => setFeeConfig(p => ({ ...p, institutionalDiscount: Number(e.target.value) / 100 }))}
+                    className="w-full accent-[var(--color-positive)]"
+                  />
+                  <div className="flex justify-between text-[0.65rem] text-[var(--color-text-muted)] mt-1">
+                    <span>0%</span><span>0.5%</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-1">
+                  <button onClick={saveFeeSettings} disabled={savingFee} className={DS.button.primary}>
+                    <Save className="w-3.5 h-3.5" /> {savingFee ? '저장 중...' : '수수료 설정 저장'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 예상 매출 대시보드 */}
+            <div className={`${DS.card.base} overflow-hidden`}>
+              <div className="flex items-center gap-2 border-b border-[var(--color-border-subtle)] px-4 py-3">
+                <BarChart3 className="w-3.5 h-3.5 text-[var(--color-brand-mid)]" />
+                <span className={`${DS.text.label} text-[var(--color-brand-mid)]`}>예상 매출 대시보드</span>
+                <span className={`ml-auto ${DS.text.micro} text-[var(--color-text-muted)]`}>
+                  기준: 월 {MOCK_MONTHLY_DEALS}건 · 평균 거래가 {formatKRW(MOCK_AVG_DEAL)}
+                </span>
+              </div>
+              <div className="px-4 py-4">
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {[
+                    { label: "매수자 수수료 월 예상", value: formatKRW(estMonthlyBuyerFee), icon: TrendingUp, color: "var(--color-positive)", sub: `${(feeConfig.buyerBaseRate * 100).toFixed(1)}% × ${MOCK_MONTHLY_DEALS}건` },
+                    { label: "매도자 수수료 월 예상", value: formatKRW(estMonthlySellerFee), icon: DollarSign, color: "var(--color-brand-mid)", sub: `${(feeConfig.sellerBaseRate * 100).toFixed(1)}% × ${MOCK_MONTHLY_DEALS}건` },
+                    { label: "월 총 예상 수수료", value: formatKRW(estMonthlyTotal), icon: BarChart3, color: "var(--color-warning)", sub: "매수+매도 합산" },
+                    { label: "연간 예상 수수료", value: formatKRW(estAnnualTotal), icon: TrendingUp, color: "var(--color-positive)", sub: "월 × 12개월 추정" },
+                  ].map(k => {
+                    const Icon = k.icon
+                    return (
+                      <div key={k.label} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-3">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <Icon className="w-3 h-3" style={{ color: k.color }} />
+                          <span className="text-[0.65rem] font-bold text-[var(--color-text-muted)]">{k.label}</span>
+                        </div>
+                        <div className="text-lg font-black tabular-nums" style={{ color: k.color }}>{k.value}</div>
+                        <div className="text-[0.65rem] text-[var(--color-text-muted)] mt-0.5">{k.sub}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* 수수료 구조 미리보기 */}
+                <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] overflow-hidden">
+                  <div className="px-3 py-2 border-b border-[var(--color-border-subtle)] text-[0.65rem] font-bold text-[var(--color-text-muted)] uppercase tracking-wide">
+                    현재 수수료 구조 요약
+                  </div>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-[var(--color-border-subtle)]">
+                        <th className="text-left px-3 py-2 text-[0.65rem] font-bold text-[var(--color-text-muted)]">구분</th>
+                        <th className="text-right px-3 py-2 text-[0.65rem] font-bold text-[var(--color-text-muted)]">기본</th>
+                        <th className="text-right px-3 py-2 text-[0.65rem] font-bold text-[var(--color-text-muted)]">NPL 추가</th>
+                        <th className="text-right px-3 py-2 text-[0.65rem] font-bold text-[var(--color-text-muted)]">전속할인</th>
+                        <th className="text-right px-3 py-2 text-[0.65rem] font-bold text-[var(--color-text-muted)]">최종(일반)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-[var(--color-border-subtle)]">
+                        <td className="px-3 py-2 font-semibold text-[var(--color-text-primary)]">매수자</td>
+                        <td className="px-3 py-2 text-right text-[var(--color-positive)] font-bold">{(feeConfig.buyerBaseRate * 100).toFixed(1)}%</td>
+                        <td className="px-3 py-2 text-right text-[var(--color-text-muted)]">-</td>
+                        <td className="px-3 py-2 text-right text-[var(--color-text-muted)]">-</td>
+                        <td className="px-3 py-2 text-right font-black text-[var(--color-positive)]">{(feeConfig.buyerBaseRate * 100).toFixed(1)}%</td>
+                      </tr>
+                      <tr className="border-b border-[var(--color-border-subtle)]">
+                        <td className="px-3 py-2 font-semibold text-[var(--color-text-primary)]">매도자 (일반)</td>
+                        <td className="px-3 py-2 text-right text-[var(--color-brand-mid)] font-bold">{(feeConfig.sellerBaseRate * 100).toFixed(1)}%</td>
+                        <td className="px-3 py-2 text-right text-[var(--color-text-secondary)]">+{(feeConfig.nplPremium * 100).toFixed(1)}%</td>
+                        <td className="px-3 py-2 text-right text-[var(--color-text-muted)]">-</td>
+                        <td className="px-3 py-2 text-right font-black text-[var(--color-brand-mid)]">{((feeConfig.sellerBaseRate + feeConfig.nplPremium) * 100).toFixed(1)}%</td>
+                      </tr>
+                      <tr>
+                        <td className="px-3 py-2 font-semibold text-[var(--color-text-primary)]">매도자 (전속)</td>
+                        <td className="px-3 py-2 text-right text-[var(--color-brand-mid)] font-bold">{(feeConfig.sellerBaseRate * 100).toFixed(1)}%</td>
+                        <td className="px-3 py-2 text-right text-[var(--color-text-secondary)]">+{(feeConfig.nplPremium * 100).toFixed(1)}%</td>
+                        <td className="px-3 py-2 text-right text-[var(--color-positive)]">-{(feeConfig.institutionalDiscount * 100).toFixed(1)}%</td>
+                        <td className="px-3 py-2 text-right font-black text-[var(--color-positive)]">
+                          {((feeConfig.sellerBaseRate + feeConfig.nplPremium - feeConfig.institutionalDiscount) * 100).toFixed(1)}%
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>

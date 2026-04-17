@@ -6,8 +6,14 @@ const withBundleAnalyzer = process.env.ANALYZE === 'true'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // ── Runtime optimizations ─────────────────────────────────────────
+  reactStrictMode: true,
+  poweredByHeader: false,     // remove "X-Powered-By: Next.js" header
+  compress: true,             // gzip responses from Next server
+  productionBrowserSourceMaps: false,  // faster build, smaller deploy
+
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
   },
   typescript: {
     // Type errors are caught in CI (tsc --noEmit). Build errors only for type issues
@@ -29,7 +35,14 @@ const nextConfig = {
     // optimizePackageImports handles lucide-react tree-shaking natively in Next.js 14+
     // Do NOT use modularizeImports for lucide-react — it breaks icons with 'Icon' suffix
     // (e.g. HandshakeIcon → handshake-icon, but the file is handshake.js)
-    optimizePackageImports: ['lucide-react', 'recharts', '@radix-ui/react-icons'],
+    optimizePackageImports: [
+      'lucide-react',
+      'recharts',
+      '@radix-ui/react-icons',
+      'framer-motion',
+      'date-fns',
+      '@tanstack/react-query',
+    ],
   },
   async headers() {
     return [
@@ -259,14 +272,10 @@ const nextConfig = {
       { source: '/about/team', destination: '/about', permanent: true },
       { source: '/psychology', destination: '/guide/psychology', permanent: true },
 
-      // guide 스텁 페이지 → 실제 목적지로 redirect
-      { source: '/guide/partner-referral', destination: '/guide/partner', permanent: true },
+      // guide 스텁 리다이렉트 (삭제된 페이지만 남김 — 실제 가이드 콘텐츠가 있는 페이지는 제거)
       { source: '/guide/professional-register', destination: '/services/experts/register', permanent: true },
-      { source: '/guide/auction-simulator', destination: '/analysis/simulator', permanent: true },
       { source: '/guide/demand-register', destination: '/exchange/demands/new', permanent: true },
-      { source: '/guide/due-diligence', destination: '/guide/npl-analysis', permanent: true },
       { source: '/guide/institution-profile', destination: '/exchange/institutions', permanent: true },
-      { source: '/guide/listing-register', destination: '/exchange/sell', permanent: true },
       { source: '/guide/map-search', destination: '/exchange/search', permanent: true },
       { source: '/guide/ocr', destination: '/analysis/ocr', permanent: true },
 

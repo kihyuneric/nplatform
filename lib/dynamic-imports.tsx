@@ -9,18 +9,18 @@ import dynamic from 'next/dynamic'
 // ─── Skeleton helpers ─────────────────────────────────────────
 
 const ChartSkeleton = () => (
-  <div className="h-[200px] bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
+  <div className="h-[200px] bg-[var(--color-surface-overlay)] animate-pulse rounded-lg" />
 )
 const TallChartSkeleton = () => (
-  <div className="h-[350px] bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
+  <div className="h-[350px] bg-[var(--color-surface-overlay)] animate-pulse rounded-lg" />
 )
 const MapSkeleton = () => (
-  <div className="h-[400px] bg-gray-100 dark:bg-gray-800 animate-pulse rounded-xl flex items-center justify-center text-gray-400 text-sm">
+  <div className="h-[400px] bg-[var(--color-surface-overlay)] animate-pulse rounded-xl flex items-center justify-center text-[var(--color-text-muted)] text-sm">
     지도 로딩 중...
   </div>
 )
 const NetworkSkeleton = () => (
-  <div className="h-[500px] bg-gray-100 dark:bg-gray-800 animate-pulse rounded-xl" />
+  <div className="h-[500px] bg-[var(--color-surface-overlay)] animate-pulse rounded-xl" />
 )
 
 // ─── Recharts ─────────────────────────────────────────────────
@@ -79,5 +79,5 @@ export const DynamicDirectionDonutChart = dynamic(
 
 export const DynamicMarketInsightPanel = dynamic(
   () => import('@/components/market-insight-panel').then(mod => ({ default: mod.MarketInsightPanel })),
-  { ssr: false, loading: () => <div className="h-[200px] animate-pulse bg-gray-50 dark:bg-gray-800 rounded-xl" /> }
+  { ssr: false, loading: () => <div className="h-[200px] animate-pulse bg-[var(--color-surface-overlay)] rounded-xl" /> }
 )

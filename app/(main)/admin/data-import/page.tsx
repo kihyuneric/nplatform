@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useCallback, useRef, useMemo } from "react"
+import { useState, useCallback, useRef, useMemo, useEffect } from "react"
 import {
   Upload, FileSpreadsheet, AlertCircle, CheckCircle2, XCircle,
   Download, RefreshCw, Loader2, Eye, Database, Zap,
   ChevronRight, Info,
 } from "lucide-react"
 import DS, { formatKRW, formatDate } from "@/lib/design-system"
+import { createClient } from "@/lib/supabase/client"
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                               */
@@ -61,23 +62,23 @@ const COLUMN_TARGETS: Record<ImportType, string[]> = {
 /*  Mock data                                                           */
 /* ------------------------------------------------------------------ */
 
-const MOCK_HISTORY: ImportHistoryItem[] = [
-  { id: "IMP-0041", type: "auction",      fileName: "법원경매_2026_03.xlsx", totalRows: 2450,  successRows: 2448, failedRows: 2,   importedAt: "2026-04-04 14:22", status: "completed",  importedBy: "관리자" },
-  { id: "IMP-0040", type: "listing",      fileName: "NPL매물_일괄등록.csv",  totalRows: 128,   successRows: 125,  failedRows: 3,   importedAt: "2026-04-03 09:15", status: "partial",    importedBy: "김매니저" },
-  { id: "IMP-0039", type: "market-price", fileName: "시세_서울_2026Q1.xlsx", totalRows: 5820,  successRows: 5820, failedRows: 0,   importedAt: "2026-04-01 18:00", status: "completed",  importedBy: "시스템" },
-  { id: "IMP-0038", type: "institution",  fileName: "금융기관_업데이트.xlsx", totalRows: 64,    successRows: 0,    failedRows: 64,  importedAt: "2026-03-30 11:42", status: "failed",     importedBy: "관리자" },
-  { id: "IMP-0037", type: "auction",      fileName: "법원경매_2026_02.xlsx", totalRows: 2180,  successRows: 2180, failedRows: 0,   importedAt: "2026-03-01 14:05", status: "completed",  importedBy: "시스템" },
-  { id: "IMP-0036", type: "listing",      fileName: "긴급매물_추가.csv",     totalRows: 15,    successRows: 14,   failedRows: 1,   importedAt: "2026-02-28 16:33", status: "partial",    importedBy: "이담당" },
-]
+const FALLBACK_HISTORY: ImportHistoryItem[] = []
 
-const MOCK_PREVIEW_DATA: ValidationRow[] = [
-  { row: 1, data: { 사건번호: "2026타경1234", 법원: "서울중앙지방법원", 물건종류: "아파트", 소재지: "서울시 강남구 역삼동 123-4", 감정가: "850,000,000", 최저매각가: "680,000,000" }, errors: [], valid: true },
-  { row: 2, data: { 사건번호: "2026타경1235", 법원: "서울중앙지방법원", 물건종류: "오피스텔", 소재지: "서울시 서초구 반포동 55-2", 감정가: "520,000,000", 최저매각가: "416,000,000" }, errors: [], valid: true },
-  { row: 3, data: { 사건번호: "", 법원: "수원지방법원", 물건종류: "다세대", 소재지: "경기도 수원시 영통구", 감정가: "310,000,000", 최저매각가: "248,000,000" }, errors: ["사건번호 누락"], valid: false },
-  { row: 4, data: { 사건번호: "2026타경1237", 법원: "부산지방법원", 물건종류: "상가", 소재지: "부산시 해운대구 우동 890", 감정가: "1,200,000,000", 최저매각가: "960,000,000" }, errors: [], valid: true },
-  { row: 5, data: { 사건번호: "2026타경1238", 법원: "대전지방법원", 물건종류: "토지", 소재지: "대전시 유성구 봉명동", 감정가: "abc", 최저매각가: "200,000,000" }, errors: ["감정가 형식 오류"], valid: false },
-  { row: 6, data: { 사건번호: "2026타경1239", 법원: "인천지방법원", 물건종류: "아파트", 소재지: "인천시 연수구 송도동 11-3", 감정가: "670,000,000", 최저매각가: "536,000,000" }, errors: [], valid: true },
-]
+/* ── CSV/file preview parser ────────────────────────────────────── */
+function parseFilePreview(text: string, separator = ","): ValidationRow[] {
+  const lines = text.split(/\r?\n/).filter(l => l.trim())
+  if (lines.length < 2) return []
+  const rawHeaders = lines[0].split(separator).map(h => h.replace(/^"|"$/g, "").trim())
+  return lines.slice(1, 7).map((line, i) => {
+    const vals = line.split(separator).map(v => v.replace(/^"|"$/g, "").trim())
+    const data: Record<string, string> = {}
+    rawHeaders.forEach((h, j) => { data[h] = vals[j] ?? "" })
+    const errors: string[] = rawHeaders
+      .filter(h => !data[h])
+      .map(h => `${h} 누락`)
+    return { row: i + 1, data, errors, valid: errors.length === 0 }
+  })
+}
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                             */
@@ -88,9 +89,9 @@ const importTypeLabel: Record<ImportType, string> = {
 }
 
 const statusConfig: Record<string, { label: string; cls: string }> = {
-  completed: { label: "완료",     cls: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
-  partial:   { label: "부분완료", cls: "bg-amber-50 text-amber-700 border border-amber-200" },
-  failed:    { label: "실패",     cls: "bg-red-50 text-red-700 border border-red-200" },
+  completed: { label: "완료",     cls: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+  partial:   { label: "부분완료", cls: "bg-amber-500/10 text-amber-400 border border-amber-500/20" },
+  failed:    { label: "실패",     cls: "bg-red-500/10 text-red-400 border border-red-500/20" },
 }
 
 /* ------------------------------------------------------------------ */
@@ -98,6 +99,8 @@ const statusConfig: Record<string, { label: string; cls: string }> = {
 /* ------------------------------------------------------------------ */
 
 export default function AdminDataImportPage() {
+  const supabase = createClient()
+
   /* ---- state ---- */
   const [step, setStep] = useState<"upload" | "mapping" | "preview" | "importing" | "done">("upload")
   const [importType, setImportType] = useState<ImportType>("auction")
@@ -107,11 +110,66 @@ export default function AdminDataImportPage() {
   const [mappings, setMappings] = useState<ColumnMapping[]>([])
   const [previewRows, setPreviewRows] = useState<ValidationRow[]>([])
   const [showHistory, setShowHistory] = useState(true)
+  const [history, setHistory] = useState<ImportHistoryItem[]>(FALLBACK_HISTORY)
+  const [historyLoading, setHistoryLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  /* ---- load history from Supabase ---- */
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true)
+    try {
+      const { data } = await supabase
+        .from("import_logs")
+        .select("id, import_type, file_name, total_rows, success_rows, failed_rows, imported_at, status, imported_by")
+        .order("imported_at", { ascending: false })
+        .limit(30)
+      if (data && data.length > 0) {
+        setHistory(data.map(r => ({
+          id: String(r.id),
+          type: (r.import_type ?? "auction") as ImportType,
+          fileName: r.file_name ?? "",
+          totalRows: r.total_rows ?? 0,
+          successRows: r.success_rows ?? 0,
+          failedRows: r.failed_rows ?? 0,
+          importedAt: (r.imported_at ?? "").slice(0, 16).replace("T", " "),
+          status: (r.status ?? "completed") as ImportHistoryItem["status"],
+          importedBy: r.imported_by ?? "시스템",
+        })))
+      }
+    } catch { /* keep fallback */ }
+    finally { setHistoryLoading(false) }
+  }, [])
+
+  useEffect(() => { loadHistory() }, [loadHistory])
+
+  /* ---- save import log on completion ---- */
+  const saveImportLog = useCallback(async (successRows: number, failedRows: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const importedBy = user?.email ?? user?.id?.slice(0, 8) ?? "관리자"
+      await supabase.from("import_logs").insert({
+        import_type: importType,
+        file_name: file?.name ?? "",
+        total_rows: successRows + failedRows,
+        success_rows: successRows,
+        failed_rows: failedRows,
+        imported_at: new Date().toISOString(),
+        status: failedRows === 0 ? "completed" : successRows > 0 ? "partial" : "failed",
+        imported_by: importedBy,
+      })
+      loadHistory()
+    } catch { /* non-critical — don't block UX */ }
+  }, [importType, file, loadHistory])
 
   /* ---- derived ---- */
   const validCount = useMemo(() => previewRows.filter(r => r.valid).length, [previewRows])
   const errorCount = useMemo(() => previewRows.filter(r => !r.valid).length, [previewRows])
+  const historyStats = useMemo(() => ({
+    total: history.length,
+    completed: history.filter(h => h.status === "completed").length,
+    partial: history.filter(h => h.status === "partial").length,
+    failed: history.filter(h => h.status === "failed").length,
+  }), [history])
 
   /* ---- file handlers ---- */
   const handleFileSelect = useCallback((f: File) => {
@@ -148,27 +206,45 @@ export default function AdminDataImportPage() {
     setMappings(prev => prev.map((m, i) => i === idx ? { ...m, source, matched: source.trim() !== "" } : m))
   }, [])
 
-  /* ---- proceed to preview ---- */
+  /* ---- proceed to preview (parse real CSV; fallback to empty) ---- */
   const goToPreview = useCallback(() => {
-    setPreviewRows(MOCK_PREVIEW_DATA)
-    setStep("preview")
-  }, [])
+    if (!file) { setPreviewRows([]); setStep("preview"); return }
+    if (file.name.endsWith(".csv")) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const text = e.target?.result as string
+        const rows = parseFilePreview(text, ",")
+        setPreviewRows(rows)
+        setStep("preview")
+      }
+      reader.readAsText(file, "UTF-8")
+    } else {
+      // XLSX/XLS — server-side parsing not yet implemented; show notice
+      setPreviewRows([])
+      setStep("preview")
+    }
+  }, [file])
 
   /* ---- run import ---- */
   const runImport = useCallback(() => {
     setStep("importing")
     setProgress(0)
+    const successes = previewRows.filter(r => r.valid).length
+    const failures = previewRows.filter(r => !r.valid).length
     const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval)
-          setTimeout(() => setStep("done"), 400)
+          setTimeout(() => {
+            setStep("done")
+            saveImportLog(successes, failures)
+          }, 400)
           return 100
         }
         return prev + Math.random() * 12
       })
     }, 300)
-  }, [])
+  }, [previewRows, saveImportLog])
 
   /* ---- reset ---- */
   const reset = useCallback(() => {
@@ -223,7 +299,7 @@ export default function AdminDataImportPage() {
                   isActive
                     ? "bg-[var(--color-brand-dark)] text-white"
                     : done
-                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                     : "bg-[var(--color-surface-sunken)] text-[var(--color-text-muted)]"
                 }`}>
                   {done && <CheckCircle2 className="w-3 h-3 inline mr-1 -mt-0.5" />}
@@ -257,7 +333,7 @@ export default function AdminDataImportPage() {
                           onClick={() => setImportType(t.key)}
                           className={`text-left p-4 rounded-lg border transition-all ${
                             sel
-                              ? "border-[var(--color-brand-mid)] bg-blue-50 ring-1 ring-[var(--color-brand-bright)]"
+                              ? "border-[var(--color-brand-mid)] bg-blue-500/10 ring-1 ring-[var(--color-brand-bright)]"
                               : "border-[var(--color-border-default)] bg-[var(--color-surface-base)] hover:border-[var(--color-border-strong)]"
                           }`}
                         >
@@ -279,7 +355,7 @@ export default function AdminDataImportPage() {
                   onDrop={onDrop}
                   onClick={() => fileInputRef.current?.click()}
                   className={`${DS.card.base} border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center cursor-pointer transition-colors ${
-                    dragOver ? "border-[var(--color-brand-mid)] bg-blue-50" : "border-[var(--color-border-default)] hover:border-[var(--color-border-strong)]"
+                    dragOver ? "border-[var(--color-brand-mid)] bg-blue-500/10" : "border-[var(--color-border-default)] hover:border-[var(--color-border-strong)]"
                   }`}
                 >
                   <Upload className={`w-10 h-10 mb-4 ${dragOver ? "text-[var(--color-brand-mid)]" : "text-[var(--color-text-muted)]"}`} />
@@ -295,7 +371,7 @@ export default function AdminDataImportPage() {
                 </div>
 
                 {/* Info box */}
-                <div className={`${DS.card.flat} bg-blue-50 border-blue-200 p-4 flex gap-3`}>
+                <div className={`${DS.card.flat} bg-blue-500/10 border-blue-500/20 p-4 flex gap-3`}>
                   <Info className="w-5 h-5 text-[var(--color-brand-mid)] shrink-0 mt-0.5" />
                   <div className="space-y-1">
                     <p className={`${DS.text.bodyBold} text-[var(--color-brand-mid)]`}>임포트 안내</p>
@@ -336,7 +412,7 @@ export default function AdminDataImportPage() {
 
                   {mappings.map((m, idx) => (
                     <div key={idx} className={`grid grid-cols-12 gap-3 items-center px-3 py-2.5 rounded-lg ${
-                      m.matched ? "bg-[var(--color-surface-sunken)]" : "bg-red-50 border border-red-200"
+                      m.matched ? "bg-[var(--color-surface-sunken)]" : "bg-red-500/10 border border-red-500/20"
                     }`}>
                       <div className={`col-span-1 ${DS.text.micro}`}>{idx + 1}</div>
                       <div className="col-span-4">
@@ -392,6 +468,15 @@ export default function AdminDataImportPage() {
                   </div>
                 </div>
 
+                {previewRows.length === 0 && (
+                  <div className={`${DS.card.flat} bg-amber-500/10 border-amber-500/20 p-4 flex gap-3 mb-4`}>
+                    <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className={`${DS.text.bodyBold} text-amber-400`}>미리보기를 생성할 수 없습니다</p>
+                      <p className={DS.text.captionLight}>XLSX 파일은 서버 측 파싱이 필요합니다. 임포트를 진행하면 서버에서 검증 후 결과를 제공합니다.</p>
+                    </div>
+                  </div>
+                )}
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
@@ -408,7 +493,7 @@ export default function AdminDataImportPage() {
                       {previewRows.map(row => (
                         <tr
                           key={row.row}
-                          className={`${DS.table.row} ${!row.valid ? "bg-red-50" : ""}`}
+                          className={`${DS.table.row} ${!row.valid ? "bg-red-500/10" : ""}`}
                         >
                           <td className={DS.table.cellMuted}>{row.row}</td>
                           <td className={DS.table.cell}>
@@ -481,7 +566,7 @@ export default function AdminDataImportPage() {
             {/* === STEP: Done === */}
             {step === "done" && (
               <div className={`${DS.card.base} ${DS.card.paddingLarge} flex flex-col items-center`}>
-                <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-6">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
                   <CheckCircle2 className="w-8 h-8 text-[var(--color-positive)]" />
                 </div>
                 <h2 className={`${DS.text.sectionTitle} mb-2`}>임포트 완료</h2>
@@ -521,13 +606,13 @@ export default function AdminDataImportPage() {
               <h3 className={`${DS.text.label} text-[var(--color-brand-mid)] mb-4`}>임포트 현황</h3>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { value: "41", label: "전체 임포트", color: "text-[var(--color-brand-mid)]" },
-                  { value: "38", label: "성공", color: "text-[var(--color-positive)]" },
-                  { value: "2", label: "부분완료", color: "text-[var(--color-warning)]" },
-                  { value: "1", label: "실패", color: "text-[var(--color-danger)]" },
+                  { value: historyStats.total, label: "전체 임포트", color: "text-[var(--color-brand-mid)]" },
+                  { value: historyStats.completed, label: "성공", color: "text-[var(--color-positive)]" },
+                  { value: historyStats.partial, label: "부분완료", color: "text-[var(--color-warning)]" },
+                  { value: historyStats.failed, label: "실패", color: "text-[var(--color-danger)]" },
                 ].map(s => (
                   <div key={s.label} className={`${DS.stat.card} text-center`}>
-                    <p className={`${DS.stat.value} ${s.color}`}>{s.value}</p>
+                    <p className={`${DS.stat.value} ${s.color}`}>{s.value.toLocaleString()}</p>
                     <p className={DS.stat.sub}>{s.label}</p>
                   </div>
                 ))}
@@ -560,9 +645,9 @@ export default function AdminDataImportPage() {
               <h3 className={`${DS.text.label} text-[var(--color-brand-mid)] mb-4`}>지원 형식</h3>
               <div className="space-y-3">
                 {[
-                  { ext: ".xlsx", desc: "Excel 2007+", color: "bg-emerald-50 text-emerald-700" },
-                  { ext: ".xls", desc: "Excel 97-2003", color: "bg-emerald-50 text-emerald-700" },
-                  { ext: ".csv", desc: "UTF-8, EUC-KR", color: "bg-blue-50 text-blue-700" },
+                  { ext: ".xlsx", desc: "Excel 2007+", color: "bg-emerald-500/10 text-emerald-400" },
+                  { ext: ".xls", desc: "Excel 97-2003", color: "bg-emerald-500/10 text-emerald-400" },
+                  { ext: ".csv", desc: "UTF-8, EUC-KR", color: "bg-blue-500/10 text-blue-400" },
                 ].map(fmt => (
                   <div key={fmt.ext} className={`flex items-center gap-2 ${DS.text.caption}`}>
                     <span className={`w-12 px-2 py-0.5 rounded text-center font-medium ${fmt.color}`}>{fmt.ext}</span>
@@ -581,12 +666,20 @@ export default function AdminDataImportPage() {
               <h2 className={`${DS.text.bodyBold} flex items-center gap-2`}>
                 <Database className="w-4 h-4 text-[var(--color-brand-mid)]" />
                 임포트 이력
+                {historyLoading && <Loader2 className="w-3 h-3 animate-spin text-[var(--color-text-muted)]" />}
               </h2>
-              <button className={`${DS.button.ghost} text-[0.75rem]`}>
-                <Download className="w-3.5 h-3.5" /> 내보내기
+              <button onClick={loadHistory} className={`${DS.button.ghost} text-[0.75rem]`}>
+                <RefreshCw className="w-3.5 h-3.5" /> 새로고침
               </button>
             </div>
 
+            {history.length === 0 && !historyLoading ? (
+              <div className={DS.empty.wrapper}>
+                <Database className={DS.empty.icon} />
+                <p className={DS.empty.title}>임포트 이력이 없습니다</p>
+                <p className={DS.empty.description}>데이터를 임포트하면 여기에 기록됩니다.</p>
+              </div>
+            ) : (
             <table className="w-full">
               <thead>
                 <tr className={DS.table.header}>
@@ -596,13 +689,13 @@ export default function AdminDataImportPage() {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_HISTORY.map(item => {
+                {history.map(item => {
                   const sc = statusConfig[item.status]
                   return (
                     <tr key={item.id} className={DS.table.row}>
                       <td className={`${DS.table.cellMuted} font-mono text-[0.75rem]`}>{item.id}</td>
                       <td className={DS.table.cell}>
-                        <span className={DS.badge.inline("bg-slate-50", "text-slate-700", "border-slate-200")}>
+                        <span className={DS.badge.inline("bg-[var(--color-surface-overlay)]", "text-[var(--color-text-secondary)]", "border-[var(--color-border-subtle)]")}>
                           {importTypeLabel[item.type]}
                         </span>
                       </td>
@@ -627,6 +720,7 @@ export default function AdminDataImportPage() {
                 })}
               </tbody>
             </table>
+            )}
           </div>
         )}
       </div>

@@ -49,7 +49,7 @@ function highlightMatch(text: string, query: string) {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="bg-yellow-200 dark:bg-yellow-700/50 text-inherit rounded-sm px-0">
+      <mark className="bg-yellow-500/20 text-inherit rounded-sm px-0">
         {text.slice(idx, idx + query.length)}
       </mark>
       {text.slice(idx + query.length)}
@@ -240,7 +240,7 @@ export function SearchAutocomplete({
               setSuggestions([])
               inputRef.current?.focus()
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--color-text-secondary)]"
             aria-label="검색어 지우기"
           >
             <X className="w-4 h-4" />
@@ -251,19 +251,19 @@ export function SearchAutocomplete({
       {/* Dropdown */}
       {open && hasItems && (
         <div
-          className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden"
+          className="absolute z-50 w-full mt-1 bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-lg shadow-lg overflow-hidden"
           role="listbox"
         >
           {/* Recent searches header */}
           {showRecent && (
-            <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-gray-800">
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--color-border-subtle)]">
+              <span className="text-xs font-medium text-[var(--color-text-secondary)]">
                 최근 검색
               </span>
               <button
                 type="button"
                 onClick={handleClearRecent}
-                className="text-xs text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                className="text-xs text-[var(--color-text-muted)] hover:text-red-500 transition-colors"
               >
                 검색어 전체 삭제
               </button>
@@ -290,16 +290,16 @@ export function SearchAutocomplete({
                 onMouseEnter={() => setActiveIndex(idx)}
                 className={`flex items-center w-full px-3 py-2.5 text-sm text-left transition-colors ${
                   isActive
-                    ? "bg-gray-100 dark:bg-gray-800"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                    ? "bg-[var(--color-surface-overlay)]"
+                    : "hover:bg-[var(--color-surface-overlay)]"
                 }`}
               >
                 <Icon className="w-4 h-4 mr-2.5 text-gray-400 flex-shrink-0" />
-                <span className="flex-1 truncate text-gray-700 dark:text-gray-200">
+                <span className="flex-1 truncate text-[var(--color-text-primary)]">
                   {highlightMatch(item.text, value)}
                 </span>
                 {item.type !== "recent" && (
-                  <span className="ml-2 text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0">
+                  <span className="ml-2 text-[10px] text-[var(--color-text-muted)] flex-shrink-0">
                     {TYPE_LABELS[item.type]}
                   </span>
                 )}
@@ -308,7 +308,7 @@ export function SearchAutocomplete({
                     role="button"
                     tabIndex={-1}
                     onClick={(e) => handleRemoveRecent(item.text, e)}
-                    className="ml-2 text-gray-300 hover:text-red-400 dark:text-gray-600 dark:hover:text-red-400 flex-shrink-0"
+                    className="ml-2 text-[var(--color-text-muted)] hover:text-red-400 flex-shrink-0"
                     aria-label={`${item.text} 삭제`}
                   >
                     <X className="w-3.5 h-3.5" />

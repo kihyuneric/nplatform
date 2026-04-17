@@ -1,15 +1,19 @@
 /**
  * lib/market-data-store.ts
  *
- * 시장 참조 데이터 공유 인메모리 스토어.
- * API 라우트(admin/market-data/*)와 분석 엔진(analysis-engine.ts) 양쪽에서 공유.
+ * 시장 참조 데이터 스토어.
+ * Supabase `rent_reference` / `auction_reference` / `court_auctions` 테이블을
+ * 우선 조회하고, 연결 불가 또는 데이터 없을 때 인메모리 목업 데이터로 폴백합니다.
  *
- * TODO: Supabase market_rent_data / market_auction_data 테이블 연동으로 교체
+ * 쿼리 함수(queryRentData, queryAuctionData)는 동기 API를 유지하여
+ * 기존 호출 코드(analysis-engine, npl-copilot 등)를 수정하지 않습니다.
+ * Supabase 데이터는 TTL 캐시(기본 5분)로 비동기 로드되며,
+ * 캐시가 준비되면 이후 동기 호출에서 자동으로 반영됩니다.
  */
 
 import type { FloorRentData, AuctionBidData } from '@/lib/market-reference-data'
 
-// ─── 임대료 스토어 ─────────────────────────────────────────
+// ─── 인메모리 목업 (폴백) ──────────────────────────────────
 export const rentStore: FloorRentData[] = [
   {
     id: 'demo-1',
@@ -43,7 +47,6 @@ export const rentStore: FloorRentData[] = [
   },
 ]
 
-// ─── 경매 스토어 ───────────────────────────────────────────
 export const auctionStore: AuctionBidData[] = [
   {
     id: 'demo-1',
@@ -73,6 +76,168 @@ export const auctionStore: AuctionBidData[] = [
   },
 ]
 
+// ─── Supabase 캐시 (모듈 수준 TTL 캐시) ───────────────────
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5분
+
+interface DataCache<T> {
+  data: T[]
+  loadedAt: number
+}
+
+let rentCache: DataCache<FloorRentData> | null = null
+let auctionCache: DataCache<AuctionBidData> | null = null
+
+// Supabase rent_reference 행을 FloorRentData로 변환
+function mapRentReference(row: Record<string, unknown>): FloorRentData {
+  const avg = Number(row['avg_rent_per_sqm'] ?? 0)
+  const median = Number(row['median_rent_per_sqm'] ?? avg)
+  const p75 = Number(row['p75_rent'] ?? avg * 1.3)
+  const p25 = Number(row['p25_rent'] ?? avg * 0.7)
+  const SQM_PER_PYEONG = 3.30579
+
+  return {
+    id: String(row['id'] ?? ''),
+    region: String(row['region'] ?? ''),
+    district: String(row['district'] ?? ''),
+    property_type: (row['property_type'] as FloorRentData['property_type']) ?? '상가',
+    floor_range: String(row['floor_category'] ?? 'all'),
+    floor_min: row['floor_category'] === 'basement' ? -1 : 1,
+    floor_max: row['floor_category'] === 'basement' ? -1 : 99,
+    rent_low_per_sqm: p25,
+    rent_mid_per_sqm: median,
+    rent_high_per_sqm: p75,
+    rent_low_per_pyeong: Math.round(p25 * SQM_PER_PYEONG * 10) / 10,
+    rent_mid_per_pyeong: Math.round(median * SQM_PER_PYEONG * 10) / 10,
+    rent_high_per_pyeong: Math.round(p75 * SQM_PER_PYEONG * 10) / 10,
+    vacancy_rate: row['vacancy_rate'] != null ? Number(row['vacancy_rate']) * 100 : undefined,
+    data_date: String(row['reference_period'] ?? ''),
+    source: String(row['source'] ?? ''),
+    created_at: String(row['created_at'] ?? ''),
+  }
+}
+
+// court_auctions 행을 AuctionBidData로 변환
+function mapCourtAuction(row: Record<string, unknown>): AuctionBidData {
+  const appraisedRaw = Number(row['appraised_value'] ?? 0)
+  const minBidRaw = Number(row['min_bid_price'] ?? 0)
+  const winBidRaw = Number(row['winning_bid'] ?? 0)
+  // DB 금액은 원(₩) 단위 → 만원으로 변환
+  const toMan = (v: number) => Math.round(v / 10000)
+
+  return {
+    id: String(row['id'] ?? ''),
+    case_number: String(row['case_id'] ?? ''),
+    court: String(row['court_name'] ?? ''),
+    region: String(row['region'] ?? ''),
+    district: String(row['district'] ?? ''),
+    property_type: String(row['property_type'] ?? ''),
+    address: String(row['property_address'] ?? ''),
+    appraised_value: toMan(appraisedRaw),
+    min_bid: toMan(minBidRaw),
+    winning_bid: toMan(winBidRaw),
+    bid_ratio: Number(row['bid_ratio'] ?? 0),
+    min_bid_ratio: appraisedRaw > 0
+      ? Math.round(minBidRaw / appraisedRaw * 100 * 10) / 10
+      : 70,
+    bidder_count: row['bidder_count'] != null ? Number(row['bidder_count']) : undefined,
+    attempt_count: row['attempt_count'] != null ? Number(row['attempt_count']) - 1 : 0,
+    result: (row['result'] as AuctionBidData['result']) ?? '유찰',
+    auction_date: String(row['auction_date'] ?? ''),
+    source: String(row['source'] ?? ''),
+    created_at: String(row['created_at'] ?? ''),
+  }
+}
+
+/**
+ * Supabase에서 임대료 데이터를 가져와 캐시 갱신.
+ * 실패 시 기존 캐시 또는 mock 데이터 유지.
+ */
+async function refreshRentCache(): Promise<void> {
+  try {
+    // Dynamic import to avoid issues in non-server contexts
+    const { createClient } = await import('@/lib/supabase/server')
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('rent_reference')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(500)
+
+    if (error) throw error
+    if (!data || data.length === 0) return
+
+    rentCache = {
+      data: (data as Record<string, unknown>[]).map(mapRentReference),
+      loadedAt: Date.now(),
+    }
+  } catch {
+    // Supabase unavailable — keep existing cache or fall back to mock
+  }
+}
+
+/**
+ * Supabase에서 경매 데이터를 가져와 캐시 갱신.
+ */
+async function refreshAuctionCache(): Promise<void> {
+  try {
+    const { createClient } = await import('@/lib/supabase/server')
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('court_auctions')
+      .select('*')
+      .in('result', ['낙찰', '유찰'])
+      .order('auction_date', { ascending: false })
+      .limit(1000)
+
+    if (error) throw error
+    if (!data || data.length === 0) return
+
+    auctionCache = {
+      data: (data as Record<string, unknown>[]).map(mapCourtAuction),
+      loadedAt: Date.now(),
+    }
+  } catch {
+    // Supabase unavailable — keep existing cache or fall back to mock
+  }
+}
+
+/**
+ * 캐시가 없거나 만료된 경우 백그라운드에서 갱신을 트리거합니다.
+ * 동기 함수에서 호출 가능 (await 없이).
+ */
+function triggerCacheRefresh(type: 'rent' | 'auction'): void {
+  if (type === 'rent') {
+    const stale = !rentCache || Date.now() - rentCache.loadedAt > CACHE_TTL_MS
+    if (stale) {
+      refreshRentCache().catch(() => {/* silent */})
+    }
+  } else {
+    const stale = !auctionCache || Date.now() - auctionCache.loadedAt > CACHE_TTL_MS
+    if (stale) {
+      refreshAuctionCache().catch(() => {/* silent */})
+    }
+  }
+}
+
+/**
+ * 현재 유효한 임대료 데이터 배열 반환 (캐시 → 목업 순).
+ */
+function getActiveRentData(): FloorRentData[] {
+  triggerCacheRefresh('rent')
+  return rentCache && rentCache.data.length > 0 ? rentCache.data : rentStore
+}
+
+/**
+ * 현재 유효한 경매 데이터 배열 반환 (캐시 → 목업 순).
+ */
+function getActiveAuctionData(): AuctionBidData[] {
+  triggerCacheRefresh('auction')
+  return auctionCache && auctionCache.data.length > 0 ? auctionCache.data : auctionStore
+}
+
 // ─── 쿼리 헬퍼 ────────────────────────────────────────────
 
 export interface MarketDataQuery {
@@ -83,8 +248,9 @@ export interface MarketDataQuery {
 }
 
 /**
- * 지역+유형에 맞는 임대료 참조 데이터 조회
- * 정확히 일치하는 것 먼저, 없으면 지역만 일치하는 것, 없으면 전체 평균
+ * 지역+유형에 맞는 임대료 참조 데이터 조회 (동기).
+ * 정확히 일치하는 것 먼저, 없으면 지역만 일치하는 것, 없으면 전체 평균.
+ * Supabase 캐시가 있으면 DB 데이터를, 없으면 목업을 반환합니다.
  */
 export function queryRentData(query: MarketDataQuery): {
   data: FloorRentData[]
@@ -96,11 +262,11 @@ export function queryRentData(query: MarketDataQuery): {
     match_level: 'exact' | 'district' | 'region' | 'global'
   }
 } {
-  let data = [...rentStore]
+  const source = getActiveRentData()
   let matchLevel: 'exact' | 'district' | 'region' | 'global' = 'exact'
 
   // 1단계: 지역+구+유형+층 정확 일치
-  let filtered = data.filter((d) => {
+  let filtered = source.filter((d) => {
     if (query.region && d.region !== query.region) return false
     if (query.district && d.district !== query.district) return false
     if (query.property_type && d.property_type !== query.property_type) return false
@@ -110,7 +276,7 @@ export function queryRentData(query: MarketDataQuery): {
 
   // 2단계: 구 기준 (층 무시)
   if (filtered.length === 0) {
-    filtered = data.filter((d) => {
+    filtered = source.filter((d) => {
       if (query.region && d.region !== query.region) return false
       if (query.district && d.district !== query.district) return false
       if (query.property_type && d.property_type !== query.property_type) return false
@@ -121,7 +287,7 @@ export function queryRentData(query: MarketDataQuery): {
 
   // 3단계: 시/도 기준
   if (filtered.length === 0) {
-    filtered = data.filter((d) => {
+    filtered = source.filter((d) => {
       if (query.region && d.region !== query.region) return false
       if (query.property_type && d.property_type !== query.property_type) return false
       return true
@@ -131,7 +297,7 @@ export function queryRentData(query: MarketDataQuery): {
 
   // 4단계: 전체 데이터 사용
   if (filtered.length === 0) {
-    filtered = data
+    filtered = source
     matchLevel = 'global'
   }
 
@@ -159,7 +325,8 @@ export function queryRentData(query: MarketDataQuery): {
 }
 
 /**
- * 지역+유형에 맞는 경매 낙찰가 통계 조회
+ * 지역+유형에 맞는 경매 낙찰가 통계 조회 (동기).
+ * Supabase 캐시가 있으면 DB 데이터를, 없으면 목업을 반환합니다.
  */
 export function queryAuctionData(query: MarketDataQuery): {
   data: AuctionBidData[]
@@ -171,10 +338,10 @@ export function queryAuctionData(query: MarketDataQuery): {
     match_level: 'exact' | 'district' | 'region' | 'global'
   }
 } {
-  let data = [...auctionStore]
+  const source = getActiveAuctionData()
   let matchLevel: 'exact' | 'district' | 'region' | 'global' = 'exact'
 
-  let filtered = data.filter((d) => {
+  let filtered = source.filter((d) => {
     if (query.region && d.region !== query.region) return false
     if (query.district && d.district !== query.district) return false
     if (query.property_type && d.property_type !== query.property_type) return false
@@ -182,7 +349,7 @@ export function queryAuctionData(query: MarketDataQuery): {
   })
 
   if (filtered.length === 0) {
-    filtered = data.filter((d) => {
+    filtered = source.filter((d) => {
       if (query.region && d.region !== query.region) return false
       if (query.property_type && d.property_type !== query.property_type) return false
       return true
@@ -191,7 +358,7 @@ export function queryAuctionData(query: MarketDataQuery): {
   }
 
   if (filtered.length === 0) {
-    filtered = data
+    filtered = source
     matchLevel = 'global'
   }
 
@@ -230,4 +397,17 @@ export function queryAuctionData(query: MarketDataQuery): {
       match_level: matchLevel,
     },
   }
+}
+
+/**
+ * 캐시를 명시적으로 워밍업합니다.
+ * Next.js Route Handler나 서버 컴포넌트의 초기화 코드에서 호출하면
+ * 첫 번째 동기 호출 전에 Supabase 데이터를 미리 로드할 수 있습니다.
+ *
+ * @example
+ * // app/api/v1/admin/market-data/route.ts
+ * await warmUpMarketDataCache()
+ */
+export async function warmUpMarketDataCache(): Promise<void> {
+  await Promise.allSettled([refreshRentCache(), refreshAuctionCache()])
 }

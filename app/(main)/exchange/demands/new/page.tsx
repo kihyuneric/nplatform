@@ -121,12 +121,12 @@ export default function NewDemandPage() {
 
   if (submitted) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center bg-gray-50">
+      <div className="flex min-h-[60vh] items-center justify-center bg-[var(--color-surface-overlay)]">
         <div className="text-center space-y-3">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#10B981]/10">
             <CheckCircle2 className="h-8 w-8 text-[#10B981]" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900">수요 등록 완료!</h2>
+          <h2 className="text-xl font-bold text-[var(--color-text-primary)]">수요 등록 완료!</h2>
           <p className="text-sm text-gray-500">AI가 매칭 결과를 분석 중입니다.</p>
         </div>
       </div>
@@ -134,7 +134,7 @@ export default function NewDemandPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--color-surface-overlay)]">
       {/* Header */}
       <div className="bg-[#0D1F38] text-white px-6 py-8">
         <div className="max-w-2xl mx-auto">
@@ -151,8 +151,8 @@ export default function NewDemandPage() {
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
 
         {/* 수요 유형 선택 */}
-        <div className="card-interactive rounded-xl bg-white p-5 space-y-3">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-normal">수요 유형</h2>
+        <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">수요 유형</h2>
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
@@ -160,15 +160,15 @@ export default function NewDemandPage() {
               className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
                 demandType === 'npl'
                   ? 'border-[#2E75B6] bg-[#2E75B6]/5'
-                  : 'border-gray-200 hover:border-gray-300'
+                  : 'border-[var(--color-border-subtle)] hover:border-[var(--color-border-subtle)]'
               }`}
             >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${demandType === 'npl' ? 'bg-[#2E75B6]' : 'bg-gray-100'}`}>
-                <Gavel className={`w-4 h-4 ${demandType === 'npl' ? 'text-white' : 'text-gray-400'}`} />
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${demandType === 'npl' ? 'bg-[#2E75B6]' : 'bg-[var(--color-surface-overlay)]'}`}>
+                <Gavel className={`w-4 h-4 ${demandType === 'npl' ? 'text-white' : 'text-[var(--color-text-muted)]'}`} />
               </div>
               <div>
-                <p className={`text-sm font-semibold ${demandType === 'npl' ? 'text-[#1B3A5C]' : 'text-gray-600'}`}>NPL 채권</p>
-                <p className="text-xs text-gray-400">부실채권 매수 수요</p>
+                <p className={`text-sm font-semibold ${demandType === 'npl' ? 'text-[var(--color-brand-mid)]' : 'text-[var(--color-text-secondary)]'}`}>NPL 채권</p>
+                <p className="text-xs text-[var(--color-text-muted)]">부실채권 매수 수요</p>
               </div>
             </button>
             <button
@@ -176,28 +176,28 @@ export default function NewDemandPage() {
               onClick={() => { setDemandType('realestate'); setCollateralTypes([]); setAiGrades([]); setAuctionStages([]) }}
               className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
                 demandType === 'realestate'
-                  ? 'border-emerald-500 bg-emerald-50/50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-emerald-500 bg-emerald-500/10'
+                  : 'border-[var(--color-border-subtle)] hover:border-[var(--color-border-subtle)]'
               }`}
             >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${demandType === 'realestate' ? 'bg-emerald-500' : 'bg-gray-100'}`}>
-                <Building2 className={`w-4 h-4 ${demandType === 'realestate' ? 'text-white' : 'text-gray-400'}`} />
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${demandType === 'realestate' ? 'bg-emerald-500' : 'bg-[var(--color-surface-overlay)]'}`}>
+                <Building2 className={`w-4 h-4 ${demandType === 'realestate' ? 'text-white' : 'text-[var(--color-text-muted)]'}`} />
               </div>
               <div>
-                <p className={`text-sm font-semibold ${demandType === 'realestate' ? 'text-emerald-700' : 'text-gray-600'}`}>부동산</p>
-                <p className="text-xs text-gray-400">일반 부동산 매물 수요</p>
+                <p className={`text-sm font-semibold ${demandType === 'realestate' ? 'text-emerald-400' : 'text-[var(--color-text-secondary)]'}`}>부동산</p>
+                <p className="text-xs text-[var(--color-text-muted)]">일반 부동산 매물 수요</p>
               </div>
             </button>
           </div>
         </div>
 
         {/* Section 1 — 기본 조건 */}
-        <div className="card-interactive rounded-xl bg-white p-5 space-y-5">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-normal">기본 조건</h2>
+        <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] p-5 space-y-5">
+          <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">기본 조건</h2>
 
           {/* 투자 목적 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">
               투자 목적 <span className="text-red-500">*</span>
             </label>
             <select
@@ -214,7 +214,7 @@ export default function NewDemandPage() {
           {/* NPL: 담보 유형 */}
           {demandType === 'npl' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                 원하는 담보 유형 <span className="text-red-500">*</span>
               </label>
               <div className="flex flex-wrap gap-2">
@@ -224,9 +224,9 @@ export default function NewDemandPage() {
                       type="checkbox"
                       checked={collateralTypes.includes(opt)}
                       onChange={() => { setCollateralTypes(toggle(collateralTypes, opt)); clearError('collateralTypes') }}
-                      className="rounded border-gray-300 text-[#2E75B6] focus:ring-[#2E75B6]"
+                      className="rounded border-[var(--color-border-subtle)] text-[#2E75B6] focus:ring-[#2E75B6]"
                     />
-                    <span className={`text-sm px-2 py-0.5 rounded-md border transition-colors ${collateralTypes.includes(opt) ? 'border-[#2E75B6] bg-[#2E75B6]/10 text-[#2E75B6]' : 'border-gray-200 text-gray-600'}`}>
+                    <span className={`text-sm px-2 py-0.5 rounded-md border transition-colors ${collateralTypes.includes(opt) ? 'border-[#2E75B6] bg-[#2E75B6]/10 text-[#2E75B6]' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
                       {opt}
                     </span>
                   </label>
@@ -240,7 +240,7 @@ export default function NewDemandPage() {
           {demandType === 'realestate' && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                   부동산 유형 <span className="text-red-500">*</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -250,9 +250,9 @@ export default function NewDemandPage() {
                         type="checkbox"
                         checked={reTypes.includes(opt)}
                         onChange={() => { setReTypes(toggle(reTypes, opt)); clearError('reTypes') }}
-                        className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                        className="rounded border-[var(--color-border-subtle)] text-emerald-600 focus:ring-emerald-500"
                       />
-                      <span className={`text-sm px-2 py-0.5 rounded-md border transition-colors ${reTypes.includes(opt) ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-600'}`}>
+                      <span className={`text-sm px-2 py-0.5 rounded-md border transition-colors ${reTypes.includes(opt) ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
                         {opt}
                       </span>
                     </label>
@@ -261,7 +261,7 @@ export default function NewDemandPage() {
                 {errors.reTypes && <p className="text-xs text-red-500 mt-1">{errors.reTypes}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                   거래 유형 <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-2">
@@ -271,9 +271,9 @@ export default function NewDemandPage() {
                         type="checkbox"
                         checked={reDealTypes.includes(opt)}
                         onChange={() => { setReDealTypes(toggle(reDealTypes, opt)); clearError('reDealTypes') }}
-                        className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                        className="rounded border-[var(--color-border-subtle)] text-emerald-600 focus:ring-emerald-500"
                       />
-                      <span className={`text-sm px-3 py-1 rounded-md border transition-colors ${reDealTypes.includes(opt) ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-600'}`}>
+                      <span className={`text-sm px-3 py-1 rounded-md border transition-colors ${reDealTypes.includes(opt) ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
                         {opt}
                       </span>
                     </label>
@@ -286,17 +286,17 @@ export default function NewDemandPage() {
         </div>
 
         {/* Section 2 — 투자 규모 */}
-        <div className="card-interactive rounded-xl bg-white p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-normal">
+        <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">
             {demandType === 'realestate' ? '가격 범위' : '투자 규모'}
           </h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">
+              <label className="block text-xs text-[var(--color-text-muted)] mb-1">
                 {demandType === 'realestate' ? '최소 가격 (억원)' : '최소 투자금 (억원)'} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none select-none">₩</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-sm pointer-events-none select-none">₩</span>
                 <input
                   type="number"
                   placeholder="예: 5"
@@ -309,11 +309,11 @@ export default function NewDemandPage() {
               {errors.minAmount && <p className="text-xs text-red-500 mt-1">{errors.minAmount}</p>}
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">
+              <label className="block text-xs text-[var(--color-text-muted)] mb-1">
                 {demandType === 'realestate' ? '최대 가격 (억원)' : '최대 투자금 (억원)'} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none select-none">₩</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-sm pointer-events-none select-none">₩</span>
                 <input
                   type="number"
                   placeholder="예: 20"
@@ -330,7 +330,7 @@ export default function NewDemandPage() {
           {/* NPL: 희망 수익률 */}
           {demandType === 'npl' && (
             <div>
-              <label className="block text-xs text-gray-500 mb-1">희망 수익률 (%)</label>
+              <label className="block text-xs text-[var(--color-text-muted)] mb-1">희망 수익률 (%)</label>
               <div className="relative">
                 <input
                   type="number"
@@ -340,7 +340,7 @@ export default function NewDemandPage() {
                   className="input-enhanced w-full"
                   style={{ paddingRight: '2rem' }}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none select-none">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-sm pointer-events-none select-none">%</span>
               </div>
             </div>
           )}
@@ -349,7 +349,7 @@ export default function NewDemandPage() {
           {demandType === 'realestate' && (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">최소 면적 (㎡)</label>
+                <label className="block text-xs text-[var(--color-text-muted)] mb-1">최소 면적 (㎡)</label>
                 <input
                   type="number"
                   placeholder="예: 33"
@@ -359,7 +359,7 @@ export default function NewDemandPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">최대 면적 (㎡)</label>
+                <label className="block text-xs text-[var(--color-text-muted)] mb-1">최대 면적 (㎡)</label>
                 <input
                   type="number"
                   placeholder="예: 115"
@@ -373,16 +373,16 @@ export default function NewDemandPage() {
         </div>
 
         {/* Section 3 — 지역 */}
-        <div className="card-interactive rounded-xl bg-white p-5 space-y-3">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-normal">지역</h2>
+        <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">지역</h2>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={nationwide}
               onChange={e => { setNationwide(e.target.checked); if (e.target.checked) setRegions([]); clearError('regions') }}
-              className="rounded border-gray-300 text-[#2E75B6] focus:ring-[#2E75B6]"
+              className="rounded border-[var(--color-border-subtle)] text-[#2E75B6] focus:ring-[#2E75B6]"
             />
-            <span className="text-sm font-medium text-gray-700 tracking-normal">전국</span>
+            <span className="text-sm font-medium text-[var(--color-text-secondary)] tracking-normal">전국</span>
           </label>
           {!nationwide && (
             <div className="flex flex-wrap gap-2 pt-1">
@@ -394,7 +394,7 @@ export default function NewDemandPage() {
                     onChange={() => { setRegions(toggle(regions, r)); clearError('regions') }}
                     className="rounded border-gray-300 text-[#2E75B6] focus:ring-[#2E75B6]"
                   />
-                  <span className={`text-sm px-2 py-0.5 rounded-md border transition-colors ${regions.includes(r) ? 'border-[#2E75B6] bg-[#2E75B6]/10 text-[#2E75B6]' : 'border-gray-200 text-gray-600'}`}>
+                  <span className={`text-sm px-2 py-0.5 rounded-md border transition-colors ${regions.includes(r) ? 'border-[#2E75B6] bg-[#2E75B6]/10 text-[#2E75B6]' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
                     {r}
                   </span>
                 </label>
@@ -406,12 +406,12 @@ export default function NewDemandPage() {
 
         {/* Section 4 — 기타 조건 (NPL only) */}
         {demandType === 'npl' && (
-          <div className="card-interactive rounded-xl bg-white p-5 space-y-5">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-normal">기타 조건</h2>
+          <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] p-5 space-y-5">
+            <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">기타 조건</h2>
 
             {/* AI 등급 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">희망 AI 등급</label>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">희망 AI 등급</label>
               <div className="flex gap-2">
                 {AI_GRADES.map(g => (
                   <label key={g} className="flex items-center gap-1 cursor-pointer">
@@ -423,12 +423,12 @@ export default function NewDemandPage() {
                     />
                     <span className={`w-9 h-9 flex items-center justify-center rounded-lg border text-sm font-bold transition-all cursor-pointer ${
                       aiGrades.includes(g)
-                        ? g === 'A' ? 'border-emerald-500 bg-emerald-50 text-emerald-600'
-                        : g === 'B' ? 'border-blue-500 bg-blue-50 text-blue-600'
-                        : g === 'C' ? 'border-yellow-500 bg-yellow-50 text-yellow-600'
-                        : g === 'D' ? 'border-orange-500 bg-orange-50 text-orange-600'
-                        : 'border-red-500 bg-red-50 text-red-600'
-                        : 'border-gray-200 text-gray-400'
+                        ? g === 'A' ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                        : g === 'B' ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                        : g === 'C' ? 'border-yellow-500 bg-yellow-500/10 text-yellow-400'
+                        : g === 'D' ? 'border-orange-500 bg-orange-500/10 text-orange-400'
+                        : 'border-red-500 bg-red-500/10 text-red-400'
+                        : 'border-[var(--color-border-subtle)] text-[var(--color-text-muted)]'
                     }`}>
                       {g}
                     </span>
@@ -439,7 +439,7 @@ export default function NewDemandPage() {
 
             {/* 경매 단계 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">선호 경매 단계</label>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">선호 경매 단계</label>
               <div className="flex gap-2">
                 {AUCTION_STAGES.map(s => (
                   <label key={s} className="flex items-center gap-1 cursor-pointer">
@@ -447,9 +447,9 @@ export default function NewDemandPage() {
                       type="checkbox"
                       checked={auctionStages.includes(s)}
                       onChange={() => setAuctionStages(toggle(auctionStages, s))}
-                      className="rounded border-gray-300 text-[#2E75B6] focus:ring-[#2E75B6]"
+                      className="rounded border-[var(--color-border-subtle)] text-[#2E75B6] focus:ring-[#2E75B6]"
                     />
-                    <span className={`text-sm px-3 py-1 rounded-md border transition-colors tracking-normal ${auctionStages.includes(s) ? 'border-[#2E75B6] bg-[#2E75B6]/10 text-[#2E75B6]' : 'border-gray-200 text-gray-600'}`}>
+                    <span className={`text-sm px-3 py-1 rounded-md border transition-colors tracking-normal ${auctionStages.includes(s) ? 'border-[#2E75B6] bg-[#2E75B6]/10 text-[#2E75B6]' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
                       {s}
                     </span>
                   </label>
@@ -459,7 +459,7 @@ export default function NewDemandPage() {
 
             {/* 메모 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">메모</label>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">메모</label>
               <textarea
                 rows={4}
                 placeholder="원하는 NPL 조건을 자유롭게 기술해주세요. (예: 권리관계 단순한 물건 선호, 임차인 없는 물건 우대 등)"
@@ -467,15 +467,15 @@ export default function NewDemandPage() {
                 onChange={e => setMemo(e.target.value)}
                 className="input-enhanced w-full resize-none"
               />
-              <p className="text-xs text-gray-400 mt-1">상세한 설명을 작성할수록 더 정확한 AI 매칭 결과를 받을 수 있습니다.</p>
+              <p className="text-xs text-[var(--color-text-muted)] mt-1">상세한 설명을 작성할수록 더 정확한 AI 매칭 결과를 받을 수 있습니다.</p>
             </div>
           </div>
         )}
 
         {/* Section 4 — 메모 (real estate) */}
         {demandType === 'realestate' && (
-          <div className="card-interactive rounded-xl bg-white p-5">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">메모</label>
+          <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] p-5">
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">메모</label>
             <textarea
               rows={4}
               placeholder="원하는 부동산 조건을 자유롭게 기술해주세요. (예: 역세권 선호, 주차 필수, 남향 우대 등)"
@@ -487,11 +487,11 @@ export default function NewDemandPage() {
         )}
 
         {/* 안내 배너 */}
-        <div className="flex items-start gap-3 rounded-xl bg-blue-50 border border-blue-100 p-4">
+        <div className="flex items-start gap-3 rounded-xl bg-blue-500/10 border border-blue-500/20 p-4">
           <Info className="h-5 w-5 text-[#2E75B6] flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-[var(--color-text-secondary)]">
             <p className="font-medium tracking-normal">등록 안내</p>
-            <ul className="mt-1 list-disc pl-4 space-y-0.5 text-xs text-gray-500">
+            <ul className="mt-1 list-disc pl-4 space-y-0.5 text-xs text-[var(--color-text-muted)]">
               <li>등록된 수요는 AI 분석을 통해 매물과 자동 매칭됩니다.</li>
               <li>개인정보(이름, 연락처)는 마스킹 처리되어 보호됩니다.</li>
               <li>등록 후 언제든 수정 또는 비공개 전환이 가능합니다.</li>
@@ -506,9 +506,9 @@ export default function NewDemandPage() {
               type="checkbox"
               checked={agreed}
               onChange={e => { setAgreed(e.target.checked); clearError('agreed') }}
-              className="mt-0.5 rounded border-gray-300 text-[#2E75B6] focus:ring-[#2E75B6]"
+              className="mt-0.5 rounded border-[var(--color-border-subtle)] text-[#2E75B6] focus:ring-[#2E75B6]"
             />
-            <span className="text-sm text-gray-600 tracking-normal">
+            <span className="text-sm text-[var(--color-text-secondary)] tracking-normal">
               수집된 개인정보는 매물 매칭 서비스 제공 목적으로만 활용되며,{' '}
               <span className="text-[#2E75B6] underline cursor-pointer">개인정보 처리방침</span>에 동의합니다.
             </span>
@@ -516,7 +516,7 @@ export default function NewDemandPage() {
           {errors.agreed && <p className="text-xs text-red-500">{errors.agreed}</p>}
 
           <div className="flex items-center justify-end gap-3">
-            <Link href="/exchange/demands" className="px-5 py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors tracking-normal">
+            <Link href="/exchange/demands" className="px-5 py-2.5 rounded-lg border border-[var(--color-border-subtle)] text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] transition-colors tracking-normal">
               취소
             </Link>
             <button

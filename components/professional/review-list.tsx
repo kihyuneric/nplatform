@@ -33,7 +33,7 @@ function StarDisplay({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'm
             cls,
             s <= Math.round(rating)
               ? 'fill-yellow-400 text-yellow-400'
-              : 'text-gray-300 dark:text-gray-600'
+              : 'text-[var(--color-text-muted)]'
           )}
         />
       ))}
@@ -73,7 +73,7 @@ export function ReviewList({ reviews, averageRating }: ReviewListProps) {
             <select
               value={sortKey}
               onChange={(e) => setSortKey(e.target.value as SortKey)}
-              className="text-sm rounded-md border border-gray-200 bg-white px-2 py-1 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+              className="text-sm rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] px-2 py-1 text-[var(--color-text-secondary)]"
             >
               <option value="latest">최신순</option>
               <option value="highest">높은평점순</option>
@@ -84,9 +84,9 @@ export function ReviewList({ reviews, averageRating }: ReviewListProps) {
       <CardContent>
         {/* Average rating display */}
         {reviews.length > 0 && (
-          <div className="flex items-center gap-4 p-4 mb-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+          <div className="flex items-center gap-4 p-4 mb-4 rounded-lg bg-[var(--color-surface-overlay)]">
             <div className="text-center">
-              <p className="text-3xl font-bold text-[#1B3A5C] dark:text-blue-400">
+              <p className="text-3xl font-bold text-[var(--color-text-primary)]">
                 {avgRating.toFixed(1)}
               </p>
               <StarDisplay rating={avgRating} size="md" />
@@ -97,8 +97,8 @@ export function ReviewList({ reviews, averageRating }: ReviewListProps) {
                 const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0
                 return (
                   <div key={star} className="flex items-center gap-2 text-xs">
-                    <span className="w-6 text-right text-gray-500 dark:text-gray-400">{star}점</span>
-                    <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <span className="w-6 text-right text-[var(--color-text-secondary)]">{star}점</span>
+                    <div className="flex-1 h-2 bg-[var(--color-surface-overlay)] rounded-full overflow-hidden">
                       <div
                         className="h-full bg-yellow-400 rounded-full transition-all"
                         style={{ width: `${pct}%` }}
@@ -114,7 +114,7 @@ export function ReviewList({ reviews, averageRating }: ReviewListProps) {
 
         {/* Review items */}
         {sorted.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
+          <p className="text-sm text-[var(--color-text-secondary)] text-center py-8">
             아직 리뷰가 없습니다.
           </p>
         ) : (
@@ -122,14 +122,14 @@ export function ReviewList({ reviews, averageRating }: ReviewListProps) {
             {sorted.map((rev) => (
               <div
                 key={rev.id}
-                className="border-b border-gray-100 dark:border-gray-800 pb-4 last:border-0 last:pb-0"
+                className="border-b border-[var(--color-border-subtle)] pb-4 last:border-0 last:pb-0"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-surface-overlay)] text-sm font-medium text-[var(--color-text-secondary)]">
                       {rev.client_name.charAt(0)}
                     </div>
-                    <span className="font-medium text-gray-900 dark:text-white text-sm">
+                    <span className="font-medium text-[var(--color-text-primary)] text-sm">
                       {rev.client_name}
                     </span>
                   </div>
@@ -137,14 +137,14 @@ export function ReviewList({ reviews, averageRating }: ReviewListProps) {
                 </div>
                 <div className="mt-1 ml-10">
                   <StarDisplay rating={rev.rating} />
-                  <p className="mt-1.5 text-sm text-gray-600 dark:text-gray-400">{rev.content}</p>
+                  <p className="mt-1.5 text-sm text-[var(--color-text-secondary)]">{rev.content}</p>
                   {rev.tags && rev.tags.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
                       {rev.tags.map((tag) => (
                         <Badge
                           key={tag}
                           variant="secondary"
-                          className="text-xs bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                          className="text-xs bg-blue-500/10 text-blue-400"
                         >
                           {tag}
                         </Badge>

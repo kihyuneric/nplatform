@@ -37,7 +37,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
-// ─── Nav structure (5-category) ──────────────────────────────────────────────
+// ─── Nav structure (4-category) ──────────────────────────────────────────────
 
 interface NavItem {
   label: string
@@ -52,47 +52,41 @@ interface NavGroup {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    group: '매물',
+    group: '거래소',
     items: [
       { label: '매물 탐색', icon: Search, href: '/exchange' },
+      { label: '입찰', icon: Gavel, href: '/exchange/auction' },
       { label: '매물 등록', icon: PlusCircle, href: '/exchange/sell' },
+      { label: '대량 등록', icon: Upload, href: '/exchange/bulk-upload' },
       { label: '매수 수요', icon: Users, href: '/exchange/demands' },
-      { label: '참여 기관', icon: Building2, href: '/exchange/institutions' },
     ],
   },
   {
-    group: '거래',
+    group: '딜룸',
     items: [
-      { label: '내 거래', icon: Briefcase, href: '/deals' },
-      { label: 'AI 매칭', icon: Brain, href: '/deals/matching' },
-      { label: '계약서', icon: FileSignature, href: '/deals/contract' },
-      { label: '거래 아카이브', icon: Archive, href: '/deals/archive' },
+      { label: '진행 중', icon: Briefcase, href: '/deals' },
+      { label: '완료', icon: Archive, href: '/deals/archive' },
+      { label: 'AI 매칭', icon: TrendingUp, href: '/deals/matching' },
+      { label: '팀 투자', icon: Building2, href: '/deals/teams' },
     ],
   },
   {
     group: '분석',
     items: [
-      { label: '시장 분석', icon: BarChart2, href: '/analysis' },
-      { label: 'AI NPL 분석', icon: Brain, href: '/analysis/new' },
+      { label: '시장 현황', icon: BarChart2, href: '/analysis' },
+      { label: 'AI 실사 보고서', icon: FileText, href: '/analysis/due-diligence' },
       { label: '경매 시뮬레이터', icon: TrendingUp, href: '/analysis/simulator' },
-      { label: 'OCR 스캐너', icon: ScanLine, href: '/analysis/ocr' },
-    ],
-  },
-  {
-    group: '서비스',
-    items: [
-      { label: '전문가', icon: Briefcase, href: '/services/experts' },
       { label: '커뮤니티', icon: MessageSquare, href: '/services/community' },
-      { label: '교육/뉴스', icon: BookOpen, href: '/services/learn' },
+      { label: '전문가', icon: Users, href: '/services/experts' },
+      { label: '학습', icon: BookOpen, href: '/services/learn' },
     ],
   },
   {
-    group: '내 정보',
+    group: '마이 페이지',
     items: [
       { label: '대시보드', icon: User, href: '/my' },
-      { label: '결제/크레딧', icon: CreditCard, href: '/my/billing' },
+      { label: '포트폴리오', icon: Briefcase, href: '/my/portfolio' },
       { label: '설정', icon: Settings, href: '/my/settings' },
-      { label: '알림', icon: Settings, href: '/my/notifications' },
     ],
   },
 ]

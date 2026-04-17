@@ -1,5 +1,8 @@
 import { z } from 'zod'
 
+// Re-export profitability analysis schemas
+export { profitabilityInputSchema } from '@/lib/npl/profitability/schema'
+
 // 매각 등록
 export const dealListingSchema = z.object({
   collateral_type: z.enum(['아파트','오피스텔','다세대','단독주택','상가','오피스','토지','공장','호텔','기타']),

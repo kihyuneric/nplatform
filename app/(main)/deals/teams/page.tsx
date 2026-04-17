@@ -5,63 +5,44 @@ import { Users, Plus, Search, TrendingUp, Building2, Lock, ChevronRight, Zap, Sh
 import Link from "next/link"
 import DS, { formatKRW } from "@/lib/design-system"
 
+type TeamStatus = "모집중" | "모집완료" | "운용중" | "상환완료" | "취소"
+
 interface Team {
   id: string
   name: string
   description: string
   member_count: number
-  max_members: number
+  max_members?: number
   target_amount: number
   raised_amount: number
   is_private: boolean
-  status: "모집중" | "투자중" | "완료"
+  status: TeamStatus
   investment_type?: string
+  listing_id?: string
   listing_title?: string
+  leader_name?: string    // 리더 투자사명
+  co_count?: number       // 공동 투자사 수
   created_at: string
   return_rate?: number
 }
 
-const MOCK_TEAMS: Team[] = [
-  {
-    id: "t1", name: "강남 아파트 NPL 공동투자팀",
-    description: "강남구 A아파트 NPL 채권 공동매입 및 경매 진행",
-    member_count: 4, max_members: 6,
-    target_amount: 500000000, raised_amount: 320000000,
-    is_private: false, status: "모집중",
-    investment_type: "아파트 NPL",
-    listing_title: "한국자산관리공사 강남구 아파트 NPL",
-    created_at: "2026-03-20", return_rate: 18.5,
-  },
-  {
-    id: "t2", name: "상가 포트폴리오 투자팀",
-    description: "수도권 상가 3건 NPL 포트폴리오 일괄 매입",
-    member_count: 3, max_members: 5,
-    target_amount: 1200000000, raised_amount: 900000000,
-    is_private: true, status: "투자중",
-    investment_type: "상가 NPL",
-    created_at: "2026-03-10", return_rate: 22.1,
-  },
-  {
-    id: "t3", name: "오피스텔 낙찰 완료팀",
-    description: "마포구 오피스텔 경매 낙찰 후 수익 배분 진행 중",
-    member_count: 5, max_members: 5,
-    target_amount: 300000000, raised_amount: 300000000,
-    is_private: false, status: "완료",
-    investment_type: "아파트 NPL",
-    created_at: "2026-01-15", return_rate: 15.2,
-  },
-]
+// Empty fallback — teams loaded from Supabase only
+const EMPTY_TEAMS: Team[] = []
 
-const STATUS_BADGE: Record<Team["status"], string> = {
-  "모집중": DS.status.active,
-  "투자중": DS.status.info,
-  "완료":   DS.status.closed,
+const STATUS_BADGE: Record<TeamStatus, string> = {
+  "모집중":   DS.status.active,
+  "모집완료": DS.status.pending,
+  "운용중":   DS.status.info,
+  "상환완료": DS.status.closed,
+  "취소":     DS.status.danger,
 }
 
-const STATUS_BAR: Record<Team["status"], string> = {
-  "모집중": "bg-gradient-to-r from-emerald-500 to-emerald-400",
-  "투자중": "bg-gradient-to-r from-[var(--color-brand-mid)] to-blue-400",
-  "완료":   "bg-[var(--color-border-default)]",
+const STATUS_BAR: Record<TeamStatus, string> = {
+  "모집중":   "bg-gradient-to-r from-emerald-500 to-emerald-400",
+  "모집완료": "bg-gradient-to-r from-amber-500 to-amber-400",
+  "운용중":   "bg-gradient-to-r from-[var(--color-brand-mid)] to-blue-400",
+  "상환완료": "bg-[var(--color-border-default)]",
+  "취소":     "bg-red-500/40",
 }
 
 const AVATAR_COLORS = [
@@ -82,22 +63,23 @@ export default function TeamsPage() {
     fetch("/api/v1/teams")
       .then(r => r.json())
       .then(d => setTeams(d.data || d.teams || []))
-      .catch(() => setTeams(MOCK_TEAMS))
+      .catch(() => setTeams(EMPTY_TEAMS))
       .finally(() => setLoading(false))
   }, [])
 
+  const DONE_STATUSES: TeamStatus[] = ["상환완료", "취소"]
   const filtered = teams.filter(t => {
-    if (tab === "내 팀") return t.status !== "완료"
+    if (tab === "내 팀") return !DONE_STATUSES.includes(t.status)
     if (tab === "공개 모집 중") return t.status === "모집중" && !t.is_private
-    if (tab === "완료") return t.status === "완료"
+    if (tab === "완료") return DONE_STATUSES.includes(t.status)
     return true
   }).filter(t => !search || t.name.includes(search) || t.description.includes(search))
 
-  const activeCount = teams.filter(t => t.status !== "완료").length
+  const activeCount = teams.filter(t => !DONE_STATUSES.includes(t.status)).length
   const totalMembers = teams.reduce((s, t) => s + t.member_count, 0)
   const avgReturn = teams.length
     ? (teams.reduce((s, t) => s + (t.return_rate ?? 0), 0) / teams.length).toFixed(1)
-    : "14.2"
+    : "—"
 
   return (
     <div className={DS.page.wrapper}>
@@ -223,32 +205,29 @@ export default function TeamsPage() {
                           {team.description}
                         </p>
 
-                        {/* Investment type */}
-                        {team.investment_type && (
-                          <div className="flex items-center gap-1.5">
-                            <Building2 className="w-3.5 h-3.5 text-[var(--color-brand-bright)] shrink-0" />
-                            <span className={`${DS.text.caption} text-[var(--color-brand-mid)]`}>{team.investment_type}</span>
+                        {/* 거래소 매물 연동 */}
+                        {team.listing_title && (
+                          <div className="flex items-center gap-1.5 rounded-lg px-2 py-1.5"
+                            style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.15)" }}>
+                            <Building2 className="w-3 h-3 text-blue-400 shrink-0" />
+                            <span className="text-[11px] text-blue-300 truncate">{team.listing_title}</span>
                           </div>
                         )}
 
-                        {/* Member avatars */}
-                        <div className="flex items-center gap-2">
-                          <div className="flex -space-x-2">
-                            {Array.from({ length: Math.min(team.member_count, 4) }).map((_, i) => (
-                              <div
-                                key={i}
-                                className={`h-6 w-6 rounded-full bg-gradient-to-br ${AVATAR_COLORS[i % AVATAR_COLORS.length]} border-2 border-[var(--color-surface-elevated)] flex items-center justify-center text-white text-[9px] font-bold`}
-                              >
-                                {String.fromCharCode(65 + i)}
-                              </div>
-                            ))}
-                          </div>
-                          <span className={DS.text.micro}>{team.member_count}/{team.max_members}명</span>
-                          {isRecruiting && (team.max_members - team.member_count) > 0 && (
-                            <span className={`ml-auto text-[0.6875rem] font-bold ${DS.text.positive}`}>
-                              {team.max_members - team.member_count}자리 남음
+                        {/* 리더 투자사 + 공동 투자사 수 */}
+                        <div className="flex items-center gap-3 text-[11px]">
+                          {team.leader_name && (
+                            <span className="flex items-center gap-1 text-amber-400">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.5 5 5.5.8-4 3.9.9 5.3L10 14.3l-4.9 2.7.9-5.3-4-3.9 5.5-.8z"/></svg>
+                              {team.leader_name}
                             </span>
                           )}
+                          {!team.leader_name && team.investment_type && (
+                            <span className="text-slate-500">{team.investment_type}</span>
+                          )}
+                          <span className="text-slate-500 ml-auto">
+                            공동 {team.co_count ?? team.member_count - 1}개사
+                          </span>
                         </div>
 
                         {/* Progress */}
@@ -295,7 +274,7 @@ export default function TeamsPage() {
           <h2 className={`${DS.text.label} mb-3`}>내 팀 참여 현황</h2>
           <div className="grid sm:grid-cols-3 gap-3">
             {[
-              { label: "참여 중인 팀", value: `${teams.filter(t => t.status !== "완료").length}개` },
+              { label: "참여 중인 팀", value: `${teams.filter(t => !DONE_STATUSES.includes(t.status)).length}개` },
               { label: "총 투자 참여금",  value: formatKRW(teams.reduce((s, t) => s + t.raised_amount, 0)) },
               { label: "평균 예상 수익률", value: `${avgReturn}%` },
             ].map(s => (

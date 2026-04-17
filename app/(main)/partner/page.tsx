@@ -118,6 +118,15 @@ export default function PartnerPage() {
         </div>
       </section>
 
+      {/* ── Cross-links ── */}
+      <div className="max-w-6xl mx-auto px-4 pt-6">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link href="/services/community" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>커뮤니티 →</Link>
+          <Link href="/services/experts" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>전문가 찾기 →</Link>
+          <Link href="/exchange" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>매물 탐색 →</Link>
+        </div>
+      </div>
+
       {/* How It Works */}
       <section id="how-it-works" className={`${DS.page.container} py-20`}>
         <div className="max-w-6xl mx-auto">
@@ -129,7 +138,7 @@ export default function PartnerPage() {
             {STEPS.map((s) => (
               <div key={s.step} className={`${DS.card.interactive} ${DS.card.paddingLarge} group`}>
                 <div className="flex items-center gap-4 mb-5">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white transition-all">
                     <s.icon className="w-6 h-6" />
                   </div>
                   <span className={`${DS.text.label} text-emerald-600`}>STEP {s.step}</span>
@@ -210,7 +219,7 @@ export default function PartnerPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {BENEFITS.map((b) => (
               <div key={b.title} className={`${DS.card.interactive} ${DS.card.padding}`}>
-                <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-[var(--color-brand-mid)] mb-4">
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-[var(--color-brand-mid)] mb-4">
                   <b.icon className="w-5 h-5" />
                 </div>
                 <h3 className={DS.text.cardSubtitle}>{b.title}</h3>

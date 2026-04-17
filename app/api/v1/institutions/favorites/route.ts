@@ -59,7 +59,10 @@ export async function GET(request: NextRequest) {
     try { const { data: { user } } = await supabase.auth.getUser(); if (user) userId = user.id } catch {}
 
     if (userId === 'anonymous') {
-      return NextResponse.json({ data: MOCK_FAVORITES, _mock: true })
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } },
+        { status: 401 }
+      )
     }
 
     const { data, error } = await supabase

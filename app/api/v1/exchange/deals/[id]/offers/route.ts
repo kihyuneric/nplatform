@@ -53,9 +53,10 @@ export async function GET(
     } = await supabase.auth.getUser()
 
     if (!user) {
-      // Fallback: return mock data for unauthenticated requests
-      const filtered = MOCK_OFFERS.filter((o) => o.deal_id === dealId || dealId === "deal-001")
-      return NextResponse.json({ data: filtered, _mock: true })
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } },
+        { status: 401 }
+      )
     }
 
     const { data, error } = await supabase

@@ -3,17 +3,28 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, ArrowRight, Brain, Check, Clock } from "lucide-react"
+import { ArrowLeft, ArrowRight, Brain, Check, Clock, Loader2 } from "lucide-react"
 import DS from "@/lib/design-system"
+import { COLLATERAL_CATEGORIES } from "@/lib/taxonomy"
 
 type Step = 1 | 2 | 3
 
 const STEPS = ["기본 정보", "담보물 정보", "AI 분석 시작"]
 
+const ANALYSIS_STEPS = [
+  "채권 정보 검증 중...",
+  "담보물 가치 산정 중...",
+  "리스크 등급 계산 중...",
+  "수익률 시뮬레이션 중...",
+  "AI 종합 판단 중...",
+]
+
 export default function NewNplAnalysisPage() {
   const router = useRouter()
   const [step, setStep] = useState<Step>(1)
   const [loading, setLoading] = useState(false)
+  const [analysisStep, setAnalysisStep] = useState(0)
+  const [error, setError] = useState<string | null>(null)
 
   // Step 1
   const [bondNumber, setBondNumber] = useState("")
@@ -37,9 +48,62 @@ export default function NewNplAnalysisPage() {
 
   const handleAnalyze = async () => {
     setLoading(true)
-    setTimeout(() => {
-      router.push("/analysis")
-    }, 2000)
+    setError(null)
+    setAnalysisStep(0)
+
+    // Animate through analysis steps
+    const stepInterval = setInterval(() => {
+      setAnalysisStep((prev) => {
+        if (prev >= ANALYSIS_STEPS.length - 1) { clearInterval(stepInterval); return prev }
+        return prev + 1
+      })
+    }, 500)
+
+    try {
+      const ltv = appraisalValue && principalAmount
+        ? Math.round((Number(principalAmount) / Number(appraisalValue)) * 100)
+        : 70
+
+      const res = await fetch('/api/v1/ai/sample-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          principal: Number(principalAmount) || 0,
+          collateralType,
+          location: address,
+          appraisedValue: Number(appraisalValue) || 0,
+          seniorClaim: Number(seniorClaim) || 0,
+          ltv,
+          bondNumber,
+          caseNumber,
+          debtorType,
+        }),
+      })
+
+      clearInterval(stepInterval)
+      setAnalysisStep(ANALYSIS_STEPS.length - 1)
+
+      const data = await res.json()
+
+      // Save result to sessionStorage for the analysis list to pick up
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem('lastAnalysisResult', JSON.stringify({
+            ...data.data,
+            _input: { bondNumber, principalAmount, collateralType, address, appraisalValue, debtorType },
+            _ts: Date.now(),
+          }))
+        } catch { /* ignore storage errors */ }
+      }
+
+      // Small delay so user sees final step
+      await new Promise(r => setTimeout(r, 600))
+      router.push('/analysis?from=new')
+    } catch (err) {
+      clearInterval(stepInterval)
+      setError('분석 중 오류가 발생했습니다. 다시 시도해주세요.')
+      setLoading(false)
+    }
   }
 
   return (
@@ -171,10 +235,13 @@ export default function NewNplAnalysisPage() {
                 value={collateralType}
                 onChange={(e) => setCollateralType(e.target.value)}
               >
-                <option value="아파트">아파트</option>
-                <option value="상가">상가</option>
-                <option value="토지">토지</option>
-                <option value="기타">기타</option>
+                {COLLATERAL_CATEGORIES.map(cat => (
+                  <optgroup key={cat.value} label={cat.label}>
+                    {cat.items.map(item => (
+                      <option key={item.value} value={item.label}>{item.label}</option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
             </div>
 
@@ -246,14 +313,42 @@ export default function NewNplAnalysisPage() {
               ))}
             </div>
 
-            <button
-              onClick={handleAnalyze}
-              disabled={loading}
-              className={`${DS.button.primary} ${DS.button.lg} w-full`}
-            >
-              <Brain className="h-6 w-6" />
-              {loading ? "분석 시작 중..." : "AI 분석 시작"}
-            </button>
+            {error && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-[0.8125rem] text-red-400">
+                {error}
+              </div>
+            )}
+
+            {loading ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-center gap-2 text-[var(--color-brand-mid)]">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span className="text-[0.875rem] font-medium">AI 분석 진행 중...</span>
+                </div>
+                <div className="space-y-2">
+                  {ANALYSIS_STEPS.map((s, i) => (
+                    <div key={s} className={`flex items-center gap-2 text-[0.8125rem] transition-all duration-300 ${i <= analysisStep ? 'opacity-100' : 'opacity-25'}`}>
+                      {i < analysisStep ? (
+                        <Check className="h-3.5 w-3.5 text-[var(--color-positive)] shrink-0" />
+                      ) : i === analysisStep ? (
+                        <Loader2 className="h-3.5 w-3.5 text-[var(--color-brand-mid)] animate-spin shrink-0" />
+                      ) : (
+                        <div className="h-3.5 w-3.5 rounded-full border border-[var(--color-border-subtle)] shrink-0" />
+                      )}
+                      <span className={i <= analysisStep ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]'}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={handleAnalyze}
+                className={`${DS.button.primary} ${DS.button.lg} w-full`}
+              >
+                <Brain className="h-6 w-6" />
+                AI 분석 시작
+              </button>
+            )}
           </div>
         )}
 

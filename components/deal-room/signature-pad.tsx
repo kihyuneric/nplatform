@@ -148,7 +148,7 @@ export default function SignaturePad({
   return (
     <div className={`inline-flex flex-col gap-3 ${className}`}>
       {/* Canvas area */}
-      <div className="relative rounded-lg border-2 border-gray-300 overflow-hidden" style={{ width, height }}>
+      <div className="relative rounded-lg border-2 border-[var(--color-border-subtle)] overflow-hidden" style={{ width, height }}>
         <canvas
           ref={canvasRef}
           className={`block ${confirmed ? "cursor-default" : "cursor-crosshair"}`}
@@ -165,16 +165,16 @@ export default function SignaturePad({
         {/* Placeholder when empty */}
         {isEmpty && !confirmed && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <PenTool className="h-8 w-8 text-gray-400 mb-2" />
-            <p className="text-sm text-gray-400 font-medium">서명을 해주세요</p>
-            <p className="text-xs text-gray-300 mt-0.5">마우스 또는 터치로 서명하세요</p>
+            <PenTool className="h-8 w-8 text-[var(--color-text-muted)] mb-2" />
+            <p className="text-sm text-[var(--color-text-muted)] font-medium">서명을 해주세요</p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">마우스 또는 터치로 서명하세요</p>
           </div>
         )}
 
         {/* Confirmed overlay */}
         {confirmed && (
           <div className="absolute top-2 right-2">
-            <div className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+            <div className="flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
               <Check className="h-3 w-3" />
               서명 완료
             </div>
@@ -184,7 +184,7 @@ export default function SignaturePad({
         {/* Bottom guide line */}
         {!confirmed && (
           <div
-            className="absolute left-8 right-8 border-b border-dashed border-gray-300"
+            className="absolute left-8 right-8 border-b border-dashed border-[var(--color-border-subtle)]"
             style={{ bottom: "40px" }}
           />
         )}

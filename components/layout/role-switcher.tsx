@@ -34,7 +34,7 @@ export function RoleSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs dark:border-gray-700">
+        <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs border-[var(--color-border-subtle)]">
           {activeRole && (
             <div
               className="h-2 w-2 rounded-full"

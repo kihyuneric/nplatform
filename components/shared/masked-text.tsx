@@ -36,7 +36,7 @@ export function MaskedText({ value, type, level = "STANDARD", className, allowRe
         <button
           type="button"
           onClick={() => setRevealed(!revealed)}
-          className="inline-flex items-center justify-center h-4 w-4 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="inline-flex items-center justify-center h-4 w-4 rounded hover:bg-[var(--color-surface-overlay)] transition-colors"
           title={revealed ? "마스킹" : "원본 보기"}
         >
           {revealed ? (

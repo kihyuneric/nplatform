@@ -6,11 +6,11 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Home, Search, Brain, Menu, X,
-  MapPin, Gavel, ShoppingBag, Store, ArrowRightLeft,
-  Globe, MessageCircle, Briefcase, Settings, LogIn,
-  Bell, User, BookOpen, BarChart3, Users, Building2,
-  Calendar, Handshake, TrendingUp, FileText, GraduationCap,
-  LayoutGrid, Wallet, ClipboardList,
+  Gavel, Settings, LogIn, Upload,
+  User, BookOpen, BarChart3, Users,
+  Handshake, FileText, GraduationCap,
+  Heart, Wallet, ClipboardList, Calculator,
+  Archive, TrendingUp,
 } from 'lucide-react'
 import { useScrollDirection } from '@/hooks/use-scroll-direction'
 import { t } from '@/lib/i18n'
@@ -26,30 +26,30 @@ interface TabItem {
 
 const DEFAULT_TABS: TabItem[] = [
   { label: '홈', href: '/', icon: Home },
-  { label: '매물', href: '/exchange', icon: Search },
-  { label: '거래', href: '/deals', icon: Handshake },
+  { label: '거래소', href: '/exchange', icon: Search },
+  { label: '딜룸', href: '/deals', icon: Handshake },
   { label: '분석', href: '/analysis', icon: Brain },
   { label: '더보기', icon: Menu, action: 'more' },
 ]
-const DEFAULT_TABS_I18N = ['mobile.home', 'mobile.listings', 'mobile.deals', 'mobile.analysis', 'mobile.more']
+const DEFAULT_TABS_I18N = ['mobile.home', 'mobile.listings', 'mobile.deals', 'mobile.insights', 'mobile.more']
 
 const SELLER_TABS: TabItem[] = [
   { label: '홈', href: '/', icon: Home },
   { label: '매물등록', href: '/exchange/sell', icon: FileText },
   { label: '내거래', href: '/deals', icon: ClipboardList },
-  { label: '서비스', href: '/analysis', icon: Brain },
+  { label: '분석', href: '/analysis', icon: Brain },
   { label: '더보기', icon: Menu, action: 'more' },
 ]
-const SELLER_TABS_I18N = ['mobile.home', 'mobile.listProperty', 'mobile.myDeals', 'mobile.service', 'mobile.more']
+const SELLER_TABS_I18N = ['mobile.home', 'mobile.listProperty', 'mobile.myDeals', 'mobile.insights', 'mobile.more']
 
 const PARTNER_TABS: TabItem[] = [
   { label: '홈', href: '/', icon: Home },
   { label: '추천', href: '/my/partner', icon: Users },
   { label: '수익', href: '/my/partner', icon: Wallet },
-  { label: '서비스', href: '/analysis', icon: Brain },
+  { label: '분석', href: '/analysis', icon: Brain },
   { label: '더보기', icon: Menu, action: 'more' },
 ]
-const PARTNER_TABS_I18N = ['mobile.home', 'mobile.referrals', 'mobile.earnings', 'mobile.service', 'mobile.more']
+const PARTNER_TABS_I18N = ['mobile.home', 'mobile.referrals', 'mobile.earnings', 'mobile.insights', 'mobile.more']
 
 function getActiveRole(): string {
   if (typeof document === 'undefined') return 'default'
@@ -71,52 +71,45 @@ function getTabsI18NForRole(role: string): string[] {
 // ─── More Menu Sections ────────────────────────────────────────
 const MORE_SECTIONS = [
   {
-    title: '매물',
+    title: '거래소',
     titleKey: 'nav.listings',
     items: [
       { label: '매물 탐색', labelKey: 'nav.nplSearch', href: '/exchange', icon: Search },
+      { label: '입찰', labelKey: 'nav.auction', href: '/exchange/auction', icon: Gavel },
       { label: '매물 등록', labelKey: 'nav.listProperty', href: '/exchange/sell', icon: FileText },
+      { label: '대량 등록', labelKey: 'nav.bulkUpload', href: '/exchange/bulk-upload', icon: Upload },
       { label: '매수 수요', labelKey: 'nav.buyerDemands', href: '/exchange/demands', icon: Users },
-      { label: '참여 기관', labelKey: 'nav.institutions', href: '/exchange/institutions', icon: Building2 },
     ],
   },
   {
-    title: '거래',
+    title: '딜룸',
     titleKey: 'nav.deals',
     items: [
-      { label: '내 거래', labelKey: 'nav.myDeals', href: '/deals', icon: ClipboardList },
+      { label: '진행 중', labelKey: 'nav.activeDeals', href: '/deals', icon: ClipboardList },
+      { label: '완료', labelKey: 'nav.dealArchive', href: '/deals/archive', icon: Archive },
       { label: 'AI 매칭', labelKey: 'nav.aiMatching', href: '/deals/matching', icon: TrendingUp },
-      { label: '계약서', labelKey: 'nav.contractGenerator', href: '/deals/contract', icon: FileText },
-      { label: '거래 아카이브', labelKey: 'nav.dealArchive', href: '/deals/archive', icon: FileText },
+      { label: '팀 투자', labelKey: 'nav.teamInvest', href: '/deals/teams', icon: Users },
     ],
   },
   {
     title: '분석',
-    titleKey: 'nav.analysis',
+    titleKey: 'nav.insights',
     items: [
-      { label: '시장 분석', labelKey: 'nav.marketAnalysis', href: '/analysis', icon: BarChart3 },
-      { label: 'AI NPL 분석', labelKey: 'nav.nplAnalysis', href: '/analysis/new', icon: Brain },
-      { label: '경매 시뮬레이터', labelKey: 'nav.auctionSimulator', href: '/analysis/simulator', icon: BarChart3 },
-      { label: 'OCR 스캐너', labelKey: 'nav.ocrScanner', href: '/analysis/ocr', icon: FileText },
-    ],
-  },
-  {
-    title: '서비스',
-    titleKey: 'nav.service',
-    items: [
-      { label: '전문가', labelKey: 'nav.findExpert', href: '/services/experts', icon: GraduationCap },
+      { label: '시장 현황', labelKey: 'nav.marketAnalysis', href: '/analysis', icon: BarChart3 },
+      { label: 'AI 실사 보고서', labelKey: 'nav.ddReport', href: '/analysis/due-diligence', icon: FileText },
+      { label: '경매 시뮬레이터', labelKey: 'nav.simulator', href: '/analysis/simulator', icon: Calculator },
       { label: '커뮤니티', labelKey: 'nav.community', href: '/services/community', icon: Users },
-      { label: '교육/뉴스', labelKey: 'nav.learn', href: '/services/learn', icon: BookOpen },
+      { label: '전문가', labelKey: 'nav.findExpert', href: '/services/experts', icon: GraduationCap },
+      { label: '학습', labelKey: 'nav.learn', href: '/services/learn', icon: BookOpen },
     ],
   },
   {
-    title: '내 정보',
+    title: '마이 페이지',
     titleKey: 'nav.myInfo',
     items: [
       { label: '대시보드', labelKey: 'mobile.myPage', href: '/my', icon: User },
-      { label: '결제/크레딧', labelKey: 'nav.billing', href: '/my/billing', icon: Wallet },
+      { label: '포트폴리오', labelKey: 'nav.portfolio', href: '/my/portfolio', icon: Heart },
       { label: '설정', labelKey: 'nav.settings', href: '/my/settings', icon: Settings },
-      { label: '알림', labelKey: 'nav.notifications', href: '/my/notifications', icon: Bell },
     ],
   },
 ]
@@ -190,19 +183,19 @@ export function MobileTabBar({ badgeCounts = {} }: MobileTabBarProps) {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed bottom-16 left-0 right-0 z-50 rounded-t-2xl bg-white dark:bg-gray-900 shadow-2xl md:hidden max-h-[70vh] overflow-y-auto"
+            className="fixed bottom-16 left-0 right-0 z-50 rounded-t-2xl bg-[var(--color-surface-elevated)] shadow-2xl md:hidden max-h-[70vh] overflow-y-auto"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <div className="px-4 pt-4 pb-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[15px] font-bold text-gray-900 dark:text-white">{t('mobile.allMenu') || '전체 메뉴'}</h3>
-                <button onClick={() => setMoreOpen(false)} className="p-1 text-gray-400 dark:text-gray-500" aria-label={t('mobile.closeMenu') || '메뉴 닫기'}>
+                <h3 className="text-[15px] font-bold text-[var(--color-text-primary)]">{t('mobile.allMenu') || '전체 메뉴'}</h3>
+                <button onClick={() => setMoreOpen(false)} className="p-1 text-[var(--color-text-muted)]" aria-label={t('mobile.closeMenu') || '메뉴 닫기'}>
                   <X className="w-5 h-5" aria-hidden="true" />
                 </button>
               </div>
               {MORE_SECTIONS.map((section) => (
                 <div key={section.title} className="mb-4">
-                  <h4 className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
+                  <h4 className="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
                     {t(section.titleKey) || section.title}
                   </h4>
                   <div className="grid grid-cols-3 gap-2">
@@ -212,10 +205,10 @@ export function MobileTabBar({ badgeCounts = {} }: MobileTabBarProps) {
                         <Link
                           key={item.href}
                           href={item.href}
-                          className="flex flex-col items-center gap-1 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                          className="flex flex-col items-center gap-1 py-2 rounded-lg hover:bg-[var(--color-surface-overlay)] transition-colors"
                         >
-                          <Icon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                          <span className="text-[11px] text-gray-600 dark:text-gray-300">{t(item.labelKey) || item.label}</span>
+                          <Icon className="w-5 h-5 text-[var(--color-text-secondary)]" />
+                          <span className="text-[11px] text-[var(--color-text-secondary)]">{t(item.labelKey) || item.label}</span>
                         </Link>
                       )
                     })}
@@ -245,7 +238,7 @@ export function MobileTabBar({ badgeCounts = {} }: MobileTabBarProps) {
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 340, damping: 34 }}
             aria-label={t('mobile.tabBar') || '하단 탭 네비게이션'}
-            className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900 shadow-[0_-2px_12px_rgba(0,0,0,0.06)] md:hidden"
+            className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] shadow-[0_-2px_12px_rgba(0,0,0,0.06)] md:hidden"
           >
             <div
               className="flex h-16 items-center justify-around"
@@ -267,10 +260,10 @@ export function MobileTabBar({ badgeCounts = {} }: MobileTabBarProps) {
                       className="relative flex flex-1 flex-col items-center justify-center gap-0.5 py-1"
                     >
                       {moreOpen && (
-                        <motion.div layoutId="tab-active-pill" className="absolute top-1 h-7 w-12 rounded-full bg-[#1B3A5C]/8 dark:bg-blue-400/10" transition={{ type: 'spring', stiffness: 380, damping: 30 }} />
+                        <motion.div layoutId="tab-active-pill" className="absolute top-1 h-7 w-12 rounded-full bg-[var(--color-brand-dark)]/8" transition={{ type: 'spring', stiffness: 380, damping: 30 }} />
                       )}
-                      <Icon className={`h-5 w-5 transition-colors ${moreOpen ? 'text-[#1B3A5C]' : 'text-gray-400 dark:text-gray-500'}`} />
-                      <span className={`text-[10px] transition-colors ${moreOpen ? 'font-bold text-[#1B3A5C]' : 'text-gray-400 dark:text-gray-500'}`}>{tabLabel}</span>
+                      <Icon className={`h-5 w-5 transition-colors ${moreOpen ? 'text-[#1B3A5C]' : 'text-[var(--color-text-muted)]'}`} />
+                      <span className={`text-[10px] transition-colors ${moreOpen ? 'font-bold text-[#1B3A5C]' : 'text-[var(--color-text-muted)]'}`}>{tabLabel}</span>
                     </button>
                   )
                 }
@@ -278,10 +271,10 @@ export function MobileTabBar({ badgeCounts = {} }: MobileTabBarProps) {
                 return (
                   <Link key={tab.href} href={tab.href!} aria-label={tabLabel} className="relative flex flex-1 flex-col items-center justify-center gap-0.5 py-1">
                     {active && (
-                      <motion.div layoutId="tab-active-pill" className="absolute top-1 h-7 w-12 rounded-full bg-[#1B3A5C]/8 dark:bg-blue-400/10" transition={{ type: 'spring', stiffness: 380, damping: 30 }} />
+                      <motion.div layoutId="tab-active-pill" className="absolute top-1 h-7 w-12 rounded-full bg-[var(--color-brand-dark)]/8" transition={{ type: 'spring', stiffness: 380, damping: 30 }} />
                     )}
-                    <Icon className={`h-5 w-5 transition-colors ${active ? 'text-[#1B3A5C]' : 'text-gray-400 dark:text-gray-500'}`} />
-                    <span className={`text-[10px] transition-colors ${active ? 'font-bold text-[#1B3A5C]' : 'text-gray-400 dark:text-gray-500'}`}>{tabLabel}</span>
+                    <Icon className={`h-5 w-5 transition-colors ${active ? 'text-[#1B3A5C]' : 'text-[var(--color-text-muted)]'}`} />
+                    <span className={`text-[10px] transition-colors ${active ? 'font-bold text-[#1B3A5C]' : 'text-[var(--color-text-muted)]'}`}>{tabLabel}</span>
                   </Link>
                 )
               })}

@@ -1,8 +1,15 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import dynamic from 'next/dynamic'
 import { useState } from 'react'
+
+// Dynamically import devtools so they are NEVER included in the production bundle.
+// next/dynamic with ssr:false + condition = zero bytes in prod.
+const ReactQueryDevtools = dynamic(
+  () => import('@tanstack/react-query-devtools').then(m => m.ReactQueryDevtools),
+  { ssr: false },
+)
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(

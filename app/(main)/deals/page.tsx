@@ -1,8 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { createClient } from "@/lib/supabase/client"
+import { motion } from "framer-motion"
 import { EmptyState } from "@/components/shared/empty-state"
 import DS, { formatKRW, getDDay, formatDate } from "@/lib/design-system"
+import { staggerContainer, staggerItem } from "@/lib/animations"
 import {
   ArrowRight,
   Bell,
@@ -20,9 +23,9 @@ import {
   Plus,
   Archive,
   Zap,
+  ChevronRight,
 } from "lucide-react"
 import Link from "next/link"
-import { t } from "@/lib/i18n"
 import { SampleBadge } from "@/components/shared/sample-badge"
 import { STAGES, type DealStage } from "@/lib/deal-constants"
 
@@ -38,52 +41,52 @@ interface DealStageConfig {
 
 const STAGE_CONFIG: Record<DealStage, DealStageConfig> = {
   INTEREST: {
-    label: t('dealStage.interest') || "관심표명",
+    label: "관심표명",
     topBorderColor: "border-t-slate-500",
     dotColor: "bg-slate-500",
-    dotBg: "bg-slate-50 text-slate-600 border border-slate-200",
+    dotBg: "bg-slate-500/10 text-slate-400 border border-slate-500/20",
     icon: Bell,
   },
   NDA: {
-    label: t('dealStage.nda') || "NDA",
+    label: "NDA",
     topBorderColor: "border-t-blue-500",
     dotColor: "bg-blue-500",
-    dotBg: "bg-blue-50 text-blue-700 border border-blue-200",
+    dotBg: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
     icon: FileText,
   },
   DUE_DILIGENCE: {
-    label: t('dealStage.dueDiligence') || "실사",
+    label: "실사",
     topBorderColor: "border-t-amber-500",
     dotColor: "bg-amber-500",
-    dotBg: "bg-amber-50 text-amber-700 border border-amber-200",
+    dotBg: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
     icon: Briefcase,
   },
   NEGOTIATION: {
-    label: t('dealStage.negotiation') || "오퍼",
+    label: "오퍼",
     topBorderColor: "border-t-violet-500",
     dotColor: "bg-violet-500",
-    dotBg: "bg-violet-50 text-violet-700 border border-violet-200",
+    dotBg: "bg-violet-500/10 text-violet-400 border border-violet-500/20",
     icon: HandshakeIcon,
   },
   CONTRACT: {
-    label: t('dealStage.contract') || "계약",
+    label: "계약",
     topBorderColor: "border-t-emerald-500",
     dotColor: "bg-emerald-500",
-    dotBg: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    dotBg: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
     icon: CheckCircle2,
   },
   SETTLEMENT: {
-    label: t('dealStage.settlement') || "잔금",
+    label: "잔금",
     topBorderColor: "border-t-cyan-500",
     dotColor: "bg-cyan-500",
-    dotBg: "bg-cyan-50 text-cyan-700 border border-cyan-200",
+    dotBg: "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20",
     icon: ArrowRight,
   },
   COMPLETED: {
-    label: t('dealStage.completed') || "완료",
+    label: "완료",
     topBorderColor: "border-t-green-500",
     dotColor: "bg-green-500",
-    dotBg: "bg-green-50 text-green-700 border border-green-200",
+    dotBg: "bg-green-500/10 text-green-400 border border-green-500/20",
     icon: CheckCircle2,
   },
 }
@@ -107,55 +110,10 @@ interface Deal {
   location?: string
 }
 
-// ─── Mock Data ────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────
 
-const MOCK_DEALS: Deal[] = [
-  {
-    id: "d1", listing_name: "강남구 삼성동 아파트 채권", counterparty: "한국자산관리공사",
-    counterparty_masked: "한국자***공사", current_stage: "NDA", progress: 28,
-    next_action: "NDA 서명 완료 확인", deadline: "2026-03-25",
-    notification: "상대방 NDA 서명 완료", amount: 1250000000, type: "buy",
-    asset_type: "아파트", location: "강남구",
-  },
-  {
-    id: "d2", listing_name: "성남시 분당 오피스 채권", counterparty: "우리은행",
-    counterparty_masked: "우**행", current_stage: "DUE_DILIGENCE", progress: 45,
-    next_action: "감정평가서 검토", deadline: "2026-04-01",
-    notification: "서류 제출 필요", amount: 3500000000, type: "buy",
-    asset_type: "오피스", location: "분당구",
-  },
-  {
-    id: "d3", listing_name: "해운대구 상가 채권", counterparty: "(주)NPL투자",
-    counterparty_masked: "(주)N**투자", current_stage: "INTEREST", progress: 10,
-    next_action: "관심 표명 확인 대기", deadline: "2026-03-28", amount: 780000000, type: "sell",
-    asset_type: "상가", location: "해운대구",
-  },
-  {
-    id: "d4", listing_name: "서초구 오피스빌딩 채권", counterparty: "글로벌자산운용",
-    counterparty_masked: "글로벌***운용", current_stage: "NEGOTIATION", progress: 60,
-    next_action: "카운터 오퍼 검토", deadline: "2026-04-05",
-    notification: "상대방 응답 대기", amount: 5200000000, type: "sell",
-    asset_type: "오피스", location: "서초구",
-  },
-  {
-    id: "d5", listing_name: "마포구 오피스텔 채권", counterparty: "미래에셋자산",
-    counterparty_masked: "미래에***산", current_stage: "CONTRACT", progress: 80,
-    next_action: "계약서 최종 확인", deadline: "2026-04-10", amount: 1800000000, type: "buy",
-    asset_type: "오피스텔", location: "마포구",
-  },
-  {
-    id: "d6", listing_name: "용인시 상가 채권", counterparty: "IBK기업은행",
-    counterparty_masked: "IB**업은행", current_stage: "SETTLEMENT", progress: 90,
-    next_action: "잔금 입금 확인", deadline: "2026-04-08", amount: 2100000000, type: "buy",
-    asset_type: "상가", location: "용인시",
-  },
-  {
-    id: "d7", listing_name: "강서구 아파트 채권", counterparty: "국민은행",
-    counterparty_masked: "국**행", current_stage: "COMPLETED", progress: 100,
-    next_action: "-", deadline: "2026-03-15", amount: 900000000, type: "sell",
-    asset_type: "아파트", location: "강서구",
-  },
-]
+// Empty fallback — never show fabricated deal data
+const EMPTY_DEALS: Deal[] = []
 
 // ─── Helpers ──────────────────────────────────────────────────
 
@@ -165,8 +123,8 @@ function daysUntil(dateStr: string): number {
 
 function deadlineBadge(dateStr: string) {
   const d = daysUntil(dateStr)
-  if (d < 0) return { text: `D+${Math.abs(d)}`, cls: "bg-red-50 text-red-700 border border-red-200" }
-  if (d <= 7) return { text: `D-${d}`, cls: "bg-amber-50 text-amber-700 border border-amber-200" }
+  if (d < 0) return { text: `D+${Math.abs(d)}`, cls: "bg-red-500/10 text-red-400 border border-red-500/20" }
+  if (d <= 7) return { text: `D-${d}`, cls: "bg-amber-500/10 text-amber-400 border border-amber-500/20" }
   return { text: `D-${d}`, cls: "bg-[var(--color-surface-sunken)] text-[var(--color-text-tertiary)] border border-[var(--color-border-subtle)]" }
 }
 
@@ -184,20 +142,20 @@ function stageToFilter(stage: DealStage): FilterStatus {
 function RiskBadge({ amount }: { amount: number }) {
   if (amount >= 3000000000) {
     return (
-      <span className="text-[0.6875rem] font-black px-1.5 py-0.5 rounded tracking-wide bg-red-50 text-red-700 border border-red-200 uppercase">
+      <span className="text-[0.6875rem] font-black px-1.5 py-0.5 rounded tracking-wide bg-red-500/10 text-red-400 border border-red-500/20 uppercase">
         HIGH
       </span>
     )
   }
   if (amount >= 1000000000) {
     return (
-      <span className="text-[0.6875rem] font-black px-1.5 py-0.5 rounded tracking-wide bg-amber-50 text-amber-700 border border-amber-200 uppercase">
+      <span className="text-[0.6875rem] font-black px-1.5 py-0.5 rounded tracking-wide bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase">
         MID
       </span>
     )
   }
   return (
-    <span className="text-[0.6875rem] font-black px-1.5 py-0.5 rounded tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">
+    <span className="text-[0.6875rem] font-black px-1.5 py-0.5 rounded tracking-wide bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
       LOW
     </span>
   )
@@ -225,11 +183,15 @@ function StageDots({ stage }: { stage: DealStage }) {
   )
 }
 
-function KanbanCard({ deal }: { deal: Deal }) {
+function KanbanCard({ deal, index = 0 }: { deal: Deal; index?: number }) {
   const dl = deadlineBadge(deal.deadline)
   return (
     <Link href={`/deals/${deal.id}`}>
-      <div className={`group ${DS.card.interactive} p-4 mb-2.5`}>
+      <motion.div
+        variants={staggerItem}
+        whileHover={{ y: -3, boxShadow: '0 8px 24px rgba(0,0,0,0.08)', transition: { duration: 0.2 } }}
+        className={`group ${DS.card.interactive} p-4 mb-2.5`}
+      >
 
         {/* Top row: risk badge + asset type + notification bell */}
         <div className="flex items-start justify-between mb-3">
@@ -290,12 +252,12 @@ function KanbanCard({ deal }: { deal: Deal }) {
 
         {/* Notification alert */}
         {deal.notification && (
-          <div className="flex items-center gap-1.5 mt-2.5 text-[0.6875rem] text-amber-700 bg-amber-50 rounded-lg px-2.5 py-1.5 border border-amber-200">
-            <AlertCircle className="w-3 h-3 shrink-0 text-amber-600" />
+          <div className="flex items-center gap-1.5 mt-2.5 text-[0.6875rem] text-amber-400 bg-amber-500/10 rounded-lg px-2.5 py-1.5 border border-amber-500/20">
+            <AlertCircle className="w-3 h-3 shrink-0 text-amber-400" />
             <span className="truncate">{deal.notification}</span>
           </div>
         )}
-      </div>
+      </motion.div>
     </Link>
   )
 }
@@ -325,23 +287,73 @@ function KpiMetric({
 // ─── Main Component ───────────────────────────────────────────
 
 export default function DealsPage() {
-  const [deals, setDeals] = useState<Deal[]>([])
+  const [deals, setDeals] = useState<Deal[]>(EMPTY_DEALS)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<"buy" | "sell">("buy")
   const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban")
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("전체")
 
-  useEffect(() => {
+  const loadDeals = useCallback(async () => {
     setLoading(true)
-    fetch('/api/v1/exchange/deals')
-      .then(r => r.json())
-      .then(d => {
-        if (d.data && d.data.length > 0) setDeals(d.data)
-        else setDeals(MOCK_DEALS)
-      })
-      .catch(() => setDeals(MOCK_DEALS))
-      .finally(() => setLoading(false))
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setDeals([]); return }
+
+      const { data } = await supabase
+        .from("deals")
+        .select(`
+          id,
+          listing_id,
+          current_stage,
+          progress,
+          next_action,
+          deadline,
+          notification,
+          amount,
+          type,
+          npl_listings(title, collateral_type, region, seller_id,
+            profiles!npl_listings_seller_id_fkey(name))
+        `)
+        .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
+        .neq("current_stage", "CANCELLED")
+        .order("updated_at", { ascending: false })
+        .limit(50)
+
+      if (data && data.length > 0) {
+        const mapped: Deal[] = data.map((r: any) => ({
+          id: String(r.id),
+          listing_name: r.npl_listings?.title ?? `매물 #${r.listing_id?.slice(0, 8) ?? r.id.slice(0, 8)}`,
+          counterparty: r.npl_listings?.profiles?.name ?? "상대방",
+          counterparty_masked: r.npl_listings?.profiles?.name
+            ? (() => {
+                const n: string = r.npl_listings.profiles.name
+                if (n.length <= 2) return n[0] + "*"
+                return n.slice(0, Math.ceil(n.length / 2)) + "*".repeat(Math.floor(n.length / 2))
+              })()
+            : "상대방",
+          current_stage: (r.current_stage ?? "INTEREST") as DealStage,
+          progress: r.progress ?? 0,
+          next_action: r.next_action ?? "-",
+          deadline: r.deadline ?? new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
+          notification: r.notification ?? undefined,
+          amount: r.amount ?? 0,
+          type: r.type ?? (r.npl_listings?.seller_id === user.id ? "sell" : "buy"),
+          asset_type: r.npl_listings?.collateral_type ?? undefined,
+          location: r.npl_listings?.region ?? undefined,
+        }))
+        setDeals(mapped)
+      } else {
+        setDeals([])
+      }
+    } catch {
+      setDeals([])
+    } finally {
+      setLoading(false)
+    }
   }, [])
+
+  useEffect(() => { loadDeals() }, [loadDeals])
 
   const typeFiltered = deals.filter((d) => d.type === tab)
   const filteredDeals = typeFiltered.filter((d) =>
@@ -367,10 +379,10 @@ export default function DealsPage() {
         {/* Left */}
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <h1 className={`${DS.text.bodyBold} whitespace-nowrap`}>
-            {t('dealStage.dealsStatus') || '내 거래 현황'}
+            내 거래 현황
           </h1>
           {/* Live deal count badge */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-mid)] animate-pulse" />
             <span className="text-[0.6875rem] font-bold text-[var(--color-brand-mid)]">{activeDeals}건 진행중</span>
           </div>
@@ -509,24 +521,99 @@ export default function DealsPage() {
           </div>
         )}
 
-        {/* ── Empty state ───────────────────────────────────── */}
+        {/* ── Empty state with template ──────────────────── */}
         {!loading && filteredDeals.length === 0 && (
-          <div className={DS.empty.wrapper}>
-            <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-4 border border-blue-200">
-              <Briefcase className="h-8 w-8 text-[var(--color-brand-mid)]" />
+          <div className="space-y-6">
+            {/* CTA */}
+            <div className={`${DS.card.elevated} p-8 text-center`}>
+              <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto mb-4 border border-blue-500/20">
+                <Briefcase className="h-8 w-8 text-[var(--color-brand-mid)]" />
+              </div>
+              <p className={`${DS.text.sectionTitle} mb-2`}>
+                아직 진행 중인 거래가 없습니다
+              </p>
+              <p className={`${DS.text.body} text-[var(--color-text-muted)] mb-6 max-w-md mx-auto`}>
+                거래소에서 매물을 탐색하고 입찰하면 딜룸이 자동으로 생성됩니다. 아래 흐름을 확인해보세요.
+              </p>
+              <Link href="/exchange">
+                <button className={DS.button.primary}>
+                  <Building2 className="h-4 w-4" />
+                  거래소 탐색하기
+                </button>
+              </Link>
             </div>
-            <p className={DS.empty.title}>
-              아직 진행 중인 거래가 없습니다
-            </p>
-            <p className={`${DS.empty.description} mb-6`}>
-              NPL 마켓에서 새로운 매물을 탐색하고 딜을 시작해보세요.
-            </p>
-            <Link href="/exchange">
-              <button className={DS.button.primary}>
-                <Building2 className="h-4 w-4" />
-                NPL 마켓 탐색하기
-              </button>
-            </Link>
+
+            {/* Deal flow template */}
+            <div className={`${DS.card.base} p-6`}>
+              <h3 className={`${DS.text.cardTitle} mb-4`}>딜룸 진행 흐름</h3>
+              <div className="grid grid-cols-5 gap-3">
+                {KANBAN_STAGES.map((stage, idx) => {
+                  const config = STAGE_CONFIG[stage]
+                  return (
+                    <div key={stage} className="relative">
+                      <div className={`border-t-2 ${config.topBorderColor} rounded-xl border border-[var(--color-border-subtle)] border-t-0 p-4`}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[0.6875rem] font-bold ${config.dotBg}`}>
+                            {idx + 1}
+                          </div>
+                          <span className={`${DS.text.label} !font-bold`}>{config.label}</span>
+                        </div>
+                        <p className={`${DS.text.micro} leading-relaxed`}>
+                          {stage === "INTEREST" && "매물에 관심표명을 하면 딜룸이 시작됩니다."}
+                          {stage === "NDA" && "비밀유지계약(NDA)을 체결하고 상세 자료에 접근합니다."}
+                          {stage === "DUE_DILIGENCE" && "감정평가, 등기, 권리관계 등 실사를 진행합니다."}
+                          {stage === "NEGOTIATION" && "가격 협상 및 오퍼를 교환합니다."}
+                          {stage === "CONTRACT" && "계약서를 작성하고 서명 후 거래를 완료합니다."}
+                        </p>
+                      </div>
+                      {idx < 4 && (
+                        <div className="hidden sm:block absolute top-1/2 -right-2 z-10">
+                          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Sample deal preview */}
+            <div className={`${DS.card.base} p-6`}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={`${DS.text.cardTitle}`}>딜룸 미리보기 (예시)</h3>
+                <span className={`text-[0.625rem] font-bold px-2 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20`}>SAMPLE</span>
+              </div>
+              <div className="opacity-60 pointer-events-none">
+                <div className="flex gap-3 overflow-hidden">
+                  {[
+                    { name: "강남구 아파트 채권", stage: "NDA" as DealStage, amount: 1250000000, progress: 28, counterparty: "한국자***공사" },
+                    { name: "분당구 오피스 채권", stage: "DUE_DILIGENCE" as DealStage, amount: 3500000000, progress: 45, counterparty: "우**행" },
+                    { name: "서초구 오피스빌딩", stage: "NEGOTIATION" as DealStage, amount: 5200000000, progress: 60, counterparty: "글로벌***운용" },
+                  ].map((sample, i) => {
+                    const config = STAGE_CONFIG[sample.stage]
+                    return (
+                      <div key={i} className={`flex-shrink-0 w-[240px] ${DS.card.base} p-4`}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <RiskBadge amount={sample.amount} />
+                          <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full ${config.dotBg}`}>
+                            {config.label}
+                          </span>
+                        </div>
+                        <p className={`${DS.text.caption} !font-semibold mb-1`}>{sample.name}</p>
+                        <p className={`${DS.text.metricSmall} !text-[var(--color-brand-mid)] mb-2`}>{formatKRW(sample.amount)}</p>
+                        <div className="w-full h-1 bg-[var(--color-border-subtle)] rounded-full overflow-hidden mb-2">
+                          <div className="h-full rounded-full bg-[var(--color-brand-mid)]" style={{ width: `${sample.progress}%` }} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className={DS.text.micro}>{sample.counterparty}</span>
+                          <span className={`${DS.text.micro} tabular-nums`}>{sample.progress}%</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -554,20 +641,25 @@ export default function DealsPage() {
                   </div>
 
                   {/* Cards area */}
-                  <div className={`min-h-[140px] rounded-b-xl border border-t-0 border-[var(--color-border-subtle)] p-2.5 ${
-                    stageDeals.length === 0 ? "border-dashed bg-[var(--color-surface-sunken)]" : "bg-[var(--color-surface-sunken)]"
-                  }`}>
+                  <motion.div
+                    variants={staggerContainer}
+                    initial="hidden"
+                    animate="visible"
+                    className={`min-h-[140px] rounded-b-xl border border-t-0 border-[var(--color-border-subtle)] p-2.5 ${
+                      stageDeals.length === 0 ? "border-dashed bg-[var(--color-surface-sunken)]" : "bg-[var(--color-surface-sunken)]"
+                    }`}
+                  >
                     {stageDeals.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-24 gap-2">
-                        <button className="w-8 h-8 rounded-full border-2 border-dashed border-[var(--color-brand-bright)] flex items-center justify-center hover:border-[var(--color-brand-mid)] hover:bg-blue-50 transition-colors group">
+                        <button className="w-8 h-8 rounded-full border-2 border-dashed border-[var(--color-brand-bright)] flex items-center justify-center hover:border-[var(--color-brand-mid)] hover:bg-blue-500/10 transition-colors group">
                           <Plus className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-[var(--color-brand-mid)]" />
                         </button>
                         <p className={DS.text.micro}>딜 없음</p>
                       </div>
                     ) : (
-                      stageDeals.map((deal) => <KanbanCard key={deal.id} deal={deal} />)
+                      stageDeals.map((deal, idx) => <KanbanCard key={deal.id} deal={deal} index={idx} />)
                     )}
-                  </div>
+                  </motion.div>
                 </div>
               )
             })}

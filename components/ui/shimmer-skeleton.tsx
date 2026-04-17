@@ -16,11 +16,11 @@ export function ShimmerSkeleton({ className, variant = "text" }: ShimmerSkeleton
 
   return (
     <div className={cn(
-      "relative overflow-hidden bg-gray-200 dark:bg-gray-800",
+      "relative overflow-hidden bg-[var(--color-surface-overlay)]",
       variants[variant],
       className
     )}>
-      <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 dark:via-gray-700/40 to-transparent animate-[shimmer_1.5s_infinite]" />
+      <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_1.5s_infinite]" />
     </div>
   )
 }

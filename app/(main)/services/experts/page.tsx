@@ -26,7 +26,6 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { GuideButton } from '@/components/guide/guide-button'
-import { t } from '@/lib/i18n'
 import { Disclaimer } from '@/components/legal/disclaimer'
 import { SampleBadge } from '@/components/shared/sample-badge'
 import { fetchSafe } from '@/lib/fetch-safe'
@@ -83,26 +82,26 @@ const REGION_OPTIONS = [
 const SPECIALTY_STYLES: Record<Specialty, { gradient: string; badge: string; tag: string; bar: string }> = {
   '법률':    {
     gradient: 'from-blue-500 to-blue-400',
-    badge: 'bg-blue-50 text-blue-700 border border-blue-200',
-    tag: 'bg-blue-50 text-blue-600',
+    badge: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+    tag: 'bg-blue-500/10 text-blue-400',
     bar: 'from-blue-500 to-blue-400',
   },
   '감정평가': {
     gradient: 'from-emerald-500 to-emerald-400',
-    badge: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-    tag: 'bg-emerald-50 text-emerald-600',
+    badge: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+    tag: 'bg-emerald-500/10 text-emerald-400',
     bar: 'from-emerald-500 to-emerald-400',
   },
   '세무':    {
     gradient: 'from-amber-500 to-amber-400',
-    badge: 'bg-amber-50 text-amber-700 border border-amber-200',
-    tag: 'bg-amber-50 text-amber-600',
+    badge: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+    tag: 'bg-amber-500/10 text-amber-400',
     bar: 'from-amber-500 to-amber-400',
   },
   '경매대행': {
     gradient: 'from-purple-500 to-purple-400',
-    badge: 'bg-purple-50 text-purple-700 border border-purple-200',
-    tag: 'bg-purple-50 text-purple-600',
+    badge: 'bg-purple-500/10 text-purple-400 border border-purple-500/20',
+    tag: 'bg-purple-500/10 text-purple-400',
     bar: 'from-purple-500 to-purple-400',
   },
 }
@@ -238,6 +237,16 @@ export default function ProfessionalPage() {
         </div>
       </div>
 
+      {/* ── Cross-links ── */}
+      <div className={`${DS.page.container} pb-2`}>
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link href="/services/community" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>커뮤니티 →</Link>
+          <Link href="/exchange" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>매물 탐색 →</Link>
+          <Link href="/analysis/due-diligence" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>실사 보고서 →</Link>
+          <Link href="/deals" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>거래 현황 →</Link>
+        </div>
+      </div>
+
       {/* ── Featured Expert Banner ── */}
       {featured && (
         <div className={`${DS.page.container} pb-2`}>
@@ -246,7 +255,7 @@ export default function ProfessionalPage() {
             <div className="absolute left-0 inset-y-0 w-[3px] bg-gradient-to-b from-amber-400 to-amber-500 rounded-l-2xl" />
 
             <div className="shrink-0 flex items-center gap-2 pl-2">
-              <div className="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-[0.6875rem] font-bold flex items-center gap-1.5">
+              <div className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[0.6875rem] font-bold flex items-center gap-1.5">
                 <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                 이달의 추천 전문가
               </div>

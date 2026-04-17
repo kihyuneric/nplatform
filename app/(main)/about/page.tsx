@@ -31,7 +31,6 @@ import {
   ShoppingCart,
   BadgeCheck,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import {
   Accordion,
   AccordionItem,
@@ -101,48 +100,48 @@ const features = [
     title: 'NPL 검색',
     href: '/market/search',
     desc: '전국 NPL 매물을 한눈에 검색. AI 등급, 낙찰가율, 법원정보까지 5개 탭으로 분석',
-    iconBg: 'bg-blue-50',
-    iconColor: 'text-blue-600',
+    iconBg: 'bg-blue-500/10',
+    iconColor: 'text-blue-400',
   },
   {
     icon: Map,
     title: 'NPL 지도',
     href: '/market/map',
     desc: '지도 기반 매물 탐색. 지역별 NPL 분포를 직관적으로 확인',
-    iconBg: 'bg-emerald-50',
-    iconColor: 'text-emerald-600',
+    iconBg: 'bg-emerald-500/10',
+    iconColor: 'text-emerald-400',
   },
   {
     icon: Gavel,
     title: 'NPL 입찰',
     href: '/market/bidding',
     desc: '금융기관 NPL 매각 입찰에 참여. 실시간 입찰 현황과 D-day 관리',
-    iconBg: 'bg-amber-50',
-    iconColor: 'text-amber-600',
+    iconBg: 'bg-amber-500/10',
+    iconColor: 'text-amber-400',
   },
   {
     icon: Brain,
     title: 'NPL 분석',
     href: '/npl-analysis',
     desc: 'AI가 분석하는 NPL 투자 리스크와 수익성. A~D등급 자동 평가',
-    iconBg: 'bg-purple-50',
-    iconColor: 'text-purple-600',
+    iconBg: 'bg-purple-500/10',
+    iconColor: 'text-purple-400',
   },
   {
     icon: Calculator,
     title: '경매 수익률 분석',
     href: '/tools/auction-simulator',
     desc: '입찰가별 ROI 시뮬레이션. 세금, 대출, 보유기간 고려한 정밀 분석',
-    iconBg: 'bg-red-50',
-    iconColor: 'text-red-600',
+    iconBg: 'bg-red-500/10',
+    iconColor: 'text-red-400',
   },
   {
     icon: BarChart3,
     title: '통계 대시보드',
     href: '/statistics',
     desc: 'NPL 시장 동향, 지역별 거래 현황, AI 등급 분포 한눈에',
-    iconBg: 'bg-pink-50',
-    iconColor: 'text-pink-600',
+    iconBg: 'bg-pink-500/10',
+    iconColor: 'text-pink-400',
   },
 ];
 
@@ -184,22 +183,22 @@ const financialCards = [
     icon: ClipboardList,
     title: '간편한 입찰 등록',
     desc: '4단계 위자드로 채권 정보부터 입찰 조건까지 간편하게 등록. 복잡한 매각 절차를 시스템이 자동 관리합니다.',
-    iconBg: 'bg-blue-50',
-    iconColor: 'text-blue-600',
+    iconBg: 'bg-blue-500/10',
+    iconColor: 'text-blue-400',
   },
   {
     icon: Users,
     title: '투자자 매칭',
     desc: 'AI 기반으로 적합한 투자자를 자동 매칭. 채권 유형과 투자자 성향을 분석하여 최적의 매수자를 추천합니다.',
-    iconBg: 'bg-emerald-50',
-    iconColor: 'text-emerald-600',
+    iconBg: 'bg-emerald-500/10',
+    iconColor: 'text-emerald-400',
   },
   {
     icon: Lock,
     title: '안전한 거래',
     desc: 'NDA 전자 서명과 전용 딜룸으로 거래 정보를 철저히 보호. 양측 모두 신뢰할 수 있는 거래 환경을 제공합니다.',
-    iconBg: 'bg-purple-50',
-    iconColor: 'text-purple-600',
+    iconBg: 'bg-purple-500/10',
+    iconColor: 'text-purple-400',
   },
 ];
 
@@ -208,31 +207,31 @@ const investorCards = [
     icon: Search,
     title: '통합 검색',
     desc: '기본 정보, AI 분석, 경매 정보, 법원 정보, 등기 정보까지 5개 탭에서 모든 매물 정보를 한 번에 확인하세요.',
-    iconBg: 'bg-blue-50',
-    iconColor: 'text-blue-600',
+    iconBg: 'bg-blue-500/10',
+    iconColor: 'text-blue-400',
   },
   {
     icon: FileText,
     title: 'AI 분석 리포트',
     desc: '채권별 투자 리스크, 예상 수익률, 시장 비교 분석을 A~D 등급으로 한눈에 파악할 수 있습니다.',
-    iconBg: 'bg-emerald-50',
-    iconColor: 'text-emerald-600',
+    iconBg: 'bg-emerald-500/10',
+    iconColor: 'text-emerald-400',
   },
   {
     icon: LineChart,
     title: '수익률 시뮬레이터',
     desc: '입찰가, 세금, 대출 조건, 보유 기간을 입력하면 예상 ROI를 자동으로 계산해 드립니다.',
-    iconBg: 'bg-red-50',
-    iconColor: 'text-red-600',
+    iconBg: 'bg-red-500/10',
+    iconColor: 'text-red-400',
   },
 ];
 
 const nplFlowSteps = [
-  { label: '금융기관 대출', icon: Landmark, iconBg: 'bg-blue-50', iconColor: 'text-blue-600' },
-  { label: '부실 발생', icon: TrendingUp, iconBg: 'bg-red-50', iconColor: 'text-red-600' },
-  { label: 'NPL 매각', icon: ShoppingCart, iconBg: 'bg-amber-50', iconColor: 'text-amber-600' },
-  { label: '투자자 매입', icon: Users, iconBg: 'bg-purple-50', iconColor: 'text-purple-600' },
-  { label: '담보 처분/회수', icon: BadgeCheck, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
+  { label: '금융기관 대출', icon: Landmark, iconBg: 'bg-blue-500/10', iconColor: 'text-blue-400' },
+  { label: '부실 발생', icon: TrendingUp, iconBg: 'bg-red-500/10', iconColor: 'text-red-400' },
+  { label: 'NPL 매각', icon: ShoppingCart, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-400' },
+  { label: '투자자 매입', icon: Users, iconBg: 'bg-purple-500/10', iconColor: 'text-purple-400' },
+  { label: '담보 처분/회수', icon: BadgeCheck, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-400' },
 ];
 
 const nplTerms = [
@@ -318,7 +317,7 @@ function StatCard({
         className={DS.text.metricHero}
       >
         {count.toLocaleString()}
-        <span className="text-emerald-600">{suffix}</span>
+        <span className="text-emerald-400">{suffix}</span>
       </span>
       <span className={`mt-2 block ${DS.text.caption}`}>{label}</span>
     </motion.div>
@@ -353,7 +352,7 @@ export default function AboutPage() {
             className={DS.text.pageTitle}
             style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)" }}
           >
-            <span className="text-emerald-600">NPLatform</span>
+            <span className="text-emerald-400">NPLatform</span>
           </motion.h1>
 
           <motion.p
@@ -521,7 +520,7 @@ export default function AboutPage() {
                   className="flex flex-1 items-start"
                 >
                   <div className="flex flex-col items-center text-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 border border-blue-200 shadow-[var(--shadow-sm)]">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/10 border border-blue-500/20 shadow-[var(--shadow-sm)]">
                       <s.icon className="h-7 w-7 text-[var(--color-brand-mid)]" />
                     </div>
                     <div className="mt-3 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-[0.6875rem] font-bold text-white">
@@ -560,7 +559,7 @@ export default function AboutPage() {
                   custom={idx}
                   className="relative flex items-start gap-5"
                 >
-                  <div className="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-[var(--color-surface-sunken)] bg-blue-50 text-[0.8125rem] font-bold text-[var(--color-brand-mid)] shadow-[var(--shadow-sm)]">
+                  <div className="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-[var(--color-surface-sunken)] bg-blue-500/10 text-[0.8125rem] font-bold text-[var(--color-brand-mid)] shadow-[var(--shadow-sm)]">
                     {s.num}
                   </div>
                   <div className="pt-1">

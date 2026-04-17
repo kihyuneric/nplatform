@@ -40,9 +40,9 @@ const COURSES = [
 const GLOSSARY_TERMS = ['근저당권', 'NPL', '경매', '배당순위', '임의경매', '강제경매', '채권최고액', '권리분석', '명도', '공매', '양도소득세', '채무자']
 
 const LEVEL_COLOR: Record<string, string> = {
-  '초급': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  '중급': 'bg-amber-50 text-amber-700 border-amber-200',
-  '고급': 'bg-red-50 text-red-700 border-red-200',
+  '초급': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  '중급': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  '고급': 'bg-red-500/10 text-red-400 border-red-500/20',
 }
 
 const LEVEL_FILTER: Record<Tab, string | null> = {
@@ -119,7 +119,7 @@ export default function LearnPage() {
                         <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                       </svg>
                     </div>
-                    <span className={`absolute top-3 left-3 text-[0.6875rem] font-bold px-2 py-0.5 rounded-full border ${LEVEL_COLOR[c.level] ?? 'bg-gray-100 text-gray-700'}`}>
+                    <span className={`absolute top-3 left-3 text-[0.6875rem] font-bold px-2 py-0.5 rounded-full border ${LEVEL_COLOR[c.level] ?? 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]'}`}>
                       {c.level}
                     </span>
                   </div>
@@ -130,7 +130,7 @@ export default function LearnPage() {
                     <p className={DS.text.captionLight}>{c.duration}</p>
                     <div className={`flex items-center justify-between pt-2 ${DS.divider.default}`}>
                       <span className={`${DS.text.caption} text-amber-500`}>★ {c.rating} <span className="text-[var(--color-text-muted)] font-normal">({c.enrolled.toLocaleString()}명)</span></span>
-                      <span className={`${DS.text.caption} font-bold ${c.price === '무료' ? 'text-emerald-600' : 'text-[var(--color-brand-dark)]'}`}>{c.price}</span>
+                      <span className={`${DS.text.caption} font-bold ${c.price === '무료' ? 'text-emerald-400' : 'text-[var(--color-brand-dark)]'}`}>{c.price}</span>
                     </div>
                   </div>
                 </Link>
@@ -152,13 +152,13 @@ export default function LearnPage() {
                   <div className={`flex-1 ${DS.card.padding} space-y-3`}>
                     <div className="flex items-center gap-2">
                       <span className={`text-[0.6875rem] font-medium px-2 py-0.5 rounded bg-[var(--color-surface-sunken)] text-[var(--color-text-secondary)]`}>{c.category}</span>
-                      <span className={`text-[0.6875rem] font-medium px-2 py-0.5 rounded-full border ${LEVEL_COLOR[c.level] ?? 'bg-gray-100 text-gray-600'}`}>{c.level}</span>
+                      <span className={`text-[0.6875rem] font-medium px-2 py-0.5 rounded-full border ${LEVEL_COLOR[c.level] ?? 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]'}`}>{c.level}</span>
                     </div>
                     <h3 className={`${DS.text.cardSubtitle} line-clamp-2`}>{c.title}</h3>
                     <p className={DS.text.micro}>{c.duration} · {c.lessons}강</p>
                     <div className={`flex items-center justify-between pt-2 ${DS.divider.default}`}>
                       <span className={`${DS.text.caption} text-amber-500`}>★ {c.rating} <span className="text-[var(--color-text-muted)] font-normal">({c.enrolled.toLocaleString()}명)</span></span>
-                      <span className={`${DS.text.caption} font-bold ${c.price === '무료' ? 'text-emerald-600' : 'text-[var(--color-brand-dark)]'}`}>{c.price}</span>
+                      <span className={`${DS.text.caption} font-bold ${c.price === '무료' ? 'text-emerald-400' : 'text-[var(--color-brand-dark)]'}`}>{c.price}</span>
                     </div>
                   </div>
                 </Link>

@@ -29,12 +29,12 @@ export function StepPreview({ story, images, colorTheme }: StepPreviewProps) {
 
   if (showFullPage) {
     return (
-      <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
-        <div className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-200 px-4 py-2 flex items-center justify-between">
-          <span className="font-semibold text-sm text-slate-600">전체 화면 미리보기</span>
+      <div className="fixed inset-0 z-[100] bg-[var(--color-surface-base)] overflow-y-auto">
+        <div className="sticky top-0 z-50 bg-[var(--color-surface-base)]/90 backdrop-blur border-b border-[var(--color-border-subtle)] px-4 py-2 flex items-center justify-between">
+          <span className="font-semibold text-sm text-[var(--color-text-secondary)]">전체 화면 미리보기</span>
           <button
             onClick={() => setShowFullPage(false)}
-            className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-sm hover:bg-slate-200"
+            className="px-3 py-1.5 bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] rounded-lg text-sm hover:bg-[var(--color-surface-overlay)]"
           >
             닫기
           </button>
@@ -45,10 +45,10 @@ export function StepPreview({ story, images, colorTheme }: StepPreviewProps) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
+    <div className="bg-[var(--color-surface-elevated)] rounded-2xl border border-[var(--color-border-subtle)] overflow-hidden">
       {/* Toolbar */}
-      <div className="px-6 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-        <div className="flex items-center gap-1 bg-slate-200 rounded-lg p-1">
+      <div className="px-6 py-3 bg-[var(--color-surface-base)] border-b border-[var(--color-border-subtle)] flex items-center justify-between">
+        <div className="flex items-center gap-1 bg-[var(--color-surface-overlay)] rounded-lg p-1">
           {DEVICES.map((d) => {
             const Icon = d.icon
             return (
@@ -57,8 +57,8 @@ export function StepPreview({ story, images, colorTheme }: StepPreviewProps) {
                 onClick={() => setDevice(d.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                   device === d.id
-                    ? 'bg-white text-slate-800 shadow'
-                    : 'text-slate-500 hover:text-slate-700'
+                    ? 'bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] shadow'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -78,7 +78,7 @@ export function StepPreview({ story, images, colorTheme }: StepPreviewProps) {
       </div>
 
       {/* Preview Frame */}
-      <div className="bg-slate-100 p-4 flex justify-center overflow-hidden" style={{ minHeight: '600px' }}>
+      <div className="bg-[var(--color-surface-base)] p-4 flex justify-center overflow-hidden" style={{ minHeight: '600px' }}>
         <motion.div
           key={device}
           initial={{ opacity: 0, scale: 0.95 }}

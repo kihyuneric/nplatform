@@ -1,261 +1,683 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+/**
+ * /my — 내 정보 대시보드 (v4, 2026-04-07)
+ *
+ * 허브 구조:
+ *   - 현재 티어 상태 카드 (L0→L3 진행률)
+ *   - 다음 단계 업그레이드 CTA
+ *   - 빠른 링크: verify / kyc / agreements / privacy / seller / portfolio
+ *   - 최근 활동 요약
+ */
+
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { motion } from "framer-motion"
 import {
-  Briefcase, Heart, TrendingUp, Bell, Settings, CreditCard,
-  BarChart3, Zap, FileText, ScanLine, CalendarClock,
-  Loader2, Sparkles, ChevronRight, Search, LayoutGrid,
-  HeadphonesIcon, ArrowUpRight, Clock, User,
+  ShieldCheck, UserCheck, Briefcase, FileSignature,
+  Eye, Building2, TrendingUp, Clock, ChevronRight,
+  Lock, CheckCircle2, Sparkles, BarChart3, Target,
+  AlertTriangle, ArrowRight, Handshake, FileSearch,
+  Activity, Bell, Loader2,
 } from "lucide-react"
-import DS, { formatKRW } from "@/lib/design-system"
+import { TierBadge } from "@/components/tier/tier-badge"
+import type { AccessTier } from "@/lib/access-tier"
+import { TIER_META } from "@/lib/access-tier"
+import { AnimatedCounter, PercentCounter, KrwCounter } from "@/components/ui/animated-counter"
+import { staggerContainer, staggerItem } from "@/lib/animations"
 
-function getCookie(name: string): string | null {
-  if (typeof document === "undefined") return null
-  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"))
-  return match ? decodeURIComponent(match[2]) : null
+const C = {
+  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
+  bg3: "#0A1628", bg4: "#0F1F35",
+  em: "#10B981", emL: "#10B981",
+  blue: "#2E75B6", blueL: "#3B82F6",
+  amber: "#F59E0B", rose: "#EF4444", purple: "#A855F7",
+  lt3: "#64748B", lt4: "#475569",
 }
 
-const QUICK_ACTIONS = [
-  { label: "포트폴리오",  href: "/my/portfolio",  icon: LayoutGrid },
-  { label: "거래 현황",   href: "/deals",          icon: Briefcase },
-  { label: "분석 내역",   href: "/analysis",       icon: BarChart3 },
-  { label: "결제·구독",   href: "/my/billing",    icon: CreditCard },
-  { label: "알림",        href: "/my/settings",   icon: Bell },
-  { label: "설정",        href: "/my/settings",   icon: Settings },
-]
-
-const RECENT_ACTIVITY = [
-  { id: 1, icon: BarChart3, color: "text-violet-700", bg: "bg-violet-100", label: "강남구 아파트 NPL 분석 완료", time: "방금 전" },
-  { id: 2, icon: Heart,     color: "text-rose-700",   bg: "bg-rose-100",   label: "역삼동 아파트 관심 목록 추가", time: "1시간 전" },
-  { id: 3, icon: Briefcase, color: "text-blue-700",   bg: "bg-blue-100",   label: "서초구 상가 딜룸 NDA 서명", time: "3시간 전" },
-  { id: 4, icon: TrendingUp,color: "text-emerald-700",bg: "bg-emerald-100",label: "포트폴리오 수익률 업데이트", time: "어제" },
-  { id: 5, icon: Search,    color: "text-amber-700",  bg: "bg-amber-100",  label: "경기 용인 토지 매물 조회", time: "2일 전" },
-]
-
-const RECOMMENDED = [
-  { id: "r1", type: "아파트", loc: "서울 강남구 역삼동", price: "12.5억", discount: 35, grade: "A+" },
-  { id: "r2", type: "상가",   loc: "경기 수원시 영통구", price: "4.8억",  discount: 42, grade: "A" },
-  { id: "r3", type: "토지",   loc: "대전 유성구",        price: "2.8억",  discount: 38, grade: "B+" },
-]
-
-const SELLER_STATS = [
-  { label: "등록 매물", value: "4건" },
-  { label: "관심 받은 수", value: "31건" },
-  { label: "진행 중 협상", value: "2건" },
-  { label: "완료 거래", value: "8건" },
-]
-
+// Dashboard data type
 interface DashboardData {
-  activeDeals: number; favorites: number; creditBalance: number
-  aiCreditsUsed: number; aiCreditsLimit: number
-  ocrUsed: number; ocrLimit: number
-  plan: string; subscriptionExpiresAt: string | null
-}
-
-async function fetchDashboardData(): Promise<DashboardData> {
-  const defaults: DashboardData = {
-    activeDeals: 3, favorites: 24, creditBalance: 0,
-    aiCreditsUsed: 18, aiCreditsLimit: 30, ocrUsed: 3, ocrLimit: 5,
-    plan: "FREE", subscriptionExpiresAt: null,
+  profile: {
+    id: string
+    name: string | null
+    email: string | null
+    current_tier: AccessTier
+    identity_verified: boolean
+    qualified_investor: boolean
+    created_at: string
+    credit_balance: number
   }
-  try {
-    const [profileRes] = await Promise.allSettled([fetch("/api/v1/users/profile").then(r => r.json())])
-    const profile = profileRes.status === "fulfilled" ? profileRes.value : null
-    return { ...defaults, plan: profile?.plan ?? "FREE", creditBalance: profile?.credit_balance ?? 0, subscriptionExpiresAt: profile?.subscription_expires_at ?? null }
-  } catch { return defaults }
+  stats: {
+    favoritesCount: number
+    activeDealsCount: number
+    analysesCount: number
+    unreadNotifications: number
+  }
+  activeDeals: Array<{
+    deal_room_id: string
+    deal_rooms: {
+      id: string
+      title: string
+      status: string
+      npl_listings?: { title: string; claim_amount: number; collateral_type: string }
+    }
+  }>
+  recentAnalyses: Array<{
+    id: string
+    listing_id: string
+    analysis_type: string
+    result: Record<string, unknown>
+    created_at: string
+  }>
+  recentNotifications: Array<{
+    id: string
+    title: string
+    message: string
+    type: string
+    is_read: boolean
+    created_at: string
+  }>
 }
 
-export default function MyPage() {
-  const router = useRouter()
-  const [role, setRole] = useState<string | null>(null)
-  const [loaded, setLoaded] = useState(false)
+function useDashboard() {
   const [data, setData] = useState<DashboardData | null>(null)
-  const [dataLoading, setDataLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const activeRole = getCookie("active_role")
-    setRole(activeRole)
-    setLoaded(true)
-    if (activeRole === "SUPER_ADMIN" || activeRole === "ADMIN") { router.replace("/admin"); return }
-    if (activeRole === "SELLER") { router.replace("/my/seller"); return }
-    if (activeRole === "PARTNER") { router.replace("/my/partner"); return }
-    if (activeRole === "PROFESSIONAL") { router.replace("/my/professional"); return }
-    fetchDashboardData().then(setData).catch(() => setData(null)).finally(() => setDataLoading(false))
-  }, [router])
+    fetch('/api/v1/my/dashboard')
+      .then((r) => r.json())
+      .then((d) => setData(d))
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
 
-  if (!loaded) return (
-    <div className={DS.page.wrapper}>
-      <div className="h-48 bg-[var(--color-surface-sunken)] animate-pulse" />
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 -mt-6 mb-8">
-          {[1,2,3,4].map(i => <div key={i} className="h-28 bg-[var(--color-surface-sunken)] rounded-2xl animate-pulse" />)}
-        </div>
-      </div>
-    </div>
-  )
+  return { data, loading }
+}
 
-  const roleLabel = role === "BUYER" || role === "BUYER_INDV" || role === "BUYER_INST" ? "바이어"
-    : role === "SELLER" ? "셀러" : role === "PARTNER" ? "파트너" : role === "PROFESSIONAL" ? "전문가" : "투자자"
-  const roleBadgeColor = roleLabel === "바이어" ? "bg-blue-50 text-blue-700 border-blue-200"
-    : roleLabel === "셀러" ? "bg-amber-50 text-amber-700 border-amber-200"
-    : roleLabel === "투자자" ? "bg-violet-50 text-violet-700 border-violet-200"
-    : "bg-emerald-50 text-emerald-700 border-emerald-200"
-  const isBuyer = !role || role === "BUYER" || role === "BUYER_INDV" || role === "BUYER_INST"
-  const isSeller = role === "SELLER"
+// Fallback values for UI rendering
+const fallbackUser = {
+  name: "사용자",
+  email: "",
+  current_tier: "L0" as AccessTier,
+  identity_verified: false,
+  qualified_investor: false,
+  created_at: new Date().toISOString(),
+  credit_balance: 0,
+}
 
-  const KPI_CARDS = [
-    { label: "내 매물 관심",    value: dataLoading ? "—" : String(data?.favorites ?? 24),   unit: "건",  accent: "bg-rose-500" },
-    { label: "진행중 거래",     value: dataLoading ? "—" : String(data?.activeDeals ?? 3),   unit: "건",  accent: "bg-blue-500" },
-    { label: "AI 분석",         value: dataLoading ? "—" : String(data?.aiCreditsUsed ?? 18),unit: "건",  accent: "bg-violet-500" },
-    { label: "포트폴리오 수익률",value: "+14.2",                                              unit: "%",   accent: "bg-emerald-500" },
+function formatRelativeTime(dateStr: string): string {
+  const now = Date.now()
+  const then = new Date(dateStr).getTime()
+  const diffMs = now - then
+  const diffMin = Math.floor(diffMs / 60000)
+  if (diffMin < 1) return '방금 전'
+  if (diffMin < 60) return `${diffMin}분 전`
+  const diffHr = Math.floor(diffMin / 60)
+  if (diffHr < 24) return `${diffHr}시간 전`
+  const diffDay = Math.floor(diffHr / 24)
+  if (diffDay < 7) return `${diffDay}일 전`
+  return dateStr.slice(0, 10)
+}
+
+function formatAmount(amount: number): string {
+  if (amount >= 100000000) return `${(amount / 100000000).toFixed(1)}억`
+  if (amount >= 10000) return `${(amount / 10000).toFixed(0)}만`
+  return amount.toLocaleString()
+}
+
+const QUICK_LINKS = [
+  {
+    href: "/my/verify",
+    label: "본인인증",
+    desc: "L0 → L1 승격",
+    icon: UserCheck,
+    color: "#3B82F6",
+    tierRequired: "L1",
+  },
+  {
+    href: "/my/kyc",
+    label: "전문투자자 KYC",
+    desc: "L1 → L2 승격",
+    icon: Briefcase,
+    color: "#10B981",
+    tierRequired: "L2",
+  },
+  {
+    href: "/my/agreements",
+    label: "계약 관리",
+    desc: "NDA · LOI 이력",
+    icon: FileSignature,
+    color: "#A855F7",
+  },
+  {
+    href: "/my/privacy",
+    label: "개인정보 설정",
+    desc: "PII 열람 로그 · 파기 요청",
+    icon: ShieldCheck,
+    color: "#F59E0B",
+  },
+  {
+    href: "/my/seller",
+    label: "내 매물",
+    desc: "등록한 매물 관리",
+    icon: Building2,
+    color: "#14B8A6",
+  },
+  {
+    href: "/my/portfolio",
+    label: "투자 포트폴리오",
+    desc: "체결 · 실사 중 매물",
+    icon: TrendingUp,
+    color: "#F43F5E",
+  },
+]
+
+// ── 샘플 데이터 (실제 데이터 없을 때 표시) ──────────────────────────
+const SAMPLE_PROFILE = {
+  name: "김투자 (샘플)", email: "sample@nplatform.co.kr",
+  current_tier: "L1" as AccessTier, identity_verified: true,
+  qualified_investor: false, created_at: "2026-01-15T00:00:00Z", credit_balance: 50,
+}
+const SAMPLE_STATS = { favoritesCount: 7, activeDealsCount: 2, analysesCount: 14, unreadNotifications: 3 }
+const SAMPLE_ACTIVE_DEALS = [
+  { deal_room_id: "sample-1", deal_rooms: { id: "sample-1", title: "서울 강남구 아파트 NPL", status: "NDA 검토 중", npl_listings: { title: "강남 아파트", claim_amount: 1200000000 } } },
+  { deal_room_id: "sample-2", deal_rooms: { id: "sample-2", title: "경기 수원 오피스텔 NPL", status: "LOI 제출", npl_listings: { title: "수원 오피스텔", claim_amount: 480000000 } } },
+]
+
+export default function MyDashboardPage() {
+  const { data: dashboardData, loading: dashboardLoading } = useDashboard()
+  const isSample = !dashboardLoading && !dashboardData
+
+  const profile = dashboardData?.profile ?? (isSample ? SAMPLE_PROFILE : fallbackUser)
+  const stats = dashboardData?.stats ?? (isSample ? SAMPLE_STATS : { favoritesCount: 0, activeDealsCount: 0, analysesCount: 0, unreadNotifications: 0 })
+  const activeDeals = dashboardData?.activeDeals ?? (isSample ? SAMPLE_ACTIVE_DEALS : [])
+  const recentAnalyses = dashboardData?.recentAnalyses ?? []
+  const recentNotifications = dashboardData?.recentNotifications ?? []
+
+  const tierOrder: AccessTier[] = ["L0", "L1", "L2", "L3"]
+  const currentIdx = tierOrder.indexOf(profile.current_tier)
+  const progress = ((currentIdx + 1) / tierOrder.length) * 100
+
+  // Portfolio KPIs from real data
+  const PORTFOLIO_KPI = [
+    { label: "관심 매물", numValue: stats.favoritesCount, suffix: "건", change: "", positive: null as boolean | null, icon: TrendingUp, decimals: 0 },
+    { label: "활성 거래", numValue: stats.activeDealsCount, suffix: "건", change: "", positive: null as boolean | null, icon: Handshake, decimals: 0 },
+    { label: "AI 분석", numValue: stats.analysesCount, suffix: "건", change: "", positive: null as boolean | null, icon: BarChart3, decimals: 0 },
+    { label: "크레딧", numValue: profile.credit_balance, suffix: "C", change: "", positive: null as boolean | null, icon: Sparkles, decimals: 0 },
   ]
 
-  return (
-    <div className={DS.page.wrapper}>
+  // Recent activity from notifications
+  const RECENT_ACTIVITY = recentNotifications.map((n) => ({
+    type: n.type,
+    label: n.title,
+    target: n.message,
+    time: formatRelativeTime(n.created_at),
+  }))
 
-      {/* 1. Header */}
-      <div className="bg-[var(--color-brand-dark)] text-white px-6 py-8 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)", backgroundSize: "40px 40px" }} />
-        <div className="absolute -top-16 -right-16 w-56 h-56 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-white/15 border-2 border-white/30 flex items-center justify-center shrink-0">
-              <User className="w-7 h-7 text-white/90" />
+  // Active deals from real data
+  const ACTIVE_DEALS = activeDeals.map((d) => ({
+    id: d.deal_room_id,
+    listing: d.deal_rooms?.npl_listings?.title || d.deal_rooms?.title || '매물',
+    stage: d.deal_rooms?.status || '진행 중',
+    stageColor: C.blue,
+    amount: d.deal_rooms?.npl_listings?.claim_amount
+      ? formatAmount(d.deal_rooms.npl_listings.claim_amount)
+      : '-',
+    daysLeft: 0,
+  }))
+
+  // Recent analyses from real data
+  const RECENT_ANALYSES = recentAnalyses.map((a) => ({
+    id: a.id,
+    title: a.analysis_type || 'AI 분석',
+    type: a.analysis_type || '분석',
+    grade: (a.result as Record<string, string>)?.grade || '-',
+    time: formatRelativeTime(a.created_at),
+  }))
+
+  // Matching alerts from notifications
+  const MATCHING_ALERTS = recentNotifications
+    .filter((n) => n.type === 'MATCHING' || n.type === 'PRICE_ALERT')
+    .slice(0, 3)
+    .map((n) => ({
+      id: n.id,
+      title: n.title,
+      desc: n.message,
+      time: formatRelativeTime(n.created_at),
+      grade: 'GOOD',
+    }))
+
+  return (
+    <main style={{ backgroundColor: C.bg0, color: "#E2E8F0", minHeight: "100vh" }}>
+      {/* 샘플 데이터 배너 */}
+      {isSample && (
+        <div className="sticky top-0 z-30 flex items-center gap-2 px-4 py-2 bg-amber-500/90 backdrop-blur text-amber-950 text-xs font-semibold">
+          <span>📋</span>
+          <span>샘플 데이터 표시 중 — 로그인 후 실제 데이터가 표시됩니다</span>
+          <a href="/login" className="ml-auto underline font-bold">로그인하기 →</a>
+        </div>
+      )}
+      {/* Header */}
+      <section
+        style={{
+          background: `linear-gradient(180deg, ${C.bg1} 0%, ${C.bg0} 100%)`,
+          borderBottom: `1px solid ${C.bg4}`,
+        }}
+      >
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "48px 24px 40px" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div style={{ fontSize: 11, color: C.emL, fontWeight: 800, letterSpacing: "0.1em", marginBottom: 10 }}>
+              MY NPLATFORM
             </div>
+            <h1
+              style={{
+                fontSize: 36, fontWeight: 900, color: "#fff",
+                letterSpacing: "-0.02em", marginBottom: 6,
+              }}
+            >
+              안녕하세요, {profile.name}님
+            </h1>
+            <p style={{ fontSize: 13, color: C.lt4 }}>
+              가입일 {profile.created_at?.slice(0, 10)} · {profile.email}
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      <section style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px 80px" }}>
+        {/* Tier Status Card */}
+        <section
+          style={{
+            backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
+            borderRadius: 16, padding: 28, marginBottom: 24,
+          }}
+        >
+          <div
+            style={{
+              display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+              marginBottom: 24, flexWrap: "wrap", gap: 14,
+            }}
+          >
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className={DS.text.inverse + " text-[1.25rem] font-bold"}>내 대시보드</span>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full border ${DS.text.label} ${roleBadgeColor}`}>
-                  {roleLabel}
+              <div style={{ fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 10, letterSpacing: "0.05em" }}>
+                현재 접근 티어
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <TierBadge tier={profile.current_tier} size="md" variant="solid" />
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>
+                  {TIER_META[profile.current_tier].label}
                 </span>
               </div>
-              <div className={`flex items-center gap-3 ${DS.text.caption} text-blue-100/85`}>
-                <span>가입일 2024.03.15</span>
-                <span className="w-1 h-1 rounded-full bg-blue-200/50" />
-                <span>마지막 접속 오늘</span>
-              </div>
+              <p style={{ marginTop: 8, fontSize: 12, color: C.lt4, maxWidth: 540 }}>
+                {TIER_META[profile.current_tier].description}
+              </p>
+            </div>
+
+            <Link
+              href="/my/kyc"
+              style={{
+                padding: "11px 18px", borderRadius: 10,
+                backgroundColor: C.em, color: "#041915",
+                fontSize: 12, fontWeight: 800, textDecoration: "none",
+                display: "inline-flex", alignItems: "center", gap: 6,
+              }}
+            >
+              다음 단계로 업그레이드 <ChevronRight size={14} />
+            </Link>
+          </div>
+
+          {/* Progress bar */}
+          <div style={{ marginBottom: 14 }}>
+            <div
+              style={{
+                height: 8, borderRadius: 999,
+                backgroundColor: C.bg4, overflow: "hidden", position: "relative",
+              }}
+            >
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                style={{
+                  height: "100%",
+                  background: `linear-gradient(90deg, ${C.em}, ${C.blue}, ${C.purple})`,
+                }}
+              />
             </div>
           </div>
-          {!dataLoading && data?.plan === "FREE" && (
-            <Link href="/my/billing" className={DS.button.primary + " shrink-0"}>
-              업그레이드 <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          )}
-        </div>
-      </div>
 
-      {/* 2. KPI Strip */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 -mt-6 relative z-10 mb-7">
-          {KPI_CARDS.map(card => (
-            <div key={card.label} className={`${DS.stat.card} overflow-hidden p-0`}>
-              <div className={`h-1 w-full ${card.accent}`} />
-              <div className="p-4 sm:p-5">
-                <div className="flex items-end gap-1 mb-1">
-                  <span className={DS.text.metricLarge}>{card.value}</span>
-                  <span className={DS.text.caption + " mb-0.5"}>{card.unit}</span>
-                </div>
-                <p className={DS.stat.label}>{card.label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* 3. Quick Actions Grid 2x3 */}
-        <div className="mb-7">
-          <p className={DS.header.eyebrow + " mb-3"}>빠른 메뉴</p>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-            {QUICK_ACTIONS.map(action => (
-              <Link key={action.href + action.label} href={action.href}>
-                <div className={`${DS.card.interactive} flex flex-col items-center gap-2 p-4 group`}>
-                  <div className="w-9 h-9 rounded-xl bg-[var(--color-surface-sunken)] group-hover:bg-[var(--color-brand-dark)]/8 flex items-center justify-center transition-colors">
-                    <action.icon className="w-4 h-4 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-brand-mid)] transition-colors" />
+          {/* Tier nodes */}
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+            {tierOrder.map((tier, i) => {
+              const achieved = i <= currentIdx
+              const meta = TIER_META[tier]
+              return (
+                <div key={tier} style={{ flex: 1, textAlign: "center" }}>
+                  <div
+                    style={{
+                      width: 32, height: 32, borderRadius: "50%",
+                      margin: "0 auto 6px",
+                      backgroundColor: achieved ? meta.color : C.bg3,
+                      border: `2px solid ${achieved ? meta.color : C.bg4}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: "#fff", fontSize: 10, fontWeight: 900,
+                    }}
+                  >
+                    {achieved ? <CheckCircle2 size={16} /> : <Lock size={12} />}
                   </div>
-                  <span className={DS.text.caption + " text-center leading-tight"}>{action.label}</span>
+                  <div
+                    style={{
+                      fontSize: 11, fontWeight: 800,
+                      color: achieved ? "#fff" : C.lt4,
+                    }}
+                  >
+                    {tier}
+                  </div>
+                  <div style={{ fontSize: 9, color: C.lt4, marginTop: 2 }}>{meta.shortLabel}</div>
                 </div>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* ── Portfolio KPI ────────────────────────────────────────── */}
+        <section style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+            <Activity size={14} color={C.em} /> 포트폴리오 요약
+          </div>
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}
+          >
+            {PORTFOLIO_KPI.map((kpi) => {
+              const Icon = kpi.icon
+              return (
+                <motion.div
+                  key={kpi.label}
+                  variants={staggerItem}
+                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                  style={{
+                    backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
+                    borderRadius: 14, padding: 20,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                    <Icon size={16} color={C.lt4} />
+                    {kpi.positive !== null && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 800,
+                        color: kpi.positive ? C.em : C.rose,
+                      }}>
+                        {kpi.change}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", marginBottom: 4 }}>
+                    <AnimatedCounter value={kpi.numValue} suffix={kpi.suffix} decimals={kpi.decimals} />
+                  </div>
+                  <div style={{ fontSize: 10, color: C.lt4, fontWeight: 600 }}>{kpi.label}</div>
+                </motion.div>
+              )
+            })}
+          </motion.div>
+        </section>
+
+        {/* ── Active Deals + Matching Alerts (2-column) ──────────────── */}
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 360px", gap: 24, marginBottom: 24, alignItems: "start" }}>
+          {/* Active Deals */}
+          <section>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Handshake size={14} color={C.blue} /> 활성 거래
+              </span>
+              <Link href="/deals" style={{ fontSize: 11, color: C.blueL, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+                전체 보기 <ArrowRight size={12} />
               </Link>
+            </div>
+            <div style={{ backgroundColor: C.bg2, border: `1px solid ${C.bg4}`, borderRadius: 14, overflow: "hidden" }}>
+              {ACTIVE_DEALS.map((deal, i) => (
+                <Link
+                  key={deal.id}
+                  href={`/deals/${deal.id}`}
+                  style={{
+                    display: "flex", gap: 14, alignItems: "center",
+                    padding: "16px 18px", textDecoration: "none",
+                    borderBottom: i < ACTIVE_DEALS.length - 1 ? `1px solid ${C.bg4}` : "none",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", marginBottom: 4 }}>{deal.listing}</div>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span style={{
+                        fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 4,
+                        backgroundColor: `${deal.stageColor}1A`, color: deal.stageColor,
+                        border: `1px solid ${deal.stageColor}44`,
+                      }}>
+                        {deal.stage}
+                      </span>
+                      <span style={{ fontSize: 10, color: C.lt4 }}>{deal.amount}</span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: 10, color: deal.daysLeft <= 5 ? C.rose : C.lt4, fontWeight: 700 }}>
+                      D-{deal.daysLeft}
+                    </div>
+                    <ChevronRight size={14} color={C.lt4} />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          {/* Matching Alerts */}
+          <aside>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Bell size={14} color={C.amber} /> 매칭 알림
+              </span>
+              <Link href="/deals/matching" style={{ fontSize: 11, color: C.blueL, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+                전체 보기 <ArrowRight size={12} />
+              </Link>
+            </div>
+            <div style={{ backgroundColor: C.bg2, border: `1px solid ${C.bg4}`, borderRadius: 14, overflow: "hidden" }}>
+              {MATCHING_ALERTS.map((alert, i) => (
+                <Link
+                  key={alert.id}
+                  href="/deals/matching"
+                  style={{
+                    display: "block", padding: "14px 18px", textDecoration: "none",
+                    borderBottom: i < MATCHING_ALERTS.length - 1 ? `1px solid ${C.bg4}` : "none",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <Target size={12} color={alert.grade === "EXCELLENT" ? C.em : C.blue} />
+                    <span style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>{alert.title}</span>
+                    <span style={{
+                      fontSize: 8, fontWeight: 800, padding: "1px 6px", borderRadius: 3,
+                      backgroundColor: alert.grade === "EXCELLENT" ? `${C.em}1A` : `${C.blue}1A`,
+                      color: alert.grade === "EXCELLENT" ? C.em : C.blue,
+                    }}>
+                      {alert.grade}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 10, color: C.lt4, marginBottom: 4 }}>{alert.desc}</div>
+                  <div style={{ fontSize: 9, color: C.lt3 }}>{alert.time}</div>
+                </Link>
+              ))}
+            </div>
+          </aside>
+        </div>
+
+        {/* ── Recent Analyses ──────────────────────────────────────── */}
+        <section style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <FileSearch size={14} color={C.purple} /> 최근 분석
+            </span>
+            <Link href="/analysis" style={{ fontSize: 11, color: C.blueL, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+              분석 허브 <ArrowRight size={12} />
+            </Link>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+            {RECENT_ANALYSES.map((a, i) => (
+              <motion.div
+                key={a.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05, duration: 0.4 }}
+              >
+                <Link
+                  href={a.type === "실사 보고서" ? "/analysis/due-diligence" : a.type === "수익률 분석" ? "/analysis/simulator" : "/analysis"}
+                  style={{
+                    display: "block", padding: 18, borderRadius: 14,
+                    backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
+                    textDecoration: "none",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: C.lt4, textTransform: "uppercase" }}>{a.type}</span>
+                    <span style={{
+                      fontSize: 12, fontWeight: 900,
+                      color: a.grade.startsWith("A") ? C.em : C.blue,
+                    }}>
+                      {a.grade}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", marginBottom: 4 }}>{a.title}</div>
+                  <div style={{ fontSize: 10, color: C.lt3 }}>{a.time}</div>
+                </Link>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* 4 + 5. Two-column: Activity + Role section */}
-        <div className="grid lg:grid-cols-2 gap-5 pb-12">
-
-          {/* 4. Recent Activity Timeline */}
-          <div className={`${DS.card.base} ${DS.card.padding}`}>
-            <div className="flex items-center justify-between mb-4">
-              <p className={DS.header.eyebrow}>최근 활동</p>
-              <Clock className="w-4 h-4 text-[var(--color-text-muted)]" />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1fr) 360px",
+            gap: 24, alignItems: "start",
+          }}
+        >
+          {/* LEFT — Quick links grid */}
+          <section>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 14 }}>
+              빠른 메뉴
             </div>
-            <ol className="relative border-l-2 border-[var(--color-border-subtle)] ml-3 space-y-0">
-              {RECENT_ACTIVITY.map(item => (
-                <li key={item.id} className="pl-5 pb-4 last:pb-0 relative">
-                  <span className={`absolute -left-[1.15rem] top-0.5 w-6 h-6 rounded-full ${item.bg} flex items-center justify-center`}>
-                    <item.icon className={`w-3 h-3 ${item.color}`} />
-                  </span>
-                  <p className={DS.text.bodyBold + " leading-snug"}>{item.label}</p>
-                  <p className={DS.text.captionLight + " mt-0.5"}>{item.time}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                gap: 14,
+              }}
+            >
+              {QUICK_LINKS.map((link, i) => {
+                const Icon = link.icon
+                return (
+                  <motion.div
+                    key={link.href}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04, duration: 0.4 }}
+                  >
+                    <Link
+                      href={link.href}
+                      style={{
+                        display: "block", padding: 20, borderRadius: 14,
+                        backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
+                        textDecoration: "none", position: "relative", overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 40, height: 40, borderRadius: 10,
+                          backgroundColor: `${link.color}1F`,
+                          border: `1px solid ${link.color}44`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          marginBottom: 12,
+                        }}
+                      >
+                        <Icon size={18} color={link.color} />
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 3 }}>
+                        {link.label}
+                      </div>
+                      <div style={{ fontSize: 11, color: C.lt4 }}>{link.desc}</div>
+                      {link.tierRequired && (
+                        <span
+                          style={{
+                            position: "absolute", top: 16, right: 16,
+                            fontSize: 9, fontWeight: 800,
+                            padding: "3px 7px", borderRadius: 4,
+                            backgroundColor: `${link.color}1A`,
+                            color: link.color,
+                            border: `1px solid ${link.color}44`,
+                          }}
+                        >
+                          → {link.tierRequired}
+                        </span>
+                      )}
+                    </Link>
+                  </motion.div>
+                )
+              })}
+            </div>
+          </section>
 
-          {/* 5. Role-specific section */}
-          <div className={`${DS.card.base} ${DS.card.padding}`}>
-            {isBuyer && (
-              <>
-                <div className="flex items-center justify-between mb-4">
-                  <p className={DS.header.eyebrow}>AI 추천 매물</p>
-                  <Link href="/exchange" className={`flex items-center gap-0.5 ${DS.text.caption} hover:text-[var(--color-brand-mid)] transition-colors`}>
-                    전체 <ArrowUpRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
-                  {RECOMMENDED.map(item => (
-                    <div key={item.id} className={`${DS.card.interactive} shrink-0 w-44 overflow-hidden`}>
-                      <div className="h-20 bg-gradient-to-br from-[var(--color-brand-dark)] to-[var(--color-brand-mid)] flex items-center justify-center relative">
-                        <span className="text-white/40 text-[1.875rem] font-extrabold">{item.type[0]}</span>
-                        <span className={`absolute top-2 right-2 ${DS.text.label} bg-[var(--color-positive)] text-white px-1.5 py-0.5 rounded`}>{item.grade}</span>
-                      </div>
-                      <div className="p-3">
-                        <p className={DS.text.captionLight + " mb-0.5"}>{item.loc}</p>
-                        <p className={DS.text.bodyBold}>{item.price}</p>
-                        <span className={`inline-block mt-1 ${DS.text.label} text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded`}>-{item.discount}% 할인</span>
-                      </div>
+          {/* RIGHT — Recent activity */}
+          <aside>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 14 }}>
+              최근 활동
+            </div>
+            <div
+              style={{
+                backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
+                borderRadius: 14, overflow: "hidden",
+              }}
+            >
+              {RECENT_ACTIVITY.map((act, i) => (
+                <div
+                  key={i}
+                  style={{
+                    padding: "14px 18px",
+                    borderBottom: i < RECENT_ACTIVITY.length - 1 ? `1px solid ${C.bg4}` : "none",
+                    display: "flex", gap: 12, alignItems: "flex-start",
+                  }}
+                >
+                  <Clock size={14} color={C.lt4} style={{ marginTop: 2, flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 2 }}>
+                      {act.label}
                     </div>
-                  ))}
-                </div>
-                <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 flex items-center gap-3">
-                  <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <p className={DS.text.caption + " flex-1 leading-relaxed"}>AI 맞춤 매물 추천을 받으려면 수요 설문을 등록하세요.</p>
-                  <Link href="/deals/matching" className={`shrink-0 ${DS.text.link} text-emerald-700 hover:text-emerald-900`}>보기</Link>
-                </div>
-              </>
-            )}
-            {isSeller && (
-              <>
-                <p className={DS.header.eyebrow + " mb-4"}>내 매물 현황</p>
-                <div className="grid grid-cols-2 gap-3">
-                  {SELLER_STATS.map(s => (
-                    <div key={s.label} className={DS.stat.card}>
-                      <p className={DS.stat.value}>{s.value}</p>
-                      <p className={DS.stat.label + " mt-0.5"}>{s.label}</p>
+                    <div style={{ fontSize: 10, color: C.lt4, fontFamily: "monospace" }}>
+                      {act.target}
                     </div>
-                  ))}
+                    <div style={{ fontSize: 10, color: C.lt4, marginTop: 4 }}>{act.time}</div>
+                  </div>
                 </div>
-              </>
-            )}
-            {!isBuyer && !isSeller && (
-              <div className={DS.empty.wrapper}>
-                <BarChart3 className={DS.empty.icon} />
-                <p className={DS.empty.description}>역할별 콘텐츠를 준비 중입니다.</p>
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+
+            <Link
+              href="/my/privacy"
+              style={{
+                display: "block", marginTop: 12, padding: "12px 16px",
+                borderRadius: 10, textAlign: "center",
+                backgroundColor: C.bg3, color: "#fff",
+                border: `1px solid ${C.bg4}`,
+                textDecoration: "none", fontSize: 11, fontWeight: 700,
+              }}
+            >
+              전체 활동 이력 보기
+            </Link>
+          </aside>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   )
 }

@@ -75,6 +75,15 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1", 10)
     const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 100)
     const offset = (page - 1) * limit
+    // seller_id=me → resolve to authenticated user's ID
+    let sellerIdParam = searchParams.get("seller_id")
+    if (sellerIdParam === 'me') {
+      try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        sellerIdParam = user?.id ?? null
+      } catch { sellerIdParam = null }
+    }
 
     // Build filters
     const filters: QueryFilters = {}
@@ -88,6 +97,7 @@ export async function GET(request: NextRequest) {
     if (listingType) filters.listing_type = listingType
     if (featured === "true") filters.is_featured = true
     if (institutions) filters.institution = institutions.includes(',') ? institutions.split(',') : institutions
+    if (sellerIdParam) filters.seller_id = sellerIdParam
 
     // Determine sort
     let orderBy = 'created_at'
@@ -107,26 +117,63 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Map npl_listings field names to filter keys (canonical table uses different column names)
+    const nplFilters: typeof filters = { ...filters }
+    if (nplFilters.collateral_region) {
+      nplFilters.sido = nplFilters.collateral_region
+      delete nplFilters.collateral_region
+    }
+    if (nplFilters.risk_grade) {
+      nplFilters.ai_grade = nplFilters.risk_grade
+      delete nplFilters.risk_grade
+    }
+
     const needsPostFilter = !!(price_min || price_max || searchQuery)
-    const result = await query('deal_listings', {
-      filters,
-      orderBy,
+
+    // Try npl_listings (canonical) first, fall back to deal_listings
+    let result = await query('npl_listings', {
+      filters: nplFilters,
+      orderBy: orderBy === 'principal_amount' ? 'claim_amount' : orderBy,
       order,
       limit: needsPostFilter ? 1000 : limit,
       offset: needsPostFilter ? 0 : offset,
     })
+    if (result._source === 'sample' && result.data.length === 0) {
+      // Try deal_listings fallback
+      result = await query('deal_listings', {
+        filters,
+        orderBy,
+        order,
+        limit: needsPostFilter ? 1000 : limit,
+        offset: needsPostFilter ? 0 : offset,
+      })
+    }
+
+    // Normalize field names: npl_listings uses claim_amount, deal_listings uses principal_amount
+    type ListingRow = Record<string, unknown>
+    ;(result.data as ListingRow[]).forEach((row) => {
+      if (row.claim_amount !== undefined && row.principal_amount === undefined) {
+        row.principal_amount = row.claim_amount
+        row.discount_rate = row.discount_rate ?? 0
+      }
+      if (row.sido !== undefined && row.collateral_region === undefined) {
+        row.collateral_region = row.sido
+      }
+      if (row.ai_grade !== undefined && row.risk_grade === undefined) {
+        row.risk_grade = row.ai_grade
+      }
+    })
 
     // Post-filter by price range (data-layer doesn't support gte/lte natively)
-    type ListingRow = Record<string, unknown>
     let filteredData: ListingRow[] = result.data as ListingRow[]
     let filteredTotal = result.total
     if (price_min) {
       const min = Number(price_min)
-      filteredData = filteredData.filter((d) => ((d.principal_amount as number) || 0) >= min)
+      filteredData = filteredData.filter((d) => (((d.principal_amount as number) || (d.claim_amount as number)) || 0) >= min)
     }
     if (price_max) {
       const max = Number(price_max)
-      filteredData = filteredData.filter((d) => ((d.principal_amount as number) || 0) <= max)
+      filteredData = filteredData.filter((d) => (((d.principal_amount as number) || (d.claim_amount as number)) || 0) <= max)
     }
     // Exclude specific listing by ID (for "similar listings")
     if (exclude) {
@@ -204,40 +251,48 @@ export async function POST(request: NextRequest) {
     const rand = String(Math.floor(1000 + Math.random() * 9000))
     const listing_number = `NPL-${ym}-${rand}`
 
+    // Build npl_listings-compatible row (canonical table)
+    const addr = body.address ?? `${body.location ?? ''} ${body.location_detail ?? ''}`.trim()
     const listing: Record<string, unknown> = {
       seller_id: userId,
-      institution: body.institution_name ?? '',
       title: sanitizeInput(body.title ?? `${body.location ?? ''} ${body.collateral_type} 채권`),
-      listing_type: body.listing_type,
-      listing_number,
-      collateral_type: body.collateral_type,
-      address: body.address ?? `${body.location ?? ''} ${body.location_detail ?? ''}`.trim(),
-      principal_amount: body.principal_amount,
-      appraised_value: body.appraisal_value ?? body.appraised_value ?? 0,
-      ltv_ratio: body.ltv ?? 0,
-      risk_grade: body.risk_grade,
-      status: 'PENDING_REVIEW',
-      visibility: body.visibility,
       description: sanitizeInput(body.description ?? ''),
+      collateral_type: body.collateral_type,
+      sido: body.location ?? addr.split(' ')[0] ?? null,
+      address: addr,
+      claim_amount: body.principal_amount,
+      appraised_value: body.appraisal_value ?? body.appraised_value ?? 0,
+      discount_rate: body.appraisal_value && body.asking_price_min
+        ? Math.round((1 - body.asking_price_min / body.appraisal_value) * 100)
+        : 0,
+      ai_grade: body.risk_grade ?? 'C',
+      listing_type: (body.listing_type === 'NPL' ? 'NPL' : body.listing_type === 'UPL' ? 'NPL' : 'NPL'),
+      status: 'PENDING_REVIEW',
+      visibility: body.visibility ?? 'PUBLIC',
       deadline: body.deadline ?? null,
-      delinquency_months: body.overdue_months ?? 0,
       area_sqm: body.area ?? 0,
-      debtor_count: 1,
-      interested_count: 0,
       view_count: 0,
-      business_number: body.business_number ?? null,
-      representative_name: body.representative_name ?? null,
-      asking_price_min: body.asking_price_min ?? 0,
-      asking_price_max: body.asking_price_max ?? 0,
+      interest_count: 0,
       ai_estimate_low: body.ai_estimate_low ?? 0,
       ai_estimate_high: body.ai_estimate_high ?? 0,
-      validation_score: body.validation_score ?? 0,
-      images: body.images ?? [],
-      location: body.location ?? null,
-      location_detail: sanitizeInput(body.location_detail ?? '') || null,
     }
 
-    const result = await insert('deal_listings', listing)
+    // Try npl_listings first (canonical), fall back to deal_listings for legacy compatibility
+    let result = await insert('npl_listings', listing)
+    if (result._source === 'sample') {
+      // Also try deal_listings if npl_listings not available
+      const legacyListing = {
+        ...listing,
+        institution: body.institution_name ?? '',
+        listing_number,
+        principal_amount: listing.claim_amount,
+        risk_grade: listing.ai_grade,
+        collateral_region: listing.sido,
+        asking_price_min: body.asking_price_min ?? 0,
+        asking_price_max: body.asking_price_max ?? 0,
+      }
+      result = await insert('deal_listings', legacyListing)
+    }
 
     // Attach listing_number to response data
     const responseData: Record<string, unknown> = { ...(result.data as Record<string, unknown>), listing_number }

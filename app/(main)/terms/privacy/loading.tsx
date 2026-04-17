@@ -1,16 +1,19 @@
+import { SkeletonPulse } from '@/components/ui/skeleton-pulse'
+
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950 animate-pulse">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="h-8 w-36 rounded bg-gray-200 dark:bg-gray-800 mb-6" />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-24 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800" />
-          ))}
-        </div>
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-32 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800" />
+    <div className="min-h-screen bg-[var(--color-surface-base)]">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+        <SkeletonPulse height={28} width={200} />
+        <SkeletonPulse height={14} width={300} />
+        <div className="space-y-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <SkeletonPulse height={18} width={160 + i * 10} />
+              <SkeletonPulse height={14} className="w-full" />
+              <SkeletonPulse height={14} className="w-5/6" />
+              <SkeletonPulse height={14} className="w-4/6" />
+            </div>
           ))}
         </div>
       </div>

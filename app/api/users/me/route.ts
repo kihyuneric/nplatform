@@ -3,18 +3,21 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic';
 
+const MOCK_USER = {
+  id: 'anonymous', name: '게스트', email: '', role: 'VIEWER',
+  stats: { listings: 0, surveys: 0, dealRooms: 0 },
+  _mock: true,
+}
+
 export async function GET() {
   const supabase = await createClient()
-  let userId = 'anonymous'
-  try { const { data: { user } } = await supabase.auth.getUser(); if (user) userId = user.id } catch {}
 
-  if (userId === 'anonymous') {
-    return NextResponse.json({
-      id: 'anonymous', name: '게스트', email: '', role: 'VIEWER',
-      stats: { listings: 0, surveys: 0, dealRooms: 0 },
-      _mock: true,
-    })
+  // Require authentication
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
   }
+  const userId = user.id
 
   const { data, error } = await supabase
     .from('users')
@@ -22,7 +25,11 @@ export async function GET() {
     .eq('id', userId)
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    // Fall back to mock on DB error (e.g. table not yet migrated)
+    console.error('[users/me] DB error:', error.message)
+    return NextResponse.json({ ...MOCK_USER, id: userId, _mock: true })
+  }
 
   // Get counts
   const [listings, surveys, dealRooms] = await Promise.all([
@@ -43,13 +50,14 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   const supabase = await createClient()
-  let putUserId = 'anonymous'
-  try { const { data: { user } } = await supabase.auth.getUser(); if (user) putUserId = user.id } catch {}
-  if (putUserId === 'anonymous') return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
+  const putUserId = user.id
 
   const body = await request.json()
   const allowed = ['name', 'company_name', 'phone']
-  const updates: Record<string, any> = {}
+  const updates: Record<string, unknown> = {}
   for (const key of allowed) {
     if (body[key] !== undefined) updates[key] = body[key]
   }

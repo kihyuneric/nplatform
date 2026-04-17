@@ -8,15 +8,15 @@ import dynamic from 'next/dynamic'
 
 const CurriculumRadarChart = dynamic(
   () => import('@/components/charts/curriculum-dashboard-charts').then(m => m.CurriculumRadarChart),
-  { ssr: false, loading: () => <div className="h-[280px] animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800" /> }
+  { ssr: false, loading: () => <div className="h-[280px] animate-pulse rounded-lg bg-[var(--color-surface-overlay)]" /> }
 )
 const CurriculumLevelChart = dynamic(
   () => import('@/components/charts/curriculum-dashboard-charts').then(m => m.CurriculumLevelChart),
-  { ssr: false, loading: () => <div className="h-[280px] animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800" /> }
+  { ssr: false, loading: () => <div className="h-[280px] animate-pulse rounded-lg bg-[var(--color-surface-overlay)]" /> }
 )
 const CurriculumPieChart = dynamic(
   () => import('@/components/charts/curriculum-dashboard-charts').then(m => m.CurriculumPieChart),
-  { ssr: false, loading: () => <div className="h-[220px] animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800" /> }
+  { ssr: false, loading: () => <div className="h-[220px] animate-pulse rounded-lg bg-[var(--color-surface-overlay)]" /> }
 )
 
 interface DashboardStats {

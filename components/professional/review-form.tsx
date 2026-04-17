@@ -99,13 +99,13 @@ export function ReviewForm({ professionalId, onSubmitted }: ReviewFormProps) {
                     'h-7 w-7 transition-colors',
                     s <= displayRating
                       ? 'fill-yellow-400 text-yellow-400'
-                      : 'text-gray-300 dark:text-gray-600'
+                      : 'text-[var(--color-text-muted)]'
                   )}
                 />
               </button>
             ))}
             {rating > 0 && (
-              <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="ml-2 text-sm font-medium text-[var(--color-text-secondary)]">
                 {rating}.0
               </span>
             )}
@@ -124,7 +124,7 @@ export function ReviewForm({ professionalId, onSubmitted }: ReviewFormProps) {
                   'cursor-pointer transition-colors',
                   selectedTags.includes(tag)
                     ? 'bg-[#2E75B6] hover:bg-[#1B3A5C] text-white'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                    : 'hover:bg-[var(--color-surface-overlay)]'
                 )}
                 onClick={() => toggleTag(tag)}
               >

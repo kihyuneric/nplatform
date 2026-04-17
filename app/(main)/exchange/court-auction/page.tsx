@@ -8,9 +8,7 @@ import {
   LayoutGrid, List, AlertTriangle, Calendar, Banknote, Loader2,
   FileText, Plus, PercentCircle,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -86,20 +84,20 @@ function getDDayColor(dday: number): string {
 }
 
 function getDDayBgColor(dday: number): string {
-  if (dday < 0) return "bg-gray-100 dark:bg-gray-800"
-  if (dday <= 3) return "bg-red-50 dark:bg-red-900/30"
-  if (dday <= 7) return "bg-orange-50 dark:bg-orange-900/30"
-  return "bg-green-50 dark:bg-green-900/30"
+  if (dday < 0) return "bg-[var(--color-surface-overlay)]"
+  if (dday <= 3) return "bg-red-500/5"
+  if (dday <= 7) return "bg-orange-500/5"
+  return "bg-green-500/5"
 }
 
 function getStatusBadge(status: BiddingStatus) {
   switch (status) {
     case "BIDDING":
-      return <Badge className="bg-green-100 text-green-700 border-green-200 dark:bg-green-900/40 dark:text-green-300 dark:border-green-800">입찰중</Badge>
+      return <span className="bg-green-500/10 text-green-400 border-green-500/20 inline-flex items-center">입찰중</span>
     case "CLOSING_SOON":
-      return <Badge className="bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/40 dark:text-orange-300 dark:border-orange-800">마감임박</Badge>
+      return <span className="bg-orange-500/10 text-orange-400 border-orange-500/20 inline-flex items-center">마감임박</span>
     case "COMPLETED":
-      return <Badge className="bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">입찰완료</Badge>
+      return <span className="bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)] inline-flex items-center">입찰완료</span>
   }
 }
 
@@ -140,150 +138,7 @@ function getInstitutionColor(name: string | undefined | null): string {
   return colors[name] || "bg-gray-500"
 }
 
-// ─── Mock Data (20 items) ────────────────────────────────────
-
-const MOCK_DATA: BiddingItem[] = [
-  {
-    id: "bid-001", institution: "KB국민은행", collateralType: "아파트",
-    address: "서울 강남구 삼성동 래미안아파트 102동 1503호",
-    loanPrincipal: 1450000000, appraisalValue: 1800000000, askingPrice: 1100000000,
-    ltv: 80.5, biddingDeadline: "2026-03-22T18:00:00Z", status: "BIDDING",
-    participants: 12, viewCount: 342,
-  },
-  {
-    id: "bid-002", institution: "신한은행", collateralType: "상가",
-    address: "서울 서초구 서초동 상가건물 1층 101호",
-    loanPrincipal: 820000000, appraisalValue: 1050000000, askingPrice: 650000000,
-    ltv: 78.1, biddingDeadline: "2026-03-20T18:00:00Z", status: "CLOSING_SOON",
-    participants: 8, viewCount: 256,
-  },
-  {
-    id: "bid-003", institution: "우리은행", collateralType: "오피스텔",
-    address: "서울 마포구 상암동 디지털큐브 오피스텔 805호",
-    loanPrincipal: 380000000, appraisalValue: 520000000, askingPrice: 310000000,
-    ltv: 73.1, biddingDeadline: "2026-03-25T18:00:00Z", status: "BIDDING",
-    participants: 15, viewCount: 189,
-  },
-  {
-    id: "bid-004", institution: "하나은행", collateralType: "토지",
-    address: "경기 용인시 처인구 양지면 대지 352평",
-    loanPrincipal: 950000000, appraisalValue: 1200000000, askingPrice: 780000000,
-    ltv: 79.2, biddingDeadline: "2026-03-21T18:00:00Z", status: "CLOSING_SOON",
-    participants: 5, viewCount: 134,
-  },
-  {
-    id: "bid-005", institution: "IBK기업은행", collateralType: "아파트",
-    address: "경기 성남시 분당구 정자동 파크뷰 201동 902호",
-    loanPrincipal: 720000000, appraisalValue: 980000000, askingPrice: 580000000,
-    ltv: 73.5, biddingDeadline: "2026-03-28T18:00:00Z", status: "BIDDING",
-    participants: 22, viewCount: 467,
-  },
-  {
-    id: "bid-006", institution: "한국자산관리공사", collateralType: "상가",
-    address: "부산 해운대구 우동 상가빌딩 지하1층~지상2층",
-    loanPrincipal: 1680000000, appraisalValue: 2100000000, askingPrice: 1350000000,
-    ltv: 80.0, biddingDeadline: "2026-03-16T18:00:00Z", status: "COMPLETED",
-    participants: 18, viewCount: 523,
-  },
-  {
-    id: "bid-007", institution: "NH농협", collateralType: "빌라",
-    address: "서울 영등포구 당산동 리버빌라 3층 301호",
-    loanPrincipal: 560000000, appraisalValue: 720000000, askingPrice: 440000000,
-    ltv: 77.8, biddingDeadline: "2026-03-30T18:00:00Z", status: "BIDDING",
-    participants: 9, viewCount: 215,
-  },
-  {
-    id: "bid-008", institution: "수협", collateralType: "토지",
-    address: "인천 강화군 강화읍 농지 1,250평",
-    loanPrincipal: 320000000, appraisalValue: 450000000, askingPrice: 250000000,
-    ltv: 71.1, biddingDeadline: "2026-04-02T18:00:00Z", status: "BIDDING",
-    participants: 3, viewCount: 78,
-  },
-  {
-    id: "bid-009", institution: "하나은행", collateralType: "아파트",
-    address: "대구 수성구 범어동 현대아파트 507동 1801호",
-    loanPrincipal: 480000000, appraisalValue: 650000000, askingPrice: 390000000,
-    ltv: 73.8, biddingDeadline: "2026-04-05T18:00:00Z", status: "BIDDING",
-    participants: 14, viewCount: 298,
-  },
-  {
-    id: "bid-010", institution: "산업은행", collateralType: "공장",
-    address: "인천 남동구 논현동 공장용지 및 건물 1동",
-    loanPrincipal: 2100000000, appraisalValue: 2800000000, askingPrice: 1750000000,
-    ltv: 75.0, biddingDeadline: "2026-03-20T18:00:00Z", status: "CLOSING_SOON",
-    participants: 6, viewCount: 167,
-  },
-  {
-    id: "bid-011", institution: "IBK기업은행", collateralType: "상가",
-    address: "부산 부산진구 부전동 근린상가 3층 301호",
-    loanPrincipal: 290000000, appraisalValue: 400000000, askingPrice: 230000000,
-    ltv: 72.5, biddingDeadline: "2026-03-15T18:00:00Z", status: "COMPLETED",
-    participants: 11, viewCount: 189,
-  },
-  {
-    id: "bid-012", institution: "한국자산관리공사", collateralType: "아파트",
-    address: "경기 고양시 일산서구 주엽동 강선마을 103동 704호",
-    loanPrincipal: 410000000, appraisalValue: 550000000, askingPrice: 330000000,
-    ltv: 74.5, biddingDeadline: "2026-04-08T18:00:00Z", status: "BIDDING",
-    participants: 19, viewCount: 356,
-  },
-  {
-    id: "bid-013", institution: "KB국민은행", collateralType: "토지",
-    address: "경기 화성시 봉담읍 대지 890평",
-    loanPrincipal: 1150000000, appraisalValue: 1500000000, askingPrice: 920000000,
-    ltv: 76.7, biddingDeadline: "2026-03-21T18:00:00Z", status: "CLOSING_SOON",
-    participants: 7, viewCount: 201,
-  },
-  {
-    id: "bid-014", institution: "신한은행", collateralType: "오피스텔",
-    address: "서울 강서구 마곡동 보타닉파크 오피스텔 612호",
-    loanPrincipal: 340000000, appraisalValue: 470000000, askingPrice: 275000000,
-    ltv: 72.3, biddingDeadline: "2026-04-01T18:00:00Z", status: "BIDDING",
-    participants: 10, viewCount: 143,
-  },
-  {
-    id: "bid-015", institution: "우리은행", collateralType: "빌라",
-    address: "서울 관악구 신림동 신림빌라 2층 202호",
-    loanPrincipal: 250000000, appraisalValue: 380000000, askingPrice: 200000000,
-    ltv: 65.8, biddingDeadline: "2026-04-10T18:00:00Z", status: "BIDDING",
-    participants: 4, viewCount: 92,
-  },
-  {
-    id: "bid-016", institution: "NH농협", collateralType: "공장",
-    address: "경기 안산시 단원구 원시동 공장건물 2동",
-    loanPrincipal: 3500000000, appraisalValue: 4800000000, askingPrice: 2800000000,
-    ltv: 72.9, biddingDeadline: "2026-04-15T18:00:00Z", status: "BIDDING",
-    participants: 3, viewCount: 112,
-  },
-  {
-    id: "bid-017", institution: "KB국민은행", collateralType: "아파트",
-    address: "부산 수영구 광안동 삼익비치타운 12동 501호",
-    loanPrincipal: 680000000, appraisalValue: 900000000, askingPrice: 540000000,
-    ltv: 75.6, biddingDeadline: "2026-03-26T18:00:00Z", status: "BIDDING",
-    participants: 16, viewCount: 388,
-  },
-  {
-    id: "bid-018", institution: "산업은행", collateralType: "토지",
-    address: "대구 달서구 성당동 상업용지 620평",
-    loanPrincipal: 5200000000, appraisalValue: 7000000000, askingPrice: 4200000000,
-    ltv: 74.3, biddingDeadline: "2026-03-18T18:00:00Z", status: "CLOSING_SOON",
-    participants: 2, viewCount: 87,
-  },
-  {
-    id: "bid-019", institution: "수협", collateralType: "상가",
-    address: "인천 중구 신포동 상가건물 1~2층",
-    loanPrincipal: 520000000, appraisalValue: 700000000, askingPrice: 410000000,
-    ltv: 74.3, biddingDeadline: "2026-04-12T18:00:00Z", status: "BIDDING",
-    participants: 7, viewCount: 156,
-  },
-  {
-    id: "bid-020", institution: "신한은행", collateralType: "아파트",
-    address: "경기 수원시 영통구 영통동 벽산아파트 105동 1203호",
-    loanPrincipal: 510000000, appraisalValue: 680000000, askingPrice: 400000000,
-    ltv: 75.0, biddingDeadline: "2026-03-14T18:00:00Z", status: "COMPLETED",
-    participants: 20, viewCount: 445,
-  },
-]
+// ─── (Mock data removed — all data loaded from Supabase) ────────────────────
 
 // ─── Filter Options ──────────────────────────────────────────
 
@@ -323,8 +178,8 @@ export default function BiddingPage() {
   const [viewMode, setViewMode] = useState<"card" | "table">("card")
   const [currentPage, setCurrentPage] = useState(1)
 
-  // API + loading state
-  const [data, setData] = useState<BiddingItem[]>(MOCK_DATA)
+  // Data state — empty until Supabase responds
+  const [data, setData] = useState<BiddingItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   // Bid modal state
@@ -334,30 +189,58 @@ export default function BiddingPage() {
   const [bidMemo, setBidMemo] = useState("")
   const [bidSubmitting, setBidSubmitting] = useState(false)
 
-  // Fetch data from API with mock fallback
+  // Fetch from Supabase (with API route as secondary source)
   useEffect(() => {
     let cancelled = false
     async function fetchData() {
       setIsLoading(true)
       try {
-        const res = await fetch("/api/v1/market/bidding")
-        if (!res.ok) throw new Error("API error")
-        const json = await res.json()
-        if (!cancelled && Array.isArray(json.data) && json.data.length > 0) {
-          // API 필드명 → 프론트 타입 매핑
-          const mapped = json.data.map((item: any) => ({
-            ...item,
-            institution: item.institution || item.creditor_institution || "미상",
-            appraisedValue: item.appraisedValue || item.appraised_value || 0,
-            claimAmount: item.claimAmount || item.claim_amount || item.loan_balance || 0,
-            collateralType: item.collateralType || item.collateral_type || "기타",
-            discountRate: item.discountRate || item.discount_rate || 0,
-            bidStatus: item.bidStatus || item.bid_status || item.status || "OPEN",
+        // Primary: direct Supabase query for active auction listings
+        const { createClient } = await import("@/lib/supabase/client")
+        const supabase = createClient()
+        const { data: rows } = await supabase
+          .from("court_auction_listings")
+          .select("*")
+          .in("status", ["BIDDING", "CLOSING_SOON"])
+          .order("bidding_deadline", { ascending: true })
+          .limit(50)
+
+        if (!cancelled && rows && rows.length > 0) {
+          const mapped: BiddingItem[] = rows.map((r: any) => ({
+            id: String(r.id),
+            institution: r.institution ?? r.creditor_institution ?? "미상",
+            collateralType: (r.collateral_type ?? "아파트") as CollateralType,
+            address: r.address ?? "주소 미공개",
+            loanPrincipal: r.loan_principal ?? r.claim_amount ?? 0,
+            appraisalValue: r.appraisal_value ?? r.appraised_value ?? 0,
+            askingPrice: r.asking_price ?? r.minimum_bid ?? 0,
+            ltv: r.ltv ?? (r.loan_principal && r.appraisal_value ? Math.round((r.loan_principal / r.appraisal_value) * 100) : 0),
+            biddingDeadline: String(r.bidding_deadline ?? "").slice(0, 10),
+            status: (r.status ?? "BIDDING") as BiddingStatus,
+            participants: r.participants ?? r.bid_count ?? 0,
+            viewCount: r.view_count ?? 0,
           }))
           setData(mapped)
+        } else {
+          // Secondary: try API route
+          const res = await fetch("/api/v1/market/bidding")
+          if (res.ok) {
+            const json = await res.json()
+            if (!cancelled && Array.isArray(json.data) && json.data.length > 0) {
+              const mapped = json.data.map((item: any) => ({
+                ...item,
+                institution: item.institution || item.creditor_institution || "미상",
+                appraisalValue: item.appraisalValue || item.appraised_value || 0,
+                loanPrincipal: item.loanPrincipal || item.claim_amount || item.loan_balance || 0,
+                collateralType: (item.collateralType || item.collateral_type || "아파트") as CollateralType,
+                status: (item.bidStatus || item.bid_status || item.status || "BIDDING") as BiddingStatus,
+              }))
+              setData(mapped)
+            }
+          }
         }
       } catch {
-        // fallback to mock data (already set as default)
+        // data stays empty — no mock fallback
       } finally {
         if (!cancelled) setIsLoading(false)
       }
@@ -497,7 +380,7 @@ export default function BiddingPage() {
   }, [activeTab, collateralFilter, institutionFilter, sortBy, searchQuery])
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-[var(--color-surface-base)]">
       {/* ──── Hero Section ──── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#1B3A5C] to-[#2E75B6] text-white">
         {/* Decorative circles */}
@@ -524,47 +407,47 @@ export default function BiddingPage() {
       {/* ──── KPI Stat Cards ──── */}
       <div className="container mx-auto px-4 -mt-8 relative z-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="shadow-lg border-0 dark:bg-gray-900 dark:border-gray-800">
+          <Card className="shadow-lg border-0 bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2.5 bg-green-50 rounded-xl shrink-0 dark:bg-green-900/30">
-                <Gavel className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <div className="p-2.5 bg-green-500/10 rounded-xl shrink-0">
+                <Gavel className="h-5 w-5 text-green-400" />
               </div>
               <div>
-                <p className="text-xs text-gray-500 font-medium dark:text-gray-400">진행중 입찰</p>
-                <p className="text-2xl font-bold text-[#1B3A5C] dark:text-white">{activeBiddings}<span className="text-sm font-medium ml-0.5">건</span></p>
+                <p className="text-xs text-[var(--color-text-secondary)] font-medium">진행중 입찰</p>
+                <p className="text-2xl font-bold text-[var(--color-text-primary)]">{activeBiddings}<span className="text-sm font-medium ml-0.5">건</span></p>
               </div>
             </CardContent>
           </Card>
-          <Card className="shadow-lg border-0 dark:bg-gray-900 dark:border-gray-800">
+          <Card className="shadow-lg border-0 bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2.5 bg-blue-50 rounded-xl shrink-0 dark:bg-blue-900/30">
-                <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <div className="p-2.5 bg-blue-500/10 rounded-xl shrink-0">
+                <Calendar className="h-5 w-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-xs text-gray-500 font-medium dark:text-gray-400">이번달 신규</p>
-                <p className="text-2xl font-bold text-[#1B3A5C] dark:text-white">{thisMonthNew}<span className="text-sm font-medium ml-0.5">건</span></p>
+                <p className="text-xs text-[var(--color-text-secondary)] font-medium">이번달 신규</p>
+                <p className="text-2xl font-bold text-[var(--color-text-primary)]">{thisMonthNew}<span className="text-sm font-medium ml-0.5">건</span></p>
               </div>
             </CardContent>
           </Card>
-          <Card className="shadow-lg border-0 dark:bg-gray-900 dark:border-gray-800">
+          <Card className="shadow-lg border-0 bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2.5 bg-purple-50 rounded-xl shrink-0 dark:bg-purple-900/30">
-                <Banknote className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <div className="p-2.5 bg-purple-500/10 rounded-xl shrink-0">
+                <Banknote className="h-5 w-5 text-purple-400" />
               </div>
               <div>
-                <p className="text-xs text-gray-500 font-medium dark:text-gray-400">총 거래규모</p>
-                <p className="text-2xl font-bold text-[#1B3A5C] dark:text-white">{Math.floor(totalVolume / 100000000).toLocaleString()}<span className="text-sm font-medium ml-0.5">억</span></p>
+                <p className="text-xs text-[var(--color-text-secondary)] font-medium">총 거래규모</p>
+                <p className="text-2xl font-bold text-[var(--color-text-primary)]">{Math.floor(totalVolume / 100000000).toLocaleString()}<span className="text-sm font-medium ml-0.5">억</span></p>
               </div>
             </CardContent>
           </Card>
-          <Card className="shadow-lg border-0 dark:bg-gray-900 dark:border-gray-800">
+          <Card className="shadow-lg border-0 bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2.5 bg-orange-50 rounded-xl shrink-0 dark:bg-orange-900/30">
-                <PercentCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              <div className="p-2.5 bg-orange-500/10 rounded-xl shrink-0">
+                <PercentCircle className="h-5 w-5 text-orange-400" />
               </div>
               <div>
-                <p className="text-xs text-gray-500 font-medium dark:text-gray-400">평균 할인율</p>
-                <p className="text-2xl font-bold text-[#1B3A5C] dark:text-white">{avgDiscount}<span className="text-sm font-medium ml-0.5">%</span></p>
+                <p className="text-xs text-[var(--color-text-secondary)] font-medium">평균 할인율</p>
+                <p className="text-2xl font-bold text-[var(--color-text-primary)]">{avgDiscount}<span className="text-sm font-medium ml-0.5">%</span></p>
               </div>
             </CardContent>
           </Card>
@@ -574,7 +457,7 @@ export default function BiddingPage() {
       {/* ──── Tab Filters ──── */}
       <div className="container mx-auto px-4 mt-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="h-10 bg-white shadow-sm border dark:bg-gray-900 dark:border-gray-700">
+          <TabsList className="h-10 bg-[var(--color-surface-elevated)] shadow-sm border-[var(--color-border-subtle)]">
             <TabsTrigger value="ALL" className="px-4">전체</TabsTrigger>
             <TabsTrigger value="BIDDING" className="px-4">입찰중</TabsTrigger>
             <TabsTrigger value="CLOSING_SOON" className="px-4">마감임박 (D-3이내)</TabsTrigger>
@@ -585,7 +468,7 @@ export default function BiddingPage() {
 
       {/* ──── Filter Bar ──── */}
       <div className="container mx-auto px-4 mt-4">
-        <Card className="mb-6 dark:bg-gray-900 dark:border-gray-800">
+        <Card className="mb-6 bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]">
           <CardContent className="p-4">
             <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
               {/* Collateral Type */}
@@ -639,10 +522,10 @@ export default function BiddingPage() {
 
               {/* Register Button */}
               <Link href="/exchange/auction/new">
-                <Button className="w-full lg:w-auto bg-[#2E75B6] hover:bg-[#1B3A5C] text-white">
+                <button className="w-full lg:w-auto bg-[#2E75B6] hover:bg-[#1B3A5C] text-white px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1.5">
                   <Plus className="h-4 w-4 mr-1" />
                   금융기관 입찰 등록
-                </Button>
+                </button>
               </Link>
             </div>
           </CardContent>
@@ -650,10 +533,10 @@ export default function BiddingPage() {
 
         {/* ──── Results header + view toggle ──── */}
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            총 <span className="font-bold text-[#1B3A5C] dark:text-white">{filteredData.length}</span>건
+          <p className="text-sm text-[var(--color-text-secondary)]">
+            총 <span className="font-bold text-[var(--color-text-primary)]">{filteredData.length}</span>건
             {filteredData.length > 0 && (
-              <span className="text-gray-400 dark:text-gray-500 ml-1">
+              <span className="text-[var(--color-text-muted)] ml-1">
                 ({startItem}-{endItem} 표시중)
               </span>
             )}
@@ -703,15 +586,14 @@ export default function BiddingPage() {
 
         {/* ──── Empty State ──── */}
         {!isLoading && filteredData.length === 0 && (
-          <Card className="p-16 text-center dark:bg-gray-900 dark:border-gray-800">
-            <Search className="h-14 w-14 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400 text-lg font-semibold">검색 결과가 없습니다</p>
-            <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
+          <Card className="p-16 text-center bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]">
+            <Search className="h-14 w-14 text-[var(--color-text-muted)] mx-auto mb-4" />
+            <p className="text-[var(--color-text-secondary)] text-lg font-semibold">검색 결과가 없습니다</p>
+            <p className="text-[var(--color-text-muted)] text-sm mt-2">
               필터 조건을 변경하거나 다른 키워드로 검색해 보세요.
             </p>
-            <Button
-              variant="outline"
-              className="mt-4"
+            <button
+              className="mt-4 px-3 py-1.5 rounded-lg text-sm border border-white/10 hover:bg-white/5 transition-colors flex items-center gap-1.5"
               onClick={() => {
                 setActiveTab("ALL")
                 setCollateralFilter("ALL")
@@ -720,7 +602,7 @@ export default function BiddingPage() {
               }}
             >
               필터 초기화
-            </Button>
+            </button>
           </Card>
         )}
 
@@ -733,7 +615,7 @@ export default function BiddingPage() {
               return (
                 <Card
                   key={item.id}
-                  className={`overflow-hidden transition-shadow hover:shadow-lg dark:bg-gray-900 dark:border-gray-800 ${
+                  className={`overflow-hidden transition-shadow hover:shadow-lg bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] ${
                     isClosingSoon ? "border-l-4 border-l-orange-400" : ""
                   }`}
                 >
@@ -744,18 +626,18 @@ export default function BiddingPage() {
                         <div className={`h-8 w-8 rounded-lg ${getInstitutionColor(item.institution)} text-white flex items-center justify-center text-[10px] font-bold shrink-0`}>
                           {getInstitutionInitial(item.institution)}
                         </div>
-                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">{item.institution}</span>
+                        <span className="text-sm font-semibold text-[var(--color-text-secondary)] truncate">{item.institution}</span>
                       </div>
                       {getStatusBadge(item.status)}
                     </div>
 
                     {/* Collateral type badge */}
-                    <Badge variant="outline" className="mb-2 text-xs">
+                    <span className="mb-2 text-xs inline-flex items-center border rounded-full px-2 py-0.5">
                       {item.collateralType}
-                    </Badge>
+                    </span>
 
                     {/* Address */}
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white leading-snug line-clamp-2 mb-3">
+                    <p className="text-sm font-semibold text-[var(--color-text-primary)] leading-snug line-clamp-2 mb-3">
                       <MapPin className="h-3.5 w-3.5 inline-block mr-1 text-gray-400 relative -top-px" />
                       {item.address}
                     </p>
@@ -763,15 +645,15 @@ export default function BiddingPage() {
                     {/* Financial info */}
                     <div className="space-y-1.5 mb-3 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-500 dark:text-gray-400">대출원금</span>
-                        <span className="font-medium dark:text-gray-300">{formatKRW(item.loanPrincipal)}</span>
+                        <span className="text-[var(--color-text-secondary)]">대출원금</span>
+                        <span className="font-medium text-[var(--color-text-secondary)]">{formatKRW(item.loanPrincipal)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500 dark:text-gray-400">감정가</span>
-                        <span className="font-medium dark:text-gray-300">{formatKRW(item.appraisalValue)}</span>
+                        <span className="text-[var(--color-text-secondary)]">감정가</span>
+                        <span className="font-medium text-[var(--color-text-secondary)]">{formatKRW(item.appraisalValue)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500 dark:text-gray-400">희망매각가</span>
+                        <span className="text-[var(--color-text-secondary)]">희망매각가</span>
                         <span className="font-bold text-[#2E75B6]">{formatKRW(item.askingPrice)}</span>
                       </div>
                     </div>
@@ -779,10 +661,10 @@ export default function BiddingPage() {
                     {/* LTV Progress Bar */}
                     <div className="mb-3">
                       <div className="flex justify-between text-xs mb-1">
-                        <span className="text-gray-500 dark:text-gray-400">LTV</span>
+                        <span className="text-[var(--color-text-secondary)]">LTV</span>
                         <span className={`font-bold ${getLtvTextColor(item.ltv)}`}>{item.ltv}%</span>
                       </div>
-                      <div className="h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div className="h-2 w-full bg-[var(--color-surface-overlay)] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all ${getLtvColor(item.ltv)}`}
                           style={{ width: `${Math.min(item.ltv, 100)}%` }}
@@ -792,7 +674,7 @@ export default function BiddingPage() {
 
                     {/* Deadline */}
                     <div className={`flex items-center justify-between mb-3 p-2 rounded-lg ${getDDayBgColor(dday)}`}>
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)]">
                         <Clock className="h-3.5 w-3.5" />
                         <span>
                           {new Date(item.biddingDeadline).toLocaleDateString("ko-KR", {
@@ -807,7 +689,7 @@ export default function BiddingPage() {
                     </div>
 
                     {/* Participants + Views */}
-                    <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500 mb-4">
+                    <div className="flex items-center gap-4 text-xs text-[var(--color-text-muted)] mb-4">
                       <span className="flex items-center gap-1">
                         <Users className="h-3.5 w-3.5" />
                         참여 {item.participants}명
@@ -820,19 +702,18 @@ export default function BiddingPage() {
 
                     {/* Action Buttons */}
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        className="flex-1 bg-[#2E75B6] hover:bg-[#1B3A5C] text-white"
+                      <button
+                        className="flex-1 bg-[#2E75B6] hover:bg-[#1B3A5C] text-white px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1.5 justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={item.status === "COMPLETED"}
                         onClick={() => handleOpenBidModal(item)}
                       >
                         <Gavel className="h-3.5 w-3.5 mr-1" />
                         입찰 참여
-                      </Button>
+                      </button>
                       <Link href={`/listings/${item.id}`} className="flex-1">
-                        <Button variant="outline" size="sm" className="w-full">
+                        <button className="w-full px-3 py-1.5 rounded-lg text-sm border border-white/10 hover:bg-white/5 transition-colors flex items-center gap-1.5 justify-center">
                           상세보기
-                        </Button>
+                        </button>
                       </Link>
                     </div>
                   </CardContent>
@@ -844,7 +725,7 @@ export default function BiddingPage() {
 
         {/* ──── Table View ──── */}
         {!isLoading && viewMode === "table" && filteredData.length > 0 && (
-          <Card className="dark:bg-gray-900 dark:border-gray-800">
+          <Card className="bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -869,7 +750,7 @@ export default function BiddingPage() {
                     return (
                       <TableRow
                         key={item.id}
-                        className={isClosingSoon ? "bg-orange-50/50 dark:bg-orange-900/10" : ""}
+                        className={isClosingSoon ? "bg-orange-500/5" : ""}
                       >
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -880,9 +761,9 @@ export default function BiddingPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="text-xs">{item.collateralType}</Badge>
+                          <span className="text-xs inline-flex items-center border rounded-full px-2 py-0.5">{item.collateralType}</span>
                         </TableCell>
-                        <TableCell className="text-sm text-gray-700 dark:text-gray-300 max-w-[250px] truncate">
+                        <TableCell className="text-sm text-[var(--color-text-secondary)] max-w-[250px] truncate">
                           {item.address}
                         </TableCell>
                         <TableCell className="text-right text-sm">
@@ -894,7 +775,7 @@ export default function BiddingPage() {
                         <TableCell className="text-right text-sm font-bold text-[#2E75B6]">
                           {formatKRW(item.askingPrice)}
                         </TableCell>
-                        <TableCell className="text-center text-xs text-gray-500 dark:text-gray-400">
+                        <TableCell className="text-center text-xs text-[var(--color-text-secondary)]">
                           {new Date(item.biddingDeadline).toLocaleDateString("ko-KR", {
                             month: "short",
                             day: "numeric",
@@ -913,19 +794,17 @@ export default function BiddingPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1 justify-center">
-                            <Button
-                              variant="default"
-                              size="sm"
-                              className="text-xs bg-[#2E75B6] hover:bg-[#1B3A5C]"
+                            <button
+                              className="text-xs bg-[#2E75B6] hover:bg-[#1B3A5C] text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                               disabled={item.status === "COMPLETED"}
                               onClick={() => handleOpenBidModal(item)}
                             >
                               입찰
-                            </Button>
+                            </button>
                             <Link href={`/listings/${item.id}`}>
-                              <Button variant="outline" size="sm" className="text-xs">
+                              <button className="text-xs px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition-colors flex items-center gap-1.5">
                                 상세
-                              </Button>
+                              </button>
                             </Link>
                           </div>
                         </TableCell>
@@ -941,38 +820,34 @@ export default function BiddingPage() {
         {/* ──── Pagination ──── */}
         {filteredData.length > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 mb-12">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-[var(--color-text-secondary)]">
               {filteredData.length}건 중 {startItem}-{endItem}
             </p>
             {totalPages > 1 && (
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
+                  className="px-3 py-1.5 rounded-lg text-sm border border-white/10 hover:bg-white/5 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                </Button>
+                </button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <Button
+                  <button
                     key={page}
-                    variant={page === currentPage ? "default" : "outline"}
-                    size="sm"
-                    className={page === currentPage ? "bg-[#1B3A5C] hover:bg-[#2E75B6] text-white" : ""}
+                    className={page === currentPage ? "bg-[#1B3A5C] hover:bg-[#2E75B6] text-white px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1.5" : "px-3 py-1.5 rounded-lg text-sm border border-white/10 hover:bg-white/5 transition-colors flex items-center gap-1.5"}
                     onClick={() => handlePageChange(page)}
                   >
                     {page}
-                  </Button>
+                  </button>
                 ))}
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
+                  className="px-3 py-1.5 rounded-lg text-sm border border-white/10 hover:bg-white/5 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
                 >
                   <ChevronRight className="h-4 w-4" />
-                </Button>
+                </button>
               </div>
             )}
           </div>
@@ -995,34 +870,34 @@ export default function BiddingPage() {
           {bidTarget && (
             <div className="space-y-4">
               {/* Listing summary */}
-              <div className="rounded-lg border bg-gray-50 p-4 space-y-3 dark:bg-gray-800 dark:border-gray-700">
+              <div className="rounded-lg border bg-[var(--color-surface-overlay)] p-4 space-y-3 border-[var(--color-border-subtle)]">
                 <div className="flex items-center gap-2">
                   <div className={`h-7 w-7 rounded ${getInstitutionColor(bidTarget.institution)} text-white flex items-center justify-center text-[9px] font-bold`}>
                     {getInstitutionInitial(bidTarget.institution)}
                   </div>
-                  <span className="text-sm font-semibold dark:text-white">{bidTarget.institution}</span>
-                  <Badge variant="outline" className="text-xs ml-auto">{bidTarget.collateralType}</Badge>
+                  <span className="text-sm font-semibold text-[var(--color-text-primary)]">{bidTarget.institution}</span>
+                  <span className="text-xs ml-auto inline-flex items-center border rounded-full px-2 py-0.5">{bidTarget.collateralType}</span>
                 </div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white leading-snug">
+                <p className="text-sm font-medium text-[var(--color-text-primary)] leading-snug">
                   <MapPin className="h-3.5 w-3.5 inline-block mr-1 text-gray-400 relative -top-px" />
                   {bidTarget.address}
                 </p>
-                <div className="grid grid-cols-2 gap-3 text-sm pt-1 border-t dark:border-gray-600">
+                <div className="grid grid-cols-2 gap-3 text-sm pt-1 border-t border-[var(--color-border-subtle)]">
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400 text-xs">대출원금</span>
-                    <p className="font-medium dark:text-gray-300">{formatKRW(bidTarget.loanPrincipal)}</p>
+                    <span className="text-[var(--color-text-secondary)] text-xs">대출원금</span>
+                    <p className="font-medium text-[var(--color-text-secondary)]">{formatKRW(bidTarget.loanPrincipal)}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400 text-xs">감정가</span>
-                    <p className="font-medium dark:text-gray-300">{formatKRW(bidTarget.appraisalValue)}</p>
+                    <span className="text-[var(--color-text-secondary)] text-xs">감정가</span>
+                    <p className="font-medium text-[var(--color-text-secondary)]">{formatKRW(bidTarget.appraisalValue)}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400 text-xs">희망매각가</span>
+                    <span className="text-[var(--color-text-secondary)] text-xs">희망매각가</span>
                     <p className="font-bold text-[#2E75B6]">{formatKRW(bidTarget.askingPrice)}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400 text-xs">마감일</span>
-                    <p className="font-medium dark:text-gray-300">
+                    <span className="text-[var(--color-text-secondary)] text-xs">마감일</span>
+                    <p className="font-medium text-[var(--color-text-secondary)]">
                       {new Date(bidTarget.biddingDeadline).toLocaleDateString("ko-KR")}
                       {" "}
                       <span className={`font-bold ${getDDayColor(getDDay(bidTarget.biddingDeadline))}`}>
@@ -1063,9 +938,9 @@ export default function BiddingPage() {
               </div>
 
               {/* NDA Notice */}
-              <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 p-3 dark:bg-amber-900/20 dark:border-amber-800">
-                <FileText className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-                <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+              <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 p-3">
+                <FileText className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
+                <p className="text-xs text-amber-300 leading-relaxed">
                   입찰 참여 시 비밀유지서약(NDA)에 동의하는 것으로 간주됩니다.
                 </p>
               </div>
@@ -1073,11 +948,11 @@ export default function BiddingPage() {
           )}
 
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setBidModalOpen(false)} disabled={bidSubmitting}>
+            <button className="px-3 py-1.5 rounded-lg text-sm border border-white/10 hover:bg-white/5 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed" onClick={() => setBidModalOpen(false)} disabled={bidSubmitting}>
               취소
-            </Button>
-            <Button
-              className="bg-[#2E75B6] hover:bg-[#1B3A5C] text-white"
+            </button>
+            <button
+              className="bg-[#2E75B6] hover:bg-[#1B3A5C] text-white px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleSubmitBid}
               disabled={!bidAmount || Number(bidAmount) <= 0 || bidSubmitting}
             >
@@ -1092,7 +967,7 @@ export default function BiddingPage() {
                   입찰 확인
                 </>
               )}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

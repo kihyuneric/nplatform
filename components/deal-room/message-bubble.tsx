@@ -66,11 +66,11 @@ export function MessageBubble({
   if (isSystem) {
     return (
       <div className="flex justify-center my-2">
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-1.5 max-w-[85%]">
-          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+        <div className="bg-[var(--color-surface-overlay)] rounded-full px-4 py-1.5 max-w-[85%]">
+          <p className="text-xs text-[var(--color-text-secondary)] text-center">
             {message.content}
           </p>
-          <p className="text-[10px] text-gray-400 dark:text-gray-500 text-center mt-0.5">
+          <p className="text-[10px] text-[var(--color-text-muted)] text-center mt-0.5">
             {formatTime(message.created_at)}
           </p>
         </div>
@@ -87,8 +87,8 @@ export function MessageBubble({
           className={cn(
             "text-xs font-medium px-1",
             isMine
-              ? "text-right text-blue-300 dark:text-blue-400"
-              : "text-left text-gray-500 dark:text-gray-400"
+              ? "text-right text-blue-300"
+              : "text-left text-[var(--color-text-secondary)]"
           )}
         >
           {isMine ? "나" : message.sender_name}
@@ -100,7 +100,7 @@ export function MessageBubble({
             "rounded-2xl px-4 py-2.5",
             isMine
               ? "bg-[#1B3A5C] text-white rounded-tr-sm"
-              : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-tl-sm"
+              : "bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] rounded-tl-sm"
           )}
         >
           {/* Text content */}
@@ -144,7 +144,7 @@ export function MessageBubble({
             isMine ? "justify-end" : "justify-start"
           )}
         >
-          <span className="text-[10px] text-gray-400 dark:text-gray-500">
+          <span className="text-[10px] text-[var(--color-text-muted)]">
             {formatTime(message.created_at)}
           </span>
           {isMine && (
@@ -152,7 +152,7 @@ export function MessageBubble({
               {readStatus === "read" ? (
                 <CheckCheck className="w-3.5 h-3.5 text-blue-500" />
               ) : (
-                <Check className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                <Check className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
               )}
             </span>
           )}

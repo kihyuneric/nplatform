@@ -253,7 +253,7 @@ function NplListingCards() {
       {listings.map((l, i) => (
         <div
           key={i}
-          className="rounded-lg border bg-white p-3 text-sm shadow-sm"
+          className="rounded-lg border bg-[var(--color-surface-elevated)] p-3 text-sm shadow-sm"
         >
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-2">
@@ -303,7 +303,7 @@ function ApiListingCards({
         <a
           key={item.id}
           href={`/listings/${item.id}`}
-          className="block rounded-lg border bg-white p-3 text-sm shadow-sm transition-colors hover:border-[#2E75B6]/40 hover:bg-blue-50/30"
+          className="block rounded-lg border bg-[var(--color-surface-elevated)] p-3 text-sm shadow-sm transition-colors hover:border-[#2E75B6]/40 hover:bg-blue-500/10"
         >
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-2">
@@ -360,7 +360,7 @@ function QuickActionButton({
   return (
     <a
       href={href}
-      className="inline-flex items-center gap-1 rounded-full border border-[#2E75B6]/30 bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-[#2E75B6] transition-colors hover:bg-[#2E75B6] hover:text-white"
+      className="inline-flex items-center gap-1 rounded-full border border-[#2E75B6]/30 bg-blue-500/10 px-2.5 py-1 text-[11px] font-medium text-[#2E75B6] transition-colors hover:bg-[#2E75B6] hover:text-white"
     >
       {icon}
       {label}
@@ -371,27 +371,27 @@ function QuickActionButton({
 
 function AnalysisCard() {
   return (
-    <div className="mt-2 rounded-lg border bg-white p-3 text-sm shadow-sm">
+    <div className="mt-2 rounded-lg border bg-[var(--color-surface-elevated)] p-3 text-sm shadow-sm">
       <div className="mb-2 flex items-center gap-2">
         <BarChart3 className="h-4 w-4 text-[#2E75B6]" />
         <span className="font-semibold text-foreground">AI 분석 요약</span>
       </div>
       <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="rounded bg-blue-50 p-2 text-center">
+        <div className="rounded bg-blue-500/10 p-2 text-center">
           <p className="text-muted-foreground">AI 등급</p>
           <p className="text-lg font-bold text-[#2E75B6]">A-</p>
         </div>
-        <div className="rounded bg-orange-50 p-2 text-center">
+        <div className="rounded bg-orange-500/10 p-2 text-center">
           <p className="text-muted-foreground">리스크 점수</p>
-          <p className="text-lg font-bold text-orange-600">32 / 100</p>
+          <p className="text-lg font-bold text-orange-400">32 / 100</p>
         </div>
-        <div className="rounded bg-green-50 p-2 text-center">
+        <div className="rounded bg-green-500/10 p-2 text-center">
           <p className="text-muted-foreground">예상 수익률</p>
-          <p className="text-lg font-bold text-green-600">18.5%</p>
+          <p className="text-lg font-bold text-green-400">18.5%</p>
         </div>
-        <div className="rounded bg-purple-50 p-2 text-center">
+        <div className="rounded bg-purple-500/10 p-2 text-center">
           <p className="text-muted-foreground">회수 가능성</p>
-          <p className="text-lg font-bold text-purple-600">높음</p>
+          <p className="text-lg font-bold text-purple-400">높음</p>
         </div>
       </div>
       <div className="mt-2 flex gap-2">
@@ -407,9 +407,9 @@ function AnalysisCard() {
 
 function RoiCard() {
   return (
-    <div className="mt-2 rounded-lg border bg-white p-3 text-sm shadow-sm">
+    <div className="mt-2 rounded-lg border bg-[var(--color-surface-elevated)] p-3 text-sm shadow-sm">
       <div className="mb-2 flex items-center gap-2">
-        <Calculator className="h-4 w-4 text-green-600" />
+        <Calculator className="h-4 w-4 text-green-400" />
         <span className="font-semibold text-foreground">수익률 시뮬레이션</span>
       </div>
       <div className="space-y-1 text-xs">
@@ -442,7 +442,7 @@ function RoiCard() {
 
 function MarketStatsCard() {
   return (
-    <div className="mt-2 rounded-lg border bg-white p-3 text-sm shadow-sm">
+    <div className="mt-2 rounded-lg border bg-[var(--color-surface-elevated)] p-3 text-sm shadow-sm">
       <div className="mb-2 flex items-center gap-2">
         <TrendingUp className="h-4 w-4 text-[#2E75B6]" />
         <span className="font-semibold text-foreground">시장 동향</span>
@@ -553,7 +553,7 @@ function TypingIndicator() {
       {[0, 1, 2].map((i) => (
         <motion.span
           key={i}
-          className="block h-2 w-2 rounded-full bg-gray-400"
+          className="block h-2 w-2 rounded-full bg-[var(--color-text-muted)]"
           animate={{ y: [0, -6, 0] }}
           transition={{
             duration: 0.6,
@@ -845,7 +845,7 @@ export function ChatWidget() {
             exit={{ opacity: 0, y: 40, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
             className={cn(
-              "fixed z-50 flex flex-col overflow-hidden rounded-2xl border bg-gray-50 shadow-2xl",
+              "fixed z-50 flex flex-col overflow-hidden rounded-2xl border bg-[var(--color-surface-overlay)] shadow-2xl",
               // Desktop
               "bottom-6 right-6 h-[600px] w-[400px]",
               // Mobile: full-screen
@@ -904,7 +904,7 @@ export function ChatWidget() {
                         AI
                       </AvatarFallback>
                     </Avatar>
-                    <div className="rounded-2xl rounded-tl-sm bg-white px-3 py-2 text-sm shadow-sm">
+                    <div className="rounded-2xl rounded-tl-sm bg-[var(--color-surface-elevated)] px-3 py-2 text-sm shadow-sm">
                       {welcomeMessage}
                     </div>
                   </div>
@@ -915,7 +915,7 @@ export function ChatWidget() {
                       <button
                         key={qp.label}
                         onClick={() => sendMessage(qp.label)}
-                        className="flex items-center gap-1.5 rounded-full border bg-white px-3 py-1.5 text-xs font-medium text-[#1B3A5C] shadow-sm transition-colors hover:bg-[#2E75B6] hover:text-white focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none"
+                        className="flex items-center gap-1.5 rounded-full border bg-[var(--color-surface-elevated)] px-3 py-1.5 text-xs font-medium text-[var(--color-brand-dark)] shadow-sm transition-colors hover:bg-[#2E75B6] hover:text-white focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none"
                       >
                         <qp.icon className="h-3.5 w-3.5" />
                         {qp.label}
@@ -951,7 +951,7 @@ export function ChatWidget() {
                       {msg.usedContext && msg.role === "assistant" && (
                         <Badge
                           variant="outline"
-                          className="mb-1 border-amber-300 bg-amber-50 text-[10px] text-amber-700"
+                          className="mb-1 border-amber-500/20 bg-amber-500/10 text-[10px] text-amber-400"
                         >
                           이전 검색 기반
                         </Badge>
@@ -961,7 +961,7 @@ export function ChatWidget() {
                           "inline-block rounded-2xl px-3 py-2 text-sm leading-relaxed",
                           msg.role === "user"
                             ? "rounded-tr-sm bg-[#2E75B6] text-white"
-                            : "rounded-tl-sm bg-white text-foreground shadow-sm"
+                            : "rounded-tl-sm bg-[var(--color-surface-elevated)] text-foreground shadow-sm"
                         )}
                       >
                         {msg.content.split("\n").map((line, i) => (
@@ -990,7 +990,7 @@ export function ChatWidget() {
                         AI
                       </AvatarFallback>
                     </Avatar>
-                    <div className="rounded-2xl rounded-tl-sm bg-white px-3 py-2 shadow-sm">
+                    <div className="rounded-2xl rounded-tl-sm bg-[var(--color-surface-elevated)] px-3 py-2 shadow-sm">
                       <TypingIndicator />
                     </div>
                   </div>
@@ -1001,7 +1001,7 @@ export function ChatWidget() {
             {/* Input bar */}
             <form
               onSubmit={handleSubmit}
-              className="flex items-center gap-2 border-t bg-white px-3 py-2"
+              className="flex items-center gap-2 border-t bg-[var(--color-surface-elevated)] px-3 py-2"
             >
               <input
                 ref={inputRef}
@@ -1018,8 +1018,8 @@ export function ChatWidget() {
                 className={cn(
                   "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none",
                   input.trim() && !isTyping
-                    ? "bg-[#2E75B6] text-white hover:bg-[#1B3A5C]"
-                    : "bg-gray-100 text-gray-400"
+                    ? "bg-[#2E75B6] text-white hover:bg-[var(--color-brand-dark)]"
+                    : "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]"
                 )}
                 aria-label="전송"
               >

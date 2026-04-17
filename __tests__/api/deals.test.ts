@@ -2,9 +2,21 @@
  * API Integration Tests for /api/deal-rooms
  * Assumes dev server is running at http://localhost:3000
  */
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
 
 const BASE_URL = 'http://localhost:3000'
+
+let serverAvailable = false
+beforeAll(async () => {
+  try {
+    const r = await fetch('http://localhost:3000/api/health', { signal: AbortSignal.timeout(2000) })
+    serverAvailable = r.ok || r.status < 500
+  } catch {
+    serverAvailable = false
+  }
+  if (!serverAvailable) console.warn('⚠️  Dev server offline — API tests will be skipped')
+}, 5000)
+beforeEach((ctx) => { if (!serverAvailable) ctx.skip() })
 
 describe('GET /api/deal-rooms', () => {
   it('returns dealRooms array', async () => {

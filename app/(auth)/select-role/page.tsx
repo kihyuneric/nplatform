@@ -88,15 +88,15 @@ export default function SelectRolePage() {
 
       {/* Logo */}
       <div className="flex items-center gap-2.5 mb-10">
-        <div className="w-9 h-9 rounded-xl bg-[#1B3A5C] flex items-center justify-center shadow-md">
+        <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-dark)] flex items-center justify-center shadow-md">
           <span className="text-white font-black text-base">N</span>
         </div>
-        <span className="text-2xl font-black text-[#0D1F38] tracking-tight">NPLatform</span>
+        <span className="text-2xl font-black text-[var(--color-brand-deep)] tracking-tight">NPLatform</span>
       </div>
 
       {/* Heading */}
       <div className="text-center mb-10 max-w-lg">
-        <h1 className="text-3xl font-black text-[#0D1F38] tracking-normal mb-3">
+        <h1 className="text-3xl font-black text-[var(--color-brand-deep)] tracking-normal mb-3">
           어떤 목적으로 사용하실 건가요?
         </h1>
         <p className="text-[#64748B] text-base tracking-normal">역할에 맞는 최적화된 서비스를 제공합니다</p>
@@ -129,7 +129,7 @@ export default function SelectRolePage() {
                 <Icon className={`w-5 h-5 transition-colors ${isSelected ? 'text-[#2E75B6]' : 'text-[#94A3B8]'}`} />
               </div>
 
-              <p className={`text-lg font-black tracking-normal mb-0.5 ${isSelected ? 'text-[#1B3A5C]' : 'text-[#0D1F38]'}`}>
+              <p className={`text-lg font-black tracking-normal mb-0.5 ${isSelected ? 'text-[var(--color-brand-dark)]' : 'text-[var(--color-brand-deep)]'}`}>
                 {role.label}
               </p>
               <p className={`text-xs font-semibold mb-3 tracking-normal ${isSelected ? 'text-[#2E75B6]' : 'text-[#94A3B8]'}`}>
@@ -146,7 +146,7 @@ export default function SelectRolePage() {
         <button
           onClick={handleSubmit}
           disabled={!selected || loading}
-          className="w-full bg-[#1B3A5C] text-white py-4 rounded-xl text-lg font-bold tracking-normal transition-all hover:bg-[#2E75B6] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full bg-[var(--color-brand-dark)] text-white py-4 rounded-xl text-lg font-bold tracking-normal transition-all hover:bg-[#2E75B6] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {loading ? (
             <><Loader2 className="w-4 h-4 animate-spin" /> 설정 중...</>

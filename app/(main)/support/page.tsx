@@ -16,7 +16,7 @@ const FAQS = [
   { q: '회원가입은 어떻게 하나요?', a: '홈페이지 우측 상단 "회원가입" 버튼을 클릭하여 이메일과 비밀번호를 입력하면 가입이 완료됩니다. 가입 후 투자자 인증을 진행하면 더 많은 서비스를 이용할 수 있습니다.' },
   { q: 'NPL 분석은 어떻게 시작하나요?', a: '상단 메뉴의 분석 도구 > NPL 분석에서 "새 분석 시작"을 클릭하세요. 사건번호, 감정가, 최저입찰가를 입력하면 AI가 자동으로 수익률과 리스크를 분석합니다.' },
   { q: '경매 시뮬레이터는 무료인가요?', a: '네, 모든 회원에게 무료로 제공됩니다. 입찰가별 예상 수익률, 세금, 비용을 자동으로 계산하여 최적의 투자 의사결정을 도와드립니다.' },
-  { q: '딜룸은 어떤 기능인가요?', a: '딜룸은 매수자와 매도자가 안전하게 거래를 진행할 수 있는 가상의 거래방입니다. NDA 서명, 실사 자료 공유, 계약 체결까지 모든 과정이 딜룸 내에서 이루어집니다.' },
+  { q: '딜룸은 어떤 기능인가요?', a: '딜룸은 매수자와 매도자가 안전하게 거래를 진행할 수 있는 비공개 거래 워크스페이스입니다. NDA 서명, 실사 자료 공유, 계약 체결까지 모든 과정이 딜룸 내에서 이루어집니다.' },
   { q: '플랜은 언제든 변경할 수 있나요?', a: '네, 언제든 상위 플랜으로 업그레이드하거나 다음 결제 주기부터 다운그레이드할 수 있습니다. 마이페이지 > 결제에서 변경 가능합니다.' },
 ]
 
@@ -135,7 +135,7 @@ export default function SupportPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className={`${DS.card.base} ${DS.card.padding}`}>
               <div className="flex items-center gap-3 mb-3">
-                <span className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-lg">📧</span>
+                <span className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-lg">📧</span>
                 <p className={DS.text.cardSubtitle}>이메일 문의</p>
               </div>
               <p className={`${DS.text.bodyMedium} ${DS.text.brand}`}>support@nplatform.co.kr</p>
@@ -143,7 +143,7 @@ export default function SupportPage() {
             </div>
             <div className={`${DS.card.base} ${DS.card.padding}`}>
               <div className="flex items-center gap-3 mb-3">
-                <span className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-lg">🕐</span>
+                <span className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-lg">🕐</span>
                 <p className={DS.text.cardSubtitle}>운영시간</p>
               </div>
               <p className={DS.text.bodyMedium}>평일 오전 9시 — 오후 6시</p>
@@ -158,7 +158,7 @@ export default function SupportPage() {
           <div className={`${DS.card.elevated} overflow-hidden`}>
             {submitted ? (
               <div className={DS.empty.wrapper}>
-                <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4 text-3xl text-emerald-600">✓</div>
+                <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-4 text-3xl text-emerald-500">✓</div>
                 <p className={DS.text.cardTitle}>문의가 접수되었습니다</p>
                 <p className={`${DS.text.caption} mt-2`}>영업일 기준 1~2일 내 답변드리겠습니다.</p>
               </div>

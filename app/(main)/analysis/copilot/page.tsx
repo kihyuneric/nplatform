@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import {
   Bot, User, Send, Sparkles, RefreshCw,
   TrendingUp, AlertTriangle, BarChart3, Scale, Lightbulb,
-  Building2, Plus, Clock, MessageSquare, Paperclip,
+  Building2, Plus, Clock, MessageSquare, Paperclip, Zap,
 } from "lucide-react"
 import { toast } from "sonner"
 import DS from "@/lib/design-system"
@@ -17,9 +17,24 @@ interface Message {
 }
 
 const STARTER_CARDS = [
-  { icon: Building2, label: "물건 분석", text: "서울 강남구 상가 경매 물건, 감정가 3억, LTV 75%, 연체 18개월 — 투자 가능한가요?" },
-  { icon: BarChart3, label: "수익률 계산", text: "감정가 5억 아파트 NPL, 최저가 3.5억에 낙찰받으면 수익률이 얼마나 되나요?" },
-  { icon: Scale, label: "법률 리스크", text: "선순위 근저당 2억에 임차인 보증금 5천만원이 있는 상가 — 배당 순서가 어떻게 되나요?" },
+  {
+    icon: Building2,
+    label: "물건 분석",
+    badge: "체험 추천",
+    text: "서울 강남구 상가 경매 물건, 감정가 3억, LTV 75%, 연체 18개월 — 투자 가능한가요?",
+  },
+  {
+    icon: BarChart3,
+    label: "수익률 계산",
+    badge: null,
+    text: "감정가 5억 아파트 NPL, 최저가 3.5억에 낙찰받으면 수익률이 얼마나 되나요?",
+  },
+  {
+    icon: Scale,
+    label: "법률 리스크",
+    badge: null,
+    text: "선순위 근저당 2억에 임차인 보증금 5천만원이 있는 상가 — 배당 순서가 어떻게 되나요?",
+  },
 ]
 
 const RECENT_CONVOS = [
@@ -49,15 +64,61 @@ export default function NPLCopilotPage() {
     const userMsg: Message = { id: `u-${Date.now()}`, role: "user", content: userText, timestamp: new Date() }
     setMessages((prev) => [...prev, userMsg])
     try {
-      const res = await fetch("/api/v1/copilot", {
+      // Stream from Claude AI Copilot
+      const res = await fetch("/api/v1/ai/copilot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userText, history: messages.slice(-10).map((m) => ({ role: m.role, content: m.content })), context: { conversation_id: conversationId } }),
+        body: JSON.stringify({
+          query: userText,
+          context: {
+            conversation_id: conversationId,
+            history: messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
+          },
+          stream: true,
+        }),
       })
       if (!res.ok) throw new Error(`${res.status}`)
-      const data = await res.json()
-      if (data.conversation_id && !conversationId) setConversationId(data.conversation_id)
-      setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: "assistant", content: data.message, timestamp: new Date() }])
+
+      // Handle SSE streaming
+      const contentType = res.headers.get("content-type") || ""
+      if (contentType.includes("text/event-stream") && res.body) {
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        let accumulated = ""
+        const assistantId = `a-${Date.now()}`
+        setMessages((prev) => [...prev, { id: assistantId, role: "assistant", content: "", timestamp: new Date() }])
+        let done = false
+        while (!done) {
+          const { value, done: streamDone } = await reader.read()
+          done = streamDone
+          if (value) {
+            const chunk = decoder.decode(value, { stream: true })
+            const lines = chunk.split("\n")
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const jsonStr = line.slice(6).trim()
+                if (jsonStr === "[DONE]") { done = true; break }
+                try {
+                  const parsed = JSON.parse(jsonStr)
+                  if (parsed.text) {
+                    accumulated += parsed.text
+                    setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: accumulated } : m))
+                  }
+                  if (parsed.conversation_id && !conversationId) setConversationId(parsed.conversation_id)
+                } catch { /* skip malformed SSE */ }
+              }
+            }
+          }
+        }
+        if (!accumulated) {
+          setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: "응답을 생성할 수 없었습니다." } : m))
+        }
+      } else {
+        // Fallback: non-streaming JSON response
+        const data = await res.json()
+        if (data.conversation_id && !conversationId) setConversationId(data.conversation_id)
+        setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: "assistant", content: data.message || data.response || "응답을 받았습니다.", timestamp: new Date() }])
+      }
     } catch {
       toast.error("응답 오류가 발생했습니다.")
       setMessages((prev) => [...prev, { id: `e-${Date.now()}`, role: "assistant", content: "AI 응답 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", timestamp: new Date() }])
@@ -88,7 +149,7 @@ export default function NPLCopilotPage() {
               <p className={DS.text.cardSubtitle}>NPL 코파일럿</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-positive)] animate-pulse" />
-                <span className={`${DS.text.micro} bg-[var(--color-brand-mid)]/10 text-[var(--color-brand-mid)] border border-[var(--color-brand-mid)]/20 px-1.5 py-0.5 rounded`}>GPT-4o</span>
+                <span className={`${DS.text.micro} bg-[var(--color-brand-mid)]/10 text-[var(--color-brand-mid)] border border-[var(--color-brand-mid)]/20 px-1.5 py-0.5 rounded`}>Claude</span>
               </div>
             </div>
           </div>
@@ -125,7 +186,7 @@ export default function NPLCopilotPage() {
         <div className="shrink-0 border-b border-[var(--color-border-subtle)] px-5 py-3 flex items-center justify-between bg-[var(--color-surface-elevated)]">
           <div className="flex items-center gap-3">
             <span className={DS.text.cardSubtitle}>AI NPL Copilot</span>
-            <span className={`${DS.text.micro} bg-[var(--color-brand-mid)]/10 text-[var(--color-brand-mid)] border border-[var(--color-brand-mid)]/20 px-2 py-0.5 rounded hidden sm:inline`}>GPT-4o</span>
+            <span className={`${DS.text.micro} bg-[var(--color-brand-mid)]/10 text-[var(--color-brand-mid)] border border-[var(--color-brand-mid)]/20 px-2 py-0.5 rounded hidden sm:inline`}>Claude</span>
           </div>
           <button
             onClick={handleReset}
@@ -150,15 +211,27 @@ export default function NPLCopilotPage() {
                   <h2 className={DS.text.sectionTitle}>AI NPL Copilot</h2>
                   <p className={`${DS.text.body} mt-1`}>NPL 투자 분석, 리스크 검토, 전략 수립을 AI와 함께</p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full mt-4">
+
+                {/* 데모 안내 */}
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                  <Zap className="h-3.5 w-3.5 shrink-0" />
+                  아래 예시 질문을 클릭하면 바로 체험할 수 있습니다 — 로그인 불필요
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full mt-2">
                   {STARTER_CARDS.map((q) => {
                     const Icon = q.icon
                     return (
                       <button
                         key={q.label}
                         onClick={() => sendMessage(q.text)}
-                        className={`${DS.card.interactive} text-left p-4 group`}
+                        className={`${DS.card.interactive} text-left p-4 group relative`}
                       >
+                        {q.badge && (
+                          <span className="absolute top-3 right-3 text-[0.625rem] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+                            {q.badge}
+                          </span>
+                        )}
                         <div className="flex items-center gap-2 mb-2">
                           <div className="h-6 w-6 rounded-md bg-[var(--color-brand-mid)]/10 flex items-center justify-center border border-[var(--color-brand-mid)]/20">
                             <Icon className="h-3.5 w-3.5 text-[var(--color-brand-mid)]" />
@@ -166,6 +239,9 @@ export default function NPLCopilotPage() {
                           <span className={`${DS.text.caption} group-hover:text-[var(--color-text-primary)] transition-colors`}>{q.label}</span>
                         </div>
                         <p className={`${DS.text.captionLight} group-hover:text-[var(--color-text-secondary)] line-clamp-3 leading-relaxed transition-colors`}>{q.text}</p>
+                        <p className="text-[0.625rem] text-[var(--color-text-muted)] mt-2 font-medium group-hover:text-[var(--color-text-tertiary)] transition-colors">
+                          클릭하여 전송 →
+                        </p>
                       </button>
                     )
                   })}

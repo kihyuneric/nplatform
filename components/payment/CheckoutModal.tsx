@@ -6,6 +6,7 @@ import {
   CheckCircle2, AlertCircle, Smartphone, Building2,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { SafeModalPortal } from '@/components/ui/safe-modal-portal'
 
 // ─── 타입 ─────────────────────────────────────────────────
 
@@ -196,6 +197,7 @@ export default function CheckoutModal({
   if (!open || !plan) return null
 
   return (
+    <SafeModalPortal>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
@@ -305,6 +307,7 @@ export default function CheckoutModal({
         </div>
       </div>
     </div>
+    </SafeModalPortal>
   )
 }
 

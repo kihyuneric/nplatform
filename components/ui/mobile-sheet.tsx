@@ -115,20 +115,20 @@ export function MobileSheet({
             dragElastic={0.1}
             onDragEnd={handleDragEnd}
             className={cn(
-              'fixed bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-2xl bg-white shadow-2xl',
+              'fixed bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-2xl bg-[var(--color-surface-elevated)] shadow-2xl',
               className
             )}
             style={{ height: windowHeight || '50vh', touchAction: 'none' }}
           >
             {/* Drag handle */}
             <div className="flex flex-col items-center pb-2 pt-3">
-              <div className="h-1 w-10 rounded-full bg-gray-300" />
+              <div className="h-1 w-10 rounded-full bg-[var(--color-border-strong)]" />
             </div>
 
             {/* Header */}
             {title && (
-              <div className="border-b border-gray-100 px-5 pb-3">
-                <h2 className="text-base font-semibold text-[#1B3A5C]">{title}</h2>
+              <div className="border-b border-[var(--color-border-subtle)] px-5 pb-3">
+                <h2 className="text-base font-semibold text-[var(--color-text-primary)]">{title}</h2>
               </div>
             )}
 

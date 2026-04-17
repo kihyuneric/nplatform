@@ -69,7 +69,7 @@ const WEEKLY_REPORTS = [
 const TrendIcon = ({ trend }: { trend: "up" | "down" | "flat" }) => {
   if (trend === "up") return <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
   if (trend === "down") return <TrendingDown className="h-3.5 w-3.5 text-red-500" />
-  return <Minus className="h-3.5 w-3.5 text-slate-400" />
+  return <Minus className="h-3.5 w-3.5 text-[var(--color-text-muted)]" />
 }
 
 export function MarketInsightPanel() {
@@ -87,7 +87,7 @@ export function MarketInsightPanel() {
         >
           <motion.h2
             variants={fadeUp}
-            className="text-2xl font-bold text-[#1B3A5C] sm:text-3xl"
+            className="text-2xl font-bold text-[var(--color-brand-dark)] sm:text-3xl"
           >
             시장 인사이트
           </motion.h2>
@@ -105,15 +105,15 @@ export function MarketInsightPanel() {
         >
           {/* Left: Region Mini Heatmap */}
           <motion.div variants={fadeUp}>
-            <Card className="border-0 bg-white shadow-md h-full">
+            <Card className="border-0 bg-[var(--color-surface-elevated)] shadow-md h-full">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1B3A5C]/10">
-                      <MapPin className="h-5 w-5 text-[#1B3A5C]" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-brand-dark)]/10">
+                      <MapPin className="h-5 w-5 text-[var(--color-brand-dark)]" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-[#1B3A5C]">지역별 NPL 현황</h3>
+                      <h3 className="font-bold text-[var(--color-brand-dark)]">지역별 NPL 현황</h3>
                       <p className="text-xs text-muted-foreground">전주 대비 매물 변동</p>
                     </div>
                   </div>
@@ -129,28 +129,28 @@ export function MarketInsightPanel() {
                     <Link
                       key={region.name}
                       href={`/market/search?region=${encodeURIComponent(region.name)}`}
-                      className="group flex items-center gap-3 rounded-lg p-2 -mx-2 hover:bg-slate-50 transition-colors"
+                      className="group flex items-center gap-3 rounded-lg p-2 -mx-2 hover:bg-[var(--color-surface-base)] transition-colors"
                     >
                       <div className={`h-8 w-8 rounded-lg ${region.color} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
                         {region.name.slice(0, 2)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-slate-700">{region.name}</span>
+                          <span className="text-sm font-medium text-[var(--color-text-secondary)]">{region.name}</span>
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-muted-foreground">할인율 {region.avgDiscount}%</span>
                             <div className="flex items-center gap-0.5">
                               <TrendIcon trend={region.trend} />
                               <span className={`text-xs font-medium ${
-                                region.trend === "up" ? "text-emerald-600" :
-                                region.trend === "down" ? "text-red-500" : "text-slate-400"
+                                region.trend === "up" ? "text-emerald-400" :
+                                region.trend === "down" ? "text-red-400" : "text-[var(--color-text-muted)]"
                               }`}>
                                 {region.trendValue}
                               </span>
                             </div>
                           </div>
                         </div>
-                        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                        <div className="h-1.5 rounded-full bg-[var(--color-surface-base)] overflow-hidden">
                           <div
                             className={`h-full rounded-full ${region.color} transition-all`}
                             style={{ width: `${(region.nplCount / maxCount) * 100}%` }}
@@ -169,15 +169,15 @@ export function MarketInsightPanel() {
 
           {/* Right: Weekly Reports */}
           <motion.div variants={fadeUp}>
-            <Card className="border-0 bg-white shadow-md h-full">
+            <Card className="border-0 bg-[var(--color-surface-elevated)] shadow-md h-full">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#10B981]/10">
-                      <FileText className="h-5 w-5 text-[#10B981]" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-positive)]/10">
+                      <FileText className="h-5 w-5 text-[var(--color-positive)]" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-[#1B3A5C]">최신 리포트</h3>
+                      <h3 className="font-bold text-[var(--color-brand-dark)]">최신 리포트</h3>
                       <p className="text-xs text-muted-foreground">시장 분석 & 투자 인사이트</p>
                     </div>
                   </div>
@@ -193,15 +193,15 @@ export function MarketInsightPanel() {
                     <Link
                       key={idx}
                       href={report.href}
-                      className="group block rounded-xl border border-slate-100 p-4 hover:border-[#2E75B6]/30 hover:shadow-sm transition-all"
+                      className="group block rounded-xl border border-[var(--color-border-subtle)] p-4 hover:border-[#2E75B6]/30 hover:shadow-sm transition-all"
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline" className="text-[10px] border-[#1B3A5C]/20 text-[#1B3A5C]">
+                        <Badge variant="outline" className="text-[10px] border-[var(--color-brand-dark)]/20 text-[var(--color-brand-dark)]">
                           {report.tag}
                         </Badge>
                         <span className="text-[10px] text-muted-foreground">{report.date}</span>
                       </div>
-                      <h4 className="text-sm font-semibold text-slate-800 group-hover:text-[#1B3A5C] transition-colors mb-1">
+                      <h4 className="text-sm font-semibold text-[var(--color-text-secondary)] group-hover:text-[var(--color-brand-dark)] transition-colors mb-1">
                         {report.title}
                       </h4>
                       <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
@@ -221,9 +221,9 @@ export function MarketInsightPanel() {
                     { label: "평균 할인율", value: "36.5%", change: "-0.8%p", changeType: "down" as const },
                     { label: "주간 거래", value: "52건", change: "+8", changeType: "up" as const },
                   ].map((stat) => (
-                    <div key={stat.label} className="rounded-lg bg-slate-50 p-3 text-center">
+                    <div key={stat.label} className="rounded-lg bg-[var(--color-surface-base)] p-3 text-center">
                       <p className="text-[10px] text-muted-foreground">{stat.label}</p>
-                      <p className="text-lg font-bold text-[#1B3A5C] mt-0.5">{stat.value}</p>
+                      <p className="text-lg font-bold text-[var(--color-brand-dark)] mt-0.5">{stat.value}</p>
                       <p className={`text-[10px] font-medium mt-0.5 ${
                         stat.changeType === "up" ? "text-emerald-600" : "text-red-500"
                       }`}>

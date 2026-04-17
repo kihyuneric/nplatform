@@ -120,42 +120,95 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (user) {
-      let query = supabase
-        .from('buyer_recommendations')
-        .select('*', { count: 'exact' })
-        .eq('user_id', user.id)
-        .gte('match_score', minScore)
+    if (!user) {
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } },
+        { status: 401 }
+      )
+    }
 
-      if (collateralType && collateralType !== 'all') {
-        query = query.eq('collateral_type', collateralType)
-      }
-      if (region && region !== 'all') {
-        query = query.eq('region', region)
-      }
+    // Fetch user's demand survey preferences to personalize
+    const { data: survey } = await supabase
+      .from('demand_surveys')
+      .select('collateral_types, regions, amount_min, amount_max, target_discount_rate')
+      .eq('user_id', user.id)
+      .eq('status', 'ACTIVE')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
-      if (sortBy === 'matchScore') {
-        query = query.order('match_score', { ascending: false })
-      } else if (sortBy === 'discountRate') {
-        query = query.order('discount_rate', { ascending: false })
-      } else if (sortBy === 'claimAmount') {
-        query = query.order('claim_amount', { ascending: true })
-      }
+    // Build npl_listings query based on preferences
+    let listingsQuery = supabase
+      .from('npl_listings')
+      .select('id, title, collateral_type, sido, claim_amount, appraised_value, discount_rate, ai_grade, status, created_at', { count: 'exact' })
+      .eq('status', 'ACTIVE')
 
-      query = query.range(offset, offset + limit - 1)
-
-      const { data, error, count } = await query
-      if (!error && data && data.length > 0) {
-        return NextResponse.json({
-          data,
-          total: count || data.length,
-          page,
-          limit,
-          has_next: offset + limit < (count || 0),
-          generated_at: new Date().toISOString(),
-          model_version: 'npl-match-v2.1',
-        })
+    // Apply user preferences from demand survey if available
+    if (survey) {
+      if (survey.collateral_types && survey.collateral_types.length > 0) {
+        listingsQuery = listingsQuery.in('collateral_type', survey.collateral_types)
       }
+      if (survey.regions && survey.regions.length > 0) {
+        listingsQuery = listingsQuery.in('sido', survey.regions)
+      }
+      if (survey.amount_min) {
+        listingsQuery = listingsQuery.gte('claim_amount', survey.amount_min)
+      }
+      if (survey.amount_max) {
+        listingsQuery = listingsQuery.lte('claim_amount', survey.amount_max)
+      }
+      if (survey.target_discount_rate) {
+        listingsQuery = listingsQuery.gte('discount_rate', survey.target_discount_rate)
+      }
+    }
+
+    // Apply request-level filters
+    if (collateralType && collateralType !== 'all') {
+      listingsQuery = listingsQuery.eq('collateral_type', collateralType)
+    }
+    if (region && region !== 'all') {
+      listingsQuery = listingsQuery.eq('sido', region)
+    }
+
+    // Sorting
+    if (sortBy === 'matchScore' || sortBy === 'discountRate') {
+      listingsQuery = listingsQuery.order('discount_rate', { ascending: false })
+    } else if (sortBy === 'claimAmount') {
+      listingsQuery = listingsQuery.order('claim_amount', { ascending: true })
+    } else {
+      listingsQuery = listingsQuery.order('created_at', { ascending: false })
+    }
+
+    listingsQuery = listingsQuery.range(offset, offset + limit - 1)
+
+    const { data: listings, error: listingsError, count } = await listingsQuery
+
+    if (listingsError) {
+      logger.error('Recommendations GET Supabase error:', { error: listingsError })
+      // fall through to mock
+    } else {
+      // Annotate with a simple match score based on discount_rate
+      const annotated = (listings ?? []).map((listing: Record<string, unknown>) => {
+        const dr = (listing.discount_rate as number) ?? 0
+        const matchScore = Math.min(99, Math.round(50 + dr * 1.5))
+        return {
+          ...listing,
+          match_score: matchScore,
+          region: listing.sido,
+          tags: [listing.collateral_type, listing.sido].filter(Boolean),
+        }
+      }).filter((r: Record<string, unknown>) => (r.match_score as number) >= minScore)
+
+      return NextResponse.json({
+        data: annotated,
+        total: count || annotated.length,
+        page,
+        limit,
+        has_next: offset + limit < (count || 0),
+        generated_at: new Date().toISOString(),
+        model_version: 'npl-match-v2.1',
+        _personalized: !!survey,
+      })
     }
   } catch {
     // Supabase not available, fall through to mock

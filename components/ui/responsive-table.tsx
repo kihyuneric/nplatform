@@ -44,19 +44,19 @@ function DefaultCard<T extends Record<string, unknown>>({
   const visibleColumns = columns.filter((c) => !c.hideOnCard)
 
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+    <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] p-4 shadow-sm">
       {visibleColumns.map((col, idx) => (
         <div
           key={col.key}
           className={cn(
             'flex items-start justify-between gap-2 py-1.5 text-sm',
-            idx !== 0 && 'border-t border-gray-50'
+            idx !== 0 && 'border-t border-[var(--color-border-subtle)]'
           )}
         >
-          <span className="min-w-[80px] font-medium text-[#1B3A5C]">
+          <span className="min-w-[80px] font-medium text-[var(--color-text-primary)]">
             {col.header}
           </span>
-          <span className="text-right text-gray-700">
+          <span className="text-right text-[var(--color-text-secondary)]">
             {col.render ? col.render(row) : String(row[col.key] ?? '-')}
           </span>
         </div>
@@ -85,7 +85,7 @@ export function ResponsiveTable<T extends Record<string, unknown>>({
           )
         )}
         {data.length === 0 && (
-          <p className="py-10 text-center text-sm text-gray-400">
+          <p className="py-10 text-center text-sm text-[var(--color-text-muted)]">
             데이터가 없습니다.
           </p>
         )}
@@ -94,15 +94,15 @@ export function ResponsiveTable<T extends Record<string, unknown>>({
   }
 
   return (
-    <div className={cn('w-full overflow-x-auto rounded-xl border border-gray-100 bg-white shadow-sm', className)}>
+    <div className={cn('w-full overflow-x-auto rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] shadow-sm', className)}>
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-100 bg-gray-50">
+          <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-sunken)]">
             {columns.map((col) => (
               <th
                 key={col.key}
                 className={cn(
-                  'px-4 py-3 text-left font-semibold text-[#1B3A5C]',
+                  'px-4 py-3 text-left font-semibold text-[var(--color-text-primary)]',
                   col.className
                 )}
               >
@@ -116,14 +116,14 @@ export function ResponsiveTable<T extends Record<string, unknown>>({
             <tr
               key={rowKey(row)}
               className={cn(
-                'border-b border-gray-50 transition-colors hover:bg-gray-50/60',
+                'border-b border-[var(--color-border-subtle)] transition-colors hover:bg-[var(--color-surface-sunken)]',
                 idx === data.length - 1 && 'border-b-0'
               )}
             >
               {columns.map((col) => (
                 <td
                   key={col.key}
-                  className={cn('px-4 py-3 text-gray-700', col.className)}
+                  className={cn('px-4 py-3 text-[var(--color-text-secondary)]', col.className)}
                 >
                   {col.render ? col.render(row) : String(row[col.key] ?? '-')}
                 </td>
@@ -134,7 +134,7 @@ export function ResponsiveTable<T extends Record<string, unknown>>({
             <tr>
               <td
                 colSpan={columns.length}
-                className="py-10 text-center text-sm text-gray-400"
+                className="py-10 text-center text-sm text-[var(--color-text-muted)]"
               >
                 데이터가 없습니다.
               </td>

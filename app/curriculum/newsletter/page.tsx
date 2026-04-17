@@ -186,19 +186,19 @@ export default function NewsletterPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-6 space-y-6 dark:bg-gray-950">
+    <div className="max-w-5xl mx-auto px-6 py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Mail className="w-6 h-6 text-purple-600" />
         <div>
-          <h1 className="text-xl font-bold dark:text-white">AI 뉴스레터 생성</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">온톨로지 기반 매일 교육 콘텐츠</p>
+          <h1 className="text-xl font-bold text-[var(--color-text-primary)]">AI 뉴스레터 생성</h1>
+          <p className="text-sm text-[var(--color-text-muted)]">온톨로지 기반 매일 교육 콘텐츠</p>
         </div>
       </div>
 
       {/* Content Type Selection */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">콘텐츠 유형</h2>
+      <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3">콘텐츠 유형</h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
           {NEWSLETTER_TYPES.map(t => {
             const Icon = t.icon
@@ -209,13 +209,13 @@ export default function NewsletterPage() {
                 onClick={() => setSelectedType(t.key)}
                 className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center ${
                   isSelected
-                    ? 'border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-600'
-                    : 'border-gray-100 hover:border-gray-200 text-gray-500 dark:border-gray-700 dark:hover:border-gray-600 dark:text-gray-400'
+                    ? 'border-purple-500 bg-purple-500/10 text-purple-300'
+                    : 'border-[var(--color-border-subtle)] hover:border-[var(--color-border-subtle)] text-[var(--color-text-muted)]'
                 }`}
               >
                 <Icon className="w-5 h-5" />
                 <span className="text-xs font-semibold">{t.label}</span>
-                <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight hidden md:block">{t.description}</span>
+                <span className="text-[10px] text-[var(--color-text-muted)] leading-tight hidden md:block">{t.description}</span>
               </button>
             )
           })}
@@ -223,15 +223,15 @@ export default function NewsletterPage() {
       </div>
 
       {/* 주제 선택 모드 + Config + Generate */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 space-y-4">
+      <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl p-5 space-y-4">
         {/* 모드 토글 */}
         <div className="flex gap-2">
           <button
             onClick={() => setThemeMode('concept')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
               themeMode === 'concept'
-                ? 'border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-600'
-                : 'border-gray-200 text-gray-500 hover:border-gray-300 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600'
+                ? 'border-purple-500 bg-purple-500/10 text-purple-300'
+                : 'border-[var(--color-border-subtle)] text-[var(--color-text-muted)] hover:border-[var(--color-border-subtle)]'
             }`}
           >
             🏷️ 온톨로지 개념 기반
@@ -240,8 +240,8 @@ export default function NewsletterPage() {
             onClick={() => setThemeMode('theme')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
               themeMode === 'theme'
-                ? 'border-orange-400 bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-600'
-                : 'border-gray-200 text-gray-500 hover:border-gray-300 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600'
+                ? 'border-orange-400 bg-orange-500/10 text-orange-300'
+                : 'border-[var(--color-border-subtle)] text-[var(--color-text-muted)] hover:border-[var(--color-border-subtle)]'
             }`}
           >
             ✏️ 자유 테마 작성
@@ -251,18 +251,18 @@ export default function NewsletterPage() {
         {/* 개념 기반 모드 */}
         {themeMode === 'concept' && (
           <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600 dark:text-gray-400">도메인:</label>
+            <label className="text-sm text-[var(--color-text-secondary)]">도메인:</label>
             <select
               value={domainFilter}
               onChange={e => setDomainFilter(e.target.value ? Number(e.target.value) : '')}
-              className="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 dark:text-gray-200"
+              className="text-sm border border-[var(--color-border-subtle)] rounded-lg px-3 py-1.5 bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]"
             >
               <option value="">전체 (중요도 순 자동 선택)</option>
               {domains.map(d => (
                 <option key={d.domain_id} value={d.domain_id}>{d.name}</option>
               ))}
             </select>
-            <span className="text-xs text-gray-400 dark:text-gray-500">온톨로지 분석 기반으로 오늘의 개념을 자동 선택합니다</span>
+            <span className="text-xs text-[var(--color-text-muted)]">온톨로지 분석 기반으로 오늘의 개념을 자동 선택합니다</span>
           </div>
         )}
 
@@ -275,12 +275,12 @@ export default function NewsletterPage() {
                 value={theme}
                 onChange={e => setTheme(e.target.value)}
                 placeholder="주제 직접 입력 (예: 경매 입찰 전략, 임대수익률 계산법...)"
-                className="flex-1 text-sm border border-orange-200 dark:border-orange-800 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 dark:text-gray-200 focus:outline-none focus:border-orange-400"
+                className="flex-1 text-sm border border-orange-500/30 rounded-lg px-3 py-2 bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] focus:outline-none focus:border-orange-400"
                 onKeyDown={e => e.key === 'Enter' && !generating && theme.trim() && handleGenerate()}
               />
             </div>
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">자주 쓰는 테마:</p>
+              <p className="text-xs text-[var(--color-text-muted)] mb-2">자주 쓰는 테마:</p>
               <div className="flex flex-wrap gap-1.5">
                 {THEME_CHIPS.map(chip => (
                   <button
@@ -288,8 +288,8 @@ export default function NewsletterPage() {
                     onClick={() => setTheme(chip)}
                     className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
                       theme === chip
-                        ? 'border-orange-400 bg-orange-50 text-orange-700 font-medium dark:bg-orange-950 dark:text-orange-300 dark:border-orange-600'
-                        : 'border-gray-200 text-gray-600 hover:border-orange-300 hover:text-orange-600 dark:border-gray-700 dark:text-gray-400 dark:hover:border-orange-600 dark:hover:text-orange-400'
+                        ? 'border-orange-400 bg-orange-500/10 text-orange-300 font-medium'
+                        : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-orange-500/50 hover:text-orange-400'
                     }`}
                   >
                     {chip}
@@ -336,7 +336,7 @@ export default function NewsletterPage() {
         </div>
 
         {error && (
-          <div className="mt-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 rounded-lg px-3 py-2">
+          <div className="mt-3 text-sm text-red-400 bg-red-500/10 rounded-lg px-3 py-2">
             {error}
           </div>
         )}
@@ -347,16 +347,16 @@ export default function NewsletterPage() {
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">AI가 뉴스레터를 생성하고 있습니다...</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500">온톨로지 컨텍스트 분석 + AI 콘텐츠 합성</p>
+            <p className="text-sm text-[var(--color-text-muted)]">AI가 뉴스레터를 생성하고 있습니다...</p>
+            <p className="text-xs text-[var(--color-text-muted)]">온톨로지 컨텍스트 분석 + AI 콘텐츠 합성</p>
           </div>
         </div>
       )}
 
       {htmlPreview && !generating && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
-          <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <span className="text-xs text-gray-500 dark:text-gray-400">AI 뉴스레터 미리보기</span>
+        <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl overflow-hidden">
+          <div className="px-4 py-2 bg-[var(--color-surface-overlay)] border-b border-[var(--color-border-subtle)] flex items-center justify-between">
+            <span className="text-xs text-[var(--color-text-muted)]">AI 뉴스레터 미리보기</span>
             {newsletterData && (
               <div className="flex items-center gap-3 text-xs text-gray-400">
                 {newsletterData.newsletter_type && (
@@ -386,13 +386,13 @@ export default function NewsletterPage() {
           {/* Section header */}
           <div className="flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-purple-500" />
-            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">샘플 뉴스레터 — AI가 생성하는 콘텐츠 예시</h2>
+            <h2 className="text-sm font-semibold text-[var(--color-text-secondary)]">샘플 뉴스레터 — AI가 생성하는 콘텐츠 예시</h2>
           </div>
 
           {/* Sample cards grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Sample 1: 오늘의 학습 */}
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 space-y-3 hover:border-purple-300 dark:hover:border-purple-700 transition-colors">
+            <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl p-5 space-y-3 hover:border-purple-500/50 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
                   <BookOpen className="w-3 h-3" />
@@ -400,21 +400,21 @@ export default function NewsletterPage() {
                 </span>
                 <span className="text-[10px] text-gray-400">daily_lesson</span>
               </div>
-              <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-snug">
+              <h3 className="text-sm font-bold text-[var(--color-text-primary)] leading-snug">
                 등기부등본, 이것만 알면 됩니다
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-3">
+              <p className="text-xs text-[var(--color-text-muted)] leading-relaxed line-clamp-3">
                 오늘은 부동산 투자의 필수 관문인 등기부등본 읽는 법을 알아봅니다. 많은 투자자들이 등기부등본을 처음 보면 복잡해 보인다고 느끼지만...
               </p>
               <div className="space-y-1">
                 {['표제부: 소재지와 면적 확인', '갑구: 소유권 이전 이력 확인', '을구: 근저당권 등 부담 확인'].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+                  <div key={idx} className="flex items-start gap-1.5 text-xs text-[var(--color-text-secondary)]">
                     <CheckCircle className="w-3 h-3 text-purple-500 mt-0.5 shrink-0" />
                     <span>{item}</span>
                   </div>
                 ))}
               </div>
-              <div className="pt-1 border-t border-gray-100 dark:border-gray-800">
+              <div className="pt-1 border-t border-[var(--color-border-subtle)]">
                 <div className="text-[10px] text-gray-400 space-y-0.5">
                   <div>중급 과정 15/47 · L2 심화</div>
                   <div>선수: 부동산 기초</div>
@@ -429,7 +429,7 @@ export default function NewsletterPage() {
             </div>
 
             {/* Sample 2: 사례 분석 */}
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 space-y-3 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+            <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl p-5 space-y-3 hover:border-blue-500/50 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
                   <BarChart3 className="w-3 h-3" />
@@ -437,21 +437,21 @@ export default function NewsletterPage() {
                 </span>
                 <span className="text-[10px] text-gray-400">case_study</span>
               </div>
-              <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-snug">
+              <h3 className="text-sm font-bold text-[var(--color-text-primary)] leading-snug">
                 낙찰 후 명도 성공 사례 분석
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-3">
+              <p className="text-xs text-[var(--color-text-muted)] leading-relaxed line-clamp-3">
                 이번 사례는 실제 경매 낙찰 후 점유자 명도 과정에서 발생한 분쟁을 성공적으로 해결한 케이스입니다. NPLatform 전문가 8명이 동일한 유형의...
               </p>
               <div className="space-y-1">
                 {['명도소송 vs 협의 명도 선택 기준', '점유자 보증금 처리 원칙', '명도 비용 예상 산정법'].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+                  <div key={idx} className="flex items-start gap-1.5 text-xs text-[var(--color-text-secondary)]">
                     <CheckCircle className="w-3 h-3 text-blue-500 mt-0.5 shrink-0" />
                     <span>{item}</span>
                   </div>
                 ))}
               </div>
-              <div className="pt-1 border-t border-gray-100 dark:border-gray-800">
+              <div className="pt-1 border-t border-[var(--color-border-subtle)]">
                 <div className="text-[10px] text-gray-400 space-y-0.5">
                   <div>고급 과정 8/35 · L3 실전</div>
                 </div>
@@ -465,7 +465,7 @@ export default function NewsletterPage() {
             </div>
 
             {/* Sample 3: 전문가 비교 */}
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 space-y-3 hover:border-red-300 dark:hover:border-red-700 transition-colors">
+            <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl p-5 space-y-3 hover:border-red-500/50 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
                   <Users className="w-3 h-3" />
@@ -473,21 +473,21 @@ export default function NewsletterPage() {
                 </span>
                 <span className="text-[10px] text-gray-400">expert_compare</span>
               </div>
-              <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-snug">
+              <h3 className="text-sm font-bold text-[var(--color-text-primary)] leading-snug">
                 권리분석, 전문가마다 다른 접근법
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-3">
+              <p className="text-xs text-[var(--color-text-muted)] leading-relaxed line-clamp-3">
                 권리분석은 경매 투자의 핵심이지만, 전문가들 사이에서도 접근 방식에 차이가 있습니다. NPLatform 전문가 15명의 강의를 분석한 결과, 크게 두 가지...
               </p>
               <div className="space-y-1">
                 {['안전 중심: 위험 요소 선별 후 입찰', '수익 중심: 권리 복잡도로 저가 낙찰 목표', '통합 관점: 상황에 따른 선택'].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+                  <div key={idx} className="flex items-start gap-1.5 text-xs text-[var(--color-text-secondary)]">
                     <CheckCircle className="w-3 h-3 text-red-500 mt-0.5 shrink-0" />
                     <span>{item}</span>
                   </div>
                 ))}
               </div>
-              <div className="pt-1 border-t border-gray-100 dark:border-gray-800">
+              <div className="pt-1 border-t border-[var(--color-border-subtle)]">
                 <div className="text-[10px] text-gray-400 space-y-0.5">
                   <div>중급 과정 22/47 · L2 심화</div>
                 </div>
@@ -502,15 +502,15 @@ export default function NewsletterPage() {
           </div>
 
           {/* Info box */}
-          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
-            <h3 className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2">자동 생성 방법</h3>
+          <div className="bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)] rounded-xl p-4">
+            <h3 className="text-xs font-semibold text-[var(--color-text-secondary)] mb-2">자동 생성 방법</h3>
             <ul className="space-y-1.5">
               {[
                 '온톨로지 엔진이 최근 발송하지 않은 캡슐 중 최적을 자동 선택',
                 'AI가 선택된 유형에 맞춰 500~800자 본문 합성',
                 '온톨로지 기반 학습 위치 정보 포함',
               ].map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <li key={idx} className="flex items-start gap-2 text-xs text-[var(--color-text-muted)]">
                   <span className="w-4 h-4 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5">{idx + 1}</span>
                   {item}
                 </li>
@@ -521,9 +521,9 @@ export default function NewsletterPage() {
       )}
 
       {/* History */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
+      <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">최근 발송 이력 (30일)</h2>
+          <h2 className="text-sm font-semibold text-[var(--color-text-secondary)]">최근 발송 이력 (30일)</h2>
           <button
             onClick={loadHistory}
             disabled={historyLoading}
@@ -543,7 +543,7 @@ export default function NewsletterPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b dark:border-gray-700 text-left text-xs text-gray-500 dark:text-gray-400">
+                <tr className="border-b border-[var(--color-border-subtle)] text-left text-xs text-[var(--color-text-muted)]">
                   <th className="pb-2 pr-4">날짜</th>
                   <th className="pb-2 pr-4">유형</th>
                   <th className="pb-2 pr-4">제목</th>
@@ -555,8 +555,8 @@ export default function NewsletterPage() {
                 {history.map(item => {
                   const statusInfo = STATUS_MAP[item.status] || STATUS_MAP.generated
                   return (
-                    <tr key={item.newsletter_id} className="border-b dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="py-2 pr-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    <tr key={item.newsletter_id} className="border-b border-[var(--color-border-subtle)] last:border-b-0 hover:bg-[var(--color-surface-overlay)]">
+                      <td className="py-2 pr-4 text-[var(--color-text-muted)] whitespace-nowrap">
                         {new Date(item.sent_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
                       </td>
                       <td className="py-2 pr-4">
@@ -564,7 +564,7 @@ export default function NewsletterPage() {
                           {TYPE_LABEL_MAP[item.newsletter_type] || item.newsletter_type}
                         </span>
                       </td>
-                      <td className="py-2 pr-4 text-gray-700 dark:text-gray-300 max-w-[200px] truncate">
+                      <td className="py-2 pr-4 text-[var(--color-text-secondary)] max-w-[200px] truncate">
                         {item.title}
                       </td>
                       <td className="py-2 pr-4">
@@ -598,9 +598,9 @@ export default function NewsletterPage() {
       {/* Email Modal */}
       {showEmailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6">
+          <div className="bg-[var(--color-surface-elevated)] rounded-2xl shadow-xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold dark:text-white">이메일 발송</h2>
+              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">이메일 발송</h2>
               <button
                 onClick={() => setShowEmailModal(false)}
                 className="p-1 hover:bg-gray-100 rounded"
@@ -611,17 +611,17 @@ export default function NewsletterPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">수신자 이메일</label>
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">수신자 이메일</label>
                 <textarea
                   value={recipients}
                   onChange={e => setRecipients(e.target.value)}
                   placeholder="이메일 주소를 쉼표로 구분하여 입력..."
-                  className="w-full text-sm border border-gray-200 dark:border-gray-700 rounded-lg p-3 min-h-[80px] focus:ring-1 focus:ring-purple-400 outline-none resize-y bg-white dark:bg-gray-800 dark:text-gray-200"
+                  className="w-full text-sm border border-[var(--color-border-subtle)] rounded-lg p-3 min-h-[80px] focus:ring-1 focus:ring-purple-400 outline-none resize-y bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]"
                 />
                 <p className="text-xs text-gray-400 mt-1">여러 명에게 보내려면 쉼표(,)로 구분하세요</p>
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
                 <input
                   type="checkbox"
                   checked={attachPdf}

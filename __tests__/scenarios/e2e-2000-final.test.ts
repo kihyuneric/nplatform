@@ -2,10 +2,35 @@
  * NPLatform v9.0 — E2E 2000개 최종 테스트
  * 81개 페이지 + 171개 API 전수 검사
  */
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 vi.setConfig({ testTimeout: 30000 })
 
 const BASE = 'http://localhost:3000'
+
+let serverAvailable = false
+
+beforeAll(async () => {
+  try {
+    const res = await fetch(`${BASE}/api/health`, { signal: AbortSignal.timeout(2000) })
+    serverAvailable = res.ok || res.status < 500
+  } catch {
+    try {
+      await fetch(BASE, { signal: AbortSignal.timeout(2000) })
+      serverAvailable = true
+    } catch {
+      serverAvailable = false
+    }
+  }
+  if (!serverAvailable) {
+    console.warn('⚠️ Dev server not running — skipping E2E tests. Start with: npm run dev --prefix C:\\Users\\82106\\Desktop\\nplatform')
+  }
+}, 10000)
+
+// Skip all tests in this file when the dev server is not running
+beforeEach((ctx) => {
+  if (!serverAvailable) ctx.skip()
+})
+
 async function pg(p: string) {
   try {
     const r = await fetch(`${BASE}${p}`, { redirect: 'manual' })

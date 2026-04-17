@@ -7,10 +7,7 @@ import {
   LogIn, AlertTriangle,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { t } from "@/lib/i18n"
 
 interface TestAccount {
   username: string
@@ -31,7 +28,7 @@ const TEST_ACCOUNTS: TestAccount[] = [
     roleName: "관리자",
     userId: "00000000-0000-0000-0000-000000000001",
     icon: <ShieldCheck className="h-8 w-8" />,
-    color: "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+    color: "bg-red-500/10 text-red-400",
     redirect: "/admin",
   },
   {
@@ -41,7 +38,7 @@ const TEST_ACCOUNTS: TestAccount[] = [
     roleName: "매도자",
     userId: "00000000-0000-0000-0000-000000000002",
     icon: <Building2 className="h-8 w-8" />,
-    color: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+    color: "bg-blue-500/10 text-blue-400",
     redirect: "/seller/dashboard",
   },
   {
@@ -51,7 +48,7 @@ const TEST_ACCOUNTS: TestAccount[] = [
     roleName: "매수자",
     userId: "00000000-0000-0000-0000-000000000003",
     icon: <User className="h-8 w-8" />,
-    color: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
+    color: "bg-emerald-500/10 text-emerald-400",
     redirect: "/exchange",
   },
   {
@@ -61,7 +58,7 @@ const TEST_ACCOUNTS: TestAccount[] = [
     roleName: "파트너",
     userId: "00000000-0000-0000-0000-000000000004",
     icon: <Users className="h-8 w-8" />,
-    color: "bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
+    color: "bg-purple-500/10 text-purple-400",
     redirect: "/partner/dashboard",
   },
   {
@@ -71,7 +68,7 @@ const TEST_ACCOUNTS: TestAccount[] = [
     roleName: "전문가",
     userId: "00000000-0000-0000-0000-000000000005",
     icon: <GraduationCap className="h-8 w-8" />,
-    color: "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
+    color: "bg-amber-500/10 text-amber-400",
     redirect: "/professional/my/dashboard",
   },
 ]
@@ -148,19 +145,19 @@ export default function DevLoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
       {/* Environment Badge */}
       <div className="mb-6 flex items-center gap-2">
-        <Badge className="bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-800 px-3 py-1 text-sm">
-          <AlertTriangle className="mr-1.5 h-3.5 w-3.5" />
-          {t('auth.devModeLabel') || '환경: 개발 모드'}
-        </Badge>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm bg-amber-500/10 text-amber-400 border border-amber-500/30">
+          <AlertTriangle className="h-3.5 w-3.5" />
+          환경: 개발 모드
+        </span>
       </div>
 
       {/* Title */}
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-[#1B3A5C] dark:text-white">
-          {t('auth.devLoginTitle') || '개발 테스트 로그인'}
+        <h1 className="text-2xl font-bold text-[#1B3A5C]">
+          개발 테스트 로그인
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground dark:text-gray-400">
-          {t('auth.devLoginSubtitle') || '테스트 계정을 선택하여 빠르게 로그인합니다'}
+        <p className="mt-2 text-sm text-muted-foreground">
+          테스트 계정을 선택하여 빠르게 로그인합니다
         </p>
       </div>
 
@@ -169,7 +166,7 @@ export default function DevLoginPage() {
         {TEST_ACCOUNTS.map((account) => (
           <Card
             key={account.username}
-            className="group border-0 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-gray-900 cursor-pointer"
+            className="group border-0 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg bg-[var(--color-surface-elevated)] cursor-pointer"
             onClick={() => !loggingIn && handleLogin(account)}
           >
             <CardContent className="flex flex-col items-center p-6">
@@ -179,23 +176,23 @@ export default function DevLoginPage() {
               </div>
 
               {/* Role Name */}
-              <h3 className="text-lg font-bold dark:text-white">{account.roleName}</h3>
+              <h3 className="text-lg font-bold text-[var(--color-text-primary)]">{account.roleName}</h3>
 
               {/* Credentials */}
-              <div className="mt-3 w-full space-y-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 p-3">
+              <div className="mt-3 w-full space-y-1.5 rounded-lg bg-[var(--color-surface-overlay)] p-3">
                 <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground dark:text-gray-400">ID</span>
-                  <span className="font-mono font-medium dark:text-gray-200">{account.username}</span>
+                  <span className="text-muted-foreground">ID</span>
+                  <span className="font-mono font-medium text-[var(--color-text-primary)]">{account.username}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground dark:text-gray-400">PW</span>
-                  <span className="font-mono font-medium dark:text-gray-200">{account.password}</span>
+                  <span className="text-muted-foreground">PW</span>
+                  <span className="font-mono font-medium text-[var(--color-text-primary)]">{account.password}</span>
                 </div>
               </div>
 
               {/* Login Button */}
-              <Button
-                className="mt-4 w-full bg-[#1B3A5C] hover:bg-[#152d49]"
+              <button
+                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#1B3A5C] hover:bg-[#152d49] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loggingIn === account.username}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -203,24 +200,24 @@ export default function DevLoginPage() {
                 }}
               >
                 {loggingIn === account.username ? (
-                  <span className="flex items-center gap-2">
+                  <>
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    {t('auth.loginLoading') || '로그인 중...'}
-                  </span>
+                    로그인 중...
+                  </>
                 ) : (
                   <>
-                    <LogIn className="mr-2 h-4 w-4" /> {t('auth.loginButton') || '로그인'}
+                    <LogIn className="h-4 w-4" /> 로그인
                   </>
                 )}
-              </Button>
+              </button>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {/* Footer note */}
-      <p className="mt-8 text-xs text-muted-foreground dark:text-gray-500 text-center max-w-md">
-        {t('auth.devLoginFooter') || '이 페이지는 개발 환경에서만 접근 가능합니다. 프로덕션 환경에서는 자동으로 일반 로그인 페이지로 이동합니다.'}
+      <p className="mt-8 text-xs text-[var(--color-text-muted)] text-center max-w-md">
+        이 페이지는 개발 환경에서만 접근 가능합니다. 프로덕션 환경에서는 자동으로 일반 로그인 페이지로 이동합니다.
       </p>
     </div>
   )

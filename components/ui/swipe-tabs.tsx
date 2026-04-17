@@ -110,7 +110,7 @@ export function SwipeTabs({
   return (
     <div className={cn('flex flex-col', className)}>
       {/* Tab bar */}
-      <div className="relative border-b border-gray-200">
+      <div className="relative border-b border-[var(--color-border-subtle)]">
         <div
           ref={tabBarRef}
           className={cn(
@@ -129,8 +129,8 @@ export function SwipeTabs({
                 className={cn(
                   'relative flex shrink-0 items-center gap-1.5 whitespace-nowrap px-4 py-3 text-sm font-medium transition-colors',
                   isActive
-                    ? 'text-[#1B3A5C]'
-                    : 'text-gray-400 hover:text-gray-600'
+                    ? 'text-[var(--color-text-primary)]'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
                 )}
               >
                 {tab.label}

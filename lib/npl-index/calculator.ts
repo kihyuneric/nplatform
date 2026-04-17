@@ -169,40 +169,115 @@ function buildRegionalMockData(): NbiRegionalData[] {
  * @param weeks 조회할 주 수 (기본 12)
  */
 export async function getWeeklyNbiData(weeks: number = 12): Promise<NbiWeeklyData[]> {
-  // TODO: Supabase 연동 시 아래 쿼리로 대체
-  // SELECT
-  //   date_trunc('week', auction_date) AS week_start,
-  //   property_type,
-  //   AVG(winning_bid_rate) * 100 AS avg_rate,
-  //   COUNT(*) AS deal_count,
-  //   SUM(winning_bid) AS total_amount
-  // FROM court_auction_listings
-  // WHERE status = 'SOLD' AND winning_bid_rate IS NOT NULL
-  // GROUP BY week_start, property_type
-  // ORDER BY week_start DESC
-  // LIMIT (weeks * 4)  -- 4 유형
+  try {
+    const { createClient } = await import('@/lib/supabase/server')
+    const supabase = await createClient()
 
-  return buildWeeklyMockData(weeks)
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - weeks * 7)
+
+    const { data, error } = await supabase
+      .from('court_auction_listings')
+      .select('auction_date, property_type, winning_bid_rate, winning_bid')
+      .eq('status', 'SOLD')
+      .not('winning_bid_rate', 'is', null)
+      .gte('auction_date', cutoff.toISOString())
+      .order('auction_date', { ascending: false })
+
+    if (error || !data || data.length < 4) {
+      return buildWeeklyMockData(weeks)
+    }
+
+    // Group by week → one NbiWeeklyData row per week (all property types aggregated)
+    type WeekBucket = {
+      rates: number[]; amounts: number[]
+      byType: Record<string, number[]>
+    }
+    const grouped: Record<string, WeekBucket> = {}
+    for (const row of data) {
+      const weekStr = getWeekStr(new Date(row.auction_date as string))
+      if (!grouped[weekStr]) grouped[weekStr] = { rates: [], amounts: [], byType: {} }
+      const rate = Number(row.winning_bid_rate) * 100
+      const ptype = ((row.property_type as string) || 'apt').toLowerCase()
+      grouped[weekStr].rates.push(rate)
+      grouped[weekStr].amounts.push(Number(row.winning_bid) || 0)
+      if (!grouped[weekStr].byType[ptype]) grouped[weekStr].byType[ptype] = []
+      grouped[weekStr].byType[ptype].push(rate)
+    }
+
+    const avg = (arr: number[]) => arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : 0
+    const r = (v: number) => Math.round(v * 10) / 10
+
+    const result: NbiWeeklyData[] = Object.entries(grouped)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([weekStr, bucket]) => ({
+        week: weekStr,
+        week_label: getISOWeekLabel(weekStr),
+        national_avg: r(avg(bucket.rates)),
+        apt_rate: r(avg(bucket.byType['아파트'] ?? bucket.byType['apt'] ?? [])),
+        officetel_rate: r(avg(bucket.byType['오피스텔'] ?? bucket.byType['officetel'] ?? [])),
+        commercial_rate: r(avg(bucket.byType['상가'] ?? bucket.byType['commercial'] ?? [])),
+        land_rate: r(avg(bucket.byType['토지'] ?? bucket.byType['land'] ?? [])),
+        total_deals: bucket.rates.length,
+        total_amount: bucket.amounts.reduce((s, a) => s + a, 0),
+        prev_week_change: 0, // computed below
+      }))
+
+    // Compute prev_week_change
+    for (let i = 1; i < result.length; i++) {
+      result[i].prev_week_change = r(result[i].national_avg - result[i - 1].national_avg)
+    }
+
+    return result
+  } catch {
+    return buildWeeklyMockData(weeks)
+  }
 }
 
 /**
  * 지역별 NBI 데이터 조회 (최근 4주 평균)
  */
 export async function getRegionalNbiData(): Promise<NbiRegionalData[]> {
-  // TODO: Supabase 연동 시 아래 쿼리로 대체
-  // SELECT
-  //   sido AS region,
-  //   AVG(winning_bid_rate) * 100 AS bid_rate,
-  //   COUNT(*) AS deal_count,
-  //   AVG(winning_bid) AS avg_amount
-  // FROM court_auction_listings
-  // WHERE status = 'SOLD'
-  //   AND auction_date >= NOW() - INTERVAL '4 weeks'
-  //   AND winning_bid_rate IS NOT NULL
-  // GROUP BY sido
-  // ORDER BY bid_rate DESC
+  try {
+    const { createClient } = await import('@/lib/supabase/server')
+    const supabase = await createClient()
 
-  return buildRegionalMockData()
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - 28)
+
+    const { data, error } = await supabase
+      .from('court_auction_listings')
+      .select('sido, winning_bid_rate, winning_bid')
+      .eq('status', 'SOLD')
+      .not('winning_bid_rate', 'is', null)
+      .not('sido', 'is', null)
+      .gte('auction_date', cutoff.toISOString())
+
+    if (error || !data || data.length < 5) {
+      return buildRegionalMockData()
+    }
+
+    const grouped: Record<string, { rates: number[]; amounts: number[] }> = {}
+    for (const row of data) {
+      const region = (row.sido as string) || '기타'
+      if (!grouped[region]) grouped[region] = { rates: [], amounts: [] }
+      grouped[region].rates.push(Number(row.winning_bid_rate) * 100)
+      grouped[region].amounts.push(Number(row.winning_bid) || 0)
+    }
+
+    return Object.entries(grouped)
+      .map(([region, v]) => ({
+        region,
+        bid_rate: Math.round((v.rates.reduce((s, r) => s + r, 0) / v.rates.length) * 10) / 10,
+        deal_count: v.rates.length,
+        avg_amount: Math.round(v.amounts.reduce((s, a) => s + a, 0) / v.amounts.length),
+        risk_level: 'medium' as const,
+        prev_change: 0,
+      }))
+      .sort((a, b) => b.bid_rate - a.bid_rate)
+  } catch {
+    return buildRegionalMockData()
+  }
 }
 
 /**

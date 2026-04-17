@@ -6,12 +6,12 @@ import { motion } from 'framer-motion'
 
 const SERVICE_HUBS = [
   {
-    title: 'NPL 마켓',
+    title: '거래소',
     description: '전국 NPL 매물 검색·지도·입찰',
     icon: Search,
     color: 'from-blue-500 to-blue-600',
-    bgLight: 'bg-blue-50',
-    textColor: 'text-blue-600',
+    bgLight: 'bg-blue-500/10',
+    textColor: 'text-blue-400',
     links: [
       { label: '매물 검색', href: '/exchange/search' },
       { label: '지도', href: '/market/map' },
@@ -24,8 +24,8 @@ const SERVICE_HUBS = [
     description: 'AI 추천·워치리스트·포트폴리오',
     icon: ShoppingBag,
     color: 'from-pink-500 to-rose-500',
-    bgLight: 'bg-pink-50',
-    textColor: 'text-pink-600',
+    bgLight: 'bg-pink-500/10',
+    textColor: 'text-pink-400',
     links: [
       { label: 'AI 추천', href: '/my/portfolio' },
       { label: '관심목록', href: '/my/portfolio' },
@@ -38,8 +38,8 @@ const SERVICE_HUBS = [
     description: '매물등록·분석·정산관리',
     icon: Store,
     color: 'from-amber-500 to-orange-500',
-    bgLight: 'bg-amber-50',
-    textColor: 'text-amber-600',
+    bgLight: 'bg-amber-500/10',
+    textColor: 'text-amber-400',
     links: [
       { label: '대시보드', href: '/my/seller' },
       { label: '매물 등록', href: '/seller/listings/new' },
@@ -52,8 +52,8 @@ const SERVICE_HUBS = [
     description: '양면매칭·거래소·공동투자',
     icon: ArrowRightLeft,
     color: 'from-orange-500 to-red-500',
-    bgLight: 'bg-orange-50',
-    textColor: 'text-orange-600',
+    bgLight: 'bg-orange-500/10',
+    textColor: 'text-orange-400',
     links: [
       { label: '매칭', href: '/marketplace/matching' },
       { label: '거래소', href: '/exchange' },
@@ -66,8 +66,8 @@ const SERVICE_HUBS = [
     description: '시장분석·히트맵·리포트·시그널',
     icon: Globe,
     color: 'from-cyan-500 to-teal-500',
-    bgLight: 'bg-cyan-50',
-    textColor: 'text-cyan-600',
+    bgLight: 'bg-cyan-500/10',
+    textColor: 'text-cyan-400',
     links: [
       { label: '시장 개요', href: '/market-intelligence' },
       { label: '히트맵', href: '/market-intelligence/heatmap' },
@@ -80,8 +80,8 @@ const SERVICE_HUBS = [
     description: '토론·전문가칼럼·지식허브',
     icon: MessageCircle,
     color: 'from-indigo-500 to-violet-500',
-    bgLight: 'bg-indigo-50',
-    textColor: 'text-indigo-600',
+    bgLight: 'bg-indigo-500/10',
+    textColor: 'text-indigo-400',
     links: [
       { label: '커뮤니티', href: '/community' },
       { label: '전문가 칼럼', href: '/community/expert' },
@@ -94,8 +94,8 @@ const SERVICE_HUBS = [
     description: '법률·감정·세무 전문가 마켓',
     icon: Briefcase,
     color: 'from-purple-500 to-fuchsia-500',
-    bgLight: 'bg-purple-50',
-    textColor: 'text-purple-600',
+    bgLight: 'bg-purple-500/10',
+    textColor: 'text-purple-400',
     links: [
       { label: '전문가 찾기', href: '/professional' },
       { label: '팀 투자', href: '/teams' },
@@ -108,8 +108,8 @@ const SERVICE_HUBS = [
     description: 'AI 분석·수익률 시뮬레이션',
     icon: Brain,
     color: 'from-emerald-500 to-green-500',
-    bgLight: 'bg-emerald-50',
-    textColor: 'text-emerald-600',
+    bgLight: 'bg-emerald-500/10',
+    textColor: 'text-emerald-400',
     links: [
       { label: 'NPL 분석', href: '/analysis' },
       { label: '경매 시뮬레이터', href: '/tools/auction-simulator' },
@@ -123,8 +123,8 @@ export function ServiceHubGrid() {
   return (
     <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">플랫폼 서비스</h2>
-        <p className="mt-2 text-gray-500">NPLatform의 모든 서비스를 한 곳에서</p>
+        <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)]">플랫폼 서비스</h2>
+        <p className="mt-2 text-[var(--color-text-muted)]">NPLatform의 모든 서비스를 한 곳에서</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {SERVICE_HUBS.map((hub, i) => (
@@ -133,7 +133,7 @@ export function ServiceHubGrid() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05, duration: 0.3 }}
-            className="group relative bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+            className="group relative bg-[var(--color-surface-elevated)] rounded-2xl border border-[var(--color-border-subtle)] p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
           >
             {/* Icon + Title */}
             <div className="flex items-center gap-3 mb-3">
@@ -141,8 +141,8 @@ export function ServiceHubGrid() {
                 <hub.icon className={`w-5 h-5 ${hub.textColor}`} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 text-[15px]">{hub.title}</h3>
-                <p className="text-xs text-gray-500">{hub.description}</p>
+                <h3 className="font-semibold text-[var(--color-text-primary)] text-[15px]">{hub.title}</h3>
+                <p className="text-xs text-[var(--color-text-muted)]">{hub.description}</p>
               </div>
             </div>
 
@@ -160,8 +160,8 @@ export function ServiceHubGrid() {
             </div>
 
             {/* Mini Stat */}
-            <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-              <span className="text-xs text-gray-400">{hub.stat.label}</span>
+            <div className="flex items-center justify-between pt-3 border-t border-[var(--color-border-subtle)]">
+              <span className="text-xs text-[var(--color-text-muted)]">{hub.stat.label}</span>
               <span className={`text-sm font-bold ${hub.textColor}`}>{hub.stat.value}</span>
             </div>
           </motion.div>

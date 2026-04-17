@@ -23,10 +23,10 @@ function formatBillion(v: number) {
 }
 
 function getCellColor(value: number, thresholds: { good: number; warn: number }) {
-  if (value >= thresholds.good) return { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' }
-  if (value >= thresholds.warn) return { bg: 'bg-yellow-50', text: 'text-yellow-800', border: 'border-yellow-200' }
-  if (value >= 0) return { bg: 'bg-orange-50', text: 'text-orange-800', border: 'border-orange-200' }
-  return { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200' }
+  if (value >= thresholds.good) return { bg: 'bg-green-500/15', text: 'text-green-400', border: 'border-green-500/20' }
+  if (value >= thresholds.warn) return { bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/20' }
+  if (value >= 0) return { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/20' }
+  return { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/20' }
 }
 
 export function SensitivityHeatmap({
@@ -46,17 +46,17 @@ export function SensitivityHeatmap({
 
   return (
     <div className="w-full">
-      <h3 className="mb-3 text-sm font-semibold text-gray-700">{title}</h3>
+      <h3 className="mb-3 text-sm font-semibold text-[var(--color-text-secondary)]">{title}</h3>
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-xs">
           <thead>
             <tr>
-              <th className="border border-gray-200 bg-gray-50 px-2 py-2 text-left font-medium text-gray-500">
+              <th className="border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-2 py-2 text-left font-medium text-[var(--color-text-muted)]">
                 {yLabel} \ {xLabel}
               </th>
               {xValues.map((x, i) => (
-                <th key={i} className="border border-gray-200 bg-gray-50 px-2 py-2 text-center font-medium text-gray-600">
+                <th key={i} className="border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-2 py-2 text-center font-medium text-[var(--color-text-secondary)]">
                   {fmtX(x)}
                 </th>
               ))}
@@ -65,7 +65,7 @@ export function SensitivityHeatmap({
           <tbody>
             {yValues.map((y, rowIdx) => (
               <tr key={rowIdx}>
-                <td className="border border-gray-200 bg-gray-50 px-2 py-2 font-medium text-gray-600 whitespace-nowrap">
+                <td className="border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-2 py-2 font-medium text-[var(--color-text-secondary)] whitespace-nowrap">
                   {fmtY(y)}
                 </td>
                 {xValues.map((_, colIdx) => {
@@ -91,21 +91,21 @@ export function SensitivityHeatmap({
       </div>
 
       {/* Legend */}
-      <div className="mt-3 flex items-center gap-3 text-xs text-gray-500">
+      <div className="mt-3 flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
         <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded bg-green-100 border border-green-200" />
+          <span className="inline-block h-3 w-3 rounded bg-green-500/15 border border-green-500/20" />
           {(thresholds.good * 100).toFixed(0)}%이상 (우수)
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded bg-yellow-50 border border-yellow-200" />
+          <span className="inline-block h-3 w-3 rounded bg-yellow-500/10 border border-yellow-500/20" />
           {(thresholds.warn * 100).toFixed(0)}~{(thresholds.good * 100).toFixed(0)}% (양호)
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded bg-orange-50 border border-orange-200" />
+          <span className="inline-block h-3 w-3 rounded bg-orange-500/10 border border-orange-500/20" />
           0~{(thresholds.warn * 100).toFixed(0)}%
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded bg-red-100 border border-red-200" />
+          <span className="inline-block h-3 w-3 rounded bg-red-500/15 border border-red-500/20" />
           손실구간
         </span>
       </div>

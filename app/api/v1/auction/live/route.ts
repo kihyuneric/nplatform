@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server"
 import { logger } from '@/lib/logger'
 
-export const runtime = "edge"
+// runtime = "edge" removed — Supabase server client requires Node.js runtime
 
 const MOCK_AUCTIONS = [
   {
@@ -57,51 +58,146 @@ const MOCK_BIDS: Record<string, Array<{ bidder: string; amount: number; time: st
   ],
 }
 
+// ─── DB row → API shape ───────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function rowToAuction(row: any) {
+  return {
+    id: row.id,
+    title: row.address
+      ? `${row.property_type ? row.property_type + ' ' : ''}${row.address}`
+      : row.case_number,
+    collateralType: row.property_type ?? "기타",
+    address: row.address ?? "",
+    startingBid: row.min_bid_price ?? 0,
+    currentBid: row.winning_bid ?? row.min_bid_price ?? 0,
+    participantCount: 0,          // no participants table yet
+    status: row.status,
+    bidCount: row.auction_count ?? 1,
+    auctionRound: row.auction_count ?? 1,
+  }
+}
+
+// ─── GET ──────────────────────────────────────────────────────
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const auctionId = searchParams.get("id")
-  const status = searchParams.get("status")
-  const page = parseInt(searchParams.get("page") || "1")
+  const statusFilter = searchParams.get("status")
+  const page  = parseInt(searchParams.get("page")  || "1")
   const limit = parseInt(searchParams.get("limit") || "20")
 
-  // Single auction detail
-  if (auctionId) {
-    const auction = MOCK_AUCTIONS.find((a) => a.id === auctionId)
-    if (!auction) {
-      return NextResponse.json(
-        { error: { code: "AUCTION_NOT_FOUND", message: "경매를 찾을 수 없습니다." } },
-        { status: 404 }
-      )
+  try {
+    const supabase = await createClient()
+
+    // ── Single auction detail ───────────────────────────────
+    if (auctionId) {
+      const { data, error } = await supabase
+        .from("court_auction_listings")
+        .select("*")
+        .eq("id", auctionId)
+        .single()
+
+      if (error || !data) {
+        // Try mock fallback for AUC-xxx style IDs
+        const mock = MOCK_AUCTIONS.find(a => a.id === auctionId)
+        if (!mock) {
+          return NextResponse.json(
+            { error: { code: "AUCTION_NOT_FOUND", message: "경매를 찾을 수 없습니다." } },
+            { status: 404 }
+          )
+        }
+        return NextResponse.json({
+          success: true,
+          data: { ...mock, bids: MOCK_BIDS[auctionId] || [] },
+          source: "mock",
+        })
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          ...rowToAuction(data),
+          bids: MOCK_BIDS[auctionId] || [],
+        },
+        source: "db",
+      })
     }
+
+    // ── List auctions ───────────────────────────────────────
+    const liveStatuses = statusFilter
+      ? [statusFilter]
+      : ["LIVE", "UPCOMING", "ACTIVE", "BIDDING", "SCHEDULED"]
+
+    let query = supabase
+      .from("court_auction_listings")
+      .select("*", { count: "exact" })
+      .in("status", liveStatuses)
+      .order("auction_date", { ascending: true })
+
+    const from = (page - 1) * limit
+    const to   = from + limit - 1
+    query = query.range(from, to)
+
+    const { data, error, count } = await query
+
+    if (error) throw error
+
+    const auctions = (data ?? []).map(rowToAuction)
+
     return NextResponse.json({
       success: true,
-      data: {
-        ...auction,
-        bids: MOCK_BIDS[auctionId] || [],
+      data: auctions,
+      meta: {
+        total: count ?? 0,
+        page,
+        limit,
+        hasMore: from + limit < (count ?? 0),
       },
+      source: "db",
+    })
+  } catch (err) {
+    logger.error("[GET /api/v1/auction/live] DB error, falling back to mock", { error: err })
+
+    // ── Mock fallback ───────────────────────────────────────
+    if (auctionId) {
+      const auction = MOCK_AUCTIONS.find(a => a.id === auctionId)
+      if (!auction) {
+        return NextResponse.json(
+          { error: { code: "AUCTION_NOT_FOUND", message: "경매를 찾을 수 없습니다." } },
+          { status: 404 }
+        )
+      }
+      return NextResponse.json({
+        success: true,
+        data: { ...auction, bids: MOCK_BIDS[auctionId] || [] },
+        source: "mock",
+      })
+    }
+
+    let auctions = [...MOCK_AUCTIONS]
+    if (statusFilter) {
+      auctions = auctions.filter(a => a.status === statusFilter)
+    }
+
+    const start = (page - 1) * limit
+    const end   = start + limit
+
+    return NextResponse.json({
+      success: true,
+      data: auctions.slice(start, end),
+      meta: {
+        total: auctions.length,
+        page,
+        limit,
+        hasMore: end < auctions.length,
+      },
+      source: "mock",
     })
   }
-
-  // List auctions
-  let auctions = [...MOCK_AUCTIONS]
-  if (status) {
-    auctions = auctions.filter((a) => a.status === status)
-  }
-
-  const start = (page - 1) * limit
-  const end = start + limit
-
-  return NextResponse.json({
-    success: true,
-    data: auctions.slice(start, end),
-    meta: {
-      total: auctions.length,
-      page,
-      limit,
-      hasMore: end < auctions.length,
-    },
-  })
 }
+
+// ─── POST (bid submission — mock only, no bids table yet) ─────
 
 export async function POST(req: NextRequest) {
   try {

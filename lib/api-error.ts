@@ -20,7 +20,14 @@ export type ApiErrorCode =
   | 'VALIDATION_ERROR'
   | 'INTERNAL_ERROR'
   | 'MISSING_FIELD'
+  | 'MISSING_FIELDS'
+  | 'INVALID_AMOUNT'
+  | 'INVALID_PRICE'
+  | 'INVALID_ACTION'
   | 'INSUFFICIENT_CREDITS'
+  | 'COUPON_EXPIRED'
+  | 'COUPON_EXHAUSTED'
+  | 'ALREADY_USED'
 
 // ─── Standard Error Response Shape ───────────────────
 export interface ApiErrorBody {

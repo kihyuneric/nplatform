@@ -1,21 +1,47 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { ArrowLeft, MapPin, Star, Clock, CheckCircle2 } from 'lucide-react'
 
-const MOCK_REVIEWS = [
-  { id: 1, name: '박OO', rating: 5, date: '2026-03-18', content: '친절하고 전문적으로 설명해주셔서 큰 도움이 됐습니다. 복잡한 권리관계도 명확히 정리해주셨어요.' },
-  { id: 2, name: '이OO', rating: 5, date: '2026-02-25', content: '빠른 답변과 정확한 분석으로 경매 입찰 전 불안감이 해소됐습니다. 강력 추천합니다.' },
-  { id: 3, name: '최OO', rating: 4, date: '2026-01-10', content: '서류 검토 매우 꼼꼼히 해주셨습니다. 다음에도 꼭 이용하겠습니다.' },
-]
+type Review = { id: number; name: string; rating: number; date: string; content: string }
 
 const TIME_SLOTS = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00']
 
 export default function ExpertDetailPage() {
+  const params = useParams()
+  const expertId = params?.id as string
   const [activeTab, setActiveTab] = useState<'profile' | 'services' | 'reviews'>('profile')
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState('')
+  const [reviews, setReviews] = useState<Review[]>([])
+
+  useEffect(() => {
+    if (!expertId) return
+    const load = async () => {
+      try {
+        const supabase = createClient()
+        const { data } = await supabase
+          .from('expert_reviews')
+          .select('id, reviewer_name, rating, created_at, content')
+          .eq('expert_id', expertId)
+          .order('created_at', { ascending: false })
+          .limit(20)
+        if (data?.length) {
+          setReviews(data.map((r: any, i: number) => ({
+            id: r.id ?? i,
+            name: r.reviewer_name ?? '익명',
+            rating: r.rating ?? 5,
+            date: String(r.created_at ?? '').slice(0, 10),
+            content: r.content ?? '',
+          })))
+        }
+      } catch { /* stays empty */ }
+    }
+    load()
+  }, [expertId])
 
   const tabs = [
     { key: 'profile', label: '프로필' },
@@ -24,9 +50,9 @@ export default function ExpertDetailPage() {
   ] as const
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--color-surface-base)]">
       {/* Hero Header */}
-      <div className="bg-[#0D1F38] text-white px-6 py-10">
+      <div className="bg-[var(--color-brand-deep)] text-white px-6 py-10">
         <div className="max-w-5xl mx-auto">
           <Link href="/services/experts" className="inline-flex items-center gap-1.5 text-blue-300 hover:text-white text-sm mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4" /> 전문가 목록
@@ -82,8 +108,8 @@ export default function ExpertDetailPage() {
             { label: '응답률', value: '98%' },
           ].map((s) => (
             <div key={s.label} className="stat-card text-center">
-              <div className="text-2xl font-black text-[#0D1F38] tracking-normal">{s.value}</div>
-              <div className="text-xs text-gray-500 mt-1 tracking-normal">{s.label}</div>
+              <div className="text-2xl font-black text-[var(--color-brand-deep)] tracking-normal">{s.value}</div>
+              <div className="text-xs text-[var(--color-text-secondary)] mt-1 tracking-normal">{s.label}</div>
             </div>
           ))}
         </div>
@@ -95,15 +121,15 @@ export default function ExpertDetailPage() {
           {/* Left Column */}
           <div>
             {/* Tab Bar */}
-            <div className="flex gap-1 bg-white rounded-xl p-1 shadow-sm mb-5 border border-gray-100">
+            <div className="flex gap-1 bg-[var(--color-surface-elevated)] rounded-xl p-1 shadow-sm mb-5 border border-[var(--color-border-subtle)]">
               {tabs.map((t) => (
                 <button
                   key={t.key}
                   onClick={() => setActiveTab(t.key)}
                   className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors tracking-normal ${
                     activeTab === t.key
-                      ? 'bg-[#0D1F38] text-white'
-                      : 'text-gray-500 hover:text-gray-800'
+                      ? 'bg-[var(--color-brand-deep)] text-white'
+                      : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
                   }`}
                 >
                   {t.label}
@@ -116,7 +142,7 @@ export default function ExpertDetailPage() {
               <div className="space-y-5">
                 <div className="card-interactive">
                   <p className="section-eyebrow">소개</p>
-                  <p className="text-gray-700 text-sm leading-relaxed tracking-normal">
+                  <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed tracking-normal">
                     NPL 채권 관련 소송 전문 법무사로 12년간 부동산 경매 법률 자문을 제공하고 있습니다. 부실채권 매입, 근저당권 실행, 명도소송 등 NPL 투자의 전 과정을 지원합니다. 대한법무사협회 부동산법 분과위원으로 활동 중입니다.
                   </p>
                 </div>
@@ -132,7 +158,7 @@ export default function ExpertDetailPage() {
                     ].map((item) => (
                       <div key={item.year} className="flex gap-4 items-start">
                         <span className="text-xs font-bold text-[#2E75B6] shrink-0 mt-0.5">{item.year}</span>
-                        <span className="text-sm text-gray-700 tracking-normal">{item.text}</span>
+                        <span className="text-sm text-[var(--color-text-secondary)] tracking-normal">{item.text}</span>
                       </div>
                     ))}
                   </div>
@@ -142,7 +168,7 @@ export default function ExpertDetailPage() {
                   <p className="section-eyebrow">전문 분야</p>
                   <div className="flex flex-wrap gap-2">
                     {['NPL 채권', '부동산 경매', '명도소송', '권리분석', '근저당 실행', '채권 회수'].map((tag) => (
-                      <span key={tag} className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold tracking-normal border border-blue-100">
+                      <span key={tag} className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold tracking-normal border border-blue-500/20">
                         {tag}
                       </span>
                     ))}
@@ -161,9 +187,9 @@ export default function ExpertDetailPage() {
                 ].map((svc) => (
                   <div key={svc.name} className="card-interactive flex items-start justify-between gap-4">
                     <div>
-                      <h3 className="font-bold text-gray-900 text-sm mb-1 tracking-normal">{svc.name}</h3>
-                      <p className="text-gray-500 text-xs tracking-normal">{svc.desc}</p>
-                      <div className="flex items-center gap-1 mt-2 text-gray-400 text-xs">
+                      <h3 className="font-bold text-[var(--color-text-primary)] text-sm mb-1 tracking-normal">{svc.name}</h3>
+                      <p className="text-[var(--color-text-secondary)] text-xs tracking-normal">{svc.desc}</p>
+                      <div className="flex items-center gap-1 mt-2 text-[var(--color-text-muted)] text-xs">
                         <Clock className="w-3 h-3" /> {svc.duration}
                       </div>
                     </div>
@@ -181,19 +207,22 @@ export default function ExpertDetailPage() {
             {/* Reviews Tab */}
             {activeTab === 'reviews' && (
               <div className="space-y-3">
-                {MOCK_REVIEWS.map((r) => (
+                {reviews.length === 0 && (
+                  <div className="text-center py-8 text-[var(--color-text-muted)] text-sm">아직 리뷰가 없습니다.</div>
+                )}
+                {reviews.map((r) => (
                   <div key={r.id} className="card-interactive">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                        <div className="w-8 h-8 rounded-full bg-[var(--color-surface-sunken)] flex items-center justify-center text-xs font-bold text-[var(--color-text-secondary)]">
                           {r.name[0]}
                         </div>
-                        <span className="text-sm font-semibold text-gray-800 tracking-normal">{r.name}</span>
+                        <span className="text-sm font-semibold text-[var(--color-text-primary)] tracking-normal">{r.name}</span>
                       </div>
-                      <span className="text-xs text-gray-400">{r.date}</span>
+                      <span className="text-xs text-[var(--color-text-muted)]">{r.date}</span>
                     </div>
                     <div className="text-yellow-400 text-sm mb-1 tracking-normal">{'★'.repeat(r.rating)}</div>
-                    <p className="text-sm text-gray-700 leading-relaxed tracking-normal">{r.content}</p>
+                    <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed tracking-normal">{r.content}</p>
                   </div>
                 ))}
               </div>
@@ -206,18 +235,18 @@ export default function ExpertDetailPage() {
               <p className="section-eyebrow">상담 예약</p>
 
               <div className="mb-4">
-                <label className="text-xs font-semibold text-gray-600 block mb-1.5 tracking-normal">날짜 선택</label>
+                <label className="text-xs font-semibold text-[var(--color-text-secondary)] block mb-1.5 tracking-normal">날짜 선택</label>
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2E75B6]"
+                  className="w-full border border-[var(--color-border-subtle)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface-base)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#2E75B6]"
                 />
               </div>
 
               <div className="mb-5">
-                <label className="text-xs font-semibold text-gray-600 block mb-1.5 tracking-normal">시간 선택</label>
+                <label className="text-xs font-semibold text-[var(--color-text-secondary)] block mb-1.5 tracking-normal">시간 선택</label>
                 <div className="grid grid-cols-3 gap-2">
                   {TIME_SLOTS.map((slot) => (
                     <button
@@ -226,7 +255,7 @@ export default function ExpertDetailPage() {
                       className={`py-1.5 rounded-lg text-xs font-semibold border transition-colors tracking-normal ${
                         selectedSlot === slot
                           ? 'bg-[#2E75B6] text-white border-[#2E75B6]'
-                          : 'border-gray-200 text-gray-600 hover:border-[#2E75B6] hover:text-[#2E75B6]'
+                          : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[#2E75B6] hover:text-[#2E75B6]'
                       }`}
                     >
                       {slot}
@@ -242,7 +271,7 @@ export default function ExpertDetailPage() {
                 예약 확정
               </button>
 
-              <p className="text-center text-xs text-gray-400 mt-3 tracking-normal">
+              <p className="text-center text-xs text-[var(--color-text-muted)] mt-3 tracking-normal">
                 예약 확정 후 카카오톡으로 안내됩니다
               </p>
             </div>

@@ -26,6 +26,12 @@ const MOCK: ArchivedDeal[] = [
 type SortKey = "deal_amount" | "roi" | "end_date"
 type FilterType = "all" | "buy" | "sell"
 
+interface ArchiveStats {
+  total: number
+  totalAmount: number
+  avgRoi: number
+}
+
 function downloadDeal(deal: ArchivedDeal) {
   const text = `거래 완료 확인서\n\n매물명: ${deal.listing_name}\n거래금액: ${formatKRW(deal.deal_amount)}\n상대방: ${deal.counterparty}\n완료일: ${deal.end_date}\n수익률: ${deal.roi}%\n`
   const blob = new Blob([text], { type: "text/plain;charset=utf-8" })
@@ -35,28 +41,45 @@ function downloadDeal(deal: ArchivedDeal) {
   URL.revokeObjectURL(url)
 }
 
-function formatPercent(n: number) {
-  return `${n.toFixed(1)}%`
+function formatAmount(n: number) {
+  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(0)}억`
+  if (n >= 10_000) return `${(n / 10_000).toFixed(0)}만`
+  return n.toLocaleString()
 }
 
 export default function ArchivePage() {
   const [deals, setDeals] = useState<ArchivedDeal[]>([])
+  const [stats, setStats] = useState<ArchiveStats>({ total: 0, totalAmount: 0, avgRoi: 0 })
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<FilterType>("all")
   const [sortKey, setSortKey] = useState<SortKey>("end_date")
   const [search, setSearch] = useState("")
   const [period, setPeriod] = useState("all")
 
-  useEffect(() => {
-    fetch("/api/v1/exchange/archive")
+  const fetchDeals = (type: FilterType, period: string) => {
+    setLoading(true)
+    const params = new URLSearchParams({ type, period })
+    fetch(`/api/v1/exchange/archive?${params}`)
       .then(r => r.json())
-      .then(d => setDeals(d.data?.length ? d.data : MOCK))
-      .catch(() => setDeals(MOCK))
+      .then(d => {
+        setDeals(d.data ?? [])
+        setStats({
+          total:       d.total       ?? (d.data?.length ?? 0),
+          totalAmount: d.totalAmount ?? 0,
+          avgRoi:      d.avgRoi      ?? 0,
+        })
+      })
+      .catch(() => setDeals([]))
       .finally(() => setLoading(false))
-  }, [])
+  }
 
+  useEffect(() => { fetchDeals(filter, period) }, []) // initial load
+
+  const handleFilterChange = (f: FilterType) => { setFilter(f); fetchDeals(f, period) }
+  const handlePeriodChange = (p: string)     => { setPeriod(p); fetchDeals(filter, p) }
+
+  // Client-side: search + sort only (type/period filtered server-side)
   const filtered = deals
-    .filter(d => filter === "all" || d.type === filter)
     .filter(d => !search || d.listing_name.includes(search) || d.counterparty.includes(search))
     .sort((a, b) => sortKey === "end_date"
       ? b.end_date.localeCompare(a.end_date)
@@ -92,30 +115,30 @@ export default function ArchivePage() {
           <div className={`flex flex-wrap gap-8 ${DS.text.body}`}>
             <div>
               <span className={DS.text.caption}>총 완료 거래</span>
-              <span className={`ml-2 ${DS.text.bodyBold}`}>247건</span>
+              <span className={`ml-2 ${DS.text.bodyBold}`}>{stats.total.toLocaleString()}건</span>
             </div>
             <div className="w-px bg-[var(--color-border-subtle)]" />
             <div>
               <span className={DS.text.caption}>총 거래액</span>
-              <span className={`ml-2 ${DS.text.bodyBold}`}>128억</span>
+              <span className={`ml-2 ${DS.text.bodyBold}`}>{formatAmount(stats.totalAmount)}</span>
             </div>
             <div className="w-px bg-[var(--color-border-subtle)]" />
             <div>
               <span className={DS.text.caption}>평균 수익률</span>
-              <span className={`ml-2 ${DS.text.bodyBold} text-[var(--color-positive)]`}>16.4%</span>
+              <span className={`ml-2 ${DS.text.bodyBold} text-[var(--color-positive)]`}>{stats.avgRoi.toFixed(1)}%</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className={`${DS.page.container} ${DS.page.paddingTop} space-y-5`}>
+      <div className={`${DS.page.container} ${DS.page.paddingTop} pb-16 space-y-5`}>
 
         {/* Filter Bar */}
         <div className={DS.filter.bar}>
           {/* Period */}
           <select
             value={period}
-            onChange={e => setPeriod(e.target.value)}
+            onChange={e => handlePeriodChange(e.target.value)}
             className={DS.input.base + " w-auto"}
           >
             <option value="all">전체 기간</option>
@@ -128,7 +151,7 @@ export default function ArchivePage() {
             {(["all", "buy", "sell"] as FilterType[]).map(f => (
               <button
                 key={f}
-                onClick={() => setFilter(f)}
+                onClick={() => handleFilterChange(f)}
                 className={`${DS.filter.chip} ${
                   filter === f ? DS.filter.chipActive : DS.filter.chipInactive
                 }`}
@@ -167,7 +190,7 @@ export default function ArchivePage() {
           </div>
         ) : (
           <div className={DS.table.wrapper}>
-            <table className="w-full">
+            <table className="w-full min-w-[680px]">
               <thead>
                 <tr className={DS.table.header}>
                   {["거래명", "매물 유형", "거래액", "수익률", "완료일", "상대방", "상세보기"].map(h => (
@@ -188,7 +211,7 @@ export default function ArchivePage() {
                       <span className={`inline-block px-2 py-0.5 rounded text-[0.6875rem] font-bold border ${
                         deal.type === "buy"
                           ? DS.status.info
-                          : "bg-purple-50 text-purple-600 border-purple-200"
+                          : "bg-purple-500/10 text-purple-400 border-purple-500/20"
                       }`}>
                         {deal.asset_type}
                       </span>
@@ -219,7 +242,7 @@ export default function ArchivePage() {
 
         {/* Summary Stats */}
         {filtered.length > 0 && (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               { icon: TrendingUp, label: "평균 수익률", value: `${avgRoi.toFixed(1)}%`, color: "text-[var(--color-brand-mid)]" },
               { icon: BarChart3,  label: "최고 수익률", value: `${maxRoi.toFixed(1)}%`, color: "text-[var(--color-positive)]" },

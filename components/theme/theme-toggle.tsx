@@ -68,7 +68,7 @@ export function ThemeToggle({ variant = 'icon', className }: ThemeToggleProps) {
               transition={{ duration: 0.2 }}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <Moon className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+              <Moon className="h-4 w-4 text-[var(--color-text-secondary)]" />
             </motion.div>
           )}
         </AnimatePresence>

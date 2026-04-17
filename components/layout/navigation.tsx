@@ -31,16 +31,30 @@ import {
 } from 'lucide-react'
 import { LanguageSelector } from './language-selector'
 import { t } from '@/lib/i18n'
+import { TierBadge } from '@/components/tier/tier-badge'
+import type { AccessTier } from '@/lib/access-tier'
+import { getNextUpgradeStep, TIER_META } from '@/lib/access-tier'
+import { NotificationCenter } from '@/components/notifications/notification-center'
+import { ThemeToggle } from '@/components/theme/theme-toggle'
+import type { Notification } from '@/lib/types'
 
-// ─── Nav items ───────────────────────────────────────────────
+// ─── Nav items (v5 전략: 4대 메인 네비) ──────────────────────
 const NAV_ITEMS = [
-  { href: '/exchange', label: 'NPL 매물' },
-  { href: '/deals', label: '거래 현황' },
-  { href: '/analysis', label: '투자 분석' },
-  { href: '/services/experts', label: '전문가' },
-  { href: '/services/community', label: '커뮤니티' },
-  { href: '/pricing', label: '요금제' },
+  { href: '/exchange',  label: '거래소',    matchPaths: ['/exchange'] },
+  { href: '/deals',     label: '딜룸',      matchPaths: ['/deals'] },
+  { href: '/analysis',  label: '분석',      matchPaths: ['/analysis', '/services'] },
+  { href: '/my',        label: '마이 페이지', matchPaths: ['/my'] },
 ]
+
+// ─── 사용자 티어 판정 (auth user → AccessTier) ─────────────
+function resolveUserTier(user: any): AccessTier {
+  if (!user) return 'L0'
+  // 전문투자자 or 기관 → L2
+  if (user.qualified_investor || user.role === 'INSTITUTION' || user.role === 'SUPER_ADMIN') return 'L2'
+  // 본인인증 완료 → L1
+  if (user.identity_verified || user.kyc_status === 'APPROVED' || user.approval_status === 'APPROVED') return 'L1'
+  return 'L0'
+}
 
 // ─── Role helpers ─────────────────────────────────────────────
 function getSwitchableRoles(userRole: string | undefined): UserRole[] {
@@ -88,27 +102,27 @@ function SearchOverlay({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl bg-white dark:bg-[#0D1F38] rounded-xl shadow-2xl overflow-hidden"
+        className="w-full max-w-2xl bg-[var(--color-brand-deep)] rounded-xl shadow-2xl overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E8EDF3] dark:border-[#1A2E4A]">
-          <Search className="h-5 w-5 text-[#4A5568] flex-shrink-0" />
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--color-border-subtle)]">
+          <Search className="h-5 w-5 text-[var(--color-nav-text-dim)] flex-shrink-0" />
           <input
             autoFocus
             type="text"
             placeholder="NPL 매물, 경매 정보, 분석 검색..."
-            className="flex-1 bg-transparent text-[#0D1F38] dark:text-white placeholder:text-[#A0AEC0] text-base outline-none"
+            className="flex-1 bg-transparent text-[var(--color-nav-text)] placeholder:text-[var(--color-nav-text-dim)] text-base outline-none"
           />
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-[#4A5568] hover:text-[#0D1F38] dark:hover:text-white transition-colors"
+            className="p-1 rounded-md text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)] transition-colors"
             aria-label="검색 닫기"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
         <div className="px-5 py-3">
-          <p className="text-xs text-[#A0AEC0]">빠른 이동: NPL마켓, 경매 분석, 시장 통계</p>
+          <p className="text-xs text-[var(--color-nav-text-dim)]">빠른 이동: 거래소, 경매 분석, 시장 통계</p>
         </div>
       </div>
     </div>
@@ -156,20 +170,20 @@ function MobileDrawer({
       />
 
       {/* Drawer panel */}
-      <div className="fixed inset-y-0 left-0 z-[110] w-72 bg-white dark:bg-[#0D1F38] flex flex-col shadow-2xl">
+      <div className="fixed inset-y-0 left-0 z-[110] w-72 bg-[var(--color-brand-deep)] flex flex-col shadow-2xl">
         {/* Drawer header */}
-        <div className="flex items-center justify-between px-5 h-14 border-b border-[#E8EDF3] dark:border-[#1A2E4A] flex-shrink-0">
+        <div className="flex items-center justify-between px-5 h-14 border-b border-[var(--color-border-subtle)] flex-shrink-0">
           <Link href="/" className="flex items-center gap-2.5" onClick={onClose}>
-            <div className="w-7 h-7 bg-[#1B3A5C] rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-7 h-7 bg-[var(--color-brand-dark)] rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-white font-black text-xs tracking-tighter">N</span>
             </div>
-            <span className="font-black text-[#0D1F38] dark:text-white text-sm tracking-tight">
-              NPL<span className="font-light text-[#4A5568] dark:text-slate-400">atform</span>
+            <span className="font-black text-[var(--color-nav-text)] text-sm tracking-tight">
+              NPL<span className="font-light text-[var(--color-nav-text-dim)]">atform</span>
             </span>
           </Link>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md text-[#4A5568] hover:text-[#0D1F38] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2E4A] transition-colors"
+            className="p-1.5 rounded-md text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)] hover:bg-[var(--color-nav-hover-bg)] transition-colors"
             aria-label="메뉴 닫기"
           >
             <X className="h-5 w-5" />
@@ -180,7 +194,7 @@ function MobileDrawer({
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-0.5">
             {NAV_ITEMS.map((item) => {
-              const isActive = (pathname ?? '').startsWith(item.href)
+              const isActive = item.matchPaths.some(p => (pathname ?? '').startsWith(p))
               return (
                 <li key={item.href}>
                   <Link
@@ -188,8 +202,8 @@ function MobileDrawer({
                     onClick={onClose}
                     className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       isActive
-                        ? 'text-[#1B3A5C] dark:text-white bg-[#EBF2FA] dark:bg-[#1A2E4A] font-semibold'
-                        : 'text-[#4A5568] dark:text-slate-300 hover:text-[#0D1F38] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1A2E4A]'
+                        ? 'text-[var(--color-nav-active)] bg-[var(--color-nav-hover-bg)] font-semibold'
+                        : 'text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)] hover:bg-[var(--color-nav-hover-bg)]'
                     }`}
                   >
                     {item.label}
@@ -201,11 +215,11 @@ function MobileDrawer({
 
           {/* Admin link */}
           {isAdmin && (
-            <div className="mt-4 pt-4 border-t border-[#E8EDF3] dark:border-[#1A2E4A]">
+            <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)]">
               <Link
                 href="/admin"
                 onClick={onClose}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-amber-600 hover:bg-amber-500/10 transition-colors"
               >
                 <Shield className="h-4 w-4" />
                 관리자 대시보드
@@ -215,24 +229,24 @@ function MobileDrawer({
         </nav>
 
         {/* Bottom auth section */}
-        <div className="px-3 py-4 border-t border-[#E8EDF3] dark:border-[#1A2E4A] flex-shrink-0">
+        <div className="px-3 py-4 border-t border-[var(--color-border-subtle)] flex-shrink-0">
           {user ? (
             <div className="space-y-1">
               <div className="px-3 py-2 mb-2">
-                <p className="text-sm font-semibold text-[#0D1F38] dark:text-white">{user.name}</p>
-                <p className="text-xs text-[#4A5568] dark:text-slate-400 truncate">{user.email}</p>
+                <p className="text-sm font-semibold text-[var(--color-nav-text)]">{user.name}</p>
+                <p className="text-xs text-[var(--color-nav-text-dim)] truncate">{user.email}</p>
               </div>
               <Link
                 href="/my"
                 onClick={onClose}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-[#4A5568] dark:text-slate-300 hover:text-[#0D1F38] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1A2E4A] transition-colors"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)] hover:bg-[var(--color-nav-hover-bg)] transition-colors"
               >
                 <User className="h-4 w-4" />내 페이지
               </Link>
               <Link
                 href="/my/notifications"
                 onClick={onClose}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-[#4A5568] dark:text-slate-300 hover:text-[#0D1F38] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1A2E4A] transition-colors"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)] hover:bg-[var(--color-nav-hover-bg)] transition-colors"
               >
                 <Bell className="h-4 w-4" />
                 알림
@@ -243,8 +257,8 @@ function MobileDrawer({
                 )}
               </Link>
               {getSwitchableRoles(user.role).length > 0 && (
-                <div className="pt-2 mt-2 border-t border-[#E8EDF3] dark:border-[#1A2E4A]">
-                  <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[#A0AEC0] flex items-center gap-1">
+                <div className="pt-2 mt-2 border-t border-[var(--color-border-subtle)]">
+                  <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-nav-text-dim)] flex items-center gap-1">
                     <RefreshCw className="h-3 w-3" /> 역할 전환
                   </p>
                   <div className="flex flex-wrap gap-1 px-3 py-1">
@@ -254,8 +268,8 @@ function MobileDrawer({
                         variant={(activeRole || user.role) === role ? 'default' : 'outline'}
                         className={`cursor-pointer text-[10px] ${
                           (activeRole || user.role) === role
-                            ? 'bg-[#1B3A5C] text-white'
-                            : 'hover:bg-slate-100 dark:hover:bg-[#1A2E4A]'
+                            ? 'bg-[var(--color-brand-dark)] text-white'
+                            : 'hover:bg-[var(--color-surface-overlay)]'
                         }`}
                         onClick={() => { switchRole(role); onClose() }}
                       >
@@ -267,7 +281,7 @@ function MobileDrawer({
               )}
               <button
                 onClick={() => { signOut(); onClose() }}
-                className="flex w-full items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors mt-1"
+                className="flex w-full items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-500/10 transition-colors mt-1"
               >
                 <LogOut className="h-4 w-4" />
                 로그아웃
@@ -279,7 +293,7 @@ function MobileDrawer({
                 <Button variant="outline" className="w-full text-sm">로그인</Button>
               </Link>
               <Link href="/signup" onClick={onClose}>
-                <Button className="w-full bg-[#1B3A5C] hover:bg-[#0D1F38] text-white text-sm font-semibold">
+                <Button className="w-full bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-deep)] text-white text-sm font-semibold">
                   무료 시작
                 </Button>
               </Link>
@@ -339,14 +353,58 @@ export function Navigation() {
   const isAdmin = user && ADMIN_ROLES.includes(user.role as UserRole)
 
   const isNavActive = useCallback(
-    (href: string) => (pathname ?? '').startsWith(href),
+    (item: typeof NAV_ITEMS[number]) =>
+      item.matchPaths.some(p => (pathname ?? '').startsWith(p)),
     [pathname]
   )
+
+  // Notification callbacks for real data
+  const fetchNotifications = useCallback(async (): Promise<Notification[]> => {
+    try {
+      const r = await fetch('/api/v1/notifications')
+      const d = await r.json()
+      const raw = (d.data ?? []) as Array<Record<string, unknown>>
+      return raw.map(n => ({
+        id: String(n.id ?? ''),
+        user_id: String(n.user_id ?? ''),
+        type: (n.type ?? 'SYSTEM') as Notification['type'],
+        title: String(n.title ?? '알림'),
+        body: n.body ? String(n.body) : undefined,
+        link: n.link ? String(n.link) : undefined,
+        is_read: !!(n.is_read ?? n.read ?? false),
+        created_at: String(n.created_at ?? new Date().toISOString()),
+      }))
+    } catch {
+      return []
+    }
+  }, [])
+
+  const handleMarkRead = useCallback(async (id: string) => {
+    try {
+      await fetch('/api/v1/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      setUnreadCount(c => Math.max(0, c - 1))
+    } catch { /* silently fail */ }
+  }, [])
+
+  const handleMarkAllRead = useCallback(async () => {
+    try {
+      await fetch('/api/v1/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true }),
+      })
+      setUnreadCount(0)
+    } catch { /* silently fail */ }
+  }, [])
 
   return (
     <>
       <header
-        className={`sticky top-0 z-50 w-full border-b border-[#E8EDF3] dark:border-[#1A2E4A] bg-white dark:bg-[#0D1F38] transition-shadow duration-200 ${
+        className={`sticky top-0 z-50 w-full border-b border-[var(--color-border-subtle)] bg-[var(--color-brand-deep)] transition-shadow duration-200 ${
           scrolled ? 'shadow-sm backdrop-blur-sm' : ''
         }`}
       >
@@ -354,27 +412,28 @@ export function Navigation() {
 
           {/* ── Logo ─────────────────────────────────────── */}
           <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-            <div className="w-8 h-8 bg-[#1B3A5C] rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-[#0D1F38] transition-colors">
+            <div className="w-8 h-8 bg-[var(--color-brand-dark)] rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-[var(--color-brand-mid)] transition-colors">
               <span className="text-white font-black text-sm tracking-tighter">N</span>
             </div>
             <div className="hidden sm:block">
-              <span className="font-black text-[#0D1F38] dark:text-white text-base tracking-tight">NPL</span>
-              <span className="font-light text-[#4A5568] dark:text-slate-400 text-base">atform</span>
+              <span className="font-black text-[var(--color-nav-text)] text-base tracking-tight">NPL</span>
+              <span className="font-light text-[var(--color-nav-text-dim)] text-base">atform</span>
             </div>
           </Link>
 
           {/* ── Center Nav (desktop) ──────────────────────── */}
-          <nav className="hidden lg:flex items-center gap-1" aria-label="메인 네비게이션">
+          <nav className="hidden lg:flex items-center gap-1" aria-label="메인 네비게이션" data-tour="nav">
             {NAV_ITEMS.map((item) => {
-              const isActive = isNavActive(item.href)
+              const isActive = isNavActive(item)
               return (
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`relative px-4 py-2 text-sm font-medium transition-colors ${
                     isActive
-                      ? 'text-[#1B3A5C] dark:text-white font-semibold after:absolute after:bottom-0 after:left-4 after:right-4 after:h-0.5 after:bg-[#1B3A5C] dark:after:bg-white after:rounded-full'
-                      : 'text-[#4A5568] dark:text-slate-400 hover:text-[#0D1F38] dark:hover:text-white'
+                      ? 'text-[var(--color-nav-active)] font-semibold after:absolute after:bottom-0 after:left-4 after:right-4 after:h-0.5 after:bg-[var(--color-nav-active)] after:rounded-full'
+                      : 'text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)] hover:bg-[var(--color-nav-hover-bg)] rounded-lg'
                   }`}
                 >
                   {item.label}
@@ -388,8 +447,9 @@ export function Navigation() {
             {/* Search button */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="p-2 rounded-md text-[#4A5568] dark:text-slate-400 hover:text-[#0D1F38] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2E4A] transition-colors"
+              className="p-2 rounded-md text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)] hover:bg-[var(--color-nav-hover-bg)] transition-colors"
               aria-label="검색"
+              data-tour="search"
             >
               <Search className="h-4 w-4" />
             </button>
@@ -397,7 +457,7 @@ export function Navigation() {
             {/* Desktop right side */}
             <div className="hidden lg:flex items-center gap-1">
               {!mounted || loading ? (
-                <div className="h-8 w-24 animate-pulse rounded-lg bg-slate-100 dark:bg-[#1A2E4A]" />
+                <div className="h-8 w-24 animate-pulse rounded-lg bg-white/10" />
               ) : user ? (
                 <>
                   {/* Admin link */}
@@ -406,7 +466,7 @@ export function Navigation() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-xs"
+                        className="text-amber-600 hover:text-amber-500 hover:bg-amber-500/10 text-xs"
                       >
                         <Shield className="mr-1 h-3.5 w-3.5" />
                         관리
@@ -414,20 +474,17 @@ export function Navigation() {
                     </Link>
                   )}
 
-                  {/* Notification bell */}
-                  <Link href="/my/notifications">
-                    <button
-                      className="relative p-2 rounded-md text-[#4A5568] dark:text-slate-400 hover:text-[#0D1F38] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2E4A] transition-colors"
-                      aria-label="알림"
-                    >
-                      <Bell className="h-4 w-4" />
-                      {unreadCount > 0 && (
-                        <span className="absolute top-1 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
-                          {unreadCount > 9 ? '9+' : unreadCount}
-                        </span>
-                      )}
-                    </button>
-                  </Link>
+                  {/* Notification bell + dropdown */}
+                  <NotificationCenter
+                    placement="dropdown"
+                    userId={user?.id ?? null}
+                    onFetch={fetchNotifications}
+                    onMarkRead={handleMarkRead}
+                    onMarkAllRead={handleMarkAllRead}
+                  />
+
+                  {/* Theme toggle */}
+                  <ThemeToggle variant="icon" />
 
                   {/* Language selector */}
                   <LanguageSelector />
@@ -435,22 +492,45 @@ export function Navigation() {
                   {/* User dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2E4A] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#1B3A5C]">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1B3A5C] text-xs font-bold text-white flex-shrink-0">
+                      <button className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-[var(--color-nav-hover-bg)] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-sky-400">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-brand-dark)] text-xs font-bold text-white flex-shrink-0">
                           {user.name?.charAt(0)?.toUpperCase() || 'U'}
                         </div>
-                        <span className="max-w-[80px] truncate text-sm font-medium text-[#0D1F38] dark:text-white">
+                        <span className="max-w-[80px] truncate text-sm font-medium text-[var(--color-nav-text)]">
                           {user.name}
                         </span>
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuContent align="end" className="w-64">
                       <div className="px-3 py-2.5">
-                        <p className="text-sm font-semibold text-[#0D1F38] dark:text-white">{user.name}</p>
-                        <p className="text-xs text-[#4A5568] dark:text-slate-400 truncate">{user.email}</p>
-                        <Badge variant="secondary" className="mt-1.5 text-[10px]">
-                          {ROLE_LABELS[(activeRole || user.role) as UserRole] || activeRole || user.role}
-                        </Badge>
+                        <p className="text-sm font-semibold text-[var(--color-text-primary)]">{user.name}</p>
+                        <p className="text-xs text-[var(--color-text-secondary)] truncate">{user.email}</p>
+                        <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                          <TierBadge tier={resolveUserTier(user)} size="sm" showLabel />
+                          <Badge variant="secondary" className="text-[10px]">
+                            {ROLE_LABELS[(activeRole || user.role) as UserRole] || activeRole || user.role}
+                          </Badge>
+                        </div>
+                        {(() => {
+                          const tier = resolveUserTier(user)
+                          const next = getNextUpgradeStep(tier)
+                          if (!next || !next.href) return null
+                          return (
+                            <Link
+                              href={next.href}
+                              className="mt-2 flex items-center justify-between rounded-md px-2.5 py-1.5"
+                              style={{
+                                backgroundColor: `${TIER_META[next.nextTier].color}14`,
+                                border: `1px solid ${TIER_META[next.nextTier].color}40`,
+                              }}
+                            >
+                              <span className="text-[11px] font-semibold" style={{ color: TIER_META[next.nextTier].color }}>
+                                {next.action} → {TIER_META[next.nextTier].shortLabel} 해금
+                              </span>
+                              <span aria-hidden style={{ color: TIER_META[next.nextTier].color, fontSize: 12 }}>→</span>
+                            </Link>
+                          )
+                        })()}
                       </div>
                       <DropdownMenuSeparator />
                       <DropdownMenuGroup>
@@ -477,14 +557,14 @@ export function Navigation() {
                       {/* Role switcher — admin only */}
                       {getSwitchableRoles(user.role).length > 0 && (
                         <>
-                          <DropdownMenuLabel className="text-[10px] uppercase tracking-wide text-[#A0AEC0] flex items-center gap-1 pt-2">
+                          <DropdownMenuLabel className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)] flex items-center gap-1 pt-2">
                             <RefreshCw className="h-3 w-3" /> 역할 전환
                           </DropdownMenuLabel>
                           {getSwitchableRoles(user.role).map((role) => (
                             <DropdownMenuItem
                               key={role}
                               onClick={() => switchRole(role)}
-                              className={`text-xs ${(activeRole || user.role) === role ? 'bg-slate-100 dark:bg-[#1A2E4A] font-semibold' : ''}`}
+                              className={`text-xs ${(activeRole || user.role) === role ? 'bg-[var(--color-surface-overlay)] font-semibold' : ''}`}
                             >
                               {(activeRole || user.role) === role && (
                                 <span className="mr-2 h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block flex-shrink-0" />
@@ -508,13 +588,13 @@ export function Navigation() {
               ) : (
                 <>
                   <LanguageSelector />
-                  <Button variant="ghost" size="sm" asChild className="text-sm text-[#4A5568] dark:text-slate-400">
+                  <Button variant="ghost" size="sm" asChild className="text-sm text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)] hover:bg-[var(--color-nav-hover-bg)]">
                     <Link href="/login">로그인</Link>
                   </Button>
                   <Button
                     size="sm"
                     asChild
-                    className="bg-[#1B3A5C] hover:bg-[#0D1F38] text-white text-sm font-semibold"
+                    className="bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-deep)] text-white text-sm font-semibold"
                   >
                     <Link href="/signup">무료 시작</Link>
                   </Button>
@@ -524,7 +604,7 @@ export function Navigation() {
 
             {/* Mobile hamburger */}
             <button
-              className="lg:hidden p-2 rounded-md text-[#4A5568] dark:text-slate-400 hover:text-[#0D1F38] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2E4A] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B3A5C]"
+              className="lg:hidden p-2 rounded-md text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)] hover:bg-[var(--color-nav-hover-bg)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
               onClick={() => setMobileMenuOpen(true)}
               aria-expanded={mobileMenuOpen}
               aria-label="메뉴 열기"

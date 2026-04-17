@@ -74,27 +74,27 @@ export default function ServiceGuidePage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between border-b border-gray-200 pb-6 dark:border-gray-800">
+      <div className="mb-8 flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-6">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">
             NP
           </div>
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">NPLatform 서비스 가이드</p>
-            <h1 className="text-lg font-bold text-gray-900 dark:text-white">{guide.title}</h1>
+            <p className="text-xs text-[var(--color-text-muted)]">NPLatform 서비스 가이드</p>
+            <h1 className="text-lg font-bold text-[var(--color-text-primary)]">{guide.title}</h1>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => window.print()}
-            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+            className="rounded-lg p-2 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-overlay)] hover:text-[var(--color-text-secondary)]"
             title="인쇄"
           >
             <Printer className="h-5 w-5" />
           </button>
           <button
             onClick={() => window.close()}
-            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+            className="rounded-lg p-2 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-overlay)] hover:text-[var(--color-text-secondary)]"
             title="닫기"
           >
             <X className="h-5 w-5" />
@@ -103,16 +103,16 @@ export default function ServiceGuidePage() {
       </div>
 
       {/* Steps */}
-      <ol className="relative space-y-8 border-l-2 border-blue-200 pl-8 dark:border-blue-900">
+      <ol className="relative space-y-8 border-l-2 border-blue-500/30 pl-8">
         {guide.steps.map((step, idx) => (
           <li key={idx} className="relative">
             <div className="absolute -left-[2.55rem] flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white shadow">
               {idx + 1}
             </div>
-            <h3 className="mb-1 text-base font-semibold text-gray-900 dark:text-white">
+            <h3 className="mb-1 text-base font-semibold text-[var(--color-text-primary)]">
               {step.title}
             </h3>
-            <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+            <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
               {step.description}
             </p>
           </li>
@@ -120,12 +120,12 @@ export default function ServiceGuidePage() {
       </ol>
 
       {/* Footer */}
-      <div className="mt-12 rounded-xl border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-800 dark:bg-gray-900">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+      <div className="mt-12 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-6 text-center">
+        <p className="text-sm text-[var(--color-text-muted)]">
           추가 도움이 필요하시면{' '}
           <button
             onClick={() => router.push('/support')}
-            className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+            className="font-medium text-blue-400 hover:underline"
           >
             고객 지원센터
           </button>

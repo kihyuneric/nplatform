@@ -57,14 +57,14 @@ const COMMANDS: CommandItem[] = [
   { id: 'learn',           label: '교육 허브',             description: '강좌·용어사전·뉴스',             icon: GraduationCap,  href: '/services/learn',            category: '서비스', keywords: ['교육','강좌','학습'] },
   { id: 'glossary',        label: '용어사전',              description: 'NPL/경매 전문 용어',             icon: BookOpen,       href: '/services/learn/glossary',   category: '서비스', keywords: ['용어','사전'] },
 
-  // 내 정보 (my)
-  { id: 'my',              label: '내 대시보드',           description: '역할별 개인 대시보드',           icon: Home,           href: '/my',                        category: '내 정보' },
-  { id: 'portfolio',       label: '포트폴리오',            description: '관심매물·비교·포트폴리오',        icon: Heart,          href: '/my/portfolio',              category: '내 정보' },
-  { id: 'billing',         label: '요금제 · 결제',         description: '구독·크레딧·인보이스',           icon: CreditCard,     href: '/my/billing',                category: '내 정보', keywords: ['billing','결제','구독','크레딧'] },
-  { id: 'notifications',   label: '알림',                  description: '알림 센터',                      icon: Bell,           href: '/my/notifications',          category: '내 정보' },
-  { id: 'settings',        label: '설정',                  description: '프로필·보안·알림 설정',           icon: Settings,       href: '/my/settings',               category: '내 정보', keywords: ['설정','settings','보안'] },
-  { id: 'developer',       label: '개발자 포털',           description: 'API 키 · Webhook · 문서',        icon: BarChart2,      href: '/my/developer',              category: '내 정보', keywords: ['api','developer','webhook'] },
-  { id: 'credits',         label: '크레딧 현황',           description: '잔여 크레딧 및 사용 내역',        icon: Coins,          href: '/my/billing?tab=크레딧',     category: '내 정보', keywords: ['크레딧','credit'] },
+  // 마이 페이지 (my)
+  { id: 'my',              label: '내 대시보드',           description: '역할별 개인 대시보드',           icon: Home,           href: '/my',                        category: '마이 페이지' },
+  { id: 'portfolio',       label: '포트폴리오',            description: '관심매물·비교·포트폴리오',        icon: Heart,          href: '/my/portfolio',              category: '마이 페이지' },
+  { id: 'billing',         label: '요금제 · 결제',         description: '구독·크레딧·인보이스',           icon: CreditCard,     href: '/my/billing',                category: '마이 페이지', keywords: ['billing','결제','구독','크레딧'] },
+  { id: 'notifications',   label: '알림',                  description: '알림 센터',                      icon: Bell,           href: '/my/notifications',          category: '마이 페이지' },
+  { id: 'settings',        label: '설정',                  description: '프로필·보안·알림 설정',           icon: Settings,       href: '/my/settings',               category: '마이 페이지', keywords: ['설정','settings','보안'] },
+  { id: 'developer',       label: '개발자 포털',           description: 'API 키 · Webhook · 문서',        icon: BarChart2,      href: '/my/developer',              category: '마이 페이지', keywords: ['api','developer','webhook'] },
+  { id: 'credits',         label: '크레딧 현황',           description: '잔여 크레딧 및 사용 내역',        icon: Coins,          href: '/my/billing?tab=크레딧',     category: '마이 페이지', keywords: ['크레딧','credit'] },
 
   // 공통
   { id: 'pricing',         label: '요금제',                description: '플랜별 가격 및 비교',             icon: CreditCard,     href: '/pricing',                   category: '공통', keywords: ['pricing','요금','플랜'] },
@@ -88,11 +88,11 @@ const COMMANDS: CommandItem[] = [
 
 export const SHORTCUTS = [
   { keys: ['⌘', 'K'],    label: '명령어 팔레트 열기'  },
-  { keys: ['G', 'E'],    label: '매물 (Exchange) 이동' },
-  { keys: ['G', 'A'],    label: '분석 (Analysis) 이동' },
-  { keys: ['G', 'D'],    label: '거래 (Deals) 이동'    },
+  { keys: ['G', 'E'],    label: '거래소 (Exchange) 이동' },
+  { keys: ['G', 'A'],    label: '분석 (Analysis) 이동'  },
+  { keys: ['G', 'D'],    label: '딜룸 (Deals) 이동'     },
   { keys: ['G', 'S'],    label: '서비스 이동'           },
-  { keys: ['G', 'M'],    label: '내 정보 이동'          },
+  { keys: ['G', 'M'],    label: '마이 페이지 이동'      },
   { keys: ['G', 'H'],    label: '홈으로 이동'           },
   { keys: ['/'],         label: '검색 포커스'           },
   { keys: ['?'],         label: '단축키 도움말'         },
@@ -105,7 +105,7 @@ export const SHORTCUTS = [
 
 function KbdKey({ k }: { k: string }) {
   return (
-    <kbd className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 text-[11px] font-semibold text-slate-600 bg-white border border-slate-300 rounded shadow-[0_1px_0_#cbd5e1] tracking-tight">
+    <kbd className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 text-[11px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded shadow-[0_1px_0_var(--color-border-default)] tracking-tight">
       {k}
     </kbd>
   )
@@ -117,12 +117,12 @@ function ShortcutHelp({ open, onClose }: { open: boolean; onClose: () => void })
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b bg-slate-50">
+        <div className="flex items-center justify-between px-5 py-4 border-b bg-[var(--color-surface-base)]">
           <div className="flex items-center gap-2">
-            <Keyboard className="w-4 h-4 text-slate-500" />
-            <span className="text-sm font-semibold text-slate-700 tracking-normal">키보드 단축키</span>
+            <Keyboard className="w-4 h-4 text-[var(--color-text-secondary)]" />
+            <span className="text-sm font-semibold text-[var(--color-text-primary)] tracking-normal">키보드 단축키</span>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -130,7 +130,7 @@ function ShortcutHelp({ open, onClose }: { open: boolean; onClose: () => void })
           <div className="space-y-2.5">
             {SHORTCUTS.map((s, i) => (
               <div key={i} className="flex items-center justify-between">
-                <span className="text-xs text-slate-600 tracking-normal">{s.label}</span>
+                <span className="text-xs text-[var(--color-text-secondary)] tracking-normal">{s.label}</span>
                 <div className="flex items-center gap-1">
                   {s.keys.map((k, j) => <KbdKey key={j} k={k} />)}
                 </div>
@@ -138,7 +138,7 @@ function ShortcutHelp({ open, onClose }: { open: boolean; onClose: () => void })
             ))}
           </div>
         </div>
-        <div className="px-5 py-3 border-t bg-slate-50 text-[11px] text-slate-400 tracking-normal">
+        <div className="px-5 py-3 border-t bg-[var(--color-surface-base)] text-[11px] text-[var(--color-text-muted)] tracking-normal">
           <span className="font-medium">G</span> 키 시퀀스: G를 누른 뒤 1초 내 두 번째 키 입력
         </div>
       </DialogContent>
@@ -287,7 +287,7 @@ export function CommandPalette() {
       {gPending && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-xs rounded-xl shadow-xl border border-white/10 animate-in fade-in slide-in-from-bottom-2">
           <KbdKey k="G" />
-          <span className="text-slate-300 tracking-normal">이동할 페이지 단축키를 누르세요 (E·A·D·S·M·H)</span>
+          <span className="text-[var(--color-text-secondary)] tracking-normal">이동할 페이지 단축키를 누르세요 (E·A·D·S·M·H)</span>
         </div>
       )}
 
@@ -300,7 +300,7 @@ export function CommandPalette() {
 
           {/* 검색 입력 */}
           <div className="flex items-center gap-2 border-b px-4">
-            <Search className="w-4 h-4 text-slate-400 shrink-0" />
+            <Search className="w-4 h-4 text-[var(--color-text-muted)] shrink-0" />
             <input
               autoFocus
               value={query}
@@ -311,7 +311,7 @@ export function CommandPalette() {
             />
             <button
               onClick={() => setHelpOpen(true)}
-              className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-600 transition"
+              className="flex items-center gap-1 text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition"
             >
               <Keyboard className="w-3 h-3" />
               <span className="hidden sm:inline">단축키</span>
@@ -321,14 +321,14 @@ export function CommandPalette() {
           {/* 결과 목록 */}
           <div className="max-h-[380px] overflow-y-auto py-1.5">
             {Object.keys(grouped).length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-slate-400 tracking-normal">
+              <div className="px-4 py-8 text-center text-sm text-[var(--color-text-muted)] tracking-normal">
                 <Search className="w-6 h-6 mx-auto mb-2 opacity-30" />
                 <span>검색 결과 없음</span>
               </div>
             ) : (
               Object.entries(grouped).map(([category, items]) => (
                 <div key={category}>
-                  <div className="px-4 pt-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <div className="px-4 pt-3 pb-1 text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-widest">
                     {category}
                   </div>
                   {items.map((item) => {
@@ -339,23 +339,23 @@ export function CommandPalette() {
                         key={item.id}
                         onClick={() => handleSelect(item.href)}
                         className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                          isSelected ? 'bg-blue-50' : 'hover:bg-slate-50'
+                          isSelected ? 'bg-blue-500/10' : 'hover:bg-[var(--color-surface-overlay)]'
                         }`}
                       >
                         <div className={`flex h-8 w-8 items-center justify-center rounded-lg shrink-0 ${
-                          isSelected ? 'bg-blue-100' : 'bg-slate-100'
+                          isSelected ? 'bg-blue-500/15' : 'bg-[var(--color-surface-overlay)]'
                         }`}>
-                          <item.icon className={`w-4 h-4 ${isSelected ? 'text-blue-600' : 'text-slate-500'}`} />
+                          <item.icon className={`w-4 h-4 ${isSelected ? 'text-blue-400' : 'text-[var(--color-text-muted)]'}`} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className={`text-sm font-medium tracking-normal ${isSelected ? 'text-blue-700' : 'text-slate-900'}`}>
+                          <div className={`text-sm font-medium tracking-normal ${isSelected ? 'text-blue-400' : 'text-[var(--color-text-primary)]'}`}>
                             {item.label}
                           </div>
                           {item.description && (
-                            <div className="text-xs text-slate-400 truncate tracking-normal">{item.description}</div>
+                            <div className="text-xs text-[var(--color-text-muted)] truncate tracking-normal">{item.description}</div>
                           )}
                         </div>
-                        <ArrowRight className={`w-3 h-3 shrink-0 ${isSelected ? 'text-blue-400' : 'text-slate-300'}`} />
+                        <ArrowRight className={`w-3 h-3 shrink-0 ${isSelected ? 'text-blue-400' : 'text-[var(--color-text-muted)]'}`} />
                       </button>
                     )
                   })}
@@ -365,7 +365,7 @@ export function CommandPalette() {
           </div>
 
           {/* 푸터 */}
-          <div className="border-t px-4 py-2 flex items-center justify-between text-[11px] text-slate-400 bg-slate-50">
+          <div className="border-t px-4 py-2 flex items-center justify-between text-[11px] text-[var(--color-text-muted)] bg-[var(--color-surface-base)]">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1"><KbdKey k="↑" /><KbdKey k="↓" /> 이동</span>
               <span className="flex items-center gap-1"><KbdKey k="↵" /> 선택</span>

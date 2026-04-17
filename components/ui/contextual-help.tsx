@@ -144,7 +144,7 @@ export function ContextualHelp({
   const iconSizeClass = iconSize === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'
 
   const popoverClasses = cn(
-    'absolute z-50 w-72 rounded-xl bg-white dark:bg-gray-900 shadow-xl border border-border',
+    'absolute z-50 w-72 rounded-xl bg-[var(--color-surface-elevated)] shadow-xl border border-border',
     'overflow-hidden',
     placement === 'bottom' && 'top-full mt-2 left-1/2 -translate-x-1/2',
     placement === 'top' && 'bottom-full mb-2 left-1/2 -translate-x-1/2',
@@ -222,7 +222,7 @@ export function ContextualHelp({
 
                         {termData.formula && (
                           <div className="mt-2 bg-muted rounded-lg p-2">
-                            <p className="text-xs font-mono text-[#1B3A5C] dark:text-blue-300">
+                            <p className="text-xs font-mono text-blue-300">
                               {termData.formula}
                             </p>
                           </div>
@@ -240,7 +240,7 @@ export function ContextualHelp({
                             {termData.relatedTerms.map((t) => (
                               <span
                                 key={t}
-                                className="text-xs px-2 py-0.5 rounded-full bg-[#1B3A5C]/10 text-[#1B3A5C] dark:bg-blue-900/30 dark:text-blue-300 font-medium"
+                                className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 font-medium"
                               >
                                 {t}
                               </span>

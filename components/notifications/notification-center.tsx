@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import type { Notification, NotificationType } from '@/lib/types'
+import { useNotificationsRealtime } from '@/lib/supabase/realtime'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -48,6 +49,8 @@ interface NotificationCenterProps {
   className?: string
   /** Trigger button placement */
   placement?: 'dropdown' | 'panel'
+  /** User ID for realtime subscription */
+  userId?: string | null
 }
 
 // ─── Mock Data ────────────────────────────────────────────────────────────
@@ -128,7 +131,7 @@ const TAB_CONFIG: Record<NotificationTab, { label: string; types?: NotificationT
 const TYPE_ICON: Record<NotificationType, React.ReactNode> = {
   MATCHING: <Users className="h-4 w-4 text-purple-500" />,
   CONTRACT: <Shield className="h-4 w-4 text-blue-500" />,
-  DEAL_ROOM: <MessageCircle className="h-4 w-4 text-[#10B981]" />,
+  DEAL_ROOM: <MessageCircle className="h-4 w-4 text-[var(--color-positive)]" />,
   KYC: <Check className="h-4 w-4 text-emerald-500" />,
   LISTING: <Building2 className="h-4 w-4 text-orange-500" />,
   ALERT: <Bell className="h-4 w-4 text-amber-500" />,
@@ -137,14 +140,14 @@ const TYPE_ICON: Record<NotificationType, React.ReactNode> = {
 }
 
 const TYPE_BG: Record<NotificationType, string> = {
-  MATCHING: 'bg-purple-100 dark:bg-purple-900/30',
-  CONTRACT: 'bg-blue-100 dark:bg-blue-900/30',
-  DEAL_ROOM: 'bg-emerald-100 dark:bg-emerald-900/30',
-  KYC: 'bg-green-100 dark:bg-green-900/30',
-  LISTING: 'bg-orange-100 dark:bg-orange-900/30',
-  ALERT: 'bg-amber-100 dark:bg-amber-900/30',
-  SYSTEM: 'bg-gray-100 dark:bg-gray-800',
-  COMPLAINT: 'bg-red-100 dark:bg-red-900/30',
+  MATCHING: 'bg-purple-500/10',
+  CONTRACT: 'bg-blue-500/10',
+  DEAL_ROOM: 'bg-emerald-500/10',
+  KYC: 'bg-green-500/10',
+  LISTING: 'bg-orange-500/10',
+  ALERT: 'bg-amber-500/10',
+  SYSTEM: 'bg-[var(--color-surface-overlay)]',
+  COMPLAINT: 'bg-red-500/10',
 }
 
 function formatTimeAgo(dateStr: string): string {
@@ -209,7 +212,7 @@ function NotificationItem({
       className={cn(
         'relative flex items-start gap-3 px-4 py-3 cursor-pointer',
         'hover:bg-muted/50 transition-colors duration-150',
-        !notification.is_read && 'bg-[#1B3A5C]/[0.03] dark:bg-blue-950/20',
+        !notification.is_read && 'bg-[var(--color-brand-dark)]/5',
       )}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -217,7 +220,7 @@ function NotificationItem({
     >
       {/* Unread indicator */}
       {!notification.is_read && (
-        <div className="absolute left-1.5 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-[#10B981]" />
+        <div className="absolute left-1.5 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-[var(--color-positive)]" />
       )}
 
       {/* Icon */}
@@ -280,9 +283,10 @@ export function NotificationCenter({
   onFetch,
   onMarkRead,
   onMarkAllRead,
-  initialNotifications = MOCK_NOTIFICATIONS,
+  initialNotifications = [],
   className,
   placement = 'dropdown',
+  userId,
 }: NotificationCenterProps) {
   const router = useRouter()
   const [internalOpen, setInternalOpen] = React.useState(false)
@@ -290,6 +294,25 @@ export function NotificationCenter({
   const [activeTab, setActiveTab] = React.useState<NotificationTab>('ALL')
   const [loading, setLoading] = React.useState(false)
   const [markingAll, setMarkingAll] = React.useState(false)
+
+  // Supabase Realtime: push new notifications instantly
+  useNotificationsRealtime(userId ?? null, (raw) => {
+    const newNotif: Notification = {
+      id: raw.id as string ?? String(Date.now()),
+      user_id: raw.user_id as string ?? '',
+      type: (raw.type as NotificationType) ?? 'SYSTEM',
+      title: raw.title as string ?? '알림',
+      body: raw.body as string ?? '',
+      link: raw.link as string | undefined,
+      is_read: false,
+      created_at: (raw.created_at as string) ?? new Date().toISOString(),
+    }
+    setNotifications((prev) => [newNotif, ...prev])
+    // Browser notification API (if permitted)
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      new Notification(newNotif.title, { body: newNotif.body ?? '', icon: '/favicon.ico' })
+    }
+  })
   const panelRef = React.useRef<HTMLDivElement>(null)
   const triggerRef = React.useRef<HTMLButtonElement>(null)
 
@@ -379,7 +402,7 @@ export function NotificationCenter({
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
       className={cn(
         'w-[380px] max-h-[600px] flex flex-col',
-        'bg-white dark:bg-gray-950 rounded-2xl shadow-2xl border border-border',
+        'bg-[var(--color-surface-elevated)] rounded-2xl shadow-2xl border border-border',
         'overflow-hidden',
         placement === 'dropdown' && 'absolute top-full right-0 mt-2 z-50',
         className
@@ -390,11 +413,11 @@ export function NotificationCenter({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3.5 border-b">
         <div className="flex items-center gap-2">
-          <Bell className="h-4 w-4 text-[#1B3A5C] dark:text-blue-300" />
+          <Bell className="h-4 w-4 text-[var(--color-brand-dark)]" />
           <h2 className="text-base font-semibold">알림</h2>
           {unreadCount > 0 && (
             <Badge
-              className="h-5 px-1.5 text-[10px] bg-[#10B981] text-white hover:bg-[#10B981]"
+              className="h-5 px-1.5 text-[10px] bg-[var(--color-positive)] text-white hover:bg-[var(--color-positive)]"
             >
               {unreadCount}
             </Badge>
@@ -405,7 +428,7 @@ export function NotificationCenter({
             <button
               onClick={handleMarkAllRead}
               disabled={markingAll}
-              className="flex items-center gap-1 text-xs text-[#2E75B6] hover:text-[#1B3A5C] font-medium disabled:opacity-50 px-2 py-1 rounded-md hover:bg-muted transition-colors"
+              className="flex items-center gap-1 text-xs text-[#2E75B6] hover:text-[var(--color-brand-dark)] font-medium disabled:opacity-50 px-2 py-1 rounded-md hover:bg-muted transition-colors"
               title="모두 읽음으로 표시"
             >
               {markingAll ? (
@@ -440,7 +463,7 @@ export function NotificationCenter({
               className={cn(
                 'relative flex items-center gap-1.5 px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors shrink-0',
                 isActive
-                  ? 'text-[#1B3A5C] dark:text-blue-300'
+                  ? 'text-[var(--color-brand-dark)]'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
@@ -450,7 +473,7 @@ export function NotificationCenter({
                   className={cn(
                     'inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[10px] font-bold',
                     isActive
-                      ? 'bg-[#1B3A5C] text-white dark:bg-blue-700'
+                      ? 'bg-[var(--color-brand-dark)] text-white'
                       : 'bg-muted text-muted-foreground',
                   )}
                 >
@@ -460,7 +483,7 @@ export function NotificationCenter({
               {isActive && (
                 <motion.div
                   layoutId="notification-tab-indicator"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1B3A5C] dark:bg-blue-400"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-brand-dark)]"
                 />
               )}
             </button>
@@ -469,7 +492,7 @@ export function NotificationCenter({
       </div>
 
       {/* Notification List */}
-      <div className="flex-1 overflow-y-auto" role="tabpanel" aria-label={`${TAB_CONFIG[activeTab].label} 알림 목록`}>
+      <div className="flex-1 overflow-y-auto" role="tabpanel" aria-label={`${TAB_CONFIG[activeTab].label} 알림 목록`} aria-live="polite" aria-atomic="false">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -507,7 +530,7 @@ export function NotificationCenter({
         </span>
         <button
           onClick={() => { router.push('/notifications'); setOpen(false) }}
-          className="flex items-center gap-1 text-xs text-[#2E75B6] hover:text-[#1B3A5C] font-medium"
+          className="flex items-center gap-1 text-xs text-[#2E75B6] hover:text-[var(--color-brand-dark)] font-medium"
         >
           모든 알림 보기
           <ExternalLink className="h-3 w-3" />
@@ -542,7 +565,7 @@ export function NotificationCenter({
                 'absolute -top-0.5 -right-0.5',
                 'h-4 min-w-4 px-1',
                 'flex items-center justify-center',
-                'rounded-full bg-[#10B981] text-white',
+                'rounded-full bg-[var(--color-positive)] text-white',
                 'text-[9px] font-bold leading-none',
               )}
             >

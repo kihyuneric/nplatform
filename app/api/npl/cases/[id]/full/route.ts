@@ -8,11 +8,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try { const user = await getAuthUser(); if (user) userId = user.id; } catch {}
 
   if (userId === 'anonymous') {
-    return NextResponse.json({
-      case_info: null, properties: [], rights: [], tenants: [],
-      assumptions: null, auction_history: [], distributions: [],
-      returns: [], sensitivity: [], risks: [], _mock: true,
-    });
+    return NextResponse.json(
+      { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } },
+      { status: 401 }
+    )
   }
 
   const supabase = await createClient();

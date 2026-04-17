@@ -7,8 +7,8 @@ import { Building2, Search, MapPin, Phone, Globe, ExternalLink, TrendingUp, Awar
 
 const C = {
   bg0:"#030810", bg1:"#050D1A", bg2:"#080F1E", bg3:"#0A1628", bg4:"#0F1F35",
-  em:"#10B981", emL:"#34D399", blue:"#3B82F6", blueL:"#60A5FA",
-  amber:"#F59E0B", amber2:"#FCD34D", purple:"#A855F7", rose:"#F43F5E", teal:"#14B8A6",
+  em:"#10B981", emL:"#34D399", blue:"#3B82F6", blueL:"#93C5FD",
+  amber:"#F59E0B", amber2:"#FCD34D", purple:"#A855F7", rose:"#EF4444", teal:"#14B8A6",
   l0:"#FFFFFF", l1:"#F8FAFC", l2:"#F1F5F9", l3:"#E2E8F0",
   lt1:"#0F172A", lt2:"#334155", lt3:"#64748B", lt4:"#94A3B8",
 }
@@ -315,7 +315,7 @@ export default function InstitutionsPage() {
           </p>
 
           {/* KPI Strip */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
+          <div className="grid grid-cols-2 lg:grid-cols-4" style={{ gap: 1, backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
             {[
               { label: '참여 기관',   value: `${totalInstitutions}개`,      icon: Building2, color: C.blue },
               { label: '총 AUM',     value: totalAUM,                      icon: TrendingUp, color: C.em },
@@ -395,7 +395,7 @@ export default function InstitutionsPage() {
             <p style={{ fontSize: '1rem', fontWeight: 700 }}>검색 결과가 없습니다</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: 20 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3" style={{ gap: 20 }}>
             {filtered.map((inst, i) => (
               <InstitutionCard key={inst.id} inst={inst} index={i} />
             ))}

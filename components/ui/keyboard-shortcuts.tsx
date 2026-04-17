@@ -192,7 +192,7 @@ export function KeyboardShortcuts({
               className={cn(
                 'fixed z-[9981] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
                 'w-[90vw] max-w-2xl max-h-[80vh]',
-                'bg-white dark:bg-gray-950 rounded-2xl shadow-2xl border border-border',
+                'bg-[var(--color-surface-base)] rounded-2xl shadow-2xl border border-border',
                 'flex flex-col overflow-hidden',
               )}
               initial={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -202,7 +202,7 @@ export function KeyboardShortcuts({
             >
               {/* Header */}
               <div className="flex items-center gap-3 px-5 py-4 border-b">
-                <Keyboard className="h-5 w-5 text-[#1B3A5C] dark:text-blue-400" />
+                <Keyboard className="h-5 w-5 text-blue-400" />
                 <h2 className="text-base font-semibold flex-1">키보드 단축키</h2>
                 <button
                   onClick={() => setOpen(false)}

@@ -33,22 +33,22 @@ interface OfferCardProps {
 const STATUS_STYLES: Record<OfferStatus, { border: string; badge: string; label: string }> = {
   pending: {
     border: "border-[#2E75B6]",
-    badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+    badge: "bg-blue-500/10 text-blue-400",
     label: "검토 중",
   },
   accepted: {
     border: "border-emerald-500",
-    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+    badge: "bg-emerald-500/10 text-emerald-400",
     label: "수락됨",
   },
   rejected: {
     border: "border-red-500",
-    badge: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+    badge: "bg-red-500/10 text-red-400",
     label: "거절됨",
   },
   countered: {
     border: "border-amber-500",
-    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+    badge: "bg-amber-500/10 text-amber-400",
     label: "역제안",
   },
 }
@@ -74,7 +74,7 @@ export function OfferCard({ offer, isMine, onAccept, onReject, onCounter }: Offe
   return (
     <div
       className={cn(
-        "rounded-xl border-2 p-4 space-y-3 bg-white dark:bg-gray-900",
+        "rounded-xl border-2 p-4 space-y-3 bg-[var(--color-surface-elevated)]",
         style.border
       )}
     >
@@ -82,7 +82,7 @@ export function OfferCard({ offer, isMine, onAccept, onReject, onCounter }: Offe
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <DollarSign className="w-4 h-4 text-[#2E75B6]" />
-          <span className="text-sm font-semibold text-gray-900 dark:text-white">
+          <span className="text-sm font-semibold text-[var(--color-text-primary)]">
             {isMine ? "내 오퍼" : "상대방 오퍼"}
           </span>
         </div>
@@ -94,20 +94,20 @@ export function OfferCard({ offer, isMine, onAccept, onReject, onCounter }: Offe
       {/* Offer Details */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <span className="text-xs text-[var(--color-text-secondary)] flex items-center gap-1">
             <DollarSign className="w-3 h-3" /> 제안금액
           </span>
-          <span className="text-lg font-bold text-gray-900 dark:text-white">
+          <span className="text-lg font-bold text-[var(--color-text-primary)]">
             {formatKRW(offer.amount)}
           </span>
         </div>
 
         {offer.conditions && (
           <div className="flex items-start justify-between gap-4">
-            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 flex-shrink-0">
+            <span className="text-xs text-[var(--color-text-secondary)] flex items-center gap-1 flex-shrink-0">
               <FileText className="w-3 h-3" /> 조건
             </span>
-            <span className="text-sm text-gray-700 dark:text-gray-300 text-right">
+            <span className="text-sm text-[var(--color-text-secondary)] text-right">
               {offer.conditions}
             </span>
           </div>
@@ -115,10 +115,10 @@ export function OfferCard({ offer, isMine, onAccept, onReject, onCounter }: Offe
 
         {offer.payment_method && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <span className="text-xs text-[var(--color-text-secondary)] flex items-center gap-1">
               <CreditCard className="w-3 h-3" /> 결제방식
             </span>
-            <span className="text-sm text-gray-700 dark:text-gray-300">
+            <span className="text-sm text-[var(--color-text-secondary)]">
               {offer.payment_method}
             </span>
           </div>
@@ -126,10 +126,10 @@ export function OfferCard({ offer, isMine, onAccept, onReject, onCounter }: Offe
 
         {offer.valid_until && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <span className="text-xs text-[var(--color-text-secondary)] flex items-center gap-1">
               <Calendar className="w-3 h-3" /> 유효기간
             </span>
-            <span className="text-sm text-gray-700 dark:text-gray-300">
+            <span className="text-sm text-[var(--color-text-secondary)]">
               {offer.valid_until}
             </span>
           </div>
@@ -153,7 +153,7 @@ export function OfferCard({ offer, isMine, onAccept, onReject, onCounter }: Offe
               size="sm"
               variant="outline"
               onClick={onReject}
-              className="flex-1 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20 text-xs h-8"
+              className="flex-1 border-red-500/40 text-red-400 hover:bg-red-500/10 text-xs h-8"
             >
               <X className="w-3.5 h-3.5 mr-1" /> 거절
             </Button>
@@ -163,7 +163,7 @@ export function OfferCard({ offer, isMine, onAccept, onReject, onCounter }: Offe
               size="sm"
               variant="outline"
               onClick={() => setShowCounterForm((v) => !v)}
-              className="flex-1 border-amber-300 text-amber-600 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-900/20 text-xs h-8"
+              className="flex-1 border-amber-500/40 text-amber-400 hover:bg-amber-500/10 text-xs h-8"
             >
               <RotateCcw className="w-3.5 h-3.5 mr-1" /> 역제안
             </Button>
@@ -173,8 +173,8 @@ export function OfferCard({ offer, isMine, onAccept, onReject, onCounter }: Offe
 
       {/* Counter-Offer Form */}
       {showCounterForm && (
-        <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-xs font-medium text-gray-700 dark:text-gray-300">역제안 작성</p>
+        <div className="space-y-2 pt-2 border-t border-[var(--color-border-subtle)]">
+          <p className="text-xs font-medium text-[var(--color-text-secondary)]">역제안 작성</p>
           <Input
             placeholder="역제안 금액 (원)"
             value={counterAmount}
@@ -232,14 +232,14 @@ export function OfferForm({ onSubmit, onCancel }: OfferFormProps) {
   }
 
   return (
-    <div className="space-y-3 p-4 border-2 border-[#2E75B6] rounded-xl bg-blue-50/50 dark:bg-blue-900/10">
-      <p className="text-sm font-semibold text-[#1B3A5C] dark:text-blue-300 flex items-center gap-2">
+    <div className="space-y-3 p-4 border-2 border-[#2E75B6] rounded-xl bg-blue-500/5">
+      <p className="text-sm font-semibold text-[var(--color-brand-dark)] flex items-center gap-2">
         <DollarSign className="w-4 h-4" /> 오퍼 보내기
       </p>
 
       <div className="space-y-2">
         <div>
-          <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
+          <label className="text-xs text-[var(--color-text-secondary)] mb-1 block">
             제안금액 (원) <span className="text-red-500">*</span>
           </label>
           <Input
@@ -250,7 +250,7 @@ export function OfferForm({ onSubmit, onCancel }: OfferFormProps) {
           />
         </div>
         <div>
-          <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">조건</label>
+          <label className="text-xs text-[var(--color-text-secondary)] mb-1 block">조건</label>
           <Textarea
             placeholder="예: 잔금 30일 이내, 하자보증 6개월"
             value={conditions}
@@ -260,7 +260,7 @@ export function OfferForm({ onSubmit, onCancel }: OfferFormProps) {
           />
         </div>
         <div>
-          <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">결제방식</label>
+          <label className="text-xs text-[var(--color-text-secondary)] mb-1 block">결제방식</label>
           <Input
             placeholder="예: 일시불, 분할납부"
             value={paymentMethod}
@@ -269,7 +269,7 @@ export function OfferForm({ onSubmit, onCancel }: OfferFormProps) {
           />
         </div>
         <div>
-          <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">유효기간</label>
+          <label className="text-xs text-[var(--color-text-secondary)] mb-1 block">유효기간</label>
           <Input
             type="date"
             value={validUntil}
@@ -280,7 +280,7 @@ export function OfferForm({ onSubmit, onCancel }: OfferFormProps) {
       </div>
 
       <div className="flex gap-2">
-        <Button onClick={handleSubmit} className="flex-1 bg-[#1B3A5C] hover:bg-[#15304d] text-white text-sm">
+        <Button onClick={handleSubmit} className="flex-1 bg-[var(--color-brand-dark)] hover:bg-[#15304d] text-white text-sm">
           오퍼 제출
         </Button>
         <Button variant="ghost" onClick={onCancel} className="text-sm">

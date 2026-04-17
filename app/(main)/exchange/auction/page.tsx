@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo, useRef } from "react"
+import { useState, useMemo, useRef, useEffect, useCallback } from "react"
+import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import { motion, useInView, AnimatePresence } from "framer-motion"
 import {
@@ -10,13 +11,14 @@ import {
   AlertTriangle, Filter, X, FileText, Users, Heart,
   Activity, Zap, TrendingDown, ChevronDown,
 } from "lucide-react"
+import { formatTimeLeft, formatMinBidRatio } from "@/lib/taxonomy"
 
 // ─── Design System ────────────────────────────────────────────────────────────
 
 const C = {
   bg0:"#030810", bg1:"#050D1A", bg2:"#080F1E", bg3:"#0A1628", bg4:"#0F1F35",
-  em:"#10B981", emL:"#34D399", blue:"#3B82F6", blueL:"#60A5FA",
-  amber:"#F59E0B", amber2:"#FCD34D", purple:"#A855F7", rose:"#F43F5E", teal:"#14B8A6",
+  em:"#10B981", emL:"#34D399", blue:"#3B82F6", blueL:"#93C5FD",
+  amber:"#F59E0B", amber2:"#FCD34D", purple:"#A855F7", rose:"#EF4444", teal:"#14B8A6",
   l0:"#FFFFFF", l1:"#F8FAFC", l2:"#F1F5F9", l3:"#E2E8F0",
   lt1:"#0F172A", lt2:"#334155", lt3:"#64748B", lt4:"#94A3B8",
 }
@@ -78,41 +80,7 @@ interface AwardResult {
   collateralType: string
 }
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const MOCK_BIDS: BidItem[] = [
-  { id: "bid-1", title: "강남 역삼동 아파트 담보 채권", institution: "한국자산관리공사", collateralType: "아파트", location: "서울 강남구", principal: 1250000000, minimumBid: 875000000, aiEstimate: 980000000, deadline: "2026-04-12", bidCount: 8, viewCount: 234, riskGrade: "A", status: "진행중" },
-  { id: "bid-2", title: "분당 정자동 오피스텔 담보 채권", institution: "우리금융에프앤아이", collateralType: "오피스텔", location: "경기 성남시", principal: 450000000, minimumBid: 315000000, aiEstimate: 370000000, deadline: "2026-04-08", bidCount: 15, viewCount: 412, riskGrade: "B", status: "마감임박" },
-  { id: "bid-3", title: "해운대 마린시티 상가 담보 채권", institution: "하나에프앤아이", collateralType: "상가", location: "부산 해운대구", principal: 2800000000, minimumBid: 1960000000, aiEstimate: 2200000000, deadline: "2026-04-18", bidCount: 3, viewCount: 89, riskGrade: "B", status: "진행중" },
-  { id: "bid-4", title: "용인 수지구 빌라 담보 채권", institution: "대신에프앤아이", collateralType: "빌라", location: "경기 용인시", principal: 320000000, minimumBid: 224000000, aiEstimate: 260000000, deadline: "2026-04-07", bidCount: 22, viewCount: 567, riskGrade: "C", status: "마감임박" },
-  { id: "bid-5", title: "제주 서귀포 토지 담보 채권", institution: "한국자산관리공사", collateralType: "토지", location: "제주 서귀포시", principal: 890000000, minimumBid: 623000000, aiEstimate: 720000000, deadline: "2026-04-20", bidCount: 5, viewCount: 145, riskGrade: "C", status: "진행중" },
-  { id: "bid-6", title: "마포 공덕동 아파트 담보 채권", institution: "신한캐피탈", collateralType: "아파트", location: "서울 마포구", principal: 980000000, minimumBid: 686000000, aiEstimate: 810000000, deadline: "2026-04-15", bidCount: 11, viewCount: 298, riskGrade: "A", status: "진행중" },
-  { id: "bid-7", title: "대전 유성구 상가 담보 채권", institution: "키움에프앤아이", collateralType: "상가", location: "대전 유성구", principal: 560000000, minimumBid: 392000000, aiEstimate: 450000000, deadline: "2026-04-09", bidCount: 7, viewCount: 178, riskGrade: "B", status: "마감임박" },
-  { id: "bid-8", title: "인천 송도 아파트 담보 채권", institution: "우리금융에프앤아이", collateralType: "아파트", location: "인천 연수구", principal: 1680000000, minimumBid: 1176000000, aiEstimate: 1350000000, deadline: "2026-04-22", bidCount: 4, viewCount: 112, riskGrade: "A", status: "진행중" },
-  { id: "bid-9", title: "수원 영통구 빌라 담보 채권", institution: "하나에프앤아이", collateralType: "빌라", location: "경기 수원시", principal: 280000000, minimumBid: 196000000, aiEstimate: 230000000, deadline: "2026-04-06", bidCount: 18, viewCount: 489, riskGrade: "D", status: "마감임박" },
-  { id: "bid-10", title: "강서 마곡동 오피스텔 담보 채권", institution: "대신에프앤아이", collateralType: "오피스텔", location: "서울 강서구", principal: 520000000, minimumBid: 364000000, aiEstimate: 420000000, deadline: "2026-04-25", bidCount: 2, viewCount: 67, riskGrade: "B", status: "진행중" },
-  { id: "bid-11", title: "일산 킨텍스 상가 담보 채권", institution: "한국자산관리공사", collateralType: "상가", location: "경기 고양시", principal: 1450000000, minimumBid: 1015000000, aiEstimate: 1180000000, deadline: "2026-04-16", bidCount: 6, viewCount: 201, riskGrade: "B", status: "진행중" },
-  { id: "bid-12", title: "평택 고덕동 토지 담보 채권", institution: "키움에프앤아이", collateralType: "토지", location: "경기 평택시", principal: 750000000, minimumBid: 525000000, aiEstimate: 610000000, deadline: "2026-04-11", bidCount: 9, viewCount: 256, riskGrade: "C", status: "진행중" },
-]
-
-const MOCK_MY_BIDS: MyBid[] = [
-  { id: "bid-1", title: "강남 역삼동 아파트 담보 채권", institution: "한국자산관리공사", bidAmount: 920000000, principal: 1250000000, bidDate: "2026-03-28", status: "진행중" },
-  { id: "bid-13", title: "서초 반포동 아파트 담보 채권", institution: "우리금융에프앤아이", bidAmount: 1450000000, principal: 1800000000, bidDate: "2026-03-20", status: "낙찰", resultDate: "2026-03-25" },
-  { id: "bid-14", title: "논현동 상가 담보 채권", institution: "하나에프앤아이", bidAmount: 680000000, principal: 950000000, bidDate: "2026-03-15", status: "유찰", resultDate: "2026-03-22" },
-  { id: "bid-4", title: "용인 수지구 빌라 담보 채권", institution: "대신에프앤아이", bidAmount: 240000000, principal: 320000000, bidDate: "2026-04-01", status: "진행중" },
-  { id: "bid-15", title: "종로구 오피스텔 담보 채권", institution: "신한캐피탈", bidAmount: 310000000, principal: 420000000, bidDate: "2026-02-28", status: "철회", resultDate: "2026-03-01" },
-]
-
-const MOCK_AWARDS: AwardResult[] = [
-  { id: "aw-1", title: "서초 반포동 아파트 담보 채권", institution: "우리금융에프앤아이", principal: 1800000000, winningBid: 1450000000, bidRate: 80.6, bidCount: 12, awardDate: "2026-03-25", collateralType: "아파트" },
-  { id: "aw-2", title: "역삼동 오피스텔 담보 채권", institution: "한국자산관리공사", principal: 650000000, winningBid: 490000000, bidRate: 75.4, bidCount: 8, awardDate: "2026-03-20", collateralType: "오피스텔" },
-  { id: "aw-3", title: "판교 상가 담보 채권", institution: "키움에프앤아이", principal: 1200000000, winningBid: 876000000, bidRate: 73.0, bidCount: 15, awardDate: "2026-03-18", collateralType: "상가" },
-  { id: "aw-4", title: "잠실 아파트 담보 채권", institution: "하나에프앤아이", principal: 2100000000, winningBid: 1722000000, bidRate: 82.0, bidCount: 20, awardDate: "2026-03-15", collateralType: "아파트" },
-  { id: "aw-5", title: "세종시 토지 담보 채권", institution: "대신에프앤아이", principal: 430000000, winningBid: 301000000, bidRate: 70.0, bidCount: 6, awardDate: "2026-03-12", collateralType: "토지" },
-  { id: "aw-6", title: "청담동 빌라 담보 채권", institution: "신한캐피탈", principal: 580000000, winningBid: 452000000, bidRate: 77.9, bidCount: 9, awardDate: "2026-03-10", collateralType: "빌라" },
-  { id: "aw-7", title: "김포 아파트 담보 채권", institution: "우리금융에프앤아이", principal: 380000000, winningBid: 281000000, bidRate: 73.9, bidCount: 11, awardDate: "2026-03-08", collateralType: "아파트" },
-  { id: "aw-8", title: "동탄 상가 담보 채권", institution: "한국자산관리공사", principal: 920000000, winningBid: 690000000, bidRate: 75.0, bidCount: 14, awardDate: "2026-03-05", collateralType: "상가" },
-]
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const COLLATERAL_FILTERS = ["전체", "아파트", "오피스텔", "상가", "토지", "빌라"]
 
@@ -452,7 +420,7 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
 
         {/* Footer Stats */}
         <div
-          className="flex items-center gap-4 pb-4 mb-4"
+          className="flex items-center gap-4 pb-4 mb-4 flex-wrap"
           style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
         >
           <span
@@ -461,12 +429,20 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
           >
             <Timer className="w-3.5 h-3.5" />
             {dday}
+            {ddayUrgent && (
+              <span
+                className="ml-1 px-1.5 py-0.5 rounded text-[0.625rem] font-black tabular-nums"
+                style={{ backgroundColor: `${C.rose}22`, color: "#FDA4AF" }}
+              >
+                {formatTimeLeft(item.deadline)}
+              </span>
+            )}
+          </span>
+          <span className="flex items-center gap-1 text-[0.75rem] font-semibold" style={{ color: C.lt4 }}>
+            <Users className="w-3.5 h-3.5" /> 입찰 {item.bidCount}명
           </span>
           <span className="flex items-center gap-1 text-[0.75rem]" style={{ color: C.lt4 }}>
-            <Users className="w-3.5 h-3.5" /> {item.bidCount}명
-          </span>
-          <span className="flex items-center gap-1 text-[0.75rem]" style={{ color: C.lt4 }}>
-            <Eye className="w-3.5 h-3.5" /> {item.viewCount}
+            <Eye className="w-3.5 h-3.5" /> 조회 {item.viewCount.toLocaleString()}
           </span>
         </div>
 
@@ -509,12 +485,101 @@ export default function AuctionPage() {
   const [sortBy, setSortBy] = useState("마감임박순")
   const [bidTarget, setBidTarget] = useState<BidItem | null>(null)
   const [bidDialogOpen, setBidDialogOpen] = useState(false)
+  // Supabase-connected state — empty until loaded
+  const [bids, setBids] = useState<BidItem[]>([])
+  const [myBids, setMyBids] = useState<MyBid[]>([])
+  const [awards, setAwards] = useState<AwardResult[]>([])
+  const [dataLoading, setDataLoading] = useState(true)
 
   const heroRef = useRef(null)
   const heroInView = useInView(heroRef, { once: true })
 
+  const loadData = useCallback(async () => {
+    setDataLoading(true)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      const [bidsRes, myBidsRes, awardsRes] = await Promise.allSettled([
+        // Active auction listings from npl_listings where auction_type != null
+        supabase.from("npl_listings")
+          .select("id, title, seller_profiles:profiles!npl_listings_seller_id_fkey(name), collateral_type, region, principal_amount, minimum_bid, ai_estimate, auction_deadline, bid_count, view_count, risk_grade, auction_status")
+          .eq("status", "ACTIVE")
+          .not("auction_deadline", "is", null)
+          .order("auction_deadline", { ascending: true })
+          .limit(50),
+
+        // User's own bids
+        user ? supabase.from("auction_bids")
+          .select("id, listing_id, bid_amount, created_at, status, result_date, npl_listings(title, collateral_type, principal_amount, profiles!npl_listings_seller_id_fkey(name))")
+          .eq("bidder_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(20) : Promise.resolve({ data: [] }),
+
+        // Recent completed auctions
+        supabase.from("auction_results")
+          .select("id, listing_id, winning_bid, bid_count, awarded_at, npl_listings(title, collateral_type, principal_amount, profiles!npl_listings_seller_id_fkey(name))")
+          .order("awarded_at", { ascending: false })
+          .limit(20),
+      ])
+
+      if (bidsRes.status === "fulfilled" && bidsRes.value.data?.length) {
+        setBids(bidsRes.value.data.map((r: any) => ({
+          id: String(r.id),
+          title: r.title ?? "NPL 채권",
+          institution: r.seller_profiles?.name ?? "—",
+          collateralType: r.collateral_type ?? "기타",
+          location: r.region ?? "—",
+          principal: r.principal_amount ?? 0,
+          minimumBid: r.minimum_bid ?? Math.round((r.principal_amount ?? 0) * 0.7),
+          aiEstimate: r.ai_estimate ?? Math.round((r.principal_amount ?? 0) * 0.78),
+          deadline: String(r.auction_deadline ?? "").slice(0, 10),
+          bidCount: r.bid_count ?? 0,
+          viewCount: r.view_count ?? 0,
+          riskGrade: r.risk_grade ?? "C",
+          status: r.auction_status ?? "진행중",
+        })))
+      }
+
+      if (myBidsRes.status === "fulfilled" && (myBidsRes.value as any).data?.length) {
+        setMyBids(((myBidsRes.value as any).data ?? []).map((r: any) => ({
+          id: String(r.listing_id ?? r.id),
+          title: r.npl_listings?.title ?? "NPL 채권",
+          institution: r.npl_listings?.profiles?.name ?? "—",
+          bidAmount: r.bid_amount ?? 0,
+          principal: r.npl_listings?.principal_amount ?? 0,
+          bidDate: String(r.created_at ?? "").slice(0, 10),
+          status: r.status ?? "진행중",
+          resultDate: r.result_date ? String(r.result_date).slice(0, 10) : undefined,
+        })))
+      }
+
+      if (awardsRes.status === "fulfilled" && awardsRes.value.data?.length) {
+        setAwards(awardsRes.value.data.map((r: any) => {
+          const principal = r.npl_listings?.principal_amount ?? 0
+          const winning = r.winning_bid ?? 0
+          return {
+            id: String(r.id),
+            title: r.npl_listings?.title ?? "NPL 채권",
+            institution: r.npl_listings?.profiles?.name ?? "—",
+            principal,
+            winningBid: winning,
+            bidRate: principal > 0 ? Math.round((winning / principal) * 1000) / 10 : 0,
+            bidCount: r.bid_count ?? 0,
+            awardDate: String(r.awarded_at ?? "").slice(0, 10),
+            collateralType: r.npl_listings?.collateral_type ?? "기타",
+          }
+        }))
+      }
+    } catch { /* data stays empty */ } finally {
+      setDataLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { loadData() }, [loadData])
+
   const filteredBids = useMemo(() => {
-    const filtered = MOCK_BIDS.filter((b) => {
+    const filtered = bids.filter((b) => {
       if (collateral !== "전체" && b.collateralType !== collateral) return false
       if (search && !b.title.includes(search) && !b.institution.includes(search) && !b.location.includes(search)) return false
       return true
@@ -523,12 +588,12 @@ export default function AuctionPage() {
     if (sortBy === "원금높은순") return [...filtered].sort((a, b) => b.principal - a.principal)
     if (sortBy === "입찰많은순") return [...filtered].sort((a, b) => b.bidCount - a.bidCount)
     return filtered
-  }, [search, collateral, sortBy])
+  }, [bids, search, collateral, sortBy])
 
-  const activeBids = MOCK_BIDS.filter((b) => b.status !== "마감").length
-  const urgentBids = MOCK_BIDS.filter((b) => b.status === "마감임박").length
-  const totalPrincipal = MOCK_BIDS.reduce((s, b) => s + b.principal, 0)
-  const avgBidRate = MOCK_AWARDS.reduce((s, a) => s + a.bidRate, 0) / MOCK_AWARDS.length
+  const activeBids = bids.filter((b) => b.status !== "마감").length
+  const urgentBids = bids.filter((b) => b.status === "마감임박").length
+  const totalPrincipal = bids.reduce((s, b) => s + b.principal, 0)
+  const avgBidRate = awards.length > 0 ? awards.reduce((s, a) => s + a.bidRate, 0) / awards.length : 0
 
   function handleBid(item: BidItem) {
     setBidTarget(item)
@@ -537,8 +602,8 @@ export default function AuctionPage() {
 
   const TABS = [
     { key: "bidding", label: "진행중 입찰", icon: Gavel, count: activeBids },
-    { key: "my", label: "내 입찰 현황", icon: FileText, count: MOCK_MY_BIDS.length },
-    { key: "awards", label: "낙찰 결과", icon: Award, count: MOCK_AWARDS.length },
+    { key: "my", label: "내 입찰 현황", icon: FileText, count: myBids.length },
+    { key: "awards", label: "낙찰 결과", icon: Award, count: awards.length },
   ] as const
 
   // My bid status config — all dark-on-light for legibility
@@ -631,7 +696,7 @@ export default function AuctionPage() {
             style={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)" }}
           >
             {[
-              { label: "총 입찰", value: `${MOCK_BIDS.length}건`, icon: Gavel, color: C.em },
+              { label: "총 입찰", value: `${bids.length}건`, icon: Gavel, color: C.em },
               { label: "진행중", value: `${activeBids}건`, icon: Activity, color: C.blueL },
               { label: "마감임박", value: `${urgentBids}건`, icon: AlertTriangle, color: C.amber },
               { label: "평균 낙찰가율", value: `${avgBidRate.toFixed(1)}%`, icon: TrendingUp, color: C.purple },
@@ -650,6 +715,19 @@ export default function AuctionPage() {
               </div>
             ))}
           </motion.div>
+
+          {/* ── Cross-links ── */}
+          <div className="flex items-center gap-3 flex-wrap mt-6">
+            <Link href="/analysis/simulator" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, backgroundColor: `${C.bg3}`, border: `1px solid ${C.bg4}`, color: C.lt3, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+              수익률 시뮬레이터 →
+            </Link>
+            <Link href="/analysis/due-diligence" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, backgroundColor: `${C.bg3}`, border: `1px solid ${C.bg4}`, color: C.lt3, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+              실사 보고서 →
+            </Link>
+            <Link href="/exchange" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, backgroundColor: `${C.bg3}`, border: `1px solid ${C.bg4}`, color: C.lt3, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+              매물 거래소 →
+            </Link>
+          </div>
 
           {/* ── DARK Tab bar ────────────────────────────────────────────────── */}
           <motion.div
@@ -825,10 +903,10 @@ export default function AuctionPage() {
               {/* Summary row */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2">
                 {[
-                  { label: "전체", count: MOCK_MY_BIDS.length, color: C.lt2 },
-                  { label: "진행중", count: MOCK_MY_BIDS.filter(b => b.status === "진행중").length, color: C.em },
-                  { label: "낙찰", count: MOCK_MY_BIDS.filter(b => b.status === "낙찰").length, color: C.blue },
-                  { label: "유찰/철회", count: MOCK_MY_BIDS.filter(b => b.status === "유찰" || b.status === "철회").length, color: C.rose },
+                  { label: "전체", count: myBids.length, color: C.lt2 },
+                  { label: "진행중", count: myBids.filter(b => b.status === "진행중").length, color: C.em },
+                  { label: "낙찰", count: myBids.filter(b => b.status === "낙찰").length, color: C.blue },
+                  { label: "유찰/철회", count: myBids.filter(b => b.status === "유찰" || b.status === "철회").length, color: C.rose },
                 ].map(({ label, count, color }) => (
                   <div
                     key={label}
@@ -848,7 +926,7 @@ export default function AuctionPage() {
               >
                 <div className="px-6 py-4" style={{ borderBottom: `1px solid ${C.l3}` }}>
                   <h2 className="text-[1.0625rem] font-bold" style={{ color: C.lt1 }}>내 입찰 현황</h2>
-                  <p className="text-[0.8125rem] mt-0.5" style={{ color: C.lt4 }}>총 {MOCK_MY_BIDS.length}건의 입찰 내역</p>
+                  <p className="text-[0.8125rem] mt-0.5" style={{ color: C.lt4 }}>총 {myBids.length}건의 입찰 내역</p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -866,7 +944,7 @@ export default function AuctionPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {MOCK_MY_BIDS.map((bid, idx) => {
+                      {myBids.map((bid, idx) => {
                         const rate = ((bid.bidAmount / bid.principal) * 100).toFixed(1)
                         const st = MY_STATUS_CONFIG[bid.status] ?? MY_STATUS_CONFIG["철회"]
                         return (
@@ -936,7 +1014,7 @@ export default function AuctionPage() {
               >
                 <div className="px-6 py-4" style={{ borderBottom: `1px solid ${C.l3}` }}>
                   <h2 className="text-[1.0625rem] font-bold" style={{ color: C.lt1 }}>낙찰 결과</h2>
-                  <p className="text-[0.8125rem] mt-0.5" style={{ color: C.lt4 }}>최근 {MOCK_AWARDS.length}건의 낙찰 결과</p>
+                  <p className="text-[0.8125rem] mt-0.5" style={{ color: C.lt4 }}>최근 {awards.length}건의 낙찰 결과</p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -954,7 +1032,7 @@ export default function AuctionPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {MOCK_AWARDS.map((award, idx) => {
+                      {awards.map((award, idx) => {
                         const rateColor = award.bidRate >= 80 ? C.em : award.bidRate >= 75 ? C.blue : C.amber
                         const rateBarColor = award.bidRate >= 80 ? C.em : award.bidRate >= 75 ? C.blue : C.amber
                         return (

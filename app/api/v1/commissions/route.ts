@@ -107,6 +107,8 @@ export async function GET(req: NextRequest) {
   const pageSize  = Math.min(100, Number(sp.get('page_size') ?? 20))
   const status    = sp.get('status')
   const dealId    = sp.get('deal_id')
+  const dateFrom  = sp.get('date_from')   // ISO date string, e.g. 2026-01-01
+  const dateTo    = sp.get('date_to')     // ISO date string, e.g. 2026-12-31
   const from      = (page - 1) * pageSize
 
   let query = supabase
@@ -125,8 +127,10 @@ export async function GET(req: NextRequest) {
     query = query.or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
   }
 
-  if (status) query = query.eq('status', status)
-  if (dealId) query = query.eq('deal_id', dealId)
+  if (status)   query = query.eq('status', status)
+  if (dealId)   query = query.eq('deal_id', dealId)
+  if (dateFrom) query = query.gte('created_at', dateFrom)
+  if (dateTo)   query = query.lte('created_at', dateTo)
 
   const { data, count, error } = await query
     .order('created_at', { ascending: false })
@@ -135,8 +139,10 @@ export async function GET(req: NextRequest) {
   // DB 오류 시 mock fallback (개발 환경)
   if (error) {
     let mock = MOCK_COMMISSIONS
-    if (status) mock = mock.filter(c => c.status === status)
-    if (dealId) mock = mock.filter(c => c.deal_id === dealId)
+    if (status)   mock = mock.filter(c => c.status === status)
+    if (dealId)   mock = mock.filter(c => c.deal_id === dealId)
+    if (dateFrom) mock = mock.filter(c => c.created_at >= dateFrom)
+    if (dateTo)   mock = mock.filter(c => c.created_at <= dateTo)
     const sliced = mock.slice(from, from + pageSize)
     return NextResponse.json({
       data: sliced,

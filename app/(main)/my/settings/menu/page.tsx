@@ -4,8 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, LayoutGrid, Save, RotateCcw, Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useNavConfig } from "@/components/providers/nav-config-provider";
@@ -29,15 +27,15 @@ export default function UserMenuSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-[var(--color-surface-sunken)]">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
         <div className="mb-6">
           <Link href="/my/settings" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
             <ChevronLeft className="h-4 w-4" /> 내 설정
           </Link>
           <div className="flex items-center gap-3 mb-1">
-            <LayoutGrid className="h-6 w-6 text-[#1B3A5C] dark:text-blue-400" />
-            <h1 className="text-xl font-bold text-[#1B3A5C] dark:text-white">내 메뉴 설정</h1>
+            <LayoutGrid className="h-6 w-6 text-[var(--color-brand-dark)]" />
+            <h1 className="text-xl font-bold text-[var(--color-text-primary)]">내 메뉴 설정</h1>
           </div>
           <p className="text-sm text-muted-foreground">
             내가 자주 사용하는 메뉴를 선택해 상단 네비게이션을 개인화하세요.
@@ -51,13 +49,13 @@ export default function UserMenuSettingsPage() {
             .map((cat) => {
               const items = getActiveItems(cat.key);
               return (
-                <Card key={cat.key} className="dark:bg-gray-900">
+                <Card key={cat.key} className="bg-[var(--color-surface-elevated)]">
                   <CardHeader className="pb-2 pt-4 px-4">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-semibold">{cat.label}</CardTitle>
-                      <Badge variant="outline" className="text-[10px]">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded border border-[var(--color-border-subtle)] text-[var(--color-text-muted)]">
                         {items.filter(i => userPrefs[i.key] !== false).length}/{items.length}
-                      </Badge>
+                      </span>
                     </div>
                   </CardHeader>
                   <CardContent className="px-4 pb-4">
@@ -96,14 +94,14 @@ export default function UserMenuSettingsPage() {
         </div>
 
         <div className="flex gap-3">
-          <Button variant="outline" onClick={handleReset} className="flex-1">
-            <RotateCcw className="h-4 w-4 mr-1.5" />
+          <button onClick={handleReset} className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg border border-[var(--color-border-default)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-sunken)] transition-colors">
+            <RotateCcw className="h-4 w-4" />
             기본값으로 초기화
-          </Button>
-          <Button onClick={handleSave} className="flex-1 bg-[#1B3A5C] hover:bg-[#2E75B6]">
-            <Save className="h-4 w-4 mr-1.5" />
+          </button>
+          <button onClick={handleSave} className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-mid)] text-white text-sm font-medium transition-colors">
+            <Save className="h-4 w-4" />
             {saved ? "저장됨 ✓" : "설정 저장"}
-          </Button>
+          </button>
         </div>
       </div>
     </div>

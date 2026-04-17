@@ -66,7 +66,7 @@ export function LastUpdated({
         <button
           onClick={onRefresh}
           disabled={loading}
-          className="ml-1 rounded p-0.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+          className="ml-1 rounded p-0.5 hover:bg-[var(--color-surface-overlay)] transition-colors disabled:opacity-50"
           aria-label="새로고침"
         >
           <RefreshCw className={`${iconSize} ${loading ? 'animate-spin' : ''}`} />

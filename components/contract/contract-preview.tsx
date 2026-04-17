@@ -84,7 +84,7 @@ export function ContractPreview({
       {/* Contract preview */}
       <div
         ref={printRef}
-        className="bg-white dark:bg-white text-black rounded-lg shadow-inner border border-gray-200 overflow-auto"
+        className="bg-white text-black rounded-lg shadow-inner border border-gray-200 overflow-auto"
         style={{
           maxHeight: "700px",
           padding: "40px 48px",

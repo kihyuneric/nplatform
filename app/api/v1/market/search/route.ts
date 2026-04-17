@@ -215,6 +215,19 @@ export async function GET(request: NextRequest) {
     const items = rows.map((row, idx) => transformToNplItem(row, offset + idx))
     const total = count ?? items.length
 
+    // Log search (fire and forget)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        void supabase.from('search_logs').insert({
+          user_id: user.id,
+          query_text: q || '',
+          filters: { sido, collateralMain, status: statusFilter },
+          result_count: total
+        })
+      }
+    } catch {}
+
     return NextResponse.json({
       data: items,
       total,

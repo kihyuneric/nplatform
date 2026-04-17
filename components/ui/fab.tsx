@@ -117,7 +117,7 @@ export function Fab({
                   className="flex items-center gap-2"
                 >
                   {/* Label bubble */}
-                  <span className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-[#1B3A5C] shadow-md">
+                  <span className="rounded-lg bg-[var(--color-surface-elevated)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)] shadow-md">
                     {action.label}
                   </span>
 

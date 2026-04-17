@@ -294,7 +294,7 @@ export function LiveBadge({ isConnected }: { isConnected: boolean }) {
             : 'bg-gray-400'
         }`}
       />
-      <span className={isConnected ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-gray-500'}>
+      <span className={isConnected ? 'text-emerald-400 font-medium' : 'text-[var(--color-text-muted)]'}>
         {isConnected ? 'LIVE' : '연결 중...'}
       </span>
     </span>

@@ -18,11 +18,11 @@ interface TickerItem {
 }
 
 const TICKER_META: Record<TickerItem["type"], { icon: any; color: string; label: string }> = {
-  TRADE:       { icon: TrendingUp,    color: "text-emerald-600 bg-emerald-50", label: "거래" },
-  NEW_LISTING: { icon: Package,       color: "text-blue-600 bg-blue-50",       label: "신규매물" },
-  COMMUNITY:   { icon: MessageCircle, color: "text-violet-600 bg-violet-50",   label: "커뮤니티" },
-  SIGNAL:      { icon: Bell,          color: "text-amber-600 bg-amber-50",     label: "시그널" },
-  BIDDING:     { icon: Gavel,         color: "text-red-600 bg-red-50",         label: "입찰" },
+  TRADE:       { icon: TrendingUp,    color: "text-emerald-400 bg-emerald-500/10", label: "거래" },
+  NEW_LISTING: { icon: Package,       color: "text-blue-400 bg-blue-500/10",       label: "신규매물" },
+  COMMUNITY:   { icon: MessageCircle, color: "text-violet-400 bg-violet-500/10",   label: "커뮤니티" },
+  SIGNAL:      { icon: Bell,          color: "text-amber-400 bg-amber-500/10",     label: "시그널" },
+  BIDDING:     { icon: Gavel,         color: "text-red-400 bg-red-500/10",         label: "입찰" },
 }
 
 const MOCK_TICKER: TickerItem[] = [
@@ -43,10 +43,10 @@ export function NewsTicker() {
   const items = [...MOCK_TICKER, ...MOCK_TICKER]
 
   return (
-    <section className="relative overflow-hidden border-y border-slate-200 bg-white">
+    <section className="relative overflow-hidden border-y border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
       <div className="container mx-auto px-4">
         <div className="flex items-center">
-          <div className="flex items-center gap-1.5 shrink-0 pr-4 py-3 border-r border-slate-200">
+          <div className="flex items-center gap-1.5 shrink-0 pr-4 py-3 border-r border-[var(--color-border-subtle)]">
             <Zap className="h-4 w-4 text-amber-500 fill-amber-500" />
             <span className="text-xs font-bold text-[#1B3A5C] whitespace-nowrap">실시간</span>
           </div>
@@ -82,10 +82,10 @@ export function NewsTicker() {
                       <Icon className="h-3 w-3" />
                       {meta.label}
                     </Badge>
-                    <span className="text-xs text-slate-700 group-hover:text-[#1B3A5C] transition-colors whitespace-nowrap">
+                    <span className="text-xs text-[var(--color-text-secondary)] group-hover:text-[#1B3A5C] transition-colors whitespace-nowrap">
                       {item.message}
                     </span>
-                    <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                    <span className="text-[10px] text-[var(--color-text-muted)] whitespace-nowrap">
                       {item.time}
                     </span>
                   </Link>
@@ -96,7 +96,7 @@ export function NewsTicker() {
 
           <Link
             href="/market-intelligence"
-            className="hidden sm:flex items-center gap-1 shrink-0 pl-4 border-l border-slate-200 text-xs text-[#2E75B6] hover:text-[#1B3A5C] font-medium transition-colors whitespace-nowrap"
+            className="hidden sm:flex items-center gap-1 shrink-0 pl-4 border-l border-[var(--color-border-subtle)] text-xs text-[#2E75B6] hover:text-[#1B3A5C] font-medium transition-colors whitespace-nowrap"
           >
             전체 <ArrowRight className="h-3 w-3" />
           </Link>

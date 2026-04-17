@@ -51,7 +51,7 @@ export function BannerLayoutPreview({ activeBanners, onSlotClick }: Props) {
           size="sm"
           variant={device === "desktop" ? "default" : "outline"}
           onClick={() => setDevice("desktop")}
-          className={device === "desktop" ? "bg-[#1B3A5C]" : ""}
+          className={device === "desktop" ? "bg-[var(--color-brand-dark)]" : ""}
         >
           <Monitor className="mr-1 h-4 w-4" /> 데스크톱
         </Button>
@@ -59,7 +59,7 @@ export function BannerLayoutPreview({ activeBanners, onSlotClick }: Props) {
           size="sm"
           variant={device === "mobile" ? "default" : "outline"}
           onClick={() => setDevice("mobile")}
-          className={device === "mobile" ? "bg-[#1B3A5C]" : ""}
+          className={device === "mobile" ? "bg-[var(--color-brand-dark)]" : ""}
         >
           <Smartphone className="mr-1 h-4 w-4" /> 모바일
         </Button>
@@ -75,15 +75,15 @@ export function BannerLayoutPreview({ activeBanners, onSlotClick }: Props) {
       </div>
 
       {/* Layout Preview */}
-      <div className="relative mx-auto overflow-hidden rounded-lg border-2 border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
+      <div className="relative mx-auto overflow-hidden rounded-lg border-2 border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]"
         style={{ width: viewW + 40, height: 400 }}
       >
         {/* Browser Chrome */}
-        <div className="flex h-7 items-center gap-1.5 border-b bg-gray-100 px-3 dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex h-7 items-center gap-1.5 border-b bg-[var(--color-surface-overlay)] px-3 border-[var(--color-border-subtle)]">
           <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
           <div className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
           <div className="h-2.5 w-2.5 rounded-full bg-green-400" />
-          <div className="ml-3 flex-1 rounded bg-white px-2 py-0.5 text-[8px] text-gray-400 dark:bg-gray-700 dark:text-gray-500">
+          <div className="ml-3 flex-1 rounded bg-[var(--color-surface-overlay)] px-2 py-0.5 text-[8px] text-[var(--color-text-muted)]">
             nplatform.co.kr
           </div>
         </div>
@@ -91,7 +91,7 @@ export function BannerLayoutPreview({ activeBanners, onSlotClick }: Props) {
         {/* Page Layout */}
         <div className="relative p-4" style={{ height: 370 }}>
           {/* Navigation bar */}
-          <div className="absolute left-4 right-4 top-4 flex h-8 items-center justify-between rounded bg-[#1B3A5C] px-3">
+          <div className="absolute left-4 right-4 top-4 flex h-8 items-center justify-between rounded bg-[var(--color-brand-dark)] px-3">
             <span className="text-[8px] font-bold text-white">NPLatform</span>
             <div className="flex gap-2">
               {["매물", "거래", "분석", "서비스"].map((m) => (
@@ -101,14 +101,14 @@ export function BannerLayoutPreview({ activeBanners, onSlotClick }: Props) {
           </div>
 
           {/* Content area placeholder */}
-          <div className="absolute left-4 top-16 text-[7px] text-gray-400" style={{ width: viewW * scale }}>
+          <div className="absolute left-4 top-16 text-[7px] text-[var(--color-text-muted)]" style={{ width: viewW * scale }}>
             {device === "desktop" && (
               <>
-                <div className="mb-1 h-4 w-32 rounded bg-gray-200 dark:bg-gray-700" />
-                <div className="mb-1 h-2 w-48 rounded bg-gray-100 dark:bg-gray-800" />
+                <div className="mb-1 h-4 w-32 rounded bg-[var(--color-surface-overlay)]" />
+                <div className="mb-1 h-2 w-48 rounded bg-[var(--color-surface-elevated)]" />
                 <div className="mt-6 grid grid-cols-3 gap-2">
                   {[1,2,3,4,5,6].map(i => (
-                    <div key={i} className="h-10 rounded bg-gray-100 dark:bg-gray-800" />
+                    <div key={i} className="h-10 rounded bg-[var(--color-surface-elevated)]" />
                   ))}
                 </div>
               </>
@@ -127,7 +127,7 @@ export function BannerLayoutPreview({ activeBanners, onSlotClick }: Props) {
                 className={`absolute cursor-pointer transition-all duration-200 ${
                   hasBanner
                     ? "border-2 border-emerald-500 bg-emerald-500/20"
-                    : "border-2 border-dashed border-blue-300 bg-blue-50/50 dark:border-blue-600 dark:bg-blue-900/20"
+                    : "border-2 border-dashed border-blue-500/40 bg-blue-500/5"
                 } ${isHovered ? "ring-2 ring-blue-400 ring-offset-1 z-10" : ""}`}
                 style={{
                   left: slot.x * scale + 16,
@@ -143,10 +143,10 @@ export function BannerLayoutPreview({ activeBanners, onSlotClick }: Props) {
                 <div className="flex h-full items-center justify-center">
                   {hasBanner ? (
                     <div className="text-center">
-                      <div className="text-[7px] font-bold text-emerald-700 dark:text-emerald-400">
+                      <div className="text-[7px] font-bold text-emerald-400">
                         {banner.title}
                       </div>
-                      <div className="text-[5px] text-emerald-600 dark:text-emerald-500">ACTIVE</div>
+                      <div className="text-[5px] text-emerald-500">ACTIVE</div>
                     </div>
                   ) : (
                     <div className="text-center">
@@ -158,12 +158,12 @@ export function BannerLayoutPreview({ activeBanners, onSlotClick }: Props) {
 
                 {/* Hover Tooltip */}
                 {isHovered && (
-                  <div className="absolute -top-20 left-1/2 z-20 w-48 -translate-x-1/2 rounded-lg border bg-white p-2 shadow-lg dark:border-gray-600 dark:bg-gray-800">
-                    <p className="text-xs font-bold text-[#1B3A5C] dark:text-white">{slot.label}</p>
-                    <p className="text-[10px] text-gray-500 dark:text-gray-400">{slot.description}</p>
-                    <p className="text-[10px] text-gray-400">권장 크기: {slot.size}px</p>
+                  <div className="absolute -top-20 left-1/2 z-20 w-48 -translate-x-1/2 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] p-2 shadow-lg">
+                    <p className="text-xs font-bold text-[var(--color-brand-dark)]">{slot.label}</p>
+                    <p className="text-[10px] text-[var(--color-text-secondary)]">{slot.description}</p>
+                    <p className="text-[10px] text-[var(--color-text-muted)]">권장 크기: {slot.size}px</p>
                     {hasBanner ? (
-                      <Badge className="mt-1 bg-emerald-100 text-emerald-700 text-[9px]">
+                      <Badge className="mt-1 bg-emerald-500/10 text-emerald-400 text-[9px]">
                         ✅ {banner.title}
                       </Badge>
                     ) : (
@@ -188,18 +188,18 @@ export function BannerLayoutPreview({ activeBanners, onSlotClick }: Props) {
               key={slot.id}
               className={`cursor-pointer rounded-lg border p-2 transition-all hover:shadow-md ${
                 banner
-                  ? "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20"
-                  : "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900"
+                  ? "border-emerald-500/20 bg-emerald-500/10"
+                  : "border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]"
               }`}
               onClick={() => onSlotClick?.(slot.position)}
             >
               <div className="flex items-center gap-2">
-                <div className={`h-2.5 w-2.5 rounded-full ${banner ? "bg-emerald-500" : "bg-gray-300"}`} />
-                <span className="text-xs font-medium dark:text-white">{slot.label}</span>
+                <div className={`h-2.5 w-2.5 rounded-full ${banner ? "bg-emerald-500" : "bg-[var(--color-border-default)]"}`} />
+                <span className="text-xs font-medium text-[var(--color-text-primary)]">{slot.label}</span>
               </div>
-              <p className="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400">{slot.size}</p>
+              <p className="mt-0.5 text-[10px] text-[var(--color-text-secondary)]">{slot.size}</p>
               {banner && (
-                <p className="mt-0.5 truncate text-[10px] text-emerald-600 dark:text-emerald-400">
+                <p className="mt-0.5 truncate text-[10px] text-emerald-400">
                   ✅ {banner.title}
                 </p>
               )}

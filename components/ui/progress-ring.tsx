@@ -240,7 +240,7 @@ export function DueDiligenceRing({
       color="#2E75B6"
       className={className}
       label={
-        <span className="text-xs font-bold text-[#1B3A5C] dark:text-white">
+        <span className="text-xs font-bold text-[var(--color-text-primary)]">
           {completed}/{total}
         </span>
       }

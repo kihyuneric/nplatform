@@ -25,8 +25,8 @@ interface TrendPoint {
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border rounded-lg shadow-lg p-3 text-xs min-w-32">
-      <p className="font-semibold mb-1 text-gray-700">{label}</p>
+    <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-lg shadow-lg p-3 text-xs min-w-32">
+      <p className="font-semibold mb-1 text-[var(--color-text-primary)]">{label}</p>
       {payload.map((entry: any) => (
         <p key={entry.name} className="flex items-center justify-between gap-3">
           <span style={{ color: entry.color }}>{entry.name}</span>

@@ -44,7 +44,7 @@ export function LanguageSelector() {
             key={lang.code}
             onClick={() => setLocale(lang.code)}
             className={
-              current === lang.code ? "bg-gray-100 dark:bg-gray-800" : ""
+              current === lang.code ? "bg-[var(--color-surface-overlay)]" : ""
             }
           >
             <span className="mr-2">{lang.flag}</span>

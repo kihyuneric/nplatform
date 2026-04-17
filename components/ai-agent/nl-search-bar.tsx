@@ -38,18 +38,18 @@ export function NLSearchBar() {
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="relative">
-        <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#10B981]" />
+        <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--color-positive)]" />
         <Input
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSearch()}
           placeholder="AI 검색: 강남 5억 이하 오피스 매물 찾아줘"
-          className="pl-10 pr-24 h-12 text-base rounded-xl border-2 border-white/30 bg-white/10 text-white placeholder:text-white/50 focus:border-[#10B981]"
+          className="pl-10 pr-24 h-12 text-base rounded-xl border-2 border-white/30 bg-white/10 text-white placeholder:text-white/50 focus:border-[var(--color-positive)]"
         />
         <Button
           onClick={handleSearch}
           disabled={loading || !query.trim()}
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 bg-[#10B981] hover:bg-[#059669] rounded-lg"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 bg-[var(--color-positive)] hover:bg-[#059669] rounded-lg"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
         </Button>
@@ -60,7 +60,7 @@ export function NLSearchBar() {
           {result.total > 0 && (
             <Button
               variant="link"
-              className="p-0 h-auto text-[#10B981] mt-1"
+              className="p-0 h-auto text-[var(--color-positive)] mt-1"
               onClick={() => router.push(result.search_url)}
             >
               {result.total}건 매물 보기 <ArrowRight className="h-3 w-3 ml-1" />

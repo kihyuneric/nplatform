@@ -129,7 +129,7 @@ export function SwipeListItem({
 
       {/* Foreground content */}
       <div
-        className="relative z-10 bg-white dark:bg-gray-900"
+        className="relative z-10 bg-[var(--color-surface-overlay)]"
         style={{
           transform: `translateX(${offsetX}px)`,
           transition: transitioning ? "transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)" : "none",

@@ -409,9 +409,9 @@ export function CommandPalette() {
                           variant="secondary"
                           className={cn(
                             'text-[10px] px-1.5 py-0 h-4',
-                            item.badge === 'AI' && 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-                            item.badge === 'HOT' && 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-                            item.badge === 'NEW' && 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+                            item.badge === 'AI' && 'bg-purple-500/10 text-purple-400',
+                            item.badge === 'HOT' && 'bg-red-500/10 text-red-400',
+                            item.badge === 'NEW' && 'bg-emerald-500/10 text-emerald-400',
                           )}
                         >
                           {item.badge}
@@ -441,7 +441,7 @@ export function CommandPalette() {
                   }}
                   className="gap-3 cursor-pointer"
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border bg-purple-50 dark:bg-purple-900/20">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border bg-purple-500/10">
                     <Sparkles className="h-4 w-4 text-purple-500" />
                   </span>
                   <div className="flex flex-col">

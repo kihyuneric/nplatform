@@ -44,7 +44,7 @@ function getFileIcon(type: string) {
   if (type.includes("spreadsheet") || type.includes("excel"))
     return <Table2 className="w-5 h-5 text-green-600" />
   if (type.includes("word") || type.includes("document"))
-    return <FileText className="w-5 h-5 text-blue-700" />
+    return <FileText className="w-5 h-5 text-blue-400" />
   return <File className="w-5 h-5 text-gray-500" />
 }
 
@@ -55,13 +55,13 @@ function formatFileSize(bytes: number): string {
 }
 
 function getFileIconColor(type: string): string {
-  if (type === "application/pdf") return "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
-  if (type.startsWith("image/")) return "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
+  if (type === "application/pdf") return "bg-red-500/10 border-red-500/20"
+  if (type.startsWith("image/")) return "bg-blue-500/10 border-blue-500/20"
   if (type.includes("spreadsheet") || type.includes("excel"))
-    return "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+    return "bg-green-500/10 border-green-500/20"
   if (type.includes("word") || type.includes("document"))
-    return "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
-  return "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+    return "bg-blue-500/10 border-blue-500/20"
+  return "bg-[var(--color-surface-overlay)] border-[var(--color-border-subtle)]"
 }
 
 // ─── Component ───────────────────────────────────────────
@@ -153,17 +153,17 @@ export function FileAttachment({
       >
         {getFileIcon(selectedFile.type)}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate text-gray-900 dark:text-white">
+          <p className="text-sm font-medium truncate text-[var(--color-text-primary)]">
             {selectedFile.name}
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-[var(--color-text-secondary)]">
             {formatFileSize(selectedFile.size)}
           </p>
         </div>
         {onRemove && (
           <button
             onClick={onRemove}
-            className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="p-1 rounded-full hover:bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -183,21 +183,21 @@ export function FileAttachment({
         className={cn(
           "flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed cursor-pointer transition-colors",
           isDragging
-            ? "border-[#2E75B6] bg-blue-50 dark:bg-blue-900/20"
-            : "border-gray-300 dark:border-gray-600 hover:border-[#2E75B6] hover:bg-gray-50 dark:hover:bg-gray-800/50"
+            ? "border-[#2E75B6] bg-blue-500/10"
+            : "border-[var(--color-border-subtle)] hover:border-[#2E75B6] hover:bg-[var(--color-surface-overlay)]"
         )}
       >
         <Upload
           className={cn(
             "w-6 h-6",
-            isDragging ? "text-[#2E75B6]" : "text-gray-400 dark:text-gray-500"
+            isDragging ? "text-[#2E75B6]" : "text-[var(--color-text-muted)]"
           )}
         />
         <div className="text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-[var(--color-text-secondary)]">
             파일을 드래그하거나 <span className="text-[#2E75B6] font-medium">클릭하여 선택</span>
           </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          <p className="text-xs text-[var(--color-text-muted)] mt-1">
             PDF, 이미지, Excel, Word (최대 {maxSizeMB}MB)
           </p>
         </div>
@@ -229,14 +229,14 @@ export function FilePreview({ file }: { file: FileMetadata }) {
       href={file.url}
       download={file.name}
       className={cn(
-        "flex items-center gap-2 p-2 rounded-lg border mt-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer",
+        "flex items-center gap-2 p-2 rounded-lg border mt-2 hover:bg-[var(--color-surface-overlay)] transition-colors cursor-pointer",
         getFileIconColor(file.type)
       )}
     >
       {getFileIcon(file.type)}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{file.name}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(file.size)}</p>
+        <p className="text-xs text-[var(--color-text-secondary)]">{formatFileSize(file.size)}</p>
       </div>
     </a>
   )

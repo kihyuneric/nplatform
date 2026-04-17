@@ -21,9 +21,9 @@ const CATEGORIES = ["전체", "투자기초", "법률", "세무", "경매", "실
 const SORTS = ["인기순", "최신순", "평점순"];
 
 const levelColors: Record<string, string> = {
-  초급: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  중급: "bg-amber-50 text-amber-700 border-amber-200",
-  고급: "bg-purple-50 text-purple-700 border-purple-200",
+  초급: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  중급: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  고급: "bg-purple-500/10 text-purple-400 border-purple-500/20",
 };
 
 export default function CoursesPage() {

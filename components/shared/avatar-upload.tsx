@@ -90,9 +90,9 @@ export function AvatarUpload({
       {editable && (
         <div className="absolute bottom-0 right-0">
           <div
-            className={`${s.camera} bg-white dark:bg-gray-700 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity`}
+            className={`${s.camera} bg-[var(--color-surface-overlay)] rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity`}
           >
-            <Camera className={`${s.icon} text-gray-600 dark:text-gray-300`} />
+            <Camera className={`${s.icon} text-[var(--color-text-secondary)]`} />
           </div>
         </div>
       )}

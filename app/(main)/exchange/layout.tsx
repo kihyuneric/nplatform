@@ -1,12 +1,23 @@
 import type { Metadata } from 'next'
-import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query'
+import { QueryClient, dehydrate } from '@tanstack/react-query'
 import { BannerSlot } from '@/components/banners/banner-slot'
 import { DynamicSubNav } from '@/components/layout/dynamic-sub-nav'
 import { query } from '@/lib/data-layer'
+import { ExchangeHydration } from './exchange-hydration'
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nplatform.co.kr'
 
 export const metadata: Metadata = {
-  title: 'NPL 매물 | NPLatform',
-  description: 'NPL 채권 매각·매수 거래 플랫폼. 매물 탐색, 입찰 신청, 거래실 입장까지 한 곳에서.',
+  title: '거래소 | NPLatform',
+  description: 'NPL 채권 매각·매수 거래소. 매물 탐색, 입찰 신청, 딜룸 입장까지 한 곳에서.',
+  alternates: {
+    canonical: `${SITE_URL}/exchange`,
+    languages: {
+      'ko': `${SITE_URL}/exchange`,
+      'en': `${SITE_URL}/en/exchange`,
+      'ja': `${SITE_URL}/ja/exchange`,
+    },
+  },
 }
 
 export const revalidate = 60  // ISR: 60초마다 백그라운드에서 재생성
@@ -69,9 +80,9 @@ export default async function ExchangeLayout({
     <>
       <DynamicSubNav pageKey="exchange" />
       <BannerSlot position="exchange-top" className="mx-auto max-w-7xl px-4 pt-4" />
-      <HydrationBoundary state={dehydrate(queryClient)}>
+      <ExchangeHydration state={dehydrate(queryClient)}>
         {children}
-      </HydrationBoundary>
+      </ExchangeHydration>
     </>
   )
 }

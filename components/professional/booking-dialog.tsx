@@ -146,13 +146,13 @@ export function BookingDialog({
 
             <div className="space-y-5 mt-2">
               {/* Professional info summary */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-[var(--color-surface-overlay)]">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2E75B6] text-white font-semibold">
                   {professionalName.charAt(0)}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">{professionalName}</p>
-                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                  <p className="font-medium text-[var(--color-text-primary)]">{professionalName}</p>
+                  <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
                     <Badge variant="secondary" className="text-xs">{specialty}</Badge>
                     <span className="flex items-center gap-0.5">
                       <MapPin className="h-3 w-3" />
@@ -221,21 +221,21 @@ export function BookingDialog({
 
               {/* Price summary */}
               {selectedService && (
-                <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-sm">
+                <div className="p-3 rounded-lg bg-blue-500/10 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">서비스</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{selectedService.name}</span>
+                    <span className="text-[var(--color-text-secondary)]">서비스</span>
+                    <span className="font-medium text-[var(--color-text-primary)]">{selectedService.name}</span>
                   </div>
                   <div className="flex justify-between mt-1">
-                    <span className="text-gray-600 dark:text-gray-400">비용</span>
-                    <span className="font-semibold text-[#1B3A5C] dark:text-blue-400">
+                    <span className="text-[var(--color-text-secondary)]">비용</span>
+                    <span className="font-semibold text-[var(--color-text-primary)]">
                       {selectedService.free_initial ? '무료 (초기상담)' : `${selectedService.price.toLocaleString()}원`}
                     </span>
                   </div>
                   {selectedService.duration_minutes && (
                     <div className="flex justify-between mt-1">
-                      <span className="text-gray-600 dark:text-gray-400">소요시간</span>
-                      <span className="text-gray-900 dark:text-white">약 {selectedService.duration_minutes}분</span>
+                      <span className="text-[var(--color-text-secondary)]">소요시간</span>
+                      <span className="text-[var(--color-text-primary)]">약 {selectedService.duration_minutes}분</span>
                     </div>
                   )}
                 </div>
@@ -270,24 +270,24 @@ export function BookingDialog({
           /* Success state */
           <div className="py-8 text-center space-y-4">
             <div className="flex justify-center">
-              <div className="h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                <CheckCircle className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+              <div className="h-16 w-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <CheckCircle className="h-8 w-8 text-emerald-400" />
               </div>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
                 예약이 완료되었습니다
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-[var(--color-text-secondary)] mt-1">
                 전문가의 확인 후 상담이 진행됩니다.
               </p>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 text-sm space-y-2 text-left max-w-xs mx-auto">
+            <div className="bg-[var(--color-surface-overlay)] rounded-lg p-4 text-sm space-y-2 text-left max-w-xs mx-auto">
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">예약번호</span>
+                <span className="text-[var(--color-text-secondary)]">예약번호</span>
                 <div className="flex items-center gap-1">
-                  <span className="font-mono font-semibold text-[#1B3A5C] dark:text-blue-400">{bookingRef}</span>
+                  <span className="font-mono font-semibold text-[var(--color-text-primary)]">{bookingRef}</span>
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(bookingRef)
@@ -300,19 +300,19 @@ export function BookingDialog({
                 </div>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">전문가</span>
-                <span className="text-gray-900 dark:text-white">{professionalName}</span>
+                <span className="text-[var(--color-text-secondary)]">전문가</span>
+                <span className="text-[var(--color-text-primary)]">{professionalName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">일시</span>
-                <span className="text-gray-900 dark:text-white">
+                <span className="text-[var(--color-text-secondary)]">일시</span>
+                <span className="text-[var(--color-text-primary)]">
                   {formatDisplayDate(selectedDate)} {selectedTime}
                 </span>
               </div>
               {selectedService && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">서비스</span>
-                  <span className="text-gray-900 dark:text-white">{selectedService.name}</span>
+                  <span className="text-[var(--color-text-secondary)]">서비스</span>
+                  <span className="text-[var(--color-text-primary)]">{selectedService.name}</span>
                 </div>
               )}
             </div>

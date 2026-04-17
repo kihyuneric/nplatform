@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { logger } from '@/lib/logger'
 import { getById, update, insert } from "@/lib/data-layer"
 import { notifyAction } from "@/lib/action-notify"
+import { sendEmail, getUserEmail } from "@/lib/email/email-service"
+import { dealStageEmail } from "@/lib/email/templates"
+import { createClient } from "@/lib/supabase/server"
 
 // ─── Constants ────────────────────────────────────────────
 
@@ -142,6 +145,32 @@ export async function PATCH(
         dealId: id,
         message: `거래 단계가 ${normalizedStage}(으)로 변경되었습니다`,
       })
+
+      // Send email notification to deal participants (best-effort)
+      try {
+        const supabase = await createClient()
+        const dealTitle = (dealData.title as string) || (dealData.listing_title as string) || '거래'
+
+        // Notify buyer + seller
+        const participantIds = [
+          dealData.buyer_id as string,
+          dealData.seller_id as string,
+        ].filter(Boolean)
+
+        await Promise.allSettled(
+          participantIds.map(async (uid) => {
+            const { email, name } = await getUserEmail(supabase, uid)
+            if (!email) return
+            return sendEmail({
+              to: email,
+              ...dealStageEmail({ name, dealTitle, stage: normalizedStage, dealId: id }),
+              tags: [{ name: 'type', value: 'deal_stage' }],
+            })
+          })
+        )
+      } catch (emailErr) {
+        logger.warn('[deal PATCH] email notification failed:', { error: emailErr })
+      }
 
       return NextResponse.json({ data: result.data, _source: result._source })
     }

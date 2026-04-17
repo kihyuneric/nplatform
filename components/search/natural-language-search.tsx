@@ -172,7 +172,7 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
     <>
       {parts.map((part, i) =>
         regex.test(part) ? (
-          <mark key={i} className="bg-yellow-200 dark:bg-yellow-800/50 text-current rounded-sm px-0.5">
+          <mark key={i} className="bg-yellow-500/20 text-current rounded-sm px-0.5">
             {part}
           </mark>
         ) : (
@@ -190,26 +190,26 @@ function ParsedChips({ filters }: { filters: ParsedSearchFilters }) {
 
   if (filters.regions?.length) {
     filters.regions.forEach((r) =>
-      chips.push({ icon: <MapPin className="h-3 w-3" />, label: r, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' })
+      chips.push({ icon: <MapPin className="h-3 w-3" />, label: r, color: 'bg-blue-500/10 text-blue-400' })
     )
   }
   if (filters.collateralTypes?.length) {
     filters.collateralTypes.forEach((t) =>
-      chips.push({ icon: <Building2 className="h-3 w-3" />, label: t, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' })
+      chips.push({ icon: <Building2 className="h-3 w-3" />, label: t, color: 'bg-purple-500/10 text-purple-400' })
     )
   }
   if (filters.maxAmount) {
     chips.push({
       icon: <DollarSign className="h-3 w-3" />,
       label: `${formatAmount(filters.maxAmount, 'short')} 이하`,
-      color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+      color: 'bg-emerald-500/10 text-emerald-400',
     })
   }
   if (filters.minAmount) {
     chips.push({
       icon: <DollarSign className="h-3 w-3" />,
       label: `${formatAmount(filters.minAmount, 'short')} 이상`,
-      color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+      color: 'bg-emerald-500/10 text-emerald-400',
     })
   }
 
@@ -429,7 +429,7 @@ export function NaturalLanguageSearch({
           <motion.div
             className={cn(
               'absolute top-full left-0 right-0 mt-2 z-50',
-              'bg-white dark:bg-gray-950 rounded-xl border border-border shadow-xl overflow-hidden',
+              'bg-[var(--color-surface-base)] rounded-xl border border-border shadow-xl overflow-hidden',
             )}
             initial={{ opacity: 0, y: -8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

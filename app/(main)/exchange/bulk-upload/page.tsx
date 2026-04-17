@@ -1,350 +1,460 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Upload, Download, CheckCircle2, AlertCircle, AlertTriangle, X, FileSpreadsheet, Zap, Shield, Clock } from "lucide-react"
+import {
+  Upload, Download, CheckCircle2, AlertCircle, AlertTriangle,
+  X, FileSpreadsheet, Zap, Shield, Clock, FileText,
+} from "lucide-react"
+import Link from "next/link"
+import DS, { formatKRW } from "@/lib/design-system"
 
-const C = {
-  bg0:"#030810", bg1:"#050D1A", bg2:"#080F1E", bg3:"#0A1628", bg4:"#0F1F35",
-  em:"#10B981", emL:"#34D399", blue:"#3B82F6", blueL:"#60A5FA",
-  amber:"#F59E0B", amber2:"#FCD34D", purple:"#A855F7", rose:"#F43F5E", teal:"#14B8A6",
-  l0:"#FFFFFF", l1:"#F8FAFC", l2:"#F1F5F9", l3:"#E2E8F0",
-  lt1:"#0F172A", lt2:"#334155", lt3:"#64748B", lt4:"#94A3B8",
-}
+// ── Types ────────────────────────────────────────────────────────────────────
 
-type Stage = "idle" | "preview" | "submitting" | "done"
-type RowStatus = "valid" | "warning" | "error"
+const COLLATERAL_TYPES = [
+  "APARTMENT","COMMERCIAL","LAND","FACTORY","OFFICE","VILLA","HOTEL","WAREHOUSE","OTHER",
+] as const
+type CollateralType = (typeof COLLATERAL_TYPES)[number]
 
-interface PreviewRow {
-  row: number
-  listingNo: string
-  debtorName: string
-  principal: number
-  collateralType: string
+interface BulkListingInput {
+  collateral_type: CollateralType
   address: string
+  sido: string
+  sigungu?: string
+  loan_principal: number
+  appraised_value: number
+  asking_price?: number
+  mortgage_amount?: number
+  claim_balance?: number
+  exclusive_area?: number
+  debtor_type?: string
+  delinquency_rate?: number
+  bid_start_date?: string
+  bid_end_date?: string
+  // ── 수익성 분석용 필드 ──
+  interest_rate?: number         // 약정금리 (%)
+  penalty_rate?: number          // 연체금리 (%)
+  default_start_date?: string    // 연체시작일
+  mortgage_rank?: number         // 근저당 순위
+  senior_claims_total?: number   // 선순위 채권 총액
+  tenant_deposit_total?: number  // 임차보증금 총액
+  build_year?: number            // 건축년도
+  notes?: string
+}
+
+type RowStatus = "pass" | "warning" | "error"
+
+interface ParsedRow {
+  index: number
+  raw: Record<string, string>
+  mapped: Partial<BulkListingInput>
   status: RowStatus
-  issue: string
+  errors: string[]
 }
 
-const DEMO_ROWS: PreviewRow[] = [
-  { row: 2, listingNo: "NPL-001", debtorName: "홍길동", principal: 500_000_000, collateralType: "아파트", address: "서울시 강남구 역삼동 123", status: "valid", issue: "" },
-  { row: 3, listingNo: "NPL-002", debtorName: "김철수", principal: 300_000_000, collateralType: "상가", address: "부산시 해운대구 우동 456", status: "warning", issue: "감정가 누락" },
-  { row: 4, listingNo: "NPL-003", debtorName: "이영희", principal: 0, collateralType: "토지", address: "", status: "error", issue: "채권원금·소재지 필수 누락" },
-  { row: 5, listingNo: "NPL-004", debtorName: "박민준", principal: 800_000_000, collateralType: "아파트", address: "경기도 성남시 분당구 서현동 789", status: "valid", issue: "" },
-  { row: 6, listingNo: "NPL-005", debtorName: "최수연", principal: 150_000_000, collateralType: "오피스텔", address: "인천시 연수구 송도동 321", status: "valid", issue: "" },
-]
+type Step = 1 | 2 | 3
 
-function fmtKRW(n: number) {
-  if (!n) return "—"
-  if (n >= 1_0000_0000) return `${(n / 1_0000_0000).toFixed(1)}억원`
-  return `${Math.floor(n / 10_000).toLocaleString()}만원`
+// ── Column mapping (CSV header -> BulkListingInput key) ──────────────────────
+
+const COL_MAP: Record<string, keyof BulkListingInput> = {
+  "담보유형": "collateral_type", "collateral_type": "collateral_type",
+  "소재지": "address", "주소": "address", "address": "address",
+  "시도": "sido", "sido": "sido",
+  "시군구": "sigungu", "sigungu": "sigungu",
+  "채권원금": "loan_principal", "loan_principal": "loan_principal",
+  "감정가": "appraised_value", "appraised_value": "appraised_value",
+  "매각희망가": "asking_price", "asking_price": "asking_price",
+  "근저당액": "mortgage_amount", "mortgage_amount": "mortgage_amount",
+  "채권잔액": "claim_balance", "claim_balance": "claim_balance",
+  "전용면적": "exclusive_area", "exclusive_area": "exclusive_area",
+  "채무자유형": "debtor_type", "debtor_type": "debtor_type",
+  "연체율": "delinquency_rate", "delinquency_rate": "delinquency_rate",
+  "입찰시작일": "bid_start_date", "bid_start_date": "bid_start_date",
+  "입찰종료일": "bid_end_date", "bid_end_date": "bid_end_date",
+  "약정금리": "interest_rate", "interest_rate": "interest_rate",
+  "연체금리": "penalty_rate", "penalty_rate": "penalty_rate",
+  "연체시작일": "default_start_date", "default_start_date": "default_start_date",
+  "근저당순위": "mortgage_rank", "mortgage_rank": "mortgage_rank",
+  "선순위총액": "senior_claims_total", "senior_claims_total": "senior_claims_total",
+  "임차보증금총액": "tenant_deposit_total", "tenant_deposit_total": "tenant_deposit_total",
+  "건축년도": "build_year", "build_year": "build_year",
+  "비고": "notes", "notes": "notes",
 }
 
-const STATUS_CFG: Record<RowStatus, { icon: any; label: string; bg: string; text: string; dot: string }> = {
-  valid:   { icon: CheckCircle2,  label: "정상", bg: "#ECFDF5", text: "#065F46", dot: C.em },
-  warning: { icon: AlertTriangle, label: "경고", bg: "#FFFBEB", text: "#92400E", dot: C.amber },
-  error:   { icon: AlertCircle,   label: "오류", bg: "#FFF1F2", text: "#9F1239", dot: C.rose },
+const NUM_FIELDS = new Set<keyof BulkListingInput>([
+  "loan_principal","appraised_value","asking_price","mortgage_amount",
+  "claim_balance","exclusive_area","delinquency_rate",
+  "interest_rate","penalty_rate","mortgage_rank","senior_claims_total",
+  "tenant_deposit_total","build_year",
+])
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function mapRow(raw: Record<string, string>): Partial<BulkListingInput> {
+  const out: Record<string, unknown> = {}
+  for (const [csvKey, val] of Object.entries(raw)) {
+    const field = COL_MAP[csvKey.trim()]
+    if (!field) continue
+    if (NUM_FIELDS.has(field)) {
+      const n = parseFloat(String(val).replace(/,/g, ""))
+      out[field] = isNaN(n) ? undefined : n
+    } else {
+      out[field] = val?.trim() || undefined
+    }
+  }
+  return out as Partial<BulkListingInput>
 }
 
-const TEMPLATES = [
-  { name: "NPL 기본 템플릿", desc: "채권·담보 기본 항목 포함", ext: "xlsx", size: "24KB" },
-  { name: "NPL 상세 템플릿", desc: "감정가·선순위 확장 항목", ext: "xlsx", size: "36KB" },
-  { name: "CSV 경량 템플릿", desc: "대용량 처리 최적화", ext: "csv", size: "8KB" },
-]
+function validateRow(m: Partial<BulkListingInput>): { status: RowStatus; errors: string[] } {
+  const errors: string[] = []
+  if (!m.collateral_type || !COLLATERAL_TYPES.includes(m.collateral_type as CollateralType))
+    errors.push("담보유형 없음/부적합")
+  if (!m.address) errors.push("소재지 필수")
+  if (!m.sido) errors.push("시도 필수")
+  if (!m.loan_principal || m.loan_principal <= 0) errors.push("채권원금 > 0 필수")
+  if (!m.appraised_value || m.appraised_value <= 0) errors.push("감정가 > 0 필수")
+  if (errors.length > 0) return { status: "error", errors }
+  const warnings: string[] = []
+  if (!m.asking_price) warnings.push("매각희망가 누락")
+  if (!m.mortgage_amount) warnings.push("근저당액 누락")
+  if (warnings.length > 0) return { status: "warning", errors: warnings }
+  return { status: "pass", errors: [] }
+}
+
+const STATUS_CFG: Record<RowStatus, { icon: typeof CheckCircle2; label: string; cls: string; dot: string }> = {
+  pass:    { icon: CheckCircle2,  label: "정상", cls: "bg-emerald-500/10 text-emerald-400", dot: "bg-[var(--color-positive)]" },
+  warning: { icon: AlertTriangle, label: "경고", cls: "bg-amber-500/10 text-amber-400",     dot: "bg-[var(--color-warning)]" },
+  error:   { icon: AlertCircle,   label: "오류", cls: "bg-red-500/10 text-red-400",          dot: "bg-[var(--color-danger)]" },
+}
+
+function generateSampleCSV(): string {
+  const header = "담보유형,소재지,시도,시군구,채권원금,감정가,매각희망가,근저당액,채권잔액,전용면적,채무자유형,연체율,입찰시작일,입찰종료일,약정금리,연체금리,연체시작일,근저당순위,선순위총액,임차보증금총액,건축년도,비고"
+  const row1 = "APARTMENT,서울시 강남구 역삼동 123,서울특별시,강남구,500000000,800000000,400000000,600000000,520000000,84.5,법인,12.5,2026-05-01,2026-05-15,5.5,12.0,2024-06-15,1,0,200000000,2015,1차매각"
+  const row2 = "COMMERCIAL,부산시 해운대구 우동 456,부산광역시,해운대구,300000000,450000000,,350000000,,120,개인,8.2,2026-05-01,2026-05-20,4.8,11.0,2024-03-01,2,150000000,,2008,"
+  return [header, row1, row2].join("\n")
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
 
 export default function BulkUploadPage() {
-  const [stage, setStage] = useState<Stage>("idle")
+  const [step, setStep] = useState<Step>(1)
   const [file, setFile] = useState<File | null>(null)
+  const [rows, setRows] = useState<ParsedRow[]>([])
   const [dragging, setDragging] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [result, setResult] = useState<{ success: number; failed: number; errors: string[] } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const rows = DEMO_ROWS
-  const validCount = rows.filter((r) => r.status === "valid").length
-  const warnCount  = rows.filter((r) => r.status === "warning").length
-  const errCount   = rows.filter((r) => r.status === "error").length
+  const validCount   = rows.filter(r => r.status === "pass").length
+  const warnCount    = rows.filter(r => r.status === "warning").length
+  const errCount     = rows.filter(r => r.status === "error").length
+  const submitCount  = validCount + warnCount
 
-  function handleFile(f: File) {
-    if (!f.name.match(/\.(xlsx|csv)$/i)) {
-      alert(".xlsx 또는 .csv 파일만 지원합니다.")
+  // ── Parse CSV / XLS / XLSX ──
+  const parseFile = useCallback((f: File) => {
+    const ext = f.name.split(".").pop()?.toLowerCase() ?? ""
+
+    if (ext === "csv") {
+      // Native CSV parser (UTF-8 BOM 처리 포함)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        try {
+          const text = ((e.target?.result as string) || "").replace(/^\uFEFF/, "") // BOM 제거
+          const lines = text.split(/\r?\n/).filter(l => l.trim())
+          if (lines.length < 2) { alert("헤더와 데이터 행이 필요합니다."); return }
+          const headers = lines[0].split(",").map(h => h.trim().replace(/^["']|["']$/g, ""))
+          const data: Record<string, string>[] = lines.slice(1, 501).map(line => {
+            const vals = line.split(",").map(v => v.trim().replace(/^["']|["']$/g, ""))
+            const obj: Record<string, string> = {}
+            headers.forEach((h, i) => { obj[h] = vals[i] || "" })
+            return obj
+          })
+          const parsed: ParsedRow[] = data.map((raw, i) => {
+            const mapped = mapRow(raw)
+            const { status, errors } = validateRow(mapped)
+            return { index: i + 2, raw, mapped, status, errors }
+          })
+          setRows(parsed)
+          setStep(2)
+        } catch {
+          alert("CSV 파싱에 실패했습니다. 파일 형식을 확인해주세요.")
+        }
+      }
+      reader.readAsText(f, "UTF-8")
+    } else {
+      // XLS / XLSX: xlsx 라이브러리 사용
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        try {
+          const XLSX = await import("xlsx")
+          const ab = e.target?.result as ArrayBuffer
+          const wb = XLSX.read(ab, { type: "array" })
+          const ws = wb.Sheets[wb.SheetNames[0]]
+          if (!ws) { alert("시트를 찾을 수 없습니다."); return }
+
+          const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: "" })
+          const data: Record<string, string>[] = rawRows.slice(0, 500).map(row => {
+            const obj: Record<string, string> = {}
+            for (const [k, v] of Object.entries(row)) {
+              obj[k] = String(v ?? "")
+            }
+            return obj
+          })
+
+          const parsed: ParsedRow[] = data.map((raw, i) => {
+            const mapped = mapRow(raw)
+            const { status, errors } = validateRow(mapped)
+            return { index: i + 2, raw, mapped, status, errors }
+          })
+          setRows(parsed)
+          setStep(2)
+        } catch {
+          alert("Excel 파싱에 실패했습니다. 파일 형식을 확인해주세요.")
+        }
+      }
+      reader.readAsArrayBuffer(f)
+    }
+  }, [])
+
+  const handleFile = useCallback((f: File) => {
+    if (!f.name.match(/\.(csv|xls|xlsx)$/i)) {
+      alert("CSV, XLS, XLSX 파일만 지원합니다.")
       return
     }
+    if (f.size > 20 * 1024 * 1024) { alert("최대 20MB까지 업로드 가능합니다."); return }
     setFile(f)
-    setStage("preview")
-  }
+    parseFile(f)
+  }, [parseFile])
 
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setDragging(false)
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault(); setDragging(false)
     const f = e.dataTransfer.files[0]
     if (f) handleFile(f)
-  }
+  }, [handleFile])
 
-  function handleSubmit() {
-    setStage("submitting")
-    setProgress(0)
-    const timer = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 100) { clearInterval(timer); setStage("done"); return 100 }
-        return p + 10
-      })
-    }, 180)
-  }
+  const downloadSample = useCallback(() => {
+    const blob = new Blob(["\uFEFF" + generateSampleCSV()], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url; a.download = "nplatform-bulk-upload-sample.csv"; a.click()
+    URL.revokeObjectURL(url)
+  }, [])
 
-  // ── Done screen ──
-  if (stage === "done") {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: C.l2 }}>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="text-center max-w-sm"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-            style={{ backgroundColor: "#ECFDF5", border: `2px solid ${C.em}` }}
-          >
-            <CheckCircle2 className="w-9 h-9" style={{ color: C.em }} />
-          </motion.div>
-          <h2 className="text-2xl font-bold mb-3" style={{ color: C.lt1 }}>등록 제출 완료</h2>
-          <p className="text-sm mb-2" style={{ color: C.lt3 }}>
-            <span className="font-bold" style={{ color: C.em }}>{validCount}건</span> 정상 제출 완료
-            {errCount > 0 && <> · <span className="font-bold" style={{ color: C.rose }}>{errCount}건</span> 제외</>}
-          </p>
-          <p className="text-xs mb-8" style={{ color: C.lt4 }}>검증 후 내부 심사를 거쳐 게시됩니다</p>
-          <button
-            onClick={() => { setStage("idle"); setFile(null); setProgress(0) }}
-            className="h-12 px-8 rounded-xl text-sm font-bold text-white transition-all hover:shadow-lg hover:-translate-y-0.5"
-            style={{ background: `linear-gradient(135deg, ${C.blue}, #6366F1)` }}
-          >
-            새 파일 업로드
-          </button>
-        </motion.div>
-      </div>
-    )
-  }
+  // ── Submit to API ──
+  const handleSubmit = useCallback(async () => {
+    const submittable = rows.filter(r => r.status !== "error")
+    if (submittable.length === 0) return
+    setSubmitting(true); setProgress(0); setStep(3)
+
+    const listings = submittable.map(r => r.mapped as BulkListingInput)
+    const batchSize = 50
+    let totalSuccess = 0, totalFailed = 0
+    const allErrors: string[] = []
+
+    for (let i = 0; i < listings.length; i += batchSize) {
+      const batch = listings.slice(i, i + batchSize)
+      try {
+        const res = await fetch("/api/v1/bulk-upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ listings: batch }),
+        })
+        const data = await res.json()
+        totalSuccess += data.success ?? 0
+        totalFailed += data.failed ?? 0
+        if (data.errors?.length) allErrors.push(...data.errors)
+      } catch {
+        totalFailed += batch.length
+        allErrors.push(`배치 ${Math.floor(i / batchSize) + 1} 네트워크 오류`)
+      }
+      setProgress(Math.min(100, Math.round(((i + batch.length) / listings.length) * 100)))
+    }
+
+    setResult({ success: totalSuccess, failed: totalFailed, errors: allErrors })
+    setSubmitting(false)
+  }, [rows])
+
+  const reset = useCallback(() => {
+    setStep(1); setFile(null); setRows([]); setProgress(0); setResult(null)
+  }, [])
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: C.l2 }}>
+    <div className={DS.page.wrapper}>
+      <div className={DS.page.container + " " + DS.page.paddingTop + " pb-12 " + DS.page.sectionGap}>
 
-      {/* Dark Hero */}
-      <div style={{ backgroundColor: C.bg1 }}>
-        <div className="max-w-5xl mx-auto px-6 pt-14 pb-12">
-          <div className="flex items-start justify-between gap-6 flex-wrap">
-            <div>
-              {/* Live badge */}
-              <div className="flex items-center gap-2 mb-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold"
-                  style={{ backgroundColor: "rgba(168,85,247,0.15)", color: "#D8B4FE", border: "1px solid rgba(168,85,247,0.3)" }}>
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: C.purple }} />
-                    <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: C.purple }} />
-                  </span>
-                  Institution Only
-                </div>
-              </div>
-              <h1 className="text-4xl font-black mb-3" style={{ color: C.l0 }}>대량 등록</h1>
-              <p className="text-base" style={{ color: "rgba(255,255,255,0.5)" }}>
-                기관 전용 엑셀 일괄 업로드 · Excel/CSV 자동 검증
-              </p>
-            </div>
-          </div>
-
-          {/* Stats row */}
-          <div className="grid grid-cols-3 gap-4 mt-10">
-            {[
-              { icon: Zap, label: "자동 검증", value: "실시간", color: C.amber },
-              { icon: Shield, label: "최대 업로드", value: "500건", color: C.blueL },
-              { icon: Clock, label: "처리 시간", value: "~30초", color: C.emL },
-            ].map(({ icon: Icon, label, value, color }) => (
-              <div key={label} className="rounded-2xl p-4 flex items-center gap-3"
-                style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: "rgba(255,255,255,0.06)" }}>
-                  <Icon className="w-5 h-5" style={{ color }} />
-                </div>
-                <div>
-                  <p className="text-lg font-black" style={{ color: C.l0 }}>{value}</p>
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{label}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Steps */}
-          <div className="grid grid-cols-3 gap-3 mt-6">
-            {[
-              { n: "01", text: "Excel 템플릿 다운로드 후 작성" },
-              { n: "02", text: "파일 업로드 및 자동 검증" },
-              { n: "03", text: "오류 수정 후 일괄 제출" },
-            ].map(({ n, text }) => (
-              <div key={n} className="flex items-center gap-3 rounded-xl px-4 py-3"
-                style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <span className="text-xs font-black tabular-nums" style={{ color: "rgba(255,255,255,0.2)" }}>{n}</span>
-                <p className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.5)" }}>{text}</p>
-              </div>
-            ))}
+        {/* Header */}
+        <div className={DS.header.wrapper}>
+          <p className={DS.header.eyebrow}>Exchange &middot; Bulk Upload</p>
+          <h1 className={DS.header.title}>대량 등록</h1>
+          <p className={DS.header.subtitle}>CSV · XLS · XLSX 파일을 업로드하여 최대 500건의 매물을 일괄 등록합니다.</p>
+          <div className="flex items-center gap-3 mt-3">
+            <Link href="/exchange/sell" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>
+              <FileText className="w-4 h-4" /> 단건 등록으로 전환
+            </Link>
+            <Link href="/exchange/demands" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>
+              매수 수요 확인 →
+            </Link>
           </div>
         </div>
-      </div>
 
-      {/* Light content area */}
-      <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
+        {/* Step indicators */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[
+            { n: 1, icon: Upload, label: "파일 업로드", desc: "CSV 파일 선택" },
+            { n: 2, icon: Shield, label: "검증 미리보기", desc: "데이터 유효성 확인" },
+            { n: 3, icon: Zap, label: "제출 결과", desc: "API 업로드 완료" },
+          ].map(({ n, icon: Icon, label, desc }) => (
+            <div key={n} className={`${n === step ? DS.card.elevated : DS.card.flat} ${DS.card.paddingCompact} flex items-center gap-3 transition-all`}>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                n < step ? "bg-emerald-500/10" : n === step ? "bg-[var(--color-brand-mid)]/10" : "bg-[var(--color-surface-sunken)]"
+              }`}>
+                {n < step
+                  ? <CheckCircle2 className="w-5 h-5 text-[var(--color-positive)]" />
+                  : <Icon className={`w-5 h-5 ${n === step ? "text-[var(--color-brand-mid)]" : "text-[var(--color-text-muted)]"}`} />}
+              </div>
+              <div>
+                <p className={n === step ? DS.text.bodyBold : DS.text.caption}>{label}</p>
+                <p className={DS.text.micro}>{desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
 
-        {/* Upload zone */}
+        {/* Stat pills */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[
+            { icon: Zap, label: "자동 검증", value: "실시간" },
+            { icon: Shield, label: "최대 업로드", value: "500건" },
+            { icon: Clock, label: "지원 형식", value: "CSV / XLS / XLSX" },
+          ].map(({ icon: Icon, label, value }) => (
+            <div key={label} className={DS.stat.card}>
+              <div className="flex items-center gap-3">
+                <Icon className="w-5 h-5 text-[var(--color-brand-mid)]" />
+                <div>
+                  <p className={DS.stat.value}>{value}</p>
+                  <p className={DS.stat.label}>{label}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Step 1: Upload ── */}
         <AnimatePresence mode="wait">
-          {stage === "idle" && (
-            <motion.div
-              key="dropzone"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.25 }}
-            >
+          {step === 1 && (
+            <motion.div key="upload" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="space-y-4">
               <div
-                onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+                onDragOver={e => { e.preventDefault(); setDragging(true) }}
                 onDragLeave={() => setDragging(false)}
                 onDrop={handleDrop}
                 onClick={() => inputRef.current?.click()}
-                className="relative rounded-2xl cursor-pointer transition-all duration-200 flex flex-col items-center justify-center py-20"
-                style={{
-                  border: dragging ? `2px solid ${C.blue}` : `2px dashed ${C.l3}`,
-                  backgroundColor: dragging ? "#EFF6FF" : C.l0,
-                  boxShadow: dragging ? `0 0 0 4px rgba(59,130,246,0.1)` : "none",
-                }}
+                className={`${DS.card.elevated} cursor-pointer flex flex-col items-center justify-center py-20 transition-all ${
+                  dragging ? "ring-2 ring-[var(--color-brand-mid)] border-[var(--color-brand-mid)]" : ""
+                }`}
               >
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept=".xlsx,.csv"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
-                />
-                <motion.div
-                  animate={{ scale: dragging ? 1.1 : 1 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 mx-auto"
-                    style={{
-                      backgroundColor: dragging ? "#DBEAFE" : C.l2,
-                      border: `1px solid ${dragging ? "#93C5FD" : C.l3}`,
-                    }}>
-                    <FileSpreadsheet className="w-9 h-9" style={{ color: dragging ? C.blue : C.lt4 }} />
-                  </div>
-                </motion.div>
-                <p className="text-xl font-bold mb-2" style={{ color: C.lt1 }}>
-                  {dragging ? "파일을 놓으세요" : "Excel 또는 CSV 파일을 드래그하거나 클릭"}
-                </p>
-                <p className="text-sm mb-6" style={{ color: C.lt4 }}>
-                  지원 형식: .xlsx, .csv · 최대 10MB · 최대 500건
-                </p>
-                <div className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold"
-                  style={{ backgroundColor: C.l2, color: C.lt2, border: `1px solid ${C.l3}` }}>
-                  <Upload className="w-4 h-4" />
-                  파일 선택
+                <input ref={inputRef} type="file" accept=".csv,.xls,.xlsx" className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 ${
+                  dragging ? "bg-blue-500/10" : "bg-[var(--color-surface-sunken)]"
+                }`}>
+                  <FileSpreadsheet className={`w-9 h-9 ${dragging ? "text-[var(--color-brand-mid)]" : "text-[var(--color-text-muted)]"}`} />
                 </div>
+                <p className={DS.text.cardTitle + " mb-2"}>
+                  {dragging ? "파일을 놓으세요" : "CSV / XLS / XLSX 파일을 드래그하거나 클릭하여 선택"}
+                </p>
+                <p className={DS.text.captionLight + " mb-6"}>최대 20MB / 최대 500건</p>
+                <span className={DS.button.secondary}>
+                  <Upload className="w-4 h-4" /> 파일 선택
+                </span>
               </div>
+              <button onClick={downloadSample} className={DS.button.secondary}>
+                <Download className="w-4 h-4" /> 샘플 CSV 다운로드
+              </button>
             </motion.div>
           )}
 
-          {(stage === "preview" || stage === "submitting") && file && (
-            <motion.div
-              key="preview"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.25 }}
-              className="space-y-5"
-            >
-              {/* File info bar */}
-              <div className="rounded-2xl p-5 flex items-center justify-between gap-4"
-                style={{ backgroundColor: C.l0, border: `1px solid ${C.l3}` }}>
+          {/* ── Step 2: Preview & Validate ── */}
+          {step === 2 && file && (
+            <motion.div key="preview" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="space-y-5">
+              {/* File info */}
+              <div className={`${DS.card.base} ${DS.card.padding} flex items-center justify-between`}>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: "#ECFDF5", border: "1px solid #A7F3D0" }}>
-                    <FileSpreadsheet className="w-6 h-6" style={{ color: C.em }} />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-emerald-500/10">
+                    <FileSpreadsheet className="w-6 h-6 text-[var(--color-positive)]" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold" style={{ color: C.lt1 }}>{file.name}</p>
-                    <p className="text-xs mt-0.5" style={{ color: C.lt4 }}>
-                      {(file.size / 1024).toFixed(1)} KB · {rows.length}행 감지됨
-                    </p>
+                    <p className={DS.text.bodyBold}>{file.name}</p>
+                    <p className={DS.text.micro}>{(file.size / 1024).toFixed(1)} KB &middot; {rows.length}행 파싱됨</p>
                   </div>
                 </div>
-                {stage === "preview" && (
-                  <button
-                    onClick={() => { setFile(null); setStage("idle") }}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-red-50 hover:text-red-500"
-                    style={{ color: C.lt4, border: `1px solid ${C.l3}` }}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
+                <button onClick={reset} className={DS.button.icon}><X className="w-4 h-4" /></button>
               </div>
 
               {/* Validation summary */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
-                  { label: "정상", count: validCount, bg: "#ECFDF5", text: "#065F46", border: "#A7F3D0", accent: C.em },
-                  { label: "경고", count: warnCount,  bg: "#FFFBEB", text: "#92400E", border: "#FDE68A", accent: C.amber },
-                  { label: "오류", count: errCount,   bg: "#FFF1F2", text: "#9F1239", border: "#FECDD3", accent: C.rose },
-                ].map(({ label, count, bg, text, border, accent }) => (
-                  <div key={label} className="rounded-2xl p-6 text-center"
-                    style={{ backgroundColor: bg, border: `1px solid ${border}` }}>
-                    <div className="text-4xl font-black tabular-nums mb-1" style={{ color: accent }}>{count}</div>
-                    <p className="text-sm font-semibold" style={{ color: text }}>{label}</p>
+                  { label: "정상", count: validCount, cls: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" },
+                  { label: "경고", count: warnCount,  cls: "bg-amber-500/10 border-amber-500/20 text-amber-400" },
+                  { label: "오류", count: errCount,    cls: "bg-red-500/10 border-red-500/20 text-red-400" },
+                ].map(({ label, count, cls }) => (
+                  <div key={label} className={`rounded-xl border p-6 text-center ${cls}`}>
+                    <div className={DS.text.metricLarge + " mb-1"}>{count}</div>
+                    <p className={DS.text.label}>{label}</p>
                   </div>
                 ))}
               </div>
 
               {/* Table */}
-              <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: C.l0, border: `1px solid ${C.l3}` }}>
-                <div className="px-6 py-4 flex items-center justify-between"
-                  style={{ borderBottom: `1px solid ${C.l3}` }}>
-                  <h3 className="text-sm font-bold" style={{ color: C.lt1 }}>검증 결과 미리보기</h3>
-                  <span className="text-xs font-medium px-2.5 py-1 rounded-full"
-                    style={{ backgroundColor: C.l2, color: C.lt3 }}>
+              <div className={DS.table.wrapper}>
+                <div className="px-6 py-4 flex items-center justify-between border-b border-[var(--color-border-subtle)]">
+                  <h3 className={DS.text.cardTitle}>검증 결과 미리보기</h3>
+                  <span className={DS.text.micro + " px-2.5 py-1 rounded-full bg-[var(--color-surface-sunken)]"}>
                     {rows.length}행
                   </span>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-[420px] overflow-y-auto">
                   <table className="w-full">
-                    <thead>
-                      <tr style={{ backgroundColor: C.l1 }}>
-                        {["행", "등록번호", "채무자", "채권원금", "담보유형", "소재지", "상태", "비고"].map((h) => (
-                          <th key={h} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap"
-                            style={{ color: C.lt4, borderBottom: `1px solid ${C.l3}` }}>
-                            {h}
-                          </th>
+                    <thead className="sticky top-0 z-10">
+                      <tr className={DS.table.header}>
+                        {["행","담보유형","소재지","시도","채권원금","감정가","상태","비고"].map(h => (
+                          <th key={h} className={DS.table.headerCell + " whitespace-nowrap"}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {rows.map((r, idx) => {
+                      {rows.map(r => {
                         const s = STATUS_CFG[r.status]
                         return (
-                          <tr key={r.row}
-                            className="transition-colors hover:bg-slate-50"
-                            style={{ borderBottom: idx < rows.length - 1 ? `1px solid ${C.l3}` : "none" }}>
-                            <td className="px-4 py-3.5 text-sm tabular-nums" style={{ color: C.lt4 }}>{r.row}</td>
-                            <td className="px-4 py-3.5 text-sm font-mono font-semibold" style={{ color: C.lt2 }}>{r.listingNo}</td>
-                            <td className="px-4 py-3.5 text-sm font-medium" style={{ color: C.lt1 }}>{r.debtorName}</td>
-                            <td className="px-4 py-3.5 text-sm tabular-nums font-semibold" style={{ color: C.lt1 }}>{fmtKRW(r.principal)}</td>
-                            <td className="px-4 py-3.5 text-sm" style={{ color: C.lt2 }}>{r.collateralType}</td>
-                            <td className="px-4 py-3.5 text-sm max-w-[140px] truncate" style={{ color: C.lt4 }}>{r.address || "—"}</td>
-                            <td className="px-4 py-3.5">
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
-                                style={{ backgroundColor: s.bg, color: s.text }}>
-                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.dot }} />
+                          <tr key={r.index} className={DS.table.row}>
+                            <td className={DS.table.cellMuted + " tabular-nums"}>{r.index}</td>
+                            <td className={DS.table.cell + (!r.mapped.collateral_type ? " !text-[var(--color-danger)] font-semibold" : "")}>
+                              {r.mapped.collateral_type || "—"}
+                            </td>
+                            <td className={DS.table.cell + " max-w-[200px] truncate" + (!r.mapped.address ? " !text-[var(--color-danger)] font-semibold" : "")}>
+                              {r.mapped.address || "—"}
+                            </td>
+                            <td className={DS.table.cell + (!r.mapped.sido ? " !text-[var(--color-danger)] font-semibold" : "")}>
+                              {r.mapped.sido || "—"}
+                            </td>
+                            <td className={DS.table.cell + " tabular-nums" + (!r.mapped.loan_principal ? " !text-[var(--color-danger)] font-semibold" : "")}>
+                              {r.mapped.loan_principal ? formatKRW(r.mapped.loan_principal) : "—"}
+                            </td>
+                            <td className={DS.table.cell + " tabular-nums" + (!r.mapped.appraised_value ? " !text-[var(--color-danger)] font-semibold" : "")}>
+                              {r.mapped.appraised_value ? formatKRW(r.mapped.appraised_value) : "—"}
+                            </td>
+                            <td className={DS.table.cell}>
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${DS.text.label} ${s.cls}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
                                 {s.label}
                               </span>
                             </td>
-                            <td className="px-4 py-3.5 text-xs" style={{ color: r.issue ? C.rose : C.lt4 }}>
-                              {r.issue || "—"}
+                            <td className={DS.table.cellMuted + " max-w-[180px] truncate"}>
+                              {r.errors.length > 0 ? (
+                                <span className="text-[var(--color-danger)]">{r.errors.join(", ")}</span>
+                              ) : "—"}
                             </td>
                           </tr>
                         )
@@ -354,97 +464,119 @@ export default function BulkUploadPage() {
                 </div>
               </div>
 
-              {/* Progress bar */}
-              {stage === "submitting" && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-2xl p-6"
-                  style={{ backgroundColor: C.l0, border: `1px solid ${C.l3}` }}
-                >
+              {/* Submit footer */}
+              <div className="flex items-center justify-between py-2">
+                <p className={DS.text.body}>
+                  {errCount > 0 ? (
+                    <>오류 <span className="font-semibold text-[var(--color-danger)]">{errCount}건</span> 제외, <span className="font-semibold text-[var(--color-text-primary)]">{submitCount}건</span> 제출</>
+                  ) : (
+                    <><span className="font-semibold text-[var(--color-positive)]">{validCount}건</span> 전체 제출 준비 완료</>
+                  )}
+                </p>
+                <div className="flex gap-3">
+                  <button onClick={reset} className={DS.button.secondary}>
+                    <X className="w-4 h-4" /> 취소
+                  </button>
+                  <button onClick={handleSubmit} disabled={submitCount === 0}
+                    className={`${DS.button.accent} ${DS.button.lg} disabled:opacity-40 disabled:cursor-not-allowed`}>
+                    <Upload className="w-4 h-4" /> 등록 제출 ({submitCount}건)
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── Step 3: Submit & Results ── */}
+          {step === 3 && (
+            <motion.div key="result" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="space-y-6">
+              {/* Progress */}
+              {submitting && (
+                <div className={`${DS.card.elevated} ${DS.card.paddingLarge}`}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: C.blue }} />
-                      <p className="text-sm font-semibold" style={{ color: C.lt1 }}>업로드 중...</p>
+                      <div className="w-2 h-2 rounded-full animate-pulse bg-[var(--color-brand-mid)]" />
+                      <p className={DS.text.bodyBold}>업로드 중...</p>
                     </div>
-                    <span className="text-sm font-black tabular-nums" style={{ color: C.blue }}>{progress}%</span>
+                    <span className={DS.text.metricMedium + " text-[var(--color-brand-mid)]"}>{progress}%</span>
                   </div>
-                  <div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: C.l2 }}>
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{ background: `linear-gradient(90deg, ${C.blue}, ${C.purple})` }}
-                      animate={{ width: `${progress}%` }}
-                      transition={{ duration: 0.2 }}
-                    />
+                  <div className="h-2.5 rounded-full overflow-hidden bg-[var(--color-surface-sunken)]">
+                    <motion.div className="h-full rounded-full bg-[var(--color-brand-mid)]"
+                      animate={{ width: `${progress}%` }} transition={{ duration: 0.2 }} />
                   </div>
-                  <p className="text-xs mt-2" style={{ color: C.lt4 }}>
-                    {validCount + warnCount}건 처리 중 · 잠시만 기다려주세요
-                  </p>
-                </motion.div>
+                  <p className={DS.text.captionLight + " mt-2"}>{submitCount}건 처리 중</p>
+                </div>
               )}
 
-              {/* Submit footer */}
-              {stage === "preview" && (
-                <div className="flex items-center justify-between py-2">
-                  <p className="text-sm" style={{ color: C.lt4 }}>
-                    {errCount > 0
-                      ? <><span className="font-semibold" style={{ color: C.rose }}>오류 {errCount}건</span>은 제외되고 <span className="font-semibold" style={{ color: C.lt1 }}>{validCount + warnCount}건</span> 제출됩니다.</>
-                      : <><span className="font-semibold" style={{ color: C.em }}>{validCount}건</span> 전체 제출 준비 완료</>}
-                  </p>
-                  <button
-                    onClick={handleSubmit}
-                    disabled={validCount === 0}
-                    className="h-11 px-8 rounded-xl text-sm font-bold text-white flex items-center gap-2 transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
-                    style={{ background: `linear-gradient(135deg, ${C.em}, ${C.teal})` }}
-                  >
-                    <Upload className="w-4 h-4" />
-                    등록 제출 ({validCount + warnCount}건)
-                  </button>
+              {/* Result */}
+              {result && !submitting && (
+                <div className="space-y-5">
+                  <div className="flex flex-col items-center text-center py-6">
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
+                      className="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-emerald-500/10 border-2 border-[var(--color-positive)]">
+                      <CheckCircle2 className="w-9 h-9 text-[var(--color-positive)]" />
+                    </motion.div>
+                    <h2 className={DS.text.sectionTitle + " mb-2"}>업로드 완료</h2>
+                    <p className={DS.text.body}>검증 후 내부 심사를 거쳐 게시됩니다.</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className={DS.stat.card + " text-center"}>
+                      <p className={DS.stat.value + " text-[var(--color-positive)] mb-1"}>{result.success}</p>
+                      <p className={DS.stat.label}>성공</p>
+                    </div>
+                    <div className={DS.stat.card + " text-center"}>
+                      <p className={DS.stat.value + " " + (result.failed > 0 ? "text-[var(--color-danger)]" : "") + " mb-1"}>{result.failed}</p>
+                      <p className={DS.stat.label}>실패</p>
+                    </div>
+                  </div>
+
+                  {result.errors.length > 0 && (
+                    <div className={`${DS.card.base} ${DS.card.padding}`}>
+                      <h4 className={DS.text.cardTitle + " mb-3"}>오류 상세</h4>
+                      <ul className="space-y-1.5 max-h-40 overflow-y-auto">
+                        {result.errors.map((err, i) => (
+                          <li key={i} className={DS.text.caption + " flex items-start gap-2"}>
+                            <AlertCircle className="w-3.5 h-3.5 mt-0.5 text-[var(--color-danger)] shrink-0" />
+                            <span>{err}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <button onClick={reset} className={DS.button.primary + " " + DS.button.lg + " flex-1"}>
+                      새 파일 업로드
+                    </button>
+                    <Link href="/exchange" className={DS.button.secondary + " " + DS.button.lg + " flex-1 justify-center"}>
+                      매물 목록 보기
+                    </Link>
+                  </div>
+                  <div className="flex gap-3">
+                    <Link href="/exchange/sell" className={DS.button.ghost + " flex-1 justify-center gap-1.5"}>
+                      <FileText className="w-4 h-4" /> 단건 등록
+                    </Link>
+                    <Link href="/exchange/demands" className={DS.button.ghost + " flex-1 justify-center gap-1.5"}>
+                      매수 수요 확인 →
+                    </Link>
+                  </div>
                 </div>
               )}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Template download section */}
-        <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: C.bg3, border: "1px solid rgba(255,255,255,0.06)" }}>
-          <div className="px-6 py-4 flex items-center gap-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            <Download className="w-4 h-4" style={{ color: C.blueL }} />
-            <h3 className="text-sm font-bold" style={{ color: C.l1 }}>템플릿 다운로드</h3>
-          </div>
-          <div className="p-4 grid sm:grid-cols-3 gap-3">
-            {TEMPLATES.map((tpl) => (
-              <a
-                key={tpl.name}
-                href={`/templates/${tpl.name.replace(/ /g, "-").toLowerCase()}.${tpl.ext}`}
-                download
-                className="group flex items-center gap-3 rounded-xl p-4 transition-all hover:scale-[1.02]"
-                style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
-              >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.2)" }}>
-                  <FileSpreadsheet className="w-5 h-5" style={{ color: C.blueL }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold truncate" style={{ color: C.l2 }}>{tpl.name}</p>
-                  <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{tpl.desc} · {tpl.size}</p>
-                </div>
-                <Download className="w-4 h-4 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: C.blueL }} />
-              </a>
-            ))}
-          </div>
-        </div>
-
         {/* Notice */}
-        <div className="rounded-2xl p-5 flex items-start gap-4" style={{ backgroundColor: C.l0, border: `1px solid ${C.l3}` }}>
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
-            style={{ backgroundColor: "#EFF6FF", border: "1px solid #BFDBFE" }}>
-            <AlertCircle className="w-4 h-4" style={{ color: C.blue }} />
+        <div className={`${DS.card.base} ${DS.card.padding} flex items-start gap-4`}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-blue-500/10">
+            <AlertCircle className="w-4 h-4 text-[var(--color-info)]" />
           </div>
           <div>
-            <p className="text-sm font-bold mb-1" style={{ color: C.lt1 }}>기관 이용 안내</p>
-            <p className="text-xs leading-relaxed" style={{ color: C.lt3 }}>
-              대량 등록 서비스는 기관 회원 전용입니다. 업로드된 데이터는 검증 후 내부 심사를 거쳐 게시됩니다. 오류 행은 자동 제외되며, 수정 후 재업로드 가능합니다.
+            <p className={DS.text.bodyBold + " mb-1"}>이용 안내</p>
+            <p className={DS.text.caption}>
+              대량 등록은 기관 회원 전용입니다. 업로드된 데이터는 서버 검증 후 내부 심사를 거쳐 게시됩니다.
+              오류 행은 자동 제외되며, 수정 후 재업로드 가능합니다. 1회 최대 500건까지 처리됩니다.
             </p>
           </div>
         </div>

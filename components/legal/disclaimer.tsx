@@ -59,12 +59,12 @@ export function Disclaimer({ type, compact = false }: DisclaimerProps) {
   }
 
   return (
-    <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20 p-4">
+    <div className="mt-6 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
       <div className="flex items-start gap-2">
-        <Icon className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <Icon className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
         <div>
-          <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">{d.title}</p>
-          <p className="text-[11px] text-amber-700 dark:text-amber-400/80 mt-1 leading-relaxed">{d.content}</p>
+          <p className="text-xs font-semibold text-amber-300">{d.title}</p>
+          <p className="text-[11px] text-amber-400/80 mt-1 leading-relaxed">{d.content}</p>
         </div>
       </div>
     </div>
@@ -82,7 +82,7 @@ export function RoleResponsibility() {
   ]
 
   return (
-    <div className="mt-6 rounded-lg border dark:border-gray-800 p-4">
+    <div className="mt-6 rounded-lg border border-[var(--color-border-subtle)] p-4">
       <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
         <Shield className="h-4 w-4 text-[#1B3A5C]" />
         역할별 책임 구조
@@ -90,7 +90,7 @@ export function RoleResponsibility() {
       <div className="space-y-2">
         {roles.map(r => (
           <div key={r.role} className="flex gap-3 text-xs">
-            <span className="font-medium text-[#1B3A5C] dark:text-blue-400 w-32 shrink-0">{r.role}</span>
+            <span className="font-medium text-blue-400 w-32 shrink-0">{r.role}</span>
             <span className="text-muted-foreground">{r.responsibility}</span>
           </div>
         ))}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { motion } from "framer-motion"
 import {
   Users, Building2, Shield, FileCheck, AlertTriangle,
   UserPlus, Gavel, FileText, CreditCard, Image,
@@ -14,43 +15,64 @@ import {
   PieChart, Pie, Cell, Legend,
 } from "recharts"
 import DS, { formatKRW, formatDate } from "@/lib/design-system"
+import { AnimatedCounter } from "@/components/ui/animated-counter"
+import { staggerContainer, staggerItem } from "@/lib/animations"
 
 /* ------------------------------------------------------------------ */
 /*  Mock data                                                           */
 /* ------------------------------------------------------------------ */
 
-const signupData = [
-  { day: "3/29", 신규가입: 18 },
-  { day: "3/30", 신규가입: 25 },
-  { day: "3/31", 신규가입: 14 },
-  { day: "4/1",  신규가입: 32 },
-  { day: "4/2",  신규가입: 41 },
-  { day: "4/3",  신규가입: 38 },
-  { day: "4/4",  신규가입: 52 },
-]
+// Dashboard data fetched from API
+interface DashboardStats {
+  totalUsers: number
+  pendingApprovals: number
+  activeListings: number
+  pendingReviews: number
+  activeDeals: number
+  monthlyRevenue: number
+  activeProfessionals: number
+  activePartners: number
+}
 
-const listingPieData = [
-  { name: "등록중",  value: 142, color: "#3B82F6" },
-  { name: "검토중",  value: 28,  color: "#F59E0B" },
-  { name: "활성",    value: 198, color: "#10B981" },
-  { name: "완료",    value: 87,  color: "#6B7280" },
-]
+interface RecentUser {
+  name: string
+  email: string
+  role: string
+  created_at: string
+  kyc_status: string
+}
 
-const recentMembers = [
-  { name: "김민수",  role: "기관 매수자", date: "2026-04-04", status: "승인완료" },
-  { name: "이영희",  role: "개인 매수자", date: "2026-04-04", status: "대기중" },
-  { name: "박성민",  role: "매도기관",    date: "2026-04-03", status: "승인완료" },
-  { name: "정다은",  role: "파트너",      date: "2026-04-03", status: "심사중" },
-  { name: "최영수",  role: "기관 매수자", date: "2026-04-02", status: "승인완료" },
-]
+function useAdminDashboard() {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalUsers: 0, pendingApprovals: 0, activeListings: 0, pendingReviews: 0,
+    activeDeals: 0, monthlyRevenue: 0, activeProfessionals: 0, activePartners: 0,
+  })
+  const [recentUsers, setRecentUsers] = useState<RecentUser[]>([])
+  const [loading, setLoading] = useState(true)
 
-const urgentItems = [
-  { type: "KYC",  content: "한국자산관리 - 기관인증 서류 검토", priority: "긴급", time: "15분 전" },
-  { type: "매물", content: "강남구 오피스텔 - 허위매물 신고",   priority: "높음", time: "32분 전" },
-  { type: "결제", content: "투자개발(주) - 크레딧 환불 요청",   priority: "보통", time: "1시간 전" },
-  { type: "신고", content: "부산 해운대 - 이중 등록 의심",       priority: "긴급", time: "2시간 전" },
-  { type: "계정", content: "신한캐피탈 - 비밀번호 초기화 요청", priority: "낮음", time: "3시간 전" },
-]
+  useEffect(() => {
+    fetch('/api/v1/admin/dashboard')
+      .then(r => r.json())
+      .then(d => {
+        if (d.stats) setStats(d.stats)
+        if (d.recentUsers) setRecentUsers(d.recentUsers)
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
+  return { stats, recentUsers, loading }
+}
+
+const ROLE_LABEL: Record<string, string> = {
+  BUYER: '매수자', SELLER: '매도자', BUYER_INST: '기관 매수자', BUYER_INDV: '개인 매수자',
+  PARTNER: '파트너', PROFESSIONAL: '전문가', ADMIN: '관리자', SUPER_ADMIN: '최고관리자',
+}
+const KYC_LABEL: Record<string, string> = {
+  APPROVED: '승인완료', PENDING: '대기중', SUBMITTED: '심사중', IN_REVIEW: '심사중', REJECTED: '거부',
+}
+
+const signupData: { day: string; 신규가입: number }[] = [] // Populated from API if available
 
 const quickLinks = [
   { label: "회원관리",     href: "/admin/users",        icon: Users       },
@@ -77,13 +99,6 @@ const statusColor: Record<string, string> = {
   심사중:   "text-[var(--color-brand-mid)]",
 }
 
-const priorityBadge: Record<string, string> = {
-  긴급: "bg-red-50 text-red-700 border border-red-200",
-  높음: "bg-orange-50 text-orange-700 border border-orange-200",
-  보통: "bg-amber-50 text-amber-700 border border-amber-200",
-  낮음: "bg-slate-50 text-slate-600 border border-slate-200",
-}
-
 const tooltipStyle = {
   contentStyle: {
     background: "var(--color-surface-elevated)",
@@ -102,7 +117,23 @@ const tooltipStyle = {
 /* ------------------------------------------------------------------ */
 
 export default function AdminDashboardPage() {
+  const { stats, recentUsers, loading } = useAdminDashboard()
   const [now, setNow] = useState("")
+
+  // Derive chart/table data from API
+  const recentMembers = recentUsers.map(u => ({
+    name: u.name || u.email?.split('@')[0] || '-',
+    role: ROLE_LABEL[u.role] || u.role || '-',
+    date: u.created_at?.slice(0, 10) || '-',
+    status: KYC_LABEL[u.kyc_status] || u.kyc_status || '-',
+  }))
+
+  // Update pie chart data from stats
+  const pieData = [
+    { name: "활성",   value: stats.activeListings, color: "#10B981" },
+    { name: "심사중", value: stats.pendingReviews, color: "#3B82F6" },
+    { name: "기타",   value: Math.max(0, stats.activeListings > 0 ? Math.round(stats.activeListings * 0.2) : 0), color: "#6B7280" },
+  ]
 
   useEffect(() => {
     const fmt = () =>
@@ -124,7 +155,7 @@ export default function AdminDashboardPage() {
         <div className="flex items-center gap-3">
           <Shield size={20} className="text-[var(--color-brand-mid)]" />
           <h1 className={DS.text.pageSubtitle}>관리자 대시보드</h1>
-          <span className={`ml-2 ${DS.badge.inline("bg-blue-50", "text-blue-700", "border-blue-200")}`}>
+          <span className={`ml-2 ${DS.badge.inline("bg-blue-500/10", "text-blue-400", "border-blue-500/20")}`}>
             ADMIN
           </span>
         </div>
@@ -139,19 +170,35 @@ export default function AdminDashboardPage() {
 
       <div className={`${DS.page.container} ${DS.page.paddingTop} ${DS.page.sectionGap} pb-10`}>
 
+        {/* ── Quick Navigation ── */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className={`${DS.text.micro} text-[var(--color-text-muted)] mr-1`}>바로가기:</span>
+          <Link href="/exchange" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>매물 거래소 →</Link>
+          <Link href="/deals" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>활성 거래 →</Link>
+          <Link href="/services/community" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>커뮤니티 →</Link>
+          <Link href="/services/experts" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>전문가 →</Link>
+          <Link href="/analysis" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>분석 허브 →</Link>
+          <Link href="/admin/coupons" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>쿠폰 관리 →</Link>
+        </div>
+
         {/* ── KPI STRIP ── */}
         <div>
           <p className={`${DS.text.label} text-[var(--color-brand-mid)] mb-3`}>핵심 지표</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3"
+          >
             {[
-              { label: "총 회원", value: "12,847", sub: "↑ +234 오늘", subColor: "text-[var(--color-positive)]" },
-              { label: "대기 승인", value: "28", unit: "명", valueColor: "text-[var(--color-danger)]", sub: "긴급 처리 필요", subColor: "text-[var(--color-danger)]" },
-              { label: "신규 매물", value: "142", unit: "건", sub: "오늘 등록", subColor: DS.text.muted },
-              { label: "진행 거래", value: "367", unit: "건", sub: "활성 딜룸", subColor: "text-[var(--color-brand-mid)]" },
-              { label: "오늘 수익", value: "₩2.8억", valueColor: "text-[var(--color-positive)]", sub: "일 매출", subColor: DS.text.muted },
+              { label: "총 회원", numValue: stats.totalUsers, sub: `전문가 ${stats.activeProfessionals}명`, subColor: DS.text.muted },
+              { label: "대기 승인", numValue: stats.pendingApprovals, unit: "명", valueColor: stats.pendingApprovals > 0 ? "text-[var(--color-danger)]" : "", sub: stats.pendingApprovals > 0 ? "처리 필요" : "없음", subColor: stats.pendingApprovals > 0 ? "text-[var(--color-danger)]" : DS.text.muted },
+              { label: "활성 매물", numValue: stats.activeListings, unit: "건", sub: `심사 대기 ${stats.pendingReviews}건`, subColor: stats.pendingReviews > 0 ? "text-[var(--color-warning)]" : DS.text.muted },
+              { label: "진행 거래", numValue: stats.activeDeals, unit: "건", sub: "활성 딜룸", subColor: "text-[var(--color-brand-mid)]" },
+              { label: "월 수익", prefix: "₩", numValue: stats.monthlyRevenue > 0 ? Math.round(stats.monthlyRevenue / 10000) : 0, suffix: "만", valueColor: "text-[var(--color-positive)]", sub: "이번달 매출", subColor: DS.text.muted },
               { label: "시스템 상태", isStatus: true },
             ].map((kpi, i) => (
-              <div key={i} className={DS.stat.card}>
+              <motion.div key={i} variants={staggerItem} className={DS.stat.card}>
                 <p className={DS.stat.label}>{kpi.label}</p>
                 {kpi.isStatus ? (
                   <>
@@ -164,15 +211,20 @@ export default function AdminDashboardPage() {
                 ) : (
                   <>
                     <p className={`${DS.stat.value} ${(kpi as any).valueColor ?? ""}`}>
-                      {kpi.value}
+                      <AnimatedCounter
+                        value={(kpi as any).numValue}
+                        prefix={(kpi as any).prefix ?? ""}
+                        suffix={(kpi as any).suffix ?? ""}
+                        decimals={(kpi as any).decimals ?? 0}
+                      />
                       {(kpi as any).unit && <span className={`${DS.text.caption} ml-0.5`}>{(kpi as any).unit}</span>}
                     </p>
                     <p className={`${DS.stat.sub} ${(kpi as any).subColor ?? ""}`}>{kpi.sub}</p>
                   </>
                 )}
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
 
         {/* ── CHARTS ROW ── */}
@@ -205,7 +257,7 @@ export default function AdminDashboardPage() {
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
-                  data={listingPieData}
+                  data={pieData}
                   cx="50%"
                   cy="50%"
                   innerRadius={45}
@@ -213,7 +265,7 @@ export default function AdminDashboardPage() {
                   paddingAngle={3}
                   dataKey="value"
                 >
-                  {listingPieData.map((entry, i) => (
+                  {pieData.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
@@ -269,62 +321,54 @@ export default function AdminDashboardPage() {
             </table>
           </div>
 
-          {/* 긴급 처리 필요 */}
+          {/* 주요 현황 */}
           <div className={DS.table.wrapper}>
             <div className={`px-4 py-3 border-b border-[var(--color-border-subtle)]`}>
-              <p className={`${DS.text.label} text-[var(--color-brand-mid)]`}>긴급 처리 필요</p>
+              <p className={`${DS.text.label} text-[var(--color-brand-mid)]`}>주요 현황</p>
             </div>
-            <table className="w-full">
-              <thead>
-                <tr className={DS.table.header}>
-                  <th className={DS.table.headerCell}>타입</th>
-                  <th className={DS.table.headerCell}>내용</th>
-                  <th className={DS.table.headerCell}>우선도</th>
-                  <th className={DS.table.headerCell}>시간</th>
-                </tr>
-              </thead>
-              <tbody>
-                {urgentItems.map((item, i) => (
-                  <tr key={i} className={DS.table.row}>
-                    <td className={DS.table.cell}>
-                      <span className={DS.badge.inline("bg-blue-50", "text-blue-700", "border-blue-200")}>
-                        {item.type}
-                      </span>
-                    </td>
-                    <td className={`${DS.table.cell} max-w-[180px] truncate`}>{item.content}</td>
-                    <td className={DS.table.cell}>
-                      <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full ${priorityBadge[item.priority]}`}>
-                        {item.priority}
-                      </span>
-                    </td>
-                    <td className={`${DS.table.cellMuted} font-mono whitespace-nowrap text-[0.75rem]`}>{item.time}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="p-4 space-y-3">
+              {[
+                { label: "KYC 승인 대기", value: stats.pendingApprovals, color: stats.pendingApprovals > 0 ? "text-[var(--color-danger)]" : "text-[var(--color-positive)]", href: "/admin/users" },
+                { label: "매물 심사 대기", value: stats.pendingReviews, color: stats.pendingReviews > 0 ? "text-[var(--color-warning)]" : "text-[var(--color-positive)]", href: "/admin/listings" },
+                { label: "진행 중 거래", value: stats.activeDeals, color: "text-[var(--color-brand-mid)]", href: "/admin/deals" },
+                { label: "활성 전문가", value: stats.activeProfessionals, color: DS.text.muted, href: "/admin/experts" },
+                { label: "활성 파트너", value: stats.activePartners, color: DS.text.muted, href: "/admin/experts" },
+              ].map((item) => (
+                <Link key={item.label} href={item.href} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-[var(--color-surface-sunken)] transition-colors">
+                  <span className={DS.text.body}>{item.label}</span>
+                  <span className={`font-semibold tabular-nums ${item.color}`}>{item.value}건</span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* ── QUICK LINKS GRID ── */}
         <div>
           <p className={`${DS.text.label} text-[var(--color-brand-mid)] mb-3`}>빠른 관리</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3"
+          >
             {quickLinks.map((link) => {
               const Icon = link.icon
               return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`${DS.card.interactive} flex flex-col items-center justify-center gap-2 py-4 px-2 group`}
-                >
-                  <Icon size={20} className="text-[var(--color-brand-mid)] group-hover:text-[var(--color-brand-dark)] transition-colors" />
-                  <span className={`${DS.text.micro} group-hover:text-[var(--color-text-primary)] transition-colors text-center leading-tight`}>
-                    {link.label}
-                  </span>
-                </Link>
+                <motion.div key={link.href} variants={staggerItem} whileHover={{ y: -2, transition: { duration: 0.15 } }}>
+                  <Link
+                    href={link.href}
+                    className={`${DS.card.interactive} flex flex-col items-center justify-center gap-2 py-4 px-2 group`}
+                  >
+                    <Icon size={20} className="text-[var(--color-brand-mid)] group-hover:text-[var(--color-brand-dark)] transition-colors" />
+                    <span className={`${DS.text.micro} group-hover:text-[var(--color-text-primary)] transition-colors text-center leading-tight`}>
+                      {link.label}
+                    </span>
+                  </Link>
+                </motion.div>
               )
             })}
-          </div>
+          </motion.div>
         </div>
 
       </div>

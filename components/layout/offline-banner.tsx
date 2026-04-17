@@ -23,7 +23,7 @@ export function OfflineBanner() {
   if (!isOffline) return null
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-white text-center py-2 text-sm font-medium flex items-center justify-center gap-2 dark:bg-amber-600">
+    <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-600 text-white text-center py-2 text-sm font-medium flex items-center justify-center gap-2">
       <WifiOff className="h-4 w-4" />
       오프라인 상태입니다. 일부 기능이 제한될 수 있습니다.
     </div>

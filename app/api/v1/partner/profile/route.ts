@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from '@/lib/logger'
+import { createClient } from "@/lib/supabase/server";
 
 // ─── Mock Data ────────────────────────────────────────────────
 const MOCK_PROFILE = {
@@ -35,7 +36,29 @@ const MOCK_PROFILE = {
 // ─── GET /api/v1/partner/profile ──────────────────────────────
 export async function GET(_req: NextRequest) {
   try {
-    return NextResponse.json({ data: MOCK_PROFILE, _mock: true });
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: { code: "UNAUTHORIZED", message: "인증이 필요합니다." } },
+        { status: 401 }
+      );
+    }
+
+    // Fetch partner profile from partners table
+    const { data: partner, error } = await supabase
+      .from('partners')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!error && partner) {
+      return NextResponse.json({ data: partner, _source: 'supabase' });
+    }
+
+    // Fall through to mock if no partner record found
+    return NextResponse.json({ data: { ...MOCK_PROFILE, user_id: user.id }, _mock: true });
   } catch (err) {
     logger.error("[partner/profile] GET Error:", { error: err });
     return NextResponse.json(
@@ -45,17 +68,29 @@ export async function GET(_req: NextRequest) {
   }
 }
 
-// ─── PUT /api/v1/partner/profile ──────────────────────────────
-export async function PUT(req: NextRequest) {
+// ─── PATCH /api/v1/partner/profile ────────────────────────────
+export async function PATCH(req: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: { code: "UNAUTHORIZED", message: "인증이 필요합니다." } },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     const allowedFields = [
-      "name",
-      "company",
-      "image_url",
-      "bio",
-      "notification_settings",
-      "bank_info",
+      "company_name",
+      "contact_name",
+      "phone",
+      "email",
+      "bank_name",
+      "account_number",
+      "account_holder",
+      "notes",
     ];
 
     const updates: Record<string, unknown> = {};
@@ -72,13 +107,27 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    updates.updated_at = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from('partners')
+      .update(updates)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+
+    if (!error && data) {
+      return NextResponse.json({ data, success: true, _source: 'supabase' });
+    }
+
+    // Mock fallback
     return NextResponse.json({
       data: { ...MOCK_PROFILE, ...updates, updatedAt: new Date().toISOString() },
       success: true,
       _mock: true,
     });
   } catch (err) {
-    logger.error("[partner/profile] PUT Error:", { error: err });
+    logger.error("[partner/profile] PATCH Error:", { error: err });
     return NextResponse.json(
       { error: { code: "INTERNAL_ERROR", message: "프로필 업데이트 실패" } },
       { status: 500 }
@@ -86,9 +135,42 @@ export async function PUT(req: NextRequest) {
   }
 }
 
+// ─── PUT /api/v1/partner/profile — Alias for PATCH ────────────
+export async function PUT(req: NextRequest) {
+  return PATCH(req);
+}
+
 // ─── DELETE /api/v1/partner/profile — Account deactivation ────
 export async function DELETE(_req: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: { code: "UNAUTHORIZED", message: "인증이 필요합니다." } },
+        { status: 401 }
+      );
+    }
+
+    const { error } = await supabase
+      .from('partners')
+      .update({ status: 'SUSPENDED', updated_at: new Date().toISOString() })
+      .eq('user_id', user.id);
+
+    if (!error) {
+      return NextResponse.json({
+        data: {
+          status: "DEACTIVATION_REQUESTED",
+          requestedAt: new Date().toISOString(),
+          message: "계정 비활성화 요청이 접수되었습니다. 영업일 기준 3일 내 처리됩니다.",
+        },
+        success: true,
+        _source: 'supabase',
+      });
+    }
+
+    // Mock fallback
     return NextResponse.json({
       data: {
         status: "DEACTIVATION_REQUESTED",

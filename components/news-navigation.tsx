@@ -30,14 +30,14 @@ export function NewsNavigation() {
   }, []);
 
   return (
-    <header className="bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-40">
+    <header className="bg-[var(--color-surface-elevated)] shadow-sm sticky top-0 z-40">
       <div className="container flex items-center justify-between h-14 gap-4">
         {/* 로고 */}
         <Link href="/news" className="flex items-center gap-2 shrink-0">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-sm">
             <span className="text-white font-bold text-xs">N</span>
           </div>
-          <span className="font-bold text-base text-gray-900 dark:text-white">부동산 뉴스</span>
+          <span className="font-bold text-base text-[var(--color-text-primary)]">부동산 뉴스</span>
         </Link>
 
         {/* 타임스탬프 (md 이상에서만 표시) */}
@@ -57,7 +57,7 @@ export function NewsNavigation() {
                 key={item.href}
                 href={item.href}
                 className={`text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none rounded ${
-                  isActive ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                  isActive ? 'text-blue-600' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
                 }`}
               >
                 {item.label}
@@ -67,7 +67,7 @@ export function NewsNavigation() {
           {/* 다크모드 토글 */}
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none"
+            className="p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] transition-colors focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none"
             aria-label="다크모드 토글"
           >
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}

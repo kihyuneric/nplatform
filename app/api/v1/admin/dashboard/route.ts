@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUserWithRole } from '@/lib/auth/get-user'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
@@ -73,33 +74,22 @@ export async function GET() {
   let _mock = false
 
   try {
-    const supabase = await createClient()
-
-    // Auth check
-    let userId = 'anonymous'
-    try { const { data: { user } } = await supabase.auth.getUser(); if (user) userId = user.id } catch {}
-
-    if (userId === 'anonymous') {
-      return NextResponse.json({
-        stats: MOCK_STATS,
-        recentUsers: MOCK_RECENT_USERS,
-        systemStatus: { database: 'unknown', api: 'healthy', realtime: 'unknown', storage: 'unknown', ai: 'not_configured' },
-        _mock: true,
-      })
+    // Auth + role check via shared helper
+    const authUser = await getAuthUserWithRole()
+    if (!authUser) {
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } },
+        { status: 401 }
+      )
     }
-
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', userId)
-      .single()
-
-    if (!profile || !['SUPER_ADMIN', 'ADMIN'].includes(profile.role)) {
+    if (!authUser.role || !['SUPER_ADMIN', 'ADMIN'].includes(authUser.role)) {
       return NextResponse.json(
         { error: { code: 'FORBIDDEN', message: '관리자 권한이 필요합니다.' } },
         { status: 403 }
       )
     }
+
+    const supabase = await createClient()
 
     // ── Fetch stats independently with fallback ──
     const monthStart = new Date()

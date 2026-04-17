@@ -81,6 +81,7 @@ function getMemoryStore(table: string): DataRecord[] {
 function loadSampleData(table: string): DataRecord[] {
   try {
     switch (table) {
+      case 'npl_listings':
       case 'deal_listings':
         return require('./sample-data/listings').SAMPLE_LISTINGS
       case 'deals':
@@ -139,8 +140,11 @@ export async function isSampleMode(): Promise<boolean> {
   if (_sampleModeCache !== null) return _sampleModeCache
   try {
     const supabase = await createClient()
-    const { error } = await supabase.from('deal_listings').select('id', { count: 'exact', head: true })
-    _sampleModeCache = !!error
+    // Try canonical npl_listings table first, fall back to deal_listings for compatibility
+    const { error: nplError } = await supabase.from('npl_listings').select('id', { count: 'exact', head: true })
+    if (!nplError) { _sampleModeCache = false; return false }
+    const { error: dlError } = await supabase.from('deal_listings').select('id', { count: 'exact', head: true })
+    _sampleModeCache = !!dlError
   } catch {
     _sampleModeCache = true
   }
@@ -272,7 +276,7 @@ export async function insert<T = DataRecord>(
 
   try {
     const supabase = await createClient()
-    const { data, error } = await supabase.from(table).insert(newRecord).select().single()
+    const { data, error } = await supabase.from(table).insert(newRecord as any).select().single()
     if (!error && data) return { data: data as T, _source: 'supabase' }
   } catch {}
 
@@ -291,7 +295,7 @@ export async function update<T = DataRecord>(
 ): Promise<{ data: T; _source: 'supabase' | 'sample' }> {
   try {
     const supabase = await createClient()
-    const { data, error } = await supabase.from(table).update(changes).eq('id', id).select().single()
+    const { data, error } = await supabase.from(table).update(changes as any).eq('id', id).select().single()
     if (!error && data) return { data: data as T, _source: 'supabase' }
   } catch {}
 

@@ -41,22 +41,22 @@ function getTimerColor(totalMs: number): TimerColor {
 
 const COLOR_CLASSES: Record<TimerColor, { bg: string; text: string; border: string; glow: string }> = {
   green: {
-    bg: "bg-[#10B981]/10 dark:bg-[#10B981]/20",
-    text: "text-[#10B981]",
-    border: "border-[#10B981]/30",
+    bg: "bg-[var(--color-positive)]/20",
+    text: "text-[var(--color-positive)]",
+    border: "border-[var(--color-positive)]/30",
     glow: "",
   },
   yellow: {
-    bg: "bg-amber-50 dark:bg-amber-900/20",
-    text: "text-amber-600 dark:text-amber-400",
-    border: "border-amber-300 dark:border-amber-600",
+    bg: "bg-amber-500/10",
+    text: "text-amber-400",
+    border: "border-amber-500/40",
     glow: "",
   },
   red: {
-    bg: "bg-red-50 dark:bg-red-900/20",
-    text: "text-red-600 dark:text-red-400",
-    border: "border-red-300 dark:border-red-600",
-    glow: "shadow-red-200 dark:shadow-red-900/40 shadow-lg",
+    bg: "bg-red-500/10",
+    text: "text-red-400",
+    border: "border-red-500/40",
+    glow: "shadow-red-900/40 shadow-lg",
   },
 }
 
@@ -72,7 +72,7 @@ function TimeSegment({ value, label, color }: { value: number; label: string; co
       `}>
         {String(value).padStart(2, "0")}
       </div>
-      <span className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-medium">{label}</span>
+      <span className="text-[11px] text-[var(--color-text-secondary)] mt-1 font-medium">{label}</span>
     </div>
   )
 }
@@ -99,12 +99,12 @@ export default function AuctionTimer({ endTime, onEnd }: AuctionTimerProps) {
   if (hasEnded || timeLeft.totalMs <= 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-4">
-        <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+        <div className="w-14 h-14 rounded-full bg-[var(--color-surface-overlay)] flex items-center justify-center">
           <Clock className="w-7 h-7 text-gray-400" />
         </div>
         <div className="text-center">
-          <p className="text-lg font-bold text-gray-600 dark:text-gray-300">경매 종료</p>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">경매가 종료되었습니다</p>
+          <p className="text-lg font-bold text-[var(--color-text-secondary)]">경매 종료</p>
+          <p className="text-sm text-[var(--color-text-muted)] mt-1">경매가 종료되었습니다</p>
         </div>
       </div>
     )
@@ -143,7 +143,7 @@ export default function AuctionTimer({ endTime, onEnd }: AuctionTimerProps) {
 
       {/* 마감 임박 경고 */}
       {color === "red" && (
-        <p className="text-xs text-red-500 dark:text-red-400 font-medium animate-pulse">
+        <p className="text-xs text-red-400 font-medium animate-pulse">
           경매 종료가 임박했습니다. 서둘러 입찰하세요!
         </p>
       )}

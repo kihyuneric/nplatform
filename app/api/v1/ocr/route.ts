@@ -1,226 +1,356 @@
-import { Errors, fromUnknown } from '@/lib/api-error'
-import { NextRequest, NextResponse } from "next/server"
-import { logger } from '@/lib/logger'
-import { createClient } from "@/lib/supabase/server"
-import { checkAndDeductCredits } from "@/lib/credit-guard"
+/**
+ * POST /api/v1/ocr
+ *
+ * 파일 업로드 → 텍스트/구조 데이터 추출
+ * 지원 형식: PDF, JPG/PNG/GIF/WebP, DOCX, HWP, CSV, XLS, XLSX
+ *
+ * Body: multipart/form-data
+ *   file     — 파일 (최대 20MB)
+ *   doc_type — appraisal | registry | lease | bond | generic (기본값)
+ */
 
-const OCR_COST = 5 // credits
+import { NextRequest, NextResponse } from 'next/server'
 
-// Mock OCR results with realistic Korean property document data
-const MOCK_OCR_RESULTS: Record<string, {
-  docType: string
-  docTypeLabel: string
-  fields: { label: string; value: string; confidence: number; category: string }[]
-  rawText: string
-  confidence: number
-  processingTime: number
-}> = {
-  registry: {
-    docType: "registry",
-    docTypeLabel: "등기부등본",
-    fields: [
-      { label: "소재지", value: "서울특별시 강남구 테헤란로 152, 강남파이낸스센터", confidence: 98, category: "기본정보" },
-      { label: "지목", value: "대", confidence: 96, category: "기본정보" },
-      { label: "면적", value: "382.5 ㎡ (115.7평)", confidence: 97, category: "기본정보" },
-      { label: "건물구조", value: "철근콘크리트조 / 지하6층 지상39층", confidence: 95, category: "기본정보" },
-      { label: "소유자", value: "주식회사 ABC자산운용 (110111-2345678)", confidence: 99, category: "갑구(소유권)" },
-      { label: "소유권 취득일", value: "2019년 05월 23일 (매매)", confidence: 95, category: "갑구(소유권)" },
-      { label: "가압류", value: "서울중앙지방법원 2023카단12345 (채권자: 김OO, 청구금액: 5억원)", confidence: 94, category: "갑구(소유권)" },
-      { label: "근저당권자", value: "국민은행 역삼지점", confidence: 98, category: "을구(근저당)" },
-      { label: "채권최고액", value: "12억원", confidence: 97, category: "을구(근저당)" },
-      { label: "채무자", value: "주식회사 ABC자산운용", confidence: 96, category: "을구(근저당)" },
-      { label: "설정일자", value: "2019년 06월 01일", confidence: 96, category: "을구(근저당)" },
-      { label: "전세권자", value: "홍길동", confidence: 93, category: "을구(전세권)" },
-      { label: "전세금", value: "3억원", confidence: 94, category: "을구(전세권)" },
-      { label: "전세권 존속기간", value: "2023.01.15 ~ 2025.01.14", confidence: 92, category: "을구(전세권)" },
-    ],
-    rawText: "[등기부등본 - AI OCR 추출 결과]\n고유번호: 1234-2019-012345\n접수일: 2019.05.23\n\n[표제부]\n소재지: 서울특별시 강남구 테헤란로 152\n건물명: 강남파이낸스센터\n구조: 철근콘크리트조\n면적: 382.5㎡\n\n[갑구]\n소유자: (주)ABC자산운용\n취득일: 2019.05.23 매매\n가압류: 2023카단12345\n\n[을구]\n근저당: 국민은행 채권최고액 12억원\n전세권: 홍길동 3억원",
-    confidence: 96.4,
-    processingTime: 2340,
-  },
-  appraisal: {
-    docType: "appraisal",
-    docTypeLabel: "감정평가서",
-    fields: [
-      { label: "감정평가 대상", value: "서울특별시 마포구 상암동 1600", confidence: 98, category: "기본정보" },
-      { label: "감정평가액", value: "8억 5,000만원", confidence: 97, category: "평가결과" },
-      { label: "기준시가", value: "7억 2,000만원", confidence: 96, category: "평가결과" },
-      { label: "평가기준일", value: "2024년 11월 15일", confidence: 99, category: "기본정보" },
-      { label: "감정평가법인", value: "한국감정평가(주)", confidence: 98, category: "평가기관" },
-      { label: "감정평가사", value: "김평가 (자격번호: 제12345호)", confidence: 95, category: "평가기관" },
-      { label: "건물 구조", value: "철근콘크리트조 (지하1층/지상12층)", confidence: 97, category: "물건상세" },
-      { label: "전용면적", value: "84.92 ㎡", confidence: 98, category: "물건상세" },
-      { label: "사용승인일", value: "2015년 08월 20일", confidence: 96, category: "물건상세" },
-      { label: "감가율", value: "18.5%", confidence: 94, category: "평가결과" },
-    ],
-    rawText: "[감정평가서 - AI OCR 추출 결과]\n\n감정평가 대상물건: 서울특별시 마포구 상암동 1600\n감정평가액: 금 850,000,000원\n기준시가: 금 720,000,000원\n평가기준일: 2024.11.15\n\n감정평가법인: 한국감정평가(주)\n감정평가사: 김평가 (제12345호)",
-    confidence: 95.1,
-    processingTime: 1980,
-  },
-  building_ledger: {
-    docType: "building_ledger",
-    docTypeLabel: "건축물대장",
-    fields: [
-      { label: "대장 구분", value: "일반건축물대장(갑)", confidence: 99, category: "기본정보" },
-      { label: "대지위치", value: "서울특별시 서초구 반포대로 201", confidence: 98, category: "기본정보" },
-      { label: "도로명주소", value: "서울특별시 서초구 반포대로 201, 101동", confidence: 97, category: "기본정보" },
-      { label: "건물명칭", value: "반포자이아파트", confidence: 99, category: "기본정보" },
-      { label: "주구조", value: "철근콘크리트구조", confidence: 98, category: "건축물 현황" },
-      { label: "주용도", value: "공동주택(아파트)", confidence: 97, category: "건축물 현황" },
-      { label: "층수", value: "지하 2층 / 지상 35층", confidence: 96, category: "건축물 현황" },
-      { label: "대지면적", value: "82,450.3 ㎡", confidence: 98, category: "면적정보" },
-      { label: "건축면적", value: "12,380.5 ㎡", confidence: 97, category: "면적정보" },
-      { label: "연면적", value: "185,230.8 ㎡", confidence: 96, category: "면적정보" },
-      { label: "건폐율", value: "15.02%", confidence: 95, category: "면적정보" },
-      { label: "용적률", value: "249.87%", confidence: 95, category: "면적정보" },
-      { label: "사용승인일", value: "2009년 12월 30일", confidence: 98, category: "허가정보" },
-      { label: "허가일", value: "2006년 03월 15일", confidence: 97, category: "허가정보" },
-    ],
-    rawText: "[건축물대장 - AI OCR 추출 결과]\n\n대장구분: 일반건축물대장(갑)\n대지위치: 서울특별시 서초구 반포대로 201\n건물명칭: 반포자이아파트\n주구조: 철근콘크리트구조\n주용도: 공동주택(아파트)\n층수: 지하2/지상35\n대지면적: 82,450.3㎡\n건축면적: 12,380.5㎡",
-    confidence: 97.2,
-    processingTime: 2150,
-  },
-  land_ledger: {
-    docType: "land_ledger",
-    docTypeLabel: "토지대장",
-    fields: [
-      { label: "소재지", value: "경기도 성남시 분당구 정자동 178-1", confidence: 98, category: "기본정보" },
-      { label: "지번", value: "178-1", confidence: 99, category: "기본정보" },
-      { label: "지목", value: "대", confidence: 98, category: "토지정보" },
-      { label: "면적", value: "1,250.8 ㎡", confidence: 97, category: "토지정보" },
-      { label: "개별공시지가", value: "15,200,000원/㎡ (2024년 1월 기준)", confidence: 96, category: "가격정보" },
-      { label: "토지이용계획", value: "제3종일반주거지역, 지구단위계획구역", confidence: 94, category: "이용계획" },
-      { label: "소유자", value: "분당개발(주)", confidence: 97, category: "소유정보" },
-      { label: "소유권 변동일", value: "2018년 09월 20일", confidence: 95, category: "소유정보" },
-      { label: "소유권 변동원인", value: "매매", confidence: 96, category: "소유정보" },
-      { label: "축척", value: "1/1200", confidence: 93, category: "기본정보" },
-    ],
-    rawText: "[토지대장 - AI OCR 추출 결과]\n\n소재지: 경기도 성남시 분당구 정자동 178-1\n지목: 대\n면적: 1,250.8㎡\n개별공시지가: 15,200,000원/㎡\n소유자: 분당개발(주)\n변동일: 2018.09.20 (매매)",
-    confidence: 94.8,
-    processingTime: 1870,
-  },
-  lease_contract: {
-    docType: "lease_contract",
-    docTypeLabel: "임대차계약서",
-    fields: [
-      { label: "임대인(성명)", value: "박임대", confidence: 98, category: "당사자" },
-      { label: "임대인(주민번호)", value: "680512-1******", confidence: 95, category: "당사자" },
-      { label: "임차인(성명)", value: "이임차", confidence: 98, category: "당사자" },
-      { label: "임차인(주민번호)", value: "850923-2******", confidence: 95, category: "당사자" },
-      { label: "소재지", value: "서울특별시 송파구 올림픽로 300, 1205호", confidence: 97, category: "물건정보" },
-      { label: "임대할 부분", value: "아파트 제12층 제05호 (전용 84.92㎡)", confidence: 96, category: "물건정보" },
-      { label: "보증금", value: "5억원 (금오억원정)", confidence: 99, category: "계약조건" },
-      { label: "월차임", value: "없음 (전세)", confidence: 98, category: "계약조건" },
-      { label: "계약기간", value: "2024년 03월 01일 ~ 2026년 02월 28일 (24개월)", confidence: 97, category: "계약조건" },
-      { label: "계약일", value: "2024년 02월 15일", confidence: 99, category: "계약조건" },
-      { label: "특약사항", value: "임차인의 전입신고 및 확정일자 부여에 동의함", confidence: 90, category: "특약" },
-    ],
-    rawText: "[임대차계약서 - AI OCR 추출 결과]\n\n임대인: 박임대\n임차인: 이임차\n소재지: 서울특별시 송파구 올림픽로 300, 1205호\n보증금: 금 500,000,000원\n월차임: 없음 (전세)\n계약기간: 2024.03.01 ~ 2026.02.28",
-    confidence: 93.5,
-    processingTime: 2510,
-  },
+export const dynamic = 'force-dynamic'
+export const maxDuration = 60
+
+// ── Claude 프롬프트 ─────────────────────────────────────────────────────────
+
+const DOC_PROMPTS: Record<string, string> = {
+  appraisal: `이 문서는 부동산 감정평가서입니다. 아래 JSON 구조로 정보를 추출해주세요.
+숫자 단위는 모두 원(KRW) 또는 ㎡입니다. 확인하지 못한 필드는 null로 하세요.
+반드시 JSON만 반환하고 설명 텍스트를 포함하지 마세요.
+{
+  "appraisal_value": 감정평가액(원),
+  "address": "주소",
+  "land_area": 토지면적(㎡),
+  "building_area": 건물면적(㎡),
+  "property_type": "부동산종류",
+  "appraisal_date": "평가일(YYYY-MM-DD)"
+}`,
+
+  registry: `이 문서는 등기부등본입니다. 권리 목록을 아래 JSON으로 추출해주세요.
+반드시 JSON만 반환하고 설명 텍스트를 포함하지 마세요.
+{
+  "rights": [
+    {
+      "seq": 순번(정수),
+      "registration_date": "등기일(YYYY-MM-DD)",
+      "right_type": "근저당|저당|가압류|압류|전세권",
+      "right_holder": "권리자명",
+      "claim_amount": 채권액(원),
+      "max_claim_amount": 채권최고액(원),
+      "principal": 원금(원),
+      "interest_rate": 이자율(소수점)
+    }
+  ]
+}`,
+
+  lease: `이 문서는 임대차계약서 또는 임차인현황표입니다. 임차인 목록을 아래 JSON으로 추출해주세요.
+반드시 JSON만 반환하고 설명 텍스트를 포함하지 마세요.
+{
+  "tenants": [
+    {
+      "tenant_name": "임차인명",
+      "move_in_date": "입주일(YYYY-MM-DD)",
+      "fixed_date": "확정일자(YYYY-MM-DD)",
+      "deposit": 보증금(원),
+      "monthly_rent": 월세(원),
+      "has_opposition_right": 대항력여부(true/false)
+    }
+  ]
+}`,
+
+  bond: `이 문서는 채권 또는 부동산 소개자료입니다. 아래 JSON으로 정보를 추출해주세요.
+반드시 JSON만 반환하고 설명 텍스트를 포함하지 마세요.
+{
+  "case_number": "사건번호",
+  "court_name": "법원명",
+  "appraisal_value": 감정가(원),
+  "minimum_price": 최저경매가(원),
+  "auction_count": 경매횟수(정수),
+  "next_auction_date": "다음경매일(YYYY-MM-DD)",
+  "address": "소재지",
+  "property_type": "부동산종류",
+  "land_area": 토지면적(㎡),
+  "building_area": 건물면적(㎡)
+}`,
+
+  generic: `이 문서에서 부동산 NPL 관련 핵심 정보를 JSON으로 추출해주세요.
+주소, 금액(원), 날짜, 당사자 정보 등을 포함합니다.
+반드시 JSON만 반환하고 설명 텍스트를 포함하지 마세요.`,
 }
 
-const MOCK_SCAN_HISTORY = [
-  { id: "scan-001", fileName: "등기부등본_강남구.pdf", docType: "registry", docTypeLabel: "등기부등본", date: "2024-12-18T09:30:00Z", confidence: 96.4, fieldCount: 14, status: "completed" },
-  { id: "scan-002", fileName: "감정평가서_마포.pdf", docType: "appraisal", docTypeLabel: "감정평가서", date: "2024-12-17T14:15:00Z", confidence: 95.1, fieldCount: 10, status: "completed" },
-  { id: "scan-003", fileName: "건축물대장_반포.pdf", docType: "building_ledger", docTypeLabel: "건축물대장", date: "2024-12-15T11:00:00Z", confidence: 97.2, fieldCount: 14, status: "completed" },
-  { id: "scan-004", fileName: "토지대장_분당.pdf", docType: "land_ledger", docTypeLabel: "토지대장", date: "2024-12-14T16:45:00Z", confidence: 94.8, fieldCount: 10, status: "completed" },
-  { id: "scan-005", fileName: "임대차계약서_송파.jpg", docType: "lease_contract", docTypeLabel: "임대차계약서", date: "2024-12-12T10:20:00Z", confidence: 93.5, fieldCount: 11, status: "completed" },
-]
+// ── 유틸 ───────────────────────────────────────────────────────────────────
 
-// POST: Accept file upload, return mock OCR results
+function parseJSON(text: string): Record<string, unknown> {
+  try {
+    const m = text.match(/\{[\s\S]*\}/)
+    if (m) return JSON.parse(m[0])
+    return JSON.parse(text)
+  } catch {
+    return { raw_text: text.slice(0, 500) }
+  }
+}
+
+// ── 이미지 → Claude Vision ─────────────────────────────────────────────────
+
+async function fromImage(
+  buffer: ArrayBuffer,
+  mime: string,
+  docType: string,
+): Promise<Record<string, unknown>> {
+  const Anthropic = (await import('@anthropic-ai/sdk')).default
+  const client = new Anthropic()
+  const base64 = Buffer.from(buffer).toString('base64')
+
+  const validMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'] as const
+  type ImgMime = (typeof validMimes)[number]
+  const safeMime: ImgMime = validMimes.includes(mime as ImgMime) ? (mime as ImgMime) : 'image/jpeg'
+
+  const resp = await client.messages.create({
+    model: 'claude-haiku-4-5',
+    max_tokens: 1024,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: safeMime, data: base64 } },
+          { type: 'text', text: DOC_PROMPTS[docType] ?? DOC_PROMPTS.generic },
+        ],
+      },
+    ],
+  })
+
+  const text = resp.content[0].type === 'text' ? resp.content[0].text : '{}'
+  return parseJSON(text)
+}
+
+// ── PDF → pdf-parse → Claude ───────────────────────────────────────────────
+
+async function fromPDF(buffer: ArrayBuffer, docType: string): Promise<Record<string, unknown>> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pdfMod: any = await import('pdf-parse')
+  const pdfParse = pdfMod.default ?? pdfMod
+  const { text } = await pdfParse(Buffer.from(buffer))
+
+  if (!text?.trim()) {
+    return {
+      error:
+        'PDF에서 텍스트를 추출할 수 없습니다. 스캔 이미지 PDF인 경우 JPG로 변환 후 재업로드하세요.',
+    }
+  }
+
+  const Anthropic = (await import('@anthropic-ai/sdk')).default
+  const client = new Anthropic()
+  const resp = await client.messages.create({
+    model: 'claude-haiku-4-5',
+    max_tokens: 1024,
+    messages: [
+      {
+        role: 'user',
+        content: `${DOC_PROMPTS[docType] ?? DOC_PROMPTS.generic}\n\n문서 내용:\n${text.slice(0, 4000)}`,
+      },
+    ],
+  })
+
+  const responseText = resp.content[0].type === 'text' ? resp.content[0].text : '{}'
+  return parseJSON(responseText)
+}
+
+// ── DOCX → ZIP 파싱 → word/document.xml → Claude ──────────────────────────
+
+async function fromDOCX(buffer: ArrayBuffer, docType: string): Promise<Record<string, unknown>> {
+  const { inflateRaw } = await import('zlib')
+  const { promisify } = await import('util')
+  const inflate = promisify(inflateRaw)
+
+  const buf = Buffer.from(buffer)
+  let xmlText = ''
+
+  try {
+    // ZIP local file header signature: PK\x03\x04
+    const PK = Buffer.from([0x50, 0x4b, 0x03, 0x04])
+    let off = 0
+
+    while (off < buf.length - 30) {
+      const idx = buf.indexOf(PK, off)
+      if (idx === -1) break
+      off = idx
+
+      const method = buf.readUInt16LE(off + 8)
+      const compSize = buf.readUInt32LE(off + 18)
+      const uncompSize = buf.readUInt32LE(off + 22)
+      const fnLen = buf.readUInt16LE(off + 26)
+      const extLen = buf.readUInt16LE(off + 28)
+      const fname = buf.slice(off + 30, off + 30 + fnLen).toString('utf8')
+      const dataOff = off + 30 + fnLen + extLen
+
+      if (fname === 'word/document.xml') {
+        const xmlBuf: Buffer =
+          method === 0
+            ? buf.slice(dataOff, dataOff + uncompSize)
+            : ((await inflate(buf.slice(dataOff, dataOff + compSize))) as Buffer)
+
+        const xml = xmlBuf.toString('utf8')
+        const matches = xml.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) ?? []
+        xmlText = matches.map((m) => m.replace(/<[^>]+>/g, '')).join(' ')
+        break
+      }
+
+      off = dataOff + Math.max(compSize, 1)
+    }
+  } catch {
+    return {
+      error: 'DOCX 파싱 실패. PDF로 저장 후 재업로드를 권장합니다.',
+    }
+  }
+
+  if (!xmlText.trim()) {
+    return { error: 'DOCX 텍스트 추출 실패. PDF 또는 이미지로 변환 후 재시도하세요.' }
+  }
+
+  const Anthropic = (await import('@anthropic-ai/sdk')).default
+  const client = new Anthropic()
+  const resp = await client.messages.create({
+    model: 'claude-haiku-4-5',
+    max_tokens: 1024,
+    messages: [
+      {
+        role: 'user',
+        content: `${DOC_PROMPTS[docType] ?? DOC_PROMPTS.generic}\n\n문서 내용:\n${xmlText.slice(0, 4000)}`,
+      },
+    ],
+  })
+
+  const responseText = resp.content[0].type === 'text' ? resp.content[0].text : '{}'
+  return parseJSON(responseText)
+}
+
+// ── HWP → EUC-KR 텍스트 추출 시도 → Claude ────────────────────────────────
+
+async function fromHWP(buffer: ArrayBuffer, docType: string): Promise<Record<string, unknown>> {
+  // HWP5 = OLE2 Compound Document — 완전 파싱은 별도 라이브러리 필요
+  // EUC-KR 디코딩으로 한글 텍스트 일부 추출 시도
+  let printable = ''
+
+  try {
+    const dec = new TextDecoder('euc-kr', { fatal: false })
+    const raw = dec.decode(buffer)
+    printable = raw.replace(/[^\u0020-\u007e\uac00-\ud7a3\u3130-\u318f]+/g, ' ').trim()
+  } catch {
+    const bytes = new Uint8Array(buffer)
+    const chars: string[] = []
+    for (const b of bytes) {
+      if (b >= 0x20 && b < 0x7f) chars.push(String.fromCharCode(b))
+    }
+    printable = chars.join('')
+  }
+
+  if (printable.length < 30) {
+    return {
+      warning:
+        'HWP 자동 텍스트 추출이 제한적입니다. PDF 또는 이미지로 변환 후 재업로드를 권장합니다.',
+      supported: false,
+    }
+  }
+
+  const Anthropic = (await import('@anthropic-ai/sdk')).default
+  const client = new Anthropic()
+  const resp = await client.messages.create({
+    model: 'claude-haiku-4-5',
+    max_tokens: 512,
+    messages: [
+      {
+        role: 'user',
+        content: `${DOC_PROMPTS[docType] ?? DOC_PROMPTS.generic}\n\n문서 내용(부분 추출됨):\n${printable.slice(0, 2000)}`,
+      },
+    ],
+  })
+
+  const responseText = resp.content[0].type === 'text' ? resp.content[0].text : '{}'
+  return {
+    ...parseJSON(responseText),
+    warning: 'HWP 추출은 불완전할 수 있습니다.',
+  }
+}
+
+// ── CSV / XLS / XLSX → xlsx ─────────────────────────────────────────────────
+
+async function fromSpreadsheet(buffer: ArrayBuffer): Promise<Record<string, unknown>> {
+  const XLSX = await import('xlsx')
+  const wb = XLSX.read(Buffer.from(buffer), { type: 'buffer' })
+  const sheetName = wb.SheetNames[0]
+  if (!sheetName) return { error: '시트를 찾을 수 없습니다.' }
+
+  const ws = wb.Sheets[sheetName]
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: null })
+
+  return {
+    rows: rows.slice(0, 500),
+    count: rows.length,
+    total_sheets: wb.SheetNames.length,
+    sheet: sheetName,
+  }
+}
+
+// ── Route Handler ──────────────────────────────────────────────────────────
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
-    const file = formData.get("file") as File | null
-    const docType = (formData.get("docType") as string) || "registry"
+    const file = formData.get('file') as File | null
+    const docType = (formData.get('doc_type') as string) || 'generic'
 
     if (!file) {
-      return Errors.badRequest('파일이 제공되지 않았습니다.')
+      return NextResponse.json({ error: '파일이 필요합니다.' }, { status: 400 })
     }
 
-    // Validate file type
-    const allowedTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png", "image/tiff"]
-    if (!allowedTypes.includes(file.type) && !file.type.startsWith("image/")) {
-      return Errors.badRequest('지원하지 않는 파일 형식입니다. PDF, JPG, PNG, TIFF 파일만 가능합니다.')
-    }
-
-    // Validate file size (max 20MB)
     if (file.size > 20 * 1024 * 1024) {
-      return Errors.badRequest('파일 크기가 20MB를 초과합니다.')
+      return NextResponse.json({ error: '파일 크기 제한: 최대 20MB' }, { status: 400 })
     }
 
-    // Credit guard
-    let userId = 'current-user'
-    try {
-      const supabase = await createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) userId = user.id
-    } catch {
-      // default user
-    }
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+    const mime = file.type
+    const buffer = await file.arrayBuffer()
 
-    const creditResult = await checkAndDeductCredits(userId, '문서 OCR 스캔', OCR_COST)
+    let data: Record<string, unknown>
 
-    if (!creditResult.allowed) {
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext) || mime.startsWith('image/')) {
+      data = await fromImage(buffer, mime || 'image/jpeg', docType)
+    } else if (ext === 'pdf' || mime === 'application/pdf') {
+      data = await fromPDF(buffer, docType)
+    } else if (
+      ext === 'docx' ||
+      mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ) {
+      data = await fromDOCX(buffer, docType)
+    } else if (ext === 'hwp' || mime === 'application/x-hwp' || mime === 'application/haansofthwp') {
+      data = await fromHWP(buffer, docType)
+    } else if (['csv', 'xls', 'xlsx'].includes(ext)) {
+      data = await fromSpreadsheet(buffer)
+    } else {
       return NextResponse.json(
-        {
-          error: '크레딧이 부족합니다',
-          required: creditResult.cost,
-          current: creditResult.balance,
-          message: `OCR 스캔에는 ${OCR_COST} 크레딧이 필요합니다. 현재 잔액: ${creditResult.balance}`,
-        },
-        { status: 402 }
+        { error: '지원하지 않는 형식입니다. 지원: PDF · JPG/PNG · DOCX · HWP · CSV/XLS/XLSX' },
+        { status: 400 },
       )
     }
 
-    // Simulate processing delay (2 seconds)
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    const result = MOCK_OCR_RESULTS[docType] || MOCK_OCR_RESULTS.registry
-
     return NextResponse.json({
       success: true,
-      data: {
-        id: `scan-${Date.now()}`,
-        fileName: file.name,
-        fileSize: file.size,
-        ...result,
-        scannedAt: new Date().toISOString(),
-        creditsUsed: OCR_COST,
-      },
-      credits_used: OCR_COST,
-      credits_remaining: creditResult.balance,
+      doc_type: docType,
+      file_name: file.name,
+      file_type: ext,
+      data,
     })
-  } catch (error) {
-    logger.error("OCR processing error:", { error: error })
-    return Errors.internal('OCR 처리 중 오류가 발생했습니다.')
+  } catch (err) {
+    console.error('[OCR] error', err)
+    return NextResponse.json(
+      {
+        error: 'OCR 처리 중 오류가 발생했습니다.',
+        detail: err instanceof Error ? err.message : 'Unknown error',
+      },
+      { status: 500 },
+    )
   }
-}
-
-// GET: Return scan history
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const page = parseInt(searchParams.get("page") || "1")
-  const limit = parseInt(searchParams.get("limit") || "10")
-  const docType = searchParams.get("docType")
-
-  let history = [...MOCK_SCAN_HISTORY]
-
-  if (docType) {
-    history = history.filter((item) => item.docType === docType)
-  }
-
-  const total = history.length
-  const startIndex = (page - 1) * limit
-  const paginatedHistory = history.slice(startIndex, startIndex + limit)
-
-  return NextResponse.json({
-    success: true,
-    data: {
-      items: paginatedHistory,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    },
-  })
 }

@@ -1,5 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, type ReactNode } from "react"
+import { SafeModalPortal } from "@/components/ui/safe-modal-portal"
 
 interface BottomSheetProps {
   open: boolean
@@ -52,7 +53,7 @@ export function BottomSheet({ open, onClose, title, children, height = "auto" }:
   if (!open) return null
 
   return (
-    <>
+    <SafeModalPortal>
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={onClose} />
       {/* Sheet */}
@@ -61,16 +62,16 @@ export function BottomSheet({ open, onClose, title, children, height = "auto" }:
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-950 rounded-t-2xl shadow-xl md:hidden transition-transform duration-300 ${
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-surface-base)] rounded-t-2xl shadow-xl md:hidden transition-transform duration-300 ${
           height === 'full' ? 'max-h-[90vh]' : height === 'half' ? 'max-h-[50vh]' : 'max-h-[80vh]'
         } overflow-hidden`}
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-2 pb-1">
-          <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
+          <div className="w-10 h-1 rounded-full bg-[var(--color-border-subtle)]" />
         </div>
         {title && (
-          <div className="px-4 pb-2 border-b dark:border-gray-800">
+          <div className="px-4 pb-2 border-b border-[var(--color-border-subtle)]">
             <h3 className="font-semibold text-lg">{title}</h3>
           </div>
         )}
@@ -78,6 +79,6 @@ export function BottomSheet({ open, onClose, title, children, height = "auto" }:
           {children}
         </div>
       </div>
-    </>
+    </SafeModalPortal>
   )
 }

@@ -90,9 +90,9 @@ export default function HeatmapChart({
       <table className="w-full text-xs border-collapse">
         <thead>
           <tr>
-            <th className="py-2 pr-3 text-right text-[11px] text-slate-400 font-normal w-16 shrink-0">지역↓ 유형→</th>
+            <th className="py-2 pr-3 text-right text-[11px] text-[var(--color-text-muted)] font-normal w-16 shrink-0">지역↓ 유형→</th>
             {resolvedTypes.map(t => (
-              <th key={t} className="py-2 px-1 text-center font-semibold text-slate-600 tracking-normal min-w-[64px]">
+              <th key={t} className="py-2 px-1 text-center font-semibold text-[var(--color-text-secondary)] tracking-normal min-w-[64px]">
                 {t}
               </th>
             ))}
@@ -101,7 +101,7 @@ export default function HeatmapChart({
         <tbody>
           {resolvedSidos.map(sido => (
             <tr key={sido}>
-              <td className="py-1 pr-3 text-right font-semibold text-slate-600 text-[11px] tracking-normal whitespace-nowrap">
+              <td className="py-1 pr-3 text-right font-semibold text-[var(--color-text-secondary)] text-[11px] tracking-normal whitespace-nowrap">
                 {sido}
               </td>
               {resolvedTypes.map(type => {
@@ -141,7 +141,7 @@ export default function HeatmapChart({
 
       {/* 범례 */}
       <div className="mt-4 flex items-center gap-2">
-        <span className="text-[10px] text-slate-400 tracking-normal shrink-0">낙찰가율</span>
+        <span className="text-[10px] text-[var(--color-text-muted)] tracking-normal shrink-0">낙찰가율</span>
         <div className="flex items-stretch h-4 rounded overflow-hidden flex-1 max-w-[280px]">
           {LEGEND_STEPS.map((step, i) => (
             <div
@@ -151,16 +151,16 @@ export default function HeatmapChart({
             />
           ))}
         </div>
-        <div className="flex items-center gap-2 text-[10px] text-slate-400 tabular-nums">
+        <div className="flex items-center gap-2 text-[10px] text-[var(--color-text-muted)] tabular-nums">
           <span>60%</span>
-          <span className="text-slate-300">—</span>
+          <span className="text-[var(--color-text-muted)]">—</span>
           <span>100%+</span>
         </div>
         <div className="flex items-center gap-2 ml-2">
           <div className="w-3 h-3 rounded" style={{ backgroundColor: rateToColor(0.65) }} />
-          <span className="text-[10px] text-slate-500 tracking-normal">저가 낙찰</span>
+          <span className="text-[10px] text-[var(--color-text-muted)] tracking-normal">저가 낙찰</span>
           <div className="w-3 h-3 rounded" style={{ backgroundColor: rateToColor(0.95) }} />
-          <span className="text-[10px] text-slate-500 tracking-normal">고가 경쟁</span>
+          <span className="text-[10px] text-[var(--color-text-muted)] tracking-normal">고가 경쟁</span>
         </div>
       </div>
     </div>
@@ -180,8 +180,8 @@ export function HeatmapPlaceholder({ className = '' }: { className?: string }) {
   )
   return (
     <div className={`relative ${className}`}>
-      <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/60 rounded-xl">
-        <p className="text-xs font-medium text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-full shadow tracking-normal">
+      <div className="absolute inset-0 flex items-center justify-center z-10 bg-[var(--color-surface-base)]/60 rounded-xl">
+        <p className="text-xs font-medium text-[var(--color-text-muted)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] px-3 py-1.5 rounded-full shadow tracking-normal">
           실제 데이터 수집 중 — 미리보기
         </p>
       </div>

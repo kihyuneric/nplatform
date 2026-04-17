@@ -3,11 +3,7 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <div className="mx-auto max-w-md">
-        {children}
-      </div>
-    </div>
-  )
+  // Auth pages own their full-screen layout (split-panels, role grids, etc).
+  // Do NOT add max-width or padding wrappers here — they will squeeze child layouts.
+  return <>{children}</>
 }

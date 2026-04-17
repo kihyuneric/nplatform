@@ -30,18 +30,25 @@ export async function GET(req: NextRequest) {
     const isServiceRole = authHeader.replace('Bearer ', '') === process.env.SUPABASE_SERVICE_ROLE_KEY
 
     if (!isServiceRole) {
-      // 쿠키 기반 세션으로 관리자 확인
-      const { data: { user }, error: authErr } = await getSupabaseAdmin()
-        .auth.admin.listUsers({ page: 1, perPage: 1 })
-        .then(() => ({ data: { user: null }, error: null }))
-        .catch(() => ({ data: { user: null }, error: new Error('auth') }))
-
-      void authErr  // suppress unused warning — we just use cookie path below
-      void user
-
-      // TODO: 실제 배포 시 cookie 세션 검증으로 교체
-      // 개발/내부 API이므로 service_role key 없으면 제한
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      // Cookie-based session: check admin role
+      try {
+        const { createClient } = await import('@/lib/supabase/server')
+        const supabase = await createClient()
+        const { data: { user }, error: authErr } = await supabase.auth.getUser()
+        if (authErr || !user) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        if (!profile || !['ADMIN', 'SUPER_ADMIN'].includes(profile.role ?? '')) {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+        }
+      } catch {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
     }
 
     // 미스크리닝 매물 수
