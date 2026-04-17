@@ -94,7 +94,17 @@ export default function DemandsPage() {
   useEffect(() => { fetchDemands() }, [fetchDemands])
 
   const handleSubmit = async () => {
-    if (formCollateral.length === 0 || formRegions.length === 0) return
+    if (formCollateral.length === 0) {
+      alert('담보 유형을 하나 이상 선택해주세요.'); return
+    }
+    if (formRegions.length === 0) {
+      alert('지역을 하나 이상 선택해주세요.'); return
+    }
+    const minAmt = Number(formMinAmount) || 0
+    const maxAmt = Number(formMaxAmount) || 0
+    if (maxAmt > 0 && minAmt > maxAmt) {
+      alert('최소 금액이 최대 금액보다 클 수 없습니다.'); return
+    }
     setSubmitting(true)
     try {
       const res = await fetch('/api/v1/exchange/demands', {
@@ -103,19 +113,25 @@ export default function DemandsPage() {
         body: JSON.stringify({
           collateral_types: formCollateral,
           regions: formRegions,
-          min_amount: Number(formMinAmount) || 0,
-          max_amount: Number(formMaxAmount) || 0,
+          min_amount: minAmt,
+          max_amount: maxAmt,
           urgency: formUrgency,
           memo: formMemo,
         }),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        const msg = (data as { error?: { message?: string } })?.error?.message ?? `수요 등록 실패 (HTTP ${res.status})`
+        throw new Error(msg)
+      }
       setShowModal(false)
       resetForm()
       setPage(1)
       fetchDemands()
-    } catch {
-      alert('수요 등록에 실패했습니다. 다시 시도해 주세요.')
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[Demand submit] error:', err)
+      alert(err instanceof Error ? err.message : '수요 등록에 실패했습니다. 다시 시도해 주세요.')
     } finally {
       setSubmitting(false)
     }
@@ -138,10 +154,16 @@ export default function DemandsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ demand_id: demandId }),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        const msg = (data as { error?: { message?: string } })?.error?.message ?? `HTTP ${res.status}`
+        throw new Error(msg)
+      }
       fetchDemands()
-    } catch {
-      alert('AI 매칭 실행에 실패했습니다.')
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[AI matching] error:', err)
+      alert(`AI 매칭 실행에 실패했습니다.${err instanceof Error ? `\n(${err.message})` : ''}`)
     } finally {
       setMatchingId(null)
     }

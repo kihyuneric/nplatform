@@ -8,7 +8,8 @@ import { Eye, EyeOff, Loader2, MessageCircle } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
-  const supabase = createClient()
+  // ⚠️ supabase 클라이언트는 handler 내부에서 lazy하게 생성한다.
+  // 상단에서 바로 호출하면 env var 누락 시 페이지 전체가 crash → 로그인 버튼 먹통 원인.
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -17,29 +18,41 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
+  const handleSocialLogin = async (provider: 'kakao' | 'google') => {
+    try {
+      const supabase = createClient()
+      await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      })
+    } catch {
+      setError('소셜 로그인은 현재 사용할 수 없습니다. 아이디/비밀번호로 로그인해주세요.')
+    }
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    try {
-      const roleDashboard: Record<string, string> = {
-        SUPER_ADMIN: '/admin', ADMIN: '/admin',
-        SELLER: '/seller/dashboard', BUYER: '/exchange',
-        BUYER_INST: '/exchange', BUYER_INDV: '/exchange',
-        PROFESSIONAL: '/professional/my/dashboard',
-        PARTNER: '/partner/dashboard', VIEWER: '/',
-      }
+    const roleDashboard: Record<string, string> = {
+      SUPER_ADMIN: '/admin', ADMIN: '/admin',
+      SELLER: '/seller/dashboard', BUYER: '/exchange',
+      BUYER_INST: '/exchange', BUYER_INDV: '/exchange',
+      PROFESSIONAL: '/professional/my/dashboard',
+      PARTNER: '/partner/dashboard', VIEWER: '/',
+    }
 
-      // ─── Dev bypass: admin/admin (SUPER_ADMIN) and demo/demo (BUYER_INDV) ───
-      const devCreds: Record<string, { role: string; name: string; tier: string }> = {
-        'admin|admin': { role: 'SUPER_ADMIN', name: '관리자', tier: 'L3' },
-        'demo|demo':   { role: 'BUYER_INDV', name: '데모 사용자', tier: 'L1' },
-        'seller|seller': { role: 'SELLER', name: '매도자 데모', tier: 'L1' },
-      }
-      const devKey = `${email.trim().toLowerCase()}|${password}`
-      const devMatch = devCreds[devKey]
-      if (devMatch) {
+    // ─── Dev bypass: Supabase 없이도 동작. 먼저 실행. ───
+    const devCreds: Record<string, { role: string; name: string; tier: string }> = {
+      'admin|admin': { role: 'SUPER_ADMIN', name: '관리자', tier: 'L3' },
+      'demo|demo':   { role: 'BUYER_INDV', name: '데모 사용자', tier: 'L1' },
+      'seller|seller': { role: 'SELLER', name: '매도자 데모', tier: 'L1' },
+    }
+    const devKey = `${email.trim().toLowerCase()}|${password}`
+    const devMatch = devCreds[devKey]
+    if (devMatch) {
+      try {
         const devUser = {
           id: `dev-${devMatch.role.toLowerCase()}-uuid`,
           email: `${email}@nplatform.dev`,
@@ -51,39 +64,57 @@ export default function LoginPage() {
           investor_tier: devMatch.tier,
           created_at: new Date().toISOString(),
         }
-        localStorage.setItem('dev_user', JSON.stringify(devUser))
-        document.cookie = `active_role=${devMatch.role};path=/;max-age=${60 * 60 * 24 * 30}`
-        document.cookie = `dev_user_active=1;path=/;max-age=${60 * 60 * 24 * 30}`
-        window.dispatchEvent(new Event('dev-login'))
-        router.push(roleDashboard[devMatch.role] || '/')
-        router.refresh()
+        try { localStorage.setItem('dev_user', JSON.stringify(devUser)) } catch { /* private mode */ }
+        // SameSite=Lax 명시 — 크로스-네비게이션에서도 쿠키가 보내지도록
+        document.cookie = `active_role=${devMatch.role};path=/;max-age=${60 * 60 * 24 * 30};SameSite=Lax`
+        document.cookie = `dev_user_active=1;path=/;max-age=${60 * 60 * 24 * 30};SameSite=Lax`
+        try { window.dispatchEvent(new Event('dev-login')) } catch { /* ignore */ }
+        const target = roleDashboard[devMatch.role] || '/'
+        // window.location을 사용해 middleware가 fresh request로 쿠키를 읽도록 full navigation
+        window.location.href = target
+        return
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[Login] dev bypass error:', err)
+        setError('개발 로그인 중 오류가 발생했습니다. 브라우저 콘솔을 확인해주세요.')
+        setLoading(false)
         return
       }
+    }
 
+    // ─── 실제 Supabase 인증 ───
+    try {
+      const supabase = createClient()
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password })
 
-      if (authError) { setError('이메일 또는 비밀번호가 올바르지 않습니다. (개발: admin/admin, demo/demo, seller/seller 사용 가능)'); return }
+      if (authError) {
+        setError('이메일 또는 비밀번호가 올바르지 않습니다. (개발: admin/admin, demo/demo, seller/seller 사용 가능)')
+        setLoading(false)
+        return
+      }
 
       // user_metadata.role 우선 사용, 없으면 DB에서 조회
       let userRole: string | undefined = authData.user?.user_metadata?.role
 
       if (!userRole) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', authData.user.id)
-          .single()
-        userRole = profile?.role
+        try {
+          const { data: profile } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', authData.user.id)
+            .single()
+          userRole = profile?.role
+        } catch { /* profile lookup failed, treat as no role */ }
       }
 
       if (!userRole) { router.push('/select-role'); return }
 
-      document.cookie = `active_role=${userRole};path=/;max-age=${60 * 60 * 24 * 30}`
-      router.push(roleDashboard[userRole] || '/')
-      router.refresh()
-    } catch {
-      setError('로그인 중 오류가 발생했습니다.')
-    } finally {
+      document.cookie = `active_role=${userRole};path=/;max-age=${60 * 60 * 24 * 30};SameSite=Lax`
+      window.location.href = roleDashboard[userRole] || '/'
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[Login] Supabase auth error:', err)
+      setError('로그인 서버에 연결할 수 없습니다. admin/admin, demo/demo, seller/seller 테스트 계정을 시도해주세요.')
       setLoading(false)
     }
   }
@@ -160,7 +191,7 @@ export default function LoginPage() {
           <div className="space-y-3 mb-6">
             <button
               type="button"
-              onClick={() => supabase.auth.signInWithOAuth({ provider: 'kakao', options: { redirectTo: `${window.location.origin}/auth/callback` } })}
+              onClick={() => handleSocialLogin('kakao')}
               className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl bg-[#FEE500] text-[#3A1D1D] font-semibold text-sm hover:brightness-95 transition-all"
             >
               <MessageCircle className="w-4 h-4" />
@@ -168,7 +199,7 @@ export default function LoginPage() {
             </button>
             <button
               type="button"
-              onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback` } })}
+              onClick={() => handleSocialLogin('google')}
               className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl bg-white border border-[#E2E8F0] text-[#374151] font-semibold text-sm hover:bg-[#F8FAFC] transition-all"
             >
               <svg width="16" height="16" viewBox="0 0 18 18" fill="none">

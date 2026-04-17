@@ -118,6 +118,24 @@ export default function SellWizardPage() {
   const handleSubmit = useCallback(async () => {
     setSubmitting(true)
     setSubmitError("")
+
+    // ── Pre-flight validation: API Zod schema가 요구하는 최소 조건 선검증 ──
+    if (!state.institution) {
+      setSubmitError('기관명을 입력해주세요.'); setSubmitting(false); return
+    }
+    if (!state.collateral) {
+      setSubmitError('담보 유형을 선택해주세요.'); setSubmitting(false); return
+    }
+    if (!state.region_city) {
+      setSubmitError('소재지(시/도)를 선택해주세요.'); setSubmitting(false); return
+    }
+    if (!state.outstanding_principal || state.outstanding_principal < 1_000_000) {
+      setSubmitError('채권잔액은 100만원 이상이어야 합니다.'); setSubmitting(false); return
+    }
+    if (!state.asking_price || state.asking_price <= 0) {
+      setSubmitError('희망 매각가를 입력해주세요.'); setSubmitting(false); return
+    }
+
     try {
       const location = [state.region_city, state.region_district].filter(Boolean).join(' ')
       const body = {
@@ -128,7 +146,7 @@ export default function SellWizardPage() {
         listing_type: state.listing_category || 'NPL',
         location,
         address: location,
-        appraisal_value: state.appraisal_value,
+        appraisal_value: state.appraisal_value || undefined,
         asking_price_min: state.asking_price,
         asking_price_max: state.asking_price,
       }
@@ -137,14 +155,18 @@ export default function SellWizardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({} as Record<string, unknown>))
       if (!res.ok) {
-        setSubmitError(data.error?.message || '제출 실패. 다시 시도해주세요.')
+        const msg = (data as { error?: { message?: string } })?.error?.message
+          ?? `제출 실패 (HTTP ${res.status}). 잠시 후 다시 시도해주세요.`
+        setSubmitError(msg)
         setSubmitting(false)
         return
       }
       setSubmitted(true)
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[Sell submit] network error:', err)
       setSubmitError('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
       setSubmitting(false)
     }

@@ -2100,8 +2100,63 @@ export default function DealRoomPage() {
         if (res.ok) {
           const { data } = await res.json()
           if (data && !cancelled) setDeal(mapApiToDealInfo(data as Record<string, unknown>))
+          return
         }
       } catch { /* supabase result already set */ }
+
+      // Fallback 1: treat dealId as a listing ID and fetch from API
+      try {
+        const listingRes = await fetch(`/api/v1/exchange/listings/${dealId}`)
+        if (listingRes.ok) {
+          const { data: listing } = await listingRes.json()
+          if (listing && !cancelled) {
+            const l = listing as Record<string, unknown>
+            setDeal({
+              id: dealId, listingId: dealId, status: "진행중", stage: 1,
+              lockInStage: "INTEREST",
+              startDate: new Date().toISOString().slice(0, 10),
+              estClose: new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10),
+              cp: { name: "데모 상대방", role: "매수자", initials: "상대", phone: "", id: "" },
+              asset: {
+                title: String(l.title ?? l.asset_title ?? "NPL 자산"),
+                principal: Number(l.principal_amount ?? l.face_value ?? 0),
+                grade: String(l.credit_grade ?? l.risk_grade ?? "B"),
+                yield: String(l.expected_yield ?? "—"),
+                region: String(l.region ?? l.region_city ?? ""),
+                collateral: String(l.collateral_type ?? l.collateral ?? ""),
+                appraisalValue: Number(l.appraisal_value ?? l.appraised_value ?? 0) || undefined,
+                address: String(l.address ?? l.location ?? "") || undefined,
+              },
+            })
+            return
+          }
+        }
+      } catch { /* continue to final fallback */ }
+
+      // Fallback 2: 개발/데모 환경 — exchange 목록의 mock ID를 매물로 간주 (npl-2026-04xx 등)
+      if (!cancelled) {
+        const MOCK_ASSETS: Record<string, { title: string; principal: number; collateral: string; region: string }> = {
+          'npl-2026-0412': { title: '강남구 아파트 NPL 채권', principal: 1_200_000_000, collateral: '아파트', region: '서울 강남구' },
+          'npl-2026-0411': { title: '성남시 사무실 NPL 채권', principal: 3_800_000_000, collateral: '사무실', region: '경기 성남시' },
+          'npl-2026-0410': { title: '해운대구 상가 NPL 채권', principal: 780_000_000, collateral: '상가', region: '부산 해운대구' },
+          'npl-2026-0409': { title: '서초구 오피스텔 NPL 채권', principal: 5_200_000_000, collateral: '오피스텔', region: '서울 서초구' },
+          'npl-2026-0408': { title: '마포구 오피스텔 NPL 채권', principal: 1_800_000_000, collateral: '오피스텔', region: '서울 마포구' },
+        }
+        const a = MOCK_ASSETS[dealId] ?? { title: `NPL 매물 #${String(dealId).slice(-6)}`, principal: 1_000_000_000, collateral: '아파트', region: '서울' }
+        setDeal({
+          id: dealId, listingId: dealId, status: "진행중", stage: 1,
+          lockInStage: "INTEREST",
+          startDate: new Date().toISOString().slice(0, 10),
+          estClose: new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10),
+          cp: { name: "매도자 (데모)", role: "매도자", initials: "매도", phone: "02-000-0000", id: "demo-seller" },
+          asset: {
+            title: a.title, principal: a.principal, grade: "B", yield: "18.5%",
+            region: a.region, collateral: a.collateral,
+            appraisalValue: Math.round(a.principal * 1.35),
+            address: `${a.region} (데모)`,
+          },
+        })
+      }
     }
 
     init().then(() => { if (!cancelled) fetchDealApi() })

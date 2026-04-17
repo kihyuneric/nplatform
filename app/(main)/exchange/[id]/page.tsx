@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import {
@@ -316,11 +316,45 @@ interface AIAnalysisResult {
 
 export default function ListingDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const id = (params?.id as string) ?? "npl-2026-0412"
 
   // Real listing state — starts with mock fallback, replaced by DB data if found
   const [listing, setListing] = useState<ListingDetail>(() => buildMock(id))
   const [tier, setTier] = useUserTier()
+  const [dealCreating, setDealCreating] = useState(false)
+
+  // ── 딜룸 입장: 기존 딜 조회 후 없으면 신규 생성 → /deals/{dealId} 이동 ──
+  const handleEnterDealRoom = useCallback(async () => {
+    if (dealCreating) return
+    setDealCreating(true)
+    try {
+      // 1) 이미 이 매물에 대한 딜이 있으면 재사용
+      const listRes = await fetch(`/api/v1/exchange/deals?listing_id=${id}&limit=1`)
+      if (listRes.ok) {
+        const { data } = await listRes.json()
+        if (Array.isArray(data) && data.length > 0) {
+          const existingDealId = data[0].id as string
+          router.push(`/deals/${existingDealId}`)
+          return
+        }
+      }
+      // 2) 딜이 없으면 신규 생성
+      const createRes = await fetch('/api/v1/exchange/deals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listing_id: id }),
+      })
+      if (createRes.ok || createRes.status === 201) {
+        const { data } = await createRes.json()
+        router.push(`/deals/${(data as Record<string, unknown>).id}`)
+        return
+      }
+    } catch { /* fall through to demo mode */ }
+    // 3) DB 없는 dev/demo 환경: 매물 ID를 그대로 딜 ID로 사용 (deal room이 fallback 처리)
+    router.push(`/deals/${id}`)
+    setDealCreating(false)
+  }, [id, router, dealCreating])
 
   // Fetch real npl_listings row
   useEffect(() => {
@@ -935,18 +969,22 @@ export default function ListingDetailPage() {
                     LOI 제출하고 L3 데이터룸
                   </Link>
                 )}
-                <Link
-                  href={`/deals/${listing.id}`}
+                <button
+                  onClick={handleEnterDealRoom}
+                  disabled={dealCreating}
                   style={{
                     padding: "12px 14px", borderRadius: 10,
-                    backgroundColor: C.blue, color: "#fff",
+                    backgroundColor: dealCreating ? "#4a6a8a" : C.blue, color: "#fff",
                     fontSize: 12, fontWeight: 800, textAlign: "center",
-                    textDecoration: "none",
+                    border: "none", cursor: dealCreating ? "default" : "pointer",
                     display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 6,
+                    transition: "background-color 0.2s",
                   }}
                 >
-                  <MessageSquare size={14} /> 딜룸 입장 · 거래 시작
-                </Link>
+                  {dealCreating
+                    ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> 딜룸 연결 중...</>
+                    : <><MessageSquare size={14} /> 딜룸 입장 · 거래 시작</>}
+                </button>
                 <Link
                   href={`/analysis/new?listing=${listing.id}&type=${listing.collateral}&region=${listing.region_city}`}
                   style={{

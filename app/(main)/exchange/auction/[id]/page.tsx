@@ -77,6 +77,50 @@ export default function AuctionDetailPage() {
     void loadListing()
   }, [id])
 
+  // 샘플 경매 물건 (DB에 없을 때 개발/데모용 fallback)
+  const SAMPLE_LISTING: CourtAuctionListing = {
+    id: id || 'sample-001',
+    case_number: '서울중앙지방법원 2025타경 12345',
+    court_name: '서울중앙지방법원',
+    property_type: '아파트',
+    address: '서울특별시 강남구 역삼동 123-45 역삼빌라 3층 301호',
+    sido: '서울', sigungu: '강남구',
+    area_m2: 84.5, floor: 3, total_floors: 15, build_year: 2005,
+    appraised_value: 1_050_000_000,
+    min_bid_price: 840_000_000,
+    deposit_amount: 84_000_000,
+    status: 'BIDDING',
+    auction_date: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
+    auction_count: 1,
+    creditor_name: '하나저축은행',
+    creditor_type: 'SAVINGS_BANK',
+    loan_principal: 780_000_000,
+    loan_balance: 820_000_000,
+    total_claim: 850_000_000,
+    senior_claim: 0,
+    lien_count: 1,
+    seizure_count: 0,
+    tenant_count: 1,
+    total_tenant_deposit: 50_000_000,
+    has_opposing_force: false,
+    lease_detail: [{ deposit: 50_000_000, opposing: false, priority: true }],
+    ai_roi_estimate: 18.5,
+    ai_risk_score: 35,
+    ai_bid_prob: 0.74,
+    ai_verdict: 'BUY',
+    ai_reasoning: '강남권 아파트로 입지 우수. LTV 74%로 안정적. 임차인 1인이나 대항력 없어 명도 리스크 낮음.',
+    ai_model_version: 'demo-v1',
+    source: 'MANUAL',
+    raw_data: {},
+    images: [],
+    documents: [],
+    is_featured: false,
+    view_count: 42,
+    bookmark_count: 8,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+
   async function loadListing() {
     setLoading(true)
     const { data, error } = await supabase
@@ -86,8 +130,12 @@ export default function AuctionDetailPage() {
       .single()
 
     if (error || !data) {
-      toast.error('매물을 찾을 수 없습니다')
-      router.push('/exchange/auction')
+      // DB 없는 개발/데모 환경에서 샘플 데이터로 계속 진행
+      const item = SAMPLE_LISTING
+      setListing(item)
+      const input = listingToScreeningInput(item)
+      setAiResult(screenNplListing(input))
+      setLoading(false)
       return
     }
 

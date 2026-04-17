@@ -96,23 +96,33 @@ export default function NewDemandPage() {
         })
       }
       let apiSuccess = false
+      let errorMessage: string | null = null
       try {
         const res = await fetch('/api/v1/exchange/demands', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
-        const json = await res.json()
-        apiSuccess = json.success === true
-      } catch {
-        // 네트워크 오류 시에도 UX 성공 처리
-        apiSuccess = true
+        if (res.ok) {
+          const json = await res.json().catch(() => ({}))
+          // API 응답 형식: { success: true, data: {...} } 또는 { data: {...} }
+          apiSuccess = (json as { success?: boolean })?.success === true
+            || ((json as { data?: unknown })?.data != null)
+        } else {
+          const data = await res.json().catch(() => ({}))
+          errorMessage = (data as { error?: { message?: string } })?.error?.message
+            ?? `등록 실패 (HTTP ${res.status})`
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[Demand new] network error:', err)
+        errorMessage = '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
       }
       if (apiSuccess) {
         setSubmitted(true)
         setTimeout(() => router.push('/exchange/demands'), 2500)
       } else {
-        alert('등록에 실패했습니다. 다시 시도해주세요.')
+        alert(errorMessage ?? '등록에 실패했습니다. 다시 시도해주세요.')
       }
     } finally {
       setSubmitting(false)

@@ -254,19 +254,36 @@ export default function BulkUploadPage() {
 
     for (let i = 0; i < listings.length; i += batchSize) {
       const batch = listings.slice(i, i + batchSize)
+      const batchNo = Math.floor(i / batchSize) + 1
       try {
         const res = await fetch("/api/v1/bulk-upload", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ listings: batch }),
         })
-        const data = await res.json()
-        totalSuccess += data.success ?? 0
-        totalFailed += data.failed ?? 0
-        if (data.errors?.length) allErrors.push(...data.errors)
-      } catch {
+        if (!res.ok) {
+          // API가 없거나 서버 에러 — 배치 전체 실패로 처리하되 진행은 계속
+          let errMsg = `배치 ${batchNo} 실패 (HTTP ${res.status})`
+          try {
+            const errData = await res.json()
+            if (errData?.error?.message) errMsg = `배치 ${batchNo}: ${errData.error.message}`
+          } catch { /* response body not JSON */ }
+          totalFailed += batch.length
+          allErrors.push(errMsg)
+        } else {
+          const data = await res.json().catch(() => ({}))
+          const succ = Number((data as { success?: number })?.success ?? 0)
+          const fail = Number((data as { failed?: number })?.failed ?? 0)
+          totalSuccess += isFinite(succ) ? succ : 0
+          totalFailed += isFinite(fail) ? fail : 0
+          const errs = (data as { errors?: unknown[] })?.errors
+          if (Array.isArray(errs) && errs.length) allErrors.push(...errs.map(String))
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(`[Bulk upload] batch ${batchNo} error:`, err)
         totalFailed += batch.length
-        allErrors.push(`배치 ${Math.floor(i / batchSize) + 1} 네트워크 오류`)
+        allErrors.push(`배치 ${batchNo} 네트워크 오류`)
       }
       setProgress(Math.min(100, Math.round(((i + batch.length) / listings.length) * 100)))
     }

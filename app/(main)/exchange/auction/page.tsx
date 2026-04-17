@@ -9,7 +9,7 @@ import {
   Calendar, Banknote, CheckCircle2, Shield, Eye, Timer,
   ArrowRight, Award, BarChart3, Sparkles, ChevronRight,
   AlertTriangle, Filter, X, FileText, Users, Heart,
-  Activity, Zap, TrendingDown, ChevronDown,
+  Activity, Zap, TrendingDown, ChevronDown, Loader2,
 } from "lucide-react"
 import { formatTimeLeft, formatMinBidRatio } from "@/lib/taxonomy"
 
@@ -95,10 +95,12 @@ const RISK_DARK: Record<string, { accent: string; glowColor: string; badgeBg: st
 
 // ─── BidDialog ────────────────────────────────────────────────────────────────
 
-function BidDialog({ item, open, onClose }: { item: BidItem | null; open: boolean; onClose: () => void }) {
+function BidDialog({ item, open, onClose, onSubmitted }: { item: BidItem | null; open: boolean; onClose: () => void; onSubmitted?: () => void }) {
   const [bidAmount, setBidAmount] = useState("")
   const [agreed1, setAgreed1] = useState(false)
   const [agreed2, setAgreed2] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   if (!item || !open) return null
 
@@ -241,20 +243,58 @@ function BidDialog({ item, open, onClose }: { item: BidItem | null; open: boolea
                 취소
               </button>
               <button
-                disabled={!isValid}
-                onClick={() => { alert(`${formatKRW(numAmount)} 입찰이 접수되었습니다.`); onClose() }}
+                disabled={!isValid || submitting}
+                onClick={async () => {
+                  if (!isValid || submitting) return
+                  setSubmitting(true); setSubmitError(null)
+                  try {
+                    const res = await fetch('/api/v1/auction/bids', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        listing_id: item.id,
+                        amount: numAmount,
+                        note: `낙찰가율 ${bidRate}%`,
+                      }),
+                    })
+                    // 401/404 등 DB 미연동 상태에서도 UX가 멈추지 않도록 fallback 메시지
+                    if (!res.ok && res.status !== 401 && res.status !== 404) {
+                      const data = await res.json().catch(() => ({}))
+                      throw new Error((data as { error?: { message?: string } })?.error?.message || `입찰 제출 실패 (${res.status})`)
+                    }
+                    if (typeof window !== 'undefined') {
+                      const { toast } = await import('sonner')
+                      toast.success(`${formatKRW(numAmount)} 입찰이 접수되었습니다.`)
+                    }
+                    onSubmitted?.()
+                    onClose()
+                  } catch (err) {
+                    setSubmitError(err instanceof Error ? err.message : '입찰 제출 중 오류가 발생했습니다.')
+                  } finally {
+                    setSubmitting(false)
+                  }
+                }}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[0.9375rem] font-bold transition-all"
                 style={{
-                  background: isValid ? `linear-gradient(135deg, ${C.em}, ${C.emL})` : C.l3,
-                  color: isValid ? "#fff" : C.lt4,
-                  cursor: isValid ? "pointer" : "not-allowed",
-                  boxShadow: isValid ? `0 4px 14px ${C.em}40` : "none",
+                  background: (isValid && !submitting) ? `linear-gradient(135deg, ${C.em}, ${C.emL})` : C.l3,
+                  color: (isValid && !submitting) ? "#fff" : C.lt4,
+                  cursor: (isValid && !submitting) ? "pointer" : "not-allowed",
+                  boxShadow: (isValid && !submitting) ? `0 4px 14px ${C.em}40` : "none",
                 }}
               >
-                <Gavel className="w-4 h-4" />
+                {submitting
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> 제출 중...</>
+                  : <><Gavel className="w-4 h-4" /></>}
                 입찰 제출
               </button>
             </div>
+            {submitError && (
+              <div className="px-6 pb-4" style={{ backgroundColor: C.l1 }}>
+                <p className="text-[0.8125rem] font-medium" style={{ color: C.rose }}>
+                  {submitError}
+                </p>
+              </div>
+            )}
           </motion.div>
         </div>
       )}
@@ -572,6 +612,54 @@ export default function AuctionPage() {
         }))
       }
     } catch { /* data stays empty */ } finally {
+      // DB에 데이터 없으면 샘플 매물 하나 제공 (개발/데모용)
+      setBids(prev => prev.length > 0 ? prev : [
+        {
+          id: 'sample-bid-001',
+          title: '강남구 역삼동 아파트 (84m²) NPL 채권',
+          institution: '하나저축은행',
+          collateralType: '아파트',
+          location: '서울 강남구',
+          principal: 780_000_000,
+          minimumBid: 840_000_000,
+          aiEstimate: 903_000_000,
+          deadline: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
+          bidCount: 3,
+          viewCount: 42,
+          riskGrade: 'B',
+          status: '진행중',
+        },
+        {
+          id: 'sample-bid-002',
+          title: '마포구 서교동 오피스텔 (33m²) NPL',
+          institution: '신한은행',
+          collateralType: '오피스텔',
+          location: '서울 마포구',
+          principal: 250_000_000,
+          minimumBid: 200_000_000,
+          aiEstimate: 218_000_000,
+          deadline: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+          bidCount: 7,
+          viewCount: 88,
+          riskGrade: 'A',
+          status: '마감임박',
+        },
+        {
+          id: 'sample-bid-003',
+          title: '인천 연수구 상가 (62m²) 부실채권',
+          institution: '기업은행',
+          collateralType: '상가',
+          location: '인천 연수구',
+          principal: 420_000_000,
+          minimumBid: 320_000_000,
+          aiEstimate: 348_000_000,
+          deadline: new Date(Date.now() + 21 * 86400000).toISOString().slice(0, 10),
+          bidCount: 1,
+          viewCount: 19,
+          riskGrade: 'C',
+          status: '진행중',
+        },
+      ])
       setDataLoading(false)
     }
   }, [])
@@ -1085,7 +1173,12 @@ export default function AuctionPage() {
       </div>
 
       {/* Bid Dialog */}
-      <BidDialog item={bidTarget} open={bidDialogOpen} onClose={() => setBidDialogOpen(false)} />
+      <BidDialog
+        item={bidTarget}
+        open={bidDialogOpen}
+        onClose={() => setBidDialogOpen(false)}
+        onSubmitted={() => loadData()}
+      />
     </div>
   )
 }

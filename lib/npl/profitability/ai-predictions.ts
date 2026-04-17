@@ -132,25 +132,62 @@ export async function runMonteCarloSimulation(
   const baseMonths = input.auctionScenario.estimatedMonths
   const appraisalValue = input.collateral.appraisalValue
 
-  // 기존 MC 엔진 사용
+  // 매입가 계산
+  const purchasePrice = (() => {
+    if (input.dealStructure === 'LOAN_SALE' && input.loanSaleTerms) {
+      return Math.round(input.bond.remainingPrincipal * (input.loanSaleTerms.purchaseRatio / 100))
+    }
+    return input.debtAssumptionTerms?.negotiatedPrice ?? input.bond.remainingPrincipal
+  })()
+
+  // 선순위 채권 합계 → 실질 회수율 계산
+  const seniorTotal = (input.rights?.seniorClaims ?? []).reduce((s, c) => s + (c.amount ?? 0), 0)
+  const meanAuctionPrice = appraisalValue * (baseBidRatio / 100)
+  // 선순위 공제 후 실제 회수 비율 (0.5~1.0 범위로 클램프)
+  const netRecovery = Math.max(0.5, Math.min(1.0,
+    meanAuctionPrice > 0 ? (meanAuctionPrice - seniorTotal) / meanAuctionPrice : 0.85
+  ))
+
+  // ⚠️ 변수명을 calculateReturn('NPL_RECOVERY')가 인식하는 이름으로 정확히 맞춰야 함.
+  //   기존 'bidRatio'/'investmentMonths'는 엔진이 인식하지 못해 기본값(손실)이 사용됐음.
   const mcInput: MonteCarloInput = {
     iterations,
-    purchasePrice: (() => {
-      if (input.dealStructure === 'LOAN_SALE' && input.loanSaleTerms) {
-        return Math.round(input.bond.remainingPrincipal * (input.loanSaleTerms.purchaseRatio / 100))
-      }
-      return input.debtAssumptionTerms?.negotiatedPrice ?? input.bond.remainingPrincipal
-    })(),
+    purchasePrice,
     variables: [
       {
-        name: 'bidRatio',
+        // 경매 낙찰가: 감정가 × 낙찰가율
+        name: '매각가',
         distribution: 'normal',
-        params: { mean: baseBidRatio, stdDev: 10 },
+        params: {
+          mean: meanAuctionPrice,
+          stdDev: Math.max(1, appraisalValue * 0.09),
+        },
       },
       {
-        name: 'investmentMonths',
+        // 선순위 공제 후 실질 회수율
+        name: '회수율',
         distribution: 'triangular',
-        params: { min: Math.max(3, baseMonths - 6), max: baseMonths + 12, mode: baseMonths },
+        params: {
+          min: Math.max(0.40, netRecovery - 0.25),
+          max: Math.min(1.0, netRecovery + 0.10),
+          mode: netRecovery,
+        },
+      },
+      {
+        // 회수 소요기간 (월)
+        name: '회수기간(월)',
+        distribution: 'triangular',
+        params: {
+          min: Math.max(3, baseMonths - 6),
+          max: baseMonths + 12,
+          mode: baseMonths,
+        },
+      },
+      {
+        // 취득세·등기비·법무비 등 부대비용률
+        name: '추가비용률',
+        distribution: 'uniform',
+        params: { min: 0.02, max: 0.08 },
       },
     ],
     returnType: 'NPL_RECOVERY',
