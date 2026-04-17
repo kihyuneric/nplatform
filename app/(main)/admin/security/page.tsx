@@ -84,12 +84,11 @@ export default function AdminSecurityPage() {
   const [auditPage, setAuditPage] = useState(0)
   const PAGE_SIZE = 30
 
-  const supabase = createClient()
-
   /* ── Fetch MFA stats + tenants from Supabase ──────────────────── */
   useEffect(() => {
     const loadMfaAndTenants = async () => {
       try {
+        const supabase = createClient()
         // Total user count and MFA breakdown
         const { count: totalUsers } = await supabase
           .from('users').select('*', { count: 'exact', head: true })
@@ -154,6 +153,7 @@ export default function AdminSecurityPage() {
   const fetchAuditLogs = useCallback(async (page = 0) => {
     setAuditLoading(true)
     try {
+      const supabase = createClient()
       const from = page * PAGE_SIZE
       const to = from + PAGE_SIZE - 1
 

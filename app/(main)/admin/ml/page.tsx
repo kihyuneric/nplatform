@@ -81,6 +81,7 @@ export default function AdminMLPage() {
   const [tab, setTab] = useState<Tab>(initialTab)
   const [dataStats, setDataStats] = useState<DataStats | null>(null)
   const [syncingSource, setSyncingSource] = useState<string | null>(null)
+  const [runningJob, setRunningJob] = useState<string | null>(null)
 
   // Real data state — fallback to mock constants if Supabase not configured
   const [models, setModels] = useState(AI_MODELS)
@@ -195,8 +196,31 @@ export default function AdminMLPage() {
     }
   }
 
-  const handleRunJob = async (jobName: string) => {
-    toast.success(`${jobName} 실행을 시작했습니다.`)
+  const handleRunJob = async (jobId: string, jobName: string) => {
+    setRunningJob(jobId)
+    const toastId = toast.loading(`${jobName} 실행 중...`)
+    try {
+      const res = await fetch('/api/v1/admin/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'run_job', job: jobName }),
+      })
+      if (res.ok) {
+        toast.success(`${jobName} 실행이 완료됐습니다.`, { id: toastId })
+        // Optimistically mark last run
+        setScheduledJobs(prev => prev.map(j =>
+          j.id === jobId
+            ? { ...j, lastRun: new Date().toISOString().slice(0, 16).replace('T', ' '), status: '완료' }
+            : j
+        ))
+      } else {
+        toast.error(`${jobName} 실행 실패`, { id: toastId })
+      }
+    } catch {
+      toast.error('네트워크 오류가 발생했습니다.', { id: toastId })
+    } finally {
+      setRunningJob(null)
+    }
   }
 
   return (
@@ -524,11 +548,14 @@ export default function AdminMLPage() {
                     </td>
                     <td className={`${DS.table.cell} text-center`}>
                       <button
-                        onClick={() => handleRunJob(job.name)}
+                        disabled={runningJob === job.id}
+                        onClick={() => handleRunJob(job.id, job.name)}
                         className={DS.button.icon}
                         title={`${job.name} 즉시 실행`}
                       >
-                        <Play className="w-3.5 h-3.5" />
+                        {runningJob === job.id
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <Play className="w-3.5 h-3.5" />}
                       </button>
                     </td>
                   </tr>
