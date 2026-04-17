@@ -107,7 +107,7 @@
       },
       {
         "key": "ins_simulator",
-        "label": "경매 시뮬레이터",
+        "label": "경매 수익률 분석기",
         "href": "/analysis/simulator",
         "description": "수익률·세금·민감도 분석",
         "icon": "Calculator",
@@ -299,7 +299,7 @@
         },
         {
           "key": "insights_simulator",
-          "label": "경매 시뮬레이터",
+          "label": "경매 수익률 분석기",
           "href": "/analysis/simulator",
           "description": "수익률·세금·민감도 분석",
           "icon": "Calculator",

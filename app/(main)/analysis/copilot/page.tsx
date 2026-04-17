@@ -146,7 +146,7 @@ export default function NPLCopilotPage() {
               <Sparkles className="h-4 w-4 text-white" />
             </div>
             <div>
-              <p className={DS.text.cardSubtitle}>NPL 코파일럿</p>
+              <p className={DS.text.cardSubtitle}>AI 컨설턴트</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-positive)] animate-pulse" />
                 <span className={`${DS.text.micro} bg-[var(--color-brand-mid)]/10 text-[var(--color-brand-mid)] border border-[var(--color-brand-mid)]/20 px-1.5 py-0.5 rounded`}>Claude</span>
@@ -185,7 +185,7 @@ export default function NPLCopilotPage() {
         {/* Chat Header */}
         <div className="shrink-0 border-b border-[var(--color-border-subtle)] px-5 py-3 flex items-center justify-between bg-[var(--color-surface-elevated)]">
           <div className="flex items-center gap-3">
-            <span className={DS.text.cardSubtitle}>AI NPL Copilot</span>
+            <span className={DS.text.cardSubtitle}>AI 컨설턴트</span>
             <span className={`${DS.text.micro} bg-[var(--color-brand-mid)]/10 text-[var(--color-brand-mid)] border border-[var(--color-brand-mid)]/20 px-2 py-0.5 rounded hidden sm:inline`}>Claude</span>
           </div>
           <button
@@ -208,7 +208,7 @@ export default function NPLCopilotPage() {
                   <Sparkles className="h-8 w-8 text-white" />
                 </div>
                 <div className="text-center">
-                  <h2 className={DS.text.sectionTitle}>AI NPL Copilot</h2>
+                  <h2 className={DS.text.sectionTitle}>AI 컨설턴트</h2>
                   <p className={`${DS.text.body} mt-1`}>NPL 투자 분석, 리스크 검토, 전략 수립을 AI와 함께</p>
                 </div>
 

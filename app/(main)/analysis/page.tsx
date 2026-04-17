@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import {
   Brain, Calculator, BarChart3, ClipboardList, MessageSquare,
-  FileSearch, ScanLine, ArrowRight, TrendingUp, Sparkles,
+  FileSearch, ArrowRight, TrendingUp, Sparkles,
   Clock, ChevronRight, Zap, Shield, AlertCircle,
 } from "lucide-react"
 import DS from "@/lib/design-system"
@@ -85,39 +85,24 @@ const TOOLS = [
     badge: "AI",
     badgeBg: "rgba(6,182,212,0.15)",
     badgeText: "#06B6D4",
-    title: "AI 딜 코파일럿",
+    title: "AI 컨설턴트",
     desc: "자연어로 매물을 설명하면 AI가 30초 만에 투자 리포트를 생성합니다.",
     features: ["Claude 기반 LLM", "판례 RAG 연동", "30초 리포트"],
   },
   {
-    href: "/analysis/contract-review",
+    href: "/analysis/ocr",
     demoHref: null,
     demoLabel: null,
     icon: FileSearch,
     color: "#EC4899",
     bg: "rgba(236,72,153,0.12)",
     border: "rgba(236,72,153,0.25)",
-    badge: "검토",
+    badge: "통합",
     badgeBg: "rgba(236,72,153,0.15)",
     badgeText: "#EC4899",
-    title: "계약서 자동 검토",
-    desc: "채권양도계약서·NDA·LOI 초안을 AI가 검토하고 위험 조항을 강조 표시합니다.",
-    features: ["위험 조항 하이라이트", "표준 조항 비교", "수정 제안"],
-  },
-  {
-    href: "/analysis/ocr",
-    demoHref: null,
-    demoLabel: null,
-    icon: ScanLine,
-    color: "#059669",
-    bg: "rgba(5,150,105,0.12)",
-    border: "rgba(5,150,105,0.25)",
-    badge: "OCR",
-    badgeBg: "rgba(5,150,105,0.15)",
-    badgeText: "#059669",
-    title: "OCR 문서 인식",
-    desc: "등기부등본·감정평가서·채권자료를 업로드하면 AI가 자동으로 핵심 데이터를 추출합니다.",
-    features: ["등기부등본 자동 파싱", "채권 원장 추출", "NPL 분석 자동 연결"],
+    title: "계약서 생성",
+    desc: "OCR 문서 인식 · 계약서 자동 생성 · AI 계약서 검토를 하나의 워크플로에서 처리합니다.",
+    features: ["OCR 등기부등본·감정서 파싱", "NPL계약서·NDA·LOI 자동 생성", "위험 조항 AI 검토"],
   },
 ] as const
 
@@ -246,7 +231,7 @@ export default function AnalysisDashboard() {
                 </h1>
               </div>
               <p className="text-[0.875rem] text-[var(--color-text-secondary)] max-w-2xl">
-                NPL 수익성 분석 · 경매 수익률 계산기 · AI 딜 코파일럿 · OCR 문서 인식까지 — 모든 분석 도구를 한 곳에서
+                NPL 수익성 분석 · 경매 수익률 분석기 · AI 컨설턴트 · 계약서 생성까지 — 모든 분석 도구를 한 곳에서
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -416,8 +401,8 @@ export default function AnalysisDashboard() {
         <div className="mt-4 flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 px-4 py-3">
           <AlertCircle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
           <p className="text-[0.75rem] text-amber-400 leading-relaxed">
-            OCR 문서 인식 기능을 통해 등기부등본·채권자료를 업로드하면 NPL 분석 입력값이 자동으로 채워집니다.
-            채권 번호에 연결된 매물은 기본 정보가 자동으로 불러와집니다.
+            <strong>계약서 생성</strong> 기능을 통해 등기부등본·채권자료를 업로드하면 NPL 계약서가 자동 생성됩니다.
+            OCR 인식 → 계약서 생성 → AI 검토를 하나의 워크플로로 처리할 수 있습니다.
           </p>
         </div>
       </section>

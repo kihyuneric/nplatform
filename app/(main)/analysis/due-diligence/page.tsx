@@ -431,6 +431,45 @@ function NarrativeAccordion({ title, text }: { title: string; text?: string }) {
    MAIN PAGE COMPONENT
    ═══════════════════════════════════════════════════════════════════════════ */
 
+// IB 급 입력 폼 타입
+interface IBInput {
+  // 물건 기본 정보
+  address: string
+  propertyType: string
+  area: string
+  buildYear: string
+  // 채권 정보
+  principalAmount: string
+  purchasePrice: string
+  ltv: string
+  debtorName: string
+  sellerInstitution: string
+  delinquencyMonths: string
+  // 감정/시세
+  appraisalValue: string
+  marketPrice: string
+  // 권리관계 요약
+  seniorMortgage: string       // 선순위 근저당 합계
+  tenantDeposit: string        // 임차인 보증금
+  hasOpposability: boolean     // 대항력 여부
+  seizureAmount: string        // 가압류 합계
+  // 분석 파라미터
+  holdingMonths: string
+  discountRate: string
+  exitStrategy: string
+}
+
+const DEFAULT_IB_INPUT: IBInput = {
+  address: "", propertyType: "아파트", area: "", buildYear: "",
+  principalAmount: "", purchasePrice: "", ltv: "", debtorName: "", sellerInstitution: "", delinquencyMonths: "",
+  appraisalValue: "", marketPrice: "",
+  seniorMortgage: "", tenantDeposit: "", hasOpposability: false, seizureAmount: "",
+  holdingMonths: "12", discountRate: "10", exitStrategy: "매각",
+}
+
+const PROPERTY_TYPE_OPTIONS = ["아파트", "오피스텔", "상가", "사무실", "공장", "토지", "단독주택", "근린시설", "기타"]
+const EXIT_STRATEGY_OPTIONS = ["매각", "임대 후 매각", "재개발·재건축", "장기 임대"]
+
 export default function DueDiligenceReportPage() {
   const [selectedListing, setSelectedListing] = useState("")
   const [myListings, setMyListings] = useState<MyListing[]>([])
@@ -438,6 +477,9 @@ export default function DueDiligenceReportPage() {
   const [progress, setProgress] = useState(0)
   const [data, setData] = useState<DDReportData | null>(null)
   const [activeTab, setActiveTab] = useState("executive")
+  const [inputMode, setInputMode] = useState<"listing" | "manual">("listing")
+  const [ibInput, setIBInput] = useState<IBInput>(DEFAULT_IB_INPUT)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const scrollToSection = useCallback((id: string) => {
@@ -482,10 +524,32 @@ export default function DueDiligenceReportPage() {
     }, 400)
 
     try {
+      const payload = inputMode === "listing"
+        ? { listingId: selectedListing }
+        : {
+            address: ibInput.address,
+            propertyType: ibInput.propertyType,
+            area: ibInput.area ? parseFloat(ibInput.area) : undefined,
+            buildYear: ibInput.buildYear ? parseInt(ibInput.buildYear) : undefined,
+            principalAmount: ibInput.principalAmount ? parseFloat(ibInput.principalAmount) * 10000 : undefined,
+            purchasePrice: ibInput.purchasePrice ? parseFloat(ibInput.purchasePrice) * 10000 : undefined,
+            appraisalValue: ibInput.appraisalValue ? parseFloat(ibInput.appraisalValue) * 10000 : undefined,
+            marketPrice: ibInput.marketPrice ? parseFloat(ibInput.marketPrice) * 10000 : undefined,
+            debtorName: ibInput.debtorName,
+            sellerInstitution: ibInput.sellerInstitution,
+            delinquencyMonths: ibInput.delinquencyMonths ? parseInt(ibInput.delinquencyMonths) : undefined,
+            seniorMortgage: ibInput.seniorMortgage ? parseFloat(ibInput.seniorMortgage) * 10000 : undefined,
+            tenantDeposit: ibInput.tenantDeposit ? parseFloat(ibInput.tenantDeposit) * 10000 : undefined,
+            hasOpposability: ibInput.hasOpposability,
+            seizureAmount: ibInput.seizureAmount ? parseFloat(ibInput.seizureAmount) * 10000 : undefined,
+            holdingMonths: parseInt(ibInput.holdingMonths),
+            discountRate: parseFloat(ibInput.discountRate) / 100,
+            exitStrategy: ibInput.exitStrategy,
+          }
       const res = await fetch("/api/v1/ai/dd-report?engine=ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listingId: selectedListing }),
+        body: JSON.stringify(payload),
       })
       const json = await res.json()
       if (json.ok && json.data) {
@@ -552,12 +616,15 @@ export default function DueDiligenceReportPage() {
         {/* ── Cross-links ─────────────────────────────────────── */}
         <div className="flex items-center gap-3 flex-wrap">
           <Link href="/analysis" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>
-            ← 분석 허브
+            ← 분석 대시보드
+          </Link>
+          <Link href="/analysis/profitability" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>
+            NPL 분석 →
           </Link>
           <Link href="/analysis/simulator" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>
-            경매 시뮬레이터 →
+            경매 수익률 분석기 →
           </Link>
-          <Link href="/deals/contract" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>
+          <Link href="/analysis/ocr" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>
             계약서 생성 →
           </Link>
           <Link href="/exchange" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>
@@ -565,63 +632,251 @@ export default function DueDiligenceReportPage() {
           </Link>
         </div>
 
-        {/* ── Controls ──────────────────────────────────────────── */}
-        <div className={`${DS.card.base} ${DS.card.padding}`}>
-          <div className="flex flex-col sm:flex-row gap-4 items-end">
-            <div className="flex-1 w-full">
-              <label className={`${DS.input.label} block`}>분석 대상 매물 선택</label>
-              <Select value={selectedListing} onValueChange={setSelectedListing}>
-                <SelectTrigger className="border-[var(--color-border-default)] bg-[var(--color-surface-elevated)]">
-                  <SelectValue placeholder="매물을 선택하세요" />
-                </SelectTrigger>
-                <SelectContent>
-                  {myListings.length === 0 && (
-                    <div className="px-3 py-4 text-sm text-center text-[var(--color-text-muted)]">
-                      등록된 매물이 없습니다
+        {/* ── IB 급 입력 폼 ──────────────────────────────────────── */}
+        <div className={`${DS.card.base} overflow-hidden`}>
+          {/* 입력 모드 탭 */}
+          <div className="flex border-b border-[var(--color-border-subtle)]">
+            {(["listing", "manual"] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setInputMode(mode)}
+                className={`flex-1 py-3 text-[0.8125rem] font-semibold transition-all ${
+                  inputMode === mode
+                    ? "text-[var(--color-brand-mid)] border-b-2 border-[var(--color-brand-mid)] bg-[var(--color-brand-mid)]/5"
+                    : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+                }`}
+              >
+                {mode === "listing" ? "🏢  등록 매물 선택" : "✏️  직접 입력 (상세)"}
+              </button>
+            ))}
+          </div>
+
+          <div className={DS.card.padding}>
+            {/* 모드 1: 등록 매물 선택 */}
+            {inputMode === "listing" && (
+              <div className="space-y-3">
+                <div>
+                  <label className={`${DS.input.label} block mb-1.5`}>분석 대상 매물 선택</label>
+                  <Select value={selectedListing} onValueChange={setSelectedListing}>
+                    <SelectTrigger className="border-[var(--color-border-default)] bg-[var(--color-surface-elevated)]">
+                      <SelectValue placeholder="내 매물을 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {myListings.length === 0 && (
+                        <div className="px-3 py-4 text-sm text-center text-[var(--color-text-muted)]">
+                          등록된 매물이 없습니다 — 직접 입력 모드를 이용해 주세요
+                        </div>
+                      )}
+                      {myListings.map((l) => (
+                        <SelectItem key={l.id} value={l.id}>
+                          <span className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-[var(--color-text-muted)]" />
+                            {l.title} ({l.principal})
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className={DS.text.captionLight}>
+                  매물 탐색 페이지에서 관심 매물을 선택하거나, <button onClick={() => setInputMode("manual")} className="text-[var(--color-brand-mid)] underline">직접 입력 모드</button>로 상세 데이터를 입력하면 더 정밀한 IB급 리포트가 생성됩니다.
+                </p>
+              </div>
+            )}
+
+            {/* 모드 2: 직접 입력 */}
+            {inputMode === "manual" && (
+              <div className="space-y-5">
+                {/* 섹션 1: 물건 기본 정보 */}
+                <div>
+                  <h3 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-[var(--color-brand-mid)]" />
+                    물건 기본 정보
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="sm:col-span-2">
+                      <label className={`${DS.input.label} block mb-1`}>주소 *</label>
+                      <input
+                        className={DS.input.base}
+                        placeholder="서울특별시 강남구 역삼동 123-45 래미안 아파트 501동 1203호"
+                        value={ibInput.address}
+                        onChange={e => setIBInput(p => ({ ...p, address: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className={`${DS.input.label} block mb-1`}>물건 유형 *</label>
+                      <select
+                        className={DS.input.base}
+                        value={ibInput.propertyType}
+                        onChange={e => setIBInput(p => ({ ...p, propertyType: e.target.value }))}
+                      >
+                        {PROPERTY_TYPE_OPTIONS.map(t => <option key={t}>{t}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={`${DS.input.label} block mb-1`}>전용면적 (m²)</label>
+                      <input className={DS.input.base} placeholder="84.92" value={ibInput.area}
+                        onChange={e => setIBInput(p => ({ ...p, area: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className={`${DS.input.label} block mb-1`}>준공연도</label>
+                      <input className={DS.input.base} placeholder="2015" value={ibInput.buildYear}
+                        onChange={e => setIBInput(p => ({ ...p, buildYear: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className={`${DS.input.label} block mb-1`}>감정평가액 (만원) *</label>
+                      <input className={DS.input.base} placeholder="102000" value={ibInput.appraisalValue}
+                        onChange={e => setIBInput(p => ({ ...p, appraisalValue: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className={`${DS.input.label} block mb-1`}>시장 시세 (만원)</label>
+                      <input className={DS.input.base} placeholder="108000" value={ibInput.marketPrice}
+                        onChange={e => setIBInput(p => ({ ...p, marketPrice: e.target.value }))} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 섹션 2: 채권 정보 */}
+                <div>
+                  <h3 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+                    <Banknote className="h-4 w-4 text-amber-500" />
+                    채권 정보
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className={`${DS.input.label} block mb-1`}>채권 원금 (만원) *</label>
+                      <input className={DS.input.base} placeholder="72000" value={ibInput.principalAmount}
+                        onChange={e => setIBInput(p => ({ ...p, principalAmount: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className={`${DS.input.label} block mb-1`}>매수 희망가 (만원) *</label>
+                      <input className={DS.input.base} placeholder="85000" value={ibInput.purchasePrice}
+                        onChange={e => setIBInput(p => ({ ...p, purchasePrice: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className={`${DS.input.label} block mb-1`}>채무자 성명 / 법인명</label>
+                      <input className={DS.input.base} placeholder="홍길동" value={ibInput.debtorName}
+                        onChange={e => setIBInput(p => ({ ...p, debtorName: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className={`${DS.input.label} block mb-1`}>매도 금융기관</label>
+                      <input className={DS.input.base} placeholder="우리은행, 하나에프앤아이..." value={ibInput.sellerInstitution}
+                        onChange={e => setIBInput(p => ({ ...p, sellerInstitution: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className={`${DS.input.label} block mb-1`}>연체 기간 (개월)</label>
+                      <input className={DS.input.base} placeholder="18" value={ibInput.delinquencyMonths}
+                        onChange={e => setIBInput(p => ({ ...p, delinquencyMonths: e.target.value }))} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 섹션 3: 권리관계 (접기 가능) */}
+                <div>
+                  <button
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="w-full flex items-center justify-between text-[0.8125rem] font-bold text-[var(--color-text-primary)] py-2 border-b border-[var(--color-border-subtle)]"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Scale className="h-4 w-4 text-purple-500" />
+                      권리관계 &amp; 분석 파라미터 (선택)
+                    </span>
+                    <ChevronDown className={`h-4 w-4 text-[var(--color-text-muted)] transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+                  </button>
+                  {showAdvanced && (
+                    <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className={`${DS.input.label} block mb-1`}>선순위 근저당 합계 (만원)</label>
+                        <input className={DS.input.base} placeholder="72000" value={ibInput.seniorMortgage}
+                          onChange={e => setIBInput(p => ({ ...p, seniorMortgage: e.target.value }))} />
+                      </div>
+                      <div>
+                        <label className={`${DS.input.label} block mb-1`}>임차인 보증금 (만원)</label>
+                        <input className={DS.input.base} placeholder="8000" value={ibInput.tenantDeposit}
+                          onChange={e => setIBInput(p => ({ ...p, tenantDeposit: e.target.value }))} />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <label className={DS.input.label + " !mb-0"}>임차인 대항력</label>
+                        <button
+                          onClick={() => setIBInput(p => ({ ...p, hasOpposability: !p.hasOpposability }))}
+                          className={`w-10 h-6 rounded-full transition-all ${ibInput.hasOpposability ? "bg-[var(--color-brand-mid)]" : "bg-[var(--color-border-default)]"}`}
+                        >
+                          <span className={`block w-4 h-4 bg-white rounded-full transition-all mx-1 ${ibInput.hasOpposability ? "translate-x-4" : ""}`} />
+                        </button>
+                        <span className={DS.text.captionLight}>{ibInput.hasOpposability ? "있음" : "없음"}</span>
+                      </div>
+                      <div>
+                        <label className={`${DS.input.label} block mb-1`}>가압류 합계 (만원)</label>
+                        <input className={DS.input.base} placeholder="5000" value={ibInput.seizureAmount}
+                          onChange={e => setIBInput(p => ({ ...p, seizureAmount: e.target.value }))} />
+                      </div>
+                      <div>
+                        <label className={`${DS.input.label} block mb-1`}>보유 기간 (개월)</label>
+                        <select className={DS.input.base} value={ibInput.holdingMonths}
+                          onChange={e => setIBInput(p => ({ ...p, holdingMonths: e.target.value }))}>
+                          {[6,9,12,18,24,36].map(m => <option key={m} value={m}>{m}개월</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={`${DS.input.label} block mb-1`}>할인율 (%)</label>
+                        <select className={DS.input.base} value={ibInput.discountRate}
+                          onChange={e => setIBInput(p => ({ ...p, discountRate: e.target.value }))}>
+                          {[6,8,10,12,14,16].map(r => <option key={r} value={r}>{r}%</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={`${DS.input.label} block mb-1`}>Exit 전략</label>
+                        <select className={DS.input.base} value={ibInput.exitStrategy}
+                          onChange={e => setIBInput(p => ({ ...p, exitStrategy: e.target.value }))}>
+                          {EXIT_STRATEGY_OPTIONS.map(s => <option key={s}>{s}</option>)}
+                        </select>
+                      </div>
                     </div>
                   )}
-                  {myListings.map((l) => (
-                    <SelectItem key={l.id} value={l.id}>
-                      <span className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-[var(--color-text-muted)]" />
-                        {l.title} ({l.principal})
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <button
-              onClick={handleGenerate}
-              disabled={generating || !selectedListing}
-              className={`${DS.button.accent} ${DS.button.lg} w-full sm:w-auto disabled:opacity-50`}
-            >
-              {generating ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  분석 중... {Math.round(progress)}%
-                </>
-              ) : (
-                <>
-                  <Brain className="h-5 w-5" />
-                  AI 리포트 생성
-                </>
-              )}
-            </button>
-          </div>
-          {generating && (
-            <div className="mt-4">
-              <div className="h-2 bg-[var(--color-surface-sunken)] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-[var(--color-positive)] rounded-full transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
+                </div>
               </div>
-              <p className={`${DS.text.captionLight} mt-1.5`}>
-                120개 항목 분석 중... 담보물, 권리관계, 재무모델, 시장데이터, 투자의견을 종합합니다.
-              </p>
+            )}
+
+            {/* 생성 버튼 */}
+            <div className="mt-4 flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-start gap-2 text-[0.75rem] text-[var(--color-text-muted)]">
+                <Gauge className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
+                <span>
+                  {inputMode === "manual"
+                    ? "주소·감정가·채권원금·매수희망가 입력 시 DCF·Monte Carlo·권리관계 분석을 포함한 42페이지 리포트 생성"
+                    : "매물 선택 시 등록된 데이터 기반으로 AI 실사 리포트를 자동 생성합니다"}
+                </span>
+              </div>
+              <button
+                onClick={handleGenerate}
+                disabled={generating || (inputMode === "listing" ? !selectedListing : !ibInput.address && !ibInput.principalAmount)}
+                className={`${DS.button.accent} ${DS.button.lg} disabled:opacity-50`}
+              >
+                {generating ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    분석 중... {Math.round(progress)}%
+                  </>
+                ) : (
+                  <>
+                    <Brain className="h-5 w-5" />
+                    AI 실사 리포트 생성
+                  </>
+                )}
+              </button>
             </div>
-          )}
+            {generating && (
+              <div className="mt-4">
+                <div className="h-2 bg-[var(--color-surface-sunken)] rounded-full overflow-hidden">
+                  <div className="h-full bg-[var(--color-positive)] rounded-full transition-all duration-300"
+                    style={{ width: `${progress}%` }} />
+                </div>
+                <p className={`${DS.text.captionLight} mt-1.5`}>
+                  담보물 실사 · 권리관계 분석 · DCF/Monte Carlo · 시장 비교사례 · 투자의견 종합 중...
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ═════════════════════ REPORT CONTENT ═════════════════════ */}
