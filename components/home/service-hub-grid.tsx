@@ -112,8 +112,8 @@ const SERVICE_HUBS = [
     textColor: 'text-emerald-400',
     links: [
       { label: 'AI 컨설턴트', href: '/analysis/copilot' },
-      { label: '경매 수익률 분석기', href: '/analysis/simulator' },
-      { label: '계약서 생성', href: '/analysis/ocr' },
+      { label: '경매 분석', href: '/analysis/simulator' },
+      { label: 'NPL 가격지수', href: '/analysis/npl-index' },
     ],
     stat: { label: 'AI 분석', value: '350+' },
   },

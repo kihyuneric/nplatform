@@ -1268,7 +1268,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                         <Download className="h-5 w-5 text-white" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-black text-[var(--color-brand-deep)] dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">경매 수익률 분석기</h4>
+                        <h4 className="text-sm font-black text-[var(--color-brand-deep)] dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">경매 분석</h4>
                         <p className="text-[10px] text-gray-400">낙찰가별 수익률·세금 자동 계산</p>
                       </div>
                       <ArrowRight className="ml-auto h-4 w-4 text-gray-400 group-hover:text-purple-500 transition-colors" />
@@ -1636,7 +1636,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
           <p className="data-label mb-3">관련 서비스</p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             {[
-              { label: '경매 수익률 분석', href: buildSimulatorUrl, icon: BarChart3 },
+              { label: '경매 분석', href: buildSimulatorUrl, icon: BarChart3 },
               { label: '딜룸 열기',       href: '/deals',          icon: Building2 },
               { label: '목록으로',        href: '/analysis',       icon: ArrowLeft },
             ].map(item => (

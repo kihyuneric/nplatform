@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Users, MessageSquare, BookOpen, Newspaper, Bell, PlusCircle } from "lucide-react"
+import { Users, MessageSquare, Newspaper, Bell, PlusCircle } from "lucide-react"
 import { BannerSlot } from '@/components/banners/banner-slot'
 
 const EXPERT_TABS = [
@@ -11,10 +11,9 @@ const EXPERT_TABS = [
 ]
 
 const COMMUNITY_TABS = [
-  { href: "/services/community", label: "커뮤니티",  icon: MessageSquare, exact: false },
-  { href: "/services/learn",     label: "교육 센터", icon: BookOpen,      exact: false },
-  { href: "/news",               label: "뉴스",      icon: Newspaper,     exact: false },
   { href: "/notices",            label: "공지사항",  icon: Bell,          exact: true  },
+  { href: "/news",               label: "NPL 뉴스",  icon: Newspaper,     exact: false },
+  { href: "/services/community", label: "커뮤니티",  icon: MessageSquare, exact: false },
 ]
 
 export default function ServicesLayout({ children }: { children: React.ReactNode }) {

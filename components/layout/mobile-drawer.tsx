@@ -19,7 +19,6 @@ import {
   Building2,
   Briefcase,
   Users,
-  BookOpen,
   PlusCircle,
   Globe,
   HelpCircle,
@@ -73,13 +72,18 @@ const NAV_GROUPS: NavGroup[] = [
   {
     group: '분석',
     items: [
-      { label: '시장 현황', icon: BarChart2, href: '/analysis' },
+      { label: 'NPL 수익성 분석', icon: TrendingUp, href: '/analysis/profitability' },
+      { label: '경매 분석', icon: BarChart2, href: '/analysis/simulator' },
+      { label: 'NPL 가격지수', icon: BarChart2, href: '/analysis/npl-index' },
       { label: 'AI 컨설턴트', icon: FileText, href: '/analysis/copilot' },
-      { label: '경매 수익률 분석기', icon: TrendingUp, href: '/analysis/simulator' },
-      { label: '계약서 생성', icon: FileText, href: '/analysis/ocr' },
+    ],
+  },
+  {
+    group: '커뮤니티',
+    items: [
+      { label: '공지사항', icon: FileText, href: '/notices' },
+      { label: 'NPL 뉴스', icon: FileText, href: '/news' },
       { label: '커뮤니티', icon: MessageSquare, href: '/services/community' },
-      { label: '전문가', icon: Users, href: '/services/experts' },
-      { label: '학습', icon: BookOpen, href: '/services/learn' },
     ],
   },
   {

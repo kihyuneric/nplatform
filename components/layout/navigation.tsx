@@ -38,12 +38,13 @@ import { NotificationCenter } from '@/components/notifications/notification-cent
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import type { Notification } from '@/lib/types'
 
-// ─── Nav items (v5 전략: 4대 메인 네비) ──────────────────────
+// ─── Nav items ────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { href: '/exchange',  label: '거래소',    matchPaths: ['/exchange'] },
-  { href: '/deals',     label: '딜룸',      matchPaths: ['/deals'] },
-  { href: '/analysis',  label: '분석',      matchPaths: ['/analysis', '/services'] },
-  { href: '/my',        label: '마이 페이지', matchPaths: ['/my'] },
+  { href: '/exchange',           label: '거래소',     matchPaths: ['/exchange'] },
+  { href: '/deals',              label: '딜룸',       matchPaths: ['/deals'] },
+  { href: '/analysis',           label: '분석',       matchPaths: ['/analysis'] },
+  { href: '/services/community', label: '커뮤니티',   matchPaths: ['/services', '/notices', '/news'] },
+  { href: '/my',                 label: '마이 페이지', matchPaths: ['/my'] },
 ]
 
 // ─── 사용자 티어 판정 (auth user → AccessTier) ─────────────

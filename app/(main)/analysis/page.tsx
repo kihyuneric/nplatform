@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import {
   Brain, Calculator, BarChart3, MessageSquare,
-  FileSearch, ArrowRight, TrendingUp, Sparkles,
+  ArrowRight, TrendingUp, Sparkles,
   Clock, ChevronRight, Zap, Shield, AlertCircle,
 } from "lucide-react"
 import DS from "@/lib/design-system"
@@ -40,7 +40,7 @@ const TOOLS = [
     badge: "실시간",
     badgeBg: "rgba(59,130,246,0.15)",
     badgeText: "#3B82F6",
-    title: "경매 수익률 분석기",
+    title: "경매 분석",
     desc: "낙찰가 슬라이더로 즉시 취득세·양도세·중개보수·수익률을 계산합니다. 15가지 부동산 유형 지원.",
     features: ["2024 세율 자동 적용", "민감도 테이블", "시나리오 저장"],
   },
@@ -74,21 +74,6 @@ const TOOLS = [
     desc: "자연어로 매물을 설명하면 AI가 30초 만에 투자 리포트를 생성합니다.",
     features: ["Claude 기반 LLM", "판례 RAG 연동", "30초 리포트"],
   },
-  {
-    href: "/analysis/ocr",
-    demoHref: null,
-    demoLabel: null,
-    icon: FileSearch,
-    color: "#EC4899",
-    bg: "rgba(236,72,153,0.12)",
-    border: "rgba(236,72,153,0.25)",
-    badge: "통합",
-    badgeBg: "rgba(236,72,153,0.15)",
-    badgeText: "#EC4899",
-    title: "계약서 생성",
-    desc: "OCR 문서 인식 · 계약서 자동 생성 · AI 계약서 검토를 하나의 워크플로에서 처리합니다.",
-    features: ["OCR 등기부등본·감정서 파싱", "NPL계약서·NDA·LOI 자동 생성", "위험 조항 AI 검토"],
-  },
 ] as const
 
 /* ─────────────────────────────────────────────────────────────
@@ -101,7 +86,7 @@ interface RecentItem {
 
 const RECENT_FALLBACK: RecentItem[] = [
   { id: "r1", type: "NPL 수익성 분석", title: "강남 역삼동 아파트 · 우리은행", grade: "A", roi: "18.4%", date: "2026-04-13", href: "/analysis/profitability/result" },
-  { id: "r2", type: "경매 수익률 분석기", title: "분당 오피스텔 · 낙찰가 3.5억", grade: "B", roi: "14.2%", date: "2026-04-12", href: "/analysis/simulator" },
+  { id: "r2", type: "경매 분석", title: "분당 오피스텔 · 낙찰가 3.5억", grade: "B", roi: "14.2%", date: "2026-04-12", href: "/analysis/simulator" },
   { id: "r3", type: "NPL 수익성 분석", title: "해운대 상가 · 하나에프앤아이", grade: "B", roi: "16.8%", date: "2026-04-10", href: "/analysis/profitability/result" },
 ]
 
@@ -216,7 +201,7 @@ export default function AnalysisDashboard() {
                 </h1>
               </div>
               <p className="text-[0.875rem] text-[var(--color-text-secondary)] max-w-2xl">
-                NPL 수익성 분석 · 경매 수익률 분석기 · AI 컨설턴트 · 계약서 생성까지 — 모든 분석 도구를 한 곳에서
+                NPL 수익성 분석 · 경매 분석 · AI 컨설턴트 · NPL 가격지수까지 — 모든 분석 도구를 한 곳에서
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">

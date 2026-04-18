@@ -232,7 +232,7 @@ export default function AuctionSimulatorPage() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Calculator className="h-5 w-5 text-[var(--color-brand-mid)]" />
-                <h1 className={DS.text.sectionTitle}>경매 수익률 분석기 v2.0</h1>
+                <h1 className={DS.text.sectionTitle}>경매 분석 v2.0</h1>
                 <span className="px-2 py-0.5 bg-[var(--color-brand-mid)]/10 text-[var(--color-brand-mid)] text-[0.6875rem] font-bold rounded-full border border-[var(--color-brand-mid)]/20">
                   2024 세율 적용
                 </span>

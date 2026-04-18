@@ -7,10 +7,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Home, Search, Brain, Menu, X,
   Gavel, Settings, LogIn, Upload,
-  User, BookOpen, BarChart3, Users,
-  Handshake, FileText, GraduationCap,
+  User, BarChart3, Users,
+  Handshake, FileText,
   Heart, Wallet, ClipboardList, Calculator,
   Archive, TrendingUp,
+  Bell, Newspaper, MessageSquare,
 } from 'lucide-react'
 import { useScrollDirection } from '@/hooks/use-scroll-direction'
 import { t } from '@/lib/i18n'
@@ -95,13 +96,19 @@ const MORE_SECTIONS = [
     title: '분석',
     titleKey: 'nav.insights',
     items: [
-      { label: '시장 현황', labelKey: 'nav.marketAnalysis', href: '/analysis', icon: BarChart3 },
-      { label: 'AI 컨설턴트', labelKey: 'nav.copilot', href: '/analysis/copilot', icon: FileText },
-      { label: '경매 수익률 분석기', labelKey: 'nav.simulator', href: '/analysis/simulator', icon: Calculator },
-      { label: '계약서 생성', labelKey: 'nav.contract', href: '/analysis/ocr', icon: FileText },
-      { label: '커뮤니티', labelKey: 'nav.community', href: '/services/community', icon: Users },
-      { label: '전문가', labelKey: 'nav.findExpert', href: '/services/experts', icon: GraduationCap },
-      { label: '학습', labelKey: 'nav.learn', href: '/services/learn', icon: BookOpen },
+      { label: 'NPL 수익성 분석', labelKey: 'nav.profitability', href: '/analysis/profitability', icon: TrendingUp },
+      { label: '경매 분석', labelKey: 'nav.simulator', href: '/analysis/simulator', icon: Calculator },
+      { label: 'NPL 가격지수', labelKey: 'nav.nplIndex', href: '/analysis/npl-index', icon: BarChart3 },
+      { label: 'AI 컨설턴트', labelKey: 'nav.copilot', href: '/analysis/copilot', icon: Brain },
+    ],
+  },
+  {
+    title: '커뮤니티',
+    titleKey: 'nav.community',
+    items: [
+      { label: '공지사항', labelKey: 'nav.notices', href: '/notices', icon: Bell },
+      { label: 'NPL 뉴스', labelKey: 'nav.nplNews', href: '/news', icon: Newspaper },
+      { label: '커뮤니티', labelKey: 'nav.communityBoard', href: '/services/community', icon: MessageSquare },
     ],
   },
   {
