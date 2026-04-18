@@ -197,10 +197,11 @@ export default function LoiPage() {
           </div>
           <div style={{ position: "relative" }}>
             <input
-              type="number"
-              value={offeredPrice || ""}
-              onChange={e => setOfferedPrice(Number(e.target.value) || 0)}
-              placeholder="예: 820000000"
+              type="text"
+              inputMode="numeric"
+              value={offeredPrice ? offeredPrice.toLocaleString('ko-KR') : ""}
+              onChange={e => setOfferedPrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)}
+              placeholder="예: 820,000,000"
               style={{
                 width: "100%", padding: "14px 60px 14px 16px", borderRadius: 10,
                 backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,

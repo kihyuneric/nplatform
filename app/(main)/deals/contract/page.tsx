@@ -536,10 +536,11 @@ export default function ContractPage() {
                 <div>
                   <label className={`block ${DS.input.label}`}>감정가 (원)</label>
                   <input
-                    type="number"
-                    placeholder="1000000000"
-                    value={form.appraisalValue || ""}
-                    onChange={e => update("appraisalValue", Number(e.target.value))}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="1,000,000,000"
+                    value={form.appraisalValue ? form.appraisalValue.toLocaleString('ko-KR') : ""}
+                    onChange={e => update("appraisalValue", Number(e.target.value.replace(/[^0-9]/g, '')))}
                     className={DS.input.base}
                   />
                   {form.appraisalValue > 0 && (
@@ -566,10 +567,11 @@ export default function ContractPage() {
                 <div>
                   <label className={`block ${DS.input.label}`}>채권 잔액 (원)</label>
                   <input
-                    type="number"
-                    placeholder="800000000"
-                    value={form.outstandingAmount || ""}
-                    onChange={e => update("outstandingAmount", Number(e.target.value))}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="800,000,000"
+                    value={form.outstandingAmount ? form.outstandingAmount.toLocaleString('ko-KR') : ""}
+                    onChange={e => update("outstandingAmount", Number(e.target.value.replace(/[^0-9]/g, '')))}
                     className={DS.input.base}
                   />
                   {form.outstandingAmount > 0 && (
@@ -579,20 +581,22 @@ export default function ContractPage() {
                 <div>
                   <label className={`block ${DS.input.label}`}>선순위 채권 (원)</label>
                   <input
-                    type="number"
-                    placeholder="300000000"
-                    value={form.seniorLiens || ""}
-                    onChange={e => update("seniorLiens", Number(e.target.value))}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="300,000,000"
+                    value={form.seniorLiens ? form.seniorLiens.toLocaleString('ko-KR') : ""}
+                    onChange={e => update("seniorLiens", Number(e.target.value.replace(/[^0-9]/g, '')))}
                     className={DS.input.base}
                   />
                 </div>
                 <div>
                   <label className={`block ${DS.input.label}`}>매매 대금 (원)</label>
                   <input
-                    type="number"
-                    placeholder="500000000"
-                    value={form.purchasePrice || ""}
-                    onChange={e => update("purchasePrice", Number(e.target.value))}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="500,000,000"
+                    value={form.purchasePrice ? form.purchasePrice.toLocaleString('ko-KR') : ""}
+                    onChange={e => update("purchasePrice", Number(e.target.value.replace(/[^0-9]/g, '')))}
                     className={DS.input.base}
                   />
                   {form.purchasePrice > 0 && (

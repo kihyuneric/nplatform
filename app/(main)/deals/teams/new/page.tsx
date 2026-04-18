@@ -350,8 +350,9 @@ export default function NewTeamPage() {
 
               <div>
                 <label className={labelCls}>총 목표 금액 (원) *</label>
-                <input type="number" placeholder="500000000" value={form.target_amount}
-                  onChange={e => update("target_amount", e.target.value)} className={inputCls} />
+                <input type="text" inputMode="numeric" placeholder="500,000,000"
+                  value={form.target_amount ? Number(form.target_amount).toLocaleString('ko-KR') : ''}
+                  onChange={e => update("target_amount", e.target.value.replace(/[^0-9]/g, ''))} className={inputCls} />
                 <p className="text-[11px] text-white/35 mt-1">
                   {Number(form.target_amount) > 0
                     ? `≈ ${(Number(form.target_amount) / 100_000_000).toFixed(2)}억원`
@@ -362,16 +363,18 @@ export default function NewTeamPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={labelCls}>1사 최소 투자 (원)</label>
-                  <input type="number" placeholder="100000000" value={form.min_per_member}
-                    onChange={e => update("min_per_member", e.target.value)} className={inputCls} />
+                  <input type="text" inputMode="numeric" placeholder="100,000,000"
+                    value={form.min_per_member ? Number(form.min_per_member).toLocaleString('ko-KR') : ''}
+                    onChange={e => update("min_per_member", e.target.value.replace(/[^0-9]/g, ''))} className={inputCls} />
                   {Number(form.min_per_member) > 0 && (
                     <p className="text-[11px] text-white/35 mt-1">≈ {fmt(Number(form.min_per_member))}원</p>
                   )}
                 </div>
                 <div>
                   <label className={labelCls}>1사 최대 투자 (원)</label>
-                  <input type="number" placeholder="2000000000" value={form.max_per_member}
-                    onChange={e => update("max_per_member", e.target.value)} className={inputCls} />
+                  <input type="text" inputMode="numeric" placeholder="2,000,000,000"
+                    value={form.max_per_member ? Number(form.max_per_member).toLocaleString('ko-KR') : ''}
+                    onChange={e => update("max_per_member", e.target.value.replace(/[^0-9]/g, ''))} className={inputCls} />
                   {Number(form.max_per_member) > 0 && (
                     <p className="text-[11px] text-white/35 mt-1">≈ {fmt(Number(form.max_per_member))}원</p>
                   )}
