@@ -257,6 +257,31 @@ export default function SellWizardPage() {
             매수자 매칭률이 높아집니다. 모든 개인정보는 자동 마스킹 파이프라인으로 처리됩니다.
           </p>
 
+          <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <a
+              href="/exchange/ocr-register"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "8px 14px", borderRadius: 10,
+                background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.3)",
+                color: "#A78BFA", fontSize: 12, fontWeight: 700, textDecoration: "none",
+              }}
+            >
+              <Sparkles size={12} /> OCR로 1~5건 빠르게 등록 →
+            </a>
+            <a
+              href="/exchange/bulk-upload"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "8px 14px", borderRadius: 10,
+                background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.3)",
+                color: "#60A5FA", fontSize: 12, fontWeight: 700, textDecoration: "none",
+              }}
+            >
+              CSV 대량 등록 (최대 500건) →
+            </a>
+          </div>
+
           <div style={{ marginTop: 28, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
             {STEPS.map((s, i) => {
               const done = step > s.id

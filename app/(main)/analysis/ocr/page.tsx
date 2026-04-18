@@ -480,7 +480,7 @@ export default function ContractWorkflowPage() {
                   </div>
                 )}
 
-                <div className="flex gap-2 pt-2">
+                <div className="flex flex-wrap gap-2 pt-2">
                   <button onClick={() => { setActiveTab("review"); setReviewText(JSON.stringify(activeResult.extractedData, null, 2)) }}
                     className={`${DS.button.secondary} text-[0.8125rem]`}>
                     <ListChecks className="h-4 w-4" /> 계약서 검토로 이동
@@ -489,6 +489,10 @@ export default function ContractWorkflowPage() {
                     className={`${DS.button.secondary} text-[0.8125rem]`}>
                     <FilePlus className="h-4 w-4" /> 계약서 생성으로 이동
                   </button>
+                  <a href="/exchange/ocr-register"
+                    className={`${DS.button.secondary} text-[0.8125rem]`}>
+                    <ScanLine className="h-4 w-4" /> 이 OCR 결과로 매물 등록 →
+                  </a>
                 </div>
               </div>
             )}

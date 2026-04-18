@@ -47,6 +47,7 @@ const COMMANDS: CommandItem[] = [
   { id: 'simulator',       label: '경매 수익률 분석기',  description: '입찰가·수익률 시나리오',        icon: BarChart3,      href: '/analysis/simulator',        category: '분석', keywords: ['시뮬레이터','수익률','경매','분석기'] },
   { id: 'copilot',         label: 'AI 컨설턴트',         description: 'NPL 투자 AI 컨설팅 챗봇',      icon: Bot,            href: '/analysis/copilot',          category: '분석', keywords: ['ai','컨설턴트','copilot','상담'] },
   { id: 'ocr',             label: '계약서 생성',         description: 'OCR·AI 계약서 자동 생성',       icon: ScanLine,       href: '/analysis/ocr',              category: '분석', keywords: ['ocr','등기','문서','계약서'] },
+  { id: 'ocr-register',    label: 'OCR 매물 일괄 등록',  description: '채권소개서·감정서로 1~5건 빠르게 등록', icon: ScanLine,  href: '/exchange/ocr-register',     category: '거래', keywords: ['ocr','매물등록','일괄','bulk','batch'] },
   { id: 'analysis-screen', label: 'AI 스크리닝 현황',   description: '경매 AI 배치 처리 상태',        icon: Shield,         href: '/analysis?tab=screening',    category: '분석' },
 
   // 서비스 (services)

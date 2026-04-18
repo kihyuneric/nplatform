@@ -10,6 +10,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/exchange',                  priority: 0.95, freq: 'hourly'  },
     { path: '/exchange/auction',          priority: 0.85, freq: 'hourly'  },
     { path: '/exchange/sell',             priority: 0.8,  freq: 'weekly'  },
+    { path: '/exchange/ocr-register',     priority: 0.8,  freq: 'weekly'  },
+    { path: '/exchange/bulk-upload',      priority: 0.75, freq: 'weekly'  },
     { path: '/exchange/demands',          priority: 0.8,  freq: 'daily'   },
     { path: '/exchange/institutions',     priority: 0.7,  freq: 'weekly'  },
     { path: '/exchange/fund',             priority: 0.7,  freq: 'weekly'  },
