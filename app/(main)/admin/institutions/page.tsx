@@ -87,6 +87,10 @@ type InstMember = { id:string; name:string; email:string; role:string; dept:stri
 function InstitutionMembersModal({ inst, onClose }: { inst: Institution; onClose: () => void }) {
   const [members, setMembers] = useState<InstMember[]>([])
   const [loadingMembers, setLoadingMembers] = useState(true)
+  const [showInvite, setShowInvite] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState("")
+  const [inviteRole, setInviteRole] = useState("MEMBER")
+  const [inviting, setInviting] = useState(false)
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -133,6 +137,56 @@ function InstitutionMembersModal({ inst, onClose }: { inst: Institution; onClose
       }
     } catch {
       toast.error('처리 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleInviteMember = async () => {
+    if (!inviteEmail.trim()) return
+    setInviting(true)
+    try {
+      const supabase = createClient()
+      // Try to find existing user by email, then add to institution
+      const { data: existingUsers } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', inviteEmail.trim())
+        .limit(1)
+      if (existingUsers && existingUsers.length > 0) {
+        const userId = existingUsers[0].id
+        const { error } = await supabase.from('institution_members').insert({
+          institution_id: inst.id,
+          user_id: userId,
+          role: inviteRole,
+          status: 'ACTIVE',
+          created_at: new Date().toISOString(),
+        })
+        if (error) throw error
+        setMembers(prev => [...prev, {
+          id: `${userId}-${Date.now()}`,
+          name: inviteEmail.split('@')[0],
+          email: inviteEmail.trim(),
+          role: inviteRole,
+          dept: '',
+          status: 'ACTIVE',
+          joined: new Date().toISOString().slice(0, 10),
+        }])
+        toast.success(`${inviteEmail} 멤버가 추가되었습니다.`)
+      } else {
+        // User not found — send invite via admin API
+        const res = await fetch('/api/v1/admin/admins', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: inviteEmail.split('@')[0], email: inviteEmail.trim(), level: 'L3' }),
+        })
+        if (!res.ok) throw new Error('초대 이메일 발송에 실패했습니다.')
+        toast.success(`${inviteEmail}으로 초대 이메일을 발송했습니다.`)
+      }
+      setInviteEmail("")
+      setShowInvite(false)
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : '초대 처리 중 오류가 발생했습니다.')
+    } finally {
+      setInviting(false)
     }
   }
 
@@ -205,10 +259,67 @@ function InstitutionMembersModal({ inst, onClose }: { inst: Institution; onClose
             </div>
           )}
         </div>
-        <div style={{ padding:"12px 16px", borderTop:`1px solid ${C.bg4}`, display:"flex", justifyContent:"flex-end", gap:8 }}>
-          <button onClick={() => toast.success("초대 이메일 작성 창으로 이동")} style={{ padding:"8px 14px", borderRadius:8, backgroundColor:"var(--color-positive-bg)", color:C.emL, border:"1px solid rgba(16, 185, 129, 0.33)", fontSize:11, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>
-            <UserPlus size={12} /> 멤버 초대
-          </button>
+        <div style={{ padding:"12px 16px", borderTop:`1px solid ${C.bg4}` }}>
+          {showInvite ? (
+            <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                placeholder="이메일 주소 입력"
+                style={{
+                  flex:1, padding:"7px 10px", borderRadius:6, fontSize:11,
+                  backgroundColor:C.bg3, border:`1px solid ${C.bg4}`,
+                  color:"#fff", outline:"none",
+                }}
+                onKeyDown={e => { if (e.key === "Enter") handleInviteMember() }}
+              />
+              <select
+                value={inviteRole}
+                onChange={e => setInviteRole(e.target.value)}
+                style={{
+                  padding:"7px 8px", borderRadius:6, fontSize:11,
+                  backgroundColor:C.bg3, border:`1px solid ${C.bg4}`,
+                  color:"#cbd5e1", cursor:"pointer",
+                }}
+              >
+                {["MASTER","MANAGER","MEMBER","VIEWER"].map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleInviteMember}
+                disabled={inviting || !inviteEmail.trim()}
+                style={{
+                  padding:"7px 14px", borderRadius:6, backgroundColor:"var(--color-positive-bg)",
+                  color:C.emL, border:"1px solid rgba(16,185,129,0.33)",
+                  fontSize:11, fontWeight:700, cursor:"pointer",
+                  opacity: inviting || !inviteEmail.trim() ? 0.5 : 1,
+                }}
+              >
+                {inviting ? "처리 중..." : "초대"}
+              </button>
+              <button
+                onClick={() => { setShowInvite(false); setInviteEmail("") }}
+                style={{
+                  padding:"7px 10px", borderRadius:6, backgroundColor:"transparent",
+                  color:C.lt4, border:`1px solid ${C.bg4}`,
+                  fontSize:11, cursor:"pointer",
+                }}
+              >
+                취소
+              </button>
+            </div>
+          ) : (
+            <div style={{ display:"flex", justifyContent:"flex-end" }}>
+              <button
+                onClick={() => setShowInvite(true)}
+                style={{ padding:"8px 14px", borderRadius:8, backgroundColor:"var(--color-positive-bg)", color:C.emL, border:"1px solid rgba(16, 185, 129, 0.33)", fontSize:11, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}
+              >
+                <UserPlus size={12} /> 멤버 초대
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

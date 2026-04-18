@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 // Phase 5-4: AI 뉴스레터 PDF 생성 API
 // GET ?type=daily_lesson&domain_id=1&concept_id=5
 // → AI 뉴스레터 데이터를 생성하고 PDF로 반환

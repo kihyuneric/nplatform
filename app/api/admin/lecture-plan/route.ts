@@ -2,6 +2,8 @@
 // GET: 캡슐의 관련 대본 리스트 조회
 // POST: 선별된 대본 + 설정으로 강의안 AI 생성
 
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import {
   getRelatedTranscripts,

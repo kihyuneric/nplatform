@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 // Phase 6: Atomic 캡슐 학습자료 다운로드 API
 // GET ?concept_id=N&format=docx|pdf
 // Atomic 캡슐 전체를 전문 교재 수준의 DOCX/PDF로 출력
@@ -10,12 +12,15 @@ import {
 } from '@/lib/docx-generator'
 import { generateAtomicCapsulePdf } from '@/lib/pdf-generator'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+  )
+}
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase()
   try {
     const { searchParams } = new URL(request.url)
     const conceptId = Number(searchParams.get('concept_id'))

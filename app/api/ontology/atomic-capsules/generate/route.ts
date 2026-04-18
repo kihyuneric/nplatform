@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 // Phase 6: Atomic 캡슐 생성 API
 // POST: 개념 ID를 받아 Atomic 캡슐 목록 자동 생성 (2단계 파이프라인)
 // GET:  개념 ID의 Atomic 캡슐 생성 진행 상황 확인
@@ -9,15 +11,18 @@ import {
   generateAllAtomicCapsules,
 } from '@/lib/atomic-capsule-generator'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+  )
+}
 
 // ============================================================
 // GET: 개념의 Atomic 캡슐 현황 조회
 // ============================================================
 export async function GET(req: NextRequest) {
+  const supabase = getSupabase()
   const { searchParams } = new URL(req.url)
   const conceptId = Number(searchParams.get('concept_id'))
 
@@ -48,6 +53,7 @@ export async function GET(req: NextRequest) {
 // POST: Atomic 캡슐 생성 시작
 // ============================================================
 export async function POST(req: NextRequest) {
+  const supabase = getSupabase()
   try {
     const body = await req.json()
     const { concept_id, force_regenerate = false } = body

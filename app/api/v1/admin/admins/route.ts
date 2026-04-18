@@ -40,8 +40,12 @@ export async function GET() {
       .eq('role', 'admin')
       .order('created_at', { ascending: true })
 
-    if (error || !data || data.length === 0) {
+    if (error) {
       return NextResponse.json({ data: MOCK_ADMINS, _mock: true })
+    }
+    if (!data || data.length === 0) {
+      // No admins in DB yet — return empty list, not fake data
+      return NextResponse.json({ data: [] })
     }
 
     const accounts: AdminAccount[] = (data as Record<string, unknown>[]).map((u) => ({

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getLectureCapsules, generateCapsuleFromData, getConceptOntologyContext, getEbookCache, saveEbookCache } from '@/lib/ontology-db'
 import { generateLecturePlanPdf, generateEbookPdf, generateAIEbookPdf } from '@/lib/pdf-generator'

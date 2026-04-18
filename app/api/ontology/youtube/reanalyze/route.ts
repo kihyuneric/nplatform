@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase, recalculateAllImportance } from '@/lib/ontology-db'
 import { runAnalysisPipeline } from '@/lib/analyze-pipeline'

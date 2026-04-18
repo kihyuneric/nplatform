@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 // Phase 6: 학습 진도 통계 API
 // GET ?user_id=anonymous — 전체 진도 현황 (대시보드용)
 // GET ?user_id=anonymous&concept_id=N — 개념별 진도
@@ -5,12 +7,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+  )
+}
 
 export async function GET(req: NextRequest) {
+  const supabase = getSupabase()
   const { searchParams } = new URL(req.url)
   const userId = searchParams.get('user_id') || 'anonymous'
   const conceptId = searchParams.get('concept_id')

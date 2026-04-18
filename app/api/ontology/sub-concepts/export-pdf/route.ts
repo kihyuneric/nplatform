@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * 하위 개념 기반 강의안/전자책 PDF 생성 API
  *
@@ -12,10 +14,12 @@ import autoTable from 'jspdf-autotable'
 import * as fs from 'fs'
 import * as path from 'path'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+  )
+}
 
 const PAGE_W = 210
 const PAGE_H = 297
@@ -117,6 +121,7 @@ function pageBreak(doc: jsPDF): number {
 // ─── 메인 핸들러 ──────────────────────────────────
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase()
   try {
     const { searchParams } = new URL(request.url)
     const conceptId = Number(searchParams.get('concept_id'))

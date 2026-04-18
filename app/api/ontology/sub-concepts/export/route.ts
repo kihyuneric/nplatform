@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * 하위 개념 기반 강의안/전자책 DOCX 생성 API
  *
@@ -22,10 +24,12 @@ import {
   Packer,
 } from 'docx'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+  )
+}
 
 const FONT = '맑은 고딕'
 const TITLE_SIZE = 56
@@ -73,6 +77,7 @@ function colorBox(content: string, label: string, color: string): Paragraph[] {
 }
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase()
   try {
     const { searchParams } = new URL(request.url)
     const conceptId = Number(searchParams.get('concept_id'))

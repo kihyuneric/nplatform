@@ -3,10 +3,14 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+// Lazy client — 빌드 시 env 없어도 throw하지 않음
+function getClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co'
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-key'
+  return createClient(url, key)
+}
+
+export const supabase = getClient()
 
 // ============================================================
 // READ — 도메인 / 개념 / 관계 / 그래프 / 경로

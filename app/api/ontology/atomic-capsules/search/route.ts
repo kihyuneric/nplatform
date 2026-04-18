@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 // Atomic 캡슐 검색 API
 // GET ?q=검색어&limit=20&offset=0
 // 캡슐 주제, 설명, 개념명에서 통합 검색
@@ -5,12 +7,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+  )
+}
 
 export async function GET(req: NextRequest) {
+  const supabase = getSupabase()
   const { searchParams } = new URL(req.url)
   const query = searchParams.get('q')?.trim()
   const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50)

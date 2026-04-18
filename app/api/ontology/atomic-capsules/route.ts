@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 // Phase 6: Atomic 캡슐 CRUD API
 // GET ?concept_id=N              — 개념 전체 Atomic 캡슐 목록
 // GET ?atomic_id=N               — 단일 Atomic 캡슐 상세 (content_json 포함)
@@ -7,12 +9,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+  )
+}
 
 export async function GET(req: NextRequest) {
+  const supabase = getSupabase()
   const { searchParams } = new URL(req.url)
   const conceptId = searchParams.get('concept_id')
   const atomicId = searchParams.get('atomic_id')
@@ -115,6 +120,7 @@ export async function GET(req: NextRequest) {
 
 // 학습 진도 저장
 export async function POST(req: NextRequest) {
+  const supabase = getSupabase()
   try {
     const body = await req.json()
     const { user_id = 'anonymous', atomic_id, concept_id, status, quiz_score, notes } = body

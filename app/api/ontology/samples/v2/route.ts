@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * 샘플 콘텐츠 API v2 — 온톨로지 기반 실제 데이터 반영
  *
@@ -9,12 +11,15 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+  )
+}
 
 export async function GET() {
+  const supabase = getSupabase()
   try {
     // ★ 온톨로지 기반 동적 선택: 전문가 수 + 평균 관련도 상위 3개 개념
     const { data: topImportance } = await supabase

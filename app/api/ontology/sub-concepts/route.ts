@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * 하위 개념 조회 + 콘텐츠 합성 API
  *
@@ -7,13 +9,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+  )
+}
 
 // GET: 하위 개념 목록
 export async function GET(req: NextRequest) {
+  const supabase = getSupabase()
   const conceptId = req.nextUrl.searchParams.get('concept_id')
 
   if (!conceptId) {

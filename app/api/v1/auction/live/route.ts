@@ -197,60 +197,136 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// ─── POST (bid submission — mock only, no bids table yet) ─────
+// ─── POST (bid submission) ────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { auctionId, bidAmount, userId, autoBid } = body
+    const { auctionId, bidAmount, autoBid } = body
 
-    if (!auctionId || !bidAmount || !userId) {
+    if (!auctionId || !bidAmount) {
       return NextResponse.json(
-        { error: { code: "MISSING_FIELDS", message: "auctionId, bidAmount, userId는 필수입니다." } },
+        { error: { code: "MISSING_FIELDS", message: "auctionId, bidAmount는 필수입니다." } },
+        { status: 400 }
+      )
+    }
+    if (typeof bidAmount !== "number" || bidAmount <= 0) {
+      return NextResponse.json(
+        { error: { code: "INVALID_BID", message: "입찰가는 양수여야 합니다." } },
         { status: 400 }
       )
     }
 
-    const auction = MOCK_AUCTIONS.find((a) => a.id === auctionId)
-    if (!auction) {
+    const supabase = await createClient()
+
+    // ── Authenticate bidder ─────────────────────────────────
+    const { data: { user }, error: authErr } = await supabase.auth.getUser()
+    if (authErr || !user) {
       return NextResponse.json(
-        { error: { code: "AUCTION_NOT_FOUND", message: "경매를 찾을 수 없습니다." } },
-        { status: 404 }
+        { error: { code: "UNAUTHORIZED", message: "로그인이 필요합니다." } },
+        { status: 401 }
       )
     }
 
-    if (auction.status !== "LIVE") {
+    // ── Fetch auction from DB ───────────────────────────────
+    const { data: auctionRow, error: auctionErr } = await supabase
+      .from("court_auction_listings")
+      .select("id, status, min_bid_price, winning_bid")
+      .eq("id", auctionId)
+      .single()
+
+    // Fallback to mock for AUC-xxx IDs
+    if (auctionErr || !auctionRow) {
+      const mock = MOCK_AUCTIONS.find((a) => a.id === auctionId)
+      if (!mock) {
+        return NextResponse.json(
+          { error: { code: "AUCTION_NOT_FOUND", message: "경매를 찾을 수 없습니다." } },
+          { status: 404 }
+        )
+      }
+      if (mock.status !== "LIVE") {
+        return NextResponse.json(
+          { error: { code: "AUCTION_NOT_LIVE", message: "진행 중인 경매가 아닙니다." } },
+          { status: 400 }
+        )
+      }
+      if (bidAmount <= mock.currentBid) {
+        return NextResponse.json(
+          { error: { code: "BID_TOO_LOW", message: `입찰가는 현재 최고가(${mock.currentBid.toLocaleString()}원)보다 높아야 합니다.` } },
+          { status: 400 }
+        )
+      }
+      // Update mock state in memory (best-effort; server restart resets this)
+      mock.currentBid = bidAmount
+      mock.bidCount += 1
+      return NextResponse.json({
+        success: true,
+        data: {
+          auctionId,
+          bidId: `BID-${Date.now()}`,
+          bidAmount,
+          currentHighest: bidAmount,
+          bidRank: 1,
+          bidTime: new Date().toISOString(),
+          isHighestBidder: true,
+        },
+        source: "mock",
+      })
+    }
+
+    // ── Validate bid against current highest ────────────────
+    const currentHighest = auctionRow.winning_bid ?? auctionRow.min_bid_price ?? 0
+    if (bidAmount <= currentHighest) {
       return NextResponse.json(
-        { error: { code: "AUCTION_NOT_LIVE", message: "진행 중인 경매가 아닙니다." } },
+        { error: { code: "BID_TOO_LOW", message: `입찰가는 현재 최고가(${currentHighest.toLocaleString()}원)보다 높아야 합니다.` } },
         { status: 400 }
       )
     }
 
-    if (bidAmount <= auction.currentBid) {
+    // ── Save bid to auction_bids table ──────────────────────
+    const bidTime = new Date().toISOString()
+    const { data: bidRow, error: bidErr } = await supabase
+      .from("auction_bids")
+      .insert({
+        auction_id: auctionId,
+        bidder_id: user.id,
+        bid_amount: bidAmount,
+        is_auto_bid: autoBid === true,
+        bid_time: bidTime,
+        status: "ACTIVE",
+      })
+      .select("id")
+      .single()
+
+    if (bidErr) {
+      logger.error("[POST /api/v1/auction/live] bid insert error", { error: bidErr })
       return NextResponse.json(
-        { error: { code: "BID_TOO_LOW", message: `입찰가는 현재 최고가(${auction.currentBid}원)보다 높아야 합니다.` } },
-        { status: 400 }
+        { error: { code: "BID_SAVE_FAILED", message: "입찰 저장 중 오류가 발생했습니다." } },
+        { status: 500 }
       )
     }
 
-    // Update mock state
-    auction.currentBid = bidAmount
-    auction.bidCount += 1
+    // ── Update auction's winning_bid (best-effort) ──────────
+    await supabase
+      .from("court_auction_listings")
+      .update({ winning_bid: bidAmount, updated_at: bidTime })
+      .eq("id", auctionId)
 
     return NextResponse.json({
       success: true,
       data: {
         auctionId,
-        bidId: `BID-${Date.now()}`,
+        bidId: bidRow?.id ?? `BID-${Date.now()}`,
         bidAmount,
         currentHighest: bidAmount,
         bidRank: 1,
-        bidTime: new Date().toISOString(),
+        bidTime,
         isHighestBidder: true,
       },
-    })
+    }, { status: 201 })
+
   } catch (error) {
-    logger.error("[Live Auction Bid Error]", { error: error })
+    logger.error("[Live Auction Bid Error]", { error })
     return NextResponse.json(
       { error: { code: "INTERNAL_ERROR", message: "입찰 처리 중 오류가 발생했습니다." } },
       { status: 500 }

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { renderNewsletterHtml, renderAINewsletterHtml } from '@/lib/newsletter-renderer'
 import { generateNewsletterPdf } from '@/lib/pdf-generator'

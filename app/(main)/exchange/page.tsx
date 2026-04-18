@@ -318,6 +318,7 @@ export default function ExchangePage() {
   const [listingsLoading, setListingsLoading] = useState(true)
   const [isDemoMode, setIsDemoMode] = useState(true)
   const [demoDismissed, setDemoDismissed] = useState(false)
+  const [totalListings, setTotalListings] = useState<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -325,6 +326,7 @@ export default function ExchangePage() {
       .then(r => r.json())
       .then(d => {
         if (cancelled) return
+        if (typeof d.total === 'number') setTotalListings(d.total)
         if (d.data && d.data.length > 0) {
           const mapped: CardListing[] = d.data.map((r: Record<string, unknown>) => {
             // Map collateral_type to major category
@@ -579,7 +581,7 @@ export default function ExchangePage() {
             }}
           >
             {[
-              { label: tr("전체 매물"), value: `${MOCK.length}건`, sub: tr("실시간") },
+              { label: tr("전체 매물"), value: totalListings != null ? `${totalListings}건` : `${listings.length}건`, sub: isDemoMode ? tr("샘플") : tr("실시간") },
               { label: tr("평균 할인율"), value: "31.2%", sub: tr("채권잔액 대비") },
               { label: tr("평균 완성도"), value: "7.6 / 10", sub: tr("자료 제공 지수") },
               { label: tr("참여 기관"), value: "12곳", sub: tr("은행·AMC") },

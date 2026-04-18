@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 // Phase 6: Atomic 캡슐 벌크 생성 API
 // POST: 여러 개념의 Atomic 캡슐을 일괄 생성
 // GET:  벌크 생성 대상 개념 목록 (Atomic 캡슐이 없는 개념들)
@@ -9,15 +11,18 @@ import {
   generateAllAtomicCapsules,
 } from '@/lib/atomic-capsule-generator'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+  )
+}
 
 // ============================================================
 // GET: Atomic 캡슐이 없는 개념 목록 + 통계
 // ============================================================
 export async function GET(req: NextRequest) {
+  const supabase = getSupabase()
   const { searchParams } = new URL(req.url)
   const domainId = searchParams.get('domain_id')
   const level = searchParams.get('level')
@@ -82,6 +87,7 @@ export async function GET(req: NextRequest) {
 // POST: 벌크 생성 실행
 // ============================================================
 export async function POST(req: NextRequest) {
+  const supabase = getSupabase()
   try {
     const body = await req.json()
     const {

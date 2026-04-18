@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * 원문 세그먼트 API
  *
@@ -13,10 +15,12 @@ import { createClient } from '@supabase/supabase-js'
 import * as fs from 'fs'
 import * as path from 'path'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+  )
+}
 
 const TRANSCRIPT_FILE = path.resolve('C:/Users/82106/Desktop/부동산 대본/경매인플루언서 대본 총정리.json')
 
@@ -46,6 +50,7 @@ function loadTranscripts() {
 }
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase()
   try {
     const { searchParams } = new URL(request.url)
     const subConceptId = Number(searchParams.get('sub_concept_id'))

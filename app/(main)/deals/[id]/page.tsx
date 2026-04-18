@@ -1757,9 +1757,12 @@ function OverviewTab({ deal }: { deal: DealInfo }) {
           <p className="text-sm font-semibold text-white tracking-normal">다음 단계: LOI 작성</p>
           <p className="text-[11px] text-white/50 tracking-normal mt-0.5">LOI 제출 시 Access Score +120점, MATCHED 단계 진입</p>
         </div>
-        <button className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg tracking-normal whitespace-nowrap">
+        <Link
+          href={`/deals/contract?dealId=${deal.id}`}
+          className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg tracking-normal whitespace-nowrap"
+        >
           LOI 작성
-        </button>
+        </Link>
       </div>
     </div>
   )
@@ -1868,8 +1871,43 @@ function AuditTab({ logs }: { logs: AuditLog[] }) {
 
 // ── Right Panel ───────────────────────────────────────────────────────────────
 
-function RightPanel({ deal }: { deal: DealInfo }) {
+const STAGE_TO_API: Record<string, string> = {
+  "매칭":      "INTEREST",
+  "오퍼 교환": "NDA",
+  "실사":      "DUE_DILIGENCE",
+  "계약":      "NEGOTIATION",
+  "완료":      "COMPLETED",
+}
+
+function RightPanel({ deal, onTabSwitch }: { deal: DealInfo; onTabSwitch: (tab: TabKey) => void }) {
   const { asset: a, cp: c } = deal
+  const [advancing, setAdvancing] = useState(false)
+  const currentStageName = STAGES[deal.stage] ?? "매칭"
+  const nextStageName = STAGES[deal.stage + 1]
+  const nextApiStage = nextStageName ? STAGE_TO_API[nextStageName] : null
+
+  const handleAdvanceStage = async () => {
+    if (!nextApiStage || advancing) return
+    setAdvancing(true)
+    try {
+      const res = await fetch(`/api/v1/exchange/deals/${deal.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stage: nextApiStage }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data?.error?.message ?? "단계 전환에 실패했습니다.")
+      } else {
+        toast.success(`"${nextStageName}" 단계로 전환됐습니다. 새로고침 후 반영됩니다.`)
+      }
+    } catch {
+      toast.error("네트워크 오류로 단계 전환에 실패했습니다.")
+    } finally {
+      setAdvancing(false)
+    }
+  }
+
   return (
     <div className="space-y-4 sticky top-14">
       {/* Asset Summary */}
@@ -1901,7 +1939,7 @@ function RightPanel({ deal }: { deal: DealInfo }) {
         </div>
         <dl className="space-y-2.5">
           {[
-            ["단계", STAGES[deal.stage]],
+            ["단계", currentStageName],
             ["시작일", deal.startDate],
             ["예상 완료", deal.estClose],
           ].map(([k, v]) => (
@@ -1911,6 +1949,16 @@ function RightPanel({ deal }: { deal: DealInfo }) {
             </div>
           ))}
         </dl>
+        {nextStageName && deal.status === "진행중" && (
+          <button
+            onClick={handleAdvanceStage}
+            disabled={advancing}
+            className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 hover:border-blue-500/50 text-blue-300 rounded-lg text-xs font-semibold tracking-normal transition-all disabled:opacity-40"
+          >
+            {advancing ? <Loader2 className="w-3 h-3 animate-spin" /> : <ArrowUpRight className="w-3 h-3" />}
+            {advancing ? "전환 중..." : `${nextStageName} 단계로 전환`}
+          </button>
+        )}
       </div>
 
       {/* Counterparty */}
@@ -1936,10 +1984,16 @@ function RightPanel({ deal }: { deal: DealInfo }) {
 
       {/* Action Buttons */}
       <div className="space-y-2">
-        <button className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#2E75B6] hover:bg-[#3680c8] text-white rounded-xl text-sm font-medium transition-colors tracking-normal">
+        <button
+          onClick={() => onTabSwitch("채팅")}
+          className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#2E75B6] hover:bg-[#3680c8] text-white rounded-xl text-sm font-medium transition-colors tracking-normal"
+        >
           <Send className="w-4 h-4" /> 메시지 보내기
         </button>
-        <button className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.1] hover:border-blue-500/30 text-white/70 hover:text-white rounded-xl text-sm font-medium transition-all tracking-normal">
+        <button
+          onClick={() => onTabSwitch("미팅")}
+          className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.1] hover:border-blue-500/30 text-white/70 hover:text-white rounded-xl text-sm font-medium transition-all tracking-normal"
+        >
           <Video className="w-4 h-4" /> 화상 회의 예약
         </button>
       </div>
@@ -2279,7 +2333,7 @@ export default function DealRoomPage() {
 
         {/* Right Sidebar */}
         <aside>
-          <RightPanel deal={deal} />
+          <RightPanel deal={deal} onTabSwitch={setActiveTab} />
         </aside>
       </div>
     </div>

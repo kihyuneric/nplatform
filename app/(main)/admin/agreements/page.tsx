@@ -87,6 +87,36 @@ export default function AdminAgreementsPage() {
   const [query, setQuery] = useState("")
   const [allRows, setAllRows] = useState<AdminAgreementRow[]>(FALLBACK_ROWS)
   const [loading, setLoading] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+
+  const handleApproveFlag = useCallback(async (rowId: string, newFlag: FlagSeverity) => {
+    setActionLoading(rowId)
+    try {
+      const { error } = await supabase
+        .from("agreements")
+        .update({ flag_severity: newFlag, updated_at: new Date().toISOString() })
+        .eq("id", rowId)
+      if (!error) {
+        setAllRows(prev => prev.map(r => r.id === rowId ? { ...r, flag: newFlag } : r))
+      }
+    } catch { /* best-effort */ }
+    finally { setActionLoading(null) }
+  }, [supabase])
+
+  const handleApproveAgreement = useCallback(async (rowId: string, newStatus: DocStatus) => {
+    setActionLoading(rowId)
+    try {
+      const { error } = await supabase
+        .from("agreements")
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq("id", rowId)
+      if (!error) {
+        setAllRows(prev => prev.map(r => r.id === rowId ? { ...r, status: newStatus } : r))
+      }
+    } catch { /* best-effort */ }
+    finally { setActionLoading(null) }
+  }, [supabase])
 
   const loadAgreements = useCallback(async () => {
     setLoading(true)
@@ -378,18 +408,70 @@ export default function AdminAgreementsPage() {
                   >
                     <Flag size={10} /> {flag.label}
                   </span>
-                  <button
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: 4,
-                      padding: "5px 10px", borderRadius: 6,
-                      backgroundColor: C.bg3, color: C.lt4,
-                      border: `1px solid ${C.bg4}`,
-                      fontSize: 10, fontWeight: 700, cursor: "pointer",
-                      width: "fit-content",
-                    }}
-                  >
-                    <Eye size={11} /> 상세
-                  </button>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <button
+                      onClick={() => setSelectedId(selectedId === row.id ? null : row.id)}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "5px 10px", borderRadius: 6,
+                        backgroundColor: selectedId === row.id ? "#2E75B61F" : C.bg3,
+                        color: selectedId === row.id ? "#2E75B6" : C.lt4,
+                        border: `1px solid ${selectedId === row.id ? "#2E75B644" : C.bg4}`,
+                        fontSize: 10, fontWeight: 700, cursor: "pointer",
+                        width: "fit-content",
+                      }}
+                    >
+                      <Eye size={11} /> {selectedId === row.id ? "닫기" : "상세"}
+                    </button>
+                    {row.flag === "NONE" && row.status !== "REJECTED" && (
+                      <button
+                        onClick={() => handleApproveFlag(row.id, "WATCH")}
+                        disabled={actionLoading === row.id}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 4,
+                          padding: "4px 8px", borderRadius: 6,
+                          backgroundColor: "rgba(245,158,11,0.08)", color: C.amber,
+                          border: "1px solid rgba(245,158,11,0.3)",
+                          fontSize: 9, fontWeight: 700, cursor: "pointer",
+                          width: "fit-content", opacity: actionLoading === row.id ? 0.5 : 1,
+                        }}
+                      >
+                        <Flag size={10} /> 관찰 표시
+                      </button>
+                    )}
+                    {row.status === "PENDING" && (
+                      <button
+                        onClick={() => handleApproveAgreement(row.id, "APPROVED")}
+                        disabled={actionLoading === row.id}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 4,
+                          padding: "4px 8px", borderRadius: 6,
+                          backgroundColor: "rgba(16,185,129,0.08)", color: C.em,
+                          border: "1px solid rgba(16,185,129,0.3)",
+                          fontSize: 9, fontWeight: 700, cursor: "pointer",
+                          width: "fit-content", opacity: actionLoading === row.id ? 0.5 : 1,
+                        }}
+                      >
+                        <CheckCircle2 size={10} /> 승인
+                      </button>
+                    )}
+                  </div>
+                  {/* Expandable detail row */}
+                  {selectedId === row.id && (
+                    <div
+                      style={{
+                        gridColumn: "1 / -1", marginTop: 8, padding: "10px 14px",
+                        borderRadius: 8, backgroundColor: C.bg4,
+                        border: `1px solid ${C.bg3}`, fontSize: 10, color: C.lt4,
+                        lineHeight: 1.7,
+                      }}
+                    >
+                      <b style={{ color: "#fff" }}>ID:</b> {row.id} &nbsp;|&nbsp;
+                      <b style={{ color: "#fff" }}>매물:</b> {row.listing_id || "—"} &nbsp;|&nbsp;
+                      <b style={{ color: "#fff" }}>등급:</b> {row.buyer_tier} &nbsp;|&nbsp;
+                      {row.flag_reason && <><b style={{ color: C.amber }}>사유:</b> {row.flag_reason}</>}
+                    </div>
+                  )}
                 </div>
               )
             })

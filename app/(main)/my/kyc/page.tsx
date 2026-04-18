@@ -124,11 +124,10 @@ export default function KycPage() {
       setUploadedUrl(publicUrl)
       setUploaded(true)
     } catch (err: unknown) {
-      // Storage not configured or network error — use mock URL so UI is unblocked
       const msg = err instanceof Error ? err.message : "업로드 실패"
-      console.warn("[kyc] Storage upload failed, using mock URL:", msg)
-      setUploadedUrl(`mock://uploaded/${Date.now()}.pdf`)
-      setUploaded(true)
+      console.error("[kyc] Storage upload failed:", msg)
+      alert(`서류 업로드에 실패했습니다: ${msg}\n\n잠시 후 다시 시도해 주세요.`)
+      // Do NOT mark as uploaded — user must retry with a real file
     } finally {
       setUploading(false)
       // Reset input so same file can be re-selected
@@ -143,7 +142,10 @@ export default function KycPage() {
     try {
       const apiType = type === "PERSONAL" ? "INDIVIDUAL" : "BUSINESS"
       const body: Record<string, string> = { type: apiType }
-      const docUrl = uploadedUrl || `mock://uploaded/${Date.now()}.pdf`
+      if (!uploadedUrl) {
+        throw new Error("서류를 먼저 업로드해 주세요.")
+      }
+      const docUrl = uploadedUrl
       if (apiType === "INDIVIDUAL") {
         body.id_image_url = docUrl
       } else {

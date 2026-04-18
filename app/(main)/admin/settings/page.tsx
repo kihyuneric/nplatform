@@ -115,8 +115,30 @@ export default function AdminSettingsPage() {
   // ── 수수료 설정 state ──────────────────────────────────────
   const [feeConfig, setFeeConfig] = useState<FeeConfig>(DEFAULT_FEE_CONFIG)
   const [savingFee, setSavingFee] = useState(false)
+  // 예상 매출 계산용 — 대시보드 API에서 실제 값 로드
+  const [avgDealValue, setAvgDealValue] = useState(0)
+  const [monthlyDeals, setMonthlyDeals] = useState(0)
 
   useEffect(() => { setFeeConfig(loadFeeConfig()) }, [])
+
+  // 대시보드 API에서 실제 거래 통계 로드
+  useEffect(() => {
+    fetch('/api/v1/admin/dashboard')
+      .then(r => r.json())
+      .then(d => {
+        if (d.data?.activeDeals != null) setMonthlyDeals(d.data.activeDeals)
+        if (d.data?.monthlyRevenue != null && d.data.activeDeals > 0) {
+          // 수수료 합산 기준으로 평균 딜 가치 역산 (buyer+seller 합산 수수료율)
+          const combinedRate = feeConfig.buyerBaseRate + feeConfig.sellerBaseRate
+          const impliedAvg = combinedRate > 0
+            ? Math.round(d.data.monthlyRevenue / (d.data.activeDeals * combinedRate))
+            : 1_500_000_000
+          setAvgDealValue(impliedAvg)
+        }
+      })
+      .catch(() => { /* fallback to 0 — UI will show N/A */ })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const saveFeeSettings = () => {
     setSavingFee(true)
@@ -124,13 +146,11 @@ export default function AdminSettingsPage() {
     setTimeout(() => { setSavingFee(false); toast.success('수수료 설정이 저장되었습니다') }, 400)
   }
 
-  // 예상 매출 계산 (샘플 12건 기준)
-  const MOCK_AVG_DEAL = 1_500_000_000   // 평균 거래가 15억
-  const MOCK_MONTHLY_DEALS = 8          // 월 성사 거래 건수
-  const estMonthlyBuyerFee = Math.round(MOCK_AVG_DEAL * feeConfig.buyerBaseRate * MOCK_MONTHLY_DEALS)
-  const estMonthlySellerFee = Math.round(MOCK_AVG_DEAL * feeConfig.sellerBaseRate * MOCK_MONTHLY_DEALS)
-  const estMonthlyTotal = estMonthlyBuyerFee + estMonthlySellerFee
-  const estAnnualTotal = estMonthlyTotal * 12
+  // 예상 매출 계산 (대시보드 실 데이터 기반)
+  const estMonthlyBuyerFee = avgDealValue > 0 ? Math.round(avgDealValue * feeConfig.buyerBaseRate * monthlyDeals) : null
+  const estMonthlySellerFee = avgDealValue > 0 ? Math.round(avgDealValue * feeConfig.sellerBaseRate * monthlyDeals) : null
+  const estMonthlyTotal = estMonthlyBuyerFee != null && estMonthlySellerFee != null ? estMonthlyBuyerFee + estMonthlySellerFee : null
+  const estAnnualTotal = estMonthlyTotal != null ? estMonthlyTotal * 12 : null
 
   const [savingPerms, setSavingPerms] = useState(false)
   const [admins, setAdmins] = useState<AdminUser[]>(FALLBACK_ADMINS)
@@ -593,16 +613,16 @@ export default function AdminSettingsPage() {
                 <BarChart3 className="w-3.5 h-3.5 text-[var(--color-brand-mid)]" />
                 <span className={`${DS.text.label} text-[var(--color-brand-mid)]`}>예상 매출 대시보드</span>
                 <span className={`ml-auto ${DS.text.micro} text-[var(--color-text-muted)]`}>
-                  기준: 월 {MOCK_MONTHLY_DEALS}건 · 평균 거래가 {formatKRW(MOCK_AVG_DEAL)}
+                  기준: 월 {monthlyDeals}건 · 평균 거래가 {avgDealValue > 0 ? formatKRW(avgDealValue) : "집계 중"}
                 </span>
               </div>
               <div className="px-4 py-4">
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   {[
-                    { label: "매수자 수수료 월 예상", value: formatKRW(estMonthlyBuyerFee), icon: TrendingUp, color: "var(--color-positive)", sub: `${(feeConfig.buyerBaseRate * 100).toFixed(1)}% × ${MOCK_MONTHLY_DEALS}건` },
-                    { label: "매도자 수수료 월 예상", value: formatKRW(estMonthlySellerFee), icon: DollarSign, color: "var(--color-brand-mid)", sub: `${(feeConfig.sellerBaseRate * 100).toFixed(1)}% × ${MOCK_MONTHLY_DEALS}건` },
-                    { label: "월 총 예상 수수료", value: formatKRW(estMonthlyTotal), icon: BarChart3, color: "var(--color-warning)", sub: "매수+매도 합산" },
-                    { label: "연간 예상 수수료", value: formatKRW(estAnnualTotal), icon: TrendingUp, color: "var(--color-positive)", sub: "월 × 12개월 추정" },
+                    { label: "매수자 수수료 월 예상", value: estMonthlyBuyerFee != null ? formatKRW(estMonthlyBuyerFee) : "—", icon: TrendingUp, color: "var(--color-positive)", sub: `${(feeConfig.buyerBaseRate * 100).toFixed(1)}% × ${monthlyDeals}건` },
+                    { label: "매도자 수수료 월 예상", value: estMonthlySellerFee != null ? formatKRW(estMonthlySellerFee) : "—", icon: DollarSign, color: "var(--color-brand-mid)", sub: `${(feeConfig.sellerBaseRate * 100).toFixed(1)}% × ${monthlyDeals}건` },
+                    { label: "월 총 예상 수수료", value: estMonthlyTotal != null ? formatKRW(estMonthlyTotal) : "—", icon: BarChart3, color: "var(--color-warning)", sub: "매수+매도 합산" },
+                    { label: "연간 예상 수수료", value: estAnnualTotal != null ? formatKRW(estAnnualTotal) : "—", icon: TrendingUp, color: "var(--color-positive)", sub: "월 × 12개월 추정" },
                   ].map(k => {
                     const Icon = k.icon
                     return (

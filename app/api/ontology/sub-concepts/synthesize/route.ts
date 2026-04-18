@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * 하위 개념 콘텐츠 합성 API
  *
@@ -12,10 +14,12 @@ import { createClient } from '@supabase/supabase-js'
 import * as fs from 'fs'
 import * as path from 'path'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+  )
+}
 
 const TRANSCRIPT_FILE = path.resolve('C:/Users/82106/Desktop/부동산 대본/경매인플루언서 대본 총정리.json')
 
@@ -45,6 +49,7 @@ function loadTranscripts() {
 }
 
 export async function POST(req: NextRequest) {
+  const supabase = getSupabase()
   try {
     const body = await req.json()
     const { sub_concept_id, selected_youtube_ids, force_regenerate } = body
@@ -413,6 +418,7 @@ ${contextText}
 }
 
 async function saveContent(subConceptId: number, content: any, videoCount: number) {
+  const supabase = getSupabase()
   await supabase
     .from('ont_sub_concept')
     .update({

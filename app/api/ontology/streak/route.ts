@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 // Phase 6: 학습 스트릭 & 게이미피케이션 API
 // GET  ?user_id=anonymous — 스트릭 현황 + 뱃지 목록
 // POST ?user_id=anonymous — 오늘 학습 기록 업데이트
@@ -5,10 +7,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+  )
+}
 
 // 뱃지 정의
 const BADGE_DEFINITIONS = [
@@ -87,6 +91,7 @@ function calculateStreak(records: Array<{ study_date: string }>): { current: num
 }
 
 export async function GET(req: NextRequest) {
+  const supabase = getSupabase()
   const userId = new URL(req.url).searchParams.get('user_id') || 'anonymous'
 
   try {
@@ -200,6 +205,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const supabase = getSupabase()
   const userId = new URL(req.url).searchParams.get('user_id') || 'anonymous'
 
   try {
