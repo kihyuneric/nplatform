@@ -24,6 +24,7 @@ const ADMIN_MENU = [
   { href: "/admin/coupons",    label: "쿠폰 관리",   icon: Tag },
   { href: "/admin/content",    label: "콘텐츠 관리", icon: Megaphone },
   { href: "/admin/experts",    label: "전문가·파트너", icon: GraduationCap },
+  { href: "/admin/integrations", label: "외부 연동",   icon: Cable },
   { href: "/admin/settings",   label: "사이트 설정", icon: Settings },
   { href: "/admin/system",     label: "시스템",      icon: Server },
   { href: "/admin/analytics",  label: "분석",        icon: BarChart3 },

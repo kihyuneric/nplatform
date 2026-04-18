@@ -183,9 +183,8 @@ const nextConfig = {
 
       // Admin settings consolidation
       { source: '/admin/api-keys', destination: '/admin/settings?tab=api-keys', permanent: true },
-      { source: '/admin/api-integrations', destination: '/admin/settings?tab=integrations', permanent: true },
-      { source: '/admin/integrations', destination: '/admin/settings?tab=integrations', permanent: true },
-      { source: '/admin/integrations/hub', destination: '/admin/settings?tab=integrations', permanent: true },
+      { source: '/admin/api-integrations', destination: '/admin/integrations', permanent: true },
+      { source: '/admin/integrations/hub', destination: '/admin/integrations', permanent: true },
       { source: '/admin/navigation', destination: '/admin/settings?tab=navigation', permanent: true },
       { source: '/admin/site-settings', destination: '/admin/settings?tab=general', permanent: true },
       { source: '/admin/permissions', destination: '/admin/settings?tab=permissions', permanent: true },
