@@ -22,10 +22,9 @@ type Tab = typeof TABS[number]
 // ─── 플랜 목록 ────────────────────────────────────────────
 
 const UPGRADE_PLANS = [
-  { key: 'STARTER',      name: 'STARTER',      price_monthly: 29_000,    price_yearly: 23_200 * 12,  icon: Zap,        color: 'text-slate-400', desc: '입문자용 기본 도구' },
-  { key: 'PRO',          name: 'PRO',           price_monthly: 79_000,    price_yearly: 63_200 * 12,  icon: Zap,        color: 'text-blue-400',  desc: '전문 투자자 필수 Suite', popular: true },
-  { key: 'PROFESSIONAL', name: 'PROFESSIONAL',  price_monthly: 199_000,   price_yearly: 159_200 * 12, icon: Crown,      color: 'text-purple-400',desc: '법인·전문 투자자 전용' },
-  { key: 'INSTITUTION',  name: 'INSTITUTION',   price_monthly: 499_000,   price_yearly: 399_200 * 12, icon: Building2,  color: 'text-emerald-400',desc: '금융기관·운용사' },
+  { key: 'L1',           name: 'L1',            price_monthly: 300_000,   price_yearly: 300_000 * 10, icon: Zap,        color: 'text-blue-400',   desc: '활발한 NPL 투자자 프리미엄 액세스', popular: false },
+  { key: 'L2',           name: 'L2',            price_monthly: 1_000_000, price_yearly: 1_000_000 * 10,icon: Crown,     color: 'text-emerald-400',desc: '법인·전문 기관 투자자 최상위 플랜', popular: true },
+  { key: 'VERIFICATION', name: '검증',           price_monthly: 500_000,   price_yearly: 500_000 * 10, icon: Building2,  color: 'text-amber-400',  desc: '기관 인증 배지 + 우선 매칭 자격' },
 ]
 
 const STATUS_LABEL: Record<string, { label: string; color: string; bg: string }> = {
@@ -113,10 +112,6 @@ export default function BillingPage() {
   const statusCfg = STATUS_LABEL[subscription?.status ?? 'active'] ?? STATUS_LABEL['active']!
 
   function handleUpgrade(plan: typeof UPGRADE_PLANS[number]) {
-    if (plan.key === 'INSTITUTION') {
-      window.location.href = '/support?subject=enterprise'
-      return
-    }
     setCheckoutPlan({
       id:            plan.key.toLowerCase(),
       plan_key:      plan.key,
