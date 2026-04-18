@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Send, CheckCircle2, Info, Building2, Gavel } from 'lucide-react'
+import { CommaNumberInput } from '@/components/ui/comma-number-input'
 
 const COLLATERAL_OPTIONS = ['아파트', '상가', '토지', '오피스텔', '기타']
 const RE_TYPE_OPTIONS = ['아파트', '오피스텔', '상가', '단독주택', '토지', '기타']
@@ -307,11 +308,10 @@ export default function NewDemandPage() {
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-sm pointer-events-none select-none">₩</span>
-                <input
-                  type="number"
+                <CommaNumberInput
                   placeholder="예: 5"
                   value={minAmount}
-                  onChange={e => { setMinAmount(e.target.value); clearError('minAmount') }}
+                  onChange={v => { setMinAmount(v); clearError('minAmount') }}
                   className={`input-enhanced w-full${errors.minAmount ? ' error' : ''}`}
                   style={{ paddingLeft: '1.75rem' }}
                 />
@@ -324,11 +324,10 @@ export default function NewDemandPage() {
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-sm pointer-events-none select-none">₩</span>
-                <input
-                  type="number"
+                <CommaNumberInput
                   placeholder="예: 20"
                   value={maxAmount}
-                  onChange={e => { setMaxAmount(e.target.value); clearError('maxAmount') }}
+                  onChange={v => { setMaxAmount(v); clearError('maxAmount') }}
                   className={`input-enhanced w-full${errors.maxAmount ? ' error' : ''}`}
                   style={{ paddingLeft: '1.75rem' }}
                 />

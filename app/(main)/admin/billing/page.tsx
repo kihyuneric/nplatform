@@ -9,6 +9,7 @@ import {
 import DS, { formatKRW, formatDate } from "@/lib/design-system"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
+import { CommaNumberInput } from "@/components/ui/comma-number-input"
 
 type TabKey = "payments" | "subscriptions" | "settlement" | "coupons" | "pricing" | "commissions"
 
@@ -430,10 +431,9 @@ function PricingTab() {
                 ].map(({ label, field }) => (
                   <div key={field}>
                     <label className={DS.text.caption + " block mb-1"}>{label}</label>
-                    <input
-                      type="number"
+                    <CommaNumberInput
                       value={p[field]}
-                      onChange={e => setPlans(prev => prev.map((pl, j) => j === i ? { ...pl, [field]: Number(e.target.value) } : pl))}
+                      onChange={v => setPlans(prev => prev.map((pl, j) => j === i ? { ...pl, [field]: Number(v) || 0 } : pl))}
                       className={DS.input.base + " text-[0.8125rem]"}
                     />
                   </div>
@@ -643,12 +643,12 @@ function CouponManager() {
             </div>
             <div>
               <label className={DS.input.label}>혜택 값 * ({form.type === '크레딧' ? '개' : form.type === '구독일' ? '일' : '%'})</label>
-              <input type="number" value={form.value} onChange={e => setForm(p => ({ ...p, value: e.target.value }))}
+              <CommaNumberInput value={form.value} onChange={v => setForm(p => ({ ...p, value: v }))}
                 placeholder="예: 100" className={DS.input.base} />
             </div>
             <div>
               <label className={DS.input.label}>사용 한도 (0=무제한)</label>
-              <input type="number" value={form.usageLimit} onChange={e => setForm(p => ({ ...p, usageLimit: e.target.value }))}
+              <CommaNumberInput value={form.usageLimit} onChange={v => setForm(p => ({ ...p, usageLimit: v }))}
                 placeholder="예: 500" className={DS.input.base} />
             </div>
             <div className="sm:col-span-2">

@@ -7,6 +7,7 @@ import {
   ChevronDown, RefreshCw, Ban, Loader2,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { CommaNumberInput } from '@/components/ui/comma-number-input'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -303,14 +304,11 @@ function CreateCouponModal({ onClose, onCreate }: CreateModalProps) {
                 {form.discount_type === 'PERCENT' ? '(1–100%)' : form.discount_type === 'FIXED' ? '(원 단위)' : '(크레딧 수)'}
               </span>
             </label>
-            <input
+            <CommaNumberInput
               style={inputStyle}
-              type="number"
-              min={1}
-              max={form.discount_type === 'PERCENT' ? 100 : undefined}
               value={form.discount_value}
-              onChange={e => set('discount_value', e.target.value)}
-              placeholder={form.discount_type === 'PERCENT' ? '예: 20' : form.discount_type === 'FIXED' ? '예: 10000' : '예: 500'}
+              onChange={v => set('discount_value', v)}
+              placeholder={form.discount_type === 'PERCENT' ? '예: 20' : form.discount_type === 'FIXED' ? '예: 10,000' : '예: 500'}
             />
             {errors.discount_value && <p style={errStyle}>{errors.discount_value}</p>}
           </div>
@@ -319,12 +317,10 @@ function CreateCouponModal({ onClose, onCreate }: CreateModalProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
               <label style={labelStyle}>최대 사용 횟수 <span style={{ color: SLATE_700, textTransform: 'none' }}>(비워두면 무제한)</span></label>
-              <input
+              <CommaNumberInput
                 style={inputStyle}
-                type="number"
-                min={1}
                 value={form.max_uses}
-                onChange={e => set('max_uses', e.target.value)}
+                onChange={v => set('max_uses', v)}
                 placeholder="예: 500"
               />
               {errors.max_uses && <p style={errStyle}>{errors.max_uses}</p>}
