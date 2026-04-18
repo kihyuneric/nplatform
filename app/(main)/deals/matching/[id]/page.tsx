@@ -67,9 +67,21 @@ export default function MatchingDetailPage() {
         const res = await fetch(`/api/v1/matching/results?id=${encodeURIComponent(matchId)}`)
         if (res.ok) {
           const json = await res.json()
-          const data = (json?.data ?? json?.result ?? null) as MatchPair | null
-          if (data && !cancelled) {
-            setMatch(data)
+          // API returns array — find by id or take first
+          const raw = json?.data ?? json?.result ?? null
+          const found: MatchPair | null = Array.isArray(raw)
+            ? (raw.find((m: MatchPair) => m.id === matchId) ?? raw[0] ?? null)
+            : (raw as MatchPair | null)
+          if (found && !cancelled) {
+            // Normalize API factors: API uses weight (0-1) while UI expects maxScore
+            const normalized: MatchPair = {
+              ...found,
+              factors: (found.factors ?? []).map(f => ({
+                ...f,
+                maxScore: f.maxScore ?? Math.round((f.weight ?? 0.25) * 100),
+              })),
+            }
+            setMatch(normalized)
             return
           }
         }
@@ -111,7 +123,7 @@ export default function MatchingDetailPage() {
     )
   }
 
-  const cfg = GRADE_CONFIG[match.grade]
+  const cfg = GRADE_CONFIG[match.grade] ?? GRADE_CONFIG["EXCELLENT"]
 
   return (
     <div className={DS.page.wrapper}>

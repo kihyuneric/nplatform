@@ -5,6 +5,7 @@ import Link from 'next/link'
 import DS, { formatKRW, formatDate } from '@/lib/design-system'
 import { MapPin, Building2, Plus, Target, Search, Users, DollarSign, ArrowUpRight, FileText, X, Sparkles, Loader2, ChevronLeft, ChevronRight, AlertCircle, LayoutGrid, List } from 'lucide-react'
 import { COLLATERAL_OPTIONS, REGIONS } from '@/lib/taxonomy'
+import { CommaNumberInput } from '@/components/ui/comma-number-input'
 
 type Urgency = 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW'
 
@@ -602,22 +603,20 @@ export default function DemandsPage() {
               <div className="grid grid-cols-2 gap-4 mb-5">
                 <div>
                   <label className={DS.input.label}>최소 금액 (원)</label>
-                  <input
-                    type="number"
-                    placeholder="100000000"
+                  <CommaNumberInput
+                    placeholder="100,000,000"
                     value={formMinAmount}
-                    onChange={e => setFormMinAmount(e.target.value)}
+                    onChange={setFormMinAmount}
                     className={DS.input.base}
                   />
-                  <p className={DS.input.helper}>예: 1억 = 100000000</p>
+                  <p className={DS.input.helper}>예: 1억 = 100,000,000</p>
                 </div>
                 <div>
                   <label className={DS.input.label}>최대 금액 (원)</label>
-                  <input
-                    type="number"
-                    placeholder="500000000"
+                  <CommaNumberInput
+                    placeholder="500,000,000"
                     value={formMaxAmount}
-                    onChange={e => setFormMaxAmount(e.target.value)}
+                    onChange={setFormMaxAmount}
                     className={DS.input.base}
                   />
                 </div>
