@@ -4,14 +4,20 @@ import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
-// ─── Fallback sample data (used when DB has no completed deals) ─────────────
-const SAMPLE_ARCHIVE = [
-  { id: 'a1', listing_name: '강서구 아파트 채권', asset_type: '아파트', deal_amount: 720_000_000, roi: 18.5, end_date: '2026-02-26', counterparty: '국민은행', type: 'buy' as const },
-  { id: 'a2', listing_name: '수원시 상가 채권', asset_type: '상가', deal_amount: 1_350_000_000, roi: 12.3, end_date: '2026-01-05', counterparty: '하나은행', type: 'buy' as const },
-  { id: 'a3', listing_name: '동대문구 오피스텔 채권', asset_type: '오피스텔', deal_amount: 480_000_000, roi: 9.1, end_date: '2025-12-08', counterparty: '(주)NPL투자', type: 'sell' as const },
-  { id: 'a4', listing_name: '분당구 오피스 채권', asset_type: '오피스', deal_amount: 2_800_000_000, roi: 22.7, end_date: '2025-11-29', counterparty: '미래에셋자산', type: 'sell' as const },
-  { id: 'a5', listing_name: '해운대구 토지 채권', asset_type: '토지', deal_amount: 950_000_000, roi: 8.7, end_date: '2025-10-28', counterparty: '신한은행', type: 'buy' as const },
-]
+// ─── Fallback sample data ────────────────────────────────────────────────────
+// Built dynamically so dates always appear recent relative to "now". Only used
+// when Supabase is unreachable — empty results are surfaced as real empty state.
+function buildSampleArchive() {
+  const now = Date.now()
+  const daysAgo = (d: number) => new Date(now - d * 86_400_000).toISOString().slice(0, 10)
+  return [
+    { id: 'a1', listing_name: '강서구 아파트 채권',     asset_type: '아파트',     deal_amount: 720_000_000,   roi: 18.5, end_date: daysAgo(14),  counterparty: '국민은행',    type: 'buy'  as const },
+    { id: 'a2', listing_name: '수원시 상가 채권',       asset_type: '상가',       deal_amount: 1_350_000_000, roi: 12.3, end_date: daysAgo(28),  counterparty: '하나은행',    type: 'buy'  as const },
+    { id: 'a3', listing_name: '동대문구 오피스텔 채권', asset_type: '오피스텔',   deal_amount: 480_000_000,   roi: 9.1,  end_date: daysAgo(45),  counterparty: '(주)NPL투자', type: 'sell' as const },
+    { id: 'a4', listing_name: '분당구 오피스 채권',     asset_type: '오피스',     deal_amount: 2_800_000_000, roi: 22.7, end_date: daysAgo(62),  counterparty: '미래에셋자산', type: 'sell' as const },
+    { id: 'a5', listing_name: '해운대구 토지 채권',     asset_type: '토지',       deal_amount: 950_000_000,   roi: 8.7,  end_date: daysAgo(90),  counterparty: '신한은행',    type: 'buy'  as const },
+  ]
+}
 
 // ─── GET /api/v1/exchange/archive ───────────────────────────────────────────
 export async function GET(request: NextRequest) {
@@ -54,6 +60,7 @@ export async function GET(request: NextRequest) {
       .in('current_stage', ['COMPLETED', 'SETTLEMENT'])
       .not('completed_at', 'is', null)
       .order('completed_at', { ascending: false })
+      .order('id', { ascending: true })
       .range(offset, offset + limit - 1)
 
     // Filter by period
@@ -88,18 +95,20 @@ export async function GET(request: NextRequest) {
         .in('current_stage', ['COMPLETED', 'SETTLEMENT'])
         .not('completed_at', 'is', null)
         .order('completed_at', { ascending: false })
+        .order('id', { ascending: true })
         .range(offset, offset + limit - 1)
       if (data) nplRows = data as unknown as typeof dealRows
     }
 
     const rows = (dealRows && dealRows.length > 0) ? dealRows : (nplRows ?? [])
 
-    // ── If nothing in DB, fall back to sample data ───────────────────────────
-    if (!rows || rows.length === 0 || dealsError) {
-      if (dealsError) logger.warn('[archive] deals query error:', { error: dealsError.message })
-
-      // Filter sample by period / type
-      let sample = [...SAMPLE_ARCHIVE]
+    // ── Only fall back to sample on REAL errors (table missing/connection) ──
+    // A successful query returning 0 rows is a valid empty state — returning
+    // sample data here used to cause the archive tab to flip between real
+    // results and stale sample rows.
+    if (dealsError) {
+      logger.warn('[archive] deals query error, returning sample:', { error: dealsError.message })
+      let sample = buildSampleArchive()
       if (period !== 'all') sample = sample.filter(d => d.end_date.startsWith(period))
       if (type !== 'all')   sample = sample.filter(d => d.type === type)
 
@@ -112,6 +121,17 @@ export async function GET(request: NextRequest) {
         totalAmount,
         avgRoi:      parseFloat(avgRoi.toFixed(1)),
         _source:     'sample',
+      })
+    }
+
+    // Empty real result → return real empty state
+    if (!rows || rows.length === 0) {
+      return NextResponse.json({
+        data: [],
+        total: 0,
+        totalAmount: 0,
+        avgRoi: 0,
+        _source: 'supabase',
       })
     }
 
@@ -169,11 +189,12 @@ export async function GET(request: NextRequest) {
     })
   } catch (err) {
     logger.error('[exchange/archive] GET error:', { error: err })
+    const sample = buildSampleArchive()
     return NextResponse.json({
-      data:    SAMPLE_ARCHIVE,
-      total:   SAMPLE_ARCHIVE.length,
-      totalAmount: SAMPLE_ARCHIVE.reduce((s, d) => s + d.deal_amount, 0),
-      avgRoi:  SAMPLE_ARCHIVE.reduce((s, d) => s + d.roi, 0) / SAMPLE_ARCHIVE.length,
+      data:    sample,
+      total:   sample.length,
+      totalAmount: sample.reduce((s, d) => s + d.deal_amount, 0),
+      avgRoi:  parseFloat((sample.reduce((s, d) => s + d.roi, 0) / sample.length).toFixed(1)),
       _source: 'sample',
     })
   }

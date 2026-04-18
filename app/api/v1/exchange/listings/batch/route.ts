@@ -7,7 +7,7 @@
  *
  * - 각 항목은 /api/v1/exchange/listings POST 스키마와 호환 (Zod로 검증)
  * - 부분 실패 허용: 항목별 성공/실패 결과를 반환
- * - 각 매물은 status='PENDING_REVIEW' 로 저장 (관리자 승인 후 노출)
+ * - 각 매물은 status='ACTIVE' 로 저장 (단건 POST와 동일, 거래소에 즉시 노출)
  */
 
 import { NextRequest, NextResponse } from "next/server"
@@ -91,7 +91,10 @@ function buildRow(body: ListingItem, userId: string): { row: Record<string, unkn
         : 0,
       ai_grade: body.risk_grade ?? 'B',
       listing_type: 'NPL',
-      status: 'PENDING_REVIEW',
+      // Match single-POST behavior (/api/v1/exchange): ACTIVE so listings
+      // appear in the exchange immediately. Admin moderation happens via the
+      // listings admin page, not via hidden PENDING_REVIEW status.
+      status: 'ACTIVE',
       visibility: body.visibility ?? 'PUBLIC',
       deadline: body.deadline ?? null,
       area_sqm: body.area ?? 0,
