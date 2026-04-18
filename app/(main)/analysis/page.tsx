@@ -207,13 +207,13 @@ export default function AnalysisDashboard() {
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 href="/analysis/demo"
-                className={`${DS.button.secondary} !text-[0.75rem] !py-2`}
+                className={DS.btn('secondary', 'sm')}
               >
                 <Zap className="w-3.5 h-3.5" /> 데모 체험
               </Link>
               <Link
                 href="/analysis/profitability"
-                className={`${DS.button.primary} !text-[0.75rem] !py-2`}
+                className={DS.btn('primary', 'sm')}
               >
                 <TrendingUp className="w-3.5 h-3.5" /> 분석 시작
               </Link>

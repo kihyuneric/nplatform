@@ -276,12 +276,41 @@ export function formatDate(date: string): string {
   return new Date(date).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
 }
 
+// ── 버튼 variant 헬퍼 ───────────────────────────────────────────────────────
+// 기존 DS.button.primary + DS.button.sm 조합 시 tailwind utility 충돌(!text/!py override) 문제를 해결.
+// button('primary', 'sm') 형태로 호출하면 size 별 완전한 class 문자열 반환.
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'accent' | 'danger'
+type ButtonSize = 'sm' | 'md' | 'lg'
+
+const BTN_BASE = 'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-150 relative overflow-hidden'
+const BTN_GHOST_BASE = 'inline-flex items-center justify-center gap-2 font-medium transition-all duration-150'
+
+const BTN_SIZE: Record<ButtonSize, string> = {
+  sm: 'px-3 py-1.5 text-[0.75rem] rounded-md',
+  md: 'px-5 py-2.5 text-[0.8125rem] rounded-lg',
+  lg: 'px-7 py-3.5 text-[0.9375rem] rounded-xl',
+}
+
+const BTN_COLORS: Record<ButtonVariant, string> = {
+  primary:   'bg-[var(--color-brand-dark)] text-white shadow-[var(--shadow-brand)] hover:bg-[var(--color-brand-mid)] hover:shadow-[var(--shadow-brand-lg)] hover:-translate-y-0.5 active:translate-y-0',
+  secondary: 'bg-[var(--color-surface-elevated)] text-[var(--color-brand-dark)] border border-[var(--color-border-default)] shadow-[var(--shadow-xs)] hover:bg-[var(--color-surface-sunken)] hover:border-[var(--color-border-strong)]',
+  ghost:     'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-sunken)] hover:text-[var(--color-text-primary)]',
+  accent:    'bg-[var(--color-positive)] text-white shadow-[var(--shadow-sm)] hover:bg-emerald-600 hover:-translate-y-0.5',
+  danger:    'bg-[var(--color-danger)] text-white shadow-[var(--shadow-sm)] hover:bg-red-600',
+}
+
+export function button(variant: ButtonVariant, size: ButtonSize = 'md'): string {
+  const base = variant === 'ghost' ? BTN_GHOST_BASE : BTN_BASE
+  return `${base} ${BTN_SIZE[size]} ${BTN_COLORS[variant]}`
+}
+
 // ── 통합 export ──────────────────────────────────────────────────────────────
 export const DS = {
   page: PAGE,
   text: TEXT,
   card: CARD,
   button: BUTTON,
+  btn: button,
   badge: BADGE,
   stat: STAT,
   input: INPUT,
