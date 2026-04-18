@@ -872,7 +872,7 @@ export default function ExchangePage() {
                 backgroundColor: V.surfaceElevated,
                 border: `1px solid ${V.borderSubtle}`,
                 borderRadius: 14,
-                overflow: "hidden",
+                overflowX: "auto",
               }}
             >
               {/* Table header */}
@@ -882,6 +882,7 @@ export default function ExchangePage() {
                   gridTemplateColumns: "1.4fr 1.4fr 0.9fr 0.9fr 0.9fr 0.7fr 0.7fr 0.6fr",
                   gap: 12,
                   padding: "12px 18px",
+                  minWidth: 820,
                   backgroundColor: V.surfaceSunken,
                   borderBottom: `1px solid ${V.borderSubtle}`,
                   fontSize: 10,
@@ -1367,6 +1368,7 @@ function ListingRow({ item, index }: { item: CardListing; index: number }) {
         gridTemplateColumns: "1.4fr 1.4fr 0.9fr 0.9fr 0.9fr 0.7fr 0.7fr 0.6fr",
         gap: 12,
         padding: "14px 18px",
+        minWidth: 820,
         borderBottom: `1px solid ${V.borderSubtle}`,
         alignItems: "center",
         fontSize: 12,
