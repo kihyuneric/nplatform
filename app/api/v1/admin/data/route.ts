@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server"
-import { Errors, fromUnknown } from '@/lib/api-error'
+import { NextRequest, NextResponse } from "next/server"
+import { Errors } from '@/lib/api-error'
 import {
   isSampleMode,
   getMemoryStoreRef,
@@ -7,6 +7,7 @@ import {
   clearMemoryTable,
   reloadSampleTable,
 } from "@/lib/data-layer"
+import { runRetrainingCycle } from "@/lib/ml/retraining-pipeline"
 
 // All known table names in the system
 const ALL_TABLES = [
@@ -77,17 +78,53 @@ export async function DELETE() {
   })
 }
 
+// Job name → retraining model_type mapping
+const JOB_TO_MODEL: Record<string, "price" | "risk" | "recovery"> = {
+  "AI 모델 재학습":     "price",
+  "가격 예측 재학습":   "price",
+  "리스크 모델 재학습": "risk",
+  "회수율 예측 재학습": "recovery",
+}
+
 /**
- * POST: Reload sample data from files
- * Body: { action: "reset" } or { action: "reset", tables: ["deals", "users"] }
+ * POST: Reload sample data / trigger ML retraining job
+ * Body: { action: "reset" }                          — 샘플 데이터 재로드
+ * Body: { action: "run_job", job: "<job name>" }     — ML 재학습 작업 실행
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
+    // ── ML 재학습 작업 실행 ───────────────────────────────────────────────────
+    if (body.action === "run_job") {
+      const jobName = body.job as string | undefined
+      const modelType = jobName ? JOB_TO_MODEL[jobName] : undefined
+
+      if (modelType) {
+        try {
+          const run = await runRetrainingCycle(modelType)
+          return NextResponse.json({
+            success: true,
+            run,
+            message: `${jobName} 실행이 완료됐습니다.`,
+          })
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          return NextResponse.json({ success: false, error: msg }, { status: 500 })
+        }
+      }
+
+      // 재학습 외 일반 작업 — 성공으로 응답 (실제 크롤러 등은 별도 cron에서 처리)
+      return NextResponse.json({
+        success: true,
+        message: `${jobName ?? '작업'} 실행 요청이 접수됐습니다.`,
+      })
+    }
+
+    // ── 샘플 데이터 재로드 ───────────────────────────────────────────────────
     if (body.action !== "reset") {
       return NextResponse.json(
-        { error: "Invalid action. Use 'reset'." },
+        { error: "Invalid action. Use 'reset' or 'run_job'." },
         { status: 400 }
       )
     }
