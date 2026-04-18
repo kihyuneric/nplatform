@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import {
   LayoutDashboard, Users, Building2, FileText, Settings, BarChart3,
   CreditCard, GraduationCap, Megaphone, Server, Cable,
-  ChevronLeft, Menu, BrainCircuit, ShieldCheck, Eye, Landmark, FileSignature, Tag,
+  ChevronLeft, Menu, BrainCircuit, ShieldCheck, Eye, Landmark, FileSignature, Tag, Activity,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -30,6 +30,7 @@ const ADMIN_MENU = [
   { href: "/admin/analytics",  label: "분석",        icon: BarChart3 },
   { href: "/admin/security",   label: "보안",        icon: Cable },
   { href: "/admin/ml",         label: "AI·ML",       icon: BrainCircuit },
+  { href: "/admin/health",     label: "헬스 체크",   icon: Activity },
 ]
 
 function getActiveLabel(pathname: string | null): string {

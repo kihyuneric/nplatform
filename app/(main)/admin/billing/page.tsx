@@ -11,15 +11,16 @@ import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import { CommaNumberInput } from "@/components/ui/comma-number-input"
 
-type TabKey = "payments" | "subscriptions" | "settlement" | "coupons" | "pricing" | "commissions"
+type TabKey = "payments" | "subscriptions" | "settlement" | "txfees" | "coupons" | "pricing" | "commissions"
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: "payments",      label: "결제 내역"  },
-  { key: "subscriptions", label: "구독 관리"  },
-  { key: "settlement",    label: "정산 관리"  },
-  { key: "coupons",       label: "쿠폰 관리"  },
-  { key: "pricing",       label: "요금제 설정" },
-  { key: "commissions",   label: "수수료"     },
+  { key: "payments",      label: "결제 내역"   },
+  { key: "subscriptions", label: "구독 관리"   },
+  { key: "settlement",    label: "정산 관리"   },
+  { key: "txfees",        label: "거래수수료"   },
+  { key: "coupons",       label: "쿠폰 관리"   },
+  { key: "pricing",       label: "요금제 설정"  },
+  { key: "commissions",   label: "수수료"      },
 ]
 
 // ─── Types ────────────────────────────────────────────────
@@ -164,6 +165,120 @@ function buildChartData(payments: PaymentRecord[]): ChartDataPoint[] {
     const month = parseInt(key.split("-")[1]) + "월"
     return { month, revenue: Math.round(revenue / 10000) } // 만원 단위
   })
+}
+
+// ─── v2 Transaction Fee Tab ───────────────────────────────────────────────────
+const TXFEE_STATUS: Record<string, { label: string; cls: string }> = {
+  pending:  { label: '대기',   cls: 'bg-amber-500/10 text-amber-400 border border-amber-500/20' },
+  invoiced: { label: '청구됨', cls: 'bg-blue-500/10 text-blue-400 border border-blue-500/20' },
+  paid:     { label: '완납',   cls: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' },
+  waived:   { label: '면제',   cls: 'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border border-[var(--color-border-subtle)]' },
+  disputed: { label: '분쟁',   cls: 'bg-red-500/10 text-red-400 border border-red-500/20' },
+}
+const DEAL_TYPE_LABEL: Record<string, string> = {
+  'npl-seller': 'NPL 매도', 'npl-buyer': 'NPL 매수',
+  're-seller': '부동산 매도', 're-buyer': '부동산 매수',
+}
+
+interface TxFeeRecord {
+  id: string
+  deal_id: string
+  deal_type: string
+  transaction_amount: number
+  seller_fee: { totalFee: number; effectiveRate: number; waived: boolean }
+  buyer_fee:  { totalFee: number; effectiveRate: number; waived: boolean; withPNR?: boolean }
+  status: string
+  created_at: string
+  notes?: string
+}
+
+function TransactionFeeTab() {
+  const [records, setRecords] = useState<TxFeeRecord[]>([])
+  const [summary, setSummary] = useState<{ total_revenue: number; pending_count: number; invoiced_count: number; paid_count: number } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [filterStatus, setFilterStatus] = useState('all')
+
+  useEffect(() => {
+    setLoading(true)
+    const qs = filterStatus !== 'all' ? `?status=${filterStatus}` : ''
+    fetch(`/api/v1/settlements${qs}`)
+      .then(r => r.json())
+      .then(j => { setRecords(j.data ?? []); setSummary(j.summary ?? null) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [filterStatus])
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label: '플랫폼 수익 (완납)', value: summary ? fmt(summary.total_revenue) : '—', border: 'border-l-emerald-400', color: 'text-[var(--color-positive)]' },
+          { label: '정산 대기',           value: summary ? `${summary.pending_count}건` : '—', border: 'border-l-amber-400',   color: 'text-[var(--color-warning)]' },
+          { label: '청구됨',              value: summary ? `${summary.invoiced_count}건` : '—', border: 'border-l-blue-400', color: 'text-[var(--color-brand-mid)]' },
+          { label: '완납',                value: summary ? `${summary.paid_count}건` : '—',  border: 'border-l-emerald-400', color: 'text-[var(--color-positive)]' },
+        ].map(k => (
+          <div key={k.label} className={`${DS.stat.card} border-l-2 ${k.border}`}>
+            <p className={DS.stat.label}>{k.label}</p>
+            <p className={`${DS.stat.value} ${k.color} font-mono tabular-nums`}>{k.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-2">
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className={DS.input.base + ' h-8 text-[0.8125rem] py-1 pr-8'}>
+          <option value="all">전체 상태</option>
+          {Object.entries(TXFEE_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12"><div className="h-6 w-6 border-2 border-[var(--color-brand-mid)] border-t-transparent rounded-full animate-spin" /></div>
+      ) : (
+        <div className={DS.table.wrapper}>
+          <table className="w-full">
+            <thead>
+              <tr className={DS.table.header}>
+                <th className={DS.table.headerCell}>정산 ID</th>
+                <th className={DS.table.headerCell}>거래 유형</th>
+                <th className={DS.table.headerCell + ' text-right'}>거래금액</th>
+                <th className={DS.table.headerCell + ' text-right'}>매도 수수료</th>
+                <th className={DS.table.headerCell + ' text-right'}>매수 수수료</th>
+                <th className={DS.table.headerCell + ' text-center'}>상태</th>
+                <th className={DS.table.headerCell}>생성일</th>
+              </tr>
+            </thead>
+            <tbody>
+              {records.map(r => {
+                const sc = TXFEE_STATUS[r.status] ?? TXFEE_STATUS.pending
+                return (
+                  <tr key={r.id} className={DS.table.row}>
+                    <td className={DS.table.cellMuted + ' font-mono text-[0.75rem]'}>{r.id}</td>
+                    <td className={DS.table.cell}>{DEAL_TYPE_LABEL[r.deal_type] ?? r.deal_type}</td>
+                    <td className={DS.table.cell + ' text-right font-mono tabular-nums'}>{fmt(r.transaction_amount)}</td>
+                    <td className={DS.table.cell + ' text-right font-mono tabular-nums'}>
+                      {r.seller_fee.waived ? <span className="text-emerald-400 text-[0.75rem]">면제</span> : fmt(r.seller_fee.totalFee)}
+                      {!r.seller_fee.waived && <span className={DS.text.micro + ' ml-1'}>({(r.seller_fee.effectiveRate * 100).toFixed(2)}%)</span>}
+                    </td>
+                    <td className={DS.table.cell + ' text-right font-mono tabular-nums'}>
+                      {r.buyer_fee.waived ? <span className="text-emerald-400 text-[0.75rem]">면제</span> : fmt(r.buyer_fee.totalFee)}
+                      {!r.buyer_fee.waived && <span className={DS.text.micro + ' ml-1'}>({(r.buyer_fee.effectiveRate * 100).toFixed(2)}%){r.buyer_fee.withPNR ? ' +PNR' : ''}</span>}
+                    </td>
+                    <td className={DS.table.cell + ' text-center'}>
+                      <span className={`text-[0.75rem] font-medium px-2 py-0.5 rounded-full ${sc.cls}`}>{sc.label}</span>
+                    </td>
+                    <td className={DS.table.cellMuted + ' tabular-nums'}>{r.created_at.split('T')[0]}</td>
+                  </tr>
+                )
+              })}
+              {records.length === 0 && (
+                <tr><td colSpan={7} className="py-12 text-center text-[var(--color-text-muted)]">정산 내역이 없습니다</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ─── Settlement Tab ───────────────────────────────────────────────────────────
@@ -1299,9 +1414,10 @@ export default function AdminBillingPage() {
         )}
 
         {/* ─── 정산 관리 탭 ─── */}
-        {tab === "settlement" && (
-          <SettlementTab />
-        )}
+        {tab === "settlement" && <SettlementTab />}
+
+        {/* ─── 거래수수료 탭 (v2) ─── */}
+        {tab === "txfees" && <TransactionFeeTab />}
 
         {/* ─── 요금제 설정 탭 ─── */}
         {tab === "pricing" && (

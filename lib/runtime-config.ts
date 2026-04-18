@@ -176,6 +176,75 @@ export async function getPortOneStoreId()   { return getConfig('PORTONE_STORE_ID
 export async function getPortOneChannelKey(){ return getConfig('PORTONE_CHANNEL_KEY') }
 export async function getAnthropicKey()     { return getConfig('ANTHROPIC_API_KEY') }
 
+// ─── v2 런타임 공급자 설정 ─────────────────────────────────
+
+export type ProviderKey =
+  | 'ai_provider'
+  | 'embedding_provider'
+  | 'payment_provider'
+  | 'ocr_mode'
+  | 'registry_mode'
+  | 'market_data_mode'
+
+export interface RuntimeProviderConfig {
+  key: ProviderKey
+  value: string
+  description: string
+  updatedAt: string
+  updatedBy?: string
+}
+
+const PROVIDER_DEFAULTS: Record<ProviderKey, string> = {
+  ai_provider:        process.env.NEXT_PUBLIC_AI_PROVIDER      ?? 'claude',
+  embedding_provider: process.env.NEXT_PUBLIC_EMBED_PROVIDER   ?? 'voyage',
+  payment_provider:   process.env.NEXT_PUBLIC_PAYMENT_PROVIDER ?? 'nicepay',
+  ocr_mode:           process.env.NEXT_PUBLIC_OCR_MODE         ?? 'claude',
+  registry_mode:      process.env.NEXT_PUBLIC_REGISTRY_MODE    ?? 'mock',
+  market_data_mode:   process.env.NEXT_PUBLIC_MARKET_DATA_MODE ?? 'mock',
+}
+
+const PROVIDER_DESCRIPTIONS: Record<ProviderKey, string> = {
+  ai_provider:        'AI 텍스트 생성 공급자 (claude | openai | gemini)',
+  embedding_provider: '임베딩(RAG) 공급자 (voyage | openai)',
+  payment_provider:   '결제 게이트웨이 (nicepay | toss | stripe | none)',
+  ocr_mode:           'OCR 문서 인식 모드 (claude | tesseract | none)',
+  registry_mode:      '등기부등본 API 모드 (iros | mock)',
+  market_data_mode:   '시세/경매 데이터 모드 (molit | kamco | mock)',
+}
+
+export async function setConfig(key: ProviderKey, value: string, updatedBy?: string): Promise<void> {
+  const supabase = getAdminClient()
+  if (!supabase) return
+  await supabase.from('runtime_configs').upsert({
+    key, value, updated_at: new Date().toISOString(), updated_by: updatedBy ?? 'admin',
+  }, { onConflict: 'key' })
+}
+
+export async function getAllConfigs(): Promise<RuntimeProviderConfig[]> {
+  const supabase = getAdminClient()
+  if (supabase) {
+    try {
+      const { data } = await supabase
+        .from('runtime_configs')
+        .select('key, value, description, updated_at, updated_by')
+      if (data?.length) {
+        return data.map(d => ({
+          key: d.key as ProviderKey,
+          value: d.value,
+          description: d.description ?? PROVIDER_DESCRIPTIONS[d.key as ProviderKey] ?? '',
+          updatedAt: d.updated_at,
+          updatedBy: d.updated_by,
+        }))
+      }
+    } catch { /* fallback */ }
+  }
+  return (Object.entries(PROVIDER_DEFAULTS) as [ProviderKey, string][]).map(([key, value]) => ({
+    key, value,
+    description: PROVIDER_DESCRIPTIONS[key],
+    updatedAt: new Date().toISOString(),
+  }))
+}
+
 // ─── 연동 상태 확인 (관리자 페이지용) ─────────────────────
 
 export interface IntegrationStatus {
