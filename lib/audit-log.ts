@@ -4,6 +4,10 @@
  * PII 접근 감사 로그 — 개인정보보호법·신용정보법 준수의 핵심 장치.
  * L2/L3 자료 조회 시 호출하여 누가·언제·어디서·왜 접근했는지 기록.
  *
+ * 저장 전략:
+ *   - 메모리 큐 (최대 1000개) — 빠른 인메모리 조회
+ *   - Supabase `audit_logs` 테이블 — 영구 저장 (fire-and-forget)
+ *
  * 이상 패턴 탐지:
  *   - 동일 사용자의 특정 지역/매각자 집중 조회
  *   - 짧은 시간 내 대량 다운로드
@@ -11,6 +15,21 @@
  */
 
 import type { AccessTier, PiiAccessLogRecord } from './db-types'
+
+// Lazy-load Supabase admin client to avoid SSR issues when env vars absent
+function getSupabaseAdmin() {
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !key) return null
+    // Dynamic require to avoid breaking if module not available
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createClient } = require('@supabase/supabase-js')
+    return createClient(url, key, { auth: { persistSession: false } })
+  } catch {
+    return null
+  }
+}
 
 // ─── 로그 입력 타입 ───────────────────────────────────────
 export interface LogAccessInput {
@@ -47,11 +66,34 @@ export async function logAccess(input: LogAccessInput): Promise<PiiAccessLogReco
     user_agent: input.userAgent,
     created_at: new Date().toISOString(),
   }
+
+  // ── 1. 메모리 큐 (빠른 인메모리 조회용) ───────────────────────────────────
   MEMORY_LOG.push(record)
-  // 메모리 큐 최대 1000개 유지
   if (MEMORY_LOG.length > 1000) MEMORY_LOG.shift()
 
-  // L2/L3 접근은 경고 로그로 출력
+  // ── 2. Supabase DB 영구 저장 (fire-and-forget) ────────────────────────────
+  const supabase = getSupabaseAdmin()
+  if (supabase) {
+    supabase
+      .from('audit_logs')
+      .insert({
+        user_id: record.user_id,
+        target_table: record.target_table,
+        target_id: record.target_id,
+        access_type: record.access_type,
+        field_name: record.field_name ?? null,
+        access_tier: record.access_tier,
+        purpose: record.purpose ?? null,
+        ip_address: record.ip_address ?? null,
+        user_agent: record.user_agent ?? null,
+        created_at: record.created_at,
+      })
+      .then(({ error }: { error: Error | null }) => {
+        if (error) console.error('[audit-log] DB insert error:', error.message)
+      })
+  }
+
+  // ── 3. L2/L3 접근 경고 로그 ──────────────────────────────────────────────
   if (input.accessTier !== 'L0' && input.accessTier !== 'L1') {
     console.warn('[PII ACCESS]', {
       user: input.userId,

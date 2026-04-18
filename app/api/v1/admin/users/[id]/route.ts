@@ -85,17 +85,34 @@ export async function PATCH(
 
     if (updateError) throw updateError
 
-    // Fire-and-forget KYC result email
-    if ((approvalStatus === 'APPROVED' || approvalStatus === 'REJECTED') && target.email) {
-      const kycResult = approvalStatus === 'APPROVED' ? 'APPROVED' : 'REJECTED'
-      void sendEmail({
-        to: target.email as string,
-        ...kycStatusEmail({
-          name: (target.name as string) ?? '고객',
-          status: kycResult,
-          tier: approvalStatus === 'APPROVED' ? (investorTier ?? 'L1') : undefined,
-        }),
-      }).catch((e) => console.error('[kyc email]', e))
+    // Fire-and-forget: KYC 결과 인앱 알림 + 이메일
+    if (approvalStatus === 'APPROVED' || approvalStatus === 'REJECTED') {
+      const isApproved = approvalStatus === 'APPROVED'
+
+      // ── In-app notification (INSERT → Realtime 트리거) ────────────────────
+      void supabase.from('notifications').insert({
+        user_id: id,
+        type: 'KYC',
+        title: isApproved ? 'KYC 심사가 승인되었습니다 ✅' : 'KYC 심사 결과가 도착했습니다',
+        body: isApproved
+          ? `투자자 등급이 ${investorTier ?? 'L1'}로 업그레이드되었습니다.`
+          : '심사 결과를 확인하고 재신청해 주세요.',
+        link: '/my/kyc',
+        is_read: false,
+        created_at: new Date().toISOString(),
+      })
+
+      // ── Email ─────────────────────────────────────────────────────────────
+      if (target.email) {
+        void sendEmail({
+          to: target.email as string,
+          ...kycStatusEmail({
+            name: (target.name as string) ?? '고객',
+            status: isApproved ? 'APPROVED' : 'REJECTED',
+            tier: isApproved ? (investorTier ?? 'L1') : undefined,
+          }),
+        }).catch((e) => console.error('[kyc email]', e))
+      }
     }
 
     return NextResponse.json({

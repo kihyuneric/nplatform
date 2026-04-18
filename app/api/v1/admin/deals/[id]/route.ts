@@ -68,7 +68,16 @@ export async function PATCH(
   }
 }
 
-// ─── Email helper ────────────────────────────────────────────────────────────
+// ─── Stage label map ─────────────────────────────────────────────────────────
+const STAGE_LABELS: Record<string, string> = {
+  negotiation:    '협상 중',
+  due_diligence:  '실사 진행',
+  contract:       '계약 체결',
+  completed:      '거래 완료',
+  dispute:        '분쟁 접수',
+}
+
+// ─── Notification helpers ─────────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function notifyDealParticipants(supabase: any, dealId: string, stage: string): Promise<void> {
   try {
@@ -94,7 +103,22 @@ async function notifyDealParticipants(supabase: any, dealId: string, stage: stri
 
     if (!users?.length) return
 
-    // Send email to each participant (fire-and-forget per recipient)
+    const stageLabel = STAGE_LABELS[stage] ?? stage
+    const dealTitle = (deal.title as string) ?? '거래'
+
+    // ── 1. In-app notifications (INSERT → triggers Realtime) ──────────────────
+    const notificationRows = (users as Array<{ id: string }>).map((u) => ({
+      user_id: u.id,
+      type: 'DEAL_ROOM',
+      title: `거래 단계 변경: ${dealTitle}`,
+      body: `현재 단계가 "${stageLabel}"(으)로 업데이트되었습니다.`,
+      link: `/deals/${dealId}`,
+      is_read: false,
+      created_at: new Date().toISOString(),
+    }))
+    await supabase.from('notifications').insert(notificationRows)
+
+    // ── 2. Email to each participant ──────────────────────────────────────────
     await Promise.allSettled(
       (users as Array<{ id: string; email: string | null; name: string }>)
         .filter((u) => !!u.email)
@@ -103,7 +127,7 @@ async function notifyDealParticipants(supabase: any, dealId: string, stage: stri
             to: u.email!,
             ...dealStageEmail({
               name: u.name ?? '고객',
-              dealTitle: deal.title ?? '거래',
+              dealTitle,
               stage,
               dealId,
             }),
