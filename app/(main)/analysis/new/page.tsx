@@ -1,11 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, ArrowRight, Brain, Check, Clock, Loader2 } from "lucide-react"
+import { ArrowLeft, ArrowRight, Brain, Check, Clock, FileUp, Loader2, Sparkles } from "lucide-react"
 import DS from "@/lib/design-system"
 import { COLLATERAL_CATEGORIES } from "@/lib/taxonomy"
+import {
+  mapAppraisalData,
+  mapBondDocData,
+  type AppraisalExtracted,
+  type BondDocExtracted,
+} from "@/lib/npl/ocr-mapper"
 
 type Step = 1 | 2 | 3
 
@@ -37,6 +43,79 @@ export default function NewNplAnalysisPage() {
   const [address, setAddress] = useState("")
   const [appraisalValue, setAppraisalValue] = useState("")
   const [seniorClaim, setSeniorClaim] = useState("")
+
+  // OCR auto-fill
+  const [ocrLoading, setOcrLoading] = useState(false)
+  const [ocrMsg, setOcrMsg] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  const runOcr = async (file: File, docType: 'bond' | 'appraisal') => {
+    setOcrLoading(true)
+    setOcrMsg(null)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('doc_type', docType)
+
+      const res = await fetch('/api/v1/ocr', { method: 'POST', body: fd })
+      if (!res.ok) {
+        const txt = await res.text()
+        throw new Error(`OCR 실패 (${res.status}) ${txt.slice(0, 80)}`)
+      }
+      const payload = await res.json() as {
+        data?: Record<string, unknown>
+        extractedData?: Record<string, unknown>
+        [k: string]: unknown
+      }
+      const extracted = (payload.data ?? payload.extractedData ?? payload) as Record<string, unknown>
+
+      let filledCount = 0
+      if (docType === 'bond') {
+        const bond = extracted as unknown as BondDocExtracted
+        const mapped = mapBondDocData(bond)
+        if (mapped.caseNumber) { setCaseNumber(mapped.caseNumber); filledCount++ }
+        if (mapped.address) { setAddress(mapped.address); filledCount++ }
+        if (mapped.propertyType) { setCollateralType(mapped.propertyType); filledCount++ }
+        // appraisalValue/minimumPrice mapper returns in 억원 unit — convert back to 원
+        if (bond.appraisal_value != null) {
+          setAppraisalValue(String(bond.appraisal_value))
+          filledCount++
+        }
+        // bond doc often implies principal ~ 최저가격 or appraisal
+        if (bond.minimum_price != null && !principalAmount) {
+          setPrincipalAmount(String(bond.minimum_price))
+          filledCount++
+        }
+      } else {
+        const app = extracted as unknown as AppraisalExtracted
+        const mapped = mapAppraisalData(app)
+        if (mapped.address) { setAddress(mapped.address); filledCount++ }
+        if (mapped.propertyType) { setCollateralType(mapped.propertyType); filledCount++ }
+        if (app.appraisal_value != null) {
+          setAppraisalValue(String(app.appraisal_value))
+          filledCount++
+        }
+      }
+
+      if (filledCount === 0) {
+        setOcrMsg('OCR 추출은 성공했지만 자동 채울 필드를 찾지 못했습니다. 수동 입력해주세요.')
+      } else {
+        setOcrMsg(`OCR 자동 채움 완료: ${filledCount}개 필드가 입력되었습니다`)
+      }
+    } catch (err) {
+      setOcrMsg(err instanceof Error ? err.message : 'OCR 처리 중 오류가 발생했습니다')
+    } finally {
+      setOcrLoading(false)
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]
+    if (!f) return
+    // Default to bond-doc type; covers case_number + address + appraisal
+    runOcr(f, 'bond')
+    e.target.value = ''
+  }
 
   const handleNext = () => {
     if (step < 3) setStep((s) => (s + 1) as Step)
@@ -173,6 +252,46 @@ export default function NewNplAnalysisPage() {
           <div className={`${DS.card.base} ${DS.card.paddingLarge} space-y-5`}>
             <p className={DS.header.eyebrow}>Step 1</p>
             <h2 className={DS.text.sectionTitle}>기본 채권 정보</h2>
+
+            {/* OCR 자동 채움 */}
+            <div className="rounded-xl border border-dashed border-[var(--color-brand-mid)]/40 bg-[var(--color-brand-mid)]/5 p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <Sparkles className="h-5 w-5 text-[var(--color-brand-dark)] shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-[0.8125rem] font-semibold text-[var(--color-brand-dark)]">
+                    서류 업로드로 자동 채우기
+                  </p>
+                  <p className="text-[0.75rem] text-[var(--color-text-muted)] mt-0.5" style={{ wordBreak: 'keep-all' }}>
+                    채권 소개서·경매 물건 명세서·감정평가서 PDF·이미지를 업로드하면 AI가 사건번호·주소·감정평가액·담보유형을 자동으로 채워넣습니다.
+                  </p>
+                </div>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={handleFileChange}
+                disabled={ocrLoading}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={ocrLoading}
+                className={`${DS.button.secondary} w-full justify-center`}
+              >
+                {ocrLoading ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> AI 추출 중...</>
+                ) : (
+                  <><FileUp className="h-4 w-4" /> 문서 업로드 (PDF · PNG · JPG)</>
+                )}
+              </button>
+              {ocrMsg && (
+                <p className={`text-[0.75rem] ${ocrMsg.includes('완료') ? 'text-[var(--color-positive)]' : 'text-[var(--color-text-muted)]'}`}>
+                  {ocrMsg}
+                </p>
+              )}
+            </div>
 
             <div>
               <label className={DS.input.label}>채권 번호</label>

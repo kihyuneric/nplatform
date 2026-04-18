@@ -5,7 +5,7 @@ import Link from "next/link"
 import {
   ArrowRight, BookOpen, Building2, Briefcase, Users, Clock, Play,
   ChevronDown, Scale, Calculator, FileText, ShieldCheck, Banknote,
-  Gavel, TrendingUp, Sparkles,
+  Gavel, TrendingUp, Sparkles, FileUp,
 } from "lucide-react"
 import DS from "@/lib/design-system"
 
@@ -48,6 +48,13 @@ const CATEGORIES = [
 ]
 
 const CORE_GUIDES = [
+  // 플랫폼 기능 (2026-04 업데이트 — 신규 OCR 자동채움·AI 컨설턴트·경매 수익률 분석기 반영)
+  { title: "OCR 자동채움 — 서류 업로드로 NPL 분석 시작", desc: "채권 소개서·경매 물건 명세서·감정평가서 PDF를 올리면 AI가 사건번호·주소·평가액·담보유형을 자동 입력. NPL 분석 새로 만들기와 매물 일괄 등록 모두 지원.", time: "4분", cat: "플랫폼", icon: Sparkles },
+  { title: "AI 컨설턴트 활용법", desc: "자연어로 매물·수익구조·리스크에 대해 질문. Claude 기반 분석 엔진이 플랫폼 데이터와 연결해 근거 있는 답변을 제공합니다.", time: "6분", cat: "플랫폼", icon: Sparkles },
+  { title: "경매 수익률 분석기", desc: "낙찰가·배당금·세금·회수기간을 단일 화면에서 시뮬레이션. 여러 시나리오(보수/중립/낙관) 동시 비교.", time: "7분", cat: "플랫폼", icon: Calculator },
+  { title: "계약서 자동 생성", desc: "채권양도·NDA·LOI 템플릿에 변수를 채워 전자계약으로 바로 송부. 분쟁시 공증 연계.", time: "5분", cat: "플랫폼", icon: FileText },
+  { title: "매물 일괄 등록 (1~5건 OCR)", desc: "/exchange/ocr-register 페이지에서 서류별로 OCR → 자동 매핑 → 한 번에 1~5건 등록. 부분 실패 허용(207 응답).", time: "6분", cat: "플랫폼", icon: FileUp },
+  // 실무 (기존)
   { title: "배당표 읽는 법", desc: "경매 배당순위, 말소기준권리 이전/이후, 체납공과금 우선변제 구조를 한눈에.", time: "7분", cat: "배당", icon: FileText },
   { title: "말소기준권리란", desc: "저당권·근저당권·가압류·담보가등기 중 최선순위. 이후 권리는 전부 소멸된다는 의미.", time: "5분", cat: "권리분석", icon: Scale },
   { title: "방어입찰 전략", desc: "자기 채권을 보호하기 위한 응찰. 예상낙찰가·배당예상액·상계신청 타이밍.", time: "10분", cat: "입찰", icon: Gavel },
