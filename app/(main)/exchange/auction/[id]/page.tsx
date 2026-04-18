@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { VERDICT_CONFIG, screenNplListing, listingToScreeningInput } from '@/lib/ai-screening/scorer'
 import type { CourtAuctionListing } from '@/lib/court-auction/types'
+import { LiveBidPanel } from './live-bid-panel'
 
 // ─── 금액 포맷 ────────────────────────────────────────────
 
@@ -69,6 +70,7 @@ export default function AuctionDetailPage() {
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [activeTab, setActiveTab]   = useState<'overview' | 'tenants' | 'ai' | 'docs'>('overview')
   const [aiResult, setAiResult]     = useState<ReturnType<typeof screenNplListing> | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined)
 
   const supabase = createClient()
 
@@ -159,9 +161,10 @@ export default function AuctionDetailPage() {
       })
     }
 
-    // 북마크 확인
+    // 사용자 정보 로드
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
+      setCurrentUserId(user.id)
       const { data: bm } = await supabase
         .from('auction_bookmarks')
         .select('id')
@@ -493,6 +496,16 @@ export default function AuctionDetailPage() {
                 ))}
               </div>
             </div>
+
+            {/* 실시간 입찰 패널 */}
+            <LiveBidPanel
+              auctionId={listing.id}
+              initialHighest={listing.winning_bid ?? listing.min_bid_price}
+              minimumBid={listing.min_bid_price}
+              endTime={listing.auction_date ? `${listing.auction_date}T10:00:00` : undefined}
+              status={listing.status}
+              currentUserId={currentUserId}
+            />
 
             {/* 액션 버튼 */}
             <div className="space-y-2.5">
