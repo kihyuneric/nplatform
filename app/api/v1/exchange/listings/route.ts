@@ -262,8 +262,9 @@ export async function POST(request: NextRequest) {
       address: addr,
       claim_amount: body.principal_amount,
       appraised_value: body.appraisal_value ?? body.appraised_value ?? 0,
-      discount_rate: body.appraisal_value && body.asking_price_min
-        ? Math.round((1 - body.asking_price_min / body.appraisal_value) * 100)
+      // 할인율 = (채권잔액 - 매각희망가) / 채권잔액. 감정가 기준이 아님.
+      discount_rate: body.principal_amount && body.asking_price_min
+        ? Math.round((1 - body.asking_price_min / body.principal_amount) * 100)
         : 0,
       ai_grade: body.risk_grade ?? 'C',
       listing_type: (body.listing_type === 'NPL' ? 'NPL' : body.listing_type === 'UPL' ? 'NPL' : 'NPL'),

@@ -40,6 +40,43 @@ const COLLATERAL_FILTER_OPTIONS = COLLATERAL_OPTIONS.filter(o => o.value !== 'AL
 const REGION_OPTIONS = REGIONS.map(r => r.short)
 const PER_PAGE = 12
 
+// API 실패 시 보여줄 샘플 수요 (UX 확보용)
+const SAMPLE_DEMANDS: Demand[] = [
+  {
+    id: 'demo-demand-001',
+    collateral_types: ['아파트', '오피스텔(주거)'],
+    regions: ['서울 강남구', '서울 서초구'],
+    min_amount: 500_000_000,
+    max_amount: 2_000_000_000,
+    urgency: 'HIGH',
+    memo: '서울 강남권 주거용 NPL — 할인율 25% 이상, 선순위 근저당 선호. 빠른 클로징 가능합니다.',
+    matching_count: 3,
+    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+  },
+  {
+    id: 'demo-demand-002',
+    collateral_types: ['근린시설/상가'],
+    regions: ['경기 성남시', '경기 수원시'],
+    min_amount: 800_000_000,
+    max_amount: 3_500_000_000,
+    urgency: 'MEDIUM',
+    memo: '수도권 상가 NPL 관심. 임대차 현황 명확한 건 우선. 포트폴리오 투자 가능.',
+    matching_count: 5,
+    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+  },
+  {
+    id: 'demo-demand-003',
+    collateral_types: ['토지'],
+    regions: ['경기', '충청'],
+    min_amount: 200_000_000,
+    max_amount: 1_000_000_000,
+    urgency: 'LOW',
+    memo: '개발 가능성 있는 토지 NPL 장기 투자. 할인율 높은 물건 선호.',
+    matching_count: 2,
+    created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
+  },
+]
+
 function CardSkeleton() {
   const b = 'bg-[var(--color-surface-sunken)] rounded'
   return (
@@ -83,9 +120,11 @@ export default function DemandsPage() {
       setDemands(json.data)
       setTotal(json.total)
       setTotalPages(json.total_pages)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '데이터를 불러올 수 없습니다')
-      setDemands([])
+    } catch {
+      // API 실패 → 샘플로 fallback (UX 확보)
+      setDemands(SAMPLE_DEMANDS)
+      setTotal(SAMPLE_DEMANDS.length)
+      setTotalPages(1)
     } finally {
       setLoading(false)
     }

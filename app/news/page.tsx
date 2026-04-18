@@ -10,7 +10,7 @@ import { KeywordRanking } from '@/components/keyword-ranking';
 import { NewsDetailPanel } from '@/components/news-detail-panel';
 import dynamic from 'next/dynamic';
 
-const chartLoadingFallback = <div className="h-64 animate-pulse rounded-lg bg-[#0D1F38]" />;
+const chartLoadingFallback = <div className="h-64 animate-pulse rounded-lg bg-[var(--color-surface-elevated)]" />;
 
 const KeywordTrendChart = dynamic(
   () => import('@/components/keyword-trend-chart').then(m => m.KeywordTrendChart),
@@ -152,25 +152,25 @@ export default function NewsPage() {
   const chips = buildChips(applied);
 
   return (
-    <div className="min-h-screen bg-[#060E1C]">
+    <div className="min-h-screen bg-[var(--color-surface-sunken)]">
 
       {/* ── Editorial Header ── */}
-      <div className="bg-[#0D1F38] border-b border-[#1a3a5c]">
+      <div className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Top bar */}
-          <div className="flex items-center justify-between py-4 border-b border-[#1a3a5c]/60">
+          <div className="flex items-center justify-between py-4 border-b border-[var(--color-border-subtle)]">
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-8 h-8 rounded bg-[#2E75B6]">
-                <Newspaper className="h-4 w-4 text-white" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-mid)]/10">
+                <Newspaper className="h-5 w-5 text-[var(--color-brand-mid)]" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white tracking-tight">NPL 뉴스</h1>
-                <p className="text-xs text-[#7BA7C7] mt-0.5">부동산 NPL 시장 실시간 뉴스 인사이트</p>
+                <h1 className="text-xl font-bold text-[var(--color-text-primary)] tracking-tight">NPL 뉴스</h1>
+                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">부동산 NPL 시장 실시간 뉴스 인사이트</p>
               </div>
             </div>
             <div className="flex items-center gap-2 no-print">
               <button
-                className="gap-1.5 h-8 px-2 rounded-md flex items-center text-xs text-[#7BA7C7] hover:text-white hover:bg-[#1a3a5c] transition-colors"
+                className="gap-1.5 h-8 px-2 rounded-md flex items-center text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-overlay)] transition-colors"
                 onClick={() => window.print()}
               >
                 <Printer className="h-3.5 w-3.5" />
@@ -182,7 +182,7 @@ export default function NewsPage() {
 
           {/* Category filter chips */}
           <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
-            <span className="text-[11px] text-[#4a7a9b] font-medium shrink-0 mr-1">섹션</span>
+            <span className="text-[11px] text-[var(--color-text-tertiary)] font-medium shrink-0 mr-1">섹션</span>
             {CATEGORY_FILTERS.map((cat) => (
               <button
                 key={cat.key}
@@ -190,7 +190,7 @@ export default function NewsPage() {
                 className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all ${
                   activeCategory === cat.key
                     ? cat.color + ' shadow-lg shadow-[#2E75B6]/20'
-                    : 'bg-[#0D2540] text-[#7BA7C7] hover:bg-[#1a3a5c] hover:text-white border border-[#1a3a5c]'
+                    : 'bg-[var(--color-surface-sunken)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-overlay)] hover:text-[var(--color-text-primary)] border border-[var(--color-border-subtle)]'
                 }`}
               >
                 {cat.label}
@@ -204,10 +204,10 @@ export default function NewsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
         {/* AI 시장 인사이트 */}
-        <div className="rounded-xl overflow-hidden border border-[#1a3a5c] bg-[#0D1F38]">
-          <div className="px-4 py-2.5 border-b border-[#1a3a5c] flex items-center gap-2">
+        <div className="rounded-xl overflow-hidden border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
+          <div className="px-4 py-2.5 border-b border-[var(--color-border-subtle)] flex items-center gap-2">
             <TrendingUp className="h-3.5 w-3.5 text-[#2E75B6]" />
-            <span className="text-xs font-semibold text-[#7BA7C7] uppercase tracking-wider">AI Market Insight</span>
+            <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">AI Market Insight</span>
           </div>
           <div className="p-4">
             <MarketInsightPanel />
@@ -215,10 +215,10 @@ export default function NewsPage() {
         </div>
 
         {/* 통계 카드 */}
-        <div className="rounded-xl overflow-hidden border border-[#1a3a5c] bg-[#0D1F38]">
-          <div className="px-4 py-2.5 border-b border-[#1a3a5c] flex items-center gap-2">
+        <div className="rounded-xl overflow-hidden border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
+          <div className="px-4 py-2.5 border-b border-[var(--color-border-subtle)] flex items-center gap-2">
             <BarChart3 className="h-3.5 w-3.5 text-[#2E75B6]" />
-            <span className="text-xs font-semibold text-[#7BA7C7] uppercase tracking-wider">News Statistics</span>
+            <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">News Statistics</span>
           </div>
           <div className="p-4">
             <EnhancedStatsOverview />
@@ -227,17 +227,17 @@ export default function NewsPage() {
 
         {/* 키워드 트렌드 + 순위 */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 rounded-xl border border-[#1a3a5c] bg-[#0D1F38] overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-[#1a3a5c]">
-              <span className="text-xs font-semibold text-[#7BA7C7] uppercase tracking-wider">Keyword Trends</span>
+          <div className="lg:col-span-2 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-[var(--color-border-subtle)]">
+              <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Keyword Trends</span>
             </div>
             <div className="p-4">
               <KeywordTrendChart />
             </div>
           </div>
-          <div className="rounded-xl border border-[#1a3a5c] bg-[#0D1F38] overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-[#1a3a5c]">
-              <span className="text-xs font-semibold text-[#7BA7C7] uppercase tracking-wider">Keyword Ranking</span>
+          <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-[var(--color-border-subtle)]">
+              <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Keyword Ranking</span>
             </div>
             <div className="p-4">
               <KeywordRanking onKeywordClick={handleKeywordClick} />
@@ -246,9 +246,9 @@ export default function NewsPage() {
         </div>
 
         {/* 키워드 클라우드 */}
-        <div className="rounded-xl border border-[#1a3a5c] bg-[#0D1F38] overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-[#1a3a5c]">
-            <span className="text-xs font-semibold text-[#7BA7C7] uppercase tracking-wider">Keyword Cloud</span>
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-[var(--color-border-subtle)]">
+            <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Keyword Cloud</span>
           </div>
           <div className="p-4">
             <KeywordCloud onKeywordClick={handleKeywordClick} />
@@ -256,25 +256,25 @@ export default function NewsPage() {
         </div>
 
         {/* ── 심화 분석 섹션 ── */}
-        <div className="rounded-xl border border-[#1a3a5c] bg-[#0D1F38] overflow-hidden">
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-hidden">
           <button
-            className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-[#1a3a5c]/30 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-[var(--color-surface-overlay)]/30 transition-colors"
             onClick={() => setDeepOpen((v) => !v)}
           >
             <div className="flex items-center gap-3">
               <BarChart3 className="h-4 w-4 text-[#2E75B6]" />
               <span className="text-sm font-semibold text-white">심화 시각화 분석</span>
-              <span className="hidden sm:inline text-[11px] text-[#4a7a9b] bg-[#0D2540] px-2.5 py-0.5 rounded-full border border-[#1a3a5c]">
+              <span className="hidden sm:inline text-[11px] text-[var(--color-text-tertiary)] bg-[var(--color-surface-sunken)] px-2.5 py-0.5 rounded-full border border-[var(--color-border-subtle)]">
                 히트맵 · 감성 산점도 · 지역 레이더 · 키워드 네트워크
               </span>
             </div>
             {deepOpen
-              ? <ChevronUp className="h-4 w-4 text-[#4a7a9b]" />
-              : <ChevronDown className="h-4 w-4 text-[#4a7a9b]" />}
+              ? <ChevronUp className="h-4 w-4 text-[var(--color-text-tertiary)]" />
+              : <ChevronDown className="h-4 w-4 text-[var(--color-text-tertiary)]" />}
           </button>
 
           {deepOpen && (
-            <div className="px-4 pb-5 space-y-4 border-t border-[#1a3a5c] pt-4">
+            <div className="px-4 pb-5 space-y-4 border-t border-[var(--color-border-subtle)] pt-4">
               <NewsHeatmap onDateClick={handleDateClick} />
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <KoreaRegionMap onRegionClick={handleSidoClick} />
@@ -291,20 +291,20 @@ export default function NewsPage() {
         </div>
 
         {/* ── 뉴스 검색 / 스크랩 탭 ── */}
-        <div ref={newsTabRef} className="rounded-xl border border-[#1a3a5c] bg-[#0D1F38] overflow-hidden">
+        <div ref={newsTabRef} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             {/* Tab header styled like editorial section bar */}
-            <div className="border-b border-[#1a3a5c] px-4 pt-3">
+            <div className="border-b border-[var(--color-border-subtle)] px-4 pt-3">
               <TabsList className="bg-transparent gap-1 h-auto pb-0">
                 <TabsTrigger
                   value="search"
-                  className="text-sm font-medium text-[#7BA7C7] data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#2E75B6] rounded-none pb-2.5 px-3"
+                  className="text-sm font-medium text-[var(--color-text-muted)] data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#2E75B6] rounded-none pb-2.5 px-3"
                 >
                   뉴스 검색
                 </TabsTrigger>
                 <TabsTrigger
                   value="scrap"
-                  className="text-sm font-medium text-[#7BA7C7] data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#2E75B6] rounded-none pb-2.5 px-3"
+                  className="text-sm font-medium text-[var(--color-text-muted)] data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#2E75B6] rounded-none pb-2.5 px-3"
                 >
                   스크랩 관리
                 </TabsTrigger>
@@ -322,11 +322,11 @@ export default function NewsPage() {
               {/* 활성 필터 칩 */}
               {chips.length > 0 && (
                 <div className="flex flex-wrap gap-2 items-center">
-                  <span className="text-xs text-[#4a7a9b]">적용된 필터:</span>
+                  <span className="text-xs text-[var(--color-text-tertiary)]">적용된 필터:</span>
                   {chips.map((chip) => (
                     <button
                       key={chip.key}
-                      className="inline-flex items-center gap-1 pr-1.5 pl-2 py-0.5 text-xs cursor-pointer bg-[#1a3a5c] text-[#7BA7C7] hover:bg-[#2E75B6]/20 hover:text-white border border-[#2E75B6]/30 rounded-full transition-colors"
+                      className="inline-flex items-center gap-1 pr-1.5 pl-2 py-0.5 text-xs cursor-pointer bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] hover:bg-[#2E75B6]/20 hover:text-[var(--color-text-primary)] border border-[#2E75B6]/30 rounded-full transition-colors"
                       onClick={() => removeChip(chip.key)}
                     >
                       {chip.label}

@@ -127,10 +127,11 @@ function formatRelativeTime(dateStr: string): string {
   return dateStr.slice(0, 10)
 }
 
-function formatAmount(amount: number): string {
+function formatAmount(amount: number | null | undefined): string {
+  if (typeof amount !== 'number' || !Number.isFinite(amount)) return '—'
   if (amount >= 100000000) return `${(amount / 100000000).toFixed(1)}억`
   if (amount >= 10000) return `${(amount / 10000).toFixed(0)}만`
-  return amount.toLocaleString()
+  return amount.toLocaleString('ko-KR')
 }
 
 const QUICK_LINKS = [

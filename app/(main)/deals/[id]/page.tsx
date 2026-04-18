@@ -2142,9 +2142,7 @@ export default function DealRoomPage() {
             tier: r.tier ?? "—", severity: r.severity ?? "INFO",
           })))
         }
-      } catch { /* data stays empty / null */ } finally {
-        if (!cancelled) setDealLoading(false)
-      }
+      } catch { /* data stays empty / null */ }
     }
 
     // Also try API route for deal info (may have richer data)
@@ -2213,7 +2211,9 @@ export default function DealRoomPage() {
       }
     }
 
-    init().then(() => { if (!cancelled) fetchDealApi() })
+    init()
+      .then(() => fetchDealApi())
+      .finally(() => { if (!cancelled) setDealLoading(false) })
     return () => { cancelled = true }
   }, [dealId])
 

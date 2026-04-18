@@ -320,88 +320,16 @@ export default function ExchangePage() {
   const [demoDismissed, setDemoDismissed] = useState(false)
   const [totalListings, setTotalListings] = useState<number | null>(null)
 
+  // 현재는 데모 모드로 MOCK 12건만 노출 (실데이터 플리커 방지). 총 건수는 API에서만 갱신.
   useEffect(() => {
     let cancelled = false
-    fetch('/api/v1/exchange/listings?limit=100&status=ACTIVE')
+    fetch('/api/v1/exchange/listings?limit=1&status=ACTIVE')
       .then(r => r.json())
       .then(d => {
         if (cancelled) return
         if (typeof d.total === 'number') setTotalListings(d.total)
-        if (d.data && d.data.length > 0) {
-          const mapped: CardListing[] = d.data.map((r: Record<string, unknown>) => {
-            // Map collateral_type to major category
-            const ct = (r.collateral_type as string) || ''
-            const collateralMajor: CardListing['collateralMajor'] =
-              /아파트|빌라|다세대|단독|오피스텔.*주거/.test(ct) ? 'RESIDENTIAL'
-              : /상가|오피스|사무|근린|교회|호텔|숙박/.test(ct) ? 'COMMERCIAL'
-              : /토지|임야|전|답|과수/.test(ct) ? 'LAND' : 'ETC'
-
-            // Map institution to type
-            const inst = (r.institution_name as string) || (r.institution as string) || '기관'
-            const inst_kind: CardListing['inst_kind'] =
-              /저축은행/.test(inst) ? 'SAVINGS_BANK'
-              : /은행/.test(inst) ? 'BANK'
-              : /새마을|신협/.test(inst) ? 'MUTUAL_CREDIT'
-              : /AMC|자산관리|F&I|대부/.test(inst) ? 'AMC' : 'AMC'
-
-            // Map risk_grade to ai_grade
-            const rg = (r.risk_grade as string) || 'B'
-            const ai_grade: AIGrade =
-              /^AAA?$/.test(rg) ? 'A' : /^BB?B?$/.test(rg) ? 'B' : /^CCC?/.test(rg) ? 'C' : 'B'
-
-            // Extract region — prefer collateral_region field, fallback to address
-            const regionSrc = (r.collateral_region as string) || (r.address as string) || (r.location as string) || ''
-            const regionMatch = regionSrc.match(/^([가-힣]+(특별시|광역시|특별자치시|도|시|군|구))/)
-            const region = regionMatch?.[1] || regionSrc.split(' ').slice(0, 2).join(' ') || '지역미상'
-            const regionCode = /서울/.test(regionSrc) ? '서울'
-              : /경기/.test(regionSrc) ? '경기' : /부산/.test(regionSrc) ? '부산'
-              : /인천/.test(regionSrc) ? '인천' : /대전/.test(regionSrc) ? '대전'
-              : /대구/.test(regionSrc) ? '대구' : /광주/.test(regionSrc) ? '광주'
-              : /충청|충북|충남/.test(regionSrc) ? '충청'
-              : /전라|전북|전남/.test(regionSrc) ? '전라'
-              : /경상|경북|경남/.test(regionSrc) ? '경상' : '기타'
-
-            const createdAt = new Date(r.created_at as string)
-            const daysAgo = Math.floor((Date.now() - createdAt.getTime()) / 86400000)
-
-            // Completeness derived from filled fields (0-10)
-            const fields = [r.appraised_value, r.address, r.collateral_type, r.risk_grade, r.principal_amount, r.asking_price_min, r.description, r.institution_name]
-            const completeness = Math.round((fields.filter(Boolean).length / fields.length) * 10)
-
-            return {
-              id: r.id as string,
-              institution: inst,
-              inst_kind,
-              listing_category: ((r.listing_type as string) === 'NPL' || !r.listing_type) ? 'NPL' : 'GENERAL',
-              region,
-              regionCode,
-              collateral: ct || '기타',
-              collateralMajor,
-              outstanding_principal: (r.principal_amount as number) || (r.claim_amount as number) || 0,
-              asking_price: (r.asking_price_min as number) || (r.principal_amount as number) || (r.claim_amount as number) || 0,
-              appraisal_value: (r.appraised_value as number) || (r.appraisal_value as number) || 0,
-              discount_rate: (r.discount_rate as number) || 0,
-              ai_grade,
-              data_completeness: completeness,
-              access_tier_required: 'L0' as const,
-              provided: {
-                appraisal: !!(r.appraised_value),
-                registry: !!(r.address),
-                rights: false,
-                lease: false,
-                site_photos: !!(r.images),
-                financials: !!(r.description),
-              },
-              sale_method: 'NPLATFORM' as const,
-              created_days_ago: Math.max(0, daysAgo),
-            } satisfies CardListing
-          })
-          setListings(mapped)
-          setIsDemoMode(false)
-        }
-        // else: API 빈 결과 → MOCK 유지, isDemoMode=true 유지 (state 이미 true)
       })
-      .catch(() => { /* 네트워크 오류 → MOCK 유지, isDemoMode=true 유지 */ })
+      .catch(() => { /* 네트워크 오류 무시 */ })
       .finally(() => { if (!cancelled) setListingsLoading(false) })
     return () => { cancelled = true }
   }, [])
