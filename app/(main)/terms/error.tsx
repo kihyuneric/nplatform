@@ -15,7 +15,7 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
       <p className="text-[var(--color-text-secondary)] mb-6 text-center max-w-md">{error.message || "페이지를 불러오는 중 문제가 발생했습니다."}</p>
       <div className="flex gap-3">
         <button onClick={reset} className="px-4 py-2 rounded-md border border-[var(--color-border-subtle)] text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)]">다시 시도</button>
-        <Link href="/" className="px-4 py-2 rounded-md bg-[#1B3A5C] text-white text-sm font-medium hover:bg-[#15304d]">홈으로</Link>
+        <Link href="/" className="px-4 py-2 rounded-md bg-[var(--color-brand-dark)] text-white text-sm font-medium hover:bg-[var(--color-brand-mid)]">홈으로</Link>
       </div>
     </div>
   )

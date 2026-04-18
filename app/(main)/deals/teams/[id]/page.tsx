@@ -289,7 +289,7 @@ export default function TeamDetailPage() {
         ) : team.status === "모집중" ? (
           <button
             onClick={() => setShowJoinModal(true)}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#10B981] px-3 text-xs font-semibold text-black hover:bg-[#0d9e6e] transition-colors"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[var(--color-positive)] px-3 text-xs font-semibold text-black hover:bg-emerald-600 transition-colors"
           >
             <UserPlus className="h-3.5 w-3.5" />참여하기
           </button>
@@ -613,7 +613,7 @@ export default function TeamDetailPage() {
               {team.status === "모집중" && (
                 <button
                   onClick={() => setShowJoinModal(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#10B981] px-3 py-1.5 text-xs font-semibold text-black hover:bg-[#0d9e6e] transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-positive)] px-3 py-1.5 text-xs font-semibold text-black hover:bg-emerald-600 transition-colors"
                 >
                   <UserPlus className="h-3.5 w-3.5" />참여 신청
                 </button>
@@ -793,7 +793,7 @@ export default function TeamDetailPage() {
                   <div className={`max-w-[70%] flex flex-col gap-1 ${msg.is_me ? "items-end" : "items-start"}`}>
                     {!msg.is_me && <span className="text-[10px] font-medium text-slate-600">{msg.sender}</span>}
                     <div className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed
-                      ${msg.is_me ? "rounded-tr-sm bg-[#10B981] text-black" : "rounded-tl-sm bg-[#0D1F38] border border-white/[0.06] text-slate-300"}`}>
+                      ${msg.is_me ? "rounded-tr-sm bg-[var(--color-positive)] text-black" : "rounded-tl-sm bg-[#0D1F38] border border-white/[0.06] text-slate-300"}`}>
                       {msg.content}
                     </div>
                     <span className="text-[10px] text-slate-700">{msg.created_at}</span>
@@ -809,7 +809,7 @@ export default function TeamDetailPage() {
                 className="flex-1 rounded-xl border border-white/10 bg-[#0D1F38] px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-[#10B981]/50"
               />
               <button onClick={sendMsg} disabled={!chatInput.trim()}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#10B981] text-black hover:bg-[#0d9e6e] disabled:opacity-40 transition-colors">
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-positive)] text-black hover:bg-emerald-600 disabled:opacity-40 transition-colors">
                 <Send className="h-4 w-4" />
               </button>
             </div>

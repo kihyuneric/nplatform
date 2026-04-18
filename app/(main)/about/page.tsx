@@ -437,7 +437,7 @@ export default function AboutPage() {
       {/*  2. 서비스 개요 - 6 Feature Cards                              */}
       {/* ============================================================ */}
       <section className="px-4 py-20 md:py-28 bg-[var(--color-surface-elevated)]">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-5xl">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -580,7 +580,7 @@ export default function AboutPage() {
       {/*  4. 금융기관을 위한 서비스                                       */}
       {/* ============================================================ */}
       <section className="px-4 py-20 md:py-28 bg-[var(--color-surface-elevated)]">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-5xl">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -639,7 +639,7 @@ export default function AboutPage() {
       {/*  5. 투자자를 위한 서비스                                        */}
       {/* ============================================================ */}
       <section className="bg-[var(--color-surface-sunken)] px-4 py-20 md:py-28">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-5xl">
           <motion.div
             initial="hidden"
             whileInView="visible"

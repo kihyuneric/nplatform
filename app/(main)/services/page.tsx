@@ -154,7 +154,7 @@ export default function ServicesPage() {
             </div>
 
             {/* Stats strip */}
-            <div className="grid grid-cols-3 gap-3 min-w-[420px]">
+            <div className="grid grid-cols-3 gap-4 min-w-[420px]">
               <KpiStatCard label="검증 전문가" value="120" unit="명" delta={8.4} icon={<Scale className="w-4 h-4" />} />
               <KpiStatCard label="커뮤니티 게시글" value="3,400" unit="건" delta={12.6} icon={<MessageSquare className="w-4 h-4" />} />
               <KpiStatCard label="교육 강좌" value="48" unit="개" delta={4.2} icon={<GraduationCap className="w-4 h-4" />} />

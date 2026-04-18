@@ -10,6 +10,16 @@ import {
 import DS from "@/lib/design-system"
 
 /* ─────────────────────────────────────────────────────────────
+   Guide palette — 카테고리별 구분색 (중앙 관리)
+   ───────────────────────────────────────────────────────────── */
+const GUIDE_PALETTE = {
+  beginner: "var(--color-positive)",   // #10B981 에메랄드
+  investor: "#8B5CF6",                 // 퍼플 (시스템 토큰 없음)
+  seller:   "#F59E0B",                 // 앰버 (시스템 토큰 없음)
+  partner:  "var(--color-brand-mid)",  // 블루
+} as const
+
+/* ─────────────────────────────────────────────────────────────
    Content
    ───────────────────────────────────────────────────────────── */
 const CATEGORIES = [
@@ -19,7 +29,7 @@ const CATEGORIES = [
     tagline: "NPL이 뭐야? 5분 완성",
     desc: "용어 · 구조 · 수익 메커니즘을 차근차근 익힙니다. 경매·공매와 NPL의 차이부터 배당까지.",
     href: "/guide/getting-started",
-    color: "#10B981",
+    color: GUIDE_PALETTE.beginner,
   },
   {
     icon: Briefcase,
@@ -27,7 +37,7 @@ const CATEGORIES = [
     tagline: "첫 NPL 투자 체크리스트 12개",
     desc: "매물 고르는 기준 · 함정 피하기 · IRR 역산 방법. 실패 사례 12가지로 배우는 리스크 관리.",
     href: "/guide/investor",
-    color: "#8B5CF6",
+    color: GUIDE_PALETTE.investor,
   },
   {
     icon: Building2,
@@ -35,7 +45,7 @@ const CATEGORIES = [
     tagline: "매각 효율 극대화 가이드",
     desc: "등록 · 가격 책정 · 입찰 전략. 대량 매각 시 포트폴리오 분할과 입찰 컷오프 설정 요령.",
     href: "/guide/seller",
-    color: "#F59E0B",
+    color: GUIDE_PALETTE.seller,
   },
   {
     icon: Users,
@@ -43,7 +53,7 @@ const CATEGORIES = [
     tagline: "감정평가·법무·컨설팅 파트너십",
     desc: "API 연동 · 수익 분배 · 전문가 프로필 노출. 파트너 등급별 혜택과 리퍼럴 커미션 체계.",
     href: "/guide/institution",
-    color: "#2E75B6",
+    color: GUIDE_PALETTE.partner,
   },
 ]
 

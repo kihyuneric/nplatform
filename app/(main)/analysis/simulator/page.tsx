@@ -203,7 +203,7 @@ export default function AuctionSimulatorPage() {
       {/* ── 데모 배너 ─────────────────────────────────────────────── */}
       {isDemo && !demoBannerDismissed && (
         <div className="bg-amber-500/10 border-b border-amber-500/25">
-          <div className="max-w-[1440px] mx-auto px-6 py-2.5 flex items-center justify-between gap-4">
+          <div className="max-w-7xl mx-auto px-6 py-2.5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 font-medium">
               <Zap className="w-4 h-4 shrink-0" />
               <span>
@@ -223,7 +223,7 @@ export default function AuctionSimulatorPage() {
 
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] px-6 py-5">
-        <div className="max-w-[1440px] mx-auto">
+        <div className="max-w-7xl mx-auto">
           <Link href="/analysis" className={`inline-flex items-center gap-1.5 ${DS.text.link} text-[0.8125rem] mb-3`}>
             <ArrowLeft className="h-3.5 w-3.5" />
             분석으로 돌아가기
@@ -268,7 +268,7 @@ export default function AuctionSimulatorPage() {
 
       {/* ── Presets ────────────────────────────────────────────── */}
       <div className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]">
-        <div className="max-w-[1440px] mx-auto px-6 py-2.5 flex items-center gap-2">
+        <div className="max-w-7xl mx-auto px-6 py-2.5 flex items-center gap-2">
           <span className={`${DS.text.label} mr-1`}>프리셋</span>
           {AUCTION_PRESETS.map((p, i) => (
             <button
@@ -287,7 +287,7 @@ export default function AuctionSimulatorPage() {
       </div>
 
       {/* ── Main ───────────────────────────────────────────────── */}
-      <div className="max-w-[1440px] mx-auto px-6 py-6">
+      <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="flex flex-col xl:flex-row gap-6">
 
           {/* ══ LEFT: Input Panel (38%) ══════════════════════════ */}

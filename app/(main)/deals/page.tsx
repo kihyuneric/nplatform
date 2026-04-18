@@ -525,7 +525,7 @@ export default function DealsPage() {
         </div>
       </div>
 
-      <div className={`${DS.page.container} !max-w-[1400px] py-5`}>
+      <div className={`${DS.page.container} py-5`}>
 
         {/* ── KPI Strip ────────────────────────────────────────── */}
         <div className={`flex items-stretch ${DS.card.base} mb-5 overflow-hidden`}>
@@ -710,7 +710,7 @@ export default function DealsPage() {
 
         {/* ── Kanban View ───────────────────────────────────── */}
         {!loading && filteredDeals.length > 0 && viewMode === "kanban" && (
-          <div className="flex gap-3 overflow-x-auto pb-4 -mx-6 px-6 sm:mx-0 sm:px-0">
+          <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
             {KANBAN_STAGES.map((stage) => {
               const stageDeals = getStageDeals(stage)
               const config = STAGE_CONFIG[stage]

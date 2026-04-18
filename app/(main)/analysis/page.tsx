@@ -196,11 +196,11 @@ export default function AnalysisDashboard() {
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <h1 className="text-2xl font-extrabold text-[var(--color-text-primary)] tracking-tight">
+                <h1 className={`${DS.text.sectionTitle} tracking-tight`}>
                   인사이트 · 분석 대시보드
                 </h1>
               </div>
-              <p className="text-[0.875rem] text-[var(--color-text-secondary)] max-w-2xl">
+              <p className={`${DS.text.caption} max-w-2xl`}>
                 NPL 수익성 분석 · 경매 분석 · AI 컨설턴트 · NPL 가격지수까지 — 모든 분석 도구를 한 곳에서
               </p>
             </div>
@@ -221,7 +221,7 @@ export default function AnalysisDashboard() {
           </div>
 
           {/* Quick stats */}
-          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
               { label: "AI 분석 완료", value: "28,391건", icon: Brain, color: "text-emerald-600" },
               { label: "평균 예측 정확도", value: "94.2%", icon: Shield, color: "text-blue-600" },
@@ -245,7 +245,7 @@ export default function AnalysisDashboard() {
 
       {/* ── Tool Grid ────────────────────────────────────────── */}
       <section className={`${DS.page.container} mt-8`}>
-        <h2 className="text-base font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+        <h2 className={`${DS.text.cardSubtitle} mb-4 flex items-center gap-2`}>
           <Sparkles className="w-4 h-4 text-[var(--color-brand-mid)]" />
           분석 도구
         </h2>
@@ -330,7 +330,7 @@ export default function AnalysisDashboard() {
       {/* ── Recent Analyses ──────────────────────────────────── */}
       <section className={`${DS.page.container} mt-8 mb-12`}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+          <h2 className={`${DS.text.cardSubtitle} flex items-center gap-2`}>
             <Clock className="w-4 h-4 text-[var(--color-text-tertiary)]" />
             최근 분석 내역
           </h2>
