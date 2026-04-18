@@ -12,10 +12,10 @@
 
 // ─── 상수 ─────────────────────────────────────────────────
 export const SELLER_FEE_CAP = 0.009         // 매도자 0.9% 절대 상한 (규제)
-export const FEE_CAP = SELLER_FEE_CAP       // 하위호환 alias
-export const SELLER_BASE_RATE = 0.009       // 0.9% (규제 상한)
-export const BUYER_BASE_RATE = 0.020        // 2.0% 기본 (관리자 설정)
-export const BUYER_FEE_CAP = 0.030         // 매수자 상한 3% (플랫폼 정책)
+export const FEE_CAP = SELLER_FEE_CAP       // 하위호환 alias (매도자·매수자 공통)
+export const SELLER_BASE_RATE = 0.005       // 0.5% 기본 (+ 옵션 최대 0.4% → 상한 0.9%)
+export const BUYER_BASE_RATE = 0.005        // 0.5% 기본 (+ 옵션 최대 0.4% → 상한 0.9%)
+export const BUYER_FEE_CAP = FEE_CAP        // 매수자도 동일 0.9% 상한 적용
 export const INSTITUTIONAL_DISCOUNT_RATE = 0.003  // 0.3% 전속 계약 할인
 
 // 관리자 설정 — 런타임에서 덮어씀 (fee-config localStorage key: 'npl_fee_config')
@@ -140,7 +140,7 @@ export function calculateBuyerFee(input: BuyerFeeInput): FeeBreakdown {
   }
 
   const rawRate = baseRate + addonDetails.reduce((sum, a) => sum + a.rate, 0)
-  const totalRate = Math.min(rawRate, BUYER_FEE_CAP)
+  const totalRate = Math.min(rawRate, FEE_CAP)
 
   return {
     dealAmount: input.dealAmount,
@@ -149,7 +149,7 @@ export function calculateBuyerFee(input: BuyerFeeInput): FeeBreakdown {
     addonDetails,
     totalRate,
     totalFee: Math.round(input.dealAmount * totalRate),
-    capped: rawRate > BUYER_FEE_CAP,
+    capped: rawRate > FEE_CAP,
   }
 }
 

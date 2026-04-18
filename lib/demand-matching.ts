@@ -73,7 +73,8 @@ const RISK_GRADE_SCORE: Record<string, Record<string, number>> = {
 /**
  * Time decay factor: demands age reduces effective urgency.
  * A 7-day-old URGENT demand = equivalent to HIGH.
- * A 30-day-old demand = decay factor 0.5.
+ * A 30-day-old demand = decay factor 0.6.
+ * A 60-day-old demand = decay factor 0.5.
  */
 function timeDenominator(createdAt?: string): number {
   if (!createdAt) return 1.0
@@ -82,8 +83,8 @@ function timeDenominator(createdAt?: string): number {
   if (ageDays <= 3) return 1.0
   if (ageDays <= 7) return 0.9
   if (ageDays <= 14) return 0.75
-  if (ageDays <= 30) return 0.6
-  return 0.5  // older than 30 days
+  if (ageDays < 60) return 0.6   // 14–60 days (includes ~30 days)
+  return 0.5  // older than 60 days
 }
 
 /**

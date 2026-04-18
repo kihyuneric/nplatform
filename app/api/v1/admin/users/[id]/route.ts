@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUserWithRole } from '@/lib/auth/get-user'
 import { apiError } from '@/lib/api-error'
+import { sendEmail } from '@/lib/email/email-service'
+import { kycStatusEmail } from '@/lib/email/templates'
 
 export const dynamic = 'force-dynamic'
 
@@ -82,6 +84,19 @@ export async function PATCH(
       .eq('id', id)
 
     if (updateError) throw updateError
+
+    // Fire-and-forget KYC result email
+    if ((approvalStatus === 'APPROVED' || approvalStatus === 'REJECTED') && target.email) {
+      const kycResult = approvalStatus === 'APPROVED' ? 'APPROVED' : 'REJECTED'
+      void sendEmail({
+        to: target.email as string,
+        ...kycStatusEmail({
+          name: (target.name as string) ?? '고객',
+          status: kycResult,
+          tier: approvalStatus === 'APPROVED' ? (investorTier ?? 'L1') : undefined,
+        }),
+      }).catch((e) => console.error('[kyc email]', e))
+    }
 
     return NextResponse.json({
       success: true,

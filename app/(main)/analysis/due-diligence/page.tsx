@@ -48,11 +48,13 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts"
-import SensitivityHeatmap from "@/components/report/sensitivity-heatmap"
-import MonteCarloChart from "@/components/report/monte-carlo-chart"
-import WaterfallChart from "@/components/report/waterfall-chart"
-import RiskMatrix from "@/components/report/risk-matrix"
-import CompTable from "@/components/report/comp-table"
+import {
+  DynamicSensitivityHeatmap as SensitivityHeatmap,
+  DynamicMonteCarloChart as MonteCarloChart,
+  DynamicWaterfallReportChart as WaterfallChart,
+  DynamicRiskMatrix as RiskMatrix,
+  DynamicCompTable as CompTable,
+} from "@/components/dynamic"
 
 /* ═══════════════════════════════════════════════════════════════════════════
    TYPE DEFINITIONS

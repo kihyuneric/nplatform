@@ -40,6 +40,33 @@ export const DynamicBidRateDistributionChart = dynamic(
   { ssr: false }
 )
 
+// ── Report / Analysis Charts (complex, SSR-incompatible) ─────────────────────
+
+export const DynamicMonteCarloChart = dynamic(
+  () => import('@/components/report/monte-carlo-chart'),
+  { ssr: false }
+)
+
+export const DynamicWaterfallReportChart = dynamic(
+  () => import('@/components/report/waterfall-chart'),
+  { ssr: false }
+)
+
+export const DynamicSensitivityHeatmap = dynamic(
+  () => import('@/components/report/sensitivity-heatmap'),
+  { ssr: false }
+)
+
+export const DynamicRiskMatrix = dynamic(
+  () => import('@/components/report/risk-matrix'),
+  { ssr: false }
+)
+
+export const DynamicCompTable = dynamic(
+  () => import('@/components/report/comp-table'),
+  { ssr: false }
+)
+
 // ── AI Chat Widget ───────────────────────────────────────────────────────────
 
 export const DynamicChatWidget = dynamic(
