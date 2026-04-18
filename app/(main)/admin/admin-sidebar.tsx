@@ -9,6 +9,7 @@ import {
   ChevronLeft, Menu, BrainCircuit, ShieldCheck, Eye, Landmark, FileSignature, Tag,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
 const ADMIN_MENU = [
   { href: "/admin",            label: "대시보드",    icon: LayoutDashboard },
@@ -30,43 +31,94 @@ const ADMIN_MENU = [
   { href: "/admin/ml",         label: "AI·ML",       icon: BrainCircuit },
 ]
 
+function getActiveLabel(pathname: string | null): string {
+  const p = pathname ?? ""
+  // longest-match first
+  const sorted = [...ADMIN_MENU].sort((a, b) => b.href.length - a.href.length)
+  const match = sorted.find((m) => p === m.href || (m.href !== "/admin" && p.startsWith(m.href)))
+  return match?.label ?? "관리자"
+}
+
+function MenuList({ collapsed = false, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
+  const pathname = usePathname()
+  return (
+    <nav className="p-2 space-y-1">
+      {ADMIN_MENU.map((item) => {
+        const Icon = item.icon
+        const isActive = pathname === item.href || (item.href !== "/admin" && (pathname ?? "").startsWith(item.href))
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={cn(
+              "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+              isActive
+                ? "bg-blue-600 text-white"
+                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)]"
+            )}
+            title={collapsed ? item.label : undefined}
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            {!collapsed && <span className="truncate flex-1">{item.label}</span>}
+          </Link>
+        )
+      })}
+    </nav>
+  )
+}
+
 export default function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
+  const activeLabel = getActiveLabel(pathname)
 
   return (
-    <aside className={cn(
-      "border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] transition-all duration-200 shrink-0 overflow-y-auto",
-      collapsed ? "w-16" : "w-56"
-    )}>
-      <div className="flex items-center justify-between p-3 border-b border-[var(--color-border-subtle)]">
-        {!collapsed && <span className="text-sm font-bold text-[var(--color-brand-dark)]">관리자</span>}
-        <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-[var(--color-surface-overlay)] transition-colors" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? "사이드바 열기" : "사이드바 닫기"}>
-          {collapsed ? <Menu className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </button>
-      </div>
-      <nav className="p-2 space-y-1">
-        {ADMIN_MENU.map((item) => {
-          const Icon = item.icon
-          const isActive = pathname === item.href || (item.href !== "/admin" && (pathname ?? "").startsWith(item.href))
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
-                isActive
-                  ? "bg-blue-600 text-white"
-                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)]"
-              )}
-              title={collapsed ? item.label : undefined}
+    <>
+      {/* 모바일 상단 바 */}
+      <div className="md:hidden sticky top-0 z-30 flex items-center justify-between border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-3 py-2">
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetTrigger asChild>
+            <button
+              className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-[var(--color-surface-overlay)] transition-colors"
+              aria-label="관리자 메뉴 열기"
             >
-              <Icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span className="truncate flex-1">{item.label}</span>}
-            </Link>
-          )
-        })}
-      </nav>
-    </aside>
+              <Menu className="h-5 w-5" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-72 p-0 overflow-y-auto">
+            <div className="p-3 border-b border-[var(--color-border-subtle)]">
+              <span className="text-sm font-bold text-[var(--color-brand-dark)]">관리자</span>
+            </div>
+            <MenuList onNavigate={() => setMobileOpen(false)} />
+          </SheetContent>
+        </Sheet>
+        <span className="text-sm font-semibold text-[var(--color-text-primary)] truncate">
+          {activeLabel}
+        </span>
+        <span className="w-9" />
+      </div>
+
+      {/* 데스크톱 사이드바 */}
+      <aside
+        className={cn(
+          "hidden md:block border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] transition-all duration-200 shrink-0 overflow-y-auto",
+          collapsed ? "w-16" : "w-56"
+        )}
+      >
+        <div className="flex items-center justify-between p-3 border-b border-[var(--color-border-subtle)]">
+          {!collapsed && <span className="text-sm font-bold text-[var(--color-brand-dark)]">관리자</span>}
+          <button
+            className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-[var(--color-surface-overlay)] transition-colors"
+            onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? "사이드바 열기" : "사이드바 닫기"}
+          >
+            {collapsed ? <Menu className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </button>
+        </div>
+        <MenuList collapsed={collapsed} />
+      </aside>
+    </>
   )
 }
