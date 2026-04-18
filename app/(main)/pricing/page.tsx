@@ -1,116 +1,272 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { CheckCircle2, X, Zap, Building2, User, Crown, Star } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import CheckoutModal, { type CheckoutPlan } from '@/components/payment/CheckoutModal'
+import {
+  CheckCircle2, X, ArrowRight, Building2, Users, Shield,
+  Sparkles, Calculator, ChevronDown, ChevronUp, Star, Zap,
+  TrendingUp, Lock, FileText, MessageSquare,
+} from 'lucide-react'
 import DS from '@/lib/design-system'
 
-const PLANS = [
+// ── 거래 수수료 (성공보수 기반) ────────────────────────
+const FEE_TABLE = [
   {
-    id: 'starter',
-    plan_key: 'STARTER',
-    icon: User,
-    name: 'STARTER',
-    price: { monthly: 29000, annual: 23200 },
-    desc: 'NPL 입문 투자자를 위한 기본 도구',
-    cta: '시작하기',
-    popular: false,
-    features: [
-      '매물 조회 50건/월',
-      'AI 분석 10회/월',
-      '경매 수익률 분석기 기본',
-      'OCR 스캔 20회/월',
-      '딜룸 3개',
-      '시장 리포트 월 1회',
-    ],
-  },
-  {
-    id: 'pro',
-    plan_key: 'PRO',
-    icon: Zap,
-    name: 'PRO',
-    price: { monthly: 79000, annual: 63200 },
-    desc: '전문 투자자를 위한 모든 기능',
-    cta: '플랜 선택하기',
-    popular: true,
-    features: [
-      '무제한 매물 조회',
-      'AI 분석 100건/월',
-      '경매 수익률 분석기 고급',
-      'OCR 스캔 100회/월',
-      '딜룸 20개',
-      '계약서 생성',
-      '주간 시장 인텔리전스',
-      '수수료 0.35% (기본 0.4%)',
-    ],
-  },
-  {
-    id: 'professional',
-    plan_key: 'PROFESSIONAL',
-    icon: Crown,
-    name: 'PROFESSIONAL',
-    price: { monthly: 199000, annual: 159200 },
-    desc: '법인·전문 투자자 전용 Suite',
-    cta: '플랜 선택하기',
-    popular: false,
-    features: [
-      '무제한 AI 분석',
-      '대량 매물 등록',
-      'NPL 가격지수 (NBI) 전체',
-      '법률 RAG 검색',
-      '딜룸 무제한',
-      '전담 지원 매니저',
-      '수수료 0.30%',
-    ],
-  },
-  {
-    id: 'institution',
-    plan_key: 'INSTITUTION',
+    type: 'NPL 매도자',
     icon: Building2,
-    name: 'INSTITUTION',
-    price: { monthly: 499000, annual: 399200 },
-    desc: '금융기관 · 자산운용사 맞춤',
-    cta: '영업팀 문의',
+    color: 'var(--color-brand-mid)',
+    rate: '≤ 0.9%',
+    base: '채권 매각 대금 기준',
+    highlight: '6개월 무료 온보딩',
+    note: '금융기관·캐피탈·저축은행 등 첫 가입 기관 6개월 수수료 면제',
+  },
+  {
+    type: 'NPL 매수자',
+    icon: TrendingUp,
+    color: 'var(--color-positive)',
+    rate: '1.5%',
+    base: '채권 매입가 기준',
+    highlight: '+ 0.3% 우선협상권',
+    note: '우선협상권(Priority Negotiation Right) 선택 시 0.3% 추가, 경쟁 입찰 없이 독점 협상 진행',
+  },
+  {
+    type: '부동산 매도자',
+    icon: Building2,
+    color: 'var(--color-info)',
+    rate: '≤ 0.9%',
+    base: '매각 대금 기준',
+    highlight: '6개월 무료 온보딩',
+    note: '부동산 매물 등록 최초 6개월 수수료 면제',
+  },
+  {
+    type: '부동산 매수자',
+    icon: Users,
+    color: 'var(--color-warning)',
+    rate: '≤ 0.9%',
+    base: '매입가 기준',
+    highlight: '멤버십 할인 적용',
+    note: 'L2 멤버십 보유 시 수수료 0.1%p 추가 할인',
+  },
+]
+
+// ── 멤버십 플랜 ────────────────────────────────────────
+const MEMBERSHIP_PLANS = [
+  {
+    id: 'free',
+    name: '기본',
+    nameEn: 'Free',
+    icon: Users,
+    price: 0,
+    priceLabel: '무료',
+    desc: '거래 수수료만으로 이용 가능한 기본 플랜',
     popular: false,
+    color: 'var(--color-text-muted)',
     features: [
-      'PROFESSIONAL 모든 기능',
-      'API 무제한 연동',
-      '팀 계정 50명',
-      'SLA 99.9% 보장',
-      '화이트라벨 리포트',
-      '수수료 0.30%',
-      '전담 계좌매니저',
+      { text: '매물 조회 50건/월', ok: true },
+      { text: 'AI 분석 5회/월', ok: true },
+      { text: '경매 분석 기본', ok: true },
+      { text: '딜룸 1개', ok: true },
+      { text: '우선협상권', ok: false },
+      { text: '법률 RAG 검색', ok: false },
+      { text: '수수료 할인', ok: false },
+    ],
+  },
+  {
+    id: 'l1',
+    name: 'L1',
+    nameEn: 'Level 1',
+    icon: Zap,
+    price: 300000,
+    priceLabel: '₩300,000',
+    desc: '활발한 NPL 투자자를 위한 프리미엄 액세스',
+    popular: false,
+    color: 'var(--color-brand-mid)',
+    features: [
+      { text: '무제한 매물 조회', ok: true },
+      { text: 'AI 분석 50회/월', ok: true },
+      { text: '경매 분석 고급 + 시뮬레이터', ok: true },
+      { text: '딜룸 10개', ok: true },
+      { text: '우선협상권 이용', ok: true },
+      { text: '법률 RAG 검색', ok: true },
+      { text: '수수료 0.05%p 할인', ok: true },
+    ],
+  },
+  {
+    id: 'l2',
+    name: 'L2',
+    nameEn: 'Level 2',
+    icon: Star,
+    price: 1000000,
+    priceLabel: '₩1,000,000',
+    desc: '법인·전문 기관 투자자를 위한 최상위 플랜',
+    popular: true,
+    color: 'var(--color-positive)',
+    features: [
+      { text: '무제한 AI 분석', ok: true },
+      { text: 'NBI 가격지수 전체 열람', ok: true },
+      { text: '대량 매물 일괄 등록', ok: true },
+      { text: '딜룸 무제한', ok: true },
+      { text: '우선협상권 이용', ok: true },
+      { text: '법률 RAG 검색 + 판례 DB', ok: true },
+      { text: '수수료 0.1%p 할인', ok: true },
+    ],
+  },
+  {
+    id: 'verify',
+    name: '검증',
+    nameEn: 'Verification',
+    icon: Shield,
+    price: 500000,
+    priceLabel: '₩500,000',
+    desc: '기관 투자자 신뢰 배지 + 우선 매칭 자격',
+    popular: false,
+    color: 'var(--color-warning)',
+    features: [
+      { text: '기관 인증 배지 부여', ok: true },
+      { text: 'AI 매칭 우선순위 상위', ok: true },
+      { text: '실명 검증 계정', ok: true },
+      { text: '연간 컴플라이언스 리포트', ok: true },
+      { text: '법인 계정 5개', ok: true },
+      { text: 'SLA 99.9% 보장', ok: true },
+      { text: '전담 어카운트 매니저', ok: true },
     ],
   },
 ]
 
-const COMPARISON = [
-  { feature: '매물 조회', free: '10건/월', pro: '무제한', enterprise: '무제한' },
-  { feature: 'AI 분석', free: '3회/월', pro: '50건/월', enterprise: '무제한' },
-  { feature: '경매 수익률 분석기', free: false, pro: true, enterprise: true },
-  { feature: 'OCR 스캔', free: '5회/월', pro: '50회/월', enterprise: '무제한' },
-  { feature: '딜룸', free: '1개', pro: '10개', enterprise: '무제한' },
-  { feature: 'API 연동', free: false, pro: false, enterprise: true },
-  { feature: '전담 매니저', free: false, pro: false, enterprise: true },
-  { feature: 'SLA 보장', free: false, pro: false, enterprise: true },
+const FAQ_ITEMS = [
+  {
+    q: '수수료는 언제 발생하나요?',
+    a: '거래가 최종 성사(계약 완료)된 시점에만 수수료가 발생합니다. 매물 조회·분석·AI 매칭 등의 과정은 무료이며, 실제 거래 체결 시에만 정산됩니다.',
+  },
+  {
+    q: '금융기관 6개월 무료 온보딩은 어떻게 신청하나요?',
+    a: '금융기관(은행, 캐피탈, 저축은행, AMC 등)은 영업팀에 문의하시면 법인 인증 후 즉시 6개월 무료 온보딩 혜택이 적용됩니다. 온보딩 기간 동안 모든 거래에 수수료가 면제됩니다.',
+  },
+  {
+    q: '우선협상권(PNR)이란 무엇인가요?',
+    a: '우선협상권(Priority Negotiation Right)은 매물에 대해 다른 투자자보다 먼저 독점적으로 협상할 수 있는 권리입니다. 경쟁 없이 원하는 조건으로 협상 테이블에 앉을 수 있습니다. NPL 매수자 수수료 1.5%에 0.3%를 추가해 이용 가능합니다.',
+  },
+  {
+    q: '멤버십과 거래 수수료는 별도인가요?',
+    a: '네, 완전히 별도입니다. 멤버십은 플랫폼 기능(AI 분석, 딜룸 수, 법률 검색 등)에 대한 이용료이고, 거래 수수료는 실제 거래 성사 시 발생하는 성공보수입니다. 기본 플랜(무료)으로도 거래 수수료만으로 플랫폼을 이용할 수 있습니다.',
+  },
+  {
+    q: 'L1/L2 멤버십으로 수수료 할인이 되나요?',
+    a: 'L1은 0.05%p, L2는 0.1%p 수수료 할인이 적용됩니다. 대규모 거래일수록 멤버십 ROI가 높아집니다. 예: 10억 거래 시 L2 기준 수수료 100만원 절약.',
+  },
 ]
 
-const FAQ = [
-  {
-    q: '무료 플랜에서 프로로 업그레이드하면 데이터가 유지되나요?',
-    a: '네, 모든 데이터(매물 관심, 분석 이력, 거래 기록)가 그대로 유지됩니다. 플랜 변경 즉시 새로운 기능을 이용할 수 있습니다.',
-  },
-  {
-    q: '연간 결제 시 할인이 있나요?',
-    a: '네, 연간 결제 시 20% 할인이 적용됩니다. 프로 플랜 기준 월 ₩39,200으로 이용 가능합니다.',
-  },
-  {
-    q: '환불 정책은 어떻게 되나요?',
-    a: '결제 후 7일 이내 미사용 크레딧에 한해 전액 환불 가능합니다. 자세한 사항은 고객센터로 문의해 주세요.',
-  },
-]
+// ── 수수료 계산기 ──────────────────────────────────────
+function FeeCalculator() {
+  const [dealType, setDealType] = useState<'npl-seller' | 'npl-buyer' | 're-seller' | 're-buyer'>('npl-buyer')
+  const [amount, setAmount] = useState('')
+  const [withPNR, setWithPNR] = useState(false)
+  const [membership, setMembership] = useState<'free' | 'l1' | 'l2'>('free')
+
+  const numAmount = Number(amount.replace(/,/g, '')) || 0
+
+  const baseRate = {
+    'npl-seller': 0.009,
+    'npl-buyer': 0.015,
+    're-seller': 0.009,
+    're-buyer': 0.009,
+  }[dealType]
+
+  const pnrRate = (dealType === 'npl-buyer' && withPNR) ? 0.003 : 0
+  const discountRate = { free: 0, l1: 0.0005, l2: 0.001 }[membership]
+  const effectiveRate = Math.max(0, baseRate + pnrRate - discountRate)
+  const fee = Math.round(numAmount * effectiveRate)
+
+  const fmt = (n: number) => n.toLocaleString('ko-KR')
+
+  return (
+    <div className={`${DS.card.elevated} p-5`}>
+      <div className="flex items-center gap-2 mb-5">
+        <Calculator className="w-5 h-5 text-[var(--color-brand-mid)]" />
+        <h3 className={DS.text.cardSubtitle}>수수료 계산기</h3>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className={`${DS.input.label} mb-1.5`}>거래 유형</label>
+          <select
+            value={dealType}
+            onChange={e => setDealType(e.target.value as typeof dealType)}
+            className={DS.input.base}
+          >
+            <option value="npl-seller">NPL 매도자</option>
+            <option value="npl-buyer">NPL 매수자</option>
+            <option value="re-seller">부동산 매도자</option>
+            <option value="re-buyer">부동산 매수자</option>
+          </select>
+        </div>
+        <div>
+          <label className={`${DS.input.label} mb-1.5`}>거래 금액 (원)</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="1,000,000,000"
+            value={amount}
+            onChange={e => setAmount(e.target.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ','))}
+            className={DS.input.base}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+        <div>
+          <label className={`${DS.input.label} mb-1.5`}>멤버십</label>
+          <select
+            value={membership}
+            onChange={e => setMembership(e.target.value as 'free' | 'l1' | 'l2')}
+            className={DS.input.base}
+          >
+            <option value="free">기본 (할인 없음)</option>
+            <option value="l1">L1 (-0.05%p)</option>
+            <option value="l2">L2 (-0.1%p)</option>
+          </select>
+        </div>
+        {dealType === 'npl-buyer' && (
+          <div className="flex items-center gap-3 pt-6">
+            <button
+              type="button"
+              onClick={() => setWithPNR(!withPNR)}
+              className={`w-11 h-6 rounded-full transition-colors ${withPNR ? 'bg-[var(--color-positive)]' : 'bg-[var(--color-surface-sunken)] border border-[var(--color-border-default)]'}`}
+            >
+              <span className={`block w-5 h-5 rounded-full bg-white shadow transition-transform mx-0.5 ${withPNR ? 'translate-x-5' : 'translate-x-0'}`} />
+            </button>
+            <span className={DS.text.body}>우선협상권 (+0.3%)</span>
+          </div>
+        )}
+      </div>
+
+      {numAmount > 0 && (
+        <div className="rounded-xl border border-[var(--color-border-default)] bg-[var(--color-surface-sunken)] p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className={DS.text.caption}>적용 수수료율</span>
+            <span className={`${DS.text.bodyBold} text-[var(--color-brand-mid)]`}>{(effectiveRate * 100).toFixed(2)}%</span>
+          </div>
+          <div className="flex items-center justify-between mb-3">
+            <span className={DS.text.caption}>거래 금액</span>
+            <span className={DS.text.body}>₩{fmt(numAmount)}</span>
+          </div>
+          <div className="h-px bg-[var(--color-border-subtle)] mb-3" />
+          <div className="flex items-center justify-between">
+            <span className={DS.text.bodyBold}>예상 수수료</span>
+            <span className="text-[1.5rem] font-extrabold text-[var(--color-positive)] tabular-nums">
+              ₩{fmt(fee)}
+            </span>
+          </div>
+          {discountRate > 0 && (
+            <p className={`${DS.text.micro} text-[var(--color-positive)] mt-1 text-right`}>
+              멤버십 할인 ₩{fmt(Math.round(numAmount * discountRate))} 적용됨
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
@@ -118,281 +274,221 @@ function FaqItem({ q, a }: { q: string; a: string }) {
     <div className="border-b border-[var(--color-border-subtle)] last:border-b-0">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-6 py-5 bg-transparent border-none cursor-pointer text-left"
-        aria-expanded={open}
+        className="w-full flex items-center justify-between px-5 py-4 text-left"
       >
-        <span className={`${DS.text.bodyBold} pr-4 leading-relaxed`}>{q}</span>
-        <span
-          className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[1rem] font-bold transition-all border ${
-            open
-              ? 'bg-[var(--color-brand-mid)] text-white border-[var(--color-brand-mid)]'
-              : 'bg-[var(--color-surface-sunken)] text-[var(--color-brand-mid)] border-[var(--color-border-default)]'
-          }`}
-        >
-          {open ? '\u2212' : '+'}
-        </span>
+        <span className={`${DS.text.bodyBold} pr-4`}>{q}</span>
+        {open ? <ChevronUp className="w-4 h-4 shrink-0 text-[var(--color-brand-mid)]" /> : <ChevronDown className="w-4 h-4 shrink-0 text-[var(--color-text-muted)]" />}
       </button>
       {open && (
-        <div className="px-6 pb-5">
-          <p className={`${DS.text.body} leading-[1.75]`}>{a}</p>
+        <div className="px-5 pb-4">
+          <p className={`${DS.text.body} text-[var(--color-text-secondary)]`}>{a}</p>
         </div>
       )}
     </div>
   )
 }
 
-function CompareCell({ val }: { val: string | boolean }) {
-  if (val === true) return <CheckCircle2 size={18} className="text-[var(--color-positive)] mx-auto" />
-  if (val === false) return <X size={16} className="text-[var(--color-text-muted)] mx-auto" />
-  return <span className={DS.text.metricSmall}>{val}</span>
-}
-
 export default function PricingPage() {
-  const [annual, setAnnual] = useState(false)
-  const [checkoutPlan, setCheckoutPlan] = useState<CheckoutPlan | null>(null)
-  const [checkoutOpen, setCheckoutOpen] = useState(false)
-  const [userInfo, setUserInfo] = useState<{ name: string; email: string }>({ name: '', email: '' })
-
-  useEffect(() => {
-    const supabase = createClient()
-    void supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        const meta = data.user.user_metadata as Record<string, string>
-        setUserInfo({
-          name:  meta['full_name'] ?? meta['name'] ?? '사용자',
-          email: data.user.email ?? '',
-        })
-      }
-    })
-  }, [])
-
-  function handleSelectPlan(plan: typeof PLANS[number]) {
-    if (plan.id === 'institution' || !plan.plan_key) {
-      window.location.href = '/support?subject=enterprise'
-      return
-    }
-    setCheckoutPlan({
-      id:            plan.id,
-      plan_key:      plan.plan_key,
-      name:          plan.name,
-      price_monthly: plan.price.monthly,
-      price_yearly:  plan.price.annual * 12,
-      description:   plan.desc,
-    })
-    setCheckoutOpen(true)
-  }
-
   return (
     <div className={DS.page.wrapper}>
+      <div className={`${DS.page.container} ${DS.page.paddingTop} pb-20`}>
 
-      {/* ── Hero Section ── */}
-      <section className="relative overflow-hidden bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] pt-16 pb-20 text-center">
-        <div className="relative max-w-[700px] mx-auto px-6">
-          <span className={DS.header.eyebrow}>요금제</span>
-          <h1 className={`${DS.text.pageTitle} mt-3 mb-4`}>
-            투자 목표에 맞는<br />플랜을 선택하세요
-          </h1>
-          <p className={`${DS.text.body} mb-10 max-w-xl mx-auto`}>
-            NPL 투자 규모와 목적에 맞는 플랜을 선택하세요.<br />
-            모든 플랜은 무약정, 언제든 변경 가능합니다.
+        {/* ── Hero ── */}
+        <div className={DS.header.wrapper}>
+          <p className={DS.header.eyebrow}>Pricing</p>
+          <h1 className={DS.header.title}>성공할 때만 수수료</h1>
+          <p className={`${DS.header.subtitle} max-w-lg`}>
+            거래가 성사될 때만 수수료가 발생합니다. 월정액 없이 시작하고, 성공할수록 더 큰 가치를 누리세요.
           </p>
-
-          {/* Toggle */}
-          <div className="inline-flex items-center bg-[var(--color-surface-sunken)] border border-[var(--color-border-subtle)] rounded-xl p-1">
-            <button
-              onClick={() => setAnnual(false)}
-              className={`px-5 py-2 rounded-lg text-[0.875rem] font-bold cursor-pointer border-none transition-all ${
-                !annual
-                  ? 'bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] shadow-[var(--shadow-sm)]'
-                  : 'bg-transparent text-[var(--color-text-tertiary)]'
-              }`}
-            >월간 결제</button>
-            <button
-              onClick={() => setAnnual(true)}
-              className={`flex items-center gap-2 px-5 py-2 rounded-lg text-[0.875rem] font-bold cursor-pointer border-none transition-all ${
-                annual
-                  ? 'bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] shadow-[var(--shadow-sm)]'
-                  : 'bg-transparent text-[var(--color-text-tertiary)]'
-              }`}
-            >
-              연간 결제
-              <span className="text-[0.6875rem] font-extrabold px-2 py-0.5 rounded-full bg-[var(--color-positive)] text-white">
-                20% 할인
-              </span>
-            </button>
-          </div>
         </div>
-      </section>
 
-      {/* ── Pricing Cards ── */}
-      <section className={`${DS.page.container} -mt-12 relative z-10 pb-16`}>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {PLANS.map((plan) => {
-            const price = annual ? plan.price.annual : plan.price.monthly
-            const priceLabel = price === 0 ? '\u20A90' : `\u20A9${price.toLocaleString('ko-KR')}`
-            const Icon = plan.icon
-            return (
-              <div
-                key={plan.id}
-                className={`relative overflow-hidden transition-all duration-200 ${
-                  plan.popular
-                    ? `${DS.card.elevated} border-2 border-[var(--color-brand-mid)] shadow-[var(--shadow-xl)] scale-[1.02]`
-                    : DS.card.base
-                }`}
-              >
-                {/* Top accent bar for popular */}
-                {plan.popular && (
-                  <div className="h-1 bg-gradient-to-r from-[var(--color-brand-mid)] to-[var(--color-brand-bright)]" />
-                )}
-                {plan.popular && (
-                  <div className="absolute top-3 right-5 bg-[var(--color-brand-mid)] text-white text-[0.6875rem] font-extrabold px-3.5 py-1 rounded-full shadow-[var(--shadow-brand)]">
-                    MOST POPULAR
+        {/* ── 거래 수수료 테이블 ── */}
+        <section className="mb-12">
+          <h2 className={`${DS.text.sectionTitle} mb-2`}>거래 수수료</h2>
+          <p className={`${DS.text.captionLight} mb-6`}>모든 수수료는 거래 성사 시 1회 정산됩니다.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            {FEE_TABLE.map((row) => {
+              const Icon = row.icon
+              return (
+                <div key={row.type} className={`${DS.card.elevated} p-5`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `color-mix(in srgb, ${row.color} 15%, transparent)` }}>
+                      <Icon className="w-4 h-4" style={{ color: row.color }} />
+                    </div>
+                    <span className={DS.text.label}>{row.type}</span>
                   </div>
-                )}
+                  <p className="text-[2rem] font-extrabold leading-none tabular-nums mb-1" style={{ color: row.color }}>
+                    {row.rate}
+                  </p>
+                  <p className={`${DS.text.micro} mb-3`}>{row.base}</p>
+                  <div className="rounded-lg px-2.5 py-1.5 mb-3 text-center text-[0.7rem] font-bold" style={{ background: `color-mix(in srgb, ${row.color} 15%, transparent)`, color: row.color }}>
+                    {row.highlight}
+                  </div>
+                  <p className={`${DS.text.micro} leading-relaxed`}>{row.note}</p>
+                </div>
+              )
+            })}
+          </div>
+        </section>
 
-                <div className={DS.card.paddingLarge}>
-                  {/* Plan icon + name */}
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-xl bg-[var(--color-surface-sunken)] border border-[var(--color-border-subtle)] flex items-center justify-center">
-                      <Icon size={20} className={plan.popular ? 'text-[var(--color-brand-mid)]' : 'text-[var(--color-text-tertiary)]'} />
+        {/* ── 수수료 계산기 ── */}
+        <section className="mb-12 max-w-2xl">
+          <FeeCalculator />
+        </section>
+
+        {/* ── 멤버십 플랜 ── */}
+        <section className="mb-12">
+          <h2 className={`${DS.text.sectionTitle} mb-2`}>멤버십 플랜</h2>
+          <p className={`${DS.text.captionLight} mb-6`}>더 많은 기능과 수수료 할인을 원하신다면 멤버십을 선택하세요.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            {MEMBERSHIP_PLANS.map((plan) => {
+              const Icon = plan.icon
+              return (
+                <div
+                  key={plan.id}
+                  className={`${DS.card.elevated} p-5 flex flex-col relative ${plan.popular ? 'ring-2 ring-[var(--color-positive)]' : ''}`}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-[var(--color-positive)] text-white text-[0.65rem] font-black tracking-wide whitespace-nowrap">
+                      추천 플랜
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `color-mix(in srgb, ${plan.color} 15%, transparent)` }}>
+                      <Icon className="w-4 h-4" style={{ color: plan.color }} />
                     </div>
                     <div>
-                      <div className={`${DS.text.label} tracking-wider ${plan.popular ? 'text-[var(--color-brand-mid)]' : ''}`}>
-                        {plan.name}
-                      </div>
+                      <p className={DS.text.bodyBold}>{plan.name}</p>
+                      <p className={DS.text.micro}>{plan.nameEn}</p>
                     </div>
                   </div>
 
-                  {/* Price */}
-                  <div className="flex items-end gap-1 mb-1">
-                    <span className={DS.text.metricHero}>{priceLabel}</span>
-                    {price > 0 && (
-                      <span className={`${DS.text.caption} pb-1`}>
-                        /월{annual ? ' (연간)' : ''}
-                      </span>
-                    )}
-                  </div>
-
-                  <p className={`${DS.text.body} mb-6`}>
-                    {plan.desc}
+                  <p className="text-[1.75rem] font-extrabold leading-none mb-0.5" style={{ color: plan.color }}>
+                    {plan.priceLabel}
                   </p>
+                  {plan.price > 0 && <p className={`${DS.text.micro} mb-3`}>/월 (VAT 별도)</p>}
+                  {plan.price === 0 && <p className={`${DS.text.micro} mb-3`}> </p>}
+                  <p className={`${DS.text.captionLight} mb-4 flex-1`}>{plan.desc}</p>
 
-                  <div className={`${DS.divider.default} mb-5`} />
-
-                  {/* Features */}
-                  <ul className="list-none p-0 m-0 flex flex-col gap-2.5 mb-7">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2.5">
-                        <CheckCircle2
-                          size={16}
-                          className={`flex-shrink-0 ${plan.popular ? 'text-[var(--color-brand-mid)]' : 'text-[var(--color-positive)]'}`}
-                        />
-                        <span className={DS.text.bodyMedium}>
-                          {f}
-                        </span>
+                  <ul className="space-y-2 mb-5">
+                    {plan.features.map((f, i) => (
+                      <li key={i} className={`flex items-center gap-2 text-[0.8rem] ${f.ok ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] line-through'}`}>
+                        {f.ok
+                          ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[var(--color-positive)]" />
+                          : <X className="w-3.5 h-3.5 shrink-0 text-[var(--color-text-muted)]" />}
+                        {f.text}
                       </li>
                     ))}
                   </ul>
 
-                  <button
-                    onClick={() => handleSelectPlan(plan)}
-                    className={`w-full py-3.5 rounded-xl font-bold cursor-pointer transition-all duration-150 hover:opacity-90 hover:-translate-y-0.5 ${
-                      plan.popular
-                        ? DS.button.primary + ' text-[0.9375rem]'
-                        : DS.button.secondary + ' text-[0.9375rem]'
-                    }`}
+                  <Link
+                    href={plan.id === 'free' ? '/exchange' : '/my/billing'}
+                    className={`${plan.popular ? DS.button.accent : DS.button.secondary} w-full justify-center text-center`}
                   >
-                    {plan.cta}
-                  </button>
+                    {plan.id === 'free' ? '거래 시작하기' : '멤버십 시작'}
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* ── 금융기관 온보딩 배너 ── */}
+        <section className="mb-12">
+          <div className="rounded-2xl border border-[var(--color-brand-mid)]/30 bg-gradient-to-r from-[var(--color-brand-dark)] to-[var(--color-brand-mid)]/20 p-8">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="w-14 h-14 rounded-2xl bg-[var(--color-brand-mid)]/20 flex items-center justify-center shrink-0">
+                  <Building2 className="w-7 h-7 text-[var(--color-brand-mid)]" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-[var(--color-brand-mid)] uppercase tracking-wider mb-1">금융기관 특별 혜택</p>
+                  <h3 className="text-xl font-extrabold text-[var(--color-text-primary)] mb-1">첫 6개월 수수료 완전 무료</h3>
+                  <p className={DS.text.captionLight}>
+                    은행, 캐피탈, 저축은행, AMC 등 금융기관 대상. 법인 인증 후 즉시 적용.
+                  </p>
                 </div>
               </div>
-            )
-          })}
-        </div>
-      </section>
-
-      {/* ── Trust Bar ── */}
-      <section className="bg-[var(--color-surface-elevated)] border-y border-[var(--color-border-subtle)] py-6 px-6">
-        <div className="max-w-[900px] mx-auto flex flex-wrap gap-6 justify-center items-center">
-          {[
-            '신용카드 불필요 — 무료 시작',
-            '언제든 해지 가능',
-            '7일 환불 보장',
-            '데이터 안전 보관',
-          ].map(item => (
-            <div key={item} className="flex items-center gap-2">
-              <CheckCircle2 size={15} className="text-[var(--color-positive)]" />
-              <span className={DS.text.bodyMedium}>{item}</span>
+              <Link href="/contact" className={`${DS.button.accent} shrink-0`}>
+                영업팀 문의 <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* ── Comparison Table ── */}
-      <section className="max-w-[1000px] mx-auto px-6 py-20">
-        <div className="text-center mb-10">
-          <span className={DS.header.eyebrow}>기능 비교</span>
-          <h2 className={`${DS.text.sectionTitle} mt-2`}>플랜별 상세 비교</h2>
-        </div>
-
-        <div className={DS.table.wrapper}>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className={DS.table.header}>
-                  <th className={`${DS.table.headerCell} w-[40%]`}>기능</th>
-                  <th className={`${DS.table.headerCell} text-center`}>무료</th>
-                  <th className={`${DS.table.headerCell} text-center bg-[var(--color-brand-mid)]/5 text-[var(--color-brand-mid)]`}>프로</th>
-                  <th className={`${DS.table.headerCell} text-center`}>기업</th>
+        {/* ── 기능 비교표 ── */}
+        <section className="mb-12">
+          <h2 className={`${DS.text.sectionTitle} mb-6`}>플랜 비교</h2>
+          <div className={DS.table.wrapper}>
+            <table className="w-full text-[0.8125rem]">
+              <thead className={DS.table.header}>
+                <tr>
+                  <th className={DS.table.headerCell}>기능</th>
+                  <th className={`${DS.table.headerCell} text-center`}>기본</th>
+                  <th className={`${DS.table.headerCell} text-center`}>L1</th>
+                  <th className={`${DS.table.headerCell} text-center`}>L2</th>
+                  <th className={`${DS.table.headerCell} text-center`}>검증</th>
                 </tr>
               </thead>
               <tbody>
-                {COMPARISON.map((row, i) => (
-                  <tr key={row.feature} className={`${DS.table.row} ${i % 2 === 1 ? 'bg-[var(--color-surface-sunken)]' : ''}`}>
-                    <td className={DS.table.cell}>{row.feature}</td>
-                    <td className={`${DS.table.cell} text-center`}><CompareCell val={row.free} /></td>
-                    <td className={`${DS.table.cell} text-center bg-[var(--color-brand-mid)]/[0.03]`}><CompareCell val={row.pro} /></td>
-                    <td className={`${DS.table.cell} text-center`}><CompareCell val={row.enterprise} /></td>
+                {[
+                  { feature: '매물 조회', free: '50건/월', l1: '무제한', l2: '무제한', verify: '무제한' },
+                  { feature: 'AI 분석', free: '5회/월', l1: '50회/월', l2: '무제한', verify: '무제한' },
+                  { feature: '경매 분석기', free: '기본', l1: '고급', l2: '고급+', verify: '고급+' },
+                  { feature: '딜룸', free: '1개', l1: '10개', l2: '무제한', verify: '무제한' },
+                  { feature: '우선협상권', free: false, l1: true, l2: true, verify: true },
+                  { feature: '법률 RAG 검색', free: false, l1: true, l2: true, verify: true },
+                  { feature: '수수료 할인', free: '없음', l1: '0.05%p', l2: '0.1%p', verify: '0.1%p' },
+                  { feature: '기관 인증 배지', free: false, l1: false, l2: false, verify: true },
+                  { feature: 'SLA 보장', free: false, l1: false, l2: false, verify: '99.9%' },
+                ].map((row, i) => (
+                  <tr key={i} className={DS.table.row}>
+                    <td className={`${DS.table.cell} font-medium`}>{row.feature}</td>
+                    {(['free', 'l1', 'l2', 'verify'] as const).map((col) => {
+                      const val = row[col]
+                      return (
+                        <td key={col} className={`${DS.table.cell} text-center`}>
+                          {val === true
+                            ? <CheckCircle2 className="w-4 h-4 text-[var(--color-positive)] mx-auto" />
+                            : val === false
+                            ? <X className="w-4 h-4 text-[var(--color-text-muted)] mx-auto" />
+                            : <span className={DS.text.caption}>{val}</span>}
+                        </td>
+                      )
+                    })}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── FAQ ── */}
-      <section className="max-w-[720px] mx-auto px-6 pb-20">
-        <div className="text-center mb-10">
-          <span className={DS.header.eyebrow}>FAQ</span>
-          <h2 className={`${DS.text.sectionTitle} mt-2`}>자주 묻는 질문</h2>
-        </div>
+        {/* ── FAQ ── */}
+        <section className="mb-12 max-w-2xl">
+          <h2 className={`${DS.text.sectionTitle} mb-6`}>자주 묻는 질문</h2>
+          <div className={DS.card.base}>
+            {FAQ_ITEMS.map((item, i) => (
+              <FaqItem key={i} q={item.q} a={item.a} />
+            ))}
+          </div>
+        </section>
 
-        <div className={DS.card.elevated}>
-          {FAQ.map((item, i) => (
-            <FaqItem key={i} {...item} />
-          ))}
-        </div>
+        {/* ── 문의 CTA ── */}
+        <section className="text-center">
+          <div className={`${DS.card.flat} inline-flex flex-col items-center gap-3 px-10 py-8`}>
+            <MessageSquare className="w-8 h-8 text-[var(--color-brand-mid)]" />
+            <p className={DS.text.sectionTitle}>더 궁금한 점이 있으신가요?</p>
+            <p className={DS.text.captionLight}>영업팀이 최적의 수수료 조건을 안내해 드립니다.</p>
+            <div className="flex gap-3 mt-1">
+              <Link href="/contact" className={DS.button.primary}>영업팀 문의</Link>
+              <Link href="/exchange" className={DS.button.secondary}>거래소 둘러보기</Link>
+            </div>
+          </div>
+        </section>
 
-        <div className="text-center mt-8">
-          <p className={`${DS.text.body} mb-4`}>원하시는 답변을 찾지 못하셨나요?</p>
-          <Link href="/support">
-            <button className={DS.button.secondary}>
-              고객센터 문의하기
-            </button>
-          </Link>
-        </div>
-      </section>
-
-      {/* ── Checkout Modal ── */}
-      <CheckoutModal
-        open={checkoutOpen}
-        onClose={() => setCheckoutOpen(false)}
-        plan={checkoutPlan}
-        billingCycle={annual ? 'yearly' : 'monthly'}
-        customerName={userInfo.name}
-        customerEmail={userInfo.email}
-      />
+      </div>
     </div>
   )
 }
