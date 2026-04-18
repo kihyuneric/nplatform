@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { CommunityTabs } from '@/components/community/community-tabs'
 
 export const revalidate = 300
 
@@ -12,5 +13,10 @@ export const metadata: Metadata = {
 }
 
 export default function NoticesLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>
+  return (
+    <>
+      <CommunityTabs />
+      {children}
+    </>
+  )
 }

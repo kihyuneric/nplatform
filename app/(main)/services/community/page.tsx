@@ -215,9 +215,8 @@ export default function CommunityPage() {
 
         {/* ── Cross-links ───────────────────────────────────── */}
         <div className="flex items-center gap-3 flex-wrap mb-4">
-          <Link href="/services/experts" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>전문가 찾기 →</Link>
           <Link href="/exchange" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>매물 탐색 →</Link>
-          <Link href="/analysis" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>분석 허브 →</Link>
+          <Link href="/analysis" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>분석 대시보드 →</Link>
         </div>
 
         {/* ── Category Tabs + Sort/Search Bar ─────────────── */}

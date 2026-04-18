@@ -96,10 +96,11 @@ const MORE_SECTIONS = [
     title: '분석',
     titleKey: 'nav.insights',
     items: [
-      { label: 'NPL 수익성 분석', labelKey: 'nav.profitability', href: '/analysis/profitability', icon: TrendingUp },
-      { label: '경매 분석', labelKey: 'nav.simulator', href: '/analysis/simulator', icon: Calculator },
-      { label: 'NPL 가격지수', labelKey: 'nav.nplIndex', href: '/analysis/npl-index', icon: BarChart3 },
+      { label: '분석 대시보드', labelKey: 'nav.analysisDashboard', href: '/analysis', icon: BarChart3 },
+      { label: 'NPL 분석', labelKey: 'nav.nplAnalysis', href: '/analysis/new', icon: FileText },
+      { label: 'NPL 가격지수', labelKey: 'nav.nplIndex', href: '/analysis/npl-index', icon: TrendingUp },
       { label: 'AI 컨설턴트', labelKey: 'nav.copilot', href: '/analysis/copilot', icon: Brain },
+      { label: '경매 분석', labelKey: 'nav.simulator', href: '/analysis/simulator', icon: Calculator },
     ],
   },
   {

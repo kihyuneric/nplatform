@@ -85,18 +85,22 @@ const segmentLabels: Record<string, string> = {
   survey: '설문',
   surveys: '설문 목록',
   matches: '매칭결과',
-  services: '전문가 서비스',
+  services: '커뮤니티',
   analysis: '투자 분석',
   pricing: '요금제',
   my: '마이 페이지',
   guide: '이용 가이드',
 }
 
+// 커뮤니티 계열(/services, /notices, /news)은 상단에 CommunityTabs가 이미 있으므로 브레드크럼 생략
+const HIDDEN_PREFIXES = ['/services', '/notices', '/news']
+
 export function BreadcrumbNav() {
   const pathname = usePathname()
 
   // Hide on home page
   if (pathname === '/') return null
+  if (pathname && HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null
 
   const segments = (pathname ?? '').split('/').filter(Boolean)
 

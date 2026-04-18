@@ -72,10 +72,11 @@ const NAV_GROUPS: NavGroup[] = [
   {
     group: '분석',
     items: [
-      { label: 'NPL 수익성 분석', icon: TrendingUp, href: '/analysis/profitability' },
-      { label: '경매 분석', icon: BarChart2, href: '/analysis/simulator' },
-      { label: 'NPL 가격지수', icon: BarChart2, href: '/analysis/npl-index' },
+      { label: '분석 대시보드', icon: BarChart2, href: '/analysis' },
+      { label: 'NPL 분석', icon: FileText, href: '/analysis/new' },
+      { label: 'NPL 가격지수', icon: TrendingUp, href: '/analysis/npl-index' },
       { label: 'AI 컨설턴트', icon: FileText, href: '/analysis/copilot' },
+      { label: '경매 분석', icon: BarChart2, href: '/analysis/simulator' },
     ],
   },
   {
