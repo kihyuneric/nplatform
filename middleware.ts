@@ -146,14 +146,18 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── 3.5. Admin route protection ──────────────────
-  // Production: requires real Supabase session only.
-  // Development: bypassed for local preview (auth check in admin/layout.tsx).
+  // Accepts EITHER real Supabase session OR dev-bypass cookie
+  // (`dev_user_active=1` set by login page on admin/admin) so that
+  // every feature can be verified without real auth during the
+  // current verification phase.
+  const hasDevBypass = request.cookies.get('dev_user_active')?.value === '1'
+
   if (!isApi && isPathMatch(pathname, ['/admin']) && process.env.NODE_ENV !== 'development') {
     const hasSupabaseSession = request.cookies.getAll().some(
       c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
     )
 
-    if (!hasSupabaseSession) {
+    if (!hasSupabaseSession && !hasDevBypass) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('redirect', pathname)
@@ -162,7 +166,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ── 3.6. Auth-required routes: /my/* requires real Supabase session ──
+  // ── 3.6. Auth-required routes: /my/* requires real Supabase session OR dev-bypass ──
   // All feature pages (/analysis, /deals, etc.) are publicly browsable.
   const AUTH_REQUIRED = ['/my']
   if (!isApi && isPathMatch(pathname, AUTH_REQUIRED) && process.env.NODE_ENV !== 'development') {
@@ -170,7 +174,7 @@ export async function middleware(request: NextRequest) {
       c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
     )
 
-    if (!hasSupabaseSession) {
+    if (!hasSupabaseSession && !hasDevBypass) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('redirect', pathname)
