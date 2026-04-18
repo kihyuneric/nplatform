@@ -308,11 +308,12 @@ export default function NewNplAnalysisPage() {
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-[0.9375rem] font-medium">&#8361;</span>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   className={`${DS.input.base} pl-8`}
                   placeholder="0"
-                  value={principalAmount}
-                  onChange={(e) => setPrincipalAmount(e.target.value)}
+                  value={principalAmount ? Number(principalAmount).toLocaleString('ko-KR') : ''}
+                  onChange={(e) => setPrincipalAmount(e.target.value.replace(/[^0-9]/g, ''))}
                 />
               </div>
             </div>
@@ -379,11 +380,12 @@ export default function NewNplAnalysisPage() {
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-[0.9375rem] font-medium">&#8361;</span>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   className={`${DS.input.base} pl-8`}
                   placeholder="0"
-                  value={appraisalValue}
-                  onChange={(e) => setAppraisalValue(e.target.value)}
+                  value={appraisalValue ? Number(appraisalValue).toLocaleString('ko-KR') : ''}
+                  onChange={(e) => setAppraisalValue(e.target.value.replace(/[^0-9]/g, ''))}
                 />
               </div>
             </div>
@@ -393,11 +395,12 @@ export default function NewNplAnalysisPage() {
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-[0.9375rem] font-medium">&#8361;</span>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   className={`${DS.input.base} pl-8`}
                   placeholder="0"
-                  value={seniorClaim}
-                  onChange={(e) => setSeniorClaim(e.target.value)}
+                  value={seniorClaim ? Number(seniorClaim).toLocaleString('ko-KR') : ''}
+                  onChange={(e) => setSeniorClaim(e.target.value.replace(/[^0-9]/g, ''))}
                 />
               </div>
             </div>

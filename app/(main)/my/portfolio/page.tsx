@@ -497,9 +497,10 @@ function SimulationTab({ watchlist, investments }: { watchlist: WatchItem[]; inv
               <div>
                 <label className={DS.text.caption + " block mb-1.5"}>매입가격 (만원)</label>
                 <input
-                  type="number"
-                  value={params.purchasePrice}
-                  onChange={(e) => setParams((p) => ({ ...p, purchasePrice: parseInt(e.target.value) || 0 }))}
+                  type="text"
+                  inputMode="numeric"
+                  value={params.purchasePrice ? params.purchasePrice.toLocaleString('ko-KR') : ''}
+                  onChange={(e) => setParams((p) => ({ ...p, purchasePrice: parseInt(e.target.value.replace(/[^0-9]/g, ''), 10) || 0 }))}
                   className="w-full px-3 py-2.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] text-[0.9375rem] focus:outline-none focus:border-[var(--color-brand-mid)] transition-colors"
                 />
                 <p className={DS.text.captionLight + " mt-1"}>{fmt(params.purchasePrice * 10000)}</p>
