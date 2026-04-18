@@ -182,6 +182,13 @@ input::placeholder, textarea::placeholder {
     --color-surface-sunken:   #F2F4F7;
     --color-surface-overlay:  rgba(255, 255, 255, 0.85);
 
+    /* ── BG tiers (light) — my/page.tsx 등 커스텀 대시보드 컴포넌트용 ────── */
+    --color-bg-deepest:  #E2E8F0;   /* slate-200 — 가장 어둠 */
+    --color-bg-deep:     #E8EDF2;
+    --color-bg-base:     #F1F5F9;   /* slate-100 */
+    --color-bg-elevated: #FFFFFF;
+    --color-bg-border:   #CBD5E1;
+
     /* ── Text (light) ──────────────────────────────────────────────────────── */
     --color-text-primary:   #0D1F38;
     --color-text-secondary: #4A5568;

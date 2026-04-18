@@ -26,12 +26,15 @@ import { TIER_META } from "@/lib/access-tier"
 import { AnimatedCounter, PercentCounter, KrwCounter } from "@/components/ui/animated-counter"
 import { staggerContainer, staggerItem } from "@/lib/animations"
 
+// ─── 대시보드 전용 색상 매핑 ─────────────────────────────────────
+// light/dark 모두 --color-bg-* CSS 변수가 globals.css에 정의되어 있어 자동 테마 대응.
+// 신규 페이지는 DS 토큰(lib/design-system.ts) 직접 사용을 권장.
 const C = {
-  bg0: "var(--color-bg-deepest, #030810)",
-  bg1: "var(--color-bg-deep, #050D1A)",
-  bg2: "var(--color-bg-base, #080F1E)",
-  bg3: "var(--color-bg-base, #0A1628)",
-  bg4: "var(--color-bg-elevated, #0F1F35)",
+  bg0: "var(--color-bg-deepest)",
+  bg1: "var(--color-bg-deep)",
+  bg2: "var(--color-bg-base)",
+  bg3: "var(--color-bg-base)",
+  bg4: "var(--color-bg-elevated)",
   em:     "var(--color-positive)",
   emL:    "var(--color-positive)",
   blue:   "var(--color-brand-dark)",
