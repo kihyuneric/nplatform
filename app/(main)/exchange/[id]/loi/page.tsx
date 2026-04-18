@@ -22,12 +22,12 @@ import { TierBadge } from "@/components/tier/tier-badge"
 import { SignModal } from "@/components/esign/sign-modal"
 
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981",
-  blue: "#2E75B6", blueL: "#3B82F6",
-  rose: "#EF4444", amber: "#F59E0B", purple: "#A855F7",
-  lt3: "#64748B", lt4: "#475569",
+  bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
+  bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
+  em: "var(--color-positive)", emL: "var(--color-positive)",
+  blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
+  rose: "var(--color-danger)", amber: "var(--color-warning)", purple: "#A855F7",
+  lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 }
 
 const ASKING_PRICE = 850_000_000 // mock
@@ -73,7 +73,7 @@ export default function LoiPage() {
           <div
             style={{
               width: 72, height: 72, borderRadius: "50%",
-              backgroundColor: `${C.purple}1F`,
+              backgroundColor: "rgba(168, 85, 247, 0.1)",
               display: "flex", alignItems: "center", justifyContent: "center",
               margin: "0 auto 20px",
             }}
@@ -245,7 +245,7 @@ export default function LoiPage() {
                   onClick={() => setFunding(op.value as any)}
                   style={{
                     padding: "16px 14px", borderRadius: 10, textAlign: "left",
-                    backgroundColor: active ? `${C.em}0E` : C.bg3,
+                    backgroundColor: active ? "var(--color-positive-bg)" : C.bg3,
                     border: `1px solid ${active ? C.em : C.bg4}`,
                     color: "#fff", cursor: "pointer",
                   }}
@@ -269,7 +269,7 @@ export default function LoiPage() {
                   onClick={() => setDuration(d)}
                   style={{
                     padding: "11px 18px", borderRadius: 10,
-                    backgroundColor: active ? `${C.em}1A` : C.bg3,
+                    backgroundColor: active ? "var(--color-positive-bg)" : C.bg3,
                     color: active ? C.emL : C.lt3,
                     border: `1px solid ${active ? C.em : C.bg4}`,
                     fontSize: 12, fontWeight: 700, cursor: "pointer",
@@ -319,7 +319,7 @@ export default function LoiPage() {
         <div
           style={{
             padding: "14px 16px", borderRadius: 12,
-            backgroundColor: `${C.blue}0A`, border: `1px solid ${C.blue}33`,
+            backgroundColor: "rgba(45, 116, 182, 0.04)", border: "1px solid rgba(45, 116, 182, 0.2)",
             display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 24,
           }}
         >
@@ -335,7 +335,7 @@ export default function LoiPage() {
           <div
             style={{
               padding: "12px 16px", borderRadius: 12, marginBottom: 16,
-              backgroundColor: `${C.em}15`, border: `1px solid ${C.em}44`,
+              backgroundColor: `${C.em}15`, border: "1px solid rgba(16, 185, 129, 0.33)",
               display: "flex", alignItems: "center", gap: 10,
             }}
           >
@@ -352,7 +352,7 @@ export default function LoiPage() {
               width: "100%", padding: "13px 20px", borderRadius: 12, marginBottom: 12,
               backgroundColor: canSubmit ? `${C.blue}22` : C.bg3,
               color: canSubmit ? C.blueL : C.lt4,
-              fontSize: 12, fontWeight: 700, border: `1px solid ${canSubmit ? C.blue + "44" : C.bg4}`,
+              fontSize: 12, fontWeight: 700, border: `1px solid ${canSubmit ? "rgba(45, 116, 182, 0.27)" : C.bg4}`,
               cursor: canSubmit ? "pointer" : "not-allowed",
               display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 8,
             }}

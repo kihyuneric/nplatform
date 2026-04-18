@@ -22,12 +22,12 @@ const VALID_STATUSES = ['ACTIVE', 'HIDDEN', 'PENDING', 'REJECTED', 'REPORTED']
 // Body: { status: 'ACTIVE' | 'HIDDEN' | ... }
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdmin()
   if (auth.error) return auth.error
 
-  const { id } = params
+  const { id } = await params
   if (!id) return apiError('BAD_REQUEST', 'id가 필요합니다.', 400)
 
   try {
@@ -58,12 +58,12 @@ export async function PATCH(
 // DELETE /api/v1/admin/listings/[id]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdmin()
   if (auth.error) return auth.error
 
-  const { id } = params
+  const { id } = await params
   if (!id) return apiError('BAD_REQUEST', 'id가 필요합니다.', 400)
 
   try {
@@ -86,12 +86,12 @@ export async function DELETE(
 // GET /api/v1/admin/listings/[id]
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdmin()
   if (auth.error) return auth.error
 
-  const { id } = params
+  const { id } = await params
   try {
     const supabase = await createClient()
     const { data, error } = await supabase

@@ -16,12 +16,20 @@ import {
 } from "lucide-react"
 
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981",
-  blue: "#2E75B6", blueL: "#3B82F6",
-  amber: "#F59E0B", rose: "#EF4444", purple: "#A855F7",
-  lt3: "#64748B", lt4: "#475569",
+  bg0: "var(--color-bg-deepest, #030810)",
+  bg1: "var(--color-bg-deep, #050D1A)",
+  bg2: "var(--color-bg-base, #080F1E)",
+  bg3: "var(--color-bg-base, #0A1628)",
+  bg4: "var(--color-bg-elevated, #0F1F35)",
+  em:     "var(--color-positive)",
+  emL:    "var(--color-positive)",
+  blue:   "var(--color-brand-dark)",
+  blueL:  "var(--color-brand-bright)",
+  amber:  "var(--color-warning)",
+  rose:   "var(--color-danger)",
+  purple: "#A855F7",
+  lt3:    "var(--color-text-muted)",
+  lt4:    "var(--color-text-muted)",
 }
 
 type LogAction = "VIEW" | "DOWNLOAD" | "MASKED_REVEAL"
@@ -173,7 +181,7 @@ export default function PrivacyPage() {
                       style={{
                         padding: "5px 11px", borderRadius: 999,
                         fontSize: 10, fontWeight: 700,
-                        backgroundColor: active ? `${C.em}1F` : C.bg2,
+                        backgroundColor: active ? "var(--color-positive-bg)" : C.bg2,
                         color: active ? C.emL : C.lt4,
                         border: `1px solid ${active ? C.em : C.bg4}`,
                         cursor: "pointer",
@@ -286,7 +294,7 @@ export default function PrivacyPage() {
                   <div
                     style={{
                       width: 36, height: 36, borderRadius: 8,
-                      backgroundColor: `${C.blue}1F`, border: `1px solid ${C.blue}44`,
+                      backgroundColor: "rgba(45, 116, 182, 0.12)", border: "1px solid rgba(45, 116, 182, 0.27)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       flexShrink: 0,
                     }}
@@ -346,7 +354,7 @@ export default function PrivacyPage() {
             <section
               style={{
                 padding: 20, borderRadius: 14,
-                backgroundColor: C.bg2, border: `1px solid ${C.rose}33`,
+                backgroundColor: C.bg2, border: "1px solid rgba(239, 68, 68, 0.2)",
               }}
             >
               <div
@@ -362,7 +370,7 @@ export default function PrivacyPage() {
                 <div
                   style={{
                     padding: "16px 14px", borderRadius: 10,
-                    backgroundColor: `${C.em}0A`, border: `1px solid ${C.em}44`,
+                    backgroundColor: "var(--color-positive-bg)", border: "1px solid var(--color-positive-border)",
                     textAlign: "center",
                   }}
                 >
@@ -384,8 +392,8 @@ export default function PrivacyPage() {
                     onClick={() => setRequested(true)}
                     style={{
                       width: "100%", padding: "10px 14px", borderRadius: 10,
-                      backgroundColor: `${C.rose}1A`, color: C.rose,
-                      border: `1px solid ${C.rose}66`,
+                      backgroundColor: "rgba(239, 68, 68, 0.1)", color: C.rose,
+                      border: "1px solid rgba(239, 68, 68, 0.4)",
                       fontSize: 11, fontWeight: 800, cursor: "pointer",
                       display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 6,
                     }}
@@ -400,7 +408,7 @@ export default function PrivacyPage() {
             <div
               style={{
                 padding: "14px 16px", borderRadius: 12,
-                backgroundColor: `${C.blue}0A`, border: `1px solid ${C.blue}33`,
+                backgroundColor: "rgba(45, 116, 182, 0.04)", border: "1px solid rgba(45, 116, 182, 0.2)",
               }}
             >
               <div style={{ fontSize: 11, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
@@ -419,7 +427,7 @@ export default function PrivacyPage() {
         <div
           style={{
             marginTop: 24, padding: "14px 16px", borderRadius: 12,
-            backgroundColor: `${C.amber}0A`, border: `1px solid ${C.amber}33`,
+            backgroundColor: "rgba(245, 158, 11, 0.04)", border: "1px solid rgba(245, 158, 11, 0.2)",
             display: "flex", gap: 10, alignItems: "flex-start",
           }}
         >

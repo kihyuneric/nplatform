@@ -13,11 +13,11 @@ import { GuideButton } from '@/components/guide/guide-button'
 
 // ─── Design System ─────────────────────────────────────────────
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E", bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#34D399", blue: "#3B82F6", amber: "#F59E0B",
-  purple: "#A855F7", rose: "#EF4444",
+  bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)", bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
+  em: "var(--color-positive)", emL: "var(--color-positive)", blue: "var(--color-brand-dark)", amber: "var(--color-warning)",
+  purple: "#A855F7", rose: "var(--color-danger)",
   l0: "#FFFFFF", l1: "#F8FAFC", l2: "#F1F5F9", l3: "#E2E8F0",
-  lt1: "#0F172A", lt2: "#334155", lt3: "#64748B", lt4: "#94A3B8",
+  lt1: "#0F172A", lt2: "#334155", lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 }
 
 // ─── Column / Category Definitions ─────────────────────────────

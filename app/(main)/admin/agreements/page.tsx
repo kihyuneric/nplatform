@@ -23,12 +23,12 @@ import {
 import { createClient } from "@/lib/supabase/client"
 
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981",
-  blue: "#2E75B6", blueL: "#3B82F6",
-  amber: "#F59E0B", rose: "#EF4444", purple: "#A855F7",
-  lt3: "#64748B", lt4: "#475569",
+  bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
+  bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
+  em: "var(--color-positive)", emL: "var(--color-positive)",
+  blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
+  amber: "var(--color-warning)", rose: "var(--color-danger)", purple: "#A855F7",
+  lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 }
 
 type DocType = "NDA" | "LOI"
@@ -206,7 +206,7 @@ export default function AdminAgreementsPage() {
           <div
             style={{
               padding: "14px 18px", borderRadius: 12,
-              backgroundColor: `${C.rose}0F`, border: `1px solid ${C.rose}55`,
+              backgroundColor: `${C.rose}0F`, border: "1px solid rgba(239, 68, 68, 0.4)",
               marginBottom: 18,
               display: "flex", gap: 12, alignItems: "center",
             }}
@@ -223,8 +223,8 @@ export default function AdminAgreementsPage() {
             <button
               style={{
                 padding: "8px 14px", borderRadius: 8,
-                backgroundColor: `${C.rose}1F`, color: C.rose,
-                border: `1px solid ${C.rose}66`,
+                backgroundColor: "rgba(239, 68, 68, 0.1)", color: C.rose,
+                border: "1px solid rgba(239, 68, 68, 0.4)",
                 fontSize: 11, fontWeight: 800, cursor: "pointer",
               }}
             >
@@ -264,7 +264,7 @@ export default function AdminAgreementsPage() {
                   style={{
                     padding: "6px 12px", borderRadius: 999,
                     fontSize: 11, fontWeight: 700,
-                    backgroundColor: active ? `${C.em}1F` : C.bg2,
+                    backgroundColor: active ? "var(--color-positive-bg)" : C.bg2,
                     color: active ? C.emL : C.lt4,
                     border: `1px solid ${active ? C.em : C.bg4}`,
                     cursor: "pointer",
@@ -400,7 +400,7 @@ export default function AdminAgreementsPage() {
         <div
           style={{
             marginTop: 20, padding: "14px 16px", borderRadius: 12,
-            backgroundColor: `${C.blue}0A`, border: `1px solid ${C.blue}33`,
+            backgroundColor: "rgba(45, 116, 182, 0.04)", border: "1px solid rgba(45, 116, 182, 0.2)",
             display: "flex", gap: 10, alignItems: "flex-start",
           }}
         >

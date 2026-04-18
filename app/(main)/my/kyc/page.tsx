@@ -22,12 +22,19 @@ import { TierBadge } from "@/components/tier/tier-badge"
 import { createClient } from "@/lib/supabase/client"
 
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981",
-  blue: "#2E75B6", blueL: "#3B82F6",
-  amber: "#F59E0B", rose: "#EF4444",
-  lt3: "#64748B", lt4: "#475569",
+  bg0: "var(--color-bg-deepest, #030810)",
+  bg1: "var(--color-bg-deep, #050D1A)",
+  bg2: "var(--color-bg-base, #080F1E)",
+  bg3: "var(--color-bg-base, #0A1628)",
+  bg4: "var(--color-bg-elevated, #0F1F35)",
+  em:     "var(--color-positive)",
+  emL:    "var(--color-positive)",
+  blue:   "var(--color-brand-dark)",
+  blueL:  "var(--color-brand-bright)",
+  amber:  "var(--color-warning)",
+  rose:   "var(--color-danger)",
+  lt3:    "var(--color-text-muted)",
+  lt4:    "var(--color-text-muted)",
 }
 
 type InvestorType = "PERSONAL" | "CORPORATE" | "INSTITUTIONAL"
@@ -208,7 +215,7 @@ export default function KycPage() {
           <div
             style={{
               width: 72, height: 72, borderRadius: "50%",
-              backgroundColor: `${C.em}1F`,
+              backgroundColor: "var(--color-positive-bg)",
               display: "flex", alignItems: "center", justifyContent: "center",
               margin: "0 auto 20px",
             }}
@@ -263,7 +270,7 @@ export default function KycPage() {
           <div
             style={{
               width: 72, height: 72, borderRadius: "50%",
-              backgroundColor: `${C.amber}1F`,
+              backgroundColor: "rgba(245, 158, 11, 0.12)",
               display: "flex", alignItems: "center", justifyContent: "center",
               margin: "0 auto 20px",
             }}
@@ -352,7 +359,7 @@ export default function KycPage() {
                   }}
                   style={{
                     padding: "18px 16px", borderRadius: 12, textAlign: "left",
-                    backgroundColor: active ? `${C.em}0E` : C.bg3,
+                    backgroundColor: active ? "var(--color-positive-bg)" : C.bg3,
                     border: `1px solid ${active ? C.em : C.bg4}`,
                     color: "#fff", cursor: "pointer",
                   }}
@@ -382,7 +389,7 @@ export default function KycPage() {
                     onClick={() => setChecked(c => ({ ...c, [req]: !c[req] }))}
                     style={{
                       padding: "12px 14px", borderRadius: 10,
-                      backgroundColor: ok ? `${C.em}0E` : C.bg3,
+                      backgroundColor: ok ? "var(--color-positive-bg)" : C.bg3,
                       border: `1px solid ${ok ? C.em : C.bg4}`,
                       color: "#fff", fontSize: 12, textAlign: "left", cursor: "pointer",
                       display: "flex", alignItems: "center", gap: 12,
@@ -439,7 +446,7 @@ export default function KycPage() {
               style={{
                 padding: "32px 24px", borderRadius: 12,
                 cursor: uploading ? "default" : "pointer",
-                backgroundColor: uploaded ? `${C.em}0A` : C.bg3,
+                backgroundColor: uploaded ? "var(--color-positive-bg)" : C.bg3,
                 border: `2px dashed ${uploaded ? C.em : C.bg4}`,
                 textAlign: "center",
               }}
@@ -481,7 +488,7 @@ export default function KycPage() {
         <div
           style={{
             padding: "14px 16px", borderRadius: 12,
-            backgroundColor: `${C.amber}0A`, border: `1px solid ${C.amber}33`,
+            backgroundColor: "rgba(245, 158, 11, 0.04)", border: "1px solid rgba(245, 158, 11, 0.2)",
             display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 24,
           }}
         >
@@ -496,7 +503,7 @@ export default function KycPage() {
           <div
             style={{
               padding: "14px 16px", borderRadius: 12, marginBottom: 16,
-              backgroundColor: `${C.rose}0A`, border: `1px solid ${C.rose}33`,
+              backgroundColor: "rgba(239, 68, 68, 0.04)", border: "1px solid rgba(239, 68, 68, 0.2)",
               display: "flex", gap: 10, alignItems: "flex-start",
             }}
           >
@@ -509,7 +516,7 @@ export default function KycPage() {
           <div
             style={{
               padding: "14px 16px", borderRadius: 12, marginBottom: 16,
-              backgroundColor: `${C.rose}0A`, border: `1px solid ${C.rose}33`,
+              backgroundColor: "rgba(239, 68, 68, 0.04)", border: "1px solid rgba(239, 68, 68, 0.2)",
               display: "flex", gap: 10, alignItems: "flex-start",
             }}
           >

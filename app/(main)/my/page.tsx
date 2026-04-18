@@ -27,12 +27,20 @@ import { AnimatedCounter, PercentCounter, KrwCounter } from "@/components/ui/ani
 import { staggerContainer, staggerItem } from "@/lib/animations"
 
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981",
-  blue: "#2E75B6", blueL: "#3B82F6",
-  amber: "#F59E0B", rose: "#EF4444", purple: "#A855F7",
-  lt3: "#64748B", lt4: "#475569",
+  bg0: "var(--color-bg-deepest, #030810)",
+  bg1: "var(--color-bg-deep, #050D1A)",
+  bg2: "var(--color-bg-base, #080F1E)",
+  bg3: "var(--color-bg-base, #0A1628)",
+  bg4: "var(--color-bg-elevated, #0F1F35)",
+  em:     "var(--color-positive)",
+  emL:    "var(--color-positive)",
+  blue:   "var(--color-brand-dark)",
+  blueL:  "var(--color-brand-bright)",
+  amber:  "var(--color-warning)",
+  rose:   "var(--color-danger)",
+  purple: "#A855F7",
+  lt3:    "var(--color-text-muted)",
+  lt4:    "var(--color-text-muted)",
 }
 
 // Dashboard data type
@@ -500,7 +508,7 @@ export default function MyDashboardPage() {
                     <span style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>{alert.title}</span>
                     <span style={{
                       fontSize: 8, fontWeight: 800, padding: "1px 6px", borderRadius: 3,
-                      backgroundColor: alert.grade === "EXCELLENT" ? `${C.em}1A` : `${C.blue}1A`,
+                      backgroundColor: alert.grade === "EXCELLENT" ? "var(--color-positive-bg)" : "rgba(45, 116, 182, 0.1)",
                       color: alert.grade === "EXCELLENT" ? C.em : C.blue,
                     }}>
                       {alert.grade}

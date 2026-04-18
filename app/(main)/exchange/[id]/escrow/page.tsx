@@ -20,12 +20,12 @@ import {
 import { calculateBuyerFee, calculateEscrowFee } from "@/lib/fee-calculator"
 
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981",
-  blue: "#2E75B6", blueL: "#3B82F6",
-  amber: "#F59E0B", rose: "#EF4444", purple: "#A855F7",
-  lt3: "#64748B", lt4: "#475569",
+  bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
+  bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
+  em: "var(--color-positive)", emL: "var(--color-positive)",
+  blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
+  amber: "var(--color-warning)", rose: "var(--color-danger)", purple: "#A855F7",
+  lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 }
 
 const ASKING_PRICE = 850_000_000
@@ -93,7 +93,7 @@ export default function EscrowPage() {
               style={{
                 display: "inline-flex", alignItems: "center", gap: 5,
                 padding: "4px 10px", borderRadius: 999,
-                backgroundColor: `${C.blue}14`, border: `1px solid ${C.blue}33`,
+                backgroundColor: `${C.blue}14`, border: "1px solid rgba(45, 116, 182, 0.2)",
                 fontSize: 11, fontWeight: 700, color: C.blueL,
               }}
             >
@@ -202,7 +202,7 @@ export default function EscrowPage() {
               style={{
                 padding: "24px 24px", borderRadius: 14,
                 background: `linear-gradient(135deg, ${C.bg3} 0%, ${C.bg1} 100%)`,
-                border: `1px solid ${C.em}44`,
+                border: "1px solid rgba(16, 185, 129, 0.33)",
                 marginBottom: 20,
               }}
             >
@@ -257,7 +257,7 @@ export default function EscrowPage() {
             <div
               style={{
                 padding: "14px 16px", borderRadius: 10,
-                backgroundColor: `${C.amber}0A`, border: `1px solid ${C.amber}33`,
+                backgroundColor: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.27)",
                 display: "flex", gap: 10, alignItems: "flex-start",
               }}
             >
@@ -302,7 +302,7 @@ export default function EscrowPage() {
             <div
               style={{
                 padding: "14px 16px", borderRadius: 14,
-                backgroundColor: `${C.em}0A`, border: `1px solid ${C.em}33`,
+                backgroundColor: "var(--color-positive-bg)", border: `1px solid ${C.em}33`,
                 display: "flex", gap: 10, alignItems: "flex-start",
               }}
             >

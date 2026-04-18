@@ -23,12 +23,12 @@ import { TierGate } from "@/components/tier/tier-gate"
 import type { AccessTier } from "@/lib/access-tier"
 
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981",
-  blue: "#2E75B6", blueL: "#3B82F6",
-  rose: "#EF4444", amber: "#F59E0B", purple: "#A855F7",
-  lt3: "#64748B", lt4: "#475569",
+  bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
+  bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
+  em: "var(--color-positive)", emL: "var(--color-positive)",
+  blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
+  rose: "var(--color-danger)", amber: "var(--color-warning)", purple: "#A855F7",
+  lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 }
 
 function fmt(n: number | null | undefined): string {
@@ -203,7 +203,7 @@ export default function DataroomPage() {
                 style={{
                   padding: "14px 16px", borderRadius: 12,
                   backgroundColor: `${C.purple}0A`,
-                  border: `1px solid ${C.purple}44`,
+                  border: "1px solid rgba(168, 85, 247, 0.27)",
                   display: "flex", gap: 10, alignItems: "flex-start",
                 }}
               >
@@ -218,7 +218,7 @@ export default function DataroomPage() {
               <section
                 style={{
                   backgroundColor: C.bg2,
-                  border: `1px solid ${C.amber}44`,
+                  border: "1px solid rgba(245, 158, 11, 0.27)",
                   borderRadius: 14,
                   overflow: "hidden",
                 }}
@@ -228,7 +228,7 @@ export default function DataroomPage() {
                     padding: "14px 18px",
                     borderBottom: `1px solid ${C.bg4}`,
                     display: "flex", alignItems: "center", gap: 8,
-                    background: `linear-gradient(90deg, ${C.amber}0A 0%, transparent 100%)`,
+                    background: "linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, transparent 100%)",
                   }}
                 >
                   <Gavel size={14} color={C.amber} />
@@ -236,7 +236,7 @@ export default function DataroomPage() {
                   <span
                     style={{
                       marginLeft: "auto", fontSize: 9, padding: "2px 7px", borderRadius: 4,
-                      backgroundColor: `${C.rose}1A`, color: C.rose, fontWeight: 800, border: `1px solid ${C.rose}44`,
+                      backgroundColor: "rgba(239, 68, 68, 0.1)", color: C.rose, fontWeight: 800, border: "1px solid rgba(239, 68, 68, 0.4)",
                     }}
                   >
                     L3 전용 · PII 마스킹 적용
@@ -289,7 +289,7 @@ export default function DataroomPage() {
                   <div
                     style={{
                       padding: "10px 14px", borderRadius: 8,
-                      backgroundColor: `${C.rose}0A`, border: `1px solid ${C.rose}33`,
+                      backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)",
                       fontSize: 11, color: C.lt3, lineHeight: 1.7,
                     }}
                   >
@@ -405,7 +405,7 @@ export default function DataroomPage() {
                                 padding: "6px 12px", borderRadius: 6,
                                 backgroundColor: `${C.em}14`,
                                 color: C.emL,
-                                border: `1px solid ${C.em}44`,
+                                border: "1px solid rgba(16, 185, 129, 0.33)",
                                 fontSize: 10, fontWeight: 700, cursor: "pointer",
                                 display: "inline-flex", alignItems: "center", gap: 4,
                               }}
@@ -484,7 +484,7 @@ export default function DataroomPage() {
               <div
                 style={{
                   padding: "14px 16px", borderRadius: 12,
-                  backgroundColor: `${C.rose}0A`, border: `1px solid ${C.rose}33`,
+                  backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)",
                   display: "flex", gap: 10, alignItems: "flex-start",
                 }}
               >

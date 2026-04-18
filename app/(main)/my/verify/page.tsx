@@ -18,11 +18,17 @@ import { TierBadge } from "@/components/tier/tier-badge"
 import { createClient } from "@/lib/supabase/client"
 
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981",
-  blue: "#2E75B6", blueL: "#3B82F6",
-  lt3: "#64748B", lt4: "#475569",
+  bg0: "var(--color-bg-deepest, #030810)",
+  bg1: "var(--color-bg-deep, #050D1A)",
+  bg2: "var(--color-bg-base, #080F1E)",
+  bg3: "var(--color-bg-base, #0A1628)",
+  bg4: "var(--color-bg-elevated, #0F1F35)",
+  em:     "var(--color-positive)",
+  emL:    "var(--color-positive)",
+  blue:   "var(--color-brand-dark)",
+  blueL:  "var(--color-brand-bright)",
+  lt3:    "var(--color-text-muted)",
+  lt4:    "var(--color-text-muted)",
 }
 
 const METHODS = [
@@ -131,7 +137,7 @@ export default function VerifyPage() {
                     <div
                       style={{
                         width: 44, height: 44, borderRadius: 10,
-                        backgroundColor: `${C.blue}1F`, border: `1px solid ${C.blue}44`,
+                        backgroundColor: "rgba(45, 116, 182, 0.12)", border: "1px solid rgba(45, 116, 182, 0.27)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         flexShrink: 0,
                       }}
@@ -148,8 +154,8 @@ export default function VerifyPage() {
                           position: "absolute", top: 12, right: 14,
                           fontSize: 9, fontWeight: 800,
                           padding: "3px 7px", borderRadius: 4,
-                          backgroundColor: `${C.em}1F`, color: C.emL,
-                          border: `1px solid ${C.em}44`,
+                          backgroundColor: "var(--color-positive-bg)", color: C.emL,
+                          border: "1px solid var(--color-positive-border)",
                         }}
                       >
                         추천
@@ -163,7 +169,7 @@ export default function VerifyPage() {
             <div
               style={{
                 marginTop: 24, padding: "14px 16px", borderRadius: 12,
-                backgroundColor: `${C.blue}0A`, border: `1px solid ${C.blue}33`,
+                backgroundColor: "rgba(45, 116, 182, 0.04)", border: "1px solid rgba(45, 116, 182, 0.2)",
                 display: "flex", gap: 10, alignItems: "flex-start",
               }}
             >
@@ -189,7 +195,7 @@ export default function VerifyPage() {
             <div
               style={{
                 width: 64, height: 64, borderRadius: "50%",
-                backgroundColor: `${C.blue}1F`,
+                backgroundColor: "rgba(45, 116, 182, 0.12)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 margin: "0 auto 20px",
                 animation: "pulse 1.5s ease-in-out infinite",
@@ -230,7 +236,7 @@ export default function VerifyPage() {
             <div
               style={{
                 width: 72, height: 72, borderRadius: "50%",
-                backgroundColor: `${C.em}1F`,
+                backgroundColor: "var(--color-positive-bg)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 margin: "0 auto 20px",
               }}

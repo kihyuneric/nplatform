@@ -21,12 +21,12 @@ import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981",
-  blue: "#2E75B6", blueL: "#3B82F6",
-  amber: "#F59E0B", rose: "#EF4444", purple: "#A855F7",
-  lt3: "#64748B", lt4: "#475569",
+  bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
+  bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
+  em: "var(--color-positive)", emL: "var(--color-positive)",
+  blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
+  amber: "var(--color-warning)", rose: "var(--color-danger)", purple: "#A855F7",
+  lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 }
 
 type InstType = "BANK" | "CAPITAL" | "AMC" | "INSURER" | "SAVINGS"
@@ -183,10 +183,10 @@ function InstitutionMembersModal({ inst, onClose }: { inst: Institution; onClose
                   <div style={{ display:"flex", gap:6, flexShrink:0 }}>
                     {m.status==="PENDING" && (
                       <>
-                        <button onClick={() => handleMemberAction(m.id, m.name, 'approve')} style={{ padding:"5px 10px", borderRadius:6, backgroundColor:`${C.em}1A`, color:C.emL, border:`1px solid ${C.em}44`, fontSize:10, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:3 }}>
+                        <button onClick={() => handleMemberAction(m.id, m.name, 'approve')} style={{ padding:"5px 10px", borderRadius:6, backgroundColor:"var(--color-positive-bg)", color:C.emL, border:"1px solid rgba(16, 185, 129, 0.33)", fontSize:10, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:3 }}>
                           <Check size={10}/> 승인
                         </button>
-                        <button onClick={() => handleMemberAction(m.id, m.name, 'reject')} style={{ padding:"5px 10px", borderRadius:6, backgroundColor:`${C.rose}1A`, color:C.rose, border:`1px solid ${C.rose}44`, fontSize:10, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:3 }}>
+                        <button onClick={() => handleMemberAction(m.id, m.name, 'reject')} style={{ padding:"5px 10px", borderRadius:6, backgroundColor:"rgba(239, 68, 68, 0.1)", color:C.rose, border:"1px solid rgba(239, 68, 68, 0.4)", fontSize:10, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:3 }}>
                           <X size={10}/> 거절
                         </button>
                       </>
@@ -206,7 +206,7 @@ function InstitutionMembersModal({ inst, onClose }: { inst: Institution; onClose
           )}
         </div>
         <div style={{ padding:"12px 16px", borderTop:`1px solid ${C.bg4}`, display:"flex", justifyContent:"flex-end", gap:8 }}>
-          <button onClick={() => toast.success("초대 이메일 작성 창으로 이동")} style={{ padding:"8px 14px", borderRadius:8, backgroundColor:`${C.em}1A`, color:C.emL, border:`1px solid ${C.em}44`, fontSize:11, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>
+          <button onClick={() => toast.success("초대 이메일 작성 창으로 이동")} style={{ padding:"8px 14px", borderRadius:8, backgroundColor:"var(--color-positive-bg)", color:C.emL, border:"1px solid rgba(16, 185, 129, 0.33)", fontSize:11, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>
             <UserPlus size={12} /> 멤버 초대
           </button>
         </div>
@@ -343,7 +343,7 @@ export default function InstitutionsPage() {
                   style={{
                     padding: "6px 12px", borderRadius: 999,
                     fontSize: 11, fontWeight: 700,
-                    backgroundColor: active ? `${C.em}1F` : C.bg2,
+                    backgroundColor: active ? "var(--color-positive-bg)" : C.bg2,
                     color: active ? C.emL : C.lt4,
                     border: `1px solid ${active ? C.em : C.bg4}`,
                     cursor: "pointer",
@@ -481,8 +481,8 @@ export default function InstitutionsPage() {
                     onClick={() => setSelectedInst(it)}
                     style={{
                       padding: "5px 10px", borderRadius: 6,
-                      backgroundColor: `${C.blue}1A`, color: C.blueL,
-                      border: `1px solid ${C.blue}44`,
+                      backgroundColor: "rgba(45, 116, 182, 0.12)", color: C.blueL,
+                      border: "1px solid rgba(45, 116, 182, 0.27)",
                       fontSize: 9, fontWeight: 700, cursor: "pointer",
                       display: "inline-flex", alignItems: "center", gap: 4,
                     }}
@@ -500,7 +500,7 @@ export default function InstitutionsPage() {
         <div
           style={{
             marginTop: 20, padding: "14px 16px", borderRadius: 12,
-            backgroundColor: `${C.blue}0A`, border: `1px solid ${C.blue}33`,
+            backgroundColor: "rgba(45, 116, 182, 0.04)", border: "1px solid rgba(45, 116, 182, 0.2)",
             display: "flex", gap: 10, alignItems: "flex-start",
           }}
         >

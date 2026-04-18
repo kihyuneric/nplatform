@@ -16,11 +16,11 @@ import { formatTimeLeft, formatMinBidRatio } from "@/lib/taxonomy"
 // ─── Design System ────────────────────────────────────────────────────────────
 
 const C = {
-  bg0:"#030810", bg1:"#050D1A", bg2:"#080F1E", bg3:"#0A1628", bg4:"#0F1F35",
-  em:"#10B981", emL:"#34D399", blue:"#3B82F6", blueL:"#93C5FD",
-  amber:"#F59E0B", amber2:"#FCD34D", purple:"#A855F7", rose:"#EF4444", teal:"#14B8A6",
+  bg0:"var(--color-bg-deepest, #030810)", bg1:"var(--color-bg-deep, #050D1A)", bg2:"var(--color-bg-base, #080F1E)", bg3:"var(--color-bg-base, #0A1628)", bg4:"var(--color-bg-elevated, #0F1F35)",
+  em:"var(--color-positive)", emL:"var(--color-positive)", blue:"var(--color-brand-dark)", blueL:"var(--color-brand-bright)",
+  amber:"var(--color-warning)", amber2:"#FCD34D", purple:"#A855F7", rose:"var(--color-danger)", teal:"#14B8A6",
   l0:"#FFFFFF", l1:"#F8FAFC", l2:"#F1F5F9", l3:"#E2E8F0",
-  lt1:"#0F172A", lt2:"#334155", lt3:"#64748B", lt4:"#94A3B8",
+  lt1:"#0F172A", lt2:"#334155", lt3:"var(--color-text-muted)", lt4:"var(--color-text-muted)",
 }
 
 // ─── Inline helpers ───────────────────────────────────────────────────────────

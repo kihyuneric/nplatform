@@ -29,12 +29,12 @@ import {
 } from "@/lib/taxonomy"
 
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#34D399",
-  blue: "#3B82F6", blueL: "#93C5FD",
-  amber: "#F59E0B", rose: "#EF4444", teal: "#14B8A6",
-  lt3: "#64748B", lt4: "#94A3B8",
+  bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
+  bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
+  em: "var(--color-positive)", emL: "var(--color-positive)",
+  blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
+  amber: "var(--color-warning)", rose: "var(--color-danger)", teal: "#14B8A6",
+  lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 }
 
 interface WizardState {
@@ -268,8 +268,8 @@ export default function SellWizardPage() {
                     style={{
                       display: "inline-flex", alignItems: "center", gap: 8,
                       padding: "8px 14px", borderRadius: 999,
-                      backgroundColor: active ? `${C.em}1A` : done ? `${C.em}0A` : C.bg2,
-                      border: `1px solid ${active ? C.em : done ? `${C.em}44` : C.bg4}`,
+                      backgroundColor: active ? "var(--color-positive-bg)" : done ? "var(--color-positive-bg)" : C.bg2,
+                      border: `1px solid ${active ? C.em : done ? "rgba(16, 185, 129, 0.33)" : C.bg4}`,
                       color: active ? C.emL : done ? C.em : C.lt4,
                       fontSize: 11, fontWeight: 700,
                     }}
@@ -353,7 +353,7 @@ export default function SellWizardPage() {
               ) : (
                 <div>
                   {submitError && (
-                    <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, backgroundColor: `${C.rose}14`, border: `1px solid ${C.rose}44`, color: C.rose, fontSize: 11, fontWeight: 600 }}>
+                    <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, backgroundColor: `${C.rose}14`, border: "1px solid rgba(239, 68, 68, 0.4)", color: C.rose, fontSize: 11, fontWeight: 600 }}>
                       {submitError}
                     </div>
                   )}
@@ -425,7 +425,7 @@ export default function SellWizardPage() {
             <div
               style={{
                 padding: "14px 16px", borderRadius: 14,
-                backgroundColor: `${C.em}0A`, border: `1px solid ${C.em}33`,
+                backgroundColor: "var(--color-positive-bg)", border: `1px solid ${C.em}33`,
                 display: "flex", gap: 10, alignItems: "flex-start",
               }}
             >
@@ -518,7 +518,7 @@ function Step2({ state, update }: { state: WizardState; update: <K extends keyof
       <div
         style={{
           marginTop: 18, padding: "12px 14px",
-          backgroundColor: `${C.blue}0E`, border: `1px solid ${C.blue}33`,
+          backgroundColor: `${C.blue}0E`, border: "1px solid rgba(45, 116, 182, 0.2)",
           borderRadius: 10, display: "flex", gap: 10, alignItems: "flex-start",
         }}
       >
@@ -569,7 +569,7 @@ function Step3({
         <div
           style={{
             marginTop: 20, padding: "18px 20px", borderRadius: 12,
-            backgroundColor: `${C.em}0A`, border: `1px solid ${C.em}33`,
+            backgroundColor: "var(--color-positive-bg)", border: `1px solid ${C.em}33`,
             display: "flex", justifyContent: "space-between", alignItems: "center",
           }}
         >
@@ -601,7 +601,7 @@ function Step4BondRights({ state, update }: { state: WizardState; update: <K ext
       <div
         style={{
           marginBottom: 18, padding: "10px 14px", borderRadius: 8,
-          backgroundColor: `${C.amber}0A`, border: `1px solid ${C.amber}33`,
+          backgroundColor: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.27)",
           display: "flex", gap: 8, alignItems: "center", fontSize: 10, color: C.lt3,
         }}
       >
@@ -640,7 +640,7 @@ function Step4BondRights({ state, update }: { state: WizardState; update: <K ext
       <div
         style={{
           marginTop: 18, padding: "12px 14px",
-          backgroundColor: `${C.blue}0E`, border: `1px solid ${C.blue}33`,
+          backgroundColor: `${C.blue}0E`, border: "1px solid rgba(45, 116, 182, 0.2)",
           borderRadius: 10, display: "flex", gap: 10, alignItems: "flex-start",
         }}
       >
@@ -753,7 +753,7 @@ function Step5Docs({ state, update }: { state: WizardState; update: <K extends k
               key={it.key}
               style={{
                 padding: "16px 18px", borderRadius: 12,
-                backgroundColor: checked ? `${C.em}0E` : C.bg3,
+                backgroundColor: checked ? "var(--color-positive-bg)" : C.bg3,
                 border: `1px solid ${checked ? C.em : C.bg4}`,
                 display: "flex", flexDirection: "column", gap: 10,
               }}
@@ -783,7 +783,7 @@ function Step5Docs({ state, update }: { state: WizardState; update: <K extends k
                 <div
                   style={{
                     width: 36, height: 36, borderRadius: 8,
-                    backgroundColor: checked ? `${C.em}1F` : C.bg4,
+                    backgroundColor: checked ? "var(--color-positive-bg)" : C.bg4,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     flexShrink: 0,
                   }}
@@ -845,7 +845,7 @@ function Step5Docs({ state, update }: { state: WizardState; update: <K extends k
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                     padding: "7px 12px", borderRadius: 8,
                     backgroundColor: `${C.blue}14`,
-                    border: `1px solid ${C.blue}33`,
+                    border: "1px solid rgba(45, 116, 182, 0.2)",
                     color: C.blueL, fontSize: 11, fontWeight: 700, cursor: "pointer",
                   }}
                 >
@@ -891,7 +891,7 @@ function Step6Review({
             <span
               style={{
                 marginLeft: 6, fontSize: 9, padding: "2px 6px", borderRadius: 3,
-                backgroundColor: `${C.em}1F`, color: C.emL, fontWeight: 800,
+                backgroundColor: "var(--color-positive-bg)", color: C.emL, fontWeight: 800,
               }}
             >
               전속
@@ -926,7 +926,7 @@ function Step6Review({
             <div
               style={{
                 marginTop: 8, padding: "14px 16px", borderRadius: 12,
-                backgroundColor: `${C.em}0A`, border: `1px solid ${C.em}25`,
+                backgroundColor: "var(--color-positive-bg)", border: `1px solid ${C.em}25`,
               }}
             >
               <div style={{ fontSize: 10, color: C.lt3, fontWeight: 700, marginBottom: 8 }}>
@@ -994,7 +994,7 @@ function SubmittedScreen({ completeness }: { completeness: number }) {
         <div
           style={{
             width: 72, height: 72, borderRadius: "50%",
-            backgroundColor: `${C.em}1F`,
+            backgroundColor: "var(--color-positive-bg)",
             display: "flex", alignItems: "center", justifyContent: "center",
             margin: "0 auto 20px",
           }}
@@ -1011,7 +1011,7 @@ function SubmittedScreen({ completeness }: { completeness: number }) {
         <div
           style={{
             padding: 16, borderRadius: 12,
-            backgroundColor: `${C.em}0A`, border: `1px solid ${C.em}33`,
+            backgroundColor: "var(--color-positive-bg)", border: `1px solid ${C.em}33`,
             marginBottom: 24,
           }}
         >
@@ -1206,7 +1206,7 @@ function CollateralSelect({ value, onChange }: { value: string; onChange: (v: st
                   onClick={() => onChange(item.value)}
                   style={{
                     padding: "7px 12px", borderRadius: 8,
-                    backgroundColor: active ? `${C.em}1A` : C.bg3,
+                    backgroundColor: active ? "var(--color-positive-bg)" : C.bg3,
                     color: active ? C.emL : C.lt3,
                     border: `1px solid ${active ? C.em : C.bg4}`,
                     fontSize: 11, fontWeight: 700, cursor: "pointer",
@@ -1234,7 +1234,7 @@ function RadioPills({ value, options, onChange }: { value: string; options: Arra
             onClick={() => onChange(op.value)}
             style={{
               padding: "9px 14px", borderRadius: 10,
-              backgroundColor: active ? `${C.em}1A` : C.bg3,
+              backgroundColor: active ? "var(--color-positive-bg)" : C.bg3,
               color: active ? C.emL : C.lt3,
               border: `1px solid ${active ? C.em : C.bg4}`,
               fontSize: 11, fontWeight: 700, cursor: "pointer",
@@ -1255,7 +1255,7 @@ function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: bool
       style={{
         display: "flex", alignItems: "center", gap: 10,
         padding: "11px 14px", borderRadius: 10,
-        backgroundColor: value ? `${C.em}0E` : C.bg3,
+        backgroundColor: value ? "var(--color-positive-bg)" : C.bg3,
         border: `1px solid ${value ? C.em : C.bg4}`,
         color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", width: "100%",
         textAlign: "left",
@@ -1288,7 +1288,7 @@ function ReviewRow({ label, children, accent = false }: { label: string; childre
       style={{
         display: "flex", justifyContent: "space-between", alignItems: "center",
         padding: "12px 14px", borderRadius: 10,
-        backgroundColor: accent ? `${C.em}0A` : C.bg3,
+        backgroundColor: accent ? "var(--color-positive-bg)" : C.bg3,
         border: `1px solid ${accent ? `${C.em}33` : C.bg4}`,
       }}
     >

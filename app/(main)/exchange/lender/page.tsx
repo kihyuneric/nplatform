@@ -31,11 +31,11 @@ import {
 
 /* ─── Design System ─────────────────────────────────────────────── */
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E", bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981", blue: "#2E75B6", blueL: "#3B82F6",
-  amber: "#F59E0B", amber2: "#F59E0B", purple: "#A855F7", rose: "#EF4444", teal: "#14B8A6",
+  bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)", bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
+  em: "var(--color-positive)", emL: "var(--color-positive)", blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
+  amber: "var(--color-warning)", amber2: "#F59E0B", purple: "#A855F7", rose: "var(--color-danger)", teal: "#14B8A6",
   l0: "#0D1F38", l1: "#060E1C", l2: "#030910", l3: "#1A2E4A",
-  lt1: "#F0F4F8", lt2: "#94A3B8", lt3: "#64748B", lt4: "#475569",
+  lt1: "#F0F4F8", lt2: "#94A3B8", lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 };
 
 /* ─── Types ─────────────────────────────────────────────────────── */

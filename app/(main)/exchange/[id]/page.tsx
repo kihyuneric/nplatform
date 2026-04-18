@@ -36,13 +36,13 @@ import { createClient } from "@/lib/supabase/client"
    DESIGN TOKENS
 ═══════════════════════════════════════════════════════════ */
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981", emD: "#047857",
-  blue: "#2E75B6", blueL: "#3B82F6",
-  amber: "#F59E0B", amberL: "#F59E0B",
-  purple: "#A855F7", rose: "#EF4444", teal: "#14B8A6",
-  lt1: "#F0F4F8", lt2: "#94A3B8", lt3: "#64748B", lt4: "#475569",
+  bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
+  bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
+  em: "var(--color-positive)", emL: "var(--color-positive)", emD: "#047857",
+  blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
+  amber: "var(--color-warning)", amberL: "#F59E0B",
+  purple: "#A855F7", rose: "var(--color-danger)", teal: "#14B8A6",
+  lt1: "#F0F4F8", lt2: "#94A3B8", lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -665,7 +665,7 @@ export default function ListingDetailPage() {
               style={{
                 padding: "14px 16px",
                 backgroundColor: `${C.blue}0E`,
-                border: `1px solid ${C.blue}33`,
+                border: "1px solid rgba(45, 116, 182, 0.2)",
                 borderRadius: 10,
                 display: "flex", gap: 10, alignItems: "flex-start",
               }}
@@ -945,7 +945,7 @@ export default function ListingDetailPage() {
                     href={`/exchange/${listing.id}/dataroom`}
                     style={{
                       padding: "12px 14px", borderRadius: 10,
-                      backgroundColor: `${C.amber}1A`, color: C.amber,
+                      backgroundColor: "rgba(245, 158, 11, 0.1)", color: C.amber,
                       fontSize: 12, fontWeight: 800, textAlign: "center",
                       border: `1px solid ${C.amber}55`,
                       textDecoration: "none",
@@ -989,9 +989,9 @@ export default function ListingDetailPage() {
                   href={`/analysis/new?listing=${listing.id}&type=${listing.collateral}&region=${listing.region_city}`}
                   style={{
                     padding: "12px 14px", borderRadius: 10,
-                    backgroundColor: C.purple + "1A", color: C.purple,
+                    backgroundColor: "rgba(168, 85, 247, 0.1)", color: C.purple,
                     fontSize: 12, fontWeight: 700, textAlign: "center",
-                    border: `1px solid ${C.purple}44`,
+                    border: "1px solid rgba(168, 85, 247, 0.27)",
                     textDecoration: "none",
                     display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 6,
                   }}
@@ -1003,7 +1003,7 @@ export default function ListingDetailPage() {
                   disabled={watchlistSaving}
                   style={{
                     padding: "10px 14px", borderRadius: 10,
-                    backgroundColor: watchlisted ? `${C.em}1A` : "transparent",
+                    backgroundColor: watchlisted ? "var(--color-positive-bg)" : "transparent",
                     color: watchlisted ? C.em : C.lt3,
                     fontSize: 11, fontWeight: 600,
                     border: `1px solid ${watchlisted ? C.em : C.bg4}`,
@@ -1021,7 +1021,7 @@ export default function ListingDetailPage() {
               style={{
                 padding: 20, borderRadius: 14,
                 backgroundColor: C.bg2,
-                border: `1px solid ${C.purple}33`,
+                border: "1px solid rgba(168, 85, 247, 0.27)",
                 background: `linear-gradient(135deg, ${C.bg2} 0%, ${C.purple}08 100%)`,
               }}
             >
@@ -1062,7 +1062,7 @@ export default function ListingDetailPage() {
                         </span>
                         <span style={{
                           fontSize: 9, padding: "2px 6px", borderRadius: 3,
-                          backgroundColor: ai.recoveryRate.predicted >= 70 ? `${C.em}1F` : `${C.amber}1F`,
+                          backgroundColor: ai.recoveryRate.predicted >= 70 ? "var(--color-positive-bg)" : "rgba(245, 158, 11, 0.1)",
                           color: ai.recoveryRate.predicted >= 70 ? C.emL : C.amberL,
                           fontWeight: 700,
                         }}>
@@ -1121,7 +1121,7 @@ export default function ListingDetailPage() {
                   {ai.anomaly && (
                     <div style={{
                       padding: "10px 14px", borderRadius: 10,
-                      backgroundColor: ai.anomaly.verdict === "SAFE" ? `${C.em}0A` : `${C.amber}0A`,
+                      backgroundColor: ai.anomaly.verdict === "SAFE" ? "var(--color-positive-bg)" : "rgba(245, 158, 11, 0.1)",
                       border: `1px solid ${ai.anomaly.verdict === "SAFE" ? C.em : C.amber}33`,
                     }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -1207,7 +1207,7 @@ export default function ListingDetailPage() {
                   href="/exchange/demands"
                   style={{
                     flex: 1, padding: "9px 12px", borderRadius: 8,
-                    backgroundColor: `${C.em}1A`, border: `1px solid ${C.em}33`,
+                    backgroundColor: "var(--color-positive-bg)", border: `1px solid ${C.em}33`,
                     fontSize: 11, fontWeight: 700, color: C.emL,
                     textDecoration: "none", textAlign: "center",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
@@ -1267,7 +1267,7 @@ export default function ListingDetailPage() {
               <div
                 style={{
                   padding: "14px 12px", borderRadius: 10,
-                  backgroundColor: `${C.em}0E`, border: `1px solid ${C.em}33`,
+                  backgroundColor: "var(--color-positive-bg)", border: `1px solid ${C.em}33`,
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -1349,7 +1349,7 @@ export default function ListingDetailPage() {
             <div
               style={{
                 padding: "14px 16px", borderRadius: 14,
-                backgroundColor: `${C.em}0A`, border: `1px solid ${C.em}33`,
+                backgroundColor: "var(--color-positive-bg)", border: `1px solid ${C.em}33`,
                 display: "flex", gap: 10, alignItems: "flex-start",
               }}
             >
@@ -1458,8 +1458,8 @@ function KpiCard({
     <div
       style={{
         padding: "16px 18px",
-        backgroundColor: accent ? `${C.em}0E` : C.bg2,
-        border: `1px solid ${accent ? `${C.em}44` : C.bg4}`,
+        backgroundColor: accent ? "var(--color-positive-bg)" : C.bg2,
+        border: `1px solid ${accent ? "rgba(16, 185, 129, 0.33)" : C.bg4}`,
         borderRadius: 12,
       }}
     >
@@ -1608,7 +1608,7 @@ function FeeRow({
             style={{
               marginLeft: 6, fontSize: 9, color: C.emL, fontWeight: 700,
               padding: "1px 5px", borderRadius: 3,
-              backgroundColor: `${C.em}1F`, border: `1px solid ${C.em}44`,
+              backgroundColor: "var(--color-positive-bg)", border: "1px solid rgba(16, 185, 129, 0.33)",
             }}
           >
             프리미엄 면제

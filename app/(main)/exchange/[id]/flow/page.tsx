@@ -27,12 +27,12 @@ import {
 import type { AccessTier } from "@/lib/access-tier"
 
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981",
-  blue: "#2E75B6", blueL: "#3B82F6",
-  amber: "#F59E0B", rose: "#EF4444", purple: "#A855F7",
-  lt3: "#64748B", lt4: "#475569",
+  bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
+  bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
+  em: "var(--color-positive)", emL: "var(--color-positive)",
+  blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
+  amber: "var(--color-warning)", rose: "var(--color-danger)", purple: "#A855F7",
+  lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 }
 
 const TIER_COLOR: Record<AccessTier, string> = {
@@ -255,8 +255,8 @@ export default function FlowPage({ params }: { params: Promise<{ id: string }> }
                           <span
                             style={{
                               padding: "2px 6px", borderRadius: 4,
-                              backgroundColor: `${C.em}1F`, color: C.emL,
-                              border: `1px solid ${C.em}66`,
+                              backgroundColor: "var(--color-positive-bg)", color: C.emL,
+                              border: "1px solid var(--color-positive-border)",
                               fontSize: 9, fontWeight: 800,
                             }}
                           >
@@ -290,7 +290,7 @@ export default function FlowPage({ params }: { params: Promise<{ id: string }> }
                 <div
                   style={{
                     padding: 20, borderRadius: 10,
-                    backgroundColor: `${C.em}0A`, border: `1px solid ${C.em}44`,
+                    backgroundColor: "var(--color-positive-bg)", border: "1px solid rgba(16, 185, 129, 0.33)",
                     textAlign: "center",
                   }}
                 >
@@ -310,7 +310,7 @@ export default function FlowPage({ params }: { params: Promise<{ id: string }> }
                         style={{
                           padding: "14px 16px", borderRadius: 12,
                           backgroundColor: allowed ? C.bg3 : `${C.rose}08`,
-                          border: `1px solid ${allowed ? C.bg4 : `${C.rose}44`}`,
+                          border: `1px solid ${allowed ? C.bg4 : "rgba(239, 68, 68, 0.4)"}`,
                         }}
                       >
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>

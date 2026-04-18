@@ -17,12 +17,20 @@ import {
 } from "lucide-react"
 
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981",
-  blue: "#2E75B6", blueL: "#3B82F6",
-  amber: "#F59E0B", rose: "#EF4444", purple: "#A855F7",
-  lt3: "#64748B", lt4: "#475569",
+  bg0: "var(--color-bg-deepest, #030810)",
+  bg1: "var(--color-bg-deep, #050D1A)",
+  bg2: "var(--color-bg-base, #080F1E)",
+  bg3: "var(--color-bg-base, #0A1628)",
+  bg4: "var(--color-bg-elevated, #0F1F35)",
+  em:     "var(--color-positive)",
+  emL:    "var(--color-positive)",
+  blue:   "var(--color-brand-dark)",
+  blueL:  "var(--color-brand-bright)",
+  amber:  "var(--color-warning)",
+  rose:   "var(--color-danger)",
+  purple: "#A855F7",
+  lt3:    "var(--color-text-muted)",
+  lt4:    "var(--color-text-muted)",
 }
 
 type DocType = "NDA" | "LOI"
@@ -249,7 +257,7 @@ export default function AgreementsPage() {
                 style={{
                   padding: "7px 13px", borderRadius: 999,
                   fontSize: 11, fontWeight: 700,
-                  backgroundColor: active ? `${C.em}1F` : C.bg2,
+                  backgroundColor: active ? "var(--color-positive-bg)" : C.bg2,
                   color: active ? C.emL : C.lt4,
                   border: `1px solid ${active ? C.em : C.bg4}`,
                   cursor: "pointer",
@@ -316,10 +324,10 @@ export default function AgreementsPage() {
                     style={{
                       display: "inline-block",
                       padding: "4px 8px", borderRadius: 4,
-                      backgroundColor: row.type === "NDA" ? `${C.blue}1F` : `${C.purple}1F`,
+                      backgroundColor: row.type === "NDA" ? "rgba(45, 116, 182, 0.12)" : "rgba(168, 85, 247, 0.1)",
                       color: row.type === "NDA" ? C.blueL : "#C084FC",
                       fontSize: 10, fontWeight: 800, width: "fit-content",
-                      border: `1px solid ${row.type === "NDA" ? `${C.blue}44` : `${C.purple}44`}`,
+                      border: `1px solid ${row.type === "NDA" ? "rgba(45, 116, 182, 0.27)" : "rgba(168, 85, 247, 0.27)"}`,
                     }}
                   >
                     {row.type}
@@ -362,7 +370,7 @@ export default function AgreementsPage() {
         <div
           style={{
             marginTop: 20, padding: "14px 16px", borderRadius: 12,
-            backgroundColor: `${C.blue}0A`, border: `1px solid ${C.blue}33`,
+            backgroundColor: "rgba(45, 116, 182, 0.04)", border: "1px solid rgba(45, 116, 182, 0.2)",
             display: "flex", gap: 10, alignItems: "flex-start",
           }}
         >

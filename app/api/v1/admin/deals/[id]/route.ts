@@ -22,12 +22,12 @@ const VALID_STAGES = ['negotiation', 'due_diligence', 'contract', 'completed', '
 // Body: { stage: 'negotiation' | 'due_diligence' | 'contract' | 'completed' | 'dispute' }
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdmin()
   if (auth.error) return auth.error
 
-  const { id } = params
+  const { id } = await params
   if (!id) return apiError('BAD_REQUEST', 'id가 필요합니다.', 400)
 
   try {
@@ -66,12 +66,12 @@ export async function PATCH(
 // GET /api/v1/admin/deals/[id]
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdmin()
   if (auth.error) return auth.error
 
-  const { id } = params
+  const { id } = await params
   try {
     const supabase = await createClient()
     const { data, error } = await supabase

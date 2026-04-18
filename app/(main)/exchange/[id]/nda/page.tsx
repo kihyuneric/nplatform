@@ -21,12 +21,12 @@ import {
 import { TierBadge } from "@/components/tier/tier-badge"
 
 const C = {
-  bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
-  bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981",
-  blue: "#2E75B6", blueL: "#3B82F6",
-  rose: "#EF4444", amber: "#F59E0B",
-  lt3: "#64748B", lt4: "#475569",
+  bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
+  bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
+  em: "var(--color-positive)", emL: "var(--color-positive)",
+  blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
+  rose: "var(--color-danger)", amber: "var(--color-warning)",
+  lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 }
 
 const NDA_CLAUSES = [
@@ -194,7 +194,7 @@ export default function NdaPage() {
             <div
               style={{
                 padding: "14px 16px", borderRadius: 12,
-                backgroundColor: `${C.amber}0A`, border: `1px solid ${C.amber}33`,
+                backgroundColor: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.27)",
                 display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 24,
               }}
             >
@@ -243,7 +243,7 @@ function SignedScreen({ id }: { id: string }) {
       <div
         style={{
           width: 72, height: 72, borderRadius: "50%",
-          backgroundColor: `${C.em}1F`,
+          backgroundColor: "var(--color-positive-bg)",
           display: "flex", alignItems: "center", justifyContent: "center",
           margin: "0 auto 20px",
         }}
@@ -260,7 +260,7 @@ function SignedScreen({ id }: { id: string }) {
       <div
         style={{
           padding: 16, borderRadius: 12,
-          backgroundColor: `${C.em}0A`, border: `1px solid ${C.em}33`,
+          backgroundColor: "var(--color-positive-bg)", border: `1px solid ${C.em}33`,
           marginBottom: 24,
         }}
       >
@@ -342,7 +342,7 @@ function Toggle({
       style={{
         display: "flex", alignItems: "center", gap: 12,
         padding: "12px 14px", borderRadius: 10,
-        backgroundColor: value ? `${C.em}0E` : C.bg3,
+        backgroundColor: value ? "var(--color-positive-bg)" : C.bg3,
         border: `1px solid ${value ? C.em : C.bg4}`,
         color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", width: "100%",
         textAlign: "left",
