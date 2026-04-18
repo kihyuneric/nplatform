@@ -6,7 +6,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nplatform.co.kr'
 
 export const metadata: Metadata = {
   title: "분석 | NPLatform",
-  description: "NPL 시장 현황, AI 실사 보고서, 경매 시뮬레이터, 트렌드 분석을 한 곳에서 확인하세요.",
+  description: "NPL 시장 현황, AI 컨설턴트, 경매 수익률 분석기, 계약서 생성을 한 곳에서 확인하세요.",
   alternates: {
     canonical: `${SITE_URL}/analysis`,
     languages: {

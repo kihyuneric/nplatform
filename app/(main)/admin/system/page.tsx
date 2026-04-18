@@ -156,7 +156,7 @@ export default function AdminSystemPage() {
                 {[
                   { name: "NPL 분석", enabled: true },
                   { name: "커뮤니티", enabled: true },
-                  { name: "경매 시뮬레이터", enabled: true },
+                  { name: "경매 수익률 분석기", enabled: true },
                   { name: "실시간 경매", enabled: false },
                   { name: "매칭 서비스", enabled: false },
                 ].map((mod) => (

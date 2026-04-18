@@ -20,7 +20,7 @@ const PLANS = [
     features: [
       '매물 조회 50건/월',
       'AI 분석 10회/월',
-      '경매 시뮬레이터 기본',
+      '경매 수익률 분석기 기본',
       'OCR 스캔 20회/월',
       '딜룸 3개',
       '시장 리포트 월 1회',
@@ -38,7 +38,7 @@ const PLANS = [
     features: [
       '무제한 매물 조회',
       'AI 분석 100건/월',
-      '경매 시뮬레이터 고급',
+      '경매 수익률 분석기 고급',
       'OCR 스캔 100회/월',
       '딜룸 20개',
       '계약서 생성',
@@ -89,7 +89,7 @@ const PLANS = [
 const COMPARISON = [
   { feature: '매물 조회', free: '10건/월', pro: '무제한', enterprise: '무제한' },
   { feature: 'AI 분석', free: '3회/월', pro: '50건/월', enterprise: '무제한' },
-  { feature: '경매 시뮬레이터', free: false, pro: true, enterprise: true },
+  { feature: '경매 수익률 분석기', free: false, pro: true, enterprise: true },
   { feature: 'OCR 스캔', free: '5회/월', pro: '50회/월', enterprise: '무제한' },
   { feature: '딜룸', free: '1개', pro: '10개', enterprise: '무제한' },
   { feature: 'API 연동', free: false, pro: false, enterprise: true },

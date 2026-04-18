@@ -502,7 +502,7 @@ export default function AuctionDetailPage() {
               >
                 <span className="flex items-center gap-2">
                   <Calculator className="h-4 w-4" />
-                  경매 시뮬레이터
+                  경매 수익률 분석기
                 </span>
                 <ChevronRight className="h-4 w-4 opacity-70" />
               </button>

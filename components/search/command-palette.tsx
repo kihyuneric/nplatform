@@ -239,12 +239,12 @@ export function CommandPalette() {
         },
         {
           id: 'auction-simulator',
-          label: '경매 시뮬레이터',
+          label: '경매 수익률 분석기',
           description: '낙찰 전략 및 수익률 계산',
           icon: <Calculator className="h-4 w-4 text-emerald-500" />,
-          action: () => navigate('/tools/auction-simulator', '경매 시뮬레이터'),
+          action: () => navigate('/analysis/simulator', '경매 수익률 분석기'),
           badge: 'NEW',
-          keywords: ['경매', '시뮬레이터', '낙찰', '수익률'],
+          keywords: ['경매', '시뮬레이터', '분석기', '낙찰', '수익률'],
         },
         {
           id: 'market-trends',

@@ -559,7 +559,7 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                         npl_report: 'NPL 분석 리포트', ai_screening: 'AI 스크리닝',
                         ocr: 'OCR 문서 처리', rag_search: '법률 RAG 검색',
                         monthly_grant: '월 정기 지급', coupon: '쿠폰 적용',
-                        copilot: 'AI Copilot', simulator: '경매 시뮬레이터',
+                        copilot: 'AI 컨설턴트', simulator: '경매 수익률 분석기',
                       }
                       const purpose = serviceLabel[row.service_key ?? ''] ?? (isPos ? '크레딧 지급' : '크레딧 사용')
                       const dtStr = new Date(row.created_at).toLocaleString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -590,8 +590,8 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                   { item: 'NPL 분석 리포트',   cost: '50 크레딧',  note: '채권·담보·수익성 풀 리포트' },
                   { item: 'OCR 문서 처리',     cost: '20 크레딧',  note: '페이지당 자동 데이터 추출' },
                   { item: '법률 RAG 검색',     cost: '5 크레딧',   note: '판례·법령 AI 검색 1회' },
-                  { item: '경매 시뮬레이터',   cost: '무료',        note: '무제한 사용 가능' },
-                  { item: 'AI Copilot 메시지', cost: '2 크레딧',   note: '1,000토큰 기준' },
+                  { item: '경매 수익률 분석기', cost: '무료',       note: '무제한 사용 가능' },
+                  { item: 'AI 컨설턴트 메시지', cost: '2 크레딧',   note: '1,000토큰 기준' },
                 ].map(row => (
                   <div key={row.item} className="flex items-center justify-between py-1.5 border-b border-[var(--color-border-subtle)] last:border-0">
                     <div>

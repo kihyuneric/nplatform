@@ -97,11 +97,11 @@
         "order": 1
       },
       {
-        "key": "ins_dd",
-        "label": "AI 실사 보고서",
-        "href": "/analysis/due-diligence",
-        "description": "투자은행급 AI 실사 리포트",
-        "icon": "FileText",
+        "key": "ins_copilot",
+        "label": "AI 컨설턴트",
+        "href": "/analysis/copilot",
+        "description": "AI 투자 컨설팅 챗봇",
+        "icon": "Sparkles",
         "active": true,
         "order": 2
       },
@@ -289,11 +289,11 @@
           "order": 1
         },
         {
-          "key": "insights_dd",
-          "label": "AI 실사 보고서",
-          "href": "/analysis/due-diligence",
-          "description": "투자은행급 AI 실사 리포트",
-          "icon": "FileText",
+          "key": "insights_copilot",
+          "label": "AI 컨설턴트",
+          "href": "/analysis/copilot",
+          "description": "AI 투자 컨설팅 챗봇",
+          "icon": "Sparkles",
           "active": true,
           "order": 2
         },

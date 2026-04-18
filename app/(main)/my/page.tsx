@@ -541,7 +541,7 @@ export default function MyDashboardPage() {
                 transition={{ delay: i * 0.05, duration: 0.4 }}
               >
                 <Link
-                  href={a.type === "실사 보고서" ? "/analysis/due-diligence" : a.type === "수익률 분석" ? "/analysis/simulator" : "/analysis"}
+                  href={a.type === "수익률 분석" ? "/analysis/simulator" : a.type === "AI 컨설팅" ? "/analysis/copilot" : "/analysis"}
                   style={{
                     display: "block", padding: 18, borderRadius: 14,
                     backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,

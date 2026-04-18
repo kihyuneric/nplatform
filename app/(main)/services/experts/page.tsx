@@ -242,7 +242,7 @@ export default function ProfessionalPage() {
         <div className="flex items-center gap-3 flex-wrap">
           <Link href="/services/community" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>커뮤니티 →</Link>
           <Link href="/exchange" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>매물 탐색 →</Link>
-          <Link href="/analysis/due-diligence" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>실사 보고서 →</Link>
+          <Link href="/analysis/copilot" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>AI 컨설턴트 →</Link>
           <Link href="/deals" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>거래 현황 →</Link>
         </div>
       </div>

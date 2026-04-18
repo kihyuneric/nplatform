@@ -1262,14 +1262,14 @@ export default function NplAnalysisDetail({ params }: PageProps) {
 
                 {/* CTA: DD Report + Copilot */}
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Link href={`/analysis/due-diligence?listing=${id}`} className="card-elevated rounded-2xl p-6 hover:shadow-lg transition-shadow group">
+                  <Link href={`/analysis/simulator?listing=${id}`} className="card-elevated rounded-2xl p-6 hover:shadow-lg transition-shadow group">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
                         <Download className="h-5 w-5 text-white" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-black text-[var(--color-brand-deep)] dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">AI 실사 리포트 생성</h4>
-                        <p className="text-[10px] text-gray-400">6섹션 · 투자등급 PDF 자동 생성</p>
+                        <h4 className="text-sm font-black text-[var(--color-brand-deep)] dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">경매 수익률 분석기</h4>
+                        <p className="text-[10px] text-gray-400">낙찰가별 수익률·세금 자동 계산</p>
                       </div>
                       <ArrowRight className="ml-auto h-4 w-4 text-gray-400 group-hover:text-purple-500 transition-colors" />
                     </div>
@@ -1280,8 +1280,8 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                         <MessageSquare className="h-5 w-5 text-white" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-black text-[var(--color-brand-deep)] dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">AI Copilot에게 질문</h4>
-                        <p className="text-[10px] text-gray-400">이 물건에 대해 Claude에게 자유롭게 질문</p>
+                        <h4 className="text-sm font-black text-[var(--color-brand-deep)] dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">AI 컨설턴트에게 질문</h4>
+                        <p className="text-[10px] text-gray-400">이 물건에 대해 AI와 자유롭게 상담</p>
                       </div>
                       <ArrowRight className="ml-auto h-4 w-4 text-gray-400 group-hover:text-purple-500 transition-colors" />
                     </div>

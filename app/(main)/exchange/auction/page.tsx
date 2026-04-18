@@ -807,10 +807,10 @@ export default function AuctionPage() {
           {/* ── Cross-links ── */}
           <div className="flex items-center gap-3 flex-wrap mt-6">
             <Link href="/analysis/simulator" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, backgroundColor: `${C.bg3}`, border: `1px solid ${C.bg4}`, color: C.lt3, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
-              수익률 시뮬레이터 →
+              경매 수익률 분석기 →
             </Link>
-            <Link href="/analysis/due-diligence" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, backgroundColor: `${C.bg3}`, border: `1px solid ${C.bg4}`, color: C.lt3, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
-              실사 보고서 →
+            <Link href="/analysis/copilot" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, backgroundColor: `${C.bg3}`, border: `1px solid ${C.bg4}`, color: C.lt3, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+              AI 컨설턴트 →
             </Link>
             <Link href="/exchange" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, backgroundColor: `${C.bg3}`, border: `1px solid ${C.bg4}`, color: C.lt3, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
               매물 거래소 →

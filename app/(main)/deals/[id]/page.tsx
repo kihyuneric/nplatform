@@ -817,10 +817,10 @@ function DDTab({ items: initialItems, dealId }: { items: DDItem[]; dealId: strin
         <div className="flex items-center justify-between mt-2">
           <p className="text-[10px] text-white/25 tracking-normal">{pct}% 완료</p>
           <Link
-            href={`/analysis/due-diligence?dealId=${dealId}`}
+            href={`/analysis/copilot?dealId=${dealId}`}
             className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
           >
-            AI 실사 보고서 생성 →
+            AI 컨설턴트에게 묻기 →
           </Link>
         </div>
       </div>
@@ -828,18 +828,18 @@ function DDTab({ items: initialItems, dealId }: { items: DDItem[]; dealId: strin
       {/* Cross-links */}
       <div className="flex gap-2">
         <Link
-          href={`/analysis/due-diligence?dealId=${dealId}`}
+          href={`/analysis/copilot?dealId=${dealId}`}
           className="flex-1 flex items-center justify-center gap-2 py-3 bg-blue-500/[0.08] border border-blue-500/20 hover:border-blue-500/40 text-blue-300 rounded-xl text-xs font-semibold tracking-normal transition-all"
         >
           <FileText className="w-3.5 h-3.5" />
-          투자은행급 보고서
+          AI 컨설턴트
         </Link>
         <Link
           href={`/analysis/simulator?dealId=${dealId}`}
           className="flex-1 flex items-center justify-center gap-2 py-3 bg-purple-500/[0.08] border border-purple-500/20 hover:border-purple-500/40 text-purple-300 rounded-xl text-xs font-semibold tracking-normal transition-all"
         >
           <TrendingUp className="w-3.5 h-3.5" />
-          경매 시뮬레이터
+          경매 수익률 분석기
         </Link>
       </div>
 

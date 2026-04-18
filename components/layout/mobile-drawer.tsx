@@ -74,8 +74,9 @@ const NAV_GROUPS: NavGroup[] = [
     group: '분석',
     items: [
       { label: '시장 현황', icon: BarChart2, href: '/analysis' },
-      { label: 'AI 실사 보고서', icon: FileText, href: '/analysis/due-diligence' },
-      { label: '경매 시뮬레이터', icon: TrendingUp, href: '/analysis/simulator' },
+      { label: 'AI 컨설턴트', icon: FileText, href: '/analysis/copilot' },
+      { label: '경매 수익률 분석기', icon: TrendingUp, href: '/analysis/simulator' },
+      { label: '계약서 생성', icon: FileText, href: '/analysis/ocr' },
       { label: '커뮤니티', icon: MessageSquare, href: '/services/community' },
       { label: '전문가', icon: Users, href: '/services/experts' },
       { label: '학습', icon: BookOpen, href: '/services/learn' },

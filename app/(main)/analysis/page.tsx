@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import {
-  Brain, Calculator, BarChart3, ClipboardList, MessageSquare,
+  Brain, Calculator, BarChart3, MessageSquare,
   FileSearch, ArrowRight, TrendingUp, Sparkles,
   Clock, ChevronRight, Zap, Shield, AlertCircle,
 } from "lucide-react"
@@ -58,21 +58,6 @@ const TOOLS = [
     title: "NPL 가격지수 (NBI)",
     desc: "전국·담보 유형별 낙찰가율 추이, 거래량, 낙찰률을 주간 단위로 추적합니다.",
     features: ["담보 유형별 필터", "거래량 추이 그래프", "지역별 히트맵"],
-  },
-  {
-    href: "/analysis/due-diligence",
-    demoHref: null,
-    demoLabel: null,
-    icon: ClipboardList,
-    color: "#F59E0B",
-    bg: "rgba(245,158,11,0.12)",
-    border: "rgba(245,158,11,0.25)",
-    badge: "체크리스트",
-    badgeBg: "rgba(245,158,11,0.15)",
-    badgeText: "#F59E0B",
-    title: "실사 체크리스트",
-    desc: "등기부등본·임대차·권리관계·현장 실사 항목을 단계별로 점검하고 완료율을 추적합니다.",
-    features: ["100+ 체크 항목", "리스크 플래그 자동 감지", "PDF 리포트 출력"],
   },
   {
     href: "/analysis/copilot",

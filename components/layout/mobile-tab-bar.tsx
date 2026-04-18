@@ -96,8 +96,9 @@ const MORE_SECTIONS = [
     titleKey: 'nav.insights',
     items: [
       { label: '시장 현황', labelKey: 'nav.marketAnalysis', href: '/analysis', icon: BarChart3 },
-      { label: 'AI 실사 보고서', labelKey: 'nav.ddReport', href: '/analysis/due-diligence', icon: FileText },
-      { label: '경매 시뮬레이터', labelKey: 'nav.simulator', href: '/analysis/simulator', icon: Calculator },
+      { label: 'AI 컨설턴트', labelKey: 'nav.copilot', href: '/analysis/copilot', icon: FileText },
+      { label: '경매 수익률 분석기', labelKey: 'nav.simulator', href: '/analysis/simulator', icon: Calculator },
+      { label: '계약서 생성', labelKey: 'nav.contract', href: '/analysis/ocr', icon: FileText },
       { label: '커뮤니티', labelKey: 'nav.community', href: '/services/community', icon: Users },
       { label: '전문가', labelKey: 'nav.findExpert', href: '/services/experts', icon: GraduationCap },
       { label: '학습', labelKey: 'nav.learn', href: '/services/learn', icon: BookOpen },

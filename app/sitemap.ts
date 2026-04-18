@@ -21,7 +21,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // 분석 (Analysis)
     { path: '/analysis',                  priority: 0.9,  freq: 'daily'   },
     { path: '/analysis/simulator',        priority: 0.85, freq: 'weekly'  },
-    { path: '/analysis/due-diligence',    priority: 0.8,  freq: 'weekly'  },
     { path: '/analysis/ocr',              priority: 0.75, freq: 'weekly'  },
     { path: '/analysis/copilot',          priority: 0.8,  freq: 'daily'   },
     { path: '/analysis/npl-index',        priority: 0.75, freq: 'daily'   },

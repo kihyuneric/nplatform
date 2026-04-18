@@ -16,7 +16,10 @@ const segmentLabels: Record<string, string> = {
   // 분석
   'npl-analysis': 'NPL 분석',
   tools: '도구',
-  'auction-simulator': '경매 시뮬레이터',
+  'auction-simulator': '경매 수익률 분석기',
+  simulator: '경매 수익률 분석기',
+  copilot: 'AI 컨설턴트',
+  ocr: '계약서 생성',
   compare: '비교',
   // 매수자·매도자
   buyer: '매수자',
