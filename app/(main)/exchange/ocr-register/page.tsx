@@ -16,6 +16,7 @@ import { toast } from "sonner"
    타입 정의
    ───────────────────────────────────────────────────────────── */
 
+const MAX_SLOTS = 20
 const COLLATERAL_TYPES = ["아파트","오피스텔","다세대","단독주택","상가","오피스","토지","공장","호텔","기타"] as const
 type CollateralType = (typeof COLLATERAL_TYPES)[number]
 
@@ -112,12 +113,31 @@ export default function OcrRegisterPage() {
 
   const addSlot = useCallback(() => {
     setSlots(prev => {
-      if (prev.length >= 5) {
-        toast.error("최대 5건까지 동시 등록 가능합니다")
+      if (prev.length >= MAX_SLOTS) {
+        toast.error(`최대 ${MAX_SLOTS}건까지 동시 등록 가능합니다`)
         return prev
       }
       return [...prev, newSlot()]
     })
+  }, [])
+
+  const addMultipleSlots = useCallback((n: number) => {
+    setSlots(prev => {
+      const room = MAX_SLOTS - prev.length
+      const take = Math.min(n, room)
+      if (take <= 0) {
+        toast.error(`이미 최대 ${MAX_SLOTS}건에 도달했습니다`)
+        return prev
+      }
+      return [...prev, ...Array.from({ length: take }, () => newSlot())]
+    })
+  }, [])
+
+  const retryFailed = useCallback(() => {
+    setSlots(prev => prev.map(s => s.status === "error"
+      ? { ...s, status: "empty" as const, errorMsg: undefined, file: null }
+      : s))
+    toast.success("실패한 슬롯을 초기화했습니다 — 다시 업로드해 주세요")
   }, [])
 
   const removeSlot = useCallback((id: string) => {
@@ -290,6 +310,8 @@ export default function OcrRegisterPage() {
   }, [slots, validate, router])
 
   const readyCount = slots.filter(s => s.status === "extracted" || num(s.form.principal_amount) >= 1_000_000).length
+  const errorCount = slots.filter(s => s.status === "error").length
+  const uploadingCount = slots.filter(s => s.status === "uploading").length
 
   return (
     <div className={DS.page.wrapper}>
@@ -305,7 +327,7 @@ export default function OcrRegisterPage() {
             </div>
             <h1 className={DS.header.title}>OCR 기반 매물 일괄 등록</h1>
             <p className="mt-2 text-[var(--color-text-muted)] text-sm">
-              채권소개서·감정평가서를 업로드하면 AI가 자동으로 필드를 채워줍니다. <b>한 번에 최대 5건</b>까지 등록 가능합니다.
+              채권소개서·감정평가서를 업로드하면 AI가 자동으로 필드를 채워줍니다. <b>한 번에 최대 {MAX_SLOTS}건</b>까지 등록 가능합니다.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -341,17 +363,34 @@ export default function OcrRegisterPage() {
           </AnimatePresence>
 
           {/* Add slot */}
-          {slots.length < 5 && (
-            <button
-              onClick={addSlot}
-              className="min-h-[300px] rounded-2xl border-2 border-dashed border-[var(--color-border-subtle)] hover:border-violet-500/50 hover:bg-violet-500/[0.03] transition-all flex flex-col items-center justify-center gap-2 text-[var(--color-text-muted)] hover:text-violet-400 group"
-            >
-              <div className="w-12 h-12 rounded-full bg-violet-500/10 group-hover:bg-violet-500/20 flex items-center justify-center transition-colors">
-                <Plus className="w-6 h-6 text-violet-400" />
+          {slots.length < MAX_SLOTS && (
+            <div className="min-h-[300px] rounded-2xl border-2 border-dashed border-[var(--color-border-subtle)] hover:border-violet-500/50 hover:bg-violet-500/[0.03] transition-all flex flex-col items-center justify-center gap-3 text-[var(--color-text-muted)] group p-6">
+              <button
+                onClick={addSlot}
+                className="flex flex-col items-center gap-2 hover:text-violet-400"
+              >
+                <div className="w-12 h-12 rounded-full bg-violet-500/10 group-hover:bg-violet-500/20 flex items-center justify-center transition-colors">
+                  <Plus className="w-6 h-6 text-violet-400" />
+                </div>
+                <span className="text-sm font-semibold">슬롯 추가 ({slots.length}/{MAX_SLOTS})</span>
+              </button>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => addMultipleSlots(5)}
+                  disabled={slots.length >= MAX_SLOTS}
+                  className="text-[11px] px-2.5 py-1 rounded-md bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 disabled:opacity-40 transition-colors"
+                >
+                  +5
+                </button>
+                <button
+                  onClick={() => addMultipleSlots(10)}
+                  disabled={slots.length >= MAX_SLOTS}
+                  className="text-[11px] px-2.5 py-1 rounded-md bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 disabled:opacity-40 transition-colors"
+                >
+                  +10
+                </button>
               </div>
-              <span className="text-sm font-semibold">슬롯 추가 ({slots.length}/5)</span>
-              <span className="text-xs">매물을 하나 더 등록하려면 클릭</span>
-            </button>
+            </div>
           )}
         </div>
 
@@ -363,10 +402,23 @@ export default function OcrRegisterPage() {
               <div>
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                   제출 준비 완료: <span className="text-violet-400">{readyCount}건</span> / 총 {slots.length}건
+                  {uploadingCount > 0 && <span className="ml-2 text-blue-400">· 분석 중 {uploadingCount}</span>}
+                  {errorCount > 0 && <span className="ml-2 text-red-400">· 오류 {errorCount}</span>}
                 </p>
                 <p className="text-xs text-[var(--color-text-muted)]">제출 후 관리자 심사를 거쳐 매물로 게시됩니다</p>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              {errorCount > 0 && (
+                <button
+                  onClick={retryFailed}
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/15 text-amber-400 font-semibold text-xs transition-colors"
+                  title="오류 슬롯을 초기화"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  오류 {errorCount}건 재시도
+                </button>
+              )}
             <button
               onClick={submitAll}
               disabled={submitting || readyCount === 0}
@@ -385,6 +437,7 @@ export default function OcrRegisterPage() {
                 </>
               )}
             </button>
+            </div>
           </div>
         </div>
 
