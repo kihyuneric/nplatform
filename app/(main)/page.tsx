@@ -12,6 +12,9 @@ import {
   Play, ChevronUp,
 } from "lucide-react";
 import { TrustBelt } from "./_landing/trust-belt";
+import { AIRecommendations } from "./_landing/ai-recommendations";
+import { ExchangePreview } from "./_landing/exchange-preview";
+import { DealRoomPreview } from "./_landing/dealroom-preview";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    DESIGN TOKENS
@@ -459,12 +462,12 @@ export default function LandingPage() {
                 className="font-black leading-[1.08] tracking-tighter mb-5"
                 style={{ fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', color: 'rgba(255,255,255,0.95)' }}
               >
-                지금 체결 중인<br />
+                오늘 움직이는<br />
                 <span style={{
                   background: `linear-gradient(135deg, ${C.em} 0%, ${C.emL} 40%, #6EE7B7 100%)`,
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}>NPL 거래소</span><br />
-                · 딜룸 · 계약
+                }}>NPL 딜 플로우</span><br />
+                매물 · 딜룸 · 전자계약
               </motion.h1>
 
               {/* Sub */}
@@ -553,6 +556,15 @@ export default function LandingPage() {
           </motion.div>
         </Reveal>
       </section>
+
+      {/* ══ 거래소 매물 예시 (쇼케이스) ═══════════════════════════════════ */}
+      <ExchangePreview />
+
+      {/* ══ 딜룸 예시 (쇼케이스) ══════════════════════════════════════════ */}
+      <DealRoomPreview />
+
+      {/* ══ AI 추천 (Phase 2-F · 개인화) ═══════════════════════════════════ */}
+      <AIRecommendations />
 
       {/* ══ TRUST BELT (brand tokens 기반) ════════════════════════════════ */}
       <TrustBelt />
@@ -914,11 +926,11 @@ export default function LandingPage() {
               className="font-black tracking-tighter mb-5"
               style={{ fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', color: 'rgba(255,255,255,0.95)' }}
             >
-              지금 체결 중인{" "}
+              오늘 움직이는{" "}
               <span style={{
                 background: `linear-gradient(135deg, ${C.em}, ${C.emL}, #6EE7B7)`,
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              }}>NPL 거래소</span>
+              }}>NPL 딜 플로우</span>
             </motion.h2>
 
             <motion.p variants={up} custom={2} className="text-base mb-8"
