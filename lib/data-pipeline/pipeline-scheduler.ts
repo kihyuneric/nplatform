@@ -23,6 +23,7 @@ import {
 } from './court-auction-fetcher'
 
 import { computeNationalNBI, compareRegionalNBI } from '@/lib/indices/nbi-calculator'
+import { getLawdCode } from './lawd-codes'
 import { createClient } from '@supabase/supabase-js'
 
 // ─── Supabase 서비스 롤 클라이언트 (서버 사이드 전용) ─────────
@@ -380,7 +381,7 @@ function mapTransactionToRow(t: RealTransaction): Record<string, unknown> {
     region: t.region,
     district: t.district,
     dong: t.dong,
-    lawd_code: guessLawdCode(t.region, t.district),
+    lawd_code: getLawdCode(t.region, t.district),
     property_type: t.type === '단독/다가구' ? '아파트' : t.type, // 최근접 매핑
     deal_year: year || new Date().getFullYear(),
     deal_month: month || new Date().getMonth() + 1,
@@ -428,18 +429,6 @@ function mapAuctionStatus(status: string): string {
   if (status === '유찰') return '유찰'
   if (status === '취하') return '취하'
   return 'unknown'
-}
-
-/** 지역명 → 법정동코드 5자리 간략 매핑 */
-function guessLawdCode(region: string, district: string): string {
-  const regionMap: Record<string, string> = {
-    '서울': '11', '부산': '26', '대구': '27', '인천': '28',
-    '광주': '29', '대전': '30', '울산': '31', '세종': '36',
-    '경기': '41', '강원': '42', '충북': '43', '충남': '44',
-    '전북': '45', '전남': '46', '경북': '47', '경남': '48', '제주': '50',
-  }
-  const prefix = regionMap[region] ?? '00'
-  return `${prefix}000`   // 단순 prefix — 실제로는 구/군 코드 추가 필요
 }
 
 function getMonthStart(monthsAgo: number): string {
