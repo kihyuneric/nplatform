@@ -92,9 +92,9 @@ export default function ProfitabilityResultPage() {
               <Zap className="w-4 h-4 shrink-0" />
               <strong>데모 체험 모드</strong> — 서울 강남구 아파트 NPL 샘플 데이터입니다. 실제 매물이 아닙니다.
             </p>
-            <a href="/analysis/profitability" className="text-xs font-bold text-amber-700 dark:text-amber-300 hover:underline shrink-0">
+            <Link href="/analysis/profitability" className="text-xs font-bold text-amber-700 dark:text-amber-300 hover:underline shrink-0">
               실제 분석 시작 →
-            </a>
+            </Link>
           </div>
         </div>
       )}

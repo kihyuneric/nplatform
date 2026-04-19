@@ -258,7 +258,7 @@ export default function SellWizardPage() {
           </p>
 
           <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <a
+            <Link
               href="/exchange/ocr-register"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
@@ -268,8 +268,8 @@ export default function SellWizardPage() {
               }}
             >
               <Sparkles size={12} /> OCR로 1~5건 빠르게 등록 →
-            </a>
-            <a
+            </Link>
+            <Link
               href="/exchange/bulk-upload"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
@@ -279,7 +279,7 @@ export default function SellWizardPage() {
               }}
             >
               CSV 대량 등록 (최대 500건) →
-            </a>
+            </Link>
           </div>
 
           <div style={{ marginTop: 28, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>

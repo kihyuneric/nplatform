@@ -711,7 +711,7 @@ function TrainingRunsHistory() {
         </div>
       ) : runs.length === 0 ? (
         <div className="py-10 text-center text-sm text-[var(--color-text-muted)]">
-          아직 재학습 이력이 없습니다. "재학습" 버튼을 눌러 시작하세요.
+          아직 재학습 이력이 없습니다. &ldquo;재학습&rdquo; 버튼을 눌러 시작하세요.
         </div>
       ) : (
         <div className={DS.table.wrapper}>

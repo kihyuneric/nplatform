@@ -489,10 +489,10 @@ export default function ContractWorkflowPage() {
                     className={`${DS.button.secondary} text-[0.8125rem]`}>
                     <FilePlus className="h-4 w-4" /> 계약서 생성으로 이동
                   </button>
-                  <a href="/exchange/ocr-register"
+                  <Link href="/exchange/ocr-register"
                     className={`${DS.button.secondary} text-[0.8125rem]`}>
                     <ScanLine className="h-4 w-4" /> 이 OCR 결과로 매물 등록 →
-                  </a>
+                  </Link>
                 </div>
               </div>
             )}
