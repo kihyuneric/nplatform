@@ -71,6 +71,9 @@ export function DealRoomPreview() {
           <p className="mt-3 text-sm md:text-base" style={{ color: "rgba(255,255,255,0.5)" }}>
             NDA → 권리증 공유 → LOI → 전자계약까지. 하나의 보안 채널에서 모두 완결합니다.
           </p>
+          <p className="mt-2 text-[10px] lg:hidden" style={{ color: "rgba(255,255,255,0.35)" }}>
+            ← 옆으로 넘겨 채팅·문서 보기 →
+          </p>
         </div>
 
         <motion.div
@@ -108,9 +111,13 @@ export function DealRoomPreview() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+          {/* 모바일: 채팅↔문서 가로 스와이프 · lg+: 3-col grid */}
+          <div
+            className="flex lg:grid overflow-x-auto lg:overflow-visible snap-x snap-mandatory lg:snap-none divide-x lg:divide-y-0 lg:grid-cols-3 lg:divide-x [&::-webkit-scrollbar]:hidden"
+            style={{ borderColor: "rgba(255,255,255,0.06)", scrollbarWidth: "none" }}
+          >
 
-            <div className="lg:col-span-2 flex flex-col">
+            <div className="snap-start shrink-0 basis-[92%] lg:basis-auto lg:shrink lg:col-span-2 flex flex-col">
               <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                 <MessageSquare size={13} style={{ color: "rgba(255,255,255,0.5)" }} />
                 <span className="text-[11px] font-bold tracking-wider" style={{ color: "rgba(255,255,255,0.55)" }}>
@@ -176,7 +183,7 @@ export function DealRoomPreview() {
               </div>
             </div>
 
-            <div className="flex flex-col">
+            <div className="snap-start shrink-0 basis-[92%] lg:basis-auto lg:shrink flex flex-col">
               <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                 <FileText size={13} style={{ color: "rgba(255,255,255,0.5)" }} />
                 <span className="text-[11px] font-bold tracking-wider" style={{ color: "rgba(255,255,255,0.55)" }}>

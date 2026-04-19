@@ -139,9 +139,16 @@ export function ExchangePreview() {
           <p className="mt-3 text-sm md:text-base" style={{ color: "rgba(255,255,255,0.5)" }}>
             채권잔액 · 매각희망가 · 감정가 · 할인율 · 자료 완성도 — 투자 판단에 필요한 모든 지표를 한 화면에.
           </p>
+          <p className="mt-2 text-[10px] md:hidden" style={{ color: "rgba(255,255,255,0.35)" }}>
+            ← 옆으로 넘겨 다른 매물 보기 →
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* 모바일: 가로 스와이프 carousel · md+: 4-col grid */}
+        <div
+          className="-mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-0 flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none gap-4 md:grid-cols-2 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden"
+          style={{ scrollbarWidth: "none" }}
+        >
           {SAMPLES.map((s, idx) => {
             const g = GRADE_STYLE[s.grade]
             return (
@@ -151,6 +158,7 @@ export function ExchangePreview() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ delay: idx * 0.06, duration: 0.4 }}
+                className="snap-start shrink-0 basis-[85%] sm:basis-[60%] md:basis-auto md:shrink"
               >
                 <Link
                   href="/exchange"
