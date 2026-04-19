@@ -462,12 +462,12 @@ export default function LandingPage() {
                 className="font-black leading-[1.08] tracking-tighter mb-5"
                 style={{ fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', color: 'rgba(255,255,255,0.95)' }}
               >
-                오늘 움직이는<br />
+                NPL 딜이 모이는 곳,<br />
+                거래가 시작되는 곳<br />
                 <span style={{
                   background: `linear-gradient(135deg, ${C.em} 0%, ${C.emL} 40%, #6EE7B7 100%)`,
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}>NPL 딜 플로우</span><br />
-                매물 · 딜룸 · 전자계약
+                }}>‘엔플랫폼’</span>
               </motion.h1>
 
               {/* Sub */}
