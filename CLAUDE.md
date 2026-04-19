@@ -56,31 +56,47 @@ NPLatform — AI 기반 NPL(부실채권) 투자 분석 및 거래 플랫폼
 
 ---
 
-## 개선 로드맵
+## 개발 Phase 지침 (SSoT)
 
-### Phase 1 (2026 Q2 — 지금)
-- [x] pgvector + RAG 법률 검색 (#1 완료)
-- [ ] AI 응답 스트리밍 SSE (#2)
-- [ ] 결제 통합 테스트 Suite (#3)
+> **모든 개발은 `docs/NPLatform_Development_Phases_Plan.md` v2 를 단일 지침으로 따릅니다.**
+> 테마: **Deal Flow 극대화 — 공급→발견→분석→협상→체결→정산 병목 제거**
+> 지시 방식: `Phase 1 진행해줘` · `Phase 1-B 해줘` · `Phase 2-A, 2-B 병렬`
+> legacy 문자 코드(A~EE) 비활성 — 번호 Phase 만 사용
 
-### Phase 2 (2026 Q2 후반)
-- [ ] LightGBM 가격 예측 Python FastAPI (#4)
-- [ ] 실시간 입찰 WebSocket (#5)
-- [ ] Jest 테스트 커버리지 80% 목표
+### Phase 1 (Q2 2026 · 지금) — Deal Flow 가시성 & P0 UX 정합성
+- [ ] 1-A 메인 페이지 거래 중심 재구성 (거래소/딜룸 강조 · 디자인 톤 유지)
+- [ ] 1-B 거래소 > 매수 수요 카드/리스트 거래소 수준 DS 적용
+- [ ] 1-C 커뮤니티 > NPL 뉴스 3-tier 네비 구조 복원
+- [x] 1-D AI Copilot SSE 스트리밍 UI (content 키 / tool_start / error)
+- [ ] 1-E 결제 통합 테스트 Suite (토스/PortOne/Inicis)
+- [ ] 1-F Deal Flow Funnel 대시보드 (Admin)
+- [ ] 1-G 글로벌 네비게이션 3-tier 전수 점검
+- [ ] 1-H P0 버그 rolling fix
 
-### Phase 3 (2026 Q3)
-- [ ] 유니콘 심플화: 238 → 55페이지 (플랜 파일 참조)
-- [ ] 실제 금융 데이터 연동 (한국자산관리공사 API)
-- [ ] 모바일 앱 TWA/PWA 배포
+### Phase 2 (Q2-Q3) — 공급·발견 병목 제거
+- OCR 95% · KAMCO/MOLIT API · 법원경매 크롤러 · 탐색 UX · AI 추천 · Bulk Upload
 
-### Phase 4 (2026 Q3 후반)
-- [ ] 파이썬 ML 파이프라인 (LightGBM + FAISS)
-- [ ] 멀티테넌시 + B2B API
+### Phase 3 (Q3) — 분석·협상 효율화
+- 리포트 SSE · Copilot tool use · 시뮬 v2 · RAG 5,000건 · NDA 자동 · VDR
 
-### Phase 5 (2026 Q4)
-- [ ] 글로벌 확장 (영어/일어 지원)
-- [ ] 규제 인증 (금융위원회 핀테크 혁신)
-- [ ] 목표 점수: 75/100
+### Phase 4 (Q3-Q4) — 체결·정산 완결성
+- 전자계약 v2 · KB에스크로 · PNR 과금 · 세금계산서 · Pool Sale · 분쟁 해결
+
+### Phase 5 (Q4-Q1'27) — 데이터·ML 가속화
+- LightGBM · WebSocket 입찰 · Vitest 80% · Playwright · Sentry · Fraud Detection
+
+### Phase 6 (Q1-Q2'27) — B2B · 글로벌 확장
+- Enterprise API · Data Subscription · 모바일 앱 · i18n · SOC2 · 멀티테넌시
+
+### 3-tier 네비게이션 규약 ⭐
+모든 `(main)` 라우트 준수:
+```
+TopBar: 거래소 | 딜룸 | 분석 | 커뮤니티 | 마이  (고정)
+SubNav: 섹션 탭/사이드 (섹션별)
+Breadcrumb: 섹션 > 하위 > 현재
+Content
+```
+위반 = P0 버그 (Phase 1-G 처리)
 
 ---
 
