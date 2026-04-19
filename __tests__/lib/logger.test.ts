@@ -63,10 +63,15 @@ describe('loggerFor + createLogger', () => {
     const log = loggerFor(req)
     log.info('hit')
 
-    // loggerFor → createLogger uses logWithContext (fire-and-forget)
-    await new Promise((r) => setTimeout(r, 10))
-
-    const writes = stdoutSpy.mock.calls.map((c: unknown[]) => c[0] as string).join('')
+    // loggerFor → createLogger uses logWithContext (fire-and-forget).
+    // Poll up to 200ms so this holds under heavy parallel CI load.
+    const deadline = Date.now() + 200
+    let writes = ''
+    while (Date.now() < deadline) {
+      writes = stdoutSpy.mock.calls.map((c: unknown[]) => c[0] as string).join('')
+      if (writes.includes('"reqId":"req-abc-123"')) break
+      await new Promise((r) => setTimeout(r, 5))
+    }
     expect(writes).toContain('"reqId":"req-abc-123"')
     expect(writes).toContain('"msg":"hit"')
   })
@@ -75,8 +80,8 @@ describe('loggerFor + createLogger', () => {
     const log = createLogger({ service: 'auth', version: 'v1' })
     log.warn('retrying', { attempt: 2 })
 
-    // logWithContext is fire-and-forget; flush microtasks
-    await new Promise((r) => setTimeout(r, 10))
+    // logWithContext is fire-and-forget; poll briefly for determinism under load
+    await new Promise((r) => setTimeout(r, 50))
 
     const writes = stdoutSpy.mock.calls.map((c: unknown[]) => c[0] as string).join('')
     expect(writes).toContain('"service":"auth"')
