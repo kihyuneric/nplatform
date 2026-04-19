@@ -13,6 +13,8 @@
  * 환경변수: MOLIT_API_KEY (공공데이터포털 인증키)
  */
 
+import { fetchWithRetry, ExternalApiError } from '@/lib/utils/fetch-with-retry'
+
 export interface RealTransaction {
   id: string
   type: '아파트' | '오피스텔' | '상가' | '토지' | '단독/다가구'
@@ -83,12 +85,19 @@ async function fetchFromMolit(
   url.searchParams.set('numOfRows', String(options.numOfRows ?? 100))
   url.searchParams.set('pageNo', '1')
 
-  const res = await fetch(url.toString(), {
+  const res = await fetchWithRetry(url.toString(), {
     headers: { Accept: 'application/json' },
-    next: { revalidate: 86400 }, // 1일 캐시
+    next: { revalidate: 86400 },
+    retries: 2,
+    backoffMs: 500,
+    timeoutMs: 15_000,
+    rateLimit: { tokensPerSec: 3, capacity: 10 },
+  }).catch((err) => {
+    if (err instanceof ExternalApiError) {
+      throw new Error(`MOLIT API error: ${err.status ?? 'unknown'} (${err.url})`)
+    }
+    throw err
   })
-
-  if (!res.ok) throw new Error(`MOLIT API error: ${res.status}`)
 
   const json = await res.json()
   const items = json?.response?.body?.items?.item ?? []

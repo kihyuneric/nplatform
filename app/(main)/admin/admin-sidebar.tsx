@@ -7,6 +7,7 @@ import {
   LayoutDashboard, Users, Building2, FileText, Settings, BarChart3,
   CreditCard, GraduationCap, Megaphone, Server, Cable,
   ChevronLeft, Menu, BrainCircuit, ShieldCheck, Eye, Landmark, FileSignature, Tag, Activity, Sliders,
+  Workflow,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -31,6 +32,7 @@ const ADMIN_MENU = [
   { href: "/admin/security",   label: "보안",        icon: Cable },
   { href: "/admin/ml",         label: "AI·ML",       icon: BrainCircuit },
   { href: "/admin/health",          label: "헬스 체크",    icon: Activity },
+  { href: "/admin/pipeline",       label: "데이터 파이프라인", icon: Workflow },
   { href: "/admin/runtime-config", label: "런타임 설정",  icon: Sliders },
 ]
 

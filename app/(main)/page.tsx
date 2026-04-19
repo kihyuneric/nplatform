@@ -11,6 +11,7 @@ import {
   Layers, RefreshCw, ArrowUpRight, Cpu, Globe, MapPin,
   Play, ChevronUp,
 } from "lucide-react";
+import { TrustBelt } from "./_landing/trust-belt";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    DESIGN TOKENS
@@ -551,6 +552,9 @@ export default function LandingPage() {
           </motion.div>
         </Reveal>
       </section>
+
+      {/* ══ TRUST BELT (brand tokens 기반) ════════════════════════════════ */}
+      <TrustBelt />
 
       {/* ══ WHY NPLATFORM ══════════════════════════════════════════════════ */}
       <section style={{ backgroundColor: C.light1, padding: '6rem 0' }}>

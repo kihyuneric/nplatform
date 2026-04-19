@@ -13,6 +13,8 @@
  *   ONBID_API_KEY          (온비드 공공API)
  */
 
+import { fetchWithRetry } from '@/lib/utils/fetch-with-retry'
+
 export interface CourtAuctionCase {
   id: string
   case_number: string            // 사건번호 (예: 2025타경12345)
@@ -62,11 +64,14 @@ async function fetchOnbid(params: {
   url.searchParams.set('pageNo', '1')
 
   try {
-    const res = await fetch(url.toString(), {
+    const res = await fetchWithRetry(url.toString(), {
       headers: { Accept: 'application/json' },
       next: { revalidate: 3600 },
+      retries: 2,
+      backoffMs: 500,
+      timeoutMs: 15_000,
+      rateLimit: { tokensPerSec: 2, capacity: 8 },
     })
-    if (!res.ok) throw new Error(`Onbid API ${res.status}`)
     const json = await res.json()
     const items = json?.response?.body?.items?.item ?? []
     const arr = Array.isArray(items) ? items : [items]

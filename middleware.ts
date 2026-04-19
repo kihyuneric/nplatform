@@ -200,6 +200,14 @@ export async function middleware(request: NextRequest) {
   // ── 6. Security Headers ───────────────────────────
   const headers = response.headers
 
+  // Per-request trace ID — propagated to handlers + logger + Sentry
+  const existingId = request.headers.get('x-request-id')
+  const requestId = existingId && /^[a-zA-Z0-9_-]{6,64}$/.test(existingId)
+    ? existingId
+    : crypto.randomUUID()
+  headers.set('x-request-id', requestId)
+  response.headers.set('x-request-id', requestId)
+
   // Generate a per-request nonce for CSP script-src (removes 'unsafe-inline' for scripts)
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
   headers.set('x-nonce', nonce)
