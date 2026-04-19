@@ -164,6 +164,7 @@ export async function POST(req: NextRequest) {
     documents: IngestDocument[]
     chunk_size?: number
     chunk_overlap?: number
+    replace_existing?: boolean  // 재시드 시 동일 doc_id 기존 행 삭제 (멱등성 보장)
   }
 
   try {
@@ -172,7 +173,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '잘못된 요청 형식' }, { status: 400 })
   }
 
-  const { documents, chunk_size = 500, chunk_overlap = 100 } = body
+  const { documents, chunk_size = 500, chunk_overlap = 100, replace_existing = false } = body
 
   if (!Array.isArray(documents) || documents.length === 0) {
     return NextResponse.json({ error: 'documents 배열이 필요합니다.' }, { status: 400 })
@@ -192,7 +193,14 @@ export async function POST(req: NextRequest) {
     try {
       // 1. 청크 분할
       const chunks = chunkText(doc.content, chunk_size, chunk_overlap)
-      const docId = `${doc.source}-${doc.title.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`
+      // 안정적인 docId: source + slug(title). Date.now() 제거로 멱등성 확보.
+      const slug = doc.title.replace(/\s+/g, '-').replace(/[()]/g, '').toLowerCase()
+      const docId = `${doc.source}-${slug}`
+
+      // 재시드 옵션: 기존 동일 doc_id 행 삭제 후 재삽입
+      if (replace_existing) {
+        await supabase.from('legal_embeddings').delete().eq('doc_id', docId)
+      }
 
       const chunkRecords: ChunkRecord[] = chunks.map((chunk, idx) => ({
         title: doc.title,

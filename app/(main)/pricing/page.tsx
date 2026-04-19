@@ -49,87 +49,144 @@ const FEE_TABLE = [
   },
 ]
 
-// ── 멤버십 플랜 ────────────────────────────────────────
-const MEMBERSHIP_PLANS = [
+// ── 역할 기반 요금제 ───────────────────────────────────
+// 무료(기본) / 매각사 · 일반 투자그룹 · 전문 투자그룹
+// 각 그룹은 대상·수수료·기능·온보딩 혜택이 다릅니다.
+type PlanId = 'free' | 'seller' | 'general' | 'pro'
+
+interface SellerSubtype {
+  key: string; label: string; sample: string
+}
+
+interface MembershipPlan {
+  id: PlanId
+  name: string
+  nameEn: string
+  icon: typeof Users
+  price: number
+  priceLabel: string
+  cadence: string
+  audience: string
+  audienceSubtitle: string
+  subtypes?: SellerSubtype[]
+  feeSummary: string
+  popular: boolean
+  color: string
+  features: Array<{ text: string; ok: boolean }>
+  ctaHref: string
+  ctaLabel: string
+}
+
+const MEMBERSHIP_PLANS: MembershipPlan[] = [
   {
     id: 'free',
-    name: '기본',
+    name: '무료 체험',
     nameEn: 'Free',
     icon: Users,
     price: 0,
     priceLabel: '무료',
-    desc: '거래 수수료만으로 이용 가능한 기본 플랜',
+    cadence: '가입 후 바로 이용',
+    audience: '모든 방문자',
+    audienceSubtitle: '거래소 탐색 · 요금/가격 이해를 위한 공개 플랜',
+    feeSummary: '거래 발생 시 표준 수수료 · 할인 없음',
     popular: false,
     color: 'var(--color-text-muted)',
     features: [
-      { text: '매물 조회 50건/월', ok: true },
-      { text: 'AI 분석 5회/월', ok: true },
-      { text: '경매 분석 기본', ok: true },
-      { text: '딜룸 1개', ok: true },
-      { text: '우선협상권', ok: false },
-      { text: '법률 RAG 검색', ok: false },
+      { text: '매물 탐색·시세 조회 (L0 공개 수준)', ok: true },
+      { text: 'AI 분석 체험 5회/월', ok: true },
+      { text: '딜룸 1개 (개인 기록용)', ok: true },
+      { text: '입찰·매수 제안 제출', ok: false },
+      { text: '우선협상권(PNR) 이용', ok: false },
       { text: '수수료 할인', ok: false },
     ],
+    ctaHref: '/exchange',
+    ctaLabel: '거래소 둘러보기',
   },
   {
-    id: 'l1',
-    name: 'L1',
-    nameEn: 'Level 1',
-    icon: Zap,
-    price: 300000,
-    priceLabel: '₩300,000',
-    desc: '활발한 NPL 투자자를 위한 프리미엄 액세스',
+    id: 'seller',
+    name: '매각사',
+    nameEn: 'Seller',
+    icon: Building2,
+    price: 0,
+    priceLabel: '첫 6개월 무료',
+    cadence: '온보딩 이후 월 ₩0 (수수료 기반)',
+    audience: '매물을 올리는 기관',
+    audienceSubtitle: 'NPL · 부동산 포트폴리오를 플랫폼으로 유통하는 공급자',
+    subtypes: [
+      { key: 'bank', label: '금융기관', sample: '은행 · 저축은행 · 캐피탈 · 보험사' },
+      { key: 'loan', label: '대부업체', sample: '등록대부업자 · NPL 매매업자' },
+      { key: 'am', label: '자산운용사', sample: 'AMC · 사모펀드 · REITs' },
+      { key: 'corp', label: '일반 법인', sample: '건설사 · 시행사 · 일반 기업' },
+    ],
+    feeSummary: 'NPL 매도 ≤0.9% · 부동산 매도 ≤0.9% (6개월 무료)',
     popular: false,
     color: 'var(--color-brand-mid)',
     features: [
-      { text: '무제한 매물 조회', ok: true },
-      { text: 'AI 분석 50회/월', ok: true },
-      { text: '경매 분석 고급 + 시뮬레이터', ok: true },
-      { text: '딜룸 10개', ok: true },
-      { text: '우선협상권 이용', ok: true },
-      { text: '법률 RAG 검색', ok: true },
-      { text: '수수료 0.05%p 할인', ok: true },
+      { text: '매물 대량 등록 + OCR 자동 파싱', ok: true },
+      { text: '딜룸 무제한 · 서명·에스크로 완결', ok: true },
+      { text: '매각가 시세 가이던스 + AI 리포트', ok: true },
+      { text: '정산·세금계산서 자동 발행', ok: true },
+      { text: '기관 인증 배지 부여 (매각사 전용)', ok: true },
+      { text: '전담 어카운트 매니저 + SLA 99.9%', ok: true },
     ],
+    ctaHref: '/contact',
+    ctaLabel: '매각사 온보딩 문의',
   },
   {
-    id: 'l2',
-    name: 'L2',
-    nameEn: 'Level 2',
-    icon: Star,
-    price: 1000000,
-    priceLabel: '₩1,000,000',
-    desc: '법인·전문 기관 투자자를 위한 최상위 플랜',
+    id: 'general',
+    name: '일반 투자그룹',
+    nameEn: 'General Investor',
+    icon: Zap,
+    price: 300000,
+    priceLabel: '₩300,000',
+    cadence: '/월 (VAT 별도)',
+    audience: '활발한 개인/기업 투자자',
+    audienceSubtitle: '월 1~5건 NPL 매수 또는 부동산 매입을 실행하는 투자그룹',
+    subtypes: [
+      { key: 'corp', label: '기업 회원', sample: '법인 · 투자조합 · 가족법인' },
+      { key: 'indiv', label: '개인 회원', sample: '전문 투자자 기준 미달 활성 투자자' },
+    ],
+    feeSummary: 'NPL 매수 1.5% · 부동산 매수 0.9% (-0.05%p 할인)',
     popular: true,
     color: 'var(--color-positive)',
     features: [
-      { text: '무제한 AI 분석', ok: true },
-      { text: 'NBI 가격지수 전체 열람', ok: true },
-      { text: '대량 매물 일괄 등록', ok: true },
-      { text: '딜룸 무제한', ok: true },
-      { text: '우선협상권 이용', ok: true },
-      { text: '법률 RAG 검색 + 판례 DB', ok: true },
-      { text: '수수료 0.1%p 할인', ok: true },
+      { text: '무제한 매물·시세·AI 분석', ok: true },
+      { text: '경매 분석기 고급 + 시뮬레이터', ok: true },
+      { text: '딜룸 10개 + 전자계약/NDA 관리', ok: true },
+      { text: '우선협상권(PNR) 0.3% 이용', ok: true },
+      { text: '법률 RAG 검색·판례 기본', ok: true },
+      { text: '수수료 0.05%p 할인', ok: true },
     ],
+    ctaHref: '/my/billing',
+    ctaLabel: '일반 투자그룹 시작',
   },
   {
-    id: 'verify',
-    name: '검증',
-    nameEn: 'Verification',
-    icon: Shield,
-    price: 500000,
-    priceLabel: '₩500,000',
-    desc: '기관 투자자 신뢰 배지 + 우선 매칭 자격',
-    popular: false,
-    color: 'var(--color-warning)',
-    features: [
-      { text: '기관 인증 배지 부여', ok: true },
-      { text: 'AI 매칭 우선순위 상위', ok: true },
-      { text: '실명 검증 계정', ok: true },
-      { text: '연간 컴플라이언스 리포트', ok: true },
-      { text: '법인 계정 5개', ok: true },
-      { text: 'SLA 99.9% 보장', ok: true },
-      { text: '전담 어카운트 매니저', ok: true },
+    id: 'pro',
+    name: '전문 투자그룹',
+    nameEn: 'Pro Investor',
+    icon: Star,
+    price: 1000000,
+    priceLabel: '₩1,000,000',
+    cadence: '/월 (VAT 별도)',
+    audience: '대량 매입·풀세일·인수 전문',
+    audienceSubtitle: '월 6건 이상 또는 풀(Pool) 단위 매입을 집행하는 전문그룹',
+    subtypes: [
+      { key: 'corp', label: '기업 회원', sample: '자산운용사 · 사모펀드 · 전문법인' },
+      { key: 'indiv', label: '개인 회원', sample: '자본시장법 상 전문 투자자' },
     ],
+    feeSummary: 'NPL 매수 1.5% · 부동산 매수 0.9% (-0.1%p 할인)',
+    popular: false,
+    color: 'var(--color-brand-mid)',
+    features: [
+      { text: '무제한 AI 분석 + 애널리스트 리포트', ok: true },
+      { text: 'NBI 가격지수 전체 + 풀세일 집계', ok: true },
+      { text: '딜룸 무제한 + 대량 매수 제안 엔진', ok: true },
+      { text: '우선협상권(PNR) + 독점협상 예약', ok: true },
+      { text: '법률 RAG + 판례 DB + 전문가 리뷰', ok: true },
+      { text: '수수료 0.1%p 할인 + 분기 볼륨 리베이트', ok: true },
+    ],
+    ctaHref: '/my/billing',
+    ctaLabel: '전문 투자그룹 시작',
   },
 ]
 
@@ -147,12 +204,16 @@ const FAQ_ITEMS = [
     a: '우선협상권(Priority Negotiation Right)은 매물에 대해 다른 투자자보다 먼저 독점적으로 협상할 수 있는 권리입니다. 경쟁 없이 원하는 조건으로 협상 테이블에 앉을 수 있습니다. NPL 매수자 수수료 1.5%에 0.3%를 추가해 이용 가능합니다.',
   },
   {
-    q: '멤버십과 거래 수수료는 별도인가요?',
-    a: '네, 완전히 별도입니다. 멤버십은 플랫폼 기능(AI 분석, 딜룸 수, 법률 검색 등)에 대한 이용료이고, 거래 수수료는 실제 거래 성사 시 발생하는 성공보수입니다. 기본 플랜(무료)으로도 거래 수수료만으로 플랫폼을 이용할 수 있습니다.',
+    q: '역할 요금제와 거래 수수료는 별도인가요?',
+    a: '네, 완전히 별도입니다. 역할 요금제(매각사/일반·전문 투자그룹)는 플랫폼 기능(AI 분석, 딜룸, 법률 검색 등)에 대한 이용료이고, 거래 수수료는 실제 거래 성사 시 발생하는 성공보수입니다. 무료 체험으로도 시세·공개 매물 탐색이 가능하며, 매수 제안·입찰은 일반/전문 투자그룹에서 제공됩니다.',
   },
   {
-    q: 'L1/L2 멤버십으로 수수료 할인이 되나요?',
-    a: 'L1은 0.05%p, L2는 0.1%p 수수료 할인이 적용됩니다. 대규모 거래일수록 멤버십 ROI가 높아집니다. 예: 10억 거래 시 L2 기준 수수료 100만원 절약.',
+    q: '일반 투자그룹과 전문 투자그룹의 차이는 무엇인가요?',
+    a: '일반 투자그룹은 월 1~5건의 매수를 진행하는 활성 투자자(기업/개인)이며 수수료 0.05%p 할인이 적용됩니다. 전문 투자그룹은 월 6건 이상 또는 풀(Pool) 단위 매입을 집행하는 전문법인/자본시장법 상 전문투자자로, 0.1%p 할인 + 분기 볼륨 리베이트 + 풀세일 엔진이 제공됩니다.',
+  },
+  {
+    q: '매각사는 어떤 회원이 가입할 수 있나요?',
+    a: '매각사는 매물을 올리는 공급자를 위한 요금제이며, 금융기관(은행·저축은행·캐피탈·보험), 대부업체(등록대부업자), 자산운용사(AMC·사모펀드·REITs), 일반 법인(건설사·시행사 등) 네 가지 유형으로 세분화됩니다. 모든 매각사는 첫 6개월간 수수료가 면제됩니다.',
   },
 ]
 
@@ -336,10 +397,12 @@ export default function PricingPage() {
           <FeeCalculator />
         </section>
 
-        {/* ── 멤버십 플랜 ── */}
+        {/* ── 역할별 요금제 ── */}
         <section className="mb-12">
-          <h2 className={`${DS.text.sectionTitle} mb-2`}>멤버십 플랜</h2>
-          <p className={`${DS.text.captionLight} mb-6`}>더 많은 기능과 수수료 할인을 원하신다면 멤버십을 선택하세요.</p>
+          <h2 className={`${DS.text.sectionTitle} mb-2`}>역할별 요금제</h2>
+          <p className={`${DS.text.captionLight} mb-6`}>
+            플랫폼 이용 목적에 맞는 역할을 선택하세요. 매각사는 첫 6개월 무료, 투자그룹은 활동량에 따라 일반/전문으로 구분됩니다.
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {MEMBERSHIP_PLANS.map((plan) => {
               const Icon = plan.icon
@@ -367,26 +430,50 @@ export default function PricingPage() {
                   <p className="text-[1.75rem] font-extrabold leading-none mb-0.5" style={{ color: plan.color }}>
                     {plan.priceLabel}
                   </p>
-                  {plan.price > 0 && <p className={`${DS.text.micro} mb-3`}>/월 (VAT 별도)</p>}
-                  {plan.price === 0 && <p className={`${DS.text.micro} mb-3`}> </p>}
-                  <p className={`${DS.text.captionLight} mb-4 flex-1`}>{plan.desc}</p>
+                  <p className={`${DS.text.micro} mb-3`}>{plan.cadence}</p>
+
+                  <div className="mb-3">
+                    <p className={`${DS.text.label} mb-0.5`}>{plan.audience}</p>
+                    <p className={`${DS.text.micro} leading-relaxed`}>{plan.audienceSubtitle}</p>
+                  </div>
+
+                  {plan.subtypes && plan.subtypes.length > 0 && (
+                    <div className="mb-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-sunken)] p-2.5">
+                      <p className={`${DS.text.micro} font-bold mb-1.5 text-[var(--color-text-primary)]`}>대상 회원 유형</p>
+                      <ul className="space-y-1">
+                        {plan.subtypes.map((st) => (
+                          <li key={st.key} className="flex items-start gap-2 text-[0.7rem]">
+                            <span className="inline-block w-1 h-1 rounded-full bg-[var(--color-brand-mid)] mt-1.5 shrink-0" />
+                            <span>
+                              <span className="font-semibold text-[var(--color-text-primary)]">{st.label}</span>
+                              <span className="text-[var(--color-text-muted)]"> · {st.sample}</span>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="mb-3 rounded-lg px-2.5 py-1.5 text-center text-[0.7rem] font-bold" style={{ background: `color-mix(in srgb, ${plan.color} 15%, transparent)`, color: plan.color }}>
+                    {plan.feeSummary}
+                  </div>
 
                   <ul className="space-y-2 mb-5">
                     {plan.features.map((f, i) => (
-                      <li key={i} className={`flex items-center gap-2 text-[0.8rem] ${f.ok ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] line-through'}`}>
+                      <li key={i} className={`flex items-start gap-2 text-[0.8rem] ${f.ok ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] line-through'}`}>
                         {f.ok
-                          ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[var(--color-positive)]" />
-                          : <X className="w-3.5 h-3.5 shrink-0 text-[var(--color-text-muted)]" />}
-                        {f.text}
+                          ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[var(--color-positive)] mt-0.5" />
+                          : <X className="w-3.5 h-3.5 shrink-0 text-[var(--color-text-muted)] mt-0.5" />}
+                        <span>{f.text}</span>
                       </li>
                     ))}
                   </ul>
 
                   <Link
-                    href={plan.id === 'free' ? '/exchange' : '/my/billing'}
-                    className={`${plan.popular ? DS.button.accent : DS.button.secondary} w-full justify-center text-center`}
+                    href={plan.ctaHref}
+                    className={`${plan.popular ? DS.button.accent : DS.button.secondary} w-full justify-center text-center mt-auto`}
                   >
-                    {plan.id === 'free' ? '거래 시작하기' : '멤버십 시작'}
+                    {plan.ctaLabel}
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
@@ -420,41 +507,43 @@ export default function PricingPage() {
 
         {/* ── 기능 비교표 ── */}
         <section className="mb-12">
-          <h2 className={`${DS.text.sectionTitle} mb-6`}>플랜 비교</h2>
+          <h2 className={`${DS.text.sectionTitle} mb-6`}>역할별 기능 비교</h2>
           <div className={DS.table.wrapper}>
             <table className="w-full text-[0.8125rem]">
               <thead className={DS.table.header}>
                 <tr>
                   <th className={DS.table.headerCell}>기능</th>
-                  <th className={`${DS.table.headerCell} text-center`}>기본</th>
-                  <th className={`${DS.table.headerCell} text-center`}>L1</th>
-                  <th className={`${DS.table.headerCell} text-center`}>L2</th>
-                  <th className={`${DS.table.headerCell} text-center`}>검증</th>
+                  <th className={`${DS.table.headerCell} text-center`}>무료</th>
+                  <th className={`${DS.table.headerCell} text-center`}>매각사</th>
+                  <th className={`${DS.table.headerCell} text-center`}>일반 투자그룹</th>
+                  <th className={`${DS.table.headerCell} text-center`}>전문 투자그룹</th>
                 </tr>
               </thead>
               <tbody>
                 {[
-                  { feature: '매물 조회', free: '50건/월', l1: '무제한', l2: '무제한', verify: '무제한' },
-                  { feature: 'AI 분석', free: '5회/월', l1: '50회/월', l2: '무제한', verify: '무제한' },
-                  { feature: '경매 분석기', free: '기본', l1: '고급', l2: '고급+', verify: '고급+' },
-                  { feature: '딜룸', free: '1개', l1: '10개', l2: '무제한', verify: '무제한' },
-                  { feature: '우선협상권', free: false, l1: true, l2: true, verify: true },
-                  { feature: '법률 RAG 검색', free: false, l1: true, l2: true, verify: true },
-                  { feature: '수수료 할인', free: '없음', l1: '0.05%p', l2: '0.1%p', verify: '0.1%p' },
-                  { feature: '기관 인증 배지', free: false, l1: false, l2: false, verify: true },
-                  { feature: 'SLA 보장', free: false, l1: false, l2: false, verify: '99.9%' },
+                  { feature: '매물 탐색', free: '공개 L0', seller: '본인 등록물 + 전체', general: '무제한', pro: '무제한' },
+                  { feature: '매물 등록', free: false, seller: '대량 + OCR', general: false, pro: false },
+                  { feature: '매수 제안·입찰', free: false, seller: false, general: true, pro: true },
+                  { feature: 'AI 분석', free: '5회/월', seller: '매물당 자동 발급', general: '무제한', pro: '무제한 + 애널리스트' },
+                  { feature: '경매 분석기', free: '기본', seller: '매각 관점', general: '고급 + 시뮬레이터', pro: '고급 + 풀세일' },
+                  { feature: '딜룸', free: '1개', seller: '무제한', general: '10개', pro: '무제한' },
+                  { feature: '우선협상권(PNR)', free: false, seller: '—', general: true, pro: true },
+                  { feature: '법률 RAG', free: false, seller: true, general: true, pro: '+ 판례 DB' },
+                  { feature: '수수료', free: '표준', seller: 'NPL/부동산 매도 ≤0.9%', general: 'NPL 매수 1.5% · -0.05%p', pro: 'NPL 매수 1.5% · -0.1%p' },
+                  { feature: '온보딩 혜택', free: '—', seller: '첫 6개월 무료', general: '—', pro: '분기 볼륨 리베이트' },
+                  { feature: '전담 매니저', free: false, seller: true, general: false, pro: true },
                 ].map((row, i) => (
                   <tr key={i} className={DS.table.row}>
                     <td className={`${DS.table.cell} font-medium`}>{row.feature}</td>
-                    {(['free', 'l1', 'l2', 'verify'] as const).map((col) => {
-                      const val = row[col]
+                    {(['free', 'seller', 'general', 'pro'] as const).map((col) => {
+                      const val = (row as Record<string, unknown>)[col]
                       return (
                         <td key={col} className={`${DS.table.cell} text-center`}>
                           {val === true
                             ? <CheckCircle2 className="w-4 h-4 text-[var(--color-positive)] mx-auto" />
                             : val === false
                             ? <X className="w-4 h-4 text-[var(--color-text-muted)] mx-auto" />
-                            : <span className={DS.text.caption}>{val}</span>}
+                            : <span className={DS.text.caption}>{String(val)}</span>}
                         </td>
                       )
                     })}

@@ -18,7 +18,8 @@ import {
   Eye, Building2, TrendingUp, Clock, ChevronRight,
   Lock, CheckCircle2, Sparkles, BarChart3, Target,
   AlertTriangle, ArrowRight, Handshake, FileSearch,
-  Activity, Bell, Loader2,
+  Activity, Bell, Loader2, Upload, Users2, Gift, Code,
+  GraduationCap, Banknote, Store, Crown,
 } from "lucide-react"
 import { TierBadge } from "@/components/tier/tier-badge"
 import type { AccessTier } from "@/lib/access-tier"
@@ -52,6 +53,8 @@ interface DashboardData {
     id: string
     name: string | null
     email: string | null
+    role?: string | null
+    role_subtype?: string | null
     current_tier: AccessTier
     identity_verified: boolean
     qualified_investor: boolean
@@ -137,52 +140,105 @@ function formatAmount(amount: number | null | undefined): string {
   return amount.toLocaleString('ko-KR')
 }
 
-const QUICK_LINKS = [
-  {
-    href: "/my/verify",
-    label: "본인인증",
-    desc: "L0 → L1 승격",
-    icon: UserCheck,
-    color: "#3B82F6",
-    tierRequired: "L1",
-  },
-  {
-    href: "/my/kyc",
-    label: "전문투자자 KYC",
-    desc: "L1 → L2 승격",
-    icon: Briefcase,
-    color: "#10B981",
-    tierRequired: "L2",
-  },
-  {
-    href: "/my/agreements",
-    label: "계약 관리",
-    desc: "NDA · LOI 이력",
-    icon: FileSignature,
-    color: "#A855F7",
-  },
-  {
-    href: "/my/privacy",
-    label: "개인정보 설정",
-    desc: "PII 열람 로그 · 파기 요청",
-    icon: ShieldCheck,
-    color: "#F59E0B",
-  },
-  {
-    href: "/my/seller",
-    label: "내 매물",
-    desc: "등록한 매물 관리",
-    icon: Building2,
-    color: "#14B8A6",
-  },
-  {
-    href: "/my/portfolio",
-    label: "투자 포트폴리오",
-    desc: "체결 · 실사 중 매물",
-    icon: TrendingUp,
-    color: "#F43F5E",
-  },
+type QuickLink = {
+  href: string
+  label: string
+  desc: string
+  icon: typeof UserCheck
+  color: string
+  tierRequired?: string
+}
+
+// 공통: 모든 역할에 표시
+const COMMON_LINKS: QuickLink[] = [
+  { href: "/my/verify",     label: "본인인증",        desc: "L0 → L1 승격",          icon: UserCheck,     color: "#3B82F6", tierRequired: "L1" },
+  { href: "/my/agreements", label: "계약 관리",       desc: "NDA · LOI 이력",         icon: FileSignature, color: "#A855F7" },
+  { href: "/my/privacy",    label: "개인정보 설정",   desc: "PII 열람 로그 · 파기",   icon: ShieldCheck,   color: "#F59E0B" },
+  { href: "/my/notifications", label: "알림 설정",    desc: "이메일 · 푸시 · 매칭",   icon: Bell,          color: "#64748B" },
 ]
+
+// 매각사 전용
+const SELLER_LINKS: QuickLink[] = [
+  { href: "/my/seller",            label: "내 매물",          desc: "등록한 매물 관리",        icon: Building2, color: "#14B8A6" },
+  { href: "/exchange/sell",        label: "매물 등록",        desc: "6단계 위저드",            icon: Store,     color: "#10B981" },
+  { href: "/exchange/bulk-upload", label: "대량 등록",        desc: "Excel/CSV 일괄 등록",     icon: Upload,    color: "#F59E0B" },
+  { href: "/my/billing",           label: "정산 · 수수료",    desc: "매각 수수료 내역",        icon: Banknote,  color: "#EC4899" },
+]
+
+// 일반 투자그룹 전용
+const INVESTOR_GENERAL_LINKS: QuickLink[] = [
+  { href: "/my/portfolio",       label: "투자 포트폴리오",  desc: "체결 · 실사 중 매물",     icon: TrendingUp, color: "#F43F5E" },
+  { href: "/my/kyc",             label: "전문투자자 KYC",   desc: "L1 → L2 승격",            icon: Briefcase,  color: "#10B981", tierRequired: "L2" },
+  { href: "/exchange/demands",   label: "매수 수요 등록",   desc: "AI 매물 매칭",            icon: Target,     color: "#8B5CF6" },
+  { href: "/my/billing",         label: "결제 · 구독",      desc: "요금제 · 수수료 내역",    icon: Banknote,   color: "#64748B" },
+]
+
+// 전문 투자그룹 전용
+const INVESTOR_PRO_LINKS: QuickLink[] = [
+  { href: "/my/portfolio",       label: "포트폴리오 분석",  desc: "IRR · 배당 실적",         icon: BarChart3,  color: "#F43F5E" },
+  { href: "/my/kyc",             label: "전문투자자 KYC",   desc: "L2/L3 권한 관리",         icon: Crown,      color: "#8B5CF6" },
+  { href: "/exchange/demands",   label: "매수 수요 · PNR",  desc: "우선협상권 요청",         icon: Target,     color: "#10B981" },
+  { href: "/my/developer",       label: "API 키 · 웹훅",    desc: "기관 시스템 연동",        icon: Code,       color: "#2E75B6" },
+]
+
+// 파트너 전용
+const PARTNER_LINKS: QuickLink[] = [
+  { href: "/my/partner",         label: "파트너 대시보드",  desc: "추천코드 · 실적 · 순위",  icon: Gift,       color: "#F59E0B" },
+  { href: "/my/partner/payouts", label: "정산 내역",        desc: "월별 리퍼럴 커미션",      icon: Banknote,   color: "#10B981" },
+  { href: "/my/developer",       label: "API 연동",         desc: "개발자 문서 · 키 관리",   icon: Code,       color: "#2E75B6" },
+]
+
+// 전문가 전용 (감정평가·법무·컨설팅)
+const PROFESSIONAL_LINKS: QuickLink[] = [
+  { href: "/my/professional",    label: "전문가 프로필",    desc: "분야 · 경력 · 노출 관리", icon: GraduationCap, color: "#A855F7" },
+  { href: "/my/organization",    label: "소속 기관",        desc: "기관 정보 · 인증",        icon: Building2,     color: "#2E75B6" },
+  { href: "/my/agreements",      label: "수주 · 계약",      desc: "의뢰받은 실사 건",        icon: Handshake,     color: "#10B981" },
+]
+
+/** 역할(+서브타입)에 따라 표시할 QUICK_LINKS 구성. */
+function getQuickLinks(role?: string | null, subtype?: string | null): QuickLink[] {
+  const r = (role ?? "").toUpperCase()
+  const s = (subtype ?? "").toUpperCase()
+  // 전문 투자그룹(PRO_CORP / PRO_INDIVIDUAL)
+  if (s === "PRO_CORP" || s === "PRO_INDIVIDUAL" || r === "INSTITUTION") {
+    return [...INVESTOR_PRO_LINKS, ...COMMON_LINKS]
+  }
+  // 매각사
+  if (r === "SELLER") {
+    return [...SELLER_LINKS, ...COMMON_LINKS]
+  }
+  // 파트너
+  if (r === "PARTNER") {
+    return [...PARTNER_LINKS, ...COMMON_LINKS]
+  }
+  // 전문가
+  if (r === "PROFESSIONAL") {
+    return [...PROFESSIONAL_LINKS, ...COMMON_LINKS]
+  }
+  // 기본: 일반 투자그룹 (BUYER, INVESTOR)
+  return [...INVESTOR_GENERAL_LINKS, ...COMMON_LINKS]
+}
+
+/** 역할별 배지 — 상단 인사말 옆에 표시 */
+const ROLE_BADGE: Record<string, { label: string; color: string }> = {
+  SELLER:       { label: "매각사",          color: "#F59E0B" },
+  BUYER:        { label: "일반 투자그룹",   color: "#2E75B6" },
+  INVESTOR:     { label: "일반 투자그룹",   color: "#2E75B6" },
+  INSTITUTION:  { label: "전문 투자그룹",   color: "#8B5CF6" },
+  PARTNER:      { label: "파트너",          color: "#10B981" },
+  PROFESSIONAL: { label: "전문가",          color: "#A855F7" },
+  ADMIN:        { label: "관리자",          color: "#EC4899" },
+  SUPER_ADMIN:  { label: "최고관리자",      color: "#EC4899" },
+}
+function roleBadge(role?: string | null, subtype?: string | null): { label: string; color: string } {
+  const s = (subtype ?? "").toUpperCase()
+  if (s === "PRO_CORP" || s === "PRO_INDIVIDUAL") return { label: "전문 투자그룹", color: "#8B5CF6" }
+  if (s === "GENERAL_CORP" || s === "GENERAL_INDIVIDUAL") return { label: "일반 투자그룹", color: "#2E75B6" }
+  if (s === "FINANCIAL_INSTITUTION") return { label: "매각사 · 금융기관", color: "#F59E0B" }
+  if (s === "LOAN_COMPANY") return { label: "매각사 · 대부업체", color: "#F59E0B" }
+  if (s === "ASSET_MANAGER") return { label: "매각사 · 자산운용사", color: "#F59E0B" }
+  return ROLE_BADGE[(role ?? "").toUpperCase()] ?? { label: "무료 체험", color: "#64748B" }
+}
 
 // ── 샘플 데이터 (실제 데이터 없을 때 표시) ──────────────────────────
 const SAMPLE_PROFILE = {
@@ -209,6 +265,18 @@ export default function MyDashboardPage() {
   const tierOrder: AccessTier[] = ["L0", "L1", "L2", "L3"]
   const currentIdx = tierOrder.indexOf(profile.current_tier)
   const progress = ((currentIdx + 1) / tierOrder.length) * 100
+
+  // ?role=SELLER&subtype=FINANCIAL_INSTITUTION 으로 프리뷰에서 역할 시연 가능
+  const [roleOverride, setRoleOverride] = useState<{ role: string | null; subtype: string | null }>({ role: null, subtype: null })
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search)
+    const r = sp.get('role'); const s = sp.get('subtype')
+    if (r || s) setRoleOverride({ role: r, subtype: s })
+  }, [])
+  const role = roleOverride.role ?? (profile as { role?: string | null }).role ?? null
+  const roleSubtype = roleOverride.subtype ?? (profile as { role_subtype?: string | null }).role_subtype ?? null
+  const QUICK_LINKS = getQuickLinks(role, roleSubtype)
+  const badge = roleBadge(role, roleSubtype)
 
   // Portfolio KPIs from real data
   const PORTFOLIO_KPI = [
@@ -282,8 +350,19 @@ export default function MyDashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div style={{ fontSize: 11, color: C.emL, fontWeight: 800, letterSpacing: "0.1em", marginBottom: 10 }}>
-              MY NPLATFORM
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+              <div style={{ fontSize: 11, color: C.emL, fontWeight: 800, letterSpacing: "0.1em" }}>
+                MY NPLATFORM
+              </div>
+              <span
+                style={{
+                  fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 999,
+                  backgroundColor: `${badge.color}1F`, color: badge.color,
+                  border: `1px solid ${badge.color}55`, letterSpacing: "0.03em",
+                }}
+              >
+                {badge.label}
+              </span>
             </div>
             <h1
               style={{

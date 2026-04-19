@@ -64,12 +64,15 @@ export async function GET() {
 
     const profile = profileResult.data
     const userTier = getUserTier(profile as UserRecord | null)
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    const roleSubtype = (authUser?.user_metadata as { role_subtype?: string | null } | null)?.role_subtype ?? null
 
     return NextResponse.json({
       profile: {
         ...profile,
         id: user.id,
         current_tier: userTier,
+        role_subtype: roleSubtype,
       },
       stats: {
         favoritesCount: favoritesResult.count ?? 0,

@@ -64,6 +64,44 @@ const formatDate = (iso: string) => {
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
 }
 
+/**
+ * API 에서 수요를 찾지 못했을 때 노출할 샘플 매수 수요.
+ * 신규 사용자 · 빈 DB · Mock 모드에서도 빈 화면 대신 대표 예시를 보여주기 위한 것.
+ */
+function buildSampleDemand(id: string): BuyerDemand {
+  const now = new Date()
+  const iso = now.toISOString()
+  return {
+    id: id || 'sample-demand',
+    buyer_name: '샘플 투자그룹',
+    buyer_tier: 'PREMIUM',
+    buyer_joined: '2025-12-01',
+    collateral_types: ['아파트', '오피스텔'],
+    regions: ['서울 강남구', '서울 서초구', '경기 성남시'],
+    min_amount: 300_000_000,
+    max_amount: 1_500_000_000,
+    target_discount_rate: 0.25,
+    recovery_period: '6~12개월',
+    investment_experience: '5년 이상 · 누적 40건',
+    urgency: 'MEDIUM',
+    description:
+      '수도권 주거담보 NPL을 중심으로 매수 검토 중입니다. LTV 65% 이하, 할인율 20% 이상 매물 우선 검토합니다. 제안 주시면 48시간 이내 회신드립니다.',
+    proposal_count: 3,
+    status: 'ACTIVE',
+    created_at: iso,
+    updated_at: iso,
+  }
+}
+
+function buildSampleAiRecs(): AIRecommendation[] {
+  return [
+    { id: 'sample-ai-1', title: '서울 강남 아파트 NPL', collateral_type: '아파트', region: '서울 강남구',
+      amount: 820_000_000, discount_rate: 0.28, match_score: 92 },
+    { id: 'sample-ai-2', title: '경기 성남 오피스텔 NPL', collateral_type: '오피스텔', region: '경기 성남시',
+      amount: 510_000_000, discount_rate: 0.22, match_score: 81 },
+  ]
+}
+
 export default function DemandDetailPage() {
   const params = useParams()
   const demandId = params?.id as string
@@ -89,8 +127,13 @@ export default function DemandDetailPage() {
           fetch(`/api/v1/exchange/demands/${demandId}`),
           fetch(`/api/v1/exchange/demands/${demandId}/propose`),
         ])
-        const demandJson = await demandRes.json()
-        const proposalJson = await proposalRes.json()
+        const demandJson = await demandRes.json().catch(() => ({ success: false }))
+        const proposalJson = await proposalRes.json().catch(() => ({ success: false, data: [] }))
+        if (!demandJson.success || !demandJson.data) {
+          // API 실패 / 빈 응답 → 샘플 수요 fallback (신규 배포 · Mock 모드 보호)
+          setDemand(buildSampleDemand(demandId))
+          setAiRecs(buildSampleAiRecs())
+        }
         if (demandJson.success) {
           const d = demandJson.data as BuyerDemand
           setDemand(d)
@@ -144,7 +187,11 @@ export default function DemandDetailPage() {
             }
           }
         } catch {}
-      } catch {}
+      } catch {
+        // 전역 실패 (네트워크 오류 등) — 여전히 샘플을 노출해 빈 화면을 피한다.
+        setDemand((prev) => prev ?? buildSampleDemand(demandId))
+        setAiRecs((prev) => (prev.length ? prev : buildSampleAiRecs()))
+      }
       finally { setLoading(false) }
     }
     fetchData()

@@ -17,7 +17,8 @@ import {
   ChevronLeft, ShieldCheck, Copy, CheckCircle2, AlertCircle,
   Building2, Lock, Clock,
 } from "lucide-react"
-import { calculateBuyerFee, calculateEscrowFee } from "@/lib/fee-calculator"
+import { calculateEscrowFee } from "@/lib/fee-calculator"
+import { calculateFee, BASE_RATES, PNR_RATE } from "@/lib/settlement/fee-engine"
 
 const C = {
   bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
@@ -34,12 +35,15 @@ export default function EscrowPage() {
   const params = useParams()
   const id = (params?.id as string) ?? "npl-2026-0412"
 
-  const buyerFee = calculateBuyerFee({
-    dealAmount: ASKING_PRICE,
-    addons: ["priority_negotiation"],
+  // v2 수수료 모델: NPL 매수자 1.5% + 우선협상권(PNR) 0.3% · 부동산 매수자 0.9%
+  const buyerFee = calculateFee({
+    dealType: "npl-buyer",
+    transactionAmount: ASKING_PRICE,
+    withPNR: true,
   })
   const escrowFee = calculateEscrowFee(ASKING_PRICE)
   const total = ASKING_PRICE + buyerFee.totalFee + escrowFee
+  const BUYER_RATE_LABEL = `NPL ${(BASE_RATES["npl-buyer"] * 100).toFixed(1)}% + PNR ${(PNR_RATE * 100).toFixed(1)}% · 부동산 ${(BASE_RATES["re-buyer"] * 100).toFixed(1)}%`
 
   // Mock virtual account
   const virtualAccount = {
@@ -283,7 +287,7 @@ export default function EscrowPage() {
                 결제 요약
               </div>
               <LineRow label="매각가" value={formatKRW(ASKING_PRICE)} />
-              <LineRow label="매수자 수수료 (0.5~0.9%)" value={formatKRW(buyerFee.totalFee)} />
+              <LineRow label={`매수자 수수료 (${BUYER_RATE_LABEL})`} value={formatKRW(buyerFee.totalFee)} />
               <LineRow label="에스크로 수수료 (0.3%)" value={formatKRW(escrowFee)} />
               <div
                 style={{

@@ -3,87 +3,217 @@
 import { useState } from "react"
 import Link from "next/link"
 import {
-  ArrowRight, BookOpen, Building2, Briefcase, Users, Clock, Play,
-  ChevronDown, Scale, Calculator, FileText, ShieldCheck, Banknote,
-  Gavel, TrendingUp, Sparkles, FileUp,
+  ArrowRight, BookOpen, Building2, Users, ChevronDown, Sparkles,
+  Store, MessageSquare, BarChart3, Users2, UserCircle, Clock, Play,
+  Gift, Banknote, Briefcase, TrendingUp, Shield, Crown,
 } from "lucide-react"
 import DS from "@/lib/design-system"
 
 /* ─────────────────────────────────────────────────────────────
-   Guide palette — 카테고리별 구분색 (중앙 관리)
+   Guide palette
    ───────────────────────────────────────────────────────────── */
 const GUIDE_PALETTE = {
-  beginner: "var(--color-positive)",   // #10B981 에메랄드
-  investor: "#8B5CF6",                 // 퍼플 (시스템 토큰 없음)
-  seller:   "#F59E0B",                 // 앰버 (시스템 토큰 없음)
-  partner:  "var(--color-brand-mid)",  // 블루
+  exchange:  "#10B981",                 // 에메랄드
+  dealroom:  "var(--color-brand-mid)",  // 블루
+  analysis:  "#8B5CF6",                 // 퍼플
+  community: "#F59E0B",                 // 앰버
+  my:        "#EC4899",                 // 핑크
+  free:      "#64748B",                 // 슬레이트
+  seller:    "#F59E0B",                 // 앰버
+  general:   "var(--color-brand-mid)",  // 블루
+  pro:       "#8B5CF6",                 // 퍼플
 } as const
 
 /* ─────────────────────────────────────────────────────────────
-   Content
+   Menu-based guides (5 top navs × sub-sections)
    ───────────────────────────────────────────────────────────── */
-const CATEGORIES = [
+const MENU_GUIDES = [
   {
-    icon: BookOpen,
-    title: "초보자",
-    tagline: "NPL이 뭐야? 5분 완성",
-    desc: "용어 · 구조 · 수익 메커니즘을 차근차근 익힙니다. 경매·공매와 NPL의 차이부터 배당까지.",
-    href: "/guide/getting-started",
-    color: GUIDE_PALETTE.beginner,
+    id: "exchange",
+    menu: "거래소",
+    tagline: "매물 탐색 · 등록 · 입찰",
+    desc: "NPL 매물을 찾고, 등록하고, 입찰하는 모든 과정. 카드/리스트 뷰 필터부터 자동 마스킹 파이프라인까지.",
+    href: "/guide/platform-tour",
+    color: GUIDE_PALETTE.exchange,
+    icon: Store,
+    items: [
+      { label: "매물 탐색 (카드·리스트 뷰)", href: "/guide/platform-tour" },
+      { label: "매물 등록 6단계 위저드", href: "/guide/listing-register" },
+      { label: "대량 등록 (Excel/CSV)", href: "/guide/listing-register" },
+      { label: "OCR 자동채움", href: "/guide/listing-register" },
+      { label: "매수 수요 등록 & AI 매칭", href: "/guide/investor" },
+    ],
   },
   {
-    icon: Briefcase,
-    title: "투자자",
-    tagline: "첫 NPL 투자 체크리스트 12개",
-    desc: "매물 고르는 기준 · 함정 피하기 · IRR 역산 방법. 실패 사례 12가지로 배우는 리스크 관리.",
-    href: "/guide/investor",
-    color: GUIDE_PALETTE.investor,
+    id: "dealroom",
+    menu: "딜룸",
+    tagline: "LOI → NDA → 실사 → 오퍼 → 계약",
+    desc: "매수자·매도자가 안전하게 진행하는 5단계 거래. 전자서명·문서함·에스크로가 하나의 딜룸에 통합.",
+    href: "/guide/deal-process",
+    color: GUIDE_PALETTE.dealroom,
+    icon: MessageSquare,
+    items: [
+      { label: "딜룸 5단계 프로세스", href: "/guide/deal-process" },
+      { label: "NDA 전자서명", href: "/guide/deal-process" },
+      { label: "AI 매칭으로 매물 추천받기", href: "/guide/investor" },
+      { label: "팀 투자 (공동투자 SPV)", href: "/guide/investor" },
+      { label: "에스크로 안전결제", href: "/guide/deal-process" },
+    ],
   },
   {
-    icon: Building2,
-    title: "매도자 (기관)",
-    tagline: "매각 효율 극대화 가이드",
-    desc: "등록 · 가격 책정 · 입찰 전략. 대량 매각 시 포트폴리오 분할과 입찰 컷오프 설정 요령.",
-    href: "/guide/seller",
-    color: GUIDE_PALETTE.seller,
+    id: "analysis",
+    menu: "분석",
+    tagline: "AI 분석 · 시뮬레이션 · 실사 리포트",
+    desc: "Claude 기반 AI가 등급·리스크·수익률을 자동 분석. 경매 시뮬레이터와 Monte Carlo까지 한 화면에서.",
+    href: "/guide/npl-analysis",
+    color: GUIDE_PALETTE.analysis,
+    icon: BarChart3,
+    items: [
+      { label: "NPL 분석 (등급 · 리스크)", href: "/guide/npl-analysis" },
+      { label: "수익성 분석 4단계", href: "/guide/profitability" },
+      { label: "경매 시뮬레이터", href: "/guide/auction-simulator" },
+      { label: "실사 리포트 7섹션", href: "/guide/due-diligence" },
+      { label: "AI Copilot 자연어 질문", href: "/guide/npl-analysis" },
+    ],
   },
   {
-    icon: Users,
-    title: "전문가 · 파트너",
-    tagline: "감정평가·법무·컨설팅 파트너십",
-    desc: "API 연동 · 수익 분배 · 전문가 프로필 노출. 파트너 등급별 혜택과 리퍼럴 커미션 체계.",
-    href: "/guide/institution",
-    color: GUIDE_PALETTE.partner,
+    id: "community",
+    menu: "커뮤니티",
+    tagline: "뉴스 · 토론 · 리더보드",
+    desc: "NPL 시장 뉴스와 인사이트, 실전 투자자들의 토론. 월간 랭킹과 추천 프로그램으로 네트워크를 확장.",
+    href: "/guide/partner-referral",
+    color: GUIDE_PALETTE.community,
+    icon: Users2,
+    items: [
+      { label: "NPL 뉴스 & 시장 인사이트", href: "/guide/npl-basics" },
+      { label: "투자자 토론·Q&A", href: "/guide/investor" },
+      { label: "파트너 추천 프로그램", href: "/guide/partner-referral" },
+      { label: "월간 리더보드 & 보너스", href: "/guide/partner-referral" },
+    ],
   },
-]
+  {
+    id: "my",
+    menu: "마이 페이지",
+    tagline: "포트폴리오 · 보안 · API",
+    desc: "관심 매물, 진행 거래, 알림을 한눈에. 2FA·API 키·결제 정보와 추천 실적 관리까지.",
+    href: "/guide/platform-tour",
+    color: GUIDE_PALETTE.my,
+    icon: UserCircle,
+    items: [
+      { label: "대시보드 (관심·진행·알림)", href: "/guide/platform-tour" },
+      { label: "포트폴리오 리포팅", href: "/guide/institution" },
+      { label: "보안 설정 (2FA)", href: "/guide/getting-started" },
+      { label: "API 키 발급 & 웹훅", href: "/guide/institution" },
+      { label: "결제 정보 & 정산", href: "/guide/institution" },
+    ],
+  },
+] as const
 
-const CORE_GUIDES = [
-  // 플랫폼 기능 (2026-04 업데이트 — 신규 OCR 자동채움·AI 컨설턴트·경매 수익률 분석기 반영)
-  { title: "OCR 자동채움 — 서류 업로드로 NPL 분석 시작", desc: "채권 소개서·경매 물건 명세서·감정평가서 PDF를 올리면 AI가 사건번호·주소·평가액·담보유형을 자동 입력. NPL 분석 새로 만들기와 매물 일괄 등록 모두 지원.", time: "4분", cat: "플랫폼", icon: Sparkles },
-  { title: "AI 컨설턴트 활용법", desc: "자연어로 매물·수익구조·리스크에 대해 질문. Claude 기반 분석 엔진이 플랫폼 데이터와 연결해 근거 있는 답변을 제공합니다.", time: "6분", cat: "플랫폼", icon: Sparkles },
-  { title: "경매 수익률 분석기", desc: "낙찰가·배당금·세금·회수기간을 단일 화면에서 시뮬레이션. 여러 시나리오(보수/중립/낙관) 동시 비교.", time: "7분", cat: "플랫폼", icon: Calculator },
-  { title: "계약서 자동 생성", desc: "채권양도·NDA·LOI 템플릿에 변수를 채워 전자계약으로 바로 송부. 분쟁시 공증 연계.", time: "5분", cat: "플랫폼", icon: FileText },
-  { title: "매물 일괄 등록 (1~5건 OCR)", desc: "/exchange/ocr-register 페이지에서 서류별로 OCR → 자동 매핑 → 한 번에 1~5건 등록. 부분 실패 허용(207 응답).", time: "6분", cat: "플랫폼", icon: FileUp },
-  // 실무 (기존)
-  { title: "배당표 읽는 법", desc: "경매 배당순위, 말소기준권리 이전/이후, 체납공과금 우선변제 구조를 한눈에.", time: "7분", cat: "배당", icon: FileText },
-  { title: "말소기준권리란", desc: "저당권·근저당권·가압류·담보가등기 중 최선순위. 이후 권리는 전부 소멸된다는 의미.", time: "5분", cat: "권리분석", icon: Scale },
-  { title: "방어입찰 전략", desc: "자기 채권을 보호하기 위한 응찰. 예상낙찰가·배당예상액·상계신청 타이밍.", time: "10분", cat: "입찰", icon: Gavel },
-  { title: "NPL 세금: 금투세·대손금", desc: "금융투자소득세 대상 여부, 대손금 처리, 양도·매각차익과 이자수익 구분.", time: "8분", cat: "세무", icon: Banknote },
-  { title: "권리분석 체크리스트", desc: "등기부·건축물대장·전입세대 열람, 유치권·법정지상권 점검 10단계.", time: "12분", cat: "실사", icon: ShieldCheck },
-  { title: "경매 vs 임의매각 선택법", desc: "회수 속도, 할인율, 소송 리스크 비교. 케이스별 권장 루트 플로우차트.", time: "6분", cat: "전략", icon: TrendingUp },
-  { title: "채권양도 통지 실무", desc: "양도양수 계약 · 확정일자 · 내용증명. 제3채무자 대항요건 갖추는 법.", time: "9분", cat: "법무", icon: FileText },
-  { title: "AMC vs 금융기관 차이", desc: "매각 목적·가격 · 자료 완성도 차이. 어느 쪽에서 사는 게 유리한가.", time: "5분", cat: "시장구조", icon: Building2 },
-  { title: "IRR vs ROI 올바른 해석", desc: "기간 고려 여부, 재투자 가정, NPL 특유의 현금흐름 패턴에서 어떤 지표를 볼지.", time: "8분", cat: "분석", icon: Calculator },
-  { title: "자금 조달 (펀드·공동투자)", desc: "NPL 전문펀드 LP 참여, 공동투자 SPV 구성, 레버리지 한도와 금리 밴드.", time: "10분", cat: "펀딩", icon: Banknote },
-  { title: "담보부동산 명도 실무", desc: "인도명령 신청 · 강제집행 · 이사비 협상. 임차인 대항력과 우선변제권.", time: "11분", cat: "실무", icon: ShieldCheck },
-  { title: "연체이자·지연배당 계산", desc: "약정이율, 상사법정이율, 배당 지연 시 지연손해금 가산 방법.", time: "6분", cat: "계산", icon: Calculator },
-]
+/* ─────────────────────────────────────────────────────────────
+   Role-based guides (매칭: /select-role · /pricing)
+   ───────────────────────────────────────────────────────────── */
+const ROLE_GUIDES = [
+  {
+    id: "free",
+    title: "무료 체험",
+    audience: "모든 방문자",
+    color: GUIDE_PALETTE.free,
+    icon: Gift,
+    bullets: [
+      "L0 공개 정보 무제한 열람",
+      "AI Copilot 월 5회 질문",
+      "경매 시뮬레이터 기본 시나리오",
+    ],
+    href: "/guide/getting-started",
+  },
+  {
+    id: "seller-bank",
+    title: "매각사 — 금융기관",
+    audience: "은행 · 보험사 · 저축은행",
+    color: GUIDE_PALETTE.seller,
+    icon: Building2,
+    bullets: [
+      "대량 매물 등록 (Excel/CSV)",
+      "자동 마스킹 · DPO 검수 파이프라인",
+      "첫 6개월 수수료 면제",
+      "API 연동 · 웹훅",
+    ],
+    href: "/guide/seller",
+  },
+  {
+    id: "seller-loan",
+    title: "매각사 — 대부업체",
+    audience: "등록 대부업 · NPL 전문 대부",
+    color: GUIDE_PALETTE.seller,
+    icon: Banknote,
+    bullets: [
+      "대량 등록 · 포트폴리오 분할",
+      "수의계약 · 입찰 컷오프 설정",
+      "첫 6개월 수수료 면제",
+    ],
+    href: "/guide/seller",
+  },
+  {
+    id: "seller-am",
+    title: "매각사 — 자산운용사",
+    audience: "AMC · 유동화전문회사",
+    color: GUIDE_PALETTE.seller,
+    icon: Briefcase,
+    bullets: [
+      "대규모 포트폴리오 일괄 매각",
+      "L3 LOI 공개로 기관 투자자 매칭",
+      "전담 딜룸 운영",
+    ],
+    href: "/guide/seller",
+  },
+  {
+    id: "seller-corp",
+    title: "매각사 — 일반 법인",
+    audience: "일반 기업 · 특수채권 보유자",
+    color: GUIDE_PALETTE.seller,
+    icon: Building2,
+    bullets: [
+      "단건 매물 등록",
+      "계약서 AI 검토 · 전자서명",
+      "에스크로 안전결제",
+    ],
+    href: "/guide/seller",
+  },
+  {
+    id: "investor-general",
+    title: "일반 투자그룹",
+    audience: "일반 기업 · 개인 투자자",
+    color: GUIDE_PALETTE.general,
+    icon: TrendingUp,
+    bullets: [
+      "기본 수수료 -0.05%p 할인",
+      "AI 분석 · 수익성 도구 무제한",
+      "공동투자 SPV 참여",
+      "월간 실사 리포트 5건",
+    ],
+    href: "/guide/investor",
+  },
+  {
+    id: "investor-pro",
+    title: "전문 투자그룹",
+    audience: "전문 기관 · 인증 전문투자자",
+    color: GUIDE_PALETTE.pro,
+    icon: Crown,
+    bullets: [
+      "기본 수수료 -0.1%p 할인",
+      "L2 NDA 자동 권한 · L3 LOI 우선",
+      "우선협상권(PNR) 옵션",
+      "API 무제한 · 전담 매니저",
+    ],
+    href: "/guide/investor",
+  },
+] as const
 
 const GLOSSARY = [
   { term: "NPL", def: "Non-Performing Loan. 3개월 이상 연체된 부실채권. 원리금 회수가 정상적으로 이루어지지 않는 대출." },
   { term: "LTV", def: "Loan To Value. 담보가치 대비 대출잔액 비율. 낮을수록 안전, 높을수록 회수 리스크 증가." },
   { term: "채권잔액", def: "원금 + 연체이자 + 법적비용의 총합. 매각 가격의 기준이 되는 숫자." },
-  { term: "매각희망가", def: "매도자가 제시하는 최저 수용 가격. 플랫폼에서는 공개·비공개 설정 가능." },
+  { term: "PNR", def: "Priority Negotiation Right. 우선협상권. 동일 조건 오퍼에서 우선 매수권을 확보하는 옵션 (+0.3%p)." },
   { term: "할인율", def: "채권잔액 대비 매각가의 차감율. 높을수록 수익 여력이 크지만 리스크도 함께 커짐." },
   { term: "자료완성도 (0-10)", def: "등기부·감정평가서·세입자현황 등 실사자료 구비도 점수. 8점 이상이 표준 거래 가능권." },
 ]
@@ -96,12 +226,12 @@ const VIDEOS = [
 ]
 
 const FAQ = [
+  { q: "수수료는 어떻게 되나요?", a: "매수자 기본 수수료는 NPL 1.5%, 부동산 0.9%이며, 우선협상권(PNR) 선택 시 +0.3%p 가산됩니다. 일반 투자그룹은 -0.05%p, 전문 투자그룹은 -0.1%p 할인이 적용됩니다. 매각사는 첫 6개월 수수료가 무료입니다." },
   { q: "최소 투자금액은?", a: "A등급 매물 기준 5천만원부터 참여 가능합니다. 공동투자 SPV 방식으로는 1천만원부터 진입할 수 있으며, 펀드 LP 참여 시 최소 3천만원입니다." },
   { q: "세금은 어떻게 되나요?", a: "양도차익은 금융투자소득세 대상이며, 채권 원금 손실분은 대손금으로 처리 가능합니다. 이자수익은 15.4% 원천징수되고, 종합과세 합산 여부는 금액에 따라 달라집니다." },
-  { q: "유동성이 낮다는데 괜찮은가요?", a: "NPL은 기본적으로 중장기 상품이지만, NPLatform은 2차 유통시장을 운영해 중도 매각이 가능합니다. 또한 배당 회수 전에도 이자 청구권 양도로 현금흐름을 만들 수 있습니다." },
-  { q: "개인도 투자가 가능한가요?", a: "본인인증 L1 이상 회원은 일정 매물에 한해 개인 투자가 가능합니다. 대형 포트폴리오(50억 초과)는 기관·전문투자자만 접근 가능하며, L0 단계에서는 요약정보만 열람됩니다." },
+  { q: "개인도 투자가 가능한가요?", a: "회원가입 시 역할 선택에서 「투자그룹 → 일반 · 개인」 또는 「전문 · 개인」을 선택하면 개인 투자자로 가입할 수 있습니다. 전문투자자 인증이 없는 개인은 L0~L1 매물에 접근 가능하며, L2 이상은 NDA 체결이 필요합니다." },
+  { q: "매각사 가입은 어떻게 하나요?", a: "회원가입 시 역할 선택에서 「매각사」를 고르고 금융기관/대부업체/자산운용사/일반 법인 중 세부 유형을 선택합니다. 담당자 이메일 인증 후 관리자 승인이 완료되면 대량 등록·API 연동이 활성화됩니다." },
   { q: "위험 대비책은 무엇인가요?", a: "L0~L3 계층형 접근통제, 자금 에스크로 보관, 전자계약·NDA 자동 체결, AI 리스크 스코어링(28,391건 학습)으로 리스크를 사전 통제합니다. 분쟁 발생 시 법무 파트너 연계 지원." },
-  { q: "수수료는 어떻게 되나요?", a: "투자자는 거래금액의 0.9%를 상한으로 합니다(100억 초과 구간 0.5%). 매도자에게는 0%이며, 프리미엄 매물 리스팅·전용 딜룸 등 옵션 서비스만 유료입니다." },
 ]
 
 /* ─────────────────────────────────────────────────────────────
@@ -109,10 +239,12 @@ const FAQ = [
    ───────────────────────────────────────────────────────────── */
 export default function GuidePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0)
+  const [activeMenu, setActiveMenu] = useState<string>(MENU_GUIDES[0].id)
+  const current = MENU_GUIDES.find((m) => m.id === activeMenu) ?? MENU_GUIDES[0]
 
   return (
     <div className={DS.page.wrapper}>
-      {/* ══════════ 1. HERO (dark) ══════════ */}
+      {/* ══════════ 1. HERO ══════════ */}
       <section
         className="relative overflow-hidden px-6 py-20"
         style={{ backgroundColor: "#050D1A" }}
@@ -134,74 +266,133 @@ export default function GuidePage() {
             }}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            NPL 완벽 가이드
+            NPLatform 사용 가이드
           </span>
           <h1 className="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-5">
-            NPL 투자, <span style={{ color: "#34D399" }}>이론이 아니라 실전</span>으로
+            <span style={{ color: "#34D399" }}>메뉴별 · 역할별</span>로 찾는<br />NPL 플랫폼 완벽 가이드
           </h1>
           <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto">
-            매입 전 실사부터 배당 회수까지 — 현장 실무자가 검증한 가이드입니다.
+            거래소 · 딜룸 · 분석 · 커뮤니티 · 마이 페이지 — 메뉴 그대로, 하위 기능까지 단계별로 안내합니다.
           </p>
         </div>
       </section>
 
       <div className={`${DS.page.container} max-w-6xl py-14`}>
-        {/* ══════════ 2. 역할별 가이드 ══════════ */}
+        {/* ══════════ 2. 메뉴별 가이드 (Tab UI) ══════════ */}
         <section className="mb-16">
-          <h2 className={`${DS.text.sectionTitle} mb-2`}>역할별 가이드</h2>
-          <p className={`${DS.text.caption} mb-6`}>당신의 목적에 맞는 루트를 선택하세요</p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {CATEGORIES.map((cat) => (
-              <Link key={cat.title} href={cat.href} className={`${DS.card.interactive} group block ${DS.card.padding}`}>
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
-                  style={{ backgroundColor: `${cat.color}15`, border: `1px solid ${cat.color}30` }}
+          <h2 className={`${DS.text.sectionTitle} mb-2`}>메뉴별 사용 가이드</h2>
+          <p className={`${DS.text.caption} mb-6`}>
+            상단 네비게이션 5개 메뉴와 하위 기능을 그대로 따라가며 배웁니다.
+          </p>
+
+          {/* Tab bar */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            {MENU_GUIDES.map((m) => {
+              const active = m.id === activeMenu
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => setActiveMenu(m.id)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all"
+                  style={{
+                    backgroundColor: active ? `${m.color}20` : "var(--color-surface-sunken)",
+                    border: `1px solid ${active ? `${m.color}60` : "var(--color-border-subtle)"}`,
+                    color: active ? m.color : "var(--color-text-secondary)",
+                  }}
                 >
-                  <cat.icon className="w-5 h-5" style={{ color: cat.color }} />
+                  <m.icon className="w-4 h-4" />
+                  {m.menu}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Active menu detail */}
+          <div className={`${DS.card.base} ${DS.card.padding}`}>
+            <div className="grid md:grid-cols-[1fr_1.5fr] gap-8">
+              <div>
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                  style={{ backgroundColor: `${current.color}15`, border: `1px solid ${current.color}30` }}
+                >
+                  <current.icon className="w-6 h-6" style={{ color: current.color }} />
                 </div>
-                <p className="text-[0.65rem] font-bold tracking-wider mb-1" style={{ color: cat.color }}>
-                  {cat.title.toUpperCase()}
+                <p className="text-[0.65rem] font-bold tracking-wider mb-1" style={{ color: current.color }}>
+                  MENU · {current.menu.toUpperCase()}
                 </p>
-                <h3 className={`${DS.text.bodyBold} mb-2`}>{cat.tagline}</h3>
-                <p className={`${DS.text.caption} leading-relaxed mb-4`}>{cat.desc}</p>
-                <span className="inline-flex items-center gap-1 text-[0.75rem] font-semibold" style={{ color: cat.color }}>
-                  바로가기 <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                </span>
-              </Link>
-            ))}
+                <h3 className={`${DS.text.cardTitle} mb-3`}>{current.tagline}</h3>
+                <p className={`${DS.text.caption} leading-relaxed mb-5`}>{current.desc}</p>
+                <Link
+                  href={current.href}
+                  className="inline-flex items-center gap-1 text-sm font-semibold"
+                  style={{ color: current.color }}
+                >
+                  전체 가이드 바로가기 <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <div>
+                <p className={`${DS.text.label} mb-3`}>하위 기능 단계</p>
+                <ol className="space-y-2">
+                  {current.items.map((it, i) => (
+                    <li key={`${current.id}-${i}`}>
+                      <Link
+                        href={it.href}
+                        className="flex items-center gap-3 p-3 rounded-lg transition-colors hover:bg-[var(--color-surface-sunken)]"
+                      >
+                        <span
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-[0.7rem] font-bold shrink-0"
+                          style={{
+                            backgroundColor: `${current.color}15`,
+                            border: `1px solid ${current.color}40`,
+                            color: current.color,
+                          }}
+                        >
+                          {i + 1}
+                        </span>
+                        <span className={`${DS.text.body} flex-1`}>{it.label}</span>
+                        <ArrowRight className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* ══════════ 3. 핵심 실무 가이드 ══════════ */}
+        {/* ══════════ 3. 역할별 가이드 ══════════ */}
         <section className="mb-16">
-          <h2 className={`${DS.text.sectionTitle} mb-2`}>핵심 실무 가이드</h2>
+          <h2 className={`${DS.text.sectionTitle} mb-2`}>역할별 사용 가이드</h2>
           <p className={`${DS.text.caption} mb-6`}>
-            실제 거래 현장에서 반드시 알아야 할 12가지 핵심 주제
+            무료 체험 · 매각사 4종 · 일반/전문 투자그룹 — 당신의 역할에 맞춘 핵심 기능 요약.
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {CORE_GUIDES.map((g, i) => (
+            {ROLE_GUIDES.map((r) => (
               <Link
-                key={i}
-                href={`/guide/${encodeURIComponent(g.title)}`}
+                key={r.id}
+                href={r.href}
                 className={`${DS.card.interactive} group block ${DS.card.padding}`}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: "#10B98110", border: "1px solid #10B98130" }}
-                  >
-                    <g.icon className="w-4 h-4" style={{ color: "#10B981" }} />
-                  </div>
-                  <span className="text-[0.65rem] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-surface-sunken)] text-[var(--color-text-tertiary)]">
-                    {g.cat}
-                  </span>
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                  style={{ backgroundColor: `${r.color}15`, border: `1px solid ${r.color}30` }}
+                >
+                  <r.icon className="w-5 h-5" style={{ color: r.color }} />
                 </div>
-                <h3 className={`${DS.text.bodyBold} mb-2 group-hover:text-[var(--color-brand-mid)] transition-colors`}>
-                  {g.title}
-                </h3>
-                <p className={`${DS.text.caption} leading-relaxed mb-3 line-clamp-3`}>{g.desc}</p>
-                <span className={`flex items-center gap-1 ${DS.text.micro}`}>
-                  <Clock className="w-3 h-3" /> 읽기 {g.time}
+                <p className="text-[0.65rem] font-bold tracking-wider mb-1" style={{ color: r.color }}>
+                  {r.audience}
+                </p>
+                <h3 className={`${DS.text.bodyBold} mb-3`}>{r.title}</h3>
+                <ul className="space-y-1.5 mb-4">
+                  {r.bullets.map((b, i) => (
+                    <li key={i} className={`${DS.text.caption} flex items-start gap-2`}>
+                      <span className="shrink-0 mt-[6px] w-1 h-1 rounded-full" style={{ backgroundColor: r.color }} />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+                <span className="inline-flex items-center gap-1 text-[0.75rem] font-semibold" style={{ color: r.color }}>
+                  이 역할 가이드 보기 <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                 </span>
               </Link>
             ))}
@@ -261,7 +452,7 @@ export default function GuidePage() {
         {/* ══════════ 6. FAQ ══════════ */}
         <section className="mb-16">
           <h2 className={`${DS.text.sectionTitle} mb-2`}>자주 묻는 질문</h2>
-          <p className={`${DS.text.caption} mb-6`}>실제 투자자들이 가장 많이 물어본 6가지</p>
+          <p className={`${DS.text.caption} mb-6`}>가장 많이 물어본 6가지</p>
           <div className={`${DS.card.base} divide-y divide-[var(--color-border-subtle)]`}>
             {FAQ.map((f, i) => (
               <button

@@ -16,6 +16,9 @@ import {
   Award,
   BarChart2,
   Pin,
+  Sparkles,
+  MessageCircle,
+  Newspaper,
 } from "lucide-react";
 import { GuideButton } from "@/components/guide/guide-button";
 import { SampleBadge } from "@/components/shared/sample-badge";
@@ -191,32 +194,65 @@ export default function CommunityPage() {
 
   return (
     <div className={DS.page.wrapper}>
-      <div className={`${DS.page.container} ${DS.page.paddingTop}`}>
 
-        {/* ── Page Header ─────────────────────────────────── */}
-        <div className="mb-5 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Users className="h-6 w-6 text-[var(--color-brand-dark)]" />
-            <h1 className={DS.text.pageSubtitle}>
-              {"NPL 투자 커뮤니티"}
-            </h1>
-            <SampleBadge />
+      {/* ── Hero (분석·딜룸과 톤앤매너 통일) ─────────────────────── */}
+      <section className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)]">
+        <div className={`${DS.page.container} py-10`}>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-rose-500 flex items-center justify-center shadow-sm">
+                  <MessageCircle className="w-5 h-5 text-white" />
+                </div>
+                <h1 className={`${DS.text.sectionTitle} tracking-tight`}>
+                  커뮤니티 · NPL 뉴스
+                </h1>
+                <SampleBadge />
+              </div>
+              <p className={`${DS.text.caption} max-w-2xl`}>
+                NPL 시장 뉴스 · 판례분석 · 투자전략 Q&amp;A — 전문 투자자와 실무자의 인사이트를 한 곳에서
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <GuideButton serviceKey="community" />
+              <Link
+                href="/services/community/new"
+                className={DS.button.primary}
+              >
+                <PenSquare className="h-3.5 w-3.5" /> 글쓰기
+              </Link>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <GuideButton serviceKey="community" />
-            <Link href="/services/community/new">
-              <button className={DS.button.primary}>
-                <PenSquare className="h-3.5 w-3.5" />
-                글쓰기
-              </button>
-            </Link>
+
+          {/* Quick stats (분석 대시보드 패턴 재사용) */}
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { label: "전체 게시글", value: "2,847", icon: Newspaper, color: "text-rose-600" },
+              { label: "오늘 새 글",   value: "34",    icon: Sparkles,  color: "text-amber-600" },
+              { label: "활성 멤버",    value: "1,240", icon: Users,     color: "text-blue-600" },
+              { label: "이번 주 화제", value: "5개",   icon: TrendingUp, color: "text-emerald-600" },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="flex items-center gap-3 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-xl px-4 py-3"
+              >
+                <s.icon className={`w-5 h-5 ${s.color} shrink-0`} />
+                <div className="min-w-0">
+                  <p className={`${DS.text.micro} truncate`}>{s.label}</p>
+                  <p className={DS.text.bodyBold}>{s.value}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      </section>
 
+      <div className={`${DS.page.container} pt-6`}>
         {/* ── Cross-links ───────────────────────────────────── */}
         <div className="flex items-center gap-3 flex-wrap mb-4">
           <Link href="/exchange" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>매물 탐색 →</Link>
           <Link href="/analysis" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>분석 대시보드 →</Link>
+          <Link href="/deals" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>딜룸 →</Link>
         </div>
 
         {/* ── Category Tabs + Sort/Search Bar ─────────────── */}

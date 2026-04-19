@@ -34,7 +34,7 @@ export async function GET(_req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { role } = body;
+    const { role, subtype } = body;
 
     const validRoles = [
       "BUYER",
@@ -46,10 +46,21 @@ export async function POST(req: NextRequest) {
       "LENDER",
       "ADMIN",
     ];
+    // 매각사 · 투자그룹 2단계 선택에서 전달되는 서브타입. 단순 문자열로 검증(화이트리스트)
+    const validSubtypes = [
+      'FINANCIAL_INSTITUTION', 'LOAN_COMPANY', 'ASSET_MANAGER', 'GENERAL_CORP',
+      'GENERAL_INDIVIDUAL', 'PRO_CORP', 'PRO_INDIVIDUAL',
+    ]
 
     if (!role || !validRoles.includes(role)) {
       return NextResponse.json(
         { error: { code: "INVALID_ROLE", message: `유효하지 않은 역할입니다. 가능한 역할: ${validRoles.join(", ")}` } },
+        { status: 400 }
+      );
+    }
+    if (subtype && !validSubtypes.includes(subtype)) {
+      return NextResponse.json(
+        { error: { code: "INVALID_SUBTYPE", message: `유효하지 않은 서브타입입니다.` } },
         { status: 400 }
       );
     }
@@ -60,12 +71,12 @@ export async function POST(req: NextRequest) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { error } = await supabase.auth.updateUser({
-          data: { role },
+          data: { role, role_subtype: subtype ?? null },
         });
         if (!error) {
           return NextResponse.json(
             {
-              data: { roles: [role], addedRole: role },
+              data: { roles: [role], addedRole: role, subtype: subtype ?? null },
               success: true,
               _source: 'supabase',
             },

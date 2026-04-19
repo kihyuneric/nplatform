@@ -397,6 +397,7 @@ async function seedEmbeddings() {
       documents: LEGAL_DOCUMENTS,
       chunk_size: 600,
       chunk_overlap: 120,
+      replace_existing: true,  // 멱등 재시드: 동일 doc_id 기존 청크 삭제 후 재삽입
     }),
   })
 

@@ -987,7 +987,7 @@ function Step6Review({
                 </div>
               </div>
               <div style={{ marginTop: 10, fontSize: 10, color: C.lt4, lineHeight: 1.5 }}>
-                ※ 거래 성사 시에만 청구되며 에스크로로 정산됩니다. 매수자 수수료({(0.02 * 100).toFixed(0)}%)는 매수자 부담입니다.
+                ※ 거래 성사 시에만 청구되며 에스크로로 정산됩니다. 매수자 수수료(NPL 1.5% + 우선협상권 0.3% · 부동산 0.9%)는 매수자 부담입니다.
               </div>
             </div>
           </>

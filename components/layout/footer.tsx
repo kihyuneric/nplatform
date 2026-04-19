@@ -8,9 +8,9 @@ import { t } from '@/lib/i18n'
 const SERVICE_LINKS = [
   { href: '/exchange', label: 'NPL 매물 탐색' },
   { href: '/exchange/sell', label: '매물 등록' },
-  { href: '/deals', label: '거래 현황' },
+  { href: '/deals', label: '딜룸' },
   { href: '/deals/matching', label: 'AI 매칭' },
-  { href: '/analysis', label: '분석' },
+  { href: '/analysis', label: 'NPL 분석' },
   { href: '/pricing', label: '요금제' },
 ]
 
@@ -37,13 +37,13 @@ export function Footer() {
   const companyName = settings?.companyName || '트랜스파머(주) | TransFarmer Inc.'
   const siteDescription = settings?.siteDescription || '금융기관과 투자자를 직접 연결하는 NPL 거래 플랫폼'
   const businessNumber = settings?.businessNumber || '507-87-02631'
-  const ceoName = settings?.ceoName || '박성필'
+  const ceoName = settings?.ceoName || '김기현'
   const companyAddress = settings?.companyAddress || '서울 마포구 백범로31길 21, 서울창업허브 별관 108호'
   const companyAddress2 = settings?.companyAddress2 || '서울 종로구 서린동 154-1, 스타트업빌리지 5층'
   const contactPhone = settings?.contactPhone || '02-555-2822'
   const contactEmail = settings?.contactEmail || 'ceo@transfarmer.co.kr'
-  const dpoName = settings?.dpoName || '박성필'
-  const dpoEmail = settings?.dpoEmail || 'sp.park@transfarmer.co.kr'
+  const dpoName = settings?.dpoName || '김기현'
+  const dpoEmail = settings?.dpoEmail || 'kh.kim@transfarmer.co.kr'
 
   return (
     <footer

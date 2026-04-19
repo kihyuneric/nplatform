@@ -28,7 +28,8 @@ import { TierGate } from "@/components/tier/tier-gate"
 import { CompletenessBadge } from "@/components/listing/completeness-badge"
 import type { AccessTier } from "@/lib/access-tier"
 import { TIER_META, getUserTier } from "@/lib/access-tier"
-import { calculateSellerFee, calculateBuyerFee } from "@/lib/fee-calculator"
+import { calculateSellerFee } from "@/lib/fee-calculator"
+import { calculateFee, BASE_RATES, PNR_RATE } from "@/lib/settlement/fee-engine"
 import { formatAIGrade } from "@/lib/taxonomy"
 import { createClient } from "@/lib/supabase/client"
 
@@ -503,10 +504,30 @@ export default function ListingDetailPage() {
     isInstitutional: true,
     dataCompleteness: listing.data_completeness,
   })
-  const buyerFee = calculateBuyerFee({
-    dealAmount: listing.asking_price,
-    addons: ["priority_negotiation"],
+  // v2 수수료 모델 — NPL 매수자 1.5% + PNR 0.3% / 부동산 매수자 0.9%
+  // listing.collateral 타입 기반으로 NPL/부동산 자산 구분 (단순 휴리스틱: 담보유형 기반)
+  const isRealEstateOnly = false  // 현재 매물은 NPL 채권이므로 NPL 매수자 요율 적용
+  const buyerDealType = isRealEstateOnly ? "re-buyer" as const : "npl-buyer" as const
+  const buyerFeeV2 = calculateFee({
+    dealType: buyerDealType,
+    transactionAmount: listing.asking_price,
+    withPNR: true,
   })
+  const buyerFee = {
+    totalRate: buyerFeeV2.effectiveRate,
+    totalFee: buyerFeeV2.netFee,
+    baseRate: buyerFeeV2.baseRate,
+    baseFee: Math.round(listing.asking_price * buyerFeeV2.baseRate),
+    addonDetails: buyerFeeV2.pnrRate > 0
+      ? [{
+          key: "priority_negotiation",
+          label: "우선협상권 (PNR)",
+          rate: buyerFeeV2.pnrRate,
+          fee: Math.round(listing.asking_price * buyerFeeV2.pnrRate),
+          waived: false,
+        }]
+      : [],
+  }
   const sellerPremiumWaived =
     sellerFee.addonDetails.find(a => a.key === "premium_listing")?.waived ?? false
 

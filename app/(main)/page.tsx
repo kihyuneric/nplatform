@@ -579,10 +579,10 @@ export default function LandingPage() {
                 icon: <TrendingUp size={24} style={{ color: C.em }} />,
                 tag: "거래 효율 3배",
                 tagBg: 'rgba(16,185,129,0.08)', tagColor: '#059669', tagBorder: 'rgba(16,185,129,0.2)',
-                title: "빠른 거래, 낮은 수수료",
-                desc: "평균 딜 클로징 24일 → 7일로 단축. 중개 수수료 2~3% → 최대 0.9%. 에스크로·전자계약으로 거래 리스크도 함께 낮춥니다.",
+                title: "빠른 거래, 투명한 수수료",
+                desc: "평균 딜 클로징 24일 → 7일로 단축. NPL 매수 1.5% · 부동산 0.9% 고정 수수료, 매각사는 첫 6개월 무료. 에스크로·전자계약으로 거래 리스크도 함께 낮춥니다.",
                 iconBg: 'rgba(16,185,129,0.06)', borderHover: '#10B981',
-                bullets: ["매물 공개 → 낙찰 평균 7일", "수수료 0.9% 캡 · 매도자 0%", "에스크로 · 전자계약 기본 제공"],
+                bullets: ["매물 공개 → 낙찰 평균 7일", "NPL 1.5% / 부동산 0.9% · 매각사 6개월 무료", "에스크로 · 전자계약 기본 제공"],
               },
               {
                 icon: <Building2 size={24} style={{ color: C.blue }} />,
