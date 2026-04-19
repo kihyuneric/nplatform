@@ -11,6 +11,7 @@ import { createClient } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
 import { predictPrice } from '@/lib/ml/models/price-predictor'
 import { classifyRisk } from '@/lib/ml/models/risk-classifier'
+import { EXPERIMENT_REGISTRY, assignVariant } from '@/lib/experiments/ab-test'
 
 export const maxDuration = 30
 
@@ -38,8 +39,18 @@ const riskFeatures = baseFeatures.extend({
 })
 
 const Body = z.discriminatedUnion('model', [
-  z.object({ model: z.literal('price'), features: baseFeatures, property_id: z.string().optional() }),
-  z.object({ model: z.literal('risk'),  features: riskFeatures, property_id: z.string().optional() }),
+  z.object({
+    model: z.literal('price'),
+    features: baseFeatures,
+    property_id: z.string().optional(),
+    subject_id: z.string().optional(), // A/B routing 결정용 (유저 id / 세션 id)
+  }),
+  z.object({
+    model: z.literal('risk'),
+    features: riskFeatures,
+    property_id: z.string().optional(),
+    subject_id: z.string().optional(),
+  }),
 ])
 
 // ─── Supabase admin (prediction logging) ─────────────────────
@@ -87,6 +98,11 @@ export async function POST(req: NextRequest) {
 
   try {
     if (parsed.model === 'price') {
+      // A/B 라우팅 — subject_id 가 있으면 variant 결정, 없으면 첫 variant 강제
+      const assignment = assignVariant(
+        EXPERIMENT_REGISTRY.ml_price_model,
+        parsed.subject_id ?? '',
+      )
       const result = predictPrice(parsed.features)
       const ratio = parsed.features.appraised_value > 0
         ? result.expectedPrice / parsed.features.appraised_value
@@ -94,7 +110,7 @@ export async function POST(req: NextRequest) {
 
       void logPrediction({
         model_name: PRICE_MODEL.name,
-        model_version: PRICE_MODEL.version,
+        model_version: `${PRICE_MODEL.version}+exp:${assignment.variant}`,
         request_id: reqId,
         input_features: parsed.features,
         predicted_value: result.expectedPrice,
@@ -108,6 +124,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         ok: true,
         model: PRICE_MODEL,
+        experiment: {
+          id: assignment.experimentId,
+          variant: assignment.variant,
+          forced: assignment.forced,
+        },
         data: result,
       })
     }
