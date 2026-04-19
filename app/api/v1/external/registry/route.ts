@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const registry = await fetchRegistryInfo(address)
     const totalEncumbrances = calcTotalEncumbrances(registry)
     const ltvRatio = estimatedValue > 0 ? estimateLtv(totalEncumbrances, estimatedValue) : null
-    const isMock = !process.env.IROS_API_KEY
+    const isMock = registry.source === 'mock'
 
     return NextResponse.json({
       success: true,
