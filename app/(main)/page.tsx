@@ -361,46 +361,46 @@ export default function LandingPage() {
 
   const features = [
     {
-      icon: <Search size={20} style={{ color: C.em }} />, tag: "매물 탐색", tagColor: C.em,
+      icon: <Search size={20} style={{ color: C.em }} />, tag: "거래소", tagColor: C.em,
       title: "NPL 매물 거래소",
-      desc: "채권잔액·매각희망가·할인율·담보LTV까지 30+ 조건 복합 필터. 자연어 입력으로 \"서울 A등급 5억 이하 수익률 20%+\" 한 번에 찾기.",
+      desc: "1,234건의 라이브 NPL 매물. 채권잔액·매각희망가·할인율·담보LTV 30+ 조건 필터 + 자연어 검색으로 즉시 매칭.",
       href: "/exchange", accent: C.em,
       meta: "등록 1,234건 · 신규 매일 ~20건",
     },
     {
-      icon: <Brain size={20} style={{ color: C.purple }} />, tag: "딜 분석", tagColor: C.purple,
-      title: "AI 딜 분석 리포트",
-      desc: "감정가·배당요구·권리분석·수익률·회수 확률까지 30초 내 자동 리포트. 몬테카를로 10,000회 시뮬레이션으로 IRR 분포 시각화.",
-      href: "/analysis", accent: C.purple,
-      meta: "평균 분석 시간 27초 · 28,391건 분석",
+      icon: <MessageSquare size={20} style={{ color: C.teal }} />, tag: "딜룸", tagColor: C.teal,
+      title: "딜룸 · NDA · 전자계약",
+      desc: "매도자·매수자 1:1 보안 채널. NDA 전자서명 → 권리증 공유 → LOI → 매매계약서 자동 생성까지 원스톱 체결.",
+      href: "/deals", accent: C.teal,
+      meta: "진행 중 딜 68건 · 이번 주 체결 14건",
     },
     {
-      icon: <Gavel size={20} style={{ color: C.amber }} />, tag: "입찰", tagColor: C.amber,
+      icon: <Gavel size={20} style={{ color: C.amber }} />, tag: "경쟁 입찰", tagColor: C.amber,
       title: "실시간 경쟁 입찰",
-      desc: "온라인 경쟁 입찰 + 프라이빗 협상. 자동 입찰 에이전트로 가격 상한·기준일 설정만 하면 조건 맞는 매물 자동 응찰.",
+      desc: "공개 경쟁 입찰 + 프라이빗 협상. 자동 입찰 에이전트로 가격 상한·기준일만 설정하면 조건 맞는 매물 자동 응찰.",
       href: "/exchange/auction", accent: C.amber,
       meta: "진행 중 입찰 42건 · 평균 낙찰 7일",
     },
     {
-      icon: <MessageSquare size={20} style={{ color: C.teal }} />, tag: "딜룸", tagColor: C.teal,
-      title: "딜룸 · NDA · 전자계약",
-      desc: "매도자·매수자 1:1 보안 채널. NDA 전자서명 → 권리증·등기부 공유 → LOI → 매매계약서 자동 생성까지 원스톱.",
-      href: "/deals", accent: C.teal,
-      meta: "전자서명 법적 효력 인정 (전자문서법)",
-    },
-    {
-      icon: <ShieldCheck size={20} style={{ color: C.blue }} />, tag: "보호", tagColor: C.blue,
+      icon: <ShieldCheck size={20} style={{ color: C.blue }} />, tag: "체결 보호", tagColor: C.blue,
       title: "에스크로 · PII 마스킹",
-      desc: "대금은 에스크로 계좌로 보호, 개인정보는 L0~L3 4단계 접근통제로 보호. 채무자 정보는 NDA + LOI 승인 후에만 열람.",
+      desc: "대금은 에스크로 계좌로, 개인정보는 L0~L3 접근통제로. 안전한 체결을 위한 2중 안전장치.",
       href: "/support", accent: C.blue,
       meta: "자금 보호 · 정보보호 2중 안전장치",
     },
     {
-      icon: <Sparkles size={20} style={{ color: C.rose }} />, tag: "AI 상담", tagColor: C.rose,
+      icon: <Brain size={20} style={{ color: C.purple }} />, tag: "AI 분석", tagColor: C.purple,
+      title: "AI 딜 분석 리포트",
+      desc: "감정가·배당요구·권리분석·수익률·회수 확률까지 27초 내 자동 리포트. 거래 결정을 빠르게, 리스크를 명확하게.",
+      href: "/analysis", accent: C.purple,
+      meta: "평균 분석 시간 27초 · 28,391건 분석",
+    },
+    {
+      icon: <Sparkles size={20} style={{ color: C.rose }} />, tag: "AI Copilot", tagColor: C.rose,
       title: "AI Copilot — 거래 어시스턴트",
-      desc: "\"이 매물 수익률 15% 가능해?\" \"감정가 대비 할인율 적정선은?\" 처럼 대화하듯 물어보세요. 매물 데이터 + 시세 DB 실시간 조회.",
+      desc: "\"이 매물 수익률 15% 가능해?\" 처럼 대화하듯 물어보세요. 매물·시세·판례 DB 를 실시간 조회하는 거래 도우미.",
       href: "/analysis/copilot", accent: C.rose,
-      meta: "GPT-4 + 자체 NPL 코퍼스 학습",
+      meta: "Claude + 자체 NPL 코퍼스 학습",
     },
   ];
 
@@ -448,9 +448,9 @@ export default function LandingPage() {
                 <div className="inline-flex items-center gap-2.5 rounded-full px-4 py-2"
                   style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
                   <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: C.em }} />
-                  <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.65)', letterSpacing: '0.06em' }}>국내 유일 NPL 전문 플랫폼</span>
+                  <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.65)', letterSpacing: '0.06em' }}>대한민국 NPL 거래소</span>
                   <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
-                  <span className="text-xs font-black" style={{ color: C.em }}>LIVE</span>
+                  <span className="text-xs font-black" style={{ color: C.em }}>지금 거래 중</span>
                 </div>
               </motion.div>
 
@@ -459,41 +459,42 @@ export default function LandingPage() {
                 className="font-black leading-[1.08] tracking-tighter mb-5"
                 style={{ fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', color: 'rgba(255,255,255,0.95)' }}
               >
-                AI가 분석하는<br />
+                지금 체결 중인<br />
                 <span style={{
                   background: `linear-gradient(135deg, ${C.em} 0%, ${C.emL} 40%, #6EE7B7 100%)`,
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}>NPL 거래</span>의<br />
-                새로운 기준
+                }}>NPL 거래소</span><br />
+                · 딜룸 · 계약
               </motion.h1>
 
               {/* Sub */}
               <motion.p variants={up} custom={2} className="text-base leading-relaxed mb-7"
-                style={{ color: 'rgba(255,255,255,0.45)', maxWidth: '420px' }}>
-                금융기관 × 투자자 직거래.{" "}
-                <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 500 }}>검색부터 입찰, 딜룸, 전자계약까지</span>{" "}
-                모든 NPL 거래 프로세스를 하나의 플랫폼에서 완결하세요.
+                style={{ color: 'rgba(255,255,255,0.45)', maxWidth: '440px' }}>
+                매각사와 투자자가 직접 만나는 거래소.{" "}
+                <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 500 }}>매물 탐색 · 경쟁 입찰 · 딜룸 협상 · 전자계약</span>{" "}
+                까지 한 번에 체결합니다.
               </motion.p>
 
-              {/* CTAs */}
+              {/* CTAs — 거래 2-branch */}
               <motion.div variants={up} custom={3} className="flex flex-col sm:flex-row gap-3 mb-7">
-                <Link href="/my"
+                <Link href="/exchange"
                   className="group inline-flex items-center justify-center gap-2 font-bold text-sm rounded-xl transition-all"
                   style={{ background: `linear-gradient(135deg, ${C.em}, #059669)`, color: 'white', padding: '14px 28px', boxShadow: `0 4px 20px rgba(16,185,129,0.3)` }}
                   onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
                   onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
                 >
-                  무료로 시작하기
+                  <Search size={15} />
+                  매물 탐색하기
                   <ArrowRight size={15} />
                 </Link>
-                <Link href="/analysis"
+                <Link href="/exchange/sell"
                   className="group inline-flex items-center justify-center gap-2 font-semibold text-sm rounded-xl transition-all"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.75)', padding: '14px 28px' }}
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)', padding: '14px 28px' }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.transform = 'translateY(0)'; }}
                 >
-                  <Play size={13} style={{ color: 'rgba(255,255,255,0.4)' }} />
-                  데모 보기
+                  <Building2 size={13} style={{ color: C.em }} />
+                  매물 등록하기
                 </Link>
               </motion.div>
 
@@ -633,15 +634,15 @@ export default function LandingPage() {
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={up} className="text-center mb-14">
             <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <Cpu size={12} style={{ color: C.blue }} />
-              <span className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em' }}>핵심 기능</span>
+              style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }}>
+              <Layers size={12} style={{ color: C.em }} />
+              <span className="text-xs font-bold" style={{ color: C.em, letterSpacing: '0.06em' }}>거래 인프라</span>
             </div>
             <h2 className="font-black tracking-tighter mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: 'rgba(255,255,255,0.95)' }}>
-              모든 것이 하나에
+              거래를 위한 모든 것
             </h2>
             <p className="text-base" style={{ color: 'rgba(255,255,255,0.35)', maxWidth: '480px', margin: '0 auto' }}>
-              NPL 거래에 필요한 모든 도구를 NPLatform 하나로.
+              거래소 · 딜룸 · 계약 · 에스크로 · AI 분석 — 체결에 필요한 모든 도구가 NPLatform 하나에.
             </p>
           </motion.div>
 
@@ -722,13 +723,13 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/my"
+                <Link href="/exchange/sell"
                   className="inline-flex items-center gap-2 font-bold text-sm rounded-xl transition-all"
                   style={{ background: `linear-gradient(135deg, ${C.em}, #059669)`, color: 'white', padding: '12px 24px', boxShadow: `0 4px 16px rgba(16,185,129,0.25)` }}
                   onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')}
                   onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
                 >
-                  금융기관으로 시작하기 <ArrowRight size={14} />
+                  매물 등록하고 딜룸 시작 <ArrowRight size={14} />
                 </Link>
               </div>
             </motion.div>
@@ -761,13 +762,13 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/my"
+                <Link href="/exchange"
                   className="inline-flex items-center gap-2 font-bold text-sm rounded-xl transition-all"
                   style={{ background: '#0A1628', color: 'white', padding: '12px 24px' }}
                   onMouseEnter={e => { (e.currentTarget.style.background = '#0F2040'); (e.currentTarget.style.transform = 'translateY(-1px)'); }}
                   onMouseLeave={e => { (e.currentTarget.style.background = '#0A1628'); (e.currentTarget.style.transform = 'translateY(0)'); }}
                 >
-                  투자자로 시작하기 <ArrowRight size={14} />
+                  거래소에서 매물 탐색 <ArrowRight size={14} />
                 </Link>
               </div>
             </motion.div>
@@ -905,7 +906,7 @@ export default function LandingPage() {
               <div className="inline-flex items-center gap-2 rounded-full px-4 py-2"
                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <Zap size={12} style={{ color: C.em }} />
-                <span className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em' }}>지금 바로 시작하세요</span>
+                <span className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em' }}>지금 거래를 시작하세요</span>
               </div>
             </motion.div>
 
@@ -913,35 +914,35 @@ export default function LandingPage() {
               className="font-black tracking-tighter mb-5"
               style={{ fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', color: 'rgba(255,255,255,0.95)' }}
             >
-              NPL 투자의{" "}
+              지금 체결 중인{" "}
               <span style={{
                 background: `linear-gradient(135deg, ${C.em}, ${C.emL}, #6EE7B7)`,
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              }}>새로운 기준</span>
+              }}>NPL 거래소</span>
             </motion.h2>
 
             <motion.p variants={up} custom={2} className="text-base mb-8"
               style={{ color: 'rgba(255,255,255,0.35)', maxWidth: '440px', margin: '0 auto 2rem', lineHeight: 1.7 }}>
-              무료로 회원가입하고 1,234건의 매물과 AI 분석을 지금 바로 경험해보세요.<br />
-              <span style={{ color: 'rgba(255,255,255,0.2)' }}>신용카드 불필요 · 즉시 이용 가능</span>
+              1,234건의 라이브 매물과 활성 딜룸에서 직접 거래를 시작하세요.<br />
+              <span style={{ color: 'rgba(255,255,255,0.2)' }}>회원가입 즉시 · 매물 탐색 · 딜룸 협상 · 전자계약</span>
             </motion.p>
 
             <motion.div variants={up} custom={3} className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <Link href="/my"
+              <Link href="/exchange"
                 className="inline-flex items-center justify-center gap-2 font-bold text-base rounded-xl transition-all"
                 style={{ background: `linear-gradient(135deg, ${C.em}, #059669)`, color: 'white', padding: '16px 32px', boxShadow: `0 4px 24px rgba(16,185,129,0.25)` }}
                 onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
                 onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
               >
-                무료로 시작하기 <ArrowRight size={17} />
+                매물 탐색하기 <ArrowRight size={17} />
               </Link>
-              <Link href="/guide"
+              <Link href="/exchange/sell"
                 className="inline-flex items-center justify-center gap-2 font-semibold text-base rounded-xl transition-all"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', padding: '16px 32px' }}
                 onMouseEnter={e => { (e.currentTarget.style.background = 'rgba(255,255,255,0.10)'); (e.currentTarget.style.transform = 'translateY(-2px)'); }}
                 onMouseLeave={e => { (e.currentTarget.style.background = 'rgba(255,255,255,0.06)'); (e.currentTarget.style.transform = 'translateY(0)'); }}
               >
-                NPL 가이드 <ChevronRight size={17} />
+                매물 등록하기 <ChevronRight size={17} />
               </Link>
             </motion.div>
 
