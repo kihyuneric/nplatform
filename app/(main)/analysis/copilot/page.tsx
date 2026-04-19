@@ -85,33 +85,50 @@ export default function NPLCopilotPage() {
         const reader = res.body.getReader()
         const decoder = new TextDecoder()
         let accumulated = ""
+        let buffer = ""
+        let streamError: string | null = null
+        const toolEvents: string[] = []
         const assistantId = `a-${Date.now()}`
         setMessages((prev) => [...prev, { id: assistantId, role: "assistant", content: "", timestamp: new Date() }])
         let done = false
         while (!done) {
           const { value, done: streamDone } = await reader.read()
           done = streamDone
-          if (value) {
-            const chunk = decoder.decode(value, { stream: true })
-            const lines = chunk.split("\n")
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const jsonStr = line.slice(6).trim()
-                if (jsonStr === "[DONE]") { done = true; break }
-                try {
-                  const parsed = JSON.parse(jsonStr)
-                  if (parsed.text) {
-                    accumulated += parsed.text
-                    setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: accumulated } : m))
-                  }
-                  if (parsed.conversation_id && !conversationId) setConversationId(parsed.conversation_id)
-                } catch { /* skip malformed SSE */ }
+          if (!value) continue
+          buffer += decoder.decode(value, { stream: true })
+          // SSE records are separated by a blank line (\n\n)
+          const records = buffer.split("\n\n")
+          buffer = records.pop() ?? ""
+          for (const record of records) {
+            const dataLine = record.split("\n").find((l) => l.startsWith("data: "))
+            if (!dataLine) continue
+            const jsonStr = dataLine.slice(6).trim()
+            if (jsonStr === "[DONE]") { done = true; break }
+            try {
+              const parsed = JSON.parse(jsonStr)
+              // Server emits { type, content } per streamCopilot contract
+              if (parsed.type === "text" && typeof parsed.content === "string") {
+                accumulated += parsed.content
+                setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: accumulated } : m))
+              } else if (parsed.type === "tool_start" && parsed.content) {
+                toolEvents.push(parsed.content)
+                const toolLabel = `🔧 ${parsed.content} 실행 중…`
+                setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: accumulated ? `${accumulated}\n\n${toolLabel}` : toolLabel } : m))
+              } else if (parsed.type === "error" && parsed.content) {
+                streamError = parsed.content
+              } else if (parsed.conversation_id && !conversationId) {
+                setConversationId(parsed.conversation_id)
               }
-            }
+            } catch { /* skip malformed SSE */ }
           }
         }
-        if (!accumulated) {
+        if (streamError && !accumulated) {
+          setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: `AI 스트리밍 오류: ${streamError}` } : m))
+        } else if (!accumulated) {
           setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: "응답을 생성할 수 없었습니다." } : m))
+        } else if (toolEvents.length > 0) {
+          // 최종 응답에 도구 마커 제거 (스트리밍 도중에만 표시)
+          setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: accumulated } : m))
         }
       } else {
         // Fallback: non-streaming JSON response
