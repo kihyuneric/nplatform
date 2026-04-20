@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { sendSlackBlocks, slackBlocks } from '@/lib/notifications/slack'
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { instName, bizRegNo, repName, phone, email, assetType } = body
+    const { instName, bizRegNo, repName, phone, email, assetType, estimatedVolume } = body
 
     if (!instName || !bizRegNo || !repName || !phone || !email || !assetType?.length) {
       return NextResponse.json(
@@ -12,8 +13,27 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // TODO: DB insert + send confirmation email + notify admin Slack
+    // TODO: DB insert + send confirmation email
     const applicationId = `INST-${Date.now().toString(36).toUpperCase()}`
+
+    // Phase 2-G: Slack 알림 (실패해도 신청 흐름은 막지 않음 — slack.ts가 swallow)
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://nplatform.vercel.app'
+    void sendSlackBlocks({
+      text: `🏛️ 신규 기관 온보딩 신청 — ${instName}`,
+      blocks: [
+        slackBlocks.header(`🏛️ 신규 기관 온보딩 신청`),
+        slackBlocks.fields([
+          { label: '기관명', value: instName },
+          { label: '사업자번호', value: bizRegNo },
+          { label: '담당자', value: `${repName} (${phone})` },
+          { label: '이메일', value: email },
+          { label: '자산 유형', value: Array.isArray(assetType) ? assetType.join(', ') : String(assetType) },
+          ...(estimatedVolume ? [{ label: '예상 규모', value: String(estimatedVolume) }] : []),
+        ]),
+        slackBlocks.context([`신청 ID: \`${applicationId}\``]),
+        slackBlocks.actionLink('승인 검토하기', `${baseUrl}/admin/onboarding`),
+      ],
+    })
 
     return NextResponse.json({
       success: true,
