@@ -146,7 +146,7 @@ export function ExchangePreview() {
 
         {/* 모바일: 가로 스와이프 carousel · md+: 4-col grid */}
         <div
-          className="-mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-0 flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none gap-4 md:grid-cols-2 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden"
+          className="-mx-4 sm:-mx-6 lg:mx-0 pl-4 sm:pl-6 lg:pl-0 pr-8 sm:pr-10 lg:pr-0 scroll-pl-4 sm:scroll-pl-6 lg:scroll-pl-0 flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none gap-4 md:grid-cols-2 lg:grid-cols-4 min-w-0 [&::-webkit-scrollbar]:hidden"
           style={{ scrollbarWidth: "none" }}
         >
           {SAMPLES.map((s, idx) => {
@@ -158,7 +158,7 @@ export function ExchangePreview() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ delay: idx * 0.06, duration: 0.4 }}
-                className="snap-start shrink-0 basis-[85%] sm:basis-[60%] md:basis-auto md:shrink"
+                className="snap-start shrink-0 basis-[82%] sm:basis-[58%] md:basis-auto md:shrink min-w-0"
               >
                 <Link
                   href="/exchange"

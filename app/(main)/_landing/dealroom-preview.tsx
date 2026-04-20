@@ -113,11 +113,11 @@ export function DealRoomPreview() {
 
           {/* 모바일: 채팅↔문서 가로 스와이프 · lg+: 3-col grid */}
           <div
-            className="flex lg:grid overflow-x-auto lg:overflow-visible snap-x snap-mandatory lg:snap-none divide-x lg:divide-y-0 lg:grid-cols-3 lg:divide-x [&::-webkit-scrollbar]:hidden"
+            className="flex lg:grid overflow-x-auto lg:overflow-visible snap-x snap-mandatory lg:snap-none scroll-px-0 pr-4 lg:pr-0 divide-x lg:divide-y-0 lg:grid-cols-3 lg:divide-x min-w-0 [&::-webkit-scrollbar]:hidden"
             style={{ borderColor: "rgba(255,255,255,0.06)", scrollbarWidth: "none" }}
           >
 
-            <div className="snap-start shrink-0 basis-[92%] lg:basis-auto lg:shrink lg:col-span-2 flex flex-col">
+            <div className="snap-start shrink-0 basis-[90%] lg:basis-auto lg:shrink lg:col-span-2 flex flex-col min-w-0">
               <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                 <MessageSquare size={13} style={{ color: "rgba(255,255,255,0.5)" }} />
                 <span className="text-[11px] font-bold tracking-wider" style={{ color: "rgba(255,255,255,0.55)" }}>
@@ -183,7 +183,7 @@ export function DealRoomPreview() {
               </div>
             </div>
 
-            <div className="snap-start shrink-0 basis-[92%] lg:basis-auto lg:shrink flex flex-col">
+            <div className="snap-start shrink-0 basis-[90%] lg:basis-auto lg:shrink flex flex-col min-w-0">
               <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                 <FileText size={13} style={{ color: "rgba(255,255,255,0.5)" }} />
                 <span className="text-[11px] font-bold tracking-wider" style={{ color: "rgba(255,255,255,0.55)" }}>

@@ -635,7 +635,7 @@ export default function DealsPage() {
             {/* Deal flow template */}
             <div className={`${DS.card.base} p-6`}>
               <h3 className={`${DS.text.cardTitle} mb-4`}>딜룸 진행 흐름</h3>
-              <div className="grid grid-cols-5 gap-3 items-stretch">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 items-stretch">
                 {KANBAN_STAGES.map((stage, idx) => {
                   const config = STAGE_CONFIG[stage]
                   return (
@@ -658,7 +658,7 @@ export default function DealsPage() {
                         </p>
                       </div>
                       {idx < 4 && (
-                        <div className="hidden sm:block absolute top-1/2 -right-2 z-10">
+                        <div className="hidden lg:block absolute top-1/2 -right-2 z-10">
                           <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
                         </div>
                       )}
