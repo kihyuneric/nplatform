@@ -170,8 +170,11 @@ function MobileDrawer({
         aria-hidden="true"
       />
 
-      {/* Drawer panel */}
-      <div className="fixed inset-y-0 left-0 z-[110] w-72 bg-[var(--color-brand-deep)] flex flex-col shadow-2xl">
+      {/* Drawer panel — NX-3: 테마 반응형 배경 */}
+      <div
+        className="fixed inset-y-0 left-0 z-[110] w-72 flex flex-col shadow-2xl"
+        style={{ backgroundColor: 'var(--color-nav-bg)' }}
+      >
         {/* Drawer header */}
         <div className="flex items-center justify-between px-5 h-14 border-b border-[var(--color-border-subtle)] flex-shrink-0">
           <Link href="/" className="flex items-center gap-2.5" onClick={onClose}>
@@ -290,6 +293,11 @@ function MobileDrawer({
             </div>
           ) : (
             <div className="flex flex-col gap-2">
+              {/* NX-2: 비로그인 유저 모바일 메뉴에도 테마/언어 컨트롤 제공 */}
+              <div className="flex items-center justify-center gap-2 pb-2 mb-1 border-b border-[var(--color-border-subtle)]">
+                <ThemeToggle variant="icon" />
+                <LanguageSelector />
+              </div>
               <Link href="/login" onClick={onClose}>
                 <Button variant="outline" className="w-full text-sm">로그인</Button>
               </Link>
@@ -405,9 +413,13 @@ export function Navigation() {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 w-full border-b border-[var(--color-border-subtle)] bg-[var(--color-brand-deep)] transition-shadow duration-200 ${
+        className={`sticky top-0 z-50 w-full border-b transition-shadow duration-200 ${
           scrolled ? 'shadow-sm backdrop-blur-sm' : ''
         }`}
+        style={{
+          backgroundColor: scrolled ? 'var(--color-nav-bg-scrolled)' : 'var(--color-nav-bg)',
+          borderBottomColor: 'var(--color-nav-border)',
+        }}
       >
         <div className="max-w-[1440px] mx-auto flex h-16 items-center justify-between px-6 lg:px-8">
 
@@ -588,6 +600,8 @@ export function Navigation() {
                 </>
               ) : (
                 <>
+                  {/* NX-2: 비로그인 유저에게도 테마 토글 노출 — 보편적 접근성 원칙 */}
+                  <ThemeToggle variant="icon" />
                   <LanguageSelector />
                   <Button variant="ghost" size="sm" asChild className="text-sm text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)] hover:bg-[var(--color-nav-hover-bg)]">
                     <Link href="/login">로그인</Link>

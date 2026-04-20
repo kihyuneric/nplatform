@@ -151,11 +151,18 @@ input::placeholder, textarea::placeholder {
     --tracking-wider:    0.04em;   /* 기존 0.08 */
     --tracking-widest:   0.06em;   /* 기존 0.12 → 한글 음절 사이 공백처럼 보이는 문제 방지 */
 
-    /* ── Nav — 항상 어두운 배경 위에 사용. 라이트/다크 모드 모두 동일한 밝은 값 ── */
-    --color-nav-text:      rgba(255, 255, 255, 0.92);  /* 기본 nav 텍스트 */
-    --color-nav-text-dim:  rgba(255, 255, 255, 0.58);  /* 보조 nav 텍스트 */
-    --color-nav-active:    #93C5FD;                    /* 활성 nav 항목 (blue-300) */
-    --color-nav-hover-bg:  rgba(255, 255, 255, 0.08);  /* hover 배경 */
+    /* ── Nav (NX-1/NX-3: theme-responsive) ──────────────────────────────────
+       라이트 모드 = 흰 배경 위 어두운 텍스트
+       다크 모드   = 어두운 배경 위 밝은 텍스트
+       (.dark 블록에서 오버라이드)
+       ───────────────────────────────────────────────────────────────────── */
+    --color-nav-bg:        #FFFFFF;                    /* 헤더 배경 */
+    --color-nav-bg-scrolled: rgba(255, 255, 255, 0.92);/* 스크롤 시 glassy */
+    --color-nav-border:    #E5E7EB;                    /* 헤더 하단 테두리 */
+    --color-nav-text:      #1F2937;                    /* 기본 nav 텍스트 (14:1) */
+    --color-nav-text-dim:  #6B7280;                    /* 보조 nav 텍스트 (4.6:1) */
+    --color-nav-active:    #1B3A5C;                    /* 활성 nav 항목 — 브랜드 네이비 */
+    --color-nav-hover-bg:  rgba(15, 23, 42, 0.06);     /* hover 배경 (slate-900/6%) */
 
     /* ── Brand Palette ─────────────────────────────────────────────────────── */
     --color-brand-deepest: #060E1C;
@@ -335,6 +342,15 @@ input::placeholder, textarea::placeholder {
   /* 핵심 원칙: 각 depth 레이어 간 명도 차이 최소 8포인트 이상 확보.
      어두운 배경에서 2단/3단 박스가 눈에 보이도록 명확한 계층 분리. */
   .dark {
+    /* ── Nav (NX-1/NX-3: 다크 오버라이드) ───────────────────────────────── */
+    --color-nav-bg:          #0D1F38;                      /* 브랜드 네이비 */
+    --color-nav-bg-scrolled: rgba(13, 31, 56, 0.92);       /* glassy */
+    --color-nav-border:      rgba(255, 255, 255, 0.10);
+    --color-nav-text:        rgba(255, 255, 255, 0.92);
+    --color-nav-text-dim:    rgba(255, 255, 255, 0.58);
+    --color-nav-active:      #93C5FD;                      /* blue-300 */
+    --color-nav-hover-bg:    rgba(255, 255, 255, 0.08);
+
     /* ── Brand 색상 (다크 모드 — 텍스트/인터랙티브 요소 가시성 확보) ──────── */
     /* 라이트 모드의 brand-dark(#1B3A5C)는 어두운 배경에서 보이지 않음.
        다크 모드에서는 더 밝은 중간 톤 블루로 오버라이드 */
@@ -1048,10 +1064,25 @@ input::placeholder, textarea::placeholder {
    COMPONENT OVERRIDES — Third-party (Radix / Shadcn)
    ───────────────────────────────────────────────────────────────────────────── */
 
-/* Switch toggle */
-button[role="switch"][data-state="checked"]   { background-color: #10B981 !important; }
-button[role="switch"][data-state="unchecked"] { background-color: #CBD5E1 !important; }
-.dark button[role="switch"][data-state="unchecked"] { background-color: #475569 !important; }
+/* Switch toggle — NX-4: unchecked 상태 가시성 (WCAG 1.4.11 non-text contrast ≥ 3:1) */
+button[role="switch"][data-state="checked"] {
+  background-color: #10B981 !important;
+  border: 1px solid #0D9668 !important;
+}
+button[role="switch"][data-state="unchecked"] {
+  /* slate-400 on white = 3.4:1 (AA ✓) · 테두리로 엣지 정의 */
+  background-color: #94A3B8 !important;
+  border: 1px solid #64748B !important;
+}
+.dark button[role="switch"][data-state="checked"] {
+  background-color: #10B981 !important;
+  border: 1px solid #34D399 !important;
+}
+.dark button[role="switch"][data-state="unchecked"] {
+  /* slate-500 on #0B1220 = 4.1:1 (AA ✓) */
+  background-color: #64748B !important;
+  border: 1px solid #94A3B8 !important;
+}
 
 /* Dropdown menu hover */
 [data-radix-popper-content-wrapper] [role="menuitem"]:hover,
