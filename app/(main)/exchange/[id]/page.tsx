@@ -12,11 +12,11 @@
  */
 
 import { useState, useEffect, useCallback } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import {
-  FileText, MapPin, Building2, TrendingDown, Info,
+  FileText, MapPin, Building2, Info,
   CheckCircle2, ShieldCheck, AlertTriangle, Scale, Images,
-  Brain, Sparkles, BarChart3, Target, TrendingUp,
+  Brain, Sparkles, Target, TrendingUp,
 } from "lucide-react"
 import { toast } from "sonner"
 import { TierGate } from "@/components/tier/tier-gate"
@@ -24,7 +24,6 @@ import type { AccessTier } from "@/lib/access-tier"
 import { getUserTier } from "@/lib/access-tier"
 import { formatAIGrade } from "@/lib/taxonomy"
 import { createClient } from "@/lib/supabase/client"
-import { maskInstitutionName } from "@/lib/mask"
 
 // DR-4: 신규 단순화 컴포넌트
 import {
@@ -34,6 +33,21 @@ import {
   DetailTabs,
 } from "@/components/asset-detail"
 import { useAssetTier } from "@/hooks/use-asset-tier"
+import type { AssetTier } from "@/hooks/use-asset-tier"
+
+/* ═════ Mock 진행 시뮬레이션 (API 미연동 시 사용) ═════
+ * 클릭할 때마다 티어가 다음 단계로 올라가며, 로컬에만 저장됩니다.
+ * 실제 API 연동 시 useAssetTier 만 사용하고 아래 블록을 제거하세요. */
+const MOCK_STORAGE_KEY = (id: string) => `asset-mock-tier:${id}`
+const TIER_ORDER: AssetTier[] = ["L0", "L1", "L2", "L3", "L4", "L5"]
+const TIER_TRANSITION_MSG: Record<AssetTier, string> = {
+  L0: "로그인 완료 · 기본 정보 열람 가능",
+  L1: "본인인증 완료 · 등기원본/임대차 열람 가능",
+  L2: "NDA 체결 완료 · 데이터룸 · 현장사진 열람 가능",
+  L3: "LOI 제출 완료 · 매도자 승인 대기 → 실사 자료 오픈",
+  L4: "계약 초안 승인 · 전자서명 · 에스크로 단계 진입",
+  L5: "정산 완료 · 거래가 종결되었습니다 🎉",
+}
 
 /* ═════ Design tokens ═════ */
 const C = {
@@ -208,7 +222,6 @@ interface AIAnalysisResult {
 ═══════════════════════════════════════════════════════════ */
 export default function ListingDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const id = (params?.id as string) ?? "npl-2026-0412"
 
   const [listing, setListing] = useState<ListingDetail>(() => buildMock(id))
@@ -218,6 +231,26 @@ export default function ListingDetailPage() {
   const [watchlisted, setWatchlisted] = useState(false)
   const [watchlistSaving, setWatchlistSaving] = useState(false)
   const [dealCreating, setDealCreating] = useState(false)
+
+  /* ─── Mock 진행 티어 (API 미연동) ───
+   * localStorage 에 저장되어 새로고침/탭 이동 후에도 단계가 유지됩니다. */
+  const [mockTier, setMockTier] = useState<AssetTier>("L0")
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const saved = window.localStorage.getItem(MOCK_STORAGE_KEY(id))
+    if (saved && TIER_ORDER.includes(saved as AssetTier)) {
+      setMockTier(saved as AssetTier)
+    }
+  }, [id])
+
+  /** 실제 서버 티어가 L0 면 mockTier 우선, 아니면 실제 티어 사용 */
+  const effectiveTier: AssetTier = assetTier.tier !== "L0" ? assetTier.tier : mockTier
+  /** 분석 탭/권리 탭 내부의 TierGate 는 AccessTier(L0~L3) 기준 — effectiveTier 의 첫 3단계를 매핑 */
+  const effectiveAccessTier: AccessTier =
+    effectiveTier === "L0" ? "L0" :
+    effectiveTier === "L1" ? "L1" :
+    "L3" // L2+ 는 모두 L3 로 간주 (담보/권리 전체 공개)
+  void tier // legacy useUserTier — AccessTier UI 호환성 위해 유지
 
   // ── Fetch real listing ──
   useEffect(() => {
@@ -285,52 +318,37 @@ export default function ListingDetailPage() {
     })()
   }, [id])
 
-  // ── Primary CTA 실행: 티어 기반 다음 단계 ──
-  const handlePrimaryAction = useCallback(async () => {
-    const action = assetTier.primaryAction
-    // L0: 로그인
-    if (action.type === "LOGIN") {
-      router.push("/auth/login?next=" + encodeURIComponent(`/exchange/${id}`))
+  // ── Primary CTA 실행: Mock 진행 시뮬레이션 ──
+  // API 미연동 상태에서는 클릭할 때마다 티어가 한 단계 승급되며,
+  // localStorage 에 저장되어 단계가 유지됩니다.
+  const handlePrimaryAction = useCallback(() => {
+    // 최종 단계 → 정산 내역 노출 (새로고침 없이 토스트만)
+    if (effectiveTier === "L5") {
+      toast.success(TIER_TRANSITION_MSG.L5, { duration: 3500 })
       return
     }
-    // L1: 인증 페이지
-    if (action.type === "QUALIFY_INVESTOR") {
-      router.push("/my/kyc")
-      return
+    // 다음 티어로 승급
+    const currentIdx = TIER_ORDER.indexOf(effectiveTier)
+    const nextTier = TIER_ORDER[currentIdx + 1] ?? "L5"
+    setMockTier(nextTier)
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(MOCK_STORAGE_KEY(id), nextTier)
     }
-    // L2+: 딜 생성/조회 후 동일 URL 에서 진행 (DR-3-D 인라인 모달은 후속)
-    if (dealCreating) return
-    setDealCreating(true)
-    try {
-      // 기존 딜 재사용
-      const listRes = await fetch(`/api/v1/exchange/deals?listing_id=${id}&limit=1`)
-      if (listRes.ok) {
-        const { data } = await listRes.json()
-        if (Array.isArray(data) && data.length > 0) {
-          toast.success("진행 중인 딜로 이동합니다.")
-          router.refresh()
-          setDealCreating(false)
-          return
-        }
-      }
-      // 신규 딜 생성
-      const createRes = await fetch("/api/v1/exchange/deals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listing_id: id }),
-      })
-      if (createRes.ok || createRes.status === 201) {
-        toast.success("딜이 시작되었습니다.")
-        await assetTier.reload()
-      } else {
-        toast.error("딜 생성에 실패했습니다.")
-      }
-    } catch {
-      toast.error("일시적 오류. 다시 시도해 주세요.")
-    } finally {
-      setDealCreating(false)
+    toast.success(TIER_TRANSITION_MSG[nextTier], { duration: 3000 })
+  }, [effectiveTier, id])
+
+  // ── 진행 초기화 (개발 편의: ?reset=1 쿼리 시 L0 복귀) ──
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const url = new URL(window.location.href)
+    if (url.searchParams.get("reset") === "1") {
+      window.localStorage.removeItem(MOCK_STORAGE_KEY(id))
+      setMockTier("L0")
+      url.searchParams.delete("reset")
+      window.history.replaceState({}, "", url.toString())
+      toast("진행 상태를 초기화했습니다. (L0)")
     }
-  }, [assetTier, dealCreating, id, router])
+  }, [id])
 
   // ── 계산 ──
   const discountPct = listing.discount_rate.toFixed(1)
@@ -357,11 +375,52 @@ export default function ListingDetailPage() {
         title={title}
         oneLiner={oneLiner}
         aiGrade={listing.ai_grade}
-        tier={assetTier.tier}
+        tier={effectiveTier}
         watchlisted={watchlisted}
         onToggleWatchlist={handleWatchlist}
         backHref="/exchange"
       />
+
+      {/* ═══ 정산 완료 배너 (L5) ═══ */}
+      {effectiveTier === "L5" && (
+        <section className="max-w-[1280px] mx-auto" style={{ padding: "20px 24px 0" }}>
+          <div
+            className="rounded-2xl p-5 flex items-start gap-4 flex-wrap"
+            style={{
+              backgroundColor: "var(--color-positive-bg)",
+              border: "1px solid var(--color-positive)",
+            }}
+          >
+            <CheckCircle2 size={24} color="var(--color-positive)" className="flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-[200px]">
+              <div className="font-black" style={{ fontSize: 16, color: "var(--color-positive)" }}>
+                거래가 종결되었습니다
+              </div>
+              <p className="mt-1.5 leading-relaxed" style={{ fontSize: 12, color: "var(--fg-default)" }}>
+                에스크로 정산이 완료되었습니다 · 영수증과 세금계산서는 아래 정산 내역에서 확인하세요.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window === "undefined") return
+                window.localStorage.removeItem(MOCK_STORAGE_KEY(id))
+                setMockTier("L0")
+                toast("진행 상태를 초기화했습니다.")
+              }}
+              className="px-3 py-1.5 rounded-lg font-bold"
+              style={{
+                fontSize: 11,
+                backgroundColor: "transparent",
+                color: "var(--color-positive)",
+                border: "1px solid var(--color-positive)",
+              }}
+            >
+              처음부터 다시 시연
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* ═══ KPI + Action ═══ */}
       <section
@@ -400,8 +459,8 @@ export default function ListingDetailPage() {
           </div>
           <div className="md:col-span-1 col-span-full">
             <PrimaryActionCard
-              tier={assetTier.tier}
-              loading={dealCreating || assetTier.loading}
+              tier={effectiveTier}
+              loading={dealCreating}
               onAction={handlePrimaryAction}
               variant="desktop"
             />
@@ -425,16 +484,16 @@ export default function ListingDetailPage() {
       >
         <DetailTabs
           initial="collateral"
-          collateral={<CollateralTab listing={listing} tier={tier} />}
-          rights={<RightsTab listing={listing} tier={tier} />}
-          analysis={<AnalysisTab listing={listing} tier={tier} aiAnalysis={aiAnalysis} />}
+          collateral={<CollateralTab listing={listing} tier={effectiveAccessTier} />}
+          rights={<RightsTab listing={listing} tier={effectiveAccessTier} />}
+          analysis={<AnalysisTab listing={listing} tier={effectiveAccessTier} aiAnalysis={aiAnalysis} />}
         />
       </section>
 
       {/* ═══ Mobile sticky CTA ═══ */}
       <PrimaryActionCard
-        tier={assetTier.tier}
-        loading={dealCreating || assetTier.loading}
+        tier={effectiveTier}
+        loading={dealCreating}
         onAction={handlePrimaryAction}
         variant="mobile-sticky"
       />
