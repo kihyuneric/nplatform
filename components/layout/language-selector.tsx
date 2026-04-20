@@ -31,7 +31,12 @@ export function LanguageSelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1 text-xs hover:bg-[var(--color-nav-hover-bg)]"
+          style={{ color: "var(--color-nav-text)" }}
+        >
           <Globe className="h-3.5 w-3.5" />
           <span>
             {currentLang.flag} {currentLang.code.toUpperCase()}

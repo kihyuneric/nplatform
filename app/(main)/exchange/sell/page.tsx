@@ -29,13 +29,24 @@ import {
   REGIONS,
 } from "@/lib/taxonomy"
 
+// NX-5: theme-responsive color map — 라이트/다크 양쪽에서 WCAG AA 대비 확보
 const C = {
-  bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
-  bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
-  em: "var(--color-positive)", emL: "var(--color-positive)",
-  blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
-  amber: "var(--color-warning)", rose: "var(--color-danger)", teal: "#14B8A6",
-  lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
+  // Surface ladder: 페이지 bg → 섹션 → 카드 → elevated
+  bg0: "var(--color-bg-deepest)",            // 라이트: #E2E8F0 / 다크: #02050C
+  bg1: "var(--color-bg-deep)",               // 라이트: #E8EDF2 / 다크: #05080F
+  bg2: "var(--color-surface-elevated)",      // 라이트: #FFFFFF / 다크: #162035
+  bg3: "var(--color-bg-base)",               // 라이트: #F1F5F9 / 다크: #0D1525
+  bg4: "var(--color-border-default)",        // 라이트: #D0D8E4 / 다크: rgba(255,255,255,0.12)
+  em:  "var(--color-positive)",
+  emL: "var(--color-positive)",
+  blue:  "var(--color-brand-dark)",
+  blueL: "var(--color-brand-bright)",
+  amber: "var(--color-warning)",
+  rose:  "var(--color-danger)",
+  teal:  "#14B8A6",
+  // 본문 텍스트: secondary(#4A5568 on light = 10:1 ✓) · tertiary(#718096 = 5.1:1 ✓)
+  lt3: "var(--color-text-secondary)",
+  lt4: "var(--color-text-tertiary)",
 }
 
 interface WizardState {
@@ -228,7 +239,7 @@ export default function SellWizardPage() {
   }
 
   return (
-    <main style={{ backgroundColor: C.bg0, color: "#E2E8F0", minHeight: "100vh" }}>
+    <main style={{ backgroundColor: C.bg0, color: "var(--color-text-primary)", minHeight: "100vh" }}>
       <section style={{ borderBottom: `1px solid ${C.bg4}`, backgroundColor: C.bg1 }}>
         <div style={{ maxWidth: 1120, margin: "0 auto", padding: "40px 24px 32px" }}>
           <Link
@@ -255,7 +266,7 @@ export default function SellWizardPage() {
             </span>
           </div>
 
-          <h1 style={{ fontSize: 32, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 8 }}>
+          <h1 style={{ fontSize: 32, fontWeight: 900, color: "var(--color-text-primary)", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 8 }}>
             매물 등록 마법사
           </h1>
           <p style={{ fontSize: 13, color: C.lt4, maxWidth: 620, lineHeight: 1.6 }}>
@@ -444,7 +455,7 @@ export default function SellWizardPage() {
                   <span>실효 요율</span>
                   <span style={{ color: C.emL, fontWeight: 700 }}>{(feeEstimate.totalRate * 100).toFixed(2)}%</span>
                 </div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", letterSpacing: "-0.01em" }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: "var(--color-text-primary)", letterSpacing: "-0.01em" }}>
                   {formatKRW(feeEstimate.totalFee)}
                 </div>
                 <div style={{ marginTop: 8, fontSize: 9, color: C.lt4, lineHeight: 1.5 }}>
@@ -462,7 +473,7 @@ export default function SellWizardPage() {
             >
               <ShieldCheck size={16} color={C.emL} style={{ marginTop: 1, flexShrink: 0 }} />
               <div style={{ fontSize: 11, color: C.lt3, lineHeight: 1.55 }}>
-                제출 시 <strong style={{ color: "#fff" }}>자동 마스킹 파이프라인</strong>이 실행되어
+                제출 시 <strong style={{ color: "var(--color-text-primary)" }}>자동 마스킹 파이프라인</strong>이 실행되어
                 채무자 식별정보 · 상세 지번 · 동/호수가 자동으로 가려집니다.
                 마스킹 결과는 DPO 검수 후 L0 공개됩니다.
               </div>
@@ -736,7 +747,7 @@ function Step4BondRights({ state, update }: { state: WizardState; update: <K ext
       >
         <AlertCircle size={14} color={C.blueL} style={{ marginTop: 1, flexShrink: 0 }} />
         <div style={{ fontSize: 11, color: C.lt3, lineHeight: 1.55 }}>
-          이 정보들은 <strong style={{ color: "#fff" }}>NPL 수익성 분석</strong>(ROI, IRR, 배당표 시뮬레이션)에 직접 사용됩니다.
+          이 정보들은 <strong style={{ color: "var(--color-text-primary)" }}>NPL 수익성 분석</strong>(ROI, IRR, 배당표 시뮬레이션)에 직접 사용됩니다.
           입력하지 않으면 매수자가 별도 분석해야 하므로 매칭률이 낮아질 수 있습니다.
         </div>
       </div>
@@ -867,7 +878,7 @@ function Step5Docs({ state, update }: { state: WizardState; update: <K extends k
                 style={{
                   display: "flex", gap: 12, alignItems: "flex-start",
                   background: "none", border: "none", cursor: "pointer",
-                  padding: 0, color: "#fff", textAlign: "left",
+                  padding: 0, color: "var(--color-text-primary)", textAlign: "left",
                 }}
               >
                 <div
@@ -1045,7 +1056,7 @@ function Step6Review({
                     fontSize: 13, fontWeight: 800,
                   }}
                 >
-                  <span style={{ color: "#fff" }}>합계</span>
+                  <span style={{ color: "var(--color-text-primary)" }}>합계</span>
                   <span style={{ color: C.emL, fontVariantNumeric: "tabular-nums" }}>
                     {formatKRW(feeEstimate.totalFee)} ({(feeEstimate.totalRate * 100).toFixed(2)}%)
                   </span>
@@ -1066,7 +1077,7 @@ function SubmittedScreen({ completeness }: { completeness: number }) {
   return (
     <main
       style={{
-        backgroundColor: C.bg0, color: "#E2E8F0", minHeight: "100vh",
+        backgroundColor: C.bg0, color: "var(--color-text-primary)", minHeight: "100vh",
         display: "flex", alignItems: "center", justifyContent: "center", padding: 40,
       }}
     >
@@ -1091,12 +1102,12 @@ function SubmittedScreen({ completeness }: { completeness: number }) {
         >
           <Check size={36} color={C.em} />
         </div>
-        <h2 style={{ fontSize: 24, fontWeight: 900, color: "#fff", marginBottom: 10 }}>
+        <h2 style={{ fontSize: 24, fontWeight: 900, color: "var(--color-text-primary)", marginBottom: 10 }}>
           마스킹 파이프라인 대기열 등록 완료
         </h2>
         <p style={{ fontSize: 13, color: C.lt4, lineHeight: 1.6, marginBottom: 24 }}>
           제출하신 매물은 자동 마스킹 엔진에서 1차 처리 후 DPO 검수를 거쳐{" "}
-          <strong style={{ color: "#fff" }}>평균 2시간 이내</strong>에 L0(공개) 단계로 노출됩니다.
+          <strong style={{ color: "var(--color-text-primary)" }}>평균 2시간 이내</strong>에 L0(공개) 단계로 노출됩니다.
         </p>
         <div
           style={{
@@ -1123,7 +1134,7 @@ function SubmittedScreen({ completeness }: { completeness: number }) {
             href="/exchange/my"
             style={{
               padding: "11px 20px", borderRadius: 10,
-              backgroundColor: C.bg3, color: "#fff",
+              backgroundColor: C.bg3, color: "var(--color-text-primary)",
               fontSize: 12, fontWeight: 700, textDecoration: "none",
               border: `1px solid ${C.bg4}`,
             }}
@@ -1171,7 +1182,7 @@ function StepHeader({ num, title, desc }: { num: number; title: string; desc: st
       <div style={{ fontSize: 11, color: C.emL, fontWeight: 800, marginBottom: 6, letterSpacing: "0.1em" }}>
         STEP {num} / 6
       </div>
-      <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff", marginBottom: 6, letterSpacing: "-0.01em" }}>
+      <h2 style={{ fontSize: 22, fontWeight: 900, color: "var(--color-text-primary)", marginBottom: 6, letterSpacing: "-0.01em" }}>
         {title}
       </h2>
       <p style={{ fontSize: 12, color: C.lt4, lineHeight: 1.6 }}>{desc}</p>
@@ -1209,7 +1220,7 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
       style={{
         width: "100%", padding: "11px 14px", borderRadius: 10,
         backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
-        color: "#fff", fontSize: 13, outline: "none",
+        color: "var(--color-text-primary)", fontSize: 13, outline: "none",
       }}
     />
   )
@@ -1237,7 +1248,7 @@ function NumberInput({ value, onChange, placeholder, suffix }: { value: number; 
         style={{
           width: "100%", padding: "11px 40px 11px 14px", borderRadius: 10,
           backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
-          color: "#fff", fontSize: 13, outline: "none",
+          color: "var(--color-text-primary)", fontSize: 13, outline: "none",
         }}
       />
       {suffix && (
@@ -1347,7 +1358,7 @@ function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: bool
         padding: "11px 14px", borderRadius: 10,
         backgroundColor: value ? "var(--color-positive-bg)" : C.bg3,
         border: `1px solid ${value ? C.em : C.bg4}`,
-        color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", width: "100%",
+        color: "var(--color-text-primary)", fontSize: 12, fontWeight: 600, cursor: "pointer", width: "100%",
         textAlign: "left",
       }}
     >
