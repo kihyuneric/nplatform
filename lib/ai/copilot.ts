@@ -418,6 +418,14 @@ function classifyIntentFallback(query: string): CopilotIntent {
 }
 
 // ─── Streaming Copilot (SSE용) ──────────────────────────────
+// Phase 3-B: streamWithTools 로 전환 — 실제 도구 실행 + 결과 피드백 루프
+//
+// 이벤트 타입:
+//   text        — 모델 텍스트 토큰
+//   tool_start  — 도구 호출 시작 (이름)
+//   tool_result — 도구 실행 결과 (JSON 요약)
+//   done        — 종료
+//   error       — 오류
 
 export async function* streamCopilot(req: CopilotRequest): AsyncGenerator<{
   type: "text" | "tool_start" | "tool_result" | "done" | "error"
@@ -443,10 +451,14 @@ export async function* streamCopilot(req: CopilotRequest): AsyncGenerator<{
       { role: "user", content: userMessage },
     ]
 
-    const stream = ai.stream({
+    const toolHandlers = createToolHandlers()
+
+    const stream = ai.streamWithTools({
       messages,
       system: COPILOT_SYSTEM,
       tools: NPL_TOOLS,
+      toolHandlers,
+      maxIterations: 5,
       maxTokens: 4096,
     })
 
@@ -455,6 +467,10 @@ export async function* streamCopilot(req: CopilotRequest): AsyncGenerator<{
         yield { type: "text", content: chunk.text }
       } else if (chunk.type === "tool_use" && chunk.toolCall) {
         yield { type: "tool_start", content: chunk.toolCall.name }
+      } else if (chunk.type === "tool_result") {
+        // 도구 결과 요약 (JSON 전체는 UI 성능 위해 축약)
+        const summary = summarizeToolOutput(chunk.toolCall?.name ?? "tool", chunk.toolOutput)
+        yield { type: "tool_result", content: summary }
       } else if (chunk.type === "done") {
         yield { type: "done", content: "" }
       } else if (chunk.type === "error") {
@@ -468,6 +484,36 @@ export async function* streamCopilot(req: CopilotRequest): AsyncGenerator<{
     yield { type: "text", content: `\n\n[Fallback 모드]\n${fallback.message}` }
     yield { type: "done", content: "" }
   }
+}
+
+// 도구 결과 요약 — UI 에 간결한 한 줄 표현 전달
+function summarizeToolOutput(toolName: string, output: unknown): string {
+  if (!output || typeof output !== "object") {
+    return `${toolName} 완료`
+  }
+  const o = output as Record<string, unknown>
+  if ("error" in o && o.error) return `${toolName} 오류: ${String(o.error).slice(0, 80)}`
+
+  // 도구별 핵심 수치 추출
+  if (toolName === "calculate_recovery_rate") {
+    const rate = (o.recoveryRate ?? o.recovery_rate) as number | undefined
+    return typeof rate === "number" ? `${toolName} — 회수율 ${(rate * 100).toFixed(1)}%` : `${toolName} 완료`
+  }
+  if (toolName === "evaluate_price") {
+    const neutral = (o.neutralPrice ?? o.neutral_price) as number | undefined
+    return typeof neutral === "number"
+      ? `${toolName} — 권장가 ${formatKRW(neutral)}`
+      : `${toolName} 완료`
+  }
+  if (toolName === "run_dcf_analysis") {
+    const npv = (o.npv ?? o.NPV) as number | undefined
+    return typeof npv === "number" ? `${toolName} — NPV ${formatKRW(npv)}` : `${toolName} 완료`
+  }
+  if (toolName === "analyze_rights_risks") {
+    const score = o.cleanScore as number | undefined
+    return typeof score === "number" ? `${toolName} — CleanScore ${score}/100` : `${toolName} 완료`
+  }
+  return `${toolName} 완료`
 }
 
 // ─── Legacy export (하위 호환) ──────────────────────────────

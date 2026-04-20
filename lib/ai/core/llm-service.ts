@@ -83,9 +83,13 @@ export interface AIResponse {
 
 /** Streaming chunk */
 export interface AIStreamChunk {
-  type: "text" | "tool_use" | "done" | "error"
+  type: "text" | "tool_use" | "tool_result" | "done" | "error"
   text?: string
   toolCall?: ToolCall
+  /** tool_result 용: 도구 실행 결과 */
+  toolOutput?: unknown
+  /** tool_result 용: 원본 tool_use_id (client 매칭용) */
+  toolUseId?: string
   error?: string
 }
 
@@ -452,6 +456,168 @@ JSON 응답:`
       }
     } catch (err: any) {
       yield { type: "error", error: err.message ?? "스트리밍 실패" }
+    }
+  }
+
+  // ─── Streaming + Tool-use 루프 ───────────────────────────
+  // chatWithTools 와 stream 을 결합: 텍스트는 토큰 단위로 흐르고,
+  // tool_use 블록이 나오면 실행 후 결과를 모델에 피드백하고 계속 스트리밍.
+
+  async *streamWithTools(opts: {
+    messages: AIMessage[]
+    system?: string
+    tools: AITool[]
+    toolHandlers: Record<string, (input: Record<string, unknown>) => Promise<unknown>>
+    maxIterations?: number
+    maxTokens?: number
+  }): AsyncGenerator<AIStreamChunk> {
+    const {
+      messages,
+      system = NPL_SYSTEM_PROMPT,
+      tools,
+      toolHandlers,
+      maxIterations = 5,
+      maxTokens = this.config.maxTokens,
+    } = opts
+
+    const conversationMessages: Anthropic.MessageParam[] = messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }))
+
+    let totalInput = 0
+    let totalOutput = 0
+
+    try {
+      for (let iter = 0; iter < maxIterations; iter++) {
+        // Per-iteration 누적 상태
+        const assistantBlocks: Anthropic.ContentBlock[] = []
+        const toolUseAccumulators: Record<number, { id: string; name: string; partial: string }> = {}
+        const textBlockAccumulators: Record<number, string> = {}
+        let iterStopReason: string | null = null
+
+        const stream = this.client.messages.stream({
+          model: this.config.model,
+          max_tokens: maxTokens,
+          temperature: this.config.temperature,
+          system: [
+            { type: "text" as const, text: system, cache_control: { type: "ephemeral" as const } },
+          ],
+          messages: conversationMessages,
+          tools: tools.map((t) => ({
+            type: "custom" as const,
+            name: t.name,
+            description: t.description,
+            input_schema: t.input_schema as Anthropic.Tool.InputSchema,
+          })),
+        })
+
+        for await (const event of stream) {
+          if (event.type === "content_block_start") {
+            const block = event.content_block as any
+            if (block.type === "text") {
+              textBlockAccumulators[event.index] = ""
+            } else if (block.type === "tool_use") {
+              toolUseAccumulators[event.index] = { id: block.id, name: block.name, partial: "" }
+              yield {
+                type: "tool_use",
+                toolCall: { id: block.id, name: block.name, input: {} },
+              }
+            }
+          } else if (event.type === "content_block_delta") {
+            const delta = event.delta as any
+            if (delta.type === "text_delta") {
+              yield { type: "text", text: delta.text }
+              if (event.index in textBlockAccumulators) {
+                textBlockAccumulators[event.index] += delta.text
+              }
+            } else if (delta.type === "input_json_delta") {
+              if (event.index in toolUseAccumulators) {
+                toolUseAccumulators[event.index].partial += delta.partial_json
+              }
+            }
+          } else if (event.type === "content_block_stop") {
+            // 블록 종료 — content 재구성 (assistant turn 에 저장 용)
+            if (event.index in textBlockAccumulators) {
+              assistantBlocks.push({
+                type: "text",
+                text: textBlockAccumulators[event.index],
+                citations: null,
+              } as Anthropic.TextBlock)
+            } else if (event.index in toolUseAccumulators) {
+              const acc = toolUseAccumulators[event.index]
+              let parsed: Record<string, unknown> = {}
+              try {
+                parsed = acc.partial ? JSON.parse(acc.partial) : {}
+              } catch {
+                parsed = {}
+              }
+              assistantBlocks.push({
+                type: "tool_use",
+                id: acc.id,
+                name: acc.name,
+                input: parsed,
+              } as Anthropic.ToolUseBlock)
+            }
+          } else if (event.type === "message_delta") {
+            const delta = event.delta as any
+            if (delta?.stop_reason) iterStopReason = delta.stop_reason
+            if (event.usage) {
+              totalInput += event.usage.input_tokens ?? 0
+              totalOutput += event.usage.output_tokens ?? 0
+            }
+          }
+        }
+
+        // 이 iteration 의 assistant turn 이 구성되었다.
+        // tool_use 가 없으면 종료
+        const toolUseBlocks = assistantBlocks.filter(
+          (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",
+        )
+        if (toolUseBlocks.length === 0 || iterStopReason === "end_turn") {
+          break
+        }
+
+        // Assistant turn append
+        conversationMessages.push({ role: "assistant", content: assistantBlocks })
+
+        // 각 도구 실행 + tool_result 이벤트 송출
+        const toolResultContents: Anthropic.ToolResultBlockParam[] = []
+        for (const tu of toolUseBlocks) {
+          const handler = toolHandlers[tu.name]
+          let output: unknown
+          if (handler) {
+            try {
+              output = await handler(tu.input as Record<string, unknown>)
+            } catch (err: any) {
+              output = { error: err?.message ?? "도구 실행 실패" }
+            }
+          } else {
+            output = { error: `알 수 없는 도구: ${tu.name}` }
+          }
+
+          yield {
+            type: "tool_result",
+            toolUseId: tu.id,
+            toolCall: { id: tu.id, name: tu.name, input: tu.input as Record<string, unknown> },
+            toolOutput: output,
+          }
+
+          toolResultContents.push({
+            type: "tool_result",
+            tool_use_id: tu.id,
+            content: typeof output === "string" ? output : JSON.stringify(output),
+          })
+        }
+
+        // User turn (tool_result) append 후 다음 iteration
+        conversationMessages.push({ role: "user", content: toolResultContents })
+      }
+
+      this.trackUsage({ inputTokens: totalInput, outputTokens: totalOutput })
+      yield { type: "done" }
+    } catch (err: any) {
+      yield { type: "error", error: err?.message ?? "streamWithTools 실패" }
     }
   }
 
