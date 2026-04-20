@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
-import { useRouter, useParams } from "next/navigation"
+import { useRouter, useParams, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import {
   ChevronLeft, Send, Upload, FileText, Download, Phone, Video,
@@ -2006,7 +2006,17 @@ function RightPanel({ deal, onTabSwitch }: { deal: DealInfo; onTabSwitch: (tab: 
 export default function DealRoomPage() {
   const params = useParams()
   const dealId = params?.id as string || "unknown"
-  const [activeTab, setActiveTab] = useState<TabKey>("개요")
+  const searchParams = useSearchParams()
+
+  // DR-2a (2026-04-21): /exchange/[id]/* 리다이렉트에서 온 query param 처리
+  // ?tab=채팅|문서|오퍼|실사|계약|에스크로|미팅|감사|개요 → 해당 탭 자동 전환
+  // ?action=nda|loi → DR-3 모달 구현 전까지 토스트 안내
+  const initialTab = ((): TabKey => {
+    const t = searchParams?.get("tab") as TabKey | null
+    const valid: TabKey[] = ["개요", "채팅", "문서", "오퍼", "실사", "계약", "에스크로", "미팅", "감사"]
+    return t && valid.includes(t) ? t : "개요"
+  })()
+  const [activeTab, setActiveTab] = useState<TabKey>(initialTab)
   const router = useRouter()
   const [deal, setDeal] = useState<DealInfo | null>(null)
   const [dealLoading, setDealLoading] = useState(true)
@@ -2020,6 +2030,28 @@ export default function DealRoomPage() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
   // authTick is a counter we bump when auth resolves to force sub-component re-render
   const [authTick, setAuthTick] = useState(0)
+
+  // DR-2a: ?action=nda|loi 처리 — DR-3 에서 실제 모달로 교체 예정
+  useEffect(() => {
+    const action = searchParams?.get("action")
+    if (action === "nda") {
+      toast.info("NDA 서명 페이지로 이동합니다", {
+        description: "기존 NDA 서명 플로우를 재사용합니다 (DR-3 에서 인라인 모달로 교체 예정)",
+        duration: 4000,
+      })
+    } else if (action === "loi") {
+      toast.info("LOI 제출 페이지로 이동합니다", {
+        description: "기존 LOI 제출 폼을 재사용합니다 (DR-3 에서 인라인 모달로 교체 예정)",
+        duration: 4000,
+      })
+    }
+    // 라우팅 cleanup: action 파라미터만 제거 (tab 은 유지)
+    if (action && typeof window !== "undefined") {
+      const url = new URL(window.location.href)
+      url.searchParams.delete("action")
+      window.history.replaceState({}, "", url.toString())
+    }
+  }, [searchParams])
 
   useEffect(() => {
     let cancelled = false
