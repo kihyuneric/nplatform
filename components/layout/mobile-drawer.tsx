@@ -54,9 +54,8 @@ const NAV_GROUPS: NavGroup[] = [
     group: '거래소',
     items: [
       { label: '매물 탐색', icon: Search, href: '/exchange' },
-      { label: '입찰', icon: Gavel, href: '/exchange/auction' },
+      { label: 'NPL 오픈경매', icon: Gavel, href: '/exchange/auction' },
       { label: '매물 등록', icon: PlusCircle, href: '/exchange/sell' },
-      { label: '대량 등록', icon: Upload, href: '/exchange/bulk-upload' },
       { label: '매수 수요', icon: Users, href: '/exchange/demands' },
     ],
   },

@@ -17,29 +17,47 @@ import { ExchangePreview } from "./_landing/exchange-preview";
 import { DealRoomPreview } from "./_landing/dealroom-preview";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   DESIGN TOKENS
+   DESIGN TOKENS — NQ 재설계 (2026-04-20)
+   ▸ 규칙: "라이트모드에 흰색 글씨 절대 금지"
+   ▸ 2축 토큰: HERO(항상 네이비+흰톤 텍스트) / ADAPTIVE(레이어+테마반응 텍스트)
 ═══════════════════════════════════════════════════════════════════════════ */
-// NX-7: 테마 반응형 토큰 — 라이트/다크 모두 적응 (.dark 클래스로 전환)
-// brandHero/textOnBrand 는 항상 고정 (브랜드 의도 색, CTA 강조)
 const C = {
-  bg0: "var(--color-bg-deepest)",      // deepest
-  bg1: "var(--color-bg-deep)",         // hero bg
-  bg2: "var(--color-bg-base)",         // section base
-  bg3: "var(--color-surface-elevated)",// card surface
-  bg4: "var(--color-bg-elevated)",     // elevated card
-  light0: "var(--color-surface-elevated)",
-  light1: "var(--color-surface-base)",
-  light2: "var(--color-surface-sunken)",
-  em: "var(--color-positive)",         // emerald
+  /* ── HERO Surface: 마케팅 영역 · 항상 네이비 (브랜드 의도) ── */
+  bg0: "var(--hero-bg)",           // #0B1F3A
+  bg1: "var(--hero-bg)",           // hero section bg
+  bg2: "var(--hero-bg-elevated)",  // #0D2448
+  bg3: "var(--hero-bg-elevated)",
+  bg4: "var(--hero-bg-soft)",      // #12305B
+
+  /* ── HERO Foreground: 항상 흰톤 ── */
+  fgh:  "var(--fg-on-hero)",       // rgba(255,255,255,0.96) 18:1
+  fghd: "var(--fg-on-hero-dim)",   // rgba(255,255,255,0.72) 12:1
+  fghm: "var(--fg-on-hero-muted)", // rgba(255,255,255,0.55) 7:1
+
+  /* ── ADAPTIVE Layer: 본문 섹션 · 라이트/다크 자동 전환 ── */
+  light0: "var(--layer-1-bg)",     // 라이트 #FFFFFF · 다크 #0D1525
+  light1: "var(--layer-0-bg)",     // 라이트 #F3F5F8 · 다크 #030810 (페이지 바탕)
+  light2: "var(--layer-2-bg)",     // 라이트 #F8FAFC · 다크 #162035
+
+  /* ── ADAPTIVE Foreground: WCAG AA+ 자동 확보 ── */
+  fg1:  "var(--fg-strong)",        // 15:1 · 헤딩
+  fg2:  "var(--fg-default)",       // 10:1 · 본문
+  fg3:  "var(--fg-muted)",         // 5.5:1 · 캡션
+  fg4:  "var(--fg-subtle)",        // 3.5:1 · 큰 글자/아이콘만
+
+  /* ── Semantic (브랜드 인텐트 · 테마 반응) ── */
+  em: "var(--color-positive)",
   emL: "#34D399",
   blue: "var(--color-brand-bright)",
   amber: "var(--color-warning)",
   purple: "#A855F7",
   rose: "var(--color-danger)",
   teal: "#14B8A6",
-  // 브랜드 의도 색 (테마 무관)
-  brandHero: "#0A1628",                // 딥 네이비 CTA
-  textOnBrand: "#FFFFFF",              // 브랜드 배경 위 텍스트
+
+  /* ── Brand Intent (테마 무관 고정) ── */
+  brandHero: "#0A1628",
+  textOnBrand: "#FFFFFF",   // 브랜드 컬러/네이비 배경 위에만 사용 (라이트모드 흰바탕에 절대 X)
+  onEmerald: "#FFFFFF",     // emerald 그라데이션 버튼 위
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -456,8 +474,8 @@ export default function LandingPage() {
                 <div className="inline-flex items-center gap-2.5 rounded-full px-4 py-2"
                   style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
                   <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: C.em }} />
-                  <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.65)', letterSpacing: '0.06em' }}>대한민국 NPL 거래소</span>
-                  <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
+                  <span className="text-xs font-semibold" style={{ color: C.fghd, letterSpacing: '0.06em' }}>대한민국 NPL 거래소</span>
+                  <span style={{ color: C.fghm }}>·</span>
                   <span className="text-xs font-black" style={{ color: C.em }}>지금 거래 중</span>
                 </div>
               </motion.div>
@@ -465,7 +483,7 @@ export default function LandingPage() {
               {/* H1 */}
               <motion.h1 variants={up} custom={1}
                 className="font-black leading-[1.08] tracking-tighter mb-5"
-                style={{ fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', color: 'rgba(255,255,255,0.95)' }}
+                style={{ fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', color: C.fgh }}
               >
                 NPL 딜이 모이는 곳,<br />
                 거래가 시작되는 곳<br />
@@ -477,9 +495,9 @@ export default function LandingPage() {
 
               {/* Sub */}
               <motion.p variants={up} custom={2} className="text-base leading-relaxed mb-7"
-                style={{ color: 'rgba(255,255,255,0.45)', maxWidth: '440px' }}>
+                style={{ color: C.fghm, maxWidth: '440px' }}>
                 매각사와 투자자가 직접 만나는 거래소.{" "}
-                <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 500 }}>매물 탐색 · 경쟁 입찰 · 딜룸 협상 · 전자계약</span>{" "}
+                <span style={{ color: C.fghd, fontWeight: 500 }}>매물 탐색 · 경쟁 입찰 · 딜룸 협상 · 전자계약</span>{" "}
                 까지 한 번에 체결합니다.
               </motion.p>
 
@@ -497,9 +515,9 @@ export default function LandingPage() {
                 </Link>
                 <Link href="/exchange/sell"
                   className="group inline-flex items-center justify-center gap-2 font-semibold text-sm rounded-xl transition-all"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)', padding: '14px 28px' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)', color: C.fgh, padding: '14px 28px' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.transform = 'translateY(0)'; }}
                 >
                   <Building2 size={13} style={{ color: C.em }} />
                   매물 등록하기
@@ -544,15 +562,15 @@ export default function LandingPage() {
                   <div className="p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>{s.icon}</div>
                   <div className="flex items-center gap-1">
                     <ChevronUp size={11} style={{ color: C.em }} />
-                    <span className="text-[10px] font-bold" style={{ color: 'rgba(255,255,255,0.3)' }}>{s.change}</span>
+                    <span className="text-[10px] font-bold" style={{ color: C.fghm }}>{s.change}</span>
                   </div>
                 </div>
                 <div className="flex items-end justify-between">
                   <div>
-                    <div className="text-2xl font-black tabular-nums leading-tight" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                    <div className="text-2xl font-black tabular-nums leading-tight" style={{ color: C.fgh }}>
                       <Counter target={s.val} suffix={s.suffix} />
                     </div>
-                    <div className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.label}</div>
+                    <div className="text-xs mt-1" style={{ color: C.fghm }}>{s.label}</div>
                   </div>
                   <Sparkline color={s.color} />
                 </div>
@@ -655,10 +673,10 @@ export default function LandingPage() {
               <Layers size={12} style={{ color: C.em }} />
               <span className="text-xs font-bold" style={{ color: C.em, letterSpacing: '0.06em' }}>거래 인프라</span>
             </div>
-            <h2 className="font-black tracking-tighter mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: 'rgba(255,255,255,0.95)' }}>
+            <h2 className="font-black tracking-tighter mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: C.fgh }}>
               거래를 위한 모든 것
             </h2>
-            <p className="text-base" style={{ color: 'rgba(255,255,255,0.35)', maxWidth: '480px', margin: '0 auto' }}>
+            <p className="text-base" style={{ color: C.fghm, maxWidth: '480px', margin: '0 auto' }}>
               거래소 · 딜룸 · 계약 · 에스크로 · AI 분석 — 체결에 필요한 모든 도구가 NPLatform 하나에.
             </p>
           </motion.div>
@@ -680,8 +698,8 @@ export default function LandingPage() {
                     <div className="p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>{f.icon}</div>
                     <span className="text-[10px] font-black px-2.5 py-1 rounded-full" style={{ background: f.accent, color: 'white' }}>{f.tag}</span>
                   </div>
-                  <h3 className="font-bold text-sm mb-2 transition-colors" style={{ color: 'rgba(255,255,255,0.9)' }}>{f.title}</h3>
-                  <p className="text-sm leading-relaxed flex-1" style={{ color: 'rgba(255,255,255,0.35)' }}>{f.desc}</p>
+                  <h3 className="font-bold text-sm mb-2 transition-colors" style={{ color: C.fgh }}>{f.title}</h3>
+                  <p className="text-sm leading-relaxed flex-1" style={{ color: C.fghm }}>{f.desc}</p>
                   {f.meta && (
                     <div className="mt-4 pt-3 border-t flex items-center gap-1.5 text-[11px] font-medium tabular-nums"
                       style={{ borderColor: 'rgba(255,255,255,0.05)', color: f.accent }}>
@@ -689,7 +707,7 @@ export default function LandingPage() {
                       {f.meta}
                     </div>
                   )}
-                  <div className="mt-3 flex items-center gap-1 text-xs font-medium transition-colors" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                  <div className="mt-3 flex items-center gap-1 text-xs font-medium transition-colors" style={{ color: C.fghm }}>
                     자세히 보기 <ArrowUpRight size={12} />
                   </div>
                 </Link>

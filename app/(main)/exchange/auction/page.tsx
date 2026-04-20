@@ -11,7 +11,8 @@ import {
   AlertTriangle, Filter, X, FileText, Users, Heart,
   Activity, Zap, TrendingDown, ChevronDown, Loader2,
 } from "lucide-react"
-import { formatTimeLeft, formatMinBidRatio } from "@/lib/taxonomy"
+import { formatTimeLeft, formatMinBidRatio, REGION_SHORT_LIST, SELLER_INSTITUTIONS } from "@/lib/taxonomy"
+import { maskInstitutionName } from "@/lib/mask"
 
 // ─── Design System — NP Layer v3 (2026-04-20) ─────────────────────────────────
 // Hero/Card 를 분리: bg0~bg4 = Hero(항상 네이비) · l0~l3 = Card(테마 반응형)
@@ -109,7 +110,45 @@ interface AwardResult {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const COLLATERAL_FILTERS = ["전체", "아파트", "오피스텔", "상가", "토지", "빌라"]
+// ─── Filter Options (매물탐색과 동일 체계) ─────────────────────────────────────
+const COLLATERAL_MAJOR_FILTER: { value: string; label: string; icon: string; keywords: string[] | null }[] = [
+  { value: "ALL",         label: "전체",       icon: "◈", keywords: null },
+  { value: "RESIDENTIAL", label: "주거용",     icon: "🏠", keywords: ["아파트", "오피스텔", "빌라", "연립", "단독", "다가구", "원룸", "도시형"] },
+  { value: "COMMERCIAL",  label: "상업/산업용", icon: "🏢", keywords: ["상가", "사무실", "빌딩", "공장", "창고", "호텔", "숙박", "근린"] },
+  { value: "LAND",        label: "토지",       icon: "🌿", keywords: ["토지", "대지", "임야", "농지", "전", "답", "잡종"] },
+  { value: "ETC",         label: "기타",       icon: "📦", keywords: null /* 위 어디에도 속하지 않음 */ },
+]
+const COLLATERAL_MINOR_MAP: Record<string, { value: string; label: string }[]> = {
+  RESIDENTIAL: [
+    { value: "ALL",      label: "전체" },
+    { value: "아파트",     label: "아파트" },
+    { value: "오피스텔",   label: "오피스텔" },
+    { value: "빌라",      label: "빌라·연립" },
+    { value: "단독",      label: "단독·다가구" },
+  ],
+  COMMERCIAL: [
+    { value: "ALL",   label: "전체" },
+    { value: "상가",   label: "상가·근린" },
+    { value: "사무실", label: "사무실" },
+    { value: "빌딩",   label: "빌딩" },
+    { value: "공장",   label: "공장·창고" },
+  ],
+  LAND: [
+    { value: "ALL",   label: "전체" },
+    { value: "대지",  label: "대지" },
+    { value: "임야",  label: "임야" },
+    { value: "농지",  label: "농지" },
+  ],
+  ETC: [{ value: "ALL", label: "전체" }],
+}
+const REGION_FILTER: { value: string; label: string }[] = [
+  { value: "ALL", label: "전체" },
+  ...REGION_SHORT_LIST.map((s) => ({ value: s, label: s })),
+]
+const INST_FILTER: { value: string; label: string }[] = [
+  { value: "ALL", label: "전체" },
+  ...Object.values(SELLER_INSTITUTIONS).map((l) => ({ value: l, label: l })),
+]
 
 // ─── Risk Grade config (dark card variant) ────────────────────────────────────
 
@@ -426,9 +465,13 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
           )}
         </div>
 
-        {/* Institution */}
-        <p className="text-[0.6875rem] font-semibold uppercase tracking-widest mb-1.5" style={{ color: C.fghm }}>
-          {item.institution}
+        {/* Institution (L0 마스킹 — NDA 체결 후 실명 공개) */}
+        <p
+          className="text-[0.6875rem] font-semibold uppercase tracking-widest mb-1.5"
+          style={{ color: C.fghm }}
+          title="NDA 체결 후 실명 공개"
+        >
+          {maskInstitutionName(item.institution)}
         </p>
 
         {/* Title */}
@@ -548,7 +591,11 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
 export default function AuctionPage() {
   const [activeTab, setActiveTab] = useState<"bidding" | "my" | "awards">("bidding")
   const [search, setSearch] = useState("")
-  const [collateral, setCollateral] = useState("전체")
+  const [collateral, setCollateral] = useState("ALL")                 // major: ALL/RESIDENTIAL/COMMERCIAL/LAND/ETC
+  const [collateralMinor, setCollateralMinor] = useState("ALL")       // 소분류 Korean keyword
+  const [region, setRegion] = useState("ALL")                          // 서울/경기/...
+  const [instType, setInstType] = useState("ALL")                      // 은행/저축은행/...
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [sortBy, setSortBy] = useState("마감임박순")
   const [bidTarget, setBidTarget] = useState<BidItem | null>(null)
   const [bidDialogOpen, setBidDialogOpen] = useState(false)
@@ -694,16 +741,47 @@ export default function AuctionPage() {
   useEffect(() => { loadData() }, [loadData])
 
   const filteredBids = useMemo(() => {
+    const majorDef = COLLATERAL_MAJOR_FILTER.find((m) => m.value === collateral)
+    const allMajorKeywords = COLLATERAL_MAJOR_FILTER
+      .filter((m) => m.value !== "ALL" && m.value !== "ETC" && m.keywords)
+      .flatMap((m) => m.keywords as string[])
+
     const filtered = bids.filter((b) => {
-      if (collateral !== "전체" && b.collateralType !== collateral) return false
+      const type = b.collateralType ?? ""
+
+      // 1) 담보 대분류 매칭
+      if (collateral !== "ALL") {
+        if (collateral === "ETC") {
+          // 다른 대분류의 keyword 에 하나도 매칭되지 않는 경우만 기타
+          const matchesOther = allMajorKeywords.some((kw) => type.includes(kw))
+          if (matchesOther) return false
+        } else if (majorDef?.keywords) {
+          const matches = majorDef.keywords.some((kw) => type.includes(kw))
+          if (!matches) return false
+        }
+      }
+
+      // 2) 담보 소분류 (keyword substring)
+      if (collateralMinor !== "ALL" && !type.includes(collateralMinor)) return false
+
+      // 3) 지역
+      if (region !== "ALL" && !(b.location ?? "").includes(region)) return false
+
+      // 4) 기관
+      if (instType !== "ALL" && !(b.institution ?? "").includes(instType)) return false
+
+      // 5) 검색어
       if (search && !b.title.includes(search) && !b.institution.includes(search) && !b.location.includes(search)) return false
+
       return true
     })
+
     if (sortBy === "마감임박순") return [...filtered].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
     if (sortBy === "원금높은순") return [...filtered].sort((a, b) => b.principal - a.principal)
     if (sortBy === "입찰많은순") return [...filtered].sort((a, b) => b.bidCount - a.bidCount)
+    if (sortBy === "저위험순")   return [...filtered].sort((a, b) => (a.riskGrade < b.riskGrade ? -1 : 1))
     return filtered
-  }, [bids, search, collateral, sortBy])
+  }, [bids, search, collateral, collateralMinor, region, instType, sortBy])
 
   const activeBids = bids.filter((b) => b.status !== "마감").length
   const urgentBids = bids.filter((b) => b.status === "마감임박").length
@@ -791,14 +869,14 @@ export default function AuctionPage() {
                 </span>
                 <span className="text-[0.6875rem] font-black uppercase tracking-widest" style={{ color: C.em }}>LIVE</span>
               </div>
-              <span className="text-[0.75rem]" style={{ color: C.fghm }}>실시간 입찰 현황</span>
+              <span className="text-[0.75rem]" style={{ color: C.fghm }}>실시간 공개 입찰 현황</span>
             </div>
 
             <h1 className="text-[2.5rem] sm:text-[3rem] font-black tracking-tight leading-none mb-3" style={{ color: C.fgh }}>
-              NPL 입찰
+              NPL 오픈경매
             </h1>
             <p className="text-[1rem] max-w-xl mb-8" style={{ color: C.fghd }}>
-              금융기관이 등록한 부실채권에 직접 입찰하세요. AI가 적정 입찰가를 실시간으로 분석합니다.
+              금융기관이 등록한 부실채권에 공개 입찰하세요. AI가 적정 입찰가를 실시간으로 분석합니다.
             </p>
           </motion.div>
 
@@ -927,23 +1005,50 @@ export default function AuctionPage() {
               </div>
             </div>
 
-            {/* Filter chips */}
+            {/* Major chips (담보 대분류) */}
             <div className="flex items-center gap-1.5 flex-wrap">
-              {COLLATERAL_FILTERS.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCollateral(c)}
-                  className="px-3 py-1.5 rounded-full text-[0.8125rem] font-semibold transition-all"
-                  style={{
-                    backgroundColor: collateral === c ? C.lt1 : C.l2,
-                    color: collateral === c ? C.l0 : C.lt2,
-                    border: `1px solid ${collateral === c ? C.lt1 : C.l3}`,
-                  }}
-                >
-                  {c}
-                </button>
-              ))}
+              {COLLATERAL_MAJOR_FILTER.map((c) => {
+                const active = collateral === c.value
+                return (
+                  <button
+                    key={c.value}
+                    onClick={() => { setCollateral(c.value); setCollateralMinor("ALL") }}
+                    className="px-3 py-1.5 rounded-full text-[0.8125rem] font-semibold transition-all inline-flex items-center gap-1"
+                    style={{
+                      backgroundColor: active ? C.lt1 : C.l2,
+                      color: active ? C.l0 : C.lt2,
+                      border: `1px solid ${active ? C.lt1 : C.l3}`,
+                    }}
+                  >
+                    <span aria-hidden="true">{c.icon}</span>
+                    {c.label}
+                  </button>
+                )
+              })}
             </div>
+
+            {/* Toggle advanced filters */}
+            <button
+              onClick={() => setFiltersOpen((v) => !v)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.8125rem] font-semibold transition-all"
+              style={{
+                backgroundColor: filtersOpen ? C.blue : C.l2,
+                color: filtersOpen ? C.onBrand : C.lt2,
+                border: `1px solid ${filtersOpen ? C.blue : C.l3}`,
+              }}
+              aria-pressed={filtersOpen}
+            >
+              <Filter className="w-3.5 h-3.5" />
+              상세필터
+              {(collateralMinor !== "ALL" || region !== "ALL" || instType !== "ALL") && (
+                <span
+                  className="ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[0.6875rem] font-bold"
+                  style={{ backgroundColor: filtersOpen ? "rgba(255,255,255,0.25)" : C.em, color: filtersOpen ? C.onBrand : C.onBrand }}
+                >
+                  {[collateralMinor !== "ALL", region !== "ALL", instType !== "ALL"].filter(Boolean).length}
+                </span>
+              )}
+            </button>
 
             {/* Sort */}
             <div className="ml-auto relative">
@@ -956,10 +1061,92 @@ export default function AuctionPage() {
                 <option>마감임박순</option>
                 <option>원금높은순</option>
                 <option>입찰많은순</option>
+                <option>저위험순</option>
               </select>
               <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: C.lt4 }} />
             </div>
           </div>
+
+          {/* ── Advanced filter panel ───────────────────────────────────────── */}
+          {filtersOpen && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-3" style={{ borderTop: `1px solid ${C.l3}` }}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3">
+                {/* Minor collateral */}
+                <div>
+                  <label className="block text-[0.6875rem] font-bold uppercase tracking-wider mb-1.5" style={{ color: C.lt3 }}>담보 소분류</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(COLLATERAL_MINOR_MAP[collateral] ?? [{ value: "ALL", label: "전체" }]).map((m) => {
+                      const active = collateralMinor === m.value
+                      return (
+                        <button
+                          key={m.value}
+                          onClick={() => setCollateralMinor(m.value)}
+                          className="px-2.5 py-1 rounded-full text-[0.75rem] font-semibold transition-all"
+                          style={{
+                            backgroundColor: active ? C.blue : C.l1,
+                            color: active ? C.onBrand : C.lt2,
+                            border: `1px solid ${active ? C.blue : C.l3}`,
+                          }}
+                          disabled={collateral === "ALL"}
+                        >
+                          {m.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Region */}
+                <div>
+                  <label className="block text-[0.6875rem] font-bold uppercase tracking-wider mb-1.5" style={{ color: C.lt3 }}>지역</label>
+                  <div className="relative">
+                    <select
+                      value={region}
+                      onChange={(e) => setRegion(e.target.value)}
+                      className="appearance-none w-full pl-3 pr-8 py-2 rounded-xl text-[0.8125rem] font-medium outline-none cursor-pointer"
+                      style={{ backgroundColor: C.l1, border: `1px solid ${C.l3}`, color: C.lt1 }}
+                    >
+                      {REGION_FILTER.map((r) => (
+                        <option key={r.value} value={r.value}>{r.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: C.lt4 }} />
+                  </div>
+                </div>
+
+                {/* Institution */}
+                <div>
+                  <label className="block text-[0.6875rem] font-bold uppercase tracking-wider mb-1.5" style={{ color: C.lt3 }}>기관</label>
+                  <div className="relative">
+                    <select
+                      value={instType}
+                      onChange={(e) => setInstType(e.target.value)}
+                      className="appearance-none w-full pl-3 pr-8 py-2 rounded-xl text-[0.8125rem] font-medium outline-none cursor-pointer"
+                      style={{ backgroundColor: C.l1, border: `1px solid ${C.l3}`, color: C.lt1 }}
+                    >
+                      {INST_FILTER.map((i) => (
+                        <option key={i.value} value={i.value}>{i.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: C.lt4 }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Reset */}
+              {(collateralMinor !== "ALL" || region !== "ALL" || instType !== "ALL") && (
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={() => { setCollateralMinor("ALL"); setRegion("ALL"); setInstType("ALL") }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[0.75rem] font-semibold transition-colors"
+                    style={{ color: C.lt3 }}
+                  >
+                    <X className="w-3 h-3" /> 필터 초기화
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -1082,7 +1269,7 @@ export default function AuctionPage() {
                                 {bid.title}
                               </Link>
                             </td>
-                            <td className="px-4 py-3.5 text-[0.875rem] whitespace-nowrap" style={{ color: C.lt3 }}>{bid.institution}</td>
+                            <td className="px-4 py-3.5 text-[0.875rem] whitespace-nowrap" style={{ color: C.lt3 }} title="NDA 체결 후 실명 공개">{maskInstitutionName(bid.institution)}</td>
                             <td className="px-4 py-3.5 text-right text-[0.875rem] font-semibold tabular-nums whitespace-nowrap font-mono" style={{ color: C.lt1 }}>{formatKRW(bid.principal)}</td>
                             <td className="px-4 py-3.5 text-right text-[0.875rem] font-bold tabular-nums whitespace-nowrap font-mono" style={{ color: C.em }}>{formatKRW(bid.bidAmount)}</td>
                             <td className="px-4 py-3.5 text-right text-[0.875rem] tabular-nums font-semibold font-mono" style={{ color: C.lt2 }}>{rate}%</td>
@@ -1162,7 +1349,7 @@ export default function AuctionPage() {
                             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                           >
                             <td className="px-4 py-3.5 text-[0.875rem] font-semibold" style={{ color: C.lt1 }}>{award.title}</td>
-                            <td className="px-4 py-3.5 text-[0.875rem] whitespace-nowrap" style={{ color: C.lt3 }}>{award.institution}</td>
+                            <td className="px-4 py-3.5 text-[0.875rem] whitespace-nowrap" style={{ color: C.lt3 }} title="NDA 체결 후 실명 공개">{maskInstitutionName(award.institution)}</td>
                             <td className="px-4 py-3.5">
                               <span
                                 className="inline-flex items-center px-2 py-0.5 rounded-full text-[0.6875rem] font-medium"

@@ -11,6 +11,7 @@ import { motion } from "framer-motion"
 import {
   Building2, MapPin, TrendingDown, Shield, Sparkles, ArrowRight, Gavel, Clock, Users,
 } from "lucide-react"
+import { maskInstitutionName } from "@/lib/mask"
 
 type Sample = {
   id: string
@@ -187,7 +188,7 @@ export function ExchangePreview() {
                         <Building2 size={11} style={{ color: "rgba(255,255,255,0.5)" }} />
                       </div>
                       <div>
-                        <div className="text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.85)" }}>{s.institution}</div>
+                        <div className="text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.85)" }} title="NDA 체결 후 실명 공개">{maskInstitutionName(s.institution)}</div>
                         <div className="text-[9px]" style={{ color: "rgba(255,255,255,0.35)" }}>
                           금융기관 · D-{s.dday}
                         </div>

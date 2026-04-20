@@ -382,7 +382,7 @@ export default function NplIndexPage() {
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'var(--color-surface-elevated)',
-                    border: '1px solid rgba(255,255,255,0.12)',
+                    border: '1px solid var(--layer-border-strong)',
                     borderRadius: '8px',
                     color: 'var(--color-text-primary)',
                     fontSize: '13px',
@@ -473,7 +473,7 @@ export default function NplIndexPage() {
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'var(--color-surface-elevated)',
-                    border: '1px solid rgba(255,255,255,0.12)',
+                    border: '1px solid var(--layer-border-strong)',
                     borderRadius: '8px',
                     color: 'var(--color-text-primary)',
                     fontSize: '13px',

@@ -24,11 +24,12 @@ import { createClient } from "@/lib/supabase/client"
 
 const C = {
   bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
-  bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
+  bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--layer-border-strong)",
   em: "var(--color-positive)", emL: "var(--color-positive)",
   blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
   amber: "var(--color-warning)", rose: "var(--color-danger)", purple: "#A855F7",
-  lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
+  lt1: "var(--fg-strong)", lt2: "var(--fg-default)",
+  lt3: "var(--fg-muted)", lt4: "var(--fg-subtle)",
 }
 
 type DocType = "NDA" | "LOI"
@@ -205,7 +206,7 @@ export default function AdminAgreementsPage() {
           <div style={{ fontSize: 11, color: C.emL, fontWeight: 800, letterSpacing: "0.1em", marginBottom: 8 }}>
             ADMIN · CONTRACTS
           </div>
-          <h1 style={{ fontSize: 32, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em", marginBottom: 8 }}>
+          <h1 style={{ fontSize: 32, fontWeight: 900, color: C.lt1, letterSpacing: "-0.02em", marginBottom: 8 }}>
             NDA · LOI 모니터링
           </h1>
           <p style={{ fontSize: 13, color: C.lt4, lineHeight: 1.6, maxWidth: 720 }}>
@@ -243,7 +244,7 @@ export default function AdminAgreementsPage() {
           >
             <ShieldAlert size={18} color={C.rose} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 2 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: C.lt1, marginBottom: 2 }}>
                 비우회 조항 위반 확정: {firstViolation.buyer}
               </div>
               <div style={{ fontSize: 11, color: C.lt4 }}>
@@ -279,7 +280,7 @@ export default function AdminAgreementsPage() {
               placeholder="매물 · 매수자 · 매도자 검색"
               style={{
                 flex: 1, background: "none", border: "none", outline: "none",
-                color: "#fff", fontSize: 12,
+                color: C.lt1, fontSize: 12,
               }}
             />
           </div>
@@ -350,7 +351,7 @@ export default function AdminAgreementsPage() {
                     gridTemplateColumns: "60px 1fr 130px 130px 130px 100px 100px",
                     padding: "16px 18px",
                     borderBottom: i < rows.length - 1 ? `1px solid ${C.bg4}` : "none",
-                    fontSize: 11, color: "#fff",
+                    fontSize: 11, color: C.lt1,
                     alignItems: "center",
                     backgroundColor: row.flag === "VIOLATION" ? `${C.rose}08` :
                                      row.flag === "SUSPECT" ? `${C.amber}08` :
@@ -466,9 +467,9 @@ export default function AdminAgreementsPage() {
                         lineHeight: 1.7,
                       }}
                     >
-                      <b style={{ color: "#fff" }}>ID:</b> {row.id} &nbsp;|&nbsp;
-                      <b style={{ color: "#fff" }}>매물:</b> {row.listing_id || "—"} &nbsp;|&nbsp;
-                      <b style={{ color: "#fff" }}>등급:</b> {row.buyer_tier} &nbsp;|&nbsp;
+                      <b style={{ color: C.lt1 }}>ID:</b> {row.id} &nbsp;|&nbsp;
+                      <b style={{ color: C.lt1 }}>매물:</b> {row.listing_id || "—"} &nbsp;|&nbsp;
+                      <b style={{ color: C.lt1 }}>등급:</b> {row.buyer_tier} &nbsp;|&nbsp;
                       {row.flag_reason && <><b style={{ color: C.amber }}>사유:</b> {row.flag_reason}</>}
                     </div>
                   )}
@@ -520,7 +521,7 @@ function StatCard({
       </div>
       <div>
         <div style={{ fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 2 }}>{label}</div>
-        <div style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>{value}</div>
+        <div style={{ fontSize: 22, fontWeight: 900, color: C.lt1 }}>{value}</div>
       </div>
     </div>
   )

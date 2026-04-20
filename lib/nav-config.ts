@@ -33,6 +33,7 @@ export const PAGE_SUBNAV_LABELS: Record<string, string> = {
   exchange: 'NPL 매물 서브메뉴',
   deals: '거래 현황 서브메뉴',
   analysis: '투자 분석 서브메뉴',
+  news: '뉴스/공지 서브메뉴',
   services: '전문가 서비스 서브메뉴',
 }
 
@@ -43,16 +44,13 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
     exchange: [
       { key: 'ex_all',          label: '거래소',     href: '/exchange',                description: 'NPL 거래소 메인',          icon: 'Store',        active: true, order: 1 },
       { key: 'ex_search',       label: '검색',       href: '/exchange/search',          description: '상세 필터 데이터 그리드',    icon: 'Search',       active: true, order: 2 },
-      { key: 'ex_feed',         label: '피드',       href: '/exchange/feed',            description: 'AI 큐레이션 발견 피드',     icon: 'Compass',      active: true, order: 3 },
-      { key: 'ex_bidding',      label: '입찰',       href: '/exchange/auction',         description: '입찰 참여',                 icon: 'Gavel',        active: true, order: 4 },
-      { key: 'ex_sell',         label: '매물 등록',  href: '/exchange/sell',            description: '내 채권 매각 등록',         icon: 'PlusCircle',   active: true, order: 5 },
-      { key: 'ex_ocr',          label: 'OCR 일괄',    href: '/exchange/ocr-register',   description: 'OCR로 1~5건 빠르게 등록',   icon: 'ScanLine',     active: true, order: 6 },
-      { key: 'ex_bulk',         label: 'CSV 대량',    href: '/exchange/bulk-upload',     description: 'CSV/XLS 대량 등록',         icon: 'Upload',       active: true, order: 7 },
-      { key: 'ex_demands',      label: '매수 수요',  href: '/exchange/demands',         description: '원하는 조건 등록',          icon: 'ClipboardList', active: true, order: 8 },
-      { key: 'ex_institutions', label: '참여 기관',  href: '/exchange/institutions',    description: '매각 기관 현황',            icon: 'Building2',    active: true, order: 9 },
-      { key: 'ex_fund',         label: '팀투자',     href: '/deals/teams',              description: 'NPL 공동투자 팀',           icon: 'Users',        active: true, order: 10 },
-      { key: 'ex_lender',       label: '대출',       href: '/exchange/lender',          description: '투자 자금 조달',            icon: 'Landmark',     active: true, order: 11 },
-      { key: 'ex_guide',        label: '이용 가이드', href: '/guide',                   description: 'NPL 매물 이용 가이드',      icon: 'BookOpen',     active: true, order: 12 },
+      { key: 'ex_bidding',      label: 'NPL 오픈경매', href: '/exchange/auction',       description: '공개 입찰 참여 · 실시간 경합', icon: 'Gavel',     active: true, order: 3 },
+      { key: 'ex_sell',         label: '매물 등록',  href: '/exchange/sell',            description: '내 채권 매각 등록 (단건 · OCR · CSV 대량)', icon: 'PlusCircle', active: true, order: 4 },
+      { key: 'ex_demands',      label: '매수 수요',  href: '/exchange/demands',         description: '원하는 조건 등록',          icon: 'ClipboardList', active: true, order: 5 },
+      { key: 'ex_institutions', label: '참여 기관',  href: '/exchange/institutions',    description: '매각 기관 현황',            icon: 'Building2',    active: true, order: 6 },
+      { key: 'ex_fund',         label: '팀투자',     href: '/deals/teams',              description: 'NPL 공동투자 팀',           icon: 'Users',        active: true, order: 7 },
+      { key: 'ex_lender',       label: '대출',       href: '/exchange/lender',          description: '투자 자금 조달',            icon: 'Landmark',     active: true, order: 8 },
+      { key: 'ex_guide',        label: '이용 가이드', href: '/guide',                   description: 'NPL 매물 이용 가이드',      icon: 'BookOpen',     active: true, order: 9 },
     ],
     deals: [
       { key: 'deals_list',      label: '딜룸',        href: '/deals',                description: '진행 중인 거래 현황',         icon: 'ClipboardList',  active: true, order: 1 },
@@ -60,7 +58,6 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
       { key: 'deals_contract',  label: '계약서 생성', href: '/deals/contract',       description: 'AI 자동 계약서 생성',         icon: 'FileSignature',  active: true, order: 3 },
       { key: 'deals_teams',     label: '팀 투자',     href: '/deals/teams',          description: '공동투자 팀 관리',            icon: 'Users',          active: true, order: 4 },
       { key: 'deals_archive',   label: '완료 거래',   href: '/deals/archive',        description: '과거 거래 기록',              icon: 'Archive',        active: true, order: 5 },
-      { key: 'deals_community', label: '커뮤니티',    href: '/services/community',   description: 'NPL 투자자 커뮤니티',         icon: 'MessageSquare',  active: true, order: 6 },
     ],
     analysis: [
       { key: 'analysis_main',    label: '분석 대시보드',   href: '/analysis',                    description: '시장 통계 및 인텔리전스',  icon: 'BarChart3',   active: true, order: 1 },
@@ -74,9 +71,9 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
       { key: 'svc_register',  label: '전문가 등록',   href: '/services/experts/register',  description: '전문가로 등록',              icon: 'PlusCircle',   active: true, order: 2 },
     ],
     community: [
-      { key: 'com_notices',   label: '공지사항',      href: '/notices',                    description: '플랫폼 공지',                icon: 'Bell',          active: true, order: 1 },
-      { key: 'com_news',      label: 'NPL 뉴스',      href: '/news',                       description: '부동산·금융 최신 뉴스',      icon: 'Newspaper',     active: true, order: 2 },
-      { key: 'com_community', label: '커뮤니티',      href: '/services/community',         description: 'NPL 투자자 커뮤니티',        icon: 'MessageSquare', active: true, order: 3 },
+      { key: 'com_news',      label: 'NPL 뉴스',      href: '/news',                       description: '부동산·금융 최신 뉴스',      icon: 'Newspaper',     active: true, order: 1 },
+      { key: 'com_notices',   label: '공지사항',      href: '/notices',                    description: '플랫폼 공지',                icon: 'Bell',          active: true, order: 2 },
+      // 커뮤니티는 숨김 (관리자에서 활성화 예정)
     ],
   },
   categories: [
@@ -123,15 +120,15 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
       ],
     },
     {
-      key: 'services',
-      label: '커뮤니티',
-      href: '/services/community',
+      key: 'news',
+      label: '뉴스/공지',
+      href: '/news',
       active: true,
       order: 4,
       items: [
-        { key: 'services_notices',   label: '공지사항',  href: '/notices',            description: '플랫폼 공지',           icon: 'Bell',          active: true, order: 1 },
-        { key: 'services_news',      label: 'NPL 뉴스',  href: '/news',               description: '부동산·금융 최신 뉴스', icon: 'Newspaper',     active: true, order: 2 },
-        { key: 'services_community', label: '커뮤니티',  href: '/services/community', description: 'NPL 투자자 커뮤니티',   icon: 'MessageSquare', active: true, order: 3 },
+        { key: 'news_main',        label: 'NPL 뉴스',  href: '/news',     description: '부동산·금융 최신 뉴스', icon: 'Newspaper', active: true, order: 1 },
+        { key: 'news_notices',     label: '공지사항',  href: '/notices',  description: '플랫폼 공지',           icon: 'Bell',      active: true, order: 2 },
+        // 커뮤니티는 숨김 (관리자에서 활성화 예정)
       ],
     },
     {

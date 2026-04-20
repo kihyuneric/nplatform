@@ -22,13 +22,15 @@ const C = {
   bg1: "var(--color-bg-deep, #050D1A)",
   bg2: "var(--color-bg-base, #080F1E)",
   bg3: "var(--color-bg-base, #0A1628)",
-  bg4: "var(--color-bg-elevated, #0F1F35)",
+  bg4: "var(--layer-border-strong)",
   em:     "var(--color-positive)",
   emL:    "var(--color-positive)",
   blue:   "var(--color-brand-dark)",
   blueL:  "var(--color-brand-bright)",
-  lt3:    "var(--color-text-muted)",
-  lt4:    "var(--color-text-muted)",
+  lt1:    "var(--fg-strong)",
+  lt2:    "var(--fg-default)",
+  lt3:    "var(--fg-muted)",
+  lt4:    "var(--fg-subtle)",
 }
 
 const METHODS = [
@@ -104,14 +106,14 @@ export default function VerifyPage() {
           </div>
           <h1
             style={{
-              fontSize: 30, fontWeight: 900, color: "#fff",
+              fontSize: 30, fontWeight: 900, color: C.lt1,
               letterSpacing: "-0.02em", marginBottom: 8,
             }}
           >
             본인인증
           </h1>
           <p style={{ fontSize: 13, color: C.lt4, lineHeight: 1.6, maxWidth: 600 }}>
-            본인인증을 완료하면 <strong style={{ color: "#fff" }}>등기부등본 요약 · 임대차 요약 · 감정평가서 마스킹본</strong> 등
+            본인인증을 완료하면 <strong style={{ color: C.lt1 }}>등기부등본 요약 · 임대차 요약 · 감정평가서 마스킹본</strong> 등
             L1 자료 열람이 가능합니다. 인증 정보는 NPLatform에 저장되지 않으며,
             인증기관에서만 처리됩니다.
           </p>
@@ -129,7 +131,7 @@ export default function VerifyPage() {
                     style={{
                       padding: "20px 22px", borderRadius: 14, textAlign: "left",
                       backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
-                      color: "#fff", cursor: "pointer",
+                      color: C.lt1, cursor: "pointer",
                       display: "flex", alignItems: "center", gap: 16,
                       position: "relative",
                     }}
@@ -203,7 +205,7 @@ export default function VerifyPage() {
             >
               <Lock size={28} color={C.blueL} />
             </div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: C.lt1, marginBottom: 8 }}>
               {METHODS.find(m => m.id === method)?.label} 인증 처리 중...
             </div>
             <div style={{ fontSize: 12, color: C.lt4 }}>잠시만 기다려주세요</div>
@@ -243,7 +245,7 @@ export default function VerifyPage() {
             >
               <CheckCircle2 size={36} color={C.em} />
             </div>
-            <h2 style={{ fontSize: 24, fontWeight: 900, color: "#fff", marginBottom: 10 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 900, color: C.lt1, marginBottom: 10 }}>
               본인인증 완료
             </h2>
             <p style={{ fontSize: 13, color: C.lt4, lineHeight: 1.6, marginBottom: 16 }}>
@@ -276,7 +278,7 @@ export default function VerifyPage() {
                 href="/my/kyc"
                 style={{
                   padding: "11px 20px", borderRadius: 10,
-                  backgroundColor: C.bg3, color: "#fff",
+                  backgroundColor: C.bg3, color: C.lt1,
                   fontSize: 12, fontWeight: 700, textDecoration: "none",
                   border: `1px solid ${C.bg4}`,
                   display: "inline-flex", alignItems: "center", gap: 6,

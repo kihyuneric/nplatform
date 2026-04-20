@@ -92,10 +92,12 @@ const nextConfig = {
       // Market → Exchange
       // /market/search serves the full NPL data grid search — no redirect
       { source: '/market/bidding', destination: '/exchange/auction', permanent: true },
-      // D7: /exchange/map 삭제 — 피드로 통합
-      { source: '/market/map', destination: '/exchange/feed', permanent: true },
-      { source: '/exchange/map', destination: '/exchange/feed', permanent: true },
-      { source: '/exchange/map/:path*', destination: '/exchange/feed', permanent: true },
+      // 지도/피드 → 발견 모드로 통합
+      { source: '/market/map', destination: '/exchange/discover', permanent: true },
+      { source: '/exchange/map', destination: '/exchange/discover', permanent: true },
+      { source: '/exchange/map/:path*', destination: '/exchange/discover', permanent: true },
+      { source: '/exchange/feed', destination: '/exchange/discover', permanent: true },
+      { source: '/exchange/feed/:path*', destination: '/exchange/discover', permanent: true },
       { source: '/listings', destination: '/exchange', permanent: true },
       { source: '/listings/:id', destination: '/exchange/:id', permanent: true },
       { source: '/marketplace/:path*', destination: '/exchange', permanent: true },

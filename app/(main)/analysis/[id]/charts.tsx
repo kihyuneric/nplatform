@@ -50,7 +50,7 @@ export function RoiScenarioChart({ data }: { data: RoiScenario[] }) {
         <YAxis type="category" dataKey="bid_rate_pct" tickFormatter={(v: number) => `${v}%`} width={40} fontSize={11} stroke="#9DAAB8" />
         <Tooltip
           formatter={(value: number) => [`${value.toFixed(1)}%`, 'ROI']}
-          contentStyle={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.12)', fontSize: 13, backgroundColor: 'var(--color-surface-elevated)' }}
+          contentStyle={{ borderRadius: 10, border: '1px solid var(--layer-border-strong)', fontSize: 13, backgroundColor: 'var(--color-surface-elevated)' }}
         />
         <Bar dataKey="roi_pct" radius={[0, 8, 8, 0]} barSize={28}>
           {data.map((sc, i) => (
@@ -71,7 +71,7 @@ export function PriceComparisonChart({ data }: { data: PriceBar[] }) {
         <YAxis type="category" dataKey="name" width={60} fontSize={11} stroke="#9DAAB8" />
         <Tooltip
           formatter={(value: number) => [fmtWon(value), '금액']}
-          contentStyle={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.12)', backgroundColor: 'var(--color-surface-elevated)' }}
+          contentStyle={{ borderRadius: 10, border: '1px solid var(--layer-border-strong)', backgroundColor: 'var(--color-surface-elevated)' }}
         />
         <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={26}>
           {data.map((entry, index) => (
@@ -98,7 +98,7 @@ export function BidRateTrendChart({ data }: { data: TrendPoint[] }) {
         <YAxis domain={['dataMin - 3', 'dataMax + 3']} fontSize={10} tickFormatter={(v: number) => `${v}%`} stroke="#9DAAB8" />
         <Tooltip
           formatter={(value: number) => [`${value}%`, '낙찰가율']}
-          contentStyle={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.12)', backgroundColor: 'var(--color-surface-elevated)' }}
+          contentStyle={{ borderRadius: 10, border: '1px solid var(--layer-border-strong)', backgroundColor: 'var(--color-surface-elevated)' }}
         />
         <Area
           type="monotone"

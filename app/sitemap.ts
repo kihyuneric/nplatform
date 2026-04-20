@@ -15,7 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/exchange/demands',          priority: 0.8,  freq: 'daily'   },
     { path: '/exchange/institutions',     priority: 0.7,  freq: 'weekly'  },
     { path: '/exchange/fund',             priority: 0.7,  freq: 'weekly'  },
-    { path: '/exchange/feed',             priority: 0.80, freq: 'hourly'  },
+    { path: '/exchange/discover',         priority: 0.80, freq: 'hourly'  },
     // 딜룸 (Deals)
     { path: '/deals',                     priority: 0.85, freq: 'daily'   },
     { path: '/deals/matching',            priority: 0.8,  freq: 'daily'   },

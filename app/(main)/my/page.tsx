@@ -160,8 +160,7 @@ const COMMON_LINKS: QuickLink[] = [
 // 매각사 전용
 const SELLER_LINKS: QuickLink[] = [
   { href: "/my/seller",            label: "내 매물",          desc: "등록한 매물 관리",        icon: Building2, color: "#14B8A6" },
-  { href: "/exchange/sell",        label: "매물 등록",        desc: "6단계 위저드",            icon: Store,     color: "#10B981" },
-  { href: "/exchange/bulk-upload", label: "대량 등록",        desc: "Excel/CSV 일괄 등록",     icon: Upload,    color: "#F59E0B" },
+  { href: "/exchange/sell",        label: "매물 등록",        desc: "단건 · OCR · CSV 대량",   icon: Store,     color: "#10B981" },
   { href: "/my/billing",           label: "정산 · 수수료",    desc: "매각 수수료 내역",        icon: Banknote,  color: "#EC4899" },
 ]
 

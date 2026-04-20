@@ -32,18 +32,36 @@ import { calculateSellerFee } from "@/lib/fee-calculator"
 import { calculateFee, BASE_RATES, PNR_RATE } from "@/lib/settlement/fee-engine"
 import { formatAIGrade } from "@/lib/taxonomy"
 import { createClient } from "@/lib/supabase/client"
+import { maskInstitutionName } from "@/lib/mask"
 
 /* ═══════════════════════════════════════════════════════════
-   DESIGN TOKENS
+   DESIGN TOKENS — NP-3 재설계 (2026-04-20)
+   ▸ 규칙 1: "라이트모드에 흰색 글씨 절대 금지"
+   ▸ 규칙 2: 동일 배경 안 중첩 박스는 레이어 단계(layer-1 → layer-2)로 구분
+   ▸ 규칙 3: 박스 경계선은 --layer-border-strong (#CBD5E1, AA 3:1) 사용
 ═══════════════════════════════════════════════════════════ */
 const C = {
-  bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
-  bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
+  /* ── Surface: ADAPTIVE (light/dark 자동 전환) ── */
+  bg0: "var(--layer-0-bg)",            // 페이지 최외곽 (light #F3F5F8 / dark #030810)
+  bg1: "var(--layer-1-bg)",            // 섹션 바탕 / 네비 헤더 (light #FFFFFF / dark #0D1525)
+  bg2: "var(--layer-1-bg)",            // primary card (라이트 흰색, 페이지와 구분됨)
+  bg3: "var(--layer-2-bg)",            // 카드 안 중첩 패널 (light #F8FAFC / dark #162035) — 엘레베이션
+  bg4: "var(--layer-border-strong)",   // 박스 경계선 (light #CBD5E1 / dark rgba(255,255,255,0.18)) — AA 3:1
+
+  /* ── Semantic (테마 반응) ── */
   em: "var(--color-positive)", emL: "var(--color-positive)", emD: "#047857",
   blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
   amber: "var(--color-warning)", amberL: "#F59E0B",
   purple: "#A855F7", rose: "var(--color-danger)", teal: "#14B8A6",
-  lt1: "var(--color-text-primary)", lt2: "var(--color-text-secondary)", lt3: "var(--color-text-tertiary)", lt4: "var(--color-text-muted)",
+
+  /* ── Foreground: ADAPTIVE (라이트는 진한색 · 다크는 밝은색) ── */
+  lt1: "var(--fg-strong)",             // 15:1 — 헤딩·핵심 수치
+  lt2: "var(--fg-default)",            // 10:1 — 본문
+  lt3: "var(--fg-muted)",              // 5.5:1 — 캡션·레이블
+  lt4: "var(--fg-subtle)",             // 3.5:1 — 아이콘/큰 텍스트 한정
+
+  /* ── On-colored (유색 배경 위 전용 · 테마 무관 흰색) ── */
+  onBrand: "var(--fg-on-brand)",       // 네이비/블루/에메랄드 bg 위 흰 글씨
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -581,7 +599,7 @@ export default function ListingDetailPage() {
                   padding: "3px 8px", borderRadius: 4,
                   fontSize: 10, fontWeight: 800,
                   backgroundColor: tier === t ? TIER_META[t].color : "transparent",
-                  color: tier === t ? "#fff" : C.lt3,
+                  color: tier === t ? C.onBrand : C.lt3,
                   border: `1px solid ${tier === t ? TIER_META[t].color : C.bg4}`,
                   cursor: "pointer",
                 }}
@@ -630,7 +648,7 @@ export default function ListingDetailPage() {
                 letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 8,
               }}
             >
-              {listing.institution} · {listing.region_city} {listing.region_district} {listing.collateral} 담보
+              {maskInstitutionName(listing.institution)} · {listing.region_city} {listing.region_district} {listing.collateral} 담보
             </h1>
             <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 13, color: C.lt3, flexWrap: "wrap" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -1493,7 +1511,7 @@ function KpiCard({
       <div
         style={{
           fontSize: 22, fontWeight: 900, letterSpacing: "-0.02em",
-          color: tone === "em" ? C.emL : "#fff",
+          color: tone === "em" ? C.emL : C.lt1,
         }}
       >
         {value}
@@ -1575,7 +1593,7 @@ function ClaimCell({
       <span style={{ fontSize: 9, color: C.lt4, fontWeight: 700, letterSpacing: "0.02em" }}>
         {label}
       </span>
-      <span style={{ fontSize: 13, color: color ?? "#fff", fontWeight: 800, letterSpacing: "-0.01em" }}>
+      <span style={{ fontSize: 13, color: color ?? C.lt1, fontWeight: 800, letterSpacing: "-0.01em" }}>
         {value}
       </span>
     </div>
@@ -1606,7 +1624,7 @@ function DataRow({
           </span>
         )}
       </span>
-      <span style={{ fontSize: 12, color: valueColor ?? "#fff", fontWeight: 700 }}>
+      <span style={{ fontSize: 12, color: valueColor ?? C.lt1, fontWeight: 700 }}>
         {value}
       </span>
     </div>

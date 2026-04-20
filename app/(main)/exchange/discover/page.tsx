@@ -26,39 +26,56 @@ import type { RiskGrade } from "@/components/npl/risk-badge"
 const COLLATERAL_OPTIONS = ["전체", "아파트", "오피스텔", "상가", "토지", "빌라", "기타"] as const
 const REGION_OPTIONS = ["전체", "서울", "경기", "인천", "부산", "대구", "광주", "대전", "울산", "세종", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"] as const
 
-// ExchangeListing → ListingCard props 변환
-function toCardProps(l: {
-  id: string
-  institution_name?: string
-  trust_grade?: string
-  principal?: number
-  location_city?: string
-  location_district?: string
-  collateral_type?: string
-  ai_estimate_low?: number
-  ai_estimate_high?: number
-  risk_grade?: string
-  deadline?: string
-  interest_count?: number
-  created_at?: string
-}) {
-  const askingMid = l.ai_estimate_low && l.ai_estimate_high
-    ? Math.round((l.ai_estimate_low + l.ai_estimate_high) / 2)
-    : (l.principal ?? 0) * 0.7
-  const discount = l.principal && l.principal > 0
-    ? Math.round((1 - askingMid / l.principal) * 1000) / 10
+// ExchangeListing(hook) · npl_listings(API raw) 양쪽 필드 호환 매핑
+// T2 fix (2026-04-20): API가 원본 snake_case(principal_amount, address, sido 등)를
+// 내려주므로 hook 기준 정규화된 필드만 읽으면 모든 값이 0/"" 로 비어 "오류"처럼 보임.
+function toCardProps(raw: Record<string, unknown>) {
+  const l = raw as Record<string, any>
+  const principal =
+    (l.principal as number) ??
+    (l.principal_amount as number) ??
+    (l.claim_amount as number) ??
+    (l.outstanding_principal as number) ??
+    0
+
+  const estLow = l.ai_estimate_low as number | undefined
+  const estHigh = l.ai_estimate_high as number | undefined
+  const askMin = l.asking_price_min as number | undefined
+  const askMax = l.asking_price_max as number | undefined
+  const askingMid =
+    estLow && estHigh ? Math.round((estLow + estHigh) / 2)
+    : askMin && askMax ? Math.round((askMin + askMax) / 2)
+    : l.asking_price ? (l.asking_price as number)
+    : Math.round(principal * 0.7)
+
+  const discount = principal > 0
+    ? Math.round((1 - askingMid / principal) * 1000) / 10
     : 0
+
+  // 지역: hook 정규화(location_city+district) > 원본(collateral_region+location_detail)
+  //      > address 앞 2토큰 > sido 순으로 fallback
+  let region = ""
+  if (l.location_city || l.location_district) {
+    region = [l.location_city, l.location_district].filter(Boolean).join(" ")
+  } else if (l.collateral_region || l.location_detail) {
+    region = [l.collateral_region, l.location_detail].filter(Boolean).join(" ")
+  } else if (typeof l.address === "string" && l.address) {
+    region = l.address.split(/\s+/).slice(0, 2).join(" ")
+  } else if (l.sido) {
+    region = String(l.sido)
+  }
+
   return {
-    id: l.id,
-    code: l.id.slice(0, 8).toUpperCase(),
-    collateralType: (l.collateral_type ?? "기타") as CollateralType,
-    region: [l.location_city, l.location_district].filter(Boolean).join(" "),
-    outstandingAmount: l.principal ?? 0,
+    id: String(l.id),
+    code: String(l.id).slice(0, 8).toUpperCase(),
+    collateralType: ((l.collateral_type as string) ?? "기타") as CollateralType,
+    region,
+    outstandingAmount: principal,
     askingPrice: askingMid,
     discountRate: discount,
-    riskGrade: (l.risk_grade ?? "C") as RiskGrade,
-    deadline: l.deadline ?? new Date(Date.now() + 7 * 24 * 3600_000).toISOString(),
-    viewCount: l.interest_count,
+    riskGrade: ((l.risk_grade as string) ?? (l.ai_grade as string) ?? "C") as RiskGrade,
+    deadline: (l.deadline as string) ?? new Date(Date.now() + 7 * 24 * 3600_000).toISOString(),
+    viewCount: (l.interest_count as number) ?? (l.view_count as number),
   }
 }
 
@@ -215,7 +232,7 @@ export default function ExchangeDiscoverPage() {
 
           {/* 실제 카드 */}
           {!isLoading && allListings.map((l) => {
-            const props = toCardProps(l)
+            const props = toCardProps(l as unknown as Record<string, unknown>)
             return <ListingCard key={l.id} {...props} />
           })}
 

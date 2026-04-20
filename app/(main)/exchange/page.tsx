@@ -20,8 +20,9 @@ import {
   Search, SlidersHorizontal, TrendingDown, Building2,
   MapPin, ShieldCheck, ArrowRight, Sparkles, Filter,
   LayoutGrid, List as ListIcon, Brain, Loader2, Zap,
-  Compass,
+  Compass, Eye,
 } from "lucide-react"
+import { maskInstitutionName } from "@/lib/mask"
 import { TierBadge } from "@/components/tier/tier-badge"
 import { CompletenessBadge } from "@/components/listing/completeness-badge"
 import type { AccessTier } from "@/lib/access-tier"
@@ -86,6 +87,7 @@ interface CardListing {
   }
   sale_method: keyof typeof SALE_METHODS  // NPLATFORM / AUCTION / PUBLIC
   created_days_ago: number
+  view_count: number   // 공개 리스트 누적 조회수 (L0)
 }
 
 const MOCK: CardListing[] = [
@@ -97,7 +99,7 @@ const MOCK: CardListing[] = [
     appraisal_value: 1_020_000_000, discount_rate: 29.2,
     ai_grade: "A", data_completeness: 9, access_tier_required: "L0",
     provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: false },
-    sale_method: "NPLATFORM", created_days_ago: 2,
+    sale_method: "NPLATFORM", created_days_ago: 2, view_count: 412,
   },
   {
     id: "npl-2026-0411", institution: "한국자산관리공사", inst_kind: "AMC", listing_category: "NPL",
@@ -107,7 +109,7 @@ const MOCK: CardListing[] = [
     appraisal_value: 3_100_000_000, discount_rate: 31.6,
     ai_grade: "A", data_completeness: 10, access_tier_required: "L0",
     provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: true },
-    sale_method: "AUCTION", created_days_ago: 1,
+    sale_method: "AUCTION", created_days_ago: 1, view_count: 1083,
   },
   {
     id: "npl-2026-0410", institution: "대신F&I", inst_kind: "AMC", listing_category: "NPL",
@@ -117,7 +119,7 @@ const MOCK: CardListing[] = [
     appraisal_value: 640_000_000, discount_rate: 34.6,
     ai_grade: "B", data_completeness: 6, access_tier_required: "L0",
     provided: { appraisal: true, registry: true, rights: false, lease: false, site_photos: true, financials: false },
-    sale_method: "NPLATFORM", created_days_ago: 4,
+    sale_method: "NPLATFORM", created_days_ago: 4, view_count: 238,
   },
   {
     id: "npl-2026-0409", institution: "신한은행", inst_kind: "BANK", listing_category: "NPL",
@@ -127,7 +129,7 @@ const MOCK: CardListing[] = [
     appraisal_value: 4_600_000_000, discount_rate: 21.2,
     ai_grade: "A", data_completeness: 10, access_tier_required: "L0",
     provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: true },
-    sale_method: "NPLATFORM", created_days_ago: 1,
+    sale_method: "NPLATFORM", created_days_ago: 1, view_count: 893,
   },
   {
     id: "npl-2026-0408", institution: "국민은행", inst_kind: "BANK", listing_category: "NPL",
@@ -137,7 +139,7 @@ const MOCK: CardListing[] = [
     appraisal_value: 1_520_000_000, discount_rate: 28.9,
     ai_grade: "A", data_completeness: 8, access_tier_required: "L0",
     provided: { appraisal: true, registry: true, rights: true, lease: false, site_photos: true, financials: false },
-    sale_method: "NPLATFORM", created_days_ago: 3,
+    sale_method: "NPLATFORM", created_days_ago: 3, view_count: 521,
   },
   {
     id: "npl-2026-0407", institution: "연합자산관리", inst_kind: "AMC", listing_category: "NPL",
@@ -147,7 +149,7 @@ const MOCK: CardListing[] = [
     appraisal_value: 780_000_000, discount_rate: 34.7,
     ai_grade: "B", data_completeness: 5, access_tier_required: "L0",
     provided: { appraisal: true, registry: false, rights: false, lease: false, site_photos: false, financials: false },
-    sale_method: "PUBLIC", created_days_ago: 6,
+    sale_method: "PUBLIC", created_days_ago: 6, view_count: 156,
   },
   {
     id: "npl-2026-0406", institution: "하나은행", inst_kind: "BANK", listing_category: "NPL",
@@ -157,7 +159,7 @@ const MOCK: CardListing[] = [
     appraisal_value: 360_000_000, discount_rate: 33.3,
     ai_grade: "B", data_completeness: 7, access_tier_required: "L0",
     provided: { appraisal: true, registry: true, rights: true, lease: false, site_photos: false, financials: false },
-    sale_method: "NPLATFORM", created_days_ago: 2,
+    sale_method: "NPLATFORM", created_days_ago: 2, view_count: 302,
   },
   {
     id: "npl-2026-0405", institution: "IBK기업은행", inst_kind: "BANK", listing_category: "NPL",
@@ -167,7 +169,7 @@ const MOCK: CardListing[] = [
     appraisal_value: 1_700_000_000, discount_rate: 30.9,
     ai_grade: "A", data_completeness: 8, access_tier_required: "L0",
     provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: false, financials: false },
-    sale_method: "NPLATFORM", created_days_ago: 3,
+    sale_method: "NPLATFORM", created_days_ago: 3, view_count: 674,
   },
   {
     id: "npl-2026-0404", institution: "키움상호저축은행", inst_kind: "SAVINGS_BANK", listing_category: "NPL",
@@ -177,7 +179,7 @@ const MOCK: CardListing[] = [
     appraisal_value: 520_000_000, discount_rate: 34.3,
     ai_grade: "C", data_completeness: 4, access_tier_required: "L0",
     provided: { appraisal: false, registry: true, rights: false, lease: false, site_photos: false, financials: false },
-    sale_method: "NPLATFORM", created_days_ago: 5,
+    sale_method: "NPLATFORM", created_days_ago: 5, view_count: 189,
   },
   {
     id: "npl-2026-0403", institution: "우리금융F&I", inst_kind: "AMC", listing_category: "NPL",
@@ -187,7 +189,7 @@ const MOCK: CardListing[] = [
     appraisal_value: 3_550_000_000, discount_rate: 28.0,
     ai_grade: "A", data_completeness: 9, access_tier_required: "L0",
     provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: false },
-    sale_method: "AUCTION", created_days_ago: 2,
+    sale_method: "AUCTION", created_days_ago: 2, view_count: 945,
   },
   {
     id: "npl-2026-0402", institution: "신한은행", inst_kind: "BANK", listing_category: "NPL",
@@ -197,7 +199,7 @@ const MOCK: CardListing[] = [
     appraisal_value: 1_280_000_000, discount_rate: 32.3,
     ai_grade: "A", data_completeness: 10, access_tier_required: "L0",
     provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: true },
-    sale_method: "NPLATFORM", created_days_ago: 1,
+    sale_method: "NPLATFORM", created_days_ago: 1, view_count: 761,
   },
   {
     id: "npl-2026-0401", institution: "새마을금고", inst_kind: "MUTUAL_CREDIT", listing_category: "NPL",
@@ -207,7 +209,7 @@ const MOCK: CardListing[] = [
     appraisal_value: 730_000_000, discount_rate: 33.7,
     ai_grade: "B", data_completeness: 7, access_tier_required: "L0",
     provided: { appraisal: true, registry: true, rights: false, lease: true, site_photos: false, financials: false },
-    sale_method: "NPLATFORM", created_days_ago: 4,
+    sale_method: "NPLATFORM", created_days_ago: 4, view_count: 287,
   },
 ]
 
@@ -496,18 +498,6 @@ export default function ExchangePage() {
                 }}
               >
                 <Sparkles size={14} /> {tr("발견 모드")}
-              </Link>
-              {/* D7: '지도에서 보기' 삭제 — '피드' (AI 큐레이션)로 통합 */}
-              <Link
-                href="/exchange/feed"
-                style={{
-                  padding: "10px 16px", borderRadius: 10,
-                  backgroundColor: V.surfaceElevated, color: V.textPrimary, fontSize: 13, fontWeight: 600,
-                  border: `1px solid ${V.borderSubtle}`,
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                }}
-              >
-                <Compass size={14} /> {tr("피드")}
               </Link>
             </div>
           </motion.div>
@@ -813,15 +803,6 @@ export default function ExchangePage() {
                     </button>
                   )
                 })}
-              </div>
-              <div
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  fontSize: 11, color: V.textMuted,
-                }}
-              >
-                <ShieldCheck size={13} color={V.positive} />
-                수수료 상한 매도·매수 각 0.9% 적용
               </div>
             </div>
           </div>
@@ -1221,15 +1202,29 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
             <Building2 size={14} color={V.textMuted} />
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: V.textPrimary, lineHeight: 1.2 }}>
-              {item.institution}
+            <div
+              style={{ fontSize: 11, fontWeight: 700, color: V.textPrimary, lineHeight: 1.2 }}
+              title="NDA 체결 후 실명 공개"
+            >
+              {maskInstitutionName(item.institution)}
             </div>
             <div style={{ fontSize: 9, color: V.textMuted, marginTop: 1 }}>
               {instLabel} · D-{7 - item.created_days_ago}
             </div>
           </div>
         </div>
-        <TierBadge tier={item.access_tier_required} variant="soft" size="xs" />
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 3,
+              fontSize: 10, color: V.textMuted, fontVariantNumeric: "tabular-nums",
+            }}
+            title="누적 조회수"
+          >
+            <Eye size={11} /> {item.view_count.toLocaleString()}
+          </span>
+          <TierBadge tier={item.access_tier_required} variant="soft" size="xs" />
+        </div>
       </div>
 
       {/* Body */}
@@ -1399,11 +1394,17 @@ function ListingRow({ item, index }: { item: CardListing; index: number }) {
           <Building2 size={14} color={V.textMuted} />
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: V.textPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {item.institution}
+          <div
+            style={{ fontSize: 12, fontWeight: 700, color: V.textPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+            title="NDA 체결 후 실명 공개"
+          >
+            {maskInstitutionName(item.institution)}
           </div>
-          <div style={{ fontSize: 10, color: V.textMuted, fontFamily: "monospace", marginTop: 2 }}>
-            {item.id}
+          <div style={{ fontSize: 10, color: V.textMuted, fontFamily: "monospace", marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
+            <span>{item.id}</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }} title="누적 조회수">
+              <Eye size={10} /> {item.view_count.toLocaleString()}
+            </span>
           </div>
         </div>
       </div>
