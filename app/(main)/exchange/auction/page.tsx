@@ -869,14 +869,14 @@ export default function AuctionPage() {
                 </span>
                 <span className="text-[0.6875rem] font-black uppercase tracking-widest" style={{ color: C.em }}>LIVE</span>
               </div>
-              <span className="text-[0.75rem]" style={{ color: C.fghm }}>실시간 공개 입찰 현황</span>
+              <span className="text-[0.75rem]" style={{ color: C.fghm }}>실시간 NPL 경매 현황</span>
             </div>
 
             <h1 className="text-[2.5rem] sm:text-[3rem] font-black tracking-tight leading-none mb-3" style={{ color: C.fgh }}>
-              NPL 오픈경매
+              NPL 경매
             </h1>
             <p className="text-[1rem] max-w-xl mb-8" style={{ color: C.fghd }}>
-              금융기관이 등록한 부실채권에 공개 입찰하세요. AI가 적정 입찰가를 실시간으로 분석합니다.
+              금융기관이 등록한 부실채권에 NPL 경매로 참여하세요. AI가 적정 입찰가를 실시간으로 분석합니다.
             </p>
           </motion.div>
 

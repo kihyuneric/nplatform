@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-13T15:00:00.000Z",
+  "updatedAt": "2026-04-20T00:00:00.000Z",
   "pageSubNavs": {
     "exchange": [
       {
@@ -13,9 +13,9 @@
       },
       {
         "key": "ex_auction",
-        "label": "입찰",
+        "label": "NPL 경매",
         "href": "/exchange/auction",
-        "description": "NPL 입찰 참여",
+        "description": "NPL 경매 참여",
         "icon": "Gavel",
         "active": true,
         "order": 2
@@ -24,19 +24,10 @@
         "key": "ex_sell",
         "label": "매물 등록",
         "href": "/exchange/sell",
-        "description": "내 채권 매각 등록",
+        "description": "내 채권 매각 등록 (단건 · OCR · CSV 대량)",
         "icon": "PlusCircle",
         "active": true,
         "order": 3
-      },
-      {
-        "key": "ex_bulk",
-        "label": "대량 등록",
-        "href": "/exchange/bulk-upload",
-        "description": "CSV/Excel 대량 매물 등록",
-        "icon": "Upload",
-        "active": true,
-        "order": 4
       },
       {
         "key": "ex_demands",
@@ -45,7 +36,7 @@
         "description": "매수 희망 조건 등록 및 매칭",
         "icon": "Users",
         "active": true,
-        "order": 5
+        "order": 4
       }
     ],
     "deals": [
@@ -191,9 +182,9 @@
         },
         {
           "key": "exchange_auction",
-          "label": "입찰",
+          "label": "NPL 경매",
           "href": "/exchange/auction",
-          "description": "NPL 입찰 참여",
+          "description": "NPL 경매 참여",
           "icon": "Gavel",
           "active": true,
           "order": 2
@@ -202,19 +193,10 @@
           "key": "exchange_sell",
           "label": "매물 등록",
           "href": "/exchange/sell",
-          "description": "내 채권 매각 등록",
+          "description": "내 채권 매각 등록 (단건 · OCR · CSV 대량)",
           "icon": "PlusCircle",
           "active": true,
           "order": 3
-        },
-        {
-          "key": "exchange_bulk",
-          "label": "대량 등록",
-          "href": "/exchange/bulk-upload",
-          "description": "CSV/Excel 대량 매물 등록",
-          "icon": "Upload",
-          "active": true,
-          "order": 4
         },
         {
           "key": "exchange_demands",
@@ -223,7 +205,7 @@
           "description": "매수 희망 조건 등록 및 매칭",
           "icon": "Users",
           "active": true,
-          "order": 5
+          "order": 4
         }
       ]
     },

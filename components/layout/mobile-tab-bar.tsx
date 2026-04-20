@@ -76,7 +76,7 @@ const MORE_SECTIONS = [
     titleKey: 'nav.listings',
     items: [
       { label: '매물 탐색', labelKey: 'nav.nplSearch', href: '/exchange', icon: Search },
-      { label: 'NPL 오픈경매', labelKey: 'nav.auction', href: '/exchange/auction', icon: Gavel },
+      { label: 'NPL 경매', labelKey: 'nav.auction', href: '/exchange/auction', icon: Gavel },
       { label: '매물 등록', labelKey: 'nav.listProperty', href: '/exchange/sell', icon: FileText },
       { label: '매수 수요', labelKey: 'nav.buyerDemands', href: '/exchange/demands', icon: Users },
     ],

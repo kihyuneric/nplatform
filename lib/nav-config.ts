@@ -44,7 +44,7 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
     exchange: [
       { key: 'ex_all',          label: '거래소',     href: '/exchange',                description: 'NPL 거래소 메인',          icon: 'Store',        active: true, order: 1 },
       { key: 'ex_search',       label: '검색',       href: '/exchange/search',          description: '상세 필터 데이터 그리드',    icon: 'Search',       active: true, order: 2 },
-      { key: 'ex_bidding',      label: 'NPL 오픈경매', href: '/exchange/auction',       description: '공개 입찰 참여 · 실시간 경합', icon: 'Gavel',     active: true, order: 3 },
+      { key: 'ex_bidding',      label: 'NPL 경매',   href: '/exchange/auction',       description: 'NPL 경매 참여',              icon: 'Gavel',        active: true, order: 3 },
       { key: 'ex_sell',         label: '매물 등록',  href: '/exchange/sell',            description: '내 채권 매각 등록 (단건 · OCR · CSV 대량)', icon: 'PlusCircle', active: true, order: 4 },
       { key: 'ex_demands',      label: '매수 수요',  href: '/exchange/demands',         description: '원하는 조건 등록',          icon: 'ClipboardList', active: true, order: 5 },
       { key: 'ex_institutions', label: '참여 기관',  href: '/exchange/institutions',    description: '매각 기관 현황',            icon: 'Building2',    active: true, order: 6 },
