@@ -80,7 +80,7 @@ export const STAGE_META: Record<DealStage, StageMeta> = {
     shortLabel: "NDA",
     description: "전문투자자 인증 후 비밀유지계약을 체결합니다.",
     tier: "L1",
-    routeFor: (id) => `/exchange/${id}/nda`,
+    routeFor: (id) => `/deals/${id}?action=nda`,
   },
   NDA_SIGNED: {
     key: "NDA_SIGNED",
@@ -96,7 +96,7 @@ export const STAGE_META: Record<DealStage, StageMeta> = {
     shortLabel: "LOI",
     description: "매수의향서를 작성합니다.",
     tier: "L2",
-    routeFor: (id) => `/exchange/${id}/loi`,
+    routeFor: (id) => `/deals/${id}?action=loi`,
   },
   LOI_SUBMITTED: {
     key: "LOI_SUBMITTED",
@@ -112,7 +112,7 @@ export const STAGE_META: Record<DealStage, StageMeta> = {
     shortLabel: "데이터룸",
     description: "매도자 승인 완료. L3 데이터룸 입장이 가능합니다.",
     tier: "L3",
-    routeFor: (id) => `/exchange/${id}/dataroom`,
+    routeFor: (id) => `/deals/${id}?tab=%EB%AC%B8%EC%84%9C`,
   },
   DATAROOM: {
     key: "DATAROOM",
@@ -120,7 +120,7 @@ export const STAGE_META: Record<DealStage, StageMeta> = {
     shortLabel: "DD",
     description: "원본 자료 실사 중입니다.",
     tier: "L3",
-    routeFor: (id) => `/exchange/${id}/dataroom`,
+    routeFor: (id) => `/deals/${id}?tab=%EB%AC%B8%EC%84%9C`,
   },
   ESCROW: {
     key: "ESCROW",
@@ -128,7 +128,7 @@ export const STAGE_META: Record<DealStage, StageMeta> = {
     shortLabel: "에스크로",
     description: "에스크로 입금 및 소유권 이전 절차를 진행합니다.",
     tier: "L3",
-    routeFor: (id) => `/exchange/${id}/escrow`,
+    routeFor: (id) => `/deals/${id}?tab=%EC%97%90%EC%8A%A4%ED%81%AC%EB%A1%9C`,
   },
   CLOSED: {
     key: "CLOSED",

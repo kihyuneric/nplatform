@@ -973,7 +973,7 @@ export default function ListingDetailPage() {
               <div style={{ fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 8 }}>다음 단계</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <Link
-                  href={`/exchange/${listing.id}/nda`}
+                  href={`/deals/${listing.id}?action=nda`}
                   style={{
                     padding: "12px 14px", borderRadius: 10,
                     backgroundColor: C.em, color: "#041915",
@@ -986,7 +986,7 @@ export default function ListingDetailPage() {
                 </Link>
                 {tier === "L3" ? (
                   <Link
-                    href={`/exchange/${listing.id}/dataroom`}
+                    href={`/deals/${listing.id}?tab=%EB%AC%B8%EC%84%9C`}
                     style={{
                       padding: "12px 14px", borderRadius: 10,
                       backgroundColor: "rgba(245, 158, 11, 0.1)", color: C.amber,
@@ -1000,7 +1000,7 @@ export default function ListingDetailPage() {
                   </Link>
                 ) : (
                   <Link
-                    href={`/exchange/${listing.id}/loi`}
+                    href={`/deals/${listing.id}?action=loi`}
                     style={{
                       padding: "12px 14px", borderRadius: 10,
                       backgroundColor: C.bg3, color: "var(--color-text-primary)",
@@ -1458,7 +1458,7 @@ export default function ListingDetailPage() {
             ♥
           </button>
           <Link
-            href={`/exchange/${listing.id}/nda`}
+            href={`/deals/${listing.id}?action=nda`}
             style={{
               flex: 1,
               padding: "12px 14px",

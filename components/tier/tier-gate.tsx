@@ -154,13 +154,13 @@ function getUpgradeAction(
   if (required === 'L3') {
     return {
       label: 'LOI 제출하고 데이터룸 열기',
-      href: listingId ? `/exchange/${listingId}/loi` : '/my/agreements',
+      href: listingId ? `/deals/${listingId}?action=loi` : '/my/agreements',
     }
   }
   if (required === 'L2') {
     // NDA 체결이 매물별일 경우 NDA 페이지로
     if (listingId) {
-      return { label: 'NDA 체결하고 열람', href: `/exchange/${listingId}/nda` }
+      return { label: 'NDA 체결하고 열람', href: `/deals/${listingId}?action=nda` }
     }
     return { label: '전문투자자 인증하기', href: '/my/kyc' }
   }

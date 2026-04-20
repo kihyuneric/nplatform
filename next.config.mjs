@@ -110,6 +110,13 @@ const nextConfig = {
       { source: '/exchange/archive', destination: '/deals/archive', permanent: true },
       { source: '/exchange/due-diligence/:id', destination: '/deals/:id', permanent: true },
       { source: '/exchange/contract/:id', destination: '/deals/:id', permanent: true },
+
+      // DR-1 (2026-04-21) · 딜룸 단일 URL 통합 — /exchange/[id]/* 하위 5개 라우트 → /deals/[id]
+      { source: '/exchange/:id/nda',      destination: '/deals/:id?action=nda',  permanent: true },
+      { source: '/exchange/:id/loi',      destination: '/deals/:id?action=loi',  permanent: true },
+      { source: '/exchange/:id/dataroom', destination: '/deals/:id?tab=%EB%AC%B8%EC%84%9C',     permanent: true },
+      { source: '/exchange/:id/escrow',   destination: '/deals/:id?tab=%EC%97%90%EC%8A%A4%ED%81%AC%EB%A1%9C', permanent: true },
+      { source: '/exchange/:id/flow',     destination: '/deals/:id',             permanent: true },
       { source: '/matching', destination: '/deals/matching', permanent: true },
       { source: '/tools/contract-generator', destination: '/deals/contract', permanent: true },
 
