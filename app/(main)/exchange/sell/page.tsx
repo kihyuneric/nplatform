@@ -189,7 +189,15 @@ export default function SellWizardPage() {
   }, [state])
 
   const update = <K extends keyof WizardState>(k: K, v: WizardState[K]) =>
-    setState(s => ({ ...s, [k]: v }))
+    setState(s => {
+      const next = { ...s, [k]: v } as WizardState
+      // 전속 계약 ON 시 매각 수수료율 하한을 0.5%로 자동 보정
+      // (등록 수수료 0.3% 할인 혜택과 이중 적용 방지)
+      if (k === "exclusive" && v === true && next.seller_fee_rate < 0.005) {
+        next.seller_fee_rate = 0.005
+      }
+      return next
+    })
 
   const completeness = useMemo(() => {
     let score = 0
@@ -629,7 +637,10 @@ function Step3({
         </div>
       )}
 
-      {/* D6: 매도자 희망 수수료율 입력 (0.3% ~ 0.9%) */}
+      {/* D6: 매도자 희망 수수료율 입력
+         ─ 일반 매물:  0.3% ~ 0.9%
+         ─ 전속 계약:  0.5% ~ 0.9%  (등록 수수료 0.3% 할인 혜택과 이중 적용 방지)
+      */}
       <div
         style={{
           marginTop: 18, padding: "18px 20px", borderRadius: 12,
@@ -641,15 +652,23 @@ function Step3({
           <div>
             <label style={{ fontSize: 12, color: "var(--color-text-primary, #F8FAFC)", fontWeight: 700 }}>
               매각 수수료율 <span style={{ color: C.emL, marginLeft: 4 }}>직접 입력</span>
+              {state.exclusive && (
+                <span style={{ marginLeft: 8, padding: "2px 6px", borderRadius: 4, fontSize: 10, fontWeight: 800,
+                  backgroundColor: `${C.emL}22`, color: C.emL, letterSpacing: "-0.01em" }}>
+                  전속 계약 · 하한 0.5%
+                </span>
+              )}
             </label>
             <div style={{ fontSize: 10, color: C.lt4, marginTop: 3 }}>
-              거래 성사 시 매각대금에서 차감됩니다. 허용 범위 0.3% ~ 0.9%. 기본 0.5%.
+              {state.exclusive
+                ? "전속 계약 매물은 등록 수수료 0.3% 할인이 이미 적용되므로, 매각 수수료율은 0.5% 이상에서 조정 가능합니다. 상한 0.9%."
+                : "거래 성사 시 매각대금에서 차감됩니다. 허용 범위 0.3% ~ 0.9%. 기본 0.5%."}
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <input
               type="range"
-              min={0.003}
+              min={state.exclusive ? 0.005 : 0.003}
               max={0.009}
               step={0.0005}
               value={state.seller_fee_rate}
