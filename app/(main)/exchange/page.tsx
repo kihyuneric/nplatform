@@ -486,6 +486,17 @@ export default function ExchangePage() {
                 {tr("매물 등록")} <ArrowRight size={14} />
               </Link>
               <Link
+                href="/exchange/discover"
+                style={{
+                  padding: "10px 16px", borderRadius: 10,
+                  backgroundColor: V.surfaceElevated, color: V.textPrimary, fontSize: 13, fontWeight: 600,
+                  border: `1px solid ${V.borderSubtle}`,
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                }}
+              >
+                <Sparkles size={14} /> {tr("발견 모드")}
+              </Link>
+              <Link
                 href="/exchange/map"
                 style={{
                   padding: "10px 16px", borderRadius: 10,
