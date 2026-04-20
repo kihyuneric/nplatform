@@ -210,7 +210,9 @@ export default function AuctionDetailPage() {
   const verdictCfg = aiResult ? VERDICT_CONFIG[aiResult.verdict] : null
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100">
+    // NX-7d (의도적): 경매 딜링 터미널은 Bloomberg-style 항상-다크 스킨.
+    // 헤더/사이드는 테마 반응형, 본문만 다크 유지. 완전 토큰화는 NY 배치 예정.
+    <div className="dark min-h-screen bg-gray-950 text-gray-100">
       {/* 헤더 */}
       <div className="bg-gray-900 border-b border-gray-800 px-6 py-4 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex items-center justify-between">

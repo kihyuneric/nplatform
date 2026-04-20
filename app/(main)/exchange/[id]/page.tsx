@@ -43,7 +43,7 @@ const C = {
   blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
   amber: "var(--color-warning)", amberL: "#F59E0B",
   purple: "#A855F7", rose: "var(--color-danger)", teal: "#14B8A6",
-  lt1: "#F0F4F8", lt2: "#94A3B8", lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
+  lt1: "var(--color-text-primary)", lt2: "var(--color-text-secondary)", lt3: "var(--color-text-tertiary)", lt4: "var(--color-text-muted)",
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -537,7 +537,7 @@ export default function ListingDetailPage() {
     sellerFee.addonDetails.find(a => a.key === "premium_listing")?.waived ?? false
 
   return (
-    <main style={{ backgroundColor: C.bg0, color: "#E2E8F0", minHeight: "100vh" }}>
+    <main style={{ backgroundColor: C.bg0, color: "var(--color-text-primary)", minHeight: "100vh" }}>
       {/* ── Top Breadcrumb & Tier Simulator ───────── */}
       <section
         style={{
@@ -626,7 +626,7 @@ export default function ListingDetailPage() {
 
             <h1
               style={{
-                fontSize: 32, fontWeight: 900, color: "#fff",
+                fontSize: 32, fontWeight: 900, color: "var(--color-text-primary)",
                 letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 8,
               }}
             >
@@ -698,7 +698,7 @@ export default function ListingDetailPage() {
             >
               <Info size={16} color={C.blueL} style={{ marginTop: 2, flexShrink: 0 }} />
               <div style={{ fontSize: 12, color: C.lt3, lineHeight: 1.55 }}>
-                본 매물은 <strong style={{ color: "#fff" }}>자동 마스킹 파이프라인</strong>을 통과한 결과입니다.
+                본 매물은 <strong style={{ color: "var(--color-text-primary)" }}>자동 마스킹 파이프라인</strong>을 통과한 결과입니다.
                 개인정보·채무자 식별정보·상세 지번·동/호수는 금융감독원 · 금융위원회 지침에 따라 자동으로 가려지며,
                 티어별 공개 범위는 규제 요건에 맞춰 분리되어 있습니다.
               </div>
@@ -747,7 +747,7 @@ export default function ListingDetailPage() {
                           {r.order}
                         </span>
                         <div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{r.type}</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--color-text-primary)" }}>{r.type}</div>
                           <div style={{ fontSize: 10, color: C.lt4 }}>권리자 {r.holder_masked}</div>
                         </div>
                       </div>
@@ -780,7 +780,7 @@ export default function ListingDetailPage() {
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 2 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 2 }}>
                       감정평가서 (PII 마스킹본)
                     </div>
                     <div style={{ fontSize: 10, color: C.lt4 }}>
@@ -790,7 +790,7 @@ export default function ListingDetailPage() {
                   <button
                     style={{
                       padding: "8px 14px", borderRadius: 8,
-                      backgroundColor: C.blue, color: "#fff",
+                      backgroundColor: C.blue, color: "var(--color-text-inverse, #fff)",
                       fontSize: 11, fontWeight: 700, border: "none", cursor: "pointer",
                     }}
                   >
@@ -809,7 +809,7 @@ export default function ListingDetailPage() {
                     backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
                   }}
                 >
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 8 }}>
                     등기부등본 원본 (마스킹 해제)
                   </div>
                   <div style={{ fontSize: 11, color: C.lt4, lineHeight: 1.55 }}>
@@ -933,9 +933,9 @@ export default function ListingDetailPage() {
                       fontSize: 11, color: C.lt3, lineHeight: 1.6,
                     }}
                   >
-                    채무자 식별정보: <span style={{ color: "#fff", fontWeight: 700 }}>{listing.debtor_name_masked}</span>
+                    채무자 식별정보: <span style={{ color: "var(--color-text-primary)", fontWeight: 700 }}>{listing.debtor_name_masked}</span>
                     {" · "}
-                    경매사건: <span style={{ color: "#fff", fontWeight: 700 }}>{listing.court_case_full}</span>
+                    경매사건: <span style={{ color: "var(--color-text-primary)", fontWeight: 700 }}>{listing.court_case_full}</span>
                   </div>
                 </div>
               </TierGate>
@@ -985,7 +985,7 @@ export default function ListingDetailPage() {
                     href={`/exchange/${listing.id}/loi`}
                     style={{
                       padding: "12px 14px", borderRadius: 10,
-                      backgroundColor: C.bg3, color: "#fff",
+                      backgroundColor: C.bg3, color: "var(--color-text-primary)",
                       fontSize: 12, fontWeight: 700, textAlign: "center",
                       border: `1px solid ${C.bg4}`,
                       textDecoration: "none",
@@ -1000,7 +1000,7 @@ export default function ListingDetailPage() {
                   disabled={dealCreating}
                   style={{
                     padding: "12px 14px", borderRadius: 10,
-                    backgroundColor: dealCreating ? "#4a6a8a" : C.blue, color: "#fff",
+                    backgroundColor: dealCreating ? "#4a6a8a" : C.blue, color: "var(--color-text-inverse, #fff)",
                     fontSize: 12, fontWeight: 800, textAlign: "center",
                     border: "none", cursor: dealCreating ? "default" : "pointer",
                     display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 6,
@@ -1067,7 +1067,7 @@ export default function ListingDetailPage() {
                   <Sparkles size={14} color="#fff" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>AI 투자 분석</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "var(--color-text-primary)" }}>AI 투자 분석</div>
                   <div style={{ fontSize: 9, color: C.lt4 }}>Claude NPL Engine · 실시간</div>
                 </div>
               </div>
@@ -1284,7 +1284,7 @@ export default function ListingDetailPage() {
                 }}
               >
                 <span style={{ fontSize: 10, color: C.lt4, fontWeight: 600 }}>기준 거래가</span>
-                <span style={{ fontSize: 14, color: "#fff", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+                <span style={{ fontSize: 14, color: "var(--color-text-primary)", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
                   {formatKRW(listing.asking_price)}
                 </span>
               </div>
@@ -1326,7 +1326,7 @@ export default function ListingDetailPage() {
               </div>
 
               <div style={{ marginTop: 10, fontSize: 10, color: C.lt4, lineHeight: 1.55 }}>
-                💡 수수료는 <strong style={{ color: "#fff" }}>거래 성사 시</strong>에만 부과됩니다.
+                💡 수수료는 <strong style={{ color: "var(--color-text-primary)" }}>거래 성사 시</strong>에만 부과됩니다.
                 에스크로 계좌로 자동 정산되며, 매도자 수수료는 별도로 처리됩니다.
               </div>
             </div>
@@ -1360,7 +1360,7 @@ export default function ListingDetailPage() {
                       fontSize: 12,
                     }}
                   >
-                    <span style={{ color: "#fff" }}>{label}</span>
+                    <span style={{ color: "var(--color-text-primary)" }}>{label}</span>
                     {ok ? (
                       <CheckCircle2 size={14} color={C.emL} />
                     ) : (
@@ -1381,7 +1381,7 @@ export default function ListingDetailPage() {
             >
               <ShieldCheck size={16} color={C.emL} style={{ marginTop: 2, flexShrink: 0 }} />
               <div style={{ fontSize: 11, color: C.lt3, lineHeight: 1.5 }}>
-                본 매물은 <strong style={{ color: "#fff" }}>개인정보보호법 · 신용정보법 · 전자금융거래법</strong>을 준수하며,
+                본 매물은 <strong style={{ color: "var(--color-text-primary)" }}>개인정보보호법 · 신용정보법 · 전자금융거래법</strong>을 준수하며,
                 모든 열람은 PII Access Log로 기록됩니다.
               </div>
             </div>
@@ -1409,7 +1409,7 @@ export default function ListingDetailPage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <div>
             <div style={{ fontSize: 10, color: C.lt4, fontWeight: 700, letterSpacing: 0.5 }}>매각 희망가</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", fontVariantNumeric: "tabular-nums" }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "var(--color-text-primary)", fontVariantNumeric: "tabular-nums" }}>
               {(listing.asking_price / 100_000_000).toFixed(1)}억원
             </div>
           </div>
@@ -1529,7 +1529,7 @@ function Panel({
         <div
           style={{
             display: "inline-flex", alignItems: "center", gap: 8,
-            fontSize: 13, fontWeight: 700, color: "#fff",
+            fontSize: 13, fontWeight: 700, color: "var(--color-text-primary)",
           }}
         >
           <span style={{ color: C.emL }}>{icon}</span>
@@ -1627,7 +1627,7 @@ function FeeRow({
         <span>{label}</span>
         <span style={{ color: C.emL, fontWeight: 700 }}>{(rate * 100).toFixed(2)}%</span>
       </div>
-      <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+      <div style={{ fontSize: 16, fontWeight: 800, color: "var(--color-text-primary)", letterSpacing: "-0.01em" }}>
         {formatKRW(amount)}
         {waived && (
           <span

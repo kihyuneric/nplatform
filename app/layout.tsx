@@ -219,12 +219,10 @@ export default async function RootLayout({
                       borderRadius: '12px',
                       boxShadow: '0 8px 32px rgba(13,31,56,0.14), 0 2px 8px rgba(13,31,56,0.08)',
                     },
+                    // richColors 가 테마별 success/error/warning/info 색을 자동 적용.
+                    // 기본 toast 는 semantic token 으로 라이트/다크 모두에서 자연스럽게 표시.
                     classNames: {
                       toast: 'border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)]',
-                      success: '!bg-emerald-950 !text-emerald-300 !border-emerald-800',
-                      error: '!bg-red-950 !text-red-300 !border-red-900',
-                      warning: '!bg-amber-950 !text-amber-300 !border-amber-800',
-                      info: '!bg-blue-950 !text-blue-300 !border-blue-800',
                     },
                   }}
                 />

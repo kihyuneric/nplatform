@@ -19,22 +19,27 @@ import { DealRoomPreview } from "./_landing/dealroom-preview";
 /* ═══════════════════════════════════════════════════════════════════════════
    DESIGN TOKENS
 ═══════════════════════════════════════════════════════════════════════════ */
+// NX-7: 테마 반응형 토큰 — 라이트/다크 모두 적응 (.dark 클래스로 전환)
+// brandHero/textOnBrand 는 항상 고정 (브랜드 의도 색, CTA 강조)
 const C = {
-  bg0: "#030810",   // deepest
-  bg1: "#050D1A",   // hero bg
-  bg2: "#080F1E",   // section dark
-  bg3: "#0A1628",   // card dark
-  bg4: "#0F1F35",   // elevated card
-  light0: "#FFFFFF",
-  light1: "#F8FAFC",
-  light2: "#F1F5F9",
-  em: "#10B981",    // emerald
+  bg0: "var(--color-bg-deepest)",      // deepest
+  bg1: "var(--color-bg-deep)",         // hero bg
+  bg2: "var(--color-bg-base)",         // section base
+  bg3: "var(--color-surface-elevated)",// card surface
+  bg4: "var(--color-bg-elevated)",     // elevated card
+  light0: "var(--color-surface-elevated)",
+  light1: "var(--color-surface-base)",
+  light2: "var(--color-surface-sunken)",
+  em: "var(--color-positive)",         // emerald
   emL: "#34D399",
-  blue: "#3B82F6",
-  amber: "#F59E0B",
+  blue: "var(--color-brand-bright)",
+  amber: "var(--color-warning)",
   purple: "#A855F7",
-  rose: "#F43F5E",
+  rose: "var(--color-danger)",
   teal: "#14B8A6",
+  // 브랜드 의도 색 (테마 무관)
+  brandHero: "#0A1628",                // 딥 네이비 CTA
+  textOnBrand: "#FFFFFF",              // 브랜드 배경 위 텍스트
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -416,7 +421,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div style={{ backgroundColor: C.bg1, color: 'white', fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif", minHeight: '100vh' }}>
+    <div style={{ backgroundColor: C.bg1, color: 'var(--color-text-primary)', fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif", minHeight: '100vh' }}>
 
       {/* ══ HERO ══════════════════════════════════════════════════════════ */}
       <section style={{ backgroundColor: C.bg0, minHeight: 'calc(100vh - 4rem)', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
@@ -776,9 +781,9 @@ export default function LandingPage() {
                 </ul>
                 <Link href="/exchange"
                   className="inline-flex items-center gap-2 font-bold text-sm rounded-xl transition-all"
-                  style={{ background: '#0A1628', color: 'white', padding: '12px 24px' }}
+                  style={{ background: C.brandHero, color: C.textOnBrand, padding: '12px 24px' }}
                   onMouseEnter={e => { (e.currentTarget.style.background = '#0F2040'); (e.currentTarget.style.transform = 'translateY(-1px)'); }}
-                  onMouseLeave={e => { (e.currentTarget.style.background = '#0A1628'); (e.currentTarget.style.transform = 'translateY(0)'); }}
+                  onMouseLeave={e => { (e.currentTarget.style.background = C.brandHero); (e.currentTarget.style.transform = 'translateY(0)'); }}
                 >
                   거래소에서 매물 탐색 <ArrowRight size={14} />
                 </Link>
