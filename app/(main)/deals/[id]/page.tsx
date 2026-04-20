@@ -19,6 +19,17 @@ import { MessageBubble, type DealMessage } from "@/components/deal-room/message-
 import { OfferCard, OfferForm, type OfferData } from "@/components/deal-room/offer-card"
 import { FileAttachment, type AttachedFile } from "@/components/deal-room/file-attachment"
 import SignaturePad from "@/components/deal-room/signature-pad"
+// DR-2c (2026-04-21): 3-Zone 셸 통합
+import {
+  DealRoomShell,
+  DealHeader,
+  DealSummaryPane,
+  DealActionPane,
+  DealChatPane,
+  type DealStage,
+  type TierLevel,
+  type ChatMessage as ShellChatMessage,
+} from "@/components/deal-room"
 import { useDealMessages, useDealPresence } from "@/lib/realtime-deals"
 import { formatKRW } from "@/lib/design-system"
 import type { EscrowAccount, EscrowMilestone, EscrowStatus } from "@/lib/payments/escrow"
@@ -1448,6 +1459,182 @@ interface AnomalyResult {
 
 // ── Overview Tab ──────────────────────────────────────────────────────────────
 
+// ─── DR-2c: 3-Zone Overview Shell ─────────────────────────────────────────────
+// /deals/[id]?tab=개요 의 메인 뷰. 계획서 §4.1 기반.
+// 좌(요약) · 중(Primary CTA) · 우(채팅+문서) · 하단(AI 분석 · 기존 OverviewTab)
+
+const STAGE_MAP: Record<string, { tier: TierLevel; stage: DealStage; progress: number }> = {
+  INTEREST:      { tier: "L0", stage: "관심", progress: 10 },
+  NDA_REQUIRED:  { tier: "L1", stage: "NDA",  progress: 25 },
+  NDA_SIGNED:    { tier: "L2", stage: "NDA",  progress: 35 },
+  LOI_DRAFTING:  { tier: "L2", stage: "LOI",  progress: 45 },
+  LOI_SUBMITTED: { tier: "L2", stage: "LOI",  progress: 50 },
+  LOI_APPROVED:  { tier: "L3", stage: "실사", progress: 60 },
+  DATAROOM:      { tier: "L3", stage: "실사", progress: 70 },
+  CONTRACT:      { tier: "L4", stage: "서명", progress: 80 },
+  ESCROW:        { tier: "L4", stage: "정산", progress: 90 },
+  DEALROOM:      { tier: "L2", stage: "LOI",  progress: 40 },
+  CLOSED:        { tier: "L5", stage: "완료", progress: 100 },
+}
+
+function deriveStageFromDeal(deal: DealInfo) {
+  return STAGE_MAP[deal.lockInStage] || { tier: "L0" as TierLevel, stage: "관심" as DealStage, progress: 10 }
+}
+
+function OverviewShell({
+  deal,
+  docs,
+  offers,
+  onTabChange,
+}: {
+  deal: DealInfo
+  docs: DealDocument[]
+  offers: DealOffer[]
+  onTabChange: (tab: TabKey) => void
+}) {
+  const router = useRouter()
+  const { tier, stage, progress } = deriveStageFromDeal(deal)
+  // NOTE: 우측 패널 채팅은 ChatTab 과 동일한 Supabase 채널 구독 — Supabase Realtime 은 동일 토픽 재사용
+  const { messages: rtMessages, sendMessage } = useDealMessages(deal.id)
+
+  // 최근 5건 메시지만 셸 chat pane 에 표시 (전체 채팅은 채팅 탭으로 이동)
+  const recentMessages: ShellChatMessage[] = rtMessages.slice(-5).map((m: any) => ({
+    id: m.id || String(m.created_at),
+    author: m.sender_name || m.name || (m.sender_id === CURRENT_USER_ID ? "나" : deal.cp.name),
+    body: m.content || m.text || "",
+    sentAt: m.created_at ? formatRelativeTime(m.created_at) : "방금",
+    mine: m.sender_id === CURRENT_USER_ID || !!m.mine,
+  }))
+
+  // 티어별 Primary CTA 핸들러
+  const handlePrimary = () => {
+    switch (tier) {
+      case "L0":
+        toast.success("관심 매물로 등록되었습니다")
+        break
+      case "L1":
+        router.push(`/deals/${deal.id}?action=nda`)
+        break
+      case "L2":
+        router.push(`/deals/${deal.id}?action=loi`)
+        break
+      case "L3":
+        onTabChange("실사")
+        break
+      case "L4":
+        onTabChange("계약")
+        break
+      case "L5":
+        onTabChange("에스크로")
+        break
+    }
+  }
+
+  return (
+    <>
+      <DealRoomShell
+        header={
+          <DealHeader
+            title={deal.asset.title}
+            subtitle={`${deal.asset.collateral} · ${deal.asset.region}`}
+            backHref="/exchange"
+            backLabel="매물 탐색"
+            stage={stage}
+            progress={progress}
+            lastActivity={rtMessages.length > 0 ? formatRelativeTime(rtMessages[rtMessages.length - 1].created_at) : "방금"}
+          />
+        }
+        summary={
+          <DealSummaryPane
+            tier={tier}
+            data={{
+              principal: deal.asset.principal,
+              askingPrice: (deal.asset as any).askingPrice,
+              appraisalValue: deal.asset.appraisalValue,
+              collateral: {
+                type: deal.asset.collateral,
+                region: deal.asset.region,
+              },
+              grade: deal.asset.grade,
+              estIrr: deal.asset.yield,
+            }}
+          />
+        }
+        action={
+          <DealActionPane
+            tier={tier}
+            onPrimaryAction={handlePrimary}
+            recentOffer={
+              offers[0]
+                ? {
+                    label: offers[0].label || "최근 오퍼",
+                    amount: offers[0].amount,
+                    status: offers[0].status || "응답 대기",
+                    date: offers[0].date,
+                  }
+                : undefined
+            }
+            secondaryActions={[
+              {
+                label: "실사 자료 요청",
+                onClick: () => onTabChange("실사"),
+                icon: <FileSearch className="w-4 h-4" />,
+              },
+              {
+                label: "오퍼 히스토리 보기",
+                onClick: () => onTabChange("오퍼"),
+                icon: <TrendingUp className="w-4 h-4" />,
+              },
+              {
+                label: "미팅 예약",
+                onClick: () => onTabChange("미팅"),
+                icon: <CalendarCheck className="w-4 h-4" />,
+              },
+            ]}
+          />
+        }
+        chat={
+          <DealChatPane
+            partner={{
+              name: deal.cp.name,
+              role: deal.cp.role,
+              online: true,
+              avatar: deal.cp.initials,
+            }}
+            messages={recentMessages}
+            documents={docs.slice(0, 6).map((d) => ({
+              id: d.id,
+              name: d.name,
+              status: "uploaded",
+            }))}
+            onSend={(text) => sendMessage(text, "TEXT")}
+            onDocumentClick={() => onTabChange("문서")}
+            placeholder="메시지 입력… (전체 채팅은 채팅 탭)"
+          />
+        }
+      />
+
+      {/* AI 분석 섹션 (기존 OverviewTab 내용) */}
+      <div className="mt-6 bg-[var(--color-surface-raised)] border border-[var(--color-border-subtle)] rounded-2xl p-5">
+        <OverviewTab deal={deal} />
+      </div>
+    </>
+  )
+}
+
+function formatRelativeTime(iso: string): string {
+  try {
+    const d = new Date(iso)
+    const diff = (Date.now() - d.getTime()) / 1000
+    if (diff < 60) return "방금"
+    if (diff < 3600) return `${Math.floor(diff / 60)}분 전`
+    if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`
+    return d.toLocaleDateString("ko-KR")
+  } catch {
+    return "방금"
+  }
+}
+
 function OverviewTab({ deal }: { deal: DealInfo }) {
   const a = deal.asset
 
@@ -2338,7 +2525,9 @@ export default function DealRoomPage() {
           </div>
 
           {/* Tab Content */}
-          {activeTab === "개요" && <OverviewTab deal={deal} />}
+          {activeTab === "개요" && (
+            <OverviewShell deal={deal} docs={docs} offers={offers} onTabChange={setActiveTab} />
+          )}
           {activeTab === "채팅" && <ChatTab dealId={dealId} deal={deal} />}
           {activeTab === "문서" && <DocsTab docs={docs} dealId={dealId} />}
           {activeTab === "오퍼" && <OfferTab offers={offers} dealId={dealId} />}
