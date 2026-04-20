@@ -93,7 +93,7 @@ export default function AdminSidebar() {
               <Menu className="h-5 w-5" />
             </button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0 overflow-y-auto">
+          <SheetContent side="left" className="w-[88vw] max-w-72 p-0 overflow-y-auto">
             <div className="p-3 border-b border-[var(--color-border-subtle)]">
               <span className="text-sm font-bold text-[var(--color-brand-dark)]">관리자</span>
             </div>

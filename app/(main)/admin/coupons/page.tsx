@@ -135,6 +135,20 @@ function CreateCouponModal({ onClose, onCreate }: CreateModalProps) {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [copied, setCopied] = useState(false)
 
+  // Esc 닫기 + body scroll lock + focus restore (a11y)
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+      opener?.focus?.()
+    }
+  }, [onClose])
+
   function set(k: string, v: string) {
     setForm(f => ({ ...f, [k]: v }))
     setErrors(e => ({ ...e, [k]: '' }))
@@ -206,6 +220,9 @@ function CreateCouponModal({ onClose, onCreate }: CreateModalProps) {
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-coupon-title"
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,
         backgroundColor: 'rgba(3,8,18,0.85)',
@@ -225,10 +242,11 @@ function CreateCouponModal({ onClose, onCreate }: CreateModalProps) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: `1px solid ${BORDER}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Tag style={{ width: 18, height: 18, color: GREEN }} />
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: WHITE, margin: 0 }}>새 쿠폰 만들기</h2>
+            <h2 id="create-coupon-title" style={{ fontSize: 17, fontWeight: 700, color: WHITE, margin: 0 }}>새 쿠폰 만들기</h2>
           </div>
           <button
             onClick={onClose}
+            aria-label="닫기"
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: SLATE_500, display: 'flex', alignItems: 'center', borderRadius: 6 }}
           >
             <X style={{ width: 18, height: 18 }} />

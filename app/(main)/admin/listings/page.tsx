@@ -293,7 +293,7 @@ export default function AdminListingsPage() {
                 >
                   삭제
                 </button>
-                <a href={`/admin/listings/${v}`} className={`${DS.text.link} text-[0.8125rem]`}>상세</a>
+                <a href={`/exchange/${v}`} target="_blank" rel="noopener noreferrer" className={`${DS.text.link} text-[0.8125rem]`}>상세 ↗</a>
               </div>
             )},
           ]}
