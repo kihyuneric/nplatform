@@ -83,6 +83,12 @@ export interface SellerFeeInput {
   isInstitutional?: boolean          // 기관 전속계약 (기본료 0.3%로 할인)
   isInstitutionOnboarding?: boolean  // 매각사 첫 6개월 무료 (전체 waive)
   dataCompleteness?: number          // 9↑ 시 premium 무료
+  /**
+   * 매도자가 등록 시 직접 입력한 수수료율 (0.003 ~ 0.009 범위).
+   * 제공 시 `isInstitutional` 기반 기본료 로직보다 우선 적용.
+   * Phase 1-M · Sprint 3 · D6 — 매도자가 희망 수수료율을 제시 → 매물별로 개별화.
+   */
+  sellerRate?: number
 }
 
 export interface FeeBreakdown {
@@ -104,7 +110,11 @@ const ADDON_LABELS: Record<string, string> = {
 }
 
 export function calculateSellerFee(input: SellerFeeInput): FeeBreakdown {
-  const baseRate = input.isInstitutional ? INSTITUTIONAL_DISCOUNT_RATE : SELLER_BASE_RATE
+  // 매도자 입력 rate가 있으면 우선 — 단, 허용 범위(0.003~0.009)로 클램프
+  const explicitRate = typeof input.sellerRate === 'number' && !Number.isNaN(input.sellerRate)
+    ? Math.min(Math.max(input.sellerRate, INSTITUTIONAL_DISCOUNT_RATE), SELLER_FEE_CAP)
+    : undefined
+  const baseRate = explicitRate ?? (input.isInstitutional ? INSTITUTIONAL_DISCOUNT_RATE : SELLER_BASE_RATE)
   const addonDetails: FeeBreakdown['addonDetails'] = []
 
   for (const addon of input.addons ?? []) {

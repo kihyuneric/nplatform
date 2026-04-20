@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import { CompletenessBadge } from "@/components/listing/completeness-badge"
 import { calculateSellerFee } from "@/lib/fee-calculator"
+import { DateField } from "@/components/ui/date-field"
 import {
   COLLATERAL_CATEGORIES, SELLER_INSTITUTION_OPTIONS,
   LISTING_CATEGORY_OPTIONS, SALE_METHOD_OPTIONS,
@@ -50,6 +51,7 @@ interface WizardState {
   asking_price: number
   appraisal_value: number
   sale_method: SaleMethod | ""
+  seller_fee_rate: number        // D6: 매도자 희망 수수료율 (0.003 ~ 0.009)
   // ── 채권 상세 (수익성 분석용) ──
   interest_rate: number          // 약정금리 (%)
   penalty_rate: number           // 연체금리 (%)
@@ -84,6 +86,7 @@ const initial: WizardState = {
   asking_price: 0,
   appraisal_value: 0,
   sale_method: "NPLATFORM",
+  seller_fee_rate: 0.005,        // 기본 0.5%
   interest_rate: 0,
   penalty_rate: 0,
   default_start_date: "",
@@ -149,6 +152,8 @@ export default function SellWizardPage() {
         appraisal_value: state.appraisal_value || undefined,
         asking_price_min: state.asking_price,
         asking_price_max: state.asking_price,
+        // D6: 매도자 입력 수수료율 (0.003~0.009)
+        seller_fee_rate: state.seller_fee_rate,
       }
       const res = await fetch('/api/v1/exchange/listings', {
         method: 'POST',
@@ -209,8 +214,9 @@ export default function SellWizardPage() {
       addons: ["premium_listing", "dedicated_manager"],
       isInstitutional: state.exclusive,
       dataCompleteness: completeness,
+      sellerRate: state.seller_fee_rate,       // D6: 매도자 입력 우선
     })
-  }, [state.asking_price, state.exclusive, completeness])
+  }, [state.asking_price, state.exclusive, completeness, state.seller_fee_rate])
 
   const discountRate = useMemo(() => {
     if (!state.outstanding_principal || !state.asking_price) return 0
@@ -611,6 +617,60 @@ function Step3({
           </div>
         </div>
       )}
+
+      {/* D6: 매도자 희망 수수료율 입력 (0.3% ~ 0.9%) */}
+      <div
+        style={{
+          marginTop: 18, padding: "18px 20px", borderRadius: 12,
+          backgroundColor: "var(--color-bg-elevated, #0F1F35)",
+          border: `1px solid var(--color-border-default, ${C.bg4})`,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
+          <div>
+            <label style={{ fontSize: 12, color: "var(--color-text-primary, #F8FAFC)", fontWeight: 700 }}>
+              매각 수수료율 <span style={{ color: C.emL, marginLeft: 4 }}>직접 입력</span>
+            </label>
+            <div style={{ fontSize: 10, color: C.lt4, marginTop: 3 }}>
+              거래 성사 시 매각대금에서 차감됩니다. 허용 범위 0.3% ~ 0.9%. 기본 0.5%.
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <input
+              type="range"
+              min={0.003}
+              max={0.009}
+              step={0.0005}
+              value={state.seller_fee_rate}
+              onChange={(e) => update("seller_fee_rate", Number(e.target.value))}
+              style={{ width: 160 }}
+              aria-label="매각 수수료율"
+            />
+            <div style={{
+              minWidth: 66, textAlign: "right",
+              fontSize: 16, fontWeight: 900, color: C.emL,
+              fontVariantNumeric: "tabular-nums",
+            }}>
+              {(state.seller_fee_rate * 100).toFixed(2)}%
+            </div>
+          </div>
+        </div>
+        {state.asking_price > 0 && (
+          <div style={{
+            marginTop: 6, padding: "8px 10px", borderRadius: 6,
+            backgroundColor: "rgba(16,185,129,0.08)", fontSize: 11, color: C.lt3,
+            display: "flex", justifyContent: "space-between",
+          }}>
+            <span>예상 수수료 (희망가 {formatKRW(state.asking_price)} 기준)</span>
+            <strong style={{ color: C.emL, fontVariantNumeric: "tabular-nums" }}>
+              {formatKRW(Math.round(state.asking_price * state.seller_fee_rate))}
+            </strong>
+          </div>
+        )}
+        <div style={{ marginTop: 8, fontSize: 10, color: C.lt4, lineHeight: 1.5 }}>
+          ※ 상한 0.9% 초과 시 자동으로 0.9%로 조정됩니다. 프리미엄 노출·전담 매니저 옵션은 Review 단계에서 추가 가능.
+        </div>
+      </div>
     </>
   )
 }
@@ -641,7 +701,12 @@ function Step4BondRights({ state, update }: { state: WizardState; update: <K ext
           <NumberInput value={state.penalty_rate} onChange={v => update("penalty_rate", v)} placeholder="예: 12.0" suffix="%" />
         </Field>
         <Field label="연체시작일">
-          <TextInput value={state.default_start_date} onChange={v => update("default_start_date", v)} placeholder="예: 2024-06-15" />
+          <DateField
+            value={state.default_start_date}
+            onChange={v => update("default_start_date", v)}
+            placeholder="연체 시작일 선택"
+            max={new Date()}
+          />
         </Field>
         <Field label="전용면적" hint="㎡">
           <NumberInput value={state.exclusive_area} onChange={v => update("exclusive_area", v)} placeholder="예: 84.5" suffix="㎡" />

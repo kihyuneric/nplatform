@@ -761,9 +761,9 @@ export default function LandingPage() {
                 </div>
                 <div className="inline-flex text-[10px] font-bold rounded-full px-3 py-1 mb-4"
                   style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', color: '#475569', letterSpacing: '0.05em' }}>
-                  기관 · 개인 투자자
+                  대부업체 · 투자자
                 </div>
-                <h3 className="font-black text-2xl mb-3" style={{ color: '#0A1628' }}>기관 / 개인 투자자</h3>
+                <h3 className="font-black text-2xl mb-3" style={{ color: '#0A1628' }}>대부업체 / 투자자</h3>
                 <p className="text-sm leading-relaxed mb-6" style={{ color: '#64748B' }}>
                   전국 NPL 매물을 AI 분석으로 평가하고 수익률을 시뮬레이션하세요. 검증된 매물만, 직거래로 더 높은 수익을 실현합니다.
                 </p>

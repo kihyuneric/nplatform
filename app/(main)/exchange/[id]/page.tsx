@@ -62,6 +62,7 @@ interface ListingDetail {
   discount_rate: number
   ai_grade: "S" | "A" | "B" | "C"
   data_completeness: number
+  seller_fee_rate?: number | null      // D6: 매도자 등록 수수료율 (null=기본값 사용)
   debtor_type: "INDIVIDUAL" | "CORPORATE"
   auction_stage: string
   court_case_masked: string
@@ -223,6 +224,8 @@ function mapNplListingToDetail(
     discount_rate: discountRaw,
     ai_grade: (row.ai_grade as "S" | "A" | "B" | "C") ?? "C",
     data_completeness: computeDataCompleteness(row),
+    // D6: 매도자 등록 수수료율 (DB에 없으면 null → fee-calculator가 기본값 사용)
+    seller_fee_rate: typeof row.seller_fee_rate === 'number' ? (row.seller_fee_rate as number) : null,
     debtor_type: (row.debtor_type as "INDIVIDUAL" | "CORPORATE") ?? "INDIVIDUAL",
     auction_stage: (row.listing_type as string) ?? "임의매각",
     court_case_masked: "●●지법 ●●타경●●●●",
@@ -503,6 +506,8 @@ export default function ListingDetailPage() {
     addons: ["premium_listing", "dedicated_manager"],
     isInstitutional: true,
     dataCompleteness: listing.data_completeness,
+    // D6: 매도자가 등록 시 입력한 수수료율을 우선 적용
+    sellerRate: listing.seller_fee_rate ?? undefined,
   })
   // v2 수수료 모델 — NPL 매수자 1.5% + PNR 0.3% / 부동산 매수자 0.9%
   // listing.collateral 타입 기반으로 NPL/부동산 자산 구분 (단순 휴리스틱: 담보유형 기반)

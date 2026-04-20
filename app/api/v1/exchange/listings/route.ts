@@ -41,6 +41,8 @@ const listingPostSchema = z.object({
   ai_estimate_low:    z.number().min(0).optional(),
   ai_estimate_high:   z.number().min(0).optional(),
   validation_score:   z.number().min(0).max(100).optional(),
+  // Phase 1-M D6: 매도자가 입력한 매각 수수료율 (0.3% ~ 0.9%)
+  seller_fee_rate:    z.number().min(0.003, '수수료율은 0.3% 이상').max(0.009, '수수료율은 0.9% 이하').optional(),
 }).refine(
   d => !d.asking_price_min || !d.asking_price_max || d.asking_price_min <= d.asking_price_max,
   { message: '최소 희망가는 최대 희망가를 초과할 수 없습니다', path: ['asking_price_min'] }
@@ -276,6 +278,8 @@ export async function POST(request: NextRequest) {
       interest_count: 0,
       ai_estimate_low: body.ai_estimate_low ?? 0,
       ai_estimate_high: body.ai_estimate_high ?? 0,
+      // D6: 매도자 입력 수수료율 — DB 제약 [0.003, 0.009], 미제공 시 NULL
+      seller_fee_rate: body.seller_fee_rate ?? null,
     }
 
     // Try npl_listings first (canonical), fall back to deal_listings for legacy compatibility
@@ -337,6 +341,7 @@ export async function PATCH(request: NextRequest) {
       'business_number', 'institution_name', 'representative_name',
       'asking_price_min', 'asking_price_max',
       'ai_estimate_low', 'ai_estimate_high', 'validation_score',
+      'seller_fee_rate',
       'images', 'location', 'location_detail',
       'origin_date', 'default_date', 'overdue_months',
       'rejection_reason',

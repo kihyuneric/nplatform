@@ -286,6 +286,49 @@ input::placeholder, textarea::placeholder {
     --success-foreground:  0 0% 100%;
     --warning:             27 96% 61%;
     --warning-foreground:  0 0% 100%;
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       Semantic Tokens v2 (Sprint 3 · Phase 1-N) — OKLCH 기반 추가 레이어
+       기존 --color-* 토큰과 병행 사용. 신규 컴포넌트는 이 토큰 우선.
+       Light: 신뢰/프리미엄 톤, WCAG AA 이상 대비비 확보.
+       ═════════════════════════════════════════════════════════════════════ */
+    /* Surface Ladder (5 levels) */
+    --surface-0:       oklch(0.995 0.002 240);  /* page bg                 */
+    --surface-1:       oklch(1.000 0.000 0);    /* card                    */
+    --surface-2:       oklch(0.975 0.005 240);  /* sunken / muted panel    */
+    --surface-3:       oklch(0.952 0.008 240);  /* deepest (input bg)      */
+    --surface-inverse: oklch(0.175 0.025 250);  /* dark block on light pg  */
+
+    /* Content Ladder (5 levels) */
+    --fg-strong:   oklch(0.205 0.035 250);  /* headings, metrics           */
+    --fg:          oklch(0.295 0.030 250);  /* body                        */
+    --fg-muted:    oklch(0.450 0.020 245);  /* secondary                   */
+    --fg-subtle:   oklch(0.625 0.015 240);  /* placeholder                 */
+    --fg-inverse:  oklch(0.985 0.005 240);  /* text on inverse surface     */
+
+    /* Border Ladder */
+    --border-subtle:  oklch(0.928 0.008 240);
+    --border-default: oklch(0.855 0.012 240);
+    --border-strong:  oklch(0.715 0.015 240);
+    --border-focus:   oklch(0.530 0.140 250);
+
+    /* Brand Palette (global NPL 기준) */
+    --brand-primary:        oklch(0.355 0.055 252);  /* #1B3A5C navy      */
+    --brand-primary-hover:  oklch(0.425 0.075 252);
+    --brand-primary-active: oklch(0.305 0.060 252);
+    --brand-secondary:      oklch(0.530 0.100 240);  /* #2E75B6 blue      */
+    --brand-accent:         oklch(0.705 0.165 155);  /* #10B981 emerald   */
+    --brand-accent-hover:   oklch(0.760 0.150 155);
+
+    /* Semantic Intent */
+    --intent-positive: oklch(0.705 0.165 155);
+    --intent-warning:  oklch(0.770 0.155 82);
+    --intent-danger:   oklch(0.625 0.225 27);
+    --intent-info:     oklch(0.620 0.145 245);
+
+    /* Focus Ring */
+    --focus-ring:        oklch(0.615 0.150 250 / 0.45);
+    --focus-ring-strong: oklch(0.530 0.180 250 / 0.65);
   }
 
   /* ── Dark Mode Tokens (v5 — 5-layer depth system) ─────────────────────── */
@@ -380,6 +423,47 @@ input::placeholder, textarea::placeholder {
     --success-foreground:  0 0% 100%;
     --warning:             38 92% 60%;    /* #FBBF24 수준 */
     --warning-foreground:  0 0% 100%;
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       Semantic Tokens v2 — Dark (WCAG AA+, 가독성 재조정)
+       ═════════════════════════════════════════════════════════════════════ */
+    /* Surface Ladder (어두운 page → 점진적으로 밝은 카드) */
+    --surface-0:       oklch(0.165 0.020 248);
+    --surface-1:       oklch(0.215 0.020 248);
+    --surface-2:       oklch(0.265 0.022 248);
+    --surface-3:       oklch(0.320 0.024 248);
+    --surface-inverse: oklch(0.985 0.005 240);
+
+    /* Content Ladder (모든 텍스트 최소 4.5:1 대비) */
+    --fg-strong:  oklch(0.975 0.008 240);
+    --fg:         oklch(0.880 0.012 240);
+    --fg-muted:   oklch(0.735 0.015 240);
+    --fg-subtle:  oklch(0.585 0.020 240);
+    --fg-inverse: oklch(0.205 0.035 250);
+
+    /* Border (불투명도 기반 — 모든 surface에서 일관 가시성) */
+    --border-subtle:  oklch(0.985 0.010 240 / 0.08);
+    --border-default: oklch(0.985 0.010 240 / 0.14);
+    --border-strong:  oklch(0.985 0.010 240 / 0.24);
+    --border-focus:   oklch(0.715 0.150 250);
+
+    /* Brand (다크에서 흰 배경색 대신 중간 톤 사용) */
+    --brand-primary:        oklch(0.705 0.120 248);
+    --brand-primary-hover:  oklch(0.780 0.110 248);
+    --brand-primary-active: oklch(0.640 0.125 248);
+    --brand-secondary:      oklch(0.620 0.115 242);
+    --brand-accent:         oklch(0.780 0.150 160);
+    --brand-accent-hover:   oklch(0.830 0.140 160);
+
+    /* Semantic Intent (다크 최적) */
+    --intent-positive: oklch(0.780 0.150 160);
+    --intent-warning:  oklch(0.830 0.150 82);
+    --intent-danger:   oklch(0.720 0.180 27);
+    --intent-info:     oklch(0.730 0.130 245);
+
+    /* Focus Ring */
+    --focus-ring:        oklch(0.715 0.150 248 / 0.55);
+    --focus-ring-strong: oklch(0.760 0.180 248 / 0.75);
   }
 }
 

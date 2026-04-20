@@ -43,7 +43,7 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
     exchange: [
       { key: 'ex_all',          label: '거래소',     href: '/exchange',                description: 'NPL 거래소 메인',          icon: 'Store',        active: true, order: 1 },
       { key: 'ex_search',       label: '검색',       href: '/exchange/search',          description: '상세 필터 데이터 그리드',    icon: 'Search',       active: true, order: 2 },
-      { key: 'ex_map',          label: '지도',       href: '/exchange/map',             description: '지도 기반 탐색',            icon: 'Map',          active: true, order: 3 },
+      { key: 'ex_feed',         label: '피드',       href: '/exchange/feed',            description: 'AI 큐레이션 발견 피드',     icon: 'Compass',      active: true, order: 3 },
       { key: 'ex_bidding',      label: '입찰',       href: '/exchange/auction',         description: '입찰 참여',                 icon: 'Gavel',        active: true, order: 4 },
       { key: 'ex_sell',         label: '매물 등록',  href: '/exchange/sell',            description: '내 채권 매각 등록',         icon: 'PlusCircle',   active: true, order: 5 },
       { key: 'ex_ocr',          label: 'OCR 일괄',    href: '/exchange/ocr-register',   description: 'OCR로 1~5건 빠르게 등록',   icon: 'ScanLine',     active: true, order: 6 },

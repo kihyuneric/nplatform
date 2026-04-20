@@ -14,7 +14,7 @@ type ThemeProviderProps = {
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'dark',
+  defaultTheme = 'light',
   storageKey = 'nplatform-theme',
   attribute = 'class',
   enableSystem = false,

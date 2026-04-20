@@ -20,7 +20,7 @@ const SIGNUP_ROLES = [
   { value: 'SELLER',       label: '매도자',   icon: Banknote,    desc: '매물 등록 및 매각' },
   { value: 'PROFESSIONAL', label: '전문가',   icon: Briefcase,   desc: '법률·세무·감정 자문' },
   { value: 'PARTNER',      label: '파트너',   icon: User,        desc: '딜 소싱 및 연결' },
-  { value: 'BUYER_INST',   label: '기관',     icon: Building2,   desc: '기관 투자자 매입' },
+  { value: 'BUYER_INST',   label: '기관',     icon: Building2,   desc: '대부업체 매입' },
 ] as const
 
 interface DocumentSlot {
@@ -79,10 +79,10 @@ const ROLE_BENEFITS: Record<string, { title: string; items: string[] }> = {
   },
   PARTNER: {
     title: '파트너 혜택',
-    items: ['딜 소싱 커미션 수취', '기관 투자자 네트워크 접근', '전용 파트너 대시보드'],
+    items: ['딜 소싱 커미션 수취', '대부업체 네트워크 접근', '전용 파트너 대시보드'],
   },
   BUYER_INST: {
-    title: '기관 투자자 혜택',
+    title: '대부업체 혜택',
     items: ['대형 포트폴리오 일괄 열람', '전용 리서치 리포트 제공', '기관 전담 매니저 배정'],
   },
 }

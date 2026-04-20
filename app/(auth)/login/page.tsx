@@ -287,7 +287,7 @@ export default function LoginPage() {
                 <code className="font-mono">admin / admin</code> — 관리자 (SUPER_ADMIN)
               </button>
               <button type="button" onClick={() => { setEmail('demo'); setPassword('demo') }} className="block hover:underline">
-                <code className="font-mono">demo / demo</code> — 개인 투자자 (BUYER)
+                <code className="font-mono">demo / demo</code> — 투자자 (BUYER)
               </button>
               <button type="button" onClick={() => { setEmail('seller'); setPassword('seller') }} className="block hover:underline">
                 <code className="font-mono">seller / seller</code> — 매도자 (SELLER)

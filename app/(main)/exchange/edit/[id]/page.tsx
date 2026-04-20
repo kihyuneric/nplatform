@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { DateField } from "@/components/ui/date-field"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { VisibilitySelector } from "@/components/exchange/visibility-selector"
@@ -467,20 +468,21 @@ export default function EditListingPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium text-[#94B4CC]">채권 발생일</Label>
-                    <input
-                      type="date"
+                    <DateField
                       value={form.originDate}
-                      onChange={(e) => updateForm({ originDate: e.target.value })}
-                      className="input-enhanced w-full"
+                      onChange={(v) => updateForm({ originDate: v })}
+                      placeholder="채권 발생일 선택"
+                      max={new Date()}
                     />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium text-[#94B4CC]">부실화일</Label>
-                    <input
-                      type="date"
+                    <DateField
                       value={form.defaultDate}
-                      onChange={(e) => updateForm({ defaultDate: e.target.value })}
-                      className="input-enhanced w-full"
+                      onChange={(v) => updateForm({ defaultDate: v })}
+                      placeholder="부실화일 선택"
+                      max={new Date()}
+                      min={form.originDate || undefined}
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -609,11 +611,12 @@ export default function EditListingPage() {
                     <Label className="text-xs font-medium text-[#94B4CC]">
                       마감일 <span className="text-red-400">*</span>
                     </Label>
-                    <input
-                      type="date"
+                    <DateField
                       value={form.deadline}
-                      onChange={(e) => updateForm({ deadline: e.target.value })}
-                      className={`input-enhanced w-full ${formErrors.deadline ? 'border-red-500/60' : ''}`}
+                      onChange={(v) => updateForm({ deadline: v })}
+                      placeholder="매각 마감일 선택"
+                      min={new Date()}
+                      error={Boolean(formErrors.deadline)}
                     />
                     {formErrors.deadline && <p className="text-xs text-red-400">{formErrors.deadline}</p>}
                   </div>

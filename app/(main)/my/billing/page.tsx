@@ -23,7 +23,7 @@ type Tab = typeof TABS[number]
 
 const UPGRADE_PLANS = [
   { key: 'L1',           name: 'L1',            price_monthly: 300_000,   price_yearly: 300_000 * 10, icon: Zap,        color: 'text-blue-400',   desc: '활발한 NPL 투자자 프리미엄 액세스', popular: false },
-  { key: 'L2',           name: 'L2',            price_monthly: 1_000_000, price_yearly: 1_000_000 * 10,icon: Crown,     color: 'text-emerald-400',desc: '법인·전문 기관 투자자 최상위 플랜', popular: true },
+  { key: 'L2',           name: 'L2',            price_monthly: 1_000_000, price_yearly: 1_000_000 * 10,icon: Crown,     color: 'text-emerald-400',desc: '법인·전문 대부업체 최상위 플랜', popular: true },
   { key: 'VERIFICATION', name: '검증',           price_monthly: 500_000,   price_yearly: 500_000 * 10, icon: Building2,  color: 'text-amber-400',  desc: '기관 인증 배지 + 우선 매칭 자격' },
 ]
 

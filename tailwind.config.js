@@ -94,6 +94,49 @@ module.exports = {
         "text-primary": "hsl(var(--npl-text-primary))",
         "text-secondary": "hsl(var(--npl-text-secondary))",
         "border-subtle": "hsl(var(--npl-border-subtle))",
+
+        // ─── Semantic Tokens v2 (Sprint 3 · Phase 1-N) ─────────────────────
+        // OKLCH 기반. 신규 컴포넌트는 이 토큰 우선 사용.
+        // 사용 예: bg-surface-0, text-fg-strong, border-border-subtle
+        surface: {
+          0: "var(--surface-0)",
+          1: "var(--surface-1)",
+          2: "var(--surface-2)",
+          3: "var(--surface-3)",
+          inverse: "var(--surface-inverse)",
+        },
+        fg: {
+          strong: "var(--fg-strong)",
+          DEFAULT: "var(--fg)",
+          muted: "var(--fg-muted)",
+          subtle: "var(--fg-subtle)",
+          inverse: "var(--fg-inverse)",
+        },
+        brand: {
+          DEFAULT: "var(--brand-primary)",
+          primary: "var(--brand-primary)",
+          "primary-hover": "var(--brand-primary-hover)",
+          "primary-active": "var(--brand-primary-active)",
+          secondary: "var(--brand-secondary)",
+          accent: "var(--brand-accent)",
+          "accent-hover": "var(--brand-accent-hover)",
+        },
+        intent: {
+          positive: "var(--intent-positive)",
+          warning: "var(--intent-warning)",
+          danger: "var(--intent-danger)",
+          info: "var(--intent-info)",
+        },
+      },
+      borderColor: {
+        subtle: "var(--border-subtle)",
+        DEFAULT: "var(--border-default)",
+        strong: "var(--border-strong)",
+        focus: "var(--border-focus)",
+      },
+      ringColor: {
+        focus: "var(--focus-ring)",
+        "focus-strong": "var(--focus-ring-strong)",
       },
       borderRadius: {
         lg: "var(--radius)",

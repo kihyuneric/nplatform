@@ -11,6 +11,7 @@ import {
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { VERDICT_CONFIG, screenNplListing, listingToScreeningInput } from '@/lib/ai-screening/scorer'
+import { maskCreditor } from '@/lib/masking'
 import type { CourtAuctionListing } from '@/lib/court-auction/types'
 import { LiveBidPanel } from './live-bid-panel'
 
@@ -329,7 +330,7 @@ export default function AuctionDetailPage() {
                   </h3>
                   <div className="grid grid-cols-2 gap-y-3 text-sm">
                     {[
-                      { label: '채권자', value: listing.creditor_name ?? '—' },
+                      { label: '채권자', value: listing.creditor_name ? maskCreditor(listing.creditor_name) : '—' },
                       { label: '채권자 유형', value: listing.creditor_type ?? '—' },
                       { label: '원금', value: fmtKRW(listing.loan_principal) },
                       { label: '잔액 (이자 포함)', value: fmtKRW(listing.loan_balance) },

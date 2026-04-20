@@ -165,17 +165,19 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
-        {/* Anti-FOUC: 다크모드 클래스를 hydration 전에 즉시 적용 */}
+        {/* Anti-FOUC: 라이트 기본, 사용자가 명시적으로 선택한 'dark'일 때만 클래스 적용 */}
         <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: `
           (function(){
             try {
               var s = localStorage.getItem('nplatform-theme');
-              var t = s ? s.replace(/"/g,'') : 'dark';
-              if (t === 'dark' || t !== 'light') {
+              var t = s ? s.replace(/"/g,'') : 'light';
+              if (t === 'dark') {
                 document.documentElement.classList.add('dark');
+              } else {
+                document.documentElement.classList.remove('dark');
               }
             } catch(e) {
-              document.documentElement.classList.add('dark');
+              // localStorage 실패 시 라이트 기본
             }
           })();
         `}} />
@@ -191,7 +193,7 @@ export default async function RootLayout({
         {/* OfflineBanner and SkipLinks removed to fix webpack RSC error */}
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           enableSystem={false}
           storageKey="nplatform-theme"
           disableTransitionOnChange={false}

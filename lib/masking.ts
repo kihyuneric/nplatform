@@ -1,7 +1,24 @@
 // ─── 마스킹 함수 (순수 함수, 의존성 없음) ──────────────
 
 export type MaskingType = "partial" | "full" | "range" | "hash"
-export type FieldType = "name" | "phone" | "ssn" | "address" | "amount" | "account"
+export type FieldType = "name" | "phone" | "ssn" | "address" | "amount" | "account" | "creditor"
+
+/**
+ * 채권자명 마스킹 (Phase 1-M · Sprint 3 · D5):
+ *   앞 3글자를 고정 마스킹 — "신한은행" → "***은행", "우리카드" → "***카드"
+ *   3글자 이하는 전체 마스킹 — "ABC" → "***"
+ *
+ * DB 함수 `public.mask_creditor()`와 정확히 동일한 동작.
+ * 정책상 이 마스킹은 NDA 체결 여부와 무관하게 공개 목록에서 항상 적용.
+ * 원본 노출은 SUPER_ADMIN / SELLER 본인 / 채권자 본인만 허용.
+ */
+export function maskCreditor(value: string): string {
+  if (!value || !value.trim()) return ""
+  const MASK_LEN = 3
+  const len = value.length
+  if (len <= MASK_LEN) return "*".repeat(len)
+  return "*".repeat(MASK_LEN) + value.slice(MASK_LEN)
+}
 
 /**
  * 이름 마스킹: 홍길동 → 홍*동, 김서연 → 김*연
@@ -106,6 +123,7 @@ export function maskValue(value: string | number, fieldType: FieldType): string 
     case "address": return maskAddress(String(value))
     case "amount": return maskAmount(typeof value === "number" ? value : parseInt(String(value)) || 0)
     case "account": return maskAccount(String(value))
+    case "creditor": return maskCreditor(String(value))
     default: return String(value)
   }
 }

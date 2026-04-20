@@ -8,7 +8,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/logger'
 import { MOCK_COURT_LISTINGS } from '@/lib/court-auction/mock-data'
+import { maskCreditor } from '@/lib/masking'
 import type { CourtAuctionListing } from '@/lib/court-auction/types'
+
+// ─── 공개 응답용: 채권자명 마스킹 (Phase 1-M · Sprint 3 · D5) ───
+// 정책: 공개 상세/유사 매물은 항상 마스킹. 원본은 admin/seller 엔드포인트에서만.
+function maskListingCreditor(item: CourtAuctionListing): CourtAuctionListing {
+  if (!item.creditor_name) return item
+  return { ...item, creditor_name: maskCreditor(item.creditor_name) }
+}
 
 // ─── 유사 목 거래 데이터 생성 ─────────────────────────────
 // realestate_transactions 테이블 미존재 시 폴백용
@@ -184,12 +192,12 @@ export async function GET(
       similarListings = findSimilarListings(listing, MOCK_COURT_LISTINGS)
     }
 
-    // ── 7. 응답 ───────────────────────────────────────────
+    // ── 7. 응답 (채권자명 마스킹 적용) ─────────────────────
     return NextResponse.json({
-      listing,
-      market_data: marketData,
-      similar_listings: similarListings,
-      _source: source,
+      listing:          maskListingCreditor(listing),
+      market_data:      marketData,
+      similar_listings: similarListings.map(maskListingCreditor),
+      _source:          source,
     })
   } catch (err) {
     logger.error('[exchange/[id]] GET error', { error: err })

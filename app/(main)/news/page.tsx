@@ -298,13 +298,13 @@ export default function NewsPage() {
               <TabsList className="bg-transparent gap-1 h-auto pb-0">
                 <TabsTrigger
                   value="search"
-                  className="text-sm font-medium text-[var(--color-text-muted)] data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#2E75B6] rounded-none pb-2.5 px-3"
+                  className="text-sm font-medium text-[var(--color-text-muted)] data-[state=active]:text-[var(--color-text-primary)] data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#2E75B6] rounded-none pb-2.5 px-3"
                 >
                   뉴스 검색
                 </TabsTrigger>
                 <TabsTrigger
                   value="scrap"
-                  className="text-sm font-medium text-[var(--color-text-muted)] data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#2E75B6] rounded-none pb-2.5 px-3"
+                  className="text-sm font-medium text-[var(--color-text-muted)] data-[state=active]:text-[var(--color-text-primary)] data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#2E75B6] rounded-none pb-2.5 px-3"
                 >
                   스크랩 관리
                 </TabsTrigger>

@@ -77,7 +77,7 @@ const STATIC_DICT: Record<string, Record<string, string>> = {
     '관심 매물': 'お気に入り', '투자 현황': '投資状況', '비교 분析': '比較分析',
     '수익 시뮬레이션': '収益シミュレーション', '본인인증': '本人確認',
     '투자자 인증': '投資家認証', '심사 대기': '審査待ち', '인증 완료': '認証済み',
-    '기관 투자자': '機関投資家', '전문 투자자': 'プロ投資家', '일반 투자자': '一般投資家',
+    '대부업체': '貸金業者', '전문 투자자': 'プロ投資家', '일반 투자자': '一般投資家',
     // ── Status ─────────────────────────────────────────────────
     '로딩 중...': '読み込み中...', '데이터가 없습니다.': 'データがありません。',
     '오류가 발생했습니다.': 'エラーが発生しました。', '다시 시도': '再試行',
@@ -342,7 +342,7 @@ Object.assign(STATIC_DICT.en, {
   '관심 매물': 'Watchlist', '투자 현황': 'Portfolio Status', '비교 분析': 'Comparison Analysis',
   '수익 시뮬레이션': 'Profit Simulation', '본인인증': 'Identity Verification',
   '투자자 인증': 'Investor Verification', '심사 대기': 'Awaiting Review', '인증 완료': 'Verified',
-  '기관 투자자': 'Institutional Investor', '전문 투자자': 'Professional Investor', '일반 투자자': 'General Investor',
+  '대부업체': 'Money Lender', '전문 투자자': 'Professional Investor', '일반 투자자': 'General Investor',
   // ── Status ─────────────────────────────────────────────────
   '로딩 중...': 'Loading...', '데이터가 없습니다.': 'No data available.',
   '오류가 발생했습니다.': 'An error occurred.', '다시 시도': 'Try again',

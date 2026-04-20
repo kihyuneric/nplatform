@@ -89,7 +89,7 @@ const GUIDE_CONTENT: Record<string, {
     category: '기본',
     date: '2026.04.12',
     sections: [
-      { id: 'signup', heading: '1. 회원가입', body: 'NPLatform 홈페이지에서 「무료로 시작하기」 버튼을 클릭하세요. 이메일 인증 후 기본 프로필(이름·역할·소속)을 입력하면 가입이 완료됩니다.\n\n역할은 개인 투자자, 기관 투자자, 매도자(금융기관/AMC) 중 선택합니다. 역할에 따라 활성화되는 기능이 다릅니다.', type: 'normal' },
+      { id: 'signup', heading: '1. 회원가입', body: 'NPLatform 홈페이지에서 「무료로 시작하기」 버튼을 클릭하세요. 이메일 인증 후 기본 프로필(이름·역할·소속)을 입력하면 가입이 완료됩니다.\n\n역할은 투자자, 대부업체, 매도자(금융기관/AMC) 중 선택합니다. 역할에 따라 활성화되는 기능이 다릅니다.', type: 'normal' },
       { id: 'first-search', heading: '2. 첫 매물 탐색', body: '상단 「거래소」 메뉴 → 「매물 탐색」 탭을 클릭하세요. 카드 뷰에서 NPL 매물 목록이 표시됩니다.\n\n• 좌측 필터: 담보 유형(아파트/오피스텔/상가/토지), 지역, 기관 유형, 매각 방식\n• AI 등급(S/A/B/C), 할인율, 자료 완성도 필터도 사용 가능\n• 리스트 뷰 전환: 우측 상단 뷰 토글 버튼으로 카드/리스트를 전환합니다.', type: 'tip' },
       { id: 'detail', heading: '3. 매물 상세 확인', body: '매물 카드를 클릭하면 상세 페이지로 이동합니다. 채권 정보, 담보물 정보, 권리관계를 확인할 수 있으며, AI 등급과 분석 결과도 표시됩니다.\n\n더 자세한 정보(감정평가서, 등기부 등)는 본인인증(L1) 또는 NDA 체결(L2) 후 열람할 수 있습니다.', type: 'normal' },
       { id: 'next', heading: '4. 다음 단계', body: '관심 매물을 찾았다면 다음 기능을 활용하세요.\n\n• 「분석 > 경매 시뮬레이터」에서 수익률을 시뮬레이션\n• 「분석 > 시장 현황」의 AI 도구에서 NPL 수익성 분석 실행\n• 「거래소 > 입찰」에서 관심 매물에 입찰가 제출\n• 「딜룸 > AI 매칭」에서 AI가 추천하는 매물 확인', type: 'tip' },
@@ -183,7 +183,7 @@ const GUIDE_CONTENT: Record<string, {
     related: [
       { title: '매도자 가이드', href: '/guide/seller', category: '매도자' },
       { title: '딜룸 거래 프로세스', href: '/guide/deal-process', category: '거래' },
-      { title: '기관 투자자 가이드', href: '/guide/institution', category: '기관' },
+      { title: '대부업체 가이드', href: '/guide/institution', category: '기관' },
     ],
   },
 
@@ -228,14 +228,14 @@ const GUIDE_CONTENT: Record<string, {
   },
 
   'institution': {
-    title: '기관 투자자 가이드',
-    description: '금융기관·부동산 펀드 등 기관 투자자의 NPLatform 활용 방법을 안내합니다.',
+    title: '대부업체 가이드',
+    description: '금융기관·부동산 펀드 등 대부업체의 NPLatform 활용 방법을 안내합니다.',
     time: '10분',
     difficulty: '중요',
     category: '기관',
     date: '2026.04.10',
     sections: [
-      { id: 'register', heading: '1. 기관 계정 등록', body: '회원가입 시 역할 선택에서 「기관 투자자」를 선택하세요. 담당자 이메일 인증 후 관리자 승인이 완료되면 기관 전용 기능(대량 등록, API 연동 등)이 활성화됩니다.', type: 'normal' },
+      { id: 'register', heading: '1. 기관 계정 등록', body: '회원가입 시 역할 선택에서 「대부업체」를 선택하세요. 담당자 이메일 인증 후 관리자 승인이 완료되면 기관 전용 기능(대량 등록, API 연동 등)이 활성화됩니다.', type: 'normal' },
       { id: 'bulk', heading: '2. 대량 매물 등록', body: '「거래소 > 대량 등록」 메뉴에서 Excel/CSV 템플릿을 다운로드하고, 채권잔액·매각희망가·감정가 등 필수 필드를 채워 업로드하세요. 수백 건의 매물을 일괄 등록할 수 있습니다.', type: 'tip' },
       { id: 'api', heading: '3. API 연동', body: '「마이 페이지 > 설정」에서 API 키를 발급받아 내부 시스템과 연동하세요. RESTful API로 매물 조회·등록·상태 변경이 가능하며, 웹훅으로 실시간 알림을 받을 수 있습니다. 자세한 문서는 「개발자 API」 페이지에서 확인하세요.', type: 'tip' },
       { id: 'reporting', heading: '4. 포트폴리오 리포팅', body: '「마이 페이지 > 포트폴리오」에서 보유 채권 전체 현황, 매각 성과, 수수료 정산 리포트를 확인할 수 있습니다. PDF 다운로드도 지원됩니다.', type: 'normal' },

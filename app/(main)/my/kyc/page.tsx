@@ -7,7 +7,7 @@
  *   1. 투자자 유형 선택 (개인 전문 · 법인 전문 · 기관)
  *   2. 자격 요건 체크 (순자산 / 금융투자 경력 / 소득)
  *   3. 증빙 서류 업로드 (모의)
- *   4. 금융기관명 입력 (기관 투자자)
+ *   4. 금융기관명 입력 (대부업체)
  *   5. 검토 대기
  */
 
@@ -349,7 +349,7 @@ export default function KycPage() {
             {[
               { v: "PERSONAL", label: "개인 전문투자자", desc: "자산·소득·경력 요건" },
               { v: "CORPORATE", label: "법인 전문투자자", desc: "자본금·금융투자 잔액" },
-              { v: "INSTITUTIONAL", label: "기관 투자자", desc: "은행·연기금·금융기관" },
+              { v: "INSTITUTIONAL", label: "대부업체", desc: "대부업체·저축은행·상호금융" },
             ].map(op => {
               const active = op.v === type
               return (

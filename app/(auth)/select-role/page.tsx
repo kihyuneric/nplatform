@@ -117,7 +117,7 @@ const INVESTOR_SUBTYPES: SubtypeOption[] = [
   {
     id: 'general-indiv',
     label: '일반 투자그룹 · 개인',
-    sample: '활성 개인 투자자 (월 1~5건)',
+    sample: '활성 투자자 (월 1~5건)',
     icon: Zap,
     backendRole: 'BUYER',
     subtype: 'GENERAL_INDIVIDUAL',

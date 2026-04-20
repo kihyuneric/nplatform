@@ -20,6 +20,7 @@ import {
   Search, SlidersHorizontal, TrendingDown, Building2,
   MapPin, ShieldCheck, ArrowRight, Sparkles, Filter,
   LayoutGrid, List as ListIcon, Brain, Loader2, Zap,
+  Compass,
 } from "lucide-react"
 import { TierBadge } from "@/components/tier/tier-badge"
 import { CompletenessBadge } from "@/components/listing/completeness-badge"
@@ -496,8 +497,9 @@ export default function ExchangePage() {
               >
                 <Sparkles size={14} /> {tr("발견 모드")}
               </Link>
+              {/* D7: '지도에서 보기' 삭제 — '피드' (AI 큐레이션)로 통합 */}
               <Link
-                href="/exchange/map"
+                href="/exchange/feed"
                 style={{
                   padding: "10px 16px", borderRadius: 10,
                   backgroundColor: V.surfaceElevated, color: V.textPrimary, fontSize: 13, fontWeight: 600,
@@ -505,7 +507,7 @@ export default function ExchangePage() {
                   display: "inline-flex", alignItems: "center", gap: 6,
                 }}
               >
-                <MapPin size={14} /> {tr("지도에서 보기")}
+                <Compass size={14} /> {tr("피드")}
               </Link>
             </div>
           </motion.div>

@@ -5,11 +5,20 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { MOCK_COURT_LISTINGS } from './mock-data'
+import { maskCreditor } from '@/lib/masking'
 import type {
   AuctionSearchFilters,
   AuctionSearchResult,
   CourtAuctionListing,
 } from './types'
+
+// ─── 공통: 공개 목록에 적용할 채권자 마스킹 ────────────────
+// 정책: NDA 무관 — 공개 검색/리스트 경로는 항상 마스킹.
+// 원본 노출은 SUPER_ADMIN / SELLER 본인 / 채권자 본인용 별도 엔드포인트에서만.
+function maskListingCreditor(item: CourtAuctionListing): CourtAuctionListing {
+  if (!item.creditor_name) return item
+  return { ...item, creditor_name: maskCreditor(item.creditor_name) }
+}
 
 // ─── Public API ───────────────────────────────────────────
 
@@ -102,7 +111,7 @@ export async function searchCourtAuctions(
 
     const total = count ?? 0
     return {
-      items:       data as CourtAuctionListing[],
+      items:       (data as CourtAuctionListing[]).map(maskListingCreditor),
       total,
       page,
       page_size:   pageSize,
@@ -219,7 +228,7 @@ function searchMockData(filters: AuctionSearchFilters): AuctionSearchResult {
   const sliced   = items.slice((page - 1) * pageSize, page * pageSize)
 
   return {
-    items:       sliced,
+    items:       sliced.map(maskListingCreditor),
     total,
     page,
     page_size:   pageSize,

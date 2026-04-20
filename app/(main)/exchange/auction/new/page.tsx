@@ -21,6 +21,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { DateField } from "@/components/ui/date-field"
 import {
   Select,
   SelectContent,
@@ -671,15 +672,13 @@ export default function BiddingNewPage() {
             <Label className="text-sm font-semibold">
               입찰 시작일 <span className="text-red-500">*</span>
             </Label>
-            <div className="relative mt-1.5">
-              <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                className={`pl-9 ${errorRing("biddingStart")}`}
-                type="date"
+            <div className="mt-1.5">
+              <DateField
                 value={form.biddingStart}
-                onChange={(e) =>
-                  updateField("biddingStart", e.target.value)
-                }
+                onChange={(v) => updateField("biddingStart", v)}
+                placeholder="입찰 시작일 선택"
+                min={new Date()}
+                error={Boolean(errorRing("biddingStart"))}
               />
             </div>
           </div>
@@ -687,15 +686,13 @@ export default function BiddingNewPage() {
             <Label className="text-sm font-semibold">
               입찰 마감일 <span className="text-red-500">*</span>
             </Label>
-            <div className="relative mt-1.5">
-              <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                className={`pl-9 ${errorRing("biddingEnd")}`}
-                type="date"
+            <div className="mt-1.5">
+              <DateField
                 value={form.biddingEnd}
-                onChange={(e) =>
-                  updateField("biddingEnd", e.target.value)
-                }
+                onChange={(v) => updateField("biddingEnd", v)}
+                placeholder="입찰 마감일 선택"
+                min={form.biddingStart || new Date()}
+                error={Boolean(errorRing("biddingEnd"))}
               />
             </div>
           </div>
