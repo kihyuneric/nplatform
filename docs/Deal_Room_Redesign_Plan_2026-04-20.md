@@ -141,6 +141,62 @@
 | L4 | 계약 초안 합의 | **전자서명 · 에스크로 입금** | L5 |
 | L5 | 서명 완료 | **정산 확인 · 영수증 다운로드** | Done |
 
+### 4.4 매물 사진 갤러리 (Media Hero)
+
+딜룸 최상단(스텝퍼 위)에 상시 노출되는 사진 영역. 거래 당사자가 "무엇을 사고파는지" 를 초단위로 체감할 수 있어야 한다.
+
+**구성:**
+- **Desktop**: 5-cell 그리드 (대표 사진 1 × 썸네일 4) · 높이 380px · 1차 딜 identity 확보
+- **Tablet (≤900px)**: 2×2 그리드 · 높이 280px
+- **Mobile (≤560px)**: 단일 대표 이미지 · 높이 220px · 좌우 스와이프
+
+**상호작용:**
+- 대표/썸네일 어느 것을 클릭해도 `galleryModal` (라이트박스) 오픈
+- 라이트박스 = 1 primary + 12 thumbnail strip · Esc 로 닫기
+- `"사진 12개 전체 보기"` CTA 로도 진입 가능
+- 이미지 없는 딜은 gradient placeholder 5 variants 로 fallback (등급 뱃지·주소 텍스트 오버레이로 identity 유지)
+
+**데이터 소스:** 기존 `listings.images[]` 재사용. Supabase Storage 공개 URL. 신규 API 불필요.
+
+### 4.5 Data Room · PDF 뷰어 / 다운로드
+
+중앙 영역 하단에 **Data Room 카드** 를 상주시켜 문서를 즉시 확인·다운로드 가능하게 한다. 실사 자료 요청 → 수신 → 열람 → 다운로드 사이클이 *한 페이지 안에서* 완결.
+
+**문서 목록 행 구조 (티어별 게이팅):**
+
+| 티어 | 노출 문서 | 액션 |
+|------|-----------|------|
+| L0 | 요약본 (이름만) · 파일 자체는 잠김 | 🔒 `NDA 서명 후 열람` |
+| L2 | NDA 체결 이후: 감정평가서 · 등기부등본 · 권리분석 | 👁 미리보기 · ↓ 다운로드 |
+| L3 | + 임대차계약서 · 실사보고서 초안 | 👁 · ↓ · 💬 (이 문서에 질문) |
+| L4 | + 전자계약서 · 에스크로 이체증 | 👁 · ↓ · ✍ 전자서명 |
+
+**미리보기 (`pdfModal`):**
+- 인라인 렌더링 (PDF.js 또는 html 기반 템플릿 — 외부 탭 이동 0)
+- 상단 툴바: 파일명 · 페이지 카운터 · **[↓ 다운로드]** 버튼 · Esc 로 닫기
+- 모바일에서는 전체화면 스위프 뷰 (pinch-zoom 허용)
+- 다운로드 = 서버 서명 URL (`/api/v1/files/:id/signed-url`, 15분 만료) → 감사 로그 자동 기록
+
+**데이터 소스:** 기존 `deal_documents` 테이블 + `documents.bucket_path` 재사용. 기존 `/api/v1/deals/[id]/documents` 확장 (썸네일·page_count 컬럼만 추가).
+
+### 4.6 모바일 반응형 브레이크포인트
+
+```
+≥1201px   Desktop       3-Zone grid · Media Hero 5-cell · Sticky 없음
+1200~901  Tablet Wide   3-Zone 좁아짐 · Media Hero 동일 · 폰트 -1
+ 900~561  Tablet / Mobile Landscape
+                        3-Zone → 2열 (좌 요약 + 중앙 CTA) · 채팅은 하단 탭 전환
+ ≤560px   Mobile        Zone 세로 스택 · Sticky Bottom CTA 노출
+                        Media Hero 단일 이미지 + dot indicator
+                        Stepper 가로 스크롤 (스냅)
+```
+
+**Sticky Bottom CTA (≤560px 전용):**
+- 좌측: 티어별 Primary CTA (넓게, 80% 폭)
+- 우측: 💬 아이콘 버튼 (채팅 패널 bottom-sheet 오픈)
+- Safe-area inset 대응 (`env(safe-area-inset-bottom)`)
+- 키보드 오픈 시 자동 숨김
+
 ---
 
 ## 5. 개발 Phase (총 10 영업일 · 2 주)
