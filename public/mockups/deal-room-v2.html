@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>딜룸 v2 시안 · NPLatform</title>
+<style>
+  :root {
+    --navy: #1B3A5C;
+    --navy-2: #2E75B6;
+    --em: #10B981;
+    --em-2: #059669;
+    --bg: #F6F7FB;
+    --card: #FFFFFF;
+    --ink: #0F172A;
+    --muted: #64748B;
+    --muted-2: #94A3B8;
+    --border: #E2E8F0;
+    --border-strong: #CBD5E1;
+    --warn: #F59E0B;
+    --danger: #EF4444;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: -apple-system, "SF Pro Text", "Noto Sans KR", "Pretendard", sans-serif; font-size: 14px; line-height: 1.5; }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
+
+  /* ── 페이지 헤더 ───────── */
+  .topbar { position: sticky; top: 0; z-index: 30; background: var(--navy); color: #fff; }
+  .topbar-inner { max-width: 1440px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; gap: 24px; }
+  .brand { font-weight: 800; letter-spacing: -0.02em; font-size: 16px; }
+  .brand i { color: var(--em); font-style: normal; }
+  .nav { display: flex; gap: 18px; font-size: 13px; opacity: 0.88; }
+  .nav span.active { color: var(--em); font-weight: 700; opacity: 1; }
+  .spacer { flex: 1; }
+  .chip-user { background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 999px; font-size: 12px; }
+
+  /* ── 탭 (시안 A/B/C 전환) ───────── */
+  .state-tabs { background: var(--card); border-bottom: 1px solid var(--border); }
+  .state-tabs-inner { max-width: 1440px; margin: 0 auto; padding: 0 24px; display: flex; gap: 4px; align-items: center; }
+  .state-tabs-inner .label { font-size: 11px; color: var(--muted); margin-right: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 14px 0; }
+  .state-tabs-inner button { padding: 14px 16px; border: 0; background: transparent; font-size: 13px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; }
+  .state-tabs-inner button.active { color: var(--navy); border-bottom-color: var(--navy); }
+
+  /* ── 딜룸 헤더 ───────── */
+  .deal-header { background: var(--card); border-bottom: 1px solid var(--border); }
+  .deal-header-inner { max-width: 1440px; margin: 0 auto; padding: 16px 24px; }
+  .crumb { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .crumb b { color: var(--ink); font-weight: 700; }
+  .deal-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 10px; display: flex; gap: 10px; align-items: baseline; }
+  .deal-tag { display: inline-block; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; background: rgba(27,58,92,0.08); color: var(--navy); }
+  .deal-tag.em { background: rgba(16,185,129,0.1); color: var(--em-2); }
+  .deal-tag.warn { background: rgba(245,158,11,0.12); color: var(--warn); }
+
+  /* Stepper */
+  .stepper { display: flex; gap: 0; margin-top: 10px; align-items: center; }
+  .stepper .step { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .stepper .step .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--border); color: var(--muted); display: grid; place-items: center; font-size: 11px; font-weight: 800; flex: 0 0 22px; }
+  .stepper .step .name { font-size: 11px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  .stepper .step .line { flex: 1; height: 2px; background: var(--border); margin-left: 6px; }
+  .stepper .step:last-child .line { display: none; }
+  .stepper .step.done .dot { background: var(--em); color: #fff; }
+  .stepper .step.done .name { color: var(--em-2); }
+  .stepper .step.done .line { background: var(--em); }
+  .stepper .step.current .dot { background: var(--navy); color: #fff; box-shadow: 0 0 0 4px rgba(27,58,92,0.12); }
+  .stepper .step.current .name { color: var(--navy); font-weight: 800; }
+  .prog-meta { margin-top: 10px; display: flex; gap: 14px; font-size: 11px; color: var(--muted); align-items: center; }
+  .prog-meta .dotb { width: 6px; height: 6px; border-radius: 50%; background: var(--em); }
+
+  /* ── 3-zone 레이아웃 ───────── */
+  .layout { max-width: 1440px; margin: 0 auto; padding: 20px 24px 40px; display: grid; grid-template-columns: 320px 1fr 340px; gap: 20px; align-items: flex-start; }
+  @media (max-width: 1080px) { .layout { grid-template-columns: 1fr; } }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+  .card h3 { font-size: 13px; font-weight: 800; margin: 0 0 12px; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: space-between; }
+  .card h3 .subtag { font-size: 10px; color: var(--muted); font-weight: 600; }
+
+  /* 좌측 요약 */
+  .summary-row { display: flex; justify-content: space-between; padding: 9px 0; font-size: 13px; border-bottom: 1px dashed var(--border); }
+  .summary-row:last-child { border-bottom: 0; }
+  .summary-row .k { color: var(--muted); }
+  .summary-row .v { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .summary-row .v.accent { color: var(--em-2); }
+  .summary-row .v.big { font-size: 15px; }
+  .masked { color: var(--muted-2); }
+  .tier-lock { margin-top: 14px; padding: 10px 12px; background: rgba(27,58,92,0.04); border: 1px dashed var(--border-strong); border-radius: 8px; font-size: 11px; color: var(--muted); display: flex; gap: 8px; align-items: flex-start; }
+  .tier-lock b { color: var(--navy); }
+
+  /* 중앙 액션 */
+  .action-hero { text-align: center; padding: 28px 20px; border: 1px solid var(--border); border-radius: 14px; background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(27,58,92,0.04)); }
+  .action-hero .eyebrow { font-size: 11px; color: var(--em-2); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
+  .action-hero h2 { font-size: 22px; font-weight: 900; letter-spacing: -0.03em; margin: 0 0 8px; color: var(--ink); }
+  .action-hero p { font-size: 13px; color: var(--muted); margin: 0 0 20px; line-height: 1.55; max-width: 420px; margin-left: auto; margin-right: auto; }
+  .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 28px; font-size: 15px; font-weight: 800; border-radius: 10px; border: 0; background: var(--em); color: #fff; transition: transform 0.1s, box-shadow 0.2s; box-shadow: 0 4px 14px rgba(16,185,129,0.3); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16,185,129,0.4); }
+  .btn-primary.navy { background: var(--navy); box-shadow: 0 4px 14px rgba(27,58,92,0.25); }
+  .btn-primary.navy:hover { box-shadow: 0 6px 20px rgba(27,58,92,0.35); }
+  .btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; font-size: 12px; font-weight: 600; color: var(--navy); background: transparent; border: 1px solid var(--border-strong); border-radius: 8px; margin-top: 6px; }
+  .btn-link { font-size: 12px; color: var(--navy-2); font-weight: 600; margin-top: 10px; background: transparent; border: 0; }
+
+  .offer-card { margin-top: 18px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: #FAFBFC; }
+  .offer-card .oc-head { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); }
+  .offer-card .oc-price { font-size: 22px; font-weight: 900; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; margin-top: 6px; }
+  .offer-card .oc-status { font-size: 11px; color: var(--warn); font-weight: 700; margin-top: 4px; }
+
+  .sidelist { margin-top: 20px; }
+  .sidelist h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 10px; font-weight: 700; }
+  .side-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; font-size: 13px; border-radius: 8px; color: var(--ink); }
+  .side-item:hover { background: var(--bg); }
+  .side-item .ico { width: 18px; color: var(--muted); flex: 0 0 18px; }
+
+  /* 우측 채팅 */
+  .chat-head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--navy), var(--navy-2)); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 12px; }
+  .chat-head .n { font-weight: 700; font-size: 13px; }
+  .chat-head .s { font-size: 11px; color: var(--em-2); display: flex; align-items: center; gap: 5px; }
+  .chat-head .s::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--em); display: inline-block; }
+  .msg { padding: 9px 11px; border-radius: 10px; font-size: 13px; margin-bottom: 8px; max-width: 88%; }
+  .msg.them { background: #F1F5F9; color: var(--ink); }
+  .msg.me { background: var(--navy); color: #fff; margin-left: auto; }
+  .msg .t { font-size: 10px; opacity: 0.7; display: block; margin-top: 2px; }
+  .msg-input { margin-top: 12px; border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+  .msg-input .pill { padding: 3px 8px; background: var(--bg); border-radius: 6px; font-size: 10px; color: var(--muted); font-weight: 600; }
+
+  .doc-list { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 14px; }
+  .doc { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 12px; }
+  .doc .st { flex: 0 0 18px; text-align: center; }
+  .doc.done .st { color: var(--em); }
+  .doc.pending .st { color: var(--warn); }
+  .doc .name { flex: 1; color: var(--ink); font-weight: 500; }
+  .doc .side { font-size: 11px; color: var(--muted); }
+
+  /* 잠김 상태 */
+  .locked-chat { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .locked-chat .ico { font-size: 32px; margin-bottom: 12px; opacity: 0.5; }
+  .locked-chat .t { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .locked-chat .d { font-size: 11px; line-height: 1.6; max-width: 240px; margin: 0 auto; }
+
+  /* ── 상태별 표시 ───────── */
+  .state { display: none; }
+  .state.active { display: block; }
+
+  /* 하단 의도 설명 */
+  .design-note { max-width: 1440px; margin: 20px auto 0; padding: 20px 24px; font-size: 12px; color: var(--muted); background: #fff; border-top: 1px solid var(--border); }
+  .design-note h4 { color: var(--ink); font-size: 13px; font-weight: 800; margin: 0 0 8px; }
+  .design-note ul { margin: 0; padding-left: 18px; }
+  .design-note li { margin-bottom: 4px; }
+
+  /* 반응형 축약 */
+  @media (max-width: 1080px) {
+    .topbar-inner { padding: 12px 14px; }
+    .state-tabs-inner { padding: 0 14px; overflow-x: auto; white-space: nowrap; }
+    .deal-header-inner, .layout { padding-left: 14px; padding-right: 14px; }
+    .stepper .step .name { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ───── TopBar (NPLatform 톤 · 참고용) ───── -->
+<div class="topbar" aria-label="NPLatform Top Navigation Bar">
+  <div class="topbar-inner">
+    <div class="brand">NPLatform <i>·</i></div>
+    <div class="nav">
+      <span>거래소</span><span class="active">딜룸</span><span>분석</span><span>뉴스/공지</span><span>마이</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="chip-user">김바이어 · L2</div>
+  </div>
+</div>
+
+<!-- ───── State 전환 탭 ───── -->
+<div class="state-tabs" role="tablist" aria-label="시안 상태 선택">
+  <div class="state-tabs-inner">
+    <span class="label">시안 상태</span>
+    <button class="active" data-state="A" onclick="switchState('A')">A · L0 진입 직후</button>
+    <button data-state="B" onclick="switchState('B')">B · L2 활발한 협상</button>
+    <button data-state="C" onclick="switchState('C')">C · L4 계약 서명 단계</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ STATE A ═══════════════════════════════ -->
+<div class="state active" data-state="A">
+
+  <div class="deal-header">
+    <div class="deal-header-inner">
+      <div class="crumb">거래소 > 매물 탐색 > <b>딜룸 · oooNPL 23-07</b></div>
+      <h1 class="deal-title">
+        ooo은행 NPL 23-07 · 아파트 · 서울 송파
+        <span class="deal-tag">L0 공개</span>
+      </h1>
+      <div class="stepper">
+        <div class="step current"><div class="dot">1</div><div class="name">관심</div><div class="line"></div></div>
+        <div class="step"><div class="dot">2</div><div class="name">NDA</div><div class="line"></div></div>
+        <div class="step"><div class="dot">3</div><div class="name">LOI</div><div class="line"></div></div>
+        <div class="step"><div class="dot">4</div><div class="name">실사</div><div class="line"></div></div>
+        <div class="step"><div class="dot">5</div><div class="name">서명</div><div class="line"></div></div>
+        <div class="step"><div class="dot">6</div><div class="name">정산</div></div>
+      </div>
+      <div class="prog-meta">
+        <span>진행률 15%</span><span>·</span>
+        <span><span class="dotb"></span> 조회수 412 · 관심 12명</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- 좌: 요약 -->
+    <aside class="card">
+      <h3>채권·담보 요약 <span class="subtag">L0 공개</span></h3>
+      <div class="summary-row"><span class="k">매각 기관</span><span class="v masked">ooo은행</span></div>
+      <div class="summary-row"><span class="k">채권잔액</span><span class="v big">12억 5천만</span></div>
+      <div class="summary-row"><span class="k">희망 매각가</span><span class="v big accent">8억 2천만</span></div>
+      <div class="summary-row"><span class="k">할인율</span><span class="v accent">34.4%</span></div>
+      <div class="summary-row"><span class="k">감정가</span><span class="v">10억</span></div>
+      <div class="summary-row"><span class="k">담보</span><span class="v">아파트 84㎡</span></div>
+      <div class="summary-row"><span class="k">소재지</span><span class="v">서울 송파 · 상세 마스킹</span></div>
+      <div class="summary-row"><span class="k">등급</span><span class="v">B · 예상 IRR 18.2%</span></div>
+
+      <div class="tier-lock">
+        <span>🔒</span>
+        <div>
+          <b>NDA 서명 후 공개</b><br/>
+          기관 실명 · 동/호수 · 권리관계 · 임차인 현황
+        </div>
+      </div>
+    </aside>
+
+    <!-- 중: 액션 -->
+    <main>
+      <div class="action-hero">
+        <div class="eyebrow">1 단계 · 첫 진입</div>
+        <h2>이 매물에 관심이 있으신가요?</h2>
+        <p>
+          관심 표시 즉시 딜룸이 생성되고, 매도자와 1:1 협상 채널이 열립니다.<br/>
+          <strong>무료 · NDA 없이 질문 가능 · 언제든 취소 가능.</strong>
+        </p>
+        <button class="btn-primary">
+          ⚡  관심 표시하고 딜룸 열기
+        </button>
+        <div style="margin-top:12px;">
+          <button class="btn-link">AI 분석 리포트 미리보기 →</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 18px;">
+        <h3>AI 가 본 이 딜의 3가지 포인트</h3>
+        <div style="font-size:13px;color:var(--ink);line-height:1.7;">
+          ✅ <b>할인율 34.4%</b> — 동일 지역·담보 중위값 28% 대비 +6.4%p<br/>
+          ✅ <b>근저당 1 순위</b> — 선순위 채권 없음, 회수 리스크 낮음<br/>
+          ⚠️ <b>임차 현황 비공개</b> — NDA 후 반드시 확인 필요
+        </div>
+      </div>
+    </main>
+
+    <!-- 우: 협상 (잠김) -->
+    <aside class="card">
+      <h3>실시간 협상</h3>
+      <div class="locked-chat">
+        <div class="ico">🔒</div>
+        <div class="t">NDA 서명 후 열림</div>
+        <div class="d">관심 표시 → 본인인증(L1) → NDA 서명(L2) 후 매도자와 직접 메시지를 주고받을 수 있습니다.</div>
+      </div>
+    </aside>
+
+  </div>
+
+  <div class="design-note">
+    <h4>시안 A 의 설계 의도</h4>
+    <ul>
+      <li>페이지 진입 후 <b>3초 안에 무엇을 할지</b> 명확. Primary CTA(녹색) 는 전체 화면에서 유일한 강조.</li>
+      <li>좌측 요약은 <b>티어별 필드 게이팅</b> — L0 에서는 기관 마스킹(ooo), 상세 지번 숨김.</li>
+      <li>우측은 <b>잠김 상태</b>이지만 "다음에 무엇을 하면 열리는지" 명확히 안내 (L1 → L2 경로).</li>
+      <li>대시보드 · KPI · 차트 <b>없음</b>. 이 단계에서 의미가 없기 때문.</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════ STATE B ═══════════════════════════════ -->
+<div class="state" data-state="B">
+
+  <div class="deal-header">
+    <div class="deal-header-inner">
+      <div class="crumb">거래소 > 매물 탐색 > <b>딜룸 · ABC저축은행 NPL 23-12</b></div>
+      <h1 class="deal-title">
+        ABC저축은행 NPL 23-12 · 아파트 · 서울 강남
+        <span class="deal-tag em">L2 · NDA 완료</span>
+      </h1>
+      <div class="stepper">
+        <div class="step done"><div class="dot">✓</div><div class="name">관심</div><div class="line"></div></div>
+        <div class="step done"><div class="dot">✓</div><div class="name">NDA</div><div class="line"></div></div>
+        <div class="step current"><div class="dot">3</div><div class="name">LOI</div><div class="line"></div></div>
+        <div class="step"><div class="dot">4</div><div class="name">실사</div><div class="line"></div></div>
+        <div class="step"><div class="dot">5</div><div class="name">서명</div><div class="line"></div></div>
+        <div class="step"><div class="dot">6</div><div class="name">정산</div></div>
+      </div>
+      <div class="prog-meta">
+        <span>진행률 55%</span><span>·</span>
+        <span><span class="dotb"></span> 최근 활동 2 분 전</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <aside class="card">
+      <h3>채권·담보 요약 <span class="subtag">L2 공개</span></h3>
+      <div class="summary-row"><span class="k">매각 기관</span><span class="v">ABC저축은행 여신관리부</span></div>
+      <div class="summary-row"><span class="k">채권잔액</span><span class="v big">12억 5천만</span></div>
+      <div class="summary-row"><span class="k">희망 매각가</span><span class="v big accent">8억 2천만</span></div>
+      <div class="summary-row"><span class="k">할인율</span><span class="v accent">34.4%</span></div>
+      <div class="summary-row"><span class="k">담보 주소</span><span class="v">서울 강남 대치동 XXX-X 103동 1502호</span></div>
+      <div class="summary-row"><span class="k">전용면적</span><span class="v">84.5㎡</span></div>
+      <div class="summary-row"><span class="k">근저당</span><span class="v">1 순위 · 선순위 없음</span></div>
+      <div class="summary-row"><span class="k">임차 현황</span><span class="v">전세 1건 · 7 억 · 대항력 ○</span></div>
+      <div class="summary-row"><span class="k">예상 IRR</span><span class="v accent">18.2%</span></div>
+    </aside>
+
+    <main>
+      <div class="action-hero">
+        <div class="eyebrow">3 단계 · 가격 제안</div>
+        <h2>LOI (매수 의향서) 를 제출하세요</h2>
+        <p>희망 인수 가격과 조건을 입력하면 매도자에게 즉시 전달됩니다. 48 시간 내 응답이 오지 않으면 자동 리마인드.</p>
+        <button class="btn-primary navy">
+          📝  LOI 제출하기
+        </button>
+        <div style="margin-top:10px; display:flex; justify-content:center; gap:8px;">
+          <button class="btn-ghost">실사 자료 요청</button>
+          <button class="btn-ghost">추가 질문 전송</button>
+        </div>
+      </div>
+
+      <div class="offer-card">
+        <div class="oc-head"><span>1 차 제안 (내가 제시)</span><span>3 시간 전</span></div>
+        <div class="oc-price">8 억 5 천만 원</div>
+        <div class="oc-status">매도자 응답 대기 중 · 45h 남음</div>
+      </div>
+
+      <div class="card" style="margin-top: 14px;">
+        <h3>제안 히스토리</h3>
+        <div style="font-size:12px; color:var(--muted); line-height:1.7;">
+          • <b>나</b> · 1차 8.5억 · 3 시간 전<br/>
+          • (대기) 매도자 응답 · 예상 48h 내
+        </div>
+      </div>
+    </main>
+
+    <aside class="card">
+      <div class="chat-head">
+        <div class="avatar">김</div>
+        <div>
+          <div class="n">김매도 · ABC저축은행</div>
+          <div class="s">온라인</div>
+        </div>
+      </div>
+
+      <div class="msg them">안녕하세요 바이어님, NDA 감사합니다. 궁금하신 점 편하게 말씀 주세요.<span class="t">오늘 14:02</span></div>
+      <div class="msg me">감정평가서와 임대차계약서 원본 열람 요청드립니다.<span class="t">오늘 14:07</span></div>
+      <div class="msg them">실사 자료 요청주시면 금주 내 업로드하겠습니다. 추가 조건 있으신지요?<span class="t">오늘 14:09</span></div>
+      <div class="msg me">1 차 제안 8.5 억 제출했습니다. 검토 부탁드립니다.<span class="t">오늘 14:31</span></div>
+
+      <div class="msg-input">
+        <span style="flex:1;">메시지 입력...</span>
+        <span class="pill">📎</span>
+        <span class="pill" style="background:var(--em);color:#fff;">전송</span>
+      </div>
+
+      <div class="doc-list">
+        <h4 style="font-size:11px; color:var(--muted); margin: 0 0 8px; text-transform:uppercase; letter-spacing:0.06em; font-weight:700;">공유 문서 (3)</h4>
+        <div class="doc done"><span class="st">✓</span><span class="name">NDA 서명본</span><span class="side">2일 전</span></div>
+        <div class="doc pending"><span class="st">⏳</span><span class="name">임대차계약서</span><span class="side">요청중</span></div>
+        <div class="doc done"><span class="st">✓</span><span class="name">권리분석 리포트</span><span class="side">AI · 1일 전</span></div>
+      </div>
+    </aside>
+
+  </div>
+
+  <div class="design-note">
+    <h4>시안 B 의 설계 의도</h4>
+    <ul>
+      <li>Primary CTA 가 <b>"LOI 제출"</b> 하나로 명확. 부가 액션(실사·질문) 은 작은 ghost 버튼으로만 존재.</li>
+      <li>우측 채팅은 <b>페이지 전환 없이 상시 노출</b>. 스크롤 없이 매도자 응답 확인 가능.</li>
+      <li>문서 목록은 <b>채팅 아래</b>에 붙여 협상·자료 공유의 맥락 분리하지 않음.</li>
+      <li>오퍼 히스토리·카운터 타이머 는 <b>가격 협상의 긴급감</b>을 만드는 핵심 장치.</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════ STATE C ═══════════════════════════════ -->
+<div class="state" data-state="C">
+
+  <div class="deal-header">
+    <div class="deal-header-inner">
+      <div class="crumb">거래소 > 매물 탐색 > <b>딜룸 · DEF자산 NPL 23-03</b></div>
+      <h1 class="deal-title">
+        DEF자산관리 NPL 23-03 · 아파트 · 부산 해운대
+        <span class="deal-tag em">L4 · 서명 단계</span>
+      </h1>
+      <div class="stepper">
+        <div class="step done"><div class="dot">✓</div><div class="name">관심</div><div class="line"></div></div>
+        <div class="step done"><div class="dot">✓</div><div class="name">NDA</div><div class="line"></div></div>
+        <div class="step done"><div class="dot">✓</div><div class="name">LOI</div><div class="line"></div></div>
+        <div class="step done"><div class="dot">✓</div><div class="name">실사</div><div class="line"></div></div>
+        <div class="step current"><div class="dot">5</div><div class="name">서명</div><div class="line"></div></div>
+        <div class="step"><div class="dot">6</div><div class="name">정산</div></div>
+      </div>
+      <div class="prog-meta">
+        <span>진행률 88%</span><span>·</span>
+        <span><span class="dotb"></span> 체결 예정일 2026-04-24</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <aside class="card">
+      <h3>계약 요약 <span class="subtag">최종</span></h3>
+      <div class="summary-row"><span class="k">매도자</span><span class="v">DEF자산관리 NPL본부</span></div>
+      <div class="summary-row"><span class="k">매수자</span><span class="v">(주)트랜스파머 (본인)</span></div>
+      <div class="summary-row"><span class="k">최종 계약가</span><span class="v big accent">7 억 8 천만</span></div>
+      <div class="summary-row"><span class="k">양수도일</span><span class="v">2026-04-30</span></div>
+      <div class="summary-row"><span class="k">에스크로</span><span class="v">KB 국민 · 준비중</span></div>
+      <div class="summary-row"><span class="k">중개 수수료</span><span class="v">0.5% · 390만</span></div>
+      <div class="summary-row"><span class="k">예상 IRR</span><span class="v accent">21.4%</span></div>
+
+      <div class="tier-lock" style="background: rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.2);">
+        <span>✓</span>
+        <div>
+          <b style="color:var(--em-2);">실사 완료</b><br/>
+          감정평가서 · 등기부등본 · 권리분석 · 임대차 3 건 확인
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="action-hero">
+        <div class="eyebrow">5 단계 · 체결 전 마지막</div>
+        <h2>전자서명 · 에스크로 입금</h2>
+        <p>계약서 최종본 확인 후 전자서명을 완료하세요. 서명 후 에스크로 계좌로 입금하면 자동으로 정산 단계로 진행됩니다.</p>
+        <button class="btn-primary navy">
+          🖊  전자서명 시작
+        </button>
+        <div style="margin-top:10px; font-size:11px; color:var(--muted);">
+          계약서 초안 v3.2 · 양당사자 합의 완료 · 2일 전
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 18px;">
+        <h3>체결 타임라인</h3>
+        <div style="font-size:12px; line-height:1.85; color:var(--muted);">
+          <div style="color:var(--em-2); font-weight:700;">✓ 4/18 · LOI 수락</div>
+          <div style="color:var(--em-2); font-weight:700;">✓ 4/19 · 실사 완료</div>
+          <div style="color:var(--em-2); font-weight:700;">✓ 4/20 · 계약서 v3.2 합의</div>
+          <div style="color:var(--navy); font-weight:800;">● 4/21 · <b>전자서명</b> (오늘 할 일)</div>
+          <div>○ 4/22 · 에스크로 입금</div>
+          <div>○ 4/24 · 체결 · 정산</div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="card">
+      <div class="chat-head">
+        <div class="avatar" style="background:linear-gradient(135deg,#8B5CF6,#6366F1);">박</div>
+        <div>
+          <div class="n">박매도 · DEF자산관리</div>
+          <div class="s">온라인</div>
+        </div>
+      </div>
+
+      <div class="msg them">계약서 v3.2 최종본 업로드했습니다. 확인 후 서명 부탁드립니다.<span class="t">오늘 09:14</span></div>
+      <div class="msg me">검토 완료했습니다. 오후 중 서명 진행하겠습니다.<span class="t">오늘 10:02</span></div>
+      <div class="msg them">에스크로는 KB 국민 확인했습니다. 서명 후 계좌 공유드릴게요.<span class="t">오늘 10:05</span></div>
+
+      <div class="msg-input">
+        <span style="flex:1;">메시지 입력...</span>
+        <span class="pill">📎</span>
+        <span class="pill" style="background:var(--em);color:#fff;">전송</span>
+      </div>
+
+      <div class="doc-list">
+        <h4 style="font-size:11px; color:var(--muted); margin: 0 0 8px; text-transform:uppercase; letter-spacing:0.06em; font-weight:700;">계약 문서 (6)</h4>
+        <div class="doc done"><span class="st">✓</span><span class="name">NDA · LOI</span><span class="side">서명완료</span></div>
+        <div class="doc done"><span class="st">✓</span><span class="name">감정평가서</span><span class="side">실사완료</span></div>
+        <div class="doc done"><span class="st">✓</span><span class="name">임대차계약서 3건</span><span class="side">실사완료</span></div>
+        <div class="doc done"><span class="st">✓</span><span class="name">권리분석 리포트</span><span class="side">AI</span></div>
+        <div class="doc pending"><span class="st">●</span><span class="name" style="color:var(--navy); font-weight:700;">계약서 v3.2</span><span class="side" style="color:var(--navy);">서명 대기</span></div>
+      </div>
+    </aside>
+
+  </div>
+
+  <div class="design-note">
+    <h4>시안 C 의 설계 의도</h4>
+    <ul>
+      <li>서명 단계는 <b>딱 하나의 CTA</b>. 에스크로·정산은 서명 완료 후 자동으로 다음 단계.</li>
+      <li>체결 타임라인은 <b>예측 가능성</b>이 핵심 — 오늘 해야 할 것, 내일 기다릴 것 명확.</li>
+      <li>좌측 요약이 <b>"진행 중 요약" → "계약 요약"</b> 으로 자연스럽게 성격 전환.</li>
+      <li>여전히 페이지는 하나. 서명·에스크로·정산이 전부 이 URL 에서 모달·섹션으로 완료.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+function switchState(s) {
+  document.querySelectorAll('.state').forEach(el => el.classList.toggle('active', el.dataset.state === s));
+  document.querySelectorAll('.state-tabs-inner button').forEach(b => b.classList.toggle('active', b.dataset.state === s));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
