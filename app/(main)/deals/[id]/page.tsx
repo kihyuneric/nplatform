@@ -38,7 +38,12 @@ import type { SignSession, Signer, SignerStatus, SessionStatus } from "@/lib/pay
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type DealStatus = "진행중" | "완료" | "중단"
-type TabKey = "개요" | "채팅" | "문서" | "오퍼" | "실사" | "계약" | "에스크로" | "미팅" | "감사"
+/**
+ * DR-2d (2026-04-21): 상세 작업 탭 — "개요"·"채팅" 제거.
+ * 3-Zone 셸이 항상 표시되는 메인 워크스페이스이고, 이 탭들은 셸 하단에서
+ * 심화 작업을 접근하는 서브 영역임. 채팅은 셸의 우측 pane 이 상시 담당.
+ */
+type DetailKey = "문서" | "오퍼" | "실사" | "계약" | "에스크로" | "미팅" | "AI 분석" | "감사"
 
 interface DealInfo {
   id: string
@@ -112,16 +117,15 @@ interface AuditLog {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const STAGES = ["매칭", "오퍼 교환", "실사", "계약", "완료"] as const
-const TABS: { key: TabKey; icon: React.ElementType }[] = [
-  { key: "개요",   icon: LayoutDashboard },
-  { key: "채팅",   icon: MessageSquare },
-  { key: "문서",   icon: FolderOpen },
-  { key: "오퍼",   icon: Tag },
-  { key: "실사",   icon: Search },
-  { key: "계약",   icon: FileCheck },
-  { key: "에스크로", icon: Wallet },
-  { key: "미팅",   icon: CalendarCheck },
-  { key: "감사",   icon: ShieldAlert },
+const DETAIL_TABS: { key: DetailKey; label: string; icon: React.ElementType }[] = [
+  { key: "문서",    label: "문서",         icon: FolderOpen },
+  { key: "오퍼",    label: "오퍼",         icon: Tag },
+  { key: "실사",    label: "실사",         icon: Search },
+  { key: "계약",    label: "계약",         icon: FileCheck },
+  { key: "에스크로", label: "에스크로",      icon: Wallet },
+  { key: "미팅",    label: "미팅",         icon: CalendarCheck },
+  { key: "AI 분석", label: "AI 분석",      icon: Brain },
+  { key: "감사",    label: "감사",         icon: ShieldAlert },
 ]
 
 // ─── Constants (empty fallbacks — never show fabricated data) ─────────────────
@@ -1481,147 +1485,6 @@ function deriveStageFromDeal(deal: DealInfo) {
   return STAGE_MAP[deal.lockInStage] || { tier: "L0" as TierLevel, stage: "관심" as DealStage, progress: 10 }
 }
 
-function OverviewShell({
-  deal,
-  docs,
-  offers,
-  onTabChange,
-}: {
-  deal: DealInfo
-  docs: DealDocument[]
-  offers: DealOffer[]
-  onTabChange: (tab: TabKey) => void
-}) {
-  const router = useRouter()
-  const { tier, stage, progress } = deriveStageFromDeal(deal)
-  // NOTE: 우측 패널 채팅은 ChatTab 과 동일한 Supabase 채널 구독 — Supabase Realtime 은 동일 토픽 재사용
-  const { messages: rtMessages, sendMessage } = useDealMessages(deal.id)
-
-  // 최근 5건 메시지만 셸 chat pane 에 표시 (전체 채팅은 채팅 탭으로 이동)
-  const recentMessages: ShellChatMessage[] = rtMessages.slice(-5).map((m: any) => ({
-    id: m.id || String(m.created_at),
-    author: m.sender_name || m.name || (m.sender_id === CURRENT_USER_ID ? "나" : deal.cp.name),
-    body: m.content || m.text || "",
-    sentAt: m.created_at ? formatRelativeTime(m.created_at) : "방금",
-    mine: m.sender_id === CURRENT_USER_ID || !!m.mine,
-  }))
-
-  // 티어별 Primary CTA 핸들러
-  const handlePrimary = () => {
-    switch (tier) {
-      case "L0":
-        toast.success("관심 매물로 등록되었습니다")
-        break
-      case "L1":
-        router.push(`/deals/${deal.id}?action=nda`)
-        break
-      case "L2":
-        router.push(`/deals/${deal.id}?action=loi`)
-        break
-      case "L3":
-        onTabChange("실사")
-        break
-      case "L4":
-        onTabChange("계약")
-        break
-      case "L5":
-        onTabChange("에스크로")
-        break
-    }
-  }
-
-  return (
-    <>
-      <DealRoomShell
-        header={
-          <DealHeader
-            title={deal.asset.title}
-            subtitle={`${deal.asset.collateral} · ${deal.asset.region}`}
-            backHref="/exchange"
-            backLabel="매물 탐색"
-            stage={stage}
-            progress={progress}
-            lastActivity={rtMessages.length > 0 ? formatRelativeTime(rtMessages[rtMessages.length - 1].created_at) : "방금"}
-          />
-        }
-        summary={
-          <DealSummaryPane
-            tier={tier}
-            data={{
-              principal: deal.asset.principal,
-              askingPrice: (deal.asset as any).askingPrice,
-              appraisalValue: deal.asset.appraisalValue,
-              collateral: {
-                type: deal.asset.collateral,
-                region: deal.asset.region,
-              },
-              grade: deal.asset.grade,
-              estIrr: deal.asset.yield,
-            }}
-          />
-        }
-        action={
-          <DealActionPane
-            tier={tier}
-            onPrimaryAction={handlePrimary}
-            recentOffer={
-              offers[0]
-                ? {
-                    label: offers[0].label || "최근 오퍼",
-                    amount: offers[0].amount,
-                    status: offers[0].status || "응답 대기",
-                    date: offers[0].date,
-                  }
-                : undefined
-            }
-            secondaryActions={[
-              {
-                label: "실사 자료 요청",
-                onClick: () => onTabChange("실사"),
-                icon: <FileSearch className="w-4 h-4" />,
-              },
-              {
-                label: "오퍼 히스토리 보기",
-                onClick: () => onTabChange("오퍼"),
-                icon: <TrendingUp className="w-4 h-4" />,
-              },
-              {
-                label: "미팅 예약",
-                onClick: () => onTabChange("미팅"),
-                icon: <CalendarCheck className="w-4 h-4" />,
-              },
-            ]}
-          />
-        }
-        chat={
-          <DealChatPane
-            partner={{
-              name: deal.cp.name,
-              role: deal.cp.role,
-              online: true,
-              avatar: deal.cp.initials,
-            }}
-            messages={recentMessages}
-            documents={docs.slice(0, 6).map((d) => ({
-              id: d.id,
-              name: d.name,
-              status: "uploaded",
-            }))}
-            onSend={(text) => sendMessage(text, "TEXT")}
-            onDocumentClick={() => onTabChange("문서")}
-            placeholder="메시지 입력… (전체 채팅은 채팅 탭)"
-          />
-        }
-      />
-
-      {/* AI 분석 섹션 (기존 OverviewTab 내용) */}
-      <div className="mt-6 bg-[var(--color-surface-raised)] border border-[var(--color-border-subtle)] rounded-2xl p-5">
-        <OverviewTab deal={deal} />
-      </div>
-    </>
-  )
-}
-
 function formatRelativeTime(iso: string): string {
   try {
     const d = new Date(iso)
@@ -2066,127 +1929,9 @@ const STAGE_TO_API: Record<string, string> = {
   "완료":      "COMPLETED",
 }
 
-function RightPanel({ deal, onTabSwitch }: { deal: DealInfo; onTabSwitch: (tab: TabKey) => void }) {
-  const { asset: a, cp: c } = deal
-  const [advancing, setAdvancing] = useState(false)
-  const currentStageName = STAGES[deal.stage] ?? "매칭"
-  const nextStageName = STAGES[deal.stage + 1]
-  const nextApiStage = nextStageName ? STAGE_TO_API[nextStageName] : null
-
-  const handleAdvanceStage = async () => {
-    if (!nextApiStage || advancing) return
-    setAdvancing(true)
-    try {
-      const res = await fetch(`/api/v1/exchange/deals/${deal.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stage: nextApiStage }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        toast.error(data?.error?.message ?? "단계 전환에 실패했습니다.")
-      } else {
-        toast.success(`"${nextStageName}" 단계로 전환됐습니다. 새로고침 후 반영됩니다.`)
-      }
-    } catch {
-      toast.error("네트워크 오류로 단계 전환에 실패했습니다.")
-    } finally {
-      setAdvancing(false)
-    }
-  }
-
-  return (
-    <div className="space-y-4 sticky top-14">
-      {/* Asset Summary */}
-      <div className="card-interactive-dark rounded-2xl p-5">
-        <div className="flex items-center gap-1.5 mb-3">
-          <Building2 className="w-3.5 h-3.5 text-blue-400" />
-          <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">매물 요약</span>
-        </div>
-        <p className="text-sm font-semibold text-white leading-snug tracking-normal mb-4">{a.title}</p>
-        <div className="grid grid-cols-3 gap-2 text-center">
-          {[
-            ["원금", fmt(a.principal), "text-white"],
-            ["AI 등급", a.grade, "text-blue-400"],
-            ["예상 수익", a.yield, "text-emerald-400"],
-          ].map(([k, v, cls]) => (
-            <div key={k} className="bg-white/[0.04] border border-white/[0.06] rounded-lg py-2.5">
-              <p className="text-[9px] text-white/30 tracking-normal">{k}</p>
-              <p className={`text-sm font-bold mt-0.5 ${cls}`}>{v}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Deal Status */}
-      <div className="card-interactive-dark rounded-2xl p-5">
-        <div className="flex items-center gap-1.5 mb-3">
-          <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
-          <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">거래 현황</span>
-        </div>
-        <dl className="space-y-2.5">
-          {[
-            ["단계", currentStageName],
-            ["시작일", deal.startDate],
-            ["예상 완료", deal.estClose],
-          ].map(([k, v]) => (
-            <div key={k} className="flex justify-between items-center">
-              <dt className="text-xs text-white/35 tracking-normal">{k}</dt>
-              <dd className="text-xs font-semibold text-white tracking-normal">{v}</dd>
-            </div>
-          ))}
-        </dl>
-        {nextStageName && deal.status === "진행중" && (
-          <button
-            onClick={handleAdvanceStage}
-            disabled={advancing}
-            className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 hover:border-blue-500/50 text-blue-300 rounded-lg text-xs font-semibold tracking-normal transition-all disabled:opacity-40"
-          >
-            {advancing ? <Loader2 className="w-3 h-3 animate-spin" /> : <ArrowUpRight className="w-3 h-3" />}
-            {advancing ? "전환 중..." : `${nextStageName} 단계로 전환`}
-          </button>
-        )}
-      </div>
-
-      {/* Counterparty */}
-      <div className="card-interactive-dark rounded-2xl p-5">
-        <div className="flex items-center gap-1.5 mb-3">
-          <Star className="w-3.5 h-3.5 text-blue-400" />
-          <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">상대방 정보</span>
-        </div>
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-full bg-[#2E75B6] flex items-center justify-center text-white text-sm font-bold shrink-0">
-            {c.initials.slice(0, 1)}
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-white tracking-normal">{c.name}</p>
-            <p className="text-xs text-white/35 tracking-normal">{c.role}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-white/35 bg-white/[0.04] border border-white/[0.06] rounded-lg px-3 py-2">
-          <Phone className="w-3.5 h-3.5 text-white/25" />
-          <span className="tracking-normal">{c.phone}</span>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="space-y-2">
-        <button
-          onClick={() => onTabSwitch("채팅")}
-          className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#2E75B6] hover:bg-[#3680c8] text-white rounded-xl text-sm font-medium transition-colors tracking-normal"
-        >
-          <Send className="w-4 h-4" /> 메시지 보내기
-        </button>
-        <button
-          onClick={() => onTabSwitch("미팅")}
-          className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.1] hover:border-blue-500/30 text-white/70 hover:text-white rounded-xl text-sm font-medium transition-all tracking-normal"
-        >
-          <Video className="w-4 h-4" /> 화상 회의 예약
-        </button>
-      </div>
-    </div>
-  )
-}
+// DR-2d (2026-04-21): RightPanel 삭제 — 3-Zone 셸의 우측 DealChatPane 이 대체함
+// (기존 매물 요약·거래 현황·상대방 정보·액션 버튼은 DealSummaryPane / DealActionPane /
+// DealChatPane 로 통합 흡수 완료)
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -2195,15 +1940,16 @@ export default function DealRoomPage() {
   const dealId = params?.id as string || "unknown"
   const searchParams = useSearchParams()
 
-  // DR-2a (2026-04-21): /exchange/[id]/* 리다이렉트에서 온 query param 처리
-  // ?tab=채팅|문서|오퍼|실사|계약|에스크로|미팅|감사|개요 → 해당 탭 자동 전환
+  // DR-2d (2026-04-21): /exchange/[id]/* 리다이렉트에서 온 query param 처리
+  // 3-Zone 셸이 메인 뷰 — 탭은 상세 작업(문서/오퍼/실사/계약/에스크로/미팅/AI/감사)만
+  // ?tab=<상세키> → 하단 상세 패널 자동 오픈 (없으면 닫힘 상태)
   // ?action=nda|loi → DR-3 모달 구현 전까지 토스트 안내
-  const initialTab = ((): TabKey => {
-    const t = searchParams?.get("tab") as TabKey | null
-    const valid: TabKey[] = ["개요", "채팅", "문서", "오퍼", "실사", "계약", "에스크로", "미팅", "감사"]
-    return t && valid.includes(t) ? t : "개요"
+  const initialDetail = ((): DetailKey | null => {
+    const t = searchParams?.get("tab")
+    const valid: DetailKey[] = ["문서", "오퍼", "실사", "계약", "에스크로", "미팅", "AI 분석", "감사"]
+    return t && (valid as string[]).includes(t) ? (t as DetailKey) : null
   })()
-  const [activeTab, setActiveTab] = useState<TabKey>(initialTab)
+  const [activeDetail, setActiveDetail] = useState<DetailKey | null>(initialDetail)
   const router = useRouter()
   const [deal, setDeal] = useState<DealInfo | null>(null)
   const [dealLoading, setDealLoading] = useState(true)
@@ -2217,6 +1963,10 @@ export default function DealRoomPage() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
   // authTick is a counter we bump when auth resolves to force sub-component re-render
   const [authTick, setAuthTick] = useState(0)
+
+  // DR-2d: 3-Zone 셸이 페이지 레벨에서 실시간 채팅 hook 을 소유
+  // 하위 ChatTab 과 동일 채널 재구독이지만 Supabase Realtime 은 토픽 멀티플렉싱됨
+  const { messages: rtMessages, sendMessage: rtSendMessage } = useDealMessages(dealId)
 
   // DR-2a: ?action=nda|loi 처리 — DR-3 에서 실제 모달로 교체 예정
   useEffect(() => {
@@ -2441,10 +2191,10 @@ export default function DealRoomPage() {
 
   if (dealLoading) {
     return (
-      <div className="min-h-screen bg-[#080F1A] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-surface-base)] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-white/40 text-sm tracking-normal">딜 정보를 불러오는 중...</p>
+          <Loader2 className="w-10 h-10 text-[var(--color-brand-mid)] animate-spin" />
+          <p className="text-[var(--color-text-tertiary)] text-sm tracking-normal">딜 정보를 불러오는 중...</p>
         </div>
       </div>
     )
@@ -2453,16 +2203,16 @@ export default function DealRoomPage() {
   // Deal not found after loading
   if (!deal) {
     return (
-      <div className="min-h-screen bg-[#080F1A] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-surface-base)] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-center px-6">
-          <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center">
-            <FolderOpen className="w-8 h-8 text-white/20" />
+          <div className="w-16 h-16 rounded-2xl bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)] flex items-center justify-center">
+            <FolderOpen className="w-8 h-8 text-[var(--color-text-muted)]" />
           </div>
-          <p className="text-white/60 text-base font-semibold">거래를 찾을 수 없습니다</p>
-          <p className="text-white/25 text-sm">딜 ID가 올바른지 확인하거나, 거래 목록으로 돌아가세요.</p>
+          <p className="text-[var(--color-text-primary)] text-base font-semibold">거래를 찾을 수 없습니다</p>
+          <p className="text-[var(--color-text-tertiary)] text-sm">딜 ID가 올바른지 확인하거나, 거래 목록으로 돌아가세요.</p>
           <button
             onClick={() => router.push("/deals")}
-            className="mt-2 px-5 py-2 bg-blue-600/80 hover:bg-blue-500 text-white text-sm font-medium rounded-xl transition-all"
+            className="mt-2 px-5 py-2 bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-mid)] text-white text-sm font-medium rounded-xl transition-all"
           >
             거래 목록으로
           </button>
@@ -2471,92 +2221,213 @@ export default function DealRoomPage() {
     )
   }
 
+  // DR-2d: 티어·스테이지·진행률 계산
+  const { tier, stage, progress } = deriveStageFromDeal(deal)
+
+  // 우측 채팅 pane — 최근 5건만 미니 뷰
+  const recentMessages: ShellChatMessage[] = rtMessages.slice(-5).map((m: any) => ({
+    id: m.id || String(m.created_at),
+    author: m.sender_name || m.name || (m.sender_id === CURRENT_USER_ID ? "나" : deal.cp.name),
+    body: m.content || m.text || "",
+    sentAt: m.created_at ? formatRelativeTime(m.created_at) : "방금",
+    mine: m.sender_id === CURRENT_USER_ID || !!m.mine,
+  }))
+
+  // 티어별 Primary CTA 핸들러 (3-Zone 셸 중앙)
+  const handlePrimary = () => {
+    switch (tier) {
+      case "L0":
+        toast.success("관심 매물로 등록되었습니다")
+        break
+      case "L1":
+        router.push(`/deals/${deal.id}?action=nda`)
+        break
+      case "L2":
+        router.push(`/deals/${deal.id}?action=loi`)
+        break
+      case "L3":
+        setActiveDetail("실사")
+        break
+      case "L4":
+        setActiveDetail("계약")
+        break
+      case "L5":
+        setActiveDetail("에스크로")
+        break
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-[#080F1A]">
-      {/* ── Sticky Header */}
-      <header className="sticky top-0 z-50 h-14 bg-[#080F1A]/95 backdrop-blur-sm border-b border-white/[0.06] flex items-center px-6 gap-4">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-1.5 text-white/40 hover:text-white transition-colors text-sm tracking-normal"
+    <div className="min-h-screen bg-[var(--color-surface-base)]">
+      <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 space-y-5">
+        {/* ── 1. 페이지 헤더 (단일 · 스테퍼 포함) */}
+        <DealHeader
+          title={deal.asset.title}
+          subtitle={`${deal.asset.collateral} · ${deal.asset.region} · 거래 #${String(deal.id).slice(0, 8)}`}
+          backHref="/deals"
+          backLabel="거래 목록"
+          stage={stage}
+          progress={progress}
+          lastActivity={rtMessages.length > 0 ? formatRelativeTime(rtMessages[rtMessages.length - 1].created_at) : "방금"}
+        />
+
+        {/* ── 2. 3-Zone 셸 (딜룸 본체 · 항상 표시) */}
+        <DealRoomShell
+          summary={
+            <DealSummaryPane
+              tier={tier}
+              data={{
+                principal: deal.asset.principal,
+                askingPrice: (deal.asset as any).askingPrice,
+                appraisalValue: deal.asset.appraisalValue,
+                collateral: {
+                  type: deal.asset.collateral,
+                  region: deal.asset.region,
+                },
+                grade: deal.asset.grade,
+                estIrr: deal.asset.yield,
+              }}
+            />
+          }
+          action={
+            <DealActionPane
+              tier={tier}
+              onPrimaryAction={handlePrimary}
+              recentOffer={
+                offers[0]
+                  ? {
+                      label: offers[0].label || "최근 오퍼",
+                      amount: offers[0].amount,
+                      status: offers[0].status || "응답 대기",
+                      date: offers[0].date,
+                    }
+                  : undefined
+              }
+              secondaryActions={[
+                {
+                  label: "실사 체크리스트 열기",
+                  onClick: () => setActiveDetail("실사"),
+                  icon: <FileSearch className="w-4 h-4" />,
+                },
+                {
+                  label: "오퍼 히스토리 보기",
+                  onClick: () => setActiveDetail("오퍼"),
+                  icon: <TrendingUp className="w-4 h-4" />,
+                },
+                {
+                  label: "AI 분석 리포트",
+                  onClick: () => setActiveDetail("AI 분석"),
+                  icon: <Brain className="w-4 h-4" />,
+                },
+              ]}
+            />
+          }
+          chat={
+            <DealChatPane
+              partner={{
+                name: deal.cp.name,
+                role: deal.cp.role,
+                online: true,
+                avatar: deal.cp.initials,
+              }}
+              messages={recentMessages}
+              documents={docs.slice(0, 6).map((d) => ({
+                id: d.id,
+                name: d.name,
+                status: "uploaded",
+              }))}
+              onSend={(text) => rtSendMessage(text, "TEXT")}
+              onDocumentClick={() => setActiveDetail("문서")}
+              placeholder="메시지 입력…"
+            />
+          }
+        />
+
+        {/* ── 3. 상세 작업 섹션 (아래 · 클릭으로 확장) */}
+        <section
+          className="bg-[var(--color-surface-raised)] border border-[var(--color-border-subtle)] rounded-2xl overflow-hidden"
+          aria-label="상세 작업"
         >
-          <ChevronLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">뒤로</span>
-        </button>
-        <div className="w-px h-5 bg-white/[0.1]" />
-        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-          <span className="font-semibold text-sm text-white tracking-normal truncate">거래 #{deal.id}</span>
-          <StatusBadge status={deal.status} />
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-[#2E75B6] flex items-center justify-center text-xs font-bold text-white">
-              {deal.cp.initials.slice(0, 1)}
-            </div>
-            <span className="text-sm text-white/60 hidden md:block tracking-normal">{deal.cp.name}</span>
-          </div>
-          <button className="px-3 py-1.5 bg-red-900/50 hover:bg-red-700/70 border border-red-700/40 text-red-300 text-xs font-medium rounded-lg transition-all tracking-normal">
-            거래 종료
-          </button>
-        </div>
-      </header>
-
-      {/* ── Progress Timeline */}
-      <ProgressTimeline current={deal.stage} />
-
-      {/* ── Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 px-4 sm:px-6 py-6 max-w-7xl mx-auto">
-        {/* Tab Panel */}
-        <div className="card-interactive-dark rounded-2xl overflow-hidden">
-          {/* Tab Navigation */}
-          <div className="flex border-b border-white/[0.06] bg-[#080F1A] px-2">
-            {TABS.map(({ key, icon: Icon }) => (
+          {/* 탭 스트립 */}
+          <div className="flex items-center gap-1 border-b border-[var(--color-border-subtle)] px-3 py-2 overflow-x-auto">
+            <span className="text-[0.6875rem] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)] pr-3 flex-shrink-0">
+              상세 작업
+            </span>
+            {DETAIL_TABS.map(({ key, label, icon: Icon }) => {
+              const active = activeDetail === key
+              return (
+                <button
+                  key={key}
+                  onClick={() => setActiveDetail(active ? null : key)}
+                  aria-pressed={active}
+                  className={[
+                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.8125rem] font-medium tracking-normal transition-all whitespace-nowrap flex-shrink-0",
+                    active
+                      ? "bg-[var(--color-brand-dark)] text-white"
+                      : "text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-overlay)] hover:text-[var(--color-text-primary)]",
+                  ].join(" ")}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{label}</span>
+                </button>
+              )
+            })}
+            {activeDetail && (
               <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`flex items-center gap-2 px-4 py-3.5 text-sm font-medium tracking-normal transition-all relative
-                  ${activeTab === key
-                    ? "text-blue-400 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-500 after:rounded-t"
-                    : "text-white/30 hover:text-white/60"}`}
+                onClick={() => setActiveDetail(null)}
+                aria-label="상세 작업 닫기"
+                className="ml-auto inline-flex items-center gap-1 px-2 py-1 rounded-md text-[0.75rem] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-overlay)] transition-colors flex-shrink-0"
               >
-                <Icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{key}</span>
+                <X className="w-3.5 h-3.5" />
+                <span>닫기</span>
               </button>
-            ))}
+            )}
           </div>
 
-          {/* Tab Content */}
-          {activeTab === "개요" && (
-            <OverviewShell deal={deal} docs={docs} offers={offers} onTabChange={setActiveTab} />
+          {/* 탭 컨텐츠 (선택 시에만) */}
+          {activeDetail === null && (
+            <div className="px-5 py-10 text-center">
+              <p className="text-[0.8125rem] text-[var(--color-text-muted)] tracking-normal">
+                위 탭을 선택하면 해당 작업 영역이 이곳에 열립니다.
+              </p>
+            </div>
           )}
-          {activeTab === "채팅" && <ChatTab dealId={dealId} deal={deal} />}
-          {activeTab === "문서" && <DocsTab docs={docs} dealId={dealId} />}
-          {activeTab === "오퍼" && <OfferTab offers={offers} dealId={dealId} />}
-          {activeTab === "실사" && <DDTab items={ddItems} dealId={dealId} />}
-          {activeTab === "계약" && (
-            signSession
-              ? <ContractTab deal={deal} session={signSession} />
-              : <div className="flex flex-col items-center justify-center h-48 gap-3 text-center p-8">
-                  <FileSignature className="w-10 h-10 text-white/10" />
-                  <p className="text-white/40 text-sm">계약 단계에 도달하면 전자서명 세션이 생성됩니다.</p>
-                </div>
+          {activeDetail === "문서" && <DocsTab docs={docs} dealId={dealId} />}
+          {activeDetail === "오퍼" && <OfferTab offers={offers} dealId={dealId} />}
+          {activeDetail === "실사" && <DDTab items={ddItems} dealId={dealId} />}
+          {activeDetail === "계약" && (
+            signSession ? (
+              <ContractTab deal={deal} session={signSession} />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-48 gap-3 text-center p-8">
+                <FileSignature className="w-10 h-10 text-[var(--color-text-muted)]" />
+                <p className="text-[var(--color-text-tertiary)] text-sm tracking-normal">
+                  계약 단계에 도달하면 전자서명 세션이 생성됩니다.
+                </p>
+              </div>
+            )
           )}
-          {activeTab === "에스크로" && (
-            escrow
-              ? <EscrowTab escrow={escrow} deal={deal} />
-              : <div className="flex flex-col items-center justify-center h-48 gap-3 text-center p-8">
-                  <Wallet className="w-10 h-10 text-white/10" />
-                  <p className="text-white/40 text-sm">에스크로 계좌는 계약 체결 후 개설됩니다.</p>
-                </div>
+          {activeDetail === "에스크로" && (
+            escrow ? (
+              <EscrowTab escrow={escrow} deal={deal} />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-48 gap-3 text-center p-8">
+                <Wallet className="w-10 h-10 text-[var(--color-text-muted)]" />
+                <p className="text-[var(--color-text-tertiary)] text-sm tracking-normal">
+                  에스크로 계좌는 계약 체결 후 개설됩니다.
+                </p>
+              </div>
+            )
           )}
-          {activeTab === "미팅" && <MeetingTab meetings={meetings} />}
-          {activeTab === "감사" && <AuditTab logs={auditLogs} />}
-        </div>
-
-        {/* Right Sidebar */}
-        <aside>
-          <RightPanel deal={deal} onTabSwitch={setActiveTab} />
-        </aside>
-      </div>
+          {activeDetail === "미팅" && <MeetingTab meetings={meetings} />}
+          {activeDetail === "AI 분석" && (
+            <div className="p-5">
+              <OverviewTab deal={deal} />
+            </div>
+          )}
+          {activeDetail === "감사" && <AuditTab logs={auditLogs} />}
+        </section>
+      </main>
     </div>
   )
 }
