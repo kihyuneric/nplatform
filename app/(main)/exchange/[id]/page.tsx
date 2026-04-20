@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import {
@@ -33,6 +33,20 @@ import { calculateFee, BASE_RATES, PNR_RATE } from "@/lib/settlement/fee-engine"
 import { formatAIGrade } from "@/lib/taxonomy"
 import { createClient } from "@/lib/supabase/client"
 import { maskInstitutionName } from "@/lib/mask"
+// DR-3-B (2026-04-21) — 자산 통합 경험: 3-Zone 딜룸 인라인 마운트
+import {
+  DealRoomShell,
+  DealHeader,
+  DealSummaryPane,
+  DealActionPane,
+  DealChatPane,
+  type DealStage as RoomDealStage,
+  type ChatMessage,
+  type ChatPartner,
+  type ChatDocument,
+} from "@/components/deal-room"
+import { useAssetTier, type AssetTier } from "@/hooks/use-asset-tier"
+import { toast } from "sonner"
 
 /* ═══════════════════════════════════════════════════════════
    DESIGN TOKENS — NP-3 재설계 (2026-04-20)
@@ -339,12 +353,17 @@ interface AIAnalysisResult {
 export default function ListingDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const id = (params?.id as string) ?? "npl-2026-0412"
+  const viaDealRoom = searchParams?.get("via") === "deal-room"
 
   // Real listing state — starts with mock fallback, replaced by DB data if found
   const [listing, setListing] = useState<ListingDetail>(() => buildMock(id))
   const [tier, setTier] = useUserTier()
   const [dealCreating, setDealCreating] = useState(false)
+
+  // DR-3-B: 자산 통합 티어 hook (AccessTier + DealStage → AssetTier L0~L5)
+  const assetTier = useAssetTier(id)
 
   // ── 딜룸 입장: 기존 딜 조회 후 없으면 신규 생성 → /deals/{dealId} 이동 ──
   const handleEnterDealRoom = useCallback(async () => {
@@ -690,6 +709,45 @@ export default function ListingDetailPage() {
           </motion.div>
         </div>
       </section>
+
+      {/* ═══════════════════════════════════════════════════════
+          DR-3-B · 자산 통합 딜룸 섹션 (티어 L2+ 또는 ?via=deal-room)
+          L2 이상이면 3-Zone 셸이 상단에 surface 되어 "내 진행 상황" 즉시 확인 가능.
+          L0/L1 은 이 섹션이 숨겨지고 기존 상세 UI 만 노출됩니다.
+      ═══════════════════════════════════════════════════════ */}
+      {(assetTier.tier !== "L0" && assetTier.tier !== "L1") || viaDealRoom ? (
+        <section
+          id="deal-room"
+          style={{
+            maxWidth: 1440,
+            margin: "0 auto",
+            padding: "24px 24px 0",
+          }}
+        >
+          <InlineAssetRoom
+            listing={listing}
+            assetTier={assetTier.tier}
+            dealStage={assetTier.dealStage}
+            dealId={assetTier.dealId}
+            primaryActionLabel={assetTier.primaryAction.label}
+            onPrimaryAction={() => {
+              // 티어별 CTA → 기존 흐름으로 연결 (DR-3-D 에서 인라인 모달로 승격 예정)
+              const action = assetTier.primaryAction
+              if (action.href) {
+                // 외부 페이지 이동이 필요한 경우
+                if (action.href.startsWith("/my/") || action.href.startsWith("/auth/")) {
+                  router.push(action.href)
+                  return
+                }
+                // 같은 exchange 경로 쿼리 갱신
+                router.push(action.href)
+              } else {
+                toast.info("곧 지원됩니다.")
+              }
+            }}
+          />
+        </section>
+      ) : null}
 
       {/* ── Main Content ──────────────────────────── */}
       <section style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 24px 80px" }}>
@@ -1659,6 +1717,114 @@ function FeeRow({
           </span>
         )}
       </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   InlineAssetRoom — DR-3-B 자산 통합 딜룸 (2026-04-21)
+   매물 상세 페이지 상단에 "지금 내 진행 상황" 을 surface 하는 섹션.
+   기존 /deals/[id] 의 3-Zone 셸을 축약 렌더링.
+═══════════════════════════════════════════════════════════ */
+function InlineAssetRoom({
+  listing,
+  assetTier,
+  dealStage,
+  dealId,
+  primaryActionLabel,
+  onPrimaryAction,
+}: {
+  listing: ListingDetail
+  assetTier: AssetTier
+  dealStage: RoomDealStage | null | string
+  dealId: string | null
+  primaryActionLabel: string
+  onPrimaryAction: () => void
+}) {
+  // DR-3-B 간소 매핑: AssetTier L0~L5 → DealHeader 6단계
+  const stageLabel: RoomDealStage = (() => {
+    switch (assetTier) {
+      case "L0": return "관심"
+      case "L1": return "관심"
+      case "L2": return "NDA"
+      case "L3": return "실사"
+      case "L4": return "서명"
+      case "L5": return "정산"
+      default: return "관심"
+    }
+  })()
+  const progress = ({
+    L0: 5, L1: 15, L2: 35, L3: 55, L4: 80, L5: 100,
+  } as const)[assetTier] ?? 0
+
+  // 요약 pane 데이터 — 기존 listing 에서 파생
+  const summaryData = {
+    principal: listing.outstanding_principal,
+    askingPrice: listing.asking_price,
+    appraisalValue: listing.appraisal_value,
+    collateral: {
+      type: listing.collateral,
+      region: `${listing.region_city} ${listing.region_district}`,
+    },
+    grade: listing.ai_grade,
+    estIrr: assetTier === "L2" || assetTier === "L3" || assetTier === "L4" || assetTier === "L5" ? "18.5%" : undefined,
+  }
+
+  // 채팅 더미 데이터 (실시간 연동은 /deals/[id] 흡수 완료 시 Supabase 채널로 교체 — DR-3-D)
+  const partner: ChatPartner = {
+    name: assetTier === "L0" || assetTier === "L1" ? "매도자 담당자" : maskInstitutionName(listing.institution),
+    role: "매도자",
+    online: assetTier === "L2" || assetTier === "L3",
+  }
+  const messages: ChatMessage[] = dealId
+    ? [
+        { id: "m1", author: partner.name, body: "자료 요청 주신 건 검토 중입니다.", sentAt: "방금" },
+      ]
+    : []
+  const documents: ChatDocument[] = dealId
+    ? [
+        { id: "d1", name: "NDA.pdf", status: assetTier === "L2" || assetTier === "L3" ? "signed" : "pending" },
+      ]
+    : []
+
+  const _unusedStage = dealStage // reserved for DR-3-D
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <DealHeader
+        title={`${listing.region_city} ${listing.collateral} NPL`}
+        subtitle={`${listing.institution} · ${listing.court_case_masked}`}
+        backHref="/exchange"
+        backLabel="매물 탐색"
+        stage={stageLabel}
+        progress={progress}
+        lastActivity={messages[0]?.sentAt}
+      />
+      <DealRoomShell
+        summary={<DealSummaryPane tier={assetTier} data={summaryData} />}
+        action={
+          <DealActionPane
+            tier={assetTier}
+            onPrimaryAction={onPrimaryAction}
+            // primaryActionLabel 은 CTA_BY_TIER 기본값을 override 하지 않음 (DR-3-D 에서 주입 API 확장 예정)
+          />
+        }
+        chat={
+          <DealChatPane
+            partner={partner}
+            messages={messages}
+            documents={documents}
+            onSend={(text) => {
+              // DR-3-D 에서 Supabase Realtime 채널로 전송 예정
+              if (!text.trim()) return
+              toast.info("딜룸 채팅 전송은 곧 활성화됩니다.")
+            }}
+            placeholder={assetTier === "L0" || assetTier === "L1" ? "NDA 체결 후 채팅 가능합니다" : "메시지 입력..."}
+          />
+        }
+      />
+      {/* dead-code 방지용 참조 */}
+      <span style={{ display: "none" }}>{primaryActionLabel}{String(_unusedStage ?? "")}</span>
     </div>
   )
 }
