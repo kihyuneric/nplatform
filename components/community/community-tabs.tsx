@@ -2,12 +2,11 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bell, Newspaper, MessageSquare } from "lucide-react"
+import { Bell, Newspaper } from "lucide-react"
 
 const TABS = [
-  { href: "/notices",            label: "공지사항",  icon: Bell,          exact: true  },
-  { href: "/news",               label: "NPL 뉴스",  icon: Newspaper,     exact: false },
-  { href: "/services/community", label: "커뮤니티",  icon: MessageSquare, exact: false },
+  { href: "/notices", label: "공지사항", icon: Bell,      exact: true  },
+  { href: "/news",    label: "NPL 뉴스", icon: Newspaper, exact: false },
 ]
 
 export function CommunityTabs() {
