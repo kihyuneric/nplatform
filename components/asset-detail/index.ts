@@ -9,3 +9,4 @@ export { AssetHeroSummary, type AssetHeroSummaryProps } from "./asset-hero-summa
 export { KpiRow, type KpiItem, type KpiRowProps } from "./kpi-row"
 export { PrimaryActionCard, type PrimaryActionCardProps } from "./primary-action-card"
 export { DetailTabs, type DetailTabKey, type DetailTabsProps } from "./detail-tabs"
+export { ActionSheet, type ActionSheetProps } from "./action-sheet"

@@ -31,6 +31,7 @@ import {
   KpiRow,
   PrimaryActionCard,
   DetailTabs,
+  ActionSheet,
 } from "@/components/asset-detail"
 import { useAssetTier } from "@/hooks/use-asset-tier"
 import type { AssetTier } from "@/hooks/use-asset-tier"
@@ -235,6 +236,7 @@ export default function ListingDetailPage() {
   /* ─── Mock 진행 티어 (API 미연동) ───
    * localStorage 에 저장되어 새로고침/탭 이동 후에도 단계가 유지됩니다. */
   const [mockTier, setMockTier] = useState<AssetTier>("L0")
+  const [actionOpen, setActionOpen] = useState(false)
   useEffect(() => {
     if (typeof window === "undefined") return
     const saved = window.localStorage.getItem(MOCK_STORAGE_KEY(id))
@@ -318,16 +320,19 @@ export default function ListingDetailPage() {
     })()
   }, [id])
 
-  // ── Primary CTA 실행: Mock 진행 시뮬레이션 ──
-  // API 미연동 상태에서는 클릭할 때마다 티어가 한 단계 승급되며,
-  // localStorage 에 저장되어 단계가 유지됩니다.
+  // ── Primary CTA: 세부 액션 모달 열기 ──
   const handlePrimaryAction = useCallback(() => {
-    // 최종 단계 → 정산 내역 노출 (새로고침 없이 토스트만)
+    setActionOpen(true)
+  }, [])
+
+  // ── 모달 내부 "승인/서명" 버튼 — 티어 승급 ──
+  const handleConfirmStep = useCallback(() => {
+    setActionOpen(false)
+    // L5 에서 확인 버튼은 닫기만 수행
     if (effectiveTier === "L5") {
       toast.success(TIER_TRANSITION_MSG.L5, { duration: 3500 })
       return
     }
-    // 다음 티어로 승급
     const currentIdx = TIER_ORDER.indexOf(effectiveTier)
     const nextTier = TIER_ORDER[currentIdx + 1] ?? "L5"
     setMockTier(nextTier)
@@ -498,6 +503,16 @@ export default function ListingDetailPage() {
         variant="mobile-sticky"
       />
       <div className="md:hidden" style={{ height: 96 }} aria-hidden />
+
+      {/* ═══ ActionSheet: 티어별 세부 폼 모달 ═══ */}
+      <ActionSheet
+        open={actionOpen}
+        tier={effectiveTier}
+        assetTitle={title}
+        askingPrice={listing.asking_price}
+        onClose={() => setActionOpen(false)}
+        onConfirm={handleConfirmStep}
+      />
 
       {/* ═══ Footer: 컴플라이언스 고지 (최소 노출) ═══ */}
       <footer
