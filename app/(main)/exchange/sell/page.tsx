@@ -1201,10 +1201,10 @@ function FormGrid({ cols, children }: { cols: 1 | 2; children: React.ReactNode }
 function Field({ label, required, hint, children, style }: { label: string; required?: boolean; hint?: string; children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div style={style}>
-      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--fg-default)", fontWeight: 600, marginBottom: 6 }}>
         {label}
         {required && <span style={{ color: C.rose }}>*</span>}
-        {hint && <span style={{ color: C.lt4, fontWeight: 500, opacity: 0.75 }}>· {hint}</span>}
+        {hint && <span style={{ color: "var(--fg-muted)", fontWeight: 500 }}>· {hint}</span>}
       </div>
       {children}
     </div>
@@ -1219,8 +1219,9 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
       placeholder={placeholder}
       style={{
         width: "100%", padding: "11px 14px", borderRadius: 10,
-        backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
-        color: "var(--color-text-primary)", fontSize: 13, outline: "none",
+        backgroundColor: "var(--layer-3-bg)",
+        border: `1px solid var(--layer-border)`,
+        color: "var(--fg-strong)", fontSize: 13, outline: "none",
       }}
     />
   )
@@ -1247,8 +1248,9 @@ function NumberInput({ value, onChange, placeholder, suffix }: { value: number; 
         placeholder={placeholder ? Number(placeholder.replace(/[^0-9]/g, '') || '0').toLocaleString('ko-KR') || placeholder : ""}
         style={{
           width: "100%", padding: "11px 40px 11px 14px", borderRadius: 10,
-          backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
-          color: "var(--color-text-primary)", fontSize: 13, outline: "none",
+          backgroundColor: "var(--layer-3-bg)",
+          border: `1px solid var(--layer-border)`,
+          color: "var(--fg-strong)", fontSize: 13, outline: "none",
         }}
       />
       {suffix && (
@@ -1271,22 +1273,49 @@ function SelectInput({ value, options, onChange, placeholder }: {
   onChange: (v: string) => void
   placeholder?: string
 }) {
+  // NP-7: Layer System v3 준수 — value 선택 시 fg-strong, placeholder 시 fg-muted
+  // (이전: value ? "#fff" : C.lt4 → 라이트 배경에서 흰글씨 버그)
   return (
-    <select
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      style={{
-        width: "100%", padding: "11px 14px", borderRadius: 10,
-        backgroundColor: C.bg3, border: `1px solid ${C.bg4}`,
-        color: value ? "#fff" : C.lt4, fontSize: 13, outline: "none",
-        appearance: "none", cursor: "pointer",
-      }}
-    >
-      {placeholder && <option value="" disabled>{placeholder}</option>}
-      {options.map(opt => (
-        <option key={opt.value} value={opt.value} style={{ backgroundColor: C.bg3 }}>{opt.label}</option>
-      ))}
-    </select>
+    <div style={{ position: "relative" }}>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        style={{
+          width: "100%", padding: "11px 36px 11px 14px", borderRadius: 10,
+          backgroundColor: "var(--layer-3-bg)",
+          border: `1px solid var(--layer-border)`,
+          color: value ? "var(--fg-strong)" : "var(--fg-muted)",
+          fontSize: 13, outline: "none",
+          appearance: "none", cursor: "pointer",
+        }}
+      >
+        {placeholder && <option value="" disabled>{placeholder}</option>}
+        {options.map(opt => (
+          <option
+            key={opt.value}
+            value={opt.value}
+            style={{
+              backgroundColor: "var(--layer-1-bg)",
+              color: "var(--fg-strong)",
+            }}
+          >
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      {/* caret 아이콘 — 네이티브 화살표 대체 */}
+      <svg
+        aria-hidden="true"
+        style={{
+          position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+          pointerEvents: "none", color: "var(--fg-muted)",
+        }}
+        width="14" height="14" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      >
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </div>
   )
 }
 

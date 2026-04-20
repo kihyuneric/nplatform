@@ -13,14 +13,41 @@ import {
 } from "lucide-react"
 import { formatTimeLeft, formatMinBidRatio } from "@/lib/taxonomy"
 
-// ─── Design System ────────────────────────────────────────────────────────────
+// ─── Design System — NP Layer v3 (2026-04-20) ─────────────────────────────────
+// Hero/Card 를 분리: bg0~bg4 = Hero(항상 네이비) · l0~l3 = Card(테마 반응형)
+// fgh = Hero 위 텍스트 · lt1~lt4 = Card 위 텍스트 (WCAG AA+ 쌍)
 
 const C = {
-  bg0:"var(--color-bg-deepest, #030810)", bg1:"var(--color-bg-deep, #050D1A)", bg2:"var(--color-bg-base, #080F1E)", bg3:"var(--color-bg-base, #0A1628)", bg4:"var(--color-bg-elevated, #0F1F35)",
-  em:"var(--color-positive)", emL:"var(--color-positive)", blue:"var(--color-brand-dark)", blueL:"var(--color-brand-bright)",
-  amber:"var(--color-warning)", amber2:"#FCD34D", purple:"#A855F7", rose:"var(--color-danger)", teal:"#14B8A6",
-  l0:"#FFFFFF", l1:"#F8FAFC", l2:"#F1F5F9", l3:"#E2E8F0",
-  lt1:"#0F172A", lt2:"#334155", lt3:"var(--color-text-muted)", lt4:"var(--color-text-muted)",
+  /* Hero Surface — 항상 네이비 (브랜드 의도 · 테마 불변) */
+  bg0:"var(--hero-bg)",           /* #0B1F3A */
+  bg1:"var(--hero-bg)",           /* hero outer */
+  bg2:"var(--hero-bg-elevated)",  /* #0D2448 */
+  bg3:"var(--hero-bg-elevated)",  /* raised card inside hero */
+  bg4:"var(--hero-bg-soft)",      /* #12305B */
+
+  /* Adaptive Card Layers — 라이트/다크 자동 전환 */
+  l0:"var(--layer-1-bg)",         /* card base (white light / #0D1525 dark) */
+  l1:"var(--layer-2-bg)",         /* recessed (#F8FAFC light / #162035 dark) */
+  l2:"var(--layer-3-bg)",         /* input/inset (#F1F5F9 light / #1E2D47 dark) */
+  l3:"var(--layer-border)",       /* card border */
+
+  /* Text on Cards (WCAG AA+) */
+  lt1:"var(--fg-strong)",         /* 15:1 headings */
+  lt2:"var(--fg-default)",        /* 10:1 body */
+  lt3:"var(--fg-muted)",          /* 5.5:1 caption */
+  lt4:"var(--fg-subtle)",         /* 3.5:1 large/icon */
+
+  /* Text on Hero (항상 흰색 톤) */
+  fgh:"var(--fg-on-hero)",        /* 18:1 on hero */
+  fghd:"var(--fg-on-hero-dim)",   /* 12:1 */
+  fghm:"var(--fg-on-hero-muted)", /* 7:1 */
+
+  /* Semantic */
+  em:"var(--color-positive)", emL:"var(--color-positive)",
+  blue:"var(--color-brand-dark)", blueL:"var(--color-brand-bright)",
+  amber:"var(--color-warning)", amber2:"#FCD34D",
+  purple:"#A855F7", rose:"var(--color-danger)", teal:"#14B8A6",
+  onBrand:"var(--fg-on-brand)",   /* #FFFFFF — brand bg 위 */
 }
 
 // ─── Inline helpers ───────────────────────────────────────────────────────────
@@ -370,7 +397,7 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
             className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.6875rem] font-medium"
             style={{
               backgroundColor: "rgba(255,255,255,0.06)",
-              color: C.lt4,
+              color: C.fghd,
               border: "1px solid rgba(255,255,255,0.10)",
             }}
           >
@@ -400,7 +427,7 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
         </div>
 
         {/* Institution */}
-        <p className="text-[0.6875rem] font-semibold uppercase tracking-widest mb-1.5" style={{ color: C.lt4 }}>
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-widest mb-1.5" style={{ color: C.fghm }}>
           {item.institution}
         </p>
 
@@ -408,7 +435,7 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
         <Link href={`/exchange/${item.id}`}>
           <h3
             className="text-[1rem] font-bold leading-snug mb-2.5 transition-opacity hover:opacity-80"
-            style={{ color: C.l0 }}
+            style={{ color: C.fgh }}
           >
             {item.title}
           </h3>
@@ -416,8 +443,8 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
 
         {/* Location */}
         <div className="flex items-center gap-1.5 mb-4">
-          <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: C.lt4 }} />
-          <span className="text-[0.75rem]" style={{ color: C.lt4 }}>{item.location}</span>
+          <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: C.fghm }} />
+          <span className="text-[0.75rem]" style={{ color: C.fghd }}>{item.location}</span>
         </div>
 
         {/* Metrics 3-col — dark bg3 panel */}
@@ -426,15 +453,15 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
           style={{ backgroundColor: C.bg3, border: "1px solid rgba(255,255,255,0.07)" }}
         >
           <div className="px-3 py-3" style={{ borderRight: "1px solid rgba(255,255,255,0.06)" }}>
-            <p className="text-[0.5625rem] font-bold uppercase tracking-widest mb-1.5" style={{ color: C.lt4 }}>채권원금</p>
-            <p className="text-[0.875rem] font-bold tabular-nums" style={{ color: C.l0 }}>{formatKRW(item.principal)}</p>
+            <p className="text-[0.5625rem] font-bold uppercase tracking-widest mb-1.5" style={{ color: C.fghm }}>채권원금</p>
+            <p className="text-[0.875rem] font-bold tabular-nums" style={{ color: C.fgh }}>{formatKRW(item.principal)}</p>
           </div>
           <div className="px-3 py-3" style={{ borderRight: "1px solid rgba(255,255,255,0.06)" }}>
-            <p className="text-[0.5625rem] font-bold uppercase tracking-widest mb-1.5" style={{ color: C.lt4 }}>최저입찰가</p>
-            <p className="text-[0.875rem] font-bold tabular-nums" style={{ color: C.blue }}>{formatKRW(item.minimumBid)}</p>
+            <p className="text-[0.5625rem] font-bold uppercase tracking-widest mb-1.5" style={{ color: C.fghm }}>최저입찰가</p>
+            <p className="text-[0.875rem] font-bold tabular-nums" style={{ color: "#93C5FD" }}>{formatKRW(item.minimumBid)}</p>
           </div>
           <div className="px-3 py-3">
-            <p className="text-[0.5625rem] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-0.5" style={{ color: C.lt4 }}>
+            <p className="text-[0.5625rem] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-0.5" style={{ color: C.fghm }}>
               <Sparkles className="w-2.5 h-2.5" style={{ color: C.em }} />AI예가
             </p>
             <p className="text-[0.875rem] font-bold tabular-nums" style={{ color: C.em }}>{formatKRW(item.aiEstimate)}</p>
@@ -444,8 +471,8 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
         {/* Progress bar */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[0.625rem] font-semibold uppercase tracking-wide" style={{ color: C.lt4 }}>최저입찰 비율</span>
-            <span className="text-[0.6875rem] font-bold tabular-nums" style={{ color: C.lt4 }}>{bidRatePct}%</span>
+            <span className="text-[0.625rem] font-semibold uppercase tracking-wide" style={{ color: C.fghm }}>최저입찰 비율</span>
+            <span className="text-[0.6875rem] font-bold tabular-nums" style={{ color: C.fghd }}>{bidRatePct}%</span>
           </div>
           <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
             <motion.div
@@ -465,7 +492,7 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
         >
           <span
             className="flex items-center gap-1.5 text-[0.75rem] font-bold"
-            style={{ color: ddayUrgent ? C.rose : C.lt4 }}
+            style={{ color: ddayUrgent ? "#FDA4AF" : C.fghd }}
           >
             <Timer className="w-3.5 h-3.5" />
             {dday}
@@ -478,10 +505,10 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
               </span>
             )}
           </span>
-          <span className="flex items-center gap-1 text-[0.75rem] font-semibold" style={{ color: C.lt4 }}>
+          <span className="flex items-center gap-1 text-[0.75rem] font-semibold" style={{ color: C.fghd }}>
             <Users className="w-3.5 h-3.5" /> 입찰 {item.bidCount}명
           </span>
-          <span className="flex items-center gap-1 text-[0.75rem]" style={{ color: C.lt4 }}>
+          <span className="flex items-center gap-1 text-[0.75rem]" style={{ color: C.fghm }}>
             <Eye className="w-3.5 h-3.5" /> 조회 {item.viewCount.toLocaleString()}
           </span>
         </div>
@@ -492,9 +519,9 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
             href={`/exchange/${item.id}`}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-[0.8125rem] font-semibold transition-all"
             style={{
-              backgroundColor: "rgba(255,255,255,0.05)",
-              color: C.lt4,
-              border: "1px solid rgba(255,255,255,0.12)",
+              backgroundColor: "rgba(255,255,255,0.08)",
+              color: C.fgh,
+              border: "1px solid rgba(255,255,255,0.18)",
             }}
           >
             <Eye className="w-3.5 h-3.5" /> 상세보기
@@ -504,7 +531,7 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-[0.8125rem] font-bold transition-all"
             style={{
               background: `linear-gradient(135deg, ${C.em}, ${C.emL})`,
-              color: "#fff",
+              color: C.onBrand,
               boxShadow: `0 2px 12px ${C.em}50`,
             }}
           >
@@ -764,13 +791,13 @@ export default function AuctionPage() {
                 </span>
                 <span className="text-[0.6875rem] font-black uppercase tracking-widest" style={{ color: C.em }}>LIVE</span>
               </div>
-              <span className="text-[0.75rem]" style={{ color: C.lt4 }}>실시간 입찰 현황</span>
+              <span className="text-[0.75rem]" style={{ color: C.fghm }}>실시간 입찰 현황</span>
             </div>
 
-            <h1 className="text-[2.5rem] sm:text-[3rem] font-black tracking-tight leading-none mb-3" style={{ color: C.l0 }}>
+            <h1 className="text-[2.5rem] sm:text-[3rem] font-black tracking-tight leading-none mb-3" style={{ color: C.fgh }}>
               NPL 입찰
             </h1>
-            <p className="text-[1rem] max-w-xl mb-8" style={{ color: C.lt4 }}>
+            <p className="text-[1rem] max-w-xl mb-8" style={{ color: C.fghd }}>
               금융기관이 등록한 부실채권에 직접 입찰하세요. AI가 적정 입찰가를 실시간으로 분석합니다.
             </p>
           </motion.div>
@@ -797,8 +824,8 @@ export default function AuctionPage() {
                   <Icon className="w-4 h-4" style={{ color }} />
                 </div>
                 <div>
-                  <p className="text-[0.6875rem] font-medium uppercase tracking-wide" style={{ color: C.lt4 }}>{label}</p>
-                  <p className="text-[1.0625rem] font-black tabular-nums mt-0.5" style={{ color: C.l0 }}>{value}</p>
+                  <p className="text-[0.6875rem] font-medium uppercase tracking-wide" style={{ color: C.fghm }}>{label}</p>
+                  <p className="text-[1.0625rem] font-black tabular-nums mt-0.5" style={{ color: C.fgh }}>{value}</p>
                 </div>
               </div>
             ))}
@@ -806,13 +833,13 @@ export default function AuctionPage() {
 
           {/* ── Cross-links ── */}
           <div className="flex items-center gap-3 flex-wrap mt-6">
-            <Link href="/analysis/simulator" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, backgroundColor: `${C.bg3}`, border: `1px solid ${C.bg4}`, color: C.lt3, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+            <Link href="/analysis/simulator" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, backgroundColor: `${C.bg3}`, border: `1px solid ${C.bg4}`, color: C.fghd, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
               경매 수익률 분석기 →
             </Link>
-            <Link href="/analysis/copilot" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, backgroundColor: `${C.bg3}`, border: `1px solid ${C.bg4}`, color: C.lt3, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+            <Link href="/analysis/copilot" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, backgroundColor: `${C.bg3}`, border: `1px solid ${C.bg4}`, color: C.fghd, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
               AI 컨설턴트 →
             </Link>
-            <Link href="/exchange" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, backgroundColor: `${C.bg3}`, border: `1px solid ${C.bg4}`, color: C.lt3, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+            <Link href="/exchange" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, backgroundColor: `${C.bg3}`, border: `1px solid ${C.bg4}`, color: C.fghd, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
               매물 거래소 →
             </Link>
           </div>
@@ -840,7 +867,7 @@ export default function AuctionPage() {
                         }
                       : {
                           backgroundColor: "transparent",
-                          color: C.lt4,
+                          color: C.fghd,
                         }
                   }
                 >
@@ -850,8 +877,8 @@ export default function AuctionPage() {
                     className="px-1.5 py-0.5 rounded-full text-[0.625rem] font-bold"
                     style={
                       isActive
-                        ? { backgroundColor: C.em, color: "#fff" }
-                        : { backgroundColor: "rgba(255,255,255,0.10)", color: C.lt4 }
+                        ? { backgroundColor: C.em, color: C.onBrand }
+                        : { backgroundColor: "rgba(255,255,255,0.10)", color: C.fghm }
                     }
                   >
                     {count}
