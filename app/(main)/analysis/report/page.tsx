@@ -40,6 +40,68 @@ const fmtKRW = (v: number) => {
 }
 const pct = (v: number) => `${v.toFixed(1)}%`
 
+/**
+ * 리스크 5팩터(담보가치/권리관계/시장/유동성/법적)별 점수 산출 계산식을 생성한다.
+ * 각 팩터는 3팩터 엔진 결과(LTV/지역동향/낙찰가율)와 특수조건을 조합해 점수를 산출하므로
+ * 해당 구성 요소를 전개해 "왜 이 점수인가"를 투명하게 설명.
+ */
+function buildRiskFactorFormula(
+  f: UnifiedAnalysisReport["risk"]["factors"][number],
+  recovery: UnifiedAnalysisReport["recovery"],
+  input: UnifiedAnalysisReport["input"],
+): string {
+  const ltv = recovery.factors.ltv
+  const region = recovery.factors.regionTrend
+  const auc = recovery.factors.auctionRatio
+  const sc = input.specialConditions
+  switch (f.category) {
+    case "담보가치":
+      return (
+        `LTV = 채권액 / 감정가 × 100\n` +
+        `    = ${fmtKRW(ltv.totalBondAmount)}원 / ${fmtKRW(ltv.collateralValue)}원 × 100\n` +
+        `    = ${ltv.ltvPercent.toFixed(2)}%\n\n` +
+        `담보가치 점수 = LTV 팩터 점수 그대로 반영\n` +
+        `           = ${ltv.score}점 (구간: ≤40%→100·≤60%→85·≤80%→65·≤100%→45·초과 감점)`
+      )
+    case "권리관계":
+      return (
+        `선순위 임차인 존재 여부 → 보증금 인수 리스크\n` +
+        `현재 상태: ${sc.seniorTenant ? "선순위 임차인 있음 (보증금 인수)" : "특이사항 없음"}\n\n` +
+        `점수 산정:\n` +
+        `  · 선순위 임차인 있음 → 55점 (MEDIUM)\n` +
+        `  · 없음              → 80점 (LOW)\n` +
+        `→ ${f.score}점 (${f.severity})`
+      )
+    case "시장":
+      return (
+        `지역 동향 점수 = 50 + 거래량변동×0.35 + 가격지수변동×0.45 (0~100 클램프)\n` +
+        `            = 50 + (${region.transactionVolumeChange.toFixed(1)})×0.35 + (${region.priceIndexChange.toFixed(1)})×0.45\n` +
+        `            = ${region.score}점\n\n` +
+        `낙찰가율 모멘텀 = ${region.auctionMomentum > 0 ? "+" : ""}${region.auctionMomentum}%p (1M − 12M)\n` +
+        `시장 리스크 점수 = 지역 동향 점수 그대로 반영 → ${f.score}점 (${f.severity})`
+      )
+    case "유동성":
+      return (
+        `기대 매각 기간(일) = 법원 1회차 매각 평균\n` +
+        `                 = ${auc.expectedSaleDays ?? "—"}일 (${auc.courtName ?? "관할법원"})\n\n` +
+        `유동성 판정: >400일 → MEDIUM · ≤400일 → LOW\n` +
+        `질권 이자 부담 = 질권비율 × 금리 × 보유기간 (수익성 블록 참조)\n` +
+        `→ 유동성 점수 ${f.score}점 (${f.severity})`
+      )
+    case "법적":
+      return (
+        `특수조건 검사 · ${Object.entries(sc).filter(([, v]) => v).length}건 해당\n` +
+        `  · 유치권 ${sc.lienRight ? "✓" : "✗"}  · 법정지상권 ${sc.statutorySuperficies ? "✓" : "✗"}\n` +
+        `  · 지분경매 ${sc.sharedAuction ? "✓" : "✗"}  · 선순위임차인 ${sc.seniorTenant ? "✓" : "✗"}\n` +
+        `  · 위반건축물 ${sc.illegalBuilding ? "✓" : "✗"}  · 분묘기지권 ${sc.graveYardRight ? "✓" : "✗"}  · 농지취득 ${sc.farmlandRestriction ? "✓" : "✗"}\n\n` +
+        `법적 점수 = 해당 없음 → 80점 · 1건 이상 → 감점 (건당 -10점)\n` +
+        `→ ${f.score}점 (${f.severity})`
+      )
+    default:
+      return `점수 = ${f.score} / 100\n근거: ${f.explanation}`
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 export default function UnifiedReportPage() {
   const params = useSearchParams()
@@ -141,6 +203,20 @@ export default function UnifiedReportPage() {
           )}
         </div>
       </section>
+
+      {/* ── 등기부 미첨부 경고 ──────────────────────── */}
+      {!report.registryAnalysis && (
+        <section className={`${DS.page.container} mt-4`}>
+          <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 flex items-start gap-3">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+            <div className="flex-1 min-w-0 text-[0.8125rem] text-amber-800 dark:text-amber-200 leading-relaxed">
+              <div className="font-bold mb-1">등기부등본 미첨부 · 분석 불가</div>
+              등기부등본이 첨부되지 않아 권리관계·예상배당표·후순위 채권 소멸 여부를 확정 분석할 수 없습니다.
+              등기부등본 업로드 시 본 리포트가 자동 재계산됩니다. (현재 표시는 기초 수치 기준 추정)
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── 1. KPI 요약 ─────────────────────────────── */}
       <section className={`${DS.page.container} py-6`}>
@@ -351,6 +427,10 @@ export default function UnifiedReportPage() {
               <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] leading-relaxed italic">
                 → {f.mitigation}
               </p>
+              <FormulaToggle
+                label="계산식"
+                formula={buildRiskFactorFormula(f, recovery, input)}
+              />
             </div>
           ))}
         </div>
@@ -432,7 +512,7 @@ export default function UnifiedReportPage() {
           icon={Database}
           caption="예상 낙찰가 / 낙찰가율 / 법원 기일 / 낙찰사례 / 실거래 / 배당표"
         >
-          <EvidenceTabs block={profitability} />
+          <EvidenceTabs block={profitability} expectedBid={report.expectedBid} />
         </Section>
       )}
 
@@ -451,6 +531,7 @@ export default function UnifiedReportPage() {
             <span>•</span>
             <span>원천 · {report.source}</span>
           </div>
+          <PromptToggle report={report} />
         </div>
       </section>
     </div>
@@ -624,6 +705,79 @@ function VerdictCriteriaToggle({
             </div>
           </div>
         </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * AI 총평에 사용된 생성형 AI 프롬프트를 클릭 토글로 표시.
+ * 리포트 전 블록(KPI·3팩터·리스크·수익성·시장 전망)의 핵심 수치를 합성해 최종 결론을 유도.
+ */
+function PromptToggle({ report }: { report: UnifiedAnalysisReport }) {
+  const [open, setOpen] = useState(false)
+  const { summary, recovery, risk, marketOutlook, input, profitability } = report
+  const prompt =
+    `역할: 당신은 20년차 NPL 투자 심사역입니다.\n` +
+    `과제: 아래 수치를 종합하여 투자 의사결정(BUY/HOLD/AVOID)과 근거를 한 문단(3~4문장)으로 제시하십시오.\n\n` +
+    `━━━━━━━━━━━━━━━━ 입력 ━━━━━━━━━━━━━━━━\n` +
+    `[물건]\n` +
+    `  · 자산      : ${input.assetTitle}\n` +
+    `  · 지역      : ${input.region}\n` +
+    `  · 유형      : ${input.propertyCategory}\n` +
+    `  · 감정가    : ${fmtKRW(input.appraisalValue)}\n` +
+    `  · 채권액    : ${fmtKRW(input.totalBondAmount)}\n` +
+    `  · 최저입찰가: ${input.minBidPrice != null ? fmtKRW(input.minBidPrice) : "—"}\n` +
+    `  · 현재시세  : ${input.currentMarketValue != null ? fmtKRW(input.currentMarketValue) : "—"}\n` +
+    `  · 선순위임차: ${input.specialConditions.seniorTenant ? "있음" : "없음"}\n\n` +
+    `[3팩터 회수율 엔진]\n` +
+    `  · LTV        : ${recovery.factors.ltv.ltvPercent.toFixed(1)}% (점수 ${recovery.factors.ltv.score})\n` +
+    `  · 지역 동향  : ${recovery.factors.regionTrend.score}점 (모멘텀 ${recovery.factors.regionTrend.auctionMomentum > 0 ? "+" : ""}${recovery.factors.regionTrend.auctionMomentum}%p)\n` +
+    `  · 낙찰가율   : 조정 ${recovery.factors.auctionRatio.adjustedBidRatio.toFixed(1)}% (점수 ${recovery.factors.auctionRatio.score})\n` +
+    `  · 종합점수   : ${recovery.compositeScore.toFixed(1)} → 등급 ${recovery.compositeGrade}\n` +
+    `  · 예측회수율 : ${recovery.predictedRecoveryRate}% (±σ ${recovery.lowerBound}~${recovery.upperBound}%, 신뢰도 ${Math.round(recovery.confidence * 100)}%)\n\n` +
+    `[리스크]\n` +
+    `  · 등급       : ${risk.grade} (${risk.level}, ${risk.score}점)\n` +
+    risk.factors.map(f => `  · ${f.category.padEnd(5)} ${f.score}점 (${f.severity}) — ${f.explanation}`).join("\n") +
+    `\n\n` +
+    `[입찰 권고]\n` +
+    `  · AI 권고 입찰가 : ${fmtKRW(summary.recommendedBidPrice)}\n` +
+    (profitability
+      ? `  · 보수/권고/공격 : ` +
+        `보수 ${(profitability.strategies.conservative.purchaseRate * 100).toFixed(1)}% / ` +
+        `권고 ${(profitability.strategies.recommended.purchaseRate * 100).toFixed(1)}% / ` +
+        `공격 ${(profitability.strategies.aggressive.purchaseRate * 100).toFixed(1)}%\n`
+      : "") +
+    `\n[시장 전망]\n` +
+    `  · 방향  : ${marketOutlook.outlook} (신뢰도 ${Math.round(marketOutlook.confidence * 100)}%, ${marketOutlook.horizonMonths}개월)\n` +
+    `  · 요약  : ${marketOutlook.narrative.replace(/\s+/g, " ").slice(0, 140)}…\n\n` +
+    `━━━━━━━━━━━━━━━━ 출력 형식 ━━━━━━━━━━━━━━━━\n` +
+    `1) 판정 (BUY / HOLD / AVOID) — 이유를 한 문장으로\n` +
+    `2) 핵심 근거 3가지 (숫자 인용 필수)\n` +
+    `3) 유의사항 (특수조건·리스크 팩터 1~2개)\n` +
+    `4) 권고 매입가/입찰가 요약 (보수/권고/공격 병렬)\n\n` +
+    `━━━━━━━━━━━━━━━━ 판정 규칙 ━━━━━━━━━━━━━━━━\n` +
+    `  · BUY   : 종합점수 ≥ 70 AND 예측회수율 ≥ 85%\n` +
+    `  · HOLD  : 종합점수 ≥ 55 (BUY 미충족)\n` +
+    `  · AVOID : 위 조건 모두 불충족\n\n` +
+    `현재 자동 판정: ${summary.verdict}`
+
+  return (
+    <div className="mt-3 pt-3 border-t border-dashed border-white/20">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1 text-[0.625rem] font-bold px-2 py-1 rounded-md border border-white/40 text-white/90 transition-colors hover:bg-white/10"
+        aria-expanded={open}
+      >
+        <Sparkles className="w-3 h-3" />
+        생성형 AI 프롬프트
+        <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+      {open && (
+        <pre className="mt-2 text-[0.6875rem] font-mono leading-relaxed whitespace-pre-wrap bg-black/30 rounded-lg p-3 text-white/95 max-h-96 overflow-auto">
+          {prompt}
+        </pre>
       )}
     </div>
   )
@@ -1869,7 +2023,73 @@ function KvInline({ k, v }: { k: string; v: string }) {
 // ═══════════════════════════════════════════════════════════════
 type EvidenceTab = "bid" | "ratio" | "court" | "cases" | "tx" | "dist"
 
-function EvidenceTabs({ block }: { block: NplProfitabilityBlock }) {
+/**
+ * 경매 예상 낙찰가 · 3-baseline 수평 바 (감정가 / 최저입찰가 / 시세)
+ * 사용자 스크린샷 첨부 1 레이아웃 매칭.
+ */
+function BidBaselineTriplet({
+  expectedBid,
+}: {
+  expectedBid: NonNullable<UnifiedAnalysisReport["expectedBid"]>
+}) {
+  const rows: Array<{
+    calc: typeof expectedBid.appraisal
+    color: string
+  }> = [
+    { calc: expectedBid.appraisal, color: "#2E75B6" },  // BLUE
+    { calc: expectedBid.minBid,    color: "#DC2626" },  // RED
+    { calc: expectedBid.market,    color: "#6B7280" },  // GRAY
+  ]
+  const maxPct = Math.max(100, ...rows.map(r => r.calc.ratioPercent))
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[0.8125rem] text-[var(--color-text-secondary)] leading-relaxed">
+        과거 유사 물건 분석 결과,<br />
+        <span className="font-bold">&apos;{expectedBid.appraisal.label}&apos; 기반 입찰가 {expectedBid.recommendedBidPrice.toLocaleString("ko-KR")}원</span>을 추천함
+      </p>
+      <div className="grid grid-cols-[minmax(160px,_1fr)_2fr] gap-2 text-[0.75rem] text-[var(--color-text-tertiary)] pb-2 border-b border-[var(--color-border-subtle)]">
+        <span>예상입찰가</span>
+        <span>수치</span>
+      </div>
+      <div className="space-y-4">
+        {rows.map(({ calc, color }) => {
+          const widthPct = (calc.ratioPercent / maxPct) * 100
+          return (
+            <div key={calc.baseline} className="grid grid-cols-[minmax(160px,_1fr)_2fr] gap-3 items-start">
+              <div>
+                <div className="text-[1rem] font-black tabular-nums" style={{ color }}>
+                  {calc.expectedBidPrice.toLocaleString("ko-KR")}원
+                </div>
+                <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] mt-0.5">{calc.label}</div>
+              </div>
+              <div>
+                <div className="text-[0.875rem] font-bold tabular-nums mb-1" style={{ color }}>
+                  {calc.ratioPercent.toFixed(1)}%
+                </div>
+                <div className="h-3 rounded-full bg-[var(--color-border-subtle)] overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${Math.max(2, Math.min(100, widthPct))}%`, background: color }}
+                  />
+                </div>
+                <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] mt-1">{calc.note}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function EvidenceTabs({
+  block,
+  expectedBid,
+}: {
+  block: NplProfitabilityBlock
+  expectedBid?: UnifiedAnalysisReport["expectedBid"]
+}) {
   const [tab, setTab] = useState<EvidenceTab>("bid")
   const { evidence } = block
 
@@ -1908,13 +2128,17 @@ function EvidenceTabs({ block }: { block: NplProfitabilityBlock }) {
       {/* 탭 컨텐츠 */}
       <div className="p-4">
         {tab === "bid" && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <MetricCard label="감정가" value={krwWon(evidence.expectedBid.appraisalValue)} tint="#1B3A5C" />
-              <MetricCard label="AI 시세" value={krwWon(evidence.expectedBid.aiMarketValue)} tint="#2E75B6" sub={evidence.expectedBid.calculatedAt} />
-              <MetricCard label="낙찰가율" value={`${evidence.expectedBid.bidRatioPercent.toFixed(1)}%`} tint="#10B981" />
-              <MetricCard label="예상 낙찰가" value={krwWon(evidence.expectedBid.expectedBidPrice)} tint="#DC2626" />
-            </div>
+          <div className="space-y-4">
+            {expectedBid ? (
+              <BidBaselineTriplet expectedBid={expectedBid} />
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <MetricCard label="감정가" value={krwWon(evidence.expectedBid.appraisalValue)} tint="#1B3A5C" />
+                <MetricCard label="AI 시세" value={krwWon(evidence.expectedBid.aiMarketValue)} tint="#2E75B6" sub={evidence.expectedBid.calculatedAt} />
+                <MetricCard label="낙찰가율" value={`${evidence.expectedBid.bidRatioPercent.toFixed(1)}%`} tint="#10B981" />
+                <MetricCard label="예상 낙찰가" value={krwWon(evidence.expectedBid.expectedBidPrice)} tint="#DC2626" />
+              </div>
+            )}
             <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{evidence.expectedBid.narrative}</p>
           </div>
         )}
