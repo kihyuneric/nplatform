@@ -49,27 +49,28 @@ const META: Record<AssetTier, StepMeta> = {
     accent: "var(--color-brand-dark)",
   },
   L1: {
-    title: "전문투자자 본인인증",
-    subtitle: "10초 인증으로 등기부 · 임대차 정보 등 L1 자료를 즉시 열람할 수 있습니다.",
-    icon: <Shield size={18} />,
-    confirmLabel: "인증 완료",
-    accent: "var(--color-brand-bright)",
-  },
-  L2: {
     title: "비밀유지계약서 (NDA)",
     subtitle:
       "10초 서명으로 NDA 체결 후 감정평가서 · 현장 사진 · 채권 정보를 열람할 수 있습니다. 모든 열람 이력은 PII Access Log 에 기록됩니다.",
     icon: <FileSignature size={18} />,
     confirmLabel: "NDA 체결하고 L2 자료 열람하기",
+    accent: "var(--color-brand-bright)",
+  },
+  L2: {
+    title: "매수의향서 (LOI) 제출",
+    subtitle:
+      "10초 제출로 채팅 · 실사 · 가격 오퍼가 열립니다. LOI 는 법적 구속력이 없는 의향서이며, 매도자 승인 후 협상 단계로 진입합니다.",
+    icon: <FileCheck size={18} />,
+    confirmLabel: "LOI 제출하기",
     accent: "var(--color-positive)",
   },
   L3: {
-    title: "계약 초안 · 에스크로",
+    title: "에스크로 결제 · 계약",
     subtitle:
-      "실사 자료 검토 후 전자서명 및 에스크로 입금을 진행합니다. 매도자 승인 및 현장 계약으로 이어집니다.",
-    icon: <FileCheck size={18} />,
-    confirmLabel: "계약 초안 확인 · 서명 진행",
-    accent: "var(--color-positive)",
+      "계약 초안 확인 후 서명하면 에스크로 입금 안내가 발송됩니다. 매도자 승인 및 현장 계약으로 이어집니다.",
+    icon: <PenLine size={18} />,
+    confirmLabel: "전자서명 · 에스크로 진행",
+    accent: "#F59E0B",
   },
   L4: {
     title: "전자계약 · 에스크로 입금",
@@ -197,15 +198,15 @@ export function ActionSheet({
   const canConfirm: boolean = (() => {
     switch (tier) {
       case "L0": return loginEmail.includes("@") && loginPw.length >= 4
-      case "L1": return codeSent && code.length === 6
-      case "L2": return ndaQualified && ndaAgreed && ndaName.trim().length >= 2
-      case "L3":
+      case "L1": return ndaQualified && ndaAgreed && ndaName.trim().length >= 2
+      case "L2":
         return (
           loiPrice > 0 &&
           loiFunding !== "" &&
           loiEntity.trim().length >= 2 &&
           loiDuration.length > 0
         )
+      case "L3": return contractSigned
       case "L4": return contractSigned
       case "L5": return true
       default: return false
@@ -303,16 +304,6 @@ export function ActionSheet({
             />
           )}
           {tier === "L1" && (
-            <L1Form
-              phone={phone}
-              code={code}
-              codeSent={codeSent}
-              onPhoneChange={setPhone}
-              onCodeChange={setCode}
-              onSendCode={() => setCodeSent(true)}
-            />
-          )}
-          {tier === "L2" && (
             <L2NdaForm
               qualified={ndaQualified}
               agreed={ndaAgreed}
@@ -322,7 +313,7 @@ export function ActionSheet({
               onNameChange={setNdaName}
             />
           )}
-          {tier === "L3" && (
+          {tier === "L2" && (
             <L3LoiForm
               askingPrice={askingPrice}
               price={loiPrice}
@@ -337,6 +328,9 @@ export function ActionSheet({
               onEntityChange={setLoiEntity}
               onNotesChange={setLoiMemo}
             />
+          )}
+          {tier === "L3" && (
+            <L4Form signed={contractSigned} onToggleSign={setContractSigned} />
           )}
           {tier === "L4" && (
             <L4Form signed={contractSigned} onToggleSign={setContractSigned} />

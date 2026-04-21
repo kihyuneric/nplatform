@@ -704,7 +704,7 @@ export function AssetDetailView({
               items={[
                 {
                   label: "채권잔액",
-                  value: formatKRW(listing.outstanding_principal),
+                  value: formatKRW(listing.claim_info.balance),
                   tone: "primary",
                   hint: `원금 ${formatKRW(listing.claim_info.principal)} + 연체이자 ${formatKRW(listing.claim_info.accrued_interest)}`,
                 },
@@ -737,7 +737,7 @@ export function AssetDetailView({
               />
               <p className="leading-relaxed" style={{ fontSize: 11, color: C.lt2 }}>
                 본 매물은 <strong style={{ color: C.lt1 }}>자동 마스킹 파이프라인</strong>을 통과한
-                결과입니다. 개인정보·재무가 식별정보·상세 지번·동/호수는 금융감독원·금융위원회 지침에 따라
+                결과입니다. 개인정보·채무자 식별정보·상세 지번·동/호수는 금융감독원·금융위원회 지침에 따라
                 자동으로 가려지며, 티어별 공개 범위는 규제 요건에 맞춰 분리되어 있습니다.
               </p>
             </div>
@@ -848,7 +848,7 @@ export function AssetDetailView({
               <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140}>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Stat label="감정가" value={formatKRW(listing.appraisal_value)} tone="em" />
-                  <Stat label="채권잔액" value={formatKRW(listing.outstanding_principal)} tone="amber" />
+                  <Stat label="채권잔액" value={formatKRW(listing.claim_info.balance)} tone="amber" />
                   <Stat label="희망가" value={formatKRW(listing.asking_price)} tone="blue" />
                 </div>
                 {/* PDF 뷰어 + 다운로드 */}

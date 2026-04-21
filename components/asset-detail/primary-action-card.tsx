@@ -51,9 +51,9 @@ const CTA: Record<AssetTier, Cta> = {
     fg: "var(--fg-on-brand)",
   },
   L2: {
-    label: "계약 초안 · 에스크로",
-    subtitle: "서명 · 입금",
-    hint: "실사 자료 검토 + 전자서명 + 에스크로 입금",
+    label: "LOI 제출하기",
+    subtitle: "10초, 매수의향서",
+    hint: "채팅 · 실사 · 가격 오퍼",
     icon: <FileCheck className="w-5 h-5" />,
     bg: "var(--color-positive)",
     fg: "#041915",
