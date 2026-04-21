@@ -23,6 +23,7 @@ import {
   scoreToGrade,
 } from './recovery-3factor'
 import { computeExpectedBid, estimateMinBid } from './expected-bid'
+import { buildRegistryAnalysis } from './registry-analysis'
 
 // ─── 샘플 통계 컨텍스트 ──────────────────────────────────────
 export const SAMPLE_STATISTICS: StatisticsContext = {
@@ -215,6 +216,34 @@ export function buildSampleReport(): UnifiedAnalysisReport {
   })
   const recommendedBidPrice = expectedBid.recommendedBidPrice
 
+  // ── 등기부 분석 (사용자 스크린샷 수치 기반) ───────────────
+  // 청구금액 1.35억, 입찰예상가 3.536억, 집행비용 총계 4,257,059원
+  const registryAnalysis = buildRegistryAnalysis({
+    claimAmount: 135_041_313,
+    bidPrice: 353_600_000,
+    interestedPartyCount: 3,
+    parcelCount: 1,
+    failedBidCount: 1,
+    claims: [
+      { rank: 2, right: '소액임차인',   creditor: '박진철',                                 claimAmount: 20_000_000 },
+      { rank: 3, right: '근저당권설정', creditor: '한국주택금융공사(문현동,부산국제금융센터)', claimAmount: 270_600_000 },
+      { rank: 4, right: '근저당권설정', creditor: '유안타저축은행(주)(논현동,영풍빌딩)',         claimAmount: 156_000_000 },
+      { rank: 5, right: '우선변제권 없는 임차인', creditor: '박진철',                         claimAmount: 0,           buyerAssume: false },
+    ],
+    rightsOverrides: {
+      '경매집행비용':                      { registryEvidence: '-', presence: 'PRESENT' },
+      '소액임차인 최우선변제금':           { registryEvidence: 'O', presence: 'PRESENT' },
+      '당해세(국세·지방세)':               { registryEvidence: '-', presence: 'NEEDS_REVIEW' },
+      '일반우선채권(근저당·전세권 등)':    { registryEvidence: 'O', presence: 'PRESENT' },
+      '일반채권(가압류 등)':               { registryEvidence: '-', presence: 'NEEDS_REVIEW' },
+      '우선변제권 없는 임차인':            { registryEvidence: 'O', presence: 'PRESENT' },
+    },
+    topRisks: [
+      '후순위 근저당(유안타저축은행) 미배당 약 9,725만원 발생 — 실투자금 영향 없음(소멸)',
+      '당해세·일반 가압류 등기부 외 조사 필요(송달내역 별도 확인)',
+    ],
+  })
+
   // 리스크 등급 — 샘플에서는 3팩터 점수 기반 룰드리븐 (실제는 Claude API)
   const riskScore = Math.round(
     ltv.score * 0.35 + region.score * 0.25 + auction.score * 0.3 + (recovery.compositeScore * 0.1),
@@ -345,6 +374,7 @@ export function buildSampleReport(): UnifiedAnalysisReport {
         { label: '법원 1회차 매각 기간', value: `${auction.expectedSaleDays ?? '—'}일`, trend: 'FLAT', commentary: '서울중앙지법 평균 대비 표준 수준' },
       ],
     },
+    registryAnalysis,
     executiveSummary:
       `강남구 개포동 1195-8 다세대(빌라) NPL 딜 종합 분석 결과 ${riskGrade}등급, 예측 회수율 ${recovery.predictedRecoveryRate}%(신뢰도 ${Math.round(recovery.confidence * 100)}%)로 평가됩니다. ` +
       `지역 6개월 낙찰가율 81.2%에 선순위 임차인 특수조건 -10%p 반영한 ${auction.adjustedBidRatio}%를 기준 입찰가율로 제시하며, ` +

@@ -337,6 +337,145 @@ export interface MarketOutlookResult {
   indicators: MarketIndicator[]   // 금리/거래량/공급/정책 등
 }
 
+// ─── 등기부 권리분석 체크리스트 ─────────────────────────────
+/**
+ * 사용자 보유 로직 · 등기부등본 분석
+ *
+ * 권리 우선순위(민사집행법 제145조·주택임대차보호법 등):
+ *   1. 경매집행비용
+ *   2. 필요비·유익비 상환청구채권
+ *   3. 소액임차인 최우선변제금 / 최종 3개월 임금·3년 퇴직금 / 재해보상금
+ *   4. 당해세(국세·지방세)
+ *   5. 조세(당해세 제외) 및 법정기일 빠른 4대보험 / 우선변제권 있는 임차인
+ *   6. 일반우선채권(근저당·전세권 등)
+ *   7. 일반임금채권
+ *   8. 법정기일 늦은 4대보험
+ *   9. 일반채권(가압류 등) / 우선변제권 없는 임차인
+ *
+ * 컬럼: 순위 / 종류 / 등기부증빙 / 유무
+ * (송달내역 컬럼은 사용자 요청으로 UI 표시 제외)
+ */
+export type RightsPresence = 'PRESENT' | 'ABSENT' | 'NEEDS_REVIEW'
+
+export interface RightsChecklistItem {
+  /** "1순위", "3순위" 등 */
+  rank: string
+  /** 정렬 보조용 */
+  rankOrder: number
+  /** 권리 종류 — "경매집행비용" 등 */
+  kind: string
+  /** 등기부등본상 근거 존재 여부 (O / -) */
+  registryEvidence: 'O' | '-'
+  /** 유무 — 있음 / 없음 / 검토 필요 */
+  presence: RightsPresence
+}
+
+export interface RightsAnalysis {
+  items: RightsChecklistItem[]
+  /** 최상위 리스크 요약 */
+  topRisks: string[]
+}
+
+// ─── 예상 배당표 ─────────────────────────────────────────────
+/**
+ * 예상 배당표 기본 전제 (사용자 요청으로 "전경매보증금" 제외)
+ *   · 입찰예상가
+ *   · 경매집행비용
+ *   · 본건(예상)배당액 = 입찰예상가 − 경매집행비용
+ */
+export interface DistributionPremise {
+  /** 입찰예상가 (원) */
+  bidPrice: number
+  /** 경매집행비용 (원) */
+  executionCost: number
+  /** 본건(예상)배당액 (원) = bidPrice − executionCost */
+  distributableAmount: number
+}
+
+export interface DistributionRow {
+  rank: number
+  /** 권리 — "경매집행비용" | "소액임차인" | "근저당권설정" | "우선변제권 없는 임차인" ... */
+  right: string
+  /** 채권자 */
+  creditor: string
+  /** 채권액 (원) */
+  claimAmount: number
+  /** 배당액 (원) */
+  distributedAmount: number
+  /** 배당비율 (0~1) */
+  distributedRatio: number
+  /** 미배당액 (원) */
+  unpaidAmount: number
+  /** 매수인 인수금액 (원) */
+  buyerAssumeAmount: number
+  /** 소멸 여부 */
+  extinguished: '소멸' | '인수' | '-'
+}
+
+export interface DistributionTable {
+  premise: DistributionPremise
+  rows: DistributionRow[]
+  totalClaim: number
+  totalDistributed: number
+  totalUnpaid: number
+  /** AI 해설 */
+  narrative: string
+}
+
+// ─── 경매집행비용 계산 ───────────────────────────────────────
+/**
+ * 사용자 로직 (대법원 경매비용 규정):
+ *
+ *  · 경매신청비용 소계
+ *    - 등록면허세      = 청구금액 × 0.2%
+ *    - 지방교육세      = 등록면허세 × 20%
+ *    - 송달료          = (이해관계인수 + 3) × 10회 × 5,200원
+ *    - 등기신청수수료  = 1필지당 3,000원
+ *
+ *  · 예납금 소계
+ *    - 감정평가수수료  (금액별 누진)
+ *    - 감정평가 실비
+ *    - 유찰수수료      = 유찰 1회당 6,000원
+ *    - 현황조사수수료  = 기본 70,000원
+ *    - 신문공고료      = 기본 220,000원 + 2필지 초과 시 필지당 110,000원
+ *    - 매각수수료      (낙찰가액별 누진)
+ *
+ *  · 경매집행비용 총계 = 신청비용 소계 + 예납금 소계
+ */
+export interface ExecutionCostLineItem {
+  /** 항목명 — "등록면허세" 등 */
+  kind: string
+  /** 금액 (원) */
+  amount: number
+  /** 산식 비고 — "청구금액 × 0.2%" */
+  formula?: string
+}
+
+export interface ExecutionCostBreakdown {
+  /** 청구금액 (원) */
+  claimAmount: number
+  /** 경매신청비용 라인 */
+  filingItems: ExecutionCostLineItem[]
+  /** 경매신청비용 소계 */
+  filingSubtotal: number
+  /** 예납금 라인 */
+  depositItems: ExecutionCostLineItem[]
+  /** 예납금 소계 */
+  depositSubtotal: number
+  /** 경매집행비용 총계 */
+  total: number
+}
+
+// ─── 등기부등본 종합 분석 블록 ───────────────────────────────
+export interface RegistryAnalysisBlock {
+  /** 권리분석 체크리스트 */
+  rights: RightsAnalysis
+  /** 예상 배당표 */
+  distribution: DistributionTable
+  /** 경매집행비용 계산 */
+  executionCost: ExecutionCostBreakdown
+}
+
 // ─── 통합 리포트 ─────────────────────────────────────────────
 export interface UnifiedReportSummary {
   /** 예측 회수율 (%) */
@@ -394,6 +533,8 @@ export interface UnifiedAnalysisReport {
   expectedBid: ExpectedBidAnalysis
   /** 섹션 5 — 시장 전망 */
   marketOutlook: MarketOutlookResult
+  /** 섹션 6 — 등기부 분석 (권리·배당·집행비용) — API 연동 시 주입 */
+  registryAnalysis?: RegistryAnalysisBlock
   /** AI 총평 */
   executiveSummary: string
 }

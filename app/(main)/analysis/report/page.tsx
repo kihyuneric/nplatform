@@ -24,6 +24,7 @@ import Link from "next/link"
 import {
   ArrowLeft, Sparkles, TrendingUp, Shield, AlertTriangle, Target,
   BarChart3, Gavel, MapPin, Info, Activity, ChevronRight,
+  FileText, Scale, Wallet,
 } from "lucide-react"
 import DS from "@/lib/design-system"
 import { riskPalette } from "@/lib/design-tokens"
@@ -500,7 +501,18 @@ export default function UnifiedReportPage() {
         <StatisticsPanel report={report} />
       </Section>
 
-      {/* ── 8. AI 총평 ─────────────────────────────── */}
+      {/* ── 8. 등기부 분석 (권리 · 배당 · 집행비용) ─────── */}
+      {report.registryAnalysis && (
+        <Section
+          title="등기부 분석 · 권리 · 배당 · 집행비용"
+          icon={FileText}
+          caption="매물 등록 시 등기부등본 파싱 결과 자동 연동"
+        >
+          <RegistryPanel block={report.registryAnalysis} />
+        </Section>
+      )}
+
+      {/* ── 9. AI 총평 ─────────────────────────────── */}
       <section className={`${DS.page.container} mb-12`}>
         <div className="rounded-xl bg-gradient-to-br from-[#1B3A5C] to-[#2E75B6] text-white p-5">
           <div className="flex items-center gap-2 mb-2">
@@ -827,6 +839,227 @@ function SummaryRow({ label, fields }: { label: string; fields: [string, string]
           {k} · <b className="text-[var(--color-text-primary)]">{v}</b>
         </span>
       ))}
+    </div>
+  )
+}
+
+// ─── 등기부 분석 패널 ───────────────────────────────────────
+function RegistryPanel({
+  block,
+}: {
+  block: NonNullable<UnifiedAnalysisReport["registryAnalysis"]>
+}) {
+  const { rights, distribution, executionCost } = block
+  const presenceLabel = (p: "PRESENT" | "ABSENT" | "NEEDS_REVIEW") =>
+    p === "PRESENT" ? "있음" : p === "NEEDS_REVIEW" ? "검토 필요" : "없음"
+  const presenceStyle = (p: "PRESENT" | "ABSENT" | "NEEDS_REVIEW") =>
+    p === "PRESENT"
+      ? { color: "#2E75B6", fontWeight: 700 }
+      : p === "NEEDS_REVIEW"
+      ? { color: "#B45309", fontWeight: 700 }
+      : { color: "var(--color-text-tertiary)" }
+
+  const krw = (v: number) => (v === 0 ? "-" : v.toLocaleString("ko-KR") + " 원")
+
+  return (
+    <div className="space-y-4">
+      {/* ── 8-A. 권리분석 체크리스트 ────────────────── */}
+      <StatSubsection title="권리분석 체크 리스트 (13행 · 송달내역 컬럼 제외)">
+        <div className="overflow-x-auto">
+          <table className="w-full text-[0.75rem]">
+            <thead>
+              <tr className="text-[var(--color-text-tertiary)] border-b border-[var(--color-border-subtle)]">
+                <th className="text-left py-1.5 pr-3 font-medium w-16">순위</th>
+                <th className="text-left py-1.5 pr-3 font-medium">종류</th>
+                <th className="text-center py-1.5 pr-3 font-medium w-20">등기부</th>
+                <th className="text-center py-1.5 font-medium w-24">유무</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rights.items.map((r, i) => {
+                const active = r.presence === "PRESENT" || r.presence === "NEEDS_REVIEW"
+                return (
+                  <tr
+                    key={r.kind + i}
+                    className={`border-b border-[var(--color-border-subtle)] ${active ? "bg-sky-50/60 dark:bg-sky-500/5" : ""}`}
+                  >
+                    <td className="py-1.5 pr-3 tabular-nums" style={{ color: active ? "#2E75B6" : "var(--color-text-secondary)", fontWeight: active ? 700 : 500 }}>
+                      {r.rank}
+                    </td>
+                    <td className="py-1.5 pr-3" style={{ color: active ? "#2E75B6" : "var(--color-text-secondary)", fontWeight: active ? 600 : 400 }}>
+                      {r.kind}
+                    </td>
+                    <td className="py-1.5 pr-3 text-center" style={{ color: r.registryEvidence === "O" ? "#2E75B6" : "var(--color-text-tertiary)", fontWeight: r.registryEvidence === "O" ? 700 : 400 }}>
+                      {r.registryEvidence}
+                    </td>
+                    <td className="py-1.5 text-center" style={presenceStyle(r.presence)}>
+                      {presenceLabel(r.presence)}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+        {rights.topRisks.length > 0 && (
+          <div className="mt-3 rounded-lg bg-amber-500/10 border border-amber-500/30 p-3">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+              <span className="text-[0.75rem] font-bold text-amber-700">권리 리스크 요점</span>
+            </div>
+            <ul className="space-y-0.5">
+              {rights.topRisks.map((r, i) => (
+                <li key={i} className="text-[0.6875rem] text-amber-700 flex items-start gap-1.5">
+                  <span className="mt-1 w-1 h-1 rounded-full bg-amber-600 shrink-0" />
+                  {r}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </StatSubsection>
+
+      {/* ── 8-B. 예상 배당표 ──────────────────────── */}
+      <div className="rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
+        <div className="text-[0.75rem] font-bold text-[var(--color-text-primary)] mb-2 flex items-center gap-1.5">
+          <Scale className="w-3.5 h-3.5 text-[var(--color-brand-mid)]" />
+          예상 배당표 작성을 위한 기본 전제 (전경매보증금 항목 제외)
+        </div>
+        {/* 기본 전제 3카드 */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+          <PremiseCard label="입찰예상가" value={distribution.premise.bidPrice} />
+          <PremiseCard label="경매집행비용" value={distribution.premise.executionCost} />
+          <PremiseCard label="본건(예상)배당액" value={distribution.premise.distributableAmount} highlight />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[0.75rem]">
+            <thead>
+              <tr className="text-[var(--color-text-tertiary)] border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]">
+                <th className="text-left py-1.5 px-2 font-medium w-12">순위</th>
+                <th className="text-left py-1.5 px-2 font-medium">권리</th>
+                <th className="text-left py-1.5 px-2 font-medium">채권자</th>
+                <th className="text-right py-1.5 px-2 font-medium">채권액</th>
+                <th className="text-right py-1.5 px-2 font-medium">배당액</th>
+                <th className="text-right py-1.5 px-2 font-medium w-16">배당비율</th>
+                <th className="text-right py-1.5 px-2 font-medium">미배당액</th>
+                <th className="text-right py-1.5 px-2 font-medium">매수인 인수금액</th>
+                <th className="text-center py-1.5 px-2 font-medium w-16">소멸 여부</th>
+              </tr>
+            </thead>
+            <tbody>
+              {distribution.rows.map((r) => (
+                <tr key={r.rank} className="border-b border-[var(--color-border-subtle)]">
+                  <td className="py-1.5 px-2 tabular-nums text-[var(--color-text-primary)]">{r.rank}</td>
+                  <td className="py-1.5 px-2 text-[var(--color-text-primary)]">{r.right}</td>
+                  <td className="py-1.5 px-2 text-[var(--color-text-secondary)] truncate max-w-[160px]">{r.creditor}</td>
+                  <td className="py-1.5 px-2 text-right tabular-nums text-[var(--color-text-primary)]">{krw(r.claimAmount)}</td>
+                  <td className="py-1.5 px-2 text-right tabular-nums font-semibold bg-sky-50/60 dark:bg-sky-500/5">
+                    {krw(r.distributedAmount)}
+                  </td>
+                  <td className="py-1.5 px-2 text-right tabular-nums" style={{ color: r.distributedRatio === 1 ? "#10B981" : r.distributedRatio > 0 ? "#F59E0B" : "var(--color-text-tertiary)" }}>
+                    {r.claimAmount > 0 ? `${Math.round(r.distributedRatio * 100)}%` : "-"}
+                  </td>
+                  <td className="py-1.5 px-2 text-right tabular-nums text-[var(--color-text-secondary)]">{krw(r.unpaidAmount)}</td>
+                  <td className="py-1.5 px-2 text-right tabular-nums bg-red-50/60 dark:bg-red-500/5 text-[var(--color-text-secondary)]">
+                    {krw(r.buyerAssumeAmount)}
+                  </td>
+                  <td className="py-1.5 px-2 text-center" style={{ color: r.extinguished === "소멸" ? "var(--color-text-tertiary)" : r.extinguished === "인수" ? "#DC2626" : "var(--color-text-tertiary)", fontWeight: r.extinguished === "인수" ? 700 : 500 }}>
+                    {r.extinguished}
+                  </td>
+                </tr>
+              ))}
+              <tr className="bg-[var(--color-surface-base)] font-bold">
+                <td colSpan={3} className="py-1.5 px-2 text-right text-[var(--color-text-primary)]">합계</td>
+                <td className="py-1.5 px-2 text-right tabular-nums text-[var(--color-text-primary)]">{krw(distribution.totalClaim)}</td>
+                <td className="py-1.5 px-2 text-right tabular-nums text-[var(--color-text-primary)]">{krw(distribution.totalDistributed)}</td>
+                <td className="py-1.5 px-2"></td>
+                <td className="py-1.5 px-2 text-right tabular-nums text-[var(--color-text-primary)]">{krw(distribution.totalUnpaid)}</td>
+                <td className="py-1.5 px-2"></td>
+                <td className="py-1.5 px-2"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed mt-3 pt-3 border-t border-[var(--color-border-subtle)]">
+          {distribution.narrative}
+        </p>
+      </div>
+
+      {/* ── 8-C. 경매집행비용 ──────────────────────── */}
+      <div className="rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
+        <div className="text-[0.75rem] font-bold text-[var(--color-text-primary)] mb-2 flex items-center gap-1.5">
+          <Wallet className="w-3.5 h-3.5 text-[var(--color-brand-mid)]" />
+          경매집행비용 · 자동계산
+        </div>
+        <div className="mb-3 rounded-lg bg-sky-500/8 border border-sky-500/20 p-3 flex items-baseline justify-between">
+          <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">청구금액</span>
+          <span className="text-lg font-black tabular-nums text-sky-700">
+            {executionCost.claimAmount.toLocaleString("ko-KR")} 원
+          </span>
+        </div>
+        <table className="w-full text-[0.75rem]">
+          <thead>
+            <tr className="text-[var(--color-text-tertiary)] border-b border-[var(--color-border-subtle)]">
+              <th className="text-left py-1.5 pr-2 font-medium w-10">#</th>
+              <th className="text-left py-1.5 pr-2 font-medium">항목</th>
+              <th className="text-right py-1.5 pr-2 font-medium">금액</th>
+              <th className="text-left py-1.5 font-medium">비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            {executionCost.filingItems.map((it, i) => (
+              <tr key={it.kind} className="border-b border-[var(--color-border-subtle)]">
+                <td className="py-1.5 pr-2 tabular-nums text-[var(--color-text-tertiary)]">{i + 1}</td>
+                <td className="py-1.5 pr-2 text-[var(--color-text-primary)]">{it.kind}</td>
+                <td className="py-1.5 pr-2 text-right tabular-nums">{it.amount.toLocaleString("ko-KR")} 원</td>
+                <td className="py-1.5 text-[var(--color-text-tertiary)]">{it.formula ?? ""}</td>
+              </tr>
+            ))}
+            <tr className="bg-sky-50/60 dark:bg-sky-500/5 font-bold">
+              <td colSpan={2} className="py-1.5 pr-2 text-[var(--color-text-primary)]">경매신청비용 소계</td>
+              <td className="py-1.5 pr-2 text-right tabular-nums text-sky-700">
+                {executionCost.filingSubtotal.toLocaleString("ko-KR")} 원
+              </td>
+              <td></td>
+            </tr>
+            {executionCost.depositItems.map((it, i) => (
+              <tr key={it.kind} className="border-b border-[var(--color-border-subtle)]">
+                <td className="py-1.5 pr-2 tabular-nums text-[var(--color-text-tertiary)]">{executionCost.filingItems.length + i + 1}</td>
+                <td className="py-1.5 pr-2 text-[var(--color-text-primary)]">{it.kind}</td>
+                <td className="py-1.5 pr-2 text-right tabular-nums">{it.amount.toLocaleString("ko-KR")} 원</td>
+                <td className="py-1.5 text-[var(--color-text-tertiary)]">{it.formula ?? ""}</td>
+              </tr>
+            ))}
+            <tr className="bg-sky-50/60 dark:bg-sky-500/5 font-bold">
+              <td colSpan={2} className="py-1.5 pr-2 text-[var(--color-text-primary)]">예납금 소계</td>
+              <td className="py-1.5 pr-2 text-right tabular-nums text-sky-700">
+                {executionCost.depositSubtotal.toLocaleString("ko-KR")} 원
+              </td>
+              <td></td>
+            </tr>
+            <tr className="bg-amber-500/10 font-black text-amber-800">
+              <td colSpan={2} className="py-2 pr-2">경매집행비용 총계</td>
+              <td className="py-2 pr-2 text-right tabular-nums text-amber-800">
+                {executionCost.total.toLocaleString("ko-KR")} 원
+              </td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function PremiseCard({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
+  return (
+    <div
+      className={`rounded-lg p-3 border ${highlight ? "bg-sky-500/8 border-sky-500/25" : "bg-[var(--color-surface-base)] border-[var(--color-border-subtle)]"}`}
+    >
+      <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] mb-0.5">{label}</div>
+      <div className={`text-[1rem] font-black tabular-nums ${highlight ? "text-sky-700" : "text-[var(--color-text-primary)]"}`}>
+        {value.toLocaleString("ko-KR")} 원
+      </div>
     </div>
   )
 }
