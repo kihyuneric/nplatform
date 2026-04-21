@@ -14,32 +14,33 @@ import Link from "next/link"
 import { Zap, ArrowRight, TrendingUp, Brain, BarChart3, Shield } from "lucide-react"
 import DS from "@/lib/design-system"
 import { DEMO_RESULT } from "@/lib/npl/profitability/demo-data"
+import { buildSampleReport } from "@/lib/npl/unified-report/sample"
 
 export default function AnalysisDemoPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
-  // 페이지 로드 시 sessionStorage에 데모 결과 저장
-  // (사용자가 "데모 분석 보기" 클릭 전에 미리 준비)
+  // 페이지 로드 시 sessionStorage 에 양쪽 데이터 준비
+  // (legacy: profitability-result / new: unifiedReport)
   useEffect(() => {
     try {
-      const demoData = { ...DEMO_RESULT, _demo: true }
-      sessionStorage.setItem("profitability-result", JSON.stringify(demoData))
+      sessionStorage.setItem("profitability-result", JSON.stringify({ ...DEMO_RESULT, _demo: true }))
+      sessionStorage.setItem("unifiedReport", JSON.stringify(buildSampleReport()))
     } catch {
-      // sessionStorage 사용 불가 시 무시
+      /* ignore */
     }
   }, [])
 
   function handleViewDemo() {
     setLoading(true)
-    // sessionStorage에 데모 데이터 저장 후 결과 페이지로 이동
     try {
-      const demoData = { ...DEMO_RESULT, _demo: true }
-      sessionStorage.setItem("profitability-result", JSON.stringify(demoData))
+      sessionStorage.setItem("profitability-result", JSON.stringify({ ...DEMO_RESULT, _demo: true }))
+      sessionStorage.setItem("unifiedReport", JSON.stringify(buildSampleReport()))
     } catch {
-      // 이미 useEffect에서 저장됨
+      /* ignore */
     }
-    router.push("/analysis/profitability/result")
+    // 통합 리포트로 진입 (샘플·최근내역 단일 진입점)
+    router.push("/analysis/report")
   }
 
   const HIGHLIGHTS = [
