@@ -91,6 +91,21 @@ interface ListingDetail {
   site_photos: string[]
   debtor_name_masked: string
   court_case_full: string
+  /** 채권 정보 (NDA · L2 이후 공개) — DR-6 */
+  claim_info: {
+    /** 채권잔액 = 원금 + 미수이자 (원) */
+    balance: number
+    /** 원금 (원) */
+    principal: number
+    /** 미수이자 (원) */
+    accrued_interest: number
+    /** 연정 금리 (연이율, %) */
+    contract_rate: number
+    /** 연체 금리 (연이율, %) */
+    delinquent_rate: number
+    /** 연체 시작일 (YYYY-MM-DD) */
+    delinquent_since: string
+  }
 }
 
 function buildMock(id: string): ListingDetail {
@@ -125,6 +140,14 @@ function buildMock(id: string): ListingDetail {
     site_photos: ["photo1", "photo2", "photo3"],
     debtor_name_masked: "김●●",
     court_case_full: "서울중앙지법 2025타경12345",
+    claim_info: {
+      balance: 1_248_600_000,          // 원금 12억 + 미수이자 48.6백만
+      principal: 1_200_000_000,
+      accrued_interest: 48_600_000,
+      contract_rate: 4.8,              // 연정 금리 4.8%
+      delinquent_rate: 18.0,           // 연체 금리 18%
+      delinquent_since: "2025-10-14",  // 연체 시작일
+    },
   }
 }
 
@@ -183,6 +206,14 @@ function mapNplListingToDetail(row: Record<string, unknown>, id: string): Listin
     site_photos: imageUrls,
     debtor_name_masked: "●●●",
     court_case_full: "●●지법 ●●타경●●●●",
+    claim_info: {
+      balance: ((row.claim_balance as number) ?? 0) || (claimAmt + Math.round(claimAmt * 0.04)),
+      principal: claimAmt,
+      accrued_interest: (row.accrued_interest as number) ?? Math.round(claimAmt * 0.04),
+      contract_rate: (row.contract_rate as number) ?? 4.8,
+      delinquent_rate: (row.delinquent_rate as number) ?? 18.0,
+      delinquent_since: (row.delinquent_since as string) ?? "2025-10-14",
+    },
   }
 }
 
@@ -729,18 +760,83 @@ export default function ListingDetailPage() {
               </TierGate>
             </SectionCard>
 
-            {/* 채권 정보 (채무자 원장) — L3 */}
+            {/* ═══ 채권 정보 — L2 NDA 체결 후 공개 (DR-6) ═══
+             * 4개 필드: 채권잔액(원금+미수이자) · 연정금리 · 연체금리 · 연체시작일 */}
             <SectionCard
-              title="채권 정보 (채무자 원장)"
-              icon={<FileText size={14} />}
-              tierBadge="L3"
-              accent="warn"
+              title="채권 정보"
+              icon={<Banknote size={14} />}
+              tierBadge="L2"
             >
-              <TierGate required="L3" current={effectiveAccessTier} listingId={id} minHeight={140}>
-                <p className="leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
-                  채무자 실명 · 원리금 내역 · 상환 이력 · 추심 기록 · 재무 상태가 포함된 원장입니다.
-                  LOI 제출 후 매도자 승인 시 직접 협상 채널에서 열람 가능합니다.
-                </p>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={200}>
+                <div className="space-y-4">
+                  {/* 채권잔액 (크게) */}
+                  <div
+                    className="rounded-xl p-4"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(46, 117, 182, 0.08))",
+                      border: "1px solid rgba(16, 185, 129, 0.33)",
+                    }}
+                  >
+                    <div
+                      className="font-semibold mb-1"
+                      style={{ fontSize: 11, color: C.lt3, letterSpacing: "0.04em" }}
+                    >
+                      채권잔액 <span style={{ color: C.lt4 }}>(원금 + 미수이자)</span>
+                    </div>
+                    <div
+                      className="font-black tabular-nums"
+                      style={{ fontSize: 28, color: C.em, lineHeight: 1.1 }}
+                    >
+                      {formatKRW(listing.claim_info.balance)}
+                    </div>
+                    <div
+                      className="mt-2 flex items-center gap-2 flex-wrap font-semibold tabular-nums"
+                      style={{ fontSize: 11, color: C.lt3 }}
+                    >
+                      <span>원금 {formatKRW(listing.claim_info.principal)}</span>
+                      <span style={{ color: C.lt4 }}>+</span>
+                      <span>미수이자 {formatKRW(listing.claim_info.accrued_interest)}</span>
+                    </div>
+                  </div>
+
+                  {/* 3개 필드 그리드: 연정금리 · 연체금리 · 연체시작일 */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <ClaimField
+                      label="연정 금리"
+                      value={`${listing.claim_info.contract_rate.toFixed(1)}%`}
+                      sub="연이율"
+                      tone="blue"
+                    />
+                    <ClaimField
+                      label="연체 금리"
+                      value={`${listing.claim_info.delinquent_rate.toFixed(1)}%`}
+                      sub="연이율"
+                      tone="amber"
+                    />
+                    <ClaimField
+                      label="연체 시작일"
+                      value={formatDateKo(listing.claim_info.delinquent_since)}
+                      sub={(() => {
+                        const days = Math.floor(
+                          (Date.now() - new Date(listing.claim_info.delinquent_since).getTime()) /
+                            (1000 * 60 * 60 * 24)
+                        )
+                        return days > 0 ? `${days}일 경과` : "오늘"
+                      })()}
+                      tone="neutral"
+                    />
+                  </div>
+
+                  <p
+                    className="leading-relaxed"
+                    style={{ fontSize: 11, color: C.lt3 }}
+                  >
+                    채권잔액은 연정 금리를 적용한 원금과 미수이자의 합계이며, 연체 시작일부터는
+                    연체 금리로 산정됩니다. 채무자 실명 · 상환 이력 · 추심 기록은 L3 (LOI 제출 후)
+                    에서 공개됩니다.
+                  </p>
+                </div>
               </TierGate>
             </SectionCard>
           </div>
@@ -951,6 +1047,60 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "em
       <div className="font-black tabular-nums" style={{ fontSize: 16, color }}>
         {value}
       </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CLAIM FIELD (채권 정보 4필드 전용 카드) — DR-6
+═══════════════════════════════════════════════════════════ */
+function ClaimField({
+  label,
+  value,
+  sub,
+  tone = "neutral",
+}: {
+  label: string
+  value: string
+  sub?: string
+  tone?: "blue" | "amber" | "neutral"
+}) {
+  const valueColor =
+    tone === "blue" ? "var(--color-brand-bright)" :
+    tone === "amber" ? C.amber :
+    C.lt1
+  const borderColor =
+    tone === "blue" ? "rgba(46, 117, 182, 0.28)" :
+    tone === "amber" ? "rgba(245, 158, 11, 0.33)" :
+    "var(--layer-border-strong)"
+  return (
+    <div
+      className="rounded-xl p-3.5"
+      style={{
+        backgroundColor: "var(--layer-2-bg)",
+        border: `1px solid ${borderColor}`,
+      }}
+    >
+      <div
+        className="font-bold"
+        style={{ fontSize: 10, color: C.lt4, letterSpacing: "0.04em" }}
+      >
+        {label}
+      </div>
+      <div
+        className="mt-1.5 font-black tabular-nums"
+        style={{ fontSize: 20, color: valueColor, lineHeight: 1.1 }}
+      >
+        {value}
+      </div>
+      {sub && (
+        <div
+          className="mt-1 font-semibold tabular-nums"
+          style={{ fontSize: 10, color: C.lt3 }}
+        >
+          {sub}
+        </div>
+      )}
     </div>
   )
 }

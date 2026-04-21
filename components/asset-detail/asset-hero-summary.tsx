@@ -1,17 +1,21 @@
 /**
- * AssetHeroSummary — 자산 상세 페이지 히어로 (DR-5 · 2026-04-21)
+ * AssetHeroSummary — 자산 상세 페이지 히어로 (DR-6 · 2026-04-21)
  *
- * 글로벌 핀테크 패턴 (Robinhood/Stripe): 제목 + 1줄 요약 + thin stepper.
+ * 글로벌 핀테크 패턴 (Robinhood/Stripe): 제목 + 1줄 요약 + numbered stepper.
  * 스크롤 최상단에서 "이 자산이 무엇이고 내가 어디에 있는지" 를 즉시 파악.
  *
- * DR-5: 6단계 → 5단계로 축소
- *   매칭(L0,L1) · 담보정보(L2) · 채권오퍼(L3) · 계약·에스크로(L4) · 완료(L5)
+ * DR-6: 번호 스텝퍼 (1→2→3→4→5) + 2-line 라벨
+ *   1 매칭 (개인인증)      ← L0, L1
+ *   2 담보·채권 정보 (NDA)  ← L2
+ *   3 실사 / 오퍼 (LOI)    ← L3
+ *   4 계약·에스크로 (서명)  ← L4
+ *   5 완료 (정산)          ← L5
  */
 
 "use client"
 
 import Link from "next/link"
-import { ChevronLeft, Heart, Sparkles } from "lucide-react"
+import { Check, ChevronLeft, Heart, Sparkles } from "lucide-react"
 import type { AssetTier } from "@/hooks/use-asset-tier"
 
 export interface AssetHeroSummaryProps {
@@ -29,13 +33,13 @@ export interface AssetHeroSummaryProps {
   backHref?: string
 }
 
-/** 5단계 프로세스 라벨 (DR-5 확정) */
-const STEPS: { label: string; hint: string }[] = [
-  { label: "매칭",          hint: "관심 · 개인인증" },
-  { label: "담보정보",       hint: "NDA" },
-  { label: "채권오퍼",       hint: "LOI · 실사" },
-  { label: "계약·에스크로",  hint: "서명" },
-  { label: "완료",          hint: "정산" },
+/** 5단계 프로세스 라벨 (DR-6 확정) — 2-line: 주 라벨 + 부 라벨 */
+const STEPS: { label: string; sub: string }[] = [
+  { label: "매칭",           sub: "(개인인증)" },
+  { label: "담보·채권 정보",  sub: "(NDA)" },
+  { label: "실사 / 오퍼",     sub: "(LOI)" },
+  { label: "계약·에스크로",   sub: "(서명)" },
+  { label: "완료",           sub: "(정산)" },
 ]
 
 /** AssetTier → 5단계 인덱스 매핑
@@ -131,56 +135,99 @@ export function AssetHeroSummary({
         </div>
       </div>
 
-      {/* Row 3: thin stepper */}
-      <div className="max-w-[1280px] mx-auto" style={{ padding: "0 24px 20px" }}>
+      {/* Row 3: numbered stepper (1→2→3→4→5) */}
+      <div className="max-w-[1280px] mx-auto" style={{ padding: "4px 24px 24px" }}>
         <ol
-          className="flex items-center gap-0"
+          className="flex items-start gap-0"
           role="list"
           aria-label="거래 진행 단계"
         >
           {STEPS.map((step, idx) => {
             const isDone = idx < currentIdx
             const isCurrent = idx === currentIdx
+            const isFuture = idx > currentIdx
+
+            const circleStyle: React.CSSProperties = isDone
+              ? {
+                  backgroundColor: "var(--color-brand-bright)",
+                  color: "var(--fg-on-brand)",
+                  border: "2px solid var(--color-brand-bright)",
+                  boxShadow: "0 2px 8px rgba(46, 117, 182, 0.25)",
+                }
+              : isCurrent
+              ? {
+                  backgroundColor: "var(--color-brand-bright)",
+                  color: "var(--fg-on-brand)",
+                  border: "2px solid var(--color-brand-bright)",
+                  boxShadow: "0 0 0 6px rgba(46, 117, 182, 0.18), 0 2px 12px rgba(46, 117, 182, 0.35)",
+                }
+              : {
+                  backgroundColor: "transparent",
+                  color: "var(--fg-subtle)",
+                  border: "2px solid var(--layer-border-strong)",
+                }
+
+            const connectorStyle: React.CSSProperties = {
+              backgroundColor: isDone
+                ? "var(--color-brand-bright)"
+                : "var(--layer-border-strong)",
+              height: 2,
+            }
+
             return (
-              <li key={step.label} className="flex items-center flex-1 last:flex-none">
-                <div className="flex flex-col items-center gap-1">
+              <li
+                key={step.label}
+                className="flex items-start flex-1 last:flex-none min-w-0"
+              >
+                {/* 원 + 라벨 수직 스택 */}
+                <div className="flex flex-col items-center gap-2 flex-shrink-0 min-w-0">
                   <div
-                    className="w-2 h-2 rounded-full transition-colors"
+                    className="rounded-full inline-flex items-center justify-center font-black transition-all"
                     style={{
-                      backgroundColor: isDone
-                        ? "var(--color-positive)"
-                        : isCurrent
-                        ? "var(--color-brand-bright)"
-                        : "var(--layer-border-strong)",
-                      boxShadow: isCurrent
-                        ? "0 0 0 4px rgba(46, 117, 182, 0.2)"
-                        : "none",
+                      width: 40,
+                      height: 40,
+                      fontSize: 15,
+                      ...circleStyle,
                     }}
                     aria-current={isCurrent ? "step" : undefined}
-                  />
-                  <span
-                    className="font-bold text-center whitespace-nowrap"
-                    style={{
-                      fontSize: 10,
-                      color: isCurrent
-                        ? "var(--color-brand-bright)"
-                        : isDone
-                        ? "var(--fg-default)"
-                        : "var(--fg-subtle)",
-                      letterSpacing: "0.02em",
-                    }}
-                    title={step.hint}
+                    aria-label={`단계 ${idx + 1} ${step.label}${isDone ? " 완료" : isCurrent ? " 진행 중" : ""}`}
                   >
-                    {step.label}
-                  </span>
+                    {isDone ? <Check size={18} strokeWidth={3} /> : idx + 1}
+                  </div>
+                  <div className="flex flex-col items-center text-center" style={{ minWidth: 72 }}>
+                    <span
+                      className="font-black whitespace-nowrap leading-tight"
+                      style={{
+                        fontSize: 12,
+                        color: isFuture ? "var(--fg-subtle)" : "var(--color-text-primary)",
+                        letterSpacing: "-0.01em",
+                      }}
+                    >
+                      {step.label}
+                    </span>
+                    <span
+                      className="font-semibold whitespace-nowrap leading-tight mt-0.5"
+                      style={{
+                        fontSize: 10,
+                        color: isCurrent
+                          ? "var(--color-brand-bright)"
+                          : isFuture
+                          ? "var(--fg-subtle)"
+                          : "var(--fg-muted)",
+                      }}
+                    >
+                      {step.sub}
+                    </span>
+                  </div>
                 </div>
+                {/* 연결선 (마지막 스텝 제외) — 원 높이 중앙에 정렬 */}
                 {idx < STEPS.length - 1 && (
                   <div
-                    className="flex-1 h-0.5 mx-2 -mt-4"
+                    className="flex-1 rounded-full mx-2"
                     style={{
-                      backgroundColor: isDone
-                        ? "var(--color-positive)"
-                        : "var(--layer-border-strong)",
+                      ...connectorStyle,
+                      marginTop: 19, // 40/2 - 2/2 (원 중심)
+                      minWidth: 24,
                     }}
                     aria-hidden
                   />
