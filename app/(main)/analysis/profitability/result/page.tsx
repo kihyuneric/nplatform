@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
-  ArrowLeft, Download, TrendingUp, TrendingDown,
+  ArrowLeft, ArrowRight, Download, TrendingUp, TrendingDown,
   AlertTriangle, CheckCircle2, XCircle, Shield,
   DollarSign, Clock, BarChart3, Brain, FileText,
   Scale, Activity, Target, Zap, ChevronDown,
@@ -26,6 +26,7 @@ export default function ProfitabilityResultPage() {
   const [activeTab, setActiveTab] = useState<string>("overview")
   const [exporting, setExporting] = useState(false)
   const [isDemo, setIsDemo] = useState(false)
+  const [listingId, setListingId] = useState<string | null>(null)
 
   const handleExportPDF = useCallback(async () => {
     if (!result || exporting) return
@@ -51,6 +52,7 @@ export default function ProfitabilityResultPage() {
       try {
         const parsed = JSON.parse(stored)
         setIsDemo(!!parsed._demo)
+        setListingId(parsed._listingId ?? null)
         setResult(parsed)
       } catch {
         router.push("/analysis/profitability")
@@ -136,6 +138,11 @@ export default function ProfitabilityResultPage() {
         </div>
       </div>
 
+      {/* DR-18: 다음 단계 액션 바 — 매물 / 시뮬레이터 / 딜룸 연계 */}
+      <div className={`${DS.page.container} pt-6`}>
+        <NextStepsBar result={result} listingId={listingId} />
+      </div>
+
       {/* KPI Cards */}
       <div className={`${DS.page.container} pt-6`}>
         <motion.div variants={staggerContainer} initial="hidden" animate="show" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -206,6 +213,94 @@ export default function ProfitabilityResultPage() {
 }
 
 // ─── KPI Card ──────────────────────────────────────────────────────────────
+
+// ─── DR-18: Next Steps Bar ────────────────────────────────────────────────
+// 매물→분석→딜룸 흐름 연결: 분석 결과에서 바로 매물 상세, 경매 시뮬,
+// AI 컨설턴트, 딜룸 신청으로 이동 가능하도록 제안.
+function NextStepsBar({ result, listingId }: { result: ProfitabilityResult; listingId: string | null }) {
+  const grade = result.aiPredictions.riskGrade.grade
+  const promoteDealroom = grade === 'A' || grade === 'B'
+  const appraisalWon = result.input.collateral.appraisalValue
+  const seniorWon = result.input.rights.mortgageAmount + result.input.rights.seniorClaims.reduce((s, c) => s + c.amount, 0)
+
+  // 경매 시뮬 프리필: appraisal/senior 파라미터
+  const simulatorHref =
+    `/analysis/simulator?appraisal=${appraisalWon}&senior=${seniorWon}` +
+    (listingId ? `&listing=${listingId}` : '')
+
+  const actions: {
+    href: string
+    label: string
+    sub: string
+    tone: 'brand' | 'success' | 'neutral' | 'warn'
+    show: boolean
+  }[] = [
+    {
+      href: listingId ? `/exchange/${listingId}` : '#',
+      label: listingId ? '매물 상세로' : '매물에서 시작',
+      sub: listingId ? '분석 근거 매물 확인' : '거래소에서 대상 매물 선택',
+      tone: 'neutral',
+      show: true,
+    },
+    {
+      href: simulatorHref,
+      label: '경매 시뮬레이터',
+      sub: `감정가·선순위 ${appraisalWon > 0 ? '자동 프리필' : '기반 계산'}`,
+      tone: 'brand',
+      show: true,
+    },
+    {
+      href: '/analysis/copilot' + (listingId ? `?listing=${listingId}` : ''),
+      label: 'AI 컨설턴트',
+      sub: '자연어로 리스크 질의',
+      tone: 'neutral',
+      show: true,
+    },
+    {
+      href: listingId ? `/deals?listing=${listingId}` : '/deals',
+      label: '딜룸 신청',
+      sub: grade === 'A' ? 'A등급 · 우선협상 권장' : grade === 'B' ? 'B등급 · 검토 권장' : '상세 심사 필요',
+      tone: promoteDealroom ? 'success' : 'warn',
+      show: true,
+    },
+  ]
+
+  const toneClass: Record<string, string> = {
+    brand: 'border-[var(--color-brand-mid)]/30 bg-[var(--color-brand-mid)]/5 hover:bg-[var(--color-brand-mid)]/10 text-[var(--color-brand-mid)]',
+    success: 'border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    neutral: 'border-[var(--color-border-default)] bg-[var(--color-surface-base)] hover:bg-[var(--color-surface-sunken)] text-[var(--color-text-secondary)]',
+    warn: 'border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  }
+
+  return (
+    <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-3">
+      <div className="flex items-center justify-between mb-2.5">
+        <div className="flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-[var(--color-brand-mid)]" />
+          <span className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">다음 단계</span>
+          <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">
+            · 분석 결과를 매물·시뮬·딜룸으로 이어보세요
+          </span>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        {actions.filter(a => a.show).map(a => (
+          <Link
+            key={a.label}
+            href={a.href}
+            className={`group flex items-center justify-between gap-2 rounded-lg border px-3 py-2.5 transition-colors ${toneClass[a.tone]}`}
+          >
+            <div className="min-w-0">
+              <div className="text-[0.8125rem] font-bold truncate">{a.label}</div>
+              <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] truncate">{a.sub}</div>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 function KpiCard({ label, value, sub, positive, icon: Icon }: {
   label: string; value: string; sub: string; positive: boolean; icon: any

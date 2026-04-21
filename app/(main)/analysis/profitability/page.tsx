@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -137,6 +137,27 @@ export default function ProfitabilityPage() {
     setStep(1)
   }, [])
 
+  // DR-18: 매물에서 넘어온 prefill (appraisal · senior · address) 반영
+  useEffect(() => {
+    if (!searchParams) return
+    const appraisal = searchParams.get("appraisal")
+    const senior = searchParams.get("senior")
+    const address = searchParams.get("address")
+    if (!appraisal && !senior && !address) return
+    if (appraisal) {
+      const v = Number(appraisal)
+      if (v > 0) setCollateral(p => ({ ...p, appraisalValue: v, appraisalDate: p.appraisalDate || new Date().toISOString().slice(0, 10) }))
+    }
+    if (senior) {
+      const v = Number(senior)
+      if (v > 0) setRights(p => ({ ...p, mortgageAmount: p.mortgageAmount || v }))
+    }
+    if (address) {
+      setCollateral(p => ({ ...p, address: p.address || decodeURIComponent(address) }))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const canNext = useCallback(() => {
     switch (step) {
       case 1: return bond.institutionName && bond.debtorName && bond.remainingPrincipal > 0 && bond.defaultStartDate
@@ -191,7 +212,10 @@ export default function ProfitabilityPage() {
       }
 
       const result = await res.json()
-      sessionStorage.setItem("profitability-result", JSON.stringify(result))
+      // DR-18: 매물 → 분석 → 딜룸 흐름 연결을 위해 listingId를 결과에 함께 저장
+      const listingId = searchParams?.get("listing") ?? searchParams?.get("listingId") ?? null
+      const enriched = listingId ? { ...result, _listingId: listingId } : result
+      sessionStorage.setItem("profitability-result", JSON.stringify(enriched))
       router.push("/analysis/profitability/result")
     } catch (err: any) {
       console.error(err)

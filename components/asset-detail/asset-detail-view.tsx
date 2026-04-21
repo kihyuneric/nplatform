@@ -11,10 +11,11 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useParams } from "next/navigation"
+import Link from "next/link"
 import {
   FileText, MapPin, Building2, Gavel,
   CheckCircle2, ShieldCheck, Scale, Images,
-  Banknote, ScrollText,
+  Banknote, ScrollText, TrendingUp, Calculator, Brain, ArrowRight,
 } from "lucide-react"
 import { toast } from "sonner"
 import { TierGate } from "@/components/tier/tier-gate"
@@ -924,6 +925,72 @@ export function AssetDetailView({
                 onAction={handlePrimaryAction}
                 variant="desktop"
               />
+              {/* DR-18: 분석 도구 바로가기 — 매물 컨텍스트를 수익성·시뮬·AI로 이어감 */}
+              <div
+                className="rounded-xl p-3 border"
+                style={{
+                  backgroundColor: C.bg3,
+                  borderColor: C.bg4,
+                }}
+              >
+                <div
+                  className="flex items-center gap-1.5 mb-2"
+                  style={{ fontSize: 11, color: C.lt3, fontWeight: 800 }}
+                >
+                  <TrendingUp className="w-3 h-3" />
+                  <span>이 매물로 분석 시작</span>
+                </div>
+                <div className="grid grid-cols-1 gap-1.5">
+                  <Link
+                    href={`/analysis/profitability?listing=${id}&appraisal=${listing.appraisal_value}&senior=${listing.rights_summary.senior_total}&address=${encodeURIComponent(`${listing.region_city} ${listing.region_district}`.trim())}`}
+                    className="group inline-flex items-center justify-between rounded-lg px-2.5 py-2 transition-colors hover:bg-white/5"
+                    style={{
+                      backgroundColor: "rgba(16,185,129,0.10)",
+                      border: "1px solid rgba(16,185,129,0.24)",
+                    }}
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      <TrendingUp className="w-3.5 h-3.5" style={{ color: "var(--color-positive)" }} />
+                      <span style={{ fontSize: 11, color: "var(--color-positive)", fontWeight: 800 }}>
+                        수익성 분석 (IRR · ROI)
+                      </span>
+                    </span>
+                    <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" style={{ color: "var(--color-positive)" }} />
+                  </Link>
+                  <Link
+                    href={`/analysis/simulator?listing=${id}&appraisal=${listing.appraisal_value}&senior=${listing.rights_summary.senior_total}`}
+                    className="group inline-flex items-center justify-between rounded-lg px-2.5 py-2 transition-colors hover:bg-white/5"
+                    style={{
+                      backgroundColor: "rgba(46,117,182,0.10)",
+                      border: "1px solid rgba(46,117,182,0.24)",
+                    }}
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      <Calculator className="w-3.5 h-3.5" style={{ color: "var(--color-brand-bright)" }} />
+                      <span style={{ fontSize: 11, color: "var(--color-brand-bright)", fontWeight: 800 }}>
+                        경매 시뮬레이터
+                      </span>
+                    </span>
+                    <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" style={{ color: "var(--color-brand-bright)" }} />
+                  </Link>
+                  <Link
+                    href={`/analysis/copilot?listing=${id}`}
+                    className="group inline-flex items-center justify-between rounded-lg px-2.5 py-2 transition-colors hover:bg-white/5"
+                    style={{
+                      backgroundColor: "rgba(139,92,246,0.10)",
+                      border: "1px solid rgba(139,92,246,0.24)",
+                    }}
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      <Brain className="w-3.5 h-3.5" style={{ color: "#A78BFA" }} />
+                      <span style={{ fontSize: 11, color: "#A78BFA", fontWeight: 800 }}>
+                        AI 컨설턴트
+                      </span>
+                    </span>
+                    <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" style={{ color: "#A78BFA" }} />
+                  </Link>
+                </div>
+              </div>
               <AssetSidebar
                 askingPrice={listing.asking_price}
                 recoveryRate={aiAnalysis.recoveryRate?.predicted ?? 72}
