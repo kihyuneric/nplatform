@@ -134,7 +134,7 @@ interface ListingDetail {
   public_sale_info: {
     mgmt_no: string           // 관리번호
     filed_date: string        // 공매신청일 (ISO)
-    estimated_start: string   // 예상 공매 개시일 (ISO)
+    estimated_start: string   // 예상 공매 시작일 (ISO)
   } | null
   /** 관리자 확인 상태 */
   escrow_confirmed: boolean   // 에스크로 결제 납입 확인
@@ -1222,7 +1222,7 @@ export function AssetDetailView({
                           </div>
                         )
                       })}
-                      {(["경매접수일", "예상 경매 개시일"] as const).map((label, i) => {
+                      {(["경매접수일(경매개시일)", "예상 경매 시작일"] as const).map((label, i) => {
                         const key = i === 0 ? "filed_date" : "estimated_start"
                         return (
                           <div key={label}>
@@ -1256,8 +1256,8 @@ export function AssetDetailView({
                     <div className="grid grid-cols-2 gap-3">
                       <InfoField label="사건번호" value={listing.auction_info.case_no} />
                       <InfoField label="관할법원" value={listing.auction_info.court} />
-                      <InfoField label="경매접수일" value={formatDateKo(listing.auction_info.filed_date)} />
-                      <InfoField label="예상 경매 개시일" value={formatDateKo(listing.auction_info.estimated_start)} />
+                      <InfoField label="경매접수일(경매개시일)" value={formatDateKo(listing.auction_info.filed_date)} />
+                      <InfoField label="예상 경매 시작일" value={formatDateKo(listing.auction_info.estimated_start)} />
                     </div>
                     {/* 땅집고옥션 경매 연동 */}
                     <a
@@ -1330,7 +1330,7 @@ export function AssetDetailView({
                           onChange={e => setPublicSaleDraft(prev => prev ? { ...prev, filed_date: e.target.value } : { mgmt_no: "", filed_date: e.target.value, estimated_start: "" })} />
                       </div>
                       <div>
-                        <label className="block font-bold mb-1" style={{ fontSize: 11, color: C.lt3 }}>예상 공매 개시일</label>
+                        <label className="block font-bold mb-1" style={{ fontSize: 11, color: C.lt3 }}>예상 공매 시작일</label>
                         <input type="date" className="w-full rounded-lg px-3 py-2 font-medium"
                           style={{ fontSize: 13, backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)", color: "var(--color-text-primary)" }}
                           value={publicSaleDraft?.estimated_start ?? ""}
@@ -1355,7 +1355,7 @@ export function AssetDetailView({
                     <div className="grid grid-cols-2 gap-3">
                       <InfoField label="관리번호" value={listing.public_sale_info.mgmt_no} />
                       <InfoField label="공매신청일" value={formatDateKo(listing.public_sale_info.filed_date)} />
-                      <InfoField label="예상 공매 개시일" value={formatDateKo(listing.public_sale_info.estimated_start)} />
+                      <InfoField label="예상 공매 시작일" value={formatDateKo(listing.public_sale_info.estimated_start)} />
                     </div>
                     {canEdit && (
                       <button type="button"

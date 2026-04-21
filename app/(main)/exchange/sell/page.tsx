@@ -787,11 +787,11 @@ function Step4BondRights({ state, update }: { state: WizardState; update: <K ext
           <Field label="관할법원">
             <TextInput value={state.auction_court} onChange={v => update("auction_court", v)} placeholder="예: 서울중앙지방법원" />
           </Field>
-          <Field label="경매접수일">
+          <Field label="경매접수일(경매개시일)">
             <DateField value={state.auction_filed_date} onChange={v => update("auction_filed_date", v)} placeholder="접수일 선택" max={new Date()} />
           </Field>
-          <Field label="예상 경매 개시일">
-            <DateField value={state.auction_estimated_start} onChange={v => update("auction_estimated_start", v)} placeholder="예상 개시일 선택" />
+          <Field label="예상 경매 시작일">
+            <DateField value={state.auction_estimated_start} onChange={v => update("auction_estimated_start", v)} placeholder="예상 시작일 선택" />
           </Field>
         </FormGrid>
       </div>
@@ -808,8 +808,8 @@ function Step4BondRights({ state, update }: { state: WizardState; update: <K ext
           <Field label="공매신청일">
             <DateField value={state.public_sale_filed_date} onChange={v => update("public_sale_filed_date", v)} placeholder="신청일 선택" max={new Date()} />
           </Field>
-          <Field label="예상 공매 개시일">
-            <DateField value={state.public_sale_estimated_start} onChange={v => update("public_sale_estimated_start", v)} placeholder="예상 개시일 선택" />
+          <Field label="예상 공매 시작일">
+            <DateField value={state.public_sale_estimated_start} onChange={v => update("public_sale_estimated_start", v)} placeholder="예상 시작일 선택" />
           </Field>
         </FormGrid>
       </div>

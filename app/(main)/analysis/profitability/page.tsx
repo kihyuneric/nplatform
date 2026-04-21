@@ -599,7 +599,7 @@ function Step2BondInfo({ value, onChange }: {
               placeholder="예: 서울중앙지방법원"
             />
           </Field>
-          <Field label="경매접수일">
+          <Field label="경매접수일(경매개시일)">
             <input
               className={DS.input.base}
               type="date"
@@ -607,7 +607,7 @@ function Step2BondInfo({ value, onChange }: {
               onChange={e => update({ auctionFiledDate: e.target.value })}
             />
           </Field>
-          <Field label="예상 경매 개시일">
+          <Field label="예상 경매 시작일">
             <input
               className={DS.input.base}
               type="date"
@@ -639,7 +639,7 @@ function Step2BondInfo({ value, onChange }: {
               onChange={e => update({ publicSaleFiledDate: e.target.value })}
             />
           </Field>
-          <Field label="예상 공매 개시일">
+          <Field label="예상 공매 시작일">
             <input
               className={DS.input.base}
               type="date"
