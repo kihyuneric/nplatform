@@ -32,6 +32,16 @@ import { riskPalette } from "@/lib/design-tokens"
 import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/unified-report/types"
 import { buildSampleReport } from "@/lib/npl/unified-report/sample"
 import { buildNplProfitability } from "@/lib/npl/unified-report/profitability"
+import {
+  computeCollateralFactor,
+  computeRightsFactor,
+  computeMarketFactor,
+  computeLiquidityFactor,
+  computeLegalFactor,
+  computeInvestmentVerdict,
+  verdictScoreToGrade,
+  VERDICT_WEIGHTS,
+} from "@/lib/npl/unified-report/risk-factors"
 
 const fmtKRW = (v: number) => {
   const eok = v / 1e8
@@ -42,61 +52,40 @@ const pct = (v: number) => `${v.toFixed(1)}%`
 
 /**
  * 리스크 5팩터(담보가치/권리관계/시장/유동성/법적)별 점수 산출 계산식을 생성한다.
- * 각 팩터는 3팩터 엔진 결과(LTV/지역동향/낙찰가율)와 특수조건을 조합해 점수를 산출하므로
- * 해당 구성 요소를 전개해 "왜 이 점수인가"를 투명하게 설명.
+ * lib/npl/unified-report/risk-factors.ts 의 순수 함수를 그대로 재실행해
+ * 샘플/리포트 빌더와 UI 가 완전히 동일한 공식·값을 공유한다 (single source of truth).
  */
 function buildRiskFactorFormula(
   f: UnifiedAnalysisReport["risk"]["factors"][number],
-  recovery: UnifiedAnalysisReport["recovery"],
-  input: UnifiedAnalysisReport["input"],
+  report: UnifiedAnalysisReport,
 ): string {
-  const ltv = recovery.factors.ltv
+  const { recovery, input } = report
+  const registry = report.registryAnalysis
+  const auction = recovery.factors.auctionRatio
   const region = recovery.factors.regionTrend
-  const auc = recovery.factors.auctionRatio
-  const sc = input.specialConditions
+
   switch (f.category) {
     case "담보가치":
-      return (
-        `LTV = 채권액 / 감정가 × 100\n` +
-        `    = ${fmtKRW(ltv.totalBondAmount)}원 / ${fmtKRW(ltv.collateralValue)}원 × 100\n` +
-        `    = ${ltv.ltvPercent.toFixed(2)}%\n\n` +
-        `담보가치 점수 = LTV 팩터 점수 그대로 반영\n` +
-        `           = ${ltv.score}점 (구간: ≤40%→100·≤60%→85·≤80%→65·≤100%→45·초과 감점)`
-      )
+      return computeCollateralFactor({
+        claimBalance: recovery.factors.ltv.totalBondAmount,
+        appraisalValue: input.appraisalValue,
+        marketValue: input.currentMarketValue ?? input.appraisalValue,
+      }).formula
     case "권리관계":
-      return (
-        `선순위 임차인 존재 여부 → 보증금 인수 리스크\n` +
-        `현재 상태: ${sc.seniorTenant ? "선순위 임차인 있음 (보증금 인수)" : "특이사항 없음"}\n\n` +
-        `점수 산정:\n` +
-        `  · 선순위 임차인 있음 → 55점 (MEDIUM)\n` +
-        `  · 없음              → 80점 (LOW)\n` +
-        `→ ${f.score}점 (${f.severity})`
-      )
+      return computeRightsFactor({
+        specialConditions: input.specialConditions,
+        registry,
+        subordinateClaimCount: 1,
+      }).formula
     case "시장":
-      return (
-        `지역 동향 점수 = 50 + 거래량변동×0.35 + 가격지수변동×0.45 (0~100 클램프)\n` +
-        `            = 50 + (${region.transactionVolumeChange.toFixed(1)})×0.35 + (${region.priceIndexChange.toFixed(1)})×0.45\n` +
-        `            = ${region.score}점\n\n` +
-        `낙찰가율 모멘텀 = ${region.auctionMomentum > 0 ? "+" : ""}${region.auctionMomentum}%p (1M − 12M)\n` +
-        `시장 리스크 점수 = 지역 동향 점수 그대로 반영 → ${f.score}점 (${f.severity})`
-      )
+      return computeMarketFactor({ region, auction }).formula
     case "유동성":
-      return (
-        `기대 매각 기간(일) = 법원 1회차 매각 평균\n` +
-        `                 = ${auc.expectedSaleDays ?? "—"}일 (${auc.courtName ?? "관할법원"})\n\n` +
-        `유동성 판정: >400일 → MEDIUM · ≤400일 → LOW\n` +
-        `질권 이자 부담 = 질권비율 × 금리 × 보유기간 (수익성 블록 참조)\n` +
-        `→ 유동성 점수 ${f.score}점 (${f.severity})`
-      )
+      return computeLiquidityFactor({
+        auction,
+        averageBidderCount: input.statistics.nearbyAuction?.summary.avgBidderCount ?? 1,
+      }).formula
     case "법적":
-      return (
-        `특수조건 검사 · ${Object.entries(sc).filter(([, v]) => v).length}건 해당\n` +
-        `  · 유치권 ${sc.lienRight ? "✓" : "✗"}  · 법정지상권 ${sc.statutorySuperficies ? "✓" : "✗"}\n` +
-        `  · 지분경매 ${sc.sharedAuction ? "✓" : "✗"}  · 선순위임차인 ${sc.seniorTenant ? "✓" : "✗"}\n` +
-        `  · 위반건축물 ${sc.illegalBuilding ? "✓" : "✗"}  · 분묘기지권 ${sc.graveYardRight ? "✓" : "✗"}  · 농지취득 ${sc.farmlandRestriction ? "✓" : "✗"}\n\n` +
-        `법적 점수 = 해당 없음 → 80점 · 1건 이상 → 감점 (건당 -10점)\n` +
-        `→ ${f.score}점 (${f.severity})`
-      )
+      return computeLegalFactor({ specialConditions: input.specialConditions }).formula
     default:
       return `점수 = ${f.score} / 100\n근거: ${f.explanation}`
   }
@@ -186,14 +175,29 @@ export default function UnifiedReportPage() {
                 {input.region} · {input.propertyCategory} · 감정가 {fmtKRW(input.appraisalValue)}
               </p>
             </div>
-            <div
-              className="px-4 py-3 rounded-xl text-center"
-              style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}
-            >
-              <div className="text-[0.625rem] opacity-80 mb-0.5">종합 등급</div>
-              <div className="text-3xl font-black leading-none">{summary.riskGrade}</div>
-              <div className="text-[0.6875rem] opacity-80 mt-1">{summary.riskScore}점 / 100</div>
-            </div>
+            {(() => {
+              const vScore = summary.verdictScore ?? 0
+              const vGrade = verdictScoreToGrade(vScore)
+              const gradeBg = {
+                A: "rgba(16,185,129,0.30)",
+                B: "rgba(16,185,129,0.20)",
+                C: "rgba(245,158,11,0.25)",
+                D: "rgba(220,38,38,0.25)",
+              }[vGrade]
+              return (
+                <div
+                  className="px-4 py-3 rounded-xl text-center"
+                  style={{ background: gradeBg, backdropFilter: "blur(10px)" }}
+                >
+                  <div className="text-[0.625rem] opacity-80 mb-0.5">AI 투자 등급</div>
+                  <div className="text-3xl font-black leading-none">{vGrade}</div>
+                  <div className="text-[0.6875rem] opacity-90 mt-1 font-bold">
+                    {vScore.toFixed(1)}점
+                    <span className="opacity-75"> · {summary.verdict}</span>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
 
           {error && (
@@ -259,7 +263,6 @@ export default function UnifiedReportPage() {
               tint={summary.verdict === "BUY" ? "#10B981" : summary.verdict === "HOLD" ? "#F59E0B" : "#DC2626"}
             />
             <VerdictCriteriaToggle
-              verdict={summary.verdict}
               predictedRecovery={recovery.predictedRecoveryRate}
               riskScore={summary.riskScore}
               recommendedRoi={profitability?.strategies.recommended.roi ?? 0}
@@ -440,7 +443,7 @@ export default function UnifiedReportPage() {
               </p>
               <FormulaToggle
                 label="계산식"
-                formula={buildRiskFactorFormula(f, recovery, input)}
+                formula={buildRiskFactorFormula(f, report)}
               />
             </div>
           ))}
@@ -658,43 +661,52 @@ function FormulaToggle({
 }
 
 /**
- * 투자 의견(BUY/HOLD/AVOID) 판정 기준을 클릭 토글로 표시.
- * KPI 카드 바로 아래에 "기준" 버튼으로 배치.
+ * 투자 의견 — 가중치 기반 스코어링 (0~100).
+ *   4팩터 각 정규화 점수 × 가중치 → 총점. 버킷 판정 (≥75 BUY · ≥55 HOLD · <55 AVOID).
+ *   risk-factors.ts 의 순수 함수 computeInvestmentVerdict 를 그대로 재실행해 UI 와 리포트가 동일 값.
  */
 function VerdictCriteriaToggle({
-  verdict,
   predictedRecovery,
   riskScore,
   recommendedRoi,
   bankSalePrice,
   totalBondAmount,
 }: {
-  verdict: "BUY" | "HOLD" | "AVOID"
   predictedRecovery: number
   riskScore: number
-  recommendedRoi: number       // 소수 (0.2845)
+  recommendedRoi: number       // 소수 (0.481)
   bankSalePrice: number        // 원
   totalBondAmount: number      // 원 (채권잔액)
 }) {
   const [open, setOpen] = useState(false)
+
+  const r = computeInvestmentVerdict({
+    predictedRecoveryRate: predictedRecovery,
+    riskScore,
+    recommendedRoi,
+    bankSalePrice,
+    claimBalance: totalBondAmount,
+  })
+  const verdictGrade = verdictScoreToGrade(r.totalScore)
   const verdictColor =
-    verdict === "BUY" ? "#10B981" : verdict === "HOLD" ? "#F59E0B" : "#DC2626"
-
-  // 4-팩터 통과 계산 (sample.ts verdict 로직과 동일)
+    r.verdict === "BUY" ? "#10B981" : r.verdict === "HOLD" ? "#F59E0B" : "#DC2626"
   const salePriceRatio = totalBondAmount > 0 ? bankSalePrice / totalBondAmount : 1
-  const passRecovery = predictedRecovery >= 85
-  const passRisk     = riskScore >= 65
-  const passROI      = recommendedRoi >= 0.18
-  const passDiscount = salePriceRatio <= 0.95
-  const passCount = [passRecovery, passRisk, passROI, passDiscount].filter(Boolean).length
+  const discountRatio  = 1 - salePriceRatio
 
-  const Row = ({ pass, label, value, rule }: { pass: boolean; label: string; value: string; rule: string }) => (
+  const Row = ({ label, rule, current, mapped, weight, contribution }: {
+    label: string
+    rule: string
+    current: string
+    mapped: number
+    weight: number
+    contribution: number
+  }) => (
     <li className="flex items-start gap-2">
       <span
-        className={`mt-0.5 inline-flex w-4 h-4 rounded-full items-center justify-center text-[0.55rem] font-black shrink-0`}
-        style={{ background: pass ? "#10B98122" : "#DC262622", color: pass ? "#10B981" : "#DC2626" }}
+        className="mt-0.5 inline-flex min-w-[2.2rem] px-1 h-4 rounded-full items-center justify-center text-[0.55rem] font-black shrink-0"
+        style={{ background: verdictColor + "22", color: verdictColor }}
       >
-        {pass ? "✓" : "✕"}
+        {mapped.toFixed(0)}
       </span>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-1.5 flex-wrap">
@@ -702,7 +714,8 @@ function VerdictCriteriaToggle({
           <span className="text-[0.625rem] text-[var(--color-text-tertiary)]">{rule}</span>
         </div>
         <div className="text-[0.625rem] font-mono text-[var(--color-text-secondary)]">
-          현재 · {value}
+          현재 · {current}
+          <span className="opacity-70"> → 정규화 {mapped.toFixed(1)} × 가중치 {weight} = <b>{contribution.toFixed(2)}점</b></span>
         </div>
       </div>
     </li>
@@ -718,7 +731,7 @@ function VerdictCriteriaToggle({
         aria-expanded={open}
       >
         <Info className="w-3 h-3" />
-        기준 · {passCount}/4 통과
+        AI 투자 등급 · {verdictGrade} ({r.totalScore}점)
         <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
       </button>
       {open && (
@@ -728,57 +741,74 @@ function VerdictCriteriaToggle({
         >
           <div>
             <div className="font-bold mb-1.5" style={{ color: verdictColor }}>
-              투자 의견 4-팩터 판정 규칙
+              투자 의견 4-팩터 가중 스코어링
             </div>
             <ul className="space-y-1.5">
               <Row
-                pass={passRecovery}
-                label="[G1] 예측 회수율"
-                rule="≥ 85% · 담보 커버리지"
-                value={`${predictedRecovery.toFixed(1)}%`}
+                label="[F1] 예측 회수율"
+                rule="0% @ 60%·100점 @ 100% (선형)"
+                current={`${predictedRecovery.toFixed(1)}%`}
+                mapped={r.components.recovery.mapped}
+                weight={r.components.recovery.weight}
+                contribution={r.components.recovery.contribution}
               />
               <Row
-                pass={passRisk}
-                label="[G2] AI 리스크 점수"
-                rule="≥ 65 · B등급 이상 (LOW/MEDIUM)"
-                value={`${riskScore}점`}
+                label="[F2] AI 리스크 점수"
+                rule="5팩터 종합 (담보·권리·시장·유동·법적)"
+                current={`${riskScore}점`}
+                mapped={r.components.risk.mapped}
+                weight={r.components.risk.weight}
+                contribution={r.components.risk.contribution}
               />
               <Row
-                pass={passROI}
-                label="[G3] 권고 시나리오 ROI"
-                rule="≥ 18% · 투자 가치"
-                value={`${(recommendedRoi * 100).toFixed(2)}%`}
+                label="[F3] 권고 시나리오 ROI"
+                rule="0 @ 0%·100점 @ 25% (선형)"
+                current={`${(recommendedRoi * 100).toFixed(2)}%`}
+                mapped={r.components.roi.mapped}
+                weight={r.components.roi.weight}
+                contribution={r.components.roi.contribution}
               />
               <Row
-                pass={passDiscount}
-                label="[G4] NPL 매각가 할인"
-                rule="매각가 / 채권잔액 ≤ 95% · 최소 5% 할인"
-                value={`${(salePriceRatio * 100).toFixed(1)}% (매각가 ${Math.round(bankSalePrice / 1e8 * 10) / 10}억 / 채권잔액 ${Math.round(totalBondAmount / 1e8 * 10) / 10}억)`}
+                label="[F4] NPL 매각가 할인"
+                rule="0 @ 0%·100점 @ 15% 할인 (선형)"
+                current={`${(discountRatio * 100).toFixed(1)}% 할인 (매각가 ${Math.round(bankSalePrice / 1e8 * 10) / 10}억 / 잔액 ${Math.round(totalBondAmount / 1e8 * 10) / 10}억)`}
+                mapped={r.components.discount.mapped}
+                weight={r.components.discount.weight}
+                contribution={r.components.discount.contribution}
               />
             </ul>
           </div>
           <div className="pt-2 border-t border-dashed" style={{ borderColor: verdictColor + "30" }}>
             <div className="font-bold mb-1" style={{ color: verdictColor }}>
-              종합 판정
+              AI 투자 등급 · 가중 합계
             </div>
             <ul className="space-y-0.5 text-[var(--color-text-secondary)]">
               <li>
-                <span className="font-bold" style={{ color: "#10B981" }}>BUY (권고)</span>
-                {" · "}4개 팩터 모두 통과
+                <span className="font-bold" style={{ color: "#10B981" }}>A</span>
+                {" · "}총점 ≥ 85  (최상위 BUY · 권고)
               </li>
               <li>
-                <span className="font-bold" style={{ color: "#F59E0B" }}>HOLD (관망)</span>
-                {" · "}2~3개 팩터 통과
+                <span className="font-bold" style={{ color: "#10B981" }}>B</span>
+                {" · "}75 ≤ 총점 &lt; 85  (BUY · 권고)
               </li>
               <li>
-                <span className="font-bold" style={{ color: "#DC2626" }}>AVOID (회피)</span>
-                {" · "}0~1개 팩터 통과
+                <span className="font-bold" style={{ color: "#F59E0B" }}>C</span>
+                {" · "}55 ≤ 총점 &lt; 75  (HOLD · 관망)
+              </li>
+              <li>
+                <span className="font-bold" style={{ color: "#DC2626" }}>D</span>
+                {" · "}총점 &lt; 55  (AVOID · 회피)
               </li>
             </ul>
             <div className="mt-2 text-[0.625rem] font-mono text-[var(--color-text-tertiary)]">
-              통과 {passCount}/4
+              총점 {r.components.recovery.contribution.toFixed(2)} + {r.components.risk.contribution.toFixed(2)} + {r.components.roi.contribution.toFixed(2)} + {r.components.discount.contribution.toFixed(2)}
+              {" = "}
+              <b style={{ color: verdictColor }}>{r.totalScore}점</b>
               {" → "}
-              <span className="font-bold" style={{ color: verdictColor }}>{verdict}</span>
+              <span className="font-bold" style={{ color: verdictColor }}>{verdictGrade}등급 · {r.verdict}</span>
+            </div>
+            <div className="mt-1 text-[0.625rem] font-mono text-[var(--color-text-tertiary)] opacity-70">
+              가중치: 회수율 {VERDICT_WEIGHTS.recovery} · 리스크 {VERDICT_WEIGHTS.risk} · ROI {VERDICT_WEIGHTS.roi} · 할인 {VERDICT_WEIGHTS.discount}
             </div>
           </div>
         </div>

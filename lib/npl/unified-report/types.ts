@@ -490,6 +490,8 @@ export interface UnifiedReportSummary {
   recommendedBidPrice: number
   /** 투자 의견 */
   verdict: 'BUY' | 'HOLD' | 'AVOID'
+  /** 투자 의견 종합 점수 (0~100, 가중치 기반) — risk-factors.ts computeInvestmentVerdict */
+  verdictScore?: number
   /** 한 줄 요약 */
   tldr: string
 }

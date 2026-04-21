@@ -26,6 +26,15 @@ import {
 import { computeExpectedBid, estimateMinBid } from './expected-bid'
 import { buildRegistryAnalysis } from './registry-analysis'
 import { buildNplProfitability } from './profitability'
+import {
+  computeCollateralFactor,
+  computeRightsFactor,
+  computeMarketFactor,
+  computeLiquidityFactor,
+  computeLegalFactor,
+  composeRiskScore,
+  computeInvestmentVerdict,
+} from './risk-factors'
 
 // ─── 샘플 통계 컨텍스트 · 송파 잠실 오피스텔 ─────────────────
 export const SAMPLE_STATISTICS: StatisticsContext = {
@@ -245,10 +254,27 @@ export function buildSampleReport(): UnifiedAnalysisReport {
     ],
   })
 
-  // 리스크 등급 — 샘플에서는 3팩터 점수 기반 룰드리븐 (실제는 Claude API)
-  const riskScore = Math.round(
-    ltv.score * 0.35 + region.score * 0.25 + auction.score * 0.3 + (recovery.compositeScore * 0.1),
-  )
+  // 리스크 5팩터 — 계산 가능한 공식 기반 (risk-factors.ts)
+  //   담보가치 · 권리관계 · 시장 · 유동성 · 법적 → 각 항목 공식 산출 후 가중 합산
+  const collateralFactor = computeCollateralFactor({
+    claimBalance: totalBond,
+    appraisalValue: appraisal,
+    marketValue: input.currentMarketValue ?? appraisal,
+  })
+  const rightsFactor = computeRightsFactor({
+    specialConditions: input.specialConditions,
+    registry: registryAnalysis,
+    subordinateClaimCount: 1,   // 잠실 케이스 후순위 근저당 1건
+  })
+  const marketFactor = computeMarketFactor({ region, auction })
+  const liquidityFactor = computeLiquidityFactor({
+    auction,
+    averageBidderCount: SAMPLE_STATISTICS.nearbyAuction?.summary.avgBidderCount ?? 1,
+  })
+  const legalFactor = computeLegalFactor({ specialConditions: input.specialConditions })
+  const riskFactorResults = [collateralFactor, rightsFactor, marketFactor, liquidityFactor, legalFactor]
+
+  const { score: riskScore, formula: riskCompositeFormula } = composeRiskScore(riskFactorResults)
   const riskGrade = scoreToGrade(riskScore)
 
   // ─── NPL 수익성 분석 · 잠실 시그마타워 오피스텔 (사용자 제공 엑셀 사례) ─────
@@ -349,23 +375,22 @@ export function buildSampleReport(): UnifiedAnalysisReport {
     },
   })
 
-  // ─── 4-팩터 투자의견 ──────────────────────────────────────
-  //  [G1] 예측회수율 ≥ 85%   · 담보 커버리지
-  //  [G2] 리스크 점수 ≥ 65   · B등급 이상 (LOW/MEDIUM)
-  //  [G3] ROI ≥ 18%          · 투자 가치
-  //  [G4] 금융기관 NPL 매각가 / 채권잔액 ≤ 0.95  · 매각가 할인 최소 5%
-  //  BUY = 4개 pass · HOLD = 2~3개 · AVOID = 0~1개
-  const bankSalePrice = profitability.acquisition.purchasePrice
+  // ─── 투자 의견 가중치 스코어링 ─────────────────────────────
+  //   4개 팩터를 0~100으로 정규화 후 가중 평균 (risk-factors.ts).
+  //   게이트식 4/4 BUY 대신 기여도 반영. ≥75 BUY · ≥55 HOLD · <55 AVOID.
+  const bankSalePrice  = profitability.acquisition.purchasePrice
   const recommendedRoi = profitability.strategies.recommended.roi
   const investmentRoi  = profitability.investment.roi
 
-  const passRecovery = recovery.predictedRecoveryRate >= 85
-  const passRisk     = riskScore >= 65
-  const passROI      = recommendedRoi >= 0.18
-  const passDiscount = bankSalePrice / Math.max(totalBond, 1) <= 0.95
-  const passCount    = [passRecovery, passRisk, passROI, passDiscount].filter(Boolean).length
-  const verdict: 'BUY' | 'HOLD' | 'AVOID' =
-    passCount === 4 ? 'BUY' : passCount >= 2 ? 'HOLD' : 'AVOID'
+  const verdictResult = computeInvestmentVerdict({
+    predictedRecoveryRate: recovery.predictedRecoveryRate,
+    riskScore,
+    recommendedRoi,
+    bankSalePrice,
+    claimBalance: totalBond,
+  })
+  const verdict = verdictResult.verdict
+  const verdictScore = verdictResult.totalScore
 
   const report: UnifiedAnalysisReport = {
     id: 'sample-' + Date.now().toString(36),
@@ -378,11 +403,12 @@ export function buildSampleReport(): UnifiedAnalysisReport {
       riskScore,
       recommendedBidPrice,
       verdict,
+      verdictScore,
       tldr:
         `${input.region} ${input.propertyCategory} · ` +
+        `투자 의견 ${verdictScore}점 (${verdict}) · ` +
         `NPL 매각가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 · ` +
-        `ROI ${(recommendedRoi * 100).toFixed(2)}% · ` +
-        `예측회수율 ${recovery.predictedRecoveryRate}% · 리스크 ${riskGrade}등급`,
+        `ROI ${(recommendedRoi * 100).toFixed(2)}% · 예측회수율 ${recovery.predictedRecoveryRate}%`,
     },
     recovery,
     risk: {
@@ -390,13 +416,13 @@ export function buildSampleReport(): UnifiedAnalysisReport {
       score: riskScore,
       level: riskScore >= 70 ? 'LOW' : riskScore >= 55 ? 'MEDIUM' : riskScore >= 40 ? 'HIGH' : 'CRITICAL',
       narrative: `LTV ${ltv.ltvPercent.toFixed(1)}% · 지역 동향 ${region.score}점 · 낙찰가율 조정치 ${auction.adjustedBidRatio.toFixed(1)}%. ${auction.specialConditionPenalty < 0 ? `특수조건 ${auction.specialConditionPenalty.toFixed(1)}%p 감점 반영. ` : ''}송파구 오피스텔 시장 안정세, 최근 3개월 낙찰가율 ${SAMPLE_STATISTICS.auctionRatioStats[0].rows.find(r => r.bucket === '3M')?.bidRatio.toFixed(1)}%로 탄탄한 흐름.`,
-      factors: [
-        { category: '담보가치', severity: ltv.score >= 70 ? 'LOW' : 'MEDIUM', score: ltv.score, explanation: `감정가 ${(appraisal/1e8).toFixed(1)}억 대비 채권 ${(totalBond/1e8).toFixed(1)}억 — LTV ${ltv.ltvPercent.toFixed(1)}%`, mitigation: 'LTV 80% 이하 유지. 필요 시 재감정 의뢰.' },
-        { category: '권리관계', severity: input.specialConditions.seniorTenant ? 'MEDIUM' : 'LOW', score: input.specialConditions.seniorTenant ? 55 : 80, explanation: input.specialConditions.seniorTenant ? '선순위 임차인 대항력 존재 — 보증금 인수 리스크' : '1순위 근저당, 특이사항 없음', mitigation: '임대차보호법상 우선변제권 확인, 인수 조건 협의' },
-        { category: '시장', severity: region.score >= 55 ? 'LOW' : 'MEDIUM', score: region.score, explanation: `${input.region} 실거래 ${region.transactionCount12M}건, 낙찰가율 모멘텀 ${region.auctionMomentum > 0 ? '+' : ''}${region.auctionMomentum}%p`, mitigation: '금리 인상기 가격조정 대비 — 보수적 시나리오 점검' },
-        { category: '유동성', severity: (auction.expectedSaleDays ?? 0) > 400 ? 'MEDIUM' : 'LOW', score: 65, explanation: `${auction.courtName ?? '관할법원'} 1회차 매각 평균 ${auction.expectedSaleDays ?? '—'}일. 질권 이자 부담 고려.`, mitigation: '단기 유동화 계획 수립, 입찰자 수 2명 미만 구간 집중' },
-        { category: '법적', severity: 'LOW', score: 80, explanation: '유치권·법정지상권·지분경매 해당 없음', mitigation: '현장조사 시 점유관계 재확인' },
-      ],
+      factors: riskFactorResults.map(f => ({
+        category: f.category,
+        severity: f.severity,
+        score: f.score,
+        explanation: f.explanation,
+        mitigation: f.mitigation,
+      })),
       specialConditionAdjustments: input.specialConditions.seniorTenant
         ? [{ condition: '선순위 임차인', impact: '낙찰가율 -10%p 반영, 보증금 인수 시 추가 현금흐름 주의' }]
         : [],
@@ -508,7 +534,7 @@ export function buildSampleReport(): UnifiedAnalysisReport {
       `권고 시나리오 ROI ${(recommendedRoi * 100).toFixed(2)}% · 기본 시나리오 ROI ${(investmentRoi * 100).toFixed(2)}%, ` +
       `지역 6개월 낙찰가율 ${SAMPLE_STATISTICS.auctionRatioStats[0].rows.find(r => r.bucket === '6M')?.bidRatio.toFixed(1)}%에 특수조건 ${auction.specialConditionPenalty.toFixed(1)}%p 반영한 ${auction.adjustedBidRatio.toFixed(1)}%를 기준 입찰가율로 제시하며, ` +
       `동일 건물 전회 낙찰(${SAMPLE_STATISTICS.sameAddressAuction!.summary.avgBidRatio}%)과 인근 송파 오피스텔(${SAMPLE_STATISTICS.nearbyAuction!.summary.avgBidRatio}%) 편차 고려, 보수·기준·공격 3단계 입찰 전략을 병행 권고합니다. ` +
-      `4-팩터 게이트 통과 ${passCount}/4 → ${verdict}.`,
+      `투자 의견 종합 점수 ${verdictScore}점 → ${verdict} (가중치: 회수율 0.35·리스크 0.25·ROI 0.25·할인 0.15).`,
   }
 
   return report
