@@ -53,7 +53,7 @@ export interface ClaimDetails {
   delinquencyStartDate: string
   /** 기한이익상실일 (ISO) */
   accelerationDate: string
-  /** 연체이자기산일 (ISO, +90일) */
+  /** 연체이자기산일 (ISO, 연체시작일 + 기산 오프셋, 기본 +90일) */
   interestAccrualStartDate: string
   /** 연체이자 — 기산시점까지 반영 (원) */
   accruedInterestAtAcceleration: number
@@ -391,6 +391,17 @@ const addDays = (date: string | Date, days: number): string => {
   return d.toISOString().slice(0, 10)
 }
 
+/**
+ * 축 생성기 — 중심값 주위 ±(step × (n-1)/2) 으로 n개 포인트 생성
+ *   buildAxis(0.85, 0.05, 5) → [0.75, 0.80, 0.85, 0.90, 0.95]
+ */
+const buildAxis = (center: number, step: number, n: number): number[] => {
+  const half = (n - 1) / 2
+  return Array.from({ length: n }, (_, i) =>
+    Math.max(0.01, Math.round((center + (i - half) * step) * 1000) / 1000),
+  )
+}
+
 // ─── Mulberry32 PRNG (결정적 시드) ─────────────────────────
 function mulberry32(seed: number) {
   return function rng() {
@@ -415,7 +426,10 @@ export interface ProfitabilityInput {
   loanPrincipal: number
   delinquencyRate: number          // 소수 (0.089)
   delinquencyStartDate: string
-  accelerationDate: string
+  /**
+   * 기한이익상실일 — 없으면 `delinquencyStartDate + accelerationOffsetDays` 로 자동 계산
+   */
+  accelerationDate?: string
   appraisalValue: number
   aiMarketValueLatest: number
   priceHistory?: ValuationPriceHistory[]
@@ -439,6 +453,24 @@ export interface ProfitabilityInput {
   brokerageFeeRate?: number
   /** 채권계약금 비율 (기본 0.10) */
   contractDepositRate?: number
+  // ── 법적/계약 기준 상수 (필요 시 오버라이드) ─────────────
+  /** 채권최고액 승수 (한국법: 원금 × 1.2) */
+  maxBondMultiplier?: number
+  /** 기한이익상실 오프셋 (일) — 기본 60 */
+  accelerationOffsetDays?: number
+  /** 연체이자 기산 오프셋 (일) — 기본 90 */
+  interestAccrualOffsetDays?: number
+  /** 채권매입 리드타임 (일) — 오늘 + N일 */
+  purchaseLeadDays?: number
+  /** 채권잔금 리드타임 (일) — 매입일 + N일 */
+  balancePaymentLeadDays?: number
+  // ── 경매 일정 리드타임 (법원 평균치 · 오버라이드 가능) ──
+  distributionDemandOffsetDays?: number  // 경매개시 → 배당요구종기 (기본 77)
+  firstSaleOffsetDays?: number           // 배당요구종기 → 1차 매각기일 (기본 270)
+  winBidOffsetDays?: number              // 매각기일 → 낙찰기일 (기본 35)
+  saleConfirmOffsetDays?: number         // 낙찰기일 → 매각결정 (기본 7)
+  balanceDueOffsetDays?: number          // 매각결정 → 잔금납부 (기본 40)
+  distributionOffsetDays?: number        // 잔금 → 배당기일 (기본 30)
   /** 근거 데이터 (6탭) — 주입형 */
   evidence?: Partial<EvidenceNavigationBlock>
   /** 계산 기준일 (기본 오늘) */
@@ -447,6 +479,23 @@ export interface ProfitabilityInput {
   mcSeed?: number
   /** Monte Carlo trial 수 (기본 10,000) */
   mcTrials?: number
+  /** Monte Carlo 낙찰가율 표준편차 (기본: evidence로부터 산출, fallback 0.07) */
+  mcBidRatioStd?: number
+  /** 민감도 분석 매입률 축 (기본: base 주변 ±12%p) */
+  sensitivityPurchaseRateAxis?: number[]
+  /** 민감도 분석 낙찰가율 축 (기본: baseBidRatio 주변 ±15%p) */
+  sensitivityBidRatioAxis?: number[]
+  // ── 3단계 전략 파라미터 ──────────────────────────────────
+  /** 보수적 매입률 (기본 0.85) */
+  strategyConservativeRate?: number
+  /** 권고 매입률 (기본 1.00) */
+  strategyRecommendedRate?: number
+  /** 공격적 매입률 (기본 1.05) */
+  strategyAggressiveRate?: number
+  /** 보수적 낙찰가율 감소폭 (기본 0.07) */
+  strategyConservativeBidDelta?: number
+  /** 공격적 낙찰가율 증가폭 (기본 0.05) */
+  strategyAggressiveBidDelta?: number
 }
 
 // ────────────────────────────────────────────────────────────
@@ -462,6 +511,20 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   const brokerageFeeRate = input.brokerageFeeRate ?? 0.015
   const contractDepositRate = input.contractDepositRate ?? 0.10
 
+  // 법적/계약 상수
+  const maxBondMultiplier = input.maxBondMultiplier ?? 1.2
+  const accelerationOffsetDays = input.accelerationOffsetDays ?? 60
+  const interestAccrualOffsetDays = input.interestAccrualOffsetDays ?? 90
+  const purchaseLeadDays = input.purchaseLeadDays ?? 7
+  const balancePaymentLeadDays = input.balancePaymentLeadDays ?? 30
+  // 법원 평균 기일 리드타임 (오버라이드 가능)
+  const distributionDemandOffsetDays = input.distributionDemandOffsetDays ?? 77
+  const firstSaleOffsetDays = input.firstSaleOffsetDays ?? 270
+  const winBidOffsetDays = input.winBidOffsetDays ?? 35
+  const saleConfirmOffsetDays = input.saleConfirmOffsetDays ?? 7
+  const balanceDueOffsetDays = input.balanceDueOffsetDays ?? 40
+  const distributionOffsetDays = input.distributionOffsetDays ?? 30
+
   // ─── [1] 물권 ─────────────────────────────────────────────
   const property: PropertyBasicInfo = {
     ...input.property,
@@ -470,8 +533,11 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   }
 
   // ─── [2] 채권 ─────────────────────────────────────────────
-  const maximumBondAmount = Math.round(input.loanPrincipal * 1.2)
-  const interestAccrualStartDate = addDays(input.delinquencyStartDate, 90)
+  const maximumBondAmount = Math.round(input.loanPrincipal * maxBondMultiplier)
+  // 기한이익상실일: 지정 없으면 연체시작 + 60일 (한국 금융관행)
+  const accelerationDate =
+    input.accelerationDate ?? addDays(input.delinquencyStartDate, accelerationOffsetDays)
+  const interestAccrualStartDate = addDays(input.delinquencyStartDate, interestAccrualOffsetDays)
   const accruedInterestAtAcceleration = Math.round(
     input.loanPrincipal *
       input.delinquencyRate *
@@ -491,7 +557,7 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
     maximumBondAmount,
     delinquencyRate: input.delinquencyRate,
     delinquencyStartDate: input.delinquencyStartDate,
-    accelerationDate: input.accelerationDate,
+    accelerationDate,
     interestAccrualStartDate,
     accruedInterestAtAcceleration,
     accruedInterestToDate,
@@ -501,12 +567,12 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
 
   // ─── [5] 경매진행일정 ─────────────────────────────────────
   const auctionStart = input.auctionStartDate ?? today
-  const distributionDemandEnd = addDays(auctionStart, 77)
-  const firstSaleDate = addDays(distributionDemandEnd, 270)
-  const winBidDate = addDays(firstSaleDate, 35)
-  const saleConfirmDate = addDays(winBidDate, 7)
-  const balanceDueDate = addDays(saleConfirmDate, 40)
-  const distributionDate = addDays(balanceDueDate, 30)
+  const distributionDemandEnd = addDays(auctionStart, distributionDemandOffsetDays)
+  const firstSaleDate = addDays(distributionDemandEnd, firstSaleOffsetDays)
+  const winBidDate = addDays(firstSaleDate, winBidOffsetDays)
+  const saleConfirmDate = addDays(winBidDate, saleConfirmOffsetDays)
+  const balanceDueDate = addDays(saleConfirmDate, balanceDueOffsetDays)
+  const distributionDate = addDays(balanceDueDate, distributionOffsetDays)
   const totalDurationDays = daysBetween(auctionStart, distributionDate)
 
   const schedule: AuctionScheduleBlock = {
@@ -514,18 +580,18 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
     totalDurationDays,
     milestones: [
       { key: 'auctionStart',          label: '경매개시결정일',  date: auctionStart,            note: '채권자 제공' },
-      { key: 'distributionDemandEnd', label: '배당요구종기일',  date: distributionDemandEnd,   offsetFromPrevDays: 77 },
-      { key: 'firstSaleDate',         label: '1차 매각기일',    date: firstSaleDate,           offsetFromPrevDays: 270 },
-      { key: 'winBidDate',            label: '낙찰기일',        date: winBidDate,              offsetFromPrevDays: 35 },
-      { key: 'saleConfirmDate',       label: '매각결정기일',    date: saleConfirmDate,         offsetFromPrevDays: 7 },
-      { key: 'balanceDueDate',        label: '잔금납부기일',    date: balanceDueDate,          offsetFromPrevDays: 40 },
-      { key: 'distributionDate',      label: '배당기일',        date: distributionDate,        offsetFromPrevDays: 30 },
+      { key: 'distributionDemandEnd', label: '배당요구종기일',  date: distributionDemandEnd,   offsetFromPrevDays: distributionDemandOffsetDays },
+      { key: 'firstSaleDate',         label: '1차 매각기일',    date: firstSaleDate,           offsetFromPrevDays: firstSaleOffsetDays },
+      { key: 'winBidDate',            label: '낙찰기일',        date: winBidDate,              offsetFromPrevDays: winBidOffsetDays },
+      { key: 'saleConfirmDate',       label: '매각결정기일',    date: saleConfirmDate,         offsetFromPrevDays: saleConfirmOffsetDays },
+      { key: 'balanceDueDate',        label: '잔금납부기일',    date: balanceDueDate,          offsetFromPrevDays: balanceDueOffsetDays },
+      { key: 'distributionDate',      label: '배당기일',        date: distributionDate,        offsetFromPrevDays: distributionOffsetDays },
     ],
   }
 
   // ─── [3] 매입일정/매입가 ──────────────────────────────────
-  const purchaseDate = addDays(today, 7)
-  const balancePaymentDate = addDays(purchaseDate, 30)
+  const purchaseDate = addDays(today, purchaseLeadDays)
+  const balancePaymentDate = addDays(purchaseDate, balancePaymentLeadDays)
   const purchasePrice = Math.round(input.loanPrincipal * (1 - discountRate))
   const pledgeLoanAmount = Math.round(purchasePrice * pledgeLoanRatio)
   const pledgeLoanPeriodDays = Math.max(0, daysBetween(balancePaymentDate, distributionDate))
@@ -618,7 +684,46 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
     annualizedRoi,
   }
 
-  // ─── 3단계 매입 전략 ─────────────────────────────────────
+  // ─── Monte Carlo (먼저 실행 → 전략/민감도 파생 근거) ───
+  // 낙찰가율 표준편차 추정: evidence.bidRatioStats items 분산 OR 기본 0.07
+  const evidenceBidRatios = input.evidence?.bidRatioStats?.items?.map(i => i.ratioPercent / 100) ?? []
+  const derivedBidRatioStd = (() => {
+    if (input.mcBidRatioStd != null) return input.mcBidRatioStd
+    if (evidenceBidRatios.length >= 2) {
+      const mean = evidenceBidRatios.reduce((s, r) => s + r, 0) / evidenceBidRatios.length
+      const variance =
+        evidenceBidRatios.reduce((s, r) => s + (r - mean) ** 2, 0) / evidenceBidRatios.length
+      return Math.max(0.02, Math.sqrt(variance))
+    }
+    return 0.07
+  })()
+
+  const monteCarlo = runMonteCarlo({
+    trials: input.mcTrials ?? 10_000,
+    seed: input.mcSeed ?? 20260421,
+    loanPrincipal: input.loanPrincipal,
+    appraisalValue: input.appraisalValue,
+    baseBidRatio: input.expectedBidRatio,
+    bidRatioStd: derivedBidRatioStd,
+    pledgeLoanRatio,
+    pledgeInterestRate,
+    pledgeLoanPeriodDays,
+    executionCost,
+    maximumBondAmount,
+    registrationTransferRate,
+    brokerageFeeRate,
+    contractDepositRate,
+    bondCalcPrincipalAndInterest,
+  })
+
+  // ─── 3단계 매입 전략 (Monte Carlo 로부터 승률 파생) ───
+  const strategyConservativeRate = input.strategyConservativeRate ?? 0.85
+  const strategyRecommendedRate = input.strategyRecommendedRate ?? 1.0
+  const strategyAggressiveRate = input.strategyAggressiveRate ?? 1.05
+  const strategyConservativeBidDelta = input.strategyConservativeBidDelta ?? derivedBidRatioStd
+  const strategyAggressiveBidDelta =
+    input.strategyAggressiveBidDelta ?? derivedBidRatioStd * 0.7
+
   const strategies = buildPurchaseStrategies({
     loanPrincipal: input.loanPrincipal,
     appraisalValue: input.appraisalValue,
@@ -633,36 +738,31 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
     contractDepositRate,
     bondCalcPrincipalAndInterest,
     baseAnnualDays: 365,
+    conservativeRate: strategyConservativeRate,
+    recommendedRate: strategyRecommendedRate,
+    aggressiveRate: strategyAggressiveRate,
+    conservativeBidDelta: strategyConservativeBidDelta,
+    aggressiveBidDelta: strategyAggressiveBidDelta,
+    bidRatioStd: derivedBidRatioStd,
   })
 
   // ─── 민감도 분석 (매입률 × 낙찰가율 → ROI) ──────────────
+  // 축을 base 값 주변으로 자동 구성 (±σ 단위)
+  const defaultPurchaseAxis = buildAxis(strategyRecommendedRate, 0.03, 5) // 0.94/0.97/1.00/1.03/1.06
+  const defaultBidRatioAxis = buildAxis(
+    input.expectedBidRatio,
+    Math.max(0.02, derivedBidRatioStd),
+    6,
+  )
   const sensitivity = buildSensitivityMatrix({
     loanPrincipal: input.loanPrincipal,
     appraisalValue: input.appraisalValue,
-    purchaseRateAxis: [0.72, 0.75, 0.78, 0.81, 0.84],
-    bidRatioAxis: [0.70, 0.75, 0.80, 0.85, 0.90, 0.95],
+    purchaseRateAxis: input.sensitivityPurchaseRateAxis ?? defaultPurchaseAxis,
+    bidRatioAxis: input.sensitivityBidRatioAxis ?? defaultBidRatioAxis,
     executionCost,
     pledgeLoanRatio,
     pledgeInterestRate,
     pledgeLoanPeriodDays,
-    maximumBondAmount,
-    registrationTransferRate,
-    brokerageFeeRate,
-    contractDepositRate,
-    bondCalcPrincipalAndInterest,
-  })
-
-  // ─── Monte Carlo ────────────────────────────────────────
-  const monteCarlo = runMonteCarlo({
-    trials: input.mcTrials ?? 10_000,
-    seed: input.mcSeed ?? 20260421,
-    loanPrincipal: input.loanPrincipal,
-    appraisalValue: input.appraisalValue,
-    baseBidRatio: input.expectedBidRatio,
-    pledgeLoanRatio,
-    pledgeInterestRate,
-    pledgeLoanPeriodDays,
-    executionCost,
     maximumBondAmount,
     registrationTransferRate,
     brokerageFeeRate,
@@ -751,6 +851,13 @@ interface StrategyArgs {
   contractDepositRate: number
   bondCalcPrincipalAndInterest: number
   baseAnnualDays: number
+  // 전략별 커스터마이즈 (선택)
+  conservativeRate?: number
+  recommendedRate?: number
+  aggressiveRate?: number
+  conservativeBidDelta?: number
+  aggressiveBidDelta?: number
+  bidRatioStd?: number
 }
 
 function computeScenario(
@@ -802,20 +909,46 @@ function computeScenario(
   }
 }
 
+/**
+ * 표준정규분포 CDF (Abramowitz & Stegun 근사) — 정규분포 기반 승률 추정
+ */
+function normalCdf(x: number): number {
+  const p = 0.2316419
+  const b1 = 0.319381530
+  const b2 = -0.356563782
+  const b3 = 1.781477937
+  const b4 = -1.821255978
+  const b5 = 1.330274429
+  const t = 1 / (1 + p * Math.abs(x))
+  const z = (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * x * x)
+  const phi = 1 - z * (b1 * t + b2 * t * t + b3 * t ** 3 + b4 * t ** 4 + b5 * t ** 5)
+  return x >= 0 ? phi : 1 - phi
+}
+
 function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
-  // 보수적: 매입률 0.72 · 낙찰가율 −7%p
-  // 권고:   매입률 1.00 · 낙찰가율 base
-  // 공격적: 매입률 1.05 · 낙찰가율 +5%p
-  const conservativeRate = 0.72
-  const conservativeBidRatio = Math.max(0.3, args.baseBidRatio - 0.07)
-  const recommendedRate = 1.0
+  const conservativeRate = args.conservativeRate ?? 0.85
+  const recommendedRate = args.recommendedRate ?? 1.0
+  const aggressiveRate = args.aggressiveRate ?? 1.05
+  const conservativeDelta = args.conservativeBidDelta ?? 0.07
+  const aggressiveDelta = args.aggressiveBidDelta ?? 0.05
+  const bidStd = Math.max(0.02, args.bidRatioStd ?? 0.07)
+
+  const conservativeBidRatio = Math.max(0.3, args.baseBidRatio - conservativeDelta)
   const recommendedBidRatio = args.baseBidRatio
-  const aggressiveRate = 1.05
-  const aggressiveBidRatio = Math.min(1.0, args.baseBidRatio + 0.05)
+  const aggressiveBidRatio = Math.min(1.0, args.baseBidRatio + aggressiveDelta)
 
   const c = computeScenario(args, conservativeRate, conservativeBidRatio)
   const r = computeScenario(args, recommendedRate, recommendedBidRatio)
   const a = computeScenario(args, aggressiveRate, aggressiveBidRatio)
+
+  /**
+   * 승률 = P(실낙찰가율 ≥ 가정 낙찰가율)
+   *      = P(Z ≥ (assumed − base) / σ)
+   *      = 1 − Φ((assumed − base) / σ)
+   * 낙찰가율이 가정보다 낮으면 2질권자 배당 부족 → 유찰/손실
+   */
+  const winProbability = (assumedBid: number) =>
+    Math.max(0.02, Math.min(0.98, 1 - normalCdf((assumedBid - args.baseBidRatio) / bidStd)))
 
   const conservative: PurchaseStrategyScenario = {
     strategy: 'CONSERVATIVE',
@@ -830,7 +963,7 @@ function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
     expectedNetProfit: c.expectedNetProfit,
     roi: c.roi,
     annualizedRoi: c.annualizedRoi,
-    winProbability: 0.3,
+    winProbability: winProbability(conservativeBidRatio),
     riskWarning: c.roi < 0 ? '보수 시나리오 하에서 원금손실 가능' : undefined,
   }
   const recommended: PurchaseStrategyScenario = {
@@ -846,7 +979,7 @@ function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
     expectedNetProfit: r.expectedNetProfit,
     roi: r.roi,
     annualizedRoi: r.annualizedRoi,
-    winProbability: 0.55,
+    winProbability: winProbability(recommendedBidRatio),
   }
   const aggressive: PurchaseStrategyScenario = {
     strategy: 'AGGRESSIVE',
@@ -861,7 +994,7 @@ function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
     expectedNetProfit: a.expectedNetProfit,
     roi: a.roi,
     annualizedRoi: a.annualizedRoi,
-    winProbability: 0.75,
+    winProbability: winProbability(aggressiveBidRatio),
     riskWarning:
       a.roi < 0.05
         ? '마진 압박 — 낙찰가율 추가 하락 시 손실 구간 진입'
@@ -877,6 +1010,8 @@ function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
       `보수적(${(conservative.roi * 100).toFixed(1)}%) · 권고(${(recommended.roi * 100).toFixed(1)}%) · ` +
       `공격적(${(aggressive.roi * 100).toFixed(1)}%) 시나리오별 ROI를 병렬 제시합니다. ` +
       `권고안 기준 연환산 ${(recommended.annualizedRoi * 100).toFixed(1)}% 목표이며, ` +
+      `승률은 낙찰가율 분포 N(μ=${(args.baseBidRatio * 100).toFixed(1)}%, σ=${(bidStd * 100).toFixed(1)}%p) 기반 ` +
+      `P(실낙찰가율 ≥ 가정치) = 1−Φ((가정−μ)/σ) 로 산출. ` +
       `민감도·Monte Carlo 결과를 교차 참고하여 최종 의사결정 바랍니다.`,
   }
 }
@@ -954,6 +1089,11 @@ interface MonteCarloArgs {
   loanPrincipal: number
   appraisalValue: number
   baseBidRatio: number
+  bidRatioStd?: number             // 기본 0.07
+  costJitter?: number              // 기본 0.15
+  interestJitter?: number          // 기본 0.12
+  failedBidLambda?: number         // 기본 0.6
+  failedBidPenaltyDays?: number    // 유찰 회당 기간 증가 (기본 60)
   pledgeLoanRatio: number
   pledgeInterestRate: number
   pledgeLoanPeriodDays: number
@@ -967,10 +1107,11 @@ interface MonteCarloArgs {
 
 function runMonteCarlo(a: MonteCarloArgs): MonteCarloResult {
   const rng = mulberry32(a.seed)
-  const bidRatioStd = 0.07
-  const costJitter = 0.15
-  const interestJitter = 0.12
-  const failedBidLambda = 0.6
+  const bidRatioStd = a.bidRatioStd ?? 0.07
+  const costJitter = a.costJitter ?? 0.15
+  const interestJitter = a.interestJitter ?? 0.12
+  const failedBidLambda = a.failedBidLambda ?? 0.6
+  const failedBidPenaltyDays = a.failedBidPenaltyDays ?? 60
 
   const rois: number[] = new Array(a.trials)
   const holdingDays: number[] = new Array(a.trials)
@@ -983,8 +1124,8 @@ function runMonteCarlo(a: MonteCarloArgs): MonteCarloResult {
     // 유찰 회수 ~ Poisson(λ) (근사: -ln(u)/λ)
     const u = Math.max(1e-12, rng())
     const failedBids = Math.max(0, Math.round(-Math.log(u) / failedBidLambda))
-    // 회수 기간 증가 (1회차 당 약 60일)
-    const holdingAdj = a.pledgeLoanPeriodDays + failedBids * 60
+    // 회수 기간 증가 (1회차 당 약 60일, 파라미터화)
+    const holdingAdj = a.pledgeLoanPeriodDays + failedBids * failedBidPenaltyDays
     // 집행비 jitter
     const execCost = Math.round(a.executionCost * (1 + costJitter * (rng() - 0.5) * 2))
     // 이자율 jitter

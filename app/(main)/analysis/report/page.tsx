@@ -18,19 +18,20 @@
  *   8. AI 총평
  */
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import {
   ArrowLeft, Sparkles, TrendingUp, Shield, AlertTriangle, Target,
   BarChart3, Gavel, MapPin, Info, Activity, ChevronRight,
   FileText, Scale, Wallet, Calendar, Building2, Layers,
-  TrendingDown, PieChart, Sigma, Database,
+  TrendingDown, PieChart, Sigma, Database, Pencil,
 } from "lucide-react"
 import DS from "@/lib/design-system"
 import { riskPalette } from "@/lib/design-tokens"
 import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/unified-report/types"
 import { buildSampleReport } from "@/lib/npl/unified-report/sample"
+import { buildNplProfitability } from "@/lib/npl/unified-report/profitability"
 
 const fmtKRW = (v: number) => {
   const eok = v / 1e8
@@ -936,13 +937,108 @@ function PremiseCard({ label, value, highlight }: { label: string; value: number
 const krwMan = (v: number) => `${Math.round(v / 1e4).toLocaleString("ko-KR")}만`
 const krwWon = (v: number) => `${Math.round(v).toLocaleString("ko-KR")}원`
 
+// ── 날짜 유틸 (클라이언트) ──────────────────────────────────
+function addDaysISO(dateISO: string, days: number): string {
+  const d = new Date(dateISO)
+  if (isNaN(d.getTime())) return dateISO
+  d.setDate(d.getDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
+/**
+ * 편집 가능 입력 상태 (엑셀 B값 기반)
+ * 값 하나라도 변경되면 useMemo로 buildNplProfitability() 재실행 → 파생값 전부 재계산
+ */
+interface EditableInputs {
+  loanPrincipal: number
+  delinquencyRate: number       // 소수
+  delinquencyStartDate: string  // ISO (매물 등록 시 채권자 입력)
+  appraisalValue: number
+  aiMarketValueLatest: number
+  expectedBidRatio: number      // 소수
+  discountRate: number          // 소수 (0 = 원금 100%)
+  pledgeLoanRatio: number       // 소수
+  pledgeInterestRate: number    // 소수
+  executionCost: number
+}
+
+function extractInitialInputs(b: NplProfitabilityBlock): EditableInputs {
+  return {
+    loanPrincipal: b.claim.loanPrincipal,
+    delinquencyRate: b.claim.delinquencyRate,
+    delinquencyStartDate: b.claim.delinquencyStartDate,
+    appraisalValue: b.valuation.appraisalValue,
+    aiMarketValueLatest: b.valuation.aiMarketValueLatest,
+    expectedBidRatio: b.valuation.expectedBidRatio,
+    discountRate: b.acquisition.discountRatePercent / 100,
+    pledgeLoanRatio: b.acquisition.pledgeLoanRatio,
+    pledgeInterestRate: b.acquisition.pledgeInterestRate,
+    executionCost: b.distribution.executionCost,
+  }
+}
+
 function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
-  const { property, claim, acquisition, valuation, schedule, distribution, investment, strategies, sensitivity, monteCarlo } = block
+  const [edit, setEdit] = useState<EditableInputs>(() => extractInitialInputs(block))
+
+  // 초기 샘플 asOf / courtName / auctionStart / evidence 등은 불변 유지
+  const initial = block
+  const auctionStartDate = initial.schedule.milestones[0]?.date
+  const courtName = initial.schedule.courtName
+
+  // 편집된 입력으로 수익성 블록 재계산 (순수 함수)
+  const live: NplProfitabilityBlock = useMemo(() => {
+    try {
+      return buildNplProfitability({
+        property: {
+          address: initial.property.address,
+          exclusiveAreaM2: initial.property.exclusiveAreaM2,
+          supplyAreaM2: initial.property.supplyAreaM2,
+          creditor: initial.property.creditor,
+          debtor: initial.property.debtor,
+          owner: initial.property.owner,
+          tenant: initial.property.tenant,
+        },
+        loanPrincipal: edit.loanPrincipal,
+        delinquencyRate: edit.delinquencyRate,
+        delinquencyStartDate: edit.delinquencyStartDate,
+        // 기한이익상실 = 연체시작일 + 60일 (사용자 규약)
+        accelerationDate: addDaysISO(edit.delinquencyStartDate, 60),
+        appraisalValue: edit.appraisalValue,
+        aiMarketValueLatest: edit.aiMarketValueLatest,
+        priceHistory: initial.valuation.priceHistory,
+        expectedBidRatio: edit.expectedBidRatio,
+        expectedBidRatioPeriod: initial.valuation.expectedBidRatioPeriod,
+        auctionStartDate,
+        courtName,
+        discountRate: edit.discountRate,
+        pledgeLoanRatio: edit.pledgeLoanRatio,
+        pledgeInterestRate: edit.pledgeInterestRate,
+        executionCost: edit.executionCost,
+        evidence: initial.evidence,
+        asOfDate: initial.claim.calculatedAt,
+        mcSeed: 20260421,
+        mcTrials: 10_000,
+      })
+    } catch {
+      return initial
+    }
+  }, [edit, initial, auctionStartDate, courtName])
+
+  const { property, claim, acquisition, valuation, schedule, distribution, investment, strategies, sensitivity, monteCarlo } = live
+
+  // 계산식 문자열 (사용자 요구사항)
+  const interestFormulaAtAccel = `원금 × 금리 × (기산일 − 연체시작일)÷365`
+  const interestFormulaToDate = `원금 × 금리 × (기준일 − 기산일)÷365 + 기산시점분`
+  const bondCalcInterestFormula = `원금 × 금리 × (배당기일 − 기산일)÷365 + 기산시점분`
+  const bondCalcPnIFormula = `채권계산서(이자) + 대출원금`
+
+  // 채권매입일 "(현재 기준 +7일)" 노트
+  const purchaseDateNote = `(현재 기준 +7일)`
 
   return (
     <>
       {/* ── [1] 물권내역 ─────────────────────────── */}
-      <Section title="NPL 수익성 분석 · 물권내역" icon={Building2} caption="소재지·면적·채권/채무·임차 상태">
+      <Section title="NPL 수익성 분석 · 물권내역" icon={Building2} caption="소재지·면적·채권/채무·임차 상태 (개인정보 마스킹)">
         <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
           <table className="w-full text-[0.75rem]">
             <tbody>
@@ -951,29 +1047,57 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
               <KvRow k="공급면적" v={`${property.supplyAreaM2.toFixed(2)} ㎡ (${property.supplyAreaPy.toFixed(2)} 평)`} />
               <KvRow k="채권자" v={property.creditor} />
               <KvRow k="채무자" v={property.debtor} />
-              <KvRow k="소유자" v={property.owner} />
               <KvRow k="임차인" v={property.tenant} last />
             </tbody>
           </table>
         </div>
       </Section>
 
-      {/* ── [2] 채권내역 ─────────────────────────── */}
-      <Section title="NPL 수익성 분석 · 채권내역" icon={Wallet} caption="원금·채권최고액·연체이자·현재 채권잔액">
+      {/* ── [2] 채권내역 ─ 대출원금 → 연체금리 → 현재 채권잔액 → 채권최고액 ── */}
+      <Section title="NPL 수익성 분석 · 채권내역" icon={Wallet} caption="수정 가능 · 원금/금리/연체시작일 변경 시 전체 재계산">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-          <MetricCard label="대출원금" value={krwWon(claim.loanPrincipal)} tint="#1B3A5C" />
-          <MetricCard label="채권최고액 (원금×1.2)" value={krwWon(claim.maximumBondAmount)} tint="#2E75B6" />
-          <MetricCard label="연체금리" value={`연 ${(claim.delinquencyRate * 100).toFixed(2)}%`} tint="#F59E0B" />
-          <MetricCard label="현재 채권잔액" value={krwWon(claim.currentBondBalance)} tint="#DC2626" />
+          <EditableMoneyCard
+            label="대출원금"
+            value={edit.loanPrincipal}
+            onChange={(v) => setEdit({ ...edit, loanPrincipal: v })}
+            tint="#1B3A5C"
+          />
+          <EditablePercentCard
+            label="연체금리 (연)"
+            value={edit.delinquencyRate}
+            onChange={(v) => setEdit({ ...edit, delinquencyRate: v })}
+            tint="#F59E0B"
+          />
+          <MetricCard
+            label="현재 채권잔액"
+            value={krwWon(claim.currentBondBalance)}
+            tint="#DC2626"
+            sub="원금 + 현재 누적 연체이자"
+          />
+          <MetricCard
+            label="채권최고액 (원금 × 1.2)"
+            value={krwWon(claim.maximumBondAmount)}
+            tint="#2E75B6"
+          />
         </div>
         <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
           <table className="w-full text-[0.75rem]">
             <tbody>
-              <KvRow k="연체시작일" v={claim.delinquencyStartDate} />
-              <KvRow k="기한이익상실일" v={claim.accelerationDate} />
-              <KvRow k="연체이자 기산일 (+90일)" v={claim.interestAccrualStartDate} />
-              <KvRow k="기산시점 연체이자" v={krwWon(claim.accruedInterestAtAcceleration)} />
-              <KvRow k="현재 누적 연체이자" v={krwWon(claim.accruedInterestToDate)} />
+              <EditableDateRow
+                k="연체시작일 (채권자 입력)"
+                v={edit.delinquencyStartDate}
+                onChange={(v) => setEdit({ ...edit, delinquencyStartDate: v })}
+              />
+              <KvRow k="기한이익상실일" v={`${claim.accelerationDate}  (연체시작일 + 60일)`} />
+              <KvRow k="연체이자 기산일" v={`${claim.interestAccrualStartDate}  (연체시작일 + 90일)`} />
+              <KvRow
+                k="기산시점 연체이자"
+                v={`${krwWon(claim.accruedInterestAtAcceleration)}  (${interestFormulaAtAccel})`}
+              />
+              <KvRow
+                k="현재 누적 연체이자"
+                v={`${krwWon(claim.accruedInterestToDate)}  (${interestFormulaToDate})`}
+              />
               <KvRow k="계산 기준일" v={claim.calculatedAt} last />
             </tbody>
           </table>
@@ -981,17 +1105,40 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
       </Section>
 
       {/* ── [3] 채권매입일정 및 매입가 ──────────── */}
-      <Section title="NPL 수익성 분석 · 채권매입 일정·매입가" icon={Calendar} caption="매입일·잔금일·매입가·질권대출 구조">
+      <Section title="NPL 수익성 분석 · 채권매입 일정·매입가" icon={Calendar} caption="매입가·질권대출 구조 수정 가능">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-          <MetricCard label="매입가 (할인율 반영)" value={krwWon(acquisition.purchasePrice)} tint="#1B3A5C" sub={`할인율 ${acquisition.discountRatePercent.toFixed(1)}%`} />
-          <MetricCard label="질권대출 금액" value={krwWon(acquisition.pledgeLoanAmount)} tint="#2E75B6" sub={`비율 ${(acquisition.pledgeLoanRatio * 100).toFixed(0)}%`} />
-          <MetricCard label="질권대출 이자율" value={`연 ${(acquisition.pledgeInterestRate * 100).toFixed(1)}%`} tint="#F59E0B" sub={`${acquisition.pledgeLoanPeriodDays}일 운용`} />
-          <MetricCard label="질권대출 총이자" value={krwWon(acquisition.pledgeInterestTotal)} tint="#DC2626" />
+          <MetricCard
+            label="매입가 (할인율 반영)"
+            value={krwWon(acquisition.purchasePrice)}
+            tint="#1B3A5C"
+            sub={`할인율 ${acquisition.discountRatePercent.toFixed(1)}%`}
+          />
+          <EditablePercentCard
+            label="매입 할인율"
+            value={edit.discountRate}
+            onChange={(v) => setEdit({ ...edit, discountRate: v })}
+            tint="#64748B"
+            hint="0% = 원금 100% 매입"
+          />
+          <EditablePercentCard
+            label="질권대출 비율"
+            value={edit.pledgeLoanRatio}
+            onChange={(v) => setEdit({ ...edit, pledgeLoanRatio: v })}
+            tint="#2E75B6"
+            hint={`금액 ${krwWon(acquisition.pledgeLoanAmount)}`}
+          />
+          <EditablePercentCard
+            label="질권대출 이자율 (연)"
+            value={edit.pledgeInterestRate}
+            onChange={(v) => setEdit({ ...edit, pledgeInterestRate: v })}
+            tint="#F59E0B"
+            hint={`총이자 ${krwWon(acquisition.pledgeInterestTotal)} · ${acquisition.pledgeLoanPeriodDays}일`}
+          />
         </div>
         <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
           <table className="w-full text-[0.75rem]">
             <tbody>
-              <KvRow k="채권매입일" v={acquisition.purchaseDate} />
+              <KvRow k="채권매입일" v={`${acquisition.purchaseDate}  ${purchaseDateNote}`} />
               <KvRow k="채권잔금일 (+30일)" v={acquisition.balancePaymentDate} last />
             </tbody>
           </table>
@@ -1001,10 +1148,32 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
       {/* ── [4] 감정가·AI시세·낙찰가율 ─────────── */}
       <Section title="NPL 수익성 분석 · 감정가·AI 시세·낙찰가율" icon={BarChart3} caption={valuation.expectedBidRatioPeriod}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-          <MetricCard label="감정가 (채권자 제공)" value={krwWon(valuation.appraisalValue)} tint="#1B3A5C" />
-          <MetricCard label="AI 시세 (현재 실거래)" value={krwWon(valuation.aiMarketValueLatest)} tint="#2E75B6" sub={valuation.aiLatestReportedAt} />
-          <MetricCard label="예상 낙찰가율" value={`${(valuation.expectedBidRatio * 100).toFixed(1)}%`} tint="#10B981" sub={valuation.expectedBidRatioPeriod} />
-          <MetricCard label="예상 낙찰가" value={krwWon(valuation.expectedBidPrice)} tint="#DC2626" sub="감정가 × 낙찰가율" />
+          <EditableMoneyCard
+            label="감정가 (채권자 제공)"
+            value={edit.appraisalValue}
+            onChange={(v) => setEdit({ ...edit, appraisalValue: v })}
+            tint="#1B3A5C"
+          />
+          <EditableMoneyCard
+            label="AI 시세 (현재 실거래)"
+            value={edit.aiMarketValueLatest}
+            onChange={(v) => setEdit({ ...edit, aiMarketValueLatest: v })}
+            tint="#2E75B6"
+            hint={valuation.aiLatestReportedAt}
+          />
+          <EditablePercentCard
+            label="예상 낙찰가율"
+            value={edit.expectedBidRatio}
+            onChange={(v) => setEdit({ ...edit, expectedBidRatio: v })}
+            tint="#10B981"
+            hint={valuation.expectedBidRatioPeriod}
+          />
+          <MetricCard
+            label="예상 낙찰가"
+            value={krwWon(valuation.expectedBidPrice)}
+            tint="#DC2626"
+            sub="감정가 × 낙찰가율"
+          />
         </div>
         {valuation.priceHistory.length > 0 && (
           <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
@@ -1057,10 +1226,46 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
       {/* ── [6] 예상 배당표 ─────────────────── */}
       <Section title="NPL 수익성 분석 · 예상 배당표" icon={Scale} caption="채권계산서(원리금) + 경매비용 → 1·2질권자 배당">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-          <MetricCard label="채권계산서 (이자)" value={krwWon(distribution.bondCalcInterest)} tint="#1B3A5C" />
-          <MetricCard label="채권계산서 (원리금)" value={krwWon(distribution.bondCalcPrincipalAndInterest)} tint="#2E75B6" />
-          <MetricCard label="예상 배당액" value={krwWon(distribution.expectedDistributionAmount)} tint="#10B981" sub={`경매비용 ${krwMan(distribution.executionCost)} 포함`} />
-          <MetricCard label="2질권자 (투자자)" value={krwWon(distribution.secondPledgeeAmount)} tint="#DC2626" sub={`1질권자 ${krwWon(distribution.firstPledgeeAmount)}`} />
+          <MetricCard
+            label="채권계산서 (이자)"
+            value={krwWon(distribution.bondCalcInterest)}
+            tint="#1B3A5C"
+            sub={bondCalcInterestFormula}
+          />
+          <MetricCard
+            label="채권계산서 (원리금)"
+            value={krwWon(distribution.bondCalcPrincipalAndInterest)}
+            tint="#2E75B6"
+            sub={bondCalcPnIFormula}
+          />
+          <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
+            <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mb-1">예상 배당액</div>
+            <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: "#10B981" }}>
+              {krwWon(distribution.expectedDistributionAmount)}
+            </div>
+            <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-1">
+              원리금 + 경매비용 ({krwMan(distribution.executionCost)})
+            </div>
+            <EditableInlineMoney
+              label="경매비용"
+              value={edit.executionCost}
+              onChange={(v) => setEdit({ ...edit, executionCost: v })}
+            />
+          </div>
+          <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
+            <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mb-1">
+              1질권자 배당액 (질권대출기관)
+            </div>
+            <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: "#2E75B6" }}>
+              {krwWon(distribution.firstPledgeeAmount)}
+            </div>
+            <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-2">
+              2질권자 배당액 (투자자)
+            </div>
+            <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: "#DC2626" }}>
+              {krwWon(distribution.secondPledgeeAmount)}
+            </div>
+          </div>
         </div>
         <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
           <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{distribution.narrative}</p>
@@ -1071,7 +1276,7 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
       <Section title="NPL 수익성 분석 · 투입자금·수익" icon={PieChart} caption={`운용 ${investment.holdingPeriodDays}일 · ROI ${(investment.roi * 100).toFixed(2)}% · 연환산 ${(investment.annualizedRoi * 100).toFixed(2)}%`}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
           <MetricCard label="투자 에쿼티 총계" value={krwWon(investment.totalEquity)} tint="#1B3A5C" />
-          <MetricCard label="예상 투자수익" value={krwWon(investment.expectedNetProfit)} tint="#10B981" sub={`2질권자 ${krwWon(investment.expectedPayout)}`} />
+          <MetricCard label="예상 투자수익" value={krwWon(investment.expectedNetProfit)} tint="#10B981" />
           <MetricCard label="투자 수익률 (ROI)" value={`${(investment.roi * 100).toFixed(2)}%`} tint="#2E75B6" />
           <MetricCard label="연환산 수익률" value={`${(investment.annualizedRoi * 100).toFixed(2)}%`} tint="#F59E0B" sub={`${investment.holdingPeriodDays}일 운용`} />
         </div>
@@ -1139,7 +1344,7 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
                   <StatRow k="예상 낙찰가" v={krwWon(s.expectedBidPrice)} />
                   <StatRow k="2질권자 배당" v={krwWon(s.secondPledgeeAmount)} />
                   <StatRow k="투자 에쿼티" v={krwWon(s.totalEquity)} />
-                  <StatRow k="예상 순익" v={krwWon(s.expectedNetProfit)} />
+                  <StatRow k="예상 손익" v={krwWon(s.expectedNetProfit)} />
                   <StatRow k="ROI / 연환산" v={`${(s.roi * 100).toFixed(1)}% / ${(s.annualizedRoi * 100).toFixed(1)}%`} />
                   <StatRow k="매입·낙찰 성공 확률" v={`${(s.winProbability * 100).toFixed(0)}%`} />
                 </dl>
@@ -1172,6 +1377,145 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
         <MonteCarloPanel mc={monteCarlo} />
       </Section>
     </>
+  )
+}
+
+// ─── 편집 가능 카드 (금액 · 원) ─────────────────────────
+function EditableMoneyCard({
+  label, value, onChange, tint, hint,
+}: {
+  label: string
+  value: number
+  onChange: (v: number) => void
+  tint: string
+  hint?: string
+}) {
+  const [raw, setRaw] = useState(String(value))
+  useEffect(() => { setRaw(String(value)) }, [value])
+
+  return (
+    <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[0.625rem] text-[var(--color-text-tertiary)]">{label}</span>
+        <Pencil className="w-3 h-3 text-[var(--color-text-tertiary)] opacity-60" />
+      </div>
+      <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: tint }}>
+        {krwWon(value)}
+      </div>
+      <input
+        type="number"
+        inputMode="numeric"
+        className="mt-1.5 w-full rounded-md bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-2 py-1 text-[0.75rem] tabular-nums focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-mid)]/40"
+        value={raw}
+        onChange={(e) => setRaw(e.target.value)}
+        onBlur={() => {
+          const n = Number(raw.replace(/[^0-9.-]/g, ""))
+          if (Number.isFinite(n) && n > 0) onChange(Math.round(n))
+          else setRaw(String(value))
+        }}
+      />
+      {hint && <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-1">{hint}</div>}
+    </div>
+  )
+}
+
+// ─── 편집 가능 카드 (퍼센트 · 소수 입력값) ─────────────
+function EditablePercentCard({
+  label, value, onChange, tint, hint,
+}: {
+  label: string
+  value: number   // 소수 (0.089)
+  onChange: (v: number) => void
+  tint: string
+  hint?: string
+}) {
+  const displayPct = (value * 100).toFixed(2)
+  const [raw, setRaw] = useState(displayPct)
+  useEffect(() => { setRaw((value * 100).toFixed(2)) }, [value])
+
+  return (
+    <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[0.625rem] text-[var(--color-text-tertiary)]">{label}</span>
+        <Pencil className="w-3 h-3 text-[var(--color-text-tertiary)] opacity-60" />
+      </div>
+      <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: tint }}>
+        {displayPct}%
+      </div>
+      <div className="mt-1.5 flex items-center gap-1">
+        <input
+          type="number"
+          step="0.01"
+          inputMode="decimal"
+          className="w-full rounded-md bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-2 py-1 text-[0.75rem] tabular-nums focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-mid)]/40"
+          value={raw}
+          onChange={(e) => setRaw(e.target.value)}
+          onBlur={() => {
+            const n = Number(raw)
+            if (Number.isFinite(n) && n >= 0 && n <= 1000) onChange(n / 100)
+            else setRaw((value * 100).toFixed(2))
+          }}
+        />
+        <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">%</span>
+      </div>
+      {hint && <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-1">{hint}</div>}
+    </div>
+  )
+}
+
+// ─── 편집 가능 인라인 (소형) 금액 ─────────────────────
+function EditableInlineMoney({
+  label, value, onChange,
+}: {
+  label: string
+  value: number
+  onChange: (v: number) => void
+}) {
+  const [raw, setRaw] = useState(String(value))
+  useEffect(() => { setRaw(String(value)) }, [value])
+
+  return (
+    <div className="mt-2 flex items-center gap-1">
+      <span className="text-[0.625rem] text-[var(--color-text-tertiary)] shrink-0">{label}</span>
+      <input
+        type="number"
+        inputMode="numeric"
+        className="flex-1 rounded-md bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-2 py-0.5 text-[0.6875rem] tabular-nums focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-mid)]/40"
+        value={raw}
+        onChange={(e) => setRaw(e.target.value)}
+        onBlur={() => {
+          const n = Number(raw.replace(/[^0-9.-]/g, ""))
+          if (Number.isFinite(n) && n >= 0) onChange(Math.round(n))
+          else setRaw(String(value))
+        }}
+      />
+    </div>
+  )
+}
+
+// ─── 편집 가능 날짜 Row ────────────────────────────────
+function EditableDateRow({
+  k, v, onChange,
+}: {
+  k: string
+  v: string        // ISO yyyy-mm-dd
+  onChange: (v: string) => void
+}) {
+  return (
+    <tr className="border-b border-[var(--color-border-subtle)]">
+      <td className="py-2 px-3 bg-[var(--color-surface-base)] text-[var(--color-text-tertiary)] font-semibold w-40">{k}</td>
+      <td className="py-2 px-3 text-[var(--color-text-primary)]">
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            className="rounded-md bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-2 py-0.5 text-[0.75rem] tabular-nums focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-mid)]/40"
+            value={v}
+            onChange={(e) => onChange(e.target.value)}
+          />
+          <Pencil className="w-3 h-3 text-[var(--color-text-tertiary)] opacity-60" />
+        </div>
+      </td>
+    </tr>
   )
 }
 
