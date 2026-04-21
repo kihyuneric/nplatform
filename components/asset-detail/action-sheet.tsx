@@ -58,17 +58,17 @@ const META: Record<AssetTier, StepMeta> = {
   L2: {
     title: "비밀유지계약서 (NDA)",
     subtitle:
-      "10초 서명으로 NDA 체결 후 채권정보 · 가격 오퍼 · 채팅 · 실사 자료를 열람할 수 있습니다. 모든 열람 이력은 PII Access Log 에 기록됩니다.",
+      "10초 서명으로 NDA 체결 후 감정평가서 · 현장 사진 · 채권 정보를 열람할 수 있습니다. 모든 열람 이력은 PII Access Log 에 기록됩니다.",
     icon: <FileSignature size={18} />,
     confirmLabel: "NDA 체결하고 L2 자료 열람하기",
     accent: "var(--color-positive)",
   },
   L3: {
-    title: "인수의향서 (LOI)",
+    title: "계약 초안 · 에스크로",
     subtitle:
-      "10초 제출로 매도자에게 NPL 인수 의향을 전달합니다. 매도자 승인 후 에스크로 보증금 납부 및 현장 계약 단계로 진행됩니다.",
+      "실사 자료 검토 후 전자서명 및 에스크로 입금을 진행합니다. 매도자 승인 및 현장 계약으로 이어집니다.",
     icon: <FileCheck size={18} />,
-    confirmLabel: "LOI 제출하고 매도자 승인 요청",
+    confirmLabel: "계약 초안 확인 · 서명 진행",
     accent: "var(--color-positive)",
   },
   L4: {
