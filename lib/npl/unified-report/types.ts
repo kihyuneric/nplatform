@@ -28,6 +28,7 @@ import type {
   NearbyTransactionStat,
   PropertyCategory,
 } from './statistics'
+import type { NplProfitabilityBlock } from './profitability'
 
 export type {
   StatisticsContext,
@@ -37,6 +38,7 @@ export type {
   NearbyAuctionStat,
   NearbyTransactionStat,
   PropertyCategory,
+  NplProfitabilityBlock,
 }
 
 // ─── 리스크 등급 ──────────────────────────────────────────────
@@ -525,15 +527,17 @@ export interface UnifiedAnalysisReport {
   recovery: RecoveryPrediction
   /** 섹션 2 — AI 리스크 등급 */
   risk: AiRiskGrade
-  /** 섹션 3 — 이상 탐지 */
-  anomaly: AnomalyDetection
-  /** 섹션 4 — AI 권고 입찰가 (보수/기준/공격) */
-  bidRecommendation: BidRecommendation
-  /** 섹션 4-B — 예상 입찰가 분석 (3-baseline: 감정가/최저입찰가/시세) */
-  expectedBid: ExpectedBidAnalysis
-  /** 섹션 5 — 시장 전망 */
+  /** (legacy) 이상 탐지 — NPL 수익성 중심 리뉴얼 이후 UI 비표시 */
+  anomaly?: AnomalyDetection
+  /** (legacy) AI 권고 입찰가 (보수/기준/공격) — NPL 수익성 3단계 전략으로 대체 */
+  bidRecommendation?: BidRecommendation
+  /** (legacy) 예상 입찰가 분석 (3-baseline) — 수익성 보고서의 감정가·AI 시세 블록으로 대체 */
+  expectedBid?: ExpectedBidAnalysis
+  /** 섹션 3 — 시장 전망 */
   marketOutlook: MarketOutlookResult
-  /** 섹션 6 — 등기부 분석 (권리·배당·집행비용) — API 연동 시 주입 */
+  /** 섹션 4 — NPL 수익성 분석 (엑셀 로직 기반 · 7블록 + 3단계 전략 + 민감도 + Monte Carlo) */
+  profitability?: NplProfitabilityBlock
+  /** (legacy) 등기부 분석 (권리·배당·집행비용) — 수익성 보고서의 예상 배당표로 대체 */
   registryAnalysis?: RegistryAnalysisBlock
   /** AI 총평 */
   executiveSummary: string

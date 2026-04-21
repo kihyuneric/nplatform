@@ -24,11 +24,12 @@ import Link from "next/link"
 import {
   ArrowLeft, Sparkles, TrendingUp, Shield, AlertTriangle, Target,
   BarChart3, Gavel, MapPin, Info, Activity, ChevronRight,
-  FileText, Scale, Wallet,
+  FileText, Scale, Wallet, Calendar, Building2, Layers,
+  TrendingDown, PieChart, Sigma, Database,
 } from "lucide-react"
 import DS from "@/lib/design-system"
 import { riskPalette } from "@/lib/design-tokens"
-import type { UnifiedAnalysisReport } from "@/lib/npl/unified-report/types"
+import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/unified-report/types"
 import { buildSampleReport } from "@/lib/npl/unified-report/sample"
 
 const fmtKRW = (v: number) => {
@@ -87,8 +88,12 @@ export default function UnifiedReportPage() {
     )
   }
 
-  const { summary, recovery, risk, anomaly, bidRecommendation, expectedBid, marketOutlook, input } = report
+  const { summary, recovery, risk, marketOutlook, profitability, input } = report
   const rp = riskPalette[summary.riskGrade] ?? riskPalette.C
+  const kpiBidRatioPct =
+    profitability?.valuation.expectedBidRatio != null
+      ? profitability.valuation.expectedBidRatio * 100
+      : report.bidRecommendation?.base.bidRatioPercent ?? 0
 
   return (
     <div className={DS.page.wrapper}>
@@ -157,7 +162,7 @@ export default function UnifiedReportPage() {
             icon={Target}
             label="AI 권고 입찰가"
             value={fmtKRW(summary.recommendedBidPrice) + "원"}
-            sub={`낙찰가율 ${bidRecommendation.base.bidRatioPercent.toFixed(1)}%`}
+            sub={`낙찰가율 ${kpiBidRatioPct.toFixed(1)}%`}
             tint="#2E75B6"
           />
           <KpiCard
@@ -313,145 +318,10 @@ export default function UnifiedReportPage() {
         )}
       </Section>
 
-      {/* ── 4. 이상 탐지 ─────────────────────────── */}
-      <Section
-        title="이상 탐지"
-        icon={AlertTriangle}
-        caption={`종합 위험도 · ${anomaly.overallRisk} (${anomaly.overallScore}점)`}
-      >
-        <div className="space-y-2">
-          {anomaly.findings.map((f) => (
-            <div
-              key={f.id}
-              className="rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3 flex gap-3"
-            >
-              <SeverityDot severity={f.severity} />
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[0.75rem] font-bold text-[var(--color-text-primary)]">{f.title}</span>
-                  <span className="text-[0.625rem] text-[var(--color-text-tertiary)]">[{f.id}]</span>
-                </div>
-                <p className="text-[0.6875rem] text-[var(--color-text-secondary)] leading-relaxed mb-1">
-                  {f.description}
-                </p>
-                <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] italic">근거 · {f.evidence}</p>
-              </div>
-              <div className="text-right shrink-0">
-                <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">신뢰도</div>
-                <div className="text-sm font-black text-[var(--color-text-primary)] tabular-nums">
-                  {f.confidence}%
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        {anomaly.recommendations.length > 0 && (
-          <div className="mt-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3">
-            <div className="text-[0.75rem] font-bold text-emerald-700 mb-1.5">권고 조치</div>
-            <ul className="space-y-0.5">
-              {anomaly.recommendations.map((r, i) => (
-                <li key={i} className="text-[0.6875rem] text-emerald-700 flex items-start gap-1.5">
-                  <span className="mt-1 w-1 h-1 rounded-full bg-emerald-600 shrink-0" />
-                  {r}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </Section>
+      {/* ── NPL 수익성 분석 (7블록 + 3단계 전략 + 민감도 + Monte Carlo + 근거) ───── */}
+      {profitability && <ProfitabilitySections block={profitability} />}
 
-      {/* ── 5-A. 예상 입찰가 분석 (3-baseline) ────────── */}
-      <Section
-        title="예상 입찰가 분석"
-        icon={BarChart3}
-        caption={`과거 유사 물건 분석 결과, '감정가 대비 낙찰가율' 기반 입찰가 ${expectedBid.recommendedBidPrice.toLocaleString("ko-KR")}원을 추천함`}
-      >
-        <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
-          <div className="grid grid-cols-12 text-[0.6875rem] text-[var(--color-text-tertiary)] pb-2 mb-1 border-b border-[var(--color-border-subtle)]">
-            <div className="col-span-4">예상입찰가</div>
-            <div className="col-span-8">수치</div>
-          </div>
-          {[expectedBid.appraisal, expectedBid.minBid, expectedBid.market].map((b) => {
-            const color = b.tint === "BLUE" ? "#2E75B6" : b.tint === "RED" ? "#DC2626" : "#64748B"
-            const barWidth = Math.min(100, b.ratioPercent)
-            return (
-              <div key={b.baseline} className="grid grid-cols-12 gap-3 items-center py-2.5 border-b border-[var(--color-border-subtle)] last:border-0">
-                <div className="col-span-4">
-                  <div className="text-lg font-black tabular-nums" style={{ color }}>
-                    {b.expectedBidPrice.toLocaleString("ko-KR")}원
-                  </div>
-                  <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] mt-0.5">{b.label}</div>
-                </div>
-                <div className="col-span-8">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-lg font-black tabular-nums" style={{ color }}>
-                      {pct(b.ratioPercent)}
-                    </span>
-                    <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">
-                      기준 {b.baselineAmount.toLocaleString("ko-KR")}원
-                    </span>
-                  </div>
-                  <div className="h-2.5 bg-[var(--color-border-subtle)] rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{ width: `${barWidth}%`, background: color }}
-                    />
-                  </div>
-                  <p className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-1">{b.note}</p>
-                </div>
-              </div>
-            )
-          })}
-          <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed mt-3 pt-3 border-t border-[var(--color-border-subtle)]">
-            {expectedBid.narrative}
-          </p>
-        </div>
-      </Section>
-
-      {/* ── 5-B. AI 권고 입찰가 (3단계 전략) ─────────────── */}
-      <Section title="AI 권고 입찰가 · 3단계 전략" icon={Target}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {[bidRecommendation.conservative, bidRecommendation.base, bidRecommendation.aggressive].map((b) => {
-            const tint = b.policy === "BASE" ? "#10B981" : b.policy === "AGGRESSIVE" ? "#DC2626" : "#64748B"
-            return (
-              <div
-                key={b.policy}
-                className={`rounded-xl p-4 border-2 ${b.policy === "BASE" ? "shadow-lg" : ""}`}
-                style={{ borderColor: tint + "55", background: b.policy === "BASE" ? tint + "08" : "var(--color-surface-elevated)" }}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[0.75rem] font-bold" style={{ color: tint }}>{b.label}</span>
-                  <span className="text-[0.625rem] px-1.5 py-0.5 rounded font-bold" style={{ background: tint + "20", color: tint }}>
-                    {b.policy}
-                  </span>
-                </div>
-                <div className="text-2xl font-black tabular-nums mb-0.5" style={{ color: "var(--color-text-primary)" }}>
-                  {fmtKRW(b.bidPrice)}원
-                </div>
-                <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] mb-2">
-                  낙찰가율 {pct(b.bidRatioPercent)}
-                </div>
-                <dl className="space-y-0.5 mb-2">
-                  <StatRow k="예상 순익" v={fmtKRW(b.expectedNetProfit) + "원"} />
-                  <StatRow k="예상 ROI" v={pct(b.expectedRoi)} />
-                  <StatRow k="예상 IRR" v={pct(b.expectedIrr)} />
-                  <StatRow k="낙찰 확률" v={pct(b.winProbability * 100)} />
-                </dl>
-                <p className="text-[0.6875rem] text-[var(--color-text-secondary)] leading-relaxed pt-2 border-t border-[var(--color-border-subtle)]">
-                  {b.rationale}
-                </p>
-              </div>
-            )
-          })}
-        </div>
-        <div className="mt-3 flex items-center gap-3 text-[0.6875rem] text-[var(--color-text-tertiary)]">
-          <span>AI 예측 낙찰가율 · <b className="text-[var(--color-text-primary)]">{pct(bidRecommendation.aiPredictedBidRatio)}</b></span>
-          <span>•</span>
-          <span>손익분기 · <b className="text-[var(--color-text-primary)]">{pct(bidRecommendation.breakEvenBidRatio)}</b></span>
-        </div>
-      </Section>
-
-      {/* ── 6. 시장 전망 ─────────────────────────── */}
+      {/* ── 시장 전망 ─────────────────────────── */}
       <Section
         title="시장 전망"
         icon={BarChart3}
@@ -496,23 +366,18 @@ export default function UnifiedReportPage() {
         </div>
       </Section>
 
-      {/* ── 7. 통계 원천 (지역·기간·인근·법원) ──────── */}
-      <Section title="통계 원천 · 지역/주소지/부동산유형별" icon={Info}>
-        <StatisticsPanel report={report} />
-      </Section>
-
-      {/* ── 8. 등기부 분석 (권리 · 배당 · 집행비용) ─────── */}
-      {report.registryAnalysis && (
+      {/* ── 근거 데이터 · 6-tab 네비게이션 ──────────── */}
+      {profitability && (
         <Section
-          title="등기부 분석 · 권리 · 배당 · 집행비용"
-          icon={FileText}
-          caption="매물 등록 시 등기부등본 파싱 결과 자동 연동"
+          title="근거 데이터 · 탭 네비게이션"
+          icon={Database}
+          caption="예상 낙찰가 / 낙찰가율 / 법원 기일 / 낙찰사례 / 실거래 / 배당표"
         >
-          <RegistryPanel block={report.registryAnalysis} />
+          <EvidenceTabs block={profitability} />
         </Section>
       )}
 
-      {/* ── 9. AI 총평 ─────────────────────────────── */}
+      {/* ── AI 총평 ─────────────────────────────── */}
       <section className={`${DS.page.container} mb-12`}>
         <div className="rounded-xl bg-gradient-to-br from-[#1B3A5C] to-[#2E75B6] text-white p-5">
           <div className="flex items-center gap-2 mb-2">
@@ -1060,6 +925,650 @@ function PremiseCard({ label, value, highlight }: { label: string; value: number
       <div className={`text-[1rem] font-black tabular-nums ${highlight ? "text-sky-700" : "text-[var(--color-text-primary)]"}`}>
         {value.toLocaleString("ko-KR")} 원
       </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NPL 수익성 분석 섹션 (엑셀 로직 · 7블록 + 3단계 + 민감도 + Monte Carlo)
+// ═══════════════════════════════════════════════════════════════
+
+const krwMan = (v: number) => `${Math.round(v / 1e4).toLocaleString("ko-KR")}만`
+const krwWon = (v: number) => `${Math.round(v).toLocaleString("ko-KR")}원`
+
+function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
+  const { property, claim, acquisition, valuation, schedule, distribution, investment, strategies, sensitivity, monteCarlo } = block
+
+  return (
+    <>
+      {/* ── [1] 물권내역 ─────────────────────────── */}
+      <Section title="NPL 수익성 분석 · 물권내역" icon={Building2} caption="소재지·면적·채권/채무·임차 상태">
+        <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
+          <table className="w-full text-[0.75rem]">
+            <tbody>
+              <KvRow k="소재지" v={property.address} />
+              <KvRow k="전용면적" v={`${property.exclusiveAreaM2.toFixed(2)} ㎡ (${property.exclusiveAreaPy.toFixed(2)} 평)`} />
+              <KvRow k="공급면적" v={`${property.supplyAreaM2.toFixed(2)} ㎡ (${property.supplyAreaPy.toFixed(2)} 평)`} />
+              <KvRow k="채권자" v={property.creditor} />
+              <KvRow k="채무자" v={property.debtor} />
+              <KvRow k="소유자" v={property.owner} />
+              <KvRow k="임차인" v={property.tenant} last />
+            </tbody>
+          </table>
+        </div>
+      </Section>
+
+      {/* ── [2] 채권내역 ─────────────────────────── */}
+      <Section title="NPL 수익성 분석 · 채권내역" icon={Wallet} caption="원금·채권최고액·연체이자·현재 채권잔액">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+          <MetricCard label="대출원금" value={krwWon(claim.loanPrincipal)} tint="#1B3A5C" />
+          <MetricCard label="채권최고액 (원금×1.2)" value={krwWon(claim.maximumBondAmount)} tint="#2E75B6" />
+          <MetricCard label="연체금리" value={`연 ${(claim.delinquencyRate * 100).toFixed(2)}%`} tint="#F59E0B" />
+          <MetricCard label="현재 채권잔액" value={krwWon(claim.currentBondBalance)} tint="#DC2626" />
+        </div>
+        <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
+          <table className="w-full text-[0.75rem]">
+            <tbody>
+              <KvRow k="연체시작일" v={claim.delinquencyStartDate} />
+              <KvRow k="기한이익상실일" v={claim.accelerationDate} />
+              <KvRow k="연체이자 기산일 (+90일)" v={claim.interestAccrualStartDate} />
+              <KvRow k="기산시점 연체이자" v={krwWon(claim.accruedInterestAtAcceleration)} />
+              <KvRow k="현재 누적 연체이자" v={krwWon(claim.accruedInterestToDate)} />
+              <KvRow k="계산 기준일" v={claim.calculatedAt} last />
+            </tbody>
+          </table>
+        </div>
+      </Section>
+
+      {/* ── [3] 채권매입일정 및 매입가 ──────────── */}
+      <Section title="NPL 수익성 분석 · 채권매입 일정·매입가" icon={Calendar} caption="매입일·잔금일·매입가·질권대출 구조">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+          <MetricCard label="매입가 (할인율 반영)" value={krwWon(acquisition.purchasePrice)} tint="#1B3A5C" sub={`할인율 ${acquisition.discountRatePercent.toFixed(1)}%`} />
+          <MetricCard label="질권대출 금액" value={krwWon(acquisition.pledgeLoanAmount)} tint="#2E75B6" sub={`비율 ${(acquisition.pledgeLoanRatio * 100).toFixed(0)}%`} />
+          <MetricCard label="질권대출 이자율" value={`연 ${(acquisition.pledgeInterestRate * 100).toFixed(1)}%`} tint="#F59E0B" sub={`${acquisition.pledgeLoanPeriodDays}일 운용`} />
+          <MetricCard label="질권대출 총이자" value={krwWon(acquisition.pledgeInterestTotal)} tint="#DC2626" />
+        </div>
+        <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
+          <table className="w-full text-[0.75rem]">
+            <tbody>
+              <KvRow k="채권매입일" v={acquisition.purchaseDate} />
+              <KvRow k="채권잔금일 (+30일)" v={acquisition.balancePaymentDate} last />
+            </tbody>
+          </table>
+        </div>
+      </Section>
+
+      {/* ── [4] 감정가·AI시세·낙찰가율 ─────────── */}
+      <Section title="NPL 수익성 분석 · 감정가·AI 시세·낙찰가율" icon={BarChart3} caption={valuation.expectedBidRatioPeriod}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+          <MetricCard label="감정가 (채권자 제공)" value={krwWon(valuation.appraisalValue)} tint="#1B3A5C" />
+          <MetricCard label="AI 시세 (현재 실거래)" value={krwWon(valuation.aiMarketValueLatest)} tint="#2E75B6" sub={valuation.aiLatestReportedAt} />
+          <MetricCard label="예상 낙찰가율" value={`${(valuation.expectedBidRatio * 100).toFixed(1)}%`} tint="#10B981" sub={valuation.expectedBidRatioPeriod} />
+          <MetricCard label="예상 낙찰가" value={krwWon(valuation.expectedBidPrice)} tint="#DC2626" sub="감정가 × 낙찰가율" />
+        </div>
+        {valuation.priceHistory.length > 0 && (
+          <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
+            <div className="text-[0.75rem] font-bold text-[var(--color-text-primary)] mb-2">시세 이력</div>
+            <table className="w-full text-[0.75rem]">
+              <thead>
+                <tr className="text-[var(--color-text-tertiary)] border-b border-[var(--color-border-subtle)]">
+                  <th className="text-left py-1.5 pr-2 font-medium">구분</th>
+                  <th className="text-right py-1.5 pr-2 font-medium">금액</th>
+                  <th className="text-right py-1.5 font-medium">산출 시점</th>
+                </tr>
+              </thead>
+              <tbody>
+                {valuation.priceHistory.map((p, i) => (
+                  <tr key={i} className="border-b border-[var(--color-border-subtle)] last:border-0">
+                    <td className="py-1.5 pr-2 text-[var(--color-text-primary)]">{p.label}</td>
+                    <td className="py-1.5 pr-2 text-right tabular-nums font-semibold">{krwWon(p.price)}</td>
+                    <td className="py-1.5 text-right tabular-nums text-[var(--color-text-tertiary)]">{p.reportedAt}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Section>
+
+      {/* ── [5] 경매진행일정 ─────────────────── */}
+      <Section title="NPL 수익성 분석 · 경매 진행 일정" icon={Calendar} caption={`총 소요 ${schedule.totalDurationDays}일 · ${schedule.courtName ?? "관할법원 미지정"}`}>
+        <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
+          <ol className="relative border-l-2 border-[var(--color-brand-mid)]/30 ml-2 space-y-3">
+            {schedule.milestones.map((m, i) => (
+              <li key={m.key} className="pl-4 relative">
+                <span
+                  className="absolute -left-[7px] top-0 w-3 h-3 rounded-full"
+                  style={{ background: i === 0 ? "#1B3A5C" : i === schedule.milestones.length - 1 ? "#10B981" : "#2E75B6" }}
+                />
+                <div className="flex items-baseline justify-between flex-wrap gap-1">
+                  <span className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">{m.label}</span>
+                  <span className="text-[0.75rem] tabular-nums font-semibold text-[var(--color-brand-mid)]">{m.date}</span>
+                </div>
+                <p className="text-[0.6875rem] text-[var(--color-text-tertiary)]">
+                  {m.offsetFromPrevDays != null ? `+${m.offsetFromPrevDays}일` : "기준일"}{m.note ? ` · ${m.note}` : ""}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </Section>
+
+      {/* ── [6] 예상 배당표 ─────────────────── */}
+      <Section title="NPL 수익성 분석 · 예상 배당표" icon={Scale} caption="채권계산서(원리금) + 경매비용 → 1·2질권자 배당">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+          <MetricCard label="채권계산서 (이자)" value={krwWon(distribution.bondCalcInterest)} tint="#1B3A5C" />
+          <MetricCard label="채권계산서 (원리금)" value={krwWon(distribution.bondCalcPrincipalAndInterest)} tint="#2E75B6" />
+          <MetricCard label="예상 배당액" value={krwWon(distribution.expectedDistributionAmount)} tint="#10B981" sub={`경매비용 ${krwMan(distribution.executionCost)} 포함`} />
+          <MetricCard label="2질권자 (투자자)" value={krwWon(distribution.secondPledgeeAmount)} tint="#DC2626" sub={`1질권자 ${krwWon(distribution.firstPledgeeAmount)}`} />
+        </div>
+        <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
+          <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{distribution.narrative}</p>
+        </div>
+      </Section>
+
+      {/* ── [7] 투입자금·수익분석 ─────────────── */}
+      <Section title="NPL 수익성 분석 · 투입자금·수익" icon={PieChart} caption={`운용 ${investment.holdingPeriodDays}일 · ROI ${(investment.roi * 100).toFixed(2)}% · 연환산 ${(investment.annualizedRoi * 100).toFixed(2)}%`}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+          <MetricCard label="투자 에쿼티 총계" value={krwWon(investment.totalEquity)} tint="#1B3A5C" />
+          <MetricCard label="예상 투자수익" value={krwWon(investment.expectedNetProfit)} tint="#10B981" sub={`2질권자 ${krwWon(investment.expectedPayout)}`} />
+          <MetricCard label="투자 수익률 (ROI)" value={`${(investment.roi * 100).toFixed(2)}%`} tint="#2E75B6" />
+          <MetricCard label="연환산 수익률" value={`${(investment.annualizedRoi * 100).toFixed(2)}%`} tint="#F59E0B" sub={`${investment.holdingPeriodDays}일 운용`} />
+        </div>
+        <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
+          <table className="w-full text-[0.75rem]">
+            <thead>
+              <tr className="text-[var(--color-text-tertiary)] border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]">
+                <th className="text-left py-1.5 px-3 font-medium">항목</th>
+                <th className="text-right py-1.5 px-3 font-medium">금액</th>
+                <th className="text-right py-1.5 px-3 font-medium">비율</th>
+                <th className="text-left py-1.5 px-3 font-medium">비고</th>
+              </tr>
+            </thead>
+            <tbody>
+              {investment.items.map((it, i) => (
+                <tr key={i} className="border-b border-[var(--color-border-subtle)]">
+                  <td className="py-1.5 px-3 text-[var(--color-text-primary)] font-semibold">{it.kind}</td>
+                  <td className="py-1.5 px-3 text-right tabular-nums font-semibold">{krwWon(it.amount)}</td>
+                  <td className="py-1.5 px-3 text-right tabular-nums text-[var(--color-text-tertiary)]">
+                    {it.ratio != null ? `${(it.ratio * 100).toFixed(2)}%` : "—"}
+                  </td>
+                  <td className="py-1.5 px-3 text-[0.6875rem] text-[var(--color-text-tertiary)]">{it.note ?? ""}</td>
+                </tr>
+              ))}
+              <tr className="bg-[var(--color-surface-base)] font-black">
+                <td className="py-2 px-3 text-[var(--color-text-primary)]">투자 에쿼티 총계</td>
+                <td className="py-2 px-3 text-right tabular-nums text-[var(--color-brand-mid)]">{krwWon(investment.totalEquity)}</td>
+                <td colSpan={2}></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </Section>
+
+      {/* ── AI 권고 매입가 3단계 전략 ───────────── */}
+      <Section title="AI 권고 NPL 매입가 · 3단계 전략" icon={Target} caption="보수적 · 권고 · 공격적 매입 시나리오 병렬 비교">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {[strategies.conservative, strategies.recommended, strategies.aggressive].map((s) => {
+            const isRec = s.strategy === "RECOMMENDED"
+            const tint = s.strategy === "CONSERVATIVE" ? "#64748B" : s.strategy === "RECOMMENDED" ? "#10B981" : "#DC2626"
+            return (
+              <div
+                key={s.strategy}
+                className={`rounded-xl p-4 border-2 ${isRec ? "shadow-lg" : ""}`}
+                style={{ borderColor: tint + "55", background: isRec ? tint + "0D" : "var(--color-surface-elevated)" }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[0.8125rem] font-bold" style={{ color: tint }}>{s.label}</span>
+                  {isRec && (
+                    <span className="text-[0.625rem] px-1.5 py-0.5 rounded font-black bg-emerald-500 text-white">
+                      AI 권고
+                    </span>
+                  )}
+                </div>
+                <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] mb-3 leading-relaxed">
+                  {s.description}
+                </div>
+                <div className="text-2xl font-black tabular-nums mb-0.5 text-[var(--color-text-primary)]">
+                  {krwWon(s.purchasePrice)}
+                </div>
+                <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] mb-3">
+                  매입률 {(s.purchaseRate * 100).toFixed(0)}% · 낙찰가율 {(s.assumedBidRatio * 100).toFixed(1)}%
+                </div>
+                <dl className="space-y-0.5 mb-2">
+                  <StatRow k="예상 낙찰가" v={krwWon(s.expectedBidPrice)} />
+                  <StatRow k="2질권자 배당" v={krwWon(s.secondPledgeeAmount)} />
+                  <StatRow k="투자 에쿼티" v={krwWon(s.totalEquity)} />
+                  <StatRow k="예상 순익" v={krwWon(s.expectedNetProfit)} />
+                  <StatRow k="ROI / 연환산" v={`${(s.roi * 100).toFixed(1)}% / ${(s.annualizedRoi * 100).toFixed(1)}%`} />
+                  <StatRow k="매입·낙찰 성공 확률" v={`${(s.winProbability * 100).toFixed(0)}%`} />
+                </dl>
+                {s.riskWarning && (
+                  <div className="mt-2 pt-2 border-t border-[var(--color-border-subtle)] flex items-start gap-1.5">
+                    <AlertTriangle className="w-3 h-3 mt-0.5 text-amber-500 shrink-0" />
+                    <p className="text-[0.625rem] text-amber-700 leading-relaxed">{s.riskWarning}</p>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+        <div className="mt-3 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
+          <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{strategies.narrative}</p>
+        </div>
+      </Section>
+
+      {/* ── 민감도 분석 (매입률 × 낙찰가율 → ROI heatmap) ─── */}
+      <Section title="민감도 분석 · 매입률 × 낙찰가율 → ROI 히트맵" icon={Layers} caption="행 = 대출원금 대비 매입률, 열 = 감정가 대비 낙찰가율">
+        <SensitivityHeatmap s={sensitivity} />
+      </Section>
+
+      {/* ── Monte Carlo 시뮬레이션 ───────────── */}
+      <Section
+        title="Monte Carlo 시뮬레이션"
+        icon={Sigma}
+        caption={`${monteCarlo.trials.toLocaleString()}회 시뮬 · 낙찰가율 정규분포·유찰 Poisson·비용 jitter 반영`}
+      >
+        <MonteCarloPanel mc={monteCarlo} />
+      </Section>
+    </>
+  )
+}
+
+function KvRow({ k, v, last }: { k: string; v: string; last?: boolean }) {
+  return (
+    <tr className={last ? "" : "border-b border-[var(--color-border-subtle)]"}>
+      <td className="py-2 px-3 bg-[var(--color-surface-base)] text-[var(--color-text-tertiary)] font-semibold w-40">{k}</td>
+      <td className="py-2 px-3 text-[var(--color-text-primary)]">{v}</td>
+    </tr>
+  )
+}
+
+function MetricCard({ label, value, sub, tint }: { label: string; value: string; sub?: string; tint: string }) {
+  return (
+    <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
+      <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mb-1">{label}</div>
+      <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: tint }}>{value}</div>
+      {sub && <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-1">{sub}</div>}
+    </div>
+  )
+}
+
+// ─── 민감도 히트맵 ───────────────────────────────────────
+function SensitivityHeatmap({ s }: { s: NplProfitabilityBlock["sensitivity"] }) {
+  const allRois = s.grid.flat().map(c => c.roi)
+  const minRoi = Math.min(...allRois)
+  const maxRoi = Math.max(...allRois)
+  const colorFor = (roi: number) => {
+    if (roi < 0) {
+      const t = Math.min(1, Math.abs(roi) / Math.max(1, Math.abs(minRoi)))
+      return `rgba(220, 38, 38, ${0.15 + t * 0.5})`
+    }
+    const t = Math.min(1, roi / Math.max(1, maxRoi))
+    return `rgba(16, 185, 129, ${0.1 + t * 0.55})`
+  }
+
+  return (
+    <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
+      <div className="overflow-x-auto">
+        <table className="w-full text-[0.75rem]">
+          <thead>
+            <tr>
+              <th className="py-1.5 px-2 text-left text-[0.625rem] text-[var(--color-text-tertiary)]">매입률 \ 낙찰가율</th>
+              {s.bidRatioAxis.map(br => (
+                <th key={br} className="py-1.5 px-1 text-center text-[0.6875rem] font-semibold text-[var(--color-text-primary)] tabular-nums">
+                  {(br * 100).toFixed(0)}%
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {s.purchaseRateAxis.map((pr, ri) => (
+              <tr key={pr}>
+                <td className="py-1.5 px-2 text-right text-[0.6875rem] font-semibold text-[var(--color-text-primary)] tabular-nums border-r border-[var(--color-border-subtle)]">
+                  {(pr * 100).toFixed(0)}%
+                </td>
+                {s.grid[ri].map(cell => (
+                  <td
+                    key={`${cell.purchaseRate}-${cell.bidRatio}`}
+                    className="py-2 px-1 text-center tabular-nums font-bold"
+                    style={{
+                      background: colorFor(cell.roi),
+                      color: cell.roi < 0 ? "#7F1D1D" : "#064E3B",
+                    }}
+                  >
+                    {cell.roi.toFixed(1)}%
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-[0.625rem] text-[var(--color-text-tertiary)]">
+        <span className="inline-flex items-center gap-1">
+          <span className="w-3 h-3 rounded" style={{ background: "rgba(220,38,38,0.5)" }} /> 손실 구간
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="w-3 h-3 rounded" style={{ background: "rgba(16,185,129,0.55)" }} /> 이익 구간
+        </span>
+        <span>· ROI 범위: {minRoi.toFixed(1)}% ~ {maxRoi.toFixed(1)}%</span>
+        <span>· 손익분기: {s.breakEvenRoi.toFixed(1)}%</span>
+      </div>
+      <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed mt-3 pt-3 border-t border-[var(--color-border-subtle)]">
+        {s.narrative}
+      </p>
+    </div>
+  )
+}
+
+// ─── Monte Carlo 패널 ─────────────────────────────────────
+function MonteCarloPanel({ mc }: { mc: NplProfitabilityBlock["monteCarlo"] }) {
+  const maxCount = Math.max(...mc.histogram.map(h => h.count), 1)
+  return (
+    <div className="space-y-3">
+      {/* KPI 4-cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <MetricCard label="평균 ROI" value={`${mc.meanRoi.toFixed(2)}%`} tint="#10B981" sub={`표준편차 ${mc.stdRoi.toFixed(2)}%p`} />
+        <MetricCard
+          label="손실 확률 (ROI<0)"
+          value={`${mc.lossProbability.toFixed(2)}%`}
+          tint={mc.lossProbability < 10 ? "#10B981" : mc.lossProbability < 25 ? "#F59E0B" : "#DC2626"}
+          sub={`VaR 95% ${mc.valueAtRisk95.toFixed(2)}%`}
+        />
+        <MetricCard label="중앙값 (P50)" value={`${mc.percentiles.p50.toFixed(2)}%`} tint="#2E75B6" sub={`${mc.trials.toLocaleString()}회 시뮬`} />
+        <MetricCard label="평균 회수 기간" value={`${Math.round(mc.meanHoldingDays)}일`} tint="#F59E0B" sub={`연환산 기준 ${(365 / Math.max(1, mc.meanHoldingDays)).toFixed(2)}x`} />
+      </div>
+
+      {/* Percentile 막대 분포 */}
+      <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
+        <div className="text-[0.75rem] font-bold text-[var(--color-text-primary)] mb-3">백분위 분포 (P10 ~ P90)</div>
+        <div className="grid grid-cols-5 gap-2 text-center">
+          {[
+            { k: "P10", v: mc.percentiles.p10, tint: "#DC2626" },
+            { k: "P25", v: mc.percentiles.p25, tint: "#F59E0B" },
+            { k: "P50", v: mc.percentiles.p50, tint: "#2E75B6" },
+            { k: "P75", v: mc.percentiles.p75, tint: "#10B981" },
+            { k: "P90", v: mc.percentiles.p90, tint: "#064E3B" },
+          ].map(p => (
+            <div key={p.k} className="rounded-lg p-2 border" style={{ borderColor: p.tint + "40", background: p.tint + "0A" }}>
+              <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">{p.k}</div>
+              <div className="text-[1rem] font-black tabular-nums" style={{ color: p.tint }}>
+                {p.v.toFixed(1)}%
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 히스토그램 */}
+      {mc.histogram.length > 0 && (
+        <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
+          <div className="text-[0.75rem] font-bold text-[var(--color-text-primary)] mb-3">수익률 히스토그램 (ROI %)</div>
+          <div className="flex items-end gap-[2px] h-32">
+            {mc.histogram.map((h, i) => {
+              const height = Math.max(2, (h.count / maxCount) * 100)
+              const mid = (h.from + h.to) / 2
+              const color = mid < 0 ? "#DC2626" : mid < 10 ? "#F59E0B" : "#10B981"
+              return (
+                <div
+                  key={i}
+                  className="flex-1 min-w-[2px] rounded-t transition-all"
+                  style={{ height: `${height}%`, background: color, opacity: 0.7 + (h.count / maxCount) * 0.3 }}
+                  title={`${h.bucket} · ${h.count}회`}
+                />
+              )
+            })}
+          </div>
+          <div className="flex items-center justify-between text-[0.625rem] text-[var(--color-text-tertiary)] mt-2 tabular-nums">
+            <span>{mc.histogram[0]?.from.toFixed(0)}%</span>
+            <span className="font-semibold">ROI 분포 · {mc.trials.toLocaleString()} trials</span>
+            <span>{mc.histogram[mc.histogram.length - 1]?.to.toFixed(0)}%</span>
+          </div>
+        </div>
+      )}
+
+      {/* 가정·내러티브 */}
+      <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
+        <div className="text-[0.75rem] font-bold text-[var(--color-text-primary)] mb-2">입력 분포 가정</div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-[0.6875rem] mb-3">
+          <KvInline k="낙찰가율 μ" v={`${(mc.assumptions.bidRatioMean * 100).toFixed(1)}%`} />
+          <KvInline k="낙찰가율 σ" v={`${(mc.assumptions.bidRatioStd * 100).toFixed(1)}%p`} />
+          <KvInline k="유찰 λ" v={mc.assumptions.failedBidLambda.toFixed(2)} />
+          <KvInline k="연체이자 jitter" v={`±${(mc.assumptions.delinquencyInterestJitter * 100).toFixed(0)}%`} />
+          <KvInline k="경매비용 jitter" v={`±${(mc.assumptions.executionCostJitter * 100).toFixed(0)}%`} />
+        </div>
+        <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{mc.narrative}</p>
+      </div>
+    </div>
+  )
+}
+
+function KvInline({ k, v }: { k: string; v: string }) {
+  return (
+    <div className="rounded-md bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-2 py-1.5">
+      <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">{k}</div>
+      <div className="text-[0.8125rem] font-bold tabular-nums text-[var(--color-text-primary)]">{v}</div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 근거 데이터 · 6-tab 네비게이션
+// ═══════════════════════════════════════════════════════════════
+type EvidenceTab = "bid" | "ratio" | "court" | "cases" | "tx" | "dist"
+
+function EvidenceTabs({ block }: { block: NplProfitabilityBlock }) {
+  const [tab, setTab] = useState<EvidenceTab>("bid")
+  const { evidence } = block
+
+  const tabs: { key: EvidenceTab; label: string }[] = [
+    { key: "bid",   label: "① 경매 예상 낙찰가" },
+    { key: "ratio", label: "② 경매 낙찰가율" },
+    { key: "court", label: "③ 법원 기일·배당" },
+    { key: "cases", label: "④ 경매 낙찰사례" },
+    { key: "tx",    label: "⑤ 인근 1km 실거래가" },
+    { key: "dist",  label: "⑥ 예상 배당표" },
+  ]
+
+  return (
+    <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
+      {/* 탭 헤더 */}
+      <div className="flex overflow-x-auto border-b border-[var(--color-border-subtle)]">
+        {tabs.map(t => {
+          const active = t.key === tab
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className={`flex-none px-3 py-2 text-[0.75rem] font-semibold transition-colors ${
+                active
+                  ? "text-[var(--color-brand-mid)] border-b-2 border-[var(--color-brand-mid)]"
+                  : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+              }`}
+            >
+              {t.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* 탭 컨텐츠 */}
+      <div className="p-4">
+        {tab === "bid" && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <MetricCard label="감정가" value={krwWon(evidence.expectedBid.appraisalValue)} tint="#1B3A5C" />
+              <MetricCard label="AI 시세" value={krwWon(evidence.expectedBid.aiMarketValue)} tint="#2E75B6" sub={evidence.expectedBid.calculatedAt} />
+              <MetricCard label="낙찰가율" value={`${evidence.expectedBid.bidRatioPercent.toFixed(1)}%`} tint="#10B981" />
+              <MetricCard label="예상 낙찰가" value={krwWon(evidence.expectedBid.expectedBidPrice)} tint="#DC2626" />
+            </div>
+            <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{evidence.expectedBid.narrative}</p>
+          </div>
+        )}
+
+        {tab === "ratio" && (
+          <div className="space-y-3">
+            <div className="text-[0.75rem] font-semibold text-[var(--color-text-primary)]">
+              선택 기준 · {evidence.bidRatioStats.selectedLabel}
+            </div>
+            {evidence.bidRatioStats.items.length > 0 ? (
+              <table className="w-full text-[0.75rem]">
+                <thead>
+                  <tr className="text-[var(--color-text-tertiary)] border-b border-[var(--color-border-subtle)]">
+                    <th className="text-left py-1.5 pr-2 font-medium">범위</th>
+                    <th className="text-left py-1.5 pr-2 font-medium">지역</th>
+                    <th className="text-right py-1.5 pr-2 font-medium">기간</th>
+                    <th className="text-right py-1.5 pr-2 font-medium">낙찰가율</th>
+                    <th className="text-right py-1.5 font-medium">표본</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {evidence.bidRatioStats.items.map((r, i) => (
+                    <tr key={i} className="border-b border-[var(--color-border-subtle)]">
+                      <td className="py-1.5 pr-2 text-[var(--color-text-tertiary)]">{r.scope}</td>
+                      <td className="py-1.5 pr-2 text-[var(--color-text-primary)]">{r.region}</td>
+                      <td className="py-1.5 pr-2 text-right tabular-nums">{r.periodMonths}M</td>
+                      <td className="py-1.5 pr-2 text-right tabular-nums font-bold" style={{ color: r.ratioPercent >= 80 ? "#10B981" : r.ratioPercent >= 65 ? "#F59E0B" : "#DC2626" }}>
+                        {r.ratioPercent.toFixed(1)}%
+                      </td>
+                      <td className="py-1.5 text-right tabular-nums text-[var(--color-text-tertiary)]">{r.sampleSize}건</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-[0.75rem] text-[var(--color-text-tertiary)] italic">표본 데이터 없음 — API 연동 시 자동 주입.</p>
+            )}
+            <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{evidence.bidRatioStats.narrative}</p>
+          </div>
+        )}
+
+        {tab === "court" && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <MetricCard label="관할법원" value={evidence.courtSchedule.courtName} tint="#1B3A5C" />
+            <MetricCard label="1회차 매각 평균" value={`${evidence.courtSchedule.avgSaleDays}일`} tint="#2E75B6" />
+            <MetricCard label="배당 평균" value={`${evidence.courtSchedule.avgDistributionDays}일`} tint="#10B981" />
+            <MetricCard label="기일 간격" value={`${evidence.courtSchedule.avgHearingInterval}일`} tint="#F59E0B" sub={`표본 ${evidence.courtSchedule.sampleSize}건`} />
+          </div>
+        )}
+
+        {tab === "cases" && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <MetricCard label="평균 소요" value={`${evidence.auctionCases.averageDurationDays}일`} tint="#1B3A5C" />
+              <MetricCard label="평균 감정가" value={krwWon(evidence.auctionCases.averageAppraisalValue)} tint="#2E75B6" />
+              <MetricCard label="평균 낙찰가" value={krwWon(evidence.auctionCases.averageSalePrice)} tint="#10B981" />
+              <MetricCard label="평균 낙찰가율" value={`${evidence.auctionCases.averageBidRatio.toFixed(1)}%`} tint="#DC2626" />
+            </div>
+            {evidence.auctionCases.sameAddress.length > 0 && (
+              <EvidenceCaseTable title="동일 주소" cases={evidence.auctionCases.sameAddress} />
+            )}
+            {evidence.auctionCases.nearbyWithin1Km.length > 0 && (
+              <EvidenceCaseTable title="인근 1km" cases={evidence.auctionCases.nearbyWithin1Km} showDistance />
+            )}
+          </div>
+        )}
+
+        {tab === "tx" && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <MetricCard label="평균 토지면적" value={`${evidence.nearbyTransactions.averageLandAreaM2.toFixed(2)} ㎡`} tint="#1B3A5C" />
+              <MetricCard label="평균 실거래금액" value={krwWon(evidence.nearbyTransactions.averageAmount)} tint="#2E75B6" />
+              <MetricCard label="평균 ㎡당 단가" value={krwMan(evidence.nearbyTransactions.averagePricePerM2) + "원"} tint="#10B981" />
+              <MetricCard label="평균 평당 단가" value={krwMan(evidence.nearbyTransactions.averagePricePerPy) + "원"} tint="#F59E0B" />
+            </div>
+            {evidence.nearbyTransactions.samples.length > 0 && (
+              <table className="w-full text-[0.75rem]">
+                <thead>
+                  <tr className="text-[var(--color-text-tertiary)] border-b border-[var(--color-border-subtle)]">
+                    <th className="text-left py-1.5 pr-2 font-medium">거래일</th>
+                    <th className="text-left py-1.5 pr-2 font-medium">주소</th>
+                    <th className="text-right py-1.5 pr-2 font-medium">거리</th>
+                    <th className="text-right py-1.5 pr-2 font-medium">면적</th>
+                    <th className="text-right py-1.5 pr-2 font-medium">금액</th>
+                    <th className="text-right py-1.5 font-medium">㎡단가</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {evidence.nearbyTransactions.samples.map((s, i) => (
+                    <tr key={i} className="border-b border-[var(--color-border-subtle)]">
+                      <td className="py-1.5 pr-2 text-[var(--color-text-primary)]">{s.txDate}</td>
+                      <td className="py-1.5 pr-2 text-[var(--color-text-secondary)] truncate max-w-[220px]">{s.address}</td>
+                      <td className="py-1.5 pr-2 text-right tabular-nums">{Math.round(s.distanceMeters)}m</td>
+                      <td className="py-1.5 pr-2 text-right tabular-nums">{s.landAreaM2.toFixed(1)}㎡</td>
+                      <td className="py-1.5 pr-2 text-right tabular-nums font-semibold">{krwWon(s.amountKRW)}</td>
+                      <td className="py-1.5 text-right tabular-nums">{krwMan(s.pricePerM2) + "원"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+
+        {tab === "dist" && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              <MetricCard label="입찰예상가" value={krwWon(evidence.distributionRef.bidPrice)} tint="#1B3A5C" />
+              <MetricCard label="경매집행비용" value={krwWon(evidence.distributionRef.executionCost)} tint="#F59E0B" />
+              <MetricCard label="본건 배당액" value={krwWon(evidence.distributionRef.distributableAmount)} tint="#10B981" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <MetricCard label="1질권자 (질권대출기관)" value={krwWon(evidence.distributionRef.firstPledgee)} tint="#2E75B6" />
+              <MetricCard label="2질권자 (투자자)" value={krwWon(evidence.distributionRef.secondPledgee)} tint="#DC2626" />
+            </div>
+            <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">
+              {evidence.distributionRef.summary}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function EvidenceCaseTable({
+  title,
+  cases,
+  showDistance,
+}: {
+  title: string
+  cases: NplProfitabilityBlock["evidence"]["auctionCases"]["sameAddress"]
+  showDistance?: boolean
+}) {
+  return (
+    <div className="rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] p-3">
+      <div className="text-[0.75rem] font-bold text-[var(--color-text-primary)] mb-2">{title} · {cases.length}건</div>
+      <table className="w-full text-[0.75rem]">
+        <thead>
+          <tr className="text-[var(--color-text-tertiary)] border-b border-[var(--color-border-subtle)]">
+            <th className="text-left py-1.5 pr-2 font-medium">사건번호</th>
+            <th className="text-left py-1.5 pr-2 font-medium">주소</th>
+            {showDistance && <th className="text-right py-1.5 pr-2 font-medium">거리</th>}
+            <th className="text-right py-1.5 pr-2 font-medium">소요</th>
+            <th className="text-right py-1.5 pr-2 font-medium">감정가</th>
+            <th className="text-right py-1.5 pr-2 font-medium">낙찰가</th>
+            <th className="text-right py-1.5 font-medium">낙찰가율</th>
+          </tr>
+        </thead>
+        <tbody>
+          {cases.map((c, i) => (
+            <tr key={c.caseNo + i} className="border-b border-[var(--color-border-subtle)] last:border-0">
+              <td className="py-1.5 pr-2 text-[var(--color-text-primary)]">{c.caseNo}</td>
+              <td className="py-1.5 pr-2 text-[var(--color-text-secondary)] truncate max-w-[180px]">{c.address}</td>
+              {showDistance && <td className="py-1.5 pr-2 text-right tabular-nums">{c.distanceKm.toFixed(1)}km</td>}
+              <td className="py-1.5 pr-2 text-right tabular-nums">{c.durationDays}일</td>
+              <td className="py-1.5 pr-2 text-right tabular-nums">{krwWon(c.appraisalValue)}</td>
+              <td className="py-1.5 pr-2 text-right tabular-nums font-semibold">{krwWon(c.salePrice)}</td>
+              <td className="py-1.5 text-right tabular-nums font-bold" style={{ color: c.bidRatio >= 80 ? "#10B981" : c.bidRatio >= 65 ? "#F59E0B" : "#DC2626" }}>
+                {c.bidRatio.toFixed(1)}%
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

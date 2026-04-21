@@ -24,6 +24,7 @@ import {
 } from './recovery-3factor'
 import { computeExpectedBid, estimateMinBid } from './expected-bid'
 import { buildRegistryAnalysis } from './registry-analysis'
+import { buildNplProfitability } from './profitability'
 
 // ─── 샘플 통계 컨텍스트 ──────────────────────────────────────
 export const SAMPLE_STATISTICS: StatisticsContext = {
@@ -375,6 +376,98 @@ export function buildSampleReport(): UnifiedAnalysisReport {
       ],
     },
     registryAnalysis,
+    profitability: buildNplProfitability({
+      property: {
+        address: '서울특별시 강남구 개포동 1195-8',
+        exclusiveAreaM2: 46.41,
+        supplyAreaM2: 58.2,
+        creditor: '우리은행',
+        debtor: '김매도',
+        owner: '김매도',
+        tenant: '선순위 임차인 존재 (대항력)',
+      },
+      loanPrincipal: 600_000_000,
+      delinquencyRate: 0.089,
+      delinquencyStartDate: '2025-07-23',
+      accelerationDate: '2025-09-24',
+      appraisalValue: 690_000_000,
+      aiMarketValueLatest: 430_000_000,
+      priceHistory: [
+        { price: 690_000_000, reportedAt: '2024-08-15', source: 'APPRAISAL',   label: '감정가 (채권자 제공)' },
+        { price: 430_000_000, reportedAt: '2026-01-26', source: 'AI_LATEST',   label: 'AI 시세 — 현재' },
+        { price: 500_000_000, reportedAt: '2025-02-11', source: 'AI_PAST_1Y',  label: 'AI 시세 — 1년 전' },
+        { price: 460_000_000, reportedAt: '2023-04-10', source: 'AI_PAST_3Y',  label: 'AI 시세 — 3년 전' },
+      ],
+      expectedBidRatio: Math.max(0.45, Math.min(0.95, auction.adjustedBidRatio / 100)),
+      expectedBidRatioPeriod: '지역 6M 기준 + 특수조건 반영',
+      auctionStartDate: '2025-10-21',
+      courtName: '서울중앙지방법원 본원',
+      discountRate: 0,
+      pledgeLoanRatio: 0.75,
+      pledgeInterestRate: 0.065,
+      executionCost: 10_000_000,
+      registrationTransferRate: 0.0048,
+      brokerageFeeRate: 0.015,
+      contractDepositRate: 0.10,
+      asOfDate: '2026-04-21',
+      mcSeed: 20260421,
+      mcTrials: 10_000,
+      evidence: {
+        bidRatioStats: {
+          selectedLabel: '강남구 다세대 · 6개월',
+          items: [
+            { scope: 'SIGUNGU',      region: '강남구',         periodMonths: 12, ratioPercent: 89.5, sampleSize: 31 },
+            { scope: 'SIGUNGU',      region: '강남구',         periodMonths: 6,  ratioPercent: 81.2, sampleSize: 12 },
+            { scope: 'SIGUNGU',      region: '강남구',         periodMonths: 3,  ratioPercent: 88.0, sampleSize: 5 },
+            { scope: 'SIGUNGU',      region: '강남구',         periodMonths: 1,  ratioPercent: 90.8, sampleSize: 2 },
+            { scope: 'EUPMYEONDONG', region: '강남구 개포동',  periodMonths: 12, ratioPercent: 72.5, sampleSize: 1 },
+          ],
+          narrative: '강남구 다세대(빌라) 최근 1년 89.5% → 6개월 81.2% → 3개월 88.0% → 1개월 90.8%. 최근 3개월 반등 흐름 반영, 특수조건(선순위 임차인) -10%p 보정 후 적용.',
+        },
+        courtSchedule: {
+          courtName: '서울중앙지방법원 본원',
+          avgSaleDays: 285,
+          avgDistributionDays: 355,
+          avgHearingInterval: 47,
+          sampleSize: 126,
+        },
+        auctionCases: {
+          averageDurationDays: 215,
+          averageAppraisalValue: 690_000_000,
+          averageSalePrice: 500_000_000,
+          averageBidRatio: 72.5,
+          sameAddress: [
+            {
+              caseNo: '2024타경113807',
+              address: '서울특별시 강남구 개포동 1195-8',
+              distanceKm: 0,
+              propertyCategory: '다세대(빌라)',
+              appraisalValue: 690_000_000,
+              salePrice: 500_000_000,
+              bidRatio: 72.5,
+              durationDays: 215,
+              saleDate: '2025-02-11',
+            },
+          ],
+          nearbyWithin1Km: [
+            { caseNo: '2025타경102443(10)', address: '서울특별시 서초구 서초동 1617-19', distanceKm: 0.9, propertyCategory: '다세대(빌라)', appraisalValue: 1_150_000_000, salePrice: 680_000_000, bidRatio: 58.8, durationDays: 379, saleDate: '2026-04-02' },
+            { caseNo: '2025타경102443(9)',  address: '서울특별시 서초구 서초동 1617-19', distanceKm: 0.9, propertyCategory: '다세대(빌라)', appraisalValue: 600_000_000,   salePrice: 340_000_000, bidRatio: 57.4, durationDays: 379, saleDate: '2026-04-02' },
+            { caseNo: '2025타경102443(7)',  address: '서울특별시 서초구 서초동 1617-19', distanceKm: 0.9, propertyCategory: '다세대(빌라)', appraisalValue: 550_000_000,   salePrice: 320_000_000, bidRatio: 58.0, durationDays: 379, saleDate: '2026-04-02' },
+          ],
+        },
+        nearbyTransactions: {
+          averageLandAreaM2: 68.27,
+          averageAmount: 1_450_000_000,
+          averagePricePerM2: 23_750_000,
+          averagePricePerPy: 70_000_000,
+          samples: [
+            { txDate: '2026-01-26', address: '서울특별시 서초구 양재동 280-4', distanceMeters: 186.4, landAreaM2: 25.82, amountKRW: 420_000_000, pricePerM2: 16_260_000, zoning: '제2종일반주거지역' },
+            { txDate: '2026-01-26', address: '서울특별시 서초구 양재동 280-4', distanceMeters: 186.4, landAreaM2: 26.03, amountKRW: 430_000_000, pricePerM2: 16_520_000, zoning: '제2종일반주거지역' },
+            { txDate: '2026-01-26', address: '서울특별시 서초구 양재동 280-4', distanceMeters: 186.4, landAreaM2: 26.10, amountKRW: 450_000_000, pricePerM2: 17_240_000, zoning: '제2종일반주거지역' },
+          ],
+        },
+      },
+    }),
     executiveSummary:
       `강남구 개포동 1195-8 다세대(빌라) NPL 딜 종합 분석 결과 ${riskGrade}등급, 예측 회수율 ${recovery.predictedRecoveryRate}%(신뢰도 ${Math.round(recovery.confidence * 100)}%)로 평가됩니다. ` +
       `지역 6개월 낙찰가율 81.2%에 선순위 임차인 특수조건 -10%p 반영한 ${auction.adjustedBidRatio}%를 기준 입찰가율로 제시하며, ` +
