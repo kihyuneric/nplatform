@@ -140,15 +140,15 @@ export const TIER_META: Record<AccessTier, {
   L1: {
     label: '본인인증 (L1)',
     shortLabel: 'L1',
-    description: '등기·권리관계·감정평가서 열람',
+    description: '등기부 요약·임대차 정보 열람',
     requirement: '휴대폰/공동인증 본인인증',
     color: '#3B82F6',
   },
   L2: {
     label: 'NDA 체결 (L2)',
     shortLabel: 'L2',
-    description: '원본 실사 자료·매각자 기관 정보',
-    requirement: '전문투자자 인증 + NDA 체결',
+    description: '감정평가서 · 현장 사진 · 채권 정보',
+    requirement: 'NDA 체결',
     color: '#A855F7',
   },
   L3: {

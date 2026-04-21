@@ -388,8 +388,10 @@ export function AssetDetailView({
   const [publicSaleDraft, setPublicSaleDraft] = useState<ListingDetail["public_sale_info"]>(null)
   const [appraisalPdfOpen, setAppraisalPdfOpen] = useState(false)
   const [loiPdfOpen, setLoiPdfOpen] = useState(false)
+  const [ndaPdfOpen, setNdaPdfOpen] = useState(false)
   const [submittedOffer, setSubmittedOffer] = useState<OfferData | null>(null)
   const [offerFormVisible, setOfferFormVisible] = useState(true)
+  const [lightboxPhoto, setLightboxPhoto] = useState<number | null>(null)
 
   /* 사용자 역할 확인: admin 또는 seller 면 편집 허용 */
   useEffect(() => {
@@ -787,7 +789,7 @@ export function AssetDetailView({
               tierBadge="L1"
               anchorId="deed-summary"
             >
-              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={140}>
+              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction}>
                 <div className="space-y-2">
                   {listing.registry_summary_items.length === 0 && (
                     <p className="text-center py-6" style={{ color: C.lt4, fontSize: 11 }}>
@@ -830,7 +832,7 @@ export function AssetDetailView({
               tierBadge="L1"
               anchorId="tenants"
             >
-              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={120}>
+              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={120} onUpgradeClick={handlePrimaryAction}>
                 <div className="grid grid-cols-3 gap-3">
                   <Stat label="보증금 합계" value={formatKRW(listing.lease_summary.total_deposit)} />
                   <Stat label="월세" value={formatKRW(listing.lease_summary.monthly_rent || 0)} />
@@ -846,23 +848,67 @@ export function AssetDetailView({
               tierBadge="L2"
               anchorId="nda"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={72}>
-                <div
-                  className="rounded-xl flex items-center gap-3 px-4 py-3"
-                  style={{
-                    backgroundColor: "var(--color-positive-bg)",
-                    border: "1px solid rgba(16, 185, 129, 0.4)",
-                  }}
-                >
-                  <CheckCircle2 size={18} color="var(--color-positive)" className="flex-shrink-0" />
-                  <div>
-                    <div className="font-black" style={{ fontSize: 13, color: "var(--color-positive)" }}>
-                      NDA 체결 완료
-                    </div>
-                    <div className="mt-0.5" style={{ fontSize: 11, color: "var(--fg-muted)" }}>
-                      감정평가서 · 현장사진 · 채권정보 등 L2 자료를 열람할 수 있습니다
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={72} onUpgradeClick={handlePrimaryAction}>
+                <div className="space-y-3">
+                  <div
+                    className="rounded-xl flex items-center gap-3 px-4 py-3"
+                    style={{
+                      backgroundColor: "var(--color-positive-bg)",
+                      border: "1px solid rgba(16, 185, 129, 0.4)",
+                    }}
+                  >
+                    <CheckCircle2 size={18} color="var(--color-positive)" className="flex-shrink-0" />
+                    <div>
+                      <div className="font-black" style={{ fontSize: 13, color: "var(--color-positive)" }}>
+                        NDA 체결 완료
+                      </div>
+                      <div className="mt-0.5" style={{ fontSize: 11, color: "var(--fg-muted)" }}>
+                        감정평가서 · 현장사진 · 채권정보 등 L2 자료를 열람할 수 있습니다
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setNdaPdfOpen(v => !v)}
+                      className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
+                      style={{
+                        fontSize: 12,
+                        backgroundColor: ndaPdfOpen ? "var(--color-brand-bright-bg, rgba(46,117,182,0.12))" : "var(--layer-2-bg)",
+                        color: ndaPdfOpen ? "var(--color-brand-bright)" : "var(--fg-muted)",
+                        border: `1px solid ${ndaPdfOpen ? "rgba(46,117,182,0.4)" : "var(--layer-border-strong)"}`,
+                      }}
+                    >
+                      {ndaPdfOpen ? <EyeOff size={13} /> : <Eye size={13} />}
+                      {ndaPdfOpen ? "NDA 닫기" : "NDA 보기"}
+                    </button>
+                    <a
+                      href={`/api/v1/docs/${id}/nda?download=1`}
+                      download
+                      onClick={e => { e.preventDefault(); toast.success("NDA 문서 다운로드를 시작합니다.", { duration: 1800 }) }}
+                      className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
+                      style={{
+                        fontSize: 12,
+                        backgroundColor: "rgba(16,185,129,0.10)",
+                        color: "var(--color-positive)",
+                        border: "1px solid rgba(16,185,129,0.3)",
+                      }}
+                    >
+                      <FileDown size={13} />
+                      PDF 다운로드
+                    </a>
+                  </div>
+                  {ndaPdfOpen && (
+                    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--layer-border-strong)" }}>
+                      <div className="flex items-center justify-between px-3 py-2"
+                        style={{ backgroundColor: "var(--layer-2-bg)", fontSize: 11, color: "var(--fg-muted)" }}>
+                        <span className="font-bold">비밀유지계약서 (NDA) 미리보기</span>
+                        <button type="button" onClick={() => setNdaPdfOpen(false)}><X size={14} /></button>
+                      </div>
+                      <iframe src={`/api/v1/docs/${id}/nda`} title="NDA" className="w-full"
+                        style={{ height: 480, border: "none", backgroundColor: "#f8f8f8" }} />
+                    </div>
+                  )}
                 </div>
               </TierGate>
             </SectionCard>
@@ -873,7 +919,7 @@ export function AssetDetailView({
               tierBadge="L2"
               anchorId="appraisal"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction}>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Stat label="감정가" value={formatKRW(listing.appraisal_value)} tone="em" />
                   <Stat label="채권잔액" value={formatKRW(listing.claim_info.balance)} tone="amber" />
@@ -944,7 +990,7 @@ export function AssetDetailView({
               tierBadge="L2"
               anchorId="auction-info"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={120}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={120} onUpgradeClick={handlePrimaryAction}>
                 {editingSec === "auction" ? (
                   /* ── 경매 정보 편집 폼 ── */
                   <div className="space-y-3">
@@ -1052,7 +1098,7 @@ export function AssetDetailView({
               tierBadge="L2"
               anchorId="public-sale"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={120}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={120} onUpgradeClick={handlePrimaryAction}>
                 {editingSec === "public-sale" ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
@@ -1133,7 +1179,7 @@ export function AssetDetailView({
               tierBadge="L2"
               anchorId="auction-stats"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={100}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={100} onUpgradeClick={handlePrimaryAction}>
                 <p className="mb-3 leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
                   국토부 실거래가 현황 및 법원 경매와 온비드 공매 낙찰 통계 및 유사 사례를 확인합니다.
                 </p>
@@ -1159,11 +1205,30 @@ export function AssetDetailView({
               tierBadge="L2"
               anchorId="deed-full"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140}>
-                <p className="leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
-                  등기부등본 원본 PDF · 전체 권리자 실명 · 근저당 설정 원본 · 변동 이력이 포함된 자료입니다.
-                  NDA 체결 완료 시 데이터룸에서 다운로드 가능합니다.
-                </p>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction}>
+                <div className="space-y-3">
+                  <p className="leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
+                    등기부등본 원본 PDF · 전체 권리자 실명 · 근저당 설정 원본 · 변동 이력이 포함된 자료입니다.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {listing.collateral !== "토지" && (
+                      /* 토지 外(아파트·건물 등): 토지+건물 등기부등본 */
+                      <DeedDownloadBtn
+                        label="토지·건물 등기부등본"
+                        url={`/api/v1/docs/${id}/deed-building`}
+                        uploaded={true}
+                        onDownload={() => toast.success("토지·건물 등기부등본 다운로드를 시작합니다.", { duration: 1800 })}
+                      />
+                    )}
+                    {/* 토지 등기부등본 (모든 담보 유형) */}
+                    <DeedDownloadBtn
+                      label="토지 등기부등본"
+                      url={`/api/v1/docs/${id}/deed-land`}
+                      uploaded={true}
+                      onDownload={() => toast.success("토지 등기부등본 다운로드를 시작합니다.", { duration: 1800 })}
+                    />
+                  </div>
+                </div>
               </TierGate>
             </SectionCard>
 
@@ -1173,25 +1238,66 @@ export function AssetDetailView({
               tierBadge="L2"
               anchorId="site-photos"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={160}>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {listing.site_photos.map((p, i) => (
-                    <div
-                      key={i}
-                      className="aspect-square rounded-lg flex items-center justify-center"
-                      style={{
-                        backgroundColor: "var(--layer-2-bg)",
-                        border: "1px dashed var(--layer-border-strong)",
-                        color: C.lt4,
-                        fontSize: 11,
-                      }}
-                    >
-                      {p}
-                    </div>
-                  ))}
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={160} onUpgradeClick={handlePrimaryAction}>
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => toast.success("현장 사진 전체 다운로드를 시작합니다.", { duration: 1800 })}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
+                    style={{ fontSize: 12, backgroundColor: "rgba(16,185,129,0.10)", color: "var(--color-positive)", border: "1px solid rgba(16,185,129,0.3)" }}
+                  >
+                    <FileDown size={13} />
+                    전체 다운로드 ({listing.site_photos.length}장)
+                  </button>
+                  <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollSnapType: "x mandatory" }}>
+                    {listing.site_photos.map((p, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setLightboxPhoto(i)}
+                        className="flex-shrink-0 rounded-lg flex items-center justify-center transition-opacity hover:opacity-80"
+                        style={{ width: 140, height: 140, scrollSnapAlign: "start", backgroundColor: "var(--layer-2-bg)", border: "1px dashed var(--layer-border-strong)", color: C.lt4, fontSize: 11, cursor: "pointer" }}
+                        title={`사진 ${i + 1} 확대`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </TierGate>
             </SectionCard>
+
+            {/* ── 현장 사진 라이트박스 ── */}
+            {lightboxPhoto !== null && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center"
+                style={{ backgroundColor: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)" }}
+                onClick={() => setLightboxPhoto(null)}
+              >
+                <div
+                  className="relative rounded-2xl flex items-center justify-center"
+                  style={{ width: "min(90vw,640px)", height: "min(80vh,480px)", backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)" }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div style={{ fontSize: 16, color: C.lt3 }}>{listing.site_photos[lightboxPhoto]}</div>
+                  <div className="absolute top-3 right-3 flex items-center gap-2">
+                    <button type="button"
+                      onClick={() => setLightboxPhoto(i => i !== null && i > 0 ? i - 1 : listing.site_photos.length - 1)}
+                      className="rounded-lg px-2 py-1 font-bold"
+                      style={{ fontSize: 14, backgroundColor: "var(--layer-1-bg)", color: "var(--fg-muted)", border: "1px solid var(--layer-border-strong)" }}>‹</button>
+                    <span style={{ fontSize: 11, color: "var(--fg-muted)" }}>{lightboxPhoto + 1} / {listing.site_photos.length}</span>
+                    <button type="button"
+                      onClick={() => setLightboxPhoto(i => i !== null && i < listing.site_photos.length - 1 ? i + 1 : 0)}
+                      className="rounded-lg px-2 py-1 font-bold"
+                      style={{ fontSize: 14, backgroundColor: "var(--layer-1-bg)", color: "var(--fg-muted)", border: "1px solid var(--layer-border-strong)" }}>›</button>
+                    <button type="button" onClick={() => setLightboxPhoto(null)}
+                      className="rounded-lg p-1" style={{ backgroundColor: "var(--layer-1-bg)", color: "var(--fg-muted)", border: "1px solid var(--layer-border-strong)" }}>
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <SectionCard
               title="채권 정보"
@@ -1337,7 +1443,7 @@ export function AssetDetailView({
                     <span className="inline-flex items-center gap-1.5">
                       <TrendingUp className="w-3.5 h-3.5" style={{ color: "var(--color-positive)" }} />
                       <span style={{ fontSize: 11, color: "var(--color-positive)", fontWeight: 800 }}>
-                        수익성 분석 (IRR · ROI)
+                        NPL 수익성 분석 (IRR · ROI)
                       </span>
                     </span>
                     <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" style={{ color: "var(--color-positive)" }} />
@@ -1353,7 +1459,7 @@ export function AssetDetailView({
                     <span className="inline-flex items-center gap-1.5">
                       <Calculator className="w-3.5 h-3.5" style={{ color: "var(--color-brand-bright)" }} />
                       <span style={{ fontSize: 11, color: "var(--color-brand-bright)", fontWeight: 800 }}>
-                        경매 시뮬레이터
+                        경매 분석 시뮬레이터
                       </span>
                     </span>
                     <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" style={{ color: "var(--color-brand-bright)" }} />
@@ -1497,8 +1603,15 @@ export function AssetDetailView({
                 boxShadow: "0 8px 32px rgba(27,58,92,0.18)",
                 color: "#F1F5F9",
                 ["--color-text-primary" as string]: "#F1F5F9",
+                ["--color-text-secondary" as string]: "rgba(241,245,249,0.70)",
+                ["--color-text-muted" as string]: "rgba(241,245,249,0.45)",
                 ["--color-brand-bright" as string]: "#60A5FA",
                 ["--color-positive" as string]: "#34D399",
+                ["--color-danger" as string]: "#F87171",
+                ["--color-warning" as string]: "#FBBF24",
+                ["--color-surface-overlay" as string]: "rgba(255,255,255,0.06)",
+                ["--color-surface-elevated" as string]: "rgba(255,255,255,0.09)",
+                ["--color-border-subtle" as string]: "rgba(255,255,255,0.14)",
                 colorScheme: "dark",
               } as React.CSSProperties}
             >
@@ -1789,6 +1902,44 @@ function ClaimField({
         </div>
       )}
     </div>
+  )
+}
+
+/** 등기부등본 다운로드 버튼 — 업로드 여부에 따라 활성/비활성 */
+function DeedDownloadBtn({
+  label,
+  url,
+  uploaded,
+  onDownload,
+}: {
+  label: string
+  url: string
+  uploaded: boolean
+  onDownload: () => void
+}) {
+  if (!uploaded) {
+    return (
+      <span
+        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold"
+        style={{ fontSize: 12, backgroundColor: "var(--layer-2-bg)", color: "var(--fg-subtle)", border: "1px solid var(--layer-border-strong)", opacity: 0.55, cursor: "not-allowed" }}
+        title="채권자가 아직 업로드하지 않았습니다"
+      >
+        <FileDown size={13} />
+        {label}
+      </span>
+    )
+  }
+  return (
+    <a
+      href={url}
+      download
+      onClick={e => { e.preventDefault(); onDownload() }}
+      className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors hover:opacity-80"
+      style={{ fontSize: 12, backgroundColor: "rgba(46,117,182,0.10)", color: "var(--color-brand-bright)", border: "1px solid rgba(46,117,182,0.3)" }}
+    >
+      <FileDown size={13} />
+      {label}
+    </a>
   )
 }
 

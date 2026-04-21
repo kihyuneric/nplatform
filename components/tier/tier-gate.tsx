@@ -27,6 +27,8 @@ interface TierGateProps {
   customMessage?: string
   /** 잠금 박스 최소 높이 */
   minHeight?: number
+  /** 제공 시 href 대신 onClick 버튼으로 업그레이드 CTA 렌더 */
+  onUpgradeClick?: () => void
 }
 
 export function TierGate({
@@ -37,6 +39,7 @@ export function TierGate({
   blurContent = true,
   customMessage,
   minHeight = 160,
+  onUpgradeClick,
 }: TierGateProps) {
   const unlocked = tierGte(current, required)
 
@@ -113,27 +116,52 @@ export function TierGate({
           {meta.description}
         </div>
 
-        {upgrade && (
-          <a
-            href={upgrade.href}
-            style={{
-              marginTop: 4,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '9px 18px',
-              fontSize: 12,
-              fontWeight: 700,
-              color: '#FFFFFF',
-              backgroundColor: meta.color,
-              borderRadius: 6,
-              textDecoration: 'none',
-              letterSpacing: '0.02em',
-            }}
-          >
-            {upgrade.label}
-            <span aria-hidden style={{ fontSize: 14 }}>→</span>
-          </a>
+        {(upgrade || onUpgradeClick) && (
+          onUpgradeClick ? (
+            <button
+              type="button"
+              onClick={onUpgradeClick}
+              style={{
+                marginTop: 4,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '9px 18px',
+                fontSize: 12,
+                fontWeight: 700,
+                color: '#FFFFFF',
+                backgroundColor: meta.color,
+                borderRadius: 6,
+                border: 'none',
+                cursor: 'pointer',
+                letterSpacing: '0.02em',
+              }}
+            >
+              {upgrade?.label ?? meta.requirement}
+              <span aria-hidden style={{ fontSize: 14 }}>→</span>
+            </button>
+          ) : upgrade ? (
+            <a
+              href={upgrade.href}
+              style={{
+                marginTop: 4,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '9px 18px',
+                fontSize: 12,
+                fontWeight: 700,
+                color: '#FFFFFF',
+                backgroundColor: meta.color,
+                borderRadius: 6,
+                textDecoration: 'none',
+                letterSpacing: '0.02em',
+              }}
+            >
+              {upgrade.label}
+              <span aria-hidden style={{ fontSize: 14 }}>→</span>
+            </a>
+          ) : null
         )}
       </div>
     </div>
@@ -158,11 +186,10 @@ function getUpgradeAction(
     }
   }
   if (required === 'L2') {
-    // NDA 체결이 매물별일 경우 NDA 페이지로
     if (listingId) {
-      return { label: 'NDA 체결하고 열람', href: `/deals/${listingId}?action=nda` }
+      return { label: 'NDA 체결화면 열기', href: `/deals/${listingId}?action=nda` }
     }
-    return { label: '전문투자자 인증하기', href: '/my/kyc' }
+    return { label: 'NDA 체결화면 열기', href: '/my/kyc' }
   }
   if (required === 'L1') {
     return { label: '본인인증하고 열람', href: '/my/verify' }
