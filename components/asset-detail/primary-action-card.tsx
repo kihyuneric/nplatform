@@ -10,7 +10,7 @@
 
 "use client"
 
-import { ArrowRight, FileSignature, FileCheck, PenLine, Wallet, CheckCircle2, Heart, LogIn, Shield } from "lucide-react"
+import { ArrowRight, FileSignature, FileCheck, PenLine, Wallet, CheckCircle2, LogIn } from "lucide-react"
 import type { ReactNode } from "react"
 import type { AssetTier } from "@/hooks/use-asset-tier"
 
@@ -43,10 +43,10 @@ const CTA: Record<AssetTier, Cta> = {
     fg: "var(--fg-on-brand)",
   },
   L1: {
-    label: "전문투자자 인증 → NDA",
-    subtitle: "5분 · KYC + NDA 자동",
-    hint: "NDA 체결 시 등기원본 · 임대차 · 사진 열람",
-    icon: <Shield className="w-5 h-5" />,
+    label: "NDA 체결",
+    subtitle: "(전자 서명)",
+    hint: "NDA 체결 시 등기원본 · 현장사진 · 임대차 열람",
+    icon: <FileSignature className="w-5 h-5" />,
     bg: "var(--color-brand-bright)",
     fg: "var(--fg-on-brand)",
   },
@@ -59,10 +59,10 @@ const CTA: Record<AssetTier, Cta> = {
     fg: "#041915",
   },
   L3: {
-    label: "실사 · 계약 초안",
-    subtitle: "데이터룸 · 협상 진행",
-    hint: "원본 자료 검토 + 계약 조건 합의",
-    icon: <FileSignature className="w-5 h-5" />,
+    label: "계약 초안 · 에스크로",
+    subtitle: "서명 · 입금",
+    hint: "실사 자료 검토 + 전자서명 + 에스크로 입금",
+    icon: <Wallet className="w-5 h-5" />,
     bg: "var(--color-positive)",
     fg: "#041915",
   },

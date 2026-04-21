@@ -33,9 +33,10 @@ export interface AssetHeroSummaryProps {
   backHref?: string
 }
 
-/** 5단계 프로세스 라벨 (DR-6 확정) — 2-line: 주 라벨 + 부 라벨 */
+/** 5단계 프로세스 라벨 (DR-7 · 2026-04-21) — 2-line: 주 라벨 + 부 라벨
+ * Step 1: 매칭 → 전문투자자 인증 으로 변경 */
 const STEPS: { label: string; sub: string }[] = [
-  { label: "매칭",           sub: "(개인인증)" },
+  { label: "전문투자자",      sub: "(인증)" },
   { label: "담보·채권 정보",  sub: "(NDA)" },
   { label: "실사 / 오퍼",     sub: "(LOI)" },
   { label: "계약·에스크로",   sub: "(서명)" },
