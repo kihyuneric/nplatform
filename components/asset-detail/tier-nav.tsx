@@ -1,17 +1,17 @@
 /**
  * TierNav — 자산 상세 페이지 L0~L5 섹션 네비게이션 (DR-10 · 2026-04-21)
  *
- * 16개 항목을 티어별로 그룹핑하여 2-줄 그리드로 표시.
+ * 항목을 티어별로 그룹핑하여 그리드로 표시.
  * 각 항목 클릭 시 해당 섹션으로 스크롤.
  *
  * 공개 레벨:
- *   L0 : AI 분석 리포트, 권리관계 요약, 등기부등본 요약, 임차인
- *   L1 : (본인인증) — 위 4개 이용 가능
- *   L2 : (NDA) 감정평가서, 등기부등본 원본, 현장사진, 채권정보, 채팅
- *   L2 : (NDA 액션) NDA
- *   L3 : (LOI) 채권 오퍼, LOI, 실사 체크리스트
- *   L4 : 계약서 초안, 에스크로
- *   L5 : 완료(정산)
+ *   L0 : AI 분석 리포트, 권리관계 요약
+ *   L1 : (본인인증) 등기부등본 요약, 임대차 현황 요약
+ *   L2 : (NDA) NDA, 감정평가서, 경매 정보, 공매 정보,
+ *              실거래/경공매 통계, 등기부등본 열람, 현장사진, 채권정보
+ *   L3 : (LOI) LOI, 채팅, 실사, 가격 오퍼
+ *   L4 : 에스크로 결제
+ *   L5 : 계약 (현장계약)
  */
 
 "use client"
@@ -42,34 +42,34 @@ export interface TierNavItem {
 
 const ITEMS: TierNavItem[] = [
   // ──────── L0 · 공개 (로그인 불필요) ────────
-  { key: "ai",           label: "AI 분석",     sub: "리포트",       requiredTier: "L0", icon: <Brain className="w-4 h-4" />,          anchor: "ai-report" },
-  { key: "rights",       label: "권리관계",    sub: "요약",         requiredTier: "L0", icon: <Scale className="w-4 h-4" />,          anchor: "rights" },
+  { key: "ai",            label: "AI 분석",        sub: "리포트",    requiredTier: "L0", icon: <Brain className="w-4 h-4" />,         anchor: "ai-report" },
+  { key: "rights",        label: "권리관계",        sub: "요약",      requiredTier: "L0", icon: <Scale className="w-4 h-4" />,         anchor: "rights" },
 
   // ──────── L1 · 본인인증 후 ────────
-  { key: "deed-summary", label: "등기부등본",  sub: "요약",         requiredTier: "L1", icon: <FileText className="w-4 h-4" />,       anchor: "deed-summary" },
-  { key: "lease",        label: "임대차 현황", sub: "",             requiredTier: "L1", icon: <Users2 className="w-4 h-4" />,         anchor: "tenants" },
-  { key: "appraisal",    label: "감정평가서",  sub: "",             requiredTier: "L1", icon: <FileBarChart className="w-4 h-4" />,   anchor: "appraisal" },
-  { key: "auction-info", label: "경매 정보",   sub: "",             requiredTier: "L1", icon: <Gavel className="w-4 h-4" />,          anchor: "auction-info" },
-  { key: "public-sale",  label: "공매 정보",   sub: "",             requiredTier: "L1", icon: <Landmark className="w-4 h-4" />,       anchor: "public-sale" },
-  { key: "auction-stat",label: "실거래",      sub: "경공매 통계",   requiredTier: "L1", icon: <BarChart2 className="w-4 h-4" />,       anchor: "auction-stats" },
+  { key: "deed-summary",  label: "등기부등본",      sub: "요약",      requiredTier: "L1", icon: <FileText className="w-4 h-4" />,      anchor: "deed-summary" },
+  { key: "lease",         label: "임대차 현황",     sub: "요약",      requiredTier: "L1", icon: <Users2 className="w-4 h-4" />,        anchor: "tenants" },
 
   // ──────── L2 · NDA 체결 후 ────────
-  { key: "deed-full",    label: "등기부등본",  sub: "원본",         requiredTier: "L2", icon: <BookOpen className="w-4 h-4" />,       anchor: "deed-full" },
-  { key: "site-photos",  label: "현장사진",    sub: "",             requiredTier: "L2", icon: <ImageIcon className="w-4 h-4" />,      anchor: "site-photos" },
-  { key: "debt",         label: "채권정보",    sub: "",             requiredTier: "L2", icon: <Coins className="w-4 h-4" />,          anchor: "debt-info" },
-  { key: "nda",          label: "NDA",         sub: "",             requiredTier: "L2", icon: <FileSignature className="w-4 h-4" />,  anchor: "nda" },
-  { key: "chat",         label: "채팅",        sub: "",             requiredTier: "L2", icon: <MessageSquare className="w-4 h-4" />,  anchor: "chat" },
-  { key: "offer",        label: "가격 오퍼",   sub: "",             requiredTier: "L2", icon: <HandCoins className="w-4 h-4" />,      anchor: "offer" },
-  { key: "due-diligence",label: "실사",        sub: "",             requiredTier: "L2", icon: <ClipboardList className="w-4 h-4" />,  anchor: "due-diligence" },
+  { key: "nda",           label: "NDA",             sub: "",          requiredTier: "L2", icon: <FileSignature className="w-4 h-4" />, anchor: "nda" },
+  { key: "appraisal",     label: "감정평가서",      sub: "열람",      requiredTier: "L2", icon: <FileBarChart className="w-4 h-4" />,  anchor: "appraisal" },
+  { key: "auction-info",  label: "경매 정보",       sub: "",          requiredTier: "L2", icon: <Gavel className="w-4 h-4" />,         anchor: "auction-info" },
+  { key: "public-sale",   label: "공매 정보",       sub: "",          requiredTier: "L2", icon: <Landmark className="w-4 h-4" />,      anchor: "public-sale" },
+  { key: "auction-stat",  label: "실거래/경공매",   sub: "통계",      requiredTier: "L2", icon: <BarChart2 className="w-4 h-4" />,     anchor: "auction-stats" },
+  { key: "deed-full",     label: "등기부등본",      sub: "열람",      requiredTier: "L2", icon: <BookOpen className="w-4 h-4" />,      anchor: "deed-full" },
+  { key: "site-photos",   label: "현장사진",        sub: "",          requiredTier: "L2", icon: <ImageIcon className="w-4 h-4" />,     anchor: "site-photos" },
+  { key: "debt",          label: "채권정보",        sub: "",          requiredTier: "L2", icon: <Coins className="w-4 h-4" />,         anchor: "debt-info" },
 
   // ──────── L3 · LOI ────────
-  { key: "loi",          label: "LOI",         sub: "",             requiredTier: "L3", icon: <FileCheck className="w-4 h-4" />,      anchor: "loi" },
+  { key: "loi",           label: "LOI",             sub: "",          requiredTier: "L3", icon: <FileCheck className="w-4 h-4" />,     anchor: "loi" },
+  { key: "chat",          label: "채팅",            sub: "",          requiredTier: "L3", icon: <MessageSquare className="w-4 h-4" />, anchor: "chat" },
+  { key: "due-diligence", label: "실사",            sub: "",          requiredTier: "L3", icon: <ClipboardList className="w-4 h-4" />, anchor: "due-diligence" },
+  { key: "offer",         label: "가격 오퍼",       sub: "",          requiredTier: "L3", icon: <HandCoins className="w-4 h-4" />,     anchor: "offer" },
 
   // ──────── L4 · 에스크로 결제 ────────
-  { key: "escrow",       label: "에스크로",    sub: "결제",         requiredTier: "L4", icon: <Wallet className="w-4 h-4" />,         anchor: "escrow" },
+  { key: "escrow",        label: "에스크로",        sub: "결제",      requiredTier: "L4", icon: <Wallet className="w-4 h-4" />,        anchor: "escrow" },
 
   // ──────── L5 · 현장 계약 ────────
-  { key: "contract-final", label: "계약",      sub: "(현장계약)",   requiredTier: "L5", icon: <Trophy className="w-4 h-4" />,         anchor: "contract-final" },
+  { key: "contract-final",label: "계약",            sub: "(현장계약)",requiredTier: "L5", icon: <Trophy className="w-4 h-4" />,        anchor: "contract-final" },
 ]
 
 export interface TierNavProps {
