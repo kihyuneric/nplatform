@@ -88,16 +88,25 @@ interface ListingDetail {
   court_case_masked: string
   published_at: string
   rights_summary: { senior_total: number; junior_total: number; deposit_total: number }
-  registry_summary_items: Array<{ order: number; order_code?: string; type: string; amount: number; holder_masked: string; receipt_date?: string }>
-  /** 등기부등본 전체 행 (L2 공개) */
-  registry_full_items?: Array<{
+  registry_summary_items: Array<{ order: number; order_code?: string; type: string; amount: number; holder_masked: string; receipt_date?: string; deed_type?: "land" | "building" }>
+  /** 등기부등본 전체 행 (L2 공개) — 토지/건물 구분 */
+  registry_land_full_items?: Array<{
     order: number
     order_code: string        // 예: "갑30", "을21"
     receipt_date: string
     type: string
     holder: string            // 권리자 (UI에서 maskHolderDisplay 적용)
     amount: number | null
-    amount_label?: string     // 예: "청구금액" (특수 표시)
+    amount_label?: string
+  }>
+  registry_building_full_items?: Array<{
+    order: number
+    order_code: string
+    receipt_date: string
+    type: string
+    holder: string
+    amount: number | null
+    amount_label?: string
   }>
   /** 감정평가서 부속 정보 */
   appraisal_area?: number     // 면적 (m²)
@@ -156,11 +165,11 @@ function buildMock(id: string): ListingDetail {
       deposit_total: 60_000_000,
     },
     registry_summary_items: [
-      { order: 1, order_code: "을21", type: "근저당권", amount: 3_600_000_000, holder_masked: "중소기업은행(부천테크노지점)", receipt_date: "2021.06.18" },
-      { order: 2, order_code: "을23", type: "근저당권", amount: 960_000_000,   holder_masked: "(주)피비스타(송파동,현대레이크빌)", receipt_date: "2024.10.25" },
-      { order: 3, order_code: "갑31", type: "가압류",   amount: 654_000_000,   holder_masked: "(주)린정(고잔동,한남법조빌딩)", receipt_date: "2024.10.15" },
+      { order: 1, order_code: "을21", type: "근저당권", amount: 3_600_000_000, holder_masked: "중소기업은행(부천테크노지점)", receipt_date: "2021.06.18", deed_type: "land" },
+      { order: 2, order_code: "을23", type: "근저당권", amount: 960_000_000,   holder_masked: "(주)피비스타(송파동,현대레이크빌)", receipt_date: "2024.10.25", deed_type: "land" },
+      { order: 3, order_code: "갑31", type: "가압류",   amount: 654_000_000,   holder_masked: "(주)린정(고잔동,한남법조빌딩)", receipt_date: "2024.10.15", deed_type: "building" },
     ],
-    registry_full_items: [
+    registry_land_full_items: [
       { order: 1, order_code: "갑30", receipt_date: "2021.06.18", type: "소유권이전(매매)",   holder: "유한회사제이원퍼스트(소유자)",         amount: null },
       { order: 2, order_code: "을21", receipt_date: "2021.06.18", type: "근저당권설정",       holder: "중소기업은행(부천테크노지점)",          amount: 3_600_000_000 },
       { order: 3, order_code: "갑31", receipt_date: "2024.10.15", type: "가압류",             holder: "(주)린정(고잔동,한남법조빌딩)",        amount: 654_000_000 },
@@ -168,6 +177,12 @@ function buildMock(id: string): ListingDetail {
       { order: 5, order_code: "을23", receipt_date: "2024.10.25", type: "근저당권설정",       holder: "(주)피비스타(송파동,현대레이크빌)",    amount: 960_000_000 },
       { order: 6, order_code: "갑33", receipt_date: "2025.01.08", type: "압류",               holder: "국 금천세무서장",                      amount: null },
       { order: 7, order_code: "갑34", receipt_date: "2025.05.09", type: "임의경매개시결정",   holder: "중소기업은행(여신관리부)",             amount: 3_086_117_337, amount_label: "청구금액" },
+    ],
+    registry_building_full_items: [
+      { order: 1, order_code: "갑1",  receipt_date: "2021.06.18", type: "소유권이전(매매)",   holder: "유한회사제이원퍼스트(소유자)",         amount: null },
+      { order: 2, order_code: "을1",  receipt_date: "2021.06.18", type: "근저당권설정",       holder: "중소기업은행(부천테크노지점)",          amount: 3_600_000_000 },
+      { order: 3, order_code: "갑2",  receipt_date: "2024.10.15", type: "가압류",             holder: "(주)린정(고잔동,한남법조빌딩)",        amount: 654_000_000 },
+      { order: 4, order_code: "갑3",  receipt_date: "2025.05.09", type: "임의경매개시결정",   holder: "중소기업은행(여신관리부)",             amount: 3_086_117_337, amount_label: "청구금액" },
     ],
     appraisal_area: 3333,
     appraisal_date: "2026-05-23",
@@ -207,12 +222,12 @@ function formatDateKo(iso: string | null | undefined): string {
   try { return iso.slice(0, 10) } catch { return "—" }
 }
 
-/** 권리자 표시용 마스킹: 괄호 부분 제거 + 앞 2글자 ● 처리 */
+/** 권리자 표시용 마스킹: 괄호 부분 제거 + 앞 5글자 ● 처리 */
 function maskHolderDisplay(raw: string): string {
   const stripped = raw.replace(/\(.*?\)/g, '').replace(/（.*?）/g, '').trim()
-  if (!stripped) return '●●●'
+  if (!stripped) return '●●●●●'
   const chars = [...stripped]
-  return chars.map((c, i) => i < 2 ? '●' : c).join('')
+  return chars.map((c, i) => i < 5 ? '●' : c).join('')
 }
 
 /** 구분 코드 포맷: order + optional code → "1(갑30)" */
@@ -448,6 +463,12 @@ export function AssetDetailView({
   const [submittedOffer, setSubmittedOffer] = useState<OfferData | null>(null)
   const [offerFormVisible, setOfferFormVisible] = useState(true)
   const [lightboxPhoto, setLightboxPhoto] = useState<number | null>(null)
+
+  /* 등기부등본 탭 & 접기/펼치기 */
+  const [deedSummaryTab, setDeedSummaryTab] = useState<"land" | "building">("land")
+  const [deedFullTab, setDeedFullTab] = useState<"land" | "building">("land")
+  const [deedSummaryExpanded, setDeedSummaryExpanded] = useState(true)
+  const [deedFullExpanded, setDeedFullExpanded] = useState(true)
 
   /* 사용자 역할 확인: admin 또는 seller 면 편집 허용 */
   useEffect(() => {
@@ -851,56 +872,116 @@ export function AssetDetailView({
                     등기 정보가 아직 업로드되지 않았습니다.
                   </p>
                 ) : (
-                  <div style={{ overflowX: "auto" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                      <thead>
-                        <tr style={{ backgroundColor: "var(--layer-2-bg)", borderBottom: "2px solid var(--layer-border-strong)" }}>
-                          {["구분", "접수일", "권리종류", "권리자", "채권금액"].map((h, i) => (
-                            <th
-                              key={h}
-                              style={{
-                                padding: "8px 12px",
-                                textAlign: i >= 4 ? "right" : i === 0 ? "center" : "left",
-                                fontSize: 10, fontWeight: 700,
-                                color: C.lt4, letterSpacing: "0.05em",
-                                textTransform: "uppercase",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {h}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {listing.registry_summary_items.map((r, idx) => (
-                          <tr
-                            key={r.order}
+                  <div>
+                    {/* 탭: 토지등기부 / 건물등기부 */}
+                    <div className="flex items-center gap-1 mb-3" style={{ borderBottom: "1px solid var(--layer-border-strong)", paddingBottom: 0 }}>
+                      {(["land", "building"] as const).map(t => {
+                        const label = t === "land" ? "토지등기부" : "건물등기부"
+                        const count = listing.registry_summary_items.filter(r => r.deed_type === t || r.deed_type == null).length
+                        const active = deedSummaryTab === t
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => setDeedSummaryTab(t)}
+                            className="font-bold transition-colors"
                             style={{
-                              borderBottom: idx < listing.registry_summary_items.length - 1
-                                ? "1px solid var(--layer-border)"
-                                : undefined,
+                              padding: "6px 14px",
+                              fontSize: 12,
+                              borderBottom: active ? "2px solid var(--color-brand-bright)" : "2px solid transparent",
+                              color: active ? "var(--color-brand-bright)" : C.lt4,
+                              background: "none",
+                              marginBottom: -1,
                             }}
                           >
-                            <td style={{ padding: "10px 12px", textAlign: "center", fontSize: 11, fontWeight: 700, color: C.lt4, whiteSpace: "nowrap" }}>
-                              {fmtOrderCode(r.order, r.order_code)}
-                            </td>
-                            <td style={{ padding: "10px 12px", fontSize: 11, color: C.lt4, whiteSpace: "nowrap" }}>
-                              {r.receipt_date ?? "—"}
-                            </td>
-                            <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: C.lt1 }}>
-                              {r.type}
-                            </td>
-                            <td style={{ padding: "10px 12px", fontSize: 11, color: C.lt3 }}>
-                              {maskHolderDisplay(r.holder_masked)}
-                            </td>
-                            <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13, fontWeight: 700, color: C.em, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
-                              {formatKRW(r.amount)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            {label}
+                            {count > 0 && (
+                              <span
+                                className="ml-1.5 rounded-full px-1.5"
+                                style={{ fontSize: 9, backgroundColor: active ? "rgba(46,117,182,0.15)" : "var(--layer-2-bg)", color: active ? "var(--color-brand-bright)" : C.lt4 }}
+                              >
+                                {count}
+                              </span>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    {/* 테이블 */}
+                    {deedSummaryExpanded && (
+                      <div style={{ overflowX: "auto" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                          <thead>
+                            <tr style={{ backgroundColor: "var(--layer-2-bg)", borderBottom: "2px solid var(--layer-border-strong)" }}>
+                              {["구분", "접수일", "권리종류", "권리자", "채권금액"].map((h, i) => (
+                                <th
+                                  key={h}
+                                  style={{
+                                    padding: "8px 12px",
+                                    textAlign: i >= 4 ? "right" : i === 0 ? "center" : "left",
+                                    fontSize: 10, fontWeight: 700,
+                                    color: C.lt4, letterSpacing: "0.05em",
+                                    textTransform: "uppercase",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {h}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {listing.registry_summary_items
+                              .filter(r => r.deed_type === deedSummaryTab || r.deed_type == null)
+                              .map((r, idx, arr) => (
+                                <tr
+                                  key={r.order}
+                                  style={{
+                                    borderBottom: idx < arr.length - 1
+                                      ? "1px solid var(--layer-border)"
+                                      : undefined,
+                                  }}
+                                >
+                                  <td style={{ padding: "10px 12px", textAlign: "center", fontSize: 11, fontWeight: 700, color: C.lt4, whiteSpace: "nowrap" }}>
+                                    {fmtOrderCode(r.order, r.order_code)}
+                                  </td>
+                                  <td style={{ padding: "10px 12px", fontSize: 11, color: C.lt4, whiteSpace: "nowrap" }}>
+                                    {r.receipt_date ?? "—"}
+                                  </td>
+                                  <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: C.lt1 }}>
+                                    {r.type}
+                                  </td>
+                                  <td style={{ padding: "10px 12px", fontSize: 11, color: C.lt3 }}>
+                                    {maskHolderDisplay(r.holder_masked)}
+                                  </td>
+                                  <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13, fontWeight: 700, color: C.em, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+                                    {formatKRW(r.amount)}
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    {/* 접기/펼치기 토글 */}
+                    <div className="mt-2 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setDeedSummaryExpanded(v => !v)}
+                        className="inline-flex items-center gap-1.5 rounded-full font-bold transition-colors"
+                        style={{
+                          padding: "4px 14px",
+                          fontSize: 11,
+                          backgroundColor: "var(--layer-2-bg)",
+                          color: C.lt4,
+                          border: "1px solid var(--layer-border-strong)",
+                        }}
+                      >
+                        {deedSummaryExpanded ? "▲ 등기부 현황 접기" : "▼ 등기부 현황 펼치기"}
+                      </button>
+                    </div>
                   </div>
                 )}
               </TierGate>
@@ -1356,83 +1437,148 @@ export function AssetDetailView({
                     )}
                   </div>
 
-                  {/* ── 전체 등기부 테이블 ── */}
-                  {listing.registry_full_items && listing.registry_full_items.length > 0 && (
-                    <div>
-                      {/* 헤더 행: 채권액합계 + 열람일 */}
-                      <div
-                        className="flex items-center justify-between mb-2 px-1"
-                        style={{ fontSize: 11 }}
-                      >
-                        <span style={{ color: C.lt3, fontWeight: 700 }}>
-                          채권액합계{" "}
-                          <span style={{ color: C.em }}>
-                            {listing.registry_full_items
-                              .reduce((s, r) => s + (r.amount ?? 0), 0)
-                              .toLocaleString("ko-KR")}원
-                          </span>
-                        </span>
-                        <span style={{ color: C.lt4 }}>
-                          열람 {listing.published_at?.replace(/-/g, ".")}
-                        </span>
-                      </div>
-
-                      <div style={{ overflowX: "auto" }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 560 }}>
-                          <thead>
-                            <tr style={{ backgroundColor: "var(--layer-2-bg)", borderBottom: "2px solid var(--layer-border-strong)" }}>
-                              {["구분", "접수일", "권리종류", "권리자", "채권금액"].map((h, i) => (
-                                <th
-                                  key={h}
-                                  style={{
-                                    padding: "8px 10px",
-                                    textAlign: i >= 4 ? "right" : i === 0 ? "center" : "left",
-                                    fontSize: 10, fontWeight: 700,
-                                    color: C.lt4, letterSpacing: "0.04em",
-                                    textTransform: "uppercase",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  {h}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {listing.registry_full_items.map((r, idx) => (
-                              <tr
-                                key={r.order}
-                                style={{
-                                  borderBottom: idx < (listing.registry_full_items?.length ?? 0) - 1
-                                    ? "1px solid var(--layer-border)"
-                                    : undefined,
-                                }}
+                  {/* ── 탭: 토지등기부 / 건물등기부 ── */}
+                  <div>
+                    <div className="flex items-center gap-1" style={{ borderBottom: "1px solid var(--layer-border-strong)", paddingBottom: 0 }}>
+                      {(["land", "building"] as const).map(t => {
+                        const label = t === "land" ? "토지 등기부등본" : "건물 등기부등본"
+                        const items = t === "land" ? listing.registry_land_full_items : listing.registry_building_full_items
+                        const active = deedFullTab === t
+                        const count = items?.length ?? 0
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => setDeedFullTab(t)}
+                            className="font-bold transition-colors"
+                            style={{
+                              padding: "6px 14px",
+                              fontSize: 12,
+                              borderBottom: active ? "2px solid var(--color-brand-bright)" : "2px solid transparent",
+                              color: active ? "var(--color-brand-bright)" : C.lt4,
+                              background: "none",
+                              marginBottom: -1,
+                            }}
+                          >
+                            {label}
+                            {count > 0 && (
+                              <span
+                                className="ml-1.5 rounded-full px-1.5"
+                                style={{ fontSize: 9, backgroundColor: active ? "rgba(46,117,182,0.15)" : "var(--layer-2-bg)", color: active ? "var(--color-brand-bright)" : C.lt4 }}
                               >
-                                <td style={{ padding: "9px 10px", textAlign: "center", fontSize: 11, fontWeight: 700, color: C.lt4, whiteSpace: "nowrap" }}>
-                                  {fmtOrderCode(r.order, r.order_code)}
-                                </td>
-                                <td style={{ padding: "9px 10px", fontSize: 11, color: C.lt4, whiteSpace: "nowrap" }}>
-                                  {r.receipt_date}
-                                </td>
-                                <td style={{ padding: "9px 10px", fontSize: 12, fontWeight: 700, color: C.lt1, whiteSpace: "nowrap" }}>
-                                  {r.type}
-                                </td>
-                                <td style={{ padding: "9px 10px", fontSize: 11, color: C.lt3 }}>
-                                  {maskHolderDisplay(r.holder)}
-                                </td>
-                                <td style={{ padding: "9px 10px", textAlign: "right", fontSize: 12, fontWeight: 700, color: r.amount ? C.em : C.lt4, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
-                                  {r.amount_label && (
-                                    <span style={{ fontSize: 10, color: C.lt4, marginRight: 4 }}>{r.amount_label}</span>
-                                  )}
-                                  {r.amount !== null ? r.amount.toLocaleString("ko-KR") + "원" : "—"}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                                {count}
+                              </span>
+                            )}
+                          </button>
+                        )
+                      })}
                     </div>
-                  )}
+
+                    {/* ── 전체 등기부 테이블 ── */}
+                    {(() => {
+                      const fullItems = deedFullTab === "land"
+                        ? listing.registry_land_full_items
+                        : listing.registry_building_full_items
+                      if (!fullItems || fullItems.length === 0) {
+                        return (
+                          <p className="text-center py-5" style={{ color: C.lt4, fontSize: 11 }}>
+                            {deedFullTab === "land" ? "토지" : "건물"} 등기부 데이터가 없습니다.
+                          </p>
+                        )
+                      }
+                      return (
+                        <div>
+                          {/* 헤더 행: 채권액합계 + 열람일 */}
+                          <div className="flex items-center justify-between my-2 px-1" style={{ fontSize: 11 }}>
+                            <span style={{ color: C.lt3, fontWeight: 700 }}>
+                              채권액합계{" "}
+                              <span style={{ color: C.em }}>
+                                {fullItems.reduce((s, r) => s + (r.amount ?? 0), 0).toLocaleString("ko-KR")}원
+                              </span>
+                            </span>
+                            <span style={{ color: C.lt4 }}>
+                              열람 {listing.published_at?.replace(/-/g, ".")}
+                            </span>
+                          </div>
+
+                          {deedFullExpanded && (
+                            <div style={{ overflowX: "auto" }}>
+                              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 560 }}>
+                                <thead>
+                                  <tr style={{ backgroundColor: "var(--layer-2-bg)", borderBottom: "2px solid var(--layer-border-strong)" }}>
+                                    {["구분", "접수일", "권리종류", "권리자", "채권금액"].map((h, i) => (
+                                      <th
+                                        key={h}
+                                        style={{
+                                          padding: "8px 10px",
+                                          textAlign: i >= 4 ? "right" : i === 0 ? "center" : "left",
+                                          fontSize: 10, fontWeight: 700,
+                                          color: C.lt4, letterSpacing: "0.04em",
+                                          textTransform: "uppercase",
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        {h}
+                                      </th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {fullItems.map((r, idx) => (
+                                    <tr
+                                      key={r.order}
+                                      style={{
+                                        borderBottom: idx < fullItems.length - 1
+                                          ? "1px solid var(--layer-border)"
+                                          : undefined,
+                                      }}
+                                    >
+                                      <td style={{ padding: "9px 10px", textAlign: "center", fontSize: 11, fontWeight: 700, color: C.lt4, whiteSpace: "nowrap" }}>
+                                        {fmtOrderCode(r.order, r.order_code)}
+                                      </td>
+                                      <td style={{ padding: "9px 10px", fontSize: 11, color: C.lt4, whiteSpace: "nowrap" }}>
+                                        {r.receipt_date}
+                                      </td>
+                                      <td style={{ padding: "9px 10px", fontSize: 12, fontWeight: 700, color: C.lt1, whiteSpace: "nowrap" }}>
+                                        {r.type}
+                                      </td>
+                                      <td style={{ padding: "9px 10px", fontSize: 11, color: C.lt3 }}>
+                                        {maskHolderDisplay(r.holder)}
+                                      </td>
+                                      <td style={{ padding: "9px 10px", textAlign: "right", fontSize: 12, fontWeight: 700, color: r.amount ? C.em : C.lt4, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+                                        {r.amount_label && (
+                                          <span style={{ fontSize: 10, color: C.lt4, marginRight: 4 }}>{r.amount_label}</span>
+                                        )}
+                                        {r.amount !== null ? r.amount.toLocaleString("ko-KR") + "원" : "—"}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+
+                          {/* 접기/펼치기 토글 */}
+                          <div className="mt-2 flex justify-center">
+                            <button
+                              type="button"
+                              onClick={() => setDeedFullExpanded(v => !v)}
+                              className="inline-flex items-center gap-1.5 rounded-full font-bold transition-colors"
+                              style={{
+                                padding: "4px 14px",
+                                fontSize: 11,
+                                backgroundColor: "var(--layer-2-bg)",
+                                color: C.lt4,
+                                border: "1px solid var(--layer-border-strong)",
+                              }}
+                            >
+                              {deedFullExpanded ? "▲ 등기부 현황 접기" : "▼ 등기부 현황 펼치기"}
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </div>
                 </div>
               </TierGate>
             </SectionCard>
@@ -1803,54 +1949,100 @@ export function AssetDetailView({
             <div
               className="rounded-2xl overflow-hidden"
               style={{
-                background: "linear-gradient(180deg, #0F1E35 0%, #122843 100%)",
-                border: "1px solid rgba(245,158,11,0.28)",
-                boxShadow: "0 8px 32px rgba(27,58,92,0.18)",
-                color: "#F1F5F9",
-                ["--color-text-primary" as string]: "#F1F5F9",
-                ["--color-text-secondary" as string]: "rgba(241,245,249,0.70)",
-                ["--color-text-muted" as string]: "rgba(241,245,249,0.45)",
-                ["--color-brand-bright" as string]: "#60A5FA",
-                ["--color-positive" as string]: "#34D399",
-                ["--color-danger" as string]: "#F87171",
-                ["--color-warning" as string]: "#FBBF24",
-                ["--color-surface-overlay" as string]: "rgba(255,255,255,0.06)",
-                ["--color-surface-elevated" as string]: "rgba(255,255,255,0.09)",
-                ["--color-border-subtle" as string]: "rgba(255,255,255,0.14)",
-                colorScheme: "dark",
-              } as React.CSSProperties}
+                backgroundColor: "var(--layer-1-bg)",
+                border: "1px solid var(--layer-border-strong)",
+                boxShadow: "0 4px 20px rgba(27,58,92,0.10)",
+              }}
             >
+              {/* ── 헤더: 브랜드 그라데이션 ── */}
               <header
-                className="flex items-center justify-between gap-3 flex-wrap px-4 py-3"
-                style={{ borderBottom: "1px solid rgba(245,158,11,0.22)" }}
+                className="flex items-center justify-between gap-3 flex-wrap px-5 py-4"
+                style={{
+                  background: "linear-gradient(135deg, #1B3A5C 0%, #2E75B6 100%)",
+                  borderBottom: "1px solid rgba(255,255,255,0.10)",
+                }}
               >
-                <h3 className="font-black inline-flex items-center gap-2" style={{ fontSize: 14 }}>
-                  <HandCoins size={16} style={{ color: "#F59E0B" }} />
-                  가격 오퍼
-                </h3>
-                <span className="font-semibold" style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}>
-                  매도자에게 매입 희망가를 제안하세요
-                </span>
-              </header>
-              <div className="p-4 space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl p-3" style={{ backgroundColor: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}>
-                    <div className="font-semibold mb-0.5" style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>매도 희망가</div>
-                    <div className="font-black tabular-nums" style={{ fontSize: 18, color: "#FBBF24" }}>{formatKRW(listing.asking_price)}</div>
+                <div className="inline-flex items-center gap-2">
+                  <div
+                    className="rounded-lg p-1.5 flex items-center justify-center"
+                    style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
+                  >
+                    <HandCoins size={16} color="#FBBF24" />
                   </div>
-                  <div className="rounded-xl p-3" style={{ backgroundColor: "rgba(96,165,250,0.08)", border: "1px solid rgba(96,165,250,0.22)" }}>
-                    <div className="font-semibold mb-0.5" style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>AI 권고 매입가</div>
-                    <div className="font-black tabular-nums" style={{ fontSize: 18, color: "#60A5FA" }}>{formatKRW(Math.round(listing.asking_price * 0.96))}</div>
+                  <div>
+                    <h3 className="font-black leading-none" style={{ fontSize: 15, color: "#FFFFFF" }}>
+                      가격 오퍼
+                    </h3>
+                    <p className="mt-0.5 font-medium" style={{ fontSize: 11, color: "rgba(255,255,255,0.72)" }}>
+                      매도자에게 매입 희망가를 제안하세요
+                    </p>
                   </div>
                 </div>
+                <span
+                  className="rounded-full font-bold px-2.5 py-1"
+                  style={{ fontSize: 10, backgroundColor: "rgba(245,158,11,0.22)", color: "#FCD34D", border: "1px solid rgba(245,158,11,0.40)" }}
+                >
+                  L3 협상 단계
+                </span>
+              </header>
+
+              {/* ── 바디 ── */}
+              <div className="p-5 space-y-4">
+                {/* 가격 요약 KPI 2칸 */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div
+                    className="rounded-xl p-3.5"
+                    style={{
+                      backgroundColor: "rgba(245,158,11,0.07)",
+                      border: "1px solid rgba(245,158,11,0.28)",
+                    }}
+                  >
+                    <div className="font-bold mb-1" style={{ fontSize: 10, color: C.lt4, letterSpacing: "0.04em" }}>
+                      매도 희망가
+                    </div>
+                    <div className="font-black tabular-nums" style={{ fontSize: 20, color: C.amber, lineHeight: 1.1 }}>
+                      {formatKRW(listing.asking_price)}
+                    </div>
+                    <div className="mt-1 font-semibold tabular-nums" style={{ fontSize: 10, color: C.lt4 }}>
+                      할인율 ↓{discountPct}%
+                    </div>
+                  </div>
+                  <div
+                    className="rounded-xl p-3.5"
+                    style={{
+                      backgroundColor: "rgba(16,185,129,0.07)",
+                      border: "1px solid rgba(16,185,129,0.28)",
+                    }}
+                  >
+                    <div className="font-bold mb-1" style={{ fontSize: 10, color: C.lt4, letterSpacing: "0.04em" }}>
+                      AI 권고 매입가
+                    </div>
+                    <div className="font-black tabular-nums" style={{ fontSize: 20, color: C.em, lineHeight: 1.1 }}>
+                      {formatKRW(Math.round(listing.asking_price * 0.96))}
+                    </div>
+                    <div className="mt-1 font-semibold" style={{ fontSize: 10, color: C.lt4 }}>
+                      AI 협상 여지 추정
+                    </div>
+                  </div>
+                </div>
+
+                {/* 구분선 */}
+                <div style={{ borderTop: "1px solid var(--layer-border-strong)" }} />
+
+                {/* 오퍼 폼 / 카드 */}
                 {submittedOffer ? (
-                  <div className="rounded-xl p-0" style={{ borderRadius: 12 }}>
+                  <div>
                     <OfferCard offer={submittedOffer} isMine />
                     <button
                       type="button"
                       onClick={() => { setSubmittedOffer(null); setOfferFormVisible(true) }}
-                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold"
-                      style={{ fontSize: 12, backgroundColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)" }}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
+                      style={{
+                        fontSize: 12,
+                        backgroundColor: "var(--layer-2-bg)",
+                        color: C.lt3,
+                        border: "1px solid var(--layer-border-strong)",
+                      }}
                     >
                       새 오퍼 작성
                     </button>
@@ -1869,10 +2061,17 @@ export function AssetDetailView({
                   <button
                     type="button"
                     onClick={() => setOfferFormVisible(true)}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl font-black"
-                    style={{ padding: "12px 16px", fontSize: 13, backgroundColor: "rgba(245,158,11,0.14)", color: "#FBBF24", border: "1px solid rgba(245,158,11,0.3)" }}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl font-black transition-colors"
+                    style={{
+                      padding: "13px 16px",
+                      fontSize: 13,
+                      background: "linear-gradient(135deg, #1B3A5C, #2E75B6)",
+                      color: "#FFFFFF",
+                      border: "none",
+                    }}
                   >
-                    <HandCoins size={14} /> 오퍼 작성 열기
+                    <HandCoins size={15} />
+                    오퍼 작성 열기
                   </button>
                 )}
               </div>
