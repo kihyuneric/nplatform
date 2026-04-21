@@ -1,28 +1,29 @@
 "use client"
 
 /**
- * /exchange/[id] — 자산 상세 (DR-4 Fast Trade · 2026-04-21)
+ * /exchange/[id] — 자산 상세 (DR-4-C Deal Room Visual Sync · 2026-04-21)
  *
  * 계획서: docs/DR-4_Fast_Trade_Simplification_2026-04-21.md
  *
- * ▸ 글로벌 핀테크 (Robinhood · Stripe · Mission Capital) 수준 단순화
- * ▸ 중복 삭제: tier simulator · InlineAssetRoom · Right sidebar · Masking banner
- * ▸ 페이지 구성: Hero → KPI×3 + Action Card×1 → Tabs×3 (담보/권리/분석)
- * ▸ 목표: 1722 LOC → <800, 스크롤 4화면 → 2화면, CTA 3곳 → 1곳
+ * ▸ 글로벌 핀테크 (Robinhood · Stripe · Mission Capital) 수준 단순화 유지
+ * ▸ DR-4-C: 탭 구조 제거 → 2-column 레이아웃 (콘텐츠 스택 + sticky 사이드바)
+ *   · 좌: 메타 스트립 · KPI · 권리/등기/임차/감정/원본/현장사진/채권 섹션 linear stack
+ *   · 우: PrimaryActionCard · AI 투자 분석 · 매칭 수요 · 수수료 안내 · 제공 자료
+ * ▸ 모바일: 사이드바 → 하단으로 자연 스택 + Primary CTA sticky bar
+ * ▸ ActionSheet 모달 + Mock tier progression 그대로 유지
  */
 
 import { useState, useEffect, useCallback } from "react"
 import { useParams } from "next/navigation"
 import {
-  FileText, MapPin, Building2, Info,
-  CheckCircle2, ShieldCheck, AlertTriangle, Scale, Images,
-  Brain, Sparkles, Target, TrendingUp,
+  FileText, MapPin, Building2, Gavel,
+  CheckCircle2, ShieldCheck, Scale, Images,
+  Banknote, ScrollText,
 } from "lucide-react"
 import { toast } from "sonner"
 import { TierGate } from "@/components/tier/tier-gate"
 import type { AccessTier } from "@/lib/access-tier"
 import { getUserTier } from "@/lib/access-tier"
-import { formatAIGrade } from "@/lib/taxonomy"
 import { createClient } from "@/lib/supabase/client"
 
 // DR-4: 신규 단순화 컴포넌트
@@ -30,8 +31,8 @@ import {
   AssetHeroSummary,
   KpiRow,
   PrimaryActionCard,
-  DetailTabs,
   ActionSheet,
+  AssetSidebar,
 } from "@/components/asset-detail"
 import { useAssetTier } from "@/hooks/use-asset-tier"
 import type { AssetTier } from "@/hooks/use-asset-tier"
@@ -357,7 +358,6 @@ export default function ListingDetailPage() {
 
   // ── 계산 ──
   const discountPct = listing.discount_rate.toFixed(1)
-  const estIrr = 18.5 // TODO: aiAnalysis.recoveryRate 에서 산출 예정
 
   const oneLiner = [
     `채권 ${formatKRW(listing.outstanding_principal)}`,
@@ -366,6 +366,15 @@ export default function ListingDetailPage() {
   ].join(" · ")
 
   const title = `${listing.region_city} ${listing.region_district} ${listing.collateral} NPL`
+
+  // 공개 범위 미리보기 (데모용) — L0/L1/L2/L3 토글
+  const handleTierPreview = (t: AssetTier) => {
+    setMockTier(t)
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(MOCK_STORAGE_KEY(id), t)
+    }
+    toast(TIER_TRANSITION_MSG[t], { duration: 2200 })
+  }
 
   return (
     <main
@@ -386,9 +395,78 @@ export default function ListingDetailPage() {
         backHref="/exchange"
       />
 
+      {/* ═══ Meta strip (은행 · 지역 · 경매단계 · 사건번호) + 공개 범위 미리보기 ═══ */}
+      <section
+        className="max-w-[1280px] mx-auto flex items-center justify-between flex-wrap gap-3"
+        style={{ padding: "14px 24px" }}
+      >
+        <div
+          className="flex items-center gap-x-4 gap-y-1.5 flex-wrap"
+          style={{ fontSize: 12, color: C.lt3 }}
+        >
+          <span className="inline-flex items-center gap-1 font-semibold">
+            <Building2 size={13} />
+            {listing.inst_type}
+          </span>
+          <span style={{ color: C.lt4 }}>·</span>
+          <span className="inline-flex items-center gap-1 font-semibold">
+            <MapPin size={13} />
+            {listing.region_city} {listing.region_district}
+          </span>
+          <span style={{ color: C.lt4 }}>·</span>
+          <span className="inline-flex items-center gap-1 font-semibold">
+            <Gavel size={13} />
+            {listing.auction_stage}
+          </span>
+          <span style={{ color: C.lt4 }}>·</span>
+          <span className="inline-flex items-center gap-1 font-mono tabular-nums" style={{ color: C.lt4 }}>
+            <FileText size={12} />
+            {id}
+          </span>
+        </div>
+        {/* 공개 범위 미리보기 */}
+        <div
+          className="inline-flex items-center gap-1 rounded-lg p-1"
+          style={{
+            backgroundColor: "var(--layer-2-bg)",
+            border: "1px solid var(--layer-border-strong)",
+          }}
+          role="radiogroup"
+          aria-label="공개 범위 미리보기"
+        >
+          <span
+            className="px-2 font-bold"
+            style={{ fontSize: 10, color: C.lt4, letterSpacing: "0.04em" }}
+          >
+            공개 범위
+          </span>
+          {(["L0", "L1", "L2", "L3"] as AssetTier[]).map((t) => {
+            const isActive = effectiveTier === t
+            return (
+              <button
+                key={t}
+                type="button"
+                role="radio"
+                aria-checked={isActive}
+                onClick={() => handleTierPreview(t)}
+                className="font-bold rounded-md transition-colors"
+                style={{
+                  padding: "4px 10px",
+                  fontSize: 11,
+                  backgroundColor: isActive ? "var(--color-brand-dark)" : "transparent",
+                  color: isActive ? "var(--fg-on-brand)" : C.lt2,
+                }}
+              >
+                {t}
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
       {/* ═══ 정산 완료 배너 (L5) ═══ */}
       {effectiveTier === "L5" && (
-        <section className="max-w-[1280px] mx-auto" style={{ padding: "20px 24px 0" }}>
+        <section className="max-w-[1280px] mx-auto" style={{ padding: "0 24px 12px" }}>
           <div
             className="rounded-2xl p-5 flex items-start gap-4 flex-wrap"
             style={{
@@ -427,22 +505,19 @@ export default function ListingDetailPage() {
         </section>
       )}
 
-      {/* ═══ KPI + Action ═══ */}
+      {/* ═══ Main grid (좌: 콘텐츠 스택 / 우: sticky 사이드바) ═══ */}
       <section
         className="max-w-[1280px] mx-auto"
-        style={{ padding: "24px 24px 0" }}
+        style={{ padding: "8px 24px 120px" }}
       >
-        <div
-          className="grid gap-4 md:gap-6"
-          style={{
-            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 360px)",
-          }}
-        >
-          <div className="md:col-span-1 col-span-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6 lg:gap-8">
+          {/* ──────────── 좌측 ──────────── */}
+          <div className="space-y-5 min-w-0">
+            {/* KPI row */}
             <KpiRow
               items={[
                 {
-                  label: "채권잔액",
+                  label: "매각잔액",
                   value: formatKRW(listing.outstanding_principal),
                   tone: "primary",
                   hint: `원금 + 이자 + 비용 합계`,
@@ -451,48 +526,214 @@ export default function ListingDetailPage() {
                   label: "매각 희망가",
                   value: formatKRW(listing.asking_price),
                   tone: "accent",
-                  hint: `감정가 대비 ${discountPct}% ↓`,
+                  hint: `할인율 ↓${discountPct}%`,
                 },
                 {
-                  label: "AI 예상 IRR",
-                  value: `${estIrr}%`,
-                  tone: "accent",
-                  hint: `등급 ${formatAIGrade(listing.ai_grade)}`,
+                  label: "감정가",
+                  value: formatKRW(listing.appraisal_value),
+                  tone: "neutral",
+                  hint: `감정평가 기준`,
                 },
               ]}
             />
+
+            {/* 자동 마스킹 고지 배너 */}
+            <div
+              className="rounded-xl p-3.5 flex items-start gap-2"
+              style={{
+                backgroundColor: "rgba(46, 117, 182, 0.07)",
+                border: "1px solid rgba(46, 117, 182, 0.24)",
+              }}
+            >
+              <ShieldCheck
+                size={15}
+                color="var(--color-brand-bright)"
+                className="flex-shrink-0 mt-0.5"
+              />
+              <p className="leading-relaxed" style={{ fontSize: 11, color: C.lt2 }}>
+                본 매물은 <strong style={{ color: C.lt1 }}>자동 마스킹 파이프라인</strong>을 통과한
+                결과입니다. 개인정보·재무가 식별정보·상세 지번·동/호수는 금융감독원·금융위원회 지침에 따라
+                자동으로 가려지며, 티어별 공개 범위는 규제 요건에 맞춰 분리되어 있습니다.
+              </p>
+            </div>
+
+            {/* 권리관계 요약 (L0) */}
+            <SectionCard
+              title="권리관계 요약"
+              icon={<Scale size={14} />}
+              tierBadge="L0"
+            >
+              <div className="grid grid-cols-3 gap-3">
+                <Stat label="선순위 총액" value={formatKRW(listing.rights_summary.senior_total)} tone="amber" />
+                <Stat label="후순위 총액" value={formatKRW(listing.rights_summary.junior_total)} tone="blue" />
+                <Stat label="보증금 총액" value={formatKRW(listing.rights_summary.deposit_total)} tone="em" />
+              </div>
+              <p className="mt-3 leading-relaxed" style={{ fontSize: 11, color: C.lt3 }}>
+                요약 정보는 L0 단계에서 누구나 열람할 수 있습니다. 권리자 상세 정보는 L2 (NDA + 전문투자자) 이상에서 공개됩니다.
+              </p>
+            </SectionCard>
+
+            {/* 등기부등본 요약 (L1) */}
+            <SectionCard
+              title="등기부등본 요약"
+              icon={<ScrollText size={14} />}
+              tierBadge="L1"
+            >
+              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={140}>
+                <div className="space-y-2">
+                  {listing.registry_summary_items.length === 0 && (
+                    <p className="text-center py-6" style={{ color: C.lt4, fontSize: 11 }}>
+                      등기 정보가 아직 업로드되지 않았습니다.
+                    </p>
+                  )}
+                  {listing.registry_summary_items.map(r => (
+                    <div
+                      key={r.order}
+                      className="flex items-center justify-between rounded-lg px-3 py-2.5"
+                      style={{
+                        backgroundColor: "var(--layer-2-bg)",
+                        border: "1px solid var(--layer-border-strong)",
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="w-6 h-6 rounded-full flex items-center justify-center font-bold"
+                          style={{ fontSize: 10, backgroundColor: C.bg4, color: C.lt2 }}
+                        >
+                          {r.order}
+                        </span>
+                        <div>
+                          <div className="font-bold" style={{ fontSize: 12, color: C.lt1 }}>{r.type}</div>
+                          <div style={{ fontSize: 10, color: C.lt4 }}>권리자 {r.holder_masked}</div>
+                        </div>
+                      </div>
+                      <div className="font-bold tabular-nums" style={{ fontSize: 13, color: C.em }}>
+                        {formatKRW(r.amount)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </TierGate>
+            </SectionCard>
+
+            {/* 임차인 요약 (L1) */}
+            <SectionCard
+              title="임차인 요약"
+              icon={<Building2 size={14} />}
+              tierBadge="L1"
+            >
+              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={120}>
+                <div className="grid grid-cols-3 gap-3">
+                  <Stat label="보증금" value={formatKRW(listing.lease_summary.total_deposit)} />
+                  <Stat label="월세" value={formatKRW(listing.lease_summary.monthly_rent || 0)} />
+                  <Stat label="임차인" value={`${listing.lease_summary.tenant_count}명`} />
+                </div>
+              </TierGate>
+            </SectionCard>
+
+            {/* 감정평가서 (마스킹본) — L1 */}
+            <SectionCard
+              title="감정평가서 (마스킹본)"
+              icon={<Banknote size={14} />}
+              tierBadge="L1"
+            >
+              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={140}>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Stat label="감정가" value={formatKRW(listing.appraisal_value)} tone="em" />
+                  <Stat label="채권잔액" value={formatKRW(listing.outstanding_principal)} tone="amber" />
+                  <Stat label="희망가" value={formatKRW(listing.asking_price)} tone="blue" />
+                </div>
+                <p className="mt-3 leading-relaxed" style={{ fontSize: 11, color: C.lt3 }}>
+                  감정평가서 PDF 원본(마스킹본)은 L1 본인인증 완료 시 다운로드 가능합니다.
+                  평가기관·평가일·감정평가사 정보는 L2 이상에서 공개됩니다.
+                </p>
+              </TierGate>
+            </SectionCard>
+
+            {/* 등기부등본 원본 — L2 */}
+            <SectionCard
+              title="등기부등본 원본"
+              icon={<ScrollText size={14} />}
+              tierBadge="L2"
+            >
+              <TierGate required="L3" current={effectiveAccessTier} listingId={id} minHeight={140}>
+                <p className="leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
+                  등기부등본 원본 PDF · 전체 권리자 실명 · 근저당 설정 원본 · 변동 이력이 포함된 자료입니다.
+                  NDA 체결 및 전문투자자 인증 완료 시 데이터룸에서 다운로드 가능합니다.
+                </p>
+              </TierGate>
+            </SectionCard>
+
+            {/* 현장 사진 — L2 */}
+            <SectionCard
+              title={`현장 사진 (${listing.site_photos.length})`}
+              icon={<Images size={14} />}
+              tierBadge="L2"
+            >
+              <TierGate required="L3" current={effectiveAccessTier} listingId={id} minHeight={160}>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {listing.site_photos.map((p, i) => (
+                    <div
+                      key={i}
+                      className="aspect-square rounded-lg flex items-center justify-center"
+                      style={{
+                        backgroundColor: "var(--layer-2-bg)",
+                        border: "1px dashed var(--layer-border-strong)",
+                        color: C.lt4,
+                        fontSize: 11,
+                      }}
+                    >
+                      {p}
+                    </div>
+                  ))}
+                </div>
+              </TierGate>
+            </SectionCard>
+
+            {/* 채권 정보 (채무자 원장) — L3 */}
+            <SectionCard
+              title="채권 정보 (채무자 원장)"
+              icon={<FileText size={14} />}
+              tierBadge="L3"
+              accent="warn"
+            >
+              <TierGate required="L3" current={effectiveAccessTier} listingId={id} minHeight={140}>
+                <p className="leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
+                  채무자 실명 · 원리금 내역 · 상환 이력 · 추심 기록 · 재무 상태가 포함된 원장입니다.
+                  LOI 제출 후 매도자 승인 시 직접 협상 채널에서 열람 가능합니다.
+                </p>
+              </TierGate>
+            </SectionCard>
           </div>
-          <div className="md:col-span-1 col-span-full">
-            <PrimaryActionCard
-              tier={effectiveTier}
-              loading={dealCreating}
-              onAction={handlePrimaryAction}
-              variant="desktop"
-            />
+
+          {/* ──────────── 우측 (sticky) ──────────── */}
+          <div className="space-y-4 min-w-0">
+            <div className="lg:sticky lg:top-4 space-y-4">
+              <PrimaryActionCard
+                tier={effectiveTier}
+                loading={dealCreating}
+                onAction={handlePrimaryAction}
+                variant="desktop"
+              />
+              <AssetSidebar
+                askingPrice={listing.asking_price}
+                recoveryRate={aiAnalysis.recoveryRate?.predicted ?? 72}
+                recoveryConfidence={aiAnalysis.recoveryRate?.confidence ?? 85}
+                priceGuide={null}
+                anomaly={
+                  aiAnalysis.anomaly
+                    ? { verdict: aiAnalysis.anomaly.verdict, score: aiAnalysis.anomaly.score }
+                    : null
+                }
+                onAskAi={() => toast.info("AI Copilot이 곧 열립니다.", { duration: 1500 })}
+                onReanalyze={() => toast.info("AI 재분석을 요청했습니다.", { duration: 1500 })}
+                onSeeDemand={() => toast.info("매수자 수요를 조회합니다.", { duration: 1500 })}
+                onAiMatch={() => toast.info("AI 매칭을 실행합니다.", { duration: 1500 })}
+              />
+            </div>
           </div>
         </div>
 
-        {/* ═══ Grid responsive fix ═══ */}
-        <style jsx>{`
-          @media (max-width: 767px) {
-            section > div:first-child {
-              grid-template-columns: 1fr !important;
-            }
-          }
-        `}</style>
-      </section>
-
-      {/* ═══ Detail Tabs ═══ */}
-      <section
-        className="max-w-[1280px] mx-auto"
-        style={{ padding: "28px 24px 120px" }}
-      >
-        <DetailTabs
-          initial="collateral"
-          collateral={<CollateralTab listing={listing} tier={effectiveAccessTier} />}
-          rights={<RightsTab listing={listing} tier={effectiveAccessTier} />}
-          analysis={<AnalysisTab listing={listing} tier={effectiveAccessTier} aiAnalysis={aiAnalysis} />}
-        />
       </section>
 
       {/* ═══ Mobile sticky CTA ═══ */}
@@ -542,215 +783,76 @@ export default function ListingDetailPage() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   TAB CONTENTS
+   SECTION CARD WRAPPER (DR-4-C)
 ═══════════════════════════════════════════════════════════ */
-
-function CollateralTab({ listing, tier }: { listing: ListingDetail; tier: AccessTier }) {
-  return (
-    <div className="space-y-6">
-      {/* 기본 정보 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <InfoRow
-          icon={<MapPin size={14} />}
-          label="소재지"
-          value={`${listing.region_city} ${listing.region_district}`}
-        />
-        <InfoRow
-          icon={<Building2 size={14} />}
-          label="담보 유형"
-          value={listing.collateral}
-        />
-        <InfoRow
-          icon={<FileText size={14} />}
-          label="사건번호"
-          value={listing.court_case_masked}
-        />
-        <InfoRow
-          icon={<Info size={14} />}
-          label="경매 단계"
-          value={listing.auction_stage}
-        />
-      </div>
-
-      {/* 감정가 요약 */}
-      <div
-        className="rounded-xl p-4"
-        style={{
-          backgroundColor: "var(--layer-2-bg)",
-          border: "1px solid var(--layer-border-strong)",
-        }}
-      >
-        <h3 className="font-bold mb-3" style={{ fontSize: 13, color: C.lt1 }}>
-          감정평가 요약
-        </h3>
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <Stat label="감정가" value={formatKRW(listing.appraisal_value)} />
-          <Stat label="채권잔액" value={formatKRW(listing.outstanding_principal)} tone="amber" />
-          <Stat label="희망가" value={formatKRW(listing.asking_price)} tone="em" />
-        </div>
-      </div>
-
-      {/* 현장 사진 (L2+) */}
-      <TierGate required="L2" current={tier} listingId={listing.id} minHeight={160}>
-        <div>
-          <h3 className="font-bold mb-3 inline-flex items-center gap-1.5" style={{ fontSize: 13, color: C.lt1 }}>
-            <Images size={14} />
-            현장 사진 ({listing.site_photos.length})
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {listing.site_photos.map((p, i) => (
-              <div
-                key={i}
-                className="aspect-square rounded-lg flex items-center justify-center"
-                style={{
-                  backgroundColor: "var(--layer-2-bg)",
-                  border: "1px dashed var(--layer-border-strong)",
-                  color: C.lt4,
-                  fontSize: 11,
-                }}
-              >
-                {p}
-              </div>
-            ))}
-          </div>
-        </div>
-      </TierGate>
-    </div>
-  )
-}
-
-function RightsTab({ listing, tier }: { listing: ListingDetail; tier: AccessTier }) {
-  return (
-    <div className="space-y-6">
-      {/* L0: 권리 요약 */}
-      <div>
-        <h3 className="font-bold mb-3 inline-flex items-center gap-1.5" style={{ fontSize: 13, color: C.lt1 }}>
-          <Scale size={14} />
-          권리관계 요약
-        </h3>
-        <div className="grid grid-cols-3 gap-3">
-          <Stat label="선순위 총액" value={formatKRW(listing.rights_summary.senior_total)} tone="amber" />
-          <Stat label="후순위 총액" value={formatKRW(listing.rights_summary.junior_total)} tone="blue" />
-          <Stat label="보증금 총액" value={formatKRW(listing.rights_summary.deposit_total)} tone="em" />
-        </div>
-      </div>
-
-      {/* L1: 등기부 요약 */}
-      <TierGate required="L1" current={tier} listingId={listing.id} minHeight={140}>
-        <div>
-          <h3 className="font-bold mb-3" style={{ fontSize: 13, color: C.lt1 }}>
-            등기부 요약
-          </h3>
-          <div className="space-y-2">
-            {listing.registry_summary_items.map(r => (
-              <div
-                key={r.order}
-                className="flex items-center justify-between rounded-lg px-3 py-2.5"
-                style={{
-                  backgroundColor: "var(--layer-2-bg)",
-                  border: "1px solid var(--layer-border-strong)",
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className="w-6 h-6 rounded-full flex items-center justify-center font-bold"
-                    style={{
-                      fontSize: 10,
-                      backgroundColor: C.bg4,
-                      color: C.lt2,
-                    }}
-                  >
-                    {r.order}
-                  </span>
-                  <div>
-                    <div className="font-bold" style={{ fontSize: 12, color: C.lt1 }}>{r.type}</div>
-                    <div style={{ fontSize: 10, color: C.lt4 }}>권리자 {r.holder_masked}</div>
-                  </div>
-                </div>
-                <div className="font-bold tabular-nums" style={{ fontSize: 13, color: C.em }}>
-                  {formatKRW(r.amount)}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </TierGate>
-
-      {/* L1: 임대차 요약 */}
-      <TierGate required="L1" current={tier} listingId={listing.id} minHeight={90}>
-        <div>
-          <h3 className="font-bold mb-3" style={{ fontSize: 13, color: C.lt1 }}>
-            임대차 요약
-          </h3>
-          <div className="grid grid-cols-3 gap-3">
-            <Stat label="보증금" value={formatKRW(listing.lease_summary.total_deposit)} />
-            <Stat label="월세" value={formatKRW(listing.lease_summary.monthly_rent || 0)} />
-            <Stat label="임차인" value={`${listing.lease_summary.tenant_count}명`} />
-          </div>
-        </div>
-      </TierGate>
-    </div>
-  )
-}
-
-function AnalysisTab({
-  listing,
-  tier,
-  aiAnalysis,
+function SectionCard({
+  title,
+  icon,
+  tierBadge,
+  accent = "neutral",
+  children,
 }: {
-  listing: ListingDetail
-  tier: AccessTier
-  aiAnalysis: AIAnalysisResult
+  title: string
+  icon?: React.ReactNode
+  tierBadge?: "L0" | "L1" | "L2" | "L3"
+  accent?: "neutral" | "warn"
+  children: React.ReactNode
 }) {
-  void tier // 현재는 티어 게이팅 없이 AI 요약은 L0 부터 공개 가능
-  void listing
+  const BADGE_STYLE: Record<string, { bg: string; fg: string; border: string }> = {
+    L0: {
+      bg: "var(--color-positive-bg)",
+      fg: "var(--color-positive)",
+      border: "rgba(16, 185, 129, 0.33)",
+    },
+    L1: {
+      bg: "rgba(46, 117, 182, 0.12)",
+      fg: "var(--color-brand-bright)",
+      border: "rgba(46, 117, 182, 0.33)",
+    },
+    L2: {
+      bg: "rgba(168, 85, 247, 0.10)",
+      fg: "#A855F7",
+      border: "rgba(168, 85, 247, 0.33)",
+    },
+    L3: {
+      bg: "rgba(245, 158, 11, 0.12)",
+      fg: "#F59E0B",
+      border: "rgba(245, 158, 11, 0.33)",
+    },
+  }
+  const badge = tierBadge ? BADGE_STYLE[tierBadge] : null
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="font-bold mb-3 inline-flex items-center gap-1.5" style={{ fontSize: 13, color: C.lt1 }}>
-          <Brain size={14} />
-          AI 분석 요약
-        </h3>
-        {aiAnalysis.loading ? (
-          <div className="text-center py-10" style={{ color: C.lt4, fontSize: 12 }}>
-            AI 분석 로딩 중...
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <AIMetric
-              icon={<Target size={14} />}
-              label="예상 회수율"
-              value={aiAnalysis.recoveryRate ? `${aiAnalysis.recoveryRate.predicted}%` : "—"}
-              hint={aiAnalysis.recoveryRate ? `신뢰도 ${aiAnalysis.recoveryRate.confidence}%` : undefined}
-            />
-            <AIMetric
-              icon={<TrendingUp size={14} />}
-              label="예상 IRR"
-              value="18.5%"
-              hint="기본 전제 기준"
-            />
-            <AIMetric
-              icon={<AlertTriangle size={14} />}
-              label="이상 감지"
-              value={aiAnalysis.anomaly?.verdict ?? "정상"}
-              hint={aiAnalysis.anomaly?.flags?.[0]}
-            />
-          </div>
+    <div
+      className="rounded-2xl p-5"
+      style={{
+        backgroundColor: "var(--layer-1-bg)",
+        border: `1px solid ${
+          accent === "warn" ? "rgba(245, 158, 11, 0.33)" : "var(--layer-border-strong)"
+        }`,
+      }}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h2
+          className="font-black inline-flex items-center gap-1.5"
+          style={{ fontSize: 14, color: "var(--fg-strong)" }}
+        >
+          {icon && <span style={{ color: "var(--color-brand-bright)" }}>{icon}</span>}
+          {title}
+        </h2>
+        {badge && (
+          <span
+            className="text-[10px] font-bold px-1.5 py-0.5 rounded inline-flex items-center gap-1"
+            style={{
+              backgroundColor: badge.bg,
+              color: badge.fg,
+              border: `1px solid ${badge.border}`,
+            }}
+          >
+            ● {tierBadge}
+          </span>
         )}
       </div>
-
-      <div
-        className="rounded-xl p-4 flex gap-3"
-        style={{
-          backgroundColor: "rgba(46, 117, 182, 0.06)",
-          border: "1px solid rgba(46, 117, 182, 0.24)",
-        }}
-      >
-        <Sparkles size={16} color="var(--color-brand-bright)" className="mt-0.5 flex-shrink-0" />
-        <p className="leading-relaxed" style={{ fontSize: 12, color: C.lt2 }}>
-          실제 회수율은 실사 결과·시장 상황·낙찰률에 따라 달라질 수 있습니다. 상세 시뮬레이션은 NDA 체결 후 데이터룸에서 제공됩니다.
-        </p>
-      </div>
+      {children}
     </div>
   )
 }
@@ -758,28 +860,6 @@ function AnalysisTab({
 /* ═══════════════════════════════════════════════════════════
    MINI COMPONENTS
 ═══════════════════════════════════════════════════════════ */
-
-function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div
-      className="flex items-center gap-3 rounded-lg px-3 py-2.5"
-      style={{
-        backgroundColor: "var(--layer-2-bg)",
-        border: "1px solid var(--layer-border-strong)",
-      }}
-    >
-      <span style={{ color: C.lt3 }}>{icon}</span>
-      <div className="min-w-0">
-        <div className="font-semibold" style={{ fontSize: 10, color: C.lt4, letterSpacing: "0.05em" }}>
-          {label}
-        </div>
-        <div className="font-bold truncate" style={{ fontSize: 13, color: C.lt1 }}>
-          {value}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "em" | "amber" | "blue" }) {
   const color =
@@ -795,38 +875,6 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "em
       <div className="font-black tabular-nums" style={{ fontSize: 16, color }}>
         {value}
       </div>
-    </div>
-  )
-}
-
-function AIMetric({
-  icon, label, value, hint,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string
-  hint?: string
-}) {
-  return (
-    <div
-      className="rounded-xl p-4"
-      style={{
-        backgroundColor: "var(--layer-2-bg)",
-        border: "1px solid var(--layer-border-strong)",
-      }}
-    >
-      <div className="flex items-center gap-1.5 mb-2" style={{ color: C.lt3 }}>
-        {icon}
-        <span className="font-semibold" style={{ fontSize: 11 }}>{label}</span>
-      </div>
-      <div className="font-black tabular-nums" style={{ fontSize: 22, color: C.lt1 }}>
-        {value}
-      </div>
-      {hint && (
-        <div className="mt-1 font-medium" style={{ fontSize: 11, color: C.lt4 }}>
-          {hint}
-        </div>
-      )}
     </div>
   )
 }
