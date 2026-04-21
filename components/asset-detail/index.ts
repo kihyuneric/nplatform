@@ -18,3 +18,4 @@ export {
   type InlineDealRoomCounterpart,
   type InlineDealRoomMessage,
 } from "./inline-deal-room"
+export { DealCompletionStages, type DealCompletionStagesProps } from "./deal-completion-stages"

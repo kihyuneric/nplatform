@@ -32,6 +32,7 @@ import {
   AssetSidebar,
   AiReportCard,
   InlineDealRoom,
+  DealCompletionStages,
   type InlineDealRoomCounterpart,
 } from "@/components/asset-detail"
 import { useAssetTier } from "@/hooks/use-asset-tier"
@@ -778,6 +779,33 @@ export default function ListingDetailPage() {
             <InlineDealRoom
               tier={effectiveTier}
               counterpart={counterpart}
+            />
+          </div>
+        )}
+
+        {/* ═══ L3/L4/L5 인라인 완료 단계 (DR-5-D) ═══ */}
+        {(effectiveTier === "L3" || effectiveTier === "L4" || effectiveTier === "L5") && (
+          <div className="mt-6 lg:mt-8">
+            <DealCompletionStages
+              tier={effectiveTier}
+              askingPrice={listing.asking_price}
+              assetTitle={title}
+              onOpenDetails={handlePrimaryAction}
+              onSubmitOffer={() => {
+                // L3 → L4 승급 (Mock)
+                setMockTier("L4")
+                if (typeof window !== "undefined") {
+                  window.localStorage.setItem(MOCK_STORAGE_KEY(id), "L4")
+                }
+              }}
+              onSignConfirm={() => {
+                // L4 → L5 승급 (Mock)
+                setMockTier("L5")
+                if (typeof window !== "undefined") {
+                  window.localStorage.setItem(MOCK_STORAGE_KEY(id), "L5")
+                }
+                toast.success(TIER_TRANSITION_MSG.L5, { duration: 3200 })
+              }}
             />
           </div>
         )}
