@@ -841,10 +841,10 @@ export function AssetDetailView({
             <SectionCard
               title="감정평가서"
               icon={<Banknote size={14} />}
-              tierBadge="L1"
+              tierBadge="L2"
               anchorId="appraisal"
             >
-              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={140}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140}>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Stat label="감정가" value={formatKRW(listing.appraisal_value)} tone="em" />
                   <Stat label="채권잔액" value={formatKRW(listing.outstanding_principal)} tone="amber" />
@@ -908,14 +908,14 @@ export function AssetDetailView({
               </TierGate>
             </SectionCard>
 
-            {/* ── 경매 정보 (L1) ── */}
+            {/* ── 경매 정보 (L2) ── */}
             <SectionCard
               title="경매 정보"
               icon={<Gavel size={14} />}
-              tierBadge="L1"
+              tierBadge="L2"
               anchorId="auction-info"
             >
-              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={120}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={120}>
                 {editingSec === "auction" ? (
                   /* ── 경매 정보 편집 폼 ── */
                   <div className="space-y-3">
@@ -1016,14 +1016,14 @@ export function AssetDetailView({
               </TierGate>
             </SectionCard>
 
-            {/* ── 공매 정보 (L1) ── */}
+            {/* ── 공매 정보 (L2) ── */}
             <SectionCard
               title="공매 정보"
               icon={<Gavel size={14} />}
-              tierBadge="L1"
+              tierBadge="L2"
               anchorId="public-sale"
             >
-              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={120}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={120}>
                 {editingSec === "public-sale" ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
@@ -1240,22 +1240,22 @@ export function AssetDetailView({
               </TierGate>
             </SectionCard>
 
-            {/* ── 실사 신청 (L2) ── */}
-            {tierGte(effectiveAccessTier, "L2") && (
+            {/* ── 실사 신청 (L3) ── */}
+            {tierGte(effectiveAccessTier, "L3") && (
               <DueDiligenceSection
                 anchorId="due-diligence"
                 listingId={id}
               />
             )}
 
-            {/* ── 실거래 경공매 통계 (L1) ── */}
+            {/* ── 실거래 경공매 통계 (L2) ── */}
             <SectionCard
               title="실거래 경공매 통계"
               icon={<BarChart2 size={14} />}
-              tierBadge="L1"
+              tierBadge="L2"
               anchorId="auction-stats"
             >
-              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={100}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={100}>
                 <p className="mb-3 leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
                   법원 경매 및 온비드 공매 현황 · 낙찰 통계 · 유찰 이력을 확인합니다.
                 </p>
@@ -1385,7 +1385,7 @@ export function AssetDetailView({
           </div>
         </div>
 
-        {tierGte(effectiveAccessTier, "L2") && (
+        {tierGte(effectiveAccessTier, "L3") && (
           <div id="chat" className="mt-6 lg:mt-8 scroll-mt-24">
             <InlineDealRoom
               tier={effectiveTier}
@@ -1394,8 +1394,8 @@ export function AssetDetailView({
           </div>
         )}
 
-        {/* ── 가격 오퍼 (L2+) ── */}
-        {tierGte(effectiveAccessTier, "L2") && (
+        {/* ── 가격 오퍼 (L3+) ── */}
+        {tierGte(effectiveAccessTier, "L3") && (
           <div id="offer" className="mt-6 lg:mt-8 scroll-mt-24">
             <div
               className="rounded-2xl overflow-hidden"
@@ -1738,7 +1738,7 @@ function DueDiligenceSection({
     <SectionCard
       title="실사 신청"
       icon={<FileText size={14} />}
-      tierBadge="L2"
+      tierBadge="L3"
       anchorId={anchorId}
     >
       {submitted ? (
