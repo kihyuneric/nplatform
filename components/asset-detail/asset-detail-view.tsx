@@ -1248,39 +1248,9 @@ export function AssetDetailView({
               />
             )}
 
-            {/* ── 땅집고 실거래 (L1) ── */}
+            {/* ── 실거래 경공매 통계 (L1) ── */}
             <SectionCard
-              title="땅집고 실거래"
-              icon={<TrendingUp size={14} />}
-              tierBadge="L1"
-              anchorId="jijigo-transactions"
-            >
-              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={100}>
-                <p className="mb-3 leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
-                  {listing.region_city} {listing.region_district} 인근 실거래가 데이터를 조회합니다.
-                </p>
-                <a
-                  href={`https://land.naver.com/article/articleList.nhn?rletTypeCd=A01&tradeTypeCd=A1&hscpTypeCd=A01%3AA03%3AA04&cortarNo=&searchText=${encodeURIComponent(`${listing.region_city} ${listing.region_district}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-bold transition-colors"
-                  style={{
-                    fontSize: 12,
-                    backgroundColor: "rgba(46,117,182,0.10)",
-                    color: "var(--color-brand-bright)",
-                    border: "1px solid rgba(46,117,182,0.28)",
-                  }}
-                >
-                  <TrendingUp size={13} />
-                  실거래가 조회 (네이버 부동산)
-                  <ArrowRight size={11} />
-                </a>
-              </TierGate>
-            </SectionCard>
-
-            {/* ── 경공매 통계 (L1) ── */}
-            <SectionCard
-              title="경공매 통계"
+              title="실거래 경공매 통계"
               icon={<BarChart2 size={14} />}
               tierBadge="L1"
               anchorId="auction-stats"
