@@ -13,9 +13,9 @@
       },
       {
         "key": "ex_auction",
-        "label": "NPL 경매",
+        "label": "자발적 경매",
         "href": "/exchange/auction",
-        "description": "NPL 경매 참여",
+        "description": "자발적 경매 참여",
         "icon": "Gavel",
         "active": true,
         "order": 2
@@ -182,9 +182,9 @@
         },
         {
           "key": "exchange_auction",
-          "label": "NPL 경매",
+          "label": "자발적 경매",
           "href": "/exchange/auction",
-          "description": "NPL 경매 참여",
+          "description": "자발적 경매 참여",
           "icon": "Gavel",
           "active": true,
           "order": 2

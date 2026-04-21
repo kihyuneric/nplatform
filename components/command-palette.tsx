@@ -29,7 +29,7 @@ interface CommandItem {
 const COMMANDS: CommandItem[] = [
   // 매물 (exchange)
   { id: 'exchange',        label: 'NPL 매물 허브',     description: '전체 NPL·채권 매물',         icon: Globe,          href: '/exchange',                  category: '매물', keywords: ['npl','채권','매물'] },
-  { id: 'auction',         label: 'NPL 경매',            description: 'NPL 경매 참여',                 icon: Gavel,          href: '/exchange/auction',          category: '매물', keywords: ['NPL','경매','입찰','auction'] },
+  { id: 'auction',         label: '자발적 경매',            description: '자발적 경매 참여',                 icon: Gavel,          href: '/exchange/auction',          category: '매물', keywords: ['NPL','경매','자발적경매','입찰','auction'] },
   { id: 'sell',            label: '매물 등록',           description: '새 NPL 매물 등록 (위저드)',    icon: Upload,         href: '/exchange/sell',             category: '매물' },
   { id: 'demands',         label: '매수 수요 목록',      description: '수요자 공개 매수 요청',        icon: ArrowRightLeft, href: '/exchange/demands',          category: '매물' },
   { id: 'demands-new',     label: '수요 등록',           description: '매수 희망 조건 등록',          icon: FileText,       href: '/exchange/demands/new',      category: '매물' },

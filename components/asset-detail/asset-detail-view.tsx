@@ -88,7 +88,7 @@ interface ListingDetail {
   court_case_masked: string
   published_at: string
   rights_summary: { senior_total: number; junior_total: number; deposit_total: number }
-  registry_summary_items: Array<{ order: number; type: string; amount: number; holder_masked: string }>
+  registry_summary_items: Array<{ order: number; type: string; amount: number; holder_masked: string; receipt_date?: string }>
   lease_summary: { total_deposit: number; monthly_rent: number; tenant_count: number }
   site_photos: string[]
   debtor_name_masked: string
@@ -143,9 +143,9 @@ function buildMock(id: string): ListingDetail {
       deposit_total: 60_000_000,
     },
     registry_summary_items: [
-      { order: 1, type: "근저당권", amount: 780_000_000, holder_masked: "우●●행" },
-      { order: 2, type: "근저당권", amount: 140_000_000, holder_masked: "○○캐피탈" },
-      { order: 3, type: "전세권", amount: 60_000_000, holder_masked: "김●●" },
+      { order: 1, type: "근저당권", amount: 780_000_000, holder_masked: "우리은행", receipt_date: "2021.06.18" },
+      { order: 2, type: "근저당권", amount: 140_000_000, holder_masked: "○○캐피탈", receipt_date: "2024.10.25" },
+      { order: 3, type: "전세권",   amount: 60_000_000,  holder_masked: "김○○", receipt_date: "2023.03.10" },
     ],
     lease_summary: { total_deposit: 60_000_000, monthly_rent: 0, tenant_count: 1 },
     site_photos: ["photo1", "photo2", "photo3"],
@@ -181,6 +181,17 @@ function formatKRW(n: number | null | undefined): string {
 function formatDateKo(iso: string | null | undefined): string {
   if (!iso) return "—"
   try { return iso.slice(0, 10) } catch { return "—" }
+}
+
+/** 권리자 표시용 마스킹: 괄호 부분 제거 + 앞 2글자 ● 처리 */
+function maskHolderDisplay(raw: string): string {
+  // 괄호 및 내용 제거 (예: "중소기업은행(부천테크노지점)" → "중소기업은행")
+  const stripped = raw.replace(/\(.*?\)/g, '').replace(/（.*?）/g, '').trim()
+  if (!stripped) return '●●●'
+  // 앞 2자리를 ● 로 교체
+  const chars = [...stripped]
+  const masked = chars.map((c, i) => i < 2 ? '●' : c)
+  return masked.join('')
 }
 
 function computeDataCompleteness(row: Record<string, unknown>): number {
@@ -790,39 +801,63 @@ export function AssetDetailView({
               anchorId="deed-summary"
             >
               <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction}>
-                <div className="space-y-2">
-                  {listing.registry_summary_items.length === 0 && (
-                    <p className="text-center py-6" style={{ color: C.lt4, fontSize: 11 }}>
-                      등기 정보가 아직 업로드되지 않았습니다.
-                    </p>
-                  )}
-                  {listing.registry_summary_items.map(r => (
-                    <div
-                      key={r.order}
-                      className="flex items-center justify-between rounded-lg px-3 py-2.5"
-                      style={{
-                        backgroundColor: "var(--layer-2-bg)",
-                        border: "1px solid var(--layer-border-strong)",
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="w-6 h-6 rounded-full flex items-center justify-center font-bold"
-                          style={{ fontSize: 10, backgroundColor: C.bg4, color: C.lt2 }}
-                        >
-                          {r.order}
-                        </span>
-                        <div>
-                          <div className="font-bold" style={{ fontSize: 12, color: C.lt1 }}>{r.type}</div>
-                          <div style={{ fontSize: 10, color: C.lt4 }}>권리자 {r.holder_masked}</div>
-                        </div>
-                      </div>
-                      <div className="font-bold tabular-nums" style={{ fontSize: 13, color: C.em }}>
-                        {formatKRW(r.amount)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                {listing.registry_summary_items.length === 0 ? (
+                  <p className="text-center py-6" style={{ color: C.lt4, fontSize: 11 }}>
+                    등기 정보가 아직 업로드되지 않았습니다.
+                  </p>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr style={{ backgroundColor: "var(--layer-2-bg)", borderBottom: "2px solid var(--layer-border-strong)" }}>
+                          {["구분", "접수일", "권리종류", "권리자", "채권금액"].map((h, i) => (
+                            <th
+                              key={h}
+                              style={{
+                                padding: "8px 12px",
+                                textAlign: i >= 4 ? "right" : i === 0 ? "center" : "left",
+                                fontSize: 10, fontWeight: 700,
+                                color: C.lt4, letterSpacing: "0.05em",
+                                textTransform: "uppercase",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {listing.registry_summary_items.map((r, idx) => (
+                          <tr
+                            key={r.order}
+                            style={{
+                              borderBottom: idx < listing.registry_summary_items.length - 1
+                                ? "1px solid var(--layer-border)"
+                                : undefined,
+                            }}
+                          >
+                            <td style={{ padding: "10px 12px", textAlign: "center", fontSize: 11, fontWeight: 700, color: C.lt4 }}>
+                              {r.order}
+                            </td>
+                            <td style={{ padding: "10px 12px", fontSize: 11, color: C.lt4, whiteSpace: "nowrap" }}>
+                              {r.receipt_date ?? "—"}
+                            </td>
+                            <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: C.lt1 }}>
+                              {r.type}
+                            </td>
+                            <td style={{ padding: "10px 12px", fontSize: 11, color: C.lt3 }}>
+                              {maskHolderDisplay(r.holder_masked)}
+                            </td>
+                            <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13, fontWeight: 700, color: C.em, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+                              {formatKRW(r.amount)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </TierGate>
             </SectionCard>
 

@@ -20,8 +20,9 @@ import {
   Search, SlidersHorizontal, TrendingDown, Building2,
   MapPin, ShieldCheck, ArrowRight, Sparkles, Filter,
   LayoutGrid, List as ListIcon, Brain, Loader2, Zap,
-  Compass, Eye,
+  Compass, Eye, Download,
 } from "lucide-react"
+import * as XLSX from "xlsx"
 import { maskInstitutionName } from "@/lib/mask"
 import { TierBadge } from "@/components/tier/tier-badge"
 import { CompletenessBadge } from "@/components/listing/completeness-badge"
@@ -407,6 +408,28 @@ export default function ExchangePage() {
   // 필터 변경 시 페이지 리셋
   const resetPage = useCallback(() => setPage(1), [])
 
+  // ── 엑셀 다운로드 ───────────────────────────────────────────
+  const handleExcelDownload = useCallback(() => {
+    const rows = filtered.map(x => ({
+      "매물ID":       x.id,
+      "기관":         x.institution,
+      "지역":         x.region,
+      "매물 유형":    x.listing_category,
+      "담보 종류":    x.collateral,
+      "채권잔액(원)": x.outstanding_principal,
+      "매각희망가(원)": x.asking_price,
+      "감정평가액(원)": x.appraisal_value,
+      "할인율(%)":    x.discount_rate,
+      "완성도(0-10)": x.data_completeness,
+      "AI 등급":      x.ai_grade,
+      "매각 방식":    x.sale_method,
+    }))
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, "거래소 매물")
+    XLSX.writeFile(wb, `NPLatform_거래소_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  }, [filtered])
+
   return (
     <main style={{ backgroundColor: V.surfaceSunken, color: V.textPrimary, minHeight: "100vh" }}>
 
@@ -761,7 +784,25 @@ export default function ExchangePage() {
             <div style={{ fontSize: 13, color: V.textTertiary }}>
               <span style={{ color: V.textPrimary, fontWeight: 700 }}>{filtered.length}</span>건 매칭
             </div>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 14 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+              {/* Excel download */}
+              <button
+                onClick={handleExcelDownload}
+                title="현재 필터 결과를 엑셀로 다운로드"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "7px 12px", borderRadius: 10,
+                  backgroundColor: V.surfaceElevated,
+                  border: `1px solid ${V.borderSubtle}`,
+                  color: V.textSecondary,
+                  fontSize: 11, fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                <Download size={13} />
+                {tr("엑셀")}
+              </button>
+
               {/* View toggle */}
               <div
                 role="tablist"

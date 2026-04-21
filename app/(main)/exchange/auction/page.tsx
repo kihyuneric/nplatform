@@ -69,6 +69,12 @@ function formatDate(iso: string) {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+const LISTING_CATEGORY_FILTER: { value: string; label: string }[] = [
+  { value: "ALL",     label: "전체" },
+  { value: "NPL",     label: "NPL" },
+  { value: "GENERAL", label: "일반 부동산" },
+]
+
 interface BidItem {
   id: string
   title: string
@@ -83,6 +89,7 @@ interface BidItem {
   viewCount: number
   riskGrade: "A" | "B" | "C" | "D"
   status: "진행중" | "마감임박" | "마감"
+  listingCategory?: "NPL" | "GENERAL"
 }
 
 interface MyBid {
@@ -591,6 +598,7 @@ function BidCard({ item, onBid, index }: { item: BidItem; onBid: (item: BidItem)
 export default function AuctionPage() {
   const [activeTab, setActiveTab] = useState<"bidding" | "my" | "awards">("bidding")
   const [search, setSearch] = useState("")
+  const [listingCategory, setListingCategory] = useState("ALL")        // ALL/NPL/GENERAL
   const [collateral, setCollateral] = useState("ALL")                 // major: ALL/RESIDENTIAL/COMMERCIAL/LAND/ETC
   const [collateralMinor, setCollateralMinor] = useState("ALL")       // 소분류 Korean keyword
   const [region, setRegion] = useState("ALL")                          // 서울/경기/...
@@ -749,6 +757,12 @@ export default function AuctionPage() {
     const filtered = bids.filter((b) => {
       const type = b.collateralType ?? ""
 
+      // 0) 매물 유형 (NPL / 일반 부동산)
+      if (listingCategory !== "ALL") {
+        const cat = b.listingCategory ?? "NPL"
+        if (cat !== listingCategory) return false
+      }
+
       // 1) 담보 대분류 매칭
       if (collateral !== "ALL") {
         if (collateral === "ETC") {
@@ -781,7 +795,7 @@ export default function AuctionPage() {
     if (sortBy === "입찰많은순") return [...filtered].sort((a, b) => b.bidCount - a.bidCount)
     if (sortBy === "저위험순")   return [...filtered].sort((a, b) => (a.riskGrade < b.riskGrade ? -1 : 1))
     return filtered
-  }, [bids, search, collateral, collateralMinor, region, instType, sortBy])
+  }, [bids, search, listingCategory, collateral, collateralMinor, region, instType, sortBy])
 
   const activeBids = bids.filter((b) => b.status !== "마감").length
   const urgentBids = bids.filter((b) => b.status === "마감임박").length
@@ -869,14 +883,14 @@ export default function AuctionPage() {
                 </span>
                 <span className="text-[0.6875rem] font-black uppercase tracking-widest" style={{ color: C.em }}>LIVE</span>
               </div>
-              <span className="text-[0.75rem]" style={{ color: C.fghm }}>실시간 NPL 경매 현황</span>
+              <span className="text-[0.75rem]" style={{ color: C.fghm }}>실시간 자발적 경매 현황</span>
             </div>
 
             <h1 className="text-[2.5rem] sm:text-[3rem] font-black tracking-tight leading-none mb-3" style={{ color: C.fgh }}>
-              NPL 경매
+              자발적 경매
             </h1>
             <p className="text-[1rem] max-w-xl mb-8" style={{ color: C.fghd }}>
-              금융기관이 등록한 부실채권에 NPL 경매로 참여하세요. AI가 적정 입찰가를 실시간으로 분석합니다.
+              금융기관이 등록한 매물에 자발적 경매로 참여하세요. AI가 적정 입찰가를 실시간으로 분석합니다.
             </p>
           </motion.div>
 
@@ -1003,6 +1017,27 @@ export default function AuctionPage() {
               >
                 AI
               </div>
+            </div>
+
+            {/* 매물 유형 (NPL / 일반 부동산) */}
+            <div className="flex items-center gap-1.5">
+              {LISTING_CATEGORY_FILTER.map((c) => {
+                const active = listingCategory === c.value
+                return (
+                  <button
+                    key={c.value}
+                    onClick={() => setListingCategory(c.value)}
+                    className="px-3 py-1.5 rounded-full text-[0.8125rem] font-semibold transition-all"
+                    style={{
+                      backgroundColor: active ? C.blue : C.l2,
+                      color: active ? C.onBrand : C.lt2,
+                      border: `1px solid ${active ? C.blue : C.l3}`,
+                    }}
+                  >
+                    {c.label}
+                  </button>
+                )
+              })}
             </div>
 
             {/* Major chips (담보 대분류) */}
@@ -1134,10 +1169,10 @@ export default function AuctionPage() {
               </div>
 
               {/* Reset */}
-              {(collateralMinor !== "ALL" || region !== "ALL" || instType !== "ALL") && (
+              {(listingCategory !== "ALL" || collateralMinor !== "ALL" || region !== "ALL" || instType !== "ALL") && (
                 <div className="flex justify-end pt-2">
                   <button
-                    onClick={() => { setCollateralMinor("ALL"); setRegion("ALL"); setInstType("ALL") }}
+                    onClick={() => { setListingCategory("ALL"); setCollateralMinor("ALL"); setRegion("ALL"); setInstType("ALL") }}
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[0.75rem] font-semibold transition-colors"
                     style={{ color: C.lt3 }}
                   >
