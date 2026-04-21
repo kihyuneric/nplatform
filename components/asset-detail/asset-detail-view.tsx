@@ -886,7 +886,12 @@ export function AssetDetailView({
           </div>
 
           <div className="space-y-4 min-w-0">
-            <div className="lg:sticky lg:top-4 space-y-4">
+            {/*
+              sticky 우측 사이드바 — 페이지 자연 스크롤 시 뷰포트에 고정.
+              · standalone (/exchange/[id]): top-4 (16px) — 최상단 Navigation 아래
+              · embedded (/deals): top-20 (80px) — /deals 의 64px sticky 헤더 아래
+            */}
+            <div className={`${embedded ? "lg:sticky lg:top-20" : "lg:sticky lg:top-4"} space-y-4`}>
               <PrimaryActionCard
                 tier={effectiveTier}
                 loading={dealCreating}

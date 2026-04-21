@@ -474,14 +474,14 @@ export default function DealsPage() {
                 </div>
                 {/*
                   선택된 딜이 바뀌면 상태 초기화를 위해 key 로 리마운트.
-                  max-h-[calc(100vh-140px)] + overflow-y-auto 로 **바운디드 스크롤 컨테이너** 를
-                  형성 → 우측 sticky 사이드바가 이 컨테이너 기준으로 고정되고, 좌측 콘텐츠가
-                  내부 스크롤되어 우측과 높이가 자연스럽게 매칭됩니다 (이전 iframe 의 내부
-                  스크롤 동작을 CSS 로 재현).
+                  **바운디드 컨테이너 없음** — /exchange/[id] 와 동일하게 페이지 자연
+                  스크롤을 사용. 우측 sidebar 는 AssetDetailView 내부의 `lg:sticky lg:top-20`
+                  로 뷰포트에 고정되어, 스크롤 시 좌측 콘텐츠만 움직이는 것처럼 보이고
+                  우측과 높이 매칭이 자연스럽게 이뤄집니다. (이중 스크롤 제거)
                 */}
                 <div
                   key={selectedDeal.id}
-                  className="rounded-2xl overflow-y-auto overflow-x-hidden border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] max-h-[calc(100vh-140px)]"
+                  className="rounded-2xl overflow-hidden border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]"
                 >
                   <AssetDetailView
                     idProp={selectedDeal.id}
