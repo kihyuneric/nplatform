@@ -486,15 +486,21 @@ export interface ProfitabilityInput {
   /** 민감도 분석 낙찰가율 축 (기본: baseBidRatio 주변 ±15%p) */
   sensitivityBidRatioAxis?: number[]
   // ── 3단계 전략 파라미터 ──────────────────────────────────
-  /** 보수적 매입률 (기본 0.85) */
+  /**
+   * 금융기관 매각가 (원, 선택)
+   *  · 제공 시: 매각가를 '권고' 앵커로 사용 → 공격적 +2.5% / 권고 매각가 / 보수적 −5%
+   *  · 미제공: 대출원금을 앵커로 사용 → 공격적 100% / 권고 −5% / 보수적 −10%
+   */
+  bankSalePrice?: number
+  /** 보수적 매입률 override (명시 시 defaults 무시) */
   strategyConservativeRate?: number
-  /** 권고 매입률 (기본 1.00) */
+  /** 권고 매입률 override (명시 시 defaults 무시) */
   strategyRecommendedRate?: number
-  /** 공격적 매입률 (기본 1.05) */
+  /** 공격적 매입률 override (명시 시 defaults 무시) */
   strategyAggressiveRate?: number
-  /** 보수적 낙찰가율 감소폭 (기본 0.07) */
+  /** 보수적 낙찰가율 감소폭 (기본 = 낙찰가율 1σ) */
   strategyConservativeBidDelta?: number
-  /** 공격적 낙찰가율 증가폭 (기본 0.05) */
+  /** 공격적 낙찰가율 증가폭 (기본 = 낙찰가율 0.7σ) */
   strategyAggressiveBidDelta?: number
 }
 
@@ -717,9 +723,34 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   })
 
   // ─── 3단계 매입 전략 (Monte Carlo 로부터 승률 파생) ───
-  const strategyConservativeRate = input.strategyConservativeRate ?? 0.85
-  const strategyRecommendedRate = input.strategyRecommendedRate ?? 1.0
-  const strategyAggressiveRate = input.strategyAggressiveRate ?? 1.05
+  //
+  // 매입률 앵커 로직 — bankSalePrice 제공 여부로 분기
+  //
+  //  (A) 금융기관 매각가 없음 → 대출원금 100% = 공격적 (원금 기준)
+  //      · 공격적 100% · 권고 95% (−5%) · 보수적 90% (−10%)
+  //  (B) 금융기관 매각가 있음 → 매각가 = 권고 앵커
+  //      · 공격적 매각가 × 1.025 (+2.5%)
+  //      · 권고   매각가
+  //      · 보수적 매각가 × 0.95 (−5%)
+  //
+  const hasBankSalePrice = typeof input.bankSalePrice === 'number' && input.bankSalePrice > 0
+  const bankSaleAnchorRate = hasBankSalePrice
+    ? (input.bankSalePrice as number) / input.loanPrincipal
+    : null
+
+  const defaultConservativeRate = hasBankSalePrice
+    ? (bankSaleAnchorRate as number) * 0.95
+    : 0.90
+  const defaultRecommendedRate = hasBankSalePrice
+    ? (bankSaleAnchorRate as number)
+    : 0.95
+  const defaultAggressiveRate = hasBankSalePrice
+    ? (bankSaleAnchorRate as number) * 1.025
+    : 1.00
+
+  const strategyConservativeRate = input.strategyConservativeRate ?? defaultConservativeRate
+  const strategyRecommendedRate = input.strategyRecommendedRate ?? defaultRecommendedRate
+  const strategyAggressiveRate = input.strategyAggressiveRate ?? defaultAggressiveRate
   const strategyConservativeBidDelta = input.strategyConservativeBidDelta ?? derivedBidRatioStd
   const strategyAggressiveBidDelta =
     input.strategyAggressiveBidDelta ?? derivedBidRatioStd * 0.7
@@ -744,6 +775,8 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
     conservativeBidDelta: strategyConservativeBidDelta,
     aggressiveBidDelta: strategyAggressiveBidDelta,
     bidRatioStd: derivedBidRatioStd,
+    bankSalePrice: hasBankSalePrice ? (input.bankSalePrice as number) : undefined,
+    bankSaleAnchorRate: bankSaleAnchorRate ?? undefined,
   })
 
   // ─── 민감도 분석 (매입률 × 낙찰가율 → ROI) ──────────────
@@ -859,6 +892,10 @@ interface StrategyArgs {
   conservativeBidDelta?: number
   aggressiveBidDelta?: number
   bidRatioStd?: number
+  /** 금융기관 매각가 (원) — 제공 시 시나리오 B 라벨링 */
+  bankSalePrice?: number
+  /** 금융기관 매각가 대비 매입률 앵커 (대출원금 대비 비율) */
+  bankSaleAnchorRate?: number
 }
 
 function computeScenario(
@@ -927,9 +964,12 @@ function normalCdf(x: number): number {
 }
 
 function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
-  const conservativeRate = args.conservativeRate ?? 0.85
-  const recommendedRate = args.recommendedRate ?? 1.0
-  const aggressiveRate = args.aggressiveRate ?? 1.05
+  const hasBankSale = typeof args.bankSalePrice === 'number' && args.bankSalePrice > 0
+  const anchor = args.bankSaleAnchorRate ?? 1 // 시나리오 B의 앵커 (대출원금 대비 매각가 비율)
+
+  const conservativeRate = args.conservativeRate ?? (hasBankSale ? anchor * 0.95 : 0.90)
+  const recommendedRate  = args.recommendedRate  ?? (hasBankSale ? anchor         : 0.95)
+  const aggressiveRate   = args.aggressiveRate   ?? (hasBankSale ? anchor * 1.025 : 1.00)
   const conservativeDelta = args.conservativeBidDelta ?? 0.07
   const aggressiveDelta = args.aggressiveBidDelta ?? 0.05
   const bidStd = Math.max(0.02, args.bidRatioStd ?? 0.07)
@@ -951,10 +991,36 @@ function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
   const winProbability = (assumedBid: number) =>
     Math.max(0.02, Math.min(0.98, 1 - normalCdf((assumedBid - args.baseBidRatio) / bidStd)))
 
+  // 라벨/설명 — 앵커가 원금(A) 인지 매각가(B)인지에 따라 분기
+  const ratioDeltaPct = (rate: number, ref: number) => ((rate - ref) * 100) // %p
+  const fmtPct = (n: number) => (n >= 0 ? `+${n.toFixed(1)}%` : `${n.toFixed(1)}%`)
+
+  const conservativeDesc = hasBankSale
+    ? `금융기관 매각가 대비 ${fmtPct(ratioDeltaPct(conservativeRate, anchor))} 매입 (대출원금 ${(conservativeRate * 100).toFixed(1)}%) · 낙찰가율 ${(conservativeBidRatio * 100).toFixed(1)}% 가정 — 하락 방어`
+    : `대출원금 ${(conservativeRate * 100).toFixed(0)}% 매입 (${fmtPct(ratioDeltaPct(conservativeRate, 1))}) · 낙찰가율 ${(conservativeBidRatio * 100).toFixed(1)}% 가정 — 하락 방어`
+
+  const recommendedDesc = hasBankSale
+    ? `금융기관 매각가 기준 매입 (대출원금 ${(recommendedRate * 100).toFixed(1)}%) · 기준 낙찰가율 ${(recommendedBidRatio * 100).toFixed(1)}%`
+    : `대출원금 ${(recommendedRate * 100).toFixed(0)}% 매입 (${fmtPct(ratioDeltaPct(recommendedRate, 1))}) · 기준 낙찰가율 ${(recommendedBidRatio * 100).toFixed(1)}%`
+
+  const aggressiveDesc = hasBankSale
+    ? `금융기관 매각가 대비 ${fmtPct(ratioDeltaPct(aggressiveRate, anchor))} 프리미엄 매입 (대출원금 ${(aggressiveRate * 100).toFixed(1)}%) · 낙찰가율 ${(aggressiveBidRatio * 100).toFixed(1)}% 가정 — 상승 포지셔닝`
+    : `대출원금 ${(aggressiveRate * 100).toFixed(0)}% 원금 전액 매입 · 낙찰가율 ${(aggressiveBidRatio * 100).toFixed(1)}% 가정 — 상승 포지셔닝`
+
+  const conservativeLabel = hasBankSale
+    ? `보수적 매입 (${fmtPct(ratioDeltaPct(conservativeRate, anchor))})`
+    : `보수적 매입 (원금 ${(conservativeRate * 100).toFixed(0)}%)`
+  const recommendedLabel = hasBankSale
+    ? `AI 권고 매입 (매각가)`
+    : `AI 권고 매입 (원금 ${(recommendedRate * 100).toFixed(0)}%)`
+  const aggressiveLabel = hasBankSale
+    ? `공격적 매입 (${fmtPct(ratioDeltaPct(aggressiveRate, anchor))})`
+    : `공격적 매입 (원금 ${(aggressiveRate * 100).toFixed(0)}%)`
+
   const conservative: PurchaseStrategyScenario = {
     strategy: 'CONSERVATIVE',
-    label: '보수적 매입',
-    description: `대출원금 대비 ${(conservativeRate * 100).toFixed(0)}% 매입 · 낙찰가율 ${(conservativeBidRatio * 100).toFixed(1)}% 가정 — 하락 시나리오 방어`,
+    label: conservativeLabel,
+    description: conservativeDesc,
     purchaseRate: conservativeRate,
     purchasePrice: c.purchasePrice,
     assumedBidRatio: conservativeBidRatio,
@@ -969,8 +1035,8 @@ function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
   }
   const recommended: PurchaseStrategyScenario = {
     strategy: 'RECOMMENDED',
-    label: 'AI 권고 매입',
-    description: `대출원금 ${(recommendedRate * 100).toFixed(0)}% 매입 · 기준 낙찰가율 ${(recommendedBidRatio * 100).toFixed(1)}%`,
+    label: recommendedLabel,
+    description: recommendedDesc,
     purchaseRate: recommendedRate,
     purchasePrice: r.purchasePrice,
     assumedBidRatio: recommendedBidRatio,
@@ -984,8 +1050,8 @@ function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
   }
   const aggressive: PurchaseStrategyScenario = {
     strategy: 'AGGRESSIVE',
-    label: '공격적 매입',
-    description: `대출원금 ${(aggressiveRate * 100).toFixed(0)}% 프리미엄 매입 · 낙찰가율 ${(aggressiveBidRatio * 100).toFixed(1)}% 가정 — 상승 시나리오 포지셔닝`,
+    label: aggressiveLabel,
+    description: aggressiveDesc,
     purchaseRate: aggressiveRate,
     purchasePrice: a.purchasePrice,
     assumedBidRatio: aggressiveBidRatio,
@@ -1002,18 +1068,22 @@ function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
         : undefined,
   }
 
+  const anchorNote = hasBankSale
+    ? `앵커: 금융기관 매각가 ${fmtEok(args.bankSalePrice as number)} (대출원금 대비 ${(anchor * 100).toFixed(1)}%) · 공격적 ×1.025 · 권고 ×1.000 · 보수적 ×0.95`
+    : `앵커: 대출원금 100% · 공격적 100% · 권고 95% (−5%) · 보수적 90% (−10%)`
+
   return {
     conservative,
     recommended,
     aggressive,
     defaultStrategy: 'RECOMMENDED',
     narrative:
+      `${anchorNote}. ` +
       `보수적(${(conservative.roi * 100).toFixed(1)}%) · 권고(${(recommended.roi * 100).toFixed(1)}%) · ` +
       `공격적(${(aggressive.roi * 100).toFixed(1)}%) 시나리오별 ROI를 병렬 제시합니다. ` +
       `권고안 기준 연환산 ${(recommended.annualizedRoi * 100).toFixed(1)}% 목표이며, ` +
       `승률은 낙찰가율 분포 N(μ=${(args.baseBidRatio * 100).toFixed(1)}%, σ=${(bidStd * 100).toFixed(1)}%p) 기반 ` +
-      `P(실낙찰가율 ≥ 가정치) = 1−Φ((가정−μ)/σ) 로 산출. ` +
-      `민감도·Monte Carlo 결과를 교차 참고하여 최종 의사결정 바랍니다.`,
+      `P(실낙찰가율 ≥ 가정치) = 1−Φ((가정−μ)/σ) 로 산출.`,
   }
 }
 

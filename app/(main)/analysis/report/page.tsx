@@ -166,13 +166,20 @@ export default function UnifiedReportPage() {
             sub={`낙찰가율 ${kpiBidRatioPct.toFixed(1)}%`}
             tint="#2E75B6"
           />
-          <KpiCard
-            icon={Gavel}
-            label="투자 의견"
-            value={summary.verdict}
-            sub={summary.verdict === "BUY" ? "권고" : summary.verdict === "HOLD" ? "관망" : "회피"}
-            tint={summary.verdict === "BUY" ? "#10B981" : summary.verdict === "HOLD" ? "#F59E0B" : "#DC2626"}
-          />
+          <div>
+            <KpiCard
+              icon={Gavel}
+              label="투자 의견"
+              value={summary.verdict}
+              sub={summary.verdict === "BUY" ? "권고" : summary.verdict === "HOLD" ? "관망" : "회피"}
+              tint={summary.verdict === "BUY" ? "#10B981" : summary.verdict === "HOLD" ? "#F59E0B" : "#DC2626"}
+            />
+            <VerdictCriteriaToggle
+              verdict={summary.verdict}
+              compositeScore={recovery.compositeScore}
+              predictedRecovery={recovery.predictedRecoveryRate}
+            />
+          </div>
         </div>
 
         <div className="mt-4 p-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)]">
@@ -273,10 +280,8 @@ export default function UnifiedReportPage() {
           <p className="mt-3 text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">
             {recovery.narrative}
           </p>
-          <div className="mt-3 pt-3 border-t border-dashed border-[var(--color-border-subtle)]">
-            <div className="text-[0.625rem] font-bold text-[var(--color-text-tertiary)] mb-1">계산식</div>
-            <pre className="text-[0.6875rem] font-mono text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
-{`종합점수 = LTV×0.40 + 지역×0.30 + 낙찰가율×0.30
+          <FormulaToggle
+            formula={`종합점수 = LTV×0.40 + 지역×0.30 + 낙찰가율×0.30
         = ${recovery.factors.ltv.score}×0.40 + ${recovery.factors.regionTrend.score}×0.30 + ${recovery.factors.auctionRatio.score}×0.30
         = ${recovery.compositeScore.toFixed(1)} → 등급 ${recovery.compositeGrade}
 
@@ -285,8 +290,7 @@ export default function UnifiedReportPage() {
          = ${recovery.predictedRecoveryRate}%
          · 신뢰구간 ${recovery.lowerBound}% ~ ${recovery.upperBound}% (±σ)
          · 신뢰도 ${Math.round(recovery.confidence * 100)}%`}
-            </pre>
-          </div>
+          />
         </div>
       </Section>
 
@@ -319,16 +323,14 @@ export default function UnifiedReportPage() {
           <p className="text-[0.8125rem] leading-relaxed" style={{ color: rp.fg }}>
             {risk.narrative}
           </p>
-          <div className="mt-3 pt-3 border-t border-dashed" style={{ borderColor: rp.border }}>
-            <div className="text-[0.625rem] font-bold mb-1" style={{ color: rp.fg }}>계산식</div>
-            <pre className="text-[0.6875rem] font-mono leading-relaxed whitespace-pre-wrap" style={{ color: rp.fg }}>
-{`리스크점수 = LTV×0.35 + 지역×0.25 + 낙찰가율×0.30 + 종합회수×0.10
+          <FormulaToggle
+            tint={{ color: rp.fg, border: rp.border }}
+            formula={`리스크점수 = LTV×0.35 + 지역×0.25 + 낙찰가율×0.30 + 종합회수×0.10
          = ${recovery.factors.ltv.score}×0.35 + ${recovery.factors.regionTrend.score}×0.25 + ${recovery.factors.auctionRatio.score}×0.30 + ${recovery.compositeScore.toFixed(1)}×0.10
          = ${risk.score}점 → 등급 ${risk.grade} (${risk.level})
 
 등급 임계: ≥85→A(LOW) · ≥70→B(LOW) · ≥55→C(MEDIUM) · ≥40→D(HIGH) · <40→E(CRITICAL)`}
-            </pre>
-          </div>
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
@@ -402,14 +404,11 @@ export default function UnifiedReportPage() {
               {marketOutlook.outlook === "BULLISH" ? "상승 추세" : marketOutlook.outlook === "BEARISH" ? "하락 추세" : "중립"}
             </div>
             <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{marketOutlook.narrative}</p>
-            <div className="mt-2 pt-2 border-t border-dashed border-[var(--color-border-subtle)]">
-              <div className="text-[0.625rem] font-bold text-[var(--color-text-tertiary)] mb-0.5">계산식</div>
-              <pre className="text-[0.6875rem] font-mono text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
-{`낙찰가율 모멘텀 = 단기(1M) − 장기(12M) = ${recovery.factors.regionTrend.auctionMomentum}%p
+            <FormulaToggle
+              formula={`낙찰가율 모멘텀 = 단기(1M) − 장기(12M) = ${recovery.factors.regionTrend.auctionMomentum}%p
 판정: 모멘텀 > +2%p → BULLISH · < −2%p → BEARISH · 그 외 → NEUTRAL
 → ${marketOutlook.outlook} (신뢰도 ${Math.round(marketOutlook.confidence * 100)}% · 기간 ${marketOutlook.horizonMonths}개월)`}
-              </pre>
-            </div>
+            />
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -520,11 +519,109 @@ function FactorCard({
           </li>
         ))}
       </ul>
-      {formula && (
-        <div className="mt-2 pt-2 border-t border-dashed border-[var(--color-border-subtle)]">
-          <div className="text-[0.625rem] font-bold text-[var(--color-text-tertiary)] mb-0.5">계산식</div>
-          <div className="text-[0.6875rem] font-mono text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
-            {formula}
+      {formula && <FormulaToggle formula={formula} />}
+    </div>
+  )
+}
+
+/**
+ * 계산식을 클릭 토글로 표시하는 재사용 컴포넌트.
+ * 기본 접힘 상태 — 버튼 클릭 시에만 계산식 노출.
+ */
+function FormulaToggle({
+  formula,
+  label = "계산식",
+  tint,
+}: {
+  formula: string
+  label?: string
+  tint?: { color: string; border: string } // 컬러 커스터마이즈 (risk 섹션 등)
+}) {
+  const [open, setOpen] = useState(false)
+  const color = tint?.color ?? "var(--color-text-tertiary)"
+  const border = tint?.border ?? "var(--color-border-subtle)"
+  return (
+    <div className="mt-2 pt-2 border-t border-dashed" style={{ borderColor: border }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1 text-[0.625rem] font-bold px-2 py-1 rounded-md border transition-colors hover:bg-[var(--color-surface-muted)]"
+        style={{ color, borderColor: border }}
+        aria-expanded={open}
+      >
+        <Sigma className="w-3 h-3" />
+        {label}
+        <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+      {open && (
+        <pre
+          className="mt-2 text-[0.6875rem] font-mono leading-relaxed whitespace-pre-wrap"
+          style={{ color: tint?.color ?? "var(--color-text-secondary)" }}
+        >
+          {formula}
+        </pre>
+      )}
+    </div>
+  )
+}
+
+/**
+ * 투자 의견(BUY/HOLD/AVOID) 판정 기준을 클릭 토글로 표시.
+ * KPI 카드 바로 아래에 "기준" 버튼으로 배치.
+ */
+function VerdictCriteriaToggle({
+  verdict,
+  compositeScore,
+  predictedRecovery,
+}: {
+  verdict: "BUY" | "HOLD" | "AVOID"
+  compositeScore: number
+  predictedRecovery: number
+}) {
+  const [open, setOpen] = useState(false)
+  const verdictColor =
+    verdict === "BUY" ? "#10B981" : verdict === "HOLD" ? "#F59E0B" : "#DC2626"
+  return (
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1 text-[0.625rem] font-bold px-2 py-1 rounded-md border transition-colors hover:bg-[var(--color-surface-muted)]"
+        style={{ color: verdictColor, borderColor: verdictColor + "66" }}
+        aria-expanded={open}
+      >
+        <Info className="w-3 h-3" />
+        기준
+        <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+      {open && (
+        <div
+          className="mt-2 rounded-lg border p-3 text-[0.6875rem] leading-relaxed"
+          style={{ borderColor: verdictColor + "40", background: verdictColor + "0D" }}
+        >
+          <div className="font-bold mb-1" style={{ color: verdictColor }}>
+            투자 의견 판정 규칙
+          </div>
+          <ul className="space-y-1 text-[var(--color-text-secondary)]">
+            <li>
+              <span className="font-bold" style={{ color: "#10B981" }}>BUY (권고)</span>
+              {" · "}종합점수 ≥ 70 <b>AND</b> 예측회수율 ≥ 85%
+            </li>
+            <li>
+              <span className="font-bold" style={{ color: "#F59E0B" }}>HOLD (관망)</span>
+              {" · "}종합점수 ≥ 55 (BUY 조건 미충족)
+            </li>
+            <li>
+              <span className="font-bold" style={{ color: "#DC2626" }}>AVOID (회피)</span>
+              {" · "}종합점수 &lt; 55 (위 조건 모두 불충족)
+            </li>
+          </ul>
+          <div className="mt-2 pt-2 border-t border-dashed" style={{ borderColor: verdictColor + "30" }}>
+            <div className="text-[0.625rem] font-mono text-[var(--color-text-tertiary)]">
+              현재 · 종합점수 {compositeScore.toFixed(1)} / 예측회수율 {predictedRecovery.toFixed(1)}%
+              {" → "}
+              <span className="font-bold" style={{ color: verdictColor }}>{verdict}</span>
+            </div>
           </div>
         </div>
       )}
