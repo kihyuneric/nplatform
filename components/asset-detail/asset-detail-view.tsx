@@ -98,6 +98,22 @@ interface ListingDetail {
     delinquent_rate: number
     delinquent_since: string
   }
+  /** 경매 정보 (없으면 null) */
+  auction_info: {
+    case_no: string           // 사건번호
+    court: string             // 관할법원
+    filed_date: string        // 경매접수일 (ISO)
+    estimated_start: string   // 예상 경매 개시일 (ISO)
+  } | null
+  /** 공매 정보 (없으면 null) */
+  public_sale_info: {
+    mgmt_no: string           // 관리번호
+    filed_date: string        // 공매신청일 (ISO)
+    estimated_start: string   // 예상 공매 개시일 (ISO)
+  } | null
+  /** 관리자 확인 상태 */
+  escrow_confirmed: boolean   // 에스크로 결제 납입 확인
+  contract_confirmed: boolean // 현장 계약 완료 확인
 }
 
 function buildMock(id: string): ListingDetail {
@@ -140,6 +156,15 @@ function buildMock(id: string): ListingDetail {
       delinquent_rate: 18.0,
       delinquent_since: "2025-10-14",
     },
+    auction_info: {
+      case_no: "서울중앙지법 2025타경12345",
+      court: "서울중앙지방법원",
+      filed_date: "2025-08-15",
+      estimated_start: "2026-05-20",
+    },
+    public_sale_info: null,
+    escrow_confirmed: false,
+    contract_confirmed: false,
   }
 }
 
@@ -206,6 +231,23 @@ function mapNplListingToDetail(row: Record<string, unknown>, id: string): Listin
       delinquent_rate: (row.delinquent_rate as number) ?? 18.0,
       delinquent_since: (row.delinquent_since as string) ?? "2025-10-14",
     },
+    auction_info: row.auction_case_no
+      ? {
+          case_no: (row.auction_case_no as string),
+          court: (row.auction_court as string) ?? "—",
+          filed_date: (row.auction_filed_date as string) ?? "",
+          estimated_start: (row.auction_start_date as string) ?? "",
+        }
+      : null,
+    public_sale_info: row.public_sale_mgmt_no
+      ? {
+          mgmt_no: (row.public_sale_mgmt_no as string),
+          filed_date: (row.public_sale_filed_date as string) ?? "",
+          estimated_start: (row.public_sale_start_date as string) ?? "",
+        }
+      : null,
+    escrow_confirmed: !!(row.escrow_confirmed_at),
+    contract_confirmed: !!(row.contract_confirmed_at),
   }
 }
 
@@ -735,22 +777,22 @@ export function AssetDetailView({
             </SectionCard>
 
             <SectionCard
-              title="임차인 요약"
+              title="임대차 현황"
               icon={<Building2 size={14} />}
               tierBadge="L1"
               anchorId="tenants"
             >
               <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={120}>
                 <div className="grid grid-cols-3 gap-3">
-                  <Stat label="보증금" value={formatKRW(listing.lease_summary.total_deposit)} />
+                  <Stat label="보증금 합계" value={formatKRW(listing.lease_summary.total_deposit)} />
                   <Stat label="월세" value={formatKRW(listing.lease_summary.monthly_rent || 0)} />
-                  <Stat label="임차인" value={`${listing.lease_summary.tenant_count}명`} />
+                  <Stat label="임차인 수" value={`${listing.lease_summary.tenant_count}명`} />
                 </div>
               </TierGate>
             </SectionCard>
 
             <SectionCard
-              title="감정평가서 (마스킹본)"
+              title="감정평가서"
               icon={<Banknote size={14} />}
               tierBadge="L1"
               anchorId="appraisal"
@@ -762,9 +804,63 @@ export function AssetDetailView({
                   <Stat label="희망가" value={formatKRW(listing.asking_price)} tone="blue" />
                 </div>
                 <p className="mt-3 leading-relaxed" style={{ fontSize: 11, color: C.lt3 }}>
-                  감정평가서 PDF 원본(마스킹본)은 L1 본인인증 완료 시 다운로드 가능합니다.
-                  평가기관·평가일·감정평가사 정보는 L2 이상에서 공개됩니다.
+                  감정평가서 전체 내용이 L1 본인인증 완료 시 열람 가능합니다.
                 </p>
+              </TierGate>
+            </SectionCard>
+
+            {/* ── 경매 정보 (L1) ── */}
+            <SectionCard
+              title="경매 정보"
+              icon={<Gavel size={14} />}
+              tierBadge="L1"
+              anchorId="auction-info"
+            >
+              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={120}>
+                {listing.auction_info ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <InfoField label="사건번호" value={listing.auction_info.case_no} />
+                      <InfoField label="관할법원" value={listing.auction_info.court} />
+                      <InfoField label="경매접수일" value={formatDateKo(listing.auction_info.filed_date)} />
+                      <InfoField label="예상 경매 개시일" value={formatDateKo(listing.auction_info.estimated_start)} />
+                    </div>
+                    <p style={{ fontSize: 11, color: C.lt3 }}>
+                      채권자는 딜룸에서 정보를 수정할 수 있습니다.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-center py-4" style={{ color: C.lt4, fontSize: 12 }}>
+                    경매 진행 없음 · 해당 매물은 임의매각 방식입니다.
+                  </p>
+                )}
+              </TierGate>
+            </SectionCard>
+
+            {/* ── 공매 정보 (L1) ── */}
+            <SectionCard
+              title="공매 정보"
+              icon={<Gavel size={14} />}
+              tierBadge="L1"
+              anchorId="public-sale"
+            >
+              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={120}>
+                {listing.public_sale_info ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <InfoField label="관리번호" value={listing.public_sale_info.mgmt_no} />
+                      <InfoField label="공매신청일" value={formatDateKo(listing.public_sale_info.filed_date)} />
+                      <InfoField label="예상 공매 개시일" value={formatDateKo(listing.public_sale_info.estimated_start)} />
+                    </div>
+                    <p style={{ fontSize: 11, color: C.lt3 }}>
+                      채권자는 딜룸에서 정보를 수정할 수 있습니다.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-center py-4" style={{ color: C.lt4, fontSize: 12 }}>
+                    공매 진행 없음 · 해당 매물은 경매 또는 임의매각 방식입니다.
+                  </p>
+                )}
               </TierGate>
             </SectionCard>
 
@@ -910,6 +1006,14 @@ export function AssetDetailView({
                 </div>
               </TierGate>
             </SectionCard>
+
+            {/* ── 실사 신청 (L2) ── */}
+            {tierGte(effectiveAccessTier, "L2") && (
+              <DueDiligenceSection
+                anchorId="due-diligence"
+                listingId={id}
+              />
+            )}
           </div>
 
           <div className="space-y-4 min-w-0">
@@ -1025,6 +1129,8 @@ export function AssetDetailView({
               tier={effectiveTier}
               askingPrice={listing.asking_price}
               assetTitle={title}
+              escrowConfirmed={listing.escrow_confirmed}
+              contractConfirmed={listing.contract_confirmed}
               onOpenDetails={handlePrimaryAction}
               onSubmitOffer={() => {
                 setMockTier("L4")
@@ -1245,3 +1351,171 @@ function ClaimField({
     </div>
   )
 }
+
+/** 경매·공매 정보 표시용 텍스트 필드 */
+function InfoField({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      className="rounded-lg p-3"
+      style={{
+        backgroundColor: "var(--layer-2-bg)",
+        border: "1px solid var(--layer-border-strong)",
+      }}
+    >
+      <div style={{ fontSize: 10, color: "var(--fg-subtle)", fontWeight: 700, marginBottom: 3 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 13, color: "var(--fg-strong)", fontWeight: 700 }}>
+        {value || "—"}
+      </div>
+    </div>
+  )
+}
+
+/** 실사 신청·확인·의견 섹션 (L2 이상) */
+function DueDiligenceSection({
+  anchorId,
+  listingId,
+}: {
+  anchorId: string
+  listingId: string
+}) {
+  const [date, setDate] = useState("")
+  const [time, setTime] = useState("")
+  const [confirmed, setConfirmed] = useState(false)
+  const [note, setNote] = useState("")
+  const [submitted, setSubmitted] = useState(false)
+
+  function handleSubmit() {
+    if (!date || !time) {
+      toast.error("실사 요청일과 시간을 입력해주세요.")
+      return
+    }
+    setSubmitted(true)
+    toast.success(`실사 신청이 접수되었습니다 [${listingId.slice(0, 8)}]. 매도자 확인 후 안내 드립니다.`, { duration: 3000 })
+  }
+
+  return (
+    <SectionCard
+      title="실사 신청"
+      icon={<FileText size={14} />}
+      tierBadge="L2"
+      anchorId={anchorId}
+    >
+      {submitted ? (
+        <div
+          className="rounded-xl p-4 flex items-center gap-3"
+          style={{
+            backgroundColor: "var(--color-positive-bg)",
+            border: "1px solid rgba(16,185,129,0.33)",
+          }}
+        >
+          <CheckCircle2 size={20} color="var(--color-positive)" className="flex-shrink-0" />
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "var(--color-positive)" }}>
+              실사 신청 완료
+            </div>
+            <div style={{ fontSize: 11, color: "var(--fg-muted)", marginTop: 2 }}>
+              {date} {time} · 매도자 측 확인 대기 중
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label
+                style={{ fontSize: 11, fontWeight: 700, color: C.lt3, display: "block", marginBottom: 5 }}
+              >
+                실사 요청일 <span style={{ color: "var(--color-danger)" }}>*</span>
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                style={{
+                  width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 13,
+                  backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)",
+                  color: "var(--fg-strong)", outline: "none",
+                }}
+              />
+            </div>
+            <div>
+              <label
+                style={{ fontSize: 11, fontWeight: 700, color: C.lt3, display: "block", marginBottom: 5 }}
+              >
+                방문 시간 <span style={{ color: "var(--color-danger)" }}>*</span>
+              </label>
+              <input
+                type="time"
+                value={time}
+                onChange={e => setTime(e.target.value)}
+                style={{
+                  width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 13,
+                  backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)",
+                  color: "var(--fg-strong)", outline: "none",
+                }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              style={{ fontSize: 11, fontWeight: 700, color: C.lt3, display: "block", marginBottom: 5 }}
+            >
+              확인 및 의견
+            </label>
+            <textarea
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              placeholder="실사 목적, 동행 인원, 확인 사항 등을 기재해 주세요."
+              rows={4}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 12,
+                backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)",
+                color: "var(--fg-strong)", outline: "none", resize: "vertical",
+              }}
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setConfirmed(v => !v)}
+              className="flex items-center gap-2 text-left"
+              style={{ fontSize: 12, color: C.lt2, cursor: "pointer", background: "none", border: "none", padding: 0 }}
+            >
+              <div
+                style={{
+                  width: 18, height: 18, borderRadius: 4, flexShrink: 0,
+                  backgroundColor: confirmed ? "var(--color-positive)" : "transparent",
+                  border: `1.5px solid ${confirmed ? "var(--color-positive)" : "var(--layer-border-strong)"}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                {confirmed && <CheckCircle2 size={11} color="#fff" />}
+              </div>
+              실사 후 비밀유지 의무를 준수하겠습니다.
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!confirmed}
+            style={{
+              padding: "11px 20px", borderRadius: 10,
+              backgroundColor: confirmed ? "var(--color-brand-bright)" : "var(--layer-border-strong)",
+              color: confirmed ? "var(--fg-on-brand)" : "var(--fg-subtle)",
+              fontSize: 13, fontWeight: 800, border: "none", cursor: confirmed ? "pointer" : "not-allowed",
+              width: "100%",
+            }}
+          >
+            실사 신청하기
+          </button>
+        </div>
+      )}
+    </SectionCard>
+  )
+}
+

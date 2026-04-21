@@ -19,8 +19,8 @@
 import type { AssetTier } from "@/hooks/use-asset-tier"
 import {
   Brain, Scale, FileText, Users2, FileBarChart, BookOpen, Image as ImageIcon,
-  Coins, FileSignature, MessageSquare, HandCoins, FileCheck, ListChecks,
-  FileEdit, Wallet, Trophy, Lock,
+  Coins, FileSignature, MessageSquare, HandCoins, FileCheck,
+  FileEdit, Wallet, Trophy, Lock, Gavel, Landmark, ClipboardList,
 } from "lucide-react"
 import type { ReactNode } from "react"
 
@@ -41,31 +41,35 @@ export interface TierNavItem {
 }
 
 const ITEMS: TierNavItem[] = [
-  // L0 — 기본 공개
-  { key: "ai",           label: "AI 분석",     sub: "리포트",       requiredTier: "L0", icon: <Brain className="w-4 h-4" />,       anchor: "ai-report" },
-  { key: "rights",       label: "권리관계",    sub: "요약",         requiredTier: "L0", icon: <Scale className="w-4 h-4" />,       anchor: "rights" },
-  { key: "deed-summary", label: "등기부등본",  sub: "요약",         requiredTier: "L0", icon: <FileText className="w-4 h-4" />,    anchor: "deed-summary" },
-  { key: "tenants",      label: "임차인",      sub: "",             requiredTier: "L0", icon: <Users2 className="w-4 h-4" />,      anchor: "tenants" },
+  // ──────── L0 · 공개 (로그인 불필요) ────────
+  { key: "ai",           label: "AI 분석",     sub: "리포트",       requiredTier: "L0", icon: <Brain className="w-4 h-4" />,          anchor: "ai-report" },
+  { key: "rights",       label: "권리관계",    sub: "요약",         requiredTier: "L0", icon: <Scale className="w-4 h-4" />,          anchor: "rights" },
 
-  // L2 — NDA 체결 후 공개
-  { key: "appraisal",    label: "감정평가서",  sub: "",             requiredTier: "L2", icon: <FileBarChart className="w-4 h-4" />, anchor: "appraisal" },
-  { key: "deed-full",    label: "등기부등본",  sub: "원본",         requiredTier: "L2", icon: <BookOpen className="w-4 h-4" />,     anchor: "deed-full" },
-  { key: "site-photos",  label: "현장사진",    sub: "",             requiredTier: "L2", icon: <ImageIcon className="w-4 h-4" />,    anchor: "site-photos" },
-  { key: "debt",         label: "채권정보",    sub: "",             requiredTier: "L2", icon: <Coins className="w-4 h-4" />,        anchor: "debt-info" },
-  { key: "nda",          label: "NDA",         sub: "",             requiredTier: "L1", icon: <FileSignature className="w-4 h-4" />, anchor: "chat" },
-  { key: "chat",         label: "채팅",        sub: "",             requiredTier: "L2", icon: <MessageSquare className="w-4 h-4" />, anchor: "chat" },
+  // ──────── L1 · 본인인증 후 ────────
+  { key: "deed-summary", label: "등기부등본",  sub: "요약",         requiredTier: "L1", icon: <FileText className="w-4 h-4" />,       anchor: "deed-summary" },
+  { key: "lease",        label: "임대차 현황", sub: "",             requiredTier: "L1", icon: <Users2 className="w-4 h-4" />,         anchor: "tenants" },
+  { key: "appraisal",    label: "감정평가서",  sub: "",             requiredTier: "L1", icon: <FileBarChart className="w-4 h-4" />,   anchor: "appraisal" },
+  { key: "auction-info", label: "경매 정보",   sub: "",             requiredTier: "L1", icon: <Gavel className="w-4 h-4" />,          anchor: "auction-info" },
+  { key: "public-sale",  label: "공매 정보",   sub: "",             requiredTier: "L1", icon: <Landmark className="w-4 h-4" />,       anchor: "public-sale" },
 
-  // L3 — LOI 제출 후
-  { key: "offer",        label: "채권 오퍼",   sub: "",             requiredTier: "L2", icon: <HandCoins className="w-4 h-4" />,    anchor: "loi" },
-  { key: "loi",          label: "LOI",         sub: "",             requiredTier: "L2", icon: <FileCheck className="w-4 h-4" />,    anchor: "loi" },
-  { key: "checklist",    label: "실사",        sub: "체크리스트",   requiredTier: "L3", icon: <ListChecks className="w-4 h-4" />,   anchor: "dd-checklist" },
+  // ──────── L2 · NDA 체결 후 ────────
+  { key: "deed-full",    label: "등기부등본",  sub: "원본",         requiredTier: "L2", icon: <BookOpen className="w-4 h-4" />,       anchor: "deed-full" },
+  { key: "site-photos",  label: "현장사진",    sub: "",             requiredTier: "L2", icon: <ImageIcon className="w-4 h-4" />,      anchor: "site-photos" },
+  { key: "debt",         label: "채권정보",    sub: "",             requiredTier: "L2", icon: <Coins className="w-4 h-4" />,          anchor: "debt-info" },
+  { key: "nda",          label: "NDA",         sub: "",             requiredTier: "L2", icon: <FileSignature className="w-4 h-4" />,  anchor: "nda" },
+  { key: "chat",         label: "채팅",        sub: "",             requiredTier: "L2", icon: <MessageSquare className="w-4 h-4" />,  anchor: "chat" },
+  { key: "offer",        label: "가격 오퍼",   sub: "",             requiredTier: "L2", icon: <HandCoins className="w-4 h-4" />,      anchor: "offer" },
+  { key: "due-diligence",label: "실사",        sub: "",             requiredTier: "L2", icon: <ClipboardList className="w-4 h-4" />,  anchor: "due-diligence" },
 
-  // L4 — 계약 · 에스크로
-  { key: "contract",     label: "계약서",      sub: "초안",         requiredTier: "L3", icon: <FileEdit className="w-4 h-4" />,     anchor: "loi" },
-  { key: "escrow",       label: "에스크로",    sub: "",             requiredTier: "L4", icon: <Wallet className="w-4 h-4" />,       anchor: "loi" },
+  // ──────── L3 · LOI ────────
+  { key: "loi",          label: "LOI",         sub: "",             requiredTier: "L3", icon: <FileCheck className="w-4 h-4" />,      anchor: "loi" },
+  { key: "contract",     label: "계약서",      sub: "초안",         requiredTier: "L3", icon: <FileEdit className="w-4 h-4" />,       anchor: "loi" },
 
-  // L5 — 완료
-  { key: "settlement",   label: "완료",        sub: "(정산)",       requiredTier: "L5", icon: <Trophy className="w-4 h-4" />,       anchor: "settlement" },
+  // ──────── L4 · 에스크로 결제 ────────
+  { key: "escrow",       label: "에스크로",    sub: "결제",         requiredTier: "L4", icon: <Wallet className="w-4 h-4" />,         anchor: "escrow" },
+
+  // ──────── L5 · 현장 계약 ────────
+  { key: "contract-final", label: "계약",      sub: "(현장계약)",   requiredTier: "L5", icon: <Trophy className="w-4 h-4" />,         anchor: "contract-final" },
 ]
 
 export interface TierNavProps {

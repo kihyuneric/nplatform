@@ -33,18 +33,21 @@ export interface AssetHeroSummaryProps {
   backHref?: string
 }
 
-/** 5단계 프로세스 라벨 (DR-7 · 2026-04-21) — 2-line: 주 라벨 + 부 라벨
- * Step 1: 매칭 → 전문투자자 인증 으로 변경 */
+/** 5단계 거래 프로세스 (L1→L2→L3→L4→L5)
+ *  1 본인인증  (L1)
+ *  2 NDA 체결 (L2)
+ *  3 LOI 제출 (L3)
+ *  4 에스크로 결제 (L4 · 매입가 10% + 수수료)
+ *  5 현장 계약 (L5) */
 const STEPS: { label: string; sub: string }[] = [
-  { label: "전문투자자",      sub: "(인증)" },
-  { label: "담보·채권 정보",  sub: "(NDA)" },
-  { label: "실사 / 오퍼",     sub: "(LOI)" },
-  { label: "계약·에스크로",   sub: "(서명)" },
-  { label: "완료",           sub: "(정산)" },
+  { label: "본인인증",      sub: "(L1)" },
+  { label: "NDA 체결",      sub: "(L2)" },
+  { label: "LOI 제출",      sub: "(L3)" },
+  { label: "에스크로 결제", sub: "(L4)" },
+  { label: "현장 계약",     sub: "(L5)" },
 ]
 
-/** AssetTier → 5단계 인덱스 매핑
- *  L0·L1 은 "매칭"(0), L2 "담보정보"(1), L3 "채권오퍼"(2), L4 "계약·에스크로"(3), L5 "완료"(4) */
+/** AssetTier → 5단계 인덱스 매핑 */
 const TIER_IDX: Record<AssetTier, number> = {
   L0: 0, L1: 0, L2: 1, L3: 2, L4: 3, L5: 4,
 }

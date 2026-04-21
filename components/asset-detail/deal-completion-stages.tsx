@@ -24,7 +24,6 @@ import {
 import Link from "next/link"
 import { toast } from "sonner"
 import { OfferForm, OfferCard, type OfferData } from "@/components/deal-room/offer-card"
-import SignaturePad from "@/components/deal-room/signature-pad"
 import type { AssetTier } from "@/hooks/use-asset-tier"
 
 export interface DealCompletionStagesProps {
@@ -33,6 +32,10 @@ export interface DealCompletionStagesProps {
   askingPrice: number
   /** 담보 타이틀 — 영수증에 표시 */
   assetTitle: string
+  /** 관리자 에스크로 납입 확인 여부 (L4) */
+  escrowConfirmed?: boolean
+  /** 관리자 현장 계약 완료 확인 여부 (L5) */
+  contractConfirmed?: boolean
   /** 외부 모달(ActionSheet) 트리거 — 필요 시 */
   onOpenDetails?: () => void
   /** LOI 제출 콜백 (없으면 toast + 데모 UX) */
@@ -608,280 +611,91 @@ function DueDiligenceChecklist() {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   L4 계약·에스크로 패널 — Signature + Escrow Timeline
+   L4 에스크로 결제 패널 — 매입가 10% + 매수 수수료 납부
+   관리자 확인 시 "에스크로 결제 납입완료" 뱃지 표시
    ───────────────────────────────────────────────────────────── */
-function ContractSignPanel({
+function EscrowPaymentPanel({
   askingPrice,
-  onSignConfirm,
+  escrowConfirmed,
 }: {
   askingPrice: number
-  onSignConfirm?: (base64: string) => void
+  escrowConfirmed?: boolean
 }) {
-  const [signed, setSigned] = useState(false)
-
-  function handleConfirm(base64: string) {
-    setSigned(true)
-    onSignConfirm?.(base64)
-    toast.success("전자서명 완료 · 에스크로 입금 단계로 진행", { duration: 2500 })
-  }
-
-  const escrowSteps = [
-    {
-      label: "전자서명",
-      status: signed ? "done" : "now" as const,
-      hint: "매수자·매도자 양측 서명",
-    },
-    {
-      label: "에스크로 입금",
-      status: signed ? "now" : "pending" as const,
-      hint: `KB에스크로 ${formatKRW(askingPrice)}`,
-    },
-    {
-      label: "소유권 이전",
-      status: "pending" as const,
-      hint: "등기 이전 + 채권양도 통지",
-    },
-    {
-      label: "정산 완료",
-      status: "pending" as const,
-      hint: "영수증 · 세금계산서 발급",
-    },
-  ]
+  // 에스크로 보증금: 매입가의 10%
+  const deposit = Math.round(askingPrice * 0.10)
+  // 매수 수수료: NPL 1.5% + 우선협상권 0.3% = 1.8%
+  const buyerFee = Math.round(askingPrice * 0.018)
+  const total = deposit + buyerFee
 
   return (
     <PanelShell
-      title="계약·에스크로"
-      subtitle="전자서명 후 에스크로 계좌 입금까지 단일 흐름으로 진행"
-      icon={<PenLine size={16} />}
+      title="에스크로 결제"
+      subtitle="매입가 10% 보증금 + 매수 수수료를 에스크로 계좌로 납부합니다"
+      icon={<Wallet size={16} />}
       accent="gold"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-5">
-        {/* 좌: Signature Pad (canvas) — 밝은 배경 */}
-        <div
-          className="rounded-xl p-4 flex flex-col items-center gap-3"
-          style={{
-            backgroundColor: "rgba(255,255,255,0.97)",
-            border: "1px solid rgba(245, 158, 11, 0.32)",
-          }}
-        >
+      <div id="escrow" className="space-y-4 scroll-mt-24">
+        {/* 납입완료 뱃지 (관리자 확인 시) */}
+        {escrowConfirmed && (
           <div
-            className="font-black inline-flex items-center gap-1.5 self-start"
-            style={{ fontSize: 12, color: "var(--color-brand-dark)" }}
-          >
-            <PenLine size={14} />
-            전자서명
-          </div>
-          <div className="max-w-full overflow-x-auto">
-            <SignaturePad width={320} height={160} onConfirm={handleConfirm} />
-          </div>
-        </div>
-
-        {/* 우: Escrow Timeline */}
-        <div className="space-y-3">
-          <div
-            className="rounded-xl p-3.5"
+            className="rounded-xl p-4 flex items-center gap-3"
             style={{
-              backgroundColor: "rgba(245, 158, 11, 0.08)",
-              border: "1px solid rgba(245, 158, 11, 0.28)",
+              backgroundColor: "rgba(16, 185, 129, 0.12)",
+              border: "1px solid rgba(16, 185, 129, 0.45)",
             }}
           >
-            <div className="flex items-center gap-2 mb-1">
-              <Wallet size={14} style={{ color: "#F59E0B" }} />
-              <div className="font-black" style={{ fontSize: 12, color: "#FBBF24" }}>
-                에스크로 계좌 (KB)
+            <CheckCircle2 size={22} style={{ color: "var(--color-positive)", flexShrink: 0 }} />
+            <div>
+              <div className="font-black" style={{ fontSize: 15, color: "var(--color-positive)" }}>
+                에스크로 결제 납입완료
+              </div>
+              <div className="font-semibold mt-0.5" style={{ fontSize: 11, color: "rgba(255,255,255,0.65)" }}>
+                관리자 납부 확인 완료 · 현장 계약 단계로 진행됩니다.
               </div>
             </div>
-            <div
-              className="font-mono tabular-nums"
-              style={{ fontSize: 13, color: "var(--fg-on-brand)" }}
-            >
-              301-9999-****-23
-            </div>
-            <div
-              className="font-bold tabular-nums mt-1"
-              style={{ fontSize: 18, color: "var(--fg-on-brand)" }}
-            >
-              {formatKRW(askingPrice)}
-            </div>
           </div>
+        )}
 
-          <ol className="space-y-0">
-            {escrowSteps.map((s, idx) => {
-              const isDone = s.status === "done"
-              const isNow = s.status === "now"
-              const color = isDone
-                ? "var(--color-positive)"
-                : isNow
-                ? "#F59E0B"
-                : "rgba(255,255,255,0.25)"
-              return (
-                <li key={s.label} className="flex gap-3 relative" style={{ paddingBottom: 14 }}>
-                  {/* dot + line */}
-                  <div className="flex flex-col items-center flex-shrink-0" style={{ width: 14 }}>
-                    <div
-                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                      style={{
-                        backgroundColor: color,
-                        boxShadow: isNow ? "0 0 0 4px rgba(245, 158, 11, 0.22)" : "none",
-                      }}
-                    />
-                    {idx < escrowSteps.length - 1 && (
-                      <div
-                        className="flex-1 mt-1"
-                        style={{
-                          width: 2,
-                          backgroundColor: isDone
-                            ? "var(--color-positive)"
-                            : "rgba(255,255,255,0.08)",
-                        }}
-                      />
-                    )}
-                  </div>
-                  <div className="min-w-0 pb-1">
-                    <div
-                      className="font-black"
-                      style={{ fontSize: 12, color: isNow ? "#FBBF24" : isDone ? "var(--color-positive)" : "var(--fg-on-brand)" }}
-                    >
-                      {s.label}
-                      {isNow && (
-                        <span
-                          className="ml-2 px-1.5 py-0.5 rounded-full font-bold"
-                          style={{
-                            fontSize: 9,
-                            backgroundColor: "rgba(245, 158, 11, 0.16)",
-                            color: "#FBBF24",
-                          }}
-                        >
-                          진행 중
-                        </span>
-                      )}
-                    </div>
-                    <div
-                      className="font-semibold mt-0.5 inline-flex items-center gap-1"
-                      style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}
-                    >
-                      {s.status === "pending" && <Clock size={10} />}
-                      {s.status === "done" && <CheckCircle2 size={10} style={{ color: "var(--color-positive)" }} />}
-                      {s.hint}
-                    </div>
-                  </div>
-                </li>
-              )
-            })}
-          </ol>
-        </div>
-      </div>
-    </PanelShell>
-  )
-}
-
-/* ─────────────────────────────────────────────────────────────
-   L5 정산 패널 — 영수증 요약 · PDF 다운로드
-   ───────────────────────────────────────────────────────────── */
-function SettlementReceiptPanel({
-  askingPrice,
-  assetTitle,
-  onDownloadReceipt,
-}: {
-  askingPrice: number
-  assetTitle: string
-  onDownloadReceipt?: () => void
-}) {
-  const buyerFee = Math.round(askingPrice * 0.018)
-  const sellerFee = Math.round(askingPrice * 0.005)
-  const totalSettled = askingPrice + buyerFee
-
-  return (
-    <PanelShell
-      title="정산 완료"
-      subtitle={`${assetTitle} — 거래가 종결되었습니다`}
-      icon={<CheckCircle2 size={16} />}
-      accent="green"
-    >
-      <div id="settlement" className="space-y-4 scroll-mt-24">
+        {/* 결제 금액 상세 */}
         <div
           className="rounded-xl p-4"
           style={{
-            backgroundColor: "rgba(16, 185, 129, 0.08)",
-            border: "1px solid rgba(16, 185, 129, 0.28)",
+            backgroundColor: "rgba(245, 158, 11, 0.08)",
+            border: "1px solid rgba(245, 158, 11, 0.28)",
           }}
         >
-          <div
-            className="font-semibold mb-1"
-            style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}
-          >
-            최종 결제 금액
+          <div className="font-semibold mb-1" style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>
+            납부 총액
           </div>
-          <div
-            className="font-black tabular-nums"
-            style={{ fontSize: 26, color: "var(--color-positive)" }}
-          >
-            {formatKRW(totalSettled)}
+          <div className="font-black tabular-nums" style={{ fontSize: 28, color: "#FBBF24" }}>
+            {formatKRW(total)}
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <ReceiptRow label="거래가" value={formatKRW(askingPrice)} />
+          <ReceiptRow label="매입가" value={formatKRW(askingPrice)} />
+          <ReceiptRow label="보증금 (매입가 × 10%)" value={formatKRW(deposit)} />
           <ReceiptRow label="매수 수수료 (1.8%)" value={formatKRW(buyerFee)} />
-          <ReceiptRow label="매도 수수료 (0.5%)" value={formatKRW(sellerFee)} dim />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              onDownloadReceipt?.()
-              toast.success("영수증 PDF 다운로드 시작", { duration: 1800 })
-            }}
-            className="group rounded-xl p-4 text-left transition-all hover:scale-[1.015] active:scale-[0.99]"
-            style={{
-              backgroundColor: "rgba(16, 185, 129, 0.14)",
-              border: "1px solid rgba(16, 185, 129, 0.32)",
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-black inline-flex items-center gap-1.5" style={{ fontSize: 13 }}>
-                  <Download size={14} style={{ color: "var(--color-positive)" }} />
-                  영수증 PDF
-                </div>
-                <div
-                  className="mt-1 font-semibold"
-                  style={{ fontSize: 11, color: "rgba(255,255,255,0.65)" }}
-                >
-                  세금계산서 · 정산 내역 포함
-                </div>
-              </div>
-              <ArrowRight size={14} className="opacity-60 group-hover:opacity-100" />
-            </div>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              toast.info("거래 완료 보고서를 준비하고 있습니다.", { duration: 1800 })
-            }}
-            className="group rounded-xl p-4 text-left transition-all hover:scale-[1.015] active:scale-[0.99]"
-            style={{
-              backgroundColor: "rgba(46, 117, 182, 0.12)",
-              border: "1px solid rgba(46, 117, 182, 0.32)",
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-black inline-flex items-center gap-1.5" style={{ fontSize: 13 }}>
-                  <FileText size={14} style={{ color: "var(--color-brand-bright)" }} />
-                  거래 완료 보고서
-                </div>
-                <div
-                  className="mt-1 font-semibold"
-                  style={{ fontSize: 11, color: "rgba(255,255,255,0.65)" }}
-                >
-                  포트폴리오 반영 · 리스크 이력
-                </div>
-              </div>
-              <ArrowRight size={14} className="opacity-60 group-hover:opacity-100" />
-            </div>
-          </button>
+        {/* 에스크로 계좌 */}
+        <div
+          className="rounded-xl p-3.5"
+          style={{
+            backgroundColor: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.10)",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Wallet size={13} style={{ color: "#F59E0B" }} />
+            <div className="font-black" style={{ fontSize: 12, color: "#FBBF24" }}>에스크로 계좌 (KB국민은행)</div>
+          </div>
+          <div className="font-mono tabular-nums" style={{ fontSize: 14, color: "var(--fg-on-brand)" }}>
+            301-9999-****-23
+          </div>
+          <div className="font-semibold mt-1" style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}>
+            예금주: KB에스크로서비스(주) · 가상계좌 자동 발급
+          </div>
         </div>
 
         <div
@@ -893,8 +707,147 @@ function SettlementReceiptPanel({
             color: "rgba(255,255,255,0.6)",
           }}
         >
+          <ShieldCheck size={12} style={{ color: "#F59E0B" }} />
+          보증금은 현장 계약 체결 후 잔금(90%) 납부 시 충당됩니다. 계약 불발 시 귀책 여부에 따라 몰취될 수 있습니다.
+        </div>
+      </div>
+    </PanelShell>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────
+   L5 현장 계약 패널 — 최종 계약 안내
+   관리자 확인 시 "계약 완료" 뱃지 표시
+   ───────────────────────────────────────────────────────────── */
+function ContractFinalPanel({
+  askingPrice,
+  assetTitle,
+  contractConfirmed,
+  onDownloadReceipt,
+}: {
+  askingPrice: number
+  assetTitle: string
+  contractConfirmed?: boolean
+  onDownloadReceipt?: () => void
+}) {
+  const buyerFee = Math.round(askingPrice * 0.018)
+
+  return (
+    <PanelShell
+      title="현장 계약"
+      subtitle={`${assetTitle} — 현장에서 최종 계약서에 서명합니다`}
+      icon={<PenLine size={16} />}
+      accent="green"
+    >
+      <div id="contract-final" className="space-y-4 scroll-mt-24">
+        {/* 계약완료 뱃지 (관리자 확인 시) */}
+        {contractConfirmed ? (
+          <div
+            className="rounded-xl p-4 flex items-center gap-3"
+            style={{
+              backgroundColor: "rgba(16, 185, 129, 0.12)",
+              border: "1px solid rgba(16, 185, 129, 0.45)",
+            }}
+          >
+            <CheckCircle2 size={22} style={{ color: "var(--color-positive)", flexShrink: 0 }} />
+            <div>
+              <div className="font-black" style={{ fontSize: 15, color: "var(--color-positive)" }}>
+                계약 완료
+              </div>
+              <div className="font-semibold mt-0.5" style={{ fontSize: 11, color: "rgba(255,255,255,0.65)" }}>
+                관리자 계약 완료 확인 · 채권양도 통지 및 등기 이전 절차가 진행됩니다.
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div
+            className="rounded-xl p-4 flex items-center gap-3"
+            style={{
+              backgroundColor: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.12)",
+            }}
+          >
+            <Clock size={20} style={{ color: "#FBBF24", flexShrink: 0 }} />
+            <div>
+              <div className="font-black" style={{ fontSize: 14 }}>
+                현장 계약 진행 대기 중
+              </div>
+              <div className="font-semibold mt-0.5" style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}>
+                매도자·매수자 대면 서명 후 관리자가 확인하면 계약 완료가 표시됩니다.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 거래 요약 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <ReceiptRow label="매입가 (최종)" value={formatKRW(askingPrice)} />
+          <ReceiptRow label="매수 수수료 (1.8%)" value={formatKRW(buyerFee)} />
+        </div>
+
+        {contractConfirmed && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                onDownloadReceipt?.()
+                toast.success("계약서 PDF 다운로드 시작", { duration: 1800 })
+              }}
+              className="group rounded-xl p-4 text-left transition-all hover:scale-[1.015] active:scale-[0.99]"
+              style={{
+                backgroundColor: "rgba(16, 185, 129, 0.14)",
+                border: "1px solid rgba(16, 185, 129, 0.32)",
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-black inline-flex items-center gap-1.5" style={{ fontSize: 13 }}>
+                    <Download size={14} style={{ color: "var(--color-positive)" }} />
+                    계약서 PDF
+                  </div>
+                  <div className="mt-1 font-semibold" style={{ fontSize: 11, color: "rgba(255,255,255,0.65)" }}>
+                    서명본 · 세금계산서 포함
+                  </div>
+                </div>
+                <ArrowRight size={14} className="opacity-60 group-hover:opacity-100" />
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => toast.info("거래 완료 보고서를 준비하고 있습니다.", { duration: 1800 })}
+              className="group rounded-xl p-4 text-left transition-all hover:scale-[1.015] active:scale-[0.99]"
+              style={{
+                backgroundColor: "rgba(46, 117, 182, 0.12)",
+                border: "1px solid rgba(46, 117, 182, 0.32)",
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-black inline-flex items-center gap-1.5" style={{ fontSize: 13 }}>
+                    <FileText size={14} style={{ color: "var(--color-brand-bright)" }} />
+                    거래 완료 보고서
+                  </div>
+                  <div className="mt-1 font-semibold" style={{ fontSize: 11, color: "rgba(255,255,255,0.65)" }}>
+                    포트폴리오 반영 · 리스크 이력
+                  </div>
+                </div>
+                <ArrowRight size={14} className="opacity-60 group-hover:opacity-100" />
+              </div>
+            </button>
+          </div>
+        )}
+
+        <div
+          className="rounded-xl p-3 flex items-center gap-2"
+          style={{
+            backgroundColor: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            fontSize: 11,
+            color: "rgba(255,255,255,0.6)",
+          }}
+        >
           <ShieldCheck size={12} style={{ color: "var(--color-positive)" }} />
-          에스크로 정산 · 채권양도 통지 · 등기 이전 완료. 모든 보증 기록은 7년간 보관됩니다.
+          현장 계약 완료 후 채권양도 통지·등기 이전이 진행됩니다. 모든 기록은 7년간 보관됩니다.
         </div>
       </div>
     </PanelShell>
@@ -936,9 +889,10 @@ export function DealCompletionStages({
   tier,
   askingPrice,
   assetTitle,
+  escrowConfirmed,
+  contractConfirmed,
   onOpenDetails,
   onSubmitOffer,
-  onSignConfirm,
   onDownloadReceipt,
 }: DealCompletionStagesProps) {
   if (tier === "L3") {
@@ -952,14 +906,18 @@ export function DealCompletionStages({
   }
   if (tier === "L4") {
     return (
-      <ContractSignPanel askingPrice={askingPrice} onSignConfirm={onSignConfirm} />
+      <EscrowPaymentPanel
+        askingPrice={askingPrice}
+        escrowConfirmed={escrowConfirmed}
+      />
     )
   }
   if (tier === "L5") {
     return (
-      <SettlementReceiptPanel
+      <ContractFinalPanel
         askingPrice={askingPrice}
         assetTitle={assetTitle}
+        contractConfirmed={contractConfirmed}
         onDownloadReceipt={onDownloadReceipt}
       />
     )
