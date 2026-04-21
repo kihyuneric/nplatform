@@ -18,7 +18,10 @@ import { useState } from "react"
 import {
   FileCheck, FolderOpen, PenLine, Wallet, CheckCircle2, Download,
   TrendingUp, FileText, ShieldCheck, Clock, ArrowRight,
+  Scale, DollarSign, Building2, Gavel, Users, Coins,
+  ChevronRight, Sparkles, Calculator,
 } from "lucide-react"
+import Link from "next/link"
 import { toast } from "sonner"
 import { OfferForm, OfferCard, type OfferData } from "@/components/deal-room/offer-card"
 import SignaturePad from "@/components/deal-room/signature-pad"
@@ -269,37 +272,115 @@ function LoiOfferPanel({
 }
 
 /* ─────────────────────────────────────────────────────────────
-   실사 체크리스트 (DR-10) — LOI 체결 후 L3 에서 표시
+   실사 체크리스트 (DR-12) — LOI 체결 후 L3 에서 표시
+   6 카테고리 · 15 항목 · AI 컨설턴트 · 경매 수익률 분석기 바로가기
    ───────────────────────────────────────────────────────────── */
+
+interface DDItem {
+  key: string
+  label: string
+  done: boolean
+  /** 상세 페이지 경로 또는 앵커 */
+  detail?: string
+}
+
+interface DDCategory {
+  key: string
+  label: string
+  icon: typeof Scale
+  items: DDItem[]
+}
+
+const DD_CATEGORIES_INITIAL: DDCategory[] = [
+  {
+    key: "rights",
+    label: "권리관계",
+    icon: Scale,
+    items: [
+      { key: "reg",      label: "등기부등본 확인",    done: false, detail: "#deed-full" },
+      { key: "bldg",     label: "건축물대장 검토",    done: false, detail: "#rights" },
+      { key: "mortgage", label: "근저당권 분석",      done: false, detail: "#rights" },
+    ],
+  },
+  {
+    key: "valuation",
+    label: "가치평가",
+    icon: DollarSign,
+    items: [
+      { key: "appraise",    label: "감정평가서 검토",       done: false, detail: "#appraisal" },
+      { key: "distrib",     label: "배당 시뮬레이션",        done: false, detail: "/analysis/simulator" },
+      { key: "irr",         label: "수익률 분석(IRR/NPV)",   done: false, detail: "/analysis/simulator" },
+    ],
+  },
+  {
+    key: "physical",
+    label: "물리적 상태",
+    icon: Building2,
+    items: [
+      { key: "onsite", label: "현장 실사 완료",      done: false, detail: "#site-photos" },
+      { key: "env",    label: "환경 리스크 평가",    done: false, detail: "#site-photos" },
+    ],
+  },
+  {
+    key: "legal",
+    label: "법적 리스크",
+    icon: Gavel,
+    items: [
+      { key: "auction",  label: "경매 기록 분석",         done: false, detail: "/analysis/simulator" },
+      { key: "corp",     label: "법인 대표 신원 확인",    done: false, detail: "#debt-info" },
+      { key: "urban",    label: "도시계획 확인",          done: false, detail: "#rights" },
+    ],
+  },
+  {
+    key: "profit",
+    label: "수익성",
+    icon: Users,
+    items: [
+      { key: "tenants", label: "임차인 현황 확인", done: false, detail: "#tenants" },
+    ],
+  },
+  {
+    key: "financial",
+    label: "재무 리스크",
+    icon: Coins,
+    items: [
+      { key: "tax",      label: "세금 체납 조회",      done: false, detail: "#debt-info" },
+      { key: "mgmt-fee", label: "관리비 체납 조회",    done: false, detail: "#debt-info" },
+      { key: "insure",   label: "보험 현황 확인",       done: false, detail: "#debt-info" },
+    ],
+  },
+]
+
 function DueDiligenceChecklist() {
-  const [items, setItems] = useState([
-    { key: "reg",      label: "등기부등본 원본 확인", done: true },
-    { key: "appraise", label: "감정평가서 재검토", done: true },
-    { key: "tax",      label: "재산세·종합부동산세 납부 이력", done: false },
-    { key: "rent",     label: "임대차 계약·보증금 현황 점검", done: false },
-    { key: "physical", label: "현장 실사 (외관·관리 상태)", done: false },
-    { key: "legal",    label: "법무법인 권리분석 의견서", done: false },
-  ])
+  const [categories, setCategories] = useState<DDCategory[]>(DD_CATEGORIES_INITIAL)
 
-  const doneCnt = items.filter((i) => i.done).length
-  const pct = Math.round((doneCnt / items.length) * 100)
+  const totalItems = categories.reduce((s, c) => s + c.items.length, 0)
+  const doneTotal  = categories.reduce((s, c) => s + c.items.filter((i) => i.done).length, 0)
+  const pct = totalItems > 0 ? Math.round((doneTotal / totalItems) * 100) : 0
 
-  function toggle(k: string) {
-    setItems((arr) => arr.map((i) => (i.key === k ? { ...i, done: !i.done } : i)))
+  function toggle(catKey: string, itemKey: string) {
+    setCategories((arr) =>
+      arr.map((c) =>
+        c.key !== catKey
+          ? c
+          : { ...c, items: c.items.map((i) => (i.key === itemKey ? { ...i, done: !i.done } : i)) }
+      )
+    )
   }
 
   return (
     <div
       id="dd-checklist"
-      className="rounded-xl p-3.5 scroll-mt-24"
+      className="rounded-xl p-4 scroll-mt-24"
       style={{
         backgroundColor: "rgba(255,255,255,0.03)",
         border: "1px dashed rgba(255,255,255,0.14)",
       }}
     >
-      <div className="flex items-center justify-between mb-2.5">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
         <div className="inline-flex items-center gap-2">
-          <span className="font-black" style={{ fontSize: 12 }}>실사 체크리스트</span>
+          <span className="font-black" style={{ fontSize: 13 }}>실사 체크리스트</span>
           <span
             className="font-semibold px-1.5 py-0.5 rounded"
             style={{
@@ -311,16 +392,23 @@ function DueDiligenceChecklist() {
             L3
           </span>
         </div>
-        <span
-          className="font-black tabular-nums"
-          style={{ fontSize: 11, color: "var(--color-brand-bright)" }}
-        >
-          {doneCnt}/{items.length} · {pct}%
-        </span>
+        <div className="text-right">
+          <div className="font-black tabular-nums" style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}>
+            실사 완료율
+          </div>
+          <div
+            className="font-black tabular-nums"
+            style={{ fontSize: 13, color: "var(--color-brand-bright)" }}
+          >
+            {doneTotal}/{totalItems} 완료 · {pct}%
+          </div>
+        </div>
       </div>
+
+      {/* Progress bar */}
       <div
-        className="w-full rounded-full overflow-hidden mb-2.5"
-        style={{ height: 4, backgroundColor: "rgba(255,255,255,0.08)" }}
+        className="w-full rounded-full overflow-hidden mb-3"
+        style={{ height: 5, backgroundColor: "rgba(255,255,255,0.08)" }}
       >
         <div
           className="h-full rounded-full transition-all"
@@ -330,48 +418,175 @@ function DueDiligenceChecklist() {
           }}
         />
       </div>
-      <ul className="space-y-1.5">
-        {items.map((it) => (
-          <li key={it.key}>
-            <button
-              type="button"
-              onClick={() => toggle(it.key)}
-              className="w-full inline-flex items-center gap-2.5 text-left rounded-lg transition-colors hover:bg-white/5"
-              style={{ padding: "6px 8px" }}
-            >
-              <span
-                className="inline-flex items-center justify-center rounded"
-                style={{
-                  width: 16,
-                  height: 16,
-                  backgroundColor: it.done ? "var(--color-positive)" : "rgba(255,255,255,0.08)",
-                  border: it.done ? "1px solid var(--color-positive)" : "1px solid rgba(255,255,255,0.18)",
-                  color: "#041915",
-                  fontSize: 10,
-                }}
-                aria-hidden
-              >
-                {it.done ? "✓" : ""}
-              </span>
-              <span
-                className="font-semibold"
-                style={{
-                  fontSize: 11,
-                  color: it.done ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.85)",
-                  textDecoration: it.done ? "line-through" : "none",
-                }}
-              >
-                {it.label}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-      <p
-        className="mt-2 leading-relaxed"
-        style={{ fontSize: 10, color: "rgba(255,255,255,0.48)" }}
+
+      {/* Quick AI links */}
+      <div className="grid grid-cols-2 gap-2 mb-3.5">
+        <Link
+          href="/analysis/copilot"
+          className="group inline-flex items-center justify-between rounded-lg px-2.5 py-2 transition-colors"
+          style={{
+            backgroundColor: "rgba(46,117,182,0.12)",
+            border: "1px solid rgba(46,117,182,0.28)",
+          }}
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" style={{ color: "var(--color-brand-bright)" }} />
+            <span className="font-black" style={{ fontSize: 11, color: "var(--color-brand-bright)" }}>
+              AI 컨설턴트에게 묻기
+            </span>
+          </span>
+          <ArrowRight
+            className="w-3 h-3 transition-transform group-hover:translate-x-0.5"
+            style={{ color: "var(--color-brand-bright)" }}
+          />
+        </Link>
+        <Link
+          href="/analysis/simulator"
+          className="group inline-flex items-center justify-between rounded-lg px-2.5 py-2 transition-colors"
+          style={{
+            backgroundColor: "rgba(16,185,129,0.12)",
+            border: "1px solid rgba(16,185,129,0.28)",
+          }}
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <Calculator className="w-3.5 h-3.5" style={{ color: "var(--color-positive)" }} />
+            <span className="font-black" style={{ fontSize: 11, color: "var(--color-positive)" }}>
+              경매 수익률 분석기
+            </span>
+          </span>
+          <ArrowRight
+            className="w-3 h-3 transition-transform group-hover:translate-x-0.5"
+            style={{ color: "var(--color-positive)" }}
+          />
+        </Link>
+      </div>
+
+      {/* 상단 한 줄 AI 단축 메뉴 */}
+      <div
+        className="flex items-center gap-2 mb-3.5 pb-3 border-b"
+        style={{ borderColor: "rgba(255,255,255,0.08)" }}
       >
-        체크리스트는 L3 (LOI 제출 후) 매도자 승인과 함께 자동 생성됩니다. 금융기관 대면 미팅에서 검토한 내용을 업데이트하세요.
+        <Link
+          href="/analysis/copilot"
+          className="inline-flex items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-white/5"
+          style={{ fontSize: 11, color: "rgba(255,255,255,0.72)" }}
+        >
+          <Sparkles className="w-3 h-3" />
+          AI 컨설턴트
+        </Link>
+        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.24)" }}>·</span>
+        <Link
+          href="/analysis/simulator"
+          className="inline-flex items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-white/5"
+          style={{ fontSize: 11, color: "rgba(255,255,255,0.72)" }}
+        >
+          <Calculator className="w-3 h-3" />
+          경매 수익률 분석기
+        </Link>
+      </div>
+
+      {/* Categories */}
+      <div className="space-y-3.5">
+        {categories.map((cat) => {
+          const catDone = cat.items.filter((i) => i.done).length
+          const CatIcon = cat.icon
+          return (
+            <div key={cat.key}>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="inline-flex items-center gap-1.5">
+                  <CatIcon className="w-3.5 h-3.5" style={{ color: "var(--color-brand-bright)" }} />
+                  <span className="font-black" style={{ fontSize: 12, color: "rgba(255,255,255,0.88)" }}>
+                    {cat.label}
+                  </span>
+                </span>
+                <span
+                  className="font-black tabular-nums"
+                  style={{ fontSize: 10, color: "rgba(255,255,255,0.48)" }}
+                >
+                  {catDone}/{cat.items.length}
+                </span>
+              </div>
+              <ul className="space-y-1">
+                {cat.items.map((it) => (
+                  <li key={it.key}>
+                    <div
+                      className="w-full inline-flex items-center gap-2 rounded-lg hover:bg-white/5 transition-colors"
+                      style={{ padding: "5px 8px" }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggle(cat.key, it.key)}
+                        className="inline-flex items-center gap-2 flex-1 text-left"
+                        aria-label={`${it.label} ${it.done ? "완료 취소" : "완료 표시"}`}
+                      >
+                        <span
+                          className="inline-flex items-center justify-center rounded shrink-0"
+                          style={{
+                            width: 16,
+                            height: 16,
+                            backgroundColor: it.done ? "var(--color-positive)" : "rgba(255,255,255,0.08)",
+                            border: it.done ? "1px solid var(--color-positive)" : "1px solid rgba(255,255,255,0.18)",
+                            color: "#041915",
+                            fontSize: 10,
+                          }}
+                          aria-hidden
+                        >
+                          {it.done ? "✓" : ""}
+                        </span>
+                        <span
+                          className="font-semibold"
+                          style={{
+                            fontSize: 11,
+                            color: it.done ? "rgba(255,255,255,0.48)" : "rgba(255,255,255,0.85)",
+                            textDecoration: it.done ? "line-through" : "none",
+                          }}
+                        >
+                          {it.label}
+                        </span>
+                      </button>
+                      {it.detail && (
+                        it.detail.startsWith("#") ? (
+                          <a
+                            href={it.detail}
+                            className="inline-flex items-center gap-0.5 font-bold rounded px-1.5 py-0.5 shrink-0 transition-colors hover:bg-white/5"
+                            style={{
+                              fontSize: 10,
+                              color: "var(--color-brand-bright)",
+                            }}
+                          >
+                            상세 <ChevronRight className="w-3 h-3" />
+                          </a>
+                        ) : (
+                          <Link
+                            href={it.detail}
+                            className="inline-flex items-center gap-0.5 font-bold rounded px-1.5 py-0.5 shrink-0 transition-colors hover:bg-white/5"
+                            style={{
+                              fontSize: 10,
+                              color: "var(--color-brand-bright)",
+                            }}
+                          >
+                            상세 <ChevronRight className="w-3 h-3" />
+                          </Link>
+                        )
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        })}
+      </div>
+
+      <p
+        className="mt-3 pt-3 border-t leading-relaxed"
+        style={{
+          fontSize: 10,
+          color: "rgba(255,255,255,0.48)",
+          borderColor: "rgba(255,255,255,0.08)",
+        }}
+      >
+        체크리스트는 L3 (LOI 제출 후) 매도자 승인과 함께 자동 생성됩니다. 각 항목의 &quot;상세&quot;를 눌러 해당 섹션·도구로 이동하거나, AI 컨설턴트에게 보완 질문을 요청하세요.
       </p>
     </div>
   )
