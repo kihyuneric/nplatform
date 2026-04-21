@@ -49,6 +49,17 @@ const fmtKRW = (v: number) => {
   return `${(v / 1e4).toFixed(0)}만`
 }
 const pct = (v: number) => `${v.toFixed(1)}%`
+/**
+ * 채권자/기관명 앞 5자 마스킹 — 개인정보/거래기밀 보호 기본 규칙.
+ * 5자 미만이면 전체를 "ooooo" 로 치환.
+ */
+const maskFirst5 = (s: string | undefined | null): string => {
+  if (!s) return ""
+  const str = String(s).trim()
+  if (str.length === 0) return ""
+  if (str.length <= 5) return "ooooo"
+  return "ooooo" + str.slice(5)
+}
 
 /**
  * 리스크 5팩터(담보가치/권리관계/시장/유동성/법적)별 점수 산출 계산식을 생성한다.
@@ -257,7 +268,7 @@ export default function UnifiedReportPage() {
           <div>
             <KpiCard
               icon={Gavel}
-              label="투자 의견"
+              label="AI 투자 의견"
               value={summary.verdict}
               sub={summary.verdict === "BUY" ? "권고" : summary.verdict === "HOLD" ? "관망" : "회피"}
               tint={summary.verdict === "BUY" ? "#10B981" : summary.verdict === "HOLD" ? "#F59E0B" : "#DC2626"}
@@ -453,11 +464,11 @@ export default function UnifiedReportPage() {
           <div className="mt-3 rounded-lg bg-amber-500/10 border border-amber-500/30 p-3">
             <div className="flex items-center gap-1.5 mb-1.5">
               <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-[0.75rem] font-bold text-amber-700">특수조건 반영 내역</span>
+              <span className="text-[0.75rem] font-bold text-amber-700 dark:text-amber-300">특수조건 반영 내역</span>
             </div>
             <ul className="space-y-1">
               {risk.specialConditionAdjustments.map((a, i) => (
-                <li key={i} className="text-[0.6875rem] text-amber-700">
+                <li key={i} className="text-[0.6875rem] text-amber-700 dark:text-amber-200">
                   <span className="font-semibold">{a.condition}</span> — {a.impact}
                 </li>
               ))}
@@ -741,7 +752,7 @@ function VerdictCriteriaToggle({
         >
           <div>
             <div className="font-bold mb-1.5" style={{ color: verdictColor }}>
-              투자 의견 4-팩터 가중 스코어링
+              AI 투자 의견 4-팩터 가중 스코어링
             </div>
             <ul className="space-y-1.5">
               <Row
@@ -943,9 +954,9 @@ function StatRow({ k, v }: { k: string; v: string }) {
 }
 
 function TrendArrow({ t }: { t: "UP" | "DOWN" | "FLAT" }) {
-  if (t === "UP") return <ChevronRight className="w-3.5 h-3.5 -rotate-45 text-emerald-600" />
-  if (t === "DOWN") return <ChevronRight className="w-3.5 h-3.5 rotate-45 text-red-600" />
-  return <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+  if (t === "UP") return <ChevronRight className="w-3.5 h-3.5 -rotate-45 text-emerald-600 dark:text-emerald-400" />
+  if (t === "DOWN") return <ChevronRight className="w-3.5 h-3.5 rotate-45 text-red-600 dark:text-red-400" />
+  return <ChevronRight className="w-3.5 h-3.5 text-[var(--color-text-tertiary)]" />
 }
 
 // ─── 통계 패널 ────────────────────────────────────────────────
@@ -1199,11 +1210,11 @@ function RegistryPanel({
           <div className="mt-3 rounded-lg bg-amber-500/10 border border-amber-500/30 p-3">
             <div className="flex items-center gap-1.5 mb-1.5">
               <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-[0.75rem] font-bold text-amber-700">권리 리스크 요점</span>
+              <span className="text-[0.75rem] font-bold text-amber-700 dark:text-amber-300">권리 리스크 요점</span>
             </div>
             <ul className="space-y-0.5">
               {rights.topRisks.map((r, i) => (
-                <li key={i} className="text-[0.6875rem] text-amber-700 flex items-start gap-1.5">
+                <li key={i} className="text-[0.6875rem] text-amber-700 dark:text-amber-200 flex items-start gap-1.5">
                   <span className="mt-1 w-1 h-1 rounded-full bg-amber-600 shrink-0" />
                   {r}
                 </li>
@@ -1245,7 +1256,7 @@ function RegistryPanel({
                 <tr key={r.rank} className="border-b border-[var(--color-border-subtle)]">
                   <td className="py-1.5 px-2 tabular-nums text-[var(--color-text-primary)]">{r.rank}</td>
                   <td className="py-1.5 px-2 text-[var(--color-text-primary)]">{r.right}</td>
-                  <td className="py-1.5 px-2 text-[var(--color-text-secondary)] truncate max-w-[160px]">{r.creditor}</td>
+                  <td className="py-1.5 px-2 text-[var(--color-text-secondary)] truncate max-w-[160px]">{maskFirst5(r.creditor)}</td>
                   <td className="py-1.5 px-2 text-right tabular-nums text-[var(--color-text-primary)]">{krw(r.claimAmount)}</td>
                   <td className="py-1.5 px-2 text-right tabular-nums font-semibold bg-sky-50/60 dark:bg-sky-500/5">
                     {krw(r.distributedAmount)}
@@ -1287,7 +1298,7 @@ function RegistryPanel({
         </div>
         <div className="mb-3 rounded-lg bg-sky-500/8 border border-sky-500/20 p-3 flex items-baseline justify-between">
           <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">청구금액</span>
-          <span className="text-lg font-black tabular-nums text-sky-700">
+          <span className="text-lg font-black tabular-nums text-sky-700 dark:text-sky-300">
             {executionCost.claimAmount.toLocaleString("ko-KR")} 원
           </span>
         </div>
@@ -1311,7 +1322,7 @@ function RegistryPanel({
             ))}
             <tr className="bg-sky-50/60 dark:bg-sky-500/5 font-bold">
               <td colSpan={2} className="py-1.5 pr-2 text-[var(--color-text-primary)]">경매신청비용 소계</td>
-              <td className="py-1.5 pr-2 text-right tabular-nums text-sky-700">
+              <td className="py-1.5 pr-2 text-right tabular-nums text-sky-700 dark:text-sky-300">
                 {executionCost.filingSubtotal.toLocaleString("ko-KR")} 원
               </td>
               <td></td>
@@ -1326,14 +1337,14 @@ function RegistryPanel({
             ))}
             <tr className="bg-sky-50/60 dark:bg-sky-500/5 font-bold">
               <td colSpan={2} className="py-1.5 pr-2 text-[var(--color-text-primary)]">예납금 소계</td>
-              <td className="py-1.5 pr-2 text-right tabular-nums text-sky-700">
+              <td className="py-1.5 pr-2 text-right tabular-nums text-sky-700 dark:text-sky-300">
                 {executionCost.depositSubtotal.toLocaleString("ko-KR")} 원
               </td>
               <td></td>
             </tr>
-            <tr className="bg-amber-500/10 font-black text-amber-800">
+            <tr className="bg-amber-500/10 font-black text-amber-800 dark:text-amber-200">
               <td colSpan={2} className="py-2 pr-2">경매집행비용 총계</td>
-              <td className="py-2 pr-2 text-right tabular-nums text-amber-800">
+              <td className="py-2 pr-2 text-right tabular-nums text-amber-800 dark:text-amber-200">
                 {executionCost.total.toLocaleString("ko-KR")} 원
               </td>
               <td></td>
@@ -1351,7 +1362,7 @@ function PremiseCard({ label, value, highlight }: { label: string; value: number
       className={`rounded-lg p-3 border ${highlight ? "bg-sky-500/8 border-sky-500/25" : "bg-[var(--color-surface-base)] border-[var(--color-border-subtle)]"}`}
     >
       <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] mb-0.5">{label}</div>
-      <div className={`text-[1rem] font-black tabular-nums ${highlight ? "text-sky-700" : "text-[var(--color-text-primary)]"}`}>
+      <div className={`text-[1rem] font-black tabular-nums ${highlight ? "text-sky-700 dark:text-sky-300" : "text-[var(--color-text-primary)]"}`}>
         {value.toLocaleString("ko-KR")} 원
       </div>
     </div>
@@ -1388,9 +1399,15 @@ interface EditableInputs {
   pledgeLoanRatio: number       // 소수
   pledgeInterestRate: number    // 소수
   executionCost: number
+  // ── 사용자 직접 조정 가능한 날짜 (달력 입력) ──
+  purchaseDate: string          // ISO — 채권매입일
+  balancePaymentDate: string    // ISO — 채권잔금일
+  auctionStartDate: string      // ISO — 경매개시결정일
+  firstSaleDate: string         // ISO — 1차 매각기일
 }
 
 function extractInitialInputs(b: NplProfitabilityBlock): EditableInputs {
+  const firstSaleMilestone = b.schedule.milestones.find(m => m.key === 'firstSaleDate')
   return {
     loanPrincipal: b.claim.loanPrincipal,
     delinquencyRate: b.claim.delinquencyRate,
@@ -1402,15 +1419,18 @@ function extractInitialInputs(b: NplProfitabilityBlock): EditableInputs {
     pledgeLoanRatio: b.acquisition.pledgeLoanRatio,
     pledgeInterestRate: b.acquisition.pledgeInterestRate,
     executionCost: b.distribution.executionCost,
+    purchaseDate: b.acquisition.purchaseDate,
+    balancePaymentDate: b.acquisition.balancePaymentDate,
+    auctionStartDate: b.schedule.milestones[0]?.date ?? b.claim.calculatedAt,
+    firstSaleDate: firstSaleMilestone?.date ?? b.claim.calculatedAt,
   }
 }
 
 function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
   const [edit, setEdit] = useState<EditableInputs>(() => extractInitialInputs(block))
 
-  // 초기 샘플 asOf / courtName / auctionStart / evidence 등은 불변 유지
+  // 초기 샘플 asOf / courtName / evidence 등은 불변 유지
   const initial = block
-  const auctionStartDate = initial.schedule.milestones[0]?.date
   const courtName = initial.schedule.courtName
 
   // 편집된 입력으로 수익성 블록 재계산 (순수 함수)
@@ -1436,7 +1456,10 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
         priceHistory: initial.valuation.priceHistory,
         expectedBidRatio: edit.expectedBidRatio,
         expectedBidRatioPeriod: initial.valuation.expectedBidRatioPeriod,
-        auctionStartDate,
+        auctionStartDate: edit.auctionStartDate,
+        firstSaleDateOverride: edit.firstSaleDate,
+        purchaseDateOverride: edit.purchaseDate,
+        balancePaymentDateOverride: edit.balancePaymentDate,
         courtName,
         discountRate: edit.discountRate,
         pledgeLoanRatio: edit.pledgeLoanRatio,
@@ -1450,7 +1473,7 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
     } catch {
       return initial
     }
-  }, [edit, initial, auctionStartDate, courtName])
+  }, [edit, initial, courtName])
 
   const { property, claim, acquisition, valuation, schedule, distribution, investment, strategies, sensitivity, monteCarlo } = live
 
@@ -1460,8 +1483,6 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
   const bondCalcInterestFormula = `원금 × 금리 × (배당기일 − 기산일)÷365 + 기산시점분`
   const bondCalcPnIFormula = `채권계산서(이자) + 대출원금`
 
-  // 채권매입일 "(현재 기준 +7일)" 노트
-  const purchaseDateNote = `(현재 기준 +7일)`
 
   return (
     <>
@@ -1473,7 +1494,7 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
               <KvRow k="소재지" v={property.address} />
               <KvRow k="전용면적" v={`${property.exclusiveAreaM2.toFixed(2)} ㎡ (${property.exclusiveAreaPy.toFixed(2)} 평)`} />
               <KvRow k="공급면적" v={`${property.supplyAreaM2.toFixed(2)} ㎡ (${property.supplyAreaPy.toFixed(2)} 평)`} />
-              <KvRow k="채권자" v={property.creditor} />
+              <KvRow k="채권자" v={maskFirst5(property.creditor)} />
               <KvRow k="채무자" v={property.debtor} />
               <KvRow k="임차인" v={property.tenant} last />
             </tbody>
@@ -1566,8 +1587,17 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
         <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
           <table className="w-full text-[0.75rem]">
             <tbody>
-              <KvRow k="채권매입일" v={`${acquisition.purchaseDate}  ${purchaseDateNote}`} />
-              <KvRow k="채권잔금일 (+30일)" v={acquisition.balancePaymentDate} last />
+              <EditableDateRow
+                k="채권매입일"
+                v={edit.purchaseDate}
+                onChange={(v) => setEdit({ ...edit, purchaseDate: v })}
+              />
+              <EditableDateRow
+                k="채권잔금일"
+                v={edit.balancePaymentDate}
+                onChange={(v) => setEdit({ ...edit, balancePaymentDate: v })}
+                last
+              />
             </tbody>
           </table>
         </div>
@@ -1630,6 +1660,26 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
 
       {/* ── [5] 경매진행일정 ─────────────────── */}
       <Section title="NPL 수익성 분석 · 경매 진행 일정" icon={Calendar} caption={`총 소요 ${schedule.totalDurationDays}일 · ${schedule.courtName ?? "관할법원 미지정"}`}>
+        {/* 사용자 조정 가능한 기준 일자 — 경매개시결정일·1차매각기일 */}
+        <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden mb-3">
+          <table className="w-full text-[0.75rem]">
+            <tbody>
+              <EditableDateRow
+                k="경매개시결정일"
+                v={edit.auctionStartDate}
+                onChange={(v) => setEdit({ ...edit, auctionStartDate: v })}
+                hint="채권자 제공·사용자 조정 가능"
+              />
+              <EditableDateRow
+                k="1차 매각기일"
+                v={edit.firstSaleDate}
+                onChange={(v) => setEdit({ ...edit, firstSaleDate: v })}
+                hint="법원 평균 +347일 (배당요구종기 +270일) · 사용자 조정 가능"
+                last
+              />
+            </tbody>
+          </table>
+        </div>
         <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
           <ol className="relative border-l-2 border-[var(--color-brand-mid)]/30 ml-2 space-y-3">
             {schedule.milestones.map((m, i) => (
@@ -1779,7 +1829,7 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
                 {s.riskWarning && (
                   <div className="mt-2 pt-2 border-t border-[var(--color-border-subtle)] flex items-start gap-1.5">
                     <AlertTriangle className="w-3 h-3 mt-0.5 text-amber-500 shrink-0" />
-                    <p className="text-[0.625rem] text-amber-700 leading-relaxed">{s.riskWarning}</p>
+                    <p className="text-[0.625rem] text-amber-700 dark:text-amber-200 leading-relaxed">{s.riskWarning}</p>
                   </div>
                 )}
               </div>
@@ -1955,24 +2005,27 @@ function EditableInlineMoney({
 
 // ─── 편집 가능 날짜 Row ────────────────────────────────
 function EditableDateRow({
-  k, v, onChange,
+  k, v, onChange, last, hint,
 }: {
   k: string
   v: string        // ISO yyyy-mm-dd
   onChange: (v: string) => void
+  last?: boolean
+  hint?: string
 }) {
   return (
-    <tr className="border-b border-[var(--color-border-subtle)]">
+    <tr className={last ? "" : "border-b border-[var(--color-border-subtle)]"}>
       <td className="py-2 px-3 bg-[var(--color-surface-base)] text-[var(--color-text-tertiary)] font-semibold w-40">{k}</td>
       <td className="py-2 px-3 text-[var(--color-text-primary)]">
         <div className="flex items-center gap-2">
           <input
             type="date"
-            className="rounded-md bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-2 py-0.5 text-[0.75rem] tabular-nums focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-mid)]/40"
+            className="rounded-md bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-2 py-0.5 text-[0.75rem] tabular-nums text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-mid)]/40 [color-scheme:light] dark:[color-scheme:dark]"
             value={v}
             onChange={(e) => onChange(e.target.value)}
           />
           <Pencil className="w-3 h-3 text-[var(--color-text-tertiary)] opacity-60" />
+          {hint ? <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">{hint}</span> : null}
         </div>
       </td>
     </tr>

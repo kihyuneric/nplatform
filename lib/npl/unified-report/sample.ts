@@ -406,7 +406,7 @@ export function buildSampleReport(): UnifiedAnalysisReport {
       verdictScore,
       tldr:
         `${input.region} ${input.propertyCategory} · ` +
-        `투자 의견 ${verdictScore}점 (${verdict}) · ` +
+        `AI 투자 의견 ${verdictScore}점 (${verdict}) · ` +
         `NPL 매각가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 · ` +
         `ROI ${(recommendedRoi * 100).toFixed(2)}% · 예측회수율 ${recovery.predictedRecoveryRate}%`,
     },
@@ -534,7 +534,7 @@ export function buildSampleReport(): UnifiedAnalysisReport {
       `권고 시나리오 ROI ${(recommendedRoi * 100).toFixed(2)}% · 기본 시나리오 ROI ${(investmentRoi * 100).toFixed(2)}%, ` +
       `지역 6개월 낙찰가율 ${SAMPLE_STATISTICS.auctionRatioStats[0].rows.find(r => r.bucket === '6M')?.bidRatio.toFixed(1)}%에 특수조건 ${auction.specialConditionPenalty.toFixed(1)}%p 반영한 ${auction.adjustedBidRatio.toFixed(1)}%를 기준 입찰가율로 제시하며, ` +
       `동일 건물 전회 낙찰(${SAMPLE_STATISTICS.sameAddressAuction!.summary.avgBidRatio}%)과 인근 송파 오피스텔(${SAMPLE_STATISTICS.nearbyAuction!.summary.avgBidRatio}%) 편차 고려, 보수·기준·공격 3단계 입찰 전략을 병행 권고합니다. ` +
-      `투자 의견 종합 점수 ${verdictScore}점 → ${verdict} (가중치: 회수율 0.35·리스크 0.25·ROI 0.25·할인 0.15).`,
+      `AI 투자 의견 종합 점수 ${verdictScore}점 → ${verdict} (가중치: 회수율 0.35·리스크 0.25·ROI 0.25·할인 0.15).`,
   }
 
   return report

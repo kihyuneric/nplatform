@@ -464,6 +464,12 @@ export interface ProfitabilityInput {
   purchaseLeadDays?: number
   /** 채권잔금 리드타임 (일) — 매입일 + N일 */
   balancePaymentLeadDays?: number
+  /** 채권매입일 오버라이드 (YYYY-MM-DD) — 지정 시 purchaseLeadDays 무시 */
+  purchaseDateOverride?: string
+  /** 채권잔금일 오버라이드 (YYYY-MM-DD) — 지정 시 balancePaymentLeadDays 무시 */
+  balancePaymentDateOverride?: string
+  /** 1차 매각기일 오버라이드 (YYYY-MM-DD) — 지정 시 firstSaleOffsetDays 무시 */
+  firstSaleDateOverride?: string
   // ── 경매 일정 리드타임 (법원 평균치 · 오버라이드 가능) ──
   distributionDemandOffsetDays?: number  // 경매개시 → 배당요구종기 (기본 77)
   firstSaleOffsetDays?: number           // 배당요구종기 → 1차 매각기일 (기본 270)
@@ -574,7 +580,7 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   // ─── [5] 경매진행일정 ─────────────────────────────────────
   const auctionStart = input.auctionStartDate ?? today
   const distributionDemandEnd = addDays(auctionStart, distributionDemandOffsetDays)
-  const firstSaleDate = addDays(distributionDemandEnd, firstSaleOffsetDays)
+  const firstSaleDate = input.firstSaleDateOverride ?? addDays(distributionDemandEnd, firstSaleOffsetDays)
   const winBidDate = addDays(firstSaleDate, winBidOffsetDays)
   const saleConfirmDate = addDays(winBidDate, saleConfirmOffsetDays)
   const balanceDueDate = addDays(saleConfirmDate, balanceDueOffsetDays)
@@ -596,8 +602,8 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   }
 
   // ─── [3] 매입일정/매입가 ──────────────────────────────────
-  const purchaseDate = addDays(today, purchaseLeadDays)
-  const balancePaymentDate = addDays(purchaseDate, balancePaymentLeadDays)
+  const purchaseDate = input.purchaseDateOverride ?? addDays(today, purchaseLeadDays)
+  const balancePaymentDate = input.balancePaymentDateOverride ?? addDays(purchaseDate, balancePaymentLeadDays)
   const purchasePrice = Math.round(input.loanPrincipal * (1 - discountRate))
   const pledgeLoanAmount = Math.round(purchasePrice * pledgeLoanRatio)
   const pledgeLoanPeriodDays = Math.max(0, daysBetween(balancePaymentDate, distributionDate))
