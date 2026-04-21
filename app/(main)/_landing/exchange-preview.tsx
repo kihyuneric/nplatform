@@ -261,7 +261,7 @@ export function ExchangePreview() {
                       className="py-2 rounded-lg text-center font-bold text-[11px] transition-all flex items-center justify-center gap-1 group-hover:brightness-110"
                       style={{ background: "linear-gradient(135deg, #10B981, #059669)", color: "white", boxShadow: "0 3px 10px rgba(16,185,129,0.25)" }}
                     >
-                      상세 보기 <ArrowRight size={11} />
+                      딜룸 입장 · 상세 <ArrowRight size={11} />
                     </div>
                   </div>
                 </Link>

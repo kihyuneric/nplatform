@@ -466,14 +466,14 @@ export default function ExchangePage() {
                   fontSize: 11, fontWeight: 700, color: V.positive, marginBottom: 12,
                 }}
               >
-                <Sparkles size={12} /> {tr("규제 준수형 NPL 거래소")}
+                <Sparkles size={12} /> {tr("NPL 프라임 거래소 · 검증 딜 전용")}
               </div>
               <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-0.03em", color: V.textPrimary, marginBottom: 8 }}>
                 {tr("거래소")}
               </h1>
-              <p style={{ fontSize: 14, color: V.textMuted, maxWidth: 560, lineHeight: 1.6 }}>
-                {tr("담보 정보는 공개 · 개인정보는 자동 마스킹.")}{" "}
-                <span style={{ color: V.positive, fontWeight: 600 }}>{tr("4단계 티어 모델")}</span>{tr("로 규제 준수와 거래 편의를 동시에 확보합니다.")}
+              <p style={{ fontSize: 14, color: V.textMuted, maxWidth: 620, lineHeight: 1.6 }}>
+                {tr("기초 정보는 투명 공개 · 개인정보는 자동 마스킹.")}{" "}
+                <span style={{ color: V.positive, fontWeight: 700 }}>{tr("인증 → NDA → LOI 단계별 열람")}</span>{tr("으로 규제 준수와 거래 속도를 동시에 확보합니다.")}
               </p>
             </div>
 
@@ -1249,7 +1249,9 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
               color: gradeMeta.text, fontSize: 10, fontWeight: 800,
               border: `1px solid ${gradeMeta.border}`,
               whiteSpace: "nowrap",
+              cursor: "help",
             }}
+            title={`AI 종합 등급 · Claude NPL Engine v2\n· 담보가치/채권비율 35%\n· 지역시장 동향 25%\n· 채무자 신용 20%\n· 경매 낙찰가율 15%\n→ 회수율 예측 기반: S≥85% · A+≥75% · A≥65% · B≥55% · C<55%`}
           >
             {formatAIGrade(item.ai_grade)}
           </div>
@@ -1265,9 +1267,9 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
           }}
         >
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <Figure label="채권잔액" value={principal} tone="neutral" />
-            <Figure label="매각희망가" value={asking} tone="em" />
-            <Figure label="감정가" value={appraisal} tone="neutral" />
+            <Figure label="채권잔액" value={principal} tone="neutral" sub="원금 + 연체이자" />
+            <Figure label="매각희망가" value={asking} tone="em" sub="잔액 대비 할인" />
+            <Figure label="감정가" value={appraisal} tone="neutral" sub="감정평가 기준" />
             <Figure
               label="할인율"
               value={
@@ -1292,12 +1294,15 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
           </div>
         </div>
 
-        {/* Completeness */}
+        {/* Completeness — 단일 지표(자료 N/10) + 아래 시각 체크리스트로 중복 정보 제거 */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <CompletenessBadge score={item.data_completeness} size="sm" />
-          <div style={{ fontSize: 10, color: V.textMuted }}>
-            자료 {Object.values(item.provided).filter(Boolean).length}/6
-          </div>
+          <span
+            title="자료 완성도 = 필수 5 + 선택 5 항목 가점 평가"
+            style={{ fontSize: 10, color: V.textTertiary, cursor: "help" }}
+          >
+            산정 기준 ⓘ
+          </span>
         </div>
 
         <InlineProvidedChips fields={item.provided} />
@@ -1317,7 +1322,7 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
             letterSpacing: "-0.01em",
           }}
         >
-          상세 보기 <ArrowRight size={14} />
+          딜룸 입장 · 상세 <ArrowRight size={14} />
         </Link>
       </div>
     </motion.article>
@@ -1454,7 +1459,7 @@ function ListingRow({ item, index }: { item: CardListing; index: number }) {
             color: item.data_completeness >= 8 ? V.positive : item.data_completeness >= 5 ? V.warning : V.danger,
             border: `1px solid ${item.data_completeness >= 8 ? `color-mix(in srgb, ${V.positive} 27%, transparent)` : item.data_completeness >= 5 ? `color-mix(in srgb, ${V.warning} 27%, transparent)` : `color-mix(in srgb, ${V.danger} 27%, transparent)`}`,
           }}
-          title={`자료 ${providedCount}/6 제공`}
+          title={`자료 완성도 ${item.data_completeness}/10 · 필수 5 + 선택 5 항목 평가 (제공 ${providedCount}/6 서류 포함)`}
         >
           {item.data_completeness}/10
         </span>
@@ -1472,8 +1477,9 @@ function ListingRow({ item, index }: { item: CardListing; index: number }) {
             fontSize: 11, fontWeight: 800,
             border: `1px solid ${gradeMeta.border}`,
             whiteSpace: "nowrap",
+            cursor: "help",
           }}
-          title="AI 종합 등급"
+          title={`AI 종합 등급 · Claude NPL Engine v2\n· 담보가치/채권비율 35%\n· 지역시장 동향 25%\n· 채무자 신용 20%\n· 경매 낙찰가율 15%\n→ 회수율 예측 기반: S≥85% · A+≥75% · A≥65% · B≥55% · C<55%`}
         >
           {formatAIGrade(item.ai_grade)}
         </span>
@@ -1532,11 +1538,12 @@ function PaginationBtn({ label, active, disabled, onClick }: {
 }
 
 function Figure({
-  label, value, tone,
+  label, value, tone, sub,
 }: {
   label: string
   value: React.ReactNode
   tone: "em" | "neutral"
+  sub?: string
 }) {
   return (
     <div>
@@ -1551,6 +1558,11 @@ function Figure({
       >
         {value}
       </div>
+      {sub && (
+        <div style={{ fontSize: 9.5, color: V.textTertiary, marginTop: 2, fontWeight: 500, letterSpacing: "-0.005em" }}>
+          {sub}
+        </div>
+      )}
     </div>
   )
 }

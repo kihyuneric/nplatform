@@ -88,10 +88,10 @@ const STATIC_DICT: Record<string, Record<string, string>> = {
 // ── 거래소 페이지 번역 추가 ────────────────────────────────────────────
 Object.assign(STATIC_DICT.en, {
   // 거래소 헤더
-  '규제 준수형 NPL 거래소': 'Regulatory-Compliant NPL Exchange',
-  '담보 정보는 공개 · 개인정보는 자동 마스킹.': 'Collateral info is public · PII is auto-masked.',
-  '4단계 티어 모델': '4-Tier Access Model',
-  '로 규제 준수와 거래 편의를 동시에 확보합니다.': 'ensures both compliance and transaction convenience.',
+  'NPL 프라임 거래소 · 검증 딜 전용': 'NPL Prime Exchange · Verified Deals Only',
+  '기초 정보는 투명 공개 · 개인정보는 자동 마스킹.': 'Core data is transparent · PII is auto-masked.',
+  '인증 → NDA → LOI 단계별 열람': 'Tiered access: KYC → NDA → LOI',
+  '으로 규제 준수와 거래 속도를 동시에 확보합니다.': ' — compliance and speed, in one flow.',
   '매물 등록': 'List Property',
   '지도에서 보기': 'View on Map',
   '전체 매물': 'Total Listings',
@@ -146,6 +146,7 @@ Object.assign(STATIC_DICT.en, {
   '할인율': 'Discount Rate',
   '예상 절감액': 'Est. Savings',
   '상세 보기': 'View Details',
+  '딜룸 입장 · 상세': 'Enter Deal Room · Detail',
   '건 매칭': 'matches',
   '카드': 'Card',
   '리스트': 'List',
@@ -157,7 +158,7 @@ Object.assign(STATIC_DICT.en, {
   '채권상세·권리': 'Bond Detail & Rights',
   '선택 자료': 'Optional Docs',
   '검토 · 제출': 'Review & Submit',
-  '규제 준수형 매물 등록': 'Regulatory-Compliant Listing',
+  '프라임 매물 등록 · L0→L3 자동 구성': 'Prime Listing · Auto L0→L3 Setup',
   // 상세 페이지
   '다음 단계': 'Next Steps',
   'NDA 체결': 'Sign NDA',
@@ -221,10 +222,10 @@ Object.assign(STATIC_DICT.en, {
 
 Object.assign(STATIC_DICT.ja, {
   // 거래소 헤더
-  '규제 준수형 NPL 거래소': '規制準拠型 NPLエクスチェンジ',
-  '담보 정보는 공개 · 개인정보는 자동 마스킹.': '担保情報は公開・個人情報は自動マスキング。',
-  '4단계 티어 모델': '4段階ティアモデル',
-  '로 규제 준수와 거래 편의를 동시에 확보합니다.': 'により規制準拠と取引利便性を両立します。',
+  'NPL 프라임 거래소 · 검증 딜 전용': 'NPLプライム取引所 · 認定案件専用',
+  '기초 정보는 투명 공개 · 개인정보는 자동 마스킹.': '基本情報は透明公開・個人情報は自動マスキング。',
+  '인증 → NDA → LOI 단계별 열람': '認証 → NDA → LOI の段階的開示',
+  '으로 규제 준수와 거래 속도를 동시에 확보합니다.': 'により規制準拠と取引スピードを両立します。',
   '매물 등록': '物件登録',
   '지도에서 보기': '地図で見る',
   '전체 매물': '全物件',
@@ -272,6 +273,7 @@ Object.assign(STATIC_DICT.ja, {
   '할인율': '割引率',
   '예상 절감액': '予想節約額',
   '상세 보기': '詳細を見る',
+  '딜룸 입장 · 상세': 'ディールルーム入場・詳細',
   '건 매칭': '件マッチ',
   '카드': 'カード',
   '리스트': 'リスト',

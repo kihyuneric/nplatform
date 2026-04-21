@@ -270,7 +270,7 @@ export default function SellWizardPage() {
                 fontSize: 11, fontWeight: 700, color: C.emL,
               }}
             >
-              <Sparkles size={12} /> 규제 준수형 매물 등록
+              <Sparkles size={12} /> 프라임 매물 등록 · L0→L3 자동 구성
             </span>
           </div>
 

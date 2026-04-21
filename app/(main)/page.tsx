@@ -255,7 +255,7 @@ function DealCard() {
           {/* CTA */}
           <div className="py-2.5 rounded-xl text-center cursor-pointer font-extrabold text-xs transition-all hover:brightness-110 flex items-center justify-center gap-1.5"
             style={{ background: `linear-gradient(135deg, ${C.em}, #059669)`, color: 'white', boxShadow: '0 4px 12px rgba(16,185,129,0.25)' }}>
-            상세 보기 <ArrowRight size={13} />
+            딜룸 입장 · 상세 <ArrowRight size={13} />
           </div>
         </div>
       </div>

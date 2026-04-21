@@ -244,6 +244,45 @@ export function AiReportCard({
           ))}
         </div>
 
+        {/* 산정 기준 투명성 설명 — DR-18 */}
+        <details
+          className="mt-4 rounded-xl overflow-hidden"
+          style={{
+            backgroundColor: "rgba(46, 117, 182, 0.08)",
+            border: "1px solid rgba(46, 117, 182, 0.24)",
+          }}
+        >
+          <summary
+            className="cursor-pointer px-3.5 py-2.5 font-semibold inline-flex items-center gap-2 select-none list-none"
+            style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}
+          >
+            <Sparkles size={11} style={{ color: "var(--color-brand-bright)" }} />
+            회수율 · 등급 산정 기준 (투명성)
+            <span style={{ marginLeft: "auto", fontSize: 10, color: "rgba(255,255,255,0.45)" }}>펼치기</span>
+          </summary>
+          <div
+            className="px-3.5 pb-3 pt-1 space-y-2"
+            style={{ fontSize: 10.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.55 }}
+          >
+            <p>
+              <b style={{ color: "var(--color-brand-bright)" }}>회수율 예측</b> = 4개 팩터 가중 평균 · 최근 36개월 경매 실적 기반 회귀 모델(Claude NPL Engine v2)
+            </p>
+            <ul className="list-disc pl-4 space-y-1">
+              <li><b>담보가치 대비 채권비율 (35%)</b> — LTV 낮을수록 회수율 ↑ · KAMCO/법원경매 낙찰가율 참조</li>
+              <li><b>지역 시장 동향 (25%)</b> — 최근 6개월 시·군·구 단위 거래량/가격지수 (국토부 실거래가)</li>
+              <li><b>채무자 신용등급 (20%)</b> — 개인/법인 신용등급 대리지표 (연체 이력 · 업권 부실률)</li>
+              <li><b>경매 낙찰가율 (15%)</b> — 동일 담보 유형·지역의 최근 매각가율 중앙값</li>
+            </ul>
+            <p>
+              <b style={{ color: "var(--color-positive)" }}>등급</b> = 회수율 기반 &nbsp;
+              <span className="tabular-nums">85%+ = S · 75%+ = A+ · 65%+ = A · 55%+ = B · &lt;55% = C</span>
+            </p>
+            <p style={{ color: "rgba(255,255,255,0.55)" }}>
+              ※ 본 산정은 투자 권유가 아니며, 실제 회수율은 낙찰 시점·실사 결과에 따라 달라질 수 있습니다. 전체 팩터 기여도·민감도 분석은 <b>AI 투자 분석</b> 리포트에서 제공됩니다.
+            </p>
+          </div>
+        </details>
+
         {/* 이상 탐지 */}
         <div className="mt-5">
           <div

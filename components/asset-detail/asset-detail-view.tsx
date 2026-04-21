@@ -612,10 +612,10 @@ export function AssetDetailView({
             <KpiRow
               items={[
                 {
-                  label: "매각잔액",
+                  label: "채권잔액",
                   value: formatKRW(listing.outstanding_principal),
                   tone: "primary",
-                  hint: `원금 + 이자 + 비용 합계`,
+                  hint: `원금 ${formatKRW(listing.claim_info.principal)} + 연체이자 ${formatKRW(listing.claim_info.accrued_interest)}`,
                 },
                 {
                   label: "매각 희망가",
@@ -839,9 +839,35 @@ export function AssetDetailView({
                       className="mt-2 flex items-center gap-2 flex-wrap font-semibold tabular-nums"
                       style={{ fontSize: 11, color: C.lt3 }}
                     >
-                      <span>원금 {formatKRW(listing.claim_info.principal)}</span>
-                      <span style={{ color: C.lt4 }}>+</span>
-                      <span>미수이자 {formatKRW(listing.claim_info.accrued_interest)}</span>
+                      {(() => {
+                        const bal = listing.claim_info.balance || 1
+                        const pRatio = Math.round((listing.claim_info.principal / bal) * 100)
+                        const iRatio = Math.max(0, 100 - pRatio)
+                        return (
+                          <>
+                            <span>원금 {formatKRW(listing.claim_info.principal)} <span style={{ color: C.lt4, fontWeight: 500 }}>({pRatio}%)</span></span>
+                            <span style={{ color: C.lt4 }}>+</span>
+                            <span>연체이자 {formatKRW(listing.claim_info.accrued_interest)} <span style={{ color: C.lt4, fontWeight: 500 }}>({iRatio}%)</span></span>
+                          </>
+                        )
+                      })()}
+                    </div>
+                    {/* 비율 시각화 — 원금/연체이자 bar */}
+                    <div
+                      className="mt-2 h-1.5 w-full rounded-full overflow-hidden flex"
+                      style={{ background: "rgba(148,163,184,0.12)" }}
+                      title="채권잔액 구성 비율"
+                    >
+                      {(() => {
+                        const bal = listing.claim_info.balance || 1
+                        const pPct = (listing.claim_info.principal / bal) * 100
+                        return (
+                          <>
+                            <span style={{ width: `${pPct}%`, background: "linear-gradient(90deg,#10B981,#2E75B6)" }} />
+                            <span style={{ flex: 1, background: "rgba(251,191,36,0.55)" }} />
+                          </>
+                        )
+                      })()}
                     </div>
                   </div>
 

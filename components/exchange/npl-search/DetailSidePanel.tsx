@@ -213,7 +213,7 @@ export function DetailSidePanel({ item, open, onClose, isStarred, onToggleStar }
               >
                 <span className="flex items-center gap-2">
                   <ExternalLink className="h-4 w-4" />
-                  매물 상세 보기
+                  딜룸 입장 · 매물 상세
                 </span>
                 <ChevronRight className="h-4 w-4" />
               </Link>
