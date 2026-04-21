@@ -16,7 +16,9 @@ import {
   FileText, MapPin, Building2, Gavel,
   CheckCircle2, ShieldCheck, Scale, Images,
   Banknote, ScrollText, TrendingUp, Calculator, Brain, ArrowRight,
+  Pencil, X, Save, FileDown, Eye, EyeOff, HandCoins,
 } from "lucide-react"
+import { OfferForm, OfferCard, type OfferData } from "@/components/deal-room/offer-card"
 import { toast } from "sonner"
 import { TierGate } from "@/components/tier/tier-gate"
 import type { AccessTier } from "@/lib/access-tier"
@@ -377,6 +379,51 @@ export function AssetDetailView({
 
   const [mockTier, setMockTier] = useState<AssetTier>("L0")
   const [actionOpen, setActionOpen] = useState(false)
+
+  /* ── 관리자/채권자 편집 기능 ── */
+  const [canEdit, setCanEdit] = useState(false)
+  const [editingSec, setEditingSec] = useState<"auction" | "public-sale" | null>(null)
+  const [auctionDraft, setAuctionDraft] = useState<ListingDetail["auction_info"]>(null)
+  const [publicSaleDraft, setPublicSaleDraft] = useState<ListingDetail["public_sale_info"]>(null)
+  const [appraisalPdfOpen, setAppraisalPdfOpen] = useState(false)
+  const [submittedOffer, setSubmittedOffer] = useState<OfferData | null>(null)
+  const [offerFormVisible, setOfferFormVisible] = useState(true)
+
+  /* 사용자 역할 확인: admin 또는 seller 면 편집 허용 */
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data }) => {
+      const role = data.user?.user_metadata?.role as string | undefined
+      // dev user 00000000... 는 SELLER 역할 → 편집 허용
+      const devUserId = "00000000-0000-0000-0000-000000000001"
+      setCanEdit(
+        role === "admin" || role === "seller" || role === "SELLER" ||
+        data.user?.id === devUserId,
+      )
+    }).catch(() => setCanEdit(false))
+  }, [])
+
+  /* 편집 저장 — baseListing 업데이트 + PATCH API */
+  const handleSaveSection = useCallback(async (section: "auction" | "public-sale") => {
+    if (section === "auction" && auctionDraft !== undefined) {
+      setBaseListing(prev => ({ ...prev, auction_info: auctionDraft }))
+    } else if (section === "public-sale" && publicSaleDraft !== undefined) {
+      setBaseListing(prev => ({ ...prev, public_sale_info: publicSaleDraft }))
+    }
+    setEditingSec(null)
+    try {
+      const body = section === "auction"
+        ? { auction_case_no: auctionDraft?.case_no, auction_court: auctionDraft?.court, auction_filed_date: auctionDraft?.filed_date, auction_estimated_start: auctionDraft?.estimated_start }
+        : { public_sale_mgmt_no: publicSaleDraft?.mgmt_no, public_sale_filed_date: publicSaleDraft?.filed_date, public_sale_estimated_start: publicSaleDraft?.estimated_start }
+      await fetch(`/api/v1/listings/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      toast.success("정보가 저장되었습니다.")
+    } catch {
+      toast.error("저장 중 오류가 발생했습니다.")
+    }
+  }, [id, auctionDraft, publicSaleDraft])
   useEffect(() => {
     if (typeof window === "undefined") return
     const saved = window.localStorage.getItem(MOCK_STORAGE_KEY(id))
@@ -803,9 +850,61 @@ export function AssetDetailView({
                   <Stat label="채권잔액" value={formatKRW(listing.outstanding_principal)} tone="amber" />
                   <Stat label="희망가" value={formatKRW(listing.asking_price)} tone="blue" />
                 </div>
-                <p className="mt-3 leading-relaxed" style={{ fontSize: 11, color: C.lt3 }}>
-                  감정평가서 전체 내용이 L1 본인인증 완료 시 열람 가능합니다.
-                </p>
+                {/* PDF 뷰어 + 다운로드 */}
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setAppraisalPdfOpen(v => !v)}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
+                    style={{
+                      fontSize: 12,
+                      backgroundColor: appraisalPdfOpen ? "var(--color-brand-bright-bg, rgba(46,117,182,0.12))" : "var(--layer-2-bg)",
+                      color: appraisalPdfOpen ? "var(--color-brand-bright)" : "var(--fg-muted)",
+                      border: `1px solid ${appraisalPdfOpen ? "rgba(46,117,182,0.4)" : "var(--layer-border-strong)"}`,
+                    }}
+                  >
+                    {appraisalPdfOpen ? <EyeOff size={13} /> : <Eye size={13} />}
+                    {appraisalPdfOpen ? "PDF 닫기" : "PDF 보기"}
+                  </button>
+                  <a
+                    href={`/api/v1/docs/${id}/appraisal?download=1`}
+                    download
+                    onClick={e => { e.preventDefault(); toast.success("감정평가서 다운로드를 시작합니다.", { duration: 1800 }) }}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
+                    style={{
+                      fontSize: 12,
+                      backgroundColor: "rgba(16,185,129,0.10)",
+                      color: "var(--color-positive)",
+                      border: "1px solid rgba(16,185,129,0.3)",
+                    }}
+                  >
+                    <FileDown size={13} />
+                    PDF 다운로드
+                  </a>
+                </div>
+                {appraisalPdfOpen && (
+                  <div
+                    className="mt-3 rounded-xl overflow-hidden"
+                    style={{ border: "1px solid var(--layer-border-strong)" }}
+                  >
+                    <div
+                      className="flex items-center justify-between px-3 py-2"
+                      style={{ backgroundColor: "var(--layer-2-bg)", fontSize: 11, color: "var(--fg-muted)" }}
+                    >
+                      <span className="font-bold">감정평가서 미리보기</span>
+                      <button type="button" onClick={() => setAppraisalPdfOpen(false)}>
+                        <X size={14} />
+                      </button>
+                    </div>
+                    {/* 실제 환경에서는 /api/v1/docs/:id/appraisal URL 사용 */}
+                    <iframe
+                      src={`/api/v1/docs/${id}/appraisal`}
+                      title="감정평가서"
+                      className="w-full"
+                      style={{ height: 560, border: "none", backgroundColor: "#f8f8f8" }}
+                    />
+                  </div>
+                )}
               </TierGate>
             </SectionCard>
 
@@ -817,7 +916,55 @@ export function AssetDetailView({
               anchorId="auction-info"
             >
               <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={120}>
-                {listing.auction_info ? (
+                {editingSec === "auction" ? (
+                  /* ── 경매 정보 편집 폼 ── */
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      {(["사건번호", "관할법원"] as const).map((label, i) => {
+                        const key = i === 0 ? "case_no" : "court"
+                        return (
+                          <div key={label}>
+                            <label className="block font-bold mb-1" style={{ fontSize: 11, color: C.lt3 }}>{label}</label>
+                            <input
+                              className="w-full rounded-lg px-3 py-2 font-medium"
+                              style={{ fontSize: 13, backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)", color: "var(--color-text-primary)" }}
+                              value={(auctionDraft as Record<string, string>)?.[key] ?? ""}
+                              onChange={e => setAuctionDraft(prev => prev ? { ...prev, [key]: e.target.value } : { case_no: "", court: "", filed_date: "", estimated_start: "", [key]: e.target.value })}
+                              placeholder={label}
+                            />
+                          </div>
+                        )
+                      })}
+                      {(["경매접수일", "예상 경매 개시일"] as const).map((label, i) => {
+                        const key = i === 0 ? "filed_date" : "estimated_start"
+                        return (
+                          <div key={label}>
+                            <label className="block font-bold mb-1" style={{ fontSize: 11, color: C.lt3 }}>{label}</label>
+                            <input
+                              type="date"
+                              className="w-full rounded-lg px-3 py-2 font-medium"
+                              style={{ fontSize: 13, backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)", color: "var(--color-text-primary)" }}
+                              value={(auctionDraft as Record<string, string>)?.[key] ?? ""}
+                              onChange={e => setAuctionDraft(prev => prev ? { ...prev, [key]: e.target.value } : { case_no: "", court: "", filed_date: "", estimated_start: "", [key]: e.target.value })}
+                            />
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button type="button" onClick={() => handleSaveSection("auction")}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-black"
+                        style={{ fontSize: 12, backgroundColor: "var(--color-positive)", color: "#fff" }}>
+                        <Save size={13} /> 저장
+                      </button>
+                      <button type="button" onClick={() => setEditingSec(null)}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold"
+                        style={{ fontSize: 12, backgroundColor: "var(--layer-2-bg)", color: "var(--fg-muted)", border: "1px solid var(--layer-border-strong)" }}>
+                        <X size={13} /> 취소
+                      </button>
+                    </div>
+                  </div>
+                ) : listing.auction_info ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <InfoField label="사건번호" value={listing.auction_info.case_no} />
@@ -825,14 +972,29 @@ export function AssetDetailView({
                       <InfoField label="경매접수일" value={formatDateKo(listing.auction_info.filed_date)} />
                       <InfoField label="예상 경매 개시일" value={formatDateKo(listing.auction_info.estimated_start)} />
                     </div>
-                    <p style={{ fontSize: 11, color: C.lt3 }}>
-                      채권자는 딜룸에서 정보를 수정할 수 있습니다.
-                    </p>
+                    {canEdit && (
+                      <button type="button"
+                        onClick={() => { setAuctionDraft(listing.auction_info); setEditingSec("auction") }}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-bold transition-colors"
+                        style={{ fontSize: 11, color: "var(--fg-muted)", backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)" }}>
+                        <Pencil size={11} /> 수정
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  <p className="text-center py-4" style={{ color: C.lt4, fontSize: 12 }}>
-                    경매 진행 없음 · 해당 매물은 임의매각 방식입니다.
-                  </p>
+                  <div className="space-y-3">
+                    <p className="text-center py-3" style={{ color: C.lt4, fontSize: 12 }}>
+                      경매 진행 없음 · 해당 매물은 임의매각 방식입니다.
+                    </p>
+                    {canEdit && (
+                      <button type="button"
+                        onClick={() => { setAuctionDraft({ case_no: "", court: "", filed_date: "", estimated_start: "" }); setEditingSec("auction") }}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-bold"
+                        style={{ fontSize: 11, color: "var(--color-brand-bright)", backgroundColor: "rgba(46,117,182,0.10)", border: "1px solid rgba(46,117,182,0.3)" }}>
+                        <Pencil size={11} /> 경매 정보 등록
+                      </button>
+                    )}
+                  </div>
                 )}
               </TierGate>
             </SectionCard>
@@ -845,21 +1007,75 @@ export function AssetDetailView({
               anchorId="public-sale"
             >
               <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={120}>
-                {listing.public_sale_info ? (
+                {editingSec === "public-sale" ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-bold mb-1" style={{ fontSize: 11, color: C.lt3 }}>관리번호</label>
+                        <input className="w-full rounded-lg px-3 py-2 font-medium"
+                          style={{ fontSize: 13, backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)", color: "var(--color-text-primary)" }}
+                          value={publicSaleDraft?.mgmt_no ?? ""}
+                          onChange={e => setPublicSaleDraft(prev => prev ? { ...prev, mgmt_no: e.target.value } : { mgmt_no: e.target.value, filed_date: "", estimated_start: "" })}
+                          placeholder="예: 2025-00123-001" />
+                      </div>
+                      <div>
+                        <label className="block font-bold mb-1" style={{ fontSize: 11, color: C.lt3 }}>공매신청일</label>
+                        <input type="date" className="w-full rounded-lg px-3 py-2 font-medium"
+                          style={{ fontSize: 13, backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)", color: "var(--color-text-primary)" }}
+                          value={publicSaleDraft?.filed_date ?? ""}
+                          onChange={e => setPublicSaleDraft(prev => prev ? { ...prev, filed_date: e.target.value } : { mgmt_no: "", filed_date: e.target.value, estimated_start: "" })} />
+                      </div>
+                      <div>
+                        <label className="block font-bold mb-1" style={{ fontSize: 11, color: C.lt3 }}>예상 공매 개시일</label>
+                        <input type="date" className="w-full rounded-lg px-3 py-2 font-medium"
+                          style={{ fontSize: 13, backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)", color: "var(--color-text-primary)" }}
+                          value={publicSaleDraft?.estimated_start ?? ""}
+                          onChange={e => setPublicSaleDraft(prev => prev ? { ...prev, estimated_start: e.target.value } : { mgmt_no: "", filed_date: "", estimated_start: e.target.value })} />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button type="button" onClick={() => handleSaveSection("public-sale")}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-black"
+                        style={{ fontSize: 12, backgroundColor: "var(--color-positive)", color: "#fff" }}>
+                        <Save size={13} /> 저장
+                      </button>
+                      <button type="button" onClick={() => setEditingSec(null)}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold"
+                        style={{ fontSize: 12, backgroundColor: "var(--layer-2-bg)", color: "var(--fg-muted)", border: "1px solid var(--layer-border-strong)" }}>
+                        <X size={13} /> 취소
+                      </button>
+                    </div>
+                  </div>
+                ) : listing.public_sale_info ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <InfoField label="관리번호" value={listing.public_sale_info.mgmt_no} />
                       <InfoField label="공매신청일" value={formatDateKo(listing.public_sale_info.filed_date)} />
                       <InfoField label="예상 공매 개시일" value={formatDateKo(listing.public_sale_info.estimated_start)} />
                     </div>
-                    <p style={{ fontSize: 11, color: C.lt3 }}>
-                      채권자는 딜룸에서 정보를 수정할 수 있습니다.
-                    </p>
+                    {canEdit && (
+                      <button type="button"
+                        onClick={() => { setPublicSaleDraft(listing.public_sale_info); setEditingSec("public-sale") }}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-bold"
+                        style={{ fontSize: 11, color: "var(--fg-muted)", backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)" }}>
+                        <Pencil size={11} /> 수정
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  <p className="text-center py-4" style={{ color: C.lt4, fontSize: 12 }}>
-                    공매 진행 없음 · 해당 매물은 경매 또는 임의매각 방식입니다.
-                  </p>
+                  <div className="space-y-3">
+                    <p className="text-center py-3" style={{ color: C.lt4, fontSize: 12 }}>
+                      공매 진행 없음 · 해당 매물은 경매 또는 임의매각 방식입니다.
+                    </p>
+                    {canEdit && (
+                      <button type="button"
+                        onClick={() => { setPublicSaleDraft({ mgmt_no: "", filed_date: "", estimated_start: "" }); setEditingSec("public-sale") }}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-bold"
+                        style={{ fontSize: 11, color: "var(--color-brand-bright)", backgroundColor: "rgba(46,117,182,0.10)", border: "1px solid rgba(46,117,182,0.3)" }}>
+                        <Pencil size={11} /> 공매 정보 등록
+                      </button>
+                    )}
+                  </div>
                 )}
               </TierGate>
             </SectionCard>
@@ -1120,6 +1336,74 @@ export function AssetDetailView({
               tier={effectiveTier}
               counterpart={counterpart}
             />
+          </div>
+        )}
+
+        {/* ── 가격 오퍼 (L2+) ── */}
+        {tierGte(effectiveAccessTier, "L2") && (
+          <div id="offer" className="mt-6 lg:mt-8 scroll-mt-24">
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{
+                background: "linear-gradient(180deg, #0F1E35 0%, #122843 100%)",
+                border: "1px solid rgba(245,158,11,0.28)",
+                boxShadow: "0 8px 32px rgba(27,58,92,0.18)",
+                color: "#F1F5F9",
+                ["--color-text-primary" as string]: "#F1F5F9",
+                ["--color-brand-bright" as string]: "#60A5FA",
+                ["--color-positive" as string]: "#34D399",
+                colorScheme: "dark",
+              } as React.CSSProperties}
+            >
+              <header className="flex items-center justify-between gap-3 flex-wrap px-4 py-3" style={{ borderBottom: "1px solid rgba(245,158,11,0.22)" }}>
+                <h3 className="font-black inline-flex items-center gap-2" style={{ fontSize: 14 }}>
+                  <HandCoins size={16} style={{ color: "#F59E0B" }} />
+                  가격 오퍼
+                </h3>
+                <span className="font-semibold" style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}>
+                  매도자에게 매입 희망가를 제안하세요
+                </span>
+              </header>
+              <div className="p-4 space-y-4">
+                {/* 희망가 기준 표시 */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl p-3" style={{ backgroundColor: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}>
+                    <div className="font-semibold mb-0.5" style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>매도 희망가</div>
+                    <div className="font-black tabular-nums" style={{ fontSize: 18, color: "#FBBF24" }}>{formatKRW(listing.asking_price)}</div>
+                  </div>
+                  <div className="rounded-xl p-3" style={{ backgroundColor: "rgba(96,165,250,0.08)", border: "1px solid rgba(96,165,250,0.22)" }}>
+                    <div className="font-semibold mb-0.5" style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>AI 권고 매입가</div>
+                    <div className="font-black tabular-nums" style={{ fontSize: 18, color: "#60A5FA" }}>{formatKRW(Math.round(listing.asking_price * 0.96))}</div>
+                  </div>
+                </div>
+                {submittedOffer ? (
+                  <div className="rounded-xl p-0" style={{ borderRadius: 12 }}>
+                    <OfferCard offer={submittedOffer} isMine />
+                    <button type="button" onClick={() => { setSubmittedOffer(null); setOfferFormVisible(true) }}
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold"
+                      style={{ fontSize: 12, backgroundColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)" }}>
+                      새 오퍼 작성
+                    </button>
+                  </div>
+                ) : offerFormVisible ? (
+                  <OfferForm
+                    onSubmit={o => {
+                      const offer: OfferData = { ...o, status: "pending" }
+                      setSubmittedOffer(offer)
+                      setOfferFormVisible(false)
+                      toast.success("가격 오퍼가 제출되었습니다 · 매도자 검토 대기 중", { duration: 2500 })
+                    }}
+                    onCancel={() => setOfferFormVisible(false)}
+                  />
+                ) : (
+                  <button type="button" onClick={() => setOfferFormVisible(true)}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl font-black"
+                    style={{ padding: "12px 16px", fontSize: 13, backgroundColor: "rgba(245,158,11,0.14)", color: "#FBBF24", border: "1px solid rgba(245,158,11,0.3)" }}>
+                    <HandCoins size={14} /> 오퍼 작성 열기
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

@@ -20,7 +20,7 @@ import type { AssetTier } from "@/hooks/use-asset-tier"
 import {
   Brain, Scale, FileText, Users2, FileBarChart, BookOpen, Image as ImageIcon,
   Coins, FileSignature, MessageSquare, HandCoins, FileCheck,
-  FileEdit, Wallet, Trophy, Lock, Gavel, Landmark, ClipboardList,
+  Wallet, Trophy, Lock, Gavel, Landmark, ClipboardList,
 } from "lucide-react"
 import type { ReactNode } from "react"
 
@@ -63,7 +63,6 @@ const ITEMS: TierNavItem[] = [
 
   // ──────── L3 · LOI ────────
   { key: "loi",          label: "LOI",         sub: "",             requiredTier: "L3", icon: <FileCheck className="w-4 h-4" />,      anchor: "loi" },
-  { key: "contract",     label: "계약서",      sub: "초안",         requiredTier: "L3", icon: <FileEdit className="w-4 h-4" />,       anchor: "loi" },
 
   // ──────── L4 · 에스크로 결제 ────────
   { key: "escrow",       label: "에스크로",    sub: "결제",         requiredTier: "L4", icon: <Wallet className="w-4 h-4" />,         anchor: "escrow" },
