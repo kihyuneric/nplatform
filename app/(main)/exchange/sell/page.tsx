@@ -13,6 +13,7 @@
 
 import { useMemo, useState, useCallback, useRef } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   Building2, MapPin, Scale, FileText, Camera, Briefcase,
@@ -997,6 +998,32 @@ function Step6Review({
   discountRate: number
   feeEstimate: ReturnType<typeof calculateSellerFee> | null
 }) {
+  const router = useRouter()
+
+  // DR-18: 매물 등록 데이터 → NPL 수익성 분석 페이지 자동 prefill
+  // 매도자가 입력한 모든 필드를 그대로 분석 페이지로 넘겨 "다시 입력" 없이 분석 착수
+  const handleStartAnalysis = useCallback(() => {
+    try {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(
+          "listing-analysis-prefill",
+          JSON.stringify({ ...state, _ts: Date.now() })
+        )
+      }
+    } catch (err) {
+      // sessionStorage 실패 시에도 분석 페이지로는 이동 (URL 파라미터 fallback)
+      console.warn("[sell→analysis] sessionStorage write failed:", err)
+    }
+    const qs = new URLSearchParams()
+    if (state.appraisal_value > 0) qs.set("appraisal", String(state.appraisal_value))
+    if (state.senior_claims_total > 0) qs.set("senior", String(state.senior_claims_total))
+    if (state.region_city || state.region_district) {
+      qs.set("address", encodeURIComponent(`${state.region_city} ${state.region_district}`.trim()))
+    }
+    const query = qs.toString()
+    router.push(`/analysis/profitability${query ? `?${query}` : ""}`)
+  }, [state, router])
+
   return (
     <>
       <StepHeader
@@ -1090,6 +1117,53 @@ function Step6Review({
 
         {/* ── DR-18: 딜룸 공개 미리보기 (L0→L3 단계별 열람 매핑) ── */}
         <TierPreviewBlock state={state} />
+
+        {/* ── DR-18: 매물 데이터로 바로 NPL 수익성 분석 시작 ── */}
+        <div
+          style={{
+            marginTop: 16, padding: "16px 18px", borderRadius: 14,
+            background: "linear-gradient(135deg, rgba(16,185,129,0.10), rgba(46,117,182,0.10))",
+            border: `1px solid ${C.em}40`,
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            gap: 14, flexWrap: "wrap",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "1 1 260px" }}>
+            <div
+              style={{
+                width: 40, height: 40, borderRadius: 10,
+                backgroundColor: "var(--color-positive-bg)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Calculator size={20} color={C.emL} />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text-primary)" }}>
+                이 매물 정보로 NPL 수익성 분석 시작
+              </div>
+              <div style={{ fontSize: 11, color: C.lt4, marginTop: 3, lineHeight: 1.5 }}>
+                채권·담보·권리 입력값이 그대로 분석 페이지로 전달됩니다 · 다시 입력할 필요 없음
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleStartAnalysis}
+            style={{
+              padding: "11px 18px", borderRadius: 10,
+              backgroundColor: C.em, color: "#041915",
+              fontSize: 12, fontWeight: 800, border: "none",
+              cursor: "pointer",
+              display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0,
+            }}
+          >
+            <Sparkles size={14} />
+            분석 시작
+            <ChevronRight size={14} />
+          </button>
+        </div>
       </div>
     </>
   )
@@ -1650,7 +1724,7 @@ function ReviewRow({ label, children, accent = false }: { label: string; childre
       }}
     >
       <span style={{ fontSize: 11, color: C.lt4, fontWeight: 700 }}>{label}</span>
-      <span style={{ fontSize: 13, fontWeight: 700, color: accent ? C.emL : "#fff" }}>{children}</span>
+      <span style={{ fontSize: 13, fontWeight: 700, color: accent ? C.emL : "var(--color-text-primary)" }}>{children}</span>
     </div>
   )
 }

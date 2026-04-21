@@ -158,6 +158,147 @@ export default function ProfitabilityPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // DR-18: 매물 등록 Step6 → 분석 페이지 전체 prefill 브리지
+  // sessionStorage("listing-analysis-prefill") 에 담긴 WizardState 를 읽어
+  // bond / collateral / rights 를 한 번에 채워 "다시 입력" 없이 분석 진입.
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const raw = sessionStorage.getItem("listing-analysis-prefill")
+    if (!raw) return
+    try {
+      const w = JSON.parse(raw) as {
+        institution?: string
+        inst_type?: string
+        listing_category?: string
+        collateral?: string
+        region_city?: string
+        region_district?: string
+        debtor_type?: "INDIVIDUAL" | "CORPORATE" | ""
+        outstanding_principal?: number
+        asking_price?: number
+        appraisal_value?: number
+        interest_rate?: number
+        penalty_rate?: number
+        default_start_date?: string
+        mortgage_rank?: number
+        mortgage_amount?: number
+        senior_claims_total?: number
+        tenant_deposit_total?: number
+        exclusive_area?: number
+        build_year?: number
+      }
+
+      // region_city 는 short label("서울")로 저장됨 → REGIONS.value 코드로 매핑
+      const regionCode =
+        REGIONS.find(r => r.short === w.region_city || r.full === w.region_city)?.value ?? ""
+
+      // 담보물 대분류 매핑 (taxonomy 기반)
+      const categoryMatch = COLLATERAL_CATEGORIES.find(c =>
+        c.items.some(i => i.value === w.collateral)
+      )
+      const propertyTypeMajor = categoryMatch?.value ?? "RESIDENTIAL"
+      const propertyTypeLabel =
+        categoryMatch?.items.find(i => i.value === w.collateral)?.label ?? (w.collateral || "아파트")
+
+      const debtorType: DebtorType =
+        w.debtor_type === "CORPORATE" ? "CORPORATE" : "INDIVIDUAL"
+
+      const today = new Date().toISOString().slice(0, 10)
+      const districtPart = w.region_district?.trim() ?? ""
+
+      setBond(p => ({
+        ...p,
+        institutionName: w.institution || p.institutionName,
+        debtorType,
+        originalPrincipal:
+          w.outstanding_principal && w.outstanding_principal > 0
+            ? w.outstanding_principal
+            : p.originalPrincipal,
+        remainingPrincipal:
+          w.outstanding_principal && w.outstanding_principal > 0
+            ? w.outstanding_principal
+            : p.remainingPrincipal,
+        interestRate:
+          w.interest_rate && w.interest_rate > 0 ? w.interest_rate : p.interestRate,
+        penaltyRate:
+          w.penalty_rate && w.penalty_rate > 0 ? w.penalty_rate : p.penaltyRate,
+        defaultStartDate: w.default_start_date || p.defaultStartDate,
+        loanType:
+          w.listing_category === "NPL"
+            ? "담보대출(NPL)"
+            : p.loanType,
+      }))
+
+      setCollateral(p => ({
+        ...p,
+        region: regionCode || p.region,
+        address: districtPart || p.address,
+        propertyTypeMajor,
+        propertyType: propertyTypeLabel,
+        area: w.exclusive_area && w.exclusive_area > 0 ? w.exclusive_area : p.area,
+        appraisalValue:
+          w.appraisal_value && w.appraisal_value > 0 ? w.appraisal_value : p.appraisalValue,
+        appraisalDate: p.appraisalDate || today,
+        buildYear:
+          w.build_year && w.build_year > 0 ? w.build_year : p.buildYear,
+      }))
+
+      setRights(p => {
+        const seniorClaims: SeniorClaim[] = [...p.seniorClaims]
+        if (w.senior_claims_total && w.senior_claims_total > 0) {
+          seniorClaims.push({
+            rank: 1,
+            type: "선순위 채권",
+            holder: "—",
+            amount: w.senior_claims_total,
+            date: today,
+          })
+        }
+        const tenants: TenantInfo[] = [...p.tenants]
+        if (w.tenant_deposit_total && w.tenant_deposit_total > 0) {
+          tenants.push({
+            name: "임차인(합산)",
+            deposit: w.tenant_deposit_total,
+            monthlyRent: 0,
+            moveInDate: today,
+            hasConfirmationDate: true,
+            priority: "SENIOR",
+          })
+        }
+        return {
+          ...p,
+          mortgageRank:
+            w.mortgage_rank && w.mortgage_rank > 0 ? w.mortgage_rank : p.mortgageRank,
+          mortgageAmount:
+            w.mortgage_amount && w.mortgage_amount > 0
+              ? w.mortgage_amount
+              : p.mortgageAmount,
+          seniorClaims,
+          tenants,
+        }
+      })
+
+      // 매각희망가 → 론세일 매입률 유추 (asking_price / outstanding_principal)
+      if (
+        w.asking_price &&
+        w.asking_price > 0 &&
+        w.outstanding_principal &&
+        w.outstanding_principal > 0
+      ) {
+        const ratio = Math.round((w.asking_price / w.outstanding_principal) * 100)
+        if (ratio > 0 && ratio <= 100) {
+          setLoanSaleTerms(p => ({ ...p, purchaseRatio: ratio }))
+        }
+      }
+
+      // 중복 소비 방지
+      sessionStorage.removeItem("listing-analysis-prefill")
+    } catch (err) {
+      console.warn("[analysis] listing prefill parse failed:", err)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const canNext = useCallback(() => {
     switch (step) {
       case 1: return bond.institutionName && bond.debtorName && bond.remainingPrincipal > 0 && bond.defaultStartDate
