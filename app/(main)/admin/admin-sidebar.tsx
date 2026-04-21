@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, Building2, FileText, Settings, BarChart3,
   CreditCard, GraduationCap, Megaphone, Server, Cable,
   ChevronLeft, Menu, BrainCircuit, ShieldCheck, Eye, Landmark, FileSignature, Tag, Activity, Sliders,
-  Workflow, TrendingUp,
+  Workflow, TrendingUp, Target,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -22,6 +22,7 @@ const ADMIN_MENU = [
   { href: "/admin/institutions", label: "매도 기관",   icon: Landmark },
   { href: "/admin/agreements", label: "NDA·LOI",    icon: FileSignature },
   { href: "/admin/deals",      label: "딜룸 모니터링", icon: Building2 },
+  { href: "/admin/matching",   label: "AI 매칭",      icon: Target },
   { href: "/admin/billing",    label: "결제·정산",   icon: CreditCard },
   { href: "/admin/coupons",    label: "쿠폰 관리",   icon: Tag },
   { href: "/admin/content",    label: "콘텐츠 관리", icon: Megaphone },
