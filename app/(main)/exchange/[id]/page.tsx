@@ -833,8 +833,8 @@ export default function ListingDetailPage() {
                     style={{ fontSize: 11, color: C.lt3 }}
                   >
                     채권잔액은 연정 금리를 적용한 원금과 미수이자의 합계이며, 연체 시작일부터는
-                    연체 금리로 산정됩니다. 채무자 실명 · 상환 이력 · 추심 기록은 L3 (LOI 제출 후)
-                    에서 공개됩니다.
+                    연체 금리로 산정됩니다. 채권 정보 세부 내역은 LOI 제출 후 금융기관 대면
+                    미팅에서 검토될 수 있습니다.
                   </p>
                 </div>
               </TierGate>
@@ -869,8 +869,9 @@ export default function ListingDetailPage() {
           </div>
         </div>
 
-        {/* ═══ 인라인 딜룸 — L1 개인인증 이후 풀폭 공개 (DR-5) ═══ */}
-        {tierGte(effectiveAccessTier, "L1") && (
+        {/* ═══ 인라인 딜룸 — L2 NDA 체결 이후 풀폭 공개 (DR-7)
+             ※ 채팅 · 상대방 정보는 L2 이상에서만 노출 */}
+        {tierGte(effectiveAccessTier, "L2") && (
           <div className="mt-6 lg:mt-8">
             <InlineDealRoom
               tier={effectiveTier}

@@ -15,8 +15,11 @@
 
 "use client"
 
-import { useState, useEffect, type ReactNode } from "react"
-import { X, LogIn, Shield, FileSignature, FileCheck, PenLine, CheckCircle2 } from "lucide-react"
+import { useMemo, useState, useEffect, type ReactNode } from "react"
+import {
+  X, LogIn, Shield, FileSignature, FileCheck, PenLine, CheckCircle2,
+  AlertTriangle, AlertCircle, ShieldCheck, Briefcase, Calendar,
+} from "lucide-react"
 import type { AssetTier } from "@/hooks/use-asset-tier"
 
 export interface ActionSheetProps {
@@ -53,17 +56,19 @@ const META: Record<AssetTier, StepMeta> = {
     accent: "var(--color-brand-bright)",
   },
   L2: {
-    title: "NDA(비밀유지계약) 체결",
-    subtitle: "매도자 정보·원본 자료 보호를 위한 전자 NDA 입니다. 서명 후 데이터룸이 열립니다.",
+    title: "비밀유지계약서 (NDA)",
+    subtitle:
+      "본 NDA 체결 후 등기부등본 원본 · 현장사진 · 임대차 상세 · 재무제표 등 L2 자료 열람이 가능합니다. 모든 열람 이력은 PII Access Log 에 기록됩니다.",
     icon: <FileSignature size={18} />,
-    confirmLabel: "NDA 서명 · 체결",
-    accent: "var(--color-brand-bright)",
+    confirmLabel: "NDA 체결하고 L2 자료 열람하기",
+    accent: "var(--color-positive)",
   },
   L3: {
-    title: "LOI(매수의향서) 제출",
-    subtitle: "희망 매입가와 조건을 적어 매도자에게 전달합니다. 승인 시 실사 자료가 공개됩니다.",
+    title: "인수의향서 (LOI)",
+    subtitle:
+      "LOI는 매도자에게 본건 NPL 인수에 대한 진지한 의향을 전달하는 문서입니다. 매도자 승인 후 L3 데이터룸이 개방되며, 채무자 식별정보 · 세부 권리자 · 경매 원장 등 최상위 자료가 공개됩니다.",
     icon: <FileCheck size={18} />,
-    confirmLabel: "LOI 제출",
+    confirmLabel: "LOI 제출하고 매도자 승인 요청",
     accent: "var(--color-positive)",
   },
   L4: {
@@ -81,6 +86,40 @@ const META: Record<AssetTier, StepMeta> = {
     accent: "var(--color-positive)",
   },
 }
+
+/** NDA 6개 조항 (원본 /exchange/[id]/nda 페이지에서 이식) */
+const NDA_CLAUSES: { title: string; body: string }[] = [
+  {
+    title: "1조 (비밀정보의 정의)",
+    body:
+      "본 NDA 체결 후 열람 가능한 매물 상세 정보(등기부등본 원본, 임대차 계약 상세, 현장사진, 재무제표, 채무자 관련 정보 일체)는 비밀정보로 규정한다.",
+  },
+  {
+    title: "2조 (비밀 유지 의무)",
+    body:
+      "수령자는 비밀정보를 NPL 투자 검토 목적으로만 사용하며, 제3자에게 누설·복제·배포하지 않는다. 단, 투자 자문 법인·법무법인 등 법적 보호 관계에 있는 전문가는 예외로 한다.",
+  },
+  {
+    title: "3조 (개인정보 보호)",
+    body:
+      "열람한 정보 중 개인정보보호법 · 신용정보법에 따라 보호되는 정보는 수령자의 책임 하에 안전하게 관리하며, 검토 종료 후 즉시 파기한다.",
+  },
+  {
+    title: "4조 (열람 이력 로깅)",
+    body:
+      "모든 열람 행위는 PII Access Log에 기록되며, 비정상 접근 패턴(대량 다운로드, 반복 조회 등)은 DPO에게 자동 통보되어 조사 대상이 된다.",
+  },
+  {
+    title: "5조 (위반 시 책임)",
+    body:
+      "본 NDA 위반 시 NPLatform 및 매도자에게 발생한 모든 손해를 배상하며, 개인정보보호법 · 신용정보법 위반 시 관련 법령에 따른 형사 · 민사 책임을 진다.",
+  },
+  {
+    title: "6조 (유효 기간)",
+    body:
+      "본 NDA는 체결일로부터 3년간 유효하며, 이후에도 비밀정보에 대한 비밀 유지 의무는 계속 유지된다.",
+  },
+]
 
 function formatKRW(n: number): string {
   if (!n) return "—"
@@ -105,10 +144,17 @@ export function ActionSheet({
   const [phone, setPhone] = useState("")
   const [code, setCode] = useState("")
   const [codeSent, setCodeSent] = useState(false)
+  // L2 NDA
+  const [ndaQualified, setNdaQualified] = useState(false)
   const [ndaAgreed, setNdaAgreed] = useState(false)
   const [ndaName, setNdaName] = useState("")
+  // L3 LOI — 원본 /exchange/[id]/loi 페이지 이식
   const [loiPrice, setLoiPrice] = useState<number>(0)
+  const [loiFunding, setLoiFunding] = useState<"" | "CASH" | "LEVERAGED" | "FUND">("")
+  const [loiDuration, setLoiDuration] = useState<string>("30")
+  const [loiEntity, setLoiEntity] = useState("")
   const [loiMemo, setLoiMemo] = useState("")
+  // L4
   const [contractSigned, setContractSigned] = useState(false)
 
   // Reset state each time modal opens with different tier
@@ -118,12 +164,22 @@ export function ActionSheet({
     setPhone("")
     setCode("")
     setCodeSent(false)
+    setNdaQualified(false)
     setNdaAgreed(false)
     setNdaName("")
-    setLoiPrice(Math.round(askingPrice * 0.95)) // 5% 할인 기본값
+    setLoiPrice(Math.round(askingPrice * 0.965)) // -3.5% 기본값 (원본 820M/850M)
+    setLoiFunding("")
+    setLoiDuration("30")
+    setLoiEntity("")
     setLoiMemo("")
     setContractSigned(false)
   }, [open, tier, askingPrice])
+
+  // LOI premium %
+  const loiPremiumPct = useMemo(() => {
+    if (askingPrice <= 0) return 0
+    return ((loiPrice - askingPrice) / askingPrice) * 100
+  }, [loiPrice, askingPrice])
 
   // ESC 닫기
   useEffect(() => {
@@ -142,8 +198,14 @@ export function ActionSheet({
     switch (tier) {
       case "L0": return loginEmail.includes("@") && loginPw.length >= 4
       case "L1": return codeSent && code.length === 6
-      case "L2": return ndaAgreed && ndaName.trim().length >= 2
-      case "L3": return loiPrice > 0 && loiMemo.trim().length >= 5
+      case "L2": return ndaQualified && ndaAgreed && ndaName.trim().length >= 2
+      case "L3":
+        return (
+          loiPrice > 0 &&
+          loiFunding !== "" &&
+          loiEntity.trim().length >= 2 &&
+          loiDuration.length > 0
+        )
       case "L4": return contractSigned
       case "L5": return true
       default: return false
@@ -162,7 +224,9 @@ export function ActionSheet({
       }}
     >
       <div
-        className="w-full sm:max-w-[520px] sm:rounded-2xl rounded-t-2xl overflow-hidden flex flex-col"
+        className={`w-full ${
+          tier === "L2" || tier === "L3" ? "sm:max-w-[720px]" : "sm:max-w-[520px]"
+        } sm:rounded-2xl rounded-t-2xl overflow-hidden flex flex-col`}
         style={{
           backgroundColor: "var(--layer-1-bg)",
           border: "1px solid var(--layer-border-strong)",
@@ -249,20 +313,29 @@ export function ActionSheet({
             />
           )}
           {tier === "L2" && (
-            <L2Form
+            <L2NdaForm
+              qualified={ndaQualified}
               agreed={ndaAgreed}
               name={ndaName}
-              onToggleAgree={setNdaAgreed}
+              onToggleQualified={setNdaQualified}
+              onToggleAgreed={setNdaAgreed}
               onNameChange={setNdaName}
             />
           )}
           {tier === "L3" && (
-            <L3Form
-              price={loiPrice}
-              memo={loiMemo}
+            <L3LoiForm
               askingPrice={askingPrice}
+              price={loiPrice}
+              funding={loiFunding}
+              duration={loiDuration}
+              entity={loiEntity}
+              notes={loiMemo}
+              premiumPct={loiPremiumPct}
               onPriceChange={setLoiPrice}
-              onMemoChange={setLoiMemo}
+              onFundingChange={setLoiFunding}
+              onDurationChange={setLoiDuration}
+              onEntityChange={setLoiEntity}
+              onNotesChange={setLoiMemo}
             />
           )}
           {tier === "L4" && (
@@ -447,112 +520,396 @@ function L1Form({
   )
 }
 
-function L2Form({
-  agreed, name, onToggleAgree, onNameChange,
+/* ═════════════════════════════════════════════════════════════
+   L2 NDA FORM — 원본 /exchange/[id]/nda 페이지 이식 (DR-7)
+═════════════════════════════════════════════════════════════ */
+function L2NdaForm({
+  qualified, agreed, name,
+  onToggleQualified, onToggleAgreed, onNameChange,
 }: {
+  qualified: boolean
   agreed: boolean
   name: string
-  onToggleAgree: (v: boolean) => void
+  onToggleQualified: (v: boolean) => void
+  onToggleAgreed: (v: boolean) => void
   onNameChange: (v: string) => void
 }) {
   return (
     <div className="space-y-4">
-      {/* NDA 약관 */}
-      <div
-        className="rounded-lg p-4 overflow-y-auto"
-        style={{
-          maxHeight: 200,
-          backgroundColor: "var(--layer-2-bg)",
-          border: "1px solid var(--layer-border-strong)",
-          fontSize: 11,
-          color: "var(--fg-default)",
-          lineHeight: 1.6,
-        }}
-      >
-        <div className="font-black mb-2" style={{ fontSize: 12, color: "var(--fg-strong)" }}>
-          비밀유지계약서 (NDA) 요약
-        </div>
-        <p><strong>1조 (목적)</strong> 본 계약은 NPLatform 을 통해 제공되는 매각 자료의 비밀 유지를 목적으로 합니다.</p>
-        <p className="mt-2"><strong>2조 (비밀정보의 범위)</strong> 매도자 정보·채권잔액·담보 상세·등기원본·현장사진 등 본 매물과 관련된 모든 원본 자료.</p>
-        <p className="mt-2"><strong>3조 (의무)</strong> 수령인은 비밀정보를 제3자에게 공개·유출할 수 없으며, 본 거래 목적 외의 용도로 사용할 수 없습니다.</p>
-        <p className="mt-2"><strong>4조 (유효기간)</strong> 본 계약의 효력은 서명일로부터 2년간 유지됩니다.</p>
-        <p className="mt-2"><strong>5조 (위반)</strong> 위반 시 실손해 배상 및 위약금 1억원을 청구할 수 있습니다.</p>
-      </div>
-
-      <label
-        className="flex items-start gap-2 cursor-pointer select-none"
-        style={{ fontSize: 12, color: "var(--fg-default)" }}
-      >
-        <input
-          type="checkbox"
-          checked={agreed}
-          onChange={(e) => onToggleAgree(e.target.checked)}
-          className="mt-0.5"
+      {/* 전문투자자 확인 */}
+      <FormCard title="전문투자자 확인" icon={<ShieldCheck size={14} />}>
+        <p
+          className="mb-3 leading-relaxed"
+          style={{ fontSize: 12, color: "var(--fg-muted)" }}
+        >
+          자본시장법 시행령 제10조에 따른 전문투자자 요건을 충족하는지 확인해주세요.
+          (금융기관 · 연기금 · 금융위 등록 투자자문업자 · 순자산 100억 이상 법인 등)
+        </p>
+        <ToggleRow
+          value={qualified}
+          onChange={onToggleQualified}
+          label="전문투자자 요건을 충족하며, 관련 증빙서류 제출에 동의합니다"
         />
-        <span>위 NDA 조항을 읽고 이에 동의합니다.</span>
-      </label>
+      </FormCard>
 
-      <Field label="전자서명 (본인 성명)">
+      {/* NDA 조항 */}
+      <FormCard title="NDA 조항" icon={<FileSignature size={14} />}>
+        <div
+          className="rounded-lg overflow-y-auto"
+          style={{
+            maxHeight: 240,
+            padding: "14px 16px",
+            backgroundColor: "var(--layer-2-bg)",
+            border: "1px solid var(--layer-border-strong)",
+            fontSize: 12,
+            color: "var(--fg-default)",
+            lineHeight: 1.7,
+          }}
+        >
+          {NDA_CLAUSES.map((clause, i) => (
+            <div key={i} className={i > 0 ? "mt-3" : ""}>
+              <div
+                className="font-black mb-1"
+                style={{ color: "var(--fg-strong)", fontSize: 12 }}
+              >
+                {clause.title}
+              </div>
+              <div>{clause.body}</div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3">
+          <ToggleRow
+            value={agreed}
+            onChange={onToggleAgreed}
+            label="위 NDA 조항을 모두 읽고 동의합니다"
+          />
+        </div>
+      </FormCard>
+
+      {/* 전자 서명 */}
+      <FormCard title="전자 서명" icon={<FileSignature size={14} />}>
+        <label
+          className="block font-bold mb-1.5"
+          style={{ fontSize: 11, color: "var(--fg-muted)" }}
+        >
+          서명자 성명 <span style={{ color: "var(--color-positive)" }}>*</span>
+        </label>
         <input
           type="text"
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
-          placeholder="홍길동"
-          style={{ ...INPUT_STYLE, fontFamily: "serif", fontStyle: "italic", fontSize: 16 }}
+          placeholder="본인의 성명을 정확히 입력하세요"
+          style={{
+            ...INPUT_STYLE,
+            fontFamily: "serif",
+            fontStyle: "italic",
+            fontSize: 15,
+          }}
         />
-      </Field>
+        <p
+          className="mt-2 leading-relaxed"
+          style={{ fontSize: 10, color: "var(--fg-subtle)" }}
+        >
+          전자서명법에 따른 공인인증서 기반 서명이 아닌 간이 서명입니다.
+          실계약 시 별도의 공인 전자서명이 요구됩니다.
+        </p>
+      </FormCard>
+
+      {/* 경고 */}
+      <div
+        className="rounded-xl flex items-start gap-2.5"
+        style={{
+          padding: "12px 14px",
+          backgroundColor: "rgba(245, 158, 11, 0.10)",
+          border: "1px solid rgba(245, 158, 11, 0.33)",
+        }}
+      >
+        <AlertTriangle
+          size={15}
+          color="#F59E0B"
+          className="flex-shrink-0 mt-0.5"
+        />
+        <p className="leading-relaxed" style={{ fontSize: 11, color: "var(--fg-default)" }}>
+          NDA 체결 후 열람 행위는 PII Access Log 에 기록되며, 비정상 패턴 감지 시 계정이
+          일시 정지될 수 있습니다. 비밀정보의 부정 사용은 개인정보보호법 · 신용정보법
+          위반에 해당합니다.
+        </p>
+      </div>
     </div>
   )
 }
 
-function L3Form({
-  price, memo, askingPrice, onPriceChange, onMemoChange,
+/* ═════════════════════════════════════════════════════════════
+   L3 LOI FORM — 원본 /exchange/[id]/loi 페이지 이식 (DR-7)
+═════════════════════════════════════════════════════════════ */
+type LoiFunding = "" | "CASH" | "LEVERAGED" | "FUND"
+
+function L3LoiForm({
+  askingPrice,
+  price, funding, duration, entity, notes, premiumPct,
+  onPriceChange, onFundingChange, onDurationChange, onEntityChange, onNotesChange,
 }: {
-  price: number
-  memo: string
   askingPrice: number
+  price: number
+  funding: LoiFunding
+  duration: string
+  entity: string
+  notes: string
+  premiumPct: number
   onPriceChange: (n: number) => void
-  onMemoChange: (v: string) => void
+  onFundingChange: (v: LoiFunding) => void
+  onDurationChange: (v: string) => void
+  onEntityChange: (v: string) => void
+  onNotesChange: (v: string) => void
 }) {
-  const discount = askingPrice > 0 ? (((askingPrice - price) / askingPrice) * 100).toFixed(1) : "0.0"
   return (
     <div className="space-y-4">
-      <Field
-        label="희망 매입가 (원)"
-        hint={`희망가 ${formatKRW(askingPrice)} 대비 ${discount}% ${Number(discount) >= 0 ? "↓" : "↑"}`}
-      >
-        <input
-          type="number"
-          value={price}
-          onChange={(e) => onPriceChange(Number(e.target.value))}
-          placeholder="850000000"
-          style={{ ...INPUT_STYLE, fontFamily: "monospace", fontSize: 15 }}
-        />
-        <div className="mt-2 font-bold tabular-nums" style={{ fontSize: 13, color: "var(--color-positive)" }}>
-          ≈ {formatKRW(price)}
+      {/* 제안 가격 */}
+      <FormCard title="제안 가격" icon={<Briefcase size={14} />}>
+        <div
+          className="mb-2 font-semibold"
+          style={{ fontSize: 11, color: "var(--fg-muted)" }}
+        >
+          매각희망가 {formatKRW(askingPrice)}원 기준
         </div>
-      </Field>
-      <Field label="제안 메모" hint="매도자에게 전달될 메시지 · 5자 이상">
-        <textarea
-          value={memo}
-          onChange={(e) => onMemoChange(e.target.value)}
-          placeholder="현금 일시불, 실사 2주 이내 완료 후 즉시 계약 가능합니다."
-          rows={4}
-          style={{ ...INPUT_STYLE, resize: "vertical", minHeight: 90 }}
+        <div className="relative">
+          <input
+            type="text"
+            inputMode="numeric"
+            value={price ? price.toLocaleString("ko-KR") : ""}
+            onChange={(e) =>
+              onPriceChange(Number(e.target.value.replace(/[^0-9]/g, "")) || 0)
+            }
+            placeholder="예: 820,000,000"
+            style={{
+              ...INPUT_STYLE,
+              padding: "14px 60px 14px 16px",
+              fontSize: 18,
+              fontWeight: 700,
+              fontFamily: "monospace",
+            }}
+          />
+          <span
+            className="absolute font-bold"
+            style={{
+              right: 18,
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: 12,
+              color: "var(--fg-muted)",
+            }}
+          >
+            원
+          </span>
+        </div>
+        {price > 0 && (
+          <div
+            className="mt-2 font-bold tabular-nums"
+            style={{
+              fontSize: 11,
+              color: premiumPct >= 0 ? "var(--color-positive)" : "#F59E0B",
+            }}
+          >
+            매각희망가 대비 {premiumPct >= 0 ? "+" : ""}
+            {premiumPct.toFixed(1)}%
+          </div>
+        )}
+      </FormCard>
+
+      {/* 자금 조달 계획 */}
+      <FormCard title="자금 조달 계획" icon={<Briefcase size={14} />}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {[
+            { value: "CASH",      label: "자기 자본 100%", desc: "승인 확률 높음" },
+            { value: "LEVERAGED", label: "금융 차입 병행", desc: "LTV 50~70%" },
+            { value: "FUND",      label: "펀드 출자",      desc: "LP 확약서 첨부" },
+          ].map((op) => {
+            const active = op.value === funding
+            return (
+              <button
+                key={op.value}
+                type="button"
+                onClick={() => onFundingChange(op.value as LoiFunding)}
+                className="text-left rounded-lg transition-colors"
+                style={{
+                  padding: "14px 12px",
+                  backgroundColor: active ? "var(--color-positive-bg)" : "var(--layer-2-bg)",
+                  border: `1px solid ${
+                    active ? "var(--color-positive)" : "var(--layer-border-strong)"
+                  }`,
+                  color: "var(--fg-default)",
+                }}
+              >
+                <div
+                  className="font-black mb-1"
+                  style={{ fontSize: 12, color: "var(--fg-strong)" }}
+                >
+                  {op.label}
+                </div>
+                <div style={{ fontSize: 10, color: "var(--fg-muted)" }}>
+                  {op.desc}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </FormCard>
+
+      {/* 실사 · 계약 체결 기간 */}
+      <FormCard title="실사 · 계약 체결 기간" icon={<Calendar size={14} />}>
+        <div className="flex gap-2 flex-wrap">
+          {["14", "30", "45", "60"].map((d) => {
+            const active = d === duration
+            return (
+              <button
+                key={d}
+                type="button"
+                onClick={() => onDurationChange(d)}
+                className="font-bold rounded-lg transition-colors"
+                style={{
+                  padding: "10px 16px",
+                  fontSize: 12,
+                  backgroundColor: active
+                    ? "var(--color-positive-bg)"
+                    : "var(--layer-2-bg)",
+                  color: active ? "var(--color-positive)" : "var(--fg-muted)",
+                  border: `1px solid ${
+                    active ? "var(--color-positive)" : "var(--layer-border-strong)"
+                  }`,
+                }}
+              >
+                {d}일
+              </button>
+            )
+          })}
+        </div>
+        <p className="mt-2" style={{ fontSize: 10, color: "var(--fg-subtle)" }}>
+          짧은 기간일수록 매도자 승인 가능성이 높아집니다.
+        </p>
+      </FormCard>
+
+      {/* 인수 주체 */}
+      <FormCard title="인수 주체" icon={<Briefcase size={14} />}>
+        <input
+          type="text"
+          value={entity}
+          onChange={(e) => onEntityChange(e.target.value)}
+          placeholder="예: ○○자산운용 NPL 1호 펀드"
+          style={{ ...INPUT_STYLE, fontSize: 13 }}
         />
-      </Field>
+      </FormCard>
+
+      {/* 매도자에게 전달할 메시지 */}
+      <FormCard title="매도자에게 전달할 메시지" icon={<Briefcase size={14} />}>
+        <textarea
+          value={notes}
+          onChange={(e) => onNotesChange(e.target.value)}
+          rows={4}
+          placeholder="인수 배경 · 추가 조건 · 실사 요구사항 등을 자유롭게 기재해주세요."
+          style={{
+            ...INPUT_STYLE,
+            fontSize: 13,
+            resize: "vertical",
+            fontFamily: "inherit",
+            minHeight: 90,
+          }}
+        />
+      </FormCard>
+
+      {/* 경고 */}
       <div
-        className="rounded-lg px-3 py-2.5 space-y-1"
+        className="rounded-xl flex items-start gap-2.5"
         style={{
-          fontSize: 11,
-          backgroundColor: "var(--color-positive-bg)",
-          color: "var(--color-positive)",
+          padding: "12px 14px",
+          backgroundColor: "rgba(46, 117, 182, 0.06)",
+          border: "1px solid rgba(46, 117, 182, 0.24)",
         }}
       >
-        <div>✓ 제출 즉시 매도자에게 알림이 전송됩니다</div>
-        <div>✓ 매도자 승인 시 데이터룸과 실사 자료가 공개됩니다</div>
+        <AlertCircle
+          size={15}
+          color="var(--color-brand-bright)"
+          className="flex-shrink-0 mt-0.5"
+        />
+        <p className="leading-relaxed" style={{ fontSize: 11, color: "var(--fg-default)" }}>
+          LOI 는 법적 구속력이 없는 의향서이지만, 매도자가 승인한 후 본 계약 협상 단계로
+          진입하면 에스크로 입금 및 계약금 몰취 조건이 적용될 수 있습니다.
+        </p>
       </div>
     </div>
+  )
+}
+
+/* ─── 공통: FormCard / ToggleRow ─── */
+function FormCard({
+  title,
+  icon,
+  children,
+}: {
+  title: string
+  icon: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <section
+      className="rounded-xl"
+      style={{
+        padding: "18px 20px",
+        backgroundColor: "var(--layer-1-bg)",
+        border: "1px solid var(--layer-border-strong)",
+      }}
+    >
+      <header
+        className="inline-flex items-center gap-2 font-black mb-3"
+        style={{ fontSize: 13, color: "var(--fg-strong)" }}
+      >
+        <span style={{ color: "var(--color-positive)" }}>{icon}</span>
+        {title}
+      </header>
+      {children}
+    </section>
+  )
+}
+
+function ToggleRow({
+  value,
+  onChange,
+  label,
+}: {
+  value: boolean
+  onChange: (v: boolean) => void
+  label: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!value)}
+      className="w-full text-left inline-flex items-center gap-3 font-semibold rounded-lg transition-colors"
+      style={{
+        padding: "11px 13px",
+        fontSize: 12,
+        color: "var(--fg-default)",
+        backgroundColor: value ? "var(--color-positive-bg)" : "var(--layer-2-bg)",
+        border: `1px solid ${
+          value ? "var(--color-positive)" : "var(--layer-border-strong)"
+        }`,
+      }}
+    >
+      <div
+        className="flex items-center justify-center rounded flex-shrink-0"
+        style={{
+          width: 20,
+          height: 20,
+          backgroundColor: value ? "var(--color-positive)" : "transparent",
+          border: `1px solid ${
+            value ? "var(--color-positive)" : "var(--layer-border-strong)"
+          }`,
+        }}
+      >
+        {value && <CheckCircle2 size={14} color="#041915" />}
+      </div>
+      <span className="flex-1">{label}</span>
+    </button>
   )
 }
 
