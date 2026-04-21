@@ -74,6 +74,8 @@ function PanelShell({
   return (
     <section
       className="rounded-2xl overflow-hidden"
+      // PanelShell 은 항상 다크 배경 (Bloomberg 톤) — 하위 컴포넌트가
+      // 페이지 라이트 모드에서도 올바른 대비를 갖도록 다크 토큰을 스코프 주입.
       style={{
         background: "linear-gradient(180deg, #0F1E35 0%, #122843 100%)",
         border: `1px solid ${accent === "gold"
@@ -83,7 +85,20 @@ function PanelShell({
           : "rgba(46, 117, 182, 0.32)"}`,
         boxShadow: "0 8px 32px rgba(27, 58, 92, 0.20)",
         color: "var(--fg-on-brand)",
-      }}
+        // ── Dark-scoped CSS variable overrides (라이트 모드 페이지에서도 적용) ──
+        ["--color-text-primary" as string]:   "#F1F5F9",
+        ["--color-text-secondary" as string]: "#CBD5E1",
+        ["--color-text-muted" as string]:     "#94A3B8",
+        ["--color-surface-elevated" as string]: "#162035",
+        ["--color-surface-overlay" as string]:  "#1E2D47",
+        ["--color-surface-sunken" as string]:   "#0F1C30",
+        ["--color-border-subtle" as string]:   "rgba(255,255,255,0.10)",
+        ["--color-brand-bright" as string]:    "#60A5FA",
+        ["--color-positive" as string]:        "#34D399",
+        ["--color-warning" as string]:         "#FBBF24",
+        ["--color-danger" as string]:          "#F87171",
+        colorScheme: "dark",
+      } as React.CSSProperties}
     >
       <header
         className="flex items-center justify-between gap-3 flex-wrap"
