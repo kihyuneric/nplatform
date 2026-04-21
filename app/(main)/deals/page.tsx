@@ -473,16 +473,16 @@ export default function DealsPage() {
                   </Link>
                 </div>
                 {/*
+                  DR-18 FIX · 2026-04-21
                   선택된 딜이 바뀌면 상태 초기화를 위해 key 로 리마운트.
-                  **바운디드 컨테이너 없음** — /exchange/[id] 와 동일하게 페이지 자연
-                  스크롤을 사용. 우측 sidebar 는 AssetDetailView 내부의 `lg:sticky lg:top-20`
-                  로 뷰포트에 고정되어, 스크롤 시 좌측 콘텐츠만 움직이는 것처럼 보이고
-                  우측과 높이 매칭이 자연스럽게 이뤄집니다. (이중 스크롤 제거)
+                  **래퍼에서 `overflow-hidden` 을 제거** — CSS `overflow: hidden` 은
+                  자식의 `position: sticky` 를 래퍼(스크롤 없는 클립 박스) 기준으로
+                  만들어 뷰포트 고정이 무력화되므로, AssetDetailView 내부의
+                  `lg:sticky lg:top-20` 우측 사이드바가 좌측 자연 스크롤과 나란히
+                  정렬되도록 /exchange/[id] 와 동일한 '래퍼 없음' 패턴을 사용.
+                  시각적 구분은 상단 제목 행의 얇은 구분선으로 대체.
                 */}
-                <div
-                  key={selectedDeal.id}
-                  className="rounded-2xl overflow-hidden border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]"
-                >
+                <div key={selectedDeal.id}>
                   <AssetDetailView
                     idProp={selectedDeal.id}
                     embedded
