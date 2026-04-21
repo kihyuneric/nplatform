@@ -1,13 +1,14 @@
 "use client"
 
 /**
- * /deals — 딜룸 (DR-11 · 2026-04-21)
+ * /deals — 딜룸 (DR-15 · 2026-04-21)
  *
- * 상단: 진행 중 딜 - 카드형(기본) / 리스트형 토글
- * 하단: 선택한 딜의 딜룸 원본 페이지 (= /exchange/[id]) 를 iframe 으로 임베드
+ * 상단: 진행중 딜 - 카드형(기본) / 리스트형 토글
+ * 하단: 선택한 딜의 딜룸 원본 화면을 **iframe 없이 직접 렌더**
+ *        (AssetDetailView 를 inline 으로 마운트)
  *
  * KPI / 매수·매도 필터 / 상태 필터는 전부 /deals/dashboard 로 이관.
- * 이 페이지는 오직 '딜룸' 본연 기능(진행 중 딜 선택 + 딜룸 뷰)만 노출.
+ * 이 페이지는 오직 '딜룸' 본연 기능(진행중 딜 선택 + 딜룸 뷰)만 노출.
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react"
@@ -25,6 +26,7 @@ import {
 import Link from "next/link"
 import { SampleBadge } from "@/components/shared/sample-badge"
 import { type DealStage } from "@/lib/deal-constants"
+import { AssetDetailView } from "@/components/asset-detail/asset-detail-view"
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -448,15 +450,17 @@ export default function DealsPage() {
               )}
             </section>
 
-            {/* 하단: 선택된 딜의 딜룸 전체 페이지 iframe 임베드 */}
+            {/* 하단: 선택된 딜의 딜룸 원본 화면 — iframe 없이 직접 렌더 */}
             {selectedDeal && (
-              <section>
-                <div className="flex items-center justify-between mb-2.5">
+              <section className="mt-2">
+                <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div className="w-1 h-4 rounded-full bg-[var(--color-brand-dark)]" />
-                    <h3 className={DS.text.cardTitle}>{selectedDeal.listing_name}</h3>
+                    <h3 className={DS.text.cardTitle}>
+                      {selectedDeal.listing_name}
+                    </h3>
                     <span className="text-[0.6875rem] font-bold text-[var(--color-text-muted)]">
-                      딜룸 전체 화면
+                      · 딜룸
                     </span>
                   </div>
                   <Link
@@ -468,17 +472,12 @@ export default function DealsPage() {
                     새 탭에서 열기
                   </Link>
                 </div>
+                {/* 선택된 딜이 바뀌면 상태 초기화를 위해 key 로 리마운트 */}
                 <div
+                  key={selectedDeal.id}
                   className="rounded-2xl overflow-hidden border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]"
-                  style={{ height: "calc(100vh - 120px)", minHeight: 900 }}
                 >
-                  <iframe
-                    key={selectedDeal.id}
-                    src={`/deals/${selectedDeal.id}?embed=1`}
-                    title={`딜룸 - ${selectedDeal.listing_name}`}
-                    className="w-full h-full border-0"
-                    loading="lazy"
-                  />
+                  <AssetDetailView idProp={selectedDeal.id} />
                 </div>
               </section>
             )}
