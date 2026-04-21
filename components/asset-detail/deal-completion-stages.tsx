@@ -220,7 +220,7 @@ function LoiOfferPanel({
           </button>
         )}
 
-        {/* 실사 데이터룸 */}
+        {/* LOI 체결 안내 (DR-9) */}
         <div
           className="rounded-xl p-3.5 flex items-start gap-3"
           style={{
@@ -234,13 +234,13 @@ function LoiOfferPanel({
           />
           <div className="flex-1 min-w-0">
             <div className="font-black" style={{ fontSize: 12 }}>
-              실사 데이터룸
+              LOI 체결
             </div>
             <div
               className="font-semibold mt-0.5 leading-relaxed"
               style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}
             >
-              매도자 승인 후 등기원본 · 임대차 계약 · 재무자료 · 채무자 원장이 공개됩니다.
+              매도자 승인 후, 채권 정보 세부 자료는 금융기관 대면 미팅에서 검토할 수 있습니다.
             </div>
           </div>
           <button
