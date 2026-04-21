@@ -58,6 +58,7 @@ export default async function DealIdLegacyRedirectPage({
   preserve("action")
   preserve("detail")
   preserve("filter")
+  preserve("embed")  // iframe 임베드 모드 (딜룸 /deals 에서 사용) — chrome 숨김
 
   // DR-3 신호: 레거시 /deals URL 에서 온 사용자임을 exchange 페이지가 인지
   qs.set("via", "deal-room")

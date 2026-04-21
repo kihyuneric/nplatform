@@ -400,11 +400,11 @@ export default function DealsPage() {
 
         {!loading && activeDeals.length > 0 && (
           <>
-            {/* 상단: 진행 중 딜 - 카드/리스트 */}
+            {/* 상단: 진행중 딜 - 카드/리스트 */}
             <section className="mb-5">
               <div className="flex items-center justify-between mb-2.5">
                 <div>
-                  <h3 className={DS.text.cardTitle}>진행 중 딜</h3>
+                  <h3 className={DS.text.cardTitle}>진행중 딜</h3>
                   <p className={`${DS.text.micro} mt-0.5`}>
                     {selectedDeal ? `선택된 딜의 딜룸이 아래에 연동됩니다` : "딜을 선택하면 딜룸이 아래에 열립니다"}
                   </p>

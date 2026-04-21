@@ -1,6 +1,7 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { Navigation } from '@/components/layout/navigation'
 import { Footer } from '@/components/layout/footer'
 import { MobileTabBar } from '@/components/layout/mobile-tab-bar'
@@ -38,24 +39,36 @@ const ONBOARDING_STEPS: TourStep[] = [
 // Full-screen pages where footer/breadcrumb should be hidden
 const FULLSCREEN_PATHS = ['/market/map']
 
-export default function MainLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+/**
+ * `?embed=1` → iframe 임베드 전용 클린 뷰
+ * - 딜룸(/deals)에서 선택된 딜의 자산 상세를 iframe 으로 합성할 때 사용
+ * - Navigation / Footer / Breadcrumb / MobileTabBar / ChatWidget / Tour 전부 숨김
+ * - 내부 콘텐츠만 노출되어 부모 페이지의 카드/리스트 아래에 깔끔히 들어감
+ */
+function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const isEmbed = searchParams?.get('embed') === '1'
   const isFullscreen = FULLSCREEN_PATHS.some(p => pathname?.startsWith(p))
 
+  // ── Embed 모드: 크롬 전부 제거하고 콘텐츠만 ──
+  if (isEmbed) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[var(--color-surface-base)]">
+        <main role="main" className="flex-1">
+          <PageTransition key={pathname}>{children}</PageTransition>
+        </main>
+      </div>
+    )
+  }
+
   return (
-    <NavConfigProvider>
     <div className="flex min-h-screen flex-col">
       <OfflineBanner />
       <Navigation />
       <main role="main" className={`flex-1 ${isFullscreen ? '' : 'pb-20 md:pb-0'}`}>
         {!isFullscreen && <BreadcrumbNav />}
-        <PageTransition key={pathname}>
-          {children}
-        </PageTransition>
+        <PageTransition key={pathname}>{children}</PageTransition>
       </main>
       {!isFullscreen && <Footer />}
       <DynamicChatWidget />
@@ -63,6 +76,19 @@ export default function MainLayout({
       <DynamicCommandPalette />
       <TourGuide steps={ONBOARDING_STEPS} tourKey="main-v1" />
     </div>
+  )
+}
+
+export default function MainLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <NavConfigProvider>
+      <Suspense fallback={null}>
+        <LayoutContent>{children}</LayoutContent>
+      </Suspense>
     </NavConfigProvider>
   )
 }
