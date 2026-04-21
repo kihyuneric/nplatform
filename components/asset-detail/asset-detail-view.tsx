@@ -88,7 +88,20 @@ interface ListingDetail {
   court_case_masked: string
   published_at: string
   rights_summary: { senior_total: number; junior_total: number; deposit_total: number }
-  registry_summary_items: Array<{ order: number; type: string; amount: number; holder_masked: string; receipt_date?: string }>
+  registry_summary_items: Array<{ order: number; order_code?: string; type: string; amount: number; holder_masked: string; receipt_date?: string }>
+  /** 등기부등본 전체 행 (L2 공개) */
+  registry_full_items?: Array<{
+    order: number
+    order_code: string        // 예: "갑30", "을21"
+    receipt_date: string
+    type: string
+    holder: string            // 권리자 (UI에서 maskHolderDisplay 적용)
+    amount: number | null
+    amount_label?: string     // 예: "청구금액" (특수 표시)
+  }>
+  /** 감정평가서 부속 정보 */
+  appraisal_area?: number     // 면적 (m²)
+  appraisal_date?: string     // 감정 기준시점 (ISO, 예: "2026-05-23")
   lease_summary: { total_deposit: number; monthly_rent: number; tenant_count: number }
   site_photos: string[]
   debtor_name_masked: string
@@ -143,10 +156,21 @@ function buildMock(id: string): ListingDetail {
       deposit_total: 60_000_000,
     },
     registry_summary_items: [
-      { order: 1, type: "근저당권", amount: 780_000_000, holder_masked: "우리은행", receipt_date: "2021.06.18" },
-      { order: 2, type: "근저당권", amount: 140_000_000, holder_masked: "○○캐피탈", receipt_date: "2024.10.25" },
-      { order: 3, type: "전세권",   amount: 60_000_000,  holder_masked: "김○○", receipt_date: "2023.03.10" },
+      { order: 1, order_code: "을21", type: "근저당권", amount: 3_600_000_000, holder_masked: "중소기업은행(부천테크노지점)", receipt_date: "2021.06.18" },
+      { order: 2, order_code: "을23", type: "근저당권", amount: 960_000_000,   holder_masked: "(주)피비스타(송파동,현대레이크빌)", receipt_date: "2024.10.25" },
+      { order: 3, order_code: "갑31", type: "가압류",   amount: 654_000_000,   holder_masked: "(주)린정(고잔동,한남법조빌딩)", receipt_date: "2024.10.15" },
     ],
+    registry_full_items: [
+      { order: 1, order_code: "갑30", receipt_date: "2021.06.18", type: "소유권이전(매매)",   holder: "유한회사제이원퍼스트(소유자)",         amount: null },
+      { order: 2, order_code: "을21", receipt_date: "2021.06.18", type: "근저당권설정",       holder: "중소기업은행(부천테크노지점)",          amount: 3_600_000_000 },
+      { order: 3, order_code: "갑31", receipt_date: "2024.10.15", type: "가압류",             holder: "(주)린정(고잔동,한남법조빌딩)",        amount: 654_000_000 },
+      { order: 4, order_code: "갑32", receipt_date: "2024.10.23", type: "압류",               holder: "영등포구(서울특별시)",                 amount: null },
+      { order: 5, order_code: "을23", receipt_date: "2024.10.25", type: "근저당권설정",       holder: "(주)피비스타(송파동,현대레이크빌)",    amount: 960_000_000 },
+      { order: 6, order_code: "갑33", receipt_date: "2025.01.08", type: "압류",               holder: "국 금천세무서장",                      amount: null },
+      { order: 7, order_code: "갑34", receipt_date: "2025.05.09", type: "임의경매개시결정",   holder: "중소기업은행(여신관리부)",             amount: 3_086_117_337, amount_label: "청구금액" },
+    ],
+    appraisal_area: 3333,
+    appraisal_date: "2026-05-23",
     lease_summary: { total_deposit: 60_000_000, monthly_rent: 0, tenant_count: 1 },
     site_photos: ["photo1", "photo2", "photo3"],
     debtor_name_masked: "김●●",
@@ -185,13 +209,33 @@ function formatDateKo(iso: string | null | undefined): string {
 
 /** 권리자 표시용 마스킹: 괄호 부분 제거 + 앞 2글자 ● 처리 */
 function maskHolderDisplay(raw: string): string {
-  // 괄호 및 내용 제거 (예: "중소기업은행(부천테크노지점)" → "중소기업은행")
   const stripped = raw.replace(/\(.*?\)/g, '').replace(/（.*?）/g, '').trim()
   if (!stripped) return '●●●'
-  // 앞 2자리를 ● 로 교체
   const chars = [...stripped]
-  const masked = chars.map((c, i) => i < 2 ? '●' : c)
-  return masked.join('')
+  return chars.map((c, i) => i < 2 ? '●' : c).join('')
+}
+
+/** 구분 코드 포맷: order + optional code → "1(갑30)" */
+function fmtOrderCode(order: number, code?: string): string {
+  return code ? `${order}(${code})` : String(order)
+}
+
+/** m² ↔ 평 변환 */
+const M2_PER_PYEONG = 3.3058
+function fmtArea(m2: number, unit: "m2" | "평"): string {
+  if (unit === "m2") return `${m2.toLocaleString("ko-KR")}m²`
+  return `${(m2 / M2_PER_PYEONG).toFixed(1)}평`
+}
+function fmtPricePerArea(price: number, m2: number, unit: "m2" | "평"): string {
+  if (!m2) return "—"
+  if (unit === "m2") {
+    const v = Math.round(price / m2)
+    return v >= 10_000 ? `${(v / 10_000).toFixed(0)}만원/m²` : `${v.toLocaleString()}원/m²`
+  }
+  const pyeong = m2 / M2_PER_PYEONG
+  const v = Math.round(price / pyeong)
+  return v >= 100_000_000 ? `${(v / 100_000_000).toFixed(1)}억/평` :
+    v >= 10_000 ? `${(v / 10_000).toFixed(0)}만원/평` : `${v.toLocaleString()}원/평`
 }
 
 function computeDataCompleteness(row: Record<string, unknown>): number {
@@ -397,6 +441,7 @@ export function AssetDetailView({
   const [editingSec, setEditingSec] = useState<"auction" | "public-sale" | null>(null)
   const [auctionDraft, setAuctionDraft] = useState<ListingDetail["auction_info"]>(null)
   const [publicSaleDraft, setPublicSaleDraft] = useState<ListingDetail["public_sale_info"]>(null)
+  const [areaUnit, setAreaUnit] = useState<"m2" | "평">("m2")
   const [appraisalPdfOpen, setAppraisalPdfOpen] = useState(false)
   const [loiPdfOpen, setLoiPdfOpen] = useState(false)
   const [ndaPdfOpen, setNdaPdfOpen] = useState(false)
@@ -837,8 +882,8 @@ export function AssetDetailView({
                                 : undefined,
                             }}
                           >
-                            <td style={{ padding: "10px 12px", textAlign: "center", fontSize: 11, fontWeight: 700, color: C.lt4 }}>
-                              {r.order}
+                            <td style={{ padding: "10px 12px", textAlign: "center", fontSize: 11, fontWeight: 700, color: C.lt4, whiteSpace: "nowrap" }}>
+                              {fmtOrderCode(r.order, r.order_code)}
                             </td>
                             <td style={{ padding: "10px 12px", fontSize: 11, color: C.lt4, whiteSpace: "nowrap" }}>
                               {r.receipt_date ?? "—"}
@@ -955,11 +1000,62 @@ export function AssetDetailView({
               anchorId="appraisal"
             >
               <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction}>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <Stat label="감정가" value={formatKRW(listing.appraisal_value)} tone="em" />
-                  <Stat label="채권잔액" value={formatKRW(listing.claim_info.balance)} tone="amber" />
-                  <Stat label="희망가" value={formatKRW(listing.asking_price)} tone="blue" />
+                {/* ── 단위 토글 ── */}
+                <div className="flex items-center gap-2 mb-3">
+                  <span style={{ fontSize: 11, color: C.lt4, fontWeight: 700 }}>단위</span>
+                  {(["m2", "평"] as const).map(u => (
+                    <button
+                      key={u}
+                      type="button"
+                      onClick={() => setAreaUnit(u)}
+                      className="rounded-full font-bold transition-colors"
+                      style={{
+                        padding: "3px 10px", fontSize: 11,
+                        backgroundColor: areaUnit === u ? C.blue : "var(--layer-2-bg)",
+                        color: areaUnit === u ? "#fff" : C.lt3,
+                        border: `1px solid ${areaUnit === u ? C.blue : "var(--layer-border-strong)"}`,
+                      }}
+                    >
+                      {u === "m2" ? "m²" : "평"}
+                    </button>
+                  ))}
                 </div>
+
+                {/* ── KPI 3칸 ── */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                  <Stat label="감정가" value={formatKRW(listing.appraisal_value)} tone="em" />
+                  <Stat
+                    label={`면적 (${areaUnit === "m2" ? "m²" : "평"})`}
+                    value={listing.appraisal_area ? fmtArea(listing.appraisal_area, areaUnit) : "—"}
+                  />
+                  <Stat
+                    label={`감정가/${areaUnit === "m2" ? "m²" : "평"}`}
+                    value={
+                      listing.appraisal_area
+                        ? fmtPricePerArea(listing.appraisal_value, listing.appraisal_area, areaUnit)
+                        : "—"
+                    }
+                    tone="blue"
+                  />
+                </div>
+
+                {/* ── 감정 기준시점 ── */}
+                <div className="flex items-center gap-3 mb-3">
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.lt3 }}>감정 기준시점</span>
+                  <input
+                    type="date"
+                    readOnly
+                    value={listing.appraisal_date ?? ""}
+                    style={{
+                      fontSize: 12, color: C.lt2,
+                      border: "1px solid var(--layer-border-strong)",
+                      borderRadius: 6, padding: "4px 8px",
+                      backgroundColor: "var(--layer-2-bg)",
+                      cursor: "default",
+                    }}
+                  />
+                </div>
+
                 {/* PDF 뷰어 + 다운로드 */}
                 <div className="mt-3 flex items-center gap-2 flex-wrap">
                   <button
@@ -1241,28 +1337,102 @@ export function AssetDetailView({
               anchorId="deed-full"
             >
               <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction}>
-                <div className="space-y-3">
-                  <p className="leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
-                    등기부등본 원본 PDF · 전체 권리자 실명 · 근저당 설정 원본 · 변동 이력이 포함된 자료입니다.
-                  </p>
+                <div className="space-y-4">
+                  {/* ── 다운로드 버튼: 토지 등기부등본 / 건물 등기부등본 ── */}
                   <div className="flex flex-wrap gap-2">
-                    {listing.collateral !== "토지" && (
-                      /* 토지 外(아파트·건물 등): 토지+건물 등기부등본 */
-                      <DeedDownloadBtn
-                        label="토지·건물 등기부등본"
-                        url={`/api/v1/docs/${id}/deed-building`}
-                        uploaded={true}
-                        onDownload={() => toast.success("토지·건물 등기부등본 다운로드를 시작합니다.", { duration: 1800 })}
-                      />
-                    )}
-                    {/* 토지 등기부등본 (모든 담보 유형) */}
                     <DeedDownloadBtn
                       label="토지 등기부등본"
                       url={`/api/v1/docs/${id}/deed-land`}
                       uploaded={true}
                       onDownload={() => toast.success("토지 등기부등본 다운로드를 시작합니다.", { duration: 1800 })}
                     />
+                    {listing.collateral !== "토지" && (
+                      <DeedDownloadBtn
+                        label="건물 등기부등본"
+                        url={`/api/v1/docs/${id}/deed-building`}
+                        uploaded={true}
+                        onDownload={() => toast.success("건물 등기부등본 다운로드를 시작합니다.", { duration: 1800 })}
+                      />
+                    )}
                   </div>
+
+                  {/* ── 전체 등기부 테이블 ── */}
+                  {listing.registry_full_items && listing.registry_full_items.length > 0 && (
+                    <div>
+                      {/* 헤더 행: 채권액합계 + 열람일 */}
+                      <div
+                        className="flex items-center justify-between mb-2 px-1"
+                        style={{ fontSize: 11 }}
+                      >
+                        <span style={{ color: C.lt3, fontWeight: 700 }}>
+                          채권액합계{" "}
+                          <span style={{ color: C.em }}>
+                            {listing.registry_full_items
+                              .reduce((s, r) => s + (r.amount ?? 0), 0)
+                              .toLocaleString("ko-KR")}원
+                          </span>
+                        </span>
+                        <span style={{ color: C.lt4 }}>
+                          열람 {listing.published_at?.replace(/-/g, ".")}
+                        </span>
+                      </div>
+
+                      <div style={{ overflowX: "auto" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 560 }}>
+                          <thead>
+                            <tr style={{ backgroundColor: "var(--layer-2-bg)", borderBottom: "2px solid var(--layer-border-strong)" }}>
+                              {["구분", "접수일", "권리종류", "권리자", "채권금액"].map((h, i) => (
+                                <th
+                                  key={h}
+                                  style={{
+                                    padding: "8px 10px",
+                                    textAlign: i >= 4 ? "right" : i === 0 ? "center" : "left",
+                                    fontSize: 10, fontWeight: 700,
+                                    color: C.lt4, letterSpacing: "0.04em",
+                                    textTransform: "uppercase",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {h}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {listing.registry_full_items.map((r, idx) => (
+                              <tr
+                                key={r.order}
+                                style={{
+                                  borderBottom: idx < (listing.registry_full_items?.length ?? 0) - 1
+                                    ? "1px solid var(--layer-border)"
+                                    : undefined,
+                                }}
+                              >
+                                <td style={{ padding: "9px 10px", textAlign: "center", fontSize: 11, fontWeight: 700, color: C.lt4, whiteSpace: "nowrap" }}>
+                                  {fmtOrderCode(r.order, r.order_code)}
+                                </td>
+                                <td style={{ padding: "9px 10px", fontSize: 11, color: C.lt4, whiteSpace: "nowrap" }}>
+                                  {r.receipt_date}
+                                </td>
+                                <td style={{ padding: "9px 10px", fontSize: 12, fontWeight: 700, color: C.lt1, whiteSpace: "nowrap" }}>
+                                  {r.type}
+                                </td>
+                                <td style={{ padding: "9px 10px", fontSize: 11, color: C.lt3 }}>
+                                  {maskHolderDisplay(r.holder)}
+                                </td>
+                                <td style={{ padding: "9px 10px", textAlign: "right", fontSize: 12, fontWeight: 700, color: r.amount ? C.em : C.lt4, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+                                  {r.amount_label && (
+                                    <span style={{ fontSize: 10, color: C.lt4, marginRight: 4 }}>{r.amount_label}</span>
+                                  )}
+                                  {r.amount !== null ? r.amount.toLocaleString("ko-KR") + "원" : "—"}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </TierGate>
             </SectionCard>
