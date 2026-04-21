@@ -53,10 +53,10 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
       { key: 'ex_guide',        label: '이용 가이드', href: '/guide',                   description: 'NPL 매물 이용 가이드',      icon: 'BookOpen',     active: true, order: 9 },
     ],
     deals: [
-      { key: 'deals_list',      label: '딜룸 현황',   href: '/deals',                description: '딜룸 · 대시보드',             icon: 'ClipboardList',  active: true, order: 1 },
-      { key: 'deals_matching',  label: 'AI 매칭',     href: '/deals/matching',       description: 'AI 기반 매물-투자자 매칭',    icon: 'Brain',          active: true, order: 2 },
-      { key: 'deals_contract',  label: '계약서 생성', href: '/deals/contract',       description: 'AI 자동 계약서 생성',         icon: 'FileSignature',  active: true, order: 3 },
-      { key: 'deals_teams',     label: '팀 투자',     href: '/deals/teams',          description: '공동투자 팀 관리',            icon: 'Users',          active: true, order: 4 },
+      { key: 'deals_room',      label: '딜룸',        href: '/deals',                description: '진행 중 딜 + 가장 최근 딜룸 연동',  icon: 'MessageSquare',  active: true, order: 1 },
+      { key: 'deals_dashboard', label: '대시보드',    href: '/deals/dashboard',      description: '진행중 + 이번달 완료 현황',         icon: 'LayoutDashboard', active: true, order: 2 },
+      { key: 'deals_matching',  label: 'AI 매칭',     href: '/deals/matching',       description: 'AI 기반 매물-투자자 매칭',          icon: 'Brain',          active: true, order: 3 },
+      { key: 'deals_teams',     label: '팀 투자',     href: '/deals/teams',          description: '공동투자 팀 관리',                  icon: 'Users',          active: true, order: 4 },
     ],
     analysis: [
       { key: 'analysis_main',    label: '분석 대시보드',   href: '/analysis',                    description: '시장 통계 및 인텔리전스',  icon: 'BarChart3',   active: true, order: 1 },
@@ -98,10 +98,10 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
       active: true,
       order: 2,
       items: [
-        { key: 'deals_list',      label: '딜룸 현황',   href: '/deals',              description: '딜룸 · 대시보드',          icon: 'ClipboardList',  active: true, order: 1 },
-        { key: 'deals_matching',  label: 'AI 매칭',     href: '/deals/matching',     description: 'AI 기반 매물-투자자 매칭', icon: 'Brain',          active: true, order: 2 },
-        { key: 'deals_contract',  label: '계약서 생성', href: '/deals/contract',     description: 'AI 자동 계약서 생성',      icon: 'FileSignature',  active: true, order: 3 },
-        { key: 'deals_community', label: '커뮤니티',    href: '/services/community', description: 'NPL 투자자 커뮤니티',      icon: 'MessageSquare',  active: true, order: 4 },
+        { key: 'deals_room',      label: '딜룸',        href: '/deals',              description: '진행 중 딜 + 가장 최근 딜룸 연동', icon: 'MessageSquare',   active: true, order: 1 },
+        { key: 'deals_dashboard', label: '대시보드',    href: '/deals/dashboard',    description: '진행중 + 이번달 완료 현황',         icon: 'LayoutDashboard', active: true, order: 2 },
+        { key: 'deals_matching',  label: 'AI 매칭',     href: '/deals/matching',     description: 'AI 기반 매물-투자자 매칭',          icon: 'Brain',           active: true, order: 3 },
+        { key: 'deals_teams',     label: '팀 투자',     href: '/deals/teams',        description: '공동투자 팀 관리',                  icon: 'Users',           active: true, order: 4 },
       ],
     },
     {

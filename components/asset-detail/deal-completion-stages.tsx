@@ -260,8 +260,120 @@ function LoiOfferPanel({
             <ArrowRight size={11} />
           </button>
         </div>
+
+        {/* 실사 체크리스트 (DR-10) — LOI 체결 후 자동 생성 */}
+        <DueDiligenceChecklist />
       </div>
     </PanelShell>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────
+   실사 체크리스트 (DR-10) — LOI 체결 후 L3 에서 표시
+   ───────────────────────────────────────────────────────────── */
+function DueDiligenceChecklist() {
+  const [items, setItems] = useState([
+    { key: "reg",      label: "등기부등본 원본 확인", done: true },
+    { key: "appraise", label: "감정평가서 재검토", done: true },
+    { key: "tax",      label: "재산세·종합부동산세 납부 이력", done: false },
+    { key: "rent",     label: "임대차 계약·보증금 현황 점검", done: false },
+    { key: "physical", label: "현장 실사 (외관·관리 상태)", done: false },
+    { key: "legal",    label: "법무법인 권리분석 의견서", done: false },
+  ])
+
+  const doneCnt = items.filter((i) => i.done).length
+  const pct = Math.round((doneCnt / items.length) * 100)
+
+  function toggle(k: string) {
+    setItems((arr) => arr.map((i) => (i.key === k ? { ...i, done: !i.done } : i)))
+  }
+
+  return (
+    <div
+      id="dd-checklist"
+      className="rounded-xl p-3.5 scroll-mt-24"
+      style={{
+        backgroundColor: "rgba(255,255,255,0.03)",
+        border: "1px dashed rgba(255,255,255,0.14)",
+      }}
+    >
+      <div className="flex items-center justify-between mb-2.5">
+        <div className="inline-flex items-center gap-2">
+          <span className="font-black" style={{ fontSize: 12 }}>실사 체크리스트</span>
+          <span
+            className="font-semibold px-1.5 py-0.5 rounded"
+            style={{
+              fontSize: 10,
+              backgroundColor: "rgba(46,117,182,0.18)",
+              color: "var(--color-brand-bright)",
+            }}
+          >
+            L3
+          </span>
+        </div>
+        <span
+          className="font-black tabular-nums"
+          style={{ fontSize: 11, color: "var(--color-brand-bright)" }}
+        >
+          {doneCnt}/{items.length} · {pct}%
+        </span>
+      </div>
+      <div
+        className="w-full rounded-full overflow-hidden mb-2.5"
+        style={{ height: 4, backgroundColor: "rgba(255,255,255,0.08)" }}
+      >
+        <div
+          className="h-full rounded-full transition-all"
+          style={{
+            width: `${pct}%`,
+            background: "linear-gradient(to right, var(--color-brand-bright), var(--color-positive))",
+          }}
+        />
+      </div>
+      <ul className="space-y-1.5">
+        {items.map((it) => (
+          <li key={it.key}>
+            <button
+              type="button"
+              onClick={() => toggle(it.key)}
+              className="w-full inline-flex items-center gap-2.5 text-left rounded-lg transition-colors hover:bg-white/5"
+              style={{ padding: "6px 8px" }}
+            >
+              <span
+                className="inline-flex items-center justify-center rounded"
+                style={{
+                  width: 16,
+                  height: 16,
+                  backgroundColor: it.done ? "var(--color-positive)" : "rgba(255,255,255,0.08)",
+                  border: it.done ? "1px solid var(--color-positive)" : "1px solid rgba(255,255,255,0.18)",
+                  color: "#041915",
+                  fontSize: 10,
+                }}
+                aria-hidden
+              >
+                {it.done ? "✓" : ""}
+              </span>
+              <span
+                className="font-semibold"
+                style={{
+                  fontSize: 11,
+                  color: it.done ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.85)",
+                  textDecoration: it.done ? "line-through" : "none",
+                }}
+              >
+                {it.label}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <p
+        className="mt-2 leading-relaxed"
+        style={{ fontSize: 10, color: "rgba(255,255,255,0.48)" }}
+      >
+        체크리스트는 L3 (LOI 제출 후) 매도자 승인과 함께 자동 생성됩니다. 금융기관 대면 미팅에서 검토한 내용을 업데이트하세요.
+      </p>
+    </div>
   )
 }
 
@@ -456,7 +568,7 @@ function SettlementReceiptPanel({
       icon={<CheckCircle2 size={16} />}
       accent="green"
     >
-      <div className="space-y-4">
+      <div id="settlement" className="space-y-4 scroll-mt-24">
         <div
           className="rounded-xl p-4"
           style={{

@@ -19,3 +19,4 @@ export {
   type InlineDealRoomMessage,
 } from "./inline-deal-room"
 export { DealCompletionStages, type DealCompletionStagesProps } from "./deal-completion-stages"
+export { TierNav, type TierNavItem, type TierNavProps } from "./tier-nav"

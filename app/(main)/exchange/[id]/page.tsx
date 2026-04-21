@@ -33,6 +33,7 @@ import {
   AiReportCard,
   InlineDealRoom,
   DealCompletionStages,
+  TierNav,
   type InlineDealRoomCounterpart,
 } from "@/components/asset-detail"
 import { useAssetTier } from "@/hooks/use-asset-tier"
@@ -512,6 +513,9 @@ export default function ListingDetailPage() {
         </div>
       </section>
 
+      {/* ═══ Tier Nav (DR-10): L0~L5 16-섹션 네비게이션 ═══ */}
+      <TierNav tier={effectiveTier} />
+
       {/* ═══ 정산 완료 배너 (L5) ═══ */}
       {effectiveTier === "L5" && (
         <section className="max-w-[1280px] mx-auto" style={{ padding: "0 24px 12px" }}>
@@ -607,6 +611,7 @@ export default function ListingDetailPage() {
 
             {/* ═══ AI 분석 리포트 — L1 개인인증 이후 공개 (DR-5) ═══ */}
             {tierGte(effectiveAccessTier, "L1") && (
+              <div id="ai-report" className="scroll-mt-24">
               <AiReportCard
                 recoveryRate={aiAnalysis.recoveryRate?.predicted ?? 78.5}
                 confidence={aiAnalysis.recoveryRate?.confidence ?? 92}
@@ -625,6 +630,7 @@ export default function ListingDetailPage() {
                 }}
                 onAskCopilot={() => toast.info("AI Copilot이 곧 열립니다.", { duration: 1500 })}
               />
+              </div>
             )}
 
             {/* 권리관계 요약 (L0) */}
@@ -632,6 +638,7 @@ export default function ListingDetailPage() {
               title="권리관계 요약"
               icon={<Scale size={14} />}
               tierBadge="L0"
+              anchorId="rights"
             >
               <div className="grid grid-cols-3 gap-3">
                 <Stat label="선순위 총액" value={formatKRW(listing.rights_summary.senior_total)} tone="amber" />
@@ -648,6 +655,7 @@ export default function ListingDetailPage() {
               title="등기부등본 요약"
               icon={<ScrollText size={14} />}
               tierBadge="L1"
+              anchorId="deed-summary"
             >
               <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={140}>
                 <div className="space-y-2">
@@ -691,6 +699,7 @@ export default function ListingDetailPage() {
               title="임차인 요약"
               icon={<Building2 size={14} />}
               tierBadge="L1"
+              anchorId="tenants"
             >
               <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={120}>
                 <div className="grid grid-cols-3 gap-3">
@@ -706,6 +715,7 @@ export default function ListingDetailPage() {
               title="감정평가서 (마스킹본)"
               icon={<Banknote size={14} />}
               tierBadge="L1"
+              anchorId="appraisal"
             >
               <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={140}>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -725,6 +735,7 @@ export default function ListingDetailPage() {
               title="등기부등본 원본"
               icon={<ScrollText size={14} />}
               tierBadge="L2"
+              anchorId="deed-full"
             >
               <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140}>
                 <p className="leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
@@ -739,6 +750,7 @@ export default function ListingDetailPage() {
               title={`현장 사진 (${listing.site_photos.length})`}
               icon={<Images size={14} />}
               tierBadge="L2"
+              anchorId="site-photos"
             >
               <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={160}>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -764,6 +776,7 @@ export default function ListingDetailPage() {
              * 4개 필드: 채권잔액(원금+미수이자) · 연정금리 · 연체금리 · 연체시작일 */}
             <SectionCard
               title="채권 정보"
+              anchorId="debt-info"
               icon={<Banknote size={14} />}
               tierBadge="L2"
             >
@@ -872,7 +885,7 @@ export default function ListingDetailPage() {
         {/* ═══ 인라인 딜룸 — L2 NDA 체결 이후 풀폭 공개 (DR-7)
              ※ 채팅 · 상대방 정보는 L2 이상에서만 노출 */}
         {tierGte(effectiveAccessTier, "L2") && (
-          <div className="mt-6 lg:mt-8">
+          <div id="chat" className="mt-6 lg:mt-8 scroll-mt-24">
             <InlineDealRoom
               tier={effectiveTier}
               counterpart={counterpart}
@@ -882,7 +895,7 @@ export default function ListingDetailPage() {
 
         {/* ═══ L3/L4/L5 인라인 완료 단계 (DR-5-D) ═══ */}
         {(effectiveTier === "L3" || effectiveTier === "L4" || effectiveTier === "L5") && (
-          <div className="mt-6 lg:mt-8">
+          <div id="loi" className="mt-6 lg:mt-8 scroll-mt-24">
             <DealCompletionStages
               tier={effectiveTier}
               askingPrice={listing.asking_price}
@@ -964,12 +977,14 @@ function SectionCard({
   tierBadge,
   accent = "neutral",
   children,
+  anchorId,
 }: {
   title: string
   icon?: React.ReactNode
   tierBadge?: "L0" | "L1" | "L2" | "L3"
   accent?: "neutral" | "warn"
   children: React.ReactNode
+  anchorId?: string
 }) {
   const BADGE_STYLE: Record<string, { bg: string; fg: string; border: string }> = {
     L0: {
@@ -996,7 +1011,8 @@ function SectionCard({
   const badge = tierBadge ? BADGE_STYLE[tierBadge] : null
   return (
     <div
-      className="rounded-2xl p-5"
+      id={anchorId}
+      className="rounded-2xl p-5 scroll-mt-24"
       style={{
         backgroundColor: "var(--layer-1-bg)",
         border: `1px solid ${
