@@ -9,7 +9,7 @@
  * - Next.js page.tsx 는 whitelist 된 named export 만 허용하므로 이 파일은 components/ 하위에 위치
  */
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { useParams } from "next/navigation"
 import {
   FileText, MapPin, Building2, Gavel,
@@ -241,14 +241,90 @@ interface AIAnalysisResult {
   error: string | null
 }
 
+/**
+ * /deals 딜룸 카드/리스트에서 선택된 딜 정보를 AssetDetailView 에 전달할 때
+ * 하드코딩된 mock 데이터를 덮어씌우기 위한 얕은 overlay 타입.
+ */
+export interface AssetDetailDealOverride {
+  /** 매물명 (예: "강남구 아파트 NPL 채권") — 표시용 */
+  listing_name?: string
+  /** 상대방/매각기관 (예: "하나저축은행") → listing.institution */
+  counterparty?: string
+  /** 채권 금액 (원) → outstanding_principal · claim_info · 희망가·감정가 재산정 */
+  amount?: number
+  /** 담보 종류 (예: "아파트") → listing.collateral */
+  asset_type?: string
+  /** 지역 (예: "서울 강남구") → region_city + region_district 로 분리 */
+  location?: string
+}
+
+/**
+ * Deal override 를 base ListingDetail 에 얕게 합성.
+ * 금액이 주어지면 권리·희망가·감정가·채권정보도 비례 산정.
+ */
+function applyDealOverride(
+  base: ListingDetail,
+  override?: AssetDetailDealOverride,
+): ListingDetail {
+  if (!override) return base
+  const next: ListingDetail = { ...base, rights_summary: { ...base.rights_summary }, claim_info: { ...base.claim_info } }
+  if (override.counterparty) next.institution = override.counterparty
+  if (override.asset_type) next.collateral = override.asset_type
+  if (override.location) {
+    const parts = override.location.trim().split(/\s+/)
+    next.region_city = parts[0] ?? base.region_city
+    next.region_district = parts.slice(1).join(" ") || base.region_district
+  }
+  if (override.amount && override.amount > 0) {
+    const amount = override.amount
+    next.outstanding_principal = amount
+    next.asking_price = Math.round(amount * (1 - base.discount_rate / 100))
+    next.appraisal_value = Math.round(amount * 1.18) // 감정가 ≈ 원금 대비 18% 상회 가정
+    next.claim_info = {
+      ...next.claim_info,
+      principal: amount,
+      accrued_interest: Math.round(amount * 0.04),
+      balance: amount + Math.round(amount * 0.04),
+    }
+    next.rights_summary = {
+      senior_total: Math.round(amount * 0.65),
+      junior_total: Math.round(amount * 0.12),
+      deposit_total: Math.round(amount * 0.05),
+    }
+  }
+  return next
+}
+
+export interface AssetDetailViewProps {
+  /** URL param 대신 직접 id 주입 — 없으면 useParams() fallback */
+  idProp?: string
+  /** 외부 페이지(/deals 등) 에서 선택된 딜의 동적 데이터로 mock overlay */
+  dealOverride?: AssetDetailDealOverride
+  /**
+   * 외부 컨테이너에 임베드 된 상태. true 면:
+   *  · min-h-screen 제거 (부모 컨테이너가 높이 제어)
+   *  · 컴플라이언스 footer 숨김
+   *  · 모바일 sticky CTA 숨김 (중복 방지)
+   */
+  embedded?: boolean
+}
+
 /* ═══════════════════════════════════════════════════════════
    AssetDetailView — 본문 (재사용 가능한 뷰 컴포넌트)
 ═══════════════════════════════════════════════════════════ */
-export function AssetDetailView({ idProp }: { idProp?: string } = {}) {
+export function AssetDetailView({
+  idProp,
+  dealOverride,
+  embedded = false,
+}: AssetDetailViewProps = {}) {
   const params = useParams()
   const id = idProp ?? (params?.id as string) ?? "npl-2026-0412"
 
-  const [listing, setListing] = useState<ListingDetail>(() => buildMock(id))
+  const [baseListing, setBaseListing] = useState<ListingDetail>(() => buildMock(id))
+  const listing = useMemo(
+    () => applyDealOverride(baseListing, dealOverride),
+    [baseListing, dealOverride],
+  )
   const [tier] = useUserTier()
   const assetTier = useAssetTier(id)
 
@@ -274,6 +350,11 @@ export function AssetDetailView({ idProp }: { idProp?: string } = {}) {
     "L3"
   void tier
 
+  // id 변경 시 base mock 재생성 (딜룸에서 카드 전환 시 필수)
+  useEffect(() => {
+    setBaseListing(buildMock(id))
+  }, [id])
+
   useEffect(() => {
     ;(async () => {
       try {
@@ -284,7 +365,7 @@ export function AssetDetailView({ idProp }: { idProp?: string } = {}) {
           .eq("id", id)
           .single()
         if (!error && data) {
-          setListing(mapNplListingToDetail(data as Record<string, unknown>, id))
+          setBaseListing(mapNplListingToDetail(data as Record<string, unknown>, id))
         }
       } catch {
         /* mock fallback */
@@ -399,7 +480,8 @@ export function AssetDetailView({ idProp }: { idProp?: string } = {}) {
       style={{
         backgroundColor: C.bg0,
         color: "var(--color-text-primary)",
-        minHeight: "100vh",
+        // embedded 모드: 부모 컨테이너가 높이 제어 (min-h-screen 제거)
+        minHeight: embedded ? undefined : "100vh",
       }}
     >
       <AssetHeroSummary
@@ -409,7 +491,7 @@ export function AssetDetailView({ idProp }: { idProp?: string } = {}) {
         tier={effectiveTier}
         watchlisted={watchlisted}
         onToggleWatchlist={handleWatchlist}
-        backHref="/exchange"
+        backHref={embedded ? "/deals" : "/exchange"}
       />
 
       <section
@@ -865,13 +947,18 @@ export function AssetDetailView({ idProp }: { idProp?: string } = {}) {
 
       </section>
 
-      <PrimaryActionCard
-        tier={effectiveTier}
-        loading={dealCreating}
-        onAction={handlePrimaryAction}
-        variant="mobile-sticky"
-      />
-      <div className="md:hidden" style={{ height: 96 }} aria-hidden />
+      {/* 모바일 sticky CTA · 컴플라이언스 footer — embedded(/deals) 에서는 중복 방지로 숨김 */}
+      {!embedded && (
+        <>
+          <PrimaryActionCard
+            tier={effectiveTier}
+            loading={dealCreating}
+            onAction={handlePrimaryAction}
+            variant="mobile-sticky"
+          />
+          <div className="md:hidden" style={{ height: 96 }} aria-hidden />
+        </>
+      )}
 
       <ActionSheet
         open={actionOpen}
@@ -882,28 +969,30 @@ export function AssetDetailView({ idProp }: { idProp?: string } = {}) {
         onConfirm={handleConfirmStep}
       />
 
-      <footer
-        className="border-t"
-        style={{
-          backgroundColor: C.bg1,
-          borderColor: C.bg4,
-          padding: "20px 24px",
-        }}
-      >
-        <div
-          className="max-w-[1280px] mx-auto flex items-center gap-2 flex-wrap"
-          style={{ fontSize: 11, color: C.lt4 }}
+      {!embedded && (
+        <footer
+          className="border-t"
+          style={{
+            backgroundColor: C.bg1,
+            borderColor: C.bg4,
+            padding: "20px 24px",
+          }}
         >
-          <ShieldCheck size={14} color={C.em} />
-          <span>
-            본 매물은 자동 마스킹 파이프라인 적용 · 티어별 공개 범위는{" "}
-            <a href="/terms/disclaimer" className="underline" style={{ color: C.lt3 }}>
-              면책고지
-            </a>
-            {" "}준수.
-          </span>
-        </div>
-      </footer>
+          <div
+            className="max-w-[1280px] mx-auto flex items-center gap-2 flex-wrap"
+            style={{ fontSize: 11, color: C.lt4 }}
+          >
+            <ShieldCheck size={14} color={C.em} />
+            <span>
+              본 매물은 자동 마스킹 파이프라인 적용 · 티어별 공개 범위는{" "}
+              <a href="/terms/disclaimer" className="underline" style={{ color: C.lt3 }}>
+                면책고지
+              </a>
+              {" "}준수.
+            </span>
+          </div>
+        </footer>
+      )}
     </main>
   )
 }

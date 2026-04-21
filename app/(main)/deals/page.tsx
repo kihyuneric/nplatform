@@ -472,12 +472,28 @@ export default function DealsPage() {
                     새 탭에서 열기
                   </Link>
                 </div>
-                {/* 선택된 딜이 바뀌면 상태 초기화를 위해 key 로 리마운트 */}
+                {/*
+                  선택된 딜이 바뀌면 상태 초기화를 위해 key 로 리마운트.
+                  max-h-[calc(100vh-140px)] + overflow-y-auto 로 **바운디드 스크롤 컨테이너** 를
+                  형성 → 우측 sticky 사이드바가 이 컨테이너 기준으로 고정되고, 좌측 콘텐츠가
+                  내부 스크롤되어 우측과 높이가 자연스럽게 매칭됩니다 (이전 iframe 의 내부
+                  스크롤 동작을 CSS 로 재현).
+                */}
                 <div
                   key={selectedDeal.id}
-                  className="rounded-2xl overflow-hidden border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]"
+                  className="rounded-2xl overflow-y-auto overflow-x-hidden border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] max-h-[calc(100vh-140px)]"
                 >
-                  <AssetDetailView idProp={selectedDeal.id} />
+                  <AssetDetailView
+                    idProp={selectedDeal.id}
+                    embedded
+                    dealOverride={{
+                      listing_name: selectedDeal.listing_name,
+                      counterparty: selectedDeal.counterparty,
+                      amount: selectedDeal.amount,
+                      asset_type: selectedDeal.asset_type,
+                      location: selectedDeal.location,
+                    }}
+                  />
                 </div>
               </section>
             )}
