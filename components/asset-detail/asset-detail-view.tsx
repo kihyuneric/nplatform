@@ -16,9 +16,8 @@ import {
   FileText, MapPin, Building2, Gavel,
   CheckCircle2, ShieldCheck, Scale, Images,
   Banknote, ScrollText, TrendingUp, Calculator, Brain, ArrowRight,
-  Pencil, X, Save, FileDown, Eye, EyeOff, HandCoins, BarChart2,
+  Pencil, X, Save, FileDown, Eye, EyeOff, HandCoins, BarChart2, FileCheck,
 } from "lucide-react"
-import { OfferForm, OfferCard, type OfferData } from "@/components/deal-room/offer-card"
 import { toast } from "sonner"
 import { TierGate } from "@/components/tier/tier-gate"
 import type { AccessTier } from "@/lib/access-tier"
@@ -386,8 +385,7 @@ export function AssetDetailView({
   const [auctionDraft, setAuctionDraft] = useState<ListingDetail["auction_info"]>(null)
   const [publicSaleDraft, setPublicSaleDraft] = useState<ListingDetail["public_sale_info"]>(null)
   const [appraisalPdfOpen, setAppraisalPdfOpen] = useState(false)
-  const [submittedOffer, setSubmittedOffer] = useState<OfferData | null>(null)
-  const [offerFormVisible, setOfferFormVisible] = useState(true)
+  const [loiPdfOpen, setLoiPdfOpen] = useState(false)
 
   /* 사용자 역할 확인: admin 또는 seller 면 편집 허용 */
   useEffect(() => {
@@ -1097,6 +1095,33 @@ export function AssetDetailView({
               </TierGate>
             </SectionCard>
 
+            {/* ── 실거래/경공매 통계 (L2) ── */}
+            <SectionCard
+              title="실거래 경공매 통계"
+              icon={<BarChart2 size={14} />}
+              tierBadge="L2"
+              anchorId="auction-stats"
+            >
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={100}>
+                <p className="mb-3 leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
+                  국토부 실거래가 현황 및 법원 경매와 온비드 공매 낙찰 통계 및 유사 사례를 확인합니다.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href="https://auction.jijigo.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-bold"
+                    style={{ fontSize: 12, backgroundColor: "rgba(168,85,247,0.10)", color: "#A855F7", border: "1px solid rgba(168,85,247,0.28)" }}
+                  >
+                    <BarChart2 size={12} />
+                    땅집고옥션 통계 정보 조회
+                    <ArrowRight size={11} />
+                  </a>
+                </div>
+              </TierGate>
+            </SectionCard>
+
             <SectionCard
               title="등기부등본 원본"
               icon={<ScrollText size={14} />}
@@ -1239,52 +1264,6 @@ export function AssetDetailView({
                 </div>
               </TierGate>
             </SectionCard>
-
-            {/* ── 실사 신청 (L3) ── */}
-            {tierGte(effectiveAccessTier, "L3") && (
-              <DueDiligenceSection
-                anchorId="due-diligence"
-                listingId={id}
-              />
-            )}
-
-            {/* ── 실거래 경공매 통계 (L2) ── */}
-            <SectionCard
-              title="실거래 경공매 통계"
-              icon={<BarChart2 size={14} />}
-              tierBadge="L2"
-              anchorId="auction-stats"
-            >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={100}>
-                <p className="mb-3 leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
-                  법원 경매 및 온비드 공매 현황 · 낙찰 통계 · 유찰 이력을 확인합니다.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <a
-                    href={`https://www.courtauction.go.kr/`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-bold"
-                    style={{ fontSize: 12, backgroundColor: "rgba(168,85,247,0.10)", color: "#A855F7", border: "1px solid rgba(168,85,247,0.28)" }}
-                  >
-                    <Gavel size={12} />
-                    대법원 경매 조회
-                    <ArrowRight size={11} />
-                  </a>
-                  <a
-                    href={`https://www.onbid.co.kr/`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-bold"
-                    style={{ fontSize: 12, backgroundColor: "rgba(245,158,11,0.10)", color: "#D97706", border: "1px solid rgba(245,158,11,0.28)" }}
-                  >
-                    <Building2 size={12} />
-                    온비드 공매 조회
-                    <ArrowRight size={11} />
-                  </a>
-                </div>
-              </TierGate>
-            </SectionCard>
           </div>
 
           <div className="space-y-4 min-w-0">
@@ -1385,6 +1364,78 @@ export function AssetDetailView({
           </div>
         </div>
 
+        {/* ── LOI 확인 (L3+) ── */}
+        {tierGte(effectiveAccessTier, "L3") && (
+          <div id="loi" className="mt-6 lg:mt-8 scroll-mt-24">
+            <SectionCard
+              title="LOI 확인"
+              icon={<FileCheck size={14} />}
+              tierBadge="L3"
+              anchorId="loi"
+            >
+              <div className="space-y-3">
+                <p className="leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
+                  제출된 인수의향서(LOI)를 확인하고 다운로드할 수 있습니다. LOI는 법적 구속력이 없는 의향서이며, 매도자 승인 후 에스크로 입금 및 현장 계약 단계로 진행됩니다.
+                </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setLoiPdfOpen(v => !v)}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
+                    style={{
+                      fontSize: 12,
+                      backgroundColor: loiPdfOpen ? "var(--color-brand-bright-bg, rgba(46,117,182,0.12))" : "var(--layer-2-bg)",
+                      color: loiPdfOpen ? "var(--color-brand-bright)" : "var(--fg-muted)",
+                      border: `1px solid ${loiPdfOpen ? "rgba(46,117,182,0.4)" : "var(--layer-border-strong)"}`,
+                    }}
+                  >
+                    {loiPdfOpen ? <EyeOff size={13} /> : <Eye size={13} />}
+                    {loiPdfOpen ? "LOI 닫기" : "LOI 보기"}
+                  </button>
+                  <a
+                    href={`/api/v1/docs/${id}/loi?download=1`}
+                    download
+                    onClick={e => { e.preventDefault(); toast.success("LOI 문서 다운로드를 시작합니다.", { duration: 1800 }) }}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
+                    style={{
+                      fontSize: 12,
+                      backgroundColor: "rgba(16,185,129,0.10)",
+                      color: "var(--color-positive)",
+                      border: "1px solid rgba(16,185,129,0.3)",
+                    }}
+                  >
+                    <FileDown size={13} />
+                    PDF 다운로드
+                  </a>
+                </div>
+                {loiPdfOpen && (
+                  <div
+                    className="mt-2 rounded-xl overflow-hidden"
+                    style={{ border: "1px solid var(--layer-border-strong)" }}
+                  >
+                    <div
+                      className="flex items-center justify-between px-3 py-2"
+                      style={{ backgroundColor: "var(--layer-2-bg)", fontSize: 11, color: "var(--fg-muted)" }}
+                    >
+                      <span className="font-bold">인수의향서 (LOI) 미리보기</span>
+                      <button type="button" onClick={() => setLoiPdfOpen(false)}>
+                        <X size={14} />
+                      </button>
+                    </div>
+                    <iframe
+                      src={`/api/v1/docs/${id}/loi`}
+                      title="LOI"
+                      className="w-full"
+                      style={{ height: 560, border: "none", backgroundColor: "#f8f8f8" }}
+                    />
+                  </div>
+                )}
+              </div>
+            </SectionCard>
+          </div>
+        )}
+
+        {/* ── 채팅 (L3+) ── */}
         {tierGte(effectiveAccessTier, "L3") && (
           <div id="chat" className="mt-6 lg:mt-8 scroll-mt-24">
             <InlineDealRoom
@@ -1394,76 +1445,9 @@ export function AssetDetailView({
           </div>
         )}
 
-        {/* ── 가격 오퍼 (L3+) ── */}
-        {tierGte(effectiveAccessTier, "L3") && (
-          <div id="offer" className="mt-6 lg:mt-8 scroll-mt-24">
-            <div
-              className="rounded-2xl overflow-hidden"
-              style={{
-                background: "linear-gradient(180deg, #0F1E35 0%, #122843 100%)",
-                border: "1px solid rgba(245,158,11,0.28)",
-                boxShadow: "0 8px 32px rgba(27,58,92,0.18)",
-                color: "#F1F5F9",
-                ["--color-text-primary" as string]: "#F1F5F9",
-                ["--color-brand-bright" as string]: "#60A5FA",
-                ["--color-positive" as string]: "#34D399",
-                colorScheme: "dark",
-              } as React.CSSProperties}
-            >
-              <header className="flex items-center justify-between gap-3 flex-wrap px-4 py-3" style={{ borderBottom: "1px solid rgba(245,158,11,0.22)" }}>
-                <h3 className="font-black inline-flex items-center gap-2" style={{ fontSize: 14 }}>
-                  <HandCoins size={16} style={{ color: "#F59E0B" }} />
-                  가격 오퍼
-                </h3>
-                <span className="font-semibold" style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}>
-                  매도자에게 매입 희망가를 제안하세요
-                </span>
-              </header>
-              <div className="p-4 space-y-4">
-                {/* 희망가 기준 표시 */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl p-3" style={{ backgroundColor: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}>
-                    <div className="font-semibold mb-0.5" style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>매도 희망가</div>
-                    <div className="font-black tabular-nums" style={{ fontSize: 18, color: "#FBBF24" }}>{formatKRW(listing.asking_price)}</div>
-                  </div>
-                  <div className="rounded-xl p-3" style={{ backgroundColor: "rgba(96,165,250,0.08)", border: "1px solid rgba(96,165,250,0.22)" }}>
-                    <div className="font-semibold mb-0.5" style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>AI 권고 매입가</div>
-                    <div className="font-black tabular-nums" style={{ fontSize: 18, color: "#60A5FA" }}>{formatKRW(Math.round(listing.asking_price * 0.96))}</div>
-                  </div>
-                </div>
-                {submittedOffer ? (
-                  <div className="rounded-xl p-0" style={{ borderRadius: 12 }}>
-                    <OfferCard offer={submittedOffer} isMine />
-                    <button type="button" onClick={() => { setSubmittedOffer(null); setOfferFormVisible(true) }}
-                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold"
-                      style={{ fontSize: 12, backgroundColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)" }}>
-                      새 오퍼 작성
-                    </button>
-                  </div>
-                ) : offerFormVisible ? (
-                  <OfferForm
-                    onSubmit={o => {
-                      const offer: OfferData = { ...o, status: "pending" }
-                      setSubmittedOffer(offer)
-                      setOfferFormVisible(false)
-                      toast.success("가격 오퍼가 제출되었습니다 · 매도자 검토 대기 중", { duration: 2500 })
-                    }}
-                    onCancel={() => setOfferFormVisible(false)}
-                  />
-                ) : (
-                  <button type="button" onClick={() => setOfferFormVisible(true)}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl font-black"
-                    style={{ padding: "12px 16px", fontSize: 13, backgroundColor: "rgba(245,158,11,0.14)", color: "#FBBF24", border: "1px solid rgba(245,158,11,0.3)" }}>
-                    <HandCoins size={14} /> 오퍼 작성 열기
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {(effectiveTier === "L3" || effectiveTier === "L4" || effectiveTier === "L5") && (
-          <div id="loi" className="mt-6 lg:mt-8 scroll-mt-24">
+        {/* ── 에스크로 결제 · 계약 (L4+) ── */}
+        {(effectiveTier === "L4" || effectiveTier === "L5") && (
+          <div id="escrow" className="mt-6 lg:mt-8 scroll-mt-24">
             <DealCompletionStages
               tier={effectiveTier}
               askingPrice={listing.asking_price}
@@ -1472,9 +1456,9 @@ export function AssetDetailView({
               contractConfirmed={listing.contract_confirmed}
               onOpenDetails={handlePrimaryAction}
               onSubmitOffer={() => {
-                setMockTier("L4")
+                setMockTier("L5")
                 if (typeof window !== "undefined") {
-                  window.localStorage.setItem(MOCK_STORAGE_KEY(id), "L4")
+                  window.localStorage.setItem(MOCK_STORAGE_KEY(id), "L5")
                 }
               }}
               onSignConfirm={() => {
