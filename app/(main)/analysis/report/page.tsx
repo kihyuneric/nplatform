@@ -196,6 +196,13 @@ export default function UnifiedReportPage() {
               `채권액 ${fmtKRW(recovery.factors.ltv.totalBondAmount)}원`,
               `출처 · ${recovery.factors.ltv.collateralSource === "APPRAISAL" ? "공인감정평가서" : recovery.factors.ltv.collateralSource === "AI_ESTIMATE" ? "AI 시세추정" : "시세 비교"}`,
             ]}
+            formula={
+              `LTV = 채권액 / 감정가 × 100\n` +
+              `    = ${fmtKRW(recovery.factors.ltv.totalBondAmount)}원 / ${fmtKRW(recovery.factors.ltv.collateralValue)}원 × 100\n` +
+              `    = ${recovery.factors.ltv.ltvPercent.toFixed(2)}%\n\n` +
+              `점수 산식 (구간별): LTV≤40%→100 · ≤60%→85 · ≤80%→65 · ≤100%→45 · 초과시 감점\n` +
+              `→ 점수 ${recovery.factors.ltv.score}`
+            }
           />
           <FactorCard
             rank={2}
@@ -208,6 +215,12 @@ export default function UnifiedReportPage() {
               `거래량 ${recovery.factors.regionTrend.transactionVolumeChange > 0 ? "+" : ""}${recovery.factors.regionTrend.transactionVolumeChange}% · 지수 ${recovery.factors.regionTrend.priceIndexChange > 0 ? "+" : ""}${recovery.factors.regionTrend.priceIndexChange}%`,
               `출처 · ${recovery.factors.regionTrend.dataSource}`,
             ]}
+            formula={
+              `모멘텀 = 단기(1M) 낙찰가율 − 장기(12M) 낙찰가율\n` +
+              `점수 = 50 + 거래량변동 × 0.35 + 가격지수변동 × 0.45 (0~100 클램프)\n` +
+              `     = 50 + (${recovery.factors.regionTrend.transactionVolumeChange.toFixed(1)}) × 0.35 + (${recovery.factors.regionTrend.priceIndexChange.toFixed(1)}) × 0.45\n` +
+              `     = ${recovery.factors.regionTrend.score}`
+            }
           />
           <FactorCard
             rank={3}
@@ -224,6 +237,20 @@ export default function UnifiedReportPage() {
                 ? `특수조건 ${recovery.factors.auctionRatio.specialConditionPenalty.toFixed(1)}%p 감점`
                 : "특수조건 없음",
             ]}
+            formula={
+              `혼합낙찰가율 = 지역×0.5 + 동일주소×0.2 + 인근×0.3 (있는 것만 사용·재정규화)\n` +
+              `            = ${recovery.factors.auctionRatio.regionMedianBidRatio.toFixed(1)}%×0.5` +
+              (recovery.factors.auctionRatio.sameAddressAvgBidRatio != null
+                ? ` + ${recovery.factors.auctionRatio.sameAddressAvgBidRatio.toFixed(1)}%×0.2`
+                : "") +
+              (recovery.factors.auctionRatio.nearbyMedianBidRatio != null
+                ? ` + ${recovery.factors.auctionRatio.nearbyMedianBidRatio.toFixed(1)}%×0.3`
+                : "") +
+              `\n            = ${recovery.factors.auctionRatio.blendedBidRatio.toFixed(1)}%\n` +
+              `조정낙찰가율 = 혼합 + 특수조건 감점(${recovery.factors.auctionRatio.specialConditionPenalty.toFixed(1)}%p)\n` +
+              `            = ${recovery.factors.auctionRatio.adjustedBidRatio.toFixed(1)}%\n\n` +
+              `점수 구간: ≥95%→100 · ≥85%→85 · ≥75%→70 · ≥65%→50\n→ 점수 ${recovery.factors.auctionRatio.score}`
+            }
           />
         </div>
 
@@ -246,6 +273,20 @@ export default function UnifiedReportPage() {
           <p className="mt-3 text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">
             {recovery.narrative}
           </p>
+          <div className="mt-3 pt-3 border-t border-dashed border-[var(--color-border-subtle)]">
+            <div className="text-[0.625rem] font-bold text-[var(--color-text-tertiary)] mb-1">계산식</div>
+            <pre className="text-[0.6875rem] font-mono text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
+{`종합점수 = LTV×0.40 + 지역×0.30 + 낙찰가율×0.30
+        = ${recovery.factors.ltv.score}×0.40 + ${recovery.factors.regionTrend.score}×0.30 + ${recovery.factors.auctionRatio.score}×0.30
+        = ${recovery.compositeScore.toFixed(1)} → 등급 ${recovery.compositeGrade}
+
+예측회수율 = 조정낙찰가율 × (100 / LTV) + (지역점수−50) × 0.12
+         = ${recovery.factors.auctionRatio.adjustedBidRatio.toFixed(1)}% × (100 / ${recovery.factors.ltv.ltvPercent.toFixed(1)}) + (${recovery.factors.regionTrend.score}−50) × 0.12
+         = ${recovery.predictedRecoveryRate}%
+         · 신뢰구간 ${recovery.lowerBound}% ~ ${recovery.upperBound}% (±σ)
+         · 신뢰도 ${Math.round(recovery.confidence * 100)}%`}
+            </pre>
+          </div>
         </div>
       </Section>
 
@@ -278,6 +319,16 @@ export default function UnifiedReportPage() {
           <p className="text-[0.8125rem] leading-relaxed" style={{ color: rp.fg }}>
             {risk.narrative}
           </p>
+          <div className="mt-3 pt-3 border-t border-dashed" style={{ borderColor: rp.border }}>
+            <div className="text-[0.625rem] font-bold mb-1" style={{ color: rp.fg }}>계산식</div>
+            <pre className="text-[0.6875rem] font-mono leading-relaxed whitespace-pre-wrap" style={{ color: rp.fg }}>
+{`리스크점수 = LTV×0.35 + 지역×0.25 + 낙찰가율×0.30 + 종합회수×0.10
+         = ${recovery.factors.ltv.score}×0.35 + ${recovery.factors.regionTrend.score}×0.25 + ${recovery.factors.auctionRatio.score}×0.30 + ${recovery.compositeScore.toFixed(1)}×0.10
+         = ${risk.score}점 → 등급 ${risk.grade} (${risk.level})
+
+등급 임계: ≥85→A(LOW) · ≥70→B(LOW) · ≥55→C(MEDIUM) · ≥40→D(HIGH) · <40→E(CRITICAL)`}
+            </pre>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
@@ -346,11 +397,19 @@ export default function UnifiedReportPage() {
           }}
         >
           <MapPin className="w-5 h-5 shrink-0 mt-0.5" style={{ color: marketOutlook.outlook === "BULLISH" ? "#10B981" : marketOutlook.outlook === "BEARISH" ? "#DC2626" : "#64748B" }} />
-          <div>
+          <div className="flex-1 min-w-0">
             <div className="text-[0.8125rem] font-bold text-[var(--color-text-primary)] mb-1">
               {marketOutlook.outlook === "BULLISH" ? "상승 추세" : marketOutlook.outlook === "BEARISH" ? "하락 추세" : "중립"}
             </div>
             <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{marketOutlook.narrative}</p>
+            <div className="mt-2 pt-2 border-t border-dashed border-[var(--color-border-subtle)]">
+              <div className="text-[0.625rem] font-bold text-[var(--color-text-tertiary)] mb-0.5">계산식</div>
+              <pre className="text-[0.6875rem] font-mono text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
+{`낙찰가율 모멘텀 = 단기(1M) − 장기(12M) = ${recovery.factors.regionTrend.auctionMomentum}%p
+판정: 모멘텀 > +2%p → BULLISH · < −2%p → BEARISH · 그 외 → NEUTRAL
+→ ${marketOutlook.outlook} (신뢰도 ${Math.round(marketOutlook.confidence * 100)}% · 기간 ${marketOutlook.horizonMonths}개월)`}
+              </pre>
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -434,8 +493,11 @@ function Section({
 }
 
 function FactorCard({
-  rank, weight, name, score, primary, lines,
-}: { rank: number; weight: string; name: string; score: number; primary: string; lines: string[] }) {
+  rank, weight, name, score, primary, lines, formula,
+}: {
+  rank: number; weight: string; name: string; score: number; primary: string;
+  lines: string[]; formula?: string
+}) {
   const tint = score >= 75 ? "#10B981" : score >= 55 ? "#F59E0B" : "#DC2626"
   return (
     <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
@@ -450,7 +512,7 @@ function FactorCard({
       <div className="h-1.5 bg-[var(--color-border-subtle)] rounded-full overflow-hidden mb-2.5">
         <div className="h-full rounded-full transition-all" style={{ width: `${score}%`, background: tint }} />
       </div>
-      <ul className="space-y-0.5">
+      <ul className="space-y-0.5 mb-2">
         {lines.map((l, i) => (
           <li key={i} className="text-[0.6875rem] text-[var(--color-text-secondary)] flex items-start gap-1">
             <span className="mt-1 w-1 h-1 rounded-full bg-[var(--color-text-tertiary)] shrink-0" />
@@ -458,6 +520,14 @@ function FactorCard({
           </li>
         ))}
       </ul>
+      {formula && (
+        <div className="mt-2 pt-2 border-t border-dashed border-[var(--color-border-subtle)]">
+          <div className="text-[0.625rem] font-bold text-[var(--color-text-tertiary)] mb-0.5">계산식</div>
+          <div className="text-[0.6875rem] font-mono text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
+            {formula}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

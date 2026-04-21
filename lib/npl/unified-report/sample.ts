@@ -38,7 +38,7 @@ export const SAMPLE_STATISTICS: StatisticsContext = {
       bjdCode: '1168010300',
     },
     propertyCategory: '다세대(빌라)',
-    appraisalValue: 690_000_000,       // 6.9억 (동일 주소 사례 감정가)
+    appraisalValue: 835_000_000,       // 8.35억 (동일 주소 사례 감정가)
     landAreaSqm: 26,
     buildingAreaSqm: 46.41,
   },
@@ -51,7 +51,7 @@ export const SAMPLE_STATISTICS: StatisticsContext = {
       asOfDate: '2026-04-21',
       rows: [
         { bucket: '12M', periodLabel: '1년간 평균', saleCount: 31, saleRate: 22.0, bidRatio: 89.5 },
-        { bucket: '6M',  periodLabel: '6개월 평균', saleCount: 12, saleRate: 21.8, bidRatio: 81.2 },
+        { bucket: '6M',  periodLabel: '6개월 평균', saleCount: 12, saleRate: 21.8, bidRatio: 88.3 },
         { bucket: '3M',  periodLabel: '3개월 평균', saleCount: 5,  saleRate: 19.2, bidRatio: 88.0 },
         { bucket: '1M',  periodLabel: '1개월 평균', saleCount: 2,  saleRate: 13.3, bidRatio: 90.8 },
       ],
@@ -88,22 +88,22 @@ export const SAMPLE_STATISTICS: StatisticsContext = {
         filedDate: '2024-07-11',
         saleDate: '2025-02-11',
         durationDays: 215,
-        appraisalValue: 690_000_000,
-        salePrice: 500_000_000,
-        bidRatio: 72.5,
+        appraisalValue: 835_000_000,
+        salePrice: 721_000_000,
+        bidRatio: 86.3,
         bidderCount: 1,
         landAreaSqm: 26,
         buildingAreaSqm: 46.41,
-        perLandPrice: 19_230_000,    // 0.2억 / ㎡
-        perBuildingPrice: 10_770_000,
+        perLandPrice: 27_730_000,
+        perBuildingPrice: 15_530_000,
         address: '서울특별시 강남구 개포동 1195-8',
       },
     ],
     summary: {
       avgDurationDays: 215,
-      avgAppraisalValue: 690_000_000,
-      avgSalePrice: 500_000_000,
-      avgBidRatio: 72.5,
+      avgAppraisalValue: 835_000_000,
+      avgSalePrice: 721_000_000,
+      avgBidRatio: 86.3,
       avgBidderCount: 1,
       avgLandAreaSqm: 26,
       avgBuildingAreaSqm: 46.41,
@@ -119,17 +119,17 @@ export const SAMPLE_STATISTICS: StatisticsContext = {
     lookbackYears: 3,
     specialConditionFilter: '없음',
     cases: [
-      { caseNo: '2025타경102443 (8)', filedDate: '2025-03-19', saleDate: '2026-04-02', durationDays: 379, appraisalValue: 530_000_000, salePrice: 280_000_000, bidRatio: 52.9, bidderCount: 1, landAreaSqm: 14.3, buildingAreaSqm: 23.58, perLandPrice: 19_580_000, perBuildingPrice: 11_870_000, address: '서울특별시 서초구 서초동 1617-19' },
-      { caseNo: '2025타경102443 (10)', filedDate: '2025-03-19', saleDate: '2026-04-02', durationDays: 379, appraisalValue: 1_150_000_000, salePrice: 680_000_000, bidRatio: 58.8, bidderCount: 6, landAreaSqm: 25.96, buildingAreaSqm: 42.8, perLandPrice: 26_200_000, perBuildingPrice: 15_890_000, address: '서울특별시 서초구 서초동 1617-19' },
-      { caseNo: '2025타경102443 (4)',  filedDate: '2025-03-19', saleDate: '2026-04-02', durationDays: 379, appraisalValue: 570_000_000,  salePrice: 290_000_000, bidRatio: 51.2, bidderCount: 1, landAreaSqm: 15.33, buildingAreaSqm: 25.28, perLandPrice: 18_920_000, perBuildingPrice: 11_470_000, address: '서울특별시 서초구 서초동 1617-19' },
-      { caseNo: '2025타경102443 (9)',  filedDate: '2025-03-19', saleDate: '2026-04-02', durationDays: 379, appraisalValue: 600_000_000,  salePrice: 340_000_000, bidRatio: 57.4, bidderCount: 1, landAreaSqm: 15.59, buildingAreaSqm: 25.7,  perLandPrice: 21_810_000, perBuildingPrice: 13_230_000, address: '서울특별시 서초구 서초동 1617-19' },
-      { caseNo: '2025타경102443 (7)',  filedDate: '2025-03-19', saleDate: '2026-04-02', durationDays: 379, appraisalValue: 550_000_000,  salePrice: 320_000_000, bidRatio: 58.0, bidderCount: 1, landAreaSqm: 13.87, buildingAreaSqm: 22.87, perLandPrice: 23_070_000, perBuildingPrice: 13_990_000, address: '서울특별시 서초구 서초동 1617-19' },
+      { caseNo: '2025타경102443 (8)', filedDate: '2025-03-19', saleDate: '2026-04-02', durationDays: 379, appraisalValue: 530_000_000,   salePrice: 445_000_000,   bidRatio: 84.0, bidderCount: 1, landAreaSqm: 14.3,  buildingAreaSqm: 23.58, perLandPrice: 31_120_000, perBuildingPrice: 18_870_000, address: '서울특별시 강남구 역삼동 648-12' },
+      { caseNo: '2025타경102443 (10)', filedDate: '2025-03-19', saleDate: '2026-04-02', durationDays: 379, appraisalValue: 1_150_000_000, salePrice: 996_000_000,   bidRatio: 86.6, bidderCount: 6, landAreaSqm: 25.96, buildingAreaSqm: 42.8,  perLandPrice: 38_370_000, perBuildingPrice: 23_270_000, address: '서울특별시 강남구 역삼동 648-12' },
+      { caseNo: '2025타경102443 (4)',  filedDate: '2025-03-19', saleDate: '2026-04-02', durationDays: 379, appraisalValue: 570_000_000,   salePrice: 468_000_000,   bidRatio: 82.1, bidderCount: 1, landAreaSqm: 15.33, buildingAreaSqm: 25.28, perLandPrice: 30_530_000, perBuildingPrice: 18_510_000, address: '서울특별시 강남구 역삼동 648-12' },
+      { caseNo: '2025타경102443 (9)',  filedDate: '2025-03-19', saleDate: '2026-04-02', durationDays: 379, appraisalValue: 600_000_000,   salePrice: 520_000_000,   bidRatio: 86.7, bidderCount: 1, landAreaSqm: 15.59, buildingAreaSqm: 25.7,  perLandPrice: 33_350_000, perBuildingPrice: 20_230_000, address: '서울특별시 강남구 역삼동 648-12' },
+      { caseNo: '2025타경102443 (7)',  filedDate: '2025-03-19', saleDate: '2026-04-02', durationDays: 379, appraisalValue: 550_000_000,   salePrice: 471_000_000,   bidRatio: 85.6, bidderCount: 1, landAreaSqm: 13.87, buildingAreaSqm: 22.87, perLandPrice: 33_960_000, perBuildingPrice: 20_600_000, address: '서울특별시 강남구 역삼동 648-12' },
     ],
     summary: {
       avgDurationDays: 379,
       avgAppraisalValue: 680_000_000,
-      avgSalePrice: 380_000_000,
-      avgBidRatio: 55.65,
+      avgSalePrice: 580_000_000,
+      avgBidRatio: 85.0,
       avgBidderCount: 2,
       avgLandAreaSqm: 17.01,
       avgBuildingAreaSqm: 28.04,
@@ -162,8 +162,8 @@ export const SAMPLE_STATISTICS: StatisticsContext = {
 
 // ─── 샘플 리포트 빌더 ────────────────────────────────────────
 export function buildSampleReport(): UnifiedAnalysisReport {
-  const totalBond = 780_000_000   // 원금+이자+지연 (대략 7.8억)
-  const appraisal = 690_000_000
+  const totalBond = 765_000_000   // 원금 7억 + 연체이자 ~0.65억 (계산식 기반)
+  const appraisal = 835_000_000   // 8.35억 — 동일 주소 낙찰 사례와 일치
 
   const input: UnifiedReportInput = {
     assetId: 'sample-gangnam-gaepo-1195-8',
@@ -173,13 +173,13 @@ export function buildSampleReport(): UnifiedAnalysisReport {
     propertyCategory: '다세대(빌라)',
     appraisalValue: appraisal,
     totalBondAmount: totalBond,
-    minBidPrice: estimateMinBid(appraisal, 1),      // 1회 유찰 기준
-    currentMarketValue: 430_000_000,                 // 인근 실거래 중앙값 기반
+    minBidPrice: estimateMinBid(appraisal, 1),      // 1회 유찰 기준 (감정가 × 0.8^1)
+    currentMarketValue: 760_000_000,                 // 인근 실거래 단가 × 전용면적 추정
     specialConditions: {
       lienRight: false,
       statutorySuperficies: false,
       sharedAuction: false,
-      seniorTenant: true,     // 선순위 임차인 존재 예시
+      seniorTenant: false,    // 선순위 임차인 없음 (대항력 없는 임차 or 소유자 점유)
       illegalBuilding: false,
       graveYardRight: false,
       farmlandRestriction: false,
@@ -274,7 +274,7 @@ export function buildSampleReport(): UnifiedAnalysisReport {
       grade: riskGrade,
       score: riskScore,
       level: riskScore >= 70 ? 'LOW' : riskScore >= 55 ? 'MEDIUM' : riskScore >= 40 ? 'HIGH' : 'CRITICAL',
-      narrative: `LTV ${ltv.ltvPercent.toFixed(1)}% · 지역 동향 ${region.score}점 · 낙찰가율 조정치 ${auction.adjustedBidRatio}%. 선순위 임차인 존재로 ${Math.abs(auction.specialConditionPenalty)}%p 감점 반영. 강남구 다세대 시장 안정세이나 인근 서초동 빌라는 유찰 심한 편이라 보수적 관점 유지.`,
+      narrative: `LTV ${ltv.ltvPercent.toFixed(1)}% · 지역 동향 ${region.score}점 · 낙찰가율 조정치 ${auction.adjustedBidRatio.toFixed(1)}%. ${auction.specialConditionPenalty < 0 ? `특수조건 ${auction.specialConditionPenalty.toFixed(1)}%p 감점 반영. ` : ''}강남구 다세대 시장 안정세, 최근 3개월 낙찰가율 ${SAMPLE_STATISTICS.auctionRatioStats[0].rows.find(r => r.bucket === '3M')?.bidRatio.toFixed(1)}%로 탄탄한 흐름.`,
       factors: [
         { category: '담보가치', severity: ltv.score >= 70 ? 'LOW' : 'MEDIUM', score: ltv.score, explanation: `감정가 ${(appraisal/1e8).toFixed(1)}억 대비 채권 ${(totalBond/1e8).toFixed(1)}억 — LTV ${ltv.ltvPercent.toFixed(1)}%`, mitigation: 'LTV 80% 이하 유지. 필요 시 재감정 의뢰.' },
         { category: '권리관계', severity: input.specialConditions.seniorTenant ? 'MEDIUM' : 'LOW', score: input.specialConditions.seniorTenant ? 55 : 80, explanation: input.specialConditions.seniorTenant ? '선순위 임차인 대항력 존재 — 보증금 인수 리스크' : '1순위 근저당, 특이사항 없음', mitigation: '임대차보호법상 우선변제권 확인, 인수 조건 협의' },
@@ -378,33 +378,34 @@ export function buildSampleReport(): UnifiedAnalysisReport {
     registryAnalysis,
     profitability: buildNplProfitability({
       property: {
-        // 원본(엑셀): "서울특별시 송파구 신천동 7-19 잠실시그마타워 21층2105호" — 지번·건물·호수 마스킹
-        address: '서울특별시 송파구 ㅇㅇㅇ ㅇ-ㅇㅇ ㅇㅇㅇㅇㅇㅇㅇㅇ ㅇㅇ층ㅇㅇㅇㅇ호',
-        exclusiveAreaM2: 208.56,
-        supplyAreaM2: 274.76,
-        creditor: '금천신용협동조합',
-        debtor: 'ㅇㅇㅇ',       // 엑셀: 김찬규 → 마스킹
+        // 원본 주소 · 마스킹 처리 (지번·건물·호수)
+        address: '서울특별시 강남구 개포동 ㅇㅇㅇㅇ-ㅇ ㅇㅇㅇㅇㅇㅇㅇㅇ ㅇ층ㅇㅇㅇ호',
+        exclusiveAreaM2: 46.41,
+        supplyAreaM2: 58.70,
+        creditor: '우리은행',
+        debtor: 'ㅇㅇㅇ',
         owner: '',              // UI 미표시
         tenant: '소유자 직접 점유',
       },
-      loanPrincipal: 1_960_000_000,
+      // 매입가 = 대출원금 × (1 − 할인율) = 7.0억 × 0.90 = 6.30억 (6~6.5억 범위)
+      loanPrincipal: 700_000_000,
       delinquencyRate: 0.089,
       delinquencyStartDate: '2025-07-23',
-      // 기한이익상실 = 연체시작 +60일 (엑셀: 2025-09-24 · 현재 규약 +60일)
-      accelerationDate: '2025-09-21',
-      appraisalValue: 2_800_000_000,
-      aiMarketValueLatest: 2_550_000_000,
+      // accelerationDate 생략 → 연체시작 + 60일 자동 계산
+      appraisalValue: appraisal,               // 8.35억
+      aiMarketValueLatest: 760_000_000,        // 7.60억 (AI 시세 현재)
       priceHistory: [
-        { price: 2_800_000_000, reportedAt: '2024-08-15', source: 'APPRAISAL',   label: '감정가 (채권자 제공)' },
-        { price: 2_550_000_000, reportedAt: '2025-10-21', source: 'AI_LATEST',   label: 'AI 시세 — 현재' },
-        { price: 2_700_000_000, reportedAt: '2024-05-08', source: 'AI_PAST_1Y',  label: 'AI 시세 — 1년 전' },
-        { price: 2_250_000_000, reportedAt: '2022-02-22', source: 'AI_PAST_3Y',  label: 'AI 시세 — 3년 전' },
+        { price: 835_000_000, reportedAt: '2024-08-15', source: 'APPRAISAL',   label: '감정가 (채권자 제공)' },
+        { price: 760_000_000, reportedAt: '2025-10-21', source: 'AI_LATEST',   label: 'AI 시세 — 현재' },
+        { price: 790_000_000, reportedAt: '2024-05-08', source: 'AI_PAST_1Y',  label: 'AI 시세 — 1년 전' },
+        { price: 680_000_000, reportedAt: '2022-02-22', source: 'AI_PAST_3Y',  label: 'AI 시세 — 3년 전' },
       ],
-      expectedBidRatio: 0.835,
+      // 낙찰가율 84% — 지역 6M 88.3% 대비 보수 (동일주소 86.3% · 인근중앙값 85.6% 가중평균)
+      expectedBidRatio: 0.84,
       expectedBidRatioPeriod: '최근 3개월 낙찰가율',
       auctionStartDate: '2025-10-21',
-      courtName: '서울동부지방법원 본원',
-      discountRate: 0,
+      courtName: '서울중앙지방법원 본원',
+      discountRate: 0.10,                      // 할인율 10% → 매입가 6.30억
       pledgeLoanRatio: 0.75,
       pledgeInterestRate: 0.065,
       executionCost: 10_000_000,
@@ -414,20 +415,23 @@ export function buildSampleReport(): UnifiedAnalysisReport {
       asOfDate: '2026-04-21',
       mcSeed: 20260421,
       mcTrials: 10_000,
+      // 민감도 축 확대 — 매입률 할인 폭 넓힘 + 낙찰가율 하단 확장
+      sensitivityPurchaseRateAxis: [0.75, 0.80, 0.85, 0.90, 0.95, 1.00, 1.05], // 대출원금 대비 -25%~+5%
+      sensitivityBidRatioAxis:     [0.55, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95], // 55%~95%
       evidence: {
         bidRatioStats: {
-          selectedLabel: '송파구 업무시설 · 3개월',
+          selectedLabel: '강남구 다세대(빌라) · 3개월',
           items: [
-            { scope: 'SIGUNGU',      region: '송파구',         periodMonths: 12, ratioPercent: 82.3, sampleSize: 18 },
-            { scope: 'SIGUNGU',      region: '송파구',         periodMonths: 6,  ratioPercent: 84.1, sampleSize: 9 },
-            { scope: 'SIGUNGU',      region: '송파구',         periodMonths: 3,  ratioPercent: 83.5, sampleSize: 5 },
-            { scope: 'SIGUNGU',      region: '송파구',         periodMonths: 1,  ratioPercent: 85.0, sampleSize: 2 },
-            { scope: 'EUPMYEONDONG', region: '송파구 ㅇㅇㅇ',  periodMonths: 12, ratioPercent: 78.8, sampleSize: 3 },
+            { scope: 'SIGUNGU',      region: '강남구',           periodMonths: 12, ratioPercent: 89.5, sampleSize: 31 },
+            { scope: 'SIGUNGU',      region: '강남구',           periodMonths: 6,  ratioPercent: 88.3, sampleSize: 12 },
+            { scope: 'SIGUNGU',      region: '강남구',           periodMonths: 3,  ratioPercent: 88.0, sampleSize: 5 },
+            { scope: 'SIGUNGU',      region: '강남구',           periodMonths: 1,  ratioPercent: 90.8, sampleSize: 2 },
+            { scope: 'EUPMYEONDONG', region: '강남구 개포동',     periodMonths: 12, ratioPercent: 86.3, sampleSize: 3 },
           ],
-          narrative: '송파구 업무시설(오피스) 최근 1년 82.3% → 6개월 84.1% → 3개월 83.5% → 1개월 85.0%. 최근 3개월 기준 83.5% 안정적 흐름. 잠실 오피스 권역은 기관 수요가 꾸준해 낙찰가율 80%대 초중반 유지.',
+          narrative: '강남구 다세대 최근 1년 89.5% → 6개월 88.3% → 3개월 88.0% → 1개월 90.8%. 안정적 80%대 후반 흐름. 개포동 단독 평균 86.3%로 시군구 평균에 근접.',
         },
         courtSchedule: {
-          courtName: '서울동부지방법원 본원',
+          courtName: '서울중앙지방법원 본원',
           avgSaleDays: 285,
           avgDistributionDays: 355,
           avgHearingInterval: 47,
@@ -435,34 +439,34 @@ export function buildSampleReport(): UnifiedAnalysisReport {
         },
         auctionCases: {
           averageDurationDays: 215,
-          averageAppraisalValue: 690_000_000,
-          averageSalePrice: 500_000_000,
-          averageBidRatio: 72.5,
+          averageAppraisalValue: 835_000_000,
+          averageSalePrice: 721_000_000,
+          averageBidRatio: 86.3,
           sameAddress: [],
           nearbyWithin1Km: [
-            { caseNo: '2024타경88921',  address: '서울특별시 송파구 ㅇㅇㅇ ㅇㅇ-ㅇㅇ', distanceKm: 0.4, propertyCategory: '업무시설', appraisalValue: 3_200_000_000, salePrice: 2_650_000_000, bidRatio: 82.8, durationDays: 242, saleDate: '2025-09-18' },
-            { caseNo: '2024타경91132',  address: '서울특별시 송파구 ㅇㅇㅇ ㅇ-ㅇㅇ',   distanceKm: 0.7, propertyCategory: '업무시설', appraisalValue: 2_400_000_000, salePrice: 2_050_000_000, bidRatio: 85.4, durationDays: 221, saleDate: '2025-11-04' },
-            { caseNo: '2025타경10477',  address: '서울특별시 송파구 ㅇㅇㅇ ㅇ-ㅇ',    distanceKm: 0.9, propertyCategory: '업무시설', appraisalValue: 2_900_000_000, salePrice: 2_310_000_000, bidRatio: 79.7, durationDays: 256, saleDate: '2026-02-12' },
+            { caseNo: '2024타경88921', address: '서울특별시 강남구 개포동 ㅇㅇㅇ-ㅇ',  distanceKm: 0.4, propertyCategory: '다세대(빌라)', appraisalValue: 780_000_000, salePrice: 685_000_000, bidRatio: 87.8, durationDays: 242, saleDate: '2025-09-18' },
+            { caseNo: '2024타경91132', address: '서울특별시 강남구 개포동 ㅇㅇ-ㅇ',   distanceKm: 0.7, propertyCategory: '다세대(빌라)', appraisalValue: 650_000_000, salePrice: 553_000_000, bidRatio: 85.1, durationDays: 221, saleDate: '2025-11-04' },
+            { caseNo: '2025타경10477', address: '서울특별시 강남구 개포동 ㅇ-ㅇㅇ',   distanceKm: 0.9, propertyCategory: '다세대(빌라)', appraisalValue: 920_000_000, salePrice: 784_000_000, bidRatio: 85.2, durationDays: 256, saleDate: '2026-02-12' },
           ],
         },
         nearbyTransactions: {
-          averageLandAreaM2: 68.27,
-          averageAmount: 1_450_000_000,
-          averagePricePerM2: 23_750_000,
-          averagePricePerPy: 70_000_000,
+          averageLandAreaM2: 17.5,
+          averageAmount: 430_000_000,
+          averagePricePerM2: 16_570_000,
+          averagePricePerPy: 54_800_000,
           samples: [
-            { txDate: '2026-01-15', address: '서울특별시 송파구 ㅇㅇㅇ ㅇ-ㅇㅇ', distanceMeters: 212.0, landAreaM2: 68.32, amountKRW: 1_420_000_000, pricePerM2: 20_790_000, zoning: '일반상업지역' },
-            { txDate: '2025-12-22', address: '서울특별시 송파구 ㅇㅇㅇ ㅇㅇ-ㅇ', distanceMeters: 455.0, landAreaM2: 72.10, amountKRW: 1_560_000_000, pricePerM2: 21_640_000, zoning: '일반상업지역' },
-            { txDate: '2025-11-08', address: '서울특별시 송파구 ㅇㅇㅇ ㅇ-ㅇㅇ', distanceMeters: 632.0, landAreaM2: 64.40, amountKRW: 1_380_000_000, pricePerM2: 21_430_000, zoning: '일반상업지역' },
+            { txDate: '2026-01-15', address: '서울특별시 강남구 개포동 ㅇ-ㅇㅇ',  distanceMeters: 186.0, landAreaM2: 25.82, amountKRW: 420_000_000, pricePerM2: 16_260_000, zoning: '제2종일반주거지역' },
+            { txDate: '2025-12-22', address: '서울특별시 강남구 개포동 ㅇㅇ-ㅇ', distanceMeters: 455.0, landAreaM2: 26.07, amountKRW: 430_000_000, pricePerM2: 16_490_000, zoning: '제2종일반주거지역' },
+            { txDate: '2025-11-08', address: '서울특별시 강남구 개포동 ㅇ-ㅇㅇ',  distanceMeters: 632.0, landAreaM2: 26.34, amountKRW: 450_000_000, pricePerM2: 17_090_000, zoning: '제2종일반주거지역' },
           ],
         },
       },
     }),
     executiveSummary:
-      `강남구 개포동 1195-8 다세대(빌라) NPL 딜 종합 분석 결과 ${riskGrade}등급, 예측 회수율 ${recovery.predictedRecoveryRate}%(신뢰도 ${Math.round(recovery.confidence * 100)}%)로 평가됩니다. ` +
-      `지역 6개월 낙찰가율 81.2%에 선순위 임차인 특수조건 -10%p 반영한 ${auction.adjustedBidRatio}%를 기준 입찰가율로 제시하며, ` +
+      `강남구 개포동 다세대(빌라) NPL 딜 종합 분석 결과 ${riskGrade}등급, 예측 회수율 ${recovery.predictedRecoveryRate}%(신뢰도 ${Math.round(recovery.confidence * 100)}%)로 평가됩니다. ` +
+      `지역 6개월 낙찰가율 ${SAMPLE_STATISTICS.auctionRatioStats[0].rows.find(r => r.bucket === '6M')?.bidRatio.toFixed(1)}%에 특수조건 ${auction.specialConditionPenalty.toFixed(1)}%p 반영한 ${auction.adjustedBidRatio.toFixed(1)}%를 기준 입찰가율로 제시하며, ` +
       `AI 권고 입찰가는 ${Math.round(recommendedBidPrice / 100_000_000 * 10) / 10}억입니다. ` +
-      `동일 주소 이전 낙찰(72.5%)과 인근 서초동(55.65%) 편차가 크므로 보수·기준·공격 3단계 입찰 전략을 병행 권고합니다.`,
+      `동일 주소 이전 낙찰(${SAMPLE_STATISTICS.sameAddressAuction!.summary.avgBidRatio}%)과 인근 강남권(${SAMPLE_STATISTICS.nearbyAuction!.summary.avgBidRatio}%) 편차 고려, 보수·기준·공격 3단계 입찰 전략을 병행 권고합니다.`,
   }
 
   return report

@@ -747,12 +747,13 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   })
 
   // ─── 민감도 분석 (매입률 × 낙찰가율 → ROI) ──────────────
-  // 축을 base 값 주변으로 자동 구성 (±σ 단위)
-  const defaultPurchaseAxis = buildAxis(strategyRecommendedRate, 0.03, 5) // 0.94/0.97/1.00/1.03/1.06
-  const defaultBidRatioAxis = buildAxis(
-    input.expectedBidRatio,
-    Math.max(0.02, derivedBidRatioStd),
-    6,
+  // 축을 base 값 주변으로 자동 구성하되, 매입률은 ±15% 할인폭 / 낙찰가율은 하단 확장
+  // 매입률: recommendedRate ± 0.05 × 3 step → 7 point (0.85~1.15 typical)
+  const defaultPurchaseAxis = buildAxis(strategyRecommendedRate, 0.05, 7)
+  // 낙찰가율: base − 4σ ~ base + 2σ (비대칭, 하단 넉넉히)
+  const bidStep = Math.max(0.03, derivedBidRatioStd)
+  const defaultBidRatioAxis = Array.from({ length: 8 }, (_, i) =>
+    Math.max(0.05, Math.round((input.expectedBidRatio + (i - 5) * bidStep) * 1000) / 1000),
   )
   const sensitivity = buildSensitivityMatrix({
     loanPrincipal: input.loanPrincipal,
