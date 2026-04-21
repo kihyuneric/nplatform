@@ -32,7 +32,12 @@ export interface BondInfo {
   defaultStartDate: string      // ISO date
   maturityDate?: string
   auctionCaseNo?: string        // 경매 사건 번호 (예: 2025타경12345)
+  auctionCourt?: string         // 관할법원
+  auctionFiledDate?: string     // 경매접수일 (ISO date)
+  auctionEstimatedStart?: string // 예상 경매 개시일 (ISO date)
   publicSaleNo?: string         // 공매 관리번호 (온비드 등)
+  publicSaleFiledDate?: string  // 공매신청일 (ISO date)
+  publicSaleEstimatedStart?: string // 예상 공매 개시일 (ISO date)
 }
 
 // ─── 담보물 정보 ───────────────────────────────────────────────────────────

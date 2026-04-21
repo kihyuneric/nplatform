@@ -75,6 +75,15 @@ interface WizardState {
   tenant_deposit_total: number   // 임차보증금 총액
   exclusive_area: number         // 전용면적 (㎡)
   build_year: number             // 건축년도
+  // ── 경매 정보 ──
+  auction_case_no: string        // 사건번호
+  auction_court: string          // 관할법원
+  auction_filed_date: string     // 경매접수일
+  auction_estimated_start: string // 예상 경매 개시일
+  // ── 공매 정보 ──
+  public_sale_mgmt_no: string    // 관리번호
+  public_sale_filed_date: string // 공매신청일
+  public_sale_estimated_start: string // 예상 공매 개시일
   provided: {
     appraisal: boolean
     registry: boolean
@@ -108,6 +117,13 @@ const initial: WizardState = {
   tenant_deposit_total: 0,
   exclusive_area: 0,
   build_year: 0,
+  auction_case_no: "",
+  auction_court: "",
+  auction_filed_date: "",
+  auction_estimated_start: "",
+  public_sale_mgmt_no: "",
+  public_sale_filed_date: "",
+  public_sale_estimated_start: "",
   provided: {
     appraisal: false, registry: false, rights: false,
     lease: false, site_photos: false, financials: false,
@@ -758,6 +774,46 @@ function Step4BondRights({ state, update }: { state: WizardState; update: <K ext
           <NumberInput value={state.tenant_deposit_total} onChange={v => update("tenant_deposit_total", v)} placeholder="예: 200000000" suffix="원" />
         </Field>
       </FormGrid>
+
+      {/* ── 경매 정보 ── */}
+      <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, backgroundColor: `${C.blue}08`, border: "1px solid rgba(45,116,182,0.18)" }}>
+        <div style={{ fontWeight: 800, fontSize: 13, color: C.blueL, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+          🏛 경매 정보 <span style={{ fontWeight: 600, fontSize: 11, color: C.lt3 }}>(선택)</span>
+        </div>
+        <FormGrid cols={2}>
+          <Field label="사건번호">
+            <TextInput value={state.auction_case_no} onChange={v => update("auction_case_no", v)} placeholder="예: 2025타경12345" />
+          </Field>
+          <Field label="관할법원">
+            <TextInput value={state.auction_court} onChange={v => update("auction_court", v)} placeholder="예: 서울중앙지방법원" />
+          </Field>
+          <Field label="경매접수일">
+            <DateField value={state.auction_filed_date} onChange={v => update("auction_filed_date", v)} placeholder="접수일 선택" max={new Date()} />
+          </Field>
+          <Field label="예상 경매 개시일">
+            <DateField value={state.auction_estimated_start} onChange={v => update("auction_estimated_start", v)} placeholder="예상 개시일 선택" />
+          </Field>
+        </FormGrid>
+      </div>
+
+      {/* ── 공매 정보 ── */}
+      <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 10, backgroundColor: `${C.blue}08`, border: "1px solid rgba(45,116,182,0.18)" }}>
+        <div style={{ fontWeight: 800, fontSize: 13, color: C.blueL, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+          📋 공매 정보 <span style={{ fontWeight: 600, fontSize: 11, color: C.lt3 }}>(선택)</span>
+        </div>
+        <FormGrid cols={2}>
+          <Field label="관리번호">
+            <TextInput value={state.public_sale_mgmt_no} onChange={v => update("public_sale_mgmt_no", v)} placeholder="예: 2025-00123-001" />
+          </Field>
+          <Field label="공매신청일">
+            <DateField value={state.public_sale_filed_date} onChange={v => update("public_sale_filed_date", v)} placeholder="신청일 선택" max={new Date()} />
+          </Field>
+          <Field label="예상 공매 개시일">
+            <DateField value={state.public_sale_estimated_start} onChange={v => update("public_sale_estimated_start", v)} placeholder="예상 개시일 선택" />
+          </Field>
+        </FormGrid>
+      </div>
+
       <div
         style={{
           marginTop: 18, padding: "12px 14px",

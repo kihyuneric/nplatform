@@ -578,20 +578,51 @@ function Step2BondInfo({ value, onChange }: {
         </div>
       </div>
 
-      {/* 경매/공매 사건 번호 */}
+      {/* 경매 정보 */}
       <div className={`${DS.card.base} p-6 space-y-4`}>
-        <h3 className={DS.text.cardTitle}>경매 · 공매 사건 번호</h3>
+        <h3 className={DS.text.cardTitle}>경매 정보</h3>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="경매 사건 번호">
+          <Field label="사건번호">
             <input
               className={DS.input.base}
               value={value.auctionCaseNo || ""}
               onChange={e => update({ auctionCaseNo: e.target.value })}
-              placeholder="예: 서울중앙지법 2025타경12345"
+              placeholder="예: 2025타경12345"
             />
             <p className={DS.input.helper}>법원경매 사건번호 (법정형식)</p>
           </Field>
-          <Field label="공매 관리번호">
+          <Field label="관할법원">
+            <input
+              className={DS.input.base}
+              value={value.auctionCourt || ""}
+              onChange={e => update({ auctionCourt: e.target.value })}
+              placeholder="예: 서울중앙지방법원"
+            />
+          </Field>
+          <Field label="경매접수일">
+            <input
+              className={DS.input.base}
+              type="date"
+              value={value.auctionFiledDate || ""}
+              onChange={e => update({ auctionFiledDate: e.target.value })}
+            />
+          </Field>
+          <Field label="예상 경매 개시일">
+            <input
+              className={DS.input.base}
+              type="date"
+              value={value.auctionEstimatedStart || ""}
+              onChange={e => update({ auctionEstimatedStart: e.target.value })}
+            />
+          </Field>
+        </div>
+      </div>
+
+      {/* 공매 정보 */}
+      <div className={`${DS.card.base} p-6 space-y-4`}>
+        <h3 className={DS.text.cardTitle}>공매 정보</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="관리번호">
             <input
               className={DS.input.base}
               value={value.publicSaleNo || ""}
@@ -599,6 +630,22 @@ function Step2BondInfo({ value, onChange }: {
               placeholder="예: 2025-00123-001"
             />
             <p className={DS.input.helper}>온비드·KAMCO 공매 관리번호</p>
+          </Field>
+          <Field label="공매신청일">
+            <input
+              className={DS.input.base}
+              type="date"
+              value={value.publicSaleFiledDate || ""}
+              onChange={e => update({ publicSaleFiledDate: e.target.value })}
+            />
+          </Field>
+          <Field label="예상 공매 개시일">
+            <input
+              className={DS.input.base}
+              type="date"
+              value={value.publicSaleEstimatedStart || ""}
+              onChange={e => update({ publicSaleEstimatedStart: e.target.value })}
+            />
           </Field>
         </div>
       </div>
