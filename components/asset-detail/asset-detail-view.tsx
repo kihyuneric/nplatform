@@ -17,6 +17,7 @@ import {
   CheckCircle2, ShieldCheck, Scale, Images,
   Banknote, ScrollText, TrendingUp, Calculator, Brain, ArrowRight,
   Pencil, X, Save, FileDown, Eye, EyeOff, HandCoins, BarChart2, FileCheck,
+  FileSignature,
 } from "lucide-react"
 import { toast } from "sonner"
 import { TierGate } from "@/components/tier/tier-gate"
@@ -742,8 +743,8 @@ export function AssetDetailView({
               </p>
             </div>
 
-            {tierGte(effectiveAccessTier, "L1") && (
-              <div id="ai-report" className="scroll-mt-24">
+            {/* AI 분석 리포트 — L0 공개 */}
+            <div id="ai-report" className="scroll-mt-24">
               <AiReportCard
                 recoveryRate={aiAnalysis.recoveryRate?.predicted ?? 78.5}
                 confidence={aiAnalysis.recoveryRate?.confidence ?? 92}
@@ -762,8 +763,7 @@ export function AssetDetailView({
                 }}
                 onAskCopilot={() => toast.info("AI Copilot이 곧 열립니다.", { duration: 1500 })}
               />
-              </div>
-            )}
+            </div>
 
             <SectionCard
               title="권리관계 요약"
@@ -835,6 +835,34 @@ export function AssetDetailView({
                   <Stat label="보증금 합계" value={formatKRW(listing.lease_summary.total_deposit)} />
                   <Stat label="월세" value={formatKRW(listing.lease_summary.monthly_rent || 0)} />
                   <Stat label="임차인 수" value={`${listing.lease_summary.tenant_count}명`} />
+                </div>
+              </TierGate>
+            </SectionCard>
+
+            {/* ── NDA 체결 (L2) ── */}
+            <SectionCard
+              title="NDA 체결"
+              icon={<FileSignature size={14} />}
+              tierBadge="L2"
+              anchorId="nda"
+            >
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={72}>
+                <div
+                  className="rounded-xl flex items-center gap-3 px-4 py-3"
+                  style={{
+                    backgroundColor: "var(--color-positive-bg)",
+                    border: "1px solid rgba(16, 185, 129, 0.4)",
+                  }}
+                >
+                  <CheckCircle2 size={18} color="var(--color-positive)" className="flex-shrink-0" />
+                  <div>
+                    <div className="font-black" style={{ fontSize: 13, color: "var(--color-positive)" }}>
+                      NDA 체결 완료
+                    </div>
+                    <div className="mt-0.5" style={{ fontSize: 11, color: "var(--fg-muted)" }}>
+                      감정평가서 · 현장사진 · 채권정보 등 L2 자료를 열람할 수 있습니다
+                    </div>
+                  </div>
                 </div>
               </TierGate>
             </SectionCard>
