@@ -1,27 +1,26 @@
 "use client"
 
 /**
- * /deals — 딜룸 (DR-10 · 2026-04-21)
+ * /deals — 딜룸 (DR-11 · 2026-04-21)
  *
- * 상단: 진행 중 딜 가로 칩 리스트 (클릭 시 임베드 자산 변경)
- * 하단: 가장 최근 딜(또는 선택한 딜)의 딜룸 원본 페이지 (= /exchange/[id]) 를 iframe 으로 임베드
+ * 상단: 진행 중 딜 - 카드형(기본) / 리스트형 토글
+ * 하단: 선택한 딜의 딜룸 원본 페이지 (= /exchange/[id]) 를 iframe 으로 임베드
  *
- * 대시보드는 /deals/dashboard 로 분리.
+ * KPI / 매수·매도 필터 / 상태 필터는 전부 /deals/dashboard 로 이관.
+ * 이 페이지는 오직 '딜룸' 본연 기능(진행 중 딜 선택 + 딜룸 뷰)만 노출.
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import DS, { formatKRW } from "@/lib/design-system"
 import {
-  ArrowRight,
   Bell,
-  FileText,
-  HandshakeIcon,
-  CheckCircle2,
   Briefcase,
   Building2,
   Plus,
   ExternalLink,
+  LayoutGrid,
+  List as ListIcon,
 } from "lucide-react"
 import Link from "next/link"
 import { SampleBadge } from "@/components/shared/sample-badge"
@@ -31,18 +30,17 @@ import { type DealStage } from "@/lib/deal-constants"
 
 interface DealStageConfig {
   label: string
-  dotColor: string
   dotBg: string
 }
 
 const STAGE_CONFIG: Record<DealStage, DealStageConfig> = {
-  INTEREST:      { label: "관심표명", dotColor: "bg-slate-500",   dotBg: "bg-slate-500/10 text-slate-400 border border-slate-500/20" },
-  NDA:           { label: "NDA",      dotColor: "bg-blue-500",    dotBg: "bg-blue-500/10 text-blue-400 border border-blue-500/20" },
-  DUE_DILIGENCE: { label: "실사",     dotColor: "bg-amber-500",   dotBg: "bg-amber-500/10 text-amber-400 border border-amber-500/20" },
-  NEGOTIATION:   { label: "오퍼",     dotColor: "bg-violet-500",  dotBg: "bg-violet-500/10 text-violet-400 border border-violet-500/20" },
-  CONTRACT:      { label: "계약",     dotColor: "bg-emerald-500", dotBg: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-  SETTLEMENT:    { label: "잔금",     dotColor: "bg-cyan-500",    dotBg: "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" },
-  COMPLETED:     { label: "완료",     dotColor: "bg-green-500",   dotBg: "bg-green-500/10 text-green-400 border border-green-500/20" },
+  INTEREST:      { label: "관심표명", dotBg: "bg-slate-500/10 text-slate-400 border border-slate-500/20" },
+  NDA:           { label: "NDA",      dotBg: "bg-blue-500/10 text-blue-400 border border-blue-500/20" },
+  DUE_DILIGENCE: { label: "실사",     dotBg: "bg-amber-500/10 text-amber-400 border border-amber-500/20" },
+  NEGOTIATION:   { label: "오퍼",     dotBg: "bg-violet-500/10 text-violet-400 border border-violet-500/20" },
+  CONTRACT:      { label: "계약",     dotBg: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+  SETTLEMENT:    { label: "잔금",     dotBg: "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" },
+  COMPLETED:     { label: "완료",     dotBg: "bg-green-500/10 text-green-400 border border-green-500/20" },
 }
 
 interface Deal {
@@ -137,35 +135,24 @@ const SAMPLE_DEALS: Deal[] = [
   },
 ]
 
-// ─── KPI metric ───────────────────────────────────────────────
+// ─── Deal card (grid) ─────────────────────────────────────────
 
-function KpiMetric({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: string }) {
-  return (
-    <div className="flex-1 min-w-0 px-5 py-3.5 border-r border-[var(--color-border-subtle)] last:border-r-0">
-      <p className={DS.stat.label}>{label}</p>
-      <p className={`${DS.stat.value} ${accent ?? ""}`}>{value}</p>
-      {sub && <p className={DS.stat.sub}>{sub}</p>}
-    </div>
-  )
-}
-
-// ─── Deal chip ────────────────────────────────────────────────
-
-function DealChip({ deal, active, onClick }: { deal: Deal; active: boolean; onClick: () => void }) {
+function DealCard({ deal, active, onClick }: { deal: Deal; active: boolean; onClick: () => void }) {
   const config = STAGE_CONFIG[deal.current_stage]
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex-shrink-0 text-left transition-all rounded-xl px-3.5 py-3 border ${
+      className={`text-left transition-all rounded-xl px-3.5 py-3 border w-full ${
         active
           ? "bg-[var(--color-brand-dark)] border-[var(--color-brand-dark)] shadow-md"
           : "bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] hover:border-[var(--color-brand-mid)]"
       }`}
-      style={{ width: 248 }}
     >
       <div className="flex items-center justify-between mb-1.5">
-        <span className={`text-[0.625rem] font-black px-1.5 py-0.5 rounded ${active ? "bg-white/15 text-white" : config.dotBg}`}>
+        <span
+          className={`text-[0.625rem] font-black px-1.5 py-0.5 rounded ${active ? "bg-white/15 text-white" : config.dotBg}`}
+        >
           {config.label}
         </span>
         {deal.notification && (
@@ -175,13 +162,19 @@ function DealChip({ deal, active, onClick }: { deal: Deal; active: boolean; onCl
           </span>
         )}
       </div>
-      <p className={`text-[0.8125rem] font-black leading-snug line-clamp-1 mb-1 ${active ? "text-white" : "text-[var(--color-text-primary)]"}`}>
+      <p
+        className={`text-[0.8125rem] font-black leading-snug line-clamp-1 mb-1 ${active ? "text-white" : "text-[var(--color-text-primary)]"}`}
+      >
         {deal.listing_name}
       </p>
-      <p className={`text-[0.6875rem] font-semibold ${active ? "text-white/80" : "text-[var(--color-text-muted)]"}`}>
+      <p
+        className={`text-[0.6875rem] font-semibold ${active ? "text-white/80" : "text-[var(--color-text-muted)]"}`}
+      >
         {formatKRW(deal.amount)} · {deal.counterparty_masked}
       </p>
-      <div className={`mt-2 h-0.5 rounded-full overflow-hidden ${active ? "bg-white/20" : "bg-[var(--color-border-subtle)]"}`}>
+      <div
+        className={`mt-2 h-0.5 rounded-full overflow-hidden ${active ? "bg-white/20" : "bg-[var(--color-border-subtle)]"}`}
+      >
         <div
           className={`h-full rounded-full transition-all ${active ? "bg-white" : "bg-gradient-to-r from-[var(--color-brand-mid)] to-[var(--color-brand-dark)]"}`}
           style={{ width: `${deal.progress}%` }}
@@ -191,13 +184,66 @@ function DealChip({ deal, active, onClick }: { deal: Deal; active: boolean; onCl
   )
 }
 
+// ─── Deal list row ────────────────────────────────────────────
+
+function DealRow({ deal, active, onClick }: { deal: Deal; active: boolean; onClick: () => void }) {
+  const config = STAGE_CONFIG[deal.current_stage]
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full grid grid-cols-[84px_1fr_120px_110px_80px_20px] gap-3 items-center px-3.5 py-2.5 text-left transition-all border-b border-[var(--color-border-subtle)] last:border-b-0 ${
+        active
+          ? "bg-[var(--color-brand-dark)]/10"
+          : "hover:bg-[var(--color-surface-sunken)]"
+      }`}
+    >
+      <span className={`text-[0.625rem] font-black px-1.5 py-0.5 rounded text-center ${config.dotBg}`}>
+        {config.label}
+      </span>
+      <div className="min-w-0">
+        <p className="text-[0.8125rem] font-black text-[var(--color-text-primary)] line-clamp-1">
+          {deal.listing_name}
+        </p>
+        <p className="text-[0.6875rem] text-[var(--color-text-muted)] line-clamp-1">
+          {deal.asset_type && deal.location ? `${deal.asset_type} · ${deal.location}` : deal.counterparty_masked}
+        </p>
+      </div>
+      <p className="text-[0.75rem] font-bold tabular-nums text-[var(--color-text-primary)]">
+        {formatKRW(deal.amount)}
+      </p>
+      <p className="text-[0.6875rem] text-[var(--color-text-muted)] line-clamp-1">
+        {deal.counterparty_masked}
+      </p>
+      <div className="flex items-center gap-1.5">
+        <div className="flex-1 h-1 rounded-full bg-[var(--color-border-subtle)] overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-[var(--color-brand-mid)] to-[var(--color-brand-dark)]"
+            style={{ width: `${deal.progress}%` }}
+          />
+        </div>
+        <span className="text-[0.625rem] font-bold tabular-nums text-[var(--color-text-muted)]">
+          {deal.progress}%
+        </span>
+      </div>
+      {deal.notification && (
+        <span className="relative inline-block w-3 h-3">
+          <Bell className="w-3 h-3 text-amber-500" />
+          <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[var(--color-danger)]" />
+        </span>
+      )}
+      {!deal.notification && <span className="w-3 h-3" />}
+    </button>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────
 
 export default function DealsPage() {
   const [deals, setDeals] = useState<Deal[]>(SAMPLE_DEALS)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<"buy" | "sell">("buy")
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<"card" | "list">("card")
 
   const loadDeals = useCallback(async () => {
     setLoading(true)
@@ -257,8 +303,8 @@ export default function DealsPage() {
   useEffect(() => { loadDeals() }, [loadDeals])
 
   const activeDeals = useMemo(
-    () => deals.filter((d) => d.type === tab && d.current_stage !== "COMPLETED"),
-    [deals, tab]
+    () => deals.filter((d) => d.current_stage !== "COMPLETED"),
+    [deals]
   )
 
   const defaultSelected = activeDeals[0] ?? null
@@ -271,13 +317,6 @@ export default function DealsPage() {
 
   const selectedDeal = activeDeals.find((d) => d.id === selectedDealId) ?? defaultSelected
 
-  // KPI
-  const totalActive = deals.filter((d) => d.current_stage !== "COMPLETED").length
-  const totalAmount = deals.filter((d) => d.current_stage !== "COMPLETED").reduce((sum, d) => sum + d.amount, 0)
-  const avgProgress = deals.length
-    ? Math.round(deals.reduce((s, d) => s + d.progress, 0) / deals.length)
-    : 0
-
   return (
     <div className={DS.page.wrapper}>
       {/* Sticky Header */}
@@ -287,13 +326,43 @@ export default function DealsPage() {
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-mid)] animate-pulse" />
             <span className="text-[0.6875rem] font-bold text-[var(--color-brand-mid)]">
-              {totalActive}건 진행중
+              {activeDeals.length}건 진행중
             </span>
           </div>
           <SampleBadge />
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {/* 카드/리스트 토글 */}
+          <div className="inline-flex rounded-lg border border-[var(--color-border-subtle)] overflow-hidden bg-[var(--color-surface-elevated)]">
+            <button
+              type="button"
+              onClick={() => setViewMode("card")}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[0.75rem] font-bold transition-all ${
+                viewMode === "card"
+                  ? "bg-[var(--color-brand-dark)] text-white"
+                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+              }`}
+              aria-label="카드 보기"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              카드
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[0.75rem] font-bold transition-all ${
+                viewMode === "list"
+                  ? "bg-[var(--color-brand-dark)] text-white"
+                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+              }`}
+              aria-label="리스트 보기"
+            >
+              <ListIcon className="w-3.5 h-3.5" />
+              목록
+            </button>
+          </div>
+
           <Link href="/exchange">
             <button className={`${DS.button.primary} ${DS.button.sm}`}>
               <Plus className="h-3.5 w-3.5" />
@@ -304,47 +373,6 @@ export default function DealsPage() {
       </div>
 
       <div className={`${DS.page.container} py-5`}>
-        {/* KPI Strip */}
-        <div className={`flex items-stretch ${DS.card.base} mb-5 overflow-hidden`}>
-          <KpiMetric
-            label="진행중 딜"
-            value={String(totalActive)}
-            sub="전체 거래"
-            accent="!text-[var(--color-brand-mid)]"
-          />
-          <KpiMetric
-            label="진행중 금액"
-            value={formatKRW(totalAmount)}
-            sub="포트폴리오 합계"
-          />
-          <KpiMetric
-            label="평균 진행률"
-            value={`${avgProgress}%`}
-            sub="전체 평균"
-            accent="!text-[var(--color-brand-mid)]"
-          />
-        </div>
-
-        {/* Buy/Sell filter */}
-        <div className="flex items-center gap-1.5 mb-5">
-          {(["buy", "sell"] as const).map((type) => (
-            <button
-              key={type}
-              onClick={() => setTab(type)}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[0.8125rem] font-bold transition-all border ${
-                tab === type ? DS.filter.chipActive : DS.filter.chipInactive
-              }`}
-            >
-              {type === "buy" ? "매수 건" : "매도 건"}
-              <span className={`text-[0.6875rem] px-1.5 py-0.5 rounded-full font-bold ${
-                tab === type ? "bg-white/20 text-white" : "bg-[var(--color-surface-sunken)] text-[var(--color-text-tertiary)]"
-              }`}>
-                {deals.filter((d) => d.type === type).length}
-              </span>
-            </button>
-          ))}
-        </div>
-
         {loading && (
           <div className="space-y-3">
             <div className="h-32 bg-[var(--color-surface-sunken)] rounded-xl animate-pulse" />
@@ -372,29 +400,52 @@ export default function DealsPage() {
 
         {!loading && activeDeals.length > 0 && (
           <>
-            {/* 상단: 진행 중 딜 리스트 (가로 스크롤) */}
+            {/* 상단: 진행 중 딜 - 카드/리스트 */}
             <section className="mb-5">
               <div className="flex items-center justify-between mb-2.5">
                 <div>
                   <h3 className={DS.text.cardTitle}>진행 중 딜</h3>
                   <p className={`${DS.text.micro} mt-0.5`}>
-                    가장 최근 딜을 기준으로 하단 딜룸이 연동됩니다 · 칩을 클릭하면 다른 딜룸으로 전환
+                    {selectedDeal ? `선택된 딜의 딜룸이 아래에 연동됩니다` : "딜을 선택하면 딜룸이 아래에 열립니다"}
                   </p>
                 </div>
                 <span className="text-[0.6875rem] font-bold text-[var(--color-text-muted)] tabular-nums">
                   총 {activeDeals.length}건
                 </span>
               </div>
-              <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
-                {activeDeals.map((d) => (
-                  <DealChip
-                    key={d.id}
-                    deal={d}
-                    active={selectedDeal?.id === d.id}
-                    onClick={() => setSelectedDealId(d.id)}
-                  />
-                ))}
-              </div>
+
+              {viewMode === "card" ? (
+                <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  {activeDeals.map((d) => (
+                    <DealCard
+                      key={d.id}
+                      deal={d}
+                      active={selectedDeal?.id === d.id}
+                      onClick={() => setSelectedDealId(d.id)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-hidden">
+                  {/* List header */}
+                  <div className="grid grid-cols-[84px_1fr_120px_110px_80px_20px] gap-3 px-3.5 py-2 text-[0.625rem] font-black uppercase tracking-wider text-[var(--color-text-muted)] bg-[var(--color-surface-sunken)] border-b border-[var(--color-border-subtle)]">
+                    <span className="text-center">단계</span>
+                    <span>매물</span>
+                    <span>금액</span>
+                    <span>상대방</span>
+                    <span>진행률</span>
+                    <span />
+                  </div>
+                  {activeDeals.map((d) => (
+                    <DealRow
+                      key={d.id}
+                      deal={d}
+                      active={selectedDeal?.id === d.id}
+                      onClick={() => setSelectedDealId(d.id)}
+                    />
+                  ))}
+                </div>
+              )}
             </section>
 
             {/* 하단: 선택된 딜의 딜룸 전체 페이지 iframe 임베드 */}

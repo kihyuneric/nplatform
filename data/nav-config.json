@@ -41,20 +41,20 @@
     ],
     "deals": [
       {
-        "key": "deals_active",
-        "label": "진행 중",
+        "key": "deals_room",
+        "label": "딜룸",
         "href": "/deals",
-        "description": "활성 거래 현황",
-        "icon": "ClipboardList",
+        "description": "진행 중 딜 + 가장 최근 딜룸 연동",
+        "icon": "MessageSquare",
         "active": true,
         "order": 1
       },
       {
-        "key": "deals_archive",
-        "label": "완료",
-        "href": "/deals/archive",
-        "description": "과거 거래 기록",
-        "icon": "Archive",
+        "key": "deals_dashboard",
+        "label": "대시보드",
+        "href": "/deals/dashboard",
+        "description": "진행중 딜 + 완료 딜 현황",
+        "icon": "LayoutDashboard",
         "active": true,
         "order": 2
       },
@@ -62,7 +62,7 @@
         "key": "deals_matching",
         "label": "AI 매칭",
         "href": "/deals/matching",
-        "description": "AI 기반 매물-수요 자동 매칭",
+        "description": "AI 기반 매물-투자자 매칭",
         "icon": "Brain",
         "active": true,
         "order": 3
@@ -217,20 +217,20 @@
       "order": 2,
       "items": [
         {
-          "key": "deals_active",
-          "label": "진행 중",
+          "key": "deals_room",
+          "label": "딜룸",
           "href": "/deals",
-          "description": "활성 거래 현황",
-          "icon": "ClipboardList",
+          "description": "진행 중 딜 + 가장 최근 딜룸 연동",
+          "icon": "MessageSquare",
           "active": true,
           "order": 1
         },
         {
-          "key": "deals_archive",
-          "label": "완료",
-          "href": "/deals/archive",
-          "description": "과거 거래 기록",
-          "icon": "Archive",
+          "key": "deals_dashboard",
+          "label": "대시보드",
+          "href": "/deals/dashboard",
+          "description": "진행중 딜 + 완료 딜 현황",
+          "icon": "LayoutDashboard",
           "active": true,
           "order": 2
         },
@@ -238,7 +238,7 @@
           "key": "deals_matching",
           "label": "AI 매칭",
           "href": "/deals/matching",
-          "description": "AI 기반 매물-수요 자동 매칭",
+          "description": "AI 기반 매물-투자자 매칭",
           "icon": "Brain",
           "active": true,
           "order": 3

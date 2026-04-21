@@ -62,8 +62,8 @@ const NAV_GROUPS: NavGroup[] = [
   {
     group: '딜룸',
     items: [
-      { label: '진행 중', icon: Briefcase, href: '/deals' },
-      { label: '완료', icon: Archive, href: '/deals/archive' },
+      { label: '딜룸', icon: MessageSquare, href: '/deals' },
+      { label: '대시보드', icon: Briefcase, href: '/deals/dashboard' },
       { label: 'AI 매칭', icon: TrendingUp, href: '/deals/matching' },
       { label: '팀 투자', icon: Building2, href: '/deals/teams' },
     ],

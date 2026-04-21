@@ -1,10 +1,12 @@
 "use client"
 
 /**
- * /deals/dashboard — 딜룸 대시보드 (DR-10 · 2026-04-21)
+ * /deals/dashboard — 딜룸 대시보드 (DR-11 · 2026-04-21)
  *
- * 진행 중 + 이번달 완료 딜을 한 리스트로 노출.
- * 상단 요약 카드 (진행중 / 이번달 완료) 클릭 시 필터 적용.
+ * 진행 중 + 완료 딜을 한 리스트로 노출.
+ * 상단 요약 카드 (진행중 딜 / 완료 딜) 클릭 시 필터 적용:
+ *   - 진행중 딜 클릭 → 기존 '진행 중' 서브네비 정보 뷰와 동일 (진행 중 딜 리스트)
+ *   - 완료 딜 클릭   → 기존 '완료' 서브네비 정보 뷰와 동일 (완료된 딜 리스트)
  * row 클릭 시 /deals/[id] 로 이동 (딜룸 전체 화면).
  */
 
@@ -194,8 +196,8 @@ function KpiMetric({ label, value, sub, accent }: { label: string; value: string
 
 // ─── Main Component ───────────────────────────────────────────
 
-type DashboardFilter = "전체" | "진행중" | "이번달 완료"
-const DASHBOARD_FILTERS: DashboardFilter[] = ["전체", "진행중", "이번달 완료"]
+type DashboardFilter = "전체" | "진행중" | "완료 딜"
+const DASHBOARD_FILTERS: DashboardFilter[] = ["전체", "진행중", "완료 딜"]
 
 export default function DealsDashboardPage() {
   const [deals, setDeals] = useState<Deal[]>(SAMPLE_DEALS)
@@ -263,16 +265,17 @@ export default function DealsDashboardPage() {
   const dashboardDeals = useMemo(() => {
     const base = deals.filter((d) => d.type === tab)
     const inProgress = base.filter((d) => d.current_stage !== "COMPLETED")
-    const completedThisMonth = base.filter((d) => d.current_stage === "COMPLETED" && isThisMonth(d.completed_at))
-    const combined = [...inProgress, ...completedThisMonth]
+    const completed = base.filter((d) => d.current_stage === "COMPLETED")
+    const combined = [...inProgress, ...completed]
     if (dashboardFilter === "진행중") return inProgress
-    if (dashboardFilter === "이번달 완료") return completedThisMonth
+    if (dashboardFilter === "완료 딜") return completed
     return combined
   }, [deals, tab, dashboardFilter])
 
   const totalActive = deals.filter((d) => d.current_stage !== "COMPLETED").length
   const totalAmount = deals.reduce((sum, d) => sum + d.amount, 0)
-  const completedCount = deals.filter((d) => d.current_stage === "COMPLETED" && isThisMonth(d.completed_at)).length
+  const completedCount = deals.filter((d) => d.current_stage === "COMPLETED").length
+  const completedThisMonthCount = deals.filter((d) => d.current_stage === "COMPLETED" && isThisMonth(d.completed_at)).length
   const avgProgress = deals.length
     ? Math.round(deals.reduce((s, d) => s + d.progress, 0) / deals.length)
     : 0
@@ -286,7 +289,7 @@ export default function DealsDashboardPage() {
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-mid)] animate-pulse" />
             <span className="text-[0.6875rem] font-bold text-[var(--color-brand-mid)]">
-              {totalActive}건 진행중 · 이번달 {completedCount}건 완료
+              {totalActive}건 진행중 · 완료 {completedCount}건 (이번달 {completedThisMonthCount}건)
             </span>
           </div>
           <SampleBadge />
@@ -317,9 +320,9 @@ export default function DealsDashboardPage() {
             sub="포트폴리오 합계"
           />
           <KpiMetric
-            label="이번달 완료"
+            label="완료 딜"
             value={String(completedCount)}
-            sub="건 성사"
+            sub={`이번달 ${completedThisMonthCount}건`}
             accent="!text-[var(--color-positive)]"
           />
           <KpiMetric
@@ -377,15 +380,17 @@ export default function DealsDashboardPage() {
               </Link>
               <Link
                 href="#list"
-                onClick={() => setDashboardFilter("이번달 완료")}
+                onClick={() => setDashboardFilter("완료 딜")}
                 className={`${DS.card.base} p-4 flex items-center justify-between hover:border-[var(--color-positive)] transition-colors`}
               >
                 <div>
-                  <p className={DS.text.label}>이번달 완료 딜</p>
+                  <p className={DS.text.label}>완료 딜</p>
                   <p className="text-[1.5rem] font-black text-[var(--color-positive)] tabular-nums">
-                    {deals.filter((d) => d.type === tab && d.current_stage === "COMPLETED" && isThisMonth(d.completed_at)).length}건
+                    {deals.filter((d) => d.type === tab && d.current_stage === "COMPLETED").length}건
                   </p>
-                  <p className={DS.text.micro}>클릭 시 리스트에서 필터링</p>
+                  <p className={DS.text.micro}>
+                    이번달 {deals.filter((d) => d.type === tab && d.current_stage === "COMPLETED" && isThisMonth(d.completed_at)).length}건 · 클릭 시 완료 딜만 표시
+                  </p>
                 </div>
                 <CheckCircle2 className="w-8 h-8 text-[var(--color-positive)] opacity-60" />
               </Link>

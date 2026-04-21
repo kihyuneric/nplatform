@@ -85,8 +85,8 @@ const MORE_SECTIONS = [
     title: '딜룸',
     titleKey: 'nav.deals',
     items: [
-      { label: '진행 중', labelKey: 'nav.activeDeals', href: '/deals', icon: ClipboardList },
-      { label: '완료', labelKey: 'nav.dealArchive', href: '/deals/archive', icon: Archive },
+      { label: '딜룸', labelKey: 'nav.dealsRoom', href: '/deals', icon: MessageSquare },
+      { label: '대시보드', labelKey: 'nav.dealsDashboard', href: '/deals/dashboard', icon: ClipboardList },
       { label: 'AI 매칭', labelKey: 'nav.aiMatching', href: '/deals/matching', icon: TrendingUp },
       { label: '팀 투자', labelKey: 'nav.teamInvest', href: '/deals/teams', icon: Users },
     ],
