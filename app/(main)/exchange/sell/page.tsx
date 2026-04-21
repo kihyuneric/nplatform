@@ -1087,8 +1087,216 @@ function Step6Review({
             </div>
           </>
         )}
+
+        {/* ── DR-18: 딜룸 공개 미리보기 (L0→L3 단계별 열람 매핑) ── */}
+        <TierPreviewBlock state={state} />
       </div>
     </>
+  )
+}
+
+// ── DR-18: 딜룸 공개 미리보기 ───────────────────────────────
+// 매물 등록 폼에 입력된 필드가 딜룸 L0→L3 단계별로 어떤 순서로 공개되는지
+// 시각화하여 정보 비대칭 단계화를 명시적으로 안내.
+function TierPreviewBlock({ state }: { state: WizardState }) {
+  const collateralLabel = COLLATERAL_CATEGORIES.flatMap(c => c.items).find(i => i.value === state.collateral)?.label ?? "—"
+  const regionBrief = `${state.region_city || "—"} ${state.region_district ? state.region_district.slice(0, 3) + "…" : ""}`.trim()
+  const regionFull = `${state.region_city} ${state.region_district}`.trim() || "—"
+  const instTypeLabel = SELLER_INSTITUTION_OPTIONS.find(o => o.value === state.inst_type)?.label ?? "—"
+  const saleMethodLabel = state.sale_method === "NPLATFORM" ? "엔플랫폼" : state.sale_method === "AUCTION" ? "경매" : state.sale_method === "PUBLIC" ? "공매" : "—"
+
+  // 범위 표시용 helper (정확치 마스킹)
+  const rangeKRW = (n: number) => {
+    if (!n) return "—"
+    const bil = n / 10000
+    if (bil >= 100) {
+      const low = Math.floor(bil / 10) * 10
+      return `${low}억대`
+    }
+    if (bil >= 1) {
+      const low = Math.floor(bil)
+      return `${low}억~${low + 1}억`
+    }
+    return `${Math.floor(n / 1000) * 1000}만원대`
+  }
+
+  const providedDocs = [
+    { key: "appraisal" as const, label: "감정평가서" },
+    { key: "registry" as const, label: "등기부등본" },
+    { key: "rights" as const, label: "권리분석서" },
+    { key: "lease" as const, label: "임대차현황" },
+    { key: "site_photos" as const, label: "현장사진" },
+    { key: "financials" as const, label: "재무제표" },
+  ]
+  const providedCount = providedDocs.filter(d => state.provided[d.key]).length
+
+  const tiers: {
+    level: "L0" | "L1" | "L2" | "L3"
+    title: string
+    gate: string
+    tone: string
+    bg: string
+    items: { label: string; value: string; muted?: boolean }[]
+  }[] = [
+    {
+      level: "L0",
+      title: "공개 카드",
+      gate: "누구나 열람",
+      tone: C.blueL,
+      bg: "rgba(46, 117, 182, 0.08)",
+      items: [
+        { label: "담보 · 지역", value: `${collateralLabel} · ${regionBrief || "—"}` },
+        { label: "매각방식", value: saleMethodLabel },
+        { label: "채권잔액 (범위)", value: rangeKRW(state.outstanding_principal) },
+        { label: "매각희망가 (범위)", value: rangeKRW(state.asking_price) },
+        { label: "감정가 (범위)", value: rangeKRW(state.appraisal_value) },
+        { label: "기관 유형", value: instTypeLabel },
+      ],
+    },
+    {
+      level: "L1",
+      title: "회원가입 · KYC",
+      gate: "본인인증 완료 시",
+      tone: C.emL,
+      bg: "var(--color-positive-bg)",
+      items: [
+        { label: "채권잔액 (정확치)", value: formatKRW(state.outstanding_principal) },
+        { label: "매각희망가 (정확치)", value: formatKRW(state.asking_price) },
+        { label: "감정가 (정확치)", value: formatKRW(state.appraisal_value) },
+        { label: "지역 (동 단위)", value: regionFull },
+        { label: "채무자 구분", value: state.debtor_type === "INDIVIDUAL" ? "개인" : state.debtor_type === "CORPORATE" ? "법인" : "—" },
+        { label: "AI 등급 프리뷰", value: "Claude NPL Engine v2" },
+      ],
+    },
+    {
+      level: "L2",
+      title: "NDA 체결",
+      gate: "비밀유지 서명 후",
+      tone: C.amber,
+      bg: "rgba(245, 158, 11, 0.08)",
+      items: [
+        { label: "연체금리", value: state.penalty_rate > 0 ? `${state.penalty_rate}%` : "—", muted: !state.penalty_rate },
+        { label: "연체시작일", value: state.default_start_date || "—", muted: !state.default_start_date },
+        { label: "근저당 설정액", value: state.mortgage_amount > 0 ? `${formatKRW(state.mortgage_amount)} (${state.mortgage_rank}순위)` : "—", muted: !state.mortgage_amount },
+        { label: "선순위 채권 총액", value: state.senior_claims_total > 0 ? formatKRW(state.senior_claims_total) : "—", muted: !state.senior_claims_total },
+        { label: "임차보증금 총액", value: state.tenant_deposit_total > 0 ? formatKRW(state.tenant_deposit_total) : "—", muted: !state.tenant_deposit_total },
+        { label: "전용면적 · 건축년도", value: `${state.exclusive_area > 0 ? state.exclusive_area + "㎡" : "—"} · ${state.build_year > 0 ? state.build_year + "년" : "—"}`, muted: !state.exclusive_area && !state.build_year },
+      ],
+    },
+    {
+      level: "L3",
+      title: "LOI 제출",
+      gate: "우선협상 인수의향서",
+      tone: C.teal,
+      bg: "rgba(20, 184, 166, 0.08)",
+      items: [
+        { label: "기관명 (정확치)", value: state.institution || "—", muted: !state.institution },
+        ...providedDocs.map(d => ({
+          label: d.label,
+          value: state.provided[d.key] ? "열람 가능" : "미제출",
+          muted: !state.provided[d.key],
+        })),
+      ],
+    },
+  ]
+
+  return (
+    <div
+      style={{
+        marginTop: 20, padding: "18px 20px", borderRadius: 14,
+        backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <ShieldCheck size={16} color={C.blueL} />
+          <span style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text-primary)" }}>
+            딜룸 공개 미리보기
+          </span>
+          <span style={{ fontSize: 10, color: C.lt4 }}>L0 → L3 단계별 열람</span>
+        </div>
+        <span
+          title="입력하신 필드가 딜룸의 각 티어에서 어떻게 공개되는지 확인하세요. 인증 → NDA → LOI 단계를 거쳐야 상세 정보가 열립니다."
+          style={{ fontSize: 10, color: C.lt4, cursor: "help" }}
+        >
+          단계별 접근 제어 ⓘ
+        </span>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 10,
+        }}
+      >
+        {tiers.map((t) => (
+          <div
+            key={t.level}
+            style={{
+              padding: "12px 13px", borderRadius: 10,
+              backgroundColor: t.bg, border: `1px solid ${t.tone}33`,
+              display: "flex", flexDirection: "column", gap: 8,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 6 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span
+                  style={{
+                    fontSize: 10, fontWeight: 900, letterSpacing: 0.4,
+                    padding: "2px 7px", borderRadius: 4,
+                    backgroundColor: t.tone, color: "#041915",
+                  }}
+                >
+                  {t.level}
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 800, color: "var(--color-text-primary)" }}>{t.title}</span>
+              </div>
+            </div>
+            <div style={{ fontSize: 9.5, color: C.lt4, fontWeight: 600, marginTop: -4 }}>{t.gate}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 2 }}>
+              {t.items.map((it, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8,
+                    fontSize: 10.5, lineHeight: 1.4,
+                  }}
+                >
+                  <span style={{ color: C.lt4, fontWeight: 500 }}>{it.label}</span>
+                  <span
+                    style={{
+                      color: it.muted ? C.lt4 : "var(--color-text-primary)",
+                      fontWeight: it.muted ? 500 : 700,
+                      fontVariantNumeric: "tabular-nums",
+                      textAlign: "right",
+                    }}
+                  >
+                    {it.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div
+        style={{
+          marginTop: 12, padding: "10px 12px", borderRadius: 8,
+          backgroundColor: C.bg3, border: `1px dashed ${C.bg4}`,
+          fontSize: 10, color: C.lt4, lineHeight: 1.5,
+        }}
+      >
+        <strong style={{ color: "var(--color-text-primary)" }}>자료 제출 현황:</strong>{" "}
+        {providedCount}/6 완료 —{" "}
+        {providedCount >= 5
+          ? "L3 LOI 제출 시 완전 열람 가능 · 체결 속도 ↑"
+          : providedCount >= 3
+          ? "L2 NDA 단계에서 기본 심사 가능 · 추가 자료 권장"
+          : "L1까지만 심사 가능 · L3 열람 가능 자료 부족"}
+      </div>
+    </div>
   )
 }
 
