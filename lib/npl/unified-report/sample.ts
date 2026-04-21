@@ -251,6 +251,122 @@ export function buildSampleReport(): UnifiedAnalysisReport {
   )
   const riskGrade = scoreToGrade(riskScore)
 
+  // ─── NPL 수익성 분석 · 잠실 시그마타워 오피스텔 (사용자 제공 엑셀 사례) ─────
+  //  원본: "NPL 수익성분석 로직 및 탬플릿.xlsx"
+  //  · 물권: 서울특별시 송파구 신천동 7-19 잠실시그마타워 21층 2105호 (전용 208.56㎡)
+  //  · 채권자 금천신용협동조합 · 대출원금 19.6억 · 연체금리 8.9%
+  //  · 감정가 28억 / AI 시세 25.5억 / 예상낙찰가율 83.5%
+  //  · 금융기관 매각가 없음 → 3단계 전략 앵커 = 대출원금 (공격 100% · 권고 95% · 보수 90%)
+  const profitability = buildNplProfitability({
+    property: {
+      // 원본 주소 · 마스킹 처리 (지번·층·호수)
+      address: '서울특별시 송파구 신천동 ㅇ-ㅇㅇ 잠실시그마타워 ㅇㅇ층ㅇㅇㅇㅇ호',
+      exclusiveAreaM2: 208.56,
+      supplyAreaM2: 274.76,
+      creditor: '금천신용협동조합',
+      debtor: 'ㅇㅇㅇ',
+      owner: '',              // UI 미표시
+      tenant: '소유자 직접 점유',
+    },
+    // 대출원금 19.6억 · 채권최고액 = ×1.2 = 23.52억 (엑셀 B15·B16)
+    loanPrincipal: 1_960_000_000,
+    delinquencyRate: 0.089,
+    delinquencyStartDate: '2025-07-23',
+    // 기한이익상실 2025-09-24 · 연체이자기산 2025-10-20 (엑셀 B19·B20)
+    accelerationDate: '2025-09-24',
+    // 감정가 28억 · AI 시세 25.5억 (엑셀 B36·B37)
+    appraisalValue: 2_800_000_000,
+    aiMarketValueLatest: 2_550_000_000,
+    priceHistory: [
+      { price: 2_800_000_000, reportedAt: '2024-08-15', source: 'APPRAISAL',   label: '감정가 (채권자 제공)' },
+      { price: 2_550_000_000, reportedAt: '2025-10-21', source: 'AI_LATEST',   label: 'AI 시세 — 현재' },
+      { price: 2_700_000_000, reportedAt: '2024-05-08', source: 'AI_PAST_1Y',  label: 'AI 시세 — 1년 전' },
+      { price: 2_250_000_000, reportedAt: '2022-02-22', source: 'AI_PAST_3Y',  label: 'AI 시세 — 3년 전' },
+    ],
+    // 예상낙찰가율 83.5% (엑셀 B40 — 최근 3개월 낙찰가율)
+    expectedBidRatio: 0.835,
+    expectedBidRatioPeriod: '최근 3개월 낙찰가율',
+    // 경매개시 2025-10-21 (엑셀 B45) · 송파구 관할 = 서울동부지방법원 본원
+    auctionStartDate: '2025-10-21',
+    courtName: '서울동부지방법원 본원',
+    // 할인율 0 = 대출원금 기준 매입 (엑셀 B30 = B15, C30 '대출원금의 X% 할인')
+    discountRate: 0,
+    // bankSalePrice 없음 → 3단계 전략 = 시나리오 A (원금 100/95/90)
+    pledgeLoanRatio: 0.75,
+    pledgeInterestRate: 0.065,
+    executionCost: 10_000_000,
+    registrationTransferRate: 0.0048,
+    brokerageFeeRate: 0.015,
+    contractDepositRate: 0.10,
+    asOfDate: '2026-04-21',
+    mcSeed: 20260421,
+    mcTrials: 10_000,
+    // 민감도 축 — 매입률 100%를 기준으로 5%p씩 할인 차감 (사용자 요청)
+    sensitivityPurchaseRateAxis: [1.00, 0.95, 0.90, 0.85, 0.80, 0.75, 0.70],
+    sensitivityBidRatioAxis:     [0.55, 0.65, 0.70, 0.75, 0.80, 0.835, 0.88, 0.92],
+    evidence: {
+      bidRatioStats: {
+        selectedLabel: '송파구 오피스텔 · 3개월',
+        items: [
+          { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 12, ratioPercent: 82.1, sampleSize: 18 },
+          { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 6,  ratioPercent: 83.8, sampleSize: 9 },
+          { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 3,  ratioPercent: 83.5, sampleSize: 4 },
+          { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 1,  ratioPercent: 84.2, sampleSize: 1 },
+          { scope: 'EUPMYEONDONG', region: '송파구 신천동',     periodMonths: 12, ratioPercent: 84.6, sampleSize: 3 },
+        ],
+        narrative: '송파구 오피스텔 낙찰가율 1년 82.1% → 6개월 83.8% → 3개월 83.5% → 1개월 84.2%. 80%대 초반 안정 흐름. 신천동 단독 평균 84.6%로 잠실 재건축 기대감 반영.',
+      },
+      courtSchedule: {
+        courtName: '서울동부지방법원 본원',
+        avgSaleDays: 285,
+        avgDistributionDays: 355,
+        avgHearingInterval: 47,
+        sampleSize: 112,
+      },
+      auctionCases: {
+        averageDurationDays: 228,
+        averageAppraisalValue: 2_650_000_000,
+        averageSalePrice: 2_200_000_000,
+        averageBidRatio: 83.0,
+        sameAddress: [],
+        nearbyWithin1Km: [
+          { caseNo: '2024타경78821', address: '서울특별시 송파구 신천동 ㅇㅇ-ㅇ',  distanceKm: 0.4, propertyCategory: '오피스텔', appraisalValue: 2_450_000_000, salePrice: 2_020_000_000, bidRatio: 82.4, durationDays: 236, saleDate: '2025-08-13' },
+          { caseNo: '2024타경82113', address: '서울특별시 송파구 잠실동 ㅇㅇㅇ-ㅇ', distanceKm: 0.7, propertyCategory: '오피스텔', appraisalValue: 2_980_000_000, salePrice: 2_495_000_000, bidRatio: 83.7, durationDays: 220, saleDate: '2025-10-02' },
+          { caseNo: '2025타경10221', address: '서울특별시 송파구 신천동 ㅇ-ㅇㅇ',  distanceKm: 0.9, propertyCategory: '오피스텔', appraisalValue: 2_520_000_000, salePrice: 2_105_000_000, bidRatio: 83.5, durationDays: 241, saleDate: '2026-01-27' },
+        ],
+      },
+      nearbyTransactions: {
+        averageLandAreaM2: 208.5,
+        averageAmount: 2_590_000_000,
+        averagePricePerM2: 12_420_000,
+        averagePricePerPy: 41_060_000,
+        samples: [
+          { txDate: '2026-02-10', address: '서울특별시 송파구 신천동 ㅇ-ㅇㅇ', distanceMeters: 92.0,  landAreaM2: 208.56, amountKRW: 2_580_000_000, pricePerM2: 12_370_000, zoning: '제3종일반주거지역' },
+          { txDate: '2025-12-18', address: '서울특별시 송파구 잠실동 ㅇㅇ-ㅇ', distanceMeters: 412.0, landAreaM2: 205.12, amountKRW: 2_570_000_000, pricePerM2: 12_530_000, zoning: '제3종일반주거지역' },
+          { txDate: '2025-11-22', address: '서울특별시 송파구 신천동 ㅇ-ㅇㅇ', distanceMeters: 188.0, landAreaM2: 212.34, amountKRW: 2_620_000_000, pricePerM2: 12_340_000, zoning: '제3종일반주거지역' },
+        ],
+      },
+    },
+  })
+
+  // ─── 4-팩터 투자의견 ──────────────────────────────────────
+  //  [G1] 예측회수율 ≥ 85%   · 담보 커버리지
+  //  [G2] 리스크 점수 ≥ 65   · B등급 이상 (LOW/MEDIUM)
+  //  [G3] ROI ≥ 18%          · 투자 가치
+  //  [G4] 금융기관 NPL 매각가 / 채권잔액 ≤ 0.95  · 매각가 할인 최소 5%
+  //  BUY = 4개 pass · HOLD = 2~3개 · AVOID = 0~1개
+  const bankSalePrice = profitability.acquisition.purchasePrice
+  const recommendedRoi = profitability.strategies.recommended.roi
+  const investmentRoi  = profitability.investment.roi
+
+  const passRecovery = recovery.predictedRecoveryRate >= 85
+  const passRisk     = riskScore >= 65
+  const passROI      = recommendedRoi >= 0.18
+  const passDiscount = bankSalePrice / Math.max(totalBond, 1) <= 0.95
+  const passCount    = [passRecovery, passRisk, passROI, passDiscount].filter(Boolean).length
+  const verdict: 'BUY' | 'HOLD' | 'AVOID' =
+    passCount === 4 ? 'BUY' : passCount >= 2 ? 'HOLD' : 'AVOID'
+
   const report: UnifiedAnalysisReport = {
     id: 'sample-' + Date.now().toString(36),
     createdAt: new Date().toISOString(),
@@ -261,13 +377,12 @@ export function buildSampleReport(): UnifiedAnalysisReport {
       riskGrade,
       riskScore,
       recommendedBidPrice,
-      verdict:
-        recovery.compositeScore >= 70 && recovery.predictedRecoveryRate >= 85
-          ? 'BUY'
-          : recovery.compositeScore >= 55
-          ? 'HOLD'
-          : 'AVOID',
-      tldr: `${input.region} ${input.propertyCategory} · 예측 회수율 ${recovery.predictedRecoveryRate}% · 리스크 ${riskGrade}등급 · AI 권고 입찰가 ${Math.round(recommendedBidPrice / 100_000_000 * 10) / 10}억`,
+      verdict,
+      tldr:
+        `${input.region} ${input.propertyCategory} · ` +
+        `NPL 매각가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 · ` +
+        `ROI ${(recommendedRoi * 100).toFixed(2)}% · ` +
+        `예측회수율 ${recovery.predictedRecoveryRate}% · 리스크 ${riskGrade}등급`,
     },
     recovery,
     risk: {
@@ -386,108 +501,14 @@ export function buildSampleReport(): UnifiedAnalysisReport {
       ],
     },
     registryAnalysis,
-    // ─── NPL 수익성 분석 · 잠실 시그마타워 오피스텔 (사용자 제공 엑셀 사례) ─────
-    //  원본: "NPL 수익성분석 로직 및 탬플릿.xlsx"
-    //  · 물권: 서울특별시 송파구 신천동 7-19 잠실시그마타워 21층 2105호 (전용 208.56㎡)
-    //  · 채권자 금천신용협동조합 · 대출원금 19.6억 · 연체금리 8.9%
-    //  · 감정가 28억 / AI 시세 25.5억 / 예상낙찰가율 83.5%
-    //  · 금융기관 매각가 없음 → 3단계 전략 앵커 = 대출원금 (공격 100% · 권고 95% · 보수 90%)
-    profitability: buildNplProfitability({
-      property: {
-        // 원본 주소 · 마스킹 처리 (지번·층·호수)
-        address: '서울특별시 송파구 신천동 ㅇ-ㅇㅇ 잠실시그마타워 ㅇㅇ층ㅇㅇㅇㅇ호',
-        exclusiveAreaM2: 208.56,
-        supplyAreaM2: 274.76,
-        creditor: '금천신용협동조합',
-        debtor: 'ㅇㅇㅇ',
-        owner: '',              // UI 미표시
-        tenant: '소유자 직접 점유',
-      },
-      // 대출원금 19.6억 · 채권최고액 = ×1.2 = 23.52억 (엑셀 B15·B16)
-      loanPrincipal: 1_960_000_000,
-      delinquencyRate: 0.089,
-      delinquencyStartDate: '2025-07-23',
-      // 기한이익상실 2025-09-24 · 연체이자기산 2025-10-20 (엑셀 B19·B20)
-      accelerationDate: '2025-09-24',
-      // 감정가 28억 · AI 시세 25.5억 (엑셀 B36·B37)
-      appraisalValue: 2_800_000_000,
-      aiMarketValueLatest: 2_550_000_000,
-      priceHistory: [
-        { price: 2_800_000_000, reportedAt: '2024-08-15', source: 'APPRAISAL',   label: '감정가 (채권자 제공)' },
-        { price: 2_550_000_000, reportedAt: '2025-10-21', source: 'AI_LATEST',   label: 'AI 시세 — 현재' },
-        { price: 2_700_000_000, reportedAt: '2024-05-08', source: 'AI_PAST_1Y',  label: 'AI 시세 — 1년 전' },
-        { price: 2_250_000_000, reportedAt: '2022-02-22', source: 'AI_PAST_3Y',  label: 'AI 시세 — 3년 전' },
-      ],
-      // 예상낙찰가율 83.5% (엑셀 B40 — 최근 3개월 낙찰가율)
-      expectedBidRatio: 0.835,
-      expectedBidRatioPeriod: '최근 3개월 낙찰가율',
-      // 경매개시 2025-10-21 (엑셀 B45) · 송파구 관할 = 서울동부지방법원 본원
-      auctionStartDate: '2025-10-21',
-      courtName: '서울동부지방법원 본원',
-      // 할인율 0 = 대출원금 기준 매입 (엑셀 B30 = B15, C30 '대출원금의 X% 할인')
-      discountRate: 0,
-      // bankSalePrice 없음 → 3단계 전략 = 시나리오 A (원금 100/95/90)
-      pledgeLoanRatio: 0.75,
-      pledgeInterestRate: 0.065,
-      executionCost: 10_000_000,
-      registrationTransferRate: 0.0048,
-      brokerageFeeRate: 0.015,
-      contractDepositRate: 0.10,
-      asOfDate: '2026-04-21',
-      mcSeed: 20260421,
-      mcTrials: 10_000,
-      // 민감도 축 — 매입률 100%를 기준으로 5%p씩 할인 차감 (사용자 요청)
-      sensitivityPurchaseRateAxis: [1.00, 0.95, 0.90, 0.85, 0.80, 0.75, 0.70], // 원금 대비 할인 5%p 스텝
-      sensitivityBidRatioAxis:     [0.55, 0.65, 0.70, 0.75, 0.80, 0.835, 0.88, 0.92], // 55~92% 비대칭
-      evidence: {
-        bidRatioStats: {
-          selectedLabel: '송파구 오피스텔 · 3개월',
-          items: [
-            { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 12, ratioPercent: 82.1, sampleSize: 18 },
-            { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 6,  ratioPercent: 83.8, sampleSize: 9 },
-            { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 3,  ratioPercent: 83.5, sampleSize: 4 },
-            { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 1,  ratioPercent: 84.2, sampleSize: 1 },
-            { scope: 'EUPMYEONDONG', region: '송파구 신천동',     periodMonths: 12, ratioPercent: 84.6, sampleSize: 3 },
-          ],
-          narrative: '송파구 오피스텔 낙찰가율 1년 82.1% → 6개월 83.8% → 3개월 83.5% → 1개월 84.2%. 80%대 초반 안정 흐름. 신천동 단독 평균 84.6%로 잠실 재건축 기대감 반영.',
-        },
-        courtSchedule: {
-          courtName: '서울동부지방법원 본원',
-          avgSaleDays: 285,
-          avgDistributionDays: 355,
-          avgHearingInterval: 47,
-          sampleSize: 112,
-        },
-        auctionCases: {
-          averageDurationDays: 228,
-          averageAppraisalValue: 2_650_000_000,
-          averageSalePrice: 2_200_000_000,
-          averageBidRatio: 83.0,
-          sameAddress: [],
-          nearbyWithin1Km: [
-            { caseNo: '2024타경78821', address: '서울특별시 송파구 신천동 ㅇㅇ-ㅇ',  distanceKm: 0.4, propertyCategory: '오피스텔', appraisalValue: 2_450_000_000, salePrice: 2_020_000_000, bidRatio: 82.4, durationDays: 236, saleDate: '2025-08-13' },
-            { caseNo: '2024타경82113', address: '서울특별시 송파구 잠실동 ㅇㅇㅇ-ㅇ', distanceKm: 0.7, propertyCategory: '오피스텔', appraisalValue: 2_980_000_000, salePrice: 2_495_000_000, bidRatio: 83.7, durationDays: 220, saleDate: '2025-10-02' },
-            { caseNo: '2025타경10221', address: '서울특별시 송파구 신천동 ㅇ-ㅇㅇ',  distanceKm: 0.9, propertyCategory: '오피스텔', appraisalValue: 2_520_000_000, salePrice: 2_105_000_000, bidRatio: 83.5, durationDays: 241, saleDate: '2026-01-27' },
-          ],
-        },
-        nearbyTransactions: {
-          averageLandAreaM2: 208.5,
-          averageAmount: 2_590_000_000,
-          averagePricePerM2: 12_420_000,
-          averagePricePerPy: 41_060_000,
-          samples: [
-            { txDate: '2026-02-10', address: '서울특별시 송파구 신천동 ㅇ-ㅇㅇ', distanceMeters: 92.0,  landAreaM2: 208.56, amountKRW: 2_580_000_000, pricePerM2: 12_370_000, zoning: '제3종일반주거지역' },
-            { txDate: '2025-12-18', address: '서울특별시 송파구 잠실동 ㅇㅇ-ㅇ', distanceMeters: 412.0, landAreaM2: 205.12, amountKRW: 2_570_000_000, pricePerM2: 12_530_000, zoning: '제3종일반주거지역' },
-            { txDate: '2025-11-22', address: '서울특별시 송파구 신천동 ㅇ-ㅇㅇ', distanceMeters: 188.0, landAreaM2: 212.34, amountKRW: 2_620_000_000, pricePerM2: 12_340_000, zoning: '제3종일반주거지역' },
-          ],
-        },
-      },
-    }),
+    profitability,
     executiveSummary:
       `송파구 신천동 잠실 시그마타워 오피스텔 NPL (금천신협 대출원금 19.6억 · 감정가 28억) 종합 분석 결과 ${riskGrade}등급, 예측 회수율 ${recovery.predictedRecoveryRate}%(신뢰도 ${Math.round(recovery.confidence * 100)}%)로 평가됩니다. ` +
+      `금융기관 NPL 매각가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 기준 ` +
+      `권고 시나리오 ROI ${(recommendedRoi * 100).toFixed(2)}% · 기본 시나리오 ROI ${(investmentRoi * 100).toFixed(2)}%, ` +
       `지역 6개월 낙찰가율 ${SAMPLE_STATISTICS.auctionRatioStats[0].rows.find(r => r.bucket === '6M')?.bidRatio.toFixed(1)}%에 특수조건 ${auction.specialConditionPenalty.toFixed(1)}%p 반영한 ${auction.adjustedBidRatio.toFixed(1)}%를 기준 입찰가율로 제시하며, ` +
-      `AI 권고 입찰가는 ${Math.round(recommendedBidPrice / 100_000_000 * 10) / 10}억입니다. ` +
-      `동일 건물 전회 낙찰(${SAMPLE_STATISTICS.sameAddressAuction!.summary.avgBidRatio}%)과 인근 송파 오피스텔(${SAMPLE_STATISTICS.nearbyAuction!.summary.avgBidRatio}%) 편차 고려, 보수·기준·공격 3단계 입찰 전략을 병행 권고합니다.`,
+      `동일 건물 전회 낙찰(${SAMPLE_STATISTICS.sameAddressAuction!.summary.avgBidRatio}%)과 인근 송파 오피스텔(${SAMPLE_STATISTICS.nearbyAuction!.summary.avgBidRatio}%) 편차 고려, 보수·기준·공격 3단계 입찰 전략을 병행 권고합니다. ` +
+      `4-팩터 게이트 통과 ${passCount}/4 → ${verdict}.`,
   }
 
   return report

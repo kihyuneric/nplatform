@@ -237,9 +237,17 @@ export default function UnifiedReportPage() {
           />
           <KpiCard
             icon={Target}
-            label="AI 권고 입찰가"
-            value={fmtKRW(summary.recommendedBidPrice) + "원"}
-            sub={`낙찰가율 ${kpiBidRatioPct.toFixed(1)}%`}
+            label="금융기관 NPL 매각가"
+            value={
+              profitability
+                ? fmtKRW(profitability.acquisition.purchasePrice) + "원"
+                : fmtKRW(summary.recommendedBidPrice) + "원"
+            }
+            sub={
+              profitability
+                ? `ROI ${(profitability.investment.roi * 100).toFixed(2)}%`
+                : `낙찰가율 ${kpiBidRatioPct.toFixed(1)}%`
+            }
             tint="#2E75B6"
           />
           <div>
@@ -252,8 +260,11 @@ export default function UnifiedReportPage() {
             />
             <VerdictCriteriaToggle
               verdict={summary.verdict}
-              compositeScore={recovery.compositeScore}
               predictedRecovery={recovery.predictedRecoveryRate}
+              riskScore={summary.riskScore}
+              recommendedRoi={profitability?.strategies.recommended.roi ?? 0}
+              bankSalePrice={profitability?.acquisition.purchasePrice ?? 0}
+              totalBondAmount={input.totalBondAmount}
             />
           </div>
         </div>
@@ -652,16 +663,51 @@ function FormulaToggle({
  */
 function VerdictCriteriaToggle({
   verdict,
-  compositeScore,
   predictedRecovery,
+  riskScore,
+  recommendedRoi,
+  bankSalePrice,
+  totalBondAmount,
 }: {
   verdict: "BUY" | "HOLD" | "AVOID"
-  compositeScore: number
   predictedRecovery: number
+  riskScore: number
+  recommendedRoi: number       // 소수 (0.2845)
+  bankSalePrice: number        // 원
+  totalBondAmount: number      // 원 (채권잔액)
 }) {
   const [open, setOpen] = useState(false)
   const verdictColor =
     verdict === "BUY" ? "#10B981" : verdict === "HOLD" ? "#F59E0B" : "#DC2626"
+
+  // 4-팩터 통과 계산 (sample.ts verdict 로직과 동일)
+  const salePriceRatio = totalBondAmount > 0 ? bankSalePrice / totalBondAmount : 1
+  const passRecovery = predictedRecovery >= 85
+  const passRisk     = riskScore >= 65
+  const passROI      = recommendedRoi >= 0.18
+  const passDiscount = salePriceRatio <= 0.95
+  const passCount = [passRecovery, passRisk, passROI, passDiscount].filter(Boolean).length
+
+  const Row = ({ pass, label, value, rule }: { pass: boolean; label: string; value: string; rule: string }) => (
+    <li className="flex items-start gap-2">
+      <span
+        className={`mt-0.5 inline-flex w-4 h-4 rounded-full items-center justify-center text-[0.55rem] font-black shrink-0`}
+        style={{ background: pass ? "#10B98122" : "#DC262622", color: pass ? "#10B981" : "#DC2626" }}
+      >
+        {pass ? "✓" : "✕"}
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-1.5 flex-wrap">
+          <span className="font-bold text-[var(--color-text-primary)]">{label}</span>
+          <span className="text-[0.625rem] text-[var(--color-text-tertiary)]">{rule}</span>
+        </div>
+        <div className="text-[0.625rem] font-mono text-[var(--color-text-secondary)]">
+          현재 · {value}
+        </div>
+      </div>
+    </li>
+  )
+
   return (
     <div className="mt-2">
       <button
@@ -672,34 +718,65 @@ function VerdictCriteriaToggle({
         aria-expanded={open}
       >
         <Info className="w-3 h-3" />
-        기준
+        기준 · {passCount}/4 통과
         <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
       </button>
       {open && (
         <div
-          className="mt-2 rounded-lg border p-3 text-[0.6875rem] leading-relaxed"
+          className="mt-2 rounded-lg border p-3 text-[0.6875rem] leading-relaxed space-y-3"
           style={{ borderColor: verdictColor + "40", background: verdictColor + "0D" }}
         >
-          <div className="font-bold mb-1" style={{ color: verdictColor }}>
-            투자 의견 판정 규칙
+          <div>
+            <div className="font-bold mb-1.5" style={{ color: verdictColor }}>
+              투자 의견 4-팩터 판정 규칙
+            </div>
+            <ul className="space-y-1.5">
+              <Row
+                pass={passRecovery}
+                label="[G1] 예측 회수율"
+                rule="≥ 85% · 담보 커버리지"
+                value={`${predictedRecovery.toFixed(1)}%`}
+              />
+              <Row
+                pass={passRisk}
+                label="[G2] AI 리스크 점수"
+                rule="≥ 65 · B등급 이상 (LOW/MEDIUM)"
+                value={`${riskScore}점`}
+              />
+              <Row
+                pass={passROI}
+                label="[G3] 권고 시나리오 ROI"
+                rule="≥ 18% · 투자 가치"
+                value={`${(recommendedRoi * 100).toFixed(2)}%`}
+              />
+              <Row
+                pass={passDiscount}
+                label="[G4] NPL 매각가 할인"
+                rule="매각가 / 채권잔액 ≤ 95% · 최소 5% 할인"
+                value={`${(salePriceRatio * 100).toFixed(1)}% (매각가 ${Math.round(bankSalePrice / 1e8 * 10) / 10}억 / 채권잔액 ${Math.round(totalBondAmount / 1e8 * 10) / 10}억)`}
+              />
+            </ul>
           </div>
-          <ul className="space-y-1 text-[var(--color-text-secondary)]">
-            <li>
-              <span className="font-bold" style={{ color: "#10B981" }}>BUY (권고)</span>
-              {" · "}종합점수 ≥ 70 <b>AND</b> 예측회수율 ≥ 85%
-            </li>
-            <li>
-              <span className="font-bold" style={{ color: "#F59E0B" }}>HOLD (관망)</span>
-              {" · "}종합점수 ≥ 55 (BUY 조건 미충족)
-            </li>
-            <li>
-              <span className="font-bold" style={{ color: "#DC2626" }}>AVOID (회피)</span>
-              {" · "}종합점수 &lt; 55 (위 조건 모두 불충족)
-            </li>
-          </ul>
-          <div className="mt-2 pt-2 border-t border-dashed" style={{ borderColor: verdictColor + "30" }}>
-            <div className="text-[0.625rem] font-mono text-[var(--color-text-tertiary)]">
-              현재 · 종합점수 {compositeScore.toFixed(1)} / 예측회수율 {predictedRecovery.toFixed(1)}%
+          <div className="pt-2 border-t border-dashed" style={{ borderColor: verdictColor + "30" }}>
+            <div className="font-bold mb-1" style={{ color: verdictColor }}>
+              종합 판정
+            </div>
+            <ul className="space-y-0.5 text-[var(--color-text-secondary)]">
+              <li>
+                <span className="font-bold" style={{ color: "#10B981" }}>BUY (권고)</span>
+                {" · "}4개 팩터 모두 통과
+              </li>
+              <li>
+                <span className="font-bold" style={{ color: "#F59E0B" }}>HOLD (관망)</span>
+                {" · "}2~3개 팩터 통과
+              </li>
+              <li>
+                <span className="font-bold" style={{ color: "#DC2626" }}>AVOID (회피)</span>
+                {" · "}0~1개 팩터 통과
+              </li>
+            </ul>
+            <div className="mt-2 text-[0.625rem] font-mono text-[var(--color-text-tertiary)]">
+              통과 {passCount}/4
               {" → "}
               <span className="font-bold" style={{ color: verdictColor }}>{verdict}</span>
             </div>
@@ -1702,6 +1779,8 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
 }
 
 // ─── 편집 가능 카드 (금액 · 원) ─────────────────────────
+//   입력 중에도 천단위 콤마(,)를 유지해 가독성 강화
+//   "1000000" → "1,000,000" (onChange 시 실시간 포맷)
 function EditableMoneyCard({
   label, value, onChange, tint, hint,
 }: {
@@ -1711,8 +1790,10 @@ function EditableMoneyCard({
   tint: string
   hint?: string
 }) {
-  const [raw, setRaw] = useState(String(value))
-  useEffect(() => { setRaw(String(value)) }, [value])
+  const [raw, setRaw] = useState<string>(value > 0 ? value.toLocaleString("ko-KR") : "")
+  useEffect(() => {
+    setRaw(value > 0 ? value.toLocaleString("ko-KR") : "")
+  }, [value])
 
   return (
     <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
@@ -1724,15 +1805,28 @@ function EditableMoneyCard({
         {krwWon(value)}
       </div>
       <input
-        type="number"
+        type="text"
         inputMode="numeric"
         className="mt-1.5 w-full rounded-md bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-2 py-1 text-[0.75rem] tabular-nums focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-mid)]/40"
         value={raw}
-        onChange={(e) => setRaw(e.target.value)}
+        onChange={(e) => {
+          // 숫자·마이너스만 남기고 즉시 천단위 콤마 적용
+          const digits = e.target.value.replace(/[^0-9-]/g, "")
+          if (digits === "" || digits === "-") {
+            setRaw(digits)
+            return
+          }
+          const n = Number(digits)
+          setRaw(Number.isFinite(n) ? n.toLocaleString("ko-KR") : digits)
+        }}
         onBlur={() => {
           const n = Number(raw.replace(/[^0-9.-]/g, ""))
-          if (Number.isFinite(n) && n > 0) onChange(Math.round(n))
-          else setRaw(String(value))
+          if (Number.isFinite(n) && n > 0) {
+            onChange(Math.round(n))
+            setRaw(Math.round(n).toLocaleString("ko-KR"))
+          } else {
+            setRaw(value > 0 ? value.toLocaleString("ko-KR") : "")
+          }
         }}
       />
       {hint && <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-1">{hint}</div>}
@@ -1785,6 +1879,7 @@ function EditablePercentCard({
 }
 
 // ─── 편집 가능 인라인 (소형) 금액 ─────────────────────
+//   입력 중 천단위 콤마 유지
 function EditableInlineMoney({
   label, value, onChange,
 }: {
@@ -1792,22 +1887,36 @@ function EditableInlineMoney({
   value: number
   onChange: (v: number) => void
 }) {
-  const [raw, setRaw] = useState(String(value))
-  useEffect(() => { setRaw(String(value)) }, [value])
+  const [raw, setRaw] = useState<string>(value > 0 ? value.toLocaleString("ko-KR") : "")
+  useEffect(() => {
+    setRaw(value > 0 ? value.toLocaleString("ko-KR") : "")
+  }, [value])
 
   return (
     <div className="mt-2 flex items-center gap-1">
       <span className="text-[0.625rem] text-[var(--color-text-tertiary)] shrink-0">{label}</span>
       <input
-        type="number"
+        type="text"
         inputMode="numeric"
         className="flex-1 rounded-md bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-2 py-0.5 text-[0.6875rem] tabular-nums focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-mid)]/40"
         value={raw}
-        onChange={(e) => setRaw(e.target.value)}
+        onChange={(e) => {
+          const digits = e.target.value.replace(/[^0-9-]/g, "")
+          if (digits === "" || digits === "-") {
+            setRaw(digits)
+            return
+          }
+          const n = Number(digits)
+          setRaw(Number.isFinite(n) ? n.toLocaleString("ko-KR") : digits)
+        }}
         onBlur={() => {
           const n = Number(raw.replace(/[^0-9.-]/g, ""))
-          if (Number.isFinite(n) && n >= 0) onChange(Math.round(n))
-          else setRaw(String(value))
+          if (Number.isFinite(n) && n >= 0) {
+            onChange(Math.round(n))
+            setRaw(Math.round(n).toLocaleString("ko-KR"))
+          } else {
+            setRaw(value > 0 ? value.toLocaleString("ko-KR") : "")
+          }
         }}
       />
     </div>
