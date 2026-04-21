@@ -1,8 +1,11 @@
 /**
- * AssetHeroSummary — 자산 상세 페이지 히어로 (DR-4 · 2026-04-21)
+ * AssetHeroSummary — 자산 상세 페이지 히어로 (DR-5 · 2026-04-21)
  *
  * 글로벌 핀테크 패턴 (Robinhood/Stripe): 제목 + 1줄 요약 + thin stepper.
  * 스크롤 최상단에서 "이 자산이 무엇이고 내가 어디에 있는지" 를 즉시 파악.
+ *
+ * DR-5: 6단계 → 5단계로 축소
+ *   매칭(L0,L1) · 담보정보(L2) · 채권오퍼(L3) · 계약·에스크로(L4) · 완료(L5)
  */
 
 "use client"
@@ -17,7 +20,7 @@ export interface AssetHeroSummaryProps {
   oneLiner: string
   /** AI 등급 — 예: "S" "A" "B" "C" */
   aiGrade?: string
-  /** 현재 티어 (6-step stepper) */
+  /** 현재 티어 (5-step stepper에 자동 매핑) */
   tier: AssetTier
   /** 관심 표시 상태 */
   watchlisted: boolean
@@ -26,17 +29,19 @@ export interface AssetHeroSummaryProps {
   backHref?: string
 }
 
-const STEPS: { tier: AssetTier; label: string }[] = [
-  { tier: "L0", label: "관심" },
-  { tier: "L1", label: "인증" },
-  { tier: "L2", label: "NDA" },
-  { tier: "L3", label: "실사" },
-  { tier: "L4", label: "서명" },
-  { tier: "L5", label: "정산" },
+/** 5단계 프로세스 라벨 (DR-5 확정) */
+const STEPS: { label: string; hint: string }[] = [
+  { label: "매칭",          hint: "관심 · 개인인증" },
+  { label: "담보정보",       hint: "NDA" },
+  { label: "채권오퍼",       hint: "LOI · 실사" },
+  { label: "계약·에스크로",  hint: "서명" },
+  { label: "완료",          hint: "정산" },
 ]
 
+/** AssetTier → 5단계 인덱스 매핑
+ *  L0·L1 은 "매칭"(0), L2 "담보정보"(1), L3 "채권오퍼"(2), L4 "계약·에스크로"(3), L5 "완료"(4) */
 const TIER_IDX: Record<AssetTier, number> = {
-  L0: 0, L1: 1, L2: 2, L3: 3, L4: 4, L5: 5,
+  L0: 0, L1: 0, L2: 1, L3: 2, L4: 3, L5: 4,
 }
 
 export function AssetHeroSummary({
@@ -137,7 +142,7 @@ export function AssetHeroSummary({
             const isDone = idx < currentIdx
             const isCurrent = idx === currentIdx
             return (
-              <li key={step.tier} className="flex items-center flex-1 last:flex-none">
+              <li key={step.label} className="flex items-center flex-1 last:flex-none">
                 <div className="flex flex-col items-center gap-1">
                   <div
                     className="w-2 h-2 rounded-full transition-colors"
@@ -154,7 +159,7 @@ export function AssetHeroSummary({
                     aria-current={isCurrent ? "step" : undefined}
                   />
                   <span
-                    className="font-bold"
+                    className="font-bold text-center whitespace-nowrap"
                     style={{
                       fontSize: 10,
                       color: isCurrent
@@ -164,6 +169,7 @@ export function AssetHeroSummary({
                         : "var(--fg-subtle)",
                       letterSpacing: "0.02em",
                     }}
+                    title={step.hint}
                   >
                     {step.label}
                   </span>

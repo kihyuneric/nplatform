@@ -1,16 +1,13 @@
 "use client"
 
 /**
- * /exchange/[id] — 자산 상세 (DR-4-C Deal Room Visual Sync · 2026-04-21)
+ * /exchange/[id] — 자산 상세 (DR-5 · 2026-04-21)
  *
- * 계획서: docs/DR-4_Fast_Trade_Simplification_2026-04-21.md
- *
- * ▸ 글로벌 핀테크 (Robinhood · Stripe · Mission Capital) 수준 단순화 유지
- * ▸ DR-4-C: 탭 구조 제거 → 2-column 레이아웃 (콘텐츠 스택 + sticky 사이드바)
- *   · 좌: 메타 스트립 · KPI · 권리/등기/임차/감정/원본/현장사진/채권 섹션 linear stack
- *   · 우: PrimaryActionCard · AI 투자 분석 · 매칭 수요 · 수수료 안내 · 제공 자료
- * ▸ 모바일: 사이드바 → 하단으로 자연 스택 + Primary CTA sticky bar
- * ▸ ActionSheet 모달 + Mock tier progression 그대로 유지
+ * DR-5 변경:
+ *   · 5단계 stepper (매칭 · 담보정보 · 채권오퍼 · 계약·에스크로 · 완료)
+ *   · AI 리포트 L1 풀 공개 · 채팅 L1부터 전송 허용
+ *   · 등기원본 · 현장사진 → L2 NDA 게이팅 원복 (버그 fix: L3→L2)
+ *   · effectiveAccessTier 매핑 수정: AssetTier L2 → AccessTier L2 (NDA)
  */
 
 import { useState, useEffect, useCallback } from "react"
@@ -23,16 +20,19 @@ import {
 import { toast } from "sonner"
 import { TierGate } from "@/components/tier/tier-gate"
 import type { AccessTier } from "@/lib/access-tier"
-import { getUserTier } from "@/lib/access-tier"
+import { getUserTier, tierGte } from "@/lib/access-tier"
 import { createClient } from "@/lib/supabase/client"
 
-// DR-4: 신규 단순화 컴포넌트
+// DR-4/5: 신규 단순화 컴포넌트
 import {
   AssetHeroSummary,
   KpiRow,
   PrimaryActionCard,
   ActionSheet,
   AssetSidebar,
+  AiReportCard,
+  InlineDealRoom,
+  type InlineDealRoomCounterpart,
 } from "@/components/asset-detail"
 import { useAssetTier } from "@/hooks/use-asset-tier"
 import type { AssetTier } from "@/hooks/use-asset-tier"
@@ -43,9 +43,9 @@ import type { AssetTier } from "@/hooks/use-asset-tier"
 const MOCK_STORAGE_KEY = (id: string) => `asset-mock-tier:${id}`
 const TIER_ORDER: AssetTier[] = ["L0", "L1", "L2", "L3", "L4", "L5"]
 const TIER_TRANSITION_MSG: Record<AssetTier, string> = {
-  L0: "로그인 완료 · 기본 정보 열람 가능",
-  L1: "본인인증 완료 · 등기원본/임대차 열람 가능",
-  L2: "NDA 체결 완료 · 데이터룸 · 현장사진 열람 가능",
+  L0: "관심 표시 완료 · 매칭 단계 시작",
+  L1: "개인인증 완료 · AI 리포트 · 채팅 언락 (매칭 단계 완료)",
+  L2: "NDA 체결 완료 · 등기원본 · 현장사진 · 매각자 기관정보 열람",
   L3: "LOI 제출 완료 · 매도자 승인 대기 → 실사 자료 오픈",
   L4: "계약 초안 승인 · 전자서명 · 에스크로 단계 진입",
   L5: "정산 완료 · 거래가 종결되었습니다 🎉",
@@ -248,11 +248,18 @@ export default function ListingDetailPage() {
 
   /** 실제 서버 티어가 L0 면 mockTier 우선, 아니면 실제 티어 사용 */
   const effectiveTier: AssetTier = assetTier.tier !== "L0" ? assetTier.tier : mockTier
-  /** 분석 탭/권리 탭 내부의 TierGate 는 AccessTier(L0~L3) 기준 — effectiveTier 의 첫 3단계를 매핑 */
+  /**
+   * AssetTier (L0~L5, 거래 단계) → AccessTier (L0~L3, 정보 공개 단계) 매핑
+   *   L0         → L0  (관심·무료)
+   *   L1         → L1  (개인인증 · AI 리포트 · 채팅 · 공개 담보 요약)
+   *   L2         → L2  (NDA · 등기원본 · 현장사진 · 매각자 기관정보)   ⬅︎ DR-5 버그 fix
+   *   L3, L4, L5 → L3  (LOI 이후 · 실사 원본 · 채권 원장 · 계약·에스크로)
+   */
   const effectiveAccessTier: AccessTier =
     effectiveTier === "L0" ? "L0" :
     effectiveTier === "L1" ? "L1" :
-    "L3" // L2+ 는 모두 L3 로 간주 (담보/권리 전체 공개)
+    effectiveTier === "L2" ? "L2" :
+    "L3"
   void tier // legacy useUserTier — AccessTier UI 호환성 위해 유지
 
   // ── Fetch real listing ──
@@ -366,6 +373,15 @@ export default function ListingDetailPage() {
   ].join(" · ")
 
   const title = `${listing.region_city} ${listing.region_district} ${listing.collateral} NPL`
+
+  // 상대방 정보 (티어별 공개 강도 조절) — DR-5
+  const counterpart: InlineDealRoomCounterpart = {
+    name: tierGte(effectiveAccessTier, "L2") ? "이매도 담당자" : "매도자 (데모)",
+    role: "매도자",
+    initial: "매",
+    phone: "02-0000-0000",
+    organization: listing.institution,
+  }
 
   // 공개 범위 미리보기 (데모용) — L0/L1/L2/L3 토글
   const handleTierPreview = (t: AssetTier) => {
@@ -557,6 +573,28 @@ export default function ListingDetailPage() {
               </p>
             </div>
 
+            {/* ═══ AI 분석 리포트 — L1 개인인증 이후 공개 (DR-5) ═══ */}
+            {tierGte(effectiveAccessTier, "L1") && (
+              <AiReportCard
+                recoveryRate={aiAnalysis.recoveryRate?.predicted ?? 78.5}
+                confidence={aiAnalysis.recoveryRate?.confidence ?? 92}
+                grade={aiAnalysis.recoveryRate?.grade}
+                anomaly={
+                  aiAnalysis.anomaly
+                    ? { verdict: aiAnalysis.anomaly.verdict, score: aiAnalysis.anomaly.score }
+                    : null
+                }
+                loading={aiAnalysis.loading}
+                onRefresh={() => toast.info("AI 재분석을 요청했습니다.", { duration: 1500 })}
+                onOpenFull={() => {
+                  if (typeof window !== "undefined") {
+                    window.open(`/analysis/${id}`, "_blank", "noopener")
+                  }
+                }}
+                onAskCopilot={() => toast.info("AI Copilot이 곧 열립니다.", { duration: 1500 })}
+              />
+            )}
+
             {/* 권리관계 요약 (L0) */}
             <SectionCard
               title="권리관계 요약"
@@ -650,27 +688,27 @@ export default function ListingDetailPage() {
               </TierGate>
             </SectionCard>
 
-            {/* 등기부등본 원본 — L2 */}
+            {/* 등기부등본 원본 — L2 NDA */}
             <SectionCard
               title="등기부등본 원본"
               icon={<ScrollText size={14} />}
               tierBadge="L2"
             >
-              <TierGate required="L3" current={effectiveAccessTier} listingId={id} minHeight={140}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140}>
                 <p className="leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
                   등기부등본 원본 PDF · 전체 권리자 실명 · 근저당 설정 원본 · 변동 이력이 포함된 자료입니다.
-                  NDA 체결 및 전문투자자 인증 완료 시 데이터룸에서 다운로드 가능합니다.
+                  NDA 체결 완료 시 데이터룸에서 다운로드 가능합니다.
                 </p>
               </TierGate>
             </SectionCard>
 
-            {/* 현장 사진 — L2 */}
+            {/* 현장 사진 — L2 NDA */}
             <SectionCard
               title={`현장 사진 (${listing.site_photos.length})`}
               icon={<Images size={14} />}
               tierBadge="L2"
             >
-              <TierGate required="L3" current={effectiveAccessTier} listingId={id} minHeight={160}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={160}>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {listing.site_photos.map((p, i) => (
                     <div
@@ -733,6 +771,16 @@ export default function ListingDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* ═══ 인라인 딜룸 — L1 개인인증 이후 풀폭 공개 (DR-5) ═══ */}
+        {tierGte(effectiveAccessTier, "L1") && (
+          <div className="mt-6 lg:mt-8">
+            <InlineDealRoom
+              tier={effectiveTier}
+              counterpart={counterpart}
+            />
+          </div>
+        )}
 
       </section>
 

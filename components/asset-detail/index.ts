@@ -11,3 +11,10 @@ export { PrimaryActionCard, type PrimaryActionCardProps } from "./primary-action
 export { DetailTabs, type DetailTabKey, type DetailTabsProps } from "./detail-tabs"
 export { ActionSheet, type ActionSheetProps } from "./action-sheet"
 export { AssetSidebar, type AssetSidebarProps } from "./asset-sidebar"
+export { AiReportCard, type AiReportCardProps, type AiReportFactor } from "./ai-report-card"
+export {
+  InlineDealRoom,
+  type InlineDealRoomProps,
+  type InlineDealRoomCounterpart,
+  type InlineDealRoomMessage,
+} from "./inline-deal-room"
