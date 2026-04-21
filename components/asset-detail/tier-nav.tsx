@@ -20,7 +20,7 @@ import type { AssetTier } from "@/hooks/use-asset-tier"
 import {
   Brain, Scale, FileText, Users2, FileBarChart, BookOpen, Image as ImageIcon,
   Coins, FileSignature, MessageSquare, HandCoins, FileCheck,
-  Wallet, Trophy, Lock, Gavel, Landmark, ClipboardList,
+  Wallet, Trophy, Lock, Gavel, Landmark, ClipboardList, TrendingUp, BarChart2,
 } from "lucide-react"
 import type { ReactNode } from "react"
 
@@ -51,6 +51,8 @@ const ITEMS: TierNavItem[] = [
   { key: "appraisal",    label: "감정평가서",  sub: "",             requiredTier: "L1", icon: <FileBarChart className="w-4 h-4" />,   anchor: "appraisal" },
   { key: "auction-info", label: "경매 정보",   sub: "",             requiredTier: "L1", icon: <Gavel className="w-4 h-4" />,          anchor: "auction-info" },
   { key: "public-sale",  label: "공매 정보",   sub: "",             requiredTier: "L1", icon: <Landmark className="w-4 h-4" />,       anchor: "public-sale" },
+  { key: "jijigo-tx",   label: "땅집고",      sub: "실거래",       requiredTier: "L1", icon: <TrendingUp className="w-4 h-4" />,      anchor: "jijigo-transactions" },
+  { key: "auction-stat",label: "경공매",      sub: "통계",         requiredTier: "L1", icon: <BarChart2 className="w-4 h-4" />,       anchor: "auction-stats" },
 
   // ──────── L2 · NDA 체결 후 ────────
   { key: "deed-full",    label: "등기부등본",  sub: "원본",         requiredTier: "L2", icon: <BookOpen className="w-4 h-4" />,       anchor: "deed-full" },

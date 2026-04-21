@@ -42,15 +42,15 @@ interface StepMeta {
 
 const META: Record<AssetTier, StepMeta> = {
   L0: {
-    title: "로그인 후 관심 표시",
-    subtitle: "30초 안에 가입/로그인하고 이 자산을 관심 목록에 저장하세요.",
-    icon: <LogIn size={18} />,
-    confirmLabel: "로그인 완료",
+    title: "전문투자자 본인인증",
+    subtitle: "10초 인증으로 등기부 · 임대차 정보 등 L1 자료를 즉시 열람할 수 있습니다.",
+    icon: <Shield size={18} />,
+    confirmLabel: "본인인증 완료",
     accent: "var(--color-brand-dark)",
   },
   L1: {
     title: "전문투자자 본인인증",
-    subtitle: "휴대폰 인증으로 등기부 · 임대차 정보 등 L1 자료를 열람할 수 있습니다.",
+    subtitle: "10초 인증으로 등기부 · 임대차 정보 등 L1 자료를 즉시 열람할 수 있습니다.",
     icon: <Shield size={18} />,
     confirmLabel: "인증 완료",
     accent: "var(--color-brand-bright)",
@@ -58,7 +58,7 @@ const META: Record<AssetTier, StepMeta> = {
   L2: {
     title: "비밀유지계약서 (NDA)",
     subtitle:
-      "본 NDA 체결 후 등기부등본 원본 · 현장사진 · 임대차 상세 · 재무제표 등 L2 자료 열람이 가능합니다. 모든 열람 이력은 PII Access Log 에 기록됩니다.",
+      "10초 서명으로 NDA 체결 후 채권정보 · 가격 오퍼 · 채팅 · 실사 자료를 열람할 수 있습니다. 모든 열람 이력은 PII Access Log 에 기록됩니다.",
     icon: <FileSignature size={18} />,
     confirmLabel: "NDA 체결하고 L2 자료 열람하기",
     accent: "var(--color-positive)",
@@ -66,7 +66,7 @@ const META: Record<AssetTier, StepMeta> = {
   L3: {
     title: "인수의향서 (LOI)",
     subtitle:
-      "LOI는 매도자에게 본건 NPL 인수에 대한 진지한 의향을 전달하는 문서입니다. 매도자 승인 후 L3 데이터룸이 개방되며, 채무자 식별정보 · 세부 권리자 · 경매 원장 등 최상위 자료가 공개됩니다.",
+      "10초 제출로 매도자에게 NPL 인수 의향을 전달합니다. 매도자 승인 후 에스크로 보증금 납부 및 현장 계약 단계로 진행됩니다.",
     icon: <FileCheck size={18} />,
     confirmLabel: "LOI 제출하고 매도자 승인 요청",
     accent: "var(--color-positive)",

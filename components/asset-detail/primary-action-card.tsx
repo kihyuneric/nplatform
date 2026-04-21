@@ -35,25 +35,25 @@ interface Cta {
 
 const CTA: Record<AssetTier, Cta> = {
   L0: {
-    label: "로그인하고 관심 표시",
-    subtitle: "30초 · 무료 가입",
-    hint: "로그인 후 본인인증 시 L1 공개 정보 열람",
+    label: "본인인증하고 관심 표시",
+    subtitle: "10초 · 전문투자자 인증",
+    hint: "본인인증 완료 시 등기부 · 임대차 정보 등 L1 자료 열람 가능",
     icon: <LogIn className="w-5 h-5" />,
     bg: "var(--color-brand-dark)",
     fg: "var(--fg-on-brand)",
   },
   L1: {
     label: "NDA 체결",
-    subtitle: "(전자 서명)",
-    hint: "NDA 체결 시 등기원본 · 현장사진 · 임대차 열람",
+    subtitle: "10초, 비밀유지계약서",
+    hint: "NDA 체결 시 채권정보 · 가격 오퍼 · 채팅 · 실사",
     icon: <FileSignature className="w-5 h-5" />,
     bg: "var(--color-brand-bright)",
     fg: "var(--fg-on-brand)",
   },
   L2: {
     label: "LOI 제출하기",
-    subtitle: "매수의향서 · 3분",
-    hint: "매도자 승인 시 실사 자료 · 직접 협상",
+    subtitle: "10초, 매수의향서",
+    hint: "매도자 승인 시 에스크로 보증금 · 계약",
     icon: <FileCheck className="w-5 h-5" />,
     bg: "var(--color-positive)",
     fg: "#041915",

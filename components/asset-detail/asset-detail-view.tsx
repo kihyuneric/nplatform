@@ -16,7 +16,7 @@ import {
   FileText, MapPin, Building2, Gavel,
   CheckCircle2, ShieldCheck, Scale, Images,
   Banknote, ScrollText, TrendingUp, Calculator, Brain, ArrowRight,
-  Pencil, X, Save, FileDown, Eye, EyeOff, HandCoins,
+  Pencil, X, Save, FileDown, Eye, EyeOff, HandCoins, BarChart2,
 } from "lucide-react"
 import { OfferForm, OfferCard, type OfferData } from "@/components/deal-room/offer-card"
 import { toast } from "sonner"
@@ -972,6 +972,23 @@ export function AssetDetailView({
                       <InfoField label="경매접수일" value={formatDateKo(listing.auction_info.filed_date)} />
                       <InfoField label="예상 경매 개시일" value={formatDateKo(listing.auction_info.estimated_start)} />
                     </div>
+                    {/* 땅집고옥션 경매 연동 */}
+                    <a
+                      href={`https://auction.jijigae.com/search?q=${encodeURIComponent(listing.auction_info.case_no || listing.court_case_full)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
+                      style={{
+                        fontSize: 12,
+                        backgroundColor: "rgba(245,158,11,0.10)",
+                        color: "#D97706",
+                        border: "1px solid rgba(245,158,11,0.28)",
+                      }}
+                    >
+                      <Gavel size={12} />
+                      땅집고옥션에서 경매 조회
+                      <ArrowRight size={11} />
+                    </a>
                     {canEdit && (
                       <button type="button"
                         onClick={() => { setAuctionDraft(listing.auction_info); setEditingSec("auction") }}
@@ -1230,6 +1247,74 @@ export function AssetDetailView({
                 listingId={id}
               />
             )}
+
+            {/* ── 땅집고 실거래 (L1) ── */}
+            <SectionCard
+              title="땅집고 실거래"
+              icon={<TrendingUp size={14} />}
+              tierBadge="L1"
+              anchorId="jijigo-transactions"
+            >
+              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={100}>
+                <p className="mb-3 leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
+                  {listing.region_city} {listing.region_district} 인근 실거래가 데이터를 조회합니다.
+                </p>
+                <a
+                  href={`https://land.naver.com/article/articleList.nhn?rletTypeCd=A01&tradeTypeCd=A1&hscpTypeCd=A01%3AA03%3AA04&cortarNo=&searchText=${encodeURIComponent(`${listing.region_city} ${listing.region_district}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-bold transition-colors"
+                  style={{
+                    fontSize: 12,
+                    backgroundColor: "rgba(46,117,182,0.10)",
+                    color: "var(--color-brand-bright)",
+                    border: "1px solid rgba(46,117,182,0.28)",
+                  }}
+                >
+                  <TrendingUp size={13} />
+                  실거래가 조회 (네이버 부동산)
+                  <ArrowRight size={11} />
+                </a>
+              </TierGate>
+            </SectionCard>
+
+            {/* ── 경공매 통계 (L1) ── */}
+            <SectionCard
+              title="경공매 통계"
+              icon={<BarChart2 size={14} />}
+              tierBadge="L1"
+              anchorId="auction-stats"
+            >
+              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={100}>
+                <p className="mb-3 leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
+                  법원 경매 및 온비드 공매 현황 · 낙찰 통계 · 유찰 이력을 확인합니다.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={`https://www.courtauction.go.kr/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-bold"
+                    style={{ fontSize: 12, backgroundColor: "rgba(168,85,247,0.10)", color: "#A855F7", border: "1px solid rgba(168,85,247,0.28)" }}
+                  >
+                    <Gavel size={12} />
+                    대법원 경매 조회
+                    <ArrowRight size={11} />
+                  </a>
+                  <a
+                    href={`https://www.onbid.co.kr/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-bold"
+                    style={{ fontSize: 12, backgroundColor: "rgba(245,158,11,0.10)", color: "#D97706", border: "1px solid rgba(245,158,11,0.28)" }}
+                  >
+                    <Building2 size={12} />
+                    온비드 공매 조회
+                    <ArrowRight size={11} />
+                  </a>
+                </div>
+              </TierGate>
+            </SectionCard>
           </div>
 
           <div className="space-y-4 min-w-0">
