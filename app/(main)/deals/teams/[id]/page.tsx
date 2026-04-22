@@ -42,9 +42,13 @@ interface Listing {
   collateral_type?: string
   address?: string
   institution?: string
+  /** API 정규화: claim_amount → principal_amount (레거시 alias) */
   principal_amount?: number
+  /** 대출원금 (원) — npl_listings.loan_principal */
+  loan_principal?: number
   appraised_value?: number
   discount_rate?: number
+  /** 리스크 등급: npl_listings.ai_grade alias */
   risk_grade?: string
   special_conditions?: Record<string, boolean> | null
   claim_breakdown?: {
@@ -54,6 +58,7 @@ interface Listing {
     normalRate?: number
     overdueRate?: number
   } | null
+  /** 미수이자 (원) — npl_listings.unpaid_interest */
   unpaid_interest?: number | null
 }
 
@@ -182,10 +187,29 @@ export default function TeamDetailPage() {
         if (r.listing_id) {
           const { data: listingData } = await supabase
             .from("npl_listings")
-            .select("id, title, collateral_type, address, institution, principal_amount, appraised_value, discount_rate, risk_grade, special_conditions, claim_breakdown, unpaid_interest")
+            .select("id, title, collateral_type, address, creditor_institution, loan_principal, unpaid_interest, claim_amount, appraised_value, discount_rate, ai_grade, special_conditions, claim_breakdown")
             .eq("id", r.listing_id)
             .single()
-          if (listingData) listing = listingData as Listing
+          if (listingData) {
+            const d = listingData as Record<string, unknown>
+            // DB 컬럼명 → Listing 인터페이스 정규화
+            listing = {
+              id:                String(d.id ?? ""),
+              title:             String(d.title ?? ""),
+              collateral_type:   d.collateral_type ? String(d.collateral_type) : undefined,
+              address:           d.address ? String(d.address) : undefined,
+              institution:       d.creditor_institution ? String(d.creditor_institution) : undefined,
+              loan_principal:    d.loan_principal ? Number(d.loan_principal) : undefined,
+              unpaid_interest:   d.unpaid_interest ? Number(d.unpaid_interest) : null,
+              // claim_amount = 채권잔액 합계 (= 원금 + 미수이자)
+              principal_amount:  d.claim_amount ? Number(d.claim_amount) : (d.loan_principal ? Number(d.loan_principal) : undefined),
+              appraised_value:   d.appraised_value ? Number(d.appraised_value) : undefined,
+              discount_rate:     d.discount_rate ? Number(d.discount_rate) : undefined,
+              risk_grade:        d.ai_grade ? String(d.ai_grade) : undefined,
+              special_conditions: d.special_conditions as Record<string, boolean> | null ?? null,
+              claim_breakdown:   d.claim_breakdown as Listing["claim_breakdown"] ?? null,
+            }
+          }
         }
 
         setTeam({
@@ -734,7 +758,11 @@ export default function TeamDetailPage() {
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
-                      { label: "채권금액", value: team.listing.principal_amount ? fmt(team.listing.principal_amount) : "—", color: "text-white" },
+                      {
+                        label: "대출원금",
+                        value: team.listing.loan_principal ? fmt(team.listing.loan_principal) : (team.listing.principal_amount ? fmt(team.listing.principal_amount) : "—"),
+                        color: "text-white",
+                      },
                       { label: "감정가", value: team.listing.appraised_value ? fmt(team.listing.appraised_value) : "—", color: "text-white" },
                       { label: "할인율", value: team.listing.discount_rate ? `${team.listing.discount_rate}%` : "—", color: "text-emerald-400" },
                       { label: "리스크 등급", value: team.listing.risk_grade ?? "—", color: GRADE_COLOR[team.listing.risk_grade ?? ""] ?? "text-white" },
@@ -750,9 +778,10 @@ export default function TeamDetailPage() {
                   </div>
 
                   {/* 채권잔액 breakdown — 대출원금 + 미수이자 */}
-                  {(team.listing.claim_breakdown || team.listing.unpaid_interest != null) && (() => {
-                    const principal = team.listing.claim_breakdown?.principal ?? team.listing.principal_amount ?? 0
-                    const unpaidInt = team.listing.claim_breakdown?.unpaidInterest ?? team.listing.unpaid_interest ?? 0
+                  {(team.listing.loan_principal || team.listing.unpaid_interest != null) && (() => {
+                    // loan_principal: 대출원금 (원금), unpaid_interest: 미수이자
+                    const principal = team.listing.loan_principal ?? team.listing.claim_breakdown?.principal ?? 0
+                    const unpaidInt = team.listing.unpaid_interest ?? team.listing.claim_breakdown?.unpaidInterest ?? 0
                     const total = principal + unpaidInt
                     return total > 0 ? (
                       <div className="mt-1 rounded-lg p-3" style={{ background: "#0F1F35", border: "1px solid rgba(245,158,11,0.2)" }}>
