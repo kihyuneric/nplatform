@@ -12,6 +12,22 @@ import {
   type AppraisalExtracted,
   type BondDocExtracted,
 } from "@/lib/npl/ocr-mapper"
+import SpecialConditionsPicker from "@/components/listings/special-conditions-picker"
+import {
+  ClaimBreakdownBlock,
+  LeaseSummaryBlock,
+  RightsSummaryBlock,
+  DebtorOwnerSameToggle,
+  DesiredSaleDiscountInput,
+  AppraisalAndMarketBlock,
+} from "@/components/listings/npl-input-blocks"
+import { EMPTY_SPECIAL_CONDITIONS } from "@/lib/npl/unified-report/types"
+import type {
+  SpecialConditions,
+  ClaimBreakdown,
+  LeaseSummary,
+  RightsSummary,
+} from "@/lib/npl/unified-report/types"
 
 type Step = 1 | 2 | 3
 
@@ -43,6 +59,31 @@ export default function NewNplAnalysisPage() {
   const [address, setAddress] = useState("")
   const [appraisalValue, setAppraisalValue] = useState("")
   const [seniorClaim, setSeniorClaim] = useState("")
+
+  // Step 2 — NPL 상세 (선택 · OCR 자동입력 가능)
+  const [appraisalDate, setAppraisalDate] = useState("")
+  const [currentMarketValue, setCurrentMarketValue] = useState("")
+  const [marketPriceNote, setMarketPriceNote] = useState("")
+  const [auctionStartDate, setAuctionStartDate] = useState("")
+  const [debtorOwnerSame, setDebtorOwnerSame] = useState(true)
+  const [desiredSaleDiscount, setDesiredSaleDiscount] = useState(0)
+  const [claimBreakdown, setClaimBreakdown] = useState<ClaimBreakdown>({
+    principal: 0,
+    unpaidInterest: 0,
+    delinquencyStartDate: "",
+    normalRate: 0.069,
+    overdueRate: 0.16,
+  })
+  const [rightsSummary, setRightsSummary] = useState<RightsSummary>({
+    seniorTotal: 0,
+    juniorTotal: 0,
+  })
+  const [leaseSummary, setLeaseSummary] = useState<LeaseSummary>({
+    totalDeposit: 0,
+    totalMonthlyRent: 0,
+    tenantCount: 0,
+  })
+  const [specialConditions, setSpecialConditions] = useState<SpecialConditions>(EMPTY_SPECIAL_CONDITIONS)
 
   // OCR auto-fill
   const [ocrLoading, setOcrLoading] = useState(false)
@@ -156,6 +197,17 @@ export default function NewNplAnalysisPage() {
           bondNumber,
           caseNumber,
           debtorType,
+          // NPL 상세 (신규)
+          appraisalDate: appraisalDate || null,
+          currentMarketValue: Number(currentMarketValue) || null,
+          marketPriceNote: marketPriceNote || null,
+          auctionStartDate: auctionStartDate || null,
+          debtorOwnerSame,
+          desiredSaleDiscount,
+          claimBreakdown,
+          rightsSummary,
+          leaseSummary,
+          specialConditions,
         }),
       })
 
@@ -169,7 +221,12 @@ export default function NewNplAnalysisPage() {
         try {
           sessionStorage.setItem('lastAnalysisResult', JSON.stringify({
             ...data.data,
-            _input: { bondNumber, principalAmount, collateralType, address, appraisalValue, debtorType },
+            _input: {
+              bondNumber, principalAmount, collateralType, address, appraisalValue, debtorType,
+              appraisalDate, currentMarketValue, marketPriceNote, auctionStartDate,
+              debtorOwnerSame, desiredSaleDiscount,
+              claimBreakdown, rightsSummary, leaseSummary, specialConditions,
+            },
             _ts: Date.now(),
           }))
         } catch { /* ignore storage errors */ }
@@ -403,6 +460,56 @@ export default function NewNplAnalysisPage() {
                   onChange={(e) => setSeniorClaim(e.target.value.replace(/[^0-9]/g, ''))}
                 />
               </div>
+            </div>
+
+            {/* ── NPL 상세 (선택 · OCR 자동입력 지원) ── */}
+            <div className="pt-3 border-t border-[var(--color-border-subtle)] space-y-3">
+              <div>
+                <h3 className="text-[0.875rem] font-bold text-[var(--color-text-primary)]">
+                  NPL 상세 정보
+                </h3>
+                <p className="text-[0.75rem] text-[var(--color-text-muted)] mt-0.5">
+                  입력하면 AI 분석 정확도가 향상됩니다 · 선택 사항
+                </p>
+              </div>
+
+              <AppraisalAndMarketBlock
+                appraisalValue={parseInt(appraisalValue) || 0}
+                onAppraisalValue={(n) => setAppraisalValue(String(n))}
+                appraisalDate={appraisalDate}
+                onAppraisalDate={setAppraisalDate}
+                marketValue={parseInt(currentMarketValue) || 0}
+                onMarketValue={(n) => setCurrentMarketValue(String(n))}
+                marketPriceNote={marketPriceNote}
+                onMarketPriceNote={setMarketPriceNote}
+                auctionStartDate={auctionStartDate}
+                onAuctionStartDate={setAuctionStartDate}
+              />
+
+              <ClaimBreakdownBlock
+                value={{
+                  ...claimBreakdown,
+                  principal: parseInt(principalAmount) || claimBreakdown.principal,
+                }}
+                onChange={(v) => {
+                  setClaimBreakdown(v)
+                  if (v.principal > 0) setPrincipalAmount(String(v.principal))
+                }}
+              />
+
+              <RightsSummaryBlock value={rightsSummary} onChange={setRightsSummary} />
+
+              <LeaseSummaryBlock value={leaseSummary} onChange={setLeaseSummary} />
+
+              <DebtorOwnerSameToggle value={debtorOwnerSame} onChange={setDebtorOwnerSame} />
+
+              <DesiredSaleDiscountInput
+                value={desiredSaleDiscount}
+                onChange={setDesiredSaleDiscount}
+                principal={parseInt(principalAmount) || claimBreakdown.principal || 0}
+              />
+
+              <SpecialConditionsPicker value={specialConditions} onChange={setSpecialConditions} />
             </div>
           </div>
         )}

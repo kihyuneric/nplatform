@@ -18,6 +18,7 @@ import type {
   SpecialConditions,
   RegistryAnalysisBlock,
 } from './types'
+import { SPECIAL_CONDITION_CATALOG } from './types'
 
 export type RiskFactorResult = {
   category: '담보가치' | '권리관계' | '시장' | '유동성' | '법적'
@@ -71,7 +72,8 @@ export function computeCollateralFactor(args: {
 }
 
 // ─── 권리관계 ───────────────────────────────────────────────
-//  기본 90점 − Σ(항목별 감점)
+//  기본 90점 − Σ(임차인 특수조건 + 등기부 시그널 + 후순위 근저당)
+//  임차인·선순위 특수조건은 SPECIAL_CONDITION_CATALOG(types.ts)에서 파생 — 단일 소스.
 export function computeRightsFactor(args: {
   specialConditions: SpecialConditions
   registry?: RegistryAnalysisBlock
@@ -79,43 +81,68 @@ export function computeRightsFactor(args: {
 }): RiskFactorResult {
   const { specialConditions, registry, subordinateClaimCount = 0 } = args
 
-  // 등기부 기반 시그널
+  // [1] 카탈로그 파생 — 임차인(E) + 선순위 권리(B) 중 권리관계 직접 영향 항목
+  //     가중치: 임차인은 legalPenalty × 2.5 (인수/명도 직접 연관, 원래 25점 기준 유지)
+  //            선순위 등기 권리는 legalPenalty × 0.5 (법적 팩터와 중복 방지)
+  const catalogPenalties = SPECIAL_CONDITION_CATALOG
+    .filter(it => it.category === 'TENANT' || it.category === 'SENIOR_ENCUMBRANCE')
+    .map(it => ({
+      label: it.label,
+      amount: it.category === 'TENANT'
+        ? Math.round(Math.abs(it.legalPenalty) * 2.5)
+        : Math.round(Math.abs(it.legalPenalty) * 0.5),
+      hit: Boolean(specialConditions[it.key]),
+    }))
+
+  // [2] 등기부 기반 시그널 (하드코딩 유지 — 등기부 특유 신호)
   const findKind = (name: string) => registry?.rights?.items?.find(r => r.kind === name)
   const hasLocalTax    = findKind('당해세(국세·지방세)')?.presence === 'NEEDS_REVIEW'
   const hasSmallTenant = findKind('소액임차인 최우선변제금')?.presence === 'NEEDS_REVIEW'
   const hasGenClaim    = findKind('일반채권(가압류 등)')?.presence === 'NEEDS_REVIEW'
 
-  const penalties: { label: string; amount: number; hit: boolean }[] = [
-    { label: '선순위 임차인 대항력',      amount: 25, hit: specialConditions.seniorTenant },
-    { label: '당해세 검토 필요',           amount: 5,  hit: hasLocalTax },
-    { label: '소액임차인 최우선 검토',     amount: 10, hit: hasSmallTenant },
+  const registryPenalties = [
+    { label: '당해세 검토 필요',            amount: 5,  hit: hasLocalTax },
+    { label: '소액임차인 최우선 검토',      amount: 10, hit: hasSmallTenant },
     { label: '일반채권 가압류 검토',        amount: 5,  hit: hasGenClaim },
     { label: `후순위 근저당 ${subordinateClaimCount}건`, amount: 3 * subordinateClaimCount, hit: subordinateClaimCount > 0 },
   ]
-  const totalPenalty = penalties.filter(p => p.hit).reduce((s, p) => s + p.amount, 0)
+
+  const penalties = [...catalogPenalties, ...registryPenalties]
+  const hits = penalties.filter(p => p.hit)
+  const totalPenalty = hits.reduce((s, p) => s + p.amount, 0)
   const raw = 90 - totalPenalty
   const score = Math.round(clamp(raw, 30, 100) * 10) / 10
 
-  const lines = penalties.map(p => `  · ${p.label}: ${p.hit ? `−${p.amount}` : '0'}`).join('\n')
+  const hitLines = hits.length === 0
+    ? '  · 해당 없음'
+    : hits.map(p => `  · ${p.label}: −${p.amount}`).join('\n')
   const formula =
-    `권리관계 점수 = 90 − Σ(항목별 감점)\n\n` +
-    `항목별 감점:\n${lines}\n\n` +
+    `권리관계 점수 = 90 − Σ(임차인 특수조건 + 선순위 권리 + 등기부 시그널)\n` +
+    `  (임차인/선순위 카탈로그: types.ts SPECIAL_CONDITION_CATALOG 단일 소스)\n\n` +
+    `해당 감점:\n${hitLines}\n\n` +
     `           = 90 − ${totalPenalty}\n` +
     `           = ${score}점`
 
-  const hitLabels = penalties.filter(p => p.hit).map(p => p.label)
+  const hitLabels = hits.map(p => p.label)
   return {
     category: '권리관계',
     score,
     severity: severityOf(score),
     explanation: hitLabels.length === 0
-      ? '선순위 임차인·당해세·소액임차·일반채권 모두 특이사항 없음 — 1순위 근저당만 활성'
-      : `검토 필요 항목 ${hitLabels.length}개: ${hitLabels.join(', ')}`,
-    mitigation: specialConditions.seniorTenant
+      ? '임차인·선순위 권리·등기부 시그널 모두 특이사항 없음 — 1순위 근저당만 활성'
+      : `검토 필요 항목 ${hitLabels.length}개: ${hitLabels.slice(0, 5).join(', ')}${hitLabels.length > 5 ? ` 외 ${hitLabels.length - 5}건` : ''}`,
+    mitigation: specialConditions.seniorTenant || specialConditions.leaseholdRegistered
       ? '임대차보호법상 우선변제권 확인, 보증금 인수 조건 매입가 협상'
       : '현장조사 시 미등기 임차·전입세대 확인, 당해세·일반채권 송달내역 별도 검증',
     formula,
-    inputs: { 선순위임차: specialConditions.seniorTenant, 당해세검토: hasLocalTax, 소액임차검토: hasSmallTenant, 일반채권검토: hasGenClaim, 후순위근저당: subordinateClaimCount },
+    inputs: {
+      대항력임차: specialConditions.seniorTenant,
+      임차권등기: specialConditions.leaseholdRegistered,
+      당해세검토: hasLocalTax,
+      소액임차검토: hasSmallTenant,
+      일반채권검토: hasGenClaim,
+      후순위근저당: subordinateClaimCount,
+    },
   }
 }
 
@@ -192,40 +219,40 @@ export function computeLiquidityFactor(args: {
 }
 
 // ─── 법적 ───────────────────────────────────────────────────
-//  95 − Σ(특수조건별 감점), 하한 30
+//  95 − Σ(특수조건 카탈로그 legalPenalty 절대값), 하한 30
+//  항목/점수는 lib/npl/unified-report/types.ts SPECIAL_CONDITION_CATALOG 단일 소스.
 export function computeLegalFactor(args: {
   specialConditions: SpecialConditions
 }): RiskFactorResult {
   const sc = args.specialConditions
-  const penalties: { key: string; label: string; amount: number; hit: boolean }[] = [
-    { key: 'lienRight',            label: '유치권',             amount: 15, hit: sc.lienRight },
-    { key: 'statutorySuperficies', label: '법정지상권',         amount: 10, hit: sc.statutorySuperficies },
-    { key: 'sharedAuction',        label: '지분경매',           amount: 15, hit: sc.sharedAuction },
-    { key: 'illegalBuilding',      label: '위반건축물',         amount: 10, hit: sc.illegalBuilding },
-    { key: 'graveYardRight',       label: '분묘기지권',         amount: 8,  hit: sc.graveYardRight },
-    { key: 'farmlandRestriction',  label: '농지취득자격',        amount: 10, hit: sc.farmlandRestriction },
-  ]
-  const totalPenalty = penalties.filter(p => p.hit).reduce((s, p) => s + p.amount, 0)
+  const penalties = SPECIAL_CONDITION_CATALOG.map(item => ({
+    key: item.key,
+    label: item.label,
+    amount: Math.abs(item.legalPenalty),
+    hit: Boolean(sc[item.key]),
+  }))
+  const hits = penalties.filter(p => p.hit)
+  const totalPenalty = hits.reduce((s, p) => s + p.amount, 0)
   const raw = 95 - totalPenalty
   const score = Math.round(clamp(raw, 30, 100) * 10) / 10
 
-  const lines = penalties
-    .map(p => `  · ${p.label}: ${p.hit ? `−${p.amount}` : '0'}`)
-    .join('\n')
+  const hitLines = hits.length === 0
+    ? '  · 해당 없음'
+    : hits.map(p => `  · ${p.label}: −${p.amount}`).join('\n')
   const formula =
-    `법적 점수 = 95 − Σ(특수조건별 감점)  · 하한 30\n\n` +
-    `감점 내역:\n${lines}\n\n` +
+    `법적 점수 = 95 − Σ(특수조건별 감점)  · 하한 30\n` +
+    `  (항목/점수: types.ts SPECIAL_CONDITION_CATALOG 단일 소스)\n\n` +
+    `해당 감점:\n${hitLines}\n\n` +
     `         = 95 − ${totalPenalty}\n` +
     `         = ${score}점`
 
-  const hits = penalties.filter(p => p.hit)
   return {
     category: '법적',
     score,
     severity: severityOf(score),
     explanation: hits.length === 0
-      ? '유치권·법정지상권·지분·위반건축·분묘·농지 등 특수조건 해당 없음'
-      : `특수조건 ${hits.length}건 해당: ${hits.map(h => h.label).join(', ')}`,
+      ? '25개 특수조건 전부 해당 없음 — 등기/물권/조세 청결'
+      : `특수조건 ${hits.length}건 해당: ${hits.slice(0, 5).map(h => h.label).join(', ')}${hits.length > 5 ? ` 외 ${hits.length - 5}건` : ''}`,
     mitigation: hits.length === 0
       ? '현장조사 시 점유관계·무허가 증축 여부 재확인'
       : '해당 특수조건별 전문가 자문 확보 후 낙찰가 협상에 반영',

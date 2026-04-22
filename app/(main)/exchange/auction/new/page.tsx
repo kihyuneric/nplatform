@@ -33,6 +33,22 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
+import SpecialConditionsPicker from "@/components/listings/special-conditions-picker"
+import {
+  ClaimBreakdownBlock,
+  LeaseSummaryBlock,
+  RightsSummaryBlock,
+  DebtorOwnerSameToggle,
+  DesiredSaleDiscountInput,
+  AppraisalAndMarketBlock,
+} from "@/components/listings/npl-input-blocks"
+import { EMPTY_SPECIAL_CONDITIONS } from "@/lib/npl/unified-report/types"
+import type {
+  SpecialConditions,
+  ClaimBreakdown,
+  LeaseSummary,
+  RightsSummary,
+} from "@/lib/npl/unified-report/types"
 
 // ─── Constants ──────────────────────────────────────────────
 
@@ -82,6 +98,17 @@ interface FormState {
   askingPrice: string
   collateralAmount: string
   claimBalance: string
+  // Step 2 (NPL 상세)
+  appraisalDate: string
+  currentMarketValue: string
+  marketPriceNote: string
+  auctionStartDate: string
+  debtorOwnerSame: boolean
+  desiredSaleDiscount: number      // 0~1
+  claimBreakdown: ClaimBreakdown
+  rightsSummary: RightsSummary
+  leaseSummary: LeaseSummary
+  specialConditions: SpecialConditions
   // Step 3
   biddingStart: string
   biddingEnd: string
@@ -106,6 +133,29 @@ const INITIAL_FORM: FormState = {
   askingPrice: "",
   collateralAmount: "",
   claimBalance: "",
+  appraisalDate: "",
+  currentMarketValue: "",
+  marketPriceNote: "",
+  auctionStartDate: "",
+  debtorOwnerSame: true,
+  desiredSaleDiscount: 0,
+  claimBreakdown: {
+    principal: 0,
+    unpaidInterest: 0,
+    delinquencyStartDate: "",
+    normalRate: 0.069,
+    overdueRate: 0.16,
+  },
+  rightsSummary: {
+    seniorTotal: 0,
+    juniorTotal: 0,
+  },
+  leaseSummary: {
+    totalDeposit: 0,
+    totalMonthlyRent: 0,
+    tenantCount: 0,
+  },
+  specialConditions: EMPTY_SPECIAL_CONDITIONS,
   biddingStart: "",
   biddingEnd: "",
   minimumBid: "",
@@ -285,6 +335,17 @@ export default function BiddingNewPage() {
         disclosure_level: form.disclosureLevel,
         bidding_method: form.biddingMethod,
         remarks: form.remarks.trim() || null,
+        // NPL 상세 (신규)
+        appraisal_date: form.appraisalDate || null,
+        current_market_value: form.currentMarketValue ? parseInt(form.currentMarketValue) : null,
+        market_price_note: form.marketPriceNote.trim() || null,
+        auction_start_date: form.auctionStartDate || null,
+        debtor_owner_same: form.debtorOwnerSame,
+        desired_sale_discount: form.desiredSaleDiscount,
+        claim_breakdown: form.claimBreakdown,
+        rights_summary: form.rightsSummary,
+        lease_summary: form.leaseSummary,
+        special_conditions: form.specialConditions,
       }
 
       const res = await fetch("/api/v1/exchange/auction/register", {
@@ -633,6 +694,73 @@ export default function BiddingNewPage() {
               (감정가 - 희망매각가) / 감정가 x 100
             </p>
           </div>
+        </div>
+
+        <Separator />
+
+        {/* ── NPL 상세 입력 (선택 · OCR 자동 입력 가능) ── */}
+        <div className="space-y-3">
+          <div>
+            <h3 className="text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+              NPL 상세 정보
+              <span className="text-[0.625rem] font-normal text-[var(--color-text-tertiary)]">
+                · 입력하면 AI 분석 정확도가 향상됩니다 · OCR 자동 입력 지원
+              </span>
+            </h3>
+          </div>
+
+          <AppraisalAndMarketBlock
+            appraisalValue={parseInt(form.appraisalValue) || 0}
+            onAppraisalValue={(n) => updateField("appraisalValue", String(n))}
+            appraisalDate={form.appraisalDate}
+            onAppraisalDate={(v) => updateField("appraisalDate", v)}
+            marketValue={parseInt(form.currentMarketValue) || 0}
+            onMarketValue={(n) => updateField("currentMarketValue", String(n))}
+            marketPriceNote={form.marketPriceNote}
+            onMarketPriceNote={(v) => updateField("marketPriceNote", v)}
+            auctionStartDate={form.auctionStartDate}
+            onAuctionStartDate={(v) => updateField("auctionStartDate", v)}
+          />
+
+          <ClaimBreakdownBlock
+            value={{
+              ...form.claimBreakdown,
+              principal: parseInt(form.loanPrincipal) || form.claimBreakdown.principal,
+            }}
+            onChange={(v) => {
+              setForm((prev) => ({
+                ...prev,
+                claimBreakdown: v,
+                loanPrincipal: v.principal > 0 ? String(v.principal) : prev.loanPrincipal,
+              }))
+            }}
+          />
+
+          <RightsSummaryBlock
+            value={form.rightsSummary}
+            onChange={(v) => setForm((prev) => ({ ...prev, rightsSummary: v }))}
+          />
+
+          <LeaseSummaryBlock
+            value={form.leaseSummary}
+            onChange={(v) => setForm((prev) => ({ ...prev, leaseSummary: v }))}
+          />
+
+          <DebtorOwnerSameToggle
+            value={form.debtorOwnerSame}
+            onChange={(v) => updateField("debtorOwnerSame", v)}
+          />
+
+          <DesiredSaleDiscountInput
+            value={form.desiredSaleDiscount}
+            onChange={(v) => setForm((prev) => ({ ...prev, desiredSaleDiscount: v }))}
+            principal={parseInt(form.loanPrincipal) || form.claimBreakdown.principal || 0}
+          />
+
+          <SpecialConditionsPicker
+            value={form.specialConditions}
+            onChange={(v) => setForm((prev) => ({ ...prev, specialConditions: v }))}
+          />
         </div>
 
         {/* Navigation */}

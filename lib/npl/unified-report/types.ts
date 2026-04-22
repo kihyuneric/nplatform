@@ -44,56 +44,187 @@ export type {
 // ─── 리스크 등급 ──────────────────────────────────────────────
 export type RiskGrade = 'A' | 'B' | 'C' | 'D' | 'E'
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+export type SeverityLevel = 'OK' | 'INFO' | 'WARNING' | 'DANGER' | 'CRITICAL'
 export type MarketOutlook = 'BULLISH' | 'NEUTRAL' | 'BEARISH'
 export type BidPolicy = 'CONSERVATIVE' | 'BASE' | 'AGGRESSIVE'
 
 // ─── 매물 특수조건 (경매분석 영향) ─────────────────────────
 /**
- * 채권자가 매물 등록 시 체크하는 특수조건.
- * 각 항목은 경매 낙찰가율 예측과 리스크 등급에 영향을 미침.
+ * 채권자가 매물 등록 시 체크하는 특수조건 (25 항목 + 기타 메모).
+ * 각 항목은 경매 낙찰가율 예측과 리스크 등급·법적 팩터 점수에 영향.
+ *
+ * 카테고리 (UI 그룹):
+ *   A. 물권 자체 (대지권/전세권/토지별도/지분)
+ *   B. 선순위 권리 (근저당/지상권/임차권/전세권/가등기/가처분/가압류)
+ *   C. 권리침해 (유치권/법정지상권/분묘)
+ *   D. 조세·채권 우선순위 (조세/당해세/임금/4대보험/재해보상)
+ *   E. 임차인 (대항력/임차권 등기)
+ *   F. 건물 (위반/무허가/사용승인 미필)
+ *   G. 기타 (농업취득자격/맹지)
  */
 export interface SpecialConditions {
-  /** 유치권 — 낙찰가율 최대 -15%p */
-  lienRight: boolean
-  /** 법정지상권 — 낙찰가율 최대 -12%p */
-  statutorySuperficies: boolean
-  /** 지분경매 — 낙찰가율 최대 -20%p */
+  // A. 물권
+  /** 대지권 미등기 — 건물만 매각 대상, 대지사용권 별도 취득 리스크 */
+  siteRightUnregistered: boolean
+  /** 전세권만 매각 — 전세권 단독 경매, 소유권 이전 불가 */
+  jeonseRightOnly: boolean
+  /** 토지 별도등기 — 건물과 토지 등기 분리, 법정지상권·정리 필요 */
+  landSeparateRegistry: boolean
+  /** 지분입찰 (지분경매) — 공유지분만 매각, 분할청구·우선매수 고려 */
   sharedAuction: boolean
-  /** 선순위 임차인 대항력 — 낙찰가율 최대 -10%p */
-  seniorTenant: boolean
-  /** 위반건축물 — 낙찰가율 최대 -8%p */
-  illegalBuilding: boolean
-  /** 분묘기지권 — 낙찰가율 최대 -10%p (토지 한정) */
+
+  // B. 선순위 권리 (등기부 갑·을구)
+  /** 선순위 근저당 — 배당 후 잔액 확인 필요 (낙찰자 인수 無) */
+  seniorMortgage: boolean
+  /** 선순위 지상권 — 건물 철거 불가, 낙찰자 인수 */
+  seniorSuperficies: boolean
+  /** 선순위 임차권 — 대항력 등기 임차권, 낙찰자 인수 */
+  seniorLeasehold: boolean
+  /** 선순위 전세권 — 전세권 인수, 보증금 반환 의무 */
+  seniorJeonse: boolean
+  /** 선순위 가등기 — 본등기 완료 시 소유권 상실 위험 */
+  seniorProvisionalReg: boolean
+  /** 선순위 가처분 — 처분금지, 권리 유동성 최대 */
+  seniorInjunction: boolean
+  /** 선순위 가압류 — 채권자 추가 다수 가능성 */
+  seniorProvisionalSeizure: boolean
+
+  // C. 권리침해
+  /** 유치권 — 제3자 점유·변제 없이 명도 제한 */
+  lienRight: boolean
+  /** 법정지상권 — 토지·건물 소유자 분리, 건물 철거 불가 */
+  statutorySuperficies: boolean
+  /** 분묘기지권 — 타인 묘지 존재, 개장 제약 (토지) */
   graveYardRight: boolean
-  /** 농지 — 영농목적 증명 필요 (접근성 저하) */
+
+  // D. 조세·우선채권
+  /** 조세 (일반 국세·지방세) — 경매비용 다음 우선배당 */
+  taxPriority: boolean
+  /** 당해세 — 해당 부동산 부과 조세, 최우선 배당 */
+  localTaxPriority: boolean
+  /** 임금채권 — 근로자 최종 3개월분 + 퇴직금 3년분 최우선 */
+  wageClaim: boolean
+  /** 4대보험 미납 — 국민연금·건강보험·고용·산재 체납 */
+  unpaidSocialInsurance: boolean
+  /** 재해보상금 — 산재 보상금 체납, 최우선 배당 */
+  disasterCompensation: boolean
+
+  // E. 임차인
+  /** 대항력있는 임차인 — 등기 없이도 대항력 (주택임대차보호법) */
+  seniorTenant: boolean
+  /** 임차권 등기 — 임차권 등기명령, 대항력 유지 */
+  leaseholdRegistered: boolean
+
+  // F. 건물
+  /** 위반건축물 — 건축물대장 등재, 강제이행금·양성화비 */
+  illegalBuilding: boolean
+  /** 무허가건축물 — 건축허가 無, 철거 대상 */
+  unlicensedBuilding: boolean
+  /** 사용승인 미필 — 준공검사 미완료, 등기 제한 */
+  noOccupancyPermit: boolean
+
+  // G. 기타
+  /** 농업취득자격증명 필요 — 농지법 제8조, 취득자격 제한 */
   farmlandRestriction: boolean
+  /** 맹지 — 도로 접근 없음, 건축·개발 제약 */
+  landlocked: boolean
+
   /** 기타 특이사항 (자유입력) */
   otherNote?: string
 }
 
-export const SPECIAL_CONDITION_LABEL: Record<keyof Omit<SpecialConditions, 'otherNote'>, string> = {
-  lienRight: '유치권',
-  statutorySuperficies: '법정지상권',
-  sharedAuction: '지분경매',
-  seniorTenant: '선순위 임차인',
-  illegalBuilding: '위반건축물',
-  graveYardRight: '분묘기지권',
-  farmlandRestriction: '농지(영농)',
+export type SpecialConditionKey = Exclude<keyof SpecialConditions, 'otherNote'>
+
+export type SpecialConditionCategory =
+  | 'PROPERTY_RIGHT'       // A. 물권 자체
+  | 'SENIOR_ENCUMBRANCE'   // B. 선순위 권리
+  | 'RIGHT_INFRINGEMENT'   // C. 권리침해
+  | 'TAX_PRIORITY'         // D. 조세·우선채권
+  | 'TENANT'               // E. 임차인
+  | 'BUILDING'             // F. 건물
+  | 'OTHER'                // G. 기타
+
+export interface SpecialConditionCatalogItem {
+  key: SpecialConditionKey
+  label: string
+  category: SpecialConditionCategory
+  /** 낙찰가율 감점 (%p) — 절대값 클수록 영향 ↑ */
+  penalty: number
+  /** 법적 리스크 감점 (risk-factors.ts computeLegalFactor) */
+  legalPenalty: number
+  severity: SeverityLevel
+  helper: string
 }
 
 /**
- * 특수조건별 낙찰가율 감점 (%p)
- * — 실증 데이터 확보 시 조정 (현재 법원경매 통계 간접 추정치)
+ * 특수조건 단일 진원지 (Single Source of Truth).
+ * UI picker·리스크 계산·낙찰가율 조정·AI 프롬프트 모두 이 배열에서 파생.
  */
-export const SPECIAL_CONDITION_PENALTY: Record<keyof Omit<SpecialConditions, 'otherNote'>, number> = {
-  lienRight: -15,
-  statutorySuperficies: -12,
-  sharedAuction: -20,
-  seniorTenant: -10,
-  illegalBuilding: -8,
-  graveYardRight: -10,
-  farmlandRestriction: -5,
+export const SPECIAL_CONDITION_CATALOG: readonly SpecialConditionCatalogItem[] = [
+  // A. 물권
+  { key: 'siteRightUnregistered', label: '대지권 미등기',   category: 'PROPERTY_RIGHT',     penalty: -10, legalPenalty: -10, severity: 'DANGER',   helper: '건물만 매각 대상 · 대지사용권 별도 취득 필요' },
+  { key: 'jeonseRightOnly',       label: '전세권만 매각',   category: 'PROPERTY_RIGHT',     penalty: -25, legalPenalty: -18, severity: 'CRITICAL', helper: '전세권 단독 경매 · 소유권 이전 불가' },
+  { key: 'landSeparateRegistry',  label: '토지 별도등기',   category: 'PROPERTY_RIGHT',     penalty: -15, legalPenalty: -12, severity: 'DANGER',   helper: '건물·토지 등기 분리 · 법정지상권·정리 필요' },
+  { key: 'sharedAuction',         label: '지분입찰',         category: 'PROPERTY_RIGHT',     penalty: -20, legalPenalty: -15, severity: 'DANGER',   helper: '공유지분만 매각 · 분할청구·우선매수 고려' },
+
+  // B. 선순위 권리
+  { key: 'seniorMortgage',          label: '선순위 근저당',  category: 'SENIOR_ENCUMBRANCE', penalty: -5,  legalPenalty: -5,  severity: 'WARNING',  helper: '배당 후 잔액 확인 필요 · 낙찰자 인수 無' },
+  { key: 'seniorSuperficies',       label: '선순위 지상권',  category: 'SENIOR_ENCUMBRANCE', penalty: -15, legalPenalty: -12, severity: 'DANGER',   helper: '건물 철거 불가 · 낙찰자 인수' },
+  { key: 'seniorLeasehold',         label: '선순위 임차권',  category: 'SENIOR_ENCUMBRANCE', penalty: -12, legalPenalty: -10, severity: 'DANGER',   helper: '대항력 등기 임차권 · 낙찰자 인수' },
+  { key: 'seniorJeonse',            label: '선순위 전세권',  category: 'SENIOR_ENCUMBRANCE', penalty: -20, legalPenalty: -15, severity: 'CRITICAL', helper: '전세권 인수 · 보증금 반환 의무' },
+  { key: 'seniorProvisionalReg',    label: '선순위 가등기',  category: 'SENIOR_ENCUMBRANCE', penalty: -25, legalPenalty: -20, severity: 'CRITICAL', helper: '본등기 완료 시 소유권 상실 위험' },
+  { key: 'seniorInjunction',        label: '선순위 가처분',  category: 'SENIOR_ENCUMBRANCE', penalty: -30, legalPenalty: -22, severity: 'CRITICAL', helper: '처분금지 · 권리 유동성 최대' },
+  { key: 'seniorProvisionalSeizure',label: '선순위 가압류',  category: 'SENIOR_ENCUMBRANCE', penalty: -15, legalPenalty: -10, severity: 'DANGER',   helper: '채권자 추가 다수 가능성' },
+
+  // C. 권리침해
+  { key: 'lienRight',            label: '유치권',         category: 'RIGHT_INFRINGEMENT', penalty: -15, legalPenalty: -12, severity: 'DANGER',   helper: '제3자 점유·변제 없이 명도 제한' },
+  { key: 'statutorySuperficies', label: '법정지상권',     category: 'RIGHT_INFRINGEMENT', penalty: -12, legalPenalty: -10, severity: 'DANGER',   helper: '토지·건물 소유자 분리 · 건물 철거 불가' },
+  { key: 'graveYardRight',       label: '분묘기지권',     category: 'RIGHT_INFRINGEMENT', penalty: -10, legalPenalty: -8,  severity: 'WARNING',  helper: '타인 묘지 존재 · 개장 제약 (토지 한정)' },
+
+  // D. 조세·우선채권
+  { key: 'taxPriority',         label: '조세',           category: 'TAX_PRIORITY', penalty: -8,  legalPenalty: -6,  severity: 'WARNING',  helper: '국세·지방세 · 경매비용 다음 우선배당' },
+  { key: 'localTaxPriority',    label: '당해세',         category: 'TAX_PRIORITY', penalty: -15, legalPenalty: -12, severity: 'DANGER',   helper: '해당 부동산 부과 · 최우선 배당' },
+  { key: 'wageClaim',           label: '임금채권',       category: 'TAX_PRIORITY', penalty: -10, legalPenalty: -8,  severity: 'DANGER',   helper: '최종 3개월분 + 퇴직금 3년분 최우선' },
+  { key: 'unpaidSocialInsurance', label: '4대보험 미납',  category: 'TAX_PRIORITY', penalty: -8,  legalPenalty: -6,  severity: 'WARNING',  helper: '국민연금·건강·고용·산재 체납' },
+  { key: 'disasterCompensation',label: '재해보상',       category: 'TAX_PRIORITY', penalty: -5,  legalPenalty: -4,  severity: 'WARNING',  helper: '산재 보상금 체납 · 최우선 배당' },
+
+  // E. 임차인
+  { key: 'seniorTenant',        label: '대항력 있는 임차인', category: 'TENANT', penalty: -10, legalPenalty: -8, severity: 'DANGER',  helper: '등기 없이도 대항력 (주임법) · 보증금 인수' },
+  { key: 'leaseholdRegistered', label: '임차권 등기',       category: 'TENANT', penalty: -8,  legalPenalty: -6, severity: 'WARNING', helper: '임차권 등기명령 · 대항력 유지' },
+
+  // F. 건물
+  { key: 'illegalBuilding',     label: '위반건축물',       category: 'BUILDING', penalty: -8,  legalPenalty: -6,  severity: 'WARNING', helper: '건축물대장 등재 · 강제이행금·양성화비' },
+  { key: 'unlicensedBuilding',  label: '무허가건축물',     category: 'BUILDING', penalty: -15, legalPenalty: -12, severity: 'DANGER',  helper: '건축허가 無 · 철거 대상' },
+  { key: 'noOccupancyPermit',   label: '사용승인 미필',    category: 'BUILDING', penalty: -10, legalPenalty: -8,  severity: 'DANGER',  helper: '준공검사 미완료 · 등기 제한' },
+
+  // G. 기타
+  { key: 'farmlandRestriction', label: '농업취득자격증명', category: 'OTHER', penalty: -5,  legalPenalty: -4,  severity: 'WARNING', helper: '농지법 제8조 · 취득자격 제한' },
+  { key: 'landlocked',          label: '맹지',             category: 'OTHER', penalty: -12, legalPenalty: -10, severity: 'DANGER',  helper: '도로 접근 無 · 건축·개발 제약' },
+] as const
+
+export const SPECIAL_CONDITION_CATEGORY_LABEL: Record<SpecialConditionCategory, string> = {
+  PROPERTY_RIGHT:     'A. 물권 자체',
+  SENIOR_ENCUMBRANCE: 'B. 선순위 등기 권리',
+  RIGHT_INFRINGEMENT: 'C. 권리 침해',
+  TAX_PRIORITY:       'D. 조세·우선채권',
+  TENANT:             'E. 임차인',
+  BUILDING:           'F. 건물',
+  OTHER:              'G. 기타',
 }
+
+/** @deprecated — SPECIAL_CONDITION_CATALOG 에서 파생. 기존 코드 호환용 */
+export const SPECIAL_CONDITION_LABEL: Record<SpecialConditionKey, string> =
+  Object.fromEntries(SPECIAL_CONDITION_CATALOG.map(it => [it.key, it.label])) as Record<SpecialConditionKey, string>
+
+/** @deprecated — SPECIAL_CONDITION_CATALOG 에서 파생. 기존 코드 호환용 */
+export const SPECIAL_CONDITION_PENALTY: Record<SpecialConditionKey, number> =
+  Object.fromEntries(SPECIAL_CONDITION_CATALOG.map(it => [it.key, it.penalty])) as Record<SpecialConditionKey, number>
+
+export const EMPTY_SPECIAL_CONDITIONS: SpecialConditions =
+  Object.fromEntries([
+    ...SPECIAL_CONDITION_CATALOG.map(it => [it.key, false]),
+    ['otherNote', ''],
+  ]) as unknown as SpecialConditions
 
 // ─── 회수율 예측 (3팩터) ─────────────────────────────────────
 
@@ -496,6 +627,48 @@ export interface UnifiedReportSummary {
   tldr: string
 }
 
+/**
+ * 채권내역 세부 (채권자 입력 · OCR 추출 가능).
+ * — 원금 / 미수이자로 채권잔액 자동 산출.
+ * — 연체시작일·정상금리·연체금리로 연체이자 실시간 재계산.
+ */
+export interface ClaimBreakdown {
+  /** 대출원금 (원) */
+  principal: number
+  /** 미수이자 — 과거 이미 발생한 이자 합계 (원) */
+  unpaidInterest: number
+  /** 연체시작일 (YYYY-MM-DD) */
+  delinquencyStartDate: string
+  /** 정상금리 (소수, 예: 0.069 = 연 6.9%) */
+  normalRate: number
+  /** 연체금리 (소수) */
+  overdueRate: number
+}
+
+/**
+ * 권리관계 요약 — 채권자 또는 OCR 입력.
+ * registryAnalysis 가 있는 경우에도, 수기 입력값이 있으면 우선 표시.
+ */
+export interface RightsSummary {
+  /** 선순위(말소되지 않고 낙찰자가 인수할 가능성 있는) 권리 총액 (원) */
+  seniorTotal: number
+  /** 후순위(배당 대상) 권리 총액 (원) */
+  juniorTotal: number
+}
+
+/**
+ * 임대차 현황 — 임차인 여러 명 존재 시 합산값만 저장.
+ * 상세 임차인 리스트는 등기부·현장조사 블록에서 별도 관리.
+ */
+export interface LeaseSummary {
+  /** 보증금 합계 (원) */
+  totalDeposit: number
+  /** 월세 합계 (원) */
+  totalMonthlyRent: number
+  /** 임차인 수 합계 */
+  tenantCount: number
+}
+
 export interface UnifiedReportInput {
   assetId?: string
   assetTitle: string              // 표시용 (예: "강남 역삼동 아파트 · 하나은행")
@@ -503,12 +676,31 @@ export interface UnifiedReportInput {
   propertyType: string
   propertyCategory: PropertyCategory
   appraisalValue: number          // 감정가 (원)
+  /** 감정가 기준일 (YYYY-MM-DD) — 감정평가서 발행일 */
+  appraisalDate?: string
   totalBondAmount: number
   /** 최저입찰가 (유찰 이후 reserve price) — 없으면 감정가 × 0.8 추정 */
   minBidPrice?: number
   /** 현재 시세 (AI 추정 or 실거래 중앙값 기반) — 없으면 감정가 사용 */
   currentMarketValue?: number
+  /** 시세 정보 메모 (출처·근거) */
+  marketPriceNote?: string
   specialConditions: SpecialConditions
+  /** 채권내역 세부 (원금/미수이자/연체금리 등) */
+  claimBreakdown?: ClaimBreakdown
+  /** 권리관계 요약 (선순위/후순위 총액) */
+  rightsSummary?: RightsSummary
+  /** 임대차 현황 (보증금/월세/임차인 수) */
+  leaseSummary?: LeaseSummary
+  /** 채무자·소유자 동일인 여부 — 회수 전략 영향 */
+  debtorOwnerSame?: boolean
+  /**
+   * 매각 희망가 — 대출원금 대비 할인율 (소수, 예: 0.10 = 원금의 90% 매각가).
+   * 0 또는 미지정 시 할인 없음(원금 전액 매각가)으로 해석.
+   */
+  desiredSaleDiscount?: number
+  /** 경매개시결정일 (알려진 경우만) */
+  auctionStartDate?: string
   /** 경매 예상 개시일 · 기간 (개월) */
   auctionEstimatedStart?: string
   auctionEstimatedMonths?: number

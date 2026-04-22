@@ -16,6 +16,7 @@
 
 import type { StatisticsContext } from './statistics'
 import type { UnifiedAnalysisReport, UnifiedReportInput } from './types'
+import { EMPTY_SPECIAL_CONDITIONS } from './types'
 import {
   computeLtvFactor,
   computeRegionTrendFactor,
@@ -185,13 +186,8 @@ export function buildSampleReport(): UnifiedAnalysisReport {
     minBidPrice: estimateMinBid(appraisal, 1),      // 1회 유찰 기준 (감정가 × 0.8^1)
     currentMarketValue: 2_550_000_000,               // 엑셀 B37 — AI 시세 최신 (2025-10-21)
     specialConditions: {
-      lienRight: false,
-      statutorySuperficies: false,
-      sharedAuction: false,
-      seniorTenant: false,    // 소유자 직접 점유 — 선순위 임차인 없음
-      illegalBuilding: false,
-      graveYardRight: false,
-      farmlandRestriction: false,
+      ...EMPTY_SPECIAL_CONDITIONS,
+      // 잠실 엑셀 사례 — 전 항목 특이사항 없음 (소유자 직접 점유)
     },
     auctionEstimatedMonths: 10,
     statistics: SAMPLE_STATISTICS,
