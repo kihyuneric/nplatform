@@ -49,6 +49,7 @@ import type {
   LeaseSummary,
   RightsSummary,
 } from "@/lib/npl/unified-report/types"
+import { buildReportFromInput } from "@/lib/npl/unified-report/sample"
 
 // ─── Constants ──────────────────────────────────────────────
 
@@ -194,6 +195,7 @@ export default function BiddingNewPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [submitting, setSubmitting] = useState(false)
+  const [submittedOk, setSubmittedOk] = useState(false)
   const [errors, setErrors] = useState<Record<string, boolean>>({})
 
   // ─── Field updaters ───────────────────────────────────────
@@ -371,7 +373,32 @@ export default function BiddingNewPage() {
 
       localStorage.removeItem(DRAFT_KEY)
       toast.success("NPL 입찰이 성공적으로 등록되었습니다.")
-      router.push("/exchange/auction")
+
+      // 분석 보고서 미리 생성 — 등록 완료 후 1클릭으로 바로 확인 가능
+      try {
+        const report = buildReportFromInput({
+          principal:          parseInt(form.loanPrincipal) || 0,
+          unpaidInterest:     form.unpaidInterest ? parseInt(form.unpaidInterest) : 0,
+          appraisedValue:     parseInt(form.appraisalValue) || 0,
+          currentMarketValue: form.currentMarketValue ? parseInt(form.currentMarketValue) : undefined,
+          specialConditions:  form.specialConditions,
+          claimBreakdown:     form.claimBreakdown,
+          rightsSummary:      form.rightsSummary,
+          leaseSummary:       form.leaseSummary,
+          address:            form.address.trim() || undefined,
+          collateralType:     form.collateralType,
+          debtorOwnerSame:    form.debtorOwnerSame,
+          desiredSaleDiscount: form.desiredSaleDiscount,
+          auctionStartDate:   form.auctionStartDate || undefined,
+          appraisalDate:      form.appraisalDate || undefined,
+          marketPriceNote:    form.marketPriceNote.trim() || undefined,
+        })
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('unifiedReport', JSON.stringify(report))
+        }
+      } catch { /* 보고서 생성 실패는 등록 성공에 영향 없음 */ }
+
+      setSubmittedOk(true)
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "등록 중 오류가 발생했습니다."
@@ -1141,6 +1168,40 @@ export default function BiddingNewPage() {
   }
 
   // ─── Render ──────────────────────────────────────────────
+
+  // 등록 완료 화면
+  if (submittedOk) {
+    return (
+      <div className="min-h-screen bg-[var(--color-surface-base)] flex flex-col items-center justify-center px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
+            <Check className="h-10 w-10 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">NPL 입찰 등록 완료</h1>
+            <p className="text-[0.875rem] text-[var(--color-text-muted)] mt-1.5">
+              매물이 성공적으로 등록되었습니다. AI 분석 보고서를 바로 확인할 수 있습니다.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => router.push("/analysis/report")}
+              className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-[var(--color-brand-dark)] text-white font-semibold text-[0.9375rem] hover:opacity-90 transition-opacity shadow-md"
+            >
+              <Send className="h-5 w-5" />
+              NPL 분석 보고서 바로 보기
+            </button>
+            <button
+              onClick={() => router.push("/exchange/auction")}
+              className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] font-medium text-[0.875rem] hover:bg-[var(--color-surface-elevated)] transition-colors"
+            >
+              입찰 목록으로 이동
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-surface-base)]">

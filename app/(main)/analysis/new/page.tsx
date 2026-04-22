@@ -28,6 +28,7 @@ import type {
   LeaseSummary,
   RightsSummary,
 } from "@/lib/npl/unified-report/types"
+import { buildReportFromInput } from "@/lib/npl/unified-report/sample"
 
 type Step = 1 | 2 | 3
 
@@ -185,65 +186,41 @@ export default function NewNplAnalysisPage() {
     }, 500)
 
     try {
-      const ltv = appraisalValue && principalAmount
-        ? Math.round((Number(principalAmount) / Number(appraisalValue)) * 100)
-        : 70
-
-      const res = await fetch('/api/v1/ai/sample-analysis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          principal: Number(principalAmount) || 0,
-          unpaidInterest: Number(unpaidInterestAmount) || 0,
-          claimBalance: claimBalanceComputed,           // 대출원금 + 미수이자
-          collateralType,
-          location: address,
-          appraisedValue: Number(appraisalValue) || 0,
-          seniorClaim: Number(seniorClaim) || 0,
-          ltv,
-          bondNumber,
-          caseNumber,
-          debtorType,
-          // NPL 상세 (신규)
-          appraisalDate: appraisalDate || null,
-          currentMarketValue: Number(currentMarketValue) || null,
-          marketPriceNote: marketPriceNote || null,
-          auctionStartDate: auctionStartDate || null,
-          debtorOwnerSame,
-          desiredSaleDiscount,
-          claimBreakdown,
-          rightsSummary,
-          leaseSummary,
-          specialConditions,
-        }),
+      // 클라이언트 사이드에서 즉시 리포트 생성 (API 호출 없이 규칙 기반 계산)
+      const report = buildReportFromInput({
+        principal:          Number(principalAmount) || 0,
+        unpaidInterest:     Number(unpaidInterestAmount) || 0,
+        appraisedValue:     Number(appraisalValue) || 0,
+        currentMarketValue: Number(currentMarketValue) || undefined,
+        specialConditions,
+        claimBreakdown,
+        rightsSummary,
+        leaseSummary,
+        address,
+        collateralType,
+        bondNumber,
+        caseNumber,
+        debtorOwnerSame,
+        desiredSaleDiscount,
+        auctionStartDate:   auctionStartDate || undefined,
+        appraisalDate:      appraisalDate || undefined,
+        marketPriceNote:    marketPriceNote || undefined,
+        debtorType,
       })
 
       clearInterval(stepInterval)
       setAnalysisStep(ANALYSIS_STEPS.length - 1)
 
-      const data = await res.json()
-
-      // Save result to sessionStorage for the analysis list to pick up
+      // unifiedReport 키로 저장 — report/page.tsx 가 이 키를 읽음
       if (typeof window !== 'undefined') {
         try {
-          sessionStorage.setItem('lastAnalysisResult', JSON.stringify({
-            ...data.data,
-            _input: {
-              bondNumber, principalAmount, unpaidInterestAmount,
-              claimBalance: claimBalanceComputed,
-              collateralType, address, appraisalValue, debtorType,
-              appraisalDate, currentMarketValue, marketPriceNote, auctionStartDate,
-              debtorOwnerSame, desiredSaleDiscount,
-              claimBreakdown, rightsSummary, leaseSummary, specialConditions,
-            },
-            _ts: Date.now(),
-          }))
+          sessionStorage.setItem('unifiedReport', JSON.stringify(report))
         } catch { /* ignore storage errors */ }
       }
 
       // Small delay so user sees final step
       await new Promise(r => setTimeout(r, 600))
-      router.push('/analysis?from=new')
+      router.push('/analysis/report')
     } catch (err) {
       clearInterval(stepInterval)
       setError('분석 중 오류가 발생했습니다. 다시 시도해주세요.')

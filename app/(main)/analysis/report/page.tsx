@@ -30,6 +30,11 @@ import {
 import DS from "@/lib/design-system"
 import { riskPalette } from "@/lib/design-tokens"
 import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/unified-report/types"
+import {
+  SPECIAL_CONDITION_CATALOG,
+  SPECIAL_CONDITION_CATEGORY_LABEL,
+  type SpecialConditionCategory,
+} from "@/lib/npl/unified-report/types"
 import { buildSampleReport } from "@/lib/npl/unified-report/sample"
 import { buildNplProfitability } from "@/lib/npl/unified-report/profitability"
 import {
@@ -288,6 +293,49 @@ export default function UnifiedReportPage() {
             <span className="font-bold">한 줄 요약 · </span>{summary.tldr}
           </p>
         </div>
+
+        {/* 채권잔액 breakdown — 원금 + 미수이자 */}
+        {(input.claimBreakdown || (input.totalBondAmount > 0)) && (() => {
+          const principal    = input.claimBreakdown?.principal    ?? input.totalBondAmount
+          const unpaidInt    = input.claimBreakdown?.unpaidInterest ?? 0
+          const totalBond    = input.totalBondAmount
+          return (
+            <div className="mt-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Wallet className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-[0.75rem] font-bold text-[var(--color-text-primary)]">채권잔액 내역</span>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center p-2 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
+                  <p className="text-[0.625rem] text-[var(--color-text-tertiary)] mb-1">대출원금</p>
+                  <p className="text-[0.9375rem] font-bold tabular-nums text-[var(--color-text-primary)]">
+                    {fmtKRW(principal)}원
+                  </p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
+                  <p className="text-[0.625rem] text-[var(--color-text-tertiary)] mb-1">미수이자</p>
+                  <p className="text-[0.9375rem] font-bold tabular-nums text-[var(--color-text-tertiary)]">
+                    {unpaidInt > 0 ? `${fmtKRW(unpaidInt)}원` : "—"}
+                  </p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                  <p className="text-[0.625rem] text-amber-700 dark:text-amber-300 mb-1 font-semibold">채권잔액 합계</p>
+                  <p className="text-[0.9375rem] font-bold tabular-nums text-amber-700 dark:text-amber-200">
+                    {fmtKRW(totalBond)}원
+                  </p>
+                </div>
+              </div>
+              {input.claimBreakdown?.delinquencyStartDate && (
+                <div className="mt-2 flex gap-3 text-[0.6875rem] text-[var(--color-text-tertiary)]">
+                  <span>연체시작 {input.claimBreakdown.delinquencyStartDate}</span>
+                  {input.claimBreakdown.overdueRate > 0 && (
+                    <span>연체금리 {(input.claimBreakdown.overdueRate * 100).toFixed(1)}%</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })()}
       </section>
 
       {/* ── 2. 회수율 3팩터 ─────────────────────────── */}
@@ -476,6 +524,9 @@ export default function UnifiedReportPage() {
           </div>
         )}
       </Section>
+
+      {/* ── 특수조건 25개 전체 점검 ────────────────── */}
+      <SpecialConditionFullSection specialConditions={input.specialConditions} />
 
       {/* ── NPL 수익성 분석 (7블록 + 3단계 전략 + 민감도 + Monte Carlo + 근거) ───── */}
       {profitability && <ProfitabilitySections block={profitability} />}
@@ -918,6 +969,155 @@ function RecoveryBar({ predicted, lower, upper }: { predicted: number; lower: nu
         <span>100%</span>
       </div>
     </div>
+  )
+}
+
+// ─── 특수조건 전체 25개 섹션 ──────────────────────────────────
+const COND_CATEGORY_ORDER: SpecialConditionCategory[] = [
+  "PROPERTY_RIGHT", "SENIOR_ENCUMBRANCE", "RIGHT_INFRINGEMENT",
+  "TAX_PRIORITY", "TENANT", "BUILDING", "OTHER",
+]
+
+const SEVERITY_BADGE: Record<string, { bg: string; fg: string; label: string }> = {
+  OK:       { bg: "rgba(16,185,129,0.12)",  fg: "#047857", label: "안전" },
+  INFO:     { bg: "rgba(14,165,233,0.12)",  fg: "#0369A1", label: "참고" },
+  WARNING:  { bg: "rgba(245,158,11,0.12)",  fg: "#B45309", label: "주의" },
+  DANGER:   { bg: "rgba(249,115,22,0.12)",  fg: "#C2410C", label: "위험" },
+  CRITICAL: { bg: "rgba(220,38,38,0.12)",   fg: "#B91C1C", label: "치명" },
+}
+
+function SpecialConditionFullSection({
+  specialConditions,
+}: {
+  specialConditions: UnifiedAnalysisReport["input"]["specialConditions"]
+}) {
+  const selected = SPECIAL_CONDITION_CATALOG.filter(it => Boolean(specialConditions[it.key]))
+  const totalPenalty      = selected.reduce((s, it) => s + it.penalty, 0)
+  const totalLegalPenalty = selected.reduce((s, it) => s + it.legalPenalty, 0)
+
+  return (
+    <Section
+      title="특수조건 25항목 전체 점검"
+      icon={AlertTriangle}
+      caption={`선택 ${selected.length}개 / 25 · 낙찰가율 감점 ${totalPenalty}%p · 법적리스크 ${totalLegalPenalty}점`}
+    >
+      <div className="space-y-4">
+        {COND_CATEGORY_ORDER.map(cat => {
+          const items = SPECIAL_CONDITION_CATALOG.filter(it => it.category === cat)
+          if (!items.length) return null
+          const hitItems = items.filter(it => Boolean(specialConditions[it.key]))
+          return (
+            <div key={cat}>
+              <div className="flex items-center justify-between mb-2">
+                <h5 className="text-[0.75rem] font-bold text-[var(--color-text-primary)] uppercase tracking-wide">
+                  {SPECIAL_CONDITION_CATEGORY_LABEL[cat]}
+                </h5>
+                {hitItems.length > 0 && (
+                  <span className="text-[0.625rem] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                    {hitItems.length}/{items.length} 해당
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                {items.map(it => {
+                  const checked = Boolean(specialConditions[it.key])
+                  const sev = SEVERITY_BADGE[it.severity] ?? SEVERITY_BADGE.WARNING
+                  return (
+                    <div
+                      key={it.key}
+                      className={`rounded-lg px-3 py-2 border text-left ${
+                        checked
+                          ? "bg-amber-500/10 border-amber-500/40"
+                          : "bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] opacity-50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-0.5">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span
+                            className={`w-3.5 h-3.5 shrink-0 rounded-sm border flex items-center justify-center text-[8px] ${
+                              checked
+                                ? "bg-amber-500 border-amber-500 text-white"
+                                : "bg-transparent border-[var(--color-border-strong)]"
+                            }`}
+                          >
+                            {checked && "✓"}
+                          </span>
+                          <span className={`text-[0.8125rem] font-semibold truncate ${
+                            checked ? "text-amber-800 dark:text-amber-200" : "text-[var(--color-text-primary)]"
+                          }`}>
+                            {it.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span
+                            className="text-[0.5625rem] font-bold px-1 py-0.5 rounded"
+                            style={{ background: sev.bg, color: sev.fg }}
+                          >
+                            {sev.label}
+                          </span>
+                          <span className={`text-[0.625rem] font-bold tabular-nums ${
+                            checked ? "text-amber-700 dark:text-amber-300" : "text-[var(--color-text-tertiary)]"
+                          }`}>
+                            {it.penalty}%p
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] pl-5 leading-snug">
+                        {it.helper}
+                      </p>
+                      {checked && (
+                        <div className="mt-1 pl-5 text-[0.625rem] text-amber-700 dark:text-amber-400">
+                          낙찰가율 {it.penalty}%p · 법적리스크 {it.legalPenalty}점
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
+
+        {/* 기타 특이사항 */}
+        {specialConditions.otherNote && (
+          <div className="rounded-lg p-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)]">
+            <p className="text-[0.75rem] font-bold text-[var(--color-text-primary)] mb-1">기타 특이사항</p>
+            <p className="text-[0.8125rem] text-[var(--color-text-secondary)] leading-relaxed">
+              {specialConditions.otherNote}
+            </p>
+          </div>
+        )}
+
+        {/* 요약 바 */}
+        <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="text-[0.6875rem] text-[var(--color-text-secondary)]">
+              선택된 특수조건: <b className="text-[var(--color-text-primary)]">{selected.length}개 / 25</b>
+            </div>
+            <div className="flex items-center gap-4 text-[0.6875rem]">
+              <span>
+                낙찰가율 감점: <span className="font-bold tabular-nums text-amber-700 dark:text-amber-200">{totalPenalty}%p</span>
+              </span>
+              <span>
+                법적 리스크 누적: <span className="font-bold tabular-nums text-red-600 dark:text-red-300">{totalLegalPenalty}점</span>
+              </span>
+            </div>
+          </div>
+          {selected.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-[var(--color-border-subtle)]">
+              <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] mb-1.5">선택된 항목 요약</p>
+              <div className="flex flex-wrap gap-1.5">
+                {selected.map(it => (
+                  <span key={it.key} className="text-[0.625rem] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25">
+                    {it.label} {it.penalty}%p
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </Section>
   )
 }
 

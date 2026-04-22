@@ -46,6 +46,15 @@ interface Listing {
   appraised_value?: number
   discount_rate?: number
   risk_grade?: string
+  special_conditions?: Record<string, boolean> | null
+  claim_breakdown?: {
+    principal?: number
+    unpaidInterest?: number
+    delinquencyStartDate?: string
+    normalRate?: number
+    overdueRate?: number
+  } | null
+  unpaid_interest?: number | null
 }
 
 interface Message {
@@ -173,7 +182,7 @@ export default function TeamDetailPage() {
         if (r.listing_id) {
           const { data: listingData } = await supabase
             .from("npl_listings")
-            .select("id, title, collateral_type, address, institution, principal_amount, appraised_value, discount_rate, risk_grade")
+            .select("id, title, collateral_type, address, institution, principal_amount, appraised_value, discount_rate, risk_grade, special_conditions, claim_breakdown, unpaid_interest")
             .eq("id", r.listing_id)
             .single()
           if (listingData) listing = listingData as Listing
@@ -739,6 +748,77 @@ export default function TeamDetailPage() {
                       </div>
                     ))}
                   </div>
+
+                  {/* 채권잔액 breakdown — 대출원금 + 미수이자 */}
+                  {(team.listing.claim_breakdown || team.listing.unpaid_interest != null) && (() => {
+                    const principal = team.listing.claim_breakdown?.principal ?? team.listing.principal_amount ?? 0
+                    const unpaidInt = team.listing.claim_breakdown?.unpaidInterest ?? team.listing.unpaid_interest ?? 0
+                    const total = principal + unpaidInt
+                    return total > 0 ? (
+                      <div className="mt-1 rounded-lg p-3" style={{ background: "#0F1F35", border: "1px solid rgba(245,158,11,0.2)" }}>
+                        <p className="text-[10px] text-amber-500 font-semibold uppercase tracking-wider mb-2">채권잔액 내역</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <p className="text-[10px] text-slate-600 mb-0.5">대출원금</p>
+                            <p className="text-sm font-bold text-white">{fmt(principal)}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-slate-600 mb-0.5">미수이자</p>
+                            <p className="text-sm font-bold text-slate-400">{unpaidInt > 0 ? fmt(unpaidInt) : "—"}</p>
+                          </div>
+                          <div style={{ borderLeft: "1px solid rgba(245,158,11,0.2)", paddingLeft: 8 }}>
+                            <p className="text-[10px] text-amber-500 mb-0.5">채권잔액 합계</p>
+                            <p className="text-sm font-bold text-amber-300">{fmt(total)}</p>
+                          </div>
+                        </div>
+                        {team.listing.claim_breakdown?.delinquencyStartDate && (
+                          <p className="text-[10px] text-slate-600 mt-1.5">
+                            연체시작: {team.listing.claim_breakdown.delinquencyStartDate}
+                            {team.listing.claim_breakdown.overdueRate ? ` · 연체금리 ${(team.listing.claim_breakdown.overdueRate * 100).toFixed(1)}%` : ""}
+                          </p>
+                        )}
+                      </div>
+                    ) : null
+                  })()}
+
+                  {/* 특수조건 요약 */}
+                  {team.listing.special_conditions && (() => {
+                    const sc = team.listing.special_conditions as Record<string, boolean>
+                    const COND_LABELS: Record<string, string> = {
+                      siteRightUnregistered: "대지권 미등기", jeonseRightOnly: "전세권만 매각",
+                      landSeparateRegistry: "토지 별도등기", sharedAuction: "지분입찰",
+                      seniorMortgage: "선순위 근저당", seniorSuperficies: "선순위 지상권",
+                      seniorLeasehold: "선순위 임차권", seniorJeonse: "선순위 전세권",
+                      seniorProvisionalReg: "선순위 가등기", seniorInjunction: "선순위 가처분",
+                      seniorProvisionalSeizure: "선순위 가압류",
+                      lienRight: "유치권", statutorySuperficies: "법정지상권", graveYardRight: "분묘기지권",
+                      taxPriority: "조세", localTaxPriority: "당해세", wageClaim: "임금채권",
+                      unpaidSocialInsurance: "4대보험 미납", disasterCompensation: "재해보상",
+                      seniorTenant: "대항력 있는 임차인", leaseholdRegistered: "임차권 등기",
+                      illegalBuilding: "위반건축물", unlicensedBuilding: "무허가건축물", noOccupancyPermit: "사용승인 미필",
+                      farmlandRestriction: "농업취득자격증명", landlocked: "맹지",
+                    }
+                    const selected = Object.entries(sc).filter(([k, v]) => v === true && k !== "otherNote").map(([k]) => COND_LABELS[k] ?? k)
+                    if (selected.length === 0) return null
+                    return (
+                      <div className="mt-1 rounded-lg p-3" style={{ background: "#0F1F35", border: "1px solid rgba(245,158,11,0.2)" }}>
+                        <p className="text-[10px] text-amber-500 font-semibold uppercase tracking-wider mb-2">
+                          특수조건 ({selected.length}개 해당)
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {selected.map(label => (
+                            <span key={label} className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                              style={{ background: "rgba(245,158,11,0.15)", color: "#FCD34D" }}>
+                              {label}
+                            </span>
+                          ))}
+                        </div>
+                        {sc.otherNote && typeof sc.otherNote === "string" && (
+                          <p className="text-[10px] text-slate-500 mt-1.5">기타: {String(sc.otherNote)}</p>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </div>
 
                 <div className="rounded-xl p-4 border border-amber-500/20 bg-amber-500/5 space-y-1.5">

@@ -15,8 +15,15 @@
  */
 
 import type { StatisticsContext } from './statistics'
-import type { UnifiedAnalysisReport, UnifiedReportInput } from './types'
-import { EMPTY_SPECIAL_CONDITIONS } from './types'
+import type {
+  UnifiedAnalysisReport,
+  UnifiedReportInput,
+  SpecialConditions,
+  ClaimBreakdown,
+  RightsSummary,
+  LeaseSummary,
+} from './types'
+import { EMPTY_SPECIAL_CONDITIONS, SPECIAL_CONDITION_CATALOG } from './types'
 import {
   computeLtvFactor,
   computeRegionTrendFactor,
@@ -531,6 +538,300 @@ export function buildSampleReport(): UnifiedAnalysisReport {
       `지역 6개월 낙찰가율 ${SAMPLE_STATISTICS.auctionRatioStats[0].rows.find(r => r.bucket === '6M')?.bidRatio.toFixed(1)}%에 특수조건 ${auction.specialConditionPenalty.toFixed(1)}%p 반영한 ${auction.adjustedBidRatio.toFixed(1)}%를 기준 입찰가율로 제시하며, ` +
       `동일 건물 전회 낙찰(${SAMPLE_STATISTICS.sameAddressAuction!.summary.avgBidRatio}%)과 인근 송파 오피스텔(${SAMPLE_STATISTICS.nearbyAuction!.summary.avgBidRatio}%) 편차 고려, 보수·기준·공격 3단계 입찰 전략을 병행 권고합니다. ` +
       `AI 투자 의견 종합 점수 ${verdictScore}점 → ${verdict} (가중치: 회수율 0.35·리스크 0.25·ROI 0.25·할인 0.15).`,
+  }
+
+  return report
+}
+
+// ─── 사용자 입력 기반 리포트 빌더 ───────────────────────────────
+/**
+ * buildReportFromInput — 사용자가 입력한 NPL 폼 데이터를 기반으로
+ * UnifiedAnalysisReport 를 생성한다.
+ *
+ * 지역 통계(RegionAuctionRatioStat 등)는 실데이터 API 미연동 상태이므로
+ * SAMPLE_STATISTICS 를 fallback 으로 사용하여 계산 공식이 모두 정상 작동한다.
+ * source: 'AI_LIVE' 로 마킹하여 sample 데이터와 구분한다.
+ */
+export interface BuildReportFromInputOptions {
+  principal?: number
+  unpaidInterest?: number
+  appraisedValue?: number
+  currentMarketValue?: number
+  specialConditions?: SpecialConditions
+  claimBreakdown?: ClaimBreakdown
+  rightsSummary?: RightsSummary
+  leaseSummary?: LeaseSummary
+  address?: string
+  collateralType?: string
+  bondNumber?: string
+  caseNumber?: string
+  debtorOwnerSame?: boolean
+  desiredSaleDiscount?: number
+  auctionStartDate?: string
+  appraisalDate?: string
+  marketPriceNote?: string
+  debtorType?: string
+}
+
+export function buildReportFromInput(overrides: BuildReportFromInputOptions): UnifiedAnalysisReport {
+  const principal     = overrides.principal     ?? 0
+  const unpaidInterest = overrides.unpaidInterest ?? 0
+  const totalBond     = principal + unpaidInterest
+  const appraisal     = overrides.appraisedValue ?? (totalBond > 0 ? Math.round(totalBond * 1.4) : 2_000_000_000)
+  const marketValue   = overrides.currentMarketValue ?? appraisal
+  const specialConditions = overrides.specialConditions ?? EMPTY_SPECIAL_CONDITIONS
+
+  // 주소에서 지역명 추출 (시·도 + 시·군·구)
+  const addressParts = (overrides.address ?? '').trim().split(/\s+/)
+  const regionLabel  = addressParts.length >= 2 ? addressParts.slice(0, 2).join(' ') : (overrides.address ?? '주소 미입력')
+
+  // 부동산 유형을 PropertyCategory 로 매핑
+  const rawType = overrides.collateralType ?? '아파트'
+  const VALID_CATEGORIES = [
+    '아파트', '다세대(빌라)', '연립', '오피스텔', '단독주택', '다가구',
+    '상가', '사무실', '공장', '창고',
+    '대지', '전', '답', '임야', '잡종지', '기타',
+  ] as const
+  type PropertyCategory = typeof VALID_CATEGORIES[number]
+  const propertyCategory: PropertyCategory =
+    (VALID_CATEGORIES as readonly string[]).includes(rawType)
+      ? (rawType as PropertyCategory)
+      : '기타'
+
+  // 자산 제목 자동 생성
+  const assetTitle =
+    overrides.address
+      ? `${addressParts.slice(0, 3).join(' ')} ${rawType} NPL`
+      : `NPL 분석 · ${rawType}`
+
+  const input: UnifiedReportInput = {
+    assetId: `user-${Date.now().toString(36)}`,
+    assetTitle,
+    region: regionLabel,
+    propertyType: rawType,
+    propertyCategory,
+    appraisalValue: appraisal,
+    appraisalDate: overrides.appraisalDate,
+    totalBondAmount: totalBond,
+    minBidPrice: appraisal > 0 ? estimateMinBid(appraisal, 1) : 0,
+    currentMarketValue: marketValue,
+    marketPriceNote: overrides.marketPriceNote,
+    specialConditions,
+    claimBreakdown: overrides.claimBreakdown,
+    rightsSummary: overrides.rightsSummary,
+    leaseSummary: overrides.leaseSummary,
+    debtorOwnerSame: overrides.debtorOwnerSame,
+    desiredSaleDiscount: overrides.desiredSaleDiscount,
+    auctionStartDate: overrides.auctionStartDate,
+    auctionEstimatedMonths: 10,
+    // SAMPLE_STATISTICS 를 fallback 으로 사용 (실데이터 API 미연동)
+    statistics: SAMPLE_STATISTICS,
+  }
+
+  // ── 3팩터 계산 ─────────────────────────────────────────────
+  const ltv = computeLtvFactor({
+    totalBondAmount: totalBond,
+    appraisalValue: appraisal,
+    source: 'APPRAISAL',
+  })
+  const region = computeRegionTrendFactor({
+    regionLabel: input.region,
+    ctx: SAMPLE_STATISTICS,
+    externalVolumeChange: 0,
+    externalPriceIndexChange: 0,
+  })
+  const auction = computeAuctionRatioFactor({
+    regionLabel: input.region,
+    category: input.propertyCategory,
+    ctx: SAMPLE_STATISTICS,
+    specialConditions,
+  })
+  const recovery = buildRecoveryPrediction({ ltv, region, auction })
+
+  const expectedBid = computeExpectedBid({
+    appraisalValue: appraisal,
+    minBidPrice: input.minBidPrice ?? 0,
+    currentMarketValue: marketValue,
+    auction,
+    ctx: SAMPLE_STATISTICS,
+  })
+  const recommendedBidPrice = expectedBid.recommendedBidPrice
+
+  // ── 리스크 5팩터 ────────────────────────────────────────────
+  const collateralFactor = computeCollateralFactor({
+    claimBalance: totalBond,
+    appraisalValue: appraisal,
+    marketValue,
+  })
+  const rightsFactor = computeRightsFactor({
+    specialConditions,
+    // registry 없음 — 등기부 미첨부 상태
+    subordinateClaimCount: 0,
+  })
+  const marketFactor    = computeMarketFactor({ region, auction })
+  const liquidityFactor = computeLiquidityFactor({
+    auction,
+    averageBidderCount: SAMPLE_STATISTICS.nearbyAuction?.summary.avgBidderCount ?? 1,
+  })
+  const legalFactor = computeLegalFactor({ specialConditions })
+  const riskFactorResults = [collateralFactor, rightsFactor, marketFactor, liquidityFactor, legalFactor]
+
+  const { score: riskScore } = composeRiskScore(riskFactorResults)
+  const riskGrade = scoreToGrade(riskScore)
+
+  // ── 투자 의견 ────────────────────────────────────────────────
+  const verdictResult = computeInvestmentVerdict({
+    predictedRecoveryRate: recovery.predictedRecoveryRate,
+    riskScore,
+    recommendedRoi: 0.15,   // 기본 기대 수익률
+    bankSalePrice: totalBond * (1 - (overrides.desiredSaleDiscount ?? 0)),
+    claimBalance: totalBond,
+  })
+
+  // ── 특수조건 적용 내역 ──────────────────────────────────────
+  const selectedSpecialConditions = SPECIAL_CONDITION_CATALOG.filter(
+    it => Boolean(specialConditions[it.key])
+  )
+  const specialConditionAdjustments = selectedSpecialConditions.map(it => ({
+    condition: it.label,
+    impact: `낙찰가율 ${it.penalty}%p · 법적리스크 ${it.legalPenalty}점 · ${it.helper}`,
+  }))
+
+  // ── 입찰 3단계 권고 ──────────────────────────────────────────
+  const adjRatio = auction.adjustedBidRatio
+  const bidConservative = Math.round(appraisal * ((adjRatio - 5) / 100))
+  const bidBase         = Math.round(appraisal * (adjRatio / 100))
+  const bidAggressive   = Math.round(appraisal * ((adjRatio + 5) / 100))
+
+  const ltvStr = ltv.ltvPercent.toFixed(1)
+  const recovStr = recovery.predictedRecoveryRate
+  const adjStr = adjRatio.toFixed(1)
+
+  const report: UnifiedAnalysisReport = {
+    id: `user-${Date.now().toString(36)}`,
+    createdAt: new Date().toISOString(),
+    source: 'AI_LIVE',
+    input,
+    summary: {
+      predictedRecovery: recovery.predictedRecoveryRate,
+      riskGrade,
+      riskScore,
+      recommendedBidPrice,
+      verdict: verdictResult.verdict,
+      verdictScore: verdictResult.totalScore,
+      tldr:
+        `${regionLabel} ${rawType} · AI 투자 의견 ${verdictResult.totalScore}점 (${verdictResult.verdict}) · ` +
+        `예측회수율 ${recovStr}% · 낙찰가율 ${adjStr}% (특수조건 ${auction.specialConditionPenalty}%p 반영)`,
+    },
+    recovery,
+    risk: {
+      grade: riskGrade,
+      score: riskScore,
+      level: riskScore >= 70 ? 'LOW' : riskScore >= 55 ? 'MEDIUM' : riskScore >= 40 ? 'HIGH' : 'CRITICAL',
+      narrative:
+        `LTV ${ltvStr}% · 지역동향 ${region.score}점 · 낙찰가율 ${adjStr}%. ` +
+        (auction.specialConditionPenalty < 0
+          ? `특수조건 ${selectedSpecialConditions.length}개 선택 — 낙찰가율 ${auction.specialConditionPenalty}%p 감점. `
+          : '특수조건 해당 없음. ') +
+        `종합 리스크 ${riskGrade}등급 (${riskScore}점).`,
+      factors: riskFactorResults.map(f => ({
+        category: f.category,
+        severity: f.severity,
+        score: f.score,
+        explanation: f.explanation,
+        mitigation: f.mitigation,
+      })),
+      specialConditionAdjustments,
+      promptMeta: {
+        model: 'user-input-ruleset-v1',
+        generatedAt: new Date().toISOString(),
+        inputHash: `${totalBond}-${appraisal}-${selectedSpecialConditions.length}`,
+      },
+    },
+    anomaly: undefined,
+    expectedBid,
+    bidRecommendation: {
+      aiPredictedBidRatio: auction.blendedBidRatio,
+      breakEvenBidRatio: Math.max(50, adjRatio - 15),
+      conservative: {
+        policy: 'CONSERVATIVE',
+        label: '보수적 입찰가 (-5%p)',
+        bidPrice: bidConservative,
+        bidRatioPercent: Number((adjRatio - 5).toFixed(1)),
+        expectedNetProfit: Math.round(appraisal * 0.03),
+        expectedRoi: 10.0,
+        expectedIrr: 12.0,
+        winProbability: 0.30,
+        rationale: '낙찰가율 하위 구간 — 낙찰 가능성 낮으나 마진 최대',
+      },
+      base: {
+        policy: 'BASE',
+        label: 'AI 권고 입찰가 (기준)',
+        bidPrice: bidBase,
+        bidRatioPercent: adjRatio,
+        expectedNetProfit: Math.round(appraisal * 0.07),
+        expectedRoi: 18.0,
+        expectedIrr: 21.0,
+        winProbability: 0.55,
+        rationale: `지역 평균 낙찰가율에 특수조건 ${auction.specialConditionPenalty}%p 반영한 ${adjStr}% 적정`,
+      },
+      aggressive: {
+        policy: 'AGGRESSIVE',
+        label: '공격적 입찰가 (+5%p)',
+        bidPrice: bidAggressive,
+        bidRatioPercent: Number((adjRatio + 5).toFixed(1)),
+        expectedNetProfit: Math.round(appraisal * 0.12),
+        expectedRoi: 28.0,
+        expectedIrr: 32.0,
+        winProbability: 0.75,
+        rationale: '낙찰 확률 최우선 시나리오 — 마진 압박 주의',
+      },
+    },
+    marketOutlook: {
+      outlook:
+        region.auctionMomentum > 2 ? 'BULLISH'
+        : region.auctionMomentum < -2 ? 'BEARISH'
+        : 'NEUTRAL',
+      confidence: region.confidence,
+      horizonMonths: 6,
+      narrative:
+        `${regionLabel} 지역 경매 낙찰가율 기준 분석. ` +
+        `특수조건 ${selectedSpecialConditions.length}개 반영 후 조정 낙찰가율 ${adjStr}%. ` +
+        (auction.specialConditionPenalty < 0
+          ? `선택된 특수조건(${selectedSpecialConditions.map(s => s.label).join('·')})으로 인해 ${Math.abs(auction.specialConditionPenalty)}%p 감점 적용. `
+          : '') +
+        `입력된 감정가 ${(appraisal / 1e8).toFixed(2)}억 대비 채권잔액 ${(totalBond / 1e8).toFixed(2)}억 (LTV ${ltvStr}%).`,
+      indicators: [
+        {
+          label: '조정 낙찰가율',
+          value: `${adjStr}%`,
+          trend: auction.specialConditionPenalty < 0 ? 'DOWN' : 'FLAT',
+          commentary: `특수조건 ${auction.specialConditionPenalty}%p 반영`,
+        },
+        {
+          label: 'LTV',
+          value: `${ltvStr}%`,
+          trend: ltv.ltvPercent > 80 ? 'UP' : ltv.ltvPercent < 60 ? 'DOWN' : 'FLAT',
+          commentary: `채권잔액 / 감정가`,
+        },
+        {
+          label: '리스크 등급',
+          value: `${riskGrade}등급 (${riskScore}점)`,
+          trend: riskScore >= 70 ? 'UP' : riskScore >= 50 ? 'FLAT' : 'DOWN',
+          commentary: '5팩터 가중 합산',
+        },
+      ],
+    },
+    registryAnalysis: undefined,
+    profitability: undefined,
+    executiveSummary:
+      `${regionLabel} ${rawType} NPL (채권잔액 ${(totalBond / 1e8).toFixed(2)}억 · 감정가 ${(appraisal / 1e8).toFixed(2)}억) ` +
+      `입력 데이터 기반 분석 결과 ${riskGrade}등급 (${riskScore}점), 예측 회수율 ${recovStr}%로 평가됩니다. ` +
+      (selectedSpecialConditions.length > 0
+        ? `특수조건 ${selectedSpecialConditions.length}개 선택(${selectedSpecialConditions.map(s => s.label).join('·')})으로 낙찰가율 ${auction.specialConditionPenalty}%p 감점 적용, 조정 낙찰가율 ${adjStr}%. `
+        : '특수조건 해당 없음 — 표준 낙찰가율 적용. ') +
+      `LTV ${ltvStr}% 기준 권리관계·시장·유동성·법적 5팩터 종합 평가. ` +
+      `AI 투자 의견 ${verdictResult.totalScore}점 → ${verdictResult.verdict}.`,
   }
 
   return report
