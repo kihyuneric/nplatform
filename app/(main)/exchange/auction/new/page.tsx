@@ -93,11 +93,12 @@ interface FormState {
   sigungu: string
   area: string
   // Step 2
-  loanPrincipal: string
+  loanPrincipal: string   // 대출원금 — 필수
+  unpaidInterest: string  // 미수이자 (정상이자 누적) — 선택
   appraisalValue: string
   askingPrice: string
   collateralAmount: string
-  claimBalance: string
+  // 채권잔액은 loanPrincipal + unpaidInterest 자동계산 (claimBalanceComputed)
   // Step 2 (NPL 상세)
   appraisalDate: string
   currentMarketValue: string
@@ -129,10 +130,10 @@ const INITIAL_FORM: FormState = {
   sigungu: "",
   area: "",
   loanPrincipal: "",
+  unpaidInterest: "",
   appraisalValue: "",
   askingPrice: "",
   collateralAmount: "",
-  claimBalance: "",
   appraisalDate: "",
   currentMarketValue: "",
   marketPriceNote: "",
@@ -230,6 +231,13 @@ export default function BiddingNewPage() {
     return (((appraisal - asking) / appraisal) * 100).toFixed(1)
   }, [form.appraisalValue, form.askingPrice])
 
+  // 채권잔액 = 대출원금 + 미수이자 (연체이자는 ClaimBreakdownBlock 내부에서 별도 추정·표시)
+  const claimBalanceComputed = useMemo(() => {
+    const principal = parseInt(form.loanPrincipal) || 0
+    const interest  = parseInt(form.unpaidInterest) || 0
+    return principal + interest
+  }, [form.loanPrincipal, form.unpaidInterest])
+
   // ─── Amount preview ──────────────────────────────────────
 
   const amountPreview = (value: string) => {
@@ -324,9 +332,9 @@ export default function BiddingNewPage() {
         collateral_amount: form.collateralAmount
           ? parseInt(form.collateralAmount)
           : null,
-        claim_balance: form.claimBalance
-          ? parseInt(form.claimBalance)
-          : null,
+        // 채권잔액 = 대출원금 + 미수이자 (자동계산)
+        unpaid_interest: form.unpaidInterest ? parseInt(form.unpaidInterest) : 0,
+        claim_balance: claimBalanceComputed > 0 ? claimBalanceComputed : null,
         ltv: ltvValue ? parseFloat(ltvValue) : null,
         discount_rate: discountRate ? parseFloat(discountRate) : null,
         bidding_start: form.biddingStart,
@@ -649,23 +657,43 @@ export default function BiddingNewPage() {
           </div>
         </div>
 
-        {/* 채권잔액 */}
+        {/* 미수이자 + 채권잔액 자동계산 */}
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+          {/* 미수이자 (정상이자 누적) */}
           <div>
-            <Label className="text-sm font-semibold">채권잔액 (원)</Label>
+            <Label className="text-sm font-semibold">
+              미수이자 (원)
+              <span className="ml-1 text-[0.6875rem] font-normal text-[var(--color-text-muted)]">
+                정상이자 누적 · 선택
+              </span>
+            </Label>
             <Input
               className="mt-1.5"
               type="text"
               inputMode="numeric"
-              placeholder="1,100,000,000"
-              value={formatNumberInput(form.claimBalance)}
+              placeholder="100,000,000"
+              value={formatNumberInput(form.unpaidInterest)}
               onChange={(e) =>
-                updateNumberField("claimBalance", e.target.value)
+                updateNumberField("unpaidInterest", e.target.value)
               }
             />
-            {amountPreview(form.claimBalance)}
+            {amountPreview(form.unpaidInterest)}
           </div>
-          <div />
+
+          {/* 채권잔액 (자동계산 = 대출원금 + 미수이자) */}
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+            <p className="text-xs text-[var(--color-text-muted)] font-medium mb-1">
+              채권잔액 (자동계산)
+            </p>
+            <p className="text-2xl font-bold text-amber-700 dark:text-amber-200 tabular-nums">
+              {claimBalanceComputed > 0
+                ? claimBalanceComputed.toLocaleString("ko-KR")
+                : "-"}
+            </p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-1">
+              대출원금 + 미수이자 {claimBalanceComputed > 0 && `· ${formatKRW(claimBalanceComputed)}`}
+            </p>
+          </div>
         </div>
 
         <Separator />
@@ -726,12 +754,14 @@ export default function BiddingNewPage() {
             value={{
               ...form.claimBreakdown,
               principal: parseInt(form.loanPrincipal) || form.claimBreakdown.principal,
+              unpaidInterest: parseInt(form.unpaidInterest) || form.claimBreakdown.unpaidInterest,
             }}
             onChange={(v) => {
               setForm((prev) => ({
                 ...prev,
                 claimBreakdown: v,
                 loanPrincipal: v.principal > 0 ? String(v.principal) : prev.loanPrincipal,
+                unpaidInterest: v.unpaidInterest > 0 ? String(v.unpaidInterest) : prev.unpaidInterest,
               }))
             }}
           />
@@ -1000,10 +1030,11 @@ export default function BiddingNewPage() {
               </span>
               <div className="rounded-lg border p-4 space-y-0.5">
                 {amountSummary("대출원금", form.loanPrincipal)}
+                {amountSummary("미수이자", form.unpaidInterest)}
+                {amountSummary("채권잔액 (자동계산)", claimBalanceComputed > 0 ? String(claimBalanceComputed) : "")}
                 {amountSummary("감정가", form.appraisalValue)}
                 {amountSummary("희망매각가", form.askingPrice)}
                 {amountSummary("설정금액", form.collateralAmount)}
-                {amountSummary("채권잔액", form.claimBalance)}
                 <Separator className="my-2" />
                 {summaryRow("LTV", ltvValue ? `${ltvValue}%` : undefined)}
                 {summaryRow(

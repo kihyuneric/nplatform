@@ -50,9 +50,14 @@ export default function NewNplAnalysisPage() {
 
   // Step 1
   const [bondNumber, setBondNumber] = useState("")
-  const [principalAmount, setPrincipalAmount] = useState("")
+  const [principalAmount, setPrincipalAmount] = useState("")    // 대출원금
+  const [unpaidInterestAmount, setUnpaidInterestAmount] = useState("") // 미수이자
   const [caseNumber, setCaseNumber] = useState("")
   const [debtorType, setDebtorType] = useState("개인")
+
+  // 채권잔액 = 대출원금 + 미수이자 (자동계산)
+  const claimBalanceComputed =
+    (parseInt(principalAmount) || 0) + (parseInt(unpaidInterestAmount) || 0)
 
   // Step 2
   const [collateralType, setCollateralType] = useState("아파트")
@@ -189,6 +194,8 @@ export default function NewNplAnalysisPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           principal: Number(principalAmount) || 0,
+          unpaidInterest: Number(unpaidInterestAmount) || 0,
+          claimBalance: claimBalanceComputed,           // 대출원금 + 미수이자
           collateralType,
           location: address,
           appraisedValue: Number(appraisalValue) || 0,
@@ -222,7 +229,9 @@ export default function NewNplAnalysisPage() {
           sessionStorage.setItem('lastAnalysisResult', JSON.stringify({
             ...data.data,
             _input: {
-              bondNumber, principalAmount, collateralType, address, appraisalValue, debtorType,
+              bondNumber, principalAmount, unpaidInterestAmount,
+              claimBalance: claimBalanceComputed,
+              collateralType, address, appraisalValue, debtorType,
               appraisalDate, currentMarketValue, marketPriceNote, auctionStartDate,
               debtorOwnerSame, desiredSaleDiscount,
               claimBreakdown, rightsSummary, leaseSummary, specialConditions,
@@ -361,7 +370,7 @@ export default function NewNplAnalysisPage() {
             </div>
 
             <div>
-              <label className={DS.input.label}>원금 채권액</label>
+              <label className={DS.input.label}>대출원금</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-[0.9375rem] font-medium">&#8361;</span>
                 <input
@@ -373,6 +382,39 @@ export default function NewNplAnalysisPage() {
                   onChange={(e) => setPrincipalAmount(e.target.value.replace(/[^0-9]/g, ''))}
                 />
               </div>
+            </div>
+
+            <div>
+              <label className={DS.input.label}>
+                미수이자
+                <span className="ml-1 text-[0.6875rem] font-normal text-[var(--color-text-muted)]">
+                  정상이자 누적 · 선택
+                </span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-[0.9375rem] font-medium">&#8361;</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className={`${DS.input.base} pl-8`}
+                  placeholder="0"
+                  value={unpaidInterestAmount ? Number(unpaidInterestAmount).toLocaleString('ko-KR') : ''}
+                  onChange={(e) => setUnpaidInterestAmount(e.target.value.replace(/[^0-9]/g, ''))}
+                />
+              </div>
+            </div>
+
+            {/* 채권잔액 자동계산 */}
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+              <p className="text-[0.6875rem] text-[var(--color-text-muted)] font-medium mb-0.5">
+                채권잔액 (자동계산)
+              </p>
+              <p className="text-[1.25rem] font-bold text-amber-700 dark:text-amber-200 tabular-nums">
+                ₩ {claimBalanceComputed > 0 ? claimBalanceComputed.toLocaleString('ko-KR') : '-'}
+              </p>
+              <p className="text-[0.625rem] text-[var(--color-text-muted)] mt-0.5">
+                대출원금 + 미수이자 · 연체이자는 Step 2 NPL 상세에서 별도 산출
+              </p>
             </div>
 
             <div>
@@ -490,10 +532,12 @@ export default function NewNplAnalysisPage() {
                 value={{
                   ...claimBreakdown,
                   principal: parseInt(principalAmount) || claimBreakdown.principal,
+                  unpaidInterest: parseInt(unpaidInterestAmount) || claimBreakdown.unpaidInterest,
                 }}
                 onChange={(v) => {
                   setClaimBreakdown(v)
                   if (v.principal > 0) setPrincipalAmount(String(v.principal))
+                  if (v.unpaidInterest > 0) setUnpaidInterestAmount(String(v.unpaidInterest))
                 }}
               />
 
