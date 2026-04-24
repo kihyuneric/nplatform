@@ -98,14 +98,55 @@ export function computeCollateralFactor(args: {
 // ─── 권리관계 (법적 병합) ─────────────────────────────────────
 //  Phase G3 · 특수조건 V2 18항목 의 penalty 합 + 등기부 시그널 감점.
 //
-//  formula: 권리관계점수 = max(20, 100 − Σ특수조건V2감점 − Σ등기부감점)
+//  formula: 권리관계점수 = max(20, 100 − Σ특수조건V2감점 − Σ매핑안된등기부감점)
 //
-//  특수조건 V2 penalty (예): 선순위등기권리 50, 대항력임차 45, 유치권/법정지상권 45 …
-//    (전체 카탈로그: types.ts SPECIAL_CONDITIONS_V2 · 단일 소스)
-//  등기부 시그널 (legacy 하드코딩 · 등기부 특유 신호): 당해세NR −5, 소액임차NR −10, 일반채권NR −5, 후순위근저당 −3/건
+//  Phase G 후속 수정 (2026-04-24):
+//    · 기존: 등기부 NEEDS_REVIEW 시그널을 별도 소액 감점(-5·-10·-5)으로 처리
+//            → 특수조건 V2 감점표(당해세 -40 등)와 불일치 문제 발생.
+//    · 수정: REGISTRY_TO_V2_KEY_MAP 매핑 테이블 도입.
+//            등기부에서 감지된 NEEDS_REVIEW 는 대응하는 V2 key 를
+//            "자동 체크" 처리 → 단일 감점 체계로 통일.
+//            매도자가 체크박스로 이미 체크한 경우 Set 중복 제거 → 이중감점 없음.
+//            V2 에 매핑할 수 없는 신호(후순위 근저당 등)만 별도 고정 감점 유지.
 //
 //  V1 legacy 호환: `specialConditions` (V1 camelCase 객체) 가 전달되면 `migrateV1ToV2Keys` 로
 //  내부 자동 변환 — UnifiedReportInput 은 양쪽 모두 허용 (점진적 마이그레이션).
+
+/**
+ * 등기부 시그널 → V2 SpecialConditions 키 매핑.
+ *
+ * 등기부 OCR/실사 단계에서 감지된 NEEDS_REVIEW 항목을
+ * V2 카탈로그의 어느 key 와 동일한 위험으로 볼지 정의.
+ *
+ * 매핑 규칙:
+ *   · 매핑 존재 → 해당 V2 key 를 자동 체크 (감점 V2 카탈로그 기준)
+ *   · 매핑 미존재 (null/undefined) → 기존 고정 감점 별도 유지
+ *
+ * 번역·테마 교체 시 이 테이블만 수정하면 됨 (계산 로직은 불변).
+ */
+const REGISTRY_TO_V2_KEY_MAP: Record<string, string | null> = {
+  // 당해세는 특수조건 V2 inherent_tax(-40) 와 동일 위험 → 자동 체크
+  '당해세(국세·지방세)': 'inherent_tax',
+  // 이하는 V2 카탈로그에 1:1 매칭되는 key 없음 → 별도 감점으로 유지
+  // (향후 V2 확장 시 여기에 매핑 추가 가능)
+  '소액임차인 최우선변제금': null,
+  '일반채권(가압류 등)':     null,
+}
+
+/**
+ * V2 매핑 없는 등기부 시그널의 별도 감점 테이블.
+ * 각 항목의 라벨과 감점값 · 활성 조건을 단일 소스로 관리.
+ */
+type UnmappedRegistrySignal = {
+  registryKind: string          // RegistryItem.kind 매칭 문자열
+  label: string                 // UI 표시 라벨
+  penalty: number               // 감점값 (양수)
+}
+const UNMAPPED_REGISTRY_SIGNALS: readonly UnmappedRegistrySignal[] = [
+  { registryKind: '소액임차인 최우선변제금', label: '소액임차인 최우선 검토', penalty: 10 },
+  { registryKind: '일반채권(가압류 등)',     label: '일반채권 가압류 검토',    penalty: 5 },
+] as const
+
 export function computeRightsFactor(args: {
   /** 신규 — V2 18항목 중 체크된 key 배열 (권장) */
   specialConditionsV2?: readonly string[]
@@ -116,65 +157,94 @@ export function computeRightsFactor(args: {
 }): RiskFactorResult {
   const { specialConditionsV2, specialConditions, registry, subordinateClaimCount = 0 } = args
 
-  // [1] 특수조건 V2 감점 합산 (types.ts SPECIAL_CONDITIONS_V2 단일 소스)
-  const v2Keys: readonly string[] = specialConditionsV2
+  // [1] 매도자 체크 기반 V2 key 집합
+  const sellerCheckedKeys: readonly string[] = specialConditionsV2
     ?? (specialConditions ? migrateV1ToV2Keys(specialConditions) : [])
-  const v2Result = computeLegalScoreV2(v2Keys)
-  // v2Result.score 는 max(20, 100 − Σpenalty) · 그대로 "특수조건 기반 기초점수" 로 사용
 
-  // [2] 등기부 시그널 (registry 블록 기반 — 현장/OCR 파싱 후 NEEDS_REVIEW)
+  // [2] 등기부 시그널 수집
   const findKind = (name: string) => registry?.rights?.items?.find(r => r.kind === name)
-  const hasLocalTax    = findKind('당해세(국세·지방세)')?.presence === 'NEEDS_REVIEW'
-  const hasSmallTenant = findKind('소액임차인 최우선변제금')?.presence === 'NEEDS_REVIEW'
-  const hasGenClaim    = findKind('일반채권(가압류 등)')?.presence === 'NEEDS_REVIEW'
 
-  const registryPenalties = [
-    { label: '당해세 검토 필요',      amount: 5,  hit: hasLocalTax },
-    { label: '소액임차인 최우선 검토', amount: 10, hit: hasSmallTenant },
-    { label: '일반채권 가압류 검토',   amount: 5,  hit: hasGenClaim },
-    { label: `후순위 근저당 ${subordinateClaimCount}건`, amount: 3 * subordinateClaimCount, hit: subordinateClaimCount > 0 },
-  ]
-  const registryHits = registryPenalties.filter(p => p.hit)
-  const registryPenaltySum = registryHits.reduce((s, p) => s + p.amount, 0)
+  // [2-1] 매핑된 시그널 → V2 key 자동 추가 (Set 합류)
+  const autoCheckedFromRegistry = new Set<string>()
+  const registryAutoCheckLabels: { v2Key: string; registryKind: string }[] = []
+  for (const [registryKind, v2Key] of Object.entries(REGISTRY_TO_V2_KEY_MAP)) {
+    if (!v2Key) continue
+    const hit = findKind(registryKind)?.presence === 'NEEDS_REVIEW'
+    if (hit && !sellerCheckedKeys.includes(v2Key)) {
+      autoCheckedFromRegistry.add(v2Key)
+      registryAutoCheckLabels.push({ v2Key, registryKind })
+    }
+  }
 
-  // [3] 최종 점수 = V2 기초점수 − 등기부 감점 · 하한 20
-  const raw = v2Result.score - registryPenaltySum
+  // [2-2] V2 매핑 없는 시그널 → 별도 고정 감점
+  const unmappedHits: { label: string; penalty: number }[] = []
+  for (const sig of UNMAPPED_REGISTRY_SIGNALS) {
+    if (findKind(sig.registryKind)?.presence === 'NEEDS_REVIEW') {
+      unmappedHits.push({ label: sig.label, penalty: sig.penalty })
+    }
+  }
+  // 후순위 근저당은 등기부 항목이 아니라 숫자 입력 → 별도 처리
+  if (subordinateClaimCount > 0) {
+    unmappedHits.push({
+      label: `후순위 근저당 ${subordinateClaimCount}건`,
+      penalty: 3 * subordinateClaimCount,
+    })
+  }
+  const unmappedPenaltySum = unmappedHits.reduce((s, p) => s + p.penalty, 0)
+
+  // [3] 최종 V2 key 집합 = 매도자체크 ∪ 등기부자동체크
+  const finalV2Keys = Array.from(new Set([...sellerCheckedKeys, ...autoCheckedFromRegistry]))
+  const v2Result = computeLegalScoreV2(finalV2Keys)
+
+  // [4] 최종 점수 = max(20, 100 − V2감점 − 매핑안된등기부감점)
+  //     · v2Result.score 는 이미 max(20, 100 − V2감점) · 여기서는 rawSum 재계산으로 일관
+  const rawSum = v2Result.penaltySum + unmappedPenaltySum
+  const raw = 100 - rawSum
   const score = Math.round(clamp(raw, 20, 100) * 10) / 10
 
-  // [4] 계산식 문자열
+  // [5] 계산식 문자열
   const hitLines: string[] = []
   if (v2Result.penaltySum > 0) {
-    hitLines.push(`  · 특수조건 V2 감점 합 (${v2Keys.length}개 선택): −${v2Result.penaltySum}`)
+    const autoCount = registryAutoCheckLabels.length
+    const autoNote = autoCount > 0 ? ` · 등기부 자동 체크 ${autoCount}개 포함` : ''
+    hitLines.push(`  · 특수조건 V2 감점 합 (${finalV2Keys.length}개${autoNote}): −${v2Result.penaltySum}`)
     const buckets = v2Result.byBucket
     if (buckets.OWNERSHIP.count > 0) hitLines.push(`      🔴 소유권 ${buckets.OWNERSHIP.count}개 · −${buckets.OWNERSHIP.penaltySum}`)
     if (buckets.COST.count > 0)      hitLines.push(`      🟠 비용   ${buckets.COST.count}개 · −${buckets.COST.penaltySum}`)
     if (buckets.LIQUIDITY.count > 0) hitLines.push(`      🟡 유동성 ${buckets.LIQUIDITY.count}개 · −${buckets.LIQUIDITY.penaltySum}`)
+    for (const r of registryAutoCheckLabels) {
+      hitLines.push(`      · 등기부 ${r.registryKind} → V2 [${r.v2Key}] 자동 체크`)
+    }
   }
-  for (const p of registryHits) hitLines.push(`  · ${p.label}: −${p.amount}`)
+  for (const p of unmappedHits) hitLines.push(`  · ${p.label}: −${p.penalty}`)
   if (hitLines.length === 0) hitLines.push('  · 해당 없음')
 
   const formula =
-    `권리관계 점수 = max(20, 100 − Σ특수조건V2감점 − Σ등기부감점)\n` +
-    `  (특수조건 V2: types.ts SPECIAL_CONDITIONS_V2 · 18항목 × 3-버킷 단일 소스)\n\n` +
+    `권리관계 점수 = max(20, 100 − Σ특수조건V2감점 − Σ매핑안된등기부감점)\n` +
+    `  (특수조건 V2: types.ts SPECIAL_CONDITIONS_V2 · 18항목 × 3-버킷 단일 소스)\n` +
+    `  (등기부 NEEDS_REVIEW → V2 key 자동 체크 · REGISTRY_TO_V2_KEY_MAP 기반)\n\n` +
     `해당 감점:\n${hitLines.join('\n')}\n\n` +
-    `         = max(20, 100 − ${v2Result.penaltySum} − ${registryPenaltySum})\n` +
+    `         = max(20, 100 − ${v2Result.penaltySum} − ${unmappedPenaltySum})\n` +
     `         = max(20, ${raw})\n` +
     `         = ${score}점`
 
   const explanationParts: string[] = []
-  if (v2Keys.length > 0) explanationParts.push(`특수조건 ${v2Keys.length}건`)
-  if (registryHits.length > 0) explanationParts.push(`등기부 시그널 ${registryHits.length}건`)
+  if (finalV2Keys.length > 0) explanationParts.push(`특수조건 ${finalV2Keys.length}건`)
+  if (unmappedHits.length > 0) explanationParts.push(`추가 등기부 시그널 ${unmappedHits.length}건`)
   const explanation = explanationParts.length === 0
     ? '특수조건·등기부 시그널 모두 해당 없음 — 1순위 근저당만 활성'
     : `검토 필요: ${explanationParts.join(' · ')}`
 
-  const hasTenantV2   = v2Keys.includes('opposable_tenant') || v2Keys.includes('lease_registration')
-  const hasSeniorV2   = v2Keys.includes('senior_registry_rights')
+  const hasTenantV2   = finalV2Keys.includes('opposable_tenant') || finalV2Keys.includes('lease_registration')
+  const hasSeniorV2   = finalV2Keys.includes('senior_registry_rights')
+  const hasInherentTaxV2 = finalV2Keys.includes('inherent_tax')
   const mitigation = hasTenantV2
     ? '임대차보호법상 우선변제권 확인 · 보증금 인수 조건으로 매입가 협상'
     : hasSeniorV2
       ? '선순위 등기권리 말소 여부 확인 · 인수 조건 명확화 후 매입가 하향 조정'
-      : '현장조사 시 미등기 임차·전입세대 확인, 당해세·일반채권 송달내역 별도 검증'
+      : hasInherentTaxV2
+        ? '당해세 송달내역·체납처분 단계 확인 · 최우선 배당 감액분 매입가 반영'
+        : '현장조사 시 미등기 임차·전입세대 확인, 소액임차·일반채권 송달내역 별도 검증'
 
   return {
     category: '권리관계',
@@ -184,14 +254,14 @@ export function computeRightsFactor(args: {
     mitigation,
     formula,
     inputs: {
-      특수조건V2개수: v2Keys.length,
+      특수조건V2개수: finalV2Keys.length,
+      매도자체크개수: sellerCheckedKeys.length,
+      등기부자동체크개수: autoCheckedFromRegistry.size,
       특수조건감점: v2Result.penaltySum,
       소유권버킷: v2Result.byBucket.OWNERSHIP.count,
       비용버킷:   v2Result.byBucket.COST.count,
       유동성버킷: v2Result.byBucket.LIQUIDITY.count,
-      당해세검토: hasLocalTax,
-      소액임차검토: hasSmallTenant,
-      일반채권검토: hasGenClaim,
+      매핑안된감점: unmappedPenaltySum,
       후순위근저당: subordinateClaimCount,
     },
   }

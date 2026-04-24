@@ -1203,7 +1203,8 @@ function SpecialConditionsV2Section({
               <b className="text-[var(--color-text-primary)] tabular-nums">{v2.formula}</b>
             </div>
             <p className="mt-2 text-[0.625rem] text-[var(--color-text-tertiary)] leading-relaxed">
-              * 이 점수에 등기부 시그널 감점(당해세 −5 · 소액임차 −10 · 일반채권 −5 · 후순위근저당 −3/건)을 차감하면 권리관계 최종 점수가 됩니다.
+              * 등기부 NEEDS_REVIEW 시그널은 V2 매핑 테이블에 따라 이 체크리스트에 자동 포함됩니다 (당해세 → inherent_tax 등).
+              매핑되지 않은 시그널(소액임차 −10 · 일반채권 −5 · 후순위근저당 −3/건)은 이 점수에서 추가 차감되어 권리관계 최종 점수가 됩니다.
             </p>
           </div>
         </div>
