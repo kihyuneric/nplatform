@@ -3,30 +3,54 @@
 /**
  * components/npl/unified-listing-form/index.tsx
  *
- * `<NplUnifiedForm>` — 매물등록/자발적경매/NPL분석 공용 입력 폼 진입점 (F2).
+ * `<NplUnifiedForm>` — 매물등록/자발적경매/NPL분석 공용 입력 폼 진입점 (F2+F3).
  *
- * mode 에 따라 섹션 가시성이 분기:
- *   ─ SELL     : 공통 + FeeSection + BidTermsSection(선택)
- *   ─ AUCTION  : 공통 + BidTermsSection (필수)
- *   ─ ANALYSIS : 공통만 (수수료·입찰조건 숨김)
+ * 섹션 가시성 매트릭스 (docs/NPLatform_UnifiedForm_Module_Plan_2026Q2.md)
  *
- * 현재 F2 단계에서는 뼈대 + mode-specific 섹션(FeeSection, BidTermsSection,
- * ClaimSection) 만 포함. 공통 섹션(기관/담보/감정/권리/특수조건/OCR)은 F3에서
- * 점진적으로 추출하여 여기로 모아옴.
- *
- * 참고: docs/NPLatform_UnifiedForm_Module_Plan_2026Q2.md
+ *   섹션                          SELL | AUCTION | ANALYSIS
+ *   ─────────────────────────────────────────────────────────
+ *   기등록 채권 불러오기          ✅   | ✅      | ✅
+ *   OCR 일괄 채움                 ✅   | ✅      | ✅
+ *   기관 · 매각주체                ✅   | ✅      | ✅
+ *   담보 · 주소                    ✅   | ✅      | ✅
+ *   채권정보 (원금/미수이자/금리)   ✅   | ✅      | ✅
+ *   감정가 · 시세                  ✅   | ✅      | ✅
+ *   권리관계 · 임차 · 할인율        ✅   | ✅      | (할인율 숨김)
+ *   특수조건 25항목                ✅   | ✅      | ✅
+ *   수수료율                       ✅   | ✅      | —
+ *   입찰조건                       선택 | ✅(필수)| —
  */
 
 import { useUnifiedFormState } from "./state"
-import type { FormMode, UnifiedFormState, DerivedMetrics } from "./types"
+import type {
+  FormMode,
+  UnifiedFormState,
+  DerivedMetrics,
+} from "./types"
 import { ClaimSection } from "./sections/claim-section"
 import { FeeSection } from "./sections/fee-section"
 import { BidTermsSection } from "./sections/bid-terms-section"
+import { InstitutionSection } from "./sections/institution-section"
+import { CollateralSection } from "./sections/collateral-section"
+import { AppraisalSection } from "./sections/appraisal-section"
+import { RightsSection } from "./sections/rights-section"
+import { SpecialConditionsSection } from "./sections/special-conditions-section"
+import { OcrSection } from "./sections/ocr-section"
 import { BondSelector, type MyListing } from "@/components/npl/bond-selector"
 
 export * from "./types"
 export { useUnifiedFormState, makeInitialState } from "./state"
-export { ClaimSection, FeeSection, BidTermsSection }
+export {
+  ClaimSection,
+  FeeSection,
+  BidTermsSection,
+  InstitutionSection,
+  CollateralSection,
+  AppraisalSection,
+  RightsSection,
+  SpecialConditionsSection,
+  OcrSection,
+}
 
 // 기등록 채권 → UnifiedFormState patch 매핑 (SELL/AUCTION/ANALYSIS 공용).
 function listingToFormPatch(l: MyListing): Partial<UnifiedFormState> {
@@ -64,12 +88,11 @@ export function NplUnifiedForm({
   const { state, dispatch, derived } = useUnifiedFormState(mode)
 
   // 상태 변경 시 부모 콜백 (제출/저장용).
-  // 부모는 필요시 state 를 읽어 API 호출.
   if (onChange) onChange(state, derived)
 
   return (
     <div className="space-y-5">
-      {/* 기등록 채권 불러오기 — SELL · AUCTION · ANALYSIS 모두 공용 */}
+      {/* 1. 기등록 채권 불러오기 — 3모드 공통 */}
       <BondSelector
         onSelect={(listing) =>
           dispatch({ type: "APPLY_LISTING", listing: listingToFormPatch(listing) })
@@ -77,13 +100,72 @@ export function NplUnifiedForm({
         onClear={() => dispatch({ type: "RESET", mode })}
       />
 
-      {/* 채권정보 — 3개 모드 공통 */}
+      {/* 2. OCR 자동 추출 — 3모드 공통 */}
+      <OcrSection
+        mode={mode}
+        onApply={(patch) => {
+          if (patch.claim) dispatch({ type: "SET_CLAIM", patch: patch.claim })
+          if (patch.appraisal) dispatch({ type: "SET_APPRAISAL", patch: patch.appraisal })
+          if (patch.address) dispatch({ type: "SET_ADDRESS", patch: patch.address })
+        }}
+      />
+
+      {/* 3. 기관·매각주체 — 3모드 공통 (ANALYSIS 는 전속 토글 숨김) */}
+      <InstitutionSection
+        value={state.institution}
+        onChange={(patch) => dispatch({ type: "SET_INSTITUTION", patch })}
+        showExclusiveToggle={mode !== "ANALYSIS"}
+      />
+
+      {/* 4. 담보·주소 — 3모드 공통 */}
+      <CollateralSection
+        collateral={state.collateral}
+        address={state.address}
+        debtorType={state.debtorType}
+        onCollateral={(v) => dispatch({ type: "PATCH", patch: { collateral: v } })}
+        onAddress={(patch) => dispatch({ type: "SET_ADDRESS", patch })}
+        onDebtorType={(v) => dispatch({ type: "PATCH", patch: { debtorType: v } })}
+      />
+
+      {/* 5. 채권정보 — 3모드 공통 */}
       <ClaimSection
         value={state.claim}
         onChange={(patch) => dispatch({ type: "SET_CLAIM", patch })}
       />
 
-      {/* 수수료율 — SELL · AUCTION 모두 노출 (ANALYSIS 는 숨김) */}
+      {/* 6. 감정가·시세·경매일정 — 3모드 공통 */}
+      <AppraisalSection
+        value={state.appraisal}
+        onChange={(patch) => dispatch({ type: "SET_APPRAISAL", patch })}
+      />
+
+      {/* 7. 권리관계·임차·채무자소유자·할인율 — 3모드 공통 (ANALYSIS 는 할인율 숨김) */}
+      <RightsSection
+        rights={state.rights}
+        lease={state.lease}
+        debtorOwnerSame={state.debtorOwnerSame}
+        desiredSaleDiscount={state.desiredSaleDiscount}
+        principal={state.claim.principal}
+        onRights={(patch) => dispatch({ type: "SET_RIGHTS", patch })}
+        onLease={(patch) => dispatch({ type: "SET_LEASE", patch })}
+        onDebtorOwnerSame={(v) =>
+          dispatch({ type: "PATCH", patch: { debtorOwnerSame: v } })
+        }
+        onDesiredSaleDiscount={(v) =>
+          dispatch({ type: "PATCH", patch: { desiredSaleDiscount: v } })
+        }
+        showDiscount={mode !== "ANALYSIS"}
+      />
+
+      {/* 8. 특수조건 25항목 — 3모드 공통 */}
+      <SpecialConditionsSection
+        value={state.specialConditions}
+        onChange={(next) =>
+          dispatch({ type: "PATCH", patch: { specialConditions: next } })
+        }
+      />
+
+      {/* 9. 수수료율 — SELL · AUCTION 공통 (ANALYSIS 숨김) */}
       {(mode === "SELL" || mode === "AUCTION") && state.fee && (
         <FeeSection
           value={state.fee}
@@ -92,15 +174,13 @@ export function NplUnifiedForm({
         />
       )}
 
-      {/* AUCTION 전용 입찰조건 (SELL 모드에서는 선택 배치) */}
+      {/* 10. 입찰조건 — AUCTION 전용 (SELL 은 선택적으로 향후 노출) */}
       {mode === "AUCTION" && state.bidTerms && (
         <BidTermsSection
           value={state.bidTerms}
           onChange={(patch) => dispatch({ type: "SET_BID_TERMS", patch })}
         />
       )}
-
-      {/* 공통 섹션(기관/담보/감정/권리/특수조건/OCR)은 F3에서 추출·주입 예정 */}
     </div>
   )
 }
