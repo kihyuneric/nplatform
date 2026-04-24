@@ -46,6 +46,8 @@ import {
   RightsSection,
   SpecialConditionsSection,
   FeeSection,
+  toSellListingBody,
+  preflightSell,
   type UnifiedFormState,
   type UnifiedFormAction,
 } from "@/components/npl/unified-listing-form"
@@ -213,48 +215,23 @@ export default function SellWizardPage() {
   }, [dispatch, state.fee?.sellerRate])
 
   const wizardState = useMemo(() => toWizardState(state, extras), [state, extras])
-  const claimBalance = state.claim.principal + state.claim.unpaidInterest
 
   const handleSubmit = useCallback(async () => {
     setSubmitting(true)
     setSubmitError("")
 
-    // Pre-flight validation (unified state 기준)
-    if (!state.institution.name) {
-      setSubmitError('기관명을 입력해주세요.'); setSubmitting(false); return
-    }
-    if (!state.collateral) {
-      setSubmitError('담보 유형을 선택해주세요.'); setSubmitting(false); return
-    }
-    if (!state.address.sido) {
-      setSubmitError('소재지(시/도)를 선택해주세요.'); setSubmitting(false); return
-    }
-    if (!state.claim.principal || state.claim.principal < 1_000_000) {
-      setSubmitError('대출원금은 100만원 이상이어야 합니다.'); setSubmitting(false); return
-    }
-    if (!state.askingPrice || state.askingPrice <= 0) {
-      setSubmitError('희망 매각가를 입력해주세요.'); setSubmitting(false); return
+    // Pre-flight validation via shared adapter
+    const preflight = preflightSell(state)
+    if (preflight) {
+      setSubmitError(preflight.message)
+      setSubmitting(false)
+      return
     }
 
     try {
-      const sidoLabel = getRegionLabel(state.address.sido)
-      const location = [sidoLabel, state.address.sigungu].filter(Boolean).join(' ')
-      const body = {
-        collateral_type: state.collateral || '기타',
-        principal_amount: state.claim.principal,
-        loan_principal: state.claim.principal,
-        unpaid_interest: state.claim.unpaidInterest,
-        claim_balance: claimBalance,
-        title: `${location} ${state.collateral} 채권`,
-        institution_name: state.institution.name,
-        listing_type: state.institution.listingCategory || 'NPL',
-        location,
-        address: location,
-        appraisal_value: state.appraisal.appraisalValue || undefined,
-        asking_price_min: state.askingPrice,
-        asking_price_max: state.askingPrice,
-        seller_fee_rate: state.fee?.sellerRate ?? 0.005,
-      }
+      const body = toSellListingBody(state, {
+        exclusive_area: extras.exclusive_area || undefined,
+      })
       const res = await fetch('/api/v1/exchange/listings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -275,7 +252,7 @@ export default function SellWizardPage() {
       setSubmitError('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
       setSubmitting(false)
     }
-  }, [state, claimBalance])
+  }, [state, extras])
 
   const completeness = useMemo(() => {
     let score = 0

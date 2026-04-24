@@ -55,6 +55,7 @@ import {
   FeeSection,
   BidTermsSection,
   OcrSection,
+  toAuctionRegisterBody,
 } from "@/components/npl/unified-listing-form"
 
 // ─── Constants ──────────────────────────────────────────────
@@ -217,49 +218,7 @@ export default function BiddingNewPage() {
 
     setSubmitting(true)
     try {
-      const regionLabel = getRegionLabel(state.address.sido)
-      const payload = {
-        name: extras.name.trim(),
-        collateral_type: state.collateral || "기타",
-        address: state.address.detail.trim(),
-        sido: regionLabel !== "-" ? regionLabel : state.address.sido,
-        sigungu: state.address.sigungu.trim(),
-        area: extras.area ? parseFloat(extras.area) : null,
-        // 채권정보
-        loan_principal: state.claim.principal || 0,
-        unpaid_interest: state.claim.unpaidInterest || 0,
-        claim_balance: derived.claimBalance > 0 ? derived.claimBalance : null,
-        claim_breakdown: state.claim,
-        // 담보가격
-        appraisal_value: state.appraisal.appraisalValue || 0,
-        asking_price: state.askingPrice || 0,
-        collateral_amount: state.collateralAmount || null,
-        ltv: derived.ltv || null,
-        discount_rate: derived.discountRate || null,
-        // NPL 상세
-        appraisal_date: state.appraisal.appraisalDate || null,
-        current_market_value: state.appraisal.currentMarketValue || null,
-        market_price_note: state.appraisal.marketPriceNote.trim() || null,
-        auction_start_date: state.appraisal.auctionStartDate || null,
-        debtor_owner_same: state.debtorOwnerSame,
-        desired_sale_discount: state.desiredSaleDiscount,
-        rights_summary: state.rights,
-        lease_summary: state.lease,
-        special_conditions: state.specialConditions,
-        // 입찰조건
-        bidding_start: extras.biddingStart,
-        bidding_end: state.bidTerms?.bidEndDate ?? "",
-        minimum_bid: state.bidTerms?.minimumBidPrice ?? 0,
-        bid_min_increment: state.bidTerms?.bidMinIncrement ?? 0,
-        bid_deposit_rate: state.bidTerms?.bidDepositRate ?? 0.10,
-        bid_reserve_price: state.bidTerms?.reservePrice ?? 0,
-        bid_allow_proxy: state.bidTerms?.allowProxyBid ?? true,
-        disclosure_level: extras.disclosureLevel,
-        bidding_method: extras.biddingMethod,
-        remarks: extras.remarks.trim() || null,
-        // 수수료율 (SELL/AUCTION 공통)
-        seller_fee_rate: state.fee?.sellerRate ?? 0.005,
-      }
+      const payload = toAuctionRegisterBody(state, extras, derived)
 
       const res = await fetch("/api/v1/exchange/auction/register", {
         method: "POST",

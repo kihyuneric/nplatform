@@ -41,6 +41,17 @@ import { BondSelector, type MyListing } from "@/components/npl/bond-selector"
 export * from "./types"
 export { useUnifiedFormState, makeInitialState } from "./state"
 export {
+  toSellListingBody,
+  toAuctionRegisterBody,
+  preflightSell,
+  preflightAuction,
+  type SellListingBody,
+  type AuctionRegisterBody,
+  type SellListingExtras,
+  type AuctionRegisterExtras,
+  type PreflightError,
+} from "./adapters"
+export {
   ClaimSection,
   FeeSection,
   BidTermsSection,
