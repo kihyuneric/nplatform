@@ -49,7 +49,7 @@ import type {
   LeaseSummary,
   RightsSummary,
 } from "@/lib/npl/unified-report/types"
-import { buildReportFromInput } from "@/lib/npl/unified-report/sample"
+// 매물등록은 분석을 자동 생성하지 않음 — 분석은 /analysis/new 독립 플로우 (UIF-2026Q2-v1)
 
 // ─── Constants ──────────────────────────────────────────────
 
@@ -372,32 +372,10 @@ export default function BiddingNewPage() {
       }
 
       localStorage.removeItem(DRAFT_KEY)
-      toast.success("NPL 입찰이 성공적으로 등록되었습니다.")
+      toast.success("NPL 매물이 성공적으로 등록되었습니다.")
 
-      // 분석 보고서 미리 생성 — 등록 완료 후 1클릭으로 바로 확인 가능
-      try {
-        const report = buildReportFromInput({
-          principal:          parseInt(form.loanPrincipal) || 0,
-          unpaidInterest:     form.unpaidInterest ? parseInt(form.unpaidInterest) : 0,
-          appraisedValue:     parseInt(form.appraisalValue) || 0,
-          currentMarketValue: form.currentMarketValue ? parseInt(form.currentMarketValue) : undefined,
-          specialConditions:  form.specialConditions,
-          claimBreakdown:     form.claimBreakdown,
-          rightsSummary:      form.rightsSummary,
-          leaseSummary:       form.leaseSummary,
-          address:            form.address.trim() || undefined,
-          collateralType:     form.collateralType,
-          debtorOwnerSame:    form.debtorOwnerSame,
-          desiredSaleDiscount: form.desiredSaleDiscount,
-          auctionStartDate:   form.auctionStartDate || undefined,
-          appraisalDate:      form.appraisalDate || undefined,
-          marketPriceNote:    form.marketPriceNote.trim() || undefined,
-        })
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('unifiedReport', JSON.stringify(report))
-        }
-      } catch { /* 보고서 생성 실패는 등록 성공에 영향 없음 */ }
-
+      // ※ 매물 등록은 여기서 종료 — 분석은 별도 액션 (UIF-2026Q2-v1 기획서)
+      // 사용자가 명시적으로 "분석 실행" 버튼을 누를 때만 /analysis/report 로 이동
       setSubmittedOk(true)
     } catch (err: unknown) {
       const message =
@@ -1178,24 +1156,24 @@ export default function BiddingNewPage() {
             <Check className="h-10 w-10 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">NPL 입찰 등록 완료</h1>
+            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">NPL 매물 등록 완료</h1>
             <p className="text-[0.875rem] text-[var(--color-text-muted)] mt-1.5">
-              매물이 성공적으로 등록되었습니다. AI 분석 보고서를 바로 확인할 수 있습니다.
+              매물이 거래소에 등록되었습니다. 분석 리포트는 별도 화면에서 실행하세요.
             </p>
           </div>
           <div className="flex flex-col gap-3">
             <button
-              onClick={() => router.push("/analysis/report")}
+              onClick={() => router.push("/exchange/auction")}
               className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-[var(--color-brand-dark)] text-white font-semibold text-[0.9375rem] hover:opacity-90 transition-opacity shadow-md"
             >
               <Send className="h-5 w-5" />
-              NPL 분석 보고서 바로 보기
+              거래소(내 매물) 이동
             </button>
             <button
-              onClick={() => router.push("/exchange/auction")}
+              onClick={() => router.push("/analysis/new")}
               className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] font-medium text-[0.875rem] hover:bg-[var(--color-surface-elevated)] transition-colors"
             >
-              입찰 목록으로 이동
+              분석 리포트 실행 (선택)
             </button>
           </div>
         </div>

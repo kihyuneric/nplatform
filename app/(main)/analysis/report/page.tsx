@@ -183,7 +183,7 @@ export default function UnifiedReportPage() {
               <div className="flex items-center gap-2 mb-1.5">
                 <Sparkles className="w-4 h-4" />
                 <span className="text-[0.6875rem] uppercase tracking-wider opacity-90 font-semibold">
-                  NPL 통합 분석 리포트 · {report.source === "SAMPLE" ? "샘플" : "AI LIVE"}
+                  NPL 통합 분석 리포트
                 </span>
               </div>
               <h1 className="text-[1.5rem] font-black tracking-tight">{input.assetTitle}</h1>

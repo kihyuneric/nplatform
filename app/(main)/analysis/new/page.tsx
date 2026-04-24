@@ -21,6 +21,7 @@ import {
   DesiredSaleDiscountInput,
   AppraisalAndMarketBlock,
 } from "@/components/listings/npl-input-blocks"
+import { BondSelector, type MyListing } from "@/components/npl/bond-selector"
 import { EMPTY_SPECIAL_CONDITIONS } from "@/lib/npl/unified-report/types"
 import type {
   SpecialConditions,
@@ -164,6 +165,40 @@ export default function NewNplAnalysisPage() {
     e.target.value = ''
   }
 
+  /**
+   * BondSelector 선택 시 모든 폼 필드를 기등록 채권 데이터로 덮어쓰기.
+   * UIF-2026Q2-v1 기획서 S7 — 매도사/매각사가 이미 올려둔 채권을 한 번에 불러오기.
+   */
+  const applyListing = (l: MyListing) => {
+    if (l.loan_principal)     setPrincipalAmount(String(l.loan_principal))
+    if (l.unpaid_interest)    setUnpaidInterestAmount(String(l.unpaid_interest))
+    if (l.address)            setAddress(l.address)
+    if (l.collateral_type)    setCollateralType(l.collateral_type)
+    if (l.appraised_value)    setAppraisalValue(String(l.appraised_value))
+    if (l.ai_estimated_price) setCurrentMarketValue(String(l.ai_estimated_price))
+    if (l.market_price_note)  setMarketPriceNote(l.market_price_note)
+    if (l.appraisal_date)     setAppraisalDate(l.appraisal_date)
+    if (l.auction_date)       setAuctionStartDate(l.auction_date)
+    if (typeof l.debtor_owner_same === "boolean") setDebtorOwnerSame(l.debtor_owner_same)
+    if (typeof l.desired_sale_discount === "number") setDesiredSaleDiscount(l.desired_sale_discount)
+
+    // JSONB blocks — 타입 가드 없이 병합 (DB 에 저장된 스키마와 프론트 타입 동일 가정)
+    if (l.claim_breakdown && typeof l.claim_breakdown === "object") {
+      setClaimBreakdown({ ...claimBreakdown, ...(l.claim_breakdown as Partial<ClaimBreakdown>) })
+    }
+    if (l.rights_summary && typeof l.rights_summary === "object") {
+      setRightsSummary({ ...rightsSummary, ...(l.rights_summary as Partial<RightsSummary>) })
+    }
+    if (l.lease_summary && typeof l.lease_summary === "object") {
+      setLeaseSummary({ ...leaseSummary, ...(l.lease_summary as Partial<LeaseSummary>) })
+    }
+    if (l.special_conditions && typeof l.special_conditions === "object") {
+      setSpecialConditions({ ...EMPTY_SPECIAL_CONDITIONS, ...(l.special_conditions as Partial<SpecialConditions>) })
+    }
+    setBondNumber(l.id)
+    setOcrMsg(`기등록 채권 "${l.title}" 의 정보를 불러왔습니다.`)
+  }
+
   const handleNext = () => {
     if (step < 3) setStep((s) => (s + 1) as Step)
   }
@@ -295,6 +330,9 @@ export default function NewNplAnalysisPage() {
           <div className={`${DS.card.base} ${DS.card.paddingLarge} space-y-5`}>
             <p className={DS.header.eyebrow}>Step 1</p>
             <h2 className={DS.text.sectionTitle}>기본 채권 정보</h2>
+
+            {/* 기등록 채권 선택 — 매도사·매각사용 (UIF S7) */}
+            <BondSelector onSelect={applyListing} />
 
             {/* OCR 자동 채움 */}
             <div className="rounded-xl border border-dashed border-[var(--color-brand-mid)]/40 bg-[var(--color-brand-mid)]/5 p-4 space-y-3">
