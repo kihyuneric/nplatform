@@ -1,14 +1,23 @@
 "use client"
 
 /**
- * /exchange/sell — 매물 등록 마법사 (v4 전략, 2026-04-07)
+ * /exchange/sell — 매물 등록 마법사 (F5: NplUnifiedForm 공용 섹션 기반)
  *
- * 5단계 마법사:
- *   1. 기관 확인       (매각 주체 / 전속 여부)
- *   2. 담보 · 지역     (L0 필수 공개 필드)
- *   3. 채권 · 금액     (채권잔액 / 매각희망가 / 감정가)
- *   4. 선택 자료       (등기 / 권리 / 임차 / 사진 / 재무)
- *   5. 검토 · 제출     (자동 마스킹 + 완성도 점수 + 수수료 견적)
+ * F5 변경점 (2026-04-24):
+ *   · useUnifiedFormState("SELL") 훅으로 중앙 SSoT 상태 관리
+ *   · Step 1~4 내부를 InstitutionSection · CollateralSection · ClaimSection ·
+ *     AppraisalSection · RightsSection · SpecialConditionsSection · FeeSection 조합
+ *   · sell 전용 보조 필드 (근저당/면적/경매/공매/자료제출) 는 WizardExtras 로 분리
+ *   · Step5Docs · Step6Review · TierPreviewBlock 은 WizardState 투영(toWizardState)으로 기존 유지
+ *   · handleSubmit 은 UnifiedFormState + extras → /api/v1/exchange/listings body 직접 매핑
+ *
+ * 6단계 마법사:
+ *   1. 기관 확인       (InstitutionSection + 전속 토글)
+ *   2. 담보 · 지역     (CollateralSection)
+ *   3. 채권 · 금액     (ClaimSection + 매각희망가/감정가/매각방식 + FeeSection)
+ *   4. 상세 · 권리     (RightsSection + SpecialConditionsSection + sell-local extras)
+ *   5. 선택 자료       (Step5Docs — extras.provided + OCR)
+ *   6. 검토 · 제출     (Step6Review + TierPreviewBlock + SubmittedScreen)
  */
 
 import { useMemo, useState, useCallback, useRef } from "react"
@@ -25,19 +34,29 @@ import { calculateSellerFee } from "@/lib/fee-calculator"
 import { DateField } from "@/components/ui/date-field"
 import {
   COLLATERAL_CATEGORIES, SELLER_INSTITUTION_OPTIONS,
-  LISTING_CATEGORY_OPTIONS, SALE_METHOD_OPTIONS,
+  getRegionLabel,
   type SellerInstitution, type SaleMethod, type CollateralType,
-  REGIONS,
 } from "@/lib/taxonomy"
+import {
+  useUnifiedFormState,
+  InstitutionSection,
+  CollateralSection,
+  ClaimSection,
+  AppraisalSection,
+  RightsSection,
+  SpecialConditionsSection,
+  FeeSection,
+  type UnifiedFormState,
+  type UnifiedFormAction,
+} from "@/components/npl/unified-listing-form"
 
 // NX-5: theme-responsive color map — 라이트/다크 양쪽에서 WCAG AA 대비 확보
 const C = {
-  // Surface ladder: 페이지 bg → 섹션 → 카드 → elevated
-  bg0: "var(--color-bg-deepest)",            // 라이트: #E2E8F0 / 다크: #02050C
-  bg1: "var(--color-bg-deep)",               // 라이트: #E8EDF2 / 다크: #05080F
-  bg2: "var(--color-surface-elevated)",      // 라이트: #FFFFFF / 다크: #162035
-  bg3: "var(--color-bg-base)",               // 라이트: #F1F5F9 / 다크: #0D1525
-  bg4: "var(--color-border-default)",        // 라이트: #D0D8E4 / 다크: rgba(255,255,255,0.12)
+  bg0: "var(--color-bg-deepest)",
+  bg1: "var(--color-bg-deep)",
+  bg2: "var(--color-surface-elevated)",
+  bg3: "var(--color-bg-base)",
+  bg4: "var(--color-border-default)",
   em:  "var(--color-positive)",
   emL: "var(--color-positive)",
   blue:  "var(--color-brand-dark)",
@@ -45,48 +64,25 @@ const C = {
   amber: "var(--color-warning)",
   rose:  "var(--color-danger)",
   teal:  "#14B8A6",
-  // 본문 텍스트: secondary(#4A5568 on light = 10:1 ✓) · tertiary(#718096 = 5.1:1 ✓)
   lt3: "var(--color-text-secondary)",
   lt4: "var(--color-text-tertiary)",
 }
 
-interface WizardState {
-  institution: string
-  inst_type: SellerInstitution | ""
-  listing_category: "NPL" | "GENERAL" | ""
-  exclusive: boolean
-  collateral: CollateralType | ""
-  region_city: string
-  region_district: string
-  debtor_type: "INDIVIDUAL" | "CORPORATE" | ""
-  // ── 채권잔액 = 대출원금(필수) + 미수이자(선택) ──
-  // outstanding_principal 필드 폐기: 항상 (loan_principal + unpaid_interest) 로 계산.
-  loan_principal: number
-  unpaid_interest: number
-  asking_price: number
-  appraisal_value: number
-  sale_method: SaleMethod | ""
-  seller_fee_rate: number        // D6: 매도자 희망 수수료율 (0.003 ~ 0.009)
-  // ── 채권 상세 (수익성 분석용) ──
-  interest_rate: number          // 약정금리 (%)
-  penalty_rate: number           // 연체금리 (%)
-  default_start_date: string     // 연체시작일
-  // ── 권리관계 (수익성 분석용) ──
-  mortgage_rank: number          // 근저당 순위
-  mortgage_amount: number        // 근저당 설정액
-  senior_claims_total: number    // 선순위 채권 총액
-  tenant_deposit_total: number   // 임차보증금 총액
-  exclusive_area: number         // 전용면적 (㎡)
-  build_year: number             // 건축년도
-  // ── 경매 정보 ──
-  auction_case_no: string        // 사건번호
-  auction_court: string          // 관할법원
-  auction_filed_date: string     // 경매접수일
-  auction_estimated_start: string // 예상 경매 개시일
-  // ── 공매 정보 ──
-  public_sale_mgmt_no: string    // 관리번호
-  public_sale_filed_date: string // 공매신청일
-  public_sale_estimated_start: string // 예상 공매 개시일
+// ═════════════════════════════════════════════════════════════
+// WizardExtras — sell 페이지 고유 보조 필드 (UnifiedFormState 가 관리하지 않음)
+// ═════════════════════════════════════════════════════════════
+interface WizardExtras {
+  mortgage_rank: number
+  mortgage_amount: number
+  exclusive_area: number
+  build_year: number
+  auction_case_no: string
+  auction_court: string
+  auction_filed_date: string
+  auction_estimated_start: string
+  public_sale_mgmt_no: string
+  public_sale_filed_date: string
+  public_sale_estimated_start: string
   provided: {
     appraisal: boolean
     registry: boolean
@@ -97,28 +93,9 @@ interface WizardState {
   }
 }
 
-const initial: WizardState = {
-  institution: "",
-  inst_type: "",
-  listing_category: "",
-  exclusive: false,
-  collateral: "",
-  region_city: "",
-  region_district: "",
-  debtor_type: "",
-  loan_principal: 0,
-  unpaid_interest: 0,
-  asking_price: 0,
-  appraisal_value: 0,
-  sale_method: "NPLATFORM",
-  seller_fee_rate: 0.005,        // 기본 0.5%
-  interest_rate: 0,
-  penalty_rate: 0,
-  default_start_date: "",
+const initialExtras: WizardExtras = {
   mortgage_rank: 1,
   mortgage_amount: 0,
-  senior_claims_total: 0,
-  tenant_deposit_total: 0,
   exclusive_area: 0,
   build_year: 0,
   auction_case_no: "",
@@ -134,65 +111,149 @@ const initial: WizardState = {
   },
 }
 
+// ═════════════════════════════════════════════════════════════
+// WizardState (legacy projection) — Step5Docs · Step6Review · TierPreviewBlock 에서 사용
+// UnifiedFormState + WizardExtras 를 평탄화한 읽기 전용 구조
+// ═════════════════════════════════════════════════════════════
+interface WizardState {
+  institution: string
+  inst_type: SellerInstitution | ""
+  listing_category: "NPL" | "GENERAL" | ""
+  exclusive: boolean
+  collateral: CollateralType | ""
+  region_city: string
+  region_district: string
+  debtor_type: "INDIVIDUAL" | "CORPORATE" | ""
+  loan_principal: number
+  unpaid_interest: number
+  asking_price: number
+  appraisal_value: number
+  sale_method: SaleMethod | ""
+  seller_fee_rate: number
+  interest_rate: number
+  penalty_rate: number
+  default_start_date: string
+  mortgage_rank: number
+  mortgage_amount: number
+  senior_claims_total: number
+  tenant_deposit_total: number
+  exclusive_area: number
+  build_year: number
+  auction_case_no: string
+  auction_court: string
+  auction_filed_date: string
+  auction_estimated_start: string
+  public_sale_mgmt_no: string
+  public_sale_filed_date: string
+  public_sale_estimated_start: string
+  provided: WizardExtras["provided"]
+}
+
+function toWizardState(s: UnifiedFormState, ex: WizardExtras): WizardState {
+  return {
+    institution: s.institution.name,
+    inst_type: s.institution.type,
+    listing_category: s.institution.listingCategory,
+    exclusive: s.institution.exclusive,
+    collateral: s.collateral,
+    region_city: getRegionLabel(s.address.sido),  // REGIONS.value → "서울" 라벨 변환
+    region_district: s.address.sigungu,
+    debtor_type: s.debtorType,
+    loan_principal: s.claim.principal,
+    unpaid_interest: s.claim.unpaidInterest,
+    asking_price: s.askingPrice,
+    appraisal_value: s.appraisal.appraisalValue,
+    sale_method: (s.saleMethod === "AUCTION" || s.saleMethod === "PUBLIC" || s.saleMethod === "NPLATFORM")
+      ? s.saleMethod
+      : "",
+    seller_fee_rate: s.fee?.sellerRate ?? 0.005,
+    interest_rate: s.claim.normalRate,
+    penalty_rate: s.claim.overdueRate,
+    default_start_date: s.claim.delinquencyStartDate,
+    senior_claims_total: s.rights.seniorTotal,
+    tenant_deposit_total: s.lease.totalDeposit,
+    mortgage_rank: ex.mortgage_rank,
+    mortgage_amount: ex.mortgage_amount,
+    exclusive_area: ex.exclusive_area,
+    build_year: ex.build_year,
+    auction_case_no: ex.auction_case_no,
+    auction_court: ex.auction_court,
+    auction_filed_date: ex.auction_filed_date,
+    auction_estimated_start: ex.auction_estimated_start,
+    public_sale_mgmt_no: ex.public_sale_mgmt_no,
+    public_sale_filed_date: ex.public_sale_filed_date,
+    public_sale_estimated_start: ex.public_sale_estimated_start,
+    provided: ex.provided,
+  }
+}
+
 const STEPS = [
   { id: 1, label: "기관 확인", icon: Building2 },
   { id: 2, label: "담보 · 지역", icon: MapPin },
   { id: 3, label: "채권 · 금액", icon: Scale },
-  { id: 4, label: "채권상세·권리", icon: Briefcase },
+  { id: 4, label: "상세 · 권리", icon: Briefcase },
   { id: 5, label: "선택 자료", icon: FileText },
   { id: 6, label: "검토 · 제출", icon: Send },
 ]
 
 export default function SellWizardPage() {
   const [step, setStep] = useState(1)
-  const [state, setState] = useState<WizardState>(initial)
+  const { state, dispatch } = useUnifiedFormState("SELL")
+  const [extras, setExtras] = useState<WizardExtras>(initialExtras)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
 
-  // 채권잔액 = 대출원금 + 미수이자 (derived, 항상 동기)
-  const claimBalance = state.loan_principal + state.unpaid_interest
+  // 전속 계약 ON 시 수수료율 하한 0.5% 자동 보정
+  const handleExclusiveChange = useCallback((exclusive: boolean) => {
+    dispatch({ type: "SET_INSTITUTION", patch: { exclusive } })
+    if (exclusive && (state.fee?.sellerRate ?? 0) < 0.005) {
+      dispatch({ type: "SET_FEE", patch: { sellerRate: 0.005 } })
+    }
+  }, [dispatch, state.fee?.sellerRate])
+
+  const wizardState = useMemo(() => toWizardState(state, extras), [state, extras])
+  const claimBalance = state.claim.principal + state.claim.unpaidInterest
 
   const handleSubmit = useCallback(async () => {
     setSubmitting(true)
     setSubmitError("")
 
-    // ── Pre-flight validation: API Zod schema가 요구하는 최소 조건 선검증 ──
-    if (!state.institution) {
+    // Pre-flight validation (unified state 기준)
+    if (!state.institution.name) {
       setSubmitError('기관명을 입력해주세요.'); setSubmitting(false); return
     }
     if (!state.collateral) {
       setSubmitError('담보 유형을 선택해주세요.'); setSubmitting(false); return
     }
-    if (!state.region_city) {
+    if (!state.address.sido) {
       setSubmitError('소재지(시/도)를 선택해주세요.'); setSubmitting(false); return
     }
-    if (!state.loan_principal || state.loan_principal < 1_000_000) {
+    if (!state.claim.principal || state.claim.principal < 1_000_000) {
       setSubmitError('대출원금은 100만원 이상이어야 합니다.'); setSubmitting(false); return
     }
-    if (!state.asking_price || state.asking_price <= 0) {
+    if (!state.askingPrice || state.askingPrice <= 0) {
       setSubmitError('희망 매각가를 입력해주세요.'); setSubmitting(false); return
     }
 
     try {
-      const location = [state.region_city, state.region_district].filter(Boolean).join(' ')
+      const sidoLabel = getRegionLabel(state.address.sido)
+      const location = [sidoLabel, state.address.sigungu].filter(Boolean).join(' ')
       const body = {
         collateral_type: state.collateral || '기타',
-        // 원금·미수이자 분리 + 합산 채권잔액 3필드 전송
-        principal_amount: state.loan_principal,
-        loan_principal: state.loan_principal,
-        unpaid_interest: state.unpaid_interest,
+        principal_amount: state.claim.principal,
+        loan_principal: state.claim.principal,
+        unpaid_interest: state.claim.unpaidInterest,
         claim_balance: claimBalance,
         title: `${location} ${state.collateral} 채권`,
-        institution_name: state.institution,
-        listing_type: state.listing_category || 'NPL',
+        institution_name: state.institution.name,
+        listing_type: state.institution.listingCategory || 'NPL',
         location,
         address: location,
-        appraisal_value: state.appraisal_value || undefined,
-        asking_price_min: state.asking_price,
-        asking_price_max: state.asking_price,
-        // D6: 매도자 입력 수수료율 (0.003~0.009)
-        seller_fee_rate: state.seller_fee_rate,
+        appraisal_value: state.appraisal.appraisalValue || undefined,
+        asking_price_min: state.askingPrice,
+        asking_price_max: state.askingPrice,
+        seller_fee_rate: state.fee?.sellerRate ?? 0.005,
       }
       const res = await fetch('/api/v1/exchange/listings', {
         method: 'POST',
@@ -214,62 +275,50 @@ export default function SellWizardPage() {
       setSubmitError('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
       setSubmitting(false)
     }
-  }, [state])
-
-  const update = <K extends keyof WizardState>(k: K, v: WizardState[K]) =>
-    setState(s => {
-      const next = { ...s, [k]: v } as WizardState
-      // 전속 계약 ON 시 매각 수수료율 하한을 0.5%로 자동 보정
-      // (등록 수수료 0.3% 할인 혜택과 이중 적용 방지)
-      if (k === "exclusive" && v === true && next.seller_fee_rate < 0.005) {
-        next.seller_fee_rate = 0.005
-      }
-      return next
-    })
+  }, [state, claimBalance])
 
   const completeness = useMemo(() => {
     let score = 0
-    if (state.loan_principal > 0) score++
-    if (state.asking_price > 0) score++
+    if (state.claim.principal > 0) score++
+    if (state.askingPrice > 0) score++
     if (state.collateral) score++
-    if (state.region_city) score++
-    if (state.debtor_type) score++
-    // 채권 상세·권리관계 필드 반영
-    if (state.penalty_rate > 0 && state.default_start_date) score++
-    if (state.mortgage_amount > 0) score++
-    const pf = state.provided
+    if (state.address.sido) score++
+    if (state.debtorType) score++
+    if (state.claim.overdueRate > 0 && state.claim.delinquencyStartDate) score++
+    if (extras.mortgage_amount > 0) score++
+    const pf = extras.provided
     if (pf.appraisal) score++
     if (pf.registry) score++
     if (pf.rights || pf.lease || pf.site_photos || pf.financials) score++
     return score
-  }, [state])
+  }, [state, extras])
 
   const canProceed = useMemo(() => {
-    if (step === 1) return !!state.institution && !!state.inst_type && !!state.listing_category
-    if (step === 2) return !!state.collateral && !!state.region_city && !!state.debtor_type
+    if (step === 1) return !!state.institution.name && !!state.institution.type && !!state.institution.listingCategory
+    if (step === 2) return !!state.collateral && !!state.address.sido && !!state.debtorType
     if (step === 3)
-      return state.loan_principal > 0 && state.asking_price > 0 && state.appraisal_value > 0
-    if (step === 4) return true // 채권상세·권리관계는 선택 입력 (입력할수록 완성도 향상)
+      return state.claim.principal > 0 && state.askingPrice > 0 && state.appraisal.appraisalValue > 0
+    if (step === 4) return true
     if (step === 5) return true
     return true
   }, [step, state])
 
   const feeEstimate = useMemo(() => {
-    if (state.asking_price <= 0) return null
+    if (state.askingPrice <= 0) return null
     return calculateSellerFee({
-      dealAmount: state.asking_price,
+      dealAmount: state.askingPrice,
       addons: ["premium_listing", "dedicated_manager"],
-      isInstitutional: state.exclusive,
+      isInstitutional: state.institution.exclusive,
       dataCompleteness: completeness,
-      sellerRate: state.seller_fee_rate,       // D6: 매도자 입력 우선
+      sellerRate: state.fee?.sellerRate ?? 0.005,
     })
-  }, [state.asking_price, state.exclusive, completeness, state.seller_fee_rate])
+  }, [state.askingPrice, state.institution.exclusive, completeness, state.fee?.sellerRate])
 
   const discountRate = useMemo(() => {
-    const total = state.loan_principal + state.unpaid_interest
-    if (!total || !state.asking_price) return 0
-    return ((total - state.asking_price) / total) * 100
-  }, [state.loan_principal, state.unpaid_interest, state.asking_price])
+    const total = state.claim.principal + state.claim.unpaidInterest
+    if (!total || !state.askingPrice) return 0
+    return ((total - state.askingPrice) / total) * 100
+  }, [state.claim.principal, state.claim.unpaidInterest, state.askingPrice])
 
   if (submitted) {
     return <SubmittedScreen completeness={completeness} />
@@ -299,7 +348,7 @@ export default function SellWizardPage() {
                 fontSize: 11, fontWeight: 700, color: C.emL,
               }}
             >
-              <Sparkles size={12} /> 프라임 매물 등록 · L0→L3 자동 구성
+              <Sparkles size={12} /> 프라임 매물 등록 · L0→L3 자동 구성 · 통합 폼 v2
             </span>
           </div>
 
@@ -378,14 +427,31 @@ export default function SellWizardPage() {
               padding: 28,
             }}
           >
-            {step === 1 && <Step1 state={state} update={update} />}
-            {step === 2 && <Step2 state={state} update={update} />}
-            {step === 3 && <Step3 state={state} update={update} discountRate={discountRate} />}
-            {step === 4 && <Step4BondRights state={state} update={update} />}
-            {step === 5 && <Step5Docs state={state} update={update} />}
+            {step === 1 && (
+              <Step1 state={state} dispatch={dispatch} onExclusiveChange={handleExclusiveChange} />
+            )}
+            {step === 2 && (
+              <Step2 state={state} dispatch={dispatch} />
+            )}
+            {step === 3 && (
+              <Step3
+                state={state}
+                dispatch={dispatch}
+                discountRate={discountRate}
+              />
+            )}
+            {step === 4 && (
+              <Step4BondRights
+                state={state}
+                dispatch={dispatch}
+                extras={extras}
+                setExtras={setExtras}
+              />
+            )}
+            {step === 5 && <Step5Docs extras={extras} setExtras={setExtras} />}
             {step === 6 && (
               <Step6Review
-                state={state}
+                state={wizardState}
                 completeness={completeness}
                 discountRate={discountRate}
                 feeEstimate={feeEstimate}
@@ -522,78 +588,69 @@ export default function SellWizardPage() {
   )
 }
 
-function Step1({ state, update }: { state: WizardState; update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void }) {
+// ═════════════════════════════════════════════════════════════
+// STEP 1 — 기관 · 매각주체 (InstitutionSection 래퍼)
+// ═════════════════════════════════════════════════════════════
+function Step1({
+  state, dispatch, onExclusiveChange,
+}: {
+  state: UnifiedFormState
+  dispatch: (action: UnifiedFormAction) => void
+  onExclusiveChange: (exclusive: boolean) => void
+}) {
   return (
     <>
-      <StepHeader num={1} title="매각 주체 확인" desc="매각 주체(기관/개인/법인)와 매물 종류를 선택하세요. 전속 계약 시 수수료가 0.3%로 할인됩니다." />
-      <FormGrid cols={1}>
-        <Field label="기관명" required>
-          <TextInput value={state.institution} onChange={v => update("institution", v)} placeholder="예: 우리은행, 한국자산관리공사, 홍길동" />
-        </Field>
-        <Field label="기관 유형" required>
-          <SelectInput
-            value={state.inst_type}
-            options={SELLER_INSTITUTION_OPTIONS.filter(o => o.value !== 'ALL')}
-            onChange={v => update("inst_type", v as SellerInstitution)}
-            placeholder="기관 유형 선택"
-          />
-        </Field>
-        <Field label="매물 종류" required hint="NPL: 부실채권 / 일반 부동산: 경매·공매·수의계약 물건">
-          <RadioPills
-            value={state.listing_category}
-            options={[
-              { value: "NPL",     label: "NPL (부실채권)" },
-              { value: "GENERAL", label: "일반 부동산" },
-            ]}
-            onChange={v => update("listing_category", v as "NPL" | "GENERAL")}
-          />
-        </Field>
-        <Field label="NPLatform 전속 계약">
-          <Toggle
-            value={state.exclusive}
-            onChange={v => update("exclusive", v)}
-            label="전속 계약 매물로 등록 (수수료 0.3% 할인)"
-          />
-        </Field>
-      </FormGrid>
+      <StepHeader
+        num={1}
+        title="매각 주체 확인"
+        desc="매각 주체(기관/개인/법인)와 매물 종류를 선택하세요. 전속 계약 시 수수료가 0.3%로 할인됩니다."
+      />
+      <InstitutionSection
+        value={state.institution}
+        onChange={(patch) => {
+          // 전속 토글만 특별 처리 (수수료 하한 자동 보정)
+          if ("exclusive" in patch && typeof patch.exclusive === "boolean") {
+            onExclusiveChange(patch.exclusive)
+            // 다른 필드가 함께 변경된 경우에도 병합 적용
+            const rest = { ...patch }
+            delete (rest as Record<string, unknown>).exclusive
+            if (Object.keys(rest).length > 0) {
+              dispatch({ type: "SET_INSTITUTION", patch: rest })
+            }
+          } else {
+            dispatch({ type: "SET_INSTITUTION", patch })
+          }
+        }}
+        showExclusiveToggle
+      />
     </>
   )
 }
 
-function Step2({ state, update }: { state: WizardState; update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void }) {
+// ═════════════════════════════════════════════════════════════
+// STEP 2 — 담보 · 지역 (CollateralSection 래퍼 + L0 안내 배너)
+// ═════════════════════════════════════════════════════════════
+function Step2({
+  state, dispatch,
+}: {
+  state: UnifiedFormState
+  dispatch: (action: UnifiedFormAction) => void
+}) {
   return (
     <>
-      <StepHeader num={2} title="담보 · 지역" desc="담보 부동산 정보는 L0(공개) 단계로 노출됩니다. 상세 지번 · 동/호수는 자동 마스킹됩니다." />
-      <FormGrid cols={2}>
-        <Field label="담보 종류" required style={{ gridColumn: "1 / -1" }}>
-          <CollateralSelect
-            value={state.collateral}
-            onChange={v => update("collateral", v as CollateralType)}
-          />
-        </Field>
-        <Field label="채무자 유형" required>
-          <RadioPills
-            value={state.debtor_type}
-            options={[
-              { value: "INDIVIDUAL", label: "개인" },
-              { value: "CORPORATE", label: "법인" },
-            ]}
-            onChange={v => update("debtor_type", v as "INDIVIDUAL" | "CORPORATE")}
-          />
-        </Field>
-        <div />
-        <Field label="시·도" required>
-          <SelectInput
-            value={state.region_city}
-            options={REGIONS.map(r => ({ value: r.short, label: r.full }))}
-            onChange={v => update("region_city", v)}
-            placeholder="시·도 선택"
-          />
-        </Field>
-        <Field label="시·군·구" hint="선택사항 (L0에서 마스킹됨)">
-          <TextInput value={state.region_district} onChange={v => update("region_district", v)} placeholder="예: 강남구" />
-        </Field>
-      </FormGrid>
+      <StepHeader
+        num={2}
+        title="담보 · 지역"
+        desc="담보 부동산 정보는 L0(공개) 단계로 노출됩니다. 상세 지번 · 동/호수는 자동 마스킹됩니다."
+      />
+      <CollateralSection
+        collateral={state.collateral}
+        address={state.address}
+        debtorType={state.debtorType}
+        onCollateral={(v) => dispatch({ type: "PATCH", patch: { collateral: v } })}
+        onAddress={(patch) => dispatch({ type: "SET_ADDRESS", patch })}
+        onDebtorType={(v) => dispatch({ type: "PATCH", patch: { debtorType: v } })}
+      />
       <div
         style={{
           marginTop: 18, padding: "12px 14px",
@@ -611,88 +668,66 @@ function Step2({ state, update }: { state: WizardState; update: <K extends keyof
   )
 }
 
+// ═════════════════════════════════════════════════════════════
+// STEP 3 — 채권 · 금액 (ClaimSection + 매각희망가/감정가/매각방식 + FeeSection)
+// ═════════════════════════════════════════════════════════════
 function Step3({
-  state, update, discountRate,
+  state, dispatch, discountRate,
 }: {
-  state: WizardState
-  update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
+  state: UnifiedFormState
+  dispatch: (action: UnifiedFormAction) => void
   discountRate: number
 }) {
+  const claimBalance = state.claim.principal + state.claim.unpaidInterest
   return (
     <>
-      <StepHeader num={3} title="채권 · 금액" desc="채권잔액(원금+미수이자)·매각희망가·감정가는 L0(공개) 핵심 필드입니다. 할인율이 자동 계산됩니다." />
+      <StepHeader
+        num={3}
+        title="채권 · 금액"
+        desc="채권잔액(원금+미수이자)·매각희망가·감정가는 L0(공개) 핵심 필드입니다. 할인율이 자동 계산됩니다."
+      />
 
-      {/* 채권잔액 = 대출원금(필수) + 미수이자(선택) 분리 입력 */}
-      <div
-        style={{
-          padding: "16px 18px", borderRadius: 12,
-          backgroundColor: "var(--color-positive-bg)",
-          border: `1px solid ${C.em}33`,
-          marginBottom: 16,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-          <Scale size={14} color={C.emL} />
-          <span style={{ fontSize: 12, fontWeight: 800, color: C.emL, letterSpacing: "-0.01em" }}>
-            채권잔액 = 대출원금 + 미수이자 (분리 입력)
-          </span>
-        </div>
+      {/* 채권정보 — ClaimSection (원금/미수이자/연체정보) */}
+      <ClaimSection
+        value={state.claim}
+        onChange={(patch) => dispatch({ type: "SET_CLAIM", patch })}
+      />
+
+      {/* 감정가 · 시세 · 경매일정 — AppraisalSection */}
+      <div style={{ marginTop: 16 }}>
+        <AppraisalSection
+          value={state.appraisal}
+          onChange={(patch) => dispatch({ type: "SET_APPRAISAL", patch })}
+        />
+      </div>
+
+      {/* 매각희망가 · 매각방식 (sell 전용 필드) */}
+      <div style={{ marginTop: 16 }}>
         <FormGrid cols={2}>
-          <Field label="대출원금" required hint="원본 대출 금액 (미수이자 제외)">
+          <Field label="매각희망가" required hint="매수자에게 공개될 가격">
             <NumberInput
-              value={state.loan_principal}
-              onChange={v => update("loan_principal", v)}
-              placeholder="예: 1000000000"
+              value={state.askingPrice}
+              onChange={v => dispatch({ type: "PATCH", patch: { askingPrice: v } })}
+              placeholder="예: 850000000"
               suffix="원"
             />
           </Field>
-          <Field label="미수이자" hint="연체·약정이자 누적분 (선택)">
-            <NumberInput
-              value={state.unpaid_interest}
-              onChange={v => update("unpaid_interest", v)}
-              placeholder="예: 200000000"
-              suffix="원"
+          <Field label="매각 방식">
+            <RadioPills
+              value={state.saleMethod}
+              options={[
+                { value: "NPLATFORM", label: "엔플랫폼" },
+                { value: "AUCTION",   label: "경매" },
+                { value: "PUBLIC",    label: "공매" },
+              ]}
+              onChange={v => dispatch({ type: "PATCH", patch: { saleMethod: v as SaleMethod } })}
             />
           </Field>
         </FormGrid>
-        {(state.loan_principal > 0 || state.unpaid_interest > 0) && (
-          <div
-            style={{
-              marginTop: 12, padding: "10px 14px", borderRadius: 8,
-              backgroundColor: "var(--color-surface-elevated)",
-              border: `1px dashed ${C.em}55`,
-              display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8,
-            }}
-          >
-            <span style={{ fontSize: 11, color: C.lt4, fontWeight: 700 }}>자동 계산 채권잔액</span>
-            <span style={{ fontSize: 18, fontWeight: 900, color: C.emL, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
-              {formatKRW(state.loan_principal + state.unpaid_interest)}
-            </span>
-          </div>
-        )}
       </div>
 
-      <FormGrid cols={2}>
-        <Field label="매각희망가" required hint="매수자에게 공개될 가격">
-          <NumberInput value={state.asking_price} onChange={v => update("asking_price", v)} placeholder="예: 850000000" suffix="원" />
-        </Field>
-        <Field label="감정가" required hint="최근 3개월 내 평가">
-          <NumberInput value={state.appraisal_value} onChange={v => update("appraisal_value", v)} placeholder="예: 1020000000" suffix="원" />
-        </Field>
-        <Field label="매각 방식">
-          <RadioPills
-            value={state.sale_method}
-            options={[
-              { value: "NPLATFORM", label: "엔플랫폼" },
-              { value: "AUCTION",   label: "경매" },
-              { value: "PUBLIC",    label: "공매" },
-            ]}
-            onChange={v => update("sale_method", v as SaleMethod)}
-          />
-        </Field>
-      </FormGrid>
-
-      {(state.loan_principal + state.unpaid_interest) > 0 && state.asking_price > 0 && (
+      {/* 자동 할인율 표시 */}
+      {claimBalance > 0 && state.askingPrice > 0 && (
         <div
           style={{
             marginTop: 20, padding: "18px 20px", borderRadius: 12,
@@ -709,80 +744,51 @@ function Step3({
           <div style={{ textAlign: "right", fontSize: 11, color: C.lt4 }}>
             채권잔액 대비
             <br />
-            매수자 절감액 {formatKRW((state.loan_principal + state.unpaid_interest) - state.asking_price)}
+            매수자 절감액 {formatKRW(claimBalance - state.askingPrice)}
           </div>
         </div>
       )}
 
-      {/* D6: 매도자 희망 수수료율 입력
-         ─ 일반 매물:  0.3% ~ 0.9%
-         ─ 전속 계약:  0.5% ~ 0.9%  (등록 수수료 0.3% 할인 혜택과 이중 적용 방지)
-      */}
-      <div
-        style={{
-          marginTop: 18, padding: "18px 20px", borderRadius: 12,
-          backgroundColor: "var(--color-bg-elevated, #0F1F35)",
-          border: `1px solid var(--color-border-default, ${C.bg4})`,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
-          <div>
-            <label style={{ fontSize: 12, color: "var(--color-text-primary, #F8FAFC)", fontWeight: 700 }}>
-              매각 수수료율 <span style={{ color: C.emL, marginLeft: 4 }}>직접 입력</span>
-              {state.exclusive && (
-                <span style={{ marginLeft: 8, padding: "2px 6px", borderRadius: 4, fontSize: 10, fontWeight: 800,
-                  backgroundColor: `${C.emL}22`, color: C.emL, letterSpacing: "-0.01em" }}>
-                  전속 계약 · 하한 0.5%
-                </span>
-              )}
-            </label>
-            <div style={{ fontSize: 10, color: C.lt4, marginTop: 3 }}>
-              {state.exclusive
-                ? "전속 계약 매물은 등록 수수료 0.3% 할인이 이미 적용되므로, 매각 수수료율은 0.5% 이상에서 조정 가능합니다. 상한 0.9%."
-                : "거래 성사 시 매각대금에서 차감됩니다. 허용 범위 0.3% ~ 0.9%. 기본 0.5%."}
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <input
-              type="range"
-              min={state.exclusive ? 0.005 : 0.003}
-              max={0.009}
-              step={0.0005}
-              value={state.seller_fee_rate}
-              onChange={(e) => update("seller_fee_rate", Number(e.target.value))}
-              style={{ width: 160 }}
-              aria-label="매각 수수료율"
-            />
+      {/* 매각 수수료율 — FeeSection */}
+      {state.fee && (
+        <div style={{ marginTop: 18 }}>
+          <FeeSection
+            value={state.fee}
+            onChange={(patch) => dispatch({ type: "SET_FEE", patch })}
+            exclusive={state.institution.exclusive}
+          />
+          {state.askingPrice > 0 && (
             <div style={{
-              minWidth: 66, textAlign: "right",
-              fontSize: 16, fontWeight: 900, color: C.emL,
-              fontVariantNumeric: "tabular-nums",
+              marginTop: 8, padding: "8px 10px", borderRadius: 6,
+              backgroundColor: "rgba(16,185,129,0.08)", fontSize: 11, color: C.lt3,
+              display: "flex", justifyContent: "space-between",
             }}>
-              {(state.seller_fee_rate * 100).toFixed(2)}%
+              <span>예상 수수료 (희망가 {formatKRW(state.askingPrice)} 기준)</span>
+              <strong style={{ color: C.emL, fontVariantNumeric: "tabular-nums" }}>
+                {formatKRW(Math.round(state.askingPrice * state.fee.sellerRate))}
+              </strong>
             </div>
-          </div>
+          )}
         </div>
-        {state.asking_price > 0 && (
-          <div style={{
-            marginTop: 6, padding: "8px 10px", borderRadius: 6,
-            backgroundColor: "rgba(16,185,129,0.08)", fontSize: 11, color: C.lt3,
-            display: "flex", justifyContent: "space-between",
-          }}>
-            <span>예상 수수료 (희망가 {formatKRW(state.asking_price)} 기준)</span>
-            <strong style={{ color: C.emL, fontVariantNumeric: "tabular-nums" }}>
-              {formatKRW(Math.round(state.asking_price * state.seller_fee_rate))}
-            </strong>
-          </div>
-        )}
-        <div style={{ marginTop: 8, fontSize: 10, color: C.lt4, lineHeight: 1.5 }}>
-          ※ 상한 0.9% 초과 시 자동으로 0.9%로 조정됩니다. 프리미엄 노출·전담 매니저 옵션은 Review 단계에서 추가 가능.
-        </div>
-      </div>
+      )}
     </>
   )
 }
 
-function Step4BondRights({ state, update }: { state: WizardState; update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void }) {
+// ═════════════════════════════════════════════════════════════
+// STEP 4 — 권리관계 · 특수조건 · sell 전용 extras (근저당/면적/경매/공매)
+// ═════════════════════════════════════════════════════════════
+function Step4BondRights({
+  state, dispatch, extras, setExtras,
+}: {
+  state: UnifiedFormState
+  dispatch: (action: UnifiedFormAction) => void
+  extras: WizardExtras
+  setExtras: React.Dispatch<React.SetStateAction<WizardExtras>>
+}) {
+  const updateEx = <K extends keyof WizardExtras>(k: K, v: WizardExtras[K]) =>
+    setExtras(ex => ({ ...ex, [k]: v }))
+
   return (
     <>
       <StepHeader
@@ -800,76 +806,82 @@ function Step4BondRights({ state, update }: { state: WizardState; update: <K ext
         <span style={{ color: C.amber, fontWeight: 800 }}>🔒 L3 데이터룸 정보</span>
         {"  "}이 정보는 LOI 승인 투자자에게만 공개됩니다. 채무자 개인정보는 자동 마스킹 파이프라인이 처리합니다.
       </div>
-      <FormGrid cols={2}>
-        <Field label="약정금리" hint="연이율 (%)">
-          <NumberInput value={state.interest_rate} onChange={v => update("interest_rate", v)} placeholder="예: 5.5" suffix="%" />
-        </Field>
-        <Field label="연체금리" hint="연이율 (%)">
-          <NumberInput value={state.penalty_rate} onChange={v => update("penalty_rate", v)} placeholder="예: 12.0" suffix="%" />
-        </Field>
-        <Field label="연체시작일">
-          <DateField
-            value={state.default_start_date}
-            onChange={v => update("default_start_date", v)}
-            placeholder="연체 시작일 선택"
-            max={new Date()}
-          />
-        </Field>
-        <Field label="전용면적" hint="㎡">
-          <NumberInput value={state.exclusive_area} onChange={v => update("exclusive_area", v)} placeholder="예: 84.5" suffix="㎡" />
-        </Field>
-        <Field label="건축년도">
-          <NumberInput value={state.build_year} onChange={v => update("build_year", v)} placeholder="예: 2015" suffix="년" />
-        </Field>
-        <Field label="근저당 순위">
-          <NumberInput value={state.mortgage_rank} onChange={v => update("mortgage_rank", v)} placeholder="예: 1" suffix="순위" />
-        </Field>
-        <Field label="근저당 설정액">
-          <NumberInput value={state.mortgage_amount} onChange={v => update("mortgage_amount", v)} placeholder="예: 1500000000" suffix="원" />
-        </Field>
-        <Field label="선순위 채권 총액" hint="당해 채권 앞 순위 합계">
-          <NumberInput value={state.senior_claims_total} onChange={v => update("senior_claims_total", v)} placeholder="예: 500000000" suffix="원" />
-        </Field>
-        <Field label="임차보증금 총액" hint="대항력 있는 임차인 합계">
-          <NumberInput value={state.tenant_deposit_total} onChange={v => update("tenant_deposit_total", v)} placeholder="예: 200000000" suffix="원" />
-        </Field>
-      </FormGrid>
 
-      {/* ── 경매 정보 ── */}
+      {/* 권리 · 임차 · 채무자소유자 · 희망 할인율 — RightsSection */}
+      <RightsSection
+        rights={state.rights}
+        lease={state.lease}
+        debtorOwnerSame={state.debtorOwnerSame}
+        desiredSaleDiscount={state.desiredSaleDiscount}
+        principal={state.claim.principal}
+        onRights={(patch) => dispatch({ type: "SET_RIGHTS", patch })}
+        onLease={(patch) => dispatch({ type: "SET_LEASE", patch })}
+        onDebtorOwnerSame={(v) => dispatch({ type: "PATCH", patch: { debtorOwnerSame: v } })}
+        onDesiredSaleDiscount={(v) => dispatch({ type: "PATCH", patch: { desiredSaleDiscount: v } })}
+        showDiscount
+      />
+
+      {/* 특수조건 25항목 */}
+      <div style={{ marginTop: 16 }}>
+        <SpecialConditionsSection
+          value={state.specialConditions}
+          onChange={(next) => dispatch({ type: "PATCH", patch: { specialConditions: next } })}
+        />
+      </div>
+
+      {/* sell 전용: 물리 특성 (전용면적 · 건축년도) + 근저당 */}
+      <div style={{ marginTop: 16 }}>
+        <FormGrid cols={2}>
+          <Field label="전용면적" hint="㎡">
+            <NumberInput value={extras.exclusive_area} onChange={v => updateEx("exclusive_area", v)} placeholder="예: 84.5" suffix="㎡" />
+          </Field>
+          <Field label="건축년도">
+            <NumberInput value={extras.build_year} onChange={v => updateEx("build_year", v)} placeholder="예: 2015" suffix="년" />
+          </Field>
+          <Field label="근저당 순위">
+            <NumberInput value={extras.mortgage_rank} onChange={v => updateEx("mortgage_rank", v)} placeholder="예: 1" suffix="순위" />
+          </Field>
+          <Field label="근저당 설정액">
+            <NumberInput value={extras.mortgage_amount} onChange={v => updateEx("mortgage_amount", v)} placeholder="예: 1500000000" suffix="원" />
+          </Field>
+        </FormGrid>
+      </div>
+
+      {/* 경매 정보 */}
       <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, backgroundColor: `${C.blue}08`, border: "1px solid rgba(45,116,182,0.18)" }}>
         <div style={{ fontWeight: 800, fontSize: 13, color: C.blueL, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
           🏛 경매 정보 <span style={{ fontWeight: 600, fontSize: 11, color: C.lt3 }}>(선택)</span>
         </div>
         <FormGrid cols={2}>
           <Field label="사건번호">
-            <TextInput value={state.auction_case_no} onChange={v => update("auction_case_no", v)} placeholder="예: 2025타경12345" />
+            <TextInput value={extras.auction_case_no} onChange={v => updateEx("auction_case_no", v)} placeholder="예: 2025타경12345" />
           </Field>
           <Field label="관할법원">
-            <TextInput value={state.auction_court} onChange={v => update("auction_court", v)} placeholder="예: 서울중앙지방법원" />
+            <TextInput value={extras.auction_court} onChange={v => updateEx("auction_court", v)} placeholder="예: 서울중앙지방법원" />
           </Field>
           <Field label="경매접수일(경매개시일)">
-            <DateField value={state.auction_filed_date} onChange={v => update("auction_filed_date", v)} placeholder="접수일 선택" max={new Date()} />
+            <DateField value={extras.auction_filed_date} onChange={v => updateEx("auction_filed_date", v)} placeholder="접수일 선택" max={new Date()} />
           </Field>
           <Field label="예상 경매 시작일">
-            <DateField value={state.auction_estimated_start} onChange={v => update("auction_estimated_start", v)} placeholder="예상 시작일 선택" />
+            <DateField value={extras.auction_estimated_start} onChange={v => updateEx("auction_estimated_start", v)} placeholder="예상 시작일 선택" />
           </Field>
         </FormGrid>
       </div>
 
-      {/* ── 공매 정보 ── */}
+      {/* 공매 정보 */}
       <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 10, backgroundColor: `${C.blue}08`, border: "1px solid rgba(45,116,182,0.18)" }}>
         <div style={{ fontWeight: 800, fontSize: 13, color: C.blueL, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
           📋 공매 정보 <span style={{ fontWeight: 600, fontSize: 11, color: C.lt3 }}>(선택)</span>
         </div>
         <FormGrid cols={2}>
           <Field label="관리번호">
-            <TextInput value={state.public_sale_mgmt_no} onChange={v => update("public_sale_mgmt_no", v)} placeholder="예: 2025-00123-001" />
+            <TextInput value={extras.public_sale_mgmt_no} onChange={v => updateEx("public_sale_mgmt_no", v)} placeholder="예: 2025-00123-001" />
           </Field>
           <Field label="공매신청일">
-            <DateField value={state.public_sale_filed_date} onChange={v => update("public_sale_filed_date", v)} placeholder="신청일 선택" max={new Date()} />
+            <DateField value={extras.public_sale_filed_date} onChange={v => updateEx("public_sale_filed_date", v)} placeholder="신청일 선택" max={new Date()} />
           </Field>
           <Field label="예상 공매 시작일">
-            <DateField value={state.public_sale_estimated_start} onChange={v => update("public_sale_estimated_start", v)} placeholder="예상 시작일 선택" />
+            <DateField value={extras.public_sale_estimated_start} onChange={v => updateEx("public_sale_estimated_start", v)} placeholder="예상 시작일 선택" />
           </Field>
         </FormGrid>
       </div>
@@ -891,7 +903,9 @@ function Step4BondRights({ state, update }: { state: WizardState; update: <K ext
   )
 }
 
-// OCR 결과 미리보기 텍스트 생성
+// ═════════════════════════════════════════════════════════════
+// OCR 프리뷰 helper
+// ═════════════════════════════════════════════════════════════
 function ocrPreview(data: Record<string, unknown>, docType: string): string {
   if (data.error) return data.error as string
   if (data.warning) return data.warning as string
@@ -939,14 +953,25 @@ interface OcrState {
   preview?: string
 }
 
-function Step5Docs({ state, update }: { state: WizardState; update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void }) {
+// ═════════════════════════════════════════════════════════════
+// STEP 5 — 선택 자료 제공 (extras.provided + OCR)
+// ═════════════════════════════════════════════════════════════
+function Step5Docs({
+  extras, setExtras,
+}: {
+  extras: WizardExtras
+  setExtras: React.Dispatch<React.SetStateAction<WizardExtras>>
+}) {
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const [ocr, setOcr] = useState<Record<string, OcrState>>({})
 
-  const handleUpload = useCallback(async (key: string, docType: string, file: File) => {
+  const toggleProvided = useCallback((key: keyof WizardExtras["provided"], value: boolean) => {
+    setExtras(ex => ({ ...ex, provided: { ...ex.provided, [key]: value } }))
+  }, [setExtras])
+
+  const handleUpload = useCallback(async (key: keyof WizardExtras["provided"], docType: string, file: File) => {
     setOcr(prev => ({ ...prev, [key]: { loading: true } }))
-    // 업로드하면 체크 자동 설정
-    update("provided", { ...state.provided, [key]: true })
+    toggleProvided(key, true)
 
     try {
       const fd = new FormData()
@@ -961,9 +986,9 @@ function Step5Docs({ state, update }: { state: WizardState; update: <K extends k
     } catch {
       setOcr(prev => ({ ...prev, [key]: { loading: false, filename: file.name, preview: "업로드 완료 (OCR 처리 중 오류)" } }))
     }
-  }, [state.provided, update])
+  }, [toggleProvided])
 
-  const items: Array<{ key: keyof WizardState["provided"]; label: string; desc: string; tier: string; icon: any }> = [
+  const items: Array<{ key: keyof WizardExtras["provided"]; label: string; desc: string; tier: string; icon: any }> = [
     { key: "appraisal", label: "감정평가서", desc: "PII 마스킹 자동 적용", tier: "L1 공개", icon: FileText },
     { key: "registry", label: "등기부등본", desc: "요약(L1) / 원본(L2)", tier: "L1 / L2", icon: FileText },
     { key: "rights", label: "권리관계 분석", desc: "선·후순위 · 보증금", tier: "L0 요약", icon: Scale },
@@ -982,7 +1007,7 @@ function Step5Docs({ state, update }: { state: WizardState; update: <K extends k
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
         {items.map(it => {
           const Icon = it.icon
-          const checked = state.provided[it.key]
+          const checked = extras.provided[it.key]
           const s = ocr[it.key]
 
           return (
@@ -995,7 +1020,6 @@ function Step5Docs({ state, update }: { state: WizardState; update: <K extends k
                 display: "flex", flexDirection: "column", gap: 10,
               }}
             >
-              {/* 히든 파일 인풋 */}
               <input
                 ref={el => { inputRefs.current[it.key] = el }}
                 type="file"
@@ -1008,9 +1032,8 @@ function Step5Docs({ state, update }: { state: WizardState; update: <K extends k
                 }}
               />
 
-              {/* 상단: 토글 버튼 */}
               <button
-                onClick={() => update("provided", { ...state.provided, [it.key]: !checked })}
+                onClick={() => toggleProvided(it.key, !checked)}
                 style={{
                   display: "flex", gap: 12, alignItems: "flex-start",
                   background: "none", border: "none", cursor: "pointer",
@@ -1049,7 +1072,6 @@ function Step5Docs({ state, update }: { state: WizardState; update: <K extends k
                 </div>
               </button>
 
-              {/* 하단: OCR 결과 또는 업로드 버튼 */}
               {s?.filename ? (
                 <div
                   style={{
@@ -1106,6 +1128,9 @@ function Step5Docs({ state, update }: { state: WizardState; update: <K extends k
   )
 }
 
+// ═════════════════════════════════════════════════════════════
+// STEP 6 — 검토 · 제출 (WizardState 투영 기반)
+// ═════════════════════════════════════════════════════════════
 function Step6Review({
   state, completeness, discountRate, feeEstimate,
 }: {
@@ -1116,8 +1141,6 @@ function Step6Review({
 }) {
   const router = useRouter()
 
-  // DR-18: 매물 등록 데이터 → NPL 수익성 분석 페이지 자동 prefill
-  // 매도자가 입력한 모든 필드를 그대로 분석 페이지로 넘겨 "다시 입력" 없이 분석 착수
   const handleStartAnalysis = useCallback(() => {
     try {
       if (typeof window !== "undefined") {
@@ -1127,7 +1150,6 @@ function Step6Review({
         )
       }
     } catch (err) {
-      // sessionStorage 실패 시에도 분석 페이지로는 이동 (URL 파라미터 fallback)
       console.warn("[sell→analysis] sessionStorage write failed:", err)
     }
     const qs = new URLSearchParams()
@@ -1167,7 +1189,7 @@ function Step6Review({
           {state.debtor_type === "INDIVIDUAL" ? "개인" : "법인"}
         </ReviewRow>
         <ReviewRow label="매각 방식">
-          {state.sale_method === "NPLATFORM" ? "엔플랫폼" : state.sale_method === "AUCTION" ? "경매" : "공매"}
+          {state.sale_method === "NPLATFORM" ? "엔플랫폼" : state.sale_method === "AUCTION" ? "경매" : state.sale_method === "PUBLIC" ? "공매" : "—"}
         </ReviewRow>
         <ReviewRow label="대출원금">{formatKRW(state.loan_principal)}</ReviewRow>
         <ReviewRow label="미수이자">{state.unpaid_interest > 0 ? formatKRW(state.unpaid_interest) : "—"}</ReviewRow>
@@ -1187,7 +1209,6 @@ function Step6Review({
             <ReviewRow label="예상 수수료 (매도자)" accent>
               {formatKRW(feeEstimate.totalFee)} ({(feeEstimate.totalRate * 100).toFixed(2)}%)
             </ReviewRow>
-            {/* 수수료 상세 breakdown */}
             <div
               style={{
                 marginTop: 8, padding: "14px 16px", borderRadius: 12,
@@ -1233,10 +1254,8 @@ function Step6Review({
           </>
         )}
 
-        {/* ── DR-18: 딜룸 공개 미리보기 (L0→L3 단계별 열람 매핑) ── */}
         <TierPreviewBlock state={state} />
 
-        {/* ── DR-18: 매물 데이터로 바로 NPL 수익성 분석 시작 ── */}
         <div
           style={{
             marginTop: 16, padding: "16px 18px", borderRadius: 14,
@@ -1287,9 +1306,9 @@ function Step6Review({
   )
 }
 
-// ── DR-18: 딜룸 공개 미리보기 ───────────────────────────────
-// 매물 등록 폼에 입력된 필드가 딜룸 L0→L3 단계별로 어떤 순서로 공개되는지
-// 시각화하여 정보 비대칭 단계화를 명시적으로 안내.
+// ═════════════════════════════════════════════════════════════
+// TierPreviewBlock — 딜룸 공개 미리보기 L0→L3
+// ═════════════════════════════════════════════════════════════
 function TierPreviewBlock({ state }: { state: WizardState }) {
   const collateralLabel = COLLATERAL_CATEGORIES.flatMap(c => c.items).find(i => i.value === state.collateral)?.label ?? "—"
   const regionBrief = `${state.region_city || "—"} ${state.region_district ? state.region_district.slice(0, 3) + "…" : ""}`.trim()
@@ -1297,7 +1316,6 @@ function TierPreviewBlock({ state }: { state: WizardState }) {
   const instTypeLabel = SELLER_INSTITUTION_OPTIONS.find(o => o.value === state.inst_type)?.label ?? "—"
   const saleMethodLabel = state.sale_method === "NPLATFORM" ? "엔플랫폼" : state.sale_method === "AUCTION" ? "경매" : state.sale_method === "PUBLIC" ? "공매" : "—"
 
-  // 범위 표시용 helper (정확치 마스킹)
   const rangeKRW = (n: number) => {
     if (!n) return "—"
     const bil = n / 10000
@@ -1494,6 +1512,9 @@ function TierPreviewBlock({ state }: { state: WizardState }) {
   )
 }
 
+// ═════════════════════════════════════════════════════════════
+// SubmittedScreen — 제출 완료 화면
+// ═════════════════════════════════════════════════════════════
 function SubmittedScreen({ completeness }: { completeness: number }) {
   return (
     <main
@@ -1595,8 +1616,9 @@ function SubmittedScreen({ completeness }: { completeness: number }) {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SHARED FORM PRIMITIVES
+   SHARED FORM PRIMITIVES (sell 전용 extras 및 커스텀 필드용)
 ═══════════════════════════════════════════════════════════ */
+
 function StepHeader({ num, title, desc }: { num: number; title: string; desc: string }) {
   return (
     <div style={{ marginBottom: 24 }}>
@@ -1649,7 +1671,6 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
 }
 
 function NumberInput({ value, onChange, placeholder, suffix }: { value: number; onChange: (v: number) => void; placeholder?: string; suffix?: string }) {
-  // Display with commas, store as raw number
   const [raw, setRaw] = useState(value ? String(value) : "")
   const displayValue = raw ? Number(raw.replace(/,/g, '')).toLocaleString('ko-KR') : ""
 
@@ -1688,92 +1709,6 @@ function NumberInput({ value, onChange, placeholder, suffix }: { value: number; 
   )
 }
 
-function SelectInput({ value, options, onChange, placeholder }: {
-  value: string
-  options: readonly { value: string; label: string }[]
-  onChange: (v: string) => void
-  placeholder?: string
-}) {
-  // NP-7: Layer System v3 준수 — value 선택 시 fg-strong, placeholder 시 fg-muted
-  // (이전: value ? "#fff" : C.lt4 → 라이트 배경에서 흰글씨 버그)
-  return (
-    <div style={{ position: "relative" }}>
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        style={{
-          width: "100%", padding: "11px 36px 11px 14px", borderRadius: 10,
-          backgroundColor: "var(--layer-3-bg)",
-          border: `1px solid var(--layer-border)`,
-          color: value ? "var(--fg-strong)" : "var(--fg-muted)",
-          fontSize: 13, outline: "none",
-          appearance: "none", cursor: "pointer",
-        }}
-      >
-        {placeholder && <option value="" disabled>{placeholder}</option>}
-        {options.map(opt => (
-          <option
-            key={opt.value}
-            value={opt.value}
-            style={{
-              backgroundColor: "var(--layer-1-bg)",
-              color: "var(--fg-strong)",
-            }}
-          >
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      {/* caret 아이콘 — 네이티브 화살표 대체 */}
-      <svg
-        aria-hidden="true"
-        style={{
-          position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-          pointerEvents: "none", color: "var(--fg-muted)",
-        }}
-        width="14" height="14" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-      >
-        <polyline points="6 9 12 15 18 9" />
-      </svg>
-    </div>
-  )
-}
-
-function CollateralSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <div>
-      {COLLATERAL_CATEGORIES.map(cat => (
-        <div key={cat.value} style={{ marginBottom: 10 }}>
-          <div style={{ fontSize: 10, color: C.lt4, fontWeight: 800, marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-            {cat.label}
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {cat.items.map(item => {
-              const active = item.value === value
-              return (
-                <button
-                  key={item.value}
-                  onClick={() => onChange(item.value)}
-                  style={{
-                    padding: "7px 12px", borderRadius: 8,
-                    backgroundColor: active ? "var(--color-positive-bg)" : C.bg3,
-                    color: active ? C.emL : C.lt3,
-                    border: `1px solid ${active ? C.em : C.bg4}`,
-                    fontSize: 11, fontWeight: 700, cursor: "pointer",
-                  }}
-                >
-                  {item.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 function RadioPills({ value, options, onChange }: { value: string; options: Array<{ value: string; label: string }>; onChange: (v: string) => void }) {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -1796,40 +1731,6 @@ function RadioPills({ value, options, onChange }: { value: string; options: Arra
         )
       })}
     </div>
-  )
-}
-
-function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label: string }) {
-  return (
-    <button
-      onClick={() => onChange(!value)}
-      style={{
-        display: "flex", alignItems: "center", gap: 10,
-        padding: "11px 14px", borderRadius: 10,
-        backgroundColor: value ? "var(--color-positive-bg)" : C.bg3,
-        border: `1px solid ${value ? C.em : C.bg4}`,
-        color: "var(--color-text-primary)", fontSize: 12, fontWeight: 600, cursor: "pointer", width: "100%",
-        textAlign: "left",
-      }}
-    >
-      <div
-        style={{
-          width: 36, height: 20, borderRadius: 999,
-          backgroundColor: value ? C.em : C.bg4,
-          position: "relative", transition: "background-color 0.2s",
-          flexShrink: 0,
-        }}
-      >
-        <div
-          style={{
-            position: "absolute", top: 2, left: value ? 18 : 2,
-            width: 16, height: 16, borderRadius: "50%",
-            backgroundColor: "#fff", transition: "left 0.2s",
-          }}
-        />
-      </div>
-      {label}
-    </button>
   )
 }
 
