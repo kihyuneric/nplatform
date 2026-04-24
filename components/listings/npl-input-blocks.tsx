@@ -405,47 +405,115 @@ export function DebtorOwnerSameToggle({
   )
 }
 
-/** ─── 5. 매각 희망가 할인율 ─────────────────────────────── */
+/** ─── 5. 매각 희망가 · 할인율 · 원금 통합 블록 ─────────────────
+ *
+ * 목표가(매각희망가) ↔ 할인율 양방향 동기.
+ *   · `askingPrice` / `onAskingPriceChange` 가 주어지면 금액 필드도 편집 가능
+ *     (SELL Step3 통합 UI — "매각희망가" + "할인율" + "원금 참조"를 한 블록으로)
+ *   · 미주어지면 기존 동작(할인율만 편집 · 금액은 원금×(1−할인율) 파생 표시)
+ *
+ * 수식:
+ *   목표 매각가 = 원금 × (1 − 할인율)
+ *   할인율     = (원금 − 목표 매각가) / 원금
+ *   금액 입력 시 할인율 자동 갱신 · 할인율 입력 시 금액 자동 갱신.
+ *   두 onChange 모두 주어지면 동기 dispatch → 상위 reducer 에서 일관 유지.
+ */
 export function DesiredSaleDiscountInput({
   value,
   onChange,
   principal,
+  askingPrice,
+  onAskingPriceChange,
   disabled,
 }: {
-  value: number // 0~1
+  value: number // 0~1 (할인율 소수)
   onChange: (v: number) => void
   principal: number
+  /** 양방향 동기용 — 지정 시 금액 필드 편집 가능 */
+  askingPrice?: number
+  onAskingPriceChange?: (v: number) => void
   disabled?: boolean
 }) {
-  const display = value > 0 ? (value * 100).toFixed(1).replace(/\.0$/, "") : ""
-  const targetSalePrice = Math.max(0, Math.round(principal * (1 - value)))
+  const editablePrice = typeof askingPrice === "number" && typeof onAskingPriceChange === "function"
+  const discountDisplay = value > 0 ? (value * 100).toFixed(1).replace(/\.0$/, "") : ""
+  // 목표가: askingPrice props 있으면 그대로, 없으면 원금 기반 파생
+  const derivedFromDiscount = Math.max(0, Math.round(principal * (1 - value)))
+  const targetSalePrice = editablePrice ? Math.max(0, Math.round(askingPrice as number)) : derivedFromDiscount
+
+  // 할인율 입력 → 금액 자동 계산 (양방향 모드)
+  const handleDiscountChange = (pct: number) => {
+    const nextDiscount = Math.min(1, Math.max(0, pct / 100))
+    onChange(nextDiscount)
+    if (editablePrice && principal > 0) {
+      onAskingPriceChange!(Math.max(0, Math.round(principal * (1 - nextDiscount))))
+    }
+  }
+
+  // 금액 입력 → 할인율 자동 계산 (양방향 모드)
+  const handleAskingPriceChange = (nextPrice: number) => {
+    if (!editablePrice) return
+    onAskingPriceChange!(Math.max(0, nextPrice))
+    if (principal > 0) {
+      const nextDiscount = Math.max(0, Math.min(1, (principal - nextPrice) / principal))
+      onChange(nextDiscount)
+    }
+  }
+
   return (
     <div className={BLOCK}>
       <BlockHeader
         icon={<Percent className="w-4 h-4" />}
         title="매각 희망가 (대출원금 대비 할인율)"
-        subtitle="채권자 제시 매각가 — 원금 대비 x% 할인 입력"
+        subtitle={editablePrice
+          ? "목표 매각가 또는 할인율 중 한 쪽 입력 시 나머지 자동 계산"
+          : "채권자 제시 매각가 — 원금 대비 x% 할인 입력"}
         right={
           <div className="text-right">
-            <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">목표 매각가</div>
+            <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">
+              {editablePrice ? "매수자 절감액" : "목표 매각가"}
+            </div>
             <div className="text-[0.875rem] font-bold text-sky-600 dark:text-sky-300 tabular-nums">
-              {targetSalePrice.toLocaleString("ko-KR")}원
+              {editablePrice
+                ? `${Math.max(0, Math.round(principal - targetSalePrice)).toLocaleString("ko-KR")}원`
+                : `${targetSalePrice.toLocaleString("ko-KR")}원`}
             </div>
           </div>
         }
       />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
+        {/* 1. 매각 희망가 (목표 매각가) */}
+        <Field
+          label="매각 희망가"
+          required={editablePrice}
+          hint={editablePrice ? "매수자에게 공개되는 가격" : "원금 × (1 − 할인율)"}
+        >
+          {editablePrice ? (
+            <NumberInput
+              value={targetSalePrice}
+              onChange={handleAskingPriceChange}
+              placeholder="예: 850000000"
+              suffix="원"
+              disabled={disabled}
+            />
+          ) : (
+            <div className="w-full rounded-lg bg-[var(--color-surface-base)]/60 border border-dashed border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-sky-600 dark:text-sky-300 tabular-nums">
+              {targetSalePrice > 0 ? `${targetSalePrice.toLocaleString("ko-KR")}원` : "—"}
+            </div>
+          )}
+        </Field>
+
+        {/* 2. 할인율 */}
         <Field label="할인율" hint="0% 입력 시 원금 전액 매각가로 간주">
           <div className="relative">
             <input
               type="text"
               inputMode="decimal"
-              value={display}
+              value={discountDisplay}
               onChange={(e) => {
                 const raw = e.target.value.replace(/[^0-9.]/g, "")
                 const pct = raw === "" ? 0 : parseFloat(raw)
                 if (Number.isNaN(pct)) return
-                onChange(Math.min(1, Math.max(0, pct / 100)))
+                handleDiscountChange(pct)
               }}
               placeholder="10.0"
               disabled={disabled}
@@ -454,6 +522,8 @@ export function DesiredSaleDiscountInput({
             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[0.6875rem] text-[var(--color-text-tertiary)]">%</span>
           </div>
         </Field>
+
+        {/* 3. 대출원금 (참조) */}
         <Field label="대출원금 (참조)" hint="채권잔액 블록의 원금 자동 연동">
           <div className="w-full rounded-lg bg-[var(--color-surface-base)]/60 border border-dashed border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-tertiary)] tabular-nums">
             {principal > 0 ? `${principal.toLocaleString("ko-KR")}원` : "원금 미입력"}

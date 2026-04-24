@@ -31,6 +31,12 @@ export function RightsSection({
   onLease,
   onDebtorOwnerSame,
   onDesiredSaleDiscount,
+  /**
+   * 양방향 동기 — SELL Step3 통합 UI 에서 목표가 직접 입력 시 전달.
+   * 미지정 시 목표가는 원금×(1−할인율) 파생 표시만.
+   */
+  askingPrice,
+  onAskingPriceChange,
   /** ANALYSIS 모드 등에서 할인율 필드 숨김 */
   showDiscount = true,
   disabled,
@@ -44,6 +50,8 @@ export function RightsSection({
   onLease: (patch: Partial<LeaseSummary>) => void
   onDebtorOwnerSame: (v: boolean) => void
   onDesiredSaleDiscount: (v: number) => void
+  askingPrice?: number
+  onAskingPriceChange?: (v: number) => void
   showDiscount?: boolean
   disabled?: boolean
 }) {
@@ -69,6 +77,8 @@ export function RightsSection({
           value={desiredSaleDiscount}
           onChange={onDesiredSaleDiscount}
           principal={principal}
+          askingPrice={askingPrice}
+          onAskingPriceChange={onAskingPriceChange}
           disabled={disabled}
         />
       )}

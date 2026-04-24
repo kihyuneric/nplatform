@@ -51,6 +51,8 @@ import {
   type UnifiedFormState,
   type UnifiedFormAction,
 } from "@/components/npl/unified-listing-form"
+// Phase G6+ · 매각희망가·할인율·원금 통합 블록 (Step3 단독 사용)
+import { DesiredSaleDiscountInput } from "@/components/listings/npl-input-blocks"
 
 // NX-5: theme-responsive color map — 라이트/다크 양쪽에서 WCAG AA 대비 확보
 const C = {
@@ -662,50 +664,49 @@ function Step3({
         />
       </div>
 
-      {/* 매각희망가 · 매각방식 (sell 전용 필드) */}
+      {/* 매각희망가 · 할인율 · 원금 통합 블록 + 매각방식 */}
       <div style={{ marginTop: 16 }}>
-        <FormGrid cols={2}>
-          <Field label="매각희망가" required hint="매수자에게 공개될 가격">
-            <NumberInput
-              value={state.askingPrice}
-              onChange={v => dispatch({ type: "PATCH", patch: { askingPrice: v } })}
-              placeholder="예: 850000000"
-              suffix="원"
-            />
-          </Field>
-          <Field label="매각 방식">
-            <RadioPills
-              value={state.saleMethod}
-              options={[
-                { value: "NPLATFORM", label: "엔플랫폼" },
-                { value: "AUCTION",   label: "경매" },
-                { value: "PUBLIC",    label: "공매" },
-              ]}
-              onChange={v => dispatch({ type: "PATCH", patch: { saleMethod: v as SaleMethod } })}
-            />
-          </Field>
-        </FormGrid>
+        <DesiredSaleDiscountInput
+          value={state.desiredSaleDiscount}
+          onChange={(v) => dispatch({ type: "PATCH", patch: { desiredSaleDiscount: v } })}
+          principal={state.claim.principal}
+          askingPrice={state.askingPrice}
+          onAskingPriceChange={(v) => dispatch({ type: "PATCH", patch: { askingPrice: v } })}
+        />
+      </div>
+      <div style={{ marginTop: 12 }}>
+        <Field label="매각 방식">
+          <RadioPills
+            value={state.saleMethod}
+            options={[
+              { value: "NPLATFORM", label: "엔플랫폼" },
+              { value: "AUCTION",   label: "경매" },
+              { value: "PUBLIC",    label: "공매" },
+            ]}
+            onChange={v => dispatch({ type: "PATCH", patch: { saleMethod: v as SaleMethod } })}
+          />
+        </Field>
       </div>
 
-      {/* 자동 할인율 표시 */}
+      {/* 자동 계산 할인율 요약 (참조용) */}
       {claimBalance > 0 && state.askingPrice > 0 && (
         <div
           style={{
-            marginTop: 20, padding: "18px 20px", borderRadius: 12,
+            marginTop: 20, padding: "14px 20px", borderRadius: 12,
             backgroundColor: "var(--color-positive-bg)", border: `1px solid ${C.em}33`,
             display: "flex", justifyContent: "space-between", alignItems: "center",
           }}
         >
           <div>
-            <div style={{ fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 3 }}>자동 계산 할인율</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: C.emL, letterSpacing: "-0.02em" }}>
+            <div style={{ fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 3 }}>채권잔액 대비 할인율</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: C.emL, letterSpacing: "-0.02em" }}>
               {discountRate.toFixed(1)}%
             </div>
           </div>
           <div style={{ textAlign: "right", fontSize: 11, color: C.lt4 }}>
-            채권잔액 대비
+            매수자 절감액 (채권잔액 기준)
             <br />
-            매수자 절감액 {formatKRW(claimBalance - state.askingPrice)}
+            <strong style={{ color: C.emL, fontSize: 13 }}>{formatKRW(claimBalance - state.askingPrice)}</strong>
           </div>
         </div>
       )}
@@ -771,7 +772,8 @@ function Step4BondRights({
         {"  "}이 정보는 LOI 승인 투자자에게만 공개됩니다. 채무자 개인정보는 자동 마스킹 파이프라인이 처리합니다.
       </div>
 
-      {/* 권리 · 임차 · 채무자소유자 · 희망 할인율 — RightsSection */}
+      {/* 권리 · 임차 · 채무자소유자 — RightsSection
+          Phase G6+ · 매각희망가/할인율 블록은 Step3 로 이관 (중복 제거). */}
       <RightsSection
         rights={state.rights}
         lease={state.lease}
@@ -782,7 +784,7 @@ function Step4BondRights({
         onLease={(patch) => dispatch({ type: "SET_LEASE", patch })}
         onDebtorOwnerSame={(v) => dispatch({ type: "PATCH", patch: { debtorOwnerSame: v } })}
         onDesiredSaleDiscount={(v) => dispatch({ type: "PATCH", patch: { desiredSaleDiscount: v } })}
-        showDiscount
+        showDiscount={false}
       />
 
       {/* 특수조건 V2 18항목 × 3-버킷 (Phase G1/G2) */}
