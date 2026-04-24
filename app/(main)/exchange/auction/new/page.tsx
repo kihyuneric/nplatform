@@ -588,83 +588,9 @@ export default function BiddingNewPage() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* ── 채권 핵심 3필드 (원금 · 미수이자 · 자동계산 채권잔액) ─── */}
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-3">
-          <div className="flex items-start gap-2">
-            <Banknote className="w-4 h-4 mt-0.5 text-emerald-500 shrink-0" />
-            <div>
-              <p className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">
-                채권잔액 = 대출원금 + 미수이자 (분리 입력)
-              </p>
-              <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] mt-0.5">
-                원금과 미수이자를 각각 입력하세요. 채권잔액 합계는 자동 계산됩니다.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-            {/* 대출원금 */}
-            <div>
-              <Label className="text-sm font-semibold">
-                대출원금 (원) <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                className={`mt-1.5 ${errorRing("loanPrincipal")}`}
-                type="text"
-                inputMode="numeric"
-                placeholder="1,000,000,000"
-                value={formatNumberInput(form.loanPrincipal)}
-                onChange={(e) =>
-                  updateNumberField("loanPrincipal", e.target.value)
-                }
-              />
-              {amountPreview(form.loanPrincipal)}
-            </div>
-
-            {/* 미수이자 (정상이자 누적) */}
-            <div>
-              <Label className="text-sm font-semibold">
-                미수이자 (원)
-                <span className="ml-1 text-[0.6875rem] font-normal text-[var(--color-text-muted)]">
-                  정상이자 누적 · 선택
-                </span>
-              </Label>
-              <Input
-                className="mt-1.5"
-                type="text"
-                inputMode="numeric"
-                placeholder="100,000,000"
-                value={formatNumberInput(form.unpaidInterest)}
-                onChange={(e) =>
-                  updateNumberField("unpaidInterest", e.target.value)
-                }
-              />
-              {amountPreview(form.unpaidInterest)}
-            </div>
-          </div>
-
-          {/* 채권잔액 자동계산 배너 */}
-          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 flex items-center justify-between">
-            <div>
-              <p className="text-[0.6875rem] text-[var(--color-text-muted)] font-medium">
-                채권잔액 (자동계산 = 대출원금 + 미수이자)
-              </p>
-              <p className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-0.5">
-                연체이자는 NPL 상세 · 채권 브레이크다운 블록에서 별도 추정
-              </p>
-            </div>
-            <p className="text-xl font-bold text-amber-700 dark:text-amber-200 tabular-nums">
-              {claimBalanceComputed > 0
-                ? `${claimBalanceComputed.toLocaleString("ko-KR")}원`
-                : "-"}
-              {claimBalanceComputed > 0 && (
-                <span className="ml-2 text-[0.6875rem] font-normal text-[var(--color-text-muted)]">
-                  {formatKRW(claimBalanceComputed)}
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
+        {/* 대출원금·미수이자·연체이자·연체시작일·정상금리·연체금리·채권잔액 자동산출 모두
+            아래 공용 블록 `ClaimBreakdownBlock` 이 담당 (OCR 자동 채움 지원).
+            상단 자체 입력 블록을 제거하여 중복 입력을 없앰. — UIF-2026Q2 */}
 
         {/* ── 담보 가격 ─────────────────────────────────── */}
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
