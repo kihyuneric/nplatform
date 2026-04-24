@@ -108,6 +108,8 @@ export function makeInitialState(mode: FormMode): UnifiedFormState {
     specialConditionsV2: [],
 
     saleMethod: "NPLATFORM",
+    saleMethods: ["NPLATFORM"],
+    saleMethodOther: "",
   }
 
   // 수수료율은 SELL + AUCTION 두 모드 모두에서 사용.
@@ -131,10 +133,19 @@ export function makeInitialState(mode: FormMode): UnifiedFormState {
   return base
 }
 
+// Phase G7+ · saleMethods 변경 시 legacy saleMethod 자동 동기 (첫 항목 or NPLATFORM).
+function syncSaleMethod(s: UnifiedFormState, patch: Partial<UnifiedFormState>): Partial<UnifiedFormState> {
+  if (patch.saleMethods !== undefined && patch.saleMethod === undefined) {
+    const first = patch.saleMethods[0]
+    return { ...patch, saleMethod: first ?? "NPLATFORM" }
+  }
+  return patch
+}
+
 function reducer(s: UnifiedFormState, a: UnifiedFormAction): UnifiedFormState {
   switch (a.type) {
     case "PATCH":
-      return { ...s, ...a.patch }
+      return { ...s, ...syncSaleMethod(s, a.patch) }
     case "SET_FIELD":
       return { ...s, [a.path]: a.value }
     case "SET_CLAIM":

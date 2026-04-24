@@ -417,7 +417,29 @@ export function buildSampleReport(): UnifiedAnalysisReport {
       grade: riskGrade,
       score: riskScore,
       level: riskScore >= 70 ? 'LOW' : riskScore >= 55 ? 'MEDIUM' : riskScore >= 40 ? 'HIGH' : 'CRITICAL',
-      narrative: `LTV ${ltv.ltvPercent.toFixed(1)}% · 지역 동향 ${region.score}점 · 낙찰가율 조정치 ${auction.adjustedBidRatio.toFixed(1)}%. ${auction.specialConditionPenalty < 0 ? `특수조건 ${auction.specialConditionPenalty.toFixed(1)}%p 감점 반영. ` : ''}송파구 오피스텔 시장 안정세, 최근 3개월 낙찰가율 ${SAMPLE_STATISTICS.auctionRatioStats[0].rows.find(r => r.bucket === '3M')?.bidRatio.toFixed(1)}%로 탄탄한 흐름.`,
+      // ─── AI 리스크 등급 narrative · 4팩터 강약·완화 포커스 관점 ───
+      //   회수율 섹션과 관점 분리:
+      //     · recovery (회수 가능성) : 얼마나 받을 수 있나 (수치·신뢰구간)
+      //     · risk (여기)            : 뭘 조심해야 하나 (최약 팩터·완화 포커스)
+      narrative: (() => {
+        const sorted = [...riskFactorResults].sort((a, b) => a.score - b.score)
+        const weakest = sorted[0]
+        const strongest = sorted[sorted.length - 1]
+        const highOrCritical = riskFactorResults.filter(f => f.severity === 'HIGH').length
+        const levelWord = riskScore >= 70 ? '낮음' : riskScore >= 55 ? '보통' : riskScore >= 40 ? '높음' : '매우 높음'
+        const focus = weakest.mitigation
+          ? weakest.mitigation
+          : `${weakest.category} 팩터 보강 필요`
+        return (
+          `리스크 수준 ${levelWord} (${riskScore}점 · 등급 ${riskGrade}). ` +
+          `4팩터 중 가장 취약한 구간은 "${weakest.category}" (${weakest.score.toFixed(1)}점) · ` +
+          `가장 견고한 구간은 "${strongest.category}" (${strongest.score.toFixed(1)}점). ` +
+          (highOrCritical > 0
+            ? `HIGH 팩터 ${highOrCritical}개 — 매입 전 완화 조치 필수. `
+            : `4팩터 모두 LOW/MEDIUM — 구조적 안정성 확보. `) +
+          `완화 포커스: ${focus}.`
+        )
+      })(),
       factors: riskFactorResults.map(f => ({
         category: f.category,
         severity: f.severity,

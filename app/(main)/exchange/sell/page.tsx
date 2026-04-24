@@ -48,8 +48,10 @@ import {
   FeeSection,
   toSellListingBody,
   preflightSell,
+  SALE_METHOD_OPTIONS,
   type UnifiedFormState,
   type UnifiedFormAction,
+  type ListingSaleMethod,
 } from "@/components/npl/unified-listing-form"
 // Phase G6+ · 매각희망가·할인율·원금 통합 블록 (Step3 단독 사용)
 import { DesiredSaleDiscountInput } from "@/components/listings/npl-input-blocks"
@@ -133,6 +135,8 @@ interface WizardState {
   asking_price: number
   appraisal_value: number
   sale_method: SaleMethod | ""
+  sale_methods: string[]
+  sale_method_other: string
   seller_fee_rate: number
   interest_rate: number
   penalty_rate: number
@@ -170,6 +174,8 @@ function toWizardState(s: UnifiedFormState, ex: WizardExtras): WizardState {
     sale_method: (s.saleMethod === "AUCTION" || s.saleMethod === "PUBLIC" || s.saleMethod === "NPLATFORM")
       ? s.saleMethod
       : "",
+    sale_methods: s.saleMethods as string[],
+    sale_method_other: s.saleMethodOther,
     seller_fee_rate: s.fee?.sellerRate ?? 0.005,
     interest_rate: s.claim.normalRate,
     penalty_rate: s.claim.overdueRate,
@@ -675,15 +681,12 @@ function Step3({
         />
       </div>
       <div style={{ marginTop: 12 }}>
-        <Field label="매각 방식">
-          <RadioPills
-            value={state.saleMethod}
-            options={[
-              { value: "NPLATFORM", label: "엔플랫폼" },
-              { value: "AUCTION",   label: "경매" },
-              { value: "PUBLIC",    label: "공매" },
-            ]}
-            onChange={v => dispatch({ type: "PATCH", patch: { saleMethod: v as SaleMethod } })}
+        <Field label="매각 방식" hint="여러 방식을 동시에 선택 가능합니다. 기타 방식은 직접 입력하세요.">
+          <SaleMethodMultiSelect
+            selected={state.saleMethods}
+            other={state.saleMethodOther}
+            onChange={(next) => dispatch({ type: "PATCH", patch: { saleMethods: next } })}
+            onOtherChange={(v) => dispatch({ type: "PATCH", patch: { saleMethodOther: v } })}
           />
         </Field>
       </div>
@@ -1155,7 +1158,13 @@ function Step6Review({
           {state.debtor_type === "INDIVIDUAL" ? "개인" : "법인"}
         </ReviewRow>
         <ReviewRow label="매각 방식">
-          {state.sale_method === "NPLATFORM" ? "엔플랫폼" : state.sale_method === "AUCTION" ? "경매" : state.sale_method === "PUBLIC" ? "공매" : "—"}
+          {(() => {
+            const labels = state.sale_methods
+              .map((m: string) => SALE_METHOD_OPTIONS.find(o => o.value === m)?.label)
+              .filter((x): x is string => Boolean(x))
+            if (state.sale_method_other.trim()) labels.push(`기타 (${state.sale_method_other.trim()})`)
+            return labels.length > 0 ? labels.join(" · ") : "—"
+          })()}
         </ReviewRow>
         <ReviewRow label="대출원금">{formatKRW(state.loan_principal)}</ReviewRow>
         <ReviewRow label="미수이자">{state.unpaid_interest > 0 ? formatKRW(state.unpaid_interest) : "—"}</ReviewRow>
@@ -1280,7 +1289,13 @@ function TierPreviewBlock({ state }: { state: WizardState }) {
   const regionBrief = `${state.region_city || "—"} ${state.region_district ? state.region_district.slice(0, 3) + "…" : ""}`.trim()
   const regionFull = `${state.region_city} ${state.region_district}`.trim() || "—"
   const instTypeLabel = SELLER_INSTITUTION_OPTIONS.find(o => o.value === state.inst_type)?.label ?? "—"
-  const saleMethodLabel = state.sale_method === "NPLATFORM" ? "엔플랫폼" : state.sale_method === "AUCTION" ? "경매" : state.sale_method === "PUBLIC" ? "공매" : "—"
+  const saleMethodLabel = (() => {
+    const labels = state.sale_methods
+      .map((m: string) => SALE_METHOD_OPTIONS.find(o => o.value === m)?.label)
+      .filter((x): x is string => Boolean(x))
+    if (state.sale_method_other.trim()) labels.push(`기타 (${state.sale_method_other.trim()})`)
+    return labels.length > 0 ? labels.join(" · ") : "—"
+  })()
 
   const rangeKRW = (n: number) => {
     if (!n) return "—"
@@ -1696,6 +1711,88 @@ function RadioPills({ value, options, onChange }: { value: string; options: Arra
           </button>
         )
       })}
+    </div>
+  )
+}
+
+/**
+ * SaleMethodMultiSelect — Phase G7+ · 매각 방식 복수 선택 + 기타 자유 입력.
+ *
+ * 옵션 카탈로그는 types.ts 의 SALE_METHOD_OPTIONS 단일 진원지에서 가져옴 (번역 대응).
+ * 토글식 칩 (pill) · "기타" 체크 시 자유 입력 텍스트필드 노출.
+ */
+function SaleMethodMultiSelect({
+  selected, other, onChange, onOtherChange,
+}: {
+  selected: ListingSaleMethod[]
+  other: string
+  onChange: (next: ListingSaleMethod[]) => void
+  onOtherChange: (v: string) => void
+}) {
+  const toggle = (v: ListingSaleMethod) => {
+    const set = new Set(selected)
+    if (set.has(v)) set.delete(v)
+    else set.add(v)
+    onChange(Array.from(set))
+  }
+  const otherActive = other.trim().length > 0
+  const toggleOther = () => {
+    if (otherActive) onOtherChange("")
+  }
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {SALE_METHOD_OPTIONS.map(op => {
+          const active = selected.includes(op.value)
+          return (
+            <button
+              key={op.value}
+              type="button"
+              onClick={() => toggle(op.value)}
+              aria-pressed={active}
+              style={{
+                padding: "9px 14px", borderRadius: 10,
+                backgroundColor: active ? "var(--color-positive-bg)" : C.bg3,
+                color: active ? C.emL : C.lt3,
+                border: `1px solid ${active ? C.em : C.bg4}`,
+                fontSize: 11, fontWeight: 700, cursor: "pointer",
+                display: "inline-flex", alignItems: "center", gap: 6,
+              }}
+            >
+              <span aria-hidden>{active ? "☑" : "☐"}</span>
+              {op.label}
+            </button>
+          )
+        })}
+        <button
+          type="button"
+          onClick={toggleOther}
+          aria-pressed={otherActive}
+          style={{
+            padding: "9px 14px", borderRadius: 10,
+            backgroundColor: otherActive ? "var(--color-positive-bg)" : C.bg3,
+            color: otherActive ? C.emL : C.lt3,
+            border: `1px solid ${otherActive ? C.em : C.bg4}`,
+            fontSize: 11, fontWeight: 700, cursor: "pointer",
+            display: "inline-flex", alignItems: "center", gap: 6,
+          }}
+        >
+          <span aria-hidden>{otherActive ? "☑" : "☐"}</span>
+          기타
+        </button>
+      </div>
+      <input
+        type="text"
+        value={other}
+        onChange={(e) => onOtherChange(e.target.value)}
+        placeholder="기타 매각 방식을 직접 입력 (예: 해외 매각 · 이관 · 사모펀드 · Bulk 매각)"
+        style={{
+          width: "100%", padding: "8px 12px", borderRadius: 8,
+          backgroundColor: C.bg3, color: "var(--color-text-primary)",
+          border: `1px solid ${otherActive ? C.em : C.bg4}`,
+          fontSize: 12, outline: "none",
+        }}
+      />
     </div>
   )
 }

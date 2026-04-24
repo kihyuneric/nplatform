@@ -247,25 +247,29 @@ export function buildRecoveryPrediction(args: {
     ).toFixed(2),
   )
 
+  // ─── 회수율 narrative · 회수 가능성·신뢰구간 관점 ─────────────
+  //   AI 리스크 등급 섹션과 관점을 명확히 분리:
+  //     · 여기 (recovery)  : 회수율 수치·신뢰구간 폭·신뢰도 근거 → "얼마나 받을 수 있나"
+  //     · risk section     : 4팩터 강약·취약 포인트·완화 포커스 → "뭘 조심해야 하나"
   const narrativeLines: string[] = []
+  const band = Math.max(0, upper - lower)
+  const bandWide = band >= 20  // ±σ 반폭 10%p 초과 → 표본 부족 신호
+  const confPct = Math.round(confidence * 100)
+  const coverageRate = ltv.ltvPercent > 0
+    ? Math.min(200, 100 / ltv.ltvPercent * 100).toFixed(0)
+    : '—'
+
   narrativeLines.push(
-    `LTV ${ltv.ltvPercent.toFixed(1)}% — ${ltv.ltvPercent <= 60 ? '안전' : ltv.ltvPercent <= 80 ? '양호' : '주의'} 구간.`,
+    `예상 회수율 ${predicted.toFixed(1)}% · 신뢰구간 ${lower.toFixed(1)}~${upper.toFixed(1)}% (±σ) · 신뢰도 ${confPct}%.`,
   )
   narrativeLines.push(
-    `지역 낙찰가율 ${auction.regionMedianBidRatio.toFixed(1)}% (${auction.regionScope})` +
-      (auction.nearbyMedianBidRatio != null
-        ? `, 인근 중앙값 ${auction.nearbyMedianBidRatio.toFixed(1)}%`
-        : '') +
-      (auction.specialConditionPenalty < 0
-        ? `, 특수조건 ${auction.specialConditionPenalty.toFixed(1)}%p 감점 반영`
-        : '') +
-      '.',
+    `담보 커버리지 ${coverageRate}% (채권액 대비 담보가치) 에 낙찰가율 ${auction.adjustedBidRatio.toFixed(1)}% 투영한 회수 시나리오.`,
   )
-  if (region.transactionCount12M > 0) {
-    narrativeLines.push(
-      `인근 실거래 ${region.transactionCount12M}건, 낙찰가율 모멘텀 ${region.auctionMomentum > 0 ? '+' : ''}${region.auctionMomentum}%p.`,
-    )
-  }
+  narrativeLines.push(
+    bandWide
+      ? `신뢰구간이 ±${(band / 2).toFixed(1)}%p 로 넓어 인근 표본 보강(${auction.sampleSize}건) 필요 — 보수 시나리오(${lower.toFixed(1)}%) 병행 권고.`
+      : `신뢰구간 ±${(band / 2).toFixed(1)}%p 로 안정. 하한(${lower.toFixed(1)}%) 기준 매입가 설정 시 마진 확보 용이.`,
+  )
 
   return {
     predictedRecoveryRate: predicted,

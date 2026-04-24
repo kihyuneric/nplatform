@@ -29,6 +29,16 @@ export type FormMode = "SELL" | "AUCTION" | "ANALYSIS"
 /** 매각 플랫폼 (SELL/AUCTION 에서 사용). */
 export type ListingSaleMethod = SaleMethod | "NPLATFORM" | "AUCTION" | "PUBLIC"
 
+/**
+ * 매각 방식 옵션 단일 진원지 — UI 라벨 · 저장 key · 순서 일관.
+ * 번역 대응: label 만 교체. value 는 DB 저장·API enum 으로 불변.
+ */
+export const SALE_METHOD_OPTIONS: readonly { value: ListingSaleMethod; label: string }[] = [
+  { value: "NPLATFORM", label: "엔플랫폼" },
+  { value: "AUCTION",   label: "경매" },
+  { value: "PUBLIC",    label: "공매" },
+] as const
+
 /** 감정·시세 섹션 (AppraisalAndMarketBlock 과 바인딩). */
 export interface AppraisalMarketState {
   appraisalValue: number
@@ -108,7 +118,20 @@ export interface UnifiedFormState {
    */
   specialConditionsV2: string[]
 
+  /**
+   * @deprecated Phase G7+ · 단일 매각 방식은 Legacy. `saleMethods` 배열 사용.
+   * 호환성을 위해 유지되며 `saleMethods[0]` 와 동기 (상위 reducer 가 반영).
+   */
   saleMethod: ListingSaleMethod
+
+  /**
+   * Phase G7+ · 복수 매각 방식 선택. 엔플랫폼/경매/공매 중 복수 체크 가능.
+   * 저장 시 API 에 문자열 배열 또는 comma-join 으로 전달.
+   */
+  saleMethods: ListingSaleMethod[]
+
+  /** Phase G7+ · 매각 방식 "기타" 자유 입력 (예: 해외 매각, 이관, 사모펀드 등) */
+  saleMethodOther: string
 
   // Mode 별 (해당 모드에서만 사용)
   fee?: FeeState
