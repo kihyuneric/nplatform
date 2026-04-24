@@ -1,39 +1,42 @@
 "use client"
 
-import { useRef, useState } from "react"
+/**
+ * app/(main)/analysis/new/page.tsx
+ *
+ * NPL 분석 신규 — F4 통합 폼 리팩터.
+ *
+ * 3-step 위자드 셸(헤더 + 진행 바 + Step 3 분석 애니메이션)은 유지하되,
+ * Step 1~2 의 입력 필드는 모두 `<NplUnifiedForm mode="ANALYSIS" />` 로 대체.
+ * 기등록 채권 불러오기 · OCR · 기관/담보/채권/감정/권리/특수조건 모든 블록이
+ * 거래소 매물등록 · 자발적 경매와 동일 UI·동일 상태 타입으로 수렴.
+ *
+ * ANALYSIS 모드는 수수료율·입찰조건을 숨기고 할인율도 숨김 (플랜 문서 매트릭스).
+ *
+ * 참고: docs/NPLatform_UnifiedForm_Module_Plan_2026Q2.md Phase F4
+ */
+
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, ArrowRight, Brain, Check, Clock, FileUp, Loader2, Sparkles } from "lucide-react"
+import {
+  ArrowLeft,
+  ArrowRight,
+  Brain,
+  Check,
+  Clock,
+  Loader2,
+} from "lucide-react"
 import DS from "@/lib/design-system"
-import { COLLATERAL_CATEGORIES } from "@/lib/taxonomy"
+import { getRegionLabel, getCollateralLabel } from "@/lib/taxonomy"
 import {
-  mapAppraisalData,
-  mapBondDocData,
-  type AppraisalExtracted,
-  type BondDocExtracted,
-} from "@/lib/npl/ocr-mapper"
-import SpecialConditionsPicker from "@/components/listings/special-conditions-picker"
-import {
-  ClaimBreakdownBlock,
-  LeaseSummaryBlock,
-  RightsSummaryBlock,
-  DebtorOwnerSameToggle,
-  DesiredSaleDiscountInput,
-  AppraisalAndMarketBlock,
-} from "@/components/listings/npl-input-blocks"
-import { BondSelector, type MyListing } from "@/components/npl/bond-selector"
-import { EMPTY_SPECIAL_CONDITIONS } from "@/lib/npl/unified-report/types"
-import type {
-  SpecialConditions,
-  ClaimBreakdown,
-  LeaseSummary,
-  RightsSummary,
-} from "@/lib/npl/unified-report/types"
+  NplUnifiedForm,
+  useUnifiedFormState,
+} from "@/components/npl/unified-listing-form"
 import { buildReportFromInput } from "@/lib/npl/unified-report/sample"
 
 type Step = 1 | 2 | 3
 
-const STEPS = ["기본 정보", "담보물 정보", "AI 분석 시작"]
+const STEPS = ["기본·채권·담보 정보", "권리·임차·특수조건", "AI 분석 시작"]
 
 const ANALYSIS_STEPS = [
   "채권 정보 검증 중...",
@@ -50,159 +53,16 @@ export default function NewNplAnalysisPage() {
   const [analysisStep, setAnalysisStep] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
-  // Step 1
+  // 분석 전용 메타 필드 (통합 폼 스키마엔 없음)
   const [bondNumber, setBondNumber] = useState("")
-  const [principalAmount, setPrincipalAmount] = useState("")    // 대출원금
-  const [unpaidInterestAmount, setUnpaidInterestAmount] = useState("") // 미수이자
   const [caseNumber, setCaseNumber] = useState("")
-  const [debtorType, setDebtorType] = useState("개인")
 
-  // 채권잔액 = 대출원금 + 미수이자 (자동계산)
-  const claimBalanceComputed =
-    (parseInt(principalAmount) || 0) + (parseInt(unpaidInterestAmount) || 0)
-
-  // Step 2
-  const [collateralType, setCollateralType] = useState("아파트")
-  const [address, setAddress] = useState("")
-  const [appraisalValue, setAppraisalValue] = useState("")
-  const [seniorClaim, setSeniorClaim] = useState("")
-
-  // Step 2 — NPL 상세 (선택 · OCR 자동입력 가능)
-  const [appraisalDate, setAppraisalDate] = useState("")
-  const [currentMarketValue, setCurrentMarketValue] = useState("")
-  const [marketPriceNote, setMarketPriceNote] = useState("")
-  const [auctionStartDate, setAuctionStartDate] = useState("")
-  const [debtorOwnerSame, setDebtorOwnerSame] = useState(true)
-  const [desiredSaleDiscount, setDesiredSaleDiscount] = useState(0)
-  const [claimBreakdown, setClaimBreakdown] = useState<ClaimBreakdown>({
-    principal: 0,
-    unpaidInterest: 0,
-    delinquencyStartDate: "",
-    normalRate: 0.069,
-    overdueRate: 0.16,
-  })
-  const [rightsSummary, setRightsSummary] = useState<RightsSummary>({
-    seniorTotal: 0,
-    juniorTotal: 0,
-  })
-  const [leaseSummary, setLeaseSummary] = useState<LeaseSummary>({
-    totalDeposit: 0,
-    totalMonthlyRent: 0,
-    tenantCount: 0,
-  })
-  const [specialConditions, setSpecialConditions] = useState<SpecialConditions>(EMPTY_SPECIAL_CONDITIONS)
-
-  // OCR auto-fill
-  const [ocrLoading, setOcrLoading] = useState(false)
-  const [ocrMsg, setOcrMsg] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-
-  const runOcr = async (file: File, docType: 'bond' | 'appraisal') => {
-    setOcrLoading(true)
-    setOcrMsg(null)
-    try {
-      const fd = new FormData()
-      fd.append('file', file)
-      fd.append('doc_type', docType)
-
-      const res = await fetch('/api/v1/ocr', { method: 'POST', body: fd })
-      if (!res.ok) {
-        const txt = await res.text()
-        throw new Error(`OCR 실패 (${res.status}) ${txt.slice(0, 80)}`)
-      }
-      const payload = await res.json() as {
-        data?: Record<string, unknown>
-        extractedData?: Record<string, unknown>
-        [k: string]: unknown
-      }
-      const extracted = (payload.data ?? payload.extractedData ?? payload) as Record<string, unknown>
-
-      let filledCount = 0
-      if (docType === 'bond') {
-        const bond = extracted as unknown as BondDocExtracted
-        const mapped = mapBondDocData(bond)
-        if (mapped.caseNumber) { setCaseNumber(mapped.caseNumber); filledCount++ }
-        if (mapped.address) { setAddress(mapped.address); filledCount++ }
-        if (mapped.propertyType) { setCollateralType(mapped.propertyType); filledCount++ }
-        // appraisalValue/minimumPrice mapper returns in 억원 unit — convert back to 원
-        if (bond.appraisal_value != null) {
-          setAppraisalValue(String(bond.appraisal_value))
-          filledCount++
-        }
-        // bond doc often implies principal ~ 최저가격 or appraisal
-        if (bond.minimum_price != null && !principalAmount) {
-          setPrincipalAmount(String(bond.minimum_price))
-          filledCount++
-        }
-      } else {
-        const app = extracted as unknown as AppraisalExtracted
-        const mapped = mapAppraisalData(app)
-        if (mapped.address) { setAddress(mapped.address); filledCount++ }
-        if (mapped.propertyType) { setCollateralType(mapped.propertyType); filledCount++ }
-        if (app.appraisal_value != null) {
-          setAppraisalValue(String(app.appraisal_value))
-          filledCount++
-        }
-      }
-
-      if (filledCount === 0) {
-        setOcrMsg('OCR 추출은 성공했지만 자동 채울 필드를 찾지 못했습니다. 수동 입력해주세요.')
-      } else {
-        setOcrMsg(`OCR 자동 채움 완료: ${filledCount}개 필드가 입력되었습니다`)
-      }
-    } catch (err) {
-      setOcrMsg(err instanceof Error ? err.message : 'OCR 처리 중 오류가 발생했습니다')
-    } finally {
-      setOcrLoading(false)
-    }
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]
-    if (!f) return
-    // Default to bond-doc type; covers case_number + address + appraisal
-    runOcr(f, 'bond')
-    e.target.value = ''
-  }
-
-  /**
-   * BondSelector 선택 시 모든 폼 필드를 기등록 채권 데이터로 덮어쓰기.
-   * UIF-2026Q2-v1 기획서 S7 — 매도사/매각사가 이미 올려둔 채권을 한 번에 불러오기.
-   */
-  const applyListing = (l: MyListing) => {
-    if (l.loan_principal)     setPrincipalAmount(String(l.loan_principal))
-    if (l.unpaid_interest)    setUnpaidInterestAmount(String(l.unpaid_interest))
-    if (l.address)            setAddress(l.address)
-    if (l.collateral_type)    setCollateralType(l.collateral_type)
-    if (l.appraised_value)    setAppraisalValue(String(l.appraised_value))
-    if (l.ai_estimated_price) setCurrentMarketValue(String(l.ai_estimated_price))
-    if (l.market_price_note)  setMarketPriceNote(l.market_price_note)
-    if (l.appraisal_date)     setAppraisalDate(l.appraisal_date)
-    if (l.auction_date)       setAuctionStartDate(l.auction_date)
-    if (typeof l.debtor_owner_same === "boolean") setDebtorOwnerSame(l.debtor_owner_same)
-    if (typeof l.desired_sale_discount === "number") setDesiredSaleDiscount(l.desired_sale_discount)
-
-    // JSONB blocks — 타입 가드 없이 병합 (DB 에 저장된 스키마와 프론트 타입 동일 가정)
-    if (l.claim_breakdown && typeof l.claim_breakdown === "object") {
-      setClaimBreakdown({ ...claimBreakdown, ...(l.claim_breakdown as Partial<ClaimBreakdown>) })
-    }
-    if (l.rights_summary && typeof l.rights_summary === "object") {
-      setRightsSummary({ ...rightsSummary, ...(l.rights_summary as Partial<RightsSummary>) })
-    }
-    if (l.lease_summary && typeof l.lease_summary === "object") {
-      setLeaseSummary({ ...leaseSummary, ...(l.lease_summary as Partial<LeaseSummary>) })
-    }
-    if (l.special_conditions && typeof l.special_conditions === "object") {
-      setSpecialConditions({ ...EMPTY_SPECIAL_CONDITIONS, ...(l.special_conditions as Partial<SpecialConditions>) })
-    }
-    setBondNumber(l.id)
-    setOcrMsg(`기등록 채권 "${l.title}" 의 정보를 불러왔습니다.`)
-  }
+  // 통합 폼 — 분석 모드 (수수료/입찰조건/할인율 숨김)
+  const { state, dispatch } = useUnifiedFormState("ANALYSIS")
 
   const handleNext = () => {
     if (step < 3) setStep((s) => (s + 1) as Step)
   }
-
   const handleBack = () => {
     if (step > 1) setStep((s) => (s - 1) as Step)
   }
@@ -212,53 +72,71 @@ export default function NewNplAnalysisPage() {
     setError(null)
     setAnalysisStep(0)
 
-    // Animate through analysis steps
     const stepInterval = setInterval(() => {
       setAnalysisStep((prev) => {
-        if (prev >= ANALYSIS_STEPS.length - 1) { clearInterval(stepInterval); return prev }
+        if (prev >= ANALYSIS_STEPS.length - 1) {
+          clearInterval(stepInterval)
+          return prev
+        }
         return prev + 1
       })
     }, 500)
 
     try {
-      // 클라이언트 사이드에서 즉시 리포트 생성 (API 호출 없이 규칙 기반 계산)
+      // UnifiedFormState → BuildReportFromInputOptions 매핑
+      const regionFull = state.address.sido
+        ? getRegionLabel(state.address.sido)
+        : ""
+      const addressStr = [
+        regionFull,
+        state.address.sigungu,
+        state.address.detail,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+
+      const collateralLabel = state.collateral
+        ? getCollateralLabel(state.collateral)
+        : "아파트"
+
       const report = buildReportFromInput({
-        principal:          Number(principalAmount) || 0,
-        unpaidInterest:     Number(unpaidInterestAmount) || 0,
-        appraisedValue:     Number(appraisalValue) || 0,
-        currentMarketValue: Number(currentMarketValue) || undefined,
-        specialConditions,
-        claimBreakdown,
-        rightsSummary,
-        leaseSummary,
-        address,
-        collateralType,
+        principal: state.claim.principal,
+        unpaidInterest: state.claim.unpaidInterest,
+        appraisedValue: state.appraisal.appraisalValue,
+        currentMarketValue: state.appraisal.currentMarketValue || undefined,
+        specialConditions: state.specialConditions,
+        claimBreakdown: state.claim,
+        rightsSummary: state.rights,
+        leaseSummary: state.lease,
+        address: addressStr,
+        collateralType: collateralLabel,
         bondNumber,
         caseNumber,
-        debtorOwnerSame,
-        desiredSaleDiscount,
-        auctionStartDate:   auctionStartDate || undefined,
-        appraisalDate:      appraisalDate || undefined,
-        marketPriceNote:    marketPriceNote || undefined,
-        debtorType,
+        debtorOwnerSame: state.debtorOwnerSame,
+        desiredSaleDiscount: state.desiredSaleDiscount,
+        auctionStartDate: state.appraisal.auctionStartDate || undefined,
+        appraisalDate: state.appraisal.appraisalDate || undefined,
+        marketPriceNote: state.appraisal.marketPriceNote || undefined,
+        debtorType: state.debtorType === "CORPORATE" ? "법인" : "개인",
       })
 
       clearInterval(stepInterval)
       setAnalysisStep(ANALYSIS_STEPS.length - 1)
 
-      // unifiedReport 키로 저장 — report/page.tsx 가 이 키를 읽음
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         try {
-          sessionStorage.setItem('unifiedReport', JSON.stringify(report))
-        } catch { /* ignore storage errors */ }
+          sessionStorage.setItem("unifiedReport", JSON.stringify(report))
+        } catch {
+          /* ignore storage errors */
+        }
       }
 
-      // Small delay so user sees final step
-      await new Promise(r => setTimeout(r, 600))
-      router.push('/analysis/report')
-    } catch (err) {
+      await new Promise((r) => setTimeout(r, 600))
+      router.push("/analysis/report")
+    } catch {
       clearInterval(stepInterval)
-      setError('분석 중 오류가 발생했습니다. 다시 시도해주세요.')
+      setError("분석 중 오류가 발생했습니다. 다시 시도해주세요.")
       setLoading(false)
     }
   }
@@ -267,7 +145,7 @@ export default function NewNplAnalysisPage() {
     <div className={DS.page.wrapper}>
       {/* Header */}
       <div className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] px-6 py-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <Link
             href="/analysis"
             className={`inline-flex items-center gap-2 ${DS.text.link} text-[0.8125rem] mb-4`}
@@ -277,21 +155,24 @@ export default function NewNplAnalysisPage() {
           </Link>
           <h1 className={DS.header.title}>새 NPL 분석</h1>
           <p className={DS.header.subtitle}>
-            AI가 30초 안에 투자 적합성을 분석합니다
+            AI가 30초 안에 투자 적합성을 분석합니다 · 거래소 매물등록과 동일한 통합 입력 폼
           </p>
         </div>
       </div>
 
       {/* Progress Bar */}
       <div className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)]">
-        <div className="max-w-2xl mx-auto px-6 py-4">
+        <div className="max-w-3xl mx-auto px-6 py-4">
           <div className="flex items-center gap-0">
             {STEPS.map((label, i) => {
               const idx = i + 1
               const done = step > idx
               const active = step === idx
               return (
-                <div key={label} className="flex items-center flex-1 last:flex-none">
+                <div
+                  key={label}
+                  className="flex items-center flex-1 last:flex-none"
+                >
                   <div className="flex items-center gap-2 shrink-0">
                     <div
                       className={`h-7 w-7 rounded-full flex items-center justify-center text-[0.6875rem] font-bold transition-all ${
@@ -306,14 +187,24 @@ export default function NewNplAnalysisPage() {
                     </div>
                     <span
                       className={`text-[0.8125rem] font-medium ${
-                        active ? "text-[var(--color-brand-dark)]" : done ? "text-[var(--color-positive)]" : "text-[var(--color-text-muted)]"
+                        active
+                          ? "text-[var(--color-brand-dark)]"
+                          : done
+                          ? "text-[var(--color-positive)]"
+                          : "text-[var(--color-text-muted)]"
                       }`}
                     >
                       {label}
                     </span>
                   </div>
                   {i < STEPS.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-3 ${done ? "bg-[var(--color-positive)]" : "bg-[var(--color-border-subtle)]"}`} />
+                    <div
+                      className={`flex-1 h-0.5 mx-3 ${
+                        done
+                          ? "bg-[var(--color-positive)]"
+                          : "bg-[var(--color-border-subtle)]"
+                      }`}
+                    />
                   )}
                 </div>
               )
@@ -323,259 +214,112 @@ export default function NewNplAnalysisPage() {
       </div>
 
       {/* Form Body */}
-      <div className="max-w-2xl mx-auto px-6 py-8">
-
-        {/* Step 1 */}
+      <div className="max-w-3xl mx-auto px-6 py-8">
+        {/* Step 1 — 기본·채권·담보 (분석 전용 메타 + 통합 폼 상단부) */}
         {step === 1 && (
           <div className={`${DS.card.base} ${DS.card.paddingLarge} space-y-5`}>
-            <p className={DS.header.eyebrow}>Step 1</p>
-            <h2 className={DS.text.sectionTitle}>기본 채권 정보</h2>
-
-            {/* 기등록 채권 선택 — 매도사·매각사용 (UIF S7) */}
-            <BondSelector onSelect={applyListing} />
-
-            {/* OCR 자동 채움 */}
-            <div className="rounded-xl border border-dashed border-[var(--color-brand-mid)]/40 bg-[var(--color-brand-mid)]/5 p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <Sparkles className="h-5 w-5 text-[var(--color-brand-dark)] shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-[0.8125rem] font-semibold text-[var(--color-brand-dark)]">
-                    서류 업로드로 자동 채우기
-                  </p>
-                  <p className="text-[0.75rem] text-[var(--color-text-muted)] mt-0.5" style={{ wordBreak: 'keep-all' }}>
-                    채권 소개서·경매 물건 명세서·감정평가서 PDF·이미지를 업로드하면 AI가 사건번호·주소·감정평가액·담보유형을 자동으로 채워넣습니다.
-                  </p>
-                </div>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,application/pdf"
-                className="hidden"
-                onChange={handleFileChange}
-                disabled={ocrLoading}
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={ocrLoading}
-                className={`${DS.button.secondary} w-full justify-center`}
-              >
-                {ocrLoading ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> AI 추출 중...</>
-                ) : (
-                  <><FileUp className="h-4 w-4" /> 문서 업로드 (PDF · PNG · JPG)</>
-                )}
-              </button>
-              {ocrMsg && (
-                <p className={`text-[0.75rem] ${ocrMsg.includes('완료') ? 'text-[var(--color-positive)]' : 'text-[var(--color-text-muted)]'}`}>
-                  {ocrMsg}
-                </p>
-              )}
-            </div>
-
             <div>
-              <label className={DS.input.label}>채권 번호</label>
-              <input
-                className={DS.input.base}
-                placeholder="예: NPL-2024-00123"
-                value={bondNumber}
-                onChange={(e) => setBondNumber(e.target.value)}
-              />
+              <p className={DS.header.eyebrow}>Step 1</p>
+              <h2 className={DS.text.sectionTitle}>기본 · 채권 · 담보 정보</h2>
             </div>
 
-            <div>
-              <label className={DS.input.label}>대출원금</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-[0.9375rem] font-medium">&#8361;</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  className={`${DS.input.base} pl-8`}
-                  placeholder="0"
-                  value={principalAmount ? Number(principalAmount).toLocaleString('ko-KR') : ''}
-                  onChange={(e) => setPrincipalAmount(e.target.value.replace(/[^0-9]/g, ''))}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className={DS.input.label}>
-                미수이자
-                <span className="ml-1 text-[0.6875rem] font-normal text-[var(--color-text-muted)]">
-                  정상이자 누적 · 선택
-                </span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-[0.9375rem] font-medium">&#8361;</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  className={`${DS.input.base} pl-8`}
-                  placeholder="0"
-                  value={unpaidInterestAmount ? Number(unpaidInterestAmount).toLocaleString('ko-KR') : ''}
-                  onChange={(e) => setUnpaidInterestAmount(e.target.value.replace(/[^0-9]/g, ''))}
-                />
-              </div>
-            </div>
-
-            {/* 채권잔액 자동계산 */}
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-              <p className="text-[0.6875rem] text-[var(--color-text-muted)] font-medium mb-0.5">
-                채권잔액 (자동계산)
-              </p>
-              <p className="text-[1.25rem] font-bold text-amber-700 dark:text-amber-200 tabular-nums">
-                ₩ {claimBalanceComputed > 0 ? claimBalanceComputed.toLocaleString('ko-KR') : '-'}
-              </p>
-              <p className="text-[0.625rem] text-[var(--color-text-muted)] mt-0.5">
-                대출원금 + 미수이자 · 연체이자는 Step 2 NPL 상세에서 별도 산출
-              </p>
-            </div>
-
-            <div>
-              <label className={DS.input.label}>경매 사건 번호</label>
-              <input
-                className={DS.input.base}
-                placeholder="예: 2024타경12345"
-                value={caseNumber}
-                onChange={(e) => setCaseNumber(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className={DS.input.label}>채무자 유형</label>
-              <select
-                className={DS.input.base}
-                value={debtorType}
-                onChange={(e) => setDebtorType(e.target.value)}
-              >
-                <option value="개인">개인</option>
-                <option value="법인">법인</option>
-              </select>
-            </div>
-          </div>
-        )}
-
-        {/* Step 2 */}
-        {step === 2 && (
-          <div className={`${DS.card.base} ${DS.card.paddingLarge} space-y-5`}>
-            <p className={DS.header.eyebrow}>Step 2</p>
-            <h2 className={DS.text.sectionTitle}>담보물 정보</h2>
-
-            <div>
-              <label className={DS.input.label}>담보물 유형</label>
-              <select
-                className={DS.input.base}
-                value={collateralType}
-                onChange={(e) => setCollateralType(e.target.value)}
-              >
-                {COLLATERAL_CATEGORIES.map(cat => (
-                  <optgroup key={cat.value} label={cat.label}>
-                    {cat.items.map(item => (
-                      <option key={item.value} value={item.label}>{item.label}</option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className={DS.input.label}>소재지</label>
-              <input
-                className={DS.input.base}
-                placeholder="예: 서울특별시 강남구 테헤란로 123"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className={DS.input.label}>감정 평가액</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-[0.9375rem] font-medium">&#8361;</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  className={`${DS.input.base} pl-8`}
-                  placeholder="0"
-                  value={appraisalValue ? Number(appraisalValue).toLocaleString('ko-KR') : ''}
-                  onChange={(e) => setAppraisalValue(e.target.value.replace(/[^0-9]/g, ''))}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className={DS.input.label}>선순위 채권</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-[0.9375rem] font-medium">&#8361;</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  className={`${DS.input.base} pl-8`}
-                  placeholder="0"
-                  value={seniorClaim ? Number(seniorClaim).toLocaleString('ko-KR') : ''}
-                  onChange={(e) => setSeniorClaim(e.target.value.replace(/[^0-9]/g, ''))}
-                />
-              </div>
-            </div>
-
-            {/* ── NPL 상세 (선택 · OCR 자동입력 지원) ── */}
-            <div className="pt-3 border-t border-[var(--color-border-subtle)] space-y-3">
+            {/* 분석 메타 (통합 폼에 없는 필드) */}
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <h3 className="text-[0.875rem] font-bold text-[var(--color-text-primary)]">
-                  NPL 상세 정보
-                </h3>
-                <p className="text-[0.75rem] text-[var(--color-text-muted)] mt-0.5">
-                  입력하면 AI 분석 정확도가 향상됩니다 · 선택 사항
-                </p>
+                <label className={DS.input.label}>채권 번호</label>
+                <input
+                  className={DS.input.base}
+                  placeholder="예: NPL-2024-00123"
+                  value={bondNumber}
+                  onChange={(e) => setBondNumber(e.target.value)}
+                />
               </div>
-
-              <AppraisalAndMarketBlock
-                appraisalValue={parseInt(appraisalValue) || 0}
-                onAppraisalValue={(n) => setAppraisalValue(String(n))}
-                appraisalDate={appraisalDate}
-                onAppraisalDate={setAppraisalDate}
-                marketValue={parseInt(currentMarketValue) || 0}
-                onMarketValue={(n) => setCurrentMarketValue(String(n))}
-                marketPriceNote={marketPriceNote}
-                onMarketPriceNote={setMarketPriceNote}
-                auctionStartDate={auctionStartDate}
-                onAuctionStartDate={setAuctionStartDate}
-              />
-
-              <ClaimBreakdownBlock
-                value={{
-                  ...claimBreakdown,
-                  principal: parseInt(principalAmount) || claimBreakdown.principal,
-                  unpaidInterest: parseInt(unpaidInterestAmount) || claimBreakdown.unpaidInterest,
-                }}
-                onChange={(v) => {
-                  setClaimBreakdown(v)
-                  if (v.principal > 0) setPrincipalAmount(String(v.principal))
-                  if (v.unpaidInterest > 0) setUnpaidInterestAmount(String(v.unpaidInterest))
-                }}
-              />
-
-              <RightsSummaryBlock value={rightsSummary} onChange={setRightsSummary} />
-
-              <LeaseSummaryBlock value={leaseSummary} onChange={setLeaseSummary} />
-
-              <DebtorOwnerSameToggle value={debtorOwnerSame} onChange={setDebtorOwnerSame} />
-
-              <DesiredSaleDiscountInput
-                value={desiredSaleDiscount}
-                onChange={setDesiredSaleDiscount}
-                principal={parseInt(principalAmount) || claimBreakdown.principal || 0}
-              />
-
-              <SpecialConditionsPicker value={specialConditions} onChange={setSpecialConditions} />
+              <div>
+                <label className={DS.input.label}>경매 사건 번호</label>
+                <input
+                  className={DS.input.base}
+                  placeholder="예: 2024타경12345"
+                  value={caseNumber}
+                  onChange={(e) => setCaseNumber(e.target.value)}
+                />
+              </div>
             </div>
+
+            {/* 통합 폼 — 전체 섹션 렌더 (ANALYSIS 모드: 수수료/입찰/할인율 숨김) */}
+            <NplUnifiedForm
+              mode="ANALYSIS"
+              state={state}
+              dispatch={dispatch}
+            />
           </div>
         )}
 
-        {/* Step 3 */}
+        {/* Step 2 — 추가 점검 요약 카드 */}
+        {step === 2 && (
+          <div className={`${DS.card.base} ${DS.card.paddingLarge} space-y-4`}>
+            <div>
+              <p className={DS.header.eyebrow}>Step 2</p>
+              <h2 className={DS.text.sectionTitle}>입력 내용 확인</h2>
+              <p className="text-[0.75rem] text-[var(--color-text-muted)] mt-1">
+                아래 요약을 확인하고 이상이 없으면 다음 단계로 진행하세요.
+                수정이 필요하면 이전 버튼을 눌러 돌아가세요.
+              </p>
+            </div>
+
+            <dl className="space-y-2 text-[0.8125rem]">
+              <Row label="기관" value={state.institution.name || "-"} />
+              <Row
+                label="담보·지역"
+                value={`${getCollateralLabel(state.collateral) || "-"} · ${
+                  [
+                    getRegionLabel(state.address.sido),
+                    state.address.sigungu,
+                    state.address.detail,
+                  ]
+                    .filter(Boolean)
+                    .join(" ") || "-"
+                }`}
+              />
+              <Row
+                label="대출원금"
+                value={`₩ ${state.claim.principal.toLocaleString("ko-KR")}`}
+              />
+              <Row
+                label="미수이자"
+                value={`₩ ${state.claim.unpaidInterest.toLocaleString("ko-KR")}`}
+              />
+              <Row
+                label="채권잔액 (원금+미수이자)"
+                value={`₩ ${(
+                  state.claim.principal + state.claim.unpaidInterest
+                ).toLocaleString("ko-KR")}`}
+                emphasize
+              />
+              <Row
+                label="감정가"
+                value={`₩ ${state.appraisal.appraisalValue.toLocaleString("ko-KR")}`}
+              />
+              <Row
+                label="선순위 / 후순위"
+                value={`₩ ${state.rights.seniorTotal.toLocaleString("ko-KR")} / ₩ ${state.rights.juniorTotal.toLocaleString("ko-KR")}`}
+              />
+              <Row
+                label="채무자 = 소유자"
+                value={state.debtorOwnerSame ? "동일인" : "다름 (물상보증)"}
+              />
+              <Row
+                label="채권/사건 번호"
+                value={`${bondNumber || "-"} / ${caseNumber || "-"}`}
+              />
+            </dl>
+          </div>
+        )}
+
+        {/* Step 3 — AI 분석 시작 */}
         {step === 3 && (
-          <div className={`${DS.card.base} ${DS.card.paddingLarge} text-center space-y-6`}>
+          <div
+            className={`${DS.card.base} ${DS.card.paddingLarge} text-center space-y-6`}
+          >
             <p className={DS.header.eyebrow}>Step 3</p>
             <h2 className={DS.text.sectionTitle}>AI 분석 준비 완료</h2>
 
@@ -584,17 +328,31 @@ export default function NewNplAnalysisPage() {
             </div>
 
             <div className="space-y-1">
-              <p className={DS.text.body}>입력된 정보를 바탕으로 AI가 종합 분석을 시작합니다.</p>
-              <div className={`flex items-center justify-center gap-1.5 ${DS.text.caption}`}>
+              <p className={DS.text.body}>
+                입력된 정보를 바탕으로 AI가 종합 분석을 시작합니다.
+              </p>
+              <div
+                className={`flex items-center justify-center gap-1.5 ${DS.text.caption}`}
+              >
                 <Clock className="h-3.5 w-3.5" />
                 <span>예상 소요시간: 약 30초</span>
               </div>
             </div>
 
             <div className="bg-[var(--color-brand-mid)]/5 border border-[var(--color-brand-mid)]/20 rounded-xl p-4 text-left space-y-1.5">
-              <p className="text-[0.75rem] font-semibold text-[var(--color-brand-dark)]">분석 항목</p>
-              {["리스크 등급 산정", "예상 수익률 계산", "배당 시뮬레이션", "투자 적합성 평가"].map((item) => (
-                <div key={item} className="flex items-center gap-2 text-[0.8125rem] text-[var(--color-brand-mid)]">
+              <p className="text-[0.75rem] font-semibold text-[var(--color-brand-dark)]">
+                분석 항목
+              </p>
+              {[
+                "리스크 등급 산정",
+                "예상 수익률 계산",
+                "배당 시뮬레이션",
+                "투자 적합성 평가",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="flex items-center gap-2 text-[0.8125rem] text-[var(--color-brand-mid)]"
+                >
                   <Check className="h-3.5 w-3.5 text-[var(--color-brand-bright)]" />
                   <span>{item}</span>
                 </div>
@@ -611,11 +369,18 @@ export default function NewNplAnalysisPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-center gap-2 text-[var(--color-brand-mid)]">
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  <span className="text-[0.875rem] font-medium">AI 분석 진행 중...</span>
+                  <span className="text-[0.875rem] font-medium">
+                    AI 분석 진행 중...
+                  </span>
                 </div>
                 <div className="space-y-2">
                   {ANALYSIS_STEPS.map((s, i) => (
-                    <div key={s} className={`flex items-center gap-2 text-[0.8125rem] transition-all duration-300 ${i <= analysisStep ? 'opacity-100' : 'opacity-25'}`}>
+                    <div
+                      key={s}
+                      className={`flex items-center gap-2 text-[0.8125rem] transition-all duration-300 ${
+                        i <= analysisStep ? "opacity-100" : "opacity-25"
+                      }`}
+                    >
                       {i < analysisStep ? (
                         <Check className="h-3.5 w-3.5 text-[var(--color-positive)] shrink-0" />
                       ) : i === analysisStep ? (
@@ -623,7 +388,15 @@ export default function NewNplAnalysisPage() {
                       ) : (
                         <div className="h-3.5 w-3.5 rounded-full border border-[var(--color-border-subtle)] shrink-0" />
                       )}
-                      <span className={i <= analysisStep ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]'}>{s}</span>
+                      <span
+                        className={
+                          i <= analysisStep
+                            ? "text-[var(--color-text-primary)]"
+                            : "text-[var(--color-text-muted)]"
+                        }
+                      >
+                        {s}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -643,10 +416,7 @@ export default function NewNplAnalysisPage() {
         {/* Navigation Buttons */}
         <div className="flex justify-between mt-6">
           {step > 1 ? (
-            <button
-              onClick={handleBack}
-              className={DS.button.secondary}
-            >
+            <button onClick={handleBack} className={DS.button.secondary}>
               <ArrowLeft className="h-4 w-4" />
               이전
             </button>
@@ -654,16 +424,40 @@ export default function NewNplAnalysisPage() {
             <div />
           )}
           {step < 3 && (
-            <button
-              onClick={handleNext}
-              className={DS.button.primary}
-            >
+            <button onClick={handleNext} className={DS.button.primary}>
               다음
               <ArrowRight className="h-4 w-4" />
             </button>
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+function Row({
+  label,
+  value,
+  emphasize,
+}: {
+  label: string
+  value: string
+  emphasize?: boolean
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-1.5 border-b border-[var(--color-border-subtle)] last:border-b-0">
+      <dt className="text-[0.75rem] text-[var(--color-text-muted)] font-medium">
+        {label}
+      </dt>
+      <dd
+        className={`tabular-nums ${
+          emphasize
+            ? "text-[0.9375rem] font-bold text-emerald-600 dark:text-emerald-300"
+            : "text-[var(--color-text-primary)]"
+        }`}
+      >
+        {value}
+      </dd>
     </div>
   )
 }

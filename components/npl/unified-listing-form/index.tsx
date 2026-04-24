@@ -25,7 +25,7 @@ import { useUnifiedFormState } from "./state"
 import type {
   FormMode,
   UnifiedFormState,
-  DerivedMetrics,
+  UnifiedFormAction,
 } from "./types"
 import { ClaimSection } from "./sections/claim-section"
 import { FeeSection } from "./sections/fee-section"
@@ -80,15 +80,21 @@ function listingToFormPatch(l: MyListing): Partial<UnifiedFormState> {
 
 export function NplUnifiedForm({
   mode,
-  onChange,
+  state: externalState,
+  dispatch: externalDispatch,
 }: {
   mode: FormMode
-  onChange?: (state: UnifiedFormState, derived: DerivedMetrics) => void
+  /**
+   * Controlled mode — 부모가 useUnifiedFormState(mode) 를 호출해 state/dispatch 를
+   * 소유하고 내려주는 방식. 제출/파생값 읽기가 필요한 페이지에서 사용.
+   * 둘 다 생략하면 내부에서 자동 구축 (uncontrolled).
+   */
+  state?: UnifiedFormState
+  dispatch?: (action: UnifiedFormAction) => void
 }) {
-  const { state, dispatch, derived } = useUnifiedFormState(mode)
-
-  // 상태 변경 시 부모 콜백 (제출/저장용).
-  if (onChange) onChange(state, derived)
+  const internal = useUnifiedFormState(mode)
+  const state = externalState ?? internal.state
+  const dispatch = externalDispatch ?? internal.dispatch
 
   return (
     <div className="space-y-5">
