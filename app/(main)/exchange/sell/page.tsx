@@ -59,7 +59,10 @@ interface WizardState {
   region_city: string
   region_district: string
   debtor_type: "INDIVIDUAL" | "CORPORATE" | ""
-  outstanding_principal: number
+  // ── 채권잔액 = 대출원금(필수) + 미수이자(선택) ──
+  // outstanding_principal 필드 폐기: 항상 (loan_principal + unpaid_interest) 로 계산.
+  loan_principal: number
+  unpaid_interest: number
   asking_price: number
   appraisal_value: number
   sale_method: SaleMethod | ""
@@ -103,7 +106,8 @@ const initial: WizardState = {
   region_city: "",
   region_district: "",
   debtor_type: "",
-  outstanding_principal: 0,
+  loan_principal: 0,
+  unpaid_interest: 0,
   asking_price: 0,
   appraisal_value: 0,
   sale_method: "NPLATFORM",
@@ -146,6 +150,9 @@ export default function SellWizardPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
 
+  // 채권잔액 = 대출원금 + 미수이자 (derived, 항상 동기)
+  const claimBalance = state.loan_principal + state.unpaid_interest
+
   const handleSubmit = useCallback(async () => {
     setSubmitting(true)
     setSubmitError("")
@@ -160,8 +167,8 @@ export default function SellWizardPage() {
     if (!state.region_city) {
       setSubmitError('소재지(시/도)를 선택해주세요.'); setSubmitting(false); return
     }
-    if (!state.outstanding_principal || state.outstanding_principal < 1_000_000) {
-      setSubmitError('채권잔액은 100만원 이상이어야 합니다.'); setSubmitting(false); return
+    if (!state.loan_principal || state.loan_principal < 1_000_000) {
+      setSubmitError('대출원금은 100만원 이상이어야 합니다.'); setSubmitting(false); return
     }
     if (!state.asking_price || state.asking_price <= 0) {
       setSubmitError('희망 매각가를 입력해주세요.'); setSubmitting(false); return
@@ -171,7 +178,11 @@ export default function SellWizardPage() {
       const location = [state.region_city, state.region_district].filter(Boolean).join(' ')
       const body = {
         collateral_type: state.collateral || '기타',
-        principal_amount: state.outstanding_principal,
+        // 원금·미수이자 분리 + 합산 채권잔액 3필드 전송
+        principal_amount: state.loan_principal,
+        loan_principal: state.loan_principal,
+        unpaid_interest: state.unpaid_interest,
+        claim_balance: claimBalance,
         title: `${location} ${state.collateral} 채권`,
         institution_name: state.institution,
         listing_type: state.listing_category || 'NPL',
@@ -218,7 +229,7 @@ export default function SellWizardPage() {
 
   const completeness = useMemo(() => {
     let score = 0
-    if (state.outstanding_principal > 0) score++
+    if (state.loan_principal > 0) score++
     if (state.asking_price > 0) score++
     if (state.collateral) score++
     if (state.region_city) score++
@@ -237,7 +248,7 @@ export default function SellWizardPage() {
     if (step === 1) return !!state.institution && !!state.inst_type && !!state.listing_category
     if (step === 2) return !!state.collateral && !!state.region_city && !!state.debtor_type
     if (step === 3)
-      return state.outstanding_principal > 0 && state.asking_price > 0 && state.appraisal_value > 0
+      return state.loan_principal > 0 && state.asking_price > 0 && state.appraisal_value > 0
     if (step === 4) return true // 채권상세·권리관계는 선택 입력 (입력할수록 완성도 향상)
     if (step === 5) return true
     return true
@@ -255,9 +266,10 @@ export default function SellWizardPage() {
   }, [state.asking_price, state.exclusive, completeness, state.seller_fee_rate])
 
   const discountRate = useMemo(() => {
-    if (!state.outstanding_principal || !state.asking_price) return 0
-    return ((state.outstanding_principal - state.asking_price) / state.outstanding_principal) * 100
-  }, [state.outstanding_principal, state.asking_price])
+    const total = state.loan_principal + state.unpaid_interest
+    if (!total || !state.asking_price) return 0
+    return ((total - state.asking_price) / total) * 100
+  }, [state.loan_principal, state.unpaid_interest, state.asking_price])
 
   if (submitted) {
     return <SubmittedScreen completeness={completeness} />
@@ -608,11 +620,59 @@ function Step3({
 }) {
   return (
     <>
-      <StepHeader num={3} title="채권 · 금액" desc="채권잔액 · 매각희망가 · 감정가는 L0(공개) 핵심 필드입니다. 할인율이 자동 계산됩니다." />
+      <StepHeader num={3} title="채권 · 금액" desc="채권잔액(원금+미수이자)·매각희망가·감정가는 L0(공개) 핵심 필드입니다. 할인율이 자동 계산됩니다." />
+
+      {/* 채권잔액 = 대출원금(필수) + 미수이자(선택) 분리 입력 */}
+      <div
+        style={{
+          padding: "16px 18px", borderRadius: 12,
+          backgroundColor: "var(--color-positive-bg)",
+          border: `1px solid ${C.em}33`,
+          marginBottom: 16,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <Scale size={14} color={C.emL} />
+          <span style={{ fontSize: 12, fontWeight: 800, color: C.emL, letterSpacing: "-0.01em" }}>
+            채권잔액 = 대출원금 + 미수이자 (분리 입력)
+          </span>
+        </div>
+        <FormGrid cols={2}>
+          <Field label="대출원금" required hint="원본 대출 금액 (미수이자 제외)">
+            <NumberInput
+              value={state.loan_principal}
+              onChange={v => update("loan_principal", v)}
+              placeholder="예: 1000000000"
+              suffix="원"
+            />
+          </Field>
+          <Field label="미수이자" hint="연체·약정이자 누적분 (선택)">
+            <NumberInput
+              value={state.unpaid_interest}
+              onChange={v => update("unpaid_interest", v)}
+              placeholder="예: 200000000"
+              suffix="원"
+            />
+          </Field>
+        </FormGrid>
+        {(state.loan_principal > 0 || state.unpaid_interest > 0) && (
+          <div
+            style={{
+              marginTop: 12, padding: "10px 14px", borderRadius: 8,
+              backgroundColor: "var(--color-surface-elevated)",
+              border: `1px dashed ${C.em}55`,
+              display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8,
+            }}
+          >
+            <span style={{ fontSize: 11, color: C.lt4, fontWeight: 700 }}>자동 계산 채권잔액</span>
+            <span style={{ fontSize: 18, fontWeight: 900, color: C.emL, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+              {formatKRW(state.loan_principal + state.unpaid_interest)}
+            </span>
+          </div>
+        )}
+      </div>
+
       <FormGrid cols={2}>
-        <Field label="채권잔액" required hint="원금 + 미수이자">
-          <NumberInput value={state.outstanding_principal} onChange={v => update("outstanding_principal", v)} placeholder="예: 1200000000" suffix="원" />
-        </Field>
         <Field label="매각희망가" required hint="매수자에게 공개될 가격">
           <NumberInput value={state.asking_price} onChange={v => update("asking_price", v)} placeholder="예: 850000000" suffix="원" />
         </Field>
@@ -632,7 +692,7 @@ function Step3({
         </Field>
       </FormGrid>
 
-      {state.outstanding_principal > 0 && state.asking_price > 0 && (
+      {(state.loan_principal + state.unpaid_interest) > 0 && state.asking_price > 0 && (
         <div
           style={{
             marginTop: 20, padding: "18px 20px", borderRadius: 12,
@@ -649,7 +709,7 @@ function Step3({
           <div style={{ textAlign: "right", fontSize: 11, color: C.lt4 }}>
             채권잔액 대비
             <br />
-            매수자 절감액 {formatKRW(state.outstanding_principal - state.asking_price)}
+            매수자 절감액 {formatKRW((state.loan_principal + state.unpaid_interest) - state.asking_price)}
           </div>
         </div>
       )}
@@ -1109,7 +1169,9 @@ function Step6Review({
         <ReviewRow label="매각 방식">
           {state.sale_method === "NPLATFORM" ? "엔플랫폼" : state.sale_method === "AUCTION" ? "경매" : "공매"}
         </ReviewRow>
-        <ReviewRow label="채권잔액">{formatKRW(state.outstanding_principal)}</ReviewRow>
+        <ReviewRow label="대출원금">{formatKRW(state.loan_principal)}</ReviewRow>
+        <ReviewRow label="미수이자">{state.unpaid_interest > 0 ? formatKRW(state.unpaid_interest) : "—"}</ReviewRow>
+        <ReviewRow label="채권잔액 (자동합산)">{formatKRW(state.loan_principal + state.unpaid_interest)}</ReviewRow>
         <ReviewRow label="매각희망가">{formatKRW(state.asking_price)}</ReviewRow>
         <ReviewRow label="감정가">{formatKRW(state.appraisal_value)}</ReviewRow>
         {state.penalty_rate > 0 && <ReviewRow label="연체금리">{state.penalty_rate}%</ReviewRow>}
@@ -1277,7 +1339,7 @@ function TierPreviewBlock({ state }: { state: WizardState }) {
       items: [
         { label: "담보 · 지역", value: `${collateralLabel} · ${regionBrief || "—"}` },
         { label: "매각방식", value: saleMethodLabel },
-        { label: "채권잔액 (범위)", value: rangeKRW(state.outstanding_principal) },
+        { label: "채권잔액 (범위)", value: rangeKRW(state.loan_principal + state.unpaid_interest) },
         { label: "매각희망가 (범위)", value: rangeKRW(state.asking_price) },
         { label: "감정가 (범위)", value: rangeKRW(state.appraisal_value) },
         { label: "기관 유형", value: instTypeLabel },
@@ -1290,7 +1352,9 @@ function TierPreviewBlock({ state }: { state: WizardState }) {
       tone: C.emL,
       bg: "var(--color-positive-bg)",
       items: [
-        { label: "채권잔액 (정확치)", value: formatKRW(state.outstanding_principal) },
+        { label: "대출원금 (정확치)", value: formatKRW(state.loan_principal) },
+        { label: "미수이자 (정확치)", value: state.unpaid_interest > 0 ? formatKRW(state.unpaid_interest) : "—" },
+        { label: "채권잔액 (정확치)", value: formatKRW(state.loan_principal + state.unpaid_interest) },
         { label: "매각희망가 (정확치)", value: formatKRW(state.asking_price) },
         { label: "감정가 (정확치)", value: formatKRW(state.appraisal_value) },
         { label: "지역 (동 단위)", value: regionFull },

@@ -174,7 +174,10 @@ export default function ProfitabilityPage() {
         region_city?: string
         region_district?: string
         debtor_type?: "INDIVIDUAL" | "CORPORATE" | ""
-        outstanding_principal?: number
+        // UIF-2026Q2: 채권잔액 = loan_principal + unpaid_interest 분리 입력
+        loan_principal?: number
+        unpaid_interest?: number
+        outstanding_principal?: number   // legacy (구 합산 필드, backward-compat)
         asking_price?: number
         appraisal_value?: number
         interest_rate?: number
@@ -206,18 +209,24 @@ export default function ProfitabilityPage() {
       const today = new Date().toISOString().slice(0, 10)
       const districtPart = w.region_district?.trim() ?? ""
 
+      // 채권잔액 derive: 분리 입력(신) 우선 → legacy outstanding_principal 폴백
+      const principal =
+        (w.loan_principal && w.loan_principal > 0)
+          ? w.loan_principal
+          : (w.outstanding_principal && w.outstanding_principal > 0)
+            ? w.outstanding_principal
+            : 0
+      const unpaidInterest =
+        (w.unpaid_interest && w.unpaid_interest > 0) ? w.unpaid_interest : 0
+      const claimBalance = principal + unpaidInterest
+
       setBond(p => ({
         ...p,
         institutionName: w.institution || p.institutionName,
         debtorType,
-        originalPrincipal:
-          w.outstanding_principal && w.outstanding_principal > 0
-            ? w.outstanding_principal
-            : p.originalPrincipal,
-        remainingPrincipal:
-          w.outstanding_principal && w.outstanding_principal > 0
-            ? w.outstanding_principal
-            : p.remainingPrincipal,
+        originalPrincipal: principal > 0 ? principal : p.originalPrincipal,
+        // 잔존원금은 대출원금(미수이자 제외). 미수이자는 연체금리×기간으로 리포트에서 별도 계산.
+        remainingPrincipal: principal > 0 ? principal : p.remainingPrincipal,
         interestRate:
           w.interest_rate && w.interest_rate > 0 ? w.interest_rate : p.interestRate,
         penaltyRate:
@@ -278,14 +287,9 @@ export default function ProfitabilityPage() {
         }
       })
 
-      // 매각희망가 → 론세일 매입률 유추 (asking_price / outstanding_principal)
-      if (
-        w.asking_price &&
-        w.asking_price > 0 &&
-        w.outstanding_principal &&
-        w.outstanding_principal > 0
-      ) {
-        const ratio = Math.round((w.asking_price / w.outstanding_principal) * 100)
+      // 매각희망가 → 론세일 매입률 유추 (asking_price / 채권잔액)
+      if (w.asking_price && w.asking_price > 0 && claimBalance > 0) {
+        const ratio = Math.round((w.asking_price / claimBalance) * 100)
         if (ratio > 0 && ratio <= 100) {
           setLoanSaleTerms(p => ({ ...p, purchaseRatio: ratio }))
         }
