@@ -250,6 +250,8 @@ export default function SellWizardPage() {
     }
   }, [state, extras])
 
+  // Phase G: 완성도 100점 기준 (항목 10개 × 10점).
+  // (과거 0~10 스케일에서 ×10 단순 승격. 훅 소비자가 100점 기준을 기대하도록 통일)
   const completeness = useMemo(() => {
     let score = 0
     if (state.claim.principal > 0) score++
@@ -263,7 +265,7 @@ export default function SellWizardPage() {
     if (pf.appraisal) score++
     if (pf.registry) score++
     if (pf.rights || pf.lease || pf.site_photos || pf.financials) score++
-    return score
+    return score * 10
   }, [state, extras])
 
   const canProceed = useMemo(() => {
@@ -507,16 +509,16 @@ export default function SellWizardPage() {
               <div style={{ marginTop: 14, height: 6, backgroundColor: C.bg4, borderRadius: 999, overflow: "hidden" }}>
                 <div
                   style={{
-                    height: "100%", width: `${(completeness / 10) * 100}%`,
-                    backgroundColor: completeness >= 9 ? C.em : completeness >= 5 ? C.amber : C.rose,
+                    height: "100%", width: `${Math.max(0, Math.min(100, completeness))}%`,
+                    backgroundColor: completeness >= 90 ? C.em : completeness >= 50 ? C.amber : C.rose,
                     transition: "width 0.3s ease",
                   }}
                 />
               </div>
               <div style={{ marginTop: 8, fontSize: 10, color: C.lt4, lineHeight: 1.5 }}>
-                {completeness >= 9
+                {completeness >= 90
                   ? "핵심 자료 완비 — 프리미엄 노출 무료 적용"
-                  : completeness >= 5
+                  : completeness >= 50
                   ? "기본 자료 충족 — 추가 자료 권장"
                   : "자료 부족 — 매수자 실사 부담 증가"}
               </div>
@@ -1165,7 +1167,7 @@ function Step6Review({
         {state.tenant_deposit_total > 0 && <ReviewRow label="임차보증금 총액">{formatKRW(state.tenant_deposit_total)}</ReviewRow>}
         {state.exclusive_area > 0 && <ReviewRow label="전용면적">{state.exclusive_area}㎡</ReviewRow>}
         <ReviewRow label="할인율" accent>{discountRate.toFixed(1)}% (채권잔액 대비)</ReviewRow>
-        <ReviewRow label="자료 완성도" accent>{completeness}/10 점</ReviewRow>
+        <ReviewRow label="자료 완성도" accent>{completeness}/100 점</ReviewRow>
         {feeEstimate && (
           <>
             <ReviewRow label="예상 수수료 (매도자)" accent>
@@ -1521,7 +1523,7 @@ function SubmittedScreen({ completeness }: { completeness: number }) {
           }}
         >
           <div style={{ fontSize: 11, color: C.lt4, marginBottom: 6 }}>현재 자료 완성도</div>
-          <div style={{ fontSize: 28, fontWeight: 900, color: C.emL }}>{completeness}/10</div>
+          <div style={{ fontSize: 28, fontWeight: 900, color: C.emL }}>{completeness}/100</div>
         </div>
         <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
           <Link

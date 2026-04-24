@@ -23,7 +23,7 @@ import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import {
   ArrowLeft, Sparkles, TrendingUp, Shield, AlertTriangle, Target,
-  BarChart3, Gavel, MapPin, Info, Activity, ChevronRight,
+  BarChart3, Gavel, MapPin, Info, Activity, ChevronRight, ChevronDown,
   FileText, Scale, Wallet, Calendar, Building2, Layers,
   TrendingDown, PieChart, Sigma, Database, Pencil,
 } from "lucide-react"
@@ -31,10 +31,12 @@ import DS from "@/lib/design-system"
 import { riskPalette } from "@/lib/design-tokens"
 import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/unified-report/types"
 import {
-  SPECIAL_CONDITION_CATALOG,
-  SPECIAL_CONDITION_CATEGORY_LABEL,
+  SPECIAL_CONDITIONS_V2,
+  SPECIAL_CONDITION_BUCKET_LABEL,
+  SPECIAL_CONDITION_BUCKET_COLOR,
   computeLegalScoreV2,
-  type SpecialConditionCategory,
+  type SpecialConditionBucket,
+  type SpecialConditionDefV2,
 } from "@/lib/npl/unified-report/types"
 import { buildSampleReport } from "@/lib/npl/unified-report/sample"
 import { buildNplProfitability } from "@/lib/npl/unified-report/profitability"
@@ -540,8 +542,13 @@ export default function UnifiedReportPage() {
         )}
       </Section>
 
-      {/* ── 특수조건 25개 전체 점검 ────────────────── */}
-      <SpecialConditionFullSection specialConditions={input.specialConditions} />
+      {/* ── 특수조건 V2 18항목 점검 (Phase G · 기본 접힘) ─────
+          데이터 소스: input.specialConditionsV2 (신규) 또는 V1 객체 → migrate */}
+      <SpecialConditionsV2Section
+        checkedKeys={
+          input.specialConditionsV2 ?? migrateV1ToV2Keys(input.specialConditions)
+        }
+      />
 
       {/* ── NPL 수익성 분석 (7블록 + 3단계 전략 + 민감도 + Monte Carlo + 근거) ───── */}
       {profitability && (
@@ -1025,152 +1032,183 @@ function RecoveryBar({ predicted, lower, upper }: { predicted: number; lower: nu
   )
 }
 
-// ─── 특수조건 전체 25개 섹션 ──────────────────────────────────
-const COND_CATEGORY_ORDER: SpecialConditionCategory[] = [
-  "PROPERTY_RIGHT", "SENIOR_ENCUMBRANCE", "RIGHT_INFRINGEMENT",
-  "TAX_PRIORITY", "TENANT", "BUILDING", "OTHER",
-]
+// ─── 특수조건 V2 18항목 섹션 (Phase G) ───────────────────────
+// · 데이터 소스: SPECIAL_CONDITIONS_V2 · SPECIAL_CONDITION_BUCKET_LABEL (types.ts 단일 진원지)
+// · 렌더링: 3-버킷 × 체크 여부 (감점 폭은 카탈로그 그대로 노출 → 번역 시 라벨만 교체하면 됨)
+// · 기본: 접힘 (collapsible) — 헤더 클릭으로 펼침
+const BUCKET_ORDER: SpecialConditionBucket[] = ["OWNERSHIP", "COST", "LIQUIDITY"]
 
-const SEVERITY_BADGE: Record<string, { bg: string; fg: string; label: string }> = {
-  OK:       { bg: "rgba(16,185,129,0.12)",  fg: "#047857", label: "안전" },
-  INFO:     { bg: "rgba(14,165,233,0.12)",  fg: "#0369A1", label: "참고" },
-  WARNING:  { bg: "rgba(245,158,11,0.12)",  fg: "#B45309", label: "주의" },
-  DANGER:   { bg: "rgba(249,115,22,0.12)",  fg: "#C2410C", label: "위험" },
-  CRITICAL: { bg: "rgba(220,38,38,0.12)",   fg: "#B91C1C", label: "치명" },
+// 버킷 색상 토큰 매핑 — types.ts 의 red/orange/yellow 를 Tailwind 변종으로 변환.
+// 번역·테마 변경 시 이 테이블만 손대면 됨 (컴포넌트 본체는 하드코딩 0).
+const BUCKET_ICON: Record<SpecialConditionBucket, string> = {
+  OWNERSHIP: "🔴",
+  COST:      "🟠",
+  LIQUIDITY: "🟡",
 }
 
-function SpecialConditionFullSection({
-  specialConditions,
+const BUCKET_THEME: Record<"red" | "orange" | "yellow", {
+  text: string; bg: string; border: string; badge: string;
+}> = {
+  red:    { text: "text-red-700 dark:text-red-300",       bg: "bg-red-500/10",     border: "border-red-500/30",    badge: "bg-red-500/20 text-red-700 dark:text-red-300" },
+  orange: { text: "text-orange-700 dark:text-orange-300", bg: "bg-orange-500/10",  border: "border-orange-500/30", badge: "bg-orange-500/20 text-orange-700 dark:text-orange-300" },
+  yellow: { text: "text-amber-700 dark:text-amber-300",   bg: "bg-amber-500/10",   border: "border-amber-500/30",  badge: "bg-amber-500/20 text-amber-700 dark:text-amber-300" },
+}
+
+function SpecialConditionsV2Section({
+  checkedKeys,
 }: {
-  specialConditions: UnifiedAnalysisReport["input"]["specialConditions"]
+  checkedKeys: readonly string[]
 }) {
-  const selected = SPECIAL_CONDITION_CATALOG.filter(it => Boolean(specialConditions[it.key]))
-  const totalPenalty      = selected.reduce((s, it) => s + it.penalty, 0)
-  const totalLegalPenalty = selected.reduce((s, it) => s + it.legalPenalty, 0)
+  const [expanded, setExpanded] = useState(false)   // 기본 접힘 ✅
+  const checkedSet = useMemo(() => new Set(checkedKeys), [checkedKeys])
+  const v2 = useMemo(() => computeLegalScoreV2(checkedKeys), [checkedKeys])
+
+  // 버킷별 항목 그룹화 (하드코딩 없이 SPECIAL_CONDITIONS_V2 에서 파생)
+  const itemsByBucket = useMemo(() => {
+    const map: Record<SpecialConditionBucket, SpecialConditionDefV2[]> = {
+      OWNERSHIP: [], COST: [], LIQUIDITY: [],
+    }
+    for (const item of SPECIAL_CONDITIONS_V2) map[item.bucket].push(item)
+    return map
+  }, [])
 
   return (
-    <Section
-      title="특수조건 25항목 전체 점검"
-      icon={AlertTriangle}
-      caption={`선택 ${selected.length}개 / 25 · 낙찰가율 감점 ${totalPenalty}%p · 법적리스크 ${totalLegalPenalty}점`}
-    >
-      <div className="space-y-4">
-        {COND_CATEGORY_ORDER.map(cat => {
-          const items = SPECIAL_CONDITION_CATALOG.filter(it => it.category === cat)
-          if (!items.length) return null
-          const hitItems = items.filter(it => Boolean(specialConditions[it.key]))
-          return (
-            <div key={cat}>
-              <div className="flex items-center justify-between mb-2">
-                <h5 className="text-[0.75rem] font-bold text-[var(--color-text-primary)] uppercase tracking-wide">
-                  {SPECIAL_CONDITION_CATEGORY_LABEL[cat]}
-                </h5>
-                {hitItems.length > 0 && (
-                  <span className="text-[0.625rem] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300">
-                    {hitItems.length}/{items.length} 해당
-                  </span>
-                )}
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                {items.map(it => {
-                  const checked = Boolean(specialConditions[it.key])
-                  const sev = SEVERITY_BADGE[it.severity] ?? SEVERITY_BADGE.WARNING
-                  return (
-                    <div
-                      key={it.key}
-                      className={`rounded-lg px-3 py-2 border text-left ${
-                        checked
-                          ? "bg-amber-500/10 border-amber-500/40"
-                          : "bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] opacity-50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span
-                            className={`w-3.5 h-3.5 shrink-0 rounded-sm border flex items-center justify-center text-[8px] ${
-                              checked
-                                ? "bg-amber-500 border-amber-500 text-white"
-                                : "bg-transparent border-[var(--color-border-strong)]"
-                            }`}
-                          >
-                            {checked && "✓"}
-                          </span>
-                          <span className={`text-[0.8125rem] font-semibold truncate ${
-                            checked ? "text-amber-800 dark:text-amber-200" : "text-[var(--color-text-primary)]"
+    <section className={`${DS.page.container} mt-6`}>
+      {/* 헤더 (토글 버튼) */}
+      <button
+        type="button"
+        onClick={() => setExpanded(v => !v)}
+        className="w-full flex items-center justify-between gap-3 py-3 border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-elevated)]/50 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          {expanded
+            ? <ChevronDown className="w-4 h-4 text-[var(--color-brand-mid)]" />
+            : <ChevronRight className="w-4 h-4 text-[var(--color-brand-mid)]" />}
+          <AlertTriangle className="w-4 h-4 text-[var(--color-brand-mid)]" />
+          <h2 className="text-[0.9375rem] font-black text-[var(--color-text-primary)]">
+            특수조건 점검 · V2 {SPECIAL_CONDITIONS_V2.length}항목
+          </h2>
+        </div>
+        <div className="flex items-center gap-3 text-[0.6875rem] text-[var(--color-text-tertiary)]">
+          <span>
+            선택 <b className="text-[var(--color-text-primary)] tabular-nums">{checkedKeys.length}</b>/{SPECIAL_CONDITIONS_V2.length}
+          </span>
+          <span>
+            감점 합 <b className="tabular-nums text-red-600 dark:text-red-300">−{v2.penaltySum}</b>
+          </span>
+          <span>
+            권리관계 기초점수 <b className="tabular-nums text-[var(--color-text-primary)]">{v2.score}점</b>
+          </span>
+        </div>
+      </button>
+
+      {/* 펼침 콘텐츠 */}
+      {expanded && (
+        <div className="mt-4 space-y-4">
+          {BUCKET_ORDER.map(bucket => {
+            const items = itemsByBucket[bucket]
+            if (!items.length) return null
+            const hitCount = items.filter(it => checkedSet.has(it.key)).length
+            const hitPenalty = items
+              .filter(it => checkedSet.has(it.key))
+              .reduce((s, it) => s + it.penalty, 0)
+            const theme = BUCKET_THEME[SPECIAL_CONDITION_BUCKET_COLOR[bucket]]
+
+            return (
+              <div key={bucket} className={`rounded-xl border ${theme.border} ${theme.bg} p-4`}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className={`text-[0.8125rem] font-bold ${theme.text} flex items-center gap-1.5`}>
+                    <span>{BUCKET_ICON[bucket]}</span>
+                    <span>{SPECIAL_CONDITION_BUCKET_LABEL[bucket]}</span>
+                    <span className="text-[0.6875rem] font-normal text-[var(--color-text-tertiary)]">
+                      ({items.length}항목)
+                    </span>
+                  </h3>
+                  {hitCount > 0 && (
+                    <span className={`text-[0.625rem] font-bold px-2 py-0.5 rounded ${theme.badge}`}>
+                      {hitCount} 해당 · −{hitPenalty}
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  {items.map(item => {
+                    const checked = checkedSet.has(item.key)
+                    return (
+                      <div
+                        key={item.key}
+                        className={`rounded-lg px-3 py-2 border text-left ${
+                          checked
+                            ? `${theme.bg} ${theme.border}`
+                            : "bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] opacity-60"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-0.5">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span
+                              className={`w-3.5 h-3.5 shrink-0 rounded-sm border flex items-center justify-center text-[8px] ${
+                                checked
+                                  ? "bg-current border-current text-white"
+                                  : "bg-transparent border-[var(--color-border-strong)]"
+                              }`}
+                            >
+                              {checked && "✓"}
+                            </span>
+                            <span className={`text-[0.8125rem] font-semibold truncate ${
+                              checked ? theme.text : "text-[var(--color-text-primary)]"
+                            }`}>
+                              {item.label}
+                            </span>
+                          </div>
+                          <span className={`text-[0.625rem] font-bold tabular-nums shrink-0 ${
+                            checked ? theme.text : "text-[var(--color-text-tertiary)]"
                           }`}>
-                            {it.label}
+                            −{item.penalty}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <span
-                            className="text-[0.5625rem] font-bold px-1 py-0.5 rounded"
-                            style={{ background: sev.bg, color: sev.fg }}
-                          >
-                            {sev.label}
-                          </span>
-                          <span className={`text-[0.625rem] font-bold tabular-nums ${
-                            checked ? "text-amber-700 dark:text-amber-300" : "text-[var(--color-text-tertiary)]"
-                          }`}>
-                            {it.penalty}%p
-                          </span>
-                        </div>
+                        {item.helper && (
+                          <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] pl-5 leading-snug">
+                            {item.helper}
+                          </p>
+                        )}
                       </div>
-                      <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] pl-5 leading-snug">
-                        {it.helper}
-                      </p>
-                      {checked && (
-                        <div className="mt-1 pl-5 text-[0.625rem] text-amber-700 dark:text-amber-400">
-                          낙찰가율 {it.penalty}%p · 법적리스크 {it.legalPenalty}점
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+
+          {/* 요약 바 — 계산식 재현 */}
+          <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+              <div className="text-[0.6875rem] text-[var(--color-text-secondary)]">
+                선택된 특수조건: <b className="text-[var(--color-text-primary)] tabular-nums">
+                  {checkedKeys.length} / {SPECIAL_CONDITIONS_V2.length}
+                </b>
+              </div>
+              <div className="flex items-center gap-3 text-[0.6875rem]">
+                <span>
+                  🔴 {v2.byBucket.OWNERSHIP.count}개 · −{v2.byBucket.OWNERSHIP.penaltySum}
+                </span>
+                <span>
+                  🟠 {v2.byBucket.COST.count}개 · −{v2.byBucket.COST.penaltySum}
+                </span>
+                <span>
+                  🟡 {v2.byBucket.LIQUIDITY.count}개 · −{v2.byBucket.LIQUIDITY.penaltySum}
+                </span>
               </div>
             </div>
-          )
-        })}
-
-        {/* 기타 특이사항 */}
-        {specialConditions.otherNote && (
-          <div className="rounded-lg p-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)]">
-            <p className="text-[0.75rem] font-bold text-[var(--color-text-primary)] mb-1">기타 특이사항</p>
-            <p className="text-[0.8125rem] text-[var(--color-text-secondary)] leading-relaxed">
-              {specialConditions.otherNote}
+            <div className="pt-3 border-t border-[var(--color-border-subtle)] text-[0.6875rem] text-[var(--color-text-tertiary)]">
+              권리관계 기초점수 = max(20, 100 − 감점합) ={" "}
+              <b className="text-[var(--color-text-primary)] tabular-nums">{v2.formula}</b>
+            </div>
+            <p className="mt-2 text-[0.625rem] text-[var(--color-text-tertiary)] leading-relaxed">
+              * 이 점수에 등기부 시그널 감점(당해세 −5 · 소액임차 −10 · 일반채권 −5 · 후순위근저당 −3/건)을 차감하면 권리관계 최종 점수가 됩니다.
             </p>
           </div>
-        )}
-
-        {/* 요약 바 */}
-        <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="text-[0.6875rem] text-[var(--color-text-secondary)]">
-              선택된 특수조건: <b className="text-[var(--color-text-primary)]">{selected.length}개 / 25</b>
-            </div>
-            <div className="flex items-center gap-4 text-[0.6875rem]">
-              <span>
-                낙찰가율 감점: <span className="font-bold tabular-nums text-amber-700 dark:text-amber-200">{totalPenalty}%p</span>
-              </span>
-              <span>
-                법적 리스크 누적: <span className="font-bold tabular-nums text-red-600 dark:text-red-300">{totalLegalPenalty}점</span>
-              </span>
-            </div>
-          </div>
-          {selected.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-[var(--color-border-subtle)]">
-              <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] mb-1.5">선택된 항목 요약</p>
-              <div className="flex flex-wrap gap-1.5">
-                {selected.map(it => (
-                  <span key={it.key} className="text-[0.625rem] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25">
-                    {it.label} {it.penalty}%p
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
-      </div>
-    </Section>
+      )}
+    </section>
   )
 }
 

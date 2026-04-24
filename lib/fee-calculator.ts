@@ -82,7 +82,12 @@ export interface SellerFeeInput {
   addons?: SellerAddon[]
   isInstitutional?: boolean          // 기관 전속계약 (기본료 0.3%로 할인)
   isInstitutionOnboarding?: boolean  // 매각사 첫 6개월 무료 (전체 waive)
-  dataCompleteness?: number          // 9↑ 시 premium 무료
+  /**
+   * 자료 완성도 점수 — Phase G 이후 0~100 기준.
+   * 90점 이상이면 `premium_listing` 애드온 무료.
+   * (호환: ≤10 입력은 구 스케일로 보고 ×10 자동 승격)
+   */
+  dataCompleteness?: number
   /**
    * 매도자가 등록 시 직접 입력한 수수료율 (0.003 ~ 0.009 범위).
    * 제공 시 `isInstitutional` 기반 기본료 로직보다 우선 적용.
@@ -117,9 +122,13 @@ export function calculateSellerFee(input: SellerFeeInput): FeeBreakdown {
   const baseRate = explicitRate ?? (input.isInstitutional ? INSTITUTIONAL_DISCOUNT_RATE : SELLER_BASE_RATE)
   const addonDetails: FeeBreakdown['addonDetails'] = []
 
+  // 완성도 기반 waive 경계선: 100점 스케일 90↑. ≤10 입력은 구 스케일로 간주 → ×10 승격.
+  const completenessRaw = input.dataCompleteness ?? 0
+  const completenessNorm = completenessRaw <= 10 ? completenessRaw * 10 : completenessRaw
+
   for (const addon of input.addons ?? []) {
     const rate = ADDON_RATES[addon]
-    const waived = addon === 'premium_listing' && (input.dataCompleteness ?? 0) >= 9
+    const waived = addon === 'premium_listing' && completenessNorm >= 90
     addonDetails.push({
       key: addon,
       label: ADDON_LABELS[addon] ?? addon,

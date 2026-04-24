@@ -1,13 +1,14 @@
 /**
  * lib/data-completeness.ts
  *
- * 매물 자료 완성도 점수 (0~10)
+ * 매물 자료 완성도 점수 (0~100, Phase G·2026Q2).
  * 금융기관마다 보유 자료 수준이 달라 일부 항목은 미제공 가능 — 이를 점수화하여 투명하게 표시.
  *
- * 점수 구성:
- *   필수(L0)  5점 — 채권잔액·매각희망가·담보종류·소재지·채무자유형
- *   선택(L1)  각 1점 — 감정평가·등기·권리관계·임차·면적/사진  (5항목)
- *   총 10점
+ * 점수 구성 (100점 기준):
+ *   필수(L0) 50점 — 5항목 × 10점 : 채권잔액·매각희망가·담보종류·소재지·채무자유형
+ *   선택(L1) 50점 — 5항목 × 10점 : 감정평가·등기·권리관계·임차·면적/사진
+ *
+ * 과거 0~10 스케일은 `calculateCompletenessLegacy10` 로 유지 (DB 마이그레이션 전 호환용).
  */
 
 import type { DealListingRecord, ProvidedFields } from './db-types'
@@ -39,9 +40,18 @@ function checkOptional(listing: DealListingRecord): number {
 }
 
 // ─── 총점 계산 ────────────────────────────────────────────
-/** 매물 완성도 점수 0~10 */
-export function calculateCompleteness(listing: DealListingRecord): number {
+/** @deprecated 구 0~10 스케일 (Phase G 이전). 새 코드는 `calculateCompleteness` 사용 */
+export function calculateCompletenessLegacy10(listing: DealListingRecord): number {
   return checkRequired(listing) + checkOptional(listing)
+}
+
+/**
+ * 매물 완성도 점수 0~100 (Phase G 표준).
+ *   · 필수 5항목 × 10점 = 50점
+ *   · 선택 5항목 × 10점 = 50점
+ */
+export function calculateCompleteness(listing: DealListingRecord): number {
+  return (checkRequired(listing) + checkOptional(listing)) * 10
 }
 
 // ─── 뱃지 스타일 ──────────────────────────────────────────
@@ -56,10 +66,23 @@ export interface CompletenessBadgeStyle {
   hint: string                // 툴팁 설명
 }
 
+/**
+ * 자료 완성도 뱃지 스타일.
+ *
+ * Phase G: 100점 기준으로 통일.
+ *   · ≥ 90 · high   : 핵심·실사 자료 완비
+ *   · ≥ 50 · mid    : 기본 자료 충족
+ *   · <  50 · low   : 자료 부족
+ *
+ * 호환: 기존 0~10 스케일로 호출되면 자동으로 ×10 정규화 (score ≤ 10 감지).
+ */
 export function getCompletenessBadge(score: number): CompletenessBadgeStyle {
-  const label = `자료 ${score}/10`
+  // 과거 0~10 스케일 입력 자동 승격 (Phase G 이전 DB/캐시 호환)
+  const normalized = score <= 10 ? score * 10 : score
+  const clamped = Math.max(0, Math.min(100, Math.round(normalized)))
+  const label = `자료 ${clamped}/100`
 
-  if (score >= 9) {
+  if (clamped >= 90) {
     return {
       level: 'high',
       label,
@@ -69,7 +92,7 @@ export function getCompletenessBadge(score: number): CompletenessBadgeStyle {
       hint: '핵심·실사 자료 완비 — 프리미엄 노출',
     }
   }
-  if (score >= 5) {
+  if (clamped >= 50) {
     return {
       level: 'mid',
       label,
