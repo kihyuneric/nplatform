@@ -1,0 +1,324 @@
+"use client"
+
+/**
+ * /admin/listings/[id]/edit — 관리자 매물 편집 페이지 (Phase G6).
+ *
+ * 흐름
+ *   1. GET  /api/v1/admin/listings/[id] → 기존 매물 조회 (관리자 권한 필수)
+ *   2. applyRowToState 로 UnifiedFormState 하이드레이션
+ *   3. NplUnifiedForm(mode=SELL) 렌더링 + 관리자 전용 상태 변경 셀렉트
+ *   4. 저장: PATCH /api/v1/admin/listings/[id] (full-edit 필드 + status 변경 가능)
+ *
+ * 관리자 권한은 서버에서 검증 (getAuthUserWithRole + SUPER_ADMIN/ADMIN).
+ * 비권한 접근 시 API 가 403 반환 → 에러 박스로 표시.
+ */
+
+import { useEffect, useState, useCallback, useMemo } from "react"
+import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
+import { Loader2, Save, ArrowLeft, AlertCircle, CheckCircle2, ShieldAlert } from "lucide-react"
+import {
+  NplUnifiedForm,
+  useUnifiedFormState,
+  applyRowToState,
+  toSellListingBody,
+  preflightSell,
+} from "@/components/npl/unified-listing-form"
+
+type FetchState = "loading" | "ready" | "error" | "notfound" | "forbidden"
+
+const ADMIN_STATUSES: { value: string; label: string }[] = [
+  { value: "PENDING", label: "PENDING · 대기" },
+  { value: "ACTIVE", label: "ACTIVE · 공개" },
+  { value: "HIDDEN", label: "HIDDEN · 숨김" },
+  { value: "REJECTED", label: "REJECTED · 반려" },
+  { value: "REPORTED", label: "REPORTED · 신고" },
+]
+
+export default function AdminListingEditPage() {
+  const params = useParams<{ id: string }>()
+  const router = useRouter()
+  const id = params?.id
+  const { state, dispatch } = useUnifiedFormState("SELL")
+
+  const [fetchState, setFetchState] = useState<FetchState>("loading")
+  const [fetchError, setFetchError] = useState<string>("")
+  const [title, setTitle] = useState<string>("")
+  const [currentStatus, setCurrentStatus] = useState<string>("PENDING")
+  const [nextStatus, setNextStatus] = useState<string>("PENDING")
+  const [reviewNote, setReviewNote] = useState<string>("")
+  const [rejectionReason, setRejectionReason] = useState<string>("")
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string>("")
+  const [saveOk, setSaveOk] = useState(false)
+
+  useEffect(() => {
+    if (!id) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const r = await fetch(`/api/v1/admin/listings/${id}`)
+        const j = await r.json()
+        if (cancelled) return
+        if (r.status === 401 || r.status === 403) {
+          setFetchError(j?.error?.message || "관리자 권한이 필요합니다.")
+          setFetchState("forbidden")
+          return
+        }
+        if (!r.ok || !j.listing) {
+          if (r.status === 404) {
+            setFetchState("notfound")
+          } else {
+            setFetchError(j?.error?.message || "매물 조회 실패")
+            setFetchState("error")
+          }
+          return
+        }
+        const row = j.listing as Record<string, unknown>
+        setTitle(String(row.title ?? "") || `매물 ${id}`)
+        const s = String(row.status ?? "PENDING")
+        setCurrentStatus(s)
+        setNextStatus(s)
+        setReviewNote(String(row.review_note ?? ""))
+        setRejectionReason(String(row.rejection_reason ?? ""))
+        applyRowToState(row, dispatch as (a: { type: string; [k: string]: unknown }) => void)
+        setFetchState("ready")
+      } catch (e) {
+        if (!cancelled) {
+          setFetchError(e instanceof Error ? e.message : "네트워크 오류")
+          setFetchState("error")
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [id, dispatch])
+
+  const preflightError = useMemo(() => preflightSell(state), [state])
+
+  const handleSave = useCallback(async () => {
+    if (!id) return
+    if (preflightError) {
+      setSaveError(preflightError.message)
+      return
+    }
+    setSaving(true)
+    setSaveError("")
+    setSaveOk(false)
+    try {
+      const body: Record<string, unknown> = {
+        ...toSellListingBody(state, {}),
+        special_conditions_v2: state.specialConditionsV2,
+        debtor_type: state.debtorType || undefined,
+      }
+      if (nextStatus !== currentStatus) body.status = nextStatus
+      if (reviewNote) body.review_note = reviewNote
+      if (nextStatus === "REJECTED" && rejectionReason) {
+        body.rejection_reason = rejectionReason
+      }
+
+      const r = await fetch(`/api/v1/admin/listings/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      const j = await r.json()
+      if (!r.ok) throw new Error(j?.error?.message || "저장 실패")
+      setSaveOk(true)
+      setTimeout(() => router.push("/admin/listings"), 1500)
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "저장 실패")
+    } finally {
+      setSaving(false)
+    }
+  }, [id, state, preflightError, nextStatus, currentStatus, reviewNote, rejectionReason, router])
+
+  if (fetchState === "loading") {
+    return (
+      <div className="max-w-5xl mx-auto p-6">
+        <div className="flex items-center gap-2 text-[var(--color-text-tertiary)]">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span className="text-sm">매물 정보를 불러오는 중…</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (fetchState === "forbidden") {
+    return (
+      <div className="max-w-5xl mx-auto p-6">
+        <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4">
+          <div className="flex items-start gap-2">
+            <ShieldAlert className="w-5 h-5 text-red-500 mt-0.5" />
+            <div>
+              <div className="font-bold text-red-700 dark:text-red-300">접근 권한 없음</div>
+              <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">{fetchError}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (fetchState === "notfound") {
+    return (
+      <div className="max-w-5xl mx-auto p-6">
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
+          <div className="font-bold text-amber-700 dark:text-amber-300">매물을 찾을 수 없습니다</div>
+          <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">ID: <code>{id}</code></p>
+          <Link
+            href="/admin/listings"
+            className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-emerald-600 hover:underline"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> 매물 관리로
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (fetchState === "error") {
+    return (
+      <div className="max-w-5xl mx-auto p-6">
+        <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4">
+          <div className="font-bold text-red-700 dark:text-red-300">조회 실패</div>
+          <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">{fetchError}</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto p-6 space-y-5">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-1.5 text-[0.75rem] text-[var(--color-text-tertiary)]">
+        <Link href="/admin" className="hover:text-[var(--color-text-secondary)]">관리자</Link>
+        <span>›</span>
+        <Link href="/admin/listings" className="hover:text-[var(--color-text-secondary)]">매물 관리</Link>
+        <span>›</span>
+        <span>편집</span>
+      </nav>
+
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-[var(--color-text-primary)]">매물 편집 (관리자)</h1>
+          <p className="mt-1 text-[0.8125rem] text-[var(--color-text-tertiary)]">
+            {title} <span className="text-[var(--color-text-muted)]">· {id}</span>
+          </p>
+        </div>
+        <Link
+          href="/admin/listings"
+          className="inline-flex items-center gap-1 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-3 py-1.5 text-[0.75rem] font-semibold text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> 목록으로
+        </Link>
+      </div>
+
+      {/* Admin Review Block */}
+      <div className="rounded-xl border border-purple-500/30 bg-purple-500/5 p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <ShieldAlert className="w-4 h-4 text-purple-500" />
+          <h3 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">관리자 리뷰 · 상태 변경</h3>
+          <span className="ml-auto text-[0.625rem] text-[var(--color-text-tertiary)]">
+            현재 상태: <strong className="text-[var(--color-text-secondary)]">{currentStatus}</strong>
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[0.6875rem] font-semibold text-[var(--color-text-secondary)] mb-1">
+              저장 후 상태
+            </label>
+            <select
+              value={nextStatus}
+              onChange={(e) => setNextStatus(e.target.value)}
+              className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] focus:border-purple-500/60 focus:outline-none"
+            >
+              {ADMIN_STATUSES.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[0.6875rem] font-semibold text-[var(--color-text-secondary)] mb-1">
+              리뷰 메모 (내부용)
+            </label>
+            <input
+              type="text"
+              value={reviewNote}
+              onChange={(e) => setReviewNote(e.target.value)}
+              placeholder="예: 감정가 재확인 요청"
+              className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-purple-500/60 focus:outline-none"
+            />
+          </div>
+        </div>
+        {nextStatus === "REJECTED" && (
+          <div>
+            <label className="block text-[0.6875rem] font-semibold text-[var(--color-text-secondary)] mb-1">
+              반려 사유 <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              rows={2}
+              placeholder="매도자에게 공개되는 반려 사유를 작성하세요."
+              className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-red-500/60 focus:outline-none"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Form */}
+      <NplUnifiedForm mode="SELL" state={state} dispatch={dispatch} />
+
+      {/* Save bar */}
+      <div className="sticky bottom-4 z-10 rounded-xl border border-purple-500/30 bg-[var(--color-surface-elevated)]/95 backdrop-blur p-4 flex items-center justify-between shadow-lg">
+        <div className="flex items-center gap-2 text-[0.75rem]">
+          {preflightError ? (
+            <>
+              <AlertCircle className="w-4 h-4 text-amber-500" />
+              <span className="text-amber-700 dark:text-amber-300">
+                <strong>{preflightError.field}</strong>: {preflightError.message}
+              </span>
+            </>
+          ) : saveError ? (
+            <>
+              <AlertCircle className="w-4 h-4 text-red-500" />
+              <span className="text-red-700 dark:text-red-300">{saveError}</span>
+            </>
+          ) : saveOk ? (
+            <>
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              <span className="text-emerald-700 dark:text-emerald-300 font-semibold">
+                저장되었습니다. 매물 관리로 이동합니다…
+              </span>
+            </>
+          ) : (
+            <span className="text-[var(--color-text-tertiary)]">
+              {nextStatus !== currentStatus
+                ? `상태: ${currentStatus} → ${nextStatus}`
+                : "수정한 내용을 검토한 후 저장하세요."}
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving || !!preflightError || saveOk || (nextStatus === "REJECTED" && !rejectionReason.trim())}
+          className="inline-flex items-center gap-2 rounded-lg bg-purple-500 px-4 py-2 text-sm font-bold text-white shadow hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {saving ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" /> 저장 중…
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" /> 저장
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  )
+}

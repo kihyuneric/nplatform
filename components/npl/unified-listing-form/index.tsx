@@ -40,6 +40,7 @@ import { BondSelector, type MyListing } from "@/components/npl/bond-selector"
 
 export * from "./types"
 export { useUnifiedFormState, makeInitialState } from "./state"
+export { rowToFormPatch, applyRowToState } from "./hydrate"
 export {
   toSellListingBody,
   toAuctionRegisterBody,
