@@ -525,12 +525,15 @@ export default function BiddingNewPage() {
           }
         />
 
-        {/* 수수료율 (AUCTION 공통) */}
+        {/* 수수료율 (AUCTION 공통) — Phase G5: 전속 계약 토글 내장 */}
         {state.fee && (
           <FeeSection
             value={state.fee}
             onChange={(patch) => dispatch({ type: "SET_FEE", patch })}
             exclusive={state.institution.exclusive}
+            onExclusiveChange={(next) =>
+              dispatch({ type: "SET_INSTITUTION", patch: { exclusive: next } })
+            }
           />
         )}
 

@@ -127,11 +127,10 @@ export function NplUnifiedForm({
         }}
       />
 
-      {/* 3. 기관·매각주체 — 3모드 공통 (ANALYSIS 는 전속 토글 숨김) */}
+      {/* 3. 기관·매각주체 — 3모드 공통 (Phase G5: 전속 토글은 FeeSection 최상단으로 이동) */}
       <InstitutionSection
         value={state.institution}
         onChange={(patch) => dispatch({ type: "SET_INSTITUTION", patch })}
-        showExclusiveToggle={mode !== "ANALYSIS"}
       />
 
       {/* 4. 담보·주소 — 3모드 공통 */}
@@ -182,12 +181,16 @@ export function NplUnifiedForm({
         }
       />
 
-      {/* 9. 수수료율 — SELL · AUCTION 공통 (ANALYSIS 숨김) */}
+      {/* 9. 수수료율 — SELL · AUCTION 공통 (ANALYSIS 숨김)
+          Phase G5: NPLatform 전속 계약 토글을 FeeSection 최상단에서 직접 제어 */}
       {(mode === "SELL" || mode === "AUCTION") && state.fee && (
         <FeeSection
           value={state.fee}
           onChange={(patch) => dispatch({ type: "SET_FEE", patch })}
           exclusive={state.institution.exclusive}
+          onExclusiveChange={(next) =>
+            dispatch({ type: "SET_INSTITUTION", patch: { exclusive: next } })
+          }
         />
       )}
 

@@ -206,13 +206,9 @@ export default function SellWizardPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
 
-  // 전속 계약 ON 시 수수료율 하한 0.5% 자동 보정
-  const handleExclusiveChange = useCallback((exclusive: boolean) => {
-    dispatch({ type: "SET_INSTITUTION", patch: { exclusive } })
-    if (exclusive && (state.fee?.sellerRate ?? 0) < 0.005) {
-      dispatch({ type: "SET_FEE", patch: { sellerRate: 0.005 } })
-    }
-  }, [dispatch, state.fee?.sellerRate])
+  // Phase G5: 전속 토글을 FeeSection 내부로 이동.
+  // FeeSection 이 exclusive=true 전환 시 sellerRate < 0.005 이면 자동 보정함(onChange 경유).
+  // → 별도 page 레벨 보정 로직 불필요.
 
   const wizardState = useMemo(() => toWizardState(state, extras), [state, extras])
 
@@ -405,7 +401,7 @@ export default function SellWizardPage() {
             }}
           >
             {step === 1 && (
-              <Step1 state={state} dispatch={dispatch} onExclusiveChange={handleExclusiveChange} />
+              <Step1 state={state} dispatch={dispatch} />
             )}
             {step === 2 && (
               <Step2 state={state} dispatch={dispatch} />
@@ -569,36 +565,22 @@ export default function SellWizardPage() {
 // STEP 1 — 기관 · 매각주체 (InstitutionSection 래퍼)
 // ═════════════════════════════════════════════════════════════
 function Step1({
-  state, dispatch, onExclusiveChange,
+  state, dispatch,
 }: {
   state: UnifiedFormState
   dispatch: (action: UnifiedFormAction) => void
-  onExclusiveChange: (exclusive: boolean) => void
 }) {
   return (
     <>
       <StepHeader
         num={1}
         title="매각 주체 확인"
-        desc="매각 주체(기관/개인/법인)와 매물 종류를 선택하세요. 전속 계약 시 수수료가 0.3%로 할인됩니다."
+        desc="매각 주체(기관/개인/법인)와 매물 종류를 선택하세요. 전속 계약은 Step 3 수수료 섹션에서 설정합니다."
       />
+      {/* Phase G5: 전속 토글은 Step 3 FeeSection 상단으로 이동. */}
       <InstitutionSection
         value={state.institution}
-        onChange={(patch) => {
-          // 전속 토글만 특별 처리 (수수료 하한 자동 보정)
-          if ("exclusive" in patch && typeof patch.exclusive === "boolean") {
-            onExclusiveChange(patch.exclusive)
-            // 다른 필드가 함께 변경된 경우에도 병합 적용
-            const rest = { ...patch }
-            delete (rest as Record<string, unknown>).exclusive
-            if (Object.keys(rest).length > 0) {
-              dispatch({ type: "SET_INSTITUTION", patch: rest })
-            }
-          } else {
-            dispatch({ type: "SET_INSTITUTION", patch })
-          }
-        }}
-        showExclusiveToggle
+        onChange={(patch) => dispatch({ type: "SET_INSTITUTION", patch })}
       />
     </>
   )
@@ -726,13 +708,16 @@ function Step3({
         </div>
       )}
 
-      {/* 매각 수수료율 — FeeSection */}
+      {/* 매각 수수료율 — FeeSection (Phase G5: 전속 계약 토글 내장) */}
       {state.fee && (
         <div style={{ marginTop: 18 }}>
           <FeeSection
             value={state.fee}
             onChange={(patch) => dispatch({ type: "SET_FEE", patch })}
             exclusive={state.institution.exclusive}
+            onExclusiveChange={(next) =>
+              dispatch({ type: "SET_INSTITUTION", patch: { exclusive: next } })
+            }
           />
           {state.askingPrice > 0 && (
             <div style={{

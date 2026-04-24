@@ -7,7 +7,11 @@
  *   · name            — 기관명 (자유 입력)
  *   · type            — SellerInstitution (은행/저축은행/AMC/…)
  *   · listingCategory — NPL / GENERAL
- *   · exclusive       — 전속 계약 여부 (SELL/AUCTION 에서 수수료 하한 영향)
+ *
+ * Phase G5:
+ *   · 전속 계약(`exclusive`) 토글 UI 는 FeeSection 상단으로 이동.
+ *   · 데이터 모델(`InstitutionState.exclusive`)은 그대로 유지.
+ *   · 하위 호환: `showExclusiveToggle` prop 은 수신만 하고 무시(no-op).
  */
 
 import { Building2 } from "lucide-react"
@@ -25,12 +29,14 @@ const INSTITUTION_ENTRIES = Object.entries(SELLER_INSTITUTIONS) as [
 export function InstitutionSection({
   value,
   onChange,
-  showExclusiveToggle = true,
   disabled,
 }: {
   value: InstitutionState
   onChange: (patch: Partial<InstitutionState>) => void
-  /** ANALYSIS 모드에서는 전속 토글 숨김 */
+  /**
+   * @deprecated Phase G5 · 전속 토글은 FeeSection 으로 이동. 더 이상 사용되지 않음.
+   * (하위 호환용으로 시그니처는 유지하지만 값은 무시)
+   */
   showExclusiveToggle?: boolean
   disabled?: boolean
 }) {
@@ -115,25 +121,6 @@ export function InstitutionSection({
           </div>
         </div>
 
-        {showExclusiveToggle && (
-          <div>
-            <label className="block text-[0.6875rem] font-semibold text-[var(--color-text-secondary)] mb-1">
-              전속 계약 여부
-            </label>
-            <label className="flex items-center gap-2 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 cursor-pointer hover:border-[var(--color-border-strong)]">
-              <input
-                type="checkbox"
-                checked={value.exclusive}
-                onChange={(e) => onChange({ exclusive: e.target.checked })}
-                disabled={disabled}
-                className="accent-sky-500"
-              />
-              <span className="text-[0.75rem] text-[var(--color-text-secondary)]">
-                전속 계약 (수수료 하한 0.5%)
-              </span>
-            </label>
-          </div>
-        )}
       </div>
     </div>
   )
