@@ -105,6 +105,7 @@ export function makeInitialState(mode: FormMode): UnifiedFormState {
 
     specialConditions: { ...emptySpecialConditions },
     specialConditionKeys: [],
+    specialConditionsV2: [],
 
     saleMethod: "NPLATFORM",
   }
@@ -158,6 +159,16 @@ function reducer(s: UnifiedFormState, a: UnifiedFormAction): UnifiedFormState {
         ...s,
         fee: { ...(s.fee as FeeState), ...a.patch },
       }
+    case "SET_DEBTOR_TYPE":
+      return { ...s, debtorType: a.value }
+    case "TOGGLE_SPECIAL_CONDITION_V2": {
+      const set = new Set(s.specialConditionsV2)
+      if (a.checked) set.add(a.key)
+      else set.delete(a.key)
+      return { ...s, specialConditionsV2: Array.from(set) }
+    }
+    case "SET_SPECIAL_CONDITIONS_V2":
+      return { ...s, specialConditionsV2: Array.from(new Set(a.keys)) }
     case "APPLY_LISTING":
       // 기등록 채권의 데이터로 덮어쓰기 (mode/fee/bidTerms 는 유지)
       return {

@@ -97,9 +97,16 @@ export interface UnifiedFormState {
   askingPrice: number
   collateralAmount: number          // 설정금액 (근저당 등)
 
-  // 특수조건 25항목
+  // 특수조건 V1 (25항목 camelCase) — @deprecated · 기존 API·리포트 호환용
   specialConditions: SpecialConditions
   specialConditionKeys: SpecialConditionKey[]
+
+  /**
+   * 특수조건 V2 (18항목 × 3-버킷) — Phase G1 신규.
+   * snake_case key 배열. SPECIAL_CONDITIONS_V2 에 정의된 18 key 중 체크된 것만.
+   * 입력폼 3-탭(소유권/비용/유동성) 의 체크 상태와 동기화.
+   */
+  specialConditionsV2: string[]
 
   saleMethod: ListingSaleMethod
 
@@ -136,5 +143,8 @@ export type UnifiedFormAction =
   | { type: "SET_LEASE"; patch: Partial<LeaseSummary> }
   | { type: "SET_BID_TERMS"; patch: Partial<BidTermsState> }
   | { type: "SET_FEE"; patch: Partial<FeeState> }
+  | { type: "SET_DEBTOR_TYPE"; value: UnifiedFormState["debtorType"] }
+  | { type: "TOGGLE_SPECIAL_CONDITION_V2"; key: string; checked: boolean }
+  | { type: "SET_SPECIAL_CONDITIONS_V2"; keys: string[] }
   | { type: "APPLY_LISTING"; listing: Partial<UnifiedFormState> }  // 기등록 채권 불러오기
   | { type: "RESET"; mode: FormMode }

@@ -226,6 +226,116 @@ export const EMPTY_SPECIAL_CONDITIONS: SpecialConditions =
     ['otherNote', ''],
   ]) as unknown as SpecialConditions
 
+// ─── 특수조건 V2 (18항목 × 3-버킷) ───────────────────────────
+/**
+ * 2026 Q2 리팩토링 — 25→18항목, 3-버킷 SSoT.
+ * 선행 문서: docs/NPLatform_Refactor_Strategy_2026Q2.md
+ *
+ * V1(25항목 camelCase) 은 @deprecated 이지만 기존 데이터·리포트 호환을 위해 유지.
+ * 신규 입력·리포트 코드는 V2 를 사용해야 한다.
+ *
+ * 버킷:
+ *   🔴 OWNERSHIP (5)  — 소유권 자체가 이전 안 되거나 경합하는 리스크
+ *   🟠 COST      (7)  — 낙찰 후 별도 비용·채무 인수
+ *   🟡 LIQUIDITY (6)  — 매각·임대가 막히거나 지연되는 리스크
+ */
+export type SpecialConditionBucket = 'OWNERSHIP' | 'COST' | 'LIQUIDITY'
+
+export const SPECIAL_CONDITION_BUCKET_LABEL: Record<SpecialConditionBucket, string> = {
+  OWNERSHIP: '소유권 리스크',
+  COST:      '비용 리스크',
+  LIQUIDITY: '유동성 리스크',
+}
+
+export const SPECIAL_CONDITION_BUCKET_COLOR: Record<SpecialConditionBucket, 'red' | 'orange' | 'yellow'> = {
+  OWNERSHIP: 'red',
+  COST:      'orange',
+  LIQUIDITY: 'yellow',
+}
+
+export interface SpecialConditionDefV2 {
+  key: string                       // snake_case 식별자 (V2 고유)
+  label: string                     // 한글 라벨
+  bucket: SpecialConditionBucket
+  /** 법적점수 감점 (0 이상 양수). 계산식: 법적점수 = max(20, 100 − Σpenalty) */
+  penalty: number
+  helper?: string                   // 체크박스 툴팁
+}
+
+/**
+ * 특수조건 V2 — 18항목 단일 진원지.
+ * 계산식: 권리관계점수 = max(20, 100 − Σ(checked.penalty))
+ */
+export const SPECIAL_CONDITIONS_V2: readonly SpecialConditionDefV2[] = [
+  // 🔴 소유권 리스크 (5)
+  { key: 'leasehold_only_sale',        label: '전세권만 매각',           bucket: 'OWNERSHIP', penalty: 60, helper: '전세권 단독 경매 · 소유권 이전 불가' },
+  { key: 'senior_registry_rights',     label: '선순위 등기권리 존재',     bucket: 'OWNERSHIP', penalty: 50, helper: '선순위 근저당·지상권·임차권·전세권·가등기·가처분·가압류 등 (등기부 원본 확인 필수)' },
+  { key: 'opposable_tenant',           label: '대항력 있는 임차인',       bucket: 'OWNERSHIP', penalty: 45, helper: '등기 없이도 대항력(주택임대차보호법) · 보증금 인수' },
+  { key: 'lien_or_statutory_easement', label: '유치권 / 법정지상권',      bucket: 'OWNERSHIP', penalty: 45, helper: '제3자 점유·명도 제한 or 건물 철거 불가' },
+  { key: 'share_auction',              label: '지분입찰',                 bucket: 'OWNERSHIP', penalty: 40, helper: '공유지분만 매각 · 분할청구·우선매수 고려' },
+
+  // 🟠 비용 리스크 (7)
+  { key: 'inherent_tax',               label: '당해세',                  bucket: 'COST',      penalty: 40, helper: '해당 부동산 부과 조세 · 최우선 배당 · 감액 폭 특히 큼' },
+  { key: 'land_separate_registry',     label: '토지 별도등기',           bucket: 'COST',      penalty: 35, helper: '건물·토지 등기 분리 · 법정지상권·정리 필요' },
+  { key: 'wage_claim',                 label: '임금채권',                bucket: 'COST',      penalty: 30, helper: '최종 3개월분 + 퇴직금 3년분 최우선' },
+  { key: 'lease_registration',         label: '임차권 등기',             bucket: 'COST',      penalty: 30, helper: '임차권 등기명령 · 대항력 유지 · 보증금 인수' },
+  { key: 'site_right_unregistered',    label: '대지권 미등기',           bucket: 'COST',      penalty: 30, helper: '건물만 매각 · 대지사용권 별도 취득 필요' },
+  { key: 'tax_and_social_insurance',   label: '조세 / 4대보험',          bucket: 'COST',      penalty: 20, helper: '국세·지방세·국민연금·건강·고용·산재 체납' },
+  { key: 'disaster_compensation',      label: '재해보상',                bucket: 'COST',      penalty: 18, helper: '산재 보상금 체납 · 최우선 배당' },
+
+  // 🟡 유동성 리스크 (6)
+  { key: 'illegal_building',           label: '무허가건축물',             bucket: 'LIQUIDITY', penalty: 45, helper: '건축허가 無 · 철거 대상' },
+  { key: 'landlocked',                 label: '맹지',                    bucket: 'LIQUIDITY', penalty: 35, helper: '도로 접근 無 · 건축·개발 제약' },
+  { key: 'no_use_approval',            label: '사용승인 미필',           bucket: 'LIQUIDITY', penalty: 30, helper: '준공검사 미완료 · 등기 제한' },
+  { key: 'grave_base_right',           label: '분묘기지권',              bucket: 'LIQUIDITY', penalty: 30, helper: '타인 묘지 존재 · 개장 제약 (토지 한정)' },
+  { key: 'code_violation',             label: '위반건축물',              bucket: 'LIQUIDITY', penalty: 25, helper: '건축물대장 등재 · 강제이행금·양성화비' },
+  { key: 'farmland_qualification',     label: '농취증 필요',             bucket: 'LIQUIDITY', penalty: 20, helper: '농지법 제8조 · 취득자격 제한' },
+] as const
+
+export type SpecialConditionKeyV2 = (typeof SPECIAL_CONDITIONS_V2)[number]['key']
+
+/** 버킷별 항목 (UI 3-탭 렌더링용) */
+export function getConditionsByBucket(bucket: SpecialConditionBucket): SpecialConditionDefV2[] {
+  return SPECIAL_CONDITIONS_V2.filter(c => c.bucket === bucket)
+}
+
+/** key → def 조회 */
+export function getConditionV2(key: string): SpecialConditionDefV2 | undefined {
+  return SPECIAL_CONDITIONS_V2.find(c => c.key === key)
+}
+
+/**
+ * 권리관계(법적) 점수 계산식 — Phase G 신규.
+ *   권리관계점수 = max(20, 100 − Σ(checked.penalty))
+ */
+export function computeLegalScoreV2(checkedKeys: readonly string[]): {
+  score: number
+  penaltySum: number
+  formula: string
+  byBucket: Record<SpecialConditionBucket, { count: number; penaltySum: number }>
+} {
+  const byBucket: Record<SpecialConditionBucket, { count: number; penaltySum: number }> = {
+    OWNERSHIP: { count: 0, penaltySum: 0 },
+    COST:      { count: 0, penaltySum: 0 },
+    LIQUIDITY: { count: 0, penaltySum: 0 },
+  }
+  let penaltySum = 0
+  for (const key of checkedKeys) {
+    const def = getConditionV2(key)
+    if (!def) continue
+    penaltySum += def.penalty
+    byBucket[def.bucket].count += 1
+    byBucket[def.bucket].penaltySum += def.penalty
+  }
+  const score = Math.max(20, 100 - penaltySum)
+  return {
+    score,
+    penaltySum,
+    formula: `max(20, 100 − ${penaltySum}) = ${score}`,
+    byBucket,
+  }
+}
+
 // ─── 회수율 예측 (3팩터) ─────────────────────────────────────
 
 /**
