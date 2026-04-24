@@ -495,12 +495,16 @@ export default function SignupPage() {
         <div className="hidden xl:flex xl:w-[420px] 2xl:w-[480px] shrink-0 flex-col justify-between p-10 2xl:p-12 bg-[var(--color-brand-deepest)] text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#2E75B6]/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-72 h-72 bg-[var(--color-brand-dark)]/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
-          <div className="relative flex items-center gap-2.5">
+          <Link
+            href="/"
+            aria-label="NPLatform 홈으로"
+            className="relative flex items-center gap-2.5 rounded-lg hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2E75B6]"
+          >
             <div className="w-9 h-9 rounded-xl bg-[#2E75B6] flex items-center justify-center shadow-lg shadow-[#2E75B6]/30">
               <span className="text-white font-black text-base tracking-tight">N</span>
             </div>
             <span className="text-xl font-bold tracking-tight">NPLatform</span>
-          </div>
+          </Link>
           <div className="relative space-y-4">
             <p className="text-xs font-bold text-[#2E75B6] uppercase tracking-[0.2em]">가입 완료</p>
             <h2 className="text-4xl font-black leading-tight text-white">환영합니다!</h2>
@@ -571,13 +575,17 @@ export default function SignupPage() {
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-[var(--color-brand-dark)]/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
         <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-[#2E75B6]/8 rounded-full blur-2xl pointer-events-none" />
 
-        {/* Logo */}
-        <div className="relative flex items-center gap-2.5">
+        {/* Logo — 클릭 시 홈 이동 */}
+        <Link
+          href="/"
+          aria-label="NPLatform 홈으로"
+          className="relative flex items-center gap-2.5 rounded-lg hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2E75B6]"
+        >
           <div className="w-9 h-9 rounded-xl bg-[#2E75B6] flex items-center justify-center shadow-lg shadow-[#2E75B6]/30">
             <span className="text-white font-black text-base tracking-tight">N</span>
           </div>
           <span className="text-xl font-bold tracking-tight">NPLatform</span>
-        </div>
+        </Link>
 
         {/* Step-aware content */}
         <div className="relative">
@@ -598,13 +606,17 @@ export default function SignupPage() {
       {/* ── RIGHT PANEL ────────────────────────────────────────────────────── */}
       <div className="flex flex-1 flex-col justify-center px-6 py-12 lg:px-16 xl:px-24 bg-white overflow-y-auto">
 
-        {/* Mobile logo */}
-        <div className="flex items-center gap-2 mb-8 lg:hidden">
+        {/* Mobile logo — 클릭 시 홈 이동 */}
+        <Link
+          href="/"
+          aria-label="NPLatform 홈으로"
+          className="flex items-center gap-2 mb-8 lg:hidden hover:opacity-80 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-brand-deep)] rounded-lg"
+        >
           <div className="w-8 h-8 rounded-xl bg-[var(--color-brand-deep)] flex items-center justify-center">
             <span className="text-white font-black text-sm">N</span>
           </div>
           <span className="text-lg font-bold text-[var(--color-brand-deep)]">NPLatform</span>
-        </div>
+        </Link>
 
         <div className="w-full max-w-[400px] mx-auto">
 

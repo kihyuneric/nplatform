@@ -217,13 +217,17 @@ export default function SelectRolePage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center px-4 py-12">
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 mb-10">
+      {/* Logo — 클릭 시 홈 이동 */}
+      <Link
+        href="/"
+        aria-label="NPLatform 홈으로"
+        className="flex items-center gap-2.5 mb-10 hover:opacity-80 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-brand-dark)] rounded-lg"
+      >
         <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-dark)] flex items-center justify-center shadow-md">
           <span className="text-white font-black text-base">N</span>
         </div>
         <span className="text-2xl font-black text-[var(--color-brand-deep)] tracking-tight">NPLatform</span>
-      </div>
+      </Link>
 
       {/* Stage indicator */}
       <div className="flex items-center gap-2 mb-5 text-xs font-semibold tracking-normal">

@@ -27,7 +27,7 @@ import { motion } from "framer-motion"
 import {
   Building2, MapPin, Scale, FileText, Camera, Briefcase,
   Check, ChevronRight, ChevronLeft, ShieldCheck, Sparkles,
-  Calculator, Send, AlertCircle, List,
+  Calculator, Send, AlertCircle, List, Download,
 } from "lucide-react"
 import { CompletenessBadge } from "@/components/listing/completeness-badge"
 import { calculateSellerFee } from "@/lib/fee-calculator"
@@ -587,6 +587,51 @@ function Step1({
         title="매각 주체 확인"
         desc="매각 주체(기관/개인/법인)와 매물 종류를 선택하세요. 전속 계약은 Step 3 수수료 섹션에서 설정합니다."
       />
+
+      {/* Phase G7+ · 엑셀 템플릿 다운로드 배너 — 매각사가 오프라인으로 작성해 제출하면 OCR 자동 등록 */}
+      <div
+        style={{
+          marginBottom: 16, padding: "14px 18px", borderRadius: 12,
+          background: "linear-gradient(135deg, rgba(46,117,182,0.08), rgba(27,58,92,0.04))",
+          border: `1px solid ${C.blue}44`,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: 14, flexWrap: "wrap",
+        }}
+      >
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <Download size={14} color={C.blueL} />
+            <strong style={{ fontSize: 13, color: "var(--color-text-primary)" }}>
+              매물 등록 템플릿 (엑셀)
+            </strong>
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4,
+              backgroundColor: `${C.blue}22`, color: C.blueL,
+            }}>
+              OCR 자동등록 지원
+            </span>
+          </div>
+          <p style={{ fontSize: 11, color: C.lt4, lineHeight: 1.5 }}>
+            매각사에 배포해 오프라인으로 작성받은 후 업로드하면 OCR 로 자동 파싱됩니다.
+            기본정보 · 특수조건 V2 18항목 · 필요서류 체크리스트 · 사진 업로드 안내 포함.
+          </p>
+        </div>
+        <a
+          href="/templates/NPLatform_매물등록_템플릿.xlsx"
+          download
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "9px 16px", borderRadius: 10,
+            backgroundColor: C.blue, color: "#fff",
+            fontSize: 12, fontWeight: 700, textDecoration: "none",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <Download size={14} />
+          템플릿 다운로드
+        </a>
+      </div>
+
       {/* Phase G5: 전속 토글은 Step 3 FeeSection 상단으로 이동. */}
       <InstitutionSection
         value={state.institution}

@@ -130,13 +130,17 @@ export default function LoginPage() {
         <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full bg-[var(--color-brand-dark)]/40 blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
 
-        {/* Logo */}
-        <div className="relative flex items-center gap-2.5 shrink-0">
+        {/* Logo — 클릭 시 홈 이동 */}
+        <Link
+          href="/"
+          aria-label="NPLatform 홈으로"
+          className="relative flex items-center gap-2.5 shrink-0 rounded-lg hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2E75B6] transition-opacity"
+        >
           <div className="w-9 h-9 rounded-xl bg-[#2E75B6] flex items-center justify-center shadow-lg shadow-[#2E75B6]/30 shrink-0">
             <span className="text-white font-black text-base">N</span>
           </div>
           <span className="text-2xl font-black text-white tracking-tight whitespace-nowrap">NPLatform</span>
-        </div>
+        </Link>
 
         {/* Hero */}
         <div className="relative space-y-6">
@@ -174,13 +178,17 @@ export default function LoginPage() {
       <div className="flex-1 min-w-0 bg-white flex items-center justify-center p-6 sm:p-8">
         <div className="w-full max-w-md">
 
-          {/* Mobile/tablet logo — hidden on xl+ */}
-          <div className="flex items-center gap-2 mb-8 xl:hidden">
+          {/* Mobile/tablet logo — hidden on xl+ · 클릭 시 홈 이동 */}
+          <Link
+            href="/"
+            aria-label="NPLatform 홈으로"
+            className="flex items-center gap-2 mb-8 xl:hidden hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-brand-deep)] rounded-lg transition-opacity"
+          >
             <div className="w-8 h-8 rounded-xl bg-[var(--color-brand-deep)] flex items-center justify-center">
               <span className="text-white font-black text-sm">N</span>
             </div>
             <span className="text-lg font-black text-[var(--color-brand-deep)]">NPLatform</span>
-          </div>
+          </Link>
 
           <div className="mb-8">
             <h1 className="text-3xl font-black text-[var(--color-brand-deep)] tracking-normal">로그인</h1>

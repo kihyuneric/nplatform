@@ -93,13 +93,17 @@ export default function MFAVerifyPage() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full border border-blue-400/10" />
         </div>
         <div className="relative flex flex-col flex-1 px-10 py-12 justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-2.5">
+          {/* Logo — 클릭 시 홈 이동 */}
+          <Link
+            href="/"
+            aria-label="NPLatform 홈으로"
+            className="flex items-center gap-2.5 rounded-lg hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-brand-bright)]"
+          >
             <div className="w-8 h-8 rounded-lg bg-[var(--color-brand-bright)] flex items-center justify-center">
               <span className="text-white font-black text-sm">N</span>
             </div>
             <span className="text-white font-bold text-lg">NPLatform</span>
-          </div>
+          </Link>
           {/* Center */}
           <div className="space-y-6">
             <div className="relative w-20 h-20">
@@ -136,13 +140,17 @@ export default function MFAVerifyPage() {
       {/* Right panel */}
       <div className="flex-1 flex flex-col items-center justify-center bg-white px-6 py-12">
         <div className="w-full max-w-sm">
-          {/* Mobile logo */}
-          <div className="md:hidden flex items-center justify-center gap-2 mb-8">
+          {/* Mobile logo — 클릭 시 홈 이동 */}
+          <Link
+            href="/"
+            aria-label="NPLatform 홈으로"
+            className="md:hidden flex items-center justify-center gap-2 mb-8 hover:opacity-80 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-brand-deep)] rounded-lg"
+          >
             <div className="w-8 h-8 rounded-lg bg-[var(--color-brand-deepest)] flex items-center justify-center">
               <Shield className="h-4 w-4 text-white" />
             </div>
             <span className="text-base font-bold text-[var(--color-brand-deep)]">NPLatform</span>
-          </div>
+          </Link>
 
           <div className="mb-8">
             <h2 className="text-3xl font-black text-[var(--color-brand-deep)] mb-2">인증 코드 입력</h2>

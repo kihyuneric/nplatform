@@ -12,13 +12,17 @@ const STEPS = [
 export default function PendingApprovalPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8FAFC] px-4 py-16">
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 mb-12">
+      {/* Logo — 클릭 시 홈 이동 */}
+      <Link
+        href="/"
+        aria-label="NPLatform 홈으로"
+        className="flex items-center gap-2.5 mb-12 hover:opacity-80 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-brand-deep)] rounded-lg"
+      >
         <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-deep)] flex items-center justify-center">
           <span className="text-white font-black text-base">N</span>
         </div>
         <span className="text-xl font-bold text-[var(--color-brand-deep)]">NPLatform</span>
-      </div>
+      </Link>
 
       <div className="w-full max-w-md space-y-8">
         {/* Icon + heading */}
