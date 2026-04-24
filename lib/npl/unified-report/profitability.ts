@@ -20,6 +20,8 @@
  *  + 근거 데이터 네비게이션 (6탭: 예상낙찰가 / 낙찰가율 / 법원기일 / 낙찰사례 / 실거래 / 배당표)
  */
 
+import { getDefaultMarginLtv } from './risk-factors'
+
 // ─── [1] 물권내역 ────────────────────────────────────────────
 export interface PropertyBasicInfo {
   address: string
@@ -441,8 +443,13 @@ export interface ProfitabilityInput {
   courtName?: string
   /** 매입 할인율 (소수, 기본 0 = 원금 100% 매입) */
   discountRate?: number
-  /** 질권대출 비율 (기본 0.75) */
+  /**
+   * 질권대출 비율 (기본: `getDefaultMarginLtv(debtorType)` — 개인 0.75 / 법인 0.90).
+   * 명시 시 debtorType 무시 · Phase G3 이전엔 0.75 하드코딩이었음.
+   */
   pledgeLoanRatio?: number
+  /** Phase G1/G3 — 채무자 유형. pledgeLoanRatio 미지정 시 기본값 분기 (개인 75% / 법인 90%) */
+  debtorType?: 'INDIVIDUAL' | 'CORPORATE' | '' | null
   /** 질권대출 이자율 (기본 0.065) */
   pledgeInterestRate?: number
   /** 경매집행비용 (기본 10,000,000) */
@@ -516,7 +523,9 @@ export interface ProfitabilityInput {
 export function buildNplProfitability(input: ProfitabilityInput): NplProfitabilityBlock {
   const today = input.asOfDate ?? new Date().toISOString().slice(0, 10)
   const discountRate = input.discountRate ?? 0
-  const pledgeLoanRatio = input.pledgeLoanRatio ?? 0.75
+  // Phase G3 — 질권대출 LTV 기본값 debtorType 분기 (개인 75% / 법인 90%).
+  //   명시적 pledgeLoanRatio 가 있으면 우선, 없으면 debtorType 기반 기본값.
+  const pledgeLoanRatio = input.pledgeLoanRatio ?? getDefaultMarginLtv(input.debtorType ?? null)
   const pledgeInterestRate = input.pledgeInterestRate ?? 0.065
   const executionCost = input.executionCost ?? 10_000_000
   const registrationTransferRate = input.registrationTransferRate ?? 0.0048

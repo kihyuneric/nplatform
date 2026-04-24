@@ -39,10 +39,10 @@ import {
   computeRightsFactor,
   computeMarketFactor,
   computeLiquidityFactor,
-  computeLegalFactor,
   composeRiskScore,
   computeInvestmentVerdict,
 } from './risk-factors'
+import { migrateV1ToV2Keys } from './special-conditions-migration'
 
 // ─── 샘플 통계 컨텍스트 · 송파 잠실 오피스텔 ─────────────────
 export const SAMPLE_STATISTICS: StatisticsContext = {
@@ -257,15 +257,15 @@ export function buildSampleReport(): UnifiedAnalysisReport {
     ],
   })
 
-  // 리스크 5팩터 — 계산 가능한 공식 기반 (risk-factors.ts)
-  //   담보가치 · 권리관계 · 시장 · 유동성 · 법적 → 각 항목 공식 산출 후 가중 합산
+  // 리스크 4팩터 — 계산 가능한 공식 기반 (risk-factors.ts · Phase G3)
+  //   담보가치 · 권리관계(법적 병합) · 시장 · 유동성 → 각 항목 공식 산출 후 가중 합산
   const collateralFactor = computeCollateralFactor({
     claimBalance: totalBond,
     appraisalValue: appraisal,
     marketValue: input.currentMarketValue ?? appraisal,
   })
   const rightsFactor = computeRightsFactor({
-    specialConditions: input.specialConditions,
+    specialConditionsV2: input.specialConditionsV2 ?? migrateV1ToV2Keys(input.specialConditions),
     registry: registryAnalysis,
     subordinateClaimCount: 1,   // 잠실 케이스 후순위 근저당 1건
   })
@@ -274,8 +274,7 @@ export function buildSampleReport(): UnifiedAnalysisReport {
     auction,
     averageBidderCount: SAMPLE_STATISTICS.nearbyAuction?.summary.avgBidderCount ?? 1,
   })
-  const legalFactor = computeLegalFactor({ specialConditions: input.specialConditions })
-  const riskFactorResults = [collateralFactor, rightsFactor, marketFactor, liquidityFactor, legalFactor]
+  const riskFactorResults = [collateralFactor, rightsFactor, marketFactor, liquidityFactor]
 
   const { score: riskScore, formula: riskCompositeFormula } = composeRiskScore(riskFactorResults)
   const riskGrade = scoreToGrade(riskScore)
@@ -558,6 +557,8 @@ export interface BuildReportFromInputOptions {
   appraisedValue?: number
   currentMarketValue?: number
   specialConditions?: SpecialConditions
+  /** Phase G1 — V2 18항목 체크된 key 배열 (권장, 미지정 시 V1 → V2 자동 마이그레이션) */
+  specialConditionsV2?: readonly string[]
   claimBreakdown?: ClaimBreakdown
   rightsSummary?: RightsSummary
   leaseSummary?: LeaseSummary
@@ -570,7 +571,7 @@ export interface BuildReportFromInputOptions {
   auctionStartDate?: string
   appraisalDate?: string
   marketPriceNote?: string
-  debtorType?: string
+  debtorType?: 'INDIVIDUAL' | 'CORPORATE' | '' | string
 }
 
 export function buildReportFromInput(overrides: BuildReportFromInputOptions): UnifiedAnalysisReport {
@@ -657,14 +658,14 @@ export function buildReportFromInput(overrides: BuildReportFromInputOptions): Un
   })
   const recommendedBidPrice = expectedBid.recommendedBidPrice
 
-  // ── 리스크 5팩터 ────────────────────────────────────────────
+  // ── 리스크 4팩터 (Phase G3) ──────────────────────────────────
   const collateralFactor = computeCollateralFactor({
     claimBalance: totalBond,
     appraisalValue: appraisal,
     marketValue,
   })
   const rightsFactor = computeRightsFactor({
-    specialConditions,
+    specialConditionsV2: overrides.specialConditionsV2 ?? migrateV1ToV2Keys(specialConditions),
     // registry 없음 — 등기부 미첨부 상태
     subordinateClaimCount: 0,
   })
@@ -673,8 +674,7 @@ export function buildReportFromInput(overrides: BuildReportFromInputOptions): Un
     auction,
     averageBidderCount: SAMPLE_STATISTICS.nearbyAuction?.summary.avgBidderCount ?? 1,
   })
-  const legalFactor = computeLegalFactor({ specialConditions })
-  const riskFactorResults = [collateralFactor, rightsFactor, marketFactor, liquidityFactor, legalFactor]
+  const riskFactorResults = [collateralFactor, rightsFactor, marketFactor, liquidityFactor]
 
   const { score: riskScore } = composeRiskScore(riskFactorResults)
   const riskGrade = scoreToGrade(riskScore)

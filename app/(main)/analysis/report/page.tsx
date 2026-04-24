@@ -42,11 +42,11 @@ import {
   computeRightsFactor,
   computeMarketFactor,
   computeLiquidityFactor,
-  computeLegalFactor,
   computeInvestmentVerdict,
   verdictScoreToGrade,
   VERDICT_WEIGHTS,
 } from "@/lib/npl/unified-report/risk-factors"
+import { migrateV1ToV2Keys } from "@/lib/npl/unified-report/special-conditions-migration"
 
 const fmtKRW = (v: number) => {
   const eok = v / 1e8
@@ -67,9 +67,11 @@ const maskFirst5 = (s: string | undefined | null): string => {
 }
 
 /**
- * 리스크 5팩터(담보가치/권리관계/시장/유동성/법적)별 점수 산출 계산식을 생성한다.
+ * 리스크 4팩터(담보가치/권리관계/시장/유동성)별 점수 산출 계산식을 생성한다 · Phase G3.
  * lib/npl/unified-report/risk-factors.ts 의 순수 함수를 그대로 재실행해
  * 샘플/리포트 빌더와 UI 가 완전히 동일한 공식·값을 공유한다 (single source of truth).
+ *
+ * 변경: 기존 '법적' 팩터는 '권리관계' 로 병합 (특수조건 V2 18항목 직접 반영).
  */
 function buildRiskFactorFormula(
   f: UnifiedAnalysisReport["risk"]["factors"][number],
@@ -89,7 +91,8 @@ function buildRiskFactorFormula(
       }).formula
     case "권리관계":
       return computeRightsFactor({
-        specialConditions: input.specialConditions,
+        specialConditionsV2:
+          input.specialConditionsV2 ?? migrateV1ToV2Keys(input.specialConditions),
         registry,
         subordinateClaimCount: 1,
       }).formula
@@ -100,8 +103,6 @@ function buildRiskFactorFormula(
         auction,
         averageBidderCount: input.statistics.nearbyAuction?.summary.avgBidderCount ?? 1,
       }).formula
-    case "법적":
-      return computeLegalFactor({ specialConditions: input.specialConditions }).formula
     default:
       return `점수 = ${f.score} / 100\n근거: ${f.explanation}`
   }

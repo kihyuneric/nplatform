@@ -796,6 +796,11 @@ export interface UnifiedReportInput {
   /** 시세 정보 메모 (출처·근거) */
   marketPriceNote?: string
   specialConditions: SpecialConditions
+  /** Phase G1 — 특수조건 V2 18항목 중 체크된 key 배열 (권장).
+   *  미지정 시 `specialConditions` 를 `migrateV1ToV2Keys` 로 자동 변환. */
+  specialConditionsV2?: readonly string[]
+  /** Phase G1 — 채무자 유형 (개인 75% / 법인 90% 질권대출 LTV 분기) */
+  debtorType?: 'INDIVIDUAL' | 'CORPORATE' | ''
   /** 채권내역 세부 (원금/미수이자/연체금리 등) */
   claimBreakdown?: ClaimBreakdown
   /** 권리관계 요약 (선순위/후순위 총액) */
