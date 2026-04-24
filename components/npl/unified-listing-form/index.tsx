@@ -16,7 +16,7 @@
  *   채권정보 (원금/미수이자/금리)   ✅   | ✅      | ✅
  *   감정가 · 시세                  ✅   | ✅      | ✅
  *   권리관계 · 임차 · 할인율        ✅   | ✅      | (할인율 숨김)
- *   특수조건 25항목                ✅   | ✅      | ✅
+ *   특수조건 V2 18항목 × 3-버킷    ✅   | ✅      | ✅
  *   수수료율                       ✅   | ✅      | —
  *   입찰조건                       선택 | ✅(필수)| —
  */
@@ -174,11 +174,11 @@ export function NplUnifiedForm({
         showDiscount={mode !== "ANALYSIS"}
       />
 
-      {/* 8. 특수조건 25항목 — 3모드 공통 */}
+      {/* 8. 특수조건 V2 18항목 × 3-버킷 — 3모드 공통 (Phase G1/G2) */}
       <SpecialConditionsSection
-        value={state.specialConditions}
-        onChange={(next) =>
-          dispatch({ type: "PATCH", patch: { specialConditions: next } })
+        value={state.specialConditionsV2}
+        onChange={(keys) =>
+          dispatch({ type: "SET_SPECIAL_CONDITIONS_V2", keys })
         }
       />
 

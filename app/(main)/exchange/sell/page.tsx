@@ -798,11 +798,11 @@ function Step4BondRights({
         showDiscount
       />
 
-      {/* 특수조건 25항목 */}
+      {/* 특수조건 V2 18항목 × 3-버킷 (Phase G1/G2) */}
       <div style={{ marginTop: 16 }}>
         <SpecialConditionsSection
-          value={state.specialConditions}
-          onChange={(next) => dispatch({ type: "PATCH", patch: { specialConditions: next } })}
+          value={state.specialConditionsV2}
+          onChange={(keys) => dispatch({ type: "SET_SPECIAL_CONDITIONS_V2", keys })}
         />
       </div>
 

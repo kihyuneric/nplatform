@@ -1,20 +1,22 @@
 "use client"
 
 /**
- * 매물 등록 · NPL 분석 · 딜룸 공용
- *   특수조건 25항목 + 기타 메모 Picker
+ * 특수조건 25항목 Picker — V1 legacy.
  *
- * 모든 데이터는 lib/npl/unified-report/types.ts `SPECIAL_CONDITION_CATALOG` 에서 파생.
- * UI picker · 리스크 계산 · AI 프롬프트 · 낙찰가율 조정 단일 소스.
+ * @deprecated Phase G2 (2026Q2)
+ *   · 입력 폼 전 경로는 `components/npl/unified-listing-form/sections/special-conditions-section.tsx`
+ *     (V2 18항목 × 3-버킷) 을 사용합니다.
+ *   · 이 picker 는 V1 25항목 API/리포트 호환용으로만 남겨둡니다.
+ *   · 현재 런타임 참조 없음 (NplUnifiedForm 으로 전환 완료 후 orphan).
+ *   · 리포트 사이드에서 V1 로우를 표시할 필요가 있을 때 참고용 컴포넌트로만 유지.
  *
- * Features
+ * 모든 데이터는 lib/npl/unified-report/types.ts `SPECIAL_CONDITION_CATALOG` (V1) 에서 파생.
+ *
+ * Features (V1)
  *   · 7개 카테고리 섹션 그룹핑 (A~G)
  *   · per-item severity 뱃지 + 감점(%p) 표시
  *   · 낙찰가율 감점 합계 실시간 표기
  *   · 기타 특이사항 자유 메모 입력
- *
- * Usage:
- *   <SpecialConditionsPicker value={conditions} onChange={setConditions} />
  */
 
 import { AlertTriangle, Info } from "lucide-react"
