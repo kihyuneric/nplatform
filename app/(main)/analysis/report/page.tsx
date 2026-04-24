@@ -33,6 +33,7 @@ import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/uni
 import {
   SPECIAL_CONDITION_CATALOG,
   SPECIAL_CONDITION_CATEGORY_LABEL,
+  computeLegalScoreV2,
   type SpecialConditionCategory,
 } from "@/lib/npl/unified-report/types"
 import { buildSampleReport } from "@/lib/npl/unified-report/sample"
@@ -45,6 +46,8 @@ import {
   computeInvestmentVerdict,
   verdictScoreToGrade,
   VERDICT_WEIGHTS,
+  RISK_FACTOR_WEIGHTS,
+  getDefaultMarginLtv,
 } from "@/lib/npl/unified-report/risk-factors"
 import { migrateV1ToV2Keys } from "@/lib/npl/unified-report/special-conditions-migration"
 
@@ -475,11 +478,22 @@ export default function UnifiedReportPage() {
           </p>
           <FormulaToggle
             tint={{ color: rp.fg, border: rp.border }}
-            formula={`리스크점수 = LTV×0.35 + 지역×0.25 + 낙찰가율×0.30 + 종합회수×0.10
-         = ${recovery.factors.ltv.score}×0.35 + ${recovery.factors.regionTrend.score}×0.25 + ${recovery.factors.auctionRatio.score}×0.30 + ${recovery.compositeScore.toFixed(1)}×0.10
-         = ${risk.score}점 → 등급 ${risk.grade} (${risk.level})
-
-등급 임계: ≥85→A(LOW) · ≥70→B(LOW) · ≥55→C(MEDIUM) · ≥40→D(HIGH) · <40→E(CRITICAL)`}
+            formula={
+              // Phase G3 — 4-팩터 가중 합성 (RISK_FACTOR_WEIGHTS 단일 소스).
+              //   '법적' 팩터 제거·'권리관계'로 병합 후 가중치 재분배 (담보 0.35 · 권리 0.30 · 시장 0.25 · 유동 0.10).
+              [
+                `리스크점수 = Σ(팩터 점수 × 가중치)   · Phase G3 4-팩터 모델`,
+                ``,
+                ...risk.factors.map(f => {
+                  const w = RISK_FACTOR_WEIGHTS[f.category as keyof typeof RISK_FACTOR_WEIGHTS] ?? 0
+                  return `  · ${f.category.padEnd(4, '　')} ${f.score.toFixed(1)}점 × ${w.toFixed(2)} = ${(f.score * w).toFixed(2)}`
+                }),
+                ``,
+                `           = ${risk.score}점 → 등급 ${risk.grade} (${risk.level})`,
+                ``,
+                `등급 임계: ≥85→A(LOW) · ≥70→B(LOW) · ≥55→C(MEDIUM) · ≥40→D(HIGH) · <40→E(CRITICAL)`,
+              ].join('\n')
+            }
           />
         </div>
 
@@ -530,7 +544,14 @@ export default function UnifiedReportPage() {
       <SpecialConditionFullSection specialConditions={input.specialConditions} />
 
       {/* ── NPL 수익성 분석 (7블록 + 3단계 전략 + 민감도 + Monte Carlo + 근거) ───── */}
-      {profitability && <ProfitabilitySections block={profitability} />}
+      {profitability && (
+        <ProfitabilitySections
+          block={profitability}
+          initialDebtorType={
+            input.debtorType === 'CORPORATE' ? 'CORPORATE' : 'INDIVIDUAL'
+          }
+        />
+      )}
 
       {/* ── 시장 전망 ─────────────────────────── */}
       <Section
@@ -817,7 +838,7 @@ function VerdictCriteriaToggle({
               />
               <Row
                 label="[F2] AI 리스크 점수"
-                rule="5팩터 종합 (담보·권리·시장·유동·법적)"
+                rule="4팩터 종합 (담보 0.35 · 권리 0.30 · 시장 0.25 · 유동 0.10)"
                 current={`${riskScore}점`}
                 mapped={r.components.risk.mapped}
                 weight={r.components.risk.weight}
@@ -881,12 +902,37 @@ function VerdictCriteriaToggle({
 }
 
 /**
- * AI 총평에 사용된 생성형 AI 프롬프트를 클릭 토글로 표시.
- * 리포트 전 블록(KPI·3팩터·리스크·수익성·시장 전망)의 핵심 수치를 합성해 최종 결론을 유도.
+ * AI 총평에 사용된 생성형 AI 프롬프트를 클릭 토글로 표시 · Phase G4 재설계.
+ *
+ * 변경 (G4-d vs 이전):
+ *   · [물건] 섹션: 단일 '선순위임차' boolean 제거 → V2 18항목 3-버킷 요약 (🔴/🟠/🟡 카운트)
+ *   · [물건] debtorType 표시 (개인 75% / 법인 90% 질권 LTV 분기 근거)
+ *   · [리스크] 4-팩터 기준 명시 (가중치 투명 노출)
+ *   · [판정 규칙] 종합점수 70 기준을 AI 투자 등급 (A~D) 에 맞춰 85/75/55 3-tier 로 정교화
  */
 function PromptToggle({ report }: { report: UnifiedAnalysisReport }) {
   const [open, setOpen] = useState(false)
   const { summary, recovery, risk, marketOutlook, input, profitability } = report
+
+  // Phase G4 · V2 버킷 요약 (🔴 소유권 / 🟠 비용 / 🟡 유동성)
+  const v2Keys = input.specialConditionsV2 ?? migrateV1ToV2Keys(input.specialConditions)
+  const v2Summary = computeLegalScoreV2(v2Keys)
+  const bucketLine = (label: string, emoji: string, b: { count: number; penaltySum: number }) =>
+    b.count > 0 ? `${emoji} ${label} ${b.count}개(−${b.penaltySum})` : `${emoji} ${label} 0`
+  const specialConditionsLine = v2Keys.length === 0
+    ? '해당 없음'
+    : [
+        bucketLine('소유권', '🔴', v2Summary.byBucket.OWNERSHIP),
+        bucketLine('비용',   '🟠', v2Summary.byBucket.COST),
+        bucketLine('유동성', '🟡', v2Summary.byBucket.LIQUIDITY),
+      ].join(' · ')
+
+  const debtorTypeLabel = input.debtorType === 'CORPORATE'
+    ? '법인 (질권 LTV 기본 90%)'
+    : input.debtorType === 'INDIVIDUAL'
+      ? '개인 (질권 LTV 기본 75%)'
+      : '미지정 (개인 기본값 적용)'
+
   const prompt =
     `역할: 당신은 20년차 NPL 투자 심사역입니다.\n` +
     `과제: 아래 수치를 종합하여 투자 의사결정(BUY/HOLD/AVOID)과 근거를 한 문단(3~4문장)으로 제시하십시오.\n\n` +
@@ -899,16 +945,22 @@ function PromptToggle({ report }: { report: UnifiedAnalysisReport }) {
     `  · 채권액    : ${fmtKRW(input.totalBondAmount)}\n` +
     `  · 최저입찰가: ${input.minBidPrice != null ? fmtKRW(input.minBidPrice) : "—"}\n` +
     `  · 현재시세  : ${input.currentMarketValue != null ? fmtKRW(input.currentMarketValue) : "—"}\n` +
-    `  · 선순위임차: ${input.specialConditions.seniorTenant ? "있음" : "없음"}\n\n` +
+    `  · 채무자유형: ${debtorTypeLabel}\n` +
+    `  · 특수조건  : ${specialConditionsLine}\n` +
+    `                (V2 18항목 기반 · 법적점수 ${v2Summary.score}점 / 감점 합 ${v2Summary.penaltySum})\n\n` +
     `[3팩터 회수율 엔진]\n` +
     `  · LTV        : ${recovery.factors.ltv.ltvPercent.toFixed(1)}% (점수 ${recovery.factors.ltv.score})\n` +
     `  · 지역 동향  : ${recovery.factors.regionTrend.score}점 (모멘텀 ${recovery.factors.regionTrend.auctionMomentum > 0 ? "+" : ""}${recovery.factors.regionTrend.auctionMomentum}%p)\n` +
     `  · 낙찰가율   : 조정 ${recovery.factors.auctionRatio.adjustedBidRatio.toFixed(1)}% (점수 ${recovery.factors.auctionRatio.score})\n` +
     `  · 종합점수   : ${recovery.compositeScore.toFixed(1)} → 등급 ${recovery.compositeGrade}\n` +
     `  · 예측회수율 : ${recovery.predictedRecoveryRate}% (±σ ${recovery.lowerBound}~${recovery.upperBound}%, 신뢰도 ${Math.round(recovery.confidence * 100)}%)\n\n` +
-    `[리스크]\n` +
+    `[리스크 4팩터 · Phase G3 가중 합성]\n` +
     `  · 등급       : ${risk.grade} (${risk.level}, ${risk.score}점)\n` +
-    risk.factors.map(f => `  · ${f.category.padEnd(5)} ${f.score}점 (${f.severity}) — ${f.explanation}`).join("\n") +
+    `  · 가중치     : 담보 0.35 · 권리관계 0.30 · 시장 0.25 · 유동성 0.10\n` +
+    risk.factors.map(f => {
+      const w = RISK_FACTOR_WEIGHTS[f.category as keyof typeof RISK_FACTOR_WEIGHTS] ?? 0
+      return `  · ${f.category.padEnd(5)} ${f.score}점 (${f.severity}) × ${w.toFixed(2)} = ${(f.score * w).toFixed(1)} — ${f.explanation}`
+    }).join("\n") +
     `\n\n` +
     `[입찰 권고]\n` +
     `  · AI 권고 입찰가 : ${fmtKRW(summary.recommendedBidPrice)}\n` +
@@ -923,13 +975,13 @@ function PromptToggle({ report }: { report: UnifiedAnalysisReport }) {
     `  · 요약  : ${marketOutlook.narrative.replace(/\s+/g, " ").slice(0, 140)}…\n\n` +
     `━━━━━━━━━━━━━━━━ 출력 형식 ━━━━━━━━━━━━━━━━\n` +
     `1) 판정 (BUY / HOLD / AVOID) — 이유를 한 문장으로\n` +
-    `2) 핵심 근거 3가지 (숫자 인용 필수)\n` +
-    `3) 유의사항 (특수조건·리스크 팩터 1~2개)\n` +
+    `2) 핵심 근거 3가지 (숫자 인용 필수 · 4-팩터 중 최소 1개 포함)\n` +
+    `3) 유의사항 (V2 특수조건 버킷 🔴/🟠/🟡 중 가장 큰 감점 버킷 1개 지목)\n` +
     `4) 권고 매입가/입찰가 요약 (보수/권고/공격 병렬)\n\n` +
     `━━━━━━━━━━━━━━━━ 판정 규칙 ━━━━━━━━━━━━━━━━\n` +
-    `  · BUY   : 종합점수 ≥ 70 AND 예측회수율 ≥ 85%\n` +
-    `  · HOLD  : 종합점수 ≥ 55 (BUY 미충족)\n` +
-    `  · AVOID : 위 조건 모두 불충족\n\n` +
+    `  · BUY   : 리스크 ≥ 75 AND 예측회수율 ≥ 85% AND 권리관계 팩터 ≥ 70\n` +
+    `  · HOLD  : 리스크 ≥ 55 (BUY 미충족)\n` +
+    `  · AVOID : 위 조건 모두 불충족 OR 🔴 소유권 버킷 감점 ≥ 50\n\n` +
     `현재 자동 판정: ${summary.verdict}`
 
   return (
@@ -1597,6 +1649,8 @@ interface EditableInputs {
   aiMarketValueLatest: number
   expectedBidRatio: number      // 소수
   discountRate: number          // 소수 (0 = 원금 100%)
+  /** 채무자 유형 — 질권대출 LTV 기본값 분기 (Phase G3 · 개인 75% / 법인 90%) */
+  debtorType: 'INDIVIDUAL' | 'CORPORATE'
   pledgeLoanRatio: number       // 소수
   pledgeInterestRate: number    // 소수
   executionCost: number
@@ -1607,7 +1661,10 @@ interface EditableInputs {
   firstSaleDate: string         // ISO — 1차 매각기일
 }
 
-function extractInitialInputs(b: NplProfitabilityBlock): EditableInputs {
+function extractInitialInputs(
+  b: NplProfitabilityBlock,
+  debtorType: 'INDIVIDUAL' | 'CORPORATE' = 'INDIVIDUAL',
+): EditableInputs {
   const firstSaleMilestone = b.schedule.milestones.find(m => m.key === 'firstSaleDate')
   return {
     loanPrincipal: b.claim.loanPrincipal,
@@ -1617,6 +1674,7 @@ function extractInitialInputs(b: NplProfitabilityBlock): EditableInputs {
     aiMarketValueLatest: b.valuation.aiMarketValueLatest,
     expectedBidRatio: b.valuation.expectedBidRatio,
     discountRate: b.acquisition.discountRatePercent / 100,
+    debtorType,
     pledgeLoanRatio: b.acquisition.pledgeLoanRatio,
     pledgeInterestRate: b.acquisition.pledgeInterestRate,
     executionCost: b.distribution.executionCost,
@@ -1627,8 +1685,16 @@ function extractInitialInputs(b: NplProfitabilityBlock): EditableInputs {
   }
 }
 
-function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
-  const [edit, setEdit] = useState<EditableInputs>(() => extractInitialInputs(block))
+function ProfitabilitySections({
+  block,
+  initialDebtorType = 'INDIVIDUAL',
+}: {
+  block: NplProfitabilityBlock
+  initialDebtorType?: 'INDIVIDUAL' | 'CORPORATE'
+}) {
+  const [edit, setEdit] = useState<EditableInputs>(() =>
+    extractInitialInputs(block, initialDebtorType),
+  )
 
   // 초기 샘플 asOf / courtName / evidence 등은 불변 유지
   const initial = block
@@ -1756,6 +1822,19 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
 
       {/* ── [3] 채권매입일정 및 매입가 ──────────── */}
       <Section title="NPL 수익성 분석 · 채권매입 일정·매입가" icon={Calendar} caption="매입가·질권대출 구조 수정 가능">
+        {/* Phase G3 · 채무자 유형 토글 — 질권대출 LTV 기본값 분기 (개인 75% / 법인 90%) */}
+        <DebtorTypeToggle
+          value={edit.debtorType}
+          currentRatio={edit.pledgeLoanRatio}
+          onChange={(nextType) => {
+            setEdit({
+              ...edit,
+              debtorType: nextType,
+              // 질권대출 LTV 를 채무자 유형 기본값으로 자동 동기화 (사용자는 아래 카드에서 수동 조정 가능)
+              pledgeLoanRatio: getDefaultMarginLtv(nextType),
+            })
+          }}
+        />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
           <MetricCard
             label="매입가 (할인율 반영)"
@@ -1775,7 +1854,9 @@ function ProfitabilitySections({ block }: { block: NplProfitabilityBlock }) {
             value={edit.pledgeLoanRatio}
             onChange={(v) => setEdit({ ...edit, pledgeLoanRatio: v })}
             tint="#2E75B6"
-            hint={`금액 ${krwWon(acquisition.pledgeLoanAmount)}`}
+            hint={`${edit.debtorType === 'CORPORATE' ? '법인' : '개인'} 기본 ${
+              (getDefaultMarginLtv(edit.debtorType) * 100).toFixed(0)
+            }% · 금액 ${krwWon(acquisition.pledgeLoanAmount)}`}
           />
           <EditablePercentCard
             label="질권대출 이자율 (연)"
@@ -2155,6 +2236,71 @@ function EditablePercentCard({
         <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">%</span>
       </div>
       {hint && <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-1">{hint}</div>}
+    </div>
+  )
+}
+
+/**
+ * Phase G3 · 채무자 유형 토글 (개인 / 법인).
+ *   · 질권대출 LTV 기본값을 자동 분기 (개인 75% / 법인 90%).
+ *   · 토글 변경 시 부모가 `pledgeLoanRatio` 를 `getDefaultMarginLtv(next)` 로 재동기화.
+ *   · 사용자는 아래 질권대출 비율 카드에서 수동 미세조정 가능.
+ */
+function DebtorTypeToggle({
+  value,
+  currentRatio,
+  onChange,
+}: {
+  value: 'INDIVIDUAL' | 'CORPORATE'
+  currentRatio: number
+  onChange: (next: 'INDIVIDUAL' | 'CORPORATE') => void
+}) {
+  const ratioPct = (currentRatio * 100).toFixed(1)
+  const defaultPct = (getDefaultMarginLtv(value) * 100).toFixed(0)
+  const customized = Math.abs(currentRatio - getDefaultMarginLtv(value)) > 1e-4
+  return (
+    <div className="mb-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[0.625rem] font-semibold uppercase tracking-wide text-[var(--color-text-tertiary)] mb-1">
+            채무자 유형 · 질권대출 LTV 분기
+          </div>
+          <div className="text-[0.75rem] text-[var(--color-text-secondary)] leading-snug">
+            현재 질권대출 비율 <b className="tabular-nums text-[var(--color-text-primary)]">{ratioPct}%</b>
+            {' · '}
+            {value === 'CORPORATE' ? '법인' : '개인'} 기본값 <b className="tabular-nums">{defaultPct}%</b>
+            {customized && (
+              <span className="ml-1.5 text-[0.625rem] font-semibold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300">
+                사용자 조정됨
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="inline-flex rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] overflow-hidden">
+          {(['INDIVIDUAL', 'CORPORATE'] as const).map((k) => {
+            const active = value === k
+            return (
+              <button
+                key={k}
+                type="button"
+                onClick={() => onChange(k)}
+                className={`px-3 py-1.5 text-[0.75rem] font-bold transition-colors ${
+                  active
+                    ? 'bg-[var(--color-brand-mid)] text-white'
+                    : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-muted)]'
+                }`}
+                aria-pressed={active}
+              >
+                {k === 'INDIVIDUAL' ? '개인 75%' : '법인 90%'}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+      <div className="mt-2 text-[0.625rem] text-[var(--color-text-tertiary)] leading-relaxed">
+        실무 관행: 저축은행·신협·캐피탈 기준 개인 채무자 질권대출 한도 <b>75%</b>,
+        법인(사업담보·ABS 가능) <b>90%</b>. 토글 시 기본값으로 재동기화, 수동 조정 가능.
+      </div>
     </div>
   )
 }

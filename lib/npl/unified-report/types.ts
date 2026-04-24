@@ -459,7 +459,7 @@ export interface RecoveryPrediction {
 
 // ─── 리스크 등급 (Claude AI 프롬프트 기반) ───────────────────
 export interface RiskFactorDetail {
-  category: string                // 담보가치/권리관계/시장/유동성/법적
+  category: string                // 담보가치/권리관계/시장/유동성  (Phase G3: '법적' → '권리관계' 병합)
   severity: 'LOW' | 'MEDIUM' | 'HIGH'
   score: number                   // 0~100 (높을수록 안전)
   explanation: string             // AI 생성 근거
