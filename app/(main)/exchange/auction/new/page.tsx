@@ -1,18 +1,29 @@
 "use client"
 
+/**
+ * /exchange/auction/new — 자발적 경매 등록 (F6)
+ *
+ * UnifiedForm(mode="AUCTION") 기반 4-step 위자드.
+ *   · Step 1 — 기본정보 (매물명 · CollateralSection · 면적)
+ *   · Step 2 — 채권정보 (OcrSection · ClaimSection · AppraisalSection · 담보가격 · RightsSection · 특수조건)
+ *   · Step 3 — 입찰조건 (biddingStart · BidTermsSection · 공개/입찰방식/특이사항)
+ *   · Step 4 — 확인 및 등록
+ *
+ * UnifiedFormState 가 SSoT. AuctionExtras 는 auction 전용 보조 필드
+ * (매물명/전용면적/입찰시작일/공개수준/입찰방식/특이사항/동의).
+ */
+
 import { useState, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
   ArrowLeft,
   Gavel,
-  MapPin,
   Check,
   ChevronRight,
   Loader2,
   Save,
   Send,
-  CalendarDays,
   Building2,
   Banknote,
   ClipboardList,
@@ -33,34 +44,20 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
-import SpecialConditionsPicker from "@/components/listings/special-conditions-picker"
+import { getRegionLabel } from "@/lib/taxonomy"
 import {
-  ClaimBreakdownBlock,
-  LeaseSummaryBlock,
-  RightsSummaryBlock,
-  DebtorOwnerSameToggle,
-  DesiredSaleDiscountInput,
-  AppraisalAndMarketBlock,
-} from "@/components/listings/npl-input-blocks"
-import { EMPTY_SPECIAL_CONDITIONS } from "@/lib/npl/unified-report/types"
-import type {
-  SpecialConditions,
-  ClaimBreakdown,
-  LeaseSummary,
-  RightsSummary,
-} from "@/lib/npl/unified-report/types"
-// 매물등록은 분석을 자동 생성하지 않음 — 분석은 /analysis/new 독립 플로우 (UIF-2026Q2-v1)
+  useUnifiedFormState,
+  CollateralSection,
+  ClaimSection,
+  AppraisalSection,
+  RightsSection,
+  SpecialConditionsSection,
+  FeeSection,
+  BidTermsSection,
+  OcrSection,
+} from "@/components/npl/unified-listing-form"
 
 // ─── Constants ──────────────────────────────────────────────
-
-const COLLATERAL_TYPES = [
-  "아파트", "상가", "토지", "오피스텔", "빌라", "공장", "기타",
-] as const
-
-const SIDO_OPTIONS = [
-  "서울", "경기", "부산", "대구", "인천", "대전", "광주", "울산",
-  "세종", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
-] as const
 
 const DISCLOSURE_OPTIONS = [
   { value: "TEASER", label: "TEASER: 기본정보만" },
@@ -83,84 +80,23 @@ const STEPS = [
 
 const DRAFT_KEY = "nplatform_bidding_new_draft"
 
-// ─── Form State ─────────────────────────────────────────────
+// ─── Auction-local extras (UnifiedFormState 에 없는 필드) ──────
 
-interface FormState {
-  // Step 1
+interface AuctionExtras {
   name: string
-  collateralType: string
-  address: string
-  sido: string
-  sigungu: string
   area: string
-  // Step 2
-  loanPrincipal: string   // 대출원금 — 필수
-  unpaidInterest: string  // 미수이자 (정상이자 누적) — 선택
-  appraisalValue: string
-  askingPrice: string
-  collateralAmount: string
-  // 채권잔액은 loanPrincipal + unpaidInterest 자동계산 (claimBalanceComputed)
-  // Step 2 (NPL 상세)
-  appraisalDate: string
-  currentMarketValue: string
-  marketPriceNote: string
-  auctionStartDate: string
-  debtorOwnerSame: boolean
-  desiredSaleDiscount: number      // 0~1
-  claimBreakdown: ClaimBreakdown
-  rightsSummary: RightsSummary
-  leaseSummary: LeaseSummary
-  specialConditions: SpecialConditions
-  // Step 3
-  biddingStart: string
-  biddingEnd: string
-  minimumBid: string
+  biddingStart: string            // BidTermsState 는 bidEndDate 만 보유
   disclosureLevel: string
   biddingMethod: string
   remarks: string
-  // Step 4
   confirmAccuracy: boolean
   confirmTerms: boolean
 }
 
-const INITIAL_FORM: FormState = {
+const INITIAL_EXTRAS: AuctionExtras = {
   name: "",
-  collateralType: "",
-  address: "",
-  sido: "",
-  sigungu: "",
   area: "",
-  loanPrincipal: "",
-  unpaidInterest: "",
-  appraisalValue: "",
-  askingPrice: "",
-  collateralAmount: "",
-  appraisalDate: "",
-  currentMarketValue: "",
-  marketPriceNote: "",
-  auctionStartDate: "",
-  debtorOwnerSame: true,
-  desiredSaleDiscount: 0,
-  claimBreakdown: {
-    principal: 0,
-    unpaidInterest: 0,
-    delinquencyStartDate: "",
-    normalRate: 0.069,
-    overdueRate: 0.16,
-  },
-  rightsSummary: {
-    seniorTotal: 0,
-    juniorTotal: 0,
-  },
-  leaseSummary: {
-    totalDeposit: 0,
-    totalMonthlyRent: 0,
-    tenantCount: 0,
-  },
-  specialConditions: EMPTY_SPECIAL_CONDITIONS,
   biddingStart: "",
-  biddingEnd: "",
-  minimumBid: "",
   disclosureLevel: "",
   biddingMethod: "",
   remarks: "",
@@ -171,19 +107,19 @@ const INITIAL_FORM: FormState = {
 // ─── Helpers ────────────────────────────────────────────────
 
 function formatKRW(amount: number): string {
-  if (amount >= 100000000) {
-    const eok = Math.floor(amount / 100000000)
-    const man = Math.floor((amount % 100000000) / 10000)
+  if (amount >= 100_000_000) {
+    const eok = Math.floor(amount / 100_000_000)
+    const man = Math.floor((amount % 100_000_000) / 10_000)
     return man > 0 ? `${eok}억 ${man.toLocaleString()}만원` : `${eok}억원`
   }
-  if (amount >= 10000) {
-    return `${Math.floor(amount / 10000).toLocaleString()}만원`
+  if (amount >= 10_000) {
+    return `${Math.floor(amount / 10_000).toLocaleString()}만원`
   }
   return `${amount.toLocaleString()}원`
 }
 
-function formatNumberInput(value: string): string {
-  const num = parseInt(value)
+function formatNumberInput(value: number | string): string {
+  const num = typeof value === "number" ? value : parseInt(value || "0", 10)
   if (!num || isNaN(num)) return ""
   return num.toLocaleString()
 }
@@ -192,65 +128,22 @@ function formatNumberInput(value: string): string {
 
 export default function BiddingNewPage() {
   const router = useRouter()
+  const { state, dispatch, derived } = useUnifiedFormState("AUCTION")
+  const [extras, setExtras] = useState<AuctionExtras>(INITIAL_EXTRAS)
   const [currentStep, setCurrentStep] = useState(1)
-  const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [submitting, setSubmitting] = useState(false)
   const [submittedOk, setSubmittedOk] = useState(false)
   const [errors, setErrors] = useState<Record<string, boolean>>({})
 
   // ─── Field updaters ───────────────────────────────────────
 
-  const updateField = useCallback(
-    (field: keyof FormState, value: string | boolean) => {
-      setForm((prev) => ({ ...prev, [field]: value }))
-      setErrors((prev) => ({ ...prev, [field]: false }))
+  const updateExtras = useCallback(
+    <K extends keyof AuctionExtras>(key: K, value: AuctionExtras[K]) => {
+      setExtras((prev) => ({ ...prev, [key]: value }))
+      setErrors((prev) => ({ ...prev, [key as string]: false }))
     },
     [],
   )
-
-  const updateNumberField = useCallback(
-    (field: keyof FormState, raw: string) => {
-      const cleaned = raw.replace(/[^0-9]/g, "")
-      setForm((prev) => ({ ...prev, [field]: cleaned }))
-      setErrors((prev) => ({ ...prev, [field]: false }))
-    },
-    [],
-  )
-
-  // ─── Auto calculations ───────────────────────────────────
-
-  const ltvValue = useMemo(() => {
-    const principal = parseInt(form.loanPrincipal)
-    const appraisal = parseInt(form.appraisalValue)
-    if (!principal || !appraisal || appraisal === 0) return null
-    return ((principal / appraisal) * 100).toFixed(1)
-  }, [form.loanPrincipal, form.appraisalValue])
-
-  const discountRate = useMemo(() => {
-    const appraisal = parseInt(form.appraisalValue)
-    const asking = parseInt(form.askingPrice)
-    if (!appraisal || !asking || appraisal === 0) return null
-    return (((appraisal - asking) / appraisal) * 100).toFixed(1)
-  }, [form.appraisalValue, form.askingPrice])
-
-  // 채권잔액 = 대출원금 + 미수이자 (연체이자는 ClaimBreakdownBlock 내부에서 별도 추정·표시)
-  const claimBalanceComputed = useMemo(() => {
-    const principal = parseInt(form.loanPrincipal) || 0
-    const interest  = parseInt(form.unpaidInterest) || 0
-    return principal + interest
-  }, [form.loanPrincipal, form.unpaidInterest])
-
-  // ─── Amount preview ──────────────────────────────────────
-
-  const amountPreview = (value: string) => {
-    const num = parseInt(value)
-    if (!num || isNaN(num)) return null
-    return (
-      <span className="mt-1 block text-xs text-emerald-600 font-medium">
-        {formatKRW(num)}
-      </span>
-    )
-  }
 
   // ─── Validation ──────────────────────────────────────────
 
@@ -258,24 +151,24 @@ export default function BiddingNewPage() {
     const newErrors: Record<string, boolean> = {}
 
     if (step === 1) {
-      if (!form.name.trim()) newErrors.name = true
-      if (!form.collateralType) newErrors.collateralType = true
-      if (!form.address.trim()) newErrors.address = true
-      if (!form.sido) newErrors.sido = true
+      if (!extras.name.trim()) newErrors.name = true
+      if (!state.collateral) newErrors.collateral = true
+      if (!state.address.detail.trim()) newErrors.address = true
+      if (!state.address.sido) newErrors.sido = true
     }
 
     if (step === 2) {
-      if (!form.loanPrincipal) newErrors.loanPrincipal = true
-      if (!form.appraisalValue) newErrors.appraisalValue = true
-      if (!form.askingPrice) newErrors.askingPrice = true
+      if (!state.claim.principal) newErrors.loanPrincipal = true
+      if (!state.appraisal.appraisalValue) newErrors.appraisalValue = true
+      if (!state.askingPrice) newErrors.askingPrice = true
     }
 
     if (step === 3) {
-      if (!form.biddingStart) newErrors.biddingStart = true
-      if (!form.biddingEnd) newErrors.biddingEnd = true
-      if (!form.minimumBid) newErrors.minimumBid = true
-      if (!form.disclosureLevel) newErrors.disclosureLevel = true
-      if (!form.biddingMethod) newErrors.biddingMethod = true
+      if (!extras.biddingStart) newErrors.biddingStart = true
+      if (!state.bidTerms?.bidEndDate) newErrors.biddingEnd = true
+      if (!state.bidTerms?.minimumBidPrice) newErrors.minimumBid = true
+      if (!extras.disclosureLevel) newErrors.disclosureLevel = true
+      if (!extras.biddingMethod) newErrors.biddingMethod = true
     }
 
     setErrors(newErrors)
@@ -304,58 +197,68 @@ export default function BiddingNewPage() {
 
   const saveDraft = useCallback(() => {
     try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(form))
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ state, extras }),
+      )
       toast.success("임시저장 되었습니다.")
     } catch {
       toast.error("임시저장에 실패했습니다.")
     }
-  }, [form])
+  }, [state, extras])
 
   // ─── Submit ──────────────────────────────────────────────
 
   const handleSubmit = async () => {
-    if (!form.confirmAccuracy || !form.confirmTerms) {
+    if (!extras.confirmAccuracy || !extras.confirmTerms) {
       toast.error("모든 동의 항목에 체크해주세요.")
       return
     }
 
     setSubmitting(true)
     try {
+      const regionLabel = getRegionLabel(state.address.sido)
       const payload = {
-        name: form.name.trim(),
-        collateral_type: form.collateralType,
-        address: form.address.trim(),
-        sido: form.sido,
-        sigungu: form.sigungu.trim(),
-        area: form.area ? parseFloat(form.area) : null,
-        loan_principal: parseInt(form.loanPrincipal) || 0,
-        appraisal_value: parseInt(form.appraisalValue) || 0,
-        asking_price: parseInt(form.askingPrice) || 0,
-        collateral_amount: form.collateralAmount
-          ? parseInt(form.collateralAmount)
-          : null,
-        // 채권잔액 = 대출원금 + 미수이자 (자동계산)
-        unpaid_interest: form.unpaidInterest ? parseInt(form.unpaidInterest) : 0,
-        claim_balance: claimBalanceComputed > 0 ? claimBalanceComputed : null,
-        ltv: ltvValue ? parseFloat(ltvValue) : null,
-        discount_rate: discountRate ? parseFloat(discountRate) : null,
-        bidding_start: form.biddingStart,
-        bidding_end: form.biddingEnd,
-        minimum_bid: parseInt(form.minimumBid) || 0,
-        disclosure_level: form.disclosureLevel,
-        bidding_method: form.biddingMethod,
-        remarks: form.remarks.trim() || null,
-        // NPL 상세 (신규)
-        appraisal_date: form.appraisalDate || null,
-        current_market_value: form.currentMarketValue ? parseInt(form.currentMarketValue) : null,
-        market_price_note: form.marketPriceNote.trim() || null,
-        auction_start_date: form.auctionStartDate || null,
-        debtor_owner_same: form.debtorOwnerSame,
-        desired_sale_discount: form.desiredSaleDiscount,
-        claim_breakdown: form.claimBreakdown,
-        rights_summary: form.rightsSummary,
-        lease_summary: form.leaseSummary,
-        special_conditions: form.specialConditions,
+        name: extras.name.trim(),
+        collateral_type: state.collateral || "기타",
+        address: state.address.detail.trim(),
+        sido: regionLabel !== "-" ? regionLabel : state.address.sido,
+        sigungu: state.address.sigungu.trim(),
+        area: extras.area ? parseFloat(extras.area) : null,
+        // 채권정보
+        loan_principal: state.claim.principal || 0,
+        unpaid_interest: state.claim.unpaidInterest || 0,
+        claim_balance: derived.claimBalance > 0 ? derived.claimBalance : null,
+        claim_breakdown: state.claim,
+        // 담보가격
+        appraisal_value: state.appraisal.appraisalValue || 0,
+        asking_price: state.askingPrice || 0,
+        collateral_amount: state.collateralAmount || null,
+        ltv: derived.ltv || null,
+        discount_rate: derived.discountRate || null,
+        // NPL 상세
+        appraisal_date: state.appraisal.appraisalDate || null,
+        current_market_value: state.appraisal.currentMarketValue || null,
+        market_price_note: state.appraisal.marketPriceNote.trim() || null,
+        auction_start_date: state.appraisal.auctionStartDate || null,
+        debtor_owner_same: state.debtorOwnerSame,
+        desired_sale_discount: state.desiredSaleDiscount,
+        rights_summary: state.rights,
+        lease_summary: state.lease,
+        special_conditions: state.specialConditions,
+        // 입찰조건
+        bidding_start: extras.biddingStart,
+        bidding_end: state.bidTerms?.bidEndDate ?? "",
+        minimum_bid: state.bidTerms?.minimumBidPrice ?? 0,
+        bid_min_increment: state.bidTerms?.bidMinIncrement ?? 0,
+        bid_deposit_rate: state.bidTerms?.bidDepositRate ?? 0.10,
+        bid_reserve_price: state.bidTerms?.reservePrice ?? 0,
+        bid_allow_proxy: state.bidTerms?.allowProxyBid ?? true,
+        disclosure_level: extras.disclosureLevel,
+        bidding_method: extras.biddingMethod,
+        remarks: extras.remarks.trim() || null,
+        // 수수료율 (SELL/AUCTION 공통)
+        seller_fee_rate: state.fee?.sellerRate ?? 0.005,
       }
 
       const res = await fetch("/api/v1/exchange/auction/register", {
@@ -373,9 +276,6 @@ export default function BiddingNewPage() {
 
       localStorage.removeItem(DRAFT_KEY)
       toast.success("NPL 매물이 성공적으로 등록되었습니다.")
-
-      // ※ 매물 등록은 여기서 종료 — 분석은 별도 액션 (UIF-2026Q2-v1 기획서)
-      // 사용자가 명시적으로 "분석 실행" 버튼을 누를 때만 /analysis/report 로 이동
       setSubmittedOk(true)
     } catch (err: unknown) {
       const message =
@@ -399,7 +299,6 @@ export default function BiddingNewPage() {
         const StepIcon = step.icon
         const isCompleted = currentStep > step.id
         const isActive = currentStep === step.id
-        const isPending = currentStep < step.id
 
         return (
           <div key={step.id} className="flex items-center">
@@ -471,83 +370,26 @@ export default function BiddingNewPage() {
           <Input
             className={`mt-1.5 ${errorRing("name")}`}
             placeholder="예: 강남 삼성동 아파트 NPL 채권"
-            value={form.name}
-            onChange={(e) => updateField("name", e.target.value)}
+            value={extras.name}
+            onChange={(e) => updateExtras("name", e.target.value)}
           />
-        </div>
-
-        {/* 담보유형 */}
-        <div>
-          <Label className="text-sm font-semibold">
-            담보유형 <span className="text-red-500">*</span>
-          </Label>
-          <Select
-            value={form.collateralType}
-            onValueChange={(v) => updateField("collateralType", v)}
-          >
-            <SelectTrigger className={`mt-1.5 ${errorRing("collateralType")}`}>
-              <SelectValue placeholder="담보유형을 선택하세요" />
-            </SelectTrigger>
-            <SelectContent>
-              {COLLATERAL_TYPES.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         <Separator />
 
-        {/* 담보 주소 */}
-        <div>
-          <Label className="text-sm font-semibold">
-            담보 주소 <span className="text-red-500">*</span>
-          </Label>
-          <div className="relative mt-1.5">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              className={`pl-9 ${errorRing("address")}`}
-              placeholder="상세 주소를 입력하세요"
-              value={form.address}
-              onChange={(e) => updateField("address", e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* 시도 / 시군구 */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-          <div>
-            <Label className="text-sm font-semibold">
-              시도 <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={form.sido}
-              onValueChange={(v) => updateField("sido", v)}
-            >
-              <SelectTrigger className={`mt-1.5 ${errorRing("sido")}`}>
-                <SelectValue placeholder="시도 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {SIDO_OPTIONS.map((sido) => (
-                  <SelectItem key={sido} value={sido}>
-                    {sido}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-sm font-semibold">시군구</Label>
-            <Input
-              className="mt-1.5"
-              placeholder="예: 강남구"
-              value={form.sigungu}
-              onChange={(e) => updateField("sigungu", e.target.value)}
-            />
-          </div>
-        </div>
+        {/* 담보·주소 (Unified CollateralSection) */}
+        <CollateralSection
+          collateral={state.collateral}
+          address={state.address}
+          debtorType={state.debtorType}
+          onCollateral={(v) =>
+            dispatch({ type: "PATCH", patch: { collateral: v } })
+          }
+          onAddress={(patch) => dispatch({ type: "SET_ADDRESS", patch })}
+          onDebtorType={(v) =>
+            dispatch({ type: "PATCH", patch: { debtorType: v } })
+          }
+        />
 
         {/* 전용면적 */}
         <div>
@@ -558,8 +400,8 @@ export default function BiddingNewPage() {
             step="0.01"
             min="0"
             placeholder="예: 84.92"
-            value={form.area}
-            onChange={(e) => updateField("area", e.target.value)}
+            value={extras.area}
+            onChange={(e) => updateExtras("area", e.target.value)}
           />
         </div>
 
@@ -588,30 +430,37 @@ export default function BiddingNewPage() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* 대출원금·미수이자·연체이자·연체시작일·정상금리·연체금리·채권잔액 자동산출 모두
-            아래 공용 블록 `ClaimBreakdownBlock` 이 담당 (OCR 자동 채움 지원).
-            상단 자체 입력 블록을 제거하여 중복 입력을 없앰. — UIF-2026Q2 */}
+        {/* OCR — 3모드 공통 인프라 */}
+        <OcrSection
+          mode="AUCTION"
+          onApply={(patch) => {
+            if (patch.claim)
+              dispatch({ type: "SET_CLAIM", patch: patch.claim })
+            if (patch.appraisal)
+              dispatch({ type: "SET_APPRAISAL", patch: patch.appraisal })
+            if (patch.address)
+              dispatch({ type: "SET_ADDRESS", patch: patch.address })
+          }}
+        />
 
-        {/* ── 담보 가격 ─────────────────────────────────── */}
+        <Separator />
+
+        {/* 채권정보 (원금/미수이자/연체이자/금리) */}
+        <ClaimSection
+          value={state.claim}
+          onChange={(patch) => dispatch({ type: "SET_CLAIM", patch })}
+        />
+
+        {/* 감정·시세·경매일정 */}
+        <AppraisalSection
+          value={state.appraisal}
+          onChange={(patch) => dispatch({ type: "SET_APPRAISAL", patch })}
+        />
+
+        <Separator />
+
+        {/* ── 담보 가격 (희망매각가 · 설정금액) ─────────────── */}
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-          {/* 감정가 */}
-          <div>
-            <Label className="text-sm font-semibold">
-              감정가 (원) <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              className={`mt-1.5 ${errorRing("appraisalValue")}`}
-              type="text"
-              inputMode="numeric"
-              placeholder="1,500,000,000"
-              value={formatNumberInput(form.appraisalValue)}
-              onChange={(e) =>
-                updateNumberField("appraisalValue", e.target.value)
-              }
-            />
-            {amountPreview(form.appraisalValue)}
-          </div>
-
           {/* 희망매각가 */}
           <div>
             <Label className="text-sm font-semibold">
@@ -622,16 +471,23 @@ export default function BiddingNewPage() {
               type="text"
               inputMode="numeric"
               placeholder="900,000,000"
-              value={formatNumberInput(form.askingPrice)}
-              onChange={(e) =>
-                updateNumberField("askingPrice", e.target.value)
-              }
+              value={formatNumberInput(state.askingPrice)}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/[^0-9]/g, "")
+                dispatch({
+                  type: "PATCH",
+                  patch: { askingPrice: raw ? parseInt(raw, 10) : 0 },
+                })
+                setErrors((prev) => ({ ...prev, askingPrice: false }))
+              }}
             />
-            {amountPreview(form.askingPrice)}
+            {state.askingPrice > 0 && (
+              <span className="mt-1 block text-xs text-emerald-600 font-medium">
+                {formatKRW(state.askingPrice)}
+              </span>
+            )}
           </div>
-        </div>
 
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
           {/* 설정금액 */}
           <div>
             <Label className="text-sm font-semibold">설정금액 (원)</Label>
@@ -640,112 +496,84 @@ export default function BiddingNewPage() {
               type="text"
               inputMode="numeric"
               placeholder="1,200,000,000"
-              value={formatNumberInput(form.collateralAmount)}
-              onChange={(e) =>
-                updateNumberField("collateralAmount", e.target.value)
-              }
+              value={formatNumberInput(state.collateralAmount)}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/[^0-9]/g, "")
+                dispatch({
+                  type: "PATCH",
+                  patch: { collateralAmount: raw ? parseInt(raw, 10) : 0 },
+                })
+              }}
             />
-            {amountPreview(form.collateralAmount)}
+            {state.collateralAmount > 0 && (
+              <span className="mt-1 block text-xs text-emerald-600 font-medium">
+                {formatKRW(state.collateralAmount)}
+              </span>
+            )}
           </div>
-          <div aria-hidden className="hidden sm:block" />
         </div>
 
-        <Separator />
-
-        {/* Auto calculations */}
+        {/* LTV·할인율 (파생값) */}
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
           <div className="rounded-lg border border-[var(--color-border-subtle)] bg-blue-500/10 p-4">
             <p className="text-xs text-[var(--color-text-muted)] font-medium mb-1">
               LTV (자동계산)
             </p>
             <p className="text-2xl font-bold text-[var(--color-brand-dark)]">
-              {ltvValue ? `${ltvValue}%` : "-"}
+              {derived.ltv ? `${derived.ltv}%` : "-"}
             </p>
             <p className="text-xs text-[var(--color-text-muted)] mt-1">
-              대출원금 / 감정가 x 100
+              대출원금 / 감정가 × 100
             </p>
           </div>
           <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4">
             <p className="text-xs text-[var(--color-text-muted)] font-medium mb-1">
               할인율 (자동계산)
             </p>
-            <p className="text-2xl font-bold text-emerald-400">
-              {discountRate ? `${discountRate}%` : "-"}
+            <p className="text-2xl font-bold text-emerald-500">
+              {derived.discountRate ? `${derived.discountRate}%` : "-"}
             </p>
             <p className="text-xs text-[var(--color-text-muted)] mt-1">
-              (감정가 - 희망매각가) / 감정가 x 100
+              (감정가 − 희망매각가) / 감정가 × 100
             </p>
           </div>
         </div>
 
         <Separator />
 
-        {/* ── NPL 상세 입력 (선택 · OCR 자동 입력 가능) ── */}
-        <div className="space-y-3">
-          <div>
-            <h3 className="text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-              NPL 상세 정보
-              <span className="text-[0.625rem] font-normal text-[var(--color-text-tertiary)]">
-                · 입력하면 AI 분석 정확도가 향상됩니다 · OCR 자동 입력 지원
-              </span>
-            </h3>
-          </div>
+        {/* 권리·임차·채무자소유자·할인율 */}
+        <RightsSection
+          rights={state.rights}
+          lease={state.lease}
+          debtorOwnerSame={state.debtorOwnerSame}
+          desiredSaleDiscount={state.desiredSaleDiscount}
+          principal={state.claim.principal}
+          onRights={(patch) => dispatch({ type: "SET_RIGHTS", patch })}
+          onLease={(patch) => dispatch({ type: "SET_LEASE", patch })}
+          onDebtorOwnerSame={(v) =>
+            dispatch({ type: "PATCH", patch: { debtorOwnerSame: v } })
+          }
+          onDesiredSaleDiscount={(v) =>
+            dispatch({ type: "PATCH", patch: { desiredSaleDiscount: v } })
+          }
+        />
 
-          <AppraisalAndMarketBlock
-            appraisalValue={parseInt(form.appraisalValue) || 0}
-            onAppraisalValue={(n) => updateField("appraisalValue", String(n))}
-            appraisalDate={form.appraisalDate}
-            onAppraisalDate={(v) => updateField("appraisalDate", v)}
-            marketValue={parseInt(form.currentMarketValue) || 0}
-            onMarketValue={(n) => updateField("currentMarketValue", String(n))}
-            marketPriceNote={form.marketPriceNote}
-            onMarketPriceNote={(v) => updateField("marketPriceNote", v)}
-            auctionStartDate={form.auctionStartDate}
-            onAuctionStartDate={(v) => updateField("auctionStartDate", v)}
-          />
+        {/* 특수조건 25항목 */}
+        <SpecialConditionsSection
+          value={state.specialConditions}
+          onChange={(next) =>
+            dispatch({ type: "PATCH", patch: { specialConditions: next } })
+          }
+        />
 
-          <ClaimBreakdownBlock
-            value={{
-              ...form.claimBreakdown,
-              principal: parseInt(form.loanPrincipal) || form.claimBreakdown.principal,
-              unpaidInterest: parseInt(form.unpaidInterest) || form.claimBreakdown.unpaidInterest,
-            }}
-            onChange={(v) => {
-              setForm((prev) => ({
-                ...prev,
-                claimBreakdown: v,
-                loanPrincipal: v.principal > 0 ? String(v.principal) : prev.loanPrincipal,
-                unpaidInterest: v.unpaidInterest > 0 ? String(v.unpaidInterest) : prev.unpaidInterest,
-              }))
-            }}
+        {/* 수수료율 (AUCTION 공통) */}
+        {state.fee && (
+          <FeeSection
+            value={state.fee}
+            onChange={(patch) => dispatch({ type: "SET_FEE", patch })}
+            exclusive={state.institution.exclusive}
           />
-
-          <RightsSummaryBlock
-            value={form.rightsSummary}
-            onChange={(v) => setForm((prev) => ({ ...prev, rightsSummary: v }))}
-          />
-
-          <LeaseSummaryBlock
-            value={form.leaseSummary}
-            onChange={(v) => setForm((prev) => ({ ...prev, leaseSummary: v }))}
-          />
-
-          <DebtorOwnerSameToggle
-            value={form.debtorOwnerSame}
-            onChange={(v) => updateField("debtorOwnerSame", v)}
-          />
-
-          <DesiredSaleDiscountInput
-            value={form.desiredSaleDiscount}
-            onChange={(v) => setForm((prev) => ({ ...prev, desiredSaleDiscount: v }))}
-            principal={parseInt(form.loanPrincipal) || form.claimBreakdown.principal || 0}
-          />
-
-          <SpecialConditionsPicker
-            value={form.specialConditions}
-            onChange={(v) => setForm((prev) => ({ ...prev, specialConditions: v }))}
-          />
-        </div>
+        )}
 
         {/* Navigation */}
         <div className="flex justify-between pt-4">
@@ -778,55 +606,29 @@ export default function BiddingNewPage() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* 입찰 시작일 / 마감일 */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-          <div>
-            <Label className="text-sm font-semibold">
-              입찰 시작일 <span className="text-red-500">*</span>
-            </Label>
-            <div className="mt-1.5">
-              <DateField
-                value={form.biddingStart}
-                onChange={(v) => updateField("biddingStart", v)}
-                placeholder="입찰 시작일 선택"
-                min={new Date()}
-                error={Boolean(errorRing("biddingStart"))}
-              />
-            </div>
-          </div>
-          <div>
-            <Label className="text-sm font-semibold">
-              입찰 마감일 <span className="text-red-500">*</span>
-            </Label>
-            <div className="mt-1.5">
-              <DateField
-                value={form.biddingEnd}
-                onChange={(v) => updateField("biddingEnd", v)}
-                placeholder="입찰 마감일 선택"
-                min={form.biddingStart || new Date()}
-                error={Boolean(errorRing("biddingEnd"))}
-              />
-            </div>
+        {/* 입찰 시작일 (extras) */}
+        <div>
+          <Label className="text-sm font-semibold">
+            입찰 시작일 <span className="text-red-500">*</span>
+          </Label>
+          <div className="mt-1.5">
+            <DateField
+              value={extras.biddingStart}
+              onChange={(v) => updateExtras("biddingStart", v)}
+              placeholder="입찰 시작일 선택"
+              min={new Date()}
+              error={Boolean(errorRing("biddingStart"))}
+            />
           </div>
         </div>
 
-        {/* 최저 입찰가 */}
-        <div>
-          <Label className="text-sm font-semibold">
-            최저 입찰가 (원) <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            className={`mt-1.5 ${errorRing("minimumBid")}`}
-            type="text"
-            inputMode="numeric"
-            placeholder="700,000,000"
-            value={formatNumberInput(form.minimumBid)}
-            onChange={(e) =>
-              updateNumberField("minimumBid", e.target.value)
-            }
+        {/* BidTermsSection (Unified) — 입찰 종료일 / 최저 입찰가 / 상승폭 / 보증금율 / 유보 / 대리입찰 */}
+        {state.bidTerms && (
+          <BidTermsSection
+            value={state.bidTerms}
+            onChange={(patch) => dispatch({ type: "SET_BID_TERMS", patch })}
           />
-          {amountPreview(form.minimumBid)}
-        </div>
+        )}
 
         <Separator />
 
@@ -837,8 +639,8 @@ export default function BiddingNewPage() {
               공개수준 <span className="text-red-500">*</span>
             </Label>
             <Select
-              value={form.disclosureLevel}
-              onValueChange={(v) => updateField("disclosureLevel", v)}
+              value={extras.disclosureLevel}
+              onValueChange={(v) => updateExtras("disclosureLevel", v)}
             >
               <SelectTrigger
                 className={`mt-1.5 ${errorRing("disclosureLevel")}`}
@@ -859,8 +661,8 @@ export default function BiddingNewPage() {
               입찰방식 <span className="text-red-500">*</span>
             </Label>
             <Select
-              value={form.biddingMethod}
-              onValueChange={(v) => updateField("biddingMethod", v)}
+              value={extras.biddingMethod}
+              onValueChange={(v) => updateExtras("biddingMethod", v)}
             >
               <SelectTrigger
                 className={`mt-1.5 ${errorRing("biddingMethod")}`}
@@ -885,11 +687,11 @@ export default function BiddingNewPage() {
             className="mt-1.5"
             rows={4}
             placeholder="입찰 관련 특이사항을 입력하세요 (예: 선순위 권리관계, 임차인 현황, 특수조건 등)"
-            value={form.remarks}
-            onChange={(e) => updateField("remarks", e.target.value)}
+            value={extras.remarks}
+            onChange={(e) => updateExtras("remarks", e.target.value)}
           />
           <p className="mt-1 text-right text-xs text-muted-foreground">
-            {form.remarks.length} / 1,000자
+            {extras.remarks.length} / 1,000자
           </p>
         </div>
 
@@ -925,10 +727,8 @@ export default function BiddingNewPage() {
       </div>
     )
 
-    const amountSummary = (label: string, raw: string) => {
-      const num = parseInt(raw)
-      return summaryRow(label, num ? formatKRW(num) : undefined)
-    }
+    const amountSummary = (label: string, num: number) =>
+      summaryRow(label, num > 0 ? formatKRW(num) : undefined)
 
     const disclosureLabelMap: Record<string, string> = {
       TEASER: "TEASER: 기본정보만",
@@ -941,6 +741,8 @@ export default function BiddingNewPage() {
       PRIVATE: "비공개입찰",
       NEGOTIATED: "수의계약",
     }
+
+    const regionDisplay = getRegionLabel(state.address.sido)
 
     return (
       <div className="space-y-6">
@@ -959,18 +761,18 @@ export default function BiddingNewPage() {
                 기본정보
               </span>
               <div className="rounded-lg border p-4 space-y-0.5">
-                {summaryRow("매물명", form.name)}
-                {summaryRow("담보유형", form.collateralType)}
-                {summaryRow("담보 주소", form.address)}
+                {summaryRow("매물명", extras.name)}
+                {summaryRow("담보유형", state.collateral || undefined)}
+                {summaryRow("담보 주소", state.address.detail)}
                 {summaryRow(
                   "지역",
-                  form.sido
-                    ? `${form.sido} ${form.sigungu}`.trim()
+                  state.address.sido
+                    ? `${regionDisplay} ${state.address.sigungu}`.trim()
                     : undefined,
                 )}
                 {summaryRow(
                   "전용면적",
-                  form.area ? `${form.area}m²` : undefined,
+                  extras.area ? `${extras.area}m²` : undefined,
                 )}
               </div>
             </div>
@@ -983,17 +785,17 @@ export default function BiddingNewPage() {
                 채권정보
               </span>
               <div className="rounded-lg border p-4 space-y-0.5">
-                {amountSummary("대출원금", form.loanPrincipal)}
-                {amountSummary("미수이자", form.unpaidInterest)}
-                {amountSummary("채권잔액 (자동계산)", claimBalanceComputed > 0 ? String(claimBalanceComputed) : "")}
-                {amountSummary("감정가", form.appraisalValue)}
-                {amountSummary("희망매각가", form.askingPrice)}
-                {amountSummary("설정금액", form.collateralAmount)}
+                {amountSummary("대출원금", state.claim.principal)}
+                {amountSummary("미수이자", state.claim.unpaidInterest)}
+                {amountSummary("채권잔액 (자동계산)", derived.claimBalance)}
+                {amountSummary("감정가", state.appraisal.appraisalValue)}
+                {amountSummary("희망매각가", state.askingPrice)}
+                {amountSummary("설정금액", state.collateralAmount)}
                 <Separator className="my-2" />
-                {summaryRow("LTV", ltvValue ? `${ltvValue}%` : undefined)}
+                {summaryRow("LTV", derived.ltv ? `${derived.ltv}%` : undefined)}
                 {summaryRow(
                   "할인율",
-                  discountRate ? `${discountRate}%` : undefined,
+                  derived.discountRate ? `${derived.discountRate}%` : undefined,
                 )}
               </div>
             </div>
@@ -1006,18 +808,41 @@ export default function BiddingNewPage() {
                 입찰조건
               </span>
               <div className="rounded-lg border p-4 space-y-0.5">
-                {summaryRow("입찰 시작일", form.biddingStart)}
-                {summaryRow("입찰 마감일", form.biddingEnd)}
-                {amountSummary("최저 입찰가", form.minimumBid)}
+                {summaryRow("입찰 시작일", extras.biddingStart)}
+                {summaryRow("입찰 마감일", state.bidTerms?.bidEndDate)}
+                {amountSummary(
+                  "최저 입찰가",
+                  state.bidTerms?.minimumBidPrice ?? 0,
+                )}
+                {amountSummary(
+                  "최소 호가 상승폭",
+                  state.bidTerms?.bidMinIncrement ?? 0,
+                )}
+                {summaryRow(
+                  "입찰 보증금율",
+                  state.bidTerms
+                    ? `${(state.bidTerms.bidDepositRate * 100).toFixed(1)}%`
+                    : undefined,
+                )}
+                {summaryRow(
+                  "대리 입찰",
+                  state.bidTerms?.allowProxyBid ? "허용" : "불가",
+                )}
                 {summaryRow(
                   "공개수준",
-                  disclosureLabelMap[form.disclosureLevel],
+                  disclosureLabelMap[extras.disclosureLevel],
                 )}
                 {summaryRow(
                   "입찰방식",
-                  methodLabelMap[form.biddingMethod],
+                  methodLabelMap[extras.biddingMethod],
                 )}
-                {form.remarks && summaryRow("특이사항", form.remarks)}
+                {summaryRow(
+                  "수수료율",
+                  state.fee
+                    ? `${(state.fee.sellerRate * 100).toFixed(2)}%`
+                    : undefined,
+                )}
+                {extras.remarks && summaryRow("특이사항", extras.remarks)}
               </div>
             </div>
           </CardContent>
@@ -1029,9 +854,9 @@ export default function BiddingNewPage() {
             <div className="flex items-start gap-3">
               <Checkbox
                 id="confirmAccuracy"
-                checked={form.confirmAccuracy}
+                checked={extras.confirmAccuracy}
                 onCheckedChange={(v) =>
-                  updateField("confirmAccuracy", v === true)
+                  updateExtras("confirmAccuracy", v === true)
                 }
               />
               <Label
@@ -1044,9 +869,9 @@ export default function BiddingNewPage() {
             <div className="flex items-start gap-3">
               <Checkbox
                 id="confirmTerms"
-                checked={form.confirmTerms}
+                checked={extras.confirmTerms}
                 onCheckedChange={(v) =>
-                  updateField("confirmTerms", v === true)
+                  updateExtras("confirmTerms", v === true)
                 }
               />
               <Label
@@ -1078,7 +903,9 @@ export default function BiddingNewPage() {
           <button
             onClick={handleSubmit}
             disabled={
-              submitting || !form.confirmAccuracy || !form.confirmTerms
+              submitting ||
+              !extras.confirmAccuracy ||
+              !extras.confirmTerms
             }
             className="flex-[2] inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-dark)]/90 text-white transition-colors disabled:opacity-50"
           >
@@ -1105,7 +932,9 @@ export default function BiddingNewPage() {
             <Check className="h-10 w-10 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">NPL 매물 등록 완료</h1>
+            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
+              NPL 매물 등록 완료
+            </h1>
             <p className="text-[0.875rem] text-[var(--color-text-muted)] mt-1.5">
               매물이 거래소에 등록되었습니다. 분석 리포트는 별도 화면에서 실행하세요.
             </p>
@@ -1149,7 +978,7 @@ export default function BiddingNewPage() {
             <div>
               <h1 className="text-3xl md:text-4xl font-bold">NPL 입찰 등록</h1>
               <p className="text-base text-white/80 mt-1">
-                금융기관 NPL 매각 입찰을 등록하세요
+                자발적 경매 NPL 매각 입찰을 등록하세요
               </p>
             </div>
           </div>
