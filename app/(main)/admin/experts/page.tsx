@@ -36,11 +36,11 @@ interface SettlementRow {
 }
 
 const statusBadge: Record<string, string> = {
-  활성:  "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  심사중: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  정지:  "bg-red-500/10 text-red-400 border-red-500/20",
-  완료:  "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  대기:  "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  활성:  "bg-stone-100/10 text-stone-900 border-stone-300/20",
+  심사중: "bg-stone-100/10 text-stone-900 border-stone-300/20",
+  정지:  "bg-stone-100/10 text-stone-900 border-stone-300/20",
+  완료:  "bg-stone-100/10 text-stone-900 border-stone-300/20",
+  대기:  "bg-stone-100/10 text-stone-900 border-stone-300/20",
   비활성: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)]",
 }
 
@@ -294,7 +294,7 @@ export default function AdminExpertsPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <span className="text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border bg-amber-500/10 text-amber-400 border-amber-500/20">
+            <span className="text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border bg-stone-100/10 text-stone-900 border-stone-300/20">
               심사중 {displayExperts.filter(e => e.status === "심사중").length}건
             </span>
             <span className="text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)]">
@@ -369,7 +369,7 @@ export default function AdminExpertsPage() {
                     <tr key={e.userId} className={DS.table.row}>
                       <td className={`${DS.table.cell} font-semibold`}>{e.name}</td>
                       <td className={DS.table.cell}>
-                        <span className={DS.badge.inline("bg-blue-500/10", "text-blue-400", "border-blue-500/20")}>{e.field}</span>
+                        <span className={DS.badge.inline("bg-stone-100/10", "text-stone-900", "border-stone-300/20")}>{e.field}</span>
                       </td>
                       <td className={`${DS.table.cellMuted} font-mono`}>{e.joined}</td>
                       <td className={DS.table.cell}>
@@ -428,7 +428,7 @@ export default function AdminExpertsPage() {
                     <tr key={p.userId} className={DS.table.row}>
                       <td className={`${DS.table.cell} font-semibold`}>{p.name}</td>
                       <td className={DS.table.cell}>
-                        <code className={DS.badge.inline("bg-blue-500/10", "text-blue-400", "border-blue-500/20")}>{p.code}</code>
+                        <code className={DS.badge.inline("bg-stone-100/10", "text-stone-900", "border-stone-300/20")}>{p.code}</code>
                       </td>
                       <td className={`${DS.table.cell} text-[var(--color-positive)] font-bold font-mono`}>{p.referrals}건</td>
                       <td className={`${DS.table.cell} text-[var(--color-warning)] font-mono`}>{p.revenue}</td>

@@ -64,25 +64,25 @@ const TAB_CONFIG: Record<NotificationTab, { label: string; types?: NotificationT
 }
 
 const TYPE_ICON: Record<NotificationType, React.ReactNode> = {
-  MATCHING: <Users className="h-4 w-4 text-purple-500" />,
-  CONTRACT: <Shield className="h-4 w-4 text-blue-500" />,
+  MATCHING: <Users className="h-4 w-4 text-stone-900" />,
+  CONTRACT: <Shield className="h-4 w-4 text-stone-900" />,
   DEAL_ROOM: <MessageCircle className="h-4 w-4 text-[var(--color-positive)]" />,
-  KYC: <Check className="h-4 w-4 text-emerald-500" />,
-  LISTING: <Building2 className="h-4 w-4 text-orange-500" />,
-  ALERT: <Bell className="h-4 w-4 text-amber-500" />,
+  KYC: <Check className="h-4 w-4 text-stone-900" />,
+  LISTING: <Building2 className="h-4 w-4 text-stone-900" />,
+  ALERT: <Bell className="h-4 w-4 text-stone-900" />,
   SYSTEM: <Settings className="h-4 w-4 text-gray-500" />,
-  COMPLAINT: <MessageCircle className="h-4 w-4 text-red-500" />,
+  COMPLAINT: <MessageCircle className="h-4 w-4 text-stone-900" />,
 }
 
 const TYPE_BG: Record<NotificationType, string> = {
-  MATCHING: 'bg-purple-500/10',
-  CONTRACT: 'bg-blue-500/10',
-  DEAL_ROOM: 'bg-emerald-500/10',
-  KYC: 'bg-green-500/10',
-  LISTING: 'bg-orange-500/10',
-  ALERT: 'bg-amber-500/10',
+  MATCHING: 'bg-stone-100/10',
+  CONTRACT: 'bg-stone-100/10',
+  DEAL_ROOM: 'bg-stone-100/10',
+  KYC: 'bg-stone-100/10',
+  LISTING: 'bg-stone-100/10',
+  ALERT: 'bg-stone-100/10',
   SYSTEM: 'bg-[var(--color-surface-overlay)]',
-  COMPLAINT: 'bg-red-500/10',
+  COMPLAINT: 'bg-stone-100/10',
 }
 
 function formatTimeAgo(dateStr: string): string {

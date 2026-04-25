@@ -39,12 +39,12 @@ const ACCEPT_STRING = Object.entries(ACCEPTED_TYPES)
   .join(",")
 
 function getFileIcon(type: string) {
-  if (type === "application/pdf") return <FileText className="w-5 h-5 text-red-500" />
-  if (type.startsWith("image/")) return <Image className="w-5 h-5 text-blue-500" />
+  if (type === "application/pdf") return <FileText className="w-5 h-5 text-stone-900" />
+  if (type.startsWith("image/")) return <Image className="w-5 h-5 text-stone-900" />
   if (type.includes("spreadsheet") || type.includes("excel"))
-    return <Table2 className="w-5 h-5 text-green-600" />
+    return <Table2 className="w-5 h-5 text-stone-900" />
   if (type.includes("word") || type.includes("document"))
-    return <FileText className="w-5 h-5 text-blue-400" />
+    return <FileText className="w-5 h-5 text-stone-900" />
   return <File className="w-5 h-5 text-gray-500" />
 }
 
@@ -55,12 +55,12 @@ function formatFileSize(bytes: number): string {
 }
 
 function getFileIconColor(type: string): string {
-  if (type === "application/pdf") return "bg-red-500/10 border-red-500/20"
-  if (type.startsWith("image/")) return "bg-blue-500/10 border-blue-500/20"
+  if (type === "application/pdf") return "bg-stone-100/10 border-stone-300/20"
+  if (type.startsWith("image/")) return "bg-stone-100/10 border-stone-300/20"
   if (type.includes("spreadsheet") || type.includes("excel"))
-    return "bg-green-500/10 border-green-500/20"
+    return "bg-stone-100/10 border-stone-300/20"
   if (type.includes("word") || type.includes("document"))
-    return "bg-blue-500/10 border-blue-500/20"
+    return "bg-stone-100/10 border-stone-300/20"
   return "bg-[var(--color-surface-overlay)] border-[var(--color-border-subtle)]"
 }
 
@@ -183,7 +183,7 @@ export function FileAttachment({
         className={cn(
           "flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed cursor-pointer transition-colors",
           isDragging
-            ? "border-[#2E75B6] bg-blue-500/10"
+            ? "border-[#2E75B6] bg-stone-100/10"
             : "border-[var(--color-border-subtle)] hover:border-[#2E75B6] hover:bg-[var(--color-surface-overlay)]"
         )}
       >
@@ -202,7 +202,7 @@ export function FileAttachment({
           </p>
         </div>
       </div>
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="text-xs text-stone-900">{error}</p>}
       <input
         ref={fileInputRef}
         type="file"

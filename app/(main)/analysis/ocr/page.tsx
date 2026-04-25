@@ -51,10 +51,10 @@ const DOC_TYPE_OPTIONS: { mode: DocumentMode; label: string; description: string
   { mode: "appraisal", label: "감정평가서",   description: "감정가/비교사례 추출"},
 ]
 const SEVERITY_CONFIG: Record<string, { bg: string; text: string; border: string; label: string }> = {
-  CRITICAL: { bg: "bg-red-500/10",    text: "text-red-400",    border: "border-red-500/20",    label: "심각" },
-  HIGH:     { bg: "bg-orange-500/10", text: "text-orange-400", border: "border-orange-500/20", label: "높음" },
-  MEDIUM:   { bg: "bg-amber-500/10",  text: "text-amber-400",  border: "border-amber-500/20",  label: "주의" },
-  LOW:      { bg: "bg-emerald-500/10",text: "text-emerald-400",border: "border-emerald-500/20",label: "낮음" },
+  CRITICAL: { bg: "bg-stone-100/10",    text: "text-stone-900",    border: "border-stone-300/20",    label: "심각" },
+  HIGH:     { bg: "bg-stone-100/10", text: "text-stone-900", border: "border-stone-300/20", label: "높음" },
+  MEDIUM:   { bg: "bg-stone-100/10",  text: "text-stone-900",  border: "border-stone-300/20",  label: "주의" },
+  LOW:      { bg: "bg-stone-100/10",text: "text-stone-900",border: "border-stone-300/20",label: "낮음" },
 }
 function flattenExtracted(data: Record<string, unknown>, prefix = ""): { key: string; value: string }[] {
   const rows: { key: string; value: string }[] = []
@@ -127,17 +127,17 @@ const SAMPLE_CONTRACT = `부실채권(NPL) 매매계약서
 
 function gradeColor(grade: string) {
   const map: Record<string, { bg: string; text: string; border: string }> = {
-    "A": { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20" },
-    "B": { bg: "bg-blue-500/10",    text: "text-blue-400",    border: "border-blue-500/20"    },
-    "C": { bg: "bg-amber-500/10",   text: "text-amber-400",   border: "border-amber-500/20"   },
-    "D": { bg: "bg-orange-500/10",  text: "text-orange-400",  border: "border-orange-500/20"  },
+    "A": { bg: "bg-stone-100/10", text: "text-stone-900", border: "border-stone-300/20" },
+    "B": { bg: "bg-stone-100/10",    text: "text-stone-900",    border: "border-stone-300/20"    },
+    "C": { bg: "bg-stone-100/10",   text: "text-stone-900",   border: "border-stone-300/20"   },
+    "D": { bg: "bg-stone-100/10",  text: "text-stone-900",  border: "border-stone-300/20"  },
   }
   return map[grade] ?? map["D"]
 }
 function riskBadge(risk: "high"|"medium"|"low") {
-  return risk === "high"   ? { label: "고위험", cls: "bg-red-500/10 text-red-400 border-red-500/20" }
-       : risk === "medium" ? { label: "중위험", cls: "bg-amber-500/10 text-amber-400 border-amber-500/20" }
-       :                     { label: "저위험", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" }
+  return risk === "high"   ? { label: "고위험", cls: "bg-stone-100/10 text-stone-900 border-stone-300/20" }
+       : risk === "medium" ? { label: "중위험", cls: "bg-stone-100/10 text-stone-900 border-stone-300/20" }
+       :                     { label: "저위험", cls: "bg-stone-100/10 text-stone-900 border-stone-300/20" }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -415,7 +415,7 @@ export default function ContractWorkflowPage() {
                     <p className={DS.text.captionLight}>{activeResult.documentType} · 신뢰도 {Math.round(activeResult.confidence * 100)}%</p>
                   </div>
                   <span className={`text-[0.625rem] font-bold px-2 py-0.5 rounded-full ${
-                    activeResult.method === "llm" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                    activeResult.method === "llm" ? "bg-stone-100/10 text-stone-900 border border-stone-300/20" : "bg-stone-100/10 text-stone-900 border border-stone-300/20"
                   }`}>{activeResult.method === "llm" ? "AI 분석" : "패턴 추출"}</span>
                 </div>
 
@@ -456,7 +456,7 @@ export default function ContractWorkflowPage() {
                     <button onClick={() => setExpandedSec(p => ({ ...p, risks: !p.risks }))}
                       className="w-full flex items-center justify-between text-[0.8125rem] font-semibold text-[var(--color-text-primary)] mb-2">
                       <span className="flex items-center gap-1.5">
-                        <ShieldAlert className="h-4 w-4 text-red-400" /> 리스크 항목 ({activeResult.risks.length}건)
+                        <ShieldAlert className="h-4 w-4 text-stone-900" /> 리스크 항목 ({activeResult.risks.length}건)
                       </span>
                       {expandedSec.risks ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </button>
@@ -508,7 +508,7 @@ export default function ContractWorkflowPage() {
                       <Eye className="h-4 w-4 text-[var(--color-text-muted)] shrink-0" />
                       <span className="flex-1 text-[0.8125rem] text-[var(--color-text-primary)] truncate">{doc.fileName}</span>
                       <span className={DS.text.captionLight}>{doc.processedAt}</span>
-                      <Trash2 className="h-4 w-4 text-[var(--color-text-muted)] hover:text-red-400 transition-colors shrink-0"
+                      <Trash2 className="h-4 w-4 text-[var(--color-text-muted)] hover:text-stone-900 transition-colors shrink-0"
                         onClick={e => { e.stopPropagation(); setDocuments(p => p.filter(d => d.id !== doc.id)) }} />
                     </button>
                   ))}
@@ -635,8 +635,8 @@ export default function ContractWorkflowPage() {
                 <pre className="whitespace-pre-wrap font-mono text-[0.75rem] leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-surface-sunken)] rounded-xl p-5 max-h-[500px] overflow-y-auto">
                   {generatedText}
                 </pre>
-                <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                  <p className="text-[0.75rem] text-amber-600 flex items-start gap-2">
+                <div className="mt-3 p-3 bg-stone-100/10 border border-stone-300/20 rounded-lg">
+                  <p className="text-[0.75rem] text-stone-900 flex items-start gap-2">
                     <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                     본 계약서는 AI가 생성한 초안입니다. 정식 사용 전 반드시 법률 전문가의 검토를 받으시기 바랍니다.
                   </p>
@@ -705,12 +705,12 @@ export default function ContractWorkflowPage() {
                 {reviewResult.missingItems.length > 0 && (
                   <div className={`${DS.card.base} ${DS.card.padding}`}>
                     <h3 className={`${DS.text.cardTitle} flex items-center gap-2 mb-3`}>
-                      <AlertCircle className="h-4 w-4 text-amber-500" /> 누락 항목
+                      <AlertCircle className="h-4 w-4 text-stone-900" /> 누락 항목
                     </h3>
                     <ul className="space-y-1.5">
                       {reviewResult.missingItems.map((item, i) => (
                         <li key={i} className="flex items-start gap-2 text-[0.8125rem] text-[var(--color-text-secondary)]">
-                          <span className="text-amber-500 mt-0.5">•</span>{item}
+                          <span className="text-stone-900 mt-0.5">•</span>{item}
                         </li>
                       ))}
                     </ul>

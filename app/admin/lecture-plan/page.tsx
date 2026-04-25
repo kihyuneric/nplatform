@@ -14,7 +14,7 @@ import type { LectureCapsuleRecord } from '@/lib/ontology-db'
 
 export default function LecturePlanPageWrapper() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><div className="animate-spin w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full" /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><div className="animate-spin w-8 h-8 border-2 border-stone-300 border-t-transparent rounded-full" /></div>}>
       <LecturePlanPage />
     </Suspense>
   )
@@ -227,7 +227,7 @@ function LecturePlanPage() {
           </div>
 
           {capsule && (
-            <div className="mt-4 p-3 bg-blue-500/10 rounded-lg">
+            <div className="mt-4 p-3 bg-stone-100/10 rounded-lg">
               <div className="font-medium">{capsule.capsule_title}</div>
               <div className="text-sm text-[var(--color-text-secondary)]">
                 레벨: {capsule.level} | 추천 시간: {capsule.recommended_duration}분
@@ -237,7 +237,7 @@ function LecturePlanPage() {
           )}
 
           {error && (
-            <div className="mt-3 p-3 bg-red-500/10 text-red-400 rounded-lg text-sm">
+            <div className="mt-3 p-3 bg-stone-100/10 text-stone-900 rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -382,7 +382,7 @@ function LecturePlanPage() {
                     <tr
                       key={t.youtube_id}
                       className={`border-t cursor-pointer hover:bg-[var(--color-surface-overlay)] ${
-                        selectedIds.has(t.youtube_id) ? 'bg-blue-500/10' : ''
+                        selectedIds.has(t.youtube_id) ? 'bg-stone-100/10' : ''
                       }`}
                       onClick={() => toggleTranscript(t.youtube_id)}
                     >
@@ -399,7 +399,7 @@ function LecturePlanPage() {
                         {t.channel_name}
                       </td>
                       <td className="p-2 text-center">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${t.relevance >= 0.8 ? 'bg-blue-500/10 text-blue-400' : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]'}`}>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${t.relevance >= 0.8 ? 'bg-stone-100/10 text-stone-900' : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]'}`}>
                           {t.relevance.toFixed(2)}
                         </span>
                       </td>

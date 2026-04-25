@@ -72,10 +72,10 @@ export function BondSelector({
   const current = items?.find((x) => x.id === selectedId) ?? null
 
   return (
-    <div className="rounded-xl border border-sky-500/30 bg-sky-500/5 p-4">
+    <div className="rounded-xl border border-stone-300/30 bg-stone-100/5 p-4">
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-start gap-2">
-          <Bookmark className="w-4 h-4 mt-0.5 text-sky-500" />
+          <Bookmark className="w-4 h-4 mt-0.5 text-stone-900" />
           <div>
             <h4 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">
               기등록 채권 불러오기 (매도사 · 매각사)
@@ -122,12 +122,12 @@ export function BondSelector({
             </div>
           )}
           {error && !loading && (
-            <div className="p-4 text-[0.75rem] text-red-500">{error}</div>
+            <div className="p-4 text-[0.75rem] text-stone-900">{error}</div>
           )}
           {!loading && !error && items && items.length === 0 && (
             <div className="p-4 text-[0.75rem] text-[var(--color-text-tertiary)]">
               등록한 NPL 채권이 없습니다. 먼저{" "}
-              <a href="/exchange/auction/new" className="text-emerald-600 dark:text-emerald-300 underline">
+              <a href="/exchange/auction/new" className="text-stone-900 dark:text-stone-900 underline">
                 매물등록
               </a>{" "}
               을 진행하세요.
@@ -149,7 +149,7 @@ export function BondSelector({
                     setOpen(false)
                   }}
                   className={`w-full text-left px-3 py-2.5 border-b border-[var(--color-border-subtle)] last:border-b-0 transition-colors ${
-                    active ? "bg-sky-500/10" : "hover:bg-[var(--color-surface-base)]"
+                    active ? "bg-stone-100/10" : "hover:bg-[var(--color-surface-base)]"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -163,7 +163,7 @@ export function BondSelector({
                     </div>
                     <div className="text-right shrink-0">
                       <div className="text-[0.6875rem] text-[var(--color-text-tertiary)]">원금</div>
-                      <div className="text-[0.75rem] font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">
+                      <div className="text-[0.75rem] font-bold text-stone-900 dark:text-stone-900 tabular-nums">
                         {fmtMoney(it.loan_principal)}
                       </div>
                     </div>

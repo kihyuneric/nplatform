@@ -32,7 +32,7 @@ export default function PendingApprovalPage() {
               className="absolute inset-0 rounded-full border-2 border-[var(--color-brand-bright)]/30 border-t-[var(--color-brand-bright)] animate-spin"
               style={{ width: 80, height: 80 }}
             />
-            <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-stone-100 flex items-center justify-center">
               <Clock className="w-9 h-9 text-[var(--color-brand-bright)]" />
             </div>
           </div>
@@ -54,7 +54,7 @@ export default function PendingApprovalPage() {
                 <div
                   className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center shrink-0"
                   style={{
-                    background: s.done ? '#10B981' : s.active ? '#3B82F6' : 'transparent',
+                    background: s.done ? '#14161A' : s.active ? '#14161A' : 'transparent',
                     border: !s.done && !s.active ? '2px solid #E5E7EB' : 'none',
                   }}
                 >
@@ -66,10 +66,10 @@ export default function PendingApprovalPage() {
                   }
                 </div>
                 <div className="pt-2">
-                  <p className={`text-sm font-semibold ${s.done ? 'text-emerald-600' : s.active ? 'text-blue-700' : 'text-gray-400'}`}>
+                  <p className={`text-sm font-semibold ${s.done ? 'text-stone-900' : s.active ? 'text-stone-900' : 'text-gray-400'}`}>
                     {s.label}
                     {s.active && (
-                      <span className="ml-2 inline-flex items-center gap-1 text-xs font-normal text-[var(--color-brand-bright)] bg-blue-50 px-2 py-0.5 rounded-full">
+                      <span className="ml-2 inline-flex items-center gap-1 text-xs font-normal text-[var(--color-brand-bright)] bg-stone-100 px-2 py-0.5 rounded-full">
                         <span className="w-1 h-1 rounded-full bg-[var(--color-brand-bright)] animate-pulse" />
                         진행 중
                       </span>
@@ -83,14 +83,14 @@ export default function PendingApprovalPage() {
         </div>
 
         {/* Info card */}
-        <div className="rounded-xl bg-blue-50 border border-blue-100 p-5 space-y-3">
+        <div className="rounded-xl bg-stone-100 border border-stone-300 p-5 space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">예상 소요 시간</span>
             <span className="font-semibold text-[var(--color-brand-deep)]">보통 1-2 영업일 소요</span>
           </div>
           <div className="flex justify-between text-sm items-center">
             <span className="text-gray-500">처리 상태</span>
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--color-brand-bright)] bg-white border border-blue-200 px-2.5 py-1 rounded-full">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--color-brand-bright)] bg-white border border-stone-300 px-2.5 py-1 rounded-full">
               <Clock className="w-3 h-3" />
               검토 중
             </span>

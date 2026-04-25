@@ -114,7 +114,7 @@ const STATUS_BAR: Record<TeamStatus, string> = {
   "모집완료": "bg-gradient-to-r from-amber-500 to-amber-400",
   "운용중":   "bg-gradient-to-r from-[var(--color-brand-mid)] to-blue-400",
   "상환완료": "bg-[var(--color-border-default)]",
-  "취소":     "bg-red-500/40",
+  "취소":     "bg-stone-100/40",
 }
 
 const AVATAR_COLORS = [
@@ -194,8 +194,8 @@ export default function TeamsPage() {
             {[
               { label: "활성 팀", value: `${activeCount}개`, icon: Users, color: "text-[var(--color-brand-mid)]" },
               { label: "모집 중", value: `${teams.filter(t => t.status === "모집중").length}개`, icon: Zap, color: "text-[var(--color-positive)]" },
-              { label: "총 참여자", value: `${totalMembers}명`, icon: Shield, color: "text-amber-500" },
-              { label: "평균 수익률", value: `${avgReturn}%`, icon: TrendingUp, color: "text-purple-500" },
+              { label: "총 참여자", value: `${totalMembers}명`, icon: Shield, color: "text-stone-900" },
+              { label: "평균 수익률", value: `${avgReturn}%`, icon: TrendingUp, color: "text-stone-900" },
             ].map(s => (
               <div key={s.label} className={`${DS.stat.card} text-center`}>
                 <s.icon className={`w-4 h-4 mx-auto mb-1.5 ${s.color}`} />
@@ -287,16 +287,16 @@ export default function TeamsPage() {
                         {/* 거래소 매물 연동 */}
                         {team.listing_title && (
                           <div className="flex items-center gap-1.5 rounded-lg px-2 py-1.5"
-                            style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.15)" }}>
-                            <Building2 className="w-3 h-3 text-blue-400 shrink-0" />
-                            <span className="text-[11px] text-blue-300 truncate">{team.listing_title}</span>
+                            style={{ background: "rgba(20,22,26,0.08)", border: "1px solid rgba(20,22,26,0.15)" }}>
+                            <Building2 className="w-3 h-3 text-stone-900 shrink-0" />
+                            <span className="text-[11px] text-stone-900 truncate">{team.listing_title}</span>
                           </div>
                         )}
 
                         {/* 리더 투자사 + 공동 투자사 수 */}
                         <div className="flex items-center gap-3 text-[11px]">
                           {team.leader_name && (
-                            <span className="flex items-center gap-1 text-amber-400">
+                            <span className="flex items-center gap-1 text-stone-900">
                               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.5 5 5.5.8-4 3.9.9 5.3L10 14.3l-4.9 2.7.9-5.3-4-3.9 5.5-.8z"/></svg>
                               {team.leader_name}
                             </span>

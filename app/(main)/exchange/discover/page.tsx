@@ -208,12 +208,12 @@ export default function ExchangeDiscoverPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* 에러 */}
         {isError && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-4 mb-4">
-            <div className="text-[13px] font-semibold text-red-600 mb-1">매물을 불러오지 못했습니다.</div>
+          <div className="rounded-xl border border-stone-300/30 bg-stone-100/5 p-4 mb-4">
+            <div className="text-[13px] font-semibold text-stone-900 mb-1">매물을 불러오지 못했습니다.</div>
             <div className="text-[12px] text-[var(--color-text-muted)] mb-2">{error?.message}</div>
             <button
               onClick={() => refetch()}
-              className="text-[12px] font-semibold text-red-600 hover:underline"
+              className="text-[12px] font-semibold text-stone-900 hover:underline"
             >
               다시 시도
             </button>

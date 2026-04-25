@@ -90,7 +90,7 @@ export default function RealtimeBidPanel({
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <Gavel className="w-4 h-4 text-emerald-400" />
+          <Gavel className="w-4 h-4 text-stone-900" />
           <span className="text-sm font-semibold text-white">실시간 입찰</span>
         </div>
 
@@ -99,13 +99,13 @@ export default function RealtimeBidPanel({
           <div className="flex items-center gap-1.5">
             <span
               className={`relative flex h-2 w-2 ${
-                state?.is_connected ? 'text-emerald-400' : 'text-gray-500'
+                state?.is_connected ? 'text-stone-900' : 'text-gray-500'
               }`}
             >
               {state?.is_connected ? (
                 <>
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-stone-100 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-stone-100" />
                 </>
               ) : (
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-gray-500" />
@@ -118,7 +118,7 @@ export default function RealtimeBidPanel({
 
           {/* Connected icon */}
           {state?.is_connected ? (
-            <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+            <Wifi className="w-3.5 h-3.5 text-stone-900" />
           ) : (
             <WifiOff className="w-3.5 h-3.5 text-gray-500" />
           )}
@@ -129,11 +129,11 @@ export default function RealtimeBidPanel({
       <div className="px-5 py-5 border-b border-white/10">
         <p className="text-xs text-gray-400 mb-1.5 uppercase tracking-wider">현재 최고 입찰가</p>
         <div className="flex items-end gap-3">
-          <span className="text-3xl font-bold text-emerald-400 leading-none">
+          <span className="text-3xl font-bold text-stone-900 leading-none">
             {state ? formatKRW(state.current_highest_bid) : '—'}
           </span>
           {state && state.current_highest_bid > 0 && (
-            <TrendingUp className="w-5 h-5 text-emerald-400 mb-0.5" />
+            <TrendingUp className="w-5 h-5 text-stone-900 mb-0.5" />
           )}
         </div>
 
@@ -147,7 +147,7 @@ export default function RealtimeBidPanel({
           </div>
 
           {state?.time_remaining !== undefined && (
-            <div className="flex items-center gap-1.5 text-amber-400">
+            <div className="flex items-center gap-1.5 text-stone-900">
               <Clock className="w-3.5 h-3.5" />
               <span className="text-xs font-medium">
                 {formatTimeRemaining(state.time_remaining)}
@@ -183,13 +183,13 @@ export default function RealtimeBidPanel({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     {isHighest && (
-                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] px-1.5 py-0 shrink-0">
+                      <Badge className="bg-stone-100/20 text-stone-900 border-stone-300/30 text-[10px] px-1.5 py-0 shrink-0">
                         최고
                       </Badge>
                     )}
                     <span
                       className={`text-xs font-medium truncate ${
-                        isMine ? 'text-blue-300' : 'text-gray-300'
+                        isMine ? 'text-stone-900' : 'text-gray-300'
                       }`}
                     >
                       {bid.bidder_name}
@@ -199,7 +199,7 @@ export default function RealtimeBidPanel({
                   <div className="flex items-center gap-3 shrink-0 ml-2">
                     <span
                       className={`text-xs font-bold ${
-                        isHighest ? 'text-emerald-400' : isMine ? 'text-blue-300' : 'text-white'
+                        isHighest ? 'text-stone-900' : isMine ? 'text-stone-900' : 'text-white'
                       }`}
                     >
                       {formatKRW(bid.amount)}
@@ -225,7 +225,7 @@ export default function RealtimeBidPanel({
             onClick={() => setBidInput(String(suggestedBid))}
           >
             추천 입찰가:{' '}
-            <span className="text-emerald-400 font-medium">{formatKRW(suggestedBid)}</span>
+            <span className="text-stone-900 font-medium">{formatKRW(suggestedBid)}</span>
             <span className="text-gray-600"> (클릭하여 입력)</span>
           </button>
         )}
@@ -240,7 +240,7 @@ export default function RealtimeBidPanel({
               onChange={(e) => handleBidInputChange(e.target.value.replace(/,/g, ''))}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmitBid()}
               className={`bg-white/[0.06] border-white/15 text-white placeholder:text-gray-600 h-10 pr-8 focus-visible:ring-emerald-500/50 ${
-                bidError ? 'border-red-500/50' : ''
+                bidError ? 'border-stone-300/50' : ''
               }`}
               disabled={isLoading}
             />
@@ -252,7 +252,7 @@ export default function RealtimeBidPanel({
           <Button
             onClick={handleSubmitBid}
             disabled={isLoading || !bidInput}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white h-10 px-4 shrink-0 disabled:opacity-50"
+            className="bg-stone-100 hover:bg-stone-100 text-white h-10 px-4 shrink-0 disabled:opacity-50"
           >
             {isLoading ? (
               <span className="flex items-center gap-1.5">
@@ -266,15 +266,15 @@ export default function RealtimeBidPanel({
         </div>
 
         {bidError && (
-          <p className="mt-1.5 text-xs text-red-400">{bidError}</p>
+          <p className="mt-1.5 text-xs text-stone-900">{bidError}</p>
         )}
 
         {/* My current bid indicator */}
         {state?.my_bid && (
-          <p className="mt-2 text-xs text-blue-400">
+          <p className="mt-2 text-xs text-stone-900">
             내 입찰가: {formatKRW(state.my_bid.amount)}
             {state.my_bid.is_winning && (
-              <span className="ml-1.5 text-emerald-400 font-medium">· 현재 최고가</span>
+              <span className="ml-1.5 text-stone-900 font-medium">· 현재 최고가</span>
             )}
           </p>
         )}

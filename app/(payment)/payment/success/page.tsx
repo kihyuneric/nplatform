@@ -93,7 +93,7 @@ function SuccessContent() {
   if (status === 'verifying') {
     return (
       <div className="w-full max-w-md bg-[#0D1F38] border border-white/10 rounded-2xl p-10 text-center">
-        <Loader2 className="h-12 w-12 text-blue-400 mx-auto animate-spin mb-4" />
+        <Loader2 className="h-12 w-12 text-stone-900 mx-auto animate-spin mb-4" />
         <h1 className="text-xl font-bold text-white mb-2">결제 확인 중…</h1>
         <p className="text-sm text-white/50">잠시만 기다려 주세요.</p>
       </div>
@@ -103,8 +103,8 @@ function SuccessContent() {
   /* ── 오류 ─────────────────────────────────────────────── */
   if (status === 'error') {
     return (
-      <div className="w-full max-w-md bg-[#0D1F38] border border-red-500/20 rounded-2xl p-10 text-center">
-        <XCircle className="h-14 w-14 text-red-400 mx-auto mb-4" />
+      <div className="w-full max-w-md bg-[#0D1F38] border border-stone-300/20 rounded-2xl p-10 text-center">
+        <XCircle className="h-14 w-14 text-stone-900 mx-auto mb-4" />
         <h1 className="text-xl font-bold text-white mb-2">결제 확인 실패</h1>
         <p className="text-sm text-white/60 mb-6">{result?.error ?? '알 수 없는 오류'}</p>
         <div className="flex flex-col gap-3">
@@ -116,7 +116,7 @@ function SuccessContent() {
           </button>
           <a
             href="/support"
-            className="w-full text-center text-sm text-blue-400 hover:text-blue-300"
+            className="w-full text-center text-sm text-stone-900 hover:text-stone-900"
           >
             고객센터 문의
           </a>
@@ -132,10 +132,10 @@ function SuccessContent() {
   return (
     <div className="w-full max-w-md">
       {/* 성공 카드 */}
-      <div className="bg-[#0D1F38] border border-emerald-500/20 rounded-2xl p-8 text-center mb-4">
+      <div className="bg-[#0D1F38] border border-stone-300/20 rounded-2xl p-8 text-center mb-4">
         <div className="flex items-center justify-center mb-4">
-          <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center">
-            <CheckCircle className="h-9 w-9 text-emerald-400" />
+          <div className="w-16 h-16 bg-stone-100/20 rounded-full flex items-center justify-center">
+            <CheckCircle className="h-9 w-9 text-stone-900" />
           </div>
         </div>
         <h1 className="text-2xl font-bold text-white mb-1">결제 완료!</h1>
@@ -160,13 +160,13 @@ function SuccessContent() {
           {result?.creditsGranted && result.creditsGranted > 0 && (
             <div className="flex justify-between">
               <span className="text-white/50">충전 크레딧</span>
-              <span className="text-emerald-400 font-semibold">+{result.creditsGranted} C</span>
+              <span className="text-stone-900 font-semibold">+{result.creditsGranted} C</span>
             </div>
           )}
           {result?.isSandbox && (
             <div className="flex justify-between">
               <span className="text-white/50">모드</span>
-              <span className="text-yellow-400 text-xs">샌드박스 (테스트)</span>
+              <span className="text-stone-900 text-xs">샌드박스 (테스트)</span>
             </div>
           )}
         </div>
@@ -176,7 +176,7 @@ function SuccessContent() {
           {isSubscription && (
             <a
               href="/my/billing"
-              className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors"
+              className="flex items-center justify-center gap-2 w-full bg-stone-100 hover:bg-stone-100 text-white font-semibold py-3 rounded-xl transition-colors"
             >
               구독 확인하기
               <ArrowRight className="h-4 w-4" />
@@ -185,7 +185,7 @@ function SuccessContent() {
           {isCreditPurchase && (
             <a
               href="/my/billing"
-              className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors"
+              className="flex items-center justify-center gap-2 w-full bg-stone-100 hover:bg-stone-100 text-white font-semibold py-3 rounded-xl transition-colors"
             >
               크레딧 확인하기
               <ArrowRight className="h-4 w-4" />
@@ -194,7 +194,7 @@ function SuccessContent() {
           {!isSubscription && !isCreditPurchase && (
             <a
               href="/my/billing"
-              className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors"
+              className="flex items-center justify-center gap-2 w-full bg-stone-100 hover:bg-stone-100 text-white font-semibold py-3 rounded-xl transition-colors"
             >
               결제 내역 보기
               <ArrowRight className="h-4 w-4" />
@@ -227,7 +227,7 @@ function SuccessContent() {
       {/* 안내 */}
       <p className="text-center text-xs text-white/30">
         결제 영수증은 이메일로 발송됩니다. 문제가 있으시면{' '}
-        <a href="/support" className="text-blue-400 underline">고객센터</a>로 문의해주세요.
+        <a href="/support" className="text-stone-900 underline">고객센터</a>로 문의해주세요.
       </p>
     </div>
   )
@@ -239,7 +239,7 @@ export default function PaymentSuccessPage() {
     <Suspense
       fallback={
         <div className="w-full max-w-md bg-[#0D1F38] border border-white/10 rounded-2xl p-10 text-center">
-          <Loader2 className="h-12 w-12 text-blue-400 mx-auto animate-spin mb-4" />
+          <Loader2 className="h-12 w-12 text-stone-900 mx-auto animate-spin mb-4" />
           <p className="text-white/50 text-sm">로딩 중…</p>
         </div>
       }

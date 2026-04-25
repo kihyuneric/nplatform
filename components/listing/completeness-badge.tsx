@@ -71,6 +71,7 @@ export function ProvidedFields({
     ? { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }
     : { display: 'flex', flexWrap: 'wrap', gap: 6 }
 
+  // McKinsey mono editorial — 색상 차별화 X. 위계는 typography weight + brass dot 으로.
   return (
     <div style={containerStyle}>
       {items.map(item => (
@@ -82,20 +83,21 @@ export function ProvidedFields({
             gap: 4,
             padding: '2px 7px',
             fontSize,
-            fontWeight: 600,
+            fontWeight: item.provided ? 600 : 400,
             lineHeight: 1.3,
             borderRadius: 3,
-            backgroundColor: item.provided ? 'rgba(16, 185, 129, 0.08)' : 'rgba(148, 163, 184, 0.08)',
-            color: item.provided ? '#10B981' : '#94A3B8',
-            border: `1px solid ${item.provided ? 'rgba(16, 185, 129, 0.2)' : 'rgba(148, 163, 184, 0.18)'}`,
+            backgroundColor: 'transparent',
+            color: item.provided ? '#14161A' : 'rgba(20, 22, 26, 0.40)',
+            border: `1px solid ${item.provided ? 'rgba(20, 22, 26, 0.25)' : 'rgba(20, 22, 26, 0.10)'}`,
             whiteSpace: 'nowrap',
+            textDecoration: item.provided ? 'none' : 'line-through',
+            textDecorationColor: 'rgba(20, 22, 26, 0.30)',
           }}
         >
-          <span aria-hidden style={{ fontSize: fontSize + 1 }}>
-            {item.provided ? '✓' : '✗'}
+          <span aria-hidden style={{ fontSize: fontSize + 1, color: item.provided ? 'var(--color-editorial-gold, #A8853E)' : 'rgba(20, 22, 26, 0.30)' }}>
+            {item.provided ? '✓' : '·'}
           </span>
           {item.label}
-          {!item.provided && <span style={{ opacity: 0.6, marginLeft: 2 }}>미제공</span>}
         </span>
       ))}
     </div>

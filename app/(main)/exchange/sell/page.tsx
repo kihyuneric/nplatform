@@ -72,7 +72,7 @@ const C = {
   blueL: "var(--color-brand-bright)",
   amber: "var(--color-warning)",
   rose:  "var(--color-danger)",
-  teal:  "#14B8A6",
+  teal:  "#14161A",
   lt3: "var(--color-text-secondary)",
   lt4: "var(--color-text-tertiary)",
 }
@@ -396,8 +396,8 @@ export default function SellWizardPage() {
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "8px 14px", borderRadius: 10,
-                background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.3)",
-                color: "#A78BFA", fontSize: 12, fontWeight: 700, textDecoration: "none",
+                background: "rgba(20,22,26,0.12)", border: "1px solid rgba(20,22,26,0.3)",
+                color: "#14161A", fontSize: 12, fontWeight: 700, textDecoration: "none",
               }}
             >
               <Sparkles size={12} /> OCR로 1~5건 빠르게 등록 →
@@ -407,8 +407,8 @@ export default function SellWizardPage() {
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "8px 14px", borderRadius: 10,
-                background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.3)",
-                color: "#60A5FA", fontSize: 12, fontWeight: 700, textDecoration: "none",
+                background: "rgba(20,22,26,0.12)", border: "1px solid rgba(20,22,26,0.3)",
+                color: "#14161A", fontSize: 12, fontWeight: 700, textDecoration: "none",
               }}
             >
               CSV 대량 등록 (최대 500건) →
@@ -545,7 +545,7 @@ export default function SellWizardPage() {
               ) : (
                 <div>
                   {submitError && (
-                    <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, backgroundColor: `${C.rose}14`, border: "1px solid rgba(239, 68, 68, 0.4)", color: C.rose, fontSize: 11, fontWeight: 600 }}>
+                    <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, backgroundColor: `${C.rose}14`, border: "1px solid rgba(27,27,31, 0.4)", color: C.rose, fontSize: 11, fontWeight: 600 }}>
                       {submitError}
                     </div>
                   )}
@@ -865,8 +865,8 @@ function ExcelTemplateBanner({
           style={{
             marginTop: 12, padding: "10px 12px", borderRadius: 8,
             backgroundColor: parseMessage.type === "ok"
-              ? "rgba(16,185,129,0.10)"
-              : "rgba(244,63,94,0.10)",
+              ? "rgba(20,22,26,0.10)"
+              : "rgba(27,27,31,0.10)",
             border: `1px solid ${parseMessage.type === "ok" ? C.em : C.rose}44`,
             fontSize: 11,
             color: parseMessage.type === "ok" ? C.emL : C.rose,
@@ -937,7 +937,7 @@ function OcrPreviewContent({ data }: { data: OcrParseResult }) {
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {data.specialConditionsV2.map((key) => (
-              <span key={key} className="text-[0.6875rem] font-semibold px-2 py-1 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+              <span key={key} className="text-[0.6875rem] font-semibold px-2 py-1 rounded-md bg-stone-100/10 text-stone-900 dark:text-stone-900 border border-stone-300/30">
                 {key}
               </span>
             ))}
@@ -956,7 +956,7 @@ function OcrPreviewContent({ data }: { data: OcrParseResult }) {
               key={k}
               className={`text-[0.6875rem] font-semibold px-2 py-1.5 rounded-md text-center ${
                 v
-                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
+                  ? "bg-stone-100/10 text-stone-900 dark:text-stone-900 border border-stone-300/30"
                   : "bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border border-[var(--color-border-subtle)]"
               }`}
             >
@@ -969,12 +969,12 @@ function OcrPreviewContent({ data }: { data: OcrParseResult }) {
       {/* 4. 경고 */}
       {data.warnings.length > 0 && (
         <section>
-          <h4 className="text-[0.875rem] font-bold text-amber-700 dark:text-amber-300 mb-2">
+          <h4 className="text-[0.875rem] font-bold text-stone-900 dark:text-stone-900 mb-2">
             ⚠ 안내 ({data.warnings.length}건)
           </h4>
           <ul className="space-y-1">
             {data.warnings.map((w, i) => (
-              <li key={i} className="text-[0.75rem] text-amber-700 dark:text-amber-300 leading-relaxed">
+              <li key={i} className="text-[0.75rem] text-stone-900 dark:text-stone-900 leading-relaxed">
                 · {w}
               </li>
             ))}
@@ -1190,7 +1190,7 @@ function Step3({
           {state.askingPrice > 0 && (
             <div style={{
               marginTop: 8, padding: "8px 10px", borderRadius: 6,
-              backgroundColor: "rgba(16,185,129,0.08)", fontSize: 11, color: C.lt3,
+              backgroundColor: "rgba(20,22,26,0.08)", fontSize: 11, color: C.lt3,
               display: "flex", justifyContent: "space-between",
             }}>
               <span>예상 수수료 (희망가 {formatKRW(state.askingPrice)} 기준)</span>
@@ -1229,7 +1229,7 @@ function Step4BondRights({
       <div
         style={{
           marginBottom: 18, padding: "10px 14px", borderRadius: 8,
-          backgroundColor: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.27)",
+          backgroundColor: "rgba(20,22,26, 0.1)", border: "1px solid rgba(20,22,26, 0.27)",
           display: "flex", gap: 8, alignItems: "center", fontSize: 10, color: C.lt3,
         }}
       >
@@ -1696,7 +1696,7 @@ function Step6Review({
         <div
           style={{
             marginTop: 16, padding: "16px 18px", borderRadius: 14,
-            background: "linear-gradient(135deg, rgba(16,185,129,0.10), rgba(46,117,182,0.10))",
+            background: "linear-gradient(135deg, rgba(20,22,26,0.10), rgba(46,117,182,0.10))",
             border: `1px solid ${C.em}40`,
             display: "flex", alignItems: "center", justifyContent: "space-between",
             gap: 14, flexWrap: "wrap",
@@ -1727,7 +1727,7 @@ function Step6Review({
             onClick={handleStartAnalysis}
             style={{
               padding: "11px 18px", borderRadius: 10,
-              backgroundColor: C.em, color: "#041915",
+              backgroundColor: C.em, color: "#FFFFFF",
               fontSize: 12, fontWeight: 800, border: "none",
               cursor: "pointer",
               display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0,
@@ -1828,7 +1828,7 @@ function TierPreviewBlock({ state }: { state: WizardState }) {
       title: "NDA 체결",
       gate: "비밀유지 서명 후",
       tone: C.amber,
-      bg: "rgba(245, 158, 11, 0.08)",
+      bg: "rgba(20,22,26, 0.08)",
       items: [
         { label: "연체금리", value: state.penalty_rate > 0 ? `${state.penalty_rate}%` : "—", muted: !state.penalty_rate },
         { label: "연체시작일", value: state.default_start_date || "—", muted: !state.default_start_date },
@@ -1843,7 +1843,7 @@ function TierPreviewBlock({ state }: { state: WizardState }) {
       title: "LOI 제출",
       gate: "우선협상 인수의향서",
       tone: C.teal,
-      bg: "rgba(20, 184, 166, 0.08)",
+      bg: "rgba(20,22,26, 0.08)",
       items: [
         { label: "기관명 (정확치)", value: state.institution || "—", muted: !state.institution },
         ...providedDocs.map(d => ({
@@ -1900,7 +1900,7 @@ function TierPreviewBlock({ state }: { state: WizardState }) {
                   style={{
                     fontSize: 10, fontWeight: 900, letterSpacing: 0.4,
                     padding: "2px 7px", borderRadius: 4,
-                    backgroundColor: t.tone, color: "#041915",
+                    backgroundColor: t.tone, color: "#FFFFFF",
                   }}
                 >
                   {t.level}
@@ -2009,7 +2009,7 @@ function SubmittedScreen({ completeness }: { completeness: number }) {
             href="/exchange"
             style={{
               padding: "11px 20px", borderRadius: 10,
-              backgroundColor: C.em, color: "#041915",
+              backgroundColor: C.em, color: "#FFFFFF",
               fontSize: 12, fontWeight: 800, textDecoration: "none",
             }}
           >

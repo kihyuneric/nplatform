@@ -65,7 +65,7 @@ export function CreditUsageModal({
       onOpenChange={onOpenChange}
       title={
         <span className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-emerald-500" />
+          <Zap className="h-5 w-5 text-stone-900" />
           AI 크레딧 사용
         </span>
       }
@@ -96,7 +96,7 @@ export function CreditUsageModal({
                   <Minus className="h-3 w-3" />
                   차감 크레딧
                 </span>
-                <span className="font-semibold text-red-400">
+                <span className="font-semibold text-stone-900">
                   -{cost.cost} 크레딧
                 </span>
               </div>
@@ -108,8 +108,8 @@ export function CreditUsageModal({
                 <span
                   className={`font-bold ${
                     hasEnough
-                      ? "text-emerald-400"
-                      : "text-red-400"
+                      ? "text-stone-900"
+                      : "text-stone-900"
                   }`}
                 >
                   {hasEnough ? remainingAfter : 0} 크레딧
@@ -124,8 +124,8 @@ export function CreditUsageModal({
 
           {/* Unlimited tier message */}
           {isUnlimited && (
-            <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-4">
-              <p className="text-sm text-emerald-400 text-center">
+            <div className="rounded-lg bg-stone-100/10 border border-stone-300/20 p-4">
+              <p className="text-sm text-stone-900 text-center">
                 엔터프라이즈 요금제는 무제한 크레딧을 사용할 수 있습니다.
               </p>
             </div>
@@ -133,13 +133,13 @@ export function CreditUsageModal({
 
           {/* Low credits warning */}
           {isLowCredits && hasEnough && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-stone-100/10 border border-stone-300/20">
+              <AlertTriangle className="h-4 w-4 text-stone-900 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-amber-400">
+                <p className="text-sm font-medium text-stone-900">
                   크레딧이 부족합니다
                 </p>
-                <p className="text-xs text-amber-400 mt-0.5">
+                <p className="text-xs text-stone-900 mt-0.5">
                   사용 후 잔여 크레딧이 {remainingAfter}개입니다. 요금제 업그레이드를 권장합니다.
                 </p>
               </div>
@@ -148,20 +148,20 @@ export function CreditUsageModal({
 
           {/* Insufficient credits */}
           {!hasEnough && !isUnlimited && (
-            <div className="flex flex-col items-center gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/20">
-              <AlertTriangle className="h-8 w-8 text-red-400" />
+            <div className="flex flex-col items-center gap-3 p-4 rounded-lg bg-stone-100/10 border border-stone-300/20">
+              <AlertTriangle className="h-8 w-8 text-stone-900" />
               <div className="text-center">
-                <p className="text-sm font-medium text-red-400">
+                <p className="text-sm font-medium text-stone-900">
                   크레딧이 부족합니다
                 </p>
-                <p className="text-xs text-red-400 mt-1">
+                <p className="text-xs text-stone-900 mt-1">
                   필요: {cost.cost} 크레딧 / 보유: {currentBalance} 크레딧
                 </p>
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                className="border-red-500/40 text-red-400 hover:bg-red-500/10"
+                className="border-stone-300/40 text-stone-900 hover:bg-stone-100/10"
                 onClick={() => {
                   onOpenChange(false)
                   window.location.href = "/settings/billing"

@@ -222,7 +222,7 @@ export function ContextualHelp({
 
                         {termData.formula && (
                           <div className="mt-2 bg-muted rounded-lg p-2">
-                            <p className="text-xs font-mono text-blue-300">
+                            <p className="text-xs font-mono text-stone-900">
                               {termData.formula}
                             </p>
                           </div>
@@ -240,7 +240,7 @@ export function ContextualHelp({
                             {termData.relatedTerms.map((t) => (
                               <span
                                 key={t}
-                                className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 font-medium"
+                                className="text-xs px-2 py-0.5 rounded-full bg-stone-100/10 text-stone-900 font-medium"
                               >
                                 {t}
                               </span>

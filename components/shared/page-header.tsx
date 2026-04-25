@@ -20,7 +20,7 @@ export function PageHeader({ title, subtitle, badge, actions, children }: PageHe
               </span>
             )}
             <h1 className="text-3xl font-bold">{title}</h1>
-            {subtitle && <p className="text-blue-100 mt-2">{subtitle}</p>}
+            {subtitle && <p className="text-stone-900 mt-2">{subtitle}</p>}
           </div>
           {actions && <div className="flex gap-3">{actions}</div>}
         </div>

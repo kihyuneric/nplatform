@@ -8,11 +8,11 @@ import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
-  PENDING:     { label: '대기중',  cls: 'bg-amber-500/10 text-amber-400 border border-amber-500/20' },
-  CONFIRMED:   { label: '확정',    cls: 'bg-blue-500/10 text-blue-400 border border-blue-500/20' },
-  IN_PROGRESS: { label: '진행중',  cls: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' },
-  COMPLETED:   { label: '완료',    cls: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' },
-  CANCELLED:   { label: '취소',    cls: 'bg-red-500/10 text-red-400 border border-red-500/20' },
+  PENDING:     { label: '대기중',  cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
+  CONFIRMED:   { label: '확정',    cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
+  IN_PROGRESS: { label: '진행중',  cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
+  COMPLETED:   { label: '완료',    cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
+  CANCELLED:   { label: '취소',    cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
 }
 
 const TABS = ['서비스 관리', '상담 현황', '수익 정산', '리뷰'] as const
@@ -225,7 +225,7 @@ export default function ProfessionalDashboardPage() {
         <div className={DS.header.wrapper}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-blue-500/10 border-2 border-[var(--color-brand-bright)] flex items-center justify-center text-[1.625rem] font-bold text-[var(--color-brand-mid)]">
+              <div className="w-16 h-16 rounded-full bg-stone-100/10 border-2 border-[var(--color-brand-bright)] flex items-center justify-center text-[1.625rem] font-bold text-[var(--color-brand-mid)]">
                 김
               </div>
               <div>
@@ -235,7 +235,7 @@ export default function ProfessionalDashboardPage() {
                 <p className={DS.text.bodyBold}>김법무 전문가</p>
                 <div className="flex gap-2 mt-1.5">
                   {['법무사', '경매 권리분석', '명도소송'].map(b => (
-                    <span key={b} className="text-[0.6875rem] px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[var(--color-brand-mid)] font-bold">{b}</span>
+                    <span key={b} className="text-[0.6875rem] px-2 py-0.5 rounded-full bg-stone-100/10 border border-stone-300/20 text-[var(--color-brand-mid)] font-bold">{b}</span>
                   ))}
                 </div>
               </div>
@@ -250,7 +250,7 @@ export default function ProfessionalDashboardPage() {
                 { label: '대기 상담', value: `${pendingCount}건`, urgent: true },
               ].map(k => (
                 <div key={k.label} className={DS.stat.card}>
-                  <p className={`${DS.stat.value} ${k.urgent ? '!text-amber-600' : ''}`}>{k.value}</p>
+                  <p className={`${DS.stat.value} ${k.urgent ? '!text-stone-900' : ''}`}>{k.value}</p>
                   <p className={DS.stat.sub}>{k.label}</p>
                 </div>
               ))}
@@ -266,8 +266,8 @@ export default function ProfessionalDashboardPage() {
           {[
             { label: '총 상담',    value: kpiTotal,    icon: MessageSquare, color: 'text-[var(--color-brand-mid)]',  border: 'border-l-[var(--color-brand-mid)]' },
             { label: '완료',       value: kpiCompleted, icon: CheckCircle,   color: 'text-[var(--color-positive)]', border: 'border-l-emerald-400' },
-            { label: '평점',       value: kpiRating,   icon: Star,          color: 'text-amber-500',   border: 'border-l-amber-400' },
-            { label: '이번달 수익', value: kpiRevenue, icon: DollarSign,   color: 'text-violet-600',  border: 'border-l-violet-400' },
+            { label: '평점',       value: kpiRating,   icon: Star,          color: 'text-stone-900',   border: 'border-l-amber-400' },
+            { label: '이번달 수익', value: kpiRevenue, icon: DollarSign,   color: 'text-stone-900',  border: 'border-l-violet-400' },
           ].map(s => (
             <div key={s.label} className={DS.stat.card + ` border-l-4 ${s.border}`}>
               <s.icon className={`w-4 h-4 ${s.color} mb-2`} />
@@ -301,7 +301,7 @@ export default function ProfessionalDashboardPage() {
             }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[0.8125rem] font-semibold transition-all border ${
               serviceOn
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/15'
+                ? 'bg-stone-100/10 border-stone-300/20 text-stone-900 hover:bg-stone-100/15'
                 : 'bg-[var(--color-surface-sunken)] border-[var(--color-border-default)] text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-base)]'
             }`}
           >
@@ -420,7 +420,7 @@ export default function ProfessionalDashboardPage() {
                     <span className={DS.text.bodyBold}>{r.client}</span>
                     <div className="flex gap-0.5">
                       {[1,2,3,4,5].map(n => (
-                        <Star key={n} className={`w-3.5 h-3.5 ${n <= r.rating ? 'fill-amber-400 text-amber-400' : 'text-[var(--color-border-default)]'}`} />
+                        <Star key={n} className={`w-3.5 h-3.5 ${n <= r.rating ? 'fill-amber-400 text-stone-900' : 'text-[var(--color-border-default)]'}`} />
                       ))}
                     </div>
                   </div>
@@ -448,7 +448,7 @@ export default function ProfessionalDashboardPage() {
                     </div>
                     <span className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-bold border ${
                       svc.active
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        ? 'bg-stone-100/10 text-stone-900 border-stone-300/20'
                         : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)]'
                     }`}>
                       {svc.active ? '운영중' : '비활성'}

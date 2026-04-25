@@ -148,7 +148,7 @@ export function LiftCard({
 export function PulseHighlight({
   children,
   className,
-  color = '#10B981',
+  color = '#14161A',
 }: {
   children: React.ReactNode
   className?: string

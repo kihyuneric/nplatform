@@ -35,8 +35,8 @@ export const PortfolioTrendChart = memo(function PortfolioTrendChart({ data }: {
               <stop offset="95%" stopColor="#1B3A5C" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="gradReturned" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+              <stop offset="5%" stopColor="#14161A" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#14161A" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
@@ -58,7 +58,7 @@ export const PortfolioTrendChart = memo(function PortfolioTrendChart({ data }: {
             wrapperStyle={{ fontSize: 11 }}
           />
           <Area type="monotone" dataKey="cumulative" stroke="#1B3A5C" fill="url(#gradInvested)" strokeWidth={2} />
-          <Area type="monotone" dataKey="returned" stroke="#10B981" fill="url(#gradReturned)" strokeWidth={2} />
+          <Area type="monotone" dataKey="returned" stroke="#14161A" fill="url(#gradReturned)" strokeWidth={2} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

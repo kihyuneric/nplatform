@@ -132,7 +132,7 @@ export function ConsultationForm({
                       <div className="flex items-center gap-2">
                         {svc.name}
                         {svc.free_initial && (
-                          <span className="text-xs text-emerald-600 font-medium">무료 초기상담</span>
+                          <span className="text-xs text-stone-900 font-medium">무료 초기상담</span>
                         )}
                         <span className="text-xs text-gray-400">
                           {svc.price > 0 ? `${svc.price.toLocaleString()}원` : '협의'}
@@ -143,7 +143,7 @@ export function ConsultationForm({
                 </SelectContent>
               </Select>
               {selectedService?.free_initial && (
-                <p className="text-xs text-emerald-600">이 서비스는 초기 상담이 무료입니다.</p>
+                <p className="text-xs text-stone-900">이 서비스는 초기 상담이 무료입니다.</p>
               )}
             </div>
           )}
@@ -172,7 +172,7 @@ export function ConsultationForm({
           {/* Content */}
           <div className="space-y-2">
             <Label>
-              상담 내용 <span className="text-red-500">*</span>
+              상담 내용 <span className="text-stone-900">*</span>
             </Label>
             <Textarea
               placeholder="상담 받고 싶은 내용을 자세히 작성해주세요..."

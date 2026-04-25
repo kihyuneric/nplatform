@@ -76,39 +76,39 @@ function getDDayLabel(dday: number): string {
 
 function getDDayColor(dday: number): string {
   if (dday < 0) return "text-gray-400"
-  if (dday <= 3) return "text-red-600"
-  if (dday <= 7) return "text-orange-500"
-  return "text-green-600"
+  if (dday <= 3) return "text-stone-900"
+  if (dday <= 7) return "text-stone-900"
+  return "text-stone-900"
 }
 
 function getDDayBgColor(dday: number): string {
   if (dday < 0) return "bg-[var(--color-surface-overlay)]"
-  if (dday <= 3) return "bg-red-500/5"
-  if (dday <= 7) return "bg-orange-500/5"
-  return "bg-green-500/5"
+  if (dday <= 3) return "bg-stone-100/5"
+  if (dday <= 7) return "bg-stone-100/5"
+  return "bg-stone-100/5"
 }
 
 function getStatusBadge(status: BiddingStatus) {
   switch (status) {
     case "BIDDING":
-      return <span className="bg-green-500/10 text-green-400 border-green-500/20 inline-flex items-center">입찰중</span>
+      return <span className="bg-stone-100/10 text-stone-900 border-stone-300/20 inline-flex items-center">입찰중</span>
     case "CLOSING_SOON":
-      return <span className="bg-orange-500/10 text-orange-400 border-orange-500/20 inline-flex items-center">마감임박</span>
+      return <span className="bg-stone-100/10 text-stone-900 border-stone-300/20 inline-flex items-center">마감임박</span>
     case "COMPLETED":
       return <span className="bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)] inline-flex items-center">입찰완료</span>
   }
 }
 
 function getLtvColor(ltv: number): string {
-  if (ltv <= 50) return "bg-blue-500"
-  if (ltv <= 70) return "bg-amber-500"
-  return "bg-red-500"
+  if (ltv <= 50) return "bg-stone-100"
+  if (ltv <= 70) return "bg-stone-100"
+  return "bg-stone-100"
 }
 
 function getLtvTextColor(ltv: number): string {
-  if (ltv <= 50) return "text-blue-600"
-  if (ltv <= 70) return "text-amber-600"
-  return "text-red-600"
+  if (ltv <= 50) return "text-stone-900"
+  if (ltv <= 70) return "text-stone-900"
+  return "text-stone-900"
 }
 
 function getInstitutionInitial(name: any): string {
@@ -123,14 +123,14 @@ function getInstitutionInitial(name: any): string {
 function getInstitutionColor(name: string | undefined | null): string {
   if (!name) return "bg-gray-500"
   const colors: Record<string, string> = {
-    "KB국민은행": "bg-amber-500",
-    "신한은행": "bg-blue-600",
-    "우리은행": "bg-sky-500",
-    "하나은행": "bg-teal-600",
-    "IBK기업은행": "bg-indigo-600",
-    "한국자산관리공사": "bg-red-600",
-    "NH농협": "bg-green-600",
-    "수협": "bg-cyan-600",
+    "KB국민은행": "bg-stone-100",
+    "신한은행": "bg-stone-100",
+    "우리은행": "bg-stone-100",
+    "하나은행": "bg-stone-100",
+    "IBK기업은행": "bg-stone-100",
+    "한국자산관리공사": "bg-stone-100",
+    "NH농협": "bg-stone-100",
+    "수협": "bg-stone-100",
     "산업은행": "bg-slate-600",
   }
   return colors[name] || "bg-gray-500"
@@ -407,8 +407,8 @@ export default function BiddingPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="shadow-lg border-0 bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2.5 bg-green-500/10 rounded-xl shrink-0">
-                <Gavel className="h-5 w-5 text-green-400" />
+              <div className="p-2.5 bg-stone-100/10 rounded-xl shrink-0">
+                <Gavel className="h-5 w-5 text-stone-900" />
               </div>
               <div>
                 <p className="text-xs text-[var(--color-text-secondary)] font-medium">진행중 입찰</p>
@@ -418,8 +418,8 @@ export default function BiddingPage() {
           </Card>
           <Card className="shadow-lg border-0 bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2.5 bg-blue-500/10 rounded-xl shrink-0">
-                <Calendar className="h-5 w-5 text-blue-400" />
+              <div className="p-2.5 bg-stone-100/10 rounded-xl shrink-0">
+                <Calendar className="h-5 w-5 text-stone-900" />
               </div>
               <div>
                 <p className="text-xs text-[var(--color-text-secondary)] font-medium">이번달 신규</p>
@@ -429,8 +429,8 @@ export default function BiddingPage() {
           </Card>
           <Card className="shadow-lg border-0 bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2.5 bg-purple-500/10 rounded-xl shrink-0">
-                <Banknote className="h-5 w-5 text-purple-400" />
+              <div className="p-2.5 bg-stone-100/10 rounded-xl shrink-0">
+                <Banknote className="h-5 w-5 text-stone-900" />
               </div>
               <div>
                 <p className="text-xs text-[var(--color-text-secondary)] font-medium">총 거래규모</p>
@@ -440,8 +440,8 @@ export default function BiddingPage() {
           </Card>
           <Card className="shadow-lg border-0 bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2.5 bg-orange-500/10 rounded-xl shrink-0">
-                <PercentCircle className="h-5 w-5 text-orange-400" />
+              <div className="p-2.5 bg-stone-100/10 rounded-xl shrink-0">
+                <PercentCircle className="h-5 w-5 text-stone-900" />
               </div>
               <div>
                 <p className="text-xs text-[var(--color-text-secondary)] font-medium">평균 할인율</p>
@@ -748,7 +748,7 @@ export default function BiddingPage() {
                     return (
                       <TableRow
                         key={item.id}
-                        className={isClosingSoon ? "bg-orange-500/5" : ""}
+                        className={isClosingSoon ? "bg-stone-100/5" : ""}
                       >
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -936,9 +936,9 @@ export default function BiddingPage() {
               </div>
 
               {/* NDA Notice */}
-              <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 p-3">
-                <FileText className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
-                <p className="text-xs text-amber-300 leading-relaxed">
+              <div className="flex items-start gap-2 rounded-lg bg-stone-100/10 border border-stone-300/20 p-3">
+                <FileText className="h-4 w-4 text-stone-900 mt-0.5 shrink-0" />
+                <p className="text-xs text-stone-900 leading-relaxed">
                   입찰 참여 시 비밀유지서약(NDA)에 동의하는 것으로 간주됩니다.
                 </p>
               </div>

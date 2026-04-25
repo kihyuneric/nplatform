@@ -88,7 +88,7 @@ export function RegionRadarChart() {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="flex items-center gap-2 text-base">
-            <MapPin className="h-4 w-4 text-green-600" />
+            <MapPin className="h-4 w-4 text-stone-900" />
             지역별 시장 레이더
           </CardTitle>
           {/* 주차 토글 */}
@@ -99,7 +99,7 @@ export function RegionRadarChart() {
                 onClick={() => setWeek(w)}
                 className={`text-xs px-2.5 py-1 rounded-md border transition-all ${
                   week === w
-                    ? 'bg-blue-600 text-white border-blue-600'
+                    ? 'bg-stone-100 text-white border-stone-300'
                     : 'text-[var(--color-text-secondary)] border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-base)]'
                 }`}
               >

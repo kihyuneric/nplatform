@@ -30,7 +30,7 @@ export function WidgetGrid({ widgets, editable = false, onRemove, onAdd }: Widge
               <CardTitle className="text-sm">{w.title}</CardTitle>
             </div>
             {editable && onRemove && (
-              <button onClick={() => onRemove(w.id)} className="text-muted-foreground hover:text-red-500">
+              <button onClick={() => onRemove(w.id)} className="text-muted-foreground hover:text-stone-900">
                 <X className="h-3.5 w-3.5" />
               </button>
             )}
@@ -39,7 +39,7 @@ export function WidgetGrid({ widgets, editable = false, onRemove, onAdd }: Widge
         </Card>
       ))}
       {editable && onAdd && (
-        <Card className="border-dashed border-2 flex items-center justify-center cursor-pointer hover:border-[#10B981] transition-colors min-h-[120px] border-[var(--color-border-subtle)]" onClick={onAdd}>
+        <Card className="border-dashed border-2 flex items-center justify-center cursor-pointer hover:border-[#14161A] transition-colors min-h-[120px] border-[var(--color-border-subtle)]" onClick={onAdd}>
           <div className="text-center text-muted-foreground">
             <Plus className="h-8 w-8 mx-auto mb-1" />
             <span className="text-xs">위젯 추가</span>

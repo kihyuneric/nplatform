@@ -80,9 +80,9 @@ export function BannerLayoutPreview({ activeBanners, onSlotClick }: Props) {
       >
         {/* Browser Chrome */}
         <div className="flex h-7 items-center gap-1.5 border-b bg-[var(--color-surface-overlay)] px-3 border-[var(--color-border-subtle)]">
-          <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
-          <div className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
-          <div className="h-2.5 w-2.5 rounded-full bg-green-400" />
+          <div className="h-2.5 w-2.5 rounded-full bg-stone-100" />
+          <div className="h-2.5 w-2.5 rounded-full bg-stone-100" />
+          <div className="h-2.5 w-2.5 rounded-full bg-stone-100" />
           <div className="ml-3 flex-1 rounded bg-[var(--color-surface-overlay)] px-2 py-0.5 text-[8px] text-[var(--color-text-muted)]">
             nplatform.co.kr
           </div>
@@ -126,8 +126,8 @@ export function BannerLayoutPreview({ activeBanners, onSlotClick }: Props) {
                 key={slot.id}
                 className={`absolute cursor-pointer transition-all duration-200 ${
                   hasBanner
-                    ? "border-2 border-emerald-500 bg-emerald-500/20"
-                    : "border-2 border-dashed border-blue-500/40 bg-blue-500/5"
+                    ? "border-2 border-stone-300 bg-stone-100/20"
+                    : "border-2 border-dashed border-stone-300/40 bg-stone-100/5"
                 } ${isHovered ? "ring-2 ring-blue-400 ring-offset-1 z-10" : ""}`}
                 style={{
                   left: slot.x * scale + 16,
@@ -143,15 +143,15 @@ export function BannerLayoutPreview({ activeBanners, onSlotClick }: Props) {
                 <div className="flex h-full items-center justify-center">
                   {hasBanner ? (
                     <div className="text-center">
-                      <div className="text-[7px] font-bold text-emerald-400">
+                      <div className="text-[7px] font-bold text-stone-900">
                         {banner.title}
                       </div>
-                      <div className="text-[5px] text-emerald-500">ACTIVE</div>
+                      <div className="text-[5px] text-stone-900">ACTIVE</div>
                     </div>
                   ) : (
                     <div className="text-center">
-                      <div className="text-[7px] font-medium text-blue-500">{slot.label}</div>
-                      <div className="text-[5px] text-blue-400">비어있음</div>
+                      <div className="text-[7px] font-medium text-stone-900">{slot.label}</div>
+                      <div className="text-[5px] text-stone-900">비어있음</div>
                     </div>
                   )}
                 </div>
@@ -163,7 +163,7 @@ export function BannerLayoutPreview({ activeBanners, onSlotClick }: Props) {
                     <p className="text-[10px] text-[var(--color-text-secondary)]">{slot.description}</p>
                     <p className="text-[10px] text-[var(--color-text-muted)]">권장 크기: {slot.size}px</p>
                     {hasBanner ? (
-                      <Badge className="mt-1 bg-emerald-500/10 text-emerald-400 text-[9px]">
+                      <Badge className="mt-1 bg-stone-100/10 text-stone-900 text-[9px]">
                         ✅ {banner.title}
                       </Badge>
                     ) : (
@@ -188,18 +188,18 @@ export function BannerLayoutPreview({ activeBanners, onSlotClick }: Props) {
               key={slot.id}
               className={`cursor-pointer rounded-lg border p-2 transition-all hover:shadow-md ${
                 banner
-                  ? "border-emerald-500/20 bg-emerald-500/10"
+                  ? "border-stone-300/20 bg-stone-100/10"
                   : "border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]"
               }`}
               onClick={() => onSlotClick?.(slot.position)}
             >
               <div className="flex items-center gap-2">
-                <div className={`h-2.5 w-2.5 rounded-full ${banner ? "bg-emerald-500" : "bg-[var(--color-border-default)]"}`} />
+                <div className={`h-2.5 w-2.5 rounded-full ${banner ? "bg-stone-100" : "bg-[var(--color-border-default)]"}`} />
                 <span className="text-xs font-medium text-[var(--color-text-primary)]">{slot.label}</span>
               </div>
               <p className="mt-0.5 text-[10px] text-[var(--color-text-secondary)]">{slot.size}</p>
               {banner && (
-                <p className="mt-0.5 truncate text-[10px] text-emerald-400">
+                <p className="mt-0.5 truncate text-[10px] text-stone-900">
                   ✅ {banner.title}
                 </p>
               )}

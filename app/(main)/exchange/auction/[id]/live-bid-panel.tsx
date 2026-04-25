@@ -43,7 +43,7 @@ function Countdown({ endTime }: { endTime?: string }) {
 
   if (!remaining) return null
   return (
-    <span className={`font-mono font-bold tabular-nums ${remaining === '종료' ? 'text-red-400' : 'text-emerald-400'}`}>
+    <span className={`font-mono font-bold tabular-nums ${remaining === '종료' ? 'text-stone-900' : 'text-stone-900'}`}>
       {remaining}
     </span>
   )
@@ -125,7 +125,7 @@ export function LiveBidPanel({
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 bg-gray-900/60">
         <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-emerald-400" />
+          <Zap className="w-4 h-4 text-stone-900" />
           <span className="font-semibold text-white text-sm">실시간 입찰</span>
         </div>
         <div className="flex items-center gap-3 text-xs">
@@ -139,7 +139,7 @@ export function LiveBidPanel({
               <Countdown endTime={endTime} />
             </div>
           )}
-          <div className={`flex items-center gap-1 ${isConnected ? 'text-emerald-400' : 'text-gray-500'}`}>
+          <div className={`flex items-center gap-1 ${isConnected ? 'text-stone-900' : 'text-gray-500'}`}>
             {isConnected ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
             <span>{isConnected ? '실시간' : '오프라인'}</span>
           </div>
@@ -176,12 +176,12 @@ export function LiveBidPanel({
               }}
               onKeyDown={(e) => e.key === 'Enter' && !submitting && handleBid()}
               placeholder={`최소 ${fmtKRW(currentHighest + 10000)}`}
-              className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-emerald-500 transition-colors"
+              className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-stone-300 transition-colors"
             />
             <button
               onClick={handleBid}
               disabled={submitting || !bidInput}
-              className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 bg-stone-100 hover:bg-stone-100 disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 rounded-lg transition-colors"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Gavel className="w-4 h-4" />}
               입찰
@@ -201,7 +201,7 @@ export function LiveBidPanel({
             ))}
             <button
               onClick={() => setBidInput(suggestedBid.toLocaleString('ko-KR'))}
-              className="flex-1 text-xs py-1.5 rounded-md bg-emerald-900/40 hover:bg-emerald-800/50 text-emerald-400 border border-emerald-800/50 transition-colors"
+              className="flex-1 text-xs py-1.5 rounded-md bg-stone-100/40 hover:bg-stone-100/50 text-stone-900 border border-stone-300/50 transition-colors"
             >
               추천가
             </button>
@@ -215,8 +215,8 @@ export function LiveBidPanel({
                 exit={{ opacity: 0 }}
                 className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${
                   feedback.ok
-                    ? 'bg-emerald-900/40 text-emerald-400 border border-emerald-800/50'
-                    : 'bg-red-900/40 text-red-400 border border-red-800/50'
+                    ? 'bg-stone-100/40 text-stone-900 border border-stone-300/50'
+                    : 'bg-stone-100/40 text-stone-900 border border-stone-300/50'
                 }`}
               >
                 {feedback.ok ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 shrink-0" />}
@@ -226,7 +226,7 @@ export function LiveBidPanel({
           </AnimatePresence>
 
           {error && (
-            <p className="text-xs text-red-400 flex items-center gap-1.5">
+            <p className="text-xs text-stone-900 flex items-center gap-1.5">
               <WifiOff className="w-3.5 h-3.5" /> {error}
             </p>
           )}
@@ -260,18 +260,18 @@ export function LiveBidPanel({
                   animate={{ opacity: 1, x: 0 }}
                   className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs ${
                     bid.isCurrentUser
-                      ? 'bg-emerald-900/30 border border-emerald-800/50'
+                      ? 'bg-stone-100/30 border border-stone-300/50'
                       : 'bg-gray-900/60'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <ChevronUp className={`w-3 h-3 ${bid.isCurrentUser ? 'text-emerald-400' : 'text-gray-600'}`} />
-                    <span className={bid.isCurrentUser ? 'text-emerald-300 font-medium' : 'text-gray-400'}>
+                    <ChevronUp className={`w-3 h-3 ${bid.isCurrentUser ? 'text-stone-900' : 'text-gray-600'}`} />
+                    <span className={bid.isCurrentUser ? 'text-stone-900 font-medium' : 'text-gray-400'}>
                       {bid.bidderAlias}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`font-semibold ${bid.isCurrentUser ? 'text-emerald-300' : 'text-white'}`}>
+                    <span className={`font-semibold ${bid.isCurrentUser ? 'text-stone-900' : 'text-white'}`}>
                       {fmtKRW(bid.amount)}
                     </span>
                     <span className="text-gray-600">{fmtTime(bid.timestamp)}</span>

@@ -36,22 +36,22 @@ const BUCKET_EMOJI: Record<SpecialConditionBucket, string> = {
 
 const BUCKET_ACCENT: Record<SpecialConditionBucket, { border: string; bg: string; ring: string; text: string }> = {
   OWNERSHIP: {
-    border: "border-red-500/40",
-    bg:     "bg-red-500/10",
+    border: "border-stone-300/40",
+    bg:     "bg-stone-100/10",
     ring:   "focus-visible:ring-red-500",
-    text:   "text-red-700 dark:text-red-300",
+    text:   "text-stone-900 dark:text-stone-900",
   },
   COST: {
-    border: "border-orange-500/40",
-    bg:     "bg-orange-500/10",
+    border: "border-stone-300/40",
+    bg:     "bg-stone-100/10",
     ring:   "focus-visible:ring-orange-500",
-    text:   "text-orange-700 dark:text-orange-200",
+    text:   "text-stone-900 dark:text-stone-900",
   },
   LIQUIDITY: {
-    border: "border-yellow-500/40",
-    bg:     "bg-yellow-500/10",
+    border: "border-stone-300/40",
+    bg:     "bg-stone-100/10",
     ring:   "focus-visible:ring-yellow-500",
-    text:   "text-yellow-700 dark:text-yellow-200",
+    text:   "text-stone-900 dark:text-stone-900",
   },
 }
 
@@ -95,7 +95,7 @@ export function SpecialConditionsSection({
   return (
     <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4 space-y-4">
       <div className="flex items-start gap-2">
-        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+        <AlertTriangle className="w-4 h-4 text-stone-900 shrink-0 mt-0.5" />
         <div className="flex-1">
           <h4 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">
             특수조건 점검 (18항목 · 3-카테고리)
@@ -105,7 +105,7 @@ export function SpecialConditionsSection({
           </p>
         </div>
         {totalChecked > 0 && (
-          <span className="text-[0.6875rem] font-semibold text-amber-700 dark:text-amber-200 shrink-0">
+          <span className="text-[0.6875rem] font-semibold text-stone-900 dark:text-stone-900 shrink-0">
             {totalChecked}개 선택
           </span>
         )}
@@ -166,7 +166,7 @@ export function SpecialConditionsSection({
             disabled={disabled}
             rows={2}
             placeholder="위 18항목 외 현장조사·등기부 특이사항 (자유 기재, 선택)"
-            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-amber-500/60 focus:outline-none resize-y disabled:opacity-50"
+            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-stone-300/60 focus:outline-none resize-y disabled:opacity-50"
           />
         </section>
       )}

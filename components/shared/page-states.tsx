@@ -22,7 +22,7 @@ export function PageError({ message, onRetry }: { message?: string; onRetry?: ()
   const retryLabel = t('pageState.retry') || '다시 시도'
   return (
     <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-4" role="alert">
-      <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
+      <AlertCircle className="w-12 h-12 text-stone-900 mb-4" />
       <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{errorTitle}</h3>
       <p className="text-sm text-muted-foreground mb-4 max-w-md">{message || defaultMsg}</p>
       {onRetry && (

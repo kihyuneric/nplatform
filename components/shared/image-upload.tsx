@@ -136,7 +136,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
       <div
         className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
           dragActive
-            ? "border-[#10B981] bg-emerald-500/10"
+            ? "border-[#14161A] bg-stone-100/10"
             : "border-[var(--color-border-subtle)] hover:border-[var(--color-text-muted)]"
         }`}
         onDragOver={(e) => {
@@ -183,7 +183,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
 
       {/* Error */}
       {error && (
-        <div className="flex items-center gap-2 p-3 bg-red-500/10 rounded-lg text-sm text-red-400">
+        <div className="flex items-center gap-2 p-3 bg-stone-100/10 rounded-lg text-sm text-stone-900">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>
@@ -205,7 +205,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
               }}
               className={`relative group rounded-lg border overflow-hidden aspect-square ${
                 dragOverIdx === idx
-                  ? "border-[#10B981] border-2"
+                  ? "border-[#14161A] border-2"
                   : "border-[var(--color-border-subtle)]"
               } ${dragIdx === idx ? "opacity-50" : ""}`}
             >

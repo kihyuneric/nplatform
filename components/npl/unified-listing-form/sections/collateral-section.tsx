@@ -39,7 +39,7 @@ export function CollateralSection({
   return (
     <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4 space-y-4">
       <div className="flex items-start gap-2">
-        <MapPin className="w-4 h-4 mt-0.5 text-emerald-500 shrink-0" />
+        <MapPin className="w-4 h-4 mt-0.5 text-stone-900 shrink-0" />
         <div>
           <h4 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">
             담보 · 주소
@@ -53,13 +53,13 @@ export function CollateralSection({
       {/* 담보 유형 */}
       <div>
         <label className="block text-[0.6875rem] font-semibold text-[var(--color-text-secondary)] mb-1">
-          담보 유형 <span className="text-red-500 ml-1">*</span>
+          담보 유형 <span className="text-stone-900 ml-1">*</span>
         </label>
         <select
           value={collateral}
           onChange={(e) => onCollateral(e.target.value as CollateralType | "")}
           disabled={disabled}
-          className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] focus:border-emerald-500/60 focus:outline-none disabled:opacity-50"
+          className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] focus:border-stone-300/60 focus:outline-none disabled:opacity-50"
         >
           <option value="">선택하세요</option>
           {COLLATERAL_CATEGORIES.map((cat) => (
@@ -78,13 +78,13 @@ export function CollateralSection({
       <div className="grid grid-cols-12 gap-3">
         <div className="col-span-4">
           <label className="block text-[0.6875rem] font-semibold text-[var(--color-text-secondary)] mb-1">
-            시/도 <span className="text-red-500 ml-1">*</span>
+            시/도 <span className="text-stone-900 ml-1">*</span>
           </label>
           <select
             value={address.sido}
             onChange={(e) => onAddress({ sido: e.target.value })}
             disabled={disabled}
-            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] focus:border-emerald-500/60 focus:outline-none disabled:opacity-50"
+            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] focus:border-stone-300/60 focus:outline-none disabled:opacity-50"
           >
             <option value="">선택</option>
             {REGIONS.map((r) => (
@@ -105,7 +105,7 @@ export function CollateralSection({
             onChange={(e) => onAddress({ sigungu: e.target.value })}
             placeholder="예: 강남구"
             disabled={disabled}
-            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-emerald-500/60 focus:outline-none disabled:opacity-50"
+            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-stone-300/60 focus:outline-none disabled:opacity-50"
           />
         </div>
 
@@ -119,7 +119,7 @@ export function CollateralSection({
             onChange={(e) => onAddress({ detail: e.target.value })}
             placeholder="예: 역삼동 123-45"
             disabled={disabled}
-            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-emerald-500/60 focus:outline-none disabled:opacity-50"
+            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-stone-300/60 focus:outline-none disabled:opacity-50"
           />
         </div>
       </div>
@@ -145,7 +145,7 @@ export function CollateralSection({
                 onClick={() => onDebtorType(opt.v)}
                 className={`flex-1 rounded-lg border px-3 py-2 text-[0.75rem] font-semibold transition-colors ${
                   active
-                    ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+                    ? "bg-stone-100/10 border-stone-300/40 text-stone-900 dark:text-stone-900"
                     : "bg-[var(--color-surface-base)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]"
                 } disabled:opacity-50`}
               >

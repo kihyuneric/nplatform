@@ -31,8 +31,8 @@ export function SellerDashboardChart({ data }: { data: MonthlyChartItem[] }) {
         />
         <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
         <Bar dataKey="views" name="조회수" fill="#2E75B6" radius={[3, 3, 0, 0]} />
-        <Bar dataKey="interests" name="관심등록" fill="#10B981" radius={[3, 3, 0, 0]} />
-        <Bar dataKey="bids" name="입찰" fill="#F59E0B" radius={[3, 3, 0, 0]} />
+        <Bar dataKey="interests" name="관심등록" fill="#14161A" radius={[3, 3, 0, 0]} />
+        <Bar dataKey="bids" name="입찰" fill="#14161A" radius={[3, 3, 0, 0]} />
         <Bar dataKey="deals" name="거래완료" fill="#1B3A5C" radius={[3, 3, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>

@@ -122,9 +122,9 @@ function validateRow(m: Partial<BulkListingInput>): { status: RowStatus; errors:
 }
 
 const STATUS_CFG: Record<RowStatus, { icon: typeof CheckCircle2; label: string; cls: string; dot: string }> = {
-  pass:    { icon: CheckCircle2,  label: "정상", cls: "bg-emerald-500/10 text-emerald-400", dot: "bg-[var(--color-positive)]" },
-  warning: { icon: AlertTriangle, label: "경고", cls: "bg-amber-500/10 text-amber-400",     dot: "bg-[var(--color-warning)]" },
-  error:   { icon: AlertCircle,   label: "오류", cls: "bg-red-500/10 text-red-400",          dot: "bg-[var(--color-danger)]" },
+  pass:    { icon: CheckCircle2,  label: "정상", cls: "bg-stone-100/10 text-stone-900", dot: "bg-[var(--color-positive)]" },
+  warning: { icon: AlertTriangle, label: "경고", cls: "bg-stone-100/10 text-stone-900",     dot: "bg-[var(--color-warning)]" },
+  error:   { icon: AlertCircle,   label: "오류", cls: "bg-stone-100/10 text-stone-900",          dot: "bg-[var(--color-danger)]" },
 }
 
 function generateSampleCSV(): string {
@@ -326,7 +326,7 @@ export default function BulkUploadPage() {
           ].map(({ n, icon: Icon, label, desc }) => (
             <div key={n} className={`${n === step ? DS.card.elevated : DS.card.flat} ${DS.card.paddingCompact} flex items-center gap-3 transition-all`}>
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                n < step ? "bg-emerald-500/10" : n === step ? "bg-[var(--color-brand-mid)]/10" : "bg-[var(--color-surface-sunken)]"
+                n < step ? "bg-stone-100/10" : n === step ? "bg-[var(--color-brand-mid)]/10" : "bg-[var(--color-surface-sunken)]"
               }`}>
                 {n < step
                   ? <CheckCircle2 className="w-5 h-5 text-[var(--color-positive)]" />
@@ -375,7 +375,7 @@ export default function BulkUploadPage() {
                 <input ref={inputRef} type="file" accept=".csv,.xls,.xlsx" className="hidden"
                   onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
                 <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 ${
-                  dragging ? "bg-blue-500/10" : "bg-[var(--color-surface-sunken)]"
+                  dragging ? "bg-stone-100/10" : "bg-[var(--color-surface-sunken)]"
                 }`}>
                   <FileSpreadsheet className={`w-9 h-9 ${dragging ? "text-[var(--color-brand-mid)]" : "text-[var(--color-text-muted)]"}`} />
                 </div>
@@ -399,7 +399,7 @@ export default function BulkUploadPage() {
               {/* File info */}
               <div className={`${DS.card.base} ${DS.card.padding} flex items-center justify-between`}>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-emerald-500/10">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-stone-100/10">
                     <FileSpreadsheet className="w-6 h-6 text-[var(--color-positive)]" />
                   </div>
                   <div>
@@ -413,9 +413,9 @@ export default function BulkUploadPage() {
               {/* Validation summary */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
-                  { label: "정상", count: validCount, cls: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" },
-                  { label: "경고", count: warnCount,  cls: "bg-amber-500/10 border-amber-500/20 text-amber-400" },
-                  { label: "오류", count: errCount,    cls: "bg-red-500/10 border-red-500/20 text-red-400" },
+                  { label: "정상", count: validCount, cls: "bg-stone-100/10 border-stone-300/20 text-stone-900" },
+                  { label: "경고", count: warnCount,  cls: "bg-stone-100/10 border-stone-300/20 text-stone-900" },
+                  { label: "오류", count: errCount,    cls: "bg-stone-100/10 border-stone-300/20 text-stone-900" },
                 ].map(({ label, count, cls }) => (
                   <div key={label} className={`rounded-xl border p-6 text-center ${cls}`}>
                     <div className={DS.text.metricLarge + " mb-1"}>{count}</div>
@@ -530,7 +530,7 @@ export default function BulkUploadPage() {
                   <div className="flex flex-col items-center text-center py-6">
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
                       transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-                      className="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-emerald-500/10 border-2 border-[var(--color-positive)]">
+                      className="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-stone-100/10 border-2 border-[var(--color-positive)]">
                       <CheckCircle2 className="w-9 h-9 text-[var(--color-positive)]" />
                     </motion.div>
                     <h2 className={DS.text.sectionTitle + " mb-2"}>업로드 완료</h2>
@@ -586,7 +586,7 @@ export default function BulkUploadPage() {
 
         {/* Notice */}
         <div className={`${DS.card.base} ${DS.card.padding} flex items-start gap-4`}>
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-blue-500/10">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-stone-100/10">
             <AlertCircle className="w-4 h-4 text-[var(--color-info)]" />
           </div>
           <div>

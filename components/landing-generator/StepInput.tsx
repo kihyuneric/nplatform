@@ -39,7 +39,7 @@ export function StepInput({ onGenerate, error }: StepInputProps) {
     <div className="max-w-2xl mx-auto">
       {/* Hero Section */}
       <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-400 rounded-full text-sm font-medium mb-4">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-stone-100/10 text-stone-900 rounded-full text-sm font-medium mb-4">
           <Sparkles className="w-4 h-4" />
           AI 기반 자동 생성
         </div>
@@ -67,7 +67,7 @@ export function StepInput({ onGenerate, error }: StepInputProps) {
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder="예: 건물주 기초과정"
-            className="w-full px-4 py-3 text-lg border-2 border-[var(--color-border-subtle)] rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"
+            className="w-full px-4 py-3 text-lg border-2 border-[var(--color-border-subtle)] rounded-xl focus:border-stone-300 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"
             autoFocus
           />
           {/* Example Topics */}
@@ -79,7 +79,7 @@ export function StepInput({ onGenerate, error }: StepInputProps) {
                 onClick={() => setTopic(ex)}
                 className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${
                   topic === ex
-                    ? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                    ? 'bg-stone-100/10 border-stone-300/30 text-stone-900'
                     : 'bg-[var(--color-surface-base)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)]'
                 }`}
               >
@@ -100,7 +100,7 @@ export function StepInput({ onGenerate, error }: StepInputProps) {
             value={targetAudience}
             onChange={(e) => setTargetAudience(e.target.value)}
             placeholder="예: 30-50대 직장인, 부동산 투자 초보자"
-            className="w-full px-4 py-3 border-2 border-[var(--color-border-subtle)] rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"
+            className="w-full px-4 py-3 border-2 border-[var(--color-border-subtle)] rounded-xl focus:border-stone-300 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"
           />
         </div>
 
@@ -118,7 +118,7 @@ export function StepInput({ onGenerate, error }: StepInputProps) {
                 onClick={() => setTone(t.value)}
                 className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all ${
                   tone === t.value
-                    ? 'bg-blue-500/10 border-blue-500 text-blue-400 shadow-md shadow-blue-500/10'
+                    ? 'bg-stone-100/10 border-stone-300 text-stone-900 shadow-md shadow-blue-500/10'
                     : 'bg-[var(--color-surface-base)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-default)]'
                 }`}
               >
@@ -131,7 +131,7 @@ export function StepInput({ onGenerate, error }: StepInputProps) {
 
         {/* Error */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl">
+          <div className="bg-stone-100/10 border border-stone-300/20 text-stone-900 px-4 py-3 rounded-xl">
             {error}
           </div>
         )}

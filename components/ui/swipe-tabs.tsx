@@ -135,7 +135,7 @@ export function SwipeTabs({
               >
                 {tab.label}
                 {tab.badge != null && tab.badge > 0 && (
-                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#10B981] px-1 text-[10px] font-bold text-white">
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#14161A] px-1 text-[10px] font-bold text-white">
                     {tab.badge > 99 ? '99+' : tab.badge}
                   </span>
                 )}
@@ -146,7 +146,7 @@ export function SwipeTabs({
 
         {/* Animated indicator */}
         <motion.div
-          className="absolute bottom-0 h-0.5 rounded-full bg-[#10B981]"
+          className="absolute bottom-0 h-0.5 rounded-full bg-[#14161A]"
           animate={indicatorStyle}
           transition={{ type: 'spring', stiffness: 400, damping: 35 }}
         />

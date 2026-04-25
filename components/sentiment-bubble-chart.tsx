@@ -40,8 +40,8 @@ function CustomTooltip({ active, payload }: any) {
       <p className="font-semibold text-[var(--color-text-secondary)] mb-1 leading-tight">{d.title}</p>
       <p className="text-muted-foreground mb-1">{d.sido}</p>
       <div className="flex gap-2 text-[11px]">
-        <span className="text-blue-600">방향성 {(d.x * 100).toFixed(0)}%</span>
-        <span className={d.y >= 0 ? 'text-green-600' : 'text-red-600'}>
+        <span className="text-stone-900">방향성 {(d.x * 100).toFixed(0)}%</span>
+        <span className={d.y >= 0 ? 'text-stone-900' : 'text-stone-900'}>
           감성 {d.y >= 0 ? '+' : ''}{d.y.toFixed(2)}
         </span>
       </div>
@@ -92,7 +92,7 @@ export function SentimentBubbleChart({ onKeywordClick }: Props) {
     <Card className="h-full">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Sparkles className="h-4 w-4 text-purple-600" />
+          <Sparkles className="h-4 w-4 text-stone-900" />
           감성 분포 분석
         </CardTitle>
         {/* 지역 필터 */}

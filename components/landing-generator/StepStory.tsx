@@ -77,7 +77,7 @@ export function StepStory({ story }: StepStoryProps) {
                 className="w-full flex items-center justify-between px-6 py-4 hover:bg-[var(--color-surface-overlay)] transition"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-500/15 text-blue-400 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-stone-100/15 text-stone-900 rounded-lg flex items-center justify-center">
                     <Icon className="w-4 h-4" />
                   </div>
                   <span className="font-semibold text-[var(--color-text-secondary)]">{section.title}</span>
@@ -114,7 +114,7 @@ function SectionContent({ sectionId, content }: { sectionId: string; content: un
       <div className="bg-[var(--color-surface-base)] rounded-xl p-4 space-y-2">
         <p className="text-lg font-bold text-[var(--color-text-primary)] whitespace-pre-line">{data.headline}</p>
         <p className="text-[var(--color-text-secondary)]">{data.subheadline}</p>
-        <span className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium">
+        <span className="inline-block px-4 py-2 bg-stone-100 text-white rounded-lg text-sm font-medium">
           {data.ctaText}
         </span>
       </div>
@@ -126,7 +126,7 @@ function SectionContent({ sectionId, content }: { sectionId: string; content: un
       <div className="space-y-2">
         <p className="font-semibold text-[var(--color-text-secondary)] mb-3">{data.title}</p>
         {data.items.map((item: { icon: string; title: string; description: string }, i: number) => (
-          <div key={i} className="flex gap-3 bg-red-500/10 rounded-xl p-3">
+          <div key={i} className="flex gap-3 bg-stone-100/10 rounded-xl p-3">
             <span className="text-2xl">{item.icon}</span>
             <div>
               <p className="font-semibold text-[var(--color-text-primary)]">{item.title}</p>
@@ -145,7 +145,7 @@ function SectionContent({ sectionId, content }: { sectionId: string; content: un
         <p className="text-sm text-[var(--color-text-muted)] mb-3">{data.subtitle}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {data.features.map((f: { icon: string; title: string; description: string }, i: number) => (
-            <div key={i} className="bg-green-500/10 rounded-xl p-3">
+            <div key={i} className="bg-stone-100/10 rounded-xl p-3">
               <span className="text-xl">{f.icon}</span>
               <p className="font-semibold text-[var(--color-text-primary)] mt-1">{f.title}</p>
               <p className="text-sm text-[var(--color-text-secondary)]">{f.description}</p>
@@ -161,13 +161,13 @@ function SectionContent({ sectionId, content }: { sectionId: string; content: un
       <div className="space-y-2">
         <p className="font-semibold text-[var(--color-text-secondary)] mb-3">{data.title}</p>
         {data.steps.map((s: { step: number; title: string; description: string; duration: string }) => (
-          <div key={s.step} className="flex gap-3 bg-blue-500/10 rounded-xl p-3">
-            <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0">
+          <div key={s.step} className="flex gap-3 bg-stone-100/10 rounded-xl p-3">
+            <div className="w-8 h-8 bg-stone-100 text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0">
               {s.step}
             </div>
             <div>
               <p className="font-semibold text-[var(--color-text-primary)]">
-                {s.title} <span className="text-xs text-blue-400 font-normal">{s.duration}</span>
+                {s.title} <span className="text-xs text-stone-900 font-normal">{s.duration}</span>
               </p>
               <p className="text-sm text-[var(--color-text-secondary)]">{s.description}</p>
             </div>
@@ -182,10 +182,10 @@ function SectionContent({ sectionId, content }: { sectionId: string; content: un
       <div className="space-y-2">
         <p className="font-semibold text-[var(--color-text-secondary)] mb-3">{data.title}</p>
         {data.items.map((t: { name: string; role: string; content: string; rating: number }, i: number) => (
-          <div key={i} className="bg-yellow-500/10 rounded-xl p-3">
+          <div key={i} className="bg-stone-100/10 rounded-xl p-3">
             <div className="flex items-center gap-1 mb-1">
               {[...Array(t.rating)].map((_, j) => (
-                <span key={j} className="text-yellow-400 text-sm">★</span>
+                <span key={j} className="text-stone-900 text-sm">★</span>
               ))}
             </div>
             <p className="text-sm text-[var(--color-text-secondary)] italic">&ldquo;{t.content}&rdquo;</p>
@@ -200,11 +200,11 @@ function SectionContent({ sectionId, content }: { sectionId: string; content: un
     return (
       <div className="bg-[var(--color-surface-base)] rounded-xl p-4">
         <p className="text-lg font-bold text-[var(--color-text-primary)]">{data.name}</p>
-        <p className="text-sm text-blue-400 font-medium">{data.title}</p>
+        <p className="text-sm text-stone-900 font-medium">{data.title}</p>
         <p className="text-sm text-[var(--color-text-secondary)] mt-2">{data.bio}</p>
         <div className="flex flex-wrap gap-2 mt-3">
           {data.credentials.map((c: string, i: number) => (
-            <span key={i} className="px-2 py-1 bg-blue-500/15 text-blue-400 rounded-lg text-xs">
+            <span key={i} className="px-2 py-1 bg-stone-100/15 text-stone-900 rounded-lg text-xs">
               {c}
             </span>
           ))}
@@ -219,17 +219,17 @@ function SectionContent({ sectionId, content }: { sectionId: string; content: un
         <p className="font-semibold text-[var(--color-text-secondary)]">{data.title}</p>
         <div className="flex items-baseline gap-3 mt-2">
           <span className="text-[var(--color-text-muted)] line-through text-lg">{data.originalPrice}</span>
-          <span className="text-3xl font-bold text-blue-400">{data.salePrice}</span>
-          <span className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-bold">{data.discount}</span>
+          <span className="text-3xl font-bold text-stone-900">{data.salePrice}</span>
+          <span className="px-2 py-1 bg-stone-100 text-white rounded-lg text-xs font-bold">{data.discount}</span>
         </div>
         <ul className="mt-3 space-y-1">
           {data.benefits.map((b: string, i: number) => (
             <li key={i} className="text-sm text-[var(--color-text-secondary)] flex items-center gap-2">
-              <span className="text-green-500">✓</span> {b}
+              <span className="text-stone-900">✓</span> {b}
             </li>
           ))}
         </ul>
-        <p className="text-sm text-red-400 font-semibold mt-3">{data.deadline}</p>
+        <p className="text-sm text-stone-900 font-semibold mt-3">{data.deadline}</p>
       </div>
     )
   }
@@ -254,7 +254,7 @@ function SectionContent({ sectionId, content }: { sectionId: string; content: un
         <p className="text-lg font-bold">{data.headline}</p>
         <p className="text-sm opacity-90 mt-1">{data.subheadline}</p>
         <div className="mt-3 flex items-center gap-3">
-          <span className="px-4 py-2 bg-white text-blue-600 rounded-lg text-sm font-bold">
+          <span className="px-4 py-2 bg-white text-stone-900 rounded-lg text-sm font-bold">
             {data.ctaText}
           </span>
           <span className="text-sm opacity-80">{data.urgencyText}</span>

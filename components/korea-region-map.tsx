@@ -41,9 +41,9 @@ function dotColor(r: RegionDot): string {
   const up   = r.up   / r.articles;
   const down = r.down / r.articles;
   const a = 0.45 + Math.min(r.articles / 85, 1) * 0.55;
-  if (up   >= 0.5) return `rgba(59,130,246,${a.toFixed(2)})`;
-  if (down >= 0.5) return `rgba(239,68,68,${a.toFixed(2)})`;
-  return `rgba(139,92,246,${(a * 0.8).toFixed(2)})`;
+  if (up   >= 0.5) return `rgba(20,22,26,${a.toFixed(2)})`;
+  if (down >= 0.5) return `rgba(27,27,31,${a.toFixed(2)})`;
+  return `rgba(20,22,26,${(a * 0.8).toFixed(2)})`;
 }
 
 function dotRadius(articles: number, max: number): number {
@@ -74,11 +74,11 @@ export function KoreaRegionMap({ onRegionClick }: Props) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Map className="h-4 w-4 text-emerald-600" />
+            <Map className="h-4 w-4 text-stone-900" />
             지역별 뉴스 분포
           </CardTitle>
           <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-            {[['bg-blue-400','상승'],['bg-red-400','하락'],['bg-purple-400','중립']].map(([c,l])=>(
+            {[['bg-stone-100','상승'],['bg-stone-100','하락'],['bg-stone-100','중립']].map(([c,l])=>(
               <span key={l} className="flex items-center gap-1">
                 <span className={`w-2.5 h-2.5 rounded-full ${c} inline-block`} />
                 {l}
@@ -155,8 +155,8 @@ export function KoreaRegionMap({ onRegionClick }: Props) {
           <p className="font-semibold mb-1">{tooltip.r.label}</p>
           <p>총 <strong>{tooltip.r.articles}</strong>건</p>
           <div className="flex gap-3 mt-1">
-            <span className="text-blue-400">↑ {tooltip.r.up}</span>
-            <span className="text-red-400">↓ {tooltip.r.down}</span>
+            <span className="text-stone-900">↑ {tooltip.r.up}</span>
+            <span className="text-stone-900">↓ {tooltip.r.down}</span>
             <span className="text-gray-400">— {tooltip.r.neutral}</span>
           </div>
         </div>

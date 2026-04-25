@@ -202,7 +202,7 @@ export function KeyboardShortcuts({
             >
               {/* Header */}
               <div className="flex items-center gap-3 px-5 py-4 border-b">
-                <Keyboard className="h-5 w-5 text-blue-400" />
+                <Keyboard className="h-5 w-5 text-stone-900" />
                 <h2 className="text-base font-semibold flex-1">키보드 단축키</h2>
                 <button
                   onClick={() => setOpen(false)}

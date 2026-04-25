@@ -18,10 +18,10 @@ interface Props {
 }
 
 const CATEGORY_STYLES: Record<KeywordCategory, { bg: string; text: string; border: string }> = {
-  '거래/시장': { bg: 'bg-blue-500/10',   text: 'text-blue-400',   border: 'border-blue-500/20'   },
-  '개발/지역': { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
-  '정책/규제': { bg: 'bg-amber-500/10',   text: 'text-amber-400',   border: 'border-amber-500/20'   },
-  '투자/금융': { bg: 'bg-purple-500/10',  text: 'text-purple-400',  border: 'border-purple-500/20'  },
+  '거래/시장': { bg: 'bg-stone-100/10',   text: 'text-stone-900',   border: 'border-stone-300/20'   },
+  '개발/지역': { bg: 'bg-stone-100/10', text: 'text-stone-900', border: 'border-stone-300/20' },
+  '정책/규제': { bg: 'bg-stone-100/10',   text: 'text-stone-900',   border: 'border-stone-300/20'   },
+  '투자/금융': { bg: 'bg-stone-100/10',  text: 'text-stone-900',  border: 'border-stone-300/20'  },
 };
 
 const CATEGORY_LEGEND: { category: KeywordCategory; label: string }[] = [
@@ -84,7 +84,7 @@ export function KeywordCloud({ onKeywordClick }: Props) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Cloud className="h-4 w-4 text-blue-600" />
+            <Cloud className="h-4 w-4 text-stone-900" />
             키워드 클라우드
           </CardTitle>
           {/* 범례 */}

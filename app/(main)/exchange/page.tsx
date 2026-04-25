@@ -55,8 +55,10 @@ const V = {
   danger:         "var(--color-danger)",
   brandBright:    "var(--color-brand-bright)",
   purple:         "var(--color-purple, #A855F7)",
-  onPositive:     "#041915", // accessible dark text on positive (green) bg
-  onDark:         "#ffffff",
+  // McKinsey mono editorial v3 — semantic background는 모두 ink (#14161A) 통일.
+  // 따라서 그 위 텍스트는 항상 흰색 (이전 #041915 dark green text → 검정 위 검정 가독성 0).
+  onPositive:     "#FFFFFF",
+  onDark:         "#FFFFFF",
 }
 
 /* ═══════════════════════════════════════════════════════════

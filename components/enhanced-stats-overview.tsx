@@ -71,8 +71,8 @@ export function EnhancedStatsOverview() {
       change: current.total - previous.total,
       icon: FileText,
       borderColor: 'border-l-blue-500',
-      iconBg: 'bg-blue-500/15',
-      iconColor: 'text-blue-400',
+      iconBg: 'bg-stone-100/15',
+      iconColor: 'text-stone-900',
     },
     {
       label: '상승 전망',
@@ -80,8 +80,8 @@ export function EnhancedStatsOverview() {
       change: current.up - previous.up,
       icon: TrendingUp,
       borderColor: 'border-l-emerald-500',
-      iconBg: 'bg-emerald-500/15',
-      iconColor: 'text-emerald-400',
+      iconBg: 'bg-stone-100/15',
+      iconColor: 'text-stone-900',
     },
     {
       label: '하락 전망',
@@ -89,8 +89,8 @@ export function EnhancedStatsOverview() {
       change: current.down - previous.down,
       icon: TrendingDown,
       borderColor: 'border-l-red-500',
-      iconBg: 'bg-red-500/15',
-      iconColor: 'text-red-400',
+      iconBg: 'bg-stone-100/15',
+      iconColor: 'text-stone-900',
     },
     {
       label: '중립 전망',
@@ -133,9 +133,9 @@ export function EnhancedStatsOverview() {
                   <p
                     className={`text-xs mt-1 ${
                       stat.change > 0
-                        ? 'text-emerald-400'
+                        ? 'text-stone-900'
                         : stat.change < 0
-                        ? 'text-red-400'
+                        ? 'text-stone-900'
                         : 'text-[var(--color-text-muted)]'
                     }`}
                   >

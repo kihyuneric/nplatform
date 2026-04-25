@@ -135,9 +135,9 @@ export default function MatchingDetailPage() {
         </Link>
 
         {usingSample && (
-          <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3">
-            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-            <p className={`${DS.text.caption} text-amber-600`}>
+          <div className="mb-4 flex items-start gap-2 rounded-lg border border-stone-300/20 bg-stone-100/10 px-4 py-3">
+            <AlertTriangle className="w-4 h-4 text-stone-900 shrink-0 mt-0.5" />
+            <p className={`${DS.text.caption} text-stone-900`}>
               실시간 매칭 데이터를 불러오지 못해 샘플 데이터를 표시합니다. 실제 매칭 결과는 /deals/matching 에서 AI 매칭 실행 후 확인할 수 있습니다.
             </p>
           </div>

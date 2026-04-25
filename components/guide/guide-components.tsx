@@ -35,9 +35,9 @@ export function MockScreen({ title, children }: { title: string; children: React
     <div className={`${DS.card.base} overflow-hidden my-6 border-2`}>
       <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-surface-sunken)] border-b border-[var(--color-border-subtle)]">
         <div className="flex gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-red-400" />
-          <div className="w-3 h-3 rounded-full bg-yellow-400" />
-          <div className="w-3 h-3 rounded-full bg-green-400" />
+          <div className="w-3 h-3 rounded-full bg-stone-100" />
+          <div className="w-3 h-3 rounded-full bg-stone-100" />
+          <div className="w-3 h-3 rounded-full bg-stone-100" />
         </div>
         <span className="text-[0.75rem] text-[var(--color-text-muted)] ml-2 font-mono">{title}</span>
       </div>
@@ -49,7 +49,7 @@ export function MockScreen({ title, children }: { title: string; children: React
 /* ── Scenario Box ── */
 export function ScenarioBox({ title, persona, description, steps }: { title: string; persona: string; description: string; steps: string[] }) {
   return (
-    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-5 my-6">
+    <div className="bg-stone-100/10 border border-stone-300/20 rounded-xl p-5 my-6">
       <div className="flex items-center gap-2 mb-2">
         <div className="w-8 h-8 rounded-full bg-[var(--color-brand-dark)] text-white flex items-center justify-center text-[0.8125rem] font-bold">{persona[0]}</div>
         <div>
@@ -73,9 +73,9 @@ export function ScenarioBox({ title, persona, description, steps }: { title: str
 /* ── Pro Tip ── */
 export function ProTip({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex gap-3 bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 my-4">
-      <Lightbulb className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-      <div className="text-[0.8125rem] text-amber-400">{children}</div>
+    <div className="flex gap-3 bg-stone-100/10 border border-stone-300/20 rounded-lg p-4 my-4">
+      <Lightbulb className="w-5 h-5 text-stone-900 flex-shrink-0 mt-0.5" />
+      <div className="text-[0.8125rem] text-stone-900">{children}</div>
     </div>
   )
 }
@@ -83,9 +83,9 @@ export function ProTip({ children }: { children: React.ReactNode }) {
 /* ── Warning ── */
 export function Warning({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex gap-3 bg-red-500/10 border border-red-500/20 rounded-lg p-4 my-4">
-      <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-      <div className="text-[0.8125rem] text-red-400">{children}</div>
+    <div className="flex gap-3 bg-stone-100/10 border border-stone-300/20 rounded-lg p-4 my-4">
+      <AlertTriangle className="w-5 h-5 text-stone-900 flex-shrink-0 mt-0.5" />
+      <div className="text-[0.8125rem] text-stone-900">{children}</div>
     </div>
   )
 }
@@ -138,12 +138,12 @@ export function GuideHeader({ title, description, time, difficulty, steps }: {
 export function BeforeAfter({ before, after }: { before: string; after: string }) {
   return (
     <div className="grid md:grid-cols-2 gap-4 my-4">
-      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-        <span className={`${DS.text.label} text-red-400`}>Before</span>
+      <div className="bg-stone-100/10 border border-stone-300/20 rounded-lg p-4">
+        <span className={`${DS.text.label} text-stone-900`}>Before</span>
         <p className={`${DS.text.body} mt-1`}>{before}</p>
       </div>
-      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
-        <span className={`${DS.text.label} text-emerald-400`}>After</span>
+      <div className="bg-stone-100/10 border border-stone-300/20 rounded-lg p-4">
+        <span className={`${DS.text.label} text-stone-900`}>After</span>
         <p className={`${DS.text.body} mt-1`}>{after}</p>
       </div>
     </div>
@@ -153,11 +153,11 @@ export function BeforeAfter({ before, after }: { before: string; after: string }
 /* ── Result Card ── */
 export function ExpectedResult({ items }: { items: string[] }) {
   return (
-    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4 my-4">
-      <h4 className="text-[0.8125rem] font-bold text-emerald-400 mb-2">기대 결과</h4>
+    <div className="bg-stone-100/10 border border-stone-300/20 rounded-lg p-4 my-4">
+      <h4 className="text-[0.8125rem] font-bold text-stone-900 mb-2">기대 결과</h4>
       <ul className="space-y-1">
         {items.map((item, i) => (
-          <li key={i} className="flex items-center gap-2 text-[0.8125rem] text-emerald-400">
+          <li key={i} className="flex items-center gap-2 text-[0.8125rem] text-stone-900">
             <CheckCircle2 className="w-4 h-4 flex-shrink-0" />{item}
           </li>
         ))}

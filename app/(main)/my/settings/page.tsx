@@ -325,7 +325,7 @@ export default function SettingsPage() {
                     <p className={DS.text.caption + " mt-0.5"}>앱 인증기로 추가 보안을 설정합니다</p>
                   </div>
                 </div>
-                <span className="bg-emerald-500/10 text-emerald-400 text-[0.8125rem] font-medium px-3 py-1 rounded-full border border-emerald-500/20">활성</span>
+                <span className="bg-stone-100/10 text-stone-900 text-[0.8125rem] font-medium px-3 py-1 rounded-full border border-stone-300/20">활성</span>
               </div>
             </div>
 
@@ -340,7 +340,7 @@ export default function SettingsPage() {
                     <div>
                       <p className={DS.text.bodyBold + " flex items-center gap-2"}>
                         {h.device}
-                        {h.current && <span className="text-[0.6875rem] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20">현재</span>}
+                        {h.current && <span className="text-[0.6875rem] bg-stone-100/10 text-stone-900 px-2 py-0.5 rounded-full border border-stone-300/20">현재</span>}
                       </p>
                       <p className={DS.text.captionLight + " mt-0.5"}>{h.ip} · {h.time}</p>
                     </div>
@@ -385,7 +385,7 @@ export default function SettingsPage() {
                         aria-checked={enabled}
                         onClick={() => handleToggleNotif(n.id)}
                         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 ${
-                          enabled ? "bg-blue-600" : "bg-[var(--color-surface-overlay)]"
+                          enabled ? "bg-stone-100" : "bg-[var(--color-surface-overlay)]"
                         }`}
                       >
                         <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${enabled ? "translate-x-5" : "translate-x-0"}`} />
@@ -400,7 +400,7 @@ export default function SettingsPage() {
                             onClick={() => handleToggleChannel(n.id, ch)}
                             className={`flex items-center gap-1 text-[0.6875rem] font-medium px-2 py-1 rounded-full border transition-all ${
                               channels[ch]
-                                ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                                ? 'bg-stone-100/10 border-stone-300/20 text-stone-900'
                                 : 'bg-[var(--color-surface-sunken)] border-[var(--color-border-subtle)] text-[var(--color-text-muted)]'
                             }`}
                           >
@@ -429,7 +429,7 @@ export default function SettingsPage() {
                 onClick={() => setActiveRole(r.id)}
                 className={`w-full flex items-center justify-between rounded-xl border p-4 text-left transition-all ${
                   activeRole === r.id
-                    ? "border-[var(--color-brand-bright)] bg-blue-500/10"
+                    ? "border-[var(--color-brand-bright)] bg-stone-100/10"
                     : DS.card.base + " hover:bg-[var(--color-surface-sunken)]"
                 }`}
               >
@@ -453,7 +453,7 @@ export default function SettingsPage() {
                 데이터 내보내기
               </button>
             </div>
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-5">
+            <div className="bg-stone-100/10 border border-stone-300/20 rounded-xl p-5">
               <div className="flex items-start gap-2 mb-3">
                 <AlertCircle className="h-4 w-4 text-[var(--color-danger)] mt-0.5 shrink-0" />
                 <div>

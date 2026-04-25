@@ -322,12 +322,12 @@ export default function EditListingPage() {
 
           <div className="flex items-center gap-2">
             {originalStatus === "REJECTED" && (
-              <span className="bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] px-2 py-0.5 hidden sm:flex">
+              <span className="bg-stone-100/20 text-stone-900 border border-stone-300/30 text-[10px] px-2 py-0.5 hidden sm:flex">
                 반려됨
               </span>
             )}
             {originalStatus === "REVISION_REQUESTED" && (
-              <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] px-2 py-0.5 hidden sm:flex">
+              <span className="bg-stone-100/20 text-stone-900 border border-stone-300/30 text-[10px] px-2 py-0.5 hidden sm:flex">
                 수정요청
               </span>
             )}
@@ -341,7 +341,7 @@ export default function EditListingPage() {
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="px-4 py-1.5 text-xs font-semibold bg-[var(--color-positive)] hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                className="px-4 py-1.5 text-xs font-semibold bg-[var(--color-positive)] hover:bg-stone-100 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
                 <Save className="w-3.5 h-3.5" />
                 {submitting ? '수정 중...' : '수정 저장'}
@@ -455,16 +455,16 @@ export default function EditListingPage() {
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium text-slate-300">
-                      채권원금 (억원) <span className="text-red-400">*</span>
+                      채권원금 (억원) <span className="text-stone-900">*</span>
                     </Label>
                     <input
                       type="number"
                       value={form.principal}
                       onChange={(e) => updateForm({ principal: e.target.value })}
                       placeholder="0"
-                      className={`input-enhanced w-full ${formErrors.principal ? 'border-red-500/60' : ''}`}
+                      className={`input-enhanced w-full ${formErrors.principal ? 'border-stone-300/60' : ''}`}
                     />
-                    {formErrors.principal && <p className="text-xs text-red-400">{formErrors.principal}</p>}
+                    {formErrors.principal && <p className="text-xs text-stone-900">{formErrors.principal}</p>}
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium text-slate-300">채권 발생일</Label>
@@ -504,10 +504,10 @@ export default function EditListingPage() {
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium text-slate-300">
-                      담보유형 <span className="text-red-400">*</span>
+                      담보유형 <span className="text-stone-900">*</span>
                     </Label>
                     <Select value={form.collateralType} onValueChange={(v) => updateForm({ collateralType: v })}>
-                      <SelectTrigger className={`bg-[var(--color-brand-deepest)] border-[var(--color-brand-dark)]/40 text-white hover:border-[var(--color-brand-mid)] focus:border-[var(--color-brand-mid)] ${formErrors.collateralType ? 'border-red-500/60' : ''}`}>
+                      <SelectTrigger className={`bg-[var(--color-brand-deepest)] border-[var(--color-brand-dark)]/40 text-white hover:border-[var(--color-brand-mid)] focus:border-[var(--color-brand-mid)] ${formErrors.collateralType ? 'border-stone-300/60' : ''}`}>
                         <SelectValue placeholder="선택" />
                       </SelectTrigger>
                       <SelectContent className="bg-[var(--color-brand-deep)] border-[var(--color-brand-dark)]/40">
@@ -516,14 +516,14 @@ export default function EditListingPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {formErrors.collateralType && <p className="text-xs text-red-400">{formErrors.collateralType}</p>}
+                    {formErrors.collateralType && <p className="text-xs text-stone-900">{formErrors.collateralType}</p>}
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium text-slate-300">
-                      소재지 (시/도) <span className="text-red-400">*</span>
+                      소재지 (시/도) <span className="text-stone-900">*</span>
                     </Label>
                     <Select value={form.location} onValueChange={(v) => updateForm({ location: v })}>
-                      <SelectTrigger className={`bg-[var(--color-brand-deepest)] border-[var(--color-brand-dark)]/40 text-white hover:border-[var(--color-brand-mid)] focus:border-[var(--color-brand-mid)] ${formErrors.location ? 'border-red-500/60' : ''}`}>
+                      <SelectTrigger className={`bg-[var(--color-brand-deepest)] border-[var(--color-brand-dark)]/40 text-white hover:border-[var(--color-brand-mid)] focus:border-[var(--color-brand-mid)] ${formErrors.location ? 'border-stone-300/60' : ''}`}>
                         <SelectValue placeholder="선택" />
                       </SelectTrigger>
                       <SelectContent className="bg-[var(--color-brand-deep)] border-[var(--color-brand-dark)]/40">
@@ -532,7 +532,7 @@ export default function EditListingPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {formErrors.location && <p className="text-xs text-red-400">{formErrors.location}</p>}
+                    {formErrors.location && <p className="text-xs text-stone-900">{formErrors.location}</p>}
                   </div>
                   <div className="space-y-1.5 sm:col-span-2">
                     <Label className="text-xs font-medium text-slate-300">상세 주소</Label>
@@ -609,7 +609,7 @@ export default function EditListingPage() {
                   </div>
                   <div className="space-y-1.5 sm:col-span-2">
                     <Label className="text-xs font-medium text-slate-300">
-                      마감일 <span className="text-red-400">*</span>
+                      마감일 <span className="text-stone-900">*</span>
                     </Label>
                     <DateField
                       value={form.deadline}
@@ -618,7 +618,7 @@ export default function EditListingPage() {
                       min={new Date()}
                       error={Boolean(formErrors.deadline)}
                     />
-                    {formErrors.deadline && <p className="text-xs text-red-400">{formErrors.deadline}</p>}
+                    {formErrors.deadline && <p className="text-xs text-stone-900">{formErrors.deadline}</p>}
                   </div>
                 </div>
 
@@ -659,7 +659,7 @@ export default function EditListingPage() {
                           onClick={() => updateForm({ files: form.files.filter((_, idx) => idx !== i) })}
                           className="p-1 hover:bg-white/5 rounded transition-colors"
                         >
-                          <X className="w-4 h-4 text-slate-400 hover:text-red-400 transition-colors" />
+                          <X className="w-4 h-4 text-slate-400 hover:text-stone-900 transition-colors" />
                         </button>
                       </div>
                     ))}
@@ -694,17 +694,17 @@ export default function EditListingPage() {
                 </div>
 
                 {(originalStatus === "REJECTED" || originalStatus === "REVISION_REQUESTED") && (
-                  <div className="p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                  <div className="p-4 bg-stone-100/10 rounded-xl border border-stone-300/20">
                     <div className="flex items-center gap-2 mb-1">
-                      <AlertCircle className="w-4 h-4 text-amber-400" />
-                      <span className="text-sm font-medium text-amber-300">재제출 안내</span>
+                      <AlertCircle className="w-4 h-4 text-stone-900" />
+                      <span className="text-sm font-medium text-stone-900">재제출 안내</span>
                     </div>
-                    <p className="text-xs text-amber-400/80">수정 후 제출하면 상태가 &quot;승인 대기&quot;로 변경되어 다시 검토됩니다.</p>
+                    <p className="text-xs text-stone-900/80">수정 후 제출하면 상태가 &quot;승인 대기&quot;로 변경되어 다시 검토됩니다.</p>
                   </div>
                 )}
 
                 <button
-                  className="w-full h-12 bg-[var(--color-positive)] hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                  className="w-full h-12 bg-[var(--color-positive)] hover:bg-stone-100 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                   disabled={submitting}
                   onClick={handleSubmit}
                 >

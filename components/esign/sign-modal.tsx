@@ -50,9 +50,9 @@ const ROLE_LABEL: Record<string, string> = {
 }
 
 const ROLE_COLOR: Record<string, string> = {
-  SELLER: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  BUYER: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  AGENT: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  SELLER: "bg-stone-100/10 text-stone-900 border-stone-300/20",
+  BUYER: "bg-stone-100/10 text-stone-900 border-stone-300/20",
+  AGENT: "bg-stone-100/10 text-stone-900 border-stone-300/20",
   WITNESS: "bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border-[var(--color-border-subtle)]",
 }
 
@@ -101,7 +101,7 @@ export function SignModal({
           style={{ borderColor: "#0F1F35" }}
         >
           <div className="flex items-center gap-2">
-            <FileText size={16} className="text-emerald-400" />
+            <FileText size={16} className="text-stone-900" />
             <span className="text-white font-bold text-[0.9375rem]">전자계약 서명</span>
             <span className="text-xs text-[var(--color-text-muted)] font-mono ml-1">{document.id}</span>
           </div>
@@ -126,13 +126,13 @@ export function SignModal({
                 <div key={s.id} className="flex items-center gap-1.5">
                   <div
                     className={`w-2 h-2 rounded-full ${
-                      s.status === "SIGNED" ? "bg-emerald-400" :
-                      s.status === "INVITED" ? "bg-amber-400 animate-pulse" :
+                      s.status === "SIGNED" ? "bg-stone-100" :
+                      s.status === "INVITED" ? "bg-stone-100 animate-pulse" :
                       "bg-slate-600"
                     }`}
                   />
                   <span className={`text-[0.6875rem] font-medium ${
-                    s.status === "SIGNED" ? "text-emerald-400" : "text-[var(--color-text-muted)]"
+                    s.status === "SIGNED" ? "text-stone-900" : "text-[var(--color-text-muted)]"
                   }`}>
                     {s.name}
                   </span>
@@ -162,7 +162,7 @@ export function SignModal({
                 </div>
                 {document.documentHash && (
                   <div className="flex items-center gap-2 mt-2">
-                    <ShieldCheck size={11} className="text-emerald-400 shrink-0" />
+                    <ShieldCheck size={11} className="text-stone-900 shrink-0" />
                     <span className="text-[0.625rem] text-[var(--color-text-muted)] font-mono break-all">
                       SHA-256: {document.documentHash}
                     </span>
@@ -189,7 +189,7 @@ export function SignModal({
                 disabled={!agreed}
                 className="w-full py-3 rounded-xl font-bold text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{
-                  backgroundColor: agreed ? "#10B981" : "#0F1F35",
+                  backgroundColor: agreed ? "#14161A" : "#0F1F35",
                   color: agreed ? "#041915" : "#64748B",
                 }}
               >
@@ -219,7 +219,7 @@ export function SignModal({
                 className="flex gap-3 p-3 rounded-xl"
                 style={{ backgroundColor: "#0A1628", border: "1px solid #F59E0B22" }}
               >
-                <AlertTriangle size={14} className="text-amber-400 shrink-0 mt-0.5" />
+                <AlertTriangle size={14} className="text-stone-900 shrink-0 mt-0.5" />
                 <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
                   서명 확인 후 제출 시 서명 이미지와 타임스탬프가 SHA-256 해시 체인에 기록됩니다.
                   서명은 취소할 수 없으며 법적 효력이 발생합니다.
@@ -239,7 +239,7 @@ export function SignModal({
                   disabled={!signatureDataUrl || disabled}
                   className="flex-2 flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{
-                    backgroundColor: signatureDataUrl ? "#10B981" : "#0F1F35",
+                    backgroundColor: signatureDataUrl ? "#14161A" : "#0F1F35",
                     color: signatureDataUrl ? "#041915" : "#64748B",
                   }}
                 >
@@ -255,7 +255,7 @@ export function SignModal({
                 className="w-16 h-16 rounded-full mx-auto flex items-center justify-center"
                 style={{ backgroundColor: "#10B98122", border: "1px solid #10B98144" }}
               >
-                <CheckCircle2 size={32} className="text-emerald-400" />
+                <CheckCircle2 size={32} className="text-stone-900" />
               </div>
               <div>
                 <h3 className="text-white font-bold text-lg mb-2">서명이 완료되었습니다</h3>
@@ -277,7 +277,7 @@ export function SignModal({
                 {new Date().toLocaleString("ko-KR")}
               </div>
               {totalSigners > 0 && signedCount < totalSigners && (
-                <p className="text-xs text-amber-400">
+                <p className="text-xs text-stone-900">
                   나머지 {totalSigners - signedCount}명의 서명을 기다리는 중입니다.
                 </p>
               )}

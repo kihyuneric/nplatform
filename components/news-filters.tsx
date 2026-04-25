@@ -99,7 +99,7 @@ export function NewsFilters({ value, onChange, onSearch }: Props) {
             <Filter className="h-4 w-4 text-muted-foreground" />
             <h3 className="font-semibold">필터</h3>
             {activeCount > 0 && (
-              <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-blue-600 text-white rounded-full">
+              <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-stone-100 text-white rounded-full">
                 {activeCount}
               </span>
             )}

@@ -26,9 +26,9 @@ const NOTICE_TABS = [
 ]
 
 const CATEGORY_STYLE: Record<string, { label: string; bg: string; text: string; border: string }> = {
-  SERVICE:     { label: '서비스 공지', bg: 'bg-blue-500/10',  text: 'text-blue-400', border: 'border-blue-500/20' },
-  MAINTENANCE: { label: '점검 안내',   bg: 'bg-red-500/10',   text: 'text-red-400', border: 'border-red-500/20' },
-  UPDATE:      { label: '업데이트',    bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
+  SERVICE:     { label: '서비스 공지', bg: 'bg-stone-100/10',  text: 'text-stone-900', border: 'border-stone-300/20' },
+  MAINTENANCE: { label: '점검 안내',   bg: 'bg-stone-100/10',   text: 'text-stone-900', border: 'border-stone-300/20' },
+  UPDATE:      { label: '업데이트',    bg: 'bg-stone-100/10', text: 'text-stone-900', border: 'border-stone-300/20' },
 }
 
 const PAGE_SIZE = 5
@@ -50,7 +50,7 @@ function NoticeRow({ notice }: { notice: Notice }) {
               {cat.label}
             </span>
             {notice.isImportant && (
-              <span className="px-2 py-0.5 rounded-full text-[0.6875rem] font-bold bg-red-500 text-white border border-red-500">중요</span>
+              <span className="px-2 py-0.5 rounded-full text-[0.6875rem] font-bold bg-stone-100 text-white border border-stone-300">중요</span>
             )}
             {notice.isNew && (
               <span className="px-2 py-0.5 rounded-full text-[0.6875rem] font-bold bg-[var(--color-brand-mid)] text-white border border-[var(--color-brand-mid)]">NEW</span>

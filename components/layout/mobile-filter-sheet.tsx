@@ -53,7 +53,7 @@ export function MobileFilterSheet({
         <SlidersHorizontal className="h-4 w-4" />
         {triggerLabel}
         {activeFilterCount > 0 && (
-          <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#10B981] px-1 text-[10px] font-bold text-white">
+          <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#14161A] px-1 text-[10px] font-bold text-white">
             {activeFilterCount}
           </span>
         )}

@@ -298,7 +298,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
         const rw = vW * scaleM
         const rh = vH * scaleM
 
-        mctx.strokeStyle = '#7C3AED'
+        mctx.strokeStyle = '#14161A'
         mctx.lineWidth = 1.5
         mctx.strokeRect(rx, ry, rw, rh)
       }
@@ -345,7 +345,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
         const isHighlighted = activeHover && (edge.source === activeHover || edge.target === activeHover)
 
         if (isPathEdge) {
-          ctx.strokeStyle = '#7C3AED'
+          ctx.strokeStyle = '#14161A'
           ctx.lineWidth = 3
           ctx.setLineDash([])
           ctx.stroke()
@@ -359,7 +359,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
           ctx.lineTo(endX - arrowSize * Math.cos(angle - 0.3), endY - arrowSize * Math.sin(angle - 0.3))
           ctx.lineTo(endX - arrowSize * Math.cos(angle + 0.3), endY - arrowSize * Math.sin(angle + 0.3))
           ctx.closePath()
-          ctx.fillStyle = '#7C3AED'
+          ctx.fillStyle = '#14161A'
           ctx.fill()
         } else if (edge.relation_type === 'prerequisite') {
           ctx.strokeStyle = dimmed ? 'rgba(209,213,219,0.3)' : (isHighlighted ? '#4B5563' : '#D1D5DB')
@@ -385,7 +385,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
           ctx.lineWidth = isHighlighted ? 2 : 1
           ctx.stroke()
         } else {
-          ctx.strokeStyle = dimmed ? 'rgba(219,234,254,0.3)' : (isHighlighted ? '#3B82F6' : '#DBEAFE')
+          ctx.strokeStyle = dimmed ? 'rgba(219,234,254,0.3)' : (isHighlighted ? '#14161A' : '#DBEAFE')
           ctx.setLineDash([2, 4])
           ctx.lineWidth = isHighlighted ? 2 : 1
           ctx.stroke()
@@ -403,7 +403,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
 
         // Path glow
         if (isPathNode) {
-          ctx.shadowColor = '#7C3AED'
+          ctx.shadowColor = '#14161A'
           ctx.shadowBlur = 12
         } else if (isSelected) {
           ctx.shadowColor = node.domain_color
@@ -416,7 +416,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
         const alpha = dimmed ? '30' : (isHovered ? 'CC' : '80')
         ctx.fillStyle = node.domain_color + alpha
         ctx.fill()
-        ctx.strokeStyle = isSelected ? '#E2E8F0' : isPathNode ? '#7C3AED' : (dimmed ? node.domain_color + '40' : node.domain_color)
+        ctx.strokeStyle = isSelected ? '#E2E8F0' : isPathNode ? '#14161A' : (dimmed ? node.domain_color + '40' : node.domain_color)
         ctx.lineWidth = isSelected ? 3 : isPathNode ? 2.5 : Math.max(1, node.difficulty)
         ctx.stroke()
 
@@ -443,7 +443,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
           const by = node.y - r * 0.7
           ctx.beginPath()
           ctx.arc(bx, by, 8, 0, Math.PI * 2)
-          ctx.fillStyle = '#EF4444'
+          ctx.fillStyle = '#1B1B1F'
           ctx.fill()
           ctx.fillStyle = '#FFFFFF'
           ctx.font = 'bold 9px sans-serif'
@@ -460,7 +460,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
           const ay = node.y + r * 0.3
           ctx.beginPath()
           ctx.arc(ax, ay, 7, 0, Math.PI * 2)
-          ctx.fillStyle = '#7C3AED'
+          ctx.fillStyle = '#14161A'
           ctx.fill()
           ctx.fillStyle = '#FFFFFF'
           ctx.font = 'bold 8px sans-serif'
@@ -671,12 +671,12 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
             {tooltipInfo.node.domain_name} | {tooltipInfo.node.level}
           </div>
           {tooltipInfo.node.expert_count > 0 && (
-            <div className="text-red-600 mt-0.5">
+            <div className="text-stone-900 mt-0.5">
               전문가 {tooltipInfo.node.expert_count}명 강조
             </div>
           )}
           {(tooltipInfo.node as any).atomic_count > 0 && (
-            <div className="text-purple-600 mt-0.5">
+            <div className="text-stone-900 mt-0.5">
               ⚡ Atomic 캡슐 {(tooltipInfo.node as any).atomic_count}개
             </div>
           )}

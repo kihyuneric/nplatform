@@ -32,7 +32,7 @@ function StarDisplay({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'm
           className={cn(
             cls,
             s <= Math.round(rating)
-              ? 'fill-yellow-400 text-yellow-400'
+              ? 'fill-yellow-400 text-stone-900'
               : 'text-[var(--color-text-muted)]'
           )}
         />
@@ -100,7 +100,7 @@ export function ReviewList({ reviews, averageRating }: ReviewListProps) {
                     <span className="w-6 text-right text-[var(--color-text-secondary)]">{star}점</span>
                     <div className="flex-1 h-2 bg-[var(--color-surface-overlay)] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-yellow-400 rounded-full transition-all"
+                        className="h-full bg-stone-100 rounded-full transition-all"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -144,7 +144,7 @@ export function ReviewList({ reviews, averageRating }: ReviewListProps) {
                         <Badge
                           key={tag}
                           variant="secondary"
-                          className="text-xs bg-blue-500/10 text-blue-400"
+                          className="text-xs bg-stone-100/10 text-stone-900"
                         >
                           {tag}
                         </Badge>

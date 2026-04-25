@@ -59,10 +59,10 @@ export function FeeSection({
   }
 
   return (
-    <div className="rounded-xl border border-sky-500/30 bg-sky-500/5 p-5 space-y-4">
+    <div className="rounded-xl border border-stone-300/30 bg-stone-100/5 p-5 space-y-4">
       {/* Phase G5 · 전속 토글 최상단 */}
       {onExclusiveChange && (
-        <div className="rounded-lg border border-sky-500/25 bg-[var(--color-surface-elevated)] p-3">
+        <div className="rounded-lg border border-stone-300/25 bg-[var(--color-surface-elevated)] p-3">
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -72,20 +72,20 @@ export function FeeSection({
             />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                <Shield className="w-3.5 h-3.5 text-sky-500" />
+                <Shield className="w-3.5 h-3.5 text-stone-900" />
                 <span className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">
                   NPLatform 전속 계약 체결
                 </span>
                 {exclusive && (
-                  <span className="ml-1 px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-600 dark:text-sky-300 text-[0.625rem] font-bold">
+                  <span className="ml-1 px-1.5 py-0.5 rounded bg-stone-100/20 text-stone-900 dark:text-stone-900 text-[0.625rem] font-bold">
                     ON · 수수료 0.3% 자동 적용
                   </span>
                 )}
               </div>
               <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] leading-relaxed">
                 전속 계약 체결 시 본 매물은 NPLatform 에서만 거래되며,
-                <strong className="text-sky-600 dark:text-sky-300"> 조선일보 땅집고 기사 지원</strong> 및
-                <strong className="text-sky-600 dark:text-sky-300"> 수수료는 0.3% 로 조정</strong>됩니다.
+                <strong className="text-stone-900 dark:text-stone-900"> 조선일보 땅집고 기사 지원</strong> 및
+                <strong className="text-stone-900 dark:text-stone-900"> 수수료는 0.3% 로 조정</strong>됩니다.
                 일반 매물은 {(GENERAL_MIN_RATE * 100).toFixed(1)}% ~ {(RATE_UPPER_BOUND * 100).toFixed(1)}% 범위에서 자유롭게 설정 가능합니다.
               </p>
             </div>
@@ -95,12 +95,12 @@ export function FeeSection({
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-2">
-          <Briefcase className="w-4 h-4 mt-0.5 text-sky-500 shrink-0" />
+          <Briefcase className="w-4 h-4 mt-0.5 text-stone-900 shrink-0" />
           <div>
             <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)]">
-              매각 수수료율 <span className="text-sky-500 ml-1">직접 입력</span>
+              매각 수수료율 <span className="text-stone-900 ml-1">직접 입력</span>
               {exclusive && (
-                <span className="ml-2 px-2 py-0.5 rounded bg-sky-500/20 text-sky-500 text-[0.625rem] font-bold">
+                <span className="ml-2 px-2 py-0.5 rounded bg-stone-100/20 text-stone-900 text-[0.625rem] font-bold">
                   전속 계약 · {(EXCLUSIVE_RATE * 100).toFixed(1)}% 적용
                 </span>
               )}
@@ -113,7 +113,7 @@ export function FeeSection({
         </div>
         <div className="shrink-0 text-right">
           <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">현재 설정</div>
-          <div className="text-xl font-bold text-sky-500 tabular-nums">{pct.toFixed(2)}%</div>
+          <div className="text-xl font-bold text-stone-900 tabular-nums">{pct.toFixed(2)}%</div>
         </div>
       </div>
 

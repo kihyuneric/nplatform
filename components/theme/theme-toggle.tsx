@@ -57,7 +57,7 @@ export function ThemeToggle({ variant = 'icon', className }: ThemeToggleProps) {
               transition={{ duration: 0.2 }}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <Sun className="h-4 w-4 text-yellow-400" />
+              <Sun className="h-4 w-4 text-stone-900" />
             </motion.div>
           ) : (
             <motion.div
@@ -117,7 +117,7 @@ export function ThemeToggle({ variant = 'icon', className }: ThemeToggleProps) {
           onClick={() => setTheme('light')}
           className={cn('gap-2 cursor-pointer', theme === 'light' && 'bg-accent')}
         >
-          <Sun className="h-4 w-4 text-yellow-500" />
+          <Sun className="h-4 w-4 text-stone-900" />
           <span>라이트</span>
           {theme === 'light' && (
             <span className="ml-auto text-xs text-muted-foreground">✓</span>
@@ -137,7 +137,7 @@ export function ThemeToggle({ variant = 'icon', className }: ThemeToggleProps) {
           onClick={() => setTheme('system')}
           className={cn('gap-2 cursor-pointer', theme === 'system' && 'bg-accent')}
         >
-          <Monitor className="h-4 w-4 text-blue-500" />
+          <Monitor className="h-4 w-4 text-stone-900" />
           <span>시스템</span>
           {theme === 'system' && (
             <span className="ml-auto text-xs text-muted-foreground">✓</span>

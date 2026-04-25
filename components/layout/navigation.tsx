@@ -223,7 +223,7 @@ function MobileDrawer({
               <Link
                 href="/admin"
                 onClick={onClose}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-amber-600 hover:bg-amber-500/10 transition-colors"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-900 hover:bg-stone-100/10 transition-colors"
               >
                 <Shield className="h-4 w-4" />
                 관리자 대시보드
@@ -285,7 +285,7 @@ function MobileDrawer({
               )}
               <button
                 onClick={() => { signOut(); onClose() }}
-                className="flex w-full items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-500/10 transition-colors mt-1"
+                className="flex w-full items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-900 hover:bg-stone-100/10 transition-colors mt-1"
               >
                 <LogOut className="h-4 w-4" />
                 로그아웃
@@ -479,7 +479,7 @@ export function Navigation() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-amber-600 hover:text-amber-500 hover:bg-amber-500/10 text-xs"
+                        className="text-stone-900 hover:text-stone-900 hover:bg-stone-100/10 text-xs"
                       >
                         <Shield className="mr-1 h-3.5 w-3.5" />
                         관리
@@ -580,7 +580,7 @@ export function Navigation() {
                               className={`text-xs ${(activeRole || user.role) === role ? 'bg-[var(--color-surface-overlay)] font-semibold' : ''}`}
                             >
                               {(activeRole || user.role) === role && (
-                                <span className="mr-2 h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block flex-shrink-0" />
+                                <span className="mr-2 h-1.5 w-1.5 rounded-full bg-stone-100 inline-block flex-shrink-0" />
                               )}
                               {ROLE_LABELS[role]}
                             </DropdownMenuItem>
@@ -590,7 +590,7 @@ export function Navigation() {
                       )}
                       <DropdownMenuItem
                         onClick={signOut}
-                        className="text-red-600 focus:text-red-600 cursor-pointer"
+                        className="text-stone-900 focus:text-stone-900 cursor-pointer"
                       >
                         <LogOut className="mr-2 h-4 w-4" />
                         로그아웃

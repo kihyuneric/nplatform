@@ -46,28 +46,28 @@ export default function AnalysisDemoPage() {
   const HIGHLIGHTS = [
     {
       icon: TrendingUp,
-      color: "#10B981",
+      color: "#14161A",
       title: "NPL 수익성 분석",
       value: "ROI 29.2%",
       desc: "강세/기준/약세 3개 시나리오 자동 계산",
     },
     {
       icon: BarChart3,
-      color: "#8B5CF6",
+      color: "#14161A",
       title: "Monte Carlo 시뮬레이션",
       value: "10,000회",
       desc: "손실확률 18.3% · P50 ROI 28.3%",
     },
     {
       icon: Brain,
-      color: "#06B6D4",
+      color: "#14161A",
       title: "AI 투자의견",
       value: "BUY",
       desc: "Claude AI 분석 · 근거 서술 포함",
     },
     {
       icon: Shield,
-      color: "#F59E0B",
+      color: "#14161A",
       title: "리스크 등급",
       value: "B등급",
       desc: "4가지 리스크 카테고리 자동 평가",
@@ -77,15 +77,15 @@ export default function AnalysisDemoPage() {
   return (
     <div className={DS.page.wrapper}>
       {/* ── 데모 배너 ───────────────────────────────────────────────── */}
-      <div className="bg-amber-500/10 border-b border-amber-500/25">
+      <div className="bg-stone-100/10 border-b border-stone-300/25">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 font-medium">
+          <div className="flex items-center gap-2 text-sm text-stone-900 dark:text-stone-900 font-medium">
             <Zap className="w-4 h-4 shrink-0" />
             <span>데모 체험 모드 — 실제 매물이 아닌 샘플 데이터(서울 강남구 아파트 NPL)를 사용합니다</span>
           </div>
           <Link
             href="/analysis/profitability"
-            className="text-xs font-semibold text-amber-700 dark:text-amber-300 hover:underline shrink-0"
+            className="text-xs font-semibold text-stone-900 dark:text-stone-900 hover:underline shrink-0"
           >
             실제 분석 시작 →
           </Link>
@@ -99,7 +99,7 @@ export default function AnalysisDemoPage() {
 
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-3">
-                <span className="inline-flex items-center gap-1 text-[0.6875rem] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+                <span className="inline-flex items-center gap-1 text-[0.6875rem] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-stone-100/15 text-stone-900 dark:text-stone-900 border border-stone-300/25">
                   <Zap className="w-3 h-3" /> 데모 체험
                 </span>
                 <span className="text-[0.6875rem] text-[var(--color-text-muted)]">서울 강남구 아파트 NPL · 하나저축은행 론세일</span>

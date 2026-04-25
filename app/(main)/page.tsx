@@ -47,12 +47,12 @@ const C = {
 
   /* ── Semantic (브랜드 인텐트 · 테마 반응) ── */
   em: "var(--color-positive)",
-  emL: "#34D399",
+  emL: "#14161A",
   blue: "var(--color-brand-bright)",
   amber: "var(--color-warning)",
-  purple: "#A855F7",
+  purple: "#14161A",
   rose: "var(--color-danger)",
-  teal: "#14B8A6",
+  teal: "#14161A",
 
   /* ── Brand Intent (테마 무관 고정) ── */
   brandHero: "#0A1628",
@@ -152,7 +152,7 @@ function DealCard() {
       className="relative w-full max-w-[370px] mx-auto select-none"
     >
       {/* Ambient glow */}
-      <div className="absolute -inset-8 rounded-3xl blur-3xl" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)' }} />
+      <div className="absolute -inset-8 rounded-3xl blur-3xl" style={{ background: 'radial-gradient(circle, rgba(20,22,26,0.12) 0%, transparent 70%)' }} />
 
       <div className="relative rounded-2xl overflow-hidden shadow-2xl"
         style={{ background: C.bg3, border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -193,7 +193,7 @@ function DealCard() {
               </div>
             </div>
             <div className="shrink-0 px-2 py-1 rounded-md text-[10px] font-extrabold"
-              style={{ background: 'var(--color-editorial-gold-soft, rgba(168,133,62,0.14))', color: C.em, border: '1px solid rgba(16,185,129,0.3)' }}>
+              style={{ background: 'var(--color-editorial-gold-soft, rgba(168,133,62,0.14))', color: C.em, border: '1px solid rgba(20,22,26,0.3)' }}>
               AI A
             </div>
           </div>
@@ -243,9 +243,9 @@ function DealCard() {
             ].map(c => (
               <span key={c.label} className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
                 style={{
-                  background: c.ok ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.04)',
+                  background: c.ok ? 'rgba(20,22,26,0.08)' : 'rgba(255,255,255,0.04)',
                   color: c.ok ? C.em : 'rgba(255,255,255,0.3)',
-                  border: `1px solid ${c.ok ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.08)'}`,
+                  border: `1px solid ${c.ok ? 'rgba(20,22,26,0.2)' : 'rgba(255,255,255,0.08)'}`,
                 }}>
                 {c.ok ? "✓" : "·"} {c.label}
               </span>
@@ -263,7 +263,7 @@ function DealCard() {
       {/* Floating badges */}
       <motion.div className="absolute -top-4 -right-4 rounded-xl px-3 py-2 shadow-xl"
         animate={{ rotate: [-1.5, 1.5, -1.5] }} transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-        style={{ background: C.bg4, border: '1px solid rgba(16,185,129,0.3)', boxShadow: '0 0 20px rgba(16,185,129,0.15)' }}>
+        style={{ background: C.bg4, border: '1px solid rgba(20,22,26,0.3)', boxShadow: '0 0 20px rgba(20,22,26,0.15)' }}>
         <div className="flex items-center gap-1.5">
           <Sparkles size={10} style={{ color: C.em }} />
           <span className="text-[11px] font-bold" style={{ color: 'rgba(255,255,255,0.85)' }}>AI 분석 완료</span>
@@ -307,7 +307,7 @@ function AISearch() {
     <div className="w-full max-w-xl">
       <div className="flex items-center gap-2 mb-2.5">
         <div className="flex items-center gap-1.5 rounded-full px-3 py-1"
-          style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(168,133,62,0.30)' }}>
+          style={{ background: 'rgba(20,22,26,0.1)', border: '1px solid rgba(168,133,62,0.30)' }}>
           <Brain size={11} style={{ color: C.em }} />
           <span className="text-[11px] font-bold" style={{ color: C.em, letterSpacing: '0.05em' }}>AI 자연어 검색</span>
         </div>
@@ -317,8 +317,8 @@ function AISearch() {
       <div className="relative flex items-center rounded-2xl overflow-hidden transition-all duration-300"
         style={{
           background: focused ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
-          border: focused ? `1px solid rgba(16,185,129,0.5)` : '1px solid rgba(255,255,255,0.08)',
-          boxShadow: focused ? `0 0 0 3px rgba(16,185,129,0.08), 0 8px 24px rgba(0,0,0,0.3)` : 'none',
+          border: focused ? `1px solid rgba(20,22,26,0.5)` : '1px solid rgba(255,255,255,0.08)',
+          boxShadow: focused ? `0 0 0 3px rgba(20,22,26,0.08), 0 8px 24px rgba(0,0,0,0.3)` : 'none',
         }}>
         <Search size={15} className="ml-4 flex-shrink-0" style={{ color: 'rgba(255,255,255,0.25)' }} />
         <input
@@ -331,7 +331,7 @@ function AISearch() {
           aria-label="NPL 자연어 검색"
         />
         <div className="flex items-center gap-1.5 mx-2 px-2.5 py-1.5 rounded-lg flex-shrink-0"
-          style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(168,133,62,0.30)' }}>
+          style={{ background: 'rgba(20,22,26,0.1)', border: '1px solid rgba(168,133,62,0.30)' }}>
           <Sparkles size={10} style={{ color: C.em }} />
           <span className="text-[10px] font-black" style={{ color: C.em }}>AI</span>
         </div>
@@ -449,11 +449,11 @@ export default function LandingPage() {
           {/* Top line */}
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)' }} />
           {/* Emerald orb */}
-          <div style={{ position: 'absolute', top: '15%', left: '20%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(80px)' }} />
+          <div style={{ position: 'absolute', top: '15%', left: '20%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(20,22,26,0.07) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(80px)' }} />
           {/* Blue orb */}
-          <div style={{ position: 'absolute', bottom: '20%', right: '15%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(80px)' }} />
+          <div style={{ position: 'absolute', bottom: '20%', right: '15%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(20,22,26,0.06) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(80px)' }} />
           {/* Purple orb */}
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '700px', height: '400px', background: 'radial-gradient(ellipse, rgba(168,85,247,0.03) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(100px)' }} />
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '700px', height: '400px', background: 'radial-gradient(ellipse, rgba(20,22,26,0.03) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(100px)' }} />
           {/* Grid */}
           <div style={{
             position: 'absolute', inset: 0, opacity: 0.022,
@@ -611,10 +611,10 @@ export default function LandingPage() {
               {
                 icon: <TrendingUp size={24} style={{ color: C.em }} />,
                 tag: "거래 효율 3배",
-                tagBg: 'rgba(4,120,87,0.10)', tagColor: 'var(--color-positive)', tagBorder: 'rgba(4,120,87,0.25)',
+                tagBg: 'rgba(20,22,26,0.10)', tagColor: 'var(--color-positive)', tagBorder: 'rgba(20,22,26,0.25)',
                 title: "빠른 거래, 투명한 수수료",
                 desc: "평균 딜 클로징 24일 → 7일로 단축. NPL 매수 1.5% · 부동산 0.9% 고정 수수료, 매각사는 첫 6개월 무료. 에스크로·전자계약으로 거래 리스크도 함께 낮춥니다.",
-                iconBg: 'rgba(4,120,87,0.08)', borderHover: 'var(--color-positive)',
+                iconBg: 'rgba(20,22,26,0.08)', borderHover: 'var(--color-positive)',
                 bullets: ["매물 공개 → 낙찰 평균 7일", "NPL 1.5% / 부동산 0.9% · 매각사 6개월 무료", "에스크로 · 전자계약 기본 제공"],
               },
               {
@@ -629,10 +629,10 @@ export default function LandingPage() {
               {
                 icon: <ShieldCheck size={24} style={{ color: C.purple }} />,
                 tag: "L0→L3 4단계 접근",
-                tagBg: 'rgba(168,85,247,0.10)', tagColor: 'var(--color-purple, #A855F7)', tagBorder: 'rgba(168,85,247,0.25)',
+                tagBg: 'rgba(20,22,26,0.10)', tagColor: 'var(--color-purple, #A855F7)', tagBorder: 'rgba(20,22,26,0.25)',
                 title: "거래 안전 · PII 보호",
                 desc: "담보 부동산은 공개, 채무자 개인정보는 가린다. 본인인증(L1) → NDA(L2) → LOI(L3) 단계별로만 권리관계·채권서류에 접근합니다.",
-                iconBg: 'rgba(168,85,247,0.08)', borderHover: 'var(--color-purple, #A855F7)',
+                iconBg: 'rgba(20,22,26,0.08)', borderHover: 'var(--color-purple, #A855F7)',
                 bullets: ["금감원·신용정보법 가이드 준수", "자동 PII 마스킹 파이프라인", "NDA 전자서명 + 감사로그 영구 보관"],
               },
             ].map((r, i) => (
@@ -662,7 +662,7 @@ export default function LandingPage() {
 
       {/* ══ FEATURES ════════════════════════════════════════════════════════ */}
       <section style={{ backgroundColor: C.bg2, padding: '6rem 0', position: 'relative' }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(16,185,129,0.3), transparent)' }} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(20,22,26,0.3), transparent)' }} />
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={up} className="text-center mb-14">
             <div className="flex items-center justify-center gap-3 mb-5">
@@ -732,7 +732,7 @@ export default function LandingPage() {
             <motion.div variants={up} custom={0}
               className="home-seller-premium-card relative rounded-2xl p-8 overflow-hidden"
             >
-              <div style={{ position: 'absolute', top: 0, right: 0, width: '220px', height: '220px', background: 'radial-gradient(circle, rgba(16,185,129,0.08), transparent 70%)', borderRadius: '50%' }} />
+              <div style={{ position: 'absolute', top: 0, right: 0, width: '220px', height: '220px', background: 'radial-gradient(circle, rgba(20,22,26,0.08), transparent 70%)', borderRadius: '50%' }} />
               <div className="home-seller-divider" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '1px' }} />
               <div className="relative">
                 <div className="home-seller-icon-wrap w-12 h-12 rounded-xl flex items-center justify-center mb-5">
@@ -768,7 +768,7 @@ export default function LandingPage() {
             <motion.div variants={up} custom={1}
               className="npl-surface-card-raised relative rounded-2xl p-8 overflow-hidden transition-shadow"
             >
-              <div style={{ position: 'absolute', top: 0, right: 0, width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(59,130,246,0.05), transparent 70%)', borderRadius: '50%' }} />
+              <div style={{ position: 'absolute', top: 0, right: 0, width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(20,22,26,0.05), transparent 70%)', borderRadius: '50%' }} />
               <div className="relative">
                 <div className="npl-surface-sunken w-12 h-12 rounded-xl flex items-center justify-center mb-5">
                   <TrendingUp size={22} style={{ color: C.blue }} />
@@ -807,7 +807,7 @@ export default function LandingPage() {
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={up} className="text-center mb-14">
             <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5"
-              style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(20,22,26,0.20)' }}>
+              style={{ background: 'rgba(20,22,26,0.1)', border: '1px solid rgba(20,22,26,0.20)' }}>
               <RefreshCw size={12} style={{ color: C.amber }} />
               <span className="text-xs font-bold" style={{ color: C.amber, letterSpacing: '0.06em' }}>거래 프로세스</span>
             </div>
@@ -916,8 +916,8 @@ export default function LandingPage() {
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: `linear-gradient(90deg, transparent, ${C.em}50, transparent)` }} />
           <div style={{ position: 'absolute', inset: 0, opacity: 0.02, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
-          <div style={{ position: 'absolute', top: '50%', left: '30%', transform: 'translateY(-50%)', width: '350px', height: '350px', background: `radial-gradient(circle, rgba(16,185,129,0.07), transparent 70%)`, borderRadius: '50%', filter: 'blur(60px)' }} />
-          <div style={{ position: 'absolute', top: '50%', right: '25%', transform: 'translateY(-50%)', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(59,130,246,0.05), transparent 70%)', borderRadius: '50%', filter: 'blur(60px)' }} />
+          <div style={{ position: 'absolute', top: '50%', left: '30%', transform: 'translateY(-50%)', width: '350px', height: '350px', background: `radial-gradient(circle, rgba(20,22,26,0.07), transparent 70%)`, borderRadius: '50%', filter: 'blur(60px)' }} />
+          <div style={{ position: 'absolute', top: '50%', right: '25%', transform: 'translateY(-50%)', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(20,22,26,0.05), transparent 70%)', borderRadius: '50%', filter: 'blur(60px)' }} />
         </div>
 
         <Reveal className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">

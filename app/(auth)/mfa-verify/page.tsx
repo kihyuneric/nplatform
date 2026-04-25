@@ -88,9 +88,9 @@ export default function MFAVerifyPage() {
       {/* Left panel */}
       <div className="hidden md:flex md:w-2/5 flex-col bg-[var(--color-brand-deepest)] relative overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute top-1/3 -left-20 w-72 h-72 rounded-full bg-blue-500/5" />
-          <div className="absolute bottom-1/4 -right-20 w-96 h-96 rounded-full bg-blue-400/5" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full border border-blue-400/10" />
+          <div className="absolute top-1/3 -left-20 w-72 h-72 rounded-full bg-stone-100/5" />
+          <div className="absolute bottom-1/4 -right-20 w-96 h-96 rounded-full bg-stone-100/5" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full border border-stone-300/10" />
         </div>
         <div className="relative flex flex-col flex-1 px-10 py-12 justify-between">
           {/* Logo — 클릭 시 홈 이동 */}
@@ -110,28 +110,28 @@ export default function MFAVerifyPage() {
               <div className="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center">
                 <Shield className="h-10 w-10 text-white" />
               </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-400 flex items-center justify-center">
+              <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center">
                 <CheckCircle2 className="h-3.5 w-3.5 text-white" />
               </div>
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white mb-3">2단계 인증으로</h1>
               <p className="text-2xl font-bold text-[var(--color-brand-bright)] mb-4">계정을 보호합니다</p>
-              <p className="text-sm text-blue-200/60 leading-relaxed">
+              <p className="text-sm text-stone-900/60 leading-relaxed">
                 인증 앱(Google Authenticator, Authy 등)에서 6자리 코드를 확인하세요.
               </p>
             </div>
             <div className="space-y-3">
               {['AES-256 암호화 전송', 'IP 기반 이상 탐지', '세션 타임아웃 보호'].map((item) => (
                 <div key={item} className="flex items-center gap-2.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                  <span className="text-xs text-blue-200/60">{item}</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-stone-100 shrink-0" />
+                  <span className="text-xs text-stone-900/60">{item}</span>
                 </div>
               ))}
             </div>
           </div>
           {/* Footer */}
-          <p className="text-[11px] text-blue-200/30 leading-relaxed border-t border-white/10 pt-6">
+          <p className="text-[11px] text-stone-900/30 leading-relaxed border-t border-white/10 pt-6">
             © 2026 NPLatform. All rights reserved.
           </p>
         </div>
@@ -160,7 +160,7 @@ export default function MFAVerifyPage() {
           {/* Timer */}
           <div className="flex items-center justify-between mb-6">
             <span className="text-xs text-gray-400">TOTP 인증 코드</span>
-            <span className={`text-xs font-mono font-semibold ${timeLeft <= 20 ? 'text-red-500' : 'text-[var(--color-brand-deep)]'}`}>
+            <span className={`text-xs font-mono font-semibold ${timeLeft <= 20 ? 'text-stone-900' : 'text-[var(--color-brand-deep)]'}`}>
               {timeLeft > 0 ? timerDisplay : '만료됨'}
             </span>
           </div>
@@ -192,7 +192,7 @@ export default function MFAVerifyPage() {
                 disabled={loading}
                 className={`h-14 w-11 rounded-xl border-2 text-center text-xl font-mono font-bold transition-all outline-none
                   ${error
-                    ? 'border-red-400 bg-red-50 text-red-600'
+                    ? 'border-stone-300 bg-stone-100 text-stone-900'
                     : digit
                       ? 'border-[var(--color-brand-deep)] bg-[var(--color-brand-deep)]/5 text-[var(--color-brand-deep)]'
                       : 'border-gray-200 bg-gray-50 text-[var(--color-brand-deep)] focus:border-[var(--color-brand-deep)] focus:bg-white focus:shadow-sm'
@@ -202,7 +202,7 @@ export default function MFAVerifyPage() {
           </div>
 
           {error && (
-            <div className="flex items-center justify-center gap-2 text-red-500 mb-4">
+            <div className="flex items-center justify-center gap-2 text-stone-900 mb-4">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <p className="text-sm">{error}</p>
             </div>

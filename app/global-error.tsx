@@ -23,9 +23,9 @@ export default function GlobalError({
           <div className="mb-6">
             <svg width="80" height="80" viewBox="0 0 120 120" fill="none" className="mx-auto">
               <circle cx="60" cy="60" r="56" fill="#FEF2F2" stroke="#FCA5A5" strokeWidth="2" />
-              <path d="M60 35L85 80H35L60 35Z" fill="#FEE2E2" stroke="#EF4444" strokeWidth="2" strokeLinejoin="round" />
-              <line x1="60" y1="50" x2="60" y2="65" stroke="#EF4444" strokeWidth="3" strokeLinecap="round" />
-              <circle cx="60" cy="72" r="2" fill="#EF4444" />
+              <path d="M60 35L85 80H35L60 35Z" fill="#FEE2E2" stroke="#1B1B1F" strokeWidth="2" strokeLinejoin="round" />
+              <line x1="60" y1="50" x2="60" y2="65" stroke="#1B1B1F" strokeWidth="3" strokeLinecap="round" />
+              <circle cx="60" cy="72" r="2" fill="#1B1B1F" />
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">시스템 오류가 발생했습니다</h1>

@@ -17,26 +17,26 @@ const IMPACT_LABELS = ["", "경미", "경미+", "보통", "심각", "치명적"]
 
 function getZoneColor(prob: number, impact: number): string {
   const score = prob + impact
-  if (score <= 4) return "rgba(16, 185, 129, 0.15)"
-  if (score <= 6) return "rgba(245, 158, 11, 0.15)"
+  if (score <= 4) return "rgba(20,22,26, 0.15)"
+  if (score <= 6) return "rgba(20,22,26, 0.15)"
   if (score <= 8) return "rgba(249, 115, 22, 0.2)"
-  return "rgba(239, 68, 68, 0.2)"
+  return "rgba(27,27,31, 0.2)"
 }
 
 function getZoneBorder(prob: number, impact: number): string {
   const score = prob + impact
-  if (score <= 4) return "rgba(16, 185, 129, 0.3)"
-  if (score <= 6) return "rgba(245, 158, 11, 0.3)"
+  if (score <= 4) return "rgba(20,22,26, 0.3)"
+  if (score <= 6) return "rgba(20,22,26, 0.3)"
   if (score <= 8) return "rgba(249, 115, 22, 0.35)"
-  return "rgba(239, 68, 68, 0.35)"
+  return "rgba(27,27,31, 0.35)"
 }
 
 function getDotColor(prob: number, impact: number): string {
   const score = prob + impact
-  if (score <= 4) return "#10B981"
-  if (score <= 6) return "#F59E0B"
+  if (score <= 4) return "#14161A"
+  if (score <= 6) return "#14161A"
   if (score <= 8) return "#F97316"
-  return "#EF4444"
+  return "#1B1B1F"
 }
 
 export default function RiskMatrix({ risks }: RiskMatrixProps) {
@@ -160,10 +160,10 @@ export default function RiskMatrix({ risks }: RiskMatrixProps) {
       {/* Legend */}
       <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-[var(--color-border-subtle)]">
         {[
-          { label: "낮음", color: "#10B981" },
-          { label: "중간", color: "#F59E0B" },
+          { label: "낮음", color: "#14161A" },
+          { label: "중간", color: "#14161A" },
           { label: "높음", color: "#F97316" },
-          { label: "치명적", color: "#EF4444" },
+          { label: "치명적", color: "#1B1B1F" },
         ].map((l) => (
           <div key={l.label} className="flex items-center gap-1.5">
             <div

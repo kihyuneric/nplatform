@@ -230,7 +230,7 @@ export default function NPLCopilotPage() {
                 </div>
 
                 {/* 데모 안내 */}
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-stone-100/10 border border-stone-300/20 text-xs font-semibold text-stone-900 dark:text-stone-900">
                   <Zap className="h-3.5 w-3.5 shrink-0" />
                   아래 예시 질문을 클릭하면 바로 체험할 수 있습니다 — 로그인 불필요
                 </div>
@@ -245,7 +245,7 @@ export default function NPLCopilotPage() {
                         className={`${DS.card.interactive} text-left p-4 group relative`}
                       >
                         {q.badge && (
-                          <span className="absolute top-3 right-3 text-[0.625rem] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+                          <span className="absolute top-3 right-3 text-[0.625rem] font-bold px-1.5 py-0.5 rounded-full bg-stone-100/15 text-stone-900 dark:text-stone-900 border border-stone-300/25">
                             {q.badge}
                           </span>
                         )}

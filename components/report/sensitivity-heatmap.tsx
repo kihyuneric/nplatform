@@ -14,11 +14,11 @@ function toEok(value: number): string {
 }
 
 function getCellColor(value: number, min: number, max: number): string {
-  if (value < 0) return "rgba(239, 68, 68, 0.7)"
+  if (value < 0) return "rgba(27,27,31, 0.7)"
   const ratio = max === min ? 0.5 : (value - min) / (max - min)
-  if (ratio > 0.66) return `rgba(16, 185, 129, ${0.3 + ratio * 0.5})`
-  if (ratio > 0.33) return `rgba(245, 158, 11, ${0.3 + ratio * 0.4})`
-  return `rgba(239, 68, 68, ${0.2 + (1 - ratio) * 0.3})`
+  if (ratio > 0.66) return `rgba(20,22,26, ${0.3 + ratio * 0.5})`
+  if (ratio > 0.33) return `rgba(20,22,26, ${0.3 + ratio * 0.4})`
+  return `rgba(27,27,31, ${0.2 + (1 - ratio) * 0.3})`
 }
 
 export default function SensitivityHeatmap({

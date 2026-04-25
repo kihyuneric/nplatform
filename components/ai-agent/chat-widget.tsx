@@ -230,21 +230,21 @@ function NplListingCards() {
       type: "아파트",
       amount: "4억 2,000만원",
       grade: "A",
-      color: "text-green-600",
+      color: "text-stone-900",
     },
     {
       address: "서울 서초구 반포동 오피스텔",
       type: "오피스텔",
       amount: "2억 8,500만원",
       grade: "B+",
-      color: "text-blue-600",
+      color: "text-stone-900",
     },
     {
       address: "서울 마포구 상암동 다세대",
       type: "다세대",
       amount: "1억 5,200만원",
       grade: "A-",
-      color: "text-green-500",
+      color: "text-stone-900",
     },
   ]
 
@@ -292,9 +292,9 @@ function ApiListingCards({
 }) {
   const gradeColor = (g?: string) => {
     if (!g) return "text-gray-500"
-    if (g.startsWith("A")) return "text-green-600"
-    if (g.startsWith("B")) return "text-blue-600"
-    return "text-orange-600"
+    if (g.startsWith("A")) return "text-stone-900"
+    if (g.startsWith("B")) return "text-stone-900"
+    return "text-stone-900"
   }
 
   return (
@@ -303,7 +303,7 @@ function ApiListingCards({
         <a
           key={item.id}
           href={`/listings/${item.id}`}
-          className="block rounded-lg border bg-[var(--color-surface-elevated)] p-3 text-sm shadow-sm transition-colors hover:border-[#2E75B6]/40 hover:bg-blue-500/10"
+          className="block rounded-lg border bg-[var(--color-surface-elevated)] p-3 text-sm shadow-sm transition-colors hover:border-[#2E75B6]/40 hover:bg-stone-100/10"
         >
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-2">
@@ -360,7 +360,7 @@ function QuickActionButton({
   return (
     <a
       href={href}
-      className="inline-flex items-center gap-1 rounded-full border border-[#2E75B6]/30 bg-blue-500/10 px-2.5 py-1 text-[11px] font-medium text-[#2E75B6] transition-colors hover:bg-[#2E75B6] hover:text-white"
+      className="inline-flex items-center gap-1 rounded-full border border-[#2E75B6]/30 bg-stone-100/10 px-2.5 py-1 text-[11px] font-medium text-[#2E75B6] transition-colors hover:bg-[#2E75B6] hover:text-white"
     >
       {icon}
       {label}
@@ -377,21 +377,21 @@ function AnalysisCard() {
         <span className="font-semibold text-foreground">AI 분석 요약</span>
       </div>
       <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="rounded bg-blue-500/10 p-2 text-center">
+        <div className="rounded bg-stone-100/10 p-2 text-center">
           <p className="text-muted-foreground">AI 등급</p>
           <p className="text-lg font-bold text-[#2E75B6]">A-</p>
         </div>
-        <div className="rounded bg-orange-500/10 p-2 text-center">
+        <div className="rounded bg-stone-100/10 p-2 text-center">
           <p className="text-muted-foreground">리스크 점수</p>
-          <p className="text-lg font-bold text-orange-400">32 / 100</p>
+          <p className="text-lg font-bold text-stone-900">32 / 100</p>
         </div>
-        <div className="rounded bg-green-500/10 p-2 text-center">
+        <div className="rounded bg-stone-100/10 p-2 text-center">
           <p className="text-muted-foreground">예상 수익률</p>
-          <p className="text-lg font-bold text-green-400">18.5%</p>
+          <p className="text-lg font-bold text-stone-900">18.5%</p>
         </div>
-        <div className="rounded bg-purple-500/10 p-2 text-center">
+        <div className="rounded bg-stone-100/10 p-2 text-center">
           <p className="text-muted-foreground">회수 가능성</p>
-          <p className="text-lg font-bold text-purple-400">높음</p>
+          <p className="text-lg font-bold text-stone-900">높음</p>
         </div>
       </div>
       <div className="mt-2 flex gap-2">
@@ -409,7 +409,7 @@ function RoiCard() {
   return (
     <div className="mt-2 rounded-lg border bg-[var(--color-surface-elevated)] p-3 text-sm shadow-sm">
       <div className="mb-2 flex items-center gap-2">
-        <Calculator className="h-4 w-4 text-green-400" />
+        <Calculator className="h-4 w-4 text-stone-900" />
         <span className="font-semibold text-foreground">수익률 시뮬레이션</span>
       </div>
       <div className="space-y-1 text-xs">
@@ -423,11 +423,11 @@ function RoiCard() {
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">예상 회수액</span>
-          <span className="font-medium text-green-600">3억 1,200만원</span>
+          <span className="font-medium text-stone-900">3억 1,200만원</span>
         </div>
         <div className="flex justify-between border-t pt-1">
           <span className="font-semibold">예상 수익률</span>
-          <span className="font-bold text-green-600">+24.8%</span>
+          <span className="font-bold text-stone-900">+24.8%</span>
         </div>
       </div>
       <a
@@ -454,7 +454,7 @@ function MarketStatsCard() {
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">전월 대비</span>
-          <span className="font-medium text-green-600">+8.3%</span>
+          <span className="font-medium text-stone-900">+8.3%</span>
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">평균 낙찰가율</span>
@@ -951,7 +951,7 @@ export function ChatWidget() {
                       {msg.usedContext && msg.role === "assistant" && (
                         <Badge
                           variant="outline"
-                          className="mb-1 border-amber-500/20 bg-amber-500/10 text-[10px] text-amber-400"
+                          className="mb-1 border-stone-300/20 bg-stone-100/10 text-[10px] text-stone-900"
                         >
                           이전 검색 기반
                         </Badge>

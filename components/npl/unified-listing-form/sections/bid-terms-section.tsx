@@ -30,9 +30,9 @@ export function BidTermsSection({
   optional?: boolean
 }) {
   return (
-    <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 space-y-4">
+    <div className="rounded-xl border border-stone-300/30 bg-stone-100/5 p-5 space-y-4">
       <div className="flex items-start gap-2">
-        <Gavel className="w-4 h-4 mt-0.5 text-amber-500 shrink-0" />
+        <Gavel className="w-4 h-4 mt-0.5 text-stone-900 shrink-0" />
         <div>
           <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)]">
             입찰 조건 {optional && <span className="text-[0.6875rem] font-normal text-[var(--color-text-tertiary)]">· 선택</span>}

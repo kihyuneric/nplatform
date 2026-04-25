@@ -234,7 +234,7 @@ export default function KycPage() {
             href="/my"
             style={{
               padding: "11px 20px", borderRadius: 10,
-              backgroundColor: C.em, color: "#041915",
+              backgroundColor: C.em, color: "#FFFFFF",
               fontSize: 12, fontWeight: 800, textDecoration: "none",
             }}
           >
@@ -272,7 +272,7 @@ export default function KycPage() {
           <div
             style={{
               width: 72, height: 72, borderRadius: "50%",
-              backgroundColor: "rgba(245, 158, 11, 0.12)",
+              backgroundColor: "rgba(20,22,26, 0.12)",
               display: "flex", alignItems: "center", justifyContent: "center",
               margin: "0 auto 20px",
             }}
@@ -291,7 +291,7 @@ export default function KycPage() {
             href="/my"
             style={{
               padding: "11px 20px", borderRadius: 10,
-              backgroundColor: C.em, color: "#041915",
+              backgroundColor: C.em, color: "#FFFFFF",
               fontSize: 12, fontWeight: 800, textDecoration: "none",
             }}
           >
@@ -490,7 +490,7 @@ export default function KycPage() {
         <div
           style={{
             padding: "14px 16px", borderRadius: 12,
-            backgroundColor: "rgba(245, 158, 11, 0.04)", border: "1px solid rgba(245, 158, 11, 0.2)",
+            backgroundColor: "rgba(20,22,26, 0.04)", border: "1px solid rgba(20,22,26, 0.2)",
             display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 24,
           }}
         >
@@ -505,7 +505,7 @@ export default function KycPage() {
           <div
             style={{
               padding: "14px 16px", borderRadius: 12, marginBottom: 16,
-              backgroundColor: "rgba(239, 68, 68, 0.04)", border: "1px solid rgba(239, 68, 68, 0.2)",
+              backgroundColor: "rgba(27,27,31, 0.04)", border: "1px solid rgba(27,27,31, 0.2)",
               display: "flex", gap: 10, alignItems: "flex-start",
             }}
           >
@@ -518,7 +518,7 @@ export default function KycPage() {
           <div
             style={{
               padding: "14px 16px", borderRadius: 12, marginBottom: 16,
-              backgroundColor: "rgba(239, 68, 68, 0.04)", border: "1px solid rgba(239, 68, 68, 0.2)",
+              backgroundColor: "rgba(27,27,31, 0.04)", border: "1px solid rgba(27,27,31, 0.2)",
               display: "flex", gap: 10, alignItems: "flex-start",
             }}
           >

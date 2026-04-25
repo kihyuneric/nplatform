@@ -51,17 +51,17 @@ interface InstitutionListing {
 }
 
 const GRADE_COLORS: Record<string, string> = {
-  S: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
-  A: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
-  B: "bg-blue-500/20 text-blue-300 border border-blue-500/30",
+  S: "bg-stone-100/20 text-stone-900 border border-stone-300/30",
+  A: "bg-stone-100/20 text-stone-900 border border-stone-300/30",
+  B: "bg-stone-100/20 text-stone-900 border border-stone-300/30",
   C: "bg-gray-500/20 text-gray-300 border border-gray-500/30",
 }
 
 const RISK_BADGE: Record<string, string> = {
-  A: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-  B: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  C: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-  D: "bg-red-500/20 text-red-300 border-red-500/30",
+  A: "bg-stone-100/20 text-stone-900 border-stone-300/30",
+  B: "bg-stone-100/20 text-stone-900 border-stone-300/30",
+  C: "bg-stone-100/20 text-stone-900 border-stone-300/30",
+  D: "bg-stone-100/20 text-stone-900 border-stone-300/30",
 }
 
 // No mock data — all loaded from Supabase
@@ -163,9 +163,9 @@ export default function InstitutionProfilePage() {
                 <span className="text-3xl font-black text-white">{initials}</span>
               </div>
               <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-sm font-black border-2 border-[var(--color-brand-deepest)] ${
-                institution.trust_grade === 'S' ? 'bg-amber-500' :
-                institution.trust_grade === 'A' ? 'bg-emerald-500' :
-                institution.trust_grade === 'B' ? 'bg-blue-500' : 'bg-gray-500'
+                institution.trust_grade === 'S' ? 'bg-stone-100' :
+                institution.trust_grade === 'A' ? 'bg-stone-100' :
+                institution.trust_grade === 'B' ? 'bg-stone-100' : 'bg-gray-500'
               } text-white`}>
                 {institution.trust_grade}
               </div>
@@ -195,7 +195,7 @@ export default function InstitutionProfilePage() {
                 onClick={() => setIsFavorite(!isFavorite)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
                   isFavorite
-                    ? "bg-red-500/20 border-red-500/40 text-red-300"
+                    ? "bg-stone-100/20 border-stone-300/40 text-stone-900"
                     : "bg-white/5 border-[var(--color-brand-dark)]/40 text-slate-300 hover:bg-white/10"
                 }`}
               >
@@ -333,7 +333,7 @@ export default function InstitutionProfilePage() {
             </button>
             <button
               onClick={() => setIsFavorite(!isFavorite)}
-              className="px-4 py-2 text-sm font-semibold bg-[var(--color-positive)] hover:bg-emerald-700 text-white rounded-xl transition-colors"
+              className="px-4 py-2 text-sm font-semibold bg-[var(--color-positive)] hover:bg-stone-100 text-white rounded-xl transition-colors"
             >
               {isFavorite ? "팔로잉" : "팔로우"}
             </button>

@@ -11,15 +11,15 @@ import type { KeywordCategory } from "@/lib/dummy-data"
 import { toast } from "sonner"
 
 const CATEGORY_STYLES: Record<KeywordCategory, { bg: string; text: string; dot: string }> = {
-  "거래/시장": { bg: "bg-blue-500/10 border border-blue-500/30", text: "text-blue-400", dot: "bg-blue-400" },
-  "개발/지역": { bg: "bg-emerald-500/10 border border-emerald-500/30", text: "text-emerald-400", dot: "bg-emerald-400" },
-  "정책/규제": { bg: "bg-amber-500/10 border border-amber-500/30", text: "text-amber-400", dot: "bg-amber-400" },
-  "투자/금융": { bg: "bg-purple-500/10 border border-purple-500/30", text: "text-purple-400", dot: "bg-purple-400" },
+  "거래/시장": { bg: "bg-stone-100/10 border border-stone-300/30", text: "text-stone-900", dot: "bg-stone-100" },
+  "개발/지역": { bg: "bg-stone-100/10 border border-stone-300/30", text: "text-stone-900", dot: "bg-stone-100" },
+  "정책/규제": { bg: "bg-stone-100/10 border border-stone-300/30", text: "text-stone-900", dot: "bg-stone-100" },
+  "투자/금융": { bg: "bg-stone-100/10 border border-stone-300/30", text: "text-stone-900", dot: "bg-stone-100" },
 }
 
 const DIR_INFO: Record<string, { icon: typeof TrendingUp; color: string; bg: string; label: string }> = {
-  "상승": { icon: TrendingUp, color: "text-emerald-400", bg: "bg-emerald-500/10 border border-emerald-500/30", label: "상승 전망" },
-  "하락": { icon: TrendingDown, color: "text-red-400", bg: "bg-red-500/10 border border-red-500/30", label: "하락 전망" },
+  "상승": { icon: TrendingUp, color: "text-stone-900", bg: "bg-stone-100/10 border border-stone-300/30", label: "상승 전망" },
+  "하락": { icon: TrendingDown, color: "text-stone-900", bg: "bg-stone-100/10 border border-stone-300/30", label: "하락 전망" },
   "중립": { icon: Minus, color: "text-slate-400", bg: "bg-slate-500/10 border border-slate-500/30", label: "중립" },
 }
 
@@ -152,8 +152,8 @@ export default function NewsDetailPage() {
               <div className="rounded-xl border border-[var(--color-brand-dark)]/40 bg-[var(--color-brand-deep)] p-5 text-center">
                 <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">감성 점수</p>
                 <p className={`text-3xl font-bold ${
-                  article.sentiment_score > 0 ? "text-emerald-400"
-                    : article.sentiment_score < 0 ? "text-red-400"
+                  article.sentiment_score > 0 ? "text-stone-900"
+                    : article.sentiment_score < 0 ? "text-stone-900"
                     : "text-slate-400"
                 }`}>
                   {article.sentiment_score > 0 ? "+" : ""}{article.sentiment_score.toFixed(2)}
@@ -239,13 +239,13 @@ export default function NewsDetailPage() {
                 <Twitter className="h-4 w-4" />
               </button>
               <button
-                className="flex items-center justify-center w-10 h-10 rounded-full border border-[var(--color-brand-dark)]/40 bg-[var(--color-brand-deep)] text-slate-400 hover:border-amber-400 hover:text-amber-400 transition-all"
+                className="flex items-center justify-center w-10 h-10 rounded-full border border-[var(--color-brand-dark)]/40 bg-[var(--color-brand-deep)] text-slate-400 hover:border-stone-300 hover:text-stone-900 transition-all"
                 title="스크랩"
               >
                 <Bookmark className="h-4 w-4" />
               </button>
               <button
-                className="flex items-center justify-center w-10 h-10 rounded-full border border-[var(--color-brand-dark)]/40 bg-[var(--color-brand-deep)] text-slate-400 hover:border-emerald-400 hover:text-emerald-400 transition-all"
+                className="flex items-center justify-center w-10 h-10 rounded-full border border-[var(--color-brand-dark)]/40 bg-[var(--color-brand-deep)] text-slate-400 hover:border-stone-300 hover:text-stone-900 transition-all"
                 title="공유"
               >
                 <Share2 className="h-4 w-4" />

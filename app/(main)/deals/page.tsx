@@ -37,12 +37,12 @@ interface DealStageConfig {
 
 const STAGE_CONFIG: Record<DealStage, DealStageConfig> = {
   INTEREST:      { label: "관심표명", dotBg: "bg-slate-500/10 text-slate-400 border border-slate-500/20" },
-  NDA:           { label: "NDA",      dotBg: "bg-blue-500/10 text-blue-400 border border-blue-500/20" },
-  DUE_DILIGENCE: { label: "실사",     dotBg: "bg-amber-500/10 text-amber-400 border border-amber-500/20" },
-  NEGOTIATION:   { label: "오퍼",     dotBg: "bg-violet-500/10 text-violet-400 border border-violet-500/20" },
-  CONTRACT:      { label: "계약",     dotBg: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-  SETTLEMENT:    { label: "잔금",     dotBg: "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" },
-  COMPLETED:     { label: "완료",     dotBg: "bg-green-500/10 text-green-400 border border-green-500/20" },
+  NDA:           { label: "NDA",      dotBg: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
+  DUE_DILIGENCE: { label: "실사",     dotBg: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
+  NEGOTIATION:   { label: "오퍼",     dotBg: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
+  CONTRACT:      { label: "계약",     dotBg: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
+  SETTLEMENT:    { label: "잔금",     dotBg: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
+  COMPLETED:     { label: "완료",     dotBg: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
 }
 
 interface Deal {
@@ -159,7 +159,7 @@ function DealCard({ deal, active, onClick }: { deal: Deal; active: boolean; onCl
         </span>
         {deal.notification && (
           <span className="relative">
-            <Bell className={`w-3 h-3 ${active ? "text-white" : "text-amber-500"}`} />
+            <Bell className={`w-3 h-3 ${active ? "text-white" : "text-stone-900"}`} />
             <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[var(--color-danger)]" />
           </span>
         )}
@@ -230,7 +230,7 @@ function DealRow({ deal, active, onClick }: { deal: Deal; active: boolean; onCli
       </div>
       {deal.notification && (
         <span className="relative inline-block w-3 h-3">
-          <Bell className="w-3 h-3 text-amber-500" />
+          <Bell className="w-3 h-3 text-stone-900" />
           <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[var(--color-danger)]" />
         </span>
       )}
@@ -325,7 +325,7 @@ export default function DealsPage() {
       <div className="sticky top-0 z-30 h-16 bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] flex items-center px-6 gap-4 shadow-[var(--shadow-sm)]">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <h1 className={`${DS.text.bodyBold} whitespace-nowrap`}>딜룸</h1>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-stone-100/10 border border-stone-300/20">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-mid)] animate-pulse" />
             <span className="text-[0.6875rem] font-bold text-[var(--color-brand-mid)]">
               {activeDeals.length}건 진행중
@@ -384,7 +384,7 @@ export default function DealsPage() {
 
         {!loading && activeDeals.length === 0 && (
           <div className={`${DS.card.elevated} p-8 text-center`}>
-            <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto mb-4 border border-blue-500/20">
+            <div className="w-16 h-16 rounded-2xl bg-stone-100/10 flex items-center justify-center mx-auto mb-4 border border-stone-300/20">
               <Briefcase className="h-8 w-8 text-[var(--color-brand-mid)]" />
             </div>
             <p className={`${DS.text.sectionTitle} mb-2`}>진행 중인 딜이 없습니다</p>

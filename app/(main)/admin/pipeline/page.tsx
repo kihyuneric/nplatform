@@ -44,17 +44,17 @@ interface CacheState {
 // ─── Status config ──────────────────────────────────────────────
 
 const STATUS_CFG: Record<RunStatus, { label: string; cls: string; icon: typeof CheckCircle2 }> = {
-  success: { label: "성공", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", icon: CheckCircle2 },
-  partial: { label: "부분 성공", cls: "bg-amber-500/10 text-amber-400 border-amber-500/20", icon: AlertTriangle },
-  failed:  { label: "실패", cls: "bg-red-500/10 text-red-400 border-red-500/20", icon: XCircle },
-  running: { label: "실행중", cls: "bg-blue-500/10 text-blue-400 border-blue-500/20", icon: Loader2 },
+  success: { label: "성공", cls: "bg-stone-100/10 text-stone-900 border-stone-300/20", icon: CheckCircle2 },
+  partial: { label: "부분 성공", cls: "bg-stone-100/10 text-stone-900 border-stone-300/20", icon: AlertTriangle },
+  failed:  { label: "실패", cls: "bg-stone-100/10 text-stone-900 border-stone-300/20", icon: XCircle },
+  running: { label: "실행중", cls: "bg-stone-100/10 text-stone-900 border-stone-300/20", icon: Loader2 },
 }
 
 const MODE_CFG: Record<PipelineMode, { label: string; color: string }> = {
-  daily:   { label: "일간", color: "bg-sky-500/10 text-sky-400 border-sky-500/20" },
-  weekly:  { label: "주간", color: "bg-violet-500/10 text-violet-400 border-violet-500/20" },
-  monthly: { label: "월간", color: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" },
-  manual:  { label: "수동", color: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
+  daily:   { label: "일간", color: "bg-stone-100/10 text-stone-900 border-stone-300/20" },
+  weekly:  { label: "주간", color: "bg-stone-100/10 text-stone-900 border-stone-300/20" },
+  monthly: { label: "월간", color: "bg-stone-100/10 text-stone-900 border-stone-300/20" },
+  manual:  { label: "수동", color: "bg-stone-100/10 text-stone-900 border-stone-300/20" },
 }
 
 function formatDuration(ms: number | null): string {
@@ -177,7 +177,7 @@ export default function AdminPipelinePage() {
         {/* Manual trigger panel */}
         <div className={DS.card.elevated}>
           <div className="flex items-center gap-2 px-5 py-3 border-b border-[var(--color-border-subtle)]">
-            <Zap className="h-4 w-4 text-amber-400" />
+            <Zap className="h-4 w-4 text-stone-900" />
             <span className={DS.text.bodyBold}>수동 실행</span>
             <span className={cn(DS.text.micro, "ml-auto")}>Vercel Cron 자동 실행 외 필요 시 수동 트리거</span>
           </div>
@@ -196,7 +196,7 @@ export default function AdminPipelinePage() {
                     isDisabled
                       ? "border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] opacity-40 cursor-not-allowed"
                       : isRunning
-                      ? "border-amber-500/50 bg-amber-500/10"
+                      ? "border-stone-300/50 bg-stone-100/10"
                       : "border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] hover:border-[var(--color-brand-mid)] hover:shadow-[var(--shadow-md)]"
                   )}
                 >
@@ -205,7 +205,7 @@ export default function AdminPipelinePage() {
                   </span>
                   <div className="flex items-center gap-1.5">
                     {isRunning ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
+                      <Loader2 className="h-4 w-4 animate-spin text-stone-900" />
                     ) : (
                       <PlayCircle className="h-4 w-4 text-[var(--color-brand-mid)]" />
                     )}
@@ -233,30 +233,30 @@ export default function AdminPipelinePage() {
               value: formatRelative(cache?.lastRun ?? null),
               sub: cache?.lastRun ? new Date(cache.lastRun).toLocaleString("ko-KR") : "—",
               icon: Clock,
-              color: "text-sky-400", border: "border-l-sky-400", bg: "bg-sky-500/5",
+              color: "text-stone-900", border: "border-l-sky-400", bg: "bg-stone-100/5",
             },
             {
               label: "성공률 (최근 10회)",
               value: `${successRate.toFixed(0)}%`,
               sub: `${recent.filter(r => r.status === "success").length}/${recent.length}회 성공`,
               icon: TrendingUp,
-              color: successRate >= 80 ? "text-emerald-400" : successRate >= 50 ? "text-amber-400" : "text-red-400",
+              color: successRate >= 80 ? "text-stone-900" : successRate >= 50 ? "text-stone-900" : "text-stone-900",
               border: successRate >= 80 ? "border-l-emerald-400" : successRate >= 50 ? "border-l-amber-400" : "border-l-red-400",
-              bg: successRate >= 80 ? "bg-emerald-500/5" : successRate >= 50 ? "bg-amber-500/5" : "bg-red-500/5",
+              bg: successRate >= 80 ? "bg-stone-100/5" : successRate >= 50 ? "bg-stone-100/5" : "bg-stone-100/5",
             },
             {
               label: "평균 소요",
               value: formatDuration(avgDuration || null),
               sub: "최근 10회 평균",
               icon: Activity,
-              color: "text-violet-400", border: "border-l-violet-400", bg: "bg-violet-500/5",
+              color: "text-stone-900", border: "border-l-violet-400", bg: "bg-stone-100/5",
             },
             {
               label: "누적 데이터 (캐시)",
               value: `${(cache?.transactionCount ?? 0).toLocaleString()}건`,
               sub: `경매 ${(cache?.auctionCount ?? 0).toLocaleString()}건 · 통계 ${((cache?.txStatsCount ?? 0) + (cache?.bidStatsCount ?? 0)).toLocaleString()}개`,
               icon: Database,
-              color: "text-indigo-400", border: "border-l-indigo-400", bg: "bg-indigo-500/5",
+              color: "text-stone-900", border: "border-l-indigo-400", bg: "bg-stone-100/5",
             },
           ].map((k) => (
             <div key={k.label} className={cn(DS.stat.card, "border-l-2", k.border, k.bg)}>
@@ -299,9 +299,9 @@ export default function AdminPipelinePage() {
                     <summary className="flex items-center gap-3 px-5 py-3 cursor-pointer hover:bg-[var(--color-surface-overlay)] transition-colors">
                       <StatusIcon className={cn(
                         "h-4 w-4 shrink-0",
-                        run.status === "success" ? "text-emerald-400" :
-                        run.status === "partial" ? "text-amber-400" :
-                        run.status === "failed" ? "text-red-400" : "text-blue-400 animate-spin"
+                        run.status === "success" ? "text-stone-900" :
+                        run.status === "partial" ? "text-stone-900" :
+                        run.status === "failed" ? "text-stone-900" : "text-stone-900 animate-spin"
                       )} />
                       <span className={cn("text-[0.6875rem] font-bold px-2 py-0.5 rounded-full border shrink-0", modeCfg.color)}>
                         {modeCfg.label}
@@ -343,11 +343,11 @@ export default function AdminPipelinePage() {
                         ))}
                       </div>
                       {hasErrors && (
-                        <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/5 p-3">
-                          <p className={cn(DS.text.label, "text-red-400 mb-2")}>오류 ({run.error_messages!.length})</p>
+                        <div className="mt-3 rounded-lg border border-stone-300/30 bg-stone-100/5 p-3">
+                          <p className={cn(DS.text.label, "text-stone-900 mb-2")}>오류 ({run.error_messages!.length})</p>
                           <ul className="space-y-1">
                             {run.error_messages!.map((msg, idx) => (
-                              <li key={idx} className="text-[0.75rem] font-mono text-red-300 break-all">
+                              <li key={idx} className="text-[0.75rem] font-mono text-stone-900 break-all">
                                 {msg}
                               </li>
                             ))}

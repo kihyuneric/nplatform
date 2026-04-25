@@ -36,19 +36,19 @@ const SORT_OPTIONS = [
 
 const CATEGORY_COLORS: Record<string, string> = {
   자유: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]",
-  질문: "bg-amber-500/10 text-amber-400",
-  정보공유: "bg-blue-500/10 text-blue-400",
-  거래후기: "bg-purple-500/10 text-purple-400",
-  법률상담: "bg-indigo-500/10 text-indigo-400",
-  투자전략: "bg-blue-500/10 text-blue-400",
-  시장분석: "bg-emerald-500/10 text-emerald-400",
-  질문답변: "bg-amber-500/10 text-amber-400",
-  후기: "bg-purple-500/10 text-purple-400",
+  질문: "bg-stone-100/10 text-stone-900",
+  정보공유: "bg-stone-100/10 text-stone-900",
+  거래후기: "bg-stone-100/10 text-stone-900",
+  법률상담: "bg-stone-100/10 text-stone-900",
+  투자전략: "bg-stone-100/10 text-stone-900",
+  시장분석: "bg-stone-100/10 text-stone-900",
+  질문답변: "bg-stone-100/10 text-stone-900",
+  후기: "bg-stone-100/10 text-stone-900",
   일반: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]",
-  뉴스: "bg-red-500/10 text-red-400",
-  법률: "bg-indigo-500/10 text-indigo-400",
-  "Q&A": "bg-amber-500/10 text-amber-400",
-  판례분석: "bg-violet-500/10 text-violet-400",
+  뉴스: "bg-stone-100/10 text-stone-900",
+  법률: "bg-stone-100/10 text-stone-900",
+  "Q&A": "bg-stone-100/10 text-stone-900",
+  판례분석: "bg-stone-100/10 text-stone-900",
   자유게시판: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]",
 };
 
@@ -227,10 +227,10 @@ export default function CommunityPage() {
           {/* Quick stats (분석 대시보드 패턴 재사용) */}
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { label: "전체 게시글", value: "2,847", icon: Newspaper, color: "text-rose-600" },
-              { label: "오늘 새 글",   value: "34",    icon: Sparkles,  color: "text-amber-600" },
-              { label: "활성 멤버",    value: "1,240", icon: Users,     color: "text-blue-600" },
-              { label: "이번 주 화제", value: "5개",   icon: TrendingUp, color: "text-emerald-600" },
+              { label: "전체 게시글", value: "2,847", icon: Newspaper, color: "text-stone-900" },
+              { label: "오늘 새 글",   value: "34",    icon: Sparkles,  color: "text-stone-900" },
+              { label: "활성 멤버",    value: "1,240", icon: Users,     color: "text-stone-900" },
+              { label: "이번 주 화제", value: "5개",   icon: TrendingUp, color: "text-stone-900" },
             ].map((s) => (
               <div
                 key={s.label}
@@ -322,8 +322,8 @@ export default function CommunityPage() {
             {/* Error state */}
             {fetchError && !isLoading && (
               <div className={DS.empty.wrapper}>
-                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <div className="w-10 h-10 rounded-full bg-stone-100/10 flex items-center justify-center mb-3">
+                  <svg className="w-5 h-5 text-stone-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
                 </div>
@@ -385,7 +385,7 @@ export default function CommunityPage() {
                       }`}
                     >
                       {isPinned && (
-                        <Pin className="h-3 w-3 text-amber-500 shrink-0 rotate-45" />
+                        <Pin className="h-3 w-3 text-stone-900 shrink-0 rotate-45" />
                       )}
 
                       {/* Main content */}
@@ -472,14 +472,14 @@ export default function CommunityPage() {
             {/* Hot Topics */}
             <div className={`${DS.card.base} overflow-hidden`}>
               <div className={`flex items-center gap-2 px-4 py-3 ${DS.divider.default}`}>
-                <TrendingUp className="h-4 w-4 text-rose-500" />
+                <TrendingUp className="h-4 w-4 text-stone-900" />
                 <span className={DS.text.cardSubtitle}>이번 주 화제</span>
               </div>
               <ul className="py-1">
                 {HOT_TOPICS.map((topic, i) => (
                   <li key={topic}>
                     <button className="w-full flex items-center gap-2.5 px-4 py-2 text-left hover:bg-[var(--color-surface-sunken)] transition-colors">
-                      <span className={`text-[0.6875rem] font-bold w-4 shrink-0 ${i < 3 ? "text-rose-500" : "text-[var(--color-text-muted)]"}`}>
+                      <span className={`text-[0.6875rem] font-bold w-4 shrink-0 ${i < 3 ? "text-stone-900" : "text-[var(--color-text-muted)]"}`}>
                         {i + 1}
                       </span>
                       <span className={`${DS.text.captionLight} line-clamp-1`}>{topic}</span>
@@ -492,7 +492,7 @@ export default function CommunityPage() {
             {/* Top Contributors */}
             <div className={`${DS.card.base} overflow-hidden`}>
               <div className={`flex items-center gap-2 px-4 py-3 ${DS.divider.default}`}>
-                <Award className="h-4 w-4 text-amber-500" />
+                <Award className="h-4 w-4 text-stone-900" />
                 <span className={DS.text.cardSubtitle}>TOP 기여자</span>
               </div>
               <ul className="py-1">
@@ -505,7 +505,7 @@ export default function CommunityPage() {
                       <p className={`${DS.text.caption} truncate`}>{user.name}</p>
                       <p className={DS.text.micro}>{user.posts}개 작성</p>
                     </div>
-                    <span className="text-[0.625rem] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 font-medium shrink-0">
+                    <span className="text-[0.625rem] px-1.5 py-0.5 rounded-full bg-stone-100/10 text-stone-900 font-medium shrink-0">
                       {user.badge}
                     </span>
                   </li>

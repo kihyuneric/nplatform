@@ -69,7 +69,7 @@ const MONTHLY_TREND = [
   { month: "2026.03", bidRate: 83.1, volume: 5520, recovery: 77.8 },
 ]
 
-const PIE_COLORS = ["#3B82F6", "#F59E0B", "#6366F1", "#10B981", "#EC4899", "#94A3B8"]
+const PIE_COLORS = ["#14161A", "#14161A", "#6366F1", "#14161A", "#EC4899", "#94A3B8"]
 
 const TABS = ["전국 현황", "지역별", "유형별", "기관별"] as const
 type Tab = typeof TABS[number]
@@ -152,9 +152,9 @@ export default function BenchmarkPage() {
                   <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
                   <Tooltip />
                   <Legend />
-                  <Area yAxisId="left" type="monotone" dataKey="bidRate" name="낙찰가율 %" fill="#3B82F6" fillOpacity={0.1} stroke="#3B82F6" strokeWidth={2} />
-                  <Area yAxisId="left" type="monotone" dataKey="recovery" name="회수율 %" fill="#10B981" fillOpacity={0.1} stroke="#10B981" strokeWidth={2} />
-                  <Bar yAxisId="right" dataKey="volume" name="물량 (건)" fill="#F59E0B" fillOpacity={0.3} />
+                  <Area yAxisId="left" type="monotone" dataKey="bidRate" name="낙찰가율 %" fill="#14161A" fillOpacity={0.1} stroke="#14161A" strokeWidth={2} />
+                  <Area yAxisId="left" type="monotone" dataKey="recovery" name="회수율 %" fill="#14161A" fillOpacity={0.1} stroke="#14161A" strokeWidth={2} />
+                  <Bar yAxisId="right" dataKey="volume" name="물량 (건)" fill="#14161A" fillOpacity={0.3} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -201,7 +201,7 @@ export default function BenchmarkPage() {
                   <XAxis type="number" domain={[60, 95]} tick={{ fontSize: 11 }} />
                   <YAxis type="category" dataKey="region" tick={{ fontSize: 12 }} width={50} />
                   <Tooltip />
-                  <Bar dataKey="bidRate" name="낙찰가율 %" fill="#3B82F6" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="bidRate" name="낙찰가율 %" fill="#14161A" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -339,9 +339,9 @@ export default function BenchmarkPage() {
         {/* ── 기관별 ───────────────────────────────────────── */}
         {tab === "기관별" && (
           <div className="space-y-6">
-            <div className="flex items-center gap-2 px-4 py-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-              <Info className="w-4 h-4 text-blue-400 shrink-0" />
-              <p className="text-[0.75rem] text-blue-400">금융감독원 공시 기준. NPL 비율 = 고정이하여신/총여신 × 100</p>
+            <div className="flex items-center gap-2 px-4 py-3 bg-stone-100/10 border border-stone-300/20 rounded-xl">
+              <Info className="w-4 h-4 text-stone-900 shrink-0" />
+              <p className="text-[0.75rem] text-stone-900">금융감독원 공시 기준. NPL 비율 = 고정이하여신/총여신 × 100</p>
             </div>
 
             {/* Institution Bar Chart */}
@@ -355,7 +355,7 @@ export default function BenchmarkPage() {
                   <Tooltip />
                   <Bar dataKey="nplRatio" name="NPL 비율 %" radius={[0, 4, 4, 0]}>
                     {INSTITUTION_NPL.map((entry, i) => (
-                      <Cell key={i} fill={entry.nplRatio < 1 ? "#10B981" : entry.nplRatio < 1.5 ? "#F59E0B" : "#EF4444"} />
+                      <Cell key={i} fill={entry.nplRatio < 1 ? "#14161A" : entry.nplRatio < 1.5 ? "#14161A" : "#1B1B1F"} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -376,7 +376,7 @@ export default function BenchmarkPage() {
                   </thead>
                   <tbody>
                     {INSTITUTION_NPL.map(row => {
-                      const ratioColor = row.nplRatio < 1 ? "text-[var(--color-positive)]" : row.nplRatio < 1.5 ? "text-amber-600" : "text-[var(--color-danger)]"
+                      const ratioColor = row.nplRatio < 1 ? "text-[var(--color-positive)]" : row.nplRatio < 1.5 ? "text-stone-900" : "text-[var(--color-danger)]"
                       return (
                         <tr key={row.name} className="border-t border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-sunken)]/50">
                           <td className="py-3 px-4 font-medium">{row.name}</td>

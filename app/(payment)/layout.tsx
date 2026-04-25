@@ -14,7 +14,7 @@ export default function PaymentLayout({ children }: { children: React.ReactNode 
         <div className="mx-auto max-w-lg px-4 py-4 flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/" className="flex items-center gap-2 text-white font-bold text-lg">
-            <span className="bg-blue-500 text-white text-xs font-black px-2 py-0.5 rounded">NPL</span>
+            <span className="bg-stone-100 text-white text-xs font-black px-2 py-0.5 rounded">NPL</span>
             <span>NPLatform</span>
           </a>
           <span className="text-white/30 text-sm">결제</span>

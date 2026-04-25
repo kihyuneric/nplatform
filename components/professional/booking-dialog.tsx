@@ -176,7 +176,7 @@ export function BookingDialog({
                           <div className="flex items-center gap-2">
                             {svc.name}
                             {svc.free_initial && (
-                              <span className="text-xs text-emerald-600 font-medium">무료</span>
+                              <span className="text-xs text-stone-900 font-medium">무료</span>
                             )}
                             <span className="text-xs text-gray-400">
                               {svc.price > 0 ? `${svc.price.toLocaleString()}원` : '협의'}
@@ -191,7 +191,7 @@ export function BookingDialog({
 
               {/* Calendar */}
               <div className="space-y-2">
-                <Label>날짜 및 시간 선택 <span className="text-red-500">*</span></Label>
+                <Label>날짜 및 시간 선택 <span className="text-stone-900">*</span></Label>
                 <BookingCalendar
                   professionalId={professionalId}
                   onSelect={handleCalendarSelect}
@@ -207,7 +207,7 @@ export function BookingDialog({
               {/* Content */}
               <div className="space-y-2">
                 <Label>
-                  상담 내용 <span className="text-red-500">*</span>
+                  상담 내용 <span className="text-stone-900">*</span>
                   <span className="text-xs text-gray-400 ml-1">(최소 10자)</span>
                 </Label>
                 <Textarea
@@ -221,7 +221,7 @@ export function BookingDialog({
 
               {/* Price summary */}
               {selectedService && (
-                <div className="p-3 rounded-lg bg-blue-500/10 text-sm">
+                <div className="p-3 rounded-lg bg-stone-100/10 text-sm">
                   <div className="flex justify-between">
                     <span className="text-[var(--color-text-secondary)]">서비스</span>
                     <span className="font-medium text-[var(--color-text-primary)]">{selectedService.name}</span>
@@ -270,8 +270,8 @@ export function BookingDialog({
           /* Success state */
           <div className="py-8 text-center space-y-4">
             <div className="flex justify-center">
-              <div className="h-16 w-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <CheckCircle className="h-8 w-8 text-emerald-400" />
+              <div className="h-16 w-16 rounded-full bg-stone-100/10 flex items-center justify-center">
+                <CheckCircle className="h-8 w-8 text-stone-900" />
               </div>
             </div>
             <div>

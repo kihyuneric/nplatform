@@ -115,11 +115,11 @@ function useBuyerPortfolio() {
 }
 
 const TYPE_ACCENT: Record<string, { bg: string; text: string; bar: string }> = {
-  아파트:   { bg: "bg-blue-500/10",    text: "text-blue-400",    bar: "bg-blue-500" },
-  상가:     { bg: "bg-amber-500/10",   text: "text-amber-400",   bar: "bg-amber-500" },
-  오피스텔: { bg: "bg-purple-500/10",  text: "text-purple-400",  bar: "bg-purple-500" },
-  토지:     { bg: "bg-emerald-500/10", text: "text-emerald-400", bar: "bg-emerald-500" },
-  오피스:   { bg: "bg-indigo-500/10",  text: "text-indigo-400",  bar: "bg-indigo-500" },
+  아파트:   { bg: "bg-stone-100/10",    text: "text-stone-900",    bar: "bg-stone-100" },
+  상가:     { bg: "bg-stone-100/10",   text: "text-stone-900",   bar: "bg-stone-100" },
+  오피스텔: { bg: "bg-stone-100/10",  text: "text-stone-900",  bar: "bg-stone-100" },
+  토지:     { bg: "bg-stone-100/10", text: "text-stone-900", bar: "bg-stone-100" },
+  오피스:   { bg: "bg-stone-100/10",  text: "text-stone-900",  bar: "bg-stone-100" },
 }
 
 const fmt = (v: number) =>
@@ -562,7 +562,7 @@ function SimulationTab({ watchlist, investments }: { watchlist: WatchItem[]; inv
           {/* Calculation note */}
           <div className={DS.card.dark + " p-4"}>
             <div className="flex items-start gap-2">
-              <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <Sparkles className="w-4 h-4 text-stone-900 shrink-0 mt-0.5" />
               <div>
                 <p className="text-[0.8125rem] font-semibold text-white mb-1">계산 기준</p>
                 <p className="text-[0.75rem] text-white/70 leading-relaxed">
@@ -620,7 +620,7 @@ function InvestmentTab({ watchlist, investments, kpis, loading }: {
       const t = i.collateralType || "기타"
       typeMap[t] = (typeMap[t] || 0) + i.investedAmount
     })
-    const COLORS = ["#3B82F6", "#F59E0B", "#10B981", "#8B5CF6", "#EF4444", "#14B8A6"]
+    const COLORS = ["#14161A", "#14161A", "#14161A", "#14161A", "#1B1B1F", "#14161A"]
     return Object.entries(typeMap)
       .sort(([, a], [, b]) => b - a)
       .map(([label, value], i) => ({
@@ -640,9 +640,9 @@ function InvestmentTab({ watchlist, investments, kpis, loading }: {
     RECOVERING: "회수 중",
   }
   const STATUS_COLOR: Record<string, string> = {
-    IN_PROGRESS: "bg-blue-500/10 text-blue-400",
-    COMPLETED: "bg-emerald-500/10 text-emerald-400",
-    RECOVERING: "bg-amber-500/10 text-amber-400",
+    IN_PROGRESS: "bg-stone-100/10 text-stone-900",
+    COMPLETED: "bg-stone-100/10 text-stone-900",
+    RECOVERING: "bg-stone-100/10 text-stone-900",
   }
 
   return (
@@ -844,7 +844,7 @@ export default function PortfolioPage() {
                           <span className={`text-[0.6875rem] font-semibold px-2 py-0.5 rounded-md ${cfg.bg} ${cfg.text}`}>{item.type}</span>
                         </div>
                         <div className="absolute top-2.5 right-2.5">
-                          <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-md ${isUp ? "bg-red-500/90 text-white" : isDown ? "bg-emerald-500/90 text-white" : "bg-white/15 text-white"}`}>
+                          <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-md ${isUp ? "bg-stone-100/90 text-white" : isDown ? "bg-stone-100/90 text-white" : "bg-white/15 text-white"}`}>
                             {isUp ? "+" : ""}{item.changePercent !== 0 ? `${item.changePercent}%` : "변동없음"}
                           </span>
                         </div>
@@ -863,7 +863,7 @@ export default function PortfolioPage() {
                             <p className={DS.text.captionLight + " mb-0.5"}>채권금액</p>
                             <p className={DS.text.metricMedium}>{fmt(item.currentPrice)}</p>
                           </div>
-                          <span className="text-[0.8125rem] font-bold px-2.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400">
+                          <span className="text-[0.8125rem] font-bold px-2.5 py-1.5 rounded-xl bg-stone-100/10 text-stone-900">
                             -{item.discount}%
                           </span>
                         </div>
@@ -873,7 +873,7 @@ export default function PortfolioPage() {
                             <Link href={`/exchange/${item.id}`}>
                               <button className={DS.text.link + " text-[0.8125rem]"}>상세보기</button>
                             </Link>
-                            <button onClick={() => removeItem(item.id)} aria-label="삭제" className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-red-500/10 transition-all">
+                            <button onClick={() => removeItem(item.id)} aria-label="삭제" className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-stone-100/10 transition-all">
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>

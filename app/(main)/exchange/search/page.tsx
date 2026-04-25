@@ -15,7 +15,7 @@ import { GuideButton } from '@/components/guide/guide-button'
 const C = {
   bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)", bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
   em: "var(--color-positive)", emL: "var(--color-positive)", blue: "var(--color-brand-dark)", amber: "var(--color-warning)",
-  purple: "#A855F7", rose: "var(--color-danger)",
+  purple: "#14161A", rose: "var(--color-danger)",
   l0: "#FFFFFF", l1: "#F8FAFC", l2: "#F1F5F9", l3: "#E2E8F0",
   lt1: "#0F172A", lt2: "#334155", lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 }
@@ -392,10 +392,10 @@ function getStatusBadge(status: string) {
 function getTypeBadge(type: string) {
   if (!type) return 'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)]'
   if (['아파트', '빌라(다세대)', '다가구', '오피스텔', '단독주택', '타운하우스'].includes(type))
-    return 'bg-blue-500/10 text-blue-300'
+    return 'bg-stone-100/10 text-stone-900'
   if (['상가', '오피스', '공장', '지식산업센터', '창고', '물류센터', '호텔·숙박'].includes(type))
-    return 'bg-amber-500/10 text-amber-300'
-  return 'bg-green-500/10 text-green-400'
+    return 'bg-stone-100/10 text-stone-900'
+  return 'bg-stone-100/10 text-stone-900'
 }
 
 const emptyFilters: FilterValues = {
@@ -749,7 +749,7 @@ export default function NplSearchPage() {
         {/* Result count badge */}
         <span
           className="px-2.5 py-0.5 text-[12px] font-bold rounded-full"
-          style={{ backgroundColor: 'rgba(16,185,129,0.15)', color: C.em, border: `1px solid rgba(16,185,129,0.3)` }}
+          style={{ backgroundColor: 'rgba(20,22,26,0.15)', color: C.em, border: `1px solid rgba(20,22,26,0.3)` }}
         >
           {totalFiltered.toLocaleString()}건
         </span>
@@ -906,13 +906,13 @@ export default function NplSearchPage() {
               border: `1px solid ${C.l3}`,
               boxShadow: 'none',
             }}
-            onFocus={e => { e.currentTarget.style.boxShadow = `0 0 0 2px rgba(16,185,129,0.25)`; e.currentTarget.style.borderColor = C.em }}
+            onFocus={e => { e.currentTarget.style.boxShadow = `0 0 0 2px rgba(20,22,26,0.25)`; e.currentTarget.style.borderColor = C.em }}
             onBlur={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = C.l3 }}
           />
           {/* AI badge */}
           <span
             className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold"
-            style={{ backgroundColor: 'rgba(16,185,129,0.1)', color: C.em, border: `1px solid rgba(16,185,129,0.2)` }}
+            style={{ backgroundColor: 'rgba(20,22,26,0.1)', color: C.em, border: `1px solid rgba(20,22,26,0.2)` }}
           >
             <Sparkles className="w-2.5 h-2.5" />
             AI
@@ -1535,8 +1535,8 @@ export default function NplSearchPage() {
                               <Star
                                 className="w-3.5 md:w-4 h-3.5 md:h-4"
                                 style={{
-                                  fill: starred.has(item.id) ? '#FBBF24' : 'none',
-                                  color: starred.has(item.id) ? '#FBBF24' : C.l3,
+                                  fill: starred.has(item.id) ? '#14161A' : 'none',
+                                  color: starred.has(item.id) ? '#14161A' : C.l3,
                                 }}
                               />
                             </button>

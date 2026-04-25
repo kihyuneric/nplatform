@@ -46,9 +46,9 @@ function getMockChecks(): HealthCheck[] {
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<HealthStatus, { label: string; cls: string; icon: typeof CheckCircle2; dot: string }> = {
-  healthy:  { label: "정상",   cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", icon: CheckCircle2,  dot: "bg-emerald-400" },
-  degraded: { label: "저하",   cls: "bg-amber-500/10 text-amber-400 border-amber-500/20",       icon: AlertTriangle, dot: "bg-amber-400" },
-  down:     { label: "장애",   cls: "bg-red-500/10 text-red-400 border-red-500/20",             icon: XCircle,       dot: "bg-red-400" },
+  healthy:  { label: "정상",   cls: "bg-stone-100/10 text-stone-900 border-stone-300/20", icon: CheckCircle2,  dot: "bg-stone-100" },
+  degraded: { label: "저하",   cls: "bg-stone-100/10 text-stone-900 border-stone-300/20",       icon: AlertTriangle, dot: "bg-stone-100" },
+  down:     { label: "장애",   cls: "bg-stone-100/10 text-stone-900 border-stone-300/20",             icon: XCircle,       dot: "bg-stone-100" },
   unknown:  { label: "미연동", cls: "bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border-[var(--color-border-subtle)]", icon: Clock, dot: "bg-[var(--color-text-muted)]" },
 }
 
@@ -123,7 +123,7 @@ export default function AdminHealthPage() {
                 <h1 className={DS.text.pageSubtitle}>시스템 헬스 체크</h1>
                 <p className={DS.text.caption}>
                   마지막 갱신: {lastRefresh.toLocaleTimeString("ko-KR")} —
-                  <span className={cn("ml-1", overallStatus === "healthy" ? "text-emerald-400" : overallStatus === "degraded" ? "text-amber-400" : "text-red-400")}>
+                  <span className={cn("ml-1", overallStatus === "healthy" ? "text-stone-900" : overallStatus === "degraded" ? "text-stone-900" : "text-stone-900")}>
                     {STATUS_CONFIG[overallStatus].label}
                   </span>
                 </p>
@@ -149,18 +149,18 @@ export default function AdminHealthPage() {
         {/* Overall status banner */}
         <div className={cn(
           "rounded-xl p-4 border flex items-center gap-3",
-          overallStatus === "healthy" ? "bg-emerald-500/10 border-emerald-500/20" :
-          overallStatus === "degraded" ? "bg-amber-500/10 border-amber-500/20" :
-          "bg-red-500/10 border-red-500/20"
+          overallStatus === "healthy" ? "bg-stone-100/10 border-stone-300/20" :
+          overallStatus === "degraded" ? "bg-stone-100/10 border-stone-300/20" :
+          "bg-stone-100/10 border-stone-300/20"
         )}>
           <OverallIcon className={cn("h-6 w-6 shrink-0",
-            overallStatus === "healthy" ? "text-emerald-400" :
-            overallStatus === "degraded" ? "text-amber-400" : "text-red-400"
+            overallStatus === "healthy" ? "text-stone-900" :
+            overallStatus === "degraded" ? "text-stone-900" : "text-stone-900"
           )} />
           <div className="flex-1">
             <p className={cn("font-bold text-sm",
-              overallStatus === "healthy" ? "text-emerald-400" :
-              overallStatus === "degraded" ? "text-amber-400" : "text-red-400"
+              overallStatus === "healthy" ? "text-stone-900" :
+              overallStatus === "degraded" ? "text-stone-900" : "text-stone-900"
             )}>
               전체 시스템 {STATUS_CONFIG[overallStatus].label}
             </p>
@@ -171,17 +171,17 @@ export default function AdminHealthPage() {
           {/* Animated pulse indicator */}
           <span className={cn(
             "inline-block h-3 w-3 rounded-full",
-            overallStatus === "healthy" ? "bg-emerald-400 animate-pulse" :
-            overallStatus === "degraded" ? "bg-amber-400 animate-pulse" : "bg-red-400"
+            overallStatus === "healthy" ? "bg-stone-100 animate-pulse" :
+            overallStatus === "degraded" ? "bg-stone-100 animate-pulse" : "bg-stone-100"
           )} />
         </div>
 
         {/* Summary cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { label: "정상", value: summary.healthy,  color: "text-emerald-400", border: "border-l-emerald-400", bg: "bg-emerald-500/5" },
-            { label: "성능 저하", value: summary.degraded, color: "text-amber-400",   border: "border-l-amber-400",   bg: "bg-amber-500/5"   },
-            { label: "장애",  value: summary.down,    color: "text-red-400",     border: "border-l-red-400",     bg: "bg-red-500/5"     },
+            { label: "정상", value: summary.healthy,  color: "text-stone-900", border: "border-l-emerald-400", bg: "bg-stone-100/5" },
+            { label: "성능 저하", value: summary.degraded, color: "text-stone-900",   border: "border-l-amber-400",   bg: "bg-stone-100/5"   },
+            { label: "장애",  value: summary.down,    color: "text-stone-900",     border: "border-l-red-400",     bg: "bg-stone-100/5"     },
             { label: "미연동", value: summary.unknown, color: "text-[var(--color-text-muted)]", border: "border-l-[var(--color-border-default)]", bg: "" },
           ].map(k => (
             <div key={k.label} className={cn(DS.stat.card, "border-l-2", k.border, k.bg)}>
@@ -243,10 +243,10 @@ export default function AdminHealthPage() {
                           {check.latency !== null && (
                             <div className="flex items-center gap-1">
                               <TrendingUp className={cn("h-3 w-3",
-                                check.latency < 50 ? "text-emerald-400" : check.latency < 200 ? "text-amber-400" : "text-red-400"
+                                check.latency < 50 ? "text-stone-900" : check.latency < 200 ? "text-stone-900" : "text-stone-900"
                               )} />
                               <span className={cn("text-xs font-mono tabular-nums",
-                                check.latency < 50 ? "text-emerald-400" : check.latency < 200 ? "text-amber-400" : "text-red-400"
+                                check.latency < 50 ? "text-stone-900" : check.latency < 200 ? "text-stone-900" : "text-stone-900"
                               )}>{check.latency}ms</span>
                             </div>
                           )}

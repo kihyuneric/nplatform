@@ -115,9 +115,9 @@ export function BondOcrUploader({
   }
 
   return (
-    <div className="rounded-xl border border-dashed border-emerald-500/30 bg-emerald-500/5 p-4">
+    <div className="rounded-xl border border-dashed border-stone-300/30 bg-stone-100/5 p-4">
       <div className="flex items-start gap-2 mb-3">
-        <Wand2 className="w-4 h-4 mt-0.5 text-emerald-500" />
+        <Wand2 className="w-4 h-4 mt-0.5 text-stone-900" />
         <div>
           <h4 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">
             OCR 자동 추출 (선택)
@@ -140,7 +140,7 @@ export function BondOcrUploader({
               onClick={() => setDocType(k)}
               className={`flex-1 rounded-lg border px-3 py-2 text-[0.75rem] transition-colors ${
                 active
-                  ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+                  ? "bg-stone-100/10 border-stone-300/40 text-stone-900 dark:text-stone-900"
                   : "bg-[var(--color-surface-base)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]"
               }`}
             >
@@ -172,7 +172,7 @@ export function BondOcrUploader({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 text-white text-[0.8125rem] font-semibold hover:bg-emerald-700 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-stone-100 text-white text-[0.8125rem] font-semibold hover:bg-stone-100 disabled:opacity-50"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
           {loading ? "분석 중…" : "파일 선택 & 분석"}
@@ -186,7 +186,7 @@ export function BondOcrUploader({
 
       {/* 에러 */}
       {error && (
-        <div className="mt-3 flex items-start gap-1.5 text-[0.75rem] text-red-600 dark:text-red-400">
+        <div className="mt-3 flex items-start gap-1.5 text-[0.75rem] text-stone-900 dark:text-stone-900">
           <XCircle className="w-4 h-4 mt-0.5 shrink-0" />
           <span>{error}</span>
         </div>
@@ -196,7 +196,7 @@ export function BondOcrUploader({
       {preview && (
         <div className="mt-3 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
           <div className="flex items-start gap-1.5 mb-2">
-            <CheckCircle2 className="w-4 h-4 mt-0.5 text-emerald-500 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 mt-0.5 text-stone-900 shrink-0" />
             <span className="text-[0.75rem] font-semibold text-[var(--color-text-primary)]">
               추출된 필드 미리보기
             </span>

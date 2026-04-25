@@ -41,7 +41,7 @@ const MOCK_SERVICES = [
     badges: ["양도세 전문", "법인세"],
     description: "NPL 양도소득세·법인세 절세 전략",
     avatarInitials: "이미",
-    avatarColor: "#10B981",
+    avatarColor: "#14161A",
   },
   {
     id: "3",

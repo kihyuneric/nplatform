@@ -70,7 +70,7 @@ function PanelShell({
   children: React.ReactNode
 }) {
   const accentColor =
-    accent === "gold" ? "#F59E0B" :
+    accent === "gold" ? "#14161A" :
     accent === "green" ? "var(--color-positive)" :
     "var(--color-brand-bright)"
 
@@ -82,9 +82,9 @@ function PanelShell({
       style={{
         background: "linear-gradient(180deg, #0F1E35 0%, #122843 100%)",
         border: `1px solid ${accent === "gold"
-          ? "rgba(245, 158, 11, 0.32)"
+          ? "rgba(20,22,26, 0.32)"
           : accent === "green"
-          ? "rgba(16, 185, 129, 0.32)"
+          ? "rgba(20,22,26, 0.32)"
           : "rgba(46, 117, 182, 0.32)"}`,
         boxShadow: "0 8px 32px rgba(27, 58, 92, 0.20)",
         color: "var(--fg-on-brand)",
@@ -96,10 +96,10 @@ function PanelShell({
         ["--color-surface-overlay" as string]:  "#1E2D47",
         ["--color-surface-sunken" as string]:   "#0F1C30",
         ["--color-border-subtle" as string]:   "rgba(255,255,255,0.10)",
-        ["--color-brand-bright" as string]:    "#60A5FA",
-        ["--color-positive" as string]:        "#34D399",
-        ["--color-warning" as string]:         "#FBBF24",
-        ["--color-danger" as string]:          "#F87171",
+        ["--color-brand-bright" as string]:    "#14161A",
+        ["--color-positive" as string]:        "#14161A",
+        ["--color-warning" as string]:         "#14161A",
+        ["--color-danger" as string]:          "#1B1B1F",
         colorScheme: "dark",
       } as React.CSSProperties}
     >
@@ -108,9 +108,9 @@ function PanelShell({
         style={{
           padding: "14px 18px",
           borderBottom: `1px solid ${accent === "gold"
-            ? "rgba(245, 158, 11, 0.24)"
+            ? "rgba(20,22,26, 0.24)"
             : accent === "green"
-            ? "rgba(16, 185, 129, 0.24)"
+            ? "rgba(20,22,26, 0.24)"
             : "rgba(46, 117, 182, 0.24)"}`,
         }}
       >
@@ -462,8 +462,8 @@ function DueDiligenceChecklist() {
           href="/analysis/simulator"
           className="group inline-flex items-center justify-between rounded-lg px-2.5 py-2 transition-colors"
           style={{
-            backgroundColor: "rgba(16,185,129,0.12)",
-            border: "1px solid rgba(16,185,129,0.28)",
+            backgroundColor: "rgba(20,22,26,0.12)",
+            border: "1px solid rgba(20,22,26,0.28)",
           }}
         >
           <span className="inline-flex items-center gap-1.5">
@@ -544,7 +544,7 @@ function DueDiligenceChecklist() {
                             height: 16,
                             backgroundColor: it.done ? "var(--color-positive)" : "rgba(255,255,255,0.08)",
                             border: it.done ? "1px solid var(--color-positive)" : "1px solid rgba(255,255,255,0.18)",
-                            color: "#041915",
+                            color: "#FFFFFF",
                             fontSize: 10,
                           }}
                           aria-hidden
@@ -640,8 +640,8 @@ function EscrowPaymentPanel({
           <div
             className="rounded-xl p-4 flex items-center gap-3"
             style={{
-              backgroundColor: "rgba(16, 185, 129, 0.12)",
-              border: "1px solid rgba(16, 185, 129, 0.45)",
+              backgroundColor: "rgba(20,22,26, 0.12)",
+              border: "1px solid rgba(20,22,26, 0.45)",
             }}
           >
             <CheckCircle2 size={22} style={{ color: "var(--color-positive)", flexShrink: 0 }} />
@@ -660,14 +660,14 @@ function EscrowPaymentPanel({
         <div
           className="rounded-xl p-4"
           style={{
-            backgroundColor: "rgba(245, 158, 11, 0.08)",
-            border: "1px solid rgba(245, 158, 11, 0.28)",
+            backgroundColor: "rgba(20,22,26, 0.08)",
+            border: "1px solid rgba(20,22,26, 0.28)",
           }}
         >
           <div className="font-semibold mb-1" style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>
             납부 총액
           </div>
-          <div className="font-black tabular-nums" style={{ fontSize: 28, color: "#FBBF24" }}>
+          <div className="font-black tabular-nums" style={{ fontSize: 28, color: "#14161A" }}>
             {formatKRW(total)}
           </div>
         </div>
@@ -687,8 +687,8 @@ function EscrowPaymentPanel({
           }}
         >
           <div className="flex items-center gap-2 mb-2">
-            <Wallet size={13} style={{ color: "#F59E0B" }} />
-            <div className="font-black" style={{ fontSize: 12, color: "#FBBF24" }}>에스크로 계좌 (KB국민은행)</div>
+            <Wallet size={13} style={{ color: "#14161A" }} />
+            <div className="font-black" style={{ fontSize: 12, color: "#14161A" }}>에스크로 계좌 (KB국민은행)</div>
           </div>
           <div className="font-mono tabular-nums" style={{ fontSize: 14, color: "var(--fg-on-brand)" }}>
             301-9999-****-23
@@ -707,7 +707,7 @@ function EscrowPaymentPanel({
             color: "rgba(255,255,255,0.6)",
           }}
         >
-          <ShieldCheck size={12} style={{ color: "#F59E0B" }} />
+          <ShieldCheck size={12} style={{ color: "#14161A" }} />
           보증금은 현장 계약 체결 후 잔금(90%) 납부 시 충당됩니다. 계약 불발 시 귀책 여부에 따라 몰취될 수 있습니다.
         </div>
       </div>
@@ -745,8 +745,8 @@ function ContractFinalPanel({
           <div
             className="rounded-xl p-4 flex items-center gap-3"
             style={{
-              backgroundColor: "rgba(16, 185, 129, 0.12)",
-              border: "1px solid rgba(16, 185, 129, 0.45)",
+              backgroundColor: "rgba(20,22,26, 0.12)",
+              border: "1px solid rgba(20,22,26, 0.45)",
             }}
           >
             <CheckCircle2 size={22} style={{ color: "var(--color-positive)", flexShrink: 0 }} />
@@ -767,7 +767,7 @@ function ContractFinalPanel({
               border: "1px solid rgba(255,255,255,0.12)",
             }}
           >
-            <Clock size={20} style={{ color: "#FBBF24", flexShrink: 0 }} />
+            <Clock size={20} style={{ color: "#14161A", flexShrink: 0 }} />
             <div>
               <div className="font-black" style={{ fontSize: 14 }}>
                 현장 계약 진행 대기 중
@@ -795,8 +795,8 @@ function ContractFinalPanel({
               }}
               className="group rounded-xl p-4 text-left transition-all hover:scale-[1.015] active:scale-[0.99]"
               style={{
-                backgroundColor: "rgba(16, 185, 129, 0.14)",
-                border: "1px solid rgba(16, 185, 129, 0.32)",
+                backgroundColor: "rgba(20,22,26, 0.14)",
+                border: "1px solid rgba(20,22,26, 0.32)",
               }}
             >
               <div className="flex items-center justify-between">

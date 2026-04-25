@@ -74,7 +74,7 @@ export function KeywordAlertModal() {
           <Bell className="h-3.5 w-3.5" />
           알림 설정
           {activeCount > 0 && (
-            <span className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold bg-blue-600 text-white rounded-full">
+            <span className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold bg-stone-100 text-white rounded-full">
               {activeCount}
             </span>
           )}
@@ -84,7 +84,7 @@ export function KeywordAlertModal() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
-            <Bell className="h-4 w-4 text-blue-600" />
+            <Bell className="h-4 w-4 text-stone-900" />
             키워드 알림 구독
           </DialogTitle>
         </DialogHeader>
@@ -125,7 +125,7 @@ export function KeywordAlertModal() {
                   aria-label={a.active ? `"${a.keyword}" 알림 끄기` : `"${a.keyword}" 알림 켜기`}
                   className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none ${
                     a.active
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-stone-100 text-white'
                       : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)]'
                   }`}
                 >

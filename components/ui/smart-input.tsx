@@ -132,7 +132,7 @@ export function CurrencyInput({
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B3A5C] focus-visible:ring-offset-2',
             'disabled:cursor-not-allowed disabled:opacity-50',
             'tabular-nums pr-10 text-right',
-            error && 'border-red-500 focus-visible:ring-red-500',
+            error && 'border-stone-300 focus-visible:ring-red-500',
             className
           )}
         />
@@ -148,7 +148,7 @@ export function CurrencyInput({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="text-xs text-[#10B981] font-medium overflow-hidden"
+            className="text-xs text-[#14161A] font-medium overflow-hidden"
           >
             = {koreanAmount}
           </motion.p>
@@ -161,7 +161,7 @@ export function CurrencyInput({
         </p>
       )}
       {error && (
-        <p className="text-xs text-red-500">{error}</p>
+        <p className="text-xs text-stone-900">{error}</p>
       )}
     </div>
   )
@@ -194,7 +194,7 @@ export function PercentageInput({
   error,
   hint,
   id,
-  accentColor = '#10B981',
+  accentColor = '#14161A',
 }: PercentageInputProps) {
   const generatedId = React.useId()
   const inputId = id ?? generatedId
@@ -267,7 +267,7 @@ export function PercentageInput({
               'h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-sm text-right',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
               'tabular-nums pr-6',
-              error && 'border-red-500',
+              error && 'border-stone-300',
             )}
             style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
           />
@@ -285,7 +285,7 @@ export function PercentageInput({
       </div>
 
       {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="text-xs text-stone-900">{error}</p>}
     </div>
   )
 }
@@ -354,11 +354,11 @@ export function PhoneInput({
           'ring-offset-background placeholder:text-muted-foreground',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B3A5C] focus-visible:ring-offset-2',
           'tabular-nums',
-          error && 'border-red-500',
+          error && 'border-stone-300',
           className
         )}
       />
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="text-xs text-stone-900">{error}</p>}
     </div>
   )
 }

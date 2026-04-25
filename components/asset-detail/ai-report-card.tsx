@@ -63,7 +63,7 @@ function gradeColor(g: string): { fg: string; bg: string; border: string } {
   if (g === "S" || g === "A+") return {
     fg: "var(--color-positive)",
     bg: "var(--color-positive-bg)",
-    border: "rgba(16, 185, 129, 0.45)",
+    border: "rgba(20,22,26, 0.45)",
   }
   if (g === "A" || g === "B") return {
     fg: "var(--color-brand-bright)",
@@ -71,9 +71,9 @@ function gradeColor(g: string): { fg: string; bg: string; border: string } {
     border: "rgba(46, 117, 182, 0.45)",
   }
   return {
-    fg: "#F59E0B",
-    bg: "rgba(245, 158, 11, 0.14)",
-    border: "rgba(245, 158, 11, 0.45)",
+    fg: "#14161A",
+    bg: "rgba(20,22,26, 0.14)",
+    border: "rgba(20,22,26, 0.45)",
   }
 }
 
@@ -198,7 +198,7 @@ export function AiReportCard({
             style={{
               width: `${Math.min(100, Math.max(0, recoveryRate ?? 0))}%`,
               background: "linear-gradient(90deg, #2E75B6 0%, #10B981 100%)",
-              boxShadow: "0 0 12px rgba(16, 185, 129, 0.4)",
+              boxShadow: "0 0 12px rgba(20,22,26, 0.4)",
             }}
           />
         </div>
@@ -296,18 +296,18 @@ export function AiReportCard({
             className="rounded-xl p-3.5 flex items-center justify-between"
             style={{
               backgroundColor: anomalySafe
-                ? "rgba(16, 185, 129, 0.08)"
-                : "rgba(245, 158, 11, 0.10)",
+                ? "rgba(20,22,26, 0.08)"
+                : "rgba(20,22,26, 0.10)",
               border: `1px solid ${anomalySafe
-                ? "rgba(16, 185, 129, 0.32)"
-                : "rgba(245, 158, 11, 0.38)"}`,
+                ? "rgba(20,22,26, 0.32)"
+                : "rgba(20,22,26, 0.38)"}`,
             }}
           >
             <div
               className="inline-flex items-center gap-2 font-black"
               style={{
                 fontSize: 13,
-                color: anomalySafe ? "var(--color-positive)" : "#F59E0B",
+                color: anomalySafe ? "var(--color-positive)" : "#14161A",
               }}
             >
               <Shield size={14} />
@@ -354,8 +354,8 @@ export function AiReportCard({
             onClick={onAskCopilot}
             className="group rounded-xl p-4 text-left transition-all hover:scale-[1.015] active:scale-[0.99]"
             style={{
-              background: "linear-gradient(135deg, rgba(168, 85, 247, 0.18), rgba(236, 72, 153, 0.12))",
-              border: "1px solid rgba(168, 85, 247, 0.38)",
+              background: "linear-gradient(135deg, rgba(20,22,26, 0.18), rgba(236, 72, 153, 0.12))",
+              border: "1px solid rgba(20,22,26, 0.38)",
             }}
           >
             <div className="flex items-center justify-between">

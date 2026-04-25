@@ -166,11 +166,11 @@ export default function AdminListingEditPage() {
   if (fetchState === "forbidden") {
     return (
       <div className="max-w-5xl mx-auto p-6">
-        <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4">
+        <div className="rounded-xl border border-stone-300/40 bg-stone-100/10 p-4">
           <div className="flex items-start gap-2">
-            <ShieldAlert className="w-5 h-5 text-red-500 mt-0.5" />
+            <ShieldAlert className="w-5 h-5 text-stone-900 mt-0.5" />
             <div>
-              <div className="font-bold text-red-700 dark:text-red-300">접근 권한 없음</div>
+              <div className="font-bold text-stone-900 dark:text-stone-900">접근 권한 없음</div>
               <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">{fetchError}</p>
             </div>
           </div>
@@ -182,12 +182,12 @@ export default function AdminListingEditPage() {
   if (fetchState === "notfound") {
     return (
       <div className="max-w-5xl mx-auto p-6">
-        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
-          <div className="font-bold text-amber-700 dark:text-amber-300">매물을 찾을 수 없습니다</div>
+        <div className="rounded-xl border border-stone-300/40 bg-stone-100/10 p-4">
+          <div className="font-bold text-stone-900 dark:text-stone-900">매물을 찾을 수 없습니다</div>
           <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">ID: <code>{id}</code></p>
           <Link
             href="/admin/listings"
-            className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-emerald-600 hover:underline"
+            className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-stone-900 hover:underline"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> 매물 관리로
           </Link>
@@ -199,8 +199,8 @@ export default function AdminListingEditPage() {
   if (fetchState === "error") {
     return (
       <div className="max-w-5xl mx-auto p-6">
-        <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4">
-          <div className="font-bold text-red-700 dark:text-red-300">조회 실패</div>
+        <div className="rounded-xl border border-stone-300/40 bg-stone-100/10 p-4">
+          <div className="font-bold text-stone-900 dark:text-stone-900">조회 실패</div>
           <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">{fetchError}</p>
         </div>
       </div>
@@ -235,9 +235,9 @@ export default function AdminListingEditPage() {
       </div>
 
       {/* Admin Review Block */}
-      <div className="rounded-xl border border-purple-500/30 bg-purple-500/5 p-4 space-y-3">
+      <div className="rounded-xl border border-stone-300/30 bg-stone-100/5 p-4 space-y-3">
         <div className="flex items-center gap-2">
-          <ShieldAlert className="w-4 h-4 text-purple-500" />
+          <ShieldAlert className="w-4 h-4 text-stone-900" />
           <h3 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">관리자 리뷰 · 상태 변경</h3>
           <span className="ml-auto text-[0.625rem] text-[var(--color-text-tertiary)]">
             현재 상태: <strong className="text-[var(--color-text-secondary)]">{currentStatus}</strong>
@@ -251,7 +251,7 @@ export default function AdminListingEditPage() {
             <select
               value={nextStatus}
               onChange={(e) => setNextStatus(e.target.value)}
-              className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] focus:border-purple-500/60 focus:outline-none"
+              className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] focus:border-stone-300/60 focus:outline-none"
             >
               {ADMIN_STATUSES.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -267,21 +267,21 @@ export default function AdminListingEditPage() {
               value={reviewNote}
               onChange={(e) => setReviewNote(e.target.value)}
               placeholder="예: 감정가 재확인 요청"
-              className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-purple-500/60 focus:outline-none"
+              className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-stone-300/60 focus:outline-none"
             />
           </div>
         </div>
         {nextStatus === "REJECTED" && (
           <div>
             <label className="block text-[0.6875rem] font-semibold text-[var(--color-text-secondary)] mb-1">
-              반려 사유 <span className="text-red-500">*</span>
+              반려 사유 <span className="text-stone-900">*</span>
             </label>
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               rows={2}
               placeholder="매도자에게 공개되는 반려 사유를 작성하세요."
-              className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-red-500/60 focus:outline-none"
+              className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-stone-300/60 focus:outline-none"
             />
           </div>
         )}
@@ -289,15 +289,15 @@ export default function AdminListingEditPage() {
 
       {/* Phase G7+ · 자발적 경매 일정 패널 (관리자 — 진행 중인 경매 일정 직접 조정) */}
       {hasAuctionSchedule && (
-        <div className="rounded-xl border border-sky-500/30 bg-sky-500/5 p-5">
+        <div className="rounded-xl border border-stone-300/30 bg-stone-100/5 p-5">
           <div className="flex items-center gap-2 mb-3">
-            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-sky-500/15">
-              <span aria-hidden className="text-sky-600 dark:text-sky-300 text-sm">⚖</span>
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-stone-100/15">
+              <span aria-hidden className="text-stone-900 dark:text-stone-900 text-sm">⚖</span>
             </span>
             <h3 className="text-[0.875rem] font-bold text-[var(--color-text-primary)]">
               자발적 경매 일정 조정 (관리자)
             </h3>
-            <span className="ml-auto text-[0.625rem] font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-600 dark:text-sky-300">
+            <span className="ml-auto text-[0.625rem] font-bold px-2 py-0.5 rounded bg-stone-100/15 text-stone-900 dark:text-stone-900">
               진행 중
             </span>
           </div>
@@ -338,24 +338,24 @@ export default function AdminListingEditPage() {
       <NplUnifiedForm mode="SELL" state={state} dispatch={dispatch} />
 
       {/* Save bar */}
-      <div className="sticky bottom-4 z-10 rounded-xl border border-purple-500/30 bg-[var(--color-surface-elevated)]/95 backdrop-blur p-4 flex items-center justify-between shadow-lg">
+      <div className="sticky bottom-4 z-10 rounded-xl border border-stone-300/30 bg-[var(--color-surface-elevated)]/95 backdrop-blur p-4 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-2 text-[0.75rem]">
           {preflightError ? (
             <>
-              <AlertCircle className="w-4 h-4 text-amber-500" />
-              <span className="text-amber-700 dark:text-amber-300">
+              <AlertCircle className="w-4 h-4 text-stone-900" />
+              <span className="text-stone-900 dark:text-stone-900">
                 <strong>{preflightError.field}</strong>: {preflightError.message}
               </span>
             </>
           ) : saveError ? (
             <>
-              <AlertCircle className="w-4 h-4 text-red-500" />
-              <span className="text-red-700 dark:text-red-300">{saveError}</span>
+              <AlertCircle className="w-4 h-4 text-stone-900" />
+              <span className="text-stone-900 dark:text-stone-900">{saveError}</span>
             </>
           ) : saveOk ? (
             <>
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              <span className="text-emerald-700 dark:text-emerald-300 font-semibold">
+              <CheckCircle2 className="w-4 h-4 text-stone-900" />
+              <span className="text-stone-900 dark:text-stone-900 font-semibold">
                 저장되었습니다. 매물 관리로 이동합니다…
               </span>
             </>
@@ -371,7 +371,7 @@ export default function AdminListingEditPage() {
           type="button"
           onClick={handleSave}
           disabled={saving || !!preflightError || saveOk || (nextStatus === "REJECTED" && !rejectionReason.trim())}
-          className="inline-flex items-center gap-2 rounded-lg bg-purple-500 px-4 py-2 text-sm font-bold text-white shadow hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 rounded-lg bg-stone-100 px-4 py-2 text-sm font-bold text-white shadow hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? (
             <>

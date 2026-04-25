@@ -54,7 +54,7 @@ export default function ExpertDetailPage() {
       {/* Hero Header */}
       <div className="bg-[var(--color-brand-deep)] text-white px-6 py-10">
         <div className="max-w-5xl mx-auto">
-          <Link href="/services/experts" className="inline-flex items-center gap-1.5 text-blue-300 hover:text-white text-sm mb-6 transition-colors">
+          <Link href="/services/experts" className="inline-flex items-center gap-1.5 text-stone-900 hover:text-white text-sm mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4" /> 전문가 목록
           </Link>
 
@@ -67,20 +67,20 @@ export default function ExpertDetailPage() {
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-3 mb-2">
                 <h1 className="text-3xl font-black tracking-normal">김재원</h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-200 text-xs font-semibold tracking-normal">법무사</span>
-                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-green-500/20 text-green-300 text-xs font-semibold">
+                <span className="px-2.5 py-0.5 rounded-full bg-stone-100/20 text-stone-900 text-xs font-semibold tracking-normal">법무사</span>
+                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-stone-100/20 text-stone-900 text-xs font-semibold">
                   <CheckCircle2 className="w-3 h-3" /> 인증 전문가
                 </span>
               </div>
 
               {/* Stars */}
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-yellow-400 text-base tracking-normal">★★★★★</span>
+                <span className="text-stone-900 text-base tracking-normal">★★★★★</span>
                 <span className="text-white font-bold text-sm">4.9</span>
-                <span className="text-blue-200 text-sm">({128}개 리뷰)</span>
+                <span className="text-stone-900 text-sm">({128}개 리뷰)</span>
               </div>
 
-              <div className="flex items-center gap-1.5 text-blue-200 text-sm">
+              <div className="flex items-center gap-1.5 text-stone-900 text-sm">
                 <MapPin className="w-4 h-4" /> 서울 강남구
               </div>
             </div>
@@ -168,7 +168,7 @@ export default function ExpertDetailPage() {
                   <p className="section-eyebrow">전문 분야</p>
                   <div className="flex flex-wrap gap-2">
                     {['NPL 채권', '부동산 경매', '명도소송', '권리분석', '근저당 실행', '채권 회수'].map((tag) => (
-                      <span key={tag} className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold tracking-normal border border-blue-500/20">
+                      <span key={tag} className="px-3 py-1 rounded-full bg-stone-100/10 text-stone-900 text-xs font-semibold tracking-normal border border-stone-300/20">
                         {tag}
                       </span>
                     ))}
@@ -221,7 +221,7 @@ export default function ExpertDetailPage() {
                       </div>
                       <span className="text-xs text-[var(--color-text-muted)]">{r.date}</span>
                     </div>
-                    <div className="text-yellow-400 text-sm mb-1 tracking-normal">{'★'.repeat(r.rating)}</div>
+                    <div className="text-stone-900 text-sm mb-1 tracking-normal">{'★'.repeat(r.rating)}</div>
                     <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed tracking-normal">{r.content}</p>
                   </div>
                 ))}

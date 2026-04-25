@@ -106,14 +106,14 @@ const STATUS_MAP: Record<string, string> = {
 
 const formatClaim = (v: number) => v >= 100000000 ? `${(v / 100000000).toFixed(1)}억` : `${(v / 10000).toFixed(0)}만`
 const STATUS_CLR: Record<string, string> = {
-  '공개중': 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-  '진행중': 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+  '공개중': 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
+  '진행중': 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
   '초안': 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]',
-  '완료': 'bg-violet-500/10 text-violet-400 border border-violet-500/20',
+  '완료': 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
 }
 const GRADE_CLR: Record<string, string> = {
-  'A+': 'text-emerald-600 font-bold', 'A': 'text-blue-600 font-bold',
-  'B+': 'text-amber-600 font-bold', 'B': 'text-orange-600 font-bold',
+  'A+': 'text-stone-900 font-bold', 'A': 'text-stone-900 font-bold',
+  'B+': 'text-stone-900 font-bold', 'B': 'text-stone-900 font-bold',
 }
 const TABS = [
   { id: 'listings', label: '매물 관리' }, { id: 'analytics', label: '분석' },
@@ -133,7 +133,7 @@ function SellerSettingToggle({ id, label, desc, defaultOn }: { id: string; label
         role="switch"
         aria-checked={on}
         onClick={() => setOn(prev => !prev)}
-        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${on ? 'bg-blue-600' : 'bg-[var(--color-surface-overlay)]'}`}
+        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${on ? 'bg-stone-100' : 'bg-[var(--color-surface-overlay)]'}`}
       >
         <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${on ? 'translate-x-5' : 'translate-x-0'}`} />
       </button>
@@ -148,8 +148,8 @@ export default function SellerDashboardPage() {
   // Map real data to display format
   const STATS = [
     { label: '등록 매물', value: sellerStats.total, icon: Package, color: 'text-[var(--color-brand-mid)]' },
-    { label: '진행 중 경매', value: sellerStats.liveAuction, icon: Gavel, color: 'text-sky-500' },
-    { label: '관심 수신', value: sellerStats.interests, icon: Heart, color: 'text-pink-600' },
+    { label: '진행 중 경매', value: sellerStats.liveAuction, icon: Gavel, color: 'text-stone-900' },
+    { label: '관심 수신', value: sellerStats.interests, icon: Heart, color: 'text-stone-900' },
     { label: '완료 거래', value: sellerStats.completed, icon: CheckCircle2, color: 'text-[var(--color-positive)]' },
   ]
   // Phase G7+ · 자발적 경매 진행 정보를 LISTINGS row 에 포함
@@ -226,7 +226,7 @@ export default function SellerDashboardPage() {
                 ['등록 매물', `${sellerStats.total}건`, ''],
                 ['진행중', `${sellerStats.active}건`, '!text-[var(--color-brand-mid)]'],
                 ['완료', `${sellerStats.completed}건`, '!text-[var(--color-positive)]'],
-                ['이번달 정산', billing.monthSettlement > 0 ? formatKRW(billing.monthSettlement) : '—', '!text-amber-600'],
+                ['이번달 정산', billing.monthSettlement > 0 ? formatKRW(billing.monthSettlement) : '—', '!text-stone-900'],
               ].map(([lbl, val, cls]) => (
                 <div key={lbl} className="text-center">
                   <div className={DS.text.caption}>{lbl}</div>
@@ -294,8 +294,8 @@ export default function SellerDashboardPage() {
                       <td className={DS.table.cell}><span className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-bold ${STATUS_CLR[l.status] ?? 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]'}`}>{l.status}</span></td>
                       <td className={DS.table.cell + " tabular-nums"}>
                         {l.bidEndDate ? (
-                          <span className={`inline-flex items-center gap-1 text-[0.75rem] ${l.auctionLive ? 'text-sky-600 dark:text-sky-300 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
-                            {l.auctionLive && <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />}
+                          <span className={`inline-flex items-center gap-1 text-[0.75rem] ${l.auctionLive ? 'text-stone-900 dark:text-stone-900 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
+                            {l.auctionLive && <span className="w-1.5 h-1.5 rounded-full bg-stone-100 animate-pulse" />}
                             <Gavel className="h-3 w-3" />
                             {new Date(l.bidEndDate).toLocaleDateString('ko-KR')}
                           </span>
@@ -303,7 +303,7 @@ export default function SellerDashboardPage() {
                           <span className="text-[0.6875rem] text-[var(--color-text-muted)]">—</span>
                         )}
                       </td>
-                      <td className={DS.table.cell + " tabular-nums"}><span className="flex items-center gap-1"><Heart className="h-3 w-3 text-pink-500" />{l.interests}</span></td>
+                      <td className={DS.table.cell + " tabular-nums"}><span className="flex items-center gap-1"><Heart className="h-3 w-3 text-stone-900" />{l.interests}</span></td>
                       <td className={DS.table.cellMuted + " tabular-nums"}>{l.date}</td>
                       <td className={DS.table.cell}>
                         <div className="flex items-center gap-1.5">
@@ -322,7 +322,7 @@ export default function SellerDashboardPage() {
                             수정
                           </Link>
                           <span className="text-[var(--color-border-default)]">|</span>
-                          <button className="text-[0.8125rem] text-[var(--color-danger)] hover:text-red-400 transition-colors cursor-pointer">종료</button>
+                          <button className="text-[0.8125rem] text-[var(--color-danger)] hover:text-stone-900 transition-colors cursor-pointer">종료</button>
                         </div>
                       </td>
                     </tr>
@@ -368,7 +368,7 @@ export default function SellerDashboardPage() {
               {[
                 { label: '이번 달 정산 예정', value: billing.monthSettlement > 0 ? formatKRW(billing.monthSettlement) : '—', sub: '완료 기준', color: 'text-[var(--color-positive)]' },
                 { label: '누적 정산 완료', value: billing.totalSettlement > 0 ? formatKRW(billing.totalSettlement) : '—', sub: '전체 기간', color: 'text-[var(--color-text-primary)]' },
-                { label: '미지급 금액', value: billing.pendingSettlement > 0 ? formatKRW(billing.pendingSettlement) : '—', sub: '정산 대기 중', color: 'text-amber-600' },
+                { label: '미지급 금액', value: billing.pendingSettlement > 0 ? formatKRW(billing.pendingSettlement) : '—', sub: '정산 대기 중', color: 'text-stone-900' },
               ].map(c => (
                 <div key={c.label} className={DS.stat.card}>
                   <div className={DS.stat.value + ' ' + c.color}>{c.value}</div>
@@ -408,9 +408,9 @@ export default function SellerDashboardPage() {
                     )}
                     {settlements.map((row, i) => {
                       const statusLabel = row.status === 'COMPLETED' ? '완료' : row.status === 'PENDING' ? '대기' : '취소'
-                      const statusCls = row.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                        : row.status === 'CANCELLED' ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                        : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                      const statusCls = row.status === 'COMPLETED' ? 'bg-stone-100/10 text-stone-900 border border-stone-300/20'
+                        : row.status === 'CANCELLED' ? 'bg-stone-100/10 text-stone-900 border border-stone-300/20'
+                        : 'bg-stone-100/10 text-stone-900 border border-stone-300/20'
                       const fmtKRW = (v: number) => `₩${v.toLocaleString()}`
                       return (
                         <tr key={row.id ?? i} className={DS.table.row}>

@@ -39,7 +39,7 @@ const STEPS = ["매물 선택", "기본 설정", "투자 계획", "확인 및 �
 const INVEST_TYPES = ["NPL채권", "아파트", "상가", "오피스", "공장/창고", "토지", "혼합"]
 
 const GRADE_COLOR: Record<string, string> = {
-  A: "#10B981", "B+": "#14B8A6", B: "#3B82F6", C: "#F59E0B", D: "#EF4444", F: "#6B7280",
+  A: "#14161A", "B+": "#14161A", B: "#14161A", C: "#14161A", D: "#1B1B1F", F: "#6B7280",
 }
 
 const SAMPLE_LISTINGS: ListingPreview[] = [
@@ -129,7 +129,7 @@ export default function NewTeamPage() {
     }
   }
 
-  const inputCls = "w-full px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#10B981]/40 focus:border-[#10B981]/50 transition-all"
+  const inputCls = "w-full px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#10B981]/40 focus:border-[#14161A]/50 transition-all"
   const labelCls = "block text-xs font-semibold text-[#8BAFD1] mb-1.5"
 
   return (
@@ -142,7 +142,7 @@ export default function NewTeamPage() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <p className="text-xs font-semibold text-[#10B981] uppercase tracking-wider mb-0.5">
+            <p className="text-xs font-semibold text-[#14161A] uppercase tracking-wider mb-0.5">
               팀투자
             </p>
             <h1 className="text-xl font-extrabold text-white">팀투자 딜 개설하기</h1>
@@ -158,18 +158,18 @@ export default function NewTeamPage() {
             <div key={i} className="flex items-center gap-1 flex-1 last:flex-none">
               <div className="flex items-center gap-1.5">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all ${
-                  i < step ? "bg-emerald-500 text-white"
-                  : i === step ? "bg-[#10B981] text-black shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                  i < step ? "bg-stone-100 text-white"
+                  : i === step ? "bg-[#14161A] text-black shadow-[0_0_10px_rgba(20,22,26,0.4)]"
                   : "bg-white/10 text-white/30"
                 }`}>
                   {i < step ? <CheckCircle2 className="w-3.5 h-3.5" /> : i + 1}
                 </div>
                 <span className={`text-xs hidden sm:block whitespace-nowrap ${
-                  i === step ? "font-semibold text-white" : i < step ? "text-emerald-400" : "text-white/25"
+                  i === step ? "font-semibold text-white" : i < step ? "text-stone-900" : "text-white/25"
                 }`}>{s}</span>
               </div>
               {i < STEPS.length - 1 && (
-                <div className={`flex-1 h-px mx-1 ${i < step ? "bg-emerald-500/50" : "bg-white/10"}`} />
+                <div className={`flex-1 h-px mx-1 ${i < step ? "bg-stone-100/50" : "bg-white/10"}`} />
               )}
             </div>
           ))}
@@ -182,7 +182,7 @@ export default function NewTeamPage() {
           {step === 0 && (
             <div className="space-y-5">
               <div className="flex items-center gap-2 mb-1">
-                <Building2 className="w-4 h-4 text-[#3B82F6]" />
+                <Building2 className="w-4 h-4 text-[#14161A]" />
                 <h2 className="text-sm font-bold text-white">거래소 매물 연동 (선택)</h2>
               </div>
               <p className="text-xs text-slate-500">팀투자의 대상 NPL 매물을 거래소에서 선택하세요. 나중에 설정할 수도 있습니다.</p>
@@ -201,7 +201,7 @@ export default function NewTeamPage() {
 
               {loadingListings ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-5 h-5 animate-spin text-[#10B981]" />
+                  <Loader2 className="w-5 h-5 animate-spin text-[#14161A]" />
                 </div>
               ) : (
                 <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
@@ -215,7 +215,7 @@ export default function NewTeamPage() {
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${!form.listing_id ? "border-[#10B981] bg-[#10B981]" : "border-slate-600"}`}>
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${!form.listing_id ? "border-[#14161A] bg-[#14161A]" : "border-slate-600"}`}>
                         {!form.listing_id && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
                       </div>
                       매물 나중에 선택
@@ -228,13 +228,13 @@ export default function NewTeamPage() {
                       onClick={() => update("listing_id", l.id)}
                       className={`w-full text-left rounded-xl p-4 border transition-all ${
                         form.listing_id === l.id
-                          ? "border-[#10B981]/50 bg-[#10B981]/10"
+                          ? "border-[#14161A]/50 bg-[#14161A]/10"
                           : "border-white/[0.06] bg-white/[0.02] hover:bg-white/5"
                       }`}
                     >
                       <div className="flex items-start gap-3">
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                          form.listing_id === l.id ? "border-[#10B981] bg-[#10B981]" : "border-slate-600"
+                          form.listing_id === l.id ? "border-[#14161A] bg-[#14161A]" : "border-slate-600"
                         }`}>
                           {form.listing_id === l.id && <CheckCircle2 className="w-3 h-3 text-black" />}
                         </div>
@@ -254,7 +254,7 @@ export default function NewTeamPage() {
                           </div>
                           <div className="flex gap-4 mt-1.5 text-xs">
                             <span className="text-slate-500">채권 <span className="text-white font-semibold">{fmt(l.principal_amount)}원</span></span>
-                            <span className="text-slate-500">할인율 <span className="text-[#10B981] font-semibold">{l.discount_rate}%</span></span>
+                            <span className="text-slate-500">할인율 <span className="text-[#14161A] font-semibold">{l.discount_rate}%</span></span>
                           </div>
                         </div>
                       </div>
@@ -265,8 +265,8 @@ export default function NewTeamPage() {
 
               {selectedListing && (
                 <div className="rounded-xl p-3 flex items-center gap-2" style={{ background: "#10B98112", border: "1px solid #10B98130" }}>
-                  <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0" />
-                  <p className="text-xs text-[#10B981] font-semibold truncate">{selectedListing.title}</p>
+                  <CheckCircle2 className="w-4 h-4 text-[#14161A] shrink-0" />
+                  <p className="text-xs text-[#14161A] font-semibold truncate">{selectedListing.title}</p>
                 </div>
               )}
             </div>
@@ -276,13 +276,13 @@ export default function NewTeamPage() {
           {step === 1 && (
             <div className="space-y-5">
               <div className="flex items-center gap-2 mb-1">
-                <Crown className="w-4 h-4 text-amber-400" />
+                <Crown className="w-4 h-4 text-stone-900" />
                 <h2 className="text-sm font-bold text-white">리더 투자사 기본 설정</h2>
               </div>
 
               {selectedListing && (
                 <div className="rounded-xl p-3 flex items-center gap-2 mb-4" style={{ background: "#3B82F612", border: "1px solid #3B82F625" }}>
-                  <Building2 className="w-4 h-4 text-[#3B82F6] shrink-0" />
+                  <Building2 className="w-4 h-4 text-[#14161A] shrink-0" />
                   <div className="min-w-0">
                     <p className="text-[10px] text-slate-500">연동 매물</p>
                     <p className="text-xs text-slate-300 font-semibold truncate">{selectedListing.title}</p>
@@ -313,13 +313,13 @@ export default function NewTeamPage() {
               <div className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/[0.02] cursor-pointer"
                 onClick={() => update("is_private", !form.is_private)}>
                 <div className="flex items-center gap-3">
-                  {form.is_private ? <Lock className="w-4 h-4 text-white/40" /> : <Globe className="w-4 h-4 text-emerald-400" />}
+                  {form.is_private ? <Lock className="w-4 h-4 text-white/40" /> : <Globe className="w-4 h-4 text-stone-900" />}
                   <div>
                     <p className="text-sm font-semibold text-white">{form.is_private ? "비공개 팀" : "공개 팀"}</p>
                     <p className="text-xs text-white/35">{form.is_private ? "초대된 투자사만 참여" : "공동 투자사 공개 모집"}</p>
                   </div>
                 </div>
-                <div className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors duration-200 ${form.is_private ? "bg-[#10B981]" : "bg-white/15"}`}>
+                <div className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors duration-200 ${form.is_private ? "bg-[#14161A]" : "bg-white/15"}`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${form.is_private ? "translate-x-6" : "translate-x-1"}`} />
                 </div>
               </div>
@@ -330,7 +330,7 @@ export default function NewTeamPage() {
           {step === 2 && (
             <div className="space-y-5">
               <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-4 h-4 text-[#10B981]" />
+                <Sparkles className="w-4 h-4 text-[#14161A]" />
                 <h2 className="text-sm font-bold text-white">투자 조건 설정</h2>
               </div>
 
@@ -341,7 +341,7 @@ export default function NewTeamPage() {
                     <button key={t} onClick={() => update("investment_type", t)}
                       className={`py-2 rounded-xl text-xs font-semibold border transition-all ${
                         form.investment_type === t
-                          ? "bg-[#10B981]/20 border-[#10B981]/50 text-[#10B981]"
+                          ? "bg-[#14161A]/20 border-[#14161A]/50 text-[#14161A]"
                           : "bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/10"
                       }`}>{t}</button>
                   ))}
@@ -427,7 +427,7 @@ export default function NewTeamPage() {
                 onClick={() => setStep(step + 1)}
                 disabled={!canNext()}
                 className="flex items-center gap-1.5 px-5 py-2 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold transition-all"
-                style={{ background: canNext() ? "#10B981" : "#1e293b", color: canNext() ? "#000" : "#64748b" }}
+                style={{ background: canNext() ? "#14161A" : "#1e293b", color: canNext() ? "#000" : "#64748b" }}
               >
                 다음 단계 <ArrowRight className="w-4 h-4" />
               </button>
@@ -436,7 +436,7 @@ export default function NewTeamPage() {
                 onClick={handleSubmit}
                 disabled={submitting || !form.name.trim()}
                 className="flex items-center gap-1.5 px-5 py-2 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold transition-all"
-                style={{ background: "#10B981", color: "#000" }}
+                style={{ background: "#14161A", color: "#000" }}
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                 팀 개설하기

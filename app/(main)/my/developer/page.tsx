@@ -241,7 +241,7 @@ export default function DeveloperPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[0.6875rem] px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[var(--color-brand-mid)] font-bold">Beta</span>
+                <span className="text-[0.6875rem] px-2 py-0.5 rounded-full bg-stone-100/10 border border-stone-300/20 text-[var(--color-brand-mid)] font-bold">Beta</span>
               </div>
               <h1 className={DS.header.title}>개발자 포털</h1>
               <p className={DS.header.subtitle}>
@@ -271,9 +271,9 @@ export default function DeveloperPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: '활성 API 키',     value: `${keys.filter(k => k.is_active).length}개`,  icon: Key,          color: 'text-[var(--color-brand-mid)]',   border: 'border-l-[var(--color-brand-mid)]' },
-            { label: '등록 Webhook',    value: '1개',                                          icon: Webhook,      color: 'text-purple-600',  border: 'border-l-purple-400' },
+            { label: '등록 Webhook',    value: '1개',                                          icon: Webhook,      color: 'text-stone-900',  border: 'border-l-purple-400' },
             { label: '이번달 API 호출', value: '124,840',                                      icon: Activity,     color: 'text-[var(--color-positive)]', border: 'border-l-emerald-400' },
-            { label: '성공률',          value: '99.8%',                                        icon: CheckCircle2, color: 'text-emerald-600',   border: 'border-l-emerald-400' },
+            { label: '성공률',          value: '99.8%',                                        icon: CheckCircle2, color: 'text-stone-900',   border: 'border-l-emerald-400' },
           ].map(s => (
             <div key={s.label} className={DS.stat.card + ` border-l-4 ${s.border}`}>
               <s.icon className={`w-4 h-4 ${s.color} mb-2`} />
@@ -300,7 +300,7 @@ export default function DeveloperPage() {
         {activeTab === 'API 키' && (
           <div className="space-y-4">
             {/* Info banner */}
-            <div className="flex items-start gap-3 px-4 py-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+            <div className="flex items-start gap-3 px-4 py-3 rounded-lg bg-stone-100/10 border border-stone-300/20">
               <Info className="w-4 h-4 text-[var(--color-brand-mid)] mt-0.5 shrink-0" />
               <p className="text-[0.8125rem] text-[var(--color-brand-mid)]">
                 API 키 관리 기능은 베타 단계입니다. 발급된 키는 현재 세션에서만 유효하며,
@@ -377,12 +377,12 @@ export default function DeveloperPage() {
                       <td className={DS.table.cellMuted + " tabular-nums"}>{k.last_used_at ?? '미사용'}</td>
                       <td className={DS.table.cell}>
                         <span className={`inline-flex rounded-full px-2 py-0.5 text-[0.6875rem] font-bold border ${
-                          k.is_active ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border-[var(--color-border-subtle)]'
+                          k.is_active ? 'bg-stone-100/10 text-stone-900 border-stone-300/20' : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border-[var(--color-border-subtle)]'
                         }`}>{k.is_active ? '활성' : '비활성'}</span>
                       </td>
                       <td className={DS.table.cell}>
                         {k.is_active && (
-                          <button onClick={() => revokeKey(k.id)} className={DS.button.icon + " hover:!text-[var(--color-danger)] hover:!bg-red-500/10"}>
+                          <button onClick={() => revokeKey(k.id)} className={DS.button.icon + " hover:!text-[var(--color-danger)] hover:!bg-stone-100/10"}>
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         )}
@@ -442,8 +442,8 @@ export default function DeveloperPage() {
           <div className="grid sm:grid-cols-3 gap-4">
             {[
               { title: 'API 레퍼런스',  desc: '전체 엔드포인트 목록과 파라미터', icon: BookOpen, href: '/developer/api-reference', accent: 'border-[var(--color-brand-bright)]' },
-              { title: 'Quick Start',   desc: '첫 API 호출까지 5분 가이드',      icon: Key,      href: '/developer/docs',          accent: 'border-amber-500/20' },
-              { title: 'Webhook 가이드', desc: '이벤트 수신 및 서명 검증',        icon: Webhook,  href: '/developer/webhooks',      accent: 'border-purple-500/20' },
+              { title: 'Quick Start',   desc: '첫 API 호출까지 5분 가이드',      icon: Key,      href: '/developer/docs',          accent: 'border-stone-300/20' },
+              { title: 'Webhook 가이드', desc: '이벤트 수신 및 서명 검증',        icon: Webhook,  href: '/developer/webhooks',      accent: 'border-stone-300/20' },
             ].map(doc => (
               <a key={doc.href} href={doc.href} className={DS.card.interactive + " " + DS.card.padding + " block !border-l-4 " + doc.accent}>
                 <doc.icon className="w-5 h-5 text-[var(--color-brand-mid)] mb-3" />

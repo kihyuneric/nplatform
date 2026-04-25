@@ -82,7 +82,7 @@ export function AIRecommendations() {
           <div>
             <div
               className="inline-flex items-center gap-2 rounded-full px-3 py-1 mb-3"
-              style={{ background: "rgba(168,85,247,0.10)", border: "1px solid rgba(168,85,247,0.25)" }}
+              style={{ background: "rgba(20,22,26,0.10)", border: "1px solid rgba(20,22,26,0.25)" }}
             >
               <Sparkles size={12} style={{ color: "#C084FC" }} />
               <span className="text-[11px] font-bold tracking-wider" style={{ color: "#C084FC" }}>
@@ -144,14 +144,14 @@ export function AIRecommendations() {
                       {typeof l.match_score === "number" && l.match_score > 0 && (
                         <span
                           className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                          style={{ background: "rgba(16,185,129,0.15)", color: "#34D399" }}
+                          style={{ background: "rgba(20,22,26,0.15)", color: "#14161A" }}
                         >
                           {l.match_score}
                         </span>
                       )}
                     </div>
                     <h3
-                      className="text-sm font-semibold text-white leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-[#34D399] transition-colors"
+                      className="text-sm font-semibold text-white leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-[#14161A] transition-colors"
                     >
                       {l.title ?? "제목 없음"}
                     </h3>
@@ -177,7 +177,7 @@ export function AIRecommendations() {
                           <span
                             key={r}
                             className="text-[9px] px-1.5 py-0.5 rounded"
-                            style={{ background: "rgba(168,85,247,0.10)", color: "#C084FC" }}
+                            style={{ background: "rgba(20,22,26,0.10)", color: "#C084FC" }}
                           >
                             {r}
                           </span>

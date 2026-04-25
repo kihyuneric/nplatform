@@ -58,7 +58,7 @@ export function TenantSwitcher() {
               )}
               <span className="text-sm">{tenant.name}</span>
             </div>
-            {currentTenant?.id === tenant.id && <Check className="h-3.5 w-3.5 text-emerald-500" />}
+            {currentTenant?.id === tenant.id && <Check className="h-3.5 w-3.5 text-stone-900" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

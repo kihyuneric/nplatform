@@ -49,7 +49,7 @@ function highlightMatch(text: string, query: string) {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="bg-yellow-500/20 text-inherit rounded-sm px-0">
+      <mark className="bg-stone-100/20 text-inherit rounded-sm px-0">
         {text.slice(idx, idx + query.length)}
       </mark>
       {text.slice(idx + query.length)}
@@ -263,7 +263,7 @@ export function SearchAutocomplete({
               <button
                 type="button"
                 onClick={handleClearRecent}
-                className="text-xs text-[var(--color-text-muted)] hover:text-red-500 transition-colors"
+                className="text-xs text-[var(--color-text-muted)] hover:text-stone-900 transition-colors"
               >
                 검색어 전체 삭제
               </button>
@@ -308,7 +308,7 @@ export function SearchAutocomplete({
                     role="button"
                     tabIndex={-1}
                     onClick={(e) => handleRemoveRecent(item.text, e)}
-                    className="ml-2 text-[var(--color-text-muted)] hover:text-red-400 flex-shrink-0"
+                    className="ml-2 text-[var(--color-text-muted)] hover:text-stone-900 flex-shrink-0"
                     aria-label={`${item.text} 삭제`}
                   >
                     <X className="w-3.5 h-3.5" />

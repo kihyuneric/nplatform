@@ -68,8 +68,8 @@ function fmtPct(n: number | null | undefined) {
 }
 
 const STATUS_STYLE: Record<string, string> = {
-  '진행 중':   'bg-blue-500/20 text-blue-300 border border-blue-500/30',
-  '협의 중':   'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+  '진행 중':   'bg-stone-100/20 text-stone-900 border border-stone-300/30',
+  '협의 중':   'bg-stone-100/20 text-stone-900 border border-stone-300/30',
   '매각 완료': 'bg-gray-500/20 text-gray-400 border border-gray-600/30',
   '준비 중':   'bg-slate-500/20 text-slate-300 border border-slate-500/30',
 }
@@ -109,7 +109,7 @@ export function DetailSidePanel({ item, open, onClose, isStarred, onToggleStar }
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 {onToggleStar && (
                   <button onClick={() => onToggleStar(item.id)} className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-                    <Star className={`h-4 w-4 ${isStarred ? 'fill-yellow-400 text-yellow-400' : 'text-white/40'}`} />
+                    <Star className={`h-4 w-4 ${isStarred ? 'fill-yellow-400 text-stone-900' : 'text-white/40'}`} />
                   </button>
                 )}
                 <Dialog.Close asChild>
@@ -134,11 +134,11 @@ export function DetailSidePanel({ item, open, onClose, isStarred, onToggleStar }
               </div>
               <div className="bg-white/5 border border-white/8 rounded-xl p-3">
                 <p className="text-xs text-white/50 mb-1">최저매각가</p>
-                <p className="text-lg font-bold text-emerald-400">{fmtMoney(item.min_sale_price)}</p>
+                <p className="text-lg font-bold text-stone-900">{fmtMoney(item.min_sale_price)}</p>
               </div>
               <div className="bg-white/5 border border-white/8 rounded-xl p-3">
                 <p className="text-xs text-white/50 mb-1">예상 ROI</p>
-                <p className={`text-lg font-bold ${roiEst != null && roiEst > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <p className={`text-lg font-bold ${roiEst != null && roiEst > 0 ? 'text-stone-900' : 'text-stone-900'}`}>
                   {roiEst != null ? `${roiEst.toFixed(1)}%` : '—'}
                 </p>
               </div>
@@ -147,7 +147,7 @@ export function DetailSidePanel({ item, open, onClose, isStarred, onToggleStar }
             {/* 위치 */}
             <div className="bg-white/5 border border-white/8 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
-                <MapPin className="h-4 w-4 text-blue-400" />
+                <MapPin className="h-4 w-4 text-stone-900" />
                 <span className="text-sm font-semibold text-white">위치</span>
               </div>
               <p className="text-sm text-white/70">{item.address || `${item.sido} ${item.sigungu} ${item.dong}`}</p>
@@ -162,7 +162,7 @@ export function DetailSidePanel({ item, open, onClose, isStarred, onToggleStar }
             {/* 채권 정보 */}
             <div className="bg-white/5 border border-white/8 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
-                <Banknote className="h-4 w-4 text-amber-400" />
+                <Banknote className="h-4 w-4 text-stone-900" />
                 <span className="text-sm font-semibold text-white">채권 정보</span>
               </div>
               <div className="space-y-2">
@@ -177,7 +177,7 @@ export function DetailSidePanel({ item, open, onClose, isStarred, onToggleStar }
             {(item.deposit > 0 || item.monthly_rent > 0) && (
               <div className="bg-white/5 border border-white/8 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <Building2 className="h-4 w-4 text-purple-400" />
+                  <Building2 className="h-4 w-4 text-stone-900" />
                   <span className="text-sm font-semibold text-white">임차인 현황</span>
                 </div>
                 <div className="space-y-2">
@@ -190,10 +190,10 @@ export function DetailSidePanel({ item, open, onClose, isStarred, onToggleStar }
 
             {/* 특이사항 */}
             {item.etc && (
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+              <div className="bg-stone-100/10 border border-stone-300/20 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <AlertCircle className="h-4 w-4 text-amber-400" />
-                  <span className="text-sm font-semibold text-amber-300">특이사항</span>
+                  <AlertCircle className="h-4 w-4 text-stone-900" />
+                  <span className="text-sm font-semibold text-stone-900">특이사항</span>
                 </div>
                 <p className="text-sm text-white/70 leading-relaxed">{item.etc}</p>
               </div>
@@ -209,7 +209,7 @@ export function DetailSidePanel({ item, open, onClose, isStarred, onToggleStar }
             <div className="space-y-2 pb-6">
               <Link
                 href={`/exchange/${item.id}`}
-                className="flex items-center justify-between w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-3 rounded-xl transition-colors"
+                className="flex items-center justify-between w-full bg-stone-100 hover:bg-stone-100 text-white font-semibold px-4 py-3 rounded-xl transition-colors"
               >
                 <span className="flex items-center gap-2">
                   <ExternalLink className="h-4 w-4" />
@@ -222,7 +222,7 @@ export function DetailSidePanel({ item, open, onClose, isStarred, onToggleStar }
                 className="flex items-center justify-between w-full bg-white/10 hover:bg-white/15 border border-white/10 text-white font-medium px-4 py-3 rounded-xl transition-colors"
               >
                 <span className="flex items-center gap-2">
-                  <Calculator className="h-4 w-4 text-emerald-400" />
+                  <Calculator className="h-4 w-4 text-stone-900" />
                   경매 수익률 분석
                 </span>
                 <ChevronRight className="h-4 w-4 text-white/40" />
@@ -232,7 +232,7 @@ export function DetailSidePanel({ item, open, onClose, isStarred, onToggleStar }
                 className="flex items-center justify-between w-full bg-white/10 hover:bg-white/15 border border-white/10 text-white font-medium px-4 py-3 rounded-xl transition-colors"
               >
                 <span className="flex items-center gap-2">
-                  <Handshake className="h-4 w-4 text-purple-400" />
+                  <Handshake className="h-4 w-4 text-stone-900" />
                   딜룸 신청
                 </span>
                 <ChevronRight className="h-4 w-4 text-white/40" />

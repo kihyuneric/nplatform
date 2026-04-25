@@ -146,7 +146,7 @@ export default function DocumentUpload({ documentTypes, onExtracted }: DocumentU
         {status === 'idle' && (
           <div
             className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors cursor-pointer ${
-              isDragging ? 'border-[var(--color-brand-dark)] bg-blue-500/10' : 'border-[var(--color-border-subtle)] hover:border-[var(--color-text-muted)]'
+              isDragging ? 'border-[var(--color-brand-dark)] bg-stone-100/10' : 'border-[var(--color-border-subtle)] hover:border-[var(--color-text-muted)]'
             }`}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
             onDragLeave={() => setIsDragging(false)}
@@ -174,7 +174,7 @@ export default function DocumentUpload({ documentTypes, onExtracted }: DocumentU
         )}
 
         {status === 'processing' && (
-          <div className="flex items-center gap-3 rounded-lg bg-blue-500/10 p-4">
+          <div className="flex items-center gap-3 rounded-lg bg-stone-100/10 p-4">
             <Loader2 className="h-5 w-5 animate-spin text-[var(--color-brand-dark)]" />
             <div>
               <p className="text-sm font-medium text-[var(--color-brand-dark)]">
@@ -194,12 +194,12 @@ export default function DocumentUpload({ documentTypes, onExtracted }: DocumentU
         )}
 
         {status === 'error' && (
-          <div className="rounded-lg bg-red-500/10 p-4">
+          <div className="rounded-lg bg-stone-100/10 p-4">
             <div className="flex items-start gap-2">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-stone-900" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-red-400">{errorMessage}</p>
-                <Button variant="ghost" size="sm" onClick={handleReset} className="mt-2 text-xs text-red-400 hover:text-red-300">
+                <p className="text-sm font-medium text-stone-900">{errorMessage}</p>
+                <Button variant="ghost" size="sm" onClick={handleReset} className="mt-2 text-xs text-stone-900 hover:text-stone-900">
                   다시 시도
                 </Button>
               </div>
@@ -211,8 +211,8 @@ export default function DocumentUpload({ documentTypes, onExtracted }: DocumentU
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <span className="text-sm font-medium text-green-400">추출 완료</span>
+                <CheckCircle2 className="h-4 w-4 text-stone-900" />
+                <span className="text-sm font-medium text-stone-900">추출 완료</span>
                 <Badge variant="outline" className="text-xs">{selectedType}</Badge>
               </div>
               <button onClick={handleReset} aria-label="닫기" className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]">

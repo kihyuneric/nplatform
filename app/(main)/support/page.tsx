@@ -135,7 +135,7 @@ export default function SupportPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className={`${DS.card.base} ${DS.card.padding}`}>
               <div className="flex items-center gap-3 mb-3">
-                <span className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-lg">📧</span>
+                <span className="w-9 h-9 rounded-xl bg-stone-100/10 flex items-center justify-center text-lg">📧</span>
                 <p className={DS.text.cardSubtitle}>이메일 문의</p>
               </div>
               <p className={`${DS.text.bodyMedium} ${DS.text.brand}`}>support@nplatform.co.kr</p>
@@ -143,7 +143,7 @@ export default function SupportPage() {
             </div>
             <div className={`${DS.card.base} ${DS.card.padding}`}>
               <div className="flex items-center gap-3 mb-3">
-                <span className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-lg">🕐</span>
+                <span className="w-9 h-9 rounded-xl bg-stone-100/10 flex items-center justify-center text-lg">🕐</span>
                 <p className={DS.text.cardSubtitle}>운영시간</p>
               </div>
               <p className={DS.text.bodyMedium}>평일 오전 9시 — 오후 6시</p>
@@ -158,7 +158,7 @@ export default function SupportPage() {
           <div className={`${DS.card.elevated} overflow-hidden`}>
             {submitted ? (
               <div className={DS.empty.wrapper}>
-                <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-4 text-3xl text-emerald-500">✓</div>
+                <div className="w-16 h-16 rounded-full bg-stone-100/10 flex items-center justify-center mb-4 text-3xl text-stone-900">✓</div>
                 <p className={DS.text.cardTitle}>문의가 접수되었습니다</p>
                 <p className={`${DS.text.caption} mt-2`}>영업일 기준 1~2일 내 답변드리겠습니다.</p>
               </div>

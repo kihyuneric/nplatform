@@ -40,9 +40,9 @@ const COURSES = [
 const GLOSSARY_TERMS = ['근저당권', 'NPL', '경매', '배당순위', '임의경매', '강제경매', '채권최고액', '권리분석', '명도', '공매', '양도소득세', '채무자']
 
 const LEVEL_COLOR: Record<string, string> = {
-  '초급': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  '중급': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  '고급': 'bg-red-500/10 text-red-400 border-red-500/20',
+  '초급': 'bg-stone-100/10 text-stone-900 border-stone-300/20',
+  '중급': 'bg-stone-100/10 text-stone-900 border-stone-300/20',
+  '고급': 'bg-stone-100/10 text-stone-900 border-stone-300/20',
 }
 
 const LEVEL_FILTER: Record<Tab, string | null> = {
@@ -79,7 +79,7 @@ export default function LearnPage() {
             <span className="text-[var(--color-border-default)]">|</span>
             <span>수강생 <strong className={DS.text.bodyBold}>12,400명</strong></span>
             <span className="text-[var(--color-border-default)]">|</span>
-            <span>평균 평점 <strong className="text-amber-500 font-semibold">4.8★</strong></span>
+            <span>평균 평점 <strong className="text-stone-900 font-semibold">4.8★</strong></span>
           </div>
         </div>
       </div>
@@ -129,8 +129,8 @@ export default function LearnPage() {
                     <p className={DS.text.captionLight}>{c.instructor}</p>
                     <p className={DS.text.captionLight}>{c.duration}</p>
                     <div className={`flex items-center justify-between pt-2 ${DS.divider.default}`}>
-                      <span className={`${DS.text.caption} text-amber-500`}>★ {c.rating} <span className="text-[var(--color-text-muted)] font-normal">({c.enrolled.toLocaleString()}명)</span></span>
-                      <span className={`${DS.text.caption} font-bold ${c.price === '무료' ? 'text-emerald-400' : 'text-[var(--color-brand-dark)]'}`}>{c.price}</span>
+                      <span className={`${DS.text.caption} text-stone-900`}>★ {c.rating} <span className="text-[var(--color-text-muted)] font-normal">({c.enrolled.toLocaleString()}명)</span></span>
+                      <span className={`${DS.text.caption} font-bold ${c.price === '무료' ? 'text-stone-900' : 'text-[var(--color-brand-dark)]'}`}>{c.price}</span>
                     </div>
                   </div>
                 </Link>
@@ -157,8 +157,8 @@ export default function LearnPage() {
                     <h3 className={`${DS.text.cardSubtitle} line-clamp-2`}>{c.title}</h3>
                     <p className={DS.text.micro}>{c.duration} · {c.lessons}강</p>
                     <div className={`flex items-center justify-between pt-2 ${DS.divider.default}`}>
-                      <span className={`${DS.text.caption} text-amber-500`}>★ {c.rating} <span className="text-[var(--color-text-muted)] font-normal">({c.enrolled.toLocaleString()}명)</span></span>
-                      <span className={`${DS.text.caption} font-bold ${c.price === '무료' ? 'text-emerald-400' : 'text-[var(--color-brand-dark)]'}`}>{c.price}</span>
+                      <span className={`${DS.text.caption} text-stone-900`}>★ {c.rating} <span className="text-[var(--color-text-muted)] font-normal">({c.enrolled.toLocaleString()}명)</span></span>
+                      <span className={`${DS.text.caption} font-bold ${c.price === '무료' ? 'text-stone-900' : 'text-[var(--color-brand-dark)]'}`}>{c.price}</span>
                     </div>
                   </div>
                 </Link>

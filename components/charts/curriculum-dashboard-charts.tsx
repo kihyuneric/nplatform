@@ -36,8 +36,8 @@ export const CurriculumRadarChart = memo(function CurriculumRadarChart({ data }:
           <PolarGrid />
           <PolarAngleAxis dataKey="domain" tick={{ fontSize: 12 }} />
           <PolarRadiusAxis tick={{ fontSize: 10 }} />
-          <Radar name="개념 수" dataKey="concepts" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.3} />
-          <Radar name="커버리지%" dataKey="coverage" stroke="#10B981" fill="#10B981" fillOpacity={0.2} />
+          <Radar name="개념 수" dataKey="concepts" stroke="#14161A" fill="#14161A" fillOpacity={0.3} />
+          <Radar name="커버리지%" dataKey="coverage" stroke="#14161A" fill="#14161A" fillOpacity={0.2} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
         </RadarChart>
       </ResponsiveContainer>
@@ -63,7 +63,7 @@ export const CurriculumLevelChart = memo(function CurriculumLevelChart({ data }:
           <YAxis tick={{ fontSize: 10 }} />
           <Tooltip />
           <Legend wrapperStyle={{ fontSize: 12 }} />
-          <Bar dataKey="covered" name="커버됨" stackId="a" fill="#8B5CF6" />
+          <Bar dataKey="covered" name="커버됨" stackId="a" fill="#14161A" />
           <Bar dataKey="uncovered" name="미커버" stackId="a" fill="#E5E7EB" />
         </BarChart>
       </ResponsiveContainer>

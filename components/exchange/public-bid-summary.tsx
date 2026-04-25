@@ -107,7 +107,7 @@ export function PublicBidSummary({ listingId, askingPrice, onBidClick, isLoggedI
           <div
             className="flex items-center justify-center w-7 h-7 rounded-lg"
             style={{
-              backgroundColor: "rgba(59,130,246,0.15)",
+              backgroundColor: "rgba(20,22,26,0.15)",
               color: "var(--color-brand-bright, #3B82F6)",
             }}
           >

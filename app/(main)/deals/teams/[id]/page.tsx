@@ -97,17 +97,17 @@ const TIER_LABEL: Record<number, string> = {
   0: "L0 일반", 1: "L1 개인전문", 2: "L2 기관전문", 3: "L3 기관"
 }
 const GRADE_COLOR: Record<string, string> = {
-  A: "#10B981", "B+": "#14B8A6", B: "#3B82F6", C: "#F59E0B", D: "#EF4444", F: "#6B7280",
+  A: "#14161A", "B+": "#14161A", B: "#14161A", C: "#14161A", D: "#1B1B1F", F: "#6B7280",
 }
 const STATUS_STYLE: Record<TeamStatus, string> = {
-  "모집중":   "border-amber-500/30 bg-amber-500/10 text-amber-400",
-  "모집완료": "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
+  "모집중":   "border-stone-300/30 bg-stone-100/10 text-stone-900",
+  "모집완료": "border-stone-300/30 bg-stone-100/10 text-stone-900",
   "운용중":   "border-[#2E75B6]/30 bg-[#2E75B6]/10 text-[#5B9BD5]",
   "상환완료": "border-slate-500/30 bg-slate-500/10 text-slate-400",
-  "취소":     "border-red-500/30 bg-red-500/10 text-red-400",
+  "취소":     "border-stone-300/30 bg-stone-100/10 text-stone-900",
 }
 const AVATAR_COLORS = [
-  "bg-[#2E75B6]", "bg-purple-600", "bg-emerald-600", "bg-amber-600", "bg-pink-600", "bg-teal-600",
+  "bg-[#2E75B6]", "bg-stone-100", "bg-stone-100", "bg-stone-100", "bg-stone-100", "bg-stone-100",
 ]
 
 function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md" | "lg" }) {
@@ -316,13 +316,13 @@ export default function TeamDetailPage() {
           <Zap className="h-2.5 w-2.5" />{team.status}
         </span>
         {isMember ? (
-          <button className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-red-500/20 bg-red-500/10 px-3 text-xs font-medium text-red-400 hover:bg-red-500/20 transition-colors">
+          <button className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-stone-300/20 bg-stone-100/10 px-3 text-xs font-medium text-stone-900 hover:bg-stone-100/20 transition-colors">
             <LogOut className="h-3.5 w-3.5" />팀 나가기
           </button>
         ) : team.status === "모집중" ? (
           <button
             onClick={() => setShowJoinModal(true)}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[var(--color-positive)] px-3 text-xs font-semibold text-black hover:bg-emerald-600 transition-colors"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[var(--color-positive)] px-3 text-xs font-semibold text-black hover:bg-stone-100 transition-colors"
           >
             <UserPlus className="h-3.5 w-3.5" />참여하기
           </button>
@@ -355,7 +355,7 @@ export default function TeamDetailPage() {
           {/* 리더 한 줄 요약 */}
           {leader && (
             <div className="mt-3 flex items-center gap-2">
-              <Crown className="h-3.5 w-3.5 text-amber-400" />
+              <Crown className="h-3.5 w-3.5 text-stone-900" />
               <span className="text-xs text-slate-500">리더 투자사</span>
               <Avatar name={leader.company_name ?? leader.name} size="sm" />
               <span className="text-sm font-semibold text-slate-200">
@@ -365,7 +365,7 @@ export default function TeamDetailPage() {
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
                   style={{
                     background: (leader.investor_tier ?? 0) >= 2 ? "#A855F720" : "#3B82F620",
-                    color: (leader.investor_tier ?? 0) >= 2 ? "#A855F7" : "#93C5FD",
+                    color: (leader.investor_tier ?? 0) >= 2 ? "#14161A" : "#93C5FD",
                   }}>
                   {TIER_LABEL[leader.investor_tier ?? 0]}
                 </span>
@@ -381,15 +381,15 @@ export default function TeamDetailPage() {
               <span className="text-slate-500">개사 참여</span>
             </span>
             <span className="flex items-center gap-1.5 text-slate-300">
-              <Target className="h-4 w-4 text-purple-400" />
+              <Target className="h-4 w-4 text-stone-900" />
               <span className="text-slate-500">목표</span>
               <span className="font-semibold text-white">{fmt(team.target_amount)}</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <TrendingUp className="h-4 w-4 text-emerald-400" />
+              <TrendingUp className="h-4 w-4 text-stone-900" />
               <span className="text-slate-500">확약</span>
-              <span className="font-semibold text-emerald-400">{fmt(team.raised_amount)}</span>
-              <span className="text-xs text-emerald-500">({pct}%)</span>
+              <span className="font-semibold text-stone-900">{fmt(team.raised_amount)}</span>
+              <span className="text-xs text-stone-900">({pct}%)</span>
             </span>
           </div>
 
@@ -400,7 +400,7 @@ export default function TeamDetailPage() {
             </div>
             <div className="mt-1.5 flex justify-between text-[11px]">
               <span className="text-slate-600">모집 현황</span>
-              <span className="font-semibold text-emerald-400">{pct}% 달성</span>
+              <span className="font-semibold text-stone-900">{pct}% 달성</span>
             </div>
           </div>
         </div>
@@ -411,9 +411,9 @@ export default function TeamDetailPage() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { label: "목표 금액", value: fmt(team.target_amount), icon: Banknote, accent: "bg-[#2E75B6]" },
-            { label: "예상 수익률", value: `${team.return_rate ?? "—"}%`, sub: "연 환산", icon: TrendingUp, accent: "bg-emerald-500" },
-            { label: "공동 투자사", value: `${coInvestors.length}개사`, sub: `리더 포함 ${team.members.length}개사`, icon: Users, accent: "bg-purple-500" },
-            { label: "모집 마감", value: team.deadline ? `D-${Math.max(0, Math.ceil((new Date(team.deadline).getTime() - Date.now()) / 86400000))}` : "—", icon: Clock, accent: "bg-amber-500" },
+            { label: "예상 수익률", value: `${team.return_rate ?? "—"}%`, sub: "연 환산", icon: TrendingUp, accent: "bg-stone-100" },
+            { label: "공동 투자사", value: `${coInvestors.length}개사`, sub: `리더 포함 ${team.members.length}개사`, icon: Users, accent: "bg-stone-100" },
+            { label: "모집 마감", value: team.deadline ? `D-${Math.max(0, Math.ceil((new Date(team.deadline).getTime() - Date.now()) / 86400000))}` : "—", icon: Clock, accent: "bg-stone-100" },
           ].map(k => (
             <div key={k.label} className="relative overflow-hidden rounded-xl border border-white/[0.06] bg-[#0F1C2E] p-4">
               <div className={`absolute left-0 top-0 h-full w-[3px] ${k.accent}`} />
@@ -441,7 +441,7 @@ export default function TeamDetailPage() {
               onClick={() => setTab(t.id)}
               className={`whitespace-nowrap inline-flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 transition-colors
                 ${tab === t.id
-                  ? "border-[#10B981] text-[#10B981]"
+                  ? "border-[#14161A] text-[#14161A]"
                   : "border-transparent text-slate-500 hover:text-slate-300"}`}
             >
               <t.icon className="h-3.5 w-3.5" />{t.label}
@@ -506,7 +506,7 @@ export default function TeamDetailPage() {
                           </td>
                           <td className="px-5 py-3.5 text-right">
                             {m.role === "LEADER"
-                              ? <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-400"><Crown className="h-2.5 w-2.5" />리더</span>
+                              ? <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-stone-900"><Crown className="h-2.5 w-2.5" />리더</span>
                               : <span className="text-[10px] text-slate-500">공동</span>
                             }
                           </td>
@@ -521,8 +521,8 @@ export default function TeamDetailPage() {
                           </td>
                           <td className="px-5 py-3.5 text-right">
                             {m.status === "COMMITTED"
-                              ? <span className="flex items-center justify-end gap-1 text-[11px] text-emerald-400"><CheckCircle2 className="h-3 w-3" />확약</span>
-                              : <span className="flex items-center justify-end gap-1 text-[11px] text-amber-400"><CircleDot className="h-3 w-3" />검토중</span>
+                              ? <span className="flex items-center justify-end gap-1 text-[11px] text-stone-900"><CheckCircle2 className="h-3 w-3" />확약</span>
+                              : <span className="flex items-center justify-end gap-1 text-[11px] text-stone-900"><CircleDot className="h-3 w-3" />검토중</span>
                             }
                           </td>
                         </tr>
@@ -544,9 +544,9 @@ export default function TeamDetailPage() {
                 <div className="rounded-2xl border p-6 space-y-5"
                   style={{ background: "linear-gradient(135deg,#0A1628,#0F1F35)", borderColor: "#F59E0B30", boxShadow: "0 0 0 1px #F59E0B10 inset" }}>
                   <div className="flex items-center gap-2">
-                    <Crown className="h-4 w-4 text-amber-400" />
-                    <h2 className="text-sm font-bold uppercase tracking-widest text-amber-400">리더 투자사</h2>
-                    <Star className="h-3.5 w-3.5 text-amber-400 ml-auto" />
+                    <Crown className="h-4 w-4 text-stone-900" />
+                    <h2 className="text-sm font-bold uppercase tracking-widest text-stone-900">리더 투자사</h2>
+                    <Star className="h-3.5 w-3.5 text-stone-900 ml-auto" />
                   </div>
 
                   <div className="flex items-start gap-4">
@@ -558,7 +558,7 @@ export default function TeamDetailPage() {
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                             style={{
                               background: (leader.investor_tier ?? 0) >= 2 ? "#A855F720" : "#3B82F620",
-                              color: (leader.investor_tier ?? 0) >= 2 ? "#A855F7" : "#93C5FD",
+                              color: (leader.investor_tier ?? 0) >= 2 ? "#14161A" : "#93C5FD",
                             }}>
                             {TIER_LABEL[leader.investor_tier ?? 0]}
                           </span>
@@ -576,7 +576,7 @@ export default function TeamDetailPage() {
                   <div className="rounded-xl p-4 space-y-3" style={{ background: "#0F1F35", border: "1px solid rgba(255,255,255,0.06)" }}>
                     <div className="flex justify-between">
                       <span className="text-xs text-slate-500">참여 금액</span>
-                      <span className="font-bold text-sm text-emerald-400">{fmt(leader.contribution)}</span>
+                      <span className="font-bold text-sm text-stone-900">{fmt(leader.contribution)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-xs text-slate-500">전체 대비</span>
@@ -590,7 +590,7 @@ export default function TeamDetailPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-xs text-slate-500">상태</span>
-                      <span className="flex items-center gap-1 text-xs text-emerald-400">
+                      <span className="flex items-center gap-1 text-xs text-stone-900">
                         <CheckCircle2 className="h-3 w-3" />확약
                       </span>
                     </div>
@@ -611,14 +611,14 @@ export default function TeamDetailPage() {
                 </div>
 
                 {/* 리더 역할 안내 */}
-                <div className="rounded-xl p-4 border border-amber-500/20 bg-amber-500/5 space-y-2">
+                <div className="rounded-xl p-4 border border-stone-300/20 bg-stone-100/5 space-y-2">
                   <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-amber-400" />
-                    <p className="text-xs font-semibold text-amber-400">리더 투자사 역할</p>
+                    <Shield className="h-4 w-4 text-stone-900" />
+                    <p className="text-xs font-semibold text-stone-900">리더 투자사 역할</p>
                   </div>
                   {["매물 발굴 및 실사 주도", "공동 투자사 모집 및 심사", "투자 의사결정 및 협상", "수익 배분 및 정산 관리"].map((t, i) => (
                     <p key={i} className="flex items-start gap-1.5 text-xs text-slate-500">
-                      <span className="text-amber-400 mt-0.5">•</span>{t}
+                      <span className="text-stone-900 mt-0.5">•</span>{t}
                     </p>
                   ))}
                 </div>
@@ -637,7 +637,7 @@ export default function TeamDetailPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-[#3B82F6]" />
+                <Users className="h-4 w-4 text-[#14161A]" />
                 <p className="text-sm font-semibold text-white">공동 투자사</p>
                 <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "#3B82F620", color: "#93C5FD" }}>
                   {coInvestors.length}개사
@@ -646,7 +646,7 @@ export default function TeamDetailPage() {
               {team.status === "모집중" && (
                 <button
                   onClick={() => setShowJoinModal(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-positive)] px-3 py-1.5 text-xs font-semibold text-black hover:bg-emerald-600 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-positive)] px-3 py-1.5 text-xs font-semibold text-black hover:bg-stone-100 transition-colors"
                 >
                   <UserPlus className="h-3.5 w-3.5" />참여 신청
                 </button>
@@ -658,7 +658,7 @@ export default function TeamDetailPage() {
                 <Users className="h-10 w-10 text-slate-700 mb-3" />
                 <p className="text-slate-500 text-sm">아직 공동 투자사가 없습니다.</p>
                 {team.status === "모집중" && (
-                  <p className="text-[#10B981] text-xs mt-1">첫 번째 공동 투자사로 참여하세요!</p>
+                  <p className="text-[#14161A] text-xs mt-1">첫 번째 공동 투자사로 참여하세요!</p>
                 )}
               </div>
             ) : (
@@ -673,15 +673,15 @@ export default function TeamDetailPage() {
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                             style={{
                               background: (m.investor_tier ?? 0) >= 2 ? "#A855F720" : "#3B82F620",
-                              color: (m.investor_tier ?? 0) >= 2 ? "#A855F7" : "#93C5FD",
+                              color: (m.investor_tier ?? 0) >= 2 ? "#14161A" : "#93C5FD",
                             }}>
                             {TIER_LABEL[m.investor_tier ?? 0]}
                           </span>
                         )}
                         <span className="ml-auto">
                           {m.status === "COMMITTED"
-                            ? <span className="flex items-center gap-1 text-[11px] text-emerald-400"><CheckCircle2 className="h-3 w-3" />확약</span>
-                            : <span className="flex items-center gap-1 text-[11px] text-amber-400"><CircleDot className="h-3 w-3" />검토중</span>
+                            ? <span className="flex items-center gap-1 text-[11px] text-stone-900"><CheckCircle2 className="h-3 w-3" />확약</span>
+                            : <span className="flex items-center gap-1 text-[11px] text-stone-900"><CircleDot className="h-3 w-3" />검토중</span>
                           }
                         </span>
                       </div>
@@ -697,7 +697,7 @@ export default function TeamDetailPage() {
             {/* 잔여 모집 안내 */}
             {team.status === "모집중" && (team.target_amount - team.raised_amount) > 0 && (
               <div className="rounded-xl p-4" style={{ background: "#10B98110", border: "1px solid #10B98125" }}>
-                <p className="text-xs text-emerald-400">
+                <p className="text-xs text-stone-900">
                   잔여 모집: <span className="font-bold">{fmt(team.target_amount - team.raised_amount)}</span>
                   {team.min_per_member && team.max_per_member && (
                     <span className="ml-2 text-[10px] text-slate-500">
@@ -719,11 +719,11 @@ export default function TeamDetailPage() {
                   style={{ background: "#0A1628", borderColor: "#3B82F625" }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-[#3B82F6]" />
+                      <Building2 className="h-4 w-4 text-[#14161A]" />
                       <span className="text-xs font-bold uppercase tracking-widest text-slate-400">거래소 연동 매물</span>
                     </div>
                     <Link href={`/exchange/${team.listing.id}`}
-                      className="flex items-center gap-1 text-xs font-medium text-[#3B82F6] hover:opacity-80 transition-opacity">
+                      className="flex items-center gap-1 text-xs font-medium text-[#14161A] hover:opacity-80 transition-opacity">
                       거래소에서 보기 <ExternalLink className="h-3 w-3" />
                     </Link>
                   </div>
@@ -764,7 +764,7 @@ export default function TeamDetailPage() {
                         color: "text-white",
                       },
                       { label: "감정가", value: team.listing.appraised_value ? fmt(team.listing.appraised_value) : "—", color: "text-white" },
-                      { label: "할인율", value: team.listing.discount_rate ? `${team.listing.discount_rate}%` : "—", color: "text-emerald-400" },
+                      { label: "할인율", value: team.listing.discount_rate ? `${team.listing.discount_rate}%` : "—", color: "text-stone-900" },
                       { label: "리스크 등급", value: team.listing.risk_grade ?? "—", color: GRADE_COLOR[team.listing.risk_grade ?? ""] ?? "text-white" },
                     ].map((k, i) => (
                       <div key={i} className="rounded-lg p-3" style={{ background: "#0F1F35", border: "1px solid rgba(255,255,255,0.05)" }}>
@@ -784,8 +784,8 @@ export default function TeamDetailPage() {
                     const unpaidInt = team.listing.unpaid_interest ?? team.listing.claim_breakdown?.unpaidInterest ?? 0
                     const total = principal + unpaidInt
                     return total > 0 ? (
-                      <div className="mt-1 rounded-lg p-3" style={{ background: "#0F1F35", border: "1px solid rgba(245,158,11,0.2)" }}>
-                        <p className="text-[10px] text-amber-500 font-semibold uppercase tracking-wider mb-2">채권잔액 내역</p>
+                      <div className="mt-1 rounded-lg p-3" style={{ background: "#0F1F35", border: "1px solid rgba(20,22,26,0.2)" }}>
+                        <p className="text-[10px] text-stone-900 font-semibold uppercase tracking-wider mb-2">채권잔액 내역</p>
                         <div className="grid grid-cols-3 gap-2">
                           <div>
                             <p className="text-[10px] text-slate-600 mb-0.5">대출원금</p>
@@ -795,9 +795,9 @@ export default function TeamDetailPage() {
                             <p className="text-[10px] text-slate-600 mb-0.5">미수이자</p>
                             <p className="text-sm font-bold text-slate-400">{unpaidInt > 0 ? fmt(unpaidInt) : "—"}</p>
                           </div>
-                          <div style={{ borderLeft: "1px solid rgba(245,158,11,0.2)", paddingLeft: 8 }}>
-                            <p className="text-[10px] text-amber-500 mb-0.5">채권잔액 합계</p>
-                            <p className="text-sm font-bold text-amber-300">{fmt(total)}</p>
+                          <div style={{ borderLeft: "1px solid rgba(20,22,26,0.2)", paddingLeft: 8 }}>
+                            <p className="text-[10px] text-stone-900 mb-0.5">채권잔액 합계</p>
+                            <p className="text-sm font-bold text-stone-900">{fmt(total)}</p>
                           </div>
                         </div>
                         {team.listing.claim_breakdown?.delinquencyStartDate && (
@@ -830,14 +830,14 @@ export default function TeamDetailPage() {
                     const selected = Object.entries(sc).filter(([k, v]) => v === true && k !== "otherNote").map(([k]) => COND_LABELS[k] ?? k)
                     if (selected.length === 0) return null
                     return (
-                      <div className="mt-1 rounded-lg p-3" style={{ background: "#0F1F35", border: "1px solid rgba(245,158,11,0.2)" }}>
-                        <p className="text-[10px] text-amber-500 font-semibold uppercase tracking-wider mb-2">
+                      <div className="mt-1 rounded-lg p-3" style={{ background: "#0F1F35", border: "1px solid rgba(20,22,26,0.2)" }}>
+                        <p className="text-[10px] text-stone-900 font-semibold uppercase tracking-wider mb-2">
                           특수조건 ({selected.length}개 해당)
                         </p>
                         <div className="flex flex-wrap gap-1">
                           {selected.map(label => (
                             <span key={label} className="text-[10px] font-medium px-1.5 py-0.5 rounded"
-                              style={{ background: "rgba(245,158,11,0.15)", color: "#FCD34D" }}>
+                              style={{ background: "rgba(20,22,26,0.15)", color: "#FCD34D" }}>
                               {label}
                             </span>
                           ))}
@@ -850,10 +850,10 @@ export default function TeamDetailPage() {
                   })()}
                 </div>
 
-                <div className="rounded-xl p-4 border border-amber-500/20 bg-amber-500/5 space-y-1.5">
+                <div className="rounded-xl p-4 border border-stone-300/20 bg-stone-100/5 space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-amber-400" />
-                    <p className="text-xs font-semibold text-amber-400">투자 유의사항</p>
+                    <AlertCircle className="h-4 w-4 text-stone-900" />
+                    <p className="text-xs font-semibold text-stone-900">투자 유의사항</p>
                   </div>
                   {[
                     "매물 정보는 거래소와 실시간 연동됩니다.",
@@ -861,7 +861,7 @@ export default function TeamDetailPage() {
                     "상세 실사 자료는 거래소 매물 페이지에서 확인하세요.",
                   ].map((t, i) => (
                     <p key={i} className="flex items-start gap-1.5 text-xs text-slate-500">
-                      <span className="text-amber-400 mt-0.5">•</span>{t}
+                      <span className="text-stone-900 mt-0.5">•</span>{t}
                     </p>
                   ))}
                 </div>
@@ -887,7 +887,7 @@ export default function TeamDetailPage() {
           <div className="rounded-xl border border-white/[0.06] bg-[#0A1624] overflow-hidden">
             <div className="border-b border-white/[0.06] px-5 py-3.5 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <div className="h-2 w-2 rounded-full bg-stone-100 animate-pulse" />
                 <span className="text-sm font-semibold text-slate-200">{team.name}</span>
               </div>
               <span className="text-[11px] text-slate-600">{team.members.length}개사 참여 중</span>
@@ -915,10 +915,10 @@ export default function TeamDetailPage() {
                 value={chatInput} onChange={e => setChatInput(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && sendMsg()}
                 placeholder="메시지를 입력하세요..."
-                className="flex-1 rounded-xl border border-white/10 bg-[#0D1F38] px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-[#10B981]/50"
+                className="flex-1 rounded-xl border border-white/10 bg-[#0D1F38] px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-[#14161A]/50"
               />
               <button onClick={sendMsg} disabled={!chatInput.trim()}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-positive)] text-black hover:bg-emerald-600 disabled:opacity-40 transition-colors">
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-positive)] text-black hover:bg-stone-100 disabled:opacity-40 transition-colors">
                 <Send className="h-4 w-4" />
               </button>
             </div>
@@ -930,7 +930,7 @@ export default function TeamDetailPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: "예상 총 수익", value: fmt(team.raised_amount * ((team.return_rate ?? 0) / 100)), color: "text-emerald-400" },
+                { label: "예상 총 수익", value: fmt(team.raised_amount * ((team.return_rate ?? 0) / 100)), color: "text-stone-900" },
                 { label: "공동 투자사 합산", value: fmt(coInvestors.reduce((s, m) => s + m.contribution, 0) * ((team.return_rate ?? 0) / 100)), color: "text-[#5B9BD5]" },
               ].map(s => (
                 <div key={s.label} className="rounded-xl border border-white/[0.06] bg-[#0A1624] p-5">
@@ -964,7 +964,7 @@ export default function TeamDetailPage() {
                             <div className="flex items-center gap-2.5">
                               <Avatar name={m.company_name ?? m.name} size="sm" />
                               <span className="font-medium text-slate-200">{m.company_name ?? m.name}</span>
-                              {m.role === "LEADER" && <Crown className="h-3 w-3 text-amber-400" />}
+                              {m.role === "LEADER" && <Crown className="h-3 w-3 text-stone-900" />}
                             </div>
                           </td>
                           <td className="px-5 py-3.5 text-right text-xs text-slate-500">
@@ -972,7 +972,7 @@ export default function TeamDetailPage() {
                           </td>
                           <td className="px-5 py-3.5 text-right text-slate-300">{fmt(m.contribution)}</td>
                           <td className="px-5 py-3.5 text-right text-slate-400">{share.toFixed(1)}%</td>
-                          <td className="px-5 py-3.5 text-right font-semibold text-emerald-400">+{fmt(ret)}</td>
+                          <td className="px-5 py-3.5 text-right font-semibold text-stone-900">+{fmt(ret)}</td>
                         </tr>
                       )
                     })}
@@ -1003,7 +1003,7 @@ export default function TeamDetailPage() {
                 <p className="text-xs text-slate-500">리더 투자사</p>
                 <p className="text-sm font-semibold text-white">{leader.company_name ?? leader.name}</p>
                 {team.return_rate && (
-                  <p className="text-xs text-slate-500">예상 수익률: <span className="text-emerald-400 font-bold">{team.return_rate}%</span></p>
+                  <p className="text-xs text-slate-500">예상 수익률: <span className="text-stone-900 font-bold">{team.return_rate}%</span></p>
                 )}
               </div>
             )}
@@ -1032,7 +1032,7 @@ export default function TeamDetailPage() {
               </button>
               <button onClick={handleJoin} disabled={joining}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
-                style={{ background: "#10B981", color: "#000" }}>
+                style={{ background: "#14161A", color: "#000" }}>
                 {joining ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 참여 신청
               </button>

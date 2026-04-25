@@ -26,11 +26,11 @@ interface SimilarListingsProps {
 }
 
 const RISK_COLORS: Record<string, string> = {
-  A: "bg-emerald-500/10 text-emerald-400",
-  B: "bg-blue-500/10 text-blue-400",
-  C: "bg-yellow-500/10 text-yellow-400",
-  D: "bg-orange-500/10 text-orange-400",
-  E: "bg-red-500/10 text-red-400",
+  A: "bg-stone-100/10 text-stone-900",
+  B: "bg-stone-100/10 text-stone-900",
+  C: "bg-stone-100/10 text-stone-900",
+  D: "bg-stone-100/10 text-stone-900",
+  E: "bg-stone-100/10 text-stone-900",
 }
 
 export function SimilarListings({ collateralType, excludeId }: SimilarListingsProps) {

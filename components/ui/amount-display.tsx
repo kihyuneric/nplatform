@@ -152,8 +152,8 @@ export function AmountDisplay({
   const fullAmount = formatAmount(amount, 'full', currency)
 
   const colorClass = cn(
-    positiveColor && isPositive && 'text-emerald-400',
-    negativeColor && isNegative && 'text-red-400',
+    positiveColor && isPositive && 'text-stone-900',
+    negativeColor && isNegative && 'text-stone-900',
     !positiveColor && !negativeColor && '',
   )
 
@@ -225,10 +225,10 @@ export function DiscountBadge({
   if (rate == null) return null
 
   const color = rate >= 30
-    ? 'bg-red-500/10 text-red-400'
+    ? 'bg-stone-100/10 text-stone-900'
     : rate >= 20
-    ? 'bg-orange-500/10 text-orange-400'
-    : 'bg-emerald-500/10 text-emerald-400'
+    ? 'bg-stone-100/10 text-stone-900'
+    : 'bg-stone-100/10 text-stone-900'
 
   return (
     <span
@@ -266,8 +266,8 @@ export function PriceChange({
     <span
       className={cn(
         'inline-flex items-center gap-0.5 text-sm font-medium tabular-nums',
-        isPositive && 'text-red-500', // Korean convention: red = up
-        isNegative && 'text-blue-500', // blue = down
+        isPositive && 'text-stone-900', // Korean convention: red = up
+        isNegative && 'text-stone-900', // blue = down
         !isPositive && !isNegative && 'text-muted-foreground',
         className
       )}

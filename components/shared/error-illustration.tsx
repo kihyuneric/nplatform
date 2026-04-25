@@ -24,9 +24,9 @@ export function ErrorIllustration({
       {/* SVG 일러스트 */}
       <svg width="120" height="120" viewBox="0 0 120 120" fill="none" className="mb-6">
         <circle cx="60" cy="60" r="56" fill="#FEF2F2" stroke="#FCA5A5" strokeWidth="2" />
-        <path d="M60 35L85 80H35L60 35Z" fill="#FEE2E2" stroke="#EF4444" strokeWidth="2" strokeLinejoin="round" />
-        <line x1="60" y1="50" x2="60" y2="65" stroke="#EF4444" strokeWidth="3" strokeLinecap="round" />
-        <circle cx="60" cy="72" r="2" fill="#EF4444" />
+        <path d="M60 35L85 80H35L60 35Z" fill="#FEE2E2" stroke="#1B1B1F" strokeWidth="2" strokeLinejoin="round" />
+        <line x1="60" y1="50" x2="60" y2="65" stroke="#1B1B1F" strokeWidth="3" strokeLinecap="round" />
+        <circle cx="60" cy="72" r="2" fill="#1B1B1F" />
       </svg>
 
       <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">{title}</h2>

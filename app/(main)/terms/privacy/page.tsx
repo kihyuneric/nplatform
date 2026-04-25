@@ -47,8 +47,8 @@ export default function PrivacyPolicyPage() {
           <h1 className={DS.header.title}>개인정보 처리방침</h1>
           <p className={`${DS.text.caption} mt-2`}>시행일: 2024년 1월 1일 · 최종 수정: 2026년 3월 1일 · v2.0</p>
           <div className="flex gap-2 mt-4">
-            <span className={`${DS.text.label} bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1`}>정보통신망법 준수</span>
-            <span className={`${DS.text.label} bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full px-3 py-1`}>개인정보보호법 준수</span>
+            <span className={`${DS.text.label} bg-stone-100/10 text-stone-900 border border-stone-300/20 rounded-full px-3 py-1`}>정보통신망법 준수</span>
+            <span className={`${DS.text.label} bg-stone-100/10 text-stone-900 border border-stone-300/20 rounded-full px-3 py-1`}>개인정보보호법 준수</span>
           </div>
         </div>
       </div>
@@ -78,9 +78,9 @@ export default function PrivacyPolicyPage() {
               <h2 className={`${DS.text.cardTitle} mb-1`}>개인정보 처리방침</h2>
               <p className={DS.text.body}>주식회사 트랜스파머(이하 &quot;회사&quot;)는 NPLatform 서비스 제공을 위해 필요한 최소한의 개인정보를 수집합니다.</p>
             </div>
-            <div className="bg-amber-500/10 border-l-4 border-amber-400 p-4 rounded-r-lg mb-8">
-              <p className={`${DS.text.bodyBold} text-amber-300`}>변경 안내 (2026.03.01 시행)</p>
-              <p className={`${DS.text.caption} text-amber-400 mt-1`}>주요 변경: AI 분석 데이터 처리 항목 추가, 쿠키 정책 세분화.</p>
+            <div className="bg-stone-100/10 border-l-4 border-stone-300 p-4 rounded-r-lg mb-8">
+              <p className={`${DS.text.bodyBold} text-stone-900`}>변경 안내 (2026.03.01 시행)</p>
+              <p className={`${DS.text.caption} text-stone-900 mt-1`}>주요 변경: AI 분석 데이터 처리 항목 추가, 쿠키 정책 세분화.</p>
             </div>
 
             <div className="space-y-10">
@@ -133,8 +133,8 @@ export default function PrivacyPolicyPage() {
                 <ul className="list-disc pl-5 space-y-1"><li><strong className="text-[var(--color-text-primary)]">필수 쿠키:</strong> 로그인 유지, 보안 토큰</li><li><strong className="text-[var(--color-text-primary)]">기능 쿠키:</strong> 다크모드·언어 설정, 최근 검색</li><li><strong className="text-[var(--color-text-primary)]">분석 쿠키:</strong> 익명 이용 통계</li><li><strong className="text-[var(--color-text-primary)]">거부:</strong> 브라우저 설정에서 조정 가능. 필수 쿠키 차단 시 일부 기능 제한됩니다.</li></ul>
               </Section>
               <Section id="section-9" title="9. 안전성 확보 조치">
-                <div className="bg-amber-500/10 border-l-4 border-amber-400 p-4 rounded-r-lg mb-3">
-                  <p className={`${DS.text.bodyBold} text-amber-300`}>AES-256 암호화 및 SSL/TLS 적용으로 개인정보를 안전하게 보호합니다.</p>
+                <div className="bg-stone-100/10 border-l-4 border-stone-300 p-4 rounded-r-lg mb-3">
+                  <p className={`${DS.text.bodyBold} text-stone-900`}>AES-256 암호화 및 SSL/TLS 적용으로 개인정보를 안전하게 보호합니다.</p>
                 </div>
                 <ul className="list-disc pl-5 space-y-1"><li><strong className="text-[var(--color-text-primary)]">기술적:</strong> AES-256, SSL/TLS, Supabase RLS 적용</li><li><strong className="text-[var(--color-text-primary)]">관리적:</strong> 내부관리계획 수립, 취급 직원 최소화·교육</li><li><strong className="text-[var(--color-text-primary)]">물리적:</strong> AWS/Supabase 인프라 보안 준수</li></ul>
               </Section>
@@ -147,11 +147,11 @@ export default function PrivacyPolicyPage() {
               </Section>
               <Section id="section-11" title="11. 고지의 의무">
                 <p className="mb-3">방침 변경 시 7일 전 공지사항 고지. 권리 중대 변경 시 최소 30일 전 고지합니다.</p>
-                <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-4 space-y-1">
-                  <p className={`${DS.text.bodyBold} text-blue-300 mb-1`}>개정 이력</p>
-                  <p className={`${DS.text.caption} text-blue-400`}>2026.03.01 — v2.0: AI 분석 항목 추가, 쿠키 정책 세분화</p>
-                  <p className={`${DS.text.caption} text-blue-400`}>2026.01.01 — v1.1: 처리위탁 업체 목록 갱신</p>
-                  <p className={`${DS.text.caption} text-blue-400`}>2025.01.01 — v1.0: 최초 제정</p>
+                <div className="rounded-xl border border-stone-300/20 bg-stone-100/10 p-4 space-y-1">
+                  <p className={`${DS.text.bodyBold} text-stone-900 mb-1`}>개정 이력</p>
+                  <p className={`${DS.text.caption} text-stone-900`}>2026.03.01 — v2.0: AI 분석 항목 추가, 쿠키 정책 세분화</p>
+                  <p className={`${DS.text.caption} text-stone-900`}>2026.01.01 — v1.1: 처리위탁 업체 목록 갱신</p>
+                  <p className={`${DS.text.caption} text-stone-900`}>2025.01.01 — v1.0: 최초 제정</p>
                 </div>
               </Section>
 

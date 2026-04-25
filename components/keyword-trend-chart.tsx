@@ -66,7 +66,7 @@ export function KeywordTrendChart() {
     <Card className="h-full">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
-          <TrendingUp className="h-4 w-4 text-blue-600" />
+          <TrendingUp className="h-4 w-4 text-stone-900" />
           키워드 트렌드 (14일)
         </CardTitle>
       </CardHeader>

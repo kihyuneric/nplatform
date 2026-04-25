@@ -50,25 +50,25 @@ function fmtWon(v: number | undefined | null) {
 
 function gradeColor(grade: string) {
   switch (grade) {
-    case 'A': return { bg: 'bg-emerald-100 dark:bg-emerald-900/50', text: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-300 dark:border-emerald-700', ring: 'ring-emerald-200 dark:ring-emerald-800', accent: 'border-emerald-500', glow: 'rgba(16,185,129,0.6)', solid: '#10B981', heroText: 'text-emerald-400', heroBg: 'bg-emerald-500/10' }
-    case 'B': return { bg: 'bg-blue-100 dark:bg-blue-900/50', text: 'text-blue-700 dark:text-blue-400', border: 'border-blue-300 dark:border-blue-700', ring: 'ring-blue-200 dark:ring-blue-800', accent: 'border-blue-500', glow: 'rgba(59,130,246,0.6)', solid: '#3B82F6', heroText: 'text-blue-400', heroBg: 'bg-blue-500/10' }
-    case 'C': return { bg: 'bg-amber-100 dark:bg-amber-900/50', text: 'text-amber-700 dark:text-amber-400', border: 'border-amber-300 dark:border-amber-700', ring: 'ring-amber-200 dark:ring-amber-800', accent: 'border-amber-500', glow: 'rgba(245,158,11,0.6)', solid: '#F59E0B', heroText: 'text-amber-400', heroBg: 'bg-amber-500/10' }
-    case 'D': return { bg: 'bg-red-100 dark:bg-red-900/50', text: 'text-red-700 dark:text-red-400', border: 'border-red-300 dark:border-red-700', ring: 'ring-red-200 dark:ring-red-800', accent: 'border-red-500', glow: 'rgba(239,68,68,0.6)', solid: '#EF4444', heroText: 'text-red-400', heroBg: 'bg-red-500/10' }
+    case 'A': return { bg: 'bg-stone-100 dark:bg-stone-100/50', text: 'text-stone-900 dark:text-stone-900', border: 'border-stone-300 dark:border-stone-300', ring: 'ring-emerald-200 dark:ring-emerald-800', accent: 'border-stone-300', glow: 'rgba(20,22,26,0.6)', solid: '#14161A', heroText: 'text-stone-900', heroBg: 'bg-stone-100/10' }
+    case 'B': return { bg: 'bg-stone-100 dark:bg-stone-100/50', text: 'text-stone-900 dark:text-stone-900', border: 'border-stone-300 dark:border-stone-300', ring: 'ring-blue-200 dark:ring-blue-800', accent: 'border-stone-300', glow: 'rgba(20,22,26,0.6)', solid: '#14161A', heroText: 'text-stone-900', heroBg: 'bg-stone-100/10' }
+    case 'C': return { bg: 'bg-stone-100 dark:bg-stone-100/50', text: 'text-stone-900 dark:text-stone-900', border: 'border-stone-300 dark:border-stone-300', ring: 'ring-amber-200 dark:ring-amber-800', accent: 'border-stone-300', glow: 'rgba(20,22,26,0.6)', solid: '#14161A', heroText: 'text-stone-900', heroBg: 'bg-stone-100/10' }
+    case 'D': return { bg: 'bg-stone-100 dark:bg-stone-100/50', text: 'text-stone-900 dark:text-stone-900', border: 'border-stone-300 dark:border-stone-300', ring: 'ring-red-200 dark:ring-red-800', accent: 'border-stone-300', glow: 'rgba(27,27,31,0.6)', solid: '#1B1B1F', heroText: 'text-stone-900', heroBg: 'bg-stone-100/10' }
     default: return { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-700 dark:text-gray-300', border: 'border-gray-300 dark:border-gray-700', ring: 'ring-gray-200 dark:ring-gray-800', accent: 'border-gray-400', glow: 'rgba(156,163,175,0.4)', solid: '#9CA3AF', heroText: 'text-gray-400', heroBg: 'bg-gray-500/10' }
   }
 }
 
 function riskScoreColor(score: number) {
-  if (score <= 30) return '#10B981'
-  if (score <= 60) return '#F59E0B'
-  return '#EF4444'
+  if (score <= 30) return '#14161A'
+  if (score <= 60) return '#14161A'
+  return '#1B1B1F'
 }
 
 function verdictLabel(grade: string) {
-  if (grade === 'A') return { label: '투자 추천', color: 'bg-emerald-500 text-white' }
-  if (grade === 'B') return { label: '투자 검토', color: 'bg-blue-500 text-white' }
-  if (grade === 'C') return { label: '주의 필요', color: 'bg-amber-500 text-white' }
-  return { label: '비추천', color: 'bg-red-600 text-white' }
+  if (grade === 'A') return { label: '투자 추천', color: 'bg-stone-100 text-white' }
+  if (grade === 'B') return { label: '투자 검토', color: 'bg-stone-100 text-white' }
+  if (grade === 'C') return { label: '주의 필요', color: 'bg-stone-100 text-white' }
+  return { label: '비추천', color: 'bg-stone-100 text-white' }
 }
 
 /* ───────────────────── types ───────────────────── */
@@ -489,8 +489,8 @@ export default function NplAnalysisDetail({ params }: PageProps) {
   const priceComparisonData = [
     { name: '감정가',   value: data.appraisal_value, fill: '#0D1F38' },
     { name: '공시가격', value: data.official_price,  fill: '#2E75B6' },
-    { name: '실거래가', value: data.market_price,    fill: '#10B981' },
-    { name: 'KB시세',  value: data.kb_price,         fill: '#8B5CF6' },
+    { name: '실거래가', value: data.market_price,    fill: '#14161A' },
+    { name: 'KB시세',  value: data.kb_price,         fill: '#14161A' },
   ]
 
   const verdict = verdictLabel(data.ai_grade)
@@ -630,12 +630,12 @@ export default function NplAnalysisDetail({ params }: PageProps) {
           <div className="card-elevated rounded-2xl p-5">
             <p className="data-label mb-3">투자 안전점수</p>
             <div className="flex items-end gap-1.5 mb-2">
-              <span className="text-3xl font-black text-[var(--color-brand-deep)] dark:text-blue-400 tabular-nums">{data.safety_score}</span>
+              <span className="text-3xl font-black text-[var(--color-brand-deep)] dark:text-stone-900 tabular-nums">{data.safety_score}</span>
               <span className="mb-1 text-xs text-gray-400">/ 100</span>
             </div>
             <div className="h-2 rounded-full bg-[var(--color-border-subtle)] dark:bg-white/10 overflow-hidden">
               <div
-                className="h-full rounded-full bg-[var(--color-brand-deep)] dark:bg-blue-500 transition-all duration-700"
+                className="h-full rounded-full bg-[var(--color-brand-deep)] dark:bg-stone-100 transition-all duration-700"
                 style={{ width: `${data.safety_score}%` }}
               />
             </div>
@@ -650,9 +650,9 @@ export default function NplAnalysisDetail({ params }: PageProps) {
             <div className="space-y-2 text-xs">
               {[
                 { label: '감정가',    value: fmt(data.appraisal_value), color: 'text-[var(--color-brand-deep)] dark:text-white font-bold' },
-                { label: '최저매각가', value: fmt(data.minimum_price),   color: 'text-blue-600 dark:text-blue-400 font-bold' },
+                { label: '최저매각가', value: fmt(data.minimum_price),   color: 'text-stone-900 dark:text-stone-900 font-bold' },
                 { label: '최저가율',  value: `${minPriceRatio}%`,        color: 'text-[var(--color-positive)] font-bold' },
-                { label: '실거래가',  value: fmt(data.market_price),     color: 'text-purple-600 dark:text-purple-400 font-bold' },
+                { label: '실거래가',  value: fmt(data.market_price),     color: 'text-stone-900 dark:text-stone-900 font-bold' },
               ].map(item => (
                 <div key={item.label} className="flex justify-between">
                   <span className="text-gray-400">{item.label}</span>
@@ -713,20 +713,20 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                     {(data.roi_scenarios || []).map((sc, i) => (
                       <tr
                         key={i}
-                        className={`border-b border-[var(--color-border-subtle)] dark:border-white/5 transition-colors hover:bg-[var(--color-surface-base)] dark:hover:bg-white/3 ${sc.expected_profit < 0 ? 'bg-red-50/60 dark:bg-red-950/20' : ''}`}
+                        className={`border-b border-[var(--color-border-subtle)] dark:border-white/5 transition-colors hover:bg-[var(--color-surface-base)] dark:hover:bg-white/3 ${sc.expected_profit < 0 ? 'bg-stone-100/60 dark:bg-red-950/20' : ''}`}
                       >
-                        <td className="py-2.5 px-3 font-black text-[var(--color-brand-deep)] dark:text-blue-400 tabular-nums">{sc.bid_rate_pct}%</td>
+                        <td className="py-2.5 px-3 font-black text-[var(--color-brand-deep)] dark:text-stone-900 tabular-nums">{sc.bid_rate_pct}%</td>
                         <td className="py-2.5 px-3 font-mono text-gray-700 dark:text-gray-300 tabular-nums">{fmt(sc.bid_price)}</td>
                         <td className="py-2.5 px-3 font-mono text-gray-700 dark:text-gray-300 tabular-nums">{fmt(sc.acquisition_cost)}</td>
                         <td className="py-2.5 px-3 font-mono text-gray-700 dark:text-gray-300 tabular-nums">{fmt(sc.expected_market_value)}</td>
-                        <td className={`py-2.5 px-3 font-bold tabular-nums ${sc.expected_profit >= 0 ? 'text-[var(--color-positive)]' : 'text-red-600 dark:text-red-400'}`}>
+                        <td className={`py-2.5 px-3 font-bold tabular-nums ${sc.expected_profit >= 0 ? 'text-[var(--color-positive)]' : 'text-stone-900 dark:text-stone-900'}`}>
                           {sc.expected_profit >= 0 ? '+' : ''}{fmt(sc.expected_profit)}
                         </td>
                         <td className="py-2.5 px-3">
                           <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-black ${
-                            sc.roi_pct >= 30 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' :
-                            sc.roi_pct >= 10 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' :
-                            'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                            sc.roi_pct >= 30 ? 'bg-stone-100 text-stone-900 dark:bg-stone-100/40 dark:text-stone-900' :
+                            sc.roi_pct >= 10 ? 'bg-stone-100 text-stone-900 dark:bg-stone-100/40 dark:text-stone-900' :
+                            'bg-stone-100 text-stone-900 dark:bg-stone-100/40 dark:text-stone-900'
                           }`}>
                             {sc.roi_pct >= 0 ? '+' : ''}{sc.roi_pct.toFixed(1)}%
                           </span>
@@ -754,9 +754,9 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
-                      { label: '예상 ROI', value: '28.5%', color: '#10B981' },
-                      { label: '예상 IRR', value: '22.3%', color: '#3B82F6' },
-                      { label: '손익분기', value: '92.1%', color: '#F59E0B' },
+                      { label: '예상 ROI', value: '28.5%', color: '#14161A' },
+                      { label: '예상 IRR', value: '22.3%', color: '#14161A' },
+                      { label: '손익분기', value: '92.1%', color: '#14161A' },
                       { label: '리스크', value: data.ai_grade, color: gradeColor(data.ai_grade).solid },
                     ].map(k => (
                       <div key={k.label} className="rounded-xl bg-gray-50 dark:bg-white/5 p-3 text-center">
@@ -784,7 +784,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                   ].map(item => (
                     <div key={item.label} className="rounded-xl bg-[var(--color-surface-base)] dark:bg-white/5 p-3 text-center border border-[var(--color-border-subtle)] dark:border-white/8">
                       <p className="text-[10px] text-gray-400 leading-tight mb-1">{item.label}</p>
-                      <p className="text-xl font-black text-[var(--color-brand-deep)] dark:text-blue-400">{item.value}%</p>
+                      <p className="text-xl font-black text-[var(--color-brand-deep)] dark:text-stone-900">{item.value}%</p>
                     </div>
                   ))}
                 </div>
@@ -796,9 +796,9 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                   <h3 className="text-sm font-bold text-[var(--color-brand-deep)] dark:text-white uppercase tracking-wider">12개월 낙찰가율 추이</h3>
                   <div className="flex items-center gap-1.5">
                     {trendDirection === 'up'   && <TrendingUp   className="h-4 w-4 text-[var(--color-positive)]" />}
-                    {trendDirection === 'down' && <TrendingDown className="h-4 w-4 text-red-500" />}
+                    {trendDirection === 'down' && <TrendingDown className="h-4 w-4 text-stone-900" />}
                     {trendDirection === 'flat' && <Minus        className="h-4 w-4 text-gray-400" />}
-                    <span className={`text-xs font-black ${trendDirection === 'up' ? 'text-[var(--color-positive)]' : trendDirection === 'down' ? 'text-red-500' : 'text-gray-400'}`}>
+                    <span className={`text-xs font-black ${trendDirection === 'up' ? 'text-[var(--color-positive)]' : trendDirection === 'down' ? 'text-stone-900' : 'text-gray-400'}`}>
                       {trendDirection === 'up' ? '상승' : trendDirection === 'down' ? '하락' : '보합'}
                     </span>
                   </div>
@@ -808,8 +808,8 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-2">
                   {[
-                    { label: '1개월 평균', value: `${data.bid_rate_stats?.avg_1m ?? 0}%`, color: 'text-[var(--color-brand-deep)] dark:text-blue-400' },
-                    { label: '3개월 평균', value: `${data.bid_rate_stats?.avg_3m ?? 0}%`, color: 'text-[var(--color-brand-dark)] dark:text-blue-300' },
+                    { label: '1개월 평균', value: `${data.bid_rate_stats?.avg_1m ?? 0}%`, color: 'text-[var(--color-brand-deep)] dark:text-stone-900' },
+                    { label: '3개월 평균', value: `${data.bid_rate_stats?.avg_3m ?? 0}%`, color: 'text-[var(--color-brand-dark)] dark:text-stone-900' },
                     { label: '6개월 평균', value: `${data.bid_rate_stats?.avg_6m ?? 0}%`, color: 'text-[var(--color-positive)]' },
                   ].map(item => (
                     <div key={item.label} className="rounded-xl bg-[var(--color-surface-base)] dark:bg-white/5 p-3 text-center border border-[var(--color-border-subtle)] dark:border-white/8">
@@ -836,16 +836,16 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                   <tbody>
                     {(data.similar_cases || []).map((sc, i) => (
                       <tr key={i} className="border-b border-[var(--color-border-subtle)] dark:border-white/5 hover:bg-[var(--color-surface-base)] dark:hover:bg-white/3 transition-colors">
-                        <td className="py-2.5 px-3 font-bold text-[var(--color-brand-deep)] dark:text-blue-400">{sc.case_number}</td>
+                        <td className="py-2.5 px-3 font-bold text-[var(--color-brand-deep)] dark:text-stone-900">{sc.case_number}</td>
                         <td className="py-2.5 px-3 max-w-[160px] truncate text-gray-600 dark:text-gray-300">{sc.address}</td>
                         <td className="py-2.5 px-3 font-mono text-gray-700 dark:text-gray-300">{fmt(sc.appraisal_value)}</td>
-                        <td className="py-2.5 px-3 font-mono text-blue-600 dark:text-blue-400">{fmt(sc.bid_price)}</td>
+                        <td className="py-2.5 px-3 font-mono text-stone-900 dark:text-stone-900">{fmt(sc.bid_price)}</td>
                         <td className="py-2.5 px-3 font-black text-[var(--color-brand-deep)] dark:text-white">{sc.bid_rate}%</td>
                         <td className="py-2.5 px-3">
                           <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                            sc.fail_count === 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                            sc.fail_count <= 2   ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                            'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            sc.fail_count === 0 ? 'bg-stone-100 text-stone-900 dark:bg-stone-100/30 dark:text-stone-900' :
+                            sc.fail_count <= 2   ? 'bg-stone-100 text-stone-900 dark:bg-stone-100/30 dark:text-stone-900' :
+                            'bg-stone-100 text-stone-900 dark:bg-stone-100/30 dark:text-stone-900'
                           }`}>{sc.fail_count}회</span>
                         </td>
                         <td className="py-2.5 px-3 text-gray-400">{sc.bid_date}</td>
@@ -866,9 +866,9 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                     { label: '최저 낙찰가율', value: `${min}%` },
                   ]
                 })().map(item => (
-                  <div key={item.label} className="rounded-xl bg-blue-50 dark:bg-blue-950/30 p-4 text-center border border-blue-100 dark:border-blue-900/30">
+                  <div key={item.label} className="rounded-xl bg-stone-100 dark:bg-blue-950/30 p-4 text-center border border-stone-300 dark:border-stone-300/30">
                     <p className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">{item.label}</p>
-                    <p className="mt-1 text-2xl font-black text-[var(--color-brand-deep)] dark:text-blue-400">{item.value}</p>
+                    <p className="mt-1 text-2xl font-black text-[var(--color-brand-deep)] dark:text-stone-900">{item.value}</p>
                   </div>
                 ))}
               </div>
@@ -889,7 +889,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 </p>
                 <button
                   onClick={fetchProfitability}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--color-brand-bright)] text-white font-bold text-sm hover:bg-blue-600 transition-colors shadow-lg"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--color-brand-bright)] text-white font-bold text-sm hover:bg-stone-100 transition-colors shadow-lg"
                 >
                   <Zap className="h-4 w-4" />
                   수익성 분석 실행
@@ -909,11 +909,11 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 {/* KPI Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                   {[
-                    { label: '순수익', value: fmt(profitability.netProfit), sub: '론세일 BASE', color: profitability.netProfit > 0 ? '#10B981' : '#EF4444' },
-                    { label: 'ROI', value: `${profitability.roi.toFixed(1)}%`, sub: '투자수익률', color: profitability.roi > 0 ? '#10B981' : '#EF4444' },
-                    { label: 'IRR', value: `${profitability.irr.toFixed(1)}%`, sub: '내부수익률', color: '#3B82F6' },
-                    { label: '회수기간', value: `${profitability.paybackMonths}개월`, sub: '예상 소요', color: '#8B5CF6' },
-                    { label: '손익분기', value: `${profitability.breakEvenBidRatio.toFixed(1)}%`, sub: '낙찰가율 기준', color: '#F59E0B' },
+                    { label: '순수익', value: fmt(profitability.netProfit), sub: '론세일 BASE', color: profitability.netProfit > 0 ? '#14161A' : '#1B1B1F' },
+                    { label: 'ROI', value: `${profitability.roi.toFixed(1)}%`, sub: '투자수익률', color: profitability.roi > 0 ? '#14161A' : '#1B1B1F' },
+                    { label: 'IRR', value: `${profitability.irr.toFixed(1)}%`, sub: '내부수익률', color: '#14161A' },
+                    { label: '회수기간', value: `${profitability.paybackMonths}개월`, sub: '예상 소요', color: '#14161A' },
+                    { label: '손익분기', value: `${profitability.breakEvenBidRatio.toFixed(1)}%`, sub: '낙찰가율 기준', color: '#14161A' },
                   ].map(k => (
                     <div key={k.label} className="card-elevated rounded-2xl p-5">
                       <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">{k.label}</p>
@@ -926,15 +926,15 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 {/* AI 투자판정 */}
                 {profitability.aiVerdict && (
                   <div className={`card-elevated rounded-2xl p-6 border-l-4 ${
-                    profitability.aiVerdict === 'BUY' ? 'border-emerald-500' : profitability.aiVerdict === 'HOLD' ? 'border-amber-500' : 'border-red-500'
+                    profitability.aiVerdict === 'BUY' ? 'border-stone-300' : profitability.aiVerdict === 'HOLD' ? 'border-stone-300' : 'border-stone-300'
                   }`}>
                     <div className="flex items-center gap-3 mb-3">
                       <Brain className="h-5 w-5 text-[var(--color-brand-bright)]" />
                       <h3 className="text-base font-bold text-[var(--color-brand-deep)] dark:text-white">AI 투자 판정</h3>
                       <span className={`ml-auto px-3 py-1 rounded-full text-xs font-black ${
-                        profitability.aiVerdict === 'BUY' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400' :
-                        profitability.aiVerdict === 'HOLD' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400' :
-                        'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400'
+                        profitability.aiVerdict === 'BUY' ? 'bg-stone-100 text-stone-900 dark:bg-stone-100/50 dark:text-stone-900' :
+                        profitability.aiVerdict === 'HOLD' ? 'bg-stone-100 text-stone-900 dark:bg-stone-100/50 dark:text-stone-900' :
+                        'bg-stone-100 text-stone-900 dark:bg-stone-100/50 dark:text-stone-900'
                       }`}>
                         {profitability.aiVerdict}
                         {profitability.aiConfidence > 0 && ` (${(profitability.aiConfidence * 100).toFixed(0)}%)`}
@@ -959,7 +959,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                           <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">{s.label}</p>
                           <p className="text-lg font-black text-[var(--color-brand-deep)] dark:text-white mb-1">순수익 {fmt(s.netProfit)}</p>
                           <div className="flex gap-4 text-xs">
-                            <span className="text-gray-500 dark:text-gray-400">ROI <strong className={s.roi > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}>{s.roi.toFixed(1)}%</strong></span>
+                            <span className="text-gray-500 dark:text-gray-400">ROI <strong className={s.roi > 0 ? 'text-stone-900 dark:text-stone-900' : 'text-stone-900'}>{s.roi.toFixed(1)}%</strong></span>
                             <span className="text-gray-500 dark:text-gray-400">IRR <strong className="text-[var(--color-brand-bright)]">{s.irr.toFixed(1)}%</strong></span>
                           </div>
                           <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">낙찰가율 {s.bidRatio}%</p>
@@ -975,11 +975,11 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                     <h3 className="text-base font-bold text-[var(--color-brand-deep)] dark:text-white mb-4">Monte Carlo 시뮬레이션 (10,000회)</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                       {[
-                        { label: '평균 수익률', value: `${profitability.monteCarlo.mean.toFixed(1)}%`, color: '#3B82F6' },
-                        { label: 'P10 (비관)', value: `${profitability.monteCarlo.p10.toFixed(1)}%`, color: '#EF4444' },
-                        { label: 'P50 (중앙)', value: `${profitability.monteCarlo.p50.toFixed(1)}%`, color: '#8B5CF6' },
-                        { label: 'P90 (낙관)', value: `${profitability.monteCarlo.p90.toFixed(1)}%`, color: '#10B981' },
-                        { label: '손실확률', value: `${profitability.monteCarlo.lossProb.toFixed(1)}%`, color: profitability.monteCarlo.lossProb > 15 ? '#EF4444' : '#F59E0B' },
+                        { label: '평균 수익률', value: `${profitability.monteCarlo.mean.toFixed(1)}%`, color: '#14161A' },
+                        { label: 'P10 (비관)', value: `${profitability.monteCarlo.p10.toFixed(1)}%`, color: '#1B1B1F' },
+                        { label: 'P50 (중앙)', value: `${profitability.monteCarlo.p50.toFixed(1)}%`, color: '#14161A' },
+                        { label: 'P90 (낙관)', value: `${profitability.monteCarlo.p90.toFixed(1)}%`, color: '#14161A' },
+                        { label: '손실확률', value: `${profitability.monteCarlo.lossProb.toFixed(1)}%`, color: profitability.monteCarlo.lossProb > 15 ? '#1B1B1F' : '#14161A' },
                       ].map(m => (
                         <div key={m.label} className="text-center p-3 rounded-xl bg-gray-50 dark:bg-white/5">
                           <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-1">{m.label}</p>
@@ -1007,7 +1007,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                         </thead>
                         <tbody>
                           {profitability.distributionTable.map((row, i) => (
-                            <tr key={i} className={`border-t border-gray-100 dark:border-white/5 ${row.isTarget ? 'bg-blue-50/50 dark:bg-blue-500/10' : ''}`}>
+                            <tr key={i} className={`border-t border-gray-100 dark:border-white/5 ${row.isTarget ? 'bg-stone-100/50 dark:bg-stone-100/10' : ''}`}>
                               <td className="px-4 py-3 text-sm text-gray-500">{row.rank === 0 ? '-' : row.rank}</td>
                               <td className={`px-4 py-3 text-sm font-semibold ${row.isTarget ? 'text-[var(--color-brand-bright)]' : 'text-gray-700 dark:text-gray-300'}`}>{row.holder}</td>
                               <td className="px-4 py-3 text-sm text-gray-500">{row.type}</td>
@@ -1030,7 +1030,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                   </div>
                   <Link
                     href="/analysis/profitability"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--color-brand-bright)] text-white font-bold text-sm hover:bg-blue-600 transition-colors shrink-0"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--color-brand-bright)] text-white font-bold text-sm hover:bg-stone-100 transition-colors shrink-0"
                   >
                     <Calculator className="h-4 w-4" />
                     수익성 분석 도구 열기
@@ -1064,7 +1064,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
 
             {aiDeep.loading && (
               <div className="card-elevated rounded-2xl p-12 text-center">
-                <Loader2 className="mx-auto h-8 w-8 text-purple-500 animate-spin mb-4" />
+                <Loader2 className="mx-auto h-8 w-8 text-stone-900 animate-spin mb-4" />
                 <p className="text-sm font-bold text-[var(--color-brand-deep)] dark:text-white mb-1">AI 분석 진행 중...</p>
                 <p className="text-xs text-gray-400">회수율 예측 · DCF · 몬테카를로 · 이상 탐지 동시 실행</p>
               </div>
@@ -1074,7 +1074,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
               <>
                 {/* AI Recovery Prediction */}
                 {aiDeep.recovery && (
-                  <div className="card-elevated rounded-2xl p-6 border-l-4 border-purple-500">
+                  <div className="card-elevated rounded-2xl p-6 border-l-4 border-stone-300">
                     <div className="flex items-center gap-3 mb-5">
                       <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
                         <Target className="h-5 w-5 text-white" />
@@ -1084,24 +1084,24 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                         <p className="text-[10px] text-gray-400">Claude NPL Recovery Predictor · Hybrid ML</p>
                       </div>
                       <span className={`ml-auto px-3 py-1 rounded-full text-xs font-bold ${
-                        aiDeep.recovery.aiVerdict === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' :
-                        'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                        aiDeep.recovery.aiVerdict === 'CONFIRMED' ? 'bg-stone-100 text-stone-900 dark:bg-stone-100/40 dark:text-stone-900' :
+                        'bg-stone-100 text-stone-900 dark:bg-stone-100/40 dark:text-stone-900'
                       }`}>
                         {aiDeep.recovery.aiVerdict === 'CONFIRMED' ? 'AI 확인됨' : 'AI 조정됨'}
                       </span>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-3 mb-4">
-                      <div className="rounded-xl bg-purple-50 dark:bg-purple-950/30 p-4 text-center border border-purple-100 dark:border-purple-900/30">
+                      <div className="rounded-xl bg-stone-100 dark:bg-purple-950/30 p-4 text-center border border-stone-300 dark:border-stone-300/30">
                         <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">예상 회수율</p>
-                        <p className="text-3xl font-black text-purple-700 dark:text-purple-300 tabular-nums">{aiDeep.recovery.predicted.toFixed(1)}%</p>
+                        <p className="text-3xl font-black text-stone-900 dark:text-stone-900 tabular-nums">{aiDeep.recovery.predicted.toFixed(1)}%</p>
                       </div>
-                      <div className="rounded-xl bg-blue-50 dark:bg-blue-950/30 p-4 text-center border border-blue-100 dark:border-blue-900/30">
+                      <div className="rounded-xl bg-stone-100 dark:bg-blue-950/30 p-4 text-center border border-stone-300 dark:border-stone-300/30">
                         <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">신뢰도</p>
-                        <p className="text-3xl font-black text-blue-700 dark:text-blue-300 tabular-nums">{(aiDeep.recovery.confidence * 100).toFixed(0)}%</p>
+                        <p className="text-3xl font-black text-stone-900 dark:text-stone-900 tabular-nums">{(aiDeep.recovery.confidence * 100).toFixed(0)}%</p>
                       </div>
-                      <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 p-4 text-center border border-emerald-100 dark:border-emerald-900/30">
+                      <div className="rounded-xl bg-stone-100 dark:bg-emerald-950/30 p-4 text-center border border-stone-300 dark:border-stone-300/30">
                         <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">예측 범위</p>
-                        <p className="text-3xl font-black text-emerald-700 dark:text-emerald-300 tabular-nums">
+                        <p className="text-3xl font-black text-stone-900 dark:text-stone-900 tabular-nums">
                           {aiDeep.recovery.range[0]}~{aiDeep.recovery.range[1]}%
                         </p>
                       </div>
@@ -1109,7 +1109,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                     {aiDeep.recovery.explanation && (
                       <div className="rounded-xl bg-[var(--color-surface-base)] dark:bg-white/5 p-4 border border-[var(--color-border-subtle)] dark:border-white/8">
                         <div className="flex items-start gap-2">
-                          <Sparkles className="h-4 w-4 text-purple-500 shrink-0 mt-0.5" />
+                          <Sparkles className="h-4 w-4 text-stone-900 shrink-0 mt-0.5" />
                           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{aiDeep.recovery.explanation}</p>
                         </div>
                       </div>
@@ -1130,17 +1130,17 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                       </div>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-3 mb-4">
-                      <div className="rounded-xl bg-blue-50 dark:bg-blue-950/30 p-4 text-center border border-blue-100 dark:border-blue-900/30">
+                      <div className="rounded-xl bg-stone-100 dark:bg-blue-950/30 p-4 text-center border border-stone-300 dark:border-stone-300/30">
                         <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">순현재가치 (NPV)</p>
-                        <p className="text-2xl font-black text-blue-700 dark:text-blue-300 tabular-nums">{fmt(aiDeep.dcf.npv)}</p>
+                        <p className="text-2xl font-black text-stone-900 dark:text-stone-900 tabular-nums">{fmt(aiDeep.dcf.npv)}</p>
                       </div>
-                      <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 p-4 text-center border border-emerald-100 dark:border-emerald-900/30">
+                      <div className="rounded-xl bg-stone-100 dark:bg-emerald-950/30 p-4 text-center border border-stone-300 dark:border-stone-300/30">
                         <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">내부수익률 (IRR)</p>
-                        <p className="text-2xl font-black text-emerald-700 dark:text-emerald-300 tabular-nums">{aiDeep.dcf.irr.toFixed(1)}%</p>
+                        <p className="text-2xl font-black text-stone-900 dark:text-stone-900 tabular-nums">{aiDeep.dcf.irr.toFixed(1)}%</p>
                       </div>
-                      <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 p-4 text-center border border-amber-100 dark:border-amber-900/30">
+                      <div className="rounded-xl bg-stone-100 dark:bg-amber-950/30 p-4 text-center border border-stone-300 dark:border-stone-300/30">
                         <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">투자회수 기간</p>
-                        <p className="text-2xl font-black text-amber-700 dark:text-amber-300 tabular-nums">{aiDeep.dcf.paybackMonths}개월</p>
+                        <p className="text-2xl font-black text-stone-900 dark:text-stone-900 tabular-nums">{aiDeep.dcf.paybackMonths}개월</p>
                       </div>
                     </div>
                     {aiDeep.dcf.scenarios && (
@@ -1158,12 +1158,12 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                               <tr key={i} className="border-b border-[var(--color-border-subtle)] dark:border-white/5">
                                 <td className="py-2.5 px-3 font-bold text-[var(--color-brand-deep)] dark:text-white">{s.label}</td>
                                 <td className="py-2.5 px-3 font-mono tabular-nums text-gray-700 dark:text-gray-300">{fmt(s.npv)}</td>
-                                <td className={`py-2.5 px-3 font-bold tabular-nums ${s.irr >= 15 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>{s.irr.toFixed(1)}%</td>
+                                <td className={`py-2.5 px-3 font-bold tabular-nums ${s.irr >= 15 ? 'text-stone-900 dark:text-stone-900' : 'text-stone-900 dark:text-stone-900'}`}>{s.irr.toFixed(1)}%</td>
                                 <td className="py-2.5 px-3">
                                   <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                                    s.irr >= 20 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' :
-                                    s.irr >= 10 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' :
-                                    'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                                    s.irr >= 20 ? 'bg-stone-100 text-stone-900 dark:bg-stone-100/40 dark:text-stone-900' :
+                                    s.irr >= 10 ? 'bg-stone-100 text-stone-900 dark:bg-stone-100/40 dark:text-stone-900' :
+                                    'bg-stone-100 text-stone-900 dark:bg-stone-100/40 dark:text-stone-900'
                                   }`}>
                                     {s.irr >= 20 ? '매력적' : s.irr >= 10 ? '양호' : '주의'}
                                   </span>
@@ -1191,10 +1191,10 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                     </div>
                     <div className="grid gap-4 sm:grid-cols-4">
                       {[
-                        { label: '평균 회수율', value: `${aiDeep.monteCarlo.mean.toFixed(1)}%`, color: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/30' },
-                        { label: '중간값', value: `${aiDeep.monteCarlo.median.toFixed(1)}%`, color: 'text-blue-700 dark:text-blue-300', bg: 'bg-blue-50 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/30' },
-                        { label: '하위 5% (VaR)', value: `${aiDeep.monteCarlo.p5.toFixed(1)}%`, color: 'text-red-700 dark:text-red-300', bg: 'bg-red-50 dark:bg-red-950/30 border-red-100 dark:border-red-900/30' },
-                        { label: '상위 95%', value: `${aiDeep.monteCarlo.p95.toFixed(1)}%`, color: 'text-purple-700 dark:text-purple-300', bg: 'bg-purple-50 dark:bg-purple-950/30 border-purple-100 dark:border-purple-900/30' },
+                        { label: '평균 회수율', value: `${aiDeep.monteCarlo.mean.toFixed(1)}%`, color: 'text-stone-900 dark:text-stone-900', bg: 'bg-stone-100 dark:bg-emerald-950/30 border-stone-300 dark:border-stone-300/30' },
+                        { label: '중간값', value: `${aiDeep.monteCarlo.median.toFixed(1)}%`, color: 'text-stone-900 dark:text-stone-900', bg: 'bg-stone-100 dark:bg-blue-950/30 border-stone-300 dark:border-stone-300/30' },
+                        { label: '하위 5% (VaR)', value: `${aiDeep.monteCarlo.p5.toFixed(1)}%`, color: 'text-stone-900 dark:text-stone-900', bg: 'bg-stone-100 dark:bg-red-950/30 border-stone-300 dark:border-stone-300/30' },
+                        { label: '상위 95%', value: `${aiDeep.monteCarlo.p95.toFixed(1)}%`, color: 'text-stone-900 dark:text-stone-900', bg: 'bg-stone-100 dark:bg-purple-950/30 border-stone-300 dark:border-stone-300/30' },
                       ].map(item => (
                         <div key={item.label} className={`rounded-xl p-4 text-center border ${item.bg}`}>
                           <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">{item.label}</p>
@@ -1204,7 +1204,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                     </div>
                     <div className="mt-4 rounded-xl bg-[var(--color-surface-base)] dark:bg-white/5 p-4 border border-[var(--color-border-subtle)] dark:border-white/8">
                       <div className="flex items-center gap-2 mb-2">
-                        <Brain className="h-4 w-4 text-emerald-500" />
+                        <Brain className="h-4 w-4 text-stone-900" />
                         <span className="text-xs font-bold text-[var(--color-brand-deep)] dark:text-white">AI 해석</span>
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
@@ -1220,21 +1220,21 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 {/* Anomaly Detection */}
                 {aiDeep.anomaly && (
                   <div className={`card-elevated rounded-2xl p-6 border-l-4 ${
-                    aiDeep.anomaly.verdict === 'SAFE' ? 'border-emerald-500' : 'border-amber-500'
+                    aiDeep.anomaly.verdict === 'SAFE' ? 'border-stone-300' : 'border-stone-300'
                   }`}>
                     <div className="flex items-center gap-3 mb-4">
                       {aiDeep.anomaly.verdict === 'SAFE' ? (
-                        <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                        <CheckCircle2 className="h-6 w-6 text-stone-900" />
                       ) : (
-                        <AlertTriangle className="h-6 w-6 text-amber-500" />
+                        <AlertTriangle className="h-6 w-6 text-stone-900" />
                       )}
                       <div>
                         <h3 className="text-sm font-black text-[var(--color-brand-deep)] dark:text-white uppercase tracking-wider">AI 이상 탐지</h3>
                         <p className="text-[10px] text-gray-400">Anomaly Detection Engine · Risk Score {aiDeep.anomaly.score}/100</p>
                       </div>
                       <span className={`ml-auto px-3 py-1.5 rounded-full text-xs font-bold ${
-                        aiDeep.anomaly.verdict === 'SAFE' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' :
-                        'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                        aiDeep.anomaly.verdict === 'SAFE' ? 'bg-stone-100 text-stone-900 dark:bg-stone-100/40 dark:text-stone-900' :
+                        'bg-stone-100 text-stone-900 dark:bg-stone-100/40 dark:text-stone-900'
                       }`}>
                         {aiDeep.anomaly.verdict === 'SAFE' ? '안전' : '주의 필요'}
                       </span>
@@ -1243,7 +1243,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                       <ul className="space-y-2">
                         {aiDeep.anomaly.flags.map((f, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-                            <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
+                            <AlertTriangle className="h-3.5 w-3.5 text-stone-900 shrink-0 mt-0.5" />
                             {f}
                           </li>
                         ))}
@@ -1268,10 +1268,10 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                         <Download className="h-5 w-5 text-white" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-black text-[var(--color-brand-deep)] dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">경매 분석</h4>
+                        <h4 className="text-sm font-black text-[var(--color-brand-deep)] dark:text-white group-hover:text-stone-900 dark:group-hover:text-stone-900 transition-colors">경매 분석</h4>
                         <p className="text-[10px] text-gray-400">낙찰가별 수익률·세금 자동 계산</p>
                       </div>
-                      <ArrowRight className="ml-auto h-4 w-4 text-gray-400 group-hover:text-purple-500 transition-colors" />
+                      <ArrowRight className="ml-auto h-4 w-4 text-gray-400 group-hover:text-stone-900 transition-colors" />
                     </div>
                   </Link>
                   <Link href={`/analysis/copilot?context=${id}`} className="card-elevated rounded-2xl p-6 hover:shadow-lg transition-shadow group">
@@ -1280,10 +1280,10 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                         <MessageSquare className="h-5 w-5 text-white" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-black text-[var(--color-brand-deep)] dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">AI 컨설턴트에게 질문</h4>
+                        <h4 className="text-sm font-black text-[var(--color-brand-deep)] dark:text-white group-hover:text-stone-900 dark:group-hover:text-stone-900 transition-colors">AI 컨설턴트에게 질문</h4>
                         <p className="text-[10px] text-gray-400">이 물건에 대해 AI와 자유롭게 상담</p>
                       </div>
-                      <ArrowRight className="ml-auto h-4 w-4 text-gray-400 group-hover:text-purple-500 transition-colors" />
+                      <ArrowRight className="ml-auto h-4 w-4 text-gray-400 group-hover:text-stone-900 transition-colors" />
                     </div>
                   </Link>
                 </div>
@@ -1339,9 +1339,9 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 <p className="data-label mb-5">가격 비율 분석</p>
                 <div className="space-y-4">
                   {[
-                    { label: '감정가 대비 최저매각가', value: ((data.minimum_price / data.appraisal_value) * 100).toFixed(1), color: '#10B981' },
+                    { label: '감정가 대비 최저매각가', value: ((data.minimum_price / data.appraisal_value) * 100).toFixed(1), color: '#14161A' },
                     { label: '감정가 대비 시세',       value: ((data.market_price / data.appraisal_value) * 100).toFixed(1),  color: '#1B3A5C' },
-                    { label: '시세 대비 최저매각가',   value: ((data.minimum_price / data.market_price) * 100).toFixed(1),   color: '#8B5CF6' },
+                    { label: '시세 대비 최저매각가',   value: ((data.minimum_price / data.market_price) * 100).toFixed(1),   color: '#14161A' },
                   ].map(item => (
                     <div key={item.label}>
                       <div className="flex justify-between text-xs mb-1.5">
@@ -1376,23 +1376,23 @@ export default function NplAnalysisDetail({ params }: PageProps) {
 
               <div className="card-elevated rounded-2xl p-6">
                 <div className="flex items-center gap-2 mb-5">
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
-                  <h3 className="text-sm font-bold text-red-700 dark:text-red-400 uppercase tracking-wider">위험 요인</h3>
+                  <AlertTriangle className="h-4 w-4 text-stone-900" />
+                  <h3 className="text-sm font-bold text-stone-900 dark:text-stone-900 uppercase tracking-wider">위험 요인</h3>
                 </div>
                 <ul className="space-y-3">
                   {(data.risk_factors || []).map((rf, i) => (
-                    <li key={i} className="flex items-start gap-3 rounded-xl bg-red-50 dark:bg-red-950/25 p-4 border border-red-100 dark:border-red-900/30">
+                    <li key={i} className="flex items-start gap-3 rounded-xl bg-stone-100 dark:bg-red-950/25 p-4 border border-stone-300 dark:border-stone-300/30">
                       <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
-                        rf.severity === 'high' ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]' :
-                        rf.severity === 'medium' ? 'bg-amber-500' : 'bg-gray-400'
+                        rf.severity === 'high' ? 'bg-stone-100 shadow-[0_0_6px_rgba(27,27,31,0.5)]' :
+                        rf.severity === 'medium' ? 'bg-stone-100' : 'bg-gray-400'
                       }`} />
                       <div className="text-sm min-w-0">
                         <span className="font-black text-gray-800 dark:text-gray-200">[{rf.category}]</span>{' '}
                         <span className="text-gray-600 dark:text-gray-400">{rf.description}</span>
                       </div>
                       <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        rf.severity === 'high'   ? 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400' :
-                        rf.severity === 'medium' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400' :
+                        rf.severity === 'high'   ? 'bg-stone-100 text-stone-900 dark:bg-stone-100/40 dark:text-stone-900' :
+                        rf.severity === 'medium' ? 'bg-stone-100 text-stone-900 dark:bg-stone-100/40 dark:text-stone-900' :
                         'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
                       }`}>
                         {rf.severity === 'high' ? '고위험' : rf.severity === 'medium' ? '중위험' : '저위험'}
@@ -1405,11 +1405,11 @@ export default function NplAnalysisDetail({ params }: PageProps) {
               <div className="card-elevated rounded-2xl p-6">
                 <div className="flex items-center gap-2 mb-5">
                   <CheckCircle2 className="h-4 w-4 text-[var(--color-positive)]" />
-                  <h3 className="text-sm font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">긍정 요인</h3>
+                  <h3 className="text-sm font-bold text-stone-900 dark:text-stone-900 uppercase tracking-wider">긍정 요인</h3>
                 </div>
                 <ul className="space-y-3">
                   {(data.positive_factors || []).map((pf, i) => (
-                    <li key={i} className="flex items-start gap-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/25 p-4 border border-emerald-100 dark:border-emerald-900/30">
+                    <li key={i} className="flex items-start gap-3 rounded-xl bg-stone-100 dark:bg-emerald-950/25 p-4 border border-stone-300 dark:border-stone-300/30">
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-positive)]" />
                       <div className="text-sm">
                         <span className="font-black text-gray-800 dark:text-gray-200">[{pf.category}]</span>{' '}
@@ -1455,10 +1455,10 @@ export default function NplAnalysisDetail({ params }: PageProps) {
               <div className="grid gap-4 sm:grid-cols-3">
                 {(data.roi_scenarios || []).slice(0, 3).map((sc, i) => {
                   const labels  = ['보수적', '기본', '공격적']
-                  const colors  = ['text-blue-700 dark:text-blue-400',    'text-[var(--color-positive)]',            'text-amber-600 dark:text-amber-400']
-                  const bgCols  = ['bg-blue-50 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/30',
-                                   'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/30',
-                                   'bg-amber-50 dark:bg-amber-950/30 border-amber-100 dark:border-amber-900/30']
+                  const colors  = ['text-stone-900 dark:text-stone-900',    'text-[var(--color-positive)]',            'text-stone-900 dark:text-stone-900']
+                  const bgCols  = ['bg-stone-100 dark:bg-blue-950/30 border-stone-300 dark:border-stone-300/30',
+                                   'bg-stone-100 dark:bg-emerald-950/30 border-stone-300 dark:border-stone-300/30',
+                                   'bg-stone-100 dark:bg-amber-950/30 border-stone-300 dark:border-stone-300/30']
                   return (
                     <div key={i} className={`rounded-2xl p-5 text-center border ${bgCols[i]}`}>
                       <p className="data-label mb-2">{labels[i]} ({sc.bid_rate_pct}%)</p>
@@ -1477,8 +1477,8 @@ export default function NplAnalysisDetail({ params }: PageProps) {
               <div className="space-y-4">
                 {[
                   { num: '01', title: '단기 매각',  desc: '낙찰 후 6~12개월 내 매각. 시세 차익 실현. 취득세+양도세 고려 필요.', icon: TrendingUp, color: 'text-[var(--color-positive)]', bar: 'bg-[var(--color-positive)]' },
-                  { num: '02', title: '임대 수익',  desc: '보유 후 임대 운용. 안정적 현금흐름 확보. 공실 리스크 관리 필요.',  icon: Building2,  color: 'text-blue-600 dark:text-blue-400',   bar: 'bg-blue-500'    },
-                  { num: '03', title: '장기 보유',  desc: '중장기 자본이득 극대화 전략. 개발호재 반영 시 높은 수익 가능.',     icon: BarChart3,  color: 'text-purple-600 dark:text-purple-400', bar: 'bg-purple-500'  },
+                  { num: '02', title: '임대 수익',  desc: '보유 후 임대 운용. 안정적 현금흐름 확보. 공실 리스크 관리 필요.',  icon: Building2,  color: 'text-stone-900 dark:text-stone-900',   bar: 'bg-stone-100'    },
+                  { num: '03', title: '장기 보유',  desc: '중장기 자본이득 극대화 전략. 개발호재 반영 시 높은 수익 가능.',     icon: BarChart3,  color: 'text-stone-900 dark:text-stone-900', bar: 'bg-stone-100'  },
                 ].map(item => (
                   <div key={item.num} className="flex gap-4">
                     {/* Number indicator */}
@@ -1507,7 +1507,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 <p className="text-sm font-bold text-white mb-1">더 정밀한 수익률 시뮬레이션이 필요하신가요?</p>
                 <p className="text-xs text-white/50">실제 입찰가별 세금·비용 포함 정밀 계산</p>
               </div>
-              <Link href={buildSimulatorUrl} className="shrink-0 bg-white text-[var(--color-brand-deep)] hover:bg-blue-50 gap-2 font-bold shadow-md px-3 py-1.5 rounded-lg text-sm transition-colors inline-flex items-center">
+              <Link href={buildSimulatorUrl} className="shrink-0 bg-white text-[var(--color-brand-deep)] hover:bg-stone-100 gap-2 font-bold shadow-md px-3 py-1.5 rounded-lg text-sm transition-colors inline-flex items-center">
                 <Calculator className="h-4 w-4" />
                 수익률 시뮬레이터 열기
               </Link>
@@ -1524,13 +1524,13 @@ export default function NplAnalysisDetail({ params }: PageProps) {
             {/* Court info — 3 KPI tiles */}
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="card-elevated rounded-2xl p-6 text-center">
-                <Landmark className="mx-auto mb-3 h-8 w-8 text-[var(--color-brand-deep)] dark:text-blue-400" />
+                <Landmark className="mx-auto mb-3 h-8 w-8 text-[var(--color-brand-deep)] dark:text-stone-900" />
                 <p className="data-label mb-1">관할 법원</p>
                 <p className="text-base font-black text-[var(--color-brand-deep)] dark:text-white">{data.court_info?.court_name ?? '-'}</p>
               </div>
               <div className="card-elevated rounded-2xl p-6 text-center">
                 <p className="data-label mb-2">평균 처리일수</p>
-                <p className="text-4xl font-black text-[var(--color-brand-dark)] dark:text-blue-300 tabular-nums">{data.court_info?.avg_processing_days ?? '-'}</p>
+                <p className="text-4xl font-black text-[var(--color-brand-dark)] dark:text-stone-900 tabular-nums">{data.court_info?.avg_processing_days ?? '-'}</p>
                 <p className="data-label mt-1">일</p>
               </div>
               <div className="card-elevated rounded-2xl p-6 text-center">
@@ -1547,16 +1547,16 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 {(data.risk_factors || []).map((rf, i) => (
                   <li key={i} className="flex items-start gap-3 rounded-xl border border-[var(--color-border-subtle)] dark:border-white/8 p-4 hover:bg-[var(--color-surface-base)] dark:hover:bg-white/3 transition-colors">
                     <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
-                      rf.severity === 'high'   ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]' :
-                      rf.severity === 'medium' ? 'bg-amber-500' : 'bg-gray-300'
+                      rf.severity === 'high'   ? 'bg-stone-100 shadow-[0_0_6px_rgba(27,27,31,0.5)]' :
+                      rf.severity === 'medium' ? 'bg-stone-100' : 'bg-gray-300'
                     }`} />
                     <div className="text-sm flex-1">
                       <p className="font-black text-[var(--color-brand-deep)] dark:text-white mb-0.5">{rf.category}</p>
                       <p className="text-gray-500 dark:text-gray-400 leading-relaxed">{rf.description}</p>
                     </div>
                     <span className={`shrink-0 text-[10px] font-black px-2.5 py-1 rounded-full ${
-                      rf.severity === 'high'   ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                      rf.severity === 'medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                      rf.severity === 'high'   ? 'bg-stone-100 text-stone-900 dark:bg-stone-100/30 dark:text-stone-900' :
+                      rf.severity === 'medium' ? 'bg-stone-100 text-stone-900 dark:bg-stone-100/30 dark:text-stone-900' :
                       'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
                     }`}>
                       {rf.severity === 'high' ? '고위험' : rf.severity === 'medium' ? '중위험' : '저위험'}
@@ -1584,7 +1584,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                         <td className="py-2.5 px-3 font-bold text-[var(--color-brand-deep)] dark:text-gray-300">{rc.case_number}</td>
                         <td className="py-2.5 px-3 text-gray-600 dark:text-gray-300">{rc.property_type}</td>
                         <td className="py-2.5 px-3 font-mono text-gray-700 dark:text-gray-300 tabular-nums">{fmt(rc.appraisal_value)}</td>
-                        <td className="py-2.5 px-3 font-mono text-blue-600 dark:text-blue-400 tabular-nums">{fmt(rc.bid_price)}</td>
+                        <td className="py-2.5 px-3 font-mono text-stone-900 dark:text-stone-900 tabular-nums">{fmt(rc.bid_price)}</td>
                         <td className="py-2.5 px-3 font-black text-[var(--color-brand-deep)] dark:text-white tabular-nums">{rc.bid_rate}%</td>
                         <td className="py-2.5 px-3 text-gray-400">{rc.date}</td>
                       </tr>
@@ -1595,11 +1595,11 @@ export default function NplAnalysisDetail({ params }: PageProps) {
             </div>
 
             {/* Expert consultation */}
-            <div className="rounded-2xl bg-gradient-to-br from-[var(--color-brand-deep)]/5 to-[var(--color-brand-dark)]/5 dark:from-[var(--color-brand-deep)] dark:to-[var(--color-brand-dark)]/80 border border-[var(--color-brand-deep)]/15 dark:border-blue-800/30 p-6 text-center">
-              <Briefcase className="mx-auto mb-3 h-10 w-10 text-[var(--color-brand-deep)] dark:text-blue-400" />
+            <div className="rounded-2xl bg-gradient-to-br from-[var(--color-brand-deep)]/5 to-[var(--color-brand-dark)]/5 dark:from-[var(--color-brand-deep)] dark:to-[var(--color-brand-dark)]/80 border border-[var(--color-brand-deep)]/15 dark:border-stone-300/30 p-6 text-center">
+              <Briefcase className="mx-auto mb-3 h-10 w-10 text-[var(--color-brand-deep)] dark:text-stone-900" />
               <h3 className="text-base font-black text-[var(--color-brand-deep)] dark:text-white mb-1">전문가에게 법률 검토 요청</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">경·공매 전문 변호사 및 법무사에게 이 건 검토를 의뢰하세요</p>
-              <Link href="/services/experts" className="px-3 py-1.5 rounded-lg border border-[var(--color-border-default)] text-sm transition-colors border-[var(--color-brand-deep)]/30 text-[var(--color-brand-deep)] hover:bg-[var(--color-brand-deep)]/5 dark:border-blue-700 dark:text-blue-300 gap-2 font-semibold inline-flex items-center">
+              <Link href="/services/experts" className="px-3 py-1.5 rounded-lg border border-[var(--color-border-default)] text-sm transition-colors border-[var(--color-brand-deep)]/30 text-[var(--color-brand-deep)] hover:bg-[var(--color-brand-deep)]/5 dark:border-stone-300 dark:text-stone-900 gap-2 font-semibold inline-flex items-center">
                 <Briefcase className="h-4 w-4" />
                 전문가 상담 신청
               </Link>
@@ -1615,7 +1615,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
               <p className="text-sm text-gray-400 mt-0.5 truncate">{data.address}</p>
             </div>
             <div className="flex flex-wrap gap-2 shrink-0">
-              <Link href={`/exchange?search=${encodeURIComponent(data.address || data.case_number || '')}`} className="gap-2 bg-[var(--color-positive)] hover:bg-emerald-400 text-white font-black shadow-[0_0_16px_rgba(16,185,129,0.3)] px-3 py-1.5 rounded-lg text-sm transition-colors inline-flex items-center">
+              <Link href={`/exchange?search=${encodeURIComponent(data.address || data.case_number || '')}`} className="gap-2 bg-[var(--color-positive)] hover:bg-stone-100 text-white font-black shadow-[0_0_16px_rgba(20,22,26,0.3)] px-3 py-1.5 rounded-lg text-sm transition-colors inline-flex items-center">
                 <ArrowRight className="h-4 w-4" />
                 딜 시작
               </Link>
@@ -1645,7 +1645,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 href={item.href}
                 className="card-flat flex items-center gap-2.5 rounded-xl p-3.5 transition-colors hover:bg-[var(--color-surface-sunken)] dark:hover:bg-white/5"
               >
-                <item.icon className="h-4 w-4 text-[var(--color-brand-dark)] dark:text-blue-400 shrink-0" />
+                <item.icon className="h-4 w-4 text-[var(--color-brand-dark)] dark:text-stone-900 shrink-0" />
                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{item.label}</span>
               </Link>
             ))}

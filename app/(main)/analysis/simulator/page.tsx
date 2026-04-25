@@ -236,13 +236,13 @@ function PieLabel(props: { cx?: number; cy?: number; midAngle?: number; innerRad
 
 // ── 시나리오·비용·민감도 셀 색상 헬퍼 ──────────────────────────────
 function sensBg(roi: number): string {
-  if (roi >= 0.35) return "bg-emerald-500/45 text-emerald-50"
-  if (roi >= 0.25) return "bg-emerald-500/25 text-emerald-100"
-  if (roi >= 0.20) return "bg-emerald-500/12 text-emerald-200"
-  if (roi >= 0.15) return "bg-amber-500/25 text-amber-100"
-  if (roi >= 0.10) return "bg-amber-500/14 text-amber-100"
-  if (roi >= 0) return "bg-orange-500/20 text-orange-100"
-  return "bg-rose-500/30 text-rose-100"
+  if (roi >= 0.35) return "bg-stone-100/45 text-stone-900"
+  if (roi >= 0.25) return "bg-stone-100/25 text-stone-900"
+  if (roi >= 0.20) return "bg-stone-100/12 text-stone-900"
+  if (roi >= 0.15) return "bg-stone-100/25 text-stone-900"
+  if (roi >= 0.10) return "bg-stone-100/14 text-stone-900"
+  if (roi >= 0) return "bg-stone-100/20 text-stone-900"
+  return "bg-stone-100/30 text-stone-900"
 }
 
 function verdictStyle(v: V27Verdict): string {
@@ -661,7 +661,7 @@ export default function AuctionSimulatorV27Page() {
                       </div>
                       <button
                         onClick={(e) => deleteScenario(sc.id, e)}
-                        className="text-[10px] px-2 py-1 rounded border border-[var(--color-border-subtle)] text-[var(--color-text-muted)] hover:text-rose-400"
+                        className="text-[10px] px-2 py-1 rounded border border-[var(--color-border-subtle)] text-[var(--color-text-muted)] hover:text-stone-900"
                       >
                         삭제
                       </button>
@@ -831,12 +831,12 @@ export default function AuctionSimulatorV27Page() {
                   key={target}
                   className={`p-2 rounded-md border text-center ${
                     bid
-                      ? "bg-emerald-500/5 border-emerald-500/20"
-                      : "bg-rose-500/5 border-rose-500/20"
+                      ? "bg-stone-100/5 border-stone-300/20"
+                      : "bg-stone-100/5 border-stone-300/20"
                   }`}
                 >
                   <div className="text-[10px] text-[var(--color-text-muted)]">목표 {target}%</div>
-                  <div className={`text-[12px] font-bold ${bid ? "text-emerald-400" : "text-rose-400"}`}>
+                  <div className={`text-[12px] font-bold ${bid ? "text-stone-900" : "text-stone-900"}`}>
                     {bid ? fmt(bid) : "불가"}
                   </div>
                 </div>
@@ -892,7 +892,7 @@ export default function AuctionSimulatorV27Page() {
                       onClick={() => setSelectedBid(isSelected ? null : r.bidPrice)}
                       className={`${DS.table.row} cursor-pointer ${
                         isBest
-                          ? "bg-emerald-500/10 ring-1 ring-emerald-500/30"
+                          ? "bg-stone-100/10 ring-1 ring-emerald-500/30"
                           : isSelected
                           ? "bg-[var(--color-brand-mid)]/10"
                           : ""
@@ -908,11 +908,11 @@ export default function AuctionSimulatorV27Page() {
                       <td className={DS.table.cell + " tabular-nums"}>{fmt(r.realInvest)}</td>
                       <td className={DS.table.cell + " tabular-nums"}>{fmt(r.brokerFee)}</td>
                       <td className={DS.table.cell + " tabular-nums"}>{fmt(r.taxBase)}</td>
-                      <td className={DS.table.cell + " tabular-nums text-amber-400"}>{fmt(r.tax)}</td>
-                      <td className={DS.table.cell + ` tabular-nums font-bold ${r.netProfit >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                      <td className={DS.table.cell + " tabular-nums text-stone-900"}>{fmt(r.tax)}</td>
+                      <td className={DS.table.cell + ` tabular-nums font-bold ${r.netProfit >= 0 ? "text-stone-900" : "text-stone-900"}`}>
                         {fmt(Math.round(r.netProfit))}
                       </td>
-                      <td className={DS.table.cell + ` tabular-nums font-bold ${r.roi >= 0.2 ? "text-emerald-400" : r.roi >= 0 ? "text-amber-400" : "text-rose-400"}`}>
+                      <td className={DS.table.cell + ` tabular-nums font-bold ${r.roi >= 0.2 ? "text-stone-900" : r.roi >= 0 ? "text-stone-900" : "text-stone-900"}`}>
                         {fmtPct(r.roi)}
                       </td>
                       <td className={DS.table.cell}>
@@ -1047,10 +1047,10 @@ function KpiCard({
 }) {
   const toneMap = {
     primary: "border-[var(--color-brand-mid)]/40 text-[var(--color-brand-mid)]",
-    success: "border-emerald-500/40 text-emerald-400",
-    warning: "border-amber-500/40 text-amber-400",
-    danger: "border-rose-500/40 text-rose-400",
-    info: "border-sky-500/40 text-sky-400",
+    success: "border-stone-300/40 text-stone-900",
+    warning: "border-stone-300/40 text-stone-900",
+    danger: "border-stone-300/40 text-stone-900",
+    info: "border-stone-300/40 text-stone-900",
     muted: "border-[var(--color-border-subtle)] text-[var(--color-text-primary)]",
   }
   return (
@@ -1154,7 +1154,7 @@ function RateGuideModal({ onClose }: { onClose: () => void }) {
         <div className="p-5 space-y-6">
           {sections.map((sec) => (
             <div key={sec.title}>
-              <div className="text-[13px] font-bold text-sky-400 mb-2 pb-1 border-b border-[var(--color-border-subtle)]">
+              <div className="text-[13px] font-bold text-stone-900 mb-2 pb-1 border-b border-[var(--color-border-subtle)]">
                 {sec.title}
               </div>
               <div className="overflow-x-auto">

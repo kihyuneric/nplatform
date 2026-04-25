@@ -149,13 +149,13 @@ export default function InstitutionOnboardingPage() {
       <div className="bg-gradient-to-br from-[#1B3A5C] to-[#2E75B6] text-white">
         <div className={`${DS.page.container} py-12`}>
           <div className="flex items-center gap-3 mb-4">
-            <Building2 className="h-8 w-8 text-emerald-300" />
-            <span className="text-emerald-300 text-sm font-semibold tracking-widest uppercase">금융기관 전용</span>
+            <Building2 className="h-8 w-8 text-stone-900" />
+            <span className="text-stone-900 text-sm font-semibold tracking-widest uppercase">금융기관 전용</span>
           </div>
           <h1 className="text-3xl font-bold mb-3">기관 온보딩 프로그램</h1>
           <p className="text-white/80 text-lg max-w-xl">
             은행·캐피탈·자산관리사 등 금융기관 대상 특별 프로그램.<br />
-            신청 후 <span className="text-emerald-300 font-bold">6개월간 매도 수수료 100% 면제</span>가 즉시 적용됩니다.
+            신청 후 <span className="text-stone-900 font-bold">6개월간 매도 수수료 100% 면제</span>가 즉시 적용됩니다.
           </p>
           <div className="flex flex-wrap gap-4 mt-6">
             {[
@@ -182,13 +182,13 @@ export default function InstitutionOnboardingPage() {
             {BENEFITS.map(b => {
               const Icon = b.icon
               return (
-                <div key={b.title} className={cn(DS.card.elevated, DS.card.padding, b.highlight && "border-emerald-500/30 bg-emerald-500/5")}>
+                <div key={b.title} className={cn(DS.card.elevated, DS.card.padding, b.highlight && "border-stone-300/30 bg-stone-100/5")}>
                   <div className="flex items-start gap-3">
-                    <div className={cn("shrink-0 rounded-lg p-2", b.highlight ? "bg-emerald-500/20" : "bg-[var(--color-surface-overlay)]")}>
-                      <Icon className={cn("h-5 w-5", b.highlight ? "text-emerald-400" : "text-[var(--color-brand-mid)]")} />
+                    <div className={cn("shrink-0 rounded-lg p-2", b.highlight ? "bg-stone-100/20" : "bg-[var(--color-surface-overlay)]")}>
+                      <Icon className={cn("h-5 w-5", b.highlight ? "text-stone-900" : "text-[var(--color-brand-mid)]")} />
                     </div>
                     <div>
-                      <p className={cn("font-semibold text-[0.9375rem] mb-1", b.highlight ? "text-emerald-400" : "text-[var(--color-text-primary)]")}>{b.title}</p>
+                      <p className={cn("font-semibold text-[0.9375rem] mb-1", b.highlight ? "text-stone-900" : "text-[var(--color-text-primary)]")}>{b.title}</p>
                       <p className={DS.text.caption}>{b.desc}</p>
                     </div>
                   </div>
@@ -209,7 +209,7 @@ export default function InstitutionOnboardingPage() {
                 <div key={s} className="flex items-center gap-2">
                   <div className={cn(
                     "h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors",
-                    step === s ? "bg-[var(--color-brand-mid)] text-white" : step > s ? "bg-emerald-500 text-white" : "bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)]"
+                    step === s ? "bg-[var(--color-brand-mid)] text-white" : step > s ? "bg-stone-100 text-white" : "bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)]"
                   )}>
                     {step > s ? <CheckCircle2 className="h-4 w-4" /> : s}
                   </div>
@@ -296,7 +296,7 @@ export default function InstitutionOnboardingPage() {
                   <label key={doc.id} className={cn(
                     "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
                     form.uploadedDocs.includes(doc.id)
-                      ? "border-[var(--color-brand-mid)] bg-blue-500/5"
+                      ? "border-[var(--color-brand-mid)] bg-stone-100/5"
                       : "border-[var(--color-border-default)] hover:border-[var(--color-border-focused)]"
                   )}>
                     <input
@@ -307,7 +307,7 @@ export default function InstitutionOnboardingPage() {
                     />
                     <span className="flex-1 text-sm text-[var(--color-text-primary)]">{doc.label}</span>
                     {doc.required
-                      ? <span className="text-[0.6875rem] font-bold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20">필수</span>
+                      ? <span className="text-[0.6875rem] font-bold text-stone-900 bg-stone-100/10 px-2 py-0.5 rounded-full border border-stone-300/20">필수</span>
                       : <span className="text-[0.6875rem] text-[var(--color-text-muted)] bg-[var(--color-surface-overlay)] px-2 py-0.5 rounded-full border border-[var(--color-border-subtle)]">선택</span>
                     }
                   </label>
@@ -346,8 +346,8 @@ export default function InstitutionOnboardingPage() {
           {step === 3 && (
             <div className={cn(DS.card.elevated, DS.card.padding, "max-w-xl text-center space-y-4")}>
               <div className="flex justify-center">
-                <div className="h-16 w-16 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <CheckCircle2 className="h-9 w-9 text-emerald-400" />
+                <div className="h-16 w-16 rounded-full bg-stone-100/20 flex items-center justify-center">
+                  <CheckCircle2 className="h-9 w-9 text-stone-900" />
                 </div>
               </div>
               <h3 className="text-xl font-bold text-[var(--color-text-primary)]">신청이 완료되었습니다!</h3>
@@ -355,8 +355,8 @@ export default function InstitutionOnboardingPage() {
                 입력하신 이메일로 접수 확인 메일이 발송됩니다.<br />
                 영업일 <strong>1~2일</strong> 이내 담당자가 연락드립니다.
               </p>
-              <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
-                <p className="text-emerald-400 text-sm font-semibold">🎉 승인 즉시 6개월 수수료 면제 자동 적용</p>
+              <div className="bg-stone-100/10 rounded-xl p-4 border border-stone-300/20">
+                <p className="text-stone-900 text-sm font-semibold">🎉 승인 즉시 6개월 수수료 면제 자동 적용</p>
               </div>
               <div className="flex gap-2 justify-center">
                 <button onClick={() => router.push("/exchange/institutions")} className={DS.button.secondary}>기관 목록 보기</button>

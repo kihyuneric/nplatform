@@ -64,7 +64,7 @@ function CustomTooltip({ active, payload }: {
   return (
     <div className="bg-[#0D1F38] border border-white/15 rounded-xl px-4 py-3 shadow-xl text-xs">
       <p className="font-semibold text-white mb-1 tracking-normal">{d.name}</p>
-      <p className={`font-bold tabular-nums ${d.value >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+      <p className={`font-bold tabular-nums ${d.value >= 0 ? 'text-stone-900' : 'text-stone-900'}`}>
         {d.value >= 0 ? '+' : ''}{d.label}
       </p>
     </div>
@@ -194,10 +194,10 @@ export function WaterfallSummaryCards({
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {[
-        { label: '감정가 대비 할인율',  value: `${discountPct.toFixed(1)}%`,       sub: `감정가 ${fmtAmt(input.appraisedValue)}`,      color: isDark ? 'text-blue-300'   : 'text-blue-400',    border: isDark ? 'border-l-blue-400'    : 'border-l-blue-400' },
+        { label: '감정가 대비 할인율',  value: `${discountPct.toFixed(1)}%`,       sub: `감정가 ${fmtAmt(input.appraisedValue)}`,      color: isDark ? 'text-stone-900'   : 'text-stone-900',    border: isDark ? 'border-l-blue-400'    : 'border-l-blue-400' },
         { label: '총 투자액',          value: fmtAmt(totalCost),                  sub: '낙찰가+비용 합계',                            color: isDark ? 'text-slate-200'  : 'text-[var(--color-text-primary)]',   border: isDark ? 'border-l-slate-500'   : 'border-l-[var(--color-border-default)]' },
-        { label: '예상 순이익',        value: fmtAmt(netProfit),                  sub: `매각가 ${fmtAmt(disposal)}`,                 color: netProfit >= 0 ? (isDark ? 'text-emerald-300' : 'text-emerald-400') : (isDark ? 'text-red-400' : 'text-red-400'), border: netProfit >= 0 ? (isDark ? 'border-l-emerald-400' : 'border-l-emerald-400') : (isDark ? 'border-l-red-400' : 'border-l-red-400') },
-        { label: '예상 ROI',           value: `${fmtPct(roi)}`,                   sub: '순이익 / 총투자액',                           color: roi >= 0 ? (isDark ? 'text-emerald-300' : 'text-emerald-400') : (isDark ? 'text-red-400' : 'text-red-400'), border: roi >= 0 ? (isDark ? 'border-l-emerald-400' : 'border-l-emerald-400') : (isDark ? 'border-l-red-400' : 'border-l-red-400') },
+        { label: '예상 순이익',        value: fmtAmt(netProfit),                  sub: `매각가 ${fmtAmt(disposal)}`,                 color: netProfit >= 0 ? (isDark ? 'text-stone-900' : 'text-stone-900') : (isDark ? 'text-stone-900' : 'text-stone-900'), border: netProfit >= 0 ? (isDark ? 'border-l-emerald-400' : 'border-l-emerald-400') : (isDark ? 'border-l-red-400' : 'border-l-red-400') },
+        { label: '예상 ROI',           value: `${fmtPct(roi)}`,                   sub: '순이익 / 총투자액',                           color: roi >= 0 ? (isDark ? 'text-stone-900' : 'text-stone-900') : (isDark ? 'text-stone-900' : 'text-stone-900'), border: roi >= 0 ? (isDark ? 'border-l-emerald-400' : 'border-l-emerald-400') : (isDark ? 'border-l-red-400' : 'border-l-red-400') },
       ].map(k => (
         <div key={k.label} className={`rounded-xl border-l-4 ${k.border} px-4 py-3 ${
           isDark

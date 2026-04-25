@@ -58,17 +58,17 @@ interface MonthlyStats {
 }
 
 const STAGE_BADGE: Record<Stage | string, string> = {
-  "협의중": "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-  "실사":   "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-  "계약":   "bg-purple-500/10 text-purple-400 border border-purple-500/20",
-  "완료":   "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-  "분쟁":   "bg-red-500/10 text-red-400 border border-red-500/20",
+  "협의중": "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  "실사":   "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  "계약":   "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  "완료":   "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  "분쟁":   "bg-stone-100/10 text-stone-900 border border-stone-300/20",
 }
 
 const DISPUTE_BADGE: Record<string, string> = {
-  "접수":   "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-  "심사중": "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-  "해결":   "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  "접수":   "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  "심사중": "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  "해결":   "bg-stone-100/10 text-stone-900 border border-stone-300/20",
 }
 
 const DISPUTE_STATUS_MAP: Record<string, string> = {
@@ -346,7 +346,7 @@ function DealTable({
                             onUpdateStatus(d.id, STAGE_TO_STATUS[nextStage])
                           }
                         }}
-                        className={`text-[0.8125rem] flex items-center gap-1 text-[var(--color-positive)] hover:text-emerald-300 font-medium transition-colors`}
+                        className={`text-[0.8125rem] flex items-center gap-1 text-[var(--color-positive)] hover:text-stone-900 font-medium transition-colors`}
                       >
                         <CheckCircle size={12} />진행
                       </button>

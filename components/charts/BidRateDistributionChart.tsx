@@ -67,7 +67,7 @@ function DistTooltip({ active, payload, label }: {
     <div className="bg-[#0D1F38] border border-white/15 rounded-xl px-4 py-3 shadow-xl text-xs">
       <p className="font-semibold text-white mb-1 tracking-normal">낙찰가율 {label}</p>
       <p className="text-slate-300 tracking-normal">건수: <span className="font-bold text-white tabular-nums">{d.count}건</span></p>
-      <p className="text-slate-300 tracking-normal">비율: <span className="font-bold text-blue-300 tabular-nums">{d.pct.toFixed(1)}%</span></p>
+      <p className="text-slate-300 tracking-normal">비율: <span className="font-bold text-stone-900 tabular-nums">{d.pct.toFixed(1)}%</span></p>
     </div>
   )
 }
@@ -145,8 +145,8 @@ export default function BidRateDistributionChart({
       {showStats && stats && (
         <div className="grid grid-cols-4 gap-2 mb-4">
           {[
-            { label: '평균', value: `${(stats.mean * 100).toFixed(1)}%`,   color: 'text-blue-400' },
-            { label: '중앙값', value: `${(stats.median * 100).toFixed(1)}%`, color: 'text-emerald-400' },
+            { label: '평균', value: `${(stats.mean * 100).toFixed(1)}%`,   color: 'text-stone-900' },
+            { label: '중앙값', value: `${(stats.median * 100).toFixed(1)}%`, color: 'text-stone-900' },
             { label: 'Q1~Q3', value: `${(stats.q1 * 100).toFixed(0)}~${(stats.q3 * 100).toFixed(0)}%`, color: 'text-slate-400' },
             { label: '표본 수', value: `${stats.n}건`,                   color: 'text-slate-400' },
           ].map(k => (
@@ -204,9 +204,9 @@ export default function BidRateDistributionChart({
 
       {/* 범례 */}
       <div className="mt-2 flex items-center gap-4 justify-end text-[10px] text-[var(--color-text-muted)] tracking-normal">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400" />저가 낙찰 (&lt;중앙값)</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" />적정 구간</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400" />고가 낙찰 (&gt;중앙값)</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-stone-100" />저가 낙찰 (&lt;중앙값)</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-stone-100" />적정 구간</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-stone-100" />고가 낙찰 (&gt;중앙값)</span>
       </div>
     </div>
   )
@@ -242,7 +242,7 @@ export function BidRateByTypeComparison({
               <>
                 {/* IQR 박스 */}
                 <div
-                  className="absolute top-1 h-4 rounded bg-blue-400/60"
+                  className="absolute top-1 h-4 rounded bg-stone-100/60"
                   style={{
                     left:  `${Math.max(0, (s.q1  - 0.5) / 0.6 * 100)}%`,
                     width: `${Math.max(1, (s.q3 - s.q1) / 0.6 * 100)}%`,
@@ -250,7 +250,7 @@ export function BidRateByTypeComparison({
                 />
                 {/* 중앙값 라인 */}
                 <div
-                  className="absolute top-0.5 h-5 w-0.5 bg-blue-600 rounded"
+                  className="absolute top-0.5 h-5 w-0.5 bg-stone-100 rounded"
                   style={{ left: `${Math.max(0, (s.median! - 0.5) / 0.6 * 100)}%` }}
                 />
               </>

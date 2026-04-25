@@ -20,14 +20,14 @@ function getCellColor(cell: HeatCell): string {
   const downRatio = cell.down / cell.total;
   if (upRatio >= 0.5) {
     const alpha = 0.25 + intensity * 0.75;
-    return `rgba(59,130,246,${alpha.toFixed(2)})`;
+    return `rgba(20,22,26,${alpha.toFixed(2)})`;
   }
   if (downRatio >= 0.38) {
     const alpha = 0.25 + intensity * 0.75;
-    return `rgba(239,68,68,${alpha.toFixed(2)})`;
+    return `rgba(27,27,31,${alpha.toFixed(2)})`;
   }
   const alpha = 0.2 + intensity * 0.6;
-  return `rgba(139,92,246,${alpha.toFixed(2)})`;
+  return `rgba(20,22,26,${alpha.toFixed(2)})`;
 }
 
 const DOW_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -71,7 +71,7 @@ export function NewsHeatmap({ onDateClick }: Props) {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="flex items-center gap-2 text-base">
-            <CalendarDays className="h-4 w-4 text-blue-600" />
+            <CalendarDays className="h-4 w-4 text-stone-900" />
             뉴스 활동 히트맵 (90일)
           </CardTitle>
           {/* 범례 */}
@@ -79,13 +79,13 @@ export function NewsHeatmap({ onDateClick }: Props) {
             <span>적음</span>
             {[0.25, 0.45, 0.65, 0.9].map((a) => (
               <span key={a} className="w-3 h-3 rounded-sm inline-block"
-                style={{ backgroundColor: `rgba(59,130,246,${a})` }} />
+                style={{ backgroundColor: `rgba(20,22,26,${a})` }} />
             ))}
             <span>많음</span>
             <span className="mx-1 text-gray-300">|</span>
-            <span className="w-3 h-3 rounded-sm inline-block bg-red-400" />
+            <span className="w-3 h-3 rounded-sm inline-block bg-stone-100" />
             <span>하락 우세</span>
-            <span className="w-3 h-3 rounded-sm inline-block bg-purple-400" />
+            <span className="w-3 h-3 rounded-sm inline-block bg-stone-100" />
             <span>중립</span>
           </div>
         </div>
@@ -154,7 +154,7 @@ export function NewsHeatmap({ onDateClick }: Props) {
 
         {/* 선택 날짜 안내 */}
         {selectedDate && (
-          <p className="mt-3 text-xs text-blue-600 font-medium">
+          <p className="mt-3 text-xs text-stone-900 font-medium">
             📌 {selectedDate} 선택됨 — 검색 필터에 날짜가 적용됩니다
             <button
               className="ml-2 text-muted-foreground hover:text-[var(--color-text-secondary)] underline"
@@ -177,8 +177,8 @@ export function NewsHeatmap({ onDateClick }: Props) {
             <>
               <p>총 <span className="font-bold text-white">{tooltip.cell.total}</span>건</p>
               <div className="flex gap-3 mt-1">
-                <span className="text-blue-400">↑ 상승 {tooltip.cell.up}</span>
-                <span className="text-red-400">↓ 하락 {tooltip.cell.down}</span>
+                <span className="text-stone-900">↑ 상승 {tooltip.cell.up}</span>
+                <span className="text-stone-900">↓ 하락 {tooltip.cell.down}</span>
                 <span className="text-gray-400">— 중립 {tooltip.cell.neutral}</span>
               </div>
             </>

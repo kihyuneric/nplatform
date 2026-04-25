@@ -98,7 +98,7 @@ export function PullToRefresh({
               className={cn(
                 'flex h-9 w-9 items-center justify-center rounded-full shadow-md transition-colors',
                 isPastThreshold || isRefreshing
-                  ? 'bg-[#10B981] text-white'
+                  ? 'bg-[#14161A] text-white'
                   : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)]'
               )}
             >

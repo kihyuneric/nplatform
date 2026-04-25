@@ -161,8 +161,8 @@ export function MeetingScheduler({
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06] bg-[#0A1628]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/[0.12] border border-emerald-500/30 flex items-center justify-center">
-                <CalendarCheck className="w-5 h-5 text-emerald-400" />
+              <div className="w-10 h-10 rounded-lg bg-stone-100/[0.12] border border-stone-300/30 flex items-center justify-center">
+                <CalendarCheck className="w-5 h-5 text-stone-900" />
               </div>
               <div>
                 <h2 id="meeting-title" className="text-base font-bold text-white tracking-normal">미팅 예약</h2>
@@ -201,10 +201,10 @@ export function MeetingScheduler({
                       style={
                         active
                           ? meta.tone === "blue"
-                            ? { backgroundColor: "rgba(59,130,246,0.12)", borderColor: "rgba(59,130,246,0.5)" }
+                            ? { backgroundColor: "rgba(20,22,26,0.12)", borderColor: "rgba(20,22,26,0.5)" }
                             : meta.tone === "amber"
-                              ? { backgroundColor: "rgba(245,158,11,0.12)", borderColor: "rgba(245,158,11,0.5)" }
-                              : { backgroundColor: "rgba(16,185,129,0.12)", borderColor: "rgba(16,185,129,0.5)" }
+                              ? { backgroundColor: "rgba(20,22,26,0.12)", borderColor: "rgba(20,22,26,0.5)" }
+                              : { backgroundColor: "rgba(20,22,26,0.12)", borderColor: "rgba(20,22,26,0.5)" }
                           : undefined
                       }
                     >
@@ -212,7 +212,7 @@ export function MeetingScheduler({
                         className="w-4 h-4"
                         style={{
                           color: active
-                            ? meta.tone === "blue" ? "#60A5FA" : meta.tone === "amber" ? "#FCD34D" : "#34D399"
+                            ? meta.tone === "blue" ? "#14161A" : meta.tone === "amber" ? "#FCD34D" : "#14161A"
                             : "rgba(255,255,255,0.5)",
                         }}
                       />
@@ -220,7 +220,7 @@ export function MeetingScheduler({
                         className="text-xs font-bold tracking-normal"
                         style={{
                           color: active
-                            ? meta.tone === "blue" ? "#93C5FD" : meta.tone === "amber" ? "#FCD34D" : "#6EE7B7"
+                            ? meta.tone === "blue" ? "#93C5FD" : meta.tone === "amber" ? "#FCD34D" : "#A8853E"
                             : "rgba(255,255,255,0.5)",
                         }}
                       >
@@ -239,7 +239,7 @@ export function MeetingScheduler({
                 value={value.title}
                 onChange={e => update("title", e.target.value)}
                 placeholder="예: 1차 가격 협상 미팅"
-                className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-emerald-500/50"
+                className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-stone-300/50"
               />
             </Field>
 
@@ -250,14 +250,14 @@ export function MeetingScheduler({
                   type="datetime-local"
                   value={value.startAt}
                   onChange={e => update("startAt", e.target.value)}
-                  className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white tabular-nums outline-none focus:border-emerald-500/50"
+                  className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white tabular-nums outline-none focus:border-stone-300/50"
                 />
               </Field>
               <Field label="진행 시간 (분)" required>
                 <select
                   value={value.durationMinutes}
                   onChange={e => update("durationMinutes", Number(e.target.value))}
-                  className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white tabular-nums outline-none focus:border-emerald-500/50"
+                  className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white tabular-nums outline-none focus:border-stone-300/50"
                 >
                   {[30, 45, 60, 90, 120, 180].map(d => (
                     <option key={d} value={d} className="bg-[#080F1A]">{d}분</option>
@@ -274,7 +274,7 @@ export function MeetingScheduler({
                   value={value.joinUrl}
                   onChange={e => update("joinUrl", e.target.value)}
                   placeholder="https://zoom.us/j/... 또는 https://meet.google.com/..."
-                  className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-emerald-500/50"
+                  className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-stone-300/50"
                 />
               </Field>
             )}
@@ -288,7 +288,7 @@ export function MeetingScheduler({
                     value={value.venue}
                     onChange={e => update("venue", e.target.value)}
                     placeholder="예: 서울 강남구 테헤란로 123 NPLatform 본사 5층 회의실 A"
-                    className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-emerald-500/50"
+                    className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-stone-300/50"
                   />
                 </Field>
                 <Field label="도착 안내 (선택)">
@@ -297,7 +297,7 @@ export function MeetingScheduler({
                     onChange={e => update("arrivalNote", e.target.value)}
                     rows={2}
                     placeholder="예: 1층 안내데스크 등록 후 5층, 주차 2시간 무료"
-                    className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-emerald-500/50 resize-none"
+                    className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-stone-300/50 resize-none"
                   />
                 </Field>
               </>
@@ -316,7 +316,7 @@ export function MeetingScheduler({
                       key={c.userId}
                       className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-all cursor-pointer ${
                         selected
-                          ? "bg-emerald-500/[0.08] border-emerald-500/30"
+                          ? "bg-stone-100/[0.08] border-stone-300/30"
                           : "bg-white/[0.03] border-white/[0.08] hover:border-white/[0.16]"
                       }`}
                     >
@@ -346,23 +346,23 @@ export function MeetingScheduler({
                 onChange={e => update("agenda", e.target.value)}
                 rows={3}
                 placeholder="예: 1) 가격 협상 — 매수가 8.5억 / 매도가 9.2억 격차 / 2) 잔금 일정 / 3) 실사 보고서 검토"
-                className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-emerald-500/50 resize-none"
+                className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-stone-300/50 resize-none"
               />
             </Field>
 
             {/* 안내 */}
-            <div className="bg-emerald-500/[0.06] border border-emerald-500/20 rounded-lg p-3 flex items-start gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-              <p className="text-[10px] text-emerald-300/80 leading-relaxed tracking-normal">
+            <div className="bg-stone-100/[0.06] border border-stone-300/20 rounded-lg p-3 flex items-start gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-stone-900 shrink-0 mt-0.5" />
+              <p className="text-[10px] text-stone-900/80 leading-relaxed tracking-normal">
                 모든 참석자에게 캘린더 초대(ICS) + 알림이 자동 발송되며, 미팅 시각 30분 전 리마인더가 전송됩니다.
-                미팅 종료 후 회의록 업로드 시 Access Score <strong className="text-emerald-300">+30점</strong>이 가산됩니다.
+                미팅 종료 후 회의록 업로드 시 Access Score <strong className="text-stone-900">+30점</strong>이 가산됩니다.
               </p>
             </div>
 
             {error && (
-              <div className="flex items-start gap-2 px-3.5 py-2.5 bg-rose-500/[0.08] border border-rose-500/30 rounded-lg">
-                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                <p className="text-xs text-rose-300 tracking-normal">{error}</p>
+              <div className="flex items-start gap-2 px-3.5 py-2.5 bg-stone-100/[0.08] border border-stone-300/30 rounded-lg">
+                <AlertTriangle className="w-4 h-4 text-stone-900 shrink-0 mt-0.5" />
+                <p className="text-xs text-stone-900 tracking-normal">{error}</p>
               </div>
             )}
           </div>
@@ -379,7 +379,7 @@ export function MeetingScheduler({
             <button
               onClick={handleSubmit}
               disabled={!valid || submitting}
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-white/[0.06] disabled:text-white/30 text-white text-xs font-bold rounded-lg tracking-normal transition-colors flex items-center gap-1.5"
+              className="px-5 py-2 bg-stone-100 hover:bg-stone-100 disabled:bg-white/[0.06] disabled:text-white/30 text-white text-xs font-bold rounded-lg tracking-normal transition-colors flex items-center gap-1.5"
             >
               <CalendarCheck className="w-3.5 h-3.5" />
               {submitting ? "예약 중..." : "미팅 예약"}
@@ -409,7 +409,7 @@ function Field({
       <label className="flex items-center gap-1.5 text-[11px] font-bold text-white/60 tracking-normal mb-1.5">
         {icon}
         {label}
-        {required && <span className="text-rose-400">*</span>}
+        {required && <span className="text-stone-900">*</span>}
       </label>
       {children}
     </div>

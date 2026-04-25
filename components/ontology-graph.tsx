@@ -391,11 +391,11 @@ function MobileSimpleView({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEd
   return (
     <div className="space-y-2 text-sm">
       {prereqs.length > 0 && (
-        <div className="bg-green-500/10 rounded-lg p-3">
-          <div className="text-xs font-medium text-green-400 mb-1">선수 개념</div>
+        <div className="bg-stone-100/10 rounded-lg p-3">
+          <div className="text-xs font-medium text-stone-900 mb-1">선수 개념</div>
           <div className="flex flex-wrap gap-1">
             {prereqs.map(n => (
-              <span key={n.id} className="bg-green-500/15 text-green-300 px-2 py-0.5 rounded text-xs">
+              <span key={n.id} className="bg-stone-100/15 text-stone-900 px-2 py-0.5 rounded text-xs">
                 {n.name}
               </span>
             ))}
@@ -405,19 +405,19 @@ function MobileSimpleView({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEd
 
       <div className="text-center text-gray-400">↓</div>
 
-      <div className="bg-blue-500/10 rounded-lg p-3 border-2 border-blue-500/40">
-        <div className="text-xs font-medium text-blue-400 mb-1">★ 현재 학습</div>
-        <div className="font-medium text-blue-300">{currentNode.name}</div>
+      <div className="bg-stone-100/10 rounded-lg p-3 border-2 border-stone-300/40">
+        <div className="text-xs font-medium text-stone-900 mb-1">★ 현재 학습</div>
+        <div className="font-medium text-stone-900">{currentNode.name}</div>
       </div>
 
       <div className="text-center text-gray-400">↓</div>
 
       {succs.length > 0 && (
-        <div className="bg-orange-500/10 rounded-lg p-3">
-          <div className="text-xs font-medium text-orange-400 mb-1">후속 개념</div>
+        <div className="bg-stone-100/10 rounded-lg p-3">
+          <div className="text-xs font-medium text-stone-900 mb-1">후속 개념</div>
           <div className="flex flex-wrap gap-1">
             {succs.map(n => (
-              <span key={n.id} className="bg-orange-500/15 text-orange-300 px-2 py-0.5 rounded text-xs">
+              <span key={n.id} className="bg-stone-100/15 text-stone-900 px-2 py-0.5 rounded text-xs">
                 {n.name}
               </span>
             ))}
@@ -426,11 +426,11 @@ function MobileSimpleView({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEd
       )}
 
       {related.length > 0 && (
-        <div className="bg-purple-500/10 rounded-lg p-3">
-          <div className="text-xs font-medium text-purple-400 mb-1">연관 개념</div>
+        <div className="bg-stone-100/10 rounded-lg p-3">
+          <div className="text-xs font-medium text-stone-900 mb-1">연관 개념</div>
           <div className="flex flex-wrap gap-1">
             {related.map(n => (
-              <span key={n.id} className="bg-purple-500/15 text-purple-300 px-2 py-0.5 rounded text-xs">
+              <span key={n.id} className="bg-stone-100/15 text-stone-900 px-2 py-0.5 rounded text-xs">
                 {n.name}
               </span>
             ))}
@@ -461,7 +461,7 @@ function MobileTreeView({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEdge
               className="w-3 h-3 rounded-full flex-shrink-0"
               style={{ backgroundColor: color }}
             />
-            <span className={`${node.isCurrent ? 'font-bold text-blue-600' : ''}`}>
+            <span className={`${node.isCurrent ? 'font-bold text-stone-900' : ''}`}>
               {node.name}
             </span>
             {targets.length > 0 && (
@@ -488,11 +488,11 @@ export function OntologyGraphLegend() {
         <span>선수 관계</span>
       </div>
       <div className="flex items-center gap-1">
-        <div className="w-8 h-0.5 border-t-2 border-dashed border-blue-500" />
+        <div className="w-8 h-0.5 border-t-2 border-dashed border-stone-300" />
         <span>포함 관계</span>
       </div>
       <div className="flex items-center gap-1">
-        <div className="w-8 h-0.5 border-t-2 border-dashed border-purple-500" />
+        <div className="w-8 h-0.5 border-t-2 border-dashed border-stone-300" />
         <span>연관 관계</span>
       </div>
       <span className="text-gray-300">|</span>

@@ -61,7 +61,7 @@ export function RoleSwitcher() {
               />
               <span className="text-sm">{ROLE_LABELS[role]} 모드</span>
             </div>
-            {activeRole === role && <Check className="h-3.5 w-3.5 text-emerald-500" />}
+            {activeRole === role && <Check className="h-3.5 w-3.5 text-stone-900" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

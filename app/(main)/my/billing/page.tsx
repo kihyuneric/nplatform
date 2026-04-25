@@ -22,23 +22,23 @@ type Tab = typeof TABS[number]
 // ─── 플랜 목록 ────────────────────────────────────────────
 
 const UPGRADE_PLANS = [
-  { key: 'L1',           name: 'L1',            price_monthly: 300_000,   price_yearly: 300_000 * 10, icon: Zap,        color: 'text-blue-400',   desc: '활발한 NPL 투자자 프리미엄 액세스', popular: false },
-  { key: 'L2',           name: 'L2',            price_monthly: 1_000_000, price_yearly: 1_000_000 * 10,icon: Crown,     color: 'text-emerald-400',desc: '법인·전문 대부업체 최상위 플랜', popular: true },
-  { key: 'VERIFICATION', name: '검증',           price_monthly: 500_000,   price_yearly: 500_000 * 10, icon: Building2,  color: 'text-amber-400',  desc: '기관 인증 배지 + 우선 매칭 자격' },
+  { key: 'L1',           name: 'L1',            price_monthly: 300_000,   price_yearly: 300_000 * 10, icon: Zap,        color: 'text-stone-900',   desc: '활발한 NPL 투자자 프리미엄 액세스', popular: false },
+  { key: 'L2',           name: 'L2',            price_monthly: 1_000_000, price_yearly: 1_000_000 * 10,icon: Crown,     color: 'text-stone-900',desc: '법인·전문 대부업체 최상위 플랜', popular: true },
+  { key: 'VERIFICATION', name: '검증',           price_monthly: 500_000,   price_yearly: 500_000 * 10, icon: Building2,  color: 'text-stone-900',  desc: '기관 인증 배지 + 우선 매칭 자격' },
 ]
 
 const STATUS_LABEL: Record<string, { label: string; color: string; bg: string }> = {
-  active:    { label: '활성',   color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-  trialing:  { label: '체험중', color: 'text-blue-400',    bg: 'bg-blue-500/10' },
-  canceled:  { label: '해지',   color: 'text-red-400',     bg: 'bg-red-500/10' },
-  past_due:  { label: '납부지연',color: 'text-amber-400',  bg: 'bg-amber-500/10' },
+  active:    { label: '활성',   color: 'text-stone-900', bg: 'bg-stone-100/10' },
+  trialing:  { label: '체험중', color: 'text-stone-900',    bg: 'bg-stone-100/10' },
+  canceled:  { label: '해지',   color: 'text-stone-900',     bg: 'bg-stone-100/10' },
+  past_due:  { label: '납부지연',color: 'text-stone-900',  bg: 'bg-stone-100/10' },
 }
 
 const INV_STATUS: Record<string, { label: string; color: string }> = {
-  ISSUED:   { label: '발행',     color: 'text-blue-400' },
-  SENT:     { label: '발송됨',   color: 'text-blue-400' },
-  PAID:     { label: '납부완료', color: 'text-emerald-400' },
-  OVERDUE:  { label: '연체',     color: 'text-red-400' },
+  ISSUED:   { label: '발행',     color: 'text-stone-900' },
+  SENT:     { label: '발송됨',   color: 'text-stone-900' },
+  PAID:     { label: '납부완료', color: 'text-stone-900' },
+  OVERDUE:  { label: '연체',     color: 'text-stone-900' },
   CANCELLED:{ label: '취소',     color: 'text-[var(--color-text-muted)]' },
 }
 
@@ -275,10 +275,10 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <Crown className="h-4 w-4 text-yellow-400" />
+                  <Crown className="h-4 w-4 text-stone-900" />
                   <span className="text-white font-semibold">{subscription.plan_name} 플랜</span>
                   {subscription.cancel_at_period_end && (
-                    <span className="text-[0.6875rem] text-orange-200 bg-orange-500/20 px-2 py-0.5 rounded-full">기간 만료 시 해지</span>
+                    <span className="text-[0.6875rem] text-stone-900 bg-stone-100/20 px-2 py-0.5 rounded-full">기간 만료 시 해지</span>
                   )}
                 </div>
                 {subscription.price_monthly > 0 ? (
@@ -307,7 +307,7 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
               {credits && (
                 <span>현재 잔액 <strong className="text-white">{credits.balance.toLocaleString()}개</strong></span>
               )}
-              <span>자동 갱신 <strong className={subscription.cancel_at_period_end ? 'text-red-300' : 'text-emerald-300'}>
+              <span>자동 갱신 <strong className={subscription.cancel_at_period_end ? 'text-stone-900' : 'text-stone-900'}>
                 {subscription.cancel_at_period_end ? '비활성' : '활성'}
               </strong></span>
             </div>
@@ -344,7 +344,7 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                   onClick={() => setBillingCycle('yearly')}
                   className={`text-[0.8125rem] px-3 py-1.5 rounded-md transition-colors ${billingCycle === 'yearly' ? DS.tabs.active : DS.tabs.trigger}`}
                 >
-                  연간 <span className="text-emerald-400 text-[0.6875rem] ml-0.5">-20%</span>
+                  연간 <span className="text-stone-900 text-[0.6875rem] ml-0.5">-20%</span>
                 </button>
               </div>
             </div>
@@ -361,9 +361,9 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                   key={plan.key}
                   className={`${DS.card.base} ${DS.card.padding} flex items-center justify-between ${
                     isCurrent
-                      ? '!border-[var(--color-brand-bright)] bg-blue-500/10'
+                      ? '!border-[var(--color-brand-bright)] bg-stone-100/10'
                       : plan.popular
-                      ? '!border-purple-500/20 bg-purple-500/10'
+                      ? '!border-stone-300/20 bg-stone-100/10'
                       : ''
                   }`}
                 >
@@ -373,7 +373,7 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                       <div className="flex items-center gap-2">
                         <span className={DS.text.cardSubtitle}>{plan.name}</span>
                         {isCurrent && <span className="text-[0.6875rem] bg-[var(--color-brand-mid)] text-white px-2 py-0.5 rounded-full font-bold">현재</span>}
-                        {plan.popular && !isCurrent && <span className="text-[0.6875rem] bg-purple-500/15 text-purple-400 px-2 py-0.5 rounded-full font-bold">인기</span>}
+                        {plan.popular && !isCurrent && <span className="text-[0.6875rem] bg-stone-100/15 text-stone-900 px-2 py-0.5 rounded-full font-bold">인기</span>}
                       </div>
                       <p className={DS.text.caption + " mt-0.5"}>{plan.desc}</p>
                     </div>
@@ -420,7 +420,7 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                 </button>
               </div>
               {(!subscription || subscription.price_monthly === 0) && (
-                <div className="mt-3 flex items-center gap-2 text-[0.8125rem] text-amber-400 bg-amber-500/10 rounded-lg px-3 py-2">
+                <div className="mt-3 flex items-center gap-2 text-[0.8125rem] text-stone-900 bg-stone-100/10 rounded-lg px-3 py-2">
                   <AlertTriangle className="h-4 w-4 shrink-0" />
                   <span>유료 플랜 구독 시 인보이스 초안을 생성할 수 있습니다.</span>
                 </div>
@@ -676,7 +676,7 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                       { code: 'SPRING2026', benefit: '크레딧 100개', usedAt: '2026-04-09', status: '사용완료' },
                       { code: 'WELCOME30', benefit: '구독 30일 무료', usedAt: '2026-01-15', status: '만료' },
                     ].map((row, i) => {
-                      const cls = row.status === '사용완료' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]'
+                      const cls = row.status === '사용완료' ? 'bg-stone-100/10 text-stone-900' : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]'
                       return (
                         <tr key={i} className={DS.table.row}>
                           <td className={DS.table.cell + " font-mono font-medium"}>{row.code}</td>

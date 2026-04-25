@@ -23,10 +23,10 @@ function formatBillion(v: number) {
 }
 
 function getCellColor(value: number, thresholds: { good: number; warn: number }) {
-  if (value >= thresholds.good) return { bg: 'bg-green-500/15', text: 'text-green-400', border: 'border-green-500/20' }
-  if (value >= thresholds.warn) return { bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/20' }
-  if (value >= 0) return { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/20' }
-  return { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/20' }
+  if (value >= thresholds.good) return { bg: 'bg-stone-100/15', text: 'text-stone-900', border: 'border-stone-300/20' }
+  if (value >= thresholds.warn) return { bg: 'bg-stone-100/10', text: 'text-stone-900', border: 'border-stone-300/20' }
+  if (value >= 0) return { bg: 'bg-stone-100/10', text: 'text-stone-900', border: 'border-stone-300/20' }
+  return { bg: 'bg-stone-100/15', text: 'text-stone-900', border: 'border-stone-300/20' }
 }
 
 export function SensitivityHeatmap({
@@ -93,19 +93,19 @@ export function SensitivityHeatmap({
       {/* Legend */}
       <div className="mt-3 flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
         <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded bg-green-500/15 border border-green-500/20" />
+          <span className="inline-block h-3 w-3 rounded bg-stone-100/15 border border-stone-300/20" />
           {(thresholds.good * 100).toFixed(0)}%이상 (우수)
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded bg-yellow-500/10 border border-yellow-500/20" />
+          <span className="inline-block h-3 w-3 rounded bg-stone-100/10 border border-stone-300/20" />
           {(thresholds.warn * 100).toFixed(0)}~{(thresholds.good * 100).toFixed(0)}% (양호)
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded bg-orange-500/10 border border-orange-500/20" />
+          <span className="inline-block h-3 w-3 rounded bg-stone-100/10 border border-stone-300/20" />
           0~{(thresholds.warn * 100).toFixed(0)}%
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded bg-red-500/15 border border-red-500/20" />
+          <span className="inline-block h-3 w-3 rounded bg-stone-100/15 border border-stone-300/20" />
           손실구간
         </span>
       </div>

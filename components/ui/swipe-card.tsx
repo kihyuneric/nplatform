@@ -37,12 +37,12 @@ export function SwipeCard({ children, onSwipeLeft, onSwipeRight }: SwipeCardProp
     >
       {/* Swipe indicators */}
       {offset > 30 && (
-        <div className="absolute top-4 right-4 z-10 rounded-full bg-[#10B981] p-2 shadow-lg">
+        <div className="absolute top-4 right-4 z-10 rounded-full bg-[#14161A] p-2 shadow-lg">
           <Heart className="h-6 w-6 text-white" />
         </div>
       )}
       {offset < -30 && (
-        <div className="absolute top-4 left-4 z-10 rounded-full bg-red-500 p-2 shadow-lg">
+        <div className="absolute top-4 left-4 z-10 rounded-full bg-stone-100 p-2 shadow-lg">
           <X className="h-6 w-6 text-white" />
         </div>
       )}

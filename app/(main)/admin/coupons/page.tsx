@@ -68,12 +68,12 @@ const BG_CARD   = '#080F1E'
 const BG_SUNKEN = '#050D1A'
 const BORDER    = '#0F1F35'
 const BORDER_MID = '#152333'
-const GREEN     = '#10B981'
+const GREEN     = '#14161A'
 const GREEN_FG  = '#041915'
-const RED       = '#EF4444'
-const AMBER     = '#F59E0B'
-const BLUE      = '#3B82F6'
-const PURPLE    = '#A855F7'
+const RED       = '#1B1B1F'
+const AMBER     = '#14161A'
+const BLUE      = '#14161A'
+const PURPLE    = '#14161A'
 const WHITE     = '#FFFFFF'
 const SLATE_300 = '#CBD5E1'
 const SLATE_500 = '#64748B'
@@ -86,8 +86,8 @@ const DISCOUNT_TYPE_META: Record<DiscountType, { label: string; color: string; I
 }
 
 const STATUS_META: Record<CouponStatus, { label: string; color: string; bg: string }> = {
-  active:   { label: '활성',  color: GREEN, bg: 'rgba(16,185,129,0.12)' },
-  expired:  { label: '만료',  color: AMBER, bg: 'rgba(245,158,11,0.12)' },
+  active:   { label: '활성',  color: GREEN, bg: 'rgba(20,22,26,0.12)' },
+  expired:  { label: '만료',  color: AMBER, bg: 'rgba(20,22,26,0.12)' },
   inactive: { label: '비활성', color: SLATE_500, bg: 'rgba(100,116,139,0.12)' },
 }
 
@@ -563,7 +563,7 @@ export default function AdminCouponsPage() {
       {toast && (
         <div style={{
           position: 'fixed', top: 20, right: 20, zIndex: 10000,
-          backgroundColor: toast.type === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+          backgroundColor: toast.type === 'success' ? 'rgba(20,22,26,0.15)' : 'rgba(27,27,31,0.15)',
           border: `1px solid ${toast.type === 'success' ? GREEN : RED}`,
           borderRadius: 10, padding: '12px 18px',
           color: toast.type === 'success' ? GREEN : RED,
@@ -795,7 +795,7 @@ export default function AdminCouponsPage() {
                               onClick={() => handleToggleActive(coupon.id)}
                               style={{
                                 width: 30, height: 30, borderRadius: 7, border: 'none',
-                                backgroundColor: coupon.active ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)',
+                                backgroundColor: coupon.active ? 'rgba(27,27,31,0.12)' : 'rgba(20,22,26,0.12)',
                                 color: coupon.active ? RED : GREEN,
                                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 transition: 'background 0.15s',
@@ -808,7 +808,7 @@ export default function AdminCouponsPage() {
                               onClick={() => handleCopyCode(coupon.code, coupon.id)}
                               style={{
                                 width: 30, height: 30, borderRadius: 7, border: 'none',
-                                backgroundColor: copiedId === coupon.id ? 'rgba(16,185,129,0.12)' : `${BORDER}80`,
+                                backgroundColor: copiedId === coupon.id ? 'rgba(20,22,26,0.12)' : `${BORDER}80`,
                                 color: copiedId === coupon.id ? GREEN : SLATE_500,
                                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 transition: 'background 0.15s',

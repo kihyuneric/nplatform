@@ -140,7 +140,7 @@ export function BookingCalendar({ professionalId, onSelect }: BookingCalendarPro
                         isSelected
                           ? 'bg-[#2E75B6] text-white ring-2 ring-[#2E75B6]/30'
                           : isAvailable && !isPast
-                          ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                          ? 'bg-stone-100/10 text-stone-900 hover:bg-stone-100/20'
                           : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] line-through cursor-not-allowed'
                       )}
                     >
@@ -157,7 +157,7 @@ export function BookingCalendar({ professionalId, onSelect }: BookingCalendarPro
       {/* Legend */}
       <div className="flex items-center gap-4 text-xs text-[var(--color-text-secondary)] pt-1">
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded bg-emerald-500/10 border border-emerald-500/20" />
+          <span className="inline-block w-3 h-3 rounded bg-stone-100/10 border border-stone-300/20" />
           예약 가능
         </span>
         <span className="flex items-center gap-1">

@@ -32,8 +32,8 @@ export function CreditBalance({ className = "", compact = false }: CreditBalance
         href="/settings/payment"
         className={`inline-flex items-center gap-1.5 text-sm hover:opacity-80 transition-opacity ${className}`}
       >
-        <Coins className="h-4 w-4 text-amber-500" />
-        <span className="font-semibold text-amber-400">
+        <Coins className="h-4 w-4 text-stone-900" />
+        <span className="font-semibold text-stone-900">
           {balance === null ? "..." : balance.toLocaleString()}
         </span>
       </Link>
@@ -42,13 +42,13 @@ export function CreditBalance({ className = "", compact = false }: CreditBalance
 
   return (
     <div
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 ${className}`}
+      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-stone-100/10 border border-stone-300/20 ${className}`}
     >
-      <Coins className="h-4 w-4 text-amber-500" />
+      <Coins className="h-4 w-4 text-stone-900" />
       <span className="text-sm font-medium text-[var(--color-text-secondary)]">
         크레딧
       </span>
-      <span className="text-sm font-bold text-amber-400">
+      <span className="text-sm font-bold text-stone-900">
         {balance === null ? "..." : balance.toLocaleString()}
       </span>
       <Link href="/settings/payment">

@@ -41,19 +41,19 @@ const KEY_LABELS: Record<string, string> = {
 }
 
 const VALUE_BADGES: Record<string, { label: string; color: string }> = {
-  claude:    { label: 'Claude',    color: 'bg-violet-900/50 text-violet-300 border-violet-700/50' },
-  openai:    { label: 'OpenAI',    color: 'bg-emerald-900/50 text-emerald-300 border-emerald-700/50' },
-  gemini:    { label: 'Gemini',    color: 'bg-blue-900/50 text-blue-300 border-blue-700/50' },
-  voyage:    { label: 'Voyage',    color: 'bg-cyan-900/50 text-cyan-300 border-cyan-700/50' },
-  nicepay:   { label: 'NicePay',   color: 'bg-orange-900/50 text-orange-300 border-orange-700/50' },
-  toss:      { label: 'Toss',      color: 'bg-blue-900/50 text-blue-300 border-blue-700/50' },
-  stripe:    { label: 'Stripe',    color: 'bg-purple-900/50 text-purple-300 border-purple-700/50' },
+  claude:    { label: 'Claude',    color: 'bg-stone-100/50 text-stone-900 border-stone-300/50' },
+  openai:    { label: 'OpenAI',    color: 'bg-stone-100/50 text-stone-900 border-stone-300/50' },
+  gemini:    { label: 'Gemini',    color: 'bg-stone-100/50 text-stone-900 border-stone-300/50' },
+  voyage:    { label: 'Voyage',    color: 'bg-stone-100/50 text-stone-900 border-stone-300/50' },
+  nicepay:   { label: 'NicePay',   color: 'bg-stone-100/50 text-stone-900 border-stone-300/50' },
+  toss:      { label: 'Toss',      color: 'bg-stone-100/50 text-stone-900 border-stone-300/50' },
+  stripe:    { label: 'Stripe',    color: 'bg-stone-100/50 text-stone-900 border-stone-300/50' },
   none:      { label: 'OFF',       color: 'bg-gray-800 text-gray-400 border-gray-700' },
-  tesseract: { label: 'Tesseract', color: 'bg-amber-900/50 text-amber-300 border-amber-700/50' },
-  iros:      { label: 'IROS',      color: 'bg-rose-900/50 text-rose-300 border-rose-700/50' },
-  mock:      { label: 'Mock',      color: 'bg-gray-800 text-yellow-400 border-yellow-700/50' },
-  molit:     { label: 'MOLIT',     color: 'bg-sky-900/50 text-sky-300 border-sky-700/50' },
-  kamco:     { label: 'KAMCO',     color: 'bg-indigo-900/50 text-indigo-300 border-indigo-700/50' },
+  tesseract: { label: 'Tesseract', color: 'bg-stone-100/50 text-stone-900 border-stone-300/50' },
+  iros:      { label: 'IROS',      color: 'bg-stone-100/50 text-stone-900 border-stone-300/50' },
+  mock:      { label: 'Mock',      color: 'bg-gray-800 text-stone-900 border-stone-300/50' },
+  molit:     { label: 'MOLIT',     color: 'bg-stone-100/50 text-stone-900 border-stone-300/50' },
+  kamco:     { label: 'KAMCO',     color: 'bg-stone-100/50 text-stone-900 border-stone-300/50' },
 }
 
 // ─── Config Card ─────────────────────────────────────────────
@@ -80,7 +80,7 @@ function ConfigCard({
   }
 
   return (
-    <div className={`rounded-xl border transition-colors ${isDirty ? 'border-amber-600/60 bg-amber-950/20' : 'border-gray-800 bg-gray-900/60'}`}>
+    <div className={`rounded-xl border transition-colors ${isDirty ? 'border-stone-300/60 bg-amber-950/20' : 'border-gray-800 bg-gray-900/60'}`}>
       <div className="p-5">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div>
@@ -135,7 +135,7 @@ function ConfigCard({
                         </span>
                       )}
                       <span className="font-mono text-white">{opt}</span>
-                      {selected === opt && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 ml-auto" />}
+                      {selected === opt && <CheckCircle2 className="w-3.5 h-3.5 text-stone-900 ml-auto" />}
                     </button>
                   )
                 })}
@@ -153,7 +153,7 @@ function ConfigCard({
               exit={{ opacity: 0, height: 0 }}
               onClick={handleSave}
               disabled={saving}
-              className="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm font-semibold py-2 rounded-lg transition-colors"
+              className="w-full flex items-center justify-center gap-2 bg-stone-100 hover:bg-stone-100 disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm font-semibold py-2 rounded-lg transition-colors"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {saving ? '저장 중...' : `${selected} 로 변경 저장`}
@@ -223,8 +223,8 @@ export default function RuntimeConfigPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-600/30 flex items-center justify-center">
-            <Sliders className="w-5 h-5 text-violet-400" />
+          <div className="w-10 h-10 rounded-xl bg-stone-100/20 border border-stone-300/30 flex items-center justify-center">
+            <Sliders className="w-5 h-5 text-stone-900" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">런타임 공급자 설정</h1>
@@ -249,9 +249,9 @@ export default function RuntimeConfigPage() {
       </div>
 
       {/* Notice */}
-      <div className="flex items-start gap-3 bg-amber-900/20 border border-amber-700/30 rounded-xl p-4 mb-6">
-        <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-300 leading-relaxed">
+      <div className="flex items-start gap-3 bg-stone-100/20 border border-stone-300/30 rounded-xl p-4 mb-6">
+        <AlertCircle className="w-4 h-4 text-stone-900 shrink-0 mt-0.5" />
+        <p className="text-xs text-stone-900 leading-relaxed">
           변경사항은 <strong>즉시 DB에 저장</strong>되며, 각 서버 인스턴스의 5분 캐시 만료 후 자동으로 적용됩니다.
           AI 공급자 변경 시 해당 API 키가 설정되어 있는지 <a href="/admin/integrations" className="underline">연동 관리</a>에서 확인하세요.
         </p>

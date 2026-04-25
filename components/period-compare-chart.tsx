@@ -40,7 +40,7 @@ function CustomTooltip({ active, payload, label }: any) {
           <span className="font-bold">{p.value.toLocaleString()}건</span>
         </p>
       ))}
-      <p className={`mt-1 font-semibold ${diff >= 0 ? 'text-blue-600' : 'text-red-500'}`}>
+      <p className={`mt-1 font-semibold ${diff >= 0 ? 'text-stone-900' : 'text-stone-900'}`}>
         변화 {diff >= 0 ? '+' : ''}{diff}건
       </p>
     </div>
@@ -60,7 +60,7 @@ export function PeriodCompareChart() {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
-            <BarChart2 className="h-4 w-4 text-blue-600" />
+            <BarChart2 className="h-4 w-4 text-stone-900" />
             기간별 키워드 비교
           </CardTitle>
           <div className="flex gap-1">
@@ -70,7 +70,7 @@ export function PeriodCompareChart() {
                 onClick={() => setMode(m)}
                 className={`text-xs px-2.5 py-1 rounded-md border transition-all ${
                   mode === m
-                    ? 'bg-blue-600 text-white border-blue-600'
+                    ? 'bg-stone-100 text-white border-stone-300'
                     : 'text-[var(--color-text-secondary)] border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-base)]'
                 }`}
               >
@@ -105,8 +105,8 @@ export function PeriodCompareChart() {
               <span
                 key={d.keyword}
                 className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                  diff > 0 ? 'bg-blue-500/10 text-blue-400' :
-                  diff < 0 ? 'bg-red-500/10 text-red-400' :
+                  diff > 0 ? 'bg-stone-100/10 text-stone-900' :
+                  diff < 0 ? 'bg-stone-100/10 text-stone-900' :
                   'bg-slate-500/15 text-[var(--color-text-muted)]'
                 }`}
               >

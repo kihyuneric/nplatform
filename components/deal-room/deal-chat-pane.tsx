@@ -143,7 +143,7 @@ export function DealChatPane({
             >
               <span className="flex-shrink-0" aria-hidden="true">
                 {d.status === "signed" && <FileCheck className="w-3.5 h-3.5 text-[var(--color-accent-default)]" />}
-                {d.status === "pending" && <Clock className="w-3.5 h-3.5 text-amber-500" />}
+                {d.status === "pending" && <Clock className="w-3.5 h-3.5 text-stone-900" />}
                 {d.status === "uploaded" && <Paperclip className="w-3.5 h-3.5 text-[var(--color-text-tertiary)]" />}
               </span>
               <span className="text-[0.75rem] text-[var(--color-text-secondary)] truncate flex-1 tracking-normal">

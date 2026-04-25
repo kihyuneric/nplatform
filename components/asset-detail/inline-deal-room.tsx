@@ -114,9 +114,9 @@ export function InlineDealRoom({
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold"
           style={{
             fontSize: 10,
-            backgroundColor: "rgba(16, 185, 129, 0.16)",
+            backgroundColor: "rgba(20,22,26, 0.16)",
             color: "var(--color-positive)",
-            border: "1px solid rgba(16, 185, 129, 0.36)",
+            border: "1px solid rgba(20,22,26, 0.36)",
           }}
         >
           <Wifi size={11} />

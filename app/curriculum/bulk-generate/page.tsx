@@ -185,7 +185,7 @@ export default function BulkGeneratePage() {
         </button>
         <div>
           <h1 className="text-xl font-bold flex items-center gap-2">
-            <Zap className="w-5 h-5 text-purple-500" />
+            <Zap className="w-5 h-5 text-stone-900" />
             Atomic 캡슐 벌크 생성
           </h1>
           <p className="text-xs text-gray-500 mt-0.5">여러 개념의 Atomic 캡슐을 일괄 생성합니다</p>
@@ -193,23 +193,23 @@ export default function BulkGeneratePage() {
       </div>
 
       {/* Stats Dashboard */}
-      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-5 border border-purple-100">
+      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-5 border border-stone-300">
         <div className="grid grid-cols-4 gap-4 mb-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-700">{stats.total_concepts}</div>
-            <div className="text-xs text-purple-500">전체 개념</div>
+            <div className="text-2xl font-bold text-stone-900">{stats.total_concepts}</div>
+            <div className="text-xs text-stone-900">전체 개념</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.with_capsules}</div>
-            <div className="text-xs text-green-500">캡슐 있음</div>
+            <div className="text-2xl font-bold text-stone-900">{stats.with_capsules}</div>
+            <div className="text-xs text-stone-900">캡슐 있음</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-amber-600">{stats.without_capsules}</div>
-            <div className="text-xs text-amber-500">미생성</div>
+            <div className="text-2xl font-bold text-stone-900">{stats.without_capsules}</div>
+            <div className="text-xs text-stone-900">미생성</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.total_atomic_capsules}</div>
-            <div className="text-xs text-blue-500">총 캡슐 수</div>
+            <div className="text-2xl font-bold text-stone-900">{stats.total_atomic_capsules}</div>
+            <div className="text-xs text-stone-900">총 캡슐 수</div>
           </div>
         </div>
 
@@ -217,7 +217,7 @@ export default function BulkGeneratePage() {
         <div>
           <div className="flex items-center justify-between text-xs text-gray-500 mb-1.5">
             <span>전체 생성 진행률</span>
-            <span className="font-semibold text-purple-700">{completionPct}%</span>
+            <span className="font-semibold text-stone-900">{completionPct}%</span>
           </div>
           <div className="w-full bg-white rounded-full h-3 overflow-hidden">
             <div
@@ -260,7 +260,7 @@ export default function BulkGeneratePage() {
               type="checkbox"
               checked={showOnlyEmpty}
               onChange={(e) => setShowOnlyEmpty(e.target.checked)}
-              className="rounded text-purple-600"
+              className="rounded text-stone-900"
             />
             미생성만 표시
           </label>
@@ -279,7 +279,7 @@ export default function BulkGeneratePage() {
         {/* Selection controls */}
         <div className="flex items-center gap-2 flex-wrap text-xs">
           <span className="text-gray-500">선택:</span>
-          <button onClick={selectAllEmpty} className="px-2 py-1 bg-amber-50 text-amber-700 rounded hover:bg-amber-100">
+          <button onClick={selectAllEmpty} className="px-2 py-1 bg-stone-100 text-stone-900 rounded hover:bg-stone-100">
             미생성 전체 선택
           </button>
           <button onClick={selectAll} className="px-2 py-1 bg-gray-50 text-gray-600 rounded hover:bg-gray-100">
@@ -288,7 +288,7 @@ export default function BulkGeneratePage() {
           <button onClick={clearSelection} className="px-2 py-1 bg-gray-50 text-gray-600 rounded hover:bg-gray-100">
             선택 해제
           </button>
-          <span className="text-purple-600 font-medium ml-2">{selected.size}개 선택됨</span>
+          <span className="text-stone-900 font-medium ml-2">{selected.size}개 선택됨</span>
         </div>
 
         {/* Generation controls */}
@@ -311,9 +311,9 @@ export default function BulkGeneratePage() {
               type="checkbox"
               checked={forceRegenerate}
               onChange={(e) => setForceRegenerate(e.target.checked)}
-              className="rounded text-red-500"
+              className="rounded text-stone-900"
             />
-            <span className={forceRegenerate ? 'text-red-600 font-medium' : ''}>
+            <span className={forceRegenerate ? 'text-stone-900 font-medium' : ''}>
               기존 캡슐 재생성 (덮어쓰기)
             </span>
           </label>
@@ -323,7 +323,7 @@ export default function BulkGeneratePage() {
           <button
             onClick={handleGenerate}
             disabled={generating || (selected.size === 0 && !domainFilter && !levelFilter)}
-            className="inline-flex items-center gap-2 px-5 py-2 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2 bg-stone-100 text-white rounded-lg text-sm font-semibold hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
             {generating ? '생성 중...' : '벌크 생성 실행'}
@@ -336,7 +336,7 @@ export default function BulkGeneratePage() {
         <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-              <BarChart2 className="w-4 h-4 text-purple-500" />
+              <BarChart2 className="w-4 h-4 text-stone-900" />
               생성 결과
             </h3>
             <button onClick={() => setShowResults(false)} className="text-gray-400 hover:text-gray-600">
@@ -345,25 +345,25 @@ export default function BulkGeneratePage() {
           </div>
 
           {genMessage && (
-            <p className="text-sm text-gray-700 bg-purple-50 rounded-lg p-3">{genMessage}</p>
+            <p className="text-sm text-gray-700 bg-stone-100 rounded-lg p-3">{genMessage}</p>
           )}
 
           {genResults.length > 0 && (
             <div className="space-y-1.5 max-h-60 overflow-y-auto">
               {genResults.map((r, i) => (
                 <div key={i} className={`flex items-center gap-2 p-2 rounded-lg text-sm ${
-                  r.status === 'success' ? 'bg-green-50' : 'bg-red-50'
+                  r.status === 'success' ? 'bg-stone-100' : 'bg-stone-100'
                 }`}>
                   {r.status === 'success'
-                    ? <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-                    : <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    ? <CheckCircle2 className="w-4 h-4 text-stone-900 shrink-0" />
+                    : <XCircle className="w-4 h-4 text-stone-900 shrink-0" />
                   }
                   <span className="font-medium">{r.concept_name}</span>
                   {r.status === 'success' && (
-                    <span className="text-green-600 ml-auto">{r.capsules_created}개 생성</span>
+                    <span className="text-stone-900 ml-auto">{r.capsules_created}개 생성</span>
                   )}
                   {r.status === 'error' && (
-                    <span className="text-red-500 ml-auto text-xs">{r.error}</span>
+                    <span className="text-stone-900 ml-auto text-xs">{r.error}</span>
                   )}
                 </div>
               ))}
@@ -375,7 +375,7 @@ export default function BulkGeneratePage() {
       {/* Concept List */}
       {loading ? (
         <div className="flex flex-col items-center gap-3 py-10">
-          <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+          <Loader2 className="w-8 h-8 text-stone-900 animate-spin" />
           <p className="text-sm text-gray-500">개념 목록 로딩 중...</p>
         </div>
       ) : (
@@ -402,7 +402,7 @@ export default function BulkGeneratePage() {
                   key={c.concept_id}
                   onClick={() => toggleSelect(c.concept_id)}
                   className={`grid grid-cols-[40px_1fr_100px_80px_80px_60px] gap-2 px-4 py-2.5 text-sm cursor-pointer hover:bg-gray-50 transition-colors ${
-                    selected.has(c.concept_id) ? 'bg-purple-50' : ''
+                    selected.has(c.concept_id) ? 'bg-stone-100' : ''
                   }`}
                 >
                   <div className="flex items-center">
@@ -410,14 +410,14 @@ export default function BulkGeneratePage() {
                       type="checkbox"
                       checked={selected.has(c.concept_id)}
                       onChange={() => toggleSelect(c.concept_id)}
-                      className="rounded text-purple-600"
+                      className="rounded text-stone-900"
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>
                   <div className="font-medium text-gray-800 truncate">
                     <Link
                       href={`/curriculum/concept/${c.concept_id}`}
-                      className="hover:text-purple-600 hover:underline"
+                      className="hover:text-stone-900 hover:underline"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {c.name}
@@ -426,9 +426,9 @@ export default function BulkGeneratePage() {
                   <div className="text-gray-500 truncate">{c.domain_name}</div>
                   <div>
                     <span className={`px-1.5 py-0.5 rounded text-xs ${
-                      c.level === '초급' ? 'bg-emerald-100 text-emerald-700' :
-                      c.level === '중급' ? 'bg-blue-100 text-blue-700' :
-                      c.level === '고급' ? 'bg-purple-100 text-purple-700' :
+                      c.level === '초급' ? 'bg-stone-100 text-stone-900' :
+                      c.level === '중급' ? 'bg-stone-100 text-stone-900' :
+                      c.level === '고급' ? 'bg-stone-100 text-stone-900' :
                       'bg-gray-100 text-gray-600'
                     }`}>
                       {c.level || '-'}
@@ -436,16 +436,16 @@ export default function BulkGeneratePage() {
                   </div>
                   <div className="text-center">
                     {c.atomic_count > 0 ? (
-                      <span className="text-purple-600 font-medium">{c.atomic_count}</span>
+                      <span className="text-stone-900 font-medium">{c.atomic_count}</span>
                     ) : (
                       <span className="text-gray-300">0</span>
                     )}
                   </div>
                   <div className="text-center">
                     {c.has_capsules ? (
-                      <CheckCircle2 className="w-4 h-4 text-green-500 inline-block" />
+                      <CheckCircle2 className="w-4 h-4 text-stone-900 inline-block" />
                     ) : (
-                      <AlertCircle className="w-4 h-4 text-amber-400 inline-block" />
+                      <AlertCircle className="w-4 h-4 text-stone-900 inline-block" />
                     )}
                   </div>
                 </div>
@@ -464,8 +464,8 @@ export default function BulkGeneratePage() {
       {generating && (
         <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 shadow-xl max-w-sm mx-4 text-center space-y-4">
-            <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mx-auto">
-              <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+            <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto">
+              <Loader2 className="w-8 h-8 text-stone-900 animate-spin" />
             </div>
             <div>
               <h3 className="font-bold text-gray-800">Atomic 캡슐 생성 중</h3>
@@ -474,7 +474,7 @@ export default function BulkGeneratePage() {
                 개념당 약 1~3분 소요됩니다.
               </p>
             </div>
-            <div className="flex items-center gap-2 justify-center text-xs text-purple-600">
+            <div className="flex items-center gap-2 justify-center text-xs text-stone-900">
               <Zap className="w-3.5 h-3.5" />
               최대 {maxConcepts}개 개념을 순차 처리합니다
             </div>

@@ -51,14 +51,14 @@ export function VisibilitySelector({ value, onChange }: VisibilitySelectorProps)
               key={opt.value}
               className={`flex items-start gap-3 rounded-lg border-2 p-3 cursor-pointer transition-colors ${
                 isSelected
-                  ? "border-[#1B3A5C] bg-blue-500/10"
+                  ? "border-[#1B3A5C] bg-stone-100/10"
                   : "border-[var(--color-border-subtle)] hover:border-gray-500"
               }`}
             >
               <RadioGroupItem value={opt.value} className="mt-0.5" />
               <div className="flex-1">
                 <div className="flex items-center gap-1.5">
-                  <Icon className={`h-4 w-4 ${isSelected ? "text-blue-400" : "text-muted-foreground"}`} />
+                  <Icon className={`h-4 w-4 ${isSelected ? "text-stone-900" : "text-muted-foreground"}`} />
                   <span className="text-sm font-medium">{opt.label}</span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>

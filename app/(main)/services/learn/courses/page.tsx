@@ -21,9 +21,9 @@ const CATEGORIES = ["전체", "투자기초", "법률", "세무", "경매", "실
 const SORTS = ["인기순", "최신순", "평점순"];
 
 const levelColors: Record<string, string> = {
-  초급: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  중급: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  고급: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  초급: "bg-stone-100/10 text-stone-900 border-stone-300/20",
+  중급: "bg-stone-100/10 text-stone-900 border-stone-300/20",
+  고급: "bg-stone-100/10 text-stone-900 border-stone-300/20",
 };
 
 export default function CoursesPage() {
@@ -108,7 +108,7 @@ export default function CoursesPage() {
                 <h2 className={DS.text.sectionTitle}>{FEATURED.title}</h2>
                 <p className={`${DS.text.caption} mb-4`}>{FEATURED.instructor}</p>
                 <div className={`flex flex-wrap gap-4 ${DS.text.body}`}>
-                  <span>★ <span className="font-semibold text-amber-500">{FEATURED.rating}</span></span>
+                  <span>★ <span className="font-semibold text-stone-900">{FEATURED.rating}</span></span>
                   <span>{FEATURED.students.toLocaleString()}명 수강</span>
                   <span>{FEATURED.duration}</span>
                   <span>{FEATURED.lessons}강</span>
@@ -144,13 +144,13 @@ export default function CoursesPage() {
                   <h3 className={`${DS.text.cardSubtitle} mb-1 leading-snug`}>{course.title}</h3>
                   <p className={`${DS.text.captionLight} mb-3`}>{course.instructor}</p>
                   <div className={`flex flex-wrap gap-3 ${DS.text.captionLight} mb-3`}>
-                    <span>★ <span className="text-amber-500 font-semibold">{course.rating}</span></span>
+                    <span>★ <span className="text-stone-900 font-semibold">{course.rating}</span></span>
                     <span>{course.students.toLocaleString()}명</span>
                     <span>{course.duration}</span>
                     <span>{course.lessons}강</span>
                   </div>
                   <div className={`flex items-center justify-between mt-auto pt-3 ${DS.divider.default}`}>
-                    <span className={`${DS.text.bodyBold} ${course.price === "무료" ? "text-emerald-600" : ""}`}>{course.price}</span>
+                    <span className={`${DS.text.bodyBold} ${course.price === "무료" ? "text-stone-900" : ""}`}>{course.price}</span>
                     <Link href={`/services/learn/courses/${course.id}`}
                       className={DS.button.secondary}>
                       보기

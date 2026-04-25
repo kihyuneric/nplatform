@@ -12,8 +12,8 @@ const HIGHLIGHTS = [
     date: '2026.03.18',
     icon: BookOpen,
     href: '/community/expert',
-    color: 'text-blue-400',
-    bg: 'bg-blue-500/10',
+    color: 'text-stone-900',
+    bg: 'bg-stone-100/10',
   },
   {
     category: '시장 분석',
@@ -22,8 +22,8 @@ const HIGHLIGHTS = [
     date: '2026.03.15',
     icon: Award,
     href: '/market-intelligence/reports',
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-500/10',
+    color: 'text-stone-900',
+    bg: 'bg-stone-100/10',
   },
   {
     category: '커뮤니티',
@@ -32,8 +32,8 @@ const HIGHLIGHTS = [
     date: '2026.03.12',
     icon: MessageCircle,
     href: '/community',
-    color: 'text-violet-400',
-    bg: 'bg-violet-500/10',
+    color: 'text-stone-900',
+    bg: 'bg-stone-100/10',
   },
 ]
 

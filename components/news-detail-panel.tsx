@@ -19,15 +19,15 @@ interface Props {
 }
 
 const CATEGORY_STYLES: Record<KeywordCategory, { bg: string; text: string; border: string }> = {
-  '거래/시장': { bg: 'bg-blue-500/10',   text: 'text-blue-400',   border: 'border-blue-500/20'   },
-  '개발/지역': { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
-  '정책/규제': { bg: 'bg-amber-500/10',   text: 'text-amber-400',   border: 'border-amber-500/20'   },
-  '투자/금융': { bg: 'bg-purple-500/10',  text: 'text-purple-400',  border: 'border-purple-500/20'  },
+  '거래/시장': { bg: 'bg-stone-100/10',   text: 'text-stone-900',   border: 'border-stone-300/20'   },
+  '개발/지역': { bg: 'bg-stone-100/10', text: 'text-stone-900', border: 'border-stone-300/20' },
+  '정책/규제': { bg: 'bg-stone-100/10',   text: 'text-stone-900',   border: 'border-stone-300/20'   },
+  '투자/금융': { bg: 'bg-stone-100/10',  text: 'text-stone-900',  border: 'border-stone-300/20'  },
 };
 
 const DIR_INFO: Record<string, { icon: typeof TrendingUp; color: string; bg: string }> = {
-  '상승': { icon: TrendingUp,  color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-  '하락': { icon: TrendingDown, color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/20'         },
+  '상승': { icon: TrendingUp,  color: 'text-stone-900', bg: 'bg-stone-100/10 border-stone-300/20' },
+  '하락': { icon: TrendingDown, color: 'text-stone-900',     bg: 'bg-stone-100/10 border-stone-300/20'         },
   '중립': { icon: Minus,        color: 'text-[var(--color-text-secondary)]',    bg: 'bg-[var(--color-surface-base)] border-[var(--color-border-subtle)]'        },
 };
 

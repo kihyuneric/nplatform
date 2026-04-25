@@ -8,8 +8,8 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
   return (
     <div className={DS.page.wrapper}>
       <div className={DS.page.container + " py-16 flex flex-col items-center text-center gap-4"}>
-        <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
-          <AlertTriangle className="w-7 h-7 text-red-400" />
+        <div className="w-14 h-14 rounded-full bg-stone-100/10 flex items-center justify-center">
+          <AlertTriangle className="w-7 h-7 text-stone-900" />
         </div>
         <h2 className={DS.header.title}>OCR 등록 페이지 로딩 오류</h2>
         <p className="text-sm text-[var(--color-text-muted)] max-w-md">
@@ -18,7 +18,7 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
         <div className="flex gap-2">
           <button
             onClick={reset}
-            className="px-4 py-2 rounded-lg bg-violet-500 text-white text-sm font-bold hover:bg-violet-600 transition-colors"
+            className="px-4 py-2 rounded-lg bg-stone-100 text-white text-sm font-bold hover:bg-stone-100 transition-colors"
           >
             다시 시도
           </button>

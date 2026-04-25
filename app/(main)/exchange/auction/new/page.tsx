@@ -248,7 +248,7 @@ export default function BiddingNewPage() {
   // ─── Error ring helper ────────────────────────────────────
 
   const errorRing = (field: string) =>
-    errors[field] ? "ring-2 ring-red-400 border-red-400" : ""
+    errors[field] ? "ring-2 ring-red-400 border-stone-300" : ""
 
   // ─── Step Indicator ──────────────────────────────────────
 
@@ -273,7 +273,7 @@ export default function BiddingNewPage() {
               <div
                 className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${
                   isCompleted
-                    ? "border-emerald-500 bg-emerald-500 text-white"
+                    ? "border-stone-300 bg-stone-100 text-white"
                     : isActive
                       ? "border-[var(--color-brand-dark)] bg-[var(--color-brand-dark)] text-white shadow-lg shadow-[var(--color-brand-dark)]/30"
                       : "border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)]"
@@ -290,7 +290,7 @@ export default function BiddingNewPage() {
                   isActive
                     ? "text-[var(--color-brand-dark)]"
                     : isCompleted
-                      ? "text-emerald-600"
+                      ? "text-stone-900"
                       : "text-gray-400"
                 }`}
               >
@@ -300,7 +300,7 @@ export default function BiddingNewPage() {
             {idx < STEPS.length - 1 && (
               <div
                 className={`mx-2 h-0.5 w-8 sm:w-12 md:w-16 transition-colors ${
-                  currentStep > step.id ? "bg-emerald-500" : "bg-gray-200"
+                  currentStep > step.id ? "bg-stone-100" : "bg-gray-200"
                 }`}
               />
             )}
@@ -324,7 +324,7 @@ export default function BiddingNewPage() {
         {/* 매물명 */}
         <div>
           <Label className="text-sm font-semibold">
-            매물명 <span className="text-red-500">*</span>
+            매물명 <span className="text-stone-900">*</span>
           </Label>
           <Input
             className={`mt-1.5 ${errorRing("name")}`}
@@ -423,7 +423,7 @@ export default function BiddingNewPage() {
           {/* 희망매각가 */}
           <div>
             <Label className="text-sm font-semibold">
-              희망매각가 (원) <span className="text-red-500">*</span>
+              희망매각가 (원) <span className="text-stone-900">*</span>
             </Label>
             <Input
               className={`mt-1.5 ${errorRing("askingPrice")}`}
@@ -441,7 +441,7 @@ export default function BiddingNewPage() {
               }}
             />
             {state.askingPrice > 0 && (
-              <span className="mt-1 block text-xs text-emerald-600 font-medium">
+              <span className="mt-1 block text-xs text-stone-900 font-medium">
                 {formatKRW(state.askingPrice)}
               </span>
             )}
@@ -465,7 +465,7 @@ export default function BiddingNewPage() {
               }}
             />
             {state.collateralAmount > 0 && (
-              <span className="mt-1 block text-xs text-emerald-600 font-medium">
+              <span className="mt-1 block text-xs text-stone-900 font-medium">
                 {formatKRW(state.collateralAmount)}
               </span>
             )}
@@ -474,7 +474,7 @@ export default function BiddingNewPage() {
 
         {/* LTV·할인율 (파생값) */}
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-          <div className="rounded-lg border border-[var(--color-border-subtle)] bg-blue-500/10 p-4">
+          <div className="rounded-lg border border-[var(--color-border-subtle)] bg-stone-100/10 p-4">
             <p className="text-xs text-[var(--color-text-muted)] font-medium mb-1">
               LTV (자동계산)
             </p>
@@ -485,11 +485,11 @@ export default function BiddingNewPage() {
               대출원금 / 감정가 × 100
             </p>
           </div>
-          <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4">
+          <div className="rounded-lg border border-stone-300/20 bg-stone-100/10 p-4">
             <p className="text-xs text-[var(--color-text-muted)] font-medium mb-1">
               할인율 (자동계산)
             </p>
-            <p className="text-2xl font-bold text-emerald-500">
+            <p className="text-2xl font-bold text-stone-900">
               {derived.discountRate ? `${derived.discountRate}%` : "-"}
             </p>
             <p className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -571,7 +571,7 @@ export default function BiddingNewPage() {
         {/* 입찰 시작일 (extras) */}
         <div>
           <Label className="text-sm font-semibold">
-            입찰 시작일 <span className="text-red-500">*</span>
+            입찰 시작일 <span className="text-stone-900">*</span>
           </Label>
           <div className="mt-1.5">
             <DateField
@@ -598,7 +598,7 @@ export default function BiddingNewPage() {
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
           <div>
             <Label className="text-sm font-semibold">
-              공개수준 <span className="text-red-500">*</span>
+              공개수준 <span className="text-stone-900">*</span>
             </Label>
             <Select
               value={extras.disclosureLevel}
@@ -620,7 +620,7 @@ export default function BiddingNewPage() {
           </div>
           <div>
             <Label className="text-sm font-semibold">
-              입찰방식 <span className="text-red-500">*</span>
+              입찰방식 <span className="text-stone-900">*</span>
             </Label>
             <Select
               value={extras.biddingMethod}
@@ -890,7 +890,7 @@ export default function BiddingNewPage() {
     return (
       <div className="min-h-screen bg-[var(--color-surface-base)] flex flex-col items-center justify-center px-4">
         <div className="max-w-md w-full text-center space-y-6">
-          <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
+          <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto shadow-lg">
             <Check className="h-10 w-10 text-white" />
           </div>
           <div>

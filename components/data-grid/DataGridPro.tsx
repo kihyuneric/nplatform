@@ -80,8 +80,8 @@ const DENSITY_CONFIG = {
 // ─── 정렬 아이콘 ─────────────────────────────────────────
 
 function SortIcon({ dir }: { dir: SortDir }) {
-  if (dir === 'asc')  return <ChevronUp className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
-  if (dir === 'desc') return <ChevronDown className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
+  if (dir === 'asc')  return <ChevronUp className="h-3.5 w-3.5 text-stone-900 flex-shrink-0" />
+  if (dir === 'desc') return <ChevronDown className="h-3.5 w-3.5 text-stone-900 flex-shrink-0" />
   return <ChevronsUpDown className="h-3 w-3 text-gray-600 flex-shrink-0" />
 }
 
@@ -300,7 +300,7 @@ export default function DataGridPro<T extends Record<string, unknown> = Record<s
                 value={globalSearch}
                 onChange={e => { setGlobalSearch(e.target.value); setPage(1) }}
                 placeholder="전체 검색..."
-                className="bg-gray-800 border border-gray-700 rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-blue-500 w-48"
+                className="bg-gray-800 border border-gray-700 rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-stone-300 w-48"
               />
             </div>
           )}
@@ -310,7 +310,7 @@ export default function DataGridPro<T extends Record<string, unknown> = Record<s
             onClick={() => setShowFilters(p => !p)}
             className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${
               showFilters
-                ? 'bg-blue-600 border-blue-600 text-white'
+                ? 'bg-stone-100 border-stone-300 text-white'
                 : 'border-gray-700 text-gray-400 hover:text-white'
             }`}
           >
@@ -320,7 +320,7 @@ export default function DataGridPro<T extends Record<string, unknown> = Record<s
 
           {/* 선택 정보 */}
           {checkboxSelection && selected.size > 0 && (
-            <span className="text-xs text-blue-400 bg-blue-500/15 px-2.5 py-1 rounded-lg">
+            <span className="text-xs text-stone-900 bg-stone-100/15 px-2.5 py-1 rounded-lg">
               {selected.size}행 선택됨
             </span>
           )}
@@ -397,7 +397,7 @@ export default function DataGridPro<T extends Record<string, unknown> = Record<s
                   value={filters[col.field] ?? ''}
                   onChange={e => { setFilters(prev => ({ ...prev, [col.field]: e.target.value })); setPage(1) }}
                   placeholder="필터..."
-                  className="w-full bg-gray-800 border border-gray-700 rounded px-1.5 py-0.5 text-xs focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-800 border border-gray-700 rounded px-1.5 py-0.5 text-xs focus:outline-none focus:border-stone-300"
                 />
               )}
             </div>
@@ -425,7 +425,7 @@ export default function DataGridPro<T extends Record<string, unknown> = Record<s
                 <th style={{ width: 40, height: headerH }} className="border-r border-gray-800">
                   <button onClick={handleSelectAll} className="flex items-center justify-center w-full h-full text-gray-400 hover:text-white">
                     {selected.size === filteredRows.length && filteredRows.length > 0
-                      ? <CheckSquare className="h-4 w-4 text-blue-400" />
+                      ? <CheckSquare className="h-4 w-4 text-stone-900" />
                       : <Square className="h-4 w-4" />}
                   </button>
                 </th>
@@ -461,7 +461,7 @@ export default function DataGridPro<T extends Record<string, unknown> = Record<s
               <tr>
                 <td colSpan={columns.length + (checkboxSelection ? 1 : 0)} className="py-16 text-center">
                   <div className="flex flex-col items-center gap-2">
-                    <div className="h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="h-6 w-6 border-2 border-stone-300 border-t-transparent rounded-full animate-spin" />
                     <span className="text-xs text-gray-500">데이터 로딩 중...</span>
                   </div>
                 </td>
@@ -496,7 +496,7 @@ export default function DataGridPro<T extends Record<string, unknown> = Record<s
                     'border-b border-gray-800/50',
                     highlightOnHover ? 'hover:bg-gray-800/40 cursor-pointer' : '',
                     stripedRows && isEven ? 'bg-gray-900/30' : '',
-                    isSelected ? 'bg-blue-500/10 border-blue-500/20' : '',
+                    isSelected ? 'bg-stone-100/10 border-stone-300/20' : '',
                   ].filter(Boolean).join(' ')}
                   style={{ height: rowH }}
                 >
@@ -507,7 +507,7 @@ export default function DataGridPro<T extends Record<string, unknown> = Record<s
                         className="flex items-center justify-center w-full h-full text-gray-500 hover:text-white"
                       >
                         {isSelected
-                          ? <CheckSquare className="h-3.5 w-3.5 text-blue-400" />
+                          ? <CheckSquare className="h-3.5 w-3.5 text-stone-900" />
                           : <Square className="h-3.5 w-3.5" />}
                       </button>
                     </td>
@@ -570,7 +570,7 @@ export default function DataGridPro<T extends Record<string, unknown> = Record<s
                   key={n}
                   onClick={() => setPage(n)}
                   className={`w-7 h-7 rounded-lg text-xs font-medium transition-colors ${
-                    n === page ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800'
+                    n === page ? 'bg-stone-100 text-white' : 'text-gray-400 hover:bg-gray-800'
                   }`}
                 >
                   {n}
@@ -607,7 +607,7 @@ export function renderCurrencyCell(value: unknown): ReactNode {
 export function renderPercentCell(value: unknown, digits = 1): ReactNode {
   const n = Number(value)
   if (isNaN(n)) return <span className="text-gray-500">—</span>
-  const color = n > 0 ? 'text-emerald-400' : n < 0 ? 'text-red-400' : 'text-gray-400'
+  const color = n > 0 ? 'text-stone-900' : n < 0 ? 'text-stone-900' : 'text-gray-400'
   return <span className={`font-medium tabular-nums ${color}`}>{n > 0 ? '+' : ''}{n.toFixed(digits)}%</span>
 }
 

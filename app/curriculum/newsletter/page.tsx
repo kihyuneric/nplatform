@@ -38,8 +38,8 @@ const TYPE_LABEL_MAP: Record<string, string> = {
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   generated: { label: '생성됨', color: 'text-gray-600 bg-gray-100' },
-  sent: { label: '발송완료', color: 'text-green-600 bg-green-100' },
-  failed: { label: '실패', color: 'text-red-600 bg-red-100' },
+  sent: { label: '발송완료', color: 'text-stone-900 bg-stone-100' },
+  failed: { label: '실패', color: 'text-stone-900 bg-stone-100' },
 }
 
 const THEME_CHIPS = [
@@ -189,7 +189,7 @@ export default function NewsletterPage() {
     <div className="max-w-5xl mx-auto px-6 py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Mail className="w-6 h-6 text-purple-600" />
+        <Mail className="w-6 h-6 text-stone-900" />
         <div>
           <h1 className="text-xl font-bold text-[var(--color-text-primary)]">AI 뉴스레터 생성</h1>
           <p className="text-sm text-[var(--color-text-muted)]">온톨로지 기반 매일 교육 콘텐츠</p>
@@ -209,7 +209,7 @@ export default function NewsletterPage() {
                 onClick={() => setSelectedType(t.key)}
                 className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center ${
                   isSelected
-                    ? 'border-purple-500 bg-purple-500/10 text-purple-300'
+                    ? 'border-stone-300 bg-stone-100/10 text-stone-900'
                     : 'border-[var(--color-border-subtle)] hover:border-[var(--color-border-subtle)] text-[var(--color-text-muted)]'
                 }`}
               >
@@ -230,7 +230,7 @@ export default function NewsletterPage() {
             onClick={() => setThemeMode('concept')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
               themeMode === 'concept'
-                ? 'border-purple-500 bg-purple-500/10 text-purple-300'
+                ? 'border-stone-300 bg-stone-100/10 text-stone-900'
                 : 'border-[var(--color-border-subtle)] text-[var(--color-text-muted)] hover:border-[var(--color-border-subtle)]'
             }`}
           >
@@ -240,7 +240,7 @@ export default function NewsletterPage() {
             onClick={() => setThemeMode('theme')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
               themeMode === 'theme'
-                ? 'border-orange-400 bg-orange-500/10 text-orange-300'
+                ? 'border-stone-300 bg-stone-100/10 text-stone-900'
                 : 'border-[var(--color-border-subtle)] text-[var(--color-text-muted)] hover:border-[var(--color-border-subtle)]'
             }`}
           >
@@ -275,7 +275,7 @@ export default function NewsletterPage() {
                 value={theme}
                 onChange={e => setTheme(e.target.value)}
                 placeholder="주제 직접 입력 (예: 경매 입찰 전략, 임대수익률 계산법...)"
-                className="flex-1 text-sm border border-orange-500/30 rounded-lg px-3 py-2 bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] focus:outline-none focus:border-orange-400"
+                className="flex-1 text-sm border border-stone-300/30 rounded-lg px-3 py-2 bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] focus:outline-none focus:border-stone-300"
                 onKeyDown={e => e.key === 'Enter' && !generating && theme.trim() && handleGenerate()}
               />
             </div>
@@ -288,8 +288,8 @@ export default function NewsletterPage() {
                     onClick={() => setTheme(chip)}
                     className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
                       theme === chip
-                        ? 'border-orange-400 bg-orange-500/10 text-orange-300 font-medium'
-                        : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-orange-500/50 hover:text-orange-400'
+                        ? 'border-stone-300 bg-stone-100/10 text-stone-900 font-medium'
+                        : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-stone-300/50 hover:text-stone-900'
                     }`}
                   >
                     {chip}
@@ -304,13 +304,13 @@ export default function NewsletterPage() {
           <button
             onClick={handleGenerate}
             disabled={generating || (themeMode === 'theme' && !theme.trim())}
-            className="flex items-center gap-1.5 px-5 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1.5 px-5 py-2 bg-stone-100 text-white rounded-lg text-sm font-medium hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             AI 뉴스레터 생성
           </button>
           {themeMode === 'theme' && !theme.trim() && (
-            <span className="text-xs text-orange-500">테마를 입력하거나 선택해주세요</span>
+            <span className="text-xs text-stone-900">테마를 입력하거나 선택해주세요</span>
           )}
 
           {htmlPreview && (
@@ -318,7 +318,7 @@ export default function NewsletterPage() {
               <button
                 onClick={handleDownloadPdf}
                 disabled={downloadingPdf}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-stone-100 text-white rounded-lg text-sm font-medium hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {downloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 PDF
@@ -326,7 +326,7 @@ export default function NewsletterPage() {
 
               <button
                 onClick={() => { setShowEmailModal(true); setSendResult(null) }}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-stone-100 text-white rounded-lg text-sm font-medium hover:bg-stone-100 transition-colors"
               >
                 <Send className="w-4 h-4" />
                 이메일 발송
@@ -336,7 +336,7 @@ export default function NewsletterPage() {
         </div>
 
         {error && (
-          <div className="mt-3 text-sm text-red-400 bg-red-500/10 rounded-lg px-3 py-2">
+          <div className="mt-3 text-sm text-stone-900 bg-stone-100/10 rounded-lg px-3 py-2">
             {error}
           </div>
         )}
@@ -346,7 +346,7 @@ export default function NewsletterPage() {
       {generating && (
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
-            <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+            <Loader2 className="w-8 h-8 text-stone-900 animate-spin" />
             <p className="text-sm text-[var(--color-text-muted)]">AI가 뉴스레터를 생성하고 있습니다...</p>
             <p className="text-xs text-[var(--color-text-muted)]">온톨로지 컨텍스트 분석 + AI 콘텐츠 합성</p>
           </div>
@@ -360,7 +360,7 @@ export default function NewsletterPage() {
             {newsletterData && (
               <div className="flex items-center gap-3 text-xs text-gray-400">
                 {newsletterData.newsletter_type && (
-                  <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">
+                  <span className="px-2 py-0.5 bg-stone-100 text-stone-900 rounded-full">
                     {TYPE_LABEL_MAP[newsletterData.newsletter_type] || newsletterData.newsletter_type}
                   </span>
                 )}
@@ -385,16 +385,16 @@ export default function NewsletterPage() {
         <div className="space-y-4">
           {/* Section header */}
           <div className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-purple-500" />
+            <BookOpen className="w-4 h-4 text-stone-900" />
             <h2 className="text-sm font-semibold text-[var(--color-text-secondary)]">샘플 뉴스레터 — AI가 생성하는 콘텐츠 예시</h2>
           </div>
 
           {/* Sample cards grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Sample 1: 오늘의 학습 */}
-            <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl p-5 space-y-3 hover:border-purple-500/50 transition-colors">
+            <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl p-5 space-y-3 hover:border-stone-300/50 transition-colors">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-stone-100 text-stone-900">
                   <BookOpen className="w-3 h-3" />
                   오늘의 학습
                 </span>
@@ -409,7 +409,7 @@ export default function NewsletterPage() {
               <div className="space-y-1">
                 {['표제부: 소재지와 면적 확인', '갑구: 소유권 이전 이력 확인', '을구: 근저당권 등 부담 확인'].map((item, idx) => (
                   <div key={idx} className="flex items-start gap-1.5 text-xs text-[var(--color-text-secondary)]">
-                    <CheckCircle className="w-3 h-3 text-purple-500 mt-0.5 shrink-0" />
+                    <CheckCircle className="w-3 h-3 text-stone-900 mt-0.5 shrink-0" />
                     <span>{item}</span>
                   </div>
                 ))}
@@ -422,16 +422,16 @@ export default function NewsletterPage() {
               </div>
               <button
                 onClick={() => setSelectedType('daily_lesson')}
-                className="w-full text-xs text-purple-600 border border-purple-200 rounded-lg px-3 py-1.5 hover:bg-purple-50 transition-colors font-medium"
+                className="w-full text-xs text-stone-900 border border-stone-300 rounded-lg px-3 py-1.5 hover:bg-stone-100 transition-colors font-medium"
               >
                 이 유형으로 생성
               </button>
             </div>
 
             {/* Sample 2: 사례 분석 */}
-            <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl p-5 space-y-3 hover:border-blue-500/50 transition-colors">
+            <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl p-5 space-y-3 hover:border-stone-300/50 transition-colors">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-stone-100 text-stone-900">
                   <BarChart3 className="w-3 h-3" />
                   사례 분석
                 </span>
@@ -446,7 +446,7 @@ export default function NewsletterPage() {
               <div className="space-y-1">
                 {['명도소송 vs 협의 명도 선택 기준', '점유자 보증금 처리 원칙', '명도 비용 예상 산정법'].map((item, idx) => (
                   <div key={idx} className="flex items-start gap-1.5 text-xs text-[var(--color-text-secondary)]">
-                    <CheckCircle className="w-3 h-3 text-blue-500 mt-0.5 shrink-0" />
+                    <CheckCircle className="w-3 h-3 text-stone-900 mt-0.5 shrink-0" />
                     <span>{item}</span>
                   </div>
                 ))}
@@ -458,16 +458,16 @@ export default function NewsletterPage() {
               </div>
               <button
                 onClick={() => setSelectedType('case_study')}
-                className="w-full text-xs text-blue-600 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-50 transition-colors font-medium"
+                className="w-full text-xs text-stone-900 border border-stone-300 rounded-lg px-3 py-1.5 hover:bg-stone-100 transition-colors font-medium"
               >
                 이 유형으로 생성
               </button>
             </div>
 
             {/* Sample 3: 전문가 비교 */}
-            <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl p-5 space-y-3 hover:border-red-500/50 transition-colors">
+            <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl p-5 space-y-3 hover:border-stone-300/50 transition-colors">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-stone-100 text-stone-900">
                   <Users className="w-3 h-3" />
                   전문가 비교
                 </span>
@@ -482,7 +482,7 @@ export default function NewsletterPage() {
               <div className="space-y-1">
                 {['안전 중심: 위험 요소 선별 후 입찰', '수익 중심: 권리 복잡도로 저가 낙찰 목표', '통합 관점: 상황에 따른 선택'].map((item, idx) => (
                   <div key={idx} className="flex items-start gap-1.5 text-xs text-[var(--color-text-secondary)]">
-                    <CheckCircle className="w-3 h-3 text-red-500 mt-0.5 shrink-0" />
+                    <CheckCircle className="w-3 h-3 text-stone-900 mt-0.5 shrink-0" />
                     <span>{item}</span>
                   </div>
                 ))}
@@ -494,7 +494,7 @@ export default function NewsletterPage() {
               </div>
               <button
                 onClick={() => setSelectedType('expert_compare')}
-                className="w-full text-xs text-red-600 border border-red-200 rounded-lg px-3 py-1.5 hover:bg-red-50 transition-colors font-medium"
+                className="w-full text-xs text-stone-900 border border-stone-300 rounded-lg px-3 py-1.5 hover:bg-stone-100 transition-colors font-medium"
               >
                 이 유형으로 생성
               </button>
@@ -511,7 +511,7 @@ export default function NewsletterPage() {
                 '온톨로지 기반 학습 위치 정보 포함',
               ].map((item, idx) => (
                 <li key={idx} className="flex items-start gap-2 text-xs text-[var(--color-text-muted)]">
-                  <span className="w-4 h-4 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5">{idx + 1}</span>
+                  <span className="w-4 h-4 rounded-full bg-stone-100 text-stone-900 flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5">{idx + 1}</span>
                   {item}
                 </li>
               ))}
@@ -579,7 +579,7 @@ export default function NewsletterPage() {
                         {item.status === 'failed' && (
                           <button
                             onClick={() => handleRetry(item)}
-                            className="text-xs text-purple-600 hover:text-purple-800"
+                            className="text-xs text-stone-900 hover:text-stone-900"
                             title={item.error_message || '재시도'}
                           >
                             재시도
@@ -633,14 +633,14 @@ export default function NewsletterPage() {
               </label>
 
               {sendResult && (
-                <div className={`text-sm rounded-lg px-3 py-2 ${sendResult.failed.length > 0 ? 'bg-yellow-50 text-yellow-700' : 'bg-green-50 text-green-700'}`}>
+                <div className={`text-sm rounded-lg px-3 py-2 ${sendResult.failed.length > 0 ? 'bg-stone-100 text-stone-900' : 'bg-stone-100 text-stone-900'}`}>
                   {sendResult.sent}건 발송 완료
                   {sendResult.failed.length > 0 && ` · ${sendResult.failed.length}건 실패: ${sendResult.failed.join(', ')}`}
                 </div>
               )}
 
               {error && (
-                <div className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</div>
+                <div className="text-sm text-stone-900 bg-stone-100 rounded-lg px-3 py-2">{error}</div>
               )}
 
               <div className="flex items-center gap-2 justify-end">
@@ -653,7 +653,7 @@ export default function NewsletterPage() {
                 <button
                   onClick={handleSend}
                   disabled={sending || !recipients.trim()}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-stone-100 text-white rounded-lg text-sm font-medium hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   발송

@@ -7,8 +7,8 @@ import {
 import { PieChart as PieIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 const DATA = [
-  { name: '상승', value: 10, color: '#3b82f6', bg: 'bg-blue-500/10',   text: 'text-blue-400',   icon: TrendingUp   },
-  { name: '하락', value:  5, color: '#ef4444', bg: 'bg-red-500/10',    text: 'text-red-400',    icon: TrendingDown },
+  { name: '상승', value: 10, color: '#3b82f6', bg: 'bg-stone-100/10',   text: 'text-stone-900',   icon: TrendingUp   },
+  { name: '하락', value:  5, color: '#ef4444', bg: 'bg-stone-100/10',    text: 'text-stone-900',    icon: TrendingDown },
   { name: '중립', value:  8, color: '#94a3b8', bg: 'bg-slate-500/15', text: 'text-[var(--color-text-secondary)]',  icon: Minus        },
 ];
 
@@ -44,7 +44,7 @@ export function DirectionDonutChart() {
     <Card className="h-full">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
-          <PieIcon className="h-4 w-4 text-indigo-600" />
+          <PieIcon className="h-4 w-4 text-stone-900" />
           전망 방향 분포
         </CardTitle>
       </CardHeader>
@@ -103,7 +103,7 @@ export function DirectionDonutChart() {
               </div>
               <div className="w-full h-1.5 bg-[var(--color-border-subtle)] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-blue-500 rounded-full transition-all"
+                  className="h-full bg-stone-100 rounded-full transition-all"
                   style={{ width: `${(DATA[0].value / total) * 100}%` }}
                 />
               </div>

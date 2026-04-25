@@ -199,7 +199,7 @@ export default function AuctionDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-950">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-stone-900" />
       </div>
     )
   }
@@ -228,7 +228,7 @@ export default function AuctionDetailPage() {
           <div className="flex items-center gap-2">
             <button onClick={() => void toggleBookmark()} className="p-2 bg-gray-800 rounded-lg hover:bg-gray-700">
               {isBookmarked
-                ? <BookmarkCheck className="h-4 w-4 text-yellow-400" />
+                ? <BookmarkCheck className="h-4 w-4 text-stone-900" />
                 : <Bookmark className="h-4 w-4 text-gray-400" />}
             </button>
             <button
@@ -254,7 +254,7 @@ export default function AuctionDetailPage() {
                       {listing.property_type}
                     </span>
                     {listing.auction_count > 1 && (
-                      <span className="text-sm bg-yellow-500/20 text-yellow-400 px-2.5 py-0.5 rounded-lg font-medium">
+                      <span className="text-sm bg-stone-100/20 text-stone-900 px-2.5 py-0.5 rounded-lg font-medium">
                         {listing.auction_count}회차
                       </span>
                     )}
@@ -293,7 +293,7 @@ export default function AuctionDetailPage() {
                   onClick={() => setActiveTab(tab)}
                   className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
                     activeTab === tab
-                      ? 'border-blue-500 text-blue-400'
+                      ? 'border-stone-300 text-stone-900'
                       : 'border-transparent text-gray-500 hover:text-gray-300'
                   }`}
                 >
@@ -307,7 +307,7 @@ export default function AuctionDetailPage() {
               <div className="space-y-4">
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
                   <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-blue-400" />물건 정보
+                    <Building2 className="h-4 w-4 text-stone-900" />물건 정보
                   </h3>
                   <div className="grid grid-cols-2 gap-y-3 text-sm">
                     {[
@@ -328,7 +328,7 @@ export default function AuctionDetailPage() {
 
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
                   <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                    <Gavel className="h-4 w-4 text-orange-400" />채권 정보
+                    <Gavel className="h-4 w-4 text-stone-900" />채권 정보
                   </h3>
                   <div className="grid grid-cols-2 gap-y-3 text-sm">
                     {[
@@ -352,7 +352,7 @@ export default function AuctionDetailPage() {
             {activeTab === 'tenants' && (
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
                 <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                  <Users className="h-4 w-4 text-purple-400" />임차인 현황
+                  <Users className="h-4 w-4 text-stone-900" />임차인 현황
                 </h3>
                 {listing.tenant_count === 0 ? (
                   <p className="text-sm text-gray-500">임차인 없음</p>
@@ -367,8 +367,8 @@ export default function AuctionDetailPage() {
                         <p className="text-lg font-bold text-white">{fmtKRW(listing.total_tenant_deposit)}</p>
                         <p className="text-xs text-gray-500">보증금 합계</p>
                       </div>
-                      <div className={`rounded-lg p-3 text-center ${listing.has_opposing_force ? 'bg-red-500/15 border border-red-500/30' : 'bg-emerald-500/15 border border-emerald-500/30'}`}>
-                        <p className={`text-sm font-bold ${listing.has_opposing_force ? 'text-red-400' : 'text-emerald-400'}`}>
+                      <div className={`rounded-lg p-3 text-center ${listing.has_opposing_force ? 'bg-stone-100/15 border border-stone-300/30' : 'bg-stone-100/15 border border-stone-300/30'}`}>
+                        <p className={`text-sm font-bold ${listing.has_opposing_force ? 'text-stone-900' : 'text-stone-900'}`}>
                           {listing.has_opposing_force ? '있음' : '없음'}
                         </p>
                         <p className="text-xs text-gray-500">대항력</p>
@@ -391,7 +391,7 @@ export default function AuctionDetailPage() {
                                 <td className="py-2 text-gray-300">{t.name ?? `임차인 ${i + 1}`}</td>
                                 <td className="py-2 text-right text-white">{fmtKRW(t.deposit)}</td>
                                 <td className="py-2 text-center">
-                                  <span className={`text-xs px-1.5 py-0.5 rounded ${t.opposing ? 'text-red-400 bg-red-500/15' : 'text-gray-500'}`}>
+                                  <span className={`text-xs px-1.5 py-0.5 rounded ${t.opposing ? 'text-stone-900 bg-stone-100/15' : 'text-gray-500'}`}>
                                     {t.opposing ? '있음' : '없음'}
                                   </span>
                                 </td>
@@ -423,12 +423,12 @@ export default function AuctionDetailPage() {
                   <MetricCard
                     label="예상 ROI"
                     value={`${aiResult.roi_estimate.toFixed(1)}%`}
-                    highlight={aiResult.roi_estimate > 0 ? 'text-emerald-400' : 'text-red-400'}
+                    highlight={aiResult.roi_estimate > 0 ? 'text-stone-900' : 'text-stone-900'}
                   />
                   <MetricCard
                     label="낙찰 가능성"
                     value={`${Math.round(aiResult.bid_prob * 100)}%`}
-                    highlight="text-blue-400"
+                    highlight="text-stone-900"
                   />
                   <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
                     <p className="text-xs text-gray-500 mb-2">리스크 점수</p>
@@ -442,7 +442,7 @@ export default function AuctionDetailPage() {
                     <div className="space-y-2">
                       {aiResult.factors.map((f, i) => (
                         <div key={i} className="flex items-center gap-3 text-sm">
-                          <span className={`w-16 text-xs font-medium flex-shrink-0 ${f.impact === 'POSITIVE' ? 'text-emerald-400' : f.impact === 'NEGATIVE' ? 'text-red-400' : 'text-gray-400'}`}>
+                          <span className={`w-16 text-xs font-medium flex-shrink-0 ${f.impact === 'POSITIVE' ? 'text-stone-900' : f.impact === 'NEGATIVE' ? 'text-stone-900' : 'text-gray-400'}`}>
                             {f.impact === 'POSITIVE' ? '+' : f.impact === 'NEGATIVE' ? '-' : '~'}{Math.abs(f.weight)}
                           </span>
                           <span className="font-medium text-white w-28 flex-shrink-0">{f.name}</span>
@@ -458,7 +458,7 @@ export default function AuctionDetailPage() {
             {activeTab === 'docs' && (
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
                 <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-cyan-400" />관련 문서
+                  <FileText className="h-4 w-4 text-stone-900" />관련 문서
                 </h3>
                 {listing.documents.length === 0 ? (
                   <p className="text-sm text-gray-500">등록된 문서가 없습니다</p>
@@ -467,7 +467,7 @@ export default function AuctionDetailPage() {
                     {listing.documents.map((doc, i) => (
                       <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer"
                         className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors">
-                        <FileText className="h-4 w-4 text-cyan-400 flex-shrink-0" />
+                        <FileText className="h-4 w-4 text-stone-900 flex-shrink-0" />
                         <span className="text-sm text-white">{doc.name}</span>
                         <ExternalLink className="h-3.5 w-3.5 text-gray-500 ml-auto" />
                       </a>
@@ -483,7 +483,7 @@ export default function AuctionDetailPage() {
             {/* 경매 정보 */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
               <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-blue-400" />경매 정보
+                <Calendar className="h-4 w-4 text-stone-900" />경매 정보
               </h3>
               <div className="space-y-3 text-sm">
                 {[
@@ -514,7 +514,7 @@ export default function AuctionDetailPage() {
             <div className="space-y-2.5">
               <button
                 onClick={() => router.push(`/analysis/simulator?appraised=${listing.appraised_value}&minBid=${listing.min_bid_price}&senior=${listing.senior_claim ?? 0}`)}
-                className="w-full flex items-center justify-between gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors"
+                className="w-full flex items-center justify-between gap-2 bg-stone-100 hover:bg-stone-100 text-white font-semibold py-3 px-4 rounded-xl transition-colors"
               >
                 <span className="flex items-center gap-2">
                   <Calculator className="h-4 w-4" />
@@ -525,7 +525,7 @@ export default function AuctionDetailPage() {
 
               <button
                 onClick={() => router.push(`/deals/new?listing_id=${listing.id}&case=${listing.case_number}`)}
-                className="w-full flex items-center justify-between gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors"
+                className="w-full flex items-center justify-between gap-2 bg-stone-100 hover:bg-stone-100 text-white font-semibold py-3 px-4 rounded-xl transition-colors"
               >
                 <span className="flex items-center gap-2">
                   <MessageSquarePlus className="h-4 w-4" />
@@ -536,11 +536,11 @@ export default function AuctionDetailPage() {
             </div>
 
             {/* 주의사항 */}
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+            <div className="bg-stone-100/10 border border-stone-300/20 rounded-xl p-4">
               <div className="flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="h-4 w-4 text-stone-900 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs font-semibold text-yellow-400 mb-1">투자 유의사항</p>
+                  <p className="text-xs font-semibold text-stone-900 mb-1">투자 유의사항</p>
                   <p className="text-xs text-gray-400 leading-relaxed">
                     AI 분석은 참고용이며 실제 투자 결과를 보장하지 않습니다.
                     경매 참여 전 법무사, 감정사 등 전문가 검토를 권장합니다.

@@ -118,10 +118,10 @@ function statusIcon(status: SyncStatus | "warning") {
 }
 
 const LOG_STATUS_BADGE: Record<string, string> = {
-  success: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-  error: "bg-red-500/10 text-red-400 border border-red-500/20",
-  warning: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-  running: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+  success: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  error: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  warning: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  running: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
   idle: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]",
 }
 
@@ -134,9 +134,9 @@ const LOG_STATUS_LABEL: Record<string, string> = {
 }
 
 const SOURCE_STATUS_BADGE: Record<string, string> = {
-  success: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-  error: "bg-red-500/10 text-red-400 border border-red-500/20",
-  running: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+  success: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  error: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  running: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
   idle: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]",
 }
 

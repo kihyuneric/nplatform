@@ -95,10 +95,10 @@ type ContractTypeId = typeof CONTRACT_TYPES[number]["id"]
 
 
 const GRADE_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-  A: { bg: "bg-emerald-500/10", text: "text-emerald-400", label: "안전" },
-  B: { bg: "bg-blue-500/10", text: "text-blue-400", label: "양호" },
-  C: { bg: "bg-amber-500/10", text: "text-amber-400", label: "주의" },
-  D: { bg: "bg-red-500/10", text: "text-red-400", label: "위험" },
+  A: { bg: "bg-stone-100/10", text: "text-stone-900", label: "안전" },
+  B: { bg: "bg-stone-100/10", text: "text-stone-900", label: "양호" },
+  C: { bg: "bg-stone-100/10", text: "text-stone-900", label: "주의" },
+  D: { bg: "bg-stone-100/10", text: "text-stone-900", label: "위험" },
   "N/A": { bg: "bg-[var(--color-surface-overlay)]", text: "text-[var(--color-text-secondary)]", label: "미평가" },
 }
 
@@ -426,8 +426,8 @@ export default function ContractPage() {
             {/* Seller */}
             <div className={`${DS.card.base} ${DS.card.paddingLarge}`}>
               <h2 className={`${DS.text.cardTitle} flex items-center gap-2 mb-4`}>
-                <div className="w-6 h-6 rounded bg-rose-500/10 flex items-center justify-center">
-                  <span className="text-[10px] font-black text-rose-400">甲</span>
+                <div className="w-6 h-6 rounded bg-stone-100/10 flex items-center justify-center">
+                  <span className="text-[10px] font-black text-stone-900">甲</span>
                 </div>
                 매도자 (채권자)
               </h2>
@@ -465,8 +465,8 @@ export default function ContractPage() {
             {/* Buyer */}
             <div className={`${DS.card.base} ${DS.card.paddingLarge}`}>
               <h2 className={`${DS.text.cardTitle} flex items-center gap-2 mb-4`}>
-                <div className="w-6 h-6 rounded bg-blue-500/10 flex items-center justify-center">
-                  <span className="text-[10px] font-black text-blue-400">乙</span>
+                <div className="w-6 h-6 rounded bg-stone-100/10 flex items-center justify-center">
+                  <span className="text-[10px] font-black text-stone-900">乙</span>
                 </div>
                 매수자 (양수인)
               </h2>
@@ -711,7 +711,7 @@ export default function ContractPage() {
                       v1 · DRAFT
                     </span>
                   )}
-                  <span className={`${DS.text.micro} bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded px-2 py-1`}>
+                  <span className={`${DS.text.micro} bg-stone-100/10 text-stone-900 border border-stone-300/20 rounded px-2 py-1`}>
                     AI 생성
                   </span>
                 </div>
@@ -797,7 +797,7 @@ export default function ContractPage() {
                   className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--color-surface-sunken)] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-stone-100/10 flex items-center justify-center">
                       <AlertTriangle className="w-4 h-4 text-[var(--color-danger)]" />
                     </div>
                     <div className="text-left">
@@ -810,7 +810,7 @@ export default function ContractPage() {
                 {expandedSections.risk && (
                   <div className="px-5 pb-4 space-y-2">
                     {riskReview.riskClauses.map((clause, i) => (
-                      <div key={i} className="flex gap-3 p-3 rounded-lg bg-red-500/5 border border-red-500/20">
+                      <div key={i} className="flex gap-3 p-3 rounded-lg bg-stone-100/5 border border-stone-300/20">
                         <AlertTriangle className="w-4 h-4 text-[var(--color-danger)] mt-0.5 flex-shrink-0" />
                         <p className={DS.text.body}>{clause}</p>
                       </div>
@@ -828,7 +828,7 @@ export default function ContractPage() {
                   className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--color-surface-sunken)] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-stone-100/10 flex items-center justify-center">
                       <AlertCircle className="w-4 h-4 text-[var(--color-warning)]" />
                     </div>
                     <div className="text-left">
@@ -841,7 +841,7 @@ export default function ContractPage() {
                 {expandedSections.missing && (
                   <div className="px-5 pb-4 space-y-2">
                     {riskReview.missingItems.map((item, i) => (
-                      <div key={i} className="flex gap-3 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                      <div key={i} className="flex gap-3 p-3 rounded-lg bg-stone-100/5 border border-stone-300/20">
                         <AlertCircle className="w-4 h-4 text-[var(--color-warning)] mt-0.5 flex-shrink-0" />
                         <p className={DS.text.body}>{item}</p>
                       </div>
@@ -859,7 +859,7 @@ export default function ContractPage() {
                   className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--color-surface-sunken)] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-stone-100/10 flex items-center justify-center">
                       <Sparkles className="w-4 h-4 text-[var(--color-info)]" />
                     </div>
                     <div className="text-left">
@@ -872,7 +872,7 @@ export default function ContractPage() {
                 {expandedSections.suggestions && (
                   <div className="px-5 pb-4 space-y-2">
                     {riskReview.suggestions.map((sug, i) => (
-                      <div key={i} className="flex gap-3 p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                      <div key={i} className="flex gap-3 p-3 rounded-lg bg-stone-100/5 border border-stone-300/20">
                         <Sparkles className="w-4 h-4 text-[var(--color-info)] mt-0.5 flex-shrink-0" />
                         <p className={DS.text.body}>{sug}</p>
                       </div>
@@ -901,7 +901,7 @@ export default function ContractPage() {
         {step === 5 && (
           <div className="space-y-6">
             <div className={`${DS.card.elevated} p-10 text-center`}>
-              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5">
+              <div className="w-16 h-16 rounded-2xl bg-stone-100/10 border border-stone-300/20 flex items-center justify-center mx-auto mb-5">
                 <CheckCircle2 className="w-8 h-8 text-[var(--color-positive)]" />
               </div>
               <h2 className={`${DS.text.sectionTitle} mb-2`}>계약서 준비 완료</h2>
@@ -915,7 +915,7 @@ export default function ContractPage() {
                   disabled={exporting}
                   className={`${DS.card.interactive} ${DS.card.padding} text-center`}
                 >
-                  <FileDown className="w-6 h-6 mx-auto mb-2 text-blue-400" />
+                  <FileDown className="w-6 h-6 mx-auto mb-2 text-stone-900" />
                   <p className={DS.text.bodyBold}>DOCX</p>
                   <p className={DS.text.micro}>Word 문서</p>
                 </button>
@@ -924,7 +924,7 @@ export default function ContractPage() {
                   disabled={exporting}
                   className={`${DS.card.interactive} ${DS.card.padding} text-center`}
                 >
-                  <FileDown className="w-6 h-6 mx-auto mb-2 text-red-400" />
+                  <FileDown className="w-6 h-6 mx-auto mb-2 text-stone-900" />
                   <p className={DS.text.bodyBold}>PDF</p>
                   <p className={DS.text.micro}>인쇄용</p>
                 </button>
@@ -969,8 +969,8 @@ export default function ContractPage() {
           <div className="space-y-6">
             {!signatureData ? (
               <div className={`${DS.card.elevated} p-10 text-center space-y-6`}>
-                <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto">
-                  <PenLine className="w-8 h-8 text-blue-400" />
+                <div className="w-16 h-16 rounded-2xl bg-stone-100/10 border border-stone-300/20 flex items-center justify-center mx-auto">
+                  <PenLine className="w-8 h-8 text-stone-900" />
                 </div>
                 <div>
                   <h2 className={`${DS.text.sectionTitle} mb-2`}>전자서명</h2>
@@ -982,8 +982,8 @@ export default function ContractPage() {
                 {/* 서명 참여자 안내 */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto text-left">
                   {[
-                    { role: "매도인 (SELLER)", name: form.sellerName || "미입력", color: "border-blue-500/20 bg-blue-500/10", textColor: "text-blue-400" },
-                    { role: "매수인 (BUYER)", name: form.buyerName || "미입력", color: "border-emerald-500/20 bg-emerald-500/10", textColor: "text-emerald-400" },
+                    { role: "매도인 (SELLER)", name: form.sellerName || "미입력", color: "border-stone-300/20 bg-stone-100/10", textColor: "text-stone-900" },
+                    { role: "매수인 (BUYER)", name: form.buyerName || "미입력", color: "border-stone-300/20 bg-stone-100/10", textColor: "text-stone-900" },
                   ].map(p => (
                     <div key={p.role} className={`rounded-xl border ${p.color} p-4`}>
                       <p className={`text-[0.6875rem] font-bold ${p.textColor} mb-1`}>{p.role}</p>
@@ -1008,11 +1008,11 @@ export default function ContractPage() {
             ) : (
               /* 서명 완료 상태 */
               <div className={`${DS.card.elevated} p-10 text-center space-y-6`}>
-                <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto">
-                  <ShieldCheck className="w-8 h-8 text-emerald-400" />
+                <div className="w-16 h-16 rounded-2xl bg-stone-100/10 border border-stone-300/20 flex items-center justify-center mx-auto">
+                  <ShieldCheck className="w-8 h-8 text-stone-900" />
                 </div>
                 <div>
-                  <h2 className={`${DS.text.sectionTitle} mb-2 text-emerald-400`}>전자서명 완료</h2>
+                  <h2 className={`${DS.text.sectionTitle} mb-2 text-stone-900`}>전자서명 완료</h2>
                   <p className={`${DS.text.body} max-w-md mx-auto`}>
                     서명이 SHA-256 해시 체인에 기록되었습니다. 법적 효력이 발생합니다.
                   </p>
@@ -1027,7 +1027,7 @@ export default function ContractPage() {
                 </div>
 
                 <div className="flex items-center justify-center gap-2 text-[0.75rem] text-[var(--color-text-tertiary)]">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-stone-900" />
                   {signedAt && new Date(signedAt).toLocaleString("ko-KR")} 서명 완료
                 </div>
 

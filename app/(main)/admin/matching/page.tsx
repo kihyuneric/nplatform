@@ -331,16 +331,16 @@ const SAMPLE: AdminMatchPair[] = [
 
 // ── 상수 ────────────────────────────────────────────────────
 const GRADE_STYLE: Record<Grade, { bg: string; text: string; ring: string; dot: string }> = {
-  EXCELLENT: { bg: "bg-emerald-500/10", text: "text-emerald-400", ring: "ring-emerald-500/30", dot: "#10B981" },
-  GOOD:      { bg: "bg-blue-500/10",    text: "text-blue-400",    ring: "ring-blue-500/30",    dot: "#3B82F6" },
-  FAIR:      { bg: "bg-amber-500/10",   text: "text-amber-400",   ring: "ring-amber-500/30",   dot: "#F59E0B" },
+  EXCELLENT: { bg: "bg-stone-100/10", text: "text-stone-900", ring: "ring-emerald-500/30", dot: "#14161A" },
+  GOOD:      { bg: "bg-stone-100/10",    text: "text-stone-900",    ring: "ring-blue-500/30",    dot: "#14161A" },
+  FAIR:      { bg: "bg-stone-100/10",   text: "text-stone-900",   ring: "ring-amber-500/30",   dot: "#14161A" },
 }
 
 const STATUS_STYLE: Record<Status, { label: string; cls: string }> = {
   PENDING:     { label: "대기",      cls: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]" },
-  DEAL_OPENED: { label: "딜룸 진행", cls: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-  DISMISSED:   { label: "기각",      cls: "bg-red-500/10 text-red-400 border border-red-500/20" },
-  EXPIRED:     { label: "만료",      cls: "bg-amber-500/10 text-amber-400 border border-amber-500/20" },
+  DEAL_OPENED: { label: "딜룸 진행", cls: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
+  DISMISSED:   { label: "기각",      cls: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
+  EXPIRED:     { label: "만료",      cls: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
 }
 
 const GRADE_TABS: { key: "ALL" | Grade; label: string }[] = [
@@ -445,7 +445,7 @@ export default function AdminMatchingPage() {
                   <Target className="w-4 h-4 text-white" />
                 </div>
                 <h1 className={`${DS.text.sectionTitle} tracking-tight`}>AI 매칭 · 관리자 전체 뷰</h1>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100/10 text-stone-900 border border-stone-300/20">
                   ADMIN ONLY
                 </span>
               </div>
@@ -544,9 +544,9 @@ function KpiTile({ label, value, hint, icon: Icon, tone }: {
 }) {
   const toneCls: Record<string, string> = {
     neutral: "text-[var(--color-text-secondary)]",
-    success: "text-emerald-400",
+    success: "text-stone-900",
     brand:   "text-[var(--color-brand-mid)]",
-    warn:    "text-amber-400",
+    warn:    "text-stone-900",
   }
   return (
     <div className="rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] p-3">
@@ -609,7 +609,7 @@ function MatchCard({ match: m, onOpen, onOpenDealroom, onDismiss }: {
             ))}
           </div>
           {m.adminNote && (
-            <div className="mt-2 text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 inline-block">
+            <div className="mt-2 text-[10px] px-2 py-1 rounded bg-stone-100/10 text-stone-900 border border-stone-300/20 inline-block">
               📝 {m.adminNote}
             </div>
           )}
@@ -627,13 +627,13 @@ function MatchCard({ match: m, onOpen, onOpenDealroom, onDismiss }: {
             <>
               <button
                 onClick={onOpenDealroom}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold rounded-md bg-stone-100/10 border border-stone-300/30 text-stone-900 hover:bg-stone-100/20"
               >
                 <CheckCircle2 className="w-3 h-3" /> 딜룸 개설
               </button>
               <button
                 onClick={onDismiss}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold rounded-md bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 text-[var(--color-text-tertiary)]"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold rounded-md bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] hover:bg-stone-100/10 hover:border-stone-300/30 hover:text-stone-900 text-[var(--color-text-tertiary)]"
               >
                 <X className="w-3 h-3" /> 기각
               </button>
@@ -666,10 +666,10 @@ function MatchCard({ match: m, onOpen, onOpenDealroom, onDismiss }: {
 
 function MemberMini({ who, m }: { who: string; m: AdminMatchMember }) {
   const tierColor: Record<string, string> = {
-    L5: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-    L4: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-    L3: "text-blue-400 bg-blue-500/10 border-blue-500/20",
-    L2: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+    L5: "text-stone-900 bg-stone-100/10 border-stone-300/20",
+    L4: "text-stone-900 bg-stone-100/10 border-stone-300/20",
+    L3: "text-stone-900 bg-stone-100/10 border-stone-300/20",
+    L2: "text-stone-900 bg-stone-100/10 border-stone-300/20",
     L1: "text-[var(--color-text-tertiary)] bg-[var(--color-surface-base)] border-[var(--color-border-subtle)]",
     L0: "text-[var(--color-text-tertiary)] bg-[var(--color-surface-base)] border-[var(--color-border-subtle)]",
   }
@@ -771,15 +771,15 @@ function MemberDetail({ m }: { m: AdminMatchMember }) {
   return (
     <div className="rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] p-3 text-xs">
       <div className="flex items-center gap-2 mb-2">
-        <span className={`px-1.5 py-0.5 rounded text-[9px] font-black ${m.role === "SELLER" ? "bg-blue-500/10 text-blue-400" : "bg-emerald-500/10 text-emerald-400"}`}>
+        <span className={`px-1.5 py-0.5 rounded text-[9px] font-black ${m.role === "SELLER" ? "bg-stone-100/10 text-stone-900" : "bg-stone-100/10 text-stone-900"}`}>
           {m.role === "SELLER" ? "매도자" : "매수자"}
         </span>
         <span className="font-bold">{m.memberName}</span>
         <span className="text-[10px] text-[var(--color-text-tertiary)]">({m.userId})</span>
         <span className={`ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded border ${
-          m.kycTier === "L5" || m.kycTier === "L4" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-          : m.kycTier === "L3" ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
-          : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+          m.kycTier === "L5" || m.kycTier === "L4" ? "bg-stone-100/10 text-stone-900 border-stone-300/20"
+          : m.kycTier === "L3" ? "bg-stone-100/10 text-stone-900 border-stone-300/20"
+          : "bg-stone-100/10 text-stone-900 border-stone-300/20"
         }`}>{m.kycTier}</span>
       </div>
       <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">

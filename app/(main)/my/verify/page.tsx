@@ -97,7 +97,7 @@ export default function VerifyPage() {
                 display: "inline-flex", alignItems: "center", gap: 4,
                 fontSize: 9, fontWeight: 800, letterSpacing: "0.04em",
                 padding: "3px 8px", borderRadius: 4,
-                backgroundColor: "#F59E0B1A", color: "#F59E0B",
+                backgroundColor: "#F59E0B1A", color: "#14161A",
                 border: "1px solid #F59E0B44",
               }}
             >
@@ -215,7 +215,7 @@ export default function VerifyPage() {
                 marginTop: 20, padding: "10px 14px", borderRadius: 8,
                 backgroundColor: "#F59E0B0A", border: "1px solid #F59E0B33",
                 display: "inline-flex", alignItems: "center", gap: 8,
-                fontSize: 11, color: "#F59E0B",
+                fontSize: 11, color: "#14161A",
               }}
             >
               <FlaskConical size={12} />
@@ -257,7 +257,7 @@ export default function VerifyPage() {
                 marginBottom: 20, padding: "10px 14px", borderRadius: 8,
                 backgroundColor: "#F59E0B0A", border: "1px solid #F59E0B33",
                 display: "inline-flex", alignItems: "center", gap: 8,
-                fontSize: 11, color: "#F59E0B",
+                fontSize: 11, color: "#14161A",
               }}
             >
               <FlaskConical size={12} />
@@ -268,7 +268,7 @@ export default function VerifyPage() {
                 href="/exchange"
                 style={{
                   padding: "11px 20px", borderRadius: 10,
-                  backgroundColor: C.em, color: "#041915",
+                  backgroundColor: C.em, color: "#FFFFFF",
                   fontSize: 12, fontWeight: 800, textDecoration: "none",
                 }}
               >

@@ -57,9 +57,9 @@ const formatKRW = (v?: number) => {
 }
 
 const URGENCY_COLOR: Record<string, string> = {
-  URGENT: "bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30",
-  HIGH: "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30",
-  MEDIUM: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
+  URGENT: "bg-stone-100/15 text-stone-900 dark:text-stone-900 border-stone-300/30",
+  HIGH: "bg-stone-100/15 text-stone-900 dark:text-stone-900 border-stone-300/30",
+  MEDIUM: "bg-stone-100/15 text-stone-900 dark:text-stone-900 border-stone-300/30",
   LOW: "bg-slate-500/15 text-slate-600 dark:text-slate-300 border-slate-500/30",
 }
 
@@ -205,7 +205,7 @@ export default function AdminDemandsPage() {
               </div>
               <div className="mt-3 flex items-center justify-between text-[0.625rem] text-[var(--color-text-tertiary)]">
                 <span>{d.created_at ? new Date(d.created_at).toLocaleDateString("ko-KR") : ""}</span>
-                <span className="inline-flex items-center gap-1 text-sky-600 dark:text-sky-300 font-bold">
+                <span className="inline-flex items-center gap-1 text-stone-900 dark:text-stone-900 font-bold">
                   <Sparkles className="w-3 h-3" /> AI 매칭 보기 <ChevronRight className="w-3 h-3" />
                 </span>
               </div>
@@ -220,7 +220,7 @@ export default function AdminDemandsPage() {
         onOpenChange={(o) => { if (!o) { setSelected(null); setMatches(null) } }}
         title={
           <span className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-sky-500" />
+            <Sparkles className="w-5 h-5 text-stone-900" />
             {selected?.buyer_name ?? "익명"} · AI 매칭 후보
           </span>
         }
@@ -253,7 +253,7 @@ export default function AdminDemandsPage() {
                   <strong className="text-sm font-bold text-[var(--color-text-primary)] truncate">
                     {m.listing?.title ?? "(매물명 없음)"}
                   </strong>
-                  <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[0.6875rem] font-bold tabular-nums">
+                  <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-stone-100/15 text-stone-900 dark:text-stone-900 text-[0.6875rem] font-bold tabular-nums">
                     매칭 {m.score}점
                   </span>
                 </div>
@@ -286,7 +286,7 @@ export default function AdminDemandsPage() {
                   ].map((b) => (
                     <div key={b.label} className="text-center">
                       <div className="h-1 rounded-full bg-[var(--color-surface-overlay)] overflow-hidden">
-                        <div className="h-full bg-emerald-500" style={{ width: `${(b.v / b.max) * 100}%` }} />
+                        <div className="h-full bg-stone-100" style={{ width: `${(b.v / b.max) * 100}%` }} />
                       </div>
                       <div className="mt-1 text-[var(--color-text-tertiary)]">{b.label} {b.v}</div>
                     </div>
@@ -294,7 +294,7 @@ export default function AdminDemandsPage() {
                 </div>
                 <div className="mt-3 flex items-center justify-end gap-2">
                   {m.listing?.id && (
-                    <Link href={`/exchange/${m.listing.id}`} target="_blank" className="text-[0.6875rem] font-semibold text-sky-600 dark:text-sky-300 hover:underline inline-flex items-center gap-1">
+                    <Link href={`/exchange/${m.listing.id}`} target="_blank" className="text-[0.6875rem] font-semibold text-stone-900 dark:text-stone-900 hover:underline inline-flex items-center gap-1">
                       <Eye className="w-3 h-3" /> 매물 상세 ↗
                     </Link>
                   )}

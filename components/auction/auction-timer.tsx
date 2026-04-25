@@ -47,15 +47,15 @@ const COLOR_CLASSES: Record<TimerColor, { bg: string; text: string; border: stri
     glow: "",
   },
   yellow: {
-    bg: "bg-amber-500/10",
-    text: "text-amber-400",
-    border: "border-amber-500/40",
+    bg: "bg-stone-100/10",
+    text: "text-stone-900",
+    border: "border-stone-300/40",
     glow: "",
   },
   red: {
-    bg: "bg-red-500/10",
-    text: "text-red-400",
-    border: "border-red-500/40",
+    bg: "bg-stone-100/10",
+    text: "text-stone-900",
+    border: "border-stone-300/40",
     glow: "shadow-red-900/40 shadow-lg",
   },
 }
@@ -143,7 +143,7 @@ export default function AuctionTimer({ endTime, onEnd }: AuctionTimerProps) {
 
       {/* 마감 임박 경고 */}
       {color === "red" && (
-        <p className="text-xs text-red-400 font-medium animate-pulse">
+        <p className="text-xs text-stone-900 font-medium animate-pulse">
           경매 종료가 임박했습니다. 서둘러 입찰하세요!
         </p>
       )}

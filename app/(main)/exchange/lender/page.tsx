@@ -33,7 +33,7 @@ import {
 const C = {
   bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)", bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
   em: "var(--color-positive)", emL: "var(--color-positive)", blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
-  amber: "var(--color-warning)", amber2: "#F59E0B", purple: "#A855F7", rose: "var(--color-danger)", teal: "#14B8A6",
+  amber: "var(--color-warning)", amber2: "#14161A", purple: "#14161A", rose: "var(--color-danger)", teal: "#14161A",
   l0: "#0D1F38", l1: "#060E1C", l2: "#030910", l3: "#1A2E4A",
   lt1: "#F0F4F8", lt2: "#94A3B8", lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 };
@@ -193,7 +193,7 @@ const PROCESS_STEPS = [
     desc: "투자 물건 정보와 필요 자금을 입력하고 맞춤 상담을 신청합니다.",
     icon: Search,
     color: C.blue,
-    bg: "rgba(59,130,246,.12)",
+    bg: "rgba(20,22,26,.12)",
   },
   {
     step: 2,
@@ -201,7 +201,7 @@ const PROCESS_STEPS = [
     desc: "AI가 조건에 최적화된 금융 상품과 금융사를 자동으로 매칭합니다.",
     icon: Handshake,
     color: C.em,
-    bg: "rgba(16,185,129,.12)",
+    bg: "rgba(20,22,26,.12)",
   },
   {
     step: 3,
@@ -209,7 +209,7 @@ const PROCESS_STEPS = [
     desc: "제출 서류를 바탕으로 신속한 심사가 진행됩니다.",
     icon: FileCheck,
     color: C.amber,
-    bg: "rgba(245,158,11,.12)",
+    bg: "rgba(20,22,26,.12)",
   },
   {
     step: 4,
@@ -217,7 +217,7 @@ const PROCESS_STEPS = [
     desc: "승인 후 빠르게 자금이 집행되어 즉시 투자에 활용 가능합니다.",
     icon: BadgeCheck,
     color: C.teal,
-    bg: "rgba(20,184,166,.12)",
+    bg: "rgba(20,22,26,.12)",
   },
 ];
 
@@ -231,10 +231,10 @@ function formatKRW(n: number): string {
 }
 
 const HIGHLIGHT_STYLES: Record<string, { bg: string; color: string; border: string }> = {
-  인기:     { bg: "rgba(244,63,94,.12)",   color: C.rose,   border: "rgba(244,63,94,.25)" },
-  추천:     { bg: "rgba(16,185,129,.12)",  color: C.em,     border: "rgba(16,185,129,.25)" },
-  프리미엄: { bg: "rgba(245,158,11,.12)",  color: C.amber,  border: "rgba(245,158,11,.25)" },
-  신규:     { bg: "rgba(59,130,246,.12)",  color: C.blue,   border: "rgba(59,130,246,.25)" },
+  인기:     { bg: "rgba(27,27,31,.12)",   color: C.rose,   border: "rgba(27,27,31,.25)" },
+  추천:     { bg: "rgba(20,22,26,.12)",  color: C.em,     border: "rgba(20,22,26,.25)" },
+  프리미엄: { bg: "rgba(20,22,26,.12)",  color: C.amber,  border: "rgba(20,22,26,.25)" },
+  신규:     { bg: "rgba(20,22,26,.12)",  color: C.blue,   border: "rgba(20,22,26,.25)" },
 };
 
 const INST_ACCENT: Record<Exclude<InstType, "전체">, string> = {
@@ -449,7 +449,7 @@ export default function LenderPage() {
       <section ref={heroRef} className="relative overflow-hidden" style={{ backgroundColor: C.bg1 }}>
         <div className="pointer-events-none absolute inset-0"
           style={{
-            backgroundImage: `radial-gradient(ellipse 80% 60% at 50% -10%, rgba(59,130,246,.20) 0%, transparent 70%)`,
+            backgroundImage: `radial-gradient(ellipse 80% 60% at 50% -10%, rgba(20,22,26,.20) 0%, transparent 70%)`,
           }}
         />
         <div className="pointer-events-none absolute inset-0 opacity-[0.025]"
@@ -467,7 +467,7 @@ export default function LenderPage() {
             className="max-w-3xl"
           >
             <div className="mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-widest"
-              style={{ background: "rgba(59,130,246,.12)", color: C.blueL, border: `1px solid rgba(59,130,246,.25)` }}>
+              style={{ background: "rgba(20,22,26,.12)", color: C.blueL, border: `1px solid rgba(20,22,26,.25)` }}>
               <Landmark size={11} /> Lending Connect
             </div>
             <h1 className="text-[36px] font-black leading-tight tracking-tight lg:text-[48px]" style={{ color: C.l0 }}>
@@ -629,7 +629,7 @@ export default function LenderPage() {
         <div className="mx-auto max-w-5xl">
           <div className="mb-10 text-center">
             <div className="mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest"
-              style={{ background: "rgba(16,185,129,.1)", color: C.em, border: `1px solid rgba(16,185,129,.2)` }}>
+              style={{ background: "rgba(20,22,26,.1)", color: C.em, border: `1px solid rgba(20,22,26,.2)` }}>
               <Calculator size={12} /> 시뮬레이터
             </div>
             <h2 className="text-[24px] font-black" style={{ color: C.lt1 }}>대출 시뮬레이터</h2>
@@ -729,10 +729,10 @@ export default function LenderPage() {
               </div>
 
               {/* AI Recommendation */}
-              <div className="rounded-2xl p-4" style={{ background: "rgba(16,185,129,.06)", border: `1px solid rgba(16,185,129,.2)` }}>
+              <div className="rounded-2xl p-4" style={{ background: "rgba(20,22,26,.06)", border: `1px solid rgba(20,22,26,.2)` }}>
                 <div className="flex gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
-                    style={{ background: "rgba(16,185,129,.15)" }}>
+                    style={{ background: "rgba(20,22,26,.15)" }}>
                     <Zap size={14} style={{ color: C.em }} />
                   </div>
                   <div>
@@ -822,7 +822,7 @@ export default function LenderPage() {
           <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${C.l3}` }}>
             <div className="px-8 py-10" style={{ backgroundColor: C.bg2 }}>
               <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl"
-                style={{ background: "rgba(59,130,246,.15)", border: `1px solid rgba(59,130,246,.25)` }}>
+                style={{ background: "rgba(20,22,26,.15)", border: `1px solid rgba(20,22,26,.25)` }}>
                 <TrendingUp size={28} style={{ color: C.blueL }} />
               </div>
               <h2 className="text-[22px] font-black" style={{ color: C.l0 }}>

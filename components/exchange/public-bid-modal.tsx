@@ -175,7 +175,7 @@ export function PublicBidModal({ open, onClose, listingId, listingTitle, askingP
           <div className="px-5 py-10 text-center">
             <div
               className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-3"
-              style={{ backgroundColor: "rgba(16,185,129,0.15)" }}
+              style={{ backgroundColor: "rgba(20,22,26,0.15)" }}
             >
               <CheckCircle2 size={32} style={{ color: "var(--color-positive, #10B981)" }} />
             </div>
@@ -338,7 +338,7 @@ export function PublicBidModal({ open, onClose, listingId, listingTitle, askingP
               <div
                 className="flex items-start gap-2 p-2.5 rounded-lg text-xs"
                 style={{
-                  backgroundColor: "rgba(239,68,68,0.08)",
+                  backgroundColor: "rgba(27,27,31,0.08)",
                   color: "var(--color-danger, #EF4444)",
                 }}
                 role="alert"

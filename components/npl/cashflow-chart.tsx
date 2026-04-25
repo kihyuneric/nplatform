@@ -37,7 +37,7 @@ export function CashflowChart({ cashflows, holdingYears }: CashflowChartProps) {
             {data.map((entry, idx) => (
               <Cell
                 key={idx}
-                fill={entry.isInvestment ? '#ef4444' : entry.isExit ? '#059669' : '#22c55e'}
+                fill={entry.isInvestment ? '#ef4444' : entry.isExit ? '#14161A' : '#22c55e'}
               />
             ))}
           </Bar>
@@ -45,9 +45,9 @@ export function CashflowChart({ cashflows, holdingYears }: CashflowChartProps) {
       </ResponsiveContainer>
 
       <div className="mt-2 flex items-center justify-center gap-4 text-xs text-gray-500">
-        <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded bg-red-500" />초기 투자</span>
-        <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded bg-green-500" />NOI</span>
-        <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded bg-emerald-600" />NOI + Exit</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded bg-stone-100" />초기 투자</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded bg-stone-100" />NOI</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded bg-stone-100" />NOI + Exit</span>
       </div>
     </div>
   )

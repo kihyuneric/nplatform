@@ -39,23 +39,23 @@ interface Proposal {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
-  ACTIVE:   { label: '활성',  cls: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' },
+  ACTIVE:   { label: '활성',  cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
   COMPLETE: { label: '완료',  cls: 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]' },
-  CANCELED: { label: '취소',  cls: 'bg-red-500/10 text-red-400 border border-red-500/20' },
+  CANCELED: { label: '취소',  cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
 }
 
 // myListings state is populated from Supabase in the main component
 type MyListing = { id: string; title: string; type: string }
 
 function scoreColor(score: number) {
-  if (score >= 70) return 'text-emerald-600'
-  if (score >= 40) return 'text-blue-600'
+  if (score >= 70) return 'text-stone-900'
+  if (score >= 40) return 'text-stone-900'
   return 'text-gray-500'
 }
 
 function scoreBar(score: number) {
-  if (score >= 70) return 'bg-emerald-500'
-  if (score >= 40) return 'bg-blue-500'
+  if (score >= 70) return 'bg-stone-100'
+  if (score >= 40) return 'bg-stone-100'
   return 'bg-gray-400'
 }
 
@@ -241,7 +241,7 @@ export default function DemandDetailPage() {
       {/* Header */}
       <div className="bg-[#0D1F38] text-white px-6 py-6">
         <div className="max-w-4xl mx-auto">
-          <Link href="/exchange/demands" className="inline-flex items-center gap-1.5 text-sm text-blue-300 hover:text-white transition-colors mb-3">
+          <Link href="/exchange/demands" className="inline-flex items-center gap-1.5 text-sm text-stone-900 hover:text-white transition-colors mb-3">
             <ArrowLeft className="h-4 w-4" />
             매수 수요 마켓
           </Link>
@@ -251,7 +251,7 @@ export default function DemandDetailPage() {
               {statusCfg.label}
             </span>
           </div>
-          <p className="mt-1 text-sm text-blue-200 tracking-normal">{demand.buyer_name} · 등록 {formatDate(demand.created_at)}</p>
+          <p className="mt-1 text-sm text-stone-900 tracking-normal">{demand.buyer_name} · 등록 {formatDate(demand.created_at)}</p>
         </div>
       </div>
 
@@ -265,7 +265,7 @@ export default function DemandDetailPage() {
               { icon: Building2, label: '담보 유형', value: demand.collateral_types.join(', '), color: 'text-[#2E75B6]' },
               { icon: Target,    label: '투자 규모', value: `${formatKRW(demand.min_amount)} ~ ${formatKRW(demand.max_amount)}`, color: 'text-[var(--color-text-primary)] font-semibold' },
               { icon: MapPin,    label: '희망 지역', value: demand.regions.join(', '), color: 'text-[var(--color-text-secondary)]' },
-              { icon: TrendingUp, label: '희망 수익률', value: `${demand.target_discount_rate}%`, color: 'text-emerald-400 font-bold text-lg' },
+              { icon: TrendingUp, label: '희망 수익률', value: `${demand.target_discount_rate}%`, color: 'text-stone-900 font-bold text-lg' },
             ].map(item => (
               <div key={item.label} className="bg-[var(--color-surface-overlay)] rounded-lg p-3 space-y-1">
                 <p className="text-xs text-gray-400 flex items-center gap-1">
@@ -291,7 +291,7 @@ export default function DemandDetailPage() {
         <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] overflow-hidden">
           <div className="px-6 py-4 border-b border-[var(--color-border-subtle)] flex items-center justify-between">
             <h2 className="font-semibold text-[var(--color-text-primary)] flex items-center gap-2 tracking-normal">
-              <Sparkles className="h-5 w-5 text-amber-500" />
+              <Sparkles className="h-5 w-5 text-stone-900" />
               AI가 매칭한 매물 {matchedListings.length > 0 ? `${matchedListings.length}건` : ''}
             </h2>
             {matchedListings.length > 0 && (
@@ -314,7 +314,7 @@ export default function DemandDetailPage() {
                         </div>
                       </div>
                       {ml.risk_grade && (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-500/10 text-[#2E75B6] border border-blue-500/20 flex-shrink-0">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded bg-stone-100/10 text-[#2E75B6] border border-stone-300/20 flex-shrink-0">
                           {ml.risk_grade}등급
                         </span>
                       )}
@@ -364,20 +364,20 @@ export default function DemandDetailPage() {
             <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] overflow-hidden">
               <div className="px-5 py-4 border-b border-[var(--color-border-subtle)]">
                 <h2 className="font-semibold text-[var(--color-text-primary)] flex items-center gap-2 text-sm tracking-normal">
-                  <Sparkles className="h-4 w-4 text-amber-500" />AI 추천 매물
+                  <Sparkles className="h-4 w-4 text-stone-900" />AI 추천 매물
                 </h2>
               </div>
               <div className="p-5 space-y-2.5">
                 {aiRecs.map(rec => (
-                  <div key={rec.id} className="rounded-lg border border-[var(--color-border-subtle)] p-3 hover:border-amber-500/30 transition-colors">
+                  <div key={rec.id} className="rounded-lg border border-[var(--color-border-subtle)] p-3 hover:border-stone-300/30 transition-colors">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-medium text-[var(--color-text-primary)] flex-1 min-w-0 truncate tracking-normal">{rec.title}</p>
-                      <span className="text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5 whitespace-nowrap">{rec.match_score}%</span>
+                      <span className="text-xs font-bold text-stone-900 bg-stone-100/10 border border-stone-300/20 rounded px-1.5 py-0.5 whitespace-nowrap">{rec.match_score}%</span>
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-400">
                       <span>{rec.collateral_type}</span><span>{rec.region}</span>
                       <span className="font-medium text-gray-600 tabular-nums">{formatKRW(rec.amount)}</span>
-                      <span className="text-emerald-600">할인율 {rec.discount_rate}%</span>
+                      <span className="text-stone-900">할인율 {rec.discount_rate}%</span>
                     </div>
                   </div>
                 ))}
@@ -392,12 +392,12 @@ export default function DemandDetailPage() {
               <p className="text-xs text-gray-500 tracking-normal">이 수요자의 조건에 맞는 매물을 제안할 수 있습니다.</p>
               <button
                 onClick={() => setShowModal(true)}
-                className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg py-2.5 text-sm font-semibold transition-colors tracking-normal"
+                className="w-full flex items-center justify-center gap-2 bg-stone-100 hover:bg-stone-100 text-white rounded-lg py-2.5 text-sm font-semibold transition-colors tracking-normal"
               >
                 <Send className="h-4 w-4" />매물 제안하기
               </button>
             </div>
-            <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-4 flex items-start gap-2.5">
+            <div className="rounded-xl bg-stone-100/10 border border-stone-300/20 p-4 flex items-start gap-2.5">
               <Shield className="h-4 w-4 text-[#2E75B6] flex-shrink-0 mt-0.5" />
               <div className="text-xs">
                 <p className="font-medium text-[#1B3A5C] tracking-normal">안전 거래 안내</p>
@@ -442,7 +442,7 @@ export default function DemandDetailPage() {
                     <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-400">
                       <span>{prop.listing_collateral_type}</span><span>{prop.listing_region}</span>
                       <span className="font-medium text-gray-600 tabular-nums">{formatKRW(prop.listing_amount)}</span>
-                      <span className="text-emerald-600">할인율 {prop.listing_discount_rate}%</span>
+                      <span className="text-stone-900">할인율 {prop.listing_discount_rate}%</span>
                     </div>
                     {prop.message && <p className="mt-2 text-xs text-[var(--color-text-secondary)] bg-[var(--color-surface-overlay)] rounded-lg p-3 leading-relaxed tracking-normal">{prop.message}</p>}
                   </div>
@@ -459,8 +459,8 @@ export default function DemandDetailPage() {
           <div className="w-full max-w-lg rounded-2xl bg-[var(--color-surface-elevated)] shadow-2xl overflow-hidden">
             {proposalSent ? (
               <div className="p-10 text-center space-y-3">
-                <div className="mx-auto h-14 w-14 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <CheckCircle2 className="h-7 w-7 text-emerald-400" />
+                <div className="mx-auto h-14 w-14 rounded-full bg-stone-100/10 flex items-center justify-center">
+                  <CheckCircle2 className="h-7 w-7 text-stone-900" />
                 </div>
                 <h3 className="text-lg font-bold text-[var(--color-text-primary)] tracking-normal">제안 전송 완료!</h3>
                 <p className="text-sm text-gray-500 tracking-normal">매수자가 제안을 검토할 예정입니다.</p>
@@ -476,7 +476,7 @@ export default function DemandDetailPage() {
                 <div className="p-6 space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5 tracking-normal">
-                      내 매물 선택 <span className="text-red-500">*</span>
+                      내 매물 선택 <span className="text-stone-900">*</span>
                     </label>
                     <select
                       value={selectedListing}
@@ -510,7 +510,7 @@ export default function DemandDetailPage() {
                   <button
                     onClick={handlePropose}
                     disabled={proposalSubmitting}
-                    className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors tracking-normal"
+                    className="inline-flex items-center gap-2 bg-stone-100 hover:bg-stone-100 disabled:opacity-60 text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors tracking-normal"
                   >
                     {proposalSubmitting ? (
                       <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />전송 중...</>

@@ -39,12 +39,12 @@ interface DealStageConfig {
 
 const STAGE_CONFIG: Record<DealStage, DealStageConfig> = {
   INTEREST:      { label: "관심표명", dotColor: "bg-slate-500",   dotBg: "bg-slate-500/10 text-slate-400 border border-slate-500/20",    icon: Bell },
-  NDA:           { label: "NDA",      dotColor: "bg-blue-500",    dotBg: "bg-blue-500/10 text-blue-400 border border-blue-500/20",     icon: FileText },
-  DUE_DILIGENCE: { label: "실사",     dotColor: "bg-amber-500",   dotBg: "bg-amber-500/10 text-amber-400 border border-amber-500/20",  icon: Briefcase },
-  NEGOTIATION:   { label: "오퍼",     dotColor: "bg-violet-500",  dotBg: "bg-violet-500/10 text-violet-400 border border-violet-500/20", icon: HandshakeIcon },
-  CONTRACT:      { label: "계약",     dotColor: "bg-emerald-500", dotBg: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20", icon: CheckCircle2 },
-  SETTLEMENT:    { label: "잔금",     dotColor: "bg-cyan-500",    dotBg: "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20",     icon: ArrowRight },
-  COMPLETED:     { label: "완료",     dotColor: "bg-green-500",   dotBg: "bg-green-500/10 text-green-400 border border-green-500/20",  icon: CheckCircle2 },
+  NDA:           { label: "NDA",      dotColor: "bg-stone-100",    dotBg: "bg-stone-100/10 text-stone-900 border border-stone-300/20",     icon: FileText },
+  DUE_DILIGENCE: { label: "실사",     dotColor: "bg-stone-100",   dotBg: "bg-stone-100/10 text-stone-900 border border-stone-300/20",  icon: Briefcase },
+  NEGOTIATION:   { label: "오퍼",     dotColor: "bg-stone-100",  dotBg: "bg-stone-100/10 text-stone-900 border border-stone-300/20", icon: HandshakeIcon },
+  CONTRACT:      { label: "계약",     dotColor: "bg-stone-100", dotBg: "bg-stone-100/10 text-stone-900 border border-stone-300/20", icon: CheckCircle2 },
+  SETTLEMENT:    { label: "잔금",     dotColor: "bg-stone-100",    dotBg: "bg-stone-100/10 text-stone-900 border border-stone-300/20",     icon: ArrowRight },
+  COMPLETED:     { label: "완료",     dotColor: "bg-stone-100",   dotBg: "bg-stone-100/10 text-stone-900 border border-stone-300/20",  icon: CheckCircle2 },
 }
 
 interface Deal {
@@ -162,8 +162,8 @@ function daysUntil(dateStr: string): number {
 
 function deadlineBadge(dateStr: string) {
   const d = daysUntil(dateStr)
-  if (d < 0) return { text: `D+${Math.abs(d)}`, cls: "bg-red-500/10 text-red-400 border border-red-500/20" }
-  if (d <= 7) return { text: `D-${d}`, cls: "bg-amber-500/10 text-amber-400 border border-amber-500/20" }
+  if (d < 0) return { text: `D+${Math.abs(d)}`, cls: "bg-stone-100/10 text-stone-900 border border-stone-300/20" }
+  if (d <= 7) return { text: `D-${d}`, cls: "bg-stone-100/10 text-stone-900 border border-stone-300/20" }
   return { text: `D-${d}`, cls: "bg-[var(--color-surface-sunken)] text-[var(--color-text-tertiary)] border border-[var(--color-border-subtle)]" }
 }
 
@@ -176,12 +176,12 @@ function isThisMonth(dateStr?: string): boolean {
 
 function RiskBadge({ amount }: { amount: number }) {
   if (amount >= 3_000_000_000) {
-    return <span className="text-[0.6875rem] font-black px-1.5 py-0.5 rounded tracking-wide bg-red-500/10 text-red-400 border border-red-500/20 uppercase">HIGH</span>
+    return <span className="text-[0.6875rem] font-black px-1.5 py-0.5 rounded tracking-wide bg-stone-100/10 text-stone-900 border border-stone-300/20 uppercase">HIGH</span>
   }
   if (amount >= 1_000_000_000) {
-    return <span className="text-[0.6875rem] font-black px-1.5 py-0.5 rounded tracking-wide bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase">MID</span>
+    return <span className="text-[0.6875rem] font-black px-1.5 py-0.5 rounded tracking-wide bg-stone-100/10 text-stone-900 border border-stone-300/20 uppercase">MID</span>
   }
-  return <span className="text-[0.6875rem] font-black px-1.5 py-0.5 rounded tracking-wide bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">LOW</span>
+  return <span className="text-[0.6875rem] font-black px-1.5 py-0.5 rounded tracking-wide bg-stone-100/10 text-stone-900 border border-stone-300/20 uppercase">LOW</span>
 }
 
 function KpiMetric({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: string }) {
@@ -286,7 +286,7 @@ export default function DealsDashboardPage() {
       <div className="sticky top-0 z-30 h-16 bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] flex items-center px-6 gap-4 shadow-[var(--shadow-sm)]">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <h1 className={`${DS.text.bodyBold} whitespace-nowrap`}>대시보드</h1>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-stone-100/10 border border-stone-300/20">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-mid)] animate-pulse" />
             <span className="text-[0.6875rem] font-bold text-[var(--color-brand-mid)]">
               {totalActive}건 진행중 · 완료 {completedCount}건 (이번달 {completedThisMonthCount}건)
@@ -414,7 +414,7 @@ export default function DealsDashboardPage() {
             {/* List */}
             {dashboardDeals.length === 0 ? (
               <div className={`${DS.card.elevated} p-8 text-center`}>
-                <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto mb-4 border border-blue-500/20">
+                <div className="w-16 h-16 rounded-2xl bg-stone-100/10 flex items-center justify-center mx-auto mb-4 border border-stone-300/20">
                   <Briefcase className="h-8 w-8 text-[var(--color-brand-mid)]" />
                 </div>
                 <p className={`${DS.text.sectionTitle} mb-2`}>조건에 맞는 딜이 없습니다</p>

@@ -18,8 +18,8 @@ export default function FundDetailError({
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center space-y-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10">
-          <AlertCircle className="w-8 h-8 text-red-500" />
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-stone-100/10">
+          <AlertCircle className="w-8 h-8 text-stone-900" />
         </div>
 
         <div className="space-y-2">
@@ -39,7 +39,7 @@ export default function FundDetailError({
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={reset}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#10B981] text-white text-sm font-semibold hover:bg-[#059669] transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#14161A] text-white text-sm font-semibold hover:bg-[#14161A] transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             다시 시도

@@ -47,15 +47,15 @@ export default function DisclaimerPage() {
             <span className="text-[var(--color-text-primary)]">면책 조항</span>
           </nav>
           <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/20">
-              <AlertTriangle className="h-5 w-5 text-amber-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-stone-100/10 border border-stone-300/20">
+              <AlertTriangle className="h-5 w-5 text-stone-900" />
             </div>
             <span className={DS.header.eyebrow}>법적 고지</span>
           </div>
           <h1 className={DS.header.title}>면책 조항</h1>
           <p className={`${DS.header.subtitle}`}>NPLatform 서비스 이용 전 반드시 확인하세요.</p>
           <div className={`mt-4 ${DS.text.caption}`}>
-            최종 수정일: <span className="text-amber-600 font-semibold">2026년 3월 21일</span>
+            최종 수정일: <span className="text-stone-900 font-semibold">2026년 3월 21일</span>
           </div>
         </div>
       </div>
@@ -90,9 +90,9 @@ export default function DisclaimerPage() {
           {/* Main content */}
           <div className="flex-1 min-w-0">
             {/* Warning banner */}
-            <div className="bg-amber-500/10 border-l-4 border-amber-400 p-4 rounded-r-xl mb-8">
-              <p className={`${DS.text.bodyBold} text-amber-300 mb-1`}>투자 위험 고지</p>
-              <p className={`${DS.text.body} text-amber-400`}>
+            <div className="bg-stone-100/10 border-l-4 border-stone-300 p-4 rounded-r-xl mb-8">
+              <p className={`${DS.text.bodyBold} text-stone-900 mb-1`}>투자 위험 고지</p>
+              <p className={`${DS.text.body} text-stone-900`}>
                 본 플랫폼의 모든 수치, 분석, 시뮬레이션은 참고용이며 실제 결과와 다를 수 있습니다.
                 투자와 관련된 모든 판단은 이용자 본인의 책임입니다.
               </p>
@@ -107,8 +107,8 @@ export default function DisclaimerPage() {
               ))}
 
               {/* General notices */}
-              <div className="bg-blue-500/10 border-l-4 border-[var(--color-brand-mid)] p-4 rounded-r-xl">
-                <h2 className={`${DS.text.cardSubtitle} text-blue-300 mb-3`}>일반 고지 사항</h2>
+              <div className="bg-stone-100/10 border-l-4 border-[var(--color-brand-mid)] p-4 rounded-r-xl">
+                <h2 className={`${DS.text.cardSubtitle} text-stone-900 mb-3`}>일반 고지 사항</h2>
                 <ul className="space-y-2">
                   {[
                     '본 면책 조항은 NPLatform의 모든 서비스에 적용됩니다.',
@@ -116,7 +116,7 @@ export default function DisclaimerPage() {
                     '관련 법규 변경 시 면책 조항을 수정할 수 있으며, 공지를 통해 안내합니다.',
                     '투자와 관련된 모든 판단은 이용자 본인의 책임이며, 필요한 경우 전문가의 자문을 받으시기 바랍니다.',
                   ].map((item, i) => (
-                    <li key={i} className={`flex items-start gap-2 ${DS.text.body} text-blue-400`}>
+                    <li key={i} className={`flex items-start gap-2 ${DS.text.body} text-stone-900`}>
                       <span className="text-[var(--color-brand-mid)] mt-0.5 shrink-0">--</span>
                       {item}
                     </li>

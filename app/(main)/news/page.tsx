@@ -78,10 +78,10 @@ function buildChips(f: FilterState): { key: string; label: string }[] {
 
 const CATEGORY_FILTERS = [
   { key: '전체', label: '전체', color: 'bg-[var(--color-brand-bright)] text-white' },
-  { key: '규제', label: '규제·정책', color: 'bg-amber-500/20 text-amber-300 border border-amber-500/30' },
-  { key: '경매', label: '경매·공매', color: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' },
-  { key: '판례', label: '판례·법원', color: 'bg-purple-500/20 text-purple-300 border border-purple-500/30' },
-  { key: '시장', label: '시장·거래', color: 'bg-red-500/20 text-red-300 border border-red-500/30' },
+  { key: '규제', label: '규제·정책', color: 'bg-stone-100/20 text-stone-900 border border-stone-300/30' },
+  { key: '경매', label: '경매·공매', color: 'bg-stone-100/20 text-stone-900 border border-stone-300/30' },
+  { key: '판례', label: '판례·법원', color: 'bg-stone-100/20 text-stone-900 border border-stone-300/30' },
+  { key: '시장', label: '시장·거래', color: 'bg-stone-100/20 text-stone-900 border border-stone-300/30' },
 ];
 
 export default function NewsPage() {

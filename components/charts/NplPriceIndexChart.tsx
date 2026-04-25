@@ -68,7 +68,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
 // ─── NBI 헤더 통계 ───────────────────────────────────────
 
 function NbiStatCard({ region, rate, change }: { region: string; rate: number; change: number | null }) {
-  const changeColor = change == null ? 'text-gray-500' : change > 0 ? 'text-emerald-400' : change < 0 ? 'text-red-400' : 'text-gray-400'
+  const changeColor = change == null ? 'text-gray-500' : change > 0 ? 'text-stone-900' : change < 0 ? 'text-stone-900' : 'text-gray-400'
   const ChangeIcon  = change == null ? Minus : change > 0 ? TrendingUp : change < 0 ? TrendingDown : Minus
   return (
     <div className="bg-gray-800/50 rounded-xl px-4 py-3 text-center flex-1 min-w-0">
@@ -147,7 +147,7 @@ export default function NplPriceIndexChart({
   if (loading) {
     return (
       <div className="flex items-center justify-center" style={{ height }}>
-        <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-stone-900" />
       </div>
     )
   }

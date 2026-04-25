@@ -70,14 +70,14 @@ const META: Record<AssetTier, StepMeta> = {
       "계약 초안 확인 후 서명하면 에스크로 입금 안내가 발송됩니다. 매도자 승인 및 현장 계약으로 이어집니다.",
     icon: <PenLine size={18} />,
     confirmLabel: "전자서명 · 에스크로 진행",
-    accent: "#F59E0B",
+    accent: "#14161A",
   },
   L4: {
     title: "전자계약 · 에스크로 입금",
     subtitle: "계약 초안 확인 후 서명하면 에스크로 입금 안내가 발송됩니다.",
     icon: <PenLine size={18} />,
     confirmLabel: "전자서명 · 진행",
-    accent: "#F59E0B",
+    accent: "#14161A",
   },
   L5: {
     title: "정산 내역 · 영수증",
@@ -615,13 +615,13 @@ function L2NdaForm({
         className="rounded-xl flex items-start gap-2.5"
         style={{
           padding: "12px 14px",
-          backgroundColor: "rgba(245, 158, 11, 0.10)",
-          border: "1px solid rgba(245, 158, 11, 0.33)",
+          backgroundColor: "rgba(20,22,26, 0.10)",
+          border: "1px solid rgba(20,22,26, 0.33)",
         }}
       >
         <AlertTriangle
           size={15}
-          color="#F59E0B"
+          color="#14161A"
           className="flex-shrink-0 mt-0.5"
         />
         <p className="leading-relaxed" style={{ fontSize: 11, color: "var(--fg-default)" }}>
@@ -702,7 +702,7 @@ function L3LoiForm({
             className="mt-2 font-bold tabular-nums"
             style={{
               fontSize: 11,
-              color: premiumPct >= 0 ? "var(--color-positive)" : "#F59E0B",
+              color: premiumPct >= 0 ? "var(--color-positive)" : "#14161A",
             }}
           >
             매각희망가 대비 {premiumPct >= 0 ? "+" : ""}

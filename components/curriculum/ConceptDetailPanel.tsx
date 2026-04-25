@@ -73,7 +73,7 @@ export default function ConceptDetailPanel({ conceptId, onClose }: Props) {
   if (loading) {
     return (
       <div className="w-80 bg-[var(--color-surface-elevated)] border-l border-[var(--color-border-subtle)] p-4 flex items-center justify-center">
-        <div className="animate-spin w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-6 h-6 border-2 border-stone-300 border-t-transparent rounded-full" />
       </div>
     )
   }
@@ -132,7 +132,7 @@ export default function ConceptDetailPanel({ conceptId, onClose }: Props) {
                   <span className="text-xs text-[var(--color-text-secondary)] w-20 truncate">{exp.channel_name}</span>
                   <div className="flex-1 bg-[var(--color-surface-overlay)] rounded-full h-2">
                     <div
-                      className="bg-purple-500 rounded-full h-2 transition-all"
+                      className="bg-stone-100 rounded-full h-2 transition-all"
                       style={{ width: `${Math.round(exp.relevance * 100)}%` }}
                     />
                   </div>
@@ -151,7 +151,7 @@ export default function ConceptDetailPanel({ conceptId, onClose }: Props) {
             <h4 className="text-xs font-semibold text-[var(--color-text-muted)] mb-1">선수 개념</h4>
             <div className="space-y-1">
               {prerequisites.map((p: any) => (
-                <div key={p.concept_id} className="flex items-center gap-1 text-sm text-purple-400 hover:text-purple-300 cursor-pointer">
+                <div key={p.concept_id} className="flex items-center gap-1 text-sm text-stone-900 hover:text-stone-900 cursor-pointer">
                   <ChevronRight className="w-3 h-3" />
                   {p.name}
                   <span className="text-xs text-[var(--color-text-muted)] ml-1">{p.level}</span>
@@ -167,7 +167,7 @@ export default function ConceptDetailPanel({ conceptId, onClose }: Props) {
             <h4 className="text-xs font-semibold text-[var(--color-text-muted)] mb-1">관련 개념</h4>
             <div className="flex flex-wrap gap-1">
               {relatedConcepts.slice(0, 8).map((c: any) => (
-                <span key={c.concept_id} className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-xs rounded">
+                <span key={c.concept_id} className="px-2 py-0.5 bg-stone-100/10 text-stone-900 text-xs rounded">
                   {c.name}
                 </span>
               ))}
@@ -199,14 +199,14 @@ export default function ConceptDetailPanel({ conceptId, onClose }: Props) {
         {atomicCapsules.length > 0 && (
           <div>
             <h4 className="text-xs font-semibold text-[var(--color-text-muted)] mb-2 flex items-center gap-1">
-              <Zap className="w-3 h-3 text-purple-500" /> Atomic 캡슐 ({atomicCapsules.length}개)
+              <Zap className="w-3 h-3 text-stone-900" /> Atomic 캡슐 ({atomicCapsules.length}개)
             </h4>
             {/* Progress bar */}
             {progressInfo && progressInfo.total_capsules > 0 && (
               <div className="mb-2">
                 <div className="flex items-center justify-between text-[10px] text-[var(--color-text-muted)] mb-1">
                   <span>마스터 진도</span>
-                  <span className="font-semibold text-purple-600">{progressInfo.mastery_pct}%</span>
+                  <span className="font-semibold text-stone-900">{progressInfo.mastery_pct}%</span>
                 </div>
                 <div className="w-full bg-[var(--color-surface-overlay)] rounded-full h-1.5 overflow-hidden">
                   <div
@@ -215,8 +215,8 @@ export default function ConceptDetailPanel({ conceptId, onClose }: Props) {
                   />
                 </div>
                 <div className="flex gap-2 mt-1 text-[9px] text-[var(--color-text-muted)]">
-                  {progressInfo.mastered > 0 && <span className="flex items-center gap-0.5"><Star className="w-2.5 h-2.5 text-amber-400" />{progressInfo.mastered} 마스터</span>}
-                  {progressInfo.completed > 0 && <span className="flex items-center gap-0.5"><CheckCircle className="w-2.5 h-2.5 text-green-400" />{progressInfo.completed} 완료</span>}
+                  {progressInfo.mastered > 0 && <span className="flex items-center gap-0.5"><Star className="w-2.5 h-2.5 text-stone-900" />{progressInfo.mastered} 마스터</span>}
+                  {progressInfo.completed > 0 && <span className="flex items-center gap-0.5"><CheckCircle className="w-2.5 h-2.5 text-stone-900" />{progressInfo.completed} 완료</span>}
                   {progressInfo.in_progress > 0 && <span>{progressInfo.in_progress} 학습중</span>}
                 </div>
               </div>
@@ -226,12 +226,12 @@ export default function ConceptDetailPanel({ conceptId, onClose }: Props) {
                 <Link
                   key={cap.atomic_id}
                   href={`/curriculum/study/${cap.atomic_id}`}
-                  className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-purple-500/10 text-xs transition-colors group"
+                  className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-stone-100/10 text-xs transition-colors group"
                 >
-                  <span className="w-5 h-5 rounded-full bg-purple-500/15 text-purple-400 text-[10px] font-bold flex items-center justify-center shrink-0">
+                  <span className="w-5 h-5 rounded-full bg-stone-100/15 text-stone-900 text-[10px] font-bold flex items-center justify-center shrink-0">
                     {cap.order_in_concept}
                   </span>
-                  <span className="text-[var(--color-text-primary)] truncate flex-1 group-hover:text-purple-400">{cap.topic}</span>
+                  <span className="text-[var(--color-text-primary)] truncate flex-1 group-hover:text-stone-900">{cap.topic}</span>
                   <span className="text-[9px] text-[var(--color-text-muted)] shrink-0">{cap.estimated_min}분</span>
                 </Link>
               ))}
@@ -255,7 +255,7 @@ export default function ConceptDetailPanel({ conceptId, onClose }: Props) {
           )}
           <Link
             href={`/curriculum/capsule/${conceptId}`}
-            className="block w-full text-center py-2 bg-purple-500/10 text-purple-400 text-sm font-medium rounded-lg hover:bg-purple-500/15 transition-colors"
+            className="block w-full text-center py-2 bg-stone-100/10 text-stone-900 text-sm font-medium rounded-lg hover:bg-stone-100/15 transition-colors"
           >
             <BookOpen className="w-4 h-4 inline-block mr-1" />
             강의 캡슐 보기

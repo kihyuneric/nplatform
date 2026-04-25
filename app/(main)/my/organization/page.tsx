@@ -54,16 +54,16 @@ interface Organization {
 
 /* ── Labels & styles ────────────────────────────────────────── */
 const ROLE_META: Record<MemberRole, { label: string; badge: string; icon: React.ReactNode }> = {
-  MASTER:  { label: "마스터",   badge: "bg-purple-500/10 text-purple-400 border-purple-500/20",  icon: <Crown size={10} /> },
-  MANAGER: { label: "매니저",   badge: "bg-blue-500/10 text-blue-400 border-blue-500/20",        icon: <ShieldCheck size={10} /> },
+  MASTER:  { label: "마스터",   badge: "bg-stone-100/10 text-stone-900 border-stone-300/20",  icon: <Crown size={10} /> },
+  MANAGER: { label: "매니저",   badge: "bg-stone-100/10 text-stone-900 border-stone-300/20",        icon: <ShieldCheck size={10} /> },
   MEMBER:  { label: "멤버",     badge: "bg-slate-500/10 text-slate-400 border-slate-500/20",     icon: <Users size={10} /> },
   VIEWER:  { label: "뷰어",     badge: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)]", icon: <Users size={10} /> },
 }
 
 const STATUS_META: Record<MemberStatus, { label: string; badge: string }> = {
-  PENDING:   { label: "승인 대기", badge: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
-  ACTIVE:    { label: "활성",     badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-  SUSPENDED: { label: "정지",     badge: "bg-red-500/10 text-red-400 border-red-500/20" },
+  PENDING:   { label: "승인 대기", badge: "bg-stone-100/10 text-stone-900 border-stone-300/20" },
+  ACTIVE:    { label: "활성",     badge: "bg-stone-100/10 text-stone-900 border-stone-300/20" },
+  SUSPENDED: { label: "정지",     badge: "bg-stone-100/10 text-stone-900 border-stone-300/20" },
   REMOVED:   { label: "제거됨",   badge: "bg-slate-500/10 text-slate-400 border-slate-500/20" },
 }
 
@@ -308,13 +308,13 @@ export default function OrganizationPage() {
                 <div className="flex items-center gap-2 mb-0.5">
                   <h2 className={DS.text.bodyBold}>{org.name}</h2>
                   <span className={`text-[0.625rem] font-bold px-1.5 py-0.5 rounded border ${
-                    org.grade === "S" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
-                    org.grade === "A" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
+                    org.grade === "S" ? "bg-stone-100/10 text-stone-900 border-stone-300/20" :
+                    org.grade === "A" ? "bg-stone-100/10 text-stone-900 border-stone-300/20" :
                     "bg-slate-500/10 text-slate-400 border-slate-500/20"
                   }`}>
                     {org.grade}등급
                   </span>
-                  <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[0.625rem] font-bold px-1.5 py-0.5 rounded">
+                  <span className="bg-stone-100/10 text-stone-900 border border-stone-300/20 text-[0.625rem] font-bold px-1.5 py-0.5 rounded">
                     {org.status === "ACTIVE" ? "활성" : "심사중"}
                   </span>
                 </div>
@@ -330,7 +330,7 @@ export default function OrganizationPage() {
                 <p className={DS.stat.label}>활성 멤버</p>
               </div>
               <div>
-                <p className={`${DS.stat.value} text-amber-500`}>{pendingCount}</p>
+                <p className={`${DS.stat.value} text-stone-900`}>{pendingCount}</p>
                 <p className={DS.stat.label}>승인 대기</p>
               </div>
               <div>
@@ -347,7 +347,7 @@ export default function OrganizationPage() {
             className={tab === "members" ? DS.tabs.active : DS.tabs.trigger}>
             <Users size={13} /> 멤버 관리
             {pendingCount > 0 && (
-              <span className="ml-1 bg-amber-500 text-white text-[0.625rem] font-bold px-1.5 py-0.5 rounded-full">
+              <span className="ml-1 bg-stone-100 text-white text-[0.625rem] font-bold px-1.5 py-0.5 rounded-full">
                 {pendingCount}
               </span>
             )}
@@ -368,10 +368,10 @@ export default function OrganizationPage() {
             {/* Pending approvals banner */}
             {pendingCount > 0 && (
               <div
-                className="flex items-center gap-3 p-4 rounded-xl border bg-amber-500/10 border-amber-500/20"
+                className="flex items-center gap-3 p-4 rounded-xl border bg-stone-100/10 border-stone-300/20"
               >
-                <AlertCircle size={16} className="text-amber-400 shrink-0" />
-                <p className="text-sm text-amber-400 font-semibold">
+                <AlertCircle size={16} className="text-stone-900 shrink-0" />
+                <p className="text-sm text-stone-900 font-semibold">
                   {pendingCount}명의 가입 요청이 승인을 기다리고 있습니다.
                 </p>
               </div>
@@ -397,7 +397,7 @@ export default function OrganizationPage() {
                       <tr key={m.id} className={DS.table.row}>
                         <td className={DS.table.cell}>
                           <div className="font-semibold text-sm flex items-center gap-1.5">
-                            {m.role === "MASTER" && <Crown size={12} className="text-amber-500 shrink-0" />}
+                            {m.role === "MASTER" && <Crown size={12} className="text-stone-900 shrink-0" />}
                             {m.name}
                           </div>
                           <div className={DS.text.micro}>{m.email}</div>
@@ -478,7 +478,7 @@ export default function OrganizationPage() {
 
               <div className="space-y-3">
                 <div>
-                  <label className={DS.input.label}>이메일 주소 <span className="text-red-500">*</span></label>
+                  <label className={DS.input.label}>이메일 주소 <span className="text-stone-900">*</span></label>
                   <input
                     type="email"
                     value={inviteEmail}
@@ -583,16 +583,16 @@ export default function OrganizationPage() {
             </div>
 
             <div
-              className="p-4 rounded-xl border space-y-3 bg-red-500/10 border-red-500/20"
+              className="p-4 rounded-xl border space-y-3 bg-stone-100/10 border-stone-300/20"
             >
-              <h4 className="text-sm font-bold text-red-400">위험 구역</h4>
-              <p className="text-xs text-red-400">
+              <h4 className="text-sm font-bold text-stone-900">위험 구역</h4>
+              <p className="text-xs text-stone-900">
                 기관 계정 탈퇴 시 모든 멤버의 기관 계정이 해제됩니다.
                 진행 중인 거래가 있을 경우 탈퇴가 제한될 수 있습니다.
               </p>
               <button
                 onClick={() => toast.error("진행 중인 거래가 있어 탈퇴가 제한됩니다")}
-                className="text-sm font-semibold text-red-400 hover:underline flex items-center gap-1.5"
+                className="text-sm font-semibold text-stone-900 hover:underline flex items-center gap-1.5"
               >
                 <LogOut size={13} /> 기관 계정 탈퇴
               </button>

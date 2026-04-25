@@ -70,13 +70,13 @@ interface ChartDataPoint {
 // ─── Status styles ────────────────────────────────────────
 
 const STATUS_STYLE: Record<string, string> = {
-  PAID:              "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-  ACTIVE:            "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-  PENDING:           "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-  FAILED:            "bg-red-500/10 text-red-400 border border-red-500/20",
-  CANCELLED:         "bg-red-500/10 text-red-400 border border-red-500/20",
-  PARTIAL_CANCELLED: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
-  REFUNDED:          "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+  PAID:              "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  ACTIVE:            "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  PENDING:           "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  FAILED:            "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  CANCELLED:         "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  PARTIAL_CANCELLED: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  REFUNDED:          "bg-stone-100/10 text-stone-900 border border-stone-300/20",
   EXPIRED:           "bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border border-[var(--color-border-subtle)]",
 }
 
@@ -92,9 +92,9 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 const PLAN_STYLE: Record<string, string> = {
-  PREMIUM:    "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-  PRO:        "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-  ENTERPRISE: "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+  PREMIUM:    "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  PRO:        "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  ENTERPRISE: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
   BASIC:      "bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border border-[var(--color-border-subtle)]",
   STARTER:    "bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border border-[var(--color-border-subtle)]",
   FREE:       "bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border border-[var(--color-border-subtle)]",
@@ -122,11 +122,11 @@ interface CommissionSummary {
 }
 
 const COMM_STATUS_STYLE: Record<string, string> = {
-  PENDING:  "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-  INVOICED: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-  PAID:     "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  PENDING:  "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  INVOICED: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  PAID:     "bg-stone-100/10 text-stone-900 border border-stone-300/20",
   WAIVED:   "bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border border-[var(--color-border-subtle)]",
-  DISPUTED: "bg-red-500/10 text-red-400 border border-red-500/20",
+  DISPUTED: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
 }
 
 const COMM_STATUS_LABEL: Record<string, string> = {
@@ -169,11 +169,11 @@ function buildChartData(payments: PaymentRecord[]): ChartDataPoint[] {
 
 // ─── v2 Transaction Fee Tab ───────────────────────────────────────────────────
 const TXFEE_STATUS: Record<string, { label: string; cls: string }> = {
-  pending:  { label: '대기',   cls: 'bg-amber-500/10 text-amber-400 border border-amber-500/20' },
-  invoiced: { label: '청구됨', cls: 'bg-blue-500/10 text-blue-400 border border-blue-500/20' },
-  paid:     { label: '완납',   cls: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' },
+  pending:  { label: '대기',   cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
+  invoiced: { label: '청구됨', cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
+  paid:     { label: '완납',   cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
   waived:   { label: '면제',   cls: 'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border border-[var(--color-border-subtle)]' },
-  disputed: { label: '분쟁',   cls: 'bg-red-500/10 text-red-400 border border-red-500/20' },
+  disputed: { label: '분쟁',   cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
 }
 const DEAL_TYPE_LABEL: Record<string, string> = {
   'npl-seller': 'NPL 매도', 'npl-buyer': 'NPL 매수',
@@ -256,11 +256,11 @@ function TransactionFeeTab() {
                     <td className={DS.table.cell}>{DEAL_TYPE_LABEL[r.deal_type] ?? r.deal_type}</td>
                     <td className={DS.table.cell + ' text-right font-mono tabular-nums'}>{fmt(r.transaction_amount)}</td>
                     <td className={DS.table.cell + ' text-right font-mono tabular-nums'}>
-                      {r.seller_fee.waived ? <span className="text-emerald-400 text-[0.75rem]">면제</span> : fmt(r.seller_fee.totalFee)}
+                      {r.seller_fee.waived ? <span className="text-stone-900 text-[0.75rem]">면제</span> : fmt(r.seller_fee.totalFee)}
                       {!r.seller_fee.waived && <span className={DS.text.micro + ' ml-1'}>({(r.seller_fee.effectiveRate * 100).toFixed(2)}%)</span>}
                     </td>
                     <td className={DS.table.cell + ' text-right font-mono tabular-nums'}>
-                      {r.buyer_fee.waived ? <span className="text-emerald-400 text-[0.75rem]">면제</span> : fmt(r.buyer_fee.totalFee)}
+                      {r.buyer_fee.waived ? <span className="text-stone-900 text-[0.75rem]">면제</span> : fmt(r.buyer_fee.totalFee)}
                       {!r.buyer_fee.waived && <span className={DS.text.micro + ' ml-1'}>({(r.buyer_fee.effectiveRate * 100).toFixed(2)}%){r.buyer_fee.withPNR ? ' +PNR' : ''}</span>}
                     </td>
                     <td className={DS.table.cell + ' text-center'}>
@@ -296,10 +296,10 @@ interface SettlementRecord {
 }
 
 const SETTLE_STATUS: Record<string, { label: string; cls: string }> = {
-  PENDING:  { label: '대기',   cls: 'bg-amber-500/10 text-amber-400 border border-amber-500/20' },
-  APPROVED: { label: '승인',   cls: 'bg-blue-500/10 text-blue-400 border border-blue-500/20' },
-  PAID:     { label: '지급완료', cls: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' },
-  REJECTED: { label: '거부',   cls: 'bg-red-500/10 text-red-400 border border-red-500/20' },
+  PENDING:  { label: '대기',   cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
+  APPROVED: { label: '승인',   cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
+  PAID:     { label: '지급완료', cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
+  REJECTED: { label: '거부',   cls: 'bg-stone-100/10 text-stone-900 border border-stone-300/20' },
 }
 const SETTLE_TYPE_LABEL: Record<string, string> = {
   partner_referral: '파트너 추천',
@@ -391,9 +391,9 @@ function SettlementTab() {
       {/* KPI 카드 */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: '정산 대기', value: totalPending, cls: 'border-amber-500/20 bg-amber-500/10' },
-          { label: '승인 완료', value: totalApproved, cls: 'border-blue-500/20 bg-blue-500/10' },
-          { label: '지급 완료', value: totalPaid, cls: 'border-emerald-500/20 bg-emerald-500/10' },
+          { label: '정산 대기', value: totalPending, cls: 'border-stone-300/20 bg-stone-100/10' },
+          { label: '승인 완료', value: totalApproved, cls: 'border-stone-300/20 bg-stone-100/10' },
+          { label: '지급 완료', value: totalPaid, cls: 'border-stone-300/20 bg-stone-100/10' },
         ].map(k => (
           <div key={k.label} className={`${DS.card.base} ${k.cls} p-4`}>
             <p className={DS.stat.label}>{k.label}</p>
@@ -455,7 +455,7 @@ function SettlementTab() {
                           </>
                         )}
                         {r.status === 'APPROVED' && (
-                          <button disabled={processing === r.id} onClick={() => handleAction(r.id, 'pay')} className={`${DS.button.secondary} ${DS.button.sm} !border-emerald-500/20 !text-emerald-400 hover:!bg-emerald-500/10`}>지급 완료</button>
+                          <button disabled={processing === r.id} onClick={() => handleAction(r.id, 'pay')} className={`${DS.button.secondary} ${DS.button.sm} !border-stone-300/20 !text-stone-900 hover:!bg-stone-100/10`}>지급 완료</button>
                         )}
                         {(r.status === 'PAID' || r.status === 'REJECTED') && (
                           <span className={DS.text.caption}>{r.status === 'PAID' ? r.paid_at ? new Date(r.paid_at).toLocaleDateString('ko-KR') : '완료' : '거부됨'}</span>
@@ -479,9 +479,9 @@ function SettlementTab() {
 // ─── Pricing Tab ──────────────────────────────────────────────────────────────
 const PLAN_DEFAULTS = [
   { key: 'STARTER',      name: 'Starter',      monthly: 29000,  yearly: 278400,  credits: 500,   color: 'text-[var(--color-text-secondary)]', bg: 'bg-[var(--color-surface-overlay)]', desc: '입문자용 기본 도구' },
-  { key: 'PRO',          name: 'Pro',           monthly: 79000,  yearly: 758400,  credits: 2000,  color: 'text-blue-400',   bg: 'bg-blue-500/10',  desc: '전문 투자자 필수 Suite', popular: true },
-  { key: 'PROFESSIONAL', name: 'Professional',  monthly: 199000, yearly: 1910400, credits: 8000,  color: 'text-purple-400', bg: 'bg-purple-500/10', desc: '법인·전문 투자자 전용' },
-  { key: 'INSTITUTION',  name: 'Institution',   monthly: 499000, yearly: 4790400, credits: 30000, color: 'text-emerald-400',bg: 'bg-emerald-500/10', desc: '금융기관·운용사' },
+  { key: 'PRO',          name: 'Pro',           monthly: 79000,  yearly: 758400,  credits: 2000,  color: 'text-stone-900',   bg: 'bg-stone-100/10',  desc: '전문 투자자 필수 Suite', popular: true },
+  { key: 'PROFESSIONAL', name: 'Professional',  monthly: 199000, yearly: 1910400, credits: 8000,  color: 'text-stone-900', bg: 'bg-stone-100/10', desc: '법인·전문 투자자 전용' },
+  { key: 'INSTITUTION',  name: 'Institution',   monthly: 499000, yearly: 4790400, credits: 30000, color: 'text-stone-900',bg: 'bg-stone-100/10', desc: '금융기관·운용사' },
 ]
 
 function PricingTab() {
@@ -526,7 +526,7 @@ function PricingTab() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {plans.map((p, i) => (
-          <div key={p.key} className={`${DS.card.elevated} ${DS.card.padding} border-l-4 ${p.key === 'PRO' ? 'border-blue-400' : p.key === 'PROFESSIONAL' ? 'border-purple-400' : p.key === 'INSTITUTION' ? 'border-emerald-400' : 'border-slate-300'}`}>
+          <div key={p.key} className={`${DS.card.elevated} ${DS.card.padding} border-l-4 ${p.key === 'PRO' ? 'border-stone-300' : p.key === 'PROFESSIONAL' ? 'border-stone-300' : p.key === 'INSTITUTION' ? 'border-stone-300' : 'border-slate-300'}`}>
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className={`font-bold ${p.color}`}>{p.name}</p>
@@ -806,9 +806,9 @@ function CouponManager() {
             <tbody>
               {coupons.map(c => {
                 const usagePct = c.usageLimit > 0 ? Math.round((c.usedCount / c.usageLimit) * 100) : 0
-                const statusCls = c.status === '활성' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                const statusCls = c.status === '활성' ? 'bg-stone-100/10 text-stone-900 border border-stone-300/20'
                   : c.status === '만료' ? 'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border border-[var(--color-border-subtle)]'
-                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  : 'bg-stone-100/10 text-stone-900 border border-stone-300/20'
                 return (
                   <tr key={c.id} className={DS.table.row}>
                     <td className={DS.table.cell + ' font-mono font-bold text-[var(--color-brand-mid)]'}>{c.code}</td>
@@ -1191,7 +1191,7 @@ export default function AdminBillingPage() {
           {[
             { label: "이번달 수익",  value: paymentsLoading ? "..." : monthRevenueStr, color: "text-[var(--color-positive)]", border: "border-l-emerald-400" },
             { label: "전월 대비",    value: paymentsLoading ? "..." : `${Number(prevMonthGrowth) >= 0 ? "+" : ""}${prevMonthGrowth}%`, color: "text-[var(--color-brand-mid)]", border: "border-l-blue-400" },
-            { label: "구독 갱신율",  value: paymentsLoading ? "..." : `${kpi.renewalRate}%`, color: "text-purple-600",  border: "border-l-purple-400" },
+            { label: "구독 갱신율",  value: paymentsLoading ? "..." : `${kpi.renewalRate}%`, color: "text-stone-900",  border: "border-l-purple-400" },
             { label: "환불 비율",    value: paymentsLoading ? "..." : `${kpi.refundRate}%`, color: "text-[var(--color-warning)]", border: "border-l-amber-400" },
           ].map(c => (
             <div key={c.label} className={`${DS.stat.card} border-l-2 ${c.border}`}>

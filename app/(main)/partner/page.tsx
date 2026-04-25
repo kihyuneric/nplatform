@@ -79,13 +79,13 @@ export default function PartnerPage() {
       <section className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)]">
         <div className="max-w-6xl mx-auto px-4 py-20 sm:py-28 text-center">
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--color-border-default)] bg-[var(--color-surface-sunken)] mb-6 ${DS.text.caption}`}>
-            <Handshake className="w-4 h-4 text-emerald-600" />
+            <Handshake className="w-4 h-4 text-stone-900" />
             <span>NPLatform 파트너 프로그램</span>
           </div>
           <h1 className={`${DS.text.pageTitle} mb-6`}>
             NPL 전문 플랫폼과 함께
             <br />
-            <span className="text-emerald-600">수익을 만드세요</span>
+            <span className="text-stone-900">수익을 만드세요</span>
           </h1>
           <p className={`${DS.text.body} max-w-2xl mx-auto mb-10`}>
             추천만으로 매월 안정적인 수익을 창출하세요.
@@ -103,7 +103,7 @@ export default function PartnerPage() {
           </div>
           <div className="mt-12 flex justify-center gap-8 sm:gap-16 text-center">
             <div>
-              <p className={`${DS.text.metricLarge} text-emerald-600`}>20%</p>
+              <p className={`${DS.text.metricLarge} text-stone-900`}>20%</p>
               <p className={`${DS.text.caption} mt-1`}>커미션 비율</p>
             </div>
             <div>
@@ -138,10 +138,10 @@ export default function PartnerPage() {
             {STEPS.map((s) => (
               <div key={s.step} className={`${DS.card.interactive} ${DS.card.paddingLarge} group`}>
                 <div className="flex items-center gap-4 mb-5">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-stone-100/10 text-stone-900 group-hover:bg-stone-100 group-hover:text-white transition-all">
                     <s.icon className="w-6 h-6" />
                   </div>
-                  <span className={`${DS.text.label} text-emerald-600`}>STEP {s.step}</span>
+                  <span className={`${DS.text.label} text-stone-900`}>STEP {s.step}</span>
                 </div>
                 <h3 className={DS.text.cardTitle}>{s.title}</h3>
                 <p className={`${DS.text.body} mt-2`}>{s.desc}</p>
@@ -190,7 +190,7 @@ export default function PartnerPage() {
                   <p className={`${DS.text.captionLight} mb-4`}>
                     구독료 {base.toLocaleString()}원/{activeTab === 'monthly' ? '월' : '월(연간)'}
                   </p>
-                  <p className={`${DS.text.metricLarge} text-emerald-600`}>
+                  <p className={`${DS.text.metricLarge} text-stone-900`}>
                     {commission.toLocaleString()}
                     <span className={`${DS.text.caption} ml-1`}>원/월</span>
                   </p>
@@ -203,7 +203,7 @@ export default function PartnerPage() {
           <div className="mt-10 text-center">
             <p className={DS.text.body}>
               추천인 <strong className="text-[var(--color-text-primary)] font-semibold">10명</strong>이 PRO 월간 구독 시 월{' '}
-              <strong className="text-emerald-600 font-semibold">158,000원</strong>의 반복 수익
+              <strong className="text-stone-900 font-semibold">158,000원</strong>의 반복 수익
             </p>
           </div>
         </div>
@@ -219,7 +219,7 @@ export default function PartnerPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {BENEFITS.map((b) => (
               <div key={b.title} className={`${DS.card.interactive} ${DS.card.padding}`}>
-                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-[var(--color-brand-mid)] mb-4">
+                <div className="w-10 h-10 rounded-lg bg-stone-100/10 flex items-center justify-center text-[var(--color-brand-mid)] mb-4">
                   <b.icon className="w-5 h-5" />
                 </div>
                 <h3 className={DS.text.cardSubtitle}>{b.title}</h3>
@@ -234,7 +234,7 @@ export default function PartnerPage() {
       <section className="bg-[var(--color-surface-elevated)] border-y border-[var(--color-border-subtle)]">
         <div className="max-w-4xl mx-auto px-4 py-20">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 text-emerald-600 mb-3">
+            <div className="inline-flex items-center gap-2 text-stone-900 mb-3">
               <Trophy className="w-5 h-5" />
               <span className={DS.text.label}>TOP PARTNERS</span>
             </div>
@@ -259,10 +259,10 @@ export default function PartnerPage() {
                     <span
                       className={`w-7 h-7 rounded-full flex items-center justify-center text-[0.6875rem] font-bold text-white ${
                         entry.rank === 1
-                          ? 'bg-yellow-500'
+                          ? 'bg-stone-100'
                           : entry.rank === 2
                           ? 'bg-[var(--color-text-muted)]'
-                          : 'bg-amber-700'
+                          : 'bg-stone-100'
                       }`}
                     >
                       {entry.rank}
@@ -273,7 +273,7 @@ export default function PartnerPage() {
                 </span>
                 <span className={DS.text.bodyBold}>{entry.name}</span>
                 <span className={`text-right ${DS.text.body}`}>{entry.referrals}명</span>
-                <span className={`text-right ${DS.text.bodyBold} text-emerald-600`}>{entry.revenue}원</span>
+                <span className={`text-right ${DS.text.bodyBold} text-stone-900`}>{entry.revenue}원</span>
               </div>
             ))}
           </div>
@@ -284,7 +284,7 @@ export default function PartnerPage() {
       <section className="max-w-4xl mx-auto px-4 py-20 text-center">
         <div className={`${DS.card.hero} relative overflow-hidden`}>
           <div className="relative">
-            <Users className="w-12 h-12 mx-auto mb-6 text-emerald-600" />
+            <Users className="w-12 h-12 mx-auto mb-6 text-stone-900" />
             <h2 className={DS.text.sectionTitle}>지금 파트너가 되어보세요</h2>
             <p className={`${DS.text.body} max-w-lg mx-auto mt-4 mb-8`}>
               NPL 시장의 성장과 함께 안정적인 수익을 만들어 가세요.

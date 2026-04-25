@@ -74,18 +74,18 @@ const LECTURE_TYPE_LABELS: Record<string, string> = {
 }
 
 const LECTURE_TYPE_COLORS: Record<string, string> = {
-  informational: '#3B82F6',
-  case_study: '#10B981',
-  hooking: '#F59E0B',
-  knowhow: '#8B5CF6',
+  informational: '#14161A',
+  case_study: '#14161A',
+  hooking: '#14161A',
+  knowhow: '#14161A',
   mixed: '#6B7280',
 }
 
 const STRUCTURE_COLORS: Record<string, string> = {
-  hooking: '#F59E0B',
-  information: '#3B82F6',
-  case: '#10B981',
-  cta: '#EF4444',
+  hooking: '#14161A',
+  information: '#14161A',
+  case: '#14161A',
+  cta: '#1B1B1F',
 }
 
 interface DrillDownInfo {
@@ -178,7 +178,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[400px]">
-        <div className="animate-spin w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-3 border-stone-300 border-t-transparent rounded-full" />
       </div>
     )
   }
@@ -187,7 +187,7 @@ export default function DashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center h-[400px] gap-3">
         <p className="text-gray-500">{error || '데이터를 불러올 수 없습니다.'}</p>
-        <button onClick={loadStats} className="text-purple-600 text-sm hover:underline">다시 시도</button>
+        <button onClick={loadStats} className="text-stone-900 text-sm hover:underline">다시 시도</button>
       </div>
     )
   }
@@ -215,7 +215,7 @@ export default function DashboardPage() {
     <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-2 mb-2">
-        <BarChart3 className="w-6 h-6 text-purple-600" />
+        <BarChart3 className="w-6 h-6 text-stone-900" />
         <h1 className="text-2xl font-bold">온톨로지 분석 대시보드</h1>
         <div className="flex-1" />
         <button
@@ -229,36 +229,36 @@ export default function DashboardPage() {
 
       {/* Atomic 캡슐 학습 진도 */}
       {progressStats && progressStats.total_atomic_capsules > 0 && (
-        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl border border-purple-100 p-6">
+        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl border border-stone-300 p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-              <Zap className="w-5 h-5 text-purple-500" />
+              <Zap className="w-5 h-5 text-stone-900" />
               Atomic 캡슐 학습 진도
             </h2>
-            <Link href="/curriculum" className="text-xs text-purple-600 hover:underline">
+            <Link href="/curriculum" className="text-xs text-stone-900 hover:underline">
               학습하러 가기 →
             </Link>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
             <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-              <div className="text-2xl font-bold text-purple-700">{progressStats.total_atomic_capsules}</div>
+              <div className="text-2xl font-bold text-stone-900">{progressStats.total_atomic_capsules}</div>
               <div className="text-xs text-gray-500 mt-0.5">총 캡슐</div>
             </div>
             <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-              <div className="text-2xl font-bold text-amber-600">{progressStats.mastered}</div>
-              <div className="text-xs text-amber-500 mt-0.5 flex items-center justify-center gap-0.5"><Star className="w-3 h-3" /> 마스터</div>
+              <div className="text-2xl font-bold text-stone-900">{progressStats.mastered}</div>
+              <div className="text-xs text-stone-900 mt-0.5 flex items-center justify-center gap-0.5"><Star className="w-3 h-3" /> 마스터</div>
             </div>
             <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-              <div className="text-2xl font-bold text-green-600">{progressStats.completed}</div>
-              <div className="text-xs text-green-500 mt-0.5">완료</div>
+              <div className="text-2xl font-bold text-stone-900">{progressStats.completed}</div>
+              <div className="text-xs text-stone-900 mt-0.5">완료</div>
             </div>
             <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-              <div className="text-2xl font-bold text-blue-600">{progressStats.in_progress}</div>
-              <div className="text-xs text-blue-500 mt-0.5">학습중</div>
+              <div className="text-2xl font-bold text-stone-900">{progressStats.in_progress}</div>
+              <div className="text-xs text-stone-900 mt-0.5">학습중</div>
             </div>
             <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-              <div className="text-2xl font-bold text-indigo-700">{progressStats.avg_quiz_score || 0}<span className="text-sm text-gray-400">점</span></div>
+              <div className="text-2xl font-bold text-stone-900">{progressStats.avg_quiz_score || 0}<span className="text-sm text-gray-400">점</span></div>
               <div className="text-xs text-gray-500 mt-0.5">평균 퀴즈</div>
             </div>
           </div>
@@ -267,7 +267,7 @@ export default function DashboardPage() {
           <div className="mb-4">
             <div className="flex items-center justify-between text-xs text-gray-500 mb-1.5">
               <span>전체 마스터 진도</span>
-              <span className="font-semibold text-purple-700">{progressStats.mastery_pct}%</span>
+              <span className="font-semibold text-stone-900">{progressStats.mastery_pct}%</span>
             </div>
             <div className="w-full bg-white rounded-full h-3 overflow-hidden">
               <div
@@ -279,7 +279,7 @@ export default function DashboardPage() {
 
           {/* 마스터 완료 개념 */}
           {progressStats.mastered_concepts > 0 && (
-            <div className="flex items-center gap-2 text-sm text-green-700 font-medium">
+            <div className="flex items-center gap-2 text-sm text-stone-900 font-medium">
               <Award className="w-4 h-4" />
               {progressStats.mastered_concepts}개 개념 완전 마스터 완료!
             </div>
@@ -287,7 +287,7 @@ export default function DashboardPage() {
 
           {/* 최근 학습 기록 */}
           {progressStats.recent_study && progressStats.recent_study.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-purple-100">
+            <div className="mt-4 pt-4 border-t border-stone-300">
               <h3 className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1">
                 <Clock className="w-3 h-3" /> 최근 학습
               </h3>
@@ -299,13 +299,13 @@ export default function DashboardPage() {
                     className="flex items-center gap-2 text-xs hover:bg-white/60 rounded-lg px-2 py-1.5 transition-colors"
                   >
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                      r.status === 'mastered' ? 'bg-amber-400' :
-                      r.status === 'completed' ? 'bg-green-400' :
-                      'bg-blue-400'
+                      r.status === 'mastered' ? 'bg-stone-100' :
+                      r.status === 'completed' ? 'bg-stone-100' :
+                      'bg-stone-100'
                     }`} />
                     <span className="text-gray-700 truncate flex-1">{r.topic}</span>
                     {r.quiz_score !== null && (
-                      <span className={`font-medium ${r.quiz_score >= 70 ? 'text-green-600' : 'text-amber-600'}`}>
+                      <span className={`font-medium ${r.quiz_score >= 70 ? 'text-stone-900' : 'text-stone-900'}`}>
                         {r.quiz_score}점
                       </span>
                     )}
@@ -321,23 +321,23 @@ export default function DashboardPage() {
       {streakData && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 스트릭 패널 */}
-          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-100 p-6">
+          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-stone-300 p-6">
             <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 mb-4">
-              <Flame className="w-5 h-5 text-orange-500" />
+              <Flame className="w-5 h-5 text-stone-900" />
               학습 스트릭
             </h2>
 
             <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-                <div className="text-3xl font-bold text-orange-600">{streakData.current_streak}</div>
+                <div className="text-3xl font-bold text-stone-900">{streakData.current_streak}</div>
                 <div className="text-xs text-gray-500 mt-0.5">현재 연속</div>
               </div>
               <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-                <div className="text-2xl font-bold text-amber-600">{streakData.longest_streak}</div>
+                <div className="text-2xl font-bold text-stone-900">{streakData.longest_streak}</div>
                 <div className="text-xs text-gray-500 mt-0.5">최장 기록</div>
               </div>
               <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-                <div className="text-2xl font-bold text-yellow-600">{streakData.total_study_days}</div>
+                <div className="text-2xl font-bold text-stone-900">{streakData.total_study_days}</div>
                 <div className="text-xs text-gray-500 mt-0.5">총 학습일</div>
               </div>
             </div>
@@ -349,8 +349,8 @@ export default function DashboardPage() {
                 {(streakData.heatmap_7d || []).map((d: any, i: number) => {
                   const dayLabel = ['일', '월', '화', '수', '목', '금', '토'][new Date(d.date).getDay()]
                   const intensity = d.count === 0 ? 'bg-gray-100' :
-                    d.count <= 2 ? 'bg-orange-200' :
-                    d.count <= 5 ? 'bg-orange-400' : 'bg-orange-600'
+                    d.count <= 2 ? 'bg-stone-100' :
+                    d.count <= 5 ? 'bg-stone-100' : 'bg-stone-100'
                   return (
                     <div key={i} className="flex flex-col items-center gap-1 flex-1">
                       <div
@@ -367,7 +367,7 @@ export default function DashboardPage() {
             {/* 오늘 요약 */}
             <div className="bg-white/60 rounded-lg p-3 flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-orange-500" />
+                <Target className="w-4 h-4 text-stone-900" />
                 <span className="text-gray-600">오늘</span>
               </div>
               <div className="flex items-center gap-3 text-xs">
@@ -384,8 +384,8 @@ export default function DashboardPage() {
                 <div className="flex flex-wrap gap-[3px]">
                   {streakData.heatmap_30d.map((d: any, i: number) => {
                     const intensity = d.count === 0 ? 'bg-gray-100' :
-                      d.count <= 2 ? 'bg-orange-200' :
-                      d.count <= 5 ? 'bg-orange-400' : 'bg-orange-600'
+                      d.count <= 2 ? 'bg-stone-100' :
+                      d.count <= 5 ? 'bg-stone-100' : 'bg-stone-100'
                     return (
                       <div
                         key={i}
@@ -400,20 +400,20 @@ export default function DashboardPage() {
           </div>
 
           {/* 뱃지 & 업적 패널 */}
-          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 p-6">
+          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-stone-300 p-6">
             <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 mb-4">
-              <Trophy className="w-5 h-5 text-indigo-500" />
+              <Trophy className="w-5 h-5 text-stone-900" />
               업적 & 뱃지
             </h2>
 
             {/* 통계 요약 */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-                <div className="text-2xl font-bold text-indigo-600">{streakData.total_capsules_studied}</div>
+                <div className="text-2xl font-bold text-stone-900">{streakData.total_capsules_studied}</div>
                 <div className="text-xs text-gray-500 mt-0.5">학습 캡슐</div>
               </div>
               <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-                <div className="text-2xl font-bold text-purple-600">
+                <div className="text-2xl font-bold text-stone-900">
                   {streakData.total_minutes >= 60
                     ? `${Math.floor(streakData.total_minutes / 60)}h ${streakData.total_minutes % 60}m`
                     : `${streakData.total_minutes}m`
@@ -451,10 +451,10 @@ export default function DashboardPage() {
 
             {/* 새로 획득한 뱃지 */}
             {streakData.new_badges && streakData.new_badges.length > 0 && (
-              <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-xl animate-pulse">
-                <div className="text-xs font-bold text-yellow-700 mb-1">🎉 새로운 뱃지 획득!</div>
+              <div className="mt-3 p-3 bg-stone-100 border border-stone-300 rounded-xl animate-pulse">
+                <div className="text-xs font-bold text-stone-900 mb-1">🎉 새로운 뱃지 획득!</div>
                 {streakData.new_badges.map((b: any, i: number) => (
-                  <div key={i} className="flex items-center gap-2 text-sm text-yellow-800">
+                  <div key={i} className="flex items-center gap-2 text-sm text-stone-900">
                     <span>{b.icon}</span>
                     <span className="font-medium">{b.name}</span>
                   </div>
@@ -463,7 +463,7 @@ export default function DashboardPage() {
             )}
 
             {/* 다음 목표 */}
-            <div className="mt-4 pt-3 border-t border-indigo-100">
+            <div className="mt-4 pt-3 border-t border-stone-300">
               <div className="text-xs font-semibold text-gray-600 mb-2">다음 목표</div>
               <div className="space-y-1.5">
                 {streakData.current_streak < 3 && (
@@ -496,7 +496,7 @@ export default function DashboardPage() {
           </h2>
           <Link
             href="/curriculum/bulk-generate"
-            className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1 px-3 py-1.5 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+            className="text-xs text-stone-900 hover:text-stone-900 flex items-center gap-1 px-3 py-1.5 bg-stone-100 rounded-lg hover:bg-stone-100 transition-colors"
           >
             <Zap className="w-3.5 h-3.5" />
             벌크 생성 관리
@@ -514,7 +514,7 @@ export default function DashboardPage() {
           <button
             onClick={handleSearch}
             disabled={searching || !searchQuery.trim()}
-            className="px-5 py-2.5 bg-purple-600 text-white text-sm font-medium rounded-xl hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-1.5"
+            className="px-5 py-2.5 bg-stone-100 text-white text-sm font-medium rounded-xl hover:bg-stone-100 disabled:opacity-50 transition-colors flex items-center gap-1.5"
           >
             {searching ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -530,15 +530,15 @@ export default function DashboardPage() {
               <Link
                 key={r.atomic_id}
                 href={`/curriculum/study/${r.atomic_id}`}
-                className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-purple-200 hover:bg-purple-50/30 transition-colors group"
+                className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-stone-300 hover:bg-stone-100/30 transition-colors group"
               >
-                <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xs font-bold shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-stone-100 text-stone-900 flex items-center justify-center text-xs font-bold shrink-0">
                   <Zap className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-800 group-hover:text-purple-700 truncate">{r.topic}</div>
+                  <div className="text-sm font-medium text-gray-800 group-hover:text-stone-900 truncate">{r.topic}</div>
                   <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
-                    <span className="text-purple-500">{r.concept_name}</span>
+                    <span className="text-stone-900">{r.concept_name}</span>
                     <span>·</span>
                     <span>{r.concept_level}</span>
                     <span>·</span>
@@ -573,7 +573,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white border border-gray-200 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50 text-blue-600">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-stone-100 text-stone-900">
                   <Video className="w-4 h-4" />
                 </div>
               </div>
@@ -582,7 +582,7 @@ export default function DashboardPage() {
             </div>
             <div className="bg-white border border-gray-200 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-green-50 text-green-600">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-stone-100 text-stone-900">
                   <TrendingUp className="w-4 h-4" />
                 </div>
               </div>
@@ -591,7 +591,7 @@ export default function DashboardPage() {
             </div>
             <div className="bg-white border border-gray-200 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-purple-50 text-purple-600">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-stone-100 text-stone-900">
                   <TrendingUp className="w-4 h-4" />
                 </div>
               </div>
@@ -600,7 +600,7 @@ export default function DashboardPage() {
             </div>
             <div className="bg-white border border-gray-200 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-orange-50 text-orange-600">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-stone-100 text-stone-900">
                   <BarChart3 className="w-4 h-4" />
                 </div>
               </div>
@@ -670,7 +670,7 @@ export default function DashboardPage() {
                             {concept.experts.slice(0, 3).map((exp, ei) => (
                               <div key={ei} className="flex items-center justify-between text-[10px]">
                                 <span className="text-gray-700">전문가 {String.fromCharCode(65 + ei)}</span>
-                                <span className="text-purple-600 font-medium">{Math.round(exp.relevance * 100)}%</span>
+                                <span className="text-stone-900 font-medium">{Math.round(exp.relevance * 100)}%</span>
                               </div>
                             ))}
                           </div>
@@ -684,7 +684,7 @@ export default function DashboardPage() {
                       </span>
                     </td>
                     <td className="py-1.5 px-2 text-center">
-                      <span className="bg-red-50 text-red-600 px-1.5 py-0.5 rounded-full font-medium">
+                      <span className="bg-stone-100 text-stone-900 px-1.5 py-0.5 rounded-full font-medium">
                         {concept.expert_count}명
                       </span>
                     </td>
@@ -747,9 +747,9 @@ export default function DashboardPage() {
                           className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all ${
                             total > 0 ? 'cursor-pointer hover:ring-2 hover:ring-purple-300' : 'cursor-default'
                           } ${
-                            rate >= 50 ? 'bg-green-100 text-green-700' :
-                            rate >= 20 ? 'bg-yellow-100 text-yellow-700' :
-                            rate > 0 ? 'bg-orange-100 text-orange-700' :
+                            rate >= 50 ? 'bg-stone-100 text-stone-900' :
+                            rate >= 20 ? 'bg-stone-100 text-stone-900' :
+                            rate > 0 ? 'bg-stone-100 text-stone-900' :
                             'bg-gray-50 text-gray-400'
                           }`}
                         >
@@ -876,7 +876,7 @@ export default function DashboardPage() {
 
       {/* Drill-down panel */}
       {drillDown && (
-        <div className="bg-white border border-purple-200 rounded-xl p-4 animate-in slide-in-from-top-2">
+        <div className="bg-white border border-stone-300 rounded-xl p-4 animate-in slide-in-from-top-2">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-700">
               {drillDown.domainName} · {drillDown.level} ({drillDownConcepts.length}개 개념)
@@ -887,7 +887,7 @@ export default function DashboardPage() {
           </div>
           {drillDownLoading ? (
             <div className="flex justify-center py-4">
-              <div className="animate-spin w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full" />
+              <div className="animate-spin w-5 h-5 border-2 border-stone-300 border-t-transparent rounded-full" />
             </div>
           ) : drillDownConcepts.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-4">해당 조건의 개념이 없습니다</p>
@@ -897,7 +897,7 @@ export default function DashboardPage() {
                 <a
                   key={c.concept_id}
                   href={`/curriculum/capsule/${c.concept_id}`}
-                  className="flex items-center justify-between p-2.5 rounded-lg border hover:border-purple-300 hover:bg-purple-50 transition-colors text-xs"
+                  className="flex items-center justify-between p-2.5 rounded-lg border hover:border-stone-300 hover:bg-stone-100 transition-colors text-xs"
                 >
                   <div>
                     <span className="font-medium text-gray-800">{c.name}</span>
@@ -958,7 +958,7 @@ function NextGoal({ icon, name, current, target }: { icon: string; name: string;
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between text-[10px] text-gray-500 mb-0.5">
           <span className="truncate">{name}</span>
-          <span className="font-medium text-indigo-600">{current}/{target}</span>
+          <span className="font-medium text-stone-900">{current}/{target}</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-1.5">
           <div
@@ -973,11 +973,11 @@ function NextGoal({ icon, name, current, target }: { icon: string; name: string;
 
 function StatCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: string | number; color: string }) {
   const colorMap: Record<string, string> = {
-    purple: 'bg-purple-50 text-purple-600',
-    blue: 'bg-blue-50 text-blue-600',
-    green: 'bg-green-50 text-green-600',
-    orange: 'bg-orange-50 text-orange-600',
-    red: 'bg-red-50 text-red-600',
+    purple: 'bg-stone-100 text-stone-900',
+    blue: 'bg-stone-100 text-stone-900',
+    green: 'bg-stone-100 text-stone-900',
+    orange: 'bg-stone-100 text-stone-900',
+    red: 'bg-stone-100 text-stone-900',
   }
 
   return (

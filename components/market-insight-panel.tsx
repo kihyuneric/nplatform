@@ -34,12 +34,12 @@ interface RegionStat {
 }
 
 const REGIONS: RegionStat[] = [
-  { name: "서울", nplCount: 142, avgDiscount: 32, trend: "up",   trendValue: "+8%",  color: "bg-blue-500" },
-  { name: "경기", nplCount: 118, avgDiscount: 38, trend: "up",   trendValue: "+12%", color: "bg-emerald-500" },
-  { name: "부산", nplCount: 65,  avgDiscount: 41, trend: "down", trendValue: "-3%",  color: "bg-violet-500" },
-  { name: "인천", nplCount: 48,  avgDiscount: 35, trend: "up",   trendValue: "+5%",  color: "bg-amber-500" },
-  { name: "대구", nplCount: 38,  avgDiscount: 44, trend: "flat", trendValue: "0%",   color: "bg-rose-500" },
-  { name: "대전", nplCount: 27,  avgDiscount: 39, trend: "down", trendValue: "-2%",  color: "bg-cyan-500" },
+  { name: "서울", nplCount: 142, avgDiscount: 32, trend: "up",   trendValue: "+8%",  color: "bg-stone-100" },
+  { name: "경기", nplCount: 118, avgDiscount: 38, trend: "up",   trendValue: "+12%", color: "bg-stone-100" },
+  { name: "부산", nplCount: 65,  avgDiscount: 41, trend: "down", trendValue: "-3%",  color: "bg-stone-100" },
+  { name: "인천", nplCount: 48,  avgDiscount: 35, trend: "up",   trendValue: "+5%",  color: "bg-stone-100" },
+  { name: "대구", nplCount: 38,  avgDiscount: 44, trend: "flat", trendValue: "0%",   color: "bg-stone-100" },
+  { name: "대전", nplCount: 27,  avgDiscount: 39, trend: "down", trendValue: "-2%",  color: "bg-stone-100" },
 ]
 
 const WEEKLY_REPORTS = [
@@ -67,8 +67,8 @@ const WEEKLY_REPORTS = [
 ]
 
 const TrendIcon = ({ trend }: { trend: "up" | "down" | "flat" }) => {
-  if (trend === "up") return <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
-  if (trend === "down") return <TrendingDown className="h-3.5 w-3.5 text-red-500" />
+  if (trend === "up") return <TrendingUp className="h-3.5 w-3.5 text-stone-900" />
+  if (trend === "down") return <TrendingDown className="h-3.5 w-3.5 text-stone-900" />
   return <Minus className="h-3.5 w-3.5 text-[var(--color-text-muted)]" />
 }
 
@@ -142,8 +142,8 @@ export function MarketInsightPanel() {
                             <div className="flex items-center gap-0.5">
                               <TrendIcon trend={region.trend} />
                               <span className={`text-xs font-medium ${
-                                region.trend === "up" ? "text-emerald-400" :
-                                region.trend === "down" ? "text-red-400" : "text-[var(--color-text-muted)]"
+                                region.trend === "up" ? "text-stone-900" :
+                                region.trend === "down" ? "text-stone-900" : "text-[var(--color-text-muted)]"
                               }`}>
                                 {region.trendValue}
                               </span>
@@ -225,7 +225,7 @@ export function MarketInsightPanel() {
                       <p className="text-[10px] text-muted-foreground">{stat.label}</p>
                       <p className="text-lg font-bold text-[var(--color-brand-dark)] mt-0.5">{stat.value}</p>
                       <p className={`text-[10px] font-medium mt-0.5 ${
-                        stat.changeType === "up" ? "text-emerald-600" : "text-red-500"
+                        stat.changeType === "up" ? "text-stone-900" : "text-stone-900"
                       }`}>
                         {stat.change}
                       </p>

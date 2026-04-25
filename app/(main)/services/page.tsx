@@ -47,16 +47,16 @@ const LEARN_LINKS = [
 
 const SPECIALTY_ACCENT: Record<string, string> = {
   "법무사·변호사": "bg-[var(--color-brand-mid)]",
-  "세무사": "bg-amber-500",
-  "공인중개사": "bg-emerald-500",
+  "세무사": "bg-stone-100",
+  "공인중개사": "bg-stone-100",
   "default": "bg-[var(--color-brand-dark)]",
 }
 
 const CATEGORY_BADGE: Record<string, string> = {
-  TIP: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-  MARKET_ANALYSIS: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-  QNA: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-  CASE_STUDY: "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+  TIP: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  MARKET_ANALYSIS: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  QNA: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  CASE_STUDY: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
   GENERAL: "bg-[var(--color-surface-sunken)] text-[var(--color-text-tertiary)] border border-[var(--color-border-subtle)]",
   default: "bg-[var(--color-surface-sunken)] text-[var(--color-text-tertiary)] border border-[var(--color-border-subtle)]",
 }
@@ -70,7 +70,7 @@ const PILLARS = [
     cta: "전문가 찾기",
     href: "/services/experts",
     accentColor: "bg-[var(--color-brand-mid)]",
-    iconBg: "bg-blue-500/10",
+    iconBg: "bg-stone-100/10",
     iconColor: "text-[var(--color-brand-mid)]",
     countLabel: "등록 전문가",
     count: "120+",
@@ -83,7 +83,7 @@ const PILLARS = [
     cta: "커뮤니티 입장",
     href: "/community",
     accentColor: "bg-[var(--color-positive)]",
-    iconBg: "bg-emerald-500/10",
+    iconBg: "bg-stone-100/10",
     iconColor: "text-[var(--color-positive)]",
     countLabel: "누적 게시글",
     count: "3,400+",
@@ -95,9 +95,9 @@ const PILLARS = [
     desc: "초보부터 심화까지 단계별 NPL 투자 커리큘럼",
     cta: "강의 보기",
     href: "/services/learn/courses",
-    accentColor: "bg-purple-500",
-    iconBg: "bg-purple-500/10",
-    iconColor: "text-purple-400",
+    accentColor: "bg-stone-100",
+    iconBg: "bg-stone-100/10",
+    iconColor: "text-stone-900",
     countLabel: "강의 수",
     count: "48개",
   },
@@ -278,7 +278,7 @@ export default function ServicesPage() {
                     </div>
                     {expert.rating !== undefined && (
                       <div className={`flex items-center gap-1 ${DS.text.bodyBold}`}>
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-stone-900" />
                         <span>{expert.rating.toFixed(1)}</span>
                         {expert.review_count !== undefined && (
                           <span className={DS.text.captionLight}>({expert.review_count})</span>
@@ -361,7 +361,7 @@ export default function ServicesPage() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className={`${DS.text.bodyBold} flex items-center gap-2`}>
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-stone-100" />
                 교육 콘텐츠
               </h2>
             </div>
@@ -369,7 +369,7 @@ export default function ServicesPage() {
               {LEARN_LINKS.map((link) => (
                 <Link key={link.href} href={link.href}>
                   <div className={`${DS.card.interactive} p-4 flex items-center gap-4`}>
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-stone-100/10 flex items-center justify-center shrink-0">
                       <link.icon className="w-5 h-5 text-[var(--color-brand-mid)]" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -388,7 +388,7 @@ export default function ServicesPage() {
                   <p className="text-[0.8125rem] text-white/70 mt-0.5">실전 투자자들의 노하우</p>
                 </div>
                 <Link href="/services/learn/courses">
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] text-[var(--color-brand-dark)] text-[0.8125rem] font-bold hover:bg-blue-500/10 transition-colors shrink-0">
+                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] text-[var(--color-brand-dark)] text-[0.8125rem] font-bold hover:bg-stone-100/10 transition-colors shrink-0">
                     강의 보기 <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </Link>

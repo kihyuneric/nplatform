@@ -82,13 +82,19 @@ export function getCompletenessBadge(score: number): CompletenessBadgeStyle {
   const clamped = Math.max(0, Math.min(100, Math.round(normalized)))
   const label = `자료 ${clamped}/100`
 
+  // McKinsey mono editorial — 점수별 색 차별화 X. 위계는 dot 채움 + 라벨 prefix 로.
+  // 모든 등급 동일 ink 텍스트 + 베이지 배경 + brass dot
+  const baseStyle = {
+    color: '#14161A',
+    bgColor: '#FFFFFF',
+    borderColor: 'rgba(20, 22, 26, 0.16)',
+  }
+
   if (clamped >= 90) {
     return {
       level: 'high',
       label,
-      color: '#10B981',
-      bgColor: 'rgba(16, 185, 129, 0.1)',
-      borderColor: 'rgba(16, 185, 129, 0.3)',
+      ...baseStyle,
       hint: '핵심·실사 자료 완비 — 프리미엄 노출',
     }
   }
@@ -96,18 +102,14 @@ export function getCompletenessBadge(score: number): CompletenessBadgeStyle {
     return {
       level: 'mid',
       label,
-      color: '#F59E0B',
-      bgColor: 'rgba(245, 158, 11, 0.1)',
-      borderColor: 'rgba(245, 158, 11, 0.3)',
+      ...baseStyle,
       hint: '기본 자료 충족 — 추가 실사 권장',
     }
   }
   return {
     level: 'low',
     label,
-    color: '#F43F5E',
-    bgColor: 'rgba(244, 63, 94, 0.1)',
-    borderColor: 'rgba(244, 63, 94, 0.3)',
+    ...baseStyle,
     hint: '자료 부족 — 매수자 직접 실사 필수',
   }
 }

@@ -38,11 +38,11 @@ interface ImportanceItem {
 
 // ── 상수 ──────────────────────────────────────────
 const LEVELS = [
-  { key: '왕초보', label: '왕초보', description: '부동산의 기본 개념부터', icon: Sprout, color: '#10B981', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', borderColor: 'border-emerald-300' },
-  { key: '초보', label: '초보', description: '본격적인 투자 준비', icon: Leaf, color: '#3B82F6', bgColor: 'bg-blue-50', textColor: 'text-blue-700', borderColor: 'border-blue-300' },
-  { key: '중급', label: '중급', description: '실전 투자 기법 습득', icon: TreePine, color: '#8B5CF6', bgColor: 'bg-purple-50', textColor: 'text-purple-700', borderColor: 'border-purple-300' },
-  { key: '고급', label: '고급', description: '고급 전략과 리스크 관리', icon: Mountain, color: '#F59E0B', bgColor: 'bg-amber-50', textColor: 'text-amber-700', borderColor: 'border-amber-300' },
-  { key: '전문가', label: '전문가', description: '전문가 수준의 포트폴리오', icon: Crown, color: '#EF4444', bgColor: 'bg-red-50', textColor: 'text-red-700', borderColor: 'border-red-300' },
+  { key: '왕초보', label: '왕초보', description: '부동산의 기본 개념부터', icon: Sprout, color: '#14161A', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
+  { key: '초보', label: '초보', description: '본격적인 투자 준비', icon: Leaf, color: '#14161A', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
+  { key: '중급', label: '중급', description: '실전 투자 기법 습득', icon: TreePine, color: '#14161A', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
+  { key: '고급', label: '고급', description: '고급 전략과 리스크 관리', icon: Mountain, color: '#14161A', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
+  { key: '전문가', label: '전문가', description: '전문가 수준의 포트폴리오', icon: Crown, color: '#1B1B1F', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
 ]
 
 const DOMAIN_ICONS: Record<string, typeof HomeIcon> = {
@@ -65,7 +65,7 @@ export default function RoadmapPageWrapper() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-300" />
       </div>
     }>
       <RoadmapPage />
@@ -199,7 +199,7 @@ function RoadmapPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-300" />
           <span className="text-sm text-gray-400">로드맵 데이터 로딩 중...</span>
         </div>
       </div>
@@ -210,7 +210,7 @@ function RoadmapPage() {
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
       {/* Hero */}
       <div className="text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-purple-50 rounded-full text-purple-600 text-sm font-medium mb-3">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-stone-100 rounded-full text-stone-900 text-sm font-medium mb-3">
           <Map className="w-4 h-4" />
           도메인 × 레벨 학습 경로
         </div>
@@ -230,7 +230,7 @@ function RoadmapPage() {
               onClick={() => setSelectedDomainId(d.domain_id)}
               className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
                 isSelected
-                  ? 'border-purple-500 bg-purple-50 shadow-lg shadow-purple-100'
+                  ? 'border-stone-300 bg-stone-100 shadow-lg shadow-purple-100'
                   : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm'
               }`}
             >
@@ -240,12 +240,12 @@ function RoadmapPage() {
               >
                 <Icon className="w-5 h-5" />
               </div>
-              <span className={`text-sm font-semibold ${isSelected ? 'text-purple-700' : 'text-gray-700'}`}>
+              <span className={`text-sm font-semibold ${isSelected ? 'text-stone-900' : 'text-gray-700'}`}>
                 {d.name}
               </span>
               <span className="text-xs text-gray-400">{totalConcepts}개 개념</span>
               {isSelected && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center">
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-stone-100 rounded-full flex items-center justify-center">
                   <ChevronRight className="w-3 h-3 text-white" />
                 </div>
               )}
@@ -266,7 +266,7 @@ function RoadmapPage() {
             <p className="text-sm text-gray-500">{DOMAIN_DESCRIPTIONS[selectedDomain.name] || selectedDomain.description}</p>
           </div>
           <div className="ml-auto text-right hidden md:block">
-            <div className="text-2xl font-bold text-purple-700">
+            <div className="text-2xl font-bold text-stone-900">
               {allConcepts.filter(c => c.domain_id === selectedDomainId).length}
             </div>
             <div className="text-xs text-gray-400">총 개념 수</div>
@@ -285,7 +285,7 @@ function RoadmapPage() {
               className="absolute top-7 left-12 h-1 transition-all duration-500 hidden md:block"
               style={{
                 width: `${LEVELS.findIndex(l => l.key === selectedLevel) * 25}%`,
-                backgroundColor: selectedDomain?.color || '#8B5CF6',
+                backgroundColor: selectedDomain?.color || '#14161A',
               }}
             />
 
@@ -366,7 +366,7 @@ function RoadmapPage() {
               <p className="text-gray-400 text-sm">이 도메인의 {selectedLevel} 레벨 콘텐츠가 아직 준비되지 않았습니다.</p>
               <p className="text-gray-300 text-xs mt-1">대본을 업로드하면 자동으로 개념이 생성됩니다.</p>
               <Link href="/curriculum/upload"
-                className="inline-flex items-center gap-1 mt-4 text-sm text-purple-600 hover:text-purple-800">
+                className="inline-flex items-center gap-1 mt-4 text-sm text-stone-900 hover:text-stone-900">
                 대본 분석하러 가기 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -388,14 +388,14 @@ function RoadmapPage() {
                       {/* 순서 번호 */}
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                        style={{ backgroundColor: levelInfo?.color || '#8B5CF6' }}
+                        style={{ backgroundColor: levelInfo?.color || '#14161A' }}
                       >
                         {idx + 1}
                       </div>
 
                       {/* 내용 */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+                        <h3 className="font-semibold text-gray-900 group-hover:text-stone-900 transition-colors">
                           {concept.name}
                         </h3>
                         {concept.description && (
@@ -412,7 +412,7 @@ function RoadmapPage() {
                             </span>
                           )}
                           {(concept.atomic_count || 0) > 0 && (
-                            <span className="flex items-center gap-1 text-purple-500">
+                            <span className="flex items-center gap-1 text-stone-900">
                               <Zap className="w-3 h-3" /> {concept.atomic_count}캡슐
                             </span>
                           )}
@@ -423,8 +423,8 @@ function RoadmapPage() {
                       {avgRelevance > 0 && (
                         <div className="hidden md:flex flex-col items-center gap-1">
                           <div className="w-12 h-12 rounded-full border-[3px] flex items-center justify-center"
-                            style={{ borderColor: levelInfo?.color || '#8B5CF6' }}>
-                            <span className="text-xs font-bold" style={{ color: levelInfo?.color || '#8B5CF6' }}>
+                            style={{ borderColor: levelInfo?.color || '#14161A' }}>
+                            <span className="text-xs font-bold" style={{ color: levelInfo?.color || '#14161A' }}>
                               {Math.round(avgRelevance * 100)}%
                             </span>
                           </div>
@@ -433,7 +433,7 @@ function RoadmapPage() {
                       )}
 
                       {/* 화살표 */}
-                      <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-purple-400 transition-colors flex-shrink-0" />
+                      <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-stone-900 transition-colors flex-shrink-0" />
                     </div>
 
                     {/* 다음 개념 연결선 */}
@@ -454,7 +454,7 @@ function RoadmapPage() {
       {graphData.nodes.length > 0 && (
         <div className="bg-white rounded-2xl border p-6">
           <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-purple-600" />
+            <BarChart3 className="w-4 h-4 text-stone-900" />
             {selectedDomain?.name} · {selectedLevel} — 개념 관계 그래프
           </h3>
           <div className="border rounded-xl p-4 bg-gray-50">
@@ -470,7 +470,7 @@ function RoadmapPage() {
       {/* ── 전체 도메인×레벨 매트릭스 ──────────── */}
       <div className="bg-white rounded-2xl border p-6 overflow-x-auto">
         <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-          <Map className="w-4 h-4 text-purple-600" />
+          <Map className="w-4 h-4 text-stone-900" />
           전체 학습 매트릭스
         </h3>
         <table className="w-full text-sm">
@@ -503,9 +503,9 @@ function RoadmapPage() {
                           onClick={() => { setSelectedDomainId(d.domain_id); setSelectedLevel(l.key) }}
                           className={`inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-medium transition-all ${
                             isCurrentCell
-                              ? 'bg-purple-600 text-white shadow-sm'
+                              ? 'bg-stone-100 text-white shadow-sm'
                               : count > 0
-                                ? 'bg-gray-100 text-gray-700 hover:bg-purple-100 hover:text-purple-700'
+                                ? 'bg-gray-100 text-gray-700 hover:bg-stone-100 hover:text-stone-900'
                                 : 'text-gray-300'
                           }`}
                         >
@@ -530,7 +530,7 @@ function RoadmapPage() {
                   <td key={l.key} className="text-center py-2.5 px-2 font-bold text-gray-700">{total}</td>
                 )
               })}
-              <td className="text-center py-2.5 pl-4 font-bold text-purple-700">{allConcepts.length}</td>
+              <td className="text-center py-2.5 pl-4 font-bold text-stone-900">{allConcepts.length}</td>
             </tr>
           </tfoot>
         </table>

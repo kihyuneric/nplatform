@@ -14,9 +14,9 @@ interface RiskChecklistProps {
 }
 
 const levelConfig = {
-  '높음': { icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', badge: 'bg-red-500/15 text-red-400' },
-  '주의': { icon: AlertCircle, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', badge: 'bg-amber-500/15 text-amber-400' },
-  '양호': { icon: CheckCircle2, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20', badge: 'bg-green-500/15 text-green-400' },
+  '높음': { icon: AlertTriangle, color: 'text-stone-900', bg: 'bg-stone-100/10', border: 'border-stone-300/20', badge: 'bg-stone-100/15 text-stone-900' },
+  '주의': { icon: AlertCircle, color: 'text-stone-900', bg: 'bg-stone-100/10', border: 'border-stone-300/20', badge: 'bg-stone-100/15 text-stone-900' },
+  '양호': { icon: CheckCircle2, color: 'text-stone-900', bg: 'bg-stone-100/10', border: 'border-stone-300/20', badge: 'bg-stone-100/15 text-stone-900' },
 }
 
 export function RiskChecklist({ risks }: RiskChecklistProps) {

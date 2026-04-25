@@ -147,7 +147,7 @@ export function KeywordNetwork({ onKeywordClick }: Props) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Network className="h-4 w-4 text-indigo-600" />
+            <Network className="h-4 w-4 text-stone-900" />
             키워드 연관 네트워크
           </CardTitle>
           {/* 범례 */}

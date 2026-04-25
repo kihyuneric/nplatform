@@ -270,7 +270,7 @@ export function ScrapManager() {
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 text-red-500"
+                            className="h-7 w-7 text-stone-900"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -413,7 +413,7 @@ export function ScrapManager() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="text-red-500"
+                      className="text-stone-900"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

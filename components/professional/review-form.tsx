@@ -83,7 +83,7 @@ export function ReviewForm({ professionalId, onSubmitted }: ReviewFormProps) {
       <CardContent className="space-y-4">
         {/* Star rating */}
         <div className="space-y-2">
-          <Label>별점 <span className="text-red-500">*</span></Label>
+          <Label>별점 <span className="text-stone-900">*</span></Label>
           <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 5].map((s) => (
               <button
@@ -98,7 +98,7 @@ export function ReviewForm({ professionalId, onSubmitted }: ReviewFormProps) {
                   className={cn(
                     'h-7 w-7 transition-colors',
                     s <= displayRating
-                      ? 'fill-yellow-400 text-yellow-400'
+                      ? 'fill-yellow-400 text-stone-900'
                       : 'text-[var(--color-text-muted)]'
                   )}
                 />
@@ -137,7 +137,7 @@ export function ReviewForm({ professionalId, onSubmitted }: ReviewFormProps) {
         {/* Review text */}
         <div className="space-y-2">
           <Label>
-            리뷰 내용 <span className="text-red-500">*</span>
+            리뷰 내용 <span className="text-stone-900">*</span>
             <span className="text-xs text-gray-400 ml-1">(최소 10자)</span>
           </Label>
           <Textarea

@@ -172,7 +172,7 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
     <>
       {parts.map((part, i) =>
         regex.test(part) ? (
-          <mark key={i} className="bg-yellow-500/20 text-current rounded-sm px-0.5">
+          <mark key={i} className="bg-stone-100/20 text-current rounded-sm px-0.5">
             {part}
           </mark>
         ) : (
@@ -190,26 +190,26 @@ function ParsedChips({ filters }: { filters: ParsedSearchFilters }) {
 
   if (filters.regions?.length) {
     filters.regions.forEach((r) =>
-      chips.push({ icon: <MapPin className="h-3 w-3" />, label: r, color: 'bg-blue-500/10 text-blue-400' })
+      chips.push({ icon: <MapPin className="h-3 w-3" />, label: r, color: 'bg-stone-100/10 text-stone-900' })
     )
   }
   if (filters.collateralTypes?.length) {
     filters.collateralTypes.forEach((t) =>
-      chips.push({ icon: <Building2 className="h-3 w-3" />, label: t, color: 'bg-purple-500/10 text-purple-400' })
+      chips.push({ icon: <Building2 className="h-3 w-3" />, label: t, color: 'bg-stone-100/10 text-stone-900' })
     )
   }
   if (filters.maxAmount) {
     chips.push({
       icon: <DollarSign className="h-3 w-3" />,
       label: `${formatAmount(filters.maxAmount, 'short')} 이하`,
-      color: 'bg-emerald-500/10 text-emerald-400',
+      color: 'bg-stone-100/10 text-stone-900',
     })
   }
   if (filters.minAmount) {
     chips.push({
       icon: <DollarSign className="h-3 w-3" />,
       label: `${formatAmount(filters.minAmount, 'short')} 이상`,
-      color: 'bg-emerald-500/10 text-emerald-400',
+      color: 'bg-stone-100/10 text-stone-900',
     })
   }
 
@@ -237,21 +237,21 @@ const QUICK_SUGGESTIONS: SearchSuggestion[] = [
     id: 'q1',
     label: '강남 아파트 10억 이하',
     description: '서울 강남 아파트 NPL',
-    icon: <MapPin className="h-3.5 w-3.5 text-blue-500" />,
+    icon: <MapPin className="h-3.5 w-3.5 text-stone-900" />,
     filters: { regions: ['서울'], collateralTypes: ['아파트'], maxAmount: 1_000_000_000 },
   },
   {
     id: 'q2',
     label: '경기 상가 임의매각',
     description: '경기 지역 상가 임의매각 매물',
-    icon: <Building2 className="h-3.5 w-3.5 text-purple-500" />,
+    icon: <Building2 className="h-3.5 w-3.5 text-stone-900" />,
     filters: { regions: ['경기'], collateralTypes: ['상가'], listingType: 'DISTRESSED_SALE' },
   },
   {
     id: 'q3',
     label: '법원경매 NPL 5억~15억',
     description: '경공매 NPL 5~15억 범위',
-    icon: <Tag className="h-3.5 w-3.5 text-emerald-500" />,
+    icon: <Tag className="h-3.5 w-3.5 text-stone-900" />,
     filters: { listingType: 'AUCTION_NPL', minAmount: 500_000_000, maxAmount: 1_500_000_000 },
   },
 ]
@@ -359,9 +359,9 @@ export function NaturalLanguageSearch({
       >
         <div className="pl-4 pr-2 shrink-0">
           {loading ? (
-            <Loader2 className="h-4 w-4 text-[#10B981] animate-spin" />
+            <Loader2 className="h-4 w-4 text-[#14161A] animate-spin" />
           ) : (
-            <Sparkles className="h-4 w-4 text-[#10B981]" />
+            <Sparkles className="h-4 w-4 text-[#14161A]" />
           )}
         </div>
 
@@ -500,7 +500,7 @@ export function NaturalLanguageSearch({
 
             {/* AI hint */}
             <div className="px-4 py-2.5 border-t bg-muted/30 flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5 text-[#10B981] shrink-0" />
+              <Sparkles className="h-3.5 w-3.5 text-[#14161A] shrink-0" />
               <p className="text-xs text-muted-foreground">
                 지역, 물건 종류, 금액을 자연어로 입력하면 AI가 자동으로 필터를 적용합니다
               </p>

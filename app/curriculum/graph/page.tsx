@@ -35,7 +35,7 @@ const LEVELS = ['전체', '왕초보', '초보', '중급', '고급', '전문가'
 const RELATION_TYPES = [
   { key: 'prerequisite', label: '선수', color: '#6B7280' },
   { key: 'relatedTo', label: '관련', color: '#9CA3AF' },
-  { key: 'partOf', label: '구성', color: '#3B82F6' },
+  { key: 'partOf', label: '구성', color: '#14161A' },
 ]
 
 interface LearningPath {
@@ -153,7 +153,7 @@ export default function GraphPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[600px]">
-        <div className="animate-spin w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-3 border-stone-300 border-t-transparent rounded-full" />
       </div>
     )
   }
@@ -164,7 +164,7 @@ export default function GraphPage() {
       <div className="px-6 py-4 border-b bg-white">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <GitBranch className="w-5 h-5 text-purple-600" />
+            <GitBranch className="w-5 h-5 text-stone-900" />
             <h1 className="text-xl font-bold">인터랙티브 지식그래프</h1>
           </div>
           <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -248,7 +248,7 @@ export default function GraphPage() {
 
           <button
             onClick={() => graphRef.current?.fitToView()}
-            className="text-xs text-gray-500 hover:text-purple-600 flex items-center gap-0.5 px-2 py-1 border border-gray-200 rounded hover:border-purple-300 transition-colors"
+            className="text-xs text-gray-500 hover:text-stone-900 flex items-center gap-0.5 px-2 py-1 border border-gray-200 rounded hover:border-stone-300 transition-colors"
             title="전체 보기"
           >
             <Maximize2 className="w-3 h-3" />
@@ -297,7 +297,7 @@ export default function GraphPage() {
                       setSelectedNodeId(n.id)
                       setSearchQuery('')
                     }}
-                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 flex items-center gap-2"
+                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-stone-100 flex items-center gap-2"
                   >
                     <span
                       className="w-2 h-2 rounded-full flex-shrink-0"
@@ -348,18 +348,18 @@ export default function GraphPage() {
           <span>관련 관계</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-6 h-0.5 bg-blue-300" style={{ borderStyle: 'dotted' }} />
+          <div className="w-6 h-0.5 bg-stone-100" style={{ borderStyle: 'dotted' }} />
           <span>구성 관계</span>
         </div>
         <span className="text-gray-300">|</span>
         <span>노드 크기 = 전문가 강조도</span>
         <span>테두리 두께 = 난이도</span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 bg-red-500 rounded-full text-white text-[8px] leading-3 text-center">N</span>
+          <span className="inline-block w-3 h-3 bg-stone-100 rounded-full text-white text-[8px] leading-3 text-center">N</span>
           = 전문가 수
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 bg-purple-600 rounded-full text-white text-[7px] leading-3 text-center">⚡</span>
+          <span className="inline-block w-3 h-3 bg-stone-100 rounded-full text-white text-[7px] leading-3 text-center">⚡</span>
           = Atomic 캡슐
         </span>
       </div>

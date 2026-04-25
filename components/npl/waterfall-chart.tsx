@@ -143,9 +143,9 @@ export function WaterfallChart({ salePrice, auctionCost, propertyTax, smallTenan
       {/* Legend */}
       <div className="mt-2 flex items-center justify-center gap-4 text-xs text-gray-500">
         <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded" style={{ background: '#1B3A5C' }} />낙찰가</span>
-        <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded bg-red-500" />비용공제</span>
-        <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded bg-blue-500" />채권배당</span>
-        <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded bg-green-500" />잔여금</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded bg-stone-100" />비용공제</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded bg-stone-100" />채권배당</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded bg-stone-100" />잔여금</span>
       </div>
     </div>
   )

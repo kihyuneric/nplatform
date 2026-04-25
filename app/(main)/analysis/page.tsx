@@ -11,20 +11,27 @@ import {
 import DS from "@/lib/design-system"
 
 /* ─────────────────────────────────────────────────────────────
-   분석 도구 카드 정의
+   분석 도구 카드 정의 — McKinsey mono editorial v3
+   모든 카드 동일 톤 (검정 + brass dot + 흰 종이). 색상 차별화 X.
+   위계는 typography weight + position + small numeric prefix 로.
    ───────────────────────────────────────────────────────────── */
+const MONO_INK = "#14161A"
+const MONO_TINT = "rgba(20, 22, 26, 0.04)"
+const MONO_BORDER = "rgba(20, 22, 26, 0.12)"
+const BRASS = "var(--color-editorial-gold, #A8853E)"
+
 const TOOLS = [
   {
     href: "/analysis/profitability",
     demoHref: "/analysis/demo",
     demoLabel: "샘플 결과 보기",
     icon: TrendingUp,
-    color: "#10B981",
-    bg: "rgba(16,185,129,0.12)",
-    border: "rgba(16,185,129,0.25)",
-    badge: "핵심",
-    badgeBg: "rgba(16,185,129,0.15)",
-    badgeText: "#10B981",
+    color: MONO_INK,
+    bg: MONO_TINT,
+    border: MONO_BORDER,
+    badge: "01 · 핵심",
+    badgeBg: "transparent",
+    badgeText: MONO_INK,
     title: "NPL 수익성 분석",
     desc: "채권·담보물 데이터를 4단계로 입력하면 AI가 IRR·ROI·배당 시나리오를 자동 계산합니다.",
     features: ["3종 시나리오 (강세·기준·약세)", "배당 워터폴 자동 산출", "AI 투자의견 서술"],
@@ -34,12 +41,12 @@ const TOOLS = [
     demoHref: "/analysis/simulator?demo=1",
     demoLabel: "데모 프리셋 체험",
     icon: Calculator,
-    color: "#3B82F6",
-    bg: "rgba(59,130,246,0.12)",
-    border: "rgba(59,130,246,0.25)",
-    badge: "실시간",
-    badgeBg: "rgba(59,130,246,0.15)",
-    badgeText: "#3B82F6",
+    color: MONO_INK,
+    bg: MONO_TINT,
+    border: MONO_BORDER,
+    badge: "02 · 실시간",
+    badgeBg: "transparent",
+    badgeText: MONO_INK,
     title: "경매 분석",
     desc: "낙찰가 슬라이더로 즉시 취득세·양도세·중개보수·수익률을 계산합니다. 15가지 부동산 유형 지원.",
     features: ["2024 세율 자동 적용", "민감도 테이블", "시나리오 저장"],
@@ -49,12 +56,12 @@ const TOOLS = [
     demoHref: null,
     demoLabel: null,
     icon: BarChart3,
-    color: "#8B5CF6",
-    bg: "rgba(139,92,246,0.12)",
-    border: "rgba(139,92,246,0.25)",
-    badge: "주간",
-    badgeBg: "rgba(139,92,246,0.15)",
-    badgeText: "#8B5CF6",
+    color: MONO_INK,
+    bg: MONO_TINT,
+    border: MONO_BORDER,
+    badge: "03 · 주간",
+    badgeBg: "transparent",
+    badgeText: MONO_INK,
     title: "NPL 가격지수 (NBI)",
     desc: "전국·담보 유형별 낙찰가율 추이, 거래량, 낙찰률을 주간 단위로 추적합니다.",
     features: ["담보 유형별 필터", "거래량 추이 그래프", "지역별 히트맵"],
@@ -64,12 +71,12 @@ const TOOLS = [
     demoHref: "/analysis/copilot",
     demoLabel: "AI 질문 체험",
     icon: Brain,
-    color: "#06B6D4",
-    bg: "rgba(6,182,212,0.12)",
-    border: "rgba(6,182,212,0.25)",
-    badge: "AI",
-    badgeBg: "rgba(6,182,212,0.15)",
-    badgeText: "#06B6D4",
+    color: MONO_INK,
+    bg: MONO_TINT,
+    border: MONO_BORDER,
+    badge: "04 · AI",
+    badgeBg: "transparent",
+    badgeText: MONO_INK,
     title: "AI 컨설턴트",
     desc: "자연어로 매물을 설명하면 AI가 30초 만에 투자 리포트를 생성합니다.",
     features: ["Claude 기반 LLM", "판례 RAG 연동", "30초 리포트"],
@@ -92,9 +99,9 @@ const RECENT_FALLBACK: RecentItem[] = [
 
 // 다크·라이트 모드 모두에서 가시성 확보: opacity 기반 배경 + 밝은 텍스트
 const GRADE_COLOR: Record<string, { bg: string; text: string }> = {
-  A: { bg: "rgba(16,185,129,0.15)",  text: "#34D399" },  // emerald
-  B: { bg: "rgba(59,130,246,0.15)",  text: "#60A5FA" },  // blue
-  C: { bg: "rgba(245,158,11,0.15)",  text: "#FBBF24" },  // amber
+  A: { bg: "rgba(20,22,26,0.15)",  text: "#14161A" },  // emerald
+  B: { bg: "rgba(20,22,26,0.15)",  text: "#14161A" },  // blue
+  C: { bg: "rgba(20,22,26,0.15)",  text: "#14161A" },  // amber
   D: { bg: "rgba(249,115,22,0.15)",  text: "#FB923C" },  // orange
 }
 
@@ -223,10 +230,10 @@ export default function AnalysisDashboard() {
           {/* Quick stats */}
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { label: "AI 분석 완료", value: "28,391건", icon: Brain, color: "text-emerald-600" },
-              { label: "평균 예측 정확도", value: "94.2%", icon: Shield, color: "text-blue-600" },
-              { label: "이번 달 분석", value: "1,284건", icon: TrendingUp, color: "text-purple-600" },
-              { label: "평균 소요 시간", value: "< 30초", icon: Clock, color: "text-amber-600" },
+              { label: "AI 분석 완료", value: "28,391건", icon: Brain, color: "text-stone-900" },
+              { label: "평균 예측 정확도", value: "94.2%", icon: Shield, color: "text-stone-900" },
+              { label: "이번 달 분석", value: "1,284건", icon: TrendingUp, color: "text-stone-900" },
+              { label: "평균 소요 시간", value: "< 30초", icon: Clock, color: "text-stone-900" },
             ].map((s) => (
               <div
                 key={s.label}
@@ -310,8 +317,8 @@ export default function AnalysisDashboard() {
                       href={tool.demoHref}
                       className="flex items-center justify-center gap-1.5 py-2 px-3 mt-1 rounded-xl text-[0.6875rem] font-semibold transition-all hover:opacity-80"
                       style={{
-                        backgroundColor: "rgba(245,158,11,0.08)",
-                        border: "1px solid rgba(245,158,11,0.2)",
+                        backgroundColor: "rgba(20,22,26,0.08)",
+                        border: "1px solid rgba(20,22,26,0.2)",
                         color: "#D97706",
                       }}
                       onClick={(e) => e.stopPropagation()}
@@ -360,7 +367,7 @@ export default function AnalysisDashboard() {
                   <p className="text-[0.8125rem] font-semibold text-[var(--color-text-primary)] truncate">{r.title}</p>
                   <p className="text-[0.6875rem] text-[var(--color-text-tertiary)]">{r.type} · {r.date}</p>
                 </div>
-                <span className="text-[0.875rem] font-black tabular-nums" style={{ color: "#10B981" }}>{r.roi}</span>
+                <span className="text-[0.875rem] font-black tabular-nums" style={{ color: "#14161A" }}>{r.roi}</span>
                 <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] shrink-0" />
               </Link>
             )
@@ -368,9 +375,9 @@ export default function AnalysisDashboard() {
         </div>
 
         {/* Notice */}
-        <div className="mt-4 flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 px-4 py-3">
-          <AlertCircle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
-          <p className="text-[0.75rem] text-amber-400 leading-relaxed">
+        <div className="mt-4 flex items-start gap-2 rounded-lg bg-stone-100/10 border border-stone-300/20 px-4 py-3">
+          <AlertCircle className="w-4 h-4 text-stone-900 mt-0.5 shrink-0" />
+          <p className="text-[0.75rem] text-stone-900 leading-relaxed">
             <strong>계약서 생성</strong> 기능을 통해 등기부등본·채권자료를 업로드하면 NPL 계약서가 자동 생성됩니다.
             OCR 인식 → 계약서 생성 → AI 검토를 하나의 워크플로로 처리할 수 있습니다.
           </p>

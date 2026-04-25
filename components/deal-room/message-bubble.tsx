@@ -87,7 +87,7 @@ export function MessageBubble({
           className={cn(
             "text-xs font-medium px-1",
             isMine
-              ? "text-right text-blue-300"
+              ? "text-right text-stone-900"
               : "text-left text-[var(--color-text-secondary)]"
           )}
         >
@@ -150,7 +150,7 @@ export function MessageBubble({
           {isMine && (
             <span className="flex items-center">
               {readStatus === "read" ? (
-                <CheckCheck className="w-3.5 h-3.5 text-blue-500" />
+                <CheckCheck className="w-3.5 h-3.5 text-stone-900" />
               ) : (
                 <Check className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
               )}

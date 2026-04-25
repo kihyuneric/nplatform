@@ -51,7 +51,7 @@ export function TrustBelt() {
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(circle at 20% 30%, rgba(37,88,160,.14), transparent 55%), radial-gradient(circle at 85% 70%, rgba(16,185,129,.10), transparent 55%)",
+            "radial-gradient(circle at 20% 30%, rgba(37,88,160,.14), transparent 55%), radial-gradient(circle at 85% 70%, rgba(20,22,26,.10), transparent 55%)",
         }}
       />
 
@@ -64,8 +64,8 @@ export function TrustBelt() {
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-12"
         >
-          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-wider text-emerald-300">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="inline-flex items-center gap-2 rounded-full border border-stone-300/20 bg-stone-100/5 px-3.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-wider text-stone-900">
+            <span className="w-1.5 h-1.5 rounded-full bg-stone-100 animate-pulse" />
             Why {BRAND.name}
           </span>
           <h2 className="mt-5 text-[clamp(1.75rem,3.6vw,2.75rem)] font-bold leading-tight text-white">
@@ -100,10 +100,10 @@ export function TrustBelt() {
                   style={{
                     background:
                       idx === 0
-                        ? "radial-gradient(circle at 50% 0%, rgba(59,130,246,.18), transparent 70%)"
+                        ? "radial-gradient(circle at 50% 0%, rgba(20,22,26,.18), transparent 70%)"
                         : idx === 1
-                        ? "radial-gradient(circle at 50% 0%, rgba(168,85,247,.18), transparent 70%)"
-                        : "radial-gradient(circle at 50% 0%, rgba(16,185,129,.18), transparent 70%)",
+                        ? "radial-gradient(circle at 50% 0%, rgba(20,22,26,.18), transparent 70%)"
+                        : "radial-gradient(circle at 50% 0%, rgba(20,22,26,.18), transparent 70%)",
                   }}
                 />
 
@@ -127,7 +127,7 @@ export function TrustBelt() {
                 <ul className="relative space-y-2 border-t border-white/[0.06] pt-4">
                   {bullets.map((b) => (
                     <li key={b.label} className="flex items-start gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-400/80" />
+                      <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0 text-stone-900/80" />
                       <div className="flex-1 min-w-0 flex items-baseline justify-between gap-3">
                         <span className="text-[0.75rem] text-white/45">{b.label}</span>
                         <span className="text-[0.8125rem] font-medium text-white/80 tabular-nums text-right">{b.value}</span>

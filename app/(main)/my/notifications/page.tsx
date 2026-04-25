@@ -21,9 +21,9 @@ interface Notification {
 }
 
 const TYPE_META: Record<NotificationType, { icon: any; color: string; bg: string; label: string }> = {
-  contract: { icon: Gavel,      color: "text-blue-400",    bg: "bg-blue-500/10",    label: "거래" },
-  listing:  { icon: FileText,   color: "text-emerald-400", bg: "bg-emerald-500/10", label: "매물" },
-  analysis: { icon: TrendingUp, color: "text-purple-400",  bg: "bg-purple-500/10",  label: "분석" },
+  contract: { icon: Gavel,      color: "text-stone-900",    bg: "bg-stone-100/10",    label: "거래" },
+  listing:  { icon: FileText,   color: "text-stone-900", bg: "bg-stone-100/10", label: "매물" },
+  analysis: { icon: TrendingUp, color: "text-stone-900",  bg: "bg-stone-100/10",  label: "분석" },
   system:   { icon: Shield,     color: "text-[var(--color-text-tertiary)]",    bg: "bg-[var(--color-surface-sunken)]",    label: "시스템" },
 }
 
@@ -228,7 +228,7 @@ export default function NotificationsPage() {
               >
                 {tab.label}
                 {unread > 0 && (
-                  <span className="h-4 min-w-4 flex items-center justify-center rounded-full bg-red-500/10 text-[var(--color-danger)] text-[0.6875rem] font-bold px-1">
+                  <span className="h-4 min-w-4 flex items-center justify-center rounded-full bg-stone-100/10 text-[var(--color-danger)] text-[0.6875rem] font-bold px-1">
                     {unread}
                   </span>
                 )}
@@ -239,10 +239,10 @@ export default function NotificationsPage() {
 
         {/* Batch bar */}
         {selectedIds.size > 0 && (
-          <div className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/20 rounded-xl px-4 py-2.5">
+          <div className="flex items-center gap-3 bg-stone-100/10 border border-stone-300/20 rounded-xl px-4 py-2.5">
             <span className={DS.text.bodyMedium + " !text-[var(--color-brand-mid)]"}>{selectedIds.size}개 선택됨</span>
             <div className="h-4 w-px bg-[var(--color-border-subtle)]" />
-            <button onClick={deleteSelected} className="flex items-center gap-1 text-[0.8125rem] text-[var(--color-danger)] hover:text-red-300 transition-colors">
+            <button onClick={deleteSelected} className="flex items-center gap-1 text-[0.8125rem] text-[var(--color-danger)] hover:text-stone-900 transition-colors">
               <Trash2 className="h-3.5 w-3.5" /> 삭제
             </button>
           </div>

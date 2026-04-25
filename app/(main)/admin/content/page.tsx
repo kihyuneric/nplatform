@@ -46,9 +46,9 @@ function categoryListForTab(tab: Tab): string[] {
 }
 
 const NOTICE_STATUS_STYLE: Record<string, string> = {
-  "published": "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  "published": "bg-stone-100/10 text-stone-900 border border-stone-300/20",
   "draft": "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]",
-  "scheduled": "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+  "scheduled": "bg-stone-100/10 text-stone-900 border border-stone-300/20",
   "hidden": "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]",
 }
 
@@ -386,11 +386,11 @@ export default function AdminContentPage() {
         return (
           <tr key={p.id} className={DS.table.row}>
             <td className={`${DS.table.cell} font-medium max-w-[260px] truncate`}>
-              {p.is_pinned && <span className="text-[0.6875rem] text-amber-400 mr-1">[고정]</span>}
+              {p.is_pinned && <span className="text-[0.6875rem] text-stone-900 mr-1">[고정]</span>}
               {p.title}
             </td>
             <td className={DS.table.cellMuted}>
-              <span className={DS.badge.inline("bg-blue-500/10", "text-blue-400", "border-blue-500/20")}>{p.category}</span>
+              <span className={DS.badge.inline("bg-stone-100/10", "text-stone-900", "border-stone-300/20")}>{p.category}</span>
             </td>
             <td className={`${DS.table.cellMuted} text-[0.75rem]`}>{p.created_at ? formatDate(p.created_at) : "-"}</td>
             <td className={DS.table.cell}>{statusBadge}</td>
@@ -438,7 +438,7 @@ export default function AdminContentPage() {
           <tr key={p.id} className={DS.table.row}>
             <td className={`${DS.table.cell} font-medium max-w-[260px] truncate`}>{p.title}</td>
             <td className={DS.table.cellMuted}>
-              <span className={DS.badge.inline("bg-purple-500/10", "text-purple-400", "border-purple-500/20")}>{p.category}</span>
+              <span className={DS.badge.inline("bg-stone-100/10", "text-stone-900", "border-stone-300/20")}>{p.category}</span>
             </td>
             <td className={`${DS.table.cellMuted} text-[0.75rem]`}>{p.created_at ? formatDate(p.created_at) : "-"}</td>
             <td className={DS.table.cell}>{statusBadge}</td>
@@ -460,7 +460,7 @@ export default function AdminContentPage() {
           <tr key={p.id} className={DS.table.row}>
             <td className={`${DS.table.cell} font-medium`}>{p.title}</td>
             <td className={DS.table.cell}>
-              <span className={DS.badge.inline("bg-purple-500/10", "text-purple-400", "border-purple-500/20")}>{p.category}</span>
+              <span className={DS.badge.inline("bg-stone-100/10", "text-stone-900", "border-stone-300/20")}>{p.category}</span>
             </td>
             <td className={`${DS.table.cellMuted} text-[0.75rem]`}>{p.created_at ? formatDate(p.created_at) : "-"}</td>
             <td className={DS.table.cell}>{statusBadge}</td>
@@ -482,7 +482,7 @@ export default function AdminContentPage() {
           <tr key={p.id} className={DS.table.row}>
             <td className={`${DS.table.cell} font-medium`}>{p.title}</td>
             <td className={DS.table.cell}>
-              <span className={DS.badge.inline("bg-cyan-500/10", "text-cyan-400", "border-cyan-500/20")}>{p.category}</span>
+              <span className={DS.badge.inline("bg-stone-100/10", "text-stone-900", "border-stone-300/20")}>{p.category}</span>
             </td>
             <td className={`${DS.table.cell} font-mono`}>{p.views.toLocaleString()}</td>
             <td className={`${DS.table.cell} font-mono`}>{p.likes.toLocaleString()}</td>

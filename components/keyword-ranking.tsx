@@ -16,7 +16,7 @@ interface Props {
   onKeywordClick?: (keyword: string) => void;
 }
 
-const RANK_COLORS = ['text-yellow-500', 'text-gray-400', 'text-amber-600'];
+const RANK_COLORS = ['text-stone-900', 'text-gray-400', 'text-stone-900'];
 
 export function KeywordRanking({ onKeywordClick }: Props) {
   const [mode, setMode]         = useState<'daily' | 'weekly'>('daily');
@@ -49,7 +49,7 @@ export function KeywordRanking({ onKeywordClick }: Props) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Hash className="h-4 w-4 text-blue-600" />
+            <Hash className="h-4 w-4 text-stone-900" />
             키워드 순위
           </CardTitle>
           <div className="flex gap-1 p-0.5 bg-muted rounded-lg">
@@ -100,7 +100,7 @@ export function KeywordRanking({ onKeywordClick }: Props) {
                 </span>
 
                 {/* 키워드 */}
-                <span className={`flex-1 text-sm font-medium truncate ${onKeywordClick ? 'group-hover:text-blue-600' : ''}`}>
+                <span className={`flex-1 text-sm font-medium truncate ${onKeywordClick ? 'group-hover:text-stone-900' : ''}`}>
                   {kw.keyword}
                 </span>
 
@@ -111,12 +111,12 @@ export function KeywordRanking({ onKeywordClick }: Props) {
 
                 {/* 등락 표시 */}
                 {kw.change > 0 ? (
-                  <span className="flex items-center text-[10px] text-emerald-600 font-semibold w-8 justify-end shrink-0">
+                  <span className="flex items-center text-[10px] text-stone-900 font-semibold w-8 justify-end shrink-0">
                     <TrendingUp className="h-2.5 w-2.5 mr-0.5" />
                     {kw.change}
                   </span>
                 ) : kw.change < 0 ? (
-                  <span className="flex items-center text-[10px] text-red-500 font-semibold w-8 justify-end shrink-0">
+                  <span className="flex items-center text-[10px] text-stone-900 font-semibold w-8 justify-end shrink-0">
                     <TrendingDown className="h-2.5 w-2.5 mr-0.5" />
                     {Math.abs(kw.change)}
                   </span>

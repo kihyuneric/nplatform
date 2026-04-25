@@ -386,14 +386,14 @@ export default function ProfitabilityPage() {
             <button
               type="button"
               onClick={loadSample}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-amber-400/40 bg-amber-500/10 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 transition-colors"
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-stone-300/40 bg-stone-100/10 text-stone-900 text-xs font-semibold hover:bg-stone-100/20 transition-colors"
             >
               <FileText className="w-3.5 h-3.5" />
               샘플 데이터로 시작
             </button>
           </div>
           {isSample && (
-            <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-400/20 text-amber-400 text-xs">
+            <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-stone-100/10 border border-stone-300/20 text-stone-900 text-xs">
               📋 샘플 데이터가 입력되었습니다. 내용을 수정하거나 바로 분석을 실행해보세요.
             </div>
           )}
@@ -539,14 +539,14 @@ function Step2BondInfo({ value, onChange }: {
       </div>
 
       {/* 채권 번호 — 직접 입력 가능 */}
-      <div className="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
+      <div className="px-4 py-3 rounded-xl bg-stone-100/10 border border-stone-300/20 space-y-2">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-          <p className="text-[0.6875rem] text-emerald-400 font-bold uppercase tracking-wide">채권 번호</p>
-          <span className="text-[0.6875rem] text-emerald-400/60">(선택 — 직접 입력하거나 자동생성)</span>
+          <div className="w-2 h-2 rounded-full bg-stone-100 shrink-0" />
+          <p className="text-[0.6875rem] text-stone-900 font-bold uppercase tracking-wide">채권 번호</p>
+          <span className="text-[0.6875rem] text-stone-900/60">(선택 — 직접 입력하거나 자동생성)</span>
         </div>
         <input
-          className="w-full bg-transparent border border-emerald-500/30 rounded-lg px-3 py-1.5 text-sm font-mono text-emerald-300 placeholder:text-emerald-500/40 focus:outline-none focus:border-emerald-400"
+          className="w-full bg-transparent border border-stone-300/30 rounded-lg px-3 py-1.5 text-sm font-mono text-stone-900 placeholder:text-stone-900/40 focus:outline-none focus:border-stone-300"
           value={value.bondId || ""}
           onChange={e => update({ bondId: e.target.value || undefined })}
           placeholder={`NPL-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 99999)).padStart(5, '0')}`}

@@ -61,7 +61,7 @@ function NumberInput({
         onChange={(e) => onChange(parseComma(e.target.value))}
         placeholder={placeholder}
         disabled={disabled}
-        className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-emerald-500/60 focus:outline-none disabled:opacity-50 tabular-nums"
+        className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-stone-300/60 focus:outline-none disabled:opacity-50 tabular-nums"
       />
       {suffix && (
         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[0.6875rem] text-[var(--color-text-tertiary)]">
@@ -98,7 +98,7 @@ function PercentInput({
         }}
         placeholder={placeholder ?? "0.00"}
         disabled={disabled}
-        className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 pr-8 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-emerald-500/60 focus:outline-none disabled:opacity-50 tabular-nums"
+        className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 pr-8 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-stone-300/60 focus:outline-none disabled:opacity-50 tabular-nums"
       />
       <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[0.6875rem] text-[var(--color-text-tertiary)]">
         %
@@ -122,7 +122,7 @@ function DateInput({
       value={value || ""}
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
-      className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] focus:border-emerald-500/60 focus:outline-none disabled:opacity-50 [color-scheme:light] dark:[color-scheme:dark]"
+      className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] focus:border-stone-300/60 focus:outline-none disabled:opacity-50 [color-scheme:light] dark:[color-scheme:dark]"
     />
   )
 }
@@ -141,7 +141,7 @@ function BlockHeader({
   return (
     <div className="flex items-start justify-between mb-3 gap-3">
       <div className="flex items-start gap-2">
-        <span className="shrink-0 mt-0.5 text-emerald-500">{icon}</span>
+        <span className="shrink-0 mt-0.5 text-stone-900">{icon}</span>
         <div>
           <h4 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">{title}</h4>
           {subtitle && (
@@ -164,7 +164,7 @@ function Field({ label, required, children, hint }: {
     <div>
       <label className="block text-[0.6875rem] font-semibold text-[var(--color-text-secondary)] mb-1">
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-stone-900 ml-1">*</span>}
       </label>
       {children}
       {hint && <p className="mt-1 text-[0.625rem] text-[var(--color-text-tertiary)]">{hint}</p>}
@@ -205,7 +205,7 @@ export function ClaimBreakdownBlock({
         right={
           <div className="text-right">
             <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">예상 채권잔액</div>
-            <div className="text-[0.875rem] font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">
+            <div className="text-[0.875rem] font-bold text-stone-900 dark:text-stone-900 tabular-nums">
               {(totalPast + accruedOverdue).toLocaleString("ko-KR")}원
             </div>
           </div>
@@ -382,7 +382,7 @@ export function DebtorOwnerSameToggle({
           disabled={disabled}
           className={`flex-1 rounded-lg px-3 py-2 text-[0.8125rem] font-semibold border transition-colors ${
             value
-              ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+              ? "bg-stone-100/10 border-stone-300/40 text-stone-900 dark:text-stone-900"
               : "bg-[var(--color-surface-base)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]"
           } disabled:opacity-50`}
         >
@@ -394,7 +394,7 @@ export function DebtorOwnerSameToggle({
           disabled={disabled}
           className={`flex-1 rounded-lg px-3 py-2 text-[0.8125rem] font-semibold border transition-colors ${
             !value
-              ? "bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-200"
+              ? "bg-stone-100/10 border-stone-300/40 text-stone-900 dark:text-stone-900"
               : "bg-[var(--color-surface-base)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]"
           } disabled:opacity-50`}
         >
@@ -472,7 +472,7 @@ export function DesiredSaleDiscountInput({
             <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">
               {editablePrice ? "매수자 절감액" : "목표 매각가"}
             </div>
-            <div className="text-[0.875rem] font-bold text-sky-600 dark:text-sky-300 tabular-nums">
+            <div className="text-[0.875rem] font-bold text-stone-900 dark:text-stone-900 tabular-nums">
               {editablePrice
                 ? `${Math.max(0, Math.round(principal - targetSalePrice)).toLocaleString("ko-KR")}원`
                 : `${targetSalePrice.toLocaleString("ko-KR")}원`}
@@ -496,7 +496,7 @@ export function DesiredSaleDiscountInput({
               disabled={disabled}
             />
           ) : (
-            <div className="w-full rounded-lg bg-[var(--color-surface-base)]/60 border border-dashed border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-sky-600 dark:text-sky-300 tabular-nums">
+            <div className="w-full rounded-lg bg-[var(--color-surface-base)]/60 border border-dashed border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-stone-900 dark:text-stone-900 tabular-nums">
               {targetSalePrice > 0 ? `${targetSalePrice.toLocaleString("ko-KR")}원` : "—"}
             </div>
           )}
@@ -517,7 +517,7 @@ export function DesiredSaleDiscountInput({
               }}
               placeholder="10.0"
               disabled={disabled}
-              className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 pr-8 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-emerald-500/60 focus:outline-none disabled:opacity-50 tabular-nums"
+              className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 pr-8 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-stone-300/60 focus:outline-none disabled:opacity-50 tabular-nums"
             />
             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[0.6875rem] text-[var(--color-text-tertiary)]">%</span>
           </div>
@@ -601,7 +601,7 @@ export function AppraisalAndMarketBlock({
             onChange={(e) => onMarketPriceNote(e.target.value)}
             placeholder="예: 같은 단지 동일 평형 2024-01 실거래 중앙값"
             disabled={disabled}
-            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-emerald-500/60 focus:outline-none disabled:opacity-50"
+            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-stone-300/60 focus:outline-none disabled:opacity-50"
           />
         </Field>
       </div>

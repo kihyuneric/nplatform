@@ -366,9 +366,9 @@ export default function GuideTopicPage({ params }: Props) {
   if (!content) notFound()
 
   const difficultyColor: Record<string, string> = {
-    '쉬움': 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-    '보통': 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-    '중요': 'bg-red-500/10 text-red-400 border border-red-500/20',
+    '쉬움': 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
+    '보통': 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
+    '중요': 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
   }
 
   return (
@@ -425,17 +425,17 @@ export default function GuideTopicPage({ params }: Props) {
               {content.sections.map((section) => {
                 if (section.type === 'tip') {
                   return (
-                    <div key={section.id} id={section.id} className="bg-blue-500/10 border-l-4 border-[var(--color-brand-mid)] p-4 rounded-r-xl">
+                    <div key={section.id} id={section.id} className="bg-stone-100/10 border-l-4 border-[var(--color-brand-mid)] p-4 rounded-r-xl">
                       <h2 className={`${DS.text.cardSubtitle} mb-2`}>{section.heading}</h2>
-                      <p className="text-[0.8125rem] text-blue-300 leading-relaxed">{section.body}</p>
+                      <p className="text-[0.8125rem] text-stone-900 leading-relaxed">{section.body}</p>
                     </div>
                   )
                 }
                 if (section.type === 'warning') {
                   return (
-                    <div key={section.id} id={section.id} className="bg-amber-500/10 border-l-4 border-amber-500 p-4 rounded-r-xl">
-                      <h2 className={`${DS.text.cardSubtitle} text-amber-400 mb-2`}>{section.heading}</h2>
-                      <p className="text-[0.8125rem] text-amber-400/80 leading-relaxed">{section.body}</p>
+                    <div key={section.id} id={section.id} className="bg-stone-100/10 border-l-4 border-stone-300 p-4 rounded-r-xl">
+                      <h2 className={`${DS.text.cardSubtitle} text-stone-900 mb-2`}>{section.heading}</h2>
+                      <p className="text-[0.8125rem] text-stone-900/80 leading-relaxed">{section.body}</p>
                     </div>
                   )
                 }
@@ -459,7 +459,7 @@ export default function GuideTopicPage({ params }: Props) {
                   </button>
                   <button
                     onClick={() => setFeedback('down')}
-                    className={`${DS.button.secondary} ${feedback === 'down' ? '!bg-red-500/10 !text-red-400 !border-red-500/20' : ''}`}
+                    className={`${DS.button.secondary} ${feedback === 'down' ? '!bg-stone-100/10 !text-stone-900 !border-stone-300/20' : ''}`}
                   >
                     <ThumbsDown className="w-4 h-4" /> 아쉬워요
                   </button>

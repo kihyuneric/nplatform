@@ -28,9 +28,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             role="alert"
             className="px-3 py-2 text-[11px] font-semibold tracking-wider"
             style={{
-              background: 'rgba(245,158,11,0.14)',
-              borderBottom: '1px solid rgba(245,158,11,0.35)',
-              color: '#F59E0B',
+              background: 'rgba(20,22,26,0.14)',
+              borderBottom: '1px solid rgba(20,22,26,0.35)',
+              color: '#14161A',
             }}
           >
             ⚠ DEV MODE — 관리자 인증이 우회되어 있습니다. 프로덕션에서는 ADMIN/SUPER_ADMIN 만 접근 가능합니다.

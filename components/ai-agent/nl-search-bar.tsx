@@ -49,7 +49,7 @@ export function NLSearchBar() {
         <Button
           onClick={handleSearch}
           disabled={loading || !query.trim()}
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 bg-[var(--color-positive)] hover:bg-[#059669] rounded-lg"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 bg-[var(--color-positive)] hover:bg-[#14161A] rounded-lg"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
         </Button>

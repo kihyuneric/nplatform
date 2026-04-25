@@ -161,7 +161,7 @@ export default function ExpertRegisterPage() {
 
               <div>
                 <label className={DS.input.label}>등록증 파일 업로드</label>
-                <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[var(--color-border-default)] rounded-xl p-8 cursor-pointer hover:border-[var(--color-brand-mid)] hover:bg-blue-500/10 transition-colors`}>
+                <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[var(--color-border-default)] rounded-xl p-8 cursor-pointer hover:border-[var(--color-brand-mid)] hover:bg-stone-100/10 transition-colors`}>
                   <Upload className="w-6 h-6 text-[var(--color-text-muted)]" />
                   <span className={DS.text.body}>
                     {form.licenseFile || 'JPG, PNG, PDF 파일을 드래그하거나 클릭하여 업로드'}
@@ -236,7 +236,7 @@ export default function ExpertRegisterPage() {
 
               <div>
                 <label className={DS.input.label}>프로필 사진</label>
-                <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[var(--color-border-default)] rounded-xl p-6 cursor-pointer hover:border-[var(--color-brand-mid)] hover:bg-blue-500/10 transition-colors`}>
+                <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[var(--color-border-default)] rounded-xl p-6 cursor-pointer hover:border-[var(--color-brand-mid)] hover:bg-stone-100/10 transition-colors`}>
                   <Upload className="w-5 h-5 text-[var(--color-text-muted)]" />
                   <span className={DS.text.body}>
                     {form.photo || 'JPG, PNG 형식, 최대 5MB'}

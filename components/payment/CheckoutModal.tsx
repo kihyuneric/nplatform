@@ -229,7 +229,7 @@ export default function CheckoutModal({
                 {billingCycle === 'monthly' ? '월간 구독' : '연간 구독'}
               </span>
               {billingCycle === 'yearly' && yearlyDiscount > 0 && (
-                <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">
+                <span className="text-xs bg-stone-100/20 text-stone-900 px-2 py-0.5 rounded-full">
                   {yearlyDiscount}% 절약
                 </span>
               )}
@@ -257,11 +257,11 @@ export default function CheckoutModal({
                   onClick={() => setSelectedMethod(method.id)}
                   className={`flex items-center gap-2.5 p-3 rounded-xl border text-left transition-all ${
                     selectedMethod === method.id
-                      ? 'border-blue-500 bg-blue-500/10 text-white'
+                      ? 'border-stone-300 bg-stone-100/10 text-white'
                       : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600'
                   }`}
                 >
-                  <span className={selectedMethod === method.id ? 'text-blue-400' : 'text-gray-500'}>
+                  <span className={selectedMethod === method.id ? 'text-stone-900' : 'text-gray-500'}>
                     {method.icon}
                   </span>
                   <div>
@@ -275,7 +275,7 @@ export default function CheckoutModal({
 
           {/* 보안 배지 */}
           <div className="flex items-center gap-2 text-xs text-gray-500">
-            <Shield className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+            <Shield className="h-3.5 w-3.5 text-stone-900 flex-shrink-0" />
             <span>KG이니시스 PCI DSS 인증 보안 결제 · 256bit TLS 암호화</span>
           </div>
 
@@ -283,7 +283,7 @@ export default function CheckoutModal({
           <button
             onClick={() => void handlePayment()}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-colors"
+            className="w-full flex items-center justify-center gap-2 bg-stone-100 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-colors"
           >
             {loading ? (
               <>
@@ -315,7 +315,7 @@ export default function CheckoutModal({
 
 export function PaymentSuccessBadge({ planName }: { planName: string }) {
   return (
-    <div className="flex items-center gap-2 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-sm px-4 py-2 rounded-xl">
+    <div className="flex items-center gap-2 bg-stone-100/15 border border-stone-300/30 text-stone-900 text-sm px-4 py-2 rounded-xl">
       <CheckCircle2 className="h-4 w-4" />
       <span>{planName} 플랜 활성화됨</span>
     </div>
@@ -324,7 +324,7 @@ export function PaymentSuccessBadge({ planName }: { planName: string }) {
 
 export function PaymentErrorBadge({ message }: { message: string }) {
   return (
-    <div className="flex items-center gap-2 bg-red-500/15 border border-red-500/30 text-red-400 text-sm px-4 py-2 rounded-xl">
+    <div className="flex items-center gap-2 bg-stone-100/15 border border-stone-300/30 text-stone-900 text-sm px-4 py-2 rounded-xl">
       <AlertCircle className="h-4 w-4" />
       <span>{message}</span>
     </div>

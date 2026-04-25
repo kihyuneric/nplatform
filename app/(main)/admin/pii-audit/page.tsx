@@ -35,9 +35,9 @@ interface Anomaly {
 const C = {
   bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
   bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#10B981", emL: "#10B981",
-  blue: "#2E75B6", blueL: "#3B82F6",
-  amber: "#F59E0B", rose: "#EF4444", purple: "#A855F7",
+  em: "#14161A", emL: "#14161A",
+  blue: "#2E75B6", blueL: "#14161A",
+  amber: "#14161A", rose: "#1B1B1F", purple: "#14161A",
   lt3: "#64748B", lt4: "#475569",
 }
 
@@ -63,20 +63,20 @@ interface AuditRow {
 const FALLBACK_AUDIT: AuditRow[] = []
 
 const SEV_META: Record<Severity, { label: string; color: string; bg: string }> = {
-  NORMAL: { label: "정상",  color: "#10B981", bg: "#10B9811A" },
-  WATCH:  { label: "관찰",  color: "#F59E0B", bg: "#F59E0B1A" },
-  ALERT:  { label: "경보",  color: "#EF4444", bg: "#F43F5E1A" },
+  NORMAL: { label: "정상",  color: "#14161A", bg: "#10B9811A" },
+  WATCH:  { label: "관찰",  color: "#14161A", bg: "#F59E0B1A" },
+  ALERT:  { label: "경보",  color: "#1B1B1F", bg: "#F43F5E1A" },
 }
 
 const TIER_COLOR: Record<AuditTier, string> = {
-  L1: "#2E75B6", L2: "#10B981", L3: "#A855F7",
+  L1: "#2E75B6", L2: "#14161A", L3: "#14161A",
 }
 
 const ACTION_META: Record<AuditAction, { label: string; color: string }> = {
   VIEW:           { label: "열람",         color: "#2E75B6" },
-  DOWNLOAD:       { label: "다운로드",     color: "#10B981" },
-  MASKED_REVEAL:  { label: "마스킹 해제",  color: "#F59E0B" },
-  DATAROOM_ENTER: { label: "데이터룸 입장", color: "#A855F7" },
+  DOWNLOAD:       { label: "다운로드",     color: "#14161A" },
+  MASKED_REVEAL:  { label: "마스킹 해제",  color: "#14161A" },
+  DATAROOM_ENTER: { label: "데이터룸 입장", color: "#14161A" },
 }
 
 const FILTERS = [

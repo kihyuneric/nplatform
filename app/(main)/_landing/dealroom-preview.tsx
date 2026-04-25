@@ -38,9 +38,9 @@ const DOCS = [
 ] as const
 
 const DOC_STYLE: Record<typeof DOCS[number]["status"], { fg: string; bg: string; label: string; icon: typeof CheckCircle2 }> = {
-  ok:     { fg: "#34D399", bg: "rgba(16,185,129,0.10)", label: "공유됨", icon: CheckCircle2 },
-  draft:  { fg: "#F59E0B", bg: "rgba(245,158,11,0.10)", label: "초안",   icon: PenLine },
-  signed: { fg: "#60A5FA", bg: "rgba(59,130,246,0.10)", label: "서명",   icon: Shield },
+  ok:     { fg: "#14161A", bg: "rgba(20,22,26,0.10)", label: "공유됨", icon: CheckCircle2 },
+  draft:  { fg: "#14161A", bg: "rgba(20,22,26,0.10)", label: "초안",   icon: PenLine },
+  signed: { fg: "#14161A", bg: "rgba(20,22,26,0.10)", label: "서명",   icon: Shield },
 }
 
 export function DealRoomPreview() {
@@ -49,7 +49,7 @@ export function DealRoomPreview() {
       <div
         style={{
           position: "absolute", top: "20%", right: "10%", width: "500px", height: "500px", pointerEvents: "none",
-          background: "radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(20,22,26,0.06) 0%, transparent 70%)",
           filter: "blur(80px)",
         }}
       />
@@ -58,10 +58,10 @@ export function DealRoomPreview() {
         <div className="text-center mb-12">
           <div
             className="inline-flex items-center gap-2 rounded-full px-3 py-1 mb-4"
-            style={{ background: "rgba(139,92,246,0.10)", border: "1px solid rgba(139,92,246,0.25)" }}
+            style={{ background: "rgba(20,22,26,0.10)", border: "1px solid rgba(20,22,26,0.25)" }}
           >
-            <MessageSquare size={12} style={{ color: "#A78BFA" }} />
-            <span className="text-[11px] font-bold tracking-wider" style={{ color: "#A78BFA" }}>
+            <MessageSquare size={12} style={{ color: "#14161A" }} />
+            <span className="text-[11px] font-bold tracking-wider" style={{ color: "#14161A" }}>
               딜룸 미리보기
             </span>
           </div>
@@ -85,8 +85,8 @@ export function DealRoomPreview() {
         >
           <div className="npl-preview-panel-header flex items-center justify-between px-5 py-3.5 flex-wrap gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(139,92,246,0.12)" }}>
-                <Lock size={13} style={{ color: "#A78BFA" }} />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(20,22,26,0.12)" }}>
+                <Lock size={13} style={{ color: "#14161A" }} />
               </div>
               <div>
                 <div className="text-[13px] font-bold text-white leading-tight">강남 아파트 담보 · NPL-2026-0412</div>
@@ -94,8 +94,8 @@ export function DealRoomPreview() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(16,185,129,0.12)", color: "#34D399", border: "1px solid rgba(16,185,129,0.25)" }}>
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#34D399" }} />
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(20,22,26,0.12)", color: "#14161A", border: "1px solid rgba(20,22,26,0.25)" }}>
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#14161A" }} />
                 진행 중
               </span>
               <span className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -125,7 +125,7 @@ export function DealRoomPreview() {
                 {MSGS.map((m, i) => {
                   const isBuyer = m.from === "buyer"
                   const isSystem = m.from === "system"
-                  const accent = isBuyer ? "#60A5FA" : m.from === "seller" ? "#34D399" : "#A78BFA"
+                  const accent = isBuyer ? "#14161A" : m.from === "seller" ? "#14161A" : "#14161A"
                   return (
                     <motion.div
                       key={i}
@@ -139,11 +139,11 @@ export function DealRoomPreview() {
                         className="max-w-[82%] rounded-xl px-3.5 py-2.5"
                         style={{
                           background: isSystem
-                            ? "rgba(139,92,246,0.08)"
+                            ? "rgba(20,22,26,0.08)"
                             : isBuyer
-                              ? "rgba(59,130,246,0.10)"
-                              : "rgba(16,185,129,0.08)",
-                          border: `1px solid ${isSystem ? "rgba(139,92,246,0.20)" : isBuyer ? "rgba(59,130,246,0.22)" : "rgba(16,185,129,0.20)"}`,
+                              ? "rgba(20,22,26,0.10)"
+                              : "rgba(20,22,26,0.08)",
+                          border: `1px solid ${isSystem ? "rgba(20,22,26,0.20)" : isBuyer ? "rgba(20,22,26,0.22)" : "rgba(20,22,26,0.20)"}`,
                         }}
                       >
                         <div className="flex items-center gap-2 mb-1">
@@ -213,27 +213,27 @@ export function DealRoomPreview() {
 
                 <div
                   className="mt-3 rounded-lg p-3"
-                  style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(139,92,246,0.06))", border: "1px solid rgba(16,185,129,0.18)" }}
+                  style={{ background: "linear-gradient(135deg, rgba(20,22,26,0.08), rgba(20,22,26,0.06))", border: "1px solid rgba(20,22,26,0.18)" }}
                 >
                   <div className="flex items-center gap-2 mb-1.5">
-                    <FileCheck2 size={12} style={{ color: "#34D399" }} />
+                    <FileCheck2 size={12} style={{ color: "#14161A" }} />
                     <span className="text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.85)" }}>전자계약 준비 완료</span>
                   </div>
                   <div className="text-[10px] leading-relaxed mb-2" style={{ color: "rgba(255,255,255,0.55)" }}>
                     LOI 수락 즉시 매매계약서가 자동 생성됩니다.
                   </div>
                   <div className="flex items-center gap-1.5 text-[9px]" style={{ color: "rgba(255,255,255,0.5)" }}>
-                    <Sparkles size={9} style={{ color: "#34D399" }} /> 대금은 KB에스크로로 보호
+                    <Sparkles size={9} style={{ color: "#14161A" }} /> 대금은 KB에스크로로 보호
                   </div>
                 </div>
 
                 <div
                   className="rounded-lg p-2.5 flex items-start gap-2"
-                  style={{ background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.15)" }}
+                  style={{ background: "rgba(20,22,26,0.05)", border: "1px solid rgba(20,22,26,0.15)" }}
                 >
-                  <AlertCircle size={12} style={{ color: "#F59E0B" }} className="mt-0.5 shrink-0" />
+                  <AlertCircle size={12} style={{ color: "#14161A" }} className="mt-0.5 shrink-0" />
                   <div className="text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
-                    모든 대화·문서는 L2 NDA 범위 내에서만 열람되며 <strong style={{ color: "#F59E0B" }}>내보내기 로그</strong>가 기록됩니다.
+                    모든 대화·문서는 L2 NDA 범위 내에서만 열람되며 <strong style={{ color: "#14161A" }}>내보내기 로그</strong>가 기록됩니다.
                   </div>
                 </div>
               </div>
@@ -245,7 +245,7 @@ export function DealRoomPreview() {
           <Link
             href="/deals"
             className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-bold transition-all"
-            style={{ background: "linear-gradient(135deg, #A78BFA, #7C3AED)", color: "white", boxShadow: "0 4px 14px rgba(139,92,246,0.25)" }}
+            style={{ background: "linear-gradient(135deg, #A78BFA, #7C3AED)", color: "white", boxShadow: "0 4px 14px rgba(20,22,26,0.25)" }}
           >
             딜룸 시작하기 <ArrowRight size={14} />
           </Link>

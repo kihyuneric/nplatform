@@ -131,7 +131,7 @@ export function Fab({
                     }}
                     className={cn(
                       'flex h-11 w-11 items-center justify-center rounded-full shadow-lg',
-                      action.colorClass ?? 'bg-[#10B981]'
+                      action.colorClass ?? 'bg-[#14161A]'
                     )}
                   >
                     <span className="text-white">{action.icon}</span>

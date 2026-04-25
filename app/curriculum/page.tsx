@@ -66,11 +66,11 @@ interface LevelOverview {
 }
 
 const LEVELS = [
-  { key: '왕초보', label: '왕초보', description: '부동산의 기본 개념부터', icon: Sprout, color: '#10B981', bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700' },
-  { key: '초보', label: '초보', description: '본격적인 투자 준비', icon: Leaf, color: '#3B82F6', bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700' },
-  { key: '중급', label: '중급', description: '실전 투자 기법 습득', icon: TreePine, color: '#8B5CF6', bg: 'bg-purple-50', border: 'border-purple-200', badge: 'bg-purple-100 text-purple-700' },
-  { key: '고급', label: '고급', description: '고급 전략과 리스크 관리', icon: Mountain, color: '#F59E0B', bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700' },
-  { key: '전문가', label: '전문가', description: '전문가 수준의 포트폴리오', icon: Crown, color: '#EF4444', bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-700' },
+  { key: '왕초보', label: '왕초보', description: '부동산의 기본 개념부터', icon: Sprout, color: '#14161A', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
+  { key: '초보', label: '초보', description: '본격적인 투자 준비', icon: Leaf, color: '#14161A', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
+  { key: '중급', label: '중급', description: '실전 투자 기법 습득', icon: TreePine, color: '#14161A', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
+  { key: '고급', label: '고급', description: '고급 전략과 리스크 관리', icon: Mountain, color: '#14161A', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
+  { key: '전문가', label: '전문가', description: '전문가 수준의 포트폴리오', icon: Crown, color: '#1B1B1F', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
 ]
 
 const DOMAIN_ICONS: Record<string, typeof HomeIcon> = {
@@ -200,7 +200,7 @@ export default function CurriculumPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-300" />
       </div>
     )
   }
@@ -221,7 +221,7 @@ export default function CurriculumPage() {
           <h1 className="text-3xl md:text-4xl font-bold mb-3">
             체계적 부동산 투자 학습
           </h1>
-          <p className="text-purple-200 text-lg max-w-2xl mx-auto mb-6">
+          <p className="text-stone-900 text-lg max-w-2xl mx-auto mb-6">
             NPLatform 부동산 전문가들의 강의를 AI가 종합 분석하여<br className="hidden md:block" />
             왕초보부터 전문가까지, 당신에게 맞는 학습 경로를 제공합니다
           </p>
@@ -229,29 +229,29 @@ export default function CurriculumPage() {
             <div className="flex items-center gap-2">
               <BookOpen className="w-5 h-5" />
               <span className="font-semibold">{allConcepts.length}</span>
-              <span className="text-purple-200">개 개념</span>
+              <span className="text-stone-900">개 개념</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5" />
               <span className="font-semibold">{totalHours}</span>
-              <span className="text-purple-200">시간 콘텐츠</span>
+              <span className="text-stone-900">시간 콘텐츠</span>
             </div>
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5" />
               <span className="font-semibold">{domains.length}</span>
-              <span className="text-purple-200">개 도메인</span>
+              <span className="text-stone-900">개 도메인</span>
             </div>
             {recStats?.total_capsules > 0 && (
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5" />
                 <span className="font-semibold">{recStats.total_capsules}</span>
-                <span className="text-purple-200">Atomic 캡슐</span>
+                <span className="text-stone-900">Atomic 캡슐</span>
               </div>
             )}
           </div>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link href="/curriculum/roadmap"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-purple-700 rounded-xl font-semibold hover:shadow-lg transition-all">
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-stone-900 rounded-xl font-semibold hover:shadow-lg transition-all">
               <Map className="w-5 h-5" />
               학습 로드맵 보기
               <ArrowRight className="w-4 h-4" />
@@ -267,14 +267,14 @@ export default function CurriculumPage() {
 
       {/* ── 학습 추천 (Atomic 캡슐 기반) ── */}
       {recommendations.length > 0 && (
-        <div className="bg-gradient-to-br from-purple-500/10 via-indigo-500/10 to-blue-500/10 rounded-2xl border border-purple-500/30 p-6">
+        <div className="bg-gradient-to-br from-purple-500/10 via-indigo-500/10 to-blue-500/10 rounded-2xl border border-stone-300/30 p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-              <Zap className="w-5 h-5 text-purple-500" />
+              <Zap className="w-5 h-5 text-stone-900" />
               다음 학습 추천
             </h2>
             {recStats && (
-              <span className="text-xs text-purple-400">
+              <span className="text-xs text-stone-900">
                 전체 진도 {recStats.mastery_pct}% · 마스터 {recStats.mastered}개
               </span>
             )}
@@ -284,15 +284,15 @@ export default function CurriculumPage() {
               <Link
                 key={rec.atomic_id || i}
                 href={`/curriculum/study/${rec.atomic_id}`}
-                className="bg-[var(--color-surface-elevated)] rounded-xl p-4 border border-[var(--color-border-subtle)] hover:border-purple-500/50 hover:shadow-md transition-all group"
+                className="bg-[var(--color-surface-elevated)] rounded-xl p-4 border border-[var(--color-border-subtle)] hover:border-stone-300/50 hover:shadow-md transition-all group"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-300 font-bold text-sm shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-stone-100/10 flex items-center justify-center text-stone-900 font-bold text-sm shrink-0">
                     {i + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-purple-400 mb-0.5">{rec.reason}</p>
-                    <p className="text-sm font-semibold text-[var(--color-text-primary)] group-hover:text-purple-400 transition-colors truncate">
+                    <p className="text-xs text-stone-900 mb-0.5">{rec.reason}</p>
+                    <p className="text-sm font-semibold text-[var(--color-text-primary)] group-hover:text-stone-900 transition-colors truncate">
                       {rec.topic}
                     </p>
                     <div className="flex items-center gap-2 mt-1 text-xs text-[var(--color-text-muted)]">
@@ -304,7 +304,7 @@ export default function CurriculumPage() {
                       </span>
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-purple-400 mt-1 shrink-0" />
+                  <ArrowRight className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-stone-900 mt-1 shrink-0" />
                 </div>
               </Link>
             ))}
@@ -330,7 +330,7 @@ export default function CurriculumPage() {
           <button
             onClick={handleCapsuleSearch}
             disabled={capsuleSearching || !capsuleSearch.trim()}
-            className="px-5 py-2.5 bg-purple-600 text-white text-sm font-medium rounded-xl hover:bg-purple-700 disabled:opacity-50 transition-colors"
+            className="px-5 py-2.5 bg-stone-100 text-white text-sm font-medium rounded-xl hover:bg-stone-100 disabled:opacity-50 transition-colors"
           >
             {capsuleSearching ? '검색 중...' : '검색'}
           </button>
@@ -341,22 +341,22 @@ export default function CurriculumPage() {
               <Link
                 key={r.atomic_id}
                 href={`/curriculum/study/${r.atomic_id}`}
-                className="flex items-center gap-3 p-3 rounded-xl border border-[var(--color-border-subtle)] hover:border-purple-500/50 hover:bg-purple-500/5 transition-colors group"
+                className="flex items-center gap-3 p-3 rounded-xl border border-[var(--color-border-subtle)] hover:border-stone-300/50 hover:bg-stone-100/5 transition-colors group"
               >
-                <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-300 flex items-center justify-center shrink-0">
+                <div className="w-7 h-7 rounded-lg bg-stone-100/10 text-stone-900 flex items-center justify-center shrink-0">
                   <Zap className="w-3.5 h-3.5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[var(--color-text-primary)] group-hover:text-purple-400 truncate">{r.topic}</p>
+                  <p className="text-sm font-medium text-[var(--color-text-primary)] group-hover:text-stone-900 truncate">{r.topic}</p>
                   <p className="text-xs text-[var(--color-text-muted)] flex items-center gap-1.5 mt-0.5">
-                    <span className="text-purple-400">{r.concept_name}</span>
+                    <span className="text-stone-900">{r.concept_name}</span>
                     <span>·</span>
                     <span>{r.concept_level}</span>
                     <span>·</span>
                     <span>{r.estimated_min}분</span>
                   </p>
                 </div>
-                <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-purple-400 shrink-0" />
+                <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-stone-900 shrink-0" />
               </Link>
             ))}
           </div>
@@ -433,25 +433,25 @@ export default function CurriculumPage() {
                     <div className="text-xs text-[var(--color-text-muted)] mt-0.5">총 개념 수</div>
                   </div>
                   <div className="bg-[var(--color-surface-overlay)] rounded-xl p-3 text-center shadow-sm">
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-2xl font-bold text-stone-900">
                       {levelOverview.total_hours}h
                     </div>
                     <div className="text-xs text-[var(--color-text-muted)] mt-0.5">총 학습시간</div>
                   </div>
                   <div className="bg-[var(--color-surface-overlay)] rounded-xl p-3 text-center shadow-sm">
-                    <div className="text-2xl font-bold text-green-600">
+                    <div className="text-2xl font-bold text-stone-900">
                       {levelOverview.expert_count}명
                     </div>
                     <div className="text-xs text-[var(--color-text-muted)] mt-0.5">참여 전문가</div>
                   </div>
                   <div className="bg-[var(--color-surface-overlay)] rounded-xl p-3 text-center shadow-sm">
-                    <div className="text-2xl font-bold text-amber-600 flex items-center justify-center gap-0.5">
+                    <div className="text-2xl font-bold text-stone-900 flex items-center justify-center gap-0.5">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Star
                           key={i}
                           className="w-3.5 h-3.5"
-                          fill={i < Math.round(levelOverview.avg_difficulty) ? '#F59E0B' : 'none'}
-                          stroke="#F59E0B"
+                          fill={i < Math.round(levelOverview.avg_difficulty) ? '#14161A' : 'none'}
+                          stroke="#14161A"
                         />
                       ))}
                     </div>
@@ -548,7 +548,7 @@ export default function CurriculumPage() {
                               {domain.name}
                             </span>
                           )}
-                          <Zap className="w-3 h-3 text-purple-300 group-hover:text-purple-500 flex-shrink-0" />
+                          <Zap className="w-3 h-3 text-stone-900 group-hover:text-stone-900 flex-shrink-0" />
                         </Link>
                       )
                     })}
@@ -585,7 +585,7 @@ export default function CurriculumPage() {
               <Link
                 key={d.domain_id}
                 href={`/curriculum/roadmap?domain=${encodeURIComponent(d.name)}`}
-                className="group bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border-subtle)] p-5 hover:shadow-lg transition-all hover:border-purple-500/50"
+                className="group bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border-subtle)] p-5 hover:shadow-lg transition-all hover:border-stone-300/50"
               >
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white flex-shrink-0"
@@ -593,7 +593,7 @@ export default function CurriculumPage() {
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-[var(--color-text-primary)] group-hover:text-purple-400 transition-colors">
+                    <h3 className="font-bold text-[var(--color-text-primary)] group-hover:text-stone-900 transition-colors">
                       {d.name}
                     </h3>
                     <p className="text-sm text-[var(--color-text-muted)] mt-0.5 line-clamp-2">
@@ -604,7 +604,7 @@ export default function CurriculumPage() {
                       <span>{hours}시간</span>
                     </div>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-purple-400 transition-colors mt-1 flex-shrink-0" />
+                  <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-stone-900 transition-colors mt-1 flex-shrink-0" />
                 </div>
               </Link>
             )
@@ -617,7 +617,7 @@ export default function CurriculumPage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-              <Zap className="w-5 h-5 text-purple-500" />
+              <Zap className="w-5 h-5 text-stone-900" />
               Atomic 캡슐 학습 트리
             </h2>
             <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
@@ -628,8 +628,8 @@ export default function CurriculumPage() {
             onClick={() => setShowHierarchy(!showHierarchy)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               showHierarchy
-                ? 'bg-purple-500/10 text-purple-300'
-                : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] hover:bg-purple-500/5 hover:text-purple-400'
+                ? 'bg-stone-100/10 text-stone-900'
+                : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] hover:bg-stone-100/5 hover:text-stone-900'
             }`}
           >
             {showHierarchy ? '접기' : '펼쳐보기'}
@@ -655,7 +655,7 @@ export default function CurriculumPage() {
                 <button
                   key={d.domain_id}
                   onClick={() => setShowHierarchy(true)}
-                  className="text-left p-3 rounded-xl border border-[var(--color-border-subtle)] hover:border-purple-500/50 hover:bg-purple-500/5 transition-colors"
+                  className="text-left p-3 rounded-xl border border-[var(--color-border-subtle)] hover:border-stone-300/50 hover:bg-stone-100/5 transition-colors"
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
@@ -674,22 +674,22 @@ export default function CurriculumPage() {
         <Link href="/curriculum/dashboard" className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl p-5 text-white hover:shadow-lg transition-shadow group">
           <BarChart3 className="w-6 h-6 mb-2 group-hover:scale-110 transition-transform" />
           <h3 className="font-semibold mb-1">대시보드</h3>
-          <p className="text-sm text-blue-200">전체 현황, 커버리지, 전문가 분석</p>
+          <p className="text-sm text-stone-900">전체 현황, 커버리지, 전문가 분석</p>
         </Link>
         <Link href="/curriculum/upload" className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-5 text-white hover:shadow-lg transition-shadow group">
           <Upload className="w-6 h-6 mb-2 group-hover:scale-110 transition-transform" />
           <h3 className="font-semibold mb-1">대본 분석</h3>
-          <p className="text-sm text-emerald-200">YouTube 대본 업로드 → 개념 자동 매핑</p>
+          <p className="text-sm text-stone-900">YouTube 대본 업로드 → 개념 자동 매핑</p>
         </Link>
         <Link href="/curriculum/graph" className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-5 text-white hover:shadow-lg transition-shadow group">
           <GitBranch className="w-6 h-6 mb-2 group-hover:scale-110 transition-transform" />
           <h3 className="font-semibold mb-1">지식그래프</h3>
-          <p className="text-sm text-purple-200">{allConcepts.length}개 개념의 관계 탐색</p>
+          <p className="text-sm text-stone-900">{allConcepts.length}개 개념의 관계 탐색</p>
         </Link>
         <Link href="/curriculum/newsletter" className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl p-5 text-white hover:shadow-lg transition-shadow group">
           <Mail className="w-6 h-6 mb-2 group-hover:scale-110 transition-transform" />
           <h3 className="font-semibold mb-1">AI 뉴스레터</h3>
-          <p className="text-sm text-rose-200">온톨로지 기반 매일 교육 콘텐츠</p>
+          <p className="text-sm text-stone-900">온톨로지 기반 매일 교육 콘텐츠</p>
         </Link>
       </div>
 
@@ -698,11 +698,11 @@ export default function CurriculumPage() {
         <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 text-center">학습 플랫폼 흐름</h2>
         <div className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-2">
           {[
-            { icon: Upload, label: '대본 분석', desc: 'YouTube 대본 업로드', color: '#10B981' },
-            { icon: GitBranch, label: '지식그래프', desc: '개념 관계 시각화', color: '#8B5CF6' },
-            { icon: BarChart3, label: '대시보드', desc: '통계 분석', color: '#3B82F6' },
-            { icon: Map, label: '로드맵', desc: '학습 경로 설계', color: '#F59E0B' },
-            { icon: Zap, label: 'Atomic 캡슐', desc: '원자적 완전학습', color: '#EF4444' },
+            { icon: Upload, label: '대본 분석', desc: 'YouTube 대본 업로드', color: '#14161A' },
+            { icon: GitBranch, label: '지식그래프', desc: '개념 관계 시각화', color: '#14161A' },
+            { icon: BarChart3, label: '대시보드', desc: '통계 분석', color: '#14161A' },
+            { icon: Map, label: '로드맵', desc: '학습 경로 설계', color: '#14161A' },
+            { icon: Zap, label: 'Atomic 캡슐', desc: '원자적 완전학습', color: '#1B1B1F' },
           ].map((step, i) => (
             <div key={i} className="flex items-center gap-2">
               <div className="flex flex-col items-center gap-1.5">

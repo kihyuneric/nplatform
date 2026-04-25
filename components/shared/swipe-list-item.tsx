@@ -109,7 +109,7 @@ export function SwipeListItem({
       {/* Background actions */}
       {/* Right side (revealed on swipe left) - Delete */}
       {onDelete && (
-        <div className="absolute inset-y-0 right-0 flex items-center justify-end bg-red-500 px-6 text-white">
+        <div className="absolute inset-y-0 right-0 flex items-center justify-end bg-stone-100 px-6 text-white">
           <div className="flex flex-col items-center gap-1">
             <Trash2 className="h-5 w-5" aria-hidden="true" />
             <span className="text-xs font-medium">{deleteLabel}</span>
@@ -119,7 +119,7 @@ export function SwipeListItem({
 
       {/* Left side (revealed on swipe right) - Archive */}
       {onArchive && (
-        <div className="absolute inset-y-0 left-0 flex items-center justify-start bg-blue-500 px-6 text-white">
+        <div className="absolute inset-y-0 left-0 flex items-center justify-start bg-stone-100 px-6 text-white">
           <div className="flex flex-col items-center gap-1">
             <Archive className="h-5 w-5" aria-hidden="true" />
             <span className="text-xs font-medium">{archiveLabel}</span>

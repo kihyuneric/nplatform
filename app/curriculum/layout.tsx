@@ -60,7 +60,7 @@ export default function CurriculumLayout({
                   href={item.href}
                   className={`text-sm font-medium transition-colors flex items-center gap-1.5 ${
                     isActive
-                      ? 'text-purple-600'
+                      ? 'text-stone-900'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
@@ -74,8 +74,8 @@ export default function CurriculumLayout({
               href={adminNavItem.href}
               className={`text-sm font-medium transition-colors flex items-center gap-1.5 ${
                 pathname.startsWith('/admin')
-                  ? 'text-indigo-600'
-                  : 'text-gray-400 hover:text-indigo-600'
+                  ? 'text-stone-900'
+                  : 'text-gray-400 hover:text-stone-900'
               }`}
             >
               <adminNavItem.icon className="w-4 h-4" />
@@ -105,7 +105,7 @@ export default function CurriculumLayout({
                   href={item.href}
                   className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-purple-50 text-purple-600'
+                      ? 'bg-stone-100 text-stone-900'
                       : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
@@ -119,7 +119,7 @@ export default function CurriculumLayout({
                 href={adminNavItem.href}
                 className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   pathname.startsWith('/admin')
-                    ? 'bg-indigo-50 text-indigo-600'
+                    ? 'bg-stone-100 text-stone-900'
                     : 'text-gray-500 hover:bg-gray-50'
                 }`}
               >

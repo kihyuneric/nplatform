@@ -19,13 +19,13 @@ const CATEGORY_LABEL: Record<string, string> = {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  TIP: "bg-blue-500/10 text-blue-400",
-  MARKET_ANALYSIS: "bg-emerald-500/10 text-emerald-400",
-  QNA: "bg-amber-500/10 text-amber-400",
-  CASE_STUDY: "bg-purple-500/10 text-purple-400",
+  TIP: "bg-stone-100/10 text-stone-900",
+  MARKET_ANALYSIS: "bg-stone-100/10 text-stone-900",
+  QNA: "bg-stone-100/10 text-stone-900",
+  CASE_STUDY: "bg-stone-100/10 text-stone-900",
   GENERAL: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]",
-  NEWS: "bg-red-500/10 text-red-400",
-  LEGAL: "bg-indigo-500/10 text-indigo-400",
+  NEWS: "bg-stone-100/10 text-stone-900",
+  LEGAL: "bg-stone-100/10 text-stone-900",
 }
 
 interface Post {
@@ -229,10 +229,10 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
   const readingTime = estimateReadingTime(post.content)
 
   const relatedPosts = [
-    { href: "/community", label: "커뮤니티 전체 보기", desc: "투자자 거래 후기 · 시장 분석", icon: <TrendingUp className="h-4 w-4 text-emerald-500" /> },
-    { href: "/community?category=TIP", label: "정보공유 게시판", desc: "NPL 투자 실전 팁 모음", icon: <Lightbulb className="h-4 w-4 text-amber-500" /> },
-    { href: "/community?category=LEGAL", label: "판례분석", desc: "최신 부동산 판례 분석", icon: <Gavel className="h-4 w-4 text-violet-500" /> },
-    { href: "/community?category=NEWS", label: "NPL 뉴스", desc: "시장 동향 및 공시 정보", icon: <Newspaper className="h-4 w-4 text-blue-500" /> },
+    { href: "/community", label: "커뮤니티 전체 보기", desc: "투자자 거래 후기 · 시장 분석", icon: <TrendingUp className="h-4 w-4 text-stone-900" /> },
+    { href: "/community?category=TIP", label: "정보공유 게시판", desc: "NPL 투자 실전 팁 모음", icon: <Lightbulb className="h-4 w-4 text-stone-900" /> },
+    { href: "/community?category=LEGAL", label: "판례분석", desc: "최신 부동산 판례 분석", icon: <Gavel className="h-4 w-4 text-stone-900" /> },
+    { href: "/community?category=NEWS", label: "NPL 뉴스", desc: "시장 동향 및 공시 정보", icon: <Newspaper className="h-4 w-4 text-stone-900" /> },
   ]
 
   return (
@@ -261,7 +261,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
               </button>
               <button
                 onClick={handleDelete}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-red-400 hover:text-red-600 hover:bg-red-500/5 transition-all"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-stone-900 hover:text-stone-900 hover:bg-stone-100/5 transition-all"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 삭제
@@ -387,7 +387,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                       toast.error("네트워크 오류가 발생했습니다.")
                     }
                   }}
-                  className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-[var(--color-border-subtle)] text-sm font-semibold text-[var(--color-text-secondary)] hover:border-red-300 hover:text-red-500 hover:bg-red-500/5 transition-all active:scale-95"
+                  className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-[var(--color-border-subtle)] text-sm font-semibold text-[var(--color-text-secondary)] hover:border-stone-300 hover:text-stone-900 hover:bg-stone-100/5 transition-all active:scale-95"
                 >
                   <ThumbsUp className="h-4 w-4 group-hover:scale-110 transition-transform" />
                   유용해요 {post.likes}
@@ -396,7 +396,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                 {/* Insight reaction (static decorative) */}
                 <button
                   onClick={() => toast.success("인사이트로 표시했습니다.")}
-                  className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-[var(--color-border-subtle)] text-sm font-semibold text-[var(--color-text-secondary)] hover:border-amber-300 hover:text-amber-600 hover:bg-amber-500/5 transition-all active:scale-95"
+                  className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-[var(--color-border-subtle)] text-sm font-semibold text-[var(--color-text-secondary)] hover:border-stone-300 hover:text-stone-900 hover:bg-stone-100/5 transition-all active:scale-95"
                 >
                   <Lightbulb className="h-4 w-4 group-hover:scale-110 transition-transform" />
                   인사이트
@@ -405,7 +405,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                 {/* Save */}
                 <button
                   onClick={() => toast.success("북마크에 저장되었습니다.")}
-                  className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-[var(--color-border-subtle)] text-sm font-semibold text-[var(--color-text-secondary)] hover:border-[#2E75B6]/40 hover:text-[#2E75B6] hover:bg-blue-500/5 transition-all active:scale-95"
+                  className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-[var(--color-border-subtle)] text-sm font-semibold text-[var(--color-text-secondary)] hover:border-[#2E75B6]/40 hover:text-[#2E75B6] hover:bg-stone-100/5 transition-all active:scale-95"
                 >
                   <Bookmark className="h-4 w-4 group-hover:scale-110 transition-transform" />
                   저장
@@ -541,7 +541,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                       {/* Reply compose */}
                       {replyTo?.id === comment.id && (
                         <div className="ml-12 mb-4">
-                          <div className="rounded-xl border border-[#2E75B6]/25 bg-blue-500/5 overflow-hidden">
+                          <div className="rounded-xl border border-[#2E75B6]/25 bg-stone-100/5 overflow-hidden">
                             <div className="flex items-center justify-between px-4 pt-3 pb-1">
                               <span className="text-xs text-[#2E75B6] flex items-center gap-1.5 font-semibold">
                                 <CornerDownRight className="h-3.5 w-3.5" />
@@ -625,8 +625,8 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                 <div className="space-y-3">
                   {[
                     { icon: <Eye className="h-4 w-4 text-gray-400" />, label: "조회", value: post.views.toLocaleString() },
-                    { icon: <ThumbsUp className="h-4 w-4 text-blue-400" />, label: "유용해요", value: post.likes },
-                    { icon: <MessageSquare className="h-4 w-4 text-emerald-400" />, label: "댓글", value: comments.length },
+                    { icon: <ThumbsUp className="h-4 w-4 text-stone-900" />, label: "유용해요", value: post.likes },
+                    { icon: <MessageSquare className="h-4 w-4 text-stone-900" />, label: "댓글", value: comments.length },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">

@@ -54,24 +54,24 @@ interface OntologyHierarchyProps {
 }
 
 const LEVEL_COLORS: Record<string, string> = {
-  '왕초보': 'text-emerald-400 bg-emerald-500/10',
-  '초보': 'text-blue-400 bg-blue-500/10',
-  '중급': 'text-purple-400 bg-purple-500/10',
-  '고급': 'text-amber-400 bg-amber-500/10',
-  '전문가': 'text-red-400 bg-red-500/10',
+  '왕초보': 'text-stone-900 bg-stone-100/10',
+  '초보': 'text-stone-900 bg-stone-100/10',
+  '중급': 'text-stone-900 bg-stone-100/10',
+  '고급': 'text-stone-900 bg-stone-100/10',
+  '전문가': 'text-stone-900 bg-stone-100/10',
 }
 
 const DIFFICULTY_COLORS = {
-  beginner: { label: '초급', dot: 'bg-emerald-400' },
-  intermediate: { label: '중급', dot: 'bg-blue-400' },
-  advanced: { label: '고급', dot: 'bg-purple-400' },
+  beginner: { label: '초급', dot: 'bg-stone-100' },
+  intermediate: { label: '중급', dot: 'bg-stone-100' },
+  advanced: { label: '고급', dot: 'bg-stone-100' },
 }
 
 const STATUS_ICONS = {
   not_started: { Icon: Circle, color: 'text-gray-300' },
-  in_progress: { Icon: Play, color: 'text-blue-400' },
-  completed: { Icon: CheckCircle2, color: 'text-green-500' },
-  mastered: { Icon: Star, color: 'text-amber-400' },
+  in_progress: { Icon: Play, color: 'text-stone-900' },
+  completed: { Icon: CheckCircle2, color: 'text-stone-900' },
+  mastered: { Icon: Star, color: 'text-stone-900' },
 }
 
 export default function OntologyHierarchy({
@@ -141,8 +141,8 @@ export default function OntologyHierarchy({
             <>
               <span className="w-px h-3 bg-[var(--color-border-subtle)]" />
               <span className="flex items-center gap-1"><Circle className="w-3 h-3 text-gray-300" /> 미시작</span>
-              <span className="flex items-center gap-1"><Play className="w-3 h-3 text-blue-400" /> 학습중</span>
-              <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" /> 마스터</span>
+              <span className="flex items-center gap-1"><Play className="w-3 h-3 text-stone-900" /> 학습중</span>
+              <span className="flex items-center gap-1"><Star className="w-3 h-3 text-stone-900" /> 마스터</span>
             </>
           )}
         </div>
@@ -197,11 +197,11 @@ export default function OntologyHierarchy({
                           <span className="w-3.5 h-3.5 shrink-0" />
                         )}
 
-                        <BookOpen className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                        <BookOpen className="w-3.5 h-3.5 text-stone-900 shrink-0" />
 
                         <Link
                           href={`/curriculum/concept/${concept.concept_id}`}
-                          className="text-xs font-medium text-[var(--color-text-secondary)] hover:text-purple-400 truncate flex-1"
+                          className="text-xs font-medium text-[var(--color-text-secondary)] hover:text-stone-900 truncate flex-1"
                         >
                           {concept.name}
                         </Link>
@@ -214,7 +214,7 @@ export default function OntologyHierarchy({
                           <div className="flex items-center gap-1 shrink-0">
                             <div className="w-12 h-1.5 bg-[var(--color-border-subtle)] rounded-full overflow-hidden">
                               <div
-                                className="h-full bg-purple-400 rounded-full"
+                                className="h-full bg-stone-100 rounded-full"
                                 style={{ width: `${progressPct}%` }}
                               />
                             </div>
@@ -231,7 +231,7 @@ export default function OntologyHierarchy({
                         {atomicCount === 0 && (
                           <Link
                             href={`/curriculum/concept/${concept.concept_id}`}
-                            className="text-[10px] text-purple-400 hover:text-purple-300 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                            className="text-[10px] text-stone-900 hover:text-stone-900 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                           >
                             생성
                           </Link>
@@ -257,7 +257,7 @@ export default function OntologyHierarchy({
                                   {showProgress ? (
                                     <StatusInfo.Icon className={`w-3 h-3 ${StatusInfo.color} shrink-0`} />
                                   ) : (
-                                    <Zap className="w-3 h-3 text-amber-400 shrink-0" />
+                                    <Zap className="w-3 h-3 text-stone-900 shrink-0" />
                                   )}
 
                                   <span className="text-[11px] text-[var(--color-text-secondary)] truncate flex-1">

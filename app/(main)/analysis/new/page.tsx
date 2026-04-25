@@ -367,7 +367,7 @@ export default function NewNplAnalysisPage() {
             </div>
 
             {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-[0.8125rem] text-red-400">
+              <div className="p-3 bg-stone-100/10 border border-stone-300/20 rounded-xl text-[0.8125rem] text-stone-900">
                 {error}
               </div>
             )}
@@ -459,7 +459,7 @@ function Row({
       <dd
         className={`tabular-nums ${
           emphasize
-            ? "text-[0.9375rem] font-bold text-emerald-600 dark:text-emerald-300"
+            ? "text-[0.9375rem] font-bold text-stone-900 dark:text-stone-900"
             : "text-[var(--color-text-primary)]"
         }`}
       >

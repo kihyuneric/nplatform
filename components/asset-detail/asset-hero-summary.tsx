@@ -129,7 +129,7 @@ export function AssetHeroSummary({
                 fontSize: 12,
                 backgroundColor: "var(--color-positive-bg)",
                 color: "var(--color-positive)",
-                border: "1px solid rgba(16, 185, 129, 0.33)",
+                border: "1px solid rgba(20,22,26, 0.33)",
               }}
             >
               <Sparkles size={12} />

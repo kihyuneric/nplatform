@@ -97,8 +97,8 @@ export function PresetManager({ currentFilters, onLoadPreset }: PresetManagerPro
         onClick={() => setOpen(prev => !prev)}
         className="flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-medium rounded-lg transition-colors"
       >
-        {presets.length > 0 ? <BookmarkCheck className="h-3.5 w-3.5 text-blue-400" /> : <Bookmark className="h-3.5 w-3.5" />}
-        프리셋 {presets.length > 0 && <span className="bg-blue-500 text-white text-[10px] px-1 rounded">{presets.length}</span>}
+        {presets.length > 0 ? <BookmarkCheck className="h-3.5 w-3.5 text-stone-900" /> : <Bookmark className="h-3.5 w-3.5" />}
+        프리셋 {presets.length > 0 && <span className="bg-stone-100 text-white text-[10px] px-1 rounded">{presets.length}</span>}
         <ChevronDown className={`h-3 w-3 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
@@ -121,7 +121,7 @@ export function PresetManager({ currentFilters, onLoadPreset }: PresetManagerPro
                   >
                     {preset.name}
                   </button>
-                  <button onClick={() => deletePreset(preset.id)} className="text-white/30 hover:text-red-400 transition-colors flex-shrink-0">
+                  <button onClick={() => deletePreset(preset.id)} className="text-white/30 hover:text-stone-900 transition-colors flex-shrink-0">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -139,9 +139,9 @@ export function PresetManager({ currentFilters, onLoadPreset }: PresetManagerPro
                   onKeyDown={e => { if (e.key === 'Enter') savePreset(); if (e.key === 'Escape') setShowSaveForm(false) }}
                   placeholder="프리셋 이름 입력"
                   autoFocus
-                  className="flex-1 bg-white/10 border border-white/15 rounded-lg px-2 py-1.5 text-xs text-white placeholder-white/30 focus:outline-none focus:border-blue-500"
+                  className="flex-1 bg-white/10 border border-white/15 rounded-lg px-2 py-1.5 text-xs text-white placeholder-white/30 focus:outline-none focus:border-stone-300"
                 />
-                <button onClick={savePreset} className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-lg transition-colors">
+                <button onClick={savePreset} className="bg-stone-100 hover:bg-stone-100 text-white text-xs px-3 py-1.5 rounded-lg transition-colors">
                   저장
                 </button>
               </div>
@@ -149,7 +149,7 @@ export function PresetManager({ currentFilters, onLoadPreset }: PresetManagerPro
               <button
                 onClick={() => setShowSaveForm(true)}
                 disabled={presets.length >= MAX_PRESETS}
-                className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 text-xs text-stone-900 hover:text-stone-900 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Plus className="h-3.5 w-3.5" />
                 현재 필터를 프리셋으로 저장

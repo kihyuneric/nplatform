@@ -28,7 +28,7 @@ export function GuideButton({ serviceKey, label = "사용 가이드", variant = 
         className={`inline-flex items-center gap-1 text-xs transition-colors ${
           theme === "dark"
             ? "text-white/70 hover:text-white"
-            : "text-muted-foreground hover:text-blue-400"
+            : "text-muted-foreground hover:text-stone-900"
         }`}
         title="사용 가이드 열기"
       >

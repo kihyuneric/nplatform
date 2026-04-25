@@ -275,9 +275,9 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3">
-                <span className="text-xs font-bold text-red-500">!</span>
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="flex items-center gap-2 rounded-xl border border-stone-300 bg-stone-100 px-4 py-3">
+                <span className="text-xs font-bold text-stone-900">!</span>
+                <p className="text-sm text-stone-900">{error}</p>
               </div>
             )}
 
@@ -290,7 +290,7 @@ export default function LoginPage() {
             </button>
 
             {/* Dev credentials hint */}
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800 leading-relaxed">
+            <div className="rounded-xl border border-stone-300 bg-stone-100 px-4 py-3 text-xs text-stone-900 leading-relaxed">
               <p className="font-bold mb-1">🔓 개발용 테스트 계정</p>
               <button type="button" onClick={() => { setEmail('admin'); setPassword('admin') }} className="block hover:underline">
                 <code className="font-mono">admin / admin</code> — 관리자 (SUPER_ADMIN)

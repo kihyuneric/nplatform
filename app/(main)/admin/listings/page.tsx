@@ -38,16 +38,16 @@ const TABS = [
 ]
 
 const STATUS_CONFIG: Record<ApprovalStatus, { label: string; cls: string }> = {
-  PENDING:  { label: "검토대기", cls: "bg-amber-500/10 text-amber-400 border border-amber-500/20" },
-  APPROVED: { label: "활성",     cls: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-  ACTIVE:   { label: "활성",     cls: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-  REJECTED: { label: "거절",     cls: "bg-red-500/10 text-red-400 border border-red-500/20" },
+  PENDING:  { label: "검토대기", cls: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
+  APPROVED: { label: "활성",     cls: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
+  ACTIVE:   { label: "활성",     cls: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
+  REJECTED: { label: "거절",     cls: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
   HIDDEN:   { label: "비공개",   cls: "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]" },
-  REPORTED: { label: "신고",     cls: "bg-orange-500/10 text-orange-400 border border-orange-500/20" },
+  REPORTED: { label: "신고",     cls: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
 }
 
 const AI_GRADE_COLORS: Record<string, string> = {
-  A: "text-emerald-400", B: "text-blue-400", C: "text-amber-400", D: "text-orange-400", F: "text-red-400",
+  A: "text-stone-900", B: "text-stone-900", C: "text-stone-900", D: "text-stone-900", F: "text-stone-900",
 }
 
 export default function AdminListingsPage() {
@@ -187,7 +187,7 @@ export default function AdminListingsPage() {
               <span className="text-[var(--color-border-default)]">|</span>
               <span>활성 <span className="text-[var(--color-positive)] font-semibold">{stats.active.toLocaleString()}건</span></span>
               <span className="text-[var(--color-border-default)]">|</span>
-              <span>신고접수 <span className="text-orange-400 font-semibold">{stats.reported}건</span></span>
+              <span>신고접수 <span className="text-stone-900 font-semibold">{stats.reported}건</span></span>
             </div>
           </div>
           <button className={DS.button.secondary}>
@@ -264,7 +264,7 @@ export default function AdminListingsPage() {
               ),
             },
             { key: 'title', label: '매물명', sortable: true, render: (v) => <span className="font-medium max-w-[160px] truncate block">{v}</span> },
-            { key: 'listing_type', label: '유형', sortable: true, render: (v) => <span className={DS.badge.inline("bg-blue-500/10", "text-blue-400", "border-blue-500/20")}>{v ?? "-"}</span> },
+            { key: 'listing_type', label: '유형', sortable: true, render: (v) => <span className={DS.badge.inline("bg-stone-100/10", "text-stone-900", "border-stone-300/20")}>{v ?? "-"}</span> },
             { key: 'location', label: '소재지', render: (v) => <span className="text-[0.75rem] text-[var(--color-text-tertiary)] max-w-[120px] truncate block">{v ?? "-"}</span> },
             { key: 'bond_amount', label: '채권액', sortable: true, render: (v) => <span className="font-mono">{v ? formatKRW(v) : "-"}</span> },
             { key: 'ai_grade', label: 'AI등급', sortable: true, render: (v) => <span className={`font-bold ${AI_GRADE_COLORS[v ?? ""] ?? "text-[var(--color-text-muted)]"}`}>{v ?? "-"}</span> },
@@ -275,8 +275,8 @@ export default function AdminListingsPage() {
               if (!v) return <span className="text-[0.6875rem] text-[var(--color-text-muted)]">—</span>
               const live = new Date(v as string).getTime() > Date.now()
               return (
-                <span className={`inline-flex items-center gap-1 text-[0.75rem] ${live ? 'text-sky-600 dark:text-sky-300 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
-                  {live && <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />}
+                <span className={`inline-flex items-center gap-1 text-[0.75rem] ${live ? 'text-stone-900 dark:text-stone-900 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
+                  {live && <span className="w-1.5 h-1.5 rounded-full bg-stone-100 animate-pulse" />}
                   {new Date(v as string).toLocaleDateString("ko-KR")}
                 </span>
               )

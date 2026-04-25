@@ -89,9 +89,9 @@ const importTypeLabel: Record<ImportType, string> = {
 }
 
 const statusConfig: Record<string, { label: string; cls: string }> = {
-  completed: { label: "완료",     cls: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-  partial:   { label: "부분완료", cls: "bg-amber-500/10 text-amber-400 border border-amber-500/20" },
-  failed:    { label: "실패",     cls: "bg-red-500/10 text-red-400 border border-red-500/20" },
+  completed: { label: "완료",     cls: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
+  partial:   { label: "부분완료", cls: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
+  failed:    { label: "실패",     cls: "bg-stone-100/10 text-stone-900 border border-stone-300/20" },
 }
 
 /* ------------------------------------------------------------------ */
@@ -299,7 +299,7 @@ export default function AdminDataImportPage() {
                   isActive
                     ? "bg-[var(--color-brand-dark)] text-white"
                     : done
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                    ? "bg-stone-100/10 text-stone-900 border border-stone-300/20"
                     : "bg-[var(--color-surface-sunken)] text-[var(--color-text-muted)]"
                 }`}>
                   {done && <CheckCircle2 className="w-3 h-3 inline mr-1 -mt-0.5" />}
@@ -333,7 +333,7 @@ export default function AdminDataImportPage() {
                           onClick={() => setImportType(t.key)}
                           className={`text-left p-4 rounded-lg border transition-all ${
                             sel
-                              ? "border-[var(--color-brand-mid)] bg-blue-500/10 ring-1 ring-[var(--color-brand-bright)]"
+                              ? "border-[var(--color-brand-mid)] bg-stone-100/10 ring-1 ring-[var(--color-brand-bright)]"
                               : "border-[var(--color-border-default)] bg-[var(--color-surface-base)] hover:border-[var(--color-border-strong)]"
                           }`}
                         >
@@ -355,7 +355,7 @@ export default function AdminDataImportPage() {
                   onDrop={onDrop}
                   onClick={() => fileInputRef.current?.click()}
                   className={`${DS.card.base} border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center cursor-pointer transition-colors ${
-                    dragOver ? "border-[var(--color-brand-mid)] bg-blue-500/10" : "border-[var(--color-border-default)] hover:border-[var(--color-border-strong)]"
+                    dragOver ? "border-[var(--color-brand-mid)] bg-stone-100/10" : "border-[var(--color-border-default)] hover:border-[var(--color-border-strong)]"
                   }`}
                 >
                   <Upload className={`w-10 h-10 mb-4 ${dragOver ? "text-[var(--color-brand-mid)]" : "text-[var(--color-text-muted)]"}`} />
@@ -371,7 +371,7 @@ export default function AdminDataImportPage() {
                 </div>
 
                 {/* Info box */}
-                <div className={`${DS.card.flat} bg-blue-500/10 border-blue-500/20 p-4 flex gap-3`}>
+                <div className={`${DS.card.flat} bg-stone-100/10 border-stone-300/20 p-4 flex gap-3`}>
                   <Info className="w-5 h-5 text-[var(--color-brand-mid)] shrink-0 mt-0.5" />
                   <div className="space-y-1">
                     <p className={`${DS.text.bodyBold} text-[var(--color-brand-mid)]`}>임포트 안내</p>
@@ -412,7 +412,7 @@ export default function AdminDataImportPage() {
 
                   {mappings.map((m, idx) => (
                     <div key={idx} className={`grid grid-cols-12 gap-3 items-center px-3 py-2.5 rounded-lg ${
-                      m.matched ? "bg-[var(--color-surface-sunken)]" : "bg-red-500/10 border border-red-500/20"
+                      m.matched ? "bg-[var(--color-surface-sunken)]" : "bg-stone-100/10 border border-stone-300/20"
                     }`}>
                       <div className={`col-span-1 ${DS.text.micro}`}>{idx + 1}</div>
                       <div className="col-span-4">
@@ -469,10 +469,10 @@ export default function AdminDataImportPage() {
                 </div>
 
                 {previewRows.length === 0 && (
-                  <div className={`${DS.card.flat} bg-amber-500/10 border-amber-500/20 p-4 flex gap-3 mb-4`}>
-                    <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                  <div className={`${DS.card.flat} bg-stone-100/10 border-stone-300/20 p-4 flex gap-3 mb-4`}>
+                    <AlertCircle className="w-5 h-5 text-stone-900 shrink-0 mt-0.5" />
                     <div>
-                      <p className={`${DS.text.bodyBold} text-amber-400`}>미리보기를 생성할 수 없습니다</p>
+                      <p className={`${DS.text.bodyBold} text-stone-900`}>미리보기를 생성할 수 없습니다</p>
                       <p className={DS.text.captionLight}>XLSX 파일은 서버 측 파싱이 필요합니다. 임포트를 진행하면 서버에서 검증 후 결과를 제공합니다.</p>
                     </div>
                   </div>
@@ -493,7 +493,7 @@ export default function AdminDataImportPage() {
                       {previewRows.map(row => (
                         <tr
                           key={row.row}
-                          className={`${DS.table.row} ${!row.valid ? "bg-red-500/10" : ""}`}
+                          className={`${DS.table.row} ${!row.valid ? "bg-stone-100/10" : ""}`}
                         >
                           <td className={DS.table.cellMuted}>{row.row}</td>
                           <td className={DS.table.cell}>
@@ -566,7 +566,7 @@ export default function AdminDataImportPage() {
             {/* === STEP: Done === */}
             {step === "done" && (
               <div className={`${DS.card.base} ${DS.card.paddingLarge} flex flex-col items-center`}>
-                <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
+                <div className="w-16 h-16 rounded-full bg-stone-100/10 border border-stone-300/20 flex items-center justify-center mb-6">
                   <CheckCircle2 className="w-8 h-8 text-[var(--color-positive)]" />
                 </div>
                 <h2 className={`${DS.text.sectionTitle} mb-2`}>임포트 완료</h2>
@@ -627,7 +627,7 @@ export default function AdminDataImportPage() {
                   { icon: Download, label: "템플릿 다운로드", color: "text-[var(--color-brand-mid)]" },
                   { icon: FileSpreadsheet, label: "최근 파일 재임포트", color: "text-[var(--color-positive)]" },
                   { icon: Database, label: "데이터 무결성 검사", color: "text-[var(--color-warning)]" },
-                  { icon: RefreshCw, label: "스케줄 임포트 설정", color: "text-purple-600" },
+                  { icon: RefreshCw, label: "스케줄 임포트 설정", color: "text-stone-900" },
                 ].map(action => (
                   <button
                     key={action.label}
@@ -645,9 +645,9 @@ export default function AdminDataImportPage() {
               <h3 className={`${DS.text.label} text-[var(--color-brand-mid)] mb-4`}>지원 형식</h3>
               <div className="space-y-3">
                 {[
-                  { ext: ".xlsx", desc: "Excel 2007+", color: "bg-emerald-500/10 text-emerald-400" },
-                  { ext: ".xls", desc: "Excel 97-2003", color: "bg-emerald-500/10 text-emerald-400" },
-                  { ext: ".csv", desc: "UTF-8, EUC-KR", color: "bg-blue-500/10 text-blue-400" },
+                  { ext: ".xlsx", desc: "Excel 2007+", color: "bg-stone-100/10 text-stone-900" },
+                  { ext: ".xls", desc: "Excel 97-2003", color: "bg-stone-100/10 text-stone-900" },
+                  { ext: ".csv", desc: "UTF-8, EUC-KR", color: "bg-stone-100/10 text-stone-900" },
                 ].map(fmt => (
                   <div key={fmt.ext} className={`flex items-center gap-2 ${DS.text.caption}`}>
                     <span className={`w-12 px-2 py-0.5 rounded text-center font-medium ${fmt.color}`}>{fmt.ext}</span>

@@ -323,7 +323,7 @@ export default function OcrRegisterPage() {
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center">
                 <ScanLine className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400">OCR 일괄 등록</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-stone-100/15 text-stone-900">OCR 일괄 등록</span>
             </div>
             <h1 className={DS.header.title}>OCR 기반 매물 일괄 등록</h1>
             <p className="mt-2 text-[var(--color-text-muted)] text-sm">
@@ -364,13 +364,13 @@ export default function OcrRegisterPage() {
 
           {/* Add slot */}
           {slots.length < MAX_SLOTS && (
-            <div className="min-h-[300px] rounded-2xl border-2 border-dashed border-[var(--color-border-subtle)] hover:border-violet-500/50 hover:bg-violet-500/[0.03] transition-all flex flex-col items-center justify-center gap-3 text-[var(--color-text-muted)] group p-6">
+            <div className="min-h-[300px] rounded-2xl border-2 border-dashed border-[var(--color-border-subtle)] hover:border-stone-300/50 hover:bg-stone-100/[0.03] transition-all flex flex-col items-center justify-center gap-3 text-[var(--color-text-muted)] group p-6">
               <button
                 onClick={addSlot}
-                className="flex flex-col items-center gap-2 hover:text-violet-400"
+                className="flex flex-col items-center gap-2 hover:text-stone-900"
               >
-                <div className="w-12 h-12 rounded-full bg-violet-500/10 group-hover:bg-violet-500/20 flex items-center justify-center transition-colors">
-                  <Plus className="w-6 h-6 text-violet-400" />
+                <div className="w-12 h-12 rounded-full bg-stone-100/10 group-hover:bg-stone-100/20 flex items-center justify-center transition-colors">
+                  <Plus className="w-6 h-6 text-stone-900" />
                 </div>
                 <span className="text-sm font-semibold">슬롯 추가 ({slots.length}/{MAX_SLOTS})</span>
               </button>
@@ -378,14 +378,14 @@ export default function OcrRegisterPage() {
                 <button
                   onClick={() => addMultipleSlots(5)}
                   disabled={slots.length >= MAX_SLOTS}
-                  className="text-[11px] px-2.5 py-1 rounded-md bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 disabled:opacity-40 transition-colors"
+                  className="text-[11px] px-2.5 py-1 rounded-md bg-stone-100/10 hover:bg-stone-100/20 text-stone-900 disabled:opacity-40 transition-colors"
                 >
                   +5
                 </button>
                 <button
                   onClick={() => addMultipleSlots(10)}
                   disabled={slots.length >= MAX_SLOTS}
-                  className="text-[11px] px-2.5 py-1 rounded-md bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 disabled:opacity-40 transition-colors"
+                  className="text-[11px] px-2.5 py-1 rounded-md bg-stone-100/10 hover:bg-stone-100/20 text-stone-900 disabled:opacity-40 transition-colors"
                 >
                   +10
                 </button>
@@ -398,12 +398,12 @@ export default function OcrRegisterPage() {
         <div className="sticky bottom-4 z-10 mt-6">
           <div className="rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] shadow-lg px-5 py-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <Sparkles className="w-4 h-4 text-violet-400" />
+              <Sparkles className="w-4 h-4 text-stone-900" />
               <div>
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">
-                  제출 준비 완료: <span className="text-violet-400">{readyCount}건</span> / 총 {slots.length}건
-                  {uploadingCount > 0 && <span className="ml-2 text-blue-400">· 분석 중 {uploadingCount}</span>}
-                  {errorCount > 0 && <span className="ml-2 text-red-400">· 오류 {errorCount}</span>}
+                  제출 준비 완료: <span className="text-stone-900">{readyCount}건</span> / 총 {slots.length}건
+                  {uploadingCount > 0 && <span className="ml-2 text-stone-900">· 분석 중 {uploadingCount}</span>}
+                  {errorCount > 0 && <span className="ml-2 text-stone-900">· 오류 {errorCount}</span>}
                 </p>
                 <p className="text-xs text-[var(--color-text-muted)]">제출 후 관리자 심사를 거쳐 매물로 게시됩니다</p>
               </div>
@@ -412,7 +412,7 @@ export default function OcrRegisterPage() {
               {errorCount > 0 && (
                 <button
                   onClick={retryFailed}
-                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/15 text-amber-400 font-semibold text-xs transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-stone-300/30 bg-stone-100/5 hover:bg-stone-100/15 text-stone-900 font-semibold text-xs transition-colors"
                   title="오류 슬롯을 초기화"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -497,7 +497,7 @@ function SlotCard({
       {/* Card header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--color-border-subtle)]">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold w-6 h-6 rounded-md bg-violet-500/15 text-violet-400 flex items-center justify-center">
+          <span className="text-xs font-bold w-6 h-6 rounded-md bg-stone-100/15 text-stone-900 flex items-center justify-center">
             {index + 1}
           </span>
           <span className="text-sm font-semibold text-[var(--color-text-primary)]">매물 #{index + 1}</span>
@@ -505,7 +505,7 @@ function SlotCard({
         </div>
         <button
           onClick={onRemove}
-          className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-stone-900 hover:bg-stone-100/10 transition-colors"
           aria-label="슬롯 삭제"
         >
           <Trash2 className="w-4 h-4" />
@@ -523,7 +523,7 @@ function SlotCard({
               disabled={slot.status === "uploading"}
               className={`text-xs px-3 py-1.5 rounded-full transition-all font-semibold ${
                 slot.docType === dt
-                  ? "bg-violet-500/15 text-violet-400 ring-1 ring-violet-500/30"
+                  ? "bg-stone-100/15 text-stone-900 ring-1 ring-violet-500/30"
                   : "bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-overlay)]/70"
               }`}
             >
@@ -546,17 +546,17 @@ function SlotCard({
             onClick={() => inputRef.current?.click()}
             className={`cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-all ${
               dragActive
-                ? "border-violet-500 bg-violet-500/5"
-                : "border-[var(--color-border-subtle)] hover:border-violet-500/50 hover:bg-violet-500/[0.03]"
+                ? "border-stone-300 bg-stone-100/5"
+                : "border-[var(--color-border-subtle)] hover:border-stone-300/50 hover:bg-stone-100/[0.03]"
             }`}
           >
-            <Upload className="w-8 h-8 mx-auto mb-2 text-violet-400" />
+            <Upload className="w-8 h-8 mx-auto mb-2 text-stone-900" />
             <p className="text-sm font-semibold text-[var(--color-text-primary)]">
               PDF·이미지·Office 문서 업로드
             </p>
             <p className="text-xs text-[var(--color-text-muted)] mt-1">클릭 또는 드래그 · 최대 20MB</p>
             {slot.errorMsg && (
-              <p className="mt-2 text-xs text-red-400 flex items-center justify-center gap-1">
+              <p className="mt-2 text-xs text-stone-900 flex items-center justify-center gap-1">
                 <AlertCircle className="w-3 h-3" /> {slot.errorMsg}
               </p>
             )}
@@ -573,7 +573,7 @@ function SlotCard({
           </div>
         ) : (
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)]">
-            <FileText className="w-4 h-4 text-violet-400" />
+            <FileText className="w-4 h-4 text-stone-900" />
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-[var(--color-text-primary)] truncate">{slot.file?.name}</p>
               <p className="text-[10px] text-[var(--color-text-muted)]">
@@ -582,7 +582,7 @@ function SlotCard({
             </div>
             <button
               onClick={() => inputRef.current?.click()}
-              className="p-1.5 rounded-md text-[var(--color-text-muted)] hover:text-violet-400 hover:bg-violet-500/10 transition-colors"
+              className="p-1.5 rounded-md text-[var(--color-text-muted)] hover:text-stone-900 hover:bg-stone-100/10 transition-colors"
               title="다시 업로드"
             >
               <RefreshCw className="w-3.5 h-3.5" />
@@ -649,7 +649,7 @@ function SlotCard({
 
         {/* Uploading loader */}
         {slot.status === "uploading" && (
-          <div className="flex items-center justify-center gap-2 py-6 text-violet-400">
+          <div className="flex items-center justify-center gap-2 py-6 text-stone-900">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span className="text-sm font-semibold">AI가 문서를 분석 중...</span>
           </div>
@@ -666,9 +666,9 @@ function SlotCard({
 function StatusPill({ status }: { status: Slot["status"] }) {
   const config = {
     empty:      { label: "대기", bg: "bg-gray-500/10",   text: "text-gray-400",   icon: null },
-    uploading:  { label: "분석중", bg: "bg-blue-500/10",  text: "text-blue-400",   icon: <Loader2 className="w-3 h-3 animate-spin" /> },
-    extracted:  { label: "추출 완료", bg: "bg-emerald-500/10", text: "text-emerald-400", icon: <CheckCircle2 className="w-3 h-3" /> },
-    error:      { label: "오류", bg: "bg-red-500/10",    text: "text-red-400",    icon: <AlertCircle className="w-3 h-3" /> },
+    uploading:  { label: "분석중", bg: "bg-stone-100/10",  text: "text-stone-900",   icon: <Loader2 className="w-3 h-3 animate-spin" /> },
+    extracted:  { label: "추출 완료", bg: "bg-stone-100/10", text: "text-stone-900", icon: <CheckCircle2 className="w-3 h-3" /> },
+    error:      { label: "오류", bg: "bg-stone-100/10",    text: "text-stone-900",    icon: <AlertCircle className="w-3 h-3" /> },
   }[status]
 
   return (
@@ -693,15 +693,15 @@ function Field({
     <label className="block">
       <div className="flex items-center justify-between mb-1">
         <span className="text-[11px] font-semibold text-[var(--color-text-muted)]">{label}</span>
-        {hint && <span className="text-[10px] text-violet-400 tabular-nums">{hint}</span>}
-        {warning && <span className="text-[10px] text-amber-400">{warning}</span>}
+        {hint && <span className="text-[10px] text-stone-900 tabular-nums">{hint}</span>}
+        {warning && <span className="text-[10px] text-stone-900">{warning}</span>}
       </div>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-3 py-2 text-sm rounded-lg bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)] focus:border-violet-500/50 focus:outline-none focus:ring-1 focus:ring-violet-500/30 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/60 transition-colors"
+        className="w-full px-3 py-2 text-sm rounded-lg bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)] focus:border-stone-300/50 focus:outline-none focus:ring-1 focus:ring-violet-500/30 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/60 transition-colors"
       />
     </label>
   )
@@ -721,7 +721,7 @@ function SelectField({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 text-sm rounded-lg bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)] focus:border-violet-500/50 focus:outline-none focus:ring-1 focus:ring-violet-500/30 text-[var(--color-text-primary)]"
+        className="w-full px-3 py-2 text-sm rounded-lg bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)] focus:border-stone-300/50 focus:outline-none focus:ring-1 focus:ring-violet-500/30 text-[var(--color-text-primary)]"
       >
         {options.map(o => (
           <option key={o} value={o}>{o}</option>

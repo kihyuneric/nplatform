@@ -15,9 +15,9 @@ import DS from '@/lib/design-system'
 // ── 담보 유형별 탭 정의 ─────────────────────────────────────────────────────
 
 const COLLATERAL_TABS = [
-  { key: 'ALL',         label: '전체',        icon: BarChart3,      color: '#10B981' },
-  { key: 'RESIDENTIAL', label: '주거용',       icon: Home,           color: '#2563EB' },
-  { key: 'COMMERCIAL',  label: '상업/산업용',  icon: Building2,      color: '#7C3AED' },
+  { key: 'ALL',         label: '전체',        icon: BarChart3,      color: '#14161A' },
+  { key: 'RESIDENTIAL', label: '주거용',       icon: Home,           color: '#14161A' },
+  { key: 'COMMERCIAL',  label: '상업/산업용',  icon: Building2,      color: '#14161A' },
   { key: 'LAND',        label: '토지',         icon: TreeDeciduous,  color: '#D97706' },
 ] as const
 
@@ -35,23 +35,23 @@ interface CollateralTypeData {
 
 const COLLATERAL_TYPE_DATA: CollateralTypeData[] = [
   // 주거용
-  { type: '아파트',        category: '주거용',       bidRate: 83.2, winRate: 74.1, volume: 412, change:  1.3, color: '#2563EB' },
-  { type: '빌라',          category: '주거용',       bidRate: 74.8, winRate: 61.2, volume: 187, change:  0.4, color: '#3B82F6' },
-  { type: '단독/다가구',   category: '주거용',       bidRate: 71.3, winRate: 58.7, volume: 134, change: -0.6, color: '#60A5FA' },
+  { type: '아파트',        category: '주거용',       bidRate: 83.2, winRate: 74.1, volume: 412, change:  1.3, color: '#14161A' },
+  { type: '빌라',          category: '주거용',       bidRate: 74.8, winRate: 61.2, volume: 187, change:  0.4, color: '#14161A' },
+  { type: '단독/다가구',   category: '주거용',       bidRate: 71.3, winRate: 58.7, volume: 134, change: -0.6, color: '#14161A' },
   { type: '오피스텔',      category: '주거용',       bidRate: 79.4, winRate: 68.3, volume: 223, change:  0.9, color: '#93C5FD' },
   // 상업/산업용
-  { type: '근린상가',      category: '상업/산업용',  bidRate: 68.7, winRate: 52.4, volume: 98,  change: -1.2, color: '#7C3AED' },
-  { type: '지식산업센터',  category: '상업/산업용',  bidRate: 72.1, winRate: 61.8, volume: 67,  change:  0.8, color: '#8B5CF6' },
-  { type: '통건물',        category: '상업/산업용',  bidRate: 65.4, winRate: 48.2, volume: 43,  change: -0.3, color: '#A78BFA' },
+  { type: '근린상가',      category: '상업/산업용',  bidRate: 68.7, winRate: 52.4, volume: 98,  change: -1.2, color: '#14161A' },
+  { type: '지식산업센터',  category: '상업/산업용',  bidRate: 72.1, winRate: 61.8, volume: 67,  change:  0.8, color: '#14161A' },
+  { type: '통건물',        category: '상업/산업용',  bidRate: 65.4, winRate: 48.2, volume: 43,  change: -0.3, color: '#14161A' },
   { type: '창고',          category: '상업/산업용',  bidRate: 63.8, winRate: 45.6, volume: 28,  change:  1.1, color: '#C4B5FD' },
   { type: '공장',          category: '상업/산업용',  bidRate: 62.3, winRate: 44.1, volume: 52,  change: -0.7, color: '#DDD6FE' },
   { type: '숙박시설',      category: '상업/산업용',  bidRate: 58.9, winRate: 39.7, volume: 21,  change:  0.2, color: '#EDE9FE' },
   { type: '노유자시설',    category: '상업/산업용',  bidRate: 55.2, winRate: 35.8, volume: 12,  change: -1.5, color: '#F5F3FF' },
   { type: '의료시설',      category: '상업/산업용',  bidRate: 61.7, winRate: 43.2, volume: 16,  change:  0.5, color: '#C4B5FD' },
-  { type: '주유소',        category: '상업/산업용',  bidRate: 59.4, winRate: 40.6, volume: 9,   change: -0.9, color: '#A78BFA' },
+  { type: '주유소',        category: '상업/산업용',  bidRate: 59.4, winRate: 40.6, volume: 9,   change: -0.9, color: '#14161A' },
   // 토지
   { type: '대지',          category: '토지',         bidRate: 71.8, winRate: 59.3, volume: 89,  change:  0.6, color: '#D97706' },
-  { type: '농지',          category: '토지',         bidRate: 64.2, winRate: 47.5, volume: 56,  change: -0.4, color: '#F59E0B' },
+  { type: '농지',          category: '토지',         bidRate: 64.2, winRate: 47.5, volume: 56,  change: -0.4, color: '#14161A' },
   { type: '임야',          category: '토지',         bidRate: 58.7, winRate: 37.9, volume: 31,  change: -1.1, color: '#FCD34D' },
   { type: '공장용지',      category: '토지',         bidRate: 65.9, winRate: 49.2, volume: 24,  change:  0.3, color: '#FDE68A' },
   { type: '창고용지',      category: '토지',         bidRate: 63.5, winRate: 46.8, volume: 18,  change: -0.2, color: '#FEF3C7' },
@@ -148,17 +148,17 @@ const regionData: RegionData[] = [
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function getRateColor(rate: number): string {
-  if (rate >= 80) return 'text-red-400'
-  if (rate >= 75) return 'text-orange-400'
-  if (rate >= 70) return 'text-amber-400'
-  return 'text-blue-400'
+  if (rate >= 80) return 'text-stone-900'
+  if (rate >= 75) return 'text-stone-900'
+  if (rate >= 70) return 'text-stone-900'
+  return 'text-stone-900'
 }
 
 function getHeatBg(rate: number): string {
-  if (rate >= 80) return 'bg-red-500/10'
-  if (rate >= 75) return 'bg-orange-500/10'
-  if (rate >= 70) return 'bg-amber-500/10'
-  return 'bg-blue-500/10'
+  if (rate >= 80) return 'bg-stone-100/10'
+  if (rate >= 75) return 'bg-stone-100/10'
+  if (rate >= 70) return 'bg-stone-100/10'
+  return 'bg-stone-100/10'
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -226,8 +226,8 @@ export default function NplIndexPage() {
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-3">
-                <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                  <Activity className="h-5 w-5 text-emerald-600" />
+                <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-stone-100/10 border border-stone-300/20">
+                  <Activity className="h-5 w-5 text-stone-900" />
                 </div>
                 <h1 className={DS.text.pageTitle}>
                   NPL 낙찰가율 지수 (NBI)
@@ -326,10 +326,10 @@ export default function NplIndexPage() {
           {/* 평균 낙찰률 (신규) */}
           <div className={`${DS.stat.card}`}>
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-amber-600" />
+              <TrendingUp className="h-4 w-4 text-stone-900" />
               <span className={DS.stat.label}>평균 낙찰률</span>
             </div>
-            <p className={`${DS.text.metricLarge} text-amber-600 tabular-nums`}>{avgBidRate}%</p>
+            <p className={`${DS.text.metricLarge} text-stone-900 tabular-nums`}>{avgBidRate}%</p>
             <p className={`${DS.stat.sub}`}>입찰 대비 낙찰 비율</p>
           </div>
         </div>
@@ -342,8 +342,8 @@ export default function NplIndexPage() {
           </span>
           <span className={`text-[0.6875rem] font-semibold px-2 py-0.5 rounded-full`}
             style={{
-              backgroundColor: `${COLLATERAL_TABS.find(t => t.key === collateralTab)?.color ?? '#10B981'}15`,
-              color: COLLATERAL_TABS.find(t => t.key === collateralTab)?.color ?? '#10B981',
+              backgroundColor: `${COLLATERAL_TABS.find(t => t.key === collateralTab)?.color ?? '#14161A'}15`,
+              color: COLLATERAL_TABS.find(t => t.key === collateralTab)?.color ?? '#14161A',
             }}
           >
             {COLLATERAL_TABS.find(t => t.key === collateralTab)?.label ?? '전체'}
@@ -401,18 +401,18 @@ export default function NplIndexPage() {
                 <Line
                   type="monotone"
                   dataKey="nbi"
-                  stroke="#10B981"
+                  stroke="#14161A"
                   strokeWidth={2.5}
-                  dot={{ r: 4, fill: '#10B981', stroke: '#fff', strokeWidth: 2 }}
-                  activeDot={{ r: 6, stroke: '#10B981', strokeWidth: 2 }}
+                  dot={{ r: 4, fill: '#14161A', stroke: '#fff', strokeWidth: 2 }}
+                  activeDot={{ r: 6, stroke: '#14161A', strokeWidth: 2 }}
                 />
                 <Line
                   type="monotone"
                   dataKey="avgRate"
-                  stroke="#2563EB"
+                  stroke="#14161A"
                   strokeWidth={2}
                   strokeDasharray="5 5"
-                  dot={{ r: 3, fill: '#2563EB', stroke: '#fff', strokeWidth: 2 }}
+                  dot={{ r: 3, fill: '#14161A', stroke: '#fff', strokeWidth: 2 }}
                 />
                 <Line
                   type="monotone"
@@ -429,8 +429,8 @@ export default function NplIndexPage() {
           {/* 범례 */}
           <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-[var(--color-border-subtle)]">
             {[
-              { label: 'NBI 지수', color: '#10B981', dash: false },
-              { label: '낙찰가율', color: '#2563EB', dash: true },
+              { label: 'NBI 지수', color: '#14161A', dash: false },
+              { label: '낙찰가율', color: '#14161A', dash: true },
               { label: '낙찰률', color: '#D97706', dash: true },
             ].map(l => (
               <div key={l.label} className="flex items-center gap-1.5 text-[0.75rem] text-[var(--color-text-secondary)]">
@@ -497,7 +497,7 @@ export default function NplIndexPage() {
         <div className={`${DS.card.base} ${DS.card.paddingLarge}`}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
             <div className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-purple-600" />
+              <BarChart3 className="h-5 w-5 text-stone-900" />
               <h2 className={DS.text.sectionTitle}>담보유형별 19종 상세 낙찰 현황</h2>
             </div>
             {/* 카테고리 필터 */}
@@ -508,8 +508,8 @@ export default function NplIndexPage() {
                   onClick={() => setTypeCategory(cat)}
                   className={`px-3 py-1 rounded-full text-[0.75rem] font-semibold border transition-all ${
                     typeCategory === cat
-                      ? 'bg-purple-600 text-white border-purple-600'
-                      : 'bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-purple-500/50'
+                      ? 'bg-stone-100 text-white border-stone-300'
+                      : 'bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-stone-300/50'
                   }`}
                 >
                   {cat}
@@ -550,9 +550,9 @@ export default function NplIndexPage() {
                       </td>
                       <td className="py-2.5 px-3 text-center">
                         <span className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-medium ${
-                          d.category === '주거용' ? 'bg-blue-500/15 text-blue-300' :
-                          d.category === '상업/산업용' ? 'bg-purple-500/15 text-purple-300' :
-                          d.category === '토지' ? 'bg-amber-500/15 text-amber-300' :
+                          d.category === '주거용' ? 'bg-stone-100/15 text-stone-900' :
+                          d.category === '상업/산업용' ? 'bg-stone-100/15 text-stone-900' :
+                          d.category === '토지' ? 'bg-stone-100/15 text-stone-900' :
                           'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)]'
                         }`}>
                           {d.category}
@@ -606,19 +606,19 @@ export default function NplIndexPage() {
             </div>
             <div className={`flex items-center gap-3 ${DS.text.captionLight}`}>
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                <span className="w-2.5 h-2.5 rounded-full bg-stone-100" />
                 80% 이상
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-orange-400" />
+                <span className="w-2.5 h-2.5 rounded-full bg-stone-100" />
                 75~80%
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                <span className="w-2.5 h-2.5 rounded-full bg-stone-100" />
                 70~75%
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+                <span className="w-2.5 h-2.5 rounded-full bg-stone-100" />
                 70% 미만
               </span>
             </div>
@@ -810,8 +810,8 @@ export default function NplIndexPage() {
 
           <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div className="flex items-start gap-4">
-              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-yellow-400/20 border border-yellow-400/30 shrink-0">
-                <Crown className="h-6 w-6 text-yellow-400" />
+              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-stone-100/20 border border-stone-300/30 shrink-0">
+                <Crown className="h-6 w-6 text-stone-900" />
               </div>
               <div>
                 <h3 className="text-[1.1875rem] font-bold text-white mb-1">

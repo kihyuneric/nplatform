@@ -75,9 +75,9 @@ export function SubmitButton({
               animate={{
                 scale: [1, 1.15, 1],
                 boxShadow: [
-                  '0 0 0 0 rgba(16,185,129,0)',
-                  '0 0 0 6px rgba(16,185,129,0.3)',
-                  '0 0 0 0 rgba(16,185,129,0)',
+                  '0 0 0 0 rgba(20,22,26,0)',
+                  '0 0 0 6px rgba(20,22,26,0.3)',
+                  '0 0 0 0 rgba(20,22,26,0)',
                 ],
               }}
               transition={{ duration: 0.4 }}

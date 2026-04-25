@@ -62,7 +62,7 @@ function MenuList({ collapsed = false, onNavigate }: { collapsed?: boolean; onNa
             className={cn(
               "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
               isActive
-                ? "bg-blue-600 text-white"
+                ? "bg-stone-100 text-white"
                 : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)]"
             )}
             title={collapsed ? item.label : undefined}

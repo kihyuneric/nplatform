@@ -46,7 +46,7 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
         variant="ghost"
         size="sm"
         onClick={handleKakaoShare}
-        className="h-8 px-2 text-xs text-[var(--color-text-secondary)] hover:text-yellow-600"
+        className="h-8 px-2 text-xs text-[var(--color-text-secondary)] hover:text-stone-900"
         title="카카오톡 공유"
       >
         <MessageCircle className="h-3.5 w-3.5 mr-1" />
@@ -56,7 +56,7 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
         variant="ghost"
         size="sm"
         onClick={handleNaverShare}
-        className="h-8 px-2 text-xs text-[var(--color-text-secondary)] hover:text-green-600"
+        className="h-8 px-2 text-xs text-[var(--color-text-secondary)] hover:text-stone-900"
         title="네이버 블로그"
       >
         <Newspaper className="h-3.5 w-3.5 mr-1" />

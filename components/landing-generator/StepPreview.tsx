@@ -70,7 +70,7 @@ export function StepPreview({ story, images, colorTheme }: StepPreviewProps) {
 
         <button
           onClick={() => setShowFullPage(true)}
-          className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition"
+          className="flex items-center gap-1 px-3 py-1.5 bg-stone-100 text-white rounded-lg text-sm font-medium hover:bg-stone-100 transition"
         >
           <ExternalLink className="w-4 h-4" />
           전체 화면

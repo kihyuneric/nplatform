@@ -13,9 +13,9 @@ const EMPTY_REFERRALS: { name: string; joined: string; status: string; payout: s
 const EMPTY_EARNINGS:  { month: string; amount: number }[] = []
 const EMPTY_BOARD:     { rank: number; name: string; refs: number; earn: string; Icon: any; cls: string; isMe?: boolean }[] = []
 const STATUS_CLR: Record<string, string> = {
-  '가입완료': 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-  '구독전환': 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-  '심사중': 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+  '가입완료': 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
+  '구독전환': 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
+  '심사중': 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
 }
 // Role-based tabs: PARTNER sees all; AFFILIATE sees only referrals+marketing
 const ALL_TABS = [
@@ -38,11 +38,11 @@ const MARKETING_ASSETS = [
 
 // Revenue mix breakdown
 const REVENUE_TYPES = [
-  { id: 'referral',     label: '구독 추천 수수료',   desc: '추천 후 구독 전환 시 첫달 구독료의 20%', rate: '20%', color: 'bg-blue-500' },
-  { id: 'transaction',  label: '거래 중개 수수료',   desc: '성사 거래 금액의 0.5~1.0% (딜 사이즈별)', rate: '0.5~1.0%', color: 'bg-emerald-500' },
-  { id: 'content',      label: '콘텐츠 제작 수수료', desc: '승인된 NPL 투자 콘텐츠 게시 건당', rate: '₩30,000/건', color: 'bg-purple-500' },
-  { id: 'event',        label: '이벤트 참가비 분배', desc: '웨비나·오프라인 행사 수익 공유', rate: '30%', color: 'bg-amber-500' },
-  { id: 'data',         label: '데이터 리포트 판매', desc: '공동 제작 시장 리포트 판매 수익 공유', rate: '15%', color: 'bg-rose-500' },
+  { id: 'referral',     label: '구독 추천 수수료',   desc: '추천 후 구독 전환 시 첫달 구독료의 20%', rate: '20%', color: 'bg-stone-100' },
+  { id: 'transaction',  label: '거래 중개 수수료',   desc: '성사 거래 금액의 0.5~1.0% (딜 사이즈별)', rate: '0.5~1.0%', color: 'bg-stone-100' },
+  { id: 'content',      label: '콘텐츠 제작 수수료', desc: '승인된 NPL 투자 콘텐츠 게시 건당', rate: '₩30,000/건', color: 'bg-stone-100' },
+  { id: 'event',        label: '이벤트 참가비 분배', desc: '웨비나·오프라인 행사 수익 공유', rate: '30%', color: 'bg-stone-100' },
+  { id: 'data',         label: '데이터 리포트 판매', desc: '공동 제작 시장 리포트 판매 수익 공유', rate: '15%', color: 'bg-stone-100' },
 ]
 
 // ─── Hook: fetch partner data from Supabase ─────────────────
@@ -210,7 +210,7 @@ function usePartnerData() {
 
         if (boardProfiles && boardProfiles.length > 0) {
           const ICONS = [Crown, Medal, Star, Trophy, Trophy]
-          const CLASSES = ['text-amber-500', 'text-slate-400', 'text-amber-400', 'text-slate-500', 'text-slate-500']
+          const CLASSES = ['text-stone-900', 'text-slate-400', 'text-stone-900', 'text-slate-500', 'text-slate-500']
           realBoard = boardProfiles.map((p, i) => {
             const uName = (Array.isArray(p.users) ? p.users[0] : p.users as Record<string, string> | null)?.name ?? `파트너 ${i + 1}`
             const isMe = p.user_id === user.id
@@ -317,8 +317,8 @@ export default function PartnerDashboardPage() {
   const stats = [
     { label: '총 추천', value: `${d.totalReferrals.toLocaleString()}명`, icon: Users, color: 'text-[var(--color-brand-mid)]' },
     { label: '이번달 추천', value: `${d.monthlyReferrals.toLocaleString()}명`, icon: TrendingUp, color: 'text-[var(--color-positive)]' },
-    { label: '누적 정산', value: formatKRW(d.totalEarnings), icon: Wallet, color: 'text-amber-600' },
-    { label: '추천 전환율', value: `${d.conversionRate}%`, icon: TrendingUp, color: 'text-violet-600' },
+    { label: '누적 정산', value: formatKRW(d.totalEarnings), icon: Wallet, color: 'text-stone-900' },
+    { label: '추천 전환율', value: `${d.conversionRate}%`, icon: TrendingUp, color: 'text-stone-900' },
   ]
 
   const handleCopy = () => {
@@ -342,7 +342,7 @@ export default function PartnerDashboardPage() {
             <div className="flex flex-wrap gap-4">
               <div className="text-center">
                 <div className={DS.text.caption}>추천 코드</div>
-                <div className="text-amber-600 font-bold text-[0.9375rem] font-mono">{d.referralCode}</div>
+                <div className="text-stone-900 font-bold text-[0.9375rem] font-mono">{d.referralCode}</div>
               </div>
               <div className="w-px bg-[var(--color-border-subtle)]" />
               <div className="text-center">
@@ -496,10 +496,10 @@ export default function PartnerDashboardPage() {
               <h2 className={DS.text.cardTitle + ' mb-4'}>이번 달 수익 구성비</h2>
               <div className="space-y-3">
                 {[
-                  { label: '구독 추천', pct: 67, color: 'bg-blue-500' },
-                  { label: '거래 중개', pct: 20, color: 'bg-emerald-500' },
-                  { label: '콘텐츠',   pct: 7,  color: 'bg-purple-500' },
-                  { label: '이벤트',   pct: 5,  color: 'bg-amber-500' },
+                  { label: '구독 추천', pct: 67, color: 'bg-stone-100' },
+                  { label: '거래 중개', pct: 20, color: 'bg-stone-100' },
+                  { label: '콘텐츠',   pct: 7,  color: 'bg-stone-100' },
+                  { label: '이벤트',   pct: 5,  color: 'bg-stone-100' },
                   { label: '기타',     pct: 1,  color: 'bg-gray-400' },
                 ].map(item => (
                   <div key={item.label}>
@@ -571,7 +571,7 @@ export default function PartnerDashboardPage() {
                   {d.leaderboard.length === 0 ? (
                     <tr><td colSpan={4} className="py-8 text-center text-[var(--color-text-muted)] text-sm">리더보드 데이터를 불러오는 중이거나 아직 파트너 활동이 없습니다.</td></tr>
                   ) : d.leaderboard.map((p: any) => (
-                    <tr key={p.rank} className={DS.table.row + (p.isMe ? ' !bg-blue-500/10' : '')}>
+                    <tr key={p.rank} className={DS.table.row + (p.isMe ? ' !bg-stone-100/10' : '')}>
                       <td className={DS.table.cell}>
                         <div className="flex items-center gap-1.5">
                           {p.Icon ? <p.Icon className={`h-4 w-4 ${p.cls}`} /> : <span className="w-4" />}

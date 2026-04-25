@@ -46,12 +46,12 @@ const RAG_DOCS = [
 ]
 
 const STATUS_BADGE_STYLE: Record<string, string> = {
-  "활성": "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-  "정상": "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-  "완료": "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-  "대기": "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-  "지연": "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-  "실패": "bg-red-500/10 text-red-400 border border-red-500/20",
+  "활성": "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  "정상": "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  "완료": "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  "대기": "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  "지연": "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  "실패": "bg-stone-100/10 text-stone-900 border border-stone-300/20",
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -264,9 +264,9 @@ export default function AdminMLPage() {
             <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
 
               {/* 예상 회수율 카드 */}
-              <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4">
+              <div className="rounded-lg border border-stone-300/20 bg-stone-100/10 p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-7 h-7 rounded-md bg-emerald-600 flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-md bg-stone-100 flex items-center justify-center">
                     <TrendingUp className="w-3.5 h-3.5 text-white" />
                   </div>
                   <div>
@@ -281,7 +281,7 @@ export default function AdminMLPage() {
                   <strong>계산식:</strong> 과거 낙찰가 / 감정가 × (리스크 가중치) · 5만건+ 과거 경매 데이터 학습
                 </div>
 
-                <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-emerald-400">
+                <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-stone-900">
                   필수 입력 데이터 (매도자 등록 시)
                 </div>
                 <ul className="space-y-1.5 text-[11px] text-[var(--color-text-secondary)]">
@@ -297,7 +297,7 @@ export default function AdminMLPage() {
                     ["채무 원금", "회수 가능액 추정 베이스"],
                   ].map(([k, v]) => (
                     <li key={k} className="flex items-start gap-2">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600 mt-0.5 flex-shrink-0" />
+                      <CheckCircle2 className="w-3 h-3 text-stone-900 mt-0.5 flex-shrink-0" />
                       <span>
                         <strong className="text-[var(--color-text-primary)]">{k}</strong>
                         <span className="text-[var(--color-text-muted)]"> — {v}</span>
@@ -306,15 +306,15 @@ export default function AdminMLPage() {
                   ))}
                 </ul>
 
-                <div className="mt-3 pt-3 border-t border-emerald-500/20 text-[10px] text-emerald-400">
+                <div className="mt-3 pt-3 border-t border-stone-300/20 text-[10px] text-stone-900">
                   <strong>학습 데이터 소스:</strong> 대법원 경매정보 · 온비드 공매정보 · 내부 완료 거래 이력
                 </div>
               </div>
 
               {/* AI 권고 입찰가 카드 */}
-              <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-4">
+              <div className="rounded-lg border border-stone-300/20 bg-stone-100/10 p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-7 h-7 rounded-md bg-blue-600 flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-md bg-stone-100 flex items-center justify-center">
                     <Target className="w-3.5 h-3.5 text-white" />
                   </div>
                   <div>
@@ -329,7 +329,7 @@ export default function AdminMLPage() {
                   <strong>계산식:</strong> 예상 회수액 − 필수 비용 − 목표 수익(ROI) · 최근 12개월 시세 반영
                 </div>
 
-                <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-blue-400">
+                <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-stone-900">
                   필수 입력 데이터
                 </div>
                 <ul className="space-y-1.5 text-[11px] text-[var(--color-text-secondary)]">
@@ -344,7 +344,7 @@ export default function AdminMLPage() {
                     ["레버리지 조건", "대출가능액 · 금리 (선택)"],
                   ].map(([k, v]) => (
                     <li key={k} className="flex items-start gap-2">
-                      <CheckCircle2 className="w-3 h-3 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <CheckCircle2 className="w-3 h-3 text-stone-900 mt-0.5 flex-shrink-0" />
                       <span>
                         <strong className="text-[var(--color-text-primary)]">{k}</strong>
                         <span className="text-[var(--color-text-muted)]"> — {v}</span>
@@ -353,7 +353,7 @@ export default function AdminMLPage() {
                   ))}
                 </ul>
 
-                <div className="mt-3 pt-3 border-t border-blue-500/20 text-[10px] text-blue-400">
+                <div className="mt-3 pt-3 border-t border-stone-300/20 text-[10px] text-stone-900">
                   <strong>자동 연동 소스:</strong> KB시세 · 국토부 실거래가 · 내부 낙찰가 DB
                 </div>
               </div>
@@ -362,7 +362,7 @@ export default function AdminMLPage() {
             {/* 사용자 입력 프로세스 가이드 */}
             <div className="px-5 py-4 border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)]">
               <div className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                <AlertCircle className="w-4 h-4 text-stone-900 mt-0.5 flex-shrink-0" />
                 <div className="text-[11px] text-[var(--color-text-secondary)] leading-relaxed">
                   <strong>매도자(금융기관) 제공 항목:</strong> 감정평가금액 · 채권 원금 · 담보 유형/지역 · 선후순위 채권 · 임차 현황 · 특수권리 플래그 (총 9개 필드)
                   <br />
@@ -471,7 +471,7 @@ export default function AdminMLPage() {
               <Database className="w-4 h-4 text-[var(--color-brand-mid)]" />
               <h2 className={DS.text.bodyBold}>크롤링 데이터 소스</h2>
               {dataStats?.isSample && (
-                <span className="ml-auto text-[0.6875rem] text-amber-400 font-medium bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">샘플 모드</span>
+                <span className="ml-auto text-[0.6875rem] text-stone-900 font-medium bg-stone-100/10 border border-stone-300/20 px-2 py-0.5 rounded-full">샘플 모드</span>
               )}
             </div>
             <table className="w-full">
@@ -671,10 +671,10 @@ function TrainingRunsHistory() {
 
   const statusBadge = (s: TrainingRun["status"]) => {
     const cls =
-      s === "completed" ? "bg-emerald-500/10 text-emerald-400 border-emerald-800" :
-      s === "running"   ? "bg-blue-500/10 text-blue-300 border-blue-800" :
-      s === "failed"    ? "bg-red-500/10 text-red-300 border-red-800" :
-                          "bg-amber-500/10 text-amber-300 border-amber-800"
+      s === "completed" ? "bg-stone-100/10 text-stone-900 border-stone-300" :
+      s === "running"   ? "bg-stone-100/10 text-stone-900 border-stone-300" :
+      s === "failed"    ? "bg-stone-100/10 text-stone-900 border-stone-300" :
+                          "bg-stone-100/10 text-stone-900 border-stone-300"
     return <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full border ${cls}`}>{s}</span>
   }
 

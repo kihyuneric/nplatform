@@ -40,9 +40,9 @@ interface Progress {
 }
 
 const DIFFICULTY_LABELS = {
-  beginner: { label: '초급', color: 'bg-emerald-100 text-emerald-700' },
-  intermediate: { label: '중급', color: 'bg-blue-100 text-blue-700' },
-  advanced: { label: '고급', color: 'bg-purple-100 text-purple-700' },
+  beginner: { label: '초급', color: 'bg-stone-100 text-stone-900' },
+  intermediate: { label: '중급', color: 'bg-stone-100 text-stone-900' },
+  advanced: { label: '고급', color: 'bg-stone-100 text-stone-900' },
 }
 
 export default function AtomicStudyPage() {
@@ -181,7 +181,7 @@ export default function AtomicStudyPage() {
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-10 flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-stone-300 border-t-transparent rounded-full animate-spin" />
         <p className="text-sm text-gray-500">캡슐 로딩 중...</p>
       </div>
     )
@@ -192,7 +192,7 @@ export default function AtomicStudyPage() {
       <div className="max-w-3xl mx-auto px-4 py-10 text-center space-y-3">
         <AlertCircle className="w-10 h-10 mx-auto text-gray-300" />
         <p className="text-gray-500">캡슐을 찾을 수 없거나 콘텐츠가 아직 생성되지 않았습니다.</p>
-        <button onClick={() => router.back()} className="text-purple-600 text-sm hover:underline">
+        <button onClick={() => router.back()} className="text-stone-900 text-sm hover:underline">
           뒤로 가기
         </button>
       </div>
@@ -219,12 +219,12 @@ export default function AtomicStudyPage() {
               예상 {capsule.estimated_min}분
             </span>
             {capsule.generation_stage === 'stage2' && (
-              <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full">
+              <span className="text-xs px-2 py-0.5 bg-stone-100 text-stone-900 rounded-full">
                 🌐 웹 조사 반영
               </span>
             )}
             {progress?.status === 'mastered' && (
-              <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex items-center gap-1">
+              <span className="text-xs px-2 py-0.5 bg-stone-100 text-stone-900 rounded-full flex items-center gap-1">
                 <Star className="w-3 h-3" /> 마스터 완료
               </span>
             )}
@@ -238,14 +238,14 @@ export default function AtomicStudyPage() {
       <Section
         id="definition"
         title="개념 정의"
-        icon={<BookOpen className="w-4 h-4 text-purple-500" />}
+        icon={<BookOpen className="w-4 h-4 text-stone-900" />}
         expanded={expanded.definition}
         onToggle={() => toggleSection('definition')}
         accent="purple"
       >
         <div className="space-y-3">
-          <div className="bg-purple-50 rounded-lg p-4">
-            <p className="text-xs font-semibold text-purple-600 mb-1">공식·법적 정의</p>
+          <div className="bg-stone-100 rounded-lg p-4">
+            <p className="text-xs font-semibold text-stone-900 mb-1">공식·법적 정의</p>
             <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{c.definition.formal}</p>
           </div>
           <div className="bg-gray-50 rounded-lg p-4">
@@ -258,7 +258,7 @@ export default function AtomicStudyPage() {
               <ul className="space-y-1.5">
                 {c.definition.key_characteristics.map((ch, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                    <span className="text-purple-400 font-bold mt-0.5">{i + 1}.</span>
+                    <span className="text-stone-900 font-bold mt-0.5">{i + 1}.</span>
                     {ch}
                   </li>
                 ))}
@@ -272,18 +272,18 @@ export default function AtomicStudyPage() {
       <Section
         id="importance"
         title="왜 중요한가"
-        icon={<Target className="w-4 h-4 text-amber-500" />}
+        icon={<Target className="w-4 h-4 text-stone-900" />}
         expanded={expanded.importance}
         onToggle={() => toggleSection('importance')}
         accent="amber"
       >
         <div className="space-y-3">
-          <div className="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-4">
-            <p className="text-xs font-semibold text-amber-700 mb-1">⚠️ 이것을 모르면</p>
+          <div className="bg-stone-100 border-l-4 border-stone-300 rounded-r-lg p-4">
+            <p className="text-xs font-semibold text-stone-900 mb-1">⚠️ 이것을 모르면</p>
             <p className="text-sm text-gray-700 leading-relaxed">{c.importance.why_essential}</p>
           </div>
-          <div className="bg-green-50 border-l-4 border-green-400 rounded-r-lg p-4">
-            <p className="text-xs font-semibold text-green-700 mb-1">💰 투자 수익에 미치는 영향</p>
+          <div className="bg-stone-100 border-l-4 border-stone-300 rounded-r-lg p-4">
+            <p className="text-xs font-semibold text-stone-900 mb-1">💰 투자 수익에 미치는 영향</p>
             <p className="text-sm text-gray-700 leading-relaxed">{c.importance.investment_impact}</p>
           </div>
         </div>
@@ -293,7 +293,7 @@ export default function AtomicStudyPage() {
       <Section
         id="principles"
         title="핵심 원리 단계별"
-        icon={<BarChart2 className="w-4 h-4 text-blue-500" />}
+        icon={<BarChart2 className="w-4 h-4 text-stone-900" />}
         expanded={expanded.principles}
         onToggle={() => toggleSection('principles')}
         accent="blue"
@@ -301,14 +301,14 @@ export default function AtomicStudyPage() {
         <div className="space-y-3">
           {c.principles?.map((p, i) => (
             <div key={i} className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+              <div className="w-7 h-7 rounded-full bg-stone-100 text-stone-900 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
                 {p.step}
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-gray-800 mb-0.5">{p.title}</p>
                 <p className="text-sm text-gray-600 leading-relaxed">{p.explanation}</p>
                 {p.example && (
-                  <div className="mt-1.5 bg-blue-50 rounded px-3 py-2 text-xs text-blue-700">
+                  <div className="mt-1.5 bg-stone-100 rounded px-3 py-2 text-xs text-stone-900">
                     💡 예시: {p.example}
                   </div>
                 )}
@@ -322,24 +322,24 @@ export default function AtomicStudyPage() {
       <Section
         id="legal"
         title="법령 근거"
-        icon={<Scale className="w-4 h-4 text-indigo-500" />}
+        icon={<Scale className="w-4 h-4 text-stone-900" />}
         expanded={expanded.legal}
         onToggle={() => toggleSection('legal')}
         accent="indigo"
       >
         <div className="space-y-3">
           {c.legal_foundation?.laws?.map((law, i) => (
-            <div key={i} className="bg-indigo-50 rounded-lg p-3">
+            <div key={i} className="bg-stone-100 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-bold text-indigo-700">{law.law_name}</span>
-                <span className="text-xs text-indigo-500">{law.article}</span>
+                <span className="text-xs font-bold text-stone-900">{law.law_name}</span>
+                <span className="text-xs text-stone-900">{law.article}</span>
               </div>
               <p className="text-xs text-gray-600">{law.summary}</p>
             </div>
           ))}
           {c.legal_foundation?.latest_changes && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-              <p className="text-xs font-semibold text-yellow-700 mb-1">📋 2024~2025 최신 변경사항</p>
+            <div className="bg-stone-100 border border-stone-300 rounded-lg p-3">
+              <p className="text-xs font-semibold text-stone-900 mb-1">📋 2024~2025 최신 변경사항</p>
               <p className="text-xs text-gray-600 leading-relaxed">{c.legal_foundation.latest_changes}</p>
             </div>
           )}
@@ -350,18 +350,18 @@ export default function AtomicStudyPage() {
       <Section
         id="cases"
         title="실전 사례"
-        icon={<FileText className="w-4 h-4 text-green-500" />}
+        icon={<FileText className="w-4 h-4 text-stone-900" />}
         expanded={expanded.cases}
         onToggle={() => toggleSection('cases')}
         accent="green"
       >
         <div className="space-y-3">
-          <div className="bg-green-50 rounded-lg p-4">
-            <p className="text-xs font-semibold text-green-700 mb-1.5">✅ 성공 사례</p>
+          <div className="bg-stone-100 rounded-lg p-4">
+            <p className="text-xs font-semibold text-stone-900 mb-1.5">✅ 성공 사례</p>
             <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{c.cases.success_case}</p>
           </div>
-          <div className="bg-red-50 rounded-lg p-4">
-            <p className="text-xs font-semibold text-red-600 mb-1.5">❌ 실패 사례 & 교훈</p>
+          <div className="bg-stone-100 rounded-lg p-4">
+            <p className="text-xs font-semibold text-stone-900 mb-1.5">❌ 실패 사례 & 교훈</p>
             <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{c.cases.failure_case}</p>
           </div>
           <div className="bg-gray-50 rounded-lg p-4">
@@ -375,21 +375,21 @@ export default function AtomicStudyPage() {
       <Section
         id="mistakes"
         title="흔한 실수 TOP 3"
-        icon={<AlertCircle className="w-4 h-4 text-red-500" />}
+        icon={<AlertCircle className="w-4 h-4 text-stone-900" />}
         expanded={expanded.mistakes}
         onToggle={() => toggleSection('mistakes')}
         accent="red"
       >
         <div className="space-y-3">
           {c.common_mistakes?.map((m, i) => (
-            <div key={i} className="border border-red-100 rounded-lg overflow-hidden">
-              <div className="bg-red-50 px-3 py-2">
-                <span className="text-xs font-bold text-red-600">실수 {i + 1}</span>
+            <div key={i} className="border border-stone-300 rounded-lg overflow-hidden">
+              <div className="bg-stone-100 px-3 py-2">
+                <span className="text-xs font-bold text-stone-900">실수 {i + 1}</span>
                 <p className="text-sm font-medium text-gray-800 mt-0.5">{m.mistake}</p>
               </div>
               <div className="px-3 py-2 space-y-1.5">
-                <p className="text-xs text-gray-500"><span className="font-medium text-amber-600">실제: </span>{m.reality}</p>
-                <p className="text-xs text-gray-500"><span className="font-medium text-green-600">올바른 접근: </span>{m.correct_approach}</p>
+                <p className="text-xs text-gray-500"><span className="font-medium text-stone-900">실제: </span>{m.reality}</p>
+                <p className="text-xs text-gray-500"><span className="font-medium text-stone-900">올바른 접근: </span>{m.correct_approach}</p>
               </div>
             </div>
           ))}
@@ -400,7 +400,7 @@ export default function AtomicStudyPage() {
       <Section
         id="checklist"
         title="실전 체크리스트"
-        icon={<CheckCircle2 className="w-4 h-4 text-teal-500" />}
+        icon={<CheckCircle2 className="w-4 h-4 text-stone-900" />}
         expanded={expanded.checklist}
         onToggle={() => toggleSection('checklist')}
         accent="teal"
@@ -408,8 +408,8 @@ export default function AtomicStudyPage() {
         <ul className="space-y-2">
           {c.checklist?.map((item, i) => (
             <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
-              <div className="w-5 h-5 rounded border-2 border-teal-300 shrink-0 mt-0.5 flex items-center justify-center">
-                <span className="text-[10px] font-bold text-teal-500">{i + 1}</span>
+              <div className="w-5 h-5 rounded border-2 border-stone-300 shrink-0 mt-0.5 flex items-center justify-center">
+                <span className="text-[10px] font-bold text-stone-900">{i + 1}</span>
               </div>
               {item}
             </li>
@@ -421,7 +421,7 @@ export default function AtomicStudyPage() {
       <Section
         id="quiz"
         title="연습문제"
-        icon={<Lightbulb className="w-4 h-4 text-yellow-500" />}
+        icon={<Lightbulb className="w-4 h-4 text-stone-900" />}
         expanded={expanded.quiz}
         onToggle={() => toggleSection('quiz')}
         accent="yellow"
@@ -445,9 +445,9 @@ export default function AtomicStudyPage() {
                           disabled={quizSubmitted}
                           onClick={() => setQuizAnswers(prev => ({ ...prev, [i]: opt }))}
                           className={`w-full text-left text-sm px-3 py-2 rounded-lg border transition-colors ${
-                            isCorrect ? 'bg-green-100 border-green-400 text-green-800' :
-                            isWrong ? 'bg-red-100 border-red-400 text-red-800' :
-                            isSelected ? 'bg-blue-50 border-blue-400 text-blue-800' :
+                            isCorrect ? 'bg-stone-100 border-stone-300 text-stone-900' :
+                            isWrong ? 'bg-stone-100 border-stone-300 text-stone-900' :
+                            isSelected ? 'bg-stone-100 border-stone-300 text-stone-900' :
                             'bg-white border-gray-200 hover:bg-gray-50'
                           }`}
                         >
@@ -479,13 +479,13 @@ export default function AtomicStudyPage() {
               <button
                 onClick={handleQuizSubmit}
                 disabled={Object.keys(quizAnswers).length === 0}
-                className="w-full py-2.5 bg-yellow-500 text-white rounded-lg text-sm font-medium hover:bg-yellow-600 disabled:opacity-50 transition-colors"
+                className="w-full py-2.5 bg-stone-100 text-white rounded-lg text-sm font-medium hover:bg-stone-100 disabled:opacity-50 transition-colors"
               >
                 정답 확인
               </button>
             ) : (
-              <div className={`rounded-lg p-4 text-center ${quizScore! >= 70 ? 'bg-green-50' : 'bg-amber-50'}`}>
-                <p className="text-2xl font-bold mb-1 ${quizScore! >= 70 ? 'text-green-700' : 'text-amber-700'}">
+              <div className={`rounded-lg p-4 text-center ${quizScore! >= 70 ? 'bg-stone-100' : 'bg-stone-100'}`}>
+                <p className="text-2xl font-bold mb-1 ${quizScore! >= 70 ? 'text-stone-900' : 'text-stone-900'}">
                   {quizScore}점
                 </p>
                 <p className="text-sm text-gray-600">
@@ -503,7 +503,7 @@ export default function AtomicStudyPage() {
       <Section
         id="mastery"
         title="마스터 확인"
-        icon={<Award className="w-4 h-4 text-amber-500" />}
+        icon={<Award className="w-4 h-4 text-stone-900" />}
         expanded={expanded.mastery}
         onToggle={() => toggleSection('mastery')}
         accent="amber"
@@ -515,7 +515,7 @@ export default function AtomicStudyPage() {
               <ul className="space-y-2">
                 {c.mastery.criteria.map((cr, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                    <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-stone-900 shrink-0 mt-0.5" />
                     {cr}
                   </li>
                 ))}
@@ -524,11 +524,11 @@ export default function AtomicStudyPage() {
           )}
 
           {c.mastery?.self_check?.length > 0 && (
-            <div className="bg-amber-50 rounded-lg p-4">
-              <p className="text-xs font-semibold text-amber-700 mb-2">자기 확인 질문</p>
+            <div className="bg-stone-100 rounded-lg p-4">
+              <p className="text-xs font-semibold text-stone-900 mb-2">자기 확인 질문</p>
               {c.mastery.self_check.map((q, i) => (
                 <p key={i} className="text-sm text-gray-700 mb-1.5">
-                  <span className="text-amber-600 font-medium">Q{i + 1}. </span>{q}
+                  <span className="text-stone-900 font-medium">Q{i + 1}. </span>{q}
                 </p>
               ))}
             </div>
@@ -557,7 +557,7 @@ export default function AtomicStudyPage() {
               마스터 완료 선언
             </button>
           ) : (
-            <div className="w-full py-3 bg-green-100 text-green-700 rounded-xl text-sm font-semibold text-center flex items-center justify-center gap-2">
+            <div className="w-full py-3 bg-stone-100 text-stone-900 rounded-xl text-sm font-semibold text-center flex items-center justify-center gap-2">
               <Award className="w-4 h-4" />
               마스터 완료! 🎉
             </div>
@@ -587,14 +587,14 @@ export default function AtomicStudyPage() {
       <div className="flex items-center gap-2 pt-2">
         <a
           href={`/api/ontology/atomic-capsules/export?concept_id=${capsule.concept_id}&format=docx`}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-stone-900 border border-stone-300 rounded-lg hover:bg-stone-100 transition-colors"
         >
           <Download className="w-3 h-3" />
           전체교재 DOCX
         </a>
         <a
           href={`/api/ontology/atomic-capsules/export?concept_id=${capsule.concept_id}&format=pdf`}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-stone-900 border border-stone-300 rounded-lg hover:bg-stone-100 transition-colors"
         >
           <Download className="w-3 h-3" />
           전체교재 PDF

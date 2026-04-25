@@ -117,7 +117,7 @@ export default function AdminSystemPage() {
                   <div key={api.name} className={`flex items-center justify-between py-2 border-b border-[var(--color-border-subtle)] last:border-0`}>
                     <span className={DS.text.body}>{api.name}</span>
                     <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border ${
-                      api.status === "active" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
+                      api.status === "active" ? "bg-stone-100/10 text-stone-900 border-stone-300/20" : "bg-stone-100/10 text-stone-900 border-stone-300/20"
                     }`}>
                       {api.status === "active" ? "정상" : "오류"}
                     </span>
@@ -163,7 +163,7 @@ export default function AdminSystemPage() {
                   <div key={mod.name} className={`flex items-center justify-between py-2 border-b border-[var(--color-border-subtle)] last:border-0`}>
                     <span className={DS.text.body}>{mod.name}</span>
                     <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border ${
-                      mod.enabled ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)]"
+                      mod.enabled ? "bg-stone-100/10 text-stone-900 border-stone-300/20" : "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)]"
                     }`}>
                       {mod.enabled ? "활성" : "비활성"}
                     </span>

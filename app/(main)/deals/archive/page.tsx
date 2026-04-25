@@ -211,7 +211,7 @@ export default function ArchivePage() {
                       <span className={`inline-block px-2 py-0.5 rounded text-[0.6875rem] font-bold border ${
                         deal.type === "buy"
                           ? DS.status.info
-                          : "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                          : "bg-stone-100/10 text-stone-900 border-stone-300/20"
                       }`}>
                         {deal.asset_type}
                       </span>

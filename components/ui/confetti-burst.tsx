@@ -41,13 +41,13 @@ interface ConfettiBurstProps {
 // ─── Constants ────────────────────────────────────────────────────────────
 
 const DEFAULT_COLORS = [
-  '#10B981', // emerald (accent)
+  '#14161A', // emerald (accent)
   '#1B3A5C', // primary
   '#2E75B6', // secondary
-  '#F59E0B', // amber
-  '#EF4444', // red
-  '#8B5CF6', // purple
-  '#06B6D4', // cyan
+  '#14161A', // amber
+  '#1B1B1F', // red
+  '#14161A', // purple
+  '#14161A', // cyan
   '#F97316', // orange
 ]
 

@@ -77,9 +77,9 @@ export function PullToRefresh({ onRefresh, children, threshold = 80 }: PullToRef
           <RefreshCw
             className={`h-5 w-5 transition-colors ${
               refreshing
-                ? "animate-spin text-[#10B981]"
+                ? "animate-spin text-[#14161A]"
                 : pullDistance > threshold
-                ? "text-[#10B981]"
+                ? "text-[#14161A]"
                 : "text-[#1B3A5C]"
             }`}
             style={!refreshing ? { transform: `rotate(${rotation}deg)` } : undefined}

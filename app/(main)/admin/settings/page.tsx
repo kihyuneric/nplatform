@@ -403,7 +403,7 @@ export default function AdminSettingsPage() {
                       <td className={`${DS.table.cell} font-semibold`}>{a.name}</td>
                       <td className={`${DS.table.cellMuted} font-mono text-[0.75rem]`}>{a.email}</td>
                       <td className={DS.table.cell}>
-                        <span className={DS.badge.inline("bg-blue-500/10", "text-blue-400", "border-blue-500/20")}>{a.role}</span>
+                        <span className={DS.badge.inline("bg-stone-100/10", "text-stone-900", "border-stone-300/20")}>{a.role}</span>
                       </td>
                       <td className={`${DS.table.cellMuted} font-mono`}>{a.joined}</td>
                       <td className={DS.table.cell}>
@@ -492,12 +492,12 @@ export default function AdminSettingsPage() {
         {tab === "수수료 설정" && (
           <div className="space-y-5">
             {/* 규제 안내 */}
-            <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/5`}>
-              <span className="text-amber-400 text-sm mt-0.5">⚠️</span>
+            <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border border-stone-300/30 bg-stone-100/5`}>
+              <span className="text-stone-900 text-sm mt-0.5">⚠️</span>
               <div>
-                <p className="text-xs font-bold text-amber-400 mb-0.5">규제 준수 고지</p>
+                <p className="text-xs font-bold text-stone-900 mb-0.5">규제 준수 고지</p>
                 <p className="text-[0.72rem] text-[var(--color-text-muted)] leading-relaxed">
-                  금융위원회 가이드라인에 따라 매도자 수수료는 <strong className="text-amber-400">0.9% 상한</strong>이 적용됩니다.
+                  금융위원회 가이드라인에 따라 매도자 수수료는 <strong className="text-stone-900">0.9% 상한</strong>이 적용됩니다.
                   매수자 수수료는 플랫폼 정책에 따라 최대 3%까지 설정 가능합니다.
                 </p>
               </div>
@@ -551,7 +551,7 @@ export default function AdminSettingsPage() {
                     className="w-full accent-[var(--color-brand-mid)]"
                   />
                   <div className="flex justify-between text-[0.65rem] text-[var(--color-text-muted)] mt-1">
-                    <span>0.3%</span><span className="text-amber-400 font-bold">상한 0.9%</span>
+                    <span>0.3%</span><span className="text-stone-900 font-bold">상한 0.9%</span>
                   </div>
                 </div>
 

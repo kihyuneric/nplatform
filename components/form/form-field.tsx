@@ -107,7 +107,7 @@ export const NPL_INPUT_CLASS =
   "transition-[border-color,box-shadow] duration-150 " +
   "hover:border-[var(--color-border-default)] " +
   "focus:border-[var(--color-brand-bright)] focus:outline-none " +
-  "focus:shadow-[0_0_0_3px_rgba(59,130,246,0.18)] " +
+  "focus:shadow-[0_0_0_3px_rgba(20,22,26,0.18)] " +
   "disabled:opacity-50 disabled:cursor-not-allowed " +
   "tabular-nums [font-variant-numeric:tabular-nums]"
 

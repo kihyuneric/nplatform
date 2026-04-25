@@ -221,6 +221,16 @@ input::placeholder, textarea::placeholder {
     /* 시각적 강조가 정말 필요한 곳만 brass */
     --color-accent-strong: var(--color-editorial-gold);   /* #A8853E muted brass */
 
+    /* ── 시맨틱 background 위 텍스트 색상 (대비 보장) ────────────────────
+       semantic colors는 모두 ink (#14161A) 이므로 그 위 텍스트는 항상 흰색 강제.
+       이전 emerald/amber/red 위 ‘진한 톤 텍스트(#041915)’ 패턴은 검정+검정 충돌. */
+    --color-positive-foreground: #FFFFFF;
+    --color-warning-foreground:  #FFFFFF;
+    --color-danger-foreground:   #FFFFFF;
+    --color-info-foreground:     #FFFFFF;
+    --color-on-ink:              #FFFFFF;   /* ink 배경 위 표준 텍스트 */
+    --color-on-brass:            #14161A;   /* brass 배경 위 표준 텍스트 */
+
     /* ── Surfaces (light) — Editorial paper tone ────────────────────────────── */
     --color-surface-base:     #FAFBFC;
     --color-surface-elevated: #FFFFFF;
@@ -2905,3 +2915,161 @@ button[role="switch"][data-state="unchecked"] {
 .npl-chart-mono .recharts-bar-rectangle:nth-child(odd) path { fill: var(--color-brand-deep) !important; }
 .npl-chart-mono .recharts-bar-rectangle:nth-child(even) path { fill: var(--color-border-default) !important; }
 .npl-chart-mono .recharts-bar-rectangle.npl-chart-mono-strong path { fill: var(--color-editorial-gold) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL MONO ENFORCEMENT · McKinsey Editorial v3 (Phase L+ Final)
+   "어느 페이지를 봐도 맥킨지 톤" — Tailwind multi-color utility 전수 강제 무력화
+
+   원칙
+   ─ 모든 emerald/green/lime/teal/cyan/sky/blue/indigo/violet/purple/fuchsia/
+     pink/rose/orange/amber/yellow/red 톤 → ink (#14161A) 또는 brass (#A8853E)
+   ─ inline style hex (`color:'#10B981'` 등)는 sed로 이미 변환됨
+   ─ 본 규칙은 Tailwind utility class와 fill/stroke (SVG/Recharts) 모두에 적용
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 텍스트 색상 (모든 컬러 톤 → ink) ─────────────────────────────────── */
+[class*="text-emerald-"],
+[class*="text-green-"],
+[class*="text-lime-"],
+[class*="text-teal-"],
+[class*="text-cyan-"],
+[class*="text-sky-"],
+[class*="text-blue-"],
+[class*="text-indigo-"],
+[class*="text-violet-"],
+[class*="text-purple-"],
+[class*="text-fuchsia-"],
+[class*="text-pink-"],
+[class*="text-rose-"],
+[class*="text-orange-"],
+[class*="text-amber-"],
+[class*="text-yellow-"],
+[class*="text-red-"] {
+  color: #14161A !important;
+}
+.dark [class*="text-emerald-"],
+.dark [class*="text-green-"],
+.dark [class*="text-lime-"],
+.dark [class*="text-teal-"],
+.dark [class*="text-cyan-"],
+.dark [class*="text-sky-"],
+.dark [class*="text-blue-"],
+.dark [class*="text-indigo-"],
+.dark [class*="text-violet-"],
+.dark [class*="text-purple-"],
+.dark [class*="text-fuchsia-"],
+.dark [class*="text-pink-"],
+.dark [class*="text-rose-"],
+.dark [class*="text-orange-"],
+.dark [class*="text-amber-"],
+.dark [class*="text-yellow-"],
+.dark [class*="text-red-"] {
+  color: #F8FAFC !important;
+}
+
+/* ── 배경 색상 (진한 채도 → ink, 연한 톤 → 베이지/회색) ────────────────── */
+[class*="bg-emerald-50"], [class*="bg-emerald-100"], [class*="bg-emerald-200"],
+[class*="bg-green-50"],   [class*="bg-green-100"],   [class*="bg-green-200"],
+[class*="bg-lime-50"],    [class*="bg-lime-100"],    [class*="bg-lime-200"],
+[class*="bg-teal-50"],    [class*="bg-teal-100"],    [class*="bg-teal-200"],
+[class*="bg-cyan-50"],    [class*="bg-cyan-100"],    [class*="bg-cyan-200"],
+[class*="bg-sky-50"],     [class*="bg-sky-100"],     [class*="bg-sky-200"],
+[class*="bg-blue-50"],    [class*="bg-blue-100"],    [class*="bg-blue-200"],
+[class*="bg-indigo-50"],  [class*="bg-indigo-100"],  [class*="bg-indigo-200"],
+[class*="bg-violet-50"],  [class*="bg-violet-100"],  [class*="bg-violet-200"],
+[class*="bg-purple-50"],  [class*="bg-purple-100"],  [class*="bg-purple-200"],
+[class*="bg-fuchsia-50"], [class*="bg-fuchsia-100"], [class*="bg-fuchsia-200"],
+[class*="bg-pink-50"],    [class*="bg-pink-100"],    [class*="bg-pink-200"],
+[class*="bg-rose-50"],    [class*="bg-rose-100"],    [class*="bg-rose-200"],
+[class*="bg-orange-50"],  [class*="bg-orange-100"],  [class*="bg-orange-200"],
+[class*="bg-amber-50"],   [class*="bg-amber-100"],   [class*="bg-amber-200"],
+[class*="bg-yellow-50"],  [class*="bg-yellow-100"],  [class*="bg-yellow-200"],
+[class*="bg-red-50"],     [class*="bg-red-100"],     [class*="bg-red-200"] {
+  background-color: #F4EBE0 !important;   /* 베이지 paper tone */
+}
+[class*="bg-emerald-300"], [class*="bg-emerald-400"], [class*="bg-emerald-500"], [class*="bg-emerald-600"], [class*="bg-emerald-700"], [class*="bg-emerald-800"], [class*="bg-emerald-900"],
+[class*="bg-green-300"],   [class*="bg-green-400"],   [class*="bg-green-500"],   [class*="bg-green-600"],   [class*="bg-green-700"],   [class*="bg-green-800"],   [class*="bg-green-900"],
+[class*="bg-lime-300"],    [class*="bg-lime-400"],    [class*="bg-lime-500"],    [class*="bg-lime-600"],    [class*="bg-lime-700"],    [class*="bg-lime-800"],    [class*="bg-lime-900"],
+[class*="bg-teal-300"],    [class*="bg-teal-400"],    [class*="bg-teal-500"],    [class*="bg-teal-600"],    [class*="bg-teal-700"],    [class*="bg-teal-800"],    [class*="bg-teal-900"],
+[class*="bg-cyan-300"],    [class*="bg-cyan-400"],    [class*="bg-cyan-500"],    [class*="bg-cyan-600"],    [class*="bg-cyan-700"],    [class*="bg-cyan-800"],    [class*="bg-cyan-900"],
+[class*="bg-sky-300"],     [class*="bg-sky-400"],     [class*="bg-sky-500"],     [class*="bg-sky-600"],     [class*="bg-sky-700"],     [class*="bg-sky-800"],     [class*="bg-sky-900"],
+[class*="bg-blue-300"],    [class*="bg-blue-400"],    [class*="bg-blue-500"],    [class*="bg-blue-600"],    [class*="bg-blue-700"],    [class*="bg-blue-800"],    [class*="bg-blue-900"],
+[class*="bg-indigo-300"],  [class*="bg-indigo-400"],  [class*="bg-indigo-500"],  [class*="bg-indigo-600"],  [class*="bg-indigo-700"],  [class*="bg-indigo-800"],  [class*="bg-indigo-900"],
+[class*="bg-violet-300"],  [class*="bg-violet-400"],  [class*="bg-violet-500"],  [class*="bg-violet-600"],  [class*="bg-violet-700"],  [class*="bg-violet-800"],  [class*="bg-violet-900"],
+[class*="bg-purple-300"],  [class*="bg-purple-400"],  [class*="bg-purple-500"],  [class*="bg-purple-600"],  [class*="bg-purple-700"],  [class*="bg-purple-800"],  [class*="bg-purple-900"],
+[class*="bg-fuchsia-300"], [class*="bg-fuchsia-400"], [class*="bg-fuchsia-500"], [class*="bg-fuchsia-600"], [class*="bg-fuchsia-700"], [class*="bg-fuchsia-800"], [class*="bg-fuchsia-900"],
+[class*="bg-pink-300"],    [class*="bg-pink-400"],    [class*="bg-pink-500"],    [class*="bg-pink-600"],    [class*="bg-pink-700"],    [class*="bg-pink-800"],    [class*="bg-pink-900"],
+[class*="bg-rose-300"],    [class*="bg-rose-400"],    [class*="bg-rose-500"],    [class*="bg-rose-600"],    [class*="bg-rose-700"],    [class*="bg-rose-800"],    [class*="bg-rose-900"],
+[class*="bg-orange-300"],  [class*="bg-orange-400"],  [class*="bg-orange-500"],  [class*="bg-orange-600"],  [class*="bg-orange-700"],  [class*="bg-orange-800"],  [class*="bg-orange-900"],
+[class*="bg-amber-300"],   [class*="bg-amber-400"],   [class*="bg-amber-500"],   [class*="bg-amber-600"],   [class*="bg-amber-700"],   [class*="bg-amber-800"],   [class*="bg-amber-900"],
+[class*="bg-yellow-300"],  [class*="bg-yellow-400"],  [class*="bg-yellow-500"],  [class*="bg-yellow-600"],  [class*="bg-yellow-700"],  [class*="bg-yellow-800"],  [class*="bg-yellow-900"],
+[class*="bg-red-300"],     [class*="bg-red-400"],     [class*="bg-red-500"],     [class*="bg-red-600"],     [class*="bg-red-700"],     [class*="bg-red-800"],     [class*="bg-red-900"] {
+  background-color: #14161A !important;
+  color: #FFFFFF !important;
+}
+
+/* ── 테두리 색상 (모든 컬러 → 베이지 hairline 또는 ink) ───────────────── */
+[class*="border-emerald-"],
+[class*="border-green-"],
+[class*="border-lime-"],
+[class*="border-teal-"],
+[class*="border-cyan-"],
+[class*="border-sky-"],
+[class*="border-blue-"],
+[class*="border-indigo-"],
+[class*="border-violet-"],
+[class*="border-purple-"],
+[class*="border-fuchsia-"],
+[class*="border-pink-"],
+[class*="border-rose-"],
+[class*="border-orange-"],
+[class*="border-amber-"],
+[class*="border-yellow-"],
+[class*="border-red-"] {
+  border-color: rgba(20, 22, 26, 0.20) !important;
+}
+
+/* ── Stroke / Fill (SVG, lucide 아이콘 일부) ──────────────────────────── */
+[class*="stroke-emerald-"],
+[class*="stroke-green-"],
+[class*="stroke-blue-"],
+[class*="stroke-purple-"],
+[class*="stroke-amber-"],
+[class*="stroke-red-"],
+[class*="stroke-rose-"] {
+  stroke: #14161A !important;
+}
+[class*="fill-emerald-"],
+[class*="fill-green-"],
+[class*="fill-blue-"],
+[class*="fill-purple-"],
+[class*="fill-amber-"],
+[class*="fill-red-"],
+[class*="fill-rose-"] {
+  fill: #14161A !important;
+}
+
+/* ── Tailwind gradient stop 색상 무력화 (from-emerald-500 등) ─────────── */
+[class*="from-emerald-"], [class*="from-green-"], [class*="from-lime-"], [class*="from-teal-"], [class*="from-cyan-"], [class*="from-sky-"],
+[class*="from-blue-"],    [class*="from-indigo-"], [class*="from-violet-"], [class*="from-purple-"], [class*="from-fuchsia-"],
+[class*="from-pink-"],    [class*="from-rose-"],   [class*="from-orange-"], [class*="from-amber-"],  [class*="from-yellow-"], [class*="from-red-"] {
+  --tw-gradient-from: #14161A !important;
+  --tw-gradient-to: rgba(20, 22, 26, 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+[class*="to-emerald-"], [class*="to-green-"], [class*="to-lime-"], [class*="to-teal-"], [class*="to-cyan-"], [class*="to-sky-"],
+[class*="to-blue-"],    [class*="to-indigo-"], [class*="to-violet-"], [class*="to-purple-"], [class*="to-fuchsia-"],
+[class*="to-pink-"],    [class*="to-rose-"],   [class*="to-orange-"], [class*="to-amber-"],  [class*="to-yellow-"], [class*="to-red-"] {
+  --tw-gradient-to: #14161A !important;
+}
+[class*="via-emerald-"], [class*="via-green-"], [class*="via-blue-"], [class*="via-purple-"], [class*="via-amber-"], [class*="via-red-"], [class*="via-rose-"] {
+  --tw-gradient-via: #14161A !important;
+}
+
+/* ── accent-* (체크박스, 라디오 accent color) ─────────────────────────── */
+[class*="accent-emerald-"], [class*="accent-green-"], [class*="accent-blue-"], [class*="accent-purple-"], [class*="accent-amber-"], [class*="accent-red-"] {
+  accent-color: #14161A !important;
+}
+
+/* ── lucide 아이콘에 inline color 미지정 + 부모 의도 emerald 톤이었던 케이스
+       클래스 기반으로 강제 mono — 하지만 `style={{ color: 'X' }}`는 sed로 이미 fix */

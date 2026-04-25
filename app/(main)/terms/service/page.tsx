@@ -95,17 +95,17 @@ export default function TermsOfServicePage() {
                 { id: "section-6", title: "제6조 (서비스 변경 및 중단)", content: <ol className="list-decimal pl-5 space-y-2"><li>회사는 운영상·기술상 필요에 따라 서비스의 전부 또는 일부를 변경할 수 있습니다.</li><li>서비스 내용, 이용방법, 시간에 변경이 있는 경우 사전에 공지합니다.</li><li>정기점검(매월 넷째 주 토요일 02:00~06:00) 또는 긴급점검 시 서비스 이용이 일시 제한될 수 있습니다.</li></ol> },
                 { id: "section-7", title: "제7조 (이용자의 의무)", content: <ol className="list-decimal pl-5 space-y-2"><li>이용자는 관계 법령, 본 약관, 이용안내 및 공지사항을 준수하여야 합니다.</li><li>이용자는 회원 정보에 변경이 있는 경우 상당한 기간 이내에 수정하여야 합니다.</li><li>이용자는 자신의 계정 정보를 타인에게 양도·대여할 수 없습니다.</li></ol> },
                 { id: "section-8", title: "제8조 (금지행위)", content: <>
-                  <div className="bg-amber-500/10 border-l-4 border-amber-400 p-4 rounded-r-lg mb-4">
-                    <p className={`${DS.text.label} text-amber-300 mb-1`}>중요 조항</p>
-                    <p className={`${DS.text.body} text-amber-400`}>다음 행위 위반 시 서비스 이용이 즉시 제한될 수 있으며, 법적 책임이 발생할 수 있습니다.</p>
+                  <div className="bg-stone-100/10 border-l-4 border-stone-300 p-4 rounded-r-lg mb-4">
+                    <p className={`${DS.text.label} text-stone-900 mb-1`}>중요 조항</p>
+                    <p className={`${DS.text.body} text-stone-900`}>다음 행위 위반 시 서비스 이용이 즉시 제한될 수 있으며, 법적 책임이 발생할 수 있습니다.</p>
                   </div>
                   <ol className="list-decimal pl-5 space-y-1"><li>타인의 정보를 도용하는 행위</li><li>회사의 사전 승낙 없이 서비스 정보를 복제·유통하는 행위</li><li>저작권 등 지적재산권 침해 행위</li><li>허가 없는 영리 목적 활동</li><li>서비스 안정적 운영을 방해하는 행위 (크롤링·스크래핑 등 포함)</li></ol>
                 </> },
                 { id: "section-9", title: "제9조 (지적재산권)", content: <ol className="list-decimal pl-5 space-y-2"><li>서비스에 대한 저작권 및 지적재산권은 회사에 귀속됩니다. 이용자가 등록한 게시물의 저작권은 해당 이용자에게 귀속됩니다.</li><li>AI 분석 결과물의 저작권은 회사에 귀속되며, 이용자는 개인 용도로만 사용할 수 있습니다.</li></ol> },
                 { id: "section-10", title: "제10조 (면책조항)", content: <>
-                  <div className="bg-amber-500/10 border-l-4 border-amber-400 p-4 rounded-r-lg mb-4">
-                    <p className={`${DS.text.label} text-amber-300 mb-1`}>투자 위험 고지</p>
-                    <p className={`${DS.text.body} text-amber-400`}>서비스에서 제공되는 모든 분석 및 통계 데이터는 참고용이며, 투자 판단의 최종 책임은 이용자에게 있습니다.</p>
+                  <div className="bg-stone-100/10 border-l-4 border-stone-300 p-4 rounded-r-lg mb-4">
+                    <p className={`${DS.text.label} text-stone-900 mb-1`}>투자 위험 고지</p>
+                    <p className={`${DS.text.body} text-stone-900`}>서비스에서 제공되는 모든 분석 및 통계 데이터는 참고용이며, 투자 판단의 최종 책임은 이용자에게 있습니다.</p>
                   </div>
                   <ol className="list-decimal pl-5 space-y-2"><li>회사는 제공되는 NPL 분석 결과, 수익률 예측, 시장 데이터 등의 정확성·완전성·적시성을 보장하지 않습니다.</li><li>천재지변 등 불가항력으로 서비스를 제공할 수 없는 경우 책임이 면제됩니다.</li></ol>
                 </> },

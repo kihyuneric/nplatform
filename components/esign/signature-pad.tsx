@@ -131,7 +131,7 @@ export function SignaturePad({
           width,
           borderRadius: 10,
           overflow: "hidden",
-          border: `1.5px solid ${drawing ? "#10B981" : "#1E3A5F"}`,
+          border: `1.5px solid ${drawing ? "#14161A" : "#1E3A5F"}`,
           backgroundColor: "#F8FAFC",
           transition: "border-color 0.2s",
           cursor: disabled ? "not-allowed" : "crosshair",
@@ -201,7 +201,7 @@ export function SignaturePad({
           onClick={handleConfirm}
           disabled={!hasSignature || disabled}
           className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[0.75rem] font-bold
-            bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed
+            bg-stone-100 text-white hover:bg-stone-100 disabled:opacity-40 disabled:cursor-not-allowed
             transition-colors"
         >
           <Check size={12} /> 서명 확인

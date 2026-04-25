@@ -31,11 +31,11 @@ import {
 export const EMPTY_SPECIAL_CONDITIONS: SpecialConditions = _EMPTY
 
 const SEVERITY_STYLE: Record<SeverityLevel, { badge: string; label: string }> = {
-  OK:       { badge: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/30",  label: "안전" },
-  INFO:     { badge: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/30",                   label: "참고" },
-  WARNING:  { badge: "bg-amber-500/10 text-amber-700 dark:text-amber-200 border-amber-500/30",           label: "주의" },
-  DANGER:   { badge: "bg-orange-500/10 text-orange-700 dark:text-orange-200 border-orange-500/30",       label: "위험" },
-  CRITICAL: { badge: "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/30",                   label: "치명" },
+  OK:       { badge: "bg-stone-100/10 text-stone-900 dark:text-stone-900 border-stone-300/30",  label: "안전" },
+  INFO:     { badge: "bg-stone-100/10 text-stone-900 dark:text-stone-900 border-stone-300/30",                   label: "참고" },
+  WARNING:  { badge: "bg-stone-100/10 text-stone-900 dark:text-stone-900 border-stone-300/30",           label: "주의" },
+  DANGER:   { badge: "bg-stone-100/10 text-stone-900 dark:text-stone-900 border-stone-300/30",       label: "위험" },
+  CRITICAL: { badge: "bg-stone-100/10 text-stone-900 dark:text-stone-900 border-stone-300/30",                   label: "치명" },
 }
 
 const CATEGORY_ORDER: SpecialConditionCategory[] = [
@@ -76,7 +76,7 @@ export default function SpecialConditionsPicker({ value, onChange, disabled, hid
     <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4 space-y-4">
       {!hideHeader && (
         <div className="flex items-start gap-2">
-          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+          <AlertTriangle className="w-4 h-4 text-stone-900 shrink-0 mt-0.5" />
           <div>
             <h4 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">
               경매 특수조건 (25항목)
@@ -99,7 +99,7 @@ export default function SpecialConditionsPicker({ value, onChange, disabled, hid
                 {SPECIAL_CONDITION_CATEGORY_LABEL[cat]}
               </h5>
               {hitCount > 0 && (
-                <span className="text-[0.625rem] font-semibold text-amber-700 dark:text-amber-200">
+                <span className="text-[0.625rem] font-semibold text-stone-900 dark:text-stone-900">
                   {hitCount}/{items.length} 선택
                 </span>
               )}
@@ -116,7 +116,7 @@ export default function SpecialConditionsPicker({ value, onChange, disabled, hid
                     disabled={disabled}
                     className={`text-left rounded-lg px-3 py-2.5 border transition-colors ${
                       checked
-                        ? "bg-amber-500/10 border-amber-500/40"
+                        ? "bg-stone-100/10 border-stone-300/40"
                         : "bg-[var(--color-surface-base)] border-[var(--color-border-subtle)] hover:border-[var(--color-border-strong)]"
                     } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                   >
@@ -125,7 +125,7 @@ export default function SpecialConditionsPicker({ value, onChange, disabled, hid
                         <span
                           className={`inline-flex w-4 h-4 shrink-0 items-center justify-center rounded border ${
                             checked
-                              ? "bg-amber-500 border-amber-500 text-white"
+                              ? "bg-stone-100 border-stone-300 text-white"
                               : "bg-transparent border-[var(--color-border-strong)]"
                           }`}
                         >
@@ -146,7 +146,7 @@ export default function SpecialConditionsPicker({ value, onChange, disabled, hid
                         <span className={`text-[0.5625rem] font-bold px-1.5 py-0.5 rounded border ${sev.badge}`}>
                           {sev.label}
                         </span>
-                        <span className={`text-[0.625rem] font-bold tabular-nums ${checked ? "text-amber-700 dark:text-amber-200" : "text-[var(--color-text-tertiary)]"}`}>
+                        <span className={`text-[0.625rem] font-bold tabular-nums ${checked ? "text-stone-900 dark:text-stone-900" : "text-[var(--color-text-tertiary)]"}`}>
                           {it.penalty}%p
                         </span>
                       </span>
@@ -173,7 +173,7 @@ export default function SpecialConditionsPicker({ value, onChange, disabled, hid
           disabled={disabled}
           rows={2}
           placeholder="위 항목 외 현장조사·등기부 특이사항 (자유 기재, 선택)"
-          className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-amber-500/60 focus:outline-none resize-y disabled:opacity-50"
+          className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-stone-300/60 focus:outline-none resize-y disabled:opacity-50"
         />
       </section>
 
@@ -185,10 +185,10 @@ export default function SpecialConditionsPicker({ value, onChange, disabled, hid
         </div>
         <div className="flex items-center gap-4 text-[0.6875rem]">
           <span>
-            낙찰가율 감점: <span className="font-bold tabular-nums text-amber-700 dark:text-amber-200">{totalBidPenalty}%p</span>
+            낙찰가율 감점: <span className="font-bold tabular-nums text-stone-900 dark:text-stone-900">{totalBidPenalty}%p</span>
           </span>
           <span>
-            법적 리스크: <span className="font-bold tabular-nums text-red-600 dark:text-red-300">{totalLegalPenalty}점</span>
+            법적 리스크: <span className="font-bold tabular-nums text-stone-900 dark:text-stone-900">{totalLegalPenalty}점</span>
           </span>
         </div>
       </div>

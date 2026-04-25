@@ -59,12 +59,12 @@ export function Disclaimer({ type, compact = false }: DisclaimerProps) {
   }
 
   return (
-    <div className="mt-6 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+    <div className="mt-6 rounded-lg border border-stone-300/30 bg-stone-100/10 p-4">
       <div className="flex items-start gap-2">
-        <Icon className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+        <Icon className="h-4 w-4 text-stone-900 shrink-0 mt-0.5" />
         <div>
-          <p className="text-xs font-semibold text-amber-300">{d.title}</p>
-          <p className="text-[11px] text-amber-400/80 mt-1 leading-relaxed">{d.content}</p>
+          <p className="text-xs font-semibold text-stone-900">{d.title}</p>
+          <p className="text-[11px] text-stone-900/80 mt-1 leading-relaxed">{d.content}</p>
         </div>
       </div>
     </div>
@@ -90,7 +90,7 @@ export function RoleResponsibility() {
       <div className="space-y-2">
         {roles.map(r => (
           <div key={r.role} className="flex gap-3 text-xs">
-            <span className="font-medium text-blue-400 w-32 shrink-0">{r.role}</span>
+            <span className="font-medium text-stone-900 w-32 shrink-0">{r.role}</span>
             <span className="text-muted-foreground">{r.responsibility}</span>
           </div>
         ))}

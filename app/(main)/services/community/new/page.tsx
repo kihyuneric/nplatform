@@ -180,9 +180,9 @@ export default function NewPostPage() {
               <p className={`${DS.text.cardSubtitle} mb-3`}>태그 <span className="text-[var(--color-text-muted)] font-normal">(최대 5개)</span></p>
               <div className="flex flex-wrap gap-2 mb-3">
                 {tags.map((tag) => (
-                  <span key={tag} className="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[0.8125rem] font-medium">
+                  <span key={tag} className="flex items-center gap-1 px-3 py-1 rounded-full bg-stone-100/10 text-stone-900 text-[0.8125rem] font-medium">
                     #{tag}
-                    <button onClick={() => removeTag(tag)} className="hover:text-blue-300 transition-colors">
+                    <button onClick={() => removeTag(tag)} className="hover:text-stone-900 transition-colors">
                       <X className="w-3 h-3" />
                     </button>
                   </span>

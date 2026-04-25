@@ -262,7 +262,7 @@ export default function UploadPage() {
           <MiniStat label="커버 개념" value={stats.covered_concepts} />
           <MiniStat label="전체 개념" value={stats.total_concepts} />
           <div className="bg-white rounded-xl p-4 border">
-            <p className="text-2xl font-bold text-purple-600">
+            <p className="text-2xl font-bold text-stone-900">
               {stats.coverage_rate}%
             </p>
             <p className="text-xs text-gray-500">커버리지</p>
@@ -282,13 +282,13 @@ export default function UploadPage() {
           <button
             onClick={handleReanalyze}
             disabled={reanalyzing}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-stone-100 text-white rounded-lg hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${reanalyzing ? 'animate-spin' : ''}`} />
             {reanalyzing ? '재분석 중...' : `전체 재분석 (${stats.total_videos}개 영상)`}
           </button>
           {reanalyzeResult && (
-            <span className={`text-sm ${reanalyzeResult.errors.length > 0 ? 'text-amber-600' : 'text-green-600'}`}>
+            <span className={`text-sm ${reanalyzeResult.errors.length > 0 ? 'text-stone-900' : 'text-stone-900'}`}>
               {reanalyzeResult.reanalyzed}개 재분석 완료
               {reanalyzeResult.errors.length > 0 && ` (오류 ${reanalyzeResult.errors.length}건)`}
             </span>
@@ -299,7 +299,7 @@ export default function UploadPage() {
       {/* Upload Form */}
       <div className="bg-white rounded-xl border p-6 space-y-4">
         <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-          <Upload className="w-5 h-5 text-purple-600" />
+          <Upload className="w-5 h-5 text-stone-900" />
           대본 업로드
         </h2>
         <div className="grid md:grid-cols-3 gap-4">
@@ -353,7 +353,7 @@ export default function UploadPage() {
           <button
             onClick={() => handleSubmit()}
             disabled={uploading || !title.trim() || !transcript.trim()}
-            className="px-6 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-2 bg-stone-100 text-white rounded-lg text-sm font-medium hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {uploading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -365,7 +365,7 @@ export default function UploadPage() {
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+          <div className="flex items-center gap-2 text-stone-900 text-sm bg-stone-100 p-3 rounded-lg">
             <XCircle className="w-4 h-4 flex-shrink-0" />
             {error}
           </div>
@@ -377,7 +377,7 @@ export default function UploadPage() {
         <div className="bg-white rounded-xl border p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-              <Table2 className="w-5 h-5 text-green-600" />
+              <Table2 className="w-5 h-5 text-stone-900" />
               엑셀 데이터 미리보기 ({excelPreview.length}건)
             </h2>
             <div className="flex items-center gap-3">
@@ -386,7 +386,7 @@ export default function UploadPage() {
                   if (selectedRows.size === excelPreview.length) setSelectedRows(new Set())
                   else setSelectedRows(new Set(excelPreview.map((_, i) => i)))
                 }}
-                className="text-xs text-purple-600 hover:underline"
+                className="text-xs text-stone-900 hover:underline"
               >
                 {selectedRows.size === excelPreview.length ? '전체 해제' : '전체 선택'}
               </button>
@@ -416,7 +416,7 @@ export default function UploadPage() {
               </thead>
               <tbody>
                 {excelPreview.map((row, i) => (
-                  <tr key={i} className={`border-t ${selectedRows.has(i) ? 'bg-purple-50/50' : ''}`}>
+                  <tr key={i} className={`border-t ${selectedRows.has(i) ? 'bg-stone-100/50' : ''}`}>
                     <td className="px-3 py-2">
                       <input
                         type="checkbox"
@@ -449,7 +449,7 @@ export default function UploadPage() {
               </div>
               <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-purple-500 rounded-full transition-all"
+                  className="h-full bg-stone-100 rounded-full transition-all"
                   style={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}
                 />
               </div>
@@ -460,7 +460,7 @@ export default function UploadPage() {
             <button
               onClick={handleBulkUpload}
               disabled={bulkUploading || selectedRows.size === 0}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 bg-stone-100 text-white rounded-lg text-sm font-medium hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {bulkUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
               {bulkUploading ? '업로드 중...' : `${selectedRows.size}건 일괄 업로드`}
@@ -481,7 +481,7 @@ export default function UploadPage() {
         <div className="space-y-4">
           <div className="bg-white rounded-xl border p-6 space-y-4">
             <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
+              <CheckCircle2 className="w-5 h-5 text-stone-900" />
               분석 결과 — {result.mapped_concepts_count}개 개념 매핑됨
             </h2>
             <p className="text-sm text-gray-500">
@@ -498,10 +498,10 @@ export default function UploadPage() {
                     .sort(([, a], [, b]) => b - a)
                     .map(([type, score]) => {
                       const styles: Record<string, { bg: string; text: string }> = {
-                        informational: { bg: 'bg-blue-100', text: 'text-blue-700' },
-                        case_study: { bg: 'bg-green-100', text: 'text-green-700' },
-                        hooking: { bg: 'bg-orange-100', text: 'text-orange-700' },
-                        knowhow: { bg: 'bg-purple-100', text: 'text-purple-700' },
+                        informational: { bg: 'bg-stone-100', text: 'text-stone-900' },
+                        case_study: { bg: 'bg-stone-100', text: 'text-stone-900' },
+                        hooking: { bg: 'bg-stone-100', text: 'text-stone-900' },
+                        knowhow: { bg: 'bg-stone-100', text: 'text-stone-900' },
                       }
                       const labels: Record<string, string> = {
                         informational: '정보성',
@@ -530,11 +530,11 @@ export default function UploadPage() {
                 <div className="flex h-6 rounded-lg overflow-hidden border">
                   {result.analysis.structure.map((seg, i) => {
                     const colors: Record<string, string> = {
-                      hooking_intro: 'bg-orange-400',
-                      information_body: 'bg-blue-400',
-                      case_example: 'bg-green-400',
-                      call_to_action: 'bg-red-400',
-                      summary: 'bg-purple-400',
+                      hooking_intro: 'bg-stone-100',
+                      information_body: 'bg-stone-100',
+                      case_example: 'bg-stone-100',
+                      call_to_action: 'bg-stone-100',
+                      summary: 'bg-stone-100',
                       transition: 'bg-gray-300',
                     }
                     const width = seg.end_pct - seg.start_pct
@@ -556,10 +556,10 @@ export default function UploadPage() {
                 </div>
                 <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                   {[
-                    { label: '후킹', color: 'bg-orange-400', value: result.analysis.hooking_ratio },
-                    { label: '정보', color: 'bg-blue-400', value: result.analysis.information_ratio },
-                    { label: '사례', color: 'bg-green-400', value: result.analysis.case_ratio },
-                    { label: 'CTA/요약', color: 'bg-red-400', value: result.analysis.cta_ratio },
+                    { label: '후킹', color: 'bg-stone-100', value: result.analysis.hooking_ratio },
+                    { label: '정보', color: 'bg-stone-100', value: result.analysis.information_ratio },
+                    { label: '사례', color: 'bg-stone-100', value: result.analysis.case_ratio },
+                    { label: 'CTA/요약', color: 'bg-stone-100', value: result.analysis.cta_ratio },
                   ].map(item => (
                     <span key={item.label} className="flex items-center gap-1">
                       <span className={`w-2.5 h-2.5 rounded-sm ${item.color}`} />
@@ -584,7 +584,7 @@ export default function UploadPage() {
                     return (
                       <div key={i} className="bg-gray-50 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">
+                          <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-stone-100 text-stone-900">
                             {typeLabels[ref.type] || ref.type}
                           </span>
                           <span className="font-mono text-sm font-medium text-gray-700">{ref.number}</span>
@@ -620,7 +620,7 @@ export default function UploadPage() {
                       <div className="w-32">
                         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-purple-500 rounded-full"
+                            className="h-full bg-stone-100 rounded-full"
                             style={{
                               width: `${Math.round(m.relevance * 100)}%`,
                             }}
@@ -660,7 +660,7 @@ export default function UploadPage() {
                 </div>
                 <button
                   onClick={() => handleDelete(item.youtube_id)}
-                  className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                  className="p-2 text-gray-400 hover:text-stone-900 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

@@ -37,9 +37,9 @@ function RetentionCell({ value }: { value: number | null }) {
   if (value === null)
     return <td className={`${DS.table.cellMuted} text-center`}>-</td>
   const cls =
-    value >= 60 ? "bg-emerald-500/10 text-emerald-400"
-    : value >= 40 ? "bg-amber-500/10 text-amber-400"
-    : "bg-red-500/10 text-red-400"
+    value >= 60 ? "bg-stone-100/10 text-stone-900"
+    : value >= 40 ? "bg-stone-100/10 text-stone-900"
+    : "bg-stone-100/10 text-stone-900"
   return (
     <td className={`${DS.table.cell} text-center`}>
       <span className={`text-[0.8125rem] font-semibold px-2 py-0.5 rounded ${cls}`}>{value}%</span>
@@ -49,9 +49,9 @@ function RetentionCell({ value }: { value: number | null }) {
 
 function StatusBadge({ status }: { status: string }) {
   const cls =
-    status === "정상" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-    : status === "주의" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-    : "bg-red-500/10 text-red-400 border border-red-500/20"
+    status === "정상" ? "bg-stone-100/10 text-stone-900 border border-stone-300/20"
+    : status === "주의" ? "bg-stone-100/10 text-stone-900 border border-stone-300/20"
+    : "bg-stone-100/10 text-stone-900 border border-stone-300/20"
   return <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border ${cls}`}>{status}</span>
 }
 
@@ -121,10 +121,10 @@ export default function AdminAnalyticsPage() {
         supabase.from('deals').select('buyer_id', { count: 'exact', head: true }).eq('status', 'COMPLETED'),
       ])
       const funnelData: FunnelRow[] = [
-        { step: "회원가입",   users: totalUsers ?? 0,      color: "#3B82F6" },
-        { step: "관심매물",   users: watchlistUsers ?? 0,  color: "#7C3AED" },
-        { step: "딜룸참여",   users: dealUsers ?? 0,       color: "#10B981" },
-        { step: "계약완료",   users: completedDeals ?? 0,  color: "#F59E0B" },
+        { step: "회원가입",   users: totalUsers ?? 0,      color: "#14161A" },
+        { step: "관심매물",   users: watchlistUsers ?? 0,  color: "#14161A" },
+        { step: "딜룸참여",   users: dealUsers ?? 0,       color: "#14161A" },
+        { step: "계약완료",   users: completedDeals ?? 0,  color: "#14161A" },
       ]
       setFunnel(funnelData)
 
@@ -227,7 +227,7 @@ export default function AdminAnalyticsPage() {
           <div className="space-y-4">
             <div className={`${DS.card.base} ${DS.card.padding}`}>
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="w-4 h-4 text-purple-600" />
+                <TrendingUp className="w-4 h-4 text-stone-900" />
                 <h2 className={DS.text.bodyBold}>전환 퍼널 분석</h2>
                 <span className={`${DS.text.caption} ml-auto`}>누적 전체 기준</span>
               </div>
@@ -372,7 +372,7 @@ export default function AdminAnalyticsPage() {
                       <td className={DS.table.cellMuted}>{item.desc}</td>
                       <td className={`${DS.table.cell} text-center`}>{item.retentionDays}일</td>
                       <td className={`${DS.table.cell} text-center`}>
-                        <span className="text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                        <span className="text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border bg-stone-100/10 text-stone-900 border-stone-300/20">
                           {item.status}
                         </span>
                       </td>

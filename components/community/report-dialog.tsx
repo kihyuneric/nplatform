@@ -83,7 +83,7 @@ export function ReportDialog({ open, onOpenChange, targetId, targetType }: Repor
       onOpenChange={(o) => { if (!o) handleClose() }}
       title={
         <span className="flex items-center gap-2">
-          <Flag className="h-5 w-5 text-red-500" />
+          <Flag className="h-5 w-5 text-stone-900" />
           신고하기
         </span>
       }
@@ -99,7 +99,7 @@ export function ReportDialog({ open, onOpenChange, targetId, targetType }: Repor
               onClick={() => setReason(r.value)}
               className={`w-full text-left rounded-lg border px-4 py-3 text-sm transition-colors ${
                 reason === r.value
-                  ? "border-red-500/50 bg-red-500/10 text-red-600 dark:text-red-300 font-semibold"
+                  ? "border-stone-300/50 bg-stone-100/10 text-stone-900 dark:text-stone-900 font-semibold"
                   : "border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]"
               }`}
             >
@@ -136,7 +136,7 @@ export function ReportDialog({ open, onOpenChange, targetId, targetType }: Repor
         <Button
           onClick={handleSubmit}
           disabled={isSubmitting || !reason}
-          className="bg-red-600 hover:bg-red-700 text-white"
+          className="bg-stone-100 hover:bg-stone-100 text-white"
         >
           {isSubmitting ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />

@@ -138,7 +138,7 @@ function PasswordStrength({ password }: { password: string }) {
     /[^A-Za-z0-9]/.test(password),
   ]
   const score = checks.filter(Boolean).length
-  const colors = ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-emerald-400']
+  const colors = ['bg-stone-100', 'bg-stone-100', 'bg-stone-100', 'bg-stone-100']
   const labels = ['취약', '보통', '양호', '강력']
 
   if (!password) return null
@@ -155,7 +155,7 @@ function PasswordStrength({ password }: { password: string }) {
         ))}
       </div>
       <p className={`text-xs font-medium ${
-        score <= 1 ? 'text-red-400' : score === 2 ? 'text-orange-400' : score === 3 ? 'text-yellow-500' : 'text-emerald-500'
+        score <= 1 ? 'text-stone-900' : score === 2 ? 'text-stone-900' : score === 3 ? 'text-stone-900' : 'text-stone-900'
       }`}>
         비밀번호 강도: {labels[score - 1] || '취약'}
       </p>
@@ -527,9 +527,9 @@ export default function SignupPage() {
               </p>
             </div>
             {bonusCredited && (
-              <div className="flex items-center justify-center gap-2.5 py-3 px-4 rounded-2xl bg-emerald-50 border border-emerald-100">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                <span className="text-sm font-semibold text-emerald-700">50 크레딧이 지급되었습니다!</span>
+              <div className="flex items-center justify-center gap-2.5 py-3 px-4 rounded-2xl bg-stone-100 border border-stone-300">
+                <CheckCircle2 className="h-4 w-4 text-stone-900 shrink-0" />
+                <span className="text-sm font-semibold text-stone-900">50 크레딧이 지급되었습니다!</span>
               </div>
             )}
             <div className="bg-gray-50 rounded-2xl p-4 text-sm text-gray-500 space-y-1.5 text-left">
@@ -641,7 +641,7 @@ export default function SignupPage() {
             <form onSubmit={handleNextStep} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
-                  이메일 <span className="text-red-400">*</span>
+                  이메일 <span className="text-stone-900">*</span>
                 </Label>
                 <Input
                   id="email"
@@ -652,12 +652,12 @@ export default function SignupPage() {
                   disabled={loading}
                   className={`input-enhanced h-12 rounded-xl ${errors.email ? 'error' : ''}`}
                 />
-                {errors.email && <p className="text-xs text-red-500 flex items-center gap-1"><span>&#9679;</span>{errors.email}</p>}
+                {errors.email && <p className="text-xs text-stone-900 flex items-center gap-1"><span>&#9679;</span>{errors.email}</p>}
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="password" className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
-                  비밀번호 <span className="text-red-400">*</span>
+                  비밀번호 <span className="text-stone-900">*</span>
                 </Label>
                 <div className="relative">
                   <Input
@@ -679,12 +679,12 @@ export default function SignupPage() {
                   </button>
                 </div>
                 <PasswordStrength password={form.password} />
-                {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
+                {errors.password && <p className="text-xs text-stone-900">{errors.password}</p>}
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="passwordConfirm" className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
-                  비밀번호 확인 <span className="text-red-400">*</span>
+                  비밀번호 확인 <span className="text-stone-900">*</span>
                 </Label>
                 <div className="relative">
                   <Input
@@ -706,9 +706,9 @@ export default function SignupPage() {
                   </button>
                 </div>
                 {form.passwordConfirm && form.password === form.passwordConfirm && (
-                  <p className="text-xs text-emerald-500 flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3" />비밀번호가 일치합니다</p>
+                  <p className="text-xs text-stone-900 flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3" />비밀번호가 일치합니다</p>
                 )}
-                {errors.passwordConfirm && <p className="text-xs text-red-500">{errors.passwordConfirm}</p>}
+                {errors.passwordConfirm && <p className="text-xs text-stone-900">{errors.passwordConfirm}</p>}
               </div>
 
               <button
@@ -734,7 +734,7 @@ export default function SignupPage() {
               {/* Role selection */}
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
-                  회원 유형 <span className="text-red-400">*</span>
+                  회원 유형 <span className="text-stone-900">*</span>
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
                   {SIGNUP_ROLES.slice(0, 4).map(({ value, label, icon: Icon, desc }) => {
@@ -794,7 +794,7 @@ export default function SignupPage() {
               {/* Name */}
               <div className="space-y-1.5">
                 <Label htmlFor="name" className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
-                  이름 <span className="text-red-400">*</span>
+                  이름 <span className="text-stone-900">*</span>
                 </Label>
                 <Input
                   id="name"
@@ -804,13 +804,13 @@ export default function SignupPage() {
                   disabled={loading}
                   className={`input-enhanced h-12 rounded-xl ${errors.name ? 'error' : ''}`}
                 />
-                {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
+                {errors.name && <p className="text-xs text-stone-900">{errors.name}</p>}
               </div>
 
               {/* Phone */}
               <div className="space-y-1.5">
                 <Label htmlFor="phone" className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
-                  연락처 <span className="text-red-400">*</span>
+                  연락처 <span className="text-stone-900">*</span>
                 </Label>
                 <Input
                   id="phone"
@@ -821,7 +821,7 @@ export default function SignupPage() {
                   disabled={loading}
                   className={`input-enhanced h-12 rounded-xl ${errors.phone ? 'error' : ''}`}
                 />
-                {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
+                {errors.phone && <p className="text-xs text-stone-900">{errors.phone}</p>}
               </div>
 
               {/* Company */}
@@ -893,14 +893,14 @@ export default function SignupPage() {
                               <span className="text-sm font-semibold text-gray-800">{slot.type}</span>
                               <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                                 slot.required
-                                  ? 'bg-red-50 text-red-500'
+                                  ? 'bg-stone-100 text-stone-900'
                                   : 'bg-gray-100 text-gray-400'
                               }`}>
                                 {slot.required ? '필수' : '선택'}
                               </span>
                             </div>
                             {uploaded && (
-                              <button type="button" onClick={() => removeDocument(slot.type)} className="w-6 h-6 rounded-full bg-gray-200 text-gray-400 hover:bg-red-100 hover:text-red-500 transition-colors flex items-center justify-center">
+                              <button type="button" onClick={() => removeDocument(slot.type)} className="w-6 h-6 rounded-full bg-gray-200 text-gray-400 hover:bg-stone-100 hover:text-stone-900 transition-colors flex items-center justify-center">
                                 <X className="h-3 w-3" />
                               </button>
                             )}
@@ -916,7 +916,7 @@ export default function SignupPage() {
                                 </div>
                               )}
                               <span className="text-xs text-gray-500 truncate flex-1">{uploaded.name}</span>
-                              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                              <CheckCircle2 className="h-4 w-4 text-stone-900 shrink-0" />
                             </div>
                           ) : (
                             <label className="flex flex-col items-center justify-center gap-1.5 py-5 border-2 border-dashed border-[var(--color-border-default)] rounded-xl cursor-pointer hover:border-[#2E75B6]/40 hover:bg-white transition-all group">
@@ -937,7 +937,7 @@ export default function SignupPage() {
                               />
                             </label>
                           )}
-                          {errors[`doc_${slot.type}`] && <p className="text-xs text-red-500">{errors[`doc_${slot.type}`]}</p>}
+                          {errors[`doc_${slot.type}`] && <p className="text-xs text-stone-900">{errors[`doc_${slot.type}`]}</p>}
                         </div>
                       )
                     })}
@@ -957,18 +957,18 @@ export default function SignupPage() {
                     <Link href="/terms/service" className="font-semibold text-[#2E75B6] hover:underline">이용약관</Link>{' '}
                     및{' '}
                     <Link href="/terms/privacy" className="font-semibold text-[#2E75B6] hover:underline">개인정보처리방침</Link>에
-                    동의합니다. <span className="text-red-400">*</span>
+                    동의합니다. <span className="text-stone-900">*</span>
                   </span>
                 </label>
-                {errors.terms && <p className="text-xs text-red-500 pl-7">{errors.terms}</p>}
+                {errors.terms && <p className="text-xs text-stone-900 pl-7">{errors.terms}</p>}
               </div>
 
               {generalError && (
-                <div className="flex items-center gap-2.5 rounded-xl border border-red-100 bg-red-50 px-4 py-3">
-                  <div className="flex-shrink-0 w-4 h-4 rounded-full bg-red-100 flex items-center justify-center">
-                    <span className="text-[9px] font-bold text-red-500">!</span>
+                <div className="flex items-center gap-2.5 rounded-xl border border-stone-300 bg-stone-100 px-4 py-3">
+                  <div className="flex-shrink-0 w-4 h-4 rounded-full bg-stone-100 flex items-center justify-center">
+                    <span className="text-[9px] font-bold text-stone-900">!</span>
                   </div>
-                  <p className="text-sm text-red-600">{generalError}</p>
+                  <p className="text-sm text-stone-900">{generalError}</p>
                 </div>
               )}
 

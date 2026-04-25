@@ -102,7 +102,7 @@ function CurveTooltip({ active, payload, label, xLabel, yLabel }: {
   return (
     <div className="bg-[#0D1F38] border border-white/15 rounded-xl px-4 py-3 shadow-xl text-xs">
       <p className="text-slate-300 mb-1 tracking-normal">{xLabel}: <span className="font-bold text-white">{label}</span></p>
-      <p className={`font-bold tabular-nums tracking-normal ${v >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+      <p className={`font-bold tabular-nums tracking-normal ${v >= 0 ? 'text-stone-900' : 'text-stone-900'}`}>
         {yLabel}: {v >= 0 ? '+' : ''}{v.toFixed(1)}%
       </p>
     </div>
@@ -167,20 +167,20 @@ export default function YieldCurveChart({
       {showOptimal && optimal && (
         <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-1.5 text-xs">
-            <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+            <TrendingUp className="w-3.5 h-3.5 text-stone-900" />
             <span className="text-slate-500 tracking-normal">최적 입찰가율</span>
-            <span className="font-bold text-emerald-600 tabular-nums">{optimal.x}</span>
+            <span className="font-bold text-stone-900 tabular-nums">{optimal.x}</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs">
             <span className="text-slate-500 tracking-normal">예상 ROI</span>
-            <span className={`font-bold tabular-nums ${optimal.roi >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+            <span className={`font-bold tabular-nums ${optimal.roi >= 0 ? 'text-stone-900' : 'text-stone-900'}`}>
               {optimal.roi >= 0 ? '+' : ''}{optimal.roi.toFixed(1)}%
             </span>
           </div>
           {breakEven && (
             <div className="flex items-center gap-1.5 text-xs">
               <span className="text-slate-500 tracking-normal">손익분기</span>
-              <span className="font-semibold text-amber-600 tabular-nums">{breakEven.x}</span>
+              <span className="font-semibold text-stone-900 tabular-nums">{breakEven.x}</span>
             </div>
           )}
         </div>
@@ -231,7 +231,7 @@ export default function YieldCurveChart({
               stroke="#10b981"
               strokeWidth={1.5}
               strokeDasharray="4 3"
-              label={{ value: '최적', position: 'top', fontSize: 10, fill: '#059669' }}
+              label={{ value: '최적', position: 'top', fontSize: 10, fill: '#14161A' }}
             />
           )}
           <Area
@@ -250,12 +250,12 @@ export default function YieldCurveChart({
       <div className="mt-2 flex items-center gap-4 justify-end text-[10px] text-slate-400">
         {hasPositive && (
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />수익 구간
+            <span className="w-2 h-2 rounded-full bg-stone-100" />수익 구간
           </span>
         )}
         {hasNegative && (
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-red-400" />손실 구간
+            <span className="w-2 h-2 rounded-full bg-stone-100" />손실 구간
           </span>
         )}
         <span className="flex items-center gap-1">

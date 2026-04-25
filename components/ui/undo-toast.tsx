@@ -66,19 +66,19 @@ function UndoToastContent({
   const [done, setDone] = React.useState(false)
 
   const barColor = type === 'destructive'
-    ? '#EF4444'
+    ? '#1B1B1F'
     : type === 'success'
-    ? '#10B981'
+    ? '#14161A'
     : type === 'info'
-    ? '#3B82F6'
+    ? '#14161A'
     : '#6B7280'
 
   const defaultIcon = type === 'destructive'
-    ? <AlertCircle className="h-4 w-4 text-red-500" />
+    ? <AlertCircle className="h-4 w-4 text-stone-900" />
     : type === 'success'
-    ? <CheckCircle className="h-4 w-4 text-emerald-500" />
+    ? <CheckCircle className="h-4 w-4 text-stone-900" />
     : type === 'info'
-    ? <Info className="h-4 w-4 text-blue-500" />
+    ? <Info className="h-4 w-4 text-stone-900" />
     : null
 
   const handleUndo = async () => {
@@ -112,7 +112,7 @@ function UndoToastContent({
           className={cn(
             'mt-1.5 text-xs font-semibold underline underline-offset-2',
             'flex items-center gap-1 transition-opacity',
-            type === 'destructive' ? 'text-red-400' : 'text-blue-300',
+            type === 'destructive' ? 'text-stone-900' : 'text-stone-900',
             (loading || done) && 'opacity-50 cursor-not-allowed',
           )}
         >
@@ -154,8 +154,8 @@ export function showUndoToast({
       classNames: {
         toast: cn(
           'relative overflow-hidden',
-          type === 'destructive' && 'border-red-800',
-          type === 'success' && 'border-emerald-800',
+          type === 'destructive' && 'border-stone-300',
+          type === 'success' && 'border-stone-300',
         ),
       },
     }

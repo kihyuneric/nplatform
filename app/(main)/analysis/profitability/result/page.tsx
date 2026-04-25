@@ -88,13 +88,13 @@ export default function ProfitabilityResultPage() {
     <div className={DS.page.wrapper}>
       {/* 데모 배너 */}
       {isDemo && (
-        <div className="bg-amber-500/10 border-b border-amber-500/25">
+        <div className="bg-stone-100/10 border-b border-stone-300/25">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
-            <p className="text-sm text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
+            <p className="text-sm text-stone-900 dark:text-stone-900 font-medium flex items-center gap-1.5">
               <Zap className="w-4 h-4 shrink-0" />
               <strong>데모 체험 모드</strong> — 서울 강남구 아파트 NPL 샘플 데이터입니다. 실제 매물이 아닙니다.
             </p>
-            <Link href="/analysis/profitability" className="text-xs font-bold text-amber-700 dark:text-amber-300 hover:underline shrink-0">
+            <Link href="/analysis/profitability" className="text-xs font-bold text-stone-900 dark:text-stone-900 hover:underline shrink-0">
               실제 분석 시작 →
             </Link>
           </div>
@@ -267,9 +267,9 @@ function NextStepsBar({ result, listingId }: { result: ProfitabilityResult; list
 
   const toneClass: Record<string, string> = {
     brand: 'border-[var(--color-brand-mid)]/30 bg-[var(--color-brand-mid)]/5 hover:bg-[var(--color-brand-mid)]/10 text-[var(--color-brand-mid)]',
-    success: 'border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    success: 'border-stone-300/30 bg-stone-100/5 hover:bg-stone-100/10 text-stone-900 dark:text-stone-900',
     neutral: 'border-[var(--color-border-default)] bg-[var(--color-surface-base)] hover:bg-[var(--color-surface-sunken)] text-[var(--color-text-secondary)]',
-    warn: 'border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    warn: 'border-stone-300/30 bg-stone-100/5 hover:bg-stone-100/10 text-stone-900 dark:text-stone-900',
   }
 
   return (
@@ -537,10 +537,10 @@ function ScenariosTab({ result }: { result: ProfitabilityResult }) {
                       key={j}
                       className="p-1.5 text-center font-medium"
                       style={{
-                        backgroundColor: roi > 20 ? "rgba(16,185,129,0.15)" :
-                          roi > 10 ? "rgba(16,185,129,0.08)" :
-                          roi > 0 ? "rgba(59,130,246,0.08)" :
-                          "rgba(239,68,68,0.1)",
+                        backgroundColor: roi > 20 ? "rgba(20,22,26,0.15)" :
+                          roi > 10 ? "rgba(20,22,26,0.08)" :
+                          roi > 0 ? "rgba(20,22,26,0.08)" :
+                          "rgba(27,27,31,0.1)",
                         color: roi > 0 ? "var(--color-text-primary)" : "var(--color-danger)",
                       }}
                     >
@@ -605,9 +605,9 @@ function MonteCarloTab({ result }: { result: ProfitabilityResult }) {
 function AiTab({ result }: { result: ProfitabilityResult }) {
   const { aiNarrative } = result
   const verdictColors: Record<string, { bg: string; text: string }> = {
-    BUY: { bg: "bg-emerald-500/10", text: "text-emerald-400" },
-    HOLD: { bg: "bg-amber-500/10", text: "text-amber-400" },
-    AVOID: { bg: "bg-red-500/10", text: "text-red-400" },
+    BUY: { bg: "bg-stone-100/10", text: "text-stone-900" },
+    HOLD: { bg: "bg-stone-100/10", text: "text-stone-900" },
+    AVOID: { bg: "bg-stone-100/10", text: "text-stone-900" },
   }
   const vc = verdictColors[aiNarrative.investmentOpinion.verdict] || verdictColors.HOLD
 

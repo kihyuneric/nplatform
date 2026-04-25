@@ -24,7 +24,7 @@ export function LiveFeed() {
 
   return (
     <div className="flex items-center gap-2 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 px-4 py-2 text-sm animate-in fade-in duration-500">
-      <CheckCircle2 className="h-4 w-4 text-[#10B981] shrink-0" />
+      <CheckCircle2 className="h-4 w-4 text-[#14161A] shrink-0" />
       <span className="text-white/90">
         <strong className="text-white font-semibold">{deal.institution}</strong>
         {' '}{deal.region} {deal.type} {deal.amount} 거래 완료

@@ -49,9 +49,9 @@ function levelFromAction(action: string): string {
 }
 
 const LEVEL_BADGE: Record<string, string> = {
-  info: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-  warning: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-  critical: "bg-red-500/10 text-red-400 border border-red-500/20",
+  info: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  warning: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
+  critical: "bg-stone-100/10 text-stone-900 border border-stone-300/20",
 }
 
 const TAB_MAP: Record<string, Tab> = {
@@ -341,7 +341,7 @@ export default function AdminSecurityPage() {
         {tab === "데이터 마스킹" && (
           <div className={DS.table.wrapper}>
             <div className="px-4 py-3 border-b border-[var(--color-border-subtle)] flex items-center gap-2">
-              <EyeOff className="w-4 h-4 text-purple-400" />
+              <EyeOff className="w-4 h-4 text-stone-900" />
               <h2 className={DS.text.bodyBold}>마스킹 규칙 관리</h2>
             </div>
             <table className="w-full">
@@ -471,8 +471,8 @@ export default function AdminSecurityPage() {
                     <td className={DS.table.cellMuted}>{t.manager}</td>
                     <td className={`${DS.table.cell} text-center`}>
                       <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border ${
-                        t.plan === "엔터프라이즈" ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
-                        : t.plan === "프로" ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                        t.plan === "엔터프라이즈" ? "bg-stone-100/10 text-stone-900 border-stone-300/20"
+                        : t.plan === "프로" ? "bg-stone-100/10 text-stone-900 border-stone-300/20"
                         : "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)]"
                       }`}>{t.plan}</span>
                     </td>
@@ -480,7 +480,7 @@ export default function AdminSecurityPage() {
                     <td className={`${DS.table.cellMuted} text-center`}>{t.since}</td>
                     <td className={`${DS.table.cell} text-center`}>
                       <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border ${
-                        t.status === "활성" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
+                        t.status === "활성" ? "bg-stone-100/10 text-stone-900 border-stone-300/20" : "bg-stone-100/10 text-stone-900 border-stone-300/20"
                       }`}>{t.status}</span>
                     </td>
                   </tr>

@@ -82,26 +82,26 @@ const REGION_OPTIONS = [
 const SPECIALTY_STYLES: Record<Specialty, { gradient: string; badge: string; tag: string; bar: string }> = {
   '법률':    {
     gradient: 'from-blue-500 to-blue-400',
-    badge: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-    tag: 'bg-blue-500/10 text-blue-400',
+    badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
+    tag: 'bg-stone-100/10 text-stone-900',
     bar: 'from-blue-500 to-blue-400',
   },
   '감정평가': {
     gradient: 'from-emerald-500 to-emerald-400',
-    badge: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-    tag: 'bg-emerald-500/10 text-emerald-400',
+    badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
+    tag: 'bg-stone-100/10 text-stone-900',
     bar: 'from-emerald-500 to-emerald-400',
   },
   '세무':    {
     gradient: 'from-amber-500 to-amber-400',
-    badge: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-    tag: 'bg-amber-500/10 text-amber-400',
+    badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
+    tag: 'bg-stone-100/10 text-stone-900',
     bar: 'from-amber-500 to-amber-400',
   },
   '경매대행': {
     gradient: 'from-purple-500 to-purple-400',
-    badge: 'bg-purple-500/10 text-purple-400 border border-purple-500/20',
-    tag: 'bg-purple-500/10 text-purple-400',
+    badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
+    tag: 'bg-stone-100/10 text-stone-900',
     bar: 'from-purple-500 to-purple-400',
   },
 }
@@ -255,8 +255,8 @@ export default function ProfessionalPage() {
             <div className="absolute left-0 inset-y-0 w-[3px] bg-gradient-to-b from-amber-400 to-amber-500 rounded-l-2xl" />
 
             <div className="shrink-0 flex items-center gap-2 pl-2">
-              <div className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[0.6875rem] font-bold flex items-center gap-1.5">
-                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+              <div className="px-2.5 py-1 rounded-lg bg-stone-100/10 border border-stone-300/20 text-stone-900 text-[0.6875rem] font-bold flex items-center gap-1.5">
+                <Star className="w-3 h-3 fill-amber-400 text-stone-900" />
                 이달의 추천 전문가
               </div>
             </div>
@@ -279,7 +279,7 @@ export default function ProfessionalPage() {
               <div className="shrink-0 flex items-center gap-3">
                 <div className="text-right hidden sm:block">
                   <div className="flex items-center gap-1 justify-end">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                    <Star className="h-4 w-4 fill-amber-400 text-stone-900" />
                     <span className={DS.text.metricSmall}>{featured.rating}</span>
                   </div>
                   <p className={DS.text.captionLight}>({featured.reviews}건)</p>
@@ -401,7 +401,7 @@ export default function ProfessionalPage() {
                     <div className={`relative h-14 w-14 rounded-2xl bg-gradient-to-br ${styles.gradient} flex items-center justify-center text-white text-xl font-bold shrink-0 shadow-md`}>
                       {pro.name.slice(0, 1)}
                       {isInstant && (
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center">
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-stone-100 border-2 border-white flex items-center justify-center">
                           <Zap className="w-2.5 h-2.5 text-white" />
                         </div>
                       )}
@@ -418,7 +418,7 @@ export default function ProfessionalPage() {
                         {/* Rating */}
                         <div className="text-right shrink-0">
                           <div className="flex items-center gap-1 justify-end">
-                            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                            <Star className="h-3.5 w-3.5 fill-amber-400 text-stone-900" />
                             <span className={DS.text.metricSmall}>{pro.rating}</span>
                           </div>
                           <p className={`${DS.text.captionLight} mt-0.5 tabular-nums`}>({pro.reviews}건)</p>

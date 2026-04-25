@@ -86,17 +86,17 @@ export function StrategyComparison({ nplReturn, directReturn, investmentPeriodMo
       {/* Side by Side Cards */}
       <div className="grid gap-4 sm:grid-cols-2">
         {/* NPL */}
-        <Card className={`border-2 ${recommendation === 'NPL' ? 'border-blue-500' : 'border-[var(--color-border-subtle)]'}`}>
+        <Card className={`border-2 ${recommendation === 'NPL' ? 'border-stone-300' : 'border-[var(--color-border-subtle)]'}`}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">NPL 채권매입</CardTitle>
-              {recommendation === 'NPL' && <Badge className="bg-blue-500">추천</Badge>}
+              {recommendation === 'NPL' && <Badge className="bg-stone-100">추천</Badge>}
             </div>
             <p className="text-xs text-[var(--color-text-muted)]">단기 고수익 전략</p>
           </CardHeader>
           <CardContent>
             <div className="mb-4 text-center">
-              <p className="text-3xl font-bold text-blue-600">
+              <p className="text-3xl font-bold text-stone-900">
                 {nplReturn ? formatPercent(nplReturn.annualized_irr) : '-'}
               </p>
               <p className="text-xs text-[var(--color-text-muted)]">연환산 IRR</p>
@@ -119,17 +119,17 @@ export function StrategyComparison({ nplReturn, directReturn, investmentPeriodMo
         </Card>
 
         {/* Direct */}
-        <Card className={`border-2 ${recommendation === '직접낙찰' ? 'border-green-500' : 'border-[var(--color-border-subtle)]'}`}>
+        <Card className={`border-2 ${recommendation === '직접낙찰' ? 'border-stone-300' : 'border-[var(--color-border-subtle)]'}`}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">직접 낙찰</CardTitle>
-              {recommendation === '직접낙찰' && <Badge className="bg-green-500">추천</Badge>}
+              {recommendation === '직접낙찰' && <Badge className="bg-stone-100">추천</Badge>}
             </div>
             <p className="text-xs text-[var(--color-text-muted)]">중장기 안정 전략</p>
           </CardHeader>
           <CardContent>
             <div className="mb-4 text-center">
-              <p className="text-3xl font-bold text-green-600">
+              <p className="text-3xl font-bold text-stone-900">
                 {directReturn ? formatPercent(directReturn.annualized_irr) : '-'}
               </p>
               <p className="text-xs text-[var(--color-text-muted)]">연환산 IRR</p>
@@ -169,8 +169,8 @@ export function StrategyComparison({ nplReturn, directReturn, investmentPeriodMo
               <thead>
                 <tr className="border-b">
                   <th className="py-2 text-left font-medium text-[var(--color-text-muted)]">지표</th>
-                  <th className="py-2 text-right font-medium text-blue-600">NPL 채권매입</th>
-                  <th className="py-2 text-right font-medium text-green-600">직접 낙찰</th>
+                  <th className="py-2 text-right font-medium text-stone-900">NPL 채권매입</th>
+                  <th className="py-2 text-right font-medium text-stone-900">직접 낙찰</th>
                 </tr>
               </thead>
               <tbody>

@@ -87,28 +87,28 @@ function gradeColor(grade: string) {
   switch (grade) {
     case "A":
     case "A+":
-      return { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20", bar: "bg-[var(--color-positive)]" }
+      return { bg: "bg-stone-100/10", text: "text-stone-900", border: "border-stone-300/20", bar: "bg-[var(--color-positive)]" }
     case "B":
     case "B+":
-      return { bg: "bg-blue-500/10", text: "text-blue-400", border: "border-blue-500/20", bar: "bg-blue-500" }
+      return { bg: "bg-stone-100/10", text: "text-stone-900", border: "border-stone-300/20", bar: "bg-stone-100" }
     case "C":
     case "C+":
-      return { bg: "bg-amber-500/10", text: "text-amber-400", border: "border-amber-500/20", bar: "bg-amber-500" }
+      return { bg: "bg-stone-100/10", text: "text-stone-900", border: "border-stone-300/20", bar: "bg-stone-100" }
     case "D":
-      return { bg: "bg-orange-500/10", text: "text-orange-400", border: "border-orange-500/20", bar: "bg-orange-500" }
+      return { bg: "bg-stone-100/10", text: "text-stone-900", border: "border-stone-300/20", bar: "bg-stone-100" }
     default:
-      return { bg: "bg-red-500/10", text: "text-red-400", border: "border-red-500/20", bar: "bg-[var(--color-negative)]" }
+      return { bg: "bg-stone-100/10", text: "text-stone-900", border: "border-stone-300/20", bar: "bg-[var(--color-negative)]" }
   }
 }
 
 function riskBadge(risk: "high" | "medium" | "low") {
   switch (risk) {
     case "high":
-      return { label: "고위험", cls: "bg-red-500/10 text-red-400 border-red-500/20" }
+      return { label: "고위험", cls: "bg-stone-100/10 text-stone-900 border-stone-300/20" }
     case "medium":
-      return { label: "중위험", cls: "bg-amber-500/10 text-amber-400 border-amber-500/20" }
+      return { label: "중위험", cls: "bg-stone-100/10 text-stone-900 border-stone-300/20" }
     case "low":
-      return { label: "저위험", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" }
+      return { label: "저위험", cls: "bg-stone-100/10 text-stone-900 border-stone-300/20" }
   }
 }
 
@@ -372,8 +372,8 @@ export default function ContractReviewPage() {
               {result.missingItems.length > 0 && (
                 <div className={`${DS.card.base} ${DS.card.padding}`}>
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                      <AlertTriangle className="w-5 h-5 text-amber-400" />
+                    <div className="w-10 h-10 rounded-lg bg-stone-100/10 flex items-center justify-center">
+                      <AlertTriangle className="w-5 h-5 text-stone-900" />
                     </div>
                     <div>
                       <h2 className={DS.text.cardTitle}>누락 항목</h2>
@@ -385,9 +385,9 @@ export default function ContractReviewPage() {
                     {result.missingItems.map((item, idx) => (
                       <div
                         key={idx}
-                        className="flex items-start gap-3 p-3 rounded-lg border border-amber-500/20 bg-amber-500/10"
+                        className="flex items-start gap-3 p-3 rounded-lg border border-stone-300/20 bg-stone-100/10"
                       >
-                        <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                        <AlertTriangle className="w-4 h-4 text-stone-900 mt-0.5 shrink-0" />
                         <span className={DS.text.body}>{item}</span>
                       </div>
                     ))}
@@ -399,8 +399,8 @@ export default function ContractReviewPage() {
               {result.suggestions.length > 0 && (
                 <div className={`${DS.card.base} ${DS.card.padding}`}>
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-emerald-400" />
+                    <div className="w-10 h-10 rounded-lg bg-stone-100/10 flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-stone-900" />
                     </div>
                     <div>
                       <h2 className={DS.text.cardTitle}>AI 종합 제안</h2>

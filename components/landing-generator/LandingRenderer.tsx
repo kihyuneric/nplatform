@@ -75,7 +75,7 @@ export function LandingRenderer({ story, images, theme }: LandingRendererProps) 
                 initial="hidden"
                 whileInView="visible"
                 transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-2xl p-6 shadow-md border border-red-100 hover:shadow-lg transition"
+                className="bg-white rounded-2xl p-6 shadow-md border border-stone-300 hover:shadow-lg transition"
               >
                 <span className="text-4xl block mb-3">{item.icon}</span>
                 <h3 className="text-lg font-bold mb-2">{item.title}</h3>
@@ -201,7 +201,7 @@ export function LandingRenderer({ story, images, theme }: LandingRendererProps) 
               >
                 <div className="flex gap-0.5 mb-3">
                   {[...Array(t.rating)].map((_, j) => (
-                    <span key={j} className="text-yellow-400 text-lg">★</span>
+                    <span key={j} className="text-stone-900 text-lg">★</span>
                   ))}
                 </div>
                 <p className="text-sm leading-relaxed" style={{ color: theme.textMuted }}>
@@ -293,7 +293,7 @@ export function LandingRenderer({ story, images, theme }: LandingRendererProps) 
                 <span className="text-4xl font-extrabold" style={{ color: theme.primary }}>
                   {story.pricing.salePrice}
                 </span>
-                <span className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-bold">
+                <span className="px-2 py-1 bg-stone-100 text-white rounded-lg text-xs font-bold">
                   {story.pricing.discount}
                 </span>
               </div>
@@ -319,7 +319,7 @@ export function LandingRenderer({ story, images, theme }: LandingRendererProps) 
                 {story.hero.ctaText}
               </button>
 
-              <p className="text-sm text-red-600 font-semibold mt-4">{story.pricing.deadline}</p>
+              <p className="text-sm text-stone-900 font-semibold mt-4">{story.pricing.deadline}</p>
             </div>
           </motion.div>
         </div>

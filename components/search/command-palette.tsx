@@ -131,7 +131,7 @@ export function CommandPalette() {
           id: 'search-all',
           label: '전체 매물 검색',
           description: '모든 NPL 매물 찾기',
-          icon: <Search className="h-4 w-4 text-[#10B981]" />,
+          icon: <Search className="h-4 w-4 text-[#14161A]" />,
           action: () => navigate('/exchange/search', '전체 매물 검색'),
           keywords: ['매물', '검색', 'NPL', '부실채권'],
         },
@@ -139,7 +139,7 @@ export function CommandPalette() {
           id: 'auction-npl',
           label: '경공매 NPL',
           description: '법원경매 NPL 매물',
-          icon: <Gavel className="h-4 w-4 text-blue-500" />,
+          icon: <Gavel className="h-4 w-4 text-stone-900" />,
           action: () => navigate('/exchange/search?type=AUCTION_NPL', '경공매 NPL'),
           badge: 'HOT',
           keywords: ['경매', '법원', '공매', 'NPL'],
@@ -148,7 +148,7 @@ export function CommandPalette() {
           id: 'distressed',
           label: '임의매각',
           description: '금융기관 임의매각 매물',
-          icon: <Building2 className="h-4 w-4 text-orange-500" />,
+          icon: <Building2 className="h-4 w-4 text-stone-900" />,
           action: () => navigate('/exchange/search?type=DISTRESSED_SALE', '임의매각'),
           keywords: ['임의매각', '금융기관', '매각'],
         },
@@ -156,7 +156,7 @@ export function CommandPalette() {
           id: 'non-auction',
           label: '비경매 NPL',
           description: '경매 외 NPL 채권',
-          icon: <FileText className="h-4 w-4 text-emerald-500" />,
+          icon: <FileText className="h-4 w-4 text-stone-900" />,
           action: () => navigate('/exchange/search?type=NON_AUCTION_NPL', '비경매 NPL'),
           keywords: ['비경매', 'NPL', '채권'],
         },
@@ -232,7 +232,7 @@ export function CommandPalette() {
           id: 'npl-analysis',
           label: 'NPL 분석 도구',
           description: 'AI 기반 부실채권 분석',
-          icon: <Brain className="h-4 w-4 text-purple-500" />,
+          icon: <Brain className="h-4 w-4 text-stone-900" />,
           action: () => navigate('/analysis', 'NPL 분석'),
           badge: 'AI',
           keywords: ['AI', '분석', 'NPL', '인공지능'],
@@ -241,7 +241,7 @@ export function CommandPalette() {
           id: 'auction-simulator',
           label: '경매 분석',
           description: '낙찰 전략 및 수익률 계산',
-          icon: <Calculator className="h-4 w-4 text-emerald-500" />,
+          icon: <Calculator className="h-4 w-4 text-stone-900" />,
           action: () => navigate('/analysis/simulator', '경매 분석'),
           badge: 'NEW',
           keywords: ['경매', '시뮬레이터', '분석기', '낙찰', '수익률', '분석'],
@@ -250,7 +250,7 @@ export function CommandPalette() {
           id: 'market-trends',
           label: '시장 트렌드 분석',
           description: 'AI 예측 기반 시장 분석',
-          icon: <TrendingUp className="h-4 w-4 text-blue-500" />,
+          icon: <TrendingUp className="h-4 w-4 text-stone-900" />,
           action: () => navigate('/statistics', '시장 트렌드'),
           keywords: ['트렌드', '시장', '예측', 'AI'],
         },
@@ -258,7 +258,7 @@ export function CommandPalette() {
           id: 'learning-center',
           label: 'NPL 학습 센터',
           description: 'NPL 투자 용어 및 가이드',
-          icon: <BookOpen className="h-4 w-4 text-amber-500" />,
+          icon: <BookOpen className="h-4 w-4 text-stone-900" />,
           action: () => navigate('/learning', 'NPL 학습 센터'),
           keywords: ['학습', '교육', 'NPL', '가이드', '용어'],
         },
@@ -409,9 +409,9 @@ export function CommandPalette() {
                           variant="secondary"
                           className={cn(
                             'text-[10px] px-1.5 py-0 h-4',
-                            item.badge === 'AI' && 'bg-purple-500/10 text-purple-400',
-                            item.badge === 'HOT' && 'bg-red-500/10 text-red-400',
-                            item.badge === 'NEW' && 'bg-emerald-500/10 text-emerald-400',
+                            item.badge === 'AI' && 'bg-stone-100/10 text-stone-900',
+                            item.badge === 'HOT' && 'bg-stone-100/10 text-stone-900',
+                            item.badge === 'NEW' && 'bg-stone-100/10 text-stone-900',
                           )}
                         >
                           {item.badge}
@@ -441,8 +441,8 @@ export function CommandPalette() {
                   }}
                   className="gap-3 cursor-pointer"
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border bg-purple-500/10">
-                    <Sparkles className="h-4 w-4 text-purple-500" />
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border bg-stone-100/10">
+                    <Sparkles className="h-4 w-4 text-stone-900" />
                   </span>
                   <div className="flex flex-col">
                     <span className="text-sm font-medium">&ldquo;{query}&rdquo; 매물 검색</span>
@@ -468,7 +468,7 @@ export function CommandPalette() {
             닫기
           </span>
           <span className="ml-auto flex items-center gap-1">
-            <Sparkles className="h-3 w-3 text-purple-400" />
+            <Sparkles className="h-3 w-3 text-stone-900" />
             AI 검색 지원
           </span>
         </div>

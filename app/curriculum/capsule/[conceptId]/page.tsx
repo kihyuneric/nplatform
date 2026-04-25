@@ -33,18 +33,18 @@ interface Capsule {
 }
 
 const SYLLABUS_TYPE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  theory: { bg: 'bg-blue-50', text: 'text-blue-700', label: '이론' },
-  case: { bg: 'bg-green-50', text: 'text-green-700', label: '사례' },
-  practice: { bg: 'bg-purple-50', text: 'text-purple-700', label: '실습' },
+  theory: { bg: 'bg-stone-100', text: 'text-stone-900', label: '이론' },
+  case: { bg: 'bg-stone-100', text: 'text-stone-900', label: '사례' },
+  practice: { bg: 'bg-stone-100', text: 'text-stone-900', label: '실습' },
   summary: { bg: 'bg-gray-50', text: 'text-gray-700', label: '요약' },
 }
 
 const LEVEL_COLORS: Record<string, string> = {
-  '왕초보': 'bg-emerald-100 text-emerald-700',
-  '초보': 'bg-blue-100 text-blue-700',
-  '중급': 'bg-purple-100 text-purple-700',
-  '고급': 'bg-amber-100 text-amber-700',
-  '전문가': 'bg-red-100 text-red-700',
+  '왕초보': 'bg-stone-100 text-stone-900',
+  '초보': 'bg-stone-100 text-stone-900',
+  '중급': 'bg-stone-100 text-stone-900',
+  '고급': 'bg-stone-100 text-stone-900',
+  '전문가': 'bg-stone-100 text-stone-900',
 }
 
 export default function CapsulePage() {
@@ -145,7 +145,7 @@ export default function CapsulePage() {
   if (loading || generating) {
     return (
       <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col items-center justify-center gap-3">
-        <div className="animate-spin w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-3 border-stone-300 border-t-transparent rounded-full" />
         <p className="text-sm text-gray-500">
           {generating ? '강의 캡슐을 자동 생성하고 있습니다...' : '로딩 중...'}
         </p>
@@ -158,7 +158,7 @@ export default function CapsulePage() {
       <div className="max-w-4xl mx-auto px-6 py-10 text-center space-y-3">
         <p className="text-gray-500">{error || '캡슐을 생성할 수 없습니다.'}</p>
         <div className="flex items-center justify-center gap-3">
-          <button onClick={loadCapsule} className="text-purple-600 text-sm hover:underline">
+          <button onClick={loadCapsule} className="text-stone-900 text-sm hover:underline">
             다시 시도
           </button>
           <button onClick={() => router.back()} className="text-gray-500 text-sm hover:underline">
@@ -302,7 +302,7 @@ export default function CapsulePage() {
           </div>
           <Link
             href={`/curriculum/concept/${conceptId}`}
-            className="shrink-0 ml-3 px-3 py-2 bg-white text-purple-700 rounded-lg text-xs font-bold hover:bg-purple-50 transition-colors"
+            className="shrink-0 ml-3 px-3 py-2 bg-white text-stone-900 rounded-lg text-xs font-bold hover:bg-stone-100 transition-colors"
           >
             학습 시작 →
           </Link>
@@ -310,11 +310,11 @@ export default function CapsulePage() {
       </div>
 
       {/* AI Toggle + Ebook Cache Status */}
-      <div className="flex items-center gap-3 px-3 py-2 bg-indigo-50 border border-indigo-100 rounded-lg">
+      <div className="flex items-center gap-3 px-3 py-2 bg-stone-100 border border-stone-300 rounded-lg">
         <label className="flex items-center gap-2 cursor-pointer">
           <div
             onClick={() => setUseAI(!useAI)}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${useAI ? 'bg-indigo-600' : 'bg-gray-300'}`}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${useAI ? 'bg-stone-100' : 'bg-gray-300'}`}
           >
             <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${useAI ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
           </div>
@@ -323,9 +323,9 @@ export default function CapsulePage() {
         {useAI && (
           <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
             ebookCacheStatus === 'cached'
-              ? 'bg-green-100 text-green-700'
+              ? 'bg-stone-100 text-stone-900'
               : ebookCacheStatus === 'none'
-                ? 'bg-amber-100 text-amber-700'
+                ? 'bg-stone-100 text-stone-900'
                 : 'bg-gray-100 text-gray-500'
           }`}>
             {ebookCacheStatus === 'cached' ? '⚡ 캐시됨' : ebookCacheStatus === 'none' ? '🔄 새로 생성' : '확인 중...'}
@@ -339,7 +339,7 @@ export default function CapsulePage() {
         <button
           onClick={() => handleDownload('lecture_plan', 'docx')}
           disabled={!!downloading || editing}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-white rounded-lg text-xs font-medium hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {downloading === 'lecture_plan_docx' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
           강의안 DOCX
@@ -347,7 +347,7 @@ export default function CapsulePage() {
         <button
           onClick={() => handleDownload('lecture_plan', 'pdf')}
           disabled={!!downloading || editing}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500 text-white rounded-lg text-xs font-medium hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-white rounded-lg text-xs font-medium hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {downloading === 'lecture_plan_pdf' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
           강의안 PDF
@@ -356,7 +356,7 @@ export default function CapsulePage() {
           onClick={() => handleDownload('ebook', 'docx')}
           disabled={!!downloading || editing}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-white rounded-lg text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-            useAI ? 'bg-indigo-700 hover:bg-indigo-800' : 'bg-indigo-600 hover:bg-indigo-700'
+            useAI ? 'bg-stone-100 hover:bg-stone-100' : 'bg-stone-100 hover:bg-stone-100'
           }`}
         >
           {downloading === 'ebook_docx' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
@@ -366,7 +366,7 @@ export default function CapsulePage() {
           onClick={() => handleDownload('ebook', 'pdf')}
           disabled={!!downloading || editing}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-white rounded-lg text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-            useAI ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-500 hover:bg-indigo-600'
+            useAI ? 'bg-stone-100 hover:bg-stone-100' : 'bg-stone-100 hover:bg-stone-100'
           }`}
         >
           {downloading === 'ebook_pdf' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
@@ -380,7 +380,7 @@ export default function CapsulePage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-white rounded-lg text-xs font-medium hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               저장
@@ -406,7 +406,7 @@ export default function CapsulePage() {
             <button
               onClick={handleRegenerate}
               disabled={regenerating}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-orange-300 text-orange-600 rounded-lg text-xs font-medium hover:bg-orange-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-stone-300 text-stone-900 rounded-lg text-xs font-medium hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {regenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
               재생성
@@ -417,8 +417,8 @@ export default function CapsulePage() {
 
       {/* Ontology Analysis Section */}
       {ontologyCtx && (
-        <section className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-100 rounded-xl p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-purple-800 flex items-center gap-1.5">
+        <section className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-stone-300 rounded-xl p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-stone-900 flex items-center gap-1.5">
             <Brain className="w-4 h-4" />
             온톨로지 분석
           </h2>
@@ -426,37 +426,37 @@ export default function CapsulePage() {
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-white/80 rounded-lg p-3 text-center">
-              <div className="text-lg font-bold text-purple-700">{ontologyCtx.expert_count || capsule.expert_sources.length}</div>
-              <div className="text-[10px] text-purple-500">전문가 수</div>
+              <div className="text-lg font-bold text-stone-900">{ontologyCtx.expert_count || capsule.expert_sources.length}</div>
+              <div className="text-[10px] text-stone-900">전문가 수</div>
             </div>
             <div className="bg-white/80 rounded-lg p-3 text-center">
-              <div className="text-lg font-bold text-blue-700">{ontologyCtx.video_count || 0}</div>
-              <div className="text-[10px] text-blue-500">관련 영상</div>
+              <div className="text-lg font-bold text-stone-900">{ontologyCtx.video_count || 0}</div>
+              <div className="text-[10px] text-stone-900">관련 영상</div>
             </div>
             <div className="bg-white/80 rounded-lg p-3 text-center">
-              <div className="text-lg font-bold text-green-700">{ontologyCtx.avg_relevance ? `${Math.round(ontologyCtx.avg_relevance * 100)}%` : '-'}</div>
-              <div className="text-[10px] text-green-500">평균 관련도</div>
+              <div className="text-lg font-bold text-stone-900">{ontologyCtx.avg_relevance ? `${Math.round(ontologyCtx.avg_relevance * 100)}%` : '-'}</div>
+              <div className="text-[10px] text-stone-900">평균 관련도</div>
             </div>
             <div className="bg-white/80 rounded-lg p-3 text-center">
-              <div className="text-lg font-bold text-amber-700">
+              <div className="text-lg font-bold text-stone-900">
                 {ontologyCtx.lecture_type_ratio
                   ? `${Math.round((ontologyCtx.lecture_type_ratio.theory || 0) * 100)}%`
                   : '-'}
               </div>
-              <div className="text-[10px] text-amber-500">이론 비율</div>
+              <div className="text-[10px] text-stone-900">이론 비율</div>
             </div>
           </div>
 
           {/* Keywords */}
           {ontologyCtx.keywords && ontologyCtx.keywords.length > 0 && (
             <div>
-              <h3 className="text-xs font-medium text-purple-600 mb-1.5 flex items-center gap-1">
+              <h3 className="text-xs font-medium text-stone-900 mb-1.5 flex items-center gap-1">
                 <Tag className="w-3 h-3" />
                 핵심 키워드
               </h3>
               <div className="flex flex-wrap gap-1.5">
                 {ontologyCtx.keywords.map((kw: string) => (
-                  <span key={kw} className="px-2 py-0.5 bg-white/80 text-purple-700 rounded-full text-xs border border-purple-200">
+                  <span key={kw} className="px-2 py-0.5 bg-white/80 text-stone-900 rounded-full text-xs border border-stone-300">
                     {kw}
                   </span>
                 ))}
@@ -467,11 +467,11 @@ export default function CapsulePage() {
           {/* Concept Position Graph */}
           {(ontologyCtx.prerequisites?.length > 0 || ontologyCtx.successors?.length > 0) && (
             <div>
-              <h3 className="text-xs font-medium text-purple-600 mb-1.5 flex items-center gap-1">
+              <h3 className="text-xs font-medium text-stone-900 mb-1.5 flex items-center gap-1">
                 <MapPin className="w-3 h-3" />
                 개념 위치 (지식 그래프)
               </h3>
-              <div className="bg-white/80 rounded-lg p-3 border border-purple-100">
+              <div className="bg-white/80 rounded-lg p-3 border border-stone-300">
                 <OntologyGraph
                   nodes={[
                     ...(ontologyCtx.prerequisites || []).map((p: any) => ({ id: p.concept_id, name: p.name, level: capsule.level })),
@@ -492,8 +492,8 @@ export default function CapsulePage() {
 
           {/* Roadmap Position */}
           {ontologyCtx.roadmap_position && (
-            <div className="bg-white/80 rounded-lg p-3 border border-purple-100">
-              <h3 className="text-xs font-medium text-purple-600 mb-2 flex items-center gap-1">
+            <div className="bg-white/80 rounded-lg p-3 border border-stone-300">
+              <h3 className="text-xs font-medium text-stone-900 mb-2 flex items-center gap-1">
                 <MapPin className="w-3 h-3" />
                 로드맵 위치
               </h3>
@@ -503,7 +503,7 @@ export default function CapsulePage() {
                     key={lvl}
                     className={`px-2 py-1 rounded-full font-medium ${
                       lvl === ontologyCtx.roadmap_position.level
-                        ? 'bg-purple-600 text-white'
+                        ? 'bg-stone-100 text-white'
                         : 'bg-gray-100 text-gray-400'
                     }`}
                   >
@@ -526,7 +526,7 @@ export default function CapsulePage() {
       {/* Overview */}
       <section className="bg-white border border-gray-200 rounded-xl p-5">
         <h2 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
-          <BookOpen className="w-4 h-4 text-purple-500" />
+          <BookOpen className="w-4 h-4 text-stone-900" />
           개요
         </h2>
         {editing ? (
@@ -543,7 +543,7 @@ export default function CapsulePage() {
       {/* Teaching guidelines */}
       <section className="bg-white border border-gray-200 rounded-xl p-5">
         <h2 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
-          <Lightbulb className="w-4 h-4 text-amber-500" />
+          <Lightbulb className="w-4 h-4 text-stone-900" />
           교수법 가이드라인
         </h2>
         {editing ? (
@@ -560,7 +560,7 @@ export default function CapsulePage() {
       {/* Syllabus */}
       <section className="bg-white border border-gray-200 rounded-xl p-5">
         <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
-          <FileText className="w-4 h-4 text-blue-500" />
+          <FileText className="w-4 h-4 text-stone-900" />
           강의 실라버스
         </h2>
         <div className="overflow-x-auto">
@@ -642,7 +642,7 @@ export default function CapsulePage() {
                       <td className="py-2.5 px-1 text-center">
                         <button
                           onClick={() => removeSyllabusItem(idx)}
-                          className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                          className="p-1 text-stone-900 hover:text-stone-900 hover:bg-stone-100 rounded transition-colors"
                           title="삭제"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -659,7 +659,7 @@ export default function CapsulePage() {
                   {editing ? (
                     <button
                       onClick={addSyllabusItem}
-                      className="flex items-center gap-1 text-purple-600 hover:text-purple-700 font-medium"
+                      className="flex items-center gap-1 text-stone-900 hover:text-stone-900 font-medium"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       항목 추가
@@ -686,7 +686,7 @@ export default function CapsulePage() {
           <ul className="space-y-1.5">
             {capsule.theory_points.map((point, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                <span className="text-purple-400 mt-0.5">•</span>
+                <span className="text-stone-900 mt-0.5">•</span>
                 {point}
               </li>
             ))}
@@ -724,7 +724,7 @@ export default function CapsulePage() {
               <Link
                 key={p.concept_id}
                 href={`/curriculum/capsule/${p.concept_id}`}
-                className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 text-purple-700 text-sm rounded-lg hover:bg-purple-100 transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 bg-stone-100 text-stone-900 text-sm rounded-lg hover:bg-stone-100 transition-colors"
               >
                 <ChevronRight className="w-3 h-3" />
                 {p.name}
@@ -743,8 +743,8 @@ export default function CapsulePage() {
           </h2>
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                <Users className="w-5 h-5 text-purple-600" />
+              <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center">
+                <Users className="w-5 h-5 text-stone-900" />
               </div>
               <div>
                 <div className="text-sm font-medium text-gray-700">
@@ -767,17 +767,17 @@ export default function CapsulePage() {
       <section className="bg-white border border-gray-200 rounded-xl p-5">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-            <History className="w-4 h-4 text-purple-500" />
+            <History className="w-4 h-4 text-stone-900" />
             AI 강의안 생성 이력
             {planHistory.length > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium">
+              <span className="ml-1 px-1.5 py-0.5 bg-stone-100 text-stone-900 rounded-full text-[10px] font-medium">
                 {planHistory.length}건
               </span>
             )}
           </h2>
           <Link
             href={`/admin/lecture-plan?concept_id=${conceptId}`}
-            className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 font-medium"
+            className="flex items-center gap-1 text-xs text-stone-900 hover:text-stone-900 font-medium"
           >
             <ExternalLink className="w-3 h-3" />
             강의안 생성 (관리자)
@@ -790,7 +790,7 @@ export default function CapsulePage() {
             <p className="text-xs text-gray-400">아직 생성된 AI 강의안이 없습니다.</p>
             <Link
               href={`/admin/lecture-plan?concept_id=${conceptId}`}
-              className="inline-flex items-center gap-1 mt-2 text-xs text-purple-600 hover:text-purple-800"
+              className="inline-flex items-center gap-1 mt-2 text-xs text-stone-900 hover:text-stone-900"
             >
               관리자 페이지에서 생성하기 →
             </Link>
@@ -806,10 +806,10 @@ export default function CapsulePage() {
                     </span>
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                       plan.status === 'final'
-                        ? 'bg-green-100 text-green-700'
+                        ? 'bg-stone-100 text-stone-900'
                         : plan.status === 'archived'
                           ? 'bg-gray-100 text-gray-500'
-                          : 'bg-amber-100 text-amber-700'
+                          : 'bg-stone-100 text-stone-900'
                     }`}>
                       {plan.status === 'final' ? '확정' : plan.status === 'archived' ? '보관' : '초안'}
                     </span>
@@ -829,7 +829,7 @@ export default function CapsulePage() {
                 </div>
                 <Link
                   href={`/admin/lecture-plan?concept_id=${conceptId}&plan_id=${plan.plan_id}`}
-                  className="flex items-center gap-0.5 text-purple-600 hover:text-purple-800 flex-shrink-0"
+                  className="flex items-center gap-0.5 text-stone-900 hover:text-stone-900 flex-shrink-0"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   보기
@@ -839,7 +839,7 @@ export default function CapsulePage() {
             {planHistory.length > 5 && (
               <Link
                 href={`/admin/lecture-plan?concept_id=${conceptId}`}
-                className="block text-center text-xs text-gray-400 hover:text-purple-600 py-1"
+                className="block text-center text-xs text-gray-400 hover:text-stone-900 py-1"
               >
                 +{planHistory.length - 5}건 더 보기
               </Link>

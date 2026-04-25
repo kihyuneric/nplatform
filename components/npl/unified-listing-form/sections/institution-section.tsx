@@ -43,7 +43,7 @@ export function InstitutionSection({
   return (
     <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
       <div className="flex items-start gap-2 mb-3">
-        <Building2 className="w-4 h-4 mt-0.5 text-emerald-500 shrink-0" />
+        <Building2 className="w-4 h-4 mt-0.5 text-stone-900 shrink-0" />
         <div>
           <h4 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">
             기관 · 매각주체
@@ -57,7 +57,7 @@ export function InstitutionSection({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-[0.6875rem] font-semibold text-[var(--color-text-secondary)] mb-1">
-            기관명 <span className="text-red-500 ml-1">*</span>
+            기관명 <span className="text-stone-900 ml-1">*</span>
           </label>
           <input
             type="text"
@@ -65,13 +65,13 @@ export function InstitutionSection({
             onChange={(e) => onChange({ name: e.target.value })}
             placeholder="예: 우리은행 서울지점"
             disabled={disabled}
-            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-emerald-500/60 focus:outline-none disabled:opacity-50"
+            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-stone-300/60 focus:outline-none disabled:opacity-50"
           />
         </div>
 
         <div>
           <label className="block text-[0.6875rem] font-semibold text-[var(--color-text-secondary)] mb-1">
-            기관 유형 <span className="text-red-500 ml-1">*</span>
+            기관 유형 <span className="text-stone-900 ml-1">*</span>
           </label>
           <select
             value={value.type}
@@ -79,7 +79,7 @@ export function InstitutionSection({
               onChange({ type: e.target.value as SellerInstitution | "" })
             }
             disabled={disabled}
-            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] focus:border-emerald-500/60 focus:outline-none disabled:opacity-50"
+            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] focus:border-stone-300/60 focus:outline-none disabled:opacity-50"
           >
             <option value="">선택하세요</option>
             {INSTITUTION_ENTRIES.map(([k, label]) => (
@@ -110,7 +110,7 @@ export function InstitutionSection({
                   onClick={() => onChange({ listingCategory: opt.v })}
                   className={`flex-1 rounded-lg border px-2 py-2 text-[0.75rem] font-semibold transition-colors ${
                     active
-                      ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+                      ? "bg-stone-100/10 border-stone-300/40 text-stone-900 dark:text-stone-900"
                       : "bg-[var(--color-surface-base)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]"
                   } disabled:opacity-50`}
                 >

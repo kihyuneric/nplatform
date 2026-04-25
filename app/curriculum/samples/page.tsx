@@ -182,7 +182,7 @@ export default function SamplesPage() {
   if (samples === null && !error) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
-        <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <div className="w-8 h-8 border-4 border-stone-300 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
         <p className="text-gray-500">샘플 데이터 로딩 중...</p>
       </div>
     )
@@ -191,8 +191,8 @@ export default function SamplesPage() {
   if (error) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
-        <p className="text-red-600 mb-4">{error}</p>
-        <button onClick={() => window.location.reload()} className="px-4 py-2 bg-purple-600 text-white rounded-lg">
+        <p className="text-stone-900 mb-4">{error}</p>
+        <button onClick={() => window.location.reload()} className="px-4 py-2 bg-stone-100 text-white rounded-lg">
           재시도
         </button>
       </div>
@@ -213,22 +213,22 @@ export default function SamplesPage() {
           AI가 합성한 교육 콘텐츠 샘플 3개입니다.
         </p>
         {/* 계층 구조 안내 */}
-        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-100">
-          <p className="text-xs font-bold text-purple-700 mb-2">📊 온톨로지 계층 구조</p>
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-stone-300">
+          <p className="text-xs font-bold text-stone-900 mb-2">📊 온톨로지 계층 구조</p>
           <div className="flex items-center gap-2 text-sm flex-wrap">
-            <span className="px-2.5 py-1 bg-purple-600 text-white rounded-lg font-medium text-xs">
+            <span className="px-2.5 py-1 bg-stone-100 text-white rounded-lg font-medium text-xs">
               {HIERARCHY_LABELS.domain}
             </span>
             <span className="text-gray-400">→</span>
-            <span className="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-medium text-xs">
+            <span className="px-2.5 py-1 bg-stone-100 text-white rounded-lg font-medium text-xs">
               {HIERARCHY_LABELS.concept}
             </span>
             <span className="text-gray-400">→</span>
-            <span className="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-medium text-xs">
+            <span className="px-2.5 py-1 bg-stone-100 text-white rounded-lg font-medium text-xs">
               {HIERARCHY_LABELS.topic}
             </span>
             <span className="text-gray-400">→</span>
-            <span className="px-2.5 py-1 bg-teal-600 text-white rounded-lg font-medium text-xs">
+            <span className="px-2.5 py-1 bg-stone-100 text-white rounded-lg font-medium text-xs">
               {HIERARCHY_LABELS.keypoint}
             </span>
           </div>
@@ -248,7 +248,7 @@ export default function SamplesPage() {
             onClick={() => setActiveTab(tab.key)}
             className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
               activeTab === tab.key
-                ? 'bg-white text-purple-700 shadow-sm'
+                ? 'bg-white text-stone-900 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -262,7 +262,7 @@ export default function SamplesPage() {
       {synthesizing && (
         <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
           <div className="bg-white rounded-xl p-8 shadow-2xl text-center max-w-sm">
-            <div className="w-10 h-10 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <div className="w-10 h-10 border-4 border-stone-300 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="font-semibold text-gray-900 mb-1">AI 콘텐츠 합성 중...</p>
             <p className="text-sm text-gray-500">약 10~30초 소요됩니다.</p>
           </div>
@@ -311,8 +311,8 @@ export default function SamplesPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right text-xs text-gray-500">
-                    <p>주제 <b className="text-purple-600">{sub_concepts.length}</b>개</p>
-                    <p>합성 <b className="text-green-600">{synthesizedCount}</b>/{sub_concepts.length}</p>
+                    <p>주제 <b className="text-stone-900">{sub_concepts.length}</b>개</p>
+                    <p>합성 <b className="text-stone-900">{synthesizedCount}</b>/{sub_concepts.length}</p>
                   </div>
                   <span className="text-gray-400">{isExpanded ? '▲' : '▼'}</span>
                 </div>
@@ -323,25 +323,25 @@ export default function SamplesPage() {
                 <div className="px-6 pb-6 border-t">
                   {/* 요약 통계 */}
                   <div className="mt-4 mb-6 grid grid-cols-2 md:grid-cols-5 gap-3">
-                    <div className="bg-purple-50 rounded-lg p-3 text-center">
-                      <p className="text-xs text-purple-600 font-medium">주제(Topic)</p>
-                      <p className="text-xl font-bold text-purple-800">{sub_concepts.length}개</p>
+                    <div className="bg-stone-100 rounded-lg p-3 text-center">
+                      <p className="text-xs text-stone-900 font-medium">주제(Topic)</p>
+                      <p className="text-xl font-bold text-stone-900">{sub_concepts.length}개</p>
                     </div>
-                    <div className="bg-blue-50 rounded-lg p-3 text-center">
-                      <p className="text-xs text-blue-600 font-medium">총 학습 시간</p>
-                      <p className="text-xl font-bold text-blue-800">{totalMinutes}분</p>
+                    <div className="bg-stone-100 rounded-lg p-3 text-center">
+                      <p className="text-xs text-stone-900 font-medium">총 학습 시간</p>
+                      <p className="text-xl font-bold text-stone-900">{totalMinutes}분</p>
                     </div>
-                    <div className="bg-green-50 rounded-lg p-3 text-center">
-                      <p className="text-xs text-green-600 font-medium">매핑 영상</p>
-                      <p className="text-xl font-bold text-green-800">{totalVideos}개</p>
+                    <div className="bg-stone-100 rounded-lg p-3 text-center">
+                      <p className="text-xs text-stone-900 font-medium">매핑 영상</p>
+                      <p className="text-xl font-bold text-stone-900">{totalVideos}개</p>
                     </div>
-                    <div className="bg-amber-50 rounded-lg p-3 text-center">
-                      <p className="text-xs text-amber-600 font-medium">참여 전문가</p>
-                      <p className="text-xl font-bold text-amber-800">{importance.expert_count}명</p>
+                    <div className="bg-stone-100 rounded-lg p-3 text-center">
+                      <p className="text-xs text-stone-900 font-medium">참여 전문가</p>
+                      <p className="text-xl font-bold text-stone-900">{importance.expert_count}명</p>
                     </div>
-                    <div className="bg-rose-50 rounded-lg p-3 text-center">
-                      <p className="text-xs text-rose-600 font-medium">평균 관련도</p>
-                      <p className="text-xl font-bold text-rose-800">{importance.avg_relevance?.toFixed(2) || '-'}</p>
+                    <div className="bg-stone-100 rounded-lg p-3 text-center">
+                      <p className="text-xs text-stone-900 font-medium">평균 관련도</p>
+                      <p className="text-xl font-bold text-stone-900">{importance.avg_relevance?.toFixed(2) || '-'}</p>
                     </div>
                   </div>
 
@@ -357,7 +357,7 @@ export default function SamplesPage() {
                         </>
                       )}
                       <span className="text-gray-400">→</span>
-                      <span className="px-2 py-1 bg-purple-100 rounded-full text-purple-700 font-medium">{concept.name}</span>
+                      <span className="px-2 py-1 bg-stone-100 rounded-full text-stone-900 font-medium">{concept.name}</span>
                       {relations.successors.length > 0 && (
                         <>
                           <span className="text-gray-400">→</span>
@@ -454,12 +454,12 @@ function TopicContentViewer({ sc, onSynthesize }: {
         className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+          <div className="w-8 h-8 rounded-lg bg-stone-100 text-stone-900 flex items-center justify-center font-bold text-sm">
             {sc.order_in_parent}
           </div>
           <div className="text-left">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] px-1 py-0.5 rounded bg-blue-50 text-blue-500 font-medium">주제</span>
+              <span className="text-[10px] px-1 py-0.5 rounded bg-stone-100 text-stone-900 font-medium">주제</span>
               <h4 className="font-semibold text-gray-900">{sc.name}</h4>
             </div>
             <p className="text-sm text-gray-500 mt-0.5">{sc.description}</p>
@@ -468,16 +468,16 @@ function TopicContentViewer({ sc, onSynthesize }: {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-4 text-xs text-gray-500">
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-green-400 rounded-full" />
+              <span className="w-2 h-2 bg-stone-100 rounded-full" />
               영상 {sc.video_count}개
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-amber-400 rounded-full" />
+              <span className="w-2 h-2 bg-stone-100 rounded-full" />
               전문가 {sc.expert_count}명
             </span>
             <span>{sc.estimated_minutes}분</span>
             {content?.meta?.ai_generated && (
-              <span className="px-1.5 py-0.5 bg-green-50 text-green-600 rounded text-[10px] font-medium">AI 합성</span>
+              <span className="px-1.5 py-0.5 bg-stone-100 text-stone-900 rounded text-[10px] font-medium">AI 합성</span>
             )}
           </div>
           <span className="text-gray-400">{expanded ? '▲' : '▼'}</span>
@@ -499,7 +499,7 @@ function TopicContentViewer({ sc, onSynthesize }: {
                   setShowVideoPanel(!showVideoPanel)
                   if (!showVideoPanel) loadVideos()
                 }}
-                className="text-xs text-blue-600 hover:text-blue-800 underline"
+                className="text-xs text-stone-900 hover:text-stone-900 underline"
               >
                 {showVideoPanel ? '닫기' : '전체 목록 보기 / 수동 선택'}
               </button>
@@ -510,7 +510,7 @@ function TopicContentViewer({ sc, onSynthesize }: {
               <div className="flex flex-wrap gap-1.5">
                 {sc.channel_breakdown.slice(0, 6).map((cb, i) => (
                   <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs text-gray-600">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-stone-100" />
                     전문가 {String.fromCharCode(65 + i)} ({cb.count}개, ★{cb.avg_relevance})
                   </span>
                 ))}
@@ -525,7 +525,7 @@ function TopicContentViewer({ sc, onSynthesize }: {
               <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50">
                 {loadingVideos ? (
                   <div className="py-6 text-center text-xs text-gray-500">
-                    <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    <div className="w-5 h-5 border-2 border-stone-300 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                     영상 목록 로딩 중...
                   </div>
                 ) : (
@@ -544,9 +544,9 @@ function TopicContentViewer({ sc, onSynthesize }: {
                       {selectMode && (
                         <>
                           <span className="text-gray-300">|</span>
-                          <button onClick={() => handleSelectAll(true)} className="text-xs text-blue-600 hover:text-blue-800">강의형만 선택</button>
-                          <button onClick={() => handleSelectAll(false)} className="text-xs text-blue-600 hover:text-blue-800">전체 선택</button>
-                          <button onClick={() => setSelectedIds(new Set())} className="text-xs text-red-500 hover:text-red-700">초기화</button>
+                          <button onClick={() => handleSelectAll(true)} className="text-xs text-stone-900 hover:text-stone-900">강의형만 선택</button>
+                          <button onClick={() => handleSelectAll(false)} className="text-xs text-stone-900 hover:text-stone-900">전체 선택</button>
+                          <button onClick={() => setSelectedIds(new Set())} className="text-xs text-stone-900 hover:text-stone-900">초기화</button>
                           <span className="ml-auto text-xs text-gray-500">
                             {selectedIds.size}개 선택됨
                           </span>
@@ -578,9 +578,9 @@ function TopicContentViewer({ sc, onSynthesize }: {
                                 key={v.youtube_id}
                                 className={`border-b last:border-0 transition-colors ${
                                   selectMode && selectedIds.has(v.youtube_id)
-                                    ? 'bg-blue-50'
+                                    ? 'bg-stone-100'
                                     : i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                                } ${selectMode ? 'cursor-pointer hover:bg-blue-50/50' : ''}`}
+                                } ${selectMode ? 'cursor-pointer hover:bg-stone-100/50' : ''}`}
                                 onClick={selectMode ? () => toggleVideo(v.youtube_id) : undefined}
                               >
                                 {selectMode && (
@@ -599,8 +599,8 @@ function TopicContentViewer({ sc, onSynthesize }: {
                                 <td className="px-3 py-1.5">
                                   <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                                     v.is_theory
-                                      ? 'bg-blue-50 text-blue-600'
-                                      : 'bg-orange-50 text-orange-600'
+                                      ? 'bg-stone-100 text-stone-900'
+                                      : 'bg-stone-100 text-stone-900'
                                   }`}>
                                     {v.is_theory ? '강의형' : '사례형'}
                                   </span>
@@ -623,14 +623,14 @@ function TopicContentViewer({ sc, onSynthesize }: {
               <div className="flex items-center gap-3 justify-center flex-wrap">
                 <button
                   onClick={() => onSynthesize(sc.sub_concept_id)}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                  className="px-4 py-2 bg-stone-100 text-white rounded-lg hover:bg-stone-100 transition-colors text-sm font-medium"
                 >
                   🤖 AI 자동 합성 (강의형 우선 전체)
                 </button>
                 {selectMode && selectedIds.size > 0 && (
                   <button
                     onClick={() => onSynthesize(sc.sub_concept_id, Array.from(selectedIds))}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    className="px-4 py-2 bg-stone-100 text-white rounded-lg hover:bg-stone-100 transition-colors text-sm font-medium"
                   >
                     ✅ 선택된 {selectedIds.size}개 대본으로 합성
                   </button>
@@ -652,14 +652,14 @@ function TopicContentViewer({ sc, onSynthesize }: {
                 </button>
                 <button
                   onClick={() => onSynthesize(sc.sub_concept_id, undefined, true)}
-                  className="text-xs px-3 py-1.5 bg-purple-50 border border-purple-300 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors"
+                  className="text-xs px-3 py-1.5 bg-stone-100 border border-stone-300 text-stone-900 rounded-lg hover:bg-stone-100 transition-colors"
                 >
                   🆕 강제 재합성 (새로 생성)
                 </button>
                 {selectMode && selectedIds.size > 0 && (
                   <button
                     onClick={() => onSynthesize(sc.sub_concept_id, Array.from(selectedIds), true)}
-                    className="text-xs px-3 py-1.5 bg-blue-50 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+                    className="text-xs px-3 py-1.5 bg-stone-100 border border-stone-300 text-stone-900 rounded-lg hover:bg-stone-100 transition-colors"
                   >
                     ✅ 선택 {selectedIds.size}개로 재합성
                   </button>
@@ -687,7 +687,7 @@ function TopicContentViewer({ sc, onSynthesize }: {
                     onClick={() => setViewMode(tab.key)}
                     className={`flex-1 py-2 rounded-md text-xs font-medium transition-all ${
                       viewMode === tab.key
-                        ? 'bg-white text-purple-700 shadow-sm'
+                        ? 'bg-white text-stone-900 shadow-sm'
                         : 'text-gray-500 hover:text-gray-700'
                     }`}
                   >
@@ -749,7 +749,7 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
           <ul className="space-y-1">
             {content.learning_objectives.map((obj, i) => (
               <li key={i} className="flex items-start gap-2 text-sm">
-                <span className="text-purple-200 mt-0.5">✓</span>
+                <span className="text-stone-900 mt-0.5">✓</span>
                 <span>{obj}</span>
               </li>
             ))}
@@ -758,28 +758,28 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
       )}
 
       {/* 1. 개념 이해 */}
-      <div className="border border-purple-100 rounded-xl overflow-hidden">
-        <SectionHeader id="intro" icon="📖" title="개념 이해" color="bg-purple-50 text-purple-800 hover:bg-purple-100" />
+      <div className="border border-stone-300 rounded-xl overflow-hidden">
+        <SectionHeader id="intro" icon="📖" title="개념 이해" color="bg-stone-100 text-stone-900 hover:bg-stone-100" />
         {openSections.has('intro') && (
           <div className="p-5 space-y-5 bg-white">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-1 h-5 bg-purple-500 rounded-full" />
-                <p className="text-xs font-bold text-purple-700 uppercase tracking-normal">왜 이것이 중요한가</p>
+                <div className="w-1 h-5 bg-stone-100 rounded-full" />
+                <p className="text-xs font-bold text-stone-900 uppercase tracking-normal">왜 이것이 중요한가</p>
               </div>
               <p className="text-sm text-gray-800 leading-7 whitespace-pre-line pl-3">{content.explanation.introduction}</p>
             </div>
             <div className="border-t pt-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-1 h-5 bg-indigo-500 rounded-full" />
-                <p className="text-xs font-bold text-indigo-700 uppercase tracking-normal">핵심 개념 설명</p>
+                <div className="w-1 h-5 bg-stone-100 rounded-full" />
+                <p className="text-xs font-bold text-stone-900 uppercase tracking-normal">핵심 개념 설명</p>
               </div>
               <p className="text-sm text-gray-800 leading-7 whitespace-pre-line pl-3">{content.explanation.core_content}</p>
             </div>
             <div className="border-t pt-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-1 h-5 bg-blue-500 rounded-full" />
-                <p className="text-xs font-bold text-blue-700 uppercase tracking-normal">실무에서의 의미</p>
+                <div className="w-1 h-5 bg-stone-100 rounded-full" />
+                <p className="text-xs font-bold text-stone-900 uppercase tracking-normal">실무에서의 의미</p>
               </div>
               <p className="text-sm text-gray-800 leading-7 whitespace-pre-line pl-3">{content.explanation.practical_meaning}</p>
             </div>
@@ -789,28 +789,28 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
 
       {/* 2. 핵심 이론 포인트 */}
       {(commonPoints.length > 0 || specializedPoints.length > 0) && (
-        <div className="border border-blue-100 rounded-xl overflow-hidden">
+        <div className="border border-stone-300 rounded-xl overflow-hidden">
           <SectionHeader
             id="theory"
             icon="🎯"
             title="핵심 이론 포인트"
             badge={`${(content.theory_points || []).length}개`}
-            color="bg-blue-50 text-blue-800 hover:bg-blue-100"
+            color="bg-stone-100 text-stone-900 hover:bg-stone-100"
           />
           {openSections.has('theory') && (
             <div className="p-4 space-y-3 bg-white">
               {commonPoints.length > 0 && (
                 <>
-                  <p className="text-xs font-semibold text-blue-600 flex items-center gap-1.5">
-                    <span className="w-2 h-2 bg-blue-400 rounded-full" />
+                  <p className="text-xs font-semibold text-stone-900 flex items-center gap-1.5">
+                    <span className="w-2 h-2 bg-stone-100 rounded-full" />
                     전문가 다수가 공통으로 강조 ({commonPoints.length}개)
                   </p>
                   <div className="space-y-3">
                     {commonPoints.map((tp, i) => (
-                      <div key={i} className="bg-blue-50 rounded-xl p-4 border-l-[3px] border-blue-400">
+                      <div key={i} className="bg-stone-100 rounded-xl p-4 border-l-[3px] border-stone-300">
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <h6 className="font-bold text-gray-900 text-sm leading-tight">{tp.title}</h6>
-                          <span className="flex-shrink-0 text-[9px] px-1.5 py-0.5 bg-blue-200 text-blue-800 rounded-full font-medium">
+                          <span className="flex-shrink-0 text-[9px] px-1.5 py-0.5 bg-stone-100 text-stone-900 rounded-full font-medium">
                             전문가 {tp.expert_count}명
                           </span>
                         </div>
@@ -823,13 +823,13 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
               {specializedPoints.length > 0 && (
                 <>
                   {commonPoints.length > 0 && <div className="border-t my-2" />}
-                  <p className="text-xs font-semibold text-amber-600 flex items-center gap-1.5">
-                    <span className="w-2 h-2 bg-amber-400 rounded-full" />
+                  <p className="text-xs font-semibold text-stone-900 flex items-center gap-1.5">
+                    <span className="w-2 h-2 bg-stone-100 rounded-full" />
                     전문가 특화 관점 ({specializedPoints.length}개)
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {specializedPoints.map((tp, i) => (
-                      <div key={i} className="bg-amber-50 rounded-xl p-4 border-l-[3px] border-amber-400">
+                      <div key={i} className="bg-stone-100 rounded-xl p-4 border-l-[3px] border-stone-300">
                         <h6 className="font-bold text-gray-900 text-sm mb-2">{tp.title}</h6>
                         <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{tp.content}</p>
                       </div>
@@ -844,19 +844,19 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
 
       {/* 3. 전문가 관점 비교 */}
       {content.expert_comparison && content.expert_comparison.perspectives?.length > 0 && (
-        <div className="border border-teal-100 rounded-xl overflow-hidden">
-          <SectionHeader id="compare" icon="⚖️" title="전문가 관점 비교" color="bg-teal-50 text-teal-800 hover:bg-teal-100" />
+        <div className="border border-stone-300 rounded-xl overflow-hidden">
+          <SectionHeader id="compare" icon="⚖️" title="전문가 관점 비교" color="bg-stone-100 text-stone-900 hover:bg-stone-100" />
           {openSections.has('compare') && (
             <div className="p-4 space-y-3 bg-white">
               <p className="text-sm text-gray-600 leading-relaxed">{content.expert_comparison.overview}</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {content.expert_comparison.perspectives.map((p, i) => (
-                  <div key={i} className="bg-white rounded-xl p-4 border border-teal-200 shadow-sm">
+                  <div key={i} className="bg-white rounded-xl p-4 border border-stone-300 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="w-6 h-6 bg-teal-100 rounded-lg flex items-center justify-center text-[11px] font-bold text-teal-700">
+                      <span className="w-6 h-6 bg-stone-100 rounded-lg flex items-center justify-center text-[11px] font-bold text-stone-900">
                         {String.fromCharCode(65 + i)}
                       </span>
-                      <p className="font-bold text-sm text-teal-900">{p.label}</p>
+                      <p className="font-bold text-sm text-stone-900">{p.label}</p>
                     </div>
                     <p className="text-sm text-gray-700 leading-relaxed mb-2">{p.viewpoint}</p>
                     {p.pros_cons && (
@@ -865,8 +865,8 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
                   </div>
                 ))}
               </div>
-              <div className="bg-teal-50 border border-teal-200 rounded-xl p-4">
-                <p className="text-xs font-bold text-teal-700 mb-1.5">🔗 종합 판단</p>
+              <div className="bg-stone-100 border border-stone-300 rounded-xl p-4">
+                <p className="text-xs font-bold text-stone-900 mb-1.5">🔗 종합 판단</p>
                 <p className="text-sm text-gray-800 leading-relaxed">{content.expert_comparison.synthesis}</p>
               </div>
             </div>
@@ -876,32 +876,32 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
 
       {/* 4. 실전 사례 (경매 사건번호 포함) */}
       {allCases.length > 0 && (
-        <div className="border border-green-100 rounded-xl overflow-hidden">
+        <div className="border border-stone-300 rounded-xl overflow-hidden">
           <SectionHeader
             id="cases"
             icon="📋"
             title="실전 사례 분석"
             badge={`${allCases.length}건`}
-            color="bg-green-50 text-green-800 hover:bg-green-100"
+            color="bg-stone-100 text-stone-900 hover:bg-stone-100"
           />
           {openSections.has('cases') && (
             <div className="p-4 space-y-4 bg-white">
               {allCases.map((cs, i) => (
-                <div key={i} className="rounded-xl border border-green-200 overflow-hidden">
-                  <div className="bg-green-50 px-4 py-3 flex items-center justify-between">
+                <div key={i} className="rounded-xl border border-stone-300 overflow-hidden">
+                  <div className="bg-stone-100 px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 bg-green-200 rounded-lg flex items-center justify-center text-[11px] font-bold text-green-800">
+                      <span className="w-6 h-6 bg-stone-100 rounded-lg flex items-center justify-center text-[11px] font-bold text-stone-900">
                         {i + 1}
                       </span>
-                      <h6 className="font-bold text-sm text-green-900">{cs.title}</h6>
+                      <h6 className="font-bold text-sm text-stone-900">{cs.title}</h6>
                     </div>
                     <div className="flex items-center gap-2">
                       {cs.case_number && (
-                        <span className="text-[10px] px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full font-mono font-medium">
+                        <span className="text-[10px] px-2 py-0.5 bg-stone-100 text-stone-900 rounded-full font-mono font-medium">
                           📄 {cs.case_number}
                         </span>
                       )}
-                      <span className="text-[10px] px-2 py-0.5 bg-green-200 text-green-800 rounded-full font-medium">
+                      <span className="text-[10px] px-2 py-0.5 bg-stone-100 text-stone-900 rounded-full font-medium">
                         {cs.case_type}
                       </span>
                     </div>
@@ -920,15 +920,15 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
                     {cs.key_numbers && cs.key_numbers.length > 0 && (
                       <div className="flex flex-wrap gap-2 border-t pt-3">
                         {cs.key_numbers.map((num, j) => (
-                          <span key={j} className="text-xs px-2.5 py-1 bg-orange-50 border border-orange-200 text-orange-800 rounded-lg font-mono">
+                          <span key={j} className="text-xs px-2.5 py-1 bg-stone-100 border border-stone-300 text-stone-900 rounded-lg font-mono">
                             {num}
                           </span>
                         ))}
                       </div>
                     )}
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-xs font-bold text-green-700 mb-1">💡 핵심 교훈</p>
-                      <p className="text-sm text-green-900 leading-relaxed">{cs.lesson}</p>
+                    <div className="bg-stone-100 border border-stone-300 rounded-lg p-3">
+                      <p className="text-xs font-bold text-stone-900 mb-1">💡 핵심 교훈</p>
+                      <p className="text-sm text-stone-900 leading-relaxed">{cs.lesson}</p>
                     </div>
                   </div>
                 </div>
@@ -940,51 +940,51 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
 
       {/* 5. 실전 가이드 */}
       {content.practical_guide && (
-        <div className="border border-orange-100 rounded-xl overflow-hidden">
-          <SectionHeader id="guide" icon="🗺️" title="실전 실행 가이드" color="bg-orange-50 text-orange-800 hover:bg-orange-100" />
+        <div className="border border-stone-300 rounded-xl overflow-hidden">
+          <SectionHeader id="guide" icon="🗺️" title="실전 실행 가이드" color="bg-stone-100 text-stone-900 hover:bg-stone-100" />
           {openSections.has('guide') && (
             <div className="p-4 space-y-4 bg-white">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {content.practical_guide.before_action?.length > 0 && (
-                  <div className="bg-blue-50 rounded-xl p-4">
-                    <p className="text-xs font-bold text-blue-700 mb-3 flex items-center gap-1.5">
-                      <span className="w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-[10px]">1</span>
+                  <div className="bg-stone-100 rounded-xl p-4">
+                    <p className="text-xs font-bold text-stone-900 mb-3 flex items-center gap-1.5">
+                      <span className="w-5 h-5 bg-stone-100 rounded-full flex items-center justify-center text-[10px]">1</span>
                       행동 전 확인
                     </p>
                     <ul className="space-y-2">
                       {content.practical_guide.before_action.map((item, i) => (
                         <li key={i} className="text-xs text-gray-700 flex items-start gap-1.5">
-                          <span className="text-blue-400 mt-0.5 flex-shrink-0">□</span> {item}
+                          <span className="text-stone-900 mt-0.5 flex-shrink-0">□</span> {item}
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
                 {content.practical_guide.during_action?.length > 0 && (
-                  <div className="bg-amber-50 rounded-xl p-4">
-                    <p className="text-xs font-bold text-amber-700 mb-3 flex items-center gap-1.5">
-                      <span className="w-5 h-5 bg-amber-200 rounded-full flex items-center justify-center text-[10px]">2</span>
+                  <div className="bg-stone-100 rounded-xl p-4">
+                    <p className="text-xs font-bold text-stone-900 mb-3 flex items-center gap-1.5">
+                      <span className="w-5 h-5 bg-stone-100 rounded-full flex items-center justify-center text-[10px]">2</span>
                       진행 중 확인
                     </p>
                     <ul className="space-y-2">
                       {content.practical_guide.during_action.map((item, i) => (
                         <li key={i} className="text-xs text-gray-700 flex items-start gap-1.5">
-                          <span className="text-amber-400 mt-0.5 flex-shrink-0">□</span> {item}
+                          <span className="text-stone-900 mt-0.5 flex-shrink-0">□</span> {item}
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
                 {content.practical_guide.after_action?.length > 0 && (
-                  <div className="bg-green-50 rounded-xl p-4">
-                    <p className="text-xs font-bold text-green-700 mb-3 flex items-center gap-1.5">
-                      <span className="w-5 h-5 bg-green-200 rounded-full flex items-center justify-center text-[10px]">3</span>
+                  <div className="bg-stone-100 rounded-xl p-4">
+                    <p className="text-xs font-bold text-stone-900 mb-3 flex items-center gap-1.5">
+                      <span className="w-5 h-5 bg-stone-100 rounded-full flex items-center justify-center text-[10px]">3</span>
                       완료 후 확인
                     </p>
                     <ul className="space-y-2">
                       {content.practical_guide.after_action.map((item, i) => (
                         <li key={i} className="text-xs text-gray-700 flex items-start gap-1.5">
-                          <span className="text-green-400 mt-0.5 flex-shrink-0">□</span> {item}
+                          <span className="text-stone-900 mt-0.5 flex-shrink-0">□</span> {item}
                         </li>
                       ))}
                     </ul>
@@ -992,12 +992,12 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
                 )}
               </div>
               {content.practical_guide.common_mistakes?.length > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                  <p className="text-xs font-bold text-red-700 mb-3">⚠️ 흔한 실수 & 주의사항</p>
+                <div className="bg-stone-100 border border-stone-300 rounded-xl p-4">
+                  <p className="text-xs font-bold text-stone-900 mb-3">⚠️ 흔한 실수 & 주의사항</p>
                   <ul className="space-y-2">
                     {content.practical_guide.common_mistakes.map((m, i) => (
                       <li key={i} className="text-xs text-gray-700 flex items-start gap-2">
-                        <span className="text-red-400 font-bold mt-0.5 flex-shrink-0">✗</span>
+                        <span className="text-stone-900 font-bold mt-0.5 flex-shrink-0">✗</span>
                         <span>{m}</span>
                       </li>
                     ))}
@@ -1005,12 +1005,12 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
                 </div>
               )}
               {content.practical_guide.pro_tips?.length > 0 && (
-                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-                  <p className="text-xs font-bold text-indigo-700 mb-3">⭐ 전문가 팁</p>
+                <div className="bg-stone-100 border border-stone-300 rounded-xl p-4">
+                  <p className="text-xs font-bold text-stone-900 mb-3">⭐ 전문가 팁</p>
                   <ul className="space-y-2">
                     {content.practical_guide.pro_tips.map((tip, i) => (
                       <li key={i} className="text-xs text-gray-700 flex items-start gap-2">
-                        <span className="text-indigo-400 font-bold mt-0.5 flex-shrink-0">★</span>
+                        <span className="text-stone-900 font-bold mt-0.5 flex-shrink-0">★</span>
                         <span>{tip}</span>
                       </li>
                     ))}
@@ -1024,13 +1024,13 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
 
       {/* 6. 마스터 체크리스트 */}
       {content.checklist && content.checklist.length > 0 && (
-        <div className="border border-indigo-100 rounded-xl overflow-hidden">
-          <SectionHeader id="checklist" icon="✅" title="마스터 체크리스트" badge={`${content.checklist.length}항목`} color="bg-indigo-50 text-indigo-800 hover:bg-indigo-100" />
+        <div className="border border-stone-300 rounded-xl overflow-hidden">
+          <SectionHeader id="checklist" icon="✅" title="마스터 체크리스트" badge={`${content.checklist.length}항목`} color="bg-stone-100 text-stone-900 hover:bg-stone-100" />
           {openSections.has('checklist') && (
             <div className="p-4 bg-white">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {content.checklist.map((item, i) => (
-                  <label key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-indigo-50 cursor-pointer group transition-colors">
+                  <label key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-stone-100 cursor-pointer group transition-colors">
                     <input type="checkbox" className="mt-0.5 flex-shrink-0 accent-indigo-600" />
                     <span className="text-sm text-gray-700 group-hover:text-gray-900 leading-relaxed">{item}</span>
                   </label>
@@ -1043,15 +1043,15 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
 
       {/* 7. 자기 진단 (모범 답안 포함) */}
       {content.self_assessment && content.self_assessment.length > 0 && (
-        <div className="border border-rose-100 rounded-xl overflow-hidden">
-          <SectionHeader id="quiz" icon="❓" title="자기 진단 테스트" badge={`${content.self_assessment.length}문항`} color="bg-rose-50 text-rose-800 hover:bg-rose-100" />
+        <div className="border border-stone-300 rounded-xl overflow-hidden">
+          <SectionHeader id="quiz" icon="❓" title="자기 진단 테스트" badge={`${content.self_assessment.length}문항`} color="bg-stone-100 text-stone-900 hover:bg-stone-100" />
           {openSections.has('quiz') && (
             <div className="p-4 space-y-3 bg-white">
               {content.self_assessment.map((sa, i) => (
-                <div key={i} className="border border-rose-100 rounded-xl overflow-hidden">
+                <div key={i} className="border border-stone-300 rounded-xl overflow-hidden">
                   <div className="p-4">
                     <div className="flex items-start gap-3">
-                      <span className="flex-shrink-0 w-7 h-7 bg-rose-100 rounded-full flex items-center justify-center text-xs font-bold text-rose-700">
+                      <span className="flex-shrink-0 w-7 h-7 bg-stone-100 rounded-full flex items-center justify-center text-xs font-bold text-stone-900">
                         Q{i + 1}
                       </span>
                       <div className="flex-1">
@@ -1064,7 +1064,7 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
                     <div className="border-t">
                       <button
                         onClick={() => toggleAnswer(i)}
-                        className="w-full px-4 py-2 text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors text-left flex items-center gap-1.5"
+                        className="w-full px-4 py-2 text-xs font-medium text-stone-900 bg-stone-100 hover:bg-stone-100 transition-colors text-left flex items-center gap-1.5"
                       >
                         {showAnswers.has(i) ? '▲ 모범 답안 숨기기' : '▼ 모범 답안 보기'}
                       </button>
@@ -1114,13 +1114,13 @@ function SynthesisView({ content }: { content: SubConceptContent }) {
       {/* theory_points */}
       <FieldBlock label={`theory_points [${content.theory_points?.length || 0}]`} color="blue">
         {(content.theory_points || []).map((tp, i) => (
-          <div key={i} className="bg-white rounded p-3 border border-blue-100 mb-2">
+          <div key={i} className="bg-white rounded p-3 border border-stone-300 mb-2">
             <div className="flex justify-between text-xs mb-1">
-              <span className="font-mono text-blue-600">[{i}].title</span>
+              <span className="font-mono text-stone-900">[{i}].title</span>
               <span className="text-gray-400">expert_count: {tp.expert_count}</span>
             </div>
             <p className="text-sm font-medium text-gray-900 mb-1">{tp.title}</p>
-            <p className="text-xs font-mono text-blue-600 mb-1">[{i}].content</p>
+            <p className="text-xs font-mono text-stone-900 mb-1">[{i}].content</p>
             <p className="text-sm text-gray-700 whitespace-pre-line">{tp.content}</p>
           </div>
         ))}
@@ -1130,8 +1130,8 @@ function SynthesisView({ content }: { content: SubConceptContent }) {
       <FieldBlock label="expert_comparison" color="amber">
         <FieldItem label="overview" value={content.expert_comparison?.overview} />
         {(content.expert_comparison?.perspectives || []).map((p, i) => (
-          <div key={i} className="bg-white rounded p-2 border border-amber-100 mb-1 text-sm">
-            <span className="font-mono text-amber-600 text-xs">perspectives[{i}]</span>
+          <div key={i} className="bg-white rounded p-2 border border-stone-300 mb-1 text-sm">
+            <span className="font-mono text-stone-900 text-xs">perspectives[{i}]</span>
             <p><b>{p.label}</b>: {p.viewpoint}</p>
             {p.pros_cons && <p className="text-xs text-gray-500">{p.pros_cons}</p>}
           </div>
@@ -1143,16 +1143,16 @@ function SynthesisView({ content }: { content: SubConceptContent }) {
       {(content.case_studies && content.case_studies.length > 0) && (
         <FieldBlock label={`case_studies [${content.case_studies.length}]`} color="green">
           {content.case_studies.map((cs, i) => (
-            <div key={i} className="bg-white rounded p-2 border border-green-100 mb-1 text-sm">
-              <span className="font-mono text-green-600 text-xs">[{i}] {cs.case_type}</span>
-              {cs.case_number && <span className="ml-2 text-[10px] px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded font-mono">{cs.case_number}</span>}
+            <div key={i} className="bg-white rounded p-2 border border-stone-300 mb-1 text-sm">
+              <span className="font-mono text-stone-900 text-xs">[{i}] {cs.case_type}</span>
+              {cs.case_number && <span className="ml-2 text-[10px] px-1.5 py-0.5 bg-stone-100 text-stone-900 rounded font-mono">{cs.case_number}</span>}
               <p><b>{cs.title}</b></p>
               <p className="text-gray-700 whitespace-pre-line text-xs mt-1">{cs.situation}</p>
-              {cs.analysis && <p className="text-blue-700 text-xs mt-1">분석: {cs.analysis}</p>}
-              <p className="text-green-700 mt-1 text-xs">교훈: {cs.lesson}</p>
+              {cs.analysis && <p className="text-stone-900 text-xs mt-1">분석: {cs.analysis}</p>}
+              <p className="text-stone-900 mt-1 text-xs">교훈: {cs.lesson}</p>
               {cs.key_numbers && cs.key_numbers.length > 0 && (
                 <div className="flex gap-1 mt-1 flex-wrap">
-                  {cs.key_numbers.map((n, j) => <span key={j} className="text-[10px] px-1.5 py-0.5 bg-orange-50 border border-orange-200 rounded font-mono">{n}</span>)}
+                  {cs.key_numbers.map((n, j) => <span key={j} className="text-[10px] px-1.5 py-0.5 bg-stone-100 border border-stone-300 rounded font-mono">{n}</span>)}
                 </div>
               )}
             </div>
@@ -1165,24 +1165,24 @@ function SynthesisView({ content }: { content: SubConceptContent }) {
         <FieldBlock label="practical_guide" color="teal">
           <div className="text-xs space-y-2">
             {content.practical_guide.before_action?.length > 0 && (
-              <div><p className="font-mono text-teal-600 font-bold">before_action:</p>
+              <div><p className="font-mono text-stone-900 font-bold">before_action:</p>
               {content.practical_guide.before_action.map((a, i) => <p key={i} className="ml-2">[{i}] {a}</p>)}</div>
             )}
             {content.practical_guide.during_action?.length > 0 && (
-              <div><p className="font-mono text-teal-600 font-bold">during_action:</p>
+              <div><p className="font-mono text-stone-900 font-bold">during_action:</p>
               {content.practical_guide.during_action.map((a, i) => <p key={i} className="ml-2">[{i}] {a}</p>)}</div>
             )}
             {content.practical_guide.after_action?.length > 0 && (
-              <div><p className="font-mono text-teal-600 font-bold">after_action:</p>
+              <div><p className="font-mono text-stone-900 font-bold">after_action:</p>
               {content.practical_guide.after_action.map((a, i) => <p key={i} className="ml-2">[{i}] {a}</p>)}</div>
             )}
             {content.practical_guide.common_mistakes?.length > 0 && (
-              <div><p className="font-mono text-red-600 font-bold">common_mistakes:</p>
-              {content.practical_guide.common_mistakes.map((m, i) => <p key={i} className="ml-2 text-red-700">[{i}] {m}</p>)}</div>
+              <div><p className="font-mono text-stone-900 font-bold">common_mistakes:</p>
+              {content.practical_guide.common_mistakes.map((m, i) => <p key={i} className="ml-2 text-stone-900">[{i}] {m}</p>)}</div>
             )}
             {content.practical_guide.pro_tips?.length > 0 && (
-              <div><p className="font-mono text-indigo-600 font-bold">pro_tips:</p>
-              {content.practical_guide.pro_tips.map((t, i) => <p key={i} className="ml-2 text-indigo-700">[{i}] {t}</p>)}</div>
+              <div><p className="font-mono text-stone-900 font-bold">pro_tips:</p>
+              {content.practical_guide.pro_tips.map((t, i) => <p key={i} className="ml-2 text-stone-900">[{i}] {t}</p>)}</div>
             )}
           </div>
         </FieldBlock>
@@ -1192,11 +1192,11 @@ function SynthesisView({ content }: { content: SubConceptContent }) {
       {(!content.case_studies && content.practical_cases && content.practical_cases.length > 0) && (
         <FieldBlock label={`practical_cases [${content.practical_cases.length}] (구형)`} color="green">
           {content.practical_cases.map((pc, i) => (
-            <div key={i} className="bg-white rounded p-2 border border-green-100 mb-1 text-sm">
-              <span className="font-mono text-green-600 text-xs">[{i}]</span>
+            <div key={i} className="bg-white rounded p-2 border border-stone-300 mb-1 text-sm">
+              <span className="font-mono text-stone-900 text-xs">[{i}]</span>
               <p><b>{pc.title}</b></p>
               <p className="text-gray-700 whitespace-pre-line">{pc.scenario}</p>
-              <p className="text-green-700 mt-1">교훈: {pc.lesson}</p>
+              <p className="text-stone-900 mt-1">교훈: {pc.lesson}</p>
             </div>
           ))}
         </FieldBlock>
@@ -1233,24 +1233,24 @@ function SynthesisView({ content }: { content: SubConceptContent }) {
 
 function FieldBlock({ label, color, children }: { label: string; color: string; children: React.ReactNode }) {
   const bgMap: Record<string, string> = {
-    purple: 'bg-purple-50 border-purple-200',
-    blue: 'bg-blue-50 border-blue-200',
-    amber: 'bg-amber-50 border-amber-200',
-    green: 'bg-green-50 border-green-200',
-    indigo: 'bg-indigo-50 border-indigo-200',
-    rose: 'bg-rose-50 border-rose-200',
+    purple: 'bg-stone-100 border-stone-300',
+    blue: 'bg-stone-100 border-stone-300',
+    amber: 'bg-stone-100 border-stone-300',
+    green: 'bg-stone-100 border-stone-300',
+    indigo: 'bg-stone-100 border-stone-300',
+    rose: 'bg-stone-100 border-stone-300',
     gray: 'bg-gray-50 border-gray-200',
-    teal: 'bg-teal-50 border-teal-200',
+    teal: 'bg-stone-100 border-stone-300',
   }
   const textMap: Record<string, string> = {
-    purple: 'text-purple-700',
-    blue: 'text-blue-700',
-    amber: 'text-amber-700',
-    green: 'text-green-700',
-    indigo: 'text-indigo-700',
-    rose: 'text-rose-700',
+    purple: 'text-stone-900',
+    blue: 'text-stone-900',
+    amber: 'text-stone-900',
+    green: 'text-stone-900',
+    indigo: 'text-stone-900',
+    rose: 'text-stone-900',
     gray: 'text-gray-700',
-    teal: 'text-teal-700',
+    teal: 'text-stone-900',
   }
   return (
     <div className={`rounded-lg p-4 border ${bgMap[color] || bgMap.gray}`}>
@@ -1300,7 +1300,7 @@ function OriginalView({ subConceptId, keywords }: { subConceptId: number; keywor
   if (loading) {
     return (
       <div className="py-8 text-center">
-        <div className="w-6 h-6 border-3 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <div className="w-6 h-6 border-3 border-stone-300 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
         <p className="text-sm text-gray-500">원문 대본 로딩 중...</p>
       </div>
     )
@@ -1309,7 +1309,7 @@ function OriginalView({ subConceptId, keywords }: { subConceptId: number; keywor
   if (error) {
     return (
       <div className="py-8 text-center">
-        <p className="text-red-500 text-sm mb-3">{error}</p>
+        <p className="text-stone-900 text-sm mb-3">{error}</p>
         <button onClick={loadSegments} className="px-3 py-1.5 bg-gray-200 rounded-lg text-sm hover:bg-gray-300">
           재시도
         </button>
@@ -1343,7 +1343,7 @@ function OriginalView({ subConceptId, keywords }: { subConceptId: number; keywor
         <div key={gIdx} className="border rounded-lg overflow-hidden">
           <div className="bg-gray-100 px-4 py-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+              <span className="w-6 h-6 bg-stone-100 text-white rounded-full flex items-center justify-center text-xs font-bold">
                 {String.fromCharCode(65 + gIdx)}
               </span>
               <span className="text-sm font-medium text-gray-700">
@@ -1360,7 +1360,7 @@ function OriginalView({ subConceptId, keywords }: { subConceptId: number; keywor
               <div key={sIdx} className="bg-gray-50 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2 text-xs text-gray-500">
                   <span>📹 {seg.title}</span>
-                  <span className="px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded text-[10px]">
+                  <span className="px-1.5 py-0.5 bg-stone-100 text-stone-900 rounded text-[10px]">
                     키워드: {seg.keyword_matched}
                   </span>
                 </div>
@@ -1393,7 +1393,7 @@ function highlightKeywords(text: string, keywords: string[]): React.ReactNode {
       {matches.map((part, i) => {
         const isKeyword = keywords.some(kw => part.toLowerCase() === kw.toLowerCase())
         return isKeyword ? (
-          <mark key={i} className="bg-yellow-200 text-yellow-900 px-0.5 rounded font-medium">{part}</mark>
+          <mark key={i} className="bg-stone-100 text-stone-900 px-0.5 rounded font-medium">{part}</mark>
         ) : (
           <span key={i}>{part}</span>
         )
@@ -1408,13 +1408,13 @@ function DownloadButtons({ conceptId, type }: { conceptId: number; type: 'lectur
     <div className="flex gap-2 mt-4">
       <button
         onClick={() => window.open(`/api/ontology/sub-concepts/export?concept_id=${conceptId}&type=${type}`, '_blank')}
-        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+        className="px-4 py-2 bg-stone-100 text-white rounded-lg hover:bg-stone-100 transition-colors text-sm font-medium"
       >
         📄 DOCX 다운로드
       </button>
       <button
         onClick={() => window.open(`/api/ontology/sub-concepts/export-pdf?concept_id=${conceptId}&type=${type}`, '_blank')}
-        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+        className="px-4 py-2 bg-stone-100 text-white rounded-lg hover:bg-stone-100 transition-colors text-sm font-medium"
       >
         📕 PDF 다운로드
       </button>
@@ -1446,12 +1446,12 @@ function LecturePlanView({ concept, subConcepts, importance, onSynthesize }: {
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="bg-purple-50">
-                <th className="text-left px-3 py-2 border text-purple-700">시간</th>
-                <th className="text-left px-3 py-2 border text-purple-700">주제(Topic)</th>
-                <th className="text-left px-3 py-2 border text-purple-700">방식</th>
-                <th className="text-left px-3 py-2 border text-purple-700">근거 영상</th>
-                <th className="text-left px-3 py-2 border text-purple-700">전문가</th>
+              <tr className="bg-stone-100">
+                <th className="text-left px-3 py-2 border text-stone-900">시간</th>
+                <th className="text-left px-3 py-2 border text-stone-900">주제(Topic)</th>
+                <th className="text-left px-3 py-2 border text-stone-900">방식</th>
+                <th className="text-left px-3 py-2 border text-stone-900">근거 영상</th>
+                <th className="text-left px-3 py-2 border text-stone-900">전문가</th>
               </tr>
             </thead>
             <tbody>
@@ -1470,14 +1470,14 @@ function LecturePlanView({ concept, subConcepts, importance, onSynthesize }: {
                   time = end
                   const fmt = (m: number) => `${Math.floor(m / 60)}:${(m % 60).toString().padStart(2, '0')}`
                   return (
-                    <tr key={sc.sub_concept_id} className="hover:bg-purple-50/30">
+                    <tr key={sc.sub_concept_id} className="hover:bg-stone-100/30">
                       <td className="px-3 py-2 border text-xs">{fmt(start)}~{fmt(end)}</td>
                       <td className="px-3 py-2 border font-medium">{sc.name}</td>
                       <td className="px-3 py-2 border text-xs">
                         {sc.order_in_parent <= 2 ? '이론' : sc.order_in_parent <= 5 ? '이론+사례' : '실습'}
                       </td>
-                      <td className="px-3 py-2 border text-xs font-medium text-green-700">{sc.video_count}개</td>
-                      <td className="px-3 py-2 border text-xs font-medium text-amber-700">{sc.expert_count}명</td>
+                      <td className="px-3 py-2 border text-xs font-medium text-stone-900">{sc.video_count}개</td>
+                      <td className="px-3 py-2 border text-xs font-medium text-stone-900">{sc.expert_count}명</td>
                     </tr>
                   )
                 })
@@ -1633,8 +1633,8 @@ function NewsletterView({ concept, subConcepts, importance }: {
               onClick={() => setNlType(key)}
               className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
                 nlType === key
-                  ? 'bg-purple-600 text-white border-purple-600'
-                  : 'bg-white text-gray-600 border-gray-300 hover:border-purple-400'
+                  ? 'bg-stone-100 text-white border-stone-300'
+                  : 'bg-white text-gray-600 border-gray-300 hover:border-stone-300'
               }`}
             >
               {label}
@@ -1645,7 +1645,7 @@ function NewsletterView({ concept, subConcepts, importance }: {
           <button
             onClick={generateNewsletter}
             disabled={nlLoading}
-            className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-stone-100 text-white text-sm font-medium rounded-lg hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             {nlLoading ? (
               <>
@@ -1667,7 +1667,7 @@ function NewsletterView({ concept, subConcepts, importance }: {
           )}
         </div>
         {nlError && (
-          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">
+          <div className="mt-3 p-3 bg-stone-100 border border-stone-300 rounded-lg text-xs text-stone-900">
             ⚠️ {nlError}
           </div>
         )}
@@ -1675,10 +1675,10 @@ function NewsletterView({ concept, subConcepts, importance }: {
 
       {/* AI 생성 결과 */}
       {nlLoading && (
-        <div className="border border-purple-200 rounded-xl p-8 text-center bg-purple-50">
-          <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-purple-700 font-medium">AI가 뉴스레터를 생성하고 있습니다...</p>
-          <p className="text-xs text-purple-500 mt-1">개념 &quot;{concept.name}&quot; 기반으로 합성 중</p>
+        <div className="border border-stone-300 rounded-xl p-8 text-center bg-stone-100">
+          <div className="w-8 h-8 border-4 border-stone-300 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-stone-900 font-medium">AI가 뉴스레터를 생성하고 있습니다...</p>
+          <p className="text-xs text-stone-900 mt-1">개념 &quot;{concept.name}&quot; 기반으로 합성 중</p>
         </div>
       )}
 
@@ -1713,7 +1713,7 @@ function NewsletterView({ concept, subConcepts, importance }: {
           </div>
         ) : (
           /* 구조화 뷰 */
-          <div className="border-2 border-purple-200 rounded-xl overflow-hidden">
+          <div className="border-2 border-stone-300 rounded-xl overflow-hidden">
             {/* 헤더 */}
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 text-white">
               <div className="flex items-center justify-between mb-1">
@@ -1742,10 +1742,10 @@ function NewsletterView({ concept, subConcepts, importance }: {
                   <h4 className="font-bold text-gray-900 mb-2 text-sm flex items-center gap-1">
                     ✅ 핵심 포인트
                   </h4>
-                  <div className="bg-purple-50 rounded-lg p-3 space-y-2">
+                  <div className="bg-stone-100 rounded-lg p-3 space-y-2">
                     {ai.key_takeaways.map((item: string, i: number) => (
                       <div key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                        <span className="w-5 h-5 rounded-full bg-purple-200 text-purple-700 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                        <span className="w-5 h-5 rounded-full bg-stone-100 text-stone-900 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
                           {i + 1}
                         </span>
                         {item}
@@ -1762,7 +1762,7 @@ function NewsletterView({ concept, subConcepts, importance }: {
                   <div className="text-xs text-gray-600 space-y-1.5">
                     {newsletter.ontology_context.roadmap_position && (
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-purple-700">
+                        <span className="font-medium text-stone-900">
                           {newsletter.ontology_context.roadmap_position.level} 과정
                         </span>
                         <span className="text-gray-400">·</span>
@@ -1774,15 +1774,15 @@ function NewsletterView({ concept, subConcepts, importance }: {
                       </div>
                     )}
                     {newsletter.ontology_context.prerequisites?.length > 0 && (
-                      <p>선수 개념: <span className="text-blue-700">{newsletter.ontology_context.prerequisites.join(', ')}</span></p>
+                      <p>선수 개념: <span className="text-stone-900">{newsletter.ontology_context.prerequisites.join(', ')}</span></p>
                     )}
                     {newsletter.ontology_context.successors?.length > 0 && (
-                      <p>후속 개념: <span className="text-green-700">{newsletter.ontology_context.successors.join(', ')}</span></p>
+                      <p>후속 개념: <span className="text-stone-900">{newsletter.ontology_context.successors.join(', ')}</span></p>
                     )}
                     {newsletter.ontology_context.keywords?.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {newsletter.ontology_context.keywords.map((kw: string, i: number) => (
-                          <span key={i} className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-[10px]">{kw}</span>
+                          <span key={i} className="px-2 py-0.5 bg-stone-100 text-stone-900 rounded text-[10px]">{kw}</span>
                         ))}
                       </div>
                     )}
@@ -1808,7 +1808,7 @@ function NewsletterView({ concept, subConcepts, importance }: {
               {/* CTA */}
               {ai?.call_to_action && (
                 <section className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 text-center">
-                  <p className="text-sm font-medium text-purple-800">{ai.call_to_action}</p>
+                  <p className="text-sm font-medium text-stone-900">{ai.call_to_action}</p>
                 </section>
               )}
 
@@ -1849,7 +1849,7 @@ function NewsletterView({ concept, subConcepts, importance }: {
                 <span className="font-medium text-gray-800 flex-1">{sc.name}</span>
                 <span className="text-gray-400">{sc.video_count}개 영상</span>
                 <span className="text-gray-400">전문가 {sc.expert_count}명</span>
-                {sc.content && <span className="text-green-500 text-[10px]">✓ 합성완료</span>}
+                {sc.content && <span className="text-stone-900 text-[10px]">✓ 합성완료</span>}
               </div>
             ))}
           </div>
@@ -1900,16 +1900,16 @@ function AtomicCapsulePreview({ conceptId, conceptName }: { conceptId: number; c
   }
 
   const DIFF_COLORS: Record<string, string> = {
-    beginner: 'bg-emerald-100 text-emerald-700',
-    intermediate: 'bg-blue-100 text-blue-700',
-    advanced: 'bg-purple-100 text-purple-700',
+    beginner: 'bg-stone-100 text-stone-900',
+    intermediate: 'bg-stone-100 text-stone-900',
+    advanced: 'bg-stone-100 text-stone-900',
   }
   const DIFF_LABELS: Record<string, string> = { beginner: '초급', intermediate: '중급', advanced: '고급' }
 
   if (loading) {
     return (
       <div className="py-8 text-center text-sm text-gray-400">
-        <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+        <div className="w-6 h-6 border-2 border-stone-300 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
         Atomic 캡슐 로딩 중...
       </div>
     )
@@ -1928,7 +1928,7 @@ function AtomicCapsulePreview({ conceptId, conceptName }: { conceptId: number; c
           {capsules.length > 0 && (
             <a
               href={`/curriculum/concept/${conceptId}`}
-              className="text-xs text-purple-600 hover:underline"
+              className="text-xs text-stone-900 hover:underline"
             >
               학습 페이지 →
             </a>
@@ -1936,7 +1936,7 @@ function AtomicCapsulePreview({ conceptId, conceptName }: { conceptId: number; c
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+            className="px-3 py-1.5 text-xs bg-stone-100 text-white rounded-lg hover:bg-stone-100 disabled:opacity-50"
           >
             {generating ? '생성 중...' : capsules.length === 0 ? '캡슐 생성' : '재생성'}
           </button>
@@ -1944,14 +1944,14 @@ function AtomicCapsulePreview({ conceptId, conceptName }: { conceptId: number; c
       </div>
 
       {genMsg && (
-        <div className="text-xs text-purple-600 flex items-center gap-1.5">
-          {generating && <div className="w-3 h-3 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />}
+        <div className="text-xs text-stone-900 flex items-center gap-1.5">
+          {generating && <div className="w-3 h-3 border-2 border-stone-300 border-t-transparent rounded-full animate-spin" />}
           {genMsg}
         </div>
       )}
 
       {capsules.length === 0 && !generating && (
-        <div className="border-2 border-dashed border-purple-200 rounded-xl p-8 text-center">
+        <div className="border-2 border-dashed border-stone-300 rounded-xl p-8 text-center">
           <p className="text-sm text-gray-500 mb-1">Atomic 캡슐이 아직 없습니다</p>
           <p className="text-xs text-gray-400">위 버튼으로 AI가 이 개념을 원자적 학습 단위로 분해합니다</p>
         </div>
@@ -1984,8 +1984,8 @@ function AtomicCapsulePreview({ conceptId, conceptName }: { conceptId: number; c
                   <div className="px-4 pb-4 border-t border-gray-100 space-y-3 text-xs">
                     {/* 개념 정의 */}
                     <div>
-                      <p className="font-bold text-purple-600 mb-1">📖 개념 정의</p>
-                      <div className="bg-purple-50 rounded-lg p-3">
+                      <p className="font-bold text-stone-900 mb-1">📖 개념 정의</p>
+                      <div className="bg-stone-100 rounded-lg p-3">
                         <p className="text-gray-700 text-[11px] leading-relaxed">{content.definition?.formal}</p>
                       </div>
                       <p className="text-gray-600 mt-1.5 leading-relaxed">{content.definition?.plain}</p>
@@ -1994,12 +1994,12 @@ function AtomicCapsulePreview({ conceptId, conceptName }: { conceptId: number; c
                     {/* 법령 근거 */}
                     {content.legal_foundation?.laws?.length > 0 && (
                       <div>
-                        <p className="font-bold text-blue-600 mb-1">⚖️ 법령 근거</p>
+                        <p className="font-bold text-stone-900 mb-1">⚖️ 법령 근거</p>
                         <div className="space-y-1">
                           {content.legal_foundation.laws.slice(0, 3).map((law: any, i: number) => (
-                            <div key={i} className="bg-blue-50 rounded px-2.5 py-1.5">
-                              <span className="font-medium text-blue-800">{law.law_name}</span>
-                              <span className="text-blue-600 ml-1">{law.article}</span>
+                            <div key={i} className="bg-stone-100 rounded px-2.5 py-1.5">
+                              <span className="font-medium text-stone-900">{law.law_name}</span>
+                              <span className="text-stone-900 ml-1">{law.article}</span>
                               <span className="text-gray-500 ml-1.5">— {law.summary}</span>
                             </div>
                           ))}
@@ -2010,13 +2010,13 @@ function AtomicCapsulePreview({ conceptId, conceptName }: { conceptId: number; c
                     {/* 실전 사례 */}
                     {content.cases && (
                       <div>
-                        <p className="font-bold text-green-600 mb-1">📋 실전 사례</p>
-                        <div className="bg-green-50 rounded-lg p-2.5 mb-1.5">
-                          <p className="text-[10px] text-green-700 font-medium mb-0.5">성공 사례</p>
+                        <p className="font-bold text-stone-900 mb-1">📋 실전 사례</p>
+                        <div className="bg-stone-100 rounded-lg p-2.5 mb-1.5">
+                          <p className="text-[10px] text-stone-900 font-medium mb-0.5">성공 사례</p>
                           <p className="text-gray-700 leading-relaxed">{content.cases.success_case?.slice(0, 200)}...</p>
                         </div>
-                        <div className="bg-red-50 rounded-lg p-2.5">
-                          <p className="text-[10px] text-red-700 font-medium mb-0.5">실패 사례</p>
+                        <div className="bg-stone-100 rounded-lg p-2.5">
+                          <p className="text-[10px] text-stone-900 font-medium mb-0.5">실패 사례</p>
                           <p className="text-gray-700 leading-relaxed">{content.cases.failure_case?.slice(0, 200)}...</p>
                         </div>
                       </div>
@@ -2025,8 +2025,8 @@ function AtomicCapsulePreview({ conceptId, conceptName }: { conceptId: number; c
                     {/* 연습문제 미리보기 */}
                     {content.quiz?.length > 0 && (
                       <div>
-                        <p className="font-bold text-amber-600 mb-1">📝 연습문제 ({content.quiz.length}개)</p>
-                        <div className="bg-amber-50 rounded-lg p-2.5">
+                        <p className="font-bold text-stone-900 mb-1">📝 연습문제 ({content.quiz.length}개)</p>
+                        <div className="bg-stone-100 rounded-lg p-2.5">
                           <p className="text-gray-700">Q. {content.quiz[0].question}</p>
                           {content.quiz[0].options && (
                             <div className="mt-1 space-y-0.5">
@@ -2043,13 +2043,13 @@ function AtomicCapsulePreview({ conceptId, conceptName }: { conceptId: number; c
                     <div className="pt-2 flex gap-2">
                       <a
                         href={`/curriculum/study/${cap.atomic_id}`}
-                        className="text-xs text-purple-600 hover:underline font-medium"
+                        className="text-xs text-stone-900 hover:underline font-medium"
                       >
                         → 전체 학습하기
                       </a>
                       <a
                         href={`/api/ontology/atomic-capsules/export?concept_id=${conceptId}&format=pdf`}
-                        className="text-xs text-indigo-600 hover:underline"
+                        className="text-xs text-stone-900 hover:underline"
                       >
                         PDF 교재 다운로드
                       </a>
@@ -2073,13 +2073,13 @@ function AtomicCapsulePreview({ conceptId, conceptName }: { conceptId: number; c
         <div className="flex gap-2 pt-2 border-t border-gray-100">
           <a
             href={`/api/ontology/atomic-capsules/export?concept_id=${conceptId}&format=docx`}
-            className="flex items-center gap-1 px-3 py-1.5 text-xs border border-indigo-200 text-indigo-600 rounded-lg hover:bg-indigo-50"
+            className="flex items-center gap-1 px-3 py-1.5 text-xs border border-stone-300 text-stone-900 rounded-lg hover:bg-stone-100"
           >
             📄 DOCX 교재
           </a>
           <a
             href={`/api/ontology/atomic-capsules/export?concept_id=${conceptId}&format=pdf`}
-            className="flex items-center gap-1 px-3 py-1.5 text-xs border border-indigo-200 text-indigo-600 rounded-lg hover:bg-indigo-50"
+            className="flex items-center gap-1 px-3 py-1.5 text-xs border border-stone-300 text-stone-900 rounded-lg hover:bg-stone-100"
           >
             📄 PDF 교재
           </a>

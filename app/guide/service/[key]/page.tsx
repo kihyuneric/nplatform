@@ -76,7 +76,7 @@ export default function ServiceGuidePage() {
       {/* Header */}
       <div className="mb-8 flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-stone-100 text-sm font-bold text-white">
             NP
           </div>
           <div>
@@ -103,10 +103,10 @@ export default function ServiceGuidePage() {
       </div>
 
       {/* Steps */}
-      <ol className="relative space-y-8 border-l-2 border-blue-500/30 pl-8">
+      <ol className="relative space-y-8 border-l-2 border-stone-300/30 pl-8">
         {guide.steps.map((step, idx) => (
           <li key={idx} className="relative">
-            <div className="absolute -left-[2.55rem] flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white shadow">
+            <div className="absolute -left-[2.55rem] flex h-8 w-8 items-center justify-center rounded-full bg-stone-100 text-sm font-bold text-white shadow">
               {idx + 1}
             </div>
             <h3 className="mb-1 text-base font-semibold text-[var(--color-text-primary)]">
@@ -125,7 +125,7 @@ export default function ServiceGuidePage() {
           추가 도움이 필요하시면{' '}
           <button
             onClick={() => router.push('/support')}
-            className="font-medium text-blue-400 hover:underline"
+            className="font-medium text-stone-900 hover:underline"
           >
             고객 지원센터
           </button>

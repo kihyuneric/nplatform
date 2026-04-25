@@ -137,8 +137,8 @@ export function LOIForm({
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06] bg-[#0A1628]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/[0.12] border border-blue-500/30 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-blue-400" />
+              <div className="w-10 h-10 rounded-lg bg-stone-100/[0.12] border border-stone-300/30 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-stone-900" />
               </div>
               <div>
                 <h2 id="loi-title" className="text-base font-bold text-white tracking-normal">LOI (의향서) 작성</h2>
@@ -167,7 +167,7 @@ export function LOIForm({
                     value={value.amount || ""}
                     onChange={e => update("amount", Number(e.target.value))}
                     placeholder="예: 850000000"
-                    className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 pr-10 text-sm text-white tabular-nums placeholder-white/20 outline-none focus:border-blue-500/50"
+                    className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 pr-10 text-sm text-white tabular-nums placeholder-white/20 outline-none focus:border-stone-300/50"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/40">원</span>
                 </div>
@@ -175,7 +175,7 @@ export function LOIForm({
                   <p className="mt-1.5 text-[11px] text-white/40 tracking-normal">
                     ≈ {(value.amount / 100_000_000).toFixed(2)}억원
                     {askingPrice && askingPrice > 0 && (
-                      <span className={discountVsAsking >= 0 ? "ml-2 text-emerald-400" : "ml-2 text-rose-400"}>
+                      <span className={discountVsAsking >= 0 ? "ml-2 text-stone-900" : "ml-2 text-stone-900"}>
                         희망가 대비 {discountVsAsking >= 0 ? "-" : "+"}{Math.abs(discountVsAsking).toFixed(1)}%
                       </span>
                     )}
@@ -193,7 +193,7 @@ export function LOIForm({
                       onClick={() => update("paymentMethod", m)}
                       className={`px-3 py-2 rounded-lg text-xs font-bold tracking-normal border transition-all ${
                         value.paymentMethod === m
-                          ? "bg-blue-500/[0.12] border-blue-500/50 text-blue-300"
+                          ? "bg-stone-100/[0.12] border-stone-300/50 text-stone-900"
                           : "bg-white/[0.03] border-white/[0.08] text-white/50 hover:border-white/[0.16]"
                       }`}
                     >
@@ -210,7 +210,7 @@ export function LOIForm({
                     type="date"
                     value={value.closingDate}
                     onChange={e => update("closingDate", e.target.value)}
-                    className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white tabular-nums outline-none focus:border-blue-500/50"
+                    className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white tabular-nums outline-none focus:border-stone-300/50"
                   />
                 </Field>
                 <Field label="LOI 유효기간" required icon={<Calendar className="w-3.5 h-3.5" />}>
@@ -218,7 +218,7 @@ export function LOIForm({
                     type="date"
                     value={value.validUntilDate}
                     onChange={e => update("validUntilDate", e.target.value)}
-                    className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white tabular-nums outline-none focus:border-blue-500/50"
+                    className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white tabular-nums outline-none focus:border-stone-300/50"
                   />
                 </Field>
               </div>
@@ -238,11 +238,11 @@ export function LOIForm({
                       onClick={() => update("bindingType", opt.v)}
                       className={`px-3 py-2.5 rounded-lg text-left border transition-all ${
                         value.bindingType === opt.v
-                          ? "bg-blue-500/[0.12] border-blue-500/50"
+                          ? "bg-stone-100/[0.12] border-stone-300/50"
                           : "bg-white/[0.03] border-white/[0.08] hover:border-white/[0.16]"
                       }`}
                     >
-                      <p className={`text-xs font-bold tracking-normal ${value.bindingType === opt.v ? "text-blue-300" : "text-white/70"}`}>{opt.label}</p>
+                      <p className={`text-xs font-bold tracking-normal ${value.bindingType === opt.v ? "text-stone-900" : "text-white/70"}`}>{opt.label}</p>
                       <p className="text-[10px] text-white/35 tracking-normal mt-0.5">{opt.desc}</p>
                     </button>
                   ))}
@@ -282,14 +282,14 @@ export function LOIForm({
                   onChange={e => update("note", e.target.value)}
                   rows={3}
                   placeholder="추가 협의사항을 자유롭게 작성해주세요"
-                  className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-blue-500/50 resize-none"
+                  className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-stone-300/50 resize-none"
                 />
               </Field>
 
               {error && (
-                <div className="flex items-start gap-2 px-3.5 py-2.5 bg-rose-500/[0.08] border border-rose-500/30 rounded-lg">
-                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                  <p className="text-xs text-rose-300 tracking-normal">{error}</p>
+                <div className="flex items-start gap-2 px-3.5 py-2.5 bg-stone-100/[0.08] border border-stone-300/30 rounded-lg">
+                  <AlertTriangle className="w-4 h-4 text-stone-900 shrink-0 mt-0.5" />
+                  <p className="text-xs text-stone-900 tracking-normal">{error}</p>
                 </div>
               )}
             </div>
@@ -319,11 +319,11 @@ export function LOIForm({
                 </div>
               </div>
 
-              <div className="bg-blue-500/[0.06] border border-blue-500/20 rounded-lg p-3 flex items-start gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
-                <p className="text-[10px] text-blue-300/80 leading-relaxed tracking-normal">
-                  제출 시 Access Score <strong className="text-blue-300">+120점</strong> 가산.
-                  매도자도 LOI 제출 시 <strong className="text-blue-300">MATCHED</strong> 단계로 자동 전이됩니다.
+              <div className="bg-stone-100/[0.06] border border-stone-300/20 rounded-lg p-3 flex items-start gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-stone-900 shrink-0 mt-0.5" />
+                <p className="text-[10px] text-stone-900/80 leading-relaxed tracking-normal">
+                  제출 시 Access Score <strong className="text-stone-900">+120점</strong> 가산.
+                  매도자도 LOI 제출 시 <strong className="text-stone-900">MATCHED</strong> 단계로 자동 전이됩니다.
                 </p>
               </div>
             </aside>
@@ -341,7 +341,7 @@ export function LOIForm({
             <button
               onClick={handleSubmit}
               disabled={!valid || submitting}
-              className="px-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-white/[0.06] disabled:text-white/30 text-white text-xs font-bold rounded-lg tracking-normal transition-colors flex items-center gap-1.5"
+              className="px-5 py-2 bg-stone-100 hover:bg-stone-100 disabled:bg-white/[0.06] disabled:text-white/30 text-white text-xs font-bold rounded-lg tracking-normal transition-colors flex items-center gap-1.5"
             >
               <FileText className="w-3.5 h-3.5" />
               {submitting ? "제출 중..." : "LOI 제출"}
@@ -371,7 +371,7 @@ function Field({
       <label className="flex items-center gap-1.5 text-[11px] font-bold text-white/60 tracking-normal mb-1.5">
         {icon}
         {label}
-        {required && <span className="text-rose-400">*</span>}
+        {required && <span className="text-stone-900">*</span>}
       </label>
       {children}
     </div>

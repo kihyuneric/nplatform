@@ -37,12 +37,12 @@ function FailContent() {
   return (
     <div className="w-full max-w-md">
       {/* 오류 카드 */}
-      <div className="bg-[#0D1F38] border border-red-500/20 rounded-2xl p-8 text-center mb-4">
+      <div className="bg-[#0D1F38] border border-stone-300/20 rounded-2xl p-8 text-center mb-4">
         <div className="flex items-center justify-center mb-4">
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center ${isUserCancelled ? 'bg-yellow-500/20' : 'bg-red-500/20'}`}>
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center ${isUserCancelled ? 'bg-stone-100/20' : 'bg-stone-100/20'}`}>
             {isUserCancelled
-              ? <AlertTriangle className="h-9 w-9 text-yellow-400" />
-              : <XCircle className="h-9 w-9 text-red-400" />
+              ? <AlertTriangle className="h-9 w-9 text-stone-900" />
+              : <XCircle className="h-9 w-9 text-stone-900" />
             }
           </div>
         </div>
@@ -68,8 +68,8 @@ function FailContent() {
 
         {/* 해결 방법 */}
         {!isUserCancelled && (
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 text-left mb-6">
-            <p className="text-blue-300 text-xs font-semibold mb-2">해결 방법을 시도해 보세요</p>
+          <div className="bg-stone-100/10 border border-stone-300/20 rounded-xl p-4 text-left mb-6">
+            <p className="text-stone-900 text-xs font-semibold mb-2">해결 방법을 시도해 보세요</p>
             <ul className="text-white/60 text-xs space-y-1 list-disc list-inside">
               <li>다른 카드나 결제 수단을 사용해 보세요</li>
               <li>카드사 앱에서 한도 및 정지 여부를 확인하세요</li>
@@ -83,7 +83,7 @@ function FailContent() {
         <div className="flex flex-col gap-3">
           <button
             onClick={() => router.back()}
-            className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors"
+            className="flex items-center justify-center gap-2 w-full bg-stone-100 hover:bg-stone-100 text-white font-semibold py-3 rounded-xl transition-colors"
           >
             <RefreshCw className="h-4 w-4" />
             다시 시도
@@ -111,7 +111,7 @@ function FailContent() {
       {/* 안내 */}
       <p className="text-center text-xs text-white/30">
         결제 중 문제가 발생했다면{' '}
-        <a href="/support" className="text-blue-400 underline">고객센터</a>로 문의해 주세요.
+        <a href="/support" className="text-stone-900 underline">고객센터</a>로 문의해 주세요.
         <br />
         주문 번호를 미리 메모해두시면 빠른 처리에 도움이 됩니다.
       </p>

@@ -106,12 +106,12 @@ export default function LandingGeneratorPage() {
               return (
                 <div key={s.id} className="flex items-center gap-1">
                   {i > 0 && (
-                    <div className={`w-8 h-0.5 ${isDone ? 'bg-blue-500' : 'bg-slate-200'}`} />
+                    <div className={`w-8 h-0.5 ${isDone ? 'bg-stone-100' : 'bg-slate-200'}`} />
                   )}
                   <div
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all
-                      ${isActive ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30' : ''}
-                      ${isDone ? 'bg-blue-100 text-blue-700' : ''}
+                      ${isActive ? 'bg-stone-100 text-white shadow-lg shadow-blue-500/30' : ''}
+                      ${isDone ? 'bg-stone-100 text-stone-900' : ''}
                       ${!isActive && !isDone ? 'bg-slate-100 text-slate-400' : ''}
                     `}
                   >
@@ -168,8 +168,8 @@ export default function LandingGeneratorPage() {
               className="flex flex-col items-center justify-center py-32"
             >
               <div className="relative">
-                <div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                <Sparkles className="w-8 h-8 text-blue-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                <div className="w-20 h-20 border-4 border-stone-300 border-t-transparent rounded-full animate-spin" />
+                <Sparkles className="w-8 h-8 text-stone-900 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
               </div>
               <h2 className="text-2xl font-bold mt-8 text-slate-800">
                 AI가 스토리텔링을 만들고 있습니다
@@ -187,7 +187,7 @@ export default function LandingGeneratorPage() {
               exit={{ opacity: 0 }}
               className="flex flex-col items-center justify-center py-32"
             >
-              <ImageIcon className="w-16 h-16 text-purple-500 animate-pulse" />
+              <ImageIcon className="w-16 h-16 text-stone-900 animate-pulse" />
               <h2 className="text-2xl font-bold mt-8 text-slate-800">
                 섹션별 이미지를 찾고 있습니다
               </h2>

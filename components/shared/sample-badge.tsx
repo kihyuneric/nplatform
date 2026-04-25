@@ -44,7 +44,7 @@ export function SampleBadge({ mode = "compact", className }: SampleBadgeProps) {
     return (
       <div
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-sm font-medium text-amber-400",
+          "inline-flex items-center gap-1.5 rounded-md border border-stone-300/40 bg-stone-100/10 px-3 py-1.5 text-sm font-medium text-stone-900",
           className
         )}
       >
@@ -58,7 +58,7 @@ export function SampleBadge({ mode = "compact", className }: SampleBadgeProps) {
     <Badge
       variant="outline"
       className={cn(
-        "border-amber-500/40 bg-amber-500/10 text-amber-400 text-[10px] px-1.5 py-0 font-medium",
+        "border-stone-300/40 bg-stone-100/10 text-stone-900 text-[10px] px-1.5 py-0 font-medium",
         className
       )}
     >

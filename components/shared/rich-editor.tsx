@@ -244,7 +244,7 @@ export function RichEditor({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           title="이미지 삽입"
-          className="rounded p-1.5 text-blue-400 hover:bg-blue-500/10 transition-colors"
+          className="rounded p-1.5 text-stone-900 hover:bg-stone-100/10 transition-colors"
         >
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
         </button>

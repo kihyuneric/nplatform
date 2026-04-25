@@ -57,7 +57,7 @@ export function NewsNavigation() {
                 key={item.href}
                 href={item.href}
                 className={`text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none rounded ${
-                  isActive ? 'text-blue-600' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                  isActive ? 'text-stone-900' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
                 }`}
               >
                 {item.label}

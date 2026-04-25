@@ -143,14 +143,14 @@ export default function SellerListingEditPage() {
   if (fetchState === "notfound") {
     return (
       <div className="max-w-5xl mx-auto p-6">
-        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
-          <div className="font-bold text-amber-700 dark:text-amber-300">매물을 찾을 수 없습니다</div>
+        <div className="rounded-xl border border-stone-300/40 bg-stone-100/10 p-4">
+          <div className="font-bold text-stone-900 dark:text-stone-900">매물을 찾을 수 없습니다</div>
           <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">
             ID: <code>{id}</code> — 이미 삭제되었거나 권한이 없습니다.
           </p>
           <Link
             href="/my/seller"
-            className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-emerald-600 hover:underline"
+            className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-stone-900 hover:underline"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> 매도자 대시보드로
           </Link>
@@ -162,8 +162,8 @@ export default function SellerListingEditPage() {
   if (fetchState === "error") {
     return (
       <div className="max-w-5xl mx-auto p-6">
-        <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4">
-          <div className="font-bold text-red-700 dark:text-red-300">매물 조회 실패</div>
+        <div className="rounded-xl border border-stone-300/40 bg-stone-100/10 p-4">
+          <div className="font-bold text-stone-900 dark:text-stone-900">매물 조회 실패</div>
           <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">{fetchError}</p>
         </div>
       </div>
@@ -199,15 +199,15 @@ export default function SellerListingEditPage() {
 
       {/* Phase G7+ · 자발적 경매 일정 패널 (있는 경우만 표시) */}
       {hasAuctionSchedule && (
-        <div className="rounded-xl border border-sky-500/30 bg-sky-500/5 p-5">
+        <div className="rounded-xl border border-stone-300/30 bg-stone-100/5 p-5">
           <div className="flex items-center gap-2 mb-3">
-            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-sky-500/15">
-              <span aria-hidden className="text-sky-600 dark:text-sky-300 text-sm">⚖</span>
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-stone-100/15">
+              <span aria-hidden className="text-stone-900 dark:text-stone-900 text-sm">⚖</span>
             </span>
             <h3 className="text-[0.875rem] font-bold text-[var(--color-text-primary)]">
               자발적 경매 일정 조정
             </h3>
-            <span className="ml-auto text-[0.625rem] font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-600 dark:text-sky-300">
+            <span className="ml-auto text-[0.625rem] font-bold px-2 py-0.5 rounded bg-stone-100/15 text-stone-900 dark:text-stone-900">
               진행 중
             </span>
           </div>
@@ -248,24 +248,24 @@ export default function SellerListingEditPage() {
       <NplUnifiedForm mode="SELL" state={state} dispatch={dispatch} />
 
       {/* Save bar */}
-      <div className="sticky bottom-4 z-10 rounded-xl border border-emerald-500/30 bg-[var(--color-surface-elevated)]/95 backdrop-blur p-4 flex items-center justify-between shadow-lg">
+      <div className="sticky bottom-4 z-10 rounded-xl border border-stone-300/30 bg-[var(--color-surface-elevated)]/95 backdrop-blur p-4 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-2 text-[0.75rem]">
           {preflightError ? (
             <>
-              <AlertCircle className="w-4 h-4 text-amber-500" />
-              <span className="text-amber-700 dark:text-amber-300">
+              <AlertCircle className="w-4 h-4 text-stone-900" />
+              <span className="text-stone-900 dark:text-stone-900">
                 <strong>{preflightError.field}</strong>: {preflightError.message}
               </span>
             </>
           ) : saveError ? (
             <>
-              <AlertCircle className="w-4 h-4 text-red-500" />
-              <span className="text-red-700 dark:text-red-300">{saveError}</span>
+              <AlertCircle className="w-4 h-4 text-stone-900" />
+              <span className="text-stone-900 dark:text-stone-900">{saveError}</span>
             </>
           ) : saveOk ? (
             <>
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              <span className="text-emerald-700 dark:text-emerald-300 font-semibold">
+              <CheckCircle2 className="w-4 h-4 text-stone-900" />
+              <span className="text-stone-900 dark:text-stone-900 font-semibold">
                 저장되었습니다. 대시보드로 이동합니다…
               </span>
             </>
@@ -279,7 +279,7 @@ export default function SellerListingEditPage() {
           type="button"
           onClick={handleSave}
           disabled={saving || !!preflightError || saveOk}
-          className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-white shadow hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 rounded-lg bg-stone-100 px-4 py-2 text-sm font-bold text-white shadow hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? (
             <>

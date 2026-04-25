@@ -18,11 +18,11 @@ interface TickerItem {
 }
 
 const TICKER_META: Record<TickerItem["type"], { icon: any; color: string; label: string }> = {
-  TRADE:       { icon: TrendingUp,    color: "text-emerald-400 bg-emerald-500/10", label: "거래" },
-  NEW_LISTING: { icon: Package,       color: "text-blue-400 bg-blue-500/10",       label: "신규매물" },
-  COMMUNITY:   { icon: MessageCircle, color: "text-violet-400 bg-violet-500/10",   label: "커뮤니티" },
-  SIGNAL:      { icon: Bell,          color: "text-amber-400 bg-amber-500/10",     label: "시그널" },
-  BIDDING:     { icon: Gavel,         color: "text-red-400 bg-red-500/10",         label: "입찰" },
+  TRADE:       { icon: TrendingUp,    color: "text-stone-900 bg-stone-100/10", label: "거래" },
+  NEW_LISTING: { icon: Package,       color: "text-stone-900 bg-stone-100/10",       label: "신규매물" },
+  COMMUNITY:   { icon: MessageCircle, color: "text-stone-900 bg-stone-100/10",   label: "커뮤니티" },
+  SIGNAL:      { icon: Bell,          color: "text-stone-900 bg-stone-100/10",     label: "시그널" },
+  BIDDING:     { icon: Gavel,         color: "text-stone-900 bg-stone-100/10",         label: "입찰" },
 }
 
 const MOCK_TICKER: TickerItem[] = [
@@ -47,7 +47,7 @@ export function NewsTicker() {
       <div className="container mx-auto px-4">
         <div className="flex items-center">
           <div className="flex items-center gap-1.5 shrink-0 pr-4 py-3 border-r border-[var(--color-border-subtle)]">
-            <Zap className="h-4 w-4 text-amber-500 fill-amber-500" />
+            <Zap className="h-4 w-4 text-stone-900 fill-amber-500" />
             <span className="text-xs font-bold text-[#1B3A5C] whitespace-nowrap">실시간</span>
           </div>
 

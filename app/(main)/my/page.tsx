@@ -42,7 +42,7 @@ const C = {
   blueL:  "var(--color-brand-bright)",
   amber:  "var(--color-warning)",
   rose:   "var(--color-danger)",
-  purple: "#A855F7",
+  purple: "#14161A",
   lt3:    "var(--color-text-muted)",
   lt4:    "var(--color-text-muted)",
 }
@@ -151,47 +151,47 @@ type QuickLink = {
 
 // 공통: 모든 역할에 표시
 const COMMON_LINKS: QuickLink[] = [
-  { href: "/my/verify",     label: "본인인증",        desc: "L0 → L1 승격",          icon: UserCheck,     color: "#3B82F6", tierRequired: "L1" },
-  { href: "/my/agreements", label: "계약 관리",       desc: "NDA · LOI 이력",         icon: FileSignature, color: "#A855F7" },
-  { href: "/my/privacy",    label: "개인정보 설정",   desc: "PII 열람 로그 · 파기",   icon: ShieldCheck,   color: "#F59E0B" },
+  { href: "/my/verify",     label: "본인인증",        desc: "L0 → L1 승격",          icon: UserCheck,     color: "#14161A", tierRequired: "L1" },
+  { href: "/my/agreements", label: "계약 관리",       desc: "NDA · LOI 이력",         icon: FileSignature, color: "#14161A" },
+  { href: "/my/privacy",    label: "개인정보 설정",   desc: "PII 열람 로그 · 파기",   icon: ShieldCheck,   color: "#14161A" },
   { href: "/my/notifications", label: "알림 설정",    desc: "이메일 · 푸시 · 매칭",   icon: Bell,          color: "#64748B" },
 ]
 
 // 매각사 전용
 const SELLER_LINKS: QuickLink[] = [
-  { href: "/my/seller",            label: "내 매물",          desc: "등록한 매물 관리",        icon: Building2, color: "#14B8A6" },
-  { href: "/exchange/sell",        label: "매물 등록",        desc: "단건 · OCR · CSV 대량",   icon: Store,     color: "#10B981" },
+  { href: "/my/seller",            label: "내 매물",          desc: "등록한 매물 관리",        icon: Building2, color: "#14161A" },
+  { href: "/exchange/sell",        label: "매물 등록",        desc: "단건 · OCR · CSV 대량",   icon: Store,     color: "#14161A" },
   { href: "/my/billing",           label: "정산 · 수수료",    desc: "매각 수수료 내역",        icon: Banknote,  color: "#EC4899" },
 ]
 
 // 일반 투자그룹 전용
 const INVESTOR_GENERAL_LINKS: QuickLink[] = [
-  { href: "/my/portfolio",       label: "투자 포트폴리오",  desc: "체결 · 실사 중 매물",     icon: TrendingUp, color: "#F43F5E" },
-  { href: "/my/kyc",             label: "전문투자자 KYC",   desc: "L1 → L2 승격",            icon: Briefcase,  color: "#10B981", tierRequired: "L2" },
-  { href: "/exchange/demands",   label: "매수 수요 등록",   desc: "AI 매물 매칭",            icon: Target,     color: "#8B5CF6" },
+  { href: "/my/portfolio",       label: "투자 포트폴리오",  desc: "체결 · 실사 중 매물",     icon: TrendingUp, color: "#1B1B1F" },
+  { href: "/my/kyc",             label: "전문투자자 KYC",   desc: "L1 → L2 승격",            icon: Briefcase,  color: "#14161A", tierRequired: "L2" },
+  { href: "/exchange/demands",   label: "매수 수요 등록",   desc: "AI 매물 매칭",            icon: Target,     color: "#14161A" },
   { href: "/my/billing",         label: "결제 · 구독",      desc: "요금제 · 수수료 내역",    icon: Banknote,   color: "#64748B" },
 ]
 
 // 전문 투자그룹 전용
 const INVESTOR_PRO_LINKS: QuickLink[] = [
-  { href: "/my/portfolio",       label: "포트폴리오 분석",  desc: "IRR · 배당 실적",         icon: BarChart3,  color: "#F43F5E" },
-  { href: "/my/kyc",             label: "전문투자자 KYC",   desc: "L2/L3 권한 관리",         icon: Crown,      color: "#8B5CF6" },
-  { href: "/exchange/demands",   label: "매수 수요 · PNR",  desc: "우선협상권 요청",         icon: Target,     color: "#10B981" },
+  { href: "/my/portfolio",       label: "포트폴리오 분석",  desc: "IRR · 배당 실적",         icon: BarChart3,  color: "#1B1B1F" },
+  { href: "/my/kyc",             label: "전문투자자 KYC",   desc: "L2/L3 권한 관리",         icon: Crown,      color: "#14161A" },
+  { href: "/exchange/demands",   label: "매수 수요 · PNR",  desc: "우선협상권 요청",         icon: Target,     color: "#14161A" },
   { href: "/my/developer",       label: "API 키 · 웹훅",    desc: "기관 시스템 연동",        icon: Code,       color: "#2E75B6" },
 ]
 
 // 파트너 전용
 const PARTNER_LINKS: QuickLink[] = [
-  { href: "/my/partner",         label: "파트너 대시보드",  desc: "추천코드 · 실적 · 순위",  icon: Gift,       color: "#F59E0B" },
-  { href: "/my/partner/payouts", label: "정산 내역",        desc: "월별 리퍼럴 커미션",      icon: Banknote,   color: "#10B981" },
+  { href: "/my/partner",         label: "파트너 대시보드",  desc: "추천코드 · 실적 · 순위",  icon: Gift,       color: "#14161A" },
+  { href: "/my/partner/payouts", label: "정산 내역",        desc: "월별 리퍼럴 커미션",      icon: Banknote,   color: "#14161A" },
   { href: "/my/developer",       label: "API 연동",         desc: "개발자 문서 · 키 관리",   icon: Code,       color: "#2E75B6" },
 ]
 
 // 전문가 전용 (감정평가·법무·컨설팅)
 const PROFESSIONAL_LINKS: QuickLink[] = [
-  { href: "/my/professional",    label: "전문가 프로필",    desc: "분야 · 경력 · 노출 관리", icon: GraduationCap, color: "#A855F7" },
+  { href: "/my/professional",    label: "전문가 프로필",    desc: "분야 · 경력 · 노출 관리", icon: GraduationCap, color: "#14161A" },
   { href: "/my/organization",    label: "소속 기관",        desc: "기관 정보 · 인증",        icon: Building2,     color: "#2E75B6" },
-  { href: "/my/agreements",      label: "수주 · 계약",      desc: "의뢰받은 실사 건",        icon: Handshake,     color: "#10B981" },
+  { href: "/my/agreements",      label: "수주 · 계약",      desc: "의뢰받은 실사 건",        icon: Handshake,     color: "#14161A" },
 ]
 
 /** 역할(+서브타입)에 따라 표시할 QUICK_LINKS 구성. */
@@ -220,22 +220,22 @@ function getQuickLinks(role?: string | null, subtype?: string | null): QuickLink
 
 /** 역할별 배지 — 상단 인사말 옆에 표시 */
 const ROLE_BADGE: Record<string, { label: string; color: string }> = {
-  SELLER:       { label: "매각사",          color: "#F59E0B" },
+  SELLER:       { label: "매각사",          color: "#14161A" },
   BUYER:        { label: "일반 투자그룹",   color: "#2E75B6" },
   INVESTOR:     { label: "일반 투자그룹",   color: "#2E75B6" },
-  INSTITUTION:  { label: "전문 투자그룹",   color: "#8B5CF6" },
-  PARTNER:      { label: "파트너",          color: "#10B981" },
-  PROFESSIONAL: { label: "전문가",          color: "#A855F7" },
+  INSTITUTION:  { label: "전문 투자그룹",   color: "#14161A" },
+  PARTNER:      { label: "파트너",          color: "#14161A" },
+  PROFESSIONAL: { label: "전문가",          color: "#14161A" },
   ADMIN:        { label: "관리자",          color: "#EC4899" },
   SUPER_ADMIN:  { label: "최고관리자",      color: "#EC4899" },
 }
 function roleBadge(role?: string | null, subtype?: string | null): { label: string; color: string } {
   const s = (subtype ?? "").toUpperCase()
-  if (s === "PRO_CORP" || s === "PRO_INDIVIDUAL") return { label: "전문 투자그룹", color: "#8B5CF6" }
+  if (s === "PRO_CORP" || s === "PRO_INDIVIDUAL") return { label: "전문 투자그룹", color: "#14161A" }
   if (s === "GENERAL_CORP" || s === "GENERAL_INDIVIDUAL") return { label: "일반 투자그룹", color: "#2E75B6" }
-  if (s === "FINANCIAL_INSTITUTION") return { label: "매각사 · 금융기관", color: "#F59E0B" }
-  if (s === "LOAN_COMPANY") return { label: "매각사 · 대부업체", color: "#F59E0B" }
-  if (s === "ASSET_MANAGER") return { label: "매각사 · 자산운용사", color: "#F59E0B" }
+  if (s === "FINANCIAL_INSTITUTION") return { label: "매각사 · 금융기관", color: "#14161A" }
+  if (s === "LOAN_COMPANY") return { label: "매각사 · 대부업체", color: "#14161A" }
+  if (s === "ASSET_MANAGER") return { label: "매각사 · 자산운용사", color: "#14161A" }
   return ROLE_BADGE[(role ?? "").toUpperCase()] ?? { label: "무료 체험", color: "#64748B" }
 }
 
@@ -330,7 +330,7 @@ export default function MyDashboardPage() {
     <main style={{ backgroundColor: C.bg0, color: "#E2E8F0", minHeight: "100vh" }}>
       {/* 샘플 데이터 배너 */}
       {isSample && (
-        <div className="sticky top-0 z-30 flex items-center gap-2 px-4 py-2 bg-amber-500/90 backdrop-blur text-amber-950 text-xs font-semibold">
+        <div className="sticky top-0 z-30 flex items-center gap-2 px-4 py-2 bg-stone-100/90 backdrop-blur text-amber-950 text-xs font-semibold">
           <span>📋</span>
           <span>샘플 데이터 표시 중 — 로그인 후 실제 데이터가 표시됩니다</span>
           <a href="/login" className="ml-auto underline font-bold">로그인하기 →</a>
@@ -411,7 +411,7 @@ export default function MyDashboardPage() {
               href="/my/kyc"
               style={{
                 padding: "11px 18px", borderRadius: 10,
-                backgroundColor: C.em, color: "#041915",
+                backgroundColor: C.em, color: "#FFFFFF",
                 fontSize: 12, fontWeight: 800, textDecoration: "none",
                 display: "inline-flex", alignItems: "center", gap: 6,
               }}

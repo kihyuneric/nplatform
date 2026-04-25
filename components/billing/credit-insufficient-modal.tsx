@@ -44,8 +44,8 @@ export function CreditInsufficientModal({
 
         {/* Icon */}
         <div className="flex items-center justify-center">
-          <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center">
-            <AlertTriangle className="h-7 w-7 text-amber-500" />
+          <div className="w-14 h-14 rounded-full bg-stone-100/10 flex items-center justify-center">
+            <AlertTriangle className="h-7 w-7 text-stone-900" />
           </div>
         </div>
 
@@ -64,13 +64,13 @@ export function CreditInsufficientModal({
           <div className="flex items-center justify-between text-sm">
             <span className="text-[var(--color-text-secondary)]">필요 크레딧</span>
             <span className="font-semibold text-[var(--color-text-primary)] flex items-center gap-1">
-              <Coins className="h-4 w-4 text-amber-500" />
+              <Coins className="h-4 w-4 text-stone-900" />
               {required}
             </span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-[var(--color-text-secondary)]">현재 잔액</span>
-            <span className="font-semibold text-red-500 flex items-center gap-1">
+            <span className="font-semibold text-stone-900 flex items-center gap-1">
               <Coins className="h-4 w-4" />
               {current}
             </span>
@@ -78,7 +78,7 @@ export function CreditInsufficientModal({
           <div className="border-t border-[var(--color-border-subtle)] pt-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-[var(--color-text-secondary)]">부족분</span>
-              <span className="font-bold text-amber-400 flex items-center gap-1">
+              <span className="font-bold text-stone-900 flex items-center gap-1">
                 <Coins className="h-4 w-4" />
                 {shortfall}
               </span>

@@ -41,8 +41,8 @@ interface NewsItem {
 interface ScrapItem { newsId: number; memo: string; folder: string; }
 
 const DIR_MAP: Record<string, { icon: typeof TrendingUp; text: string; color: string; border: string }> = {
-  상승: { icon: TrendingUp,  text: '상승', color: 'bg-emerald-500/15 text-emerald-400', border: 'border-l-emerald-400' },
-  하락: { icon: TrendingDown, text: '하락', color: 'bg-red-500/15 text-red-400',       border: 'border-l-red-400'     },
+  상승: { icon: TrendingUp,  text: '상승', color: 'bg-stone-100/15 text-stone-900', border: 'border-l-emerald-400' },
+  하락: { icon: TrendingDown, text: '하락', color: 'bg-stone-100/15 text-stone-900',       border: 'border-l-red-400'     },
   중립: { icon: Minus,        text: '중립', color: 'bg-slate-500/15 text-[var(--color-text-secondary)]',      border: 'border-l-gray-300'    },
 };
 
@@ -272,7 +272,7 @@ export default function NewsList({ filters, appliedAt, onArticleClick }: Props) 
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button size="icon" variant="ghost" className="h-5 w-5 text-red-500">
+                                <Button size="icon" variant="ghost" className="h-5 w-5 text-stone-900">
                                   <Trash2 className="h-2.5 w-2.5" />
                                 </Button>
                               </AlertDialogTrigger>
@@ -323,7 +323,7 @@ export default function NewsList({ filters, appliedAt, onArticleClick }: Props) 
                     onClick={() => toggleScrap(item.id)}
                     title={scraped ? '스크랩 해제' : '스크랩'}>
                     {scraped
-                      ? <BookmarkCheck className="h-4 w-4 text-blue-500" />
+                      ? <BookmarkCheck className="h-4 w-4 text-stone-900" />
                       : <Bookmark className="h-4 w-4" />}
                   </Button>
                   {link && (

@@ -43,14 +43,14 @@ interface PortfolioStats {
 /* ── Helpers ──────────────────────────────────────────────────── */
 
 const GRADE_COLOR: Record<string, string> = {
-  A: "#10B981", B: "#3B82F6", C: "#F59E0B", D: "#F97316", F: "#EF4444",
+  A: "#14161A", B: "#14161A", C: "#14161A", D: "#F97316", F: "#1B1B1F",
 }
 
 const TYPE_COLOR: Record<string, string> = {
-  "아파트":   "#3B82F6",
-  "상가":     "#F59E0B",
-  "오피스텔": "#A855F7",
-  "토지":     "#10B981",
+  "아파트":   "#14161A",
+  "상가":     "#14161A",
+  "오피스텔": "#14161A",
+  "토지":     "#14161A",
   "오피스":   "#6366F1",
   "기타":     "#94A3B8",
 }
@@ -238,11 +238,11 @@ export default function PortfolioAnalyticsPage() {
 
         {/* ── Concentration Warning ── */}
         {overConcentrated && (
-          <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-stone-100/10 border border-stone-300/20">
+            <AlertTriangle className="w-5 h-5 text-stone-900 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-bold text-amber-300">집중도 주의</p>
-              <p className="text-xs text-amber-400 mt-0.5">
+              <p className="text-sm font-bold text-stone-900">집중도 주의</p>
+              <p className="text-xs text-stone-900 mt-0.5">
                 {topType?.name} 유형이 전체의 {topTypePct}%를 차지하고 있습니다.
                 유형 분산으로 리스크를 낮추세요.
               </p>

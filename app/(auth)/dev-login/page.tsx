@@ -28,7 +28,7 @@ const TEST_ACCOUNTS: TestAccount[] = [
     roleName: "관리자",
     userId: "00000000-0000-0000-0000-000000000001",
     icon: <ShieldCheck className="h-8 w-8" />,
-    color: "bg-red-500/10 text-red-400",
+    color: "bg-stone-100/10 text-stone-900",
     redirect: "/admin",
   },
   {
@@ -38,7 +38,7 @@ const TEST_ACCOUNTS: TestAccount[] = [
     roleName: "매도자",
     userId: "00000000-0000-0000-0000-000000000002",
     icon: <Building2 className="h-8 w-8" />,
-    color: "bg-blue-500/10 text-blue-400",
+    color: "bg-stone-100/10 text-stone-900",
     redirect: "/seller/dashboard",
   },
   {
@@ -48,7 +48,7 @@ const TEST_ACCOUNTS: TestAccount[] = [
     roleName: "매수자",
     userId: "00000000-0000-0000-0000-000000000003",
     icon: <User className="h-8 w-8" />,
-    color: "bg-emerald-500/10 text-emerald-400",
+    color: "bg-stone-100/10 text-stone-900",
     redirect: "/exchange",
   },
   {
@@ -58,7 +58,7 @@ const TEST_ACCOUNTS: TestAccount[] = [
     roleName: "파트너",
     userId: "00000000-0000-0000-0000-000000000004",
     icon: <Users className="h-8 w-8" />,
-    color: "bg-purple-500/10 text-purple-400",
+    color: "bg-stone-100/10 text-stone-900",
     redirect: "/partner/dashboard",
   },
   {
@@ -68,7 +68,7 @@ const TEST_ACCOUNTS: TestAccount[] = [
     roleName: "전문가",
     userId: "00000000-0000-0000-0000-000000000005",
     icon: <GraduationCap className="h-8 w-8" />,
-    color: "bg-amber-500/10 text-amber-400",
+    color: "bg-stone-100/10 text-stone-900",
     redirect: "/professional/my/dashboard",
   },
 ]
@@ -145,7 +145,7 @@ export default function DevLoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
       {/* Environment Badge */}
       <div className="mb-6 flex items-center gap-2">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm bg-amber-500/10 text-amber-400 border border-amber-500/30">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm bg-stone-100/10 text-stone-900 border border-stone-300/30">
           <AlertTriangle className="h-3.5 w-3.5" />
           환경: 개발 모드
         </span>
