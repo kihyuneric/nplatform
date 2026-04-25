@@ -76,18 +76,41 @@ async function myMemoryTranslate(text: string, targetLang: string): Promise<stri
   }
 }
 
-// ─── 단일 텍스트 번역 (폴백 체인) ─────────────────────────
+// ─── 한글 정상 응답 검증 (Google 깨진 응답 방어) ─────────────
+//   Google 비공식 API 가 Vercel 서버리스 환경에서 깨진 응답을 보내는 케이스 감지.
+//   - 영어 응답에 ASCII 외 깨진 문자가 섞이거나
+//   - 일본어 응답에 의미 없는 반복 패턴이 나오면 reject
+function isValidTranslation(translated: string, targetLang: string): boolean {
+  if (!translated || translated.length === 0) return false
+  // 깨진 문자 (Replacement Character · Latin-1 Supplement extended) 포함 시 reject
+  if (/[\uFFFD\u00C0-\u00FF]{2,}/.test(translated)) return false
+  // 영어 결과에 한글 부호 (조합형 등) 또는 깨진 문자 포함 시 reject
+  if (targetLang === "en" && /[\u0080-\u00BF\u0100-\u052F\u3131-\u318E\uAC00-\uD7A3]/.test(translated)) return false
+  // 동일 단어 8회 이상 반복 (예: "ツイートによる" × 20) → 깨진 응답
+  const words = translated.split(/\s+/)
+  if (words.length > 0) {
+    const counts = new Map<string, number>()
+    for (const w of words) counts.set(w, (counts.get(w) ?? 0) + 1)
+    for (const c of counts.values()) if (c >= 8) return false
+  }
+  // 동일 짧은 substring 8회 이상 반복
+  const repeat = translated.match(/(.{4,15})\1{7,}/)
+  if (repeat) return false
+  return true
+}
+
+// ─── 단일 텍스트 번역 (폴백 체인 — MyMemory 우선) ─────────
 async function translateOne(text: string, targetLang: string): Promise<string> {
   if (!text || text.trim().length === 0) return text
   if (text.length > MAX_TEXT_LENGTH) return text
 
-  // 1차: Google
-  const g = await googleTranslate(text, targetLang)
-  if (g && g !== text) return g
-
-  // 2차: MyMemory
+  // 1차: MyMemory (Vercel 서버리스에서 안정적)
   const m = await myMemoryTranslate(text, targetLang)
-  if (m && m !== text) return m
+  if (m && m !== text && isValidTranslation(m, targetLang)) return m
+
+  // 2차: Google (검증 통과 시만 채택)
+  const g = await googleTranslate(text, targetLang)
+  if (g && g !== text && isValidTranslation(g, targetLang)) return g
 
   // 폴백: 원문
   return text
