@@ -643,16 +643,160 @@ function Step1({
         desc="매각 주체(기관/개인/법인)와 매물 종류를 선택하세요. 전속 계약은 Step 3 수수료 섹션에서 설정합니다."
       />
 
-      {/* Phase G7+ · 엑셀 템플릿 다운로드 배너 — 매각사가 오프라인으로 작성해 제출하면 OCR 자동 등록 */}
-      <div
-        style={{
-          marginBottom: 16, padding: "14px 18px", borderRadius: 12,
-          background: "linear-gradient(135deg, rgba(46,117,182,0.08), rgba(27,58,92,0.04))",
-          border: `1px solid ${C.blue}44`,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          gap: 14, flexWrap: "wrap",
-        }}
-      >
+      {/* Phase G7+ · 엑셀 템플릿 다운로드 + OCR 자동 채우기 업로드 */}
+      <ExcelTemplateBanner state={state} dispatch={dispatch} />
+
+      {/* Phase G5: 전속 토글은 Step 3 FeeSection 상단으로 이동. */}
+      <InstitutionSection
+        value={state.institution}
+        onChange={(patch) => dispatch({ type: "SET_INSTITUTION", patch })}
+      />
+    </>
+  )
+}
+
+// ═════════════════════════════════════════════════════════════
+// Phase G7+ · 엑셀 템플릿 다운로드/업로드 배너 (Step 1 상단)
+//   다운로드 → 매각사 오프라인 작성 → 업로드 → OCR 자동 파싱
+// ═════════════════════════════════════════════════════════════
+function ExcelTemplateBanner({
+  state, dispatch,
+}: {
+  state: UnifiedFormState
+  dispatch: (action: UnifiedFormAction) => void
+}) {
+  const [parsing, setParsing] = useState(false)
+  const [parseMessage, setParseMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setParsing(true)
+    setParseMessage(null)
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      const res = await fetch("/api/v1/ocr/parse-template", { method: "POST", body: fd })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json?.error?.message || "파싱 실패")
+      const data = json.data as {
+        fields: Record<string, unknown>
+        specialConditionsV2: string[]
+        providedFields: Record<string, boolean>
+        warnings: string[]
+      }
+      // ── 폼 자동 채우기 ──
+      const f = data.fields
+      const inst: Partial<UnifiedFormState["institution"]> = {}
+      if (f.institution_name) inst.name = String(f.institution_name)
+      if (f.institution_type) {
+        // "은행" · "저축은행" 등 한글 라벨을 그대로 받지만 SellerInstitution enum 은 영문이라 백엔드에서 매핑.
+        // 여기서는 institution_type 한글 그대로 두고 type 은 미설정 (사용자 검토 후 선택)
+      }
+      if (Object.keys(inst).length > 0) {
+        dispatch({ type: "SET_INSTITUTION", patch: inst })
+      }
+      if (f.collateral_type) {
+        dispatch({ type: "PATCH", patch: { collateral: String(f.collateral_type) as UnifiedFormState["collateral"] } })
+      }
+      if (f.sido || f.sigungu || f.address) {
+        dispatch({
+          type: "SET_ADDRESS",
+          patch: {
+            sido: String(f.sido ?? ""),
+            sigungu: String(f.sigungu ?? ""),
+            detail: String(f.address ?? ""),
+          },
+        })
+      }
+      if (f.debtor_type) {
+        const dtRaw = String(f.debtor_type)
+        const dt = dtRaw.includes("CORPORATE") || dtRaw.includes("법인") ? "CORPORATE" : "INDIVIDUAL"
+        dispatch({ type: "SET_DEBTOR_TYPE", value: dt })
+      }
+      const claimPatch: Partial<UnifiedFormState["claim"]> = {}
+      if (f.loan_principal)  claimPatch.principal = Number(f.loan_principal)
+      if (f.unpaid_interest) claimPatch.unpaidInterest = Number(f.unpaid_interest)
+      if (f.delinquency_start_date) claimPatch.delinquencyStartDate = String(f.delinquency_start_date)
+      if (f.normal_rate)  claimPatch.normalRate = Number(f.normal_rate) / 100
+      if (f.overdue_rate) claimPatch.overdueRate = Number(f.overdue_rate) / 100
+      if (Object.keys(claimPatch).length > 0) dispatch({ type: "SET_CLAIM", patch: claimPatch })
+
+      const aprPatch: Partial<UnifiedFormState["appraisal"]> = {}
+      if (f.appraisal_value)      aprPatch.appraisalValue = Number(f.appraisal_value)
+      if (f.appraisal_date)       aprPatch.appraisalDate = String(f.appraisal_date)
+      if (f.current_market_value) aprPatch.currentMarketValue = Number(f.current_market_value)
+      if (f.market_price_note)    aprPatch.marketPriceNote = String(f.market_price_note)
+      if (f.auction_start_date)   aprPatch.auctionStartDate = String(f.auction_start_date)
+      if (Object.keys(aprPatch).length > 0) dispatch({ type: "SET_APPRAISAL", patch: aprPatch })
+
+      const rightsPatch: Partial<UnifiedFormState["rights"]> = {}
+      if (f.senior_total) rightsPatch.seniorTotal = Number(f.senior_total)
+      if (Object.keys(rightsPatch).length > 0) dispatch({ type: "SET_RIGHTS", patch: rightsPatch })
+
+      const leasePatch: Partial<UnifiedFormState["lease"]> = {}
+      if (f.lease_deposit) leasePatch.totalDeposit = Number(f.lease_deposit)
+      if (f.lease_monthly) leasePatch.totalMonthlyRent = Number(f.lease_monthly)
+      if (f.tenant_count)  leasePatch.tenantCount = Number(f.tenant_count)
+      if (Object.keys(leasePatch).length > 0) dispatch({ type: "SET_LEASE", patch: leasePatch })
+
+      if (f.asking_price) {
+        dispatch({ type: "PATCH", patch: { askingPrice: Number(f.asking_price) } })
+      }
+      if (f.discount_rate) {
+        dispatch({ type: "PATCH", patch: { desiredSaleDiscount: Number(f.discount_rate) / 100 } })
+      }
+
+      // 매각 방식 (체크박스)
+      const methods: ("NPLATFORM" | "AUCTION" | "PUBLIC")[] = []
+      if (f.sale_method_nplatform) methods.push("NPLATFORM")
+      if (f.sale_method_auction)   methods.push("AUCTION")
+      if (f.sale_method_public)    methods.push("PUBLIC")
+      if (methods.length > 0) {
+        dispatch({ type: "PATCH", patch: { saleMethods: methods } })
+      }
+      if (f.sale_method_other) {
+        dispatch({ type: "PATCH", patch: { saleMethodOther: String(f.sale_method_other) } })
+      }
+      if (f.seller_fee_rate) {
+        dispatch({ type: "SET_FEE", patch: { sellerRate: Number(f.seller_fee_rate) / 100 } })
+      }
+
+      // 특수조건 V2
+      if (data.specialConditionsV2.length > 0) {
+        dispatch({ type: "SET_SPECIAL_CONDITIONS_V2", keys: data.specialConditionsV2 })
+      }
+
+      const filled =
+        Object.keys(data.fields).length +
+        data.specialConditionsV2.length +
+        Object.values(data.providedFields).filter(Boolean).length
+      setParseMessage({
+        type: "ok",
+        text: `${filled}개 항목이 자동 채워졌습니다. 이어서 검토·수정 후 다음 단계로 진행하세요.${data.warnings.length > 0 ? ` (안내: ${data.warnings.join(", ")})` : ""}`,
+      })
+      void state // suppress unused
+    } catch (err) {
+      setParseMessage({
+        type: "err",
+        text: err instanceof Error ? err.message : "엑셀 파싱 실패. 템플릿 v3.0 형식인지 확인해주세요.",
+      })
+    } finally {
+      setParsing(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
+
+  return (
+    <div
+      style={{
+        marginBottom: 16, padding: "14px 18px", borderRadius: 12,
+        background: "linear-gradient(135deg, rgba(46,117,182,0.08), rgba(27,58,92,0.04))",
+        border: `1px solid ${C.blue}44`,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
             <Download size={14} color={C.blueL} />
@@ -667,32 +811,67 @@ function Step1({
             </span>
           </div>
           <p style={{ fontSize: 11, color: C.lt4, lineHeight: 1.5 }}>
-            매각사에 배포해 오프라인으로 작성받은 후 업로드하면 OCR 로 자동 파싱됩니다.
-            기본정보 · 특수조건 V2 18항목 · 필요서류 체크리스트 · 사진 업로드 안내 포함.
+            매각사에 배포해 오프라인으로 작성받은 후 업로드하면 폼이 자동 채워집니다.
+            드롭다운 / O·X 체크 / 자유 입력 모두 자동 파싱.
           </p>
         </div>
-        <a
-          href="/templates/NPLatform_매물등록_템플릿.xlsx"
-          download
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            padding: "9px 16px", borderRadius: 10,
-            backgroundColor: C.blue, color: "#fff",
-            fontSize: 12, fontWeight: 700, textDecoration: "none",
-            whiteSpace: "nowrap",
-          }}
-        >
-          <Download size={14} />
-          템플릿 다운로드
-        </a>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <a
+            href="/templates/NPLatform_매물등록_템플릿.xlsx"
+            download
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "9px 14px", borderRadius: 10,
+              backgroundColor: "transparent", color: C.blueL,
+              border: `1px solid ${C.blue}55`,
+              fontSize: 12, fontWeight: 700, textDecoration: "none",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Download size={14} /> 템플릿
+          </a>
+          <button
+            type="button"
+            disabled={parsing}
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "9px 16px", borderRadius: 10,
+              backgroundColor: parsing ? C.bg4 : C.blue, color: "#fff",
+              fontSize: 12, fontWeight: 700, border: "none",
+              cursor: parsing ? "wait" : "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {parsing ? "파싱 중..." : <>📤 엑셀 업로드 (자동 채우기)</>}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            onChange={handleUpload}
+            style={{ display: "none" }}
+          />
+        </div>
       </div>
 
-      {/* Phase G5: 전속 토글은 Step 3 FeeSection 상단으로 이동. */}
-      <InstitutionSection
-        value={state.institution}
-        onChange={(patch) => dispatch({ type: "SET_INSTITUTION", patch })}
-      />
-    </>
+      {parseMessage && (
+        <div
+          style={{
+            marginTop: 12, padding: "10px 12px", borderRadius: 8,
+            backgroundColor: parseMessage.type === "ok"
+              ? "rgba(16,185,129,0.10)"
+              : "rgba(244,63,94,0.10)",
+            border: `1px solid ${parseMessage.type === "ok" ? C.em : C.rose}44`,
+            fontSize: 11,
+            color: parseMessage.type === "ok" ? C.emL : C.rose,
+            lineHeight: 1.5,
+          }}
+        >
+          {parseMessage.type === "ok" ? "✓" : "⚠"} {parseMessage.text}
+        </div>
+      )}
+    </div>
   )
 }
 
