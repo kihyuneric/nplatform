@@ -3472,13 +3472,18 @@ button[role="switch"][data-state="unchecked"] {
    4단계 명확 위계 + 자동 가독성 보장
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ──────────────────────────────────────────────────────────────────
+   McKinsey Layer System v4.1 — 강화된 색차 (8%/단계)
+   "도형 안 도형 안 도형 안 도형까지" 명확한 위계
+   ────────────────────────────────────────────────────────────────── */
+
 /* L0 — 페이지 outermost */
 .mck-l0 {
   background: #FFFFFF;
   color: #051C2C;
 }
 .dark .mck-l0 {
-  background: #051C2C;
+  background: #051C2C;     /* 가장 깊은 navy */
   color: #FFFFFF;
 }
 
@@ -3489,7 +3494,7 @@ button[role="switch"][data-state="unchecked"] {
   padding: 5rem 0;
 }
 .dark .mck-l1 {
-  background: #0A1628;
+  background: #0F2842;     /* L0보다 분명히 밝음 (8% lighter) */
   color: #FFFFFF;
 }
 
@@ -3506,8 +3511,8 @@ button[role="switch"][data-state="unchecked"] {
   border-color: #051C2C;
 }
 .dark .mck-l2 {
-  background: #122643;
-  border-color: rgba(255, 255, 255, 0.15);
+  background: #1A3A5C;     /* L1보다 분명히 밝음 (16% lighter from L0) */
+  border-color: rgba(255, 255, 255, 0.18);
   color: #FFFFFF;
 }
 .dark .mck-l2:hover {
@@ -3523,21 +3528,21 @@ button[role="switch"][data-state="unchecked"] {
   border-radius: 0;
 }
 .dark .mck-l3 {
-  background: #1F2E5C;
-  border-color: rgba(66, 175, 255, 0.30);
+  background: #254E76;     /* L2보다 분명히 밝음 (24% lighter from L0) */
+  border-color: rgba(66, 175, 255, 0.35);
   color: #FFFFFF;
 }
 
 /* L4 — Inline highlight (sub-card 안 강조 박스) */
 .mck-l4 {
-  background: rgba(34, 81, 255, 0.06);
-  border-left: 2px solid #2251FF;
+  background: rgba(34, 81, 255, 0.10);
+  border-left: 3px solid #2251FF;
   color: #051C2C;
   padding: 0.75rem 1rem;
   border-radius: 0;
 }
 .dark .mck-l4 {
-  background: rgba(66, 175, 255, 0.10);
+  background: rgba(66, 175, 255, 0.18);    /* sky tint — 명확한 강조 */
   border-left-color: #42AFFF;
   color: #FFFFFF;
 }
@@ -3633,6 +3638,162 @@ button[role="switch"][data-state="unchecked"] {
 .dark .mck-divider-accent { border-top-color: #42AFFF; }
 .mck-divider-dashed   { border-top: 1px dashed #BFBFBF; height: 0; }
 .dark .mck-divider-dashed { border-top-color: rgba(255, 255, 255, 0.20); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CRITICAL · 다크 컨테이너 안 sub-박스 자동 색차 (강력 contextual override)
+   사용자 핵심 지적: "남색 안 남색", "다크 안 다크" 절대 금지
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 다크 hero 영역 안의 inline 같은 navy 색 background 박스 → 자동 sky blue tint 변환 */
+[style*="hero-bg"] [style*="background:#051C2C"],
+[style*="hero-bg"] [style*="background: #051C2C"],
+[style*="hero-bg"] [style*='background:"#051C2C"'],
+[style*="hero-bg"] [style*='background: "#051C2C"'],
+[style*="hero-bg"] [style*="background-color:#051C2C"],
+[style*="hero-bg"] [style*="background-color: #051C2C"],
+[style*="brand-deep"] [style*="background:#051C2C"],
+[style*="brand-deep"] [style*="background: #051C2C"],
+[style*="brand-deepest"] [style*="background:#051C2C"],
+[style*="brand-deepest"] [style*="background: #051C2C"],
+[style*="background:#051C2C"] [style*="background:#051C2C"],
+[style*="background: #051C2C"] [style*="background: #051C2C"] {
+  background: rgba(66, 175, 255, 0.12) !important;
+  border: 1px solid rgba(66, 175, 255, 0.30) !important;
+}
+
+/* 다크 컨테이너 안의 hero-bg 같은 토큰 사용 sub-박스 — 자동 sky tint */
+[style*="hero-bg"] [style*="hero-bg"] {
+  background: rgba(66, 175, 255, 0.10) !important;
+  border-color: rgba(66, 175, 255, 0.25) !important;
+}
+
+/* 다크 컨테이너 안 inline rgba(11,31,58,...) navy 톤 → sky tint */
+[style*="hero-bg"] [style*="rgba(11, 31, 58"],
+[style*="hero-bg"] [style*="rgba(13, 36, 72"],
+[style*="hero-bg"] [style*="rgba(5, 28, 44"],
+[style*="brand-deep"] [style*="rgba(11, 31, 58"],
+[style*="brand-deep"] [style*="rgba(13, 36, 72"],
+[style*="brand-deep"] [style*="rgba(5, 28, 44"] {
+  background: rgba(66, 175, 255, 0.10) !important;
+  border-color: rgba(66, 175, 255, 0.25) !important;
+}
+
+/* 라이트 카드 안 inline 흰 배경 sub-박스 → 자동 light gray tint (라이트 안 라이트 방지) */
+.mck-l2 [style*="background:#FFFFFF"],
+.mck-l2 [style*="background: #FFFFFF"],
+.mck-l2 [style*="background:white"],
+.mck-l2 [style*="background: white"] {
+  background: #F5F5F5 !important;
+  border: 1px solid #E5E5E5 !important;
+}
+
+/* AI 등급 칩 (B등급/C등급/A등급) — 5번 지적된 multi-color 칩 강제 mono
+   거래소 카드 우상단의 "AI A등급", "AI B등급" 등 모두 동일 검정 박스 + 흰 글씨로 */
+[class*="ai-grade"],
+[data-grade],
+.npl-ai-grade {
+  background: #051C2C !important;
+  color: #FFFFFF !important;
+  border-color: #051C2C !important;
+}
+
+/* AI 등급 텍스트 안 알파벳 — 모두 동일 색상 */
+[class*="ai-grade"] *,
+.npl-ai-grade * {
+  color: #FFFFFF !important;
+}
+
+/* 카드 우상단 라벨 (메인 6개 카드 거래소/딜룸/경쟁입찰/체결보호/AI분석/AI Copilot)
+   — 모두 동일 sky blue 톤 (이전 multi-color 강제 통일) */
+.mck-card-label,
+[data-card-label] {
+  background: rgba(34, 81, 255, 0.10) !important;
+  color: #2251FF !important;
+  border: 1px solid rgba(34, 81, 255, 0.25) !important;
+}
+.dark .mck-card-label,
+.dark [data-card-label] {
+  background: rgba(66, 175, 255, 0.12) !important;
+  color: #42AFFF !important;
+  border-color: rgba(66, 175, 255, 0.30) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AUTO HIERARCHY · 다크 컨테이너 안 자식 박스 자동 한 단계 밝게
+   "남색 안 남색 안 남색" 절대 금지 — 화면에서 도형 위계가 시각적으로 보이게
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 다크 모드 페이지 (.mck-l0 또는 body.dark) 안의 모든 sub-카드 자동 밝게 */
+.dark .mck-l0 [class*="rounded"]:not(.mck-l1):not(.mck-l2):not(.mck-l3):not(.mck-l4),
+.dark .mck-l0 [class*="border"]:not(.mck-l1):not(.mck-l2):not(.mck-l3):not(.mck-l4) {
+  /* 기본은 변경 X, 명시적 .mck-l* 클래스가 우선 */
+}
+
+/* 다크 모드: inline style 으로 navy 톤(#051C2C, #0A1628 등) 배경 강제된 박스
+   — 자동으로 한 단계 밝은 톤으로 변환 (위계 표시) */
+.dark *[style*="background: #051C2C"]:not(body):not(.mck-l0),
+.dark *[style*="background:#051C2C"]:not(body):not(.mck-l0),
+.dark *[style*="background-color: #051C2C"]:not(body):not(.mck-l0),
+.dark *[style*="background-color:#051C2C"]:not(body):not(.mck-l0) {
+  background: #1A3A5C !important;   /* L2 톤으로 자동 변환 */
+}
+
+.dark *[style*="background: #0A1628"]:not(body):not(.mck-l1),
+.dark *[style*="background:#0A1628"]:not(body):not(.mck-l1),
+.dark *[style*="background: #0F2842"]:not(body):not(.mck-l1) {
+  background: #254E76 !important;   /* L3 톤으로 자동 변환 */
+}
+
+/* 다크 모드: inline style hero-bg 토큰 — 자동 sub-Layer 변환 */
+.dark *[style*="hero-bg)"] *[style*="hero-bg)"],
+.dark *[style*="hero-bg-elevated"] *[style*="hero-bg-elevated"] {
+  background: #254E76 !important;
+  border-color: rgba(66, 175, 255, 0.30) !important;
+}
+
+/* 백분위 / Percentile / Distribution 칩 — multi-color 강제 mono */
+[class*="percentile"],
+[class*="p10-"], [class*="p25-"], [class*="p50-"], [class*="p75-"], [class*="p90-"],
+[data-percentile] {
+  background: rgba(34, 81, 255, 0.06) !important;
+  color: #2251FF !important;
+  border: 1px solid rgba(34, 81, 255, 0.25) !important;
+}
+.dark [class*="percentile"],
+.dark [class*="p10-"], .dark [class*="p25-"], .dark [class*="p50-"], .dark [class*="p75-"], .dark [class*="p90-"],
+.dark [data-percentile] {
+  background: rgba(66, 175, 255, 0.12) !important;
+  color: #42AFFF !important;
+  border-color: rgba(66, 175, 255, 0.30) !important;
+}
+
+/* MEDIUM/HIGH/LOW 라벨 — 위계 색차 (대비 강화) */
+.dark .mck-severity-low    { background: rgba(255,255,255,0.08) !important; color: #B3E0FF !important; border: 1px solid rgba(127,205,255,0.30) !important; }
+.dark .mck-severity-medium { background: rgba(66,175,255,0.18) !important; color: #FFFFFF !important; border: 1px solid rgba(66,175,255,0.40) !important; }
+.dark .mck-severity-high   { background: rgba(34,81,255,0.30) !important; color: #FFFFFF !important; border: 1px solid rgba(34,81,255,0.50) !important; }
+
+/* 라이트 모드 동일 */
+.mck-severity-low    { background: #F5F5F5; color: #666666; border: 1px solid #E5E5E5; }
+.mck-severity-medium { background: rgba(34,81,255,0.08); color: #2251FF; border: 1px solid rgba(34,81,255,0.25); }
+.mck-severity-high   { background: rgba(34,81,255,0.18); color: #051C2C; border: 1px solid rgba(34,81,255,0.40); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MASTER · 다크 모드에서 동일 색 박스 중첩 시 자동 색차
+   가장 강력한 catch-all — div 깊이별 색 자동 밝게
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 다크 모드 .mck-l1 안의 sub 박스 (border 또는 bg 가진 div) → L2 톤 */
+.dark .mck-l1 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3) {
+  background: #1A3A5C !important;
+}
+/* L2 안의 sub div → L3 톤 */
+.dark .mck-l2 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3) {
+  background: #254E76 !important;
+}
+/* L3 안의 sub div → L4 톤 */
+.dark .mck-l3 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3) {
+  background: rgba(66, 175, 255, 0.18) !important;
+}
 
 /* 5단계 프로세스 카드 — 각 단계 sky blue accent + 흰 글씨 + 큰 숫자 */
 .npl-process-step {

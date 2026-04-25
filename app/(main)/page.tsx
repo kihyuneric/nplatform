@@ -385,47 +385,51 @@ export default function LandingPage() {
     { label: "AI 분석 건수", val: 28391, suffix: "건", icon: <Brain size={16} style={{ color: C.purple }} />, change: "실시간", up: true, color: C.purple },
   ];
 
+  // McKinsey mono editorial v4 — 6개 카드 모두 동일 톤 (사용자 5번 지적: "알록달록 X")
+  // 차별화는 라벨 텍스트 + 아이콘 모양 + 위치로. color 차별화 X.
+  const MCK_ICON  = "var(--color-mck-blue, #2251FF)"      // 모든 아이콘 동일 bright blue
+  const MCK_TAG_C = "var(--color-mck-blue, #2251FF)"      // 모든 라벨 동일 색
   const features = [
     {
-      icon: <Search size={20} style={{ color: C.em }} />, tag: "거래소", tagColor: C.em,
+      icon: <Search size={20} style={{ color: MCK_ICON }} />, tag: "거래소", tagColor: MCK_TAG_C,
       title: "NPL 매물 거래소",
       desc: "1,234건의 라이브 NPL 매물. 채권잔액·매각희망가·할인율·담보LTV 30+ 조건 필터 + 자연어 검색으로 즉시 매칭.",
-      href: "/exchange", accent: C.em,
+      href: "/exchange", accent: MCK_TAG_C,
       meta: "등록 1,234건 · 신규 매일 ~20건",
     },
     {
-      icon: <MessageSquare size={20} style={{ color: C.teal }} />, tag: "딜룸", tagColor: C.teal,
+      icon: <MessageSquare size={20} style={{ color: MCK_ICON }} />, tag: "딜룸", tagColor: MCK_TAG_C,
       title: "딜룸 · NDA · 전자계약",
       desc: "매도자·매수자 1:1 보안 채널. NDA 전자서명 → 권리증 공유 → LOI → 매매계약서 자동 생성까지 원스톱 체결.",
-      href: "/deals", accent: C.teal,
+      href: "/deals", accent: MCK_TAG_C,
       meta: "진행 중 딜 68건 · 이번 주 체결 14건",
     },
     {
-      icon: <Gavel size={20} style={{ color: C.amber }} />, tag: "경쟁 입찰", tagColor: C.amber,
+      icon: <Gavel size={20} style={{ color: MCK_ICON }} />, tag: "경쟁 입찰", tagColor: MCK_TAG_C,
       title: "실시간 경쟁 입찰",
       desc: "공개 경쟁 입찰 + 프라이빗 협상. 자동 입찰 에이전트로 가격 상한·기준일만 설정하면 조건 맞는 매물 자동 응찰.",
-      href: "/exchange/auction", accent: C.amber,
+      href: "/exchange/auction", accent: MCK_TAG_C,
       meta: "진행 중 입찰 42건 · 평균 낙찰 7일",
     },
     {
-      icon: <ShieldCheck size={20} style={{ color: C.blue }} />, tag: "체결 보호", tagColor: C.blue,
+      icon: <ShieldCheck size={20} style={{ color: MCK_ICON }} />, tag: "체결 보호", tagColor: MCK_TAG_C,
       title: "에스크로 · PII 마스킹",
       desc: "대금은 에스크로 계좌로, 개인정보는 L0~L3 접근통제로. 안전한 체결을 위한 2중 안전장치.",
-      href: "/support", accent: C.blue,
+      href: "/support", accent: MCK_TAG_C,
       meta: "자금 보호 · 정보보호 2중 안전장치",
     },
     {
-      icon: <Brain size={20} style={{ color: C.purple }} />, tag: "AI 분석", tagColor: C.purple,
+      icon: <Brain size={20} style={{ color: MCK_ICON }} />, tag: "AI 분석", tagColor: MCK_TAG_C,
       title: "AI 딜 분석 리포트",
       desc: "감정가·배당요구·권리분석·수익률·회수 확률까지 27초 내 자동 리포트. 거래 결정을 빠르게, 리스크를 명확하게.",
-      href: "/analysis", accent: C.purple,
+      href: "/analysis", accent: MCK_TAG_C,
       meta: "평균 분석 시간 27초 · 28,391건 분석",
     },
     {
-      icon: <Sparkles size={20} style={{ color: C.rose }} />, tag: "AI Copilot", tagColor: C.rose,
+      icon: <Sparkles size={20} style={{ color: MCK_ICON }} />, tag: "AI Copilot", tagColor: MCK_TAG_C,
       title: "AI Copilot — 거래 어시스턴트",
       desc: "\"이 매물 수익률 15% 가능해?\" 처럼 대화하듯 물어보세요. 매물·시세·판례 DB 를 실시간 조회하는 거래 도우미.",
-      href: "/analysis/copilot", accent: C.rose,
+      href: "/analysis/copilot", accent: MCK_TAG_C,
       meta: "Claude + 자체 NPL 코퍼스 학습",
     },
   ];

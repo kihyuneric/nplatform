@@ -271,13 +271,15 @@ export function formatAIGrade(grade: string | null | undefined): string {
   return `AI ${g}등급`
 }
 
-/** AI 등급별 색상 (배지/카드에 재사용) */
+/** AI 등급별 색상 — McKinsey mono editorial v4
+ *  사용자 5번 지적: 알록달록 multi-color 절대 금지.
+ *  모든 등급 동일 톤 (deep navy 박스 + 흰 글씨). 차별화는 알파벳 자체로. */
 export const AI_GRADE_COLORS: Record<AIGrade, { bg: string; text: string; border: string }> = {
-  A: { bg: '#ECFDF5', text: '#047857', border: '#A7F3D0' },
-  B: { bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' },
-  C: { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
-  D: { bg: '#FFF7ED', text: '#C2410C', border: '#FED7AA' },
-  E: { bg: '#FEF2F2', text: '#B91C1C', border: '#FECACA' },
+  A: { bg: '#051C2C', text: '#FFFFFF', border: '#051C2C' },
+  B: { bg: '#051C2C', text: '#FFFFFF', border: '#051C2C' },
+  C: { bg: '#051C2C', text: '#FFFFFF', border: '#051C2C' },
+  D: { bg: '#051C2C', text: '#FFFFFF', border: '#051C2C' },
+  E: { bg: '#051C2C', text: '#FFFFFF', border: '#051C2C' },
 }
 
 // ─── 7. 유틸: 최저입찰 비율 자동 계산 ─────────────────────────
