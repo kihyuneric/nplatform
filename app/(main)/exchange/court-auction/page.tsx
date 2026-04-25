@@ -522,7 +522,7 @@ export default function BiddingPage() {
               <Link href="/exchange/auction/new">
                 <button className="w-full lg:w-auto bg-[#2E75B6] hover:bg-[#1B3A5C] text-white px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1.5">
                   <Plus className="h-4 w-4 mr-1" />
-                  금융기관 입찰 등록
+                  자발적 경매 등록
                 </button>
               </Link>
             </div>

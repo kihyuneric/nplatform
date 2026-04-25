@@ -628,8 +628,8 @@ export default function AboutPage() {
             variants={fadeUp}
             className="mt-10 text-center"
           >
-            <Link href="/market/bidding/new" className={DS.button.primary}>
-              금융기관 입찰 등록 <ArrowRight className="ml-2 h-4 w-4" />
+            <Link href="/exchange/auction/new" className={DS.button.primary}>
+              자발적 경매 등록 <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </motion.div>
         </div>

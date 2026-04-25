@@ -710,6 +710,25 @@ export function AssetDetailView({
             {id}
           </span>
         </div>
+        <div className="flex items-center gap-2 flex-wrap">
+        {/* 매도자/관리자: 매물 정보 전체 수정 진입점 */}
+        {canEdit && (
+          <a
+            href={`/my/listings/${id}/edit`}
+            className="inline-flex items-center gap-1.5 rounded-lg font-bold transition-colors"
+            style={{
+              padding: "6px 12px",
+              fontSize: 12,
+              color: "#FFFFFF",
+              backgroundColor: "#0A1628",
+              border: "1px solid #0A1628",
+              textDecoration: "none",
+            }}
+          >
+            <Pencil size={12} />
+            매물 정보 수정
+          </a>
+        )}
         <div
           className="inline-flex items-center gap-1 rounded-lg p-1"
           style={{
@@ -746,6 +765,7 @@ export function AssetDetailView({
               </button>
             )
           })}
+        </div>
         </div>
       </section>
       )}
