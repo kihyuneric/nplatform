@@ -304,10 +304,25 @@ const breakpoints = {
 - ✅ 테마 토글 비로그인 접근 확인 (이미 `navigation.tsx` L604 에 존재)
 - ✅ `/my/seller` 매물 리스트 **수정** 버튼 → `/my/listings/[id]/edit` 링크 연결
 - ✅ `/admin/listings` 액션 열에 **편집** 버튼 추가 → `/admin/listings/[id]/edit`
+- ✅ 자발적 경매 등록 페이지 제목 명확화 + 매물 등록 시 동시 등록 옵션
+- ✅ Sell 페이지 step 이동 스크롤-상단 (H5 부분 적용)
 
-**다음 스프린트 (H1 착수 시 첫 커밋)**:
-- 하드코딩 색상 전수 조사 `grep 'bg-\\[#\\|style.*background.*#' app/` 결과를 `.home-seller-*` 처럼 CSS 클래스로 추출
-- `FormField` 공용 컴포넌트 도입 · 전 폼 리팩터 스프린트
+## 9. Phase H 진척 상황 (Live Tracker)
+
+| 단계 | 상태 | 산출물 / 파일 |
+|---|---|---|
+| **H1 · Token Foundation** | 🟡 부분 완료 | `globals.css` Surface Primitives (`.npl-surface-*`) · 메인 페이지 일부 교체 |
+| **H2 · Typography** | 🟢 컴포넌트 완료 | `components/typography/type.tsx` · `<Type variant=display\|h1\|...>` |
+| **H3 · Level 1 Primitives** | 🟢 Input 완료 | `globals.css .npl-input` · `<NplInput>` · `<NplTextarea>` · `<NplSelect>` · 기존 shadcn `<Button>` 호환 유지 |
+| **H4 · Form System** | 🟢 컴포넌트 완료 | `components/form/form-field.tsx` · `<FormField label hint error>` |
+| **H5 · Modal & BottomSheet** | 🟡 부분 완료 | sell page step 이동 scroll-to-top 적용 · 모달 BottomSheet 미시작 |
+| **H6 · Dark Pass 2** | ⏳ 대기 | Surface Hierarchy 6단계 전수 적용 |
+| **H7 · Motion & Polish** | ⏳ 대기 | |
+
+**다음 작업 큐**:
+- 시범 페이지에 FormField · Type · npl-input 점진 적용 (signup·login·my/profile 등)
+- 하드코딩 색상 추가 전수 조사·교체 (`grep 'bg-\\[#'`)
+- Modal 표준 wrapper (`<NplModal>`) 신규 · 모바일 ≤768px BottomSheet 자동 전환
 
 ---
 
