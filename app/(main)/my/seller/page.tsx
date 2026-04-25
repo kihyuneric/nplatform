@@ -10,6 +10,10 @@ import DS, { formatKRW } from '@/lib/design-system'
 interface SellerListing {
   id: string; title: string; claim_amount: number; ai_grade: string | null
   status: string; interest_count: number; view_count: number; created_at: string
+  /** Phase G7+ · 자발적 경매 진행 정보 (매물 row 에서 직접 파생) */
+  bid_start_date: string | null
+  bid_end_date: string | null
+  min_bid_price: number | null
 }
 
 interface SettlementRecord {
@@ -43,6 +47,10 @@ function useSellerData() {
           interest_count: (l.interest_count as number) || 0,
           view_count: (l.view_count as number) || 0,
           created_at: l.created_at as string,
+          // Phase G7+ · 자발적 경매 진행 정보
+          bid_start_date: (l.bid_start_date as string) ?? null,
+          bid_end_date:   (l.bid_end_date   as string) ?? null,
+          min_bid_price:  (l.min_bid_price  as number) ?? null,
         })))
       } catch (e) {
         console.error(e)
@@ -66,6 +74,11 @@ function useSellerData() {
   const completedCount = listings.filter(l => l.status === 'SOLD' || l.status === 'COMPLETED').length
   const totalInterests = listings.reduce((s, l) => s + (l.interest_count || 0), 0)
   const totalViews = listings.reduce((s, l) => s + (l.view_count || 0), 0)
+  // Phase G7+ · 진행 중인 자발적 경매 (종료일이 미래)
+  const nowMs = Date.now()
+  const liveAuctionCount = listings.filter(
+    l => l.bid_end_date && new Date(l.bid_end_date).getTime() > nowMs,
+  ).length
 
   // Billing stats derived from real settlements data
   const now = new Date()
@@ -82,7 +95,7 @@ function useSellerData() {
 
   return {
     listings, settlements, loading,
-    stats: { total: listings.length, active: activeCount, completed: completedCount, interests: totalInterests, views: totalViews },
+    stats: { total: listings.length, active: activeCount, completed: completedCount, interests: totalInterests, views: totalViews, liveAuction: liveAuctionCount },
     billing: { monthSettlement, totalSettlement, pendingSettlement },
   }
 }
@@ -135,19 +148,25 @@ export default function SellerDashboardPage() {
   // Map real data to display format
   const STATS = [
     { label: '등록 매물', value: sellerStats.total, icon: Package, color: 'text-[var(--color-brand-mid)]' },
+    { label: '진행 중 경매', value: sellerStats.liveAuction, icon: Gavel, color: 'text-sky-500' },
     { label: '관심 수신', value: sellerStats.interests, icon: Heart, color: 'text-pink-600' },
-    { label: '조회수', value: sellerStats.views, icon: TrendingUp, color: 'text-amber-600' },
     { label: '완료 거래', value: sellerStats.completed, icon: CheckCircle2, color: 'text-[var(--color-positive)]' },
   ]
-  const LISTINGS = sellerListings.map(l => ({
-    id: l.id,
-    name: l.title,
-    claim: formatClaim(l.claim_amount),
-    grade: l.ai_grade || '-',
-    status: STATUS_MAP[l.status] || l.status,
-    interests: l.interest_count || 0,
-    date: l.created_at?.slice(0, 10) || '-',
-  }))
+  // Phase G7+ · 자발적 경매 진행 정보를 LISTINGS row 에 포함
+  const LISTINGS = sellerListings.map(l => {
+    const auctionLive = l.bid_end_date ? new Date(l.bid_end_date).getTime() > Date.now() : false
+    return {
+      id: l.id,
+      name: l.title,
+      claim: formatClaim(l.claim_amount),
+      grade: l.ai_grade || '-',
+      status: STATUS_MAP[l.status] || l.status,
+      interests: l.interest_count || 0,
+      date: l.created_at?.slice(0, 10) || '-',
+      bidEndDate: l.bid_end_date,
+      auctionLive,
+    }
+  })
   const CHART: { month: string; views: number; interests: number }[] = []
   const VISITORS = [
     { label: '총 매물 조회', value: `${sellerStats?.views ?? 0}회` },
@@ -238,6 +257,7 @@ export default function SellerDashboardPage() {
                     <th className={DS.table.headerCell}>채권액</th>
                     <th className={DS.table.headerCell}>AI등급</th>
                     <th className={DS.table.headerCell}>상태</th>
+                    <th className={DS.table.headerCell}>경매 종료일</th>
                     <th className={DS.table.headerCell}>관심수</th>
                     <th className={DS.table.headerCell}>등록일</th>
                     <th className={DS.table.headerCell}>액션</th>
@@ -250,6 +270,17 @@ export default function SellerDashboardPage() {
                       <td className={DS.table.cell + " font-semibold tabular-nums"}>{l.claim}</td>
                       <td className={DS.table.cell + " " + (GRADE_CLR[l.grade] ?? 'text-[var(--color-text-tertiary)]')}>{l.grade}</td>
                       <td className={DS.table.cell}><span className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-bold ${STATUS_CLR[l.status] ?? 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]'}`}>{l.status}</span></td>
+                      <td className={DS.table.cell + " tabular-nums"}>
+                        {l.bidEndDate ? (
+                          <span className={`inline-flex items-center gap-1 text-[0.75rem] ${l.auctionLive ? 'text-sky-600 dark:text-sky-300 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
+                            {l.auctionLive && <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />}
+                            <Gavel className="h-3 w-3" />
+                            {new Date(l.bidEndDate).toLocaleDateString('ko-KR')}
+                          </span>
+                        ) : (
+                          <span className="text-[0.6875rem] text-[var(--color-text-muted)]">—</span>
+                        )}
+                      </td>
                       <td className={DS.table.cell + " tabular-nums"}><span className="flex items-center gap-1"><Heart className="h-3 w-3 text-pink-500" />{l.interests}</span></td>
                       <td className={DS.table.cellMuted + " tabular-nums"}>{l.date}</td>
                       <td className={DS.table.cell}>

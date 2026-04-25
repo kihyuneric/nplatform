@@ -39,6 +39,10 @@ export default function SellerListingEditPage() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string>("")
   const [saveOk, setSaveOk] = useState(false)
+  // Phase G7+ · 자발적 경매 일정 (있는 경우 편집 가능)
+  const [bidEndDate, setBidEndDate] = useState<string>("")
+  const [minBidPrice, setMinBidPrice] = useState<number>(0)
+  const [hasAuctionSchedule, setHasAuctionSchedule] = useState<boolean>(false)
 
   // 1. GET 으로 기존 매물 조회 후 상태 하이드레이션
   useEffect(() => {
@@ -60,6 +64,17 @@ export default function SellerListingEditPage() {
         }
         setTitle(String(j.data.title ?? "") || `매물 ${id}`)
         applyRowToState(j.data as Record<string, unknown>, dispatch as (a: { type: string; [k: string]: unknown }) => void)
+        // Phase G7+ · 자발적 경매 일정 hydrate (있는 경우만 표시)
+        const row = j.data as Record<string, unknown>
+        const endDateRaw = row.bid_end_date as string | null | undefined
+        if (endDateRaw) {
+          // ISO timestamp → YYYY-MM-DD
+          setBidEndDate(String(endDateRaw).slice(0, 10))
+          setHasAuctionSchedule(true)
+        }
+        if (typeof row.min_bid_price === "number") {
+          setMinBidPrice(row.min_bid_price)
+        }
         setFetchState("ready")
       } catch (e) {
         if (!cancelled) {
@@ -90,6 +105,11 @@ export default function SellerListingEditPage() {
         special_conditions_v2: state.specialConditionsV2,
         debtor_type: state.debtorType || undefined,
       }
+      // Phase G7+ · 자발적 경매 일정 변경 시 함께 전송
+      if (hasAuctionSchedule) {
+        if (bidEndDate) body.bid_end_date = `${bidEndDate}T23:59:59.000Z`
+        if (minBidPrice > 0) body.min_bid_price = minBidPrice
+      }
       const r = await fetch(`/api/v1/exchange/listings/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -107,7 +127,7 @@ export default function SellerListingEditPage() {
     } finally {
       setSaving(false)
     }
-  }, [id, state, preflightError, router])
+  }, [id, state, preflightError, router, hasAuctionSchedule, bidEndDate, minBidPrice])
 
   if (fetchState === "loading") {
     return (
@@ -176,6 +196,53 @@ export default function SellerListingEditPage() {
           <ArrowLeft className="w-3.5 h-3.5" /> 취소
         </Link>
       </div>
+
+      {/* Phase G7+ · 자발적 경매 일정 패널 (있는 경우만 표시) */}
+      {hasAuctionSchedule && (
+        <div className="rounded-xl border border-sky-500/30 bg-sky-500/5 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-sky-500/15">
+              <span aria-hidden className="text-sky-600 dark:text-sky-300 text-sm">⚖</span>
+            </span>
+            <h3 className="text-[0.875rem] font-bold text-[var(--color-text-primary)]">
+              자발적 경매 일정 조정
+            </h3>
+            <span className="ml-auto text-[0.625rem] font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-600 dark:text-sky-300">
+              진행 중
+            </span>
+          </div>
+          <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] mb-4 leading-relaxed">
+            본 매물의 자발적 경매가 진행 중입니다. 종료일이나 최저 입찰가를 수정할 수 있습니다.
+            저장 시 입찰자에게 변경 알림이 발송됩니다.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[0.6875rem] font-semibold text-[var(--color-text-secondary)] mb-1">
+                경매 종료일
+              </label>
+              <input
+                type="date"
+                value={bidEndDate}
+                min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)}
+                onChange={(e) => setBidEndDate(e.target.value)}
+                className="npl-input"
+              />
+            </div>
+            <div>
+              <label className="block text-[0.6875rem] font-semibold text-[var(--color-text-secondary)] mb-1">
+                최저 입찰가 (원)
+              </label>
+              <input
+                type="number"
+                value={minBidPrice || ""}
+                onChange={(e) => setMinBidPrice(Number(e.target.value) || 0)}
+                placeholder="예: 850000000"
+                className="npl-input"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Form */}
       <NplUnifiedForm mode="SELL" state={state} dispatch={dispatch} />

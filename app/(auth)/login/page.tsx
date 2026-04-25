@@ -119,8 +119,9 @@ export default function LoginPage() {
     }
   }
 
-  // 입력 텍스트가 확실히 보이도록 bg-white + slate-900 명시 (다크모드에서도 유지)
-  const inputCls = 'border border-[#E2E8F0] rounded-xl px-4 py-3 w-full focus:ring-2 focus:ring-[#2E75B6] focus:border-transparent outline-none bg-white !text-slate-900 placeholder:text-slate-400 text-sm transition-all'
+  // Phase H3 · 표준 npl-input 클래스 사용 (라이트/다크 자동 분기 · 44px height)
+  // 로그인 폼은 우측 패널이 항상 #FFFFFF 라 라이트 토큰 강제 + 텍스트 가독성 보장
+  const inputCls = 'npl-input !rounded-xl !h-12 !bg-white !text-slate-900 !border-[#E2E8F0] focus:!border-[#2E75B6] focus:!shadow-[0_0_0_3px_rgba(46,117,182,0.18)] placeholder:!text-slate-400'
 
   return (
     <div className="min-h-screen flex">

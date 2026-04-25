@@ -40,6 +40,9 @@ const ADMIN_FULL_EDIT_FIELDS = [
   'images',
   // Phase G1 V2 특수조건 · debtor_type
   'special_conditions_v2', 'debtor_type',
+  // Phase G7+ · 자발적 경매 일정
+  'bid_start_date', 'bid_end_date', 'min_bid_price',
+  'disclosure_level', 'bidding_method',
 ] as const
 
 // PATCH /api/v1/admin/listings/[id]
