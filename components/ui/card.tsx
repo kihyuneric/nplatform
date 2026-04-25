@@ -2,6 +2,12 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Phase H · Card (NPLatform 핀테크 톤).
+ *   · radius lg(8) → 14 (more refined)
+ *   · shadow-sm → shadow-[var(--shadow-card)] (라이트/다크 자동 분기)
+ *   · 다크 모드에서 inset 1px highlight (globals.css 의 --shadow-card 가 처리)
+ */
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -9,7 +15,8 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      "rounded-[14px] border bg-card text-card-foreground",
+      "shadow-[var(--shadow-card)]",
       className
     )}
     {...props}

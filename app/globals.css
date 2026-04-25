@@ -314,26 +314,27 @@ input::placeholder, textarea::placeholder {
     --ease-out:      cubic-bezier(0, 0, 0.2, 1);
     --ease-in-out:   cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* ── Shadcn HSL Tokens (compatibility) ─────────────────────────────────── */
-    --background:          210 20% 98%;
-    --foreground:          215 28% 17%;
-    --card:                0 0% 100%;
-    --card-foreground:     215 28% 17%;
+    /* ── Shadcn HSL Tokens — Phase H 핀테크 톤 재정의 ─────────────────────── */
+    /* NPLatform 브랜드: navy(#1B3A5C) primary · bright blue(#3B82F6) ring·focus */
+    --background:          210 20% 98%;     /* #F8FAFC 페이지 배경 */
+    --foreground:          222 47% 11%;     /* #0F172A 본문 텍스트 (대비 ↑) */
+    --card:                0 0% 100%;       /* #FFFFFF 카드 */
+    --card-foreground:     222 47% 11%;
     --popover:             0 0% 100%;
-    --popover-foreground:  215 28% 17%;
-    --primary:             211 53% 23%;
+    --popover-foreground:  222 47% 11%;
+    --primary:             211 53% 23%;     /* #1B3A5C navy (CTA 배경) */
     --primary-foreground:  0 0% 100%;
-    --secondary:           210 59% 45%;
+    --secondary:           210 59% 45%;     /* #2E75B6 mid blue */
     --secondary-foreground:0 0% 100%;
-    --muted:               210 20% 96%;
+    --muted:               210 20% 96%;     /* #F1F5F9 */
     --muted-foreground:    215 16% 47%;
-    --accent:              160 84% 39%;
+    --accent:              160 84% 39%;     /* #10B981 emerald (강조) */
     --accent-foreground:   0 0% 100%;
     --destructive:         0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border:              214 18% 90%;
-    --input:               214 18% 90%;
-    --ring:                211 53% 23%;
+    --border:              214 32% 91%;     /* #E2E8F0 살짝 진하게 (Phase H — 카드 경계 명확) */
+    --input:               214 32% 91%;
+    --ring:                217 91% 60%;     /* #3B82F6 bright blue — focus 시 더 잘 보임 */
     --success:             160 84% 39%;
     --success-foreground:  0 0% 100%;
     --warning:             27 96% 61%;
@@ -479,26 +480,27 @@ input::placeholder, textarea::placeholder {
     --npl-text-secondary:    var(--color-text-secondary);
     --npl-border-subtle:     var(--color-border-subtle);
 
-    /* ── Shadcn HSL (다크 최적화) ── */
-    --background:          220 32% 6%;    /* #05080F */
-    --foreground:          210 40% 96%;   /* #F1F5F9 */
-    --card:                220 30% 12%;   /* #0D1525 */
+    /* ── Shadcn HSL (다크 · Phase H NPLatform 톤 통일) ── */
+    /* 라이트와 동일한 브랜드 컬러 시스템 — primary navy 톤 일관 · ring bright blue */
+    --background:          222 47% 9%;     /* #0A1628 surface base */
+    --foreground:          210 40% 96%;    /* #F1F5F9 */
+    --card:                222 32% 14%;    /* #182338 elevated card */
     --card-foreground:     210 40% 96%;
-    --popover:             220 30% 15%;   /* #162035 */
+    --popover:             222 30% 17%;    /* #1F2D45 */
     --popover-foreground:  210 40% 96%;
-    --primary:             239 84% 67%;   /* #6366F1 */
+    --primary:             217 91% 60%;    /* #3B82F6 다크에선 밝은 블루 (가독성) */
     --primary-foreground:  0 0% 100%;
-    --secondary:           215 25% 20%;
-    --secondary-foreground:210 40% 80%;
-    --muted:               220 25% 15%;
-    --muted-foreground:    215 20% 65%;   /* #94A3B8 수준 */
-    --accent:              160 64% 52%;   /* #34D399 */
+    --secondary:           215 25% 22%;
+    --secondary-foreground:210 40% 88%;
+    --muted:               222 30% 17%;    /* #1F2D45 */
+    --muted-foreground:    215 20% 70%;
+    --accent:              160 64% 52%;    /* #34D399 brighter emerald 다크 친화 */
     --accent-foreground:   0 0% 100%;
-    --destructive:         0 72% 70%;     /* #F87171 */
+    --destructive:         0 72% 70%;
     --destructive-foreground: 0 0% 100%;
-    --border:              220 20% 18%;   /* rgba(255,255,255,0.12) 수준 */
-    --input:               220 20% 16%;
-    --ring:                239 84% 67%;
+    --border:              220 20% 22%;    /* 다크 카드 경계 명확 */
+    --input:               220 20% 18%;
+    --ring:                217 91% 60%;    /* #3B82F6 라이트와 동일 ring */
     --success:             160 64% 52%;
     --success-foreground:  0 0% 100%;
     --warning:             38 92% 60%;    /* #FBBF24 수준 */
