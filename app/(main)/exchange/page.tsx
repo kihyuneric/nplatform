@@ -640,7 +640,7 @@ export default function ExchangePage() {
                 cursor: "pointer",
               }}
             >
-              <SlidersHorizontal size={14} /> 필터
+              <SlidersHorizontal size={14} /> {tr("필터")}
             </button>
 
             <select
@@ -653,10 +653,10 @@ export default function ExchangePage() {
                 cursor: "pointer",
               }}
             >
-              <option value="recent">최신순</option>
-              <option value="discount">할인율 높은순</option>
-              <option value="completeness">완성도 높은순</option>
-              <option value="principal_desc">채권잔액 큰순</option>
+              <option value="recent">{tr("최신순")}</option>
+              <option value="discount">{tr("할인율 높은순")}</option>
+              <option value="completeness">{tr("완성도 높은순")}</option>
+              <option value="principal_desc">{tr("채권잔액 큰순")}</option>
             </select>
           </div>
 
@@ -716,44 +716,44 @@ export default function ExchangePage() {
               <span style={{ fontSize: 10, color: V.textMuted, fontWeight: 700, marginRight: 2 }}>{tr("적용 필터:")}</span>
               {listingCategory !== "ALL" && (
                 <ActiveFilterChip
-                  label={`유형: ${LISTING_CATEGORY_FILTER.find(o => o.value === listingCategory)?.label}`}
+                  label={`${tr("유형")}: ${tr(LISTING_CATEGORY_FILTER.find(o => o.value === listingCategory)?.label ?? "")}`}
                   onRemove={() => setListingCategory("ALL")}
                 />
               )}
               {collateral !== "ALL" && (
                 <ActiveFilterChip
-                  label={`담보: ${COLLATERAL_MAJOR_FILTER.find(o => o.value === collateral)?.icon} ${COLLATERAL_MAJOR_FILTER.find(o => o.value === collateral)?.label}${collateralMinor !== "ALL" ? ` › ${COLLATERAL_MINOR_MAP[collateral]?.find(o => o.value === collateralMinor)?.label ?? collateralMinor}` : ""}`}
+                  label={`${tr("담보")}: ${COLLATERAL_MAJOR_FILTER.find(o => o.value === collateral)?.icon} ${tr(COLLATERAL_MAJOR_FILTER.find(o => o.value === collateral)?.label ?? "")}${collateralMinor !== "ALL" ? ` › ${tr(COLLATERAL_MINOR_MAP[collateral]?.find(o => o.value === collateralMinor)?.label ?? collateralMinor)}` : ""}`}
                   onRemove={() => { setCollateral("ALL"); setCollateralMinor("ALL") }}
                 />
               )}
               {collateral !== "ALL" && collateralMinor !== "ALL" && (
                 <ActiveFilterChip
-                  label={`세부: ${COLLATERAL_MINOR_MAP[collateral]?.find(o => o.value === collateralMinor)?.label ?? collateralMinor}`}
+                  label={`${tr("세부")}: ${tr(COLLATERAL_MINOR_MAP[collateral]?.find(o => o.value === collateralMinor)?.label ?? collateralMinor)}`}
                   onRemove={() => setCollateralMinor("ALL")}
                   color="brand"
                 />
               )}
               {region !== "ALL" && (
                 <ActiveFilterChip
-                  label={`지역: ${region}`}
+                  label={`${tr("지역")}: ${region}`}
                   onRemove={() => setRegion("ALL")}
                 />
               )}
               {instType !== "ALL" && (
                 <ActiveFilterChip
-                  label={`기관: ${SELLER_INSTITUTIONS[instType as keyof typeof SELLER_INSTITUTIONS]}`}
+                  label={`${tr("기관")}: ${tr(SELLER_INSTITUTIONS[instType as keyof typeof SELLER_INSTITUTIONS] ?? "")}`}
                   onRemove={() => setInstType("ALL")}
                 />
               )}
               {stage !== "ALL" && (
                 <ActiveFilterChip
-                  label={`매각: ${SALE_METHODS[stage as keyof typeof SALE_METHODS]}`}
+                  label={`${tr("매각")}: ${tr(SALE_METHODS[stage as keyof typeof SALE_METHODS] ?? "")}`}
                   onRemove={() => setStage("ALL")}
                 />
               )}
               {minCompleteness > 0 && (
                 <ActiveFilterChip
-                  label={`완성도 ${minCompleteness}+`}
+                  label={`${tr("완성도")} ${minCompleteness}+`}
                   onRemove={() => setMinCompleteness(0)}
                 />
               )}

@@ -187,8 +187,8 @@ export default function NewDemandPage() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center bg-[var(--color-surface-overlay)]">
         <div className="text-center space-y-3">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#10B981]/10">
-            <CheckCircle2 className="h-8 w-8 text-[#10B981]" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-positive)]/10">
+            <CheckCircle2 className="h-8 w-8 text-[var(--color-positive)]" />
           </div>
           <h2 className="text-xl font-bold text-[var(--color-text-primary)]">수요 등록 완료!</h2>
           <p className="text-sm text-gray-500">AI가 매칭 결과를 분석 중입니다.</p>
@@ -200,7 +200,7 @@ export default function NewDemandPage() {
   return (
     <div className="min-h-screen bg-[var(--color-surface-overlay)]">
       {/* Header */}
-      <div className="bg-[#0D1F38] text-white px-6 py-8">
+      <div className="bg-[var(--color-brand-deepest)] text-white px-6 py-8">
         <div className="max-w-2xl mx-auto">
           <Link href="/exchange/demands" className="inline-flex items-center gap-1.5 text-sm text-blue-300 hover:text-white transition-colors mb-4">
             <ArrowLeft className="h-4 w-4" />
@@ -274,11 +274,11 @@ export default function NewDemandPage() {
               onClick={() => { setDemandType('npl'); setReTypes([]); setReDealTypes([]) }}
               className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
                 demandType === 'npl'
-                  ? 'border-[#2E75B6] bg-[#2E75B6]/5'
+                  ? 'border-[var(--color-brand-bright)] bg-[var(--color-brand-bright)]/5'
                   : 'border-[var(--color-border-subtle)] hover:border-[var(--color-border-subtle)]'
               }`}
             >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${demandType === 'npl' ? 'bg-[#2E75B6]' : 'bg-[var(--color-surface-overlay)]'}`}>
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${demandType === 'npl' ? 'bg-[var(--color-brand-bright)]' : 'bg-[var(--color-surface-overlay)]'}`}>
                 <Gavel className={`w-4 h-4 ${demandType === 'npl' ? 'text-white' : 'text-[var(--color-text-muted)]'}`} />
               </div>
               <div>
@@ -339,9 +339,9 @@ export default function NewDemandPage() {
                       type="checkbox"
                       checked={collateralTypes.includes(opt)}
                       onChange={() => { setCollateralTypes(toggle(collateralTypes, opt)); clearError('collateralTypes') }}
-                      className="rounded border-[var(--color-border-subtle)] text-[#2E75B6] focus:ring-[#2E75B6]"
+                      className="rounded border-[var(--color-border-subtle)] text-[var(--color-brand-bright)] focus:ring-[var(--color-brand-bright)]"
                     />
-                    <span className={`text-sm px-2 py-0.5 rounded-md border transition-colors ${collateralTypes.includes(opt) ? 'border-[#2E75B6] bg-[#2E75B6]/10 text-[#2E75B6]' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
+                    <span className={`text-sm px-2 py-0.5 rounded-md border transition-colors ${collateralTypes.includes(opt) ? 'border-[var(--color-brand-bright)] bg-[var(--color-brand-bright)]/10 text-[var(--color-brand-bright)]' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
                       {opt}
                     </span>
                   </label>
@@ -493,7 +493,7 @@ export default function NewDemandPage() {
               type="checkbox"
               checked={nationwide}
               onChange={e => { setNationwide(e.target.checked); if (e.target.checked) setRegions([]); clearError('regions') }}
-              className="rounded border-[var(--color-border-subtle)] text-[#2E75B6] focus:ring-[#2E75B6]"
+              className="rounded border-[var(--color-border-subtle)] text-[var(--color-brand-bright)] focus:ring-[var(--color-brand-bright)]"
             />
             <span className="text-sm font-medium text-[var(--color-text-secondary)] tracking-normal">전국</span>
           </label>
@@ -505,9 +505,9 @@ export default function NewDemandPage() {
                     type="checkbox"
                     checked={regions.includes(r)}
                     onChange={() => { setRegions(toggle(regions, r)); clearError('regions') }}
-                    className="rounded border-gray-300 text-[#2E75B6] focus:ring-[#2E75B6]"
+                    className="rounded border-gray-300 text-[var(--color-brand-bright)] focus:ring-[var(--color-brand-bright)]"
                   />
-                  <span className={`text-sm px-2 py-0.5 rounded-md border transition-colors ${regions.includes(r) ? 'border-[#2E75B6] bg-[#2E75B6]/10 text-[#2E75B6]' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
+                  <span className={`text-sm px-2 py-0.5 rounded-md border transition-colors ${regions.includes(r) ? 'border-[var(--color-brand-bright)] bg-[var(--color-brand-bright)]/10 text-[var(--color-brand-bright)]' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
                     {r}
                   </span>
                 </label>
@@ -560,9 +560,9 @@ export default function NewDemandPage() {
                       type="checkbox"
                       checked={auctionStages.includes(s)}
                       onChange={() => setAuctionStages(toggle(auctionStages, s))}
-                      className="rounded border-[var(--color-border-subtle)] text-[#2E75B6] focus:ring-[#2E75B6]"
+                      className="rounded border-[var(--color-border-subtle)] text-[var(--color-brand-bright)] focus:ring-[var(--color-brand-bright)]"
                     />
-                    <span className={`text-sm px-3 py-1 rounded-md border transition-colors tracking-normal ${auctionStages.includes(s) ? 'border-[#2E75B6] bg-[#2E75B6]/10 text-[#2E75B6]' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
+                    <span className={`text-sm px-3 py-1 rounded-md border transition-colors tracking-normal ${auctionStages.includes(s) ? 'border-[var(--color-brand-bright)] bg-[var(--color-brand-bright)]/10 text-[var(--color-brand-bright)]' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
                       {s}
                     </span>
                   </label>
@@ -601,7 +601,7 @@ export default function NewDemandPage() {
 
         {/* 안내 배너 */}
         <div className="flex items-start gap-3 rounded-xl bg-blue-500/10 border border-blue-500/20 p-4">
-          <Info className="h-5 w-5 text-[#2E75B6] flex-shrink-0 mt-0.5" />
+          <Info className="h-5 w-5 text-[var(--color-brand-bright)] flex-shrink-0 mt-0.5" />
           <div className="text-sm text-[var(--color-text-secondary)]">
             <p className="font-medium tracking-normal">등록 안내</p>
             <ul className="mt-1 list-disc pl-4 space-y-0.5 text-xs text-[var(--color-text-muted)]">
@@ -619,11 +619,11 @@ export default function NewDemandPage() {
               type="checkbox"
               checked={agreed}
               onChange={e => { setAgreed(e.target.checked); clearError('agreed') }}
-              className="mt-0.5 rounded border-[var(--color-border-subtle)] text-[#2E75B6] focus:ring-[#2E75B6]"
+              className="mt-0.5 rounded border-[var(--color-border-subtle)] text-[var(--color-brand-bright)] focus:ring-[var(--color-brand-bright)]"
             />
             <span className="text-sm text-[var(--color-text-secondary)] tracking-normal">
               수집된 개인정보는 매물 매칭 서비스 제공 목적으로만 활용되며,{' '}
-              <span className="text-[#2E75B6] underline cursor-pointer">개인정보 처리방침</span>에 동의합니다.
+              <span className="text-[var(--color-brand-bright)] underline cursor-pointer">개인정보 처리방침</span>에 동의합니다.
             </span>
           </label>
           {errors.agreed && <p className="text-xs text-red-500">{errors.agreed}</p>}
@@ -638,7 +638,7 @@ export default function NewDemandPage() {
               className={`inline-flex items-center gap-2 disabled:opacity-60 text-white px-8 py-2.5 rounded-lg text-sm font-semibold transition-colors tracking-normal ${
                 demandType === 'realestate'
                   ? 'bg-emerald-500 hover:bg-emerald-600'
-                  : 'bg-[#2E75B6] hover:bg-[#1e5a94]'
+                  : 'bg-[var(--color-brand-bright)] hover:bg-[var(--color-brand-dark)]'
               }`}
             >
               {submitting ? (

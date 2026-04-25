@@ -77,7 +77,7 @@ function buildChips(f: FilterState): { key: string; label: string }[] {
 }
 
 const CATEGORY_FILTERS = [
-  { key: '전체', label: '전체', color: 'bg-[#2E75B6] text-white' },
+  { key: '전체', label: '전체', color: 'bg-[var(--color-brand-bright)] text-white' },
   { key: '규제', label: '규제·정책', color: 'bg-amber-500/20 text-amber-300 border border-amber-500/30' },
   { key: '경매', label: '경매·공매', color: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' },
   { key: '판례', label: '판례·법원', color: 'bg-purple-500/20 text-purple-300 border border-purple-500/30' },
@@ -206,7 +206,7 @@ export default function NewsPage() {
         {/* AI 시장 인사이트 */}
         <div className="rounded-xl overflow-hidden border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
           <div className="px-4 py-2.5 border-b border-[var(--color-border-subtle)] flex items-center gap-2">
-            <TrendingUp className="h-3.5 w-3.5 text-[#2E75B6]" />
+            <TrendingUp className="h-3.5 w-3.5 text-[var(--color-brand-bright)]" />
             <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">AI Market Insight</span>
           </div>
           <div className="p-4">
@@ -217,7 +217,7 @@ export default function NewsPage() {
         {/* 통계 카드 */}
         <div className="rounded-xl overflow-hidden border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
           <div className="px-4 py-2.5 border-b border-[var(--color-border-subtle)] flex items-center gap-2">
-            <BarChart3 className="h-3.5 w-3.5 text-[#2E75B6]" />
+            <BarChart3 className="h-3.5 w-3.5 text-[var(--color-brand-bright)]" />
             <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">News Statistics</span>
           </div>
           <div className="p-4">
@@ -262,7 +262,7 @@ export default function NewsPage() {
             onClick={() => setDeepOpen((v) => !v)}
           >
             <div className="flex items-center gap-3">
-              <BarChart3 className="h-4 w-4 text-[#2E75B6]" />
+              <BarChart3 className="h-4 w-4 text-[var(--color-brand-bright)]" />
               <span className="text-sm font-semibold text-white">심화 시각화 분석</span>
               <span className="hidden sm:inline text-[11px] text-[var(--color-text-tertiary)] bg-[var(--color-surface-sunken)] px-2.5 py-0.5 rounded-full border border-[var(--color-border-subtle)]">
                 히트맵 · 감성 산점도 · 지역 레이더 · 키워드 네트워크
@@ -298,13 +298,13 @@ export default function NewsPage() {
               <TabsList className="bg-transparent gap-1 h-auto pb-0">
                 <TabsTrigger
                   value="search"
-                  className="text-sm font-medium text-[var(--color-text-muted)] data-[state=active]:text-[var(--color-text-primary)] data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#2E75B6] rounded-none pb-2.5 px-3"
+                  className="text-sm font-medium text-[var(--color-text-muted)] data-[state=active]:text-[var(--color-text-primary)] data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-brand-bright)] rounded-none pb-2.5 px-3"
                 >
                   뉴스 검색
                 </TabsTrigger>
                 <TabsTrigger
                   value="scrap"
-                  className="text-sm font-medium text-[var(--color-text-muted)] data-[state=active]:text-[var(--color-text-primary)] data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#2E75B6] rounded-none pb-2.5 px-3"
+                  className="text-sm font-medium text-[var(--color-text-muted)] data-[state=active]:text-[var(--color-text-primary)] data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-brand-bright)] rounded-none pb-2.5 px-3"
                 >
                   스크랩 관리
                 </TabsTrigger>
@@ -326,7 +326,7 @@ export default function NewsPage() {
                   {chips.map((chip) => (
                     <button
                       key={chip.key}
-                      className="inline-flex items-center gap-1 pr-1.5 pl-2 py-0.5 text-xs cursor-pointer bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] hover:bg-[#2E75B6]/20 hover:text-[var(--color-text-primary)] border border-[#2E75B6]/30 rounded-full transition-colors"
+                      className="inline-flex items-center gap-1 pr-1.5 pl-2 py-0.5 text-xs cursor-pointer bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] hover:bg-[var(--color-brand-bright)]/20 hover:text-[var(--color-text-primary)] border border-[var(--color-brand-bright)]/30 rounded-full transition-colors"
                       onClick={() => removeChip(chip.key)}
                     >
                       {chip.label}

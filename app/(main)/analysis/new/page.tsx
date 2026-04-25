@@ -61,10 +61,17 @@ export default function NewNplAnalysisPage() {
   const { state, dispatch } = useUnifiedFormState("ANALYSIS")
 
   const handleNext = () => {
-    if (step < 3) setStep((s) => (s + 1) as Step)
+    if (step < 3) {
+      setStep((s) => (s + 1) as Step)
+      // Phase L · P2 — 위자드 step 이동 시 자동 상단 스크롤 (디자인 시스템 v2.5 §9 UX)
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" })
+    }
   }
   const handleBack = () => {
-    if (step > 1) setStep((s) => (s - 1) as Step)
+    if (step > 1) {
+      setStep((s) => (s - 1) as Step)
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" })
+    }
   }
 
   const handleAnalyze = async () => {

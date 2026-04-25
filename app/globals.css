@@ -1499,44 +1499,30 @@ button[role="switch"][data-state="unchecked"] {
   border-color: rgba(255,255,255,0.06);
 }
 
-/* npl-preview-dark-card: 랜딩 페이지 _landing 의 다크 프리뷰 카드 */
-/*   라이트 모드 = 라이트 톤 카드 · 다크 모드 = 진한 네이비 카드 */
+/* npl-preview-dark-card: 랜딩 페이지 _landing 의 다크 프리뷰 카드
+ *   섹션 배경이 항상 다크(#0A1324)로 강제 (인라인 스타일).
+ *   카드 내부 텍스트도 모두 흰색 인라인 (rgba(255,255,255,...)).
+ *   따라서 라이트 모드에서도 카드 자체는 항상 다크 톤이어야 가독성 확보됨.
+ *   (이전: 라이트 모드 분기 → 흰 카드 + 흰 텍스트 = 안 보임 문제 해결) */
 .npl-preview-dark-card {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  color: #0F172A;
-}
-.dark .npl-preview-dark-card {
   background: #0F1C34;
   border: 1px solid rgba(255,255,255,0.08);
   color: rgba(255,255,255,0.95);
 }
 .npl-preview-dark-card.featured {
   border-color: rgba(16,185,129,0.30);
-}
-.dark .npl-preview-dark-card.featured {
-  border-color: rgba(16,185,129,0.30);
   box-shadow: 0 0 24px rgba(16,185,129,0.08);
 }
 
-/* npl-preview-panel: _landing dealroom-preview 의 큰 프리뷰 패널 */
+/* npl-preview-panel: _landing dealroom-preview 의 큰 프리뷰 패널
+ *   동일 이유로 항상 다크 톤 고정 (섹션 배경 #080F1E + 내부 인라인 흰색 텍스트). */
 .npl-preview-panel {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0 12px 36px rgba(13,31,56,0.10);
-  color: #0F172A;
-}
-.dark .npl-preview-panel {
   background: #0D1830;
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow: 0 20px 60px rgba(0,0,0,0.45);
   color: rgba(255,255,255,0.95);
 }
 .npl-preview-panel-header {
-  background: rgba(13,31,56,0.03);
-  border-bottom: 1px solid #E2E8F0;
-}
-.dark .npl-preview-panel-header {
   background: rgba(255,255,255,0.02);
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }

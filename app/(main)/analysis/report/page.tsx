@@ -420,7 +420,7 @@ export default function UnifiedReportPage() {
         <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
           <div className="flex items-baseline gap-2 mb-3">
             <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">예측 회수율 (신뢰구간)</span>
-            <span className="text-2xl font-black tabular-nums" style={{ color: "#10B981" }}>
+            <span className="text-2xl font-black tabular-nums" style={{ color: "var(--color-positive)" }}>
               {pct(recovery.predictedRecoveryRate)}
             </span>
             <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">
@@ -875,19 +875,19 @@ function VerdictCriteriaToggle({
             </div>
             <ul className="space-y-0.5 text-[var(--color-text-secondary)]">
               <li>
-                <span className="font-bold" style={{ color: "#10B981" }}>A</span>
+                <span className="font-bold" style={{ color: "var(--color-positive)" }}>A</span>
                 {" · "}총점 ≥ 85  (최상위 BUY · 권고)
               </li>
               <li>
-                <span className="font-bold" style={{ color: "#10B981" }}>B</span>
+                <span className="font-bold" style={{ color: "var(--color-positive)" }}>B</span>
                 {" · "}75 ≤ 총점 &lt; 85  (BUY · 권고)
               </li>
               <li>
-                <span className="font-bold" style={{ color: "#F59E0B" }}>C</span>
+                <span className="font-bold" style={{ color: "var(--color-warning)" }}>C</span>
                 {" · "}55 ≤ 총점 &lt; 75  (HOLD · 관망)
               </li>
               <li>
-                <span className="font-bold" style={{ color: "#DC2626" }}>D</span>
+                <span className="font-bold" style={{ color: "var(--color-danger)" }}>D</span>
                 {" · "}총점 &lt; 55  (AVOID · 회피)
               </li>
             </ul>
@@ -1275,7 +1275,7 @@ function StatisticsPanel({ report }: { report: UnifiedAnalysisReport }) {
                     <td className="py-1.5 pr-3 text-[var(--color-text-primary)]">{r.periodLabel}</td>
                     <td className="py-1.5 pr-3 text-right tabular-nums text-[var(--color-text-primary)]">{r.saleCount}</td>
                     <td className="py-1.5 pr-3 text-right tabular-nums text-[var(--color-text-primary)]">{pct(r.saleRate)}</td>
-                    <td className="py-1.5 text-right tabular-nums font-semibold" style={{ color: "#10B981" }}>{pct(r.bidRatio)}</td>
+                    <td className="py-1.5 text-right tabular-nums font-semibold" style={{ color: "var(--color-positive)" }}>{pct(r.bidRatio)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1451,7 +1451,7 @@ function RegistryPanel({
     p === "PRESENT" ? "있음" : p === "NEEDS_REVIEW" ? "검토 필요" : "없음"
   const presenceStyle = (p: "PRESENT" | "ABSENT" | "NEEDS_REVIEW") =>
     p === "PRESENT"
-      ? { color: "#2E75B6", fontWeight: 700 }
+      ? { color: "var(--color-brand-bright)", fontWeight: 700 }
       : p === "NEEDS_REVIEW"
       ? { color: "#B45309", fontWeight: 700 }
       : { color: "var(--color-text-tertiary)" }
@@ -2039,7 +2039,7 @@ function ProfitabilitySections({
           />
           <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
             <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mb-1">예상 배당액</div>
-            <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: "#10B981" }}>
+            <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: "var(--color-positive)" }}>
               {krwWon(distribution.expectedDistributionAmount)}
             </div>
             <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-1">
@@ -2055,13 +2055,13 @@ function ProfitabilitySections({
             <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mb-1">
               1질권자 배당액 (질권대출기관)
             </div>
-            <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: "#2E75B6" }}>
+            <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: "var(--color-brand-bright)" }}>
               {krwWon(distribution.firstPledgeeAmount)}
             </div>
             <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-2">
               2질권자 배당액 (투자자)
             </div>
-            <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: "#DC2626" }}>
+            <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: "var(--color-danger)" }}>
               {krwWon(distribution.secondPledgeeAmount)}
             </div>
           </div>
@@ -2614,8 +2614,8 @@ function BidBaselineTriplet({
     calc: typeof expectedBid.appraisal
     color: string
   }> = [
-    { calc: expectedBid.appraisal, color: "#2E75B6" },  // BLUE
-    { calc: expectedBid.minBid,    color: "#DC2626" },  // RED
+    { calc: expectedBid.appraisal, color: "var(--color-brand-bright)" },  // BLUE
+    { calc: expectedBid.minBid,    color: "var(--color-danger)" },  // RED
     { calc: expectedBid.market,    color: "#6B7280" },  // GRAY
   ]
   const maxPct = Math.max(100, ...rows.map(r => r.calc.ratioPercent))
