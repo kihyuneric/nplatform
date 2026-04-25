@@ -26,7 +26,7 @@ import {
 import Link from "next/link"
 import { SampleBadge } from "@/components/shared/sample-badge"
 import { type DealStage } from "@/lib/deal-constants"
-import { AssetDetailView } from "@/components/asset-detail/asset-detail-view"
+import { DealFlowView } from "@/components/asset-detail/deal-flow-view"
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -483,7 +483,7 @@ export default function DealsPage() {
                   시각적 구분은 상단 제목 행의 얇은 구분선으로 대체.
                 */}
                 <div key={selectedDeal.id}>
-                  <AssetDetailView
+                  <DealFlowView
                     idProp={selectedDeal.id}
                     embedded
                     dealOverride={{

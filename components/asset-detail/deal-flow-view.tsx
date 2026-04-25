@@ -83,17 +83,45 @@ const MOCK_DEAL = {
 /* ═══════════════════════════════════════════════════════════════════════════
    Page
    ═══════════════════════════════════════════════════════════════════════════ */
-export function DealFlowView() {
+export interface DealFlowViewProps {
+  /** Deal ID (URL 파라미터 대신 prop 으로 주입 가능) */
+  idProp?: string
+  /** /deals 페이지 등에서 inline 임베드 시 — 상단 utility bar 숨김 */
+  embedded?: boolean
+  /** 외부 컴포넌트가 보유한 deal 메타 override */
+  dealOverride?: {
+    listing_name?: string
+    counterparty?: string
+    amount?: number
+    asset_type?: string
+    location?: string
+  }
+}
+
+export function DealFlowView({ idProp, embedded = false, dealOverride }: DealFlowViewProps = {}) {
   const params = useParams()
   const router = useRouter()
-  const dealId = (params?.id as string) || MOCK_DEAL.id
-  const deal = MOCK_DEAL
+  const dealId = idProp || (params?.id as string) || MOCK_DEAL.id
+
+  // dealOverride 가 있으면 mock 위에 덮어쓰기
+  const deal = useMemo(() => {
+    if (!dealOverride) return MOCK_DEAL
+    return {
+      ...MOCK_DEAL,
+      title: dealOverride.listing_name ?? MOCK_DEAL.title,
+      institution: dealOverride.counterparty ?? MOCK_DEAL.institution,
+      region: dealOverride.location ?? MOCK_DEAL.region,
+      // 금액(원) → 억 단위 변환
+      bondBalance: dealOverride.amount ? dealOverride.amount / 100_000_000 : MOCK_DEAL.bondBalance,
+    }
+  }, [dealOverride])
 
   const [favorited, setFavorited] = useState(false)
 
   return (
-    <div style={{ background: MCK.paperTint, minHeight: "100vh" }}>
-      {/* ═══ Top utility bar ════════════════════════════════════════════ */}
+    <div style={{ background: MCK.paperTint, minHeight: embedded ? "auto" : "100vh" }}>
+      {/* ═══ Top utility bar (embedded 모드에선 숨김) ═══════════════════ */}
+      {!embedded && (
       <div
         style={{
           background: MCK.paper,
@@ -149,6 +177,7 @@ export function DealFlowView() {
           </button>
         </div>
       </div>
+      )}
 
       {/* ═══ 1. DEAL HEADER ════════════════════════════════════════════════ */}
       <DealHeader deal={deal} />
