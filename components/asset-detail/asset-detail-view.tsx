@@ -1401,7 +1401,7 @@ export function AssetDetailView({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-bold"
-                    style={{ fontSize: 12, backgroundColor: "rgba(5, 28, 44,0.10)", color: "#051C2C", border: "1px solid rgba(5, 28, 44,0.28)" }}
+                    style={{ fontSize: 12, backgroundColor: "rgba(5, 28, 44,0.10)", color: "var(--color-text-primary)", border: "1px solid rgba(5, 28, 44,0.28)" }}
                   >
                     <BarChart2 size={12} />
                     땅집고옥션 통계 정보 조회
@@ -1824,12 +1824,12 @@ export function AssetDetailView({
                     }}
                   >
                     <span className="inline-flex items-center gap-1.5">
-                      <Brain className="w-3.5 h-3.5" style={{ color: "#051C2C" }} />
-                      <span style={{ fontSize: 11, color: "#051C2C", fontWeight: 800 }}>
+                      <Brain className="w-3.5 h-3.5" style={{ color: "var(--color-text-primary)" }} />
+                      <span style={{ fontSize: 11, color: "var(--color-text-primary)", fontWeight: 800 }}>
                         AI 컨설턴트
                       </span>
                     </span>
-                    <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" style={{ color: "#051C2C" }} />
+                    <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" style={{ color: "var(--color-text-primary)" }} />
                   </Link>
                 </div>
               </div>

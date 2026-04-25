@@ -65,12 +65,12 @@ interface FunnelResponse {
 /* 기본 Mock (API 실패 시) — 실제 비즈니스 시그널 흐름에 가깝게 */
 const MOCK: FunnelResponse = {
   stages: [
-    { key: "supply",    label: "공급",  sub: "매물 등록",       icon: Building2,     color: "#051C2C", count: 1234, conversionRate: 62, avgDays: 1.2, bottleneck: false },
+    { key: "supply",    label: "공급",  sub: "매물 등록",       icon: Building2,     color: "var(--color-text-primary)", count: 1234, conversionRate: 62, avgDays: 1.2, bottleneck: false },
     { key: "discovery", label: "발견",  sub: "매물 조회·검색",  icon: Search,        color: "#0EA5E9", count: 8742, conversionRate: 28, avgDays: 0.4, bottleneck: false },
-    { key: "analysis",  label: "분석",  sub: "AI 분석·리포트",  icon: Brain,         color: "#051C2C", count: 2451, conversionRate: 18, avgDays: 2.1, bottleneck: true  },
-    { key: "deal",      label: "협상",  sub: "딜룸·NDA·LOI",    icon: MessageSquare, color: "#051C2C", count: 441,  conversionRate: 41, avgDays: 7.8, bottleneck: false },
-    { key: "close",     label: "체결",  sub: "전자계약",         icon: FileCheck,     color: "#051C2C", count: 181,  conversionRate: 88, avgDays: 3.2, bottleneck: false },
-    { key: "settle",    label: "정산",  sub: "에스크로·수수료",  icon: Banknote,      color: "#051C2C", count: 159,  conversionRate: 100, avgDays: 2.0, bottleneck: false },
+    { key: "analysis",  label: "분석",  sub: "AI 분석·리포트",  icon: Brain,         color: "var(--color-text-primary)", count: 2451, conversionRate: 18, avgDays: 2.1, bottleneck: true  },
+    { key: "deal",      label: "협상",  sub: "딜룸·NDA·LOI",    icon: MessageSquare, color: "var(--color-text-primary)", count: 441,  conversionRate: 41, avgDays: 7.8, bottleneck: false },
+    { key: "close",     label: "체결",  sub: "전자계약",         icon: FileCheck,     color: "var(--color-text-primary)", count: 181,  conversionRate: 88, avgDays: 3.2, bottleneck: false },
+    { key: "settle",    label: "정산",  sub: "에스크로·수수료",  icon: Banknote,      color: "var(--color-text-primary)", count: 159,  conversionRate: 100, avgDays: 2.0, bottleneck: false },
   ],
   weeklyTrend: [
     { week: "W-5", supply: 182, deal: 58, close: 21 },

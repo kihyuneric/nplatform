@@ -15,9 +15,9 @@ import DS from '@/lib/design-system'
 // ── 담보 유형별 탭 정의 ─────────────────────────────────────────────────────
 
 const COLLATERAL_TABS = [
-  { key: 'ALL',         label: '전체',        icon: BarChart3,      color: '#051C2C' },
-  { key: 'RESIDENTIAL', label: '주거용',       icon: Home,           color: '#051C2C' },
-  { key: 'COMMERCIAL',  label: '상업/산업용',  icon: Building2,      color: '#051C2C' },
+  { key: 'ALL',         label: '전체',        icon: BarChart3,      color: 'var(--color-text-primary)' },
+  { key: 'RESIDENTIAL', label: '주거용',       icon: Home,           color: 'var(--color-text-primary)' },
+  { key: 'COMMERCIAL',  label: '상업/산업용',  icon: Building2,      color: 'var(--color-text-primary)' },
   { key: 'LAND',        label: '토지',         icon: TreeDeciduous,  color: '#D97706' },
 ] as const
 
@@ -35,23 +35,23 @@ interface CollateralTypeData {
 
 const COLLATERAL_TYPE_DATA: CollateralTypeData[] = [
   // 주거용
-  { type: '아파트',        category: '주거용',       bidRate: 83.2, winRate: 74.1, volume: 412, change:  1.3, color: '#051C2C' },
-  { type: '빌라',          category: '주거용',       bidRate: 74.8, winRate: 61.2, volume: 187, change:  0.4, color: '#051C2C' },
-  { type: '단독/다가구',   category: '주거용',       bidRate: 71.3, winRate: 58.7, volume: 134, change: -0.6, color: '#051C2C' },
+  { type: '아파트',        category: '주거용',       bidRate: 83.2, winRate: 74.1, volume: 412, change:  1.3, color: 'var(--color-text-primary)' },
+  { type: '빌라',          category: '주거용',       bidRate: 74.8, winRate: 61.2, volume: 187, change:  0.4, color: 'var(--color-text-primary)' },
+  { type: '단독/다가구',   category: '주거용',       bidRate: 71.3, winRate: 58.7, volume: 134, change: -0.6, color: 'var(--color-text-primary)' },
   { type: '오피스텔',      category: '주거용',       bidRate: 79.4, winRate: 68.3, volume: 223, change:  0.9, color: '#93C5FD' },
   // 상업/산업용
-  { type: '근린상가',      category: '상업/산업용',  bidRate: 68.7, winRate: 52.4, volume: 98,  change: -1.2, color: '#051C2C' },
-  { type: '지식산업센터',  category: '상업/산업용',  bidRate: 72.1, winRate: 61.8, volume: 67,  change:  0.8, color: '#051C2C' },
-  { type: '통건물',        category: '상업/산업용',  bidRate: 65.4, winRate: 48.2, volume: 43,  change: -0.3, color: '#051C2C' },
+  { type: '근린상가',      category: '상업/산업용',  bidRate: 68.7, winRate: 52.4, volume: 98,  change: -1.2, color: 'var(--color-text-primary)' },
+  { type: '지식산업센터',  category: '상업/산업용',  bidRate: 72.1, winRate: 61.8, volume: 67,  change:  0.8, color: 'var(--color-text-primary)' },
+  { type: '통건물',        category: '상업/산업용',  bidRate: 65.4, winRate: 48.2, volume: 43,  change: -0.3, color: 'var(--color-text-primary)' },
   { type: '창고',          category: '상업/산업용',  bidRate: 63.8, winRate: 45.6, volume: 28,  change:  1.1, color: '#C4B5FD' },
   { type: '공장',          category: '상업/산업용',  bidRate: 62.3, winRate: 44.1, volume: 52,  change: -0.7, color: '#DDD6FE' },
   { type: '숙박시설',      category: '상업/산업용',  bidRate: 58.9, winRate: 39.7, volume: 21,  change:  0.2, color: '#EDE9FE' },
   { type: '노유자시설',    category: '상업/산업용',  bidRate: 55.2, winRate: 35.8, volume: 12,  change: -1.5, color: '#F5F3FF' },
   { type: '의료시설',      category: '상업/산업용',  bidRate: 61.7, winRate: 43.2, volume: 16,  change:  0.5, color: '#C4B5FD' },
-  { type: '주유소',        category: '상업/산업용',  bidRate: 59.4, winRate: 40.6, volume: 9,   change: -0.9, color: '#051C2C' },
+  { type: '주유소',        category: '상업/산업용',  bidRate: 59.4, winRate: 40.6, volume: 9,   change: -0.9, color: 'var(--color-text-primary)' },
   // 토지
   { type: '대지',          category: '토지',         bidRate: 71.8, winRate: 59.3, volume: 89,  change:  0.6, color: '#D97706' },
-  { type: '농지',          category: '토지',         bidRate: 64.2, winRate: 47.5, volume: 56,  change: -0.4, color: '#051C2C' },
+  { type: '농지',          category: '토지',         bidRate: 64.2, winRate: 47.5, volume: 56,  change: -0.4, color: 'var(--color-text-primary)' },
   { type: '임야',          category: '토지',         bidRate: 58.7, winRate: 37.9, volume: 31,  change: -1.1, color: '#FCD34D' },
   { type: '공장용지',      category: '토지',         bidRate: 65.9, winRate: 49.2, volume: 24,  change:  0.3, color: '#FDE68A' },
   { type: '창고용지',      category: '토지',         bidRate: 63.5, winRate: 46.8, volume: 18,  change: -0.2, color: '#FEF3C7' },
@@ -429,8 +429,8 @@ export default function NplIndexPage() {
           {/* 범례 */}
           <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-[var(--color-border-subtle)]">
             {[
-              { label: 'NBI 지수', color: '#051C2C', dash: false },
-              { label: '낙찰가율', color: '#051C2C', dash: true },
+              { label: 'NBI 지수', color: 'var(--color-text-primary)', dash: false },
+              { label: '낙찰가율', color: 'var(--color-text-primary)', dash: true },
               { label: '낙찰률', color: '#D97706', dash: true },
             ].map(l => (
               <div key={l.label} className="flex items-center gap-1.5 text-[0.75rem] text-[var(--color-text-secondary)]">

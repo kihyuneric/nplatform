@@ -209,9 +209,9 @@ export function MatchScoreRing({
       className={className}
       sublabel="매칭"
       thresholds={[
-        { value: 80, color: '#051C2C' },
+        { value: 80, color: 'var(--color-text-primary)' },
         { value: 60, color: '#2E75B6' },
-        { value: 0, color: '#051C2C' },
+        { value: 0, color: 'var(--color-text-primary)' },
       ]}
     />
   )
@@ -273,9 +273,9 @@ export function MultiProgressRing({ items, size = 56, className }: MultiRingProp
             strokeWidth={5}
             color={item.color}
             thresholds={[
-              { value: 80, color: '#051C2C' },
-              { value: 50, color: '#051C2C' },
-              { value: 0, color: '#A53F8A' },
+              { value: 80, color: 'var(--color-text-primary)' },
+              { value: 50, color: 'var(--color-text-primary)' },
+              { value: 0, color: 'var(--color-danger)' },
             ]}
           />
           <span className="text-[10px] text-muted-foreground text-center leading-tight max-w-[60px]">

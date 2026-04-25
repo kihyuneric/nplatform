@@ -367,7 +367,7 @@ export default function AnalysisDashboard() {
                   <p className="text-[0.8125rem] font-semibold text-[var(--color-text-primary)] truncate">{r.title}</p>
                   <p className="text-[0.6875rem] text-[var(--color-text-tertiary)]">{r.type} · {r.date}</p>
                 </div>
-                <span className="text-[0.875rem] font-black tabular-nums" style={{ color: "#051C2C" }}>{r.roi}</span>
+                <span className="text-[0.875rem] font-black tabular-nums" style={{ color: "var(--color-text-primary)" }}>{r.roi}</span>
                 <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] shrink-0" />
               </Link>
             )

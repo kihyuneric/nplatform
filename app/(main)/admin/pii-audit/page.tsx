@@ -63,9 +63,9 @@ interface AuditRow {
 const FALLBACK_AUDIT: AuditRow[] = []
 
 const SEV_META: Record<Severity, { label: string; color: string; bg: string }> = {
-  NORMAL: { label: "정상",  color: "#051C2C", bg: "#10B9811A" },
-  WATCH:  { label: "관찰",  color: "#051C2C", bg: "#F59E0B1A" },
-  ALERT:  { label: "경보",  color: "#A53F8A", bg: "#F43F5E1A" },
+  NORMAL: { label: "정상",  color: "var(--color-text-primary)", bg: "#10B9811A" },
+  WATCH:  { label: "관찰",  color: "var(--color-text-primary)", bg: "#F59E0B1A" },
+  ALERT:  { label: "경보",  color: "var(--color-danger)", bg: "#F43F5E1A" },
 }
 
 const TIER_COLOR: Record<AuditTier, string> = {
@@ -74,9 +74,9 @@ const TIER_COLOR: Record<AuditTier, string> = {
 
 const ACTION_META: Record<AuditAction, { label: string; color: string }> = {
   VIEW:           { label: "열람",         color: "#2E75B6" },
-  DOWNLOAD:       { label: "다운로드",     color: "#051C2C" },
-  MASKED_REVEAL:  { label: "마스킹 해제",  color: "#051C2C" },
-  DATAROOM_ENTER: { label: "데이터룸 입장", color: "#051C2C" },
+  DOWNLOAD:       { label: "다운로드",     color: "var(--color-text-primary)" },
+  MASKED_REVEAL:  { label: "마스킹 해제",  color: "var(--color-text-primary)" },
+  DATAROOM_ENTER: { label: "데이터룸 입장", color: "var(--color-text-primary)" },
 }
 
 const FILTERS = [

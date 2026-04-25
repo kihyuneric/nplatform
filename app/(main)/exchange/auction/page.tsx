@@ -240,7 +240,7 @@ function BidDialog({ item, open, onClose, onSubmitted }: { item: BidItem | null;
                   <Sparkles className="w-4 h-4" style={{ color: C.blue }} />
                 </div>
                 <div>
-                  <p className="text-[0.75rem] font-semibold" style={{ color: "#051C2C" }}>AI 적정 입찰가 참고</p>
+                  <p className="text-[0.75rem] font-semibold" style={{ color: "var(--color-text-primary)" }}>AI 적정 입찰가 참고</p>
                   <p className="text-[0.875rem] font-bold tabular-nums" style={{ color: "#1E3A8A" }}>
                     {formatKRW(item.aiEstimate)}
                     <span className="text-[0.75rem] font-normal ml-1" style={{ color: C.blue }}>

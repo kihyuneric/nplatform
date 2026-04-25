@@ -59,8 +59,8 @@ const SAMPLE_ACCESS_LOG: AccessLogRow[] = [
 
 const ACTION_META: Record<LogAction, { label: string; color: string }> = {
   VIEW:          { label: "열람",     color: "#2E75B6" },
-  DOWNLOAD:      { label: "다운로드", color: "#051C2C" },
-  MASKED_REVEAL: { label: "마스킹 해제", color: "#051C2C" },
+  DOWNLOAD:      { label: "다운로드", color: "var(--color-text-primary)" },
+  MASKED_REVEAL: { label: "마스킹 해제", color: "var(--color-text-primary)" },
 }
 
 const TIER_COLOR: Record<LogTier, string> = {

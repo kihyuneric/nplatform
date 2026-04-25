@@ -160,10 +160,10 @@ export default function RiskMatrix({ risks }: RiskMatrixProps) {
       {/* Legend */}
       <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-[var(--color-border-subtle)]">
         {[
-          { label: "낮음", color: "#051C2C" },
-          { label: "중간", color: "#051C2C" },
+          { label: "낮음", color: "var(--color-text-primary)" },
+          { label: "중간", color: "var(--color-text-primary)" },
           { label: "높음", color: "#F97316" },
-          { label: "치명적", color: "#A53F8A" },
+          { label: "치명적", color: "var(--color-danger)" },
         ].map((l) => (
           <div key={l.label} className="flex items-center gap-1.5">
             <div

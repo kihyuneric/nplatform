@@ -397,7 +397,7 @@ export default function SellWizardPage() {
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "8px 14px", borderRadius: 10,
                 background: "rgba(5, 28, 44,0.12)", border: "1px solid rgba(5, 28, 44,0.3)",
-                color: "#051C2C", fontSize: 12, fontWeight: 700, textDecoration: "none",
+                color: "var(--color-text-primary)", fontSize: 12, fontWeight: 700, textDecoration: "none",
               }}
             >
               <Sparkles size={12} /> OCR로 1~5건 빠르게 등록 →
@@ -408,7 +408,7 @@ export default function SellWizardPage() {
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "8px 14px", borderRadius: 10,
                 background: "rgba(5, 28, 44,0.12)", border: "1px solid rgba(5, 28, 44,0.3)",
-                color: "#051C2C", fontSize: 12, fontWeight: 700, textDecoration: "none",
+                color: "var(--color-text-primary)", fontSize: 12, fontWeight: 700, textDecoration: "none",
               }}
             >
               CSV 대량 등록 (최대 500건) →

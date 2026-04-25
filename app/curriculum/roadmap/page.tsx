@@ -38,11 +38,11 @@ interface ImportanceItem {
 
 // ── 상수 ──────────────────────────────────────────
 const LEVELS = [
-  { key: '왕초보', label: '왕초보', description: '부동산의 기본 개념부터', icon: Sprout, color: '#051C2C', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
-  { key: '초보', label: '초보', description: '본격적인 투자 준비', icon: Leaf, color: '#051C2C', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
-  { key: '중급', label: '중급', description: '실전 투자 기법 습득', icon: TreePine, color: '#051C2C', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
-  { key: '고급', label: '고급', description: '고급 전략과 리스크 관리', icon: Mountain, color: '#051C2C', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
-  { key: '전문가', label: '전문가', description: '전문가 수준의 포트폴리오', icon: Crown, color: '#A53F8A', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
+  { key: '왕초보', label: '왕초보', description: '부동산의 기본 개념부터', icon: Sprout, color: 'var(--color-text-primary)', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
+  { key: '초보', label: '초보', description: '본격적인 투자 준비', icon: Leaf, color: 'var(--color-text-primary)', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
+  { key: '중급', label: '중급', description: '실전 투자 기법 습득', icon: TreePine, color: 'var(--color-text-primary)', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
+  { key: '고급', label: '고급', description: '고급 전략과 리스크 관리', icon: Mountain, color: 'var(--color-text-primary)', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
+  { key: '전문가', label: '전문가', description: '전문가 수준의 포트폴리오', icon: Crown, color: 'var(--color-danger)', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
 ]
 
 const DOMAIN_ICONS: Record<string, typeof HomeIcon> = {

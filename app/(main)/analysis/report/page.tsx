@@ -1456,7 +1456,7 @@ function RegistryPanel({
     p === "PRESENT"
       ? { color: "var(--color-brand-bright)", fontWeight: 700 }
       : p === "NEEDS_REVIEW"
-      ? { color: "#051C2C", fontWeight: 700 }
+      ? { color: "var(--color-text-primary)", fontWeight: 700 }
       : { color: "var(--color-text-tertiary)" }
 
   const krw = (v: number) => (v === 0 ? "-" : v.toLocaleString("ko-KR") + " 원")

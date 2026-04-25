@@ -54,23 +54,23 @@ const FALLBACK_INSTITUTIONS: Institution[] = []
 
 const TYPE_META: Record<InstType, { label: string; color: string }> = {
   BANK:    { label: "은행",      color: "#2E75B6" },
-  CAPITAL: { label: "캐피탈",    color: "#051C2C" },
-  AMC:     { label: "AMC",      color: "#051C2C" },
-  INSURER: { label: "보험",      color: "#051C2C" },
-  SAVINGS: { label: "저축은행",  color: "#A53F8A" },
+  CAPITAL: { label: "캐피탈",    color: "var(--color-text-primary)" },
+  AMC:     { label: "AMC",      color: "var(--color-text-primary)" },
+  INSURER: { label: "보험",      color: "var(--color-text-primary)" },
+  SAVINGS: { label: "저축은행",  color: "var(--color-danger)" },
 }
 
 const GRADE_META: Record<InstGrade, { color: string; bg: string }> = {
-  S: { color: "#051C2C", bg: "#FBBF241F" },
-  A: { color: "#051C2C", bg: "#34D3991F" },
-  B: { color: "#051C2C", bg: "#60A5FA1F" },
+  S: { color: "var(--color-text-primary)", bg: "#FBBF241F" },
+  A: { color: "var(--color-text-primary)", bg: "#34D3991F" },
+  B: { color: "var(--color-text-primary)", bg: "#60A5FA1F" },
   C: { color: "#475569", bg: "#94A3B81F" },
 }
 
 const STATUS_META: Record<InstStatus, { label: string; color: string }> = {
-  ACTIVE:    { label: "활성",     color: "#051C2C" },
-  PROBATION: { label: "관찰",     color: "#051C2C" },
-  SUSPENDED: { label: "정지",     color: "#A53F8A" },
+  ACTIVE:    { label: "활성",     color: "var(--color-text-primary)" },
+  PROBATION: { label: "관찰",     color: "var(--color-text-primary)" },
+  SUSPENDED: { label: "정지",     color: "var(--color-danger)" },
 }
 
 const FILTERS = [

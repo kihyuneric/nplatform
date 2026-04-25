@@ -55,23 +55,23 @@ const FALLBACK_ROWS: AdminAgreementRow[] = []
 
 const TYPE_META: Record<DocType, { color: string }> = {
   NDA: { color: "#2E75B6" },
-  LOI: { color: "#051C2C" },
+  LOI: { color: "var(--color-text-primary)" },
 }
 
 const STATUS_META: Record<DocStatus, { label: string; color: string; icon: React.ElementType }> = {
-  PENDING:   { label: "검토 중",  color: "#051C2C", icon: Clock },
-  APPROVED:  { label: "승인",    color: "#051C2C", icon: CheckCircle2 },
+  PENDING:   { label: "검토 중",  color: "var(--color-text-primary)", icon: Clock },
+  APPROVED:  { label: "승인",    color: "var(--color-text-primary)", icon: CheckCircle2 },
   SIGNED:    { label: "체결",    color: "#2E75B6", icon: CheckCircle2 },
-  REJECTED:  { label: "거절",    color: "#A53F8A", icon: XCircle },
+  REJECTED:  { label: "거절",    color: "var(--color-danger)", icon: XCircle },
   EXPIRED:   { label: "만료",    color: "#64748B", icon: XCircle },
   WITHDRAWN: { label: "철회",    color: "#475569", icon: XCircle },
 }
 
 const FLAG_META: Record<FlagSeverity, { label: string; color: string }> = {
-  NONE:      { label: "정상",   color: "#051C2C" },
-  WATCH:     { label: "관찰",   color: "#051C2C" },
+  NONE:      { label: "정상",   color: "var(--color-text-primary)" },
+  WATCH:     { label: "관찰",   color: "var(--color-text-primary)" },
   SUSPECT:   { label: "의심",   color: "#F97316" },
-  VIOLATION: { label: "위반",   color: "#A53F8A" },
+  VIOLATION: { label: "위반",   color: "var(--color-danger)" },
 }
 
 const FILTERS = [

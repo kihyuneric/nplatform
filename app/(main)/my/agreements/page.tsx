@@ -123,10 +123,10 @@ const SAMPLE_AGREEMENTS: AgreementRow[] = [
 ]
 
 const STATUS_META: Record<DocStatus, { label: string; color: string; bg: string; icon: React.ElementType }> = {
-  PENDING:  { label: "검토 중",   color: "#051C2C", bg: "#F59E0B1F", icon: Clock },
-  APPROVED: { label: "승인",     color: "#051C2C", bg: "#10B9811F", icon: CheckCircle2 },
+  PENDING:  { label: "검토 중",   color: "var(--color-text-primary)", bg: "#F59E0B1F", icon: Clock },
+  APPROVED: { label: "승인",     color: "var(--color-text-primary)", bg: "#10B9811F", icon: CheckCircle2 },
   SIGNED:   { label: "체결 완료", color: "#2E75B6", bg: "#3B82F61F", icon: CheckCircle2 },
-  REJECTED: { label: "거절",     color: "#A53F8A", bg: "#F43F5E1F", icon: XCircle },
+  REJECTED: { label: "거절",     color: "var(--color-danger)", bg: "#F43F5E1F", icon: XCircle },
   EXPIRED:  { label: "만료",     color: "#64748B", bg: "#64748B1F", icon: AlertCircle },
 }
 

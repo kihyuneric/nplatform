@@ -187,7 +187,7 @@ function InstitutionCard({ inst, index }: { inst: Institution; index: number }) 
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
               <h3 style={{ fontSize: '1rem', fontWeight: 800, color: C.lt1, lineHeight: 1.2 }}>{inst.name}</h3>
               {inst.verified && (
-                <span title="인증 기관" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: '0.5625rem', fontWeight: 800, padding: '2px 7px', borderRadius: 20, backgroundColor: '#ECFDF5', color: '#051C2C', border: '1px solid #A7F3D0' }}>
+                <span title="인증 기관" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: '0.5625rem', fontWeight: 800, padding: '2px 7px', borderRadius: 20, backgroundColor: '#ECFDF5', color: 'var(--color-text-primary)', border: '1px solid #A7F3D0' }}>
                   <Shield size={9} />인증
                 </span>
               )}

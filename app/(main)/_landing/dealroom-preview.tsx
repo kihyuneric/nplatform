@@ -60,8 +60,8 @@ export function DealRoomPreview() {
             className="inline-flex items-center gap-2 rounded-full px-3 py-1 mb-4"
             style={{ background: "rgba(5, 28, 44,0.10)", border: "1px solid rgba(5, 28, 44,0.25)" }}
           >
-            <MessageSquare size={12} style={{ color: "#051C2C" }} />
-            <span className="text-[11px] font-bold tracking-wider" style={{ color: "#051C2C" }}>
+            <MessageSquare size={12} style={{ color: "var(--color-text-primary)" }} />
+            <span className="text-[11px] font-bold tracking-wider" style={{ color: "var(--color-text-primary)" }}>
               딜룸 미리보기
             </span>
           </div>
@@ -86,7 +86,7 @@ export function DealRoomPreview() {
           <div className="npl-preview-panel-header flex items-center justify-between px-5 py-3.5 flex-wrap gap-2">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(5, 28, 44,0.12)" }}>
-                <Lock size={13} style={{ color: "#051C2C" }} />
+                <Lock size={13} style={{ color: "var(--color-text-primary)" }} />
               </div>
               <div>
                 <div className="text-[13px] font-bold text-white leading-tight">강남 아파트 담보 · NPL-2026-0412</div>
@@ -94,7 +94,7 @@ export function DealRoomPreview() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(5, 28, 44,0.12)", color: "#051C2C", border: "1px solid rgba(5, 28, 44,0.25)" }}>
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(5, 28, 44,0.12)", color: "var(--color-text-primary)", border: "1px solid rgba(5, 28, 44,0.25)" }}>
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#051C2C" }} />
                 진행 중
               </span>
@@ -216,14 +216,14 @@ export function DealRoomPreview() {
                   style={{ background: "linear-gradient(135deg, rgba(5, 28, 44,0.08), rgba(5, 28, 44,0.06))", border: "1px solid rgba(5, 28, 44,0.18)" }}
                 >
                   <div className="flex items-center gap-2 mb-1.5">
-                    <FileCheck2 size={12} style={{ color: "#051C2C" }} />
+                    <FileCheck2 size={12} style={{ color: "var(--color-text-primary)" }} />
                     <span className="text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.85)" }}>전자계약 준비 완료</span>
                   </div>
                   <div className="text-[10px] leading-relaxed mb-2" style={{ color: "rgba(255,255,255,0.55)" }}>
                     LOI 수락 즉시 매매계약서가 자동 생성됩니다.
                   </div>
                   <div className="flex items-center gap-1.5 text-[9px]" style={{ color: "rgba(255,255,255,0.5)" }}>
-                    <Sparkles size={9} style={{ color: "#051C2C" }} /> 대금은 KB에스크로로 보호
+                    <Sparkles size={9} style={{ color: "var(--color-text-primary)" }} /> 대금은 KB에스크로로 보호
                   </div>
                 </div>
 
@@ -231,9 +231,9 @@ export function DealRoomPreview() {
                   className="rounded-lg p-2.5 flex items-start gap-2"
                   style={{ background: "rgba(5, 28, 44,0.05)", border: "1px solid rgba(5, 28, 44,0.15)" }}
                 >
-                  <AlertCircle size={12} style={{ color: "#051C2C" }} className="mt-0.5 shrink-0" />
+                  <AlertCircle size={12} style={{ color: "var(--color-text-primary)" }} className="mt-0.5 shrink-0" />
                   <div className="text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
-                    모든 대화·문서는 L2 NDA 범위 내에서만 열람되며 <strong style={{ color: "#051C2C" }}>내보내기 로그</strong>가 기록됩니다.
+                    모든 대화·문서는 L2 NDA 범위 내에서만 열람되며 <strong style={{ color: "var(--color-text-primary)" }}>내보내기 로그</strong>가 기록됩니다.
                   </div>
                 </div>
               </div>

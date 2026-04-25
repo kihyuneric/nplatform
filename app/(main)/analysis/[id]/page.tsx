@@ -754,9 +754,9 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
-                      { label: '예상 ROI', value: '28.5%', color: '#051C2C' },
-                      { label: '예상 IRR', value: '22.3%', color: '#051C2C' },
-                      { label: '손익분기', value: '92.1%', color: '#051C2C' },
+                      { label: '예상 ROI', value: '28.5%', color: 'var(--color-text-primary)' },
+                      { label: '예상 IRR', value: '22.3%', color: 'var(--color-text-primary)' },
+                      { label: '손익분기', value: '92.1%', color: 'var(--color-text-primary)' },
                       { label: '리스크', value: data.ai_grade, color: gradeColor(data.ai_grade).solid },
                     ].map(k => (
                       <div key={k.label} className="rounded-xl bg-gray-50 dark:bg-white/5 p-3 text-center">
@@ -911,9 +911,9 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                   {[
                     { label: '순수익', value: fmt(profitability.netProfit), sub: '론세일 BASE', color: profitability.netProfit > 0 ? '#051C2C' : '#A53F8A' },
                     { label: 'ROI', value: `${profitability.roi.toFixed(1)}%`, sub: '투자수익률', color: profitability.roi > 0 ? '#051C2C' : '#A53F8A' },
-                    { label: 'IRR', value: `${profitability.irr.toFixed(1)}%`, sub: '내부수익률', color: '#051C2C' },
-                    { label: '회수기간', value: `${profitability.paybackMonths}개월`, sub: '예상 소요', color: '#051C2C' },
-                    { label: '손익분기', value: `${profitability.breakEvenBidRatio.toFixed(1)}%`, sub: '낙찰가율 기준', color: '#051C2C' },
+                    { label: 'IRR', value: `${profitability.irr.toFixed(1)}%`, sub: '내부수익률', color: 'var(--color-text-primary)' },
+                    { label: '회수기간', value: `${profitability.paybackMonths}개월`, sub: '예상 소요', color: 'var(--color-text-primary)' },
+                    { label: '손익분기', value: `${profitability.breakEvenBidRatio.toFixed(1)}%`, sub: '낙찰가율 기준', color: 'var(--color-text-primary)' },
                   ].map(k => (
                     <div key={k.label} className="card-elevated rounded-2xl p-5">
                       <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">{k.label}</p>
@@ -975,10 +975,10 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                     <h3 className="text-base font-bold text-[var(--color-brand-deep)] dark:text-white mb-4">Monte Carlo 시뮬레이션 (10,000회)</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                       {[
-                        { label: '평균 수익률', value: `${profitability.monteCarlo.mean.toFixed(1)}%`, color: '#051C2C' },
-                        { label: 'P10 (비관)', value: `${profitability.monteCarlo.p10.toFixed(1)}%`, color: '#A53F8A' },
-                        { label: 'P50 (중앙)', value: `${profitability.monteCarlo.p50.toFixed(1)}%`, color: '#051C2C' },
-                        { label: 'P90 (낙관)', value: `${profitability.monteCarlo.p90.toFixed(1)}%`, color: '#051C2C' },
+                        { label: '평균 수익률', value: `${profitability.monteCarlo.mean.toFixed(1)}%`, color: 'var(--color-text-primary)' },
+                        { label: 'P10 (비관)', value: `${profitability.monteCarlo.p10.toFixed(1)}%`, color: 'var(--color-danger)' },
+                        { label: 'P50 (중앙)', value: `${profitability.monteCarlo.p50.toFixed(1)}%`, color: 'var(--color-text-primary)' },
+                        { label: 'P90 (낙관)', value: `${profitability.monteCarlo.p90.toFixed(1)}%`, color: 'var(--color-text-primary)' },
                         { label: '손실확률', value: `${profitability.monteCarlo.lossProb.toFixed(1)}%`, color: profitability.monteCarlo.lossProb > 15 ? '#A53F8A' : '#051C2C' },
                       ].map(m => (
                         <div key={m.label} className="text-center p-3 rounded-xl bg-gray-50 dark:bg-white/5">
@@ -1339,9 +1339,9 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 <p className="data-label mb-5">가격 비율 분석</p>
                 <div className="space-y-4">
                   {[
-                    { label: '감정가 대비 최저매각가', value: ((data.minimum_price / data.appraisal_value) * 100).toFixed(1), color: '#051C2C' },
+                    { label: '감정가 대비 최저매각가', value: ((data.minimum_price / data.appraisal_value) * 100).toFixed(1), color: 'var(--color-text-primary)' },
                     { label: '감정가 대비 시세',       value: ((data.market_price / data.appraisal_value) * 100).toFixed(1),  color: '#1B3A5C' },
-                    { label: '시세 대비 최저매각가',   value: ((data.minimum_price / data.market_price) * 100).toFixed(1),   color: '#051C2C' },
+                    { label: '시세 대비 최저매각가',   value: ((data.minimum_price / data.market_price) * 100).toFixed(1),   color: 'var(--color-text-primary)' },
                   ].map(item => (
                     <div key={item.label}>
                       <div className="flex justify-between text-xs mb-1.5">

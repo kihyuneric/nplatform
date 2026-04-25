@@ -3194,6 +3194,325 @@ button[role="switch"][data-state="unchecked"] {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   CRITICAL · 다크 컨테이너 안의 navy text 가독성 강제 fix
+   "남색 배경 + 남색 글씨 = 안 보임" 문제 해결
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* hero/dark navy 배경 컨테이너 안의 모든 텍스트는 강제 흰톤 (자식 모두) */
+[style*="hero-bg"],
+[style*="brand-deepest"],
+[style*="brand-deep"],
+[style*="#051C2C"],
+[style*="#0B1F3A"],
+[style*="#0D2448"],
+[style*="#12305B"],
+[style*="hero-bg-elevated"],
+[style*="hero-bg-soft"] {
+  color: #FFFFFF;
+}
+
+/* 그 안의 자식 요소 중 inline color: #051C2C 같은 darknavy로 박힌 것들 — 흰톤 강제 */
+[style*="hero-bg"] [style*="color: '#051C2C'"],
+[style*="hero-bg"] [style*='color: "#051C2C"'],
+[style*="hero-bg"] [style*="color:'#051C2C'"],
+[style*="hero-bg"] [style*='color:"#051C2C"'],
+[style*="hero-bg"] [style*="color: rgb(5, 28, 44)"],
+[style*="hero-bg"] [style*="color: rgba(5, 28, 44"],
+[style*="brand-deepest"] [style*="color: '#051C2C'"],
+[style*="brand-deep"] [style*="color: '#051C2C'"] {
+  color: #FFFFFF !important;
+}
+
+/* eyebrow 라벨 (WHY NPLATFORM 등) — navy 배경 위에서는 흰색 또는 sky blue */
+[style*="hero-bg"] .npl-editorial-eyebrow,
+[style*="hero-bg"] .npl-mck-eyebrow,
+[style*="brand-deep"] .npl-editorial-eyebrow,
+[style*="brand-deep"] .npl-mck-eyebrow,
+[style*="brand-deepest"] .npl-editorial-eyebrow,
+[style*="brand-deepest"] .npl-mck-eyebrow {
+  color: #42AFFF !important;   /* sky blue — navy 위에 잘 보임 */
+}
+
+/* navy 배경 위 라벨/뱃지 (multi-color 통일) */
+[style*="hero-bg"] [class*="bg-blue"],
+[style*="hero-bg"] [class*="bg-purple"],
+[style*="hero-bg"] [class*="bg-pink"],
+[style*="hero-bg"] [class*="bg-sky"],
+[style*="brand-deep"] [class*="bg-blue"],
+[style*="brand-deep"] [class*="bg-purple"],
+[style*="brand-deep"] [class*="bg-pink"] {
+  background-color: #2251FF !important;   /* McKinsey bright blue 통일 */
+  color: #FFFFFF !important;
+}
+
+/* purple/pink 잔재 강제 → blue로 (어느 페이지든) */
+[class*="text-purple-"],
+[class*="text-pink-"],
+[class*="text-fuchsia-"],
+[class*="text-violet-"],
+[class*="text-magenta"] {
+  color: #2251FF !important;   /* McKinsey blue */
+}
+[class*="bg-purple-"],
+[class*="bg-pink-"],
+[class*="bg-fuchsia-"],
+[class*="bg-violet-"] {
+  background-color: #2251FF !important;
+  color: #FFFFFF !important;
+}
+
+/* 다크 navy 배경 안의 카드 라벨 통일 — 모두 outlined 흰색 또는 단일 sky */
+[style*="hero-bg"] [class*="rounded-full"],
+[style*="brand-deep"] [class*="rounded-full"],
+[style*="brand-deepest"] [class*="rounded-full"] {
+  /* 라벨 칩에 흰색 outline 권장 — 컴포넌트가 inline bg 강제하면 위에서 override */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL DESIGN ADVISORY · 다크 컨테이너 안 sub-box 위계
+   "남색 안의 남색" 박살 + purple/violet 완전 제거
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 다크 navy 컨테이너 안의 inline navy 색상 background 박스 — sky blue로 강제 (대비) */
+[style*="hero-bg"] [style*="background: #051C2C"],
+[style*="hero-bg"] [style*="background: '#051C2C'"],
+[style*="hero-bg"] [style*='background: "#051C2C"'],
+[style*="hero-bg"] [style*="background: rgb(5, 28, 44)"],
+[style*="hero-bg"] [style*="background-color: #051C2C"],
+[style*="hero-bg"] [style*="background-color: '#051C2C'"],
+[style*="brand-deepest"] [style*="background: #051C2C"],
+[style*="brand-deepest"] [style*="background-color: #051C2C"],
+[style*="brand-deep"] [style*="background: #051C2C"],
+[style*="brand-deep"] [style*="background-color: #051C2C"] {
+  background: rgba(66, 175, 255, 0.12) !important;   /* sky blue tint */
+  border: 1px solid rgba(66, 175, 255, 0.30) !important;
+}
+
+/* 다크 컨테이너 안의 sub-아이콘 박스 — sky blue 톤 (대비) */
+[style*="hero-bg"] .npl-icon-box,
+[style*="brand-deepest"] .npl-icon-box,
+[style*="brand-deep"] .npl-icon-box {
+  background: rgba(66, 175, 255, 0.10) !important;
+  border: 1px solid rgba(66, 175, 255, 0.25) !important;
+  color: #42AFFF !important;
+}
+
+/* purple/violet/fuchsia 색상 잔재 — McKinsey는 절대 사용 안 함, 모두 blue로 강제 */
+.text-purple-50, .text-purple-100, .text-purple-200, .text-purple-300, .text-purple-400, .text-purple-500, .text-purple-600, .text-purple-700, .text-purple-800, .text-purple-900,
+.text-violet-50, .text-violet-100, .text-violet-200, .text-violet-300, .text-violet-400, .text-violet-500, .text-violet-600, .text-violet-700, .text-violet-800, .text-violet-900,
+.text-fuchsia-50, .text-fuchsia-100, .text-fuchsia-200, .text-fuchsia-300, .text-fuchsia-400, .text-fuchsia-500, .text-fuchsia-600, .text-fuchsia-700, .text-fuchsia-800, .text-fuchsia-900,
+.text-pink-50, .text-pink-100, .text-pink-200, .text-pink-300, .text-pink-400, .text-pink-500, .text-pink-600, .text-pink-700, .text-pink-800, .text-pink-900 {
+  color: #2251FF !important;
+}
+.bg-purple-300, .bg-purple-400, .bg-purple-500, .bg-purple-600, .bg-purple-700, .bg-purple-800, .bg-purple-900,
+.bg-violet-300, .bg-violet-400, .bg-violet-500, .bg-violet-600, .bg-violet-700, .bg-violet-800, .bg-violet-900,
+.bg-fuchsia-300, .bg-fuchsia-400, .bg-fuchsia-500, .bg-fuchsia-600, .bg-fuchsia-700, .bg-fuchsia-800, .bg-fuchsia-900,
+.bg-pink-300, .bg-pink-400, .bg-pink-500, .bg-pink-600, .bg-pink-700, .bg-pink-800, .bg-pink-900 {
+  background-color: #2251FF !important;
+  color: #FFFFFF !important;
+}
+
+/* inline rgba(168, 85, 247) purple, rgba(167, 139, 250) violet 등 → bright blue rgba */
+[style*="rgb(168, 85, 247)"],
+[style*="rgba(168, 85, 247"],
+[style*="rgb(167, 139, 250)"],
+[style*="rgba(167, 139, 250"],
+[style*="rgb(139, 92, 246)"],
+[style*="rgba(139, 92, 246"],
+[style*="rgb(192, 132, 252)"],
+[style*="rgba(192, 132, 252"] {
+  color: #2251FF !important;
+  background-color: rgba(34, 81, 255, 0.10) !important;
+  border-color: rgba(34, 81, 255, 0.30) !important;
+}
+
+/* 다크 navy 위에 떠있는 카드들의 단계 위계 — 1차/2차/3차 색 차별화 (위계 명확) */
+.npl-stage-l0 { background: rgba(255, 255, 255, 0.06) !important; color: #FFFFFF !important; }
+.npl-stage-l1 { background: rgba(127, 205, 255, 0.18) !important; color: #7FCDFF !important; }
+.npl-stage-l2 { background: rgba(66, 175, 255, 0.22) !important; color: #42AFFF !important; }
+.npl-stage-l3 { background: rgba(34, 81, 255, 0.30) !important; color: #FFFFFF !important; }
+
+/* 다크 hero 안의 작은 액센트 배지 — outlined (배경 navy 위) */
+[style*="hero-bg"] .npl-badge-light,
+[style*="brand-deep"] .npl-badge-light {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-radius: 999px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   다크 모드 차트/테이블 가독성 강제 (Recharts + 일반 table/svg)
+   "그래프 안 텍스트가 안 보임" 문제 해결
+   ═══════════════════════════════════════════════════════════════════════════ */
+.dark .recharts-wrapper text,
+.dark .recharts-text,
+.dark .recharts-cartesian-axis-tick-value,
+.dark .recharts-legend-item-text,
+.dark .recharts-tooltip-label,
+.dark .recharts-tooltip-item,
+.dark .recharts-label,
+.dark .recharts-pie-label-text {
+  fill: #F8FAFC !important;
+  color: #F8FAFC !important;
+}
+.dark .recharts-cartesian-grid line,
+.dark .recharts-cartesian-axis-line {
+  stroke: rgba(255, 255, 255, 0.18) !important;
+}
+.dark .recharts-default-tooltip {
+  background: #0A1628 !important;
+  border: 1px solid rgba(255, 255, 255, 0.20) !important;
+  color: #F8FAFC !important;
+}
+.dark .recharts-tooltip-cursor {
+  fill: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* 다크 모드 일반 table — 모든 셀 텍스트 흰톤 강제 */
+.dark table th,
+.dark table td {
+  color: #F8FAFC;
+}
+.dark table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.dark table thead {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+.dark table tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* 다크 모드 강조 셀 (highlighted) — sky blue tint */
+.dark table td[data-highlight="true"],
+.dark table td.highlight,
+.dark .table-cell-strong {
+  background: rgba(66, 175, 255, 0.12) !important;
+  color: #F8FAFC !important;
+}
+
+/* 차트 안 inline 텍스트 (도넛 percentage label 등) - 다크 배경 위 흰톤 강제 */
+.dark svg text {
+  fill: #F8FAFC;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CRITICAL · 다크 모드 input/select/textarea 가독성 강제
+   문제: var(--color-text-primary) = 다크 모드 흰톤 → 흰 배경 input 안 흰 글씨
+   해결: 다크 모드에서 모든 폼 필드 → 다크 배경 + 흰 글씨로 통일
+   ═══════════════════════════════════════════════════════════════════════════ */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="submit"]):not([type="button"]),
+.dark textarea,
+.dark select {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  color: #F8FAFC !important;
+  border-color: rgba(255, 255, 255, 0.20) !important;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #2251FF !important;
+  background-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* select option은 OS 기본 dropdown — 다크 배경 명시 */
+.dark select option {
+  background: #051C2C;
+  color: #F8FAFC;
+}
+
+/* 다크 모드에서 input/textarea가 라이트 배경 강제로 박힌 경우 — 텍스트는 검정 강제 */
+.dark input[class*="bg-white"],
+.dark textarea[class*="bg-white"],
+.dark .bg-white input,
+.dark .bg-white textarea,
+.dark .bg-white select,
+.dark input[style*="background: #FFFFFF"],
+.dark input[style*="background:#FFFFFF"],
+.dark input[style*="background-color: #FFFFFF"],
+.dark input[style*="background-color:#FFFFFF"],
+.dark input[style*="background: white"],
+.dark input[style*="background:white"] {
+  background-color: #FFFFFF !important;
+  color: #051C2C !important;
+}
+
+/* 다크 모드 카드 안 텍스트 — inline color: 'var(--color-text-primary)' 가 흰톤이라 OK
+   하지만 카드가 라이트 배경 강제일 경우 검정 강제 */
+.dark [class*="bg-white"] *[style*="color: 'var(--color-text-primary)'"],
+.dark [class*="bg-white"] *[style*='color: "var(--color-text-primary)"'] {
+  /* CSS attribute selector는 변수 안 적용. 실효성 낮음 */
+}
+
+/* 카드 안 어두운 색 텍스트 (다크 모드 흰톤 토큰) — 작은 button/카드 컨테이너 */
+.dark .npl-mck-card,
+.dark .npl-card-mono {
+  background: #051C2C !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #F8FAFC !important;
+}
+
+/* 다크 모드 stat-card / preset-button — 어두운 navy 박스 안 텍스트 강제 흰톤 */
+.dark .npl-mck-stat-card *,
+.dark .npl-stat-card * {
+  color: #FFFFFF !important;
+}
+
+/* 5단계 프로세스 카드 — 각 단계 sky blue accent + 흰 글씨 + 큰 숫자 */
+.npl-process-step {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  padding: 1.5rem;
+  text-align: center;
+  border-radius: 0;
+  transition: border-color 200ms;
+}
+.npl-process-step:hover {
+  border-color: #42AFFF;
+}
+.npl-process-step .icon-wrap {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 1rem;
+  background: rgba(66, 175, 255, 0.15);
+  border: 1px solid rgba(66, 175, 255, 0.30);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #42AFFF;
+  border-radius: 0;
+}
+.npl-process-step .step-number {
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #42AFFF;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+}
+.npl-process-step .step-title {
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #FFFFFF;
+  margin-bottom: 0.5rem;
+}
+.npl-process-step .step-desc {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.55;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    McKinsey Monochrome System — Multi-color SaaS dashboard 톤 차단
    "단색 navy + warm gold accent + grayscale chart"
    ═══════════════════════════════════════════════════════════════════════════ */

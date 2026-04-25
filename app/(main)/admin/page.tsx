@@ -139,8 +139,8 @@ export default function AdminDashboardPage() {
 
   // Update pie chart data from stats
   const pieData = [
-    { name: "활성",   value: stats.activeListings, color: "#051C2C" },
-    { name: "심사중", value: stats.pendingReviews, color: "#051C2C" },
+    { name: "활성",   value: stats.activeListings, color: "var(--color-text-primary)" },
+    { name: "심사중", value: stats.pendingReviews, color: "var(--color-text-primary)" },
     { name: "기타",   value: Math.max(0, stats.activeListings > 0 ? Math.round(stats.activeListings * 0.2) : 0), color: "#6B7280" },
   ]
 

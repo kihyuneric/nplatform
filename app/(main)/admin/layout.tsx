@@ -30,7 +30,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             style={{
               background: 'rgba(5, 28, 44,0.14)',
               borderBottom: '1px solid rgba(5, 28, 44,0.35)',
-              color: '#051C2C',
+              color: 'var(--color-text-primary)',
             }}
           >
             ⚠ DEV MODE — 관리자 인증이 우회되어 있습니다. 프로덕션에서는 ADMIN/SUPER_ADMIN 만 접근 가능합니다.

@@ -144,7 +144,7 @@ export function AIRecommendations() {
                       {typeof l.match_score === "number" && l.match_score > 0 && (
                         <span
                           className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                          style={{ background: "rgba(5, 28, 44,0.15)", color: "#051C2C" }}
+                          style={{ background: "rgba(5, 28, 44,0.15)", color: "var(--color-text-primary)" }}
                         >
                           {l.match_score}
                         </span>

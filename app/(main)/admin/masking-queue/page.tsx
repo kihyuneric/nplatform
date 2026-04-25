@@ -52,23 +52,23 @@ const FALLBACK_QUEUE: QueueItem[] = []
 
 const CATEGORY_META: Record<DocCategory, { label: string; color: string }> = {
   REGISTRY:  { label: "등기·권리",  color: "#2E75B6" },
-  APPRAISAL: { label: "감정평가서", color: "#051C2C" },
-  LEASE:     { label: "임대차",    color: "#051C2C" },
-  DEBTOR:    { label: "채무자",    color: "#A53F8A" },
-  PHOTO:     { label: "현장사진",  color: "#051C2C" },
+  APPRAISAL: { label: "감정평가서", color: "var(--color-text-primary)" },
+  LEASE:     { label: "임대차",    color: "var(--color-text-primary)" },
+  DEBTOR:    { label: "채무자",    color: "var(--color-danger)" },
+  PHOTO:     { label: "현장사진",  color: "var(--color-text-primary)" },
 }
 
 const STATUS_META: Record<QueueStatus, { label: string; color: string; icon: React.ElementType }> = {
-  PENDING:   { label: "대기",     color: "#051C2C", icon: Clock },
+  PENDING:   { label: "대기",     color: "var(--color-text-primary)", icon: Clock },
   REVIEWING: { label: "검토 중",  color: "#2E75B6", icon: Eye },
-  APPROVED:  { label: "승인",     color: "#051C2C", icon: CheckCircle2 },
-  REJECTED:  { label: "반려",     color: "#A53F8A", icon: XCircle },
+  APPROVED:  { label: "승인",     color: "var(--color-text-primary)", icon: CheckCircle2 },
+  REJECTED:  { label: "반려",     color: "var(--color-danger)", icon: XCircle },
 }
 
 const RISK_META: Record<RiskLevel, { label: string; color: string }> = {
-  HIGH:   { label: "고위험", color: "#A53F8A" },
-  MEDIUM: { label: "중위험", color: "#051C2C" },
-  LOW:    { label: "저위험", color: "#051C2C" },
+  HIGH:   { label: "고위험", color: "var(--color-danger)" },
+  MEDIUM: { label: "중위험", color: "var(--color-text-primary)" },
+  LOW:    { label: "저위험", color: "var(--color-text-primary)" },
 }
 
 const FILTERS = [

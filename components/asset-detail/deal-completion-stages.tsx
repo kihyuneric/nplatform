@@ -667,7 +667,7 @@ function EscrowPaymentPanel({
           <div className="font-semibold mb-1" style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>
             납부 총액
           </div>
-          <div className="font-black tabular-nums" style={{ fontSize: 28, color: "#051C2C" }}>
+          <div className="font-black tabular-nums" style={{ fontSize: 28, color: "var(--color-text-primary)" }}>
             {formatKRW(total)}
           </div>
         </div>
@@ -687,8 +687,8 @@ function EscrowPaymentPanel({
           }}
         >
           <div className="flex items-center gap-2 mb-2">
-            <Wallet size={13} style={{ color: "#051C2C" }} />
-            <div className="font-black" style={{ fontSize: 12, color: "#051C2C" }}>에스크로 계좌 (KB국민은행)</div>
+            <Wallet size={13} style={{ color: "var(--color-text-primary)" }} />
+            <div className="font-black" style={{ fontSize: 12, color: "var(--color-text-primary)" }}>에스크로 계좌 (KB국민은행)</div>
           </div>
           <div className="font-mono tabular-nums" style={{ fontSize: 14, color: "var(--fg-on-brand)" }}>
             301-9999-****-23
@@ -707,7 +707,7 @@ function EscrowPaymentPanel({
             color: "rgba(255,255,255,0.6)",
           }}
         >
-          <ShieldCheck size={12} style={{ color: "#051C2C" }} />
+          <ShieldCheck size={12} style={{ color: "var(--color-text-primary)" }} />
           보증금은 현장 계약 체결 후 잔금(90%) 납부 시 충당됩니다. 계약 불발 시 귀책 여부에 따라 몰취될 수 있습니다.
         </div>
       </div>
@@ -767,7 +767,7 @@ function ContractFinalPanel({
               border: "1px solid rgba(255,255,255,0.12)",
             }}
           >
-            <Clock size={20} style={{ color: "#051C2C", flexShrink: 0 }} />
+            <Clock size={20} style={{ color: "var(--color-text-primary)", flexShrink: 0 }} />
             <div>
               <div className="font-black" style={{ fontSize: 14 }}>
                 현장 계약 진행 대기 중
