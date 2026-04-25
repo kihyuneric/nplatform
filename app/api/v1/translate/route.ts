@@ -26,7 +26,54 @@ const TARGET_LANGS = new Set(["en", "ja"])
 const MAX_TEXTS = 50
 const MAX_TEXT_LENGTH = 5000
 
-// ─── Google Translate 비공식 (1차 시도) ─────────────────────
+// ─── Anthropic Claude 번역 (1차 · 가장 안정적) ──────────────
+async function claudeTranslate(texts: string[], targetLang: string): Promise<string[] | null> {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) return null
+  const langName = targetLang === "en" ? "English" : "Japanese"
+  // 짧은 텍스트는 한 번에 묶어서 (배치) 비용·속도 최적화
+  const numbered = texts.map((t, i) => `[${i + 1}] ${t}`).join("\n")
+  const prompt = `You are a professional Korean→${langName} translator for a financial platform (NPL = Non-Performing Loans).
+Translate each numbered Korean line to natural ${langName}. Keep the same numbering format.
+Use formal financial terminology. Output ONLY the translations, no explanations.
+
+${numbered}`
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-3-5-haiku-20241022",
+        max_tokens: 4000,
+        messages: [{ role: "user", content: prompt }],
+      }),
+    })
+    if (!res.ok) return null
+    const data = (await res.json()) as { content?: Array<{ text?: string }> }
+    const out = data?.content?.[0]?.text ?? ""
+    if (!out) return null
+    // [N] 으로 시작하는 라인만 파싱
+    const lines = out.split(/\r?\n/).filter(l => l.trim().length > 0)
+    const result: string[] = new Array(texts.length).fill("")
+    for (const line of lines) {
+      const m = line.match(/^\[(\d+)\]\s*(.+)$/)
+      if (!m) continue
+      const idx = parseInt(m[1], 10) - 1
+      if (idx >= 0 && idx < texts.length) result[idx] = m[2].trim()
+    }
+    // 빈 칸은 원문으로 채움
+    return result.map((r, i) => r || texts[i])
+  } catch {
+    return null
+  }
+}
+
+// ─── Google Translate 비공식 (3차 시도) ─────────────────────
 async function googleTranslate(text: string, targetLang: string): Promise<string | null> {
   try {
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ko&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`
@@ -139,8 +186,21 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 병렬 번역 (Promise.all)
-    const translations = await Promise.all(texts.map((t) => translateOne(t, targetLang)))
+    // 1차 · Anthropic Claude (배치 번역 — 한 번에 N개)
+    const claudeResults = await claudeTranslate(texts, targetLang)
+    let translations: string[]
+    if (claudeResults && claudeResults.length === texts.length) {
+      // Claude 응답 검증 — 깨지지 않은 라인만 채택, 나머지는 폴백
+      translations = await Promise.all(
+        claudeResults.map(async (r, i) => {
+          if (r && r !== texts[i] && isValidTranslation(r, targetLang)) return r
+          return translateOne(texts[i], targetLang)
+        }),
+      )
+    } else {
+      // Claude 키 없거나 실패 → 폴백 체인 (MyMemory → Google)
+      translations = await Promise.all(texts.map((t) => translateOne(t, targetLang)))
+    }
 
     return NextResponse.json(
       { translations },
