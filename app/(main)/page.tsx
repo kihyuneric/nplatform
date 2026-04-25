@@ -640,10 +640,9 @@ export default function LandingPage() {
               },
             ].map((r, i) => (
               <motion.div key={r.title} variants={up} custom={i}
-                className="rounded-2xl p-7 transition-all duration-300"
-                style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
-                onMouseEnter={e => { (e.currentTarget.style.boxShadow = `0 8px 30px rgba(0,0,0,0.08), 0 0 0 1px ${r.borderHover}22`); (e.currentTarget.style.transform = 'translateY(-4px)'); (e.currentTarget.style.borderColor = `${r.borderHover}44`); }}
-                onMouseLeave={e => { (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'); (e.currentTarget.style.transform = 'translateY(0)'); (e.currentTarget.style.borderColor = '#E2E8F0'); }}
+                className="npl-surface-card rounded-2xl p-7 transition-all duration-300"
+                onMouseEnter={e => { (e.currentTarget.style.transform = 'translateY(-4px)'); }}
+                onMouseLeave={e => { (e.currentTarget.style.transform = 'translateY(0)'); }}
               >
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{ background: r.iconBg }}>{r.icon}</div>
                 <div className="inline-flex items-center text-[10px] font-bold rounded-full px-2.5 py-1 mb-3" style={{ background: r.tagBg, color: r.tagColor, border: `1px solid ${r.tagBorder}` }}>{r.tag}</div>
@@ -721,12 +720,11 @@ export default function LandingPage() {
       <section style={{ backgroundColor: C.light1, padding: '6rem 0' }}>
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={up} className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5"
-              style={{ background: '#F1F5F9', border: '1px solid #E2E8F0' }}>
-              <TrendingUp size={12} style={{ color: '#64748B' }} />
-              <span className="text-xs font-bold" style={{ color: '#64748B', letterSpacing: '0.06em' }}>누구를 위한 플랫폼인가</span>
+            <div className="npl-surface-sunken inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5">
+              <TrendingUp size={12} className="text-[var(--color-text-tertiary)]" />
+              <span className="text-xs font-bold text-[var(--color-text-tertiary)]" style={{ letterSpacing: '0.06em' }}>누구를 위한 플랫폼인가</span>
             </div>
-            <h2 className="font-black tracking-tighter" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#0A1628' }}>
+            <h2 className="font-black tracking-tighter text-[var(--color-text-primary)]" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)' }}>
               매각자와 투자자 모두를 위한
             </h2>
           </motion.div>
@@ -770,28 +768,24 @@ export default function LandingPage() {
 
             {/* Investor – clean light */}
             <motion.div variants={up} custom={1}
-              className="relative rounded-2xl p-8 overflow-hidden transition-shadow"
-              style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.08)')}
-              onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)')}
+              className="npl-surface-card-raised relative rounded-2xl p-8 overflow-hidden transition-shadow"
             >
               <div style={{ position: 'absolute', top: 0, right: 0, width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(59,130,246,0.05), transparent 70%)', borderRadius: '50%' }} />
               <div className="relative">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: '#F1F5F9', border: '1px solid #E2E8F0' }}>
+                <div className="npl-surface-sunken w-12 h-12 rounded-xl flex items-center justify-center mb-5">
                   <TrendingUp size={22} style={{ color: C.blue }} />
                 </div>
-                <div className="inline-flex text-[10px] font-bold rounded-full px-3 py-1 mb-4"
-                  style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', color: '#475569', letterSpacing: '0.05em' }}>
+                <div className="npl-surface-sunken inline-flex text-[10px] font-bold rounded-full px-3 py-1 mb-4 text-[var(--color-text-secondary)]"
+                  style={{ letterSpacing: '0.05em' }}>
                   대부업체 · 투자자
                 </div>
-                <h3 className="font-black text-2xl mb-3" style={{ color: '#0A1628' }}>대부업체 / 투자자</h3>
-                <p className="text-sm leading-relaxed mb-6" style={{ color: '#64748B' }}>
+                <h3 className="font-black text-2xl mb-3 text-[var(--color-text-primary)]">대부업체 / 투자자</h3>
+                <p className="text-sm leading-relaxed mb-6 text-[var(--color-text-tertiary)]">
                   전국 NPL 매물을 AI 분석으로 평가하고 수익률을 시뮬레이션하세요. 검증된 매물만, 직거래로 더 높은 수익을 실현합니다.
                 </p>
                 <ul className="space-y-2.5 mb-7">
                   {["30+ 조건 통합 검색", "AI 리스크 등급 분석", "수익률 시뮬레이션", "실시간 경쟁 입찰", "AI Copilot 상담"].map(item => (
-                    <li key={item} className="flex items-center gap-2.5 text-sm" style={{ color: '#475569' }}>
+                    <li key={item} className="flex items-center gap-2.5 text-sm text-[var(--color-text-secondary)]">
                       <CheckCircle2 size={13} style={{ color: C.blue, flexShrink: 0 }} />{item}
                     </li>
                   ))}
@@ -894,31 +888,25 @@ export default function LandingPage() {
           <motion.div variants={stagger} className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-10">
             {["KB국민은행","신한은행","우리은행","하나은행","농협은행","기업은행","국민저축은행","OK저축은행","SBI저축은행","웰컴저축은행","현대캐피탈","롯데캐피탈","KB캐피탈","신한캐피탈","하나캐피탈"].map((inst, i) => (
               <motion.div key={inst} variants={fadeIn} custom={i}
-                className="rounded-xl py-4 px-2 flex items-center justify-center transition-all"
-                style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}
-                onMouseEnter={e => { (e.currentTarget.style.background = '#F1F5F9'); (e.currentTarget.style.borderColor = '#CBD5E1'); }}
-                onMouseLeave={e => { (e.currentTarget.style.background = '#F8FAFC'); (e.currentTarget.style.borderColor = '#E2E8F0'); }}
+                className="npl-surface-subtle rounded-xl py-4 px-2 flex items-center justify-center transition-all hover:border-[var(--color-border-default)]"
               >
-                <span className="text-xs font-semibold text-center leading-snug" style={{ color: '#475569' }}>{inst}</span>
+                <span className="text-xs font-semibold text-center leading-snug text-[var(--color-text-secondary)]">{inst}</span>
               </motion.div>
             ))}
           </motion.div>
 
           <motion.div variants={stagger} className="flex flex-wrap justify-center gap-3">
             {[
-              { icon: <Shield size={15} style={{ color: '#1B3A5C' }} />, label: "금융감독원 준수" },
-              { icon: <Lock size={15} style={{ color: '#1B3A5C' }} />, label: "AES-256 암호화" },
-              { icon: <Star size={15} style={{ color: '#1B3A5C' }} />, label: "ISO 27001 인증" },
-              { icon: <Globe size={15} style={{ color: '#1B3A5C' }} />, label: "개인정보보호법 준수" },
+              { icon: <Shield size={15} className="text-[var(--color-brand-dark)]" />, label: "금융감독원 준수" },
+              { icon: <Lock size={15} className="text-[var(--color-brand-dark)]" />, label: "AES-256 암호화" },
+              { icon: <Star size={15} className="text-[var(--color-brand-dark)]" />, label: "ISO 27001 인증" },
+              { icon: <Globe size={15} className="text-[var(--color-brand-dark)]" />, label: "개인정보보호법 준수" },
             ].map(b => (
               <motion.div key={b.label} variants={fadeIn}
-                className="flex items-center gap-2.5 rounded-xl px-5 py-2.5 transition-all"
-                style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
-                onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}
-                onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)')}
+                className="npl-surface-card flex items-center gap-2.5 rounded-xl px-5 py-2.5 transition-all"
               >
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#F8FAFC' }}>{b.icon}</div>
-                <span className="text-sm font-semibold" style={{ color: '#374151' }}>{b.label}</span>
+                <div className="npl-surface-subtle w-7 h-7 rounded-lg flex items-center justify-center">{b.icon}</div>
+                <span className="text-sm font-semibold text-[var(--color-text-secondary)]">{b.label}</span>
               </motion.div>
             ))}
           </motion.div>

@@ -1333,6 +1333,55 @@ button[role="switch"][data-state="unchecked"] {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   PHASE H1 · SURFACE PRIMITIVES — 라이트/다크 자동 분기
+   인라인 `style={{ background: '#FFFFFF' }}` 대신 사용.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* npl-surface-card: 기본 카드 (라이트=흰색, 다크=elevated) */
+.npl-surface-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.dark .npl-surface-card {
+  background: #0D1F38;
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* npl-surface-card-raised: shadow 강조 (호버 가능 카드) */
+.npl-surface-card-raised {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.dark .npl-surface-card-raised {
+  background: #0D1F38;
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* npl-surface-sunken: 들어간 느낌 (Section 내 박스) */
+.npl-surface-sunken {
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+}
+.dark .npl-surface-sunken {
+  background: #0A1628;
+  border-color: rgba(255,255,255,0.06);
+}
+
+/* npl-surface-subtle: 매우 연한 배경 (섹션 래퍼) */
+.npl-surface-subtle {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+}
+.dark .npl-surface-subtle {
+  background: #060E1C;
+  border-color: rgba(255,255,255,0.06);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    PHASE H · HOME-SELLER-PREMIUM CARD — 라이트/다크 분기 (메인 페이지)
    ───────────────────────────────────────────────────────────────────────────── */
 .home-seller-premium-card {
