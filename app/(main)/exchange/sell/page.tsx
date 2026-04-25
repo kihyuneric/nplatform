@@ -27,7 +27,7 @@ import { motion } from "framer-motion"
 import {
   Building2, MapPin, Scale, FileText, Camera, Briefcase,
   Check, ChevronRight, ChevronLeft, ShieldCheck, Sparkles,
-  Calculator, Send, AlertCircle, List, Download,
+  Calculator, Send, AlertCircle, List, Download, Gavel,
 } from "lucide-react"
 import { CompletenessBadge } from "@/components/listing/completeness-badge"
 import { calculateSellerFee } from "@/lib/fee-calculator"
@@ -89,6 +89,13 @@ interface WizardExtras {
   public_sale_mgmt_no: string
   public_sale_filed_date: string
   public_sale_estimated_start: string
+  /**
+   * Phase G7+ · 매물 등록 시 자발적 경매로도 동시 등록.
+   * true 인 경우 제출 시 /api/v1/exchange/auction/register 도 호출 (또는 백엔드에서 분기).
+   */
+  voluntaryAuctionEnabled: boolean
+  voluntaryAuctionEndDate: string  // YYYY-MM-DD · 경매 종료일
+  voluntaryAuctionMinBid: number   // 최저 입찰가 (원)
   provided: {
     appraisal: boolean
     registry: boolean
@@ -111,6 +118,9 @@ const initialExtras: WizardExtras = {
   public_sale_mgmt_no: "",
   public_sale_filed_date: "",
   public_sale_estimated_start: "",
+  voluntaryAuctionEnabled: false,
+  voluntaryAuctionEndDate: "",
+  voluntaryAuctionMinBid: 0,
   provided: {
     appraisal: false, registry: false, rights: false,
     lease: false, site_photos: false, financials: false,
@@ -249,6 +259,40 @@ export default function SellWizardPage() {
         setSubmitting(false)
         return
       }
+
+      // Phase G7+ · 자발적 경매 동시 등록 (체크 시 후속 호출)
+      // 매물 등록 성공 후 경매방을 자동 생성. 실패해도 매물은 살아 있음.
+      if (extras.voluntaryAuctionEnabled && extras.voluntaryAuctionEndDate) {
+        try {
+          const minBid = extras.voluntaryAuctionMinBid > 0
+            ? extras.voluntaryAuctionMinBid
+            : Math.round(state.askingPrice * 0.9)
+          const auctionPayload: Record<string, unknown> = {
+            ...body,
+            // 경매 전용 필드 오버라이드
+            bidding_start: new Date().toISOString().slice(0, 10),
+            bidding_end: extras.voluntaryAuctionEndDate,
+            minimum_bid: minBid,
+            asking_price: state.askingPrice,
+            disclosure_level: 'PUBLIC',
+            bidding_method: 'PUBLIC_COMPETITIVE',
+            auction_start_date: new Date().toISOString().slice(0, 10),
+          }
+          const auctionRes = await fetch('/api/v1/exchange/auction/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(auctionPayload),
+          })
+          if (!auctionRes.ok) {
+            // eslint-disable-next-line no-console
+            console.warn('[Sell submit] 자발적 경매 등록 실패 (매물은 등록됨)')
+          }
+        } catch (auctionErr) {
+          // eslint-disable-next-line no-console
+          console.warn('[Sell submit] 자발적 경매 등록 네트워크 오류:', auctionErr)
+        }
+      }
+
       setSubmitted(true)
     } catch (err) {
       // eslint-disable-next-line no-console
@@ -421,6 +465,8 @@ export default function SellWizardPage() {
                 state={state}
                 dispatch={dispatch}
                 discountRate={discountRate}
+                extras={extras}
+                setExtras={setExtras}
               />
             )}
             {step === 4 && (
@@ -449,7 +495,11 @@ export default function SellWizardPage() {
               }}
             >
               <button
-                onClick={() => setStep(s => Math.max(1, s - 1))}
+                onClick={() => {
+                  setStep(s => Math.max(1, s - 1))
+                  // Phase H5 · step 이동 시 새 step 콘텐츠 상단으로 스크롤
+                  window.scrollTo({ top: 0, behavior: "smooth" })
+                }}
                 disabled={step === 1}
                 style={{
                   padding: "10px 18px", borderRadius: 10,
@@ -464,7 +514,12 @@ export default function SellWizardPage() {
               </button>
               {step < 6 ? (
                 <button
-                  onClick={() => canProceed && setStep(s => s + 1)}
+                  onClick={() => {
+                    if (!canProceed) return
+                    setStep(s => s + 1)
+                    // Phase H5 · step 이동 시 새 step 콘텐츠 상단으로 스크롤
+                    window.scrollTo({ top: 0, behavior: "smooth" })
+                  }}
                   disabled={!canProceed}
                   style={{
                     padding: "11px 20px", borderRadius: 10,
@@ -686,11 +741,13 @@ function Step2({
 // STEP 3 — 채권 · 금액 (ClaimSection + 매각희망가/감정가/매각방식 + FeeSection)
 // ═════════════════════════════════════════════════════════════
 function Step3({
-  state, dispatch, discountRate,
+  state, dispatch, discountRate, extras, setExtras,
 }: {
   state: UnifiedFormState
   dispatch: (action: UnifiedFormAction) => void
   discountRate: number
+  extras: WizardExtras
+  setExtras: React.Dispatch<React.SetStateAction<WizardExtras>>
 }) {
   const claimBalance = state.claim.principal + state.claim.unpaidInterest
   return (
@@ -735,6 +792,77 @@ function Step3({
           />
         </Field>
       </div>
+
+      {/* Phase G7+ · 자발적 경매로 동시 등록 (매각방식에 "경매" 체크 시 자동 노출) */}
+      {state.saleMethods.includes("AUCTION") && (
+        <div
+          style={{
+            marginTop: 14, padding: "16px 18px", borderRadius: 12,
+            border: `1px solid ${C.blue}55`,
+            backgroundColor: `${C.blue}0E`,
+          }}
+        >
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={extras.voluntaryAuctionEnabled}
+              onChange={(e) =>
+                setExtras((prev) => ({ ...prev, voluntaryAuctionEnabled: e.target.checked }))
+              }
+              className="mt-0.5 accent-sky-500 w-4 h-4 shrink-0"
+            />
+            <div className="min-w-0 flex-1">
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                <Gavel size={14} style={{ color: C.blueL }} />
+                <strong style={{ fontSize: 13, color: "var(--color-text-primary)" }}>
+                  자발적 경매로 동시 등록
+                </strong>
+                {extras.voluntaryAuctionEnabled && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4,
+                    backgroundColor: `${C.blue}22`, color: C.blueL,
+                  }}>
+                    ON · 경매방 자동 생성
+                  </span>
+                )}
+              </div>
+              <p style={{ fontSize: 11, color: C.lt4, lineHeight: 1.5 }}>
+                매물 등록 직후 자발적 경매방을 자동 생성합니다. 종료일까지 입찰 진행 후 최고가 매수자와 자동 매칭.
+              </p>
+            </div>
+          </label>
+
+          {extras.voluntaryAuctionEnabled && (
+            <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <Field label="경매 종료일" required hint="이 일시에 입찰 마감 · 자동 정산">
+                <input
+                  type="date"
+                  value={extras.voluntaryAuctionEndDate}
+                  min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)}
+                  onChange={(e) =>
+                    setExtras((prev) => ({ ...prev, voluntaryAuctionEndDate: e.target.value }))
+                  }
+                  style={{
+                    width: "100%", padding: "10px 12px", borderRadius: 8,
+                    backgroundColor: C.bg3, color: "var(--color-text-primary)",
+                    border: `1px solid ${C.bg4}`, fontSize: 13,
+                  }}
+                />
+              </Field>
+              <Field label="최저 입찰가 (원)" hint="미입력 시 매각희망가 90% 자동 적용">
+                <NumberInput
+                  value={extras.voluntaryAuctionMinBid}
+                  onChange={(v) =>
+                    setExtras((prev) => ({ ...prev, voluntaryAuctionMinBid: v }))
+                  }
+                  placeholder={`예: ${Math.round(state.askingPrice * 0.9).toLocaleString()}`}
+                  suffix="원"
+                />
+              </Field>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 자동 계산 할인율 요약 (참조용) */}
       {claimBalance > 0 && state.askingPrice > 0 && (

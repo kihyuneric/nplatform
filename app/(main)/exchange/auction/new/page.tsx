@@ -938,9 +938,9 @@ export default function BiddingNewPage() {
               <Gavel className="h-8 w-8" />
             </div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold">NPL 입찰 등록</h1>
+              <h1 className="text-3xl md:text-4xl font-bold">자발적 경매 등록</h1>
               <p className="text-base text-white/80 mt-1">
-                자발적 경매 NPL 매각 입찰을 등록하세요
+                NPL 자산을 자발적 경매로 매각합니다 · 입찰 시작일 · 종료일 · 최저 입찰가 설정
               </p>
             </div>
           </div>
