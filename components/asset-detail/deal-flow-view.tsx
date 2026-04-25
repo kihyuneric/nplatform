@@ -88,6 +88,14 @@ export interface DealFlowViewProps {
   idProp?: string
   /** /deals 페이지 등에서 inline 임베드 시 — 상단 utility bar 숨김 */
   embedded?: boolean
+  /**
+   * 좌측 컬럼 전용 패널 모드 — 외부 grid 의 좌측 자리에 들어갈 때 사용.
+   * - 모든 max-w-[1280px] 컨테이너 제거 → 부모 grid 폭에 맞춤
+   * - 좌우 padding 축소 (px-6 → px-0/px-1)
+   * - 상단 utility bar 자동 숨김 (embedded 와 동일)
+   * - 100vh minHeight 제거
+   */
+  panelMode?: boolean
   /** 외부 컴포넌트가 보유한 deal 메타 override */
   dealOverride?: {
     listing_name?: string
@@ -98,7 +106,14 @@ export interface DealFlowViewProps {
   }
 }
 
-export function DealFlowView({ idProp, embedded = false, dealOverride }: DealFlowViewProps = {}) {
+export function DealFlowView({
+  idProp,
+  embedded = false,
+  panelMode = false,
+  dealOverride,
+}: DealFlowViewProps = {}) {
+  // panelMode 는 embedded 의 superset (utility bar 등 chrome 숨김 포함)
+  const inEmbed = embedded || panelMode
   const params = useParams()
   const router = useRouter()
   const dealId = idProp || (params?.id as string) || MOCK_DEAL.id
@@ -119,9 +134,9 @@ export function DealFlowView({ idProp, embedded = false, dealOverride }: DealFlo
   const [favorited, setFavorited] = useState(false)
 
   return (
-    <div style={{ background: MCK.paperTint, minHeight: embedded ? "auto" : "100vh" }}>
-      {/* ═══ Top utility bar (embedded 모드에선 숨김) ═══════════════════ */}
-      {!embedded && (
+    <div style={{ background: panelMode ? "transparent" : MCK.paperTint, minHeight: inEmbed ? "auto" : "100vh" }}>
+      {/* ═══ Top utility bar (embedded/panel 모드에선 숨김) ════════════ */}
+      {!inEmbed && (
       <div
         style={{
           background: MCK.paper,
@@ -180,13 +195,14 @@ export function DealFlowView({ idProp, embedded = false, dealOverride }: DealFlo
       )}
 
       {/* ═══ 1. DEAL HEADER ════════════════════════════════════════════════ */}
-      <DealHeader deal={deal} />
+      <DealHeader deal={deal} panelMode={panelMode} />
 
       {/* ═══ 2. DEAL SCREENING ═════════════════════════════════════════════ */}
       <DealSection
         eyebrow="Section 01 · Free preview"
         title="Deal Screening"
         subtitle="이 딜이 검토할 가치가 있는지 3분 안에 판단"
+        panelMode={panelMode}
       >
         <DealScreening />
         <DealCTA
@@ -201,6 +217,7 @@ export function DealFlowView({ idProp, embedded = false, dealOverride }: DealFlo
         icon={Lock}
         title="NDA 체결 시 열람 가능"
         subtitle="기관 검증 데이터 · 감정평가서 · 실거래 · 채권 정보"
+        panelMode={panelMode}
       />
 
       {/* ═══ 3. DEAL VALIDATION ════════════════════════════════════════════ */}
@@ -209,6 +226,7 @@ export function DealFlowView({ idProp, embedded = false, dealOverride }: DealFlo
         title="Deal Validation"
         subtitle="검증 데이터 — 의사결정의 핵심 근거"
         locked={!deal.hasNDA}
+        panelMode={panelMode}
       >
         <DealValidation locked={!deal.hasNDA} />
         {!deal.hasNDA && (
@@ -226,6 +244,7 @@ export function DealFlowView({ idProp, embedded = false, dealOverride }: DealFlo
         icon={Lock}
         title="LOI 제출 시 참여 가능"
         subtitle="채팅 · 오프라인 미팅 · 실사 · 가격 협상"
+        panelMode={panelMode}
       />
 
       {/* ═══ 4. DEAL ENGAGEMENT ════════════════════════════════════════════ */}
@@ -234,6 +253,7 @@ export function DealFlowView({ idProp, embedded = false, dealOverride }: DealFlo
         title="Deal Engagement"
         subtitle="딜 참여 — 매도자와 직접 협상"
         locked={!deal.hasLOI}
+        panelMode={panelMode}
       >
         <DealEngagement locked={!deal.hasLOI} />
         {!deal.hasLOI && (
@@ -251,6 +271,7 @@ export function DealFlowView({ idProp, embedded = false, dealOverride }: DealFlo
         icon={Lock}
         title="ESCROW 결제 후 실행"
         subtitle="안전결제 · 계약서 자동생성 · 현장 클로징"
+        panelMode={panelMode}
       />
 
       {/* ═══ 5. DEAL EXECUTION ═════════════════════════════════════════════ */}
@@ -259,6 +280,7 @@ export function DealFlowView({ idProp, embedded = false, dealOverride }: DealFlo
         title="Deal Execution"
         subtitle="거래 실행 — 30분 내 클로징"
         locked={!deal.hasEscrow}
+        panelMode={panelMode}
       >
         <DealExecution locked={!deal.hasEscrow} />
         {!deal.hasEscrow && (
@@ -271,7 +293,7 @@ export function DealFlowView({ idProp, embedded = false, dealOverride }: DealFlo
         )}
       </DealSection>
 
-      <div style={{ height: 80 }} />
+      <div style={{ height: panelMode ? 24 : 80 }} />
     </div>
   )
 }
@@ -279,7 +301,7 @@ export function DealFlowView({ idProp, embedded = false, dealOverride }: DealFlo
 /* ═══════════════════════════════════════════════════════════════════════════
    Deal Header — 신뢰 + 핵심정보 3초 판단
    ═══════════════════════════════════════════════════════════════════════════ */
-function DealHeader({ deal }: { deal: typeof MOCK_DEAL }) {
+function DealHeader({ deal, panelMode = false }: { deal: typeof MOCK_DEAL; panelMode?: boolean }) {
   const stages: { key: DealStage; label: string; korean: string }[] = [
     { key: "Screening",  label: "Screening",  korean: "탐색" },
     { key: "Validation", label: "Validation", korean: "검증" },
@@ -293,10 +315,13 @@ function DealHeader({ deal }: { deal: typeof MOCK_DEAL }) {
       style={{
         background: MCK.paper,
         borderBottom: `2px solid ${MCK.brass}`,
-        boxShadow: "0 1px 3px rgba(10,22,40,0.04)",
+        boxShadow: panelMode ? "none" : "0 1px 3px rgba(10,22,40,0.04)",
+        borderTop: panelMode ? `1px solid ${MCK.border}` : undefined,
+        borderLeft: panelMode ? `1px solid ${MCK.border}` : undefined,
+        borderRight: panelMode ? `1px solid ${MCK.border}` : undefined,
       }}
     >
-      <div className="max-w-[1280px] mx-auto px-6 py-8">
+      <div className={panelMode ? "px-5 py-6" : "max-w-[1280px] mx-auto px-6 py-8"}>
         {/* meta row */}
         <div className="flex items-center gap-2 mb-3" style={{ flexWrap: "wrap" }}>
           {[deal.institution, deal.region, deal.saleType, deal.id].map((m, i) => (
@@ -496,16 +521,17 @@ function KPI({ label, value, accent }: { label: string; value: string; accent?: 
    Section wrapper — eyebrow + title + content + (locked overlay)
    ═══════════════════════════════════════════════════════════════════════════ */
 function DealSection({
-  eyebrow, title, subtitle, locked = false, children,
+  eyebrow, title, subtitle, locked = false, children, panelMode = false,
 }: {
   eyebrow: string
   title: string
   subtitle: string
   locked?: boolean
   children: React.ReactNode
+  panelMode?: boolean
 }) {
   return (
-    <section className="max-w-[1280px] mx-auto px-6 py-12">
+    <section className={panelMode ? "px-5 py-8" : "max-w-[1280px] mx-auto px-6 py-12"}>
       <header className="mb-8">
         <div className="flex items-center gap-2 mb-2">
           <span
@@ -957,14 +983,15 @@ function DataTileLocked({
    Deal Gate — 카드가 아니라 가로 라인 게이트
    ═══════════════════════════════════════════════════════════════════════════ */
 function DealGate({
-  icon: Icon, title, subtitle,
+  icon: Icon, title, subtitle, panelMode = false,
 }: {
   icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>
   title: string
   subtitle: string
+  panelMode?: boolean
 }) {
   return (
-    <div className="max-w-[1280px] mx-auto px-6">
+    <div className={panelMode ? "px-5" : "max-w-[1280px] mx-auto px-6"}>
       <div
         style={{
           display: "flex",

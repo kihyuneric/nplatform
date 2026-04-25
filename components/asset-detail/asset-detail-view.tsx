@@ -39,6 +39,8 @@ import {
   TierNav,
   type InlineDealRoomCounterpart,
 } from "@/components/asset-detail"
+// DR-19: 딜룸 좌측 메인 funnel 컴포넌트
+import { DealFlowView } from "@/components/asset-detail/deal-flow-view"
 import { useAssetTier } from "@/hooks/use-asset-tier"
 import type { AssetTier } from "@/hooks/use-asset-tier"
 
@@ -423,6 +425,12 @@ export interface AssetDetailViewProps {
    *  · 모바일 sticky CTA 숨김 (중복 방지)
    */
   embedded?: boolean
+  /**
+   * 딜룸 (/deals) 전용 — 좌측 메인 컨텐츠를 Deal Flow funnel 로 교체.
+   * 우측 sticky 사이드바(PrimaryActionCard, 분석도구, AssetSidebar) 는 유지.
+   * 상단 hero(자산 사진/제목) 와 하단 footer 는 숨김.
+   */
+  dealFlowMode?: boolean
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -432,6 +440,7 @@ export function AssetDetailView({
   idProp,
   dealOverride,
   embedded = false,
+  dealFlowMode = false,
 }: AssetDetailViewProps = {}) {
   const params = useParams()
   const id = idProp ?? (params?.id as string) ?? "npl-2026-0412"
@@ -655,6 +664,7 @@ export function AssetDetailView({
         minHeight: embedded ? undefined : "100vh",
       }}
     >
+      {!dealFlowMode && (
       <AssetHeroSummary
         title={title}
         oneLiner={oneLiner}
@@ -664,7 +674,9 @@ export function AssetDetailView({
         onToggleWatchlist={handleWatchlist}
         backHref={embedded ? "/deals" : "/exchange"}
       />
+      )}
 
+      {!dealFlowMode && (
       <section
         className="max-w-[1280px] mx-auto flex items-center justify-between flex-wrap gap-3"
         style={{ padding: "14px 24px" }}
@@ -731,8 +743,9 @@ export function AssetDetailView({
           })}
         </div>
       </section>
+      )}
 
-      <TierNav tier={effectiveTier} />
+      {!dealFlowMode && <TierNav tier={effectiveTier} />}
 
       {effectiveTier === "L5" && (
         <section className="max-w-[1280px] mx-auto" style={{ padding: "0 24px 12px" }}>
@@ -780,6 +793,25 @@ export function AssetDetailView({
       >
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6 lg:gap-8">
           <div className="space-y-5 min-w-0">
+            {dealFlowMode ? (
+              /*
+                DR-19 · 2026-04-25
+                딜룸 (/deals) 진입 시 좌측 메인 컨텐츠를 Deal Flow funnel 로 교체.
+                우측 sticky 사이드바(아래 'space-y-4' 블록) 는 그대로 유지.
+              */
+              <DealFlowView
+                idProp={id}
+                panelMode
+                dealOverride={dealOverride ? {
+                  listing_name: dealOverride.listing_name,
+                  counterparty: dealOverride.counterparty,
+                  amount: dealOverride.amount,
+                  asset_type: dealOverride.asset_type,
+                  location: dealOverride.location,
+                } : undefined}
+              />
+            ) : (
+            <>
             <KpiRow
               items={[
                 {
@@ -1752,6 +1784,8 @@ export function AssetDetailView({
                 </div>
               </TierGate>
             </SectionCard>
+            </>
+            )}
           </div>
 
           <div className="space-y-4 min-w-0">

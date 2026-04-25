@@ -26,7 +26,7 @@ import {
 import Link from "next/link"
 import { SampleBadge } from "@/components/shared/sample-badge"
 import { type DealStage } from "@/lib/deal-constants"
-import { DealFlowView } from "@/components/asset-detail/deal-flow-view"
+import { AssetDetailView } from "@/components/asset-detail/asset-detail-view"
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -483,9 +483,16 @@ export default function DealsPage() {
                   시각적 구분은 상단 제목 행의 얇은 구분선으로 대체.
                 */}
                 <div key={selectedDeal.id}>
-                  <DealFlowView
+                  {/*
+                    DR-19 · 2026-04-25
+                    기존 딜룸 레이아웃(좌측 메인 + 우측 sticky 사이드바) 유지.
+                    `dealFlowMode` prop 으로 좌측 메인 영역만 Deal Flow funnel 로 교체.
+                    우측 사이드바(PrimaryActionCard, 분석도구, AssetSidebar)는 그대로.
+                  */}
+                  <AssetDetailView
                     idProp={selectedDeal.id}
                     embedded
+                    dealFlowMode
                     dealOverride={{
                       listing_name: selectedDeal.listing_name,
                       counterparty: selectedDeal.counterparty,
