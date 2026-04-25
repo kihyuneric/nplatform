@@ -18,9 +18,7 @@ import { Progress } from "@/components/ui/progress"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog"
+import { NplModal, NplModalFooter } from "@/components/design-system"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -854,20 +852,20 @@ export default function BiddingPage() {
         )}
       </div>
 
-      {/* ──── Bid Submission Dialog ──── */}
-      <Dialog open={bidModalOpen} onOpenChange={setBidModalOpen}>
-        <DialogContent className="sm:max-w-[520px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Gavel className="h-5 w-5 text-[#2E75B6]" />
-              입찰 참여
-            </DialogTitle>
-            <DialogDescription>
-              입찰 정보를 확인하고 입찰 금액을 입력해주세요.
-            </DialogDescription>
-          </DialogHeader>
-
-          {bidTarget && (
+      {/* Phase H5+ · NplModal 마이그레이션 — 모바일 BottomSheet 자동 + scroll-to-top */}
+      <NplModal
+        open={bidModalOpen}
+        onOpenChange={setBidModalOpen}
+        title={
+          <span className="flex items-center gap-2">
+            <Gavel className="h-5 w-5 text-[var(--color-brand-mid)]" />
+            입찰 참여
+          </span>
+        }
+        description="입찰 정보를 확인하고 입찰 금액을 입력해주세요."
+        size="md"
+      >
+        {bidTarget && (
             <div className="space-y-4">
               {/* Listing summary */}
               <div className="rounded-lg border bg-[var(--color-surface-overlay)] p-4 space-y-3 border-[var(--color-border-subtle)]">
@@ -947,30 +945,29 @@ export default function BiddingPage() {
             </div>
           )}
 
-          <DialogFooter className="gap-2 sm:gap-0">
-            <button className="px-3 py-1.5 rounded-lg text-sm border border-white/10 hover:bg-white/5 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed" onClick={() => setBidModalOpen(false)} disabled={bidSubmitting}>
-              취소
-            </button>
-            <button
-              className="bg-[#2E75B6] hover:bg-[#1B3A5C] text-white px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={handleSubmitBid}
-              disabled={!bidAmount || Number(bidAmount) <= 0 || bidSubmitting}
-            >
-              {bidSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  처리중...
-                </>
-              ) : (
-                <>
-                  <Gavel className="h-4 w-4 mr-1" />
-                  입찰 확인
-                </>
-              )}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <NplModalFooter>
+          <button className="px-4 py-2 rounded-lg text-sm border border-[var(--color-border-default)] hover:bg-[var(--color-surface-overlay)] transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--color-text-secondary)]" onClick={() => setBidModalOpen(false)} disabled={bidSubmitting}>
+            취소
+          </button>
+          <button
+            className="bg-[var(--color-brand-mid)] hover:bg-[var(--color-brand-dark)] text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleSubmitBid}
+            disabled={!bidAmount || Number(bidAmount) <= 0 || bidSubmitting}
+          >
+            {bidSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                처리중...
+              </>
+            ) : (
+              <>
+                <Gavel className="h-4 w-4 mr-1" />
+                입찰 확인
+              </>
+            )}
+          </button>
+        </NplModalFooter>
+      </NplModal>
     </div>
   )
 }

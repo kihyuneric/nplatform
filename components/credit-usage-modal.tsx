@@ -1,14 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog"
+import { NplModal, NplModalFooter } from "@/components/design-system"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -67,19 +60,19 @@ export function CreditUsageModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-[var(--color-text-primary)]">
-            <Zap className="h-5 w-5 text-emerald-500" />
-            AI 크레딧 사용
-          </DialogTitle>
-          <DialogDescription>
-            이 기능을 사용하면 크레딧이 차감됩니다.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-2">
+    <NplModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={
+        <span className="flex items-center gap-2">
+          <Zap className="h-5 w-5 text-emerald-500" />
+          AI 크레딧 사용
+        </span>
+      }
+      description="이 기능을 사용하면 크레딧이 차감됩니다."
+      size="sm"
+    >
+      <div className="space-y-4">
           {/* Credit cost info */}
           <div className="rounded-lg border border-[var(--color-border-subtle)] p-4 space-y-3">
             <div className="flex items-center justify-between">
@@ -181,35 +174,34 @@ export function CreditUsageModal({
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+      <NplModalFooter>
+        <Button
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+          disabled={confirming}
+        >
+          취소
+        </Button>
+        {hasEnough && (
           <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={handleConfirm}
             disabled={confirming}
+            className="bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-deep)] text-white"
           >
-            취소
+            {confirming ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                처리 중...
+              </>
+            ) : (
+              <>
+                <Zap className="h-4 w-4 mr-2" />
+                {cost.cost} 크레딧 사용
+              </>
+            )}
           </Button>
-          {hasEnough && (
-            <Button
-              onClick={handleConfirm}
-              disabled={confirming}
-              className="bg-[#1B3A5C] hover:bg-[#1B3A5C]/90 text-white"
-            >
-              {confirming ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  처리 중...
-                </>
-              ) : (
-                <>
-                  <Zap className="h-4 w-4 mr-2" />
-                  {cost.cost} 크레딧 사용
-                </>
-              )}
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        )}
+      </NplModalFooter>
+    </NplModal>
   )
 }

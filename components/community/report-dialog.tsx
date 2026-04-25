@@ -1,14 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { NplModal, NplModalFooter } from "@/components/design-system"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Loader2, Flag } from "lucide-react"
@@ -28,6 +21,12 @@ interface ReportDialogProps {
   targetType: "post" | "comment"
 }
 
+/**
+ * Phase H5+ · NplModal 마이그레이션 (구 Dialog → NplModal).
+ *   · 데스크 ≥768 = 중앙 모달 · 모바일 <768 = BottomSheet 자동 전환
+ *   · open 변경 시 콘텐츠 scroll-to-top 자동
+ *   · ESC/오버레이 클릭 닫기
+ */
 export function ReportDialog({ open, onOpenChange, targetId, targetType }: ReportDialogProps) {
   const [reason, setReason] = useState("")
   const [details, setDetails] = useState("")
@@ -79,75 +78,74 @@ export function ReportDialog({ open, onOpenChange, targetId, targetType }: Repor
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Flag className="h-5 w-5 text-red-500" />
-            신고하기
-          </DialogTitle>
-          <DialogDescription>
-            {targetType === "post" ? "게시글" : "댓글"}을 신고합니다. 신고 사유를 선택해주세요.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          {/* Reason selection */}
-          <div className="space-y-2">
-            {REPORT_REASONS.map((r) => (
-              <button
-                key={r.value}
-                onClick={() => setReason(r.value)}
-                className={`w-full text-left rounded-lg border px-4 py-3 text-sm transition-colors ${
-                  reason === r.value
-                    ? "border-red-500/50 bg-red-500/10 text-red-400"
-                    : "border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]"
-                }`}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Details textarea for "OTHER" */}
-          {reason === "OTHER" && (
-            <div>
-              <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1.5 block">
-                상세 사유
-              </label>
-              <textarea
-                value={details}
-                onChange={(e) => setDetails(e.target.value)}
-                placeholder="신고 사유를 자세히 입력해주세요..."
-                rows={3}
-                maxLength={500}
-                className="w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300/50 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
-              />
-              <p className="text-xs text-muted-foreground mt-1 text-right">
-                {details.length}/500
-              </p>
-            </div>
-          )}
+    <NplModal
+      open={open}
+      onOpenChange={(o) => { if (!o) handleClose() }}
+      title={
+        <span className="flex items-center gap-2">
+          <Flag className="h-5 w-5 text-red-500" />
+          신고하기
+        </span>
+      }
+      description={`${targetType === "post" ? "게시글" : "댓글"}을 신고합니다. 신고 사유를 선택해주세요.`}
+      size="sm"
+    >
+      <div className="space-y-4">
+        {/* Reason selection */}
+        <div className="space-y-2">
+          {REPORT_REASONS.map((r) => (
+            <button
+              key={r.value}
+              onClick={() => setReason(r.value)}
+              className={`w-full text-left rounded-lg border px-4 py-3 text-sm transition-colors ${
+                reason === r.value
+                  ? "border-red-500/50 bg-red-500/10 text-red-600 dark:text-red-300 font-semibold"
+                  : "border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]"
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
-            취소
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting || !reason}
-            className="bg-red-600 hover:bg-red-700 text-white"
-          >
-            {isSubmitting ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Flag className="w-4 h-4 mr-2" />
-            )}
-            {isSubmitting ? "접수 중..." : "신고하기"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        {/* Details textarea for "OTHER" */}
+        {reason === "OTHER" && (
+          <div>
+            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1.5 block">
+              상세 사유
+            </label>
+            <textarea
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+              placeholder="신고 사유를 자세히 입력해주세요..."
+              rows={3}
+              maxLength={500}
+              className="npl-input npl-input-textarea !min-h-[88px]"
+            />
+            <p className="text-xs text-[var(--color-text-tertiary)] mt-1 text-right">
+              {details.length}/500
+            </p>
+          </div>
+        )}
+      </div>
+
+      <NplModalFooter>
+        <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+          취소
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={isSubmitting || !reason}
+          className="bg-red-600 hover:bg-red-700 text-white"
+        >
+          {isSubmitting ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Flag className="w-4 h-4 mr-2" />
+          )}
+          {isSubmitting ? "접수 중..." : "신고하기"}
+        </Button>
+      </NplModalFooter>
+    </NplModal>
   )
 }

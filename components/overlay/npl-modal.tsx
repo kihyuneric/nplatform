@@ -37,8 +37,9 @@ import { cn } from "@/lib/utils"
 export interface NplModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  title?: string
-  description?: string
+  /** 제목 — 문자열 또는 ReactNode (아이콘 + 텍스트 등) */
+  title?: React.ReactNode
+  description?: React.ReactNode
   /** 모달 본문 ref — 외부에서 scrollTo 가능 (위자드 step 이동 등) */
   contentRef?: React.Ref<HTMLDivElement>
   /** 닫기 버튼 숨김 (강제 진행 모달용) */
