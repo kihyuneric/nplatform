@@ -1333,6 +1333,63 @@ button[role="switch"][data-state="unchecked"] {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   PHASE H6 · DARK SURFACE HIERARCHY (6단계) — 깊이감 표현
+   다크모드 카드는 box-shadow 대신 border + inset highlight 로 깊이 표현.
+   대비(Contrast) WCAG AA 보장:
+     · Text Primary (#F1F5F9) on Surface (#0A1628) → 16.5:1
+     · Text Secondary (#CBD5E1) on Surface          → 11.2:1
+     · Text Tertiary (#94A3B8) on Elevated          → 5.8:1
+   ───────────────────────────────────────────────────────────────────────────── */
+.dark {
+  /* Surface 6단계 (깊은 → 얕은) — 인용 시 var(--surface-N) */
+  /* 이미 정의된 surface-0~5 와 정합 */
+  --shadow-card:        0 1px 2px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.04);
+  --shadow-card-hover:  0 4px 16px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
+  --shadow-modal:       0 16px 48px rgba(0,0,0,0.70), inset 0 1px 0 rgba(255,255,255,0.06);
+  --shadow-popover:     0 8px 32px rgba(0,0,0,0.60), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+:root {
+  /* 라이트모드 shadow */
+  --shadow-card:        0 1px 3px rgba(13,31,56,0.05);
+  --shadow-card-hover:  0 8px 24px rgba(13,31,56,0.10);
+  --shadow-modal:       0 24px 60px rgba(13,31,56,0.18);
+  --shadow-popover:     0 8px 24px rgba(13,31,56,0.12);
+}
+
+/* 다크모드에서 .npl-surface-card 의 inset highlight 강화 */
+.dark .npl-surface-card,
+.dark .npl-surface-card-raised {
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   PHASE H7 · MOTION PRESETS — 표준 transition 토큰
+   ───────────────────────────────────────────────────────────────────────────── */
+:root {
+  --motion-fast:    150ms cubic-bezier(0, 0, 0.2, 1);
+  --motion-base:    220ms cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-slow:    350ms cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* H7 · Skeleton — 로딩 상태 통일 */
+.npl-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-overlay) 0%,
+    var(--color-surface-elevated) 50%,
+    var(--color-surface-overlay) 100%
+  );
+  background-size: 200% 100%;
+  animation: npl-skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+@keyframes npl-skeleton-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    PHASE H3 · INPUT PRIMITIVE — 표준 입력 필드 (height 44px · NPLatform 토큰)
    페이지 어디서나 동일한 입력 UX 보장.
    사용:

@@ -312,17 +312,23 @@ const breakpoints = {
 | 단계 | 상태 | 산출물 / 파일 |
 |---|---|---|
 | **H1 · Token Foundation** | 🟡 부분 완료 | `globals.css` Surface Primitives (`.npl-surface-*`) · 메인 페이지 일부 교체 |
-| **H2 · Typography** | 🟢 컴포넌트 완료 | `components/typography/type.tsx` · `<Type variant=display\|h1\|...>` |
-| **H3 · Level 1 Primitives** | 🟢 Input 완료 | `globals.css .npl-input` · `<NplInput>` · `<NplTextarea>` · `<NplSelect>` · 기존 shadcn `<Button>` 호환 유지 |
-| **H4 · Form System** | 🟢 컴포넌트 완료 | `components/form/form-field.tsx` · `<FormField label hint error>` |
-| **H5 · Modal & BottomSheet** | 🟡 부분 완료 | sell page step 이동 scroll-to-top 적용 · 모달 BottomSheet 미시작 |
-| **H6 · Dark Pass 2** | ⏳ 대기 | Surface Hierarchy 6단계 전수 적용 |
-| **H7 · Motion & Polish** | ⏳ 대기 | |
+| **H2 · Typography** | 🟢 완료 | `components/typography/type.tsx` · `<Type variant=display\|h1\|...>` |
+| **H3 · Level 1 Primitives** | 🟢 Input 완료 | `globals.css .npl-input` · `<NplInput>` · `<NplTextarea>` · `<NplSelect>` |
+| **H4 · Form System** | 🟢 완료 | `components/form/form-field.tsx` · `<FormField label hint error>` |
+| **H5 · Modal & BottomSheet** | 🟢 완료 | `components/overlay/npl-modal.tsx` · `<NplModal>` (≥768=중앙 ↔ <768=BottomSheet) · `useScrollToTop` 훅 |
+| **H6 · Dark Pass 2** | 🟢 완료 | `globals.css` shadow 토큰 (--shadow-{card,modal,popover}) · 다크 inset highlight · Surface 6단계 정합 |
+| **H7 · Motion & Polish** | 🟢 완료 | `components/motion/presets.ts` 표준 variants · `components/feedback/skeleton.tsx` · `.npl-skeleton` 글로벌 클래스 |
+
+**통합 진입점**: `components/design-system/index.ts` 한 줄 import 가능
+```ts
+import { Type, FormField, NplModal, Skeleton, fadeIn, useScrollToTop } from "@/components/design-system"
+```
 
 **다음 작업 큐**:
 - 시범 페이지에 FormField · Type · npl-input 점진 적용 (signup·login·my/profile 등)
 - 하드코딩 색상 추가 전수 조사·교체 (`grep 'bg-\\[#'`)
-- Modal 표준 wrapper (`<NplModal>`) 신규 · 모바일 ≤768px BottomSheet 자동 전환
+- 기존 모달들을 NplModal 로 점진 마이그레이션
+- 페이지별 Skeleton 로딩 상태 적용
 
 ---
 
