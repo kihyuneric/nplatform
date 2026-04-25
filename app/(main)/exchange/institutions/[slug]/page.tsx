@@ -129,7 +129,7 @@ export default function InstitutionProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#060E1A]">
+      <div className="min-h-screen bg-[var(--color-brand-deepest)]">
         <div className="h-64 bg-[var(--color-brand-deep)] animate-pulse" />
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4 -mt-8">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -145,13 +145,13 @@ export default function InstitutionProfilePage() {
   const initials = institution.name.slice(0, 2)
 
   return (
-    <div className="min-h-screen bg-[#060E1A]">
+    <div className="min-h-screen bg-[var(--color-brand-deepest)]">
       {/* Hero Banner */}
-      <div className="bg-[var(--color-brand-deep)] border-b border-[#1E3A5F]/60">
+      <div className="bg-[var(--color-brand-deep)] border-b border-[var(--color-brand-dark)]/40/60">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-0">
           <Link
             href="/exchange/institutions"
-            className="inline-flex items-center gap-1.5 text-xs text-[#4A7FA5] hover:text-[#94B4CC] transition-colors mb-6"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-300 transition-colors mb-6"
           >
             <ChevronLeft className="w-3.5 h-3.5" /> 참여 기관 목록
           </Link>
@@ -159,10 +159,10 @@ export default function InstitutionProfilePage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6 pb-8">
             {/* Logo Badge */}
             <div className="relative flex-shrink-0">
-              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#1E4A7A] to-[#0D2D50] border-2 border-[#2E75B6]/40 flex items-center justify-center shadow-xl shadow-black/30">
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[var(--color-brand-dark)] to-[var(--color-brand-deep)] border-2 border-[var(--color-brand-mid)]/40 flex items-center justify-center shadow-xl shadow-black/30">
                 <span className="text-3xl font-black text-white">{initials}</span>
               </div>
-              <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-sm font-black border-2 border-[#060E1A] ${
+              <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-sm font-black border-2 border-[var(--color-brand-deepest)] ${
                 institution.trust_grade === 'S' ? 'bg-amber-500' :
                 institution.trust_grade === 'A' ? 'bg-emerald-500' :
                 institution.trust_grade === 'B' ? 'bg-blue-500' : 'bg-gray-500'
@@ -178,7 +178,7 @@ export default function InstitutionProfilePage() {
                   <Shield className="w-3 h-3 mr-1" />
                   신뢰등급 {institution.trust_grade}
                 </span>
-                <span className="text-xs px-2.5 py-0.5 inline-flex items-center bg-[#1E3A5F]/60 text-[#94B4CC] border border-[#2E5A8E]/40">
+                <span className="text-xs px-2.5 py-0.5 inline-flex items-center bg-[var(--color-brand-dark)]/60 text-slate-300 border border-[var(--color-brand-mid)]/40">
                   {institution.type === "INSTITUTION" ? "금융기관" : "자산관리사"}
                 </span>
                 <span className="text-xs px-2.5 py-0.5 inline-flex items-center bg-[var(--color-positive)]/10 text-[var(--color-positive)] border border-[var(--color-positive)]/20">
@@ -186,7 +186,7 @@ export default function InstitutionProfilePage() {
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{institution.name}</h1>
-              <p className="text-sm text-[#4A7FA5] mt-1.5 max-w-lg">{institution.description}</p>
+              <p className="text-sm text-slate-400 mt-1.5 max-w-lg">{institution.description}</p>
             </div>
 
             {/* CTA */}
@@ -196,7 +196,7 @@ export default function InstitutionProfilePage() {
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
                   isFavorite
                     ? "bg-red-500/20 border-red-500/40 text-red-300"
-                    : "bg-white/5 border-[#1E3A5F] text-[#94B4CC] hover:bg-white/10"
+                    : "bg-white/5 border-[var(--color-brand-dark)]/40 text-slate-300 hover:bg-white/10"
                 }`}
               >
                 <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
@@ -208,7 +208,7 @@ export default function InstitutionProfilePage() {
 
         {/* Stats Strip */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-[#1E3A5F]/60">
+          <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-[var(--color-brand-dark)]/40/60">
             {[
               { icon: BarChart3, label: "총 등록채권", value: `${institution.listing_count}건`, sub: "누적 등록" },
               { icon: TrendingUp, label: "거래 완료", value: `${institution.total_deals}건`, sub: "총 거래" },
@@ -217,14 +217,14 @@ export default function InstitutionProfilePage() {
             ].map((stat, i) => (
               <div
                 key={stat.label}
-                className={`px-4 sm:px-6 py-4 ${i < 3 ? 'border-r border-[#1E3A5F]/60' : ''}`}
+                className={`px-4 sm:px-6 py-4 ${i < 3 ? 'border-r border-[var(--color-brand-dark)]/40/60' : ''}`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <stat.icon className="w-3.5 h-3.5 text-[#4A7FA5]" />
-                  <span className="text-[11px] text-[#4A7FA5] uppercase tracking-wider">{stat.label}</span>
+                  <stat.icon className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-[11px] text-slate-400 uppercase tracking-wider">{stat.label}</span>
                 </div>
                 <p className="text-xl font-black text-white">{stat.value}</p>
-                <p className="text-[11px] text-[#3A5A7A]">{stat.sub}</p>
+                <p className="text-[11px] text-slate-500">{stat.sub}</p>
               </div>
             ))}
           </div>
@@ -239,15 +239,15 @@ export default function InstitutionProfilePage() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-base font-bold text-white">매각 공고</h2>
-              <p className="text-xs text-[#4A7FA5] mt-0.5">현재 활성 매물 {listings.length}건</p>
+              <p className="text-xs text-slate-400 mt-0.5">현재 활성 매물 {listings.length}건</p>
             </div>
-            <span className="bg-[#1E3A5F]/60 text-[#94B4CC] border border-[#2E5A8E]/40 text-xs inline-flex items-center px-2.5 py-0.5">
+            <span className="bg-[var(--color-brand-dark)]/60 text-slate-300 border border-[var(--color-brand-mid)]/40 text-xs inline-flex items-center px-2.5 py-0.5">
               {listings.length}건
             </span>
           </div>
 
           {listings.length === 0 ? (
-            <div className="bg-[var(--color-brand-deep)] border border-[#1E3A5F]/60 rounded-2xl p-12 flex items-center justify-center">
+            <div className="bg-[var(--color-brand-deep)] border border-[var(--color-brand-dark)]/40/60 rounded-2xl p-12 flex items-center justify-center">
               <EmptyState icon={Building2} title="등록된 매각 공고가 없습니다" />
             </div>
           ) : (
@@ -255,12 +255,12 @@ export default function InstitutionProfilePage() {
               {listings.map((listing) => (
                 <div
                   key={listing.id}
-                  className="bg-[var(--color-brand-deep)] border border-[#1E3A5F]/60 rounded-2xl overflow-hidden hover:border-[#2E75B6]/50 hover:shadow-lg hover:shadow-black/20 transition-all group"
+                  className="bg-[var(--color-brand-deep)] border border-[var(--color-brand-dark)]/40/60 rounded-2xl overflow-hidden hover:border-[var(--color-brand-mid)]/50 hover:shadow-lg hover:shadow-black/20 transition-all group"
                 >
                   {/* Card Top */}
-                  <div className="px-4 pt-4 pb-3 border-b border-[#1E3A5F]/40">
+                  <div className="px-4 pt-4 pb-3 border-b border-[var(--color-brand-dark)]/40/40">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] font-medium px-2 py-0.5 bg-[#1E3A5F]/60 text-[#94B4CC] rounded-md border border-[#2E5A8E]/30">
+                      <span className="text-[10px] font-medium px-2 py-0.5 bg-[var(--color-brand-dark)]/60 text-slate-300 rounded-md border border-[var(--color-brand-mid)]/30">
                         {listing.collateral_type}
                       </span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${RISK_BADGE[listing.risk_grade] || RISK_BADGE.C}`}>
@@ -269,9 +269,9 @@ export default function InstitutionProfilePage() {
                     </div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-black text-white">{formatKRW(listing.principal)}</span>
-                      <span className="text-xs text-[#4A7FA5]">원</span>
+                      <span className="text-xs text-slate-400">원</span>
                     </div>
-                    <div className="flex items-center gap-1.5 mt-1.5 text-xs text-[#4A7FA5]">
+                    <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400">
                       <MapPin className="w-3 h-3" />
                       <span>{listing.location}</span>
                     </div>
@@ -279,7 +279,7 @@ export default function InstitutionProfilePage() {
 
                   {/* Card Bottom */}
                   <div className="px-4 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3 text-[11px] text-[#3A5A7A]">
+                    <div className="flex items-center gap-3 text-[11px] text-slate-500">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" /> {listing.deadline}
                       </span>
@@ -288,7 +288,7 @@ export default function InstitutionProfilePage() {
                       </span>
                     </div>
                     <Link href={`/exchange/${listing.id}`}>
-                      <button className="px-3 py-1.5 text-xs font-semibold bg-[#1E4A7A] group-hover:bg-[#2563B0] text-white rounded-lg transition-colors">
+                      <button className="px-3 py-1.5 text-xs font-semibold bg-[var(--color-brand-dark)] group-hover:bg-[var(--color-brand-mid)] text-white rounded-lg transition-colors">
                         상세보기
                       </button>
                     </Link>
@@ -300,8 +300,8 @@ export default function InstitutionProfilePage() {
         </div>
 
         {/* Institution History */}
-        <div className="bg-[var(--color-brand-deep)] border border-[#1E3A5F]/60 rounded-2xl overflow-hidden">
-          <div className="px-6 py-5 border-b border-[#1E3A5F]/60">
+        <div className="bg-[var(--color-brand-deep)] border border-[var(--color-brand-dark)]/40/60 rounded-2xl overflow-hidden">
+          <div className="px-6 py-5 border-b border-[var(--color-brand-dark)]/40/60">
             <h3 className="text-sm font-bold text-white">기관 정보</h3>
           </div>
           <div className="p-6 space-y-4">
@@ -312,8 +312,8 @@ export default function InstitutionProfilePage() {
                 { label: "평균 거래 소요일", value: `${institution.avg_deal_days}일` },
                 { label: "매수자 평점", value: `${institution.buyer_rating} / 5.0` },
               ].map((item) => (
-                <div key={item.label} className="flex items-center justify-between py-2.5 border-b border-[#1E3A5F]/40 last:border-0">
-                  <span className="text-xs text-[#4A7FA5]">{item.label}</span>
+                <div key={item.label} className="flex items-center justify-between py-2.5 border-b border-[var(--color-brand-dark)]/40/40 last:border-0">
+                  <span className="text-xs text-slate-400">{item.label}</span>
                   <span className="text-sm font-semibold text-white">{item.value}</span>
                 </div>
               ))}
@@ -322,18 +322,18 @@ export default function InstitutionProfilePage() {
         </div>
 
         {/* Contact CTA */}
-        <div className="bg-gradient-to-r from-[var(--color-brand-deep)] to-[#0A1A30] border border-[#1E3A5F]/60 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="bg-gradient-to-r from-[var(--color-brand-deep)] to-[#0A1A30] border border-[var(--color-brand-dark)]/40/60 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-sm font-bold text-white mb-1">거래 문의하기</h3>
-            <p className="text-xs text-[#4A7FA5]">{institution.name}에 직접 채권 거래 문의를 보내세요.</p>
+            <p className="text-xs text-slate-400">{institution.name}에 직접 채권 거래 문의를 보내세요.</p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 text-[#94B4CC] border border-[#1E3A5F] rounded-xl transition-colors">
+            <button className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 text-slate-300 border border-[var(--color-brand-dark)]/40 rounded-xl transition-colors">
               <MessageSquare className="w-4 h-4 inline mr-1.5" />메시지 보내기
             </button>
             <button
               onClick={() => setIsFavorite(!isFavorite)}
-              className="px-4 py-2 text-sm font-semibold bg-[var(--color-positive)] hover:bg-[#0d9668] text-white rounded-xl transition-colors"
+              className="px-4 py-2 text-sm font-semibold bg-[var(--color-positive)] hover:bg-emerald-700 text-white rounded-xl transition-colors"
             >
               {isFavorite ? "팔로잉" : "팔로우"}
             </button>

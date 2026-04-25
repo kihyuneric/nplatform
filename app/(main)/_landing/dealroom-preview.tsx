@@ -81,13 +81,9 @@ export function DealRoomPreview() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.15 }}
           transition={{ duration: 0.5 }}
-          className="rounded-2xl overflow-hidden"
-          style={{ background: "#0D1830", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 60px rgba(0,0,0,0.45)" }}
+          className="npl-preview-panel rounded-2xl overflow-hidden"
         >
-          <div
-            className="flex items-center justify-between px-5 py-3.5 flex-wrap gap-2"
-            style={{ background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-          >
+          <div className="npl-preview-panel-header flex items-center justify-between px-5 py-3.5 flex-wrap gap-2">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(139,92,246,0.12)" }}>
                 <Lock size={13} style={{ color: "#A78BFA" }} />

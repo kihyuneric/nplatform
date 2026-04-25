@@ -38,10 +38,10 @@ export default function NewsDetailPage() {
 
   if (!article) {
     return (
-      <div className="min-h-screen bg-[#060E1C] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-brand-deepest)] flex items-center justify-center">
         <div className="text-center">
           <p className="text-lg text-slate-400 mb-4">기사를 찾을 수 없습니다.</p>
-          <Link href="/news" className="px-3 py-1.5 rounded-lg border border-[var(--color-border-default)] text-sm transition-colors border-[#1a3a5c] text-slate-300 hover:bg-[#0D1F38]">
+          <Link href="/news" className="px-3 py-1.5 rounded-lg border border-[var(--color-border-default)] text-sm transition-colors border-[var(--color-brand-dark)]/40 text-slate-300 hover:bg-[var(--color-brand-deep)]">
             뉴스 목록으로
           </Link>
         </div>
@@ -54,7 +54,7 @@ export default function NewsDetailPage() {
   const readingTime = Math.max(1, Math.round((article.summary?.length ?? 200) / 400))
 
   return (
-    <div className="min-h-screen bg-[#060E1C]">
+    <div className="min-h-screen bg-[var(--color-brand-deepest)]">
 
       {/* ── Hero Image Placeholder ── */}
       <div className="relative h-56 sm:h-72 lg:h-80 overflow-hidden">
@@ -69,11 +69,11 @@ export default function NewsDetailPage() {
           }}
         />
         {/* Glow accent */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#2E75B6]/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[var(--color-brand-mid)]/10 rounded-full blur-3xl" />
         {/* Category label overlaid on hero */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#060E1C] to-transparent h-32" />
         <div className="absolute bottom-5 left-4 sm:left-8 lg:left-12">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-bold tracking-wide uppercase bg-[#2E75B6] text-white">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-bold tracking-wide uppercase bg-[var(--color-brand-mid)] text-white">
             NPL 뉴스
           </span>
         </div>
@@ -89,7 +89,7 @@ export default function NewsDetailPage() {
             {/* Back nav */}
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center gap-1.5 text-[#4a7a9b] hover:text-[#2E75B6] text-sm mb-6 transition-colors"
+              className="inline-flex items-center gap-1.5 text-slate-400 hover:text-[var(--color-brand-mid)] text-sm mb-6 transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               뉴스 목록
@@ -103,7 +103,7 @@ export default function NewsDetailPage() {
                   <DirIcon className="h-3.5 w-3.5" />
                   {dir.label}
                 </span>
-                <span className="text-[11px] text-[#4a7a9b]">
+                <span className="text-[11px] text-slate-400">
                   확신도 {Math.round(article.direction_score * 100)}%
                 </span>
               </div>
@@ -114,21 +114,21 @@ export default function NewsDetailPage() {
               </h1>
 
               {/* Meta row */}
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pb-5 border-b border-[#1a3a5c]">
-                <span className="flex items-center gap-1.5 text-sm text-[#7BA7C7]">
-                  <Building className="h-3.5 w-3.5 text-[#4a7a9b]" />
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pb-5 border-b border-[var(--color-brand-dark)]/40">
+                <span className="flex items-center gap-1.5 text-sm text-slate-300">
+                  <Building className="h-3.5 w-3.5 text-slate-400" />
                   <span className="font-medium text-slate-300">{article.provider}</span>
                 </span>
-                <span className="flex items-center gap-1.5 text-sm text-[#7BA7C7]">
-                  <Calendar className="h-3.5 w-3.5 text-[#4a7a9b]" />
+                <span className="flex items-center gap-1.5 text-sm text-slate-300">
+                  <Calendar className="h-3.5 w-3.5 text-slate-400" />
                   {article.published_at}
                 </span>
-                <span className="flex items-center gap-1.5 text-sm text-[#7BA7C7]">
-                  <MapPin className="h-3.5 w-3.5 text-[#4a7a9b]" />
+                <span className="flex items-center gap-1.5 text-sm text-slate-300">
+                  <MapPin className="h-3.5 w-3.5 text-slate-400" />
                   {article.sido}{article.sigungu ? ` ${article.sigungu}` : ""}
                 </span>
-                <span className="flex items-center gap-1.5 text-sm text-[#7BA7C7]">
-                  <Clock className="h-3.5 w-3.5 text-[#4a7a9b]" />
+                <span className="flex items-center gap-1.5 text-sm text-slate-300">
+                  <Clock className="h-3.5 w-3.5 text-slate-400" />
                   읽는 시간 {readingTime}분
                 </span>
               </div>
@@ -143,14 +143,14 @@ export default function NewsDetailPage() {
 
             {/* Scores */}
             <div className="grid grid-cols-2 gap-4 mb-10">
-              <div className="rounded-xl border border-[#1a3a5c] bg-[#0D1F38] p-5 text-center">
-                <p className="text-xs text-[#4a7a9b] uppercase tracking-wider mb-2">방향성 확신도</p>
-                <p className="text-3xl font-bold text-[#2E75B6]">
+              <div className="rounded-xl border border-[var(--color-brand-dark)]/40 bg-[var(--color-brand-deep)] p-5 text-center">
+                <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">방향성 확신도</p>
+                <p className="text-3xl font-bold text-[var(--color-brand-mid)]">
                   {Math.round(article.direction_score * 100)}%
                 </p>
               </div>
-              <div className="rounded-xl border border-[#1a3a5c] bg-[#0D1F38] p-5 text-center">
-                <p className="text-xs text-[#4a7a9b] uppercase tracking-wider mb-2">감성 점수</p>
+              <div className="rounded-xl border border-[var(--color-brand-dark)]/40 bg-[var(--color-brand-deep)] p-5 text-center">
+                <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">감성 점수</p>
                 <p className={`text-3xl font-bold ${
                   article.sentiment_score > 0 ? "text-emerald-400"
                     : article.sentiment_score < 0 ? "text-red-400"
@@ -163,8 +163,8 @@ export default function NewsDetailPage() {
 
             {/* Keywords */}
             {article.keywords.length > 0 && (
-              <div className="mb-10 p-5 rounded-xl border border-[#1a3a5c] bg-[#0D1F38]">
-                <h3 className="text-xs font-semibold text-[#4a7a9b] uppercase tracking-wider mb-3">관련 키워드</h3>
+              <div className="mb-10 p-5 rounded-xl border border-[var(--color-brand-dark)]/40 bg-[var(--color-brand-deep)]">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">관련 키워드</h3>
                 <div className="flex flex-wrap gap-2">
                   {article.keywords.map((kw) => {
                     const cat = KEYWORD_CATEGORY_MAP[kw]
@@ -187,21 +187,21 @@ export default function NewsDetailPage() {
 
             {/* Related Articles */}
             <div>
-              <h2 className="text-sm font-semibold text-[#4a7a9b] uppercase tracking-wider mb-4 flex items-center gap-2">
-                <span className="w-4 h-px bg-[#2E75B6]" />
+              <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <span className="w-4 h-px bg-[var(--color-brand-mid)]" />
                 관련 기사
               </h2>
-              <div className="space-y-0 rounded-xl border border-[#1a3a5c] overflow-hidden">
+              <div className="space-y-0 rounded-xl border border-[var(--color-brand-dark)]/40 overflow-hidden">
                 {RELATED_ARTICLES.map((rel, i) => (
                   <Link
                     key={rel.id}
                     href={`/news/${rel.id}`}
-                    className={`flex items-center gap-4 px-5 py-4 bg-[#0D1F38] hover:bg-[#1a3a5c]/50 transition-colors group ${
-                      i < RELATED_ARTICLES.length - 1 ? "border-b border-[#1a3a5c]" : ""
+                    className={`flex items-center gap-4 px-5 py-4 bg-[var(--color-brand-deep)] hover:bg-[var(--color-brand-dark)]/50 transition-colors group ${
+                      i < RELATED_ARTICLES.length - 1 ? "border-b border-[var(--color-brand-dark)]/40" : ""
                     }`}
                   >
                     <div className="flex-1 min-w-0">
-                      <span className="inline-block text-[10px] text-[#2E75B6] font-semibold uppercase tracking-wider mb-1">
+                      <span className="inline-block text-[10px] text-[var(--color-brand-mid)] font-semibold uppercase tracking-wider mb-1">
                         {rel.category}
                       </span>
                       <p className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors truncate">
@@ -209,8 +209,8 @@ export default function NewsDetailPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-xs text-[#4a7a9b]">{rel.time}</span>
-                      <ChevronRight className="h-4 w-4 text-[#4a7a9b] group-hover:text-[#2E75B6] transition-colors" />
+                      <span className="text-xs text-slate-400">{rel.time}</span>
+                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[var(--color-brand-mid)] transition-colors" />
                     </div>
                   </Link>
                 ))}
@@ -221,31 +221,31 @@ export default function NewsDetailPage() {
           {/* ── Share Sidebar ── */}
           <aside className="hidden lg:flex flex-col gap-3 w-12 items-center pt-16">
             <div className="sticky top-24 flex flex-col gap-3">
-              <p className="text-[10px] text-[#4a7a9b] uppercase tracking-normal writing-mode-vertical rotate-180 text-center mb-1" style={{ writingMode: 'vertical-rl' }}>공유</p>
+              <p className="text-[10px] text-slate-400 uppercase tracking-normal writing-mode-vertical rotate-180 text-center mb-1" style={{ writingMode: 'vertical-rl' }}>공유</p>
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href)
                   toast.success("링크가 복사되었습니다")
                 }}
-                className="flex items-center justify-center w-10 h-10 rounded-full border border-[#1a3a5c] bg-[#0D1F38] text-[#4a7a9b] hover:border-[#2E75B6] hover:text-[#2E75B6] transition-all"
+                className="flex items-center justify-center w-10 h-10 rounded-full border border-[var(--color-brand-dark)]/40 bg-[var(--color-brand-deep)] text-slate-400 hover:border-[var(--color-brand-mid)] hover:text-[var(--color-brand-mid)] transition-all"
                 title="링크 복사"
               >
                 <Link2 className="h-4 w-4" />
               </button>
               <button
-                className="flex items-center justify-center w-10 h-10 rounded-full border border-[#1a3a5c] bg-[#0D1F38] text-[#4a7a9b] hover:border-[#1DA1F2] hover:text-[#1DA1F2] transition-all"
+                className="flex items-center justify-center w-10 h-10 rounded-full border border-[var(--color-brand-dark)]/40 bg-[var(--color-brand-deep)] text-slate-400 hover:border-[#1DA1F2] hover:text-[#1DA1F2] transition-all"
                 title="Twitter 공유"
               >
                 <Twitter className="h-4 w-4" />
               </button>
               <button
-                className="flex items-center justify-center w-10 h-10 rounded-full border border-[#1a3a5c] bg-[#0D1F38] text-[#4a7a9b] hover:border-amber-400 hover:text-amber-400 transition-all"
+                className="flex items-center justify-center w-10 h-10 rounded-full border border-[var(--color-brand-dark)]/40 bg-[var(--color-brand-deep)] text-slate-400 hover:border-amber-400 hover:text-amber-400 transition-all"
                 title="스크랩"
               >
                 <Bookmark className="h-4 w-4" />
               </button>
               <button
-                className="flex items-center justify-center w-10 h-10 rounded-full border border-[#1a3a5c] bg-[#0D1F38] text-[#4a7a9b] hover:border-emerald-400 hover:text-emerald-400 transition-all"
+                className="flex items-center justify-center w-10 h-10 rounded-full border border-[var(--color-brand-dark)]/40 bg-[var(--color-brand-deep)] text-slate-400 hover:border-emerald-400 hover:text-emerald-400 transition-all"
                 title="공유"
               >
                 <Share2 className="h-4 w-4" />
