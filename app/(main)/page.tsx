@@ -443,10 +443,10 @@ export default function LandingPage() {
   ];
 
   return (
-    <div style={{ backgroundColor: C.bg1, color: 'var(--color-text-primary)', fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif", minHeight: '100vh' }}>
+    <div className="mck-l0" style={{ fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif", minHeight: '100vh' }}>
 
       {/* ══ HERO ══════════════════════════════════════════════════════════ */}
-      <section style={{ backgroundColor: C.bg0, minHeight: 'calc(100vh - 4rem)', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+      <section className="mck-l1" style={{ backgroundColor: C.bg0, minHeight: 'calc(100vh - 4rem)', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
 
         {/* Mesh background */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>

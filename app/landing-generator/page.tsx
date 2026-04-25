@@ -92,7 +92,7 @@ export default function LandingGeneratorPage() {
                 <ArrowLeft className="w-5 h-5" />
               </button>
             )}
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-stone-100 bg-clip-text text-transparent">
               AI 랜딩페이지 생성기
             </h1>
           </div>

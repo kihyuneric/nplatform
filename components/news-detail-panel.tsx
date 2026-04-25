@@ -81,7 +81,7 @@ function SentimentBar({ value }: { value: number }) {
         <span className="font-semibold" style={{ color }}>{label}</span>
         <span>긍정</span>
       </div>
-      <div className="relative h-3 rounded-full bg-gradient-to-r from-red-200 via-gray-200 to-emerald-200">
+      <div className="relative h-3 rounded-full bg-gradient-to-r from-stone-100 via-gray-200 to-stone-100">
         {/* 중앙 축 */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-px bg-gray-400/40" />
         {/* 포인터 */}

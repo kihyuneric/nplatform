@@ -1048,14 +1048,14 @@ export default function NplAnalysisDetail({ params }: PageProps) {
           <div className="space-y-5">
             {!aiDeep.loaded && !aiDeep.loading && (
               <div className="card-elevated rounded-2xl p-10 text-center">
-                <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center mb-4 shadow-lg">
+                <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-stone-100 to-blue-500 flex items-center justify-center mb-4 shadow-lg">
                   <Brain className="h-8 w-8 text-white" />
                 </div>
                 <h3 className="text-lg font-black text-[var(--color-brand-deep)] dark:text-white mb-2">AI 심층 분석 실행</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
                   Claude NPL Engine이 회수율 예측, DCF 분석, 몬테카를로 시뮬레이션, 이상 탐지를 동시에 실행합니다
                 </p>
-                <button onClick={fetchAIDeep} className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white gap-2 font-bold shadow-lg px-3 py-1.5 rounded-lg text-sm transition-colors inline-flex items-center">
+                <button onClick={fetchAIDeep} className="bg-gradient-to-r from-stone-100 to-blue-600 hover:from-stone-100 hover:to-blue-500 text-white gap-2 font-bold shadow-lg px-3 py-1.5 rounded-lg text-sm transition-colors inline-flex items-center">
                   <Sparkles className="h-4 w-4" />
                   AI 심층 분석 시작
                 </button>
@@ -1076,7 +1076,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 {aiDeep.recovery && (
                   <div className="card-elevated rounded-2xl p-6 border-l-4 border-stone-300">
                     <div className="flex items-center gap-3 mb-5">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-stone-100 to-blue-500 flex items-center justify-center">
                         <Target className="h-5 w-5 text-white" />
                       </div>
                       <div>
@@ -1121,7 +1121,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 {aiDeep.dcf && (
                   <div className="card-elevated rounded-2xl p-6">
                     <div className="flex items-center gap-3 mb-5">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-stone-100 flex items-center justify-center">
                         <BarChart3 className="h-5 w-5 text-white" />
                       </div>
                       <div>
@@ -1181,7 +1181,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 {aiDeep.monteCarlo && (
                   <div className="card-elevated rounded-2xl p-6">
                     <div className="flex items-center gap-3 mb-5">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-stone-100 to-stone-100 flex items-center justify-center">
                         <Zap className="h-5 w-5 text-white" />
                       </div>
                       <div>
@@ -1264,7 +1264,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Link href={`/analysis/simulator?listing=${id}`} className="card-elevated rounded-2xl p-6 hover:shadow-lg transition-shadow group">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-stone-100 to-stone-100 flex items-center justify-center">
                         <Download className="h-5 w-5 text-white" />
                       </div>
                       <div>
@@ -1276,7 +1276,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                   </Link>
                   <Link href={`/analysis/copilot?context=${id}`} className="card-elevated rounded-2xl p-6 hover:shadow-lg transition-shadow group">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-stone-100 to-indigo-500 flex items-center justify-center">
                         <MessageSquare className="h-5 w-5 text-white" />
                       </div>
                       <div>

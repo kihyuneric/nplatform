@@ -208,7 +208,7 @@ export default function CurriculumPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-10">
       {/* ── Hero ──────────────────────────────── */}
-      <div className="relative bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 rounded-3xl overflow-hidden">
+      <div className="relative bg-gradient-to-br from-stone-100 via-indigo-600 to-blue-600 rounded-3xl overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{
           backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 50%, white 1px, transparent 1px)',
           backgroundSize: '40px 40px',
@@ -267,7 +267,7 @@ export default function CurriculumPage() {
 
       {/* ── 학습 추천 (Atomic 캡슐 기반) ── */}
       {recommendations.length > 0 && (
-        <div className="bg-gradient-to-br from-purple-500/10 via-indigo-500/10 to-blue-500/10 rounded-2xl border border-stone-300/30 p-6">
+        <div className="bg-gradient-to-br from-stone-100/10 via-indigo-500/10 to-blue-500/10 rounded-2xl border border-stone-300/30 p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
               <Zap className="w-5 h-5 text-stone-900" />
@@ -671,22 +671,22 @@ export default function CurriculumPage() {
 
       {/* ── 빠른 진입 ─────────────────────────── */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Link href="/curriculum/dashboard" className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl p-5 text-white hover:shadow-lg transition-shadow group">
+        <Link href="/curriculum/dashboard" className="bg-gradient-to-br from-blue-500 to-stone-100 rounded-xl p-5 text-white hover:shadow-lg transition-shadow group">
           <BarChart3 className="w-6 h-6 mb-2 group-hover:scale-110 transition-transform" />
           <h3 className="font-semibold mb-1">대시보드</h3>
           <p className="text-sm text-stone-900">전체 현황, 커버리지, 전문가 분석</p>
         </Link>
-        <Link href="/curriculum/upload" className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-5 text-white hover:shadow-lg transition-shadow group">
+        <Link href="/curriculum/upload" className="bg-gradient-to-br from-stone-100 to-stone-100 rounded-xl p-5 text-white hover:shadow-lg transition-shadow group">
           <Upload className="w-6 h-6 mb-2 group-hover:scale-110 transition-transform" />
           <h3 className="font-semibold mb-1">대본 분석</h3>
           <p className="text-sm text-stone-900">YouTube 대본 업로드 → 개념 자동 매핑</p>
         </Link>
-        <Link href="/curriculum/graph" className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-5 text-white hover:shadow-lg transition-shadow group">
+        <Link href="/curriculum/graph" className="bg-gradient-to-br from-stone-100 to-indigo-600 rounded-xl p-5 text-white hover:shadow-lg transition-shadow group">
           <GitBranch className="w-6 h-6 mb-2 group-hover:scale-110 transition-transform" />
           <h3 className="font-semibold mb-1">지식그래프</h3>
           <p className="text-sm text-stone-900">{allConcepts.length}개 개념의 관계 탐색</p>
         </Link>
-        <Link href="/curriculum/newsletter" className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl p-5 text-white hover:shadow-lg transition-shadow group">
+        <Link href="/curriculum/newsletter" className="bg-gradient-to-br from-stone-100 to-stone-100 rounded-xl p-5 text-white hover:shadow-lg transition-shadow group">
           <Mail className="w-6 h-6 mb-2 group-hover:scale-110 transition-transform" />
           <h3 className="font-semibold mb-1">AI 뉴스레터</h3>
           <p className="text-sm text-stone-900">온톨로지 기반 매일 교육 콘텐츠</p>

@@ -551,7 +551,7 @@ export default function AtomicStudyPage() {
           {progress?.status !== 'mastered' ? (
             <button
               onClick={handleMastery}
-              className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+              className="w-full py-3 bg-gradient-to-r from-stone-100 to-stone-100 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
             >
               <Star className="w-4 h-4" />
               마스터 완료 선언

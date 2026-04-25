@@ -110,16 +110,16 @@ const STATUS_BADGE: Record<TeamStatus, string> = {
 }
 
 const STATUS_BAR: Record<TeamStatus, string> = {
-  "모집중":   "bg-gradient-to-r from-emerald-500 to-emerald-400",
-  "모집완료": "bg-gradient-to-r from-amber-500 to-amber-400",
+  "모집중":   "bg-gradient-to-r from-stone-100 to-stone-100",
+  "모집완료": "bg-gradient-to-r from-stone-100 to-stone-100",
   "운용중":   "bg-gradient-to-r from-[var(--color-brand-mid)] to-blue-400",
   "상환완료": "bg-[var(--color-border-default)]",
   "취소":     "bg-stone-100/40",
 }
 
 const AVATAR_COLORS = [
-  "from-blue-600 to-blue-400", "from-emerald-600 to-emerald-400",
-  "from-purple-600 to-purple-400", "from-amber-600 to-amber-400",
+  "from-blue-600 to-blue-400", "from-stone-100 to-stone-100",
+  "from-stone-100 to-stone-100", "from-stone-100 to-stone-100",
 ]
 
 type FilterTab = "전체" | "내 팀" | "공개 모집 중" | "완료"

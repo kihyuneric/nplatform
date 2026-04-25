@@ -293,7 +293,7 @@ export default function CapsulePage() {
       </div>
 
       {/* Atomic 캡슐 학습 배너 */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-4 text-white">
+      <div className="bg-gradient-to-r from-stone-100 to-indigo-600 rounded-xl p-4 text-white">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs opacity-80 mb-0.5">2단계 AI 파이프라인 (웹 조사 + 법령·판례 포함)</p>
@@ -417,7 +417,7 @@ export default function CapsulePage() {
 
       {/* Ontology Analysis Section */}
       {ontologyCtx && (
-        <section className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-stone-300 rounded-xl p-5 space-y-4">
+        <section className="bg-gradient-to-br from-stone-100 to-indigo-50 border border-stone-300 rounded-xl p-5 space-y-4">
           <h2 className="text-sm font-semibold text-stone-900 flex items-center gap-1.5">
             <Brain className="w-4 h-4" />
             온톨로지 분석

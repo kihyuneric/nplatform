@@ -229,7 +229,7 @@ export default function DashboardPage() {
 
       {/* Atomic 캡슐 학습 진도 */}
       {progressStats && progressStats.total_atomic_capsules > 0 && (
-        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl border border-stone-300 p-6">
+        <div className="bg-gradient-to-br from-stone-100 to-indigo-50 rounded-2xl border border-stone-300 p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
               <Zap className="w-5 h-5 text-stone-900" />
@@ -271,7 +271,7 @@ export default function DashboardPage() {
             </div>
             <div className="w-full bg-white rounded-full h-3 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-700"
+                className="h-full bg-gradient-to-r from-stone-100 to-indigo-500 rounded-full transition-all duration-700"
                 style={{ width: `${progressStats.mastery_pct}%` }}
               />
             </div>
@@ -321,7 +321,7 @@ export default function DashboardPage() {
       {streakData && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 스트릭 패널 */}
-          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-stone-300 p-6">
+          <div className="bg-gradient-to-br from-stone-100 to-stone-100 rounded-2xl border border-stone-300 p-6">
             <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 mb-4">
               <Flame className="w-5 h-5 text-stone-900" />
               학습 스트릭
@@ -400,7 +400,7 @@ export default function DashboardPage() {
           </div>
 
           {/* 뱃지 & 업적 패널 */}
-          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-stone-300 p-6">
+          <div className="bg-gradient-to-br from-indigo-50 to-stone-100 rounded-2xl border border-stone-300 p-6">
             <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 mb-4">
               <Trophy className="w-5 h-5 text-stone-900" />
               업적 & 뱃지
@@ -962,7 +962,7 @@ function NextGoal({ icon, name, current, target }: { icon: string; name: string;
         </div>
         <div className="w-full bg-gray-200 rounded-full h-1.5">
           <div
-            className="h-full bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full transition-all"
+            className="h-full bg-gradient-to-r from-indigo-400 to-stone-100 rounded-full transition-all"
             style={{ width: `${pct}%` }}
           />
         </div>

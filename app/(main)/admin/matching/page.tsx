@@ -441,7 +441,7 @@ export default function AdminMatchingPage() {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-stone-100 to-stone-100 flex items-center justify-center">
                   <Target className="w-4 h-4 text-white" />
                 </div>
                 <h1 className={`${DS.text.sectionTitle} tracking-tight`}>AI 매칭 · 관리자 전체 뷰</h1>

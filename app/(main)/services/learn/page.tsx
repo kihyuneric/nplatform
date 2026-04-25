@@ -15,13 +15,13 @@ const FEATURED = [
     rating: 4.9, enrolled: 1840, price: '무료',
   },
   {
-    id: 'f2', level: '중급', gradient: 'from-emerald-500 to-emerald-400',
+    id: 'f2', level: '중급', gradient: 'from-stone-100 to-stone-100',
     title: '경매 절차 완전 정복 — 권리분석 실무',
     instructor: '박서연 · 법무사', duration: '총 22강 / 약 5시간',
     rating: 4.7, enrolled: 876, price: '49,000원',
   },
   {
-    id: 'f3', level: '고급', gradient: 'from-purple-500 to-purple-400',
+    id: 'f3', level: '고급', gradient: 'from-stone-100 to-stone-100',
     title: '배당순위 & 권리분석 실전 마스터',
     instructor: '정대호 · CFA', duration: '총 24강 / 약 6시간',
     rating: 4.9, enrolled: 603, price: '69,000원',

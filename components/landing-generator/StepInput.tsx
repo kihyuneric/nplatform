@@ -45,7 +45,7 @@ export function StepInput({ onGenerate, error }: StepInputProps) {
         </div>
         <h2 className="text-4xl font-bold text-[var(--color-text-primary)] mb-3">
           주제만 입력하면<br />
-          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-blue-600 to-stone-100 bg-clip-text text-transparent">
             랜딩페이지가 완성됩니다
           </span>
         </h2>
@@ -140,7 +140,7 @@ export function StepInput({ onGenerate, error }: StepInputProps) {
         <button
           type="submit"
           disabled={!topic.trim()}
-          className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+          className="w-full py-4 bg-gradient-to-r from-blue-600 to-stone-100 text-white text-lg font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
         >
           <Sparkles className="w-5 h-5 inline mr-2" />
           랜딩페이지 생성하기

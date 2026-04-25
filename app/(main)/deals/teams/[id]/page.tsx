@@ -395,7 +395,7 @@ export default function TeamDetailPage() {
 
           <div className="mt-4">
             <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden">
-              <div className="h-full rounded-full bg-gradient-to-r from-[#2E75B6] to-emerald-500 transition-all duration-700"
+              <div className="h-full rounded-full bg-gradient-to-r from-[#2E75B6] to-stone-100 transition-all duration-700"
                 style={{ width: `${Math.min(pct, 100)}%` }} />
             </div>
             <div className="mt-1.5 flex justify-between text-[11px]">

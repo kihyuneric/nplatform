@@ -213,7 +213,7 @@ export default function SamplesPage() {
           AI가 합성한 교육 콘텐츠 샘플 3개입니다.
         </p>
         {/* 계층 구조 안내 */}
-        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-stone-300">
+        <div className="bg-gradient-to-r from-stone-100 to-indigo-50 rounded-xl p-4 border border-stone-300">
           <p className="text-xs font-bold text-stone-900 mb-2">📊 온톨로지 계층 구조</p>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <span className="px-2.5 py-1 bg-stone-100 text-white rounded-lg font-medium text-xs">
@@ -744,7 +744,7 @@ function OptimizedView({ content }: { content: SubConceptContent }) {
     <div className="space-y-4">
       {/* 학습 목표 */}
       {content.learning_objectives && content.learning_objectives.length > 0 && (
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-r from-stone-100 to-indigo-600 rounded-xl p-4 text-white">
           <p className="text-xs font-bold mb-2 opacity-80 uppercase tracking-wider">📌 이 주제를 마치면</p>
           <ul className="space-y-1">
             {content.learning_objectives.map((obj, i) => (
@@ -1521,7 +1521,7 @@ function EbookView({ concept, subConcepts, importance, onSynthesize }: {
   return (
     <div className="space-y-6">
       {/* 전자책 표지 */}
-      <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-xl p-6 text-white">
+      <div className="bg-gradient-to-br from-indigo-600 to-stone-100 rounded-xl p-6 text-white">
         <p className="text-xs opacity-70 mb-2">📚 전자책 — 체계적 전문 실용서</p>
         <h3 className="text-xl font-bold mb-2">{concept.name}</h3>
         <p className="text-sm opacity-80">
@@ -1715,7 +1715,7 @@ function NewsletterView({ concept, subConcepts, importance }: {
           /* 구조화 뷰 */
           <div className="border-2 border-stone-300 rounded-xl overflow-hidden">
             {/* 헤더 */}
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 text-white">
+            <div className="bg-gradient-to-r from-stone-100 to-indigo-600 px-6 py-4 text-white">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs opacity-80">📨 부동산 투자 교육 뉴스레터</span>
                 <span className="text-xs opacity-70 bg-white/20 px-2 py-0.5 rounded-full">
@@ -1807,7 +1807,7 @@ function NewsletterView({ concept, subConcepts, importance }: {
 
               {/* CTA */}
               {ai?.call_to_action && (
-                <section className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 text-center">
+                <section className="bg-gradient-to-r from-stone-100 to-indigo-50 rounded-lg p-4 text-center">
                   <p className="text-sm font-medium text-stone-900">{ai.call_to_action}</p>
                 </section>
               )}

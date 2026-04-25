@@ -193,7 +193,7 @@ export default function BulkGeneratePage() {
       </div>
 
       {/* Stats Dashboard */}
-      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-5 border border-stone-300">
+      <div className="bg-gradient-to-br from-stone-100 to-indigo-50 rounded-xl p-5 border border-stone-300">
         <div className="grid grid-cols-4 gap-4 mb-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-stone-900">{stats.total_concepts}</div>
@@ -221,7 +221,7 @@ export default function BulkGeneratePage() {
           </div>
           <div className="w-full bg-white rounded-full h-3 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-stone-100 to-indigo-500 rounded-full transition-all duration-500"
               style={{ width: `${completionPct}%` }}
             />
           </div>

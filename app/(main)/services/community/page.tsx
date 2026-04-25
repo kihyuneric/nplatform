@@ -201,7 +201,7 @@ export default function CommunityPage() {
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-2.5 mb-2">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-rose-500 flex items-center justify-center shadow-sm">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-stone-100 to-stone-100 flex items-center justify-center shadow-sm">
                   <MessageCircle className="w-5 h-5 text-white" />
                 </div>
                 <h1 className={`${DS.text.sectionTitle} tracking-tight`}>

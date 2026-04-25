@@ -150,7 +150,7 @@ export default function ConceptAtomicListPage() {
 
       {/* 진도 대시보드 */}
       {capsules.length > 0 && (
-        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-5 border border-stone-300">
+        <div className="bg-gradient-to-br from-stone-100 to-indigo-50 rounded-xl p-5 border border-stone-300">
           <div className="grid grid-cols-3 gap-4 mb-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-stone-900">{capsules.length}</div>
@@ -176,7 +176,7 @@ export default function ConceptAtomicListPage() {
             </div>
             <div className="w-full bg-white rounded-full h-3 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500"
+                className="h-full bg-gradient-to-r from-stone-100 to-indigo-500 rounded-full transition-all duration-500"
                 style={{ width: `${progressPct}%` }}
               />
             </div>
@@ -317,7 +317,7 @@ export default function ConceptAtomicListPage() {
 
       {/* 다운로드 섹션 */}
       {capsules.length > 0 && (
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-5 border border-stone-300">
+        <div className="bg-gradient-to-br from-indigo-50 to-stone-100 rounded-xl p-5 border border-stone-300">
           <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
             <Download className="w-4 h-4 text-stone-900" />
             Atomic 캡슐 학습교재 다운로드

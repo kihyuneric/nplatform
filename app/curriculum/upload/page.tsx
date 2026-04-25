@@ -268,7 +268,7 @@ export default function UploadPage() {
             <p className="text-xs text-gray-500">커버리지</p>
             <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all"
+                className="h-full bg-gradient-to-r from-stone-100 to-indigo-500 rounded-full transition-all"
                 style={{ width: `${Math.min(stats.coverage_rate, 100)}%` }}
               />
             </div>

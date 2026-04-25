@@ -87,22 +87,22 @@ const SPECIALTY_STYLES: Record<Specialty, { gradient: string; badge: string; tag
     bar: 'from-blue-500 to-blue-400',
   },
   '감정평가': {
-    gradient: 'from-emerald-500 to-emerald-400',
+    gradient: 'from-stone-100 to-stone-100',
     badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
     tag: 'bg-stone-100/10 text-stone-900',
-    bar: 'from-emerald-500 to-emerald-400',
+    bar: 'from-stone-100 to-stone-100',
   },
   '세무':    {
-    gradient: 'from-amber-500 to-amber-400',
+    gradient: 'from-stone-100 to-stone-100',
     badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
     tag: 'bg-stone-100/10 text-stone-900',
-    bar: 'from-amber-500 to-amber-400',
+    bar: 'from-stone-100 to-stone-100',
   },
   '경매대행': {
-    gradient: 'from-purple-500 to-purple-400',
+    gradient: 'from-stone-100 to-stone-100',
     badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
     tag: 'bg-stone-100/10 text-stone-900',
-    bar: 'from-purple-500 to-purple-400',
+    bar: 'from-stone-100 to-stone-100',
   },
 }
 
@@ -252,7 +252,7 @@ export default function ProfessionalPage() {
         <div className={`${DS.page.container} pb-2`}>
           <div className={`${DS.card.elevated} p-5 flex flex-col sm:flex-row items-start sm:items-center gap-5 relative overflow-hidden`}>
             {/* Left accent */}
-            <div className="absolute left-0 inset-y-0 w-[3px] bg-gradient-to-b from-amber-400 to-amber-500 rounded-l-2xl" />
+            <div className="absolute left-0 inset-y-0 w-[3px] bg-gradient-to-b from-stone-100 to-stone-100 rounded-l-2xl" />
 
             <div className="shrink-0 flex items-center gap-2 pl-2">
               <div className="px-2.5 py-1 rounded-lg bg-stone-100/10 border border-stone-300/20 text-stone-900 text-[0.6875rem] font-bold flex items-center gap-1.5">

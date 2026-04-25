@@ -210,7 +210,7 @@ export default function ConceptDetailPanel({ conceptId, onClose }: Props) {
                 </div>
                 <div className="w-full bg-[var(--color-surface-overlay)] rounded-full h-1.5 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all"
+                    className="h-full bg-gradient-to-r from-stone-100 to-indigo-500 rounded-full transition-all"
                     style={{ width: `${progressInfo.mastery_pct}%` }}
                   />
                 </div>
@@ -247,7 +247,7 @@ export default function ConceptDetailPanel({ conceptId, onClose }: Props) {
           {atomicCapsules.length > 0 && (
             <Link
               href={`/curriculum/concept/${conceptId}`}
-              className="block w-full text-center py-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-sm font-medium rounded-lg hover:from-purple-600 hover:to-indigo-600 transition-colors"
+              className="block w-full text-center py-2 bg-gradient-to-r from-stone-100 to-indigo-500 text-white text-sm font-medium rounded-lg hover:from-stone-100 hover:to-indigo-600 transition-colors"
             >
               <Zap className="w-4 h-4 inline-block mr-1" />
               Atomic 캡슐 학습하기

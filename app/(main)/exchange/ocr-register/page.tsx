@@ -320,7 +320,7 @@ export default function OcrRegisterPage() {
         <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-stone-100 to-indigo-500 flex items-center justify-center">
                 <ScanLine className="w-5 h-5 text-white" />
               </div>
               <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-stone-100/15 text-stone-900">OCR 일괄 등록</span>
@@ -422,7 +422,7 @@ export default function OcrRegisterPage() {
             <button
               onClick={submitAll}
               disabled={submitting || readyCount === 0}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-bold text-sm shadow-md transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-stone-100 to-indigo-500 hover:from-stone-100 hover:to-indigo-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-bold text-sm shadow-md transition-all"
             >
               {submitting ? (
                 <>

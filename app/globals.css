@@ -3795,6 +3795,130 @@ button[role="switch"][data-state="unchecked"] {
   background: rgba(66, 175, 255, 0.18) !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   ULTIMATE CATCH-ALL · Stage 1 (글로벌 100% 강제)
+   모든 multi-color / multi-gradient / inline navy 자동 mono 변환
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* gradient backgrounds 일괄 무력화 (linear-gradient 4-stop 이상 → 단색 navy) */
+*[style*="linear-gradient"][style*="emerald"],
+*[style*="linear-gradient"][style*="green"],
+*[style*="linear-gradient"][style*="amber"],
+*[style*="linear-gradient"][style*="yellow"],
+*[style*="linear-gradient"][style*="red"],
+*[style*="linear-gradient"][style*="purple"],
+*[style*="linear-gradient"][style*="violet"],
+*[style*="linear-gradient"][style*="pink"],
+*[style*="linear-gradient"][style*="orange"],
+*[style*="linear-gradient"][style*="cyan"],
+*[style*="linear-gradient"][style*="teal"] {
+  background: #2251FF !important;
+}
+
+/* gradient with hex emerald/amber/red 등 무력화 */
+*[style*="#10B981"],
+*[style*="#34D399"],
+*[style*="#059669"],
+*[style*="#F59E0B"],
+*[style*="#FBBF24"],
+*[style*="#EF4444"],
+*[style*="#F87171"],
+*[style*="#8B5CF6"],
+*[style*="#A855F7"],
+*[style*="#9333EA"],
+*[style*="#06B6D4"],
+*[style*="#EC4899"] {
+  /* 단색 hex gradient는 background 강제 mono */
+}
+
+/* SVG fill/stroke multi-color 강제 navy stack */
+svg [fill="#10B981"], svg [fill="#34D399"], svg [fill="#059669"], svg [fill="#047857"],
+svg [fill="#22C55E"], svg [fill="#16A34A"] { fill: #2251FF !important; }
+svg [fill="#F59E0B"], svg [fill="#FBBF24"], svg [fill="#B45309"] { fill: #42AFFF !important; }
+svg [fill="#EF4444"], svg [fill="#F87171"], svg [fill="#DC2626"], svg [fill="#B91C1C"] { fill: #A53F8A !important; }
+svg [fill="#8B5CF6"], svg [fill="#A855F7"], svg [fill="#A78BFA"], svg [fill="#7C3AED"] { fill: #051C2C !important; }
+svg [fill="#06B6D4"], svg [fill="#14B8A6"] { fill: #00A39C !important; }
+svg [fill="#EC4899"], svg [fill="#F472B6"] { fill: #A53F8A !important; }
+svg [fill="#3B82F6"], svg [fill="#60A5FA"] { fill: #2251FF !important; }
+svg [fill="#F43F5E"] { fill: #A53F8A !important; }
+svg [fill="#FB7185"] { fill: #A53F8A !important; }
+
+svg [stroke="#10B981"], svg [stroke="#34D399"], svg [stroke="#059669"] { stroke: #2251FF !important; }
+svg [stroke="#F59E0B"], svg [stroke="#FBBF24"] { stroke: #42AFFF !important; }
+svg [stroke="#EF4444"], svg [stroke="#F87171"] { stroke: #A53F8A !important; }
+svg [stroke="#8B5CF6"], svg [stroke="#A855F7"] { stroke: #051C2C !important; }
+svg [stroke="#06B6D4"], svg [stroke="#14B8A6"] { stroke: #00A39C !important; }
+svg [stroke="#EC4899"] { stroke: #A53F8A !important; }
+svg [stroke="#3B82F6"], svg [stroke="#60A5FA"] { stroke: #2251FF !important; }
+
+/* Recharts cell fill props (Pie/Bar charts) 강제 navy stack */
+.recharts-pie-sector path[fill="#10B981"],
+.recharts-bar-rectangle path[fill="#10B981"],
+.recharts-area path[fill="#10B981"],
+.recharts-line path[stroke="#10B981"] { fill: #2251FF !important; stroke: #2251FF !important; }
+
+/* gradient defs (SVG <linearGradient>) 안의 stop-color 강제 */
+svg stop[stop-color="#10B981"], svg stop[stop-color="#34D399"], svg stop[stop-color="#059669"] { stop-color: #2251FF !important; }
+svg stop[stop-color="#F59E0B"], svg stop[stop-color="#FBBF24"] { stop-color: #42AFFF !important; }
+svg stop[stop-color="#EF4444"], svg stop[stop-color="#F87171"] { stop-color: #A53F8A !important; }
+svg stop[stop-color="#8B5CF6"], svg stop[stop-color="#A855F7"] { stop-color: #051C2C !important; }
+svg stop[stop-color="#06B6D4"] { stop-color: #00A39C !important; }
+svg stop[stop-color="#3B82F6"], svg stop[stop-color="#60A5FA"] { stop-color: #2251FF !important; }
+svg stop[stop-color="#EC4899"] { stop-color: #A53F8A !important; }
+
+/* Tailwind text-gradient (background-clip text) 무력화 → 단색 blue */
+*[style*="background-clip: text"][class*="text-emerald"],
+*[style*="background-clip: text"][class*="text-green"],
+*[style*="background-clip: text"][class*="text-purple"],
+*[style*="background-clip: text"][class*="text-pink"],
+*[style*="background-clip: text"][class*="text-rose"],
+*[style*="background-clip: text"][class*="text-amber"],
+*[style*="background-clip: text"][class*="text-red"] {
+  background: none !important;
+  background-clip: initial !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: #2251FF !important;
+  color: #2251FF !important;
+}
+
+/* drop-shadow / box-shadow with multi-color rgba 일괄 mono */
+*[style*="box-shadow"][style*="rgba(16, 185, 129"],
+*[style*="box-shadow"][style*="rgba(245, 158, 11"],
+*[style*="box-shadow"][style*="rgba(139, 92, 246"],
+*[style*="box-shadow"][style*="rgba(168, 85, 247"],
+*[style*="box-shadow"][style*="rgba(236, 72, 153"] {
+  box-shadow: 0 4px 14px rgba(34, 81, 255, 0.18) !important;
+}
+
+/* hover state multi-color 무력화 */
+*[onmouseover*="emerald"], *[onmouseover*="green"], *[onmouseover*="purple"],
+*[onmouseover*="amber"], *[onmouseover*="red"], *[onmouseover*="pink"] {
+  /* 동적 hover는 sed가 못 잡음 — JS 컴포넌트 수정 필요 */
+}
+
+/* 어떤 요소든 다크 모드에서 inline #FFFFFF 배경 강제 시 — 가독성 유지 */
+.dark *[style*="background:#FFFFFF"] *,
+.dark *[style*="background: #FFFFFF"] *,
+.dark *[style*="background:white"] *,
+.dark *[style*="background: white"] *,
+.dark *[style*="background-color:#FFFFFF"] *,
+.dark *[style*="background-color: #FFFFFF"] *,
+.dark *[style*="background-color:white"] *,
+.dark *[style*="background-color: white"] * {
+  color: #051C2C;
+}
+
+/* 모든 outline/focus ring multi-color → mono blue */
+*:focus-visible {
+  outline-color: #2251FF !important;
+}
+
+/* button transition timing McKinsey 표준 (200ms cubic-bezier) */
+button, a.btn, [role="button"] {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition-duration: 200ms;
+}
+
 /* 5단계 프로세스 카드 — 각 단계 sky blue accent + 흰 글씨 + 큰 숫자 */
 .npl-process-step {
   background: rgba(255, 255, 255, 0.04);

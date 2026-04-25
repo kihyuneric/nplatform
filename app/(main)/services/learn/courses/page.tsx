@@ -5,15 +5,15 @@ import Link from "next/link";
 import DS, { formatKRW, formatDate } from "@/lib/design-system";
 
 const COURSES = [
-  { id: "npl-intro", title: "NPL 투자 입문 가이드", instructor: "김민준 강사", level: "초급", category: "투자기초", duration: "4시간 30분", lessons: 12, students: 2840, rating: 4.8, price: "무료", gradient: "from-emerald-500 to-teal-500" },
+  { id: "npl-intro", title: "NPL 투자 입문 가이드", instructor: "김민준 강사", level: "초급", category: "투자기초", duration: "4시간 30분", lessons: 12, students: 2840, rating: 4.8, price: "무료", gradient: "from-stone-100 to-stone-100" },
   { id: "auction-process", title: "경매 절차 완전 정복", instructor: "이수연 강사", level: "초급", category: "경매", duration: "6시간", lessons: 16, students: 1920, rating: 4.7, price: "무료", gradient: "from-blue-500 to-indigo-500" },
-  { id: "distribution", title: "배당순위와 권리분석", instructor: "박정호 변호사", level: "중급", category: "법률", duration: "5시간", lessons: 14, students: 1340, rating: 4.9, price: "89,000원", gradient: "from-amber-500 to-orange-500" },
-  { id: "ltv-analysis", title: "LTV 분석과 채권 가치평가", instructor: "최지원 세무사", level: "중급", category: "세무", duration: "4시간", lessons: 10, students: 980, rating: 4.6, price: "79,000원", gradient: "from-violet-500 to-purple-500" },
-  { id: "npl-strategy", title: "NPL 고수익 투자 전략", instructor: "강동훈 대표", level: "고급", category: "투자기초", duration: "8시간", lessons: 20, students: 620, rating: 4.9, price: "129,000원", gradient: "from-rose-500 to-red-500" },
-  { id: "deal-room", title: "딜룸 활용과 협상 전략", instructor: "윤서희 강사", level: "중급", category: "실사", duration: "3시간", lessons: 8, students: 750, rating: 4.7, price: "69,000원", gradient: "from-cyan-500 to-sky-500" },
-  { id: "due-diligence", title: "실사보고서 작성 실무", instructor: "임철수 강사", level: "중급", category: "실사", duration: "5시간 30분", lessons: 15, students: 540, rating: 4.8, price: "99,000원", gradient: "from-fuchsia-500 to-pink-500" },
-  { id: "tax-auction", title: "경매 세금 완전 가이드", instructor: "최지원 세무사", level: "고급", category: "세무", duration: "4시간", lessons: 11, students: 430, rating: 4.7, price: "89,000원", gradient: "from-lime-500 to-green-500" },
-  { id: "law-basics", title: "NPL 투자자를 위한 법률 기초", instructor: "박정호 변호사", level: "초급", category: "법률", duration: "3시간", lessons: 9, students: 1120, rating: 4.6, price: "59,000원", gradient: "from-orange-500 to-amber-500" },
+  { id: "distribution", title: "배당순위와 권리분석", instructor: "박정호 변호사", level: "중급", category: "법률", duration: "5시간", lessons: 14, students: 1340, rating: 4.9, price: "89,000원", gradient: "from-stone-100 to-stone-100" },
+  { id: "ltv-analysis", title: "LTV 분석과 채권 가치평가", instructor: "최지원 세무사", level: "중급", category: "세무", duration: "4시간", lessons: 10, students: 980, rating: 4.6, price: "79,000원", gradient: "from-stone-100 to-stone-100" },
+  { id: "npl-strategy", title: "NPL 고수익 투자 전략", instructor: "강동훈 대표", level: "고급", category: "투자기초", duration: "8시간", lessons: 20, students: 620, rating: 4.9, price: "129,000원", gradient: "from-stone-100 to-stone-100" },
+  { id: "deal-room", title: "딜룸 활용과 협상 전략", instructor: "윤서희 강사", level: "중급", category: "실사", duration: "3시간", lessons: 8, students: 750, rating: 4.7, price: "69,000원", gradient: "from-stone-100 to-sky-500" },
+  { id: "due-diligence", title: "실사보고서 작성 실무", instructor: "임철수 강사", level: "중급", category: "실사", duration: "5시간 30분", lessons: 15, students: 540, rating: 4.8, price: "99,000원", gradient: "from-stone-100 to-stone-100" },
+  { id: "tax-auction", title: "경매 세금 완전 가이드", instructor: "최지원 세무사", level: "고급", category: "세무", duration: "4시간", lessons: 11, students: 430, rating: 4.7, price: "89,000원", gradient: "from-lime-500 to-stone-100" },
+  { id: "law-basics", title: "NPL 투자자를 위한 법률 기초", instructor: "박정호 변호사", level: "초급", category: "법률", duration: "3시간", lessons: 9, students: 1120, rating: 4.6, price: "59,000원", gradient: "from-stone-100 to-stone-100" },
 ];
 
 const LEVELS = ["전체", "초급", "중급", "고급"];

@@ -60,7 +60,7 @@ export function ListingCard({
     >
       {isExclusive && (
         <div className="absolute top-0 right-0 z-10">
-          <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[0.625rem] font-extrabold px-2.5 py-1 rounded-bl-lg uppercase tracking-wider flex items-center gap-1">
+          <div className="bg-gradient-to-r from-stone-100 to-stone-100 text-white text-[0.625rem] font-extrabold px-2.5 py-1 rounded-bl-lg uppercase tracking-wider flex items-center gap-1">
             <Sparkles className="w-3 h-3" />
             Exclusive
           </div>

@@ -23,7 +23,7 @@ const SERVICE_HUBS = [
     title: '매수자 포털',
     description: 'AI 추천·워치리스트·포트폴리오',
     icon: ShoppingBag,
-    color: 'from-pink-500 to-rose-500',
+    color: 'from-stone-100 to-stone-100',
     bgLight: 'bg-stone-100/10',
     textColor: 'text-stone-900',
     links: [
@@ -37,7 +37,7 @@ const SERVICE_HUBS = [
     title: '매도자 포털',
     description: '매물등록·분석·정산관리',
     icon: Store,
-    color: 'from-amber-500 to-orange-500',
+    color: 'from-stone-100 to-stone-100',
     bgLight: 'bg-stone-100/10',
     textColor: 'text-stone-900',
     links: [
@@ -51,7 +51,7 @@ const SERVICE_HUBS = [
     title: '거래 매칭',
     description: '양면매칭·거래소·공동투자',
     icon: ArrowRightLeft,
-    color: 'from-orange-500 to-red-500',
+    color: 'from-stone-100 to-stone-100',
     bgLight: 'bg-stone-100/10',
     textColor: 'text-stone-900',
     links: [
@@ -65,7 +65,7 @@ const SERVICE_HUBS = [
     title: '시장 인텔리전스',
     description: '시장분석·히트맵·리포트·시그널',
     icon: Globe,
-    color: 'from-cyan-500 to-teal-500',
+    color: 'from-stone-100 to-stone-100',
     bgLight: 'bg-stone-100/10',
     textColor: 'text-stone-900',
     links: [
@@ -79,7 +79,7 @@ const SERVICE_HUBS = [
     title: '커뮤니티',
     description: '토론·전문가칼럼·지식허브',
     icon: MessageCircle,
-    color: 'from-indigo-500 to-violet-500',
+    color: 'from-indigo-500 to-stone-100',
     bgLight: 'bg-stone-100/10',
     textColor: 'text-stone-900',
     links: [
@@ -93,7 +93,7 @@ const SERVICE_HUBS = [
     title: '전문 서비스',
     description: '법률·감정·세무 전문가 마켓',
     icon: Briefcase,
-    color: 'from-purple-500 to-fuchsia-500',
+    color: 'from-stone-100 to-stone-100',
     bgLight: 'bg-stone-100/10',
     textColor: 'text-stone-900',
     links: [
@@ -107,7 +107,7 @@ const SERVICE_HUBS = [
     title: '분석 도구',
     description: 'AI 분석·수익률 시뮬레이션',
     icon: Brain,
-    color: 'from-emerald-500 to-green-500',
+    color: 'from-stone-100 to-stone-100',
     bgLight: 'bg-stone-100/10',
     textColor: 'text-stone-900',
     links: [

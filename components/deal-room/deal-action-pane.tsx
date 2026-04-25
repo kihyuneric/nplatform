@@ -86,7 +86,7 @@ export function DealActionPane({ tier, onPrimaryAction, recentOffer, secondaryAc
       ? "bg-gradient-to-br from-[var(--color-brand-mid)] to-[var(--color-brand-dark)] text-white"
       : cta.variant === "accent"
       ? "bg-gradient-to-br from-[var(--color-accent-default)] to-[var(--color-accent-dark)] text-white"
-      : "bg-gradient-to-br from-amber-400 to-amber-600 text-amber-950"
+      : "bg-gradient-to-br from-stone-100 to-stone-100 text-amber-950"
 
   return (
     <div className="space-y-4">

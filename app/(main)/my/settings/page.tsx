@@ -234,7 +234,7 @@ export default function SettingsPage() {
             {/* Avatar */}
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-[var(--color-brand-mid)] to-purple-600 flex items-center justify-center text-white text-[1.1875rem] font-bold">
+                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-[var(--color-brand-mid)] to-stone-100 flex items-center justify-center text-white text-[1.1875rem] font-bold">
                   {form.name[0] ?? "?"}
                 </div>
                 <button className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-default)] flex items-center justify-center text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">

@@ -40,7 +40,7 @@ export default function CurriculumLayout({
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
           <Link href="/curriculum" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-stone-100 to-indigo-600 flex items-center justify-center">
               <BookOpen className="w-4 h-4 text-white" />
             </div>
             <span className="font-bold text-lg text-gray-900">
@@ -130,7 +130,7 @@ export default function CurriculumLayout({
           </nav>
         )}
 
-        <div className="h-[2px] bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500" />
+        <div className="h-[2px] bg-gradient-to-r from-stone-100 via-indigo-500 to-blue-500" />
       </header>
       <main>{children}</main>
     </div>

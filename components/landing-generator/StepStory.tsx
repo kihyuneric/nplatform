@@ -55,7 +55,7 @@ export function StepStory({ story }: StepStoryProps) {
 
   return (
     <div className="bg-[var(--color-surface-elevated)] rounded-2xl border border-[var(--color-border-subtle)] overflow-hidden">
-      <div className="px-6 py-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-b border-[var(--color-border-subtle)]">
+      <div className="px-6 py-4 bg-gradient-to-r from-blue-500/10 to-stone-100/10 border-b border-[var(--color-border-subtle)]">
         <h3 className="text-lg font-bold text-[var(--color-text-primary)]">📝 생성된 스토리텔링</h3>
         <p className="text-sm text-[var(--color-text-muted)]">각 섹션을 클릭하여 내용을 확인하세요</p>
       </div>
@@ -215,7 +215,7 @@ function SectionContent({ sectionId, content }: { sectionId: string; content: un
 
   if (sectionId === 'pricing') {
     return (
-      <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl p-4">
+      <div className="bg-gradient-to-br from-blue-500/10 to-stone-100/10 rounded-xl p-4">
         <p className="font-semibold text-[var(--color-text-secondary)]">{data.title}</p>
         <div className="flex items-baseline gap-3 mt-2">
           <span className="text-[var(--color-text-muted)] line-through text-lg">{data.originalPrice}</span>
@@ -250,7 +250,7 @@ function SectionContent({ sectionId, content }: { sectionId: string; content: un
 
   if (sectionId === 'finalCta') {
     return (
-      <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl p-4 text-white">
+      <div className="bg-gradient-to-r from-blue-500 to-stone-100 rounded-xl p-4 text-white">
         <p className="text-lg font-bold">{data.headline}</p>
         <p className="text-sm opacity-90 mt-1">{data.subheadline}</p>
         <div className="mt-3 flex items-center gap-3">

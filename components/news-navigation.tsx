@@ -76,7 +76,7 @@ export function NewsNavigation() {
       </div>
 
       {/* 그라데이션 하단 보더 */}
-      <div className="h-[2px] bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500" />
+      <div className="h-[2px] bg-gradient-to-r from-blue-600 via-indigo-500 to-stone-100" />
     </header>
   );
 }
