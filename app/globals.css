@@ -169,15 +169,26 @@ input::placeholder, textarea::placeholder {
     --color-nav-active:    #1B3A5C;                    /* 활성 nav 항목 — 브랜드 네이비 */
     --color-nav-hover-bg:  rgba(15, 23, 42, 0.06);     /* hover 배경 (slate-900/6%) */
 
-    /* ── McKinsey Editorial Accent · Warm Gold (signature divider) ─────────── */
-    --color-editorial-gold:      #C9A227;     /* warm gold — divider, label */
-    --color-editorial-gold-soft: rgba(201, 162, 39, 0.20);
+    /* ── McKinsey Editorial Accent · 절제된 brass tone ──────────────────────
+       이전 #C9A227 (warm gold) 너무 화려 → #A8853E (muted brass) 진짜 editorial
+       Sparingly, 라벨·divider·금속 액센트 한 곳에만 사용 */
+    --color-editorial-gold:      #A8853E;     /* muted brass — 절제 */
+    --color-editorial-gold-soft: rgba(168, 133, 62, 0.18);
 
-    /* ── Editorial Typography Stack ─────────────────────────────────────────
-       헤딩은 serif tone (Charter/Bookmania 부재 시 Georgia 폴백 — McKinsey style)
-       본문은 기존 Pretendard 유지 (한글 가독성) */
-    --font-editorial-display: 'Charter', 'Bookmania', 'Source Serif Pro', Georgia, 'Noto Serif KR', serif;
-    --font-editorial-body:    'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    /* ── 베이지 (McKinsey paper tone — 라이트 노이즈 액센트 배경) ─────────── */
+    --color-editorial-beige:     #F4EBE0;     /* warm paper */
+    --color-editorial-beige-deep:#E8DDC9;     /* sunken paper */
+
+    /* ── Charcoal (검은 navy 대신 neutral charcoal · McKinsey 헤더 톤) ───── */
+    --color-editorial-ink:       #14161A;     /* near-black, slightly warm */
+
+    /* ── Typography Stack ────────────────────────────────────────────────────
+       한국 사용자 대상: 헤딩은 Pretendard SemiBold/Bold + 음수 트래킹 + 큰 사이즈로 위계.
+       Serif fallback (Charter/Bookmania)은 한글에서 폴백 안 되므로 의미 없음 — 제거.
+       대신 영문/숫자만 serif tone 으로 (옵셔널). */
+    --font-editorial-display: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    --font-editorial-body:    'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    --font-editorial-numeric: 'Charter', 'Bookmania', 'Source Serif Pro', Georgia, serif;
 
     /* ── Brand Palette · McKinsey Editorial v2.5 (2026-04-25) ───────────────
        SSoT: docs/NPLatform_DesignSystem_v2_McKinsey.md §1.1
@@ -189,19 +200,26 @@ input::placeholder, textarea::placeholder {
     --color-brand-bright:  #2E75B6;     /* Interactive 통일 — focus ring, hover */
     --color-brand-light:   #93C5FD;     /* brand-300 — 디스플레이 강조 (히어로) */
 
-    /* ── Semantic Colors · 700-tone (editorial-grade · SaaS 500보다 차분) ───── */
-    --color-positive:     #047857;      /* emerald-700 — 수익·승인 (기존 #10B981 → 차분) */
-    --color-positive-bg:  #ECFDF5;
-    --color-positive-dark:#065F46;
+    /* ── Semantic Colors · McKinsey Mono Override (v3) ──────────────────────
+       이전: emerald/amber/red 등 multi-color → 페이지가 알록달록
+       신규: 모두 ink/charcoal/brass 음영으로 통일.
+       의미 차별화는 background tint + icon shape + text label 로 (color X) */
+    --color-positive:     #14161A;      /* ink (검정) — 이전 emerald 대체 */
+    --color-positive-bg:  rgba(168, 133, 62, 0.08);   /* brass tint */
+    --color-positive-dark:#14161A;
 
-    --color-warning:      #B45309;      /* amber-700 (기존 #F59E0B → 차분) */
-    --color-warning-bg:   #FFFBEB;
+    --color-warning:      #14161A;      /* ink — 이전 amber 대체 (label만 다르게) */
+    --color-warning-bg:   rgba(168, 133, 62, 0.10);
+    --color-warning-border: rgba(168, 133, 62, 0.25);
 
-    --color-danger:       #B91C1C;      /* red-700 (기존 #EF4444 → 진중) */
-    --color-danger-bg:    #FEF2F2;
+    --color-danger:       #1B1B1F;      /* near-ink (red 대체) */
+    --color-danger-bg:    rgba(20, 22, 26, 0.06);
 
-    --color-info:         #1D4ED8;      /* blue-700 (신규) */
-    --color-info-bg:      #EFF6FF;
+    --color-info:         #14161A;      /* ink (blue 대체) */
+    --color-info-bg:      rgba(20, 22, 26, 0.05);
+
+    /* 시각적 강조가 정말 필요한 곳만 brass */
+    --color-accent-strong: var(--color-editorial-gold);   /* #A8853E muted brass */
 
     /* ── Surfaces (light) — Editorial paper tone ────────────────────────────── */
     --color-surface-base:     #FAFBFC;
@@ -329,32 +347,32 @@ input::placeholder, textarea::placeholder {
     --ease-out:      cubic-bezier(0, 0, 0.2, 1);
     --ease-in-out:   cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* ── Shadcn HSL Tokens · McKinsey Editorial v2.5 (2026-04-25) ─────────────
-       시맨틱은 700-tone (차분), accent/ring은 brand-500 #2E75B6 통일 */
-    --background:          210 20% 98%;     /* #F8FAFC 페이지 배경 */
-    --foreground:          222 47% 11%;     /* #0F172A 본문 (slate-900) */
-    --card:                0 0% 100%;       /* #FFFFFF 카드 */
-    --card-foreground:     222 47% 11%;
+    /* ── Shadcn HSL Tokens · McKinsey Mono Override v3 ──────────────────────
+       모든 시맨틱 색상을 ink + brass 액센트로 통일. emerald/red/blue 모두 X */
+    --background:          36 33% 92%;      /* #F4EBE0 따뜻한 베이지 (이전 #F8FAFC) */
+    --foreground:          222 12% 9%;      /* #14161A near-ink */
+    --card:                0 0% 100%;       /* #FFFFFF 카드 (베이지 위 흰종이) */
+    --card-foreground:     222 12% 9%;
     --popover:             0 0% 100%;
-    --popover-foreground:  222 47% 11%;
-    --primary:             211 53% 23%;     /* #1B3A5C navy (CTA 배경) */
+    --popover-foreground:  222 12% 9%;
+    --primary:             222 12% 9%;      /* #14161A ink (CTA 배경) */
     --primary-foreground:  0 0% 100%;
-    --secondary:           210 59% 45%;     /* #2E75B6 mid blue (Interactive) */
+    --secondary:           211 53% 23%;     /* #1B3A5C navy 보조 */
     --secondary-foreground:0 0% 100%;
-    --muted:               210 20% 96%;     /* #F1F5F9 */
-    --muted-foreground:    215 19% 35%;     /* #475569 (slate-600) */
-    --accent:              167 100% 24%;    /* #047857 emerald-700 (editorial — 화려한 #10B981 → 차분) */
+    --muted:               36 25% 86%;      /* 베이지 deep */
+    --muted-foreground:    222 8% 35%;      /* 차콜 그레이 */
+    --accent:              40 47% 45%;      /* #A8853E muted brass (이전 emerald) */
     --accent-foreground:   0 0% 100%;
-    --destructive:         0 73% 41%;       /* #B91C1C red-700 (editorial — #EF4444 → 진중) */
+    --destructive:         222 12% 18%;     /* dark slate (이전 red 대체) */
     --destructive-foreground: 0 0% 100%;
-    --border:              214 32% 91%;     /* #E2E8F0 (slate-200) */
-    --input:               214 32% 91%;
-    --ring:                210 59% 45%;     /* #2E75B6 brand-500 — focus ring (밝은 #3B82F6 → editorial blue) */
-    --success:             167 100% 24%;   /* #047857 emerald-700 */
+    --border:              30 18% 82%;      /* 베이지 hairline */
+    --input:               30 18% 82%;
+    --ring:                40 47% 45%;      /* brass focus ring */
+    --success:             222 12% 9%;      /* ink (이전 emerald) */
     --success-foreground:  0 0% 100%;
-    --warning:             25 95% 36%;     /* #B45309 amber-700 */
+    --warning:             40 47% 45%;      /* brass (이전 amber) */
     --warning-foreground:  0 0% 100%;
-    --info:                221 83% 48%;    /* #1D4ED8 blue-700 */
+    --info:                222 12% 9%;      /* ink (이전 blue) */
     --info-foreground:     0 0% 100%;
 
     /* ═══════════════════════════════════════════════════════════════════════
@@ -470,22 +488,24 @@ input::placeholder, textarea::placeholder {
 
     --fg-on-warning:    #0D1F38;             /* amber bg 위 — 다크에서도 어두운 텍스트 필요 */
 
-    /* ── 시맨틱 색상 (다크 최적화 — editorial 톤, 배경 위에서 적절한 가독성) ── */
-    --color-positive:        #34D399;   /* emerald-400 — 다크 가독성 (라이트 #047857 → 다크 밝게) */
-    --color-positive-dark:   #34D399;
-    --color-positive-bg:     rgba(52,211,153,0.12);
-    --color-positive-border: rgba(52,211,153,0.25);
-    --color-warning:         #FBBF24;   /* amber-400 (라이트 #B45309 → 다크 밝게) */
-    --color-warning-dark:    #FBBF24;
-    --color-warning-bg:      rgba(251,191,36,0.12);
-    --color-warning-border:  rgba(251,191,36,0.25);
-    --color-danger:          #F87171;   /* red-400 (라이트 #B91C1C → 다크 밝게) */
-    --color-danger-bg:       rgba(248,113,113,0.12);
-    --color-danger-border:   rgba(248,113,113,0.25);
-    --color-info:            #60A5FA;   /* blue-400 — 다크 (라이트 #1D4ED8) */
-    --color-info-bg:         rgba(96,165,250,0.12);
-    /* brand-bright/mid/light는 위 Brand 블록에서 통일 정의됨 (indigo override 제거 — McKinsey 톤 일관) */
-    --color-purple:          #A78BFA;   /* purple-400 — 딜룸 강조 */
+    /* ── 시맨틱 색상 (다크 모드 · McKinsey Mono Override v3) ───────────────
+       다크 배경 위에서도 multi-color 금지 — 흰톤 + brass 액센트만 */
+    --color-positive:        #F8FAFC;   /* 다크 배경 위 흰톤 (이전 emerald 대체) */
+    --color-positive-dark:   #F8FAFC;
+    --color-positive-bg:     rgba(168, 133, 62, 0.14);
+    --color-positive-border: rgba(168, 133, 62, 0.30);
+    --color-warning:         #F8FAFC;   /* 흰톤 (이전 amber 대체) */
+    --color-warning-dark:    #F8FAFC;
+    --color-warning-bg:      rgba(168, 133, 62, 0.10);
+    --color-warning-border:  rgba(168, 133, 62, 0.25);
+    --color-danger:          #E2E8F0;   /* slate-200 (이전 red 대체) */
+    --color-danger-bg:       rgba(255, 255, 255, 0.06);
+    --color-danger-border:   rgba(255, 255, 255, 0.18);
+    --color-info:            #F8FAFC;   /* 흰톤 (이전 blue 대체) */
+    --color-info-bg:         rgba(255, 255, 255, 0.06);
+    /* brand-bright/mid/light는 위 Brand 블록에서 통일 정의됨 */
+    --color-purple:          #A8853E;   /* purple → brass 통일 */
+    --color-accent-strong:   var(--color-editorial-gold);
 
     /* NPL aliases */
     --npl-primary:           #2A5A8C;
@@ -497,33 +517,33 @@ input::placeholder, textarea::placeholder {
     --npl-text-secondary:    var(--color-text-secondary);
     --npl-border-subtle:     var(--color-border-subtle);
 
-    /* ── Shadcn HSL (다크 · McKinsey Editorial v2.5) ────────────────────────
-       라이트와 동일한 ring/primary 톤 (brand-500 #2E75B6) — 일관성 우선 */
-    --background:          222 47% 10%;    /* #0A1628 surface base (SSoT bg-canvas) */
-    --foreground:          210 40% 98%;    /* #F8FAFC (살짝 따뜻한 화이트) */
-    --card:                216 38% 15%;    /* #182338 elevated card (SSoT bg-elevated) */
+    /* ── Shadcn HSL (다크 · McKinsey Mono v3) ───────────────────────────────
+       다크 모드도 multi-color 금지 — ink + brass 액센트만 */
+    --background:          222 12% 7%;     /* #0F1115 deep ink (이전 navy) */
+    --foreground:          210 40% 98%;    /* #F8FAFC */
+    --card:                222 10% 12%;    /* #1A1C20 dark surface */
     --card-foreground:     210 40% 98%;
-    --popover:             216 38% 17%;    /* #1E2D47 float */
+    --popover:             222 10% 14%;    /* #20232A */
     --popover-foreground:  210 40% 98%;
-    --primary:             210 59% 45%;    /* #2E75B6 brand-500 (라이트와 통일) */
-    --primary-foreground:  0 0% 100%;
-    --secondary:           215 25% 22%;
+    --primary:             210 40% 98%;    /* white (다크 위 흰 CTA) */
+    --primary-foreground:  222 12% 7%;
+    --secondary:           222 10% 18%;
     --secondary-foreground:210 40% 88%;
-    --muted:               216 38% 18%;    /* #1F2D45 */
-    --muted-foreground:    215 20% 65%;    /* #94A3B8 */
-    --accent:              160 64% 52%;    /* #34D399 emerald-400 (다크 가독성) */
-    --accent-foreground:   222 47% 10%;    /* 다크 누름 위 */
-    --destructive:         0 72% 70%;      /* #F87171 red-400 */
+    --muted:               222 10% 16%;
+    --muted-foreground:    215 12% 65%;
+    --accent:              40 47% 50%;     /* muted brass (이전 emerald) */
+    --accent-foreground:   222 12% 7%;
+    --destructive:         222 8% 30%;     /* dark slate (이전 red) */
     --destructive-foreground: 0 0% 100%;
-    --border:              217 33% 17%;    /* #1E293B slate-800 (SSoT border-subtle) */
-    --input:               217 28% 21%;    /* #334155 slate-700 */
-    --ring:                210 59% 45%;    /* #2E75B6 라이트와 동일 ring */
-    --success:             160 64% 52%;
-    --success-foreground:  222 47% 10%;
-    --warning:             43 96% 56%;     /* #FBBF24 amber-400 */
-    --warning-foreground:  222 47% 10%;
-    --info:                210 100% 67%;   /* #60A5FA blue-400 */
-    --info-foreground:     0 0% 100%;
+    --border:              222 8% 18%;
+    --input:               222 8% 22%;
+    --ring:                40 47% 50%;     /* brass focus ring */
+    --success:             40 47% 50%;     /* brass (이전 emerald) */
+    --success-foreground:  222 12% 7%;
+    --warning:             40 47% 50%;     /* brass (이전 amber) */
+    --warning-foreground:  222 12% 7%;
+    --info:                40 47% 50%;     /* brass */
+    --info-foreground:     222 12% 7%;
 
     /* ═══════════════════════════════════════════════════════════════════════
        Semantic Tokens v2 — Dark (WCAG AA+, 가독성 재조정)
@@ -2737,3 +2757,151 @@ button[role="switch"][data-state="unchecked"] {
   font-style: italic;
   color: var(--color-text-secondary);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   McKinsey Monochrome System — Multi-color SaaS dashboard 톤 차단
+   "단색 navy + warm gold accent + grayscale chart"
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* CTA · 단색 deep navy + gold underline (emerald gradient 대체) */
+.npl-cta-mono {
+  background: var(--color-brand-deep);
+  color: #FFFFFF;
+  border: 1px solid var(--color-brand-deep);
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  position: relative;
+  transition: background 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.npl-cta-mono:hover {
+  background: #000000;   /* 더 진하게 */
+}
+.npl-cta-mono::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 1px;
+  background: var(--color-editorial-gold);
+  opacity: 0.6;
+  transition: width 240ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.npl-cta-mono:hover::after { width: 48px; opacity: 1; }
+
+/* Secondary CTA · 외곽선 navy + warm gold hover */
+.npl-cta-mono-outline {
+  background: transparent;
+  color: var(--color-brand-deep);
+  border: 1px solid var(--color-brand-deep);
+  font-weight: 600;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.npl-cta-mono-outline:hover {
+  background: var(--color-brand-deep);
+  color: #FFFFFF;
+  border-color: var(--color-editorial-gold);
+}
+.dark .npl-cta-mono-outline {
+  color: #F8FAFC;
+  border-color: rgba(255,255,255,0.4);
+}
+.dark .npl-cta-mono-outline:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: var(--color-editorial-gold);
+}
+
+/* Active step · navy fill (emerald active 대체) */
+.npl-step-mono {
+  border-color: var(--color-brand-deep);
+  background: var(--color-brand-deep);
+  color: #FFFFFF;
+}
+.npl-step-mono-pending {
+  border-color: var(--color-border-default);
+  background: transparent;
+  color: var(--color-text-tertiary);
+}
+.npl-step-mono-done {
+  border-color: var(--color-brand-deep);
+  background: transparent;
+  color: var(--color-brand-deep);
+}
+
+/* 정보 카드 · monochrome (분석 대시보드 etc.)
+ *   색상 차별화는 좌측 gold thin bar 로만. */
+.npl-card-mono {
+  background: #FFFFFF;
+  border: 1px solid var(--color-border-subtle);
+  position: relative;
+  transition: border-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.npl-card-mono::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--color-editorial-gold);
+  opacity: 0;
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.npl-card-mono:hover { border-color: var(--color-brand-deep); }
+.npl-card-mono:hover::before { opacity: 1; }
+.dark .npl-card-mono {
+  background: var(--color-surface-overlay);
+  border-color: var(--color-border-subtle);
+}
+
+/* 강조 숫자 · 단색 navy (multi-color metric 대체) */
+.npl-metric-mono {
+  font-family: var(--font-editorial-display);
+  font-weight: 700;
+  color: var(--color-brand-deep);
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+}
+.dark .npl-metric-mono {
+  color: #F8FAFC;
+}
+
+/* 라벨 · uppercase serif eyebrow */
+.npl-label-mono {
+  font-family: var(--font-editorial-body);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+/* 상태 칩 · 단색 + gold dot (colorful pill 대체) */
+.npl-chip-mono {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.625rem;
+  background: rgba(11, 27, 46, 0.04);
+  border: 1px solid rgba(11, 27, 46, 0.12);
+  color: var(--color-text-primary);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border-radius: 4px;
+}
+.npl-chip-mono::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background: var(--color-editorial-gold);
+  border-radius: 50%;
+}
+.dark .npl-chip-mono {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.12);
+  color: var(--color-text-primary);
+}
+
+/* 차트 단색화 (Recharts override — multi-color bars → grayscale + gold strong) */
+.npl-chart-mono .recharts-bar-rectangle:nth-child(odd) path { fill: var(--color-brand-deep) !important; }
+.npl-chart-mono .recharts-bar-rectangle:nth-child(even) path { fill: var(--color-border-default) !important; }
+.npl-chart-mono .recharts-bar-rectangle.npl-chart-mono-strong path { fill: var(--color-editorial-gold) !important; }

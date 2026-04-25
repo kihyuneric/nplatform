@@ -81,9 +81,9 @@ const toValidation = (list) => ({
 
 // ─── 스타일 ────────────────────────────────────────────────
 const FILL_SECTION = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1B3A5C" } }
-const FILL_INPUT = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEF3C7" } }
-const FILL_SELECT = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDBEAFE" } }
-const FILL_CHECK = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDCFCE7" } }
+const FILL_INPUT = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF4EBE0" } }
+const FILL_SELECT = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEFEAE0" } }
+const FILL_CHECK = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEEE7DA" } }
 const FILL_HELP = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } }
 const BORDER_ALL = {
   top: { style: "thin", color: { argb: "FFCBD5E1" } },
@@ -112,13 +112,13 @@ const styleSelect = (c) => {
   c.fill = FILL_SELECT
   c.border = BORDER_ALL
   c.alignment = { vertical: "middle" }
-  c.font = { size: 10, bold: true, color: { argb: "FF1E40AF" } }
+  c.font = { size: 10, bold: true, color: { argb: "FF14161A" } }
 }
 const styleCheck = (c) => {
   c.fill = FILL_CHECK
   c.border = BORDER_ALL
   c.alignment = { horizontal: "center", vertical: "middle" }
-  c.font = { size: 10, bold: true, color: { argb: "FF047857" } }
+  c.font = { size: 10, bold: true, color: { argb: "FF14161A" } }
 }
 const styleHelp = (c) => {
   c.fill = FILL_HELP
@@ -148,7 +148,7 @@ s1.getRow(r).values = ["항목", "값", "설명 / 예시"]
 for (const col of ["A", "B", "C"]) {
   const c = s1.getCell(`${col}${r}`)
   c.font = { bold: true, color: { argb: "FFFFFFFF" } }
-  c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2E75B6" } }
+  c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF14161A" } }
   c.alignment = { vertical: "middle", horizontal: "center" }
   c.border = BORDER_ALL
 }
@@ -220,7 +220,7 @@ s2.getRow(r2).values = ["항목", "체크 (O/X)", "비고"]
 for (const col of ["A", "B", "C"]) {
   const c = s2.getCell(`${col}${r2}`)
   c.font = { bold: true, color: { argb: "FFFFFFFF" } }
-  c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2E75B6" } }
+  c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF14161A" } }
   c.alignment = { vertical: "middle", horizontal: "center" }
   c.border = BORDER_ALL
 }
@@ -273,7 +273,7 @@ s3.getRow(r3).values = ["항목", "값", "설명"]
 for (const col of ["A", "B", "C"]) {
   const c = s3.getCell(`${col}${r3}`)
   c.font = { bold: true, color: { argb: "FFFFFFFF" } }
-  c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2E75B6" } }
+  c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF14161A" } }
   c.alignment = { vertical: "middle", horizontal: "center" }
   c.border = BORDER_ALL
 }
@@ -347,7 +347,7 @@ s4.getRow(r4).values = ["버킷", "특수조건", "회피 (O/X)", "비고"]
 for (const col of ["A", "B", "C", "D"]) {
   const c = s4.getCell(`${col}${r4}`)
   c.font = { bold: true, color: { argb: "FFFFFFFF" } }
-  c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2E75B6" } }
+  c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF14161A" } }
   c.alignment = { vertical: "middle", horizontal: "center" }
   c.border = BORDER_ALL
 }
@@ -409,7 +409,7 @@ for (const row of guide) {
     s5.getCell(`A${r5}`).font = { bold: true, size: 13, color: { argb: "FF1B3A5C" } }
     s5.mergeCells(`A${r5}:B${r5}`)
   } else if (/^\d\./.test(String(row[0]))) {
-    s5.getCell(`A${r5}`).font = { bold: true, size: 11, color: { argb: "FF1E40AF" } }
+    s5.getCell(`A${r5}`).font = { bold: true, size: 11, color: { argb: "FF14161A" } }
     s5.mergeCells(`A${r5}:B${r5}`)
   } else {
     s5.getCell(`B${r5}`).font = { size: 10, color: { argb: "FF475569" } }

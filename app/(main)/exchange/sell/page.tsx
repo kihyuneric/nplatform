@@ -420,22 +420,28 @@ export default function SellWizardPage() {
               const done = step > s.id
               const active = step === s.id
               const Icon = s.icon
+              // McKinsey monochrome step indicator: navy active · gold dot for done · plain pending
               return (
                 <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <div
                     style={{
                       display: "inline-flex", alignItems: "center", gap: 8,
-                      padding: "8px 14px", borderRadius: 999,
-                      backgroundColor: active ? "var(--color-positive-bg)" : done ? "var(--color-positive-bg)" : C.bg2,
-                      border: `1px solid ${active ? C.em : done ? "rgba(16, 185, 129, 0.33)" : C.bg4}`,
-                      color: active ? C.emL : done ? C.em : C.lt4,
-                      fontSize: 11, fontWeight: 700,
+                      padding: "8px 14px", borderRadius: 4,
+                      backgroundColor: active ? "var(--color-brand-deep)" : "transparent",
+                      border: `1px solid ${active ? "var(--color-brand-deep)" : done ? "var(--color-brand-deep)" : "var(--color-border-default)"}`,
+                      color: active ? "#FFFFFF" : done ? "var(--color-brand-deep)" : "var(--color-text-tertiary)",
+                      fontSize: 11, fontWeight: 700, letterSpacing: "0.02em",
                     }}
                   >
-                    {done ? <Check size={12} /> : <Icon size={12} />}
+                    {done ? (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--color-editorial-gold)" }} />
+                        <Check size={12} />
+                      </span>
+                    ) : <Icon size={12} />}
                     {s.label}
                   </div>
-                  {i < STEPS.length - 1 && <ChevronRight size={12} color={C.bg4} />}
+                  {i < STEPS.length - 1 && <ChevronRight size={12} color="var(--color-border-default)" />}
                 </div>
               )
             })}

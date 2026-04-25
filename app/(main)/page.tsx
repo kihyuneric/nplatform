@@ -172,7 +172,7 @@ function DealCard() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[9px] px-2 py-0.5 rounded font-bold"
-              style={{ background: 'rgba(16,185,129,0.12)', color: C.em, border: '1px solid rgba(16,185,129,0.25)' }}>
+              style={{ background: 'var(--color-editorial-gold-soft, rgba(168,133,62,0.14))', color: C.em, border: '1px solid rgba(168,133,62,0.35)' }}>
               L0
             </span>
           </div>
@@ -193,7 +193,7 @@ function DealCard() {
               </div>
             </div>
             <div className="shrink-0 px-2 py-1 rounded-md text-[10px] font-extrabold"
-              style={{ background: 'rgba(16,185,129,0.12)', color: C.em, border: '1px solid rgba(16,185,129,0.3)' }}>
+              style={{ background: 'var(--color-editorial-gold-soft, rgba(168,133,62,0.14))', color: C.em, border: '1px solid rgba(16,185,129,0.3)' }}>
               AI A
             </div>
           </div>
@@ -225,7 +225,7 @@ function DealCard() {
           {/* Completeness bar */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 px-2 py-1 rounded-md" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
+              <div className="flex items-center gap-1 px-2 py-1 rounded-md" style={{ background: 'var(--color-editorial-gold-soft, rgba(168,133,62,0.10))', border: '1px solid rgba(168,133,62,0.30)' }}>
                 <Shield size={10} style={{ color: C.em }} />
                 <span className="text-[10px] font-bold" style={{ color: C.em }}>9/10</span>
               </div>
@@ -254,7 +254,7 @@ function DealCard() {
 
           {/* CTA */}
           <div className="py-2.5 rounded-xl text-center cursor-pointer font-extrabold text-xs transition-all hover:brightness-110 flex items-center justify-center gap-1.5"
-            style={{ background: `linear-gradient(135deg, ${C.em}, #059669)`, color: 'white', boxShadow: '0 4px 12px rgba(16,185,129,0.25)' }}>
+            style={{ background: 'var(--color-brand-deep)', color: 'white', border: '1px solid var(--color-brand-deep)' }}>
             딜룸 입장 · 상세 <ArrowRight size={13} />
           </div>
         </div>
@@ -307,7 +307,7 @@ function AISearch() {
     <div className="w-full max-w-xl">
       <div className="flex items-center gap-2 mb-2.5">
         <div className="flex items-center gap-1.5 rounded-full px-3 py-1"
-          style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+          style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(168,133,62,0.30)' }}>
           <Brain size={11} style={{ color: C.em }} />
           <span className="text-[11px] font-bold" style={{ color: C.em, letterSpacing: '0.05em' }}>AI 자연어 검색</span>
         </div>
@@ -331,13 +331,13 @@ function AISearch() {
           aria-label="NPL 자연어 검색"
         />
         <div className="flex items-center gap-1.5 mx-2 px-2.5 py-1.5 rounded-lg flex-shrink-0"
-          style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+          style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(168,133,62,0.30)' }}>
           <Sparkles size={10} style={{ color: C.em }} />
           <span className="text-[10px] font-black" style={{ color: C.em }}>AI</span>
         </div>
         <Link href={`/exchange${q ? `?q=${encodeURIComponent(q)}` : ""}`}
           className="text-sm font-bold px-5 py-3.5 flex-shrink-0 transition-all"
-          style={{ background: `linear-gradient(135deg, ${C.em}, #059669)`, color: 'white' }}>
+          style={{ background: 'var(--color-brand-deep)', color: 'white' }}>
           검색
         </Link>
       </div>
@@ -501,7 +501,7 @@ export default function LandingPage() {
               <motion.div variants={up} custom={3} className="flex flex-col sm:flex-row gap-3 mb-7">
                 <Link href="/exchange"
                   className="group inline-flex items-center justify-center gap-2 font-bold text-sm rounded-xl transition-all"
-                  style={{ background: `linear-gradient(135deg, ${C.em}, #059669)`, color: 'white', padding: '14px 28px', boxShadow: `0 4px 20px rgba(16,185,129,0.3)` }}
+                  style={{ background: 'var(--color-brand-deep)', color: 'white', padding: '14px 28px', border: '1px solid var(--color-brand-deep)' }}
                   onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
                   onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
                 >
@@ -755,7 +755,7 @@ export default function LandingPage() {
                 </ul>
                 <Link href="/exchange/sell"
                   className="inline-flex items-center gap-2 font-bold text-sm rounded-xl transition-all"
-                  style={{ background: `linear-gradient(135deg, ${C.em}, #059669)`, color: 'white', padding: '12px 24px', boxShadow: `0 4px 16px rgba(16,185,129,0.25)` }}
+                  style={{ background: 'var(--color-brand-deep)', color: 'white', padding: '12px 24px', border: '1px solid var(--color-brand-deep)' }}
                   onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')}
                   onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
                 >
@@ -807,7 +807,7 @@ export default function LandingPage() {
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={up} className="text-center mb-14">
             <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5"
-              style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
+              style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(20,22,26,0.20)' }}>
               <RefreshCw size={12} style={{ color: C.amber }} />
               <span className="text-xs font-bold" style={{ color: C.amber, letterSpacing: '0.06em' }}>거래 프로세스</span>
             </div>
@@ -832,7 +832,7 @@ export default function LandingPage() {
                 <div className="text-sm font-bold mb-1.5" style={{ color: 'rgba(255,255,255,0.85)' }}>{s.t}</div>
                 <div className="text-xs leading-relaxed mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>{s.d}</div>
                 {s.sla && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.08)', color: C.em, border: '1px solid rgba(16,185,129,0.2)' }}>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--color-editorial-gold-soft, rgba(168,133,62,0.10))', color: C.em, border: '1px solid rgba(168,133,62,0.30)' }}>
                     <Zap size={9} />{s.sla}
                   </span>
                 )}
@@ -852,7 +852,7 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2 mb-0.5">
                     <div className="text-[10px] font-black" style={{ color: C.em }}>{s.n}</div>
                     {s.sla && (
-                      <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.08)', color: C.em, border: '1px solid rgba(16,185,129,0.2)' }}>
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--color-editorial-gold-soft, rgba(168,133,62,0.10))', color: C.em, border: '1px solid rgba(168,133,62,0.30)' }}>
                         <Zap size={8} />{s.sla}
                       </span>
                     )}
@@ -935,10 +935,7 @@ export default function LandingPage() {
               style={{ fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', color: 'rgba(255,255,255,0.95)' }}
             >
               오늘 움직이는{" "}
-              <span style={{
-                background: `linear-gradient(135deg, ${C.em}, ${C.emL}, #6EE7B7)`,
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              }}>NPL 딜 플로우</span>
+              <span style={{ color: 'var(--color-editorial-gold)' }}>NPL 딜 플로우</span>
             </motion.h2>
 
             <motion.p variants={up} custom={2} className="text-base mb-8"
@@ -950,7 +947,7 @@ export default function LandingPage() {
             <motion.div variants={up} custom={3} className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Link href="/exchange"
                 className="inline-flex items-center justify-center gap-2 font-bold text-base rounded-xl transition-all"
-                style={{ background: `linear-gradient(135deg, ${C.em}, #059669)`, color: 'white', padding: '16px 32px', boxShadow: `0 4px 24px rgba(16,185,129,0.25)` }}
+                style={{ background: 'var(--color-brand-deep)', color: 'white', padding: '16px 32px', border: '1px solid var(--color-brand-deep)' }}
                 onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
                 onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
               >

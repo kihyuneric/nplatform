@@ -51,9 +51,9 @@ const toValidation = (list) => ({
 
 // ─── 스타일 헬퍼 ───────────────────────────────────────────
 const FILL_SECTION = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B3A5C' } }      // 네이비
-const FILL_INPUT   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } }      // 연노랑 (자유입력)
-const FILL_SELECT  = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } }      // 연파랑 (드롭다운)
-const FILL_CHECK   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } }      // 연녹색 (O/X)
+const FILL_INPUT   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4EBE0' } }      // 연노랑 (자유입력)
+const FILL_SELECT  = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFEAE0' } }      // 연파랑 (드롭다운)
+const FILL_CHECK   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEE7DA' } }      // 연녹색 (O/X)
 const FILL_HELP    = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } }      // 매우 연한 회색
 
 const BORDER_ALL = {
@@ -83,13 +83,13 @@ function styleSelect(cell) {
   cell.fill = FILL_SELECT
   cell.border = BORDER_ALL
   cell.alignment = { vertical: 'middle' }
-  cell.font = { size: 10, bold: true, color: { argb: 'FF1E40AF' } }
+  cell.font = { size: 10, bold: true, color: { argb: 'FF14161A' } }
 }
 function styleCheck(cell) {
   cell.fill = FILL_CHECK
   cell.border = BORDER_ALL
   cell.alignment = { horizontal: 'center', vertical: 'middle' }
-  cell.font = { size: 10, bold: true, color: { argb: 'FF047857' } }
+  cell.font = { size: 10, bold: true, color: { argb: 'FF14161A' } }
 }
 function styleHelp(cell) {
   cell.fill = FILL_HELP
@@ -124,7 +124,7 @@ s1.getRow(r).values = ['항목', '값 (드롭다운 · 자유입력 · O/X)', '�
 for (const col of ['A', 'B', 'C']) {
   const c = s1.getCell(`${col}${r}`)
   c.font = { bold: true, size: 10, color: { argb: 'FFFFFFFF' } }
-  c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2E75B6' } }
+  c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF14161A' } }
   c.alignment = { vertical: 'middle', horizontal: 'center' }
   c.border = BORDER_ALL
 }
@@ -265,7 +265,7 @@ s2.getRow(3).values = ['버킷', '특수조건', '감점', '체크 (O/X)', '비�
 for (const col of ['A', 'B', 'C', 'D', 'E']) {
   const c = s2.getCell(`${col}3`)
   c.font = { bold: true, color: { argb: 'FFFFFFFF' } }
-  c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2E75B6' } }
+  c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF14161A' } }
   c.alignment = { vertical: 'middle', horizontal: 'center' }
   c.border = BORDER_ALL
 }
@@ -298,7 +298,7 @@ for (const [bucket, name, penalty, memo] of SPECIAL_CONDITIONS) {
   styleLabel(s2.getCell(`B${rr}`))
   const cPen = s2.getCell(`C${rr}`)
   cPen.alignment = { horizontal: 'center', vertical: 'middle' }
-  cPen.font = { size: 10, color: { argb: 'FFB91C1C' }, bold: true }
+  cPen.font = { size: 10, color: { argb: 'FF14161A' }, bold: true }
   cPen.border = BORDER_ALL
   styleCheck(s2.getCell(`D${rr}`))
   s2.getCell(`D${rr}`).dataValidation = toValidation(YES_NO)
@@ -309,7 +309,7 @@ for (const [bucket, name, penalty, memo] of SPECIAL_CONDITIONS) {
 rr++
 s2.getRow(rr).values = ['', '권리관계 기초점수 = max(20, 100 − Σ감점)', '', '', '']
 s2.mergeCells(`A${rr}:E${rr}`)
-s2.getCell(`A${rr}`).font = { bold: true, italic: true, color: { argb: 'FF047857' } }
+s2.getCell(`A${rr}`).font = { bold: true, italic: true, color: { argb: 'FF14161A' } }
 s2.getCell(`A${rr}`).alignment = { horizontal: 'center', vertical: 'middle' }
 
 // ══════════════════════════════════════════════════════════
@@ -336,7 +336,7 @@ s3.getRow(3).values = ['구분', '서류명', '필수 여부', '제공 여부', 
 for (const col of ['A', 'B', 'C', 'D', 'E']) {
   const c = s3.getCell(`${col}3`)
   c.font = { bold: true, color: { argb: 'FFFFFFFF' } }
-  c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2E75B6' } }
+  c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF14161A' } }
   c.alignment = { vertical: 'middle', horizontal: 'center' }
   c.border = BORDER_ALL
 }
@@ -382,7 +382,7 @@ for (const [kind, name, req, memo] of DOCS) {
   styleLabel(s3.getCell(`B${rr}`))
   const cReq = s3.getCell(`C${rr}`)
   cReq.alignment = { horizontal: 'center', vertical: 'middle' }
-  cReq.font = { size: 10, bold: true, color: req === '필수' ? { argb: 'FFB91C1C' } : { argb: 'FF64748B' } }
+  cReq.font = { size: 10, bold: true, color: req === '필수' ? { argb: 'FF14161A' } : { argb: 'FF64748B' } }
   cReq.border = BORDER_ALL
   styleCheck(s3.getCell(`D${rr}`))
   s3.getCell(`D${rr}`).dataValidation = toValidation(SUPPLY_YESNO)
@@ -393,7 +393,7 @@ for (const [kind, name, req, memo] of DOCS) {
 rr++
 s3.getRow(rr).values = ['', '필수 2종 (등기부등본·외관 전경 사진) + 선택 자료 추가 제공 시 자료 완성도 100/100 달성.', '', '', '']
 s3.mergeCells(`A${rr}:E${rr}`)
-s3.getCell(`A${rr}`).font = { bold: true, italic: true, color: { argb: 'FF047857' } }
+s3.getCell(`A${rr}`).font = { bold: true, italic: true, color: { argb: 'FF14161A' } }
 s3.getCell(`A${rr}`).alignment = { horizontal: 'center', vertical: 'middle' }
 
 // ══════════════════════════════════════════════════════════
@@ -457,7 +457,7 @@ for (const row of guide) {
     s4.getCell(`B${rr}`).font = { size: 10, color: { argb: 'FF334155' } }
   } else if (/^\d\./.test(String(row[0]))) {
     // 번호 섹션 제목
-    s4.getCell(`A${rr}`).font = { bold: true, size: 11, color: { argb: 'FF1E40AF' } }
+    s4.getCell(`A${rr}`).font = { bold: true, size: 11, color: { argb: 'FF14161A' } }
     s4.mergeCells(`A${rr}:B${rr}`)
   } else {
     s4.getCell(`B${rr}`).font = { size: 10, color: { argb: 'FF475569' } }

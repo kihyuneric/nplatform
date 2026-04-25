@@ -433,16 +433,16 @@ export default function ExchangePage() {
   return (
     <main style={{ backgroundColor: V.surfaceSunken, color: V.textPrimary, minHeight: "100vh" }}>
 
-      {/* ── 데모 모드 배너 ────────────────────────────── */}
+      {/* ── 데모 모드 배너 · McKinsey mono editorial ──────────────── */}
       {isDemoMode && !demoDismissed && (
         <div style={{
-          backgroundColor: "rgba(245,158,11,0.08)",
-          borderBottom: "1px solid rgba(245,158,11,0.22)",
+          backgroundColor: "var(--color-editorial-beige, #F4EBE0)",
+          borderBottom: "1px solid rgba(20, 22, 26, 0.10)",
           padding: "10px 24px",
         }}>
           <div style={{ maxWidth: 1440, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--color-warning)", fontWeight: 600 }}>
-              <Zap size={14} />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--color-editorial-ink, #14161A)", fontWeight: 600 }}>
+              <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "var(--color-editorial-gold, #A8853E)" }} />
               <span>
                 데모 체험 모드 — 샘플 매물 <strong>{MOCK.length}건</strong>을 표시 중입니다. 실제 등록된 매물이 없습니다.
               </span>
@@ -450,7 +450,7 @@ export default function ExchangePage() {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Link
                 href="/exchange/sell"
-                style={{ fontSize: 12, fontWeight: 700, color: "var(--color-warning-dark, #92400E)", textDecoration: "underline" }}
+                style={{ fontSize: 12, fontWeight: 700, color: "var(--color-editorial-ink, #14161A)", textDecoration: "underline", textDecorationColor: "var(--color-editorial-gold, #A8853E)", textUnderlineOffset: "3px" }}
               >
                 매물 등록하기 →
               </Link>

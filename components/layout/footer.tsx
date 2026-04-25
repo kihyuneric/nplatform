@@ -181,14 +181,16 @@ export function Footer() {
           </div>
         </div>
 
-        {/* ── Regulatory compliance strip ─────────────── */}
-        <div className="mt-10 pt-6 border-t border-[var(--color-brand-deep)]/40">
+        {/* ── Regulatory compliance strip · McKinsey mono editorial ─────────── */}
+        <div className="mt-10 pt-6 border-t" style={{ borderColor: "rgba(255,255,255,0.10)" }}>
+          {/* warm brass thin divider — editorial signature */}
+          <div className="mb-4" style={{ height: 1, width: 48, background: "var(--color-editorial-gold, #A8853E)" }} />
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            <ComplianceBadge label="개인정보보호법 준수" color="#10B981" />
-            <ComplianceBadge label="신용정보법 준수" color="#10B981" />
-            <ComplianceBadge label="전자금융거래법 준수" color="#10B981" />
-            <ComplianceBadge label="ISMS-P 준비 중" color="#F59E0B" />
-            <ComplianceBadge label="에스크로 자금보호" color="#3B82F6" />
+            <ComplianceBadge label="개인정보보호법 준수" />
+            <ComplianceBadge label="신용정보법 준수" />
+            <ComplianceBadge label="전자금융거래법 준수" />
+            <ComplianceBadge label="ISMS-P 준비 중" />
+            <ComplianceBadge label="에스크로 자금보호" />
           </div>
           <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed max-w-4xl">
             NPLatform은 금융감독원 · 금융위원회의 개인정보 · 채무자정보 보호 지침에 따라 모든 매물 데이터에 대해
@@ -228,8 +230,9 @@ export function Footer() {
             <span className="text-[11px] text-[var(--color-text-muted)] font-mono tracking-wide">
               NPLatform v12.0
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-brand-deep)]/60 text-[10px] text-slate-400 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+            {/* 서비스 상태 — mono editorial: brass dot + 흰톤 글씨 */}
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)" }}>
+              <span className="w-1.5 h-1.5 inline-block" style={{ background: "var(--color-editorial-gold, #A8853E)" }} />
               서비스 정상
             </span>
           </div>
@@ -239,20 +242,23 @@ export function Footer() {
   )
 }
 
-// ─── Compliance badge pill ──────────────────────────────────
-function ComplianceBadge({ label, color }: { label: string; color: string }) {
+// ─── Compliance badge · McKinsey mono editorial ──────────────────────────────
+// 모든 뱃지 동일 톤 (이전: emerald/amber/blue 컬러 prop → 모두 brass + 흰톤)
+function ComplianceBadge({ label }: { label: string; color?: string }) {
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold"
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-semibold"
       style={{
-        backgroundColor: `${color}14`,
-        color,
-        border: `1px solid ${color}33`,
+        background: "transparent",
+        color: "rgba(255, 255, 255, 0.78)",
+        border: "1px solid rgba(255, 255, 255, 0.16)",
+        borderRadius: 0,
+        letterSpacing: "0.02em",
       }}
     >
       <span
-        className="w-1.5 h-1.5 rounded-full inline-block"
-        style={{ backgroundColor: color }}
+        className="w-1 h-1 inline-block"
+        style={{ background: "var(--color-editorial-gold, #A8853E)" }}
       />
       {label}
     </span>
