@@ -85,6 +85,127 @@ const STATIC_DICT: Record<string, Record<string, string>> = {
   },
 }
 
+// ── Phase L · 메인 홈 페이지 핵심 텍스트 (사용자 스크린샷 누락분) ──────
+Object.assign(STATIC_DICT.en, {
+  // 히어로 섹션
+  'NPL 거래, 이제 다르게': 'NPL Trading, Reimagined',
+  '기존 NPL 거래의 불투명성, 높은 진입장벽, 복잡한 프로세스를 AI로 해결합니다.':
+    'AI eliminates opacity, high entry barriers, and complex processes in legacy NPL trading.',
+  '복잡한 NPL 거래를 단순하고 투명하게. 각 단계마다 AI가 함께합니다.':
+    'Complex NPL trading, made simple and transparent. AI assists at every step.',
+  '5단계로 완결되는 거래': 'Trades Completed in 5 Steps',
+  '거래 프로세스': 'Transaction Process',
+  '매각자와 투자자 모두를 위한': 'For Both Sellers and Investors',
+  '누구를 위한 플랫폼인가': 'Who is this platform for?',
+  // 카드 라벨
+  '거래 효율 3배': '3x Trade Efficiency',
+  '47개 금융기관': '47 Financial Institutions',
+  'L0→L3 4단계 접근': 'L0→L3 Tiered Access',
+  '매도자 → 투자자 직거래': 'Seller → Investor Direct Trade',
+  '거래 안전 · PII 보호': 'Secure Trade · PII Protection',
+  // 통계 타일
+  '협력 금융기관': 'Partner Institutions',
+  '평균 수익률': 'Average Return',
+  '거래완료': 'Completed Trades',
+  '총 거래액': 'Total Volume',
+  'AI 분석': 'AI Analyses',
+  '누적 거래액': 'Cumulative Volume',
+  'AI 분석 건수': 'AI Analysis Count',
+  // 매도자/투자자 카드
+  '금융기관 (매각사)': 'Financial Institution (Seller)',
+  '대부업체 / 투자자': 'Lenders / Investors',
+  '매각사 · 금융기관': 'Sellers · Financial Institutions',
+  '매물 일괄 등록 및 관리': 'Bulk listing registration · management',
+  '실시간 입찰 모니터링': 'Real-time bid monitoring',
+  'AI 가격 자동 산정': 'AI auto-pricing',
+  '딜룸 문서 관리': 'Deal Room document management',
+  '전자계약 원스톱': 'One-stop e-contract',
+  '30+ 조건 통합 검색': '30+ filter unified search',
+  'AI 리스크 등급 분석': 'AI risk grade analysis',
+  '수익률 시뮬레이션': 'ROI simulation',
+  '실시간 경쟁 입찰': 'Real-time competitive bidding',
+  'AI Copilot 상담': 'AI Copilot consultation',
+  // 5단계 프로세스
+  '담보·권리·시세·회수확률을 30초 내 리포트. 투자자가 본인인증(L1)만으로 열람.':
+    'Collateral·rights·market·recovery report in 30 seconds. Investors view with KYC (L1).',
+  '공개 경쟁 입찰 또는 NDA(L2) 프라이빗 협상. 자동 입찰 에이전트 지원.':
+    'Open competitive bidding or NDA(L2) private negotiation. Auto-bidding agent supported.',
+  'LOI(L3) 승인 후 채권서류·권리관계 전체 열람. 보안 채널 협상 + 문서 교환.':
+    'After LOI(L3) approval, full bond documents·rights access. Secure channel + document exchange.',
+  '전자계약서 자동 생성 → 서명 → 에스크로 대금 지급 → 채권양도 완결.':
+    'E-contract auto-generated → signed → escrow paid → bond transfer completed.',
+  '매도자(금융기관)가 NPL을 L0 카드 형태로 공개. PII는 자동 마스킹.':
+    'Seller (institution) discloses NPL as L0 card. PII auto-masked.',
+  // 신뢰 배지
+  '금융감독원 준수': 'FSS Compliant',
+  'AES-256 암호화': 'AES-256 Encryption',
+  'ISO 27001 인증': 'ISO 27001 Certified',
+  '개인정보보호법 준수': 'PIPA Compliant',
+  // 검색바
+  'AI 자연어 검색': 'AI Natural Language Search',
+  '원하는 물건을 자유롭게 설명하세요': 'Describe what you are looking for',
+  '저축은행 연체 6개월 이상 담보 A등급': 'Savings bank · 6+ months overdue · A-grade collateral',
+  '서울 아파트': 'Seoul Apartment',
+  '수익률 20%+': 'Return 20%+',
+  '1억 이하': 'Under 100M KRW',
+  'A등급 저위험': 'Grade A · Low Risk',
+  '관리자': 'Administrator',
+  // 단위
+  '건': '',
+  '개사': ' firms',
+  '억': 'B KRW',
+  '만원': 'M KRW',
+  '원': ' KRW',
+  '명': '',
+})
+Object.assign(STATIC_DICT.ja, {
+  'NPL 거래, 이제 다르게': 'NPL取引、新しい体験',
+  '기존 NPL 거래의 불투명성, 높은 진입장벽, 복잡한 프로세스를 AI로 해결합니다.':
+    'AIが既存NPL取引の不透明性、高い参入障壁、複雑なプロセスを解決します。',
+  '복잡한 NPL 거래를 단순하고 투명하게. 각 단계마다 AI가 함께합니다.':
+    '複雑なNPL取引をシンプルで透明に。各ステップでAIが伴走します。',
+  '5단계로 완결되는 거래': '5ステップで完結する取引',
+  '거래 프로세스': '取引プロセス',
+  '매각자와 투자자 모두를 위한': '売却者と投資家のための',
+  '누구를 위한 플랫폼인가': 'どなたのためのプラットフォームか',
+  '거래 효율 3배': '取引効率3倍',
+  '47개 금융기관': '金融機関47社',
+  'L0→L3 4단계 접근': 'L0→L3 4段階アクセス',
+  '매도자 → 투자자 직거래': '売却者 → 投資家 直接取引',
+  '거래 안전 · PII 보호': '安全取引 · PII保護',
+  '협력 금융기관': '提携金融機関',
+  '평균 수익률': '平均利回り',
+  '거래완료': '取引完了',
+  '총 거래액': '総取引額',
+  'AI 분석': 'AI分析',
+  '누적 거래액': '累計取引額',
+  'AI 분석 건수': 'AI分析件数',
+  '금융기관 (매각사)': '金融機関(売却者)',
+  '대부업체 / 투자자': '貸金業者 / 投資家',
+  '매각사 · 금융기관': '売却者 · 金融機関',
+  '매물 일괄 등록 및 관리': '物件一括登録·管理',
+  '실시간 입찰 모니터링': 'リアルタイム入札監視',
+  'AI 가격 자동 산정': 'AI価格自動算定',
+  '딜룸 문서 관리': 'ディールルーム文書管理',
+  '전자계약 원스톱': '電子契約ワンストップ',
+  '30+ 조건 통합 검색': '30以上の条件統合検索',
+  'AI 리스크 등급 분석': 'AIリスク等級分析',
+  '수익률 시뮬레이션': '利回りシミュレーション',
+  '실시간 경쟁 입찰': 'リアルタイム競争入札',
+  'AI Copilot 상담': 'AI Copilot相談',
+  '금융감독원 준수': '金融監督院準拠',
+  'AES-256 암호화': 'AES-256暗号化',
+  'ISO 27001 인증': 'ISO 27001認証',
+  '개인정보보호법 준수': '個人情報保護法準拠',
+  'AI 자연어 검색': 'AI自然言語検索',
+  '원하는 물건을 자유롭게 설명하세요': '希望する物件を自由に記述してください',
+  '서울 아파트': 'ソウルアパート',
+  '수익률 20%+': '利回り20%+',
+  '1억 이하': '1億以下',
+  'A등급 저위험': 'Aグレード低リスク',
+  '관리자': '管理者',
+})
+
 // ── 거래소 페이지 번역 추가 ────────────────────────────────────────────
 Object.assign(STATIC_DICT.en, {
   // 거래소 헤더
@@ -1060,21 +1181,26 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * 구글 번역 API (무료 비공식 엔드포인트)
- * 대량 사용 시 Google Cloud Translation API 키로 전환 권장
+ * Phase L · 서버사이드 번역 프록시 호출.
+ *
+ * 이전: 브라우저에서 직접 translate.googleapis.com 호출 → CSP/CAPTCHA 차단 자주 발생
+ * 이후: /api/v1/translate 서버 라우트 호출 → 다중 폴백 (Google → MyMemory → 원문)
+ *       서버는 CSP 영향 없음 + CDN 캐시 1일
  */
 async function googleTranslate(text: string, targetLang: string): Promise<string> {
-  const langMap: Record<string, string> = { ko: 'ko', en: 'en', ja: 'ja' }
-  const target = langMap[targetLang] || 'en'
+  const langMap: Record<string, string> = { en: 'en', ja: 'ja' }
+  const target = langMap[targetLang]
+  if (!target) return text
 
   try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ko&tl=${target}&dt=t&q=${encodeURIComponent(text)}`
-    const res = await fetch(url)
+    const res = await fetch('/api/v1/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texts: [text], targetLang: target }),
+    })
     if (!res.ok) return text
-    const data = await res.json()
-    // 구글 번역 응답: [[["translated text","original text",null,null,10]],null,"ko"]
-    const translated = data?.[0]?.map((item: any[]) => item[0]).join('') || text
-    return translated
+    const data = await res.json() as { translations?: string[] }
+    return data.translations?.[0] || text
   } catch {
     return text
   }
