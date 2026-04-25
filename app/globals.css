@@ -3048,6 +3048,152 @@ button[role="switch"][data-state="unchecked"] {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   McKinsey 한국 보고서 패턴 (PDF 직접 추출 — 2025 기술 트렌드, 조직건강도 차트)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 보고서 큰 헤딩 — 검정 Pretendard Bold, 줄간격 1.3 */
+.npl-mck-report-heading {
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: #051C2C;
+  word-break: keep-all;
+}
+.dark .npl-mck-report-heading { color: #FFFFFF; }
+
+/* 회색 본문 박스 — 정보/안내문 (PDF에 본 톤) */
+.npl-mck-info-box {
+  background: #F5F5F5;
+  padding: 2rem 2.25rem;
+  color: #333333;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  border-radius: 0;
+}
+.npl-mck-info-box .caption {
+  font-style: italic;
+  color: #666666;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+}
+.dark .npl-mck-info-box {
+  background: #122643;
+  color: #E5E5E5;
+}
+.dark .npl-mck-info-box .caption { color: #B8B8B8; }
+
+/* CTA — square 검정 navy 박스 + 흰 글씨 + 화살표 (보고서 원문 보기 등) */
+.npl-mck-cta-square {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1.5rem;
+  background: #051C2C;
+  color: #FFFFFF;
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.005em;
+  border: 1px solid #051C2C;
+  border-radius: 0;
+  text-decoration: none;
+  transition: background 200ms;
+}
+.npl-mck-cta-square:hover {
+  background: #000000;
+}
+
+/* 핵심 숫자 카드 — Navy 박스 + 큰 흰 숫자 (43%, 39% 등) */
+.npl-mck-stat-card {
+  background: #051C2C;
+  color: #FFFFFF;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 0;
+}
+.npl-mck-stat-card-label {
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.4;
+}
+.npl-mck-stat-card-value {
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  line-height: 1;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.025em;
+}
+
+/* 카테고리 탭/라벨 — Navy 박스 + 흰 글씨 (좌측 카테고리 표시) */
+.npl-mck-tab-pill {
+  display: inline-block;
+  background: #051C2C;
+  color: #FFFFFF;
+  padding: 0.5rem 1rem;
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-radius: 0;
+  line-height: 1.3;
+}
+
+/* 차트 stack legend — Navy + bright blue + sky + light sky 단계 */
+.npl-mck-chart-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-size: 0.75rem;
+  color: #051C2C;
+}
+.npl-mck-chart-legend::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background: var(--legend-color, #051C2C);
+}
+.npl-mck-chart-legend.deep   { --legend-color: #051C2C; }
+.npl-mck-chart-legend.mid    { --legend-color: #1F2E5C; }
+.npl-mck-chart-legend.bright { --legend-color: #2251FF; }
+.npl-mck-chart-legend.sky    { --legend-color: #42AFFF; }
+.npl-mck-chart-legend.light  { --legend-color: #7FCDFF; }
+.npl-mck-chart-legend.pale   { --legend-color: #B3E0FF; }
+
+/* 보고서 캡션/도표 번호 — 작은 회색 */
+.npl-mck-figure-caption {
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #999999;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.02em;
+}
+
+/* 보고서 페이지 메인 컨테이너 — 큰 여백 + 흰 배경 */
+.npl-mck-report-page {
+  background: #FFFFFF;
+  padding: 4rem 2rem;
+  max-width: 980px;
+  margin: 0 auto;
+}
+.dark .npl-mck-report-page { background: #051C2C; }
+
+/* 섹션 사이 간격 (McKinsey 보고서는 매우 넉넉) */
+.npl-mck-report-page > * + * {
+  margin-top: 3rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    McKinsey Monochrome System — Multi-color SaaS dashboard 톤 차단
    "단색 navy + warm gold accent + grayscale chart"
    ═══════════════════════════════════════════════════════════════════════════ */
