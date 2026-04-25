@@ -39,8 +39,13 @@ import {
   TierNav,
   type InlineDealRoomCounterpart,
 } from "@/components/asset-detail"
-// DR-19: 딜룸 좌측 메인 funnel 컴포넌트
-import { DealFlowView } from "@/components/asset-detail/deal-flow-view"
+// DR-19: 딜룸 좌측 메인 funnel 컴포넌트 (primitives — 기존 섹션 사이에 stage gate 삽입용)
+import {
+  DealHeaderStandalone,
+  DealSection,
+  DealGate,
+} from "@/components/asset-detail/deal-flow-view"
+import { Lock as DealLockIcon } from "lucide-react"
 import { useAssetTier } from "@/hooks/use-asset-tier"
 import type { AssetTier } from "@/hooks/use-asset-tier"
 
@@ -793,25 +798,37 @@ export function AssetDetailView({
       >
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6 lg:gap-8">
           <div className="space-y-5 min-w-0">
-            {dealFlowMode ? (
-              /*
-                DR-19 · 2026-04-25
-                딜룸 (/deals) 진입 시 좌측 메인 컨텐츠를 Deal Flow funnel 로 교체.
-                우측 sticky 사이드바(아래 'space-y-4' 블록) 는 그대로 유지.
-              */
-              <DealFlowView
-                idProp={id}
-                panelMode
-                dealOverride={dealOverride ? {
-                  listing_name: dealOverride.listing_name,
-                  counterparty: dealOverride.counterparty,
-                  amount: dealOverride.amount,
-                  asset_type: dealOverride.asset_type,
-                  location: dealOverride.location,
-                } : undefined}
-              />
-            ) : (
-            <>
+            {/*
+              DR-20 · 2026-04-25
+              딜룸 (/deals) 진입 시 좌측 메인을 Deal Flow funnel 로 재구성.
+              · 기존 섹션은 그대로 사용 (중복 X)
+              · DealHeaderStandalone 으로 4-step funnel 진행상황 헤더만 상단에 추가
+              · DealSection 헤더 + DealGate 가로 라인을 단계 사이에 삽입
+              · 우측 sticky 사이드바는 그대로 유지
+            */}
+            {dealFlowMode && (
+              <>
+                <DealHeaderStandalone
+                  title={title}
+                  institution={listing.institution}
+                  region={`${listing.region_city} ${listing.region_district}`.trim()}
+                  saleType={listing.auction_stage}
+                  dealId={id}
+                  currentStage={
+                    effectiveTier === "L4" || effectiveTier === "L5" ? "Execution" :
+                    effectiveTier === "L3" ? "Engagement" :
+                    effectiveTier === "L2" ? "Validation" : "Screening"
+                  }
+                  hideKpiGrid
+                  panelMode
+                />
+                <StageHeader
+                  eyebrow="Section 01 · Free preview"
+                  title="Deal Screening"
+                  subtitle="이 딜이 검토할 가치가 있는지 3분 안에 판단"
+                />
+              </>
+            )}
             <KpiRow
               items={[
                 {
@@ -1033,6 +1050,23 @@ export function AssetDetailView({
                 </div>
               </TierGate>
             </SectionCard>
+
+            {/* ── DR-20: Gate 1 (NDA) + Stage 02 헤더 — dealFlowMode 에서만 ── */}
+            {dealFlowMode && (
+              <>
+                <DealGate
+                  icon={DealLockIcon}
+                  title="NDA 체결 시 열람 가능"
+                  subtitle="기관 검증 데이터 · 감정평가서 · 실거래 · 채권 정보"
+                  panelMode
+                />
+                <StageHeader
+                  eyebrow="Section 02 · NDA required"
+                  title="Deal Validation"
+                  subtitle="검증 데이터 — 의사결정의 핵심 근거"
+                />
+              </>
+            )}
 
             {/* ── NDA 체결 (L2) ── */}
             <SectionCard
@@ -1784,8 +1818,6 @@ export function AssetDetailView({
                 </div>
               </TierGate>
             </SectionCard>
-            </>
-            )}
           </div>
 
           <div className="space-y-4 min-w-0">
@@ -1885,6 +1917,23 @@ export function AssetDetailView({
             </div>
           </div>
         </div>
+
+        {/* ── DR-20: Gate 2 (LOI) + Stage 03 헤더 — dealFlowMode 에서만 ── */}
+        {dealFlowMode && (
+          <div className="mt-6 lg:mt-8">
+            <DealGate
+              icon={DealLockIcon}
+              title="LOI 제출 시 참여 가능"
+              subtitle="채팅 · 가격 오퍼 · 오프라인 미팅 · 실사 · 협상"
+              panelMode
+            />
+            <StageHeader
+              eyebrow="Section 03 · LOI required"
+              title="Deal Engagement"
+              subtitle="딜 참여 — 매도자와 채팅·가격 협상·실사 진행"
+            />
+          </div>
+        )}
 
         {/* ── LOI 확인 (L3+) ── */}
         {tierGte(effectiveAccessTier, "L3") && (
@@ -2110,6 +2159,23 @@ export function AssetDetailView({
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ── DR-20: Gate 3 (ESCROW) + Stage 04 헤더 — dealFlowMode 에서만 ── */}
+        {dealFlowMode && (
+          <div className="mt-6 lg:mt-8">
+            <DealGate
+              icon={DealLockIcon}
+              title="ESCROW 결제 후 실행"
+              subtitle="안전결제 · 전자계약 · 잔금처리"
+              panelMode
+            />
+            <StageHeader
+              eyebrow="Section 04 · Closing"
+              title="Deal Execution"
+              subtitle="거래 실행 — 30분 내 클로징"
+            />
           </div>
         )}
 
@@ -2548,3 +2614,66 @@ function DueDiligenceSection({
   )
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   StageHeader — DR-20 · 단계 구분 인라인 헤더
+   기존 SectionCard 사이에 삽입하기 위한 가벼운 wrapper
+   (DealSection 의 헤더 부분만 추출 — 자식 wrapping X)
+   ═══════════════════════════════════════════════════════════════════════════ */
+function StageHeader({
+  eyebrow,
+  title,
+  subtitle,
+}: {
+  eyebrow: string
+  title: string
+  subtitle: string
+}) {
+  return (
+    <header className="mt-2 mb-1">
+      <div className="flex items-center gap-2 mb-2">
+        <span
+          style={{
+            width: 18,
+            height: 1.5,
+            background: "#B8924B",
+            display: "inline-block",
+          }}
+        />
+        <span
+          style={{
+            color: "#8B6F2F",
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: "0.10em",
+            textTransform: "uppercase",
+          }}
+        >
+          {eyebrow}
+        </span>
+      </div>
+      <h2
+        style={{
+          color: "#0A1628",
+          fontSize: "clamp(1.25rem, 2.2vw, 1.625rem)",
+          fontWeight: 700,
+          letterSpacing: "-0.02em",
+          lineHeight: 1.2,
+          marginBottom: 4,
+        }}
+      >
+        {title}
+      </h2>
+      <p
+        style={{
+          color: "#4A5568",
+          fontSize: 13,
+          fontWeight: 400,
+          lineHeight: 1.55,
+          maxWidth: 640,
+        }}
+      >
+        {subtitle}
+      </p>
+    </header>
+  )
+}

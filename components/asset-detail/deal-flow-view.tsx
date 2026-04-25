@@ -301,7 +301,65 @@ export function DealFlowView({
 /* ═══════════════════════════════════════════════════════════════════════════
    Deal Header — 신뢰 + 핵심정보 3초 판단
    ═══════════════════════════════════════════════════════════════════════════ */
-function DealHeader({ deal, panelMode = false }: { deal: typeof MOCK_DEAL; panelMode?: boolean }) {
+/**
+ * DealHeader (export 형) — 외부 컴포넌트(AssetDetailView 등)에서 단독 사용 가능.
+ * - hideKpiGrid: 외부에 이미 KpiRow 가 있을 때 KPI 6칸 그리드 숨김 (중복 방지)
+ * - currentStage: 4-step funnel 진행 표시 (Screening / Validation / Engagement / Execution)
+ */
+export interface DealHeaderStandaloneProps {
+  title: string
+  institution?: string
+  region?: string
+  saleType?: string
+  dealId?: string
+  aiGradeBadge?: string  // 예: "AI 등급 A · 매수 적합"
+  currentStage?: DealStage
+  hideKpiGrid?: boolean
+  hideMetaRow?: boolean
+  hideTitle?: boolean
+  panelMode?: boolean
+  // KPI 값 (hideKpiGrid=false 일 때만 사용)
+  kpis?: { bondBalance: number; hopePrice: number; discountRate: number; expectedROI: number; riskScore: number; ltv: number }
+}
+
+export function DealHeaderStandalone(props: DealHeaderStandaloneProps) {
+  const deal = {
+    ...MOCK_DEAL,
+    title: props.title,
+    institution: props.institution ?? MOCK_DEAL.institution,
+    region: props.region ?? MOCK_DEAL.region,
+    saleType: props.saleType ?? MOCK_DEAL.saleType,
+    id: props.dealId ?? MOCK_DEAL.id,
+    currentStage: props.currentStage ?? MOCK_DEAL.currentStage,
+    bondBalance: props.kpis?.bondBalance ?? MOCK_DEAL.bondBalance,
+    hopePrice: props.kpis?.hopePrice ?? MOCK_DEAL.hopePrice,
+    discountRate: props.kpis?.discountRate ?? MOCK_DEAL.discountRate,
+    expectedROI: props.kpis?.expectedROI ?? MOCK_DEAL.expectedROI,
+    riskScore: props.kpis?.riskScore ?? MOCK_DEAL.riskScore,
+    ltv: props.kpis?.ltv ?? MOCK_DEAL.ltv,
+  }
+  return (
+    <DealHeader
+      deal={deal}
+      panelMode={props.panelMode}
+      hideKpiGrid={props.hideKpiGrid}
+      hideMetaRow={props.hideMetaRow}
+      hideTitle={props.hideTitle}
+      aiGradeBadge={props.aiGradeBadge}
+    />
+  )
+}
+
+function DealHeader({
+  deal, panelMode = false, hideKpiGrid = false, hideMetaRow = false, hideTitle = false, aiGradeBadge = "AI 등급 A · 매수 적합",
+}: {
+  deal: typeof MOCK_DEAL
+  panelMode?: boolean
+  hideKpiGrid?: boolean
+  hideMetaRow?: boolean
+  hideTitle?: boolean
+  aiGradeBadge?: string
+}) {
   const stages: { key: DealStage; label: string; korean: string }[] = [
     { key: "Screening",  label: "Screening",  korean: "탐색" },
     { key: "Validation", label: "Validation", korean: "검증" },
@@ -323,6 +381,7 @@ function DealHeader({ deal, panelMode = false }: { deal: typeof MOCK_DEAL; panel
     >
       <div className={panelMode ? "px-5 py-6" : "max-w-[1280px] mx-auto px-6 py-8"}>
         {/* meta row */}
+        {!hideMetaRow && (
         <div className="flex items-center gap-2 mb-3" style={{ flexWrap: "wrap" }}>
           {[deal.institution, deal.region, deal.saleType, deal.id].map((m, i) => (
             <span
@@ -339,8 +398,10 @@ function DealHeader({ deal, panelMode = false }: { deal: typeof MOCK_DEAL; panel
             </span>
           ))}
         </div>
+        )}
 
         {/* title + AI badge */}
+        {!hideTitle && (
         <div className="flex items-start justify-between gap-6 mb-6" style={{ flexWrap: "wrap" }}>
           <h1
             style={{
@@ -371,11 +432,13 @@ function DealHeader({ deal, panelMode = false }: { deal: typeof MOCK_DEAL; panel
             }}
           >
             <Sparkles size={13} style={{ color: MCK.brass }} />
-            <span style={{ color: MCK.brassDark }}>AI 등급 A · 매수 적합</span>
+            <span style={{ color: MCK.brassDark }}>{aiGradeBadge}</span>
           </div>
         </div>
+        )}
 
-        {/* KPI row */}
+        {/* KPI row (외부에 KpiRow 가 있으면 hideKpiGrid 로 중복 제거) */}
+        {!hideKpiGrid && (
         <div
           className="grid"
           style={{
@@ -392,9 +455,10 @@ function DealHeader({ deal, panelMode = false }: { deal: typeof MOCK_DEAL; panel
           <KPI label="리스크 점수" value={`${deal.riskScore} / 5`} />
           <KPI label="LTV"         value={`${deal.ltv}%`} />
         </div>
+        )}
 
         {/* Deal Stage progress */}
-        <div className="mt-8">
+        <div className={hideKpiGrid && hideMetaRow && hideTitle ? "" : "mt-8"}>
           <div className="flex items-center gap-2 mb-3">
             <span
               style={{
@@ -520,7 +584,7 @@ function KPI({ label, value, accent }: { label: string; value: string; accent?: 
 /* ═══════════════════════════════════════════════════════════════════════════
    Section wrapper — eyebrow + title + content + (locked overlay)
    ═══════════════════════════════════════════════════════════════════════════ */
-function DealSection({
+export function DealSection({
   eyebrow, title, subtitle, locked = false, children, panelMode = false,
 }: {
   eyebrow: string
@@ -982,7 +1046,7 @@ function DataTileLocked({
 /* ═══════════════════════════════════════════════════════════════════════════
    Deal Gate — 카드가 아니라 가로 라인 게이트
    ═══════════════════════════════════════════════════════════════════════════ */
-function DealGate({
+export function DealGate({
   icon: Icon, title, subtitle, panelMode = false,
 }: {
   icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>
@@ -1047,7 +1111,7 @@ function DealGate({
 /* ═══════════════════════════════════════════════════════════════════════════
    Deal CTA — 검정 박스 + brass top + 흰 글씨 (mck-cta-dark)
    ═══════════════════════════════════════════════════════════════════════════ */
-function DealCTA({
+export function DealCTA({
   label, subtext, href, emphasis,
 }: {
   label: string
