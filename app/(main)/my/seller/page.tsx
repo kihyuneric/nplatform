@@ -254,9 +254,20 @@ export default function SellerDashboardPage() {
                       <td className={DS.table.cellMuted + " tabular-nums"}>{l.date}</td>
                       <td className={DS.table.cell}>
                         <div className="flex items-center gap-1.5">
-                          <button className={DS.text.link + " text-[0.8125rem]"}>상세</button>
+                          {/* Phase G6 · 매도자 본인 매물 상세/편집 링크 연결 */}
+                          <Link
+                            href={`/exchange/listings/${l.id}`}
+                            className={DS.text.link + " text-[0.8125rem]"}
+                          >
+                            상세
+                          </Link>
                           <span className="text-[var(--color-border-default)]">|</span>
-                          <button className={DS.text.caption + " hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"}>수정</button>
+                          <Link
+                            href={`/my/listings/${l.id}/edit`}
+                            className={DS.text.caption + " hover:text-[var(--color-text-primary)] transition-colors"}
+                          >
+                            수정
+                          </Link>
                           <span className="text-[var(--color-border-default)]">|</span>
                           <button className="text-[0.8125rem] text-[var(--color-danger)] hover:text-red-400 transition-colors cursor-pointer">종료</button>
                         </div>

@@ -732,28 +732,27 @@ export default function LandingPage() {
           </motion.div>
 
           <motion.div variants={stagger} className="grid md:grid-cols-2 gap-6">
-            {/* Seller – dark premium */}
+            {/* Seller – premium (라이트/다크 자동 분기 · Phase H · globals.css 의 .home-seller-premium-card) */}
             <motion.div variants={up} custom={0}
-              className="relative rounded-2xl p-8 overflow-hidden"
-              style={{ background: `linear-gradient(135deg, #0A1628 0%, #0F2040 100%)`, border: '1px solid rgba(255,255,255,0.08)' }}>
+              className="home-seller-premium-card relative rounded-2xl p-8 overflow-hidden"
+            >
               <div style={{ position: 'absolute', top: 0, right: 0, width: '220px', height: '220px', background: 'radial-gradient(circle, rgba(16,185,129,0.08), transparent 70%)', borderRadius: '50%' }} />
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, rgba(16,185,129,0.3), transparent)' }} />
+              <div className="home-seller-divider" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '1px' }} />
               <div className="relative">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div className="home-seller-icon-wrap w-12 h-12 rounded-xl flex items-center justify-center mb-5">
                   <Building2 size={22} style={{ color: C.em }} />
                 </div>
-                <div className="inline-flex text-[10px] font-bold rounded-full px-3 py-1 mb-4"
-                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.05em' }}>
+                <div className="home-seller-eyebrow inline-flex text-[10px] font-bold rounded-full px-3 py-1 mb-4"
+                  style={{ letterSpacing: '0.05em' }}>
                   매각사 · 금융기관
                 </div>
-                <h3 className="font-black text-2xl mb-3" style={{ color: 'rgba(255,255,255,0.95)' }}>금융기관 (매각사)</h3>
-                <p className="text-sm leading-relaxed mb-6" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                <h3 className="home-seller-title font-black text-2xl mb-3">금융기관 (매각사)</h3>
+                <p className="home-seller-body text-sm leading-relaxed mb-6">
                   NPL 매물을 디지털로 등록하고 전국 검증된 투자자에게 노출하세요. AI 가격 산정, 입찰 관리, 딜룸 협상까지 자동화합니다.
                 </p>
                 <ul className="space-y-2.5 mb-7">
                   {["매물 일괄 등록 및 관리", "실시간 입찰 모니터링", "AI 가격 자동 산정", "딜룸 문서 관리", "전자계약 원스톱"].map(item => (
-                    <li key={item} className="flex items-center gap-2.5 text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    <li key={item} className="home-seller-list-item flex items-center gap-2.5 text-sm">
                       <CheckCircle2 size={13} style={{ color: C.em, flexShrink: 0 }} />{item}
                     </li>
                   ))}

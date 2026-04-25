@@ -293,6 +293,10 @@ export default function AdminListingsPage() {
                 >
                   삭제
                 </button>
+                {/* Phase G6 · 관리자 편집 페이지 링크 */}
+                <a href={`/admin/listings/${v}/edit`} className={`${DS.button.secondary} ${DS.button.sm}`}>
+                  편집
+                </a>
                 <a href={`/exchange/${v}`} target="_blank" rel="noopener noreferrer" className={`${DS.text.link} text-[0.8125rem]`}>상세 ↗</a>
               </div>
             )},

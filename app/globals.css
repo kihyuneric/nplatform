@@ -1333,6 +1333,48 @@ button[role="switch"][data-state="unchecked"] {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   PHASE H · HOME-SELLER-PREMIUM CARD — 라이트/다크 분기 (메인 페이지)
+   ───────────────────────────────────────────────────────────────────────────── */
+.home-seller-premium-card {
+  /* 라이트 모드 기본: 브랜드 네이비 그라디언트 ‘라이트 톤’ + 라이트 보더 */
+  background: linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%);
+  border: 1px solid #CBD5E1;
+}
+.home-seller-premium-card .home-seller-eyebrow {
+  background: rgba(27,58,92,0.08);
+  border: 1px solid rgba(27,58,92,0.16);
+  color: #1B3A5C;
+}
+.home-seller-premium-card .home-seller-icon-wrap {
+  background: rgba(27,58,92,0.06);
+  border: 1px solid rgba(27,58,92,0.14);
+}
+.home-seller-premium-card .home-seller-title { color: #0D1F38; }
+.home-seller-premium-card .home-seller-body  { color: #334155; }
+.home-seller-premium-card .home-seller-list-item { color: #475569; }
+.home-seller-premium-card .home-seller-divider {
+  background: linear-gradient(90deg, rgba(16,185,129,0.3), transparent);
+}
+
+/* 다크 모드: 기존 프리미엄 다크 그라디언트 유지 */
+.dark .home-seller-premium-card {
+  background: linear-gradient(135deg, #0A1628 0%, #0F2040 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.dark .home-seller-premium-card .home-seller-eyebrow {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.5);
+}
+.dark .home-seller-premium-card .home-seller-icon-wrap {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.dark .home-seller-premium-card .home-seller-title { color: rgba(255,255,255,0.95); }
+.dark .home-seller-premium-card .home-seller-body  { color: rgba(255,255,255,0.45); }
+.dark .home-seller-premium-card .home-seller-list-item { color: rgba(255,255,255,0.55); }
+
+/* ─────────────────────────────────────────────────────────────────────────────
    NPL COMPONENT PRIMITIVES
    card-interactive, npl-card 등 다크/라이트 공용 카드 컴포넌트
    ───────────────────────────────────────────────────────────────────────────── */
