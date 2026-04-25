@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, Building2, FileText, Settings, BarChart3,
   CreditCard, GraduationCap, Megaphone, Server, Cable,
   ChevronLeft, Menu, BrainCircuit, ShieldCheck, Eye, Landmark, FileSignature, Tag, Activity, Sliders,
-  Workflow, TrendingUp, Target,
+  Workflow, TrendingUp, Target, ShoppingCart,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -17,6 +17,7 @@ const ADMIN_MENU = [
   { href: "/admin/deal-funnel",label: "Deal Funnel", icon: TrendingUp },
   { href: "/admin/users",      label: "회원관리",    icon: Users },
   { href: "/admin/listings",   label: "매물관리",    icon: FileText },
+  { href: "/admin/demands",    label: "매수자 수요",  icon: ShoppingCart },
   { href: "/admin/masking-queue", label: "마스킹 검토", icon: ShieldCheck },
   { href: "/admin/pii-audit",  label: "PII 감사",    icon: Eye },
   { href: "/admin/institutions", label: "매도 기관",   icon: Landmark },

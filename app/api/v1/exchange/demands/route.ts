@@ -67,6 +67,17 @@ export async function POST(request: NextRequest) {
       urgency,
       description,
       is_public,
+      // Phase G7+ · 매수자 OCR 추가 필드
+      buyer_name,
+      buyer_type,
+      contact_phone,
+      contact_email,
+      avoid_conditions,
+      preferred_risk_grades,
+      min_roi,
+      min_recovery_rate,
+      recovery_horizon,
+      risk_appetite,
     } = body
 
     // Derive collateral_types for real estate if missing
@@ -111,8 +122,19 @@ export async function POST(request: NextRequest) {
 
     const { data, _source } = await insert('demands', {
       buyer_id: 'usr-current',
-      buyer_name: '사용자',
+      buyer_name: buyer_name || '사용자',
       buyer_tier: 'BASIC',
+      // Phase G7+ · 매수자 OCR 추가 필드 (있으면 저장)
+      buyer_type: buyer_type || null,
+      contact_phone: contact_phone || null,
+      contact_email: contact_email || null,
+      avoid_conditions: Array.isArray(avoid_conditions) ? avoid_conditions : [],
+      preferred_risk_grades: Array.isArray(preferred_risk_grades) ? preferred_risk_grades : (ai_grades || []),
+      min_roi: min_roi || null,
+      min_recovery_rate: min_recovery_rate || null,
+      recovery_horizon: recovery_horizon || null,
+      risk_appetite: risk_appetite || null,
+      // 기존 필드
       demand_type,
       purpose: purpose || '',
       collateral_types: resolvedCollateralTypes,

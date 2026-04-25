@@ -284,8 +284,8 @@ export default function EditListingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#060E1A] flex items-center justify-center">
-        <div className="flex items-center gap-3 text-[#4A7FA5]">
+      <div className="min-h-screen bg-[var(--color-brand-deepest)] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-slate-400">
           <Loader2 className="w-5 h-5 animate-spin" />
           <span className="text-sm font-medium tracking-wide">매물 정보를 불러오는 중...</span>
         </div>
@@ -296,14 +296,14 @@ export default function EditListingPage() {
   const StepIcon = STEPS[step - 1].icon
 
   return (
-    <div className="min-h-screen bg-[#060E1A]">
+    <div className="min-h-screen bg-[var(--color-brand-deepest)]">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-40 bg-[var(--color-brand-deep)] border-b border-[#1E3A5F]/60 shadow-lg shadow-black/20">
+      <div className="sticky top-0 z-40 bg-[var(--color-brand-deep)] border-b border-[var(--color-brand-dark)]/40/60 shadow-lg shadow-black/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => router.push('/exchange')}
-              className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-[#94B4CC] hover:text-white"
+              className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-slate-300 hover:text-white"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -311,10 +311,10 @@ export default function EditListingPage() {
               <div className="flex items-center gap-2">
                 <h1 className="text-sm font-bold text-white tracking-tight">매물 수정</h1>
                 {listingNumber && (
-                  <span className="text-xs font-mono text-[#4A7FA5] truncate hidden sm:block">{listingNumber}</span>
+                  <span className="text-xs font-mono text-slate-400 truncate hidden sm:block">{listingNumber}</span>
                 )}
               </div>
-              <p className="text-[11px] text-[#4A7FA5] hidden sm:block">
+              <p className="text-[11px] text-slate-400 hidden sm:block">
                 {step}/{totalSteps}단계 — {STEPS[step - 1].title}
               </p>
             </div>
@@ -333,7 +333,7 @@ export default function EditListingPage() {
             )}
             <button
               onClick={() => router.push('/exchange')}
-              className="px-3 py-1.5 text-xs text-[#94B4CC] hover:text-white border border-[#1E3A5F] hover:border-[#2E5A8E] rounded-lg transition-colors"
+              className="px-3 py-1.5 text-xs text-slate-300 hover:text-white border border-[var(--color-brand-dark)]/40 hover:border-[var(--color-brand-mid)] rounded-lg transition-colors"
             >
               취소
             </button>
@@ -341,7 +341,7 @@ export default function EditListingPage() {
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="px-4 py-1.5 text-xs font-semibold bg-[var(--color-positive)] hover:bg-[#0d9668] text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                className="px-4 py-1.5 text-xs font-semibold bg-[var(--color-positive)] hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
                 <Save className="w-3.5 h-3.5" />
                 {submitting ? '수정 중...' : '수정 저장'}
@@ -350,7 +350,7 @@ export default function EditListingPage() {
               <button
                 onClick={handleNext}
                 disabled={!canNext()}
-                className="px-4 py-1.5 text-xs font-semibold bg-[#1E4A7A] hover:bg-[#2563B0] text-white rounded-lg transition-colors disabled:opacity-40 flex items-center gap-1.5"
+                className="px-4 py-1.5 text-xs font-semibold bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-mid)] text-white rounded-lg transition-colors disabled:opacity-40 flex items-center gap-1.5"
               >
                 다음 <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -359,7 +359,7 @@ export default function EditListingPage() {
         </div>
 
         {/* Progress bar */}
-        <div className="h-0.5 bg-[#0A1628]">
+        <div className="h-0.5 bg-[var(--color-brand-deepest)]">
           <div
             className="h-full bg-gradient-to-r from-[#2E75B6] to-[var(--color-positive)] transition-all duration-500"
             style={{ width: `${progress}%` }}
@@ -380,14 +380,14 @@ export default function EditListingPage() {
                   onClick={() => isDone && setStep(i + 1)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     isActive
-                      ? "bg-[#1E4A7A] text-white border border-[#2E75B6]/50"
+                      ? "bg-[var(--color-brand-dark)] text-white border border-[var(--color-brand-mid)]/50"
                       : isDone
                       ? "bg-[var(--color-brand-deep)] text-[var(--color-positive)] border border-[var(--color-positive)]/20 cursor-pointer hover:border-[var(--color-positive)]/40"
-                      : "bg-[var(--color-brand-deep)] text-[#3A5A7A] border border-[#1E3A5F]/40 cursor-default"
+                      : "bg-[var(--color-brand-deep)] text-slate-500 border border-[var(--color-brand-dark)]/40/40 cursor-default"
                   }`}
                 >
                   <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[10px] ${
-                    isDone ? "bg-[var(--color-positive)]/20" : isActive ? "bg-white/20" : "bg-[#1E3A5F]"
+                    isDone ? "bg-[var(--color-positive)]/20" : isActive ? "bg-white/20" : "bg-[var(--color-brand-dark)]"
                   }`}>
                     {isDone ? <Check className="w-2.5 h-2.5" /> : <SIcon className="w-2.5 h-2.5" />}
                   </span>
@@ -395,7 +395,7 @@ export default function EditListingPage() {
                   <span className="sm:hidden">{i + 1}</span>
                 </button>
                 {i < STEPS.length - 1 && (
-                  <ChevronRight className={`w-3 h-3 flex-shrink-0 ${isDone ? "text-[var(--color-positive)]/40" : "text-[#1E3A5F]"}`} />
+                  <ChevronRight className={`w-3 h-3 flex-shrink-0 ${isDone ? "text-[var(--color-positive)]/40" : "text-[var(--color-brand-dark)]"}`} />
                 )}
               </div>
             )
@@ -403,15 +403,15 @@ export default function EditListingPage() {
         </div>
 
         {/* Step Content Card */}
-        <div className="bg-[var(--color-brand-deep)] border border-[#1E3A5F]/60 rounded-2xl overflow-hidden">
+        <div className="bg-[var(--color-brand-deep)] border border-[var(--color-brand-dark)]/40/60 rounded-2xl overflow-hidden">
           {/* Card Header */}
-          <div className="px-6 py-5 border-b border-[#1E3A5F]/60 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#1E4A7A]/50 flex items-center justify-center">
-              <StepIcon className="w-4.5 h-4.5 text-[#5B9BD5]" />
+          <div className="px-6 py-5 border-b border-[var(--color-brand-dark)]/40/60 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-dark)]/50 flex items-center justify-center">
+              <StepIcon className="w-4.5 h-4.5 text-[var(--color-brand-mid)]" />
             </div>
             <div>
               <h2 className="text-sm font-semibold text-white">{STEPS[step - 1].title}</h2>
-              <p className="text-xs text-[#4A7FA5]">{step}단계 / 총 {totalSteps}단계</p>
+              <p className="text-xs text-slate-400">{step}단계 / 총 {totalSteps}단계</p>
             </div>
           </div>
 
@@ -420,7 +420,7 @@ export default function EditListingPage() {
               <div className="space-y-5">
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-[#94B4CC]">사업자등록번호</Label>
+                    <Label className="text-xs font-medium text-slate-300">사업자등록번호</Label>
                     <input
                       value={form.businessNumber}
                       onChange={(e) => updateForm({ businessNumber: e.target.value })}
@@ -429,7 +429,7 @@ export default function EditListingPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-[#94B4CC]">기관명</Label>
+                    <Label className="text-xs font-medium text-slate-300">기관명</Label>
                     <input
                       value={form.institutionName}
                       onChange={(e) => updateForm({ institutionName: e.target.value })}
@@ -438,7 +438,7 @@ export default function EditListingPage() {
                     />
                   </div>
                   <div className="space-y-1.5 sm:col-span-2">
-                    <Label className="text-xs font-medium text-[#94B4CC]">대표자명</Label>
+                    <Label className="text-xs font-medium text-slate-300">대표자명</Label>
                     <input
                       value={form.representativeName}
                       onChange={(e) => updateForm({ representativeName: e.target.value })}
@@ -454,7 +454,7 @@ export default function EditListingPage() {
               <div className="space-y-5">
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-[#94B4CC]">
+                    <Label className="text-xs font-medium text-slate-300">
                       채권원금 (억원) <span className="text-red-400">*</span>
                     </Label>
                     <input
@@ -467,7 +467,7 @@ export default function EditListingPage() {
                     {formErrors.principal && <p className="text-xs text-red-400">{formErrors.principal}</p>}
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-[#94B4CC]">채권 발생일</Label>
+                    <Label className="text-xs font-medium text-slate-300">채권 발생일</Label>
                     <DateField
                       value={form.originDate}
                       onChange={(v) => updateForm({ originDate: v })}
@@ -476,7 +476,7 @@ export default function EditListingPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-[#94B4CC]">부실화일</Label>
+                    <Label className="text-xs font-medium text-slate-300">부실화일</Label>
                     <DateField
                       value={form.defaultDate}
                       onChange={(v) => updateForm({ defaultDate: v })}
@@ -486,7 +486,7 @@ export default function EditListingPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-[#94B4CC]">연체기간 (개월)</Label>
+                    <Label className="text-xs font-medium text-slate-300">연체기간 (개월)</Label>
                     <input
                       type="number"
                       value={form.overdueMonths}
@@ -503,39 +503,39 @@ export default function EditListingPage() {
               <div className="space-y-5">
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-[#94B4CC]">
+                    <Label className="text-xs font-medium text-slate-300">
                       담보유형 <span className="text-red-400">*</span>
                     </Label>
                     <Select value={form.collateralType} onValueChange={(v) => updateForm({ collateralType: v })}>
-                      <SelectTrigger className={`bg-[#060E1A] border-[#1E3A5F] text-white hover:border-[#2E75B6] focus:border-[#2E75B6] ${formErrors.collateralType ? 'border-red-500/60' : ''}`}>
+                      <SelectTrigger className={`bg-[var(--color-brand-deepest)] border-[var(--color-brand-dark)]/40 text-white hover:border-[var(--color-brand-mid)] focus:border-[var(--color-brand-mid)] ${formErrors.collateralType ? 'border-red-500/60' : ''}`}>
                         <SelectValue placeholder="선택" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[var(--color-brand-deep)] border-[#1E3A5F]">
+                      <SelectContent className="bg-[var(--color-brand-deep)] border-[var(--color-brand-dark)]/40">
                         {COLLATERAL_TYPES.map((t) => (
-                          <SelectItem key={t} value={t} className="text-white hover:bg-[#1E3A5F]">{t}</SelectItem>
+                          <SelectItem key={t} value={t} className="text-white hover:bg-[var(--color-brand-dark)]">{t}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                     {formErrors.collateralType && <p className="text-xs text-red-400">{formErrors.collateralType}</p>}
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-[#94B4CC]">
+                    <Label className="text-xs font-medium text-slate-300">
                       소재지 (시/도) <span className="text-red-400">*</span>
                     </Label>
                     <Select value={form.location} onValueChange={(v) => updateForm({ location: v })}>
-                      <SelectTrigger className={`bg-[#060E1A] border-[#1E3A5F] text-white hover:border-[#2E75B6] focus:border-[#2E75B6] ${formErrors.location ? 'border-red-500/60' : ''}`}>
+                      <SelectTrigger className={`bg-[var(--color-brand-deepest)] border-[var(--color-brand-dark)]/40 text-white hover:border-[var(--color-brand-mid)] focus:border-[var(--color-brand-mid)] ${formErrors.location ? 'border-red-500/60' : ''}`}>
                         <SelectValue placeholder="선택" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[var(--color-brand-deep)] border-[#1E3A5F]">
+                      <SelectContent className="bg-[var(--color-brand-deep)] border-[var(--color-brand-dark)]/40">
                         {LOCATIONS.map((l) => (
-                          <SelectItem key={l} value={l} className="text-white hover:bg-[#1E3A5F]">{l}</SelectItem>
+                          <SelectItem key={l} value={l} className="text-white hover:bg-[var(--color-brand-dark)]">{l}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                     {formErrors.location && <p className="text-xs text-red-400">{formErrors.location}</p>}
                   </div>
                   <div className="space-y-1.5 sm:col-span-2">
-                    <Label className="text-xs font-medium text-[#94B4CC]">상세 주소</Label>
+                    <Label className="text-xs font-medium text-slate-300">상세 주소</Label>
                     <input
                       value={form.locationDetail}
                       onChange={(e) => updateForm({ locationDetail: e.target.value })}
@@ -544,7 +544,7 @@ export default function EditListingPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-[#94B4CC]">면적 (m²)</Label>
+                    <Label className="text-xs font-medium text-slate-300">면적 (m²)</Label>
                     <input
                       type="number"
                       value={form.area}
@@ -554,7 +554,7 @@ export default function EditListingPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-[#94B4CC]">감정가 (억원)</Label>
+                    <Label className="text-xs font-medium text-slate-300">감정가 (억원)</Label>
                     <input
                       type="number"
                       value={form.appraisalValue}
@@ -564,7 +564,7 @@ export default function EditListingPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-[#94B4CC]">LTV (%)</Label>
+                    <Label className="text-xs font-medium text-slate-300">LTV (%)</Label>
                     <input
                       type="number"
                       value={form.ltv}
@@ -579,7 +579,7 @@ export default function EditListingPage() {
 
             {step === 4 && (
               <div className="space-y-4">
-                <p className="text-xs text-[#4A7FA5]">담보물 이미지를 업로드하세요. 최대 10장까지 가능합니다.</p>
+                <p className="text-xs text-slate-400">담보물 이미지를 업로드하세요. 최대 10장까지 가능합니다.</p>
                 <ImageUpload value={form.images} onChange={(images) => updateForm({ images })} />
               </div>
             )}
@@ -588,7 +588,7 @@ export default function EditListingPage() {
               <div className="space-y-5">
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-[#94B4CC]">희망가 최소 (억원)</Label>
+                    <Label className="text-xs font-medium text-slate-300">희망가 최소 (억원)</Label>
                     <input
                       type="number"
                       value={form.askingPriceMin}
@@ -598,7 +598,7 @@ export default function EditListingPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-[#94B4CC]">희망가 최대 (억원)</Label>
+                    <Label className="text-xs font-medium text-slate-300">희망가 최대 (억원)</Label>
                     <input
                       type="number"
                       value={form.askingPriceMax}
@@ -608,7 +608,7 @@ export default function EditListingPage() {
                     />
                   </div>
                   <div className="space-y-1.5 sm:col-span-2">
-                    <Label className="text-xs font-medium text-[#94B4CC]">
+                    <Label className="text-xs font-medium text-slate-300">
                       마감일 <span className="text-red-400">*</span>
                     </Label>
                     <DateField
@@ -622,8 +622,8 @@ export default function EditListingPage() {
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#1E3A5F]/60">
-                  <Label className="text-xs font-medium text-[#94B4CC] mb-3 block">공개 범위</Label>
+                <div className="pt-2 border-t border-[var(--color-brand-dark)]/40/60">
+                  <Label className="text-xs font-medium text-slate-300 mb-3 block">공개 범위</Label>
                   <VisibilitySelector value={form.visibility} onChange={(v) => updateForm({ visibility: v })} />
                 </div>
               </div>
@@ -631,35 +631,35 @@ export default function EditListingPage() {
 
             {step === 6 && (
               <div className="space-y-4">
-                <p className="text-xs text-[#4A7FA5]">관련 서류를 첨부하세요. Excel, PDF, CSV, Image (최대 50MB)</p>
+                <p className="text-xs text-slate-400">관련 서류를 첨부하세요. Excel, PDF, CSV, Image (최대 50MB)</p>
                 <div
                   className={`border-2 border-dashed rounded-xl p-10 text-center transition-all ${
                     dragActive
                       ? "border-[var(--color-positive)] bg-[var(--color-positive)]/5"
-                      : "border-[#1E3A5F] hover:border-[#2E75B6]/50"
+                      : "border-[var(--color-brand-dark)]/40 hover:border-[var(--color-brand-mid)]/50"
                   }`}
                   onDragOver={(e) => { e.preventDefault(); setDragActive(true) }}
                   onDragLeave={() => setDragActive(false)}
                   onDrop={handleFileDrop}
                 >
-                  <Upload className="w-10 h-10 mx-auto text-[#2E5A8E] mb-3" />
-                  <p className="text-sm font-medium text-[#94B4CC]">파일을 여기에 드래그하거나 클릭하여 업로드</p>
-                  <p className="text-xs text-[#3A5A7A] mt-1">Excel, PDF, CSV, Image (최대 50MB)</p>
+                  <Upload className="w-10 h-10 mx-auto text-[var(--color-brand-mid)] mb-3" />
+                  <p className="text-sm font-medium text-slate-300">파일을 여기에 드래그하거나 클릭하여 업로드</p>
+                  <p className="text-xs text-slate-500 mt-1">Excel, PDF, CSV, Image (최대 50MB)</p>
                 </div>
                 {form.files.length > 0 && (
                   <div className="space-y-2">
                     {form.files.map((file, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 bg-[#060E1A] rounded-lg border border-[#1E3A5F]/60">
-                        <span className="text-sm text-[#94B4CC] flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-[#4A7FA5]" />
+                      <div key={i} className="flex items-center justify-between p-3 bg-[var(--color-brand-deepest)] rounded-lg border border-[var(--color-brand-dark)]/40/60">
+                        <span className="text-sm text-slate-300 flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-slate-400" />
                           {file.name}
-                          <span className="text-xs text-[#3A5A7A]">({file.size})</span>
+                          <span className="text-xs text-slate-500">({file.size})</span>
                         </span>
                         <button
                           onClick={() => updateForm({ files: form.files.filter((_, idx) => idx !== i) })}
                           className="p-1 hover:bg-white/5 rounded transition-colors"
                         >
-                          <X className="w-4 h-4 text-[#4A7FA5] hover:text-red-400 transition-colors" />
+                          <X className="w-4 h-4 text-slate-400 hover:text-red-400 transition-colors" />
                         </button>
                       </div>
                     ))}
@@ -675,7 +675,7 @@ export default function EditListingPage() {
                   <h3 className="text-sm font-semibold text-white">입력 정보 확인</h3>
                 </div>
 
-                <div className="bg-[#060E1A] rounded-xl border border-[#1E3A5F]/60 overflow-hidden">
+                <div className="bg-[var(--color-brand-deepest)] rounded-xl border border-[var(--color-brand-dark)]/40/60 overflow-hidden">
                   {[
                     { label: "담보유형", value: form.collateralType },
                     { label: "소재지", value: `${form.location} ${form.locationDetail}`.trim() },
@@ -685,9 +685,9 @@ export default function EditListingPage() {
                   ].map((row, i, arr) => (
                     <div
                       key={row.label}
-                      className={`flex items-center justify-between px-4 py-3 ${i < arr.length - 1 ? 'border-b border-[#1E3A5F]/40' : ''}`}
+                      className={`flex items-center justify-between px-4 py-3 ${i < arr.length - 1 ? 'border-b border-[var(--color-brand-dark)]/40/40' : ''}`}
                     >
-                      <span className="text-xs text-[#4A7FA5]">{row.label}</span>
+                      <span className="text-xs text-slate-400">{row.label}</span>
                       <span className="text-sm font-medium text-white">{row.value || "-"}</span>
                     </div>
                   ))}
@@ -704,7 +704,7 @@ export default function EditListingPage() {
                 )}
 
                 <button
-                  className="w-full h-12 bg-[var(--color-positive)] hover:bg-[#0d9668] text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                  className="w-full h-12 bg-[var(--color-positive)] hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                   disabled={submitting}
                   onClick={handleSubmit}
                 >
@@ -721,7 +721,7 @@ export default function EditListingPage() {
           <button
             onClick={() => setStep((s) => Math.max(1, s - 1))}
             disabled={step === 1}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm text-[#94B4CC] hover:text-white border border-[#1E3A5F] hover:border-[#2E5A8E] rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm text-slate-300 hover:text-white border border-[var(--color-brand-dark)]/40 hover:border-[var(--color-brand-mid)] rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronLeft className="w-4 h-4" /> 이전
           </button>
@@ -729,7 +729,7 @@ export default function EditListingPage() {
             <button
               onClick={handleNext}
               disabled={!canNext()}
-              className="flex items-center gap-1.5 px-5 py-2 text-sm font-semibold bg-[#1E4A7A] hover:bg-[#2563B0] text-white rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-5 py-2 text-sm font-semibold bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-mid)] text-white rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               다음 <ChevronRight className="w-4 h-4" />
             </button>

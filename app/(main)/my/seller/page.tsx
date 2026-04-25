@@ -167,7 +167,29 @@ export default function SellerDashboardPage() {
       auctionLive,
     }
   })
-  const CHART: { month: string; views: number; interests: number }[] = []
+  // Phase J · 매물 등록일 기준 월별 집계 차트 (실데이터 파생)
+  const CHART = (() => {
+    const monthlyMap = new Map<string, { views: number; interests: number }>()
+    const now = new Date()
+    // 최근 6개월 키 미리 생성 (빈 월에도 0 표시)
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const key = `${String(d.getMonth() + 1).padStart(2, '0')}월`
+      monthlyMap.set(key, { views: 0, interests: 0 })
+    }
+    for (const l of sellerListings) {
+      if (!l.created_at) continue
+      const created = new Date(l.created_at)
+      const monthsDiff = (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth())
+      if (monthsDiff < 0 || monthsDiff > 5) continue
+      const key = `${String(created.getMonth() + 1).padStart(2, '0')}월`
+      const cur = monthlyMap.get(key) ?? { views: 0, interests: 0 }
+      cur.views += l.view_count || 0
+      cur.interests += l.interest_count || 0
+      monthlyMap.set(key, cur)
+    }
+    return Array.from(monthlyMap.entries()).map(([month, v]) => ({ month, views: v.views, interests: v.interests }))
+  })()
   const VISITORS = [
     { label: '총 매물 조회', value: `${sellerStats?.views ?? 0}회` },
     { label: '활성 매물', value: `${sellerStats?.active ?? 0}건` },

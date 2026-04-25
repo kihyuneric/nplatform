@@ -21,6 +21,8 @@ export interface MatchableListing {
   institution?: string
   deadline?: string
   created_at?: string   // ISO string — used for time decay
+  /** Phase G7+ · 매물의 특수조건 V2 key 배열 (avoid_conditions 페널티 계산용) */
+  special_condition_keys?: string[]
 }
 
 export interface MatchableDemand {
@@ -37,6 +39,8 @@ export interface MatchableDemand {
   created_at?: string                // ISO string — used for time decay
   /** Current portfolio concentration: map of collateral_type → count */
   portfolio_concentration?: Record<string, number>
+  /** Phase G7+ · 회피하고 싶은 V2 특수조건 key 배열 — 매칭 점수에서 페널티 */
+  avoid_conditions?: string[]
 }
 
 export interface MatchResult {
@@ -50,6 +54,8 @@ export interface MatchResult {
     urgency: number
   }
   concentrationPenalty?: number
+  /** Phase G7+ · 회피 조건 매칭 시 페널티 점수 (5점/조건) */
+  avoidPenalty?: number
 }
 
 const URGENCY_BONUS: Record<string, number> = {
@@ -171,14 +177,25 @@ function scoreDemandToListing(
 
   // Portfolio concentration penalty
   const penalty = concentrationPenalty(listing, demand)
+
+  // Phase G7+ · avoid_conditions 페널티 (매물의 special_condition_keys 와 교집합 N개 × 5점)
+  let avoidPenalty = 0
+  if (demand.avoid_conditions?.length && listing.special_condition_keys?.length) {
+    const matched = listing.special_condition_keys.filter((k) =>
+      demand.avoid_conditions!.includes(k),
+    ).length
+    avoidPenalty = matched * 5
+  }
+
   const raw = collateral + region + price + riskGrade + urgency
-  const final = Math.max(0, raw - penalty)
+  const final = Math.max(0, raw - penalty - avoidPenalty)
 
   return {
     id: demand.id,
     score: final,
     breakdown: { collateral, region, price, riskGrade, urgency },
     concentrationPenalty: penalty > 0 ? penalty : undefined,
+    avoidPenalty: avoidPenalty > 0 ? avoidPenalty : undefined,
   }
 }
 
