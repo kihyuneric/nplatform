@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Send, CheckCircle2, Info, Building2, Gavel } from 'lucide-react'
+import { ArrowLeft, Send, CheckCircle2, Info, Building2, Gavel, Download, Upload, Sparkles, Loader2 } from 'lucide-react'
 import { CommaNumberInput } from '@/components/ui/comma-number-input'
+import { NplModal, NplModalFooter } from '@/components/design-system'
+import { Button } from '@/components/ui/button'
 
 const COLLATERAL_OPTIONS = ['아파트', '상가', '토지', '오피스텔', '기타']
 const RE_TYPE_OPTIONS = ['아파트', '오피스텔', '상가', '단독주택', '토지', '기타']
@@ -47,6 +49,57 @@ export default function NewDemandPage() {
   const [reDealTypes, setReDealTypes] = useState<string[]>([])
   const [reMinArea, setReMinArea] = useState('')
   const [reMaxArea, setReMaxArea] = useState('')
+
+  // Phase G7+ · 매수자 엑셀 OCR 업로드
+  const [parsing, setParsing] = useState(false)
+  const [parsePreview, setParsePreview] = useState<{
+    fields: Record<string, unknown>
+    regions: string[]
+    collateralTypes: string[]
+    avoidConditions: string[]
+    warnings: string[]
+    source?: { fileName?: string }
+  } | null>(null)
+  const [parseError, setParseError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setParsing(true)
+    setParseError(null)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/v1/ocr/parse-buyer-template', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json?.error?.message || '파싱 실패')
+      setParsePreview(json.data)
+    } catch (err) {
+      setParseError(err instanceof Error ? err.message : '엑셀 파싱 실패')
+    } finally {
+      setParsing(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const applyExcelData = () => {
+    if (!parsePreview) return
+    const f = parsePreview.fields
+    if (f.min_principal)  setMinAmount(String(f.min_principal))
+    else if (f.min_amount) setMinAmount(String(f.min_amount))
+    if (f.max_principal)  setMaxAmount(String(f.max_principal))
+    else if (f.max_amount) setMaxAmount(String(f.max_amount))
+    if (f.min_roi_pct || f.min_roi) setTargetReturn(String(f.min_roi_pct ?? f.min_roi))
+    if (parsePreview.regions.length > 0) {
+      setRegions(parsePreview.regions.map(r => r.replace(/특별시$|광역시$|특별자치시$|특별자치도$|도$/, '')))
+    }
+    if (parsePreview.collateralTypes.length > 0) setCollateralTypes(parsePreview.collateralTypes)
+    if (f.preferred_risk_grades && Array.isArray(f.preferred_risk_grades)) {
+      setAiGrades(f.preferred_risk_grades as string[])
+    }
+    setParsePreview(null)
+  }
 
   const toggle = <T extends string>(list: T[], val: T): T[] =>
     list.includes(val) ? list.filter(x => x !== val) : [...list, val]
@@ -160,6 +213,57 @@ export default function NewDemandPage() {
 
       {/* Form */}
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+
+        {/* Phase G7+ · 매수자 엑셀 템플릿 다운로드/업로드 배너 */}
+        <div className="rounded-xl p-5 border border-sky-500/40 bg-gradient-to-br from-sky-500/8 to-sky-500/0">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="w-4 h-4 text-sky-500" />
+                <strong className="text-sm font-bold text-[var(--color-text-primary)]">
+                  엑셀 1번에 자동 작성
+                </strong>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-600 dark:text-sky-300">
+                  OCR 자동 채우기
+                </span>
+              </div>
+              <p className="text-xs text-[var(--color-text-tertiary)] leading-relaxed">
+                매수자 요구사항 엑셀(드롭다운+체크) 업로드 시 폼이 자동으로 채워집니다.
+                관심 지역·담보·수익률·회피 조건까지 한 번에.
+              </p>
+            </div>
+            <div className="flex gap-2 items-center">
+              <a
+                href="/templates/NPLatform_매수자_요구사항_템플릿.xlsx"
+                download
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-sky-500/40 text-sky-600 dark:text-sky-300 text-xs font-bold hover:bg-sky-500/10 transition-colors"
+              >
+                <Download className="w-3.5 h-3.5" /> 템플릿
+              </a>
+              <button
+                type="button"
+                disabled={parsing}
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-sky-500 hover:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-colors"
+              >
+                {parsing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                {parsing ? '파싱 중...' : '엑셀 업로드'}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                onChange={handleExcelUpload}
+                className="hidden"
+              />
+            </div>
+          </div>
+          {parseError && (
+            <div className="mt-3 p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-300">
+              ⚠ {parseError}
+            </div>
+          )}
+        </div>
 
         {/* 수요 유형 선택 */}
         <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] p-5 space-y-3">
@@ -552,6 +656,109 @@ export default function NewDemandPage() {
           </div>
         </div>
       </div>
+
+      {/* Phase G7+ · 매수자 엑셀 OCR 미리보기 모달 */}
+      <NplModal
+        open={!!parsePreview}
+        onOpenChange={(o) => { if (!o) setParsePreview(null) }}
+        title={
+          <span className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-sky-500" />
+            매수자 엑셀 파싱 결과 미리보기
+          </span>
+        }
+        description={parsePreview?.source?.fileName ?? '업로드한 요구사항을 확인하세요'}
+        size="lg"
+      >
+        {parsePreview && (
+          <div className="space-y-5">
+            {/* 매수자 정보 + 가격 조건 */}
+            <section>
+              <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)] mb-2">
+                📋 매수자 정보 + 가격 조건 ({Object.keys(parsePreview.fields).length})
+              </h4>
+              {Object.keys(parsePreview.fields).length === 0 ? (
+                <p className="text-[0.8125rem] text-[var(--color-text-tertiary)]">추출된 항목 없음</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                  {Object.entries(parsePreview.fields).map(([k, v]) => (
+                    <div key={k} className="flex items-baseline justify-between gap-2 px-3 py-2 rounded-lg bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)]">
+                      <span className="text-[0.6875rem] font-semibold text-[var(--color-text-tertiary)]">{k}</span>
+                      <span className="text-[0.8125rem] font-bold text-[var(--color-text-primary)] truncate text-right tabular-nums">{String(v)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* 관심 지역 */}
+            <section>
+              <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)] mb-2">
+                📍 관심 지역 ({parsePreview.regions.length})
+              </h4>
+              {parsePreview.regions.length === 0 ? (
+                <p className="text-[0.8125rem] text-[var(--color-text-tertiary)]">전체 지역</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {parsePreview.regions.map(r => (
+                    <span key={r} className="text-[0.75rem] font-semibold px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">{r}</span>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* 담보 종류 */}
+            <section>
+              <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)] mb-2">
+                🏠 관심 담보 종류 ({parsePreview.collateralTypes.length})
+              </h4>
+              {parsePreview.collateralTypes.length === 0 ? (
+                <p className="text-[0.8125rem] text-[var(--color-text-tertiary)]">전체 담보</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {parsePreview.collateralTypes.map(c => (
+                    <span key={c} className="text-[0.75rem] font-semibold px-2 py-1 rounded-md bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/30">{c}</span>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* 회피 조건 */}
+            <section>
+              <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)] mb-2">
+                🚫 회피 조건 ({parsePreview.avoidConditions.length}/18)
+              </h4>
+              {parsePreview.avoidConditions.length === 0 ? (
+                <p className="text-[0.8125rem] text-[var(--color-text-tertiary)]">제한 없음 — 모든 매물 후보</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {parsePreview.avoidConditions.map(k => (
+                    <span key={k} className="text-[0.6875rem] font-semibold px-2 py-1 rounded-md bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/30">{k}</span>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* 안내 */}
+            {parsePreview.warnings.length > 0 && (
+              <section>
+                <h4 className="text-[0.875rem] font-bold text-amber-700 dark:text-amber-300 mb-2">
+                  ⚠ 안내 ({parsePreview.warnings.length}건)
+                </h4>
+                <ul className="space-y-1">
+                  {parsePreview.warnings.map((w, i) => (
+                    <li key={i} className="text-[0.75rem] text-amber-700 dark:text-amber-300">· {w}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
+        )}
+        <NplModalFooter>
+          <Button variant="ghost" onClick={() => setParsePreview(null)}>취소</Button>
+          <Button onClick={applyExcelData}>적용하기 (폼 자동 채우기)</Button>
+        </NplModalFooter>
+      </NplModal>
     </div>
   )
 }
