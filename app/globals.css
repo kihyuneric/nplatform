@@ -169,29 +169,34 @@ input::placeholder, textarea::placeholder {
     --color-nav-active:    #1B3A5C;                    /* 활성 nav 항목 — 브랜드 네이비 */
     --color-nav-hover-bg:  rgba(15, 23, 42, 0.06);     /* hover 배경 (slate-900/6%) */
 
-    /* ── Brand Palette ─────────────────────────────────────────────────────── */
-    --color-brand-deepest: #060E1C;
-    --color-brand-deep:    #0D1F38;
-    --color-brand-dark:    #1B3A5C;
-    --color-brand-mid:     #2558A0;
-    --color-brand-bright:  #3B82F6;
-    --color-brand-light:   #93C5FD;
+    /* ── Brand Palette · McKinsey Editorial v2.5 (2026-04-25) ───────────────
+       SSoT: docs/NPLatform_DesignSystem_v2_McKinsey.md §1.1
+       brand-900 #0B1B2E (강조) · brand-700 #1B3A5C (Navy) · brand-500 #2E75B6 (Interactive) · brand-300 #93C5FD (Display) */
+    --color-brand-deepest: #060E1C;     /* 가장 어두운 baseline (히어로 외곽) */
+    --color-brand-deep:    #0B1B2E;     /* brand-900 — h1, 본문 위 강조 */
+    --color-brand-dark:    #1B3A5C;     /* brand-700 — 기본 Navy */
+    --color-brand-mid:     #2E75B6;     /* brand-500 — Interactive (link, button) */
+    --color-brand-bright:  #2E75B6;     /* Interactive 통일 — focus ring, hover */
+    --color-brand-light:   #93C5FD;     /* brand-300 — 디스플레이 강조 (히어로) */
 
-    /* ── Semantic Colors ───────────────────────────────────────────────────── */
-    --color-positive:     #10B981;
+    /* ── Semantic Colors · 700-tone (editorial-grade · SaaS 500보다 차분) ───── */
+    --color-positive:     #047857;      /* emerald-700 — 수익·승인 (기존 #10B981 → 차분) */
     --color-positive-bg:  #ECFDF5;
     --color-positive-dark:#065F46;
 
-    --color-warning:      #F59E0B;
+    --color-warning:      #B45309;      /* amber-700 (기존 #F59E0B → 차분) */
     --color-warning-bg:   #FFFBEB;
 
-    --color-danger:       #EF4444;
+    --color-danger:       #B91C1C;      /* red-700 (기존 #EF4444 → 진중) */
     --color-danger-bg:    #FEF2F2;
 
-    /* ── Surfaces (light) ──────────────────────────────────────────────────── */
+    --color-info:         #1D4ED8;      /* blue-700 (신규) */
+    --color-info-bg:      #EFF6FF;
+
+    /* ── Surfaces (light) — Editorial paper tone ────────────────────────────── */
     --color-surface-base:     #FAFBFC;
     --color-surface-elevated: #FFFFFF;
-    --color-surface-sunken:   #F2F4F7;
+    --color-surface-sunken:   #F4F6F9;   /* 살짝 따뜻 (기존 #F2F4F7) */
     --color-surface-overlay:  rgba(255, 255, 255, 0.85);
 
     /* ── BG tiers (light) — my/page.tsx 등 커스텀 대시보드 컴포넌트용 ────── */
@@ -201,17 +206,17 @@ input::placeholder, textarea::placeholder {
     --color-bg-elevated: #FFFFFF;
     --color-bg-border:   #CBD5E1;
 
-    /* ── Text (light) ──────────────────────────────────────────────────────── */
-    --color-text-primary:   #0D1F38;
-    --color-text-secondary: #4A5568;
-    --color-text-tertiary:  #718096;
-    --color-text-muted:     #A0AEC0;
+    /* ── Text (light) — Slate scale (editorial 표준 위계) ────────────────────── */
+    --color-text-primary:   #0F172A;    /* slate-900 — 본문 (대비 최대) */
+    --color-text-secondary: #475569;    /* slate-600 — 캡션 */
+    --color-text-tertiary:  #64748B;    /* slate-500 — 라벨 */
+    --color-text-muted:     #94A3B8;    /* slate-400 — 비활성 */
     --color-text-inverse:   #FFFFFF;
 
-    /* ── Border (light) ────────────────────────────────────────────────────── */
-    --color-border-subtle:  #E8EDF3;
-    --color-border-default: #D0D8E4;
-    --color-border-strong:  #9DAAB8;
+    /* ── Border (light) — Slate (소프트, 대비 적절) ──────────────────────── */
+    --color-border-subtle:  #E2E8F0;    /* slate-200 */
+    --color-border-default: #CBD5E1;    /* slate-300 */
+    --color-border-strong:  #94A3B8;    /* slate-400 */
 
     /* ═════════════════════════════════════════════════════════════════════
        NP Layer System v3 (2026-04-20 · 세계 최고 수준 재설계)
@@ -314,31 +319,33 @@ input::placeholder, textarea::placeholder {
     --ease-out:      cubic-bezier(0, 0, 0.2, 1);
     --ease-in-out:   cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* ── Shadcn HSL Tokens — Phase H 핀테크 톤 재정의 ─────────────────────── */
-    /* NPLatform 브랜드: navy(#1B3A5C) primary · bright blue(#3B82F6) ring·focus */
+    /* ── Shadcn HSL Tokens · McKinsey Editorial v2.5 (2026-04-25) ─────────────
+       시맨틱은 700-tone (차분), accent/ring은 brand-500 #2E75B6 통일 */
     --background:          210 20% 98%;     /* #F8FAFC 페이지 배경 */
-    --foreground:          222 47% 11%;     /* #0F172A 본문 텍스트 (대비 ↑) */
+    --foreground:          222 47% 11%;     /* #0F172A 본문 (slate-900) */
     --card:                0 0% 100%;       /* #FFFFFF 카드 */
     --card-foreground:     222 47% 11%;
     --popover:             0 0% 100%;
     --popover-foreground:  222 47% 11%;
     --primary:             211 53% 23%;     /* #1B3A5C navy (CTA 배경) */
     --primary-foreground:  0 0% 100%;
-    --secondary:           210 59% 45%;     /* #2E75B6 mid blue */
+    --secondary:           210 59% 45%;     /* #2E75B6 mid blue (Interactive) */
     --secondary-foreground:0 0% 100%;
     --muted:               210 20% 96%;     /* #F1F5F9 */
-    --muted-foreground:    215 16% 47%;
-    --accent:              160 84% 39%;     /* #10B981 emerald (강조) */
+    --muted-foreground:    215 19% 35%;     /* #475569 (slate-600) */
+    --accent:              167 100% 24%;    /* #047857 emerald-700 (editorial — 화려한 #10B981 → 차분) */
     --accent-foreground:   0 0% 100%;
-    --destructive:         0 84% 60%;
+    --destructive:         0 73% 41%;       /* #B91C1C red-700 (editorial — #EF4444 → 진중) */
     --destructive-foreground: 0 0% 100%;
-    --border:              214 32% 91%;     /* #E2E8F0 살짝 진하게 (Phase H — 카드 경계 명확) */
+    --border:              214 32% 91%;     /* #E2E8F0 (slate-200) */
     --input:               214 32% 91%;
-    --ring:                217 91% 60%;     /* #3B82F6 bright blue — focus 시 더 잘 보임 */
-    --success:             160 84% 39%;
+    --ring:                210 59% 45%;     /* #2E75B6 brand-500 — focus ring (밝은 #3B82F6 → editorial blue) */
+    --success:             167 100% 24%;   /* #047857 emerald-700 */
     --success-foreground:  0 0% 100%;
-    --warning:             27 96% 61%;
+    --warning:             25 95% 36%;     /* #B45309 amber-700 */
     --warning-foreground:  0 0% 100%;
+    --info:                221 83% 48%;    /* #1D4ED8 blue-700 */
+    --info-foreground:     0 0% 100%;
 
     /* ═══════════════════════════════════════════════════════════════════════
        Semantic Tokens v2 (Sprint 3 · Phase 1-N) — OKLCH 기반 추가 레이어
@@ -397,42 +404,42 @@ input::placeholder, textarea::placeholder {
     --color-nav-active:      #93C5FD;                      /* blue-300 */
     --color-nav-hover-bg:    rgba(255, 255, 255, 0.08);
 
-    /* ── Brand 색상 (다크 모드 — 텍스트/인터랙티브 요소 가시성 확보) ──────── */
-    /* 라이트 모드의 brand-dark(#1B3A5C)는 어두운 배경에서 보이지 않음.
-       다크 모드에서는 더 밝은 중간 톤 블루로 오버라이드 */
-    --color-brand-deepest: #1A2A40;
-    --color-brand-deep:    #1E3A5A;
-    --color-brand-dark:    #2E75B6;   /* 텍스트/버튼 → 어두운 배경에서 명확히 보임 */
-    --color-brand-mid:     #4A90D9;   /* 링크, 강조 텍스트 */
-    --color-brand-bright:  #60A5FA;   /* 하이라이트 */
-    --color-brand-light:   #93C5FD;
+    /* ── Brand 색상 (다크 모드 · McKinsey v2.5 SSoT 정합) ───────────────────
+       라이트의 brand-mid #2E75B6 는 어두운 배경에서도 충분히 가시.
+       추가 밝은 톤은 brand-bright #60A5FA (blue-400 — 라이트 톤과 일관) */
+    --color-brand-deepest: #060E1C;     /* hero outer */
+    --color-brand-deep:    #0B1B2E;     /* brand-900 — h1 (라이트와 동일) */
+    --color-brand-dark:    #2E75B6;     /* 다크 배경 위 가시성 → brand-500 톤 사용 */
+    --color-brand-mid:     #2E75B6;     /* link / interactive 통일 */
+    --color-brand-bright:  #60A5FA;     /* blue-400 — 하이라이트 (다크 전용) */
+    --color-brand-light:   #93C5FD;     /* brand-300 — 디스플레이 */
 
-    /* ── Surface 5단계 계층 (페이지 → L1카드 → L2중첩 → L3딥) ── */
-    --color-surface-sunken:   #05080F;   /* 최하단 페이지 배경 */
-    --color-surface-base:     #0D1525;   /* L1 카드 기본 */
-    --color-surface-elevated: #162035;   /* L2 중첩 카드 */
-    --color-surface-overlay:  #1E2D47;   /* L3 딥 카드 / 모달 내부 */
-    --color-surface-float:    #273C5A;   /* 최상단 (드롭다운, 툴팁) */
+    /* ── Surface 4단계 (SSoT §1.3) ───────────────────────────────────────── */
+    --color-surface-sunken:   #060E1C;   /* bg-subtle — 최하단 페이지 */
+    --color-surface-base:     #0A1628;   /* bg-canvas — 페이지 메인 */
+    --color-surface-elevated: #122643;   /* bg-muted — sunken inside card */
+    --color-surface-overlay:  #182338;   /* bg-elevated — raised card / modal */
+    --color-surface-float:    #1E2D47;   /* float (드롭다운, 툴팁) */
 
     /* ── 배경 계층 (page-level bg tiers) ── */
-    --color-bg-deepest:   #02050C;
-    --color-bg-deep:      #05080F;
-    --color-bg-base:      #0D1525;
-    --color-bg-elevated:  #162035;
+    --color-bg-deepest:   #060E1C;
+    --color-bg-deep:      #0A1628;
+    --color-bg-base:      #122643;
+    --color-bg-elevated:  #182338;
     --color-bg-border:    #1E2D47;
 
-    /* ── 텍스트 (WCAG AA 대비비 확보) ── */
-    --color-text-primary:   #F1F5F9;   /* slate-100 — 헤딩, 중요 수치 */
-    --color-text-secondary: #CBD5E1;   /* slate-300 — 본문 (기존 #94A3B8보다 밝게) */
-    --color-text-tertiary:  #94A3B8;   /* slate-400 — 보조 설명 (기존 #64748B보다 밝게) */
-    --color-text-muted:     #64748B;   /* slate-500 — 플레이스홀더 (기존 #475569보다 밝게) */
-    --color-text-disabled:  #334155;   /* slate-700 — 비활성 */
+    /* ── 텍스트 (SSoT §1.4 · 다크는 살짝 따뜻한 화이트) ── */
+    --color-text-primary:   #F8FAFC;   /* SSoT — 살짝 따뜻한 white */
+    --color-text-secondary: #CBD5E1;
+    --color-text-tertiary:  #94A3B8;
+    --color-text-muted:     #64748B;
+    --color-text-disabled:  #334155;
 
-    /* ── 테두리 (불투명도 기반, 배경색 무관하게 항상 보임) ── */
-    --color-border-subtle:  rgba(255,255,255,0.07);
-    --color-border-default: rgba(255,255,255,0.12);
-    --color-border-strong:  rgba(255,255,255,0.22);
-    --color-border-focus:   #6366F1;
+    /* ── 테두리 (SSoT 기준 slate scale · 일관성) ── */
+    --color-border-subtle:  #1E293B;    /* slate-800 */
+    --color-border-default: #334155;    /* slate-700 */
+    --color-border-strong:  #475569;    /* slate-600 */
+    --color-border-focus:   #2E75B6;    /* brand-500 — focus ring */
 
     /* ── NP Layer System v3 — Dark overrides ── */
     --layer-0-bg:   #030810;   /* page outermost (deepest) */
@@ -453,22 +460,22 @@ input::placeholder, textarea::placeholder {
 
     --fg-on-warning:    #0D1F38;             /* amber bg 위 — 다크에서도 어두운 텍스트 필요 */
 
-    /* ── 시맨틱 색상 (다크 최적화 — 배경 위에서 밝게 보임) ── */
-    --color-positive:        #34D399;   /* emerald-400 — 기존 #10B981보다 밝음 */
-    --color-positive-dark:   #34D399;   /* 다크모드 override: 라이트의 #065F46 대신 밝은 색 */
+    /* ── 시맨틱 색상 (다크 최적화 — editorial 톤, 배경 위에서 적절한 가독성) ── */
+    --color-positive:        #34D399;   /* emerald-400 — 다크 가독성 (라이트 #047857 → 다크 밝게) */
+    --color-positive-dark:   #34D399;
     --color-positive-bg:     rgba(52,211,153,0.12);
     --color-positive-border: rgba(52,211,153,0.25);
-    --color-warning:         #FBBF24;   /* amber-400 */
+    --color-warning:         #FBBF24;   /* amber-400 (라이트 #B45309 → 다크 밝게) */
     --color-warning-dark:    #FBBF24;
     --color-warning-bg:      rgba(251,191,36,0.12);
     --color-warning-border:  rgba(251,191,36,0.25);
-    --color-danger:          #F87171;   /* red-400 */
+    --color-danger:          #F87171;   /* red-400 (라이트 #B91C1C → 다크 밝게) */
     --color-danger-bg:       rgba(248,113,113,0.12);
     --color-danger-border:   rgba(248,113,113,0.25);
-    --color-brand-bright:    #818CF8;   /* indigo-400 */
-    --color-brand-mid:       #6366F1;
-    --color-brand-light:     #A5B4FC;   /* indigo-300 */
-    --color-purple:          #C084FC;   /* purple-400 */
+    --color-info:            #60A5FA;   /* blue-400 — 다크 (라이트 #1D4ED8) */
+    --color-info-bg:         rgba(96,165,250,0.12);
+    /* brand-bright/mid/light는 위 Brand 블록에서 통일 정의됨 (indigo override 제거 — McKinsey 톤 일관) */
+    --color-purple:          #A78BFA;   /* purple-400 — 딜룸 강조 */
 
     /* NPL aliases */
     --npl-primary:           #2A5A8C;
@@ -480,31 +487,33 @@ input::placeholder, textarea::placeholder {
     --npl-text-secondary:    var(--color-text-secondary);
     --npl-border-subtle:     var(--color-border-subtle);
 
-    /* ── Shadcn HSL (다크 · Phase H NPLatform 톤 통일) ── */
-    /* 라이트와 동일한 브랜드 컬러 시스템 — primary navy 톤 일관 · ring bright blue */
-    --background:          222 47% 9%;     /* #0A1628 surface base */
-    --foreground:          210 40% 96%;    /* #F1F5F9 */
-    --card:                222 32% 14%;    /* #182338 elevated card */
-    --card-foreground:     210 40% 96%;
-    --popover:             222 30% 17%;    /* #1F2D45 */
-    --popover-foreground:  210 40% 96%;
-    --primary:             217 91% 60%;    /* #3B82F6 다크에선 밝은 블루 (가독성) */
+    /* ── Shadcn HSL (다크 · McKinsey Editorial v2.5) ────────────────────────
+       라이트와 동일한 ring/primary 톤 (brand-500 #2E75B6) — 일관성 우선 */
+    --background:          222 47% 10%;    /* #0A1628 surface base (SSoT bg-canvas) */
+    --foreground:          210 40% 98%;    /* #F8FAFC (살짝 따뜻한 화이트) */
+    --card:                216 38% 15%;    /* #182338 elevated card (SSoT bg-elevated) */
+    --card-foreground:     210 40% 98%;
+    --popover:             216 38% 17%;    /* #1E2D47 float */
+    --popover-foreground:  210 40% 98%;
+    --primary:             210 59% 45%;    /* #2E75B6 brand-500 (라이트와 통일) */
     --primary-foreground:  0 0% 100%;
     --secondary:           215 25% 22%;
     --secondary-foreground:210 40% 88%;
-    --muted:               222 30% 17%;    /* #1F2D45 */
-    --muted-foreground:    215 20% 70%;
-    --accent:              160 64% 52%;    /* #34D399 brighter emerald 다크 친화 */
-    --accent-foreground:   0 0% 100%;
-    --destructive:         0 72% 70%;
+    --muted:               216 38% 18%;    /* #1F2D45 */
+    --muted-foreground:    215 20% 65%;    /* #94A3B8 */
+    --accent:              160 64% 52%;    /* #34D399 emerald-400 (다크 가독성) */
+    --accent-foreground:   222 47% 10%;    /* 다크 누름 위 */
+    --destructive:         0 72% 70%;      /* #F87171 red-400 */
     --destructive-foreground: 0 0% 100%;
-    --border:              220 20% 22%;    /* 다크 카드 경계 명확 */
-    --input:               220 20% 18%;
-    --ring:                217 91% 60%;    /* #3B82F6 라이트와 동일 ring */
+    --border:              217 33% 17%;    /* #1E293B slate-800 (SSoT border-subtle) */
+    --input:               217 28% 21%;    /* #334155 slate-700 */
+    --ring:                210 59% 45%;    /* #2E75B6 라이트와 동일 ring */
     --success:             160 64% 52%;
-    --success-foreground:  0 0% 100%;
-    --warning:             38 92% 60%;    /* #FBBF24 수준 */
-    --warning-foreground:  0 0% 100%;
+    --success-foreground:  222 47% 10%;
+    --warning:             43 96% 56%;     /* #FBBF24 amber-400 */
+    --warning-foreground:  222 47% 10%;
+    --info:                210 100% 67%;   /* #60A5FA blue-400 */
+    --info-foreground:     0 0% 100%;
 
     /* ═══════════════════════════════════════════════════════════════════════
        Semantic Tokens v2 — Dark (WCAG AA+, 가독성 재조정)
