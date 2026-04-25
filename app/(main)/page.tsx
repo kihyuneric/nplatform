@@ -120,7 +120,7 @@ const TICKS = [
 ];
 function LiveTicker() {
   return (
-    <div className="relative overflow-hidden" style={{ backgroundColor: '#F0F4F8', borderTop: '1px solid #DDE3EC' }}>
+    <div className="relative overflow-hidden" style={{ backgroundColor: 'var(--layer-2-bg)', borderTop: '1px solid var(--layer-border)' }}>
       <div className="absolute left-0 top-0 bottom-0 w-20 z-10" style={{ background: 'linear-gradient(to right, #F0F4F8, transparent)' }} />
       <div className="absolute right-0 top-0 bottom-0 w-20 z-10" style={{ background: 'linear-gradient(to left, #F0F4F8, transparent)' }} />
       <motion.div
@@ -131,9 +131,9 @@ function LiveTicker() {
         {TICKS.map((t, i) => (
           <div key={i} className="flex items-center gap-2.5 flex-shrink-0">
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: t.c }} />
-            <span className="text-[11px] font-medium" style={{ color: '#64748B', letterSpacing: '0.06em' }}>{t.t}</span>
-            <span className="text-sm font-bold tabular-nums" style={{ color: '#1E293B' }}>{t.v}</span>
-            <span style={{ color: '#CBD5E1' }}>|</span>
+            <span className="text-[11px] font-medium" style={{ color: 'var(--fg-muted)', letterSpacing: '0.06em' }}>{t.t}</span>
+            <span className="text-sm font-bold tabular-nums" style={{ color: 'var(--fg-strong)' }}>{t.v}</span>
+            <span style={{ color: 'var(--color-border-default)' }}>|</span>
           </div>
         ))}
       </motion.div>
@@ -469,28 +469,24 @@ export default function LandingPage() {
             {/* Left */}
             <motion.div variants={stagger} initial="hidden" animate="visible">
 
-              {/* Eyebrow badge */}
+              {/* Eyebrow · McKinsey editorial gold accent */}
               <motion.div variants={up} custom={0} className="mb-6">
-                <div className="inline-flex items-center gap-2.5 rounded-full px-4 py-2"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: C.em }} />
-                  <span className="text-xs font-semibold" style={{ color: C.fghd, letterSpacing: '0.06em' }}>대한민국 NPL 거래소</span>
-                  <span style={{ color: C.fghm }}>·</span>
-                  <span className="text-xs font-black" style={{ color: C.em }}>지금 거래 중</span>
+                <div className="flex items-center gap-3">
+                  <span className="block w-12 h-[2px]" style={{ background: 'var(--color-editorial-gold)' }} />
+                  <span className="npl-editorial-eyebrow" style={{ color: 'var(--color-editorial-gold)' }}>
+                    Korea NPL Exchange · 거래 진행 중
+                  </span>
                 </div>
               </motion.div>
 
-              {/* H1 */}
+              {/* H1 · Editorial display (serif tone) */}
               <motion.h1 variants={up} custom={1}
-                className="font-black leading-[1.08] tracking-tighter mb-5"
+                className="npl-editorial-display mb-5"
                 style={{ fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', color: C.fgh }}
               >
                 NPL 딜이 모이는 곳,<br />
                 거래가 시작되는 곳<br />
-                <span style={{
-                  background: `linear-gradient(135deg, ${C.em} 0%, ${C.emL} 40%, #6EE7B7 100%)`,
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}>‘엔플랫폼’</span>
+                <span style={{ color: 'var(--color-editorial-gold)' }}>엔플랫폼</span>
               </motion.h1>
 
               {/* Sub */}
@@ -592,19 +588,20 @@ export default function LandingPage() {
       {/* ══ TRUST BELT (brand tokens 기반) ════════════════════════════════ */}
       <TrustBelt />
 
-      {/* ══ WHY NPLATFORM ══════════════════════════════════════════════════ */}
+      {/* ══ WHY NPLATFORM · McKinsey Editorial 톤 ══════════════════════════ */}
       <section style={{ backgroundColor: C.light1, padding: '6rem 0' }}>
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={up} className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5"
-              style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
-              <Sparkles size={12} style={{ color: '#059669' }} />
-              <span className="text-xs font-bold" style={{ color: '#059669', letterSpacing: '0.06em' }}>왜 NPLATFORM인가</span>
+            {/* warm gold thin divider — editorial signature */}
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <span className="block w-10 h-[2px]" style={{ background: 'var(--color-editorial-gold)' }} />
+              <span className="npl-editorial-eyebrow">Why NPLatform</span>
+              <span className="block w-10 h-[2px]" style={{ background: 'var(--color-editorial-gold)' }} />
             </div>
-            <h2 className="font-black tracking-tighter mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#0A1628' }}>
+            <h2 className="npl-editorial-display mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: 'var(--fg-strong)' }}>
               NPL 거래, 이제 다르게
             </h2>
-            <p className="text-base max-w-xl mx-auto" style={{ color: '#64748B' }}>
+            <p className="text-base max-w-xl mx-auto" style={{ color: 'var(--fg-muted)' }}>
               기존 NPL 거래의 불투명성, 높은 진입장벽, 복잡한 프로세스를 AI로 해결합니다.
             </p>
           </motion.div>
@@ -614,28 +611,28 @@ export default function LandingPage() {
               {
                 icon: <TrendingUp size={24} style={{ color: C.em }} />,
                 tag: "거래 효율 3배",
-                tagBg: 'rgba(16,185,129,0.08)', tagColor: '#059669', tagBorder: 'rgba(16,185,129,0.2)',
+                tagBg: 'rgba(4,120,87,0.10)', tagColor: 'var(--color-positive)', tagBorder: 'rgba(4,120,87,0.25)',
                 title: "빠른 거래, 투명한 수수료",
                 desc: "평균 딜 클로징 24일 → 7일로 단축. NPL 매수 1.5% · 부동산 0.9% 고정 수수료, 매각사는 첫 6개월 무료. 에스크로·전자계약으로 거래 리스크도 함께 낮춥니다.",
-                iconBg: 'rgba(16,185,129,0.06)', borderHover: '#10B981',
+                iconBg: 'rgba(4,120,87,0.08)', borderHover: 'var(--color-positive)',
                 bullets: ["매물 공개 → 낙찰 평균 7일", "NPL 1.5% / 부동산 0.9% · 매각사 6개월 무료", "에스크로 · 전자계약 기본 제공"],
               },
               {
                 icon: <Building2 size={24} style={{ color: C.blue }} />,
                 tag: "47개 금융기관",
-                tagBg: 'rgba(59,130,246,0.08)', tagColor: '#2563EB', tagBorder: 'rgba(59,130,246,0.2)',
+                tagBg: 'rgba(46,117,182,0.10)', tagColor: 'var(--color-brand-bright)', tagBorder: 'rgba(46,117,182,0.25)',
                 title: "매도자 → 투자자 직거래",
                 desc: "은행·저축은행·캐피탈 47개사가 직접 매각. 중간 유통 없이 1차 공급자 가격으로 매입하고, 매도자는 LLR(Loan Loss Reserve) 회수를 극대화합니다.",
-                iconBg: 'rgba(59,130,246,0.06)', borderHover: '#3B82F6',
+                iconBg: 'rgba(46,117,182,0.08)', borderHover: 'var(--color-brand-bright)',
                 bullets: ["중간 유통 없는 1차 공급 가격", "기관 KYC · 자격 검증 완료", "실시간 경쟁 입찰 / 프라이빗 협상"],
               },
               {
                 icon: <ShieldCheck size={24} style={{ color: C.purple }} />,
                 tag: "L0→L3 4단계 접근",
-                tagBg: 'rgba(168,85,247,0.08)', tagColor: '#9333EA', tagBorder: 'rgba(168,85,247,0.2)',
+                tagBg: 'rgba(168,85,247,0.10)', tagColor: 'var(--color-purple, #A855F7)', tagBorder: 'rgba(168,85,247,0.25)',
                 title: "거래 안전 · PII 보호",
                 desc: "담보 부동산은 공개, 채무자 개인정보는 가린다. 본인인증(L1) → NDA(L2) → LOI(L3) 단계별로만 권리관계·채권서류에 접근합니다.",
-                iconBg: 'rgba(168,85,247,0.06)', borderHover: '#A855F7',
+                iconBg: 'rgba(168,85,247,0.08)', borderHover: 'var(--color-purple, #A855F7)',
                 bullets: ["금감원·신용정보법 가이드 준수", "자동 PII 마스킹 파이프라인", "NDA 전자서명 + 감사로그 영구 보관"],
               },
             ].map((r, i) => (
@@ -668,12 +665,12 @@ export default function LandingPage() {
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(16,185,129,0.3), transparent)' }} />
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={up} className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5"
-              style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }}>
-              <Layers size={12} style={{ color: C.em }} />
-              <span className="text-xs font-bold" style={{ color: C.em, letterSpacing: '0.06em' }}>거래 인프라</span>
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <span className="block w-10 h-[2px]" style={{ background: 'var(--color-editorial-gold)' }} />
+              <span className="npl-editorial-eyebrow">Trade Infrastructure · 거래 인프라</span>
+              <span className="block w-10 h-[2px]" style={{ background: 'var(--color-editorial-gold)' }} />
             </div>
-            <h2 className="font-black tracking-tighter mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: C.fgh }}>
+            <h2 className="npl-editorial-display mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: C.fgh }}>
               거래를 위한 모든 것
             </h2>
             <p className="text-base" style={{ color: C.fghm, maxWidth: '480px', margin: '0 auto' }}>
@@ -873,15 +870,15 @@ export default function LandingPage() {
       <section style={{ backgroundColor: C.light0, padding: '6rem 0' }}>
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={up} className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5"
-              style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
-              <Star size={12} style={{ color: C.amber }} />
-              <span className="text-xs font-bold" style={{ color: '#B45309', letterSpacing: '0.06em' }}>협력 금융기관</span>
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <span className="block w-10 h-[2px]" style={{ background: 'var(--color-editorial-gold)' }} />
+              <span className="npl-editorial-eyebrow">Partner Institutions · 협력 금융기관</span>
+              <span className="block w-10 h-[2px]" style={{ background: 'var(--color-editorial-gold)' }} />
             </div>
-            <h2 className="font-black tracking-tighter mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#0A1628' }}>
+            <h2 className="npl-editorial-display mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: 'var(--fg-strong)' }}>
               47개 금융기관이 신뢰하는 플랫폼
             </h2>
-            <p className="text-base" style={{ color: '#64748B', maxWidth: '480px', margin: '0 auto' }}>
+            <p className="text-base" style={{ color: 'var(--fg-muted)', maxWidth: '480px', margin: '0 auto' }}>
               국내 주요 은행, 저축은행, 캐피탈사와 파트너십을 맺고 있습니다.
             </p>
           </motion.div>

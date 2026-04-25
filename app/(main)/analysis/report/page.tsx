@@ -172,11 +172,13 @@ export default function UnifiedReportPage() {
   return (
     <div className={DS.page.wrapper}>
 
-      {/* ── 헤더 ─────────────────────────────────────── */}
+      {/* ── 헤더 · McKinsey editorial: 단색 deepest navy + warm gold accent ── */}
       <section
         className="relative overflow-hidden border-b border-[var(--color-border-subtle)]"
-        style={{ background: "linear-gradient(135deg, #1B3A5C 0%, #2E75B6 100%)" }}
+        style={{ background: "var(--color-brand-deep)" }}
       >
+        {/* warm gold thin accent line — McKinsey editorial signature */}
+        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #C9A227 40%, #C9A227 60%, transparent)" }} />
         <div className={`${DS.page.container} py-8 text-white`}>
           <Link
             href="/analysis"
@@ -621,9 +623,10 @@ export default function UnifiedReportPage() {
         </Section>
       )}
 
-      {/* ── AI 총평 ─────────────────────────────── */}
+      {/* ── AI 총평 · editorial single-tone navy ── */}
       <section className={`${DS.page.container} mb-12`}>
-        <div className="rounded-xl bg-gradient-to-br from-[#1B3A5C] to-[#2E75B6] text-white p-5">
+        <div className="rounded-xl text-white p-5 relative overflow-hidden" style={{ background: "var(--color-brand-deep)" }}>
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #C9A227 40%, #C9A227 60%, transparent)" }} />
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-4 h-4" />
             <span className="text-[0.6875rem] uppercase tracking-wider font-semibold opacity-90">

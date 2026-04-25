@@ -169,6 +169,16 @@ input::placeholder, textarea::placeholder {
     --color-nav-active:    #1B3A5C;                    /* 활성 nav 항목 — 브랜드 네이비 */
     --color-nav-hover-bg:  rgba(15, 23, 42, 0.06);     /* hover 배경 (slate-900/6%) */
 
+    /* ── McKinsey Editorial Accent · Warm Gold (signature divider) ─────────── */
+    --color-editorial-gold:      #C9A227;     /* warm gold — divider, label */
+    --color-editorial-gold-soft: rgba(201, 162, 39, 0.20);
+
+    /* ── Editorial Typography Stack ─────────────────────────────────────────
+       헤딩은 serif tone (Charter/Bookmania 부재 시 Georgia 폴백 — McKinsey style)
+       본문은 기존 Pretendard 유지 (한글 가독성) */
+    --font-editorial-display: 'Charter', 'Bookmania', 'Source Serif Pro', Georgia, 'Noto Serif KR', serif;
+    --font-editorial-body:    'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+
     /* ── Brand Palette · McKinsey Editorial v2.5 (2026-04-25) ───────────────
        SSoT: docs/NPLatform_DesignSystem_v2_McKinsey.md §1.1
        brand-900 #0B1B2E (강조) · brand-700 #1B3A5C (Navy) · brand-500 #2E75B6 (Interactive) · brand-300 #93C5FD (Display) */
@@ -2685,4 +2695,45 @@ button[role="switch"][data-state="unchecked"] {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Phase L+ · McKinsey Editorial Typography & Decorations
+   "절제된 위계 · 인쇄물 톤 · 한국어 본문은 Pretendard 유지"
+   사용 예: <h2 className="npl-editorial-display">제목</h2>
+   ═══════════════════════════════════════════════════════════════════════════ */
+.npl-editorial-display {
+  font-family: var(--font-editorial-display);
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  line-height: 1.05;
+}
+.npl-editorial-eyebrow {
+  font-family: var(--font-editorial-body);
+  font-weight: 700;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-editorial-gold);
+}
+/* warm gold thin divider — McKinsey signature */
+.npl-editorial-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-editorial-gold) 40%, var(--color-editorial-gold) 60%, transparent);
+  border: 0;
+}
+.npl-editorial-divider-left {
+  width: 48px;
+  height: 2px;
+  background: var(--color-editorial-gold);
+  margin: 0 0 1rem 0;
+}
+
+/* "한 줄 인용" 같은 레퍼런스 인용 박스 */
+.npl-editorial-quote {
+  border-left: 2px solid var(--color-editorial-gold);
+  padding: 0.25rem 0 0.25rem 1rem;
+  font-family: var(--font-editorial-display);
+  font-style: italic;
+  color: var(--color-text-secondary);
 }
