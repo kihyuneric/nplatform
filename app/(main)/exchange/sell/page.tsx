@@ -55,6 +55,9 @@ import {
 } from "@/components/npl/unified-listing-form"
 // Phase G6+ · 매각희망가·할인율·원금 통합 블록 (Step3 단독 사용)
 import { DesiredSaleDiscountInput } from "@/components/listings/npl-input-blocks"
+// Phase H5 · NplModal — OCR 미리보기 모달 (모바일 BottomSheet 자동)
+import { NplModal, NplModalFooter } from "@/components/design-system"
+import { Button } from "@/components/ui/button"
 
 // NX-5: theme-responsive color map — 라이트/다크 양쪽에서 WCAG AA 대비 확보
 const C = {
@@ -659,6 +662,15 @@ function Step1({
 // Phase G7+ · 엑셀 템플릿 다운로드/업로드 배너 (Step 1 상단)
 //   다운로드 → 매각사 오프라인 작성 → 업로드 → OCR 자동 파싱
 // ═════════════════════════════════════════════════════════════
+/** OCR 파싱 결과 타입 */
+type OcrParseResult = {
+  fields: Record<string, unknown>
+  specialConditionsV2: string[]
+  providedFields: Record<string, boolean>
+  warnings: string[]
+  source?: { fileName?: string; fileSize?: number; sheetCount?: number; sheetNames?: string[] }
+}
+
 function ExcelTemplateBanner({
   state, dispatch,
 }: {
@@ -667,6 +679,7 @@ function ExcelTemplateBanner({
 }) {
   const [parsing, setParsing] = useState(false)
   const [parseMessage, setParseMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null)
+  const [previewData, setPreviewData] = useState<OcrParseResult | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -680,103 +693,8 @@ function ExcelTemplateBanner({
       const res = await fetch("/api/v1/ocr/parse-template", { method: "POST", body: fd })
       const json = await res.json()
       if (!res.ok) throw new Error(json?.error?.message || "파싱 실패")
-      const data = json.data as {
-        fields: Record<string, unknown>
-        specialConditionsV2: string[]
-        providedFields: Record<string, boolean>
-        warnings: string[]
-      }
-      // ── 폼 자동 채우기 ──
-      const f = data.fields
-      const inst: Partial<UnifiedFormState["institution"]> = {}
-      if (f.institution_name) inst.name = String(f.institution_name)
-      if (f.institution_type) {
-        // "은행" · "저축은행" 등 한글 라벨을 그대로 받지만 SellerInstitution enum 은 영문이라 백엔드에서 매핑.
-        // 여기서는 institution_type 한글 그대로 두고 type 은 미설정 (사용자 검토 후 선택)
-      }
-      if (Object.keys(inst).length > 0) {
-        dispatch({ type: "SET_INSTITUTION", patch: inst })
-      }
-      if (f.collateral_type) {
-        dispatch({ type: "PATCH", patch: { collateral: String(f.collateral_type) as UnifiedFormState["collateral"] } })
-      }
-      if (f.sido || f.sigungu || f.address) {
-        dispatch({
-          type: "SET_ADDRESS",
-          patch: {
-            sido: String(f.sido ?? ""),
-            sigungu: String(f.sigungu ?? ""),
-            detail: String(f.address ?? ""),
-          },
-        })
-      }
-      if (f.debtor_type) {
-        const dtRaw = String(f.debtor_type)
-        const dt = dtRaw.includes("CORPORATE") || dtRaw.includes("법인") ? "CORPORATE" : "INDIVIDUAL"
-        dispatch({ type: "SET_DEBTOR_TYPE", value: dt })
-      }
-      const claimPatch: Partial<UnifiedFormState["claim"]> = {}
-      if (f.loan_principal)  claimPatch.principal = Number(f.loan_principal)
-      if (f.unpaid_interest) claimPatch.unpaidInterest = Number(f.unpaid_interest)
-      if (f.delinquency_start_date) claimPatch.delinquencyStartDate = String(f.delinquency_start_date)
-      if (f.normal_rate)  claimPatch.normalRate = Number(f.normal_rate) / 100
-      if (f.overdue_rate) claimPatch.overdueRate = Number(f.overdue_rate) / 100
-      if (Object.keys(claimPatch).length > 0) dispatch({ type: "SET_CLAIM", patch: claimPatch })
-
-      const aprPatch: Partial<UnifiedFormState["appraisal"]> = {}
-      if (f.appraisal_value)      aprPatch.appraisalValue = Number(f.appraisal_value)
-      if (f.appraisal_date)       aprPatch.appraisalDate = String(f.appraisal_date)
-      if (f.current_market_value) aprPatch.currentMarketValue = Number(f.current_market_value)
-      if (f.market_price_note)    aprPatch.marketPriceNote = String(f.market_price_note)
-      if (f.auction_start_date)   aprPatch.auctionStartDate = String(f.auction_start_date)
-      if (Object.keys(aprPatch).length > 0) dispatch({ type: "SET_APPRAISAL", patch: aprPatch })
-
-      const rightsPatch: Partial<UnifiedFormState["rights"]> = {}
-      if (f.senior_total) rightsPatch.seniorTotal = Number(f.senior_total)
-      if (Object.keys(rightsPatch).length > 0) dispatch({ type: "SET_RIGHTS", patch: rightsPatch })
-
-      const leasePatch: Partial<UnifiedFormState["lease"]> = {}
-      if (f.lease_deposit) leasePatch.totalDeposit = Number(f.lease_deposit)
-      if (f.lease_monthly) leasePatch.totalMonthlyRent = Number(f.lease_monthly)
-      if (f.tenant_count)  leasePatch.tenantCount = Number(f.tenant_count)
-      if (Object.keys(leasePatch).length > 0) dispatch({ type: "SET_LEASE", patch: leasePatch })
-
-      if (f.asking_price) {
-        dispatch({ type: "PATCH", patch: { askingPrice: Number(f.asking_price) } })
-      }
-      if (f.discount_rate) {
-        dispatch({ type: "PATCH", patch: { desiredSaleDiscount: Number(f.discount_rate) / 100 } })
-      }
-
-      // 매각 방식 (체크박스)
-      const methods: ("NPLATFORM" | "AUCTION" | "PUBLIC")[] = []
-      if (f.sale_method_nplatform) methods.push("NPLATFORM")
-      if (f.sale_method_auction)   methods.push("AUCTION")
-      if (f.sale_method_public)    methods.push("PUBLIC")
-      if (methods.length > 0) {
-        dispatch({ type: "PATCH", patch: { saleMethods: methods } })
-      }
-      if (f.sale_method_other) {
-        dispatch({ type: "PATCH", patch: { saleMethodOther: String(f.sale_method_other) } })
-      }
-      if (f.seller_fee_rate) {
-        dispatch({ type: "SET_FEE", patch: { sellerRate: Number(f.seller_fee_rate) / 100 } })
-      }
-
-      // 특수조건 V2
-      if (data.specialConditionsV2.length > 0) {
-        dispatch({ type: "SET_SPECIAL_CONDITIONS_V2", keys: data.specialConditionsV2 })
-      }
-
-      const filled =
-        Object.keys(data.fields).length +
-        data.specialConditionsV2.length +
-        Object.values(data.providedFields).filter(Boolean).length
-      setParseMessage({
-        type: "ok",
-        text: `${filled}개 항목이 자동 채워졌습니다. 이어서 검토·수정 후 다음 단계로 진행하세요.${data.warnings.length > 0 ? ` (안내: ${data.warnings.join(", ")})` : ""}`,
-      })
-      void state // suppress unused
+      // 미리보기 모달로 결과 표시 (사용자 확인 후 적용)
+      setPreviewData(json.data as OcrParseResult)
     } catch (err) {
       setParseMessage({
         type: "err",
@@ -786,6 +704,81 @@ function ExcelTemplateBanner({
       setParsing(false)
       if (fileInputRef.current) fileInputRef.current.value = ""
     }
+  }
+
+  const applyParseResult = (data: OcrParseResult) => {
+    const f = data.fields
+    const inst: Partial<UnifiedFormState["institution"]> = {}
+    if (f.institution_name) inst.name = String(f.institution_name)
+    if (Object.keys(inst).length > 0) dispatch({ type: "SET_INSTITUTION", patch: inst })
+    if (f.collateral_type) {
+      dispatch({ type: "PATCH", patch: { collateral: String(f.collateral_type) as UnifiedFormState["collateral"] } })
+    }
+    if (f.sido || f.sigungu || f.address) {
+      dispatch({
+        type: "SET_ADDRESS",
+        patch: {
+          sido: String(f.sido ?? ""),
+          sigungu: String(f.sigungu ?? ""),
+          detail: String(f.address ?? ""),
+        },
+      })
+    }
+    if (f.debtor_type) {
+      const dtRaw = String(f.debtor_type)
+      const dt = dtRaw.includes("CORPORATE") || dtRaw.includes("법인") ? "CORPORATE" : "INDIVIDUAL"
+      dispatch({ type: "SET_DEBTOR_TYPE", value: dt })
+    }
+    const claimPatch: Partial<UnifiedFormState["claim"]> = {}
+    if (f.loan_principal)  claimPatch.principal = Number(f.loan_principal)
+    if (f.unpaid_interest) claimPatch.unpaidInterest = Number(f.unpaid_interest)
+    if (f.delinquency_start_date) claimPatch.delinquencyStartDate = String(f.delinquency_start_date)
+    if (f.normal_rate)  claimPatch.normalRate = Number(f.normal_rate) / 100
+    if (f.overdue_rate) claimPatch.overdueRate = Number(f.overdue_rate) / 100
+    if (Object.keys(claimPatch).length > 0) dispatch({ type: "SET_CLAIM", patch: claimPatch })
+
+    const aprPatch: Partial<UnifiedFormState["appraisal"]> = {}
+    if (f.appraisal_value)      aprPatch.appraisalValue = Number(f.appraisal_value)
+    if (f.appraisal_date)       aprPatch.appraisalDate = String(f.appraisal_date)
+    if (f.current_market_value) aprPatch.currentMarketValue = Number(f.current_market_value)
+    if (f.market_price_note)    aprPatch.marketPriceNote = String(f.market_price_note)
+    if (f.auction_start_date)   aprPatch.auctionStartDate = String(f.auction_start_date)
+    if (Object.keys(aprPatch).length > 0) dispatch({ type: "SET_APPRAISAL", patch: aprPatch })
+
+    const rightsPatch: Partial<UnifiedFormState["rights"]> = {}
+    if (f.senior_total) rightsPatch.seniorTotal = Number(f.senior_total)
+    if (Object.keys(rightsPatch).length > 0) dispatch({ type: "SET_RIGHTS", patch: rightsPatch })
+
+    const leasePatch: Partial<UnifiedFormState["lease"]> = {}
+    if (f.lease_deposit) leasePatch.totalDeposit = Number(f.lease_deposit)
+    if (f.lease_monthly) leasePatch.totalMonthlyRent = Number(f.lease_monthly)
+    if (f.tenant_count)  leasePatch.tenantCount = Number(f.tenant_count)
+    if (Object.keys(leasePatch).length > 0) dispatch({ type: "SET_LEASE", patch: leasePatch })
+
+    if (f.asking_price) dispatch({ type: "PATCH", patch: { askingPrice: Number(f.asking_price) } })
+    if (f.discount_rate) dispatch({ type: "PATCH", patch: { desiredSaleDiscount: Number(f.discount_rate) / 100 } })
+
+    const methods: ("NPLATFORM" | "AUCTION" | "PUBLIC")[] = []
+    if (f.sale_method_nplatform) methods.push("NPLATFORM")
+    if (f.sale_method_auction)   methods.push("AUCTION")
+    if (f.sale_method_public)    methods.push("PUBLIC")
+    if (methods.length > 0) dispatch({ type: "PATCH", patch: { saleMethods: methods } })
+    if (f.sale_method_other) dispatch({ type: "PATCH", patch: { saleMethodOther: String(f.sale_method_other) } })
+    if (f.seller_fee_rate) dispatch({ type: "SET_FEE", patch: { sellerRate: Number(f.seller_fee_rate) / 100 } })
+
+    if (data.specialConditionsV2.length > 0) {
+      dispatch({ type: "SET_SPECIAL_CONDITIONS_V2", keys: data.specialConditionsV2 })
+    }
+    void state // suppress unused
+    const filled =
+      Object.keys(data.fields).length +
+      data.specialConditionsV2.length +
+      Object.values(data.providedFields).filter(Boolean).length
+    setParseMessage({
+      type: "ok",
+      text: `${filled}개 항목이 자동 채워졌습니다. 검토 후 다음 단계로 진행하세요.${data.warnings.length > 0 ? ` (안내: ${data.warnings.join(", ")})` : ""}`,
+    })
+    setPreviewData(null)
   }
 
   return (
@@ -870,6 +863,111 @@ function ExcelTemplateBanner({
         >
           {parseMessage.type === "ok" ? "✓" : "⚠"} {parseMessage.text}
         </div>
+      )}
+
+      {/* Phase H5 · OCR 파싱 결과 미리보기 모달 */}
+      <NplModal
+        open={!!previewData}
+        onOpenChange={(o) => { if (!o) setPreviewData(null) }}
+        title="엑셀 파싱 결과 미리보기"
+        description={previewData?.source?.fileName ?? "업로드한 템플릿에서 추출된 정보를 확인하세요"}
+        size="lg"
+      >
+        {previewData && <OcrPreviewContent data={previewData} />}
+        <NplModalFooter>
+          <Button variant="ghost" onClick={() => setPreviewData(null)}>
+            취소 · 적용 안 함
+          </Button>
+          <Button onClick={() => previewData && applyParseResult(previewData)}>
+            적용하기 (폼에 자동 채움)
+          </Button>
+        </NplModalFooter>
+      </NplModal>
+    </div>
+  )
+}
+
+// OCR 미리보기 콘텐츠 — 시트별 추출 결과 요약
+function OcrPreviewContent({ data }: { data: OcrParseResult }) {
+  const fieldEntries = Object.entries(data.fields)
+  return (
+    <div className="space-y-5">
+      {/* 1. 기본정보 추출 */}
+      <section>
+        <div className="flex items-baseline justify-between mb-2">
+          <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)]">
+            📋 기본정보 ({fieldEntries.length}개 필드)
+          </h4>
+        </div>
+        {fieldEntries.length === 0 ? (
+          <p className="text-[0.8125rem] text-[var(--color-text-tertiary)]">추출된 필드가 없습니다.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 max-h-72 overflow-y-auto">
+            {fieldEntries.map(([k, v]) => (
+              <div key={k} className="flex items-baseline justify-between gap-3 px-3 py-2 rounded-lg bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)]">
+                <span className="text-[0.6875rem] font-semibold text-[var(--color-text-tertiary)] shrink-0">{k}</span>
+                <span className="text-[0.8125rem] font-bold text-[var(--color-text-primary)] truncate text-right tabular-nums">
+                  {String(v)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 2. 특수조건 V2 */}
+      <section>
+        <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)] mb-2">
+          🔍 특수조건 V2 ({data.specialConditionsV2.length}/18 체크)
+        </h4>
+        {data.specialConditionsV2.length === 0 ? (
+          <p className="text-[0.8125rem] text-[var(--color-text-tertiary)]">체크된 특수조건이 없습니다.</p>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {data.specialConditionsV2.map((key) => (
+              <span key={key} className="text-[0.6875rem] font-semibold px-2 py-1 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                {key}
+              </span>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 3. 필요서류 */}
+      <section>
+        <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)] mb-2">
+          📎 필요서류 제공 여부
+        </h4>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+          {Object.entries(data.providedFields).map(([k, v]) => (
+            <span
+              key={k}
+              className={`text-[0.6875rem] font-semibold px-2 py-1.5 rounded-md text-center ${
+                v
+                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
+                  : "bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border border-[var(--color-border-subtle)]"
+              }`}
+            >
+              {v ? "✓" : "—"} {k}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. 경고 */}
+      {data.warnings.length > 0 && (
+        <section>
+          <h4 className="text-[0.875rem] font-bold text-amber-700 dark:text-amber-300 mb-2">
+            ⚠ 안내 ({data.warnings.length}건)
+          </h4>
+          <ul className="space-y-1">
+            {data.warnings.map((w, i) => (
+              <li key={i} className="text-[0.75rem] text-amber-700 dark:text-amber-300 leading-relaxed">
+                · {w}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   )

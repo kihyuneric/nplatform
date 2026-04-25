@@ -21,6 +21,9 @@ interface AdminListing {
   status: ApprovalStatus
   created_at: string
   seller_name?: string
+  // Phase G7+ · 자발적 경매 진행 정보
+  bid_end_date?: string | null
+  min_bid_price?: number | null
 }
 
 const PAGE_SIZE = 20
@@ -268,6 +271,16 @@ export default function AdminListingsPage() {
             { key: 'status', label: '상태', sortable: true, render: (v: ApprovalStatus) => {
               const s = STATUS_CONFIG[v]; return s ? <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border ${s.cls}`}>{s.label}</span> : null
             }},
+            { key: 'bid_end_date', label: '경매 종료', sortable: true, render: (v) => {
+              if (!v) return <span className="text-[0.6875rem] text-[var(--color-text-muted)]">—</span>
+              const live = new Date(v as string).getTime() > Date.now()
+              return (
+                <span className={`inline-flex items-center gap-1 text-[0.75rem] ${live ? 'text-sky-600 dark:text-sky-300 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
+                  {live && <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />}
+                  {new Date(v as string).toLocaleDateString("ko-KR")}
+                </span>
+              )
+            } },
             { key: 'created_at', label: '등록일', sortable: true, render: (v) => <span className="text-[0.75rem] text-[var(--color-text-tertiary)]">{v ? new Date(v).toLocaleDateString("ko-KR") : "-"}</span> },
             { key: 'id', label: '액션', render: (v, row) => (
               <div className="flex items-center gap-1.5 flex-wrap">
