@@ -47,7 +47,9 @@ export function Footer() {
 
   return (
     <footer
-      className="mt-auto border-t border-[#1A2E4A] bg-[#060E1C]"
+      // Phase H1 · 의도적 다크 톤 유지 (라이트 모드에서도 다크 푸터는 핀테크 표준 패턴)
+      // 단, 하드코딩 → 브랜드 토큰으로 교체하여 향후 색상 변경 시 일괄 적용 가능
+      className="mt-auto border-t border-[var(--color-brand-deep)]/40 bg-[var(--color-brand-deepest)]"
       aria-label="사이트 하단 정보"
     >
       <div className="max-w-[1440px] mx-auto px-6 lg:px-8 pt-14 pb-10">
@@ -59,7 +61,7 @@ export function Footer() {
           <div className="flex flex-col gap-4">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5 group w-fit">
-              <div className="w-8 h-8 bg-[#1B3A5C] rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-[#0D1F38] transition-colors">
+              <div className="w-8 h-8 bg-[var(--color-brand-dark)] rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-[var(--color-brand-deep)] transition-colors">
                 <span className="text-white font-black text-sm tracking-tighter">N</span>
               </div>
               <div>
@@ -180,7 +182,7 @@ export function Footer() {
         </div>
 
         {/* ── Regulatory compliance strip ─────────────── */}
-        <div className="mt-10 pt-6 border-t border-[#1A2E4A]">
+        <div className="mt-10 pt-6 border-t border-[var(--color-brand-deep)]/40">
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <ComplianceBadge label="개인정보보호법 준수" color="#10B981" />
             <ComplianceBadge label="신용정보법 준수" color="#10B981" />
@@ -201,7 +203,7 @@ export function Footer() {
         </div>
 
         {/* ── Bottom bar ───────────────────────────────── */}
-        <div className="mt-12 pt-6 border-t border-[#1A2E4A] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 pt-6 border-t border-[var(--color-brand-deep)]/40 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
             <p className="text-xs text-[var(--color-text-muted)]">
               &copy; 2026 트랜스파머(주) TransFarmer Inc. All rights reserved.
@@ -226,7 +228,7 @@ export function Footer() {
             <span className="text-[11px] text-[var(--color-text-muted)] font-mono tracking-wide">
               NPLatform v12.0
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#1A2E4A] text-[10px] text-slate-400 font-medium">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-brand-deep)]/60 text-[10px] text-slate-400 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
               서비스 정상
             </span>

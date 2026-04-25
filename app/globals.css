@@ -1497,6 +1497,26 @@ button[role="switch"][data-state="unchecked"] {
   border-color: rgba(255,255,255,0.06);
 }
 
+/* npl-preview-dark-card: 랜딩 페이지 _landing 의 다크 프리뷰 카드 */
+/*   라이트 모드 = 라이트 톤 카드 · 다크 모드 = 진한 네이비 카드 */
+.npl-preview-dark-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  color: #0F172A;
+}
+.dark .npl-preview-dark-card {
+  background: #0F1C34;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.95);
+}
+.npl-preview-dark-card.featured {
+  border-color: rgba(16,185,129,0.30);
+}
+.dark .npl-preview-dark-card.featured {
+  border-color: rgba(16,185,129,0.30);
+  box-shadow: 0 0 24px rgba(16,185,129,0.08);
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    PHASE H · HOME-SELLER-PREMIUM CARD — 라이트/다크 분기 (메인 페이지)
    ───────────────────────────────────────────────────────────────────────────── */

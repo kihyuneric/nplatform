@@ -163,12 +163,7 @@ export function ExchangePreview() {
               >
                 <Link
                   href="/exchange"
-                  className="group relative block rounded-2xl overflow-hidden transition-all hover:-translate-y-1"
-                  style={{
-                    background: "#0F1C34",
-                    border: s.featured ? "1px solid rgba(16,185,129,0.3)" : "1px solid rgba(255,255,255,0.08)",
-                    boxShadow: s.featured ? "0 0 24px rgba(16,185,129,0.08)" : undefined,
-                  }}
+                  className={`npl-preview-dark-card group relative block rounded-2xl overflow-hidden transition-all hover:-translate-y-1 ${s.featured ? 'featured' : ''}`}
                 >
                   {s.featured && (
                     <div
