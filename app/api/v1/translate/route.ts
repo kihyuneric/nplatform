@@ -32,11 +32,18 @@ async function googleTranslate(text: string, targetLang: string): Promise<string
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ko&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`
     const res = await fetch(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; NPLatformBot/1.0)",
+        // 브라우저 같은 헤더로 실제 응답 받기 (User-Agent만 있으면 깨진 응답 옴)
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json,text/plain,*/*",
+        "Accept-Language": "en-US,en;q=0.9,ko;q=0.8",
       },
     })
     if (!res.ok) return null
-    const data = (await res.json()) as unknown
+    // UTF-8 명시 디코드 (응답 헤더가 charset 미지정 시 fetch 가 자동 추측 → 한글 깨짐)
+    const buf = await res.arrayBuffer()
+    const raw = new TextDecoder("utf-8").decode(buf)
+    let data: unknown
+    try { data = JSON.parse(raw) } catch { return null }
     // 응답 형태: [[["translated", "original", null, null, 10]], null, "ko"]
     if (!Array.isArray(data) || !Array.isArray((data as unknown[])[0])) return null
     const segments = (data as unknown[])[0] as unknown[]
