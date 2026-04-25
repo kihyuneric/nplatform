@@ -163,7 +163,7 @@ function DealCard() {
         - 1점 brass accent (gold) — 좌상단 hairline 하나만
         - CTA = ink 검정 사각 + 흰 글씨 (radius 0)
       */}
-      <div className="relative overflow-hidden"
+      <div className="mck-paper relative overflow-hidden"
         style={{
           background: '#FFFFFF',
           border: '1px solid rgba(5, 28, 44, 0.10)',
@@ -348,50 +348,54 @@ function AISearch() {
   };
   return (
     <div className="w-full max-w-xl">
+      {/* AI 라벨 + 안내 — navy 위 brass + 흰 (직접 hex) */}
       <div className="flex items-center gap-2 mb-2.5">
-        <div className="flex items-center gap-1.5 rounded-full px-3 py-1"
-          style={{ background: 'rgba(5, 28, 44,0.1)', border: '1px solid rgba(34, 81, 255,0.30)' }}>
-          <Brain size={11} style={{ color: C.em }} />
-          <span className="text-[11px] font-bold" style={{ color: C.em, letterSpacing: '0.05em' }}>AI 자연어 검색</span>
+        <div className="flex items-center gap-1.5 px-3 py-1"
+          style={{ background: 'transparent', border: '1px solid #B8924B', borderRadius: 0 }}>
+          <Brain size={11} style={{ color: '#E5C77A' }} />
+          <span className="text-[11px] font-bold uppercase tracking-[0.10em]" style={{ color: '#E5C77A' }}>AI 자연어 검색</span>
         </div>
-        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.22)' }}>원하는 물건을 자유롭게 설명하세요</span>
+        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.78)' }}>원하는 물건을 자유롭게 설명하세요</span>
       </div>
 
-      <div className="relative flex items-center rounded-2xl overflow-hidden transition-all duration-300"
+      {/* 검색 박스 — 흰 종이 (navy 위 강한 contrast) */}
+      <div className="relative flex items-center overflow-hidden transition-all duration-300"
         style={{
-          background: focused ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
-          border: focused ? `1px solid rgba(5, 28, 44,0.5)` : '1px solid rgba(255,255,255,0.08)',
-          boxShadow: focused ? `0 0 0 3px rgba(5, 28, 44,0.08), 0 8px 24px rgba(0,0,0,0.3)` : 'none',
+          background: '#FFFFFF',
+          border: focused ? '1px solid #0A1628' : '1px solid rgba(5, 28, 44, 0.20)',
+          borderRadius: 0,
+          boxShadow: focused ? '0 0 0 2px rgba(184,146,75,0.35), 0 8px 24px rgba(0,0,0,0.3)' : '0 6px 18px -4px rgba(0,0,0,0.2)',
         }}>
-        <Search size={15} className="ml-4 flex-shrink-0" style={{ color: 'rgba(255,255,255,0.25)' }} />
+        <Search size={15} className="ml-4 flex-shrink-0" style={{ color: 'rgba(5, 28, 44, 0.55)' }} />
         <input
           type="text" value={q} onChange={e => setQ(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } }}
           placeholder={!focused ? SUGGESTIONS[idx] : "예: 서울 강남 아파트 NPL 수익률 20% 이상 A등급"}
           className="flex-1 bg-transparent text-sm outline-none px-3 py-3.5"
-          style={{ color: 'rgba(255,255,255,0.85)', caretColor: C.em }}
+          style={{ color: '#0A1628', caretColor: '#B8924B' }}
           aria-label="NPL 자연어 검색"
         />
-        <div className="flex items-center gap-1.5 mx-2 px-2.5 py-1.5 rounded-lg flex-shrink-0"
-          style={{ background: 'rgba(5, 28, 44,0.1)', border: '1px solid rgba(34, 81, 255,0.30)' }}>
-          <Sparkles size={10} style={{ color: C.em }} />
-          <span className="text-[10px] font-black" style={{ color: C.em }}>AI</span>
+        <div className="flex items-center gap-1.5 mx-2 px-2.5 py-1.5 flex-shrink-0"
+          style={{ background: '#F5F5F5', border: '1px solid rgba(5, 28, 44, 0.15)', borderRadius: 0 }}>
+          <Sparkles size={10} style={{ color: '#B8924B' }} />
+          <span className="text-[10px] font-black uppercase tracking-[0.08em]" style={{ color: '#0A1628' }}>AI</span>
         </div>
         <Link href={`/exchange${q ? `?q=${encodeURIComponent(q)}` : ""}`}
           className="text-sm font-bold px-5 py-3.5 flex-shrink-0 transition-all"
-          style={{ background: 'var(--color-brand-deep)', color: 'white' }}>
+          style={{ background: '#0A1628', color: '#FFFFFF', borderRadius: 0, letterSpacing: '0.04em' }}>
           검색
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-2 mt-2.5">
+      {/* Quick chips — navy 위 흰 outline + 흰 글씨 */}
+      <div className="flex flex-wrap gap-2 mt-3">
         {["서울 아파트", "수익률 20%+", "1억 이하", "A등급 저위험"].map(tag => (
           <button key={tag} onClick={() => setQ(tag)}
-            className="text-[11px] rounded-full px-3 py-1 transition-all"
-            style={{ color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-            onMouseEnter={e => { (e.target as HTMLElement).style.color = 'rgba(255,255,255,0.7)'; (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.2)'; }}
-            onMouseLeave={e => { (e.target as HTMLElement).style.color = 'rgba(255,255,255,0.35)'; (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}
+            className="text-[11px] px-3 py-1.5 transition-all font-medium"
+            style={{ color: '#FFFFFF', background: 'transparent', border: '1px solid rgba(255,255,255,0.40)', borderRadius: 0, letterSpacing: '0.02em' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FFFFFF'; (e.currentTarget as HTMLElement).style.color = '#0A1628'; (e.currentTarget as HTMLElement).style.borderColor = '#FFFFFF'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#FFFFFF'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.40)'; }}
           >{tag}</button>
         ))}
       </div>
@@ -516,54 +520,55 @@ export default function LandingPage() {
             {/* Left */}
             <motion.div variants={stagger} initial="hidden" animate="visible">
 
-              {/* Eyebrow · McKinsey editorial gold accent */}
+              {/* Eyebrow · 직접 hex (CSS 변수 fallback X) — navy 위 brass 광택 */}
               <motion.div variants={up} custom={0} className="mb-6">
                 <div className="flex items-center gap-3">
-                  <span className="block w-12 h-[2px]" style={{ background: 'var(--color-editorial-gold)' }} />
-                  <span className="npl-editorial-eyebrow" style={{ color: 'var(--color-editorial-gold)' }}>
+                  <span className="block w-12 h-[2px]" style={{ background: '#E5C77A' }} />
+                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: '#E5C77A' }}>
                     Korea NPL Exchange · 거래 진행 중
                   </span>
                 </div>
               </motion.div>
 
-              {/* H1 · Editorial display (serif tone) */}
+              {/* H1 · Editorial display — 본문 흰, 브랜드는 brass (직접 hex) */}
               <motion.h1 variants={up} custom={1}
                 className="npl-editorial-display mb-5"
-                style={{ fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', color: C.fgh }}
+                style={{ fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', color: '#FFFFFF', lineHeight: 1.08, letterSpacing: '-0.02em', fontWeight: 800 }}
               >
-                NPL 딜이 모이는 곳,<br />
-                거래가 시작되는 곳<br />
-                <span style={{ color: 'var(--color-editorial-gold)' }}>엔플랫폼</span>
+                <span style={{ color: '#FFFFFF' }}>NPL 딜이 모이는 곳,</span><br />
+                <span style={{ color: '#FFFFFF' }}>거래가 시작되는 곳</span><br />
+                <span style={{ color: '#E5C77A', fontWeight: 900 }}>엔플랫폼</span>
               </motion.h1>
 
-              {/* Sub */}
+              {/* Sub · 흰 70%~90% 강한 가독성 */}
               <motion.p variants={up} custom={2} className="text-base leading-relaxed mb-7"
-                style={{ color: C.fghm, maxWidth: '440px' }}>
+                style={{ color: 'rgba(255,255,255,0.78)', maxWidth: '440px' }}>
                 매각사와 투자자가 직접 만나는 거래소.{" "}
-                <span style={{ color: C.fghd, fontWeight: 500 }}>매물 탐색 · 경쟁 입찰 · 딜룸 협상 · 전자계약</span>{" "}
+                <span style={{ color: '#FFFFFF', fontWeight: 600 }}>매물 탐색 · 경쟁 입찰 · 딜룸 협상 · 전자계약</span>{" "}
                 까지 한 번에 체결합니다.
               </motion.p>
 
-              {/* CTAs — 거래 2-branch */}
+              {/* CTAs · Navy hero 위 — Primary = 흰 종이 + ink, Secondary = brass outline + brass
+                  contrast 규칙: 어두운 배경 → 글씨/배경은 강한 대비 (흰/brass) */}
               <motion.div variants={up} custom={3} className="flex flex-col sm:flex-row gap-3 mb-7">
                 <Link href="/exchange"
-                  className="group inline-flex items-center justify-center gap-2 font-bold text-sm rounded-xl transition-all"
-                  style={{ background: 'var(--color-brand-deep)', color: 'white', padding: '14px 28px', border: '1px solid var(--color-brand-deep)' }}
-                  onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
-                  onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
+                  className="group inline-flex items-center justify-center gap-2 font-bold text-sm transition-all"
+                  style={{ background: '#FFFFFF', color: '#0A1628', padding: '14px 28px', border: '1px solid #FFFFFF', borderRadius: 0, letterSpacing: '0.02em' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 20px -4px rgba(0,0,0,0.4)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                 >
-                  <Search size={15} />
-                  매물 탐색하기
-                  <ArrowRight size={15} />
+                  <Search size={15} style={{ color: '#0A1628' }} />
+                  <span style={{ color: '#0A1628' }}>매물 탐색하기</span>
+                  <ArrowRight size={15} style={{ color: '#0A1628' }} />
                 </Link>
                 <Link href="/exchange/sell"
-                  className="group inline-flex items-center justify-center gap-2 font-semibold text-sm rounded-xl transition-all"
-                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)', color: C.fgh, padding: '14px 28px' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                  className="group inline-flex items-center justify-center gap-2 font-semibold text-sm transition-all"
+                  style={{ background: 'transparent', border: '1px solid #B8924B', color: '#E5C77A', padding: '14px 28px', borderRadius: 0, letterSpacing: '0.02em' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(184, 146, 75, 0.10)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}
                 >
-                  <Building2 size={13} style={{ color: C.em }} />
-                  매물 등록하기
+                  <Building2 size={13} style={{ color: '#E5C77A' }} />
+                  <span style={{ color: '#E5C77A' }}>매물 등록하기</span>
                 </Link>
               </motion.div>
 
@@ -590,32 +595,49 @@ export default function LandingPage() {
         <LiveTicker />
       </section>
 
-      {/* ══ STATS BAR ══════════════════════════════════════════════════════ */}
-      <section style={{ backgroundColor: C.bg2, borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '2.5rem 0' }}>
+      {/* ══ STATS BAR · McKinsey White Paper 섹션 ═══════════════════════════
+          navy hero 직후 = 흰 배경 섹션으로 강한 contrast.
+          4개 카드 모두 White Paper + ink + brass hairline.
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid rgba(5, 28, 44, 0.10)', borderBottom: '1px solid rgba(5, 28, 44, 0.10)', padding: '3.5rem 0' }}>
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div variants={stagger} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <motion.div variants={stagger} className="grid grid-cols-2 lg:grid-cols-4 gap-px" style={{ background: 'rgba(5, 28, 44, 0.10)' }}>
             {stats.map((s, i) => (
               <motion.div key={s.label} variants={up} custom={i}
-                className="relative rounded-2xl p-5 overflow-hidden group transition-all duration-300"
-                style={{ background: C.bg3, border: '1px solid rgba(255,255,255,0.07)', cursor: 'default' }}
-                onMouseEnter={e => { (e.currentTarget.style.borderColor = `rgba(${s.color === C.em ? '16,185,129' : s.color === C.blue ? '59,130,246' : s.color === C.amber ? '245,158,11' : '168,85,247'},0.3)`); (e.currentTarget.style.transform = 'translateY(-2px)'); }}
-                onMouseLeave={e => { (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'); (e.currentTarget.style.transform = 'translateY(0)'); }}
+                className="relative p-6 overflow-hidden group"
+                style={{
+                  background: '#FFFFFF',
+                  borderTop: '2px solid var(--color-editorial-gold, #B8924B)',
+                  borderRadius: 0,
+                  cursor: 'default',
+                }}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>{s.icon}</div>
+                <div className="flex items-start justify-between mb-4">
+                  {/* 아이콘 = ink 검정 (color X) */}
+                  <div className="p-2" style={{ background: '#F5F5F5', border: '1px solid rgba(5, 28, 44, 0.10)', borderRadius: 0 }}>
+                    {s.icon && (
+                      <span style={{ display: 'inline-flex', color: '#0A1628' }}>
+                        {/* clone icon with ink color */}
+                        {s.icon}
+                      </span>
+                    )}
+                  </div>
+                  {/* 변화율 = brass small */}
                   <div className="flex items-center gap-1">
-                    <ChevronUp size={11} style={{ color: C.em }} />
-                    <span className="text-[10px] font-bold" style={{ color: C.fghm }}>{s.change}</span>
+                    <ChevronUp size={11} style={{ color: 'var(--color-editorial-gold, #B8924B)' }} />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.06em]" style={{ color: 'var(--color-editorial-gold, #B8924B)' }}>{s.change}</span>
                   </div>
                 </div>
                 <div className="flex items-end justify-between">
                   <div>
-                    <div className="text-2xl font-black tabular-nums leading-tight" style={{ color: C.fgh }}>
+                    {/* 숫자 = HERO ink (size + weight 강조, 색 X) */}
+                    <div className="text-3xl font-extrabold tabular-nums leading-tight" style={{ color: '#0A1628', letterSpacing: '-0.02em' }}>
                       <Counter target={s.val} suffix={s.suffix} />
                     </div>
-                    <div className="text-xs mt-1" style={{ color: C.fghm }}>{s.label}</div>
+                    {/* 라벨 = 작은 회색 uppercase */}
+                    <div className="text-[10px] mt-2 font-bold uppercase tracking-[0.10em]" style={{ color: 'rgba(5, 28, 44, 0.55)' }}>{s.label}</div>
                   </div>
-                  <Sparkline color={s.color} />
+                  <Sparkline color="#0A1628" />
                 </div>
               </motion.div>
             ))}
@@ -707,51 +729,59 @@ export default function LandingPage() {
         </Reveal>
       </section>
 
-      {/* ══ FEATURES ════════════════════════════════════════════════════════ */}
-      <section style={{ backgroundColor: C.bg2, padding: '6rem 0', position: 'relative' }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(5, 28, 44,0.3), transparent)' }} />
+      {/* ══ FEATURES · McKinsey White Paper 섹션 ═══════════════════════════
+          흰 배경 섹션 + 6개 흰 종이 카드 + ink 검정 + brass hairline
+          뱃지 = 검정 사각 + 흰 글씨 (multi-color X)
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section style={{ backgroundColor: '#FAFAFA', padding: '6rem 0', position: 'relative' }}>
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={up} className="text-center mb-14">
             <div className="flex items-center justify-center gap-3 mb-5">
-              <span className="block w-10 h-[2px]" style={{ background: 'var(--color-editorial-gold)' }} />
-              <span className="npl-editorial-eyebrow">Trade Infrastructure · 거래 인프라</span>
-              <span className="block w-10 h-[2px]" style={{ background: 'var(--color-editorial-gold)' }} />
+              <span className="block w-10 h-[2px]" style={{ background: 'var(--color-editorial-gold, #B8924B)' }} />
+              <span style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: 'var(--color-editorial-gold, #B8924B)' }}>Trade Infrastructure · 거래 인프라</span>
+              <span className="block w-10 h-[2px]" style={{ background: 'var(--color-editorial-gold, #B8924B)' }} />
             </div>
-            <h2 className="npl-editorial-display mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: C.fgh }}>
+            <h2 className="mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#0A1628', fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 1.15 }}>
               거래를 위한 모든 것
             </h2>
-            <p className="text-base" style={{ color: C.fghm, maxWidth: '480px', margin: '0 auto' }}>
+            <p className="text-base" style={{ color: 'rgba(5, 28, 44, 0.65)', maxWidth: '480px', margin: '0 auto', lineHeight: 1.6 }}>
               거래소 · 딜룸 · 계약 · 에스크로 · AI 분석 — 체결에 필요한 모든 도구가 NPLatform 하나에.
             </p>
           </motion.div>
 
-          <motion.div variants={stagger} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <motion.div variants={stagger} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px" style={{ background: 'rgba(5, 28, 44, 0.10)' }}>
             {features.map((f, i) => (
               <motion.div key={f.title} variants={up} custom={i}>
                 <Link href={f.href}
-                  className="relative flex flex-col rounded-2xl p-6 group block transition-all duration-300 overflow-hidden"
-                  style={{ background: C.bg3, border: '1px solid rgba(255,255,255,0.07)' }}
-                  onMouseEnter={e => { (e.currentTarget.style.background = C.bg4); (e.currentTarget.style.borderColor = `${f.accent}30`); (e.currentTarget.style.transform = 'translateY(-3px)'); (e.currentTarget.style.boxShadow = `0 12px 40px rgba(0,0,0,0.2), 0 0 0 1px ${f.accent}20`); }}
-                  onMouseLeave={e => { (e.currentTarget.style.background = C.bg3); (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'); (e.currentTarget.style.transform = 'translateY(0)'); (e.currentTarget.style.boxShadow = 'none'); }}
+                  className="relative flex flex-col p-7 group block transition-all duration-300 h-full"
+                  style={{
+                    background: '#FFFFFF',
+                    borderRadius: 0,
+                    borderTop: '2px solid transparent',
+                  }}
+                  onMouseEnter={e => { (e.currentTarget.style.borderTop = '2px solid var(--color-editorial-gold, #B8924B)'); (e.currentTarget.style.transform = 'translateY(-2px)'); (e.currentTarget.style.boxShadow = '0 12px 24px -8px rgba(5, 28, 44, 0.18)'); }}
+                  onMouseLeave={e => { (e.currentTarget.style.borderTop = '2px solid transparent'); (e.currentTarget.style.transform = 'translateY(0)'); (e.currentTarget.style.boxShadow = 'none'); }}
                 >
-                  {/* Top gradient border on hover – static */}
-                  <div className="absolute top-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: `linear-gradient(90deg, transparent, ${f.accent}60, transparent)` }} />
-
                   <div className="flex items-start justify-between mb-5">
-                    <div className="p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>{f.icon}</div>
-                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full" style={{ background: f.accent, color: 'white' }}>{f.tag}</span>
+                    {/* 아이콘 = light gray sq + ink */}
+                    <div className="p-2.5" style={{ background: '#F5F5F5', border: '1px solid rgba(5, 28, 44, 0.10)', borderRadius: 0 }}>
+                      <span style={{ display: 'inline-flex', color: '#0A1628' }}>{f.icon}</span>
+                    </div>
+                    {/* 뱃지 = 검정 사각 + 흰 글씨 (모든 6개 동일 톤) */}
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 uppercase tracking-[0.08em]"
+                      style={{ background: '#0A1628', color: '#FFFFFF', borderRadius: 0 }}>{f.tag}</span>
                   </div>
-                  <h3 className="font-bold text-sm mb-2 transition-colors" style={{ color: C.fgh }}>{f.title}</h3>
-                  <p className="text-sm leading-relaxed flex-1" style={{ color: C.fghm }}>{f.desc}</p>
+                  <h3 className="font-extrabold text-base mb-2.5" style={{ color: '#0A1628', letterSpacing: '-0.012em' }}>{f.title}</h3>
+                  <p className="text-sm leading-relaxed flex-1" style={{ color: 'rgba(5, 28, 44, 0.65)' }}>{f.desc}</p>
                   {f.meta && (
-                    <div className="mt-4 pt-3 border-t flex items-center gap-1.5 text-[11px] font-medium tabular-nums"
-                      style={{ borderColor: 'rgba(255,255,255,0.05)', color: f.accent }}>
-                      <span className="w-1 h-1 rounded-full" style={{ background: f.accent }} />
+                    <div className="mt-4 pt-3 flex items-center gap-1.5 text-[11px] font-bold tabular-nums uppercase tracking-[0.06em]"
+                      style={{ borderTop: '1px solid rgba(5, 28, 44, 0.10)', color: '#0A1628' }}>
+                      <span className="w-1 h-1" style={{ background: 'var(--color-editorial-gold, #B8924B)', borderRadius: 0 }} />
                       {f.meta}
                     </div>
                   )}
-                  <div className="mt-3 flex items-center gap-1 text-xs font-medium transition-colors" style={{ color: C.fghm }}>
+                  {/* CTA hint = ink + underline on hover */}
+                  <div className="mt-3 flex items-center gap-1 text-xs font-bold uppercase tracking-[0.06em]" style={{ color: '#0A1628' }}>
                     자세히 보기 <ArrowUpRight size={12} />
                   </div>
                 </Link>
@@ -849,63 +879,79 @@ export default function LandingPage() {
         </Reveal>
       </section>
 
-      {/* ══ PROCESS ════════════════════════════════════════════════════════ */}
-      <section style={{ backgroundColor: C.bg2, padding: '6rem 0' }}>
+      {/* ══ PROCESS · McKinsey White Paper 섹션 ═══════════════════════════
+          흰 배경 + ink 검정 + 5단계 카드는 흰 종이 + 번호는 brass
+          기존 navy on navy → contrast 위반 100% 해소
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section style={{ backgroundColor: '#FFFFFF', padding: '6rem 0' }}>
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={up} className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5"
-              style={{ background: 'rgba(5, 28, 44,0.1)', border: '1px solid rgba(5, 28, 44,0.20)' }}>
-              <RefreshCw size={12} style={{ color: C.amber }} />
-              <span className="text-xs font-bold" style={{ color: C.amber, letterSpacing: '0.06em' }}>거래 프로세스</span>
+            {/* Eyebrow — 검정 사각 + 흰 글씨 */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-5"
+              style={{ background: '#0A1628', border: '1px solid #0A1628', borderRadius: 0 }}>
+              <RefreshCw size={11} style={{ color: '#FFFFFF' }} />
+              <span className="text-[11px] font-bold uppercase" style={{ color: '#FFFFFF', letterSpacing: '0.10em' }}>거래 프로세스</span>
             </div>
-            <h2 className="font-black tracking-tighter mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: 'rgba(255,255,255,0.95)' }}>
+            <h2 className="font-black tracking-tighter mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#0A1628', letterSpacing: '-0.025em', lineHeight: 1.15 }}>
               5단계로 완결되는 거래
             </h2>
-            <p className="text-base" style={{ color: 'rgba(255,255,255,0.35)', maxWidth: '480px', margin: '0 auto' }}>
+            <p className="text-base" style={{ color: 'rgba(5, 28, 44, 0.65)', maxWidth: '520px', margin: '0 auto', lineHeight: 1.6 }}>
               복잡한 NPL 거래를 단순하고 투명하게. 각 단계마다 AI가 함께합니다.
             </p>
           </motion.div>
 
-          {/* Desktop */}
-          <motion.div variants={stagger} className="hidden lg:grid grid-cols-5 gap-4 relative">
-            <div style={{ position: 'absolute', top: '28px', left: '10%', right: '10%', height: '1px', background: `linear-gradient(90deg, ${C.em}30, ${C.blue}30, ${C.em}30)` }} />
+          {/* Desktop · 흰 종이 5단계 + brass connector */}
+          <motion.div variants={stagger} className="hidden lg:grid grid-cols-5 gap-px relative" style={{ background: 'rgba(5, 28, 44, 0.10)' }}>
+            {/* connector line — brass dashed */}
+            <div style={{ position: 'absolute', top: '38px', left: '8%', right: '8%', height: '1px', borderTop: '1px dashed rgba(184, 146, 75, 0.50)', zIndex: 0, pointerEvents: 'none' }} />
             {steps.map((s, i) => (
-              <motion.div key={s.n} variants={up} custom={i} className="relative z-10 flex flex-col items-center text-center px-3">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 text-white shadow-xl"
-                  style={{ background: `linear-gradient(135deg, ${C.bg4}, ${C.bg3})`, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}>
-                  {s.icon}
+              <motion.div key={s.n} variants={up} custom={i}
+                className="relative z-10 flex flex-col items-center text-center p-6"
+                style={{ background: '#FFFFFF', borderTop: '2px solid var(--color-editorial-gold, #B8924B)', borderRadius: 0 }}
+              >
+                {/* 아이콘 = 검정 사각 + 흰 아이콘 */}
+                <div className="w-14 h-14 flex items-center justify-center mb-4"
+                  style={{ background: '#0A1628', borderRadius: 0 }}>
+                  <span style={{ display: 'inline-flex', color: '#FFFFFF' }}>{s.icon}</span>
                 </div>
-                <div className="text-[10px] font-black mb-1" style={{ color: C.em, letterSpacing: '0.08em' }}>{s.n}</div>
-                <div className="text-sm font-bold mb-1.5" style={{ color: 'rgba(255,255,255,0.85)' }}>{s.t}</div>
-                <div className="text-xs leading-relaxed mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>{s.d}</div>
+                {/* 번호 = brass small uppercase */}
+                <div className="text-[10px] font-black mb-2" style={{ color: '#B8924B', letterSpacing: '0.12em' }}>{s.n}</div>
+                {/* 제목 = ink + bold */}
+                <div className="text-sm font-bold mb-2" style={{ color: '#0A1628', letterSpacing: '-0.01em' }}>{s.t}</div>
+                {/* 설명 = 회색 ink */}
+                <div className="text-xs leading-relaxed mb-3" style={{ color: 'rgba(5, 28, 44, 0.65)' }}>{s.d}</div>
                 {s.sla && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--color-editorial-gold-soft, rgba(34, 81, 255,0.10))', color: C.em, border: '1px solid rgba(34, 81, 255,0.30)' }}>
-                    <Zap size={9} />{s.sla}
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5"
+                    style={{ background: 'transparent', color: '#B8924B', border: '1px solid #B8924B', borderRadius: 0, letterSpacing: '0.04em' }}>
+                    <Zap size={9} style={{ color: '#B8924B' }} />{s.sla}
                   </span>
                 )}
               </motion.div>
             ))}
           </motion.div>
 
-          {/* Mobile */}
-          <motion.div variants={stagger} className="lg:hidden space-y-3">
+          {/* Mobile · 흰 종이 카드 + brass top */}
+          <motion.div variants={stagger} className="lg:hidden space-y-px" style={{ background: 'rgba(5, 28, 44, 0.10)' }}>
             {steps.map((s, i) => (
               <motion.div key={s.n} variants={up} custom={i}
-                className="flex gap-4 rounded-2xl p-4"
-                style={{ background: C.bg3, border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-white"
-                  style={{ background: C.bg4, border: '1px solid rgba(255,255,255,0.08)' }}>{s.icon}</div>
+                className="flex gap-4 p-5"
+                style={{ background: '#FFFFFF', borderTop: '2px solid var(--color-editorial-gold, #B8924B)', borderRadius: 0 }}>
+                <div className="w-11 h-11 flex items-center justify-center flex-shrink-0"
+                  style={{ background: '#0A1628', borderRadius: 0 }}>
+                  <span style={{ display: 'inline-flex', color: '#FFFFFF' }}>{s.icon}</span>
+                </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <div className="text-[10px] font-black" style={{ color: C.em }}>{s.n}</div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="text-[10px] font-black" style={{ color: '#B8924B', letterSpacing: '0.12em' }}>{s.n}</div>
                     {s.sla && (
-                      <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--color-editorial-gold-soft, rgba(34, 81, 255,0.10))', color: C.em, border: '1px solid rgba(34, 81, 255,0.30)' }}>
-                        <Zap size={8} />{s.sla}
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5"
+                        style={{ background: 'transparent', color: '#B8924B', border: '1px solid #B8924B', borderRadius: 0 }}>
+                        <Zap size={8} style={{ color: '#B8924B' }} />{s.sla}
                       </span>
                     )}
                   </div>
-                  <div className="text-sm font-bold mb-1" style={{ color: 'rgba(255,255,255,0.85)' }}>{s.t}</div>
-                  <div className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.d}</div>
+                  <div className="text-sm font-bold mb-1" style={{ color: '#0A1628' }}>{s.t}</div>
+                  <div className="text-xs leading-relaxed" style={{ color: 'rgba(5, 28, 44, 0.65)' }}>{s.d}</div>
                 </div>
               </motion.div>
             ))}
@@ -969,59 +1015,65 @@ export default function LandingPage() {
 
         <Reveal className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <motion.div variants={stagger}>
+            {/* Eyebrow — brass outline + brass (직접 hex) */}
             <motion.div variants={up} custom={0} className="mb-6">
-              <div className="inline-flex items-center gap-2 rounded-full px-4 py-2"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <Zap size={12} style={{ color: C.em }} />
-                <span className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em' }}>지금 거래를 시작하세요</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5"
+                style={{ background: 'transparent', border: '1px solid #B8924B', borderRadius: 0 }}>
+                <Zap size={11} style={{ color: '#E5C77A' }} />
+                <span className="text-[11px] font-bold uppercase" style={{ color: '#E5C77A', letterSpacing: '0.10em' }}>지금 거래를 시작하세요</span>
               </div>
             </motion.div>
 
             <motion.h2 variants={up} custom={1}
               className="font-black tracking-tighter mb-5"
-              style={{ fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', color: 'rgba(255,255,255,0.95)' }}
+              style={{ fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', color: '#FFFFFF', lineHeight: 1.1, letterSpacing: '-0.025em' }}
             >
-              오늘 움직이는{" "}
-              <span style={{ color: 'var(--color-editorial-gold)' }}>NPL 딜 플로우</span>
+              <span style={{ color: '#FFFFFF' }}>오늘 움직이는</span>{" "}
+              <span style={{ color: '#E5C77A', fontWeight: 900 }}>NPL 딜 플로우</span>
             </motion.h2>
 
             <motion.p variants={up} custom={2} className="text-base mb-8"
-              style={{ color: 'rgba(255,255,255,0.35)', maxWidth: '440px', margin: '0 auto 2rem', lineHeight: 1.7 }}>
+              style={{ color: 'rgba(255,255,255,0.78)', maxWidth: '480px', margin: '0 auto 2rem', lineHeight: 1.7 }}>
               1,234건의 라이브 매물과 활성 딜룸에서 직접 거래를 시작하세요.<br />
-              <span style={{ color: 'rgba(255,255,255,0.2)' }}>회원가입 즉시 · 매물 탐색 · 딜룸 협상 · 전자계약</span>
+              <span style={{ color: 'rgba(255,255,255,0.55)' }}>회원가입 즉시 · 매물 탐색 · 딜룸 협상 · 전자계약</span>
             </motion.p>
 
-            <motion.div variants={up} custom={3} className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <motion.div variants={up} custom={3} className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
               <Link href="/exchange"
-                className="inline-flex items-center justify-center gap-2 font-bold text-base rounded-xl transition-all"
-                style={{ background: 'var(--color-brand-deep)', color: 'white', padding: '16px 32px', border: '1px solid var(--color-brand-deep)' }}
-                onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
-                onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
+                className="inline-flex items-center justify-center gap-2 font-bold text-base transition-all"
+                style={{ background: '#FFFFFF', color: '#0A1628', padding: '16px 32px', border: '1px solid #FFFFFF', borderRadius: 0, letterSpacing: '0.02em' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 20px -4px rgba(0,0,0,0.4)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
               >
-                매물 탐색하기 <ArrowRight size={17} />
+                <span style={{ color: '#0A1628' }}>매물 탐색하기</span>
+                <ArrowRight size={17} style={{ color: '#0A1628' }} />
               </Link>
               <Link href="/exchange/sell"
-                className="inline-flex items-center justify-center gap-2 font-semibold text-base rounded-xl transition-all"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', padding: '16px 32px' }}
-                onMouseEnter={e => { (e.currentTarget.style.background = 'rgba(255,255,255,0.10)'); (e.currentTarget.style.transform = 'translateY(-2px)'); }}
-                onMouseLeave={e => { (e.currentTarget.style.background = 'rgba(255,255,255,0.06)'); (e.currentTarget.style.transform = 'translateY(0)'); }}
+                className="inline-flex items-center justify-center gap-2 font-semibold text-base transition-all"
+                style={{ background: 'transparent', border: '1px solid #B8924B', color: '#E5C77A', padding: '16px 32px', borderRadius: 0, letterSpacing: '0.02em' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(184, 146, 75, 0.10)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}
               >
-                매물 등록하기 <ChevronRight size={17} />
+                <span style={{ color: '#E5C77A' }}>매물 등록하기</span>
+                <ChevronRight size={17} style={{ color: '#E5C77A' }} />
               </Link>
             </motion.div>
 
+            {/* 47개 금융기관 banner — chips 흰 배경 + ink, 텍스트 흰 강조 */}
             <motion.div variants={up} custom={4} className="flex items-center justify-center gap-3"
-              style={{ color: 'rgba(255,255,255,0.25)', fontSize: '13px' }}>
+              style={{ color: 'rgba(255,255,255,0.78)', fontSize: '13px' }}>
               <div className="flex -space-x-2">
                 {["KB", "신한", "우리", "하나", "기업"].map((b, i) => (
                   <div key={b}
-                    className="w-7 h-7 rounded-full flex items-center justify-center font-bold"
-                    style={{ background: C.bg3, border: `2px solid ${C.bg0}`, color: 'rgba(255,255,255,0.5)', fontSize: '8px', zIndex: 5 - i }}>
+                    className="w-7 h-7 flex items-center justify-center font-bold"
+                    style={{ background: '#FFFFFF', border: '2px solid #0A1628', color: '#0A1628', fontSize: '8px', zIndex: 5 - i, borderRadius: '50%', letterSpacing: '0.02em' }}>
                     {b}
                   </div>
                 ))}
               </div>
-              <span><strong style={{ color: 'rgba(255,255,255,0.55)' }}>47개 금융기관</strong>이 이미 사용 중</span>
+              <span style={{ color: 'rgba(255,255,255,0.78)' }}>
+                <strong style={{ color: '#FFFFFF', fontWeight: 800 }}>47개 금융기관</strong>이 이미 사용 중
+              </span>
             </motion.div>
           </motion.div>
         </Reveal>

@@ -177,13 +177,16 @@ export const breakpoint = {
 
 // ── Domain palettes (NPL/부동산) ────────────────────────────────────────────
 
-/** 리스크 등급 A~E — 차트/배지/카드 보더에서 공통 사용 */
+/** 리스크 등급 A~E · McKinsey White Paper 톤
+ *  멀티컬러 X — 모든 등급 흰 종이 + ink 검정 + brass 1점.
+ *  차별화는 grade letter weight + small brass accent + 보더 두께로.
+ *  E(Critical)만 ink(검정) bg + 흰 fg = 알림 강조. */
 export const riskPalette = {
-  A: { fg: '#047857', bg: '#ECFDF5', border: '#A7F3D0' },
-  B: { fg: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
-  C: { fg: '#B45309', bg: '#FFFBEB', border: '#FDE68A' },
-  D: { fg: '#C2410C', bg: '#FFF7ED', border: '#FED7AA' },
-  E: { fg: '#B91C1C', bg: '#FEF2F2', border: '#FECACA' },
+  A: { fg: '#0A1628', bg: '#FFFFFF', border: '#B8924B' },   // brass border = 안정 강조
+  B: { fg: '#0A1628', bg: '#FFFFFF', border: '#B8924B' },
+  C: { fg: '#0A1628', bg: '#FFFFFF', border: 'rgba(5, 28, 44, 0.20)' },
+  D: { fg: '#0A1628', bg: '#FAFAFA', border: '#0A1628' },   // 진한 ink border = 주의
+  E: { fg: '#FFFFFF', bg: '#0A1628', border: '#0A1628' },   // ink bg + 흰 fg = critical
 } as const
 
 /** 담보물 유형 색상 — 지도 마커, 차트 카테고리 */

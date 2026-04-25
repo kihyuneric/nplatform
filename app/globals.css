@@ -4585,3 +4585,281 @@ button, a.btn, [role="button"] {
 
 /* ── lucide 아이콘에 inline color 미지정 + 부모 의도 emerald 톤이었던 케이스
        클래스 기반으로 강제 mono — 하지만 `style={{ color: 'X' }}`는 sed로 이미 fix */
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   v6 · CONTRAST GUARANTEE LAYER (2026-04-25)
+   ▸ 사용자 핵심 원칙: "어두운 배경이면 흰글씨, 흰배경이면 어두운 글씨"
+   ▸ 다크 모드에서도 "navy on navy" 절대 금지
+   ▸ amber/yellow inline hex 무력화 (AI 등급 등 multi-color SaaS 톤 차단)
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1) DARK MODE 카드/article/dialog 강제 흰 종이 (navy on navy 차단) ──── */
+.dark article:not(.mck-l0):not(.mck-l1):not(.mck-l2):not(.mck-l3):not(.mck-l4),
+.dark section[class*="card"]:not(.mck-l0):not(.mck-l1):not(.mck-l2):not(.mck-l3):not(.mck-l4),
+.dark div[class*="rounded-xl"]:not(.mck-l0):not(.mck-l1):not(.mck-l2):not(.mck-l3):not(.mck-l4):not([style*="background"]):not([style*="bg-"]) {
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+  border-color: rgba(5, 28, 44, 0.10) !important;
+}
+
+/* 다크 모드에서도 .mck-paper 안의 모든 텍스트는 ink 검정 강제 */
+.dark .mck-paper,
+.dark .mck-paper *:not(svg):not(path):not(button):not(.brass):not([style*="color"]) {
+  color: #0A1628 !important;
+}
+.dark .mck-paper p,
+.dark .mck-paper span:not([style*="color"]),
+.dark .mck-paper div:not([style*="color"]) {
+  color: rgba(5, 28, 44, 0.65) !important;
+}
+.dark .mck-paper h1, .dark .mck-paper h2, .dark .mck-paper h3, .dark .mck-paper h4, .dark .mck-paper strong {
+  color: #0A1628 !important;
+}
+
+/* ── 2) AMBER/YELLOW/ORANGE inline hex 무력화 (multi-color SaaS 톤 차단) ── */
+/*  AI 리스크 등급 amber bg/fg/border 같은 패턴이 안 보이도록 강제 mono */
+[style*="#FFFBEB"],   /* amber-50 */
+[style*="#FEF3C7"],   /* amber-100 */
+[style*="#FDE68A"],   /* amber-200 */
+[style*="#FCD34D"],   /* amber-300 */
+[style*="#FBBF24"],   /* amber-400 */
+[style*="#F59E0B"],   /* amber-500 */
+[style*="#D97706"],   /* amber-600 */
+[style*="#B45309"],   /* amber-700 */
+[style*="#FFF7ED"],   /* orange-50 */
+[style*="#FED7AA"],   /* orange-200 */
+[style*="#FDBA74"],   /* orange-300 */
+[style*="#FB923C"],   /* orange-400 */
+[style*="#F97316"],   /* orange-500 */
+[style*="#EA580C"],   /* orange-600 */
+[style*="#C2410C"],   /* orange-700 */
+[style*="#FFFFE0"],   /* light yellow */
+[style*="#FEFCE8"],   /* yellow-50 */
+[style*="#FEF9C3"],   /* yellow-100 */
+[style*="#FEF08A"],   /* yellow-200 */
+[style*="#FACC15"],   /* yellow-400 */
+[style*="#EAB308"],   /* yellow-500 */
+[style*="#CA8A04"]    /* yellow-600 */
+{
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+  border-color: rgba(5, 28, 44, 0.20) !important;
+}
+
+/* ── 3) CONTRAST GUARANTEE — navy 배경 위 자식 글씨 ─────────────────── */
+/*  부모가 navy/dark 배경이면 자식 텍스트는 흰 또는 brass */
+[style*="background: #0A1628"] > *:not([style*="color"]):not(svg):not(path),
+[style*="background:#0A1628"]  > *:not([style*="color"]):not(svg):not(path),
+[style*="backgroundColor: #0A1628"] > *:not([style*="color"]):not(svg):not(path),
+[style*="background: #0B1F3A"] > *:not([style*="color"]):not(svg):not(path),
+[style*="background:#0B1F3A"]  > *:not([style*="color"]):not(svg):not(path),
+[style*="background: #0D2448"] > *:not([style*="color"]):not(svg):not(path),
+[style*="background:#0D2448"]  > *:not([style*="color"]):not(svg):not(path),
+[style*="background: #1B3A5C"] > *:not([style*="color"]):not(svg):not(path),
+[style*="background:#1B3A5C"]  > *:not([style*="color"]):not(svg):not(path) {
+  color: #FFFFFF !important;
+}
+
+/*  부모가 흰 배경이면 자식 텍스트는 ink (라이트모드 흰글씨 절대 금지 강제) */
+[style*="background: #FFFFFF"] > p:not([style*="color"]),
+[style*="background:#FFFFFF"]  > p:not([style*="color"]),
+[style*="backgroundColor: #FFFFFF"] > p:not([style*="color"]),
+[style*="background: #FAFAFA"] > p:not([style*="color"]),
+[style*="background:#FAFAFA"]  > p:not([style*="color"]) {
+  color: rgba(5, 28, 44, 0.75) !important;
+}
+
+/* ── 4) 다크 모드 hero 안 navy 박스 → 강제 흰 + ink (전환 시 잔존 fix) ── */
+.dark [style*="background: rgba(255, 255, 255, 0.04)"],
+.dark [style*="background: rgba(255,255,255,0.04)"],
+.dark [style*="background: rgba(255, 255, 255, 0.06)"],
+.dark [style*="background: rgba(255,255,255,0.06)"],
+.dark [style*="background: rgba(255, 255, 255, 0.08)"],
+.dark [style*="background: rgba(255,255,255,0.08)"] {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.30) !important;
+}
+
+/* ── 5) AI grade letter (A/B/C/D/E) 카드 강제 mono ──────────────────── */
+[class*="grade-A"], [class*="grade-B"], [class*="grade-C"],
+[class*="risk-grade"], [class*="riskGrade"] {
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+  border-color: rgba(5, 28, 44, 0.20) !important;
+}
+[class*="grade-D"], [class*="grade-E"], [class*="grade-CRITICAL"], [class*="grade-HIGH"] {
+  background: #0A1628 !important;
+  color: #FFFFFF !important;
+  border-color: #0A1628 !important;
+}
+
+/* ── 6) 라이트 모드 navy 배경 박스 위 흐린 흰 글씨 → 흰색 강화 ─────── */
+section[style*="backgroundColor: #0B1F3A"] *:not([style*="color"]):not(svg):not(path):not(.mck-paper):not(.mck-paper *),
+section[style*="backgroundColor:#0B1F3A"] *:not([style*="color"]):not(svg):not(path):not(.mck-paper):not(.mck-paper *),
+section[style*="backgroundColor: #0A1628"] *:not([style*="color"]):not(svg):not(path):not(.mck-paper):not(.mck-paper *) {
+  /* 직접 color 지정 안 한 텍스트는 흰 */
+  color: rgba(255, 255, 255, 0.90);
+}
+
+/* ── 7) 작은 회색 라벨 (uppercase tracking) 톤 통일 ─────────────────── */
+.mck-paper [class*="uppercase"]:not([style*="color"]) {
+  color: rgba(5, 28, 44, 0.55) !important;
+  letter-spacing: 0.10em !important;
+  font-weight: 700 !important;
+}
+
+/* ── 8) Sparkline / chart in white paper → ink only ─────────────────── */
+.mck-paper svg path[stroke]:not([stroke="#0A1628"]):not([stroke="#B8924B"]):not([stroke="#FFFFFF"]) {
+  /* 파란/초록 sparkline 들 → ink */
+  stroke: #0A1628 !important;
+}
+
+/* ── 9) 다크모드 input/textarea/select 흰 배경 강제 (이미 있으면 보강) ── */
+.dark .mck-paper input,
+.dark .mck-paper textarea,
+.dark .mck-paper select {
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+  border-color: rgba(5, 28, 44, 0.20) !important;
+}
+.dark .mck-paper input::placeholder,
+.dark .mck-paper textarea::placeholder {
+  color: rgba(5, 28, 44, 0.45) !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   v7 · MULTI-COLOR HEX CATCH-ALL (2026-04-25)
+   ▸ 사용자: "맥킨지가 이런 색을 사용하지" — purple/violet/green/blue/pink 인라인 hex 무력화
+   ▸ 모든 인라인 hex 멀티컬러 → ink + brass mono 시스템으로 강제 통합
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Purple / Violet / Indigo / Magenta inline hex ──────────────────── */
+[style*="#A855F7"], [style*="#9333EA"], [style*="#7C3AED"], [style*="#6D28D9"],
+[style*="#5B21B6"], [style*="#8B5CF6"], [style*="#A78BFA"], [style*="#C4B5FD"],
+[style*="#DDD6FE"], [style*="#EDE9FE"], [style*="#F5F3FF"], [style*="#FAF5FF"],
+[style*="#F3E8FF"], [style*="#E9D5FF"], [style*="#D8B4FE"], [style*="#C084FC"],
+[style*="#6366F1"], [style*="#4F46E5"], [style*="#4338CA"], [style*="#3730A3"],
+[style*="#818CF8"], [style*="#A5B4FC"], [style*="#C7D2FE"], [style*="#E0E7FF"],
+[style*="#EC4899"], [style*="#DB2777"], [style*="#BE185D"], [style*="#F472B6"],
+[style*="#F9A8D4"], [style*="#FBCFE8"], [style*="#FCE7F3"], [style*="#D946EF"],
+[style*="#C026D3"], [style*="#A21CAF"]
+{
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  background-image: none !important;
+  color: #0A1628 !important;
+  border-color: rgba(5, 28, 44, 0.20) !important;
+  fill: #0A1628 !important;
+  stroke: #0A1628 !important;
+}
+
+/* ── Green / Emerald / Lime / Teal inline hex ───────────────────────── */
+[style*="#10B981"], [style*="#059669"], [style*="#047857"], [style*="#065F46"],
+[style*="#34D399"], [style*="#6EE7B7"], [style*="#A7F3D0"], [style*="#D1FAE5"],
+[style*="#ECFDF5"], [style*="#F0FDF4"], [style*="#22C55E"], [style*="#16A34A"],
+[style*="#15803D"], [style*="#4ADE80"], [style*="#86EFAC"], [style*="#BBF7D0"],
+[style*="#DCFCE7"], [style*="#84CC16"], [style*="#65A30D"], [style*="#A3E635"],
+[style*="#BEF264"], [style*="#D9F99D"], [style*="#ECFCCB"], [style*="#14B8A6"],
+[style*="#0D9488"], [style*="#5EEAD4"], [style*="#99F6E4"], [style*="#CCFBF1"]
+{
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  background-image: none !important;
+  color: #0A1628 !important;
+  border-color: rgba(5, 28, 44, 0.20) !important;
+  fill: #0A1628 !important;
+  stroke: #0A1628 !important;
+}
+
+/* ── Cyan / Sky / 비-브랜드 Blue 무력화 (McKinsey 브랜드 navy/blue 보존)
+       유지: navy(#051C2C/#0B1F3A/#0A1628) + bright blue(#2251FF) + brand blue(#2558A0/#2E75B6)
+       무력화: cyan/sky 같은 SaaS 톤 ── */
+[style*="#0EA5E9"], [style*="#0284C7"], [style*="#0369A1"],
+[style*="#38BDF8"], [style*="#7DD3FC"], [style*="#BAE6FD"], [style*="#E0F2FE"],
+[style*="#06B6D4"], [style*="#0891B2"], [style*="#22D3EE"], [style*="#67E8F9"],
+[style*="#A5F3FC"], [style*="#CFFAFE"]
+{
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  background-image: none !important;
+  color: #0A1628 !important;
+  border-color: rgba(5, 28, 44, 0.20) !important;
+  fill: #0A1628 !important;
+  stroke: #0A1628 !important;
+}
+
+/* ── Red / Rose inline hex (모두 ink — 알림은 두꺼운 ink border로) ──── */
+[style*="#EF4444"], [style*="#DC2626"], [style*="#B91C1C"], [style*="#991B1B"],
+[style*="#F87171"], [style*="#FCA5A5"], [style*="#FECACA"], [style*="#FEE2E2"],
+[style*="#FEF2F2"], [style*="#F43F5E"], [style*="#E11D48"], [style*="#BE123C"],
+[style*="#9F1239"], [style*="#FB7185"], [style*="#FDA4AF"], [style*="#FECDD3"],
+[style*="#FFE4E6"]
+{
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  background-image: none !important;
+  color: #0A1628 !important;
+  border-color: #0A1628 !important;
+  border-width: 1px !important;
+  fill: #0A1628 !important;
+  stroke: #0A1628 !important;
+}
+
+/* ── Linear-gradient backgrounds with multi-color → flat ink ────────── */
+[style*="linear-gradient"][style*="#A855F7"],
+[style*="linear-gradient"][style*="#8B5CF6"],
+[style*="linear-gradient"][style*="#7C3AED"],
+[style*="linear-gradient"][style*="#10B981"],
+[style*="linear-gradient"][style*="#3B82F6"],
+[style*="linear-gradient"][style*="#EC4899"],
+[style*="linear-gradient"][style*="#F59E0B"],
+[style*="linear-gradient"][style*="#F97316"],
+[style*="linear-gradient"][style*="#EF4444"] {
+  background: #0A1628 !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+}
+
+/* ── 1점 brass accent만 유지 — brass는 변하지 않음 ─────────────────── */
+[style*="#B8924B"], [style*="#E5C77A"], [style*="#D4A858"], [style*="#A37D3F"] {
+  /* leave as-is */
+}
+
+/* ── 4단계 위계 도형 — McKinsey 스타일 sharp 1px hairline ──────────── */
+.mck-paper, .mck-l1 .mck-paper, .mck-l2 .mck-paper {
+  border-radius: 0 !important;
+}
+.mck-paper button:not([style*="border-radius"]),
+.mck-paper input:not([style*="border-radius"]),
+.mck-paper select:not([style*="border-radius"]),
+.mck-paper textarea:not([style*="border-radius"]) {
+  border-radius: 0 !important;
+}
+
+/* ── 아이콘 크기 통일 (24px standard) — McKinsey infographic 톤 ──── */
+.mck-paper svg.lucide:not([width]):not([height]) {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.6 !important;
+}
+
+/* ── Selectionable typography hierarchy — 본문, 라벨, 캡션 통일 ──── */
+.mck-paper h1, .mck-paper h2, .mck-paper h3, .mck-paper h4, .mck-paper h5 {
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+  color: #0A1628 !important;
+}
+.mck-paper p:not([style*="color"]):not([style*="font"]) {
+  color: rgba(5, 28, 44, 0.75) !important;
+  line-height: 1.65 !important;
+}
+
+/* ── Sub-label ALL CAPS uppercase — McKinsey eyebrow signature ────── */
+.mck-paper .uppercase, .mck-paper [class*="uppercase"] {
+  letter-spacing: 0.10em !important;
+  font-weight: 700 !important;
+  font-size: 0.6875rem !important;
+}

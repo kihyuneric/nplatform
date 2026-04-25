@@ -99,10 +99,10 @@ const RECENT_FALLBACK: RecentItem[] = [
 
 // 다크·라이트 모드 모두에서 가시성 확보: opacity 기반 배경 + 밝은 텍스트
 const GRADE_COLOR: Record<string, { bg: string; text: string }> = {
-  A: { bg: "rgba(5, 28, 44,0.15)",  text: "#051C2C" },  // emerald
-  B: { bg: "rgba(5, 28, 44,0.15)",  text: "#051C2C" },  // blue
-  C: { bg: "rgba(5, 28, 44,0.15)",  text: "#051C2C" },  // amber
-  D: { bg: "rgba(249,115,22,0.15)",  text: "#FB923C" },  // orange
+  A: { bg: "#FFFFFF",  text: "#0A1628" },
+  B: { bg: "#FFFFFF",  text: "#0A1628" },
+  C: { bg: "#FFFFFF",  text: "#0A1628" },
+  D: { bg: "#FAFAFA",  text: "#0A1628" },
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -317,9 +317,10 @@ export default function AnalysisDashboard() {
                       href={tool.demoHref}
                       className="flex items-center justify-center gap-1.5 py-2 px-3 mt-1 rounded-xl text-[0.6875rem] font-semibold transition-all hover:opacity-80"
                       style={{
-                        backgroundColor: "rgba(5, 28, 44,0.08)",
-                        border: "1px solid rgba(5, 28, 44,0.2)",
-                        color: "#D97706",
+                        backgroundColor: "#FFFFFF",
+                        border: "1px solid #B8924B",
+                        color: "#0A1628",
+                        borderRadius: 0,
                       }}
                       onClick={(e) => e.stopPropagation()}
                     >
