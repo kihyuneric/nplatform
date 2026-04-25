@@ -85,6 +85,80 @@ const STATIC_DICT: Record<string, Record<string, string>> = {
   },
 }
 
+// ── Phase L (v2) · 사용자 스크린샷 검출 미번역 텍스트 30+ 추가 ────────
+Object.assign(STATIC_DICT.en, {
+  // 메인 페이지 카드 제목 (5종)
+  'NPL 매물 거래소': 'NPL Listings Exchange',
+  '딜룸 · NDA · 전자계약': 'Deal Room · NDA · E-Contract',
+  '에스크로 · PII 마스킹': 'Escrow · PII Masking',
+  'AI 딜 분석 리포트': 'AI Deal Analysis Report',
+  'AI Copilot — 거래 어시스턴트': 'AI Copilot — Trade Assistant',
+  // 카드 작은 라벨 (8종)
+  '매물 공개 → 낙찰 평균 7일': 'Listing → Award · 7-day average',
+  '에스크로 · 전자계약 기본 제공': 'Escrow · E-contract included',
+  '중간 유통 없는 1차 공급 가격': 'Direct first-supplier pricing',
+  '기관 KYC · 자격 검증 완료': 'Institutional KYC · qualification verified',
+  '실시간 경쟁 입찰 / 프라이빗 협상': 'Real-time competitive bidding / private negotiation',
+  '금감원·신용정보법 가이드 준수': 'FSS · Credit Information Act compliant',
+  '자동 PII 마스킹 파이프라인': 'Automated PII masking pipeline',
+  'NDA 전자서명 + 감사로그 영구 보관': 'NDA e-signature + immutable audit log',
+  // 본문 긴 문장 (3카드)
+  '은행·저축은행·캐피탈 47개사가 직접 매각. 중간 유통 없이 1차 공급자 가격으로 매입하고, 매도자는 LLR(Loan Loss Reserve) 회수를 극대화합니다.':
+    'Direct sales from 47 banks, savings banks, and capital firms. Buy at first-supplier pricing without intermediaries, while sellers maximize LLR (Loan Loss Reserve) recovery.',
+  '담보 부동산은 공개, 채무자 개인정보는 가린다. 본인인증(L1) → NDA(L2) → LOI(L3) 단계별로만 권리관계·채권서류에 접근합니다.':
+    'Collateral disclosed, debtor PII masked. Tiered access to rights and bond documents via KYC(L1) → NDA(L2) → LOI(L3).',
+  '국내 주요 은행, 저축은행, 캐피탈사와 파트너십을 맺고 있습니다.':
+    'Partnered with major Korean banks, savings banks, and capital firms.',
+  // 추가 라벨
+  '협력 기관': 'Partner Institutions',
+  '자료 완성도': 'Data Completeness',
+  '평균 분석 시간 27초 · 28,391건 분석': 'Avg analysis 27s · 28,391 analyzed',
+  '진행 중 입찰 42건 · 평균 낙찰 7일': '42 active bids · 7-day average award',
+  '1,234 live NPL listings.': '1,234 live NPL listings.',
+  '등록 1,234건 · 신규 매일 ~20건': '1,234 listings · ~20 new daily',
+  '68 deals in progress 14 concluded this week': '68 deals in progress · 14 concluded this week',
+  '자세히 보기': 'Learn more',
+  '자금 보호 · 정보보호 2중 안전장치': 'Fund protection · 2-layer data security',
+  'Claude + learning our own NPL corpus': 'Claude + learning our own NPL corpus',
+  // 히어로 보조 텍스트
+  '매도자 → 투자자 직거래': 'Seller → Investor Direct Trade',
+  // 통계 단위
+  '47개사': '47 firms',
+  '3,847건': '3,847',
+  '28,391건': '28,391',
+})
+Object.assign(STATIC_DICT.ja, {
+  'NPL 매물 거래소': 'NPL物件取引所',
+  '딜룸 · NDA · 전자계약': 'ディールルーム · NDA · 電子契約',
+  '에스크로 · PII 마스킹': 'エスクロー · PIIマスキング',
+  'AI 딜 분석 리포트': 'AIディール分析レポート',
+  'AI Copilot — 거래 어시스턴트': 'AI Copilot — 取引アシスタント',
+  '매물 공개 → 낙찰 평균 7일': '物件公開 → 落札 平均7日',
+  '에스크로 · 전자계약 기본 제공': 'エスクロー · 電子契約 標準装備',
+  '중간 유통 없는 1차 공급 가격': '中間流通なしの一次供給価格',
+  '기관 KYC · 자격 검증 완료': '機関KYC · 資格認証完了',
+  '실시간 경쟁 입찰 / 프라이빗 협상': 'リアルタイム競争入札 / プライベート交渉',
+  '금감원·신용정보법 가이드 준수': '金融監督院・信用情報法ガイド遵守',
+  '자동 PII 마스킹 파이프라인': '自動PIIマスキングパイプライン',
+  'NDA 전자서명 + 감사로그 영구 보관': 'NDA電子署名 + 監査ログ永久保管',
+  '은행·저축은행·캐피탈 47개사가 직접 매각. 중간 유통 없이 1차 공급자 가격으로 매입하고, 매도자는 LLR(Loan Loss Reserve) 회수를 극대화합니다.':
+    '銀行·貯蓄銀行·キャピタル47社が直接売却。中間流通なしの一次供給価格で購入、売却者はLLR(Loan Loss Reserve)回収を最大化します。',
+  '담보 부동산은 공개, 채무자 개인정보는 가린다. 본인인증(L1) → NDA(L2) → LOI(L3) 단계별로만 권리관계·채권서류에 접근합니다.':
+    '担保不動産は公開、債務者個人情報はマスク。本人認証(L1)→NDA(L2)→LOI(L3)の段階的アクセスで権利関係·債権書類を閲覧。',
+  '국내 주요 은행, 저축은행, 캐피탈사와 파트너십을 맺고 있습니다.':
+    '韓国の主要銀行、貯蓄銀行、キャピタル社とパートナーシップを締結しています。',
+  '협력 기관': '提携機関',
+  '자료 완성도': '資料完成度',
+  '평균 분석 시간 27초 · 28,391건 분석': '平均分析時間27秒 · 28,391件分析',
+  '진행 중 입찰 42건 · 평균 낙찰 7일': '進行中入札42件 · 平均落札7日',
+  '등록 1,234건 · 신규 매일 ~20건': '登録1,234件 · 新規毎日~20件',
+  '자세히 보기': '詳細を見る',
+  '매도자 → 투자자 직거래': '売却者 → 投資家 直接取引',
+  '47개사': '47社',
+  '3,847건': '3,847件',
+  '28,391건': '28,391件',
+})
+
 // ── Phase L · 메인 홈 페이지 핵심 텍스트 (사용자 스크린샷 누락분) ──────
 Object.assign(STATIC_DICT.en, {
   // 히어로 섹션

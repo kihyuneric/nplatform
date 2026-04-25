@@ -646,11 +646,12 @@ export default function LandingPage() {
               >
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{ background: r.iconBg }}>{r.icon}</div>
                 <div className="inline-flex items-center text-[10px] font-bold rounded-full px-2.5 py-1 mb-3" style={{ background: r.tagBg, color: r.tagColor, border: `1px solid ${r.tagBorder}` }}>{r.tag}</div>
-                <h3 className="font-bold text-lg mb-2.5" style={{ color: '#0A1628' }}>{r.title}</h3>
-                <p className="text-sm leading-relaxed mb-4" style={{ color: '#64748B' }}>{r.desc}</p>
-                <ul className="space-y-1.5 pt-3 border-t border-slate-100">
+                {/* Phase L · 다크모드 가독성 fix · 하드코딩 색상 제거 → 토큰 사용 */}
+                <h3 className="font-bold text-lg mb-2.5 text-[var(--color-text-primary)]">{r.title}</h3>
+                <p className="text-sm leading-relaxed mb-4 text-[var(--color-text-tertiary)]">{r.desc}</p>
+                <ul className="space-y-1.5 pt-3 border-t border-[var(--color-border-subtle)]">
                   {r.bullets?.map((b, j) => (
-                    <li key={j} className="flex items-start gap-2 text-[12.5px]" style={{ color: '#475569' }}>
+                    <li key={j} className="flex items-start gap-2 text-[12.5px] text-[var(--color-text-secondary)]">
                       <CheckCircle2 size={13} className="flex-shrink-0 mt-0.5" style={{ color: r.borderHover }} />
                       <span>{b}</span>
                     </li>
