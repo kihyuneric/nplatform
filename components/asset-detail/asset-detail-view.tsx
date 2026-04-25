@@ -1015,7 +1015,7 @@ export function AssetDetailView({
                     className="rounded-xl flex items-center gap-3 px-4 py-3"
                     style={{
                       backgroundColor: "var(--color-positive-bg)",
-                      border: "1px solid rgba(20,22,26, 0.4)",
+                      border: "1px solid rgba(5, 28, 44, 0.4)",
                     }}
                   >
                     <CheckCircle2 size={18} color="var(--color-positive)" className="flex-shrink-0" />
@@ -1050,9 +1050,9 @@ export function AssetDetailView({
                       className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
                       style={{
                         fontSize: 12,
-                        backgroundColor: "rgba(20,22,26,0.10)",
+                        backgroundColor: "rgba(5, 28, 44,0.10)",
                         color: "var(--color-positive)",
-                        border: "1px solid rgba(20,22,26,0.3)",
+                        border: "1px solid rgba(5, 28, 44,0.3)",
                       }}
                     >
                       <FileDown size={13} />
@@ -1160,9 +1160,9 @@ export function AssetDetailView({
                     className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
                     style={{
                       fontSize: 12,
-                      backgroundColor: "rgba(20,22,26,0.10)",
+                      backgroundColor: "rgba(5, 28, 44,0.10)",
                       color: "var(--color-positive)",
-                      border: "1px solid rgba(20,22,26,0.3)",
+                      border: "1px solid rgba(5, 28, 44,0.3)",
                     }}
                   >
                     <FileDown size={13} />
@@ -1267,9 +1267,9 @@ export function AssetDetailView({
                       className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
                       style={{
                         fontSize: 12,
-                        backgroundColor: "rgba(20,22,26,0.10)",
+                        backgroundColor: "rgba(5, 28, 44,0.10)",
                         color: "#D97706",
-                        border: "1px solid rgba(20,22,26,0.28)",
+                        border: "1px solid rgba(5, 28, 44,0.28)",
                       }}
                     >
                       <Gavel size={12} />
@@ -1401,7 +1401,7 @@ export function AssetDetailView({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-bold"
-                    style={{ fontSize: 12, backgroundColor: "rgba(20,22,26,0.10)", color: "#14161A", border: "1px solid rgba(20,22,26,0.28)" }}
+                    style={{ fontSize: 12, backgroundColor: "rgba(5, 28, 44,0.10)", color: "#051C2C", border: "1px solid rgba(5, 28, 44,0.28)" }}
                   >
                     <BarChart2 size={12} />
                     땅집고옥션 통계 정보 조회
@@ -1595,7 +1595,7 @@ export function AssetDetailView({
                     type="button"
                     onClick={() => toast.success("현장 사진 전체 다운로드를 시작합니다.", { duration: 1800 })}
                     className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
-                    style={{ fontSize: 12, backgroundColor: "rgba(20,22,26,0.10)", color: "var(--color-positive)", border: "1px solid rgba(20,22,26,0.3)" }}
+                    style={{ fontSize: 12, backgroundColor: "rgba(5, 28, 44,0.10)", color: "var(--color-positive)", border: "1px solid rgba(5, 28, 44,0.3)" }}
                   >
                     <FileDown size={13} />
                     전체 다운로드 ({listing.site_photos.length}장)
@@ -1662,8 +1662,8 @@ export function AssetDetailView({
                     className="rounded-xl p-4"
                     style={{
                       background:
-                        "linear-gradient(135deg, rgba(20,22,26, 0.12), rgba(46, 117, 182, 0.08))",
-                      border: "1px solid rgba(20,22,26, 0.33)",
+                        "linear-gradient(135deg, rgba(5, 28, 44, 0.12), rgba(46, 117, 182, 0.08))",
+                      border: "1px solid rgba(5, 28, 44, 0.33)",
                     }}
                   >
                     <div
@@ -1707,7 +1707,7 @@ export function AssetDetailView({
                         return (
                           <>
                             <span style={{ width: `${pPct}%`, background: "linear-gradient(90deg,#10B981,#2E75B6)" }} />
-                            <span style={{ flex: 1, background: "rgba(20,22,26,0.55)" }} />
+                            <span style={{ flex: 1, background: "rgba(5, 28, 44,0.55)" }} />
                           </>
                         )
                       })()}
@@ -1787,8 +1787,8 @@ export function AssetDetailView({
                     href={`/analysis/profitability?listing=${id}&appraisal=${listing.appraisal_value}&senior=${listing.rights_summary.senior_total}&address=${encodeURIComponent(`${listing.region_city} ${listing.region_district}`.trim())}`}
                     className="group inline-flex items-center justify-between rounded-lg px-2.5 py-2 transition-colors hover:bg-white/5"
                     style={{
-                      backgroundColor: "rgba(20,22,26,0.10)",
-                      border: "1px solid rgba(20,22,26,0.24)",
+                      backgroundColor: "rgba(5, 28, 44,0.10)",
+                      border: "1px solid rgba(5, 28, 44,0.24)",
                     }}
                   >
                     <span className="inline-flex items-center gap-1.5">
@@ -1819,17 +1819,17 @@ export function AssetDetailView({
                     href={`/analysis/copilot?listing=${id}`}
                     className="group inline-flex items-center justify-between rounded-lg px-2.5 py-2 transition-colors hover:bg-white/5"
                     style={{
-                      backgroundColor: "rgba(20,22,26,0.10)",
-                      border: "1px solid rgba(20,22,26,0.24)",
+                      backgroundColor: "rgba(5, 28, 44,0.10)",
+                      border: "1px solid rgba(5, 28, 44,0.24)",
                     }}
                   >
                     <span className="inline-flex items-center gap-1.5">
-                      <Brain className="w-3.5 h-3.5" style={{ color: "#14161A" }} />
-                      <span style={{ fontSize: 11, color: "#14161A", fontWeight: 800 }}>
+                      <Brain className="w-3.5 h-3.5" style={{ color: "#051C2C" }} />
+                      <span style={{ fontSize: 11, color: "#051C2C", fontWeight: 800 }}>
                         AI 컨설턴트
                       </span>
                     </span>
-                    <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" style={{ color: "#14161A" }} />
+                    <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" style={{ color: "#051C2C" }} />
                   </Link>
                 </div>
               </div>
@@ -1887,9 +1887,9 @@ export function AssetDetailView({
                     className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
                     style={{
                       fontSize: 12,
-                      backgroundColor: "rgba(20,22,26,0.10)",
+                      backgroundColor: "rgba(5, 28, 44,0.10)",
                       color: "var(--color-positive)",
-                      border: "1px solid rgba(20,22,26,0.3)",
+                      border: "1px solid rgba(5, 28, 44,0.3)",
                     }}
                   >
                     <FileDown size={13} />
@@ -1967,7 +1967,7 @@ export function AssetDetailView({
                     className="rounded-lg p-1.5 flex items-center justify-center"
                     style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
                   >
-                    <HandCoins size={16} color="#14161A" />
+                    <HandCoins size={16} color="#051C2C" />
                   </div>
                   <div>
                     <h3 className="font-black leading-none" style={{ fontSize: 15, color: "#FFFFFF" }}>
@@ -1980,7 +1980,7 @@ export function AssetDetailView({
                 </div>
                 <span
                   className="rounded-full font-bold px-2.5 py-1"
-                  style={{ fontSize: 10, backgroundColor: "rgba(20,22,26,0.22)", color: "#FCD34D", border: "1px solid rgba(20,22,26,0.40)" }}
+                  style={{ fontSize: 10, backgroundColor: "rgba(5, 28, 44,0.22)", color: "#FCD34D", border: "1px solid rgba(5, 28, 44,0.40)" }}
                 >
                   L3 협상 단계
                 </span>
@@ -1993,8 +1993,8 @@ export function AssetDetailView({
                   <div
                     className="rounded-xl p-3.5"
                     style={{
-                      backgroundColor: "rgba(20,22,26,0.07)",
-                      border: "1px solid rgba(20,22,26,0.28)",
+                      backgroundColor: "rgba(5, 28, 44,0.07)",
+                      border: "1px solid rgba(5, 28, 44,0.28)",
                     }}
                   >
                     <div className="font-bold mb-1" style={{ fontSize: 10, color: C.lt4, letterSpacing: "0.04em" }}>
@@ -2010,8 +2010,8 @@ export function AssetDetailView({
                   <div
                     className="rounded-xl p-3.5"
                     style={{
-                      backgroundColor: "rgba(20,22,26,0.07)",
-                      border: "1px solid rgba(20,22,26,0.28)",
+                      backgroundColor: "rgba(5, 28, 44,0.07)",
+                      border: "1px solid rgba(5, 28, 44,0.28)",
                     }}
                   >
                     <div className="font-bold mb-1" style={{ fontSize: 10, color: C.lt4, letterSpacing: "0.04em" }}>
@@ -2180,7 +2180,7 @@ function SectionCard({
     L0: {
       bg: "var(--color-positive-bg)",
       fg: "var(--color-positive)",
-      border: "rgba(20,22,26, 0.33)",
+      border: "rgba(5, 28, 44, 0.33)",
     },
     L1: {
       bg: "rgba(46, 117, 182, 0.12)",
@@ -2188,14 +2188,14 @@ function SectionCard({
       border: "rgba(46, 117, 182, 0.33)",
     },
     L2: {
-      bg: "rgba(20,22,26, 0.10)",
-      fg: "#14161A",
-      border: "rgba(20,22,26, 0.33)",
+      bg: "rgba(5, 28, 44, 0.10)",
+      fg: "#051C2C",
+      border: "rgba(5, 28, 44, 0.33)",
     },
     L3: {
-      bg: "rgba(20,22,26, 0.12)",
-      fg: "#14161A",
-      border: "rgba(20,22,26, 0.33)",
+      bg: "rgba(5, 28, 44, 0.12)",
+      fg: "#051C2C",
+      border: "rgba(5, 28, 44, 0.33)",
     },
   }
   const badge = tierBadge ? BADGE_STYLE[tierBadge] : null
@@ -2206,7 +2206,7 @@ function SectionCard({
       style={{
         backgroundColor: "var(--layer-1-bg)",
         border: `1px solid ${
-          accent === "warn" ? "rgba(20,22,26, 0.33)" : "var(--layer-border-strong)"
+          accent === "warn" ? "rgba(5, 28, 44, 0.33)" : "var(--layer-border-strong)"
         }`,
       }}
     >
@@ -2275,7 +2275,7 @@ function ClaimField({
     C.lt1
   const borderColor =
     tone === "blue" ? "rgba(46, 117, 182, 0.28)" :
-    tone === "amber" ? "rgba(20,22,26, 0.33)" :
+    tone === "amber" ? "rgba(5, 28, 44, 0.33)" :
     "var(--layer-border-strong)"
   return (
     <div
@@ -2402,7 +2402,7 @@ function DueDiligenceSection({
           className="rounded-xl p-4 flex items-center gap-3"
           style={{
             backgroundColor: "var(--color-positive-bg)",
-            border: "1px solid rgba(20,22,26,0.33)",
+            border: "1px solid rgba(5, 28, 44,0.33)",
           }}
         >
           <CheckCircle2 size={20} color="var(--color-positive)" className="flex-shrink-0" />

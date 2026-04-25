@@ -42,9 +42,9 @@ const html = `<!DOCTYPE html>
     }
     .npl-logo span { color: #22C55E; }
     .npl-badge {
-      background: rgba(20,22,26,.15);
+      background: rgba(5, 28, 44,.15);
       color: #22C55E;
-      border: 1px solid rgba(20,22,26,.3);
+      border: 1px solid rgba(5, 28, 44,.3);
       font-size: 11px;
       font-weight: 700;
       padding: 2px 8px;

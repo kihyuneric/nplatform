@@ -42,7 +42,7 @@ export function KpiStatCard({
     (isNegative && deltaDirection === "higher-is-better") ||
     (isPositive && deltaDirection === "lower-is-better")
 
-  const deltaColor = isGood ? "#14161A" : isBad ? "#1B1B1F" : "#94A3B8"
+  const deltaColor = isGood ? "#051C2C" : isBad ? "#A53F8A" : "#94A3B8"
   const DeltaIcon = isFlat ? Minus : isPositive ? TrendingUp : TrendingDown
 
   return (

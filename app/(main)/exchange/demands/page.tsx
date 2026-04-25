@@ -52,9 +52,9 @@ interface DemandsResponse {
 }
 
 const URGENCY_MAP: Record<Urgency, { label: string; badge: string; dot: string; icon: typeof Flame }> = {
-  URGENT: { label: '긴급', badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20', dot: '#1B1B1F', icon: Flame },
+  URGENT: { label: '긴급', badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20', dot: '#A53F8A', icon: Flame },
   HIGH:   { label: '높음', badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20', dot: '#F97316', icon: TrendingUp },
-  MEDIUM: { label: '보통', badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20', dot: '#14161A', icon: Clock },
+  MEDIUM: { label: '보통', badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20', dot: '#051C2C', icon: Clock },
   LOW:    { label: '낮음', badge: 'bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]', dot: '#64748B', icon: Clock },
 }
 

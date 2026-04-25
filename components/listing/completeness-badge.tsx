@@ -87,14 +87,14 @@ export function ProvidedFields({
             lineHeight: 1.3,
             borderRadius: 3,
             backgroundColor: 'transparent',
-            color: item.provided ? '#14161A' : 'rgba(20, 22, 26, 0.40)',
-            border: `1px solid ${item.provided ? 'rgba(20, 22, 26, 0.25)' : 'rgba(20, 22, 26, 0.10)'}`,
+            color: item.provided ? '#051C2C' : 'rgba(5, 28, 44, 0.40)',
+            border: `1px solid ${item.provided ? 'rgba(5, 28, 44, 0.25)' : 'rgba(5, 28, 44, 0.10)'}`,
             whiteSpace: 'nowrap',
             textDecoration: item.provided ? 'none' : 'line-through',
-            textDecorationColor: 'rgba(20, 22, 26, 0.30)',
+            textDecorationColor: 'rgba(5, 28, 44, 0.30)',
           }}
         >
-          <span aria-hidden style={{ fontSize: fontSize + 1, color: item.provided ? 'var(--color-editorial-gold, #A8853E)' : 'rgba(20, 22, 26, 0.30)' }}>
+          <span aria-hidden style={{ fontSize: fontSize + 1, color: item.provided ? 'var(--color-editorial-gold, #2251FF)' : 'rgba(5, 28, 44, 0.30)' }}>
             {item.provided ? '✓' : '·'}
           </span>
           {item.label}

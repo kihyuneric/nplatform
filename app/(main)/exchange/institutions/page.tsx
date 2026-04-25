@@ -8,7 +8,7 @@ import { Building2, Search, MapPin, Phone, Globe, ExternalLink, TrendingUp, Awar
 const C = {
   bg0:"var(--color-bg-deepest, #030810)", bg1:"var(--color-bg-deep, #050D1A)", bg2:"var(--color-bg-base, #080F1E)", bg3:"var(--color-bg-base, #0A1628)", bg4:"var(--color-bg-elevated, #0F1F35)",
   em:"var(--color-positive)", emL:"var(--color-positive)", blue:"var(--color-brand-dark)", blueL:"var(--color-brand-bright)",
-  amber:"var(--color-warning)", amber2:"#FCD34D", purple:"#14161A", rose:"var(--color-danger)", teal:"#14161A",
+  amber:"var(--color-warning)", amber2:"#FCD34D", purple:"#051C2C", rose:"var(--color-danger)", teal:"#051C2C",
   l0:"#FFFFFF", l1:"#F8FAFC", l2:"#F1F5F9", l3:"#E2E8F0",
   lt1:"#0F172A", lt2:"#334155", lt3:"var(--color-text-muted)", lt4:"var(--color-text-muted)",
 }
@@ -187,7 +187,7 @@ function InstitutionCard({ inst, index }: { inst: Institution; index: number }) 
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
               <h3 style={{ fontSize: '1rem', fontWeight: 800, color: C.lt1, lineHeight: 1.2 }}>{inst.name}</h3>
               {inst.verified && (
-                <span title="인증 기관" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: '0.5625rem', fontWeight: 800, padding: '2px 7px', borderRadius: 20, backgroundColor: '#ECFDF5', color: '#14161A', border: '1px solid #A7F3D0' }}>
+                <span title="인증 기관" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: '0.5625rem', fontWeight: 800, padding: '2px 7px', borderRadius: 20, backgroundColor: '#ECFDF5', color: '#051C2C', border: '1px solid #A7F3D0' }}>
                   <Shield size={9} />인증
                 </span>
               )}
@@ -302,7 +302,7 @@ export default function InstitutionsPage() {
         <div style={{ position: 'relative', maxWidth: 1280, margin: '0 auto', padding: '64px 24px 48px' }}>
           {/* Eyebrow */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: C.blue, textTransform: 'uppercase', letterSpacing: '0.12em', padding: '4px 12px', borderRadius: 20, backgroundColor: 'rgba(20,22,26,0.12)', border: '1px solid rgba(20,22,26,0.25)' }}>
+            <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: C.blue, textTransform: 'uppercase', letterSpacing: '0.12em', padding: '4px 12px', borderRadius: 20, backgroundColor: 'rgba(5, 28, 44,0.12)', border: '1px solid rgba(5, 28, 44,0.25)' }}>
               Participating Institutions
             </span>
           </div>

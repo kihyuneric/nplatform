@@ -537,10 +537,10 @@ function ScenariosTab({ result }: { result: ProfitabilityResult }) {
                       key={j}
                       className="p-1.5 text-center font-medium"
                       style={{
-                        backgroundColor: roi > 20 ? "rgba(20,22,26,0.15)" :
-                          roi > 10 ? "rgba(20,22,26,0.08)" :
-                          roi > 0 ? "rgba(20,22,26,0.08)" :
-                          "rgba(27,27,31,0.1)",
+                        backgroundColor: roi > 20 ? "rgba(5, 28, 44,0.15)" :
+                          roi > 10 ? "rgba(5, 28, 44,0.08)" :
+                          roi > 0 ? "rgba(5, 28, 44,0.08)" :
+                          "rgba(165, 63, 138,0.1)",
                         color: roi > 0 ? "var(--color-text-primary)" : "var(--color-danger)",
                       }}
                     >

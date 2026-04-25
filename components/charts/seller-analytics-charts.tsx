@@ -36,8 +36,8 @@ export function AnalyticsTrendChart({ data }: { data: TrendItem[] }) {
         <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }} />
         <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
         <Line type="monotone" dataKey="views" name="조회수" stroke="#2E75B6" strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="interests" name="관심등록" stroke="#14161A" strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="inquiries" name="문의" stroke="#14161A" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="interests" name="관심등록" stroke="#051C2C" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="inquiries" name="문의" stroke="#051C2C" strokeWidth={2} dot={false} />
       </LineChart>
     </ResponsiveContainer>
   )
@@ -82,8 +82,8 @@ export function AnalyticsRegionChart({ data }: { data: RegionItem[] }) {
         <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }} />
         <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
         <Bar dataKey="views" name="조회수" fill="#2E75B6" radius={[0, 3, 3, 0]} />
-        <Bar dataKey="interests" name="관심등록" fill="#14161A" radius={[0, 3, 3, 0]} />
-        <Bar dataKey="bids" name="입찰" fill="#14161A" radius={[0, 3, 3, 0]} />
+        <Bar dataKey="interests" name="관심등록" fill="#051C2C" radius={[0, 3, 3, 0]} />
+        <Bar dataKey="bids" name="입찰" fill="#051C2C" radius={[0, 3, 3, 0]} />
       </BarChart>
     </ResponsiveContainer>
   )
@@ -108,8 +108,8 @@ export function AnalyticsDiscountChart({ data }: { data: DiscountItem[] }) {
         <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }} />
         <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
         <Bar dataKey="views" name="조회수" fill="#1B3A5C" radius={[3, 3, 0, 0]} />
-        <Bar dataKey="interests" name="관심등록" fill="#14161A" radius={[3, 3, 0, 0]} />
-        <Bar dataKey="bids" name="입찰" fill="#14161A" radius={[3, 3, 0, 0]} />
+        <Bar dataKey="interests" name="관심등록" fill="#051C2C" radius={[3, 3, 0, 0]} />
+        <Bar dataKey="bids" name="입찰" fill="#051C2C" radius={[3, 3, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   )

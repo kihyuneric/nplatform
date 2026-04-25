@@ -66,11 +66,11 @@ interface LevelOverview {
 }
 
 const LEVELS = [
-  { key: '왕초보', label: '왕초보', description: '부동산의 기본 개념부터', icon: Sprout, color: '#14161A', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
-  { key: '초보', label: '초보', description: '본격적인 투자 준비', icon: Leaf, color: '#14161A', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
-  { key: '중급', label: '중급', description: '실전 투자 기법 습득', icon: TreePine, color: '#14161A', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
-  { key: '고급', label: '고급', description: '고급 전략과 리스크 관리', icon: Mountain, color: '#14161A', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
-  { key: '전문가', label: '전문가', description: '전문가 수준의 포트폴리오', icon: Crown, color: '#1B1B1F', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
+  { key: '왕초보', label: '왕초보', description: '부동산의 기본 개념부터', icon: Sprout, color: '#051C2C', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
+  { key: '초보', label: '초보', description: '본격적인 투자 준비', icon: Leaf, color: '#051C2C', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
+  { key: '중급', label: '중급', description: '실전 투자 기법 습득', icon: TreePine, color: '#051C2C', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
+  { key: '고급', label: '고급', description: '고급 전략과 리스크 관리', icon: Mountain, color: '#051C2C', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
+  { key: '전문가', label: '전문가', description: '전문가 수준의 포트폴리오', icon: Crown, color: '#A53F8A', bg: 'bg-stone-100', border: 'border-stone-300', badge: 'bg-stone-100 text-stone-900' },
 ]
 
 const DOMAIN_ICONS: Record<string, typeof HomeIcon> = {
@@ -450,8 +450,8 @@ export default function CurriculumPage() {
                         <Star
                           key={i}
                           className="w-3.5 h-3.5"
-                          fill={i < Math.round(levelOverview.avg_difficulty) ? '#14161A' : 'none'}
-                          stroke="#14161A"
+                          fill={i < Math.round(levelOverview.avg_difficulty) ? '#051C2C' : 'none'}
+                          stroke="#051C2C"
                         />
                       ))}
                     </div>
@@ -698,11 +698,11 @@ export default function CurriculumPage() {
         <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 text-center">학습 플랫폼 흐름</h2>
         <div className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-2">
           {[
-            { icon: Upload, label: '대본 분석', desc: 'YouTube 대본 업로드', color: '#14161A' },
-            { icon: GitBranch, label: '지식그래프', desc: '개념 관계 시각화', color: '#14161A' },
-            { icon: BarChart3, label: '대시보드', desc: '통계 분석', color: '#14161A' },
-            { icon: Map, label: '로드맵', desc: '학습 경로 설계', color: '#14161A' },
-            { icon: Zap, label: 'Atomic 캡슐', desc: '원자적 완전학습', color: '#1B1B1F' },
+            { icon: Upload, label: '대본 분석', desc: 'YouTube 대본 업로드', color: '#051C2C' },
+            { icon: GitBranch, label: '지식그래프', desc: '개념 관계 시각화', color: '#051C2C' },
+            { icon: BarChart3, label: '대시보드', desc: '통계 분석', color: '#051C2C' },
+            { icon: Map, label: '로드맵', desc: '학습 경로 설계', color: '#051C2C' },
+            { icon: Zap, label: 'Atomic 캡슐', desc: '원자적 완전학습', color: '#A53F8A' },
           ].map((step, i) => (
             <div key={i} className="flex items-center gap-2">
               <div className="flex flex-col items-center gap-1.5">

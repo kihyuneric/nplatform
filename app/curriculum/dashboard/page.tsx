@@ -74,18 +74,18 @@ const LECTURE_TYPE_LABELS: Record<string, string> = {
 }
 
 const LECTURE_TYPE_COLORS: Record<string, string> = {
-  informational: '#14161A',
-  case_study: '#14161A',
-  hooking: '#14161A',
-  knowhow: '#14161A',
+  informational: '#051C2C',
+  case_study: '#051C2C',
+  hooking: '#051C2C',
+  knowhow: '#051C2C',
   mixed: '#6B7280',
 }
 
 const STRUCTURE_COLORS: Record<string, string> = {
-  hooking: '#14161A',
-  information: '#14161A',
-  case: '#14161A',
-  cta: '#1B1B1F',
+  hooking: '#051C2C',
+  information: '#051C2C',
+  case: '#051C2C',
+  cta: '#A53F8A',
 }
 
 interface DrillDownInfo {

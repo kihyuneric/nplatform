@@ -189,7 +189,7 @@ export function SignModal({
                 disabled={!agreed}
                 className="w-full py-3 rounded-xl font-bold text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{
-                  backgroundColor: agreed ? "#14161A" : "#0F1F35",
+                  backgroundColor: agreed ? "#051C2C" : "#0F1F35",
                   color: agreed ? "#041915" : "#64748B",
                 }}
               >
@@ -239,7 +239,7 @@ export function SignModal({
                   disabled={!signatureDataUrl || disabled}
                   className="flex-2 flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{
-                    backgroundColor: signatureDataUrl ? "#14161A" : "#0F1F35",
+                    backgroundColor: signatureDataUrl ? "#051C2C" : "#0F1F35",
                     color: signatureDataUrl ? "#041915" : "#64748B",
                   }}
                 >

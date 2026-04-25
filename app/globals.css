@@ -169,61 +169,88 @@ input::placeholder, textarea::placeholder {
     --color-nav-active:    #1B3A5C;                    /* 활성 nav 항목 — 브랜드 네이비 */
     --color-nav-hover-bg:  rgba(15, 23, 42, 0.06);     /* hover 배경 (slate-900/6%) */
 
-    /* ── McKinsey Editorial Accent · 절제된 brass tone ──────────────────────
-       이전 #C9A227 (warm gold) 너무 화려 → #A8853E (muted brass) 진짜 editorial
-       Sparingly, 라벨·divider·금속 액센트 한 곳에만 사용 */
-    --color-editorial-gold:      #A8853E;     /* muted brass — 절제 */
-    --color-editorial-gold-soft: rgba(168, 133, 62, 0.18);
+    /* ── 진짜 McKinsey Color System v5 (실제 mckinsey.com 추출) ─────────────
+       Navy + Blue 그라데이션 stack — 카테고리별 한 가지 accent 만 (teal 또는 magenta)
+       brass/gold/베이지 모두 제거 (McKinsey는 절대 사용 안 함) */
+    --color-mck-navy-deep:    #051C2C;     /* 가장 진한 navy — 헤딩, 다크 배경 */
+    --color-mck-navy:         #1F2E5C;     /* mid navy */
+    --color-mck-blue:         #2251FF;     /* 메인 accent · "Featured" · CTA */
+    --color-mck-blue-bright:  #1E3CFA;     /* hover */
+    --color-mck-sky:          #42AFFF;     /* 차트 mid bar · link active */
+    --color-mck-sky-light:    #7FCDFF;     /* 차트 light bar */
+    --color-mck-sky-pale:     #B3E0FF;     /* 차트 가장 연한 bar */
 
-    /* ── 베이지 (McKinsey paper tone — 라이트 노이즈 액센트 배경) ─────────── */
-    --color-editorial-beige:     #F4EBE0;     /* warm paper */
-    --color-editorial-beige-deep:#E8DDC9;     /* sunken paper */
+    /* 카테고리 accents — 두 카테고리 이상 구분 시만 사용 */
+    --color-mck-teal:         #00A39C;     /* 보조 카테고리 (drop-in, 드물게) */
+    --color-mck-mint:         #5BD4C4;
+    --color-mck-magenta:      #A53F8A;     /* 또 다른 카테고리 (드물게) */
 
-    /* ── Charcoal (검은 navy 대신 neutral charcoal · McKinsey 헤더 톤) ───── */
-    --color-editorial-ink:       #14161A;     /* near-black, slightly warm */
+    /* Neutrals (McKinsey 흰 종이 + 회색 위계) */
+    --color-mck-gray-50:      #F5F5F5;     /* 차트 배경 / 페이지 옅은 영역 */
+    --color-mck-gray-100:     #E8E8E8;
+    --color-mck-gray-300:     #BFBFBF;
+    --color-mck-gray-500:     #999999;
+    --color-mck-gray-700:     #666666;     /* 본문 텍스트 */
+    --color-mck-gray-900:     #1A1A1A;
 
-    /* ── Typography Stack ────────────────────────────────────────────────────
-       한국 사용자 대상: 헤딩은 Pretendard SemiBold/Bold + 음수 트래킹 + 큰 사이즈로 위계.
-       Serif fallback (Charter/Bookmania)은 한글에서 폴백 안 되므로 의미 없음 — 제거.
-       대신 영문/숫자만 serif tone 으로 (옵셔널). */
-    --font-editorial-display: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-    --font-editorial-body:    'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-    --font-editorial-numeric: 'Charter', 'Bookmania', 'Source Serif Pro', Georgia, serif;
+    /* ── 호환 alias (기존 코드 호환) — editorial 토큰을 McKinsey 실제 색으로 매핑 ─ */
+    --color-editorial-ink:       #051C2C;          /* deep navy (이전 #14161A → McKinsey 실제) */
+    --color-editorial-gold:      #2251FF;          /* bright blue (이전 brass → McKinsey accent) */
+    --color-editorial-gold-soft: rgba(34, 81, 255, 0.10);
+    --color-editorial-beige:     #F5F5F5;          /* light gray (이전 베이지 → McKinsey 종이) */
+    --color-editorial-beige-deep:#E8E8E8;
 
-    /* ── Brand Palette · McKinsey Editorial v2.5 (2026-04-25) ───────────────
-       SSoT: docs/NPLatform_DesignSystem_v2_McKinsey.md §1.1
-       brand-900 #0B1B2E (강조) · brand-700 #1B3A5C (Navy) · brand-500 #2E75B6 (Interactive) · brand-300 #93C5FD (Display) */
-    --color-brand-deepest: #060E1C;     /* 가장 어두운 baseline (히어로 외곽) */
-    --color-brand-deep:    #0B1B2E;     /* brand-900 — h1, 본문 위 강조 */
-    --color-brand-dark:    #1B3A5C;     /* brand-700 — 기본 Navy */
-    --color-brand-mid:     #2E75B6;     /* brand-500 — Interactive (link, button) */
-    --color-brand-bright:  #2E75B6;     /* Interactive 통일 — focus ring, hover */
-    --color-brand-light:   #93C5FD;     /* brand-300 — 디스플레이 강조 (히어로) */
+    /* ── Typography Stack · 진짜 McKinsey 톤앤매너 (한국어 보고서 매칭) ─────
+       McKinsey 한국 보고서: 헤딩 진한 검정 sans-serif Bold, 본문 회색,
+       숫자 강조는 큰 진한 검정 또는 navy.
+       한글 위계는 Pretendard weight + size + tracking 으로. */
+    --font-editorial-display: 'Pretendard Variable', 'Pretendard', 'Helvetica Neue', Helvetica, Arial, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    --font-editorial-body:    'Pretendard Variable', 'Pretendard', 'Helvetica Neue', Helvetica, Arial, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    --font-editorial-numeric: 'Pretendard Variable', 'Pretendard', 'Helvetica Neue', Arial, sans-serif;
 
-    /* ── Semantic Colors · McKinsey Mono Override (v3) ──────────────────────
-       이전: emerald/amber/red 등 multi-color → 페이지가 알록달록
-       신규: 모두 ink/charcoal/brass 음영으로 통일.
-       의미 차별화는 background tint + icon shape + text label 로 (color X) */
-    --color-positive:     #14161A;      /* ink (검정) — 이전 emerald 대체 */
-    --color-positive-bg:  rgba(168, 133, 62, 0.08);   /* brass tint */
-    --color-positive-dark:#14161A;
+    /* ── McKinsey Chart Stack Palette (deep navy → light blue 5단계) ─────── */
+    --color-chart-1: #051C2C;   /* deepest navy — primary bar */
+    --color-chart-2: #1F2E5C;   /* mid navy */
+    --color-chart-3: #2251FF;   /* bright blue */
+    --color-chart-4: #42AFFF;   /* sky blue */
+    --color-chart-5: #7FCDFF;   /* light sky */
+    --color-chart-6: #B3E0FF;   /* pale blue */
+    /* 카테고리 분리가 필요할 때만 — McKinsey도 드물게 사용 */
+    --color-chart-cat-teal:    #00A39C;
+    --color-chart-cat-magenta: #A53F8A;
 
-    --color-warning:      #14161A;      /* ink — 이전 amber 대체 (label만 다르게) */
-    --color-warning-bg:   rgba(168, 133, 62, 0.10);
-    --color-warning-border: rgba(168, 133, 62, 0.25);
+    /* ── Brand Palette · 진짜 McKinsey Navy+Blue Stack (v5 · 2026-04-25) ────
+       실제 mckinsey.com 추출 — Deep Navy → Bright Blue → Sky Blue 단계적 */
+    --color-brand-deepest: #051C2C;     /* McKinsey deep navy — 가장 진함 */
+    --color-brand-deep:    #051C2C;     /* h1, 헤딩 강조 */
+    --color-brand-dark:    #1F2E5C;     /* mid navy */
+    --color-brand-mid:     #2251FF;     /* McKinsey bright blue — Interactive */
+    --color-brand-bright:  #2251FF;     /* CTA, focus ring */
+    --color-brand-light:   #42AFFF;     /* sky blue — 차트 mid · 디스플레이 */
 
-    --color-danger:       #1B1B1F;      /* near-ink (red 대체) */
-    --color-danger-bg:    rgba(20, 22, 26, 0.06);
+    /* ── Semantic Colors · McKinsey Navy+Blue v5 ────────────────────────────
+       이전 단색 ink로만 통일 → McKinsey 실제는 navy + blue 위계
+       positive = bright blue (강조), warning = sky blue, danger = magenta (드물게), info = navy */
+    --color-positive:     #2251FF;      /* McKinsey bright blue — 긍정/강조 */
+    --color-positive-bg:  rgba(34, 81, 255, 0.08);
+    --color-positive-dark:#051C2C;
 
-    --color-info:         #14161A;      /* ink (blue 대체) */
-    --color-info-bg:      rgba(20, 22, 26, 0.05);
+    --color-warning:      #42AFFF;      /* McKinsey sky blue — 경고도 blue 톤 */
+    --color-warning-bg:   rgba(66, 175, 255, 0.10);
+    --color-warning-border: rgba(66, 175, 255, 0.25);
 
-    /* 시각적 강조가 정말 필요한 곳만 brass */
-    --color-accent-strong: var(--color-editorial-gold);   /* #A8853E muted brass */
+    --color-danger:       #A53F8A;      /* McKinsey magenta — 위험 (드물게, 차분) */
+    --color-danger-bg:    rgba(165, 63, 138, 0.06);
 
-    /* ── 시맨틱 background 위 텍스트 색상 (대비 보장) ────────────────────
-       semantic colors는 모두 ink (#14161A) 이므로 그 위 텍스트는 항상 흰색 강제.
-       이전 emerald/amber/red 위 ‘진한 톤 텍스트(#041915)’ 패턴은 검정+검정 충돌. */
+    --color-info:         #051C2C;      /* deep navy — 정보 (흰 배경 위) */
+    --color-info-bg:      rgba(5, 28, 44, 0.05);
+
+    /* 시각적 강조 — McKinsey bright blue */
+    --color-accent-strong: #2251FF;
+
+    /* ── 시맨틱 background 위 텍스트 색상 (라이트 모드: 흰색) ────────────
+       라이트 모드: semantic = ink (#14161A) → 그 위 텍스트는 흰색
+       다크 모드: semantic = 흰톤 (#F8FAFC) → 그 위 텍스트는 검정 (override 필요) */
     --color-positive-foreground: #FFFFFF;
     --color-warning-foreground:  #FFFFFF;
     --color-danger-foreground:   #FFFFFF;
@@ -357,32 +384,32 @@ input::placeholder, textarea::placeholder {
     --ease-out:      cubic-bezier(0, 0, 0.2, 1);
     --ease-in-out:   cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* ── Shadcn HSL Tokens · McKinsey Mono Override v3 ──────────────────────
-       모든 시맨틱 색상을 ink + brass 액센트로 통일. emerald/red/blue 모두 X */
-    --background:          36 33% 92%;      /* #F4EBE0 따뜻한 베이지 (이전 #F8FAFC) */
-    --foreground:          222 12% 9%;      /* #14161A near-ink */
-    --card:                0 0% 100%;       /* #FFFFFF 카드 (베이지 위 흰종이) */
-    --card-foreground:     222 12% 9%;
+    /* ── Shadcn HSL Tokens · 진짜 McKinsey Navy+Blue v5 (실제 mckinsey.com 매칭) ──
+       Deep Navy #051C2C + Bright Blue #2251FF + Sky #42AFFF + 흰 종이 + 회색 위계 */
+    --background:          0 0% 100%;       /* #FFFFFF 흰 종이 (베이지 X — McKinsey는 흰색) */
+    --foreground:          204 80% 10%;     /* #051C2C deep navy */
+    --card:                0 0% 100%;
+    --card-foreground:     204 80% 10%;
     --popover:             0 0% 100%;
-    --popover-foreground:  222 12% 9%;
-    --primary:             222 12% 9%;      /* #14161A ink (CTA 배경) */
+    --popover-foreground:  204 80% 10%;
+    --primary:             204 80% 10%;     /* #051C2C deep navy (CTA 배경) */
     --primary-foreground:  0 0% 100%;
-    --secondary:           211 53% 23%;     /* #1B3A5C navy 보조 */
+    --secondary:           227 53% 24%;     /* #1F2E5C mid navy */
     --secondary-foreground:0 0% 100%;
-    --muted:               36 25% 86%;      /* 베이지 deep */
-    --muted-foreground:    222 8% 35%;      /* 차콜 그레이 */
-    --accent:              40 47% 45%;      /* #A8853E muted brass (이전 emerald) */
+    --muted:               0 0% 96%;        /* #F5F5F5 light gray */
+    --muted-foreground:    0 0% 40%;        /* #666666 본문 회색 */
+    --accent:              228 100% 57%;    /* #2251FF McKinsey bright blue (이전 brass) */
     --accent-foreground:   0 0% 100%;
-    --destructive:         222 12% 18%;     /* dark slate (이전 red 대체) */
+    --destructive:         313 49% 45%;     /* #A53F8A magenta (드물게) */
     --destructive-foreground: 0 0% 100%;
-    --border:              30 18% 82%;      /* 베이지 hairline */
-    --input:               30 18% 82%;
-    --ring:                40 47% 45%;      /* brass focus ring */
-    --success:             222 12% 9%;      /* ink (이전 emerald) */
+    --border:              0 0% 91%;        /* #E8E8E8 회색 hairline */
+    --input:               0 0% 91%;
+    --ring:                228 100% 57%;    /* #2251FF McKinsey blue focus ring */
+    --success:             228 100% 57%;    /* #2251FF (이전 ink) */
     --success-foreground:  0 0% 100%;
-    --warning:             40 47% 45%;      /* brass (이전 amber) */
-    --warning-foreground:  0 0% 100%;
-    --info:                222 12% 9%;      /* ink (이전 blue) */
+    --warning:             204 100% 63%;    /* #42AFFF sky blue */
+    --warning-foreground:  204 80% 10%;
+    --info:                204 80% 10%;     /* deep navy */
     --info-foreground:     0 0% 100%;
 
     /* ═══════════════════════════════════════════════════════════════════════
@@ -498,24 +525,29 @@ input::placeholder, textarea::placeholder {
 
     --fg-on-warning:    #0D1F38;             /* amber bg 위 — 다크에서도 어두운 텍스트 필요 */
 
-    /* ── 시맨틱 색상 (다크 모드 · McKinsey Mono Override v3) ───────────────
-       다크 배경 위에서도 multi-color 금지 — 흰톤 + brass 액센트만 */
-    --color-positive:        #F8FAFC;   /* 다크 배경 위 흰톤 (이전 emerald 대체) */
-    --color-positive-dark:   #F8FAFC;
-    --color-positive-bg:     rgba(168, 133, 62, 0.14);
-    --color-positive-border: rgba(168, 133, 62, 0.30);
-    --color-warning:         #F8FAFC;   /* 흰톤 (이전 amber 대체) */
-    --color-warning-dark:    #F8FAFC;
-    --color-warning-bg:      rgba(168, 133, 62, 0.10);
-    --color-warning-border:  rgba(168, 133, 62, 0.25);
-    --color-danger:          #E2E8F0;   /* slate-200 (이전 red 대체) */
-    --color-danger-bg:       rgba(255, 255, 255, 0.06);
-    --color-danger-border:   rgba(255, 255, 255, 0.18);
-    --color-info:            #F8FAFC;   /* 흰톤 (이전 blue 대체) */
-    --color-info-bg:         rgba(255, 255, 255, 0.06);
-    /* brand-bright/mid/light는 위 Brand 블록에서 통일 정의됨 */
-    --color-purple:          #A8853E;   /* purple → brass 통일 */
-    --color-accent-strong:   var(--color-editorial-gold);
+    /* ── 시맨틱 색상 (다크 모드 · 진짜 McKinsey Navy+Blue v5) ───────────────
+       다크 배경 위 가독성 — 흰톤 + bright blue 액센트 + sky blue 위계 */
+    --color-positive:        #2251FF;   /* McKinsey bright blue (다크 배경 위 강조) */
+    --color-positive-dark:   #2251FF;
+    --color-positive-bg:     rgba(34, 81, 255, 0.14);
+    --color-positive-border: rgba(34, 81, 255, 0.30);
+    --color-warning:         #42AFFF;   /* sky blue */
+    --color-warning-dark:    #42AFFF;
+    --color-warning-bg:      rgba(66, 175, 255, 0.10);
+    --color-warning-border:  rgba(66, 175, 255, 0.25);
+    --color-danger:          #A53F8A;   /* magenta */
+    --color-danger-bg:       rgba(165, 63, 138, 0.12);
+    --color-danger-border:   rgba(165, 63, 138, 0.30);
+    --color-info:            #42AFFF;   /* sky blue */
+    --color-info-bg:         rgba(66, 175, 255, 0.10);
+    --color-purple:          #A53F8A;
+    --color-accent-strong:   #2251FF;
+
+    /* 시맨틱 background 위 텍스트 — McKinsey blue 위 흰색 */
+    --color-positive-foreground: #FFFFFF;   /* blue 위 흰색 */
+    --color-warning-foreground:  #051C2C;   /* sky blue 위 navy */
+    --color-danger-foreground:   #FFFFFF;   /* magenta 위 흰색 */
+    --color-info-foreground:     #051C2C;
 
     /* NPL aliases */
     --npl-primary:           #2A5A8C;
@@ -2769,6 +2801,253 @@ button[role="switch"][data-state="unchecked"] {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   McKinsey Stat-Number Pattern · 큰 숫자 강조 (30+, 80%, 130+ 같은)
+   진짜 McKinsey: serif Bold + bright blue 강조
+   ═══════════════════════════════════════════════════════════════════════════ */
+.npl-mck-stat-number {
+  font-family: 'Bower', 'Tiempos Headline', 'Charter', Georgia, 'Pretendard Variable', 'Pretendard', serif;
+  font-weight: 700;
+  font-size: clamp(3.5rem, 6vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  color: #2251FF;   /* McKinsey bright blue */
+  font-variant-numeric: tabular-nums;
+}
+.npl-mck-stat-label {
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: #051C2C;
+  margin-top: 0.5rem;
+}
+.npl-mck-stat-caption {
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #666666;
+  margin-top: 0.25rem;
+}
+
+/* McKinsey eyebrow (예: "FEATURED INSIGHTS") — uppercase + 넓은 tracking */
+.npl-mck-eyebrow {
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: #051C2C;
+}
+
+/* McKinsey 헤딩 (영문 serif option) */
+.npl-mck-heading-serif {
+  font-family: 'Bower', 'Tiempos Headline', 'Charter', Georgia, 'Pretendard Variable', 'Pretendard', serif;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  color: #051C2C;
+}
+
+/* McKinsey 링크 (blue underline + 화살표) */
+.npl-mck-link {
+  color: #2251FF;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  transition: color 200ms;
+}
+.npl-mck-link:hover {
+  color: #1E3CFA;
+  text-decoration-thickness: 2px;
+}
+
+/* McKinsey CTA 버튼 (진한 blue 박스 + 흰 글씨) */
+.npl-mck-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  background: #2251FF;
+  color: #FFFFFF;
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+  border: 1px solid #2251FF;
+  border-radius: 0;   /* McKinsey는 round X, square edge */
+  transition: background 200ms;
+}
+.npl-mck-cta:hover {
+  background: #1E3CFA;
+  border-color: #1E3CFA;
+}
+.npl-mck-cta-outline {
+  background: transparent;
+  color: #051C2C;
+  border: 1px solid #051C2C;
+}
+.npl-mck-cta-outline:hover {
+  background: #051C2C;
+  color: #FFFFFF;
+}
+
+/* McKinsey thin hairline divider — section 간 구분 */
+.npl-mck-divider {
+  height: 1px;
+  background: #E5E5E5;
+  border: 0;
+  margin: 2rem 0;
+}
+
+/* McKinsey 카드 hairline — outline 1px + 흰 배경 */
+.npl-mck-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  padding: 2rem;
+  border-radius: 0;
+  transition: border-color 200ms;
+}
+.npl-mck-card:hover {
+  border-color: #051C2C;
+}
+.dark .npl-mck-card {
+  background: #051C2C;
+  border-color: #1F2E5C;
+  color: #F5F5F5;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   McKinsey Dark Mode Tone & Manner — 직접 추출 (mckinsey.com 다크 페이지)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Deep navy 풀 배경 섹션 (Solutions, Our People, Examples 등) */
+.npl-mck-section-dark {
+  background: #051C2C;
+  color: #F5F5F5;
+  padding: 5rem 0;
+}
+.npl-mck-section-dark .npl-mck-eyebrow {
+  color: #FFFFFF;
+  letter-spacing: 0.22em;
+}
+.npl-mck-section-dark h1, .npl-mck-section-dark h2, .npl-mck-section-dark h3,
+.npl-mck-section-dark .npl-mck-heading-serif {
+  color: #FFFFFF;
+}
+.npl-mck-section-dark p, .npl-mck-section-dark .body {
+  color: #D4D4D4;
+}
+.npl-mck-section-dark .meta, .npl-mck-section-dark time {
+  color: #999999;
+}
+.npl-mck-section-dark a, .npl-mck-section-dark .npl-mck-link {
+  color: #2251FF;   /* bright blue 화살표 */
+}
+.npl-mck-section-dark hr, .npl-mck-section-dark .divider {
+  background: #1F2E5C;
+  border: 0;
+  height: 1px;
+}
+
+/* Bright blue 풀 배경 banner — CTA 강조 섹션 (e.g. "What's your next brilliant move?") */
+.npl-mck-banner-blue {
+  background: #2251FF;
+  color: #FFFFFF;
+  padding: 4rem 2rem;
+}
+.npl-mck-banner-blue .npl-mck-heading-serif,
+.npl-mck-banner-blue h1, .npl-mck-banner-blue h2 {
+  color: #FFFFFF;
+}
+.npl-mck-banner-blue p {
+  color: rgba(255, 255, 255, 0.92);
+}
+.npl-mck-banner-blue .npl-mck-cta-outline,
+.npl-mck-banner-blue button {
+  background: transparent;
+  color: #FFFFFF;
+  border: 1px solid #FFFFFF;
+}
+.npl-mck-banner-blue .npl-mck-cta-outline:hover {
+  background: #FFFFFF;
+  color: #2251FF;
+}
+
+/* 다크 카드 안 카테고리 라벨 (Blog Post, Case Study) */
+.npl-mck-section-dark .npl-mck-category {
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-bottom: 0.5rem;
+}
+
+/* 다크 모드 인사이트 카드 — 이미지 + 텍스트 오버레이 패턴 */
+.npl-mck-insight-card-dark {
+  background: transparent;
+  color: #F5F5F5;
+}
+.npl-mck-insight-card-dark .title {
+  font-family: 'Bower', 'Tiempos Headline', 'Charter', Georgia, 'Pretendard Variable', serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  line-height: 1.25;
+  color: #FFFFFF;
+  letter-spacing: -0.012em;
+}
+.npl-mck-insight-card-dark .arrow {
+  color: #2251FF;
+  font-weight: 600;
+}
+.npl-mck-insight-card-dark .description,
+.npl-mck-insight-card-dark .meta-text {
+  color: #B8B8B8;
+  font-size: 0.875rem;
+}
+
+/* People card (스크린샷 3 — 인물 카드) */
+.npl-mck-person-card {
+  background: transparent;
+  text-align: left;
+}
+.npl-mck-person-card img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  margin-bottom: 1rem;
+}
+.npl-mck-section-dark .npl-mck-person-card .name {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: #FFFFFF;
+}
+.npl-mck-section-dark .npl-mck-person-card .role {
+  font-style: italic;
+  font-size: 0.875rem;
+  color: #B8B8B8;
+  margin-top: 0.125rem;
+}
+.npl-mck-section-dark .npl-mck-person-card .description {
+  font-size: 0.875rem;
+  color: #D4D4D4;
+  line-height: 1.55;
+  margin-top: 0.75rem;
+}
+.npl-mck-section-dark .npl-mck-person-card .read-link {
+  color: #2251FF;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  margin-top: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    McKinsey Monochrome System — Multi-color SaaS dashboard 톤 차단
    "단색 navy + warm gold accent + grayscale chart"
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -2927,14 +3206,13 @@ button[role="switch"][data-state="unchecked"] {
    ─ 본 규칙은 Tailwind utility class와 fill/stroke (SVG/Recharts) 모두에 적용
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── 텍스트 색상 (모든 컬러 톤 → ink) ─────────────────────────────────── */
+/* ── 텍스트 색상 (multi-color → McKinsey deep navy) ─────────────────────── */
 [class*="text-emerald-"],
 [class*="text-green-"],
 [class*="text-lime-"],
 [class*="text-teal-"],
 [class*="text-cyan-"],
 [class*="text-sky-"],
-[class*="text-blue-"],
 [class*="text-indigo-"],
 [class*="text-violet-"],
 [class*="text-purple-"],
@@ -2945,15 +3223,15 @@ button[role="switch"][data-state="unchecked"] {
 [class*="text-amber-"],
 [class*="text-yellow-"],
 [class*="text-red-"] {
-  color: #14161A !important;
+  color: #051C2C !important;   /* McKinsey deep navy */
 }
+/* blue/indigo는 McKinsey 톤이라 유지 (text는 link/CTA 색) */
 .dark [class*="text-emerald-"],
 .dark [class*="text-green-"],
 .dark [class*="text-lime-"],
 .dark [class*="text-teal-"],
 .dark [class*="text-cyan-"],
 .dark [class*="text-sky-"],
-.dark [class*="text-blue-"],
 .dark [class*="text-indigo-"],
 .dark [class*="text-violet-"],
 .dark [class*="text-purple-"],
@@ -2964,7 +3242,7 @@ button[role="switch"][data-state="unchecked"] {
 .dark [class*="text-amber-"],
 .dark [class*="text-yellow-"],
 .dark [class*="text-red-"] {
-  color: #F8FAFC !important;
+  color: #F5F5F5 !important;
 }
 
 /* ── 배경 색상 (진한 채도 → ink, 연한 톤 → 베이지/회색) ────────────────── */
@@ -2992,8 +3270,6 @@ button[role="switch"][data-state="unchecked"] {
 [class*="bg-lime-300"],    [class*="bg-lime-400"],    [class*="bg-lime-500"],    [class*="bg-lime-600"],    [class*="bg-lime-700"],    [class*="bg-lime-800"],    [class*="bg-lime-900"],
 [class*="bg-teal-300"],    [class*="bg-teal-400"],    [class*="bg-teal-500"],    [class*="bg-teal-600"],    [class*="bg-teal-700"],    [class*="bg-teal-800"],    [class*="bg-teal-900"],
 [class*="bg-cyan-300"],    [class*="bg-cyan-400"],    [class*="bg-cyan-500"],    [class*="bg-cyan-600"],    [class*="bg-cyan-700"],    [class*="bg-cyan-800"],    [class*="bg-cyan-900"],
-[class*="bg-sky-300"],     [class*="bg-sky-400"],     [class*="bg-sky-500"],     [class*="bg-sky-600"],     [class*="bg-sky-700"],     [class*="bg-sky-800"],     [class*="bg-sky-900"],
-[class*="bg-blue-300"],    [class*="bg-blue-400"],    [class*="bg-blue-500"],    [class*="bg-blue-600"],    [class*="bg-blue-700"],    [class*="bg-blue-800"],    [class*="bg-blue-900"],
 [class*="bg-indigo-300"],  [class*="bg-indigo-400"],  [class*="bg-indigo-500"],  [class*="bg-indigo-600"],  [class*="bg-indigo-700"],  [class*="bg-indigo-800"],  [class*="bg-indigo-900"],
 [class*="bg-violet-300"],  [class*="bg-violet-400"],  [class*="bg-violet-500"],  [class*="bg-violet-600"],  [class*="bg-violet-700"],  [class*="bg-violet-800"],  [class*="bg-violet-900"],
 [class*="bg-purple-300"],  [class*="bg-purple-400"],  [class*="bg-purple-500"],  [class*="bg-purple-600"],  [class*="bg-purple-700"],  [class*="bg-purple-800"],  [class*="bg-purple-900"],
@@ -3004,8 +3280,19 @@ button[role="switch"][data-state="unchecked"] {
 [class*="bg-amber-300"],   [class*="bg-amber-400"],   [class*="bg-amber-500"],   [class*="bg-amber-600"],   [class*="bg-amber-700"],   [class*="bg-amber-800"],   [class*="bg-amber-900"],
 [class*="bg-yellow-300"],  [class*="bg-yellow-400"],  [class*="bg-yellow-500"],  [class*="bg-yellow-600"],  [class*="bg-yellow-700"],  [class*="bg-yellow-800"],  [class*="bg-yellow-900"],
 [class*="bg-red-300"],     [class*="bg-red-400"],     [class*="bg-red-500"],     [class*="bg-red-600"],     [class*="bg-red-700"],     [class*="bg-red-800"],     [class*="bg-red-900"] {
-  background-color: #14161A !important;
+  background-color: #051C2C !important;   /* McKinsey deep navy */
   color: #FFFFFF !important;
+}
+/* blue/sky 진한 톤은 McKinsey 정통 색이라 그대로 (단 #2251FF 정도로 통일) */
+[class*="bg-blue-500"], [class*="bg-blue-600"], [class*="bg-blue-700"], [class*="bg-blue-800"], [class*="bg-blue-900"],
+[class*="bg-sky-500"],  [class*="bg-sky-600"],  [class*="bg-sky-700"],  [class*="bg-sky-800"],  [class*="bg-sky-900"] {
+  background-color: #2251FF !important;   /* McKinsey bright blue */
+  color: #FFFFFF !important;
+}
+[class*="bg-blue-300"], [class*="bg-blue-400"],
+[class*="bg-sky-300"],  [class*="bg-sky-400"] {
+  background-color: #42AFFF !important;   /* McKinsey sky */
+  color: #051C2C !important;
 }
 
 /* ── 테두리 색상 (모든 컬러 → 베이지 hairline 또는 ink) ───────────────── */

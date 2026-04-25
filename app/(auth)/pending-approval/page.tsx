@@ -54,7 +54,7 @@ export default function PendingApprovalPage() {
                 <div
                   className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center shrink-0"
                   style={{
-                    background: s.done ? '#14161A' : s.active ? '#14161A' : 'transparent',
+                    background: s.done ? '#051C2C' : s.active ? '#051C2C' : 'transparent',
                     border: !s.done && !s.active ? '2px solid #E5E7EB' : 'none',
                   }}
                 >

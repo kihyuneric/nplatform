@@ -194,7 +194,7 @@ export function PercentageInput({
   error,
   hint,
   id,
-  accentColor = '#14161A',
+  accentColor = '#051C2C',
 }: PercentageInputProps) {
   const generatedId = React.useId()
   const inputId = id ?? generatedId

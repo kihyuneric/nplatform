@@ -27,7 +27,7 @@ const C = {
   blueL:  "var(--color-brand-bright)",
   amber:  "var(--color-warning)",
   rose:   "var(--color-danger)",
-  purple: "#14161A",
+  purple: "#051C2C",
   lt3:    "var(--color-text-muted)",
   lt4:    "var(--color-text-muted)",
 }
@@ -59,12 +59,12 @@ const SAMPLE_ACCESS_LOG: AccessLogRow[] = [
 
 const ACTION_META: Record<LogAction, { label: string; color: string }> = {
   VIEW:          { label: "열람",     color: "#2E75B6" },
-  DOWNLOAD:      { label: "다운로드", color: "#14161A" },
-  MASKED_REVEAL: { label: "마스킹 해제", color: "#14161A" },
+  DOWNLOAD:      { label: "다운로드", color: "#051C2C" },
+  MASKED_REVEAL: { label: "마스킹 해제", color: "#051C2C" },
 }
 
 const TIER_COLOR: Record<LogTier, string> = {
-  L1: "#2E75B6", L2: "#14161A", L3: "#14161A",
+  L1: "#2E75B6", L2: "#051C2C", L3: "#051C2C",
 }
 
 const PII_CATEGORIES = [
@@ -354,7 +354,7 @@ export default function PrivacyPage() {
             <section
               style={{
                 padding: 20, borderRadius: 14,
-                backgroundColor: C.bg2, border: "1px solid rgba(27,27,31, 0.2)",
+                backgroundColor: C.bg2, border: "1px solid rgba(165, 63, 138, 0.2)",
               }}
             >
               <div
@@ -392,8 +392,8 @@ export default function PrivacyPage() {
                     onClick={() => setRequested(true)}
                     style={{
                       width: "100%", padding: "10px 14px", borderRadius: 10,
-                      backgroundColor: "rgba(27,27,31, 0.1)", color: C.rose,
-                      border: "1px solid rgba(27,27,31, 0.4)",
+                      backgroundColor: "rgba(165, 63, 138, 0.1)", color: C.rose,
+                      border: "1px solid rgba(165, 63, 138, 0.4)",
                       fontSize: 11, fontWeight: 800, cursor: "pointer",
                       display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 6,
                     }}
@@ -427,7 +427,7 @@ export default function PrivacyPage() {
         <div
           style={{
             marginTop: 24, padding: "14px 16px", borderRadius: 12,
-            backgroundColor: "rgba(20,22,26, 0.04)", border: "1px solid rgba(20,22,26, 0.2)",
+            backgroundColor: "rgba(5, 28, 44, 0.04)", border: "1px solid rgba(5, 28, 44, 0.2)",
             display: "flex", gap: 10, alignItems: "flex-start",
           }}
         >

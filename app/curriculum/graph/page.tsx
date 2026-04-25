@@ -35,7 +35,7 @@ const LEVELS = ['전체', '왕초보', '초보', '중급', '고급', '전문가'
 const RELATION_TYPES = [
   { key: 'prerequisite', label: '선수', color: '#6B7280' },
   { key: 'relatedTo', label: '관련', color: '#9CA3AF' },
-  { key: 'partOf', label: '구성', color: '#14161A' },
+  { key: 'partOf', label: '구성', color: '#051C2C' },
 ]
 
 interface LearningPath {

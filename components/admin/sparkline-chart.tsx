@@ -20,7 +20,7 @@ export const SparklineChart = memo(function SparklineChart({
 }: SparklineChartProps) {
   const { path, fillPath, strokeColor } = useMemo(() => {
     if (!data || data.length < 2) {
-      return { path: "", fillPath: "", strokeColor: color ?? "#14161A" }
+      return { path: "", fillPath: "", strokeColor: color ?? "#051C2C" }
     }
 
     const min = Math.min(...data)
@@ -41,14 +41,14 @@ export const SparklineChart = memo(function SparklineChart({
     const firstAvg = data.slice(0, third).reduce((a, b) => a + b, 0) / third
     const lastAvg = data.slice(-third).reduce((a, b) => a + b, 0) / third
 
-    let detectedColor = color ?? "#14161A"
+    let detectedColor = color ?? "#051C2C"
     if (autoColor && !color) {
       if (lastAvg > firstAvg * 1.05) {
-        detectedColor = "#14161A" // green - improving
+        detectedColor = "#051C2C" // green - improving
       } else if (lastAvg < firstAvg * 0.95) {
-        detectedColor = "#1B1B1F" // red - degrading
+        detectedColor = "#A53F8A" // red - degrading
       } else {
-        detectedColor = "#14161A" // yellow - stable
+        detectedColor = "#051C2C" // yellow - stable
       }
     }
 

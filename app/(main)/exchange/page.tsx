@@ -55,9 +55,10 @@ const V = {
   danger:         "var(--color-danger)",
   brandBright:    "var(--color-brand-bright)",
   purple:         "var(--color-purple, #A855F7)",
-  // McKinsey mono editorial v3 — semantic background는 모두 ink (#14161A) 통일.
-  // 따라서 그 위 텍스트는 항상 흰색 (이전 #041915 dark green text → 검정 위 검정 가독성 0).
-  onPositive:     "#FFFFFF",
+  // McKinsey mono editorial v4 — *-foreground 토큰으로 라이트/다크 자동 분기
+  // 라이트: positive 배경 = ink (#14161A) → 텍스트 흰색
+  // 다크: positive 배경 = brass (#2251FF) → 텍스트 검정 (#14161A)
+  onPositive:     "var(--color-positive-foreground)",
   onDark:         "#FFFFFF",
 }
 
@@ -439,12 +440,12 @@ export default function ExchangePage() {
       {isDemoMode && !demoDismissed && (
         <div style={{
           backgroundColor: "var(--color-editorial-beige, #F4EBE0)",
-          borderBottom: "1px solid rgba(20, 22, 26, 0.10)",
+          borderBottom: "1px solid rgba(5, 28, 44, 0.10)",
           padding: "10px 24px",
         }}>
           <div style={{ maxWidth: 1440, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--color-editorial-ink, #14161A)", fontWeight: 600 }}>
-              <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "var(--color-editorial-gold, #A8853E)" }} />
+              <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "var(--color-editorial-gold, #2251FF)" }} />
               <span>
                 데모 체험 모드 — 샘플 매물 <strong>{MOCK.length}건</strong>을 표시 중입니다. 실제 등록된 매물이 없습니다.
               </span>
@@ -452,7 +453,7 @@ export default function ExchangePage() {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Link
                 href="/exchange/sell"
-                style={{ fontSize: 12, fontWeight: 700, color: "var(--color-editorial-ink, #14161A)", textDecoration: "underline", textDecorationColor: "var(--color-editorial-gold, #A8853E)", textUnderlineOffset: "3px" }}
+                style={{ fontSize: 12, fontWeight: 700, color: "var(--color-editorial-ink, #14161A)", textDecoration: "underline", textDecorationColor: "var(--color-editorial-gold, #2251FF)", textUnderlineOffset: "3px" }}
               >
                 매물 등록하기 →
               </Link>

@@ -31,7 +31,7 @@ interface ProgressRingProps {
 function getThresholdColor(
   value: number,
   thresholds?: { value: number; color: string }[],
-  defaultColor = '#14161A'
+  defaultColor = '#051C2C'
 ): string {
   if (!thresholds) return defaultColor
   const sorted = [...thresholds].sort((a, b) => b.value - a.value)
@@ -57,7 +57,7 @@ export function ProgressRing({
   animate = true,
   className,
   variant = 'default',
-  gradientColors = ['#1B3A5C', '#14161A'],
+  gradientColors = ['#1B3A5C', '#051C2C'],
   thresholds,
 }: ProgressRingProps) {
   const normalizedValue = Math.max(0, Math.min(max, value))
@@ -170,10 +170,10 @@ export function ProfileCompletenessRing({
   className?: string
 }) {
   const color = percentage >= 80
-    ? '#14161A'
+    ? '#051C2C'
     : percentage >= 50
-    ? '#14161A'
-    : '#1B1B1F'
+    ? '#051C2C'
+    : '#A53F8A'
 
   return (
     <ProgressRing
@@ -205,13 +205,13 @@ export function MatchScoreRing({
       size={size}
       strokeWidth={6}
       variant="gradient"
-      gradientColors={['#1B3A5C', '#14161A']}
+      gradientColors={['#1B3A5C', '#051C2C']}
       className={className}
       sublabel="매칭"
       thresholds={[
-        { value: 80, color: '#14161A' },
+        { value: 80, color: '#051C2C' },
         { value: 60, color: '#2E75B6' },
-        { value: 0, color: '#14161A' },
+        { value: 0, color: '#051C2C' },
       ]}
     />
   )
@@ -273,9 +273,9 @@ export function MultiProgressRing({ items, size = 56, className }: MultiRingProp
             strokeWidth={5}
             color={item.color}
             thresholds={[
-              { value: 80, color: '#14161A' },
-              { value: 50, color: '#14161A' },
-              { value: 0, color: '#1B1B1F' },
+              { value: 80, color: '#051C2C' },
+              { value: 50, color: '#051C2C' },
+              { value: 0, color: '#A53F8A' },
             ]}
           />
           <span className="text-[10px] text-muted-foreground text-center leading-tight max-w-[60px]">

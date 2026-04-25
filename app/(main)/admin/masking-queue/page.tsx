@@ -22,9 +22,9 @@ import { toast } from "sonner"
 const C = {
   bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
   bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#14161A", emL: "#14161A",
-  blue: "#2E75B6", blueL: "#14161A",
-  amber: "#14161A", rose: "#1B1B1F", purple: "#14161A",
+  em: "#051C2C", emL: "#051C2C",
+  blue: "#2E75B6", blueL: "#051C2C",
+  amber: "#051C2C", rose: "#A53F8A", purple: "#051C2C",
   lt3: "#64748B", lt4: "#475569",
 }
 
@@ -52,23 +52,23 @@ const FALLBACK_QUEUE: QueueItem[] = []
 
 const CATEGORY_META: Record<DocCategory, { label: string; color: string }> = {
   REGISTRY:  { label: "등기·권리",  color: "#2E75B6" },
-  APPRAISAL: { label: "감정평가서", color: "#14161A" },
-  LEASE:     { label: "임대차",    color: "#14161A" },
-  DEBTOR:    { label: "채무자",    color: "#1B1B1F" },
-  PHOTO:     { label: "현장사진",  color: "#14161A" },
+  APPRAISAL: { label: "감정평가서", color: "#051C2C" },
+  LEASE:     { label: "임대차",    color: "#051C2C" },
+  DEBTOR:    { label: "채무자",    color: "#A53F8A" },
+  PHOTO:     { label: "현장사진",  color: "#051C2C" },
 }
 
 const STATUS_META: Record<QueueStatus, { label: string; color: string; icon: React.ElementType }> = {
-  PENDING:   { label: "대기",     color: "#14161A", icon: Clock },
+  PENDING:   { label: "대기",     color: "#051C2C", icon: Clock },
   REVIEWING: { label: "검토 중",  color: "#2E75B6", icon: Eye },
-  APPROVED:  { label: "승인",     color: "#14161A", icon: CheckCircle2 },
-  REJECTED:  { label: "반려",     color: "#1B1B1F", icon: XCircle },
+  APPROVED:  { label: "승인",     color: "#051C2C", icon: CheckCircle2 },
+  REJECTED:  { label: "반려",     color: "#A53F8A", icon: XCircle },
 }
 
 const RISK_META: Record<RiskLevel, { label: string; color: string }> = {
-  HIGH:   { label: "고위험", color: "#1B1B1F" },
-  MEDIUM: { label: "중위험", color: "#14161A" },
-  LOW:    { label: "저위험", color: "#14161A" },
+  HIGH:   { label: "고위험", color: "#A53F8A" },
+  MEDIUM: { label: "중위험", color: "#051C2C" },
+  LOW:    { label: "저위험", color: "#051C2C" },
 }
 
 const FILTERS = [

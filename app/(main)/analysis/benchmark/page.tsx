@@ -69,7 +69,7 @@ const MONTHLY_TREND = [
   { month: "2026.03", bidRate: 83.1, volume: 5520, recovery: 77.8 },
 ]
 
-const PIE_COLORS = ["#14161A", "#14161A", "#6366F1", "#14161A", "#EC4899", "#94A3B8"]
+const PIE_COLORS = ["#051C2C", "#051C2C", "#6366F1", "#051C2C", "#EC4899", "#94A3B8"]
 
 const TABS = ["전국 현황", "지역별", "유형별", "기관별"] as const
 type Tab = typeof TABS[number]
@@ -152,9 +152,9 @@ export default function BenchmarkPage() {
                   <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
                   <Tooltip />
                   <Legend />
-                  <Area yAxisId="left" type="monotone" dataKey="bidRate" name="낙찰가율 %" fill="#14161A" fillOpacity={0.1} stroke="#14161A" strokeWidth={2} />
-                  <Area yAxisId="left" type="monotone" dataKey="recovery" name="회수율 %" fill="#14161A" fillOpacity={0.1} stroke="#14161A" strokeWidth={2} />
-                  <Bar yAxisId="right" dataKey="volume" name="물량 (건)" fill="#14161A" fillOpacity={0.3} />
+                  <Area yAxisId="left" type="monotone" dataKey="bidRate" name="낙찰가율 %" fill="#051C2C" fillOpacity={0.1} stroke="#051C2C" strokeWidth={2} />
+                  <Area yAxisId="left" type="monotone" dataKey="recovery" name="회수율 %" fill="#051C2C" fillOpacity={0.1} stroke="#051C2C" strokeWidth={2} />
+                  <Bar yAxisId="right" dataKey="volume" name="물량 (건)" fill="#051C2C" fillOpacity={0.3} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -201,7 +201,7 @@ export default function BenchmarkPage() {
                   <XAxis type="number" domain={[60, 95]} tick={{ fontSize: 11 }} />
                   <YAxis type="category" dataKey="region" tick={{ fontSize: 12 }} width={50} />
                   <Tooltip />
-                  <Bar dataKey="bidRate" name="낙찰가율 %" fill="#14161A" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="bidRate" name="낙찰가율 %" fill="#051C2C" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -355,7 +355,7 @@ export default function BenchmarkPage() {
                   <Tooltip />
                   <Bar dataKey="nplRatio" name="NPL 비율 %" radius={[0, 4, 4, 0]}>
                     {INSTITUTION_NPL.map((entry, i) => (
-                      <Cell key={i} fill={entry.nplRatio < 1 ? "#14161A" : entry.nplRatio < 1.5 ? "#14161A" : "#1B1B1F"} />
+                      <Cell key={i} fill={entry.nplRatio < 1 ? "#051C2C" : entry.nplRatio < 1.5 ? "#051C2C" : "#A53F8A"} />
                     ))}
                   </Bar>
                 </BarChart>

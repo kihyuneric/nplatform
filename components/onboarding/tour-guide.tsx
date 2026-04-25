@@ -105,7 +105,7 @@ function SpotlightOverlay({
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         rx="9"
         fill="none"
-        stroke="#14161A"
+        stroke="#051C2C"
         strokeWidth="2"
         opacity="0.8"
         className="pointer-events-none"

@@ -97,7 +97,7 @@ const TIER_LABEL: Record<number, string> = {
   0: "L0 일반", 1: "L1 개인전문", 2: "L2 기관전문", 3: "L3 기관"
 }
 const GRADE_COLOR: Record<string, string> = {
-  A: "#14161A", "B+": "#14161A", B: "#14161A", C: "#14161A", D: "#1B1B1F", F: "#6B7280",
+  A: "#051C2C", "B+": "#051C2C", B: "#051C2C", C: "#051C2C", D: "#A53F8A", F: "#6B7280",
 }
 const STATUS_STYLE: Record<TeamStatus, string> = {
   "모집중":   "border-stone-300/30 bg-stone-100/10 text-stone-900",
@@ -365,7 +365,7 @@ export default function TeamDetailPage() {
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
                   style={{
                     background: (leader.investor_tier ?? 0) >= 2 ? "#A855F720" : "#3B82F620",
-                    color: (leader.investor_tier ?? 0) >= 2 ? "#14161A" : "#93C5FD",
+                    color: (leader.investor_tier ?? 0) >= 2 ? "#051C2C" : "#93C5FD",
                   }}>
                   {TIER_LABEL[leader.investor_tier ?? 0]}
                 </span>
@@ -558,7 +558,7 @@ export default function TeamDetailPage() {
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                             style={{
                               background: (leader.investor_tier ?? 0) >= 2 ? "#A855F720" : "#3B82F620",
-                              color: (leader.investor_tier ?? 0) >= 2 ? "#14161A" : "#93C5FD",
+                              color: (leader.investor_tier ?? 0) >= 2 ? "#051C2C" : "#93C5FD",
                             }}>
                             {TIER_LABEL[leader.investor_tier ?? 0]}
                           </span>
@@ -673,7 +673,7 @@ export default function TeamDetailPage() {
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                             style={{
                               background: (m.investor_tier ?? 0) >= 2 ? "#A855F720" : "#3B82F620",
-                              color: (m.investor_tier ?? 0) >= 2 ? "#14161A" : "#93C5FD",
+                              color: (m.investor_tier ?? 0) >= 2 ? "#051C2C" : "#93C5FD",
                             }}>
                             {TIER_LABEL[m.investor_tier ?? 0]}
                           </span>
@@ -784,7 +784,7 @@ export default function TeamDetailPage() {
                     const unpaidInt = team.listing.unpaid_interest ?? team.listing.claim_breakdown?.unpaidInterest ?? 0
                     const total = principal + unpaidInt
                     return total > 0 ? (
-                      <div className="mt-1 rounded-lg p-3" style={{ background: "#0F1F35", border: "1px solid rgba(20,22,26,0.2)" }}>
+                      <div className="mt-1 rounded-lg p-3" style={{ background: "#0F1F35", border: "1px solid rgba(5, 28, 44,0.2)" }}>
                         <p className="text-[10px] text-stone-900 font-semibold uppercase tracking-wider mb-2">채권잔액 내역</p>
                         <div className="grid grid-cols-3 gap-2">
                           <div>
@@ -795,7 +795,7 @@ export default function TeamDetailPage() {
                             <p className="text-[10px] text-slate-600 mb-0.5">미수이자</p>
                             <p className="text-sm font-bold text-slate-400">{unpaidInt > 0 ? fmt(unpaidInt) : "—"}</p>
                           </div>
-                          <div style={{ borderLeft: "1px solid rgba(20,22,26,0.2)", paddingLeft: 8 }}>
+                          <div style={{ borderLeft: "1px solid rgba(5, 28, 44,0.2)", paddingLeft: 8 }}>
                             <p className="text-[10px] text-stone-900 mb-0.5">채권잔액 합계</p>
                             <p className="text-sm font-bold text-stone-900">{fmt(total)}</p>
                           </div>
@@ -830,14 +830,14 @@ export default function TeamDetailPage() {
                     const selected = Object.entries(sc).filter(([k, v]) => v === true && k !== "otherNote").map(([k]) => COND_LABELS[k] ?? k)
                     if (selected.length === 0) return null
                     return (
-                      <div className="mt-1 rounded-lg p-3" style={{ background: "#0F1F35", border: "1px solid rgba(20,22,26,0.2)" }}>
+                      <div className="mt-1 rounded-lg p-3" style={{ background: "#0F1F35", border: "1px solid rgba(5, 28, 44,0.2)" }}>
                         <p className="text-[10px] text-stone-900 font-semibold uppercase tracking-wider mb-2">
                           특수조건 ({selected.length}개 해당)
                         </p>
                         <div className="flex flex-wrap gap-1">
                           {selected.map(label => (
                             <span key={label} className="text-[10px] font-medium px-1.5 py-0.5 rounded"
-                              style={{ background: "rgba(20,22,26,0.15)", color: "#FCD34D" }}>
+                              style={{ background: "rgba(5, 28, 44,0.15)", color: "#FCD34D" }}>
                               {label}
                             </span>
                           ))}
@@ -1032,7 +1032,7 @@ export default function TeamDetailPage() {
               </button>
               <button onClick={handleJoin} disabled={joining}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
-                style={{ background: "#14161A", color: "#000" }}>
+                style={{ background: "#051C2C", color: "#000" }}>
                 {joining ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 참여 신청
               </button>

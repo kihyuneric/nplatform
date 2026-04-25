@@ -50,18 +50,18 @@ function fmtWon(v: number | undefined | null) {
 
 function gradeColor(grade: string) {
   switch (grade) {
-    case 'A': return { bg: 'bg-stone-100 dark:bg-stone-100/50', text: 'text-stone-900 dark:text-stone-900', border: 'border-stone-300 dark:border-stone-300', ring: 'ring-emerald-200 dark:ring-emerald-800', accent: 'border-stone-300', glow: 'rgba(20,22,26,0.6)', solid: '#14161A', heroText: 'text-stone-900', heroBg: 'bg-stone-100/10' }
-    case 'B': return { bg: 'bg-stone-100 dark:bg-stone-100/50', text: 'text-stone-900 dark:text-stone-900', border: 'border-stone-300 dark:border-stone-300', ring: 'ring-blue-200 dark:ring-blue-800', accent: 'border-stone-300', glow: 'rgba(20,22,26,0.6)', solid: '#14161A', heroText: 'text-stone-900', heroBg: 'bg-stone-100/10' }
-    case 'C': return { bg: 'bg-stone-100 dark:bg-stone-100/50', text: 'text-stone-900 dark:text-stone-900', border: 'border-stone-300 dark:border-stone-300', ring: 'ring-amber-200 dark:ring-amber-800', accent: 'border-stone-300', glow: 'rgba(20,22,26,0.6)', solid: '#14161A', heroText: 'text-stone-900', heroBg: 'bg-stone-100/10' }
-    case 'D': return { bg: 'bg-stone-100 dark:bg-stone-100/50', text: 'text-stone-900 dark:text-stone-900', border: 'border-stone-300 dark:border-stone-300', ring: 'ring-red-200 dark:ring-red-800', accent: 'border-stone-300', glow: 'rgba(27,27,31,0.6)', solid: '#1B1B1F', heroText: 'text-stone-900', heroBg: 'bg-stone-100/10' }
+    case 'A': return { bg: 'bg-stone-100 dark:bg-stone-100/50', text: 'text-stone-900 dark:text-stone-900', border: 'border-stone-300 dark:border-stone-300', ring: 'ring-emerald-200 dark:ring-emerald-800', accent: 'border-stone-300', glow: 'rgba(5, 28, 44,0.6)', solid: '#051C2C', heroText: 'text-stone-900', heroBg: 'bg-stone-100/10' }
+    case 'B': return { bg: 'bg-stone-100 dark:bg-stone-100/50', text: 'text-stone-900 dark:text-stone-900', border: 'border-stone-300 dark:border-stone-300', ring: 'ring-blue-200 dark:ring-blue-800', accent: 'border-stone-300', glow: 'rgba(5, 28, 44,0.6)', solid: '#051C2C', heroText: 'text-stone-900', heroBg: 'bg-stone-100/10' }
+    case 'C': return { bg: 'bg-stone-100 dark:bg-stone-100/50', text: 'text-stone-900 dark:text-stone-900', border: 'border-stone-300 dark:border-stone-300', ring: 'ring-amber-200 dark:ring-amber-800', accent: 'border-stone-300', glow: 'rgba(5, 28, 44,0.6)', solid: '#051C2C', heroText: 'text-stone-900', heroBg: 'bg-stone-100/10' }
+    case 'D': return { bg: 'bg-stone-100 dark:bg-stone-100/50', text: 'text-stone-900 dark:text-stone-900', border: 'border-stone-300 dark:border-stone-300', ring: 'ring-red-200 dark:ring-red-800', accent: 'border-stone-300', glow: 'rgba(165, 63, 138,0.6)', solid: '#A53F8A', heroText: 'text-stone-900', heroBg: 'bg-stone-100/10' }
     default: return { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-700 dark:text-gray-300', border: 'border-gray-300 dark:border-gray-700', ring: 'ring-gray-200 dark:ring-gray-800', accent: 'border-gray-400', glow: 'rgba(156,163,175,0.4)', solid: '#9CA3AF', heroText: 'text-gray-400', heroBg: 'bg-gray-500/10' }
   }
 }
 
 function riskScoreColor(score: number) {
-  if (score <= 30) return '#14161A'
-  if (score <= 60) return '#14161A'
-  return '#1B1B1F'
+  if (score <= 30) return '#051C2C'
+  if (score <= 60) return '#051C2C'
+  return '#A53F8A'
 }
 
 function verdictLabel(grade: string) {
@@ -489,8 +489,8 @@ export default function NplAnalysisDetail({ params }: PageProps) {
   const priceComparisonData = [
     { name: '감정가',   value: data.appraisal_value, fill: '#0D1F38' },
     { name: '공시가격', value: data.official_price,  fill: '#2E75B6' },
-    { name: '실거래가', value: data.market_price,    fill: '#14161A' },
-    { name: 'KB시세',  value: data.kb_price,         fill: '#14161A' },
+    { name: '실거래가', value: data.market_price,    fill: '#051C2C' },
+    { name: 'KB시세',  value: data.kb_price,         fill: '#051C2C' },
   ]
 
   const verdict = verdictLabel(data.ai_grade)
@@ -754,9 +754,9 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
-                      { label: '예상 ROI', value: '28.5%', color: '#14161A' },
-                      { label: '예상 IRR', value: '22.3%', color: '#14161A' },
-                      { label: '손익분기', value: '92.1%', color: '#14161A' },
+                      { label: '예상 ROI', value: '28.5%', color: '#051C2C' },
+                      { label: '예상 IRR', value: '22.3%', color: '#051C2C' },
+                      { label: '손익분기', value: '92.1%', color: '#051C2C' },
                       { label: '리스크', value: data.ai_grade, color: gradeColor(data.ai_grade).solid },
                     ].map(k => (
                       <div key={k.label} className="rounded-xl bg-gray-50 dark:bg-white/5 p-3 text-center">
@@ -909,11 +909,11 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 {/* KPI Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                   {[
-                    { label: '순수익', value: fmt(profitability.netProfit), sub: '론세일 BASE', color: profitability.netProfit > 0 ? '#14161A' : '#1B1B1F' },
-                    { label: 'ROI', value: `${profitability.roi.toFixed(1)}%`, sub: '투자수익률', color: profitability.roi > 0 ? '#14161A' : '#1B1B1F' },
-                    { label: 'IRR', value: `${profitability.irr.toFixed(1)}%`, sub: '내부수익률', color: '#14161A' },
-                    { label: '회수기간', value: `${profitability.paybackMonths}개월`, sub: '예상 소요', color: '#14161A' },
-                    { label: '손익분기', value: `${profitability.breakEvenBidRatio.toFixed(1)}%`, sub: '낙찰가율 기준', color: '#14161A' },
+                    { label: '순수익', value: fmt(profitability.netProfit), sub: '론세일 BASE', color: profitability.netProfit > 0 ? '#051C2C' : '#A53F8A' },
+                    { label: 'ROI', value: `${profitability.roi.toFixed(1)}%`, sub: '투자수익률', color: profitability.roi > 0 ? '#051C2C' : '#A53F8A' },
+                    { label: 'IRR', value: `${profitability.irr.toFixed(1)}%`, sub: '내부수익률', color: '#051C2C' },
+                    { label: '회수기간', value: `${profitability.paybackMonths}개월`, sub: '예상 소요', color: '#051C2C' },
+                    { label: '손익분기', value: `${profitability.breakEvenBidRatio.toFixed(1)}%`, sub: '낙찰가율 기준', color: '#051C2C' },
                   ].map(k => (
                     <div key={k.label} className="card-elevated rounded-2xl p-5">
                       <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">{k.label}</p>
@@ -975,11 +975,11 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                     <h3 className="text-base font-bold text-[var(--color-brand-deep)] dark:text-white mb-4">Monte Carlo 시뮬레이션 (10,000회)</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                       {[
-                        { label: '평균 수익률', value: `${profitability.monteCarlo.mean.toFixed(1)}%`, color: '#14161A' },
-                        { label: 'P10 (비관)', value: `${profitability.monteCarlo.p10.toFixed(1)}%`, color: '#1B1B1F' },
-                        { label: 'P50 (중앙)', value: `${profitability.monteCarlo.p50.toFixed(1)}%`, color: '#14161A' },
-                        { label: 'P90 (낙관)', value: `${profitability.monteCarlo.p90.toFixed(1)}%`, color: '#14161A' },
-                        { label: '손실확률', value: `${profitability.monteCarlo.lossProb.toFixed(1)}%`, color: profitability.monteCarlo.lossProb > 15 ? '#1B1B1F' : '#14161A' },
+                        { label: '평균 수익률', value: `${profitability.monteCarlo.mean.toFixed(1)}%`, color: '#051C2C' },
+                        { label: 'P10 (비관)', value: `${profitability.monteCarlo.p10.toFixed(1)}%`, color: '#A53F8A' },
+                        { label: 'P50 (중앙)', value: `${profitability.monteCarlo.p50.toFixed(1)}%`, color: '#051C2C' },
+                        { label: 'P90 (낙관)', value: `${profitability.monteCarlo.p90.toFixed(1)}%`, color: '#051C2C' },
+                        { label: '손실확률', value: `${profitability.monteCarlo.lossProb.toFixed(1)}%`, color: profitability.monteCarlo.lossProb > 15 ? '#A53F8A' : '#051C2C' },
                       ].map(m => (
                         <div key={m.label} className="text-center p-3 rounded-xl bg-gray-50 dark:bg-white/5">
                           <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-1">{m.label}</p>
@@ -1339,9 +1339,9 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 <p className="data-label mb-5">가격 비율 분석</p>
                 <div className="space-y-4">
                   {[
-                    { label: '감정가 대비 최저매각가', value: ((data.minimum_price / data.appraisal_value) * 100).toFixed(1), color: '#14161A' },
+                    { label: '감정가 대비 최저매각가', value: ((data.minimum_price / data.appraisal_value) * 100).toFixed(1), color: '#051C2C' },
                     { label: '감정가 대비 시세',       value: ((data.market_price / data.appraisal_value) * 100).toFixed(1),  color: '#1B3A5C' },
-                    { label: '시세 대비 최저매각가',   value: ((data.minimum_price / data.market_price) * 100).toFixed(1),   color: '#14161A' },
+                    { label: '시세 대비 최저매각가',   value: ((data.minimum_price / data.market_price) * 100).toFixed(1),   color: '#051C2C' },
                   ].map(item => (
                     <div key={item.label}>
                       <div className="flex justify-between text-xs mb-1.5">
@@ -1383,7 +1383,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                   {(data.risk_factors || []).map((rf, i) => (
                     <li key={i} className="flex items-start gap-3 rounded-xl bg-stone-100 dark:bg-red-950/25 p-4 border border-stone-300 dark:border-stone-300/30">
                       <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
-                        rf.severity === 'high' ? 'bg-stone-100 shadow-[0_0_6px_rgba(27,27,31,0.5)]' :
+                        rf.severity === 'high' ? 'bg-stone-100 shadow-[0_0_6px_rgba(165, 63, 138,0.5)]' :
                         rf.severity === 'medium' ? 'bg-stone-100' : 'bg-gray-400'
                       }`} />
                       <div className="text-sm min-w-0">
@@ -1547,7 +1547,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 {(data.risk_factors || []).map((rf, i) => (
                   <li key={i} className="flex items-start gap-3 rounded-xl border border-[var(--color-border-subtle)] dark:border-white/8 p-4 hover:bg-[var(--color-surface-base)] dark:hover:bg-white/3 transition-colors">
                     <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
-                      rf.severity === 'high'   ? 'bg-stone-100 shadow-[0_0_6px_rgba(27,27,31,0.5)]' :
+                      rf.severity === 'high'   ? 'bg-stone-100 shadow-[0_0_6px_rgba(165, 63, 138,0.5)]' :
                       rf.severity === 'medium' ? 'bg-stone-100' : 'bg-gray-300'
                     }`} />
                     <div className="text-sm flex-1">
@@ -1615,7 +1615,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
               <p className="text-sm text-gray-400 mt-0.5 truncate">{data.address}</p>
             </div>
             <div className="flex flex-wrap gap-2 shrink-0">
-              <Link href={`/exchange?search=${encodeURIComponent(data.address || data.case_number || '')}`} className="gap-2 bg-[var(--color-positive)] hover:bg-stone-100 text-white font-black shadow-[0_0_16px_rgba(20,22,26,0.3)] px-3 py-1.5 rounded-lg text-sm transition-colors inline-flex items-center">
+              <Link href={`/exchange?search=${encodeURIComponent(data.address || data.case_number || '')}`} className="gap-2 bg-[var(--color-positive)] hover:bg-stone-100 text-white font-black shadow-[0_0_16px_rgba(5, 28, 44,0.3)] px-3 py-1.5 rounded-lg text-sm transition-colors inline-flex items-center">
                 <ArrowRight className="h-4 w-4" />
                 딜 시작
               </Link>

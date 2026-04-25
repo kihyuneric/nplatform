@@ -9,7 +9,7 @@ interface SuccessCheckProps {
   color?: string
 }
 
-export function SuccessCheck({ size = 48, className, color = '#14161A' }: SuccessCheckProps) {
+export function SuccessCheck({ size = 48, className, color = '#051C2C' }: SuccessCheckProps) {
   const r = size / 2 - 2
   const circumference = 2 * Math.PI * r
 

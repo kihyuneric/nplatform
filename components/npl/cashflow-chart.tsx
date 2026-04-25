@@ -37,7 +37,7 @@ export function CashflowChart({ cashflows, holdingYears }: CashflowChartProps) {
             {data.map((entry, idx) => (
               <Cell
                 key={idx}
-                fill={entry.isInvestment ? '#ef4444' : entry.isExit ? '#14161A' : '#22c55e'}
+                fill={entry.isInvestment ? '#ef4444' : entry.isExit ? '#051C2C' : '#22c55e'}
               />
             ))}
           </Bar>

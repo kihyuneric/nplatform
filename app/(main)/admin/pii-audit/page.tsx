@@ -35,9 +35,9 @@ interface Anomaly {
 const C = {
   bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
   bg3: "#0A1628", bg4: "#0F1F35",
-  em: "#14161A", emL: "#14161A",
-  blue: "#2E75B6", blueL: "#14161A",
-  amber: "#14161A", rose: "#1B1B1F", purple: "#14161A",
+  em: "#051C2C", emL: "#051C2C",
+  blue: "#2E75B6", blueL: "#051C2C",
+  amber: "#051C2C", rose: "#A53F8A", purple: "#051C2C",
   lt3: "#64748B", lt4: "#475569",
 }
 
@@ -63,20 +63,20 @@ interface AuditRow {
 const FALLBACK_AUDIT: AuditRow[] = []
 
 const SEV_META: Record<Severity, { label: string; color: string; bg: string }> = {
-  NORMAL: { label: "정상",  color: "#14161A", bg: "#10B9811A" },
-  WATCH:  { label: "관찰",  color: "#14161A", bg: "#F59E0B1A" },
-  ALERT:  { label: "경보",  color: "#1B1B1F", bg: "#F43F5E1A" },
+  NORMAL: { label: "정상",  color: "#051C2C", bg: "#10B9811A" },
+  WATCH:  { label: "관찰",  color: "#051C2C", bg: "#F59E0B1A" },
+  ALERT:  { label: "경보",  color: "#A53F8A", bg: "#F43F5E1A" },
 }
 
 const TIER_COLOR: Record<AuditTier, string> = {
-  L1: "#2E75B6", L2: "#14161A", L3: "#14161A",
+  L1: "#2E75B6", L2: "#051C2C", L3: "#051C2C",
 }
 
 const ACTION_META: Record<AuditAction, { label: string; color: string }> = {
   VIEW:           { label: "열람",         color: "#2E75B6" },
-  DOWNLOAD:       { label: "다운로드",     color: "#14161A" },
-  MASKED_REVEAL:  { label: "마스킹 해제",  color: "#14161A" },
-  DATAROOM_ENTER: { label: "데이터룸 입장", color: "#14161A" },
+  DOWNLOAD:       { label: "다운로드",     color: "#051C2C" },
+  MASKED_REVEAL:  { label: "마스킹 해제",  color: "#051C2C" },
+  DATAROOM_ENTER: { label: "데이터룸 입장", color: "#051C2C" },
 }
 
 const FILTERS = [

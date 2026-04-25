@@ -22,8 +22,8 @@ export function RecommendationRadar({ factors }: RecommendationRadarProps) {
           <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: '#6B7280' }} />
           <Radar
             dataKey="score"
-            stroke="#14161A"
-            fill="#14161A"
+            stroke="#051C2C"
+            fill="#051C2C"
             fillOpacity={0.2}
           />
           <Tooltip formatter={(v: number) => [`${v}점`, '매칭 점수']} />

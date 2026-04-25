@@ -121,10 +121,10 @@ export default function AdminAnalyticsPage() {
         supabase.from('deals').select('buyer_id', { count: 'exact', head: true }).eq('status', 'COMPLETED'),
       ])
       const funnelData: FunnelRow[] = [
-        { step: "회원가입",   users: totalUsers ?? 0,      color: "#14161A" },
-        { step: "관심매물",   users: watchlistUsers ?? 0,  color: "#14161A" },
-        { step: "딜룸참여",   users: dealUsers ?? 0,       color: "#14161A" },
-        { step: "계약완료",   users: completedDeals ?? 0,  color: "#14161A" },
+        { step: "회원가입",   users: totalUsers ?? 0,      color: "#051C2C" },
+        { step: "관심매물",   users: watchlistUsers ?? 0,  color: "#051C2C" },
+        { step: "딜룸참여",   users: dealUsers ?? 0,       color: "#051C2C" },
+        { step: "계약완료",   users: completedDeals ?? 0,  color: "#051C2C" },
       ]
       setFunnel(funnelData)
 

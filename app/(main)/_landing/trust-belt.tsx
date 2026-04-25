@@ -51,7 +51,7 @@ export function TrustBelt() {
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(circle at 20% 30%, rgba(37,88,160,.14), transparent 55%), radial-gradient(circle at 85% 70%, rgba(20,22,26,.10), transparent 55%)",
+            "radial-gradient(circle at 20% 30%, rgba(37,88,160,.14), transparent 55%), radial-gradient(circle at 85% 70%, rgba(5, 28, 44,.10), transparent 55%)",
         }}
       />
 
@@ -100,10 +100,10 @@ export function TrustBelt() {
                   style={{
                     background:
                       idx === 0
-                        ? "radial-gradient(circle at 50% 0%, rgba(20,22,26,.18), transparent 70%)"
+                        ? "radial-gradient(circle at 50% 0%, rgba(5, 28, 44,.18), transparent 70%)"
                         : idx === 1
-                        ? "radial-gradient(circle at 50% 0%, rgba(20,22,26,.18), transparent 70%)"
-                        : "radial-gradient(circle at 50% 0%, rgba(20,22,26,.18), transparent 70%)",
+                        ? "radial-gradient(circle at 50% 0%, rgba(5, 28, 44,.18), transparent 70%)"
+                        : "radial-gradient(circle at 50% 0%, rgba(5, 28, 44,.18), transparent 70%)",
                   }}
                 />
 

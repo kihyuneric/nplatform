@@ -125,7 +125,7 @@ export function InstitutionBarChart({ data }: { data: MonthlyTrendItem[] }) {
                 yAxisId="right"
                 dataKey="interests"
                 name="관심 등록"
-                fill="#14161A"
+                fill="#051C2C"
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>

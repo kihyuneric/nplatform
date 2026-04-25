@@ -38,11 +38,11 @@ interface ImportanceItem {
 
 // ── 상수 ──────────────────────────────────────────
 const LEVELS = [
-  { key: '왕초보', label: '왕초보', description: '부동산의 기본 개념부터', icon: Sprout, color: '#14161A', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
-  { key: '초보', label: '초보', description: '본격적인 투자 준비', icon: Leaf, color: '#14161A', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
-  { key: '중급', label: '중급', description: '실전 투자 기법 습득', icon: TreePine, color: '#14161A', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
-  { key: '고급', label: '고급', description: '고급 전략과 리스크 관리', icon: Mountain, color: '#14161A', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
-  { key: '전문가', label: '전문가', description: '전문가 수준의 포트폴리오', icon: Crown, color: '#1B1B1F', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
+  { key: '왕초보', label: '왕초보', description: '부동산의 기본 개념부터', icon: Sprout, color: '#051C2C', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
+  { key: '초보', label: '초보', description: '본격적인 투자 준비', icon: Leaf, color: '#051C2C', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
+  { key: '중급', label: '중급', description: '실전 투자 기법 습득', icon: TreePine, color: '#051C2C', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
+  { key: '고급', label: '고급', description: '고급 전략과 리스크 관리', icon: Mountain, color: '#051C2C', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
+  { key: '전문가', label: '전문가', description: '전문가 수준의 포트폴리오', icon: Crown, color: '#A53F8A', bgColor: 'bg-stone-100', textColor: 'text-stone-900', borderColor: 'border-stone-300' },
 ]
 
 const DOMAIN_ICONS: Record<string, typeof HomeIcon> = {
@@ -285,7 +285,7 @@ function RoadmapPage() {
               className="absolute top-7 left-12 h-1 transition-all duration-500 hidden md:block"
               style={{
                 width: `${LEVELS.findIndex(l => l.key === selectedLevel) * 25}%`,
-                backgroundColor: selectedDomain?.color || '#14161A',
+                backgroundColor: selectedDomain?.color || '#051C2C',
               }}
             />
 
@@ -388,7 +388,7 @@ function RoadmapPage() {
                       {/* 순서 번호 */}
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                        style={{ backgroundColor: levelInfo?.color || '#14161A' }}
+                        style={{ backgroundColor: levelInfo?.color || '#051C2C' }}
                       >
                         {idx + 1}
                       </div>
@@ -423,8 +423,8 @@ function RoadmapPage() {
                       {avgRelevance > 0 && (
                         <div className="hidden md:flex flex-col items-center gap-1">
                           <div className="w-12 h-12 rounded-full border-[3px] flex items-center justify-center"
-                            style={{ borderColor: levelInfo?.color || '#14161A' }}>
-                            <span className="text-xs font-bold" style={{ color: levelInfo?.color || '#14161A' }}>
+                            style={{ borderColor: levelInfo?.color || '#051C2C' }}>
+                            <span className="text-xs font-bold" style={{ color: levelInfo?.color || '#051C2C' }}>
                               {Math.round(avgRelevance * 100)}%
                             </span>
                           </div>

@@ -103,7 +103,7 @@ export function ExchangePreview() {
         </div>
 
         {/* 카드 grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px" style={{ background: "rgba(20, 22, 26, 0.08)" }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px" style={{ background: "rgba(5, 28, 44, 0.08)" }}>
           {SAMPLES.map((s, idx) => (
             <motion.div
               key={s.id}
@@ -175,7 +175,7 @@ export function ExchangePreview() {
                 </p>
 
                 {/* 금액 위계 — 매각희망가만 큰 검정, 나머지는 작게 */}
-                <div className="space-y-3 pb-4 border-b" style={{ borderColor: "rgba(20, 22, 26, 0.10)" }}>
+                <div className="space-y-3 pb-4 border-b" style={{ borderColor: "rgba(5, 28, 44, 0.10)" }}>
                   <div>
                     <div
                       style={{
@@ -256,7 +256,7 @@ export function ExchangePreview() {
                 <div
                   className="flex items-center justify-between pt-3"
                   style={{
-                    borderTop: "1px solid rgba(20, 22, 26, 0.10)",
+                    borderTop: "1px solid rgba(5, 28, 44, 0.10)",
                   }}
                 >
                   <span

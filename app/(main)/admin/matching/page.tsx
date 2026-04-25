@@ -331,9 +331,9 @@ const SAMPLE: AdminMatchPair[] = [
 
 // ── 상수 ────────────────────────────────────────────────────
 const GRADE_STYLE: Record<Grade, { bg: string; text: string; ring: string; dot: string }> = {
-  EXCELLENT: { bg: "bg-stone-100/10", text: "text-stone-900", ring: "ring-emerald-500/30", dot: "#14161A" },
-  GOOD:      { bg: "bg-stone-100/10",    text: "text-stone-900",    ring: "ring-blue-500/30",    dot: "#14161A" },
-  FAIR:      { bg: "bg-stone-100/10",   text: "text-stone-900",   ring: "ring-amber-500/30",   dot: "#14161A" },
+  EXCELLENT: { bg: "bg-stone-100/10", text: "text-stone-900", ring: "ring-emerald-500/30", dot: "#051C2C" },
+  GOOD:      { bg: "bg-stone-100/10",    text: "text-stone-900",    ring: "ring-blue-500/30",    dot: "#051C2C" },
+  FAIR:      { bg: "bg-stone-100/10",   text: "text-stone-900",   ring: "ring-amber-500/30",   dot: "#051C2C" },
 }
 
 const STATUS_STYLE: Record<Status, { label: string; cls: string }> = {

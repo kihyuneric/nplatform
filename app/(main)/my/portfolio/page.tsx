@@ -620,7 +620,7 @@ function InvestmentTab({ watchlist, investments, kpis, loading }: {
       const t = i.collateralType || "기타"
       typeMap[t] = (typeMap[t] || 0) + i.investedAmount
     })
-    const COLORS = ["#14161A", "#14161A", "#14161A", "#14161A", "#1B1B1F", "#14161A"]
+    const COLORS = ["#051C2C", "#051C2C", "#051C2C", "#051C2C", "#A53F8A", "#051C2C"]
     return Object.entries(typeMap)
       .sort(([, a], [, b]) => b - a)
       .map(([label, value], i) => ({

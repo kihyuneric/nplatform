@@ -29,7 +29,7 @@ const TONE_STYLES: Record<NonNullable<KpiItem["tone"]>, { color: string; bgTint:
   },
   accent: {
     color: "var(--color-positive)",
-    bgTint: "rgba(20,22,26, 0.05)",
+    bgTint: "rgba(5, 28, 44, 0.05)",
   },
   neutral: {
     color: "var(--color-text-primary)",

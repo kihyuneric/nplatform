@@ -201,10 +201,10 @@ export function MeetingScheduler({
                       style={
                         active
                           ? meta.tone === "blue"
-                            ? { backgroundColor: "rgba(20,22,26,0.12)", borderColor: "rgba(20,22,26,0.5)" }
+                            ? { backgroundColor: "rgba(5, 28, 44,0.12)", borderColor: "rgba(5, 28, 44,0.5)" }
                             : meta.tone === "amber"
-                              ? { backgroundColor: "rgba(20,22,26,0.12)", borderColor: "rgba(20,22,26,0.5)" }
-                              : { backgroundColor: "rgba(20,22,26,0.12)", borderColor: "rgba(20,22,26,0.5)" }
+                              ? { backgroundColor: "rgba(5, 28, 44,0.12)", borderColor: "rgba(5, 28, 44,0.5)" }
+                              : { backgroundColor: "rgba(5, 28, 44,0.12)", borderColor: "rgba(5, 28, 44,0.5)" }
                           : undefined
                       }
                     >
@@ -212,7 +212,7 @@ export function MeetingScheduler({
                         className="w-4 h-4"
                         style={{
                           color: active
-                            ? meta.tone === "blue" ? "#14161A" : meta.tone === "amber" ? "#FCD34D" : "#14161A"
+                            ? meta.tone === "blue" ? "#051C2C" : meta.tone === "amber" ? "#FCD34D" : "#051C2C"
                             : "rgba(255,255,255,0.5)",
                         }}
                       />
@@ -220,7 +220,7 @@ export function MeetingScheduler({
                         className="text-xs font-bold tracking-normal"
                         style={{
                           color: active
-                            ? meta.tone === "blue" ? "#93C5FD" : meta.tone === "amber" ? "#FCD34D" : "#A8853E"
+                            ? meta.tone === "blue" ? "#93C5FD" : meta.tone === "amber" ? "#FCD34D" : "#2251FF"
                             : "rgba(255,255,255,0.5)",
                         }}
                       >

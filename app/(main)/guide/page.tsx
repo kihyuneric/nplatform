@@ -13,15 +13,15 @@ import DS from "@/lib/design-system"
    Guide palette
    ───────────────────────────────────────────────────────────── */
 const GUIDE_PALETTE = {
-  exchange:  "#14161A",                 // 에메랄드
+  exchange:  "#051C2C",                 // 에메랄드
   dealroom:  "var(--color-brand-mid)",  // 블루
-  analysis:  "#14161A",                 // 퍼플
-  community: "#14161A",                 // 앰버
+  analysis:  "#051C2C",                 // 퍼플
+  community: "#051C2C",                 // 앰버
   my:        "#EC4899",                 // 핑크
   free:      "#64748B",                 // 슬레이트
-  seller:    "#14161A",                 // 앰버
+  seller:    "#051C2C",                 // 앰버
   general:   "var(--color-brand-mid)",  // 블루
-  pro:       "#14161A",                 // 퍼플
+  pro:       "#051C2C",                 // 퍼플
 } as const
 
 /* ─────────────────────────────────────────────────────────────
@@ -262,14 +262,14 @@ export default function GuidePage() {
             style={{
               backgroundColor: "#10B98115",
               border: "1px solid #10B98140",
-              color: "#14161A",
+              color: "#051C2C",
             }}
           >
             <Sparkles className="w-3.5 h-3.5" />
             NPLatform 사용 가이드
           </span>
           <h1 className="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-5">
-            <span style={{ color: "#14161A" }}>메뉴별 · 역할별</span>로 찾는<br />NPL 플랫폼 완벽 가이드
+            <span style={{ color: "#051C2C" }}>메뉴별 · 역할별</span>로 찾는<br />NPL 플랫폼 완벽 가이드
           </h1>
           <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto">
             거래소 · 딜룸 · 분석 · 커뮤니티 · 마이 페이지 — 메뉴 그대로, 하위 기능까지 단계별로 안내합니다.
@@ -409,7 +409,7 @@ export default function GuidePage() {
             <Link
               href="/guide/glossary"
               className="text-xs font-semibold inline-flex items-center gap-1"
-              style={{ color: "#14161A" }}
+              style={{ color: "#051C2C" }}
             >
               전체 사전 보기 <ArrowRight className="w-3 h-3" />
             </Link>
@@ -417,7 +417,7 @@ export default function GuidePage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {GLOSSARY.map((g, i) => (
               <div key={i} className={`${DS.card.base} ${DS.card.padding}`}>
-                <p className="text-lg font-extrabold mb-2" style={{ color: "#14161A" }}>
+                <p className="text-lg font-extrabold mb-2" style={{ color: "#051C2C" }}>
                   {g.term}
                 </p>
                 <p className={`${DS.text.caption} leading-relaxed`}>{g.def}</p>

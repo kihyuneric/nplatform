@@ -66,11 +66,11 @@ function UndoToastContent({
   const [done, setDone] = React.useState(false)
 
   const barColor = type === 'destructive'
-    ? '#1B1B1F'
+    ? '#A53F8A'
     : type === 'success'
-    ? '#14161A'
+    ? '#051C2C'
     : type === 'info'
-    ? '#14161A'
+    ? '#051C2C'
     : '#6B7280'
 
   const defaultIcon = type === 'destructive'

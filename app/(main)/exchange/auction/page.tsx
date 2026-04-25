@@ -47,7 +47,7 @@ const C = {
   em:"var(--color-positive)", emL:"var(--color-positive)",
   blue:"var(--color-brand-dark)", blueL:"var(--color-brand-bright)",
   amber:"var(--color-warning)", amber2:"#FCD34D",
-  purple:"#14161A", rose:"var(--color-danger)", teal:"#14161A",
+  purple:"#051C2C", rose:"var(--color-danger)", teal:"#051C2C",
   onBrand:"var(--fg-on-brand)",   /* #FFFFFF — brand bg 위 */
 }
 
@@ -240,7 +240,7 @@ function BidDialog({ item, open, onClose, onSubmitted }: { item: BidItem | null;
                   <Sparkles className="w-4 h-4" style={{ color: C.blue }} />
                 </div>
                 <div>
-                  <p className="text-[0.75rem] font-semibold" style={{ color: "#14161A" }}>AI 적정 입찰가 참고</p>
+                  <p className="text-[0.75rem] font-semibold" style={{ color: "#051C2C" }}>AI 적정 입찰가 참고</p>
                   <p className="text-[0.875rem] font-bold tabular-nums" style={{ color: "#1E3A8A" }}>
                     {formatKRW(item.aiEstimate)}
                     <span className="text-[0.75rem] font-normal ml-1" style={{ color: C.blue }}>
@@ -815,8 +815,8 @@ export default function AuctionPage() {
 
   // My bid status config — all dark-on-light for legibility
   const MY_STATUS_CONFIG: Record<string, { bg: string; text: string; border: string }> = {
-    진행중: { bg: "#D1FAE5", text: "#14161A", border: "#A8853E" },
-    낙찰:   { bg: "#DBEAFE", text: "#14161A", border: "#93C5FD" },
+    진행중: { bg: "#D1FAE5", text: "#051C2C", border: "#2251FF" },
+    낙찰:   { bg: "#DBEAFE", text: "#051C2C", border: "#93C5FD" },
     유찰:   { bg: "#FFE4E6", text: "#9F1239", border: "#FCA5A5" },
     철회:   { bg: C.l2,     text: C.lt3,     border: C.l3      },
   }

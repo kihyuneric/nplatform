@@ -25,7 +25,7 @@ const C = {
   bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
   em: "var(--color-positive)", emL: "var(--color-positive)",
   blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
-  amber: "var(--color-warning)", rose: "var(--color-danger)", purple: "#14161A",
+  amber: "var(--color-warning)", rose: "var(--color-danger)", purple: "#051C2C",
   lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 }
 
@@ -54,23 +54,23 @@ const FALLBACK_INSTITUTIONS: Institution[] = []
 
 const TYPE_META: Record<InstType, { label: string; color: string }> = {
   BANK:    { label: "은행",      color: "#2E75B6" },
-  CAPITAL: { label: "캐피탈",    color: "#14161A" },
-  AMC:     { label: "AMC",      color: "#14161A" },
-  INSURER: { label: "보험",      color: "#14161A" },
-  SAVINGS: { label: "저축은행",  color: "#1B1B1F" },
+  CAPITAL: { label: "캐피탈",    color: "#051C2C" },
+  AMC:     { label: "AMC",      color: "#051C2C" },
+  INSURER: { label: "보험",      color: "#051C2C" },
+  SAVINGS: { label: "저축은행",  color: "#A53F8A" },
 }
 
 const GRADE_META: Record<InstGrade, { color: string; bg: string }> = {
-  S: { color: "#14161A", bg: "#FBBF241F" },
-  A: { color: "#14161A", bg: "#34D3991F" },
-  B: { color: "#14161A", bg: "#60A5FA1F" },
+  S: { color: "#051C2C", bg: "#FBBF241F" },
+  A: { color: "#051C2C", bg: "#34D3991F" },
+  B: { color: "#051C2C", bg: "#60A5FA1F" },
   C: { color: "#475569", bg: "#94A3B81F" },
 }
 
 const STATUS_META: Record<InstStatus, { label: string; color: string }> = {
-  ACTIVE:    { label: "활성",     color: "#14161A" },
-  PROBATION: { label: "관찰",     color: "#14161A" },
-  SUSPENDED: { label: "정지",     color: "#1B1B1F" },
+  ACTIVE:    { label: "활성",     color: "#051C2C" },
+  PROBATION: { label: "관찰",     color: "#051C2C" },
+  SUSPENDED: { label: "정지",     color: "#A53F8A" },
 }
 
 const FILTERS = [
@@ -224,11 +224,11 @@ function InstitutionMembersModal({ inst, onClose }: { inst: Institution; onClose
                 <div key={m.id} style={{ padding:"10px 12px", borderRadius:8, backgroundColor:C.bg3, border:`1px solid ${C.bg4}`, display:"flex", alignItems:"center", gap:10 }}>
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:2 }}>
-                      {m.role==="MASTER" && <Crown size={11} color="#14161A" />}
+                      {m.role==="MASTER" && <Crown size={11} color="#051C2C" />}
                       <span style={{ color:"#fff", fontWeight:700, fontSize:12 }}>{m.name}</span>
                       <span className={`text-[0.6rem] font-bold px-1.5 py-0.5 rounded-full border ${ROLE_BADGE[m.role]||""}`}>{ROLE_LABEL[m.role]||m.role}</span>
                       {m.status==="PENDING" && (
-                        <span style={{ fontSize:9, padding:"2px 6px", borderRadius:999, backgroundColor:"#FFF7ED", color:"#14161A", border:"1px solid #FDE68A", fontWeight:800 }}>승인대기</span>
+                        <span style={{ fontSize:9, padding:"2px 6px", borderRadius:999, backgroundColor:"#FFF7ED", color:"#051C2C", border:"1px solid #FDE68A", fontWeight:800 }}>승인대기</span>
                       )}
                     </div>
                     <div style={{ fontSize:10, color:C.lt4 }}>{m.email} · {m.dept}</div>
@@ -237,10 +237,10 @@ function InstitutionMembersModal({ inst, onClose }: { inst: Institution; onClose
                   <div style={{ display:"flex", gap:6, flexShrink:0 }}>
                     {m.status==="PENDING" && (
                       <>
-                        <button onClick={() => handleMemberAction(m.id, m.name, 'approve')} style={{ padding:"5px 10px", borderRadius:6, backgroundColor:"var(--color-positive-bg)", color:C.emL, border:"1px solid rgba(20,22,26, 0.33)", fontSize:10, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:3 }}>
+                        <button onClick={() => handleMemberAction(m.id, m.name, 'approve')} style={{ padding:"5px 10px", borderRadius:6, backgroundColor:"var(--color-positive-bg)", color:C.emL, border:"1px solid rgba(5, 28, 44, 0.33)", fontSize:10, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:3 }}>
                           <Check size={10}/> 승인
                         </button>
-                        <button onClick={() => handleMemberAction(m.id, m.name, 'reject')} style={{ padding:"5px 10px", borderRadius:6, backgroundColor:"rgba(27,27,31, 0.1)", color:C.rose, border:"1px solid rgba(27,27,31, 0.4)", fontSize:10, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:3 }}>
+                        <button onClick={() => handleMemberAction(m.id, m.name, 'reject')} style={{ padding:"5px 10px", borderRadius:6, backgroundColor:"rgba(165, 63, 138, 0.1)", color:C.rose, border:"1px solid rgba(165, 63, 138, 0.4)", fontSize:10, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:3 }}>
                           <X size={10}/> 거절
                         </button>
                       </>
@@ -292,7 +292,7 @@ function InstitutionMembersModal({ inst, onClose }: { inst: Institution; onClose
                 disabled={inviting || !inviteEmail.trim()}
                 style={{
                   padding:"7px 14px", borderRadius:6, backgroundColor:"var(--color-positive-bg)",
-                  color:C.emL, border:"1px solid rgba(20,22,26,0.33)",
+                  color:C.emL, border:"1px solid rgba(5, 28, 44,0.33)",
                   fontSize:11, fontWeight:700, cursor:"pointer",
                   opacity: inviting || !inviteEmail.trim() ? 0.5 : 1,
                 }}
@@ -314,7 +314,7 @@ function InstitutionMembersModal({ inst, onClose }: { inst: Institution; onClose
             <div style={{ display:"flex", justifyContent:"flex-end" }}>
               <button
                 onClick={() => setShowInvite(true)}
-                style={{ padding:"8px 14px", borderRadius:8, backgroundColor:"var(--color-positive-bg)", color:C.emL, border:"1px solid rgba(20,22,26, 0.33)", fontSize:11, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}
+                style={{ padding:"8px 14px", borderRadius:8, backgroundColor:"var(--color-positive-bg)", color:C.emL, border:"1px solid rgba(5, 28, 44, 0.33)", fontSize:11, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}
               >
                 <UserPlus size={12} /> 멤버 초대
               </button>

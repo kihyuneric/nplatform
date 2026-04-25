@@ -20,14 +20,14 @@ function getCellColor(cell: HeatCell): string {
   const downRatio = cell.down / cell.total;
   if (upRatio >= 0.5) {
     const alpha = 0.25 + intensity * 0.75;
-    return `rgba(20,22,26,${alpha.toFixed(2)})`;
+    return `rgba(5, 28, 44,${alpha.toFixed(2)})`;
   }
   if (downRatio >= 0.38) {
     const alpha = 0.25 + intensity * 0.75;
-    return `rgba(27,27,31,${alpha.toFixed(2)})`;
+    return `rgba(165, 63, 138,${alpha.toFixed(2)})`;
   }
   const alpha = 0.2 + intensity * 0.6;
-  return `rgba(20,22,26,${alpha.toFixed(2)})`;
+  return `rgba(5, 28, 44,${alpha.toFixed(2)})`;
 }
 
 const DOW_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -79,7 +79,7 @@ export function NewsHeatmap({ onDateClick }: Props) {
             <span>적음</span>
             {[0.25, 0.45, 0.65, 0.9].map((a) => (
               <span key={a} className="w-3 h-3 rounded-sm inline-block"
-                style={{ backgroundColor: `rgba(20,22,26,${a})` }} />
+                style={{ backgroundColor: `rgba(5, 28, 44,${a})` }} />
             ))}
             <span>많음</span>
             <span className="mx-1 text-gray-300">|</span>

@@ -46,28 +46,28 @@ export default function AnalysisDemoPage() {
   const HIGHLIGHTS = [
     {
       icon: TrendingUp,
-      color: "#14161A",
+      color: "#051C2C",
       title: "NPL 수익성 분석",
       value: "ROI 29.2%",
       desc: "강세/기준/약세 3개 시나리오 자동 계산",
     },
     {
       icon: BarChart3,
-      color: "#14161A",
+      color: "#051C2C",
       title: "Monte Carlo 시뮬레이션",
       value: "10,000회",
       desc: "손실확률 18.3% · P50 ROI 28.3%",
     },
     {
       icon: Brain,
-      color: "#14161A",
+      color: "#051C2C",
       title: "AI 투자의견",
       value: "BUY",
       desc: "Claude AI 분석 · 근거 서술 포함",
     },
     {
       icon: Shield,
-      color: "#14161A",
+      color: "#051C2C",
       title: "리스크 등급",
       value: "B등급",
       desc: "4가지 리스크 카테고리 자동 평가",

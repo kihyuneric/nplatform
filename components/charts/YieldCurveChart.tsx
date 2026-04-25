@@ -231,7 +231,7 @@ export default function YieldCurveChart({
               stroke="#10b981"
               strokeWidth={1.5}
               strokeDasharray="4 3"
-              label={{ value: '최적', position: 'top', fontSize: 10, fill: '#14161A' }}
+              label={{ value: '최적', position: 'top', fontSize: 10, fill: '#051C2C' }}
             />
           )}
           <Area

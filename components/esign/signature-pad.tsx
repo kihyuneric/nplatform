@@ -131,7 +131,7 @@ export function SignaturePad({
           width,
           borderRadius: 10,
           overflow: "hidden",
-          border: `1.5px solid ${drawing ? "#14161A" : "#1E3A5F"}`,
+          border: `1.5px solid ${drawing ? "#051C2C" : "#1E3A5F"}`,
           backgroundColor: "#F8FAFC",
           transition: "border-color 0.2s",
           cursor: disabled ? "not-allowed" : "crosshair",

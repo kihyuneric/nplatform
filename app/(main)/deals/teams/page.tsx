@@ -287,7 +287,7 @@ export default function TeamsPage() {
                         {/* 거래소 매물 연동 */}
                         {team.listing_title && (
                           <div className="flex items-center gap-1.5 rounded-lg px-2 py-1.5"
-                            style={{ background: "rgba(20,22,26,0.08)", border: "1px solid rgba(20,22,26,0.15)" }}>
+                            style={{ background: "rgba(5, 28, 44,0.08)", border: "1px solid rgba(5, 28, 44,0.15)" }}>
                             <Building2 className="w-3 h-3 text-stone-900 shrink-0" />
                             <span className="text-[11px] text-stone-900 truncate">{team.listing_title}</span>
                           </div>

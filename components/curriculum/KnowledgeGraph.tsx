@@ -298,7 +298,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
         const rw = vW * scaleM
         const rh = vH * scaleM
 
-        mctx.strokeStyle = '#14161A'
+        mctx.strokeStyle = '#051C2C'
         mctx.lineWidth = 1.5
         mctx.strokeRect(rx, ry, rw, rh)
       }
@@ -345,7 +345,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
         const isHighlighted = activeHover && (edge.source === activeHover || edge.target === activeHover)
 
         if (isPathEdge) {
-          ctx.strokeStyle = '#14161A'
+          ctx.strokeStyle = '#051C2C'
           ctx.lineWidth = 3
           ctx.setLineDash([])
           ctx.stroke()
@@ -359,7 +359,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
           ctx.lineTo(endX - arrowSize * Math.cos(angle - 0.3), endY - arrowSize * Math.sin(angle - 0.3))
           ctx.lineTo(endX - arrowSize * Math.cos(angle + 0.3), endY - arrowSize * Math.sin(angle + 0.3))
           ctx.closePath()
-          ctx.fillStyle = '#14161A'
+          ctx.fillStyle = '#051C2C'
           ctx.fill()
         } else if (edge.relation_type === 'prerequisite') {
           ctx.strokeStyle = dimmed ? 'rgba(209,213,219,0.3)' : (isHighlighted ? '#4B5563' : '#D1D5DB')
@@ -385,7 +385,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
           ctx.lineWidth = isHighlighted ? 2 : 1
           ctx.stroke()
         } else {
-          ctx.strokeStyle = dimmed ? 'rgba(219,234,254,0.3)' : (isHighlighted ? '#14161A' : '#DBEAFE')
+          ctx.strokeStyle = dimmed ? 'rgba(219,234,254,0.3)' : (isHighlighted ? '#051C2C' : '#DBEAFE')
           ctx.setLineDash([2, 4])
           ctx.lineWidth = isHighlighted ? 2 : 1
           ctx.stroke()
@@ -403,7 +403,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
 
         // Path glow
         if (isPathNode) {
-          ctx.shadowColor = '#14161A'
+          ctx.shadowColor = '#051C2C'
           ctx.shadowBlur = 12
         } else if (isSelected) {
           ctx.shadowColor = node.domain_color
@@ -416,7 +416,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
         const alpha = dimmed ? '30' : (isHovered ? 'CC' : '80')
         ctx.fillStyle = node.domain_color + alpha
         ctx.fill()
-        ctx.strokeStyle = isSelected ? '#E2E8F0' : isPathNode ? '#14161A' : (dimmed ? node.domain_color + '40' : node.domain_color)
+        ctx.strokeStyle = isSelected ? '#E2E8F0' : isPathNode ? '#051C2C' : (dimmed ? node.domain_color + '40' : node.domain_color)
         ctx.lineWidth = isSelected ? 3 : isPathNode ? 2.5 : Math.max(1, node.difficulty)
         ctx.stroke()
 
@@ -443,7 +443,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
           const by = node.y - r * 0.7
           ctx.beginPath()
           ctx.arc(bx, by, 8, 0, Math.PI * 2)
-          ctx.fillStyle = '#1B1B1F'
+          ctx.fillStyle = '#A53F8A'
           ctx.fill()
           ctx.fillStyle = '#FFFFFF'
           ctx.font = 'bold 9px sans-serif'
@@ -460,7 +460,7 @@ const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, Props>(function Knowledg
           const ay = node.y + r * 0.3
           ctx.beginPath()
           ctx.arc(ax, ay, 7, 0, Math.PI * 2)
-          ctx.fillStyle = '#14161A'
+          ctx.fillStyle = '#051C2C'
           ctx.fill()
           ctx.fillStyle = '#FFFFFF'
           ctx.font = 'bold 8px sans-serif'

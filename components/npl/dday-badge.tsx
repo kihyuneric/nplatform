@@ -30,7 +30,7 @@ export function DDayBadge({ deadline, size = "md", className = "" }: DDayBadgePr
   } else if (today) {
     label = "오늘 마감"
     bg = "#FEF2F2"
-    fg = "#1B1B1F"
+    fg = "#A53F8A"
   } else if (urgent) {
     label = `D-${days}`
     bg = "#FFFBEB"
@@ -38,7 +38,7 @@ export function DDayBadge({ deadline, size = "md", className = "" }: DDayBadgePr
   } else {
     label = `D-${days}`
     bg = "#EFF6FF"
-    fg = "#14161A"
+    fg = "#051C2C"
   }
 
   const sizeCls =

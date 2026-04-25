@@ -72,7 +72,7 @@ const C = {
   blueL: "var(--color-brand-bright)",
   amber: "var(--color-warning)",
   rose:  "var(--color-danger)",
-  teal:  "#14161A",
+  teal:  "#051C2C",
   lt3: "var(--color-text-secondary)",
   lt4: "var(--color-text-tertiary)",
 }
@@ -396,8 +396,8 @@ export default function SellWizardPage() {
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "8px 14px", borderRadius: 10,
-                background: "rgba(20,22,26,0.12)", border: "1px solid rgba(20,22,26,0.3)",
-                color: "#14161A", fontSize: 12, fontWeight: 700, textDecoration: "none",
+                background: "rgba(5, 28, 44,0.12)", border: "1px solid rgba(5, 28, 44,0.3)",
+                color: "#051C2C", fontSize: 12, fontWeight: 700, textDecoration: "none",
               }}
             >
               <Sparkles size={12} /> OCR로 1~5건 빠르게 등록 →
@@ -407,8 +407,8 @@ export default function SellWizardPage() {
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "8px 14px", borderRadius: 10,
-                background: "rgba(20,22,26,0.12)", border: "1px solid rgba(20,22,26,0.3)",
-                color: "#14161A", fontSize: 12, fontWeight: 700, textDecoration: "none",
+                background: "rgba(5, 28, 44,0.12)", border: "1px solid rgba(5, 28, 44,0.3)",
+                color: "#051C2C", fontSize: 12, fontWeight: 700, textDecoration: "none",
               }}
             >
               CSV 대량 등록 (최대 500건) →
@@ -545,7 +545,7 @@ export default function SellWizardPage() {
               ) : (
                 <div>
                   {submitError && (
-                    <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, backgroundColor: `${C.rose}14`, border: "1px solid rgba(27,27,31, 0.4)", color: C.rose, fontSize: 11, fontWeight: 600 }}>
+                    <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, backgroundColor: `${C.rose}14`, border: "1px solid rgba(165, 63, 138, 0.4)", color: C.rose, fontSize: 11, fontWeight: 600 }}>
                       {submitError}
                     </div>
                   )}
@@ -865,8 +865,8 @@ function ExcelTemplateBanner({
           style={{
             marginTop: 12, padding: "10px 12px", borderRadius: 8,
             backgroundColor: parseMessage.type === "ok"
-              ? "rgba(20,22,26,0.10)"
-              : "rgba(27,27,31,0.10)",
+              ? "rgba(5, 28, 44,0.10)"
+              : "rgba(165, 63, 138,0.10)",
             border: `1px solid ${parseMessage.type === "ok" ? C.em : C.rose}44`,
             fontSize: 11,
             color: parseMessage.type === "ok" ? C.emL : C.rose,
@@ -1190,7 +1190,7 @@ function Step3({
           {state.askingPrice > 0 && (
             <div style={{
               marginTop: 8, padding: "8px 10px", borderRadius: 6,
-              backgroundColor: "rgba(20,22,26,0.08)", fontSize: 11, color: C.lt3,
+              backgroundColor: "rgba(5, 28, 44,0.08)", fontSize: 11, color: C.lt3,
               display: "flex", justifyContent: "space-between",
             }}>
               <span>예상 수수료 (희망가 {formatKRW(state.askingPrice)} 기준)</span>
@@ -1229,7 +1229,7 @@ function Step4BondRights({
       <div
         style={{
           marginBottom: 18, padding: "10px 14px", borderRadius: 8,
-          backgroundColor: "rgba(20,22,26, 0.1)", border: "1px solid rgba(20,22,26, 0.27)",
+          backgroundColor: "rgba(5, 28, 44, 0.1)", border: "1px solid rgba(5, 28, 44, 0.27)",
           display: "flex", gap: 8, alignItems: "center", fontSize: 10, color: C.lt3,
         }}
       >
@@ -1696,7 +1696,7 @@ function Step6Review({
         <div
           style={{
             marginTop: 16, padding: "16px 18px", borderRadius: 14,
-            background: "linear-gradient(135deg, rgba(20,22,26,0.10), rgba(46,117,182,0.10))",
+            background: "linear-gradient(135deg, rgba(5, 28, 44,0.10), rgba(46,117,182,0.10))",
             border: `1px solid ${C.em}40`,
             display: "flex", alignItems: "center", justifyContent: "space-between",
             gap: 14, flexWrap: "wrap",
@@ -1828,7 +1828,7 @@ function TierPreviewBlock({ state }: { state: WizardState }) {
       title: "NDA 체결",
       gate: "비밀유지 서명 후",
       tone: C.amber,
-      bg: "rgba(20,22,26, 0.08)",
+      bg: "rgba(5, 28, 44, 0.08)",
       items: [
         { label: "연체금리", value: state.penalty_rate > 0 ? `${state.penalty_rate}%` : "—", muted: !state.penalty_rate },
         { label: "연체시작일", value: state.default_start_date || "—", muted: !state.default_start_date },
@@ -1843,7 +1843,7 @@ function TierPreviewBlock({ state }: { state: WizardState }) {
       title: "LOI 제출",
       gate: "우선협상 인수의향서",
       tone: C.teal,
-      bg: "rgba(20,22,26, 0.08)",
+      bg: "rgba(5, 28, 44, 0.08)",
       items: [
         { label: "기관명 (정확치)", value: state.institution || "—", muted: !state.institution },
         ...providedDocs.map(d => ({

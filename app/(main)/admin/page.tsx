@@ -139,8 +139,8 @@ export default function AdminDashboardPage() {
 
   // Update pie chart data from stats
   const pieData = [
-    { name: "활성",   value: stats.activeListings, color: "#14161A" },
-    { name: "심사중", value: stats.pendingReviews, color: "#14161A" },
+    { name: "활성",   value: stats.activeListings, color: "#051C2C" },
+    { name: "심사중", value: stats.pendingReviews, color: "#051C2C" },
     { name: "기타",   value: Math.max(0, stats.activeListings > 0 ? Math.round(stats.activeListings * 0.2) : 0), color: "#6B7280" },
   ]
 
@@ -249,15 +249,15 @@ export default function AdminDashboardPage() {
               <AreaChart data={signupData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="signupGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#14161A" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#14161A" stopOpacity={0} />
+                    <stop offset="5%"  stopColor="#051C2C" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="#051C2C" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-subtle)" />
                 <XAxis dataKey="day" tick={{ fill: "var(--color-text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: "var(--color-text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip {...tooltipStyle} />
-                <Area type="monotone" dataKey="신규가입" stroke="#14161A" strokeWidth={2} fill="url(#signupGrad)" dot={{ fill: "#14161A", r: 3 }} />
+                <Area type="monotone" dataKey="신규가입" stroke="#051C2C" strokeWidth={2} fill="url(#signupGrad)" dot={{ fill: "#051C2C", r: 3 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>

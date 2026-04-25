@@ -54,7 +54,7 @@ export function RoiScenarioChart({ data }: { data: RoiScenario[] }) {
         />
         <Bar dataKey="roi_pct" radius={[0, 8, 8, 0]} barSize={28}>
           {data.map((sc, i) => (
-            <Cell key={i} fill={sc.roi_pct >= 30 ? '#14161A' : sc.roi_pct >= 10 ? '#14161A' : '#1B1B1F'} />
+            <Cell key={i} fill={sc.roi_pct >= 30 ? '#051C2C' : sc.roi_pct >= 10 ? '#051C2C' : '#A53F8A'} />
           ))}
         </Bar>
       </BarChart>

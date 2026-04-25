@@ -97,7 +97,7 @@ export default function VerifyPage() {
                 display: "inline-flex", alignItems: "center", gap: 4,
                 fontSize: 9, fontWeight: 800, letterSpacing: "0.04em",
                 padding: "3px 8px", borderRadius: 4,
-                backgroundColor: "#F59E0B1A", color: "#14161A",
+                backgroundColor: "#F59E0B1A", color: "#051C2C",
                 border: "1px solid #F59E0B44",
               }}
             >
@@ -215,7 +215,7 @@ export default function VerifyPage() {
                 marginTop: 20, padding: "10px 14px", borderRadius: 8,
                 backgroundColor: "#F59E0B0A", border: "1px solid #F59E0B33",
                 display: "inline-flex", alignItems: "center", gap: 8,
-                fontSize: 11, color: "#14161A",
+                fontSize: 11, color: "#051C2C",
               }}
             >
               <FlaskConical size={12} />
@@ -257,7 +257,7 @@ export default function VerifyPage() {
                 marginBottom: 20, padding: "10px 14px", borderRadius: 8,
                 backgroundColor: "#F59E0B0A", border: "1px solid #F59E0B33",
                 display: "inline-flex", alignItems: "center", gap: 8,
-                fontSize: 11, color: "#14161A",
+                fontSize: 11, color: "#051C2C",
               }}
             >
               <FlaskConical size={12} />

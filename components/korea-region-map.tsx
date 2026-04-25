@@ -41,9 +41,9 @@ function dotColor(r: RegionDot): string {
   const up   = r.up   / r.articles;
   const down = r.down / r.articles;
   const a = 0.45 + Math.min(r.articles / 85, 1) * 0.55;
-  if (up   >= 0.5) return `rgba(20,22,26,${a.toFixed(2)})`;
-  if (down >= 0.5) return `rgba(27,27,31,${a.toFixed(2)})`;
-  return `rgba(20,22,26,${(a * 0.8).toFixed(2)})`;
+  if (up   >= 0.5) return `rgba(5, 28, 44,${a.toFixed(2)})`;
+  if (down >= 0.5) return `rgba(165, 63, 138,${a.toFixed(2)})`;
+  return `rgba(5, 28, 44,${(a * 0.8).toFixed(2)})`;
 }
 
 function dotRadius(articles: number, max: number): number {

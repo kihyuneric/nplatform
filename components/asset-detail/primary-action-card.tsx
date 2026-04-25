@@ -71,7 +71,7 @@ const CTA: Record<AssetTier, Cta> = {
     subtitle: "계약 + 입금",
     hint: "법적 효력 즉시 발생",
     icon: <PenLine className="w-5 h-5" />,
-    bg: "#14161A",
+    bg: "#051C2C",
     fg: "#1F1300",
   },
   L5: {

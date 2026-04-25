@@ -178,7 +178,7 @@ export default function UnifiedReportPage() {
         style={{ background: "var(--color-brand-deep)" }}
       >
         {/* warm gold thin accent line — McKinsey editorial signature */}
-        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #C9A227 40%, #C9A227 60%, transparent)" }} />
+        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #2251FF 40%, #2251FF 60%, transparent)" }} />
         <div className={`${DS.page.container} py-8 text-white`}>
           <Link
             href="/analysis"
@@ -203,10 +203,10 @@ export default function UnifiedReportPage() {
               const vScore = summary.verdictScore ?? 0
               const vGrade = verdictScoreToGrade(vScore)
               const gradeBg = {
-                A: "rgba(20,22,26,0.30)",
-                B: "rgba(20,22,26,0.20)",
-                C: "rgba(20,22,26,0.25)",
-                D: "rgba(27,27,31,0.25)",
+                A: "rgba(5, 28, 44,0.30)",
+                B: "rgba(5, 28, 44,0.20)",
+                C: "rgba(5, 28, 44,0.25)",
+                D: "rgba(165, 63, 138,0.25)",
               }[vGrade]
               return (
                 <div
@@ -254,7 +254,7 @@ export default function UnifiedReportPage() {
             label="예측 회수율"
             value={pct(summary.predictedRecovery)}
             sub={`신뢰도 ${Math.round(recovery.confidence * 100)}%`}
-            tint="#14161A"
+            tint="#051C2C"
           />
           <KpiCard
             icon={Shield}
@@ -284,7 +284,7 @@ export default function UnifiedReportPage() {
               label="AI 투자 의견"
               value={summary.verdict}
               sub={summary.verdict === "BUY" ? "권고" : summary.verdict === "HOLD" ? "관망" : "회피"}
-              tint={summary.verdict === "BUY" ? "#14161A" : summary.verdict === "HOLD" ? "#14161A" : "#1B1B1F"}
+              tint={summary.verdict === "BUY" ? "#051C2C" : summary.verdict === "HOLD" ? "#051C2C" : "#A53F8A"}
             />
             <VerdictCriteriaToggle
               predictedRecovery={recovery.predictedRecoveryRate}
@@ -573,19 +573,19 @@ export default function UnifiedReportPage() {
           style={{
             background:
               marketOutlook.outlook === "BULLISH"
-                ? "rgba(20,22,26,0.08)"
+                ? "rgba(5, 28, 44,0.08)"
                 : marketOutlook.outlook === "BEARISH"
-                ? "rgba(27,27,31,0.08)"
+                ? "rgba(165, 63, 138,0.08)"
                 : "rgba(100,116,139,0.08)",
             borderColor:
               marketOutlook.outlook === "BULLISH"
-                ? "rgba(20,22,26,0.25)"
+                ? "rgba(5, 28, 44,0.25)"
                 : marketOutlook.outlook === "BEARISH"
-                ? "rgba(27,27,31,0.25)"
+                ? "rgba(165, 63, 138,0.25)"
                 : "rgba(100,116,139,0.25)",
           }}
         >
-          <MapPin className="w-5 h-5 shrink-0 mt-0.5" style={{ color: marketOutlook.outlook === "BULLISH" ? "#14161A" : marketOutlook.outlook === "BEARISH" ? "#1B1B1F" : "#64748B" }} />
+          <MapPin className="w-5 h-5 shrink-0 mt-0.5" style={{ color: marketOutlook.outlook === "BULLISH" ? "#051C2C" : marketOutlook.outlook === "BEARISH" ? "#A53F8A" : "#64748B" }} />
           <div className="flex-1 min-w-0">
             <div className="text-[0.8125rem] font-bold text-[var(--color-text-primary)] mb-1">
               {marketOutlook.outlook === "BULLISH" ? "상승 추세" : marketOutlook.outlook === "BEARISH" ? "하락 추세" : "중립"}
@@ -626,7 +626,7 @@ export default function UnifiedReportPage() {
       {/* ── AI 총평 · editorial single-tone navy ── */}
       <section className={`${DS.page.container} mb-12`}>
         <div className="rounded-xl text-white p-5 relative overflow-hidden" style={{ background: "var(--color-brand-deep)" }}>
-          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #C9A227 40%, #C9A227 60%, transparent)" }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #2251FF 40%, #2251FF 60%, transparent)" }} />
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-4 h-4" />
             <span className="text-[0.6875rem] uppercase tracking-wider font-semibold opacity-90">
@@ -686,7 +686,7 @@ function FactorCard({
   rank: number; weight: string; name: string; score: number; primary: string;
   lines: string[]; formula?: string
 }) {
-  const tint = score >= 75 ? "#14161A" : score >= 55 ? "#14161A" : "#1B1B1F"
+  const tint = score >= 75 ? "#051C2C" : score >= 55 ? "#051C2C" : "#A53F8A"
   return (
     <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
       <div className="flex items-center justify-between mb-2">
@@ -783,7 +783,7 @@ function VerdictCriteriaToggle({
   })
   const verdictGrade = verdictScoreToGrade(r.totalScore)
   const verdictColor =
-    r.verdict === "BUY" ? "#14161A" : r.verdict === "HOLD" ? "#14161A" : "#1B1B1F"
+    r.verdict === "BUY" ? "#051C2C" : r.verdict === "HOLD" ? "#051C2C" : "#A53F8A"
   const salePriceRatio = totalBondAmount > 0 ? bankSalePrice / totalBondAmount : 1
   const discountRatio  = 1 - salePriceRatio
 
@@ -1218,9 +1218,9 @@ function SpecialConditionsV2Section({
 
 function SeverityPill({ severity }: { severity: "LOW" | "MEDIUM" | "HIGH" }) {
   const map = {
-    LOW: { bg: "rgba(20,22,26,0.15)", fg: "#14161A" },
-    MEDIUM: { bg: "rgba(20,22,26,0.15)", fg: "#14161A" },
-    HIGH: { bg: "rgba(27,27,31,0.15)", fg: "#1B1B1F" },
+    LOW: { bg: "rgba(5, 28, 44,0.15)", fg: "#051C2C" },
+    MEDIUM: { bg: "rgba(5, 28, 44,0.15)", fg: "#051C2C" },
+    HIGH: { bg: "rgba(165, 63, 138,0.15)", fg: "#A53F8A" },
   }
   const s = map[severity]
   return (
@@ -1232,10 +1232,10 @@ function SeverityPill({ severity }: { severity: "LOW" | "MEDIUM" | "HIGH" }) {
 
 function SeverityDot({ severity }: { severity: "INFO" | "WARNING" | "DANGER" | "CRITICAL" }) {
   const color =
-    severity === "CRITICAL" ? "#1B1B1F"
-    : severity === "DANGER" ? "#14161A"
-    : severity === "WARNING" ? "#14161A"
-    : "#14161A"
+    severity === "CRITICAL" ? "#A53F8A"
+    : severity === "DANGER" ? "#051C2C"
+    : severity === "WARNING" ? "#051C2C"
+    : "#051C2C"
   return <span className="shrink-0 w-2 h-2 rounded-full mt-1.5" style={{ background: color }} />
 }
 
@@ -1418,7 +1418,7 @@ function AuctionCaseTable({ cases, showAddress = false }: { cases: Array<{ caseN
               <td className="py-1.5 pr-2 text-right tabular-nums">{c.durationDays}일</td>
               <td className="py-1.5 pr-2 text-right tabular-nums">{fmtKRW(c.appraisalValue)}</td>
               <td className="py-1.5 pr-2 text-right tabular-nums font-semibold">{fmtKRW(c.salePrice)}</td>
-              <td className="py-1.5 pr-2 text-right tabular-nums font-semibold" style={{ color: c.bidRatio >= 80 ? "#14161A" : c.bidRatio >= 65 ? "#14161A" : "#1B1B1F" }}>
+              <td className="py-1.5 pr-2 text-right tabular-nums font-semibold" style={{ color: c.bidRatio >= 80 ? "#051C2C" : c.bidRatio >= 65 ? "#051C2C" : "#A53F8A" }}>
                 {pct(c.bidRatio)}
               </td>
               <td className="py-1.5 text-right tabular-nums">{c.bidderCount}명</td>
@@ -1456,7 +1456,7 @@ function RegistryPanel({
     p === "PRESENT"
       ? { color: "var(--color-brand-bright)", fontWeight: 700 }
       : p === "NEEDS_REVIEW"
-      ? { color: "#14161A", fontWeight: 700 }
+      ? { color: "#051C2C", fontWeight: 700 }
       : { color: "var(--color-text-tertiary)" }
 
   const krw = (v: number) => (v === 0 ? "-" : v.toLocaleString("ko-KR") + " 원")
@@ -1556,14 +1556,14 @@ function RegistryPanel({
                   <td className="py-1.5 px-2 text-right tabular-nums font-semibold bg-stone-100/60 dark:bg-stone-100/5">
                     {krw(r.distributedAmount)}
                   </td>
-                  <td className="py-1.5 px-2 text-right tabular-nums" style={{ color: r.distributedRatio === 1 ? "#14161A" : r.distributedRatio > 0 ? "#14161A" : "var(--color-text-tertiary)" }}>
+                  <td className="py-1.5 px-2 text-right tabular-nums" style={{ color: r.distributedRatio === 1 ? "#051C2C" : r.distributedRatio > 0 ? "#051C2C" : "var(--color-text-tertiary)" }}>
                     {r.claimAmount > 0 ? `${Math.round(r.distributedRatio * 100)}%` : "-"}
                   </td>
                   <td className="py-1.5 px-2 text-right tabular-nums text-[var(--color-text-secondary)]">{krw(r.unpaidAmount)}</td>
                   <td className="py-1.5 px-2 text-right tabular-nums bg-stone-100/60 dark:bg-stone-100/5 text-[var(--color-text-secondary)]">
                     {krw(r.buyerAssumeAmount)}
                   </td>
-                  <td className="py-1.5 px-2 text-center" style={{ color: r.extinguished === "소멸" ? "var(--color-text-tertiary)" : r.extinguished === "인수" ? "#1B1B1F" : "var(--color-text-tertiary)", fontWeight: r.extinguished === "인수" ? 700 : 500 }}>
+                  <td className="py-1.5 px-2 text-center" style={{ color: r.extinguished === "소멸" ? "var(--color-text-tertiary)" : r.extinguished === "인수" ? "#A53F8A" : "var(--color-text-tertiary)", fontWeight: r.extinguished === "인수" ? 700 : 500 }}>
                     {r.extinguished}
                   </td>
                 </tr>
@@ -1824,12 +1824,12 @@ function ProfitabilitySections({
             label="연체금리 (연)"
             value={edit.delinquencyRate}
             onChange={(v) => setEdit({ ...edit, delinquencyRate: v })}
-            tint="#14161A"
+            tint="#051C2C"
           />
           <MetricCard
             label="현재 채권잔액"
             value={krwWon(claim.currentBondBalance)}
-            tint="#1B1B1F"
+            tint="#A53F8A"
             sub="원금 + 현재 누적 연체이자"
           />
           <MetricCard
@@ -1904,7 +1904,7 @@ function ProfitabilitySections({
             label="질권대출 이자율 (연)"
             value={edit.pledgeInterestRate}
             onChange={(v) => setEdit({ ...edit, pledgeInterestRate: v })}
-            tint="#14161A"
+            tint="#051C2C"
             hint={`총이자 ${krwWon(acquisition.pledgeInterestTotal)} · ${acquisition.pledgeLoanPeriodDays}일`}
           />
         </div>
@@ -1947,13 +1947,13 @@ function ProfitabilitySections({
             label="예상 낙찰가율"
             value={edit.expectedBidRatio}
             onChange={(v) => setEdit({ ...edit, expectedBidRatio: v })}
-            tint="#14161A"
+            tint="#051C2C"
             hint={valuation.expectedBidRatioPeriod}
           />
           <MetricCard
             label="예상 낙찰가"
             value={krwWon(valuation.expectedBidPrice)}
-            tint="#1B1B1F"
+            tint="#A53F8A"
             sub="감정가 × 낙찰가율"
           />
         </div>
@@ -2010,7 +2010,7 @@ function ProfitabilitySections({
               <li key={m.key} className="pl-4 relative">
                 <span
                   className="absolute -left-[7px] top-0 w-3 h-3 rounded-full"
-                  style={{ background: i === 0 ? "#1B3A5C" : i === schedule.milestones.length - 1 ? "#14161A" : "#2E75B6" }}
+                  style={{ background: i === 0 ? "#1B3A5C" : i === schedule.milestones.length - 1 ? "#051C2C" : "#2E75B6" }}
                 />
                 <div className="flex items-baseline justify-between flex-wrap gap-1">
                   <span className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">{m.label}</span>
@@ -2078,9 +2078,9 @@ function ProfitabilitySections({
       <Section title="NPL 수익성 분석 · 투입자금·수익" icon={PieChart} caption={`운용 ${investment.holdingPeriodDays}일 · ROI ${(investment.roi * 100).toFixed(2)}% · 연환산 ${(investment.annualizedRoi * 100).toFixed(2)}%`}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
           <MetricCard label="투자 에쿼티 총계" value={krwWon(investment.totalEquity)} tint="#1B3A5C" />
-          <MetricCard label="예상 투자수익" value={krwWon(investment.expectedNetProfit)} tint="#14161A" />
+          <MetricCard label="예상 투자수익" value={krwWon(investment.expectedNetProfit)} tint="#051C2C" />
           <MetricCard label="투자 수익률 (ROI)" value={`${(investment.roi * 100).toFixed(2)}%`} tint="#2E75B6" />
-          <MetricCard label="연환산 수익률" value={`${(investment.annualizedRoi * 100).toFixed(2)}%`} tint="#14161A" sub={`${investment.holdingPeriodDays}일 운용`} />
+          <MetricCard label="연환산 수익률" value={`${(investment.annualizedRoi * 100).toFixed(2)}%`} tint="#051C2C" sub={`${investment.holdingPeriodDays}일 운용`} />
         </div>
         <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
           <table className="w-full text-[0.75rem]">
@@ -2118,7 +2118,7 @@ function ProfitabilitySections({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[strategies.conservative, strategies.recommended, strategies.aggressive].map((s) => {
             const isRec = s.strategy === "RECOMMENDED"
-            const tint = s.strategy === "CONSERVATIVE" ? "#64748B" : s.strategy === "RECOMMENDED" ? "#14161A" : "#1B1B1F"
+            const tint = s.strategy === "CONSERVATIVE" ? "#64748B" : s.strategy === "RECOMMENDED" ? "#051C2C" : "#A53F8A"
             return (
               <div
                 key={s.strategy}
@@ -2448,10 +2448,10 @@ function SensitivityHeatmap({ s }: { s: NplProfitabilityBlock["sensitivity"] }) 
   const colorFor = (roi: number) => {
     if (roi < 0) {
       const t = Math.min(1, Math.abs(roi) / Math.max(1, Math.abs(minRoi)))
-      return `rgba(27,27,31, ${0.15 + t * 0.5})`
+      return `rgba(165, 63, 138, ${0.15 + t * 0.5})`
     }
     const t = Math.min(1, roi / Math.max(1, maxRoi))
-    return `rgba(20,22,26, ${0.1 + t * 0.55})`
+    return `rgba(5, 28, 44, ${0.1 + t * 0.55})`
   }
 
   return (
@@ -2493,10 +2493,10 @@ function SensitivityHeatmap({ s }: { s: NplProfitabilityBlock["sensitivity"] }) 
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-3 text-[0.625rem] text-[var(--color-text-tertiary)]">
         <span className="inline-flex items-center gap-1">
-          <span className="w-3 h-3 rounded" style={{ background: "rgba(27,27,31,0.5)" }} /> 손실 구간
+          <span className="w-3 h-3 rounded" style={{ background: "rgba(165, 63, 138,0.5)" }} /> 손실 구간
         </span>
         <span className="inline-flex items-center gap-1">
-          <span className="w-3 h-3 rounded" style={{ background: "rgba(20,22,26,0.55)" }} /> 이익 구간
+          <span className="w-3 h-3 rounded" style={{ background: "rgba(5, 28, 44,0.55)" }} /> 이익 구간
         </span>
         <span>· ROI 범위: {minRoi.toFixed(1)}% ~ {maxRoi.toFixed(1)}%</span>
         <span>· 손익분기: {s.breakEvenRoi.toFixed(1)}%</span>
@@ -2515,15 +2515,15 @@ function MonteCarloPanel({ mc }: { mc: NplProfitabilityBlock["monteCarlo"] }) {
     <div className="space-y-3">
       {/* KPI 4-cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <MetricCard label="평균 ROI" value={`${mc.meanRoi.toFixed(2)}%`} tint="#14161A" sub={`표준편차 ${mc.stdRoi.toFixed(2)}%p`} />
+        <MetricCard label="평균 ROI" value={`${mc.meanRoi.toFixed(2)}%`} tint="#051C2C" sub={`표준편차 ${mc.stdRoi.toFixed(2)}%p`} />
         <MetricCard
           label="손실 확률 (ROI<0)"
           value={`${mc.lossProbability.toFixed(2)}%`}
-          tint={mc.lossProbability < 10 ? "#14161A" : mc.lossProbability < 25 ? "#14161A" : "#1B1B1F"}
+          tint={mc.lossProbability < 10 ? "#051C2C" : mc.lossProbability < 25 ? "#051C2C" : "#A53F8A"}
           sub={`VaR 95% ${mc.valueAtRisk95.toFixed(2)}%`}
         />
         <MetricCard label="중앙값 (P50)" value={`${mc.percentiles.p50.toFixed(2)}%`} tint="#2E75B6" sub={`${mc.trials.toLocaleString()}회 시뮬`} />
-        <MetricCard label="평균 회수 기간" value={`${Math.round(mc.meanHoldingDays)}일`} tint="#14161A" sub={`연환산 기준 ${(365 / Math.max(1, mc.meanHoldingDays)).toFixed(2)}x`} />
+        <MetricCard label="평균 회수 기간" value={`${Math.round(mc.meanHoldingDays)}일`} tint="#051C2C" sub={`연환산 기준 ${(365 / Math.max(1, mc.meanHoldingDays)).toFixed(2)}x`} />
       </div>
 
       {/* Percentile 막대 분포 */}
@@ -2531,10 +2531,10 @@ function MonteCarloPanel({ mc }: { mc: NplProfitabilityBlock["monteCarlo"] }) {
         <div className="text-[0.75rem] font-bold text-[var(--color-text-primary)] mb-3">백분위 분포 (P10 ~ P90)</div>
         <div className="grid grid-cols-5 gap-2 text-center">
           {[
-            { k: "P10", v: mc.percentiles.p10, tint: "#1B1B1F" },
-            { k: "P25", v: mc.percentiles.p25, tint: "#14161A" },
+            { k: "P10", v: mc.percentiles.p10, tint: "#A53F8A" },
+            { k: "P25", v: mc.percentiles.p25, tint: "#051C2C" },
             { k: "P50", v: mc.percentiles.p50, tint: "#2E75B6" },
-            { k: "P75", v: mc.percentiles.p75, tint: "#14161A" },
+            { k: "P75", v: mc.percentiles.p75, tint: "#051C2C" },
             { k: "P90", v: mc.percentiles.p90, tint: "#064E3B" },
           ].map(p => (
             <div key={p.k} className="rounded-lg p-2 border" style={{ borderColor: p.tint + "40", background: p.tint + "0A" }}>
@@ -2555,7 +2555,7 @@ function MonteCarloPanel({ mc }: { mc: NplProfitabilityBlock["monteCarlo"] }) {
             {mc.histogram.map((h, i) => {
               const height = Math.max(2, (h.count / maxCount) * 100)
               const mid = (h.from + h.to) / 2
-              const color = mid < 0 ? "#1B1B1F" : mid < 10 ? "#14161A" : "#14161A"
+              const color = mid < 0 ? "#A53F8A" : mid < 10 ? "#051C2C" : "#051C2C"
               return (
                 <div
                   key={i}
@@ -2716,8 +2716,8 @@ function EvidenceTabs({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <MetricCard label="감정가" value={krwWon(evidence.expectedBid.appraisalValue)} tint="#1B3A5C" />
                 <MetricCard label="AI 시세" value={krwWon(evidence.expectedBid.aiMarketValue)} tint="#2E75B6" sub={evidence.expectedBid.calculatedAt} />
-                <MetricCard label="낙찰가율" value={`${evidence.expectedBid.bidRatioPercent.toFixed(1)}%`} tint="#14161A" />
-                <MetricCard label="예상 낙찰가" value={krwWon(evidence.expectedBid.expectedBidPrice)} tint="#1B1B1F" />
+                <MetricCard label="낙찰가율" value={`${evidence.expectedBid.bidRatioPercent.toFixed(1)}%`} tint="#051C2C" />
+                <MetricCard label="예상 낙찰가" value={krwWon(evidence.expectedBid.expectedBidPrice)} tint="#A53F8A" />
               </div>
             )}
             <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{evidence.expectedBid.narrative}</p>
@@ -2746,7 +2746,7 @@ function EvidenceTabs({
                       <td className="py-1.5 pr-2 text-[var(--color-text-tertiary)]">{r.scope}</td>
                       <td className="py-1.5 pr-2 text-[var(--color-text-primary)]">{r.region}</td>
                       <td className="py-1.5 pr-2 text-right tabular-nums">{r.periodMonths}M</td>
-                      <td className="py-1.5 pr-2 text-right tabular-nums font-bold" style={{ color: r.ratioPercent >= 80 ? "#14161A" : r.ratioPercent >= 65 ? "#14161A" : "#1B1B1F" }}>
+                      <td className="py-1.5 pr-2 text-right tabular-nums font-bold" style={{ color: r.ratioPercent >= 80 ? "#051C2C" : r.ratioPercent >= 65 ? "#051C2C" : "#A53F8A" }}>
                         {r.ratioPercent.toFixed(1)}%
                       </td>
                       <td className="py-1.5 text-right tabular-nums text-[var(--color-text-tertiary)]">{r.sampleSize}건</td>
@@ -2765,8 +2765,8 @@ function EvidenceTabs({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <MetricCard label="관할법원" value={evidence.courtSchedule.courtName} tint="#1B3A5C" />
             <MetricCard label="1회차 매각 평균" value={`${evidence.courtSchedule.avgSaleDays}일`} tint="#2E75B6" />
-            <MetricCard label="배당 평균" value={`${evidence.courtSchedule.avgDistributionDays}일`} tint="#14161A" />
-            <MetricCard label="기일 간격" value={`${evidence.courtSchedule.avgHearingInterval}일`} tint="#14161A" sub={`표본 ${evidence.courtSchedule.sampleSize}건`} />
+            <MetricCard label="배당 평균" value={`${evidence.courtSchedule.avgDistributionDays}일`} tint="#051C2C" />
+            <MetricCard label="기일 간격" value={`${evidence.courtSchedule.avgHearingInterval}일`} tint="#051C2C" sub={`표본 ${evidence.courtSchedule.sampleSize}건`} />
           </div>
         )}
 
@@ -2775,8 +2775,8 @@ function EvidenceTabs({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <MetricCard label="평균 소요" value={`${evidence.auctionCases.averageDurationDays}일`} tint="#1B3A5C" />
               <MetricCard label="평균 감정가" value={krwWon(evidence.auctionCases.averageAppraisalValue)} tint="#2E75B6" />
-              <MetricCard label="평균 낙찰가" value={krwWon(evidence.auctionCases.averageSalePrice)} tint="#14161A" />
-              <MetricCard label="평균 낙찰가율" value={`${evidence.auctionCases.averageBidRatio.toFixed(1)}%`} tint="#1B1B1F" />
+              <MetricCard label="평균 낙찰가" value={krwWon(evidence.auctionCases.averageSalePrice)} tint="#051C2C" />
+              <MetricCard label="평균 낙찰가율" value={`${evidence.auctionCases.averageBidRatio.toFixed(1)}%`} tint="#A53F8A" />
             </div>
             {evidence.auctionCases.sameAddress.length > 0 && (
               <EvidenceCaseTable title="동일 주소" cases={evidence.auctionCases.sameAddress} />
@@ -2792,8 +2792,8 @@ function EvidenceTabs({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <MetricCard label="평균 토지면적" value={`${evidence.nearbyTransactions.averageLandAreaM2.toFixed(2)} ㎡`} tint="#1B3A5C" />
               <MetricCard label="평균 실거래금액" value={krwWon(evidence.nearbyTransactions.averageAmount)} tint="#2E75B6" />
-              <MetricCard label="평균 ㎡당 단가" value={krwMan(evidence.nearbyTransactions.averagePricePerM2) + "원"} tint="#14161A" />
-              <MetricCard label="평균 평당 단가" value={krwMan(evidence.nearbyTransactions.averagePricePerPy) + "원"} tint="#14161A" />
+              <MetricCard label="평균 ㎡당 단가" value={krwMan(evidence.nearbyTransactions.averagePricePerM2) + "원"} tint="#051C2C" />
+              <MetricCard label="평균 평당 단가" value={krwMan(evidence.nearbyTransactions.averagePricePerPy) + "원"} tint="#051C2C" />
             </div>
             {evidence.nearbyTransactions.samples.length > 0 && (
               <table className="w-full text-[0.75rem]">
@@ -2828,12 +2828,12 @@ function EvidenceTabs({
           <div className="space-y-3">
             <div className="grid grid-cols-3 gap-3">
               <MetricCard label="입찰예상가" value={krwWon(evidence.distributionRef.bidPrice)} tint="#1B3A5C" />
-              <MetricCard label="경매집행비용" value={krwWon(evidence.distributionRef.executionCost)} tint="#14161A" />
-              <MetricCard label="본건 배당액" value={krwWon(evidence.distributionRef.distributableAmount)} tint="#14161A" />
+              <MetricCard label="경매집행비용" value={krwWon(evidence.distributionRef.executionCost)} tint="#051C2C" />
+              <MetricCard label="본건 배당액" value={krwWon(evidence.distributionRef.distributableAmount)} tint="#051C2C" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <MetricCard label="1질권자 (질권대출기관)" value={krwWon(evidence.distributionRef.firstPledgee)} tint="#2E75B6" />
-              <MetricCard label="2질권자 (투자자)" value={krwWon(evidence.distributionRef.secondPledgee)} tint="#1B1B1F" />
+              <MetricCard label="2질권자 (투자자)" value={krwWon(evidence.distributionRef.secondPledgee)} tint="#A53F8A" />
             </div>
             <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">
               {evidence.distributionRef.summary}
@@ -2878,7 +2878,7 @@ function EvidenceCaseTable({
               <td className="py-1.5 pr-2 text-right tabular-nums">{c.durationDays}일</td>
               <td className="py-1.5 pr-2 text-right tabular-nums">{krwWon(c.appraisalValue)}</td>
               <td className="py-1.5 pr-2 text-right tabular-nums font-semibold">{krwWon(c.salePrice)}</td>
-              <td className="py-1.5 text-right tabular-nums font-bold" style={{ color: c.bidRatio >= 80 ? "#14161A" : c.bidRatio >= 65 ? "#14161A" : "#1B1B1F" }}>
+              <td className="py-1.5 text-right tabular-nums font-bold" style={{ color: c.bidRatio >= 80 ? "#051C2C" : c.bidRatio >= 65 ? "#051C2C" : "#A53F8A" }}>
                 {c.bidRatio.toFixed(1)}%
               </td>
             </tr>

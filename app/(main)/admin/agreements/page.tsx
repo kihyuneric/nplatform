@@ -27,7 +27,7 @@ const C = {
   bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--layer-border-strong)",
   em: "var(--color-positive)", emL: "var(--color-positive)",
   blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
-  amber: "var(--color-warning)", rose: "var(--color-danger)", purple: "#14161A",
+  amber: "var(--color-warning)", rose: "var(--color-danger)", purple: "#051C2C",
   lt1: "var(--fg-strong)", lt2: "var(--fg-default)",
   lt3: "var(--fg-muted)", lt4: "var(--fg-subtle)",
 }
@@ -55,23 +55,23 @@ const FALLBACK_ROWS: AdminAgreementRow[] = []
 
 const TYPE_META: Record<DocType, { color: string }> = {
   NDA: { color: "#2E75B6" },
-  LOI: { color: "#14161A" },
+  LOI: { color: "#051C2C" },
 }
 
 const STATUS_META: Record<DocStatus, { label: string; color: string; icon: React.ElementType }> = {
-  PENDING:   { label: "검토 중",  color: "#14161A", icon: Clock },
-  APPROVED:  { label: "승인",    color: "#14161A", icon: CheckCircle2 },
+  PENDING:   { label: "검토 중",  color: "#051C2C", icon: Clock },
+  APPROVED:  { label: "승인",    color: "#051C2C", icon: CheckCircle2 },
   SIGNED:    { label: "체결",    color: "#2E75B6", icon: CheckCircle2 },
-  REJECTED:  { label: "거절",    color: "#1B1B1F", icon: XCircle },
+  REJECTED:  { label: "거절",    color: "#A53F8A", icon: XCircle },
   EXPIRED:   { label: "만료",    color: "#64748B", icon: XCircle },
   WITHDRAWN: { label: "철회",    color: "#475569", icon: XCircle },
 }
 
 const FLAG_META: Record<FlagSeverity, { label: string; color: string }> = {
-  NONE:      { label: "정상",   color: "#14161A" },
-  WATCH:     { label: "관찰",   color: "#14161A" },
+  NONE:      { label: "정상",   color: "#051C2C" },
+  WATCH:     { label: "관찰",   color: "#051C2C" },
   SUSPECT:   { label: "의심",   color: "#F97316" },
-  VIOLATION: { label: "위반",   color: "#1B1B1F" },
+  VIOLATION: { label: "위반",   color: "#A53F8A" },
 }
 
 const FILTERS = [
@@ -237,7 +237,7 @@ export default function AdminAgreementsPage() {
           <div
             style={{
               padding: "14px 18px", borderRadius: 12,
-              backgroundColor: `${C.rose}0F`, border: "1px solid rgba(27,27,31, 0.4)",
+              backgroundColor: `${C.rose}0F`, border: "1px solid rgba(165, 63, 138, 0.4)",
               marginBottom: 18,
               display: "flex", gap: 12, alignItems: "center",
             }}
@@ -254,8 +254,8 @@ export default function AdminAgreementsPage() {
             <button
               style={{
                 padding: "8px 14px", borderRadius: 8,
-                backgroundColor: "rgba(27,27,31, 0.1)", color: C.rose,
-                border: "1px solid rgba(27,27,31, 0.4)",
+                backgroundColor: "rgba(165, 63, 138, 0.1)", color: C.rose,
+                border: "1px solid rgba(165, 63, 138, 0.4)",
                 fontSize: 11, fontWeight: 800, cursor: "pointer",
               }}
             >
@@ -431,8 +431,8 @@ export default function AdminAgreementsPage() {
                         style={{
                           display: "inline-flex", alignItems: "center", gap: 4,
                           padding: "4px 8px", borderRadius: 6,
-                          backgroundColor: "rgba(20,22,26,0.08)", color: C.amber,
-                          border: "1px solid rgba(20,22,26,0.3)",
+                          backgroundColor: "rgba(5, 28, 44,0.08)", color: C.amber,
+                          border: "1px solid rgba(5, 28, 44,0.3)",
                           fontSize: 9, fontWeight: 700, cursor: "pointer",
                           width: "fit-content", opacity: actionLoading === row.id ? 0.5 : 1,
                         }}
@@ -447,8 +447,8 @@ export default function AdminAgreementsPage() {
                         style={{
                           display: "inline-flex", alignItems: "center", gap: 4,
                           padding: "4px 8px", borderRadius: 6,
-                          backgroundColor: "rgba(20,22,26,0.08)", color: C.em,
-                          border: "1px solid rgba(20,22,26,0.3)",
+                          backgroundColor: "rgba(5, 28, 44,0.08)", color: C.em,
+                          border: "1px solid rgba(5, 28, 44,0.3)",
                           fontSize: 9, fontWeight: 700, cursor: "pointer",
                           width: "fit-content", opacity: actionLoading === row.id ? 0.5 : 1,
                         }}

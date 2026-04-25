@@ -184,7 +184,7 @@ export function Footer() {
         {/* ── Regulatory compliance strip · McKinsey mono editorial ─────────── */}
         <div className="mt-10 pt-6 border-t" style={{ borderColor: "rgba(255,255,255,0.10)" }}>
           {/* warm brass thin divider — editorial signature */}
-          <div className="mb-4" style={{ height: 1, width: 48, background: "var(--color-editorial-gold, #A8853E)" }} />
+          <div className="mb-4" style={{ height: 1, width: 48, background: "var(--color-editorial-gold, #2251FF)" }} />
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <ComplianceBadge label="개인정보보호법 준수" />
             <ComplianceBadge label="신용정보법 준수" />
@@ -232,7 +232,7 @@ export function Footer() {
             </span>
             {/* 서비스 상태 — mono editorial: brass dot + 흰톤 글씨 */}
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)" }}>
-              <span className="w-1.5 h-1.5 inline-block" style={{ background: "var(--color-editorial-gold, #A8853E)" }} />
+              <span className="w-1.5 h-1.5 inline-block" style={{ background: "var(--color-editorial-gold, #2251FF)" }} />
               서비스 정상
             </span>
           </div>
@@ -258,7 +258,7 @@ function ComplianceBadge({ label }: { label: string; color?: string }) {
     >
       <span
         className="w-1 h-1 inline-block"
-        style={{ background: "var(--color-editorial-gold, #A8853E)" }}
+        style={{ background: "var(--color-editorial-gold, #2251FF)" }}
       />
       {label}
     </span>
