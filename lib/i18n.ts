@@ -1181,29 +1181,54 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Phase L · 서버사이드 번역 프록시 호출.
+ * Phase L · 클라이언트 직접 호출 (Google Translate 비공식).
  *
- * 이전: 브라우저에서 직접 translate.googleapis.com 호출 → CSP/CAPTCHA 차단 자주 발생
- * 이후: /api/v1/translate 서버 라우트 호출 → 다중 폴백 (Google → MyMemory → 원문)
- *       서버는 CSP 영향 없음 + CDN 캐시 1일
+ * 사용자 브라우저 (한국 IP)에서 직접 호출 시 한글 정상 응답.
+ * Vercel 서버리스 (해외 리전)에서는 깨진 응답이 와서 서버 프록시 안 씀.
+ * CSP 의 connect-src 에 translate.googleapis.com 허용 필요 (이미 추가됨).
+ *
+ * 폴백 체인:
+ *   1) STATIC_DICT (정적 사전 hit) — 즉시 반환
+ *   2) 캐시 (localStorage) — 0ms
+ *   3) Google Translate 비공식 — 클라이언트 직접 호출
+ *   4) /api/v1/translate 서버 프록시 (Claude → MyMemory → Google)
+ *   5) 원문 그대로
  */
 async function googleTranslate(text: string, targetLang: string): Promise<string> {
   const langMap: Record<string, string> = { en: 'en', ja: 'ja' }
   const target = langMap[targetLang]
   if (!target) return text
 
+  // 1차 · 클라이언트 직접 (사용자 브라우저 한국 IP 정상 응답)
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ko&tl=${target}&dt=t&q=${encodeURIComponent(text)}`
+    const res = await fetch(url)
+    if (res.ok) {
+      const data = await res.json()
+      const translated = data?.[0]?.map((item: any[]) => item[0]).join('') || ''
+      if (translated && translated !== text) return translated
+    }
+  } catch {
+    // CSP 차단 또는 네트워크 오류 → 서버 프록시로 폴백
+  }
+
+  // 2차 · 서버 프록시 (Claude API)
   try {
     const res = await fetch('/api/v1/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ texts: [text], targetLang: target }),
     })
-    if (!res.ok) return text
-    const data = await res.json() as { translations?: string[] }
-    return data.translations?.[0] || text
+    if (res.ok) {
+      const data = await res.json() as { translations?: string[] }
+      const t0 = data.translations?.[0]
+      if (t0 && t0 !== text) return t0
+    }
   } catch {
-    return text
+    // 폴백
   }
+
+  return text
 }
 
 /**
