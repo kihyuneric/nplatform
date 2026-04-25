@@ -909,13 +909,25 @@ export function AssetDetailView({
               </p>
             </SectionCard>
 
+            {/* ── DR-21: CTA 게이트 (L1 인증) — dealFlowMode 에서만 ── */}
+            {dealFlowMode && !tierGte(effectiveAccessTier, "L1") && (
+              <div className="mt-6 lg:mt-8">
+                <DealGate
+                  icon={DealLockIcon}
+                  title="로그인/인증하고 상세 보기"
+                  subtitle="등기부등본·임대차·감정평가서 등 상세 데이터 열람"
+                  panelMode
+                />
+              </div>
+            )}
+
             <SectionCard
               title="등기부등본 요약"
               icon={<ScrollText size={14} />}
               tierBadge="L1"
               anchorId="deed-summary"
             >
-              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction}>
+              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
                 {listing.registry_summary_items.length === 0 ? (
                   <p className="text-center py-6" style={{ color: C.lt4, fontSize: 11 }}>
                     등기 정보가 아직 업로드되지 않았습니다.
@@ -1042,7 +1054,7 @@ export function AssetDetailView({
               tierBadge="L1"
               anchorId="tenants"
             >
-              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={120} onUpgradeClick={handlePrimaryAction}>
+              <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={120} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
                 <div className="grid grid-cols-3 gap-3">
                   <Stat label="보증금 합계" value={formatKRW(listing.lease_summary.total_deposit)} />
                   <Stat label="월세" value={formatKRW(listing.lease_summary.monthly_rent || 0)} />
@@ -1075,7 +1087,7 @@ export function AssetDetailView({
               tierBadge="L2"
               anchorId="nda"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={72} onUpgradeClick={handlePrimaryAction}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={72} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
                 <div className="space-y-3">
                   <div
                     className="rounded-xl flex items-center gap-3 px-4 py-3"
@@ -1146,7 +1158,7 @@ export function AssetDetailView({
               tierBadge="L2"
               anchorId="appraisal"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
                 {/* ── 단위 토글 ── */}
                 <div className="flex items-center gap-2 mb-3">
                   <span style={{ fontSize: 11, color: C.lt4, fontWeight: 700 }}>단위</span>
@@ -1268,7 +1280,7 @@ export function AssetDetailView({
               tierBadge="L2"
               anchorId="auction-info"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={120} onUpgradeClick={handlePrimaryAction}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={120} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
                 {editingSec === "auction" ? (
                   /* ── 경매 정보 편집 폼 ── */
                   <div className="space-y-3">
@@ -1376,7 +1388,7 @@ export function AssetDetailView({
               tierBadge="L2"
               anchorId="public-sale"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={120} onUpgradeClick={handlePrimaryAction}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={120} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
                 {editingSec === "public-sale" ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
@@ -1457,7 +1469,7 @@ export function AssetDetailView({
               tierBadge="L2"
               anchorId="auction-stats"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={100} onUpgradeClick={handlePrimaryAction}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={100} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
                 <p className="mb-3 leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
                   국토부 실거래가 현황 및 법원 경매와 온비드 공매 낙찰 통계 및 유사 사례를 확인합니다.
                 </p>
@@ -1483,7 +1495,7 @@ export function AssetDetailView({
               tierBadge="L2"
               anchorId="deed-full"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
                 <div className="space-y-4">
                   {/* ── 다운로드 버튼: 토지 등기부등본 / 건물 등기부등본 ── */}
                   <div className="flex flex-wrap gap-2">
@@ -1655,7 +1667,7 @@ export function AssetDetailView({
               tierBadge="L2"
               anchorId="site-photos"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={160} onUpgradeClick={handlePrimaryAction}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={160} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
                 <div className="space-y-3">
                   <button
                     type="button"
@@ -1722,7 +1734,7 @@ export function AssetDetailView({
               icon={<Banknote size={14} />}
               tierBadge="L2"
             >
-              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={200}>
+              <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={200} softBlur={dealFlowMode}>
                 <div className="space-y-4">
                   <div
                     className="rounded-xl p-4"
@@ -1935,8 +1947,9 @@ export function AssetDetailView({
           </div>
         )}
 
-        {/* ── LOI 확인 (L3+) ── */}
-        {tierGte(effectiveAccessTier, "L3") && (
+        {/* ── LOI 확인 (L3+) — dealFlowMode 에서는 미인증 시 blur 처리해서 노출 ── */}
+        {(tierGte(effectiveAccessTier, "L3") || dealFlowMode) && (
+          <DealLockedSection locked={!tierGte(effectiveAccessTier, "L3") && dealFlowMode} badgeLabel="LOI 제출 후 열람">
           <div id="loi" className="mt-6 lg:mt-8 scroll-mt-24">
             <SectionCard
               title="LOI 확인"
@@ -2004,30 +2017,36 @@ export function AssetDetailView({
               </div>
             </SectionCard>
           </div>
+          </DealLockedSection>
         )}
 
-        {/* ── 채팅 (L3+) ── */}
-        {tierGte(effectiveAccessTier, "L3") && (
+        {/* ── 채팅 (L3+) — dealFlowMode 에서는 미인증 시 blur 처리해서 노출 ── */}
+        {(tierGte(effectiveAccessTier, "L3") || dealFlowMode) && (
+          <DealLockedSection locked={!tierGte(effectiveAccessTier, "L3") && dealFlowMode} badgeLabel="LOI 제출 후 열람">
           <div id="chat" className="mt-6 lg:mt-8 scroll-mt-24">
             <InlineDealRoom
               tier={effectiveTier}
               counterpart={counterpart}
             />
           </div>
+          </DealLockedSection>
         )}
 
-        {/* ── 실사 (L3+) ── */}
-        {tierGte(effectiveAccessTier, "L3") && (
+        {/* ── 실사 (L3+) — dealFlowMode 에서는 미인증 시 blur 처리해서 노출 ── */}
+        {(tierGte(effectiveAccessTier, "L3") || dealFlowMode) && (
+          <DealLockedSection locked={!tierGte(effectiveAccessTier, "L3") && dealFlowMode} badgeLabel="LOI 제출 후 열람">
           <div id="due-diligence" className="mt-6 lg:mt-8 scroll-mt-24">
             <DueDiligenceSection
               anchorId="due-diligence"
               listingId={id}
             />
           </div>
+          </DealLockedSection>
         )}
 
-        {/* ── 가격 오퍼 (L3+) ── */}
-        {tierGte(effectiveAccessTier, "L3") && (
+        {/* ── 가격 오퍼 (L3+) — dealFlowMode 에서는 미인증 시 blur 처리해서 노출 ── */}
+        {(tierGte(effectiveAccessTier, "L3") || dealFlowMode) && (
+          <DealLockedSection locked={!tierGte(effectiveAccessTier, "L3") && dealFlowMode} badgeLabel="LOI 제출 후 열람">
           <div id="offer" className="mt-6 lg:mt-8 scroll-mt-24">
             <div
               className="rounded-2xl overflow-hidden"
@@ -2160,6 +2179,7 @@ export function AssetDetailView({
               </div>
             </div>
           </div>
+          </DealLockedSection>
         )}
 
         {/* ── DR-20: Gate 3 (ESCROW) + Stage 04 헤더 — dealFlowMode 에서만 ── */}
@@ -2179,8 +2199,12 @@ export function AssetDetailView({
           </div>
         )}
 
-        {/* ── 에스크로 결제 · 계약 (L4+) ── */}
-        {(effectiveTier === "L4" || effectiveTier === "L5") && (
+        {/* ── 에스크로 결제 · 계약 (L4+) — dealFlowMode 에서는 미인증 시 blur 처리해서 노출 ── */}
+        {(effectiveTier === "L4" || effectiveTier === "L5" || dealFlowMode) && (
+          <DealLockedSection
+            locked={!(effectiveTier === "L4" || effectiveTier === "L5") && dealFlowMode}
+            badgeLabel="ESCROW 입금 후 실행"
+          >
           <div id="escrow" className="mt-6 lg:mt-8 scroll-mt-24">
             <DealCompletionStages
               tier={effectiveTier}
@@ -2204,6 +2228,7 @@ export function AssetDetailView({
               }}
             />
           </div>
+          </DealLockedSection>
         )}
 
       </section>
@@ -2675,5 +2700,61 @@ function StageHeader({
         {subtitle}
       </p>
     </header>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DealLockedSection — DR-21 · L3+ 섹션 softBlur 래퍼
+   dealFlowMode + tier 미달 시 자식을 흐리게 보여주고 우상단 잠금 뱃지 표시
+   ═══════════════════════════════════════════════════════════════════════════ */
+function DealLockedSection({
+  locked,
+  badgeLabel = "LOI 제출 후 열람",
+  children,
+}: {
+  locked: boolean
+  badgeLabel?: string
+  children: React.ReactNode
+}) {
+  if (!locked) return <>{children}</>
+  return (
+    <div style={{ position: "relative" }}>
+      <div
+        aria-hidden
+        style={{
+          filter: "blur(7px)",
+          opacity: 0.55,
+          pointerEvents: "none",
+          userSelect: "none",
+        }}
+      >
+        {children}
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "6px 10px",
+          backgroundColor: "#FFFFFF",
+          border: "1px solid #E5E7EB",
+          borderRadius: 0,
+          boxShadow: "0 4px 12px rgba(10, 22, 40, 0.08)",
+          zIndex: 5,
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <rect x="4" y="10" width="16" height="11" rx="2" stroke="#8B6F2F" strokeWidth="2" />
+          <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#8B6F2F" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="12" cy="15.5" r="1.4" fill="#8B6F2F" />
+        </svg>
+        <span style={{ color: "#0A1628", fontSize: 11, fontWeight: 700, letterSpacing: "0.02em" }}>
+          {badgeLabel}
+        </span>
+      </div>
+    </div>
   )
 }

@@ -29,6 +29,11 @@ interface TierGateProps {
   minHeight?: number
   /** 제공 시 href 대신 onClick 버튼으로 업그레이드 CTA 렌더 */
   onUpgradeClick?: () => void
+  /**
+   * true면 자식을 그대로 렌더하되 blur 처리 + 우상단 작은 자물쇠 뱃지만 표시.
+   * 풀 오버레이를 띄우지 않음 (Deal Flow 모드용).
+   */
+  softBlur?: boolean
 }
 
 export function TierGate({
@@ -40,6 +45,7 @@ export function TierGate({
   customMessage,
   minHeight = 160,
   onUpgradeClick,
+  softBlur = false,
 }: TierGateProps) {
   const unlocked = tierGte(current, required)
 
@@ -49,6 +55,109 @@ export function TierGate({
 
   const meta = TIER_META[required]
   const upgrade = getUpgradeAction(current, required, listingId)
+
+  // ─── softBlur 모드: 콘텐츠를 흐리게 그대로 보여주고 작은 잠금 뱃지만 ──
+  if (softBlur) {
+    return (
+      <div style={{ position: 'relative' }}>
+        <div
+          aria-hidden
+          style={{
+            filter: 'blur(7px)',
+            opacity: 0.55,
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          {children}
+        </div>
+
+        {/* 우상단 자물쇠 뱃지 */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '6px 10px',
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #E5E7EB',
+            borderRadius: 0,
+            boxShadow: '0 4px 12px rgba(10, 22, 40, 0.08)',
+            zIndex: 5,
+          }}
+        >
+          <LockIcon color="#8B6F2F" />
+          <span style={{ color: '#0A1628', fontSize: 11, fontWeight: 700, letterSpacing: '0.02em' }}>
+            {meta.requirement}
+          </span>
+        </div>
+
+        {/* 중앙 CTA 버튼 (선택) */}
+        {(upgrade || onUpgradeClick) && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 6,
+            }}
+          >
+            {onUpgradeClick ? (
+              <button
+                type="button"
+                onClick={onUpgradeClick}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '10px 20px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: '#FFFFFF',
+                  backgroundColor: '#0A1628',
+                  borderRadius: 0,
+                  border: 'none',
+                  cursor: 'pointer',
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  boxShadow: '0 8px 24px rgba(10, 22, 40, 0.25)',
+                }}
+              >
+                {upgrade?.label ?? meta.requirement}
+                <span aria-hidden style={{ fontSize: 14 }}>→</span>
+              </button>
+            ) : upgrade ? (
+              <a
+                href={upgrade.href}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '10px 20px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: '#FFFFFF',
+                  backgroundColor: '#0A1628',
+                  borderRadius: 0,
+                  textDecoration: 'none',
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  boxShadow: '0 8px 24px rgba(10, 22, 40, 0.25)',
+                }}
+              >
+                {upgrade.label}
+                <span aria-hidden style={{ fontSize: 14 }}>→</span>
+              </a>
+            ) : null}
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div
