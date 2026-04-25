@@ -236,7 +236,8 @@ export async function middleware(request: NextRequest) {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.supabase.co https://api.anthropic.com https://api.openai.com",
+      // Phase L · translate.googleapis.com 허용 (i18n 자동 번역)
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.supabase.co https://api.anthropic.com https://api.openai.com https://translate.googleapis.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

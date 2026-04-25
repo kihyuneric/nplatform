@@ -175,18 +175,53 @@ export function AutoTranslateProvider() {
     const initialTimer = setTimeout(runInitial, 100)
 
     // MutationObserver: 새 DOM 요소 감지
+    // Phase L · 모달·드롭다운 등 Radix Portal 도 함께 감지
+    //   characterData=true → 텍스트 노드 자체 변경도 감지 (예: {count}건 카운터)
     const observer = new MutationObserver(mutations => {
       for (const m of mutations) {
+        // 새로 추가된 노드
         m.addedNodes.forEach(node => {
           if (node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.TEXT_NODE) {
             walkAndTranslate(node, locale)
           }
         })
+        // 기존 텍스트 노드 변경 (React 리렌더로 텍스트만 바뀐 경우)
+        if (m.type === 'characterData' && m.target.nodeType === Node.TEXT_NODE) {
+          translateTextNode(m.target as Text, locale)
+        }
+        // 속성 변경 (placeholder/title/aria-label)
+        if (m.type === 'attributes' && m.target.nodeType === Node.ELEMENT_NODE) {
+          const el = m.target as Element
+          const attr = m.attributeName
+          if (attr && ['placeholder', 'title', 'aria-label'].includes(attr)) {
+            const val = el.getAttribute(attr)
+            if (val && HANGUL_RE.test(val) && !shouldIgnore(el)) {
+              const immediate = t(val, locale)
+              if (immediate && immediate !== val) {
+                el.setAttribute(attr, immediate)
+              } else {
+                pendingQueue.push(async () => {
+                  if (!el.isConnected) return
+                  try {
+                    const translated = await translateText(val, locale)
+                    if (translated && translated !== val && el.isConnected) {
+                      el.setAttribute(attr, translated)
+                    }
+                  } catch {}
+                })
+                processQueue()
+              }
+            }
+          }
+        }
       }
     })
     observer.observe(document.body, {
       childList: true,
       subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['placeholder', 'title', 'aria-label'],
     })
     observerRef.current = observer
 
