@@ -102,6 +102,73 @@ function parseValue(raw: unknown, type: string | undefined): unknown {
   return trim(raw)
 }
 
+// ─── 한글 라벨 → 시스템 enum 자동 매핑 (Phase G7+) ──────────
+//   엑셀에서 사용자가 드롭다운으로 선택한 한글 라벨을 NPLatform enum/값으로 정규화.
+//   매핑이 없는 경우 원본 그대로 반환 → UI 에서 사용자가 보정 가능.
+
+const INSTITUTION_TYPE_MAP: Record<string, string> = {
+  "은행": "BANK", "저축은행": "SAVINGS_BANK", "상호금융": "MUTUAL_CREDIT",
+  "보험": "INSURANCE", "보험사": "INSURANCE",
+  "카드": "CREDIT_CARD", "카드사": "CREDIT_CARD",
+  "캐피탈": "CAPITAL", "증권": "SECURITIES", "증권사": "SECURITIES",
+  "amc": "AMC", "펀드": "FUND",
+  "신협": "MUTUAL_CREDIT", "새마을": "MUTUAL_CREDIT", "신탁": "AMC",
+  "대부업체": "MONEY_LENDER", "대부": "MONEY_LENDER",
+  "개인": "INDIVIDUAL", "법인": "CORPORATION", "기타": "AMC",
+}
+
+const LISTING_CATEGORY_MAP: Record<string, string> = {
+  "npl": "NPL", "npl(부실채권)": "NPL", "npl부실채권": "NPL", "부실채권": "NPL",
+  "general": "GENERAL", "general(일반부동산)": "GENERAL", "일반부동산": "GENERAL", "일반": "GENERAL",
+}
+
+const SIDO_NORMALIZE: Record<string, string> = {
+  "서울특별시": "서울", "서울": "서울",
+  "부산광역시": "부산", "부산": "부산",
+  "대구광역시": "대구", "대구": "대구",
+  "인천광역시": "인천", "인천": "인천",
+  "광주광역시": "광주", "광주": "광주",
+  "대전광역시": "대전", "대전": "대전",
+  "울산광역시": "울산", "울산": "울산",
+  "세종특별자치시": "세종", "세종": "세종",
+  "경기도": "경기", "경기": "경기",
+  "강원특별자치도": "강원", "강원도": "강원", "강원": "강원",
+  "충청북도": "충북", "충북": "충북",
+  "충청남도": "충남", "충남": "충남",
+  "전북특별자치도": "전북", "전라북도": "전북", "전북": "전북",
+  "전라남도": "전남", "전남": "전남",
+  "경상북도": "경북", "경북": "경북",
+  "경상남도": "경남", "경남": "경남",
+  "제주특별자치도": "제주", "제주": "제주",
+}
+
+const COLLATERAL_NORMALIZE: Record<string, string> = {
+  "아파트": "아파트", "오피스텔": "오피스텔",
+  "다세대": "다세대(빌라)", "빌라": "다세대(빌라)", "다세대(빌라)": "다세대(빌라)",
+  "단독주택": "단독주택", "단독": "단독주택",
+  "상가": "상가", "오피스": "사무실", "사무실": "사무실",
+  "토지": "토지", "공장": "공장", "호텔": "기타", "기타": "기타",
+}
+
+const DEBTOR_TYPE_MAP: Record<string, string> = {
+  "individual": "INDIVIDUAL", "individual(개인)": "INDIVIDUAL", "개인": "INDIVIDUAL",
+  "corporate": "CORPORATE", "corporate(법인)": "CORPORATE", "법인": "CORPORATE",
+}
+
+/** 정규화: 공백/괄호 내 부가설명 제거 후 매핑 검색 */
+function normalizeMap(value: string, table: Record<string, string>): string {
+  const normFull = norm(value)                           // 전체 정규화
+  if (table[normFull]) return table[normFull]
+  // 괄호 앞 부분만 (예: "INDIVIDUAL (개인 · 질권 LTV 75%)" → "individual")
+  const bareKey = normFull.split(/[(·]/)[0].trim()
+  if (table[bareKey]) return table[bareKey]
+  // 한글 키워드 부분일치 (e.g. "개인" 포함 시)
+  for (const [k, v] of Object.entries(table)) {
+    if (normFull.includes(k)) return v
+  }
+  return value
+}
+
 // 시트 1 파싱 — A열 라벨 매칭 → B열 값
 function parseSheet1(sheet: XLSX.WorkSheet): { fields: Record<string, unknown>; warnings: string[] } {
   const rows: unknown[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" })
@@ -126,6 +193,46 @@ function parseSheet1(sheet: XLSX.WorkSheet): { fields: Record<string, unknown>; 
         break
       }
     }
+  }
+
+  // ── 한글 라벨 → enum 정규화 (Phase G7+) ───────────────────
+  if (fields.institution_type) {
+    fields.institution_type = normalizeMap(String(fields.institution_type), INSTITUTION_TYPE_MAP)
+  }
+  if (fields.listing_category) {
+    fields.listing_category = normalizeMap(String(fields.listing_category), LISTING_CATEGORY_MAP)
+  }
+  if (fields.sido) {
+    fields.sido = normalizeMap(String(fields.sido), SIDO_NORMALIZE)
+  }
+  if (fields.collateral_type) {
+    fields.collateral_type = normalizeMap(String(fields.collateral_type), COLLATERAL_NORMALIZE)
+  }
+  if (fields.debtor_type) {
+    fields.debtor_type = normalizeMap(String(fields.debtor_type), DEBTOR_TYPE_MAP)
+  }
+  // 매각 방식 ON/OFF 체크 (행별 O/X)
+  if (fields.sale_method_nplatform !== undefined) {
+    fields.sale_method_nplatform = isTrue(fields.sale_method_nplatform)
+  }
+  if (fields.sale_method_auction !== undefined) {
+    fields.sale_method_auction = isTrue(fields.sale_method_auction)
+  }
+  if (fields.sale_method_public !== undefined) {
+    fields.sale_method_public = isTrue(fields.sale_method_public)
+  }
+  if (fields.sale_method_other_flag !== undefined) {
+    fields.sale_method_other_flag = isTrue(fields.sale_method_other_flag)
+  }
+  // 채무자·소유자 동일 여부 → boolean
+  if (fields.debtor_owner_same !== undefined) {
+    const v = String(fields.debtor_owner_same)
+    fields.debtor_owner_same = v.includes("동일") ? true : v.includes("다름") ? false : isTrue(v)
+  }
+  // 전속 계약 ON/OFF
+  if (fields.exclusive_choice !== undefined) {
+    const v = String(fields.exclusive_choice)
+    fields.exclusive_choice = v.includes("ON") || v.includes("0.3%") ? true : false
   }
 
   return { fields, warnings }

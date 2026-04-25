@@ -710,6 +710,9 @@ function ExcelTemplateBanner({
     const f = data.fields
     const inst: Partial<UnifiedFormState["institution"]> = {}
     if (f.institution_name) inst.name = String(f.institution_name)
+    if (f.institution_type) inst.type = f.institution_type as UnifiedFormState["institution"]["type"]
+    if (f.listing_category) inst.listingCategory = f.listing_category as UnifiedFormState["institution"]["listingCategory"]
+    if (typeof f.exclusive_choice === "boolean") inst.exclusive = f.exclusive_choice
     if (Object.keys(inst).length > 0) dispatch({ type: "SET_INSTITUTION", patch: inst })
     if (f.collateral_type) {
       dispatch({ type: "PATCH", patch: { collateral: String(f.collateral_type) as UnifiedFormState["collateral"] } })
@@ -728,6 +731,9 @@ function ExcelTemplateBanner({
       const dtRaw = String(f.debtor_type)
       const dt = dtRaw.includes("CORPORATE") || dtRaw.includes("법인") ? "CORPORATE" : "INDIVIDUAL"
       dispatch({ type: "SET_DEBTOR_TYPE", value: dt })
+    }
+    if (typeof f.debtor_owner_same === "boolean") {
+      dispatch({ type: "PATCH", patch: { debtorOwnerSame: f.debtor_owner_same } })
     }
     const claimPatch: Partial<UnifiedFormState["claim"]> = {}
     if (f.loan_principal)  claimPatch.principal = Number(f.loan_principal)
