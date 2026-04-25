@@ -1,7 +1,9 @@
 'use client'
 
 import * as React from 'react'
-import { ThemeProvider as NextThemesProvider } from 'next-themes'
+
+// 다크모드 제거 — 라이트 단일 테마 (McKinsey White Paper)
+// next-themes 의존성을 제거하고, ThemeProvider 는 children 을 그대로 패스스루.
 
 type ThemeProviderProps = {
   children: React.ReactNode
@@ -12,25 +14,6 @@ type ThemeProviderProps = {
   disableTransitionOnChange?: boolean
 }
 
-export function ThemeProvider({
-  children,
-  defaultTheme = 'light',
-  storageKey = 'nplatform-theme',
-  attribute = 'class',
-  enableSystem = false,
-  disableTransitionOnChange = false,
-  ...props
-}: ThemeProviderProps) {
-  return (
-    <NextThemesProvider
-      attribute={attribute as any}
-      defaultTheme={defaultTheme}
-      enableSystem={enableSystem}
-      storageKey={storageKey}
-      disableTransitionOnChange={disableTransitionOnChange}
-      {...props}
-    >
-      {children}
-    </NextThemesProvider>
-  )
+export function ThemeProvider({ children }: ThemeProviderProps) {
+  return <>{children}</>
 }

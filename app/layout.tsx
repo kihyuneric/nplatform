@@ -29,7 +29,6 @@ const pretendard = localFont({
 import { AuthProvider } from '@/components/auth/auth-provider'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { Toaster } from 'sonner'
-import { ThemeProvider } from '@/components/theme/theme-provider'
 import { AutoTranslateProvider } from '@/components/translate/auto-translate-provider'
 import { Analytics } from '@vercel/analytics/next'
 
@@ -165,20 +164,13 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
-        {/* Anti-FOUC: 라이트 기본, 사용자가 명시적으로 선택한 'dark'일 때만 클래스 적용 */}
+        {/* 다크모드 제거 — 라이트 단일 테마 (McKinsey White Paper). 과거 dark 토큰 정리 */}
         <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: `
           (function(){
             try {
-              var s = localStorage.getItem('nplatform-theme');
-              var t = s ? s.replace(/"/g,'') : 'light';
-              if (t === 'dark') {
-                document.documentElement.classList.add('dark');
-              } else {
-                document.documentElement.classList.remove('dark');
-              }
-            } catch(e) {
-              // localStorage 실패 시 라이트 기본
-            }
+              document.documentElement.classList.remove('dark');
+              localStorage.removeItem('nplatform-theme');
+            } catch(e) {}
           })();
         `}} />
         <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: `
@@ -190,46 +182,36 @@ export default async function RootLayout({
         `}} />
       </head>
       <body className={`${pretendard.variable} ${pretendard.className}`}>
-        {/* OfflineBanner and SkipLinks removed to fix webpack RSC error */}
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          storageKey="nplatform-theme"
-          disableTransitionOnChange={false}
-        >
-          <QueryProvider>
-            <AuthProvider>
-              <AutoTranslateProvider />
-              <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-[#1B3A5C] focus:text-white focus:rounded-md">본문으로 건너뛰기</a>
-              <main id="main-content" role="main">
-                {children}
-              </main>
-              <div aria-live="polite" aria-atomic="true">
-                <Toaster
-                  position="top-right"
-                  richColors
-                  expand={false}
-                  closeButton
-                  toastOptions={{
-                    style: {
-                      fontFamily: 'var(--font-pretendard)',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      borderRadius: '12px',
-                      boxShadow: '0 8px 32px rgba(13,31,56,0.14), 0 2px 8px rgba(13,31,56,0.08)',
-                    },
-                    // richColors 가 테마별 success/error/warning/info 색을 자동 적용.
-                    // 기본 toast 는 semantic token 으로 라이트/다크 모두에서 자연스럽게 표시.
-                    classNames: {
-                      toast: 'border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)]',
-                    },
-                  }}
-                />
-              </div>
-            </AuthProvider>
-          </QueryProvider>
-        </ThemeProvider>
+        {/* 라이트 단일 테마 — McKinsey White Paper 시스템 */}
+        <QueryProvider>
+          <AuthProvider>
+            <AutoTranslateProvider />
+            <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-[#1B3A5C] focus:text-white focus:rounded-md">본문으로 건너뛰기</a>
+            <main id="main-content" role="main">
+              {children}
+            </main>
+            <div aria-live="polite" aria-atomic="true">
+              <Toaster
+                position="top-right"
+                richColors
+                expand={false}
+                closeButton
+                toastOptions={{
+                  style: {
+                    fontFamily: 'var(--font-pretendard)',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 32px rgba(13,31,56,0.14), 0 2px 8px rgba(13,31,56,0.08)',
+                  },
+                  classNames: {
+                    toast: 'border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)]',
+                  },
+                }}
+              />
+            </div>
+          </AuthProvider>
+        </QueryProvider>
         <Analytics />
       </body>
     </html>

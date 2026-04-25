@@ -831,19 +831,22 @@ function DemandCard({
           </button>
           <Link
             href={`/exchange/demands/${d.id}`}
+            className="mck-cta-dark"
             style={{
               flex: 1,
               padding: '10px 14px',
-              borderRadius: 10,
-              backgroundColor: V.positive,
-              color: V.onPositive,
-              fontSize: 12, fontWeight: 800,
+              borderRadius: 0,           // McKinsey sharp edge
+              backgroundColor: '#0A1628', // ink — 명시 hex (token fallback 회피)
+              color: '#FFFFFF',           // 흰 글씨 절대 보장
+              fontSize: 12, fontWeight: 700,
               textAlign: 'center',
               display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: 6,
               letterSpacing: '-0.01em',
+              borderTop: '1.5px solid #B8924B',  // brass top accent
             }}
           >
-            <Zap size={13} /> 제안 보내기
+            <Zap size={13} style={{ color: '#FFFFFF' }} />
+            <span style={{ color: '#FFFFFF' }}>제안 보내기</span>
           </Link>
         </div>
       </div>

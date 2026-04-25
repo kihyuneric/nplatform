@@ -4863,3 +4863,294 @@ section[style*="backgroundColor: #0A1628"] *:not([style*="color"]):not(svg):not(
   font-weight: 700 !important;
   font-size: 0.6875rem !important;
 }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   v8 · DARK CTA INSIDE WHITE PAPER (2026-04-25)
+   ▸ 거래소 카드 CTA "딜룸 입장 · 상세" 같은 검정 박스 안 흰 글씨가
+     globals.css mck-paper 자식 ink 강제 변환에 의해 안 보이는 문제 fix.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* mck-paper 안의 검정/navy 배경 자식 박스 → 그 안 텍스트는 흰색 강제 */
+.mck-paper [style*="background: #0A1628"],
+.mck-paper [style*="background:#0A1628"],
+.mck-paper [style*="backgroundColor: #0A1628"],
+.mck-paper [style*="backgroundColor:#0A1628"],
+.mck-paper [style*="background: #0B1F3A"],
+.mck-paper [style*="background:#0B1F3A"],
+.mck-paper [style*="background: #051C2C"],
+.mck-paper [style*="background:#051C2C"],
+.mck-paper .mck-cta-dark,
+.mck-cta-dark {
+  color: #FFFFFF !important;
+}
+.mck-paper [style*="background: #0A1628"] *,
+.mck-paper [style*="background:#0A1628"] *,
+.mck-paper [style*="backgroundColor: #0A1628"] *,
+.mck-paper [style*="backgroundColor:#0A1628"] *,
+.mck-paper [style*="background: #0B1F3A"] *,
+.mck-paper [style*="background:#0B1F3A"] *,
+.mck-paper [style*="background: #051C2C"] *,
+.mck-paper [style*="background:#051C2C"] *,
+.mck-paper .mck-cta-dark *,
+.mck-cta-dark * {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* mck-paper 안의 흰 글씨 명시 inline color → 그대로 보존 */
+.mck-paper [style*="color: #FFFFFF"],
+.mck-paper [style*="color:#FFFFFF"],
+.mck-paper [style*="color: #fff"],
+.mck-paper [style*="color:#fff"] {
+  color: #FFFFFF !important;
+}
+
+/* lucide ArrowRight 같은 아이콘 stroke fill 흰색 강제 (검정 CTA 안) */
+.mck-cta-dark svg {
+  color: #FFFFFF !important;
+}
+.mck-cta-dark svg path,
+.mck-cta-dark svg line,
+.mck-cta-dark svg polyline,
+.mck-cta-dark svg circle {
+  stroke: #FFFFFF !important;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   v9 — DARK MODE KILL SWITCH + McKinsey LIGHT-ONLY DESIGN SYSTEM
+   사용자 요구: "다크모드 기능 자체 삭제, 라이트 모드 기준 맥킨지 시스템 재구성"
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* ── 1) 다크모드 완전 비활성 — html.dark 가 추가되더라도 라이트 토큰 강제 ── */
+html.dark,
+html.dark body,
+.dark {
+  color-scheme: light !important;
+}
+/* 어떤 경로로든 .dark 클래스가 추가되어도 :root 라이트 토큰 그대로 사용 */
+html.dark { background: var(--color-bg-base, #FAFBFC) !important; }
+
+/* ── 2) Typography hierarchy — McKinsey White Paper 기준 ───────────────────
+   사용자 요구: "제목, 하위, 컨텐츠, 표, 모달 기준을 가지고 톤앤매너 만들어"
+   기준 (모바일 → 데스크탑):
+     H1 (page hero):    30 → 36px / 800 / -0.025em / line 1.15 / ink #0A1628
+     H2 (section):      22 → 26px / 700 / -0.02em  / line 1.25 / ink #0A1628
+     H3 (card title):   16 → 17px / 700 / -0.01em  / line 1.30 / ink #0A1628
+     body:              14 → 15px / 400 / 0        / line 1.55 / #1F2937
+     sub (caption):     12 → 12px / 500 / 0        / line 1.45 / #4A5568
+     micro:             11px      / 600 / 0        / line 1.40 / #718096
+     eyebrow:           10 → 11px / 700 / 0.10em / uppercase / brass #B8924B
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* H1 — 페이지 헤로 / 페이지 타이틀 */
+h1.mck-h1, .mck-h1 {
+  font-size: clamp(1.875rem, 4vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: #0A1628;
+  word-break: keep-all;
+}
+/* H2 — 섹션 타이틀 */
+h2.mck-h2, .mck-h2 {
+  font-size: clamp(1.375rem, 2.5vw, 1.625rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: #0A1628;
+  word-break: keep-all;
+}
+/* H3 — 카드/모달 타이틀 */
+h3.mck-h3, .mck-h3 {
+  font-size: clamp(1rem, 1.5vw, 1.0625rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.30;
+  color: #0A1628;
+}
+/* body — 본문 */
+.mck-body {
+  font-size: clamp(0.875rem, 1vw, 0.9375rem);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.55;
+  color: #1F2937;
+}
+/* sub — caption */
+.mck-sub {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.45;
+  color: #4A5568;
+}
+/* micro — small label */
+.mck-micro {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.40;
+  color: #718096;
+}
+/* eyebrow — 섹션 위 brass 강조 라벨 */
+.mck-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: #B8924B;
+  display: inline-block;
+}
+
+/* 표(table) 헤더/셀 톤 — 모달/카드 안 동일 */
+.mck-table th {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #4A5568;
+  padding: 12px 16px;
+  border-bottom: 1.5px solid #0A1628;
+  text-align: left;
+  background: transparent;
+}
+.mck-table td {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0A1628;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(10, 22, 40, 0.08);
+}
+.mck-table tbody tr:last-child td { border-bottom: none; }
+.mck-table tbody tr:hover td { background: #FAFBFC; }
+
+/* 모달/다이얼로그 톤 — 흰 종이 + ink 글씨 + brass top bar */
+[role="dialog"], [role="alertdialog"] {
+  background: #FFFFFF !important;
+}
+[role="dialog"] h1, [role="dialog"] h2, [role="dialog"] h3,
+[role="alertdialog"] h1, [role="alertdialog"] h2, [role="alertdialog"] h3 {
+  color: #0A1628;
+}
+
+/* ── 3) 2-3단계 contrast 규칙 — 카드 안 박스 안 박스 ─────────────────────────
+   사용자 핵심 통찰: "카드 안에 다시 박스(도형, 도식화) 배경이 있으면
+   그에 맞게 다시 글꼴이 수정되어야 하는 2,3단계가 있는데 그 규칙이 없어"
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* L1 → L2: 흰 종이 카드 안에 navy 박스 → 자식 텍스트 모두 흰색 */
+.mck-paper [style*="background-color: #0A1628"],
+.mck-paper [style*="background-color:#0A1628"],
+.mck-paper [style*="background: #0A1628"],
+.mck-paper [style*="background:#0A1628"],
+.mck-paper [style*="background: #051C2C"],
+.mck-paper [style*="background:#051C2C"],
+.mck-paper [style*="background: #0B1F3A"],
+.mck-paper [style*="background:#0B1F3A"],
+.mck-paper [style*="background: #1B3A5C"],
+.mck-paper [style*="background:#1B3A5C"],
+.mck-paper [style*="background: #2558A0"],
+.mck-paper [style*="background:#2558A0"] {
+  color: #FFFFFF !important;
+}
+.mck-paper [style*="background-color: #0A1628"] *:not([style*="color"]),
+.mck-paper [style*="background-color:#0A1628"] *:not([style*="color"]),
+.mck-paper [style*="background: #0A1628"] *:not([style*="color"]),
+.mck-paper [style*="background:#0A1628"] *:not([style*="color"]),
+.mck-paper [style*="background: #051C2C"] *:not([style*="color"]),
+.mck-paper [style*="background:#051C2C"] *:not([style*="color"]),
+.mck-paper [style*="background: #0B1F3A"] *:not([style*="color"]),
+.mck-paper [style*="background:#0B1F3A"] *:not([style*="color"]),
+.mck-paper [style*="background: #1B3A5C"] *:not([style*="color"]),
+.mck-paper [style*="background:#1B3A5C"] *:not([style*="color"]),
+.mck-paper [style*="background: #2558A0"] *:not([style*="color"]),
+.mck-paper [style*="background:#2558A0"] *:not([style*="color"]) {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* L2 → L3: navy 박스 안 다시 한층 inset 박스 (검정/딥 navy) → 흰 텍스트 유지 */
+.mck-paper [style*="background:#0A1628"] [style*="background"],
+.mck-paper [style*="background: #0A1628"] [style*="background"] {
+  color: #FFFFFF !important;
+}
+
+/* 일반(global) — mck-paper 없어도 navy 배경 + 자식 텍스트 흰색 강제 */
+.mck-cta-dark span,
+.mck-cta-dark a,
+.mck-cta-dark p,
+.mck-cta-dark div:not([style*="background"]) {
+  color: #FFFFFF !important;
+}
+
+/* 4) 딜룸 NDA 박스 패턴 — 검정 박스 안 navy 링크/배지 → 흰색 */
+.mck-paper [class*="nda"] [style*="color: #0A1628"],
+.mck-paper [class*="nda"] [style*="color:#0A1628"],
+.mck-paper [class*="nda"] [style*="color: #1B3A5C"],
+.mck-paper [class*="nda"] [style*="color:#1B3A5C"],
+[role="dialog"] [style*="background:#0A1628"] [style*="color:#0A1628"],
+[role="dialog"] [style*="background: #0A1628"] [style*="color: #0A1628"] {
+  color: #FFFFFF !important;
+}
+
+/* 5) 흰 종이 안의 brass 강조 — 가독성 보장 (brass on white WCAG AA) */
+.mck-paper .mck-eyebrow,
+.mck-paper [style*="color: #B8924B"],
+.mck-paper [style*="color:#B8924B"] {
+  color: #8B6F2F !important;  /* 화이트 종이 위 brass 어두운 톤 — WCAG AA 4.5:1 */
+}
+/* navy 배경 안의 brass eyebrow → 라이트 brass */
+.mck-cta-dark .mck-eyebrow,
+[style*="background:#0A1628"] .mck-eyebrow,
+[style*="background: #0A1628"] .mck-eyebrow,
+[style*="background:#051C2C"] .mck-eyebrow,
+[style*="background: #051C2C"] .mck-eyebrow {
+  color: #E5C77A !important;
+}
+
+/* 6) 매수수요 "제안 보내기" 같은 V.positive(파란/네이비) 버튼 안 → 흰글씨 강제 */
+a[style*="backgroundColor: var(--color-positive)"] *,
+a[style*="background-color: var(--color-positive)"] *,
+a[style*="backgroundColor:var(--color-positive)"] *,
+button[style*="backgroundColor: var(--color-positive)"] *,
+button[style*="background-color: var(--color-positive)"] * {
+  color: #FFFFFF !important;
+}
+
+/* ── 7) Multi-color suppression for non-brand hex (라이트 단일 + McKinsey palette) ──
+   브랜드 navy/blue (#1B3A5C, #2558A0, #2E75B6, #2251FF, #4F86C7) 와
+   brass (#B8924B, #E5C77A, #8B6F2F) + ink (#0A1628, #051C2C) 만 살린다. */
+
+/* 약간이라도 사용자가 "이런 색 사양" 한 것은 흰 + ink/brass 로 강제 */
+[style*="color: #F59E0B"]:not(.preserve-color),
+[style*="color:#F59E0B"]:not(.preserve-color),
+[style*="color: #FB923C"]:not(.preserve-color),
+[style*="color:#FB923C"]:not(.preserve-color),
+[style*="color: #D97706"]:not(.preserve-color),
+[style*="color:#D97706"]:not(.preserve-color),
+[style*="color: #B45309"]:not(.preserve-color),
+[style*="color:#B45309"]:not(.preserve-color) {
+  color: #B8924B !important;  /* amber/orange → brass */
+}
+
+/* ── 8) 글꼴 크기 일관 톤앤매너 — 모든 카드 헤딩 통일 ─────────────────────── */
+.card h1, .card h2, .card h3,
+.mck-paper h1, .mck-paper h2, .mck-paper h3,
+[role="article"] h1, [role="article"] h2, [role="article"] h3 {
+  letter-spacing: -0.015em;
+  word-break: keep-all;
+}
+
+/* ── 9) brass border accent — 강조 카드용 (top 1px brass) ─────────────────── */
+.mck-paper--accent {
+  position: relative;
+  border-top: 1.5px solid #B8924B !important;
+}
+
+/* ── 10) 마지막 강제 가드 — body 배경 라이트 ─────────────────────────────── */
+body {
+  background-color: var(--color-bg-base, #FAFBFC);
+  color: #0A1628;
+}
+

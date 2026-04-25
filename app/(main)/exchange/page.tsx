@@ -1358,7 +1358,8 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
 
         <InlineProvidedChips fields={item.provided} />
 
-        {/* CTA — ink 검정 + 흰 글씨 + sharp edge */}
+        {/* CTA — ink 검정 + 흰 글씨 + sharp edge
+            child span/svg에 inline color 명시 → globals.css mck-paper 자식 ink 변환 회피 */}
         <Link
           href={`/exchange/${item.id}`}
           style={{
@@ -1373,9 +1374,10 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
             letterSpacing: "0.04em",
             border: "1px solid #0A1628",
           }}
+          className="mck-cta-dark"
         >
-          <span>딜룸 입장 · 상세</span>
-          <ArrowRight size={14} />
+          <span style={{ color: "#FFFFFF" }}>딜룸 입장 · 상세</span>
+          <ArrowRight size={14} style={{ color: "#FFFFFF" }} />
         </Link>
       </div>
     </motion.article>

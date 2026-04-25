@@ -1,8 +1,11 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+// 다크모드 제거 — 라이트 단일 테마 (McKinsey White Paper)
+// 이 파일은 외부 import 호환을 위해 stub 으로 유지됩니다.
 
-type Theme = 'light' | 'dark';
+import { createContext, useContext } from 'react';
+
+type Theme = 'light';
 
 const ThemeContext = createContext<{
   theme: Theme;
@@ -10,27 +13,8 @@ const ThemeContext = createContext<{
 }>({ theme: 'light', toggle: () => {} });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light');
-
-  useEffect(() => {
-    const saved = localStorage.getItem('theme') as Theme | null;
-    const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const initial = saved ?? preferred;
-    setTheme(initial);
-    document.documentElement.classList.toggle('dark', initial === 'dark');
-  }, []);
-
-  const toggle = () => {
-    setTheme((prev) => {
-      const next = prev === 'light' ? 'dark' : 'light';
-      localStorage.setItem('theme', next);
-      document.documentElement.classList.toggle('dark', next === 'dark');
-      return next;
-    });
-  };
-
   return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
+    <ThemeContext.Provider value={{ theme: 'light', toggle: () => {} }}>
       {children}
     </ThemeContext.Provider>
   );

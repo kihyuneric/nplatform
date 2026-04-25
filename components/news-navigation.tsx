@@ -3,8 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Clock, Sun, Moon } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { Clock } from 'lucide-react';
 
 const navItems = [
   { href: '/news',       label: '뉴스 검색' },
@@ -14,7 +13,6 @@ const navItems = [
 export function NewsNavigation() {
   const pathname = usePathname();
   const [time, setTime] = useState('');
-  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const fmt = () => {
@@ -64,14 +62,7 @@ export function NewsNavigation() {
               </Link>
             );
           })}
-          {/* 다크모드 토글 */}
-          <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] transition-colors focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none"
-            aria-label="다크모드 토글"
-          >
-            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
+          {/* 다크모드 토글 제거 — 라이트 단일 테마 (McKinsey White Paper) */}
         </nav>
       </div>
 

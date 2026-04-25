@@ -11,14 +11,23 @@ import {
 import DS from "@/lib/design-system"
 
 /* ─────────────────────────────────────────────────────────────
-   분석 도구 카드 정의 — McKinsey mono editorial v3
-   모든 카드 동일 톤 (검정 + brass dot + 흰 종이). 색상 차별화 X.
-   위계는 typography weight + position + small numeric prefix 로.
+   McKinsey 컬러 시스템 v9 — 라이트 단일 테마, 흰 종이 + ink + brass
+   사용자 요구: "분석 대시보드 맥킨지 칼라로 색 구성. 다 모노톤이야 너무"
    ───────────────────────────────────────────────────────────── */
-const MONO_INK = "#051C2C"
-const MONO_TINT = "rgba(5, 28, 44, 0.04)"
-const MONO_BORDER = "rgba(5, 28, 44, 0.12)"
-const BRASS = "var(--color-editorial-gold, #2251FF)"
+const MCK_INK = "#0A1628"           // 메인 ink (deep navy)
+const MCK_INK_DEEP = "#051C2C"      // hero deep navy
+const MCK_BRASS = "#B8924B"         // brass accent (선/dot/border)
+const MCK_BRASS_LIGHT = "#E5C77A"   // brass on dark
+const MCK_BRASS_DARK = "#8B6F2F"    // brass on white (WCAG AA)
+const MCK_BRAND_BLUE = "#2558A0"    // 살린 brand blue (강조)
+const MCK_PAPER = "#FFFFFF"
+const MCK_PAPER_TINT = "rgba(10, 22, 40, 0.04)"
+const MCK_BORDER = "rgba(10, 22, 40, 0.12)"
+
+// 호환 alias (기존 참조 유지)
+const MONO_INK = MCK_INK
+const MONO_TINT = MCK_PAPER_TINT
+const MONO_BORDER = MCK_BORDER
 
 const TOOLS = [
   {
@@ -194,55 +203,136 @@ export default function AnalysisDashboard() {
   return (
     <div className={DS.page.wrapper}>
 
-      {/* ── Hero ───────────────────────────────────────────── */}
-      <section className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)]">
-        <div className={`${DS.page.container} py-10`}>
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      {/* ── Hero (McKinsey Navy + Brass) ────────────────────────────────── */}
+      <section
+        style={{
+          background: `linear-gradient(135deg, ${MCK_INK_DEEP} 0%, ${MCK_INK} 100%)`,
+          borderBottom: `2px solid ${MCK_BRASS}`,
+        }}
+      >
+        <div className={`${DS.page.container} py-12`}>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-stone-100 to-stone-100 flex items-center justify-center shadow-sm">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <h1 className={`${DS.text.sectionTitle} tracking-tight`}>
-                  인사이트 · 분석 대시보드
-                </h1>
+              {/* eyebrow */}
+              <div className="flex items-center gap-2 mb-3">
+                <span style={{ width: 24, height: 1.5, background: MCK_BRASS_LIGHT, display: 'inline-block' }} />
+                <span
+                  style={{
+                    color: MCK_BRASS_LIGHT,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: '0.10em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Insights · Analytics Cockpit
+                </span>
               </div>
-              <p className={`${DS.text.caption} max-w-2xl`}>
-                NPL 수익성 분석 · 경매 분석 · AI 컨설턴트 · NPL 가격지수까지 — 모든 분석 도구를 한 곳에서
+              <h1
+                style={{
+                  color: '#FFFFFF',
+                  fontSize: 'clamp(1.875rem, 3.5vw, 2.25rem)',
+                  fontWeight: 800,
+                  letterSpacing: '-0.025em',
+                  lineHeight: 1.15,
+                  marginBottom: 8,
+                  wordBreak: 'keep-all',
+                }}
+              >
+                인사이트 · <span style={{ color: MCK_BRASS_LIGHT, fontWeight: 900 }}>분석 대시보드</span>
+              </h1>
+              <p
+                style={{
+                  color: 'rgba(255,255,255,0.78)',
+                  fontSize: 14,
+                  lineHeight: 1.55,
+                  maxWidth: 640,
+                  fontWeight: 400,
+                }}
+              >
+                NPL 수익성 분석 · 경매 분석 · AI 컨설턴트 · NPL 가격지수까지 — 모든 분석 도구를 한 곳에서.
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 href="/analysis/demo"
-                className={DS.btn('secondary', 'sm')}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '10px 18px',
+                  background: 'transparent',
+                  border: `1.5px solid ${MCK_BRASS_LIGHT}`,
+                  color: MCK_BRASS_LIGHT,
+                  fontSize: 12, fontWeight: 700,
+                  letterSpacing: '-0.005em',
+                }}
               >
-                <Zap className="w-3.5 h-3.5" /> 데모 체험
+                <Zap className="w-3.5 h-3.5" style={{ color: MCK_BRASS_LIGHT }} />
+                <span style={{ color: MCK_BRASS_LIGHT }}>데모 체험</span>
               </Link>
               <Link
                 href="/analysis/profitability"
-                className={DS.btn('primary', 'sm')}
+                className="mck-cta-dark"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '10px 20px',
+                  background: '#FFFFFF',
+                  borderTop: `2px solid ${MCK_BRASS}`,
+                  color: MCK_INK,
+                  fontSize: 12, fontWeight: 800,
+                  letterSpacing: '-0.005em',
+                }}
               >
-                <TrendingUp className="w-3.5 h-3.5" /> 분석 시작
+                <TrendingUp className="w-3.5 h-3.5" style={{ color: MCK_INK }} />
+                <span style={{ color: MCK_INK }}>분석 시작</span>
               </Link>
             </div>
           </div>
 
-          {/* Quick stats */}
-          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {/* Quick stats — White Paper, brass top accent */}
+          <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { label: "AI 분석 완료", value: "28,391건", icon: Brain, color: "text-stone-900" },
-              { label: "평균 예측 정확도", value: "94.2%", icon: Shield, color: "text-stone-900" },
-              { label: "이번 달 분석", value: "1,284건", icon: TrendingUp, color: "text-stone-900" },
-              { label: "평균 소요 시간", value: "< 30초", icon: Clock, color: "text-stone-900" },
+              { label: "AI 분석 완료", value: "28,391건", icon: Brain, accent: MCK_BRASS },
+              { label: "평균 예측 정확도", value: "94.2%", icon: Shield, accent: MCK_BRAND_BLUE },
+              { label: "이번 달 분석", value: "1,284건", icon: TrendingUp, accent: MCK_BRASS },
+              { label: "평균 소요 시간", value: "< 30초", icon: Clock, accent: MCK_BRAND_BLUE },
             ].map((s) => (
               <div
                 key={s.label}
-                className="flex items-center gap-3 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-xl px-4 py-3"
+                style={{
+                  background: '#FFFFFF',
+                  borderTop: `2px solid ${s.accent}`,
+                  padding: '14px 16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                }}
               >
-                <s.icon className={`w-5 h-5 ${s.color} shrink-0`} />
+                <s.icon className="w-5 h-5 shrink-0" style={{ color: s.accent }} />
                 <div>
-                  <p className="text-[0.6875rem] text-[var(--color-text-tertiary)]">{s.label}</p>
-                  <p className="text-[0.9375rem] font-black text-[var(--color-text-primary)] tabular-nums">{s.value}</p>
+                  <p
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: '#4A5568',
+                      letterSpacing: '0.04em',
+                      textTransform: 'uppercase',
+                      marginBottom: 2,
+                    }}
+                  >
+                    {s.label}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 800,
+                      color: MCK_INK,
+                      letterSpacing: '-0.015em',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {s.value}
+                  </p>
                 </div>
               </div>
             ))}
@@ -250,12 +340,35 @@ export default function AnalysisDashboard() {
         </div>
       </section>
 
-      {/* ── Tool Grid ────────────────────────────────────────── */}
-      <section className={`${DS.page.container} mt-8`}>
-        <h2 className={`${DS.text.cardSubtitle} mb-4 flex items-center gap-2`}>
-          <Sparkles className="w-4 h-4 text-[var(--color-brand-mid)]" />
-          분석 도구
-        </h2>
+      {/* ── Tool Grid (McKinsey White Paper) ────────────────────────────── */}
+      <section className={`${DS.page.container} mt-10`}>
+        <div className="mb-5">
+          <div className="flex items-center gap-2 mb-2">
+            <span style={{ width: 18, height: 1.5, background: MCK_BRASS, display: 'inline-block' }} />
+            <span
+              style={{
+                color: MCK_BRASS_DARK,
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: '0.10em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Toolkit · 4 modules
+            </span>
+          </div>
+          <h2
+            style={{
+              color: MCK_INK,
+              fontSize: 'clamp(1.25rem, 2vw, 1.5rem)',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              lineHeight: 1.25,
+            }}
+          >
+            분석 도구
+          </h2>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {TOOLS.map((tool, i) => {
             const Icon = tool.icon
@@ -335,15 +448,49 @@ export default function AnalysisDashboard() {
         </div>
       </section>
 
-      {/* ── Recent Analyses ──────────────────────────────────── */}
-      <section className={`${DS.page.container} mt-8 mb-12`}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className={`${DS.text.cardSubtitle} flex items-center gap-2`}>
-            <Clock className="w-4 h-4 text-[var(--color-text-tertiary)]" />
-            최근 분석 내역
-          </h2>
-          <Link href="/my/portfolio" className={`${DS.text.link} text-[0.75rem]`}>
-            전체 보기 <ArrowRight className="inline w-3 h-3" />
+      {/* ── Recent Analyses (McKinsey White Paper) ─────────────────────── */}
+      <section className={`${DS.page.container} mt-10 mb-12`}>
+        <div className="flex items-end justify-between mb-5">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span style={{ width: 18, height: 1.5, background: MCK_BRASS, display: 'inline-block' }} />
+              <span
+                style={{
+                  color: MCK_BRASS_DARK,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '0.10em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Recent · last 30 days
+              </span>
+            </div>
+            <h2
+              style={{
+                color: MCK_INK,
+                fontSize: 'clamp(1.25rem, 2vw, 1.5rem)',
+                fontWeight: 700,
+                letterSpacing: '-0.02em',
+                lineHeight: 1.25,
+              }}
+            >
+              최근 분석 내역
+            </h2>
+          </div>
+          <Link
+            href="/my/portfolio"
+            style={{
+              color: MCK_BRAND_BLUE,
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '-0.005em',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+          >
+            전체 보기 <ArrowRight className="inline w-3 h-3" style={{ color: MCK_BRAND_BLUE }} />
           </Link>
         </div>
 
