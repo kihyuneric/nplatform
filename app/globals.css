@@ -3467,6 +3467,173 @@ button[role="switch"][data-state="unchecked"] {
   color: #FFFFFF !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   McKinsey Layer System v4 — "도형 안 도형 안 도형 안 도형까지"
+   4단계 명확 위계 + 자동 가독성 보장
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* L0 — 페이지 outermost */
+.mck-l0 {
+  background: #FFFFFF;
+  color: #051C2C;
+}
+.dark .mck-l0 {
+  background: #051C2C;
+  color: #FFFFFF;
+}
+
+/* L1 — 섹션 / Hero */
+.mck-l1 {
+  background: #F5F5F5;
+  color: #051C2C;
+  padding: 5rem 0;
+}
+.dark .mck-l1 {
+  background: #0A1628;
+  color: #FFFFFF;
+}
+
+/* L2 — Primary Card (도형) */
+.mck-l2 {
+  background: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  color: #051C2C;
+  padding: 2rem;
+  border-radius: 0;
+  transition: border-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mck-l2:hover {
+  border-color: #051C2C;
+}
+.dark .mck-l2 {
+  background: #122643;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+}
+.dark .mck-l2:hover {
+  border-color: #42AFFF;
+}
+
+/* L3 — Sub-card (카드 안의 카드) */
+.mck-l3 {
+  background: #F5F5F5;
+  border: 1px solid #E5E5E5;
+  color: #051C2C;
+  padding: 1.25rem;
+  border-radius: 0;
+}
+.dark .mck-l3 {
+  background: #1F2E5C;
+  border-color: rgba(66, 175, 255, 0.30);
+  color: #FFFFFF;
+}
+
+/* L4 — Inline highlight (sub-card 안 강조 박스) */
+.mck-l4 {
+  background: rgba(34, 81, 255, 0.06);
+  border-left: 2px solid #2251FF;
+  color: #051C2C;
+  padding: 0.75rem 1rem;
+  border-radius: 0;
+}
+.dark .mck-l4 {
+  background: rgba(66, 175, 255, 0.10);
+  border-left-color: #42AFFF;
+  color: #FFFFFF;
+}
+
+/* Layer 안 자식 요소 자동 색 (opacity 위계) */
+.mck-l1 h1, .mck-l1 h2, .mck-l1 h3,
+.mck-l2 h1, .mck-l2 h2, .mck-l2 h3,
+.mck-l3 h1, .mck-l3 h2, .mck-l3 h3,
+.mck-l4 h1, .mck-l4 h2, .mck-l4 h3 {
+  color: inherit;
+}
+.mck-l1 p, .mck-l2 p, .mck-l3 p, .mck-l4 p {
+  color: inherit;
+  opacity: 0.85;
+}
+.mck-l1 .mck-caption, .mck-l2 .mck-caption,
+.mck-l3 .mck-caption, .mck-l4 .mck-caption {
+  opacity: 0.65;
+  font-size: 0.8125rem;
+}
+
+/* Strong inline highlight (글꼴 강조 — 색 + weight 다르게) */
+.mck-strong, .mck-l1 strong, .mck-l2 strong, .mck-l3 strong {
+  color: #2251FF;
+  font-weight: 700;
+}
+.dark .mck-strong, .dark .mck-l1 strong, .dark .mck-l2 strong, .dark .mck-l3 strong {
+  color: #42AFFF;
+}
+
+/* Highlight inline (multi-color 대신 brass-like blue 강조) */
+.mck-highlight {
+  color: #2251FF;
+  font-weight: 600;
+}
+.dark .mck-highlight { color: #42AFFF; }
+
+/* Italic emphasis (다른 글꼴 강조) */
+.mck-emphasis {
+  font-style: italic;
+  color: #2251FF;
+  font-weight: 500;
+}
+.dark .mck-emphasis { color: #42AFFF; }
+
+/* Stat number inline (큰 숫자 강조 — 다른 글꼴 + 색) */
+.mck-stat {
+  font-family: 'Bower', 'Tiempos Headline', 'Charter', Georgia, 'Pretendard Variable', serif;
+  font-weight: 700;
+  font-size: 1.5em;
+  color: #2251FF;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.dark .mck-stat { color: #42AFFF; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   자동 가독성 보장 — Layer 컨텍스트 contextual override
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* L2/L3 카드 (라이트 흰 배경) 안의 inline 흰톤 텍스트 → navy 강제 */
+.mck-l2 *[style*="color: rgba(255, 255, 255"],
+.mck-l3 *[style*="color: rgba(255, 255, 255"],
+.mck-l4 *[style*="color: rgba(255, 255, 255"] {
+  color: #051C2C !important;
+}
+.mck-l2 *[style*="color: '#FFFFFF'"],
+.mck-l2 *[style*='color: "#FFFFFF"'],
+.mck-l3 *[style*="color: '#FFFFFF'"],
+.mck-l3 *[style*='color: "#FFFFFF"'] {
+  color: #051C2C !important;
+}
+
+/* 다크 L2/L3 안의 inline navy → 흰톤 강제 */
+.dark .mck-l2 *[style*="color: '#051C2C'"],
+.dark .mck-l2 *[style*='color: "#051C2C"'],
+.dark .mck-l3 *[style*="color: '#051C2C'"],
+.dark .mck-l3 *[style*='color: "#051C2C"'] {
+  color: #FFFFFF !important;
+}
+
+/* 명시적 흰색 강제 (예외 — 다크 위 흰 글씨 의도된 경우) */
+.mck-force-white { color: #FFFFFF !important; }
+.mck-force-navy  { color: #051C2C !important; }
+.mck-force-blue  { color: #2251FF !important; }
+
+/* 선/Divider 표준 (라이트/다크 자동 분기) */
+.mck-divider          { border-top: 1px solid #E5E5E5; height: 0; }
+.dark .mck-divider    { border-top-color: rgba(255, 255, 255, 0.12); }
+.mck-divider-strong   { border-top: 1px solid #BFBFBF; height: 0; }
+.dark .mck-divider-strong { border-top-color: rgba(255, 255, 255, 0.20); }
+.mck-divider-accent   { border-top: 2px solid #2251FF; height: 0; width: 48px; }
+.dark .mck-divider-accent { border-top-color: #42AFFF; }
+.mck-divider-dashed   { border-top: 1px dashed #BFBFBF; height: 0; }
+.dark .mck-divider-dashed { border-top-color: rgba(255, 255, 255, 0.20); }
+
 /* 5단계 프로세스 카드 — 각 단계 sky blue accent + 흰 글씨 + 큰 숫자 */
 .npl-process-step {
   background: rgba(255, 255, 255, 0.04);
