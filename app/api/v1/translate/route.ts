@@ -205,9 +205,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { translations },
       {
-        // CDN 캐시 1일 (동일 텍스트 반복 호출 방지)
+        // 일시적 cache 비활성화 (깨진 응답이 CDN 에 캐싱된 케이스 방어)
+        // 추후 안정화 후 다시 s-maxage 길게 설정
         headers: {
-          "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
+          "Cache-Control": "no-store, no-cache, must-revalidate",
         },
       },
     )
