@@ -1210,49 +1210,61 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
   const saleMethodLabel = SALE_METHODS[item.sale_method]
   const instLabel = SELLER_INSTITUTIONS[item.inst_kind]
 
+  /*
+    McKinsey Editorial Card v5 — White Paper + Ink + 1-point Brass Accent
+    원칙: 색을 채우지 않는다. typography hierarchy 로 위계.
+    - 카드 자체 = 흰 종이 (#FFFFFF, 다크 모드도 동일 — .mck-paper escape)
+    - 본문 = ink (#0A1628) + 회색 단계 (#3A4A5C, #6B7280)
+    - 강조 = size + weight (색 ≠ 강조). 매각희망가 1점만 brass.
+    - sharp edge (radius 0), 1px hairline, 검정 CTA + 흰 글씨
+  */
   return (
     <motion.article
+      className="mck-paper"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.03, 0.3), duration: 0.4 }}
       style={{
-        backgroundColor: V.surfaceElevated,
-        border: `1px solid ${V.borderSubtle}`,
-        borderRadius: 14,
+        backgroundColor: "#FFFFFF",
+        border: "1px solid rgba(5, 28, 44, 0.10)",
+        borderTop: "2px solid var(--color-editorial-gold, #B8924B)",
+        borderRadius: 0,
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
+        boxShadow: "0 12px 24px -8px rgba(5, 28, 44, 0.15), 0 4px 8px -2px rgba(5, 28, 44, 0.08)",
       }}
     >
-      {/* Header strip */}
+      {/* Header strip — institution + tier */}
       <div
         style={{
-          padding: "12px 14px",
-          backgroundColor: V.surfaceSunken,
-          borderBottom: `1px solid ${V.borderSubtle}`,
+          padding: "12px 16px",
+          backgroundColor: "#FFFFFF",
+          borderBottom: "1px solid rgba(5, 28, 44, 0.10)",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div
             style={{
-              width: 28, height: 28, borderRadius: 8,
-              backgroundColor: V.surfaceSunken,
+              width: 28, height: 28, borderRadius: 0,
+              backgroundColor: "#F5F5F5",
+              border: "1px solid rgba(5, 28, 44, 0.10)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}
           >
-            <Building2 size={14} color={V.textMuted} />
+            <Building2 size={13} color="rgba(5, 28, 44, 0.55)" />
           </div>
           <div>
             <div
-              style={{ fontSize: 11, fontWeight: 700, color: V.textPrimary, lineHeight: 1.2 }}
+              style={{ fontSize: 11, fontWeight: 700, color: "#0A1628", lineHeight: 1.2, letterSpacing: "-0.005em" }}
               title="NDA 체결 후 실명 공개"
             >
               {maskInstitutionName(item.institution)}
             </div>
-            <div style={{ fontSize: 9, color: V.textMuted, marginTop: 1 }}>
+            <div style={{ fontSize: 9, color: "rgba(5, 28, 44, 0.50)", marginTop: 2, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.10em" }}>
               {instLabel} · D-{7 - item.created_days_ago}
             </div>
           </div>
@@ -1261,7 +1273,7 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
           <span
             style={{
               display: "inline-flex", alignItems: "center", gap: 3,
-              fontSize: 10, color: V.textMuted, fontVariantNumeric: "tabular-nums",
+              fontSize: 10, color: "rgba(5, 28, 44, 0.55)", fontVariantNumeric: "tabular-nums", fontWeight: 600,
             }}
             title="누적 조회수"
           >
@@ -1272,78 +1284,73 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
       </div>
 
       {/* Body */}
-      <div style={{ padding: "16px 16px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ padding: "18px 16px 14px", display: "flex", flexDirection: "column", gap: 14 }}>
         {/* Title row */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
-          <div>
-            <div style={{ fontSize: 12, color: V.textMuted, marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
-              <MapPin size={11} /> {item.region} · {item.collateral}
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: 10, color: "rgba(5, 28, 44, 0.55)", marginBottom: 6, display: "flex", alignItems: "center", gap: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.10em" }}>
+              <MapPin size={10} /> {item.region} · {item.collateral}
             </div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: V.textPrimary, letterSpacing: "-0.01em" }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#0A1628", letterSpacing: "-0.012em", lineHeight: 1.25 }}>
               {saleMethodLabel} · {item.collateral} 담보
             </div>
-            <div style={{ fontSize: 10, color: V.textMuted, marginTop: 3, fontFamily: "monospace" }}>
+            <div style={{ fontSize: 9, color: "rgba(5, 28, 44, 0.40)", marginTop: 4, fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               {item.id}
             </div>
           </div>
+          {/* AI 등급 = 검정 사각 + 흰 글씨 (mono, 색 X) */}
           <div
             style={{
-              padding: "4px 8px", borderRadius: 6,
-              backgroundColor: gradeMeta.bg,
-              color: gradeMeta.text, fontSize: 10, fontWeight: 800,
-              border: `1px solid ${gradeMeta.border}`,
+              padding: "3px 7px", borderRadius: 0,
+              backgroundColor: "#0A1628",
+              color: "#FFFFFF", fontSize: 10, fontWeight: 800,
+              border: "1px solid #0A1628",
               whiteSpace: "nowrap",
               cursor: "help",
+              letterSpacing: "0.06em",
             }}
             title={`AI 종합 등급 · Claude NPL Engine v2\n· 담보가치/채권비율 35%\n· 지역시장 동향 25%\n· 채무자 신용 20%\n· 경매 낙찰가율 15%\n→ 회수율 예측 기반: S≥85% · A+≥75% · A≥65% · B≥55% · C<55%`}
           >
-            {formatAIGrade(item.ai_grade)}
+            AI · {formatAIGrade(item.ai_grade)}
           </div>
         </div>
 
-        {/* Key figures (L0 core) */}
-        <div
-          style={{
-            padding: "12px 14px",
-            backgroundColor: V.surfaceBase,
-            border: `1px solid ${V.borderSubtle}`,
-            borderRadius: 10,
-          }}
-        >
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <Figure label="채권잔액" value={principal} tone="neutral" sub="원금 + 연체이자" />
-            <Figure label="매각희망가" value={asking} tone="em" sub="잔액 대비 할인" />
-            <Figure label="감정가" value={appraisal} tone="neutral" sub="감정평가 기준" />
-            <Figure
-              label="할인율"
-              value={
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
-                  <TrendingDown size={13} color={V.positive} />
-                  {item.discount_rate.toFixed(1)}%
-                </span>
-              }
-              tone="em"
-            />
+        {/* HERO 숫자 = 매각희망가 (큰 ink 검정) */}
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(5, 28, 44, 0.55)", textTransform: "uppercase", letterSpacing: "0.16em", marginBottom: 4 }}>
+            매각희망가
+          </div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: "#0A1628", letterSpacing: "-0.02em", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+            {asking}
+          </div>
+        </div>
+
+        {/* Sub metrics row — 채권잔액 · 감정가 · 할인율 (할인율만 brass) */}
+        <div style={{ paddingTop: 12, borderTop: "1px solid rgba(5, 28, 44, 0.10)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            <SubMetric label="채권잔액" value={principal} />
+            <SubMetric label="감정가" value={appraisal} />
+            <SubMetric label="할인율" value={`${item.discount_rate.toFixed(1)}%`} brass />
           </div>
           <div
             style={{
               marginTop: 10, paddingTop: 10,
-              borderTop: `1px dashed ${V.borderSubtle}`,
+              borderTop: "1px dashed rgba(5, 28, 44, 0.10)",
               display: "flex", justifyContent: "space-between",
-              fontSize: 10, color: V.textMuted,
+              fontSize: 10,
             }}
           >
-            <span>예상 절감액</span>
-            <span style={{ color: V.positive, fontWeight: 700 }}>{savings}</span>
+            <span style={{ color: "rgba(5, 28, 44, 0.55)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.10em" }}>예상 절감액</span>
+            <span style={{ color: "#0A1628", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{savings}</span>
           </div>
         </div>
 
-        {/* Completeness — 단일 지표(자료 N/10) + 아래 시각 체크리스트로 중복 정보 제거 */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+        {/* Completeness — outline */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, paddingTop: 4 }}>
           <CompletenessBadge score={item.data_completeness} size="sm" />
           <span
             title="자료 완성도 = 필수 5 + 선택 5 항목 가점 평가"
-            style={{ fontSize: 10, color: V.textTertiary, cursor: "help" }}
+            style={{ fontSize: 10, color: "rgba(5, 28, 44, 0.55)", cursor: "help", fontWeight: 600, letterSpacing: "0.04em" }}
           >
             산정 기준 ⓘ
           </span>
@@ -1351,25 +1358,46 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
 
         <InlineProvidedChips fields={item.provided} />
 
-        {/* CTA */}
+        {/* CTA — ink 검정 + 흰 글씨 + sharp edge */}
         <Link
           href={`/exchange/${item.id}`}
           style={{
             marginTop: 4,
             padding: "11px 14px",
-            borderRadius: 10,
-            backgroundColor: V.positive,
-            color: V.onPositive,
+            borderRadius: 0,
+            backgroundColor: "#0A1628",
+            color: "#FFFFFF",
             fontSize: 12, fontWeight: 800,
             textAlign: "center",
-            display: "flex", justifyContent: "center", alignItems: "center", gap: 6,
-            letterSpacing: "-0.01em",
+            display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6,
+            letterSpacing: "0.04em",
+            border: "1px solid #0A1628",
           }}
         >
-          딜룸 입장 · 상세 <ArrowRight size={14} />
+          <span>딜룸 입장 · 상세</span>
+          <ArrowRight size={14} />
         </Link>
       </div>
     </motion.article>
+  )
+}
+
+/** 작은 라벨 + 숫자 — McKinsey Sub Metric */
+function SubMetric({ label, value, brass }: { label: string; value: string; brass?: boolean }) {
+  return (
+    <div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(5, 28, 44, 0.55)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 4 }}>
+        {label}
+      </div>
+      <div style={{
+        fontSize: 14, fontWeight: 800,
+        color: brass ? "var(--color-editorial-gold, #B8924B)" : "#0A1628",
+        letterSpacing: "-0.01em",
+        fontVariantNumeric: "tabular-nums",
+      }}>
+        {value}
+      </div>
+    </div>
   )
 }
 

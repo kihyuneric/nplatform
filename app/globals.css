@@ -3782,17 +3782,325 @@ button[role="switch"][data-state="unchecked"] {
    가장 강력한 catch-all — div 깊이별 색 자동 밝게
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* 다크 모드 .mck-l1 안의 sub 박스 (border 또는 bg 가진 div) → L2 톤 */
-.dark .mck-l1 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3) {
+/* 다크 모드 .mck-l1 안의 sub 박스 (border 또는 bg 가진 div) → L2 톤
+   단, 명시적으로 흰 surface (paper card) 또는 gold/ink black 박스는 그대로 유지
+   — McKinsey 인쇄물 톤: navy hero 위 white paper card 가 핵심
+*/
+.dark .mck-l1 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3):not([style*="#FFFFFF"]):not([style*="#FFF"]):not([style*="white"]):not([style*="#0A1628"]):not([style*="#B8924B"]):not([style*="editorial-gold"]):not(.mck-paper) {
   background: #1A3A5C !important;
 }
-/* L2 안의 sub div → L3 톤 */
-.dark .mck-l2 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3) {
+/* L2 안의 sub div → L3 톤 (흰 종이/ink 박스 escape) */
+.dark .mck-l2 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3):not([style*="#FFFFFF"]):not([style*="#FFF"]):not([style*="white"]):not([style*="#0A1628"]):not([style*="#B8924B"]):not([style*="editorial-gold"]):not(.mck-paper) {
   background: #254E76 !important;
 }
-/* L3 안의 sub div → L4 톤 */
-.dark .mck-l3 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3) {
+/* L3 안의 sub div → L4 톤 (흰 종이/ink 박스 escape) */
+.dark .mck-l3 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3):not([style*="#FFFFFF"]):not([style*="#FFF"]):not([style*="white"]):not([style*="#0A1628"]):not([style*="#B8924B"]):not([style*="editorial-gold"]):not(.mck-paper) {
   background: rgba(66, 175, 255, 0.18) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   .mck-paper · McKinsey White Paper Card System v5
+   원칙: 흰 종이 + ink 검정 + 회색 단계 + 1점 brass + sharp edge (radius 0)
+   다크 모드에서도 동일 (escape from navy auto-cast)
+   진짜 McKinsey 인쇄물 톤 — 색을 채우지 않는 디자인
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* === 카드 컨테이너 자체 === */
+.mck-paper,
+.dark .mck-paper {
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+  border: 1px solid rgba(5, 28, 44, 0.10) !important;
+  border-top: 2px solid var(--color-editorial-gold, #B8924B) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 12px 24px -8px rgba(5, 28, 44, 0.18), 0 4px 8px -2px rgba(5, 28, 44, 0.10) !important;
+  overflow: hidden;
+}
+
+/* === 카드 안의 모든 텍스트 → ink 검정 + 회색 단계 === */
+/* 일반 텍스트 (h1~h6, p, span, div, label, a) */
+.mck-paper, .mck-paper *,
+.dark .mck-paper, .dark .mck-paper * {
+  color: #0A1628 !important;
+}
+/* 보조 텍스트는 회색 단계 (text-gray-*, text-muted, text-secondary 등) */
+.mck-paper [class*="text-gray-3"], .mck-paper [class*="text-gray-4"], .mck-paper [class*="text-gray-5"],
+.mck-paper [class*="text-slate-3"], .mck-paper [class*="text-slate-4"], .mck-paper [class*="text-slate-5"],
+.mck-paper [class*="text-zinc-3"], .mck-paper [class*="text-zinc-4"], .mck-paper [class*="text-zinc-5"],
+.mck-paper [class*="text-neutral-3"], .mck-paper [class*="text-neutral-4"], .mck-paper [class*="text-neutral-5"],
+.mck-paper [class*="text-stone-3"], .mck-paper [class*="text-stone-4"], .mck-paper [class*="text-stone-5"],
+.mck-paper [class*="text-muted"], .mck-paper [class*="text-secondary"], .mck-paper [class*="text-tertiary"],
+.dark .mck-paper [class*="text-gray-3"], .dark .mck-paper [class*="text-gray-4"], .dark .mck-paper [class*="text-gray-5"],
+.dark .mck-paper [class*="text-slate-3"], .dark .mck-paper [class*="text-slate-4"], .dark .mck-paper [class*="text-slate-5"],
+.dark .mck-paper [class*="text-muted"], .dark .mck-paper [class*="text-secondary"], .dark .mck-paper [class*="text-tertiary"] {
+  color: rgba(5, 28, 44, 0.55) !important;
+}
+/* 가장 흐린 메타 텍스트 */
+.mck-paper [class*="text-gray-2"], .mck-paper [class*="text-slate-2"], .mck-paper [class*="text-zinc-2"],
+.mck-paper [class*="text-neutral-2"], .mck-paper [class*="text-stone-2"],
+.mck-paper [class*="text-gray-4"][class*="opacity"],
+.dark .mck-paper [class*="text-gray-2"], .dark .mck-paper [class*="text-slate-2"] {
+  color: rgba(5, 28, 44, 0.40) !important;
+}
+
+/* === 카드 안의 sub-box → 흰 종이 또는 light gray (navy 강제 X) === */
+.mck-paper > div[class*="bg-"], .mck-paper > section[class*="bg-"],
+.mck-paper [class*="rounded"][class*="bg-"]:not(button):not(a),
+.dark .mck-paper > div[class*="bg-"], .dark .mck-paper > section[class*="bg-"],
+.dark .mck-paper [class*="rounded"][class*="bg-"]:not(button):not(a) {
+  background: #FFFFFF !important;
+  border-color: rgba(5, 28, 44, 0.10) !important;
+}
+/* 더 강조된 sub-box (그늘 영역) → light gray */
+.mck-paper [class*="bg-gray-1"], .mck-paper [class*="bg-slate-1"], .mck-paper [class*="bg-zinc-1"],
+.mck-paper [class*="bg-neutral-1"], .mck-paper [class*="bg-stone-1"], .mck-paper [class*="bg-muted"],
+.mck-paper [class*="bg-secondary"], .mck-paper [class*="bg-accent"],
+.dark .mck-paper [class*="bg-gray-1"], .dark .mck-paper [class*="bg-slate-1"], .dark .mck-paper [class*="bg-muted"] {
+  background: #F5F5F5 !important;
+  color: #0A1628 !important;
+}
+
+/* === 카드 안의 input/textarea/select → 흰 배경 + ink 글씨 (다크 모드 대비) === */
+.mck-paper input, .mck-paper textarea, .mck-paper select,
+.dark .mck-paper input, .dark .mck-paper textarea, .dark .mck-paper select {
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+  border: 1px solid rgba(5, 28, 44, 0.20) !important;
+  border-radius: 0 !important;
+}
+.mck-paper input::placeholder, .mck-paper textarea::placeholder,
+.dark .mck-paper input::placeholder, .dark .mck-paper textarea::placeholder {
+  color: rgba(5, 28, 44, 0.40) !important;
+}
+
+/* === 카드 안의 button (primary CTA) → ink 검정 + 흰 글씨 === */
+.mck-paper button[class*="primary"], .mck-paper a[class*="primary"],
+.mck-paper button[class*="bg-primary"], .mck-paper a[class*="bg-primary"],
+.mck-paper button[class*="bg-blue"], .mck-paper button[class*="bg-emerald"],
+.mck-paper button[class*="bg-green"], .mck-paper button[class*="bg-indigo"],
+.dark .mck-paper button[class*="primary"], .dark .mck-paper a[class*="primary"] {
+  background: #0A1628 !important;
+  color: #FFFFFF !important;
+  border: 1px solid #0A1628 !important;
+  border-radius: 0 !important;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+.mck-paper button[class*="primary"] *, .mck-paper a[class*="primary"] *,
+.dark .mck-paper button[class*="primary"] *, .dark .mck-paper a[class*="primary"] * {
+  color: #FFFFFF !important;
+}
+
+/* === 카드 안의 secondary button → 투명 + ink 보더 === */
+.mck-paper button[class*="secondary"], .mck-paper a[class*="secondary"],
+.mck-paper button[class*="outline"], .mck-paper a[class*="outline"],
+.dark .mck-paper button[class*="secondary"], .dark .mck-paper button[class*="outline"] {
+  background: transparent !important;
+  color: #0A1628 !important;
+  border: 1px solid rgba(5, 28, 44, 0.30) !important;
+  border-radius: 0 !important;
+  font-weight: 600;
+}
+
+/* === 카드 안의 badge/chip/tag → outline only ink === */
+.mck-paper [class*="badge"], .mck-paper [class*="chip"], .mck-paper [class*="tag"]:not(svg):not(path),
+.mck-paper [class*="Badge"], .mck-paper [class*="Chip"],
+.dark .mck-paper [class*="badge"], .dark .mck-paper [class*="chip"], .dark .mck-paper [class*="tag"]:not(svg):not(path) {
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+  border: 1px solid rgba(5, 28, 44, 0.30) !important;
+  border-radius: 0 !important;
+}
+
+/* === 카드 안의 link → ink + underline on hover === */
+.mck-paper a:not([class*="primary"]):not([class*="bg-"]),
+.dark .mck-paper a:not([class*="primary"]):not([class*="bg-"]) {
+  color: #0A1628 !important;
+  text-decoration: none;
+}
+.mck-paper a:not([class*="primary"]):not([class*="bg-"]):hover,
+.dark .mck-paper a:not([class*="primary"]):not([class*="bg-"]):hover {
+  text-decoration: underline;
+  text-decoration-color: var(--color-editorial-gold, #B8924B);
+}
+
+/* === 카드 안의 svg icon → ink === */
+.mck-paper svg:not([class*="text-"]),
+.dark .mck-paper svg:not([class*="text-"]) {
+  color: rgba(5, 28, 44, 0.55) !important;
+}
+
+/* === 카드 안의 hr/divider → light hairline === */
+.mck-paper hr, .mck-paper [role="separator"],
+.dark .mck-paper hr, .dark .mck-paper [role="separator"] {
+  border-color: rgba(5, 28, 44, 0.10) !important;
+  background: rgba(5, 28, 44, 0.10) !important;
+}
+
+/* === 카드 안의 progress/meter bar === */
+.mck-paper progress, .mck-paper [role="progressbar"],
+.dark .mck-paper progress, .dark .mck-paper [role="progressbar"] {
+  background: #F5F5F5 !important;
+  color: #0A1628 !important;
+  border-radius: 0 !important;
+}
+
+/* === 카드 안의 table === */
+.mck-paper table, .dark .mck-paper table {
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+}
+.mck-paper th, .mck-paper td,
+.dark .mck-paper th, .dark .mck-paper td {
+  border-color: rgba(5, 28, 44, 0.10) !important;
+  color: #0A1628 !important;
+}
+.mck-paper thead, .dark .mck-paper thead {
+  background: #F5F5F5 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AUTO-PAPER · 다크 모드 자동 White Paper 변환
+   명시적 .mck-paper className 없이도 카드 패턴이 자동으로 흰 종이로 보이게
+   ⚠ Hero/Nav/Footer는 navy 유지 — semantic 태그 (.mck-l0, header, nav, footer) 제외
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1. 모든 <article> 태그 → 흰 종이 카드 (다크 모드 자동) */
+.dark article:not(.mck-l0):not(.mck-l1):not(.mck-l2):not(.mck-l3):not(.mck-l4) {
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+  border: 1px solid rgba(5, 28, 44, 0.10) !important;
+  border-top: 2px solid var(--color-editorial-gold, #B8924B) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 12px 24px -8px rgba(5, 28, 44, 0.18), 0 4px 8px -2px rgba(5, 28, 44, 0.10) !important;
+}
+.dark article * {
+  color: #0A1628 !important;
+}
+.dark article [class*="text-gray-3"], .dark article [class*="text-gray-4"], .dark article [class*="text-gray-5"],
+.dark article [class*="text-slate-3"], .dark article [class*="text-slate-4"], .dark article [class*="text-slate-5"],
+.dark article [class*="text-muted"], .dark article [class*="text-secondary"], .dark article [class*="text-tertiary"] {
+  color: rgba(5, 28, 44, 0.55) !important;
+}
+
+/* 2. shadcn Card 컴포넌트 (Card, CardContent, CardHeader, CardFooter) — 다크 모드 자동 흰 종이 */
+.dark [class*="Card"]:not(button):not(a):not([class*="CardSection"]):not(.mck-l0):not(.mck-l1):not(.mck-l2):not(.mck-l3),
+.dark [data-slot="card"],
+.dark .card:not(button):not(a) {
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+  border-color: rgba(5, 28, 44, 0.10) !important;
+}
+
+/* 3. Tailwind bg-card / bg-background / bg-popover (shadcn 토큰) → 흰 종이 */
+.dark [class*="bg-card"]:not(.mck-l0):not(.mck-l1):not(.mck-l2):not(.mck-l3):not(.mck-l4),
+.dark [class*="bg-popover"]:not(.mck-l0):not(.mck-l1):not(.mck-l2):not(.mck-l3) {
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+  border-color: rgba(5, 28, 44, 0.10) !important;
+}
+.dark [class*="bg-card"] *:not([class*="bg-"]):not([class*="text-white"]):not(svg):not(path),
+.dark [class*="bg-popover"] *:not([class*="bg-"]):not([class*="text-white"]):not(svg):not(path) {
+  color: #0A1628 !important;
+}
+
+/* 4. 모달/다이얼로그 (Radix Dialog, Sheet, Drawer 등) — 다크 모드도 흰 종이 */
+.dark [role="dialog"]:not(.mck-l0):not(.mck-l1),
+.dark [data-radix-dialog-content],
+.dark [data-radix-sheet-content],
+.dark [data-radix-drawer-content],
+.dark [data-radix-popover-content] {
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+  border-color: rgba(5, 28, 44, 0.20) !important;
+  border-radius: 0 !important;
+}
+.dark [role="dialog"] *:not([class*="bg-"]):not(svg):not(path),
+.dark [data-radix-dialog-content] *:not([class*="bg-"]):not(svg):not(path) {
+  color: #0A1628 !important;
+}
+
+/* 5. AI 등급 / Tier 뱃지 — 무조건 검정 사각 + 흰 글씨 (multi-color 차단) */
+[class*="ai-grade"], [class*="AIGrade"], [data-grade],
+[class*="tier-badge"], [class*="TierBadge"],
+.npl-ai-grade, [data-tier],
+.dark [class*="ai-grade"], .dark [class*="AIGrade"], .dark [data-grade],
+.dark [class*="tier-badge"], .dark [class*="TierBadge"] {
+  background: #0A1628 !important;
+  color: #FFFFFF !important;
+  border: 1px solid #0A1628 !important;
+  border-radius: 0 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+}
+[class*="ai-grade"] *, [class*="tier-badge"] *,
+.dark [class*="ai-grade"] *, .dark [class*="tier-badge"] * {
+  color: #FFFFFF !important;
+}
+
+/* 6. CTA primary button (전 페이지) — 다크 모드라도 검정 + 흰 (네이비 단색 X) */
+.dark button[class*="bg-primary"]:not(.mck-l0 button),
+.dark a[class*="bg-primary"]:not(.mck-l0 a),
+.dark button[class*="primary-action"],
+.dark .cta-primary,
+.dark [class*="btn-primary"] {
+  background: #0A1628 !important;
+  color: #FFFFFF !important;
+  border: 1px solid #0A1628 !important;
+  border-radius: 0 !important;
+  letter-spacing: 0.04em !important;
+  font-weight: 700 !important;
+}
+
+/* 7. 다크 모드 input/textarea/select 전역 — 흰 배경 + ink 글씨 (가독성) */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([class*="bg-"]),
+.dark textarea:not([class*="bg-"]),
+.dark select:not([class*="bg-"]) {
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+  border: 1px solid rgba(5, 28, 44, 0.20) !important;
+  border-radius: 0 !important;
+}
+.dark input::placeholder, .dark textarea::placeholder {
+  color: rgba(5, 28, 44, 0.40) !important;
+}
+
+/* 8. 로그인/Auth 페이지 카드 — 자동 흰 종이 (다크 모드라도) */
+.dark [class*="login"], .dark [class*="signup"], .dark [class*="auth-card"],
+.dark form[class*="rounded"]:not(.mck-l0):not(.mck-l1):not(.mck-l2) {
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+  border-color: rgba(5, 28, 44, 0.10) !important;
+}
+.dark [class*="login"] *:not([class*="bg-"]):not(svg):not(path),
+.dark [class*="signup"] *:not([class*="bg-"]):not(svg):not(path),
+.dark [class*="auth-card"] *:not([class*="bg-"]):not(svg):not(path) {
+  color: inherit !important;
+}
+
+/* 9. 관리자 dashboard 카드 (data card, stat card) — 흰 종이 */
+.dark [class*="dashboard-card"],
+.dark [class*="stat-card"],
+.dark [class*="metric-card"],
+.dark [class*="kpi-card"] {
+  background: #FFFFFF !important;
+  color: #0A1628 !important;
+  border: 1px solid rgba(5, 28, 44, 0.10) !important;
+  border-top: 2px solid var(--color-editorial-gold, #B8924B) !important;
+  border-radius: 0 !important;
+}
+
+/* 10. 다크 모드에서 navy 위 "흐린 흰 글씨" (rgba(255,255,255,0.3~0.5)) 가독성 강화 */
+.dark *[style*="rgba(255,255,255,0.3)"],
+.dark *[style*="rgba(255, 255, 255, 0.3)"],
+.dark *[style*="rgba(255,255,255,0.35)"],
+.dark *[style*="rgba(255,255,255,0.4)"],
+.dark *[style*="rgba(255, 255, 255, 0.4)"] {
+  /* 만약 부모가 .mck-paper 또는 흰 카드 안이면 ink로 강제 */
+}
+.mck-paper *[style*="rgba(255,255,255"],
+.dark .mck-paper *[style*="rgba(255,255,255"] {
+  color: rgba(5, 28, 44, 0.55) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

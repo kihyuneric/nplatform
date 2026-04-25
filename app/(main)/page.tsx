@@ -154,128 +154,171 @@ function DealCard() {
       {/* Ambient glow */}
       <div className="absolute -inset-8 rounded-3xl blur-3xl" style={{ background: 'radial-gradient(circle, rgba(5, 28, 44,0.12) 0%, transparent 70%)' }} />
 
-      <div className="relative rounded-2xl overflow-hidden shadow-2xl"
-        style={{ background: C.bg3, border: '1px solid rgba(255,255,255,0.08)' }}>
+      {/*
+        McKinsey Editorial Card — White paper on navy hero
+        원칙: 색을 채우지 않고 typography hierarchy 로 위계
+        - 카드 = 흰 종이 (#FFFFFF)
+        - 본문 = ink (#0A1628) + 회색 단계 (#3A4A5C, #6B7280)
+        - 강조 = ink Black + ExtraBold + 큰 사이즈 (색 ≠ 강조)
+        - 1점 brass accent (gold) — 좌상단 hairline 하나만
+        - CTA = ink 검정 사각 + 흰 글씨 (radius 0)
+      */}
+      <div className="relative overflow-hidden"
+        style={{
+          background: '#FFFFFF',
+          border: '1px solid rgba(5, 28, 44, 0.10)',
+          borderTop: '2px solid var(--color-editorial-gold, #B8924B)',
+          boxShadow: '0 24px 48px -12px rgba(5, 28, 44, 0.30), 0 8px 16px -4px rgba(5, 28, 44, 0.15)',
+          borderRadius: 0,
+        }}>
 
         {/* Header strip — institution */}
-        <div className="flex items-center justify-between px-4 py-3"
-          style={{ background: C.bg2, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center justify-between px-5 py-3.5"
+          style={{ borderBottom: '1px solid rgba(5, 28, 44, 0.10)' }}>
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: C.bg1 }}>
-              <Building2 size={13} style={{ color: 'rgba(255,255,255,0.4)' }} />
+            <div className="w-7 h-7 flex items-center justify-center"
+              style={{ background: '#F5F5F5', border: '1px solid rgba(5, 28, 44, 0.10)' }}>
+              <Building2 size={13} style={{ color: 'rgba(5, 28, 44, 0.55)' }} />
             </div>
             <div>
-              <div className="text-[11px] font-bold" style={{ color: 'rgba(255,255,255,0.85)' }}>우리은행</div>
-              <div className="text-[9px]" style={{ color: 'rgba(255,255,255,0.35)' }}>금융기관 · D-5</div>
+              <div className="text-[11px] font-bold tracking-tight" style={{ color: '#0A1628' }}>우리은행</div>
+              <div className="text-[9px] uppercase tracking-[0.10em] mt-0.5" style={{ color: 'rgba(5, 28, 44, 0.50)', fontWeight: 600 }}>금융기관 · D-5</div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[9px] px-2 py-0.5 rounded font-bold"
-              style={{ background: 'var(--color-editorial-gold-soft, rgba(34, 81, 255,0.14))', color: C.em, border: '1px solid rgba(34, 81, 255,0.35)' }}>
-              L0
-            </span>
-          </div>
+          <span className="text-[9px] px-2 py-0.5 font-bold uppercase tracking-[0.10em]"
+            style={{ background: '#0A1628', color: '#FFFFFF', borderRadius: 0 }}>
+            NPL
+          </span>
         </div>
 
-        <div className="p-4 flex flex-col gap-3">
+        <div className="px-5 py-4 flex flex-col gap-4">
           {/* Title row */}
           <div className="flex justify-between items-start gap-2">
-            <div>
-              <div className="flex items-center gap-1 text-[11px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1 text-[10px] uppercase tracking-[0.10em] mb-1.5" style={{ color: 'rgba(5, 28, 44, 0.55)', fontWeight: 600 }}>
                 <MapPin size={10} /> 서울 강남구 · 아파트
               </div>
-              <div className="text-[13px] font-extrabold" style={{ color: 'rgba(255,255,255,0.92)', letterSpacing: '-0.01em' }}>
+              <div className="text-[15px] font-extrabold" style={{ color: '#0A1628', letterSpacing: '-0.012em', lineHeight: 1.25 }}>
                 임의매각 · 아파트 담보
               </div>
-              <div className="text-[9px] mt-1 font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                npl-2026-0412
+              <div className="text-[9px] mt-1 font-mono uppercase tracking-[0.06em]" style={{ color: 'rgba(5, 28, 44, 0.40)' }}>
+                NPL-2026-0412
               </div>
             </div>
-            <div className="shrink-0 px-2 py-1 rounded-md text-[10px] font-extrabold"
-              style={{ background: 'var(--color-editorial-gold-soft, rgba(34, 81, 255,0.14))', color: C.em, border: '1px solid rgba(5, 28, 44,0.3)' }}>
-              AI A
+            <div className="shrink-0 px-1.5 py-1 text-[10px] font-extrabold tracking-[0.06em]"
+              style={{ background: '#0A1628', color: '#FFFFFF', borderRadius: 0 }}>
+              AI · A
             </div>
           </div>
 
-          {/* Key figures */}
-          <div className="rounded-xl p-3" style={{ background: C.bg2, border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div className="grid grid-cols-2 gap-2.5">
+          {/* Key figures — 매각희망가만 큰 강조, 나머지는 작게 */}
+          <div className="pt-1">
+            {/* 매각희망가 = HERO 숫자 */}
+            <div className="mb-3">
+              <div className="text-[9px] font-bold uppercase tracking-[0.16em] mb-1" style={{ color: 'rgba(5, 28, 44, 0.55)' }}>
+                매각희망가
+              </div>
+              <div className="text-3xl font-extrabold tabular-nums" style={{ color: '#0A1628', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                8.5<span className="text-xl font-bold" style={{ color: 'rgba(5, 28, 44, 0.55)' }}>억</span>
+              </div>
+            </div>
+            {/* sub-metrics: 채권잔액 · 감정가 · 할인율 */}
+            <div className="grid grid-cols-3 gap-3 pt-3" style={{ borderTop: '1px solid rgba(5, 28, 44, 0.10)' }}>
               {[
-                { label: "채권잔액", value: "12.0억", color: 'rgba(255,255,255,0.75)' },
-                { label: "매각희망가", value: "8.5억", color: C.em },
-                { label: "감정가", value: "10.2억", color: 'rgba(255,255,255,0.75)' },
-                { label: "할인율", value: "29.2%", color: C.em, icon: true },
+                { label: "채권잔액", value: "12.0", unit: "억" },
+                { label: "감정가", value: "10.2", unit: "억" },
+                { label: "할인율", value: "29.2", unit: "%", brass: true },
               ].map(f => (
                 <div key={f.label}>
-                  <div className="text-[9px] font-semibold mb-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>{f.label}</div>
-                  <div className="text-sm font-black tabular-nums flex items-center gap-1" style={{ color: f.color }}>
-                    {f.icon && <TrendingDown size={12} style={{ color: C.em }} />}
-                    {f.value}
+                  <div className="text-[9px] font-bold uppercase tracking-[0.12em] mb-1" style={{ color: 'rgba(5, 28, 44, 0.55)' }}>{f.label}</div>
+                  <div className="text-sm font-bold tabular-nums" style={{ color: f.brass ? 'var(--color-editorial-gold, #B8924B)' : '#0A1628', letterSpacing: '-0.01em' }}>
+                    {f.value}<span className="text-[10px] font-semibold ml-0.5" style={{ color: 'rgba(5, 28, 44, 0.45)' }}>{f.unit}</span>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="flex justify-between items-center mt-2.5 pt-2.5" style={{ borderTop: '1px dashed rgba(255,255,255,0.08)' }}>
-              <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>예상 절감액</span>
-              <span className="text-[10px] font-bold" style={{ color: C.em }}>3.5억</span>
+            <div className="flex justify-between items-center mt-3 pt-2.5" style={{ borderTop: '1px dashed rgba(5, 28, 44, 0.10)' }}>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.10em]" style={{ color: 'rgba(5, 28, 44, 0.55)' }}>예상 절감액</span>
+              <span className="text-xs font-extrabold tabular-nums" style={{ color: '#0A1628' }}>3.5억</span>
             </div>
           </div>
 
           {/* Completeness bar */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between" style={{ borderTop: '1px solid rgba(5, 28, 44, 0.10)', paddingTop: '0.75rem' }}>
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 px-2 py-1 rounded-md" style={{ background: 'var(--color-editorial-gold-soft, rgba(34, 81, 255,0.10))', border: '1px solid rgba(34, 81, 255,0.30)' }}>
-                <Shield size={10} style={{ color: C.em }} />
-                <span className="text-[10px] font-bold" style={{ color: C.em }}>9/10</span>
+              <div className="flex items-center gap-1 px-2 py-0.5"
+                style={{ background: '#F5F5F5', border: '1px solid rgba(5, 28, 44, 0.20)', borderRadius: 0 }}>
+                <Shield size={10} style={{ color: '#0A1628' }} />
+                <span className="text-[10px] font-extrabold tabular-nums" style={{ color: '#0A1628' }}>9/10</span>
               </div>
-              <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.3)' }}>자료 완성도</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.10em]" style={{ color: 'rgba(5, 28, 44, 0.55)' }}>자료 완성도</span>
             </div>
-            <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.3)' }}>자료 5/6</span>
+            <span className="text-[10px] font-semibold tabular-nums uppercase tracking-[0.06em]" style={{ color: 'rgba(5, 28, 44, 0.55)' }}>자료 5/6</span>
           </div>
 
-          {/* Provided chips */}
+          {/* Provided chips — outline only */}
           <div className="flex flex-wrap gap-1">
             {[
               { label: "감정평가", ok: true }, { label: "등기", ok: true },
               { label: "권리", ok: true }, { label: "임차", ok: true },
               { label: "사진", ok: true }, { label: "재무", ok: false },
             ].map(c => (
-              <span key={c.label} className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
+              <span key={c.label} className="text-[10px] font-semibold px-1.5 py-0.5"
                 style={{
-                  background: c.ok ? 'rgba(5, 28, 44,0.08)' : 'rgba(255,255,255,0.04)',
-                  color: c.ok ? C.em : 'rgba(255,255,255,0.3)',
-                  border: `1px solid ${c.ok ? 'rgba(5, 28, 44,0.2)' : 'rgba(255,255,255,0.08)'}`,
+                  background: '#FFFFFF',
+                  color: c.ok ? '#0A1628' : 'rgba(5, 28, 44, 0.40)',
+                  border: c.ok ? '1px solid rgba(5, 28, 44, 0.30)' : '1px dashed rgba(5, 28, 44, 0.20)',
+                  borderRadius: 0,
+                  letterSpacing: '0.02em',
                 }}>
                 {c.ok ? "✓" : "·"} {c.label}
               </span>
             ))}
           </div>
 
-          {/* CTA */}
-          <div className="py-2.5 rounded-xl text-center cursor-pointer font-extrabold text-xs transition-all hover:brightness-110 flex items-center justify-center gap-1.5"
-            style={{ background: 'var(--color-brand-deep)', color: 'white', border: '1px solid var(--color-brand-deep)' }}>
-            딜룸 입장 · 상세 <ArrowRight size={13} />
+          {/* CTA — ink black + sharp edge */}
+          <div className="py-2.5 px-4 text-center cursor-pointer font-extrabold text-xs transition-all hover:opacity-90 flex items-center justify-between"
+            style={{
+              background: '#0A1628',
+              color: '#FFFFFF',
+              border: '1px solid #0A1628',
+              borderRadius: 0,
+              letterSpacing: '0.04em',
+            }}>
+            <span>딜룸 입장 · 상세</span>
+            <ArrowRight size={13} />
           </div>
         </div>
       </div>
 
-      {/* Floating badges */}
-      <motion.div className="absolute -top-4 -right-4 rounded-xl px-3 py-2 shadow-xl"
+      {/* Floating badges — high contrast on navy hero */}
+      <motion.div className="absolute -top-4 -right-4 px-3 py-2"
         animate={{ rotate: [-1.5, 1.5, -1.5] }} transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-        style={{ background: C.bg4, border: '1px solid rgba(5, 28, 44,0.3)', boxShadow: '0 0 20px rgba(5, 28, 44,0.15)' }}>
+        style={{
+          background: 'var(--color-editorial-gold, #B8924B)',
+          color: '#FFFFFF',
+          borderRadius: 0,
+          boxShadow: '0 8px 24px -4px rgba(5, 28, 44, 0.40)',
+        }}>
         <div className="flex items-center gap-1.5">
-          <Sparkles size={10} style={{ color: C.em }} />
-          <span className="text-[11px] font-bold" style={{ color: 'rgba(255,255,255,0.85)' }}>AI 분석 완료</span>
+          <Sparkles size={11} style={{ color: '#FFFFFF' }} />
+          <span className="text-[11px] font-extrabold uppercase tracking-[0.08em]" style={{ color: '#FFFFFF' }}>AI 분석 완료</span>
         </div>
       </motion.div>
 
-      <motion.div className="absolute -bottom-4 -left-4 rounded-xl px-3 py-2"
+      <motion.div className="absolute -bottom-4 -left-4 px-3 py-2"
         animate={{ y: [0, -4, 0] }} transition={{ duration: 3.5, delay: 1, repeat: Infinity, ease: "easeInOut" }}
-        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)' }}>
+        style={{
+          background: '#FFFFFF',
+          border: '1px solid rgba(5, 28, 44, 0.20)',
+          borderRadius: 0,
+          boxShadow: '0 8px 24px -4px rgba(5, 28, 44, 0.30)',
+        }}>
         <div className="flex items-center gap-1.5">
-          <Activity size={10} style={{ color: C.amber }} />
-          <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.75)' }}>할인율 <strong>29.2%</strong> 실시간</span>
+          <Activity size={11} style={{ color: '#0A1628' }} />
+          <span className="text-[11px] uppercase tracking-[0.08em]" style={{ color: 'rgba(5, 28, 44, 0.65)', fontWeight: 600 }}>
+            할인율 <strong style={{ color: '#0A1628', fontWeight: 800 }}>29.2%</strong> 실시간
+          </span>
         </div>
       </motion.div>
     </motion.div>
