@@ -258,7 +258,7 @@ export default function UnifiedReportPage() {
         style={{ background: "var(--color-brand-deep)" }}
       >
         {/* brass thin accent line — McKinsey editorial signature */}
-        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #B8924B 40%, #B8924B 60%, transparent)" }} />
+        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #003A70 40%, #003A70 60%, transparent)" }} />
         <div className={`${DS.page.container} py-8 text-white`}>
           {/* 상단 액션 바 — 좌: 뒤로 / 우: PDF Full + PDF Summary + Viewer */}
           <div className="flex items-center justify-between gap-3 mb-4 no-print flex-wrap">
@@ -300,7 +300,7 @@ export default function UnifiedReportPage() {
                   }
                 }}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold transition-colors shadow-sm"
-                style={{ backgroundColor: "#B8924B", color: "#FFFFFF" }}
+                style={{ backgroundColor: "#003A70", color: "#FFFFFF" }}
                 title={t.pdfSummary}
               >
                 <FileTextIcon className="w-3.5 h-3.5" />
@@ -327,7 +327,7 @@ export default function UnifiedReportPage() {
               <div className="flex items-center gap-2 mb-2">
                 <span
                   className="text-[0.625rem] tracking-[0.22em] font-bold"
-                  style={{ color: "#B8924B" }}
+                  style={{ color: "#003A70" }}
                 >
                   NPLATFORM
                 </span>
@@ -336,7 +336,7 @@ export default function UnifiedReportPage() {
                   CONFIDENTIAL — INVESTMENT MEMORANDUM
                 </span>
               </div>
-              <div className="w-12 h-[1px] mb-2.5" style={{ background: "#B8924B" }} />
+              <div className="w-12 h-[1px] mb-2.5" style={{ background: "#003A70" }} />
               <h1
                 className="text-[1.625rem] font-black tracking-tight leading-tight"
                 style={{ fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: "-0.01em" }}
@@ -371,13 +371,13 @@ export default function UnifiedReportPage() {
               const gradeFg = {
                 A: "#0A1628",
                 B: "#0A1628",
-                C: "#B8924B",
+                C: "#003A70",
                 D: "#A53F8A",
               }[vGrade]
               return (
                 <div
                   className="px-5 py-3 rounded-xl text-center shadow-md"
-                  style={{ background: "#FFFFFF", border: "2px solid #B8924B" }}
+                  style={{ background: "#FFFFFF", border: "2px solid #003A70" }}
                 >
                   <div className="text-[0.625rem] mb-0.5 font-semibold tracking-wider uppercase" style={{ color: "#0A1628", opacity: 0.7 }}>
                     {t.aiGrade}
@@ -483,9 +483,9 @@ export default function UnifiedReportPage() {
         {/* McKinsey-style "Key Takeaway" box — brass left accent + serif italic */}
         <div
           className="mt-4 p-4 rounded-md bg-white border border-[var(--color-border-subtle)] shadow-[0_1px_2px_rgba(10,22,40,0.04)]"
-          style={{ borderLeft: "4px solid #B8924B" }}
+          style={{ borderLeft: "4px solid #003A70" }}
         >
-          <div className="text-[0.625rem] tracking-[0.22em] font-bold mb-1.5" style={{ color: "#B8924B" }}>
+          <div className="text-[0.625rem] tracking-[0.22em] font-bold mb-1.5" style={{ color: "#003A70" }}>
             KEY TAKEAWAY
           </div>
           <p
@@ -714,7 +714,7 @@ export default function UnifiedReportPage() {
           {risk.factors.map((f) => {
             const score = Math.max(0, Math.min(100, f.score))
             // 점수 → 색상: ≥75 녹(positive) / ≥50 brass / <50 amber-red
-            const barColor = score >= 75 ? '#10B981' : score >= 50 ? '#B8924B' : '#DC2626'
+            const barColor = score >= 75 ? '#10B981' : score >= 50 ? '#003A70' : '#DC2626'
             return (
               <div
                 key={f.category}
@@ -887,7 +887,7 @@ function KpiCard({
   return (
     <div
       className="relative rounded-md bg-white border border-[var(--color-border-subtle)] px-3.5 py-3 shadow-[0_1px_2px_rgba(10,22,40,0.04)]"
-      style={{ borderTop: "2px solid #B8924B" }}
+      style={{ borderTop: "2px solid #003A70" }}
     >
       <div className="flex items-center justify-between mb-2">
         <span className="text-[0.625rem] text-[#0A1628] tracking-[0.14em] font-bold uppercase opacity-65">{label}</span>
@@ -930,7 +930,7 @@ function Section({
         {exhibit != null && (
           <div
             className="text-[0.625rem] font-bold tracking-[0.18em] mb-1.5"
-            style={{ color: "#B8924B" }}
+            style={{ color: "#003A70" }}
           >
             EXHIBIT {exhibit}
           </div>
@@ -940,26 +940,26 @@ function Section({
             className="font-black text-[#0A1628] flex items-center gap-2 text-[1.0625rem] leading-tight"
             style={{ fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: "-0.005em" }}
           >
-            <Icon className="w-4 h-4" style={{ color: "#B8924B" }} />
+            <Icon className="w-4 h-4" style={{ color: "#003A70" }} />
             {title}
           </h2>
           {caption && (
             <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">{caption}</span>
           )}
         </div>
-        <div className="mt-2.5 h-[1px]" style={{ background: "#B8924B" }} />
+        <div className="mt-2.5 h-[1px]" style={{ background: "#003A70" }} />
       </div>
       {takeaway && (
         <div
           className="mb-4 px-4 py-3 rounded-md flex items-start gap-2.5"
           style={{
             background: "rgba(184,146,75,0.06)",
-            borderLeft: "3px solid #B8924B",
+            borderLeft: "3px solid #003A70",
           }}
         >
           <span
             className="text-[0.625rem] font-bold tracking-[0.18em] mt-[2px] shrink-0"
-            style={{ color: "#B8924B" }}
+            style={{ color: "#003A70" }}
           >
             SO WHAT
           </span>
@@ -2495,7 +2495,7 @@ function ProfitabilitySections({
           }}
         >
           <div className="flex items-start gap-2">
-            <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: predictedRound > 1 ? '#B8924B' : '#0A1628' }} />
+            <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: predictedRound > 1 ? '#003A70' : '#0A1628' }} />
             <div>
               {predictedRound === 1 ? (
                 <>
@@ -3617,38 +3617,53 @@ function SummaryPrintable({
       className={`summary-printable px-8 py-7 ${viewerMode ? "" : "summary-printable-print"}`}
       style={{ backgroundColor: "#FFFFFF", color: "#0A1628", fontFamily: "var(--font-cjk-sans, system-ui)" }}
     >
-      {/* Header */}
-      <div
-        className="flex items-start justify-between gap-4 pb-4 mb-4 border-b-2"
-        style={{ borderColor: "#B8924B" }}
-      >
-        <div>
-          <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold mb-1" style={{ color: "#B8924B" }}>
-            NPLATFORM · {t.reportLabel}
-          </div>
-          <h1 className="text-[1.375rem] font-black leading-tight" style={{ color: "#0A1628" }}>
-            {input.assetTitle}
-          </h1>
-          <p className="text-[0.8125rem] mt-1" style={{ color: "rgba(10,22,40,0.70)" }}>
-            {input.region} · {input.propertyCategory} · {t.appraisal} {fmtKRW(input.appraisalValue)}
-          </p>
-          {/* Phase G7+ 다수 주소 — 1Page Summary 헤더 추가 주소 인라인 표기 (인쇄 호환 · details 미사용) */}
-          {(input.additionalAddresses?.length ?? 0) > 0 && (
-            <p className="text-[0.6875rem] mt-1" style={{ color: "rgba(10,22,40,0.65)" }}>
-              포트폴리오 {(input.additionalAddresses?.length ?? 0) + 1}건 · 추가:{" "}
-              {(input.additionalAddresses ?? []).slice(0, 3).join(" · ")}
-              {(input.additionalAddresses?.length ?? 0) > 3 ? ` 외 ${(input.additionalAddresses?.length ?? 0) - 3}건` : ""}
-            </p>
-          )}
+      {/* Header — McKinsey editorial: small caps brand bar + serif title + cobalt accent */}
+      <div className="pb-4 mb-5 border-b" style={{ borderColor: "rgba(10,22,40,0.15)" }}>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[0.5625rem] tracking-[0.24em] font-bold" style={{ color: "#003A70" }}>
+            NPLATFORM
+          </span>
+          <span className="text-[0.5625rem] tracking-[0.18em] opacity-60">·</span>
+          <span className="text-[0.5625rem] tracking-[0.22em] font-semibold" style={{ color: "rgba(10,22,40,0.75)" }}>
+            CONFIDENTIAL — INVESTMENT MEMORANDUM
+          </span>
         </div>
-        <div
-          className="px-4 py-2.5 rounded-lg text-center shrink-0"
-          style={{ backgroundColor: "#0A1628", color: "#FFFFFF", border: "2px solid #B8924B" }}
-        >
-          <div className="text-[0.5625rem] uppercase tracking-wider opacity-80">{t.aiGrade}</div>
-          <div className="text-[2rem] font-black leading-none mt-0.5">{vGrade}</div>
-          <div className="text-[0.625rem] mt-0.5 font-bold opacity-90">
-            {vScore.toFixed(1)} · {summary.verdict}
+        <div className="w-10 h-[1px] mb-2.5" style={{ background: "#003A70" }} />
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1
+              className="text-[1.5rem] font-black leading-tight"
+              style={{ color: "#0A1628", fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: "-0.012em" }}
+            >
+              {input.assetTitle}
+            </h1>
+            <p className="text-[0.8125rem] mt-1.5" style={{ color: "rgba(10,22,40,0.70)" }}>
+              {input.region} · {input.propertyCategory} · {t.appraisal} {fmtKRW(input.appraisalValue)}
+            </p>
+            {/* Phase G7+ 다수 주소 — 1Page Summary 헤더 추가 주소 인라인 표기 (인쇄 호환 · details 미사용) */}
+            {(input.additionalAddresses?.length ?? 0) > 0 && (
+              <p className="text-[0.6875rem] mt-1" style={{ color: "rgba(10,22,40,0.65)" }}>
+                포트폴리오 {(input.additionalAddresses?.length ?? 0) + 1}건 · 추가:{" "}
+                {(input.additionalAddresses ?? []).slice(0, 3).join(" · ")}
+                {(input.additionalAddresses?.length ?? 0) > 3 ? ` 외 ${(input.additionalAddresses?.length ?? 0) - 3}건` : ""}
+              </p>
+            )}
+          </div>
+          {/* AI 등급 카드 — McKinsey deep navy + serif numerals */}
+          <div
+            className="px-4 py-2.5 rounded-md text-center shrink-0 shadow-[0_1px_3px_rgba(10,22,40,0.12)]"
+            style={{ backgroundColor: "#051C2C", color: "#FFFFFF", borderTop: "3px solid #003A70" }}
+          >
+            <div className="text-[0.5625rem] tracking-[0.18em] opacity-80 font-bold">{t.aiGrade}</div>
+            <div
+              className="text-[2.25rem] font-black leading-none mt-0.5"
+              style={{ fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: "-0.02em" }}
+            >
+              {vGrade}
+            </div>
+            <div className="text-[0.625rem] mt-0.5 font-bold opacity-90 tabular-nums">
+              {vScore.toFixed(1)} · {summary.verdict}
+            </div>
           </div>
         </div>
       </div>
@@ -3670,11 +3685,22 @@ function SummaryPrintable({
         />
       </div>
 
-      {/* 채권잔액 4-컬럼 */}
+      {/* 채권잔액 4-컬럼 — McKinsey EXHIBIT 라벨 + 1pt cobalt 룰 */}
       <div className="mb-4">
-        <div className="text-[0.6875rem] font-bold uppercase tracking-wider mb-2" style={{ color: "rgba(10,22,40,0.65)" }}>
-          {t.claimBreakdown}
+        <div className="flex items-baseline justify-between mb-1.5">
+          <div className="flex items-baseline gap-2">
+            <span className="text-[0.5625rem] tracking-[0.22em] font-bold" style={{ color: "#003A70" }}>
+              EXHIBIT A
+            </span>
+            <span
+              className="text-[0.875rem] font-black"
+              style={{ color: "#0A1628", fontFamily: 'Georgia, "Times New Roman", serif' }}
+            >
+              {t.claimBreakdown}
+            </span>
+          </div>
         </div>
+        <div className="h-[1px] mb-2.5" style={{ background: "#003A70" }} />
         <div className="grid grid-cols-4 gap-2">
           <SummaryAmount label={t.principal} value={fmtKRW(principal)} />
           <SummaryAmount label={t.unpaidInterest} value={unpaidInt > 0 ? fmtKRW(unpaidInt) : "—"} />
@@ -3683,23 +3709,45 @@ function SummaryPrintable({
         </div>
       </div>
 
-      {/* AI 총평 */}
-      <div className="mb-4 p-4 rounded-lg" style={{ backgroundColor: "#0A1628", color: "#FFFFFF" }}>
-        <div className="text-[0.625rem] uppercase tracking-wider opacity-80 font-bold mb-1.5">
-          {t.aiSummary}
+      {/* AI 총평 — McKinsey "Executive Summary" 박스: deep navy + 좌측 cobalt 4pt 액센트 */}
+      <div
+        className="mb-4 p-4 rounded-md relative"
+        style={{ backgroundColor: "#051C2C", color: "#FFFFFF", borderLeft: "4px solid #003A70" }}
+      >
+        <div className="text-[0.5625rem] tracking-[0.22em] font-bold mb-2" style={{ color: "#6FB8E6" }}>
+          EXECUTIVE SUMMARY
         </div>
-        <p className="text-[0.8125rem] leading-relaxed">{executiveSummary}</p>
+        <p
+          className="text-[0.875rem] leading-relaxed font-medium"
+          style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+        >
+          {executiveSummary}
+        </p>
       </div>
 
-      {/* Risk 4-factor mini bars */}
+      {/* Risk 4-factor mini bars — McKinsey EXHIBIT B */}
       <div className="mb-4">
-        <div className="text-[0.6875rem] font-bold uppercase tracking-wider mb-2" style={{ color: "rgba(10,22,40,0.65)" }}>
-          {t.riskFourFactor} · {t.riskModelCaption}
+        <div className="flex items-baseline justify-between mb-1.5">
+          <div className="flex items-baseline gap-2">
+            <span className="text-[0.5625rem] tracking-[0.22em] font-bold" style={{ color: "#003A70" }}>
+              EXHIBIT B
+            </span>
+            <span
+              className="text-[0.875rem] font-black"
+              style={{ color: "#0A1628", fontFamily: 'Georgia, "Times New Roman", serif' }}
+            >
+              {t.riskFourFactor}
+            </span>
+          </div>
+          <span className="text-[0.5625rem]" style={{ color: "rgba(10,22,40,0.55)" }}>
+            {t.riskModelCaption}
+          </span>
         </div>
+        <div className="h-[1px] mb-2.5" style={{ background: "#003A70" }} />
         <div className="grid grid-cols-2 gap-2">
           {risk.factors.map((f) => {
             const score = Math.max(0, Math.min(100, f.score))
-            const barColor = score >= 75 ? "#0A1628" : score >= 50 ? "#B8924B" : "#A53F8A"
+            const barColor = score >= 75 ? "#0A1628" : score >= 50 ? "#003A70" : "#A53F8A"
             return (
               <div
                 key={f.category}
@@ -3734,7 +3782,7 @@ function SummaryPrintable({
         <span>
           {t.generatedAt} · {new Date(report.createdAt).toLocaleString("ko-KR")}
         </span>
-        <span style={{ color: "#B8924B", fontWeight: 700 }}>NPLATFORM · TransFarmer Inc.</span>
+        <span style={{ color: "#003A70", fontWeight: 700 }}>NPLATFORM · TransFarmer Inc.</span>
       </div>
     </div>
   )
@@ -3753,16 +3801,22 @@ function SummaryStat({
 }) {
   return (
     <div
-      className="p-2.5 rounded-lg"
+      className="px-2.5 py-2.5 rounded-md"
       style={{
-        backgroundColor: accent ? "#B8924B" : "rgba(10,22,40,0.04)",
+        backgroundColor: accent ? "#003A70" : "#FFFFFF",
         color: accent ? "#FFFFFF" : "#0A1628",
-        border: accent ? "none" : "1px solid rgba(10,22,40,0.10)",
+        border: accent ? "none" : "1px solid rgba(10,22,40,0.12)",
+        borderTop: accent ? "3px solid #051C2C" : "2px solid #003A70",
       }}
     >
-      <div className="text-[0.5625rem] uppercase tracking-wider font-bold opacity-75 mb-0.5">{label}</div>
-      <div className="text-[0.9375rem] font-black tabular-nums leading-tight">{value}</div>
-      {sub && <div className="text-[0.5625rem] mt-0.5 opacity-80">{sub}</div>}
+      <div className="text-[0.5625rem] tracking-[0.16em] font-bold opacity-75 mb-1">{label}</div>
+      <div
+        className="text-[1.0625rem] font-black tabular-nums leading-tight"
+        style={{ fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: "-0.012em" }}
+      >
+        {value}
+      </div>
+      {sub && <div className="text-[0.5625rem] mt-1 opacity-80 font-medium">{sub}</div>}
     </div>
   )
 }
@@ -3770,15 +3824,21 @@ function SummaryStat({
 function SummaryAmount({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
   return (
     <div
-      className="text-center p-2 rounded-lg"
+      className="text-center p-2 rounded-md"
       style={{
-        backgroundColor: accent ? "#0A1628" : "#FFFFFF",
+        backgroundColor: accent ? "#051C2C" : "#FFFFFF",
         color: accent ? "#FFFFFF" : "#0A1628",
-        border: accent ? "2px solid #B8924B" : "1px solid rgba(10,22,40,0.10)",
+        border: accent ? "none" : "1px solid rgba(10,22,40,0.12)",
+        borderTop: accent ? "none" : "2px solid #003A70",
       }}
     >
-      <div className="text-[0.5625rem] uppercase tracking-wider opacity-75 font-bold mb-0.5">{label}</div>
-      <div className="text-[0.875rem] font-black tabular-nums">{value}</div>
+      <div className="text-[0.5625rem] tracking-[0.16em] opacity-75 font-bold mb-1">{label}</div>
+      <div
+        className="text-[0.9375rem] font-black tabular-nums"
+        style={{ fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: "-0.012em" }}
+      >
+        {value}
+      </div>
     </div>
   )
 }

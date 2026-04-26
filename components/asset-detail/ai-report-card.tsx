@@ -242,7 +242,7 @@ export function AiReportCard({
               </span>
             </div>
             <span style={{ fontSize: 10, fontWeight: 600, color: C.textMuted, letterSpacing: "0.04em" }}>
-              모델 · sample-ruleset-v1 · 해시 sample
+              NPLATFORM 리스크 분석 모델
             </span>
           </div>
 

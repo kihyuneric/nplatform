@@ -192,6 +192,15 @@ export function buildSampleReport(): UnifiedAnalysisReport {
     totalBondAmount: totalBond,
     minBidPrice: estimateMinBid(appraisal, 1),      // 1회 유찰 기준 (감정가 × 0.8^1)
     currentMarketValue: 2_550_000_000,               // 엑셀 B37 — AI 시세 최신 (2025-10-21)
+    // 채권잔액 내역 — 19.6억(원금) + 2.2억(연체이자) = 21.8억(채권잔액 합계) · 엑셀 B15·B22·B23
+    claimBreakdown: {
+      principal: 1_960_000_000,        // 대출원금 19.60억
+      unpaidInterest: 0,                // 미수이자 (이자 약정만 — 연체이자에 포함됨)
+      overdueInterest: 220_000_000,    // 연체이자 2.20억 (25.07.23~26.04.21 누적, 8.9% 기준)
+      delinquencyStartDate: '2025-07-23',
+      normalRate: 0.069,                // 정상금리 6.9%
+      overdueRate: 0.089,                // 연체금리 8.9%
+    },
     specialConditions: {
       ...EMPTY_SPECIAL_CONDITIONS,
       // 잠실 엑셀 사례 — 전 항목 특이사항 없음 (소유자 직접 점유)
@@ -451,9 +460,9 @@ export function buildSampleReport(): UnifiedAnalysisReport {
         ? [{ condition: '선순위 임차인', impact: '낙찰가율 -10%p 반영, 보증금 인수 시 추가 현금흐름 주의' }]
         : [],
       promptMeta: {
-        model: 'sample-ruleset-v1',
+        model: 'NPLATFORM 리스크 분석 모델',
         generatedAt: new Date().toISOString(),
-        inputHash: 'sample',
+        inputHash: 'nplatform-risk-v1',
       },
     },
     anomaly: {

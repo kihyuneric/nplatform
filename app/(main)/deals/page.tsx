@@ -74,7 +74,7 @@ const SAMPLE_DEALS: Deal[] = [
     next_action: 'NDA 체결 필요',
     deadline: new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10),
     notification: '매도자가 응답 대기 중',
-    amount: 1_200_000_000,
+    amount: 2_180_000_000, // NPL 보고서 동기화 (채권잔액 21.80억)
     type: 'buy',
     asset_type: '아파트',
     location: '서울 강남구',

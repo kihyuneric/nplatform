@@ -379,39 +379,40 @@ function DealHeader({
         borderRight: panelMode ? `1px solid ${MCK.border}` : undefined,
       }}
     >
-      <div className={panelMode ? "px-5 py-6" : "max-w-[1280px] mx-auto px-6 py-8"}>
-        {/* meta row */}
+      <div className={panelMode ? "px-7 py-9" : "max-w-[1280px] mx-auto px-6 py-10"}>
+        {/* meta row — enlarged: 채권자/지역/매각방식/딜ID 라벨 강조 */}
         {!hideMetaRow && (
-        <div className="flex items-center gap-2 mb-3" style={{ flexWrap: "wrap" }}>
+        <div className="flex items-center gap-2 mb-5" style={{ flexWrap: "wrap" }}>
           {[deal.institution, deal.region, deal.saleType, deal.id].map((m, i) => (
             <span
               key={m}
               style={{
-                fontSize: 11,
-                fontWeight: 600,
+                fontSize: 13,
+                fontWeight: 700,
                 color: MCK.textSub,
                 letterSpacing: "0.02em",
               }}
             >
-              {i > 0 && <span style={{ color: MCK.border, marginRight: 8 }}>·</span>}
+              {i > 0 && <span style={{ color: MCK.border, marginRight: 10 }}>·</span>}
               {m}
             </span>
           ))}
         </div>
         )}
 
-        {/* title + AI badge */}
+        {/* title + AI badge — enlarged */}
         {!hideTitle && (
-        <div className="flex items-start justify-between gap-6 mb-6" style={{ flexWrap: "wrap" }}>
+        <div className="flex items-start justify-between gap-6 mb-8" style={{ flexWrap: "wrap" }}>
           <h1
             style={{
               color: MCK.ink,
-              fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)",
+              fontSize: "clamp(2.25rem, 4.2vw, 3.25rem)",
               fontWeight: 800,
               letterSpacing: "-0.025em",
               lineHeight: 1.1,
               flex: "1 1 auto",
               wordBreak: "keep-all",
+              fontFamily: 'Georgia, "Times New Roman", serif',
             }}
           >
             {deal.title}
@@ -420,18 +421,19 @@ function DealHeader({
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: 6,
-              padding: "7px 14px",
+              gap: 8,
+              padding: "10px 20px",
               background: MCK.paper,
-              border: `1.5px solid ${MCK.brass}`,
+              border: `2px solid ${MCK.brass}`,
               borderRadius: 999,
-              fontSize: 12,
-              fontWeight: 700,
+              fontSize: 14,
+              fontWeight: 800,
               color: MCK.brassDark,
               flexShrink: 0,
+              boxShadow: "0 1px 3px rgba(184, 146, 75, 0.15)",
             }}
           >
-            <Sparkles size={13} style={{ color: MCK.brass }} />
+            <Sparkles size={16} style={{ color: MCK.brass }} />
             <span style={{ color: MCK.brassDark }}>{aiGradeBadge}</span>
           </div>
         </div>
@@ -457,20 +459,20 @@ function DealHeader({
         </div>
         )}
 
-        {/* Deal Stage progress */}
-        <div className={hideKpiGrid && hideMetaRow && hideTitle ? "" : "mt-8"}>
-          <div className="flex items-center gap-2 mb-3">
+        {/* Deal Stage progress — enlarged */}
+        <div className={hideKpiGrid && hideMetaRow && hideTitle ? "" : "mt-10"}>
+          <div className="flex items-center gap-2.5 mb-5">
             <span
               style={{
-                width: 16, height: 1.5, background: MCK.brass, display: "inline-block",
+                width: 24, height: 2, background: MCK.brass, display: "inline-block",
               }}
             />
             <span
               style={{
                 color: MCK.brassDark,
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: "0.10em",
+                fontSize: 13,
+                fontWeight: 800,
+                letterSpacing: "0.12em",
                 textTransform: "uppercase",
               }}
             >
@@ -486,25 +488,26 @@ function DealHeader({
                   <div className="flex flex-col items-center" style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
-                        width: 36, height: 36,
+                        width: 52, height: 52,
                         background: current ? MCK.ink : (done ? MCK.brass : MCK.paper),
-                        border: `2px solid ${current ? MCK.ink : (done ? MCK.brass : MCK.border)}`,
+                        border: `2.5px solid ${current ? MCK.ink : (done ? MCK.brass : MCK.border)}`,
                         color: current || done ? MCK.paper : MCK.textMuted,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: 13,
+                        fontSize: 17,
                         fontWeight: 800,
                         borderRadius: 999,
+                        boxShadow: current ? "0 2px 8px rgba(10,22,40,0.18)" : "none",
                       }}
                     >
                       {i + 1}
                     </div>
-                    <div className="mt-2 text-center" style={{ minWidth: 0 }}>
+                    <div className="mt-3 text-center" style={{ minWidth: 0 }}>
                       <div
                         style={{
-                          fontSize: 12,
-                          fontWeight: 700,
+                          fontSize: 14,
+                          fontWeight: 800,
                           color: current ? MCK.ink : MCK.textSub,
                           letterSpacing: "-0.01em",
                         }}
@@ -513,10 +516,10 @@ function DealHeader({
                       </div>
                       <div
                         style={{
-                          fontSize: 10,
+                          fontSize: 12,
                           fontWeight: 600,
                           color: MCK.textMuted,
-                          marginTop: 2,
+                          marginTop: 4,
                         }}
                       >
                         {s.korean}
@@ -526,10 +529,10 @@ function DealHeader({
                   {i < stages.length - 1 && (
                     <div
                       style={{
-                        height: 1.5,
+                        height: 2,
                         flex: 1,
                         background: done ? MCK.brass : MCK.border,
-                        marginTop: -32,
+                        marginTop: -46,
                         marginLeft: -8, marginRight: -8,
                       }}
                     />

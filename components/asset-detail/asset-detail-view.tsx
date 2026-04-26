@@ -154,17 +154,24 @@ interface ListingDetail {
 }
 
 function buildMock(id: string): ListingDetail {
+  /**
+   * NPL 분석 보고서(lib/npl/unified-report/sample.ts) 와 동기화 (2026-04-26)
+   * · 채권잔액 21.8억 = 원금 19.6억 + 연체이자 2.2억
+   * · 감정가 28.0억 / AI 시세 25.5억 / 할인율 8.9%
+   * · 정상금리 6.9% / 연체금리 8.9% / 연체시작 2025-07-23
+   * · AI 등급 A · 매수 적합
+   */
   return {
     id,
-    institution: "우리은행",
-    inst_type: "은행",
+    institution: "하나저축은행",
+    inst_type: "저축은행",
     region_city: "서울",
     region_district: "강남구",
     collateral: "아파트",
-    outstanding_principal: 1_200_000_000,
-    asking_price: 850_000_000,
-    appraisal_value: 1_020_000_000,
-    discount_rate: 29.2,
+    outstanding_principal: 1_960_000_000,
+    asking_price: 2_550_000_000,
+    appraisal_value: 2_800_000_000,
+    discount_rate: 8.9,
     ai_grade: "A",
     data_completeness: 9,
     debtor_type: "INDIVIDUAL",
@@ -203,12 +210,12 @@ function buildMock(id: string): ListingDetail {
     debtor_name_masked: "김●●",
     court_case_full: "서울중앙지법 2025타경12345",
     claim_info: {
-      balance: 1_248_600_000,
-      principal: 1_200_000_000,
-      accrued_interest: 48_600_000,
-      contract_rate: 4.8,
-      delinquent_rate: 18.0,
-      delinquent_since: "2025-10-14",
+      balance: 2_180_000_000,         // 채권잔액 21.80억 (NPL 보고서 동기화)
+      principal: 1_960_000_000,       // 대출원금 19.60억
+      accrued_interest: 220_000_000,  // 연체이자 2.20억
+      contract_rate: 6.9,             // 정상금리
+      delinquent_rate: 8.9,           // 연체금리
+      delinquent_since: "2025-07-23",
     },
     auction_info: {
       case_no: "서울중앙지법 2025타경12345",
@@ -486,8 +493,13 @@ export function AssetDetailView({
   /* 등기부등본 탭 & 접기/펼치기 */
   const [deedSummaryTab, setDeedSummaryTab] = useState<"land" | "building">("land")
   const [deedFullTab, setDeedFullTab] = useState<"land" | "building">("land")
-  const [deedSummaryExpanded, setDeedSummaryExpanded] = useState(true)
-  const [deedFullExpanded, setDeedFullExpanded] = useState(true)
+  /* 등기부등본 펼치기/접기 기본값
+   * 요약(deedSummary): false (목차만 보임 → 펼치기로 전체 노출)
+   * 원본(deedFull): true (펼친 상태로 시작 → 접으면 목차만)
+   * 사용자 요청: "기본적으로 등기부 현황 펼치기로 버튼 / 등기부 현황 접기 (지금과 반대)"
+   */
+  const [deedSummaryExpanded, setDeedSummaryExpanded] = useState(false)
+  const [deedFullExpanded, setDeedFullExpanded] = useState(false)
 
   /* 사용자 역할 확인: admin 또는 seller 면 편집 허용 */
   useEffect(() => {
