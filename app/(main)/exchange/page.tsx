@@ -1180,7 +1180,7 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
       style={{
         backgroundColor: "#FFFFFF",
         border: "1px solid rgba(5, 28, 44, 0.10)",
-        borderTop: "2px solid var(--color-editorial-gold, #B8924B)",
+        borderTop: "2px solid var(--color-editorial-gold, #2251FF)",
         borderRadius: 0,
         overflow: "hidden",
         display: "flex",
@@ -1346,7 +1346,7 @@ function SubMetric({ label, value, brass }: { label: string; value: string; bras
       </div>
       <div style={{
         fontSize: 14, fontWeight: 800,
-        color: brass ? "var(--color-editorial-gold, #B8924B)" : "#0A1628",
+        color: brass ? "var(--color-editorial-gold, #2251FF)" : "#0A1628",
         letterSpacing: "-0.01em",
         fontVariantNumeric: "tabular-nums",
       }}>

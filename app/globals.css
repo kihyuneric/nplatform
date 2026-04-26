@@ -584,18 +584,18 @@ input::placeholder, textarea::placeholder {
     --secondary-foreground:210 40% 88%;
     --muted:               222 10% 16%;
     --muted-foreground:    215 12% 65%;
-    --accent:              40 47% 50%;     /* muted brass (이전 emerald) */
+    --accent:              228 100% 57%;     /* muted brass (이전 emerald) */
     --accent-foreground:   222 12% 7%;
     --destructive:         222 8% 30%;     /* dark slate (이전 red) */
     --destructive-foreground: 0 0% 100%;
     --border:              222 8% 18%;
     --input:               222 8% 22%;
-    --ring:                40 47% 50%;     /* brass focus ring */
-    --success:             40 47% 50%;     /* brass (이전 emerald) */
+    --ring:                228 100% 57%;     /* brass focus ring */
+    --success:             228 100% 57%;     /* brass (이전 emerald) */
     --success-foreground:  222 12% 7%;
-    --warning:             40 47% 50%;     /* brass (이전 amber) */
+    --warning:             228 100% 57%;     /* brass (이전 amber) */
     --warning-foreground:  222 12% 7%;
-    --info:                40 47% 50%;     /* brass */
+    --info:                228 100% 57%;     /* brass */
     --info-foreground:     222 12% 7%;
 
     /* ═══════════════════════════════════════════════════════════════════════
@@ -3844,15 +3844,15 @@ button[role="switch"][data-state="unchecked"] {
    단, 명시적으로 흰 surface (paper card) 또는 gold/ink black 박스는 그대로 유지
    — McKinsey 인쇄물 톤: navy hero 위 white paper card 가 핵심
 */
-.dark .mck-l1 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3):not([style*="#FFFFFF"]):not([style*="#FFF"]):not([style*="white"]):not([style*="#0A1628"]):not([style*="#B8924B"]):not([style*="editorial-gold"]):not(.mck-paper) {
+.dark .mck-l1 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3):not([style*="#FFFFFF"]):not([style*="#FFF"]):not([style*="white"]):not([style*="#0A1628"]):not([style*="#2251FF"]):not([style*="editorial-gold"]):not(.mck-paper) {
   background: #1A3A5C !important;
 }
 /* L2 안의 sub div → L3 톤 (흰 종이/ink 박스 escape) */
-.dark .mck-l2 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3):not([style*="#FFFFFF"]):not([style*="#FFF"]):not([style*="white"]):not([style*="#0A1628"]):not([style*="#B8924B"]):not([style*="editorial-gold"]):not(.mck-paper) {
+.dark .mck-l2 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3):not([style*="#FFFFFF"]):not([style*="#FFF"]):not([style*="white"]):not([style*="#0A1628"]):not([style*="#2251FF"]):not([style*="editorial-gold"]):not(.mck-paper) {
   background: #254E76 !important;
 }
 /* L3 안의 sub div → L4 톤 (흰 종이/ink 박스 escape) */
-.dark .mck-l3 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3):not([style*="#FFFFFF"]):not([style*="#FFF"]):not([style*="white"]):not([style*="#0A1628"]):not([style*="#B8924B"]):not([style*="editorial-gold"]):not(.mck-paper) {
+.dark .mck-l3 > div[style*="background"]:not(.mck-l1):not(.mck-l2):not(.mck-l3):not([style*="#FFFFFF"]):not([style*="#FFF"]):not([style*="white"]):not([style*="#0A1628"]):not([style*="#2251FF"]):not([style*="editorial-gold"]):not(.mck-paper) {
   background: rgba(66, 175, 255, 0.18) !important;
 }
 
@@ -3869,7 +3869,7 @@ button[role="switch"][data-state="unchecked"] {
   background: #FFFFFF !important;
   color: #0A1628 !important;
   border: 1px solid rgba(5, 28, 44, 0.10) !important;
-  border-top: 2px solid var(--color-editorial-gold, #B8924B) !important;
+  border-top: 2px solid var(--color-editorial-gold, #2251FF) !important;
   border-radius: 0 !important;
   box-shadow: 0 12px 24px -8px rgba(5, 28, 44, 0.18), 0 4px 8px -2px rgba(5, 28, 44, 0.10) !important;
   overflow: hidden;
@@ -4010,7 +4010,7 @@ button[role="switch"][data-state="unchecked"] {
 .mck-paper a:not([class*="primary"]):not([class*="bg-"]):not(.mck-cta-dark):not(.mck-cta-dark *):hover,
 .dark .mck-paper a:not([class*="primary"]):not([class*="bg-"]):not(.mck-cta-dark):not(.mck-cta-dark *):hover {
   text-decoration: underline;
-  text-decoration-color: var(--color-editorial-gold, #B8924B);
+  text-decoration-color: var(--color-editorial-gold, #2251FF);
 }
 
 /* === 카드 안의 svg icon → ink ===
@@ -4060,7 +4060,7 @@ button[role="switch"][data-state="unchecked"] {
   background: #FFFFFF !important;
   color: #0A1628 !important;
   border: 1px solid rgba(5, 28, 44, 0.10) !important;
-  border-top: 2px solid var(--color-editorial-gold, #B8924B) !important;
+  border-top: 2px solid var(--color-editorial-gold, #2251FF) !important;
   border-radius: 0 !important;
   box-shadow: 0 12px 24px -8px rgba(5, 28, 44, 0.18), 0 4px 8px -2px rgba(5, 28, 44, 0.10) !important;
 }
@@ -4176,7 +4176,7 @@ button[role="switch"][data-state="unchecked"] {
   background: #FFFFFF !important;
   color: #0A1628 !important;
   border: 1px solid rgba(5, 28, 44, 0.10) !important;
-  border-top: 2px solid var(--color-editorial-gold, #B8924B) !important;
+  border-top: 2px solid var(--color-editorial-gold, #2251FF) !important;
   border-radius: 0 !important;
 }
 
@@ -4516,7 +4516,7 @@ button, a.btn, [role="button"] {
 
    원칙
    ─ 모든 emerald/green/lime/teal/cyan/sky/blue/indigo/violet/purple/fuchsia/
-     pink/rose/orange/amber/yellow/red 톤 → ink (#14161A) 또는 brass (#A8853E)
+     pink/rose/orange/amber/yellow/red 톤 → ink (#14161A) 또는 brass (#1A47CC)
    ─ inline style hex (`color:'#10B981'` 등)는 sed로 이미 변환됨
    ─ 본 규칙은 Tailwind utility class와 fill/stroke (SVG/Recharts) 모두에 적용
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -4801,7 +4801,7 @@ section[style*="backgroundColor: #0A1628"] *:not([style*="color"]):not(svg):not(
 }
 
 /* ── 8) Sparkline / chart in white paper → ink only ─────────────────── */
-.mck-paper svg path[stroke]:not([stroke="#0A1628"]):not([stroke="#B8924B"]):not([stroke="#FFFFFF"]) {
+.mck-paper svg path[stroke]:not([stroke="#0A1628"]):not([stroke="#2251FF"]):not([stroke="#FFFFFF"]) {
   /* 파란/초록 sparkline 들 → ink */
   stroke: #0A1628 !important;
 }
@@ -4914,7 +4914,7 @@ section[style*="backgroundColor: #0A1628"] *:not([style*="color"]):not(svg):not(
 }
 
 /* ── 1점 brass accent만 유지 — brass는 변하지 않음 ─────────────────── */
-[style*="#B8924B"], [style*="#E5C77A"], [style*="#D4A858"], [style*="#A37D3F"] {
+[style*="#2251FF"], [style*="#00A9F4"], [style*="#00A9F4"], [style*="#1A47CC"] {
   /* leave as-is */
 }
 
@@ -5031,7 +5031,7 @@ html.dark { background: var(--color-bg-base, #FAFBFC) !important; }
      body:              14 → 15px / 400 / 0        / line 1.55 / #1F2937
      sub (caption):     12 → 12px / 500 / 0        / line 1.45 / #4A5568
      micro:             11px      / 600 / 0        / line 1.40 / #718096
-     eyebrow:           10 → 11px / 700 / 0.10em / uppercase / brass #B8924B
+     eyebrow:           10 → 11px / 700 / 0.10em / uppercase / brass #2251FF
    ─────────────────────────────────────────────────────────────────────────── */
 
 /* H1 — 페이지 헤로 / 페이지 타이틀 */
@@ -5090,7 +5090,7 @@ h3.mck-h3, .mck-h3 {
   font-weight: 700;
   letter-spacing: 0.10em;
   text-transform: uppercase;
-  color: #B8924B;
+  color: #2251FF;
   display: inline-block;
 }
 
@@ -5186,9 +5186,9 @@ h3.mck-h3, .mck-h3 {
 
 /* 5) 흰 종이 안의 brass 강조 — 가독성 보장 (brass on white WCAG AA) */
 .mck-paper .mck-eyebrow,
-.mck-paper [style*="color: #B8924B"],
-.mck-paper [style*="color:#B8924B"] {
-  color: #8B6F2F !important;  /* 화이트 종이 위 brass 어두운 톤 — WCAG AA 4.5:1 */
+.mck-paper [style*="color: #2251FF"],
+.mck-paper [style*="color:#2251FF"] {
+  color: #1A47CC !important;  /* 화이트 종이 위 brass 어두운 톤 — WCAG AA 4.5:1 */
 }
 /* navy 배경 안의 brass eyebrow → 라이트 brass */
 .mck-cta-dark .mck-eyebrow,
@@ -5196,7 +5196,7 @@ h3.mck-h3, .mck-h3 {
 [style*="background: #0A1628"] .mck-eyebrow,
 [style*="background:#051C2C"] .mck-eyebrow,
 [style*="background: #051C2C"] .mck-eyebrow {
-  color: #E5C77A !important;
+  color: #00A9F4 !important;
 }
 
 /* 6) 매수수요 "제안 보내기" 같은 V.positive(파란/네이비) 버튼 안 → 흰글씨 강제 */
@@ -5210,7 +5210,7 @@ button[style*="background-color: var(--color-positive)"] * {
 
 /* ── 7) Multi-color suppression for non-brand hex (라이트 단일 + McKinsey palette) ──
    브랜드 navy/blue (#1B3A5C, #2558A0, #2E75B6, #2251FF, #4F86C7) 와
-   brass (#B8924B, #E5C77A, #8B6F2F) + ink (#0A1628, #051C2C) 만 살린다. */
+   brass (#2251FF, #00A9F4, #1A47CC) + ink (#0A1628, #051C2C) 만 살린다. */
 
 /* 약간이라도 사용자가 "이런 색 사양" 한 것은 흰 + ink/brass 로 강제 */
 [style*="color: #F59E0B"]:not(.preserve-color),
@@ -5221,7 +5221,7 @@ button[style*="background-color: var(--color-positive)"] * {
 [style*="color:#D97706"]:not(.preserve-color),
 [style*="color: #B45309"]:not(.preserve-color),
 [style*="color:#B45309"]:not(.preserve-color) {
-  color: #B8924B !important;  /* amber/orange → brass */
+  color: #2251FF !important;  /* amber/orange → brass */
 }
 
 /* ── 8) 글꼴 크기 일관 톤앤매너 — 모든 카드 헤딩 통일 ─────────────────────── */
@@ -5235,7 +5235,7 @@ button[style*="background-color: var(--color-positive)"] * {
 /* ── 9) brass border accent — 강조 카드용 (top 1px brass) ─────────────────── */
 .mck-paper--accent {
   position: relative;
-  border-top: 1.5px solid #B8924B !important;
+  border-top: 1.5px solid #2251FF !important;
 }
 
 /* ── 10) 마지막 강제 가드 — body 배경 라이트 ─────────────────────────────── */

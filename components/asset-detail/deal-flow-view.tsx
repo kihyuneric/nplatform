@@ -1,23 +1,23 @@
-"use client"
+﻿"use client"
 
 /**
  * components/asset-detail/deal-flow-view.tsx
  *
- * NPL 딜 상세 페이지 — 거래소형 전환 중심 UI (McKinsey White Paper · v9)
+ * NPL ???곸꽭 ?섏씠吏 ??嫄곕옒?뚰삎 ?꾪솚 以묒떖 UI (McKinsey White Paper 쨌 v9)
  *
- * 5개 섹션 흐름형 구조:
- *   1. Deal Header (신뢰 + 핵심정보)
- *   2. Deal Screening   (탐색 · L0~L1 · 무료)
- *   ── 게이트 1: NDA ─────────────────────────
- *   3. Deal Validation  (검증 · 감정/경매/실거래/사진/채권)
- *   ── 게이트 2: LOI ─────────────────────────
- *   4. Deal Engagement  (참여 · 채팅/미팅/실사/협상)
- *   ── 게이트 3: ESCROW ──────────────────────
- *   5. Deal Execution   (실행 · 결제/계약)
+ * 5媛??뱀뀡 ?먮쫫??援ъ“:
+ *   1. Deal Header (?좊ː + ?듭떖?뺣낫)
+ *   2. Deal Screening   (?먯깋 쨌 L0~L1 쨌 臾대즺)
+ *   ?? 寃뚯씠??1: NDA ?????????????????????????
+ *   3. Deal Validation  (寃利?쨌 媛먯젙/寃쎈ℓ/?ㅺ굅???ъ쭊/梨꾧텒)
+ *   ?? 寃뚯씠??2: LOI ?????????????????????????
+ *   4. Deal Engagement  (李몄뿬 쨌 梨꾪똿/誘명똿/?ㅼ궗/?묒긽)
+ *   ?? 寃뚯씠??3: ESCROW ??????????????????????
+ *   5. Deal Execution   (?ㅽ뻾 쨌 寃곗젣/怨꾩빟)
  *
- * 위에서 아래로 투자 깊이가 깊어지는 funnel.
- * NDA / LOI 는 카드가 아니라 가로 라인 게이트.
- * 잠긴 콘텐츠는 blur + lock 아이콘 + hover tooltip.
+ * ?꾩뿉???꾨옒濡??ъ옄 源딆씠媛 源딆뼱吏??funnel.
+ * NDA / LOI ??移대뱶媛 ?꾨땲??媛濡??쇱씤 寃뚯씠??
+ * ?좉릿 肄섑뀗痢좊뒗 blur + lock ?꾩씠肄?+ hover tooltip.
  */
 
 import { useMemo, useState } from "react"
@@ -34,70 +34,67 @@ import {
 } from "lucide-react"
 import { maskInstitutionName } from "@/lib/mask"
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   McKinsey palette (라이트 단일)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   McKinsey palette (?쇱씠???⑥씪)
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 const MCK = {
   ink:        "#0A1628",  // primary text
   inkDeep:    "#051C2C",  // hero deep
   paper:      "#FFFFFF",
   paperTint:  "#FAFBFC",
-  brass:      "#B8924B",  // primary accent
-  brassDark:  "#8B6F2F",  // brass on white (WCAG AA)
-  brassLight: "#E5C77A",  // brass on navy
+  brass:      "#2251FF",  // primary accent
+  brassDark:  "#1A47CC",  // brass on white (WCAG AA)
+  brassLight: "#00A9F4",  // brass on navy
   blue:       "#2558A0",  // brand blue
   blueLight:  "#4F86C7",
   border:     "rgba(10, 22, 40, 0.10)",
   borderStrong: "rgba(10, 22, 40, 0.18)",
   textSub:    "#4A5568",
   textMuted:  "#718096",
-  positive:   "#0F766E",  // McKinsey 진한 teal (밝은 green 회피)
-  warning:    "#92400E",  // McKinsey 진한 amber (밝은 yellow 회피)
+  positive:   "#0F766E",  // McKinsey 吏꾪븳 teal (諛앹? green ?뚰뵾)
+  warning:    "#92400E",  // McKinsey 吏꾪븳 amber (諛앹? yellow ?뚰뵾)
 } as const
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Mock deal data (실제 API 연결시 교체)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Mock deal data (?ㅼ젣 API ?곌껐??援먯껜)
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 type DealStage = "Screening" | "Validation" | "Engagement" | "Execution"
 
 const MOCK_DEAL = {
   id: "npl-2026-0412",
-  title: "서울 강남구 아파트 NPL",
-  institution: "은행",
-  region: "서울 강남구",
-  saleType: "임의매각",
+  title: "?쒖슱 媛뺣궓援??꾪뙆??NPL",
+  institution: "???,
+  region: "?쒖슱 媛뺣궓援?,
+  saleType: "?꾩쓽留ㅺ컖",
   // Numbers
-  bondBalance: 12.0,    // 채권 잔액 (억)
-  hopePrice: 8.5,       // 매각 희망가 (억)
-  discountRate: 29.2,   // 할인율 (%)
-  expectedROI: 12.8,    // 예상 수익률 (%)
-  riskScore: 2.1,       // 리스크 점수 / 5
+  bondBalance: 12.0,    // 梨꾧텒 ?붿븸 (??
+  hopePrice: 8.5,       // 留ㅺ컖 ?щ쭩媛 (??
+  discountRate: 29.2,   // ?좎씤??(%)
+  expectedROI: 12.8,    // ?덉긽 ?섏씡瑜?(%)
+  riskScore: 2.1,       // 由ъ뒪???먯닔 / 5
   ltv: 68,              // LTV %
   // Stage progress
   currentStage: "Screening" as DealStage,
-  // 권한
+  // 沅뚰븳
   hasNDA: false,
   hasLOI: false,
   hasEscrow: false,
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Page
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Page
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 export interface DealFlowViewProps {
-  /** Deal ID (URL 파라미터 대신 prop 으로 주입 가능) */
+  /** Deal ID (URL ?뚮씪誘명꽣 ???prop ?쇰줈 二쇱엯 媛?? */
   idProp?: string
-  /** /deals 페이지 등에서 inline 임베드 시 — 상단 utility bar 숨김 */
+  /** /deals ?섏씠吏 ?깆뿉??inline ?꾨쿋???????곷떒 utility bar ?④? */
   embedded?: boolean
   /**
-   * 좌측 컬럼 전용 패널 모드 — 외부 grid 의 좌측 자리에 들어갈 때 사용.
-   * - 모든 max-w-[1280px] 컨테이너 제거 → 부모 grid 폭에 맞춤
-   * - 좌우 padding 축소 (px-6 → px-0/px-1)
-   * - 상단 utility bar 자동 숨김 (embedded 와 동일)
-   * - 100vh minHeight 제거
+   * 醫뚯륫 而щ읆 ?꾩슜 ?⑤꼸 紐⑤뱶 ???몃? grid ??醫뚯륫 ?먮━???ㅼ뼱媛????ъ슜.
+   * - 紐⑤뱺 max-w-[1280px] 而⑦뀒?대꼫 ?쒓굅 ??遺紐?grid ??뿉 留욎땄
+   * - 醫뚯슦 padding 異뺤냼 (px-6 ??px-0/px-1)
+   * - ?곷떒 utility bar ?먮룞 ?④? (embedded ? ?숈씪)
+   * - 100vh minHeight ?쒓굅
    */
   panelMode?: boolean
-  /** 외부 컴포넌트가 보유한 deal 메타 override */
+  /** ?몃? 而댄룷?뚰듃媛 蹂댁쑀??deal 硫뷀? override */
   dealOverride?: {
     listing_name?: string
     counterparty?: string
@@ -105,13 +102,13 @@ export interface DealFlowViewProps {
     asset_type?: string
     location?: string
   }
-  /** L0→L1 투자자 인증 모달 트리거 (없으면 /login 링크로 폴백) */
+  /** L0?묹1 ?ъ옄???몄쬆 紐⑤떖 ?몃━嫄?(?놁쑝硫?/login 留곹겕濡??대갚) */
   onVerifyClick?: () => void
-  /** L1→L2 NDA 모달 트리거 (없으면 /exchange/[id]?action=nda 링크로 폴백) */
+  /** L1?묹2 NDA 紐⑤떖 ?몃━嫄?(?놁쑝硫?/exchange/[id]?action=nda 留곹겕濡??대갚) */
   onNdaClick?: () => void
-  /** L2→L3 LOI 모달 트리거 (없으면 /exchange/[id]?action=loi 링크로 폴백) */
+  /** L2?묹3 LOI 紐⑤떖 ?몃━嫄?(?놁쑝硫?/exchange/[id]?action=loi 留곹겕濡??대갚) */
   onLoiClick?: () => void
-  /** L3→L4 ESCROW 모달 트리거 (없으면 /exchange/[id]?action=escrow 링크로 폴백) */
+  /** L3?묹4 ESCROW 紐⑤떖 ?몃━嫄?(?놁쑝硫?/exchange/[id]?action=escrow 留곹겕濡??대갚) */
   onEscrowClick?: () => void
 }
 
@@ -125,13 +122,13 @@ export function DealFlowView({
   onLoiClick,
   onEscrowClick,
 }: DealFlowViewProps = {}) {
-  // panelMode 는 embedded 의 superset (utility bar 등 chrome 숨김 포함)
+  // panelMode ??embedded ??superset (utility bar ??chrome ?④? ?ы븿)
   const inEmbed = embedded || panelMode
   const params = useParams()
   const router = useRouter()
   const dealId = idProp || (params?.id as string) || MOCK_DEAL.id
 
-  // dealOverride 가 있으면 mock 위에 덮어쓰기
+  // dealOverride 媛 ?덉쑝硫?mock ?꾩뿉 ??뼱?곌린
   const deal = useMemo(() => {
     if (!dealOverride) return MOCK_DEAL
     return {
@@ -139,8 +136,7 @@ export function DealFlowView({
       title: dealOverride.listing_name ?? MOCK_DEAL.title,
       institution: maskInstitutionName(dealOverride.counterparty ?? MOCK_DEAL.institution),
       region: dealOverride.location ?? MOCK_DEAL.region,
-      // 금액(원) → 억 단위 변환
-      bondBalance: dealOverride.amount ? dealOverride.amount / 100_000_000 : MOCK_DEAL.bondBalance,
+      // 湲덉븸(?? ?????⑥쐞 蹂??      bondBalance: dealOverride.amount ? dealOverride.amount / 100_000_000 : MOCK_DEAL.bondBalance,
     }
   }, [dealOverride])
 
@@ -148,7 +144,7 @@ export function DealFlowView({
 
   return (
     <div style={{ background: panelMode ? "transparent" : MCK.paperTint, minHeight: inEmbed ? "auto" : "100vh" }}>
-      {/* ═══ Top utility bar (embedded/panel 모드에선 숨김) ════════════ */}
+      {/* ?먥븧??Top utility bar (embedded/panel 紐⑤뱶?먯꽑 ?④?) ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧 */}
       {!inEmbed && (
       <div
         style={{
@@ -176,7 +172,7 @@ export function DealFlowView({
             }}
           >
             <ArrowLeft size={16} style={{ color: MCK.ink }} />
-            <span style={{ color: MCK.ink }}>매물 목록</span>
+            <span style={{ color: MCK.ink }}>留ㅻЪ 紐⑸줉</span>
           </button>
           <button
             onClick={() => setFavorited(v => !v)}
@@ -200,55 +196,55 @@ export function DealFlowView({
               style={{ color: favorited ? MCK.brass : MCK.ink }}
             />
             <span style={{ color: favorited ? MCK.brassDark : MCK.ink }}>
-              {favorited ? "관심 담음" : "관심 담기"}
+              {favorited ? "愿???댁쓬" : "愿???닿린"}
             </span>
           </button>
         </div>
       </div>
       )}
 
-      {/* ═══ 1. DEAL HEADER ════════════════════════════════════════════════ */}
+      {/* ?먥븧??1. DEAL HEADER ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧 */}
       <DealHeader deal={deal} panelMode={panelMode} />
 
-      {/* ═══ 2. DEAL SCREENING ═════════════════════════════════════════════ */}
+      {/* ?먥븧??2. DEAL SCREENING ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/}
       <DealSection
-        eyebrow="Section 01 · Free preview"
+        eyebrow="Section 01 쨌 Free preview"
         title="Deal Screening"
-        subtitle="이 딜이 검토할 가치가 있는지 3분 안에 판단"
+        subtitle="???쒖씠 寃?좏븷 媛移섍? ?덈뒗吏 3遺??덉뿉 ?먮떒"
         panelMode={panelMode}
       >
         <DealScreening />
         <DealCTA
-          label="투자자 인증하고 관심 표시"
-          subtext="10초 · 사업자등록증/명함 투자자 인증"
+          label="?ъ옄???몄쬆?섍퀬 愿???쒖떆"
+          subtext="10珥?쨌 ?ъ뾽?먮벑濡앹쬆/紐낇븿 ?ъ옄???몄쬆"
           href={onVerifyClick ? undefined : "/login"}
           onClick={onVerifyClick}
         />
       </DealSection>
 
-      {/* ═══ Gate 1 ═══════════════════════════════════════════════════════ */}
+      {/* ?먥븧??Gate 1 ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/}
       <DealGate
         icon={Lock}
-        title="NDA 체결 시 열람 가능"
-        subtitle="기관 검증 데이터 · 감정평가서 · 실거래 · 채권 정보"
+        title="NDA 泥닿껐 ???대엺 媛??
+        subtitle="湲곌? 寃利??곗씠??쨌 媛먯젙?됯???쨌 ?ㅺ굅??쨌 梨꾧텒 ?뺣낫"
         panelMode={panelMode}
-        ctaLabel={onNdaClick ? "NDA 체결화면 열기" : undefined}
+        ctaLabel={onNdaClick ? "NDA 泥닿껐?붾㈃ ?닿린" : undefined}
         onCtaClick={onNdaClick}
       />
 
-      {/* ═══ 3. DEAL VALIDATION ════════════════════════════════════════════ */}
+      {/* ?먥븧??3. DEAL VALIDATION ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧 */}
       <DealSection
-        eyebrow="Section 02 · NDA required"
+        eyebrow="Section 02 쨌 NDA required"
         title="Deal Validation"
-        subtitle="검증 데이터 — 의사결정의 핵심 근거"
+        subtitle="寃利??곗씠?????섏궗寃곗젙???듭떖 洹쇨굅"
         locked={!deal.hasNDA}
         panelMode={panelMode}
       >
         <DealValidation locked={!deal.hasNDA} />
         {!deal.hasNDA && (
           <DealCTA
-            label="NDA 체결하고 전체 데이터 보기"
-            subtext="전자서명 · 약 2분 소요 · 즉시 잠금 해제"
+            label="NDA 泥닿껐?섍퀬 ?꾩껜 ?곗씠??蹂닿린"
+            subtext="?꾩옄?쒕챸 쨌 ??2遺??뚯슂 쨌 利됱떆 ?좉툑 ?댁젣"
             href={onNdaClick ? undefined : `/exchange/${dealId}?action=nda`}
             onClick={onNdaClick}
             emphasis
@@ -256,29 +252,29 @@ export function DealFlowView({
         )}
       </DealSection>
 
-      {/* ═══ Gate 2 ═══════════════════════════════════════════════════════ */}
+      {/* ?먥븧??Gate 2 ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/}
       <DealGate
         icon={Lock}
-        title="LOI 제출 시 참여 가능"
-        subtitle="채팅 · 오프라인 미팅 · 실사 · 가격 협상"
+        title="LOI ?쒖텧 ??李몄뿬 媛??
+        subtitle="梨꾪똿 쨌 ?ㅽ봽?쇱씤 誘명똿 쨌 ?ㅼ궗 쨌 媛寃??묒긽"
         panelMode={panelMode}
-        ctaLabel={onLoiClick ? "LOI 제출화면 열기" : undefined}
+        ctaLabel={onLoiClick ? "LOI ?쒖텧?붾㈃ ?닿린" : undefined}
         onCtaClick={onLoiClick}
       />
 
-      {/* ═══ 4. DEAL ENGAGEMENT ════════════════════════════════════════════ */}
+      {/* ?먥븧??4. DEAL ENGAGEMENT ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧 */}
       <DealSection
-        eyebrow="Section 03 · LOI required"
+        eyebrow="Section 03 쨌 LOI required"
         title="Deal Engagement"
-        subtitle="딜 참여 — 매도자와 직접 협상"
+        subtitle="??李몄뿬 ??留ㅻ룄?먯? 吏곸젒 ?묒긽"
         locked={!deal.hasLOI}
         panelMode={panelMode}
       >
         <DealEngagement locked={!deal.hasLOI} />
         {!deal.hasLOI && (
           <DealCTA
-            label="LOI 제출하고 협상 참여"
-            subtext="구속력 없는 의향서 · 매도자 동의 후 딜룸 오픈"
+            label="LOI ?쒖텧?섍퀬 ?묒긽 李몄뿬"
+            subtext="援ъ냽???녿뒗 ?섑뼢??쨌 留ㅻ룄???숈쓽 ???쒕８ ?ㅽ뵂"
             href={onLoiClick ? undefined : `/exchange/${dealId}?action=loi`}
             onClick={onLoiClick}
             emphasis
@@ -286,29 +282,29 @@ export function DealFlowView({
         )}
       </DealSection>
 
-      {/* ═══ Gate 3 ═══════════════════════════════════════════════════════ */}
+      {/* ?먥븧??Gate 3 ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/}
       <DealGate
         icon={Lock}
-        title="ESCROW 결제 후 실행"
-        subtitle="안전결제 · 계약서 자동생성 · 현장 클로징"
+        title="ESCROW 寃곗젣 ???ㅽ뻾"
+        subtitle="?덉쟾寃곗젣 쨌 怨꾩빟???먮룞?앹꽦 쨌 ?꾩옣 ?대줈吏?
         panelMode={panelMode}
-        ctaLabel={onEscrowClick ? "ESCROW 결제화면 열기" : undefined}
+        ctaLabel={onEscrowClick ? "ESCROW 寃곗젣?붾㈃ ?닿린" : undefined}
         onCtaClick={onEscrowClick}
       />
 
-      {/* ═══ 5. DEAL EXECUTION ═════════════════════════════════════════════ */}
+      {/* ?먥븧??5. DEAL EXECUTION ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/}
       <DealSection
-        eyebrow="Section 04 · Closing"
+        eyebrow="Section 04 쨌 Closing"
         title="Deal Execution"
-        subtitle="거래 실행 — 30분 내 클로징"
+        subtitle="嫄곕옒 ?ㅽ뻾 ??30遺????대줈吏?
         locked={!deal.hasEscrow}
         panelMode={panelMode}
       >
         <DealExecution locked={!deal.hasEscrow} />
         {!deal.hasEscrow && (
           <DealCTA
-            label="결제 진행"
-            subtext="에스크로 안전결제 · KB국민은행 협력"
+            label="寃곗젣 吏꾪뻾"
+            subtext="?먯뒪?щ줈 ?덉쟾寃곗젣 쨌 KB援??????묐젰"
             href={onEscrowClick ? undefined : `/exchange/${dealId}?action=escrow`}
             onClick={onEscrowClick}
             emphasis
@@ -321,13 +317,12 @@ export function DealFlowView({
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Deal Header — 신뢰 + 핵심정보 3초 판단
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Deal Header ???좊ː + ?듭떖?뺣낫 3珥??먮떒
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 /**
- * DealHeader (export 형) — 외부 컴포넌트(AssetDetailView 등)에서 단독 사용 가능.
- * - hideKpiGrid: 외부에 이미 KpiRow 가 있을 때 KPI 6칸 그리드 숨김 (중복 방지)
- * - currentStage: 4-step funnel 진행 표시 (Screening / Validation / Engagement / Execution)
+ * DealHeader (export ?? ???몃? 而댄룷?뚰듃(AssetDetailView ???먯꽌 ?⑤룆 ?ъ슜 媛??
+ * - hideKpiGrid: ?몃????대? KpiRow 媛 ?덉쓣 ??KPI 6移?洹몃━???④? (以묐났 諛⑹?)
+ * - currentStage: 4-step funnel 吏꾪뻾 ?쒖떆 (Screening / Validation / Engagement / Execution)
  */
 export interface DealHeaderStandaloneProps {
   title: string
@@ -335,13 +330,13 @@ export interface DealHeaderStandaloneProps {
   region?: string
   saleType?: string
   dealId?: string
-  aiGradeBadge?: string  // 예: "AI 등급 A · 매수 적합"
+  aiGradeBadge?: string  // ?? "AI ?깃툒 A 쨌 留ㅼ닔 ?곹빀"
   currentStage?: DealStage
   hideKpiGrid?: boolean
   hideMetaRow?: boolean
   hideTitle?: boolean
   panelMode?: boolean
-  // KPI 값 (hideKpiGrid=false 일 때만 사용)
+  // KPI 媛?(hideKpiGrid=false ???뚮쭔 ?ъ슜)
   kpis?: { bondBalance: number; hopePrice: number; discountRate: number; expectedROI: number; riskScore: number; ltv: number }
 }
 
@@ -374,7 +369,7 @@ export function DealHeaderStandalone(props: DealHeaderStandaloneProps) {
 }
 
 function DealHeader({
-  deal, panelMode = false, hideKpiGrid = false, hideMetaRow = false, hideTitle = false, aiGradeBadge = "AI 등급 A · 매수 적합",
+  deal, panelMode = false, hideKpiGrid = false, hideMetaRow = false, hideTitle = false, aiGradeBadge = "AI ?깃툒 A 쨌 留ㅼ닔 ?곹빀",
 }: {
   deal: typeof MOCK_DEAL
   panelMode?: boolean
@@ -384,10 +379,10 @@ function DealHeader({
   aiGradeBadge?: string
 }) {
   const stages: { key: DealStage; label: string; korean: string }[] = [
-    { key: "Screening",  label: "Screening",  korean: "탐색" },
-    { key: "Validation", label: "Validation", korean: "검증" },
-    { key: "Engagement", label: "Engagement", korean: "딜 참여" },
-    { key: "Execution",  label: "Execution",  korean: "거래 실행" },
+    { key: "Screening",  label: "Screening",  korean: "?먯깋" },
+    { key: "Validation", label: "Validation", korean: "寃利? },
+    { key: "Engagement", label: "Engagement", korean: "??李몄뿬" },
+    { key: "Execution",  label: "Execution",  korean: "嫄곕옒 ?ㅽ뻾" },
   ]
   const currentIdx = stages.findIndex(s => s.key === deal.currentStage)
 
@@ -403,7 +398,7 @@ function DealHeader({
       }}
     >
       <div className={panelMode ? "px-7 py-9" : "max-w-[1280px] mx-auto px-6 py-10"}>
-        {/* meta row — enlarged: 채권자/지역/매각방식/딜ID 라벨 강조 */}
+        {/* meta row ??enlarged: 梨꾧텒??吏??留ㅺ컖諛⑹떇/?쏧D ?쇰꺼 媛뺤“ */}
         {!hideMetaRow && (
         <div className="flex items-center gap-2 mb-5" style={{ flexWrap: "wrap" }}>
           {[deal.institution, deal.region, deal.saleType, deal.id].map((m, i) => (
@@ -416,14 +411,14 @@ function DealHeader({
                 letterSpacing: "0.02em",
               }}
             >
-              {i > 0 && <span style={{ color: MCK.border, marginRight: 10 }}>·</span>}
+              {i > 0 && <span style={{ color: MCK.border, marginRight: 10 }}>쨌</span>}
               {m}
             </span>
           ))}
         </div>
         )}
 
-        {/* title + AI badge — enlarged */}
+        {/* title + AI badge ??enlarged */}
         {!hideTitle && (
         <div className="flex items-start justify-between gap-6 mb-8" style={{ flexWrap: "wrap" }}>
           <h1
@@ -462,7 +457,7 @@ function DealHeader({
         </div>
         )}
 
-        {/* KPI row (외부에 KpiRow 가 있으면 hideKpiGrid 로 중복 제거) */}
+        {/* KPI row (?몃???KpiRow 媛 ?덉쑝硫?hideKpiGrid 濡?以묐났 ?쒓굅) */}
         {!hideKpiGrid && (
         <div
           className="grid"
@@ -473,16 +468,16 @@ function DealHeader({
             background: MCK.paperTint,
           }}
         >
-          <KPI label="채권 잔액"   value={`${deal.bondBalance.toFixed(1)}억`} />
-          <KPI label="매각 희망가" value={`${deal.hopePrice.toFixed(1)}억`} />
-          <KPI label="할인율"      value={`${deal.discountRate}%`} accent />
-          <KPI label="예상 수익률" value={`${deal.expectedROI}%`} accent />
-          <KPI label="리스크 점수" value={`${deal.riskScore} / 5`} />
+          <KPI label="梨꾧텒 ?붿븸"   value={`${deal.bondBalance.toFixed(1)}??} />
+          <KPI label="留ㅺ컖 ?щ쭩媛" value={`${deal.hopePrice.toFixed(1)}??} />
+          <KPI label="?좎씤??      value={`${deal.discountRate}%`} accent />
+          <KPI label="?덉긽 ?섏씡瑜? value={`${deal.expectedROI}%`} accent />
+          <KPI label="由ъ뒪???먯닔" value={`${deal.riskScore} / 5`} />
           <KPI label="LTV"         value={`${deal.ltv}%`} />
         </div>
         )}
 
-        {/* Deal Stage progress — enlarged */}
+        {/* Deal Stage progress ??enlarged */}
         <div className={hideKpiGrid && hideMetaRow && hideTitle ? "" : "mt-10"}>
           <div className="flex items-center gap-2.5 mb-5">
             <span
@@ -499,7 +494,7 @@ function DealHeader({
                 textTransform: "uppercase",
               }}
             >
-              Deal Stage · 4-step funnel
+              Deal Stage 쨌 4-step funnel
             </span>
           </div>
           <div className="flex items-center" style={{ gap: 0 }}>
@@ -607,9 +602,8 @@ function KPI({ label, value, accent }: { label: string; value: string; accent?: 
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Section wrapper — eyebrow + title + content + (locked overlay)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Section wrapper ??eyebrow + title + content + (locked overlay)
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 export function DealSection({
   eyebrow, title, subtitle, locked = false, children, panelMode = false,
 }: {
@@ -687,22 +681,21 @@ export function DealSection({
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Section 1 — DEAL SCREENING (free preview)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Section 1 ??DEAL SCREENING (free preview)
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 function DealScreening() {
   return (
     <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
-      {/* AI 분석 리포트 */}
+      {/* AI 遺꾩꽍 由ы룷??*/}
       <PaperCard
         accent={MCK.brass}
-        eyebrow="L0 · AI Insights"
+        eyebrow="L0 쨌 AI Insights"
         icon={Brain}
-        title="AI 분석 리포트"
+        title="AI 遺꾩꽍 由ы룷??
       >
-        <DataRow label="예상 낙찰가" value="9.2 ~ 10.4억" emphasis />
-        <DataRow label="예상 회수율" value="86%" />
-        <DataRow label="배당 시나리오" value="3종 (강세·기준·약세)" />
+        <DataRow label="?덉긽 ?숈같媛" value="9.2 ~ 10.4?? emphasis />
+        <DataRow label="?덉긽 ?뚯닔?? value="86%" />
+        <DataRow label="諛곕떦 ?쒕굹由ъ삤" value="3醫?(媛뺤꽭쨌湲곗?쨌?쎌꽭)" />
         <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px dashed ${MCK.border}` }}>
           <div
             style={{
@@ -710,27 +703,26 @@ function DealScreening() {
               letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8,
             }}
           >
-            핵심 리스크
-          </div>
+            ?듭떖 由ъ뒪??          </div>
           <ul style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <RiskItem level="low"  text="권리관계 단순 (선순위 1건)" />
-            <RiskItem level="med"  text="임차인 1세대 · 대항력 검토 필요" />
-            <RiskItem level="low"  text="시세 변동성 낮음 (강남구 평균 + 4%)" />
+            <RiskItem level="low"  text="沅뚮━愿怨??⑥닚 (?좎닚??1嫄?" />
+            <RiskItem level="med"  text="?꾩감??1?몃? 쨌 ???젰 寃???꾩슂" />
+            <RiskItem level="low"  text="?쒖꽭 蹂?숈꽦 ??쓬 (媛뺣궓援??됯퇏 + 4%)" />
           </ul>
         </div>
       </PaperCard>
 
-      {/* 권리관계 요약 */}
+      {/* 沅뚮━愿怨??붿빟 */}
       <PaperCard
         accent={MCK.blue}
-        eyebrow="L0 · Title summary"
+        eyebrow="L0 쨌 Title summary"
         icon={Scale}
-        title="권리관계 요약"
+        title="沅뚮━愿怨??붿빟"
       >
-        <DataRow label="선순위 권리" value="근저당 1건 (KB국민은행)" />
-        <DataRow label="채권최고액"  value="14.4억 (말소기준)" />
-        <DataRow label="가압류"      value="없음" positive />
-        <DataRow label="가처분"      value="없음" positive />
+        <DataRow label="?좎닚??沅뚮━" value="洹쇱???1嫄?(KB援?????" />
+        <DataRow label="梨꾧텒理쒓퀬??  value="14.4??(留먯냼湲곗?)" />
+        <DataRow label="媛?뺣쪟"      value="?놁쓬" positive />
+        <DataRow label="媛泥섎텇"      value="?놁쓬" positive />
         <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px dashed ${MCK.border}` }}>
           <div
             style={{
@@ -738,19 +730,19 @@ function DealScreening() {
               letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8,
             }}
           >
-            임차인 현황
+            ?꾩감???꾪솴
           </div>
-          <DataRow label="전입세대" value="1세대" />
-          <DataRow label="확정일자" value="있음 (대항력 O)" warning />
+          <DataRow label="?꾩엯?몃?" value="1?몃?" />
+          <DataRow label="?뺤젙?쇱옄" value="?덉쓬 (???젰 O)" warning />
         </div>
       </PaperCard>
 
-      {/* 요약 정보 */}
+      {/* ?붿빟 ?뺣낫 */}
       <PaperCard
         accent={MCK.brass}
-        eyebrow="L1 · Document digest"
+        eyebrow="L1 쨌 Document digest"
         icon={FileText}
-        title="요약 정보"
+        title="?붿빟 ?뺣낫"
       >
         <div
           style={{
@@ -758,11 +750,11 @@ function DealScreening() {
             letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8,
           }}
         >
-          등기 요약
+          ?깃린 ?붿빟
         </div>
-        <DataRow label="유형"     value="아파트" />
-        <DataRow label="전용면적" value="84.99㎡ (25.7평)" />
-        <DataRow label="층/구조"  value="14층 / RC조" />
+        <DataRow label="?좏삎"     value="?꾪뙆?? />
+        <DataRow label="?꾩슜硫댁쟻" value="84.99??(25.7??" />
+        <DataRow label="痢?援ъ“"  value="14痢?/ RC議? />
         <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px dashed ${MCK.border}` }}>
           <div
             style={{
@@ -770,28 +762,27 @@ function DealScreening() {
               letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8,
             }}
           >
-            임대차 요약
+            ?꾨?李??붿빟
           </div>
-          <DataRow label="보증금"   value="3.5억" />
-          <DataRow label="월세"     value="없음" />
-          <DataRow label="계약 종료" value="2027-03-15" />
+          <DataRow label="蹂댁쬆湲?   value="3.5?? />
+          <DataRow label="?붿꽭"     value="?놁쓬" />
+          <DataRow label="怨꾩빟 醫낅즺" value="2027-03-15" />
         </div>
       </PaperCard>
     </div>
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Section 2 — DEAL VALIDATION (NDA gated)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Section 2 ??DEAL VALIDATION (NDA gated)
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 function DealValidation({ locked }: { locked: boolean }) {
   const items = [
-    { icon: ScrollText, title: "감정평가서",   desc: "공인 감정평가법인 v.2026.03",     meta: "PDF 28p" },
-    { icon: Gavel,      title: "경매 정보",    desc: "수원지방법원 본원 2026타경 1234",   meta: "현재가 8.7억" },
-    { icon: BarChart3,  title: "공매 정보",    desc: "한국자산관리공사 캠코 매물",        meta: "공매가 9.1억" },
-    { icon: TrendingUp, title: "실거래 통계",  desc: "동일 단지 최근 12개월 27건",        meta: "평균 11.2억" },
-    { icon: ImageIcon,  title: "현장 사진",    desc: "전문 인스펙터 촬영 v.2026.04",     meta: "사진 24장" },
-    { icon: Banknote,   title: "채권 정보",    desc: "원금·이자·연체이자 분할 데이터",     meta: "Excel" },
+    { icon: ScrollText, title: "媛먯젙?됯???,   desc: "怨듭씤 媛먯젙?됯?踰뺤씤 v.2026.03",     meta: "PDF 28p" },
+    { icon: Gavel,      title: "寃쎈ℓ ?뺣낫",    desc: "?섏썝吏諛⑸쾿??蹂몄썝 2026?寃?1234",   meta: "?꾩옱媛 8.7?? },
+    { icon: BarChart3,  title: "怨듬ℓ ?뺣낫",    desc: "?쒓뎅?먯궛愿由ш났??罹좎퐫 留ㅻЪ",        meta: "怨듬ℓ媛 9.1?? },
+    { icon: TrendingUp, title: "?ㅺ굅???듦퀎",  desc: "?숈씪 ?⑥? 理쒓렐 12媛쒖썡 27嫄?,        meta: "?됯퇏 11.2?? },
+    { icon: ImageIcon,  title: "?꾩옣 ?ъ쭊",    desc: "?꾨Ц ?몄뒪?숉꽣 珥ъ쁺 v.2026.04",     meta: "?ъ쭊 24?? },
+    { icon: Banknote,   title: "梨꾧텒 ?뺣낫",    desc: "?먭툑쨌?댁옄쨌?곗껜?댁옄 遺꾪븷 ?곗씠??,     meta: "Excel" },
   ]
   return (
     <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
@@ -802,15 +793,14 @@ function DealValidation({ locked }: { locked: boolean }) {
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Section 3 — DEAL ENGAGEMENT (LOI gated)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Section 3 ??DEAL ENGAGEMENT (LOI gated)
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 function DealEngagement({ locked }: { locked: boolean }) {
   const items = [
-    { icon: MessageSquare,  title: "채팅 문의",     desc: "매도 담당자 직접 연결",            meta: "응답 평균 18분" },
-    { icon: MapPin,         title: "오프라인 미팅", desc: "강남 본사 회의실 예약",            meta: "주중 가능" },
-    { icon: ClipboardCheck, title: "실사 진행",     desc: "감정평가사 동행 현장 실사",         meta: "1.5일 소요" },
-    { icon: Banknote,       title: "가격 협상",     desc: "구속력 없는 가격 오퍼 제시",        meta: "최대 3회" },
+    { icon: MessageSquare,  title: "梨꾪똿 臾몄쓽",     desc: "留ㅻ룄 ?대떦??吏곸젒 ?곌껐",            meta: "?묐떟 ?됯퇏 18遺? },
+    { icon: MapPin,         title: "?ㅽ봽?쇱씤 誘명똿", desc: "媛뺣궓 蹂몄궗 ?뚯쓽???덉빟",            meta: "二쇱쨷 媛?? },
+    { icon: ClipboardCheck, title: "?ㅼ궗 吏꾪뻾",     desc: "媛먯젙?됯????숉뻾 ?꾩옣 ?ㅼ궗",         meta: "1.5???뚯슂" },
+    { icon: Banknote,       title: "媛寃??묒긽",     desc: "援ъ냽???녿뒗 媛寃??ㅽ띁 ?쒖떆",        meta: "理쒕? 3?? },
   ]
   return (
     <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
@@ -821,14 +811,13 @@ function DealEngagement({ locked }: { locked: boolean }) {
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Section 4 — DEAL EXECUTION (Escrow gated)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Section 4 ??DEAL EXECUTION (Escrow gated)
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 function DealExecution({ locked }: { locked: boolean }) {
   const items = [
-    { icon: Wallet,         title: "에스크로 결제", desc: "KB국민은행 안전결제 · 분할납입",   meta: "최대 12개월" },
-    { icon: FileSignature,  title: "전자 계약",     desc: "전자서명 + 확정일자 자동",          meta: "10분 소요" },
-    { icon: CheckCircle2,   title: "현장 클로징",   desc: "법무사 동행 등기이전 + 잔금처리",    meta: "1일 클로징" },
+    { icon: Wallet,         title: "?먯뒪?щ줈 寃곗젣", desc: "KB援??????덉쟾寃곗젣 쨌 遺꾪븷?⑹엯",   meta: "理쒕? 12媛쒖썡" },
+    { icon: FileSignature,  title: "?꾩옄 怨꾩빟",     desc: "?꾩옄?쒕챸 + ?뺤젙?쇱옄 ?먮룞",          meta: "10遺??뚯슂" },
+    { icon: CheckCircle2,   title: "?꾩옣 ?대줈吏?,   desc: "踰뺣Т???숉뻾 ?깃린?댁쟾 + ?붽툑泥섎━",    meta: "1???대줈吏? },
   ]
   return (
     <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
@@ -839,9 +828,8 @@ function DealExecution({ locked }: { locked: boolean }) {
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Reusable: Paper card (free preview)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Reusable: Paper card (free preview)
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 function PaperCard({
   accent, eyebrow, icon: Icon, title, children,
 }: {
@@ -940,7 +928,7 @@ function DataRow({
 
 function RiskItem({ level, text }: { level: "low" | "med" | "high"; text: string }) {
   const color = level === "low" ? MCK.positive : level === "med" ? MCK.warning : MCK.brassDark
-  const label = level === "low" ? "낮음" : level === "med" ? "보통" : "높음"
+  const label = level === "low" ? "??쓬" : level === "med" ? "蹂댄넻" : "?믪쓬"
   return (
     <li className="flex items-center gap-2" style={{ fontSize: 12, color: MCK.ink }}>
       <span
@@ -960,9 +948,8 @@ function RiskItem({ level, text }: { level: "low" | "med" | "high"; text: string
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Locked data tile (Validation/Engagement/Execution)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Locked data tile (Validation/Engagement/Execution)
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 function DataTileLocked({
   icon: Icon, title, desc, meta, locked,
 }: {
@@ -986,7 +973,7 @@ function DataTileLocked({
         transition: "border-color 0.18s ease",
         borderColor: hover ? MCK.brass : MCK.border,
       }}
-      title={locked ? "잠금 해제 시 다운로드 가능" : ""}
+      title={locked ? "?좉툑 ?댁젣 ???ㅼ슫濡쒕뱶 媛?? : ""}
     >
       <div className="flex items-start justify-between mb-3">
         <div
@@ -1010,7 +997,7 @@ function DataTileLocked({
             }}
           >
             <Lock size={11} style={{ color: MCK.textSub }} />
-            <span style={{ color: MCK.textSub }}>잠금</span>
+            <span style={{ color: MCK.textSub }}>?좉툑</span>
           </div>
         )}
       </div>
@@ -1062,18 +1049,15 @@ function DataTileLocked({
             boxShadow: "0 4px 12px rgba(10,22,40,0.15)",
           }}
         >
-          잠금 해제 후 열람 가능
-        </div>
+          ?좉툑 ?댁젣 ???대엺 媛??        </div>
       )}
     </article>
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Deal Gate — 카드가 아니라 가로 라인 게이트
-   ctaLabel/onCtaClick 가 제공되면 게이트 라벨 아래 좌측 CTA 버튼 노출.
-   (DR-24: 딜룸 좌측 게이트 모달 트리거 — "투자자 인증하고 열람" / "NDA 체결화면 열기" / "LOI 제출화면 열기")
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Deal Gate ??移대뱶媛 ?꾨땲??媛濡??쇱씤 寃뚯씠??   ctaLabel/onCtaClick 媛 ?쒓났?섎㈃ 寃뚯씠???쇰꺼 ?꾨옒 醫뚯륫 CTA 踰꾪듉 ?몄텧.
+   (DR-24: ?쒕８ 醫뚯륫 寃뚯씠??紐⑤떖 ?몃━嫄???"?ъ옄???몄쬆?섍퀬 ?대엺" / "NDA 泥닿껐?붾㈃ ?닿린" / "LOI ?쒖텧?붾㈃ ?닿린")
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 export function DealGate({
   icon: Icon, title, subtitle, panelMode = false, ctaLabel, onCtaClick,
 }: {
@@ -1081,9 +1065,9 @@ export function DealGate({
   title: string
   subtitle: string
   panelMode?: boolean
-  /** 좌측 게이트 CTA 라벨 (예: "NDA 체결화면 열기"). 있을 때만 버튼 노출. */
+  /** 醫뚯륫 寃뚯씠??CTA ?쇰꺼 (?? "NDA 泥닿껐?붾㈃ ?닿린"). ?덉쓣 ?뚮쭔 踰꾪듉 ?몄텧. */
   ctaLabel?: string
-  /** ctaLabel 클릭 시 모달 열기 콜백 */
+  /** ctaLabel ?대┃ ??紐⑤떖 ?닿린 肄쒕갚 */
   onCtaClick?: () => void
 }) {
   return (
@@ -1137,7 +1121,7 @@ export function DealGate({
         <div style={{ flex: 1, height: 1.5, background: MCK.brass }} />
       </div>
 
-      {/* 좌측 CTA 버튼 — 모달 트리거 (ctaLabel 가 있을 때만) */}
+      {/* 醫뚯륫 CTA 踰꾪듉 ??紐⑤떖 ?몃━嫄?(ctaLabel 媛 ?덉쓣 ?뚮쭔) */}
       {ctaLabel && onCtaClick && (
         <div
           style={{
@@ -1176,10 +1160,9 @@ export function DealGate({
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Deal CTA — 검정 박스 + brass top + 흰 글씨 (mck-cta-dark)
-   onClick 가 제공되면 버튼으로 렌더 (모달 트리거), 아니면 Link 로 폴백.
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Deal CTA ??寃??諛뺤뒪 + brass top + ??湲??(mck-cta-dark)
+   onClick 媛 ?쒓났?섎㈃ 踰꾪듉?쇰줈 ?뚮뜑 (紐⑤떖 ?몃━嫄?, ?꾨땲硫?Link 濡??대갚.
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 export function DealCTA({
   label, subtext, href, emphasis, onClick,
 }: {

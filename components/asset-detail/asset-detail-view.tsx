@@ -1,12 +1,12 @@
-"use client"
+﻿"use client"
 
 /**
- * AssetDetailView — /exchange/[id] 자산 상세 본문 (DR-15 · 2026-04-21)
+ * AssetDetailView ??/exchange/[id] ?먯궛 ?곸꽭 蹂몃Ц (DR-15 쨌 2026-04-21)
  *
- * 이 컴포넌트는 /exchange/[id] 페이지는 물론 /deals 딜룸에서 선택된 딜의
- * 상세 화면을 iframe 없이 직접 렌더링할 때에도 재사용됩니다.
- * - idProp 가 주어지면 그것을 우선 사용하고, 없으면 useParams() 의 [id] 로 fallback
- * - Next.js page.tsx 는 whitelist 된 named export 만 허용하므로 이 파일은 components/ 하위에 위치
+ * ??而댄룷?뚰듃??/exchange/[id] ?섏씠吏??臾쇰줎 /deals ?쒕８?먯꽌 ?좏깮???쒖쓽
+ * ?곸꽭 ?붾㈃??iframe ?놁씠 吏곸젒 ?뚮뜑留곹븷 ?뚯뿉???ъ궗?⑸맗?덈떎.
+ * - idProp 媛 二쇱뼱吏硫?洹멸쾬???곗꽑 ?ъ슜?섍퀬, ?놁쑝硫?useParams() ??[id] 濡?fallback
+ * - Next.js page.tsx ??whitelist ??named export 留??덉슜?섎?濡????뚯씪? components/ ?섏쐞???꾩튂
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react"
@@ -27,7 +27,7 @@ import { getUserTier, tierGte } from "@/lib/access-tier"
 import { createClient } from "@/lib/supabase/client"
 import { maskInstitutionName } from "@/lib/mask"
 
-// DR-4/5: 신규 단순화 컴포넌트
+// DR-4/5: ?좉퇋 ?⑥닚??而댄룷?뚰듃
 import {
   AssetHeroSummary,
   KpiRow,
@@ -46,7 +46,7 @@ import {
   type NdaState,
   type LoiState,
 } from "@/components/asset-detail"
-// DR-19: 딜룸 좌측 메인 funnel 컴포넌트 (primitives — 기존 섹션 사이에 stage gate 삽입용)
+// DR-19: ?쒕８ 醫뚯륫 硫붿씤 funnel 而댄룷?뚰듃 (primitives ??湲곗〈 ?뱀뀡 ?ъ씠??stage gate ?쎌엯??
 import {
   DealHeaderStandalone,
   DealSection,
@@ -56,19 +56,19 @@ import { Lock as DealLockIcon } from "lucide-react"
 import { useAssetTier } from "@/hooks/use-asset-tier"
 import type { AssetTier } from "@/hooks/use-asset-tier"
 
-/* ═════ Mock 진행 시뮬레이션 (API 미연동 시 사용) ═════ */
+/* ?먥븧?먥븧??Mock 吏꾪뻾 ?쒕??덉씠??(API 誘몄뿰?????ъ슜) ?먥븧?먥븧??*/
 const MOCK_STORAGE_KEY = (id: string) => `asset-mock-tier:${id}`
 const TIER_ORDER: AssetTier[] = ["L0", "L1", "L2", "L3", "L4", "L5"]
 const TIER_TRANSITION_MSG: Record<AssetTier, string> = {
-  L0: "관심 표시 완료 · 매칭 단계 시작",
-  L1: "개인인증 완료 · AI 리포트 · 채팅 언락 (매칭 단계 완료)",
-  L2: "NDA 체결 완료 · 등기원본 · 현장사진 · 매각자 기관정보 열람",
-  L3: "LOI 제출 완료 · 매도자 승인 대기 → 실사 자료 오픈",
-  L4: "계약 초안 승인 · 전자서명 · 에스크로 단계 진입",
-  L5: "정산 완료 · 거래가 종결되었습니다 🎉",
+  L0: "愿???쒖떆 ?꾨즺 쨌 留ㅼ묶 ?④퀎 ?쒖옉",
+  L1: "媛쒖씤?몄쬆 ?꾨즺 쨌 AI 由ы룷??쨌 梨꾪똿 ?몃씫 (留ㅼ묶 ?④퀎 ?꾨즺)",
+  L2: "NDA 泥닿껐 ?꾨즺 쨌 ?깃린?먮낯 쨌 ?꾩옣?ъ쭊 쨌 留ㅺ컖??湲곌??뺣낫 ?대엺",
+  L3: "LOI ?쒖텧 ?꾨즺 쨌 留ㅻ룄???뱀씤 ?湲????ㅼ궗 ?먮즺 ?ㅽ뵂",
+  L4: "怨꾩빟 珥덉븞 ?뱀씤 쨌 ?꾩옄?쒕챸 쨌 ?먯뒪?щ줈 ?④퀎 吏꾩엯",
+  L5: "?뺤궛 ?꾨즺 쨌 嫄곕옒媛 醫낃껐?섏뿀?듬땲???럦",
 }
 
-/* ═════ Design tokens ═════ */
+/* ?먥븧?먥븧??Design tokens ?먥븧?먥븧??*/
 const C = {
   bg0: "var(--layer-0-bg)",
   bg1: "var(--layer-1-bg)",
@@ -83,7 +83,7 @@ const C = {
   lt4: "var(--fg-subtle)",
 }
 
-/* ═════ Data types ═════ */
+/* ?먥븧?먥븧??Data types ?먥븧?먥븧??*/
 interface ListingDetail {
   id: string
   institution: string
@@ -103,13 +103,13 @@ interface ListingDetail {
   published_at: string
   rights_summary: { senior_total: number; junior_total: number; deposit_total: number }
   registry_summary_items: Array<{ order: number; order_code?: string; type: string; amount: number; holder_masked: string; receipt_date?: string; deed_type?: "land" | "building" }>
-  /** 등기부등본 전체 행 (L2 공개) — 토지/건물 구분 */
+  /** ?깃린遺?깅낯 ?꾩껜 ??(L2 怨듦컻) ???좎?/嫄대Ъ 援щ텇 */
   registry_land_full_items?: Array<{
     order: number
-    order_code: string        // 예: "갑30", "을21"
+    order_code: string        // ?? "媛?0", "??1"
     receipt_date: string
     type: string
-    holder: string            // 권리자 (UI에서 maskHolderDisplay 적용)
+    holder: string            // 沅뚮━??(UI?먯꽌 maskHolderDisplay ?곸슜)
     amount: number | null
     amount_label?: string
   }>
@@ -122,9 +122,9 @@ interface ListingDetail {
     amount: number | null
     amount_label?: string
   }>
-  /** 감정평가서 부속 정보 */
-  appraisal_area?: number     // 면적 (m²)
-  appraisal_date?: string     // 감정 기준시점 (ISO, 예: "2026-05-23")
+  /** 媛먯젙?됯???遺???뺣낫 */
+  appraisal_area?: number     // 硫댁쟻 (m짼)
+  appraisal_date?: string     // 媛먯젙 湲곗??쒖젏 (ISO, ?? "2026-05-23")
   lease_summary: { total_deposit: number; monthly_rent: number; tenant_count: number }
   site_photos: string[]
   debtor_name_masked: string
@@ -137,44 +137,41 @@ interface ListingDetail {
     delinquent_rate: number
     delinquent_since: string
     /**
-     * 수익권 금액 (공부상 채권최고액) — 1차 근저당의 채권최고액.
-     * 한국 표준은 대출원금 × 110~140% (관행 1.2x). 미입력 시 원금 × 1.2 기본 적용.
+     * ?섏씡沅?湲덉븸 (怨듬???梨꾧텒理쒓퀬?? ??1李?洹쇱??뱀쓽 梨꾧텒理쒓퀬??
+     * ?쒓뎅 ?쒖?? ?異쒖썝湲?횞 110~140% (愿??1.2x). 誘몄엯?????먭툑 횞 1.2 湲곕낯 ?곸슜.
      */
     maximum_bond_amount?: number
   }
-  /** 경매 정보 (없으면 null) */
+  /** 寃쎈ℓ ?뺣낫 (?놁쑝硫?null) */
   auction_info: {
-    case_no: string           // 사건번호
-    court: string             // 관할법원
-    filed_date: string        // 경매접수일 (ISO)
-    estimated_start: string   // 예상 경매 개시일 (ISO)
+    case_no: string           // ?ш굔踰덊샇
+    court: string             // 愿?좊쾿??    filed_date: string        // 寃쎈ℓ?묒닔??(ISO)
+    estimated_start: string   // ?덉긽 寃쎈ℓ 媛쒖떆??(ISO)
   } | null
-  /** 공매 정보 (없으면 null) */
+  /** 怨듬ℓ ?뺣낫 (?놁쑝硫?null) */
   public_sale_info: {
-    mgmt_no: string           // 관리번호
-    filed_date: string        // 공매신청일 (ISO)
-    estimated_start: string   // 예상 공매 시작일 (ISO)
+    mgmt_no: string           // 愿由щ쾲??    filed_date: string        // 怨듬ℓ?좎껌??(ISO)
+    estimated_start: string   // ?덉긽 怨듬ℓ ?쒖옉??(ISO)
   } | null
-  /** 관리자 확인 상태 */
-  escrow_confirmed: boolean   // 에스크로 결제 납입 확인
-  contract_confirmed: boolean // 현장 계약 완료 확인
+  /** 愿由ъ옄 ?뺤씤 ?곹깭 */
+  escrow_confirmed: boolean   // ?먯뒪?щ줈 寃곗젣 ?⑹엯 ?뺤씤
+  contract_confirmed: boolean // ?꾩옣 怨꾩빟 ?꾨즺 ?뺤씤
 }
 
 function buildMock(id: string): ListingDetail {
   /**
-   * NPL 분석 보고서(lib/npl/unified-report/sample.ts) 와 동기화 (2026-04-26)
-   * · 채권잔액 21.8억 = 원금 19.6억 + 연체이자 2.2억
-   * · 감정가 28.0억 / AI 시세 25.5억 / 할인율 8.9%
-   * · 정상금리 6.9% / 연체금리 8.9% / 연체시작 2025-07-23
-   * · AI 등급 A · 매수 적합
+   * NPL 遺꾩꽍 蹂닿퀬??lib/npl/unified-report/sample.ts) ? ?숆린??(2026-04-26)
+   * 쨌 梨꾧텒?붿븸 21.8??= ?먭툑 19.6??+ ?곗껜?댁옄 2.2??   * 쨌 媛먯젙媛 28.0??/ AI ?쒖꽭 25.5??/ ?좎씤??8.9%
+   * 쨌 ?뺤긽湲덈━ 6.9% / ?곗껜湲덈━ 8.9% / ?곗껜?쒖옉 2025-07-23
+   * 쨌 AI ?깃툒 A 쨌 留ㅼ닔 ?곹빀
    */
   return {
     id,
-    institution: "하나저축은행",
-    inst_type: "저축은행",
-    region_city: "서울",
-    region_district: "강남구",
-    collateral: "아파트",
+    institution: "?섎굹?異뺤???,
+    inst_type: "?異뺤???,
+    region_city: "?쒖슱",
+    region_district: "媛뺣궓援?,
+    collateral: "?꾪뙆??,
     outstanding_principal: 1_960_000_000,
     asking_price: 2_550_000_000,
     appraisal_value: 2_800_000_000,
@@ -182,8 +179,8 @@ function buildMock(id: string): ListingDetail {
     ai_grade: "A",
     data_completeness: 9,
     debtor_type: "INDIVIDUAL",
-    auction_stage: "임의매각",
-    court_case_masked: "서울중앙지법 2025타경●●●●",
+    auction_stage: "?꾩쓽留ㅺ컖",
+    court_case_masked: "?쒖슱以묒븰吏踰?2025?寃썩뿈?뤴뿈??,
     published_at: "2026-04-05",
     rights_summary: {
       senior_total: 780_000_000,
@@ -191,42 +188,40 @@ function buildMock(id: string): ListingDetail {
       deposit_total: 60_000_000,
     },
     registry_summary_items: [
-      { order: 1, order_code: "을21", type: "근저당권", amount: 3_600_000_000, holder_masked: "중소기업은행(부천테크노지점)", receipt_date: "2021.06.18", deed_type: "land" },
-      { order: 2, order_code: "을23", type: "근저당권", amount: 960_000_000,   holder_masked: "(주)피비스타(송파동,현대레이크빌)", receipt_date: "2024.10.25", deed_type: "land" },
-      { order: 3, order_code: "갑31", type: "가압류",   amount: 654_000_000,   holder_masked: "(주)린정(고잔동,한남법조빌딩)", receipt_date: "2024.10.15", deed_type: "building" },
+      { order: 1, order_code: "??1", type: "洹쇱??밴텒", amount: 3_600_000_000, holder_masked: "以묒냼湲곗뾽???遺泥쒗뀒?щ끂吏??", receipt_date: "2021.06.18", deed_type: "land" },
+      { order: 2, order_code: "??3", type: "洹쇱??밴텒", amount: 960_000_000,   holder_masked: "(二??쇰퉬?ㅽ?(?≫뙆???꾨??덉씠?щ퉴)", receipt_date: "2024.10.25", deed_type: "land" },
+      { order: 3, order_code: "媛?1", type: "媛?뺣쪟",   amount: 654_000_000,   holder_masked: "(二?由곗젙(怨좎옍???쒕궓踰뺤“鍮뚮뵫)", receipt_date: "2024.10.15", deed_type: "building" },
     ],
     registry_land_full_items: [
-      { order: 1, order_code: "갑30", receipt_date: "2021.06.18", type: "소유권이전(매매)",   holder: "유한회사제이원퍼스트(소유자)",         amount: null },
-      { order: 2, order_code: "을21", receipt_date: "2021.06.18", type: "근저당권설정",       holder: "중소기업은행(부천테크노지점)",          amount: 3_600_000_000 },
-      { order: 3, order_code: "갑31", receipt_date: "2024.10.15", type: "가압류",             holder: "(주)린정(고잔동,한남법조빌딩)",        amount: 654_000_000 },
-      { order: 4, order_code: "갑32", receipt_date: "2024.10.23", type: "압류",               holder: "영등포구(서울특별시)",                 amount: null },
-      { order: 5, order_code: "을23", receipt_date: "2024.10.25", type: "근저당권설정",       holder: "(주)피비스타(송파동,현대레이크빌)",    amount: 960_000_000 },
-      { order: 6, order_code: "갑33", receipt_date: "2025.01.08", type: "압류",               holder: "국 금천세무서장",                      amount: null },
-      { order: 7, order_code: "갑34", receipt_date: "2025.05.09", type: "임의경매개시결정",   holder: "중소기업은행(여신관리부)",             amount: 3_086_117_337, amount_label: "청구금액" },
+      { order: 1, order_code: "媛?0", receipt_date: "2021.06.18", type: "?뚯쑀沅뚯씠??留ㅻℓ)",   holder: "?좏븳?뚯궗?쒖씠?먰띁?ㅽ듃(?뚯쑀??",         amount: null },
+      { order: 2, order_code: "??1", receipt_date: "2021.06.18", type: "洹쇱??밴텒?ㅼ젙",       holder: "以묒냼湲곗뾽???遺泥쒗뀒?щ끂吏??",          amount: 3_600_000_000 },
+      { order: 3, order_code: "媛?1", receipt_date: "2024.10.15", type: "媛?뺣쪟",             holder: "(二?由곗젙(怨좎옍???쒕궓踰뺤“鍮뚮뵫)",        amount: 654_000_000 },
+      { order: 4, order_code: "媛?2", receipt_date: "2024.10.23", type: "?뺣쪟",               holder: "?곷벑?ш뎄(?쒖슱?밸퀎??",                 amount: null },
+      { order: 5, order_code: "??3", receipt_date: "2024.10.25", type: "洹쇱??밴텒?ㅼ젙",       holder: "(二??쇰퉬?ㅽ?(?≫뙆???꾨??덉씠?щ퉴)",    amount: 960_000_000 },
+      { order: 6, order_code: "媛?3", receipt_date: "2025.01.08", type: "?뺣쪟",               holder: "援?湲덉쿇?몃Т?쒖옣",                      amount: null },
+      { order: 7, order_code: "媛?4", receipt_date: "2025.05.09", type: "?꾩쓽寃쎈ℓ媛쒖떆寃곗젙",   holder: "以묒냼湲곗뾽????ъ떊愿由щ?)",             amount: 3_086_117_337, amount_label: "泥?뎄湲덉븸" },
     ],
     registry_building_full_items: [
-      { order: 1, order_code: "갑1",  receipt_date: "2021.06.18", type: "소유권이전(매매)",   holder: "유한회사제이원퍼스트(소유자)",         amount: null },
-      { order: 2, order_code: "을1",  receipt_date: "2021.06.18", type: "근저당권설정",       holder: "중소기업은행(부천테크노지점)",          amount: 3_600_000_000 },
-      { order: 3, order_code: "갑2",  receipt_date: "2024.10.15", type: "가압류",             holder: "(주)린정(고잔동,한남법조빌딩)",        amount: 654_000_000 },
-      { order: 4, order_code: "갑3",  receipt_date: "2025.05.09", type: "임의경매개시결정",   holder: "중소기업은행(여신관리부)",             amount: 3_086_117_337, amount_label: "청구금액" },
+      { order: 1, order_code: "媛?",  receipt_date: "2021.06.18", type: "?뚯쑀沅뚯씠??留ㅻℓ)",   holder: "?좏븳?뚯궗?쒖씠?먰띁?ㅽ듃(?뚯쑀??",         amount: null },
+      { order: 2, order_code: "??",  receipt_date: "2021.06.18", type: "洹쇱??밴텒?ㅼ젙",       holder: "以묒냼湲곗뾽???遺泥쒗뀒?щ끂吏??",          amount: 3_600_000_000 },
+      { order: 3, order_code: "媛?",  receipt_date: "2024.10.15", type: "媛?뺣쪟",             holder: "(二?由곗젙(怨좎옍???쒕궓踰뺤“鍮뚮뵫)",        amount: 654_000_000 },
+      { order: 4, order_code: "媛?",  receipt_date: "2025.05.09", type: "?꾩쓽寃쎈ℓ媛쒖떆寃곗젙",   holder: "以묒냼湲곗뾽????ъ떊愿由щ?)",             amount: 3_086_117_337, amount_label: "泥?뎄湲덉븸" },
     ],
     appraisal_area: 3333,
     appraisal_date: "2026-05-23",
     lease_summary: { total_deposit: 60_000_000, monthly_rent: 0, tenant_count: 1 },
     site_photos: ["photo1", "photo2", "photo3"],
-    debtor_name_masked: "김●●",
-    court_case_full: "서울중앙지법 2025타경12345",
+    debtor_name_masked: "源?뤴뿈",
+    court_case_full: "?쒖슱以묒븰吏踰?2025?寃?2345",
     claim_info: {
-      balance: 2_180_000_000,         // 채권잔액 21.80억 (NPL 보고서 동기화)
-      principal: 1_960_000_000,       // 대출원금 19.60억
-      accrued_interest: 220_000_000,  // 연체이자 2.20억
-      contract_rate: 6.9,             // 정상금리
-      delinquent_rate: 8.9,           // 연체금리
+      balance: 2_180_000_000,         // 梨꾧텒?붿븸 21.80??(NPL 蹂닿퀬???숆린??
+      principal: 1_960_000_000,       // ?異쒖썝湲?19.60??      accrued_interest: 220_000_000,  // ?곗껜?댁옄 2.20??      contract_rate: 6.9,             // ?뺤긽湲덈━
+      delinquent_rate: 8.9,           // ?곗껜湲덈━
       delinquent_since: "2025-07-23",
     },
     auction_info: {
-      case_no: "서울중앙지법 2025타경12345",
-      court: "서울중앙지방법원",
+      case_no: "?쒖슱以묒븰吏踰?2025?寃?2345",
+      court: "?쒖슱以묒븰吏諛⑸쾿??,
       filed_date: "2025-08-15",
       estimated_start: "2026-05-20",
     },
@@ -237,46 +232,46 @@ function buildMock(id: string): ListingDetail {
 }
 
 function formatKRW(n: number | null | undefined): string {
-  if (!n) return "—"
-  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}억`
-  if (n >= 10_000) return `${(n / 10_000).toFixed(0)}만`
+  if (!n) return "??
+  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}??
+  if (n >= 10_000) return `${(n / 10_000).toFixed(0)}留?
   return n.toLocaleString("ko-KR")
 }
 
 function formatDateKo(iso: string | null | undefined): string {
-  if (!iso) return "—"
-  try { return iso.slice(0, 10) } catch { return "—" }
+  if (!iso) return "??
+  try { return iso.slice(0, 10) } catch { return "?? }
 }
 
-/** 권리자 표시용 마스킹: 괄호 부분 제거 + 앞 5글자 ● 처리 */
+/** 沅뚮━???쒖떆??留덉뒪?? 愿꾪샇 遺遺??쒓굅 + ??5湲????泥섎━ */
 function maskHolderDisplay(raw: string): string {
-  const stripped = raw.replace(/\(.*?\)/g, '').replace(/（.*?）/g, '').trim()
-  if (!stripped) return '●●●●●'
+  const stripped = raw.replace(/\(.*?\)/g, '').replace(/竊?*?竊?g, '').trim()
+  if (!stripped) return '?뤴뿈?뤴뿈??
   const chars = [...stripped]
-  return chars.map((c, i) => i < 5 ? '●' : c).join('')
+  return chars.map((c, i) => i < 5 ? '?? : c).join('')
 }
 
-/** 구분 코드 포맷: order + optional code → "1(갑30)" */
+/** 援щ텇 肄붾뱶 ?щ㎎: order + optional code ??"1(媛?0)" */
 function fmtOrderCode(order: number, code?: string): string {
   return code ? `${order}(${code})` : String(order)
 }
 
-/** m² ↔ 평 변환 */
+/** m짼 ????蹂??*/
 const M2_PER_PYEONG = 3.3058
-function fmtArea(m2: number, unit: "m2" | "평"): string {
-  if (unit === "m2") return `${m2.toLocaleString("ko-KR")}m²`
-  return `${(m2 / M2_PER_PYEONG).toFixed(1)}평`
+function fmtArea(m2: number, unit: "m2" | "??): string {
+  if (unit === "m2") return `${m2.toLocaleString("ko-KR")}m짼`
+  return `${(m2 / M2_PER_PYEONG).toFixed(1)}??
 }
-function fmtPricePerArea(price: number, m2: number, unit: "m2" | "평"): string {
-  if (!m2) return "—"
+function fmtPricePerArea(price: number, m2: number, unit: "m2" | "??): string {
+  if (!m2) return "??
   if (unit === "m2") {
     const v = Math.round(price / m2)
-    return v >= 10_000 ? `${(v / 10_000).toFixed(0)}만원/m²` : `${v.toLocaleString()}원/m²`
+    return v >= 10_000 ? `${(v / 10_000).toFixed(0)}留뚯썝/m짼` : `${v.toLocaleString()}??m짼`
   }
   const pyeong = m2 / M2_PER_PYEONG
   const v = Math.round(price / pyeong)
-  return v >= 100_000_000 ? `${(v / 100_000_000).toFixed(1)}억/평` :
-    v >= 10_000 ? `${(v / 10_000).toFixed(0)}만원/평` : `${v.toLocaleString()}원/평`
+  return v >= 100_000_000 ? `${(v / 100_000_000).toFixed(1)}???? :
+    v >= 10_000 ? `${(v / 10_000).toFixed(0)}留뚯썝/?? : `${v.toLocaleString()}????
 }
 
 function computeDataCompleteness(row: Record<string, unknown>): number {
@@ -301,11 +296,11 @@ function mapNplListingToDetail(row: Record<string, unknown>, id: string): Listin
   const imageUrls = Array.isArray(row.image_urls) ? (row.image_urls as string[]) : []
   return {
     id: (row.id as string) ?? id,
-    institution: (row.creditor_institution as string) ?? "매각기관",
-    inst_type: "금융기관",
-    region_city: (row.sido as string) ?? "지역 미상",
+    institution: (row.creditor_institution as string) ?? "留ㅺ컖湲곌?",
+    inst_type: "湲덉쑖湲곌?",
+    region_city: (row.sido as string) ?? "吏??誘몄긽",
     region_district: (row.sigungu as string) ?? "",
-    collateral: (row.collateral_type as string) ?? "기타",
+    collateral: (row.collateral_type as string) ?? "湲고?",
     outstanding_principal: claimAmt,
     asking_price: askingPrice,
     appraisal_value: appraisedVal,
@@ -313,15 +308,15 @@ function mapNplListingToDetail(row: Record<string, unknown>, id: string): Listin
     ai_grade: (row.ai_grade as "S" | "A" | "B" | "C") ?? "C",
     data_completeness: computeDataCompleteness(row),
     debtor_type: (row.debtor_type as "INDIVIDUAL" | "CORPORATE") ?? "INDIVIDUAL",
-    auction_stage: (row.listing_type as string) ?? "임의매각",
-    court_case_masked: "●●지법 ●●타경●●●●",
+    auction_stage: (row.listing_type as string) ?? "?꾩쓽留ㅺ컖",
+    court_case_masked: "?뤴뿈吏踰??뤴뿈?寃썩뿈?뤴뿈??,
     published_at: formatDateKo(row.created_at as string),
     rights_summary: { senior_total: seniorClaim, junior_total: 0, deposit_total: 0 },
     registry_summary_items: [],
     lease_summary: { total_deposit: 0, monthly_rent: 0, tenant_count: 0 },
     site_photos: imageUrls,
-    debtor_name_masked: "●●●",
-    court_case_full: "●●지법 ●●타경●●●●",
+    debtor_name_masked: "?뤴뿈??,
+    court_case_full: "?뤴뿈吏踰??뤴뿈?寃썩뿈?뤴뿈??,
     claim_info: {
       balance: ((row.claim_balance as number) ?? 0) || (claimAmt + Math.round(claimAmt * 0.04)),
       principal: claimAmt,
@@ -333,7 +328,7 @@ function mapNplListingToDetail(row: Record<string, unknown>, id: string): Listin
     auction_info: row.auction_case_no
       ? {
           case_no: (row.auction_case_no as string),
-          court: (row.auction_court as string) ?? "—",
+          court: (row.auction_court as string) ?? "??,
           filed_date: (row.auction_filed_date as string) ?? "",
           estimated_start: (row.auction_start_date as string) ?? "",
         }
@@ -384,25 +379,24 @@ interface AIAnalysisResult {
 }
 
 /**
- * /deals 딜룸 카드/리스트에서 선택된 딜 정보를 AssetDetailView 에 전달할 때
- * 하드코딩된 mock 데이터를 덮어씌우기 위한 얕은 overlay 타입.
+ * /deals ?쒕８ 移대뱶/由ъ뒪?몄뿉???좏깮?????뺣낫瑜?AssetDetailView ???꾨떖???? * ?섎뱶肄붾뵫??mock ?곗씠?곕? ??뼱?뚯슦湲??꾪븳 ?뺤? overlay ???
  */
 export interface AssetDetailDealOverride {
-  /** 매물명 (예: "강남구 아파트 NPL 채권") — 표시용 */
+  /** 留ㅻЪ紐?(?? "媛뺣궓援??꾪뙆??NPL 梨꾧텒") ???쒖떆??*/
   listing_name?: string
-  /** 상대방/매각기관 (예: "하나저축은행") → listing.institution */
+  /** ?곷?諛?留ㅺ컖湲곌? (?? "?섎굹?異뺤???) ??listing.institution */
   counterparty?: string
-  /** 채권 금액 (원) → outstanding_principal · claim_info · 희망가·감정가 재산정 */
+  /** 梨꾧텒 湲덉븸 (?? ??outstanding_principal 쨌 claim_info 쨌 ?щ쭩媛쨌媛먯젙媛 ?ъ궛??*/
   amount?: number
-  /** 담보 종류 (예: "아파트") → listing.collateral */
+  /** ?대낫 醫낅쪟 (?? "?꾪뙆??) ??listing.collateral */
   asset_type?: string
-  /** 지역 (예: "서울 강남구") → region_city + region_district 로 분리 */
+  /** 吏??(?? "?쒖슱 媛뺣궓援?) ??region_city + region_district 濡?遺꾨━ */
   location?: string
 }
 
 /**
- * Deal override 를 base ListingDetail 에 얕게 합성.
- * 금액이 주어지면 권리·희망가·감정가·채권정보도 비례 산정.
+ * Deal override 瑜?base ListingDetail ???뺢쾶 ?⑹꽦.
+ * 湲덉븸??二쇱뼱吏硫?沅뚮━쨌?щ쭩媛쨌媛먯젙媛쨌梨꾧텒?뺣낫??鍮꾨? ?곗젙.
  */
 function applyDealOverride(
   base: ListingDetail,
@@ -421,8 +415,7 @@ function applyDealOverride(
     const amount = override.amount
     next.outstanding_principal = amount
     next.asking_price = Math.round(amount * (1 - base.discount_rate / 100))
-    next.appraisal_value = Math.round(amount * 1.18) // 감정가 ≈ 원금 대비 18% 상회 가정
-    next.claim_info = {
+    next.appraisal_value = Math.round(amount * 1.18) // 媛먯젙媛 ???먭툑 ?鍮?18% ?곹쉶 媛??    next.claim_info = {
       ...next.claim_info,
       principal: amount,
       accrued_interest: Math.round(amount * 0.04),
@@ -438,28 +431,27 @@ function applyDealOverride(
 }
 
 export interface AssetDetailViewProps {
-  /** URL param 대신 직접 id 주입 — 없으면 useParams() fallback */
+  /** URL param ???吏곸젒 id 二쇱엯 ???놁쑝硫?useParams() fallback */
   idProp?: string
-  /** 외부 페이지(/deals 등) 에서 선택된 딜의 동적 데이터로 mock overlay */
+  /** ?몃? ?섏씠吏(/deals ?? ?먯꽌 ?좏깮???쒖쓽 ?숈쟻 ?곗씠?곕줈 mock overlay */
   dealOverride?: AssetDetailDealOverride
   /**
-   * 외부 컨테이너에 임베드 된 상태. true 면:
-   *  · min-h-screen 제거 (부모 컨테이너가 높이 제어)
-   *  · 컴플라이언스 footer 숨김
-   *  · 모바일 sticky CTA 숨김 (중복 방지)
+   * ?몃? 而⑦뀒?대꼫???꾨쿋?????곹깭. true 硫?
+   *  쨌 min-h-screen ?쒓굅 (遺紐?而⑦뀒?대꼫媛 ?믪씠 ?쒖뼱)
+   *  쨌 而댄뵆?쇱씠?몄뒪 footer ?④?
+   *  쨌 紐⑤컮??sticky CTA ?④? (以묐났 諛⑹?)
    */
   embedded?: boolean
   /**
-   * 딜룸 (/deals) 전용 — 좌측 메인 컨텐츠를 Deal Flow funnel 로 교체.
-   * 우측 sticky 사이드바(PrimaryActionCard, 분석도구, AssetSidebar) 는 유지.
-   * 상단 hero(자산 사진/제목) 와 하단 footer 는 숨김.
+   * ?쒕８ (/deals) ?꾩슜 ??醫뚯륫 硫붿씤 而⑦뀗痢좊? Deal Flow funnel 濡?援먯껜.
+   * ?곗륫 sticky ?ъ씠?쒕컮(PrimaryActionCard, 遺꾩꽍?꾧뎄, AssetSidebar) ???좎?.
+   * ?곷떒 hero(?먯궛 ?ъ쭊/?쒕ぉ) ? ?섎떒 footer ???④?.
    */
   dealFlowMode?: boolean
 }
 
-/* ═══════════════════════════════════════════════════════════
-   AssetDetailView — 본문 (재사용 가능한 뷰 컴포넌트)
-═══════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   AssetDetailView ??蹂몃Ц (?ъ궗??媛?ν븳 酉?而댄룷?뚰듃)
+?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 export function AssetDetailView({
   idProp,
   dealOverride,
@@ -484,36 +476,36 @@ export function AssetDetailView({
   const [mockTier, setMockTier] = useState<AssetTier>("L0")
   const [actionOpen, setActionOpen] = useState(false)
 
-  /* ── DR-24: 게이트 모달 (투자자 인증 / NDA / LOI) ──
-   * 이미 승인된 회원이면 모달이 뜰 필요 없으므로 부모에서 상태 체크 후 호출.
-   * Mock: 회원가입 시 사업자등록증/명함 모두 제출 → 관리자 검토 중(pending).
-   *       채권별 NDA/LOI 는 미제출(none) 상태에서 시작.
+  /* ?? DR-24: 寃뚯씠??紐⑤떖 (?ъ옄???몄쬆 / NDA / LOI) ??
+   * ?대? ?뱀씤???뚯썝?대㈃ 紐⑤떖?????꾩슂 ?놁쑝誘濡?遺紐⑥뿉???곹깭 泥댄겕 ???몄텧.
+   * Mock: ?뚯썝媛?????ъ뾽?먮벑濡앹쬆/紐낇븿 紐⑤몢 ?쒖텧 ??愿由ъ옄 寃??以?pending).
+   *       梨꾧텒蹂?NDA/LOI ??誘몄젣異?none) ?곹깭?먯꽌 ?쒖옉.
    */
   const [investorOpen, setInvestorOpen] = useState(false)
   const [ndaOpen, setNdaOpen] = useState(false)
   const [loiOpen, setLoiOpen] = useState(false)
   const [investorState, setInvestorState] = useState<InvestorVerifyState>({
     status: "pending",
-    businessLicense: { label: "사업자등록증", submitted: true, filename: "사업자등록증_2026.pdf", submittedAt: "2026-04-20" },
-    businessCard: { label: "명함", submitted: true, filename: "namecard.jpg", submittedAt: "2026-04-20" },
-    reviewNote: "관리자 검토 중 (영업일 기준 1일 이내)",
+    businessLicense: { label: "?ъ뾽?먮벑濡앹쬆", submitted: true, filename: "?ъ뾽?먮벑濡앹쬆_2026.pdf", submittedAt: "2026-04-20" },
+    businessCard: { label: "紐낇븿", submitted: true, filename: "namecard.jpg", submittedAt: "2026-04-20" },
+    reviewNote: "愿由ъ옄 寃??以?(?곸뾽??湲곗? 1???대궡)",
     updatedAt: "2026-04-20",
   })
   const [ndaState, setNdaState] = useState<NdaState>({
     status: "none",
-    sellerName: maskInstitutionName("하나저축은행"),
+    sellerName: maskInstitutionName("?섎굹?異뺤???),
   })
   const [loiState, setLoiState] = useState<LoiState>({
     status: "none",
-    sellerName: maskInstitutionName("하나저축은행"),
+    sellerName: maskInstitutionName("?섎굹?異뺤???),
   })
 
-  /* ── 관리자/채권자 편집 기능 ── */
+  /* ?? 愿由ъ옄/梨꾧텒???몄쭛 湲곕뒫 ?? */
   const [canEdit, setCanEdit] = useState(false)
   const [editingSec, setEditingSec] = useState<"auction" | "public-sale" | null>(null)
   const [auctionDraft, setAuctionDraft] = useState<ListingDetail["auction_info"]>(null)
   const [publicSaleDraft, setPublicSaleDraft] = useState<ListingDetail["public_sale_info"]>(null)
-  const [areaUnit, setAreaUnit] = useState<"m2" | "평">("m2")
+  const [areaUnit, setAreaUnit] = useState<"m2" | "??>("m2")
   const [appraisalPdfOpen, setAppraisalPdfOpen] = useState(false)
   const [loiPdfOpen, setLoiPdfOpen] = useState(false)
   const [ndaPdfOpen, setNdaPdfOpen] = useState(false)
@@ -521,22 +513,21 @@ export function AssetDetailView({
   const [offerFormVisible, setOfferFormVisible] = useState(true)
   const [lightboxPhoto, setLightboxPhoto] = useState<number | null>(null)
 
-  /* 등기부등본 탭 & 접기/펼치기 */
+  /* ?깃린遺?깅낯 ??& ?묎린/?쇱튂湲?*/
   const [deedSummaryTab, setDeedSummaryTab] = useState<"land" | "building">("land")
   const [deedFullTab, setDeedFullTab] = useState<"land" | "building">("land")
-  /* 등기부등본 펼치기/접기 기본값
-   * 요약(deedSummary): false (목차만 보임 → 펼치기로 전체 노출)
-   * 원본(deedFull): true (펼친 상태로 시작 → 접으면 목차만)
-   * 사용자 요청: "기본적으로 등기부 현황 펼치기로 버튼 / 등기부 현황 접기 (지금과 반대)"
+  /* ?깃린遺?깅낯 ?쇱튂湲??묎린 湲곕낯媛?   * ?붿빟(deedSummary): false (紐⑹감留?蹂댁엫 ???쇱튂湲곕줈 ?꾩껜 ?몄텧)
+   * ?먮낯(deedFull): true (?쇱튇 ?곹깭濡??쒖옉 ???묒쑝硫?紐⑹감留?
+   * ?ъ슜???붿껌: "湲곕낯?곸쑝濡??깃린遺 ?꾪솴 ?쇱튂湲곕줈 踰꾪듉 / ?깃린遺 ?꾪솴 ?묎린 (吏湲덇낵 諛섎?)"
    */
   const [deedSummaryExpanded, setDeedSummaryExpanded] = useState(false)
   const [deedFullExpanded, setDeedFullExpanded] = useState(false)
 
-  /* 사용자 역할 확인: admin 또는 seller 면 편집 허용 */
+  /* ?ъ슜????븷 ?뺤씤: admin ?먮뒗 seller 硫??몄쭛 ?덉슜 */
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => {
       const role = data.user?.user_metadata?.role as string | undefined
-      // dev user 00000000... 는 SELLER 역할 → 편집 허용
+      // dev user 00000000... ??SELLER ??븷 ???몄쭛 ?덉슜
       const devUserId = "00000000-0000-0000-0000-000000000001"
       setCanEdit(
         role === "admin" || role === "seller" || role === "SELLER" ||
@@ -545,7 +536,7 @@ export function AssetDetailView({
     }).catch(() => setCanEdit(false))
   }, [])
 
-  /* 편집 저장 — baseListing 업데이트 + PATCH API */
+  /* ?몄쭛 ?????baseListing ?낅뜲?댄듃 + PATCH API */
   const handleSaveSection = useCallback(async (section: "auction" | "public-sale") => {
     if (section === "auction" && auctionDraft !== undefined) {
       setBaseListing(prev => ({ ...prev, auction_info: auctionDraft }))
@@ -562,9 +553,9 @@ export function AssetDetailView({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
-      toast.success("정보가 저장되었습니다.")
+      toast.success("?뺣낫媛 ??λ릺?덉뒿?덈떎.")
     } catch {
-      toast.error("저장 중 오류가 발생했습니다.")
+      toast.error("???以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.")
     }
   }, [id, auctionDraft, publicSaleDraft])
   useEffect(() => {
@@ -583,7 +574,7 @@ export function AssetDetailView({
     "L3"
   void tier
 
-  // id 변경 시 base mock 재생성 (딜룸에서 카드 전환 시 필수)
+  // id 蹂寃???base mock ?ъ깮??(?쒕８?먯꽌 移대뱶 ?꾪솚 ???꾩닔)
   useEffect(() => {
     setBaseListing(buildMock(id))
   }, [id])
@@ -617,7 +608,7 @@ export function AssetDetailView({
         const res = await fetch("/api/v1/buyer/watchlist", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ listingId: id, folderName: "기본", priceAtSave: listing.asking_price }),
+          body: JSON.stringify({ listingId: id, folderName: "湲곕낯", priceAtSave: listing.asking_price }),
         })
         if (res.ok || res.status === 409) setWatchlisted(true)
       }
@@ -652,12 +643,12 @@ export function AssetDetailView({
   }, [id])
 
   /**
-   * DR-24: tier 별로 게이트 모달 분기
-   * - L0 → 투자자 인증 (관리자 승인 대기 시 모달, approved 면 즉시 다음 단계)
-   * - L1 → NDA 체결 모달 (매각사 승인 대기)
-   * - L2 → LOI 제출 모달 (매각사 승인 대기)
-   * - L3+ → 기존 ActionSheet (계약/에스크로/정산)
-   * 이미 approved 상태이면 모달을 띄우지 않고 다음 단계 즉시 진행 (handleConfirmStep)
+   * DR-24: tier 蹂꾨줈 寃뚯씠??紐⑤떖 遺꾧린
+   * - L0 ???ъ옄???몄쬆 (愿由ъ옄 ?뱀씤 ?湲???紐⑤떖, approved 硫?利됱떆 ?ㅼ쓬 ?④퀎)
+   * - L1 ??NDA 泥닿껐 紐⑤떖 (留ㅺ컖???뱀씤 ?湲?
+   * - L2 ??LOI ?쒖텧 紐⑤떖 (留ㅺ컖???뱀씤 ?湲?
+   * - L3+ ??湲곗〈 ActionSheet (怨꾩빟/?먯뒪?щ줈/?뺤궛)
+   * ?대? approved ?곹깭?대㈃ 紐⑤떖???꾩슦吏 ?딄퀬 ?ㅼ쓬 ?④퀎 利됱떆 吏꾪뻾 (handleConfirmStep)
    */
   const handlePrimaryAction = useCallback(() => {
     if (effectiveTier === "L0") {
@@ -678,7 +669,7 @@ export function AssetDetailView({
     setActionOpen(true)
   }, [effectiveTier, investorState.status, ndaState.status, loiState.status]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  /** Mock: 다음 tier 로 즉시 승급 (이미 approved 인 경우용) */
+  /** Mock: ?ㅼ쓬 tier 濡?利됱떆 ?밴툒 (?대? approved ??寃쎌슦?? */
   const handleNextTier = useCallback(() => {
     const currentIdx = TIER_ORDER.indexOf(effectiveTier)
     const nextTier = TIER_ORDER[currentIdx + 1] ?? "L5"
@@ -712,24 +703,24 @@ export function AssetDetailView({
       setMockTier("L0")
       url.searchParams.delete("reset")
       window.history.replaceState({}, "", url.toString())
-      toast("진행 상태를 초기화했습니다. (L0)")
+      toast("吏꾪뻾 ?곹깭瑜?珥덇린?뷀뻽?듬땲?? (L0)")
     }
   }, [id])
 
   const discountPct = listing.discount_rate.toFixed(1)
 
   const oneLiner = [
-    `채권 ${formatKRW(listing.outstanding_principal)}`,
-    `희망 ${formatKRW(listing.asking_price)}`,
-    `할인율 ${discountPct}%`,
-  ].join(" · ")
+    `梨꾧텒 ${formatKRW(listing.outstanding_principal)}`,
+    `?щ쭩 ${formatKRW(listing.asking_price)}`,
+    `?좎씤??${discountPct}%`,
+  ].join(" 쨌 ")
 
   const title = `${listing.region_city} ${listing.region_district} ${listing.collateral} NPL`
 
   const counterpart: InlineDealRoomCounterpart = {
-    name: tierGte(effectiveAccessTier, "L2") ? "이매도 담당자" : "매도자 (데모)",
-    role: "매도자",
-    initial: "매",
+    name: tierGte(effectiveAccessTier, "L2") ? "?대ℓ???대떦?? : "留ㅻ룄??(?곕え)",
+    role: "留ㅻ룄??,
+    initial: "留?,
     phone: "02-0000-0000",
     organization: maskInstitutionName(listing.institution),
   }
@@ -747,7 +738,7 @@ export function AssetDetailView({
       style={{
         backgroundColor: C.bg0,
         color: "var(--color-text-primary)",
-        // embedded 모드: 부모 컨테이너가 높이 제어 (min-h-screen 제거)
+        // embedded 紐⑤뱶: 遺紐?而⑦뀒?대꼫媛 ?믪씠 ?쒖뼱 (min-h-screen ?쒓굅)
         minHeight: embedded ? undefined : "100vh",
       }}
     >
@@ -776,24 +767,24 @@ export function AssetDetailView({
             <Building2 size={13} />
             {listing.inst_type}
           </span>
-          <span style={{ color: C.lt4 }}>·</span>
+          <span style={{ color: C.lt4 }}>쨌</span>
           <span className="inline-flex items-center gap-1 font-semibold">
             <MapPin size={13} />
             {listing.region_city} {listing.region_district}
           </span>
-          <span style={{ color: C.lt4 }}>·</span>
+          <span style={{ color: C.lt4 }}>쨌</span>
           <span className="inline-flex items-center gap-1 font-semibold">
             <Gavel size={13} />
             {listing.auction_stage}
           </span>
-          <span style={{ color: C.lt4 }}>·</span>
+          <span style={{ color: C.lt4 }}>쨌</span>
           <span className="inline-flex items-center gap-1 font-mono tabular-nums" style={{ color: C.lt4 }}>
             <FileText size={12} />
             {id}
           </span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-        {/* 매도자/관리자: 매물 정보 전체 수정 진입점 */}
+        {/* 留ㅻ룄??愿由ъ옄: 留ㅻЪ ?뺣낫 ?꾩껜 ?섏젙 吏꾩엯??*/}
         {canEdit && (
           <a
             href={`/my/listings/${id}/edit`}
@@ -808,7 +799,7 @@ export function AssetDetailView({
             }}
           >
             <Pencil size={12} />
-            매물 정보 수정
+            留ㅻЪ ?뺣낫 ?섏젙
           </a>
         )}
         <div
@@ -818,13 +809,13 @@ export function AssetDetailView({
             border: "1px solid var(--layer-border-strong)",
           }}
           role="radiogroup"
-          aria-label="공개 범위 미리보기"
+          aria-label="怨듦컻 踰붿쐞 誘몃━蹂닿린"
         >
           <span
             className="px-2 font-bold"
             style={{ fontSize: 10, color: C.lt4, letterSpacing: "0.04em" }}
           >
-            공개 범위
+            怨듦컻 踰붿쐞
           </span>
           {(["L0", "L1", "L2", "L3"] as AssetTier[]).map((t) => {
             const isActive = effectiveTier === t
@@ -866,10 +857,9 @@ export function AssetDetailView({
             <CheckCircle2 size={24} color="var(--color-positive)" className="flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-[200px]">
               <div className="font-black" style={{ fontSize: 16, color: "var(--color-positive)" }}>
-                거래가 종결되었습니다
-              </div>
+                嫄곕옒媛 醫낃껐?섏뿀?듬땲??              </div>
               <p className="mt-1.5 leading-relaxed" style={{ fontSize: 12, color: "var(--fg-default)" }}>
-                에스크로 정산이 완료되었습니다 · 영수증과 세금계산서는 아래 정산 내역에서 확인하세요.
+                ?먯뒪?щ줈 ?뺤궛???꾨즺?섏뿀?듬땲??쨌 ?곸닔利앷낵 ?멸툑怨꾩궛?쒕뒗 ?꾨옒 ?뺤궛 ?댁뿭?먯꽌 ?뺤씤?섏꽭??
               </p>
             </div>
             <button
@@ -878,7 +868,7 @@ export function AssetDetailView({
                 if (typeof window === "undefined") return
                 window.localStorage.removeItem(MOCK_STORAGE_KEY(id))
                 setMockTier("L0")
-                toast("진행 상태를 초기화했습니다.")
+                toast("吏꾪뻾 ?곹깭瑜?珥덇린?뷀뻽?듬땲??")
               }}
               className="px-3 py-1.5 rounded-lg font-bold"
               style={{
@@ -888,7 +878,7 @@ export function AssetDetailView({
                 border: "1px solid var(--color-positive)",
               }}
             >
-              처음부터 다시 시연
+              泥섏쓬遺???ㅼ떆 ?쒖뿰
             </button>
           </div>
         </section>
@@ -901,12 +891,12 @@ export function AssetDetailView({
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6 lg:gap-8">
           <div className="space-y-5 min-w-0">
             {/*
-              DR-20 · 2026-04-25
-              딜룸 (/deals) 진입 시 좌측 메인을 Deal Flow funnel 로 재구성.
-              · 기존 섹션은 그대로 사용 (중복 X)
-              · DealHeaderStandalone 으로 4-step funnel 진행상황 헤더만 상단에 추가
-              · DealSection 헤더 + DealGate 가로 라인을 단계 사이에 삽입
-              · 우측 sticky 사이드바는 그대로 유지
+              DR-20 쨌 2026-04-25
+              ?쒕８ (/deals) 吏꾩엯 ??醫뚯륫 硫붿씤??Deal Flow funnel 濡??ш뎄??
+              쨌 湲곗〈 ?뱀뀡? 洹몃?濡??ъ슜 (以묐났 X)
+              쨌 DealHeaderStandalone ?쇰줈 4-step funnel 吏꾪뻾?곹솴 ?ㅻ뜑留??곷떒??異붽?
+              쨌 DealSection ?ㅻ뜑 + DealGate 媛濡??쇱씤???④퀎 ?ъ씠???쎌엯
+              쨌 ?곗륫 sticky ?ъ씠?쒕컮??洹몃?濡??좎?
             */}
             {dealFlowMode && (
               <>
@@ -925,31 +915,31 @@ export function AssetDetailView({
                   panelMode
                 />
                 <StageHeader
-                  eyebrow="Section 01 · Free preview"
+                  eyebrow="Section 01 쨌 Free preview"
                   title="Deal Screening"
-                  subtitle="이 딜이 검토할 가치가 있는지 3분 안에 판단"
+                  subtitle="???쒖씠 寃?좏븷 媛移섍? ?덈뒗吏 3遺??덉뿉 ?먮떒"
                 />
               </>
             )}
             <KpiRow
               items={[
                 {
-                  label: "채권잔액",
+                  label: "梨꾧텒?붿븸",
                   value: formatKRW(listing.claim_info.balance),
                   tone: "primary",
-                  hint: `원금 ${formatKRW(listing.claim_info.principal)} + 연체이자 ${formatKRW(listing.claim_info.accrued_interest)}`,
+                  hint: `?먭툑 ${formatKRW(listing.claim_info.principal)} + ?곗껜?댁옄 ${formatKRW(listing.claim_info.accrued_interest)}`,
                 },
                 {
-                  label: "매각 희망가",
+                  label: "留ㅺ컖 ?щ쭩媛",
                   value: formatKRW(listing.asking_price),
                   tone: "accent",
-                  hint: `할인율 ↓${discountPct}%`,
+                  hint: `?좎씤????{discountPct}%`,
                 },
                 {
-                  label: "감정가",
+                  label: "媛먯젙媛",
                   value: formatKRW(listing.appraisal_value),
                   tone: "neutral",
-                  hint: `감정평가 기준`,
+                  hint: `媛먯젙?됯? 湲곗?`,
                 },
               ]}
             />
@@ -967,13 +957,12 @@ export function AssetDetailView({
                 className="flex-shrink-0 mt-0.5"
               />
               <p className="leading-relaxed" style={{ fontSize: 11, color: C.lt2 }}>
-                본 매물은 <strong style={{ color: C.lt1 }}>자동 마스킹 파이프라인</strong>을 통과한
-                결과입니다. 개인정보·채무자 식별정보·상세 지번·동/호수는 금융감독원·금융위원회 지침에 따라
-                자동으로 가려지며, 티어별 공개 범위는 규제 요건에 맞춰 분리되어 있습니다.
+                蹂?留ㅻЪ? <strong style={{ color: C.lt1 }}>?먮룞 留덉뒪???뚯씠?꾨씪??/strong>???듦낵??                寃곌낵?낅땲?? 媛쒖씤?뺣낫쨌梨꾨Т???앸퀎?뺣낫쨌?곸꽭 吏踰댟룸룞/?몄닔??湲덉쑖媛먮룆?먃룰툑?듭쐞?먰쉶 吏移⑥뿉 ?곕씪
+                ?먮룞?쇰줈 媛?ㅼ?硫? ?곗뼱蹂?怨듦컻 踰붿쐞??洹쒖젣 ?붽굔??留욎떠 遺꾨━?섏뼱 ?덉뒿?덈떎.
               </p>
             </div>
 
-            {/* AI 분석 리포트 — L0 공개 */}
+            {/* AI 遺꾩꽍 由ы룷????L0 怨듦컻 */}
             <div id="ai-report" className="scroll-mt-24">
               <AiReportCard
                 recoveryRate={aiAnalysis.recoveryRate?.predicted ?? 78.5}
@@ -985,41 +974,41 @@ export function AssetDetailView({
                     : null
                 }
                 loading={aiAnalysis.loading}
-                onRefresh={() => toast.info("AI 재분석을 요청했습니다.", { duration: 1500 })}
+                onRefresh={() => toast.info("AI ?щ텇?앹쓣 ?붿껌?덉뒿?덈떎.", { duration: 1500 })}
                 onOpenFull={() => {
                   if (typeof window !== "undefined") {
                     window.open(`/analysis/${id}`, "_blank", "noopener")
                   }
                 }}
-                onAskCopilot={() => toast.info("AI Copilot이 곧 열립니다.", { duration: 1500 })}
+                onAskCopilot={() => toast.info("AI Copilot??怨??대┰?덈떎.", { duration: 1500 })}
               />
             </div>
 
             <SectionCard
-              title="권리관계 요약"
+              title="沅뚮━愿怨??붿빟"
               icon={<Scale size={14} />}
               tierBadge="L0"
               anchorId="rights"
             >
               <div className="grid grid-cols-3 gap-3">
-                <Stat label="선순위 총액" value={formatKRW(listing.rights_summary.senior_total)} tone="amber" />
-                <Stat label="후순위 총액" value={formatKRW(listing.rights_summary.junior_total)} tone="blue" />
-                <Stat label="보증금 총액" value={formatKRW(listing.rights_summary.deposit_total)} tone="em" />
+                <Stat label="?좎닚??珥앹븸" value={formatKRW(listing.rights_summary.senior_total)} tone="amber" />
+                <Stat label="?꾩닚??珥앹븸" value={formatKRW(listing.rights_summary.junior_total)} tone="blue" />
+                <Stat label="蹂댁쬆湲?珥앹븸" value={formatKRW(listing.rights_summary.deposit_total)} tone="em" />
               </div>
               <p className="mt-3 leading-relaxed" style={{ fontSize: 11, color: C.lt3 }}>
-                요약 정보는 L0 단계에서 누구나 열람할 수 있습니다. 권리자 상세 정보는 L2 (NDA + 전문투자자) 이상에서 공개됩니다.
+                ?붿빟 ?뺣낫??L0 ?④퀎?먯꽌 ?꾧뎄???대엺?????덉뒿?덈떎. 沅뚮━???곸꽭 ?뺣낫??L2 (NDA + ?꾨Ц?ъ옄?? ?댁긽?먯꽌 怨듦컻?⑸땲??
               </p>
             </SectionCard>
 
-            {/* ── DR-21: CTA 게이트 (L1 인증) — dealFlowMode 에서만 ── */}
+            {/* ?? DR-21: CTA 寃뚯씠??(L1 ?몄쬆) ??dealFlowMode ?먯꽌留??? */}
             {dealFlowMode && !tierGte(effectiveAccessTier, "L1") && (
               <div className="mt-6 lg:mt-8">
                 <DealGate
                   icon={DealLockIcon}
-                  title="투자자 인증하고 상세 보기"
-                  subtitle="등기부등본·임대차·감정평가서 등 상세 데이터 열람"
+                  title="?ъ옄???몄쬆?섍퀬 ?곸꽭 蹂닿린"
+                  subtitle="?깃린遺?깅낯쨌?꾨?李㉱룰컧?뺥룊媛?????곸꽭 ?곗씠???대엺"
                   panelMode
-                  ctaLabel={investorState.status === "approved" ? undefined : "투자자 인증하고 열람"}
+                  ctaLabel={investorState.status === "approved" ? undefined : "?ъ옄???몄쬆?섍퀬 ?대엺"}
                   onCtaClick={
                     investorState.status === "approved"
                       ? undefined
@@ -1030,7 +1019,7 @@ export function AssetDetailView({
             )}
 
             <SectionCard
-              title="등기부등본 요약"
+              title="?깃린遺?깅낯 ?붿빟"
               icon={<ScrollText size={14} />}
               tierBadge="L1"
               anchorId="deed-summary"
@@ -1038,14 +1027,14 @@ export function AssetDetailView({
               <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
                 {listing.registry_summary_items.length === 0 ? (
                   <p className="text-center py-6" style={{ color: C.lt4, fontSize: 11 }}>
-                    등기 정보가 아직 업로드되지 않았습니다.
+                    ?깃린 ?뺣낫媛 ?꾩쭅 ?낅줈?쒕릺吏 ?딆븯?듬땲??
                   </p>
                 ) : (
                   <div>
-                    {/* 탭: 토지등기부 / 건물등기부 */}
+                    {/* ?? ?좎??깃린遺 / 嫄대Ъ?깃린遺 */}
                     <div className="flex items-center gap-1 mb-3" style={{ borderBottom: "1px solid var(--layer-border-strong)", paddingBottom: 0 }}>
                       {(["land", "building"] as const).map(t => {
-                        const label = t === "land" ? "토지등기부" : "건물등기부"
+                        const label = t === "land" ? "?좎??깃린遺" : "嫄대Ъ?깃린遺"
                         const count = listing.registry_summary_items.filter(r => r.deed_type === t || r.deed_type == null).length
                         const active = deedSummaryTab === t
                         return (
@@ -1077,13 +1066,13 @@ export function AssetDetailView({
                       })}
                     </div>
 
-                    {/* 테이블 */}
+                    {/* ?뚯씠釉?*/}
                     {deedSummaryExpanded && (
                       <div style={{ overflowX: "auto" }}>
                         <table style={{ width: "100%", borderCollapse: "collapse" }}>
                           <thead>
                             <tr style={{ backgroundColor: "var(--layer-2-bg)", borderBottom: "2px solid var(--layer-border-strong)" }}>
-                              {["구분", "접수일", "권리종류", "권리자", "채권금액"].map((h, i) => (
+                              {["援щ텇", "?묒닔??, "沅뚮━醫낅쪟", "沅뚮━??, "梨꾧텒湲덉븸"].map((h, i) => (
                                 <th
                                   key={h}
                                   style={{
@@ -1116,7 +1105,7 @@ export function AssetDetailView({
                                     {fmtOrderCode(r.order, r.order_code)}
                                   </td>
                                   <td style={{ padding: "10px 12px", fontSize: 11, color: C.lt4, whiteSpace: "nowrap" }}>
-                                    {r.receipt_date ?? "—"}
+                                    {r.receipt_date ?? "??}
                                   </td>
                                   <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: C.lt1 }}>
                                     {r.type}
@@ -1134,7 +1123,7 @@ export function AssetDetailView({
                       </div>
                     )}
 
-                    {/* 접기/펼치기 토글 */}
+                    {/* ?묎린/?쇱튂湲??좉? */}
                     <div className="mt-2 flex justify-center">
                       <button
                         type="button"
@@ -1148,7 +1137,7 @@ export function AssetDetailView({
                           border: "1px solid var(--layer-border-strong)",
                         }}
                       >
-                        {deedSummaryExpanded ? "▲ 등기부 현황 접기" : "▼ 등기부 현황 펼치기"}
+                        {deedSummaryExpanded ? "???깃린遺 ?꾪솴 ?묎린" : "???깃린遺 ?꾪솴 ?쇱튂湲?}
                       </button>
                     </div>
                   </div>
@@ -1157,31 +1146,31 @@ export function AssetDetailView({
             </SectionCard>
 
             <SectionCard
-              title="임대차 현황"
+              title="?꾨?李??꾪솴"
               icon={<Building2 size={14} />}
               tierBadge="L1"
               anchorId="tenants"
             >
               <TierGate required="L1" current={effectiveAccessTier} listingId={id} minHeight={120} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
                 <div className="grid grid-cols-3 gap-3">
-                  <Stat label="보증금 합계" value={formatKRW(listing.lease_summary.total_deposit)} />
-                  <Stat label="월세" value={formatKRW(listing.lease_summary.monthly_rent || 0)} />
-                  <Stat label="임차인 수" value={`${listing.lease_summary.tenant_count}명`} />
+                  <Stat label="蹂댁쬆湲??⑷퀎" value={formatKRW(listing.lease_summary.total_deposit)} />
+                  <Stat label="?붿꽭" value={formatKRW(listing.lease_summary.monthly_rent || 0)} />
+                  <Stat label="?꾩감???? value={`${listing.lease_summary.tenant_count}紐?} />
                 </div>
               </TierGate>
             </SectionCard>
 
-            {/* ── DR-20: Gate 1 (NDA) + Stage 02 헤더 — dealFlowMode 에서만 ── */}
+            {/* ?? DR-20: Gate 1 (NDA) + Stage 02 ?ㅻ뜑 ??dealFlowMode ?먯꽌留??? */}
             {dealFlowMode && (
               <>
                 <DealGate
                   icon={DealLockIcon}
-                  title="NDA 체결 시 열람 가능"
-                  subtitle="기관 검증 데이터 · 감정평가서 · 실거래 · 채권 정보"
+                  title="NDA 泥닿껐 ???대엺 媛??
+                  subtitle="湲곌? 寃利??곗씠??쨌 媛먯젙?됯???쨌 ?ㅺ굅??쨌 梨꾧텒 ?뺣낫"
                   panelMode
                   ctaLabel={
                     !tierGte(effectiveAccessTier, "L2") && ndaState.status !== "approved"
-                      ? "NDA 체결화면 열기"
+                      ? "NDA 泥닿껐?붾㈃ ?닿린"
                       : undefined
                   }
                   onCtaClick={
@@ -1191,16 +1180,16 @@ export function AssetDetailView({
                   }
                 />
                 <StageHeader
-                  eyebrow="Section 02 · NDA required"
+                  eyebrow="Section 02 쨌 NDA required"
                   title="Deal Validation"
-                  subtitle="검증 데이터 — 의사결정의 핵심 근거"
+                  subtitle="寃利??곗씠?????섏궗寃곗젙???듭떖 洹쇨굅"
                 />
               </>
             )}
 
-            {/* ── NDA 체결 (L2) ── */}
+            {/* ?? NDA 泥닿껐 (L2) ?? */}
             <SectionCard
-              title="NDA 체결"
+              title="NDA 泥닿껐"
               icon={<FileSignature size={14} />}
               tierBadge="L2"
               anchorId="nda"
@@ -1217,10 +1206,10 @@ export function AssetDetailView({
                     <CheckCircle2 size={18} color="var(--color-positive)" className="flex-shrink-0" />
                     <div>
                       <div className="font-black" style={{ fontSize: 13, color: "var(--color-positive)" }}>
-                        NDA 체결 완료
+                        NDA 泥닿껐 ?꾨즺
                       </div>
                       <div className="mt-0.5" style={{ fontSize: 11, color: "var(--fg-muted)" }}>
-                        감정평가서 · 현장사진 · 채권정보 등 L2 자료를 열람할 수 있습니다
+                        媛먯젙?됯???쨌 ?꾩옣?ъ쭊 쨌 梨꾧텒?뺣낫 ??L2 ?먮즺瑜??대엺?????덉뒿?덈떎
                       </div>
                     </div>
                   </div>
@@ -1237,12 +1226,12 @@ export function AssetDetailView({
                       }}
                     >
                       {ndaPdfOpen ? <EyeOff size={13} /> : <Eye size={13} />}
-                      {ndaPdfOpen ? "NDA 닫기" : "NDA 보기"}
+                      {ndaPdfOpen ? "NDA ?リ린" : "NDA 蹂닿린"}
                     </button>
                     <a
                       href={`/api/v1/docs/${id}/nda?download=1`}
                       download
-                      onClick={e => { e.preventDefault(); toast.success("NDA 문서 다운로드를 시작합니다.", { duration: 1800 }) }}
+                      onClick={e => { e.preventDefault(); toast.success("NDA 臾몄꽌 ?ㅼ슫濡쒕뱶瑜??쒖옉?⑸땲??", { duration: 1800 }) }}
                       className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
                       style={{
                         fontSize: 12,
@@ -1252,14 +1241,14 @@ export function AssetDetailView({
                       }}
                     >
                       <FileDown size={13} />
-                      PDF 다운로드
+                      PDF ?ㅼ슫濡쒕뱶
                     </a>
                   </div>
                   {ndaPdfOpen && (
                     <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--layer-border-strong)" }}>
                       <div className="flex items-center justify-between px-3 py-2"
                         style={{ backgroundColor: "var(--layer-2-bg)", fontSize: 11, color: "var(--fg-muted)" }}>
-                        <span className="font-bold">비밀유지계약서 (NDA) 미리보기</span>
+                        <span className="font-bold">鍮꾨??좎?怨꾩빟??(NDA) 誘몃━蹂닿린</span>
                         <button type="button" onClick={() => setNdaPdfOpen(false)}><X size={14} /></button>
                       </div>
                       <iframe src={`/api/v1/docs/${id}/nda`} title="NDA" className="w-full"
@@ -1271,16 +1260,16 @@ export function AssetDetailView({
             </SectionCard>
 
             <SectionCard
-              title="감정평가서"
+              title="媛먯젙?됯???
               icon={<Banknote size={14} />}
               tierBadge="L2"
               anchorId="appraisal"
             >
               <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
-                {/* ── 단위 토글 ── */}
+                {/* ?? ?⑥쐞 ?좉? ?? */}
                 <div className="flex items-center gap-2 mb-3">
-                  <span style={{ fontSize: 11, color: C.lt4, fontWeight: 700 }}>단위</span>
-                  {(["m2", "평"] as const).map(u => (
+                  <span style={{ fontSize: 11, color: C.lt4, fontWeight: 700 }}>?⑥쐞</span>
+                  {(["m2", "??] as const).map(u => (
                     <button
                       key={u}
                       type="button"
@@ -1293,32 +1282,32 @@ export function AssetDetailView({
                         border: `1px solid ${areaUnit === u ? C.blue : "var(--layer-border-strong)"}`,
                       }}
                     >
-                      {u === "m2" ? "m²" : "평"}
+                      {u === "m2" ? "m짼" : "??}
                     </button>
                   ))}
                 </div>
 
-                {/* ── KPI 3칸 ── */}
+                {/* ?? KPI 3移??? */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-                  <Stat label="감정가" value={formatKRW(listing.appraisal_value)} tone="em" />
+                  <Stat label="媛먯젙媛" value={formatKRW(listing.appraisal_value)} tone="em" />
                   <Stat
-                    label={`면적 (${areaUnit === "m2" ? "m²" : "평"})`}
-                    value={listing.appraisal_area ? fmtArea(listing.appraisal_area, areaUnit) : "—"}
+                    label={`硫댁쟻 (${areaUnit === "m2" ? "m짼" : "??})`}
+                    value={listing.appraisal_area ? fmtArea(listing.appraisal_area, areaUnit) : "??}
                   />
                   <Stat
-                    label={`감정가/${areaUnit === "m2" ? "m²" : "평"}`}
+                    label={`媛먯젙媛/${areaUnit === "m2" ? "m짼" : "??}`}
                     value={
                       listing.appraisal_area
                         ? fmtPricePerArea(listing.appraisal_value, listing.appraisal_area, areaUnit)
-                        : "—"
+                        : "??
                     }
                     tone="blue"
                   />
                 </div>
 
-                {/* ── 감정 기준시점 ── */}
+                {/* ?? 媛먯젙 湲곗??쒖젏 ?? */}
                 <div className="flex items-center gap-3 mb-3">
-                  <span style={{ fontSize: 11, fontWeight: 700, color: C.lt3 }}>감정 기준시점</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.lt3 }}>媛먯젙 湲곗??쒖젏</span>
                   <input
                     type="date"
                     readOnly
@@ -1333,7 +1322,7 @@ export function AssetDetailView({
                   />
                 </div>
 
-                {/* PDF 뷰어 + 다운로드 */}
+                {/* PDF 酉곗뼱 + ?ㅼ슫濡쒕뱶 */}
                 <div className="mt-3 flex items-center gap-2 flex-wrap">
                   <button
                     type="button"
@@ -1347,12 +1336,12 @@ export function AssetDetailView({
                     }}
                   >
                     {appraisalPdfOpen ? <EyeOff size={13} /> : <Eye size={13} />}
-                    {appraisalPdfOpen ? "PDF 닫기" : "PDF 보기"}
+                    {appraisalPdfOpen ? "PDF ?リ린" : "PDF 蹂닿린"}
                   </button>
                   <a
                     href={`/api/v1/docs/${id}/appraisal?download=1`}
                     download
-                    onClick={e => { e.preventDefault(); toast.success("감정평가서 다운로드를 시작합니다.", { duration: 1800 }) }}
+                    onClick={e => { e.preventDefault(); toast.success("媛먯젙?됯????ㅼ슫濡쒕뱶瑜??쒖옉?⑸땲??", { duration: 1800 }) }}
                     className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
                     style={{
                       fontSize: 12,
@@ -1362,7 +1351,7 @@ export function AssetDetailView({
                     }}
                   >
                     <FileDown size={13} />
-                    PDF 다운로드
+                    PDF ?ㅼ슫濡쒕뱶
                   </a>
                 </div>
                 {appraisalPdfOpen && (
@@ -1374,15 +1363,15 @@ export function AssetDetailView({
                       className="flex items-center justify-between px-3 py-2"
                       style={{ backgroundColor: "var(--layer-2-bg)", fontSize: 11, color: "var(--fg-muted)" }}
                     >
-                      <span className="font-bold">감정평가서 미리보기</span>
+                      <span className="font-bold">媛먯젙?됯???誘몃━蹂닿린</span>
                       <button type="button" onClick={() => setAppraisalPdfOpen(false)}>
                         <X size={14} />
                       </button>
                     </div>
-                    {/* 실제 환경에서는 /api/v1/docs/:id/appraisal URL 사용 */}
+                    {/* ?ㅼ젣 ?섍꼍?먯꽌??/api/v1/docs/:id/appraisal URL ?ъ슜 */}
                     <iframe
                       src={`/api/v1/docs/${id}/appraisal`}
-                      title="감정평가서"
+                      title="媛먯젙?됯???
                       className="w-full"
                       style={{ height: 560, border: "none", backgroundColor: "#f8f8f8" }}
                     />
@@ -1391,19 +1380,19 @@ export function AssetDetailView({
               </TierGate>
             </SectionCard>
 
-            {/* ── 경매 정보 (L2) ── */}
+            {/* ?? 寃쎈ℓ ?뺣낫 (L2) ?? */}
             <SectionCard
-              title="경매 정보"
+              title="寃쎈ℓ ?뺣낫"
               icon={<Gavel size={14} />}
               tierBadge="L2"
               anchorId="auction-info"
             >
               <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={120} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
                 {editingSec === "auction" ? (
-                  /* ── 경매 정보 편집 폼 ── */
+                  /* ?? 寃쎈ℓ ?뺣낫 ?몄쭛 ???? */
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                      {(["사건번호", "관할법원"] as const).map((label, i) => {
+                      {(["?ш굔踰덊샇", "愿?좊쾿??] as const).map((label, i) => {
                         const key = i === 0 ? "case_no" : "court"
                         return (
                           <div key={label}>
@@ -1418,7 +1407,7 @@ export function AssetDetailView({
                           </div>
                         )
                       })}
-                      {(["경매접수일(경매개시일)", "예상 경매 시작일"] as const).map((label, i) => {
+                      {(["寃쎈ℓ?묒닔??寃쎈ℓ媛쒖떆??", "?덉긽 寃쎈ℓ ?쒖옉??] as const).map((label, i) => {
                         const key = i === 0 ? "filed_date" : "estimated_start"
                         return (
                           <div key={label}>
@@ -1438,24 +1427,23 @@ export function AssetDetailView({
                       <button type="button" onClick={() => handleSaveSection("auction")}
                         className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-black"
                         style={{ fontSize: 12, backgroundColor: "var(--color-positive)", color: "#fff" }}>
-                        <Save size={13} /> 저장
-                      </button>
+                        <Save size={13} /> ???                      </button>
                       <button type="button" onClick={() => setEditingSec(null)}
                         className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold"
                         style={{ fontSize: 12, backgroundColor: "var(--layer-2-bg)", color: "var(--fg-muted)", border: "1px solid var(--layer-border-strong)" }}>
-                        <X size={13} /> 취소
+                        <X size={13} /> 痍⑥냼
                       </button>
                     </div>
                   </div>
                 ) : listing.auction_info ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                      <InfoField label="사건번호" value={listing.auction_info.case_no} />
-                      <InfoField label="관할법원" value={listing.auction_info.court} />
-                      <InfoField label="경매접수일(경매개시일)" value={formatDateKo(listing.auction_info.filed_date)} />
-                      <InfoField label="예상 경매 시작일" value={formatDateKo(listing.auction_info.estimated_start)} />
+                      <InfoField label="?ш굔踰덊샇" value={listing.auction_info.case_no} />
+                      <InfoField label="愿?좊쾿?? value={listing.auction_info.court} />
+                      <InfoField label="寃쎈ℓ?묒닔??寃쎈ℓ媛쒖떆??" value={formatDateKo(listing.auction_info.filed_date)} />
+                      <InfoField label="?덉긽 寃쎈ℓ ?쒖옉?? value={formatDateKo(listing.auction_info.estimated_start)} />
                     </div>
-                    {/* 땅집고옥션 경매 연동 */}
+                    {/* ?낆쭛怨좎삦??寃쎈ℓ ?곕룞 */}
                     <a
                       href={`https://auction.jijigae.com/search?q=${encodeURIComponent(listing.auction_info.case_no || listing.court_case_full)}`}
                       target="_blank"
@@ -1469,7 +1457,7 @@ export function AssetDetailView({
                       }}
                     >
                       <Gavel size={12} />
-                      땅집고옥션에서 경매 조회
+                      ?낆쭛怨좎삦?섏뿉??寃쎈ℓ 議고쉶
                       <ArrowRight size={11} />
                     </a>
                     {canEdit && (
@@ -1477,21 +1465,21 @@ export function AssetDetailView({
                         onClick={() => { setAuctionDraft(listing.auction_info); setEditingSec("auction") }}
                         className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-bold transition-colors"
                         style={{ fontSize: 11, color: "var(--fg-muted)", backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)" }}>
-                        <Pencil size={11} /> 수정
+                        <Pencil size={11} /> ?섏젙
                       </button>
                     )}
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <p className="text-center py-3" style={{ color: C.lt4, fontSize: 12 }}>
-                      경매 진행 없음 · 해당 매물은 임의매각 방식입니다.
+                      寃쎈ℓ 吏꾪뻾 ?놁쓬 쨌 ?대떦 留ㅻЪ? ?꾩쓽留ㅺ컖 諛⑹떇?낅땲??
                     </p>
                     {canEdit && (
                       <button type="button"
                         onClick={() => { setAuctionDraft({ case_no: "", court: "", filed_date: "", estimated_start: "" }); setEditingSec("auction") }}
                         className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-bold"
                         style={{ fontSize: 11, color: "var(--color-brand-bright)", backgroundColor: "rgba(46,117,182,0.10)", border: "1px solid rgba(46,117,182,0.3)" }}>
-                        <Pencil size={11} /> 경매 정보 등록
+                        <Pencil size={11} /> 寃쎈ℓ ?뺣낫 ?깅줉
                       </button>
                     )}
                   </div>
@@ -1499,9 +1487,9 @@ export function AssetDetailView({
               </TierGate>
             </SectionCard>
 
-            {/* ── 공매 정보 (L2) ── */}
+            {/* ?? 怨듬ℓ ?뺣낫 (L2) ?? */}
             <SectionCard
-              title="공매 정보"
+              title="怨듬ℓ ?뺣낫"
               icon={<Gavel size={14} />}
               tierBadge="L2"
               anchorId="public-sale"
@@ -1511,22 +1499,22 @@ export function AssetDetailView({
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block font-bold mb-1" style={{ fontSize: 11, color: C.lt3 }}>관리번호</label>
+                        <label className="block font-bold mb-1" style={{ fontSize: 11, color: C.lt3 }}>愿由щ쾲??/label>
                         <input className="w-full rounded-lg px-3 py-2 font-medium"
                           style={{ fontSize: 13, backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)", color: "var(--color-text-primary)" }}
                           value={publicSaleDraft?.mgmt_no ?? ""}
                           onChange={e => setPublicSaleDraft(prev => prev ? { ...prev, mgmt_no: e.target.value } : { mgmt_no: e.target.value, filed_date: "", estimated_start: "" })}
-                          placeholder="예: 2025-00123-001" />
+                          placeholder="?? 2025-00123-001" />
                       </div>
                       <div>
-                        <label className="block font-bold mb-1" style={{ fontSize: 11, color: C.lt3 }}>공매신청일</label>
+                        <label className="block font-bold mb-1" style={{ fontSize: 11, color: C.lt3 }}>怨듬ℓ?좎껌??/label>
                         <input type="date" className="w-full rounded-lg px-3 py-2 font-medium"
                           style={{ fontSize: 13, backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)", color: "var(--color-text-primary)" }}
                           value={publicSaleDraft?.filed_date ?? ""}
                           onChange={e => setPublicSaleDraft(prev => prev ? { ...prev, filed_date: e.target.value } : { mgmt_no: "", filed_date: e.target.value, estimated_start: "" })} />
                       </div>
                       <div>
-                        <label className="block font-bold mb-1" style={{ fontSize: 11, color: C.lt3 }}>예상 공매 시작일</label>
+                        <label className="block font-bold mb-1" style={{ fontSize: 11, color: C.lt3 }}>?덉긽 怨듬ℓ ?쒖옉??/label>
                         <input type="date" className="w-full rounded-lg px-3 py-2 font-medium"
                           style={{ fontSize: 13, backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)", color: "var(--color-text-primary)" }}
                           value={publicSaleDraft?.estimated_start ?? ""}
@@ -1537,42 +1525,41 @@ export function AssetDetailView({
                       <button type="button" onClick={() => handleSaveSection("public-sale")}
                         className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-black"
                         style={{ fontSize: 12, backgroundColor: "var(--color-positive)", color: "#fff" }}>
-                        <Save size={13} /> 저장
-                      </button>
+                        <Save size={13} /> ???                      </button>
                       <button type="button" onClick={() => setEditingSec(null)}
                         className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold"
                         style={{ fontSize: 12, backgroundColor: "var(--layer-2-bg)", color: "var(--fg-muted)", border: "1px solid var(--layer-border-strong)" }}>
-                        <X size={13} /> 취소
+                        <X size={13} /> 痍⑥냼
                       </button>
                     </div>
                   </div>
                 ) : listing.public_sale_info ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                      <InfoField label="관리번호" value={listing.public_sale_info.mgmt_no} />
-                      <InfoField label="공매신청일" value={formatDateKo(listing.public_sale_info.filed_date)} />
-                      <InfoField label="예상 공매 시작일" value={formatDateKo(listing.public_sale_info.estimated_start)} />
+                      <InfoField label="愿由щ쾲?? value={listing.public_sale_info.mgmt_no} />
+                      <InfoField label="怨듬ℓ?좎껌?? value={formatDateKo(listing.public_sale_info.filed_date)} />
+                      <InfoField label="?덉긽 怨듬ℓ ?쒖옉?? value={formatDateKo(listing.public_sale_info.estimated_start)} />
                     </div>
                     {canEdit && (
                       <button type="button"
                         onClick={() => { setPublicSaleDraft(listing.public_sale_info); setEditingSec("public-sale") }}
                         className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-bold"
                         style={{ fontSize: 11, color: "var(--fg-muted)", backgroundColor: "var(--layer-2-bg)", border: "1px solid var(--layer-border-strong)" }}>
-                        <Pencil size={11} /> 수정
+                        <Pencil size={11} /> ?섏젙
                       </button>
                     )}
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <p className="text-center py-3" style={{ color: C.lt4, fontSize: 12 }}>
-                      공매 진행 없음 · 해당 매물은 경매 또는 임의매각 방식입니다.
+                      怨듬ℓ 吏꾪뻾 ?놁쓬 쨌 ?대떦 留ㅻЪ? 寃쎈ℓ ?먮뒗 ?꾩쓽留ㅺ컖 諛⑹떇?낅땲??
                     </p>
                     {canEdit && (
                       <button type="button"
                         onClick={() => { setPublicSaleDraft({ mgmt_no: "", filed_date: "", estimated_start: "" }); setEditingSec("public-sale") }}
                         className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-bold"
                         style={{ fontSize: 11, color: "var(--color-brand-bright)", backgroundColor: "rgba(46,117,182,0.10)", border: "1px solid rgba(46,117,182,0.3)" }}>
-                        <Pencil size={11} /> 공매 정보 등록
+                        <Pencil size={11} /> 怨듬ℓ ?뺣낫 ?깅줉
                       </button>
                     )}
                   </div>
@@ -1580,16 +1567,16 @@ export function AssetDetailView({
               </TierGate>
             </SectionCard>
 
-            {/* ── 실거래/경공매 통계 (L2) ── */}
+            {/* ?? ?ㅺ굅??寃쎄났留??듦퀎 (L2) ?? */}
             <SectionCard
-              title="실거래 경공매 통계"
+              title="?ㅺ굅??寃쎄났留??듦퀎"
               icon={<BarChart2 size={14} />}
               tierBadge="L2"
               anchorId="auction-stats"
             >
               <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={100} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
                 <p className="mb-3 leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
-                  국토부 실거래가 현황 및 법원 경매와 온비드 공매 낙찰 통계 및 유사 사례를 확인합니다.
+                  援?넗遺 ?ㅺ굅?섍? ?꾪솴 諛?踰뺤썝 寃쎈ℓ? ?⑤퉬??怨듬ℓ ?숈같 ?듦퀎 諛??좎궗 ?щ?瑜??뺤씤?⑸땲??
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <a
@@ -1600,7 +1587,7 @@ export function AssetDetailView({
                     style={{ fontSize: 12, backgroundColor: "rgba(5, 28, 44,0.10)", color: "var(--color-text-primary)", border: "1px solid rgba(5, 28, 44,0.28)" }}
                   >
                     <BarChart2 size={12} />
-                    땅집고옥션 통계 정보 조회
+                    ?낆쭛怨좎삦???듦퀎 ?뺣낫 議고쉶
                     <ArrowRight size={11} />
                   </a>
                 </div>
@@ -1608,36 +1595,36 @@ export function AssetDetailView({
             </SectionCard>
 
             <SectionCard
-              title="등기부등본 원본"
+              title="?깃린遺?깅낯 ?먮낯"
               icon={<ScrollText size={14} />}
               tierBadge="L2"
               anchorId="deed-full"
             >
               <TierGate required="L2" current={effectiveAccessTier} listingId={id} minHeight={140} onUpgradeClick={handlePrimaryAction} softBlur={dealFlowMode}>
                 <div className="space-y-4">
-                  {/* ── 다운로드 버튼: 토지 등기부등본 / 건물 등기부등본 ── */}
+                  {/* ?? ?ㅼ슫濡쒕뱶 踰꾪듉: ?좎? ?깃린遺?깅낯 / 嫄대Ъ ?깃린遺?깅낯 ?? */}
                   <div className="flex flex-wrap gap-2">
                     <DeedDownloadBtn
-                      label="토지 등기부등본"
+                      label="?좎? ?깃린遺?깅낯"
                       url={`/api/v1/docs/${id}/deed-land`}
                       uploaded={true}
-                      onDownload={() => toast.success("토지 등기부등본 다운로드를 시작합니다.", { duration: 1800 })}
+                      onDownload={() => toast.success("?좎? ?깃린遺?깅낯 ?ㅼ슫濡쒕뱶瑜??쒖옉?⑸땲??", { duration: 1800 })}
                     />
-                    {listing.collateral !== "토지" && (
+                    {listing.collateral !== "?좎?" && (
                       <DeedDownloadBtn
-                        label="건물 등기부등본"
+                        label="嫄대Ъ ?깃린遺?깅낯"
                         url={`/api/v1/docs/${id}/deed-building`}
                         uploaded={true}
-                        onDownload={() => toast.success("건물 등기부등본 다운로드를 시작합니다.", { duration: 1800 })}
+                        onDownload={() => toast.success("嫄대Ъ ?깃린遺?깅낯 ?ㅼ슫濡쒕뱶瑜??쒖옉?⑸땲??", { duration: 1800 })}
                       />
                     )}
                   </div>
 
-                  {/* ── 탭: 토지등기부 / 건물등기부 ── */}
+                  {/* ?? ?? ?좎??깃린遺 / 嫄대Ъ?깃린遺 ?? */}
                   <div>
                     <div className="flex items-center gap-1" style={{ borderBottom: "1px solid var(--layer-border-strong)", paddingBottom: 0 }}>
                       {(["land", "building"] as const).map(t => {
-                        const label = t === "land" ? "토지 등기부등본" : "건물 등기부등본"
+                        const label = t === "land" ? "?좎? ?깃린遺?깅낯" : "嫄대Ъ ?깃린遺?깅낯"
                         const items = t === "land" ? listing.registry_land_full_items : listing.registry_building_full_items
                         const active = deedFullTab === t
                         const count = items?.length ?? 0
@@ -1670,7 +1657,7 @@ export function AssetDetailView({
                       })}
                     </div>
 
-                    {/* ── 전체 등기부 테이블 ── */}
+                    {/* ?? ?꾩껜 ?깃린遺 ?뚯씠釉??? */}
                     {(() => {
                       const fullItems = deedFullTab === "land"
                         ? listing.registry_land_full_items
@@ -1678,22 +1665,21 @@ export function AssetDetailView({
                       if (!fullItems || fullItems.length === 0) {
                         return (
                           <p className="text-center py-5" style={{ color: C.lt4, fontSize: 11 }}>
-                            {deedFullTab === "land" ? "토지" : "건물"} 등기부 데이터가 없습니다.
+                            {deedFullTab === "land" ? "?좎?" : "嫄대Ъ"} ?깃린遺 ?곗씠?곌? ?놁뒿?덈떎.
                           </p>
                         )
                       }
                       return (
                         <div>
-                          {/* 헤더 행: 채권액합계 + 열람일 */}
+                          {/* ?ㅻ뜑 ?? 梨꾧텒?≫빀怨?+ ?대엺??*/}
                           <div className="flex items-center justify-between my-2 px-1" style={{ fontSize: 11 }}>
                             <span style={{ color: C.lt3, fontWeight: 700 }}>
-                              채권액합계{" "}
+                              梨꾧텒?≫빀怨?" "}
                               <span style={{ color: C.em }}>
-                                {fullItems.reduce((s, r) => s + (r.amount ?? 0), 0).toLocaleString("ko-KR")}원
-                              </span>
+                                {fullItems.reduce((s, r) => s + (r.amount ?? 0), 0).toLocaleString("ko-KR")}??                              </span>
                             </span>
                             <span style={{ color: C.lt4 }}>
-                              열람 {listing.published_at?.replace(/-/g, ".")}
+                              ?대엺 {listing.published_at?.replace(/-/g, ".")}
                             </span>
                           </div>
 
@@ -1702,7 +1688,7 @@ export function AssetDetailView({
                               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 560 }}>
                                 <thead>
                                   <tr style={{ backgroundColor: "var(--layer-2-bg)", borderBottom: "2px solid var(--layer-border-strong)" }}>
-                                    {["구분", "접수일", "권리종류", "권리자", "채권금액"].map((h, i) => (
+                                    {["援щ텇", "?묒닔??, "沅뚮━醫낅쪟", "沅뚮━??, "梨꾧텒湲덉븸"].map((h, i) => (
                                       <th
                                         key={h}
                                         style={{
@@ -1745,7 +1731,7 @@ export function AssetDetailView({
                                         {r.amount_label && (
                                           <span style={{ fontSize: 10, color: C.lt4, marginRight: 4 }}>{r.amount_label}</span>
                                         )}
-                                        {r.amount !== null ? r.amount.toLocaleString("ko-KR") + "원" : "—"}
+                                        {r.amount !== null ? r.amount.toLocaleString("ko-KR") + "?? : "??}
                                       </td>
                                     </tr>
                                   ))}
@@ -1754,7 +1740,7 @@ export function AssetDetailView({
                             </div>
                           )}
 
-                          {/* 접기/펼치기 토글 */}
+                          {/* ?묎린/?쇱튂湲??좉? */}
                           <div className="mt-2 flex justify-center">
                             <button
                               type="button"
@@ -1768,7 +1754,7 @@ export function AssetDetailView({
                                 border: "1px solid var(--layer-border-strong)",
                               }}
                             >
-                              {deedFullExpanded ? "▲ 등기부 현황 접기" : "▼ 등기부 현황 펼치기"}
+                              {deedFullExpanded ? "???깃린遺 ?꾪솴 ?묎린" : "???깃린遺 ?꾪솴 ?쇱튂湲?}
                             </button>
                           </div>
                         </div>
@@ -1780,7 +1766,7 @@ export function AssetDetailView({
             </SectionCard>
 
             <SectionCard
-              title={`현장 사진 (${listing.site_photos.length})`}
+              title={`?꾩옣 ?ъ쭊 (${listing.site_photos.length})`}
               icon={<Images size={14} />}
               tierBadge="L2"
               anchorId="site-photos"
@@ -1789,12 +1775,12 @@ export function AssetDetailView({
                 <div className="space-y-3">
                   <button
                     type="button"
-                    onClick={() => toast.success("현장 사진 전체 다운로드를 시작합니다.", { duration: 1800 })}
+                    onClick={() => toast.success("?꾩옣 ?ъ쭊 ?꾩껜 ?ㅼ슫濡쒕뱶瑜??쒖옉?⑸땲??", { duration: 1800 })}
                     className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
                     style={{ fontSize: 12, backgroundColor: "rgba(5, 28, 44,0.10)", color: "var(--color-positive)", border: "1px solid rgba(5, 28, 44,0.3)" }}
                   >
                     <FileDown size={13} />
-                    전체 다운로드 ({listing.site_photos.length}장)
+                    ?꾩껜 ?ㅼ슫濡쒕뱶 ({listing.site_photos.length}??
                   </button>
                   <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollSnapType: "x mandatory" }}>
                     {listing.site_photos.map((p, i) => (
@@ -1804,7 +1790,7 @@ export function AssetDetailView({
                         onClick={() => setLightboxPhoto(i)}
                         className="flex-shrink-0 rounded-lg flex items-center justify-center transition-opacity hover:opacity-80"
                         style={{ width: 140, height: 140, scrollSnapAlign: "start", backgroundColor: "var(--layer-2-bg)", border: "1px dashed var(--layer-border-strong)", color: C.lt4, fontSize: 11, cursor: "pointer" }}
-                        title={`사진 ${i + 1} 확대`}
+                        title={`?ъ쭊 ${i + 1} ?뺣?`}
                       >
                         {p}
                       </button>
@@ -1814,7 +1800,7 @@ export function AssetDetailView({
               </TierGate>
             </SectionCard>
 
-            {/* ── 현장 사진 라이트박스 ── */}
+            {/* ?? ?꾩옣 ?ъ쭊 ?쇱씠?몃컯???? */}
             {lightboxPhoto !== null && (
               <div
                 className="fixed inset-0 z-50 flex items-center justify-center"
@@ -1831,12 +1817,12 @@ export function AssetDetailView({
                     <button type="button"
                       onClick={() => setLightboxPhoto(i => i !== null && i > 0 ? i - 1 : listing.site_photos.length - 1)}
                       className="rounded-lg px-2 py-1 font-bold"
-                      style={{ fontSize: 14, backgroundColor: "var(--layer-1-bg)", color: "var(--fg-muted)", border: "1px solid var(--layer-border-strong)" }}>‹</button>
+                      style={{ fontSize: 14, backgroundColor: "var(--layer-1-bg)", color: "var(--fg-muted)", border: "1px solid var(--layer-border-strong)" }}>??/button>
                     <span style={{ fontSize: 11, color: "var(--fg-muted)" }}>{lightboxPhoto + 1} / {listing.site_photos.length}</span>
                     <button type="button"
                       onClick={() => setLightboxPhoto(i => i !== null && i < listing.site_photos.length - 1 ? i + 1 : 0)}
                       className="rounded-lg px-2 py-1 font-bold"
-                      style={{ fontSize: 14, backgroundColor: "var(--layer-1-bg)", color: "var(--fg-muted)", border: "1px solid var(--layer-border-strong)" }}>›</button>
+                      style={{ fontSize: 14, backgroundColor: "var(--layer-1-bg)", color: "var(--fg-muted)", border: "1px solid var(--layer-border-strong)" }}>??/button>
                     <button type="button" onClick={() => setLightboxPhoto(null)}
                       className="rounded-lg p-1" style={{ backgroundColor: "var(--layer-1-bg)", color: "var(--fg-muted)", border: "1px solid var(--layer-border-strong)" }}>
                       <X size={14} />
@@ -1847,7 +1833,7 @@ export function AssetDetailView({
             )}
 
             <SectionCard
-              title="채권 정보"
+              title="梨꾧텒 ?뺣낫"
               anchorId="debt-info"
               icon={<Banknote size={14} />}
               tierBadge="L2"
@@ -1866,7 +1852,7 @@ export function AssetDetailView({
                       className="font-semibold mb-1"
                       style={{ fontSize: 11, color: C.lt3, letterSpacing: "0.04em" }}
                     >
-                      채권잔액 <span style={{ color: C.lt4 }}>(원금 + 미수이자)</span>
+                      梨꾧텒?붿븸 <span style={{ color: C.lt4 }}>(?먭툑 + 誘몄닔?댁옄)</span>
                     </div>
                     <div
                       className="font-black tabular-nums"
@@ -1884,18 +1870,18 @@ export function AssetDetailView({
                         const iRatio = Math.max(0, 100 - pRatio)
                         return (
                           <>
-                            <span>원금 {formatKRW(listing.claim_info.principal)} <span style={{ color: C.lt4, fontWeight: 500 }}>({pRatio}%)</span></span>
+                            <span>?먭툑 {formatKRW(listing.claim_info.principal)} <span style={{ color: C.lt4, fontWeight: 500 }}>({pRatio}%)</span></span>
                             <span style={{ color: C.lt4 }}>+</span>
-                            <span>연체이자 {formatKRW(listing.claim_info.accrued_interest)} <span style={{ color: C.lt4, fontWeight: 500 }}>({iRatio}%)</span></span>
+                            <span>?곗껜?댁옄 {formatKRW(listing.claim_info.accrued_interest)} <span style={{ color: C.lt4, fontWeight: 500 }}>({iRatio}%)</span></span>
                           </>
                         )
                       })()}
                     </div>
-                    {/* 비율 시각화 — 원금/연체이자 bar */}
+                    {/* 鍮꾩쑉 ?쒓컖?????먭툑/?곗껜?댁옄 bar */}
                     <div
                       className="mt-2 h-1.5 w-full rounded-full overflow-hidden flex"
                       style={{ background: "rgba(148,163,184,0.12)" }}
-                      title="채권잔액 구성 비율"
+                      title="梨꾧텒?붿븸 援ъ꽦 鍮꾩쑉"
                     >
                       {(() => {
                         const bal = listing.claim_info.balance || 1
@@ -1912,33 +1898,33 @@ export function AssetDetailView({
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <ClaimField
-                      label="대출 금리"
+                      label="?異?湲덈━"
                       value={`${listing.claim_info.contract_rate.toFixed(1)}%`}
-                      sub="연이율"
+                      sub="?곗씠??
                       tone="blue"
                     />
                     <ClaimField
-                      label="연체 금리"
+                      label="?곗껜 湲덈━"
                       value={`${listing.claim_info.delinquent_rate.toFixed(1)}%`}
-                      sub="연이율"
+                      sub="?곗씠??
                       tone="amber"
                     />
                     <ClaimField
-                      label="연체 시작일"
+                      label="?곗껜 ?쒖옉??
                       value={formatDateKo(listing.claim_info.delinquent_since)}
                       sub={(() => {
                         const days = Math.floor(
                           (Date.now() - new Date(listing.claim_info.delinquent_since).getTime()) /
                             (1000 * 60 * 60 * 24)
                         )
-                        return days > 0 ? `${days}일 경과` : "오늘"
+                        return days > 0 ? `${days}??寃쎄낵` : "?ㅻ뒛"
                       })()}
                       tone="neutral"
                     />
                   </div>
 
-                  {/* 수익권 금액 (공부상 채권최고액) — 사용자 요청 2026-04-26.
-                      미입력 매물은 한국 표준 대출원금 × 1.2 로 자동 환산해 표시 */}
+                  {/* ?섏씡沅?湲덉븸 (怨듬???梨꾧텒理쒓퀬?? ???ъ슜???붿껌 2026-04-26.
+                      誘몄엯??留ㅻЪ? ?쒓뎅 ?쒖? ?異쒖썝湲?횞 1.2 濡??먮룞 ?섏궛???쒖떆 */}
                   {(() => {
                     const principal = listing.claim_info.principal
                     const explicit = listing.claim_info.maximum_bond_amount
@@ -1957,20 +1943,20 @@ export function AssetDetailView({
                             className="font-semibold mb-1"
                             style={{ fontSize: 11, color: C.lt3, letterSpacing: "0.04em" }}
                           >
-                            수익권 금액 <span style={{ color: C.lt4 }}>(공부상 채권최고액 · 1순위 근저당)</span>
+                            ?섏씡沅?湲덉븸 <span style={{ color: C.lt4 }}>(怨듬???梨꾧텒理쒓퀬??쨌 1?쒖쐞 洹쇱???</span>
                           </div>
                           <div className="font-black tabular-nums" style={{ fontSize: 20, color: "#2E75B6", lineHeight: 1.1 }}>
                             {formatKRW(maxBond)}
                           </div>
                           <div className="mt-1 tabular-nums" style={{ fontSize: 11, color: C.lt3 }}>
-                            대출원금 × <b>{ratio}%</b>
-                            {!explicit && <span style={{ color: C.lt4 }}> · 표준 1.2x 자동 환산 (등기부 미입력)</span>}
+                            ?異쒖썝湲?횞 <b>{ratio}%</b>
+                            {!explicit && <span style={{ color: C.lt4 }}> 쨌 ?쒖? 1.2x ?먮룞 ?섏궛 (?깃린遺 誘몄엯??</span>}
                           </div>
                         </div>
                         <ClaimField
-                          label="설정 비율"
+                          label="?ㅼ젙 鍮꾩쑉"
                           value={`${ratio}%`}
-                          sub="대출원금 × 110~140% 표준"
+                          sub="?異쒖썝湲?횞 110~140% ?쒖?"
                           tone="blue"
                         />
                       </div>
@@ -1981,9 +1967,9 @@ export function AssetDetailView({
                     className="leading-relaxed"
                     style={{ fontSize: 11, color: C.lt3 }}
                   >
-                    채권잔액은 대출 금리와 연체 금리를 적용한 원금과 미수이자의 합계이며,
-                    연체 시작일부터는 연체 금리로 산정됩니다. 채권 정보 세부 내역은 LOI 제출
-                    후 금융기관 대면 미팅에서 검토될 수 있습니다.
+                    梨꾧텒?붿븸? ?異?湲덈━? ?곗껜 湲덈━瑜??곸슜???먭툑怨?誘몄닔?댁옄???⑷퀎?대ŉ,
+                    ?곗껜 ?쒖옉?쇰??곕뒗 ?곗껜 湲덈━濡??곗젙?⑸땲?? 梨꾧텒 ?뺣낫 ?몃? ?댁뿭? LOI ?쒖텧
+                    ??湲덉쑖湲곌? ?硫?誘명똿?먯꽌 寃?좊맆 ???덉뒿?덈떎.
                   </p>
                 </div>
               </TierGate>
@@ -1992,9 +1978,9 @@ export function AssetDetailView({
 
           <div className="space-y-4 min-w-0">
             {/*
-              sticky 우측 사이드바 — 페이지 자연 스크롤 시 뷰포트에 고정.
-              · standalone (/exchange/[id]): top-4 (16px) — 최상단 Navigation 아래
-              · embedded (/deals): top-20 (80px) — /deals 의 64px sticky 헤더 아래
+              sticky ?곗륫 ?ъ씠?쒕컮 ???섏씠吏 ?먯뿰 ?ㅽ겕濡???酉고룷?몄뿉 怨좎젙.
+              쨌 standalone (/exchange/[id]): top-4 (16px) ??理쒖긽??Navigation ?꾨옒
+              쨌 embedded (/deals): top-20 (80px) ??/deals ??64px sticky ?ㅻ뜑 ?꾨옒
             */}
             <div className={`${embedded ? "lg:sticky lg:top-20" : "lg:sticky lg:top-4"} space-y-4`}>
               <PrimaryActionCard
@@ -2003,7 +1989,7 @@ export function AssetDetailView({
                 onAction={handlePrimaryAction}
                 variant="desktop"
               />
-              {/* DR-18: 분석 도구 바로가기 — 매물 컨텍스트를 수익성·시뮬·AI로 이어감 */}
+              {/* DR-18: 遺꾩꽍 ?꾧뎄 諛붾줈媛湲???留ㅻЪ 而⑦뀓?ㅽ듃瑜??섏씡?굿룹떆裕?텮I濡??댁뼱媛?*/}
               <div
                 className="rounded-xl p-3 border"
                 style={{
@@ -2016,7 +2002,7 @@ export function AssetDetailView({
                   style={{ fontSize: 11, color: C.lt3, fontWeight: 800 }}
                 >
                   <TrendingUp className="w-3 h-3" />
-                  <span>이 매물로 분석 시작</span>
+                  <span>??留ㅻЪ濡?遺꾩꽍 ?쒖옉</span>
                 </div>
                 <div className="grid grid-cols-1 gap-1.5">
                   <Link
@@ -2030,7 +2016,7 @@ export function AssetDetailView({
                     <span className="inline-flex items-center gap-1.5">
                       <TrendingUp className="w-3.5 h-3.5" style={{ color: "var(--color-positive)" }} />
                       <span style={{ fontSize: 11, color: "var(--color-positive)", fontWeight: 800 }}>
-                        NPL 수익성 분석 (IRR · ROI)
+                        NPL ?섏씡??遺꾩꽍 (IRR 쨌 ROI)
                       </span>
                     </span>
                     <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" style={{ color: "var(--color-positive)" }} />
@@ -2046,8 +2032,7 @@ export function AssetDetailView({
                     <span className="inline-flex items-center gap-1.5">
                       <Calculator className="w-3.5 h-3.5" style={{ color: "var(--color-brand-bright)" }} />
                       <span style={{ fontSize: 11, color: "var(--color-brand-bright)", fontWeight: 800 }}>
-                        경매 분석 시뮬레이터
-                      </span>
+                        寃쎈ℓ 遺꾩꽍 ?쒕??덉씠??                      </span>
                     </span>
                     <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" style={{ color: "var(--color-brand-bright)" }} />
                   </Link>
@@ -2062,7 +2047,7 @@ export function AssetDetailView({
                     <span className="inline-flex items-center gap-1.5">
                       <Brain className="w-3.5 h-3.5" style={{ color: "var(--color-text-primary)" }} />
                       <span style={{ fontSize: 11, color: "var(--color-text-primary)", fontWeight: 800 }}>
-                        AI 컨설턴트
+                        AI 而⑥꽕?댄듃
                       </span>
                     </span>
                     <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" style={{ color: "var(--color-text-primary)" }} />
@@ -2094,27 +2079,27 @@ export function AssetDetailView({
                     ? { verdict: aiAnalysis.anomaly.verdict, score: aiAnalysis.anomaly.score }
                     : null
                 }
-                onAskAi={() => toast.info("AI Copilot이 곧 열립니다.", { duration: 1500 })}
-                onReanalyze={() => toast.info("AI 재분석을 요청했습니다.", { duration: 1500 })}
-                onShowProbability={() => toast.info("확률 계산식을 표시합니다.", { duration: 1500 })}
-                onSeeDemand={() => toast.info("매수자 수요를 조회합니다.", { duration: 1500 })}
-                onAiMatch={() => toast.info("AI 매칭을 실행합니다.", { duration: 1500 })}
+                onAskAi={() => toast.info("AI Copilot??怨??대┰?덈떎.", { duration: 1500 })}
+                onReanalyze={() => toast.info("AI ?щ텇?앹쓣 ?붿껌?덉뒿?덈떎.", { duration: 1500 })}
+                onShowProbability={() => toast.info("?뺣쪧 怨꾩궛?앹쓣 ?쒖떆?⑸땲??", { duration: 1500 })}
+                onSeeDemand={() => toast.info("留ㅼ닔???섏슂瑜?議고쉶?⑸땲??", { duration: 1500 })}
+                onAiMatch={() => toast.info("AI 留ㅼ묶???ㅽ뻾?⑸땲??", { duration: 1500 })}
               />
             </div>
           </div>
         </div>
 
-        {/* ── DR-20: Gate 2 (LOI) + Stage 03 헤더 — dealFlowMode 에서만 ── */}
+        {/* ?? DR-20: Gate 2 (LOI) + Stage 03 ?ㅻ뜑 ??dealFlowMode ?먯꽌留??? */}
         {dealFlowMode && (
           <div className="mt-6 lg:mt-8">
             <DealGate
               icon={DealLockIcon}
-              title="LOI 제출 시 참여 가능"
-              subtitle="채팅 · 가격 오퍼 · 오프라인 미팅 · 실사 · 협상"
+              title="LOI ?쒖텧 ??李몄뿬 媛??
+              subtitle="梨꾪똿 쨌 媛寃??ㅽ띁 쨌 ?ㅽ봽?쇱씤 誘명똿 쨌 ?ㅼ궗 쨌 ?묒긽"
               panelMode
               ctaLabel={
                 !tierGte(effectiveAccessTier, "L3") && loiState.status !== "approved"
-                  ? "LOI 제출화면 열기"
+                  ? "LOI ?쒖텧?붾㈃ ?닿린"
                   : undefined
               }
               onCtaClick={
@@ -2124,26 +2109,26 @@ export function AssetDetailView({
               }
             />
             <StageHeader
-              eyebrow="Section 03 · LOI required"
+              eyebrow="Section 03 쨌 LOI required"
               title="Deal Engagement"
-              subtitle="딜 참여 — 매도자와 채팅·가격 협상·실사 진행"
+              subtitle="??李몄뿬 ??留ㅻ룄?먯? 梨꾪똿쨌媛寃??묒긽쨌?ㅼ궗 吏꾪뻾"
             />
           </div>
         )}
 
-        {/* ── LOI 확인 (L3+) — dealFlowMode 에서는 미인증 시 blur 처리해서 노출 ── */}
+        {/* ?? LOI ?뺤씤 (L3+) ??dealFlowMode ?먯꽌??誘몄씤利???blur 泥섎━?댁꽌 ?몄텧 ?? */}
         {(tierGte(effectiveAccessTier, "L3") || dealFlowMode) && (
-          <DealLockedSection locked={!tierGte(effectiveAccessTier, "L3") && dealFlowMode} badgeLabel="LOI 제출 후 열람">
+          <DealLockedSection locked={!tierGte(effectiveAccessTier, "L3") && dealFlowMode} badgeLabel="LOI ?쒖텧 ???대엺">
           <div id="loi" className="mt-6 lg:mt-8 scroll-mt-24">
             <SectionCard
-              title="LOI 확인"
+              title="LOI ?뺤씤"
               icon={<FileCheck size={14} />}
               tierBadge="L3"
               anchorId="loi"
             >
               <div className="space-y-3">
                 <p className="leading-relaxed" style={{ fontSize: 12, color: C.lt3 }}>
-                  제출된 인수의향서(LOI)를 확인하고 다운로드할 수 있습니다. LOI는 법적 구속력이 없는 의향서이며, 매도자 승인 후 에스크로 입금 및 현장 계약 단계로 진행됩니다.
+                  ?쒖텧???몄닔?섑뼢??LOI)瑜??뺤씤?섍퀬 ?ㅼ슫濡쒕뱶?????덉뒿?덈떎. LOI??踰뺤쟻 援ъ냽?μ씠 ?녿뒗 ?섑뼢?쒖씠硫? 留ㅻ룄???뱀씤 ???먯뒪?щ줈 ?낃툑 諛??꾩옣 怨꾩빟 ?④퀎濡?吏꾪뻾?⑸땲??
                 </p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
@@ -2158,12 +2143,12 @@ export function AssetDetailView({
                     }}
                   >
                     {loiPdfOpen ? <EyeOff size={13} /> : <Eye size={13} />}
-                    {loiPdfOpen ? "LOI 닫기" : "LOI 보기"}
+                    {loiPdfOpen ? "LOI ?リ린" : "LOI 蹂닿린"}
                   </button>
                   <a
                     href={`/api/v1/docs/${id}/loi?download=1`}
                     download
-                    onClick={e => { e.preventDefault(); toast.success("LOI 문서 다운로드를 시작합니다.", { duration: 1800 }) }}
+                    onClick={e => { e.preventDefault(); toast.success("LOI 臾몄꽌 ?ㅼ슫濡쒕뱶瑜??쒖옉?⑸땲??", { duration: 1800 }) }}
                     className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition-colors"
                     style={{
                       fontSize: 12,
@@ -2173,7 +2158,7 @@ export function AssetDetailView({
                     }}
                   >
                     <FileDown size={13} />
-                    PDF 다운로드
+                    PDF ?ㅼ슫濡쒕뱶
                   </a>
                 </div>
                 {loiPdfOpen && (
@@ -2185,7 +2170,7 @@ export function AssetDetailView({
                       className="flex items-center justify-between px-3 py-2"
                       style={{ backgroundColor: "var(--layer-2-bg)", fontSize: 11, color: "var(--fg-muted)" }}
                     >
-                      <span className="font-bold">인수의향서 (LOI) 미리보기</span>
+                      <span className="font-bold">?몄닔?섑뼢??(LOI) 誘몃━蹂닿린</span>
                       <button type="button" onClick={() => setLoiPdfOpen(false)}>
                         <X size={14} />
                       </button>
@@ -2204,9 +2189,9 @@ export function AssetDetailView({
           </DealLockedSection>
         )}
 
-        {/* ── 채팅 (L3+) — dealFlowMode 에서는 미인증 시 blur 처리해서 노출 ── */}
+        {/* ?? 梨꾪똿 (L3+) ??dealFlowMode ?먯꽌??誘몄씤利???blur 泥섎━?댁꽌 ?몄텧 ?? */}
         {(tierGte(effectiveAccessTier, "L3") || dealFlowMode) && (
-          <DealLockedSection locked={!tierGte(effectiveAccessTier, "L3") && dealFlowMode} badgeLabel="LOI 제출 후 열람">
+          <DealLockedSection locked={!tierGte(effectiveAccessTier, "L3") && dealFlowMode} badgeLabel="LOI ?쒖텧 ???대엺">
           <div id="chat" className="mt-6 lg:mt-8 scroll-mt-24">
             <InlineDealRoom
               tier={effectiveTier}
@@ -2216,9 +2201,9 @@ export function AssetDetailView({
           </DealLockedSection>
         )}
 
-        {/* ── 실사 (L3+) — dealFlowMode 에서는 미인증 시 blur 처리해서 노출 ── */}
+        {/* ?? ?ㅼ궗 (L3+) ??dealFlowMode ?먯꽌??誘몄씤利???blur 泥섎━?댁꽌 ?몄텧 ?? */}
         {(tierGte(effectiveAccessTier, "L3") || dealFlowMode) && (
-          <DealLockedSection locked={!tierGte(effectiveAccessTier, "L3") && dealFlowMode} badgeLabel="LOI 제출 후 열람">
+          <DealLockedSection locked={!tierGte(effectiveAccessTier, "L3") && dealFlowMode} badgeLabel="LOI ?쒖텧 ???대엺">
           <div id="due-diligence" className="mt-6 lg:mt-8 scroll-mt-24">
             <DueDiligenceSection
               anchorId="due-diligence"
@@ -2228,9 +2213,9 @@ export function AssetDetailView({
           </DealLockedSection>
         )}
 
-        {/* ── 가격 오퍼 (L3+) — dealFlowMode 에서는 미인증 시 blur 처리해서 노출 ── */}
+        {/* ?? 媛寃??ㅽ띁 (L3+) ??dealFlowMode ?먯꽌??誘몄씤利???blur 泥섎━?댁꽌 ?몄텧 ?? */}
         {(tierGte(effectiveAccessTier, "L3") || dealFlowMode) && (
-          <DealLockedSection locked={!tierGte(effectiveAccessTier, "L3") && dealFlowMode} badgeLabel="LOI 제출 후 열람">
+          <DealLockedSection locked={!tierGte(effectiveAccessTier, "L3") && dealFlowMode} badgeLabel="LOI ?쒖텧 ???대엺">
           <div id="offer" className="mt-6 lg:mt-8 scroll-mt-24">
             <div
               className="rounded-2xl overflow-hidden"
@@ -2240,7 +2225,7 @@ export function AssetDetailView({
                 boxShadow: "0 4px 20px rgba(27,58,92,0.10)",
               }}
             >
-              {/* ── 헤더: 브랜드 그라데이션 ── */}
+              {/* ?? ?ㅻ뜑: 釉뚮옖??洹몃씪?곗씠???? */}
               <header
                 className="flex items-center justify-between gap-3 flex-wrap px-5 py-4"
                 style={{
@@ -2257,24 +2242,23 @@ export function AssetDetailView({
                   </div>
                   <div>
                     <h3 className="font-black leading-none" style={{ fontSize: 15, color: "#FFFFFF" }}>
-                      가격 오퍼
+                      媛寃??ㅽ띁
                     </h3>
                     <p className="mt-0.5 font-medium" style={{ fontSize: 11, color: "rgba(255,255,255,0.72)" }}>
-                      매도자에게 매입 희망가를 제안하세요
-                    </p>
+                      留ㅻ룄?먯뿉寃?留ㅼ엯 ?щ쭩媛瑜??쒖븞?섏꽭??                    </p>
                   </div>
                 </div>
                 <span
                   className="rounded-full font-bold px-2.5 py-1"
                   style={{ fontSize: 10, backgroundColor: "rgba(5, 28, 44,0.22)", color: "#FCD34D", border: "1px solid rgba(5, 28, 44,0.40)" }}
                 >
-                  L3 협상 단계
+                  L3 ?묒긽 ?④퀎
                 </span>
               </header>
 
-              {/* ── 바디 ── */}
+              {/* ?? 諛붾뵒 ?? */}
               <div className="p-5 space-y-4">
-                {/* 가격 요약 KPI 2칸 */}
+                {/* 媛寃??붿빟 KPI 2移?*/}
                 <div className="grid grid-cols-2 gap-3">
                   <div
                     className="rounded-xl p-3.5"
@@ -2284,13 +2268,13 @@ export function AssetDetailView({
                     }}
                   >
                     <div className="font-bold mb-1" style={{ fontSize: 10, color: C.lt4, letterSpacing: "0.04em" }}>
-                      매도 희망가
+                      留ㅻ룄 ?щ쭩媛
                     </div>
                     <div className="font-black tabular-nums" style={{ fontSize: 20, color: C.amber, lineHeight: 1.1 }}>
                       {formatKRW(listing.asking_price)}
                     </div>
                     <div className="mt-1 font-semibold tabular-nums" style={{ fontSize: 10, color: C.lt4 }}>
-                      할인율 ↓{discountPct}%
+                      ?좎씤????discountPct}%
                     </div>
                   </div>
                   <div
@@ -2301,21 +2285,21 @@ export function AssetDetailView({
                     }}
                   >
                     <div className="font-bold mb-1" style={{ fontSize: 10, color: C.lt4, letterSpacing: "0.04em" }}>
-                      AI 권고 매입가
+                      AI 沅뚭퀬 留ㅼ엯媛
                     </div>
                     <div className="font-black tabular-nums" style={{ fontSize: 20, color: C.em, lineHeight: 1.1 }}>
                       {formatKRW(Math.round(listing.asking_price * 0.96))}
                     </div>
                     <div className="mt-1 font-semibold" style={{ fontSize: 10, color: C.lt4 }}>
-                      AI 협상 여지 추정
+                      AI ?묒긽 ?ъ? 異붿젙
                     </div>
                   </div>
                 </div>
 
-                {/* 구분선 */}
+                {/* 援щ텇??*/}
                 <div style={{ borderTop: "1px solid var(--layer-border-strong)" }} />
 
-                {/* 오퍼 폼 / 카드 */}
+                {/* ?ㅽ띁 ??/ 移대뱶 */}
                 {submittedOffer ? (
                   <div>
                     <OfferCard offer={submittedOffer} isMine />
@@ -2330,7 +2314,7 @@ export function AssetDetailView({
                         border: "1px solid var(--layer-border-strong)",
                       }}
                     >
-                      새 오퍼 작성
+                      ???ㅽ띁 ?묒꽦
                     </button>
                   </div>
                 ) : offerFormVisible ? (
@@ -2339,7 +2323,7 @@ export function AssetDetailView({
                       const offer: OfferData = { ...o, status: "pending" }
                       setSubmittedOffer(offer)
                       setOfferFormVisible(false)
-                      toast.success("가격 오퍼가 제출되었습니다 · 매도자 검토 대기 중", { duration: 2500 })
+                      toast.success("媛寃??ㅽ띁媛 ?쒖텧?섏뿀?듬땲??쨌 留ㅻ룄??寃???湲?以?, { duration: 2500 })
                     }}
                     onCancel={() => setOfferFormVisible(false)}
                   />
@@ -2357,7 +2341,7 @@ export function AssetDetailView({
                     }}
                   >
                     <HandCoins size={15} />
-                    오퍼 작성 열기
+                    ?ㅽ띁 ?묒꽦 ?닿린
                   </button>
                 )}
               </div>
@@ -2366,28 +2350,28 @@ export function AssetDetailView({
           </DealLockedSection>
         )}
 
-        {/* ── DR-20: Gate 3 (ESCROW) + Stage 04 헤더 — dealFlowMode 에서만 ── */}
+        {/* ?? DR-20: Gate 3 (ESCROW) + Stage 04 ?ㅻ뜑 ??dealFlowMode ?먯꽌留??? */}
         {dealFlowMode && (
           <div className="mt-6 lg:mt-8">
             <DealGate
               icon={DealLockIcon}
-              title="ESCROW 결제 후 실행"
-              subtitle="안전결제 · 전자계약 · 잔금처리"
+              title="ESCROW 寃곗젣 ???ㅽ뻾"
+              subtitle="?덉쟾寃곗젣 쨌 ?꾩옄怨꾩빟 쨌 ?붽툑泥섎━"
               panelMode
             />
             <StageHeader
-              eyebrow="Section 04 · Closing"
+              eyebrow="Section 04 쨌 Closing"
               title="Deal Execution"
-              subtitle="거래 실행 — 30분 내 클로징"
+              subtitle="嫄곕옒 ?ㅽ뻾 ??30遺????대줈吏?
             />
           </div>
         )}
 
-        {/* ── 에스크로 결제 · 계약 (L4+) — dealFlowMode 에서는 미인증 시 blur 처리해서 노출 ── */}
+        {/* ?? ?먯뒪?щ줈 寃곗젣 쨌 怨꾩빟 (L4+) ??dealFlowMode ?먯꽌??誘몄씤利???blur 泥섎━?댁꽌 ?몄텧 ?? */}
         {(effectiveTier === "L4" || effectiveTier === "L5" || dealFlowMode) && (
           <DealLockedSection
             locked={!(effectiveTier === "L4" || effectiveTier === "L5") && dealFlowMode}
-            badgeLabel="ESCROW 입금 후 실행"
+            badgeLabel="ESCROW ?낃툑 ???ㅽ뻾"
           >
           <div id="escrow" className="mt-6 lg:mt-8 scroll-mt-24">
             <DealCompletionStages
@@ -2417,7 +2401,7 @@ export function AssetDetailView({
 
       </section>
 
-      {/* 모바일 sticky CTA · 컴플라이언스 footer — embedded(/deals) 에서는 중복 방지로 숨김 */}
+      {/* 紐⑤컮??sticky CTA 쨌 而댄뵆?쇱씠?몄뒪 footer ??embedded(/deals) ?먯꽌??以묐났 諛⑹?濡??④? */}
       {!embedded && (
         <>
           <PrimaryActionCard
@@ -2439,7 +2423,7 @@ export function AssetDetailView({
         onConfirm={handleConfirmStep}
       />
 
-      {/* DR-24: 게이트 모달 — L0 투자자 인증 / L1 NDA / L2 LOI */}
+      {/* DR-24: 寃뚯씠??紐⑤떖 ??L0 ?ъ옄???몄쬆 / L1 NDA / L2 LOI */}
       <InvestorVerifyModal
         open={investorOpen}
         onClose={() => setInvestorOpen(false)}
@@ -2449,9 +2433,9 @@ export function AssetDetailView({
             ...s,
             status: "pending",
             updatedAt: new Date().toISOString().slice(0, 10),
-            reviewNote: "추가 자료 제출 완료 — 관리자 재검토 중",
+            reviewNote: "異붽? ?먮즺 ?쒖텧 ?꾨즺 ??愿由ъ옄 ?ш???以?,
           }))
-          toast.success("투자자 인증 자료를 제출했습니다. 관리자 검토 후 알림으로 안내됩니다.", { duration: 3000 })
+          toast.success("?ъ옄???몄쬆 ?먮즺瑜??쒖텧?덉뒿?덈떎. 愿由ъ옄 寃?????뚮┝?쇰줈 ?덈궡?⑸땲??", { duration: 3000 })
         }}
       />
 
@@ -2467,9 +2451,9 @@ export function AssetDetailView({
             ...s,
             status: "submitted",
             submittedAt: today,
-            reviewNote: "매각사 검토 대기 중 (영업일 기준 1일 이내)",
+            reviewNote: "留ㅺ컖??寃???湲?以?(?곸뾽??湲곗? 1???대궡)",
           }))
-          toast.success("NDA 전자서명을 매각사에 전송했습니다. 승인 시 L2 자료가 즉시 열립니다.", { duration: 3500 })
+          toast.success("NDA ?꾩옄?쒕챸??留ㅺ컖?ъ뿉 ?꾩넚?덉뒿?덈떎. ?뱀씤 ??L2 ?먮즺媛 利됱떆 ?대┰?덈떎.", { duration: 3500 })
           setNdaOpen(false)
         }}
       />
@@ -2488,9 +2472,9 @@ export function AssetDetailView({
             status: "submitted",
             submittedAt: today,
             proposedPrice: price,
-            reviewNote: "매각사 검토 대기 중",
+            reviewNote: "留ㅺ컖??寃???湲?以?,
           }))
-          toast.success("LOI 를 매각사에 제출했습니다. 승인 시 협상·데이터룸이 활성화됩니다.", { duration: 3500 })
+          toast.success("LOI 瑜?留ㅺ컖?ъ뿉 ?쒖텧?덉뒿?덈떎. ?뱀씤 ???묒긽쨌?곗씠?곕８???쒖꽦?붾맗?덈떎.", { duration: 3500 })
           setLoiOpen(false)
         }}
       />
@@ -2510,11 +2494,11 @@ export function AssetDetailView({
           >
             <ShieldCheck size={14} color={C.em} />
             <span>
-              본 매물은 자동 마스킹 파이프라인 적용 · 티어별 공개 범위는{" "}
+              蹂?留ㅻЪ? ?먮룞 留덉뒪???뚯씠?꾨씪???곸슜 쨌 ?곗뼱蹂?怨듦컻 踰붿쐞??" "}
               <a href="/terms/disclaimer" className="underline" style={{ color: C.lt3 }}>
-                면책고지
+                硫댁콉怨좎?
               </a>
-              {" "}준수.
+              {" "}以??
             </span>
           </div>
         </footer>
@@ -2523,9 +2507,8 @@ export function AssetDetailView({
   )
 }
 
-/* ═══════════════════════════════════════════════════════════
-   SECTION CARD WRAPPER
-═══════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   SECTION CARD WRAPPER
+?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 function SectionCard({
   title,
   icon,
@@ -2592,7 +2575,7 @@ function SectionCard({
               border: `1px solid ${badge.border}`,
             }}
           >
-            ● {tierBadge}
+            ??{tierBadge}
           </span>
         )}
       </div>
@@ -2601,9 +2584,8 @@ function SectionCard({
   )
 }
 
-/* ═══════════════════════════════════════════════════════════
-   MINI COMPONENTS
-═══════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   MINI COMPONENTS
+?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "em" | "amber" | "blue" }) {
   const color =
@@ -2674,7 +2656,7 @@ function ClaimField({
   )
 }
 
-/** 등기부등본 다운로드 버튼 — 업로드 여부에 따라 활성/비활성 */
+/** ?깃린遺?깅낯 ?ㅼ슫濡쒕뱶 踰꾪듉 ???낅줈???щ????곕씪 ?쒖꽦/鍮꾪솢??*/
 function DeedDownloadBtn({
   label,
   url,
@@ -2691,7 +2673,7 @@ function DeedDownloadBtn({
       <span
         className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold"
         style={{ fontSize: 12, backgroundColor: "var(--layer-2-bg)", color: "var(--fg-subtle)", border: "1px solid var(--layer-border-strong)", opacity: 0.55, cursor: "not-allowed" }}
-        title="채권자가 아직 업로드하지 않았습니다"
+        title="梨꾧텒?먭? ?꾩쭅 ?낅줈?쒗븯吏 ?딆븯?듬땲??
       >
         <FileDown size={13} />
         {label}
@@ -2712,7 +2694,7 @@ function DeedDownloadBtn({
   )
 }
 
-/** 경매·공매 정보 표시용 텍스트 필드 */
+/** 寃쎈ℓ쨌怨듬ℓ ?뺣낫 ?쒖떆???띿뒪???꾨뱶 */
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
     <div
@@ -2726,13 +2708,13 @@ function InfoField({ label, value }: { label: string; value: string }) {
         {label}
       </div>
       <div style={{ fontSize: 13, color: "var(--fg-strong)", fontWeight: 700 }}>
-        {value || "—"}
+        {value || "??}
       </div>
     </div>
   )
 }
 
-/** 실사 신청·확인·의견 섹션 (L2 이상) */
+/** ?ㅼ궗 ?좎껌쨌?뺤씤쨌?섍껄 ?뱀뀡 (L2 ?댁긽) */
 function DueDiligenceSection({
   anchorId,
   listingId,
@@ -2748,16 +2730,16 @@ function DueDiligenceSection({
 
   function handleSubmit() {
     if (!date || !time) {
-      toast.error("실사 요청일과 시간을 입력해주세요.")
+      toast.error("?ㅼ궗 ?붿껌?쇨낵 ?쒓컙???낅젰?댁＜?몄슂.")
       return
     }
     setSubmitted(true)
-    toast.success(`실사 신청이 접수되었습니다 [${listingId.slice(0, 8)}]. 매도자 확인 후 안내 드립니다.`, { duration: 3000 })
+    toast.success(`?ㅼ궗 ?좎껌???묒닔?섏뿀?듬땲??[${listingId.slice(0, 8)}]. 留ㅻ룄???뺤씤 ???덈궡 ?쒕┰?덈떎.`, { duration: 3000 })
   }
 
   return (
     <SectionCard
-      title="실사 신청"
+      title="?ㅼ궗 ?좎껌"
       icon={<FileText size={14} />}
       tierBadge="L3"
       anchorId={anchorId}
@@ -2773,11 +2755,10 @@ function DueDiligenceSection({
           <CheckCircle2 size={20} color="var(--color-positive)" className="flex-shrink-0" />
           <div>
             <div style={{ fontSize: 13, fontWeight: 800, color: "var(--color-positive)" }}>
-              실사 신청 완료
+              ?ㅼ궗 ?좎껌 ?꾨즺
             </div>
             <div style={{ fontSize: 11, color: "var(--fg-muted)", marginTop: 2 }}>
-              {date} {time} · 매도자 측 확인 대기 중
-            </div>
+              {date} {time} 쨌 留ㅻ룄??痢??뺤씤 ?湲?以?            </div>
           </div>
         </div>
       ) : (
@@ -2787,7 +2768,7 @@ function DueDiligenceSection({
               <label
                 style={{ fontSize: 11, fontWeight: 700, color: C.lt3, display: "block", marginBottom: 5 }}
               >
-                실사 요청일 <span style={{ color: "var(--color-danger)" }}>*</span>
+                ?ㅼ궗 ?붿껌??<span style={{ color: "var(--color-danger)" }}>*</span>
               </label>
               <input
                 type="date"
@@ -2804,7 +2785,7 @@ function DueDiligenceSection({
               <label
                 style={{ fontSize: 11, fontWeight: 700, color: C.lt3, display: "block", marginBottom: 5 }}
               >
-                방문 시간 <span style={{ color: "var(--color-danger)" }}>*</span>
+                諛⑸Ц ?쒓컙 <span style={{ color: "var(--color-danger)" }}>*</span>
               </label>
               <input
                 type="time"
@@ -2823,12 +2804,12 @@ function DueDiligenceSection({
             <label
               style={{ fontSize: 11, fontWeight: 700, color: C.lt3, display: "block", marginBottom: 5 }}
             >
-              확인 및 의견
+              ?뺤씤 諛??섍껄
             </label>
             <textarea
               value={note}
               onChange={e => setNote(e.target.value)}
-              placeholder="실사 목적, 동행 인원, 확인 사항 등을 기재해 주세요."
+              placeholder="?ㅼ궗 紐⑹쟻, ?숉뻾 ?몄썝, ?뺤씤 ?ы빆 ?깆쓣 湲곗옱??二쇱꽭??"
               rows={4}
               style={{
                 width: "100%", padding: "10px 12px", borderRadius: 8, fontSize: 12,
@@ -2855,7 +2836,7 @@ function DueDiligenceSection({
               >
                 {confirmed && <CheckCircle2 size={11} color="#fff" />}
               </div>
-              실사 후 비밀유지 의무를 준수하겠습니다.
+              ?ㅼ궗 ??鍮꾨??좎? ?섎Т瑜?以?섑븯寃좎뒿?덈떎.
             </button>
           </div>
 
@@ -2871,7 +2852,7 @@ function DueDiligenceSection({
               width: "100%",
             }}
           >
-            실사 신청하기
+            ?ㅼ궗 ?좎껌?섍린
           </button>
         </div>
       )}
@@ -2879,11 +2860,10 @@ function DueDiligenceSection({
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   StageHeader — DR-20 · 단계 구분 인라인 헤더
-   기존 SectionCard 사이에 삽입하기 위한 가벼운 wrapper
-   (DealSection 의 헤더 부분만 추출 — 자식 wrapping X)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   StageHeader ??DR-20 쨌 ?④퀎 援щ텇 ?몃씪???ㅻ뜑
+   湲곗〈 SectionCard ?ъ씠???쎌엯?섍린 ?꾪븳 媛踰쇱슫 wrapper
+   (DealSection ???ㅻ뜑 遺遺꾨쭔 異붿텧 ???먯떇 wrapping X)
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 function StageHeader({
   eyebrow,
   title,
@@ -2900,13 +2880,13 @@ function StageHeader({
           style={{
             width: 18,
             height: 1.5,
-            background: "#B8924B",
+            background: "#2251FF",
             display: "inline-block",
           }}
         />
         <span
           style={{
-            color: "#8B6F2F",
+            color: "#1A47CC",
             fontSize: 11,
             fontWeight: 700,
             letterSpacing: "0.10em",
@@ -2943,13 +2923,12 @@ function StageHeader({
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   DealLockedSection — DR-21 · L3+ 섹션 softBlur 래퍼
-   dealFlowMode + tier 미달 시 자식을 흐리게 보여주고 우상단 잠금 뱃지 표시
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   DealLockedSection ??DR-21 쨌 L3+ ?뱀뀡 softBlur ?섑띁
+   dealFlowMode + tier 誘몃떖 ???먯떇???먮━寃?蹂댁뿬二쇨퀬 ?곗긽???좉툑 諭껋? ?쒖떆
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 function DealLockedSection({
   locked,
-  badgeLabel = "LOI 제출 후 열람",
+  badgeLabel = "LOI ?쒖텧 ???대엺",
   children,
 }: {
   locked: boolean
@@ -2987,9 +2966,9 @@ function DealLockedSection({
         }}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-          <rect x="4" y="10" width="16" height="11" rx="2" stroke="#8B6F2F" strokeWidth="2" />
-          <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#8B6F2F" strokeWidth="2" strokeLinecap="round" />
-          <circle cx="12" cy="15.5" r="1.4" fill="#8B6F2F" />
+          <rect x="4" y="10" width="16" height="11" rx="2" stroke="#1A47CC" strokeWidth="2" />
+          <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#1A47CC" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="12" cy="15.5" r="1.4" fill="#1A47CC" />
         </svg>
         <span style={{ color: "#0A1628", fontSize: 11, fontWeight: 700, letterSpacing: "0.02em" }}>
           {badgeLabel}

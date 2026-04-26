@@ -15,32 +15,63 @@
  */
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Palette · 진짜 McKinsey 화이트 페이퍼 (mckinsey.com 매칭)
+   Palette · 공식 McKinsey & Company 칼라 시스템 (2026-04-26 · v2)
+
+   Ref: 사용자 첨부 "맥킨지 칼라참고.pdf" — 공식 McKinsey 코퍼레이트 팔레트.
+   원칙:
+     1) Deep Navy #051C2C 가 모든 임팩트 패널의 기본 배경 (텍스트는 White)
+     2) Electric Blue #2251FF 가 유일한 primary accent (CTA · KPI top accent · 하이라이트)
+     3) Cyan #00A9F4 는 dark 배경 위 강조 ("best practice" 끝점)
+     4) 데이터 비주얼은 Black → DarkGrey → LightGrey → LightBlue → ElectricBlue 단계 사용
+     5) 색을 적게 사용 (semantic 은 회색조에 가깝게 — 채도 죽임)
+
+   ⚠ Backwards-compat: 기존 brass/brassLight/brassDark 키는 유지하되
+   값만 Electric Blue + Cyan 으로 remap. 20+ 페이지가 자동으로 새 팔레트 상속.
    ═══════════════════════════════════════════════════════════════════════════ */
 export const MCK = {
-  // ─ Ink (텍스트/제목/네이비) ──────────────────────────────
-  ink:        "#0A1628",   // primary text
-  inkDeep:    "#051C2C",   // hero deep navy
-  inkMid:     "#1B3A5C",   // body strong
+  // ─ Ink (Deep Navy — McKinsey 코퍼레이트 다크) ────────────
+  ink:        "#051C2C",   // primary text + dark panel base
+  inkDeep:    "#051C2C",   // hero deep navy (공식 McKinsey #051C2C)
+  inkMid:     "#1B3A5C",   // body strong / 서브 톤
+  black:      "#000000",   // pure black (gradient endpoint)
 
   // ─ Paper (배경/표면) ─────────────────────────────────────
   paper:      "#FFFFFF",
   paperTint:  "#FAFBFC",   // subtle off-white
   paperDeep:  "#F4F6F9",   // page tint
 
-  // ─ Brass (악센트 · 골드) ─────────────────────────────────
-  brass:      "#B8924B",   // primary accent
-  brassDark:  "#8B6F2F",   // brass on white (WCAG AA)
-  brassLight: "#E5C77A",   // brass on navy (Header decorations)
+  // ─ Electric Blue (PRIMARY ACCENT · McKinsey 시그니처) ───
+  electric:    "#2251FF",   // McKinsey Electric Blue (공식 primary accent)
+  electricDark:"#1A47CC",   // 흰 배경 WCAG AA 텍스트용
+  electricSoft:"rgba(34, 81, 255, 0.10)",  // hover / active surface
 
-  // ─ Blue (interactive · McKinsey bright blue) ────────────
-  blue:       "#2558A0",   // brand blue (서브 강조)
+  // ─ Cyan (HIGHLIGHT · best-practice end-point) ────────────
+  cyan:        "#00A9F4",   // McKinsey Cyan (dark 배경 위 강조)
+  cyanSoft:    "rgba(0, 169, 244, 0.14)",
+
+  // ─ Greyscale (lagging → best 데이터 그라데이션) ──────────
+  greyDarkest: "#1A1A1A",
+  greyDark:    "#4A4A4A",
+  greyMid:     "#888888",
+  greyLight:   "#C8C8C8",
+  greyLightest:"#E8E8E8",
+  // 그라데이션 시퀀스 (5-step lagging→best)
+  // [black, greyDark, greyLight, electric, cyan]
+
+  // ─ Blue (legacy · 보조 톤) ───────────────────────────────
+  blue:       "#2558A0",   // 서브 강조 (legacy)
   blueLight:  "#4F86C7",
-  blueBright: "#2251FF",   // McKinsey real bright blue
+  blueBright: "#2251FF",   // alias → electric
+
+  // ─ Brass (BACKWARDS-COMPAT 별칭 · Electric Blue 로 remap) ─
+  // ⚠ 새 코드는 electric/cyan 키 사용. 기존 페이지 자동 상속용.
+  brass:      "#2251FF",   // → electric (primary accent)
+  brassDark:  "#1A47CC",   // → electricDark (white-bg)
+  brassLight: "#00A9F4",   // → cyan (dark-bg highlight)
 
   // ─ Borders & dividers ────────────────────────────────────
-  border:        "rgba(10, 22, 40, 0.10)",
-  borderStrong:  "rgba(10, 22, 40, 0.18)",
+  border:        "rgba(5, 28, 44, 0.10)",
+  borderStrong:  "rgba(5, 28, 44, 0.18)",
   borderInverse: "rgba(255, 255, 255, 0.18)",
 
   // ─ Text hierarchy ────────────────────────────────────────
@@ -48,13 +79,36 @@ export const MCK = {
   textMuted:  "#718096",
   textInverse:"#E2E8F0",
 
-  // ─ Semantic (McKinsey 차분 톤) ───────────────────────────
-  positive:   "#0F766E",   // McKinsey 진한 teal (밝은 green 회피)
-  positiveBg: "rgba(15, 118, 110, 0.10)",
-  warning:    "#92400E",   // McKinsey 진한 amber (밝은 yellow 회피)
-  warningBg:  "rgba(146, 64, 14, 0.10)",
-  danger:     "#B91C1C",
-  dangerBg:   "rgba(185, 28, 28, 0.10)",
+  // ─ Semantic (McKinsey 톤 — 채도 죽임 · 색 최소 사용) ────
+  // McKinsey 는 semantic 컬러도 회색조 가깝게. green/red 강조 회피.
+  positive:   "#1F4F46",   // 매우 진한 teal (거의 회녹)
+  positiveBg: "rgba(31, 79, 70, 0.08)",
+  warning:    "#5A4318",   // 매우 진한 amber (거의 회갈)
+  warningBg:  "rgba(90, 67, 24, 0.08)",
+  danger:     "#7A1F1F",   // 매우 진한 brick (거의 회적)
+  dangerBg:   "rgba(122, 31, 31, 0.08)",
+} as const
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   McKinsey 데이터 비주얼 그라데이션 (lagging → best practice)
+   PDF 참조: 5-step monochrome-to-electric 시퀀스
+   ═══════════════════════════════════════════════════════════════════════════ */
+export const MCK_GRADIENT = {
+  laggingToBest: [
+    "#000000",   // 0 · lagging (black)
+    "#4A4A4A",   // 1 · below avg (dark grey)
+    "#C8C8C8",   // 2 · average (light grey)
+    "#00A9F4",   // 3 · above avg (cyan)
+    "#2251FF",   // 4 · best practice (electric blue)
+  ],
+  // 차트용 series order (deep navy 위주, accent 만 cyan/electric)
+  chartSeries: [
+    "#051C2C",   // primary 시리즈 (deep navy)
+    "#2251FF",   // accent (electric)
+    "#00A9F4",   // highlight (cyan)
+    "#888888",   // baseline (mid grey)
+    "#C8C8C8",   // bench (light grey)
+  ],
 } as const
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -106,7 +160,8 @@ export const MCK_GEOMETRY = {
   cardPad: 22,
   sectionGap: 48,
   divider: `1px solid ${MCK.border}`,
-  thinAccent: `2px solid ${MCK.brass}`,
+  thinAccent: `2px solid ${MCK.electric}`,
+  electricAccent: `4px solid ${MCK.electric}`,
 } as const
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -120,7 +175,7 @@ export const mckPaperBackground = (variant: "tint" | "white" | "deep" = "tint"):
 export const mckCard = (opts?: { accent?: string; padding?: number }): React.CSSProperties => ({
   background: MCK.paper,
   border: `1px solid ${MCK.border}`,
-  borderTop: `2px solid ${opts?.accent ?? MCK.brass}`,
+  borderTop: `2px solid ${opts?.accent ?? MCK.electric}`,
   padding: opts?.padding ?? MCK_GEOMETRY.cardPad,
 })
 
@@ -130,7 +185,7 @@ export const mckSerifHeading: React.CSSProperties = {
   ...MCK_TYPE.hero,
 }
 
-export const mckEyebrow = (color: string = MCK.brassDark): React.CSSProperties => ({
+export const mckEyebrow = (color: string = MCK.electricDark): React.CSSProperties => ({
   color,
   ...MCK_TYPE.eyebrow,
 })
