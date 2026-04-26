@@ -1082,8 +1082,8 @@ function Step3({
         </Field>
       </div>
 
-      {/* Phase G7+ · 자발적 경매로 동시 등록 (매각방식에 "경매" 체크 시 자동 노출) */}
-      {state.saleMethods.includes("AUCTION") && (
+      {/* Phase G7+ · 자발적 경매로 동시 등록 (매각방식 무관 · 항상 노출) */}
+      {(
         <div
           style={{
             marginTop: 14, padding: "16px 18px", borderRadius: 12,
