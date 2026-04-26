@@ -576,6 +576,8 @@ export function buildSampleReport(): UnifiedAnalysisReport {
 export interface BuildReportFromInputOptions {
   principal?: number
   unpaidInterest?: number
+  /** Phase G7+ — 연체이자 (수기 입력값) */
+  overdueInterest?: number
   appraisedValue?: number
   currentMarketValue?: number
   specialConditions?: SpecialConditions
@@ -599,7 +601,9 @@ export interface BuildReportFromInputOptions {
 export function buildReportFromInput(overrides: BuildReportFromInputOptions): UnifiedAnalysisReport {
   const principal     = overrides.principal     ?? 0
   const unpaidInterest = overrides.unpaidInterest ?? 0
-  const totalBond     = principal + unpaidInterest
+  // Phase G7+ — 연체이자(수기 입력)을 채권잔액에 합산
+  const overdueInterest = overrides.overdueInterest ?? overrides.claimBreakdown?.overdueInterest ?? 0
+  const totalBond     = principal + unpaidInterest + overdueInterest
   const appraisal     = overrides.appraisedValue ?? (totalBond > 0 ? Math.round(totalBond * 1.4) : 2_000_000_000)
   const marketValue   = overrides.currentMarketValue ?? appraisal
   const specialConditions = overrides.specialConditions ?? EMPTY_SPECIAL_CONDITIONS

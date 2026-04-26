@@ -81,6 +81,7 @@ export function makeInitialState(mode: FormMode): UnifiedFormState {
     claim: {
       principal: 0,
       unpaidInterest: 0,
+      overdueInterest: 0,
       delinquencyStartDate: "",
       normalRate: 0,
       overdueRate: 0,
@@ -205,7 +206,9 @@ export function useUnifiedFormState(mode: FormMode) {
 
 export function useDerivedMetrics(s: UnifiedFormState): DerivedMetrics {
   return useMemo(() => {
-    const claimBalance = s.claim.principal + s.claim.unpaidInterest
+    // Phase G7+ — 채권잔액 = 원금 + 미수이자 + 연체이자(수기 입력)
+    const claimBalance =
+      s.claim.principal + s.claim.unpaidInterest + (s.claim.overdueInterest ?? 0)
 
     const start = s.claim.delinquencyStartDate
       ? new Date(s.claim.delinquencyStartDate)
@@ -217,11 +220,15 @@ export function useDerivedMetrics(s: UnifiedFormState): DerivedMetrics {
         )
       : 0
 
-    const accruedOverdue = Math.round(
+    // 연체이자 자동 추정값 — 수기 입력값(overdueInterest)이 있으면 그 값을, 없으면 자동 계산값을 표시.
+    const accruedAuto = Math.round(
       (s.claim.principal * s.claim.overdueRate * overdueDays) / 365,
     )
+    const accruedOverdue = (s.claim.overdueInterest ?? 0) > 0
+      ? (s.claim.overdueInterest as number)
+      : accruedAuto
 
-    const totalClaim = claimBalance + accruedOverdue
+    const totalClaim = claimBalance
 
     const ltv =
       s.appraisal.appraisalValue > 0

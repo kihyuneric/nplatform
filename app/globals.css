@@ -3851,10 +3851,11 @@ button[role="switch"][data-state="unchecked"] {
 
 /* === 카드 안의 모든 텍스트 → ink 검정 + 회색 단계 === */
 /* 일반 텍스트 (h1~h6, p, span, div, label, a) — navy/dark 배경 inline-style 박스는 제외 */
+/* 또한 .mck-cta-dark (검정 CTA) 자체와 그 후손도 제외 — 흰 글씨 유지 */
 .mck-paper,
-.mck-paper *:not([style*="background-color: #0A1628"]):not([style*="background-color:#0A1628"]):not([style*="background-color: #051C2C"]):not([style*="background-color:#051C2C"]):not([style*="background-color: #1B3A5C"]):not([style*="background-color:#1B3A5C"]):not([style*="background-color: #03050C"]):not([style*="background-color:#03050C"]):not([style*="background:#0A1628"]):not([style*="background: #0A1628"]):not([style*="background:#051C2C"]):not([style*="background: #051C2C"]),
+.mck-paper *:not([style*="background-color: #0A1628"]):not([style*="background-color:#0A1628"]):not([style*="background-color: #051C2C"]):not([style*="background-color:#051C2C"]):not([style*="background-color: #1B3A5C"]):not([style*="background-color:#1B3A5C"]):not([style*="background-color: #03050C"]):not([style*="background-color:#03050C"]):not([style*="background:#0A1628"]):not([style*="background: #0A1628"]):not([style*="background:#051C2C"]):not([style*="background: #051C2C"]):not(.mck-cta-dark):not(.mck-cta-dark *),
 .dark .mck-paper,
-.dark .mck-paper *:not([style*="background-color: #0A1628"]):not([style*="background-color:#0A1628"]):not([style*="background-color: #051C2C"]):not([style*="background-color:#051C2C"]):not([style*="background-color: #1B3A5C"]):not([style*="background-color:#1B3A5C"]):not([style*="background-color: #03050C"]):not([style*="background-color:#03050C"]):not([style*="background:#0A1628"]):not([style*="background: #0A1628"]):not([style*="background:#051C2C"]):not([style*="background: #051C2C"]) {
+.dark .mck-paper *:not([style*="background-color: #0A1628"]):not([style*="background-color:#0A1628"]):not([style*="background-color: #051C2C"]):not([style*="background-color:#051C2C"]):not([style*="background-color: #1B3A5C"]):not([style*="background-color:#1B3A5C"]):not([style*="background-color: #03050C"]):not([style*="background-color:#03050C"]):not([style*="background:#0A1628"]):not([style*="background: #0A1628"]):not([style*="background:#051C2C"]):not([style*="background: #051C2C"]):not(.mck-cta-dark):not(.mck-cta-dark *) {
   color: #0A1628 !important;
 }
 /* navy/ink/dark 배경 inline-styled 박스(레이어 안 도형) → 흰 글씨 강제 */
@@ -3973,21 +3974,23 @@ button[role="switch"][data-state="unchecked"] {
   border-radius: 0 !important;
 }
 
-/* === 카드 안의 link → ink + underline on hover === */
-.mck-paper a:not([class*="primary"]):not([class*="bg-"]),
-.dark .mck-paper a:not([class*="primary"]):not([class*="bg-"]) {
+/* === 카드 안의 link → ink + underline on hover ===
+   .mck-cta-dark (검정 CTA) 와 그 후손은 흰색 유지 (제외) */
+.mck-paper a:not([class*="primary"]):not([class*="bg-"]):not(.mck-cta-dark):not(.mck-cta-dark *),
+.dark .mck-paper a:not([class*="primary"]):not([class*="bg-"]):not(.mck-cta-dark):not(.mck-cta-dark *) {
   color: #0A1628 !important;
   text-decoration: none;
 }
-.mck-paper a:not([class*="primary"]):not([class*="bg-"]):hover,
-.dark .mck-paper a:not([class*="primary"]):not([class*="bg-"]):hover {
+.mck-paper a:not([class*="primary"]):not([class*="bg-"]):not(.mck-cta-dark):not(.mck-cta-dark *):hover,
+.dark .mck-paper a:not([class*="primary"]):not([class*="bg-"]):not(.mck-cta-dark):not(.mck-cta-dark *):hover {
   text-decoration: underline;
   text-decoration-color: var(--color-editorial-gold, #B8924B);
 }
 
-/* === 카드 안의 svg icon → ink === */
-.mck-paper svg:not([class*="text-"]),
-.dark .mck-paper svg:not([class*="text-"]) {
+/* === 카드 안의 svg icon → ink ===
+   .mck-cta-dark 안의 svg 는 흰색 유지 (제외) */
+.mck-paper svg:not([class*="text-"]):not(.mck-cta-dark *),
+.dark .mck-paper svg:not([class*="text-"]):not(.mck-cta-dark *) {
   color: rgba(5, 28, 44, 0.55) !important;
 }
 

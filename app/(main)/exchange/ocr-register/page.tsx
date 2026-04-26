@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Upload, FileText, Loader2, CheckCircle2, AlertCircle, X, Plus,
-  ScanLine, Sparkles, ArrowRight, Trash2, RefreshCw, Save,
+  ScanLine, Sparkles, ArrowRight, Trash2, RefreshCw, Save, Download, FileSpreadsheet,
 } from "lucide-react"
 import DS from "@/lib/design-system"
 import { mapBondDocData, mapAppraisalData, type BondDocExtracted, type AppraisalExtracted } from "@/lib/npl/ocr-mapper"
@@ -337,14 +337,44 @@ export default function OcrRegisterPage() {
             >
               단건 상세 등록 →
             </Link>
-            <span
-              className="text-xs px-3 py-2 rounded-lg border border-dashed border-[var(--color-border-subtle)] text-[var(--color-text-muted)]"
-              title="대량 등록 일시 중단"
+            <a
+              href="/templates/NPLatform_매물등록_템플릿.xlsx"
+              download
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border-2 hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: "#FFFFFF", borderColor: "rgba(10,22,40,0.20)", color: "#0A1628", fontWeight: 700 }}
             >
-              📞 대량 등록 — 02-555-2822 문의
-            </span>
+              <Download className="w-3.5 h-3.5" /> NPLATFORM 엑셀 템플릿
+            </a>
           </div>
         </header>
+
+        {/* 입력 경로 안내 — 채권소개서 자료 + NPLATFORM 엑셀 템플릿 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div
+            className="rounded-xl border-2 p-4"
+            style={{ backgroundColor: "#FFFFFF", borderColor: "rgba(10,22,40,0.15)", color: "#0A1628" }}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <FileText className="w-4 h-4" />
+              <span className="text-[0.8125rem] font-bold">채권소개서 관련 자료 업로드 (아래 슬롯)</span>
+            </div>
+            <p className="text-[0.6875rem]" style={{ color: "rgba(10,22,40,0.70)" }}>
+              PDF·이미지·DOCX·HWP — 슬롯별로 1건씩 OCR 자동 추출 후 폼에 채움.
+            </p>
+          </div>
+          <div
+            className="rounded-xl border-2 p-4"
+            style={{ backgroundColor: "#FFFFFF", borderColor: "rgba(10,22,40,0.15)", color: "#0A1628" }}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <FileSpreadsheet className="w-4 h-4" />
+              <span className="text-[0.8125rem] font-bold">NPLATFORM 엑셀 템플릿 (단건 상세)</span>
+            </div>
+            <p className="text-[0.6875rem]" style={{ color: "rgba(10,22,40,0.70)" }}>
+              템플릿 다운로드 후 채워서 <Link href="/exchange/sell" className="underline font-bold">단건 상세 등록</Link>에서 업로드 (자동 폼 채움).
+            </p>
+          </div>
+        </div>
 
         {/* Slots */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -357,7 +387,6 @@ export default function OcrRegisterPage() {
                 onUpload={(file, docType) => handleUpload(slot.id, file, docType)}
                 onRemove={() => removeSlot(slot.id)}
                 onFormChange={(patch) => updateForm(slot.id, patch)}
-                onDocTypeChange={(docType) => updateSlot(slot.id, { docType })}
               />
             ))}
           </AnimatePresence>
@@ -466,14 +495,12 @@ function SlotCard({
   onUpload,
   onRemove,
   onFormChange,
-  onDocTypeChange,
 }: {
   slot: Slot
   index: number
   onUpload: (file: File, docType: Slot["docType"]) => void
   onRemove: () => void
   onFormChange: (patch: Partial<Slot["form"]>) => void
-  onDocTypeChange: (docType: Slot["docType"]) => void
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragActive, setDragActive] = useState(false)
@@ -514,22 +541,14 @@ function SlotCard({
 
       {/* Body */}
       <div className="p-5 space-y-4">
-        {/* Doc type selector */}
-        <div className="flex gap-2">
-          {(["bond", "appraisal"] as const).map(dt => (
-            <button
-              key={dt}
-              onClick={() => onDocTypeChange(dt)}
-              disabled={slot.status === "uploading"}
-              className={`text-xs px-3 py-1.5 rounded-full transition-all font-semibold ${
-                slot.docType === dt
-                  ? "bg-stone-100/15 text-stone-900 ring-1 ring-violet-500/30"
-                  : "bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-overlay)]/70"
-              }`}
-            >
-              {dt === "bond" ? "채권 소개서" : "감정평가서"}
-            </button>
-          ))}
+        {/* Phase G7+ — 문서 유형 선택 제거. 모든 업로드는 "채권소개서 관련 자료"로 통합 처리.
+           내부적으로 docType="bond" (옴니버스 매퍼)로 고정. */}
+        <div
+          className="text-[11px] font-semibold inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+          style={{ backgroundColor: "rgba(10,22,40,0.06)", color: "#0A1628" }}
+        >
+          <FileText className="w-3 h-3" />
+          채권소개서 관련 자료 (PDF·이미지·Office)
         </div>
 
         {/* Drop zone or file info */}

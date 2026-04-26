@@ -101,6 +101,7 @@ export function rowToFormPatch(row: AnyRow): Partial<UnifiedFormState> {
     claim: {
       principal,
       unpaidInterest: num(row.unpaid_interest),
+      overdueInterest: num(row.overdue_interest),
       delinquencyStartDate: str(row.default_date ?? row.delinquency_start_date),
       normalRate: num(row.normal_rate),
       overdueRate: num(row.overdue_rate),

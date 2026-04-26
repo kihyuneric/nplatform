@@ -546,6 +546,23 @@ export default function BiddingNewPage() {
           />
         </div>
 
+        {/* 채권정보 자동 채움 (선택) — 매물명 직후 노출 (Phase G7+ 위치 변경) */}
+        <OcrSection
+          mode="AUCTION"
+          onApply={(patch) => {
+            if (patch.claim)
+              dispatch({ type: "SET_CLAIM", patch: patch.claim })
+            if (patch.appraisal)
+              dispatch({ type: "SET_APPRAISAL", patch: patch.appraisal })
+            if (patch.address)
+              dispatch({ type: "SET_ADDRESS", patch: patch.address })
+          }}
+          onApplyTemplate={(patch) => {
+            // 엑셀 템플릿 일괄 제출 — 모든 최상위 필드를 한 번에 덮어쓰기
+            dispatch({ type: "PATCH", patch })
+          }}
+        />
+
         <Separator />
 
         {/* 담보·주소 (Unified CollateralSection) */}
@@ -601,22 +618,7 @@ export default function BiddingNewPage() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* OCR — 3모드 공통 인프라 */}
-        <OcrSection
-          mode="AUCTION"
-          onApply={(patch) => {
-            if (patch.claim)
-              dispatch({ type: "SET_CLAIM", patch: patch.claim })
-            if (patch.appraisal)
-              dispatch({ type: "SET_APPRAISAL", patch: patch.appraisal })
-            if (patch.address)
-              dispatch({ type: "SET_ADDRESS", patch: patch.address })
-          }}
-        />
-
-        <Separator />
-
-        {/* 채권정보 (원금/미수이자/연체이자/금리) */}
+        {/* 채권정보 (원금/미수이자/연체이자/금리) — OCR 자동 채움은 Step 1 매물명 직후로 이동 */}
         <ClaimSection
           value={state.claim}
           onChange={(patch) => dispatch({ type: "SET_CLAIM", patch })}

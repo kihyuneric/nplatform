@@ -320,10 +320,11 @@ export default function UnifiedReportPage() {
           </p>
         </div>
 
-        {/* 채권잔액 breakdown — 원금 + 미수이자 */}
+        {/* 채권잔액 breakdown — 원금 + 미수이자 + 연체이자 (Phase G7+ — 4-컬럼) */}
         {(input.claimBreakdown || (input.totalBondAmount > 0)) && (() => {
           const principal    = input.claimBreakdown?.principal    ?? input.totalBondAmount
           const unpaidInt    = input.claimBreakdown?.unpaidInterest ?? 0
+          const overdueInt   = input.claimBreakdown?.overdueInterest ?? 0
           const totalBond    = input.totalBondAmount
           return (
             <div className="mt-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
@@ -331,7 +332,7 @@ export default function UnifiedReportPage() {
                 <Wallet className="w-3.5 h-3.5 text-stone-900" />
                 <span className="text-[0.75rem] font-bold text-[var(--color-text-primary)]">채권잔액 내역</span>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="text-center p-2 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
                   <p className="text-[0.625rem] text-[var(--color-text-tertiary)] mb-1">대출원금</p>
                   <p className="text-[0.9375rem] font-bold tabular-nums text-[var(--color-text-primary)]">
@@ -342,6 +343,12 @@ export default function UnifiedReportPage() {
                   <p className="text-[0.625rem] text-[var(--color-text-tertiary)] mb-1">미수이자</p>
                   <p className="text-[0.9375rem] font-bold tabular-nums text-[var(--color-text-tertiary)]">
                     {unpaidInt > 0 ? `${fmtKRW(unpaidInt)}원` : "—"}
+                  </p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
+                  <p className="text-[0.625rem] text-[var(--color-text-tertiary)] mb-1">연체이자</p>
+                  <p className="text-[0.9375rem] font-bold tabular-nums text-[var(--color-text-tertiary)]">
+                    {overdueInt > 0 ? `${fmtKRW(overdueInt)}원` : "—"}
                   </p>
                 </div>
                 <div className="text-center p-2 rounded-lg bg-stone-100/10 border border-stone-300/30">

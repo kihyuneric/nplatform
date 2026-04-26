@@ -1,16 +1,19 @@
 "use client"
 
 /**
- * OcrSection — 공용 자동 채움 섹션 (Phase G7+ 재구성).
+ * OcrSection — 공용 자동 채움 섹션 (Phase G7+ v2 — 2-탭 단순화).
  *
- * 3 가지 입력 경로 한 곳에서 제공:
- *   1. 엑셀 템플릿 업로드 (`/api/v1/ocr/parse-template`)
- *      · 권장 — NPLatform 매물등록 템플릿 v3 다운로드 후 채워서 업로드
- *      · 사용자 자체 보유 자료(엑셀)도 헤더 일부 일치 시 자동 매핑
- *   2. 채권소개서 OCR (`BondOcrUploader` doc_type=bond)
- *   3. 감정평가서 OCR (`BondOcrUploader` doc_type=appraisal)
+ * 사용자 요구로 채권소개서·감정평가서 별도 탭 제거 후 단일 "관련 자료" 탭으로 통합.
+ *
+ * 2 가지 입력 경로:
+ *   1. NPLatform 엑셀 템플릿 업로드 (`/api/v1/ocr/parse-template`)
+ *      · NPLatform 매물등록 템플릿 다운로드 후 채워서 업로드 (권장)
+ *      · 사용자 자체 보유 엑셀도 헤더 일부 일치 시 자동 매핑
+ *   2. 채권소개서 관련 자료 (`BondOcrUploader` — 채권소개서·감정평가서·등기부 모두 수용)
+ *      · PDF·이미지·DOCX·HWP — OCR 자동 추출 (default doc_type=bond)
  *
  * 추출 결과는 모두 UnifiedFormState patch 로 변환해 onApply 콜백 전달.
+ * 엑셀 파싱 결과는 항목별 미리보기 노출 후 [폼에 적용] 버튼으로 일괄 반영.
  */
 
 import { useRef, useState } from "react"
@@ -23,7 +26,6 @@ import {
   Wand2,
   Download,
   FileText,
-  FileSearch,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -33,23 +35,18 @@ import {
 import type { UnifiedFormState } from "../types"
 
 type FormMode = UnifiedFormState["mode"]
-type SourceTab = "template" | "bond" | "appraisal"
+type SourceTab = "docs" | "template"
 
 const TAB_META: Record<SourceTab, { icon: React.ReactNode; label: string; desc: string }> = {
+  docs: {
+    icon: <FileText className="w-4 h-4" />,
+    label: "채권소개서 관련 자료",
+    desc: "PDF·이미지·DOCX·HWP — 자동 추출",
+  },
   template: {
     icon: <FileSpreadsheet className="w-4 h-4" />,
-    label: "엑셀 템플릿·자료",
-    desc: "NPLatform 템플릿 또는 보유 엑셀 → 폼 자동 채움",
-  },
-  bond: {
-    icon: <FileText className="w-4 h-4" />,
-    label: "채권소개서 OCR",
-    desc: "PDF·이미지에서 채권 정보 자동 추출",
-  },
-  appraisal: {
-    icon: <FileSearch className="w-4 h-4" />,
-    label: "감정평가서 OCR",
-    desc: "감정가·면적·주소 자동 추출",
+    label: "NPLATFORM 엑셀 템플릿",
+    desc: "NPLatform 템플릿 다운로드 → 채워서 업로드",
   },
 }
 
@@ -129,14 +126,15 @@ function templateToFormPatch(fields: TemplateFields): Partial<UnifiedFormState> 
     patch.debtorOwnerSame = !!fields.debtor_owner_same
   }
 
-  // 채권
+  // 채권 (Phase G7+ — overdue_interest 추가)
   if (
-    fields.loan_principal || fields.unpaid_interest ||
+    fields.loan_principal || fields.unpaid_interest || fields.overdue_interest ||
     fields.delinquency_start_date || fields.normal_rate || fields.overdue_rate
   ) {
     patch.claim = {
       principal: num(fields.loan_principal),
       unpaidInterest: num(fields.unpaid_interest),
+      overdueInterest: num(fields.overdue_interest),
       delinquencyStartDate: str(fields.delinquency_start_date),
       normalRate: pctOrFraction(fields.normal_rate),
       overdueRate: pctOrFraction(fields.overdue_rate),
@@ -220,7 +218,7 @@ export function OcrSection({
   /** mode 파라미터는 향후 ANALYSIS 에서 문서유형 기본값 제어용 */
   mode?: FormMode
 }) {
-  const [tab, setTab] = useState<SourceTab>("template")
+  const [tab, setTab] = useState<SourceTab>("docs")
 
   return (
     <div className="rounded-xl border border-dashed border-stone-300/30 bg-stone-100/5 p-4 space-y-4">
@@ -228,17 +226,17 @@ export function OcrSection({
         <Wand2 className="w-4 h-4 mt-0.5" style={{ color: "#0A1628" }} />
         <div className="flex-1 min-w-0">
           <h4 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">
-            자동 채움 (선택)
+            채권정보 자동 채움 (선택)
           </h4>
           <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] mt-0.5">
-            엑셀 템플릿·자체 보유 자료·문서 OCR — 어떤 경로든 한 번에 폼이 채워집니다.
-            추출 결과를 검토한 후 반영합니다.
+            채권소개서 관련 자료(PDF·이미지) 또는 NPLATFORM 엑셀 템플릿을 업로드하면
+            폼이 한 번에 채워집니다. 추출 결과를 미리 확인한 뒤 반영합니다.
           </p>
         </div>
       </div>
 
-      {/* 입력 경로 탭 */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* 입력 경로 탭 — 2-탭 (채권소개서 자료 · 엑셀 템플릿) */}
+      <div className="grid grid-cols-2 gap-2">
         {(Object.keys(TAB_META) as SourceTab[]).map((k) => {
           const active = tab === k
           return (
@@ -285,9 +283,12 @@ export function OcrSection({
         />
       )}
 
-      {(tab === "bond" || tab === "appraisal") && (
+      {tab === "docs" && (
         <BondOcrUploader
-          defaultDocType={tab}
+          defaultDocType="bond"
+          hideDocTypeSelector
+          title="채권소개서 관련 자료 업로드"
+          description="채권소개서·감정평가서·등기부등본 등 PDF·이미지·DOCX·HWP — 추출된 항목을 미리보기 후 폼에 일괄 반영합니다."
           onExtracted={(extracted) => onApply(ocrToFormPatch(extracted))}
         />
       )}
@@ -424,31 +425,64 @@ function TemplateUploader({
         </div>
       )}
 
-      {/* 미리보기 */}
+      {/* 미리보기 — 카테고리별 그룹 + 일괄 제출 (자동 폼 채움) */}
       {preview && (
         <div className="rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-stone-900 shrink-0" />
-              <span className="text-[0.75rem] font-semibold text-[var(--color-text-primary)]">
-                추출된 항목 미리보기
+              <CheckCircle2 className="w-4 h-4 text-stone-900 shrink-0" style={{ color: "#0A1628" }} />
+              <span className="text-[0.8125rem] font-bold" style={{ color: "#0A1628" }}>
+                파싱된 내용 — 항목별 미리보기
               </span>
             </div>
-            <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">
-              필드 {filledCount}건 · 특수조건 {preview.specialConditionsV2.length}건
+            <span className="text-[0.6875rem] text-[var(--color-text-tertiary)] font-semibold">
+              {filledCount}개 항목 · 특수조건 {preview.specialConditionsV2.length}개
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[0.6875rem] text-[var(--color-text-secondary)] max-h-48 overflow-y-auto pr-1">
-            {Object.entries(preview.fields)
-              .filter(([, v]) => v !== "" && v != null)
-              .slice(0, 20)
-              .map(([k, v]) => (
-                <div key={k} className="flex items-center justify-between">
-                  <span className="text-[var(--color-text-tertiary)]">{k}</span>
-                  <span className="font-semibold tabular-nums truncate ml-2">{String(v)}</span>
+          <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+            {groupTemplateFields(preview.fields).map(([groupLabel, rows]) => (
+              <div key={groupLabel}>
+                <div
+                  className="text-[0.625rem] font-bold uppercase tracking-[0.10em] mb-1 pb-0.5 border-b"
+                  style={{ color: "rgba(10,22,40,0.55)", borderColor: "rgba(10,22,40,0.10)" }}
+                >
+                  {groupLabel}
                 </div>
-              ))}
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[0.6875rem]">
+                  {rows.map(([k, v]) => (
+                    <div key={k} className="flex items-center justify-between gap-2">
+                      <span className="text-[var(--color-text-tertiary)] truncate">{k}</span>
+                      <span className="font-semibold tabular-nums truncate text-right" style={{ color: "#0A1628" }}>
+                        {v}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {preview.specialConditionsV2.length > 0 && (
+              <div>
+                <div
+                  className="text-[0.625rem] font-bold uppercase tracking-[0.10em] mb-1 pb-0.5 border-b"
+                  style={{ color: "rgba(10,22,40,0.55)", borderColor: "rgba(10,22,40,0.10)" }}
+                >
+                  특수조건 V2
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {preview.specialConditionsV2.map((k) => (
+                    <span
+                      key={k}
+                      className="inline-flex items-center px-1.5 py-0.5 rounded text-[0.625rem] font-semibold"
+                      style={{ backgroundColor: "rgba(10,22,40,0.06)", color: "#0A1628" }}
+                    >
+                      {k}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {preview.warnings.length > 0 && (
@@ -462,13 +496,81 @@ function TemplateUploader({
           <button
             type="button"
             onClick={apply}
-            className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[0.8125rem] font-bold hover:opacity-90 transition-opacity"
+            className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-[0.8125rem] font-bold hover:opacity-90 transition-opacity"
             style={{ backgroundColor: "#0A1628", color: "#FFFFFF", border: "2px solid #0A1628" }}
           >
-            <CheckCircle2 className="w-4 h-4" style={{ color: "#FFFFFF" }} /> 이 값을 폼에 적용
+            <CheckCircle2 className="w-4 h-4" style={{ color: "#FFFFFF" }} />
+            일괄 제출 — 폼에 자동 채움 ({filledCount + preview.specialConditionsV2.length}건)
           </button>
         </div>
       )}
     </div>
   )
+}
+
+/** 템플릿 파싱 필드를 사람이 읽기 쉬운 카테고리로 그룹화. 빈 값은 자동 제외. */
+function groupTemplateFields(fields: TemplateFields): [string, [string, string][]][] {
+  const FIELD_LABEL: Record<string, string> = {
+    institution_name: "기관명",
+    institution_type: "기관 유형",
+    listing_category: "공시 유형",
+    collateral_type: "담보 유형",
+    sido: "시도",
+    sigungu: "시군구",
+    address: "상세 주소",
+    debtor_type: "채무자 유형",
+    debtor_owner_same: "채무자=소유자",
+    loan_principal: "대출 원금",
+    unpaid_interest: "미수이자",
+    overdue_interest: "연체이자",
+    delinquency_start_date: "연체 시작일",
+    normal_rate: "정상금리",
+    overdue_rate: "연체금리",
+    appraisal_value: "감정가",
+    appraisal_date: "감정 기준일",
+    current_market_value: "현재 시세",
+    market_price_note: "시세 비고",
+    auction_start_date: "경매 개시일",
+    public_sale_start_date: "공매 개시일",
+    senior_total: "선순위 합계",
+    lease_deposit: "임차 보증금",
+    lease_monthly: "임차 월세",
+    tenant_count: "임차인 수",
+    asking_price: "매각희망가",
+    discount_rate: "할인율",
+    sale_method_nplatform: "매각방식 NPLATFORM",
+    sale_method_auction: "매각방식 자발적경매",
+    sale_method_public: "매각방식 공매",
+    sale_method_other: "매각방식 기타",
+    seller_fee_rate: "매도자 수수료율",
+  }
+  const GROUPS: [string, string[]][] = [
+    ["기관·매각주체", ["institution_name", "institution_type", "listing_category"]],
+    ["담보·주소", ["collateral_type", "sido", "sigungu", "address"]],
+    ["채무자", ["debtor_type", "debtor_owner_same"]],
+    ["채권 정보", ["loan_principal", "unpaid_interest", "overdue_interest", "delinquency_start_date", "normal_rate", "overdue_rate"]],
+    ["감정·시세·경매일정", ["appraisal_value", "appraisal_date", "current_market_value", "market_price_note", "auction_start_date", "public_sale_start_date"]],
+    ["권리·임차", ["senior_total", "lease_deposit", "lease_monthly", "tenant_count"]],
+    ["매각가·수수료", ["asking_price", "discount_rate", "sale_method_nplatform", "sale_method_auction", "sale_method_public", "sale_method_other", "seller_fee_rate"]],
+  ]
+  const fmt = (v: unknown): string => {
+    if (typeof v === "number") {
+      if (v < 1) return `${(v * 100).toFixed(2)}%`
+      if (v >= 10000) return v.toLocaleString("ko-KR")
+      return String(v)
+    }
+    if (typeof v === "boolean") return v ? "예" : "아니오"
+    return String(v)
+  }
+  const out: [string, [string, string][]][] = []
+  for (const [groupLabel, keys] of GROUPS) {
+    const rows: [string, string][] = []
+    for (const k of keys) {
+      const v = fields[k]
+      if (v === undefined || v === null || v === "") continue
+      rows.push([FIELD_LABEL[k] ?? k, fmt(v)])
+    }
+    if (rows.length > 0) out.push([groupLabel, rows])
+  }
+  return out
 }

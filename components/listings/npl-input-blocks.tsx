@@ -185,13 +185,15 @@ export function ClaimBreakdownBlock({
   onChange: (v: ClaimBreakdown) => void
   disabled?: boolean
 }) {
-  const totalPast = value.principal + value.unpaidInterest
-
-  // 연체이자 실시간 추정 (연체시작일 ~ 오늘) — 참고용
+  // 연체이자 자동 추정 (참고용) — 수기 입력값이 0일 때 힌트로 노출
   const today = new Date()
   const startDate = value.delinquencyStartDate ? new Date(value.delinquencyStartDate) : today
   const days = Math.max(0, Math.floor((today.getTime() - startDate.getTime()) / 86400000))
-  const accruedOverdue = Math.round((value.principal * value.overdueRate * days) / 365)
+  const accruedAuto = Math.round((value.principal * value.overdueRate * days) / 365)
+
+  // Phase G7+ — 채권잔액 = 원금 + 미수이자 + 연체이자(수기 입력)
+  const overdueInterest = value.overdueInterest ?? 0
+  const claimBalance = value.principal + value.unpaidInterest + overdueInterest
 
   function set<K extends keyof ClaimBreakdown>(k: K, v: ClaimBreakdown[K]) {
     onChange({ ...value, [k]: v })
@@ -202,12 +204,12 @@ export function ClaimBreakdownBlock({
       <BlockHeader
         icon={<Wallet className="w-4 h-4" />}
         title="채권잔액 세부"
-        subtitle="원금 + 미수이자 + 연체이자 → 채권잔액 자동 산출 · OCR 지원"
+        subtitle="원금 + 미수이자 + 연체이자 → 채권잔액 자동 합산 · OCR 지원"
         right={
           <div className="text-right">
-            <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">예상 채권잔액</div>
-            <div className="text-[0.875rem] font-bold text-stone-900 dark:text-stone-900 tabular-nums">
-              {(totalPast + accruedOverdue).toLocaleString("ko-KR")}원
+            <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">채권잔액 합계</div>
+            <div className="text-[0.875rem] font-bold tabular-nums" style={{ color: "#0A1628" }}>
+              {claimBalance.toLocaleString("ko-KR")}원
             </div>
           </div>
         }
@@ -232,6 +234,22 @@ export function ClaimBreakdownBlock({
             disabled={disabled}
           />
         </Field>
+        <Field
+          label="연체이자"
+          hint={
+            overdueInterest === 0 && accruedAuto > 0
+              ? `참고 자동 추정 ${accruedAuto.toLocaleString("ko-KR")}원 — 수기 입력 시 합계 반영`
+              : "수기 입력값이 채권잔액 합계에 반영"
+          }
+        >
+          <NumberInput
+            value={overdueInterest}
+            onChange={(n) => set("overdueInterest", n)}
+            placeholder="0"
+            suffix="원"
+            disabled={disabled}
+          />
+        </Field>
         <Field label="연체시작일" required>
           <DateInput
             value={value.delinquencyStartDate}
@@ -247,7 +265,11 @@ export function ClaimBreakdownBlock({
             placeholder="6.90"
           />
         </Field>
-        <Field label="연체금리 (연이율)" required hint={days > 0 ? `연체 ${days}일 경과 · 추정 연체이자 ${accruedOverdue.toLocaleString("ko-KR")}원` : undefined}>
+        <Field
+          label="연체금리 (연이율)"
+          required
+          hint={days > 0 ? `연체 ${days}일 경과 · 자동 추정 연체이자 ${accruedAuto.toLocaleString("ko-KR")}원` : undefined}
+        >
           <PercentInput
             value={value.overdueRate}
             onChange={(v) => set("overdueRate", v)}
@@ -566,13 +588,13 @@ export function MaxBondAmountBlock({
   disabled?: boolean
 }) {
   const basePrice = askingPrice > 0 ? askingPrice : principal
-  const multiplier = basePrice > 0 && value > 0 ? value / basePrice : 1.30
+  const multiplier = basePrice > 0 && value > 0 ? value / basePrice : 1.20
   const displayMultiplier = Math.min(1.40, Math.max(1.10, multiplier))
   const sliderValue = Math.round(displayMultiplier * 100) // 110~140
 
   const min110 = Math.round(basePrice * 1.10)
   const max140 = Math.round(basePrice * 1.40)
-  const defaultAmount = Math.round(basePrice * 1.30)
+  const defaultAmount = Math.round(basePrice * 1.20)
 
   function handleSlider(pct: number) {
     const next = Math.round(basePrice * (pct / 100))
@@ -588,7 +610,7 @@ export function MaxBondAmountBlock({
       <BlockHeader
         icon={<TrendingUp className="w-4 h-4" />}
         title="수익권 금액 (최고가 매수신고가 110~140% 한도)"
-        subtitle="NPL 매수자 회수 상한 — 슬라이더 또는 금액 직접 입력. 0 입력 시 리포트 기본값 130% 적용"
+        subtitle="NPL 매수자 회수 상한 — 슬라이더 또는 금액 직접 입력. 0 입력 시 리포트 기본값 120% 적용"
         right={
           <div className="text-right">
             <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">현재 비율</div>
@@ -603,7 +625,7 @@ export function MaxBondAmountBlock({
       <div className="mb-4">
         <div className="flex items-center justify-between text-[0.6875rem] text-[var(--color-text-tertiary)] mb-1">
           <span>110% (보수적)</span>
-          <span>125%</span>
+          <span>120% (기본)</span>
           <span>140% (최대)</span>
         </div>
         <input
@@ -625,7 +647,7 @@ export function MaxBondAmountBlock({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="수익권 금액 (직접 입력)" hint="0원 = 리포트 기본값 130% 사용">
+        <Field label="수익권 금액 (직접 입력)" hint="0원 = 리포트 기본값 120% 사용">
           <NumberInput
             value={value}
             onChange={handleAmount}

@@ -110,6 +110,7 @@ export default function NewNplAnalysisPage() {
       const report = buildReportFromInput({
         principal: state.claim.principal,
         unpaidInterest: state.claim.unpaidInterest,
+        overdueInterest: state.claim.overdueInterest,
         appraisedValue: state.appraisal.appraisalValue,
         currentMarketValue: state.appraisal.currentMarketValue || undefined,
         specialConditions: state.specialConditions,

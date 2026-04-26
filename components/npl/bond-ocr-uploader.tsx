@@ -32,6 +32,7 @@ export interface BondOcrExtracted {
   debtorName?: string
   loanPrincipal?: number
   unpaidInterest?: number
+  overdueInterest?: number  // Phase G7+ — 연체이자 수기 입력값
   normalRate?: number   // 0.069
   overdueRate?: number  // 0.16
   delinquencyStartDate?: string
@@ -62,9 +63,16 @@ const DOC_META: Record<DocType, { icon: React.ReactNode; label: string; desc: st
 export function BondOcrUploader({
   onExtracted,
   defaultDocType = "bond",
+  hideDocTypeSelector = false,
+  title = "OCR 자동 추출 (선택)",
+  description = "채권소개서 · 감정평가서를 업로드하면 해당 필드가 자동 채워집니다. 추출 결과를 검토한 후 반영합니다.",
 }: {
   onExtracted: (partial: BondOcrExtracted) => void
   defaultDocType?: DocType
+  /** docType 선택 토글 숨김 — 부모가 단일 모드로 사용 시 */
+  hideDocTypeSelector?: boolean
+  title?: string
+  description?: string
 }) {
   const [docType, setDocType] = useState<DocType>(defaultDocType)
   const [loading, setLoading] = useState(false)
@@ -120,16 +128,16 @@ export function BondOcrUploader({
         <Wand2 className="w-4 h-4 mt-0.5" style={{ color: "#0A1628" }} />
         <div>
           <h4 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">
-            OCR 자동 추출 (선택)
+            {title}
           </h4>
           <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] mt-0.5">
-            채권소개서 · 감정평가서를 업로드하면 해당 필드가 자동 채워집니다.
-            추출 결과를 검토한 후 반영합니다.
+            {description}
           </p>
         </div>
       </div>
 
-      {/* 문서 유형 */}
+      {/* 문서 유형 — hideDocTypeSelector=true 면 감춤 (단일 진입 사용 시) */}
+      {!hideDocTypeSelector && (
       <div className="flex gap-2 mb-3">
         {(Object.keys(DOC_META) as DocType[]).map((k) => {
           const active = docType === k
@@ -160,6 +168,7 @@ export function BondOcrUploader({
           )
         })}
       </div>
+      )}
 
       {/* 파일 입력 */}
       <div className="flex items-center gap-2">
@@ -253,6 +262,7 @@ function mapOcrResponse(json: unknown, docType: DocType): BondOcrExtracted {
     debtorName: str(ex.debtor_name),
     loanPrincipal: num(ex.loan_principal ?? ex.principal),
     unpaidInterest: num(ex.unpaid_interest),
+    overdueInterest: num(ex.overdue_interest),
     normalRate: num(ex.normal_rate ?? ex.interest_rate),
     overdueRate: num(ex.overdue_rate),
     delinquencyStartDate: str(ex.delinquency_start_date),
@@ -274,6 +284,7 @@ function previewRows(p: BondOcrExtracted): [string, string][] {
   const rows: [string, string][] = []
   if (p.loanPrincipal)        rows.push(["대출원금",   p.loanPrincipal.toLocaleString("ko-KR") + "원"])
   if (p.unpaidInterest)       rows.push(["미수이자",   p.unpaidInterest.toLocaleString("ko-KR") + "원"])
+  if (p.overdueInterest)      rows.push(["연체이자",   p.overdueInterest.toLocaleString("ko-KR") + "원"])
   if (p.normalRate)           rows.push(["정상금리",   (p.normalRate * 100).toFixed(2) + "%"])
   if (p.overdueRate)          rows.push(["연체금리",   (p.overdueRate * 100).toFixed(2) + "%"])
   if (p.delinquencyStartDate) rows.push(["연체시작",   p.delinquencyStartDate])

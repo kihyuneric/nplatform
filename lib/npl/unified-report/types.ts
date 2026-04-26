@@ -739,14 +739,20 @@ export interface UnifiedReportSummary {
 
 /**
  * 채권내역 세부 (채권자 입력 · OCR 추출 가능).
- * — 원금 / 미수이자로 채권잔액 자동 산출.
- * — 연체시작일·정상금리·연체금리로 연체이자 실시간 재계산.
+ * — 원금 + 미수이자 + 연체이자 = 채권잔액 (수기 입력값 합산).
+ * — 연체시작일·정상금리·연체금리로 연체이자 실시간 재계산도 가능 (참고용).
  */
 export interface ClaimBreakdown {
   /** 대출원금 (원) */
   principal: number
-  /** 미수이자 — 과거 이미 발생한 이자 합계 (원) */
+  /** 미수이자 — 과거 이미 발생한 정상이자 누적 (원) */
   unpaidInterest: number
+  /**
+   * 연체이자 — 채권자 수기 입력 (원).
+   * 0 입력 시 연체시작일·연체금리·원금으로 자동 계산값을 참고로 표시.
+   * Phase G7+ 신설 (2026-04-26).
+   */
+  overdueInterest: number
   /** 연체시작일 (YYYY-MM-DD) */
   delinquencyStartDate: string
   /** 정상금리 (소수, 예: 0.069 = 연 6.9%) */

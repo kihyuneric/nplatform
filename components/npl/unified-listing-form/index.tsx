@@ -75,6 +75,7 @@ function listingToFormPatch(l: MyListing): Partial<UnifiedFormState> {
     claim: {
       principal: l.loan_principal ?? 0,
       unpaidInterest: l.unpaid_interest ?? 0,
+      overdueInterest: 0,
       delinquencyStartDate: "",
       normalRate: 0,
       overdueRate: 0,
@@ -157,6 +158,14 @@ export function NplUnifiedForm({
         onChange={(patch) => dispatch({ type: "SET_CLAIM", patch })}
       />
 
+      {/* 5-1. 수익권 금액 — 채권잔액 바로 아래 (3모드 공통, Phase G6) */}
+      <MaxBondAmountSection
+        value={state.maximumBondAmount}
+        onChange={(v) => dispatch({ type: "PATCH", patch: { maximumBondAmount: v } })}
+        askingPrice={state.askingPrice}
+        principal={state.claim.principal}
+      />
+
       {/* 6. 감정가·시세·경매일정 — 3모드 공통 */}
       <AppraisalSection
         value={state.appraisal}
@@ -187,14 +196,6 @@ export function NplUnifiedForm({
         onChange={(keys) =>
           dispatch({ type: "SET_SPECIAL_CONDITIONS_V2", keys })
         }
-      />
-
-      {/* 8-1. 수익권 금액 — 3모드 공통 (Phase G6) */}
-      <MaxBondAmountSection
-        value={state.maximumBondAmount}
-        onChange={(v) => dispatch({ type: "PATCH", patch: { maximumBondAmount: v } })}
-        askingPrice={state.askingPrice}
-        principal={state.claim.principal}
       />
 
       {/* 9. 수수료율 — SELL · AUCTION 공통 (ANALYSIS 숨김)
