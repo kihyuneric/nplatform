@@ -8,12 +8,13 @@ import {
   Building2, FileText, Shield, DollarSign,
   TrendingUp, ChevronRight, Info,
 } from "lucide-react"
-import Link from "next/link"
-import DS, { formatKRW } from "@/lib/design-system"
 import { NumberInput } from "@/components/ui/number-input"
 import { krwLong } from "@/lib/format"
-import { staggerItem } from "@/lib/animations"
 import { COLLATERAL_CATEGORIES, REGIONS } from "@/lib/taxonomy"
+import {
+  MckPageShell, MckPageHeader, MckSection, MckCard, MckBadge, MckDemoBanner,
+} from "@/components/mck"
+import { MCK, MCK_FONTS, MCK_TYPE, formatKRW } from "@/lib/mck-design"
 import type {
   ProfitabilityInput,
   DealStructure,
@@ -87,8 +88,6 @@ const defaultAuction: AuctionScenario = {
   bidReductionRate: 20,
 }
 
-// ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────
-
 // ── 샘플 데이터 ────────────────────────────────────────────────────────────
 const SAMPLE_BOND: BondInfo = {
   bondId: "NPL-2026-00042",
@@ -112,6 +111,42 @@ const SAMPLE_COLLATERAL: CollateralInfo = {
   appraisalDate: "2025-11-01",
 }
 
+// ─── Helpers (style snippets) ──────────────────────────────────────────────
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  background: MCK.paper,
+  border: `1px solid ${MCK.border}`,
+  borderRadius: 0,
+  padding: "8px 12px",
+  fontSize: 13,
+  color: MCK.ink,
+  fontFamily: MCK_FONTS.sans,
+  outline: "none",
+}
+
+const labelStyle: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: MCK.textSub,
+  letterSpacing: "0.05em",
+  textTransform: "uppercase" as const,
+  display: "block",
+  marginBottom: 4,
+}
+
+const helperStyle: React.CSSProperties = {
+  fontSize: 11,
+  color: MCK.textMuted,
+  marginTop: 4,
+}
+
+const cardSubTitleStyle: React.CSSProperties = {
+  fontFamily: MCK_FONTS.serif,
+  ...MCK_TYPE.h3,
+  color: MCK.ink,
+  marginBottom: 12,
+}
+
 export default function ProfitabilityPage() {
   const router = useRouter()
   const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null
@@ -120,7 +155,7 @@ export default function ProfitabilityPage() {
   const [isSample, setIsSample] = useState(false)
 
   // 폼 상태
-  const [dealStructure, setDealStructure] = useState<DealStructure>("LOAN_SALE")
+  const [dealStructure] = useState<DealStructure>("LOAN_SALE")
   const [bond, setBond] = useState<BondInfo>(defaultBond)
   const [collateral, setCollateral] = useState<CollateralInfo>(defaultCollateral)
   const [rights, setRights] = useState<RightsAnalysis>(defaultRights)
@@ -159,8 +194,6 @@ export default function ProfitabilityPage() {
   }, [])
 
   // DR-18: 매물 등록 Step6 → 분석 페이지 전체 prefill 브리지
-  // sessionStorage("listing-analysis-prefill") 에 담긴 WizardState 를 읽어
-  // bond / collateral / rights 를 한 번에 채워 "다시 입력" 없이 분석 진입.
   useEffect(() => {
     if (typeof window === "undefined") return
     const raw = sessionStorage.getItem("listing-analysis-prefill")
@@ -174,10 +207,9 @@ export default function ProfitabilityPage() {
         region_city?: string
         region_district?: string
         debtor_type?: "INDIVIDUAL" | "CORPORATE" | ""
-        // UIF-2026Q2: 채권잔액 = loan_principal + unpaid_interest 분리 입력
         loan_principal?: number
         unpaid_interest?: number
-        outstanding_principal?: number   // legacy (구 합산 필드, backward-compat)
+        outstanding_principal?: number
         asking_price?: number
         appraisal_value?: number
         interest_rate?: number
@@ -191,11 +223,9 @@ export default function ProfitabilityPage() {
         build_year?: number
       }
 
-      // region_city 는 short label("서울")로 저장됨 → REGIONS.value 코드로 매핑
       const regionCode =
         REGIONS.find(r => r.short === w.region_city || r.full === w.region_city)?.value ?? ""
 
-      // 담보물 대분류 매핑 (taxonomy 기반)
       const categoryMatch = COLLATERAL_CATEGORIES.find(c =>
         c.items.some(i => i.value === w.collateral)
       )
@@ -209,7 +239,6 @@ export default function ProfitabilityPage() {
       const today = new Date().toISOString().slice(0, 10)
       const districtPart = w.region_district?.trim() ?? ""
 
-      // 채권잔액 derive: 분리 입력(신) 우선 → legacy outstanding_principal 폴백
       const principal =
         (w.loan_principal && w.loan_principal > 0)
           ? w.loan_principal
@@ -225,7 +254,6 @@ export default function ProfitabilityPage() {
         institutionName: w.institution || p.institutionName,
         debtorType,
         originalPrincipal: principal > 0 ? principal : p.originalPrincipal,
-        // 잔존원금은 대출원금(미수이자 제외). 미수이자는 연체금리×기간으로 리포트에서 별도 계산.
         remainingPrincipal: principal > 0 ? principal : p.remainingPrincipal,
         interestRate:
           w.interest_rate && w.interest_rate > 0 ? w.interest_rate : p.interestRate,
@@ -287,7 +315,6 @@ export default function ProfitabilityPage() {
         }
       })
 
-      // 매각희망가 → 론세일 매입률 유추 (asking_price / 채권잔액)
       if (w.asking_price && w.asking_price > 0 && claimBalance > 0) {
         const ratio = Math.round((w.asking_price / claimBalance) * 100)
         if (ratio > 0 && ratio <= 100) {
@@ -295,7 +322,6 @@ export default function ProfitabilityPage() {
         }
       }
 
-      // 중복 소비 방지
       sessionStorage.removeItem("listing-analysis-prefill")
     } catch (err) {
       console.warn("[analysis] listing prefill parse failed:", err)
@@ -316,13 +342,11 @@ export default function ProfitabilityPage() {
   const handleSubmit = async () => {
     setLoading(true)
     try {
-      // originalPrincipal 기본값: remainingPrincipal 복사 (미입력 시)
       const finalBond = {
         ...bond,
         originalPrincipal: bond.originalPrincipal > 0 ? bond.originalPrincipal : bond.remainingPrincipal,
       }
 
-      // 지역 short label 가져오기
       const regionObj = collateral.region
         ? (await import("@/lib/taxonomy")).REGIONS.find(r => r.value === collateral.region)
         : null
@@ -336,7 +360,7 @@ export default function ProfitabilityPage() {
         collateral: {
           ...collateral,
           address: fullAddress,
-          area: collateral.area > 0 ? collateral.area : 84, // 기본 전용면적
+          area: collateral.area > 0 ? collateral.area : 84,
         },
         rights,
         ...(dealStructure === "LOAN_SALE" ? { loanSaleTerms } : { debtAssumptionTerms }),
@@ -357,7 +381,6 @@ export default function ProfitabilityPage() {
       }
 
       const result = await res.json()
-      // DR-18: 매물 → 분석 → 딜룸 흐름 연결을 위해 listingId를 결과에 함께 저장
       const listingId = searchParams?.get("listing") ?? searchParams?.get("listingId") ?? null
       const enriched = listingId ? { ...result, _listingId: listingId } : result
       sessionStorage.setItem("profitability-result", JSON.stringify(enriched))
@@ -370,68 +393,120 @@ export default function ProfitabilityPage() {
     }
   }
 
+  const headerActions = (
+    <button
+      type="button"
+      onClick={loadSample}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "10px 16px",
+        background: MCK.paper,
+        color: MCK.ink,
+        border: `1px solid ${MCK.ink}`,
+        borderTop: `2px solid ${MCK.brass}`,
+        fontSize: 12,
+        fontWeight: 800,
+        letterSpacing: "-0.01em",
+        cursor: "pointer",
+      }}
+    >
+      <FileText size={14} style={{ color: MCK.ink }} />
+      샘플 데이터로 시작
+    </button>
+  )
+
   return (
-    <div className={DS.page.wrapper}>
-      {/* Header */}
-      <div className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] px-6 py-6">
-        <div className={DS.page.container}>
-          <Link href="/analysis" className={`${DS.text.caption} flex items-center gap-1 mb-3 hover:text-[var(--color-brand-mid)] transition-colors`}>
-            <ArrowLeft className="w-3.5 h-3.5" /> 분석 도구
-          </Link>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className={DS.header.title}>NPL 수익성 분석</h1>
-              <p className={DS.header.subtitle}>채권·담보물 데이터를 입력하면 AI가 수익성을 자동 분석합니다</p>
-            </div>
-            <button
-              type="button"
-              onClick={loadSample}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-stone-300/40 bg-stone-100/10 text-stone-900 text-xs font-semibold hover:bg-stone-100/20 transition-colors"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              샘플 데이터로 시작
-            </button>
+    <MckPageShell variant="tint">
+      <MckPageHeader
+        breadcrumbs={[
+          { label: "홈", href: "/" },
+          { label: "분석", href: "/analysis" },
+          { label: "NPL 분석" },
+        ]}
+        eyebrow="NPL ANALYSIS"
+        title="NPL 수익성 분석"
+        subtitle="채권·담보물 데이터를 입력하면 결정론적 모델이 매입 수익률·IRR·회수 시나리오를 자동 산출합니다."
+        actions={headerActions}
+      />
+
+      {isSample && (
+        <div className="max-w-[1280px] mx-auto" style={{ padding: "16px 24px 0" }}>
+          <div
+            style={{
+              background: MCK.paper,
+              border: `1px solid ${MCK.border}`,
+              borderTop: `2px solid ${MCK.brass}`,
+              padding: "10px 14px",
+              fontSize: 12,
+              color: MCK.textSub,
+            }}
+          >
+            <MckBadge tone="brass">샘플</MckBadge>
+            <span style={{ marginLeft: 8 }}>
+              샘플 데이터가 입력되었습니다. 내용을 수정하거나 바로 분석을 실행해보세요.
+            </span>
           </div>
-          {isSample && (
-            <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-stone-100/10 border border-stone-300/20 text-stone-900 text-xs">
-              📋 샘플 데이터가 입력되었습니다. 내용을 수정하거나 바로 분석을 실행해보세요.
-            </div>
-          )}
         </div>
-      </div>
+      )}
 
       {/* Step Indicator */}
-      <div className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] px-6 py-4">
-        <div className={`${DS.page.container} flex items-center gap-1 overflow-x-auto`}>
+      <div className="max-w-[1280px] mx-auto" style={{ padding: "20px 24px 0" }}>
+        <div
+          style={{
+            background: MCK.paper,
+            border: `1px solid ${MCK.border}`,
+            borderTop: `2px solid ${MCK.brass}`,
+            padding: "16px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            overflowX: "auto",
+          }}
+        >
           {STEPS.map((s, idx) => {
             const isActive = s.id === step
             const isDone = s.id < step
-            const Icon = s.icon
             return (
               <div key={s.id} className="flex items-center">
                 <button
                   onClick={() => s.id < step && setStep(s.id)}
                   disabled={s.id > step}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
-                    isActive ? "bg-[var(--color-brand-mid)]/10 text-[var(--color-brand-mid)]"
-                    : isDone ? "text-[var(--color-positive)] cursor-pointer hover:bg-[var(--color-surface-sunken)]"
-                    : "text-[var(--color-text-muted)]"
-                  }`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "6px 10px",
+                    background: isActive ? MCK.ink : "transparent",
+                    color: isActive ? MCK.paper : isDone ? MCK.positive : MCK.textMuted,
+                    border: isActive ? `1px solid ${MCK.ink}` : `1px solid transparent`,
+                    cursor: s.id <= step ? "pointer" : "not-allowed",
+                  }}
                 >
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[0.6875rem] font-bold shrink-0 ${
-                    isActive ? "bg-[var(--color-brand-mid)] text-white"
-                    : isDone ? "bg-[var(--color-positive)] text-white"
-                    : "bg-[var(--color-surface-sunken)] text-[var(--color-text-muted)]"
-                  }`}>
-                    {isDone ? <CheckCircle2 className="w-4 h-4" /> : s.id}
+                  <div
+                    style={{
+                      width: 24,
+                      height: 24,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 11,
+                      fontWeight: 800,
+                      background: isActive ? MCK.brass : isDone ? MCK.positive : MCK.paperDeep,
+                      color: isActive ? MCK.ink : isDone ? MCK.paper : MCK.textMuted,
+                      border: isActive ? "none" : `1px solid ${MCK.border}`,
+                    }}
+                  >
+                    {isDone ? <CheckCircle2 size={14} /> : s.id}
                   </div>
-                  <div className="hidden sm:block">
-                    <div className="text-[0.75rem] font-semibold">{s.label}</div>
-                    <div className="text-[0.625rem] opacity-60">{s.desc}</div>
+                  <div className="hidden sm:block" style={{ textAlign: "left" }}>
+                    <div style={{ fontSize: 12, fontWeight: 700 }}>{s.label}</div>
+                    <div style={{ fontSize: 10, opacity: 0.7 }}>{s.desc}</div>
                   </div>
                 </button>
                 {idx < STEPS.length - 1 && (
-                  <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] mx-1 shrink-0" />
+                  <ChevronRight size={14} style={{ color: MCK.textMuted, margin: "0 4px" }} />
                 )}
               </div>
             )
@@ -440,7 +515,7 @@ export default function ProfitabilityPage() {
       </div>
 
       {/* Form Content */}
-      <div className={`${DS.page.container} ${DS.page.paddingTop} pb-32`}>
+      <div className="max-w-[1280px] mx-auto" style={{ padding: "24px 24px 120px" }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
@@ -450,25 +525,16 @@ export default function ProfitabilityPage() {
             transition={{ duration: 0.2 }}
           >
             {step === 1 && (
-              <Step2BondInfo
-                value={bond}
-                onChange={setBond}
-              />
+              <Step1BondInfo value={bond} onChange={setBond} />
             )}
             {step === 2 && (
-              <Step3Collateral
-                value={collateral}
-                onChange={setCollateral}
-              />
+              <Step2Collateral value={collateral} onChange={setCollateral} />
             )}
             {step === 3 && (
-              <Step4Rights
-                value={rights}
-                onChange={setRights}
-              />
+              <Step3Rights value={rights} onChange={setRights} />
             )}
             {step === 4 && (
-              <Step5DealTerms
+              <Step4DealTerms
                 dealStructure={dealStructure}
                 loanSaleTerms={loanSaleTerms}
                 debtAssumptionTerms={debtAssumptionTerms}
@@ -484,95 +550,153 @@ export default function ProfitabilityPage() {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[var(--color-surface-elevated)] border-t border-[var(--color-border-subtle)] px-6 py-4 z-10">
-        <div className={`${DS.page.container} flex items-center justify-between`}>
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: MCK.paper,
+          borderTop: `2px solid ${MCK.brass}`,
+          padding: "14px 24px",
+          zIndex: 20,
+          boxShadow: "0 -4px 12px rgba(10,22,40,0.06)",
+        }}
+      >
+        <div className="max-w-[1280px] mx-auto flex items-center justify-between">
           <button
             onClick={() => setStep(s => Math.max(1, s - 1))}
             disabled={step === 1}
-            className={`${DS.button.secondary} ${step === 1 ? "opacity-50 cursor-not-allowed" : ""}`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "10px 18px",
+              background: MCK.paper,
+              color: MCK.ink,
+              border: `1px solid ${MCK.ink}`,
+              fontSize: 13,
+              fontWeight: 700,
+              opacity: step === 1 ? 0.4 : 1,
+              cursor: step === 1 ? "not-allowed" : "pointer",
+            }}
           >
-            <ArrowLeft className="w-4 h-4" /> 이전
+            <ArrowLeft size={14} /> 이전
           </button>
 
-          <span className={DS.text.caption}>{step} / {STEPS.length}</span>
+          <span style={{ fontSize: 12, color: MCK.textMuted, fontWeight: 600 }}>
+            {step} / {STEPS.length}
+          </span>
 
           {step < STEPS.length ? (
             <button
               onClick={() => setStep(s => Math.min(STEPS.length, s + 1))}
               disabled={!canNext()}
-              className={`${DS.button.primary} ${!canNext() ? "opacity-50 cursor-not-allowed" : ""}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "10px 22px",
+                background: MCK.ink,
+                color: MCK.paper,
+                border: "none",
+                borderTop: `2px solid ${MCK.brass}`,
+                fontSize: 13,
+                fontWeight: 800,
+                opacity: !canNext() ? 0.4 : 1,
+                cursor: !canNext() ? "not-allowed" : "pointer",
+              }}
             >
-              다음 <ArrowRight className="w-4 h-4" />
+              다음 <ArrowRight size={14} />
             </button>
           ) : (
             <button
               onClick={handleSubmit}
               disabled={loading || !canNext()}
-              className={`${DS.button.primary} ${loading || !canNext() ? "opacity-50 cursor-not-allowed" : ""}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "10px 22px",
+                background: MCK.ink,
+                color: MCK.paper,
+                border: "none",
+                borderTop: `2px solid ${MCK.brass}`,
+                fontSize: 13,
+                fontWeight: 800,
+                opacity: loading || !canNext() ? 0.4 : 1,
+                cursor: loading || !canNext() ? "not-allowed" : "pointer",
+              }}
             >
               {loading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> 분석 중...</>
+                <><Loader2 size={14} className="animate-spin" /> 분석 중...</>
               ) : (
-                <><TrendingUp className="w-4 h-4" /> 분석 실행</>
+                <><TrendingUp size={14} /> 분석 실행</>
               )}
             </button>
           )}
         </div>
       </div>
-    </div>
+    </MckPageShell>
   )
 }
 
 // ─── Step 1: 채권 기본정보 ─────────────────────────────────────────────────
 
-function Step2BondInfo({ value, onChange }: {
+function Step1BondInfo({ value, onChange }: {
   value: BondInfo
   onChange: (v: BondInfo) => void
 }) {
   const update = (patch: Partial<BondInfo>) => onChange({ ...value, ...patch })
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h2 className={DS.text.sectionTitle}>채권 기본정보</h2>
-        <p className={DS.text.body}>채권기관, 채무자, 대출 조건을 입력하세요.</p>
-      </div>
-
-      {/* 채권 번호 — 직접 입력 가능 */}
-      <div className="px-4 py-3 rounded-xl bg-stone-100/10 border border-stone-300/20 space-y-2">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-stone-100 shrink-0" />
-          <p className="text-[0.6875rem] text-stone-900 font-bold uppercase tracking-wide">채권 번호</p>
-          <span className="text-[0.6875rem] text-stone-900/60">(선택 — 직접 입력하거나 자동생성)</span>
+    <div className="max-w-3xl mx-auto" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <header>
+        <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
+          <span style={{ width: 18, height: 1.5, background: MCK.brass }} />
+          <span style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark }}>STEP 01</span>
         </div>
+        <h2 style={{ ...MCK_TYPE.h2, fontFamily: MCK_FONTS.serif, color: MCK.ink, marginBottom: 6 }}>
+          채권 기본정보
+        </h2>
+        <p style={{ ...MCK_TYPE.body, color: MCK.textSub }}>
+          채권기관, 채무자, 대출 조건을 입력하세요.
+        </p>
+      </header>
+
+      {/* 채권 번호 */}
+      <MckCard eyebrow="채권 번호">
+        <p style={{ fontSize: 11, color: MCK.textMuted, marginBottom: 6 }}>
+          선택 — 직접 입력하거나 자동 생성됩니다.
+        </p>
         <input
-          className="w-full bg-transparent border border-stone-300/30 rounded-lg px-3 py-1.5 text-sm font-mono text-stone-900 placeholder:text-stone-900/40 focus:outline-none focus:border-stone-300"
+          style={{ ...inputStyle, fontFamily: MCK_FONTS.mono }}
           value={value.bondId || ""}
           onChange={e => update({ bondId: e.target.value || undefined })}
-          placeholder={`NPL-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 99999)).padStart(5, '0')}`}
+          placeholder={`NPL-${new Date().getFullYear()}-00000`}
         />
-      </div>
+      </MckCard>
 
-      <div className={`${DS.card.base} p-6 space-y-4`}>
-        <h3 className={DS.text.cardTitle}>채권기관 · 채무자</h3>
+      <MckCard>
+        <h3 style={cardSubTitleStyle}>채권기관 · 채무자</h3>
         <div className="grid grid-cols-2 gap-4">
           <Field label="채권기관명" required>
-            <input className={DS.input.base} value={value.institutionName} onChange={e => update({ institutionName: e.target.value })} placeholder="예: 금천신협" />
+            <input style={inputStyle} value={value.institutionName} onChange={e => update({ institutionName: e.target.value })} placeholder="예: 금천신협" />
           </Field>
           <Field label="채무자명" required>
-            <input className={DS.input.base} value={value.debtorName} onChange={e => update({ debtorName: e.target.value })} placeholder="예: 홍길동" />
+            <input style={inputStyle} value={value.debtorName} onChange={e => update({ debtorName: e.target.value })} placeholder="예: 홍길동" />
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4" style={{ marginTop: 12 }}>
           <Field label="채무자 유형">
-            <select className={DS.input.base} value={value.debtorType} onChange={e => update({ debtorType: e.target.value as DebtorType })}>
+            <select style={inputStyle} value={value.debtorType} onChange={e => update({ debtorType: e.target.value as DebtorType })}>
               <option value="INDIVIDUAL">개인</option>
               <option value="CORPORATE">법인</option>
               <option value="SOLE_PROPRIETOR">개인사업자</option>
             </select>
           </Field>
           <Field label="대출종류">
-            <select className={DS.input.base} value={value.loanType} onChange={e => update({ loanType: e.target.value })}>
+            <select style={inputStyle} value={value.loanType} onChange={e => update({ loanType: e.target.value })}>
               <option>담보대출</option>
               <option>신용대출</option>
               <option>전세자금대출</option>
@@ -580,83 +704,45 @@ function Step2BondInfo({ value, onChange }: {
             </select>
           </Field>
         </div>
-      </div>
+      </MckCard>
 
-      {/* 경매 정보 */}
-      <div className={`${DS.card.base} p-6 space-y-4`}>
-        <h3 className={DS.text.cardTitle}>경매 정보</h3>
+      <MckCard>
+        <h3 style={cardSubTitleStyle}>경매 정보</h3>
         <div className="grid grid-cols-2 gap-4">
           <Field label="사건번호">
-            <input
-              className={DS.input.base}
-              value={value.auctionCaseNo || ""}
-              onChange={e => update({ auctionCaseNo: e.target.value })}
-              placeholder="예: 2025타경12345"
-            />
-            <p className={DS.input.helper}>법원경매 사건번호 (법정형식)</p>
+            <input style={inputStyle} value={value.auctionCaseNo || ""} onChange={e => update({ auctionCaseNo: e.target.value })} placeholder="예: 2025타경12345" />
+            <p style={helperStyle}>법원경매 사건번호 (법정형식)</p>
           </Field>
           <Field label="관할법원">
-            <input
-              className={DS.input.base}
-              value={value.auctionCourt || ""}
-              onChange={e => update({ auctionCourt: e.target.value })}
-              placeholder="예: 서울중앙지방법원"
-            />
+            <input style={inputStyle} value={value.auctionCourt || ""} onChange={e => update({ auctionCourt: e.target.value })} placeholder="예: 서울중앙지방법원" />
           </Field>
-          <Field label="경매접수일(경매개시일)">
-            <input
-              className={DS.input.base}
-              type="date"
-              value={value.auctionFiledDate || ""}
-              onChange={e => update({ auctionFiledDate: e.target.value })}
-            />
+          <Field label="경매접수일(개시일)">
+            <input style={inputStyle} type="date" value={value.auctionFiledDate || ""} onChange={e => update({ auctionFiledDate: e.target.value })} />
           </Field>
           <Field label="예상 경매 시작일">
-            <input
-              className={DS.input.base}
-              type="date"
-              value={value.auctionEstimatedStart || ""}
-              onChange={e => update({ auctionEstimatedStart: e.target.value })}
-            />
+            <input style={inputStyle} type="date" value={value.auctionEstimatedStart || ""} onChange={e => update({ auctionEstimatedStart: e.target.value })} />
           </Field>
         </div>
-      </div>
+      </MckCard>
 
-      {/* 공매 정보 */}
-      <div className={`${DS.card.base} p-6 space-y-4`}>
-        <h3 className={DS.text.cardTitle}>공매 정보</h3>
+      <MckCard>
+        <h3 style={cardSubTitleStyle}>공매 정보</h3>
         <div className="grid grid-cols-2 gap-4">
           <Field label="관리번호">
-            <input
-              className={DS.input.base}
-              value={value.publicSaleNo || ""}
-              onChange={e => update({ publicSaleNo: e.target.value })}
-              placeholder="예: 2025-00123-001"
-            />
-            <p className={DS.input.helper}>온비드·KAMCO 공매 관리번호</p>
+            <input style={inputStyle} value={value.publicSaleNo || ""} onChange={e => update({ publicSaleNo: e.target.value })} placeholder="예: 2025-00123-001" />
+            <p style={helperStyle}>온비드·KAMCO 공매 관리번호</p>
           </Field>
           <Field label="공매신청일">
-            <input
-              className={DS.input.base}
-              type="date"
-              value={value.publicSaleFiledDate || ""}
-              onChange={e => update({ publicSaleFiledDate: e.target.value })}
-            />
+            <input style={inputStyle} type="date" value={value.publicSaleFiledDate || ""} onChange={e => update({ publicSaleFiledDate: e.target.value })} />
           </Field>
           <Field label="예상 공매 시작일">
-            <input
-              className={DS.input.base}
-              type="date"
-              value={value.publicSaleEstimatedStart || ""}
-              onChange={e => update({ publicSaleEstimatedStart: e.target.value })}
-            />
+            <input style={inputStyle} type="date" value={value.publicSaleEstimatedStart || ""} onChange={e => update({ publicSaleEstimatedStart: e.target.value })} />
           </Field>
         </div>
-      </div>
+      </MckCard>
 
-      {/* 채권 금액 */}
-      <div className={`${DS.card.base} p-6 space-y-4`}>
-        <h3 className={DS.text.cardTitle}>채권 금액</h3>
+      <MckCard>
+        <h3 style={cardSubTitleStyle}>채권 금액</h3>
         <div className="grid grid-cols-2 gap-4">
           <Field label="대출원금" required>
             <CurrencyInput value={value.originalPrincipal} onChange={v => update({ originalPrincipal: v })} placeholder="원 단위 입력" />
@@ -665,31 +751,30 @@ function Step2BondInfo({ value, onChange }: {
             <CurrencyInput value={value.remainingPrincipal} onChange={v => update({ remainingPrincipal: v })} placeholder="원 단위 입력" />
           </Field>
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4" style={{ marginTop: 12 }}>
           <Field label="약정금리 (%)">
-            <input className={DS.input.base} type="number" step="0.1" value={value.interestRate} onChange={e => update({ interestRate: Number(e.target.value) })} />
+            <input style={inputStyle} type="number" step="0.1" value={value.interestRate} onChange={e => update({ interestRate: Number(e.target.value) })} />
           </Field>
           <Field label="연체금리 (%)" required>
-            <input className={DS.input.base} type="number" step="0.1" value={value.penaltyRate} onChange={e => update({ penaltyRate: Number(e.target.value) })} />
+            <input style={inputStyle} type="number" step="0.1" value={value.penaltyRate} onChange={e => update({ penaltyRate: Number(e.target.value) })} />
           </Field>
           <Field label="연체시작일" required>
-            <input className={DS.input.base} type="date" value={value.defaultStartDate} onChange={e => update({ defaultStartDate: e.target.value })} />
+            <input style={inputStyle} type="date" value={value.defaultStartDate} onChange={e => update({ defaultStartDate: e.target.value })} />
           </Field>
         </div>
-      </div>
+      </MckCard>
     </div>
   )
 }
 
-// ─── Step 3: 담보물 정보 ───────────────────────────────────────────────────
+// ─── Step 2: 담보물 정보 ───────────────────────────────────────────────────
 
-function Step3Collateral({ value, onChange }: {
+function Step2Collateral({ value, onChange }: {
   value: CollateralInfo
   onChange: (v: CollateralInfo) => void
 }) {
   const update = (patch: Partial<CollateralInfo>) => onChange({ ...value, ...patch })
 
-  // 선택된 대분류의 세부 유형 목록
   const currentMajor = COLLATERAL_CATEGORIES.find(c => c.value === (value.propertyTypeMajor || "RESIDENTIAL"))
   const detailItems = currentMajor?.items ?? COLLATERAL_CATEGORIES[0].items
 
@@ -700,22 +785,25 @@ function Step3Collateral({ value, onChange }: {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h2 className={DS.text.sectionTitle}>담보물 정보</h2>
-        <p className={DS.text.body}>담보물의 소재지, 유형, 감정가를 입력하세요.</p>
-      </div>
+    <div className="max-w-3xl mx-auto" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <header>
+        <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
+          <span style={{ width: 18, height: 1.5, background: MCK.brass }} />
+          <span style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark }}>STEP 02</span>
+        </div>
+        <h2 style={{ ...MCK_TYPE.h2, fontFamily: MCK_FONTS.serif, color: MCK.ink, marginBottom: 6 }}>
+          담보물 정보
+        </h2>
+        <p style={{ ...MCK_TYPE.body, color: MCK.textSub }}>
+          담보물의 소재지, 유형, 감정가를 입력하세요.
+        </p>
+      </header>
 
-      {/* 소재지 */}
-      <div className={`${DS.card.base} p-6 space-y-4`}>
-        <h3 className={DS.text.cardTitle}>소재지</h3>
+      <MckCard>
+        <h3 style={cardSubTitleStyle}>소재지</h3>
         <div className="grid grid-cols-2 gap-4">
           <Field label="시/도" required>
-            <select
-              className={DS.input.base}
-              value={value.region || ""}
-              onChange={e => update({ region: e.target.value })}
-            >
+            <select style={inputStyle} value={value.region || ""} onChange={e => update({ region: e.target.value })}>
               <option value="">-- 선택 --</option>
               {REGIONS.map(r => (
                 <option key={r.value} value={r.value}>{r.full}</option>
@@ -723,86 +811,84 @@ function Step3Collateral({ value, onChange }: {
             </select>
           </Field>
           <Field label="상세 주소" required>
-            <input
-              className={DS.input.base}
-              value={value.address}
-              onChange={e => update({ address: e.target.value })}
-              placeholder="예: 강남구 역삼동 123-45"
-            />
+            <input style={inputStyle} value={value.address} onChange={e => update({ address: e.target.value })} placeholder="예: 강남구 역삼동 123-45" />
           </Field>
         </div>
-      </div>
+      </MckCard>
 
-      {/* 담보물 유형 — 2단계 선택 */}
-      <div className={`${DS.card.base} p-6 space-y-4`}>
-        <h3 className={DS.text.cardTitle}>담보물 유형</h3>
+      <MckCard>
+        <h3 style={cardSubTitleStyle}>담보물 유형</h3>
 
-        {/* 대분류 버튼 탭 */}
         <div>
-          <p className={DS.text.label + " mb-2"}>유형 대분류</p>
-          <div className="flex flex-wrap gap-2">
-            {COLLATERAL_CATEGORIES.map(cat => (
-              <button
-                key={cat.value}
-                type="button"
-                onClick={() => handleMajorChange(cat.value)}
-                className={`px-3 py-1.5 rounded-lg text-[0.8125rem] font-semibold border transition-all ${
-                  (value.propertyTypeMajor || "RESIDENTIAL") === cat.value
-                    ? "bg-[var(--color-brand-mid)]/10 border-[var(--color-brand-mid)] text-[var(--color-brand-mid)]"
-                    : "border-[var(--color-border-default)] text-[var(--color-text-tertiary)] hover:border-[var(--color-border-strong)] bg-[var(--color-surface-base)]"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+          <label style={labelStyle}>유형 대분류</label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {COLLATERAL_CATEGORIES.map(cat => {
+              const isActive = (value.propertyTypeMajor || "RESIDENTIAL") === cat.value
+              return (
+                <button
+                  key={cat.value}
+                  type="button"
+                  onClick={() => handleMajorChange(cat.value)}
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    border: `1px solid ${isActive ? MCK.ink : MCK.border}`,
+                    background: isActive ? MCK.ink : MCK.paper,
+                    color: isActive ? MCK.paper : MCK.textSub,
+                    cursor: "pointer",
+                  }}
+                >
+                  {cat.label}
+                </button>
+              )
+            })}
           </div>
         </div>
 
-        {/* 세부 유형 */}
-        <Field label="세부 유형" required>
-          <select
-            className={DS.input.base}
-            value={value.propertyType}
-            onChange={e => update({ propertyType: e.target.value as CollateralType })}
-          >
-            {detailItems.map(item => (
-              <option key={item.value} value={item.value}>{item.label}</option>
-            ))}
-          </select>
-        </Field>
+        <div style={{ marginTop: 12 }}>
+          <Field label="세부 유형" required>
+            <select style={inputStyle} value={value.propertyType} onChange={e => update({ propertyType: e.target.value as CollateralType })}>
+              {detailItems.map(item => (
+                <option key={item.value} value={item.value}>{item.label}</option>
+              ))}
+            </select>
+          </Field>
+        </div>
 
-        <Field label="전용면적 (㎡)">
-          <input className={DS.input.base} type="number" step="0.01" value={value.area || ""} onChange={e => update({ area: Number(e.target.value) })} placeholder="미입력 시 84㎡ 기본 적용" />
-        </Field>
-      </div>
+        <div style={{ marginTop: 12 }}>
+          <Field label="전용면적 (㎡)">
+            <input style={inputStyle} type="number" step="0.01" value={value.area || ""} onChange={e => update({ area: Number(e.target.value) })} placeholder="미입력 시 84㎡ 기본 적용" />
+          </Field>
+        </div>
+      </MckCard>
 
-      {/* 감정 정보 */}
-      <div className={`${DS.card.base} p-6 space-y-4`}>
-        <h3 className={DS.text.cardTitle}>감정 정보</h3>
+      <MckCard>
+        <h3 style={cardSubTitleStyle}>감정 정보</h3>
         <div className="grid grid-cols-2 gap-4">
           <Field label="감정가" required>
             <CurrencyInput value={value.appraisalValue} onChange={v => update({ appraisalValue: v })} placeholder="원 단위 입력" />
           </Field>
           <Field label="감정일" required>
-            <input className={DS.input.base} type="date" value={value.appraisalDate} onChange={e => update({ appraisalDate: e.target.value })} />
+            <input style={inputStyle} type="date" value={value.appraisalDate} onChange={e => update({ appraisalDate: e.target.value })} />
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4" style={{ marginTop: 12 }}>
           <Field label="현재시세 (선택)">
             <CurrencyInput value={value.currentMarketValue ?? 0} onChange={v => update({ currentMarketValue: v || undefined })} placeholder="원 단위 (미입력 가능)" />
           </Field>
           <Field label="건축년도">
-            <input className={DS.input.base} type="number" value={value.buildYear || ""} onChange={e => update({ buildYear: Number(e.target.value) || undefined })} placeholder="예: 2010" />
+            <input style={inputStyle} type="number" value={value.buildYear || ""} onChange={e => update({ buildYear: Number(e.target.value) || undefined })} placeholder="예: 2010" />
           </Field>
         </div>
-      </div>
+      </MckCard>
     </div>
   )
 }
 
-// ─── Step 4: 권리관계 ──────────────────────────────────────────────────────
+// ─── Step 3: 권리관계 ──────────────────────────────────────────────────────
 
-function Step4Rights({ value, onChange }: {
+function Step3Rights({ value, onChange }: {
   value: RightsAnalysis
   onChange: (v: RightsAnalysis) => void
 }) {
@@ -853,42 +939,58 @@ function Step4Rights({ value, onChange }: {
     update({ tenants: updated })
   }
 
-  return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h2 className={DS.text.sectionTitle}>권리관계</h2>
-        <p className={DS.text.body}>근저당 순위, 선순위 채권, 임차인 정보를 입력하세요.</p>
-      </div>
+  const addBtnStyle: React.CSSProperties = {
+    padding: "6px 10px",
+    fontSize: 11,
+    fontWeight: 700,
+    color: MCK.ink,
+    background: MCK.paper,
+    border: `1px solid ${MCK.ink}`,
+    cursor: "pointer",
+  }
 
-      {/* 근저당 기본 */}
-      <div className={`${DS.card.base} p-6 space-y-4`}>
-        <h3 className={DS.text.cardTitle}>근저당 정보</h3>
+  return (
+    <div className="max-w-3xl mx-auto" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <header>
+        <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
+          <span style={{ width: 18, height: 1.5, background: MCK.brass }} />
+          <span style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark }}>STEP 03</span>
+        </div>
+        <h2 style={{ ...MCK_TYPE.h2, fontFamily: MCK_FONTS.serif, color: MCK.ink, marginBottom: 6 }}>
+          권리관계
+        </h2>
+        <p style={{ ...MCK_TYPE.body, color: MCK.textSub }}>
+          근저당 순위, 선순위 채권, 임차인 정보를 입력하세요.
+        </p>
+      </header>
+
+      <MckCard>
+        <h3 style={cardSubTitleStyle}>근저당 정보</h3>
         <div className="grid grid-cols-2 gap-4">
           <Field label="근저당 순위" required>
-            <input className={DS.input.base} type="number" min={1} max={10} value={value.mortgageRank} onChange={e => update({ mortgageRank: Number(e.target.value) })} />
+            <input style={inputStyle} type="number" min={1} max={10} value={value.mortgageRank} onChange={e => update({ mortgageRank: Number(e.target.value) })} />
           </Field>
           <Field label="근저당 설정액" required>
             <CurrencyInput value={value.mortgageAmount} onChange={v => update({ mortgageAmount: v })} placeholder="원 단위" />
           </Field>
         </div>
-      </div>
+      </MckCard>
 
-      {/* 선순위 채권 */}
-      <div className={`${DS.card.base} p-6 space-y-4`}>
-        <div className="flex items-center justify-between">
-          <h3 className={DS.text.cardTitle}>선순위 채권</h3>
-          <button onClick={addSenior} className={DS.button.ghost}>+ 추가</button>
+      <MckCard>
+        <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+          <h3 style={{ ...cardSubTitleStyle, marginBottom: 0 }}>선순위 채권</h3>
+          <button onClick={addSenior} style={addBtnStyle}>+ 추가</button>
         </div>
         {value.seniorClaims.length === 0 && (
-          <p className={DS.text.captionLight}>선순위 채권이 없습니다.</p>
+          <p style={{ fontSize: 12, color: MCK.textMuted }}>선순위 채권이 없습니다.</p>
         )}
         {value.seniorClaims.map((claim, idx) => (
-          <div key={idx} className="grid grid-cols-4 gap-3 items-end border-b border-[var(--color-border-subtle)] pb-3">
+          <div key={idx} className="grid grid-cols-4 gap-3 items-end" style={{ borderBottom: `1px solid ${MCK.border}`, paddingBottom: 12, marginBottom: 12 }}>
             <Field label="채권자">
-              <input className={DS.input.base} value={claim.holder} onChange={e => updateSenior(idx, { holder: e.target.value })} placeholder="예: KB국민은행" />
+              <input style={inputStyle} value={claim.holder} onChange={e => updateSenior(idx, { holder: e.target.value })} placeholder="예: KB국민은행" />
             </Field>
             <Field label="유형">
-              <select className={DS.input.base} value={claim.type} onChange={e => updateSenior(idx, { type: e.target.value })}>
+              <select style={inputStyle} value={claim.type} onChange={e => updateSenior(idx, { type: e.target.value })}>
                 <option>근저당</option>
                 <option>전세권</option>
                 <option>가압류</option>
@@ -898,45 +1000,48 @@ function Step4Rights({ value, onChange }: {
             <Field label="금액">
               <NumberInput value={claim.amount || null} onChange={v => updateSenior(idx, { amount: v ?? 0 })} suffix="원" placeholder="원 단위 입력" />
             </Field>
-            <button onClick={() => removeSenior(idx)} className="text-[var(--color-danger)] text-[0.75rem] font-medium pb-1">삭제</button>
+            <button onClick={() => removeSenior(idx)} style={{ color: MCK.danger, fontSize: 12, fontWeight: 700, padding: "8px 0", background: "transparent", border: "none", cursor: "pointer" }}>
+              삭제
+            </button>
           </div>
         ))}
-      </div>
+      </MckCard>
 
-      {/* 임차인 */}
-      <div className={`${DS.card.base} p-6 space-y-4`}>
-        <div className="flex items-center justify-between">
-          <h3 className={DS.text.cardTitle}>임차인 정보</h3>
-          <button onClick={addTenant} className={DS.button.ghost}>+ 추가</button>
+      <MckCard>
+        <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+          <h3 style={{ ...cardSubTitleStyle, marginBottom: 0 }}>임차인 정보</h3>
+          <button onClick={addTenant} style={addBtnStyle}>+ 추가</button>
         </div>
         {value.tenants.length === 0 && (
-          <p className={DS.text.captionLight}>등록된 임차인이 없습니다.</p>
+          <p style={{ fontSize: 12, color: MCK.textMuted }}>등록된 임차인이 없습니다.</p>
         )}
         {value.tenants.map((tenant, idx) => (
-          <div key={idx} className="grid grid-cols-4 gap-3 items-end border-b border-[var(--color-border-subtle)] pb-3">
+          <div key={idx} className="grid grid-cols-4 gap-3 items-end" style={{ borderBottom: `1px solid ${MCK.border}`, paddingBottom: 12, marginBottom: 12 }}>
             <Field label="임차인명">
-              <input className={DS.input.base} value={tenant.name} onChange={e => updateTenant(idx, { name: e.target.value })} />
+              <input style={inputStyle} value={tenant.name} onChange={e => updateTenant(idx, { name: e.target.value })} />
             </Field>
             <Field label="보증금">
               <NumberInput value={tenant.deposit || null} onChange={v => updateTenant(idx, { deposit: v ?? 0 })} suffix="원" placeholder="원 단위 입력" />
             </Field>
             <Field label="대항력">
-              <select className={DS.input.base} value={tenant.priority} onChange={e => updateTenant(idx, { priority: e.target.value as "SENIOR" | "JUNIOR" })}>
+              <select style={inputStyle} value={tenant.priority} onChange={e => updateTenant(idx, { priority: e.target.value as "SENIOR" | "JUNIOR" })}>
                 <option value="SENIOR">선순위 (대항력)</option>
                 <option value="JUNIOR">후순위</option>
               </select>
             </Field>
-            <button onClick={() => removeTenant(idx)} className="text-[var(--color-danger)] text-[0.75rem] font-medium pb-1">삭제</button>
+            <button onClick={() => removeTenant(idx)} style={{ color: MCK.danger, fontSize: 12, fontWeight: 700, padding: "8px 0", background: "transparent", border: "none", cursor: "pointer" }}>
+              삭제
+            </button>
           </div>
         ))}
-      </div>
+      </MckCard>
     </div>
   )
 }
 
-// ─── Step 5: 딜 조건 ──────────────────────────────────────────────────────
+// ─── Step 4: 딜 조건 ──────────────────────────────────────────────────────
 
-function Step5DealTerms({ dealStructure, loanSaleTerms, debtAssumptionTerms, auctionScenario, bond, onLoanSaleChange, onDebtAssumptionChange, onAuctionChange }: {
+function Step4DealTerms({ dealStructure, loanSaleTerms, debtAssumptionTerms, auctionScenario, bond, onLoanSaleChange, onDebtAssumptionChange, onAuctionChange }: {
   dealStructure: DealStructure
   loanSaleTerms: LoanSaleTerms
   debtAssumptionTerms: DebtAssumptionTerms
@@ -948,41 +1053,56 @@ function Step5DealTerms({ dealStructure, loanSaleTerms, debtAssumptionTerms, auc
 }) {
   const isLoanSale = dealStructure === "LOAN_SALE"
 
-  // 론세일 매입가 자동 계산
   const purchasePrice = isLoanSale
     ? Math.round(bond.remainingPrincipal * (loanSaleTerms.purchaseRatio / 100))
     : debtAssumptionTerms.negotiatedPrice
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h2 className={DS.text.sectionTitle}>
+    <div className="max-w-3xl mx-auto" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <header>
+        <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
+          <span style={{ width: 18, height: 1.5, background: MCK.brass }} />
+          <span style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark }}>STEP 04</span>
+        </div>
+        <h2 style={{ ...MCK_TYPE.h2, fontFamily: MCK_FONTS.serif, color: MCK.ink, marginBottom: 6 }}>
           {isLoanSale ? "론세일 조건" : "채무인수 조건"}
         </h2>
-        <p className={DS.text.body}>매입 조건과 경매 시나리오를 설정하세요.</p>
-      </div>
+        <p style={{ ...MCK_TYPE.body, color: MCK.textSub }}>
+          매입 조건과 경매 시나리오를 설정하세요.
+        </p>
+      </header>
 
-      {/* 딜 조건 */}
-      <div className={`${DS.card.base} p-6 space-y-4`}>
-        <h3 className={DS.text.cardTitle}>{isLoanSale ? "매입 조건" : "인수 조건"}</h3>
+      <MckCard>
+        <h3 style={cardSubTitleStyle}>{isLoanSale ? "매입 조건" : "인수 조건"}</h3>
         {isLoanSale ? (
           <>
             <div className="grid grid-cols-3 gap-4">
               <Field label="매입률 (%)" required>
-                <input className={DS.input.base} type="number" step="1" value={loanSaleTerms.purchaseRatio} onChange={e => onLoanSaleChange({ ...loanSaleTerms, purchaseRatio: Number(e.target.value) })} />
+                <input style={inputStyle} type="number" step="1" value={loanSaleTerms.purchaseRatio} onChange={e => onLoanSaleChange({ ...loanSaleTerms, purchaseRatio: Number(e.target.value) })} />
               </Field>
               <Field label="질권비율 (%)">
-                <input className={DS.input.base} type="number" step="1" value={loanSaleTerms.pledgeRatio} onChange={e => onLoanSaleChange({ ...loanSaleTerms, pledgeRatio: Number(e.target.value) })} />
+                <input style={inputStyle} type="number" step="1" value={loanSaleTerms.pledgeRatio} onChange={e => onLoanSaleChange({ ...loanSaleTerms, pledgeRatio: Number(e.target.value) })} />
               </Field>
               <Field label="질권이자율 (%)">
-                <input className={DS.input.base} type="number" step="0.1" value={loanSaleTerms.pledgeInterestRate} onChange={e => onLoanSaleChange({ ...loanSaleTerms, pledgeInterestRate: Number(e.target.value) })} />
+                <input style={inputStyle} type="number" step="0.1" value={loanSaleTerms.pledgeInterestRate} onChange={e => onLoanSaleChange({ ...loanSaleTerms, pledgeInterestRate: Number(e.target.value) })} />
               </Field>
             </div>
             {purchasePrice > 0 && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-[var(--color-brand-mid)]/5 border border-[var(--color-brand-mid)]/20">
-                <Info className="w-4 h-4 text-[var(--color-brand-mid)]" />
-                <span className={DS.text.bodyMedium}>
-                  예상 매입가: <strong>{formatKRW(purchasePrice)}</strong>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: 12,
+                  background: MCK.paperTint,
+                  border: `1px solid ${MCK.border}`,
+                  borderLeft: `2px solid ${MCK.brass}`,
+                  marginTop: 14,
+                }}
+              >
+                <Info size={14} style={{ color: MCK.brassDark }} />
+                <span style={{ fontSize: 13, color: MCK.ink }}>
+                  예상 매입가: <strong style={{ fontFamily: MCK_FONTS.serif }}>{formatKRW(purchasePrice)}</strong>
                   {' '}(잔여원금 {formatKRW(bond.remainingPrincipal)} × {loanSaleTerms.purchaseRatio}%)
                 </span>
               </div>
@@ -992,11 +1112,11 @@ function Step5DealTerms({ dealStructure, loanSaleTerms, debtAssumptionTerms, auc
           <div className="grid grid-cols-2 gap-4">
             <Field label="협의가 (매각가)" required>
               <NumberInput value={debtAssumptionTerms.negotiatedPrice || null} onChange={v => onDebtAssumptionChange({ ...debtAssumptionTerms, negotiatedPrice: v ?? 0 })} placeholder="원 단위" suffix="원" />
-              {debtAssumptionTerms.negotiatedPrice > 0 && <p className={DS.text.captionLight}>{formatKRW(debtAssumptionTerms.negotiatedPrice)}</p>}
+              {debtAssumptionTerms.negotiatedPrice > 0 && <p style={helperStyle}>{formatKRW(debtAssumptionTerms.negotiatedPrice)}</p>}
             </Field>
             <Field label="인수채무금액" required>
               <NumberInput value={debtAssumptionTerms.assumedDebtAmount || null} onChange={v => onDebtAssumptionChange({ ...debtAssumptionTerms, assumedDebtAmount: v ?? 0 })} placeholder="원 단위" suffix="원" />
-              {debtAssumptionTerms.assumedDebtAmount > 0 && <p className={DS.text.captionLight}>{formatKRW(debtAssumptionTerms.assumedDebtAmount)}</p>}
+              {debtAssumptionTerms.assumedDebtAmount > 0 && <p style={helperStyle}>{formatKRW(debtAssumptionTerms.assumedDebtAmount)}</p>}
             </Field>
             <Field label="추가지급금 (선택)">
               <NumberInput value={debtAssumptionTerms.additionalPayment ?? null} onChange={v => onDebtAssumptionChange({ ...debtAssumptionTerms, additionalPayment: v ?? undefined })} suffix="원" placeholder="원 단위" />
@@ -1006,32 +1126,30 @@ function Step5DealTerms({ dealStructure, loanSaleTerms, debtAssumptionTerms, auc
             </Field>
           </div>
         )}
-      </div>
+      </MckCard>
 
-      {/* 경매 시나리오 */}
-      <div className={`${DS.card.base} p-6 space-y-4`}>
-        <h3 className={DS.text.cardTitle}>경매 시나리오</h3>
+      <MckCard>
+        <h3 style={cardSubTitleStyle}>경매 시나리오</h3>
         <div className="grid grid-cols-2 gap-4">
           <Field label="예상 낙찰가율 (%)">
-            <input className={DS.input.base} type="number" step="1" value={auctionScenario.expectedBidRatio} onChange={e => onAuctionChange({ ...auctionScenario, expectedBidRatio: Number(e.target.value) })} />
+            <input style={inputStyle} type="number" step="1" value={auctionScenario.expectedBidRatio} onChange={e => onAuctionChange({ ...auctionScenario, expectedBidRatio: Number(e.target.value) })} />
           </Field>
           <Field label="예상 유찰횟수">
-            <input className={DS.input.base} type="number" min={0} max={10} value={auctionScenario.auctionRound} onChange={e => onAuctionChange({ ...auctionScenario, auctionRound: Number(e.target.value) })} />
+            <input style={inputStyle} type="number" min={0} max={10} value={auctionScenario.auctionRound} onChange={e => onAuctionChange({ ...auctionScenario, auctionRound: Number(e.target.value) })} />
           </Field>
           <Field label="예상 소요기간 (월)">
-            <input className={DS.input.base} type="number" min={1} max={60} value={auctionScenario.estimatedMonths} onChange={e => onAuctionChange({ ...auctionScenario, estimatedMonths: Number(e.target.value) })} />
+            <input style={inputStyle} type="number" min={1} max={60} value={auctionScenario.estimatedMonths} onChange={e => onAuctionChange({ ...auctionScenario, estimatedMonths: Number(e.target.value) })} />
           </Field>
           <Field label="유찰감소율 (%)">
-            <input className={DS.input.base} type="number" step="1" value={auctionScenario.bidReductionRate} onChange={e => onAuctionChange({ ...auctionScenario, bidReductionRate: Number(e.target.value) })} />
+            <input style={inputStyle} type="number" step="1" value={auctionScenario.bidReductionRate} onChange={e => onAuctionChange({ ...auctionScenario, bidReductionRate: Number(e.target.value) })} />
           </Field>
         </div>
-      </div>
+      </MckCard>
     </div>
   )
 }
 
-// ─── CurrencyInput (천 단위 콤마 표시) ────────────────────────────────────
-// 공용 NumberInput 래퍼 — 대출원금, 잔여원금 등 KRW 입력 필드
+// ─── CurrencyInput ────────────────────────────────────────────────────────
 
 function CurrencyInput({
   value, onChange, placeholder,
@@ -1041,7 +1159,7 @@ function CurrencyInput({
   placeholder?: string
 }) {
   return (
-    <div className="space-y-0.5">
+    <div>
       <NumberInput
         value={value > 0 ? value : null}
         onChange={v => onChange(v ?? 0)}
@@ -1049,7 +1167,7 @@ function CurrencyInput({
         suffix="원"
       />
       {value > 0 && (
-        <p className="text-[0.75rem] font-semibold text-[var(--color-brand-mid)] tabular-nums">
+        <p style={{ marginTop: 4, fontSize: 12, fontWeight: 700, color: MCK.brassDark, fontVariantNumeric: "tabular-nums", fontFamily: MCK_FONTS.serif }}>
           {krwLong(value)}
         </p>
       )}
@@ -1065,12 +1183,16 @@ function Field({ label, required, children }: {
   children: React.ReactNode
 }) {
   return (
-    <div className="space-y-1">
-      <label className={DS.text.label}>
+    <div>
+      <label style={labelStyle}>
         {label}
-        {required && <span className="text-[var(--color-danger)] ml-0.5">*</span>}
+        {required && <span style={{ color: MCK.danger, marginLeft: 2 }}>*</span>}
       </label>
       {children}
     </div>
   )
 }
+
+// MckDemoBanner export referenced — keep import live (no API failure path here).
+// Keeping reference to avoid unused-import lint when other variants re-enable demo mode.
+void MckDemoBanner

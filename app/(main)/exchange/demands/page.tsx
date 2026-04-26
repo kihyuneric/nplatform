@@ -2,33 +2,22 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import DS, { formatKRW, formatDate } from '@/lib/design-system'
-import { MapPin, Building2, Plus, Target, Search, Users, DollarSign, ArrowUpRight, FileText, X, Sparkles, Loader2, ChevronLeft, ChevronRight, AlertCircle, LayoutGrid, List, Zap, Flame, TrendingUp, Clock } from 'lucide-react'
+import {
+  MapPin, Building2, Plus, Target, Search, Users, DollarSign,
+  ArrowUpRight, X, Sparkles, Loader2, ChevronLeft, ChevronRight,
+  AlertCircle, LayoutGrid, List, Zap, Flame, TrendingUp, Clock,
+} from 'lucide-react'
 import { COLLATERAL_OPTIONS, REGIONS } from '@/lib/taxonomy'
 import { CommaNumberInput } from '@/components/ui/comma-number-input'
+import {
+  MckPageShell, MckPageHeader, MckKpiGrid, MckCard, MckEmptyState,
+  MckDemoBanner, MckBadge,
+} from '@/components/mck'
+import { MCK, MCK_FONTS, MCK_TYPE, formatKRW } from '@/lib/mck-design'
 
 /* ═══════════════════════════════════════════════════════════
-   DESIGN TOKENS — aligned with /exchange listing cards
+   Types
 ═══════════════════════════════════════════════════════════ */
-const V = {
-  surfaceSunken:   'var(--color-surface-sunken)',
-  surfaceBase:     'var(--color-surface-base)',
-  surfaceElevated: 'var(--color-surface-elevated)',
-  borderSubtle:    'var(--color-border-subtle)',
-  borderDefault:   'var(--color-border-default)',
-  textPrimary:     'var(--color-text-primary)',
-  textSecondary:   'var(--color-text-secondary)',
-  textTertiary:    'var(--color-text-tertiary)',
-  textMuted:       'var(--color-text-muted)',
-  positive:        'var(--color-positive)',
-  warning:         'var(--color-warning)',
-  danger:          'var(--color-danger)',
-  brandBright:     'var(--color-brand-bright)',
-  brandMid:        'var(--color-brand-mid)',
-  onPositive:      '#041915',
-}
-
 type Urgency = 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW'
 
 interface Demand {
@@ -51,19 +40,28 @@ interface DemandsResponse {
   total_pages: number
 }
 
-const URGENCY_MAP: Record<Urgency, { label: string; badge: string; dot: string; icon: typeof Flame }> = {
-  URGENT: { label: '긴급', badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20', dot: '#A53F8A', icon: Flame },
-  HIGH:   { label: '높음', badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20', dot: '#F97316', icon: TrendingUp },
-  MEDIUM: { label: '보통', badge: 'bg-stone-100/10 text-stone-900 border border-stone-300/20', dot: '#051C2C', icon: Clock },
-  LOW:    { label: '낮음', badge: 'bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]', dot: '#64748B', icon: Clock },
+/* ═══════════════════════════════════════════════════════════
+   Urgency mapping — McKinsey 차분 톤
+═══════════════════════════════════════════════════════════ */
+const URGENCY_MAP: Record<Urgency, {
+  label: string
+  tone: 'danger' | 'warning' | 'blue' | 'neutral'
+  color: string
+  icon: typeof Flame
+}> = {
+  URGENT: { label: '긴급', tone: 'danger',  color: MCK.danger,   icon: Flame },
+  HIGH:   { label: '높음', tone: 'warning', color: MCK.warning,  icon: TrendingUp },
+  MEDIUM: { label: '보통', tone: 'blue',    color: MCK.blue,     icon: Clock },
+  LOW:    { label: '낮음', tone: 'neutral', color: MCK.textMuted, icon: Clock },
 }
 
-// Use taxonomy collateral options (exclude 'ALL' sentinel)
 const COLLATERAL_FILTER_OPTIONS = COLLATERAL_OPTIONS.filter(o => o.value !== 'ALL').map(o => o.label)
 const REGION_OPTIONS = REGIONS.map(r => r.short)
 const PER_PAGE = 12
 
-// API 실패 시 보여줄 샘플 수요 (UX 확보용)
+/* ═══════════════════════════════════════════════════════════
+   Sample fallback
+═══════════════════════════════════════════════════════════ */
 const SAMPLE_DEMANDS: Demand[] = [
   {
     id: 'demo-demand-001',
@@ -100,18 +98,46 @@ const SAMPLE_DEMANDS: Demand[] = [
   },
 ]
 
+/* ═══════════════════════════════════════════════════════════
+   Format date
+═══════════════════════════════════════════════════════════ */
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Skeleton card
+═══════════════════════════════════════════════════════════ */
 function CardSkeleton() {
-  const b = 'bg-[var(--color-surface-sunken)] rounded'
   return (
-    <div className={`${DS.card.base} ${DS.card.padding} animate-pulse`}>
-      <div className="flex items-center gap-2 mb-4"><div className={`h-5 w-14 ${b}-full`} /><div className={`h-5 w-10 ${b}-full`} /></div>
-      <div className={`h-7 w-3/4 ${b} mb-3`} />
-      <div className="flex gap-2 mb-3"><div className={`h-6 w-16 ${b}`} /><div className={`h-6 w-16 ${b}`} /></div>
-      <div className={`h-4 w-1/2 ${b} mb-3`} /><div className={`h-4 w-full ${b} mb-2`} /><div className={`h-4 w-2/3 ${b}`} />
+    <div
+      style={{
+        background: MCK.paper,
+        border: `1px solid ${MCK.border}`,
+        borderTop: `2px solid ${MCK.brass}`,
+        padding: 22,
+      }}
+      className="animate-pulse"
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <div style={{ height: 16, width: 56, background: MCK.paperDeep }} />
+        <div style={{ height: 16, width: 40, background: MCK.paperDeep }} />
+      </div>
+      <div style={{ height: 22, width: '75%', background: MCK.paperDeep, marginBottom: 12 }} />
+      <div className="flex gap-2 mb-3">
+        <div style={{ height: 22, width: 64, background: MCK.paperDeep }} />
+        <div style={{ height: 22, width: 64, background: MCK.paperDeep }} />
+      </div>
+      <div style={{ height: 14, width: '50%', background: MCK.paperDeep, marginBottom: 12 }} />
+      <div style={{ height: 14, width: '100%', background: MCK.paperDeep, marginBottom: 8 }} />
+      <div style={{ height: 14, width: '66%', background: MCK.paperDeep }} />
     </div>
   )
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Main Page
+═══════════════════════════════════════════════════════════ */
 export default function DemandsPage() {
   const [demands, setDemands] = useState<Demand[]>([])
   const [total, setTotal] = useState(0)
@@ -119,6 +145,7 @@ export default function DemandsPage() {
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isDemo, setIsDemo] = useState(false)
   const [urgencyFilter, setUrgencyFilter] = useState<Urgency | ''>('')
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card')
   const [showModal, setShowModal] = useState(false)
@@ -143,11 +170,12 @@ export default function DemandsPage() {
       setDemands(json.data)
       setTotal(json.total)
       setTotalPages(json.total_pages)
+      setIsDemo(false)
     } catch {
-      // API 실패 → 샘플로 fallback (UX 확보)
       setDemands(SAMPLE_DEMANDS)
       setTotal(SAMPLE_DEMANDS.length)
       setTotalPages(1)
+      setIsDemo(true)
     } finally {
       setLoading(false)
     }
@@ -235,193 +263,295 @@ export default function DemandsPage() {
     setter(arr.includes(item) ? arr.filter(x => x !== item) : [...arr, item])
   }
 
-  return (
-    <div className={DS.page.wrapper}>
-      <div className={`${DS.page.container} ${DS.page.paddingTop} pb-16`}>
+  // ── KPI items ────────────────────────────────────────────────
+  const urgentCount = demands.filter(d => d.urgency === 'URGENT' || d.urgency === 'HIGH').length
+  const avgAmount = demands.length === 0
+    ? 0
+    : Math.round(demands.reduce((s, d) => s + (d.min_amount + d.max_amount) / 2, 0) / demands.length)
 
-        {/* Header */}
-        <div className={DS.header.wrapper}>
-          <p className={DS.header.eyebrow}>Buyer Demand Board</p>
-          <h1 className={DS.header.title}>매수 수요</h1>
-          <p className={DS.header.subtitle}>
-            매수 의향이 있는 투자자들의 NPL 매수 조건을 확인하고 직접 제안을 보내세요
-          </p>
-          <div className="flex items-center gap-3 mt-3">
-            <Link href="/exchange/sell" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>
-              매물 등록 →
-            </Link>
-            <Link href="/deals/matching" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>
-              AI 매칭 결과 →
-            </Link>
-          </div>
+  const kpiItems = [
+    { label: '등록된 수요', value: loading ? '—' : `${total}건`, hint: 'Buyer Demand' },
+    { label: '긴급 수요', value: loading ? '—' : `${urgentCount}건`, hint: 'URGENT · HIGH' },
+    { label: '평균 희망가', value: loading || demands.length === 0 ? '—' : formatKRW(avgAmount), hint: 'AVG mid-band', accent: true },
+  ]
+
+  // ── Header actions ───────────────────────────────────────────
+  const headerActions = (
+    <button
+      onClick={() => setShowModal(true)}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '12px 22px',
+        background: MCK.ink,
+        color: MCK.paper,
+        border: 'none',
+        borderTop: `2.5px solid ${MCK.brass}`,
+        fontSize: 13,
+        fontWeight: 800,
+        letterSpacing: '-0.01em',
+        cursor: 'pointer',
+        boxShadow: '0 6px 20px rgba(10,22,40,0.18)',
+      }}
+    >
+      <Plus size={14} />
+      수요 등록
+    </button>
+  )
+
+  return (
+    <MckPageShell variant="tint">
+      {isDemo && <MckDemoBanner message="체험 모드 — 샘플 매수 수요 데이터를 표시 중입니다." />}
+
+      <MckPageHeader
+        breadcrumbs={[
+          { label: '거래소', href: '/exchange' },
+          { label: '매수 수요' },
+        ]}
+        eyebrow="BUYER DEMAND BOARD"
+        title="매수 수요"
+        subtitle="매수 의향이 있는 투자자들의 NPL 매수 조건을 확인하고 직접 제안을 보내세요"
+        actions={headerActions}
+      />
+
+      <div className="max-w-[1280px] mx-auto" style={{ padding: '32px 24px 64px' }}>
+        {/* Quick links */}
+        <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+          <Link
+            href="/exchange/sell"
+            style={{
+              fontSize: 12, fontWeight: 700, color: MCK.brassDark,
+              letterSpacing: '0.04em', textTransform: 'uppercase',
+              textDecoration: 'none', borderBottom: `1px solid ${MCK.brass}`,
+              paddingBottom: 2,
+            }}
+          >
+            매물 등록 →
+          </Link>
+          <Link
+            href="/deals/matching"
+            style={{
+              fontSize: 12, fontWeight: 700, color: MCK.brassDark,
+              letterSpacing: '0.04em', textTransform: 'uppercase',
+              textDecoration: 'none', borderBottom: `1px solid ${MCK.brass}`,
+              paddingBottom: 2,
+            }}
+          >
+            AI 매칭 결과 →
+          </Link>
         </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <div className={DS.stat.card}>
-            <div className="flex items-center gap-2 mb-1">
-              <Users size={14} className="text-[var(--color-brand-mid)]" />
-              <p className={DS.stat.label}>등록된 수요</p>
-            </div>
-            <p className={DS.stat.value}>{loading ? '—' : `${total}건`}</p>
-          </div>
-          <div className={DS.stat.card}>
-            <div className="flex items-center gap-2 mb-1">
-              <Target size={14} className="text-[var(--color-warning)]" />
-              <p className={DS.stat.label}>긴급 수요</p>
-            </div>
-            <p className={DS.stat.value}>
-              {loading ? '—' : `${demands.filter(d => d.urgency === 'URGENT' || d.urgency === 'HIGH').length}건`}
-            </p>
-          </div>
-          <div className={DS.stat.card}>
-            <div className="flex items-center gap-2 mb-1">
-              <DollarSign size={14} className="text-[var(--color-positive)]" />
-              <p className={DS.stat.label}>평균 희망 금액</p>
-            </div>
-            <p className={DS.stat.value}>
-              {loading || demands.length === 0 ? '—' : formatKRW(
-                Math.round(demands.reduce((s, d) => s + (d.min_amount + d.max_amount) / 2, 0) / demands.length)
-              )}
-            </p>
-          </div>
+        {/* KPI grid */}
+        <div style={{ marginBottom: 32 }}>
+          <MckKpiGrid items={kpiItems} />
         </div>
 
         {/* Filter bar */}
-        <div className={`${DS.filter.bar} mb-6`}>
-          <div className="flex items-center gap-2 flex-wrap flex-1">
-            <span className={DS.text.caption}>긴급도:</span>
-            {(['', 'URGENT', 'HIGH', 'MEDIUM', 'LOW'] as const).map(u => (
-              <button
-                key={u || 'ALL'}
-                onClick={() => { setUrgencyFilter(u as Urgency | ''); setPage(1) }}
-                className={`${DS.filter.chip} ${urgencyFilter === u ? DS.filter.chipActive : DS.filter.chipInactive}`}
-              >
-                {u ? URGENCY_MAP[u].label : '전체'}
-              </button>
-            ))}
+        <div
+          style={{
+            background: MCK.paper,
+            border: `1px solid ${MCK.border}`,
+            padding: '14px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 12,
+            marginBottom: 24,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span style={{ ...MCK_TYPE.label, color: MCK.textSub }}>긴급도</span>
+            {(['', 'URGENT', 'HIGH', 'MEDIUM', 'LOW'] as const).map(u => {
+              const active = urgencyFilter === u
+              return (
+                <button
+                  key={u || 'ALL'}
+                  onClick={() => { setUrgencyFilter(u as Urgency | ''); setPage(1) }}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: '0.04em',
+                    background: active ? MCK.ink : MCK.paperTint,
+                    color: active ? MCK.paper : MCK.textSub,
+                    border: `1px solid ${active ? MCK.ink : MCK.border}`,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {u ? URGENCY_MAP[u].label : '전체'}
+                </button>
+              )
+            })}
           </div>
-          <div className="flex items-center gap-3">
-            <span className={DS.text.captionLight}>{total}건</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 12, color: MCK.textMuted, fontWeight: 600 }}>{total}건</span>
             {/* View toggle */}
-            <div className="flex items-center border border-[var(--color-border-subtle)] rounded-lg overflow-hidden">
+            <div style={{ display: 'flex', border: `1px solid ${MCK.border}`, overflow: 'hidden' }}>
               <button
                 onClick={() => setViewMode('card')}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[0.75rem] font-semibold transition-colors ${
-                  viewMode === 'card'
-                    ? 'bg-[var(--color-brand-dark)] text-white'
-                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-elevated)]'
-                }`}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '6px 12px', fontSize: 11, fontWeight: 700,
+                  background: viewMode === 'card' ? MCK.ink : MCK.paper,
+                  color: viewMode === 'card' ? MCK.paper : MCK.textSub,
+                  border: 'none', cursor: 'pointer',
+                }}
               >
-                <LayoutGrid size={13} /> 카드
+                <LayoutGrid size={12} /> 카드
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[0.75rem] font-semibold transition-colors ${
-                  viewMode === 'list'
-                    ? 'bg-[var(--color-brand-dark)] text-white'
-                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-elevated)]'
-                }`}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '6px 12px', fontSize: 11, fontWeight: 700,
+                  background: viewMode === 'list' ? MCK.ink : MCK.paper,
+                  color: viewMode === 'list' ? MCK.paper : MCK.textSub,
+                  border: 'none', cursor: 'pointer',
+                  borderLeft: `1px solid ${MCK.border}`,
+                }}
               >
-                <List size={13} /> 리스트
+                <List size={12} /> 리스트
               </button>
             </div>
-            <button onClick={() => setShowModal(true)} className={`${DS.button.accent} ${DS.button.sm}`}>
-              <Plus size={14} /> 수요 등록
-            </button>
           </div>
         </div>
 
-        {/* Content area */}
+        {/* Content */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
           </div>
         ) : error ? (
-          <div className={DS.empty.wrapper}>
-            <AlertCircle className={DS.empty.icon} />
-            <p className={DS.empty.title}>데이터를 불러올 수 없습니다</p>
-            <p className={DS.empty.description}>{error}</p>
-            <button onClick={fetchDemands} className={`${DS.button.secondary} mt-4`}>다시 시도</button>
-          </div>
+          <MckEmptyState
+            icon={AlertCircle}
+            title="데이터를 불러올 수 없습니다"
+            description={error}
+            actionLabel="다시 시도"
+            onActionClick={fetchDemands}
+            variant="error"
+          />
         ) : demands.length === 0 ? (
-          <div className={DS.empty.wrapper}>
-            <Search className={DS.empty.icon} />
-            <p className={DS.empty.title}>등록된 수요가 없습니다</p>
-            <p className={DS.empty.description}>첫 번째 매수 수요를 등록하고 AI 매칭을 받아보세요</p>
-            <button onClick={() => setShowModal(true)} className={`${DS.button.accent} mt-4`}>
-              <Plus size={14} /> 수요 등록하기
-            </button>
-          </div>
+          <MckEmptyState
+            icon={Search}
+            title="등록된 수요가 없습니다"
+            description="첫 번째 매수 수요를 등록하고 AI 매칭을 받아보세요"
+            actionLabel="수요 등록하기"
+            onActionClick={() => setShowModal(true)}
+          />
         ) : viewMode === 'list' ? (
           /* ── LIST VIEW ── */
-          <>
-            <div className={DS.table.wrapper}>
-              <table className="w-full text-[0.8125rem]">
-                <thead className={DS.table.header}>
-                  <tr>
-                    <th className={DS.table.headerCell}>긴급도</th>
-                    <th className={DS.table.headerCell}>담보 유형</th>
-                    <th className={DS.table.headerCell}>지역</th>
-                    <th className={DS.table.headerCell}>희망 금액 범위</th>
-                    <th className={DS.table.headerCell}>매칭</th>
-                    <th className={DS.table.headerCell}>등록일</th>
-                    <th className={DS.table.headerCell}>액션</th>
+          <div
+            style={{
+              background: MCK.paper,
+              border: `1px solid ${MCK.border}`,
+              borderTop: `2px solid ${MCK.brass}`,
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: MCK.paperTint, borderBottom: `1px solid ${MCK.border}` }}>
+                    {['긴급도', '담보 유형', '지역', '희망 금액 범위', '매칭', '등록일', '액션'].map(h => (
+                      <th
+                        key={h}
+                        style={{
+                          padding: '12px 14px',
+                          textAlign: 'left',
+                          ...MCK_TYPE.label,
+                          color: MCK.textSub,
+                        }}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {demands.map(d => {
                     const urg = URGENCY_MAP[d.urgency]
                     return (
-                      <tr key={d.id} className={DS.table.row}>
-                        <td className={DS.table.cell}>
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6875rem] font-bold ${urg.badge}`}>
-                            {urg.label}
-                          </span>
+                      <tr key={d.id} style={{ borderBottom: `1px solid ${MCK.border}` }}>
+                        <td style={{ padding: '14px' }}>
+                          <MckBadge tone={urg.tone}>{urg.label}</MckBadge>
                         </td>
-                        <td className={DS.table.cell}>
-                          <div className="flex flex-wrap gap-1">
+                        <td style={{ padding: '14px' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                             {d.collateral_types.slice(0, 3).map(ct => (
-                              <span key={ct} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[0.625rem] font-semibold border ${DS.collateral[ct as keyof typeof DS.collateral] || DS.collateral['기타']}`}>
+                              <span
+                                key={ct}
+                                style={{
+                                  display: 'inline-flex', alignItems: 'center',
+                                  padding: '2px 6px', fontSize: 10, fontWeight: 700,
+                                  color: MCK.brassDark,
+                                  background: 'rgba(184, 146, 75, 0.10)',
+                                  border: `1px solid ${MCK.brass}33`,
+                                }}
+                              >
                                 {ct}
                               </span>
                             ))}
                             {d.collateral_types.length > 3 && (
-                              <span className={DS.text.micro}>+{d.collateral_types.length - 3}</span>
+                              <span style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 600 }}>
+                                +{d.collateral_types.length - 3}
+                              </span>
                             )}
                           </div>
                         </td>
-                        <td className={DS.table.cell}>
-                          <div className="flex items-center gap-1">
-                            <MapPin size={11} className="text-[var(--color-brand-mid)] shrink-0" />
-                            <span className={DS.text.caption}>{d.regions.slice(0, 4).join(', ')}{d.regions.length > 4 ? ` +${d.regions.length - 4}` : ''}</span>
+                        <td style={{ padding: '14px' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <MapPin size={11} style={{ color: MCK.brassDark }} />
+                            <span style={{ fontSize: 12, color: MCK.textSub }}>
+                              {d.regions.slice(0, 4).join(', ')}{d.regions.length > 4 ? ` +${d.regions.length - 4}` : ''}
+                            </span>
                           </div>
                         </td>
-                        <td className={DS.table.cell}>
-                          <span className="font-semibold text-[0.8125rem]">
+                        <td style={{ padding: '14px' }}>
+                          <span style={{ fontWeight: 700, fontSize: 13, color: MCK.ink, fontVariantNumeric: 'tabular-nums' }}>
                             {formatKRW(d.min_amount)} ~ {formatKRW(d.max_amount)}
                           </span>
                         </td>
-                        <td className={DS.table.cell}>
+                        <td style={{ padding: '14px' }}>
                           {d.matching_count > 0
-                            ? <span className={DS.badge.positive}>{d.matching_count}건</span>
-                            : <span className={DS.text.muted}>-</span>
-                          }
+                            ? <MckBadge tone="positive">{d.matching_count}건</MckBadge>
+                            : <span style={{ color: MCK.textMuted, fontSize: 12 }}>-</span>}
                         </td>
-                        <td className={`${DS.table.cellMuted}`}>{formatDate(d.created_at)}</td>
-                        <td className={DS.table.cell}>
-                          <div className="flex items-center gap-2">
+                        <td style={{ padding: '14px', fontSize: 12, color: MCK.textMuted, fontVariantNumeric: 'tabular-nums' }}>
+                          {formatDate(d.created_at)}
+                        </td>
+                        <td style={{ padding: '14px' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                             <button
                               onClick={() => runMatching(d.id)}
                               disabled={matchingId === d.id}
-                              className={`${DS.button.ghost} ${DS.button.sm} gap-1`}
+                              style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                                padding: '5px 10px', fontSize: 11, fontWeight: 700,
+                                background: MCK.paperTint,
+                                color: MCK.ink,
+                                border: `1px solid ${MCK.border}`,
+                                cursor: matchingId === d.id ? 'wait' : 'pointer',
+                                opacity: matchingId === d.id ? 0.6 : 1,
+                              }}
                             >
                               {matchingId === d.id ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
                               매칭
                             </button>
-                            <a href={`/exchange/demands/${d.id}`} className={`${DS.button.primary} ${DS.button.sm}`}>
+                            <Link
+                              href={`/exchange/demands/${d.id}`}
+                              style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                                padding: '5px 10px', fontSize: 11, fontWeight: 700,
+                                background: MCK.ink, color: MCK.paper,
+                                borderTop: `2px solid ${MCK.brass}`,
+                                textDecoration: 'none',
+                              }}
+                            >
                               상세 <ArrowUpRight size={11} />
-                            </a>
+                            </Link>
                           </div>
                         </td>
                       </tr>
@@ -430,16 +560,15 @@ export default function DemandsPage() {
                 </tbody>
               </table>
             </div>
-          </>
+          </div>
         ) : (
           /* ── CARD VIEW ── */
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {demands.map((d, i) => (
+              {demands.map(d => (
                 <DemandCard
                   key={d.id}
                   demand={d}
-                  index={i}
                   onRunMatching={runMatching}
                   matching={matchingId === d.id}
                 />
@@ -448,33 +577,42 @@ export default function DemandsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-10">
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 40 }}>
                 <button
                   disabled={page <= 1}
                   onClick={() => setPage(p => p - 1)}
-                  className={`${DS.button.secondary} ${DS.button.sm} disabled:opacity-40`}
+                  style={{
+                    width: 36, height: 36,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    background: MCK.paper, border: `1px solid ${MCK.border}`,
+                    color: MCK.ink, cursor: page <= 1 ? 'not-allowed' : 'pointer',
+                    opacity: page <= 1 ? 0.4 : 1,
+                  }}
                 >
                   <ChevronLeft size={14} />
                 </button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
                   .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
                   .reduce<(number | 'dots')[]>((acc, p, i, arr) => {
-                    if (i > 0 && p - (arr[i - 1]) > 1) acc.push('dots')
+                    if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('dots')
                     acc.push(p)
                     return acc
                   }, [])
                   .map((p, i) =>
                     p === 'dots' ? (
-                      <span key={`dots-${i}`} className={DS.text.muted}>...</span>
+                      <span key={`dots-${i}`} style={{ color: MCK.textMuted, padding: '0 4px' }}>...</span>
                     ) : (
                       <button
                         key={p}
-                        onClick={() => setPage(p)}
-                        className={`w-9 h-9 rounded-lg text-[0.8125rem] font-bold transition-colors ${
-                          p === page
-                            ? 'bg-[var(--color-brand-dark)] text-white'
-                            : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)] hover:border-[var(--color-brand-bright)]'
-                        }`}
+                        onClick={() => setPage(p as number)}
+                        style={{
+                          width: 36, height: 36, fontSize: 13, fontWeight: 700,
+                          background: p === page ? MCK.ink : MCK.paper,
+                          color: p === page ? MCK.paper : MCK.textSub,
+                          border: `1px solid ${p === page ? MCK.ink : MCK.border}`,
+                          cursor: 'pointer',
+                          fontVariantNumeric: 'tabular-nums',
+                        }}
                       >
                         {p}
                       </button>
@@ -483,7 +621,13 @@ export default function DemandsPage() {
                 <button
                   disabled={page >= totalPages}
                   onClick={() => setPage(p => p + 1)}
-                  className={`${DS.button.secondary} ${DS.button.sm} disabled:opacity-40`}
+                  style={{
+                    width: 36, height: 36,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    background: MCK.paper, border: `1px solid ${MCK.border}`,
+                    color: MCK.ink, cursor: page >= totalPages ? 'not-allowed' : 'pointer',
+                    opacity: page >= totalPages ? 0.4 : 1,
+                  }}
                 >
                   <ChevronRight size={14} />
                 </button>
@@ -493,99 +637,182 @@ export default function DemandsPage() {
         )}
 
         {/* Notice */}
-        <div className={`${DS.card.flat} p-4 mt-10`}>
-          <p className={`${DS.text.label} mb-1`}>이용 안내</p>
-          <p className={DS.text.captionLight}>
-            매수 수요 게시판은 NPL 투자자가 매수 조건을 공개하고 매도자의 제안을 받는 서비스입니다. 게시된 정보는 참고용이며 실제 거래 조건은 당사자 간 협의에 따릅니다.
+        <div
+          style={{
+            marginTop: 48,
+            background: MCK.paper,
+            border: `1px solid ${MCK.border}`,
+            borderLeft: `3px solid ${MCK.brass}`,
+            padding: '16px 20px',
+          }}
+        >
+          <p style={{ ...MCK_TYPE.label, color: MCK.brassDark, marginBottom: 6 }}>이용 안내</p>
+          <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.6 }}>
+            매수 수요 게시판은 NPL 투자자가 매수 조건을 공개하고 매도자의 제안을 받는 서비스입니다.
+            게시된 정보는 참고용이며 실제 거래 조건은 당사자 간 협의에 따릅니다.
           </p>
         </div>
       </div>
 
+      {/* ── Modal ──────────────────────────────────────────────── */}
       {showModal && (
-        <div className={DS.modal.overlay} onClick={() => setShowModal(false)}>
+        <div
+          onClick={() => setShowModal(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            background: 'rgba(10, 22, 40, 0.6)',
+            backdropFilter: 'blur(4px)',
+          }}
+        >
           <div className="flex items-center justify-center min-h-screen p-4">
             <div
-              className={`${DS.modal.content} w-full max-w-lg max-h-[90vh] overflow-y-auto`}
               onClick={e => e.stopPropagation()}
+              style={{
+                background: MCK.paper,
+                borderTop: `3px solid ${MCK.brass}`,
+                width: '100%', maxWidth: 560,
+                maxHeight: '90vh', overflowY: 'auto',
+                padding: 28,
+                boxShadow: '0 20px 60px rgba(10, 22, 40, 0.40)',
+              }}
             >
               {/* Modal header */}
-              <div className="flex items-center justify-between mb-6">
-                <h2 className={DS.modal.title}>매수 수요 등록</h2>
-                <button onClick={() => setShowModal(false)} className={DS.button.icon}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+                <h2 style={{ fontFamily: MCK_FONTS.serif, ...MCK_TYPE.h2, color: MCK.ink }}>
+                  매수 수요 등록
+                </h2>
+                <button
+                  onClick={() => setShowModal(false)}
+                  style={{
+                    width: 32, height: 32,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'transparent', border: 'none', cursor: 'pointer',
+                    color: MCK.textSub,
+                  }}
+                >
                   <X size={18} />
                 </button>
               </div>
 
               {/* Collateral multi-select */}
-              <div className="mb-5">
-                <label className={DS.input.label}>담보 유형 (복수 선택)</label>
-                <div className="flex flex-wrap gap-2 mt-1.5">
-                  {COLLATERAL_FILTER_OPTIONS.map(opt => (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() => toggleItem(formCollateral, opt, setFormCollateral)}
-                      className={`${DS.filter.chip} ${formCollateral.includes(opt) ? DS.filter.chipActive : DS.filter.chipInactive}`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ ...MCK_TYPE.label, color: MCK.textSub, display: 'block', marginBottom: 8 }}>
+                  담보 유형 (복수 선택)
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {COLLATERAL_FILTER_OPTIONS.map(opt => {
+                    const active = formCollateral.includes(opt)
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => toggleItem(formCollateral, opt, setFormCollateral)}
+                        style={{
+                          padding: '6px 10px', fontSize: 11, fontWeight: 700,
+                          background: active ? MCK.ink : MCK.paperTint,
+                          color: active ? MCK.paper : MCK.textSub,
+                          border: `1px solid ${active ? MCK.ink : MCK.border}`,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {opt}
+                      </button>
+                    )
+                  })}
                 </div>
                 {formCollateral.length === 0 && (
-                  <p className={DS.input.error}>최소 1개 선택 필요</p>
+                  <p style={{ fontSize: 11, color: MCK.danger, marginTop: 6 }}>최소 1개 선택 필요</p>
                 )}
               </div>
 
               {/* Region multi-select */}
-              <div className="mb-5">
-                <label className={DS.input.label}>지역 (복수 선택)</label>
-                <div className="flex flex-wrap gap-2 mt-1.5">
-                  {REGION_OPTIONS.map(opt => (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() => toggleItem(formRegions, opt, setFormRegions)}
-                      className={`${DS.filter.chip} ${formRegions.includes(opt) ? DS.filter.chipActive : DS.filter.chipInactive}`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ ...MCK_TYPE.label, color: MCK.textSub, display: 'block', marginBottom: 8 }}>
+                  지역 (복수 선택)
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {REGION_OPTIONS.map(opt => {
+                    const active = formRegions.includes(opt)
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => toggleItem(formRegions, opt, setFormRegions)}
+                        style={{
+                          padding: '6px 10px', fontSize: 11, fontWeight: 700,
+                          background: active ? MCK.ink : MCK.paperTint,
+                          color: active ? MCK.paper : MCK.textSub,
+                          border: `1px solid ${active ? MCK.ink : MCK.border}`,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {opt}
+                      </button>
+                    )
+                  })}
                 </div>
                 {formRegions.length === 0 && (
-                  <p className={DS.input.error}>최소 1개 선택 필요</p>
+                  <p style={{ fontSize: 11, color: MCK.danger, marginTop: 6 }}>최소 1개 선택 필요</p>
                 )}
               </div>
 
               {/* Amount range */}
-              <div className="grid grid-cols-2 gap-4 mb-5">
+              <div className="grid grid-cols-2 gap-4" style={{ marginBottom: 20 }}>
                 <div>
-                  <label className={DS.input.label}>최소 금액 (원)</label>
+                  <label style={{ ...MCK_TYPE.label, color: MCK.textSub, display: 'block', marginBottom: 8 }}>
+                    최소 금액 (원)
+                  </label>
                   <CommaNumberInput
                     placeholder="100,000,000"
                     value={formMinAmount}
                     onChange={setFormMinAmount}
-                    className={DS.input.base}
+                    className="w-full"
+                    style={{
+                      padding: '10px 12px',
+                      border: `1px solid ${MCK.border}`,
+                      background: MCK.paper,
+                      fontSize: 13,
+                      color: MCK.ink,
+                    }}
                   />
-                  <p className={DS.input.helper}>예: 1억 = 100,000,000</p>
+                  <p style={{ fontSize: 11, color: MCK.textMuted, marginTop: 4 }}>예: 1억 = 100,000,000</p>
                 </div>
                 <div>
-                  <label className={DS.input.label}>최대 금액 (원)</label>
+                  <label style={{ ...MCK_TYPE.label, color: MCK.textSub, display: 'block', marginBottom: 8 }}>
+                    최대 금액 (원)
+                  </label>
                   <CommaNumberInput
                     placeholder="500,000,000"
                     value={formMaxAmount}
                     onChange={setFormMaxAmount}
-                    className={DS.input.base}
+                    className="w-full"
+                    style={{
+                      padding: '10px 12px',
+                      border: `1px solid ${MCK.border}`,
+                      background: MCK.paper,
+                      fontSize: 13,
+                      color: MCK.ink,
+                    }}
                   />
                 </div>
               </div>
 
-              {/* Urgency select */}
-              <div className="mb-5">
-                <label className={DS.input.label}>긴급도</label>
+              {/* Urgency */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ ...MCK_TYPE.label, color: MCK.textSub, display: 'block', marginBottom: 8 }}>
+                  긴급도
+                </label>
                 <select
                   value={formUrgency}
                   onChange={e => setFormUrgency(e.target.value as Urgency)}
-                  className={DS.input.base}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: `1px solid ${MCK.border}`,
+                    background: MCK.paper,
+                    fontSize: 13,
+                    color: MCK.ink,
+                  }}
                 >
                   <option value="URGENT">긴급</option>
                   <option value="HIGH">높음</option>
@@ -595,29 +822,62 @@ export default function DemandsPage() {
               </div>
 
               {/* Memo */}
-              <div className="mb-6">
-                <label className={DS.input.label}>메모</label>
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ ...MCK_TYPE.label, color: MCK.textSub, display: 'block', marginBottom: 8 }}>
+                  메모
+                </label>
                 <textarea
                   rows={3}
                   placeholder="매수 조건, 선호 물건 유형 등을 자유롭게 기재해 주세요"
                   value={formMemo}
                   onChange={e => setFormMemo(e.target.value)}
-                  className={`${DS.input.base} resize-none`}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: `1px solid ${MCK.border}`,
+                    background: MCK.paper,
+                    fontSize: 13,
+                    color: MCK.ink,
+                    resize: 'none',
+                    fontFamily: MCK_FONTS.sans,
+                  }}
                 />
               </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-end gap-3">
-                <button onClick={() => setShowModal(false)} className={DS.button.secondary}>취소</button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <button
+                  onClick={() => setShowModal(false)}
+                  style={{
+                    padding: '10px 20px',
+                    background: MCK.paper,
+                    color: MCK.ink,
+                    border: `1px solid ${MCK.border}`,
+                    fontSize: 13, fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  취소
+                </button>
                 <button
                   onClick={handleSubmit}
                   disabled={submitting || formCollateral.length === 0 || formRegions.length === 0}
-                  className={`${DS.button.primary} ${DS.button.lg} disabled:opacity-50`}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '10px 22px',
+                    background: MCK.ink,
+                    color: MCK.paper,
+                    border: 'none',
+                    borderTop: `2px solid ${MCK.brass}`,
+                    fontSize: 13, fontWeight: 800,
+                    cursor: submitting ? 'wait' : 'pointer',
+                    opacity: (submitting || formCollateral.length === 0 || formRegions.length === 0) ? 0.5 : 1,
+                  }}
                 >
                   {submitting ? (
-                    <><Loader2 size={16} className="animate-spin" /> 등록 중...</>
+                    <><Loader2 size={14} className="animate-spin" /> 등록 중...</>
                   ) : (
-                    <><Plus size={16} /> 수요 등록</>
+                    <><Plus size={14} /> 수요 등록</>
                   )}
                 </button>
               </div>
@@ -625,21 +885,19 @@ export default function DemandsPage() {
           </div>
         </div>
       )}
-    </div>
+    </MckPageShell>
   )
 }
 
 /* ═══════════════════════════════════════════════════════════
-   DemandCard — exchange-grade buyer demand card
+   DemandCard — McKinsey white-paper style
 ═══════════════════════════════════════════════════════════ */
 function DemandCard({
   demand: d,
-  index,
   onRunMatching,
   matching,
 }: {
   demand: Demand
-  index: number
   onRunMatching: (id: string) => void
   matching: boolean
 }) {
@@ -648,39 +906,23 @@ function DemandCard({
   const hasMatches = d.matching_count > 0
   const avg = Math.round((d.min_amount + d.max_amount) / 2)
   const ageDays = Math.max(0, Math.floor((Date.now() - new Date(d.created_at).getTime()) / 86400000))
-  const isHot = d.urgency === 'URGENT' || d.urgency === 'HIGH'
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.03, 0.3), duration: 0.4 }}
+    <article
       style={{
-        backgroundColor: V.surfaceElevated,
-        border: `1px solid ${V.borderSubtle}`,
-        borderRadius: 14,
-        overflow: 'hidden',
+        background: MCK.paper,
+        border: `1px solid ${MCK.border}`,
+        borderTop: `2px solid ${urg.color}`,
         display: 'flex',
         flexDirection: 'column',
-        position: 'relative',
       }}
     >
-      {/* Urgency accent strip */}
+      {/* Header strip */}
       <div
         style={{
-          height: 3,
-          background: isHot
-            ? `linear-gradient(90deg, ${urg.dot}, transparent 85%)`
-            : `linear-gradient(90deg, ${urg.dot}80, transparent 70%)`,
-        }}
-      />
-
-      {/* Header strip: urgency + age + live matching */}
-      <div
-        style={{
-          padding: '12px 14px',
-          backgroundColor: V.surfaceSunken,
-          borderBottom: `1px solid ${V.borderSubtle}`,
+          padding: '12px 16px',
+          background: MCK.paperTint,
+          borderBottom: `1px solid ${MCK.border}`,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -690,19 +932,19 @@ function DemandCard({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div
             style={{
-              width: 28, height: 28, borderRadius: 8,
-              backgroundColor: `color-mix(in srgb, ${urg.dot} 14%, transparent)`,
-              border: `1px solid color-mix(in srgb, ${urg.dot} 28%, transparent)`,
+              width: 28, height: 28,
+              background: `${urg.color}1A`,
+              border: `1px solid ${urg.color}55`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            <UrgIcon size={13} color={urg.dot} />
+            <UrgIcon size={14} color={urg.color} />
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: V.textPrimary, lineHeight: 1.2, letterSpacing: '-0.01em' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: MCK.ink, letterSpacing: '-0.01em' }}>
               {urg.label} 매수 수요
             </div>
-            <div style={{ fontSize: 9, color: V.textMuted, marginTop: 1 }}>
+            <div style={{ fontSize: 10, color: MCK.textMuted, marginTop: 1 }}>
               등록 {ageDays === 0 ? '오늘' : `${ageDays}일 전`}
             </div>
           </div>
@@ -711,38 +953,48 @@ function DemandCard({
           <Link
             href="/deals/matching"
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '3px 9px', borderRadius: 999,
-              backgroundColor: `color-mix(in srgb, ${V.positive} 14%, transparent)`,
-              border: `1px solid color-mix(in srgb, ${V.positive} 30%, transparent)`,
-              color: V.positive, fontSize: 10, fontWeight: 800,
-              letterSpacing: '-0.01em',
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '3px 9px',
+              background: MCK.positiveBg,
+              border: `1px solid ${MCK.positive}55`,
+              color: MCK.positive,
+              fontSize: 10, fontWeight: 800,
+              letterSpacing: '0.04em',
+              textDecoration: 'none',
             }}
           >
-            <span style={{
-              width: 6, height: 6, borderRadius: '50%',
-              backgroundColor: V.positive, display: 'inline-block',
-              boxShadow: `0 0 0 3px color-mix(in srgb, ${V.positive} 25%, transparent)`,
-            }} />
+            <span
+              style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: MCK.positive, display: 'inline-block',
+              }}
+            />
             LIVE · 매칭 {d.matching_count}
           </Link>
         ) : (
-          <span style={{ fontSize: 10, color: V.textMuted, fontWeight: 600 }}>
+          <span style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
             {formatDate(d.created_at)}
           </span>
         )}
       </div>
 
       {/* Body */}
-      <div style={{ padding: '16px 16px 14px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
-        {/* Title row: region + collateral count */}
+      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
+        {/* Region + collateral title */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: V.textMuted, marginBottom: 5 }}>
-            <MapPin size={11} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: MCK.textMuted, marginBottom: 6 }}>
+            <MapPin size={11} style={{ color: MCK.brassDark }} />
             <span>{d.regions.slice(0, 3).join(' · ')}{d.regions.length > 3 ? ` +${d.regions.length - 3}` : ''}</span>
           </div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: V.textPrimary, letterSpacing: '-0.01em', lineHeight: 1.35 }}>
-            {d.collateral_types.slice(0, 2).join(' · ')}{d.collateral_types.length > 2 ? ` 외 ${d.collateral_types.length - 2}종` : ''} 희망
+          <div
+            style={{
+              fontFamily: MCK_FONTS.serif,
+              fontSize: 15, fontWeight: 700, color: MCK.ink,
+              letterSpacing: '-0.015em', lineHeight: 1.35,
+            }}
+          >
+            {d.collateral_types.slice(0, 2).join(' · ')}
+            {d.collateral_types.length > 2 ? ` 외 ${d.collateral_types.length - 2}종` : ''} 희망
           </div>
         </div>
 
@@ -750,9 +1002,8 @@ function DemandCard({
         <div
           style={{
             padding: '12px 14px',
-            backgroundColor: V.surfaceBase,
-            border: `1px solid ${V.borderSubtle}`,
-            borderRadius: 10,
+            background: MCK.paperTint,
+            border: `1px solid ${MCK.border}`,
           }}
         >
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -762,13 +1013,21 @@ function DemandCard({
           <div
             style={{
               marginTop: 10, paddingTop: 10,
-              borderTop: `1px dashed ${V.borderSubtle}`,
+              borderTop: `1px dashed ${MCK.border}`,
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              fontSize: 10, color: V.textMuted,
+              fontSize: 10, color: MCK.textMuted,
             }}
           >
-            <span>평균 희망가</span>
-            <span style={{ color: V.textPrimary, fontWeight: 800, fontSize: 12 }}>{formatKRW(avg)}</span>
+            <span style={{ ...MCK_TYPE.label }}>평균 희망가</span>
+            <span
+              style={{
+                fontFamily: MCK_FONTS.serif,
+                color: MCK.ink, fontWeight: 800, fontSize: 13,
+                fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em',
+              }}
+            >
+              {formatKRW(avg)}
+            </span>
           </div>
         </div>
 
@@ -779,11 +1038,11 @@ function DemandCard({
               key={ct}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 3,
-                padding: '3px 8px', borderRadius: 4,
+                padding: '3px 8px',
                 fontSize: 10, fontWeight: 700, lineHeight: 1.3,
-                backgroundColor: `color-mix(in srgb, ${V.brandBright} 10%, transparent)`,
-                color: V.brandBright,
-                border: `1px solid color-mix(in srgb, ${V.brandBright} 22%, transparent)`,
+                background: 'rgba(184, 146, 75, 0.10)',
+                color: MCK.brassDark,
+                border: `1px solid ${MCK.brass}33`,
                 whiteSpace: 'nowrap',
               }}
             >
@@ -796,7 +1055,7 @@ function DemandCard({
         {d.memo && (
           <p
             style={{
-              fontSize: 11, lineHeight: 1.55, color: V.textSecondary,
+              fontSize: 12, lineHeight: 1.55, color: MCK.textSub,
               display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
             }}
@@ -815,10 +1074,9 @@ function DemandCard({
             style={{
               flex: '0 0 auto',
               padding: '10px 12px',
-              borderRadius: 10,
-              backgroundColor: V.surfaceSunken,
-              border: `1px solid ${V.borderSubtle}`,
-              color: V.textPrimary,
+              background: MCK.paperTint,
+              border: `1px solid ${MCK.border}`,
+              color: MCK.ink,
               fontSize: 11, fontWeight: 700,
               display: 'inline-flex', alignItems: 'center', gap: 5,
               cursor: matching ? 'wait' : 'pointer',
@@ -831,26 +1089,25 @@ function DemandCard({
           </button>
           <Link
             href={`/exchange/demands/${d.id}`}
-            className="mck-cta-dark"
             style={{
               flex: 1,
               padding: '10px 14px',
-              borderRadius: 0,           // McKinsey sharp edge
-              backgroundColor: '#0A1628', // ink — 명시 hex (token fallback 회피)
-              color: '#FFFFFF',           // 흰 글씨 절대 보장
+              background: MCK.ink,
+              color: MCK.paper,
               fontSize: 12, fontWeight: 700,
               textAlign: 'center',
               display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: 6,
               letterSpacing: '-0.01em',
-              borderTop: '1.5px solid #B8924B',  // brass top accent
+              borderTop: `2px solid ${MCK.brass}`,
+              textDecoration: 'none',
             }}
           >
-            <Zap size={13} style={{ color: '#FFFFFF' }} />
-            <span style={{ color: '#FFFFFF' }}>제안 보내기</span>
+            <Zap size={13} />
+            <span>제안 보내기</span>
           </Link>
         </div>
       </div>
-    </motion.article>
+    </article>
   )
 }
 
@@ -863,13 +1120,14 @@ function DemandFigure({
 }) {
   return (
     <div>
-      <div style={{ fontSize: 10, color: V.textMuted, fontWeight: 600, marginBottom: 2 }}>{label}</div>
+      <div style={{ ...MCK_TYPE.label, color: MCK.textMuted, marginBottom: 3 }}>{label}</div>
       <div
         style={{
-          fontSize: 15,
-          fontWeight: 800,
-          color: tone === 'em' ? V.positive : V.textPrimary,
-          letterSpacing: '-0.01em',
+          fontFamily: MCK_FONTS.serif,
+          fontSize: 16, fontWeight: 800,
+          color: tone === 'em' ? MCK.positive : MCK.ink,
+          letterSpacing: '-0.025em',
+          fontVariantNumeric: 'tabular-nums',
         }}
       >
         {value}

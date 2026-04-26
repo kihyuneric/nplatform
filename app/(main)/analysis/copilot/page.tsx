@@ -2,12 +2,19 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import {
-  Bot, User, Send, Sparkles, RefreshCw,
-  TrendingUp, AlertTriangle, BarChart3, Scale, Lightbulb,
+  Sparkles, RefreshCw, Send,
+  BarChart3, Scale,
   Building2, Plus, Clock, MessageSquare, Paperclip, Zap,
+  User as UserIcon,
 } from "lucide-react"
 import { toast } from "sonner"
-import DS from "@/lib/design-system"
+import {
+  MckPageShell,
+  MckPageHeader,
+  MckBadge,
+  MckDemoBanner,
+} from "@/components/mck"
+import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
 
 interface Message {
   id: string
@@ -44,11 +51,28 @@ const RECENT_CONVOS = [
   { id: "c4", title: "경매 유찰 입찰 전략", time: "3일 전" },
 ]
 
+const DEMO_FALLBACK = `(데모 응답) 입력하신 조건을 검토했습니다.
+
+[1] 시세 대비 매입가
+- 감정가 3억, 시장가 추정 2.7~2.9억으로 적정 매입가는 2.0~2.2억 수준
+- 연체 18개월은 신탁/배당 우선순위 검토가 필요한 구간
+
+[2] 핵심 리스크
+- 선순위 근저당 비율 (LTV 75%) → 배당 후 회수율 시뮬 필수
+- 임차인 보증금 / 명도 난이도 별도 확인
+
+[3] 권장 액션
+- /analysis/profitability 에서 IRR·ROI 시뮬 실행
+- /analysis/simulator 에서 낙찰가 슬라이더로 민감도 분석
+
+* 본 응답은 네트워크 오류로 인한 데모 fallback 입니다. 실제 Claude AI 응답은 더 상세합니다.`
+
 export default function NPLCopilotPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
+  const [isDemo, setIsDemo] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -64,7 +88,6 @@ export default function NPLCopilotPage() {
     const userMsg: Message = { id: `u-${Date.now()}`, role: "user", content: userText, timestamp: new Date() }
     setMessages((prev) => [...prev, userMsg])
     try {
-      // Stream from Claude AI Copilot
       const res = await fetch("/api/v1/ai/copilot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -79,7 +102,6 @@ export default function NPLCopilotPage() {
       })
       if (!res.ok) throw new Error(`${res.status}`)
 
-      // Handle SSE streaming
       const contentType = res.headers.get("content-type") || ""
       if (contentType.includes("text/event-stream") && res.body) {
         const reader = res.body.getReader()
@@ -96,7 +118,6 @@ export default function NPLCopilotPage() {
           done = streamDone
           if (!value) continue
           buffer += decoder.decode(value, { stream: true })
-          // SSE records are separated by a blank line (\n\n)
           const records = buffer.split("\n\n")
           buffer = records.pop() ?? ""
           for (const record of records) {
@@ -106,13 +127,12 @@ export default function NPLCopilotPage() {
             if (jsonStr === "[DONE]") { done = true; break }
             try {
               const parsed = JSON.parse(jsonStr)
-              // Server emits { type, content } per streamCopilot contract
               if (parsed.type === "text" && typeof parsed.content === "string") {
                 accumulated += parsed.content
                 setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: accumulated } : m))
               } else if (parsed.type === "tool_start" && parsed.content) {
                 toolEvents.push(parsed.content)
-                const toolLabel = `🔧 ${parsed.content} 실행 중…`
+                const toolLabel = `[ ${parsed.content} 실행 중… ]`
                 setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: accumulated ? `${accumulated}\n\n${toolLabel}` : toolLabel } : m))
               } else if (parsed.type === "error" && parsed.content) {
                 streamError = parsed.content
@@ -127,18 +147,17 @@ export default function NPLCopilotPage() {
         } else if (!accumulated) {
           setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: "응답을 생성할 수 없었습니다." } : m))
         } else if (toolEvents.length > 0) {
-          // 최종 응답에 도구 마커 제거 (스트리밍 도중에만 표시)
           setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: accumulated } : m))
         }
       } else {
-        // Fallback: non-streaming JSON response
         const data = await res.json()
         if (data.conversation_id && !conversationId) setConversationId(data.conversation_id)
         setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: "assistant", content: data.message || data.response || "응답을 받았습니다.", timestamp: new Date() }])
       }
     } catch {
-      toast.error("응답 오류가 발생했습니다.")
-      setMessages((prev) => [...prev, { id: `e-${Date.now()}`, role: "assistant", content: "AI 응답 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", timestamp: new Date() }])
+      toast.error("AI 응답 오류 — 데모 응답으로 대체합니다.")
+      setIsDemo(true)
+      setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: "assistant", content: DEMO_FALLBACK, timestamp: new Date() }])
     } finally {
       setLoading(false)
       inputRef.current?.focus()
@@ -153,196 +172,517 @@ export default function NPLCopilotPage() {
   const isEmpty = messages.length === 0
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[var(--color-surface-sunken)]">
+    <MckPageShell variant="tint">
+      {isDemo && (
+        <MckDemoBanner
+          message="데모 응답 모드 — Claude API 연결 실패로 사전 작성된 샘플 응답을 사용합니다."
+          ctaLabel="다시 시도"
+          ctaHref="/analysis/copilot"
+        />
+      )}
 
-      {/* Sidebar */}
-      <aside className="hidden lg:flex w-[280px] shrink-0 flex-col bg-[var(--color-surface-elevated)] border-r border-[var(--color-border-subtle)]">
-        <div className="px-4 pt-5 pb-4 border-b border-[var(--color-border-subtle)]">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="h-9 w-9 rounded-xl bg-[var(--color-brand-dark)] flex items-center justify-center shadow-[var(--shadow-sm)] shrink-0">
-              <Sparkles className="h-4 w-4 text-white" />
-            </div>
-            <div>
-              <p className={DS.text.cardSubtitle}>AI 컨설턴트</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-positive)] animate-pulse" />
-                <span className={`${DS.text.micro} bg-[var(--color-brand-mid)]/10 text-[var(--color-brand-mid)] border border-[var(--color-brand-mid)]/20 px-1.5 py-0.5 rounded`}>Claude</span>
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={handleReset}
-            className={DS.button.secondary + " w-full"}
-          >
-            <Plus className="h-4 w-4" />
-            새 대화 시작
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-          <p className={`${DS.text.label} px-2 mb-3`}>최근 대화</p>
-          {RECENT_CONVOS.map((c) => (
-            <button key={c.id} className="w-full flex items-start gap-2.5 px-3 py-2.5 rounded-xl hover:bg-[var(--color-surface-sunken)] transition-colors text-left group">
-              <MessageSquare className="h-3.5 w-3.5 text-[var(--color-text-muted)] shrink-0 mt-0.5 group-hover:text-[var(--color-text-secondary)] transition-colors" />
-              <div className="min-w-0">
-                <p className={`${DS.text.caption} truncate group-hover:text-[var(--color-text-primary)] transition-colors`}>{c.title}</p>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <Clock className="h-2.5 w-2.5 text-[var(--color-text-muted)]" />
-                  <p className={DS.text.micro}>{c.time}</p>
-                </div>
-              </div>
+      <MckPageHeader
+        breadcrumbs={[
+          { label: "홈", href: "/" },
+          { label: "분석", href: "/analysis" },
+          { label: "AI 컨설턴트" },
+        ]}
+        eyebrow="AI Consultant · Claude"
+        title="AI 컨설턴트"
+        subtitle="자연어로 매물·법률·수익률을 질문하면 Claude AI 가 RAG 판례 인용과 함께 답변합니다."
+        actions={
+          <div className="flex items-center gap-2 shrink-0">
+            <MckBadge tone="positive" outlined icon={<span style={{ width: 6, height: 6, background: MCK.positive, display: "inline-block", borderRadius: "50%" }} />}>
+              Online · Claude
+            </MckBadge>
+            <button
+              onClick={handleReset}
+              type="button"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "8px 14px",
+                background: MCK.paper,
+                border: `1px solid ${MCK.borderStrong}`,
+                color: MCK.ink,
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+              }}
+            >
+              <RefreshCw size={12} />
+              초기화
             </button>
-          ))}
-        </div>
-      </aside>
-
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-
-        {/* Chat Header */}
-        <div className="shrink-0 border-b border-[var(--color-border-subtle)] px-5 py-3 flex items-center justify-between bg-[var(--color-surface-elevated)]">
-          <div className="flex items-center gap-3">
-            <span className={DS.text.cardSubtitle}>AI 컨설턴트</span>
-            <span className={`${DS.text.micro} bg-[var(--color-brand-mid)]/10 text-[var(--color-brand-mid)] border border-[var(--color-brand-mid)]/20 px-2 py-0.5 rounded hidden sm:inline`}>Claude</span>
           </div>
-          <button
-            onClick={handleReset}
-            className={DS.button.ghost}
+        }
+      />
+
+      {/* Workspace: sidebar + chat */}
+      <div className="max-w-[1280px] mx-auto" style={{ padding: "24px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 280px) minmax(0, 1fr)",
+            gap: 16,
+            alignItems: "stretch",
+          }}
+          className="lg:grid-cols-[280px_1fr] grid-cols-1"
+        >
+          {/* Sidebar */}
+          <aside
+            className="hidden lg:flex"
+            style={{
+              flexDirection: "column",
+              background: MCK.paper,
+              border: `1px solid ${MCK.border}`,
+              borderTop: `2px solid ${MCK.brass}`,
+              minHeight: 600,
+            }}
           >
-            <RefreshCw className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">초기화</span>
-          </button>
-        </div>
-
-        {/* Messages */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto bg-[var(--color-surface-sunken)]">
-          <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
-
-            {/* Welcome / empty state */}
-            {isEmpty && (
-              <div className="flex flex-col items-center gap-4 pt-12 pb-4">
-                <div className="h-16 w-16 rounded-2xl bg-[var(--color-brand-dark)] flex items-center justify-center shadow-[var(--shadow-lg)] border border-[var(--color-border-subtle)]">
-                  <Sparkles className="h-8 w-8 text-white" />
-                </div>
-                <div className="text-center">
-                  <h2 className={DS.text.sectionTitle}>AI 컨설턴트</h2>
-                  <p className={`${DS.text.body} mt-1`}>NPL 투자 분석, 리스크 검토, 전략 수립을 AI와 함께</p>
-                </div>
-
-                {/* 데모 안내 */}
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-stone-100/10 border border-stone-300/20 text-xs font-semibold text-stone-900 dark:text-stone-900">
-                  <Zap className="h-3.5 w-3.5 shrink-0" />
-                  아래 예시 질문을 클릭하면 바로 체험할 수 있습니다 — 로그인 불필요
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full mt-2">
-                  {STARTER_CARDS.map((q) => {
-                    const Icon = q.icon
-                    return (
-                      <button
-                        key={q.label}
-                        onClick={() => sendMessage(q.text)}
-                        className={`${DS.card.interactive} text-left p-4 group relative`}
-                      >
-                        {q.badge && (
-                          <span className="absolute top-3 right-3 text-[0.625rem] font-bold px-1.5 py-0.5 rounded-full bg-stone-100/15 text-stone-900 dark:text-stone-900 border border-stone-300/25">
-                            {q.badge}
-                          </span>
-                        )}
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="h-6 w-6 rounded-md bg-[var(--color-brand-mid)]/10 flex items-center justify-center border border-[var(--color-brand-mid)]/20">
-                            <Icon className="h-3.5 w-3.5 text-[var(--color-brand-mid)]" />
-                          </div>
-                          <span className={`${DS.text.caption} group-hover:text-[var(--color-text-primary)] transition-colors`}>{q.label}</span>
-                        </div>
-                        <p className={`${DS.text.captionLight} group-hover:text-[var(--color-text-secondary)] line-clamp-3 leading-relaxed transition-colors`}>{q.text}</p>
-                        <p className="text-[0.625rem] text-[var(--color-text-muted)] mt-2 font-medium group-hover:text-[var(--color-text-tertiary)] transition-colors">
-                          클릭하여 전송 →
-                        </p>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Message bubbles */}
-            {messages.map((msg) => {
-              const isUser = msg.role === "user"
-              return (
-                <div key={msg.id} className={`flex gap-3 items-end ${isUser ? "flex-row-reverse" : "flex-row"}`}>
-                  <div className={`shrink-0 h-7 w-7 rounded-lg flex items-center justify-center ${isUser ? "bg-[var(--color-brand-dark)]" : "bg-[var(--color-brand-mid)]"}`}>
-                    {isUser ? <User className="h-3.5 w-3.5 text-white" /> : <Sparkles className="h-3.5 w-3.5 text-white" />}
-                  </div>
-                  <div className={`max-w-[78%] space-y-1 ${isUser ? "items-end flex flex-col" : "items-start flex flex-col"}`}>
-                    <div className={`px-4 py-3 text-[0.9375rem] leading-relaxed whitespace-pre-wrap rounded-2xl ${
-                      isUser
-                        ? "bg-[var(--color-brand-dark)] text-white rounded-tr-sm shadow-[var(--shadow-sm)]"
-                        : "bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] rounded-tl-sm shadow-[var(--shadow-xs)]"
-                    }`}>
-                      {msg.content}
-                    </div>
-                    <p className={DS.text.micro}>
-                      {msg.timestamp.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
-                    </p>
-                  </div>
-                </div>
-              )
-            })}
-
-            {/* Typing indicator */}
-            {loading && (
-              <div className="flex gap-3 items-end">
-                <div className="h-7 w-7 rounded-lg bg-[var(--color-brand-mid)] flex items-center justify-center shrink-0">
-                  <Sparkles className="h-3.5 w-3.5 text-white" />
-                </div>
-                <div className={`${DS.card.base} rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2`}>
-                  <div className="flex gap-1">
-                    {[0, 150, 300].map((d) => (
-                      <span key={d} className="h-1.5 w-1.5 bg-[var(--color-brand-mid)] rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
-                    ))}
-                  </div>
-                  <span className={DS.text.micro}>분석 중...</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Input Bar */}
-        <div className="shrink-0 bg-[var(--color-surface-elevated)] border-t border-[var(--color-border-subtle)] px-4 py-3">
-          <div className="max-w-3xl mx-auto">
-            <div className="flex items-end gap-0 rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-surface-base)] focus-within:border-[var(--color-brand-mid)] transition-all overflow-hidden">
-              <button className="h-11 w-11 shrink-0 flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors">
-                <Paperclip className="h-4 w-4" />
-              </button>
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-                placeholder="NPL 분석에 대해 무엇이든 물어보세요..."
-                rows={1}
-                className="flex-1 resize-none bg-transparent text-[0.9375rem] py-3 text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none"
-                disabled={loading}
-                style={{ minHeight: "44px", maxHeight: "120px" }}
-              />
-              <div className="flex items-center pr-3 pb-2.5 self-end">
-                <button
-                  onClick={() => sendMessage()}
-                  disabled={loading || !input.trim()}
-                  className="h-8 w-8 shrink-0 flex items-center justify-center rounded-xl bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-mid)] text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            <div style={{ padding: "20px 18px", borderBottom: `1px solid ${MCK.border}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                <div
+                  style={{
+                    width: 36, height: 36,
+                    background: MCK.ink,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                  }}
                 >
-                  {loading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                  <Sparkles size={16} style={{ color: MCK.brassLight }} />
+                </div>
+                <div>
+                  <p style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark, marginBottom: 2 }}>
+                    AI Consultant
+                  </p>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: MCK.ink, fontFamily: MCK_FONTS.serif }}>
+                    Claude
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleReset}
+                type="button"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  width: "100%",
+                  padding: "10px 14px",
+                  background: MCK.ink,
+                  color: MCK.paper,
+                  borderTop: `2px solid ${MCK.brass}`,
+                  border: "none",
+                  fontSize: 12,
+                  fontWeight: 800,
+                  letterSpacing: "0.02em",
+                  cursor: "pointer",
+                }}
+              >
+                <Plus size={14} />
+                새 대화 시작
+              </button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px 12px" }}>
+              <p
+                style={{
+                  ...MCK_TYPE.label,
+                  color: MCK.textMuted,
+                  padding: "0 8px",
+                  marginBottom: 10,
+                }}
+              >
+                Recent · 최근 대화
+              </p>
+              {RECENT_CONVOS.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className="hover:bg-[#FAFBFC]"
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 10,
+                    width: "100%",
+                    padding: "10px 12px",
+                    background: "transparent",
+                    border: "none",
+                    borderLeft: `2px solid transparent`,
+                    textAlign: "left",
+                    cursor: "pointer",
+                  }}
+                >
+                  <MessageSquare size={14} style={{ color: MCK.textMuted, marginTop: 2, flexShrink: 0 }} />
+                  <div style={{ minWidth: 0 }}>
+                    <p
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: MCK.ink,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {c.title}
+                    </p>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                      <Clock size={10} style={{ color: MCK.textMuted }} />
+                      <p style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 500 }}>{c.time}</p>
+                    </div>
+                  </div>
                 </button>
+              ))}
+            </div>
+          </aside>
+
+          {/* Chat panel */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              background: MCK.paper,
+              border: `1px solid ${MCK.border}`,
+              borderTop: `2px solid ${MCK.brass}`,
+              minHeight: 600,
+              maxHeight: "calc(100vh - 200px)",
+            }}
+          >
+            {/* Messages area */}
+            <div
+              ref={scrollRef}
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                background: MCK.paperTint,
+                padding: "24px 20px",
+              }}
+            >
+              <div className="max-w-3xl mx-auto" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                {/* Welcome / empty state */}
+                {isEmpty && (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18, paddingTop: 24, paddingBottom: 8 }}>
+                    <div
+                      style={{
+                        width: 64, height: 64,
+                        background: MCK.ink,
+                        borderTop: `2px solid ${MCK.brass}`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Sparkles size={28} style={{ color: MCK.brassLight }} />
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <p style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark, marginBottom: 8 }}>
+                        Start your consult
+                      </p>
+                      <h2
+                        style={{
+                          fontFamily: MCK_FONTS.serif,
+                          color: MCK.ink,
+                          fontSize: 22,
+                          fontWeight: 800,
+                          letterSpacing: "-0.02em",
+                          marginBottom: 6,
+                        }}
+                      >
+                        AI 컨설턴트
+                      </h2>
+                      <p style={{ fontSize: 13, color: MCK.textSub }}>
+                        NPL 투자 분석, 리스크 검토, 전략 수립을 AI 와 함께
+                      </p>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "6px 14px",
+                        background: MCK.paper,
+                        border: `1px solid ${MCK.brass}55`,
+                        color: MCK.brassDark,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      <Zap size={11} />
+                      아래 예시 질문을 클릭하면 바로 체험 — 로그인 불필요
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full" style={{ marginTop: 8 }}>
+                      {STARTER_CARDS.map((q) => {
+                        const Icon = q.icon
+                        return (
+                          <button
+                            key={q.label}
+                            type="button"
+                            onClick={() => sendMessage(q.text)}
+                            className="hover:shadow-md transition-shadow"
+                            style={{
+                              background: MCK.paper,
+                              border: `1px solid ${MCK.border}`,
+                              borderTop: `2px solid ${MCK.brass}`,
+                              padding: 16,
+                              textAlign: "left",
+                              cursor: "pointer",
+                              position: "relative",
+                            }}
+                          >
+                            {q.badge && (
+                              <span style={{ position: "absolute", top: 10, right: 10 }}>
+                                <MckBadge tone="brass" size="sm">{q.badge}</MckBadge>
+                              </span>
+                            )}
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                              <div
+                                style={{
+                                  width: 24, height: 24,
+                                  background: MCK.ink,
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                }}
+                              >
+                                <Icon size={12} style={{ color: MCK.paper }} />
+                              </div>
+                              <span
+                                style={{
+                                  ...MCK_TYPE.eyebrow,
+                                  color: MCK.brassDark,
+                                }}
+                              >
+                                {q.label}
+                              </span>
+                            </div>
+                            <p
+                              style={{
+                                fontSize: 12,
+                                color: MCK.textSub,
+                                lineHeight: 1.55,
+                                display: "-webkit-box",
+                                WebkitBoxOrient: "vertical",
+                                WebkitLineClamp: 3,
+                                overflow: "hidden",
+                              }}
+                            >
+                              {q.text}
+                            </p>
+                            <p
+                              style={{
+                                fontSize: 10,
+                                color: MCK.brassDark,
+                                fontWeight: 800,
+                                letterSpacing: "0.06em",
+                                textTransform: "uppercase",
+                                marginTop: 10,
+                              }}
+                            >
+                              클릭하여 전송 →
+                            </p>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Message bubbles */}
+                {messages.map((msg) => {
+                  const isUser = msg.role === "user"
+                  return (
+                    <div
+                      key={msg.id}
+                      style={{
+                        display: "flex",
+                        gap: 10,
+                        alignItems: "flex-start",
+                        flexDirection: isUser ? "row-reverse" : "row",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 28, height: 28,
+                          flexShrink: 0,
+                          background: isUser ? MCK.paper : MCK.ink,
+                          border: isUser ? `1px solid ${MCK.borderStrong}` : "none",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {isUser
+                          ? <UserIcon size={14} style={{ color: MCK.ink }} />
+                          : <Sparkles size={14} style={{ color: MCK.brassLight }} />
+                        }
+                      </div>
+                      <div style={{ maxWidth: "78%", display: "flex", flexDirection: "column", gap: 4, alignItems: isUser ? "flex-end" : "flex-start" }}>
+                        <div
+                          style={{
+                            padding: "12px 16px",
+                            fontSize: 14,
+                            lineHeight: 1.6,
+                            whiteSpace: "pre-wrap",
+                            color: MCK.ink,
+                            background: isUser ? MCK.paper : MCK.paperTint,
+                            border: isUser
+                              ? `1px solid ${MCK.ink}`
+                              : `1px solid ${MCK.border}`,
+                            borderLeft: isUser ? `1px solid ${MCK.ink}` : `3px solid ${MCK.brass}`,
+                            fontFamily: MCK_FONTS.sans,
+                          }}
+                        >
+                          {msg.content}
+                        </div>
+                        <p style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 500, padding: "0 4px" }}>
+                          {msg.timestamp.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {/* Typing indicator */}
+                {loading && (
+                  <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <div
+                      style={{
+                        width: 28, height: 28,
+                        background: MCK.ink,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Sparkles size={14} style={{ color: MCK.brassLight }} />
+                    </div>
+                    <div
+                      style={{
+                        background: MCK.paperTint,
+                        border: `1px solid ${MCK.border}`,
+                        borderLeft: `3px solid ${MCK.brass}`,
+                        padding: "12px 16px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <div style={{ display: "flex", gap: 4 }}>
+                        {[0, 150, 300].map((d) => (
+                          <span
+                            key={d}
+                            className="animate-bounce"
+                            style={{
+                              width: 6, height: 6,
+                              background: MCK.brassDark,
+                              display: "inline-block",
+                              animationDelay: `${d}ms`,
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <span style={{ fontSize: 11, color: MCK.textMuted, fontWeight: 600 }}>분석 중...</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-            <p className={`${DS.text.micro} mt-1.5 px-0.5`}>
-              Enter: 전송 · Shift+Enter: 줄바꿈 · AI 응답은 참고용입니다.
-            </p>
+
+            {/* Input bar */}
+            <div
+              style={{
+                background: MCK.paper,
+                borderTop: `1px solid ${MCK.border}`,
+                padding: "14px 20px",
+              }}
+            >
+              <div className="max-w-3xl mx-auto">
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-end",
+                    background: MCK.paperTint,
+                    border: `1px solid ${MCK.borderStrong}`,
+                    overflow: "hidden",
+                  }}
+                >
+                  <button
+                    type="button"
+                    style={{
+                      width: 40, height: 44,
+                      flexShrink: 0,
+                      background: "transparent",
+                      border: "none",
+                      color: MCK.textMuted,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Paperclip size={16} />
+                  </button>
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+                    placeholder="NPL 분석에 대해 무엇이든 물어보세요..."
+                    rows={1}
+                    disabled={loading}
+                    style={{
+                      flex: 1,
+                      resize: "none",
+                      background: "transparent",
+                      border: "none",
+                      outline: "none",
+                      fontSize: 14,
+                      lineHeight: 1.5,
+                      color: MCK.ink,
+                      padding: "12px 8px",
+                      minHeight: 44,
+                      maxHeight: 120,
+                      fontFamily: MCK_FONTS.sans,
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => sendMessage()}
+                    disabled={loading || !input.trim()}
+                    style={{
+                      width: 36, height: 36,
+                      flexShrink: 0,
+                      margin: "4px 6px",
+                      background: MCK.ink,
+                      borderTop: `2px solid ${MCK.brass}`,
+                      border: "none",
+                      color: MCK.paper,
+                      cursor: loading || !input.trim() ? "not-allowed" : "pointer",
+                      opacity: loading || !input.trim() ? 0.4 : 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {loading ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />}
+                  </button>
+                </div>
+                <p style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 500, marginTop: 6, padding: "0 4px" }}>
+                  Enter: 전송 · Shift+Enter: 줄바꿈 · AI 응답은 참고용입니다.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </MckPageShell>
   )
 }

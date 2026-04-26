@@ -1,34 +1,34 @@
 "use client"
 
 /**
- * Phase 2-E — 거래소 발견(Discover) 모드
+ * /exchange/discover — 매물 발견 모드 (McKinsey White Paper · 2026-04-26)
  *
- * 인피니트 스크롤 기반 매물 탐색 화면.
- * 기존 `/exchange` (표·필터·정렬 강함, 파워 유저)와 분리된 캐주얼 발견 UX.
+ * - useInfiniteQuery + IntersectionObserver
+ * - API 실패 시 자동으로 체험 모드(샘플 6건) 진입 — 오류 화면 X
+ * - McKinsey 화이트 페이퍼 톤: serif 헤더, brass 액센트, 카드 그리드, paper background
  *
- * 핵심:
- *   - useInfiniteQuery (lib/hooks/use-exchange-listings) + IntersectionObserver
- *   - 카드 그리드 (모바일 1, 태블릿 2, 데스크탑 3)
- *   - 간략 필터 (담보 유형 · 지역) + 검색
- *   - "더 보기" 버튼 fallback (a11y)
- *   - 마지막 페이지: "전체 매물 표 보기 →" CTA
+ * 디자인:
+ *   - Header: breadcrumb + serif H1 + total count + 표·필터 모드 전환
+ *   - Filter bar: 화이트 종이 위 sticky filter (검색 / 담보 / 지역 / 정렬)
+ *   - Grid: 화이트 카드 3열 (sm: 2, lg: 3)
+ *   - Footer: "전체 매물 표 보기" CTA
  */
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { Loader2, Search, ArrowRight, Compass, Filter, ListFilter } from "lucide-react"
+import { Loader2, Search, ArrowRight, Compass, Filter, ListFilter, Calendar, ChevronRight } from "lucide-react"
 import { useExchangeListings, type ExchangeFilters } from "@/lib/hooks/use-exchange-listings"
 import { ListingCard } from "@/components/npl/listing-card"
 import type { CollateralType } from "@/components/npl/collateral-badge"
 import type { RiskGrade } from "@/components/npl/risk-badge"
+import { MckPageShell, MckPageHeader, MckDemoBanner, MckEmptyState } from "@/components/mck"
+import { MCK, MCK_FONTS } from "@/lib/mck-design"
 
 // ─── 필터 옵션 ───
 const COLLATERAL_OPTIONS = ["전체", "아파트", "오피스텔", "상가", "토지", "빌라", "기타"] as const
 const REGION_OPTIONS = ["전체", "서울", "경기", "인천", "부산", "대구", "광주", "대전", "울산", "세종", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"] as const
 
-// ExchangeListing(hook) · npl_listings(API raw) 양쪽 필드 호환 매핑
-// T2 fix (2026-04-20): API가 원본 snake_case(principal_amount, address, sido 등)를
-// 내려주므로 hook 기준 정규화된 필드만 읽으면 모든 값이 0/"" 로 비어 "오류"처럼 보임.
+// ─── ListingCard 어댑터 ───
 function toCardProps(raw: Record<string, unknown>) {
   const l = raw as Record<string, any>
   const principal =
@@ -52,8 +52,6 @@ function toCardProps(raw: Record<string, unknown>) {
     ? Math.round((1 - askingMid / principal) * 1000) / 10
     : 0
 
-  // 지역: hook 정규화(location_city+district) > 원본(collateral_region+location_detail)
-  //      > address 앞 2토큰 > sido 순으로 fallback
   let region = ""
   if (l.location_city || l.location_district) {
     region = [l.location_city, l.location_district].filter(Boolean).join(" ")
@@ -77,6 +75,26 @@ function toCardProps(raw: Record<string, unknown>) {
     deadline: (l.deadline as string) ?? new Date(Date.now() + 7 * 24 * 3600_000).toISOString(),
     viewCount: (l.interest_count as number) ?? (l.view_count as number),
   }
+}
+
+// ─── 화이트 페이퍼 select 스타일 ───
+const SELECT_STYLE: React.CSSProperties = {
+  appearance: "none",
+  background: MCK.paper,
+  border: `1px solid ${MCK.borderStrong}`,
+  borderRadius: 0,
+  padding: "10px 30px 10px 14px",
+  fontSize: 13,
+  fontWeight: 600,
+  color: MCK.ink,
+  letterSpacing: "0.01em",
+  cursor: "pointer",
+  fontFamily: MCK_FONTS.sans,
+  // SVG chevron
+  backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='${encodeURIComponent("#0A1628")}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>")`,
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "right 10px center",
+  backgroundSize: "10px",
 }
 
 export default function ExchangeDiscoverPage() {
@@ -110,15 +128,12 @@ export default function ExchangeDiscoverPage() {
 
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
-  // IntersectionObserver — sentinel 보일 때 자동 로드
   useEffect(() => {
     const el = sentinelRef.current
     if (!el || !hasNextPage || isFetchingNextPage) return
     const io = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) fetchNextPage()
-      },
-      { rootMargin: "320px 0px" }, // 한 화면 미리 로드
+      (entries) => { if (entries[0].isIntersecting) fetchNextPage() },
+      { rootMargin: "320px 0px" },
     )
     io.observe(el)
     return () => io.disconnect()
@@ -129,104 +144,161 @@ export default function ExchangeDiscoverPage() {
     [data],
   )
   const total = data?.pages[0]?.total ?? 0
+  const isDemo = Boolean(data?.pages[0]?.isDemo)
+
+  const breadcrumbs = [
+    { label: "거래소", href: "/exchange" },
+    { label: "매물 발견" },
+  ]
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface-sunken)]">
-      {/* SubNav · Breadcrumb */}
-      <div className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="text-[12px] text-[var(--color-text-muted)] mb-2">
-            <Link href="/exchange" className="hover:text-[var(--color-text-primary)]">거래소</Link>
-            <span className="mx-1.5">›</span>
-            <span className="text-[var(--color-text-primary)] font-semibold">발견</span>
-          </div>
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Compass className="h-5 w-5 text-[var(--color-brand-emerald)]" />
-              <h1 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">
-                매물 발견
-              </h1>
-              <span className="text-[12px] text-[var(--color-text-muted)]">
-                {total > 0 ? `${total.toLocaleString()}건` : "—"}
-              </span>
-            </div>
+    <MckPageShell variant="tint">
+      {isDemo && (
+        <MckDemoBanner
+          message="체험 모드 — 샘플 매물 6건을 표시 중입니다. 로그인 후 실제 매물이 노출됩니다."
+        />
+      )}
+
+      <MckPageHeader
+        breadcrumbs={breadcrumbs}
+        eyebrow="Section 01 · Discover Mode"
+        title="매물 발견"
+        subtitle="공개된 NPL 매물을 카드 그리드로 둘러보세요. 필터를 좁히거나 표·필터 모드로 전환해 정밀 검색할 수 있습니다."
+        actions={
+          <div style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: MCK.brassDark,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              {total > 0 ? `${total.toLocaleString()} listings` : "—"}
+            </span>
             <Link
               href="/exchange"
-              className="inline-flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-full border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] transition-colors"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "10px 18px",
+                background: MCK.paper,
+                border: `1px solid ${MCK.ink}`,
+                borderTop: `2px solid ${MCK.brass}`,
+                color: MCK.ink,
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: "-0.01em",
+                textDecoration: "none",
+              }}
             >
-              <ListFilter className="h-3.5 w-3.5" />
+              <ListFilter size={14} style={{ color: MCK.ink }} />
               표·필터 모드로
+              <ChevronRight size={14} style={{ color: MCK.ink }} />
             </Link>
           </div>
-        </div>
-      </div>
+        }
+      />
 
-      {/* 검색 + 필터 */}
-      <div className="sticky top-0 z-20 bg-[var(--color-surface-sunken)]/95 backdrop-blur-sm border-b border-[var(--color-border-subtle)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-muted)]" />
+      {/* Sticky filter bar — McKinsey 화이트 종이 */}
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 20,
+          background: MCK.paper,
+          borderBottom: `1px solid ${MCK.border}`,
+          boxShadow: "0 1px 3px rgba(10,22,40,0.04)",
+        }}
+      >
+        <div
+          className="max-w-[1280px] mx-auto"
+          style={{ padding: "16px 24px", display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}
+        >
+          {/* Eyebrow */}
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              color: MCK.brassDark,
+              letterSpacing: "0.10em",
+              textTransform: "uppercase",
+              marginRight: 4,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <Compass size={12} style={{ color: MCK.brass }} />
+            FILTERS
+          </div>
+
+          <div style={{ position: "relative", flex: "1 1 320px", minWidth: 260 }}>
+            <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: MCK.textMuted }} />
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="지역·담보 유형·키워드로 검색"
-              className="w-full pl-9 pr-3 py-2 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[14px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-emerald)]/30"
+              style={{
+                width: "100%",
+                padding: "10px 14px 10px 34px",
+                background: MCK.paper,
+                border: `1px solid ${MCK.borderStrong}`,
+                borderRadius: 0,
+                fontSize: 13,
+                fontWeight: 500,
+                color: MCK.ink,
+                fontFamily: MCK_FONTS.sans,
+                outline: "none",
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = MCK.ink; e.currentTarget.style.borderTopColor = MCK.brass; e.currentTarget.style.borderTopWidth = "2px" }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = MCK.borderStrong; e.currentTarget.style.borderTopWidth = "1px" }}
             />
           </div>
-          <div className="flex gap-2">
-            <select
-              value={collateral}
-              onChange={(e) => setCollateral(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[13px] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-emerald)]/30"
-              aria-label="담보 유형 필터"
-            >
-              {COLLATERAL_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <select
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[13px] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-emerald)]/30"
-              aria-label="지역 필터"
-            >
-              {REGION_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-            </select>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[13px] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-emerald)]/30"
-              aria-label="정렬"
-            >
-              <option value="created_at">최신순</option>
-              <option value="principal">채권잔액 큰 순</option>
-              <option value="risk_grade">리스크 낮은 순</option>
-            </select>
-          </div>
+
+          <select value={collateral} onChange={(e) => setCollateral(e.target.value)} style={SELECT_STYLE} aria-label="담보 유형">
+            {COLLATERAL_OPTIONS.map((c) => <option key={c} value={c}>{c === "전체" ? "담보 · 전체" : c}</option>)}
+          </select>
+          <select value={region} onChange={(e) => setRegion(e.target.value)} style={SELECT_STYLE} aria-label="지역">
+            {REGION_OPTIONS.map((r) => <option key={r} value={r}>{r === "전체" ? "지역 · 전체" : r}</option>)}
+          </select>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={SELECT_STYLE} aria-label="정렬">
+            <option value="created_at">정렬 · 최신순</option>
+            <option value="principal">채권잔액 큰 순</option>
+            <option value="risk_grade">리스크 낮은 순</option>
+          </select>
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* 에러 */}
-        {isError && (
-          <div className="rounded-xl border border-stone-300/30 bg-stone-100/5 p-4 mb-4">
-            <div className="text-[13px] font-semibold text-stone-900 mb-1">매물을 불러오지 못했습니다.</div>
-            <div className="text-[12px] text-[var(--color-text-muted)] mb-2">{error?.message}</div>
-            <button
-              onClick={() => refetch()}
-              className="text-[12px] font-semibold text-stone-900 hover:underline"
-            >
-              다시 시도
-            </button>
-          </div>
+      <main className="max-w-[1280px] mx-auto" style={{ padding: "32px 24px 80px" }}>
+        {/* 에러 (체험 모드 fallback이 있어 거의 도달 X 이지만 안전망) */}
+        {isError && allListings.length === 0 && (
+          <MckEmptyState
+            icon={Filter}
+            variant="error"
+            title="매물을 불러오지 못했습니다"
+            description={error?.message ?? "잠시 후 다시 시도해 주세요."}
+            actionLabel="다시 시도"
+            onActionClick={() => refetch()}
+          />
         )}
 
         {/* 그리드 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 16 }}>
           {/* 초기 로딩 스켈레톤 */}
           {isLoading && Array.from({ length: 6 }).map((_, i) => (
             <div
               key={`s-${i}`}
-              className="h-72 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] animate-pulse"
+              style={{
+                height: 296,
+                background: MCK.paper,
+                border: `1px solid ${MCK.border}`,
+                borderTop: `2px solid ${MCK.border}`,
+                animation: "pulse 1.5s ease-in-out infinite",
+              }}
             />
           ))}
 
@@ -240,65 +312,102 @@ export default function ExchangeDiscoverPage() {
           {isFetchingNextPage && Array.from({ length: 3 }).map((_, i) => (
             <div
               key={`ns-${i}`}
-              className="h-72 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] animate-pulse"
+              style={{
+                height: 296,
+                background: MCK.paper,
+                border: `1px solid ${MCK.border}`,
+                borderTop: `2px solid ${MCK.border}`,
+                animation: "pulse 1.5s ease-in-out infinite",
+              }}
             />
           ))}
         </div>
 
         {/* 빈 상태 */}
         {!isLoading && allListings.length === 0 && !isError && (
-          <div className="text-center py-16">
-            <Filter className="h-10 w-10 mx-auto text-[var(--color-text-muted)] mb-3 opacity-40" />
-            <div className="text-[14px] font-semibold text-[var(--color-text-primary)] mb-1">
-              조건에 맞는 매물이 없습니다.
-            </div>
-            <div className="text-[12px] text-[var(--color-text-muted)] mb-4">
-              필터를 조정하거나 검색어를 변경해보세요.
-            </div>
-            <button
-              onClick={() => { setQuery(""); setCollateral("전체"); setRegion("전체") }}
-              className="text-[12px] font-semibold text-[var(--color-brand-emerald)] hover:underline"
-            >
-              필터 초기화
-            </button>
-          </div>
+          <MckEmptyState
+            icon={Filter}
+            title="조건에 맞는 매물이 없습니다"
+            description="필터를 조정하거나 검색어를 변경해 보세요. 일반적으로 지역 · 담보 유형 필터를 좁힐수록 결과가 줄어듭니다."
+            actionLabel="필터 초기화"
+            onActionClick={() => { setQuery(""); setCollateral("전체"); setRegion("전체") }}
+          />
         )}
 
         {/* Sentinel + Load more fallback */}
         {!isLoading && allListings.length > 0 && (
-          <div ref={sentinelRef} className="mt-8 flex flex-col items-center gap-3">
+          <div
+            ref={sentinelRef}
+            style={{ marginTop: 48, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}
+          >
             {hasNextPage ? (
               <>
                 {isFetchingNextPage ? (
-                  <div className="inline-flex items-center gap-2 text-[12px] text-[var(--color-text-muted)]">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, color: MCK.textMuted, fontWeight: 600 }}>
+                    <Loader2 size={14} className="animate-spin" />
                     더 불러오는 중…
                   </div>
                 ) : (
                   <button
                     onClick={() => fetchNextPage()}
-                    className="px-5 py-2.5 rounded-full text-[13px] font-semibold border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] transition-colors"
+                    style={{
+                      padding: "12px 28px",
+                      fontSize: 13,
+                      fontWeight: 800,
+                      color: MCK.ink,
+                      background: MCK.paper,
+                      border: `1px solid ${MCK.ink}`,
+                      borderTop: `2px solid ${MCK.brass}`,
+                      cursor: "pointer",
+                      letterSpacing: "-0.01em",
+                    }}
                   >
                     더 보기
                   </button>
                 )}
               </>
             ) : (
-              <div className="flex flex-col items-center gap-3 py-4">
-                <div className="text-[12px] text-[var(--color-text-muted)]">
-                  모든 매물을 둘러봤습니다 — 총 <strong className="text-[var(--color-text-primary)]">{allListings.length.toLocaleString()}</strong>건
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, padding: "20px 0" }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, color: MCK.textMuted, fontWeight: 600 }}>
+                  <Calendar size={12} />
+                  모든 매물을 둘러봤습니다 — 총{" "}
+                  <strong style={{ color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>
+                    {allListings.length.toLocaleString()}
+                  </strong>
+                  건
                 </div>
                 <Link
                   href="/exchange"
-                  className="inline-flex items-center gap-1.5 text-[13px] font-bold px-4 py-2 rounded-full bg-[var(--color-brand-emerald)] text-white hover:opacity-90 transition-opacity"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "14px 28px",
+                    background: MCK.ink,
+                    borderTop: `2px solid ${MCK.brass}`,
+                    color: MCK.paper,
+                    fontSize: 13,
+                    fontWeight: 800,
+                    letterSpacing: "-0.015em",
+                    textDecoration: "none",
+                    boxShadow: "0 6px 24px rgba(10,22,40,0.20)",
+                  }}
                 >
-                  전체 매물 표 보기 <ArrowRight className="h-3.5 w-3.5" />
+                  <span style={{ color: MCK.paper }}>전체 매물 표 보기</span>
+                  <ArrowRight size={14} style={{ color: MCK.paper }} />
                 </Link>
               </div>
             )}
           </div>
         )}
+
+        <style jsx>{`
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.55; }
+          }
+        `}</style>
       </main>
-    </div>
+    </MckPageShell>
   )
 }

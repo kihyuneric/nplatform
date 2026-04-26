@@ -2,6 +2,7 @@
 
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { fetchSafe } from '@/lib/fetch-safe'
+import { DEMO_LISTINGS_PAGE } from '@/lib/mck-mock'
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -69,18 +70,29 @@ function buildParams(filters: ExchangeFilters, page: number): URLSearchParams {
 // ─── Infinite listings (pagination with "더 보기") ─────────────
 
 export function useExchangeListings(filters: ExchangeFilters) {
-  return useInfiniteQuery<{ listings: ExchangeListing[]; total: number; totalPages: number; kpi: Record<string, number> }, Error>({
+  return useInfiniteQuery<{ listings: ExchangeListing[]; total: number; totalPages: number; kpi: Record<string, number>; isDemo?: boolean }, Error>({
     queryKey: ['exchange-listings', filters],
     queryFn: async ({ pageParam }) => {
       const page = typeof pageParam === 'number' ? pageParam : 1
       const params = buildParams(filters, page)
-      const data = await fetchSafe<ListingsResponse>(
-        `/api/v1/exchange/listings?${params.toString()}`
+      // 체험 모드 fallback — API 실패/401 시 데모 데이터 페이지를 반환해
+      // 사용자에게 오류 화면 대신 6건의 샘플 매물을 보여 준다.
+      const data = await fetchSafe<ListingsResponse & { isDemo?: boolean }>(
+        `/api/v1/exchange/listings?${params.toString()}`,
+        {
+          fallback: {
+            listings: page === 1 ? (DEMO_LISTINGS_PAGE.listings as unknown as ExchangeListing[]) : [],
+            total: DEMO_LISTINGS_PAGE.total,
+            totalPages: 1,
+            kpi: DEMO_LISTINGS_PAGE.kpi,
+            isDemo: true,
+          },
+        }
       )
       const listings = data.listings ?? data.data ?? []
       const total = data.total ?? data.totalCount ?? 0
       const totalPages = data.totalPages ?? (Math.ceil(total / PAGE_SIZE) || 1)
-      return { listings, total, totalPages, kpi: data.kpi ?? {} }
+      return { listings, total, totalPages, kpi: data.kpi ?? {}, isDemo: data.isDemo }
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, _allPages, lastPageParam) => {

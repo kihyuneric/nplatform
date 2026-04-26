@@ -1,53 +1,42 @@
 "use client"
 
 /**
- * /my — 내 정보 대시보드 (v4, 2026-04-07)
+ * /my — 내 정보 대시보드 (v5 · 2026-04-26 McKinsey re-skin)
  *
- * 허브 구조:
- *   - 현재 티어 상태 카드 (L0→L3 진행률)
- *   - 다음 단계 업그레이드 CTA
- *   - 빠른 링크: verify / kyc / agreements / privacy / seller / portfolio
- *   - 최근 활동 요약
+ * 변경 사항:
+ *   - 다크 테마 → McKinsey 화이트 페이퍼 (MCK.paper / Georgia serif)
+ *   - 체험 모드 강화: API 실패 시 SAMPLE_* 데이터로 자동 fallback + MckDemoBanner
+ *   - MckPageShell · MckPageHeader · MckKpiGrid · MckCard · MckSection · MckCta · MckBadge
+ *   - 4-step tier funnel (L0→L3) brass/ink 색
+ *   - 역할(SELLER/INVESTOR_GENERAL/INVESTOR_PRO/PARTNER/PROFESSIONAL)별 QuickLinks 유지
  */
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { motion } from "framer-motion"
 import {
   ShieldCheck, UserCheck, Briefcase, FileSignature,
-  Eye, Building2, TrendingUp, Clock, ChevronRight,
+  Building2, TrendingUp, Clock, ChevronRight,
   Lock, CheckCircle2, Sparkles, BarChart3, Target,
-  AlertTriangle, ArrowRight, Handshake, FileSearch,
-  Activity, Bell, Loader2, Upload, Users2, Gift, Code,
+  ArrowRight, Handshake, FileSearch,
+  Activity, Bell, Users2, Gift, Code,
   GraduationCap, Banknote, Store, Crown,
 } from "lucide-react"
-import { TierBadge } from "@/components/tier/tier-badge"
 import type { AccessTier } from "@/lib/access-tier"
 import { TIER_META } from "@/lib/access-tier"
-import { AnimatedCounter, PercentCounter, KrwCounter } from "@/components/ui/animated-counter"
-import { staggerContainer, staggerItem } from "@/lib/animations"
+import {
+  MckPageShell,
+  MckPageHeader,
+  MckKpiGrid,
+  type MckKpiItem,
+  MckCard,
+  MckCta,
+  MckBadge,
+  MckDemoBanner,
+  MckEmptyState,
+} from "@/components/mck"
+import { MCK, MCK_FONTS, MCK_TYPE, formatKRW } from "@/lib/mck-design"
 
-// ─── 대시보드 전용 색상 매핑 ─────────────────────────────────────
-// light/dark 모두 --color-bg-* CSS 변수가 globals.css에 정의되어 있어 자동 테마 대응.
-// 신규 페이지는 DS 토큰(lib/design-system.ts) 직접 사용을 권장.
-const C = {
-  bg0: "var(--color-bg-deepest)",
-  bg1: "var(--color-bg-deep)",
-  bg2: "var(--color-bg-base)",
-  bg3: "var(--color-bg-base)",
-  bg4: "var(--color-bg-elevated)",
-  em:     "var(--color-positive)",
-  emL:    "var(--color-positive)",
-  blue:   "var(--color-brand-dark)",
-  blueL:  "var(--color-brand-bright)",
-  amber:  "var(--color-warning)",
-  rose:   "var(--color-danger)",
-  purple: "#051C2C",
-  lt3:    "var(--color-text-muted)",
-  lt4:    "var(--color-text-muted)",
-}
-
-// Dashboard data type
+// ─── Types ─────────────────────────────────────────────────────────────
 interface DashboardData {
   profile: {
     id: string
@@ -93,6 +82,7 @@ interface DashboardData {
   }>
 }
 
+// ─── Hook ──────────────────────────────────────────────────────────────
 function useDashboard() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -103,12 +93,10 @@ function useDashboard() {
       try {
         const r = await fetch('/api/v1/my/dashboard', { credentials: 'include' })
         if (!r.ok) {
-          // 401·500 등 — 샘플/폴백 모드로 전환 (dashboardData = null 유지)
           if (!cancelled) setData(null)
           return
         }
         const d = await r.json().catch(() => null)
-        // 정상 응답에 profile 키가 있는 경우에만 채택
         if (!cancelled && d && typeof d === 'object' && 'profile' in d) {
           setData(d as DashboardData)
         } else if (!cancelled) {
@@ -127,7 +115,7 @@ function useDashboard() {
   return { data, loading }
 }
 
-// Fallback values for UI rendering
+// ─── Helpers ───────────────────────────────────────────────────────────
 const fallbackUser = {
   name: "사용자",
   email: "",
@@ -152,137 +140,116 @@ function formatRelativeTime(dateStr: string): string {
   return dateStr.slice(0, 10)
 }
 
-function formatAmount(amount: number | null | undefined): string {
-  if (typeof amount !== 'number' || !Number.isFinite(amount)) return '—'
-  if (amount >= 100000000) return `${(amount / 100000000).toFixed(1)}억`
-  if (amount >= 10000) return `${(amount / 10000).toFixed(0)}만`
-  return amount.toLocaleString('ko-KR')
-}
-
+// ─── QuickLinks (역할별) ──────────────────────────────────────────────
 type QuickLink = {
   href: string
   label: string
   desc: string
   icon: typeof UserCheck
-  color: string
   tierRequired?: string
+  highlight?: boolean
 }
 
-// 공통: 모든 역할에 표시
 const COMMON_LINKS: QuickLink[] = [
-  { href: "/my/verify",     label: "본인인증",        desc: "L0 → L1 승격",          icon: UserCheck,     color: "var(--color-text-primary)", tierRequired: "L1" },
-  { href: "/my/agreements", label: "계약 관리",       desc: "NDA · LOI 이력",         icon: FileSignature, color: "var(--color-text-primary)" },
-  { href: "/my/privacy",    label: "개인정보 설정",   desc: "PII 열람 로그 · 파기",   icon: ShieldCheck,   color: "var(--color-text-primary)" },
-  { href: "/my/notifications", label: "알림 설정",    desc: "이메일 · 푸시 · 매칭",   icon: Bell,          color: "#64748B" },
+  { href: "/my/verify",       label: "본인인증",      desc: "L0 → L1 승격",         icon: UserCheck,     tierRequired: "L1", highlight: true },
+  { href: "/my/agreements",   label: "계약 관리",     desc: "NDA · LOI 이력",       icon: FileSignature },
+  { href: "/my/privacy",      label: "개인정보 설정", desc: "PII 열람 로그 · 파기", icon: ShieldCheck },
+  { href: "/my/notifications",label: "알림 설정",     desc: "이메일 · 푸시 · 매칭", icon: Bell },
 ]
-
-// 매각사 전용
 const SELLER_LINKS: QuickLink[] = [
-  { href: "/my/seller",            label: "내 매물",          desc: "등록한 매물 관리",        icon: Building2, color: "var(--color-text-primary)" },
-  { href: "/exchange/sell",        label: "매물 등록",        desc: "단건 · OCR · CSV 대량",   icon: Store,     color: "var(--color-text-primary)" },
-  { href: "/my/billing",           label: "정산 · 수수료",    desc: "매각 수수료 내역",        icon: Banknote,  color: "#EC4899" },
+  { href: "/my/seller",     label: "내 매물",       desc: "등록한 매물 관리",       icon: Building2, highlight: true },
+  { href: "/exchange/sell", label: "매물 등록",     desc: "단건 · OCR · CSV 대량",  icon: Store },
+  { href: "/my/billing",    label: "정산 · 수수료", desc: "매각 수수료 내역",       icon: Banknote },
 ]
-
-// 일반 투자그룹 전용
 const INVESTOR_GENERAL_LINKS: QuickLink[] = [
-  { href: "/my/portfolio",       label: "투자 포트폴리오",  desc: "체결 · 실사 중 매물",     icon: TrendingUp, color: "var(--color-danger)" },
-  { href: "/my/kyc",             label: "전문투자자 KYC",   desc: "L1 → L2 승격",            icon: Briefcase,  color: "var(--color-text-primary)", tierRequired: "L2" },
-  { href: "/exchange/demands",   label: "매수 수요 등록",   desc: "AI 매물 매칭",            icon: Target,     color: "var(--color-text-primary)" },
-  { href: "/my/billing",         label: "결제 · 구독",      desc: "요금제 · 수수료 내역",    icon: Banknote,   color: "#64748B" },
+  { href: "/my/portfolio",     label: "투자 포트폴리오", desc: "체결 · 실사 중 매물", icon: TrendingUp, highlight: true },
+  { href: "/my/kyc",           label: "전문투자자 KYC",  desc: "L1 → L2 승격",        icon: Briefcase, tierRequired: "L2" },
+  { href: "/exchange/demands", label: "매수 수요 등록",  desc: "AI 매물 매칭",        icon: Target },
+  { href: "/my/billing",       label: "결제 · 구독",     desc: "요금제 · 수수료 내역",icon: Banknote },
 ]
-
-// 전문 투자그룹 전용
 const INVESTOR_PRO_LINKS: QuickLink[] = [
-  { href: "/my/portfolio",       label: "포트폴리오 분석",  desc: "IRR · 배당 실적",         icon: BarChart3,  color: "var(--color-danger)" },
-  { href: "/my/kyc",             label: "전문투자자 KYC",   desc: "L2/L3 권한 관리",         icon: Crown,      color: "var(--color-text-primary)" },
-  { href: "/exchange/demands",   label: "매수 수요 · PNR",  desc: "우선협상권 요청",         icon: Target,     color: "var(--color-text-primary)" },
-  { href: "/my/developer",       label: "API 키 · 웹훅",    desc: "기관 시스템 연동",        icon: Code,       color: "#2E75B6" },
+  { href: "/my/portfolio",     label: "포트폴리오 분석", desc: "IRR · 배당 실적",     icon: BarChart3, highlight: true },
+  { href: "/my/kyc",           label: "전문투자자 KYC",  desc: "L2/L3 권한 관리",     icon: Crown },
+  { href: "/exchange/demands", label: "매수 수요 · PNR", desc: "우선협상권 요청",     icon: Target },
+  { href: "/my/developer",     label: "API 키 · 웹훅",   desc: "기관 시스템 연동",    icon: Code },
 ]
-
-// 파트너 전용
 const PARTNER_LINKS: QuickLink[] = [
-  { href: "/my/partner",         label: "파트너 대시보드",  desc: "추천코드 · 실적 · 순위",  icon: Gift,       color: "var(--color-text-primary)" },
-  { href: "/my/partner/payouts", label: "정산 내역",        desc: "월별 리퍼럴 커미션",      icon: Banknote,   color: "var(--color-text-primary)" },
-  { href: "/my/developer",       label: "API 연동",         desc: "개발자 문서 · 키 관리",   icon: Code,       color: "#2E75B6" },
+  { href: "/my/partner",         label: "파트너 대시보드", desc: "추천코드 · 실적 · 순위", icon: Gift, highlight: true },
+  { href: "/my/partner/payouts", label: "정산 내역",       desc: "월별 리퍼럴 커미션",     icon: Banknote },
+  { href: "/my/developer",       label: "API 연동",        desc: "개발자 문서 · 키 관리",  icon: Code },
 ]
-
-// 전문가 전용 (감정평가·법무·컨설팅)
 const PROFESSIONAL_LINKS: QuickLink[] = [
-  { href: "/my/professional",    label: "전문가 프로필",    desc: "분야 · 경력 · 노출 관리", icon: GraduationCap, color: "var(--color-text-primary)" },
-  { href: "/my/organization",    label: "소속 기관",        desc: "기관 정보 · 인증",        icon: Building2,     color: "#2E75B6" },
-  { href: "/my/agreements",      label: "수주 · 계약",      desc: "의뢰받은 실사 건",        icon: Handshake,     color: "var(--color-text-primary)" },
+  { href: "/my/professional", label: "전문가 프로필", desc: "분야 · 경력 · 노출 관리",  icon: GraduationCap, highlight: true },
+  { href: "/my/organization", label: "소속 기관",     desc: "기관 정보 · 인증",         icon: Building2 },
+  { href: "/my/agreements",   label: "수주 · 계약",   desc: "의뢰받은 실사 건",         icon: Handshake },
 ]
 
-/** 역할(+서브타입)에 따라 표시할 QUICK_LINKS 구성. */
 function getQuickLinks(role?: string | null, subtype?: string | null): QuickLink[] {
   const r = (role ?? "").toUpperCase()
   const s = (subtype ?? "").toUpperCase()
-  // 전문 투자그룹(PRO_CORP / PRO_INDIVIDUAL)
-  if (s === "PRO_CORP" || s === "PRO_INDIVIDUAL" || r === "INSTITUTION") {
-    return [...INVESTOR_PRO_LINKS, ...COMMON_LINKS]
-  }
-  // 매각사
-  if (r === "SELLER") {
-    return [...SELLER_LINKS, ...COMMON_LINKS]
-  }
-  // 파트너
-  if (r === "PARTNER") {
-    return [...PARTNER_LINKS, ...COMMON_LINKS]
-  }
-  // 전문가
-  if (r === "PROFESSIONAL") {
-    return [...PROFESSIONAL_LINKS, ...COMMON_LINKS]
-  }
-  // 기본: 일반 투자그룹 (BUYER, INVESTOR)
+  if (s === "PRO_CORP" || s === "PRO_INDIVIDUAL" || r === "INSTITUTION") return [...INVESTOR_PRO_LINKS, ...COMMON_LINKS]
+  if (r === "SELLER")       return [...SELLER_LINKS, ...COMMON_LINKS]
+  if (r === "PARTNER")      return [...PARTNER_LINKS, ...COMMON_LINKS]
+  if (r === "PROFESSIONAL") return [...PROFESSIONAL_LINKS, ...COMMON_LINKS]
   return [...INVESTOR_GENERAL_LINKS, ...COMMON_LINKS]
 }
 
-/** 역할별 배지 — 상단 인사말 옆에 표시 */
-const ROLE_BADGE: Record<string, { label: string; color: string }> = {
-  SELLER:       { label: "매각사",          color: "var(--color-text-primary)" },
-  BUYER:        { label: "일반 투자그룹",   color: "#2E75B6" },
-  INVESTOR:     { label: "일반 투자그룹",   color: "#2E75B6" },
-  INSTITUTION:  { label: "전문 투자그룹",   color: "var(--color-text-primary)" },
-  PARTNER:      { label: "파트너",          color: "var(--color-text-primary)" },
-  PROFESSIONAL: { label: "전문가",          color: "var(--color-text-primary)" },
-  ADMIN:        { label: "관리자",          color: "#EC4899" },
-  SUPER_ADMIN:  { label: "최고관리자",      color: "#EC4899" },
-}
-function roleBadge(role?: string | null, subtype?: string | null): { label: string; color: string } {
+function roleBadge(role?: string | null, subtype?: string | null): { label: string; tone: "ink" | "brass" | "blue" | "neutral" } {
   const s = (subtype ?? "").toUpperCase()
-  if (s === "PRO_CORP" || s === "PRO_INDIVIDUAL") return { label: "전문 투자그룹", color: "var(--color-text-primary)" }
-  if (s === "GENERAL_CORP" || s === "GENERAL_INDIVIDUAL") return { label: "일반 투자그룹", color: "#2E75B6" }
-  if (s === "FINANCIAL_INSTITUTION") return { label: "매각사 · 금융기관", color: "var(--color-text-primary)" }
-  if (s === "LOAN_COMPANY") return { label: "매각사 · 대부업체", color: "var(--color-text-primary)" }
-  if (s === "ASSET_MANAGER") return { label: "매각사 · 자산운용사", color: "var(--color-text-primary)" }
-  return ROLE_BADGE[(role ?? "").toUpperCase()] ?? { label: "무료 체험", color: "#64748B" }
+  if (s === "PRO_CORP" || s === "PRO_INDIVIDUAL") return { label: "전문 투자그룹", tone: "ink" }
+  if (s === "GENERAL_CORP" || s === "GENERAL_INDIVIDUAL") return { label: "일반 투자그룹", tone: "blue" }
+  if (s === "FINANCIAL_INSTITUTION") return { label: "매각사 · 금융기관", tone: "brass" }
+  if (s === "LOAN_COMPANY")  return { label: "매각사 · 대부업체", tone: "brass" }
+  if (s === "ASSET_MANAGER") return { label: "매각사 · 자산운용사", tone: "brass" }
+  const r = (role ?? "").toUpperCase()
+  if (r === "SELLER")       return { label: "매각사",      tone: "brass" }
+  if (r === "INVESTOR" || r === "BUYER") return { label: "일반 투자그룹", tone: "blue" }
+  if (r === "INSTITUTION")  return { label: "전문 투자그룹", tone: "ink" }
+  if (r === "PARTNER")      return { label: "파트너",      tone: "ink" }
+  if (r === "PROFESSIONAL") return { label: "전문가",      tone: "ink" }
+  if (r === "ADMIN" || r === "SUPER_ADMIN") return { label: "관리자", tone: "ink" }
+  return { label: "무료 체험", tone: "neutral" }
 }
 
-// ── 샘플 데이터 (실제 데이터 없을 때 표시) ──────────────────────────
+// ─── Sample data (체험 모드) ───────────────────────────────────────────
 const SAMPLE_PROFILE = {
-  name: "김투자 (샘플)", email: "sample@nplatform.co.kr",
-  current_tier: "L1" as AccessTier, identity_verified: true,
-  qualified_investor: false, created_at: "2026-01-15T00:00:00Z", credit_balance: 50,
+  name: "김투자 (샘플)",
+  email: "sample@nplatform.co.kr",
+  current_tier: "L1" as AccessTier,
+  identity_verified: true,
+  qualified_investor: false,
+  created_at: "2026-01-15T00:00:00Z",
+  credit_balance: 50,
 }
 const SAMPLE_STATS = { favoritesCount: 7, activeDealsCount: 2, analysesCount: 14, unreadNotifications: 3 }
 const SAMPLE_ACTIVE_DEALS = [
-  { deal_room_id: "sample-1", deal_rooms: { id: "sample-1", title: "서울 강남구 아파트 NPL", status: "NDA 검토 중", npl_listings: { title: "강남 아파트", claim_amount: 1200000000 } } },
-  { deal_room_id: "sample-2", deal_rooms: { id: "sample-2", title: "경기 수원 오피스텔 NPL", status: "LOI 제출", npl_listings: { title: "수원 오피스텔", claim_amount: 480000000 } } },
+  { deal_room_id: "sample-1", deal_rooms: { id: "sample-1", title: "서울 강남구 아파트 NPL", status: "NDA 검토 중", npl_listings: { title: "강남 아파트 NPL", claim_amount: 1_200_000_000, collateral_type: "아파트" } } },
+  { deal_room_id: "sample-2", deal_rooms: { id: "sample-2", title: "경기 수원 오피스텔 NPL", status: "LOI 제출", npl_listings: { title: "수원 오피스텔 NPL", claim_amount: 480_000_000, collateral_type: "오피스텔" } } },
+]
+const SAMPLE_RECENT_ANALYSES = [
+  { id: "a1", listing_id: "demo-1", analysis_type: "수익률 분석", result: { grade: "A" }, created_at: new Date(Date.now() - 2 * 3600_000).toISOString() },
+  { id: "a2", listing_id: "demo-2", analysis_type: "AI 컨설팅", result: { grade: "B+" }, created_at: new Date(Date.now() - 26 * 3600_000).toISOString() },
+  { id: "a3", listing_id: "demo-3", analysis_type: "경매 시뮬레이션", result: { grade: "A-" }, created_at: new Date(Date.now() - 4 * 24 * 3600_000).toISOString() },
+]
+const SAMPLE_RECENT_NOTIFICATIONS = [
+  { id: "n1", title: "관심 매물 가격 변동", message: "강남 아파트 NPL 1.20억 → 1.15억 (4% ↓)", type: "PRICE_ALERT", is_read: false, created_at: new Date(Date.now() - 30 * 60_000).toISOString() },
+  { id: "n2", title: "새로운 매물 매칭", message: "AI 매칭 점수 92점 — 부산 해운대 아파트", type: "MATCHING", is_read: false, created_at: new Date(Date.now() - 5 * 3600_000).toISOString() },
+  { id: "n3", title: "NDA 서명 요청", message: "강남 아파트 딜룸 NDA 서명이 필요합니다", type: "DEAL_ROOM", is_read: true, created_at: new Date(Date.now() - 30 * 3600_000).toISOString() },
 ]
 
+// ─── Page ──────────────────────────────────────────────────────────────
 export default function MyDashboardPage() {
-  const { data: dashboardData, loading: dashboardLoading } = useDashboard()
-  const isSample = !dashboardLoading && !dashboardData
+  const { data: dashboardData, loading } = useDashboard()
+  const isSample = !loading && !dashboardData
 
   const profile = dashboardData?.profile ?? (isSample ? SAMPLE_PROFILE : fallbackUser)
   const stats = dashboardData?.stats ?? (isSample ? SAMPLE_STATS : { favoritesCount: 0, activeDealsCount: 0, analysesCount: 0, unreadNotifications: 0 })
   const activeDeals = dashboardData?.activeDeals ?? (isSample ? SAMPLE_ACTIVE_DEALS : [])
-  const recentAnalyses = dashboardData?.recentAnalyses ?? []
-  const recentNotifications = dashboardData?.recentNotifications ?? []
+  const recentAnalyses = dashboardData?.recentAnalyses ?? (isSample ? SAMPLE_RECENT_ANALYSES : [])
+  const recentNotifications = dashboardData?.recentNotifications ?? (isSample ? SAMPLE_RECENT_NOTIFICATIONS : [])
 
   const tierOrder: AccessTier[] = ["L0", "L1", "L2", "L3"]
   const currentIdx = tierOrder.indexOf(profile.current_tier)
-  const progress = ((currentIdx + 1) / tierOrder.length) * 100
 
   // ?role=SELLER&subtype=FINANCIAL_INSTITUTION 으로 프리뷰에서 역할 시연 가능
   const [roleOverride, setRoleOverride] = useState<{ role: string | null; subtype: string | null }>({ role: null, subtype: null })
@@ -296,497 +263,437 @@ export default function MyDashboardPage() {
   const QUICK_LINKS = getQuickLinks(role, roleSubtype)
   const badge = roleBadge(role, roleSubtype)
 
-  // Portfolio KPIs from real data
-  const PORTFOLIO_KPI = [
-    { label: "관심 매물", numValue: stats.favoritesCount, suffix: "건", change: "", positive: null as boolean | null, icon: TrendingUp, decimals: 0 },
-    { label: "활성 거래", numValue: stats.activeDealsCount, suffix: "건", change: "", positive: null as boolean | null, icon: Handshake, decimals: 0 },
-    { label: "AI 분석", numValue: stats.analysesCount, suffix: "건", change: "", positive: null as boolean | null, icon: BarChart3, decimals: 0 },
-    { label: "크레딧", numValue: profile.credit_balance, suffix: "C", change: "", positive: null as boolean | null, icon: Sparkles, decimals: 0 },
+  // KPI Grid
+  const KPI_ITEMS: MckKpiItem[] = [
+    { label: "관심 매물", value: stats.favoritesCount, hint: "Favorites" },
+    { label: "활성 거래", value: stats.activeDealsCount, hint: "Deal Rooms", accent: stats.activeDealsCount > 0 },
+    { label: "AI 분석", value: stats.analysesCount, hint: "Reports" },
+    { label: "크레딧", value: `${profile.credit_balance.toLocaleString("ko-KR")} C`, hint: "Balance" },
   ]
 
-  // Recent activity from notifications
-  const RECENT_ACTIVITY = recentNotifications.map((n) => ({
-    type: n.type,
-    label: n.title,
-    target: n.message,
-    time: formatRelativeTime(n.created_at),
-  }))
-
-  // Active deals from real data
-  const ACTIVE_DEALS = activeDeals.map((d) => ({
-    id: d.deal_room_id,
-    listing: d.deal_rooms?.npl_listings?.title || d.deal_rooms?.title || '매물',
-    stage: d.deal_rooms?.status || '진행 중',
-    stageColor: C.blue,
-    amount: d.deal_rooms?.npl_listings?.claim_amount
-      ? formatAmount(d.deal_rooms.npl_listings.claim_amount)
-      : '-',
-    daysLeft: 0,
-  }))
-
-  // Recent analyses from real data
-  const RECENT_ANALYSES = recentAnalyses.map((a) => ({
-    id: a.id,
-    title: a.analysis_type || 'AI 분석',
-    type: a.analysis_type || '분석',
-    grade: (a.result as Record<string, string>)?.grade || '-',
-    time: formatRelativeTime(a.created_at),
-  }))
-
-  // Matching alerts from notifications
-  const MATCHING_ALERTS = recentNotifications
-    .filter((n) => n.type === 'MATCHING' || n.type === 'PRICE_ALERT')
-    .slice(0, 3)
-    .map((n) => ({
-      id: n.id,
-      title: n.title,
-      desc: n.message,
-      time: formatRelativeTime(n.created_at),
-      grade: 'GOOD',
-    }))
+  // Loading 상태
+  if (loading) {
+    return (
+      <MckPageShell variant="tint">
+        <MckPageHeader
+          breadcrumbs={[{ label: "마이", href: "/my" }, { label: "대시보드" }]}
+          eyebrow="My NPLatform"
+          title="내 정보"
+          subtitle="잠시만 기다려 주세요…"
+        />
+        <main className="max-w-[1280px] mx-auto" style={{ padding: "32px 24px 80px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 0, border: `1px solid ${MCK.border}` }}>
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} style={{ background: MCK.paper, padding: "18px 20px", borderRight: i < 4 ? `1px solid ${MCK.border}` : "none" }}>
+                <div style={{ height: 10, width: "60%", background: MCK.border, marginBottom: 8 }} />
+                <div style={{ height: 24, width: "70%", background: MCK.border }} />
+              </div>
+            ))}
+          </div>
+        </main>
+      </MckPageShell>
+    )
+  }
 
   return (
-    <main style={{ backgroundColor: C.bg0, color: "#E2E8F0", minHeight: "100vh" }}>
-      {/* 샘플 데이터 배너 */}
+    <MckPageShell variant="tint">
       {isSample && (
-        <div className="sticky top-0 z-30 flex items-center gap-2 px-4 py-2 bg-stone-100/90 backdrop-blur text-amber-950 text-xs font-semibold">
-          <span>📋</span>
-          <span>샘플 데이터 표시 중 — 로그인 후 실제 데이터가 표시됩니다</span>
-          <a href="/login" className="ml-auto underline font-bold">로그인하기 →</a>
-        </div>
+        <MckDemoBanner message="체험 모드 — 샘플 대시보드를 표시 중입니다. 로그인 후 실제 데이터로 전환됩니다." />
       )}
-      {/* Header */}
-      <section
-        style={{
-          background: `linear-gradient(180deg, ${C.bg1} 0%, ${C.bg0} 100%)`,
-          borderBottom: `1px solid ${C.bg4}`,
-        }}
-      >
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "48px 24px 40px" }}>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
-              <div style={{ fontSize: 11, color: C.emL, fontWeight: 800, letterSpacing: "0.1em" }}>
-                MY NPLATFORM
-              </div>
-              <span
-                style={{
-                  fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 999,
-                  backgroundColor: `${badge.color}1F`, color: badge.color,
-                  border: `1px solid ${badge.color}55`, letterSpacing: "0.03em",
-                }}
-              >
-                {badge.label}
-              </span>
-            </div>
-            <h1
-              style={{
-                fontSize: 36, fontWeight: 900, color: "#fff",
-                letterSpacing: "-0.02em", marginBottom: 6,
-              }}
-            >
-              안녕하세요, {profile.name}님
-            </h1>
-            <p style={{ fontSize: 13, color: C.lt4 }}>
-              가입일 {profile.created_at?.slice(0, 10)} · {profile.email}
-            </p>
-          </motion.div>
-        </div>
-      </section>
 
-      <section style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px 80px" }}>
-        {/* Tier Status Card */}
+      <MckPageHeader
+        breadcrumbs={[{ label: "홈", href: "/" }, { label: "마이", href: "/my" }, { label: "대시보드" }]}
+        eyebrow={`Section · ${badge.label}`}
+        title={`안녕하세요, ${profile.name ?? "사용자"}님`}
+        subtitle={`${profile.email || "이메일 미등록"} · 가입일 ${profile.created_at?.slice(0, 10) ?? "—"}`}
+        actions={
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <MckBadge tone={badge.tone} size="md">{badge.label}</MckBadge>
+            <MckBadge tone={profile.current_tier === "L0" ? "neutral" : "ink"} outlined size="md">
+              현재 티어 · {profile.current_tier}
+            </MckBadge>
+          </div>
+        }
+      />
+
+      <div className="max-w-[1280px] mx-auto" style={{ padding: "32px 24px 80px" }}>
+        {/* ── 1. KPI 라인 ─────────────────────────────────────── */}
+        <div style={{ marginBottom: 32 }}>
+          <MckKpiGrid items={KPI_ITEMS} />
+        </div>
+
+        {/* ── 2. Tier Funnel ─────────────────────────────────── */}
         <section
           style={{
-            backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
-            borderRadius: 16, padding: 28, marginBottom: 24,
+            background: MCK.paper,
+            border: `1px solid ${MCK.border}`,
+            borderTop: `2px solid ${MCK.brass}`,
+            padding: 28,
+            marginBottom: 32,
           }}
         >
-          <div
-            style={{
-              display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-              marginBottom: 24, flexWrap: "wrap", gap: 14,
-            }}
-          >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
             <div>
-              <div style={{ fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 10, letterSpacing: "0.05em" }}>
-                현재 접근 티어
+              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark, marginBottom: 8 }}>
+                Access Tier · L0 → L3
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <TierBadge tier={profile.current_tier} size="md" variant="solid" />
-                <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>
-                  {TIER_META[profile.current_tier].label}
-                </span>
-              </div>
-              <p style={{ marginTop: 8, fontSize: 12, color: C.lt4, maxWidth: 540 }}>
+              <h2 style={{ ...MCK_TYPE.h2, fontFamily: MCK_FONTS.serif, color: MCK.ink, marginBottom: 6 }}>
+                {TIER_META[profile.current_tier].label}
+              </h2>
+              <p style={{ ...MCK_TYPE.bodySm, color: MCK.textSub, maxWidth: 540 }}>
                 {TIER_META[profile.current_tier].description}
               </p>
             </div>
-
-            <Link
-              href="/my/kyc"
-              style={{
-                padding: "11px 18px", borderRadius: 10,
-                backgroundColor: C.em, color: "#FFFFFF",
-                fontSize: 12, fontWeight: 800, textDecoration: "none",
-                display: "inline-flex", alignItems: "center", gap: 6,
-              }}
-            >
-              다음 단계로 업그레이드 <ChevronRight size={14} />
-            </Link>
+            <MckCta
+              label={profile.current_tier === "L3" ? "권한 관리" : "다음 단계로 업그레이드"}
+              href={profile.current_tier === "L3" ? "/my/kyc" : "/my/verify"}
+              variant="primary"
+              size="md"
+              centered={false}
+            />
           </div>
 
-          {/* Progress bar */}
-          <div style={{ marginBottom: 14 }}>
-            <div
-              style={{
-                height: 8, borderRadius: 999,
-                backgroundColor: C.bg4, overflow: "hidden", position: "relative",
-              }}
-            >
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                style={{
-                  height: "100%",
-                  background: `linear-gradient(90deg, ${C.em}, ${C.blue}, ${C.purple})`,
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Tier nodes */}
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+          {/* 4-step funnel */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0, marginTop: 8 }}>
             {tierOrder.map((tier, i) => {
               const achieved = i <= currentIdx
+              const isCurrent = i === currentIdx
               const meta = TIER_META[tier]
               return (
-                <div key={tier} style={{ flex: 1, textAlign: "center" }}>
-                  <div
-                    style={{
-                      width: 32, height: 32, borderRadius: "50%",
-                      margin: "0 auto 6px",
-                      backgroundColor: achieved ? meta.color : C.bg3,
-                      border: `2px solid ${achieved ? meta.color : C.bg4}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      color: "#fff", fontSize: 10, fontWeight: 900,
-                    }}
-                  >
-                    {achieved ? <CheckCircle2 size={16} /> : <Lock size={12} />}
+                <div
+                  key={tier}
+                  style={{
+                    padding: "18px 16px",
+                    borderTop: achieved ? `3px solid ${MCK.brass}` : `3px solid ${MCK.border}`,
+                    borderRight: i < 3 ? `1px solid ${MCK.border}` : "none",
+                    background: isCurrent ? MCK.paperTint : MCK.paper,
+                    position: "relative",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div
+                      style={{
+                        width: 28, height: 28,
+                        background: achieved ? MCK.ink : MCK.paperTint,
+                        border: `1px solid ${achieved ? MCK.ink : MCK.border}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {achieved ? <CheckCircle2 size={14} color={MCK.brass} /> : <Lock size={12} color={MCK.textMuted} />}
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        letterSpacing: "0.06em",
+                        color: achieved ? MCK.brassDark : MCK.textMuted,
+                      }}
+                    >
+                      {tier}
+                    </span>
                   </div>
                   <div
                     style={{
-                      fontSize: 11, fontWeight: 800,
-                      color: achieved ? "#fff" : C.lt4,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: achieved ? MCK.ink : MCK.textMuted,
+                      letterSpacing: "-0.01em",
+                      marginBottom: 4,
+                      fontFamily: MCK_FONTS.serif,
                     }}
                   >
-                    {tier}
+                    {meta.shortLabel}
                   </div>
-                  <div style={{ fontSize: 9, color: C.lt4, marginTop: 2 }}>{meta.shortLabel}</div>
+                  <div style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 500, lineHeight: 1.4 }}>
+                    {meta.description.split(".")[0]}
+                  </div>
                 </div>
               )
             })}
           </div>
         </section>
 
-        {/* ── Portfolio KPI ────────────────────────────────────────── */}
-        <section style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
-            <Activity size={14} color={C.em} /> 포트폴리오 요약
-          </div>
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}
-          >
-            {PORTFOLIO_KPI.map((kpi) => {
-              const Icon = kpi.icon
-              return (
-                <motion.div
-                  key={kpi.label}
-                  variants={staggerItem}
-                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
-                  style={{
-                    backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
-                    borderRadius: 14, padding: 20,
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                    <Icon size={16} color={C.lt4} />
-                    {kpi.positive !== null && (
-                      <span style={{
-                        fontSize: 10, fontWeight: 800,
-                        color: kpi.positive ? C.em : C.rose,
-                      }}>
-                        {kpi.change}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", marginBottom: 4 }}>
-                    <AnimatedCounter value={kpi.numValue} suffix={kpi.suffix} decimals={kpi.decimals} />
-                  </div>
-                  <div style={{ fontSize: 10, color: C.lt4, fontWeight: 600 }}>{kpi.label}</div>
-                </motion.div>
-              )
-            })}
-          </motion.div>
-        </section>
-
-        {/* ── Active Deals + Matching Alerts (2-column) ──────────────── */}
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 360px", gap: 24, marginBottom: 24, alignItems: "start" }}>
+        {/* ── 3. Active Deals + Notifications (2-column) ──── */}
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 380px", gap: 24, marginBottom: 32, alignItems: "start" }}>
           {/* Active Deals */}
-          <section>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Handshake size={14} color={C.blue} /> 활성 거래
-              </span>
-              <Link href="/deals" style={{ fontSize: 11, color: C.blueL, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
-                전체 보기 <ArrowRight size={12} />
+          <MckCard
+            eyebrow="Active Deals"
+            icon={Handshake}
+            title="진행 중인 거래"
+            meta={
+              <Link href="/deals" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: MCK.brassDark, textDecoration: "none" }}>
+                전체 보기 <ArrowRight size={11} />
               </Link>
-            </div>
-            <div style={{ backgroundColor: C.bg2, border: `1px solid ${C.bg4}`, borderRadius: 14, overflow: "hidden" }}>
-              {ACTIVE_DEALS.map((deal, i) => (
-                <Link
-                  key={deal.id}
-                  href={`/deals/${deal.id}`}
-                  style={{
-                    display: "flex", gap: 14, alignItems: "center",
-                    padding: "16px 18px", textDecoration: "none",
-                    borderBottom: i < ACTIVE_DEALS.length - 1 ? `1px solid ${C.bg4}` : "none",
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", marginBottom: 4 }}>{deal.listing}</div>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <span style={{
-                        fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 4,
-                        backgroundColor: `${deal.stageColor}1A`, color: deal.stageColor,
-                        border: `1px solid ${deal.stageColor}44`,
-                      }}>
-                        {deal.stage}
-                      </span>
-                      <span style={{ fontSize: 10, color: C.lt4 }}>{deal.amount}</span>
+            }
+          >
+            {activeDeals.length === 0 ? (
+              <div style={{ padding: "20px 0", textAlign: "center", color: MCK.textMuted, fontSize: 12 }}>
+                현재 진행 중인 거래가 없습니다.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                {activeDeals.map((d, i) => (
+                  <Link
+                    key={d.deal_room_id}
+                    href={`/deals/${d.deal_room_id}`}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 14,
+                      padding: "14px 0",
+                      borderBottom: i < activeDeals.length - 1 ? `1px solid ${MCK.border}` : "none",
+                      textDecoration: "none",
+                      color: MCK.ink,
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: MCK.ink, marginBottom: 6, fontFamily: MCK_FONTS.serif }}>
+                        {d.deal_rooms?.npl_listings?.title || d.deal_rooms?.title || "매물"}
+                      </div>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                        <MckBadge tone="brass" size="sm">{d.deal_rooms?.status ?? "진행 중"}</MckBadge>
+                        <span style={{ fontSize: 11, color: MCK.textSub, fontWeight: 600 }}>
+                          {formatKRW(d.deal_rooms?.npl_listings?.claim_amount ?? null)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <div style={{ fontSize: 10, color: deal.daysLeft <= 5 ? C.rose : C.lt4, fontWeight: 700 }}>
-                      D-{deal.daysLeft}
-                    </div>
-                    <ChevronRight size={14} color={C.lt4} />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
+                    <ChevronRight size={14} color={MCK.textMuted} />
+                  </Link>
+                ))}
+              </div>
+            )}
+          </MckCard>
 
-          {/* Matching Alerts */}
-          <aside>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Bell size={14} color={C.amber} /> 매칭 알림
-              </span>
-              <Link href="/deals/matching" style={{ fontSize: 11, color: C.blueL, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
-                전체 보기 <ArrowRight size={12} />
-              </Link>
-            </div>
-            <div style={{ backgroundColor: C.bg2, border: `1px solid ${C.bg4}`, borderRadius: 14, overflow: "hidden" }}>
-              {MATCHING_ALERTS.map((alert, i) => (
-                <Link
-                  key={alert.id}
-                  href="/deals/matching"
-                  style={{
-                    display: "block", padding: "14px 18px", textDecoration: "none",
-                    borderBottom: i < MATCHING_ALERTS.length - 1 ? `1px solid ${C.bg4}` : "none",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                    <Target size={12} color={alert.grade === "EXCELLENT" ? C.em : C.blue} />
-                    <span style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>{alert.title}</span>
-                    <span style={{
-                      fontSize: 8, fontWeight: 800, padding: "1px 6px", borderRadius: 3,
-                      backgroundColor: alert.grade === "EXCELLENT" ? "var(--color-positive-bg)" : "rgba(45, 116, 182, 0.1)",
-                      color: alert.grade === "EXCELLENT" ? C.em : C.blue,
-                    }}>
-                      {alert.grade}
-                    </span>
+          {/* Notifications */}
+          <MckCard
+            eyebrow="Recent Activity"
+            icon={Bell}
+            title="최근 알림"
+            accent={MCK.ink}
+            meta={
+              stats.unreadNotifications > 0 && (
+                <MckBadge tone="brass" size="sm">{stats.unreadNotifications} 미읽음</MckBadge>
+              )
+            }
+          >
+            {recentNotifications.length === 0 ? (
+              <div style={{ padding: "20px 0", textAlign: "center", color: MCK.textMuted, fontSize: 12 }}>
+                새로운 알림이 없습니다.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                {recentNotifications.slice(0, 4).map((n, i) => (
+                  <div
+                    key={n.id}
+                    style={{
+                      padding: "12px 0",
+                      borderBottom: i < Math.min(recentNotifications.length, 4) - 1 ? `1px solid ${MCK.border}` : "none",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 4 }}>
+                      {!n.is_read && (
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: MCK.brass, marginTop: 6, flexShrink: 0 }} />
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: MCK.ink, marginBottom: 2 }}>
+                          {n.title}
+                        </div>
+                        <div style={{ fontSize: 11, color: MCK.textSub, lineHeight: 1.5 }}>
+                          {n.message}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: MCK.textMuted, fontWeight: 600 }}>
+                      <Clock size={9} />
+                      {formatRelativeTime(n.created_at)}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 10, color: C.lt4, marginBottom: 4 }}>{alert.desc}</div>
-                  <div style={{ fontSize: 9, color: C.lt3 }}>{alert.time}</div>
-                </Link>
-              ))}
-            </div>
-          </aside>
+                ))}
+              </div>
+            )}
+          </MckCard>
         </div>
 
-        {/* ── Recent Analyses ──────────────────────────────────────── */}
-        <section style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <FileSearch size={14} color={C.purple} /> 최근 분석
-            </span>
-            <Link href="/analysis" style={{ fontSize: 11, color: C.blueL, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
-              분석 허브 <ArrowRight size={12} />
-            </Link>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-            {RECENT_ANALYSES.map((a, i) => (
-              <motion.div
-                key={a.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05, duration: 0.4 }}
-              >
-                <Link
-                  href={a.type === "수익률 분석" ? "/analysis/simulator" : a.type === "AI 컨설팅" ? "/analysis/copilot" : "/analysis"}
-                  style={{
-                    display: "block", padding: 18, borderRadius: 14,
-                    backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
-                    textDecoration: "none",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: C.lt4, textTransform: "uppercase" }}>{a.type}</span>
-                    <span style={{
-                      fontSize: 12, fontWeight: 900,
-                      color: a.grade.startsWith("A") ? C.em : C.blue,
-                    }}>
-                      {a.grade}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", marginBottom: 4 }}>{a.title}</div>
-                  <div style={{ fontSize: 10, color: C.lt3 }}>{a.time}</div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) 360px",
-            gap: 24, alignItems: "start",
-          }}
-        >
-          {/* LEFT — Quick links grid */}
-          <section>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 14 }}>
-              빠른 메뉴
+        {/* ── 4. Recent Analyses ─────────────────────────────── */}
+        {recentAnalyses.length > 0 && (
+          <section style={{ marginBottom: 32 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+              <div className="flex items-center gap-2">
+                <span style={{ width: 18, height: 1.5, background: MCK.brass, display: "inline-block" }} />
+                <span style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark }}>Recent Analyses</span>
+              </div>
+              <Link href="/analysis" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: MCK.brassDark, textDecoration: "none" }}>
+                분석 허브 <ArrowRight size={11} />
+              </Link>
             </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-                gap: 14,
-              }}
-            >
-              {QUICK_LINKS.map((link, i) => {
-                const Icon = link.icon
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 0, border: `1px solid ${MCK.border}`, background: MCK.paper }}>
+              {recentAnalyses.slice(0, 3).map((a, i, arr) => {
+                const grade = ((a.result as Record<string, string>)?.grade ?? "—")
+                const isHigh = grade.startsWith("A")
                 return (
-                  <motion.div
-                    key={link.href}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.04, duration: 0.4 }}
+                  <Link
+                    key={a.id}
+                    href={a.analysis_type === "수익률 분석" ? "/analysis/simulator" : a.analysis_type === "AI 컨설팅" ? "/analysis/copilot" : "/analysis"}
+                    style={{
+                      display: "block",
+                      padding: 22,
+                      borderRight: i < arr.length - 1 ? `1px solid ${MCK.border}` : "none",
+                      textDecoration: "none",
+                    }}
                   >
-                    <Link
-                      href={link.href}
-                      style={{
-                        display: "block", padding: 20, borderRadius: 14,
-                        backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
-                        textDecoration: "none", position: "relative", overflow: "hidden",
-                      }}
-                    >
-                      <div
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                      <span style={{ ...MCK_TYPE.eyebrow, color: MCK.textSub }}>
+                        {a.analysis_type || "분석"}
+                      </span>
+                      <span
                         style={{
-                          width: 40, height: 40, borderRadius: 10,
-                          backgroundColor: `${link.color}1F`,
-                          border: `1px solid ${link.color}44`,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          marginBottom: 12,
+                          fontSize: 18,
+                          fontWeight: 800,
+                          color: isHigh ? MCK.positive : MCK.brassDark,
+                          fontFamily: MCK_FONTS.serif,
+                          letterSpacing: "-0.02em",
                         }}
                       >
-                        <Icon size={18} color={link.color} />
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 3 }}>
-                        {link.label}
-                      </div>
-                      <div style={{ fontSize: 11, color: C.lt4 }}>{link.desc}</div>
-                      {link.tierRequired && (
-                        <span
-                          style={{
-                            position: "absolute", top: 16, right: 16,
-                            fontSize: 9, fontWeight: 800,
-                            padding: "3px 7px", borderRadius: 4,
-                            backgroundColor: `${link.color}1A`,
-                            color: link.color,
-                            border: `1px solid ${link.color}44`,
-                          }}
-                        >
-                          → {link.tierRequired}
-                        </span>
-                      )}
-                    </Link>
-                  </motion.div>
+                        {grade}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: MCK.ink, marginBottom: 6, fontFamily: MCK_FONTS.serif }}>
+                      Listing #{a.listing_id?.slice(0, 8) ?? "—"}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: MCK.textMuted, fontWeight: 600 }}>
+                      <Clock size={10} /> {formatRelativeTime(a.created_at)}
+                    </div>
+                  </Link>
                 )
               })}
             </div>
           </section>
+        )}
 
-          {/* RIGHT — Recent activity */}
-          <aside>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", marginBottom: 14 }}>
-              최근 활동
+        {/* ── 5. Quick Links Grid (역할별) ─────────────────────── */}
+        <section style={{ marginBottom: 32 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+            <div>
+              <div className="flex items-center gap-2" style={{ marginBottom: 6 }}>
+                <span style={{ width: 18, height: 1.5, background: MCK.brass, display: "inline-block" }} />
+                <span style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark }}>Quick Menu · {badge.label}</span>
+              </div>
+              <h2 style={{ ...MCK_TYPE.h3, fontFamily: MCK_FONTS.serif, color: MCK.ink }}>
+                빠른 메뉴
+              </h2>
             </div>
-            <div
-              style={{
-                backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
-                borderRadius: 14, overflow: "hidden",
-              }}
-            >
-              {RECENT_ACTIVITY.map((act, i) => (
-                <div
-                  key={i}
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+              gap: 0,
+              border: `1px solid ${MCK.border}`,
+              background: MCK.paper,
+            }}
+          >
+            {QUICK_LINKS.map((link, i) => {
+              const Icon = link.icon
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
                   style={{
-                    padding: "14px 18px",
-                    borderBottom: i < RECENT_ACTIVITY.length - 1 ? `1px solid ${C.bg4}` : "none",
-                    display: "flex", gap: 12, alignItems: "flex-start",
+                    display: "block",
+                    padding: 22,
+                    borderRight: (i + 1) % 4 !== 0 ? `1px solid ${MCK.border}` : "none",
+                    borderTop: i >= 4 ? `1px solid ${MCK.border}` : link.highlight ? `2px solid ${MCK.brass}` : "none",
+                    textDecoration: "none",
+                    background: MCK.paper,
+                    position: "relative",
+                    transition: "background 120ms ease",
                   }}
                 >
-                  <Clock size={14} color={C.lt4} style={{ marginTop: 2, flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 2 }}>
-                      {act.label}
-                    </div>
-                    <div style={{ fontSize: 10, color: C.lt4, fontFamily: "monospace" }}>
-                      {act.target}
-                    </div>
-                    <div style={{ fontSize: 10, color: C.lt4, marginTop: 4 }}>{act.time}</div>
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      background: link.highlight ? MCK.ink : MCK.paperTint,
+                      border: `1px solid ${link.highlight ? MCK.ink : MCK.border}`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: 14,
+                    }}
+                  >
+                    <Icon size={16} color={link.highlight ? MCK.brassLight : MCK.ink} />
                   </div>
-                </div>
-              ))}
-            </div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: MCK.ink, marginBottom: 4, fontFamily: MCK_FONTS.serif, letterSpacing: "-0.01em" }}>
+                    {link.label}
+                  </div>
+                  <div style={{ fontSize: 11, color: MCK.textSub, lineHeight: 1.5 }}>
+                    {link.desc}
+                  </div>
+                  {link.tierRequired && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: 18,
+                        right: 18,
+                        fontSize: 9,
+                        fontWeight: 800,
+                        padding: "2px 6px",
+                        background: `${MCK.brass}1F`,
+                        color: MCK.brassDark,
+                        border: `1px solid ${MCK.brass}55`,
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      → {link.tierRequired}
+                    </span>
+                  )}
+                </Link>
+              )
+            })}
+          </div>
+        </section>
 
-            <Link
+        {/* ── 6. Footer CTA ─────────────────────────────────── */}
+        {isSample ? (
+          <MckEmptyState
+            icon={Sparkles}
+            title="실제 데이터로 NPLatform을 경험하세요"
+            description="로그인하면 실제 매물·딜·분석·정산 데이터를 한눈에 확인할 수 있습니다."
+            actionLabel="로그인하기"
+            actionHref="/login"
+            variant="demo"
+          />
+        ) : (
+          <div
+            style={{
+              background: MCK.paper,
+              border: `1px solid ${MCK.border}`,
+              borderTop: `2px solid ${MCK.brass}`,
+              padding: 24,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 16,
+            }}
+          >
+            <div>
+              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark, marginBottom: 6 }}>Account · History</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: MCK.ink, fontFamily: MCK_FONTS.serif }}>
+                전체 활동 이력 · PII 열람 로그
+              </div>
+            </div>
+            <MckCta
+              label="활동 이력 보기"
               href="/my/privacy"
-              style={{
-                display: "block", marginTop: 12, padding: "12px 16px",
-                borderRadius: 10, textAlign: "center",
-                backgroundColor: C.bg3, color: "#fff",
-                border: `1px solid ${C.bg4}`,
-                textDecoration: "none", fontSize: 11, fontWeight: 700,
-              }}
-            >
-              전체 활동 이력 보기
-            </Link>
-          </aside>
-        </div>
-      </section>
-    </main>
+              variant="secondary"
+              size="md"
+              centered={false}
+            />
+          </div>
+        )}
+      </div>
+    </MckPageShell>
   )
 }
