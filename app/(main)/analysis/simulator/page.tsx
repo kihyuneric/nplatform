@@ -41,6 +41,8 @@ import {
   Cell,
 } from "recharts"
 import DS from "@/lib/design-system"
+import { MckPageShell, MckPageHeader, MckBadge } from "@/components/mck"
+import { MCK, MCK_FONTS } from "@/lib/mck-design"
 import {
   type V27Input,
   type V27Mode,
@@ -536,75 +538,100 @@ export default function AuctionSimulatorV27Page() {
 
   // ── 렌더 ──────────────────────────────────────────────────────
   return (
-    <div className={DS.page.wrapper}>
+    <MckPageShell variant="white">
       {/* 토스트 */}
       {toast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[999] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] shadow-lg px-4 py-2.5 rounded-lg text-[13px] font-medium text-[var(--color-text-primary)]">
+        <div
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-[999]"
+          style={{
+            background: MCK.ink,
+            color: MCK.paper,
+            borderTop: `2px solid ${MCK.brass}`,
+            padding: "10px 18px",
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: "-0.01em",
+            boxShadow: "0 8px 24px rgba(10,22,40,0.20)",
+          }}
+        >
           {toast}
         </div>
       )}
 
-      {/* 헤더 */}
-      <div className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] px-4 sm:px-6 py-4">
-        <div className="max-w-7xl mx-auto">
-          <Link href="/analysis" className={`inline-flex items-center gap-1.5 ${DS.text.link} text-[0.8125rem] mb-3`}>
-            <ArrowLeft className="h-3.5 w-3.5" />
-            분석으로 돌아가기
-          </Link>
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <Calculator className="h-5 w-5 text-[var(--color-brand-mid)]" />
-                <h1 className={DS.text.sectionTitle}>경매 수익률 분석기 v27</h1>
-                <span className="px-2 py-0.5 bg-[var(--color-brand-mid)]/10 text-[var(--color-brand-mid)] text-[0.6875rem] font-bold rounded-full border border-[var(--color-brand-mid)]/20">
-                  단위 천원 · 모드 {mode}
-                </span>
-              </div>
-              <p className={DS.text.body}>취득세·양도세·중개보수·법무사·민감도까지 — 원본 v27 계산 로직 풀이식</p>
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              {MODES.map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMode(m)}
-                  className={`px-3 py-1.5 text-[12px] font-semibold rounded-lg border transition ${
-                    mode === m
-                      ? "bg-[var(--color-brand-mid)] text-white border-[var(--color-brand-mid)]"
-                      : "bg-[var(--color-surface-overlay)] text-[var(--color-text-primary)] border-[var(--color-border-subtle)] hover:border-[var(--color-brand-mid)]/40"
-                  }`}
-                >
-                  {m}
-                </button>
-              ))}
-              <button onClick={saveScenario} className={DS.button.secondary + " !text-[0.75rem] !px-3 !py-1.5"}>
-                <Save className="h-3.5 w-3.5" /> 저장
-              </button>
+      {/* McKinsey 헤더 */}
+      <MckPageHeader
+        breadcrumbs={[
+          { label: "홈", href: "/" },
+          { label: "분석", href: "/analysis" },
+          { label: "경매 수익률 분석기 v27" },
+        ]}
+        eyebrow={`Auction Simulator · ${mode} 모드`}
+        title="경매 수익률 분석기 v27"
+        subtitle="취득세 · 양도세 · 중개보수 · 법무사 · 민감도까지 — 원본 v27 계산 로직 풀이식 (단위 천원)"
+        actions={
+          <div className="flex items-center gap-2 flex-wrap" style={{ justifyContent: "flex-end" }}>
+            {MODES.map((m) => (
               <button
-                onClick={() => setShowScenarios((v) => !v)}
-                className={DS.button.secondary + ` !text-[0.75rem] !px-3 !py-1.5 ${scenarios.length === 0 ? "opacity-60" : ""}`}
+                key={m}
+                onClick={() => setMode(m)}
+                style={{
+                  padding: "8px 14px",
+                  fontSize: 12,
+                  fontWeight: 800,
+                  letterSpacing: "-0.01em",
+                  background: mode === m ? MCK.ink : MCK.paper,
+                  color: mode === m ? MCK.paper : MCK.ink,
+                  border: `1px solid ${MCK.ink}`,
+                  borderTop: mode === m ? `2px solid ${MCK.brass}` : `1px solid ${MCK.ink}`,
+                  cursor: "pointer",
+                }}
               >
-                <FolderOpen className="h-3.5 w-3.5" /> 시나리오 {scenarios.length > 0 && `(${scenarios.length}/${V27_MAX_SCENARIOS})`}
+                {m}
               </button>
-              <button onClick={() => setShowPresets((v) => !v)} className={DS.button.secondary + " !text-[0.75rem] !px-3 !py-1.5"}>
-                <Sparkles className="h-3.5 w-3.5" /> 샘플
-              </button>
-              <button onClick={() => setShowRateGuide(true)} className={DS.button.secondary + " !text-[0.75rem] !px-3 !py-1.5"}>
-                <Info className="h-3.5 w-3.5" /> 요율표
-              </button>
-              <button onClick={share} className={DS.button.secondary + " !text-[0.75rem] !px-3 !py-1.5"}>
-                <Share2 className="h-3.5 w-3.5" /> 공유
-              </button>
-              <button onClick={reset} className={DS.button.secondary + " !text-[0.75rem] !px-3 !py-1.5"}>
-                <RotateCcw className="h-3.5 w-3.5" /> 초기화
-              </button>
-              <button onClick={downloadCsv} className={DS.button.primary + " !text-[0.75rem] !px-3 !py-1.5"}>
-                <Download className="h-3.5 w-3.5" /> CSV
-              </button>
-            </div>
+            ))}
+            <button onClick={saveScenario} className={DS.button.secondary + " !text-[0.75rem] !px-3 !py-1.5"}>
+              <Save className="h-3.5 w-3.5" /> 저장
+            </button>
+            <button
+              onClick={() => setShowScenarios((v) => !v)}
+              className={DS.button.secondary + ` !text-[0.75rem] !px-3 !py-1.5 ${scenarios.length === 0 ? "opacity-60" : ""}`}
+            >
+              <FolderOpen className="h-3.5 w-3.5" /> 시나리오 {scenarios.length > 0 && `(${scenarios.length}/${V27_MAX_SCENARIOS})`}
+            </button>
+            <button onClick={() => setShowPresets((v) => !v)} className={DS.button.secondary + " !text-[0.75rem] !px-3 !py-1.5"}>
+              <Sparkles className="h-3.5 w-3.5" /> 샘플
+            </button>
+            <button onClick={() => setShowRateGuide(true)} className={DS.button.secondary + " !text-[0.75rem] !px-3 !py-1.5"}>
+              <Info className="h-3.5 w-3.5" /> 요율표
+            </button>
+            <button onClick={share} className={DS.button.secondary + " !text-[0.75rem] !px-3 !py-1.5"}>
+              <Share2 className="h-3.5 w-3.5" /> 공유
+            </button>
+            <button onClick={reset} className={DS.button.secondary + " !text-[0.75rem] !px-3 !py-1.5"}>
+              <RotateCcw className="h-3.5 w-3.5" /> 초기화
+            </button>
+            <button
+              onClick={downloadCsv}
+              style={{
+                padding: "8px 14px",
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: "-0.01em",
+                background: MCK.ink,
+                color: MCK.paper,
+                border: "none",
+                borderTop: `2px solid ${MCK.brass}`,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <Download className="h-3.5 w-3.5" /> CSV
+            </button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* 프리셋 패널 */}
       {showPresets && (
@@ -1029,7 +1056,7 @@ export default function AuctionSimulatorV27Page() {
           <strong className="text-[var(--color-text-primary)]">단위:</strong> 모든 금액은 <strong>천원(1,000원)</strong> 단위입니다. 예) "240,000" = 2.4억원.
         </section>
       </div>
-    </div>
+    </MckPageShell>
   )
 }
 

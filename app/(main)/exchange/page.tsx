@@ -36,6 +36,8 @@ import {
   AI_GRADE_COLORS,
   type AIGrade,
 } from "@/lib/taxonomy"
+import { MckPageShell, MckPageHeader, MckDemoBanner, MckBadge } from "@/components/mck"
+import { MCK, MCK_FONTS } from "@/lib/mck-design"
 
 /* ═══════════════════════════════════════════════════════════
    DESIGN TOKENS — CSS variable references for theme support
@@ -434,127 +436,120 @@ export default function ExchangePage() {
   }, [filtered])
 
   return (
-    <main style={{ backgroundColor: V.surfaceSunken, color: V.textPrimary, minHeight: "100vh" }}>
+    <MckPageShell variant="tint">
 
-      {/* ── 데모 모드 배너 · McKinsey mono editorial ──────────────── */}
+      {/* ── 데모 모드 배너 · McKinsey ──────────────── */}
       {isDemoMode && !demoDismissed && (
-        <div style={{
-          backgroundColor: "var(--color-editorial-beige, #F4EBE0)",
-          borderBottom: "1px solid rgba(5, 28, 44, 0.10)",
-          padding: "10px 24px",
-        }}>
-          <div style={{ maxWidth: 1440, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--color-editorial-ink, #14161A)", fontWeight: 600 }}>
-              <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "var(--color-editorial-gold, #2251FF)" }} />
-              <span>
-                데모 체험 모드 — 샘플 매물 <strong>{MOCK.length}건</strong>을 표시 중입니다. 실제 등록된 매물이 없습니다.
-              </span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Link
-                href="/exchange/sell"
-                style={{ fontSize: 12, fontWeight: 700, color: "var(--color-editorial-ink, #14161A)", textDecoration: "underline", textDecorationColor: "var(--color-editorial-gold, #2251FF)", textUnderlineOffset: "3px" }}
-              >
-                매물 등록하기 →
-              </Link>
-              <button
-                onClick={() => setDemoDismissed(true)}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-warning)", fontSize: 14, lineHeight: 1 }}
-                aria-label="배너 닫기"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        </div>
+        <MckDemoBanner
+          message={`체험 모드 — 샘플 매물 ${MOCK.length}건을 표시 중입니다. 실제 등록된 매물이 없습니다.`}
+          ctaHref="/exchange/sell"
+          ctaLabel="매물 등록하기"
+        />
       )}
 
-      {/* ── Header ─────────────────────────────────── */}
-      <section
-        style={{
-          background: `linear-gradient(180deg, ${V.surfaceBase} 0%, ${V.surfaceSunken} 100%)`,
-          borderBottom: `1px solid ${V.borderSubtle}`,
-        }}
-      >
-        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "56px 24px 40px" }}>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}
-          >
-            <div>
-              <div
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "4px 10px", borderRadius: 999,
-                  backgroundColor: `color-mix(in srgb, ${V.positive} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${V.positive} 20%, transparent)`,
-                  fontSize: 11, fontWeight: 700, color: V.positive, marginBottom: 12,
-                }}
-              >
-                <Sparkles size={12} /> {tr("NPL 프라임 거래소 · 검증 딜 전용")}
-              </div>
-              <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-0.03em", color: V.textPrimary, marginBottom: 8 }}>
-                {tr("거래소")}
-              </h1>
-              <p style={{ fontSize: 14, color: V.textMuted, maxWidth: 620, lineHeight: 1.6 }}>
-                {tr("기초 정보는 투명 공개 · 개인정보는 자동 마스킹.")}{" "}
-                <span style={{ color: V.positive, fontWeight: 700 }}>{tr("인증 → NDA → LOI 단계별 열람")}</span>{tr("으로 규제 준수와 거래 속도를 동시에 확보합니다.")}
-              </p>
-            </div>
+      {/* ── McKinsey 헤더 ─────────────────────────────────── */}
+      <MckPageHeader
+        breadcrumbs={[
+          { label: "홈", href: "/" },
+          { label: "거래소", href: "/exchange" },
+          { label: "매물 탐색" },
+        ]}
+        eyebrow="NPL Prime Marketplace · 검증 딜 전용"
+        title={tr("거래소")}
+        subtitle={tr("기초 정보는 투명 공개 · 개인정보는 자동 마스킹. 인증 → NDA → LOI 단계별 열람으로 규제 준수와 거래 속도를 동시에 확보합니다.")}
+        actions={
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <Link
+              href="/exchange/sell"
+              style={{
+                padding: "9px 16px",
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: "-0.01em",
+                background: MCK.ink,
+                color: MCK.paper,
+                border: "none",
+                borderTop: `2px solid ${MCK.brass}`,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              {tr("매물 등록")} <ArrowRight size={14} />
+            </Link>
+            <Link
+              href="/exchange/discover"
+              style={{
+                padding: "9px 16px",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "-0.01em",
+                background: MCK.paper,
+                color: MCK.ink,
+                border: `1px solid ${MCK.ink}`,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <Sparkles size={14} /> {tr("발견 모드")}
+            </Link>
+          </div>
+        }
+      />
 
-            <div style={{ display: "flex", gap: 8 }}>
-              <Link
-                href="/exchange/sell"
-                style={{
-                  padding: "10px 16px", borderRadius: 10,
-                  backgroundColor: V.positive, color: V.onPositive, fontSize: 13, fontWeight: 700,
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                }}
-              >
-                {tr("매물 등록")} <ArrowRight size={14} />
-              </Link>
-              <Link
-                href="/exchange/discover"
-                style={{
-                  padding: "10px 16px", borderRadius: 10,
-                  backgroundColor: V.surfaceElevated, color: V.textPrimary, fontSize: 13, fontWeight: 600,
-                  border: `1px solid ${V.borderSubtle}`,
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                }}
-              >
-                <Sparkles size={14} /> {tr("발견 모드")}
-              </Link>
-            </div>
-          </motion.div>
-
-          {/* ── KPI strip ───────────────────────────── */}
+      {/* ── KPI strip · McKinsey editorial ───────────────────────────── */}
+      <section style={{ background: MCK.paper, borderBottom: `1px solid ${MCK.ink}11` }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 24px 32px" }}>
           <div
             style={{
-              marginTop: 28,
               display: "grid",
               gridTemplateColumns: "repeat(4, 1fr)",
-              gap: 12,
+              gap: 0,
+              borderTop: `1px solid ${MCK.ink}22`,
             }}
           >
             {[
-              { label: tr("전체 매물"), value: totalListings != null ? `${totalListings}건` : `${listings.length}건`, sub: isDemoMode ? tr("샘플") : tr("실시간") },
+              { label: tr("전체 매물"), value: totalListings != null ? `${totalListings}건` : `${listings.length}건`, sub: isDemoMode ? tr("샘플 데이터") : tr("실시간 집계") },
               { label: tr("평균 할인율"), value: "31.2%", sub: tr("채권잔액 대비") },
-              { label: tr("평균 완성도"), value: "7.6 / 10", sub: tr("자료 제공 지수") },
-              { label: tr("참여 기관"), value: "12곳", sub: tr("은행·AMC") },
+              { label: tr("평균 자료 완성도"), value: "7.6 / 10", sub: tr("자료 제공 지수") },
+              { label: tr("참여 기관"), value: "12곳", sub: tr("은행 · AMC · 저축은행") },
             ].map((k, i) => (
               <div
                 key={i}
                 style={{
-                  padding: "14px 16px",
-                  backgroundColor: V.surfaceElevated,
-                  border: `1px solid ${V.borderSubtle}`,
-                  borderRadius: 12,
+                  padding: "20px 18px",
+                  background: MCK.paper,
+                  borderRight: i < 3 ? `1px solid ${MCK.ink}11` : "none",
+                  borderTop: `2px solid ${MCK.brass}`,
                 }}
               >
-                <div style={{ fontSize: 11, color: V.textMuted, fontWeight: 600, marginBottom: 4 }}>{k.label}</div>
-                <div style={{ fontSize: 22, color: V.textPrimary, fontWeight: 800, letterSpacing: "-0.02em" }}>{k.value}</div>
-                <div style={{ fontSize: 10, color: V.textTertiary, marginTop: 2 }}>{k.sub}</div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: MCK.brassDark,
+                    marginBottom: 8,
+                  }}
+                >
+                  {k.label}
+                </div>
+                <div
+                  style={{
+                    fontFamily: MCK_FONTS.serif,
+                    fontSize: 30,
+                    fontWeight: 700,
+                    letterSpacing: "-0.02em",
+                    color: MCK.ink,
+                    marginBottom: 4,
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {k.value}
+                </div>
+                <div style={{ fontSize: 11, color: MCK.ink, opacity: 0.55 }}>{k.sub}</div>
               </div>
             ))}
           </div>
@@ -1017,7 +1012,7 @@ export default function ExchangePage() {
           )}
         </div>
       </section>
-    </main>
+    </MckPageShell>
   )
 }
 
