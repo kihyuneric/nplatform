@@ -63,18 +63,19 @@ export function MckDemoBanner({
             alignItems: "center",
             gap: 6,
             padding: "6px 14px",
-            background: MCK.brass,
-            color: MCK.ink,
+            background: MCK.electric,
+            color: MCK.paper,
             fontSize: 11,
             fontWeight: 800,
             textDecoration: "none",
             letterSpacing: "0.04em",
             textTransform: "uppercase",
             flexShrink: 0,
+            border: `1px solid ${MCK.cyan}`,
           }}
         >
           {ctaLabel}
-          <ArrowRight size={12} style={{ color: MCK.ink }} />
+          <ArrowRight size={12} style={{ color: MCK.paper }} />
         </Link>
       </div>
     </div>

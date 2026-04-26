@@ -1251,20 +1251,21 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
               {item.id}
             </div>
           </div>
-          {/* AI 등급 = 검정 사각 + 흰 글씨 (mono, 색 X) */}
+          {/* AI 등급 = 옅은 McKinsey Electric Blue 배경 + electricDark 글씨 (가독성 ↑) */}
           <div
             style={{
-              padding: "3px 7px", borderRadius: 0,
-              backgroundColor: "#0A1628",
-              color: "#FFFFFF", fontSize: 10, fontWeight: 800,
-              border: "1px solid #0A1628",
+              padding: "4px 9px", borderRadius: 0,
+              backgroundColor: "rgba(34, 81, 255, 0.10)",   /* MCK.electricSoft */
+              color: "#1A47CC",                              /* MCK.electricDark — WCAG AA on soft blue */
+              fontSize: 10, fontWeight: 800,
+              border: "1px solid rgba(34, 81, 255, 0.35)",
               whiteSpace: "nowrap",
               cursor: "help",
               letterSpacing: "0.06em",
             }}
             title={`AI 종합 등급 · Nplatform NPL Engine v2\n· 담보가치/채권비율 35%\n· 지역시장 동향 25%\n· 채무자 신용 20%\n· 경매 낙찰가율 15%\n→ 회수율 예측 기반: S≥85% · A+≥75% · A≥65% · B≥55% · C<55%`}
           >
-            AI · {formatAIGrade(item.ai_grade)}
+            AI · {(String(item.ai_grade ?? '').toUpperCase().replace(/^AI\s*/i, '').replace(/\s*등급$/, '') || '-')}등급
           </div>
         </div>
 
@@ -1278,23 +1279,30 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
           </div>
         </div>
 
-        {/* Sub metrics row — 채권잔액 · 감정가 · 할인율 (할인율만 brass) */}
-        <div style={{ paddingTop: 12, borderTop: "1px solid rgba(5, 28, 44, 0.10)" }}>
+        {/* Sub metrics row — McKinsey Deep Navy panel + white text (impact 강조) */}
+        <div
+          style={{
+            background: "#051C2C",                                /* MCK.inkDeep */
+            borderTop: "3px solid #2251FF",                       /* MCK.electric accent strip */
+            padding: "14px 16px 12px",
+            margin: "0 -16px",                                    /* card padding bleed */
+          }}
+        >
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-            <SubMetric label="채권잔액" value={principal} />
-            <SubMetric label="감정가" value={appraisal} />
-            <SubMetric label="할인율" value={`${item.discount_rate.toFixed(1)}%`} brass />
+            <SubMetricDark label="채권잔액" value={principal} />
+            <SubMetricDark label="감정가" value={appraisal} />
+            <SubMetricDark label="할인율" value={`${item.discount_rate.toFixed(1)}%`} cyan />
           </div>
           <div
             style={{
               marginTop: 10, paddingTop: 10,
-              borderTop: "1px dashed rgba(5, 28, 44, 0.10)",
+              borderTop: "1px dashed rgba(255, 255, 255, 0.18)",
               display: "flex", justifyContent: "space-between",
               fontSize: 10,
             }}
           >
-            <span style={{ color: "rgba(5, 28, 44, 0.55)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.10em" }}>예상 절감액</span>
-            <span style={{ color: "#0A1628", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{savings}</span>
+            <span style={{ color: "rgba(255, 255, 255, 0.65)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.10em" }}>예상 절감액</span>
+            <span style={{ color: "#FFFFFF", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{savings}</span>
           </div>
         </div>
 
@@ -1337,7 +1345,7 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
   )
 }
 
-/** 작은 라벨 + 숫자 — McKinsey Sub Metric */
+/** 작은 라벨 + 숫자 — McKinsey Sub Metric (paper variant) */
 function SubMetric({ label, value, brass }: { label: string; value: string; brass?: boolean }) {
   return (
     <div>
@@ -1349,6 +1357,33 @@ function SubMetric({ label, value, brass }: { label: string; value: string; bras
         color: brass ? "var(--color-editorial-gold, #2251FF)" : "#0A1628",
         letterSpacing: "-0.01em",
         fontVariantNumeric: "tabular-nums",
+      }}>
+        {value}
+      </div>
+    </div>
+  )
+}
+
+/** SubMetric dark variant — McKinsey navy panel 위 흰 글씨 (할인율 = cyan 강조) */
+function SubMetricDark({ label, value, cyan }: { label: string; value: string; cyan?: boolean }) {
+  return (
+    <div>
+      <div style={{
+        fontSize: 9, fontWeight: 700,
+        color: cyan ? "#00A9F4" : "rgba(255, 255, 255, 0.65)",
+        textTransform: "uppercase",
+        letterSpacing: "0.12em",
+        marginBottom: 4,
+      }}>
+        {label}
+      </div>
+      <div style={{
+        fontSize: 16, fontWeight: 800,
+        fontFamily: "Georgia, 'Times New Roman', 'Noto Serif KR', serif",
+        color: cyan ? "#00A9F4" : "#FFFFFF",
+        letterSpacing: "-0.015em",
+        fontVariantNumeric: "tabular-nums",
+        lineHeight: 1.05,
       }}>
         {value}
       </div>
