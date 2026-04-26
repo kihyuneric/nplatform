@@ -4,7 +4,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Users, PlusCircle } from "lucide-react"
 import { BannerSlot } from '@/components/banners/banner-slot'
-import { CommunityTabs } from '@/components/community/community-tabs'
 
 const EXPERT_TABS = [
   { href: "/services/experts",          label: "전문가 찾기", icon: Users,       exact: false },
@@ -19,7 +18,7 @@ export default function ServicesLayout({ children }: { children: React.ReactNode
     <>
       <BannerSlot position="services-top" className="mx-auto max-w-7xl px-4 pt-4" />
 
-      {isExpert ? (
+      {isExpert && (
         <div className="sticky top-16 z-10 bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex gap-1 overflow-x-auto scrollbar-hide">
@@ -43,8 +42,6 @@ export default function ServicesLayout({ children }: { children: React.ReactNode
             </div>
           </div>
         </div>
-      ) : (
-        <CommunityTabs />
       )}
 
       {children}

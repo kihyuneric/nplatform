@@ -76,6 +76,7 @@ export function makeInitialState(mode: FormMode): UnifiedFormState {
     },
     collateral: "",
     address: { sido: "", sigungu: "", detail: "" },
+    additionalAddresses: [],
     debtorType: "",
 
     claim: {
@@ -156,6 +157,26 @@ function reducer(s: UnifiedFormState, a: UnifiedFormAction): UnifiedFormState {
       return { ...s, appraisal: { ...s.appraisal, ...a.patch } }
     case "SET_ADDRESS":
       return { ...s, address: { ...s.address, ...a.patch } }
+    case "ADD_ADDRESS":
+      return {
+        ...s,
+        additionalAddresses: [
+          ...s.additionalAddresses,
+          { sido: "", sigungu: "", detail: "", ...(a.address ?? {}) },
+        ],
+      }
+    case "REMOVE_ADDRESS_AT":
+      return {
+        ...s,
+        additionalAddresses: s.additionalAddresses.filter((_, i) => i !== a.index),
+      }
+    case "UPDATE_ADDRESS_AT":
+      return {
+        ...s,
+        additionalAddresses: s.additionalAddresses.map((addr, i) =>
+          i === a.index ? { ...addr, ...a.patch } : addr,
+        ),
+      }
     case "SET_INSTITUTION":
       return { ...s, institution: { ...s.institution, ...a.patch } }
     case "SET_RIGHTS":

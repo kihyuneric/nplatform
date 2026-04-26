@@ -1,12 +1,25 @@
 "use client"
 
+/**
+ * CommunityTabs — "공지/문의" TopBar 카테고리 하위 SubNav.
+ *
+ * 사용 위치
+ *   · /notices/layout.tsx — 공지사항 페이지
+ *   · /news/layout.tsx    — (legacy) NPL 뉴스 — TopBar 카테고리에서 제외됨, 외부 링크로만 진입
+ *   · /services/layout.tsx — 전문가 서비스
+ *
+ * 변경 이력
+ *   · 2026-04-26 — TABS 를 "공지사항 + 고객센터" 로 정정 (NPL 뉴스 제거).
+ *     공지/문의 카테고리는 nav-config.ts (`news` category) 와 일치해야 함.
+ */
+
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bell, Newspaper } from "lucide-react"
+import { Bell, LifeBuoy } from "lucide-react"
 
 const TABS = [
-  { href: "/notices", label: "공지사항", icon: Bell,      exact: true  },
-  { href: "/news",    label: "NPL 뉴스", icon: Newspaper, exact: false },
+  { href: "/notices", label: "공지사항", icon: Bell,     exact: false },
+  { href: "/support", label: "고객센터", icon: LifeBuoy, exact: false },
 ]
 
 export function CommunityTabs() {

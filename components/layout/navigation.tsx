@@ -43,7 +43,7 @@ const NAV_ITEMS = [
   { href: '/exchange',  label: '거래소',     matchPaths: ['/exchange'] },
   { href: '/deals',     label: '딜룸',       matchPaths: ['/deals'] },
   { href: '/analysis',  label: '분석',       matchPaths: ['/analysis'] },
-  { href: '/notices',   label: '공지/문의',  matchPaths: ['/notices', '/support', '/news'] },
+  { href: '/notices',   label: '공지/문의',  matchPaths: ['/notices', '/support'] },
   { href: '/my',        label: '마이 페이지', matchPaths: ['/my'] },
 ]
 

@@ -89,6 +89,13 @@ export interface UnifiedFormState {
   collateral: CollateralType | ""
   address: AddressState
 
+  /**
+   * Phase G7+ — 다수 주소 지원 (포트폴리오 매각·복합 담보 1건 등록).
+   * 주 주소(`address`) + 추가 주소 배열. 각 추가 주소도 AddressState 와 동일 스키마.
+   * 빈 배열이면 단일 주소만 사용 (기존 동작과 호환).
+   */
+  additionalAddresses: AddressState[]
+
   debtorType: "INDIVIDUAL" | "CORPORATE" | ""
 
   // 채권 (원금/미수이자/연체시작일/정상금리/연체금리)
@@ -168,6 +175,9 @@ export type UnifiedFormAction =
   | { type: "SET_CLAIM"; patch: Partial<ClaimBreakdown> }
   | { type: "SET_APPRAISAL"; patch: Partial<AppraisalMarketState> }
   | { type: "SET_ADDRESS"; patch: Partial<AddressState> }
+  | { type: "ADD_ADDRESS"; address?: Partial<AddressState> }
+  | { type: "REMOVE_ADDRESS_AT"; index: number }
+  | { type: "UPDATE_ADDRESS_AT"; index: number; patch: Partial<AddressState> }
   | { type: "SET_INSTITUTION"; patch: Partial<InstitutionState> }
   | { type: "SET_RIGHTS"; patch: Partial<RightsSummary> }
   | { type: "SET_LEASE"; patch: Partial<LeaseSummary> }

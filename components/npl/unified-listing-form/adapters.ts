@@ -13,7 +13,38 @@
  */
 
 import { getRegionLabel } from "@/lib/taxonomy"
-import type { DerivedMetrics, UnifiedFormState } from "./types"
+import type { AddressState, DerivedMetrics, UnifiedFormState } from "./types"
+
+// Phase G7+ — 추가 주소 직렬화 (빈 항목 제거).
+//   API 페이로드용 포맷: { sido, sigungu, detail, location, address }
+//   · location  — "{시도라벨} {시군구}" (region 라벨 사용 — 단일 주소와 동일 규칙)
+//   · address   — "{location} {detail}" (detail 있을 때만)
+function serializeAdditionalAddresses(extras: AddressState[] | undefined) {
+  if (!extras || extras.length === 0) return [] as Array<{
+    sido: string
+    sigungu: string
+    detail: string
+    location: string
+    address: string
+  }>
+  return extras
+    .filter((a) => a.sido || a.sigungu || a.detail)
+    .map((a) => {
+      const sidoLabel = getRegionLabel(a.sido)
+      const location = [sidoLabel !== "-" ? sidoLabel : "", a.sigungu]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+      const address = a.detail ? `${location} ${a.detail}`.trim() : location
+      return {
+        sido: a.sido,
+        sigungu: a.sigungu,
+        detail: a.detail,
+        location,
+        address,
+      }
+    })
+}
 
 // ─── SELL: /api/v1/exchange/listings POST body ─────────────
 
@@ -40,6 +71,14 @@ export interface SellListingBody {
   asking_price_max: number
   seller_fee_rate: number
   area?: number
+  /** Phase G7+ — 추가 주소 (포트폴리오·복합 담보 1건 등록). 비어 있으면 [] */
+  additional_addresses: Array<{
+    sido: string
+    sigungu: string
+    detail: string
+    location: string
+    address: string
+  }>
 }
 
 export function toSellListingBody(
@@ -75,6 +114,7 @@ export function toSellListingBody(
     asking_price_max: state.askingPrice,
     seller_fee_rate: state.fee?.sellerRate ?? 0.005,
     area: extras.exclusive_area || undefined,
+    additional_addresses: serializeAdditionalAddresses(state.additionalAddresses),
   }
 }
 
@@ -125,6 +165,14 @@ export interface AuctionRegisterBody {
   bidding_method: string
   remarks: string | null
   seller_fee_rate: number
+  /** Phase G7+ — 추가 주소 (포트폴리오·복합 담보 1건 등록). 비어 있으면 [] */
+  additional_addresses: Array<{
+    sido: string
+    sigungu: string
+    detail: string
+    location: string
+    address: string
+  }>
 }
 
 export function toAuctionRegisterBody(
@@ -177,6 +225,8 @@ export function toAuctionRegisterBody(
     remarks: extras.remarks?.trim() || null,
     // 수수료율 (SELL/AUCTION 공통)
     seller_fee_rate: state.fee?.sellerRate ?? 0.005,
+    // Phase G7+ — 추가 주소 (포트폴리오·복합 담보)
+    additional_addresses: serializeAdditionalAddresses(state.additionalAddresses),
   }
 }
 

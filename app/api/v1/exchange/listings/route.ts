@@ -43,6 +43,16 @@ const listingPostSchema = z.object({
   validation_score:   z.number().min(0).max(100).optional(),
   // Phase 1-M D6: 매도자가 입력한 매각 수수료율 (0.3% ~ 0.9%)
   seller_fee_rate:    z.number().min(0.003, '수수료율은 0.3% 이상').max(0.009, '수수료율은 0.9% 이하').optional(),
+  // Phase G7+ — 다수 주소 (포트폴리오·복합 담보). 빈 배열이면 단일 주소 매물.
+  additional_addresses: z.array(
+    z.object({
+      sido:     z.string().max(20),
+      sigungu:  z.string().max(50),
+      detail:   z.string().max(300),
+      location: z.string().max(100).optional(),
+      address:  z.string().max(400).optional(),
+    })
+  ).max(50, '추가 주소는 최대 50건까지 등록할 수 있습니다').optional(),
 }).refine(
   d => !d.asking_price_min || !d.asking_price_max || d.asking_price_min <= d.asking_price_max,
   { message: '최소 희망가는 최대 희망가를 초과할 수 없습니다', path: ['asking_price_min'] }
@@ -280,6 +290,8 @@ export async function POST(request: NextRequest) {
       ai_estimate_high: body.ai_estimate_high ?? 0,
       // D6: 매도자 입력 수수료율 — DB 제약 [0.003, 0.009], 미제공 시 NULL
       seller_fee_rate: body.seller_fee_rate ?? null,
+      // Phase G7+: 다수 주소 (포트폴리오·복합 담보). 빈 배열이 기본.
+      additional_addresses: body.additional_addresses ?? [],
     }
 
     // Try npl_listings first (canonical), fall back to deal_listings for legacy compatibility
@@ -345,6 +357,8 @@ export async function PATCH(request: NextRequest) {
       'images', 'location', 'location_detail',
       'origin_date', 'default_date', 'overdue_months',
       'rejection_reason',
+      // Phase G7+: 다수 주소 (포트폴리오·복합 담보)
+      'additional_addresses',
     ]
     const changes: UpdatePayload = {}
     for (const field of allowedFields) {

@@ -12,9 +12,37 @@
  *   · mode 는 SELL 고정 (편집 화면은 항상 SELL 모드 폼으로 재구성)
  */
 
-import type { UnifiedFormState } from "./types"
+import type { AddressState, UnifiedFormState } from "./types"
 
 type AnyRow = Record<string, unknown>
+
+// Phase G7+ — 추가 주소 배열 파싱 (snake_case · camelCase · stringified JSON 모두 허용).
+function parseAdditionalAddresses(v: unknown): AddressState[] {
+  const normalize = (item: unknown): AddressState | null => {
+    if (!item || typeof item !== "object") return null
+    const obj = item as Record<string, unknown>
+    const sido = typeof obj.sido === "string" ? obj.sido : ""
+    const sigungu = typeof obj.sigungu === "string" ? obj.sigungu : ""
+    const detail = typeof obj.detail === "string" ? obj.detail : ""
+    if (!sido && !sigungu && !detail) return null
+    return { sido, sigungu, detail }
+  }
+  const list: unknown[] = Array.isArray(v)
+    ? v
+    : typeof v === "string" && v.trim().length > 0
+      ? (() => {
+          try {
+            const parsed = JSON.parse(v)
+            return Array.isArray(parsed) ? parsed : []
+          } catch {
+            return []
+          }
+        })()
+      : []
+  return list
+    .map(normalize)
+    .filter((x): x is AddressState => x !== null)
+}
 
 function num(v: unknown): number {
   if (typeof v === "number" && Number.isFinite(v)) return v
@@ -94,6 +122,9 @@ export function rowToFormPatch(row: AnyRow): Partial<UnifiedFormState> {
       sigungu: str(row.sigungu),
       detail: locationDetail || address,
     },
+    additionalAddresses: parseAdditionalAddresses(
+      row.additional_addresses ?? row.additionalAddresses,
+    ),
 
     debtorType:
       (str(row.debtor_type) as UnifiedFormState["debtorType"]) || "",
