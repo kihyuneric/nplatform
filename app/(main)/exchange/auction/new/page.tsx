@@ -565,15 +565,23 @@ export default function BiddingNewPage() {
 
         <Separator />
 
-        {/* 담보·주소 (Unified CollateralSection) */}
+        {/* 담보·주소 (Unified CollateralSection) — Phase G7+ 다수 주소 wired */}
         <CollateralSection
           collateral={state.collateral}
           address={state.address}
+          additionalAddresses={state.additionalAddresses}
           debtorType={state.debtorType}
           onCollateral={(v) =>
             dispatch({ type: "PATCH", patch: { collateral: v } })
           }
           onAddress={(patch) => dispatch({ type: "SET_ADDRESS", patch })}
+          onAddAddress={() => dispatch({ type: "ADD_ADDRESS" })}
+          onRemoveAddressAt={(index) =>
+            dispatch({ type: "REMOVE_ADDRESS_AT", index })
+          }
+          onUpdateAddressAt={(index, patch) =>
+            dispatch({ type: "UPDATE_ADDRESS_AT", index, patch })
+          }
           onDebtorType={(v) =>
             dispatch({ type: "PATCH", patch: { debtorType: v } })
           }
