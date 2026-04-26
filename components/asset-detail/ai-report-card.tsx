@@ -1,15 +1,17 @@
-﻿/**
- * AiReportCard ??AI 遺꾩꽍 由ы룷??(DR-21 쨌 2026-04-25)
+/**
+ * AiReportCard — AI 분석 리포트 (DR-21 · 2026-04-25)
  *
- * 醫낇빀 AI 遺꾩꽍 由ы룷????McKinsey White Paper v9
+ * 종합 AI 분석 리포트 — McKinsey White Paper v9
  *
- * 援ъ꽦:
- *   1. ?ㅻ뜑 (?ㅽ겕 ?ㅼ씠鍮?+ ?덈줈怨좎묠)
- *   2. KPI Row 1 ???덉륫 ?뚯닔??/ 由ъ뒪???깃툒 / 湲덉쑖湲곌? NPL 留ㅺ컖媛
- *   3. KPI Row 2 ???ъ옄 ?먯옘??/ ?덉긽 ?ъ옄?섏씡 / ?ъ옄 ?섏씡瑜? *   4. ?덉륫 ?뚯닔???좊ː援ш컙 + ?ㅻ챸
- *   5. 3-Factor Cards (LTV / ?쒖옣?숉뼢 / ?숈같媛??
- *   6. AI 由ъ뒪???깃툒 쨌 ?앹꽦??AI ?꾨＼?꾪듃
- *   7. Monte Carlo ?쒕??덉씠?? */
+ * 구성:
+ *   1. 헤더 (다크 네이비 + 새로고침)
+ *   2. KPI Row 1 — 예측 회수율 / 리스크 등급 / 금융기관 NPL 매각가
+ *   3. KPI Row 2 — 투자 에쿼티 / 예상 투자수익 / 투자 수익률
+ *   4. 예측 회수율 신뢰구간 + 설명
+ *   5. 3-Factor Cards (LTV / 시장동향 / 낙찰가율)
+ *   6. AI 리스크 등급 · 생성형 AI 프롬프트
+ *   7. Monte Carlo 시뮬레이션
+ */
 
 "use client"
 
@@ -18,8 +20,9 @@ import {
   Sigma, Activity,
 } from "lucide-react"
 
-/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Palette
-   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
+/* ═══════════════════════════════════════════════════════════════════════════
+   Palette
+   ═══════════════════════════════════════════════════════════════════════════ */
 const C = {
   ink: "#0A1628",
   inkDeep: "#051C2C",
@@ -38,8 +41,9 @@ const C = {
   magenta: "#A21CAF",
 } as const
 
-/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Types
-   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
+/* ═══════════════════════════════════════════════════════════════════════════
+   Types
+   ═══════════════════════════════════════════════════════════════════════════ */
 export interface AiReportFactor {
   label: string
   /** 0 ~ 100 */
@@ -59,14 +63,14 @@ export interface AiReportCardProps {
 }
 
 const DEFAULT_FACTORS: AiReportFactor[] = [
-  { label: "?대낫媛移??鍮?梨꾧텒鍮꾩쑉", weight: 35 },
-  { label: "吏???쒖옣 ?숉뼢",         weight: 25 },
-  { label: "梨꾨Т???좎슜?깃툒",         weight: 20 },
-  { label: "寃쎈ℓ ?숈같媛??,           weight: 15 },
+  { label: "담보가치 대비 채권비율", weight: 35 },
+  { label: "지역 시장 동향",         weight: 25 },
+  { label: "채무자 신용등급",         weight: 20 },
+  { label: "경매 낙찰가율",           weight: 15 },
 ]
 
 function gradeFromRate(rate: number | null): string {
-  if (rate == null) return "??
+  if (rate == null) return "—"
   if (rate >= 85) return "S"
   if (rate >= 75) return "A+"
   if (rate >= 65) return "A"
@@ -74,8 +78,9 @@ function gradeFromRate(rate: number | null): string {
   return "C"
 }
 
-/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   AiReportCard (硫붿씤)
-   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
+/* ═══════════════════════════════════════════════════════════════════════════
+   AiReportCard (메인)
+   ═══════════════════════════════════════════════════════════════════════════ */
 export function AiReportCard({
   recoveryRate,
   confidence,
@@ -92,10 +97,11 @@ export function AiReportCard({
   const conf = confidence ?? 92
   const lo = Math.max(0, rate - 10.9)
   const hi = rate + 10.9
-  const anomalySafe = anomaly == null || anomaly.verdict === "safe" || anomaly.verdict === "?덉쟾"
+  const anomalySafe = anomaly == null || anomaly.verdict === "safe" || anomaly.verdict === "안전"
 
-  // ?곕え??mock 媛?(?ㅼ젣 API ?곕룞 ??prop ?쇰줈 援먯껜)
-  const askingPrice = 19.6 // ??  const equity = 593_516_997
+  // 데모용 mock 값 (실제 API 연동 시 prop 으로 교체)
+  const askingPrice = 19.6 // 억
+  const equity = 593_516_997
   const expectedProfit = 168_859_880
   const roi = 28.45
   const riskScore = 64.4
@@ -107,9 +113,9 @@ export function AiReportCard({
         border: `1px solid ${C.border}`,
         boxShadow: "0 1px 3px rgba(10,22,40,0.04)",
       }}
-      aria-label="AI 遺꾩꽍 由ы룷??
+      aria-label="AI 분석 리포트"
     >
-      {/* ??? Header (dark) ??????????????????????????????? */}
+      {/* ─── Header (dark) ─────────────────────────────── */}
       <header
         className="flex items-center justify-between"
         style={{
@@ -120,7 +126,7 @@ export function AiReportCard({
       >
         <h3 className="font-black inline-flex items-center gap-2.5" style={{ fontSize: 15, color: C.paper }}>
           <Brain size={18} style={{ color: C.brass }} />
-          <span style={{ color: C.paper }}>AI 遺꾩꽍 由ы룷??/span>
+          <span style={{ color: C.paper }}>AI 분석 리포트</span>
         </h3>
         <button
           type="button"
@@ -137,57 +143,57 @@ export function AiReportCard({
           }}
         >
           <RefreshCcw size={12} className={loading ? "animate-spin" : ""} style={{ color: C.brass }} />
-          ?덈줈怨좎묠
+          새로고침
         </button>
       </header>
 
-      {/* ??? Body ???????????????????????????????????????? */}
+      {/* ─── Body ──────────────────────────────────────── */}
       <div style={{ padding: 22 }}>
-        {/* KPI Row 1 ???덉륫?뚯닔??/ 由ъ뒪??/ 留ㅺ컖媛 */}
+        {/* KPI Row 1 — 예측회수율 / 리스크 / 매각가 */}
         <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
           <KpiCard
             icon={<TrendingUp size={14} style={{ color: C.brandBright }} />}
-            label="?덉륫 ?뚯닔??
+            label="예측 회수율"
             value={`${rate.toFixed(1)}%`}
             valueColor={C.brandBright}
-            sub={`?좊ː??${conf}%`}
+            sub={`신뢰도 ${conf}%`}
           />
           <KpiCard
             icon={<Shield size={14} style={{ color: C.magenta }} />}
-            label="由ъ뒪???깃툒"
-            value={`${effectiveGrade} 쨌 ${riskScore.toFixed(1)}??}
+            label="리스크 등급"
+            value={`${effectiveGrade} · ${riskScore.toFixed(1)}점`}
             valueColor={C.ink}
             sub="MEDIUM"
           />
           <KpiCard
             icon={<Target size={14} style={{ color: C.brandBright }} />}
-            label="湲덉쑖湲곌? NPL 留ㅺ컖媛"
-            value={`${askingPrice.toFixed(2)}?듭썝`}
+            label="금융기관 NPL 매각가"
+            value={`${askingPrice.toFixed(2)}억원`}
             valueColor={C.ink}
             sub={`ROI ${roi.toFixed(2)}%`}
           />
         </div>
 
-        {/* KPI Row 2 ???먯옘??/ ?덉긽?섏씡 / ROI */}
+        {/* KPI Row 2 — 에쿼티 / 예상수익 / ROI */}
         <div className="grid gap-3 mt-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
           <KpiCard
-            label="?ъ옄 ?먯옘??珥앷퀎"
-            value={`${equity.toLocaleString()}??}
+            label="투자 에쿼티 총계"
+            value={`${equity.toLocaleString()}원`}
             valueColor={C.ink}
           />
           <KpiCard
-            label="?덉긽 ?ъ옄?섏씡"
-            value={`${expectedProfit.toLocaleString()}??}
+            label="예상 투자수익"
+            value={`${expectedProfit.toLocaleString()}원`}
             valueColor={C.ink}
           />
           <KpiCard
-            label="?ъ옄 ?섏씡瑜?(ROI)"
+            label="투자 수익률 (ROI)"
             value={`${roi.toFixed(2)}%`}
             valueColor={C.brandBright}
           />
         </div>
 
-        {/* ??? ?덉륫 ?뚯닔??+ ?좊ː援ш컙 ??? */}
+        {/* ─── 예측 회수율 + 신뢰구간 ─── */}
         <div
           className="mt-5"
           style={{
@@ -197,7 +203,7 @@ export function AiReportCard({
           }}
         >
           <div className="flex items-baseline gap-2 mb-3" style={{ flexWrap: "wrap" }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: C.textSub }}>?덉륫 ?뚯닔??(?좊ː援ш컙)</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.textSub }}>예측 회수율 (신뢰구간)</span>
             <span
               className="tabular-nums"
               style={{ fontSize: 16, fontWeight: 800, color: C.brandBright }}
@@ -205,21 +211,21 @@ export function AiReportCard({
               {rate.toFixed(1)}%
             </span>
             <span className="tabular-nums" style={{ fontSize: 11, color: C.textMuted }}>
-              쨌 踰붿쐞 {lo.toFixed(1)}% ~ {hi.toFixed(1)}%
+              · 범위 {lo.toFixed(1)}% ~ {hi.toFixed(1)}%
             </span>
           </div>
           <ConfidenceBar rate={rate} lo={lo} hi={hi} />
           <p className="mt-3 leading-relaxed" style={{ fontSize: 11, color: C.textSub }}>
-            ?덉긽 ?뚯닔??{rate.toFixed(1)}% 쨌 ?좊ː援ш컙 {lo.toFixed(1)}~{hi.toFixed(1)}% (짹?) 쨌 ?좊ː??{conf}%.
-            ?대낫 而ㅻ쾭由ъ? 128% (梨꾧텒???鍮??대낫媛移? ???숈같媛??83.5% ?ъ쁺???뚯닔 ?쒕굹由ъ삤.
-            ?좊ː援ш컙??짹10.9%p 濡??볦뼱 ?멸렐 ?쒕낯 蹂닿컯(14嫄? ?꾩슂 ??蹂댁닔 ?쒕굹由ъ삤(96.9%) 蹂묓뻾 沅뚭퀬.
+            예상 회수율 {rate.toFixed(1)}% · 신뢰구간 {lo.toFixed(1)}~{hi.toFixed(1)}% (±σ) · 신뢰도 {conf}%.
+            담보 커버리지 128% (채권액 대비 담보가치) 에 낙찰가율 83.5% 투영한 회수 시나리오.
+            신뢰구간이 ±10.9%p 로 넓어 인근 표본 보강(14건) 필요 — 보수 시나리오(96.9%) 병행 권고.
           </p>
           <CalcLink />
         </div>
 
-        {/* ??? 3-Factor Cards ?뱀뀡 ?쒓굅 (2026-04-26 쨌 ?ъ슜???붿껌) ??? */}
+        {/* ─── 3-Factor Cards 섹션 제거 (2026-04-26 · 사용자 요청) ─── */}
 
-        {/* ??? AI 由ъ뒪???깃툒 쨌 ?앹꽦??AI ?꾨＼?꾪듃 ??? */}
+        {/* ─── AI 리스크 등급 · 생성형 AI 프롬프트 ─── */}
         <div
           className="mt-5"
           style={{
@@ -232,11 +238,11 @@ export function AiReportCard({
             <div className="inline-flex items-center gap-2">
               <Shield size={14} style={{ color: C.brassDark }} />
               <span style={{ fontSize: 12, fontWeight: 700, color: C.ink, letterSpacing: "-0.01em" }}>
-                AI 由ъ뒪???깃툒
+                AI 리스크 등급
               </span>
             </div>
             <span style={{ fontSize: 10, fontWeight: 600, color: C.textMuted, letterSpacing: "0.04em" }}>
-              NPLATFORM 由ъ뒪??遺꾩꽍 紐⑤뜽
+              NPLATFORM 리스크 분석 모델
             </span>
           </div>
 
@@ -259,25 +265,26 @@ export function AiReportCard({
             <div style={{ flex: "1 1 360px", minWidth: 0 }}>
               <div className="flex items-baseline gap-2 mb-1" style={{ flexWrap: "wrap" }}>
                 <span className="tabular-nums" style={{ fontSize: 14, fontWeight: 800, color: C.ink }}>
-                  醫낇빀 {riskScore.toFixed(1)}??                </span>
-                <span style={{ fontSize: 11, fontWeight: 700, color: C.textSub }}>쨌 MEDIUM</span>
+                  종합 {riskScore.toFixed(1)}점
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.textSub }}>· MEDIUM</span>
                 <span style={{ fontSize: 11, fontWeight: 600, color: C.textMuted }}>
-                  留ㅻЪ ?깅줉 ???뱀닔議곌굔 ?꾨＼?꾪듃 諛섏쁺
+                  매물 등록 시 특수조건 프롬프트 반영
                 </span>
               </div>
               <p className="leading-relaxed" style={{ fontSize: 12, color: C.textSub }}>
-                由ъ뒪???섏? 蹂댄넻 ({riskScore.toFixed(1)}??쨌 ?깃툒 {effectiveGrade}). 4?⑺꽣 以?媛??痍⑥빟??援ш컙?
-                <b style={{ color: C.warning }}> "沅뚮━愿怨? (52.0??</b> 쨌 媛??寃ш퀬??援ш컙?
-                <b style={{ color: C.positive }}> "?좊룞?? (79.0??</b>. HIGH ?⑺꽣 1媛???留ㅼ엯 ???꾪솕 議곗튂 ?꾩닔.
-                ?꾪솕 ?ъ빱?? ?뱁빐???〓떖?댁뿭쨌泥대궔泥섎텇 ?④퀎 ?뺤씤 쨌 理쒖슦??諛곕떦
-                媛먯븸遺?留ㅼ엯媛 諛섏쁺.
+                리스크 수준 보통 ({riskScore.toFixed(1)}점 · 등급 {effectiveGrade}). 4팩터 중 가장 취약한 구간은
+                <b style={{ color: C.warning }}> "권리관계" (52.0점)</b> · 가장 견고한 구간은
+                <b style={{ color: C.positive }}> "유동성" (79.0점)</b>. HIGH 팩터 1개 — 매입 전 완화 조치 필수.
+                완화 포커스: 당해세 송달내역·체납처분 단계 확인 · 최우선 배당
+                감액분 매입가 반영.
               </p>
               <div className="mt-2"><CalcLink /></div>
             </div>
           </div>
         </div>
 
-        {/* ??? Monte Carlo ??? */}
+        {/* ─── Monte Carlo ─── */}
         <div
           className="mt-5"
           style={{
@@ -290,21 +297,22 @@ export function AiReportCard({
             <div className="inline-flex items-center gap-2">
               <Sigma size={14} style={{ color: C.brassDark }} />
               <span style={{ fontSize: 12, fontWeight: 700, color: C.ink, letterSpacing: "-0.01em" }}>
-                Monte Carlo ?쒕??덉씠??              </span>
+                Monte Carlo 시뮬레이션
+              </span>
             </div>
             <span style={{ fontSize: 10, fontWeight: 600, color: C.textMuted, letterSpacing: "0.02em" }}>
-              10,000???쒕? 쨌 ?숈같媛???뺢퇋遺꾪룷-?좎같 Poisson쨌鍮꾩슜 jitter 諛섏쁺
+              10,000회 시뮬 · 낙찰가율 정규분포-유찰 Poisson·비용 jitter 반영
             </span>
           </div>
           <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
-            <McKpi label="?됯퇏 ROI" value="23.30%" sub="?쒖??몄감 5.30%p" valueColor={C.brandBright} />
-            <McKpi label="?먯떎 ?뺣쪧 (ROI<0)" value="0.20%" sub="VaR 95% 12.70%" valueColor={C.warning} />
-            {/* 以묒븰媛?(P50) 移대뱶 ?쒓굅 ??2026-04-26 ?ъ슜???붿껌 */}
-            <McKpi label="?됯퇏 ?뚯닔 湲곌컙" value="338?? sub="?고솚??湲곗? 1.08x" valueColor={C.ink} />
+            <McKpi label="평균 ROI" value="23.30%" sub="표준편차 5.30%p" valueColor={C.brandBright} />
+            <McKpi label="손실 확률 (ROI<0)" value="0.20%" sub="VaR 95% 12.70%" valueColor={C.warning} />
+            {/* 중앙값 (P50) 카드 제거 — 2026-04-26 사용자 요청 */}
+            <McKpi label="평균 회수 기간" value="338일" sub="연환산 기준 1.08x" valueColor={C.ink} />
           </div>
         </div>
 
-        {/* ?댁긽 ?먯? (?듭뀡) */}
+        {/* 이상 탐지 (옵션) */}
         {anomaly && (
           <div
             className="mt-5 flex items-center justify-between"
@@ -317,11 +325,11 @@ export function AiReportCard({
             <div className="inline-flex items-center gap-2 font-bold" style={{ fontSize: 12 }}>
               <Activity size={13} style={{ color: anomalySafe ? C.positive : C.warning }} />
               <span style={{ color: anomalySafe ? C.positive : C.warning }}>
-                {anomalySafe ? "?댁긽 ?먯?: ?덉쟾" : `?댁긽 ?먯?: ${anomaly.verdict}`}
+                {anomalySafe ? "이상 탐지: 안전" : `이상 탐지: ${anomaly.verdict}`}
               </span>
             </div>
             <span className="tabular-nums" style={{ fontSize: 11, fontWeight: 600, color: C.textMuted }}>
-              ?먯닔 {anomaly.score.toFixed(1)}
+              점수 {anomaly.score.toFixed(1)}
             </span>
           </div>
         )}
@@ -344,9 +352,9 @@ export function AiReportCard({
               >
                 <span className="inline-flex items-center gap-2" style={{ fontSize: 12, fontWeight: 700, color: C.ink }}>
                   <Sparkles size={13} style={{ color: C.brass }} />
-                  AI ?ъ옄 遺꾩꽍 (?뚯닔??쨌 DCF 쨌 紐ы뀒移대?濡?
+                  AI 투자 분석 (회수율 · DCF · 몬테카를로)
                 </span>
-                <span style={{ fontSize: 14, color: C.brass }}>??/span>
+                <span style={{ fontSize: 14, color: C.brass }}>→</span>
               </button>
             )}
             {onAskCopilot && (
@@ -364,9 +372,9 @@ export function AiReportCard({
               >
                 <span className="inline-flex items-center gap-2" style={{ fontSize: 12, fontWeight: 700, color: C.ink }}>
                   <Brain size={13} style={{ color: C.brass }} />
-                  AI Copilot ?먭쾶 ??留ㅻЪ 吏덈Ц
+                  AI Copilot 에게 이 매물 질문
                 </span>
-                <span style={{ fontSize: 14, color: C.brass }}>??/span>
+                <span style={{ fontSize: 14, color: C.brass }}>→</span>
               </button>
             )}
           </div>
@@ -376,8 +384,9 @@ export function AiReportCard({
   )
 }
 
-/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Sub: KpiCard
-   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
+/* ═══════════════════════════════════════════════════════════════════════════
+   Sub: KpiCard
+   ═══════════════════════════════════════════════════════════════════════════ */
 function KpiCard({
   icon, label, value, valueColor, sub,
 }: {
@@ -422,11 +431,13 @@ function KpiCard({
   )
 }
 
-/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Sub: FactorCard ??2026-04-26 ?ъ슜???붿껌?쇰줈 ?몄텧遺 ?쒓굅??(?뺤쓽???④퍡 ?뺣━)
-   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
+/* ═══════════════════════════════════════════════════════════════════════════
+   Sub: FactorCard — 2026-04-26 사용자 요청으로 호출부 제거됨 (정의도 함께 정리)
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Sub: ConfidenceBar
-   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
+/* ═══════════════════════════════════════════════════════════════════════════
+   Sub: ConfidenceBar
+   ═══════════════════════════════════════════════════════════════════════════ */
 function ConfidenceBar({ rate, lo, hi }: { rate: number; lo: number; hi: number }) {
   const max = 130
   const loPct = (lo / max) * 100
@@ -476,8 +487,9 @@ function ConfidenceBar({ rate, lo, hi }: { rate: number; lo: number; hi: number 
   )
 }
 
-/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Sub: McKpi (Monte Carlo KPI)
-   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
+/* ═══════════════════════════════════════════════════════════════════════════
+   Sub: McKpi (Monte Carlo KPI)
+   ═══════════════════════════════════════════════════════════════════════════ */
 function McKpi({ label, value, sub, valueColor }: { label: string; value: string; sub: string; valueColor: string }) {
   return (
     <div>
@@ -497,8 +509,9 @@ function McKpi({ label, value, sub, valueColor }: { label: string; value: string
   )
 }
 
-/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??   Sub: CalcLink
-   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
+/* ═══════════════════════════════════════════════════════════════════════════
+   Sub: CalcLink
+   ═══════════════════════════════════════════════════════════════════════════ */
 function CalcLink() {
   return (
     <button
@@ -516,7 +529,8 @@ function CalcLink() {
       }}
     >
       <Sigma size={11} style={{ color: C.brass }} />
-      怨꾩궛??      <span style={{ marginLeft: 2, color: C.brass }}>??/span>
+      계산식
+      <span style={{ marginLeft: 2, color: C.brass }}>›</span>
     </button>
   )
 }

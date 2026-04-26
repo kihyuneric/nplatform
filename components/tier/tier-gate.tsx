@@ -1,10 +1,10 @@
-﻿/**
+/**
  * components/tier/tier-gate.tsx
  *
- * ?묎렐 ?쒖뼱 ?섑띁.
- * ?꾩옱 ?ъ슜???곗뼱媛 required 誘몃쭔?대㈃ ?먯떇???④린怨??좉툑 ?ㅻ쾭?덉씠 + ?낃렇?덉씠??CTA ?쒖떆.
+ * 접근 제어 래퍼.
+ * 현재 사용자 티어가 required 미만이면 자식을 숨기고 잠금 오버레이 + 업그레이드 CTA 표시.
  *
- * ?ъ슜 ??
+ * 사용 예:
  *   <TierGate required="L2" current={userTier} listingId={id}>
  *     <RegistryFullViewer url={listing.registry_full_url} />
  *   </TierGate>
@@ -19,18 +19,19 @@ import { TierBadge } from './tier-badge'
 interface TierGateProps {
   required: AccessTier
   current: AccessTier
-  listingId?: string                  // L3 ?낃렇?덉씠????LOI ?섏씠吏 寃쎈줈 ?앹꽦??  children: React.ReactNode
-  /** true硫??좉꼈?????먯떇???먮━寃??ㅼ뿉 ?뚮뜑 */
+  listingId?: string                  // L3 업그레이드 시 LOI 페이지 경로 생성용
+  children: React.ReactNode
+  /** true면 잠겼을 때 자식을 흐리게 뒤에 렌더 */
   blurContent?: boolean
-  /** ?좉릿 ?곹깭?먯꽌 蹂댁뿬以?而ㅼ뒪? 硫붿떆吏 */
+  /** 잠긴 상태에서 보여줄 커스텀 메시지 */
   customMessage?: string
-  /** ?좉툑 諛뺤뒪 理쒖냼 ?믪씠 */
+  /** 잠금 박스 최소 높이 */
   minHeight?: number
-  /** ?쒓났 ??href ???onClick 踰꾪듉?쇰줈 ?낃렇?덉씠??CTA ?뚮뜑 */
+  /** 제공 시 href 대신 onClick 버튼으로 업그레이드 CTA 렌더 */
   onUpgradeClick?: () => void
   /**
-   * true硫??먯떇??洹몃?濡??뚮뜑?섎릺 blur 泥섎━ + ?곗긽???묒? ?먮Ъ??諭껋?留??쒖떆.
-   * ? ?ㅻ쾭?덉씠瑜??꾩슦吏 ?딆쓬 (Deal Flow 紐⑤뱶??.
+   * true면 자식을 그대로 렌더하되 blur 처리 + 우상단 작은 자물쇠 뱃지만 표시.
+   * 풀 오버레이를 띄우지 않음 (Deal Flow 모드용).
    */
   softBlur?: boolean
 }
@@ -55,7 +56,7 @@ export function TierGate({
   const meta = TIER_META[required]
   const upgrade = getUpgradeAction(current, required, listingId)
 
-  // ??? softBlur 紐⑤뱶: 肄섑뀗痢좊? ?먮━寃?洹몃?濡?蹂댁뿬二쇨퀬 ?묒? ?좉툑 諭껋?留???
+  // ─── softBlur 모드: 콘텐츠를 흐리게 그대로 보여주고 작은 잠금 뱃지만 ──
   if (softBlur) {
     return (
       <div style={{ position: 'relative' }}>
@@ -71,7 +72,7 @@ export function TierGate({
           {children}
         </div>
 
-        {/* ?곗긽???먮Ъ??諭껋? */}
+        {/* 우상단 자물쇠 뱃지 */}
         <div
           style={{
             position: 'absolute',
@@ -94,7 +95,7 @@ export function TierGate({
           </span>
         </div>
 
-        {/* 以묒븰 CTA 踰꾪듉 (?좏깮) */}
+        {/* 중앙 CTA 버튼 (선택) */}
         {(upgrade || onUpgradeClick) && (
           <div
             style={{
@@ -127,7 +128,7 @@ export function TierGate({
                 }}
               >
                 {upgrade?.label ?? meta.requirement}
-                <span aria-hidden style={{ fontSize: 14 }}>??/span>
+                <span aria-hidden style={{ fontSize: 14 }}>→</span>
               </button>
             ) : upgrade ? (
               <a
@@ -149,7 +150,7 @@ export function TierGate({
                 }}
               >
                 {upgrade.label}
-                <span aria-hidden style={{ fontSize: 14 }}>??/span>
+                <span aria-hidden style={{ fontSize: 14 }}>→</span>
               </a>
             ) : null}
           </div>
@@ -199,7 +200,7 @@ export function TierGate({
           backdropFilter: 'blur(4px)',
         }}
       >
-        {/* ?먮Ъ???꾩씠肄?*/}
+        {/* 자물쇠 아이콘 */}
         <div
           style={{
             width: 48,
@@ -218,7 +219,7 @@ export function TierGate({
         <TierBadge tier={required} size="md" showLabel />
 
         <div style={{ color: '#E2E8F0', fontSize: 13, fontWeight: 600 }}>
-          {customMessage ?? `${meta.requirement} ???대엺 媛?ν빀?덈떎`}
+          {customMessage ?? `${meta.requirement} 후 열람 가능합니다`}
         </div>
         <div style={{ color: '#94A3B8', fontSize: 11, maxWidth: 360 }}>
           {meta.description}
@@ -246,7 +247,7 @@ export function TierGate({
               }}
             >
               {upgrade?.label ?? meta.requirement}
-              <span aria-hidden style={{ fontSize: 14 }}>??/span>
+              <span aria-hidden style={{ fontSize: 14 }}>→</span>
             </button>
           ) : upgrade ? (
             <a
@@ -267,7 +268,7 @@ export function TierGate({
               }}
             >
               {upgrade.label}
-              <span aria-hidden style={{ fontSize: 14 }}>??/span>
+              <span aria-hidden style={{ fontSize: 14 }}>→</span>
             </a>
           ) : null
         )}
@@ -276,36 +277,36 @@ export function TierGate({
   )
 }
 
-// ??? ?낃렇?덉씠???≪뀡 寃곗젙 ?????????????????????????????????
+// ─── 업그레이드 액션 결정 ─────────────────────────────────
 function getUpgradeAction(
   current: AccessTier,
   required: AccessTier,
   listingId?: string
 ): { label: string; href: string } | null {
-  // ???④퀎???щ젮媛?꾨줉 next step ?쒖슜
+  // 한 단계씩 올려가도록 next step 활용
   const next = getNextUpgradeStep(current)
   if (!next) return null
 
-  // L2 ??L3 ?낃렇?덉씠?쒕뒗 留ㅻЪ蹂?LOI ?꾩슂
+  // L2 → L3 업그레이드는 매물별 LOI 필요
   if (required === 'L3') {
     return {
-      label: 'LOI ?쒖텧?붾㈃ ?닿린',
+      label: 'LOI 제출화면 열기',
       href: listingId ? `/deals/${listingId}?action=loi` : '/my/agreements',
     }
   }
   if (required === 'L2') {
     if (listingId) {
-      return { label: 'NDA 泥닿껐?붾㈃ ?닿린', href: `/deals/${listingId}?action=nda` }
+      return { label: 'NDA 체결화면 열기', href: `/deals/${listingId}?action=nda` }
     }
-    return { label: 'NDA 泥닿껐?붾㈃ ?닿린', href: '/my/kyc' }
+    return { label: 'NDA 체결화면 열기', href: '/my/kyc' }
   }
   if (required === 'L1') {
-    return { label: '?ъ옄???몄쬆?섍퀬 ?대엺', href: '/my/verify' }
+    return { label: '투자자 인증하고 열람', href: '/my/verify' }
   }
   return null
 }
 
-// ??? ?먮Ъ???꾩씠肄?(?몃씪??SVG) ??????????????????????????
+// ─── 자물쇠 아이콘 (인라인 SVG) ──────────────────────────
 function LockIcon({ color }: { color: string }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">

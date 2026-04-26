@@ -1,13 +1,18 @@
-﻿/**
- * AssetSidebar ???먯궛 ?곸꽭 ?곗륫 ?ъ씠?쒕컮 (DR-4-C 쨌 2026-04-21 쨌 DR-23 쨌 2026-04-26)
+/**
+ * AssetSidebar — 자산 상세 우측 사이드바 (DR-4-C · 2026-04-21 · DR-23 · 2026-04-26)
  *
- * 援ъ꽦 (4媛?移대뱶 ?ㅽ깮):
- *   1. AI ?ъ옄 遺꾩꽍 (NPL 遺꾩꽍 由ы룷???곕룞 쨌 McKinsey ?ㅽ???
- *      - AI ?ъ옄 ?섍껄 BUY + AI ?ъ옄 ?깃툒 留됰? 洹몃옒?? *      - AI 沅뚭퀬 留ㅼ엯媛 + 留ㅼ엯瑜졖룸굺李곌??? *      - ?덉긽 ?숈같媛 / 2吏덇텒??諛곕떦 / ?ъ옄 ?먯옘??/ ?덉긽 ?먯씡 / ROI / ?고솚?? *      - 留ㅼ엯쨌?숈같 ?깃났 ?뺣쪧 留됰? 洹몃옒?? *   2. 留ㅼ묶 ?섏슂
- *   3. 留ㅼ닔???섏닔猷??덈궡
- *   4. ?쒓났 ?먮즺 泥댄겕由ъ뒪?? *
+ * 구성 (4개 카드 스택):
+ *   1. AI 투자 분석 (NPL 분석 리포트 연동 · McKinsey 스타일)
+ *      - AI 투자 의견 BUY + AI 투자 등급 막대 그래프
+ *      - AI 권고 매입가 + 매입률·낙찰가율
+ *      - 예상 낙찰가 / 2질권자 배당 / 투자 에쿼티 / 예상 손익 / ROI / 연환산
+ *      - 매입·낙찰 성공 확률 막대 그래프
+ *   2. 매칭 수요
+ *   3. 매수자 수수료 안내
+ *   4. 제공 자료 체크리스트
+ *
  * Engine: Nplatform NPL Engine
- * ?곸쐞 PrimaryActionCard 諛붾줈 ?꾨옒??諛곗튂?섎ŉ ?곗뒪?ы넲?먯꽑 sticky.
+ * 상위 PrimaryActionCard 바로 아래에 배치되며 데스크톱에선 sticky.
  */
 
 "use client"
@@ -21,10 +26,11 @@ import {
 /* McKinsey palette */
 const MCK = {
   ink:        "#0A1628",
-  inkDeep:    "#051C2C",  // ???ㅼ씠鍮?(?깃툒 移대뱶 諛곌꼍)
+  inkDeep:    "#051C2C",  // 딥 네이비 (등급 카드 배경)
   paper:      "#FFFFFF",
   paperTint:  "#FAFBFC",
-  cobalt:     "#003A70",  // McKinsey 肄붾컻??  cobaltLight:"#6FB8E6",  // ?쇰꺼 ?섏씠?쇱씠??(?ㅼ씠鍮???
+  cobalt:     "#003A70",  // McKinsey 코발트
+  cobaltLight:"#6FB8E6",  // 라벨 하이라이트 (네이비 위)
   brass:      "#2251FF",
   border:     "rgba(10, 22, 40, 0.10)",
   borderStrong: "rgba(10, 22, 40, 0.18)",
@@ -40,78 +46,78 @@ export interface AssetDocItem {
 }
 
 export interface NplInvestmentSummary {
-  /** AI ?ъ옄 ?섍껄 (BUY / HOLD / SELL) */
+  /** AI 투자 의견 (BUY / HOLD / SELL) */
   verdict: 'BUY' | 'HOLD' | 'SELL'
-  /** AI ?ъ옄 ?깃툒 (S/A+/A/B/C) */
+  /** AI 투자 등급 (S/A+/A/B/C) */
   grade: string
-  /** ?ъ옄 ?먯닔 (0-100) */
+  /** 투자 점수 (0-100) */
   score: number
-  /** AI 沅뚭퀬 留ㅼ엯媛 (?? */
+  /** AI 권고 매입가 (원) */
   recommendedPurchasePrice: number
-  /** ?異쒖썝湲??鍮?留ㅼ엯瑜?(?뚯닔, ??0.95) */
+  /** 대출원금 대비 매입률 (소수, 예 0.95) */
   purchaseRate: number
-  /** ?덉긽?숈같媛??(?뚯닔, ??0.835) */
+  /** 예상낙찰가율 (소수, 예 0.835) */
   bidRatio: number
-  /** ?덉긽?숈같媛 (?? */
+  /** 예상낙찰가 (원) */
   expectedBidPrice: number
-  /** 2吏덇텒??諛곕떦??(?? */
+  /** 2질권자 배당액 (원) */
   secondPledgeeAmount: number
-  /** ?ъ옄 ?먯옘??(?? */
+  /** 투자 에쿼티 (원) */
   totalEquity: number
-  /** ?덉긽 ?먯씡 (?? */
+  /** 예상 손익 (원) */
   expectedNetProfit: number
-  /** ROI (?뚯닔, ??0.486) */
+  /** ROI (소수, 예 0.486) */
   roi: number
-  /** ?고솚??ROI (?뚯닔, ??0.662) */
+  /** 연환산 ROI (소수, 예 0.662) */
   annualizedRoi: number
-  /** 留ㅼ엯쨌?숈같 ?깃났 ?뺣쪧 (?뚯닔, ??0.50) */
+  /** 매입·낙찰 성공 확률 (소수, 예 0.50) */
   winProbability: number
 }
 
 export interface AssetSidebarProps {
-  /** 留ㅺ컖 ?щ쭩媛 (?? ???섏닔猷?怨꾩궛 湲곗? */
+  /** 매각 희망가 (원) — 수수료 계산 기준 */
   askingPrice: number
   /**
-   * NPL 遺꾩꽍 由ы룷??湲곕컲 AI ?ъ옄 ?붿빟 (DR-23).
-   * ?쒓났?섎㈃ 泥⑤?2 ?붿옄???ъ옄?깃툒 留됰?洹몃옒??쨌 留ㅼ엯媛쨌諛곕떦쨌ROI 쨌 ?깃났?뺣쪧 留됰?洹몃옒?? ?몄텧.
-   * 誘몄젣怨듭씠硫??덇굅???뚯닔??移대뱶 fallback.
+   * NPL 분석 리포트 기반 AI 투자 요약 (DR-23).
+   * 제공되면 첨부2 디자인(투자등급 막대그래프 · 매입가·배당·ROI · 성공확률 막대그래프) 노출.
+   * 미제공이면 레거시 회수율 카드 fallback.
    */
   investmentSummary?: NplInvestmentSummary | null
-  /** [Legacy] AI ?뚯닔???덉륫 (%) ??investmentSummary 誘몄젣怨???fallback */
+  /** [Legacy] AI 회수율 예측 (%) — investmentSummary 미제공 시 fallback */
   recoveryRate: number | null
-  /** [Legacy] AI ?좊ː??(%) */
+  /** [Legacy] AI 신뢰도 (%) */
   recoveryConfidence: number | null
-  /** [Legacy] AI 沅뚭퀬 ?낆같媛 ???됯퇏/理쒖냼/理쒕? (?? */
+  /** [Legacy] AI 권고 입찰가 — 평균/최소/최대 (원) */
   priceGuide: { mid: number; min: number; max: number } | null
-  /** ?댁긽 ?먯? 寃곌낵 (諛곌꼍?????쒖떆??verdict ?곗꽑) */
+  /** 이상 탐지 결과 (배경용 — 표시는 verdict 우선) */
   anomaly: { verdict: string; score: number } | null
-  /** ?쒓났 ?먮즺 泥댄겕由ъ뒪??*/
+  /** 제공 자료 체크리스트 */
   documents?: AssetDocItem[]
-  /** AI??吏덈Ц?섍린 ?대┃ */
+  /** AI에 질문하기 클릭 */
   onAskAi?: () => void
-  /** ?щ텇???대┃ */
+  /** 재분석 클릭 */
   onReanalyze?: () => void
-  /** ?뺣쪧 怨꾩궛??蹂닿린 ?대┃ */
+  /** 확률 계산식 보기 클릭 */
   onShowProbability?: () => void
-  /** ?섏슂 ?뺤씤 ?대┃ */
+  /** 수요 확인 클릭 */
   onSeeDemand?: () => void
-  /** AI 留ㅼ묶 ?대┃ */
+  /** AI 매칭 클릭 */
   onAiMatch?: () => void
 }
 
 const DEFAULT_DOCS: AssetDocItem[] = [
-  { label: "媛먯젙?됯???, available: true },
-  { label: "?깃린遺?깅낯", available: true },
-  { label: "沅뚮━愿怨?, available: true },
-  { label: "?꾩감?꾪솴", available: true },
-  { label: "?꾩옣?ъ쭊", available: true },
-  { label: "?щТ?먮즺", available: false, hint: "?댄썑怨듦컻" },
+  { label: "감정평가서", available: true },
+  { label: "등기부등본", available: true },
+  { label: "권리관계", available: true },
+  { label: "임차현황", available: true },
+  { label: "현장사진", available: true },
+  { label: "재무자료", available: false, hint: "이후공개" },
 ]
 
 function formatKRW(n: number | null | undefined): string {
-  if (!n) return "??
-  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}??
-  if (n >= 10_000) return `${(n / 10_000).toFixed(0)}留?
+  if (!n) return "—"
+  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}억`
+  if (n >= 10_000) return `${(n / 10_000).toFixed(0)}만`
   return n.toLocaleString("ko-KR")
 }
 
@@ -129,7 +135,7 @@ export function AssetSidebar({
   onSeeDemand,
   onAiMatch,
 }: AssetSidebarProps) {
-  // ?섏닔猷?怨꾩궛 ??湲곕낯 1.5% + PNR ?곗꽑?묒긽沅?0.3% = 1.8%
+  // 수수료 계산 — 기본 1.5% + PNR 우선협상권 0.3% = 1.8%
   const basicFeeRate = 1.5
   const pnrFeeRate = 0.3
   const totalFeeRate = basicFeeRate + pnrFeeRate
@@ -140,9 +146,9 @@ export function AssetSidebar({
   const availableDocs = documents.filter(d => d.available).length
   const totalDocs = documents.length
 
-  /* ??? DR-23: NPL 蹂닿퀬???곕룞 AI ?ъ옄 ?붿빟 ???????????????
-   * investmentSummary 媛 ?덉쑝硫?泥⑤?2 ?붿옄??
-   * ?놁쑝硫??덇굅???뚯닔??移대뱶 fallback (援щ쾭???명솚).
+  /* ─── DR-23: NPL 보고서 연동 AI 투자 요약 ───────────────
+   * investmentSummary 가 있으면 첨부2 디자인.
+   * 없으면 레거시 회수율 카드 fallback (구버전 호환).
    */
   const summary = investmentSummary
   const recoveryValue = recoveryRate ?? 72
@@ -154,7 +160,7 @@ export function AssetSidebar({
 
   return (
     <aside className="space-y-4">
-      {/* ?먥븧??AI ?ъ옄 遺꾩꽍 (DR-23 쨌 NPL 蹂닿퀬???곕룞 쨌 McKinsey) ?먥븧??*/}
+      {/* ═══ AI 투자 분석 (DR-23 · NPL 보고서 연동 · McKinsey) ═══ */}
       <div
         style={{
           background: MCK.paper,
@@ -163,7 +169,7 @@ export function AssetSidebar({
         }}
       >
         <div className="px-5 pt-5 pb-4">
-          {/* Header ??McKinsey editorial */}
+          {/* Header — McKinsey editorial */}
           <div className="flex items-center justify-between mb-1">
             <div className="inline-flex items-center gap-2">
               <Sparkles size={14} style={{ color: MCK.cobalt }} />
@@ -176,7 +182,7 @@ export function AssetSidebar({
                   fontFamily: 'Georgia, "Times New Roman", serif',
                 }}
               >
-                AI ?ъ옄 遺꾩꽍
+                AI 투자 분석
               </h3>
               <span
                 style={{
@@ -193,13 +199,14 @@ export function AssetSidebar({
               </span>
             </div>
             <span style={{ fontSize: 10, fontWeight: 700, color: MCK.textMuted, letterSpacing: "0.06em" }}>
-              ?ㅼ떆媛?            </span>
+              실시간
+            </span>
           </div>
           <div style={{ width: 32, height: 1, background: MCK.cobalt, marginBottom: 14 }} />
 
           {summary ? (
             <>
-              {/* ?? AI ?ъ옄 ?섍껄 + ?깃툒 (留됰? 洹몃옒?? ?? */}
+              {/* ── AI 투자 의견 + 등급 (막대 그래프) ── */}
               <div
                 style={{
                   background: MCK.inkDeep,
@@ -219,7 +226,7 @@ export function AssetSidebar({
                         marginBottom: 4,
                       }}
                     >
-                      AI ?ъ옄 ?섍껄
+                      AI 투자 의견
                     </div>
                     <div
                       style={{
@@ -234,7 +241,7 @@ export function AssetSidebar({
                       {summary.verdict}
                     </div>
                     <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginTop: 4 }}>
-                      沅뚭퀬
+                      권고
                     </div>
                   </div>
                   <div className="text-right">
@@ -248,7 +255,7 @@ export function AssetSidebar({
                         marginBottom: 4,
                       }}
                     >
-                      AI ?ъ옄 ?깃툒
+                      AI 투자 등급
                     </div>
                     <div
                       style={{
@@ -271,11 +278,11 @@ export function AssetSidebar({
                         fontVariantNumeric: "tabular-nums",
                       }}
                     >
-                      {summary.score.toFixed(1)}??쨌 {summary.verdict}
+                      {summary.score.toFixed(1)}점 · {summary.verdict}
                     </div>
                   </div>
                 </div>
-                {/* ?먯닔 留됰? 洹몃옒??*/}
+                {/* 점수 막대 그래프 */}
                 <div
                   style={{
                     height: 6,
@@ -300,7 +307,7 @@ export function AssetSidebar({
                 </div>
               </div>
 
-              {/* ?? AI 沅뚭퀬 留ㅼ엯媛 ?? */}
+              {/* ── AI 권고 매입가 ── */}
               <div
                 style={{
                   background: MCK.paperTint,
@@ -318,7 +325,7 @@ export function AssetSidebar({
                       letterSpacing: "-0.005em",
                     }}
                   >
-                    AI 沅뚭퀬 留ㅼ엯 (?먭툑 {Math.round(summary.purchaseRate * 100)}%)
+                    AI 권고 매입 (원금 {Math.round(summary.purchaseRate * 100)}%)
                   </span>
                   <span
                     style={{
@@ -331,11 +338,11 @@ export function AssetSidebar({
                       color: MCK.paper,
                     }}
                   >
-                    AI 沅뚭퀬
+                    AI 권고
                   </span>
                 </div>
                 <p style={{ fontSize: 10, fontWeight: 600, color: MCK.textMuted, marginBottom: 8 }}>
-                  ?異쒖썝湲?{Math.round(summary.purchaseRate * 100)}% 留ㅼ엯 ({((summary.purchaseRate - 1) * 100).toFixed(1)}%) 쨌 湲곗? ?숈같媛??{(summary.bidRatio * 100).toFixed(1)}%
+                  대출원금 {Math.round(summary.purchaseRate * 100)}% 매입 ({((summary.purchaseRate - 1) * 100).toFixed(1)}%) · 기준 낙찰가율 {(summary.bidRatio * 100).toFixed(1)}%
                 </p>
                 <div
                   style={{
@@ -348,25 +355,26 @@ export function AssetSidebar({
                     lineHeight: 1.05,
                   }}
                 >
-                  {summary.recommendedPurchasePrice.toLocaleString("ko-KR")}??                </div>
+                  {summary.recommendedPurchasePrice.toLocaleString("ko-KR")}원
+                </div>
                 <p style={{ fontSize: 10, fontWeight: 600, color: MCK.textMuted, marginTop: 6 }}>
-                  留ㅼ엯瑜?{Math.round(summary.purchaseRate * 100)}% 쨌 ?숈같媛??{(summary.bidRatio * 100).toFixed(1)}%
+                  매입률 {Math.round(summary.purchaseRate * 100)}% · 낙찰가율 {(summary.bidRatio * 100).toFixed(1)}%
                 </p>
               </div>
 
-              {/* ?? ?섏씡 ?쇱씤 ?꾩씠???? */}
+              {/* ── 수익 라인 아이템 ── */}
               <div className="space-y-2 mb-4">
                 {[
-                  { label: "?덉긽 ?숈같媛", value: `${summary.expectedBidPrice.toLocaleString("ko-KR")}??, accent: false },
-                  { label: "2吏덇텒??諛곕떦", value: `${summary.secondPledgeeAmount.toLocaleString("ko-KR")}??, accent: false },
-                  { label: "?ъ옄 ?먯옘??, value: `${summary.totalEquity.toLocaleString("ko-KR")}??, accent: false },
+                  { label: "예상 낙찰가", value: `${summary.expectedBidPrice.toLocaleString("ko-KR")}원`, accent: false },
+                  { label: "2질권자 배당", value: `${summary.secondPledgeeAmount.toLocaleString("ko-KR")}원`, accent: false },
+                  { label: "투자 에쿼티", value: `${summary.totalEquity.toLocaleString("ko-KR")}원`, accent: false },
                   {
-                    label: "?덉긽 ?먯씡",
-                    value: `${summary.expectedNetProfit >= 0 ? "+" : ""}${summary.expectedNetProfit.toLocaleString("ko-KR")}??,
+                    label: "예상 손익",
+                    value: `${summary.expectedNetProfit >= 0 ? "+" : ""}${summary.expectedNetProfit.toLocaleString("ko-KR")}원`,
                     accent: true,
                   },
                   {
-                    label: "ROI / ?고솚??,
+                    label: "ROI / 연환산",
                     value: `${(summary.roi * 100).toFixed(1)}% / ${(summary.annualizedRoi * 100).toFixed(1)}%`,
                     accent: true,
                   },
@@ -394,7 +402,7 @@ export function AssetSidebar({
                 ))}
               </div>
 
-              {/* ?? 留ㅼ엯쨌?숈같 ?깃났 ?뺣쪧 (留됰? 洹몃옒?? ?? */}
+              {/* ── 매입·낙찰 성공 확률 (막대 그래프) ── */}
               <div
                 style={{
                   background: MCK.paperTint,
@@ -413,7 +421,7 @@ export function AssetSidebar({
                       color: MCK.ink,
                     }}
                   >
-                    留ㅼ엯쨌?숈같 ?깃났 ?뺣쪧
+                    매입·낙찰 성공 확률
                   </span>
                   <span
                     style={{
@@ -465,20 +473,22 @@ export function AssetSidebar({
                     }}
                   >
                     <Sigma size={11} />
-                    ?뺣쪧 怨꾩궛??                    <span style={{ marginLeft: 2 }}>??/span>
+                    확률 계산식
+                    <span style={{ marginLeft: 2 }}>›</span>
                   </button>
                 )}
               </div>
             </>
           ) : (
-            /* ?? Legacy fallback (?뚯닔??移대뱶) ?? */
+            /* ── Legacy fallback (회수율 카드) ── */
             <>
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-1.5">
                   <span style={{ fontSize: 11, fontWeight: 600, color: MCK.textMuted }}>
-                    ?덉긽 ?뚯닔??                  </span>
+                    예상 회수율
+                  </span>
                   <span style={{ fontSize: 10, fontWeight: 700, color: MCK.textMuted }}>
-                    ?좊ː??{recoveryConf}%
+                    신뢰도 {recoveryConf}%
                   </span>
                 </div>
                 <div
@@ -503,7 +513,7 @@ export function AssetSidebar({
                   />
                 </div>
                 <div className="flex justify-between mt-1">
-                  <span style={{ fontSize: 9, fontWeight: 700, color: MCK.textMuted }}>踰붿쐞 60%</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: MCK.textMuted }}>범위 60%</span>
                   <span style={{ fontSize: 9, fontWeight: 700, color: MCK.textMuted }}>85%</span>
                 </div>
               </div>
@@ -516,7 +526,7 @@ export function AssetSidebar({
                 }}
               >
                 <div style={{ fontSize: 10, fontWeight: 700, color: MCK.textMuted, marginBottom: 4 }}>
-                  AI 沅뚭퀬 ?낆같媛
+                  AI 권고 입찰가
                 </div>
                 <div
                   style={{
@@ -530,9 +540,9 @@ export function AssetSidebar({
                   {formatKRW(priceMid)}
                 </div>
                 <div className="mt-1 flex items-center gap-2" style={{ fontSize: 10, fontWeight: 600, color: MCK.textMuted }}>
-                  <span>蹂댁닔 {formatKRW(priceMin)}</span>
-                  <span>쨌</span>
-                  <span>怨듦꺽 {formatKRW(priceMax)}</span>
+                  <span>보수 {formatKRW(priceMin)}</span>
+                  <span>·</span>
+                  <span>공격 {formatKRW(priceMax)}</span>
                 </div>
               </div>
               <div
@@ -543,10 +553,10 @@ export function AssetSidebar({
                 }}
               >
                 <div style={{ fontSize: 11, fontWeight: 700, color: MCK.positive }}>
-                  {anomaly?.verdict ?? "?댁긽 吏뺥썑 ?놁쓬"}
+                  {anomaly?.verdict ?? "이상 징후 없음"}
                 </div>
                 <div style={{ fontSize: 10, fontWeight: 600, color: MCK.textMuted }}>
-                  由ъ뒪??{riskScore}/100
+                  리스크 {riskScore}/100
                 </div>
               </div>
             </>
@@ -568,7 +578,7 @@ export function AssetSidebar({
               }}
             >
               <MessageCircle size={12} />
-              AI?먭쾶 吏덈Ц
+              AI에게 질문
             </button>
             <button
               type="button"
@@ -584,12 +594,13 @@ export function AssetSidebar({
               }}
             >
               <RefreshCcw size={12} />
-              ?щ텇??            </button>
+              재분석
+            </button>
           </div>
         </div>
       </div>
 
-      {/* ?먥븧??留ㅼ묶 ?섏슂 ?먥븧??*/}
+      {/* ═══ 매칭 수요 ═══ */}
       <div
         className="rounded-2xl p-5"
         style={{
@@ -602,10 +613,10 @@ export function AssetSidebar({
           style={{ fontSize: 13, color: "var(--fg-strong)" }}
         >
           <Users size={14} color="var(--color-brand-bright)" />
-          留ㅼ묶 ?섏슂
+          매칭 수요
         </h3>
         <p className="leading-relaxed mb-3" style={{ fontSize: 11, color: "var(--fg-muted)" }}>
-          ??留ㅻЪ怨?議곌굔???쇱튂?섎뒗 留ㅼ닔???섏슂瑜??뺤씤?섏꽭?? AI 留ㅼ묶 ?붿쭊???대낫 ?좏삎쨌吏??룰?寃⑸?瑜?湲곕컲?쇰줈 理쒖쟻 留ㅼ닔?먮? 異붿쿇?⑸땲??
+          이 매물과 조건이 일치하는 매수자 수요를 확인하세요. AI 매칭 엔진이 담보 유형·지역·가격대를 기반으로 최적 매수자를 추천합니다.
         </p>
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -621,7 +632,7 @@ export function AssetSidebar({
             }}
           >
             <Users size={12} />
-            ?섏슂 ?뺤씤
+            수요 확인
           </button>
           <button
             type="button"
@@ -636,12 +647,12 @@ export function AssetSidebar({
             }}
           >
             <Wand2 size={12} />
-            AI 留ㅼ묶
+            AI 매칭
           </button>
         </div>
       </div>
 
-      {/* ?먥븧??留ㅼ닔???섏닔猷??덈궡 ?먥븧??*/}
+      {/* ═══ 매수자 수수료 안내 ═══ */}
       <div
         className="rounded-2xl p-5"
         style={{
@@ -650,9 +661,9 @@ export function AssetSidebar({
         }}
       >
         <h3 className="font-black mb-3" style={{ fontSize: 13, color: "var(--fg-strong)" }}>
-          留ㅼ닔???섏닔猷??덈궡
+          매수자 수수료 안내
         </h3>
-        {/* 湲곗? 嫄곕옒媛 */}
+        {/* 기준 거래가 */}
         <div
           className="flex items-center justify-between rounded-lg px-3 py-2.5 mb-3"
           style={{
@@ -661,13 +672,13 @@ export function AssetSidebar({
           }}
         >
           <span className="font-semibold" style={{ fontSize: 11, color: "var(--fg-muted)" }}>
-            湲곗? 嫄곕옒媛
+            기준 거래가
           </span>
           <span className="font-black tabular-nums" style={{ fontSize: 14, color: "var(--fg-strong)" }}>
             {formatKRW(askingPrice)}
           </span>
         </div>
-        {/* ?섏닔猷??붿빟 */}
+        {/* 수수료 요약 */}
         <div className="flex items-center justify-between mb-2">
           <span
             className="font-black tabular-nums"
@@ -677,7 +688,8 @@ export function AssetSidebar({
           </span>
           <div className="text-right">
             <div className="text-[10px] font-semibold" style={{ color: "var(--fg-muted)" }}>
-              ?덉긽 ?섏닔猷?            </div>
+              예상 수수료
+            </div>
             <div className="font-black tabular-nums" style={{ fontSize: 15, color: "var(--color-positive)" }}>
               {formatKRW(totalFee)}
             </div>
@@ -686,11 +698,11 @@ export function AssetSidebar({
         {/* Breakdown */}
         <div className="space-y-1 mb-3 text-[11px]">
           <div className="flex items-center justify-between" style={{ color: "var(--fg-default)" }}>
-            <span>湲곕낯 ?섏닔猷?({basicFeeRate}%)</span>
+            <span>기본 수수료 ({basicFeeRate}%)</span>
             <span className="font-bold tabular-nums">{formatKRW(basicFee)}</span>
           </div>
           <div className="flex items-center justify-between" style={{ color: "var(--fg-default)" }}>
-            <span>+ ?곗꽑?묒긽沅?(PNR, {pnrFeeRate}%)</span>
+            <span>+ 우선협상권 (PNR, {pnrFeeRate}%)</span>
             <span className="font-bold tabular-nums">{formatKRW(pnrFee)}</span>
           </div>
         </div>
@@ -698,12 +710,12 @@ export function AssetSidebar({
           className="text-[10px] leading-relaxed pt-2 border-t"
           style={{ color: "var(--fg-muted)", borderColor: "var(--layer-border-strong)" }}
         >
-          ?뮕 ?섏닔猷뚮뒗 <strong style={{ color: "var(--fg-default)" }}>嫄곕옒 ?깆궗 ??/strong>?먮쭔 遺怨쇰맗?덈떎.
-          ?먯뒪?щ줈 怨꾩쥖濡??먮룞 ?뺤궛?섎ŉ, 留ㅻ룄???섏닔猷뚮뒗 蹂꾨룄濡?泥섎━?⑸땲??
+          💡 수수료는 <strong style={{ color: "var(--fg-default)" }}>거래 성사 시</strong>에만 부과됩니다.
+          에스크로 계좌로 자동 정산되며, 매도자 수수료는 별도로 처리됩니다.
         </p>
       </div>
 
-      {/* ?먥븧???쒓났 ?먮즺 ?먥븧??*/}
+      {/* ═══ 제공 자료 ═══ */}
       <div
         className="rounded-2xl p-5"
         style={{
@@ -713,7 +725,7 @@ export function AssetSidebar({
       >
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-black" style={{ fontSize: 13, color: "var(--fg-strong)" }}>
-            ?쒓났 ?먮즺
+            제공 자료
           </h3>
           <span className="font-bold tabular-nums" style={{ fontSize: 12, color: "var(--color-positive)" }}>
             {availableDocs}/{totalDocs}
@@ -752,7 +764,7 @@ export function AssetSidebar({
           className="text-[10px] leading-relaxed pt-3 mt-3 border-t"
           style={{ color: "var(--fg-muted)", borderColor: "var(--layer-border-strong)" }}
         >
-          蹂?留ㅻЪ? 媛쒖씤?뺣낫蹂댄샇踰빧룹떊?⑹젙蹂대쾿쨌?꾩옄湲덉쑖嫄곕옒踰뺤쓣 以?섑븯硫? 紐⑤뱺 ?대엺? PII Access Log??湲곕줉?⑸땲??
+          본 매물은 개인정보보호법·신용정보법·전자금융거래법을 준수하며, 모든 열람은 PII Access Log에 기록됩니다.
         </p>
       </div>
     </aside>
