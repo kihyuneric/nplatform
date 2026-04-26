@@ -1827,7 +1827,7 @@ function TierPreviewBlock({ state }: { state: WizardState }) {
         { label: "감정가 (정확치)", value: formatKRW(state.appraisal_value) },
         { label: "지역 (동 단위)", value: regionFull },
         { label: "채무자 구분", value: state.debtor_type === "INDIVIDUAL" ? "개인" : state.debtor_type === "CORPORATE" ? "법인" : "—" },
-        { label: "AI 등급 프리뷰", value: "Claude NPL Engine v2" },
+        { label: "AI 등급 프리뷰", value: "Nplatform NPL Engine v2" },
       ],
     },
     {

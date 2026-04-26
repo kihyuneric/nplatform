@@ -367,7 +367,7 @@ Object.assign(STATIC_DICT.en, {
   '관심 매물 등록됨': '♥ Watchlisted',
   '관심 매물 담기': 'Add to Watchlist',
   'AI 투자 분석': 'AI Investment Analysis',
-  'Claude NPL Engine · 실시간': 'Claude NPL Engine · Live',
+  'Nplatform NPL Engine · 실시간': 'Nplatform NPL Engine · Live',
   '예상 회수율': 'Est. Recovery Rate',
   'AI 권고 입찰가': 'AI Recommended Bid',
   '이상 징후 없음': 'No Anomalies',

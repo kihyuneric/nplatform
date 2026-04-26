@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 /**
  * /exchange — NPL 매물 탐색 (v4 전략, 2026-04-07)
@@ -1309,7 +1309,7 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
               cursor: "help",
               letterSpacing: "0.06em",
             }}
-            title={`AI 종합 등급 · Claude NPL Engine v2\n· 담보가치/채권비율 35%\n· 지역시장 동향 25%\n· 채무자 신용 20%\n· 경매 낙찰가율 15%\n→ 회수율 예측 기반: S≥85% · A+≥75% · A≥65% · B≥55% · C<55%`}
+            title={`AI 종합 등급 · Nplatform NPL Engine v2\n· 담보가치/채권비율 35%\n· 지역시장 동향 25%\n· 채무자 신용 20%\n· 경매 낙찰가율 15%\n→ 회수율 예측 기반: S≥85% · A+≥75% · A≥65% · B≥55% · C<55%`}
           >
             AI · {formatAIGrade(item.ai_grade)}
           </div>
@@ -1553,7 +1553,7 @@ function ListingRow({ item, index }: { item: CardListing; index: number }) {
             whiteSpace: "nowrap",
             cursor: "help",
           }}
-          title={`AI 종합 등급 · Claude NPL Engine v2\n· 담보가치/채권비율 35%\n· 지역시장 동향 25%\n· 채무자 신용 20%\n· 경매 낙찰가율 15%\n→ 회수율 예측 기반: S≥85% · A+≥75% · A≥65% · B≥55% · C<55%`}
+          title={`AI 종합 등급 · Nplatform NPL Engine v2\n· 담보가치/채권비율 35%\n· 지역시장 동향 25%\n· 채무자 신용 20%\n· 경매 낙찰가율 15%\n→ 회수율 예측 기반: S≥85% · A+≥75% · A≥65% · B≥55% · C<55%`}
         >
           {formatAIGrade(item.ai_grade)}
         </span>
@@ -1640,3 +1640,4 @@ function Figure({
     </div>
   )
 }
+

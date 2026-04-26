@@ -25,6 +25,7 @@ import { OfferForm, OfferCard, type OfferData } from "@/components/deal-room/off
 import type { AccessTier } from "@/lib/access-tier"
 import { getUserTier, tierGte } from "@/lib/access-tier"
 import { createClient } from "@/lib/supabase/client"
+import { maskInstitutionName } from "@/lib/mask"
 
 // DR-4/5: 신규 단순화 컴포넌트
 import {
@@ -666,7 +667,7 @@ export function AssetDetailView({
     role: "매도자",
     initial: "매",
     phone: "02-0000-0000",
-    organization: listing.institution,
+    organization: maskInstitutionName(listing.institution),
   }
 
   const handleTierPreview = (t: AssetTier) => {
@@ -1990,6 +1991,21 @@ export function AssetDetailView({
               </div>
               <AssetSidebar
                 askingPrice={listing.asking_price}
+                investmentSummary={{
+                  verdict: 'BUY',
+                  grade: 'A',
+                  score: 89.4,
+                  recommendedPurchasePrice: 1_862_000_000,
+                  purchaseRate: 0.95,
+                  bidRatio: 0.835,
+                  expectedBidPrice: 2_338_000_000,
+                  secondPledgeeAmount: 849_258_576,
+                  totalEquity: 571_368_997,
+                  expectedNetProfit: 277_889_579,
+                  roi: 0.486,
+                  annualizedRoi: 0.662,
+                  winProbability: 0.50,
+                }}
                 recoveryRate={aiAnalysis.recoveryRate?.predicted ?? 72}
                 recoveryConfidence={aiAnalysis.recoveryRate?.confidence ?? 85}
                 priceGuide={null}
@@ -2000,6 +2016,7 @@ export function AssetDetailView({
                 }
                 onAskAi={() => toast.info("AI Copilot이 곧 열립니다.", { duration: 1500 })}
                 onReanalyze={() => toast.info("AI 재분석을 요청했습니다.", { duration: 1500 })}
+                onShowProbability={() => toast.info("확률 계산식을 표시합니다.", { duration: 1500 })}
                 onSeeDemand={() => toast.info("매수자 수요를 조회합니다.", { duration: 1500 })}
                 onAiMatch={() => toast.info("AI 매칭을 실행합니다.", { duration: 1500 })}
               />

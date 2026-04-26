@@ -27,6 +27,7 @@ import Link from "next/link"
 import { SampleBadge } from "@/components/shared/sample-badge"
 import { type DealStage } from "@/lib/deal-constants"
 import { AssetDetailView } from "@/components/asset-detail/asset-detail-view"
+import { maskInstitutionName } from "@/lib/mask"
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -68,7 +69,7 @@ const SAMPLE_DEALS: Deal[] = [
     id: 'npl-2026-0412',
     listing_name: '강남구 아파트 NPL 채권',
     counterparty: '하나저축은행',
-    counterparty_masked: '하나저***',
+    counterparty_masked: maskInstitutionName('하나저축은행'),
     current_stage: 'INTEREST',
     progress: 10,
     next_action: 'NDA 체결 필요',
@@ -83,7 +84,7 @@ const SAMPLE_DEALS: Deal[] = [
     id: 'npl-2026-0411',
     listing_name: '성남시 사무실 NPL 채권',
     counterparty: '한국자산관리공사',
-    counterparty_masked: '한국자***',
+    counterparty_masked: maskInstitutionName('한국자산관리공사'),
     current_stage: 'NDA',
     progress: 28,
     next_action: '실사 자료 검토',
@@ -97,7 +98,7 @@ const SAMPLE_DEALS: Deal[] = [
     id: 'npl-2026-0410',
     listing_name: '해운대구 상가 NPL 채권',
     counterparty: '대신F&I',
-    counterparty_masked: '대신***',
+    counterparty_masked: maskInstitutionName('대신F&I'),
     current_stage: 'DUE_DILIGENCE',
     progress: 48,
     next_action: '감정평가 결과 확인',
@@ -111,7 +112,7 @@ const SAMPLE_DEALS: Deal[] = [
     id: 'npl-2026-0409',
     listing_name: '서초구 오피스텔 NPL 채권',
     counterparty: '신한은행',
-    counterparty_masked: '신한***',
+    counterparty_masked: maskInstitutionName('신한은행'),
     current_stage: 'NEGOTIATION',
     progress: 65,
     next_action: '최종 오퍼 확정',
@@ -125,7 +126,7 @@ const SAMPLE_DEALS: Deal[] = [
     id: 'npl-2026-0408',
     listing_name: '마포구 오피스텔 NPL 채권',
     counterparty: '국민은행',
-    counterparty_masked: '국민***',
+    counterparty_masked: maskInstitutionName('국민은행'),
     current_stage: 'CONTRACT',
     progress: 82,
     next_action: '계약서 전자서명',
@@ -274,13 +275,7 @@ export default function DealsPage() {
           id: String(r.id),
           listing_name: r.npl_listings?.title ?? `매물 #${r.listing_id?.slice(0, 8) ?? r.id.slice(0, 8)}`,
           counterparty: r.npl_listings?.profiles?.name ?? "상대방",
-          counterparty_masked: r.npl_listings?.profiles?.name
-            ? (() => {
-                const n: string = r.npl_listings.profiles.name
-                if (n.length <= 2) return n[0] + "*"
-                return n.slice(0, Math.ceil(n.length / 2)) + "*".repeat(Math.floor(n.length / 2))
-              })()
-            : "상대방",
+          counterparty_masked: maskInstitutionName(r.npl_listings?.profiles?.name ?? "상대방"),
           current_stage: (r.current_stage ?? "INTEREST") as DealStage,
           progress: r.progress ?? 0,
           next_action: r.next_action ?? "-",

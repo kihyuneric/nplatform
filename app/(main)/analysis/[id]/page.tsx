@@ -1042,7 +1042,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
         )}
 
         {/* ══════════════════════════════════════════════════════
-            TAB: AI 심층분석 (Claude NPL Engine)
+            TAB: AI 심층분석 (Nplatform NPL Engine)
         ══════════════════════════════════════════════════════ */}
         {activeTab === 'ai-deep' && (
           <div className="space-y-5">
@@ -1053,7 +1053,7 @@ export default function NplAnalysisDetail({ params }: PageProps) {
                 </div>
                 <h3 className="text-lg font-black text-[var(--color-brand-deep)] dark:text-white mb-2">AI 심층 분석 실행</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                  Claude NPL Engine이 회수율 예측, DCF 분석, 몬테카를로 시뮬레이션, 이상 탐지를 동시에 실행합니다
+                  Nplatform NPL Engine이 회수율 예측, DCF 분석, 몬테카를로 시뮬레이션, 이상 탐지를 동시에 실행합니다
                 </p>
                 <button onClick={fetchAIDeep} className="bg-gradient-to-r from-stone-100 to-blue-600 hover:from-stone-100 hover:to-blue-500 text-white gap-2 font-bold shadow-lg px-3 py-1.5 rounded-lg text-sm transition-colors inline-flex items-center">
                   <Sparkles className="h-4 w-4" />

@@ -32,6 +32,7 @@ import {
   Shield, TrendingUp, AlertTriangle,
   ChevronRight, Info,
 } from "lucide-react"
+import { maskInstitutionName } from "@/lib/mask"
 
 /* ═══════════════════════════════════════════════════════════════════════════
    McKinsey palette (라이트 단일)
@@ -124,7 +125,7 @@ export function DealFlowView({
     return {
       ...MOCK_DEAL,
       title: dealOverride.listing_name ?? MOCK_DEAL.title,
-      institution: dealOverride.counterparty ?? MOCK_DEAL.institution,
+      institution: maskInstitutionName(dealOverride.counterparty ?? MOCK_DEAL.institution),
       region: dealOverride.location ?? MOCK_DEAL.region,
       // 금액(원) → 억 단위 변환
       bondBalance: dealOverride.amount ? dealOverride.amount / 100_000_000 : MOCK_DEAL.bondBalance,
@@ -326,7 +327,7 @@ export function DealHeaderStandalone(props: DealHeaderStandaloneProps) {
   const deal = {
     ...MOCK_DEAL,
     title: props.title,
-    institution: props.institution ?? MOCK_DEAL.institution,
+    institution: maskInstitutionName(props.institution ?? MOCK_DEAL.institution),
     region: props.region ?? MOCK_DEAL.region,
     saleType: props.saleType ?? MOCK_DEAL.saleType,
     id: props.dealId ?? MOCK_DEAL.id,
