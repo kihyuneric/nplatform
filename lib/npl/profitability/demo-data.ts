@@ -2,7 +2,7 @@
  * lib/npl/profitability/demo-data.ts
  *
  * 데모 체험용 사전 계산된 NPL 수익성 분석 결과
- * 서울 강남구 아파트 NPL — 하나저축은행 론세일 딜
+ * 서울 강남구 아파트 NPL — ooooo행 론세일 딜
  * 이 데이터는 실제 분석 엔진이 생성하는 것과 동일한 구조를 가짐
  */
 
@@ -15,7 +15,7 @@ export const DEMO_RESULT: ProfitabilityResult = {
     dealStructure: 'LOAN_SALE',
     analysisDate: new Date().toISOString().slice(0, 10),
     bond: {
-      institutionName: '하나저축은행',
+      institutionName: 'ooooo행',
       debtorName: '김**',
       debtorType: 'INDIVIDUAL',
       loanType: '주택담보대출',
@@ -41,7 +41,7 @@ export const DEMO_RESULT: ProfitabilityResult = {
       mortgageRank: 1,
       mortgageAmount: 900_000_000,
       seniorClaims: [
-        { rank: 1, type: '근저당', holder: '하나저축은행', amount: 900_000_000, date: '2019-03-22' },
+        { rank: 1, type: '근저당', holder: 'ooooo행', amount: 900_000_000, date: '2019-03-22' },
       ],
       tenants: [
         {
@@ -108,7 +108,7 @@ export const DEMO_RESULT: ProfitabilityResult = {
         distributableAmount: 1_081_920_000,
         distributionTable: [
           { rank: 1, holder: '당해세/집행비용', type: '세금', claimAmount: 22_080_000, distributionAmount: 22_080_000, shortfall: 0, recoveryRate: 1.0, isTarget: false },
-          { rank: 2, holder: '하나저축은행(당사)', type: '근저당', claimAmount: 1_024_250_000, distributionAmount: 909_840_000, shortfall: 114_410_000, recoveryRate: 0.888, isTarget: true },
+          { rank: 2, holder: 'ooooo행(당사)', type: '근저당', claimAmount: 1_024_250_000, distributionAmount: 909_840_000, shortfall: 114_410_000, recoveryRate: 0.888, isTarget: true },
           { rank: 3, holder: '이** (임차인)', type: '임차보증', claimAmount: 150_000_000, distributionAmount: 150_000_000, shortfall: 0, recoveryRate: 1.0, isTarget: false },
         ],
         targetRecovery: 909_840_000,
@@ -135,7 +135,7 @@ export const DEMO_RESULT: ProfitabilityResult = {
         distributableAmount: 964_320_000,
         distributionTable: [
           { rank: 1, holder: '당해세/집행비용', type: '세금', claimAmount: 19_680_000, distributionAmount: 19_680_000, shortfall: 0, recoveryRate: 1.0, isTarget: false },
-          { rank: 2, holder: '하나저축은행(당사)', type: '근저당', claimAmount: 1_024_250_000, distributionAmount: 814_320_000, shortfall: 209_930_000, recoveryRate: 0.795, isTarget: true },
+          { rank: 2, holder: 'ooooo행(당사)', type: '근저당', claimAmount: 1_024_250_000, distributionAmount: 814_320_000, shortfall: 209_930_000, recoveryRate: 0.795, isTarget: true },
           { rank: 3, holder: '이** (임차인)', type: '임차보증', claimAmount: 150_000_000, distributionAmount: 130_000_000, shortfall: 20_000_000, recoveryRate: 0.867, isTarget: false },
         ],
         targetRecovery: 814_320_000,
@@ -162,7 +162,7 @@ export const DEMO_RESULT: ProfitabilityResult = {
         distributableAmount: 846_720_000,
         distributionTable: [
           { rank: 1, holder: '당해세/집행비용', type: '세금', claimAmount: 17_280_000, distributionAmount: 17_280_000, shortfall: 0, recoveryRate: 1.0, isTarget: false },
-          { rank: 2, holder: '하나저축은행(당사)', type: '근저당', claimAmount: 1_024_250_000, distributionAmount: 696_720_000, shortfall: 327_530_000, recoveryRate: 0.680, isTarget: true },
+          { rank: 2, holder: 'ooooo행(당사)', type: '근저당', claimAmount: 1_024_250_000, distributionAmount: 696_720_000, shortfall: 327_530_000, recoveryRate: 0.680, isTarget: true },
           { rank: 3, holder: '이** (임차인)', type: '임차보증', claimAmount: 150_000_000, distributionAmount: 0, shortfall: 150_000_000, recoveryRate: 0, isTarget: false },
         ],
         targetRecovery: 696_720_000,
@@ -191,7 +191,7 @@ export const DEMO_RESULT: ProfitabilityResult = {
       distributableAmount: 964_320_000,
       distributionTable: [
         { rank: 1, holder: '당해세/집행비용', type: '세금', claimAmount: 19_680_000, distributionAmount: 19_680_000, shortfall: 0, recoveryRate: 1.0, isTarget: false },
-        { rank: 2, holder: '하나저축은행(당사)', type: '근저당', claimAmount: 1_024_250_000, distributionAmount: 814_320_000, shortfall: 209_930_000, recoveryRate: 0.795, isTarget: true },
+        { rank: 2, holder: 'ooooo행(당사)', type: '근저당', claimAmount: 1_024_250_000, distributionAmount: 814_320_000, shortfall: 209_930_000, recoveryRate: 0.795, isTarget: true },
         { rank: 3, holder: '이** (임차인)', type: '임차보증', claimAmount: 150_000_000, distributionAmount: 130_000_000, shortfall: 20_000_000, recoveryRate: 0.867, isTarget: false },
       ],
       targetRecovery: 814_320_000,
@@ -307,6 +307,6 @@ export const DEMO_RESULT: ProfitabilityResult = {
       bear: '낙찰가율 72%로 하락 시 순손실 5,947만원. 유찰 1~2회 발생하거나 시장 급냉 시 발생 가능. 손익분기(63.4%)와 거리가 있어 실질 손실 위험은 제한적.',
       overall: '3개 시나리오 기대값 ROI +25.5%. 강세/기준 시나리오 실현 확률이 Monte Carlo 기준 81.7%로 높아 투자 적합 판단. 임차인 리스크 사전 확인 권장.',
     },
-    executiveSummary: '서울 강남구 역삼동 OO아파트(전용 84.9㎡) NPL 론세일 딜에 대한 종합 분석 결과, B등급(양호) 투자로 평가됩니다. 하나저축은행 1순위 근저당 보유로 권리관계가 단순하며, AI 예측 낙찰가율 83.2% 기준 ROI 29.2%, IRR 31.8%의 수익을 기대할 수 있습니다. 손익분기 낙찰가율 63.4%는 현재 입찰 경쟁 수준 대비 18.6%p의 안전 마진을 제공합니다. 후순위 임차인 보증금 1.5억원에 대한 리스크 관리가 필요하나 투자 결정에 결정적인 장애 요인은 아닙니다. 경매 기간 8개월, 자기자본 수익률 77.3%(강세 시나리오) ~ -29.9%(약세) 범위에서 기준 시나리오 투자 권고(BUY) 등급을 부여합니다.',
+    executiveSummary: '서울 강남구 역삼동 OO아파트(전용 84.9㎡) NPL 론세일 딜에 대한 종합 분석 결과, B등급(양호) 투자로 평가됩니다. ooooo행 1순위 근저당 보유로 권리관계가 단순하며, AI 예측 낙찰가율 83.2% 기준 ROI 29.2%, IRR 31.8%의 수익을 기대할 수 있습니다. 손익분기 낙찰가율 63.4%는 현재 입찰 경쟁 수준 대비 18.6%p의 안전 마진을 제공합니다. 후순위 임차인 보증금 1.5억원에 대한 리스크 관리가 필요하나 투자 결정에 결정적인 장애 요인은 아닙니다. 경매 기간 8개월, 자기자본 수익률 77.3%(강세 시나리오) ~ -29.9%(약세) 범위에서 기준 시나리오 투자 권고(BUY) 등급을 부여합니다.',
   },
 }

@@ -75,25 +75,51 @@ export default function SupportPage() {
   return (
     <div className={DS.page.wrapper}>
 
-      {/* Hero */}
-      <section className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)]">
-        <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-          <p className={DS.header.eyebrow}>고객센터</p>
-          <h1 className={`${DS.header.title} mt-4 mb-4`}>
-            어떻게 도와드릴까요?
+      {/* ── Hero (McKinsey Navy + Brass) — matches /analysis · /notices tone ── */}
+      <section
+        style={{
+          background: 'linear-gradient(135deg, #051C2C 0%, #0A1628 100%)',
+          borderBottom: '2px solid #B8924B',
+        }}
+      >
+        <div className="max-w-3xl mx-auto px-4 py-14 text-center">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <span style={{ width: 24, height: 1.5, background: '#E5C77A', display: 'inline-block' }} />
+            <span style={{ color: '#E5C77A', fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase' }}>
+              Customer Care · Help Center
+            </span>
+            <span style={{ width: 24, height: 1.5, background: '#E5C77A', display: 'inline-block' }} />
+          </div>
+          <h1
+            style={{
+              color: '#FFFFFF',
+              fontSize: 'clamp(1.875rem, 3.5vw, 2.25rem)',
+              fontWeight: 800,
+              letterSpacing: '-0.025em',
+              lineHeight: 1.15,
+              marginBottom: 8,
+            }}
+          >
+            <span style={{ color: '#E5C77A', fontWeight: 900 }}>고객센터</span>
           </h1>
-          <p className={`${DS.header.subtitle} mx-auto mb-8`}>
-            궁금한 점이 있으시면 언제든 문의해 주세요
+          <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 14, lineHeight: 1.55, fontWeight: 400, marginBottom: 24 }}>
+            FAQ · 문의 분류 · 1:1 상담까지 — 궁금한 점을 한 곳에서 해결하세요.
           </p>
           {/* Search */}
           <div className="relative max-w-xl mx-auto">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-lg">🔍</span>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg" style={{ color: '#E5C77A' }}>🔍</span>
             <input
               type="text"
               placeholder="질문을 검색해보세요..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className={`${DS.input.base} pl-12`}
+              className="w-full pl-12 pr-4 py-3 rounded-lg text-[0.875rem]"
+              style={{
+                backgroundColor: '#FFFFFF',
+                color: '#0A1628',
+                border: '1.5px solid #E5C77A',
+                fontWeight: 500,
+              }}
             />
           </div>
         </div>

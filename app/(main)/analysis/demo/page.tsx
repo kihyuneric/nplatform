@@ -102,7 +102,7 @@ export default function AnalysisDemoPage() {
                 <span className="inline-flex items-center gap-1 text-[0.6875rem] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-stone-100/15 text-stone-900 dark:text-stone-900 border border-stone-300/25">
                   <Zap className="w-3 h-3" /> 데모 체험
                 </span>
-                <span className="text-[0.6875rem] text-[var(--color-text-muted)]">서울 강남구 아파트 NPL · 하나저축은행 론세일</span>
+                <span className="text-[0.6875rem] text-[var(--color-text-muted)]">서울 강남구 아파트 NPL · ooooo행 론세일</span>
               </div>
               <h1 className="text-3xl font-extrabold text-[var(--color-text-primary)] mb-3">
                 NPL 수익성 분석<br />
@@ -171,7 +171,7 @@ export default function AnalysisDemoPage() {
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <dt className="text-[var(--color-text-secondary)]">금융기관</dt>
-                <dd className="font-semibold text-[var(--color-text-primary)]">하나저축은행</dd>
+                <dd className="font-semibold text-[var(--color-text-primary)]">ooooo행</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-[var(--color-text-secondary)]">잔여원금</dt>

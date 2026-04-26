@@ -129,6 +129,11 @@ interface ListingDetail {
     contract_rate: number
     delinquent_rate: number
     delinquent_since: string
+    /**
+     * 수익권 금액 (공부상 채권최고액) — 1차 근저당의 채권최고액.
+     * 한국 표준은 대출원금 × 110~140% (관행 1.2x). 미입력 시 원금 × 1.2 기본 적용.
+     */
+    maximum_bond_amount?: number
   }
   /** 경매 정보 (없으면 null) */
   auction_info: {
@@ -1814,7 +1819,7 @@ export function AssetDetailView({
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <ClaimField
-                      label="연정 금리"
+                      label="대출 금리"
                       value={`${listing.claim_info.contract_rate.toFixed(1)}%`}
                       sub="연이율"
                       tone="blue"
@@ -1839,13 +1844,53 @@ export function AssetDetailView({
                     />
                   </div>
 
+                  {/* 수익권 금액 (공부상 채권최고액) — 사용자 요청 2026-04-26.
+                      미입력 매물은 한국 표준 대출원금 × 1.2 로 자동 환산해 표시 */}
+                  {(() => {
+                    const principal = listing.claim_info.principal
+                    const explicit = listing.claim_info.maximum_bond_amount
+                    const maxBond = explicit && explicit > 0 ? explicit : Math.round(principal * 1.2)
+                    const ratio = principal > 0 ? Math.round((maxBond / principal) * 100) : 120
+                    return (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div
+                          className="rounded-xl p-3 sm:col-span-2"
+                          style={{
+                            background: "linear-gradient(135deg, rgba(46,117,182,0.08), rgba(5,28,44,0.05))",
+                            border: "1px solid rgba(46,117,182,0.30)",
+                          }}
+                        >
+                          <div
+                            className="font-semibold mb-1"
+                            style={{ fontSize: 11, color: C.lt3, letterSpacing: "0.04em" }}
+                          >
+                            수익권 금액 <span style={{ color: C.lt4 }}>(공부상 채권최고액 · 1순위 근저당)</span>
+                          </div>
+                          <div className="font-black tabular-nums" style={{ fontSize: 20, color: "#2E75B6", lineHeight: 1.1 }}>
+                            {formatKRW(maxBond)}
+                          </div>
+                          <div className="mt-1 tabular-nums" style={{ fontSize: 11, color: C.lt3 }}>
+                            대출원금 × <b>{ratio}%</b>
+                            {!explicit && <span style={{ color: C.lt4 }}> · 표준 1.2x 자동 환산 (등기부 미입력)</span>}
+                          </div>
+                        </div>
+                        <ClaimField
+                          label="설정 비율"
+                          value={`${ratio}%`}
+                          sub="대출원금 × 110~140% 표준"
+                          tone="blue"
+                        />
+                      </div>
+                    )
+                  })()}
+
                   <p
                     className="leading-relaxed"
                     style={{ fontSize: 11, color: C.lt3 }}
                   >
-                    채권잔액은 연정 금리를 적용한 원금과 미수이자의 합계이며, 연체 시작일부터는
-                    연체 금리로 산정됩니다. 채권 정보 세부 내역은 LOI 제출 후 금융기관 대면
-                    미팅에서 검토될 수 있습니다.
+                    채권잔액은 대출 금리와 연체 금리를 적용한 원금과 미수이자의 합계이며,
+                    연체 시작일부터는 연체 금리로 산정됩니다. 채권 정보 세부 내역은 LOI 제출
+                    후 금융기관 대면 미팅에서 검토될 수 있습니다.
                   </p>
                 </div>
               </TierGate>

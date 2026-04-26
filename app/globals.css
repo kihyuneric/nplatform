@@ -51,6 +51,17 @@ body {
   letter-spacing: 0;  /* 숫자도 letter-spacing 0 */
 }
 
+/* CJK 친화 모노 — 한글이 섞인 계산식/프롬프트 블록 전용
+   font-mono 의 Courier-stack 으로 인한 한글 깨짐을 방지하기 위해
+   Pretendard 본문 폰트 + tabular-nums + 들여쓰기 보존(whitespace) 으로 통일. */
+.font-cjk-mono {
+  font-family: var(--font-pretendard), 'Pretendard', system-ui, -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0;
+  word-break: keep-all;
+}
+
 /* 버튼 텍스트: 한국어 버튼은 spacing 0 */
 .btn-primary,
 .btn-secondary,
@@ -2008,6 +2019,27 @@ button[role="switch"][data-state="unchecked"] {
   body    { background: white !important; color: black !important; }
   .container { max-width: 100% !important; padding: 0 !important; }
   canvas  { max-width: 100% !important; }
+
+  /* 분석 리포트 PDF 다운로드 (window.print → Save as PDF) 최적화
+     · 카드/박스 그림자·반투명 배경 → 흑백 백서 톤으로 정규화
+     · 페이지 넘김 시 섹션이 어색하게 잘리지 않도록 break-inside:avoid */
+  .pdf-page-break { page-break-before: always; break-before: page; }
+  .pdf-avoid-break, section, .rounded-xl, .rounded-2xl {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .pdf-section, section { box-shadow: none !important; }
+  /* 화면 전용 인터랙티브 컴포넌트 숨김 (편집 입력·툴팁·드롭다운 등) */
+  input[type="date"], input[type="text"], input[type="number"], textarea, select,
+  button[aria-expanded] {
+    background: transparent !important;
+    border-color: rgba(0,0,0,0.15) !important;
+    color: black !important;
+  }
+}
+@page {
+  size: A4;
+  margin: 12mm;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────

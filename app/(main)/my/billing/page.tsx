@@ -611,7 +611,7 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                   value={couponInput}
                   onChange={e => setCouponInput(e.target.value.toUpperCase())}
                   placeholder="쿠폰 코드 입력 (예: SPRING2026)"
-                  className={DS.input.base + " font-mono uppercase"}
+                  className={DS.input.base + " uppercase tracking-wide"}
                   maxLength={20}
                 />
                 <button

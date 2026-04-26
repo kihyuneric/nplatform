@@ -152,28 +152,55 @@ export default function NoticesPage() {
   return (
     <div className={DS.page.wrapper}>
 
-      {/* Header */}
-      <section className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)]">
+      {/* ── Hero (McKinsey Navy + Brass) — matches /analysis tone ─────── */}
+      <section
+        style={{
+          background: 'linear-gradient(135deg, #051C2C 0%, #0A1628 100%)',
+          borderBottom: '2px solid #B8924B',
+        }}
+      >
         <div className="max-w-3xl mx-auto px-4 py-12">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-[var(--color-brand-mid)]/10 flex items-center justify-center text-xl">🔔</div>
-            <div>
-              <h1 className={DS.text.sectionTitle}>공지사항</h1>
-              <p className={DS.text.caption}>NPLatform의 주요 소식과 업데이트를 확인하세요</p>
-            </div>
+          <div className="flex items-center gap-2 mb-3">
+            <span style={{ width: 24, height: 1.5, background: '#E5C77A', display: 'inline-block' }} />
+            <span style={{ color: '#E5C77A', fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase' }}>
+              Announcements · Service Updates
+            </span>
           </div>
+          <h1
+            style={{
+              color: '#FFFFFF',
+              fontSize: 'clamp(1.875rem, 3.5vw, 2.25rem)',
+              fontWeight: 800,
+              letterSpacing: '-0.025em',
+              lineHeight: 1.15,
+              marginBottom: 8,
+            }}
+          >
+            <span style={{ color: '#E5C77A', fontWeight: 900 }}>공지</span>사항
+          </h1>
+          <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 14, lineHeight: 1.55, fontWeight: 400 }}>
+            NPLatform 의 서비스 공지 · 점검 안내 · 업데이트 소식을 한 곳에서 확인하세요.
+          </p>
 
           {/* Tab bar */}
           <div className="flex gap-1.5 mt-6 flex-wrap">
-            {NOTICE_TABS.map((t) => (
-              <button
-                key={t.value}
-                onClick={() => handleTab(t.value)}
-                className={tab === t.value ? DS.tabs.active : DS.tabs.trigger}
-              >
-                {t.label}
-              </button>
-            ))}
+            {NOTICE_TABS.map((t) => {
+              const active = tab === t.value
+              return (
+                <button
+                  key={t.value}
+                  onClick={() => handleTab(t.value)}
+                  style={
+                    active
+                      ? { backgroundColor: '#FFFFFF', color: '#0A1628', border: '2px solid #FFFFFF', fontWeight: 800 }
+                      : { backgroundColor: 'transparent', color: '#E5C77A', border: '1.5px solid rgba(229,199,122,0.55)', fontWeight: 600 }
+                  }
+                  className="px-3.5 py-1.5 text-[0.75rem] tracking-tight transition-colors"
+                >
+                  {t.label}
+                </button>
+              )
+            })}
           </div>
         </div>
       </section>

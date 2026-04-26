@@ -33,7 +33,7 @@ export const PAGE_SUBNAV_LABELS: Record<string, string> = {
   exchange: 'NPL 매물 서브메뉴',
   deals: '거래 현황 서브메뉴',
   analysis: '투자 분석 서브메뉴',
-  news: '뉴스/공지 서브메뉴',
+  news: '공지/문의 서브메뉴',
   services: '전문가 서비스 서브메뉴',
 }
 
@@ -59,20 +59,18 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
       { key: 'deals_teams',     label: '팀 투자',     href: '/deals/teams',          description: '공동투자 팀 관리',                  icon: 'Users',          active: true, order: 4 },
     ],
     analysis: [
-      { key: 'analysis_main',    label: '분석 대시보드',   href: '/analysis',                    description: '시장 통계 및 인텔리전스',  icon: 'BarChart3',   active: true, order: 1 },
-      { key: 'analysis_new',     label: 'NPL 분석',        href: '/analysis/new',                description: 'AI 채권 가치 분석',        icon: 'FileSearch',  active: true, order: 2 },
-      { key: 'analysis_nbi',     label: 'NPL 가격지수',    href: '/analysis/npl-index',          description: 'NBI 주간 낙찰가율 지수',   icon: 'TrendingUp',  active: true, order: 3 },
-      { key: 'analysis_copilot', label: 'AI 컨설턴트',         href: '/analysis/copilot',            description: 'AI 투자 컨설팅 챗봇',      icon: 'Sparkles',    active: true, order: 4 },
-      { key: 'analysis_sim',     label: '경매 분석',           href: '/analysis/simulator',          description: '경매 수익률 시나리오 분석', icon: 'Calculator',  active: true, order: 5 },
+      { key: 'analysis_main',    label: '분석 대시보드', href: '/analysis',           description: '시장 통계 및 인텔리전스',    icon: 'BarChart3',  active: true, order: 1 },
+      { key: 'analysis_new',     label: 'NPL 분석',      href: '/analysis/new',       description: 'AI 채권 가치 분석',          icon: 'FileSearch', active: true, order: 2 },
+      { key: 'analysis_sim',     label: '경매 분석',     href: '/analysis/simulator', description: '경매 수익률 시나리오 분석',  icon: 'Calculator', active: true, order: 3 },
+      { key: 'analysis_copilot', label: 'AI 컨설턴트',   href: '/analysis/copilot',   description: 'AI 투자 컨설팅 챗봇',        icon: 'Sparkles',   active: true, order: 4 },
     ],
     services: [
       { key: 'svc_experts',   label: '전문가 찾기',   href: '/services/experts',           description: '법률·세무·부동산 전문가',    icon: 'Users',        active: true, order: 1 },
       { key: 'svc_register',  label: '전문가 등록',   href: '/services/experts/register',  description: '전문가로 등록',              icon: 'PlusCircle',   active: true, order: 2 },
     ],
     community: [
-      { key: 'com_news',      label: 'NPL 뉴스',      href: '/news',                       description: '부동산·금융 최신 뉴스',      icon: 'Newspaper',     active: true, order: 1 },
-      { key: 'com_notices',   label: '공지사항',      href: '/notices',                    description: '플랫폼 공지',                icon: 'Bell',          active: true, order: 2 },
-      // 커뮤니티는 숨김 (관리자에서 활성화 예정)
+      { key: 'com_notices', label: '공지사항', href: '/notices', description: '플랫폼 공지',         icon: 'Bell',         active: true, order: 1 },
+      { key: 'com_support', label: '고객센터', href: '/support', description: 'FAQ · 문의 · 도움말', icon: 'LifeBuoy',     active: true, order: 2 },
     ],
   },
   categories: [
@@ -111,22 +109,21 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
       active: true,
       order: 3,
       items: [
-        { key: 'analysis_dashboard', label: '분석 대시보드', href: '/analysis',            description: '시장 통계 및 인텔리전스', icon: 'BarChart3',  active: true, order: 1 },
-        { key: 'analysis_new',       label: 'NPL 분석',        href: '/analysis/new',        description: 'AI 채권 가치 분석',       icon: 'FileSearch', active: true, order: 2 },
-        { key: 'analysis_nbi',       label: 'NPL 가격지수',    href: '/analysis/npl-index',  description: 'NBI 주간 낙찰가율 지수',  icon: 'TrendingUp', active: true, order: 3 },
-        { key: 'analysis_simulator', label: '경매 분석',       href: '/analysis/simulator',  description: '경매 수익률 시나리오 분석', icon: 'Calculator', active: true, order: 4 },
+        { key: 'analysis_dashboard', label: '분석 대시보드', href: '/analysis',           description: '시장 통계 및 인텔리전스',    icon: 'BarChart3',  active: true, order: 1 },
+        { key: 'analysis_new',       label: 'NPL 분석',      href: '/analysis/new',       description: 'AI 채권 가치 분석',          icon: 'FileSearch', active: true, order: 2 },
+        { key: 'analysis_simulator', label: '경매 분석',     href: '/analysis/simulator', description: '경매 수익률 시나리오 분석',  icon: 'Calculator', active: true, order: 3 },
+        { key: 'analysis_copilot',   label: 'AI 컨설턴트',   href: '/analysis/copilot',   description: 'AI 투자 컨설팅 챗봇',        icon: 'Sparkles',   active: true, order: 4 },
       ],
     },
     {
       key: 'news',
-      label: '뉴스/공지',
-      href: '/news',
+      label: '공지/문의',
+      href: '/notices',
       active: true,
       order: 4,
       items: [
-        { key: 'news_main',        label: 'NPL 뉴스',  href: '/news',     description: '부동산·금융 최신 뉴스', icon: 'Newspaper', active: true, order: 1 },
-        { key: 'news_notices',     label: '공지사항',  href: '/notices',  description: '플랫폼 공지',           icon: 'Bell',      active: true, order: 2 },
-        // 커뮤니티는 숨김 (관리자에서 활성화 예정)
+        { key: 'news_notices', label: '공지사항', href: '/notices', description: '플랫폼 공지',         icon: 'Bell',     active: true, order: 1 },
+        { key: 'news_support', label: '고객센터', href: '/support', description: 'FAQ · 문의 · 도움말', icon: 'LifeBuoy', active: true, order: 2 },
       ],
     },
     {

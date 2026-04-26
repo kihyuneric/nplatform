@@ -73,17 +73,15 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: '분석 대시보드', icon: BarChart2, href: '/analysis' },
       { label: 'NPL 분석', icon: FileText, href: '/analysis/new' },
-      { label: 'NPL 가격지수', icon: TrendingUp, href: '/analysis/npl-index' },
-      { label: 'AI 컨설턴트', icon: FileText, href: '/analysis/copilot' },
       { label: '경매 분석', icon: BarChart2, href: '/analysis/simulator' },
+      { label: 'AI 컨설턴트', icon: FileText, href: '/analysis/copilot' },
     ],
   },
   {
-    group: '커뮤니티',
+    group: '공지/문의',
     items: [
       { label: '공지사항', icon: FileText, href: '/notices' },
-      { label: 'NPL 뉴스', icon: FileText, href: '/news' },
-      { label: '커뮤니티', icon: MessageSquare, href: '/services/community' },
+      { label: '고객센터', icon: MessageSquare, href: '/support' },
     ],
   },
   {

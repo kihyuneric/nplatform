@@ -111,9 +111,9 @@ const SERVICE_HUBS = [
     bgLight: 'bg-stone-100/10',
     textColor: 'text-stone-900',
     links: [
-      { label: 'AI 컨설턴트', href: '/analysis/copilot' },
+      { label: 'NPL 분석', href: '/analysis/new' },
       { label: '경매 분석', href: '/analysis/simulator' },
-      { label: 'NPL 가격지수', href: '/analysis/npl-index' },
+      { label: 'AI 컨설턴트', href: '/analysis/copilot' },
     ],
     stat: { label: 'AI 분석', value: '350+' },
   },

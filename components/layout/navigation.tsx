@@ -40,11 +40,11 @@ import type { Notification } from '@/lib/types'
 
 // ─── Nav items ────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { href: '/exchange',           label: '거래소',     matchPaths: ['/exchange'] },
-  { href: '/deals',              label: '딜룸',       matchPaths: ['/deals'] },
-  { href: '/analysis',           label: '분석',       matchPaths: ['/analysis'] },
-  { href: '/news',               label: '뉴스/공지',   matchPaths: ['/news', '/notices'] },
-  { href: '/my',                 label: '마이 페이지', matchPaths: ['/my'] },
+  { href: '/exchange',  label: '거래소',     matchPaths: ['/exchange'] },
+  { href: '/deals',     label: '딜룸',       matchPaths: ['/deals'] },
+  { href: '/analysis',  label: '분석',       matchPaths: ['/analysis'] },
+  { href: '/notices',   label: '공지/문의',  matchPaths: ['/notices', '/support', '/news'] },
+  { href: '/my',        label: '마이 페이지', matchPaths: ['/my'] },
 ]
 
 // ─── 사용자 티어 판정 (auth user → AccessTier) ─────────────

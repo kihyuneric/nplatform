@@ -97,18 +97,16 @@ const MORE_SECTIONS = [
     items: [
       { label: '분석 대시보드', labelKey: 'nav.analysisDashboard', href: '/analysis', icon: BarChart3 },
       { label: 'NPL 분석', labelKey: 'nav.nplAnalysis', href: '/analysis/new', icon: FileText },
-      { label: 'NPL 가격지수', labelKey: 'nav.nplIndex', href: '/analysis/npl-index', icon: TrendingUp },
-      { label: 'AI 컨설턴트', labelKey: 'nav.copilot', href: '/analysis/copilot', icon: Brain },
       { label: '경매 분석', labelKey: 'nav.simulator', href: '/analysis/simulator', icon: Calculator },
+      { label: 'AI 컨설턴트', labelKey: 'nav.copilot', href: '/analysis/copilot', icon: Brain },
     ],
   },
   {
-    title: '커뮤니티',
+    title: '공지/문의',
     titleKey: 'nav.community',
     items: [
       { label: '공지사항', labelKey: 'nav.notices', href: '/notices', icon: Bell },
-      { label: 'NPL 뉴스', labelKey: 'nav.nplNews', href: '/news', icon: Newspaper },
-      { label: '커뮤니티', labelKey: 'nav.communityBoard', href: '/services/community', icon: MessageSquare },
+      { label: '고객센터', labelKey: 'nav.support', href: '/support', icon: MessageSquare },
     ],
   },
   {

@@ -25,7 +25,7 @@ import {
   ArrowLeft, Sparkles, TrendingUp, Shield, AlertTriangle, Target,
   BarChart3, Gavel, MapPin, Info, Activity, ChevronRight, ChevronDown,
   FileText, Scale, Wallet, Calendar, Building2, Layers,
-  TrendingDown, PieChart, Sigma, Database, Pencil,
+  TrendingDown, PieChart, Sigma, Database, Pencil, Download,
 } from "lucide-react"
 import DS from "@/lib/design-system"
 import { riskPalette } from "@/lib/design-tokens"
@@ -180,12 +180,30 @@ export default function UnifiedReportPage() {
         {/* warm gold thin accent line — McKinsey editorial signature */}
         <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #2251FF 40%, #2251FF 60%, transparent)" }} />
         <div className={`${DS.page.container} py-8 text-white`}>
-          <Link
-            href="/analysis"
-            className="inline-flex items-center gap-1 text-xs opacity-80 hover:opacity-100 mb-3"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> 분석 대시보드
-          </Link>
+          <div className="flex items-center justify-between gap-3 mb-3 no-print">
+            <Link
+              href="/analysis"
+              className="inline-flex items-center gap-1 text-xs opacity-80 hover:opacity-100"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> 분석 대시보드
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  // 인쇄 대화상자 → "PDF로 저장" 으로 다운로드 (한/영 모두 동일 흐름)
+                  // 현재 화면이 그대로 PDF 로 변환되므로 페이지 번역(Chrome 자동번역) 시 영문 PDF 도 동일 출력.
+                  document.title = `NPL_분석_리포트_${input.assetTitle.replace(/\s+/g, '_').slice(0, 40)}`
+                  window.print()
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/95 hover:bg-white text-[#0A1628] text-[0.75rem] font-bold transition-colors shadow-sm"
+              title="PDF 다운로드 (한/영 자동 번역 시에도 동일)"
+            >
+              <Download className="w-3.5 h-3.5" />
+              PDF 다운로드
+            </button>
+          </div>
           <div className="flex items-start justify-between flex-wrap gap-3">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
@@ -501,31 +519,50 @@ export default function UnifiedReportPage() {
           />
         </div>
 
-        {/* 4-팩터 카드 — 사용자 요청(2026-04-26) 2x2 배열 */}
+        {/* 4-팩터 카드 — 사용자 요청(2026-04-26) 2x2 배열 + 가로 바 그래프 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {risk.factors.map((f) => (
-            <div
-              key={f.category}
-              className="rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3"
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[0.75rem] font-bold text-[var(--color-text-primary)]">{f.category}</span>
-                <SeverityPill severity={f.severity} />
+          {risk.factors.map((f) => {
+            const score = Math.max(0, Math.min(100, f.score))
+            // 점수 → 색상: ≥75 녹(positive) / ≥50 brass / <50 amber-red
+            const barColor = score >= 75 ? '#10B981' : score >= 50 ? '#B8924B' : '#DC2626'
+            return (
+              <div
+                key={f.category}
+                className="rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3"
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[0.75rem] font-bold text-[var(--color-text-primary)]">{f.category}</span>
+                  <SeverityPill severity={f.severity} />
+                </div>
+                <div className="flex items-baseline gap-1.5 mb-2">
+                  <span className="text-lg font-black tabular-nums text-[var(--color-text-primary)]">{f.score}</span>
+                  <span className="text-[0.625rem] text-[var(--color-text-tertiary)]">/ 100</span>
+                </div>
+                {/* 가로 바 그래프 — 가시성용 (사용자 요청 2026-04-26) */}
+                <div
+                  className="relative h-2.5 rounded-full overflow-hidden mb-2"
+                  style={{ backgroundColor: 'rgba(10,22,40,0.08)', border: '1px solid rgba(10,22,40,0.10)' }}
+                  aria-label={`${f.category} 점수 ${f.score}`}
+                >
+                  <div
+                    className="absolute top-0 left-0 h-full rounded-full transition-all"
+                    style={{
+                      width: `${score}%`,
+                      background: `linear-gradient(90deg, ${barColor}CC 0%, ${barColor} 100%)`,
+                    }}
+                  />
+                </div>
+                <p className="text-[0.6875rem] text-[var(--color-text-secondary)] leading-relaxed mb-1.5">{f.explanation}</p>
+                <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] leading-relaxed italic">
+                  → {f.mitigation}
+                </p>
+                <FormulaToggle
+                  label="계산식"
+                  formula={buildRiskFactorFormula(f, report)}
+                />
               </div>
-              <div className="flex items-baseline gap-1.5 mb-1.5">
-                <span className="text-lg font-black tabular-nums text-[var(--color-text-primary)]">{f.score}</span>
-                <span className="text-[0.625rem] text-[var(--color-text-tertiary)]">/ 100</span>
-              </div>
-              <p className="text-[0.6875rem] text-[var(--color-text-secondary)] leading-relaxed mb-1.5">{f.explanation}</p>
-              <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] leading-relaxed italic">
-                → {f.mitigation}
-              </p>
-              <FormulaToggle
-                label="계산식"
-                formula={buildRiskFactorFormula(f, report)}
-              />
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {risk.specialConditionAdjustments.length > 0 && (
@@ -745,8 +782,12 @@ function FormulaToggle({
       </button>
       {open && (
         <pre
-          className="mt-2 text-[0.6875rem] font-mono leading-relaxed whitespace-pre-wrap"
-          style={{ color: tint?.color ?? "var(--color-text-secondary)" }}
+          className="mt-2 text-[0.75rem] font-cjk-mono leading-relaxed whitespace-pre-wrap rounded-lg p-3 border"
+          style={{
+            color: tint?.color ?? "var(--color-text-secondary)",
+            borderColor: 'rgba(10,22,40,0.10)',
+            background: 'rgba(10,22,40,0.04)',
+          }}
         >
           {formula}
         </pre>
@@ -808,7 +849,7 @@ function VerdictCriteriaToggle({
           <span className="font-bold text-[var(--color-text-primary)]">{label}</span>
           <span className="text-[0.625rem] text-[var(--color-text-tertiary)]">{rule}</span>
         </div>
-        <div className="text-[0.625rem] font-mono text-[var(--color-text-secondary)]">
+        <div className="text-[0.6875rem] font-cjk-mono text-[var(--color-text-secondary)] leading-relaxed">
           현재 · {current}
           <span className="opacity-70"> → 정규화 {mapped.toFixed(1)} × 가중치 {weight} = <b>{contribution.toFixed(2)}점</b></span>
         </div>
@@ -895,14 +936,14 @@ function VerdictCriteriaToggle({
                 {" · "}총점 &lt; 55  (AVOID · 회피)
               </li>
             </ul>
-            <div className="mt-2 text-[0.625rem] font-mono text-[var(--color-text-tertiary)]">
+            <div className="mt-2 text-[0.6875rem] font-cjk-mono text-[var(--color-text-tertiary)] leading-relaxed">
               총점 {r.components.recovery.contribution.toFixed(2)} + {r.components.risk.contribution.toFixed(2)} + {r.components.roi.contribution.toFixed(2)} + {r.components.discount.contribution.toFixed(2)}
               {" = "}
               <b style={{ color: verdictColor }}>{r.totalScore}점</b>
               {" → "}
               <span className="font-bold" style={{ color: verdictColor }}>{verdictGrade}등급 · {r.verdict}</span>
             </div>
-            <div className="mt-1 text-[0.625rem] font-mono text-[var(--color-text-tertiary)] opacity-70">
+            <div className="mt-1 text-[0.6875rem] font-cjk-mono text-[var(--color-text-tertiary)] opacity-70">
               가중치: 회수율 {VERDICT_WEIGHTS.recovery} · 리스크 {VERDICT_WEIGHTS.risk} · ROI {VERDICT_WEIGHTS.roi} · 할인 {VERDICT_WEIGHTS.discount}
             </div>
           </div>
@@ -944,56 +985,70 @@ function PromptToggle({ report }: { report: UnifiedAnalysisReport }) {
       ? '개인 (질권 LTV 기본 75%)'
       : '미지정 (개인 기본값 적용)'
 
-  const prompt =
-    `역할: 당신은 20년차 NPL 투자 심사역입니다.\n` +
-    `과제: 아래 수치를 종합하여 투자 의사결정(BUY/HOLD/AVOID)과 근거를 한 문단(3~4문장)으로 제시하십시오.\n\n` +
-    `━━━━━━━━━━━━━━━━ 입력 ━━━━━━━━━━━━━━━━\n` +
-    `[물건]\n` +
-    `  · 자산      : ${input.assetTitle}\n` +
-    `  · 지역      : ${input.region}\n` +
-    `  · 유형      : ${input.propertyCategory}\n` +
-    `  · 감정가    : ${fmtKRW(input.appraisalValue)}\n` +
-    `  · 채권액    : ${fmtKRW(input.totalBondAmount)}\n` +
-    `  · 최저입찰가: ${input.minBidPrice != null ? fmtKRW(input.minBidPrice) : "—"}\n` +
-    `  · 현재시세  : ${input.currentMarketValue != null ? fmtKRW(input.currentMarketValue) : "—"}\n` +
-    `  · 채무자유형: ${debtorTypeLabel}\n` +
-    `  · 특수조건  : ${specialConditionsLine}\n` +
-    `                (V2 18항목 기반 · 법적점수 ${v2Summary.score}점 / 감점 합 ${v2Summary.penaltySum})\n\n` +
-    `[3팩터 회수율 엔진]\n` +
-    `  · LTV        : ${recovery.factors.ltv.ltvPercent.toFixed(1)}% (점수 ${recovery.factors.ltv.score})\n` +
-    `  · 지역 동향  : ${recovery.factors.regionTrend.score}점 (모멘텀 ${recovery.factors.regionTrend.auctionMomentum > 0 ? "+" : ""}${recovery.factors.regionTrend.auctionMomentum}%p)\n` +
-    `  · 낙찰가율   : 조정 ${recovery.factors.auctionRatio.adjustedBidRatio.toFixed(1)}% (점수 ${recovery.factors.auctionRatio.score})\n` +
-    `  · 종합점수   : ${recovery.compositeScore.toFixed(1)} → 등급 ${recovery.compositeGrade}\n` +
-    `  · 예측회수율 : ${recovery.predictedRecoveryRate}% (±σ ${recovery.lowerBound}~${recovery.upperBound}%, 신뢰도 ${Math.round(recovery.confidence * 100)}%)\n\n` +
-    `[리스크 4팩터 · Phase G3 가중 합성]\n` +
-    `  · 등급       : ${risk.grade} (${risk.level}, ${risk.score}점)\n` +
-    `  · 가중치     : 담보 0.35 · 권리관계 0.30 · 시장 0.25 · 유동성 0.10\n` +
-    risk.factors.map(f => {
-      const w = RISK_FACTOR_WEIGHTS[f.category as keyof typeof RISK_FACTOR_WEIGHTS] ?? 0
-      return `  · ${f.category.padEnd(5)} ${f.score}점 (${f.severity}) × ${w.toFixed(2)} = ${(f.score * w).toFixed(1)} — ${f.explanation}`
-    }).join("\n") +
-    `\n\n` +
-    `[입찰 권고]\n` +
-    `  · AI 권고 입찰가 : ${fmtKRW(summary.recommendedBidPrice)}\n` +
-    (profitability
-      ? `  · 보수/권고/공격 : ` +
-        `보수 ${(profitability.strategies.conservative.purchaseRate * 100).toFixed(1)}% / ` +
-        `권고 ${(profitability.strategies.recommended.purchaseRate * 100).toFixed(1)}% / ` +
-        `공격 ${(profitability.strategies.aggressive.purchaseRate * 100).toFixed(1)}%\n`
-      : "") +
-    `\n[시장 전망]\n` +
-    `  · 방향  : ${marketOutlook.outlook} (신뢰도 ${Math.round(marketOutlook.confidence * 100)}%, ${marketOutlook.horizonMonths}개월)\n` +
-    `  · 요약  : ${marketOutlook.narrative.replace(/\s+/g, " ").slice(0, 140)}…\n\n` +
-    `━━━━━━━━━━━━━━━━ 출력 형식 ━━━━━━━━━━━━━━━━\n` +
-    `1) 판정 (BUY / HOLD / AVOID) — 이유를 한 문장으로\n` +
-    `2) 핵심 근거 3가지 (숫자 인용 필수 · 4-팩터 중 최소 1개 포함)\n` +
-    `3) 유의사항 (V2 특수조건 버킷 🔴/🟠/🟡 중 가장 큰 감점 버킷 1개 지목)\n` +
-    `4) 권고 매입가/입찰가 요약 (보수/권고/공격 병렬)\n\n` +
-    `━━━━━━━━━━━━━━━━ 판정 규칙 ━━━━━━━━━━━━━━━━\n` +
-    `  · BUY   : 리스크 ≥ 75 AND 예측회수율 ≥ 85% AND 권리관계 팩터 ≥ 70\n` +
-    `  · HOLD  : 리스크 ≥ 55 (BUY 미충족)\n` +
-    `  · AVOID : 위 조건 모두 불충족 OR 🔴 소유권 버킷 감점 ≥ 50\n\n` +
-    `현재 자동 판정: ${summary.verdict}`
+  // Phase G5 (2026-04-26) — 프롬프트 재작성:
+  //  · 박스 라인(━) 제거 → 깨짐 없는 헤더 (## 마크다운 풍)
+  //  · 단순 키-값 라인업으로 정렬 일관성 확보 (font-cjk-mono 와 호환)
+  //  · 출력 형식·판정 규칙 문장 정제, 어시스턴트 역할 강화
+  const formatRiskFactor = (f: typeof risk.factors[number]) => {
+    const w = RISK_FACTOR_WEIGHTS[f.category as keyof typeof RISK_FACTOR_WEIGHTS] ?? 0
+    return `  - ${f.category} : ${f.score}점 (${f.severity}) × ${w.toFixed(2)} = ${(f.score * w).toFixed(1)} | ${f.explanation}`
+  }
+
+  const prompt = [
+    `# 역할`,
+    `당신은 20년차 NPL(부실채권) 투자 심사역입니다. 보수적이고 데이터 기반의 판단을 합니다.`,
+    ``,
+    `# 과제`,
+    `아래 입력을 종합해 투자 의사결정(BUY / HOLD / AVOID)과 근거를 3~4문장으로 제시하십시오.`,
+    ``,
+    `## [입력 1] 물건 개요`,
+    `  - 자산        : ${input.assetTitle}`,
+    `  - 지역        : ${input.region}`,
+    `  - 유형        : ${input.propertyCategory}`,
+    `  - 감정가      : ${fmtKRW(input.appraisalValue)}`,
+    `  - 채권액      : ${fmtKRW(input.totalBondAmount)}`,
+    `  - 최저입찰가  : ${input.minBidPrice != null ? fmtKRW(input.minBidPrice) : '—'}`,
+    `  - 현재시세    : ${input.currentMarketValue != null ? fmtKRW(input.currentMarketValue) : '—'}`,
+    `  - 채무자유형  : ${debtorTypeLabel}`,
+    `  - 특수조건    : ${specialConditionsLine}`,
+    `                 (V2 18항목 · 법적점수 ${v2Summary.score}점 / 감점 합 ${v2Summary.penaltySum})`,
+    ``,
+    `## [입력 2] 회수율 엔진 (3-팩터)`,
+    `  - LTV        : ${recovery.factors.ltv.ltvPercent.toFixed(1)}% (점수 ${recovery.factors.ltv.score})`,
+    `  - 지역 동향  : ${recovery.factors.regionTrend.score}점 (모멘텀 ${recovery.factors.regionTrend.auctionMomentum > 0 ? '+' : ''}${recovery.factors.regionTrend.auctionMomentum}%p)`,
+    `  - 낙찰가율   : 조정 ${recovery.factors.auctionRatio.adjustedBidRatio.toFixed(1)}% (점수 ${recovery.factors.auctionRatio.score})`,
+    `  - 종합점수   : ${recovery.compositeScore.toFixed(1)} → 등급 ${recovery.compositeGrade}`,
+    `  - 예측회수율 : ${recovery.predictedRecoveryRate}% (±σ ${recovery.lowerBound}~${recovery.upperBound}%, 신뢰도 ${Math.round(recovery.confidence * 100)}%)`,
+    ``,
+    `## [입력 3] 리스크 4팩터 (가중 합성)`,
+    `  - 종합 등급 : ${risk.grade} (${risk.level}, ${risk.score}점)`,
+    `  - 가중치    : 담보 0.35 · 권리관계 0.30 · 시장 0.25 · 유동성 0.10`,
+    ...risk.factors.map(formatRiskFactor),
+    ``,
+    `## [입력 4] 권고 입찰 / 매입가`,
+    `  - AI 권고 입찰가 : ${fmtKRW(summary.recommendedBidPrice)}`,
+    profitability
+      ? `  - 매입률(보수/권고/공격) : ${(profitability.strategies.conservative.purchaseRate * 100).toFixed(1)}% / ${(profitability.strategies.recommended.purchaseRate * 100).toFixed(1)}% / ${(profitability.strategies.aggressive.purchaseRate * 100).toFixed(1)}%`
+      : null,
+    ``,
+    `## [입력 5] 시장 전망`,
+    `  - 방향 : ${marketOutlook.outlook} (신뢰도 ${Math.round(marketOutlook.confidence * 100)}% · ${marketOutlook.horizonMonths}개월)`,
+    `  - 요약 : ${marketOutlook.narrative.replace(/\s+/g, ' ').slice(0, 140)}…`,
+    ``,
+    `# 출력 형식`,
+    `1. 판정 (BUY / HOLD / AVOID) + 핵심 이유 1문장`,
+    `2. 핵심 근거 3가지 (숫자 인용 필수 · 회수율/리스크 팩터 중 최소 1개 포함)`,
+    `3. 유의사항 (특수조건 V2 버킷 🔴 소유권 / 🟠 비용 / 🟡 유동성 중 최대 감점 1개 지목)`,
+    `4. 권고 매입가·입찰가 요약 (보수 / 권고 / 공격 병렬)`,
+    ``,
+    `# 판정 규칙`,
+    `  - BUY   : 리스크 점수 ≥ 75  AND  예측회수율 ≥ 85%  AND  권리관계 팩터 ≥ 70`,
+    `  - HOLD  : 리스크 점수 ≥ 55  (BUY 조건 미충족)`,
+    `  - AVOID : 위 조건 모두 불충족  OR  🔴 소유권 버킷 감점 ≥ 50`,
+    ``,
+    `# 현재 자동 판정`,
+    `  ${summary.verdict}`,
+  ].filter(Boolean).join('\n')
 
   return (
     <div className="mt-3 pt-3 border-t border-dashed border-white/20">
@@ -1008,7 +1063,7 @@ function PromptToggle({ report }: { report: UnifiedAnalysisReport }) {
         <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
       </button>
       {open && (
-        <pre className="mt-2 text-[0.6875rem] font-mono leading-relaxed whitespace-pre-wrap bg-black/30 rounded-lg p-3 text-white/95 max-h-96 overflow-auto">
+        <pre className="mt-2 text-[0.75rem] font-cjk-mono leading-relaxed whitespace-pre-wrap bg-black/40 rounded-lg p-3.5 text-white/95 max-h-[26rem] overflow-auto border border-white/10">
           {prompt}
         </pre>
       )}
@@ -1018,17 +1073,32 @@ function PromptToggle({ report }: { report: UnifiedAnalysisReport }) {
 
 function RecoveryBar({ predicted, lower, upper }: { predicted: number; lower: number; upper: number }) {
   const scale = (v: number) => Math.max(0, Math.min(100, v))
+  // McKinsey 네이비 + 브래스 — 흰 배경에서도 가시성 확보 (사용자 요청 2026-04-26)
   return (
-    <div className="relative h-6 bg-[var(--color-border-subtle)] rounded-full overflow-hidden">
+    <div
+      className="relative h-7 rounded-full overflow-hidden"
+      style={{ backgroundColor: 'rgba(10,22,40,0.08)', border: '1px solid rgba(10,22,40,0.12)' }}
+    >
+      {/* 신뢰구간 밴드 (brass tint) */}
       <div
-        className="absolute top-0 h-full bg-stone-100/30"
-        style={{ left: `${scale(lower)}%`, width: `${scale(upper - lower)}%` }}
+        className="absolute top-0 h-full"
+        style={{
+          left: `${scale(lower)}%`,
+          width: `${Math.max(scale(upper - lower), 0.5)}%`,
+          background: 'linear-gradient(90deg, rgba(184,146,75,0.55) 0%, rgba(184,146,75,0.85) 100%)',
+        }}
       />
+      {/* 예측치 마커 (navy ink) */}
       <div
-        className="absolute top-0 h-full w-1 bg-stone-100"
-        style={{ left: `${scale(predicted)}%` }}
+        className="absolute top-0 h-full"
+        style={{
+          left: `calc(${scale(predicted)}% - 2px)`,
+          width: 4,
+          backgroundColor: '#0A1628',
+          boxShadow: '0 0 0 1px #FFFFFF',
+        }}
       />
-      <div className="absolute inset-0 flex items-center justify-between px-2 text-[0.625rem] text-[var(--color-text-tertiary)]">
+      <div className="absolute inset-0 flex items-center justify-between px-3 text-[0.625rem] font-bold tabular-nums" style={{ color: '#0A1628' }}>
         <span>0%</span>
         <span>100%</span>
       </div>
@@ -1681,6 +1751,29 @@ function addDaysISO(dateISO: string, days: number): string {
 }
 
 /**
+ * 예상 낙찰 회차 계산 — 한국 부동산 경매 관행: 유찰 시 1회당 약 20%p 저감.
+ *   · 회차 N 의 최저입찰가율 = 100% − (N−1) × 20%p
+ *   · 예측 낙찰가율(R) 이 최저입찰가율 이상인 가장 빠른 회차를 반환.
+ *
+ * 사용자 시나리오 (2026-04-26):
+ *   · R = 83.5% → 1회차(min 100%) 실패 · 2회차(min 80%) 가능 → 2회차
+ *   · R = 62%   → 2회차(min 80%) 실패 · 3회차(min 60%) 가능 → 3회차
+ */
+function predictedAuctionRound(bidRatioPercent: number): number {
+  if (!isFinite(bidRatioPercent) || bidRatioPercent <= 0) return 1
+  if (bidRatioPercent >= 100) return 1
+  // n = ceil(1 + (100 − R) / 20)
+  return Math.max(1, Math.ceil(1 + (100 - bidRatioPercent) / 20))
+}
+
+/**
+ * 회차 N → 1차 매각기일로부터의 일자 오프셋. 유찰 → 재매각까지 평균 28일.
+ */
+function predictedSaleDateOffsetDays(round: number): number {
+  return Math.max(0, (round - 1)) * 28
+}
+
+/**
  * 편집 가능 입력 상태 (엑셀 B값 기반)
  * 값 하나라도 변경되면 useMemo로 buildNplProfitability() 재실행 → 파생값 전부 재계산
  */
@@ -1697,11 +1790,22 @@ interface EditableInputs {
   pledgeLoanRatio: number       // 소수
   pledgeInterestRate: number    // 소수
   executionCost: number
+  /**
+   * 수익권 금액 (공부상 채권최고액) 승수 — 대출원금의 110%~140% (한국 표준 1.2x).
+   * 사용자는 슬라이더 또는 직접 금액 입력으로 조정 가능.
+   * 엔진의 maxBondMultiplier 로 전달되어 채권최고액·근저당권이전비용 자동 재계산.
+   */
+  maxBondMultiplier: number     // 1.10 ~ 1.40 (default 1.20)
   // ── 사용자 직접 조정 가능한 날짜 (달력 입력) ──
   purchaseDate: string          // ISO — 채권매입일
   balancePaymentDate: string    // ISO — 채권잔금일
   auctionStartDate: string      // ISO — 경매개시결정일
   firstSaleDate: string         // ISO — 1차 매각기일
+  /**
+   * 예상 매각기일 — 낙찰가율에 따라 자동 계산되는 실제 낙찰 예상일.
+   * 사용자가 수동으로 조정 가능 (override). null/'' 이면 자동값 사용.
+   */
+  predictedSaleDateOverride: string  // ISO 또는 ''
 }
 
 function extractInitialInputs(
@@ -1725,6 +1829,13 @@ function extractInitialInputs(
     balancePaymentDate: b.acquisition.balancePaymentDate,
     auctionStartDate: b.schedule.milestones[0]?.date ?? b.claim.calculatedAt,
     firstSaleDate: firstSaleMilestone?.date ?? b.claim.calculatedAt,
+    // 자동 계산을 기본값으로 (UI 에서 사용자 조정 가능). 빈 문자열이면 자동값 사용.
+    predictedSaleDateOverride: '',
+    // 채권최고액 승수 — 샘플의 maximumBondAmount/loanPrincipal 비율을 그대로 사용 (없으면 기본 1.2)
+    maxBondMultiplier:
+      b.claim.loanPrincipal > 0
+        ? Math.max(1.10, Math.min(1.40, b.claim.maximumBondAmount / b.claim.loanPrincipal))
+        : 1.20,
   }
 }
 
@@ -1743,10 +1854,26 @@ function ProfitabilitySections({
   const initial = block
   const courtName = initial.schedule.courtName
 
+  // ── 예상 매각 회차/일자 자동 계산 (낙찰가율 기준) ──
+  //   질권대출 이자일수가 회차에 따라 늘어나면서 ROI 가 자동 재계산됨.
+  const predictedRound = useMemo(
+    () => predictedAuctionRound(edit.expectedBidRatio * 100),
+    [edit.expectedBidRatio],
+  )
+  const predictedSaleDateAuto = useMemo(
+    () => addDaysISO(edit.firstSaleDate, predictedSaleDateOffsetDays(predictedRound)),
+    [edit.firstSaleDate, predictedRound],
+  )
+  // 사용자 override 가 있으면 그 값을, 없으면 auto 를 엔진에 주입.
+  const effectivePredictedSaleDate = edit.predictedSaleDateOverride || predictedSaleDateAuto
+
   // 편집된 입력으로 수익성 블록 재계산 (순수 함수)
   const live: NplProfitabilityBlock = useMemo(() => {
     try {
-      return buildNplProfitability({
+      // 엔진의 firstSaleDateOverride 에 "예상 매각기일" 을 주입 → 후속 일정
+      // (낙찰기일 / 매각결정 / 잔금납부 / 배당기일) 이 회차에 맞춰 모두 시프트.
+      // 결과: 질권대출 운용일수 증가 → 이자 비용 증가 → 순수익·ROI 자동 하향.
+      const block = buildNplProfitability({
         property: {
           address: initial.property.address,
           exclusiveAreaM2: initial.property.exclusiveAreaM2,
@@ -1767,7 +1894,8 @@ function ProfitabilitySections({
         expectedBidRatio: edit.expectedBidRatio,
         expectedBidRatioPeriod: initial.valuation.expectedBidRatioPeriod,
         auctionStartDate: edit.auctionStartDate,
-        firstSaleDateOverride: edit.firstSaleDate,
+        // 예상 매각기일을 1차 매각기일 자리에 주입 — 후속 모든 일정 시프트
+        firstSaleDateOverride: effectivePredictedSaleDate,
         purchaseDateOverride: edit.purchaseDate,
         balancePaymentDateOverride: edit.balancePaymentDate,
         courtName,
@@ -1775,15 +1903,32 @@ function ProfitabilitySections({
         pledgeLoanRatio: edit.pledgeLoanRatio,
         pledgeInterestRate: edit.pledgeInterestRate,
         executionCost: edit.executionCost,
+        // 수익권 금액 (공부상 채권최고액) 승수 — 110~140% 범위
+        maxBondMultiplier: edit.maxBondMultiplier,
         evidence: initial.evidence,
         asOfDate: initial.claim.calculatedAt,
         mcSeed: 20260421,
         mcTrials: 10_000,
       })
+      // milestones 의 'firstSaleDate' 라벨을 "예상 매각기일 (X회차)" 로 치환 +
+      // 사용자가 직접 입력한 '1차 매각기일' 을 별도 milestone 으로 prepend.
+      const adjustedMilestones = block.schedule.milestones.map(m =>
+        m.key === 'firstSaleDate'
+          ? {
+              ...m,
+              label: `예상 매각기일 (${predictedRound}회차)`,
+              note:
+                predictedRound === 1
+                  ? '1회차 낙찰 예상'
+                  : `예상 낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% → ${predictedRound}회차로 예상 (회차당 −20%p · 평균 +28일)`,
+            }
+          : m,
+      )
+      return { ...block, schedule: { ...block.schedule, milestones: adjustedMilestones } }
     } catch {
       return initial
     }
-  }, [edit, initial, courtName])
+  }, [edit, initial, courtName, effectivePredictedSaleDate, predictedRound])
 
   const { property, claim, acquisition, valuation, schedule, distribution, investment, strategies, sensitivity, monteCarlo } = live
 
@@ -1833,10 +1978,18 @@ function ProfitabilitySections({
             tint="#A53F8A"
             sub="원금 + 현재 누적 연체이자"
           />
-          <MetricCard
-            label="채권최고액 (원금 × 1.2)"
-            value={krwWon(claim.maximumBondAmount)}
-            tint="#2E75B6"
+          <MaxBondMultiplierCard
+            label="수익권 금액 (공부상 채권최고액)"
+            multiplier={edit.maxBondMultiplier}
+            principal={edit.loanPrincipal}
+            amount={claim.maximumBondAmount}
+            onMultiplierChange={(m) => setEdit({ ...edit, maxBondMultiplier: m })}
+            onAmountChange={(amt) => {
+              if (edit.loanPrincipal > 0) {
+                const m = Math.max(1.10, Math.min(1.40, amt / edit.loanPrincipal))
+                setEdit({ ...edit, maxBondMultiplier: m })
+              }
+            }}
           />
         </div>
         <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
@@ -1985,7 +2138,7 @@ function ProfitabilitySections({
 
       {/* ── [5] 경매진행일정 ─────────────────── */}
       <Section title="NPL 수익성 분석 · 경매 진행 일정" icon={Calendar} caption={`총 소요 ${schedule.totalDurationDays}일 · ${schedule.courtName ?? "관할법원 미지정"}`}>
-        {/* 사용자 조정 가능한 기준 일자 — 경매개시결정일·1차매각기일 */}
+        {/* 사용자 조정 가능한 기준 일자 — 경매개시결정일·1차매각기일·예상매각기일 */}
         <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden mb-3">
           <table className="w-full text-[0.75rem]">
             <tbody>
@@ -2000,10 +2153,50 @@ function ProfitabilitySections({
                 v={edit.firstSaleDate}
                 onChange={(v) => setEdit({ ...edit, firstSaleDate: v })}
                 hint="법원 평균 +347일 (배당요구종기 +270일) · 사용자 조정 가능"
+              />
+              <EditableDateRow
+                k={`예상 매각기일 (${predictedRound}회차)`}
+                v={effectivePredictedSaleDate}
+                onChange={(v) => setEdit({ ...edit, predictedSaleDateOverride: v })}
+                hint={
+                  predictedRound === 1
+                    ? `예상 낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% → 1회차에 낙찰 예상 (자동 계산 · 수동 조정 가능)`
+                    : `예상 낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% → ${predictedRound}회차 예상 (회차당 −20%p 할인 · 유찰당 평균 +28일 · 자동 계산 · 수동 조정 가능)`
+                }
                 last
               />
             </tbody>
           </table>
+        </div>
+
+        {/* 예상 회차 안내 배너 — 회차 변경 시 질권대출 이자일수·ROI 재계산됨 */}
+        <div
+          className="rounded-lg border p-3 mb-3 text-[0.75rem] leading-relaxed"
+          style={{
+            borderColor: predictedRound > 1 ? 'rgba(184,146,75,0.45)' : 'rgba(10,22,40,0.12)',
+            background: predictedRound > 1 ? 'rgba(184,146,75,0.08)' : 'rgba(10,22,40,0.03)',
+            color: 'var(--color-text-secondary)',
+          }}
+        >
+          <div className="flex items-start gap-2">
+            <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: predictedRound > 1 ? '#B8924B' : '#0A1628' }} />
+            <div>
+              {predictedRound === 1 ? (
+                <>
+                  예상 낙찰가율 <b className="tabular-nums">{(edit.expectedBidRatio * 100).toFixed(1)}%</b> 가 1회차 최저입찰가율(100%) 이상이므로
+                  <b> 1회차 매각기일에 낙찰 예상</b>됩니다.
+                </>
+              ) : (
+                <>
+                  예상 낙찰가율 <b className="tabular-nums">{(edit.expectedBidRatio * 100).toFixed(1)}%</b> 가 1회차 최저입찰가율(100%) 미만이므로
+                  유찰이 예상되며, 회차당 −20%p 저감을 적용해 <b>{predictedRound}회차 매각기일</b>(최저 {(100 - (predictedRound - 1) * 20).toFixed(0)}%)에 낙찰 예상됩니다.
+                  <span className="block mt-1 text-[0.6875rem] text-[var(--color-text-tertiary)]">
+                    유찰당 평균 +28일 → 질권대출 운용일수 +{(predictedRound - 1) * 28}일 → 이자비용 증가 → ROI 자동 하향 반영.
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
         </div>
         <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
           <ol className="relative border-l-2 border-[var(--color-brand-mid)]/30 ml-2 space-y-3">
@@ -2301,6 +2494,99 @@ function EditablePercentCard({
         <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">%</span>
       </div>
       {hint && <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-1">{hint}</div>}
+    </div>
+  )
+}
+
+/**
+ * 수익권 금액 (공부상 채권최고액) 입력 카드 — Phase G6 (2026-04-26).
+ *   · 슬라이더: 대출원금 × 110% ~ 140% (한국 표준 1.2x · 1%p 단위)
+ *   · 직접 금액 입력: 자동으로 (금액 / 대출원금) 비율 계산해 슬라이더 동기화
+ *   · 기본값: 1.20 (원금 × 1.2)
+ *   · 엔진의 maxBondMultiplier 로 흘러 채권최고액·근저당권이전비용 자동 재계산
+ */
+function MaxBondMultiplierCard({
+  label,
+  multiplier,
+  principal,
+  amount,
+  onMultiplierChange,
+  onAmountChange,
+}: {
+  label: string
+  multiplier: number      // 1.10 ~ 1.40
+  principal: number       // 대출원금
+  amount: number          // 채권최고액 = 원금 × multiplier
+  onMultiplierChange: (m: number) => void
+  onAmountChange: (amt: number) => void
+}) {
+  const pct = Math.round(multiplier * 100)
+  const [raw, setRaw] = useState<string>(amount > 0 ? amount.toLocaleString('ko-KR') : '')
+  useEffect(() => {
+    setRaw(amount > 0 ? amount.toLocaleString('ko-KR') : '')
+  }, [amount])
+
+  return (
+    <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[0.625rem] text-[var(--color-text-tertiary)]">{label}</span>
+        <Pencil className="w-3 h-3 text-[var(--color-text-tertiary)] opacity-60" />
+      </div>
+      <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: '#2E75B6' }}>
+        {krwWon(amount)}
+      </div>
+      <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-0.5">
+        대출원금 × <b className="tabular-nums">{pct}%</b>  (1차 근저당 표준 110~140%)
+      </div>
+
+      {/* 슬라이더: 110% ~ 140% (1%p 단위) */}
+      <div className="mt-2">
+        <input
+          type="range"
+          min={110}
+          max={140}
+          step={1}
+          value={pct}
+          onChange={(e) => onMultiplierChange(Number(e.target.value) / 100)}
+          aria-label="채권최고액 비율 (대출원금 대비)"
+          className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+          style={{
+            background: `linear-gradient(90deg, #2E75B6 0%, #2E75B6 ${((pct - 110) / 30) * 100}%, rgba(10,22,40,0.10) ${((pct - 110) / 30) * 100}%, rgba(10,22,40,0.10) 100%)`,
+          }}
+        />
+        <div className="flex justify-between text-[0.5625rem] text-[var(--color-text-tertiary)] tabular-nums mt-0.5">
+          <span>110%</span>
+          <span>120%</span>
+          <span>130%</span>
+          <span>140%</span>
+        </div>
+      </div>
+
+      {/* 직접 금액 입력 (선택) */}
+      <input
+        type="text"
+        inputMode="numeric"
+        className="mt-1.5 w-full rounded-md bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-2 py-1 text-[0.75rem] tabular-nums focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-mid)]/40"
+        value={raw}
+        placeholder="직접 입력 (원)"
+        onChange={(e) => {
+          const digits = e.target.value.replace(/[^0-9-]/g, '')
+          if (digits === '' || digits === '-') {
+            setRaw(digits)
+            return
+          }
+          const n = Number(digits)
+          setRaw(Number.isFinite(n) ? n.toLocaleString('ko-KR') : digits)
+        }}
+        onBlur={() => {
+          const n = Number(raw.replace(/[^0-9.-]/g, ''))
+          if (Number.isFinite(n) && n > 0 && principal > 0) {
+            onAmountChange(Math.round(n))
+          } else {
+            setRaw(amount > 0 ? amount.toLocaleString('ko-KR') : '')
+          }
+        }}
+      />
     </div>
   )
 }

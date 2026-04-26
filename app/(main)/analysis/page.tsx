@@ -4,8 +4,8 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import {
-  Brain, Calculator, BarChart3, MessageSquare,
-  ArrowRight, TrendingUp, Sparkles,
+  Brain, Calculator,
+  ArrowRight, TrendingUp,
   Clock, ChevronRight, Zap, Shield, AlertCircle,
 } from "lucide-react"
 import DS from "@/lib/design-system"
@@ -61,21 +61,6 @@ const TOOLS = [
     features: ["2024 세율 자동 적용", "민감도 테이블", "시나리오 저장"],
   },
   {
-    href: "/analysis/npl-index",
-    demoHref: null,
-    demoLabel: null,
-    icon: BarChart3,
-    color: MONO_INK,
-    bg: MONO_TINT,
-    border: MONO_BORDER,
-    badge: "03 · 주간",
-    badgeBg: "transparent",
-    badgeText: MONO_INK,
-    title: "NPL 가격지수 (NBI)",
-    desc: "전국·담보 유형별 낙찰가율 추이, 거래량, 낙찰률을 주간 단위로 추적합니다.",
-    features: ["담보 유형별 필터", "거래량 추이 그래프", "지역별 히트맵"],
-  },
-  {
     href: "/analysis/copilot",
     demoHref: "/analysis/copilot",
     demoLabel: "AI 질문 체험",
@@ -83,7 +68,7 @@ const TOOLS = [
     color: MONO_INK,
     bg: MONO_TINT,
     border: MONO_BORDER,
-    badge: "04 · AI",
+    badge: "03 · AI",
     badgeBg: "transparent",
     badgeText: MONO_INK,
     title: "AI 컨설턴트",
@@ -250,7 +235,7 @@ export default function AnalysisDashboard() {
                   fontWeight: 400,
                 }}
               >
-                NPL 수익성 분석 · 경매 분석 · AI 컨설턴트 · NPL 가격지수까지 — 모든 분석 도구를 한 곳에서.
+                NPL 수익성 분석 · 경매 분석 · AI 컨설턴트 — 모든 분석 도구를 한 곳에서.
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -275,15 +260,16 @@ export default function AnalysisDashboard() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   padding: '10px 20px',
-                  background: '#FFFFFF',
-                  borderTop: `2px solid ${MCK_BRASS}`,
-                  color: MCK_INK,
+                  backgroundColor: MCK_INK,
+                  borderTop: `2px solid ${MCK_BRASS_LIGHT}`,
+                  border: `2px solid ${MCK_INK}`,
+                  color: '#FFFFFF',
                   fontSize: 12, fontWeight: 800,
                   letterSpacing: '-0.005em',
                 }}
               >
-                <TrendingUp className="w-3.5 h-3.5" style={{ color: MCK_INK }} />
-                <span style={{ color: MCK_INK }}>분석 시작</span>
+                <TrendingUp className="w-3.5 h-3.5" style={{ color: '#FFFFFF' }} />
+                <span style={{ color: '#FFFFFF' }}>분석 시작</span>
               </Link>
             </div>
           </div>
@@ -354,7 +340,7 @@ export default function AnalysisDashboard() {
                 textTransform: 'uppercase',
               }}
             >
-              Toolkit · 4 modules
+              Toolkit · 3 modules
             </span>
           </div>
           <h2

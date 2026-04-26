@@ -98,11 +98,30 @@ function useDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/v1/my/dashboard')
-      .then((r) => r.json())
-      .then((d) => setData(d))
-      .catch(console.error)
-      .finally(() => setLoading(false))
+    let cancelled = false
+    ;(async () => {
+      try {
+        const r = await fetch('/api/v1/my/dashboard', { credentials: 'include' })
+        if (!r.ok) {
+          // 401·500 등 — 샘플/폴백 모드로 전환 (dashboardData = null 유지)
+          if (!cancelled) setData(null)
+          return
+        }
+        const d = await r.json().catch(() => null)
+        // 정상 응답에 profile 키가 있는 경우에만 채택
+        if (!cancelled && d && typeof d === 'object' && 'profile' in d) {
+          setData(d as DashboardData)
+        } else if (!cancelled) {
+          setData(null)
+        }
+      } catch (err) {
+        console.error('[my/dashboard] fetch error', err)
+        if (!cancelled) setData(null)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
   }, [])
 
   return { data, loading }
