@@ -1072,19 +1072,59 @@ function KpiCard({
   sub?: string
   tone: "primary" | "success" | "warning" | "danger" | "info" | "muted"
 }) {
-  const toneMap = {
-    primary: "border-[var(--color-brand-mid)]/40 text-[var(--color-brand-mid)]",
-    success: "border-stone-300/40 text-stone-900",
-    warning: "border-stone-300/40 text-stone-900",
-    danger: "border-stone-300/40 text-stone-900",
-    info: "border-stone-300/40 text-stone-900",
-    muted: "border-[var(--color-border-subtle)] text-[var(--color-text-primary)]",
-  }
+  // McKinsey 절제: 모든 KPI 카드는 ink 다크 패널 + brass top accent.
+  // primary/success는 brass top 4px (강조), 그 외는 brass top 2px.
+  const accentThickness = tone === "primary" || tone === "success" ? 4 : 2
   return (
-    <div className={`rounded-xl border p-3 bg-[var(--color-surface-overlay)] ${toneMap[tone]}`}>
-      <div className="text-[10px] font-bold tracking-wider text-[var(--color-text-muted)] uppercase">{label}</div>
-      <div className="text-[18px] font-black tabular-nums mt-1 leading-tight truncate">{value}</div>
-      {sub && <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{sub}</div>}
+    <div
+      style={{
+        background: MCK.inkDeep,
+        borderTop: `${accentThickness}px solid ${MCK.brass}`,
+        padding: "16px 16px 14px",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 10,
+          fontWeight: 700,
+          color: MCK.brassLight,
+          letterSpacing: "0.10em",
+          textTransform: "uppercase",
+          marginBottom: 8,
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontFamily: MCK_FONTS.serif,
+          fontSize: 24,
+          fontWeight: 700,
+          color: MCK.paper,
+          fontVariantNumeric: "tabular-nums",
+          letterSpacing: "-0.02em",
+          lineHeight: 1.05,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        {value}
+      </div>
+      {sub && (
+        <div
+          style={{
+            fontSize: 10,
+            color: "rgba(255,255,255,0.65)",
+            marginTop: 6,
+            letterSpacing: "0.01em",
+          }}
+        >
+          {sub}
+        </div>
+      )}
     </div>
   )
 }

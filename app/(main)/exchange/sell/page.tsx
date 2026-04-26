@@ -59,22 +59,25 @@ import { DesiredSaleDiscountInput } from "@/components/listings/npl-input-blocks
 import { NplModal, NplModalFooter } from "@/components/design-system"
 import { Button } from "@/components/ui/button"
 
-// NX-5: theme-responsive color map — 라이트/다크 양쪽에서 WCAG AA 대비 확보
+// McKinsey 절제된 모노크로 매핑 — 기존 C.* 키는 유지하고 값만 mck로 교체
+import { MCK as _MCK } from "@/lib/mck-design"
+import { MckPageShell, MckPageHeader, MckBadge } from "@/components/mck"
+import { MCK_FONTS } from "@/lib/mck-design"
 const C = {
-  bg0: "var(--color-bg-deepest)",
-  bg1: "var(--color-bg-deep)",
-  bg2: "var(--color-surface-elevated)",
-  bg3: "var(--color-bg-base)",
-  bg4: "var(--color-border-default)",
-  em:  "var(--color-positive)",
-  emL: "var(--color-positive)",
-  blue:  "var(--color-brand-dark)",
-  blueL: "var(--color-brand-bright)",
-  amber: "var(--color-warning)",
-  rose:  "var(--color-danger)",
-  teal:  "#051C2C",
-  lt3: "var(--color-text-secondary)",
-  lt4: "var(--color-text-tertiary)",
+  bg0: _MCK.paperTint,
+  bg1: _MCK.paper,
+  bg2: _MCK.paper,
+  bg3: _MCK.paperTint,
+  bg4: _MCK.border,
+  em:  _MCK.brassDark,    // green → brass (단일 악센트)
+  emL: _MCK.brassDark,
+  blue:  _MCK.ink,
+  blueL: _MCK.ink,
+  amber: _MCK.warning,
+  rose:  _MCK.danger,
+  teal:  _MCK.ink,
+  lt3: _MCK.inkMid,
+  lt4: _MCK.textSub,
 }
 
 // ═════════════════════════════════════════════════════════════
@@ -355,93 +358,83 @@ export default function SellWizardPage() {
   }
 
   return (
-    <main style={{ backgroundColor: C.bg0, color: "var(--color-text-primary)", minHeight: "100vh" }}>
-      <section style={{ borderBottom: `1px solid ${C.bg4}`, backgroundColor: C.bg1 }}>
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "40px 24px 32px" }}>
-          <Link
-            href="/exchange"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              fontSize: 12, color: C.lt4, fontWeight: 600, textDecoration: "none",
-              marginBottom: 16,
-            }}
-          >
-            <ChevronLeft size={14} /> 매물 목록
-          </Link>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <span
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 5,
-                padding: "4px 10px", borderRadius: 999,
-                backgroundColor: `${C.em}14`, border: `1px solid ${C.em}33`,
-                fontSize: 11, fontWeight: 700, color: C.emL,
-              }}
-            >
-              <Sparkles size={12} /> 프라임 매물 등록 · L0→L3 자동 구성 · 통합 폼 v2
-            </span>
-          </div>
-
-          <h1 style={{ fontSize: 32, fontWeight: 900, color: "var(--color-text-primary)", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 8 }}>
-            매물 등록 마법사
-          </h1>
-          <p style={{ fontSize: 13, color: C.lt4, maxWidth: 620, lineHeight: 1.6 }}>
-            필수 5항목(L0)만 입력하면 즉시 공개 가능하며, 선택 5항목을 추가할수록 자료 완성도와
-            매수자 매칭률이 높아집니다. 모든 개인정보는 자동 마스킹 파이프라인으로 처리됩니다.
-          </p>
-
-          <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+    <MckPageShell variant="tint">
+      <MckPageHeader
+        breadcrumbs={[
+          { label: "홈", href: "/" },
+          { label: "거래소", href: "/exchange" },
+          { label: "매물 등록" },
+        ]}
+        eyebrow="Listing Wizard · L0 → L3 자동 구성"
+        title="매물 등록 마법사"
+        subtitle="필수 5항목(L0)만 입력하면 즉시 공개 가능하며, 선택 5항목을 추가할수록 자료 완성도와 매수자 매칭률이 높아집니다. 모든 개인정보는 자동 마스킹 파이프라인으로 처리됩니다."
+        actions={
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
             <Link
               href="/exchange/ocr-register"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "8px 14px", borderRadius: 10,
-                background: "rgba(5, 28, 44,0.12)", border: "1px solid rgba(5, 28, 44,0.3)",
-                color: "var(--color-text-primary)", fontSize: 12, fontWeight: 700, textDecoration: "none",
+                padding: "9px 16px",
+                background: _MCK.ink, color: _MCK.paper,
+                fontSize: 12, fontWeight: 800,
+                letterSpacing: "-0.01em",
+                textDecoration: "none",
+                borderTop: `2px solid ${_MCK.brass}`,
               }}
             >
-              <Sparkles size={12} /> OCR·엑셀 템플릿으로 빠르게 등록 →
+              <Sparkles size={12} /> OCR · 엑셀 빠른 등록
             </Link>
-            <span
+            <Link
+              href="/exchange"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "8px 14px", borderRadius: 10,
-                background: "rgba(255,255,255,0.04)", border: "1px dashed rgba(5, 28, 44,0.3)",
-                color: C.lt4, fontSize: 11, fontWeight: 600,
+                padding: "9px 16px",
+                background: _MCK.paper, color: _MCK.ink,
+                fontSize: 12, fontWeight: 700,
+                letterSpacing: "-0.01em",
+                textDecoration: "none",
+                border: `1px solid ${_MCK.ink}`,
               }}
-              title="대량 등록 일시 중단"
             >
-              📞 대량 등록은 NPLATFORM 고객센터(02-555-2822) 문의 바랍니다
-            </span>
+              <ChevronLeft size={12} /> 매물 목록
+            </Link>
           </div>
+        }
+      />
 
-          <div style={{ marginTop: 28, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+      {/* ── McKinsey 단계 표시 (절제: ink + brass) ─────────────────────────────── */}
+      <section style={{ background: _MCK.paper, borderBottom: `1px solid ${_MCK.border}` }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "20px 24px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
             {STEPS.map((s, i) => {
               const done = step > s.id
               const active = step === s.id
               const Icon = s.icon
-              // McKinsey monochrome step indicator: navy active · gold dot for done · plain pending
               return (
                 <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <div
                     style={{
                       display: "inline-flex", alignItems: "center", gap: 8,
-                      padding: "8px 14px", borderRadius: 4,
-                      backgroundColor: active ? "var(--color-brand-deep)" : "transparent",
-                      border: `1px solid ${active ? "var(--color-brand-deep)" : done ? "var(--color-brand-deep)" : "var(--color-border-default)"}`,
-                      color: active ? "#FFFFFF" : done ? "var(--color-brand-deep)" : "var(--color-text-tertiary)",
-                      fontSize: 11, fontWeight: 700, letterSpacing: "0.02em",
+                      padding: "9px 16px",
+                      backgroundColor: active ? _MCK.ink : _MCK.paper,
+                      borderTop: active ? `2px solid ${_MCK.brass}` : `1px solid ${done ? _MCK.brass : _MCK.border}`,
+                      borderRight: `1px solid ${active ? _MCK.ink : _MCK.border}`,
+                      borderBottom: `1px solid ${active ? _MCK.ink : _MCK.border}`,
+                      borderLeft: `1px solid ${active ? _MCK.ink : _MCK.border}`,
+                      color: active ? _MCK.paper : done ? _MCK.ink : _MCK.textMuted,
+                      fontSize: 11, fontWeight: 700, letterSpacing: "0.04em",
+                      textTransform: "uppercase",
                     }}
                   >
                     {done ? (
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--color-editorial-gold)" }} />
+                        <span style={{ width: 5, height: 5, background: _MCK.brass }} />
                         <Check size={12} />
                       </span>
                     ) : <Icon size={12} />}
                     {s.label}
                   </div>
-                  {i < STEPS.length - 1 && <ChevronRight size={12} color="var(--color-border-default)" />}
+                  {i < STEPS.length - 1 && <ChevronRight size={12} color={_MCK.textMuted} />}
                 </div>
               )
             })}
@@ -632,7 +625,7 @@ export default function SellWizardPage() {
           </aside>
         </div>
       </section>
-    </main>
+    </MckPageShell>
   )
 }
 
@@ -1969,7 +1962,7 @@ function SubmittedScreen({ completeness }: { completeness: number }) {
   return (
     <main
       style={{
-        backgroundColor: C.bg0, color: "var(--color-text-primary)", minHeight: "100vh",
+        backgroundColor: _MCK.paperTint, color: _MCK.ink, minHeight: "100vh",
         display: "flex", alignItems: "center", justifyContent: "center", padding: 40,
       }}
     >
@@ -1978,23 +1971,25 @@ function SubmittedScreen({ completeness }: { completeness: number }) {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
         style={{
-          maxWidth: 520, width: "100%",
-          padding: 48, borderRadius: 20,
-          backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
+          maxWidth: 560, width: "100%",
+          padding: 48,
+          backgroundColor: _MCK.paper,
+          border: `1px solid ${_MCK.border}`,
+          borderTop: `4px solid ${_MCK.brass}`,
           textAlign: "center",
         }}
       >
         <div
           style={{
-            width: 72, height: 72, borderRadius: "50%",
-            backgroundColor: "var(--color-positive-bg)",
+            width: 72, height: 72,
+            backgroundColor: _MCK.ink,
             display: "flex", alignItems: "center", justifyContent: "center",
-            margin: "0 auto 20px",
+            margin: "0 auto 24px",
           }}
         >
-          <Check size={36} color={C.em} />
+          <Check size={36} color={_MCK.brassLight} />
         </div>
-        <h2 style={{ fontSize: 24, fontWeight: 900, color: "var(--color-text-primary)", marginBottom: 10 }}>
+        <h2 style={{ fontFamily: MCK_FONTS.serif, fontSize: 28, fontWeight: 700, color: _MCK.ink, marginBottom: 12, letterSpacing: "-0.02em" }}>
           마스킹 파이프라인 대기열 등록 완료
         </h2>
         <p style={{ fontSize: 13, color: C.lt4, lineHeight: 1.6, marginBottom: 24 }}>

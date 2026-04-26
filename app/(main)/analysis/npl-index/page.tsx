@@ -11,6 +11,8 @@ import {
   Info, Crown, MapPin, Activity, ChevronDown, ChevronUp, Download, Home, Building2, TreeDeciduous,
 } from 'lucide-react'
 import DS from '@/lib/design-system'
+import { MckPageShell, MckPageHeader, MckKpiGrid } from '@/components/mck'
+import { MCK } from '@/lib/mck-design'
 
 // ── 담보 유형별 탭 정의 ─────────────────────────────────────────────────────
 
@@ -211,41 +213,38 @@ export default function NplIndexPage() {
     ) : null
 
   return (
-    <div className={DS.page.wrapper}>
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)]">
-        <div className={`${DS.page.container} py-12 sm:py-16`}>
-          <Link
-            href="/analysis"
-            className={`inline-flex items-center gap-1.5 ${DS.text.link} text-[0.8125rem] mb-6`}
+    <MckPageShell variant="tint">
+      {/* ── McKinsey Hero ───────────────────────────────────────────── */}
+      <MckPageHeader
+        breadcrumbs={[
+          { label: "홈", href: "/" },
+          { label: "분석", href: "/analysis" },
+          { label: "NPL 낙찰가율 지수 (NBI)" },
+        ]}
+        eyebrow="NPL Bid Index · 주간 시장 지표"
+        title="NPL 낙찰가율 지수 (NBI)"
+        subtitle="전국 NPL 경매 낙찰가율을 주간 단위로 추적하여 시장 과열·냉각 상태를 한눈에 파악할 수 있는 종합 지표입니다."
+        actions={
+          <button
+            style={{
+              padding: "9px 16px",
+              fontSize: 12,
+              fontWeight: 800,
+              letterSpacing: "-0.01em",
+              background: MCK.ink,
+              color: MCK.paper,
+              border: "none",
+              borderTop: `2px solid ${MCK.brass}`,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              cursor: "pointer",
+            }}
           >
-            <ArrowLeft className="h-4 w-4" />
-            분석 도구
-          </Link>
-
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-stone-100/10 border border-stone-300/20">
-                  <Activity className="h-5 w-5 text-stone-900" />
-                </div>
-                <h1 className={DS.text.pageTitle}>
-                  NPL 낙찰가율 지수 (NBI)
-                </h1>
-              </div>
-              <p className={`${DS.text.body} max-w-2xl`}>
-                전국 NPL 경매 낙찰가율을 주간 단위로 추적하여 시장 과열·냉각 상태를
-                한눈에 파악할 수 있는 종합 지표입니다.
-              </p>
-            </div>
-
-            <button className={DS.button.secondary + " shrink-0"}>
-              <Download className="h-4 w-4" />
-              리포트 다운로드
-            </button>
-          </div>
-        </div>
-      </section>
+            <Download size={14} /> 리포트 다운로드
+          </button>
+        }
+      />
 
       {/* ── 담보 유형 탭 ──────────────────────────────────────────────────── */}
       <section className={`${DS.page.container} mt-6`}>
@@ -275,75 +274,34 @@ export default function NplIndexPage() {
         </div>
       </section>
 
-      {/* ── KPI Cards ─────────────────────────────────────────────────────── */}
-      <section className={`${DS.page.container} mt-4 relative z-10`}>
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* 금주 NBI */}
-          <div className={`${DS.stat.card}`}>
-            <div className="flex items-center gap-2 mb-2">
-              <BarChart3 className="h-4 w-4 text-[var(--color-brand-dark)]" />
-              <span className={DS.stat.label}>금주 NBI</span>
-            </div>
-            <p className={`${DS.text.metricLarge} text-[var(--color-brand-dark)]`}>
-              {currentWeek.nbi}
-            </p>
-            <p className={`${DS.stat.sub}`}>{currentWeek.date}</p>
-          </div>
-
-          {/* 전주 대비 변동 */}
-          <div className={`${DS.stat.card}`}>
-            <div className="flex items-center gap-2 mb-2">
-              {nbiChange >= 0 ? (
-                <TrendingUp className="h-4 w-4 text-[var(--color-positive)]" />
-              ) : (
-                <TrendingDown className="h-4 w-4 text-[var(--color-danger)]" />
-              )}
-              <span className={DS.stat.label}>전주 대비 변동</span>
-            </div>
-            <p
-              className={`${DS.text.metricLarge} ${
-                nbiChange >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-danger)]'
-              }`}
-            >
-              {nbiChange >= 0 ? '+' : ''}
-              {nbiChange}
-            </p>
-            <p className={`${DS.stat.sub}`}>
-              {nbiChange >= 0 ? '상승 추세' : '하락 추세'}
-            </p>
-          </div>
-
-          {/* 평균 낙찰가율 */}
-          <div className={`${DS.stat.card}`}>
-            <div className="flex items-center gap-2 mb-2">
-              <Activity className="h-4 w-4 text-[var(--color-brand-mid)]" />
-              <span className={DS.stat.label}>평균 낙찰가율</span>
-            </div>
-            <p className={`${DS.text.metricLarge} text-[var(--color-brand-mid)]`}>{avgRate}%</p>
-            <p className={`${DS.stat.sub}`}>12주 평균</p>
-          </div>
-
-          {/* 평균 낙찰률 (신규) */}
-          <div className={`${DS.stat.card}`}>
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-stone-900" />
-              <span className={DS.stat.label}>평균 낙찰률</span>
-            </div>
-            <p className={`${DS.text.metricLarge} text-stone-900 tabular-nums`}>{avgBidRate}%</p>
-            <p className={`${DS.stat.sub}`}>입찰 대비 낙찰 비율</p>
-          </div>
-        </div>
+      {/* ── KPI Cards · DARK · McKinsey impact ──────────────────────────── */}
+      <section className={`${DS.page.container} mt-6 relative z-10`}>
+        <MckKpiGrid
+          variant="dark"
+          items={[
+            { label: "금주 NBI", value: String(currentWeek.nbi), hint: currentWeek.date },
+            { label: "전주 대비 변동", value: `${nbiChange >= 0 ? "+" : ""}${nbiChange}`, hint: nbiChange >= 0 ? "▲ 상승 추세" : "▼ 하락 추세" },
+            { label: "평균 낙찰가율", value: `${avgRate}%`, hint: "12주 평균" },
+            { label: "평균 낙찰률", value: `${avgBidRate}%`, hint: "입찰 대비 낙찰 비율" },
+          ]}
+        />
 
         {/* 거래량 집계 */}
-        <div className="mt-3 flex items-center justify-between px-1">
-          <span className={DS.text.captionLight}>
+        <div className="mt-4 flex items-center justify-between px-1">
+          <span style={{ fontSize: 11, color: MCK.textMuted, letterSpacing: "0.02em" }}>
             {activeData[0].date} ~ {currentWeek.date} 기준 · 총 거래량{' '}
-            <strong className="text-[var(--color-text-primary)] tabular-nums">{totalVolume.toLocaleString()}건</strong>
+            <strong style={{ color: MCK.ink, fontVariantNumeric: "tabular-nums", fontWeight: 800 }}>{totalVolume.toLocaleString()}건</strong>
           </span>
-          <span className={`text-[0.6875rem] font-semibold px-2 py-0.5 rounded-full`}
+          <span
             style={{
-              backgroundColor: `${COLLATERAL_TABS.find(t => t.key === collateralTab)?.color ?? '#051C2C'}15`,
-              color: COLLATERAL_TABS.find(t => t.key === collateralTab)?.color ?? '#051C2C',
+              fontSize: 10,
+              fontWeight: 800,
+              padding: "4px 10px",
+              background: MCK.ink,
+              color: MCK.paper,
+              borderTop: `2px solid ${MCK.brass}`,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
             }}
           >
             {COLLATERAL_TABS.find(t => t.key === collateralTab)?.label ?? '전체'}
@@ -834,6 +792,6 @@ export default function NplIndexPage() {
           </div>
         </div>
       </section>
-    </div>
+    </MckPageShell>
   )
 }

@@ -36,32 +36,33 @@ import {
   AI_GRADE_COLORS,
   type AIGrade,
 } from "@/lib/taxonomy"
-import { MckPageShell, MckPageHeader, MckDemoBanner, MckBadge } from "@/components/mck"
+import { MckPageShell, MckPageHeader, MckDemoBanner, MckBadge, MckKpiGrid } from "@/components/mck"
 import { MCK, MCK_FONTS } from "@/lib/mck-design"
 
 /* ═══════════════════════════════════════════════════════════
-   DESIGN TOKENS — CSS variable references for theme support
+   DESIGN TOKENS — McKinsey 절제된 모노크로 (ink + brass + paper)
+   기존 V.* 호출부 호환을 위해 키 이름은 유지하되 값은 mck 팔레트로 매핑.
+   purple/positive(green)/brandBright는 모두 ink 또는 brass로 통일.
 ═══════════════════════════════════════════════════════════ */
+import { MCK as _MCK } from "@/lib/mck-design"
 const V = {
-  surfaceSunken:  "var(--color-surface-sunken)",
-  surfaceBase:    "var(--color-surface-base)",
-  surfaceElevated:"var(--color-surface-elevated)",
-  borderSubtle:   "var(--color-border-subtle)",
-  borderDefault:  "var(--color-border-default)",
-  textPrimary:    "var(--color-text-primary)",
-  textSecondary:  "var(--color-text-secondary)",
-  textTertiary:   "var(--color-text-tertiary)",
-  textMuted:      "var(--color-text-muted)",
-  positive:       "var(--color-positive)",
-  warning:        "var(--color-warning)",
-  danger:         "var(--color-danger)",
-  brandBright:    "var(--color-brand-bright)",
-  purple:         "var(--color-purple, #A855F7)",
-  // McKinsey mono editorial v4 — *-foreground 토큰으로 라이트/다크 자동 분기
-  // 라이트: positive 배경 = ink (#14161A) → 텍스트 흰색
-  // 다크: positive 배경 = brass (#2251FF) → 텍스트 검정 (#14161A)
-  onPositive:     "var(--color-positive-foreground)",
-  onDark:         "#FFFFFF",
+  surfaceSunken:  _MCK.paperTint,
+  surfaceBase:    _MCK.paper,
+  surfaceElevated:_MCK.paper,
+  borderSubtle:   _MCK.border,
+  borderDefault:  _MCK.borderStrong,
+  textPrimary:    _MCK.ink,
+  textSecondary:  _MCK.inkMid,
+  textTertiary:   _MCK.textSub,
+  textMuted:      _MCK.textMuted,
+  // semantic — McKinsey 차분 톤. 칩/뱃지에서만 1px 라인용으로 사용
+  positive:       _MCK.brassDark,    // green → brass (절제)
+  warning:        _MCK.warning,
+  danger:         _MCK.danger,
+  brandBright:    _MCK.ink,           // bright blue → ink (모노크로)
+  purple:         _MCK.brassDark,     // purple → brass (단일 악센트)
+  onPositive:     _MCK.paper,
+  onDark:         _MCK.paper,
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -498,61 +499,18 @@ export default function ExchangePage() {
         }
       />
 
-      {/* ── KPI strip · McKinsey editorial ───────────────────────────── */}
-      <section style={{ background: MCK.paper, borderBottom: `1px solid ${MCK.ink}11` }}>
-        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 24px 32px" }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: 0,
-              borderTop: `1px solid ${MCK.ink}22`,
-            }}
-          >
-            {[
-              { label: tr("전체 매물"), value: totalListings != null ? `${totalListings}건` : `${listings.length}건`, sub: isDemoMode ? tr("샘플 데이터") : tr("실시간 집계") },
-              { label: tr("평균 할인율"), value: "31.2%", sub: tr("채권잔액 대비") },
-              { label: tr("평균 자료 완성도"), value: "7.6 / 10", sub: tr("자료 제공 지수") },
-              { label: tr("참여 기관"), value: "12곳", sub: tr("은행 · AMC · 저축은행") },
-            ].map((k, i) => (
-              <div
-                key={i}
-                style={{
-                  padding: "20px 18px",
-                  background: MCK.paper,
-                  borderRight: i < 3 ? `1px solid ${MCK.ink}11` : "none",
-                  borderTop: `2px solid ${MCK.brass}`,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color: MCK.brassDark,
-                    marginBottom: 8,
-                  }}
-                >
-                  {k.label}
-                </div>
-                <div
-                  style={{
-                    fontFamily: MCK_FONTS.serif,
-                    fontSize: 30,
-                    fontWeight: 700,
-                    letterSpacing: "-0.02em",
-                    color: MCK.ink,
-                    marginBottom: 4,
-                    lineHeight: 1.1,
-                  }}
-                >
-                  {k.value}
-                </div>
-                <div style={{ fontSize: 11, color: MCK.ink, opacity: 0.55 }}>{k.sub}</div>
-              </div>
-            ))}
-          </div>
+      {/* ── KPI strip · DARK · McKinsey impact ───────────────────────────── */}
+      <section style={{ background: MCK.paper, paddingBottom: 32 }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 24px" }}>
+          <MckKpiGrid
+            variant="dark"
+            items={[
+              { label: tr("전체 매물"), value: totalListings != null ? `${totalListings}건` : `${listings.length}건`, hint: isDemoMode ? tr("샘플 데이터") : tr("실시간 집계") },
+              { label: tr("평균 할인율"), value: "31.2%", hint: tr("채권잔액 대비") },
+              { label: tr("평균 자료 완성도"), value: "7.6 / 10", hint: tr("자료 제공 지수") },
+              { label: tr("참여 기관"), value: "12곳", hint: tr("은행 · AMC · 저축은행") },
+            ]}
+          />
         </div>
       </section>
 

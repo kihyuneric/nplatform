@@ -6,21 +6,119 @@ export interface MckKpiItem {
   label: string
   value: string | number
   hint?: string
+  /** brass top border 강조 (기본 false) */
   accent?: boolean
-  /** trend +/- 표시용 */
+  /** trend +/- 표시용 — 색은 사용하지 않고 ▲/▼ 글자만 (McKinsey 톤) */
   delta?: { value: string; positive?: boolean }
 }
 
 /**
- * MckKpiGrid — 화이트 페이퍼 KPI 그리드.
+ * MckKpiGrid — McKinsey 톤 KPI 그리드.
  *
- * - 카드별 1px border + brass top accent (강조 KPI 만)
- * - 숫자는 800 weight + tabular-nums + serif 가능
- * - 책임 분리: row layout 만 담당; 값 포맷은 호출자가 처리
+ * variant:
+ *  - "paper" (기본): 흰 배경 + ink 숫자 — 일반 통계 row
+ *  - "dark"        : ink 배경 + paper 숫자 — 히어로 임팩트 (대시보드 최상단)
+ *
+ * 디자인 원칙:
+ *  - radius 0 (sharp)
+ *  - brass top accent 4px (dark variant) / 2px (paper)
+ *  - 숫자 = Georgia serif 32-44px (dark) / 24-28px (paper)
+ *  - 색은 ink/paper/brass 만 사용 — semantic 색은 ▲/▼ 글자에 의존
  */
-export function MckKpiGrid({ items, columns }: { items: MckKpiItem[]; columns?: number }) {
+export function MckKpiGrid({
+  items,
+  columns,
+  variant = "paper",
+}: {
+  items: MckKpiItem[]
+  columns?: number
+  variant?: "paper" | "dark"
+}) {
   const cols = columns ?? Math.min(items.length, 6)
-  const minW = cols >= 4 ? 160 : 200
+  const minW = cols >= 4 ? 180 : 220
+
+  const isDark = variant === "dark"
+
+  // dark variant: ink panel
+  if (isDark) {
+    return (
+      <div
+        className="grid"
+        style={{
+          gridTemplateColumns: `repeat(auto-fit, minmax(${minW}px, 1fr))`,
+          gap: 0,
+          background: MCK.inkDeep,
+          borderTop: `4px solid ${MCK.brass}`,
+        }}
+      >
+        {items.map((it, i) => (
+          <div
+            key={`${it.label}-${i}`}
+            style={{
+              padding: "26px 24px 24px",
+              borderRight:
+                i < items.length - 1 ? `1px solid rgba(255,255,255,0.10)` : "none",
+              background: "transparent",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: MCK.brassLight,
+                letterSpacing: "0.10em",
+                textTransform: "uppercase",
+                marginBottom: 10,
+              }}
+            >
+              {it.label}
+            </div>
+            <div
+              style={{
+                fontFamily: MCK_FONTS.serif,
+                fontSize: 38,
+                fontWeight: 700,
+                color: MCK.paper,
+                letterSpacing: "-0.025em",
+                fontVariantNumeric: "tabular-nums",
+                lineHeight: 1.0,
+              }}
+            >
+              {it.value}
+            </div>
+            {it.hint && (
+              <div
+                style={{
+                  marginTop: 10,
+                  fontSize: 11,
+                  color: "rgba(255,255,255,0.65)",
+                  fontWeight: 500,
+                  letterSpacing: "0.01em",
+                }}
+              >
+                {it.hint}
+              </div>
+            )}
+            {it.delta && (
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: MCK.brassLight,
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {it.delta.positive ? "▲" : "▼"} {it.delta.value}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // paper variant — 흰 배경 (기본)
   return (
     <div
       className="grid"
@@ -28,14 +126,14 @@ export function MckKpiGrid({ items, columns }: { items: MckKpiItem[]; columns?: 
         gridTemplateColumns: `repeat(auto-fit, minmax(${minW}px, 1fr))`,
         gap: 0,
         border: `1px solid ${MCK.border}`,
-        background: MCK.paperTint,
+        background: MCK.paper,
       }}
     >
       {items.map((it, i) => (
         <div
           key={`${it.label}-${i}`}
           style={{
-            padding: "18px 20px",
+            padding: "20px 22px",
             borderRight: i < items.length - 1 ? `1px solid ${MCK.border}` : "none",
             borderTop: it.accent ? `2px solid ${MCK.brass}` : "none",
             background: MCK.paper,
@@ -45,23 +143,23 @@ export function MckKpiGrid({ items, columns }: { items: MckKpiItem[]; columns?: 
             style={{
               fontSize: 10,
               fontWeight: 700,
-              color: MCK.textSub,
-              letterSpacing: "0.06em",
+              color: MCK.brassDark,
+              letterSpacing: "0.08em",
               textTransform: "uppercase",
-              marginBottom: 6,
+              marginBottom: 8,
             }}
           >
             {it.label}
           </div>
           <div
             style={{
-              fontSize: 24,
-              fontWeight: 800,
-              color: it.accent ? MCK.brassDark : MCK.ink,
+              fontFamily: MCK_FONTS.serif,
+              fontSize: 28,
+              fontWeight: 700,
+              color: MCK.ink,
               letterSpacing: "-0.025em",
               fontVariantNumeric: "tabular-nums",
               lineHeight: 1.05,
-              fontFamily: MCK_FONTS.serif,
             }}
           >
             {it.value}
@@ -69,9 +167,9 @@ export function MckKpiGrid({ items, columns }: { items: MckKpiItem[]; columns?: 
           {it.hint && (
             <div
               style={{
-                marginTop: 6,
+                marginTop: 8,
                 fontSize: 11,
-                color: MCK.textMuted,
+                color: MCK.textSub,
                 fontWeight: 500,
               }}
             >
@@ -81,10 +179,11 @@ export function MckKpiGrid({ items, columns }: { items: MckKpiItem[]; columns?: 
           {it.delta && (
             <div
               style={{
-                marginTop: 4,
+                marginTop: 6,
                 fontSize: 11,
                 fontWeight: 700,
-                color: it.delta.positive ? MCK.positive : MCK.danger,
+                color: MCK.ink,
+                letterSpacing: "0.02em",
               }}
             >
               {it.delta.positive ? "▲" : "▼"} {it.delta.value}
