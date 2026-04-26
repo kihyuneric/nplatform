@@ -2042,6 +2042,32 @@ button[role="switch"][data-state="unchecked"] {
   margin: 12mm;
 }
 
+/* Phase G7+ — 1Page Summary 인쇄 모드 (analysis report)
+   기본 화면: .print-summary-only 숨김
+   인쇄 시 body.print-summary 활성: 본문은 visibility hidden, .print-summary-only 만 표시 */
+.print-summary-only { display: none; }
+@media print {
+  body.print-summary * { visibility: hidden !important; }
+  body.print-summary .print-summary-only,
+  body.print-summary .print-summary-only * {
+    visibility: visible !important;
+  }
+  body.print-summary .print-summary-only {
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: #FFFFFF;
+  }
+  body.print-summary .summary-printable {
+    width: 100%;
+    page-break-after: avoid;
+    padding: 8mm !important;
+  }
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    PAGE TRANSITION — Next.js App Router soft fade
    ───────────────────────────────────────────────────────────────────────────── */

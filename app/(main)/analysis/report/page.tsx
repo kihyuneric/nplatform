@@ -25,7 +25,8 @@ import {
   ArrowLeft, Sparkles, TrendingUp, Shield, AlertTriangle, Target,
   BarChart3, Gavel, MapPin, Info, Activity, ChevronRight, ChevronDown,
   FileText, Scale, Wallet, Calendar, Building2, Layers,
-  TrendingDown, PieChart, Sigma, Database, Pencil, Download,
+  TrendingDown, PieChart, Sigma, Database, Pencil, Download, Eye, X,
+  FileText as FileTextIcon, Languages,
 } from "lucide-react"
 import DS from "@/lib/design-system"
 import { riskPalette } from "@/lib/design-tokens"
@@ -113,12 +114,166 @@ function buildRiskFactorFormula(
   }
 }
 
+// ─── i18n · 한국어/영어/일본어 (Phase G7+ 2026-04-26) ───────
+type Lang = "ko" | "en" | "ja"
+const LANGS: { code: Lang; label: string }[] = [
+  { code: "ko", label: "한국어" },
+  { code: "en", label: "English" },
+  { code: "ja", label: "日本語" },
+]
+type Dict = {
+  reportLabel: string
+  back: string
+  pdfFull: string
+  pdfSummary: string
+  viewer: string
+  aiGrade: string
+  appraisal: string
+  predictedRecovery: string
+  riskGrade: string
+  bankSalePrice: string
+  aiOpinion: string
+  recommend: string
+  hold: string
+  avoid: string
+  oneLineSummary: string
+  claimBreakdown: string
+  principal: string
+  unpaidInterest: string
+  overdueInterest: string
+  totalBond: string
+  delinquencyStart: string
+  overdueRate: string
+  recoveryThreeFactor: string
+  riskFourFactor: string
+  riskModelCaption: string
+  evidenceData: string
+  aiSummary: string
+  generatedAt: string
+  closeViewer: string
+  summaryViewerTitle: string
+  summaryRoi: string
+  summaryConfidence: string
+  promptLabel: string
+}
+const T: Record<Lang, Dict> = {
+  ko: {
+    reportLabel: "NPL 통합 분석 리포트",
+    back: "분석 대시보드",
+    pdfFull: "PDF 다운로드 (Full Ver.)",
+    pdfSummary: "PDF 다운로드 (1Page Summary)",
+    viewer: "Viewer",
+    aiGrade: "AI 투자 등급",
+    appraisal: "감정가",
+    predictedRecovery: "예측 회수율",
+    riskGrade: "리스크 등급",
+    bankSalePrice: "금융기관 NPL 매각가",
+    aiOpinion: "AI 투자 의견",
+    recommend: "권고",
+    hold: "관망",
+    avoid: "회피",
+    oneLineSummary: "한 줄 요약",
+    claimBreakdown: "채권잔액 내역",
+    principal: "대출원금",
+    unpaidInterest: "미수이자",
+    overdueInterest: "연체이자",
+    totalBond: "채권잔액 합계",
+    delinquencyStart: "연체시작",
+    overdueRate: "연체금리",
+    recoveryThreeFactor: "회수율 예측 · 3팩터 분석",
+    riskFourFactor: "AI 리스크 등급",
+    riskModelCaption: "NPLATFORM 리스크 분석 모델",
+    evidenceData: "근거 데이터",
+    aiSummary: "AI 총평",
+    generatedAt: "생성일",
+    closeViewer: "닫기",
+    summaryViewerTitle: "1Page Summary — Viewer",
+    summaryRoi: "예상 ROI",
+    summaryConfidence: "신뢰도",
+    promptLabel: "AI 총평 기준 프롬프트",
+  },
+  en: {
+    reportLabel: "NPL Integrated Analysis Report",
+    back: "Analysis Dashboard",
+    pdfFull: "Download PDF (Full Ver.)",
+    pdfSummary: "Download PDF (1-Page Summary)",
+    viewer: "Viewer",
+    aiGrade: "AI Investment Grade",
+    appraisal: "Appraisal",
+    predictedRecovery: "Predicted Recovery",
+    riskGrade: "Risk Grade",
+    bankSalePrice: "Bank NPL Sale Price",
+    aiOpinion: "AI Opinion",
+    recommend: "Recommend",
+    hold: "Hold",
+    avoid: "Avoid",
+    oneLineSummary: "One-line Summary",
+    claimBreakdown: "Claim Balance Breakdown",
+    principal: "Loan Principal",
+    unpaidInterest: "Unpaid Interest",
+    overdueInterest: "Overdue Interest",
+    totalBond: "Total Claim Balance",
+    delinquencyStart: "Delinquency Start",
+    overdueRate: "Overdue Rate",
+    recoveryThreeFactor: "Recovery Forecast · 3-Factor Analysis",
+    riskFourFactor: "AI Risk Grade",
+    riskModelCaption: "NPLATFORM Risk Analysis Model",
+    evidenceData: "Evidence Data",
+    aiSummary: "AI Executive Summary",
+    generatedAt: "Generated",
+    closeViewer: "Close",
+    summaryViewerTitle: "1-Page Summary — Viewer",
+    summaryRoi: "Expected ROI",
+    summaryConfidence: "Confidence",
+    promptLabel: "AI Summary Prompt",
+  },
+  ja: {
+    reportLabel: "NPL 統合分析レポート",
+    back: "分析ダッシュボード",
+    pdfFull: "PDFダウンロード (フル版)",
+    pdfSummary: "PDFダウンロード (1ページ要約)",
+    viewer: "ビューア",
+    aiGrade: "AI投資格付",
+    appraisal: "鑑定価額",
+    predictedRecovery: "予測回収率",
+    riskGrade: "リスク格付",
+    bankSalePrice: "金融機関NPL売却価格",
+    aiOpinion: "AI投資意見",
+    recommend: "推奨",
+    hold: "様子見",
+    avoid: "回避",
+    oneLineSummary: "一行要約",
+    claimBreakdown: "債権残高内訳",
+    principal: "貸出元金",
+    unpaidInterest: "未収利息",
+    overdueInterest: "延滞利息",
+    totalBond: "債権残高合計",
+    delinquencyStart: "延滞開始",
+    overdueRate: "延滞金利",
+    recoveryThreeFactor: "回収率予測 · 3要因分析",
+    riskFourFactor: "AIリスク格付",
+    riskModelCaption: "NPLATFORM リスク分析モデル",
+    evidenceData: "根拠データ",
+    aiSummary: "AI 総評",
+    generatedAt: "作成日",
+    closeViewer: "閉じる",
+    summaryViewerTitle: "1ページ要約 — ビューア",
+    summaryRoi: "予想ROI",
+    summaryConfidence: "信頼度",
+    promptLabel: "AI総評プロンプト",
+  },
+}
+
 // ─────────────────────────────────────────────────────────────
 export default function UnifiedReportPage() {
   const params = useSearchParams()
   const id = params?.get("id") ?? null
   const [report, setReport] = useState<UnifiedAnalysisReport | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Phase G7+ — 다국어 (한/영/일) + 1Page Summary Viewer
+  const [lang, setLang] = useState<Lang>("ko")
+  const [summaryOpen, setSummaryOpen] = useState(false)
+  const t = T[lang]
 
   useEffect(() => {
     ;(async () => {
@@ -172,70 +327,135 @@ export default function UnifiedReportPage() {
   return (
     <div className={DS.page.wrapper}>
 
-      {/* ── 헤더 · McKinsey editorial: 단색 deepest navy + warm gold accent ── */}
+      {/* ── 헤더 · McKinsey editorial: 단색 deepest navy + 1pt brass accent (Phase G7+ v2) ── */}
       <section
         className="relative overflow-hidden border-b border-[var(--color-border-subtle)]"
         style={{ background: "var(--color-brand-deep)" }}
       >
-        {/* warm gold thin accent line — McKinsey editorial signature */}
-        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #2251FF 40%, #2251FF 60%, transparent)" }} />
+        {/* brass thin accent line — McKinsey editorial signature */}
+        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #B8924B 40%, #B8924B 60%, transparent)" }} />
         <div className={`${DS.page.container} py-8 text-white`}>
-          <div className="flex items-center justify-between gap-3 mb-3 no-print">
+          {/* 상단 액션 바 — 좌: 뒤로 / 우: 언어 + PDF Full + PDF Summary + Viewer */}
+          <div className="flex items-center justify-between gap-3 mb-4 no-print flex-wrap">
             <Link
               href="/analysis"
               className="inline-flex items-center gap-1 text-xs opacity-80 hover:opacity-100"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> 분석 대시보드
+              <ArrowLeft className="w-3.5 h-3.5" /> {t.back}
             </Link>
-            <button
-              type="button"
-              onClick={() => {
-                if (typeof window !== 'undefined') {
-                  // 인쇄 대화상자 → "PDF로 저장" 으로 다운로드 (한/영 모두 동일 흐름)
-                  // 현재 화면이 그대로 PDF 로 변환되므로 페이지 번역(Chrome 자동번역) 시 영문 PDF 도 동일 출력.
-                  document.title = `NPL_분석_리포트_${input.assetTitle.replace(/\s+/g, '_').slice(0, 40)}`
-                  window.print()
-                }
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/95 hover:bg-white text-[#0A1628] text-[0.75rem] font-bold transition-colors shadow-sm"
-              title="PDF 다운로드 (한/영 자동 번역 시에도 동일)"
-            >
-              <Download className="w-3.5 h-3.5" />
-              PDF 다운로드
-            </button>
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* 언어 선택 — 한국어 / English / 日本語 */}
+              <div className="inline-flex items-center rounded-lg overflow-hidden border border-white/30">
+                <Languages className="w-3.5 h-3.5 ml-2 mr-1 opacity-70" />
+                {LANGS.map((l) => {
+                  const active = lang === l.code
+                  return (
+                    <button
+                      key={l.code}
+                      type="button"
+                      onClick={() => setLang(l.code)}
+                      aria-pressed={active}
+                      className="px-2.5 py-1.5 text-[0.6875rem] font-bold transition-colors"
+                      style={{
+                        backgroundColor: active ? "#FFFFFF" : "transparent",
+                        color: active ? "#0A1628" : "rgba(255,255,255,0.85)",
+                      }}
+                    >
+                      {l.label}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* PDF 다운로드 — Full Ver. */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    document.documentElement.setAttribute("lang", lang)
+                    document.body.classList.remove("print-summary")
+                    document.title = `NPL_Report_${input.assetTitle.replace(/\s+/g, "_").slice(0, 40)}_${lang.toUpperCase()}`
+                    window.print()
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/95 hover:bg-white text-[#0A1628] text-[0.6875rem] font-bold transition-colors shadow-sm"
+                title={t.pdfFull}
+              >
+                <Download className="w-3.5 h-3.5" />
+                {t.pdfFull}
+              </button>
+
+              {/* PDF 다운로드 — 1Page Summary */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    document.documentElement.setAttribute("lang", lang)
+                    document.body.classList.add("print-summary")
+                    document.title = `NPL_Summary_${input.assetTitle.replace(/\s+/g, "_").slice(0, 40)}_${lang.toUpperCase()}`
+                    window.print()
+                    setTimeout(() => document.body.classList.remove("print-summary"), 500)
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold transition-colors shadow-sm"
+                style={{ backgroundColor: "#B8924B", color: "#FFFFFF" }}
+                title={t.pdfSummary}
+              >
+                <FileTextIcon className="w-3.5 h-3.5" />
+                {t.pdfSummary}
+              </button>
+
+              {/* Viewer — 1Page Summary 미리보기 (선택 언어로 번역) */}
+              <button
+                type="button"
+                onClick={() => setSummaryOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold transition-colors border border-white/40 hover:bg-white/10"
+                style={{ color: "#FFFFFF" }}
+                title={t.viewer}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                {t.viewer}
+              </button>
+            </div>
           </div>
+
           <div className="flex items-start justify-between flex-wrap gap-3">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <Sparkles className="w-4 h-4" />
                 <span className="text-[0.6875rem] uppercase tracking-wider opacity-90 font-semibold">
-                  NPL 통합 분석 리포트
+                  {t.reportLabel}
                 </span>
               </div>
               <h1 className="text-[1.5rem] font-black tracking-tight">{input.assetTitle}</h1>
               <p className="text-[0.8125rem] opacity-90 mt-0.5">
-                {input.region} · {input.propertyCategory} · 감정가 {fmtKRW(input.appraisalValue)}
+                {input.region} · {input.propertyCategory} · {t.appraisal} {fmtKRW(input.appraisalValue)}
               </p>
             </div>
+            {/* AI 투자 등급 카드 — 백색 배경 · 가시성 우선 (Phase G7+ v2) */}
             {(() => {
               const vScore = summary.verdictScore ?? 0
               const vGrade = verdictScoreToGrade(vScore)
-              const gradeBg = {
-                A: "rgba(5, 28, 44,0.30)",
-                B: "rgba(5, 28, 44,0.20)",
-                C: "rgba(5, 28, 44,0.25)",
-                D: "rgba(165, 63, 138,0.25)",
+              const gradeFg = {
+                A: "#0A1628",
+                B: "#0A1628",
+                C: "#B8924B",
+                D: "#A53F8A",
               }[vGrade]
               return (
                 <div
-                  className="px-4 py-3 rounded-xl text-center"
-                  style={{ background: gradeBg, backdropFilter: "blur(10px)" }}
+                  className="px-5 py-3 rounded-xl text-center shadow-md"
+                  style={{ background: "#FFFFFF", border: "2px solid #B8924B" }}
                 >
-                  <div className="text-[0.625rem] opacity-80 mb-0.5">AI 투자 등급</div>
-                  <div className="text-3xl font-black leading-none">{vGrade}</div>
-                  <div className="text-[0.6875rem] opacity-90 mt-1 font-bold">
-                    {vScore.toFixed(1)}점
-                    <span className="opacity-75"> · {summary.verdict}</span>
+                  <div className="text-[0.625rem] mb-0.5 font-semibold tracking-wider uppercase" style={{ color: "#0A1628", opacity: 0.7 }}>
+                    {t.aiGrade}
+                  </div>
+                  <div className="text-4xl font-black leading-none" style={{ color: gradeFg }}>
+                    {vGrade}
+                  </div>
+                  <div className="text-[0.6875rem] mt-1.5 font-bold" style={{ color: "#0A1628" }}>
+                    {vScore.toFixed(1)}
+                    <span style={{ opacity: 0.65 }}> · {summary.verdict}</span>
                   </div>
                 </div>
               )
@@ -249,6 +469,20 @@ export default function UnifiedReportPage() {
           )}
         </div>
       </section>
+
+      {/* ── 1Page Summary Viewer 모달 (선택 언어로 번역) ── */}
+      {summaryOpen && (
+        <SummaryViewerModal
+          report={report}
+          lang={lang}
+          onClose={() => setSummaryOpen(false)}
+        />
+      )}
+
+      {/* 1Page Summary 인쇄용 hidden DOM — body.print-summary 일 때만 보임 */}
+      <div className="print-summary-only" aria-hidden="true">
+        <SummaryPrintable report={report} lang={lang} />
+      </div>
 
       {/* ── 등기부 미첨부 경고 ──────────────────────── */}
       {!report.registryAnalysis && (
@@ -372,7 +606,7 @@ export default function UnifiedReportPage() {
       </section>
 
       {/* ── 2. 회수율 3팩터 ─────────────────────────── */}
-      <Section title="회수율 예측 · 3팩터 분석" icon={Activity} caption={`채무자 신용등급 제외 · LTV 40% · 지역 30% · 낙찰가율 30%`}>
+      <Section title={t.recoveryThreeFactor} icon={Activity} caption={`LTV 40% · ${lang === "en" ? "Region" : lang === "ja" ? "地域" : "지역"} 30% · ${lang === "en" ? "Auction" : lang === "ja" ? "落札率" : "낙찰가율"} 30%`}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
           <FactorCard
             rank={1}
@@ -478,9 +712,9 @@ export default function UnifiedReportPage() {
 
       {/* ── 3. AI 리스크 등급 ─────────────────────── */}
       <Section
-        title="AI 리스크 등급"
+        title={t.riskFourFactor}
         icon={Shield}
-        caption={`모델 · ${risk.promptMeta.model} · 해시 ${risk.promptMeta.inputHash}`}
+        caption={t.riskModelCaption}
       >
         <div
           className="rounded-xl p-4 mb-3 border"
@@ -657,10 +891,10 @@ export default function UnifiedReportPage() {
         </div>
       </Section>
 
-      {/* ── 근거 데이터 · 6-tab 네비게이션 ──────────── */}
+      {/* ── 근거 데이터 ──────────── */}
       {profitability && (
         <Section
-          title="근거 데이터 · 탭 네비게이션"
+          title={t.evidenceData}
           icon={Database}
           caption="예상 낙찰가 / 낙찰가율 / 법원 기일 / 낙찰사례 / 실거래 / 배당표"
         >
@@ -675,16 +909,14 @@ export default function UnifiedReportPage() {
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-4 h-4" />
             <span className="text-[0.6875rem] uppercase tracking-wider font-semibold opacity-90">
-              AI 총평
+              {t.aiSummary}
             </span>
           </div>
           <p className="text-[0.875rem] leading-relaxed">{report.executiveSummary}</p>
           <div className="mt-4 flex items-center gap-2 text-[0.6875rem] opacity-80">
-            <span>생성일 · {new Date(report.createdAt).toLocaleString("ko-KR")}</span>
-            <span>•</span>
-            <span>원천 · {report.source}</span>
+            <span>{t.generatedAt} · {new Date(report.createdAt).toLocaleString(lang === "ja" ? "ja-JP" : lang === "en" ? "en-US" : "ko-KR")}</span>
           </div>
-          <PromptToggle report={report} />
+          <PromptToggle report={report} promptLabel={t.promptLabel} />
         </div>
       </section>
     </div>
@@ -969,7 +1201,7 @@ function VerdictCriteriaToggle({
  *   · [리스크] 4-팩터 기준 명시 (가중치 투명 노출)
  *   · [판정 규칙] 종합점수 70 기준을 AI 투자 등급 (A~D) 에 맞춰 85/75/55 3-tier 로 정교화
  */
-function PromptToggle({ report }: { report: UnifiedAnalysisReport }) {
+function PromptToggle({ report, promptLabel }: { report: UnifiedAnalysisReport; promptLabel?: string }) {
   const [open, setOpen] = useState(false)
   const { summary, recovery, risk, marketOutlook, input, profitability } = report
 
@@ -1066,7 +1298,7 @@ function PromptToggle({ report }: { report: UnifiedAnalysisReport }) {
         aria-expanded={open}
       >
         <Sparkles className="w-3 h-3" />
-        생성형 AI 프롬프트
+        {promptLabel ?? "AI 총평 기준 프롬프트"}
         <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
       </button>
       {open && (
@@ -3201,6 +3433,240 @@ function EvidenceCaseTable({
           ))}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
+// 1Page Summary — Viewer Modal + Printable component (Phase G7+)
+//   Viewer: 모달 형태, 선택 언어로 번역된 1페이지 요약 (인쇄 PDF 와 동일 콘텐츠)
+//   Printable: body.print-summary 클래스 활성 시 본문을 가리고 이 컴포넌트만 출력
+// ─────────────────────────────────────────────────────────────
+
+function SummaryViewerModal({
+  report,
+  lang,
+  onClose,
+}: {
+  report: UnifiedAnalysisReport
+  lang: Lang
+  onClose: () => void
+}) {
+  const t = T[lang]
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-2xl shadow-2xl"
+        style={{ backgroundColor: "#FFFFFF" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className="sticky top-0 z-10 flex items-center justify-between px-5 py-3 border-b"
+          style={{ backgroundColor: "#FFFFFF", borderColor: "rgba(10,22,40,0.10)" }}
+        >
+          <div className="flex items-center gap-2">
+            <FileTextIcon className="w-4 h-4" style={{ color: "#0A1628" }} />
+            <span className="text-[0.875rem] font-bold" style={{ color: "#0A1628" }}>
+              {t.summaryViewerTitle}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t.closeViewer}
+            className="p-1.5 rounded-lg hover:bg-stone-100"
+          >
+            <X className="w-4 h-4" style={{ color: "#0A1628" }} />
+          </button>
+        </div>
+        <SummaryPrintable report={report} lang={lang} viewerMode />
+      </div>
+    </div>
+  )
+}
+
+function SummaryPrintable({
+  report,
+  lang,
+  viewerMode = false,
+}: {
+  report: UnifiedAnalysisReport
+  lang: Lang
+  viewerMode?: boolean
+}) {
+  const t = T[lang]
+  const { summary, recovery, risk, profitability, input, executiveSummary } = report
+  const vScore = summary.verdictScore ?? 0
+  const vGrade = verdictScoreToGrade(vScore)
+  const principal = input.claimBreakdown?.principal ?? input.totalBondAmount
+  const unpaidInt = input.claimBreakdown?.unpaidInterest ?? 0
+  const overdueInt = input.claimBreakdown?.overdueInterest ?? 0
+  const totalBond = input.totalBondAmount
+
+  return (
+    <div
+      className={`summary-printable px-8 py-7 ${viewerMode ? "" : "summary-printable-print"}`}
+      style={{ backgroundColor: "#FFFFFF", color: "#0A1628", fontFamily: "var(--font-cjk-sans, system-ui)" }}
+    >
+      {/* Header */}
+      <div
+        className="flex items-start justify-between gap-4 pb-4 mb-4 border-b-2"
+        style={{ borderColor: "#B8924B" }}
+      >
+        <div>
+          <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold mb-1" style={{ color: "#B8924B" }}>
+            NPLATFORM · {t.reportLabel}
+          </div>
+          <h1 className="text-[1.375rem] font-black leading-tight" style={{ color: "#0A1628" }}>
+            {input.assetTitle}
+          </h1>
+          <p className="text-[0.8125rem] mt-1" style={{ color: "rgba(10,22,40,0.70)" }}>
+            {input.region} · {input.propertyCategory} · {t.appraisal} {fmtKRW(input.appraisalValue)}
+          </p>
+        </div>
+        <div
+          className="px-4 py-2.5 rounded-lg text-center shrink-0"
+          style={{ backgroundColor: "#0A1628", color: "#FFFFFF", border: "2px solid #B8924B" }}
+        >
+          <div className="text-[0.5625rem] uppercase tracking-wider opacity-80">{t.aiGrade}</div>
+          <div className="text-[2rem] font-black leading-none mt-0.5">{vGrade}</div>
+          <div className="text-[0.625rem] mt-0.5 font-bold opacity-90">
+            {vScore.toFixed(1)} · {summary.verdict}
+          </div>
+        </div>
+      </div>
+
+      {/* KPI strip */}
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        <SummaryStat label={t.predictedRecovery} value={pct(summary.predictedRecovery)} sub={`${t.summaryConfidence} ${Math.round(recovery.confidence * 100)}%`} />
+        <SummaryStat label={t.riskGrade} value={`${summary.riskGrade} · ${summary.riskScore}`} sub={risk.level} />
+        <SummaryStat
+          label={t.bankSalePrice}
+          value={profitability ? fmtKRW(profitability.acquisition.purchasePrice) : fmtKRW(summary.recommendedBidPrice)}
+          sub={profitability ? `${t.summaryRoi} ${(profitability.investment.roi * 100).toFixed(2)}%` : ""}
+        />
+        <SummaryStat
+          label={t.aiOpinion}
+          value={summary.verdict}
+          sub={summary.verdict === "BUY" ? t.recommend : summary.verdict === "HOLD" ? t.hold : t.avoid}
+          accent
+        />
+      </div>
+
+      {/* 채권잔액 4-컬럼 */}
+      <div className="mb-4">
+        <div className="text-[0.6875rem] font-bold uppercase tracking-wider mb-2" style={{ color: "rgba(10,22,40,0.65)" }}>
+          {t.claimBreakdown}
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          <SummaryAmount label={t.principal} value={fmtKRW(principal)} />
+          <SummaryAmount label={t.unpaidInterest} value={unpaidInt > 0 ? fmtKRW(unpaidInt) : "—"} />
+          <SummaryAmount label={t.overdueInterest} value={overdueInt > 0 ? fmtKRW(overdueInt) : "—"} />
+          <SummaryAmount label={t.totalBond} value={fmtKRW(totalBond)} accent />
+        </div>
+      </div>
+
+      {/* AI 총평 */}
+      <div className="mb-4 p-4 rounded-lg" style={{ backgroundColor: "#0A1628", color: "#FFFFFF" }}>
+        <div className="text-[0.625rem] uppercase tracking-wider opacity-80 font-bold mb-1.5">
+          {t.aiSummary}
+        </div>
+        <p className="text-[0.8125rem] leading-relaxed">{executiveSummary}</p>
+      </div>
+
+      {/* Risk 4-factor mini bars */}
+      <div className="mb-4">
+        <div className="text-[0.6875rem] font-bold uppercase tracking-wider mb-2" style={{ color: "rgba(10,22,40,0.65)" }}>
+          {t.riskFourFactor} · {t.riskModelCaption}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {risk.factors.map((f) => {
+            const score = Math.max(0, Math.min(100, f.score))
+            const barColor = score >= 75 ? "#0A1628" : score >= 50 ? "#B8924B" : "#A53F8A"
+            return (
+              <div
+                key={f.category}
+                className="p-2.5 rounded-lg"
+                style={{ backgroundColor: "rgba(10,22,40,0.04)", border: "1px solid rgba(10,22,40,0.10)" }}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[0.6875rem] font-bold" style={{ color: "#0A1628" }}>
+                    {f.category}
+                  </span>
+                  <span className="text-[0.8125rem] font-black tabular-nums" style={{ color: barColor }}>
+                    {f.score}
+                  </span>
+                </div>
+                <div
+                  className="h-1.5 rounded-full overflow-hidden"
+                  style={{ backgroundColor: "rgba(10,22,40,0.10)" }}
+                >
+                  <div className="h-full" style={{ width: `${score}%`, backgroundColor: barColor }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div
+        className="pt-3 mt-4 flex items-center justify-between text-[0.625rem] border-t"
+        style={{ borderColor: "rgba(10,22,40,0.10)", color: "rgba(10,22,40,0.55)" }}
+      >
+        <span>
+          {t.generatedAt} · {new Date(report.createdAt).toLocaleString(lang === "ja" ? "ja-JP" : lang === "en" ? "en-US" : "ko-KR")}
+        </span>
+        <span style={{ color: "#B8924B", fontWeight: 700 }}>NPLATFORM · TransFarmer Inc.</span>
+      </div>
+    </div>
+  )
+}
+
+function SummaryStat({
+  label,
+  value,
+  sub,
+  accent = false,
+}: {
+  label: string
+  value: string
+  sub?: string
+  accent?: boolean
+}) {
+  return (
+    <div
+      className="p-2.5 rounded-lg"
+      style={{
+        backgroundColor: accent ? "#B8924B" : "rgba(10,22,40,0.04)",
+        color: accent ? "#FFFFFF" : "#0A1628",
+        border: accent ? "none" : "1px solid rgba(10,22,40,0.10)",
+      }}
+    >
+      <div className="text-[0.5625rem] uppercase tracking-wider font-bold opacity-75 mb-0.5">{label}</div>
+      <div className="text-[0.9375rem] font-black tabular-nums leading-tight">{value}</div>
+      {sub && <div className="text-[0.5625rem] mt-0.5 opacity-80">{sub}</div>}
+    </div>
+  )
+}
+
+function SummaryAmount({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div
+      className="text-center p-2 rounded-lg"
+      style={{
+        backgroundColor: accent ? "#0A1628" : "#FFFFFF",
+        color: accent ? "#FFFFFF" : "#0A1628",
+        border: accent ? "2px solid #B8924B" : "1px solid rgba(10,22,40,0.10)",
+      }}
+    >
+      <div className="text-[0.5625rem] uppercase tracking-wider opacity-75 font-bold mb-0.5">{label}</div>
+      <div className="text-[0.875rem] font-black tabular-nums">{value}</div>
     </div>
   )
 }
