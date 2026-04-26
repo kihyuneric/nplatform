@@ -3818,10 +3818,39 @@ button[role="switch"][data-state="unchecked"] {
 }
 
 /* === 카드 안의 모든 텍스트 → ink 검정 + 회색 단계 === */
-/* 일반 텍스트 (h1~h6, p, span, div, label, a) */
-.mck-paper, .mck-paper *,
-.dark .mck-paper, .dark .mck-paper * {
+/* 일반 텍스트 (h1~h6, p, span, div, label, a) — navy/dark 배경 inline-style 박스는 제외 */
+.mck-paper,
+.mck-paper *:not([style*="background-color: #0A1628"]):not([style*="background-color:#0A1628"]):not([style*="background-color: #051C2C"]):not([style*="background-color:#051C2C"]):not([style*="background-color: #1B3A5C"]):not([style*="background-color:#1B3A5C"]):not([style*="background-color: #03050C"]):not([style*="background-color:#03050C"]):not([style*="background:#0A1628"]):not([style*="background: #0A1628"]):not([style*="background:#051C2C"]):not([style*="background: #051C2C"]),
+.dark .mck-paper,
+.dark .mck-paper *:not([style*="background-color: #0A1628"]):not([style*="background-color:#0A1628"]):not([style*="background-color: #051C2C"]):not([style*="background-color:#051C2C"]):not([style*="background-color: #1B3A5C"]):not([style*="background-color:#1B3A5C"]):not([style*="background-color: #03050C"]):not([style*="background-color:#03050C"]):not([style*="background:#0A1628"]):not([style*="background: #0A1628"]):not([style*="background:#051C2C"]):not([style*="background: #051C2C"]) {
   color: #0A1628 !important;
+}
+/* navy/ink/dark 배경 inline-styled 박스(레이어 안 도형) → 흰 글씨 강제 */
+.mck-paper [style*="background-color: #0A1628"],
+.mck-paper [style*="background-color:#0A1628"],
+.mck-paper [style*="background-color: #051C2C"],
+.mck-paper [style*="background-color:#051C2C"],
+.mck-paper [style*="background-color: #1B3A5C"],
+.mck-paper [style*="background-color:#1B3A5C"],
+.mck-paper [style*="background-color: #03050C"],
+.mck-paper [style*="background-color:#03050C"],
+.mck-paper [style*="background:#0A1628"],
+.mck-paper [style*="background: #0A1628"],
+.mck-paper [style*="background:#051C2C"],
+.mck-paper [style*="background: #051C2C"],
+.mck-paper [style*="background-color: #0A1628"] *,
+.mck-paper [style*="background-color:#0A1628"] *,
+.mck-paper [style*="background-color: #051C2C"] *,
+.mck-paper [style*="background-color:#051C2C"] *,
+.mck-paper [style*="background-color: #1B3A5C"] *,
+.mck-paper [style*="background-color:#1B3A5C"] *,
+.mck-paper [style*="background-color: #03050C"] *,
+.mck-paper [style*="background-color:#03050C"] *,
+.mck-paper [style*="background:#0A1628"] *,
+.mck-paper [style*="background: #0A1628"] *,
+.mck-paper [style*="background:#051C2C"] *,
+.mck-paper [style*="background: #051C2C"] * {
+  color: #FFFFFF !important;
 }
 /* 보조 텍스트는 회색 단계 (text-gray-*, text-muted, text-secondary 등) */
 .mck-paper [class*="text-gray-3"], .mck-paper [class*="text-gray-4"], .mck-paper [class*="text-gray-5"],

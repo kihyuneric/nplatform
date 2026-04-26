@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import DS, { formatKRW } from "@/lib/design-system"
+import { maskInstitutionName } from "@/lib/mask"
 import { staggerContainer, staggerItem } from "@/lib/animations"
 import { riskPalette } from "@/lib/design-tokens"
 import { generateProfitabilityPdf } from "@/lib/npl/profitability/pdf-export"
@@ -115,7 +116,7 @@ export default function ProfitabilityResultPage() {
                 </span>
                 <span className={DS.badge.info}>{dealLabel}</span>
               </div>
-              <h1 className={DS.header.title}>{result.input.bond.institutionName} — {result.input.bond.debtorName}</h1>
+              <h1 className={DS.header.title}>{maskInstitutionName(result.input.bond.institutionName)} — {result.input.bond.debtorName}</h1>
               <div className="flex items-center gap-3 mt-1 flex-wrap">
                 {result.input.bond.bondId && (
                   <span className="flex items-center gap-1 text-xs font-mono text-[var(--color-text-tertiary)]">

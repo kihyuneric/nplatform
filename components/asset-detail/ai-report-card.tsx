@@ -223,48 +223,7 @@ export function AiReportCard({
           <CalcLink />
         </div>
 
-        {/* ─── 3-Factor Cards ─── */}
-        <div className="grid gap-3 mt-5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
-          <FactorCard
-            idx={1}
-            weight={40}
-            score={65}
-            label="담보가치 대비 채권비율 (LTV)"
-            mainValue="LTV 77.9%"
-            mainColor={C.ink}
-            bullets={[
-              "감정가 28.00억원",
-              "채권액 21.80억원",
-              "출처 · 공인감정평가서",
-            ]}
-          />
-          <FactorCard
-            idx={2}
-            weight={30}
-            score={54.4}
-            label="지역 시장 동향"
-            mainValue="+1.7%p 모멘텀"
-            mainColor={C.magenta}
-            bullets={[
-              "인근 실거래 5건 / 12M",
-              "거래량 +8.2% · 지수 +3.5%",
-              "출처 · MIXED",
-            ]}
-          />
-          <FactorCard
-            idx={3}
-            weight={30}
-            score={70}
-            label="경매 낙찰가율"
-            mainValue="조정 83.5%"
-            mainColor={C.ink}
-            bullets={[
-              "지역 중앙값 83.8% (SIGUNGU)",
-              "인근 중앙값 83.0%",
-              "특수조건 없음",
-            ]}
-          />
-        </div>
+        {/* ─── 3-Factor Cards 섹션 제거 (2026-04-26 · 사용자 요청) ─── */}
 
         {/* ─── AI 리스크 등급 · 생성형 AI 프롬프트 ─── */}
         <div
@@ -348,7 +307,7 @@ export function AiReportCard({
           <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
             <McKpi label="평균 ROI" value="23.30%" sub="표준편차 5.30%p" valueColor={C.brandBright} />
             <McKpi label="손실 확률 (ROI<0)" value="0.20%" sub="VaR 95% 12.70%" valueColor={C.warning} />
-            <McKpi label="중앙값 (P50)" value="24.30%" sub="10,000회 시뮬" valueColor={C.brandBright} />
+            {/* 중앙값 (P50) 카드 제거 — 2026-04-26 사용자 요청 */}
             <McKpi label="평균 회수 기간" value="338일" sub="연환산 기준 1.08x" valueColor={C.ink} />
           </div>
         </div>
@@ -473,77 +432,8 @@ function KpiCard({
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Sub: FactorCard
+   Sub: FactorCard — 2026-04-26 사용자 요청으로 호출부 제거됨 (정의도 함께 정리)
    ═══════════════════════════════════════════════════════════════════════════ */
-function FactorCard({
-  idx, weight, score, label, mainValue, mainColor, bullets,
-}: {
-  idx: number
-  weight: number
-  score: number
-  label: string
-  mainValue: string
-  mainColor: string
-  bullets: string[]
-}) {
-  return (
-    <article
-      style={{
-        background: C.paper,
-        border: `1px solid ${C.border}`,
-        borderTop: `2px solid ${C.brass}`,
-        padding: 16,
-      }}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <span style={{ fontSize: 10, fontWeight: 700, color: C.brassDark, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-          팩터 {idx} · 가중치 {weight}%
-        </span>
-        <span className="tabular-nums" style={{ fontSize: 22, fontWeight: 800, color: C.ink, letterSpacing: "-0.02em", lineHeight: 1 }}>
-          {score}
-        </span>
-      </div>
-      <div style={{ fontSize: 11, fontWeight: 600, color: C.textSub, marginBottom: 4 }}>
-        {label}
-      </div>
-      <div
-        className="tabular-nums"
-        style={{ fontSize: 16, fontWeight: 800, color: mainColor, letterSpacing: "-0.015em", marginBottom: 8 }}
-      >
-        {mainValue}
-      </div>
-      {/* Bar */}
-      <div
-        style={{
-          height: 4,
-          background: "rgba(10, 22, 40, 0.06)",
-          marginBottom: 10,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            width: `${Math.min(100, score)}%`,
-            height: "100%",
-            background: `linear-gradient(90deg, ${C.brass}, ${C.magenta})`,
-          }}
-        />
-      </div>
-      <ul style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        {bullets.map((b, i) => (
-          <li
-            key={i}
-            style={{ fontSize: 11, color: C.textSub, fontWeight: 500, lineHeight: 1.45 }}
-          >
-            <span style={{ color: C.brassDark, marginRight: 4 }}>·</span>
-            {b}
-          </li>
-        ))}
-      </ul>
-      <div className="mt-3"><CalcLink /></div>
-    </article>
-  )
-}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Sub: ConfidenceBar

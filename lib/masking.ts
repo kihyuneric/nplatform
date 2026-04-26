@@ -4,20 +4,19 @@ export type MaskingType = "partial" | "full" | "range" | "hash"
 export type FieldType = "name" | "phone" | "ssn" | "address" | "amount" | "account" | "creditor"
 
 /**
- * 채권자명 마스킹 (Phase 1-M · Sprint 3 · D5):
- *   앞 3글자를 고정 마스킹 — "신한은행" → "***은행", "우리카드" → "***카드"
- *   3글자 이하는 전체 마스킹 — "ABC" → "***"
+ * 채권자명 마스킹 (Phase 1-M · Sprint 3 · D5 · 2026-04-26 갱신):
+ *   앞 5글자를 'ooooo' 로 고정 마스킹 — "신한은행카드" → "ooooo드", "농협자산관리회사" → "ooooo관리회사"
+ *   5글자 이하는 전체 'ooooo' — "신한은행" → "ooooo"
  *
- * DB 함수 `public.mask_creditor()`와 정확히 동일한 동작.
- * 정책상 이 마스킹은 NDA 체결 여부와 무관하게 공개 목록에서 항상 적용.
+ * 정책: NDA 체결 여부와 무관하게 공개 목록에서 항상 적용.
  * 원본 노출은 SUPER_ADMIN / SELLER 본인 / 채권자 본인만 허용.
  */
 export function maskCreditor(value: string): string {
   if (!value || !value.trim()) return ""
-  const MASK_LEN = 3
+  const PREFIX = "ooooo"
   const len = value.length
-  if (len <= MASK_LEN) return "*".repeat(len)
-  return "*".repeat(MASK_LEN) + value.slice(MASK_LEN)
+  if (len <= PREFIX.length) return PREFIX
+  return PREFIX + value.slice(PREFIX.length)
 }
 
 /**
