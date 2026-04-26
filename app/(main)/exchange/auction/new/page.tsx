@@ -13,7 +13,7 @@
  * (매물명/전용면적/입찰시작일/공개수준/입찰방식/특이사항/동의).
  */
 
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
@@ -28,6 +28,7 @@ import {
   Banknote,
   ClipboardList,
   FileCheck,
+  PackageOpen,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -57,6 +58,7 @@ import {
   OcrSection,
   toAuctionRegisterBody,
 } from "@/components/npl/unified-listing-form"
+import { applyRowToState } from "@/components/npl/unified-listing-form/hydrate"
 
 // ─── Constants ──────────────────────────────────────────────
 
@@ -105,6 +107,22 @@ const INITIAL_EXTRAS: AuctionExtras = {
   confirmTerms: false,
 }
 
+// ─── 기존 매물(매각사 본인 매물) 타입 ──────────────────────
+interface SellerListing {
+  id: string
+  title?: string
+  collateral_type?: string
+  address?: string
+  sido?: string
+  principal_amount?: number
+  claim_amount?: number
+  appraised_value?: number
+  status?: string
+  created_at?: string
+  // hydrate.ts 의 rowToFormPatch 가 받는 추가 필드들
+  [key: string]: unknown
+}
+
 // ─── Helpers ────────────────────────────────────────────────
 
 function formatKRW(amount: number): string {
@@ -135,6 +153,103 @@ export default function BiddingNewPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submittedOk, setSubmittedOk] = useState(false)
   const [errors, setErrors] = useState<Record<string, boolean>>({})
+
+  // ─── 기존 매물(매각사 본인 매물) 불러오기 ──────────────────
+  const [myListings, setMyListings] = useState<SellerListing[]>([])
+  const [loadingListings, setLoadingListings] = useState(false)
+  const [selectedListingId, setSelectedListingId] = useState<string>("")
+  const [importApplied, setImportApplied] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      setLoadingListings(true)
+      try {
+        // seller_id=me → 인증된 사용자 본인의 매물만 반환 (매각사 = 본인 등록 매물)
+        const res = await fetch(
+          "/api/v1/exchange/listings?seller_id=me&limit=50&sort=newest",
+          { cache: "no-store" },
+        )
+        if (!res.ok) return
+        const json = (await res.json()) as { data?: SellerListing[] }
+        if (!cancelled && Array.isArray(json.data)) {
+          setMyListings(json.data)
+        }
+      } catch {
+        /* best-effort: 무시 */
+      } finally {
+        if (!cancelled) setLoadingListings(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const handleImportListing = useCallback(
+    async (listingId: string) => {
+      setSelectedListingId(listingId)
+      if (!listingId) return
+
+      // 1) 목록 응답에 이미 들은 row 사용
+      let row = myListings.find((l) => l.id === listingId) as
+        | SellerListing
+        | undefined
+
+      // 2) 상세 API 로 보강 (특수조건/임차/권리 등은 상세에만 있을 수 있음)
+      try {
+        const res = await fetch(
+          `/api/v1/exchange/listings/${listingId}`,
+          { cache: "no-store" },
+        )
+        if (res.ok) {
+          const json = (await res.json()) as { data?: SellerListing }
+          if (json.data) row = { ...row, ...json.data }
+        }
+      } catch {
+        /* 상세 호출 실패 시 목록 row 만으로 진행 */
+      }
+
+      if (!row) {
+        toast.error("선택한 매물 정보를 불러오지 못했습니다.")
+        return
+      }
+
+      // 3) UnifiedFormState 에 적용
+      // hydrate.ts 는 느슨한 dispatch 시그니처를 사용 — 캐스트하여 호출
+      applyRowToState(
+        row as Record<string, unknown>,
+        dispatch as unknown as (action: {
+          type: string
+          [k: string]: unknown
+        }) => void,
+      )
+
+      // 4) auction-extras (UnifiedFormState 에 없는 필드) 보강
+      setExtras((prev) => ({
+        ...prev,
+        name: typeof row?.title === "string" ? row.title : prev.name,
+        area:
+          typeof row?.area_sqm === "number"
+            ? String(row.area_sqm)
+            : typeof row?.area === "number"
+              ? String(row.area)
+              : prev.area,
+      }))
+
+      setImportApplied(true)
+      setErrors({})
+      toast.success("기존 매물 정보를 불러왔습니다. 입찰 조건만 추가 입력하세요.")
+    },
+    [myListings, dispatch],
+  )
+
+  const handleClearImport = useCallback(() => {
+    setSelectedListingId("")
+    setImportApplied(false)
+    // 폼 자체를 초기화하지는 않음 — 사용자가 직접 수정 가능하도록
+    toast.info("불러오기 연결을 해제했습니다. 폼 내용은 그대로 유지됩니다.")
+  }, [])
 
   // ─── Field updaters ───────────────────────────────────────
 
@@ -321,6 +436,103 @@ export default function BiddingNewPage() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
+        {/* ── 기존 매물 불러오기 (매각사 본인 매물 한정) ───────── */}
+        <div
+          className="rounded-lg border-2 border-dashed p-4"
+          style={{
+            borderColor: importApplied ? "#10B981" : "#D6D3D1",
+            backgroundColor: importApplied ? "#ECFDF5" : "#FAFAF9",
+          }}
+        >
+          <div className="flex items-start gap-2 mb-3">
+            <PackageOpen
+              className="h-5 w-5 mt-0.5 shrink-0"
+              style={{ color: importApplied ? "#10B981" : "#1B3A5C" }}
+            />
+            <div className="flex-1">
+              <div className="text-sm font-bold text-[var(--color-brand-dark)]">
+                기존 매물에서 불러오기
+                <span className="ml-2 text-xs font-medium text-[var(--color-text-muted)]">
+                  (매각사 본인 매물 한정)
+                </span>
+              </div>
+              <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                이미 등록한 매물 정보를 자동으로 채워 입찰 조건만 추가합니다.
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Select
+              value={selectedListingId}
+              onValueChange={handleImportListing}
+              disabled={loadingListings || myListings.length === 0}
+            >
+              <SelectTrigger className="flex-1 bg-white">
+                <SelectValue
+                  placeholder={
+                    loadingListings
+                      ? "내 매물 불러오는 중…"
+                      : myListings.length === 0
+                        ? "등록된 매물이 없습니다"
+                        : "내 매물에서 선택…"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {myListings.map((l) => {
+                  const principal =
+                    l.principal_amount ?? l.claim_amount ?? 0
+                  return (
+                    <SelectItem key={l.id} value={l.id}>
+                      <span className="flex flex-col items-start text-left">
+                        <span className="text-sm font-medium">
+                          {l.title || `매물 ${l.id.slice(0, 8)}`}
+                        </span>
+                        <span className="text-xs text-[var(--color-text-muted)]">
+                          {[
+                            l.collateral_type,
+                            l.sido,
+                            principal
+                              ? `원금 ${formatKRW(principal)}`
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </span>
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
+
+            {importApplied && (
+              <button
+                type="button"
+                onClick={handleClearImport}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md border border-[var(--color-border-subtle)] bg-white text-[var(--color-text-secondary)] hover:bg-stone-50 transition-colors"
+              >
+                <Check className="h-3.5 w-3.5" />
+                불러옴 — 해제
+              </button>
+            )}
+          </div>
+
+          {!loadingListings && myListings.length === 0 && (
+            <div className="mt-2 text-xs text-[var(--color-text-muted)]">
+              본인 명의로 등록된 매물이 없습니다. 먼저{" "}
+              <Link
+                href="/exchange/sell"
+                className="underline text-[var(--color-brand-dark)] font-medium"
+              >
+                매물 등록
+              </Link>
+              을 진행해 주세요.
+            </div>
+          )}
+        </div>
+
         {/* 매물명 */}
         <div>
           <Label className="text-sm font-semibold">
