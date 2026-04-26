@@ -131,12 +131,13 @@ const INST_FILTER: { value: string; label: string }[] = [
   ...Object.values(SELLER_INSTITUTIONS).map((l) => ({ value: l, label: l })),
 ]
 
-// Risk grade tone map
-const RISK_TONE: Record<string, "positive" | "blue" | "warning" | "danger"> = {
-  A: "positive",
-  B: "blue",
-  C: "warning",
-  D: "danger",
+// Risk grade tone map (McKinsey monochromatic — 색을 적게 사용)
+// A = ink (가장 강조 · 가장 안정) · B = blue (electric soft) · C = neutral outline · D = warning (회갈색 차분)
+const RISK_TONE: Record<string, "positive" | "blue" | "warning" | "danger" | "neutral"> = {
+  A: "blue",       // McKinsey Electric Blue tint
+  B: "neutral",    // light grey outline
+  C: "warning",    // 차분한 amber (이미 채도 낮음)
+  D: "danger",     // 차분한 brick (이미 채도 낮음)
 }
 
 // ─── BidDialog (McKinsey 화이트 페이퍼 모달) ─────────────────────────────────
@@ -455,7 +456,10 @@ function BidCard({ item, onBid }: { item: BidItem; onBid: (item: BidItem) => voi
   const ddayNum = parseInt(dday.replace("D-", ""), 10)
   const ddayUrgent = ddayNum <= 1
   const isUrgent = item.status === "마감임박"
-  const bidRatePct = ((item.minimumBid / item.principal) * 100).toFixed(1)
+  const bidRateRaw = (item.minimumBid / item.principal) * 100
+  // 진행 바는 100% 상한 · 표기 숫자도 100% 상한 (실제 비율이 100%를 넘어도 시각적 100%)
+  const bidRatePct = Math.min(100, bidRateRaw).toFixed(1)
+  const bidRateBar = Math.min(100, bidRateRaw)
   const riskTone = RISK_TONE[item.riskGrade] ?? "warning"
 
   return (
@@ -463,7 +467,8 @@ function BidCard({ item, onBid }: { item: BidItem; onBid: (item: BidItem) => voi
       style={{
         background: MCK.paper,
         border: `1px solid ${MCK.border}`,
-        borderTop: `2px solid ${isUrgent ? MCK.danger : MCK.brass}`,
+        // McKinsey 톤 — urgent 도 monochromatic ink (더 이상 빨강 X · electric으로 강조)
+        borderTop: `2px solid ${isUrgent ? MCK.ink : MCK.electric}`,
         padding: 20,
         display: "flex",
         flexDirection: "column",
@@ -477,15 +482,40 @@ function BidCard({ item, onBid }: { item: BidItem; onBid: (item: BidItem) => voi
         e.currentTarget.style.boxShadow = "none"
       }}
     >
-      {/* Badges row */}
+      {/* Badges row — 모두 McKinsey monochromatic outline (색 최소화) */}
       <div className="flex items-center" style={{ gap: 6, flexWrap: "wrap" }}>
         <MckBadge tone={riskTone} size="sm">{`등급 ${item.riskGrade}`}</MckBadge>
         <MckBadge tone="neutral" size="sm" outlined>{item.collateralType}</MckBadge>
         <span style={{ marginLeft: "auto" }}>
           {isUrgent ? (
-            <MckBadge tone="danger" size="sm">마감임박</MckBadge>
+            // 마감임박 — ink 검정 + 흰 글씨 (강조 but 색 X)
+            <span
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "3px 8px",
+                background: MCK.ink, color: MCK.paper,
+                fontSize: 10, fontWeight: 800,
+                letterSpacing: "0.06em", textTransform: "uppercase",
+                border: `1px solid ${MCK.ink}`,
+              }}
+            >
+              <Timer size={10} /> 마감임박
+            </span>
           ) : (
-            <MckBadge tone="positive" size="sm">진행중</MckBadge>
+            // 진행중 — Electric Blue outline + electricDark 글씨 (옅은 강조)
+            <span
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "3px 8px",
+                background: "rgba(34, 81, 255, 0.10)",
+                color: "#1A47CC",
+                fontSize: 10, fontWeight: 800,
+                letterSpacing: "0.06em", textTransform: "uppercase",
+                border: "1px solid rgba(34, 81, 255, 0.35)",
+              }}
+            >
+              진행중
+            </span>
           )}
         </span>
       </div>
@@ -523,39 +553,39 @@ function BidCard({ item, onBid }: { item: BidItem; onBid: (item: BidItem) => voi
         </div>
       </div>
 
-      {/* Metrics 3-col table */}
+      {/* Metrics 3-col panel — McKinsey Deep Navy + Electric top accent + 흰 Georgia 16px + Cyan 강조 */}
       <div
         style={{
+          background: MCK.inkDeep,                          /* #051C2C */
+          borderTop: `3px solid ${MCK.electric}`,           /* electric blue accent strip */
           display: "grid",
           gridTemplateColumns: "1fr 1fr 1fr",
-          border: `1px solid ${MCK.border}`,
-          background: MCK.paperTint,
         }}
       >
-        <div style={{ padding: "10px 12px", borderRight: `1px solid ${MCK.border}` }}>
-          <p style={{ ...MCK_TYPE.label, color: MCK.textMuted, marginBottom: 3 }}>채권원금</p>
-          <p style={{ fontFamily: MCK_FONTS.serif, fontSize: 14, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>
+        <div style={{ padding: "12px 14px", borderRight: "1px solid rgba(255, 255, 255, 0.12)" }}>
+          <p style={{ ...MCK_TYPE.label, color: "rgba(255, 255, 255, 0.65)", marginBottom: 4 }}>채권원금</p>
+          <p style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.paper, letterSpacing: "-0.015em", lineHeight: 1.05, fontVariantNumeric: "tabular-nums" }}>
             {formatKRW(item.principal)}
           </p>
         </div>
-        <div style={{ padding: "10px 12px", borderRight: `1px solid ${MCK.border}` }}>
-          <p style={{ ...MCK_TYPE.label, color: MCK.textMuted, marginBottom: 3 }}>최저입찰가</p>
-          <p style={{ fontFamily: MCK_FONTS.serif, fontSize: 14, fontWeight: 800, color: MCK.blue, fontVariantNumeric: "tabular-nums" }}>
+        <div style={{ padding: "12px 14px", borderRight: "1px solid rgba(255, 255, 255, 0.12)" }}>
+          <p style={{ ...MCK_TYPE.label, color: "rgba(255, 255, 255, 0.65)", marginBottom: 4 }}>최저입찰가</p>
+          <p style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.paper, letterSpacing: "-0.015em", lineHeight: 1.05, fontVariantNumeric: "tabular-nums" }}>
             {formatKRW(item.minimumBid)}
           </p>
         </div>
-        <div style={{ padding: "10px 12px" }}>
-          <p style={{ ...MCK_TYPE.label, color: MCK.textMuted, marginBottom: 3, display: "inline-flex", alignItems: "center", gap: 3 }}>
-            <Sparkles size={9} style={{ color: MCK.brassDark }} />
+        <div style={{ padding: "12px 14px" }}>
+          <p style={{ ...MCK_TYPE.label, color: MCK.cyan, marginBottom: 4, display: "inline-flex", alignItems: "center", gap: 3 }}>
+            <Sparkles size={9} style={{ color: MCK.cyan }} />
             AI예가
           </p>
-          <p style={{ fontFamily: MCK_FONTS.serif, fontSize: 14, fontWeight: 800, color: MCK.brassDark, fontVariantNumeric: "tabular-nums" }}>
+          <p style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.cyan, letterSpacing: "-0.015em", lineHeight: 1.05, fontVariantNumeric: "tabular-nums" }}>
             {formatKRW(item.aiEstimate)}
           </p>
         </div>
       </div>
 
-      {/* Progress bar */}
+      {/* Progress bar — 100% 상한 (시각적/숫자 모두) */}
       <div>
         <div className="flex items-center justify-between" style={{ marginBottom: 4 }}>
           <span style={{ ...MCK_TYPE.label, color: MCK.textMuted }}>최저입찰 비율</span>
@@ -570,8 +600,8 @@ function BidCard({ item, onBid }: { item: BidItem; onBid: (item: BidItem) => voi
               top: 0,
               left: 0,
               height: "100%",
-              width: `${bidRatePct}%`,
-              background: MCK.brass,
+              width: `${bidRateBar}%`,
+              background: MCK.electric,
             }}
           />
         </div>
@@ -981,11 +1011,12 @@ export default function AuctionPage() {
         }
       />
 
-      {/* KPI strip */}
+      {/* KPI strip — DARK variant 매물 탐색 대시보드와 동일 톤 */}
       <section className="max-w-[1280px] mx-auto" style={{ padding: "32px 24px 8px" }}>
         <MckKpiGrid
+          variant="dark"
           items={[
-            { label: "Total Listings", value: `${bids.length}건`, hint: "전체 입찰", accent: true },
+            { label: "Total Listings", value: `${bids.length}건`, hint: "전체 입찰" },
             { label: "Active", value: `${activeBids}건`, hint: "진행중" },
             { label: "Closing Soon", value: `${urgentBids}건`, hint: "마감 임박", delta: urgentBids > 0 ? { value: "주의", positive: false } : undefined },
             { label: "Avg. Win Rate", value: `${avgBidRate.toFixed(1)}%`, hint: "낙찰가율 (vs 원금)" },
@@ -1118,8 +1149,8 @@ export default function AuctionPage() {
                   padding: "2px 6px",
                   fontSize: 9,
                   fontWeight: 800,
-                  background: MCK.brass,
-                  color: MCK.ink,
+                  background: MCK.electric,
+                  color: MCK.paper,                /* 코발트 위 흰 글씨 */
                   letterSpacing: "0.04em",
                 }}
               >
@@ -1152,7 +1183,7 @@ export default function AuctionPage() {
               })}
             </div>
 
-            {/* Major chips */}
+            {/* Major chips — active 시 electric blue + 흰 글씨 (가독성) */}
             <div className="flex items-center" style={{ gap: 4, flexWrap: "wrap" }}>
               {COLLATERAL_MAJOR_FILTER.map((c) => {
                 const active = collateral === c.value
@@ -1164,9 +1195,9 @@ export default function AuctionPage() {
                       padding: "6px 12px",
                       fontSize: 12,
                       fontWeight: 700,
-                      background: active ? MCK.brass : MCK.paper,
-                      color: active ? MCK.ink : MCK.textSub,
-                      border: `1px solid ${active ? MCK.brass : MCK.border}`,
+                      background: active ? MCK.electric : MCK.paper,
+                      color: active ? MCK.paper : MCK.textSub,
+                      border: `1px solid ${active ? MCK.electric : MCK.border}`,
                       cursor: "pointer",
                       letterSpacing: "0.01em",
                     }}
@@ -1203,8 +1234,8 @@ export default function AuctionPage() {
                     minWidth: 18,
                     height: 16,
                     padding: "0 4px",
-                    background: MCK.brass,
-                    color: MCK.ink,
+                    background: MCK.electric,
+                    color: MCK.paper,
                     fontSize: 10,
                     fontWeight: 800,
                     display: "inline-flex",
