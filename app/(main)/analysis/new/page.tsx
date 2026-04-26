@@ -103,6 +103,14 @@ export default function NewNplAnalysisPage() {
         .join(" ")
         .trim()
 
+      // Phase G7+ 다수 주소(포트폴리오·복합 담보) — 동일 직렬화 규칙 적용
+      const additionalAddressStrs: string[] = (state.additionalAddresses ?? [])
+        .map((addr) => {
+          const region = addr.sido ? getRegionLabel(addr.sido) : ""
+          return [region, addr.sigungu, addr.detail].filter(Boolean).join(" ").trim()
+        })
+        .filter((s) => s.length > 0)
+
       const collateralLabel = state.collateral
         ? getCollateralLabel(state.collateral)
         : "아파트"
@@ -118,6 +126,7 @@ export default function NewNplAnalysisPage() {
         rightsSummary: state.rights,
         leaseSummary: state.lease,
         address: addressStr,
+        additionalAddresses: additionalAddressStrs,
         collateralType: collateralLabel,
         bondNumber,
         caseNumber,

@@ -431,6 +431,23 @@ export default function UnifiedReportPage() {
               <p className="text-[0.8125rem] opacity-90 mt-0.5">
                 {input.region} · {input.propertyCategory} · {t.appraisal} {fmtKRW(input.appraisalValue)}
               </p>
+              {/* Phase G7+ 다수 주소 — 포트폴리오·복합 담보 시 추가 주소 행 노출 */}
+              {(input.additionalAddresses?.length ?? 0) > 0 && (
+                <details className="mt-1.5 group">
+                  <summary className="text-[0.6875rem] opacity-90 cursor-pointer select-none inline-flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    <span className="font-semibold">
+                      포트폴리오 {(input.additionalAddresses?.length ?? 0) + 1}건
+                    </span>
+                    <span className="opacity-70">— 추가 주소 {input.additionalAddresses?.length ?? 0}건 보기</span>
+                  </summary>
+                  <ul className="mt-1 ml-4 list-disc text-[0.6875rem] opacity-90 space-y-0.5">
+                    {(input.additionalAddresses ?? []).map((addr, idx) => (
+                      <li key={`hdr-extra-${idx}`}>{addr}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
             </div>
             {/* AI 투자 등급 카드 — 백색 배경 · 가시성 우선 (Phase G7+ v2) */}
             {(() => {
@@ -1243,6 +1260,12 @@ function PromptToggle({ report, promptLabel }: { report: UnifiedAnalysisReport; 
     `## [입력 1] 물건 개요`,
     `  - 자산        : ${input.assetTitle}`,
     `  - 지역        : ${input.region}`,
+    ...((input.additionalAddresses?.length ?? 0) > 0
+      ? [
+          `  - 포트폴리오  : ${(input.additionalAddresses?.length ?? 0) + 1}건 (주 + 추가 ${input.additionalAddresses?.length ?? 0}건)`,
+          ...(input.additionalAddresses ?? []).map((addr, idx) => `    · 추가${idx + 1}: ${addr}`),
+        ]
+      : []),
     `  - 유형        : ${input.propertyCategory}`,
     `  - 감정가      : ${fmtKRW(input.appraisalValue)}`,
     `  - 채권액      : ${fmtKRW(input.totalBondAmount)}`,
@@ -2115,6 +2138,8 @@ function ProfitabilitySections({
       const block = buildNplProfitability({
         property: {
           address: initial.property.address,
+          // Phase G7+ 다수 주소(포트폴리오·복합 담보) — 재계산 시 보존
+          additionalAddresses: initial.property.additionalAddresses ?? [],
           exclusiveAreaM2: initial.property.exclusiveAreaM2,
           supplyAreaM2: initial.property.supplyAreaM2,
           creditor: initial.property.creditor,
@@ -2181,11 +2206,33 @@ function ProfitabilitySections({
   return (
     <>
       {/* ── [1] 물권내역 ─────────────────────────── */}
-      <Section title="NPL 수익성 분석 · 물권내역" icon={Building2} caption="소재지·면적·채권/채무·임차 상태 (개인정보 마스킹)">
+      <Section
+        title="NPL 수익성 분석 · 물권내역"
+        icon={Building2}
+        caption={
+          (property.additionalAddresses?.length ?? 0) > 0
+            ? `포트폴리오·복합 담보 (${1 + (property.additionalAddresses?.length ?? 0)}건) · 소재지·면적·채권/채무·임차 상태`
+            : "소재지·면적·채권/채무·임차 상태 (개인정보 마스킹)"
+        }
+      >
         <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
           <table className="w-full text-[0.75rem]">
             <tbody>
-              <KvRow k="소재지" v={property.address} />
+              {/* 다수 주소 — 주 주소 1건 + 추가 주소 N건. 단일 물권이면 라벨은 "소재지" 만 표시. */}
+              {(property.additionalAddresses?.length ?? 0) === 0 ? (
+                <KvRow k="소재지" v={property.address} />
+              ) : (
+                <>
+                  <KvRow k="소재지 (주)" v={property.address} />
+                  {(property.additionalAddresses ?? []).map((addr, idx) => (
+                    <KvRow
+                      key={`addr-extra-${idx}`}
+                      k={`소재지 (추가 ${idx + 1})`}
+                      v={addr}
+                    />
+                  ))}
+                </>
+              )}
               <KvRow k="전용면적" v={`${property.exclusiveAreaM2.toFixed(2)} ㎡ (${property.exclusiveAreaPy.toFixed(2)} 평)`} />
               <KvRow k="공급면적" v={`${property.supplyAreaM2.toFixed(2)} ㎡ (${property.supplyAreaPy.toFixed(2)} 평)`} />
               <KvRow k="채권자" v={maskFirst5(property.creditor)} />
@@ -3528,6 +3575,14 @@ function SummaryPrintable({
           <p className="text-[0.8125rem] mt-1" style={{ color: "rgba(10,22,40,0.70)" }}>
             {input.region} · {input.propertyCategory} · {t.appraisal} {fmtKRW(input.appraisalValue)}
           </p>
+          {/* Phase G7+ 다수 주소 — 1Page Summary 헤더 추가 주소 인라인 표기 (인쇄 호환 · details 미사용) */}
+          {(input.additionalAddresses?.length ?? 0) > 0 && (
+            <p className="text-[0.6875rem] mt-1" style={{ color: "rgba(10,22,40,0.65)" }}>
+              포트폴리오 {(input.additionalAddresses?.length ?? 0) + 1}건 · 추가:{" "}
+              {(input.additionalAddresses ?? []).slice(0, 3).join(" · ")}
+              {(input.additionalAddresses?.length ?? 0) > 3 ? ` 외 ${(input.additionalAddresses?.length ?? 0) - 3}건` : ""}
+            </p>
+          )}
         </div>
         <div
           className="px-4 py-2.5 rounded-lg text-center shrink-0"

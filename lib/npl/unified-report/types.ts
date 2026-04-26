@@ -789,6 +789,12 @@ export interface UnifiedReportInput {
   assetId?: string
   assetTitle: string              // 표시용 (예: "강남 역삼동 아파트 · 하나은행")
   region: string
+  /**
+   * 추가 주소 (포트폴리오·복합 담보) — 주 주소(`region`/`assetTitle`) 외 부동산 목록.
+   * 빈 배열이면 단일 물권. UI 는 length>0 일 때만 "포트폴리오 N건" 배지·서브 행을 노출.
+   * (Phase G7+ 2026-04-26 · supabase migration 025)
+   */
+  additionalAddresses?: string[]
   propertyType: string
   propertyCategory: PropertyCategory
   appraisalValue: number          // 감정가 (원)

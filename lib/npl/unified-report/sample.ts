@@ -587,6 +587,12 @@ export interface BuildReportFromInputOptions {
   rightsSummary?: RightsSummary
   leaseSummary?: LeaseSummary
   address?: string
+  /**
+   * 추가 주소 (포트폴리오·복합 담보) — 주 주소 외 부동산 목록.
+   * 각 항목은 "시·도 시·군·구 상세" 형태의 한글 주소 문자열.
+   * (Phase G7+ 2026-04-26 · supabase migration 025)
+   */
+  additionalAddresses?: string[]
   collateralType?: string
   bondNumber?: string
   caseNumber?: string
@@ -631,10 +637,23 @@ export function buildReportFromInput(overrides: BuildReportFromInputOptions): Un
       ? `${addressParts.slice(0, 3).join(' ')} ${rawType} NPL`
       : `NPL 분석 · ${rawType}`
 
+  // 추가 주소 정규화 — 빈 문자열 제거 + 중복 제거 + 주 주소와 동일한 항목 제거
+  const normalizedExtraAddresses: string[] = (overrides.additionalAddresses ?? [])
+    .map(a => (typeof a === 'string' ? a.trim() : ''))
+    .filter(a => a.length > 0 && a !== (overrides.address ?? '').trim())
+    .filter((a, i, arr) => arr.indexOf(a) === i)
+
+  // 포트폴리오 자산 제목 — 추가 주소 N건 있으면 배지 부착
+  const portfolioAssetTitle =
+    normalizedExtraAddresses.length > 0
+      ? `${assetTitle} · 포트폴리오 ${normalizedExtraAddresses.length + 1}건`
+      : assetTitle
+
   const input: UnifiedReportInput = {
     assetId: `user-${Date.now().toString(36)}`,
-    assetTitle,
+    assetTitle: portfolioAssetTitle,
     region: regionLabel,
+    additionalAddresses: normalizedExtraAddresses,
     propertyType: rawType,
     propertyCategory,
     appraisalValue: appraisal,

@@ -25,6 +25,12 @@ import { getDefaultMarginLtv } from './risk-factors'
 // ─── [1] 물권내역 ────────────────────────────────────────────
 export interface PropertyBasicInfo {
   address: string
+  /**
+   * 추가 주소 (포트폴리오·복합 담보) — 주 주소 외 부동산 목록.
+   * 빈 배열이면 단일 물권. UI 는 비어있지 않을 때만 "추가 주소 N건" 행을 노출.
+   * (Phase G7+ 2026-04-26 · supabase migration 025)
+   */
+  additionalAddresses?: string[]
   /** 전용면적 (㎡) */
   exclusiveAreaM2: number
   /** 전용면적 (평) = m2 × 0.3025 */
@@ -549,6 +555,10 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   // ─── [1] 물권 ─────────────────────────────────────────────
   const property: PropertyBasicInfo = {
     ...input.property,
+    // 추가 주소 (포트폴리오·복합 담보) 정규화 — undefined → 빈 배열
+    additionalAddresses: Array.isArray(input.property.additionalAddresses)
+      ? input.property.additionalAddresses.filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
+      : [],
     exclusiveAreaPy: Math.round(input.property.exclusiveAreaM2 * M2_TO_PY * 100) / 100,
     supplyAreaPy: Math.round(input.property.supplyAreaM2 * M2_TO_PY * 100) / 100,
   }
