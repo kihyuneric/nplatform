@@ -9,7 +9,7 @@ import {
   Calendar, Banknote, CheckCircle2, Shield, Eye, Timer,
   ArrowRight, Award, BarChart3, Sparkles, ChevronRight,
   AlertTriangle, Filter, X, FileText, Users, Heart,
-  Activity, Zap, TrendingDown, ChevronDown, Loader2,
+  Activity, Zap, TrendingDown, ChevronDown, Loader2, Plus,
 } from "lucide-react"
 import { formatTimeLeft, formatMinBidRatio, REGION_SHORT_LIST, SELLER_INSTITUTIONS } from "@/lib/taxonomy"
 import { maskInstitutionName } from "@/lib/mask"
@@ -872,26 +872,49 @@ export default function AuctionPage() {
             animate={heroInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5 }}
           >
-            <div className="flex items-center gap-2 mb-4">
-              <div
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full"
-                style={{ backgroundColor: `${C.em}20`, border: `1px solid ${C.em}40` }}
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: C.em }} />
-                  <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: C.em }} />
-                </span>
-                <span className="text-[0.6875rem] font-black uppercase tracking-widest" style={{ color: C.em }}>LIVE</span>
-              </div>
-              <span className="text-[0.75rem]" style={{ color: C.fghm }}>실시간 자발적 경매 현황</span>
-            </div>
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <div
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full"
+                    style={{ backgroundColor: `${C.em}20`, border: `1px solid ${C.em}40` }}
+                  >
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: C.em }} />
+                      <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: C.em }} />
+                    </span>
+                    <span className="text-[0.6875rem] font-black uppercase tracking-widest" style={{ color: C.em }}>LIVE</span>
+                  </div>
+                  <span className="text-[0.75rem]" style={{ color: C.fghm }}>실시간 자발적 경매 현황</span>
+                </div>
 
-            <h1 className="text-[2.5rem] sm:text-[3rem] font-black tracking-tight leading-none mb-3" style={{ color: C.fgh }}>
-              자발적 경매
-            </h1>
-            <p className="text-[1rem] max-w-xl mb-8" style={{ color: C.fghd }}>
-              금융기관이 등록한 매물에 자발적 경매로 참여하세요. AI가 적정 입찰가를 실시간으로 분석합니다.
-            </p>
+                <h1 className="text-[2.5rem] sm:text-[3rem] font-black tracking-tight leading-none mb-3" style={{ color: C.fgh }}>
+                  자발적 경매
+                </h1>
+                <p className="text-[1rem] max-w-xl mb-8" style={{ color: C.fghd }}>
+                  금융기관이 등록한 매물에 자발적 경매로 참여하세요. AI가 적정 입찰가를 실시간으로 분석합니다.
+                </p>
+              </div>
+
+              {/* ── 자발적 경매 등록 CTA (매도자 진입점) ─────────────── */}
+              <Link
+                href="/exchange/auction/new"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl transition-all hover:opacity-90 mt-2 shadow-lg shrink-0"
+                style={{
+                  backgroundColor: C.em,
+                  color: C.onBrand,
+                  fontSize: "0.9375rem",
+                  fontWeight: 800,
+                  letterSpacing: "-0.01em",
+                  textDecoration: "none",
+                  boxShadow: `0 8px 24px ${C.em}40`,
+                }}
+              >
+                <Plus className="w-4 h-4" />
+                자발적 경매 등록
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </motion.div>
 
           {/* KPI strip */}
