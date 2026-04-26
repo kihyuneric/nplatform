@@ -102,6 +102,7 @@ export function makeInitialState(mode: FormMode): UnifiedFormState {
 
     askingPrice: 0,
     collateralAmount: 0,
+    maximumBondAmount: 0,
 
     specialConditions: { ...emptySpecialConditions },
     specialConditionKeys: [],

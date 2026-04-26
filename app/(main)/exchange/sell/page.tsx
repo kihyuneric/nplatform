@@ -390,7 +390,7 @@ export default function SellWizardPage() {
             매수자 매칭률이 높아집니다. 모든 개인정보는 자동 마스킹 파이프라인으로 처리됩니다.
           </p>
 
-          <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <Link
               href="/exchange/ocr-register"
               style={{
@@ -400,19 +400,19 @@ export default function SellWizardPage() {
                 color: "var(--color-text-primary)", fontSize: 12, fontWeight: 700, textDecoration: "none",
               }}
             >
-              <Sparkles size={12} /> OCR로 1~5건 빠르게 등록 →
+              <Sparkles size={12} /> OCR·엑셀 템플릿으로 빠르게 등록 →
             </Link>
-            <Link
-              href="/exchange/bulk-upload"
+            <span
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "8px 14px", borderRadius: 10,
-                background: "rgba(5, 28, 44,0.12)", border: "1px solid rgba(5, 28, 44,0.3)",
-                color: "var(--color-text-primary)", fontSize: 12, fontWeight: 700, textDecoration: "none",
+                background: "rgba(255,255,255,0.04)", border: "1px dashed rgba(5, 28, 44,0.3)",
+                color: C.lt4, fontSize: 11, fontWeight: 600,
               }}
+              title="대량 등록 일시 중단"
             >
-              CSV 대량 등록 (최대 500건) →
-            </Link>
+              📞 대량 등록은 NPLATFORM 고객센터(02-555-2822) 문의 바랍니다
+            </span>
           </div>
 
           <div style={{ marginTop: 28, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
@@ -532,10 +532,10 @@ export default function SellWizardPage() {
                   disabled={!canProceed}
                   style={{
                     padding: "11px 20px", borderRadius: 10,
-                    backgroundColor: canProceed ? C.em : C.bg4,
-                    color: canProceed ? "#041915" : C.lt4,
+                    backgroundColor: canProceed ? "#0A1628" : C.bg4,
+                    color: canProceed ? "#FFFFFF" : C.lt4,
                     fontSize: 12, fontWeight: 800,
-                    border: "none",
+                    border: canProceed ? "1px solid #0A1628" : "none",
                     cursor: canProceed ? "pointer" : "not-allowed",
                     display: "inline-flex", alignItems: "center", gap: 6,
                   }}
@@ -554,9 +554,10 @@ export default function SellWizardPage() {
                     disabled={submitting}
                     style={{
                       padding: "11px 22px", borderRadius: 10,
-                      backgroundColor: submitting ? C.bg4 : C.em,
-                      color: submitting ? C.lt4 : "#041915",
-                      fontSize: 12, fontWeight: 800, border: "none",
+                      backgroundColor: submitting ? C.bg4 : "#0A1628",
+                      color: submitting ? C.lt4 : "#FFFFFF",
+                      fontSize: 12, fontWeight: 800,
+                      border: submitting ? "none" : "1px solid #0A1628",
                       cursor: submitting ? "not-allowed" : "pointer",
                       display: "inline-flex", alignItems: "center", gap: 6,
                     }}
@@ -1493,13 +1494,13 @@ function Step5Docs({
                 <div
                   style={{
                     width: 18, height: 18, borderRadius: 4,
-                    backgroundColor: checked ? C.em : "transparent",
-                    border: `1px solid ${checked ? C.em : C.bg4}`,
+                    backgroundColor: checked ? "#0A1628" : "transparent",
+                    border: `1px solid ${checked ? "#0A1628" : C.bg4}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     flexShrink: 0,
                   }}
                 >
-                  {checked && <Check size={12} color="#041915" />}
+                  {checked && <Check size={12} color="#FFFFFF" />}
                 </div>
               </button>
 
@@ -2028,18 +2029,18 @@ function SubmittedScreen({ completeness }: { completeness: number }) {
           </Link>
         </div>
         <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 16, flexWrap: "wrap" }}>
-          <Link
-            href="/exchange/bulk-upload"
+          <span
             style={{
               padding: "9px 16px", borderRadius: 8,
-              backgroundColor: "transparent", color: C.lt3,
-              fontSize: 11, fontWeight: 600, textDecoration: "none",
-              border: `1px solid ${C.bg4}`,
+              backgroundColor: "transparent", color: C.lt4,
+              fontSize: 11, fontWeight: 600,
+              border: `1px dashed ${C.bg4}`,
               display: "flex", alignItems: "center", gap: 6,
             }}
+            title="대량 등록 일시 중단"
           >
-            📦 대량 등록하기
-          </Link>
+            📞 대량 등록은 NPLATFORM 고객센터(02-555-2822) 문의 바랍니다
+          </span>
           <Link
             href="/exchange/demands"
             style={{

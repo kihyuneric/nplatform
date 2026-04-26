@@ -337,12 +337,12 @@ export default function OcrRegisterPage() {
             >
               단건 상세 등록 →
             </Link>
-            <Link
-              href="/exchange/bulk-upload"
-              className="text-xs px-3 py-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-overlay)] transition-colors"
+            <span
+              className="text-xs px-3 py-2 rounded-lg border border-dashed border-[var(--color-border-subtle)] text-[var(--color-text-muted)]"
+              title="대량 등록 일시 중단"
             >
-              CSV 대량 등록 →
-            </Link>
+              📞 대량 등록 — 02-555-2822 문의
+            </span>
           </div>
         </header>
 

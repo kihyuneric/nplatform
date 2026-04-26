@@ -108,11 +108,13 @@ export function InstitutionSection({
                   type="button"
                   disabled={disabled}
                   onClick={() => onChange({ listingCategory: opt.v })}
-                  className={`flex-1 rounded-lg border px-2 py-2 text-[0.75rem] font-semibold transition-colors ${
+                  aria-pressed={active}
+                  className="flex-1 rounded-lg border-2 px-2 py-2 text-[0.75rem] font-bold transition-colors disabled:opacity-50"
+                  style={
                     active
-                      ? "bg-stone-100/10 border-stone-300/40 text-stone-900 dark:text-stone-900"
-                      : "bg-[var(--color-surface-base)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]"
-                  } disabled:opacity-50`}
+                      ? { backgroundColor: "#0A1628", borderColor: "#0A1628", color: "#FFFFFF" }
+                      : { backgroundColor: "#FFFFFF", borderColor: "rgba(10,22,40,0.15)", color: "#0A1628" }
+                  }
                 >
                   {opt.label}
                 </button>

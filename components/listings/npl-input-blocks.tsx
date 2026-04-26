@@ -30,6 +30,7 @@ import {
   UserCheck,
   Percent,
   Landmark,
+  TrendingUp,
 } from "lucide-react"
 
 /** ─── 공통 유틸 ─────────────────────────────────────────── */
@@ -380,11 +381,13 @@ export function DebtorOwnerSameToggle({
           type="button"
           onClick={() => !disabled && onChange(true)}
           disabled={disabled}
-          className={`flex-1 rounded-lg px-3 py-2 text-[0.8125rem] font-semibold border transition-colors ${
+          aria-pressed={value}
+          className="flex-1 rounded-lg border-2 px-3 py-2 text-[0.8125rem] font-bold transition-colors disabled:opacity-50"
+          style={
             value
-              ? "bg-stone-100/10 border-stone-300/40 text-stone-900 dark:text-stone-900"
-              : "bg-[var(--color-surface-base)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]"
-          } disabled:opacity-50`}
+              ? { backgroundColor: "#0A1628", borderColor: "#0A1628", color: "#FFFFFF" }
+              : { backgroundColor: "#FFFFFF", borderColor: "rgba(10,22,40,0.15)", color: "#0A1628" }
+          }
         >
           동일인 (채무자 = 소유자)
         </button>
@@ -392,11 +395,13 @@ export function DebtorOwnerSameToggle({
           type="button"
           onClick={() => !disabled && onChange(false)}
           disabled={disabled}
-          className={`flex-1 rounded-lg px-3 py-2 text-[0.8125rem] font-semibold border transition-colors ${
+          aria-pressed={!value}
+          className="flex-1 rounded-lg border-2 px-3 py-2 text-[0.8125rem] font-bold transition-colors disabled:opacity-50"
+          style={
             !value
-              ? "bg-stone-100/10 border-stone-300/40 text-stone-900 dark:text-stone-900"
-              : "bg-[var(--color-surface-base)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]"
-          } disabled:opacity-50`}
+              ? { backgroundColor: "#0A1628", borderColor: "#0A1628", color: "#FFFFFF" }
+              : { backgroundColor: "#FFFFFF", borderColor: "rgba(10,22,40,0.15)", color: "#0A1628" }
+          }
         >
           다름 (물상보증·제3자 담보)
         </button>
@@ -527,6 +532,111 @@ export function DesiredSaleDiscountInput({
         <Field label="대출원금 (참조)" hint="채권잔액 블록의 원금 자동 연동">
           <div className="w-full rounded-lg bg-[var(--color-surface-base)]/60 border border-dashed border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-tertiary)] tabular-nums">
             {principal > 0 ? `${principal.toLocaleString("ko-KR")}원` : "원금 미입력"}
+          </div>
+        </Field>
+      </div>
+    </div>
+  )
+}
+
+/** ─── 5-1. 수익권 금액 (최고가 매수신고가의 110~140% 한도) ─────────────
+ *
+ * Phase G6 신규 — NPL 수익권 최대 회수 한도.
+ *   · 최고가 매수신고가(=매각가) 대비 110~140% 사이 슬라이더 입력
+ *   · 직접 금액 입력도 허용 (역방향 — multiplier 자동 재계산)
+ *   · 0 입력 시 분석 리포트 기본값(원금 × 130%) fallback
+ *
+ * 매각가가 입력되지 않은 단계에서도 "원금 기준 110~140%" 로 표시 가능하도록
+ * `basePrice` (= askingPrice or principal) 를 fallback chain 으로 사용.
+ */
+export function MaxBondAmountBlock({
+  value,
+  onChange,
+  askingPrice,
+  principal,
+  disabled,
+}: {
+  /** 0 = 미설정 (리포트에서 기본값 130% 적용) */
+  value: number
+  onChange: (v: number) => void
+  /** 매각희망가 — 우선 기준 */
+  askingPrice: number
+  /** 매각희망가 미입력 시 fallback */
+  principal: number
+  disabled?: boolean
+}) {
+  const basePrice = askingPrice > 0 ? askingPrice : principal
+  const multiplier = basePrice > 0 && value > 0 ? value / basePrice : 1.30
+  const displayMultiplier = Math.min(1.40, Math.max(1.10, multiplier))
+  const sliderValue = Math.round(displayMultiplier * 100) // 110~140
+
+  const min110 = Math.round(basePrice * 1.10)
+  const max140 = Math.round(basePrice * 1.40)
+  const defaultAmount = Math.round(basePrice * 1.30)
+
+  function handleSlider(pct: number) {
+    const next = Math.round(basePrice * (pct / 100))
+    onChange(next)
+  }
+
+  function handleAmount(n: number) {
+    onChange(Math.max(0, n))
+  }
+
+  return (
+    <div className={BLOCK}>
+      <BlockHeader
+        icon={<TrendingUp className="w-4 h-4" />}
+        title="수익권 금액 (최고가 매수신고가 110~140% 한도)"
+        subtitle="NPL 매수자 회수 상한 — 슬라이더 또는 금액 직접 입력. 0 입력 시 리포트 기본값 130% 적용"
+        right={
+          <div className="text-right">
+            <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">현재 비율</div>
+            <div className="text-[0.875rem] font-bold tabular-nums" style={{ color: "#0A1628" }}>
+              {basePrice > 0 && value > 0 ? `${(multiplier * 100).toFixed(1)}%` : "—"}
+            </div>
+          </div>
+        }
+      />
+
+      {/* 슬라이더 (110~140) */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between text-[0.6875rem] text-[var(--color-text-tertiary)] mb-1">
+          <span>110% (보수적)</span>
+          <span>125%</span>
+          <span>140% (최대)</span>
+        </div>
+        <input
+          type="range"
+          min={110}
+          max={140}
+          step={1}
+          value={sliderValue}
+          onChange={(e) => handleSlider(Number(e.target.value))}
+          disabled={disabled || basePrice === 0}
+          className="w-full accent-[#0A1628] disabled:opacity-40"
+          style={{ accentColor: "#0A1628" }}
+        />
+        <div className="flex items-center justify-between text-[0.625rem] text-[var(--color-text-tertiary)] mt-1 tabular-nums">
+          <span>{basePrice > 0 ? `${min110.toLocaleString("ko-KR")}원` : "—"}</span>
+          <span>{basePrice > 0 ? `${defaultAmount.toLocaleString("ko-KR")}원` : "—"}</span>
+          <span>{basePrice > 0 ? `${max140.toLocaleString("ko-KR")}원` : "—"}</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="수익권 금액 (직접 입력)" hint="0원 = 리포트 기본값 130% 사용">
+          <NumberInput
+            value={value}
+            onChange={handleAmount}
+            placeholder="예: 850000000"
+            suffix="원"
+            disabled={disabled}
+          />
+        </Field>
+        <Field label="기준가 (매각희망가 → 원금 fallback)" hint="매각희망가 미입력 시 원금 기준">
+          <div className="w-full rounded-lg bg-[var(--color-surface-base)]/60 border border-dashed border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-tertiary)] tabular-nums">
+            {basePrice > 0 ? `${basePrice.toLocaleString("ko-KR")}원` : "기준가 미입력"}
           </div>
         </Field>
       </div>

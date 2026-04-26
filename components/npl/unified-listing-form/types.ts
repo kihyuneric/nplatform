@@ -107,6 +107,13 @@ export interface UnifiedFormState {
   askingPrice: number
   collateralAmount: number          // 설정금액 (근저당 등)
 
+  /**
+   * 수익권 금액 (최고가 매수신고가의 110~140% 한도) — Phase G6 신규.
+   * NPL 수익권의 최대 회수 한도 (= 매입 매수자 회수 상한).
+   * 0 입력 시 분석 리포트의 슬라이더 기본값(원금 × 130%) 사용.
+   */
+  maximumBondAmount: number
+
   // 특수조건 V1 (25항목 camelCase) — @deprecated · 기존 API·리포트 호환용
   specialConditions: SpecialConditions
   specialConditionKeys: SpecialConditionKey[]

@@ -35,6 +35,7 @@ import { CollateralSection } from "./sections/collateral-section"
 import { AppraisalSection } from "./sections/appraisal-section"
 import { RightsSection } from "./sections/rights-section"
 import { SpecialConditionsSection } from "./sections/special-conditions-section"
+import { MaxBondAmountSection } from "./sections/max-bond-amount-section"
 import { OcrSection } from "./sections/ocr-section"
 import { BondSelector, type MyListing } from "@/components/npl/bond-selector"
 
@@ -61,6 +62,7 @@ export {
   AppraisalSection,
   RightsSection,
   SpecialConditionsSection,
+  MaxBondAmountSection,
   OcrSection,
 }
 
@@ -118,13 +120,18 @@ export function NplUnifiedForm({
         onClear={() => dispatch({ type: "RESET", mode })}
       />
 
-      {/* 2. OCR 자동 추출 — 3모드 공통 */}
+      {/* 2. 자동 채움 (엑셀 템플릿 / 채권 OCR / 감정 OCR) — 3모드 공통 */}
       <OcrSection
         mode={mode}
         onApply={(patch) => {
           if (patch.claim) dispatch({ type: "SET_CLAIM", patch: patch.claim })
           if (patch.appraisal) dispatch({ type: "SET_APPRAISAL", patch: patch.appraisal })
           if (patch.address) dispatch({ type: "SET_ADDRESS", patch: patch.address })
+        }}
+        onApplyTemplate={(patch) => {
+          // PATCH 액션 — 모든 최상위 필드를 한 번에 덮어쓰기.
+          // 중첩 객체(institution/claim/appraisal/...)는 reducer 가 그대로 교체.
+          dispatch({ type: "PATCH", patch })
         }}
       />
 
@@ -180,6 +187,14 @@ export function NplUnifiedForm({
         onChange={(keys) =>
           dispatch({ type: "SET_SPECIAL_CONDITIONS_V2", keys })
         }
+      />
+
+      {/* 8-1. 수익권 금액 — 3모드 공통 (Phase G6) */}
+      <MaxBondAmountSection
+        value={state.maximumBondAmount}
+        onChange={(v) => dispatch({ type: "PATCH", patch: { maximumBondAmount: v } })}
+        askingPrice={state.askingPrice}
+        principal={state.claim.principal}
       />
 
       {/* 9. 수수료율 — SELL · AUCTION 공통 (ANALYSIS 숨김)
