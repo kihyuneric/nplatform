@@ -26,7 +26,7 @@ import {
   BarChart3, Gavel, MapPin, Info, Activity, ChevronRight, ChevronDown,
   FileText, Scale, Wallet, Calendar, Building2, Layers,
   TrendingDown, PieChart, Sigma, Database, Pencil, Download, Eye, X,
-  FileText as FileTextIcon, Languages,
+  FileText as FileTextIcon,
 } from "lucide-react"
 import DS from "@/lib/design-system"
 import { riskPalette } from "@/lib/design-tokens"
@@ -114,13 +114,8 @@ function buildRiskFactorFormula(
   }
 }
 
-// ─── i18n · 한국어/영어/일본어 (Phase G7+ 2026-04-26) ───────
-type Lang = "ko" | "en" | "ja"
-const LANGS: { code: Lang; label: string }[] = [
-  { code: "ko", label: "한국어" },
-  { code: "en", label: "English" },
-  { code: "ja", label: "日本語" },
-]
+// ─── 라벨 사전 · 한국어 단일 (Phase G7+ 2026-04-26 v3 — 사이트 자체 번역기능 사용으로 i18n 토글 제거) ───────
+type Lang = "ko"
 type Dict = {
   reportLabel: string
   back: string
@@ -192,76 +187,6 @@ const T: Record<Lang, Dict> = {
     summaryConfidence: "신뢰도",
     promptLabel: "AI 총평 기준 프롬프트",
   },
-  en: {
-    reportLabel: "NPL Integrated Analysis Report",
-    back: "Analysis Dashboard",
-    pdfFull: "Download PDF (Full Ver.)",
-    pdfSummary: "Download PDF (1-Page Summary)",
-    viewer: "Viewer",
-    aiGrade: "AI Investment Grade",
-    appraisal: "Appraisal",
-    predictedRecovery: "Predicted Recovery",
-    riskGrade: "Risk Grade",
-    bankSalePrice: "Bank NPL Sale Price",
-    aiOpinion: "AI Opinion",
-    recommend: "Recommend",
-    hold: "Hold",
-    avoid: "Avoid",
-    oneLineSummary: "One-line Summary",
-    claimBreakdown: "Claim Balance Breakdown",
-    principal: "Loan Principal",
-    unpaidInterest: "Unpaid Interest",
-    overdueInterest: "Overdue Interest",
-    totalBond: "Total Claim Balance",
-    delinquencyStart: "Delinquency Start",
-    overdueRate: "Overdue Rate",
-    recoveryThreeFactor: "Recovery Forecast · 3-Factor Analysis",
-    riskFourFactor: "AI Risk Grade",
-    riskModelCaption: "NPLATFORM Risk Analysis Model",
-    evidenceData: "Evidence Data",
-    aiSummary: "AI Executive Summary",
-    generatedAt: "Generated",
-    closeViewer: "Close",
-    summaryViewerTitle: "1-Page Summary — Viewer",
-    summaryRoi: "Expected ROI",
-    summaryConfidence: "Confidence",
-    promptLabel: "AI Summary Prompt",
-  },
-  ja: {
-    reportLabel: "NPL 統合分析レポート",
-    back: "分析ダッシュボード",
-    pdfFull: "PDFダウンロード (フル版)",
-    pdfSummary: "PDFダウンロード (1ページ要約)",
-    viewer: "ビューア",
-    aiGrade: "AI投資格付",
-    appraisal: "鑑定価額",
-    predictedRecovery: "予測回収率",
-    riskGrade: "リスク格付",
-    bankSalePrice: "金融機関NPL売却価格",
-    aiOpinion: "AI投資意見",
-    recommend: "推奨",
-    hold: "様子見",
-    avoid: "回避",
-    oneLineSummary: "一行要約",
-    claimBreakdown: "債権残高内訳",
-    principal: "貸出元金",
-    unpaidInterest: "未収利息",
-    overdueInterest: "延滞利息",
-    totalBond: "債権残高合計",
-    delinquencyStart: "延滞開始",
-    overdueRate: "延滞金利",
-    recoveryThreeFactor: "回収率予測 · 3要因分析",
-    riskFourFactor: "AIリスク格付",
-    riskModelCaption: "NPLATFORM リスク分析モデル",
-    evidenceData: "根拠データ",
-    aiSummary: "AI 総評",
-    generatedAt: "作成日",
-    closeViewer: "閉じる",
-    summaryViewerTitle: "1ページ要約 — ビューア",
-    summaryRoi: "予想ROI",
-    summaryConfidence: "信頼度",
-    promptLabel: "AI総評プロンプト",
-  },
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -270,8 +195,8 @@ export default function UnifiedReportPage() {
   const id = params?.get("id") ?? null
   const [report, setReport] = useState<UnifiedAnalysisReport | null>(null)
   const [error, setError] = useState<string | null>(null)
-  // Phase G7+ — 다국어 (한/영/일) + 1Page Summary Viewer
-  const [lang, setLang] = useState<Lang>("ko")
+  // Phase G7+ v3 — 사이트 자체 번역기능 사용으로 다국어 토글 제거 · 한국어 단일
+  const lang: Lang = "ko"
   const [summaryOpen, setSummaryOpen] = useState(false)
   const t = T[lang]
 
@@ -335,7 +260,7 @@ export default function UnifiedReportPage() {
         {/* brass thin accent line — McKinsey editorial signature */}
         <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #B8924B 40%, #B8924B 60%, transparent)" }} />
         <div className={`${DS.page.container} py-8 text-white`}>
-          {/* 상단 액션 바 — 좌: 뒤로 / 우: 언어 + PDF Full + PDF Summary + Viewer */}
+          {/* 상단 액션 바 — 좌: 뒤로 / 우: PDF Full + PDF Summary + Viewer */}
           <div className="flex items-center justify-between gap-3 mb-4 no-print flex-wrap">
             <Link
               href="/analysis"
@@ -344,29 +269,6 @@ export default function UnifiedReportPage() {
               <ArrowLeft className="w-3.5 h-3.5" /> {t.back}
             </Link>
             <div className="flex items-center gap-2 flex-wrap">
-              {/* 언어 선택 — 한국어 / English / 日本語 */}
-              <div className="inline-flex items-center rounded-lg overflow-hidden border border-white/30">
-                <Languages className="w-3.5 h-3.5 ml-2 mr-1 opacity-70" />
-                {LANGS.map((l) => {
-                  const active = lang === l.code
-                  return (
-                    <button
-                      key={l.code}
-                      type="button"
-                      onClick={() => setLang(l.code)}
-                      aria-pressed={active}
-                      className="px-2.5 py-1.5 text-[0.6875rem] font-bold transition-colors"
-                      style={{
-                        backgroundColor: active ? "#FFFFFF" : "transparent",
-                        color: active ? "#0A1628" : "rgba(255,255,255,0.85)",
-                      }}
-                    >
-                      {l.label}
-                    </button>
-                  )
-                })}
-              </div>
-
               {/* PDF 다운로드 — Full Ver. */}
               <button
                 type="button"
@@ -421,14 +323,27 @@ export default function UnifiedReportPage() {
 
           <div className="flex items-start justify-between flex-wrap gap-3">
             <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <Sparkles className="w-4 h-4" />
-                <span className="text-[0.6875rem] uppercase tracking-wider opacity-90 font-semibold">
-                  {t.reportLabel}
+              {/* McKinsey-style brand bar — small caps, brass, confidential */}
+              <div className="flex items-center gap-2 mb-2">
+                <span
+                  className="text-[0.625rem] tracking-[0.22em] font-bold"
+                  style={{ color: "#B8924B" }}
+                >
+                  NPLATFORM
+                </span>
+                <span className="text-[0.625rem] tracking-[0.18em] opacity-70">·</span>
+                <span className="text-[0.625rem] tracking-[0.22em] opacity-90 font-semibold">
+                  CONFIDENTIAL — INVESTMENT MEMORANDUM
                 </span>
               </div>
-              <h1 className="text-[1.5rem] font-black tracking-tight">{input.assetTitle}</h1>
-              <p className="text-[0.8125rem] opacity-90 mt-0.5">
+              <div className="w-12 h-[1px] mb-2.5" style={{ background: "#B8924B" }} />
+              <h1
+                className="text-[1.625rem] font-black tracking-tight leading-tight"
+                style={{ fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: "-0.01em" }}
+              >
+                {input.assetTitle}
+              </h1>
+              <p className="text-[0.8125rem] opacity-90 mt-1">
                 {input.region} · {input.propertyCategory} · {t.appraisal} {fmtKRW(input.appraisalValue)}
               </p>
               {/* Phase G7+ 다수 주소 — 포트폴리오·복합 담보 시 추가 주소 행 노출 */}
@@ -565,9 +480,19 @@ export default function UnifiedReportPage() {
           </div>
         </div>
 
-        <div className="mt-4 p-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)]">
-          <p className="text-[0.8125rem] text-[var(--color-text-primary)] leading-relaxed">
-            <span className="font-bold">한 줄 요약 · </span>{summary.tldr}
+        {/* McKinsey-style "Key Takeaway" box — brass left accent + serif italic */}
+        <div
+          className="mt-4 p-4 rounded-md bg-white border border-[var(--color-border-subtle)] shadow-[0_1px_2px_rgba(10,22,40,0.04)]"
+          style={{ borderLeft: "4px solid #B8924B" }}
+        >
+          <div className="text-[0.625rem] tracking-[0.22em] font-bold mb-1.5" style={{ color: "#B8924B" }}>
+            KEY TAKEAWAY
+          </div>
+          <p
+            className="text-[0.9375rem] text-[#0A1628] leading-relaxed font-medium"
+            style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+          >
+            {summary.tldr}
           </p>
         </div>
 
@@ -623,7 +548,14 @@ export default function UnifiedReportPage() {
       </section>
 
       {/* ── 2. 회수율 3팩터 ─────────────────────────── */}
-      <Section title={t.recoveryThreeFactor} icon={Activity} caption={`LTV 40% · ${lang === "en" ? "Region" : lang === "ja" ? "地域" : "지역"} 30% · ${lang === "en" ? "Auction" : lang === "ja" ? "落札率" : "낙찰가율"} 30%`}>
+      <Section
+        title={t.recoveryThreeFactor}
+        icon={Activity}
+        caption={`LTV 40% · 지역 30% · 낙찰가율 30%`}
+        exhibit={1}
+        takeaway={`예측 회수율 ${recovery.predictedRecoveryRate.toFixed(1)}% — LTV·지역동향·낙찰가율 3팩터 가중평균. ${recovery.predictedRecoveryRate >= 80 ? "회수 안정성 高 (BUY 신호)." : recovery.predictedRecoveryRate >= 60 ? "회수 안정성 中 (모니터링 필요)." : "회수 안정성 低 (매입가 조정 필요)."}`}
+        source="NPLATFORM 회수율 모델 v3.2 — 한국감정원 시세지수 + 대법원 경매통계 + 자체 LTV 분석">
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
           <FactorCard
             rank={1}
@@ -931,7 +863,7 @@ export default function UnifiedReportPage() {
           </div>
           <p className="text-[0.875rem] leading-relaxed">{report.executiveSummary}</p>
           <div className="mt-4 flex items-center gap-2 text-[0.6875rem] opacity-80">
-            <span>{t.generatedAt} · {new Date(report.createdAt).toLocaleString(lang === "ja" ? "ja-JP" : lang === "en" ? "en-US" : "ko-KR")}</span>
+            <span>{t.generatedAt} · {new Date(report.createdAt).toLocaleString("ko-KR")}</span>
           </div>
           <PromptToggle report={report} promptLabel={t.promptLabel} />
         </div>
@@ -942,34 +874,108 @@ export default function UnifiedReportPage() {
 
 // ─── Sub components ──────────────────────────────────────────
 
+/**
+ * McKinsey-style KPI card (Phase G7+ v3 2026-04-26).
+ * - White paper, ink #0A1628 high contrast
+ * - Brass 1pt top accent
+ * - Mono tabular numerals (large, bold)
+ * - Small caps label
+ */
 function KpiCard({
   icon: Icon, label, value, sub, tint,
 }: { icon: React.ElementType; label: string; value: string; sub: string; tint: string }) {
   return (
-    <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">{label}</span>
+    <div
+      className="relative rounded-md bg-white border border-[var(--color-border-subtle)] px-3.5 py-3 shadow-[0_1px_2px_rgba(10,22,40,0.04)]"
+      style={{ borderTop: "2px solid #B8924B" }}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[0.625rem] text-[#0A1628] tracking-[0.14em] font-bold uppercase opacity-65">{label}</span>
         <Icon className="w-3.5 h-3.5" style={{ color: tint }} />
       </div>
-      <div className="text-lg font-black tabular-nums text-[var(--color-text-primary)]">{value}</div>
-      <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">{sub}</div>
+      <div
+        className="text-[1.375rem] font-black tabular-nums leading-none mb-1.5"
+        style={{ color: "#0A1628", fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: "-0.015em" }}
+      >
+        {value}
+      </div>
+      <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] font-medium">{sub}</div>
     </div>
   )
 }
 
+/**
+ * McKinsey-style Section header (Phase G7+ v3 2026-04-26).
+ * - "EXHIBIT N" small-caps brass label
+ * - Serif (Georgia) title — editorial weight
+ * - 1pt brass under-rule
+ * - Optional `source` footnote (italic, small)
+ *
+ * exhibit/source 는 모두 옵셔널 — 호환성 유지 (기존 Section 호출 그대로 동작).
+ */
 function Section({
-  title, icon: Icon, caption, children,
-}: { title: string; icon: React.ElementType; caption?: string; children: React.ReactNode }) {
+  title, icon: Icon, caption, children, exhibit, source, takeaway,
+}: {
+  title: string
+  icon: React.ElementType
+  caption?: string
+  children: React.ReactNode
+  exhibit?: number
+  source?: string
+  takeaway?: string
+}) {
   return (
-    <section className={`${DS.page.container} mt-6`}>
-      <div className="flex items-baseline justify-between mb-3">
-        <h2 className="text-[0.9375rem] font-black text-[var(--color-text-primary)] flex items-center gap-2">
-          <Icon className="w-4 h-4 text-[var(--color-brand-mid)]" />
-          {title}
-        </h2>
-        {caption && <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">{caption}</span>}
+    <section className={`${DS.page.container} mt-8`}>
+      <div className="mb-4">
+        {exhibit != null && (
+          <div
+            className="text-[0.625rem] font-bold tracking-[0.18em] mb-1.5"
+            style={{ color: "#B8924B" }}
+          >
+            EXHIBIT {exhibit}
+          </div>
+        )}
+        <div className="flex items-baseline justify-between gap-3 flex-wrap">
+          <h2
+            className="font-black text-[#0A1628] flex items-center gap-2 text-[1.0625rem] leading-tight"
+            style={{ fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: "-0.005em" }}
+          >
+            <Icon className="w-4 h-4" style={{ color: "#B8924B" }} />
+            {title}
+          </h2>
+          {caption && (
+            <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">{caption}</span>
+          )}
+        </div>
+        <div className="mt-2.5 h-[1px]" style={{ background: "#B8924B" }} />
       </div>
+      {takeaway && (
+        <div
+          className="mb-4 px-4 py-3 rounded-md flex items-start gap-2.5"
+          style={{
+            background: "rgba(184,146,75,0.06)",
+            borderLeft: "3px solid #B8924B",
+          }}
+        >
+          <span
+            className="text-[0.625rem] font-bold tracking-[0.18em] mt-[2px] shrink-0"
+            style={{ color: "#B8924B" }}
+          >
+            SO WHAT
+          </span>
+          <p className="text-[0.8125rem] text-[#0A1628] leading-relaxed font-medium">
+            {takeaway}
+          </p>
+        </div>
+      )}
       {children}
+      {source && (
+        <p
+          className="mt-3 text-[0.6875rem] text-[var(--color-text-tertiary)] italic pt-2 border-t border-dashed border-[var(--color-border-subtle)]"
+        >
+          <span className="font-bold not-italic" style={{ color: "#0A1628" }}>Source:</span> {source}
+        </p>
+      )}
     </section>
   )
 }
@@ -2244,7 +2250,13 @@ function ProfitabilitySections({
       </Section>
 
       {/* ── [2] 채권내역 ─ 대출원금 → 연체금리 → 현재 채권잔액 → 채권최고액 ── */}
-      <Section title="NPL 수익성 분석 · 채권내역" icon={Wallet} caption="수정 가능 · 원금/금리/연체시작일 변경 시 전체 재계산">
+      <Section
+        title="NPL 수익성 분석 · 채권내역"
+        icon={Wallet}
+        caption="수정 가능 · 원금/금리/연체시작일 변경 시 전체 재계산"
+        exhibit={2}
+        source="채권자 제공 자료 · 등기부등본 (정확도 검증 후 입력)">
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
           <EditableMoneyCard
             label="대출원금"
@@ -2303,7 +2315,13 @@ function ProfitabilitySections({
       </Section>
 
       {/* ── [3] 채권매입일정 및 매입가 ──────────── */}
-      <Section title="NPL 수익성 분석 · 채권매입 일정·매입가" icon={Calendar} caption="매입가·질권대출 구조 수정 가능">
+      <Section
+        title="NPL 수익성 분석 · 채권매입 일정·매입가"
+        icon={Calendar}
+        caption="매입가·질권대출 구조 수정 가능"
+        exhibit={3}
+        source="질권대출 LTV·금리: 시중 NPL 전문 금융기관 평균치 (2026Q1)">
+
         {/* Phase G3 · 채무자 유형 토글 — 질권대출 LTV 기본값 분기 (개인 75% / 법인 90%) */}
         <DebtorTypeToggle
           value={edit.debtorType}
@@ -2368,7 +2386,13 @@ function ProfitabilitySections({
       </Section>
 
       {/* ── [4] 감정가·AI시세·낙찰가율 ─────────── */}
-      <Section title="NPL 수익성 분석 · 감정가·AI 시세·낙찰가율" icon={BarChart3} caption={valuation.expectedBidRatioPeriod}>
+      <Section
+        title="NPL 수익성 분석 · 감정가·AI 시세·낙찰가율"
+        icon={BarChart3}
+        caption={valuation.expectedBidRatioPeriod}
+        exhibit={4}
+        source="감정평가서 + KB부동산 시세 + NPLATFORM AI 시세 (multi-source consensus)">
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
           <EditableMoneyCard
             label="감정가 (채권자 제공)"
@@ -2423,7 +2447,13 @@ function ProfitabilitySections({
       </Section>
 
       {/* ── [5] 경매진행일정 ─────────────────── */}
-      <Section title="NPL 수익성 분석 · 경매 진행 일정" icon={Calendar} caption={`총 소요 ${schedule.totalDurationDays}일 · ${schedule.courtName ?? "관할법원 미지정"}`}>
+      <Section
+        title="NPL 수익성 분석 · 경매 진행 일정"
+        icon={Calendar}
+        caption={`총 소요 ${schedule.totalDurationDays}일 · ${schedule.courtName ?? "관할법원 미지정"}`}
+        exhibit={5}
+        source="대법원 법원경매정보 + 관할법원 평균 진행기간 통계 (2024~2025)">
+
         {/* 사용자 조정 가능한 기준 일자 — 경매개시결정일·1차매각기일·예상매각기일 */}
         <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden mb-3">
           <table className="w-full text-[0.75rem]">
@@ -2506,7 +2536,13 @@ function ProfitabilitySections({
       </Section>
 
       {/* ── [6] 예상 배당표 ─────────────────── */}
-      <Section title="NPL 수익성 분석 · 예상 배당표" icon={Scale} caption="채권계산서(원리금) + 경매비용 → 1·2질권자 배당">
+      <Section
+        title="NPL 수익성 분석 · 예상 배당표"
+        icon={Scale}
+        caption="채권계산서(원리금) + 경매비용 → 1·2질권자 배당"
+        exhibit={6}
+        source="민사집행법 §145·§148 배당순위 + 채권계산서 원리금 시뮬레이션">
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
           <MetricCard
             label="채권계산서 (이자)"
@@ -2555,7 +2591,14 @@ function ProfitabilitySections({
       </Section>
 
       {/* ── [7] 투입자금·수익분석 ─────────────── */}
-      <Section title="NPL 수익성 분석 · 투입자금·수익" icon={PieChart} caption={`운용 ${investment.holdingPeriodDays}일 · ROI ${(investment.roi * 100).toFixed(2)}% · 연환산 ${(investment.annualizedRoi * 100).toFixed(2)}%`}>
+      <Section
+        title="NPL 수익성 분석 · 투입자금·수익"
+        icon={PieChart}
+        caption={`운용 ${investment.holdingPeriodDays}일 · ROI ${(investment.roi * 100).toFixed(2)}% · 연환산 ${(investment.annualizedRoi * 100).toFixed(2)}%`}
+        exhibit={7}
+        takeaway={`자기자본 대비 ROI ${(investment.roi * 100).toFixed(2)}% (연환산 ${(investment.annualizedRoi * 100).toFixed(2)}%) — 시장 대안 (예금·채권) 대비 ${investment.annualizedRoi >= 0.15 ? "월등한 우위" : investment.annualizedRoi >= 0.08 ? "양호한 우위" : "프리미엄 미달"}.`}
+        source="현금흐름 시뮬레이션: 매입가·질권대출·경매낙찰 시점 기준 자본환원">
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
           <MetricCard label="투자 에쿼티 총계" value={krwWon(investment.totalEquity)} tint="#1B3A5C" />
           <MetricCard label="예상 투자수익" value={krwWon(investment.expectedNetProfit)} tint="#051C2C" />
@@ -2594,7 +2637,14 @@ function ProfitabilitySections({
       </Section>
 
       {/* ── AI 권고 매입가 3단계 전략 ───────────── */}
-      <Section title="AI 권고 NPL 매입가 · 3단계 전략" icon={Target} caption="보수적 · 권고 · 공격적 매입 시나리오 병렬 비교">
+      <Section
+        title="AI 권고 NPL 매입가 · 3단계 전략"
+        icon={Target}
+        caption="보수적 · 권고 · 공격적 매입 시나리오 병렬 비교"
+        exhibit={8}
+        takeaway="동일 자산에 대한 3단계 매입가 시나리오 — 자본 여력·리스크 선호도에 따라 선택. 권고가는 ROI 15% + 리스크 중립 기준."
+        source="NPLATFORM 매입가 추천 모델 v2 (낙찰가율 ± 1σ 분포 가중)">
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[strategies.conservative, strategies.recommended, strategies.aggressive].map((s) => {
             const isRec = s.strategy === "RECOMMENDED"
@@ -2668,7 +2718,14 @@ function ProfitabilitySections({
       </Section>
 
       {/* ── 민감도 분석 (매입률 × 낙찰가율 → ROI heatmap) ─── */}
-      <Section title="민감도 분석 · 매입률 × 낙찰가율 → ROI 히트맵" icon={Layers} caption="행 = 대출원금 대비 매입률, 열 = 감정가 대비 낙찰가율">
+      <Section
+        title="민감도 분석 · 매입률 × 낙찰가율 → ROI 히트맵"
+        icon={Layers}
+        caption="행 = 대출원금 대비 매입률, 열 = 감정가 대비 낙찰가율"
+        exhibit={9}
+        takeaway="히트맵 우상단 = 저가 매입 + 고가 낙찰 (최선 시나리오) · 좌하단 = 고가 매입 + 저가 낙찰 (손실 시나리오). 실 시나리오는 가운데 ±1열."
+        source="2-변수 시나리오 분석 — 매입률 5%p/낙찰가율 5%p step grid">
+
         <SensitivityHeatmap s={sensitivity} />
       </Section>
 
@@ -3675,7 +3732,7 @@ function SummaryPrintable({
         style={{ borderColor: "rgba(10,22,40,0.10)", color: "rgba(10,22,40,0.55)" }}
       >
         <span>
-          {t.generatedAt} · {new Date(report.createdAt).toLocaleString(lang === "ja" ? "ja-JP" : lang === "en" ? "en-US" : "ko-KR")}
+          {t.generatedAt} · {new Date(report.createdAt).toLocaleString("ko-KR")}
         </span>
         <span style={{ color: "#B8924B", fontWeight: 700 }}>NPLATFORM · TransFarmer Inc.</span>
       </div>
