@@ -117,7 +117,7 @@ export function BondOcrUploader({
   return (
     <div className="rounded-xl border border-dashed border-stone-300/30 bg-stone-100/5 p-4">
       <div className="flex items-start gap-2 mb-3">
-        <Wand2 className="w-4 h-4 mt-0.5 text-stone-900" />
+        <Wand2 className="w-4 h-4 mt-0.5" style={{ color: "#0A1628" }} />
         <div>
           <h4 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">
             OCR 자동 추출 (선택)
@@ -138,17 +138,22 @@ export function BondOcrUploader({
               key={k}
               type="button"
               onClick={() => setDocType(k)}
-              className={`flex-1 rounded-lg border px-3 py-2 text-[0.75rem] transition-colors ${
+              aria-pressed={active}
+              className="flex-1 rounded-lg border-2 px-3 py-2 text-[0.75rem] transition-colors"
+              style={
                 active
-                  ? "bg-stone-100/10 border-stone-300/40 text-stone-900 dark:text-stone-900"
-                  : "bg-[var(--color-surface-base)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]"
-              }`}
+                  ? { backgroundColor: "#0A1628", borderColor: "#0A1628", color: "#FFFFFF" }
+                  : { backgroundColor: "#FFFFFF", borderColor: "rgba(10,22,40,0.20)", color: "#0A1628" }
+              }
             >
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5" style={{ color: active ? "#FFFFFF" : "#0A1628" }}>
                 {DOC_META[k].icon}
-                <span className="font-semibold">{DOC_META[k].label}</span>
+                <span className="font-bold">{DOC_META[k].label}</span>
               </div>
-              <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-0.5 text-left">
+              <div
+                className="text-[0.625rem] mt-0.5 text-left"
+                style={{ color: active ? "rgba(255,255,255,0.85)" : "rgba(10,22,40,0.55)" }}
+              >
                 {DOC_META[k].desc}
               </div>
             </button>
@@ -172,9 +177,10 @@ export function BondOcrUploader({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-stone-100 text-white text-[0.8125rem] font-semibold hover:bg-stone-100 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[0.8125rem] font-bold disabled:opacity-50 transition-opacity hover:opacity-90"
+          style={{ backgroundColor: "#0A1628", color: "#FFFFFF", border: "2px solid #0A1628", letterSpacing: "0.02em" }}
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: "#FFFFFF" }} /> : <UploadCloud className="w-4 h-4" style={{ color: "#FFFFFF" }} />}
           {loading ? "분석 중…" : "파일 선택 & 분석"}
         </button>
         {fileName && (
@@ -212,9 +218,10 @@ export function BondOcrUploader({
           <button
             type="button"
             onClick={apply}
-            className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--color-brand-dark)] text-white text-[0.75rem] font-semibold hover:opacity-90"
+            className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[0.8125rem] font-bold hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: "#0A1628", color: "#FFFFFF", border: "2px solid #0A1628" }}
           >
-            <CheckCircle2 className="w-4 h-4" /> 이 값을 폼에 적용
+            <CheckCircle2 className="w-4 h-4" style={{ color: "#FFFFFF" }} /> 이 값을 폼에 적용
           </button>
         </div>
       )}

@@ -59,13 +59,18 @@ export function CollateralSection({
           value={collateral}
           onChange={(e) => onCollateral(e.target.value as CollateralType | "")}
           disabled={disabled}
-          className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] focus:border-stone-300/60 focus:outline-none disabled:opacity-50"
+          className={`w-full rounded-lg px-3 py-2 text-[0.8125rem] focus:outline-none disabled:opacity-50 transition-colors`}
+          style={
+            collateral
+              ? { backgroundColor: "#0A1628", color: "#FFFFFF", border: "2px solid #0A1628", fontWeight: 700 }
+              : { backgroundColor: "#FFFFFF", color: "#94A3B8", border: "1px solid rgba(10,22,40,0.15)", fontWeight: 400 }
+          }
         >
-          <option value="">선택하세요</option>
+          <option value="" style={{ color: "#94A3B8", backgroundColor: "#FFFFFF" }}>선택하세요</option>
           {COLLATERAL_CATEGORIES.map((cat) => (
             <optgroup key={cat.value} label={cat.label}>
               {cat.items.map((item) => (
-                <option key={item.value} value={item.value}>
+                <option key={item.value} value={item.value} style={{ color: "#0A1628", backgroundColor: "#FFFFFF" }}>
                   {item.label}
                 </option>
               ))}
@@ -84,11 +89,16 @@ export function CollateralSection({
             value={address.sido}
             onChange={(e) => onAddress({ sido: e.target.value })}
             disabled={disabled}
-            className="w-full rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-primary)] focus:border-stone-300/60 focus:outline-none disabled:opacity-50"
+            className="w-full rounded-lg px-3 py-2 text-[0.8125rem] focus:outline-none disabled:opacity-50 transition-colors"
+            style={
+              address.sido
+                ? { backgroundColor: "#0A1628", color: "#FFFFFF", border: "2px solid #0A1628", fontWeight: 700 }
+                : { backgroundColor: "#FFFFFF", color: "#94A3B8", border: "1px solid rgba(10,22,40,0.15)", fontWeight: 400 }
+            }
           >
-            <option value="">선택</option>
+            <option value="" style={{ color: "#94A3B8", backgroundColor: "#FFFFFF" }}>선택</option>
             {REGIONS.map((r) => (
-              <option key={r.value} value={r.value}>
+              <option key={r.value} value={r.value} style={{ color: "#0A1628", backgroundColor: "#FFFFFF" }}>
                 {r.short}
               </option>
             ))}
@@ -143,11 +153,17 @@ export function CollateralSection({
                 type="button"
                 disabled={disabled}
                 onClick={() => onDebtorType(opt.v)}
-                className={`flex-1 rounded-lg border px-3 py-2 text-[0.75rem] font-semibold transition-colors ${
+                aria-pressed={active}
+                className={`flex-1 rounded-lg border-2 px-3 py-2 text-[0.8125rem] font-bold transition-colors ${
                   active
-                    ? "bg-stone-100/10 border-stone-300/40 text-stone-900 dark:text-stone-900"
-                    : "bg-[var(--color-surface-base)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]"
+                    ? "shadow-sm"
+                    : "hover:border-[#0A1628]/40"
                 } disabled:opacity-50`}
+                style={
+                  active
+                    ? { backgroundColor: "#0A1628", borderColor: "#0A1628", color: "#FFFFFF" }
+                    : { backgroundColor: "#FFFFFF", borderColor: "rgba(10,22,40,0.15)", color: "#0A1628" }
+                }
               >
                 {opt.label}
               </button>

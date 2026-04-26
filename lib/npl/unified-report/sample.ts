@@ -184,7 +184,7 @@ export function buildSampleReport(): UnifiedAnalysisReport {
 
   const input: UnifiedReportInput = {
     assetId: 'sample-songpa-jamsil-sigma-2105',
-    assetTitle: '송파 잠실 시그마타워 오피스텔 · 금천신협 NPL',
+    assetTitle: '송파 잠실 ㅇㅇㅇㅇㅇ 오피스텔 · ㅇㅇ신협 NPL',
     region: '서울특별시 송파구 신천동',
     propertyType: '오피스텔',
     propertyCategory: '오피스텔',

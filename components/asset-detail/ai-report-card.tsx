@@ -238,7 +238,7 @@ export function AiReportCard({
             <div className="inline-flex items-center gap-2">
               <Shield size={14} style={{ color: C.brassDark }} />
               <span style={{ fontSize: 12, fontWeight: 700, color: C.ink, letterSpacing: "-0.01em" }}>
-                AI 리스크 등급 · 생성형 AI 프롬프트
+                AI 리스크 등급
               </span>
             </div>
             <span style={{ fontSize: 10, fontWeight: 600, color: C.textMuted, letterSpacing: "0.04em" }}>

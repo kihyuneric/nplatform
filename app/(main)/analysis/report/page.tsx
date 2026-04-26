@@ -453,7 +453,7 @@ export default function UnifiedReportPage() {
 
       {/* ── 3. AI 리스크 등급 ─────────────────────── */}
       <Section
-        title="AI 리스크 등급 · 생성형 AI 프롬프트"
+        title="AI 리스크 등급"
         icon={Shield}
         caption={`모델 · ${risk.promptMeta.model} · 해시 ${risk.promptMeta.inputHash}`}
       >
@@ -501,7 +501,8 @@ export default function UnifiedReportPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+        {/* 4-팩터 카드 — 사용자 요청(2026-04-26) 2x2 배열 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {risk.factors.map((f) => (
             <div
               key={f.category}
@@ -1089,7 +1090,7 @@ function SpecialConditionsV2Section({
             : <ChevronRight className="w-4 h-4 text-[var(--color-brand-mid)]" />}
           <AlertTriangle className="w-4 h-4 text-[var(--color-brand-mid)]" />
           <h2 className="text-[0.9375rem] font-black text-[var(--color-text-primary)]">
-            특수조건 점검 · V2 {SPECIAL_CONDITIONS_V2.length}항목
+            특수조건 점검 · {SPECIAL_CONDITIONS_V2.length}항목
           </h2>
         </div>
         <div className="flex items-center gap-3 text-[0.6875rem] text-[var(--color-text-tertiary)]">
@@ -2118,6 +2119,8 @@ function ProfitabilitySections({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[strategies.conservative, strategies.recommended, strategies.aggressive].map((s) => {
             const isRec = s.strategy === "RECOMMENDED"
+            // 권고 표시 임계값: RECOMMENDED 컬럼 OR 매입·낙찰 성공 확률 ≥ 50% (사용자 요청 2026-04-26)
+            const showRecBadge = isRec || s.winProbability >= 0.5
             const tint = s.strategy === "CONSERVATIVE" ? "#64748B" : s.strategy === "RECOMMENDED" ? "#051C2C" : "#A53F8A"
             return (
               <div
@@ -2127,8 +2130,11 @@ function ProfitabilitySections({
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[0.8125rem] font-bold" style={{ color: tint }}>{s.label}</span>
-                  {isRec && (
-                    <span className="text-[0.625rem] px-1.5 py-0.5 rounded font-black bg-stone-100 text-white">
+                  {showRecBadge && (
+                    <span
+                      className="text-[0.625rem] px-2 py-0.5 rounded font-black tracking-wider"
+                      style={{ backgroundColor: "#0A1628", color: "#FFFFFF", letterSpacing: "0.06em" }}
+                    >
                       AI 권고
                     </span>
                   )}
@@ -2148,8 +2154,25 @@ function ProfitabilitySections({
                   <StatRow k="투자 에쿼티" v={krwWon(s.totalEquity)} />
                   <StatRow k="예상 손익" v={krwWon(s.expectedNetProfit)} />
                   <StatRow k="ROI / 연환산" v={`${(s.roi * 100).toFixed(1)}% / ${(s.annualizedRoi * 100).toFixed(1)}%`} />
-                  <StatRow k="매입·낙찰 성공 확률" v={`${(s.winProbability * 100).toFixed(0)}%`} />
+                  <StatRow k="매입·낙찰 성공 확률" v={`${(s.winProbability * 100).toFixed(1)}%`} />
                 </dl>
+                {/* 매입·낙찰 성공 확률 계산식 (정규분포 기반 P(실낙찰가율 ≥ 가정치)) */}
+                <div className="mb-2">
+                  <FormulaToggle
+                    label="확률 계산식"
+                    formula={[
+                      `매입·낙찰 성공 확률 = P(실낙찰가율 ≥ 가정 낙찰가율)`,
+                      ``,
+                      `  · 가정 낙찰가율   = ${(s.assumedBidRatio * 100).toFixed(1)}%`,
+                      `  · 분포 가정       = N(μ = 83.5%, σ = 2.0%p)  · 지역 12M 낙찰가율 분포 추정`,
+                      `  · z = (가정 − μ) / σ = (${(s.assumedBidRatio * 100).toFixed(1)} − 83.5) / 2.0 = ${(((s.assumedBidRatio * 100) - 83.5) / 2.0).toFixed(2)}`,
+                      `  · P  = 1 − Φ(z) = ${(s.winProbability * 100).toFixed(1)}%   (Φ = 표준정규 누적분포)`,
+                      ``,
+                      `해석 · 가정 낙찰가율이 분포 평균보다 낮을수록 P 가 커지며 (실낙찰가율이 가정치 이상일 확률 ↑),`,
+                      `      가정 낙찰가율이 분포 평균보다 높을수록 P 가 작아진다 (입찰 경쟁 강화 → 낙찰 실패 위험 ↑).`,
+                    ].join('\n')}
+                  />
+                </div>
                 {s.riskWarning && (
                   <div className="mt-2 pt-2 border-t border-[var(--color-border-subtle)] flex items-start gap-1.5">
                     <AlertTriangle className="w-3 h-3 mt-0.5 text-stone-900 shrink-0" />
