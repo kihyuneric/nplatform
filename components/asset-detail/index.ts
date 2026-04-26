@@ -20,3 +20,10 @@ export {
 } from "./inline-deal-room"
 export { DealCompletionStages, type DealCompletionStagesProps } from "./deal-completion-stages"
 export { TierNav, type TierNavItem, type TierNavProps } from "./tier-nav"
+export {
+  InvestorVerifyModal, NdaModal, LoiModal,
+  type ApprovalStatus, type SubmittedDoc,
+  type InvestorVerifyState, type InvestorVerifyModalProps,
+  type NdaState, type NdaModalProps,
+  type LoiState, type LoiModalProps,
+} from "./access-modals"

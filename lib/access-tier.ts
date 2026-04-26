@@ -138,10 +138,10 @@ export const TIER_META: Record<AccessTier, {
     color: '#64748B',
   },
   L1: {
-    label: '본인인증 (L1)',
+    label: '투자자 인증 (L1)',
     shortLabel: 'L1',
     description: '등기부 요약·임대차 정보 열람',
-    requirement: '휴대폰/공동인증 본인인증',
+    requirement: '사업자등록증/명함 투자자 인증',
     color: '#3B82F6',
   },
   L2: {

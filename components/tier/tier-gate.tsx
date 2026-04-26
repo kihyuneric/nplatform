@@ -290,7 +290,7 @@ function getUpgradeAction(
   // L2 → L3 업그레이드는 매물별 LOI 필요
   if (required === 'L3') {
     return {
-      label: 'LOI 제출하고 데이터룸 열기',
+      label: 'LOI 제출화면 열기',
       href: listingId ? `/deals/${listingId}?action=loi` : '/my/agreements',
     }
   }
@@ -301,7 +301,7 @@ function getUpgradeAction(
     return { label: 'NDA 체결화면 열기', href: '/my/kyc' }
   }
   if (required === 'L1') {
-    return { label: '본인인증하고 열람', href: '/my/verify' }
+    return { label: '투자자 인증하고 열람', href: '/my/verify' }
   }
   return null
 }

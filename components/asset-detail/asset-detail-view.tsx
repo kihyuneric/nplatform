@@ -38,7 +38,13 @@ import {
   InlineDealRoom,
   DealCompletionStages,
   TierNav,
+  InvestorVerifyModal,
+  NdaModal,
+  LoiModal,
   type InlineDealRoomCounterpart,
+  type InvestorVerifyState,
+  type NdaState,
+  type LoiState,
 } from "@/components/asset-detail"
 // DR-19: 딜룸 좌측 메인 funnel 컴포넌트 (primitives — 기존 섹션 사이에 stage gate 삽입용)
 import {
@@ -478,6 +484,30 @@ export function AssetDetailView({
   const [mockTier, setMockTier] = useState<AssetTier>("L0")
   const [actionOpen, setActionOpen] = useState(false)
 
+  /* ── DR-24: 게이트 모달 (투자자 인증 / NDA / LOI) ──
+   * 이미 승인된 회원이면 모달이 뜰 필요 없으므로 부모에서 상태 체크 후 호출.
+   * Mock: 회원가입 시 사업자등록증/명함 모두 제출 → 관리자 검토 중(pending).
+   *       채권별 NDA/LOI 는 미제출(none) 상태에서 시작.
+   */
+  const [investorOpen, setInvestorOpen] = useState(false)
+  const [ndaOpen, setNdaOpen] = useState(false)
+  const [loiOpen, setLoiOpen] = useState(false)
+  const [investorState, setInvestorState] = useState<InvestorVerifyState>({
+    status: "pending",
+    businessLicense: { label: "사업자등록증", submitted: true, filename: "사업자등록증_2026.pdf", submittedAt: "2026-04-20" },
+    businessCard: { label: "명함", submitted: true, filename: "namecard.jpg", submittedAt: "2026-04-20" },
+    reviewNote: "관리자 검토 중 (영업일 기준 1일 이내)",
+    updatedAt: "2026-04-20",
+  })
+  const [ndaState, setNdaState] = useState<NdaState>({
+    status: "none",
+    sellerName: maskInstitutionName("하나저축은행"),
+  })
+  const [loiState, setLoiState] = useState<LoiState>({
+    status: "none",
+    sellerName: maskInstitutionName("하나저축은행"),
+  })
+
   /* ── 관리자/채권자 편집 기능 ── */
   const [canEdit, setCanEdit] = useState(false)
   const [editingSec, setEditingSec] = useState<"auction" | "public-sale" | null>(null)
@@ -621,9 +651,43 @@ export function AssetDetailView({
     })()
   }, [id])
 
+  /**
+   * DR-24: tier 별로 게이트 모달 분기
+   * - L0 → 투자자 인증 (관리자 승인 대기 시 모달, approved 면 즉시 다음 단계)
+   * - L1 → NDA 체결 모달 (매각사 승인 대기)
+   * - L2 → LOI 제출 모달 (매각사 승인 대기)
+   * - L3+ → 기존 ActionSheet (계약/에스크로/정산)
+   * 이미 approved 상태이면 모달을 띄우지 않고 다음 단계 즉시 진행 (handleConfirmStep)
+   */
   const handlePrimaryAction = useCallback(() => {
+    if (effectiveTier === "L0") {
+      if (investorState.status === "approved") { handleNextTier(); return }
+      setInvestorOpen(true)
+      return
+    }
+    if (effectiveTier === "L1") {
+      if (ndaState.status === "approved") { handleNextTier(); return }
+      setNdaOpen(true)
+      return
+    }
+    if (effectiveTier === "L2") {
+      if (loiState.status === "approved") { handleNextTier(); return }
+      setLoiOpen(true)
+      return
+    }
     setActionOpen(true)
-  }, [])
+  }, [effectiveTier, investorState.status, ndaState.status, loiState.status]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** Mock: 다음 tier 로 즉시 승급 (이미 approved 인 경우용) */
+  const handleNextTier = useCallback(() => {
+    const currentIdx = TIER_ORDER.indexOf(effectiveTier)
+    const nextTier = TIER_ORDER[currentIdx + 1] ?? "L5"
+    setMockTier(nextTier)
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(MOCK_STORAGE_KEY(id), nextTier)
+    }
+    toast.success(TIER_TRANSITION_MSG[nextTier], { duration: 3000 })
+  }, [effectiveTier, id])
 
   const handleConfirmStep = useCallback(() => {
     setActionOpen(false)
@@ -952,9 +1016,15 @@ export function AssetDetailView({
               <div className="mt-6 lg:mt-8">
                 <DealGate
                   icon={DealLockIcon}
-                  title="로그인/인증하고 상세 보기"
+                  title="투자자 인증하고 상세 보기"
                   subtitle="등기부등본·임대차·감정평가서 등 상세 데이터 열람"
                   panelMode
+                  ctaLabel={investorState.status === "approved" ? undefined : "투자자 인증하고 열람"}
+                  onCtaClick={
+                    investorState.status === "approved"
+                      ? undefined
+                      : () => setInvestorOpen(true)
+                  }
                 />
               </div>
             )}
@@ -1109,6 +1179,16 @@ export function AssetDetailView({
                   title="NDA 체결 시 열람 가능"
                   subtitle="기관 검증 데이터 · 감정평가서 · 실거래 · 채권 정보"
                   panelMode
+                  ctaLabel={
+                    !tierGte(effectiveAccessTier, "L2") && ndaState.status !== "approved"
+                      ? "NDA 체결화면 열기"
+                      : undefined
+                  }
+                  onCtaClick={
+                    !tierGte(effectiveAccessTier, "L2") && ndaState.status !== "approved"
+                      ? () => setNdaOpen(true)
+                      : undefined
+                  }
                 />
                 <StageHeader
                   eyebrow="Section 02 · NDA required"
@@ -2032,6 +2112,16 @@ export function AssetDetailView({
               title="LOI 제출 시 참여 가능"
               subtitle="채팅 · 가격 오퍼 · 오프라인 미팅 · 실사 · 협상"
               panelMode
+              ctaLabel={
+                !tierGte(effectiveAccessTier, "L3") && loiState.status !== "approved"
+                  ? "LOI 제출화면 열기"
+                  : undefined
+              }
+              onCtaClick={
+                !tierGte(effectiveAccessTier, "L3") && loiState.status !== "approved"
+                  ? () => setLoiOpen(true)
+                  : undefined
+              }
             />
             <StageHeader
               eyebrow="Section 03 · LOI required"
@@ -2347,6 +2437,62 @@ export function AssetDetailView({
         askingPrice={listing.asking_price}
         onClose={() => setActionOpen(false)}
         onConfirm={handleConfirmStep}
+      />
+
+      {/* DR-24: 게이트 모달 — L0 투자자 인증 / L1 NDA / L2 LOI */}
+      <InvestorVerifyModal
+        open={investorOpen}
+        onClose={() => setInvestorOpen(false)}
+        state={investorState}
+        onSubmit={() => {
+          setInvestorState((s) => ({
+            ...s,
+            status: "pending",
+            updatedAt: new Date().toISOString().slice(0, 10),
+            reviewNote: "추가 자료 제출 완료 — 관리자 재검토 중",
+          }))
+          toast.success("투자자 인증 자료를 제출했습니다. 관리자 검토 후 알림으로 안내됩니다.", { duration: 3000 })
+        }}
+      />
+
+      <NdaModal
+        open={ndaOpen}
+        onClose={() => setNdaOpen(false)}
+        listingTitle={title}
+        listingId={id}
+        state={ndaState}
+        onSubmit={() => {
+          const today = new Date().toISOString().slice(0, 10)
+          setNdaState((s) => ({
+            ...s,
+            status: "submitted",
+            submittedAt: today,
+            reviewNote: "매각사 검토 대기 중 (영업일 기준 1일 이내)",
+          }))
+          toast.success("NDA 전자서명을 매각사에 전송했습니다. 승인 시 L2 자료가 즉시 열립니다.", { duration: 3500 })
+          setNdaOpen(false)
+        }}
+      />
+
+      <LoiModal
+        open={loiOpen}
+        onClose={() => setLoiOpen(false)}
+        listingTitle={title}
+        listingId={id}
+        askingPrice={listing.asking_price}
+        state={loiState}
+        onSubmit={(price) => {
+          const today = new Date().toISOString().slice(0, 10)
+          setLoiState((s) => ({
+            ...s,
+            status: "submitted",
+            submittedAt: today,
+            proposedPrice: price,
+            reviewNote: "매각사 검토 대기 중",
+          }))
+          toast.success("LOI 를 매각사에 제출했습니다. 승인 시 협상·데이터룸이 활성화됩니다.", { duration: 3500 })
+          setLoiOpen(false)
+        }}
       />
 
       {!embedded && (

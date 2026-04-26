@@ -35,9 +35,9 @@ interface Cta {
 
 const CTA: Record<AssetTier, Cta> = {
   L0: {
-    label: "본인인증하고 관심 표시",
-    subtitle: "10초 · 전문투자자 인증",
-    hint: "본인인증 완료 시 등기부 · 임대차 정보 등 L1 자료 열람 가능",
+    label: "투자자 인증하고 관심 표시",
+    subtitle: "10초 · 투자자 인증",
+    hint: "등기부 · 임대차 정보 등 L1 자료 열람 가능",
     icon: <LogIn className="w-5 h-5" />,
     bg: "var(--color-brand-dark)",
     fg: "var(--fg-on-brand)",

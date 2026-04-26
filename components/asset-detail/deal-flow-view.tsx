@@ -105,6 +105,14 @@ export interface DealFlowViewProps {
     asset_type?: string
     location?: string
   }
+  /** L0→L1 투자자 인증 모달 트리거 (없으면 /login 링크로 폴백) */
+  onVerifyClick?: () => void
+  /** L1→L2 NDA 모달 트리거 (없으면 /exchange/[id]?action=nda 링크로 폴백) */
+  onNdaClick?: () => void
+  /** L2→L3 LOI 모달 트리거 (없으면 /exchange/[id]?action=loi 링크로 폴백) */
+  onLoiClick?: () => void
+  /** L3→L4 ESCROW 모달 트리거 (없으면 /exchange/[id]?action=escrow 링크로 폴백) */
+  onEscrowClick?: () => void
 }
 
 export function DealFlowView({
@@ -112,6 +120,10 @@ export function DealFlowView({
   embedded = false,
   panelMode = false,
   dealOverride,
+  onVerifyClick,
+  onNdaClick,
+  onLoiClick,
+  onEscrowClick,
 }: DealFlowViewProps = {}) {
   // panelMode 는 embedded 의 superset (utility bar 등 chrome 숨김 포함)
   const inEmbed = embedded || panelMode
@@ -207,9 +219,10 @@ export function DealFlowView({
       >
         <DealScreening />
         <DealCTA
-          label="로그인하고 상세 보기"
-          subtext="회원가입 30초 · 무료 · 카드 등록 불필요"
-          href="/login"
+          label="투자자 인증하고 관심 표시"
+          subtext="10초 · 사업자등록증/명함 투자자 인증"
+          href={onVerifyClick ? undefined : "/login"}
+          onClick={onVerifyClick}
         />
       </DealSection>
 
@@ -219,6 +232,8 @@ export function DealFlowView({
         title="NDA 체결 시 열람 가능"
         subtitle="기관 검증 데이터 · 감정평가서 · 실거래 · 채권 정보"
         panelMode={panelMode}
+        ctaLabel={onNdaClick ? "NDA 체결화면 열기" : undefined}
+        onCtaClick={onNdaClick}
       />
 
       {/* ═══ 3. DEAL VALIDATION ════════════════════════════════════════════ */}
@@ -234,7 +249,8 @@ export function DealFlowView({
           <DealCTA
             label="NDA 체결하고 전체 데이터 보기"
             subtext="전자서명 · 약 2분 소요 · 즉시 잠금 해제"
-            href={`/exchange/${dealId}?action=nda`}
+            href={onNdaClick ? undefined : `/exchange/${dealId}?action=nda`}
+            onClick={onNdaClick}
             emphasis
           />
         )}
@@ -246,6 +262,8 @@ export function DealFlowView({
         title="LOI 제출 시 참여 가능"
         subtitle="채팅 · 오프라인 미팅 · 실사 · 가격 협상"
         panelMode={panelMode}
+        ctaLabel={onLoiClick ? "LOI 제출화면 열기" : undefined}
+        onCtaClick={onLoiClick}
       />
 
       {/* ═══ 4. DEAL ENGAGEMENT ════════════════════════════════════════════ */}
@@ -261,7 +279,8 @@ export function DealFlowView({
           <DealCTA
             label="LOI 제출하고 협상 참여"
             subtext="구속력 없는 의향서 · 매도자 동의 후 딜룸 오픈"
-            href={`/exchange/${dealId}?action=loi`}
+            href={onLoiClick ? undefined : `/exchange/${dealId}?action=loi`}
+            onClick={onLoiClick}
             emphasis
           />
         )}
@@ -273,6 +292,8 @@ export function DealFlowView({
         title="ESCROW 결제 후 실행"
         subtitle="안전결제 · 계약서 자동생성 · 현장 클로징"
         panelMode={panelMode}
+        ctaLabel={onEscrowClick ? "ESCROW 결제화면 열기" : undefined}
+        onCtaClick={onEscrowClick}
       />
 
       {/* ═══ 5. DEAL EXECUTION ═════════════════════════════════════════════ */}
@@ -288,7 +309,8 @@ export function DealFlowView({
           <DealCTA
             label="결제 진행"
             subtext="에스크로 안전결제 · KB국민은행 협력"
-            href={`/exchange/${dealId}?action=escrow`}
+            href={onEscrowClick ? undefined : `/exchange/${dealId}?action=escrow`}
+            onClick={onEscrowClick}
             emphasis
           />
         )}
@@ -1049,14 +1071,20 @@ function DataTileLocked({
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Deal Gate — 카드가 아니라 가로 라인 게이트
+   ctaLabel/onCtaClick 가 제공되면 게이트 라벨 아래 좌측 CTA 버튼 노출.
+   (DR-24: 딜룸 좌측 게이트 모달 트리거 — "투자자 인증하고 열람" / "NDA 체결화면 열기" / "LOI 제출화면 열기")
    ═══════════════════════════════════════════════════════════════════════════ */
 export function DealGate({
-  icon: Icon, title, subtitle, panelMode = false,
+  icon: Icon, title, subtitle, panelMode = false, ctaLabel, onCtaClick,
 }: {
   icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>
   title: string
   subtitle: string
   panelMode?: boolean
+  /** 좌측 게이트 CTA 라벨 (예: "NDA 체결화면 열기"). 있을 때만 버튼 노출. */
+  ctaLabel?: string
+  /** ctaLabel 클릭 시 모달 열기 콜백 */
+  onCtaClick?: () => void
 }) {
   return (
     <div className={panelMode ? "px-5" : "max-w-[1280px] mx-auto px-6"}>
@@ -1108,47 +1136,94 @@ export function DealGate({
         </div>
         <div style={{ flex: 1, height: 1.5, background: MCK.brass }} />
       </div>
+
+      {/* 좌측 CTA 버튼 — 모달 트리거 (ctaLabel 가 있을 때만) */}
+      {ctaLabel && onCtaClick && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: -4,
+            marginBottom: 12,
+          }}
+        >
+          <button
+            type="button"
+            onClick={onCtaClick}
+            className="mck-cta-dark"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "11px 22px",
+              background: MCK.paper,
+              border: `1.5px solid ${MCK.ink}`,
+              borderTop: `2px solid ${MCK.brass}`,
+              color: MCK.ink,
+              fontSize: 12.5,
+              fontWeight: 800,
+              letterSpacing: "-0.01em",
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(10,22,40,0.08)",
+            }}
+          >
+            <span style={{ color: MCK.ink }}>{ctaLabel}</span>
+            <ChevronRight size={14} style={{ color: MCK.ink }} />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Deal CTA — 검정 박스 + brass top + 흰 글씨 (mck-cta-dark)
+   onClick 가 제공되면 버튼으로 렌더 (모달 트리거), 아니면 Link 로 폴백.
    ═══════════════════════════════════════════════════════════════════════════ */
 export function DealCTA({
-  label, subtext, href, emphasis,
+  label, subtext, href, emphasis, onClick,
 }: {
   label: string
   subtext: string
-  href: string
+  href?: string
   emphasis?: boolean
+  onClick?: () => void
 }) {
+  const inner = (
+    <>
+      <span style={{ color: emphasis ? MCK.paper : MCK.ink }}>{label}</span>
+      <ChevronRight size={16} style={{ color: emphasis ? MCK.paper : MCK.ink }} />
+    </>
+  )
+  const baseStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "16px 36px",
+    background: emphasis ? MCK.ink : MCK.paper,
+    borderTop: `2.5px solid ${MCK.brass}`,
+    border: emphasis ? "none" : `1px solid ${MCK.ink}`,
+    color: emphasis ? MCK.paper : MCK.ink,
+    fontSize: 14,
+    fontWeight: 800,
+    letterSpacing: "-0.015em",
+    textTransform: "none",
+    minWidth: 280,
+    justifyContent: "center",
+    boxShadow: emphasis ? "0 6px 24px rgba(10,22,40,0.20)" : "none",
+    cursor: "pointer",
+  }
   return (
     <div className="mt-10 flex flex-col items-center" style={{ gap: 10 }}>
-      <Link
-        href={href}
-        className="mck-cta-dark"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 10,
-          padding: "16px 36px",
-          background: emphasis ? MCK.ink : MCK.paper,
-          borderTop: `2.5px solid ${MCK.brass}`,
-          border: emphasis ? "none" : `1px solid ${MCK.ink}`,
-          color: emphasis ? MCK.paper : MCK.ink,
-          fontSize: 14,
-          fontWeight: 800,
-          letterSpacing: "-0.015em",
-          textTransform: "none",
-          minWidth: 280,
-          justifyContent: "center",
-          boxShadow: emphasis ? "0 6px 24px rgba(10,22,40,0.20)" : "none",
-        }}
-      >
-        <span style={{ color: emphasis ? MCK.paper : MCK.ink }}>{label}</span>
-        <ChevronRight size={16} style={{ color: emphasis ? MCK.paper : MCK.ink }} />
-      </Link>
+      {onClick ? (
+        <button type="button" onClick={onClick} className="mck-cta-dark" style={baseStyle}>
+          {inner}
+        </button>
+      ) : (
+        <Link href={href ?? "#"} className="mck-cta-dark" style={baseStyle}>
+          {inner}
+        </Link>
+      )}
       <div
         style={{
           fontSize: 11,
