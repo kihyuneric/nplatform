@@ -65,7 +65,7 @@ const DEMO_FALLBACK = `(데모 응답) 입력하신 조건을 검토했습니다
 - /analysis/profitability 에서 IRR·ROI 시뮬 실행
 - /analysis/simulator 에서 낙찰가 슬라이더로 민감도 분석
 
-* 본 응답은 네트워크 오류로 인한 데모 fallback 입니다. 실제 Claude AI 응답은 더 상세합니다.`
+* 본 응답은 네트워크 오류로 인한 데모 fallback 입니다. 실제 NPlatform AI 응답은 더 상세합니다.`
 
 export default function NPLCopilotPage() {
   const [messages, setMessages] = useState<Message[]>([])
@@ -175,7 +175,7 @@ export default function NPLCopilotPage() {
     <MckPageShell variant="tint">
       {isDemo && (
         <MckDemoBanner
-          message="데모 응답 모드 — Claude API 연결 실패로 사전 작성된 샘플 응답을 사용합니다."
+          message="데모 응답 모드 — NPlatform AI 연결 실패로 사전 작성된 샘플 응답을 사용합니다."
           ctaLabel="다시 시도"
           ctaHref="/analysis/copilot"
         />
@@ -187,13 +187,13 @@ export default function NPLCopilotPage() {
           { label: "분석", href: "/analysis" },
           { label: "AI 컨설턴트" },
         ]}
-        eyebrow="AI Consultant · Claude"
+        eyebrow="AI Consultant · NPlatform AI"
         title="AI 컨설턴트"
-        subtitle="자연어로 매물·법률·수익률을 질문하면 Claude AI 가 RAG 판례 인용과 함께 답변합니다."
+        subtitle="자연어로 매물·법률·수익률을 질문하면 NPlatform AI 가 RAG 판례 인용과 함께 답변합니다."
         actions={
           <div className="flex items-center gap-2 shrink-0">
             <MckBadge tone="positive" outlined icon={<span style={{ width: 6, height: 6, background: MCK.positive, display: "inline-block", borderRadius: "50%" }} />}>
-              Online · Claude
+              Online · NPlatform AI
             </MckBadge>
             <button
               onClick={handleReset}
@@ -259,7 +259,7 @@ export default function NPLCopilotPage() {
                     AI Consultant
                   </p>
                   <p style={{ fontSize: 13, fontWeight: 700, color: MCK.ink, fontFamily: MCK_FONTS.serif }}>
-                    Claude
+                    NPlatform AI
                   </p>
                 </div>
               </div>

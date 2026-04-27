@@ -90,11 +90,13 @@ export default function DealRoomExamplerPage() {
         subtitle="○○은행 · 서울 강남구 · 임의매각 · NPL-2026-0412"
         actions={
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-            {/* 편집하기 — 관리자 / 매도자 본인만 노출 (매물 편집 페이지로 이동) */}
+            {/* 편집하기 — 관리자 / 매도자(본인)만 노출
+                · resourceId 는 이 데모 페이지에서 표시 중인 매물 ID (실제 데이터 연동 시 동적 listing.id)
+                · ownerId 는 해당 매물의 seller_id (데모: dev SELLER 사용자 = 김매도) */}
             <OwnerEditButton
               resourceType="dealroom"
-              resourceId="NPL-2026-0412"
-              ownerId={null}
+              resourceId="npl-2026-0412"
+              ownerId="00000000-0000-0000-0000-000000000001"
             />
             {/* PDF 다운로드 (Full Ver.) — 메인 dark CTA */}
             <button

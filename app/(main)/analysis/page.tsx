@@ -50,8 +50,8 @@ const TOOLS = [
     icon: Brain,
     badge: "03 · AI",
     title: "AI 컨설턴트",
-    desc: "자연어로 매물을 설명하면 AI가 30초 만에 투자 리포트를 생성합니다.",
-    features: ["Claude 기반 LLM", "판례 RAG 연동", "30초 리포트"],
+    desc: "자연어로 매물을 설명하면 AI가 즉각적으로 답변을 생성합니다.",
+    features: ["생성형 AI 기반 LLM", "물건 분석 및 수익률 계산", "법률 리스크"],
   },
 ] as const
 

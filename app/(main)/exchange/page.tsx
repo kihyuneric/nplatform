@@ -71,6 +71,8 @@ const V = {
 ═══════════════════════════════════════════════════════════ */
 interface CardListing {
   id: string
+  /** 매도자(매각사) 사용자 ID — OwnerEditButton 권한 매칭용. 없으면 관리자만 편집 가능 */
+  seller_id?: string | null
   institution: string
   inst_kind: keyof typeof SELLER_INSTITUTIONS  // BANK / SAVINGS_BANK / MUTUAL_CREDIT / AMC / MONEY_LENDER
   listing_category: keyof typeof LISTING_CATEGORIES  // NPL / GENERAL
@@ -98,9 +100,14 @@ interface CardListing {
   view_count: number   // 공개 리스트 누적 조회수 (L0)
 }
 
+// 데모 모드 매도자 UUID — CLAUDE.md 의 dev SELLER (김매도) 와 일치.
+// 로그인 시 해당 user.id 와 일치하는 매물 카드에서 OwnerEditButton 노출.
+const DEMO_SELLER_ID = "00000000-0000-0000-0000-000000000001"
+
 const MOCK: CardListing[] = [
   {
-    id: "npl-2026-0412", institution: "우리은행", inst_kind: "BANK", listing_category: "NPL",
+    id: "npl-2026-0412", seller_id: DEMO_SELLER_ID,
+    institution: "우리은행", inst_kind: "BANK", listing_category: "NPL",
     region: "서울 강남구", regionCode: "SEOUL",
     collateral: "아파트", collateralMajor: "RESIDENTIAL",
     outstanding_principal: 1_200_000_000, asking_price: 850_000_000,
@@ -1338,12 +1345,13 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
           <ArrowRight size={14} />
         </Link>
 
-        {/* 관리자 / 매도자(본인) 만 노출 — OwnerEditButton 자체에서 권한 체크 */}
+        {/* 관리자 / 매도자(본인) 만 노출 — OwnerEditButton 자체에서 권한 체크
+            ownerId === user.id 일 때 매도자에게 "편집" 버튼이 노출됨. */}
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
           <OwnerEditButton
             resourceType="listing"
             resourceId={item.id}
-            ownerId={null}
+            ownerId={item.seller_id ?? null}
             compact
             label="편집"
           />
