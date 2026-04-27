@@ -335,9 +335,9 @@ input::placeholder, textarea::placeholder {
     --fg-on-danger:     #FFFFFF;             /* on red bg */
 
     /* ── NPL namespace aliases (referenced in tailwind.config) ─────────────── */
-    --npl-primary:           #1B3A5C;
-    --npl-secondary:         #2E75B6;
-    --npl-accent:            #10B981;
+    --npl-primary:           #0A1628;
+    --npl-secondary:         #2251FF;
+    --npl-accent:            #2251FF;
     --npl-surface-elevated:  var(--color-surface-elevated);
     --npl-surface-sunken:    var(--color-surface-sunken);
     --npl-text-primary:      var(--color-text-primary);
@@ -448,19 +448,19 @@ input::placeholder, textarea::placeholder {
     --border-strong:  oklch(0.715 0.015 240);
     --border-focus:   oklch(0.530 0.140 250);
 
-    /* Brand Palette (global NPL 기준) */
-    --brand-primary:        oklch(0.355 0.055 252);  /* #1B3A5C navy      */
-    --brand-primary-hover:  oklch(0.425 0.075 252);
-    --brand-primary-active: oklch(0.305 0.060 252);
-    --brand-secondary:      oklch(0.530 0.100 240);  /* #2E75B6 blue      */
-    --brand-accent:         oklch(0.705 0.165 155);  /* #10B981 emerald   */
-    --brand-accent-hover:   oklch(0.760 0.150 155);
+    /* Brand Palette (McKinsey monochrome — Electric Blue accent) */
+    --brand-primary:        oklch(0.180 0.040 252);  /* #0A1628 ink         */
+    --brand-primary-hover:  oklch(0.250 0.045 252);
+    --brand-primary-active: oklch(0.140 0.035 252);
+    --brand-secondary:      oklch(0.555 0.250 264);  /* #2251FF electric    */
+    --brand-accent:         oklch(0.555 0.250 264);  /* #2251FF electric    */
+    --brand-accent-hover:   oklch(0.485 0.235 264);  /* #1A47CC electricDark */
 
-    /* Semantic Intent */
-    --intent-positive: oklch(0.705 0.165 155);
-    --intent-warning:  oklch(0.770 0.155 82);
-    --intent-danger:   oklch(0.625 0.225 27);
-    --intent-info:     oklch(0.620 0.145 245);
+    /* Semantic Intent (McKinsey: muted teal/amber/magenta — no rainbow) */
+    --intent-positive: oklch(0.515 0.115 184);  /* #0F766E teal           */
+    --intent-warning:  oklch(0.555 0.125 65);   /* #B45309 amber-deep     */
+    --intent-danger:   oklch(0.510 0.155 354);  /* #A53F8A magenta        */
+    --intent-info:     oklch(0.555 0.250 264);  /* #2251FF electric       */
 
     /* Focus Ring */
     --focus-ring:        oklch(0.615 0.150 250 / 0.45);
@@ -560,10 +560,10 @@ input::placeholder, textarea::placeholder {
     --color-danger-foreground:   #FFFFFF;   /* magenta 위 흰색 */
     --color-info-foreground:     #051C2C;
 
-    /* NPL aliases */
-    --npl-primary:           #2A5A8C;
-    --npl-secondary:         #4A9ADE;
-    --npl-accent:            #34D399;
+    /* NPL aliases (dark mode — McKinsey monochrome) */
+    --npl-primary:           #0A1628;
+    --npl-secondary:         #2251FF;
+    --npl-accent:            #4D78FF;  /* electric-light for dark bg */
     --npl-surface-elevated:  var(--color-surface-elevated);
     --npl-surface-sunken:    var(--color-surface-sunken);
     --npl-text-primary:      var(--color-text-primary);
@@ -692,16 +692,16 @@ input::placeholder, textarea::placeholder {
   transform: translateY(-2px);
 }
 
-/* ── 수익성 분석 결과 전용 깊이 카드 ──────────────────────────────────── */
+/* ── 수익성 분석 결과 전용 깊이 카드 (McKinsey monochrome) ─────────────── */
 .dark .metric-card-positive {
-  background: rgba(52,211,153,0.08);
-  border-color: rgba(52,211,153,0.25);
-  border-left: 3px solid #34D399;
+  background: rgba(34,81,255,0.08);
+  border-color: rgba(34,81,255,0.25);
+  border-left: 3px solid #2251FF;  /* electric */
 }
 .dark .metric-card-negative {
-  background: rgba(248,113,113,0.08);
-  border-color: rgba(248,113,113,0.25);
-  border-left: 3px solid #F87171;
+  background: rgba(165,63,138,0.08);
+  border-color: rgba(165,63,138,0.25);
+  border-left: 3px solid #A53F8A;  /* magenta */
 }
 .dark .metric-card-neutral {
   background: #162035;
@@ -1246,8 +1246,8 @@ input::placeholder, textarea::placeholder {
                 box-shadow var(--duration-fast) var(--ease-out);
   }
   .btn-danger:hover {
-    background-color: #DC2626;
-    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+    background-color: #842F6E;  /* magenta-deep */
+    box-shadow: 0 4px 14px rgba(165, 63, 138, 0.35);
   }
 
   /* ── Table ───────────────────────────────────────────────────────────────── */
@@ -1289,8 +1289,8 @@ input::placeholder, textarea::placeholder {
 
 /* Switch toggle — NX-4: unchecked 상태 가시성 (WCAG 1.4.11 non-text contrast ≥ 3:1) */
 button[role="switch"][data-state="checked"] {
-  background-color: #10B981 !important;
-  border: 1px solid #0D9668 !important;
+  background-color: #2251FF !important;  /* electric */
+  border: 1px solid #1A47CC !important;  /* electricDark */
 }
 button[role="switch"][data-state="unchecked"] {
   /* slate-400 on white = 3.4:1 (AA ✓) · 테두리로 엣지 정의 */
@@ -1298,8 +1298,8 @@ button[role="switch"][data-state="unchecked"] {
   border: 1px solid #64748B !important;
 }
 .dark button[role="switch"][data-state="checked"] {
-  background-color: #10B981 !important;
-  border: 1px solid #34D399 !important;
+  background-color: #2251FF !important;  /* electric */
+  border: 1px solid #4D78FF !important;  /* electric-light */
 }
 .dark button[role="switch"][data-state="unchecked"] {
   /* slate-500 on #0B1220 = 4.1:1 (AA ✓) */
@@ -2011,61 +2011,179 @@ button[role="switch"][data-state="unchecked"] {
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   PRINT
-   ───────────────────────────────────────────────────────────────────────────── */
-@media print {
-  header, nav, .no-print { display: none !important; }
-  body    { background: white !important; color: black !important; }
-  .container { max-width: 100% !important; padding: 0 !important; }
-  canvas  { max-width: 100% !important; }
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRINT · NPL 분석 보고서 PDF 다운로드 최적화 (Full + Summary)
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-  /* 분석 리포트 PDF 다운로드 (window.print → Save as PDF) 최적화
-     · 카드/박스 그림자·반투명 배경 → 흑백 백서 톤으로 정규화
-     · 페이지 넘김 시 섹션이 어색하게 잘리지 않도록 break-inside:avoid */
-  .pdf-page-break { page-break-before: always; break-before: page; }
-  .pdf-avoid-break, section, .rounded-xl, .rounded-2xl {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-  .pdf-section, section { box-shadow: none !important; }
-  /* 화면 전용 인터랙티브 컴포넌트 숨김 (편집 입력·툴팁·드롭다운 등) */
-  input[type="date"], input[type="text"], input[type="number"], textarea, select,
-  button[aria-expanded] {
-    background: transparent !important;
-    border-color: rgba(0,0,0,0.15) !important;
-    color: black !important;
-  }
-}
+/* ── Default page size · A4 portrait + 12mm margin ──────────────────── */
 @page {
   size: A4;
-  margin: 12mm;
+  margin: 12mm 10mm;
 }
 
-/* Phase G7+ — 1Page Summary 인쇄 모드 (analysis report)
-   기본 화면: .print-summary-only 숨김
-   인쇄 시 body.print-summary 활성: 본문은 visibility hidden, .print-summary-only 만 표시 */
+/* ── 화면 전용 visibility (.print-summary-only 는 인쇄 시에만 표시) ── */
 .print-summary-only { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   FULL REPORT 인쇄 모드 (window.print without body.print-summary)
+   - 화면의 paper + electric + Deep Navy 색상 전부 보존
+   - 글로벌 nav/sidebar 숨김
+   - section 단위 break 제어
+   ═══════════════════════════════════════════════════════════════════════ */
 @media print {
-  body.print-summary * { visibility: hidden !important; }
+  /* ★ 핵심 — 모든 요소의 background/color 강제 보존 (Chrome/Safari/Firefox) */
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* body — paper 배경 보존 (color/background:black 강제 X) */
+  html, body {
+    background: #FFFFFF !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 글로벌 layout chrome 숨김 — Section 의 <header> 는 보존 */
+  /*  · Navigation: <header class="sticky top-0..."> */
+  /*  · Footer:     <footer> */
+  /*  · BreadcrumbNav: <nav aria-label="Breadcrumb"> */
+  /*  · Chat widget / Mobile tab bar / Tour overlay: fixed positioning */
+  header[class*="sticky"],
+  header.sticky,
+  footer,
+  nav[aria-label="Breadcrumb"],
+  [class*="MobileTabBar"],
+  [class*="ChatWidget"],
+  .no-print,
+  [data-no-print="true"] {
+    display: none !important;
+  }
+  /* fixed positioning 으로 plot 위에 떠 있는 chat widget · tour · banner */
+  [style*="position: fixed"],
+  [class*="fixed"][class*="bottom-"],
+  [class*="fixed"][class*="right-"] {
+    display: none !important;
+  }
+
+  /* MckPageShell 의 padding/max-width 인쇄 시 풀 페이지 사용 */
+  .container,
+  .max-w-\[1280px\],
+  .max-w-\[1440px\],
+  .max-w-3xl,
+  .max-w-4xl {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* canvas / svg / img — 페이지 폭에 맞춤 */
+  canvas, svg, img { max-width: 100% !important; height: auto !important; }
+
+  /* ── 페이지 break 제어 ─────────────────────────────────── */
+  .pdf-page-break { page-break-before: always !important; break-before: page !important; }
+
+  /* Section 컴포넌트 + 카드는 페이지 중간에 잘리지 않도록 */
+  section,
+  article,
+  .pdf-avoid-break {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* h1, h2, h3 다음 콘텐츠와 함께 유지 (orphan heading 방지) */
+  h1, h2, h3 {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* 그림자 제거 (인쇄 품질) — 단 background-color 는 유지 */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* ── 인터랙티브 입력 요소 인쇄 정합 ───────────────────── */
+  input[type="date"], input[type="text"], input[type="number"],
+  input[type="email"], textarea, select {
+    background: transparent !important;
+    border: 1px solid rgba(10, 22, 40, 0.20) !important;
+    color: #051C2C !important;
+  }
+
+  /* details 자동 펼침 (계산식 toggle 등) */
+  details { open: true; }
+  details > summary { display: none !important; }
+  details > * { display: block !important; }
+
+  /* 호버 효과 / transition 제거 */
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  /* 외부 링크 URL 표시 X (인쇄 시 깔끔) */
+  a[href]::after { content: none !important; }
+
+  /* 폰트 크기 12pt 기본 (PDF 가독성) */
+  body { font-size: 11pt !important; line-height: 1.5 !important; }
+  h1 { font-size: 22pt !important; }
+  h2 { font-size: 16pt !important; }
+  h3 { font-size: 13pt !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   1Page SUMMARY 인쇄 모드 (body.print-summary 활성)
+   - 본문(.summary-printable) 1장 풀 페이지 출력
+   - 그 외 모든 콘텐츠 visibility hidden
+   ═══════════════════════════════════════════════════════════════════════ */
+@media print {
+  body.print-summary * {
+    visibility: hidden !important;
+  }
   body.print-summary .print-summary-only,
   body.print-summary .print-summary-only * {
     visibility: visible !important;
   }
   body.print-summary .print-summary-only {
     display: block !important;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    background: #FFFFFF;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    background: #FFFFFF !important;
+    z-index: 9999;
   }
   body.print-summary .summary-printable {
-    width: 100%;
-    page-break-after: avoid;
+    width: 100% !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
     padding: 8mm !important;
+    /* Summary 는 1 페이지에 강제 포함 */
+    max-height: 100vh !important;
+    overflow: hidden !important;
   }
+  /* Summary 페이지 — A4 portrait */
+  body.print-summary {
+    background: #FFFFFF !important;
+  }
+  /* Summary 출력 시에도 색상 보존 */
+  body.print-summary *,
+  body.print-summary *::before,
+  body.print-summary *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}
+
+/* @page: Summary 시 margin 더 좁게 */
+body.print-summary {
+  /* @page selector inside body — 일부 브라우저만 지원하지만 안전 */
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -2292,13 +2410,13 @@ button[role="switch"][data-state="unchecked"] {
 }
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #1B3A5C 0%, #2E75B6 100%);
-  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, #0A1628 0%, #2251FF 100%);  /* ink → electric */
+  border-radius: 0;  /* McKinsey square corners */
   transition: width var(--duration-slow) var(--ease-out);
 }
-.progress-bar-fill.positive { background: linear-gradient(90deg, #059669 0%, #10B981 100%); }
-.progress-bar-fill.warning  { background: linear-gradient(90deg, #D97706 0%, #F59E0B 100%); }
-.progress-bar-fill.danger   { background: linear-gradient(90deg, #DC2626 0%, #EF4444 100%); }
+.progress-bar-fill.positive { background: linear-gradient(90deg, #0F766E 0%, #2251FF 100%); }  /* teal → electric */
+.progress-bar-fill.warning  { background: linear-gradient(90deg, #B45309 0%, #2251FF 100%); }  /* amber-deep → electric */
+.progress-bar-fill.danger   { background: linear-gradient(90deg, #A53F8A 0%, #0A1628 100%); }  /* magenta → ink */
 
 /* ─────────────────────────────────────────────────────────────────────────────
    TOOLTIP — Native-style
@@ -2399,13 +2517,13 @@ button[role="switch"][data-state="unchecked"] {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   RISK GRADE BORDER — Left-border color coding
+   RISK GRADE BORDER — McKinsey monochrome progression (positive→neutral→ink)
    ───────────────────────────────────────────────────────────────────────────── */
-.risk-A { border-left-color: #10B981 !important; }
-.risk-B { border-left-color: #3B82F6 !important; }
-.risk-C { border-left-color: #F59E0B !important; }
-.risk-D { border-left-color: #F97316 !important; }
-.risk-E { border-left-color: #EF4444 !important; }
+.risk-A { border-left-color: #0F766E !important; }  /* teal — best */
+.risk-B { border-left-color: #2251FF !important; }  /* electric */
+.risk-C { border-left-color: #4A5568 !important; }  /* textSub — neutral */
+.risk-D { border-left-color: #0A1628 !important; }  /* ink */
+.risk-E { border-left-color: #A53F8A !important; }  /* magenta — worst */
 
 /* ─────────────────────────────────────────────────────────────────────────────
    ADDITIONAL KEYFRAMES
@@ -4995,6 +5113,46 @@ section[style*="backgroundColor: #0A1628"] *:not([style*="color"]):not(svg):not(
 .mck-paper [style*="color: #fff"],
 .mck-paper [style*="color:#fff"] {
   color: #FFFFFF !important;
+}
+
+/* McKinsey 카드 navy 패널 — 충돌 셀렉터 회피용 전용 클래스 (#061D2D 사용) */
+.mck-card-navy-panel {
+  background: #061D2D;
+  color: #FFFFFF;
+}
+.mck-card-navy-panel > *:not(.mck-label-cobalt):not([style*="color"]) {
+  color: #FFFFFF;
+}
+
+/* mck-paper navy 패널 안에서 라벨 cobalt blue 강제 — className 기반 (글로벌 흰색 강제 룰 회피) */
+.mck-paper .mck-label-cobalt,
+.mck-paper .mck-label-cobalt *,
+.mck-cta-dark .mck-label-cobalt,
+.mck-paper [style*="background: #051C2C"] .mck-label-cobalt,
+.mck-paper [style*="background:#051C2C"] .mck-label-cobalt,
+.mck-paper .mck-card-navy-panel .mck-label-cobalt,
+html body .mck-paper .mck-card-navy-panel .mck-label-cobalt,
+html body .mck-paper .mck-card-navy-panel .mck-label-cobalt[class] {
+  color: #2251FF !important;
+  fill: #2251FF !important;
+  stroke: #2251FF !important;
+}
+
+/* McKinsey soft sky CTA — 첨부 스크린샷 톤 (powdery cyan + deep navy 텍스트) */
+.mck-cta-sky {
+  background: #9EC0DC !important;
+  color: #051C2C !important;
+  border: 1px solid #7FA8C8 !important;
+}
+.mck-cta-sky *,
+.mck-paper .mck-cta-sky,
+.mck-paper .mck-cta-sky * {
+  color: #051C2C !important;
+  fill: #051C2C !important;
+  stroke: #051C2C !important;
+}
+.mck-cta-sky:hover {
+  background: #87B0CD !important;
 }
 
 /* lucide ArrowRight 같은 아이콘 stroke fill 흰색 강제 (검정 CTA 안) */
