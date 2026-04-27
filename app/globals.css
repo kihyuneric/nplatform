@@ -2137,39 +2137,39 @@ button[role="switch"][data-state="unchecked"] {
 
 /* ═══════════════════════════════════════════════════════════════════════
    1Page SUMMARY 인쇄 모드 (body.print-summary 활성)
-   - 본문(.summary-printable) 1장 풀 페이지 출력
-   - 그 외 모든 콘텐츠 visibility hidden
+   - .print-summary-only 는 React Portal 로 body 직속에 렌더됨
+   - 본문(main) + 기타 형제 요소를 display:none 으로 완전히 제거 → 1페이지만 출력
+   - 이전 visibility:hidden 방식은 레이아웃이 유지되어 빈 페이지가 함께 출력되는 버그
    ═══════════════════════════════════════════════════════════════════════ */
 @media print {
-  body.print-summary * {
-    visibility: hidden !important;
+  /* body 직속 children 중 .print-summary-only 만 남기고 모두 제거 */
+  body.print-summary > *:not(.print-summary-only) {
+    display: none !important;
   }
-  body.print-summary .print-summary-only,
-  body.print-summary .print-summary-only * {
-    visibility: visible !important;
-  }
+  /* .print-summary-only 자체와 그 자손 — 일반 흐름으로 표시 */
   body.print-summary .print-summary-only {
     display: block !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
+    position: static !important;
     width: 100% !important;
     background: #FFFFFF !important;
-    z-index: 9999;
+  }
+  body.print-summary .print-summary-only * {
+    visibility: visible !important;
   }
   body.print-summary .summary-printable {
     width: 100% !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
     padding: 8mm !important;
-    /* Summary 는 1 페이지에 강제 포함 */
+    /* 1 페이지 강제 — 내용이 넘쳐도 잘라냄 */
     max-height: 100vh !important;
     overflow: hidden !important;
   }
   /* Summary 페이지 — A4 portrait */
   body.print-summary {
     background: #FFFFFF !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   /* Summary 출력 시에도 색상 보존 */
   body.print-summary *,

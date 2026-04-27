@@ -19,6 +19,7 @@
  */
 
 import { useEffect, useMemo, useState } from "react"
+import { createPortal } from "react-dom"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import {
@@ -200,7 +201,11 @@ export default function UnifiedReportPage() {
   // Phase G7+ v3 — 사이트 자체 번역기능 사용으로 다국어 토글 제거 · 한국어 단일
   const lang: Lang = "ko"
   const [summaryOpen, setSummaryOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const t = T[lang]
+
+  // SSR 시 document 미존재 — Portal 은 mount 이후에만 렌더
+  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     ;(async () => {
@@ -413,10 +418,15 @@ export default function UnifiedReportPage() {
         />
       )}
 
-      {/* 1Page Summary 인쇄용 hidden DOM — body.print-summary 일 때만 보임 */}
-      <div className="print-summary-only" aria-hidden="true">
-        <SummaryPrintable report={report} lang={lang} />
-      </div>
+      {/* 1Page Summary 인쇄용 — Portal 로 document.body 직속에 렌더하여
+          body.print-summary 모드에서 본문(main)을 display:none 으로 제거 가능.
+          이전에는 visibility:hidden 만 사용해 본문 페이지 수만큼 빈 페이지가 함께 출력되는 버그. */}
+      {mounted && createPortal(
+        <div className="print-summary-only" aria-hidden="true">
+          <SummaryPrintable report={report} lang={lang} />
+        </div>,
+        document.body,
+      )}
 
       {/* ── 등기부 미첨부 경고 ──────────────────────── */}
       {!report.registryAnalysis && (
