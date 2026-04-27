@@ -328,27 +328,138 @@ export default function ExchangePage() {
   const [aiRecommendation, setAiRecommendation] = useState("")
 
   // ── Real listings data ──────────────────────────────────────
-  // 초기값을 MOCK으로 두면 API 응답 전/후로 매물이 바뀌는 것처럼 보임(flicker).
-  // 대신 MOCK + isDemoMode=true 로 즉시 시작 → API가 실데이터를 돌려주면 교체,
-  // 실패/empty면 그대로 MOCK 유지. 사용자 입장에서는 "데모 모드 → 실제 모드"
-  // 한 방향 전환만 발생하므로 매물이 사라지거나 배너가 깜빡이지 않음.
+  // SoT 흐름 정합: 실제 API listings 를 가져와 CardListing 으로 매핑.
+  // API 가 비어있거나 실패하면 MOCK fallback (체험 모드 배너 노출).
   const [listings, setListings] = useState<CardListing[]>(MOCK)
   const [listingsLoading, setListingsLoading] = useState(true)
   const [isDemoMode, setIsDemoMode] = useState(true)
   const [demoDismissed, setDemoDismissed] = useState(false)
   const [totalListings, setTotalListings] = useState<number | null>(null)
 
-  // 현재는 데모 모드로 MOCK 12건만 노출 (실데이터 플리커 방지). 총 건수는 API에서만 갱신.
   useEffect(() => {
     let cancelled = false
-    fetch('/api/v1/exchange/listings?limit=1&status=ACTIVE')
-      .then(r => r.json())
-      .then(d => {
+    ;(async () => {
+      try {
+        const r = await fetch('/api/v1/exchange/listings?limit=50&status=ACTIVE', { credentials: 'include' })
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        const d = await r.json()
         if (cancelled) return
         if (typeof d.total === 'number') setTotalListings(d.total)
-      })
-      .catch(() => { /* 네트워크 오류 무시 */ })
-      .finally(() => { if (!cancelled) setListingsLoading(false) })
+        const rows: Array<Record<string, unknown>> = Array.isArray(d.data) ? d.data : []
+        if (rows.length === 0) {
+          // 실 데이터 없음 — MOCK 유지
+          return
+        }
+        // API row → CardListing 매핑 (필드 변형 흡수)
+        const mapped: CardListing[] = rows.map((raw): CardListing => {
+          const r = raw as Record<string, any>
+          const principal =
+            (r.outstanding_principal as number) ??
+            (r.principal_amount as number) ??
+            (r.claim_amount as number) ?? 0
+          const appraisal = (r.appraised_value as number) ?? (r.appraisal_value as number) ?? 0
+          let asking = (r.asking_price as number) ?? 0
+          if (!asking) {
+            const lo = r.ai_estimate_low as number | undefined
+            const hi = r.ai_estimate_high as number | undefined
+            if (lo && hi) asking = Math.round((lo + hi) / 2)
+            else if (typeof r.minimum_bid === 'number') asking = r.minimum_bid
+            else asking = Math.round(principal * 0.7)
+          }
+          const discount =
+            typeof r.discount_rate === 'number' && r.discount_rate > 0
+              ? r.discount_rate
+              : principal > 0
+                ? Math.round((1 - asking / principal) * 1000) / 10
+                : 0
+          // institution / region / collateral 정규화
+          const institution: string =
+            (r.institution as string) ?? (r.institution_name as string) ?? '미정'
+          const region: string =
+            [r.sido, r.sigungu].filter(Boolean).join(' ') ||
+            [r.location_city, r.location_district].filter(Boolean).join(' ') ||
+            (typeof r.address_masked === 'string' ? r.address_masked : '') ||
+            (typeof r.address === 'string' ? r.address.split(/\s+/).slice(0, 2).join(' ') : '')
+          // collateral 영문 enum → 한글 라벨 (간단 매핑; 누락 값은 '기타')
+          const ctRaw = String(r.collateral_type ?? '').toUpperCase()
+          const COLLATERAL_LABEL: Record<string, string> = {
+            APARTMENT: '아파트', OFFICETEL: '오피스텔', COMMERCIAL: '근린시설/상가',
+            STORE: '근린시설/상가', RETAIL: '근린시설/상가', LAND: '대지',
+            VILLA: '빌라/다세대', HOUSE: '빌라/다세대',
+          }
+          const collateral = COLLATERAL_LABEL[ctRaw] || (typeof r.collateral_type === 'string' ? r.collateral_type : '기타')
+          const collateralMajor: CardListing['collateralMajor'] =
+            ctRaw === 'LAND' ? 'LAND' :
+            ctRaw === 'COMMERCIAL' || ctRaw === 'STORE' || ctRaw === 'RETAIL' ? 'COMMERCIAL' :
+            ctRaw === 'APARTMENT' || ctRaw === 'OFFICETEL' || ctRaw === 'VILLA' || ctRaw === 'HOUSE' ? 'RESIDENTIAL' :
+            'ETC'
+          // institution kind (간이) — 필요 시 향후 institution_type 으로 정밀화
+          const inst_kind: CardListing['inst_kind'] =
+            (r.institution_type === 'AMC' ? 'AMC' :
+             r.institution_type === 'SAVINGS_BANK' ? 'SAVINGS_BANK' :
+             r.institution_type === 'BANK' ? 'BANK' :
+             'BANK')
+          // sale_method
+          const sm = String(r.sale_method ?? '').toUpperCase()
+          const sale_method: CardListing['sale_method'] =
+            sm === 'AUCTION' ? 'AUCTION' :
+            sm === 'PUBLIC' ? 'PUBLIC' :
+            'NPLATFORM'
+          // 등록 후 경과일
+          const created = r.created_at ? new Date(r.created_at as string).getTime() : Date.now()
+          const created_days_ago = Math.max(0, Math.floor((Date.now() - created) / 86_400_000))
+          // ai_grade 안전 fallback
+          const aiGradeRaw = String(r.risk_grade ?? r.ai_grade ?? 'B').toUpperCase()
+          const ai_grade: CardListing['ai_grade'] =
+            ['A', 'B', 'C', 'D', 'E', 'S'].includes(aiGradeRaw) ? (aiGradeRaw as CardListing['ai_grade']) : 'B'
+          // data_completeness 0-10
+          const completeness =
+            typeof r.data_completeness === 'number' ? r.data_completeness :
+            typeof r.completeness_score === 'number' ? r.completeness_score :
+            6
+          return {
+            id: String(r.id),
+            seller_id: (r.seller_id as string) ?? null,
+            institution,
+            inst_kind,
+            listing_category: 'NPL',
+            region,
+            regionCode: String(r.sido ?? '').includes('서울') ? 'SEOUL' :
+                        String(r.sido ?? '').includes('경기') ? 'GYEONGGI' :
+                        String(r.sido ?? '').includes('인천') ? 'INCHEON' :
+                        String(r.sido ?? '').includes('부산') ? 'BUSAN' :
+                        String(r.sido ?? '').includes('대구') ? 'DAEGU' :
+                        String(r.sido ?? '').includes('대전') ? 'DAEJEON' : 'OTHER',
+            collateral,
+            collateralMajor,
+            outstanding_principal: principal,
+            asking_price: asking,
+            appraisal_value: appraisal,
+            discount_rate: discount,
+            ai_grade,
+            data_completeness: Math.max(0, Math.min(10, completeness)),
+            access_tier_required: 'L0',
+            provided: {
+              appraisal: !!appraisal,
+              registry: !!r.registry_provided,
+              rights: !!r.rights_provided,
+              lease: !!r.lease_provided,
+              site_photos: Array.isArray(r.images) && r.images.length > 0,
+              financials: !!r.financials_provided,
+            },
+            sale_method,
+            created_days_ago,
+            view_count: typeof r.view_count === 'number' ? r.view_count : 0,
+          }
+        })
+        setListings(mapped)
+        setIsDemoMode(false)  // 실 데이터 사용 — 데모 배너 자동 해제
+      } catch (err) {
+        console.warn('[exchange] listings fetch failed → MOCK fallback', err)
+      } finally {
+        if (!cancelled) setListingsLoading(false)
+      }
+    })()
     return () => { cancelled = true }
   }, [])
 
