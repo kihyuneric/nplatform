@@ -1,0 +1,559 @@
+
+> my-v0-project@0.1.0 build
+> next build
+
+   ▲ Next.js 15.3.6
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings in 33.0s
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/api-keys/usage/route.ts
+
+
+[1m[33mwarn[39m[22m - The `darkMode` option in your Tailwind CSS configuration is set to `false`, which now behaves the same as `media`.
+[1m[33mwarn[39m[22m - Change `darkMode` to `media` or remove it entirely.
+[1m[33mwarn[39m[22m - https://tailwindcss.com/docs/upgrade-guide#remove-dark-mode-configuration
+ ✓ Compiled successfully in 51s
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Generating static pages (0/334) ...
+[screen/summary] TypeError: Cannot read properties of null (reading 'from')
+    at l (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\api\v1\auction\screen\summary\route.js:1:388)
+   Generating static pages (83/334) 
+   Generating static pages (166/334) 
+   Generating static pages (250/334) 
+ ✓ Generating static pages (334/334)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                         Size  First Load JS
+┌ ƒ /                                              22 kB         166 kB
+├ ƒ /_not-found                                  1.08 kB         104 kB
+├ ƒ /about                                       12.7 kB         168 kB
+├ ƒ /admin                                       6.82 kB         276 kB
+├ ƒ /admin/agreements                               7 kB         205 kB
+├ ƒ /admin/analytics                             6.55 kB         277 kB
+├ ƒ /admin/billing                               14.6 kB         289 kB
+├ ƒ /admin/content                               6.83 kB         176 kB
+├ ƒ /admin/coupons                               8.91 kB         167 kB
+├ ƒ /admin/data-import                           8.85 kB         169 kB
+├ ƒ /admin/data-sync                             6.34 kB         176 kB
+├ ƒ /admin/deal-funnel                           9.12 kB         258 kB
+├ ƒ /admin/deals                                 8.56 kB         283 kB
+├ ƒ /admin/demands                               6.99 kB         133 kB
+├ ƒ /admin/experts                               6.02 kB         176 kB
+├ ƒ /admin/health                                5.44 kB         121 kB
+├ ƒ /admin/institutions                          8.54 kB         216 kB
+├ ƒ /admin/integrations                          6.12 kB         121 kB
+├ ƒ /admin/lecture-plan                          7.75 kB         149 kB
+├ ƒ /admin/listings                              9.73 kB         225 kB
+├ ƒ /admin/listings/[id]/edit                    4.59 kB         159 kB
+├ ƒ /admin/masking-queue                         6.72 kB         214 kB
+├ ƒ /admin/matching                              9.11 kB         127 kB
+├ ƒ /admin/ml                                    9.98 kB         179 kB
+├ ƒ /admin/pii-audit                             7.21 kB         206 kB
+├ ƒ /admin/pipeline                              5.68 kB         131 kB
+├ ƒ /admin/runtime-config                        5.49 kB         155 kB
+├ ƒ /admin/security                              7.17 kB         177 kB
+├ ƒ /admin/settings                              9.56 kB         179 kB
+├ ƒ /admin/system                                3.31 kB         112 kB
+├ ƒ /admin/users                                 5.72 kB         124 kB
+├ ƒ /analysis                                    5.97 kB         152 kB
+├ ƒ /analysis/[id]                               18.9 kB         125 kB
+├ ƒ /analysis/benchmark                          5.31 kB         229 kB
+├ ƒ /analysis/contract-review                    8.24 kB         130 kB
+├ ƒ /analysis/copilot                            5.83 kB         121 kB
+├ ƒ /analysis/demo                               9.75 kB         140 kB
+├ ƒ /analysis/new                                4.84 kB         183 kB
+├ ƒ /analysis/npl-index                          11.1 kB         225 kB
+├ ƒ /analysis/ocr                                13.4 kB         138 kB
+├ ƒ /analysis/profitability                        14 kB         167 kB
+├ ƒ /analysis/profitability/result                151 kB         304 kB
+├ ƒ /analysis/report                             30.8 kB         161 kB
+├ ƒ /analysis/simulator                          17.5 kB         245 kB
+├ ƒ /api/admin/lecture-plan                      1.08 kB         104 kB
+├ ƒ /api/daily-keyword-stats                     1.08 kB         104 kB
+├ ƒ /api/daily-keyword-updown                    1.08 kB         104 kB
+├ ƒ /api/daily-top-keywords                      1.08 kB         104 kB
+├ ƒ /api/deal-rooms                              1.08 kB         104 kB
+├ ƒ /api/deal-rooms/[id]                         1.08 kB         104 kB
+├ ƒ /api/deal-rooms/[id]/messages                1.08 kB         104 kB
+├ ƒ /api/deal-rooms/[id]/read                    1.08 kB         104 kB
+├ ƒ /api/docs                                    1.08 kB         104 kB
+├ ƒ /api/health                                  1.08 kB         104 kB
+├ ƒ /api/keyword-trend                           1.08 kB         104 kB
+├ ƒ /api/landing/generate                        1.08 kB         104 kB
+├ ƒ /api/landing/images                          1.08 kB         104 kB
+├ ƒ /api/listings                                1.08 kB         104 kB
+├ ƒ /api/listings/[id]                           1.08 kB         104 kB
+├ ƒ /api/listings/[id]/interest                  1.08 kB         104 kB
+├ ƒ /api/matching                                1.08 kB         104 kB
+├ ƒ /api/news-search                             1.08 kB         104 kB
+├ ƒ /api/news-stats                              1.08 kB         104 kB
+├ ƒ /api/nlp/analyze                             1.08 kB         104 kB
+├ ƒ /api/nlp/psychology                          1.08 kB         104 kB
+├ ƒ /api/notifications                           1.08 kB         104 kB
+├ ƒ /api/npl/analyze                             1.08 kB         104 kB
+├ ƒ /api/npl/assumptions                         1.08 kB         104 kB
+├ ƒ /api/npl/cases                               1.08 kB         104 kB
+├ ƒ /api/npl/cases/[id]                          1.08 kB         104 kB
+├ ƒ /api/npl/cases/[id]/full                     1.08 kB         104 kB
+├ ƒ /api/npl/export                              1.08 kB         104 kB
+├ ƒ /api/npl/ocr                                 1.08 kB         104 kB
+├ ƒ /api/npl/rights                              1.08 kB         104 kB
+├ ƒ /api/npl/tenants                             1.08 kB         104 kB
+├ ƒ /api/ontology/atomic-capsules                1.08 kB         104 kB
+├ ƒ /api/ontology/atomic-capsules/bulk-generate  1.08 kB         104 kB
+├ ƒ /api/ontology/atomic-capsules/export         1.08 kB         104 kB
+├ ƒ /api/ontology/atomic-capsules/generate       1.08 kB         104 kB
+├ ƒ /api/ontology/atomic-capsules/search         1.08 kB         104 kB
+├ ƒ /api/ontology/capsules                       1.08 kB         104 kB
+├ ƒ /api/ontology/capsules/export                1.08 kB         104 kB
+├ ƒ /api/ontology/capsules/export-pdf            1.08 kB         104 kB
+├ ƒ /api/ontology/capsules/generate              1.08 kB         104 kB
+├ ƒ /api/ontology/capsules/update                1.08 kB         104 kB
+├ ƒ /api/ontology/concept/[id]                   1.08 kB         104 kB
+├ ƒ /api/ontology/concepts                       1.08 kB         104 kB
+├ ƒ /api/ontology/dashboard                      1.08 kB         104 kB
+├ ƒ /api/ontology/domains                        1.08 kB         104 kB
+├ ƒ /api/ontology/graph                          1.08 kB         104 kB
+├ ƒ /api/ontology/importance                     1.08 kB         104 kB
+├ ƒ /api/ontology/importance/recalculate         1.08 kB         104 kB
+├ ƒ /api/ontology/level-overview                 1.08 kB         104 kB
+├ ƒ /api/ontology/migrate                        1.08 kB         104 kB
+├ ƒ /api/ontology/newsletter/export-pdf          1.08 kB         104 kB
+├ ƒ /api/ontology/newsletter/generate            1.08 kB         104 kB
+├ ƒ /api/ontology/newsletter/send                1.08 kB         104 kB
+├ ƒ /api/ontology/path/[id]                      1.08 kB         104 kB
+├ ƒ /api/ontology/paths                          1.08 kB         104 kB
+├ ƒ /api/ontology/progress                       1.08 kB         104 kB
+├ ƒ /api/ontology/recommend                      1.08 kB         104 kB
+├ ƒ /api/ontology/samples                        1.08 kB         104 kB
+├ ƒ /api/ontology/samples/v2                     1.08 kB         104 kB
+├ ƒ /api/ontology/streak                         1.08 kB         104 kB
+├ ƒ /api/ontology/sub-concepts                   1.08 kB         104 kB
+├ ƒ /api/ontology/sub-concepts/export            1.08 kB         104 kB
+├ ƒ /api/ontology/sub-concepts/export-pdf        1.08 kB         104 kB
+├ ƒ /api/ontology/sub-concepts/segments          1.08 kB         104 kB
+├ ƒ /api/ontology/sub-concepts/synthesize        1.08 kB         104 kB
+├ ƒ /api/ontology/sub-concepts/videos            1.08 kB         104 kB
+├ ƒ /api/ontology/youtube                        1.08 kB         104 kB
+├ ƒ /api/ontology/youtube/[id]                   1.08 kB         104 kB
+├ ƒ /api/ontology/youtube/bulk-upload            1.08 kB         104 kB
+├ ƒ /api/ontology/youtube/reanalyze              1.08 kB         104 kB
+├ ƒ /api/ontology/youtube/stats                  1.08 kB         104 kB
+├ ƒ /api/ontology/youtube/upload                 1.08 kB         104 kB
+├ ƒ /api/openapi                                 1.08 kB         104 kB
+├ ƒ /api/surveys                                 1.08 kB         104 kB
+├ ƒ /api/surveys/[id]                            1.08 kB         104 kB
+├ ƒ /api/users/me                                1.08 kB         104 kB
+├ ƒ /api/v1/admin/admins                         1.08 kB         104 kB
+├ ƒ /api/v1/admin/api-config                     1.08 kB         104 kB
+├ ƒ /api/v1/admin/api-config/test                1.08 kB         104 kB
+├ ƒ /api/v1/admin/approvals                      1.08 kB         104 kB
+├ ƒ /api/v1/admin/audit                          1.08 kB         104 kB
+├ ƒ /api/v1/admin/billing/stats                  1.08 kB         104 kB
+├ ƒ /api/v1/admin/crawl/court-auction            1.08 kB         104 kB
+├ ƒ /api/v1/admin/dashboard                      1.08 kB         104 kB
+├ ƒ /api/v1/admin/dashboard/deals                1.08 kB         104 kB
+├ ƒ /api/v1/admin/dashboard/revenue              1.08 kB         104 kB
+├ ƒ /api/v1/admin/dashboard/signups              1.08 kB         104 kB
+├ ƒ /api/v1/admin/data                           1.08 kB         104 kB
+├ ƒ /api/v1/admin/data/export                    1.08 kB         104 kB
+├ ƒ /api/v1/admin/data/status                    1.08 kB         104 kB
+├ ƒ /api/v1/admin/deals/[id]                     1.08 kB         104 kB
+├ ƒ /api/v1/admin/errors                         1.08 kB         104 kB
+├ ƒ /api/v1/admin/health                         1.08 kB         104 kB
+├ ƒ /api/v1/admin/import/court-auction           1.08 kB         104 kB
+├ ƒ /api/v1/admin/infra                          1.08 kB         104 kB
+├ ƒ /api/v1/admin/infra/test                     1.08 kB         104 kB
+├ ƒ /api/v1/admin/listings/[id]                  1.08 kB         104 kB
+├ ƒ /api/v1/admin/market-data                    1.08 kB         104 kB
+├ ƒ /api/v1/admin/market-data/auction            1.08 kB         104 kB
+├ ƒ /api/v1/admin/market-data/rent               1.08 kB         104 kB
+├ ƒ /api/v1/admin/migrate                        1.08 kB         104 kB
+├ ƒ /api/v1/admin/ml/retrain                     1.08 kB         104 kB
+├ ƒ /api/v1/admin/ml/samples                     1.08 kB         104 kB
+├ ƒ /api/v1/admin/modules                        1.08 kB         104 kB
+├ ƒ /api/v1/admin/monitoring                     1.08 kB         104 kB
+├ ƒ /api/v1/admin/partners/settlements           1.08 kB         104 kB
+├ ƒ /api/v1/admin/pipeline                       1.08 kB         104 kB
+├ ƒ /api/v1/admin/pricing                        1.08 kB         104 kB
+├ ƒ /api/v1/admin/pricing/plans                  1.08 kB         104 kB
+├ ƒ /api/v1/admin/role-approval                  1.08 kB         104 kB
+├ ƒ /api/v1/admin/runtime-config                 1.08 kB         104 kB
+├ ƒ /api/v1/admin/security/rls-audit             1.08 kB         104 kB
+├ ƒ /api/v1/admin/site-settings                  1.08 kB         104 kB
+├ ƒ /api/v1/admin/stats                          1.08 kB         104 kB
+├ ƒ /api/v1/admin/users                          1.08 kB         104 kB
+├ ƒ /api/v1/admin/users/[id]                     1.08 kB         104 kB
+├ ƒ /api/v1/admin/vdr/grants                     1.08 kB         104 kB
+├ ƒ /api/v1/ai/anomaly-detect                    1.08 kB         104 kB
+├ ƒ /api/v1/ai/contract-review                   1.08 kB         104 kB
+├ ƒ /api/v1/ai/copilot                           1.08 kB         104 kB
+├ ƒ /api/v1/ai/dd-report                         1.08 kB         104 kB
+├ ƒ /api/v1/ai/dd-report/stream                  1.08 kB         104 kB
+├ ƒ /api/v1/ai/document-analyze                  1.08 kB         104 kB
+├ ƒ /api/v1/ai/health                            1.08 kB         104 kB
+├ ƒ /api/v1/ai/nl-search                         1.08 kB         104 kB
+├ ƒ /api/v1/ai/recovery-predict                  1.08 kB         104 kB
+├ ƒ /api/v1/ai/sample-analysis                   1.08 kB         104 kB
+├ ƒ /api/v1/ai/translate                         1.08 kB         104 kB
+├ ƒ /api/v1/alerts                               1.08 kB         104 kB
+├ ƒ /api/v1/analysis                             1.08 kB         104 kB
+├ ƒ /api/v1/analysis-engine                      1.08 kB         104 kB
+├ ƒ /api/v1/analysis/[id]                        1.08 kB         104 kB
+├ ƒ /api/v1/analysis/unified/risk-grade          1.08 kB         104 kB
+├ ƒ /api/v1/analytics/track                      1.08 kB         104 kB
+├ ƒ /api/v1/analytics/vitals                     1.08 kB         104 kB
+├ ƒ /api/v1/api-keys                             1.08 kB         104 kB
+├ ƒ /api/v1/api-keys/[id]                        1.08 kB         104 kB
+├ ƒ /api/v1/api-keys/usage                       1.08 kB         104 kB
+├ ƒ /api/v1/auction/bids                         1.08 kB         104 kB
+├ ƒ /api/v1/auction/live                         1.08 kB         104 kB
+├ ƒ /api/v1/auction/screen                       1.08 kB         104 kB
+├ ƒ /api/v1/auction/screen/summary               1.08 kB         104 kB
+├ ƒ /api/v1/auction/screen/trigger               1.08 kB         104 kB
+├ ƒ /api/v1/auction/stream                       1.08 kB         104 kB
+├ ƒ /api/v1/auth/change-password                 1.08 kB         104 kB
+├ ƒ /api/v1/auth/dev-login                       1.08 kB         104 kB
+├ ƒ /api/v1/auth/mfa/setup                       1.08 kB         104 kB
+├ ƒ /api/v1/auth/mfa/verify                      1.08 kB         104 kB
+├ ƒ /api/v1/auth/validate-session                1.08 kB         104 kB
+├ ƒ /api/v1/banners                              1.08 kB         104 kB
+├ ƒ /api/v1/billing/credits/purchase             1.08 kB         104 kB
+├ ƒ /api/v1/billing/invoices                     1.08 kB         104 kB
+├ ƒ /api/v1/billing/invoices/[id]                1.08 kB         104 kB
+├ ƒ /api/v1/billing/subscribe                    1.08 kB         104 kB
+├ ƒ /api/v1/bulk-upload                          1.08 kB         104 kB
+├ ƒ /api/v1/buyer/alerts                         1.08 kB         104 kB
+├ ƒ /api/v1/buyer/portfolio                      1.08 kB         104 kB
+├ ƒ /api/v1/buyer/recommendations                1.08 kB         104 kB
+├ ƒ /api/v1/buyer/watchlist                      1.08 kB         104 kB
+├ ƒ /api/v1/co-invest                            1.08 kB         104 kB
+├ ƒ /api/v1/co-invest/[id]                       1.08 kB         104 kB
+├ ƒ /api/v1/co-invest/create                     1.08 kB         104 kB
+├ ƒ /api/v1/commissions                          1.08 kB         104 kB
+├ ƒ /api/v1/commissions/[id]                     1.08 kB         104 kB
+├ ƒ /api/v1/commissions/[id]/invoice             1.08 kB         104 kB
+├ ƒ /api/v1/commissions/[id]/pay                 1.08 kB         104 kB
+├ ƒ /api/v1/commissions/summary                  1.08 kB         104 kB
+├ ƒ /api/v1/community                            1.08 kB         104 kB
+├ ƒ /api/v1/community/[id]                       1.08 kB         104 kB
+├ ƒ /api/v1/community/[id]/comments              1.08 kB         104 kB
+├ ƒ /api/v1/community/report                     1.08 kB         104 kB
+├ ƒ /api/v1/contracts                            1.08 kB         104 kB
+├ ƒ /api/v1/contracts/[id]                       1.08 kB         104 kB
+├ ƒ /api/v1/copilot                              1.08 kB         104 kB
+├ ƒ /api/v1/coupons                              1.08 kB         104 kB
+├ ƒ /api/v1/coupons/redeem                       1.08 kB         104 kB
+├ ƒ /api/v1/courses                              1.08 kB         104 kB
+├ ƒ /api/v1/courses/[id]/lessons                 1.08 kB         104 kB
+├ ƒ /api/v1/credits                              1.08 kB         104 kB
+├ ƒ /api/v1/cron/ai-screen                       1.08 kB         104 kB
+├ ƒ /api/v1/cron/daily                           1.08 kB         104 kB
+├ ƒ /api/v1/cron/daily-summary                   1.08 kB         104 kB
+├ ƒ /api/v1/cron/data-pipeline                   1.08 kB         104 kB
+├ ƒ /api/v1/cron/nbi                             1.08 kB         104 kB
+├ ƒ /api/v1/cron/weekly                          1.08 kB         104 kB
+├ ƒ /api/v1/developer/docs                       1.08 kB         104 kB
+├ ƒ /api/v1/developer/keys                       1.08 kB         104 kB
+├ ƒ /api/v1/docs                                 1.08 kB         104 kB
+├ ƒ /api/v1/esign                                1.08 kB         104 kB
+├ ƒ /api/v1/exchange                             1.08 kB         104 kB
+├ ƒ /api/v1/exchange/[id]                        1.08 kB         104 kB
+├ ƒ /api/v1/exchange/archive                     1.08 kB         104 kB
+├ ƒ /api/v1/exchange/auction/my-listings         1.08 kB         104 kB
+├ ƒ /api/v1/exchange/auction/register            1.08 kB         104 kB
+├ ƒ /api/v1/exchange/deals                       1.08 kB         104 kB
+├ ƒ /api/v1/exchange/deals/[id]                  1.08 kB         104 kB
+├ ƒ /api/v1/exchange/deals/[id]/documents        1.08 kB         104 kB
+├ ƒ /api/v1/exchange/deals/[id]/messages         1.08 kB         104 kB
+├ ƒ /api/v1/exchange/deals/[id]/offers           1.08 kB         104 kB
+├ ƒ /api/v1/exchange/demands                     1.08 kB         104 kB
+├ ƒ /api/v1/exchange/demands/[id]                1.08 kB         104 kB
+├ ƒ /api/v1/exchange/demands/[id]/matches        1.08 kB         104 kB
+├ ƒ /api/v1/exchange/demands/[id]/propose        1.08 kB         104 kB
+├ ƒ /api/v1/exchange/due-diligence/[id]          1.08 kB         104 kB
+├ ƒ /api/v1/exchange/listings                    1.08 kB         104 kB
+├ ƒ /api/v1/exchange/listings/[id]               1.08 kB         104 kB
+├ ƒ /api/v1/exchange/listings/[id]/bids          1.08 kB         104 kB
+├ ƒ /api/v1/exchange/listings/[id]/bids/[bidId]  1.08 kB         104 kB
+├ ƒ /api/v1/exchange/listings/batch              1.08 kB         104 kB
+├ ƒ /api/v1/exchange/search                      1.08 kB         104 kB
+├ ƒ /api/v1/external/auction                     1.08 kB         104 kB
+├ ƒ /api/v1/external/market-data                 1.08 kB         104 kB
+├ ƒ /api/v1/external/news                        1.08 kB         104 kB
+├ ƒ /api/v1/external/real-estate                 1.08 kB         104 kB
+├ ƒ /api/v1/external/registry                    1.08 kB         104 kB
+├ ƒ /api/v1/favorites                            1.08 kB         104 kB
+├ ƒ /api/v1/fund                                 1.08 kB         104 kB
+├ ƒ /api/v1/glossary                             1.08 kB         104 kB
+├ ƒ /api/v1/health                               1.08 kB         104 kB
+├ ƒ /api/v1/indices/nbi                          1.08 kB         104 kB
+├ ƒ /api/v1/institution                          1.08 kB         104 kB
+├ ƒ /api/v1/institution/dashboard                1.08 kB         104 kB
+├ ƒ /api/v1/institution/members                  1.08 kB         104 kB
+├ ƒ /api/v1/institutional/portfolio              1.08 kB         104 kB
+├ ƒ /api/v1/institutions                         1.08 kB         104 kB
+├ ƒ /api/v1/institutions/favorites               1.08 kB         104 kB
+├ ƒ /api/v1/intelligence/heatmap                 1.08 kB         104 kB
+├ ƒ /api/v1/intelligence/overview                1.08 kB         104 kB
+├ ƒ /api/v1/intelligence/reports                 1.08 kB         104 kB
+├ ƒ /api/v1/intelligence/signals                 1.08 kB         104 kB
+├ ƒ /api/v1/investor/verification                1.08 kB         104 kB
+├ ƒ /api/v1/kyc/status                           1.08 kB         104 kB
+├ ƒ /api/v1/kyc/submit                           1.08 kB         104 kB
+├ ƒ /api/v1/kyc/verify                           1.08 kB         104 kB
+├ ƒ /api/v1/kyc/verify-business                  1.08 kB         104 kB
+├ ƒ /api/v1/lender                               1.08 kB         104 kB
+├ ƒ /api/v1/listing-qna                          1.08 kB         104 kB
+├ ƒ /api/v1/listings/featured                    1.08 kB         104 kB
+├ ƒ /api/v1/listings/similar                     1.08 kB         104 kB
+├ ƒ /api/v1/market/bidding                       1.08 kB         104 kB
+├ ƒ /api/v1/market/bidding/register              1.08 kB         104 kB
+├ ƒ /api/v1/market/map                           1.08 kB         104 kB
+├ ƒ /api/v1/market/search                        1.08 kB         104 kB
+├ ƒ /api/v1/marketplace/calendar                 1.08 kB         104 kB
+├ ƒ /api/v1/matching/results                     1.08 kB         104 kB
+├ ƒ /api/v1/matching/run                         1.08 kB         104 kB
+├ ƒ /api/v1/ml/explain                           1.08 kB         104 kB
+├ ƒ /api/v1/ml/pool                              1.08 kB         104 kB
+├ ƒ /api/v1/ml/predict                           1.08 kB         104 kB
+├ ƒ /api/v1/ml/predict-price                     1.08 kB         104 kB
+├ ƒ /api/v1/ml/recommend                         1.08 kB         104 kB
+├ ƒ /api/v1/ml/report                            1.08 kB         104 kB
+├ ƒ /api/v1/my/dashboard                         1.08 kB         104 kB
+├ ƒ /api/v1/my/portfolio                         1.08 kB         104 kB
+├ ƒ /api/v1/nav-config                           1.08 kB         104 kB
+├ ƒ /api/v1/nda                                  1.08 kB         104 kB
+├ ƒ /api/v1/nda/auto                             1.08 kB         104 kB
+├ ƒ /api/v1/notices                              1.08 kB         104 kB
+├ ƒ /api/v1/notifications                        1.08 kB         104 kB
+├ ƒ /api/v1/notifications/keyword-alerts         1.08 kB         104 kB
+├ ƒ /api/v1/npl/profitability                    1.08 kB         104 kB
+├ ƒ /api/v1/npl/profitability/compare            1.08 kB         104 kB
+├ ƒ /api/v1/ocr                                  1.08 kB         104 kB
+├ ƒ /api/v1/ocr/autofill                         1.08 kB         104 kB
+├ ƒ /api/v1/ocr/parse-buyer-template             1.08 kB         104 kB
+├ ƒ /api/v1/ocr/parse-template                   1.08 kB         104 kB
+├ ƒ /api/v1/onboarding/institution               1.08 kB         104 kB
+├ ƒ /api/v1/openapi/spec                         1.08 kB         104 kB
+├ ƒ /api/v1/partner/dashboard                    1.08 kB         104 kB
+├ ƒ /api/v1/partner/leads                        1.08 kB         104 kB
+├ ƒ /api/v1/partner/profile                      1.08 kB         104 kB
+├ ƒ /api/v1/partner/register                     1.08 kB         104 kB
+├ ƒ /api/v1/partner/settlements                  1.08 kB         104 kB
+├ ƒ /api/v1/payments                             1.08 kB         104 kB
+├ ƒ /api/v1/payments/[id]                        1.08 kB         104 kB
+├ ƒ /api/v1/payments/checkout                    1.08 kB         104 kB
+├ ƒ /api/v1/payments/confirm                     1.08 kB         104 kB
+├ ƒ /api/v1/payments/inicis-ready                1.08 kB         104 kB
+├ ƒ /api/v1/payments/inicis-return               1.08 kB         104 kB
+├ ƒ /api/v1/payments/sample-checkout             1.08 kB         104 kB
+├ ƒ /api/v1/payments/webhook                     1.08 kB         104 kB
+├ ƒ /api/v1/permissions                          1.08 kB         104 kB
+├ ƒ /api/v1/personalization/recommendations      1.08 kB         104 kB
+├ ƒ /api/v1/portfolio/analyze                    1.08 kB         104 kB
+├ ƒ /api/v1/professional                         1.08 kB         104 kB
+├ ƒ /api/v1/professional/consultations           1.08 kB         104 kB
+├ ƒ /api/v1/professional/earnings                1.08 kB         104 kB
+├ ƒ /api/v1/professional/reviews                 1.08 kB         104 kB
+├ ƒ /api/v1/professional/services                1.08 kB         104 kB
+├ ƒ /api/v1/professionals                        1.08 kB         104 kB
+├ ƒ /api/v1/rag/ingest                           1.08 kB         104 kB
+├ ƒ /api/v1/rag/search                           1.08 kB         104 kB
+├ ƒ /api/v1/recommendations/listings             1.08 kB         104 kB
+├ ƒ /api/v1/referrals                            1.08 kB         104 kB
+├ ƒ /api/v1/referrals/code                       1.08 kB         104 kB
+├ ƒ /api/v1/referrals/earnings                   1.08 kB         104 kB
+├ ƒ /api/v1/referrals/leaderboard                1.08 kB         104 kB
+├ ƒ /api/v1/referrals/validate                   1.08 kB         104 kB
+├ ƒ /api/v1/reputation                           1.08 kB         104 kB
+├ ƒ /api/v1/roles                                1.08 kB         104 kB
+├ ƒ /api/v1/roles/request                        1.08 kB         104 kB
+├ ƒ /api/v1/search-logs                          1.08 kB         104 kB
+├ ƒ /api/v1/search/log                           1.08 kB         104 kB
+├ ƒ /api/v1/search/suggestions                   1.08 kB         104 kB
+├ ƒ /api/v1/seller                               1.08 kB         104 kB
+├ ƒ /api/v1/seller/analytics                     1.08 kB         104 kB
+├ ƒ /api/v1/seller/dashboard                     1.08 kB         104 kB
+├ ƒ /api/v1/seller/register                      1.08 kB         104 kB
+├ ƒ /api/v1/seller/settlement                    1.08 kB         104 kB
+├ ƒ /api/v1/seller/settlements                   1.08 kB         104 kB
+├ ƒ /api/v1/services                             1.08 kB         104 kB
+├ ƒ /api/v1/settlements                          1.08 kB         104 kB
+├ ƒ /api/v1/settlements/[id]                     1.08 kB         104 kB
+├ ƒ /api/v1/settlements/calculate                1.08 kB         104 kB
+├ ƒ /api/v1/simulations                          1.08 kB         104 kB
+├ ƒ /api/v1/statistics                           1.08 kB         104 kB
+├ ƒ /api/v1/stats                                1.08 kB         104 kB
+├ ƒ /api/v1/support                              1.08 kB         104 kB
+├ ƒ /api/v1/teams                                1.08 kB         104 kB
+├ ƒ /api/v1/teams/[id]                           1.08 kB         104 kB
+├ ƒ /api/v1/teams/returns                        1.08 kB         104 kB
+├ ƒ /api/v1/translate                            1.08 kB         104 kB
+├ ƒ /api/v1/upload                               1.08 kB         104 kB
+├ ƒ /api/v1/users/documents                      1.08 kB         104 kB
+├ ƒ /api/v1/users/profile                        1.08 kB         104 kB
+├ ƒ /api/v1/users/stats                          1.08 kB         104 kB
+├ ƒ /api/v1/vdr/grant                            1.08 kB         104 kB
+├ ƒ /api/v1/vdr/grant/consume                    1.08 kB         104 kB
+├ ƒ /api/v1/vdr/watermark                        1.08 kB         104 kB
+├ ƒ /api/v1/webhooks                             1.08 kB         104 kB
+├ ƒ /api/v1/webhooks/deal-completed              1.08 kB         104 kB
+├ ƒ /api/weekly-keyword-stats                    1.08 kB         104 kB
+├ ƒ /api/weekly-keyword-updown                   1.08 kB         104 kB
+├ ƒ /api/weekly-top-keywords                     1.08 kB         104 kB
+├ ƒ /curriculum                                  10.3 kB         119 kB
+├ ƒ /curriculum/bulk-generate                    4.94 kB         111 kB
+├ ƒ /curriculum/capsule/[conceptId]              8.91 kB         118 kB
+├ ƒ /curriculum/concept/[conceptId]              5.04 kB         111 kB
+├ ƒ /curriculum/dashboard                        10.9 kB         256 kB
+├ ƒ /curriculum/graph                            9.48 kB         116 kB
+├ ƒ /curriculum/newsletter                       16.7 kB         120 kB
+├ ƒ /curriculum/roadmap                          6.79 kB         116 kB
+├ ƒ /curriculum/samples                          13.9 kB         117 kB
+├ ƒ /curriculum/study/[atomicId]                 7.91 kB         169 kB
+├ ƒ /curriculum/upload                           6.77 kB         248 kB
+├ ƒ /deals                                       5.24 kB         236 kB
+├ ƒ /deals/[id]                                  1.08 kB         104 kB
+├ ƒ /deals/archive                               3.45 kB         109 kB
+├ ƒ /deals/contract                              15.1 kB         121 kB
+├ ƒ /deals/dashboard                             7.97 kB         178 kB
+├ ƒ /deals/matching                              5.96 kB         115 kB
+├ ƒ /deals/matching/[id]                         3.89 kB         113 kB
+├ ƒ /deals/teams                                 5.04 kB         114 kB
+├ ƒ /deals/teams/[id]                            13.2 kB         184 kB
+├ ƒ /deals/teams/new                             6.44 kB         113 kB
+├ ƒ /dev-login                                   4.04 kB         123 kB
+├ ƒ /developer                                   7.76 kB         117 kB
+├ ƒ /docs/api                                    1.08 kB         104 kB
+├ ƒ /exchange                                    16.7 kB         322 kB
+├ ƒ /exchange/[id]                                 290 B         229 kB
+├ ƒ /exchange/auction                            17.7 kB         216 kB
+├ ƒ /exchange/auction/[id]                       12.2 kB         219 kB
+├ ƒ /exchange/auction/new                        13.5 kB         217 kB
+├ ƒ /exchange/bulk-upload                        2.66 kB         112 kB
+├ ƒ /exchange/court-auction                      15.8 kB         169 kB
+├ ƒ /exchange/demands                            11.2 kB         157 kB
+├ ƒ /exchange/demands/[id]                       8.41 kB         117 kB
+├ ƒ /exchange/demands/new                        10.7 kB         137 kB
+├ ƒ /exchange/discover                            9.6 kB         124 kB
+├ ƒ /exchange/edit/[id]                          18.5 kB         189 kB
+├ ƒ /exchange/fund                               1.08 kB         104 kB
+├ ƒ /exchange/fund/[id]                          1.08 kB         104 kB
+├ ƒ /exchange/fund/new                           1.08 kB         104 kB
+├ ƒ /exchange/institutions                       7.89 kB         151 kB
+├ ƒ /exchange/institutions/[slug]                9.38 kB         223 kB
+├ ƒ /exchange/lender                             12.1 kB         156 kB
+├ ƒ /exchange/ocr-register                       10.2 kB         166 kB
+├ ƒ /exchange/search                             16.3 kB         274 kB
+├ ƒ /exchange/sell                               23.3 kB         259 kB
+├ ƒ /guide                                       8.25 kB         117 kB
+├ ƒ /guide/[topic]                                 13 kB         122 kB
+├ ƒ /guide/service/[key]                          3.5 kB         106 kB
+├ ƒ /landing-generator                           10.8 kB         151 kB
+├ ƒ /login                                       6.15 kB         167 kB
+├ ƒ /mfa-setup                                   3.78 kB         114 kB
+├ ƒ /mfa-verify                                  7.07 kB         113 kB
+├ ƒ /my                                          10.6 kB         163 kB
+├ ƒ /my/agreements                               4.65 kB         148 kB
+├ ƒ /my/billing                                  14.2 kB         184 kB
+├ ƒ /my/developer                                8.44 kB         178 kB
+├ ƒ /my/kyc                                      8.08 kB         206 kB
+├ ƒ /my/listings/[id]/edit                       3.69 kB         158 kB
+├ ƒ /my/notifications                            6.03 kB         179 kB
+├ ƒ /my/organization                             9.62 kB         182 kB
+├ ƒ /my/partner                                  11.6 kB         282 kB
+├ ƒ /my/portfolio                                8.65 kB         118 kB
+├ ƒ /my/portfolio/analytics                       6.7 kB         285 kB
+├ ƒ /my/privacy                                  5.18 kB         149 kB
+├ ƒ /my/professional                             6.53 kB         179 kB
+├ ƒ /my/seller                                   9.03 kB         219 kB
+├ ƒ /my/settings                                 7.45 kB         177 kB
+├ ƒ /my/settings/menu                            6.16 kB         131 kB
+├ ƒ /my/verify                                   6.25 kB         205 kB
+├ ƒ /news                                        21.4 kB         165 kB
+├ ƒ /news/[id]                                   4.59 kB         126 kB
+├ ƒ /notices                                     3.54 kB         164 kB
+├ ƒ /offline                                     1.08 kB         104 kB
+├ ƒ /onboarding/institution                      6.57 kB         128 kB
+├ ƒ /opengraph-image                             1.08 kB         104 kB
+├ ƒ /partner                                     5.16 kB         114 kB
+├ ƒ /payment/fail                                3.02 kB         106 kB
+├ ƒ /payment/success                             3.33 kB         106 kB
+├ ƒ /pending-approval                             2.6 kB         109 kB
+├ ƒ /pricing                                     8.09 kB         117 kB
+├ ƒ /psychology                                    380 B         103 kB
+├ ○ /robots.txt                                  1.08 kB         104 kB
+├ ƒ /select-role                                 5.37 kB         121 kB
+├ ƒ /services                                    7.76 kB         119 kB
+├ ƒ /services/community                          9.29 kB         125 kB
+├ ƒ /services/community/[id]                     13.2 kB         149 kB
+├ ƒ /services/community/new                      4.46 kB         110 kB
+├ ƒ /services/experts                            11.6 kB         127 kB
+├ ƒ /services/experts/[id]                       5.09 kB         166 kB
+├ ƒ /services/experts/register                   3.63 kB         112 kB
+├ ƒ /services/learn                               3.1 kB         112 kB
+├ ƒ /services/learn/courses                      2.93 kB         112 kB
+├ ƒ /services/learn/glossary                     4.45 kB         113 kB
+├ ƒ /signup                                      13.1 kB         184 kB
+├ ○ /sitemap.xml                                 1.08 kB         104 kB
+├ ƒ /support                                     3.66 kB         109 kB
+├ ƒ /terms/disclaimer                            3.69 kB         113 kB
+├ ƒ /terms/privacy                                4.1 kB         113 kB
+└ ƒ /terms/service                               4.39 kB         113 kB
++ First Load JS shared by all                     103 kB
+  ├ chunks/31684-26bc5948ff454025.js             46.6 kB
+  ├ chunks/4bd1b696-e200605bcb0506c6.js          53.2 kB
+  └ other shared chunks (total)                  3.17 kB
+
+
+ƒ Middleware                                      172 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

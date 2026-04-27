@@ -1327,9 +1327,10 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
 
         <InlineProvidedChips fields={item.provided} />
 
-        {/* CTA — McKinsey soft sky blue + deep navy 텍스트 (사용자 첨부 톤) */}
+        {/* CTA — 딜룸 입장. /exchange/[id] 가 /deals/dealroom?listingId=... 로 redirect.
+            ListingCard CTA 자체도 명시적으로 listingId 쿼리를 넘겨 딜룸 SoT 흐름을 보장. */}
         <Link
-          href={`/exchange/${item.id}`}
+          href={`/deals/dealroom?listingId=${encodeURIComponent(item.id)}`}
           style={{
             marginTop: 4,
             padding: "11px 14px",
@@ -1565,10 +1566,10 @@ function ListingRow({ item, index }: { item: CardListing; index: number }) {
         </span>
       </div>
 
-      {/* CTA */}
+      {/* CTA — 딜룸 SoT 흐름: 매물 ID 기반 직진 */}
       <div style={{ textAlign: "right" }}>
         <Link
-          href={`/exchange/${item.id}`}
+          href={`/deals/dealroom?listingId=${encodeURIComponent(item.id)}`}
           style={{
             display: "inline-flex", alignItems: "center", gap: 4,
             padding: "7px 12px",

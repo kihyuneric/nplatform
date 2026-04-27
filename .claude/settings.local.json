@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /c/Users/82106/Desktop/nplatform/.claude/worktrees/silly-brahmagupta-527262 log --oneline -20)",
+      "Bash(git -C /c/Users/82106/Desktop/nplatform/.claude/worktrees/silly-brahmagupta-527262 log --all --oneline)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(echo \"TSC=$?\")"
+    ]
+  }
+}

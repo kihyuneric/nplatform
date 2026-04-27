@@ -22,8 +22,8 @@
  */
 
 import Link from "next/link"
-import { useState, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { createContext, useContext, useState, useRef, useMemo } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   ArrowRight, ArrowLeft, FileText, MessageSquare,
@@ -50,54 +50,139 @@ import {
   detectPII as sharedDetectPII,
   INITIAL_BUYER_THREADS as SHARED_BUYER_THREADS,
 } from "./_chat-data"
+import {
+  useListing,
+  getListingTitle,
+  getListingCode,
+  getListingInstitution,
+  getListingRegion,
+  getListingAskingPrice,
+  type ListingDetail,
+} from "@/lib/hooks/use-listing"
+import { useDealroomLinks } from "@/lib/external/dealroom-links"
+
+/* ─── Dealroom Listing Context — 하위 컴포넌트(NDA/LOI 모달, Summary 등) 가
+       prop drill 없이 listing 에 접근. 매물 SoT 의 단일 진입점. ───────────── */
+interface DealroomListingCtx {
+  listing: ListingDetail | null
+  /** 표시명 (자동 합성된) */
+  title: string
+  code: string
+  institution: string
+  region: string
+  /** 매각희망가 — LOI 모달 등에서 사용 */
+  askingPrice: number
+}
+const DealroomListingContext = createContext<DealroomListingCtx | null>(null)
+function useDealroomListing(): DealroomListingCtx {
+  const ctx = useContext(DealroomListingContext)
+  if (!ctx) {
+    // Provider 가 없을 때(개별 컴포넌트 렌더 등) 안전 fallback
+    return { listing: null, title: "딜룸", code: "", institution: "", region: "", askingPrice: 0 }
+  }
+  return ctx
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   PAGE
+   PAGE — 매물 ID 기반 동적 딜룸
+   · ?listingId=... 쿼리로 진입 (없으면 데모 매물로 fallback)
+   · 모든 화면 콘텐츠는 useListing(id) 의 결과로부터 파생됨 (제목·기관·주소 등 하드코딩 X)
 ═══════════════════════════════════════════════════════════════════════════ */
-export default function DealRoomExamplerPage() {
+export default function DealRoomPage() {
+  const searchParams = useSearchParams()
+  const listingId = searchParams?.get("listingId") ?? searchParams?.get("id") ?? null
+
+  // SoT — 매물 raw 데이터 (없으면 DEMO_LISTING fallback)
+  const { listing, isLoading: listingLoading, isDemo } = useListing(listingId, {
+    allowDemo: true,
+    enabled: true,
+  })
+
+  // 외부 링크 (사용자가 별도 API 로 제공할 슬롯; 미설정 시 fallback 합성)
+  const { data: linksData } = useDealroomLinks(listing)
+  const externalLinks = linksData?.links ?? []
+
   const [summaryOpen, setSummaryOpen] = useState(false)
+
+  // 표시명 — 모두 매물에서 파생 (하드코딩 금지)
+  const listingTitle = listing ? getListingTitle(listing) : "딜룸"
+  const listingCode = listing ? getListingCode(listing) : ""
+  const listingInstitution = listing ? getListingInstitution(listing) : ""
+  const listingRegion = listing ? getListingRegion(listing) : ""
+  const safeFileTitle = useMemo(
+    () => listingTitle.replace(/\s+/g, "_").slice(0, 40) || "DealRoom",
+    [listingTitle],
+  )
 
   // PDF / Viewer 핸들러 — /analysis/report 와 동일 패턴 (window.print + body class)
   const handlePdfFull = () => {
     if (typeof window !== "undefined") {
       document.body.classList.remove("print-summary")
-      document.title = "NPL_DealRoom_강남구_아파트_NPL_채권"
+      document.title = `NPL_DealRoom_${safeFileTitle}`
       window.print()
     }
   }
   const handlePdfSummary = () => {
     if (typeof window !== "undefined") {
       document.body.classList.add("print-summary")
-      document.title = "NPL_DealRoom_Summary_강남구_아파트_NPL_채권"
+      document.title = `NPL_DealRoom_Summary_${safeFileTitle}`
       window.print()
       setTimeout(() => document.body.classList.remove("print-summary"), 500)
     }
   }
 
-  return (
-    <MckPageShell variant="tint">
-      {/* ── ⓪ 체험 모드 데모 banner ──────────────────────────────── */}
-      <MckDemoBanner />
+  // 매물 컨텍스트 — 하위 모든 컴포넌트가 listing 에 접근 가능
+  const ctxValue: DealroomListingCtx = useMemo(() => ({
+    listing,
+    title: listingTitle,
+    code: listingCode,
+    institution: listingInstitution,
+    region: listingRegion,
+    askingPrice: listing ? getListingAskingPrice(listing) : 0,
+  }), [listing, listingTitle, listingCode, listingInstitution, listingRegion])
 
-      {/* ── ① Page Header — breadcrumb + eyebrow + PDF/Viewer + 거래소 / 딜룸 CTA ── */}
+  return (
+    <DealroomListingContext.Provider value={ctxValue}>
+    <MckPageShell variant="tint">
+      {/* ── ⓪ 체험 모드 데모 banner — listingId 없거나 demo fallback 일 때 */}
+      {(isDemo || !listingId) && (
+        <MckDemoBanner
+          message={
+            !listingId
+              ? "체험 모드 — 샘플 매물의 딜룸을 표시 중입니다. 실제 매물의 딜룸을 보려면 거래소에서 매물을 선택해 주세요."
+              : "체험 모드 — 매물 정보를 불러오지 못해 샘플 데이터를 표시 중입니다."
+          }
+          ctaLabel="거래소로"
+          ctaHref="/exchange"
+        />
+      )}
+
+      {/* ── ① Page Header — breadcrumb + eyebrow + PDF/Viewer + 거래소 / 딜룸 CTA ──
+          모든 표기 (제목/부제) 는 매물 데이터에서 파생 — 하드코딩 X */}
       <MckPageHeader
         breadcrumbs={[
           { label: "딜룸", href: "/deals" },
-          { label: "진행중 딜" },
+          { label: listingCode ? `딜룸 #${listingCode}` : "진행중 딜" },
         ]}
         eyebrow="DEAL ROOMS · NEGOTIATION DESK"
-        title="강남구 아파트 NPL 채권 · 딜룸"
-        subtitle="○○은행 · 서울 강남구 · 임의매각 · NPL-2026-0412"
+        title={listingLoading ? "딜룸 로딩 중…" : `${listingTitle} · 딜룸`}
+        subtitle={
+          listingLoading
+            ? "매물 정보를 불러오고 있습니다."
+            : [listingInstitution, listingRegion, listingCode]
+                .filter(Boolean)
+                .join(" · ")
+        }
         actions={
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-            {/* 편집하기 — 관리자 / 매도자(본인)만 노출
-                · resourceId 는 이 데모 페이지에서 표시 중인 매물 ID (실제 데이터 연동 시 동적 listing.id)
-                · ownerId 는 해당 매물의 seller_id (데모: dev SELLER 사용자 = 김매도) */}
-            <OwnerEditButton
-              resourceType="dealroom"
-              resourceId="npl-2026-0412"
-              ownerId="00000000-0000-0000-0000-000000000001"
-            />
+            {/* 편집하기 — 관리자 / 매도자(본인)만 노출. ownerId 는 listing.seller_id 에서 파생. */}
+            {listing && (
+              <OwnerEditButton
+                resourceType="dealroom"
+                resourceId={String(listing.id)}
+                ownerId={listing.seller_id ?? null}
+              />
+            )}
             {/* PDF 다운로드 (Full Ver.) — 메인 dark CTA */}
             <button
               type="button"
@@ -282,6 +367,7 @@ export default function DealRoomExamplerPage() {
         </div>
       </section>
     </MckPageShell>
+    </DealroomListingContext.Provider>
   )
 }
 
@@ -909,6 +995,37 @@ function SectionExecution() {
   )
 }
 
+/* ════ Summary Viewer Header — listing context 에서 모든 표기 파생 ═══════ */
+function SummaryViewerHeader() {
+  const { title, code, institution, region, listing } = useDealroomListing()
+  // D-day 계산 (listing.deadline 또는 bid_end_date 가 있으면 표기, 없으면 생략)
+  const deadlineStr =
+    (typeof listing?.deadline === "string" ? listing.deadline : null) ??
+    (typeof listing?.bid_end_date === "string" ? listing.bid_end_date : null)
+  let dDay: string | null = null
+  if (deadlineStr) {
+    const days = Math.ceil((new Date(deadlineStr).getTime() - Date.now()) / 86_400_000)
+    if (days >= 0) dDay = `D-${days}`
+    else dDay = "마감"
+  }
+  const subtitleParts = [institution, region, code, dDay].filter(Boolean)
+  return (
+    <div>
+      <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 4 }}>
+        1PAGE SUMMARY — VIEWER
+      </div>
+      <h3 style={{ fontFamily: MCK_FONTS.serif, fontSize: 22, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.015em" }}>
+        {title} · 딜룸 요약
+      </h3>
+      {subtitleParts.length > 0 && (
+        <div style={{ fontSize: 12, color: MCK.textSub, marginTop: 6, fontWeight: 500 }}>
+          {subtitleParts.join(" · ")}
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ════ Viewer — 1Page Summary 미리보기 모달 ════════════════════════════════ */
 function DealRoomSummaryViewer({ onClose }: { onClose: () => void }) {
   return (
@@ -934,17 +1051,7 @@ function DealRoomSummaryViewer({ onClose }: { onClose: () => void }) {
         }}
       >
         <header style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 18, paddingBottom: 14, borderBottom: `1px solid ${MCK.border}` }}>
-          <div>
-            <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 4 }}>
-              1PAGE SUMMARY — VIEWER
-            </div>
-            <h3 style={{ fontFamily: MCK_FONTS.serif, fontSize: 22, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.015em" }}>
-              강남구 아파트 NPL 채권 · 딜룸 요약
-            </h3>
-            <div style={{ fontSize: 12, color: MCK.textSub, marginTop: 6, fontWeight: 500 }}>
-              ○○은행 · 서울 강남구 · 임의매각 · NPL-2026-0412 · D-5
-            </div>
-          </div>
+          <SummaryViewerHeader />
           <button type="button" onClick={onClose} aria-label="닫기" style={{
             padding: "4px 10px", fontSize: 18, fontWeight: 800,
             background: "transparent", color: MCK.textMuted, border: "none", cursor: "pointer", lineHeight: 1,
@@ -2335,6 +2442,10 @@ const ACTIVE_STEP: NextStepKey = "auth"
 function NextStepGroup({ activeKey = ACTIVE_STEP }: { activeKey?: NextStepKey } = {}) {
   const [openKey, setOpenKey] = useState<NextStepKey | null>(null)
   const router = useRouter()
+  // 매물 SoT — 모달의 listingTitle/listingId/sellerName/askingPrice 모두 listing 파생
+  const { title: listingTitle, code: listingCode, institution, askingPrice, listing } = useDealroomListing()
+  const fallbackInstitution = institution || "매도자"
+  const sellerNameForModal = fallbackInstitution
 
   // 기존 access-modals 의 state 시뮬레이션 (시연용 · 신청 가능 = "none")
   const investorState: InvestorVerifyState = {
@@ -2342,8 +2453,8 @@ function NextStepGroup({ activeKey = ACTIVE_STEP }: { activeKey?: NextStepKey } 
     businessLicense: { label: "사업자등록증", submitted: false },
     businessCard: { label: "명함", submitted: false },
   }
-  const ndaState: NdaState = { status: "none", sellerName: "○○은행" }
-  const loiState: LoiState = { status: "none", sellerName: "○○은행" }
+  const ndaState: NdaState = { status: "none", sellerName: sellerNameForModal }
+  const loiState: LoiState = { status: "none", sellerName: sellerNameForModal }
 
   return (
     <>
@@ -2373,17 +2484,17 @@ function NextStepGroup({ activeKey = ACTIVE_STEP }: { activeKey?: NextStepKey } 
       <NdaModal
         open={openKey === "nda"}
         onClose={() => setOpenKey(null)}
-        listingTitle="강남구 아파트 NPL 채권"
-        listingId="NPL-2026-0412"
+        listingTitle={listingTitle}
+        listingId={listing ? String(listing.id) : listingCode}
         state={ndaState}
         onSubmit={() => setOpenKey(null)}
       />
       <LoiModal
         open={openKey === "loi"}
         onClose={() => setOpenKey(null)}
-        listingTitle="강남구 아파트 NPL 채권"
-        listingId="NPL-2026-0412"
-        askingPrice={850_000_000}
+        listingTitle={listingTitle}
+        listingId={listing ? String(listing.id) : listingCode}
+        askingPrice={askingPrice}
         state={loiState}
         onSubmit={() => setOpenKey(null)}
       />

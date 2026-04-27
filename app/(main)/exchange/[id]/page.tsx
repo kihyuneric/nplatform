@@ -1,17 +1,23 @@
 /**
- * /exchange/[id] — 시안 단계 통일: 모든 딜룸 진입을 /deals/dealroom 로 라우트
+ * /exchange/[id] — 매물 상세는 딜룸으로 통합. listing.id 를 쿼리에 보존해 redirect.
  *
  * 진입 경로:
  *   1. 거래소 매물 탐색 → 딜룸 입장 클릭
  *   2. 새 탭에서 열기 (target="_blank")
  *   3. /deals/[id] 레거시 redirect
+ *   4. 외부 링크/공유 URL (/exchange/<UUID>)
  *
- * 모든 경로가 동일한 풀 시안 딜룸(/deals/dealroom) UI 를 보여줍니다.
- * 실제 구현 단계에서 backend listing_id 별 분기로 전환 예정.
+ * 모든 경로가 /deals/dealroom?listingId=<UUID> 로 단일화되어 useListing(id) 가
+ * SoT 데이터를 자동으로 가져옴.
  */
 
 import { redirect } from "next/navigation"
 
-export default function ListingDetailPage() {
-  redirect("/deals/dealroom")
+export default async function ListingDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  redirect(`/deals/dealroom?listingId=${encodeURIComponent(id)}`)
 }
