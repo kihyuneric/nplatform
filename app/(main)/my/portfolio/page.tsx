@@ -54,42 +54,102 @@ interface PortfolioKPIs {
   winRate: number
 }
 
-// Watchlist hook — /api/v1/my/watchlist (falls back to /api/v1/my/portfolio for watchlist key)
+// 영문 collateral_type → 한글 라벨 (TYPE_ACCENT 와 정합)
+const COLLATERAL_LABEL: Record<string, string> = {
+  APARTMENT: "아파트", OFFICETEL: "오피스텔", COMMERCIAL: "상가",
+  STORE: "상가", RETAIL: "상가", LAND: "토지", VILLA: "빌라",
+  HOUSE: "빌라", FACTORY: "공장", OFFICE: "오피스",
+}
+
+// Watchlist hook — /api/v1/my/portfolio
+//   API 가 비었거나 비로그인이면 실제 ACTIVE 매물 6건을 fetch 해 샘플로 표시 →
+//   사용자가 '관심 매물' 동선·딜룸 상세 진입 흐름을 즉시 검증 가능.
 function useWatchlistData() {
   const [watchlist, setWatchlist] = useState<WatchItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [isSample, setIsSample] = useState(false)
   const [summary, setSummary] = useState({ totalInvestment: 0, watchlistCount: 0, watchlistTotal: 0, activeDealsCount: 0 })
 
   useEffect(() => {
-    // Try /api/v1/my/portfolio first (returns watchlist + summary)
-    fetch("/api/v1/my/portfolio")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.watchlist) {
-          setWatchlist(
-            data.watchlist.map((w: Record<string, unknown>) => ({
-              id: w.listing_id as string,
-              title: w.title as string,
-              type: w.type as string,
-              region: w.region as string,
-              currentPrice: w.currentPrice as number,
-              changePercent: 0,
-              discount: w.discount as number,
-              daysWatched: w.daysWatched as number,
-              grade: w.grade as string,
-            }))
-          )
+    let cancelled = false
+    ;(async () => {
+      try {
+        // 1. 실제 watchlist 먼저 시도
+        const r = await fetch("/api/v1/my/portfolio", { credentials: "include" })
+        if (r.ok) {
+          const data = await r.json()
+          if (Array.isArray(data?.watchlist) && data.watchlist.length > 0) {
+            if (!cancelled) {
+              setWatchlist(
+                data.watchlist.map((w: Record<string, unknown>) => ({
+                  id: w.listing_id as string,
+                  title: w.title as string,
+                  type: w.type as string,
+                  region: w.region as string,
+                  currentPrice: w.currentPrice as number,
+                  changePercent: 0,
+                  discount: w.discount as number,
+                  daysWatched: w.daysWatched as number,
+                  grade: w.grade as string,
+                }))
+              )
+              if (data.summary) setSummary(data.summary)
+            }
+            return
+          }
         }
-        if (data.summary) setSummary(data.summary)
-      })
-      .catch(() => {
-        // fallback: empty state (allowed per spec)
-        setWatchlist([])
-      })
-      .finally(() => setLoading(false))
+
+        // 2. 비어있으면 실제 ACTIVE 매물에서 샘플 6건 가져오기 (딜룸 상세 진입 검증용)
+        const sr = await fetch("/api/v1/exchange/listings?limit=6&status=ACTIVE")
+        if (sr.ok) {
+          const sd = await sr.json()
+          const rows: Array<Record<string, unknown>> = Array.isArray(sd?.data) ? sd.data : []
+          if (!cancelled && rows.length > 0) {
+            const sampled: WatchItem[] = rows.map((row, idx) => {
+              const r = row as Record<string, any>
+              const principal =
+                (r.principal_amount as number) ??
+                (r.claim_amount as number) ??
+                (r.outstanding_principal as number) ?? 0
+              const appraisal = (r.appraised_value as number) ?? (r.appraisal_value as number) ?? 0
+              const ctRaw = String(r.collateral_type ?? "").toUpperCase()
+              const type = COLLATERAL_LABEL[ctRaw] || (typeof r.collateral_type === "string" ? r.collateral_type : "기타")
+              const region =
+                [r.sido, r.sigungu].filter(Boolean).join(" ") ||
+                (typeof r.address_masked === "string" ? r.address_masked : "")
+              return {
+                id: String(r.id),
+                title: String(r.title ?? region ?? "매물"),
+                type,
+                region,
+                currentPrice: appraisal || principal,
+                changePercent: 0,
+                discount: typeof r.discount_rate === "number" ? r.discount_rate : 0,
+                daysWatched: idx + 1,
+                grade: String(r.risk_grade ?? r.ai_grade ?? "B"),
+              }
+            })
+            setWatchlist(sampled)
+            setIsSample(true)
+            // 요약 카드 — 샘플 기준 합계 노출
+            setSummary({
+              totalInvestment: 0,
+              watchlistCount: sampled.length,
+              watchlistTotal: sampled.reduce((s, w) => s + (w.currentPrice || 0), 0),
+              activeDealsCount: 0,
+            })
+          }
+        }
+      } catch {
+        // 네트워크 오류 무시 — 빈 상태 유지
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
   }, [])
 
-  return { watchlist, loading, summary, setWatchlist }
+  return { watchlist, loading, summary, setWatchlist, isSample }
 }
 
 // Buyer portfolio hook — /api/v1/buyer/portfolio
@@ -723,7 +783,7 @@ function InvestmentTab({ watchlist, investments, kpis, loading }: {
 
 // ─── Main PortfolioPage ────────────────────────────────────────────────────────
 export default function PortfolioPage() {
-  const { watchlist, loading: watchlistLoading, summary, setWatchlist } = useWatchlistData()
+  const { watchlist, loading: watchlistLoading, summary, setWatchlist, isSample } = useWatchlistData()
   const { investments, kpis, loading: investLoading } = useBuyerPortfolio()
   const [tab, setTab] = useState<Tab>("관심 매물")
   const [items, setItems] = useState<WatchItem[]>([])
@@ -791,6 +851,36 @@ export default function PortfolioPage() {
           </div>
         </div>
       </div>
+
+      {/* 체험 모드 배너 — 실제 watchlist 데이터가 없어 ACTIVE 매물 6건을 샘플로 표시 중 */}
+      {isSample && (
+        <div className={DS.page.container}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              padding: "10px 16px",
+              background: "rgba(34, 81, 255, 0.06)",
+              border: "1px solid rgba(34, 81, 255, 0.30)",
+              borderLeft: "3px solid #2251FF",
+              borderRadius: 0,
+              fontSize: 12,
+              color: "#0A1628",
+              marginTop: 12,
+            }}
+          >
+            <span>
+              <strong style={{ fontWeight: 800 }}>체험 모드</strong> — 실제 관심 매물이 없어
+              현재 거래 중인 매물 6건을 샘플로 표시합니다. 카드의 <strong>상세보기</strong> 를 누르면 매물별 딜룸으로 진입합니다.
+            </span>
+            <Link href="/exchange" className="text-[0.75rem] font-bold underline" style={{ color: "#1A47CC" }}>
+              거래소에서 관심 추가 →
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className={DS.page.container + " py-6"}>

@@ -76,15 +76,48 @@ export default function AgreementsPage() {
   const [filter, setFilter] = useState<typeof FILTERS[number]["key"]>("ALL")
   const [agreements, setAgreements] = useState<AgreementRow[]>(SAMPLE_AGREEMENTS)
   const [loadingData, setLoadingData] = useState(true)
+  const [isSample, setIsSample] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("/api/v1/my/agreements")
+        // 1. 실제 계약 이력 시도
+        const res = await fetch("/api/v1/my/agreements", { credentials: "include" })
         if (res.ok) {
           const json = await res.json()
           if (Array.isArray(json.data) && json.data.length > 0) {
             setAgreements(json.data as AgreementRow[])
+            setIsSample(false)
+            return
+          }
+        }
+        // 2. 비어 있으면 실제 ACTIVE 매물 4건의 UUID 로 SAMPLE 의 listing_id 를 교체 →
+        //    클릭 시 진짜 딜룸으로 진입할 수 있도록 (기존 SAMPLE 의 가짜 ID 는 DEMO_LISTING fallback 으로 떨어짐)
+        const lr = await fetch("/api/v1/exchange/listings?limit=4&status=ACTIVE")
+        if (lr.ok) {
+          const lj = await lr.json()
+          const ids: string[] = Array.isArray(lj?.data)
+            ? lj.data.map((row: Record<string, unknown>) => String(row.id)).filter(Boolean)
+            : []
+          if (ids.length > 0) {
+            const titles: Record<string, string> = {}
+            const insts: Record<string, string> = {}
+            ;(lj.data as Array<Record<string, unknown>>).forEach((row) => {
+              const id = String(row.id)
+              titles[id] = String(row.title ?? row.address_masked ?? "매물")
+              insts[id] = String(row.creditor_institution ?? row.institution_name ?? row.institution ?? "매도자")
+            })
+            const hydrated = SAMPLE_AGREEMENTS.map((a, idx) => {
+              const realId = ids[idx % ids.length]
+              return {
+                ...a,
+                listing_id: realId,
+                collateral: titles[realId] || a.collateral,
+                counterparty: insts[realId] || a.counterparty,
+              }
+            })
+            setAgreements(hydrated)
+            setIsSample(true)
           }
         }
       } catch {
@@ -130,6 +163,27 @@ export default function AgreementsPage() {
               <Loader2 size={13} style={{ animation: "spin 1s linear infinite", color: ELECTRIC }} />
               계약 이력 불러오는 중...
               <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+            </div>
+          )}
+
+          {/* 체험 모드 배너 — 실제 계약 이력이 없을 때 ACTIVE 매물 UUID 로 hydrated 된 SAMPLE 사용 */}
+          {!loadingData && isSample && (
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              gap: 12, padding: "10px 16px",
+              background: "rgba(34, 81, 255, 0.06)",
+              border: `1px solid rgba(34, 81, 255, 0.30)`,
+              borderLeft: `3px solid ${ELECTRIC}`,
+              fontSize: 12, color: INK,
+              marginBottom: 16,
+            }}>
+              <span>
+                <strong style={{ fontWeight: 800 }}>체험 모드</strong> — 실제 NDA/LOI 이력이 없어
+                ACTIVE 매물에 매핑된 샘플 계약을 표시합니다. 행을 클릭하면 매물별 딜룸으로 진입합니다.
+              </span>
+              <Link href="/exchange" style={{ fontSize: 11, fontWeight: 700, color: ELECTRIC_DARK, textDecoration: "underline" }}>
+                거래소에서 NDA 신청 →
+              </Link>
             </div>
           )}
 
@@ -182,7 +236,7 @@ export default function AgreementsPage() {
             <header
               style={{
                 display: "grid",
-                gridTemplateColumns: "80px 1fr 200px 140px 140px 110px",
+                gridTemplateColumns: "80px 1fr 200px 140px 140px 110px 90px",
                 gap: 12,
                 padding: "12px 20px",
                 fontSize: 9, color: INK_MID, fontWeight: 800,
@@ -197,6 +251,7 @@ export default function AgreementsPage() {
               <span style={{ textAlign: "right" }}>금액</span>
               <span>일시</span>
               <span>상태</span>
+              <span style={{ textAlign: "right" }}>상세</span>
             </header>
 
             {rows.length === 0 ? (
@@ -214,7 +269,7 @@ export default function AgreementsPage() {
                     href={`/deals/dealroom?listingId=${encodeURIComponent(row.listing_id)}`}
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "80px 1fr 200px 140px 140px 110px",
+                      gridTemplateColumns: "80px 1fr 200px 140px 140px 110px 90px",
                       gap: 12,
                       padding: "16px 20px",
                       borderBottom: i < rows.length - 1 ? `1px solid ${BORDER}` : "none",
@@ -281,6 +336,19 @@ export default function AgreementsPage() {
                       letterSpacing: "0.04em",
                     }}>
                       <Icon size={11} style={{ color: meta.color }} /> {meta.label}
+                    </span>
+                    {/* 명시적 상세 진입 버튼 — 행 전체가 Link 이지만 시각적 어포던스 보강 */}
+                    <span style={{
+                      justifySelf: "end",
+                      display: "inline-flex", alignItems: "center", gap: 4,
+                      padding: "5px 10px",
+                      background: ELECTRIC,
+                      color: "#FFFFFF",
+                      fontSize: 10, fontWeight: 800,
+                      letterSpacing: "0.04em",
+                      borderTop: `2px solid ${ELECTRIC_DARK}`,
+                    }}>
+                      딜룸 ↗
                     </span>
                   </Link>
                 )
