@@ -57,9 +57,11 @@ import {
   getListingInstitution,
   getListingRegion,
   getListingAskingPrice,
+  getListingPrincipal,
+  getListingAppraisal,
   type ListingDetail,
 } from "@/lib/hooks/use-listing"
-import { useDealroomLinks } from "@/lib/external/dealroom-links"
+import { useDealroomLinks, type DealroomLink } from "@/lib/external/dealroom-links"
 
 /* ─── Dealroom Listing Context — 하위 컴포넌트(NDA/LOI 모달, Summary 등) 가
        prop drill 없이 listing 에 접근. 매물 SoT 의 단일 진입점. ───────────── */
@@ -72,13 +74,24 @@ interface DealroomListingCtx {
   region: string
   /** 매각희망가 — LOI 모달 등에서 사용 */
   askingPrice: number
+  /** 채권잔액 / 감정가 / 할인율 — Section 01 핵심 지표 */
+  principal: number
+  appraisal: number
+  discountRate: number
+  /** 외부 링크 (사용자 제공 API 슬롯 또는 fallback 합성) */
+  externalLinks: DealroomLink[]
+  externalLinksSource: 'external' | 'fallback'
 }
 const DealroomListingContext = createContext<DealroomListingCtx | null>(null)
 function useDealroomListing(): DealroomListingCtx {
   const ctx = useContext(DealroomListingContext)
   if (!ctx) {
     // Provider 가 없을 때(개별 컴포넌트 렌더 등) 안전 fallback
-    return { listing: null, title: "딜룸", code: "", institution: "", region: "", askingPrice: 0 }
+    return {
+      listing: null, title: "딜룸", code: "", institution: "", region: "",
+      askingPrice: 0, principal: 0, appraisal: 0, discountRate: 0,
+      externalLinks: [], externalLinksSource: 'fallback',
+    }
   }
   return ctx
 }
@@ -132,14 +145,30 @@ export default function DealRoomPage() {
   }
 
   // 매물 컨텍스트 — 하위 모든 컴포넌트가 listing 에 접근 가능
-  const ctxValue: DealroomListingCtx = useMemo(() => ({
-    listing,
-    title: listingTitle,
-    code: listingCode,
-    institution: listingInstitution,
-    region: listingRegion,
-    askingPrice: listing ? getListingAskingPrice(listing) : 0,
-  }), [listing, listingTitle, listingCode, listingInstitution, listingRegion])
+  const ctxValue: DealroomListingCtx = useMemo(() => {
+    const principal = listing ? getListingPrincipal(listing) : 0
+    const appraisal = listing ? getListingAppraisal(listing) : 0
+    const askingPrice = listing ? getListingAskingPrice(listing) : 0
+    const discountRate =
+      listing && typeof listing.discount_rate === 'number'
+        ? listing.discount_rate
+        : (principal > 0 && askingPrice > 0
+            ? Math.round((1 - askingPrice / principal) * 1000) / 10
+            : 0)
+    return {
+      listing,
+      title: listingTitle,
+      code: listingCode,
+      institution: listingInstitution,
+      region: listingRegion,
+      askingPrice,
+      principal,
+      appraisal,
+      discountRate,
+      externalLinks,
+      externalLinksSource: linksData?.source ?? 'fallback',
+    }
+  }, [listing, listingTitle, listingCode, listingInstitution, listingRegion, externalLinks, linksData?.source])
 
   return (
     <DealroomListingContext.Provider value={ctxValue}>
@@ -279,18 +308,72 @@ export default function DealRoomPage() {
       {/* Viewer 모달 (1Page Summary 미리보기) */}
       {summaryOpen && <DealRoomSummaryViewer onClose={() => setSummaryOpen(false)} />}
 
-      {/* ── ② DARK KPI Strip ──────────────────────────────────────── */}
+      {/* ── ② DARK KPI Strip — 매물 SoT 파생 ────────────────────────
+          매각희망가 / 채권잔액 / 감정가 / 남은 기간 모두 listing 에서 추출.
+          AI 등급은 listing.risk_grade 기준. 거래 단계는 매물 상태 기반. */}
       <section style={{ background: MCK.paper, paddingBottom: 24 }}>
         <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 24px" }}>
-          <MckKpiGrid
-            variant="dark"
-            items={[
-              { label: "매각희망가", value: "19.9억", hint: "할인율 ↓8.9% · 채권잔액 22.7억" },
-              { label: "AI 투자 등급", value: "A · 89.4점", hint: "BUY · 회수율 78.5%" },
-              { label: "거래 단계", value: "NDA", hint: "검증 데이터 열람 가능" },
-              { label: "남은 기간", value: "D-5", hint: "LOI 제출 마감" },
-            ]}
-          />
+          {(() => {
+            const askingV = listing ? getListingAskingPrice(listing) : 0
+            const principalV = listing ? getListingPrincipal(listing) : 0
+            const appraisalV = listing ? getListingAppraisal(listing) : 0
+            const drV =
+              listing && typeof listing.discount_rate === "number"
+                ? listing.discount_rate
+                : (principalV > 0 && askingV > 0
+                    ? Math.round((1 - askingV / principalV) * 1000) / 10
+                    : 0)
+            const grade = String(listing?.risk_grade ?? listing?.ai_grade ?? "—").toUpperCase()
+            const stage = String(listing?.disclosure_level ?? listing?.status ?? "ACTIVE")
+            const stageLabel =
+              stage === "FULL" ? "FULL" :
+              stage === "NDA_REQUIRED" ? "NDA" :
+              stage === "TEASER" ? "공개 (L0)" :
+              stage
+            // D-day 계산
+            const deadlineStr =
+              (typeof listing?.deadline === "string" ? listing.deadline : null) ??
+              (typeof listing?.bid_end_date === "string" ? listing.bid_end_date : null)
+            let dDay = "—"
+            let dDayHint = "마감일 미정"
+            if (deadlineStr) {
+              const days = Math.ceil((new Date(deadlineStr).getTime() - Date.now()) / 86_400_000)
+              if (days >= 0) {
+                dDay = `D-${days}`
+                dDayHint = "입찰 / LOI 마감"
+              } else {
+                dDay = "마감"
+                dDayHint = "마감 경과"
+              }
+            }
+            return (
+              <MckKpiGrid
+                variant="dark"
+                items={[
+                  {
+                    label: "매각희망가",
+                    value: askingV > 0 ? `${(askingV / 100_000_000).toFixed(1)}억` : "—",
+                    hint: `${drV > 0 ? `할인율 ↓${drV.toFixed(1)}% · ` : ""}채권잔액 ${principalV > 0 ? `${(principalV / 100_000_000).toFixed(1)}억` : "—"}`,
+                  },
+                  {
+                    label: "AI 투자 등급",
+                    value: grade !== "—" ? grade : "분석 대기",
+                    hint: appraisalV > 0 ? `감정가 ${(appraisalV / 100_000_000).toFixed(1)}억` : "감정가 미공개",
+                  },
+                  {
+                    label: "거래 단계",
+                    value: stageLabel,
+                    hint: stage === "TEASER" ? "NDA 체결 후 검증 데이터 열람" : "검증 데이터 열람 가능",
+                  },
+                  {
+                    label: "남은 기간",
+                    value: dDay,
+                    hint: dDayHint,
+                  },
+                ]}
+              />
+            )
+          })()}
         </div>
       </section>
 
@@ -498,7 +581,23 @@ function SectionShell({
 /* ═══════════════════════════════════════════════════════════════════════════
    SECTION 01 · Deal Screening (L0 · Free preview)
 ═══════════════════════════════════════════════════════════════════════════ */
+
+// 한국 원화 → 억 단위 표기 (소수점 1자리)
+function fmtEok(v: number): string {
+  if (v <= 0) return "—"
+  return `${(v / 100_000_000).toFixed(1)}억`
+}
+
 function SectionScreening() {
+  // SoT — listing 에서 핵심 지표 파생 (하드코딩 없음)
+  const { principal, askingPrice, appraisal, discountRate } = useDealroomListing()
+  const principalLabel = fmtEok(principal)
+  const askingLabel = fmtEok(askingPrice)
+  const appraisalLabel = fmtEok(appraisal)
+  const discountSub = discountRate > 0 ? `할인율 ↓${discountRate.toFixed(1)}%` : "—"
+  const principalSub = "채권잔액 = 원금 + 미수이자"
+  const appraisalSub = "감정평가 기준"
+
   return (
     <SectionShell
       anchor="section-1"
@@ -507,12 +606,16 @@ function SectionScreening() {
       title="Deal Screening — 3분 안에 판단"
       subtitle="이 딜이 검토할 가치가 있는지 빠르게 판단할 수 있도록 핵심 지표만 압축했습니다."
     >
-      {/* 핵심 3-col 지표 */}
+      {/* 핵심 3-col 지표 — 매물 SoT 파생 */}
       <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 12, marginBottom: 18 }}>
-        <ScreenMetricCard label="채권잔액" value="22.7억" sub="원금 21.8억 + 연체이자 8,720만" />
-        <ScreenMetricCard label="매각 희망가" value="19.9억" sub="할인율 ↓8.9%" highlight />
-        <ScreenMetricCard label="감정가" value="25.7억" sub="감정평가 기준" />
+        <ScreenMetricCard label="채권잔액" value={principalLabel} sub={principalSub} />
+        <ScreenMetricCard label="매각 희망가" value={askingLabel} sub={discountSub} highlight />
+        <ScreenMetricCard label="감정가" value={appraisalLabel} sub={appraisalSub} />
       </div>
+
+      {/* 외부 링크 패널 — 사용자 제공 API (NEXT_PUBLIC_EXTERNAL_DEALROOM_LINKS_URL)
+          미설정 시 매물 데이터로 합성된 fallback 링크. 실거래/시세/등기 등 외부 검증 동선. */}
+      <ExternalLinksPanel />
 
       {/* 자동 마스킹 banner — McKinsey Sky Blue (첨부 5 "딜룸 입장 · 상세" 스타일) */}
       <div
@@ -665,6 +768,64 @@ function SectionScreening() {
       <RegistrySummaryTable />
       {/* (사용자 요청 — 땅집고옥션 버튼 삭제 · Section 02 경매 정보 카드 하단으로 이동) */}
     </SectionShell>
+  )
+}
+
+/* External link card grid — listing-derived links. 사용자 API 미설정 시 fallback. */
+function ExternalLinksPanel() {
+  const { externalLinks, externalLinksSource } = useDealroomListing()
+  if (externalLinks.length === 0) return null
+  return (
+    <div style={{
+      background: MCK.paper,
+      border: `1px solid ${MCK.border}`,
+      borderTop: `2px solid ${MCK.electric}`,
+      padding: "16px 18px",
+      marginBottom: 24,
+    }}>
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        marginBottom: 12, gap: 8, flexWrap: "wrap",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <ExternalLink size={14} style={{ color: MCK.electric }} />
+          <span style={{ ...MCK_TYPE.eyebrow, color: MCK.electric }}>
+            외부 검증 자료
+          </span>
+        </div>
+        <span style={{
+          fontSize: 9, fontWeight: 800, padding: "2px 8px",
+          background: externalLinksSource === 'external' ? "rgba(16, 185, 129, 0.10)" : "rgba(34, 81, 255, 0.06)",
+          color: externalLinksSource === 'external' ? "#047857" : MCK.electricDark,
+          border: `1px solid ${externalLinksSource === 'external' ? "rgba(16, 185, 129, 0.35)" : "rgba(34, 81, 255, 0.30)"}`,
+          letterSpacing: "0.06em", textTransform: "uppercase",
+        }}>
+          {externalLinksSource === 'external' ? "API 연동" : "기본 연결"}
+        </span>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: 8 }}>
+        {externalLinks.map((link) => (
+          <Link
+            key={link.kind + link.href}
+            href={link.href}
+            target="_blank"
+            rel="noopener"
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+              padding: "10px 12px",
+              background: MCK.paperTint,
+              border: `1px solid ${MCK.border}`,
+              fontSize: 11, fontWeight: 700, color: MCK.ink,
+              textDecoration: "none",
+              transition: "border-color 0.15s",
+            }}
+          >
+            <span style={{ color: MCK.ink, lineHeight: 1.3 }}>{link.label}</span>
+            <ExternalLink size={11} style={{ color: MCK.electric, flexShrink: 0 }} />
+          </Link>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -1686,6 +1847,18 @@ function SecureChatPanel() {
    RIGHT · 상대방 정보 사이드 패널 (chat 아래)
 ═══════════════════════════════════════════════════════════════════════════ */
 function CounterpartySidePanel() {
+  // 매도자 정보는 매물 데이터에서 파생. NDA 체결 전까지 담당자 실명/연락처는 마스킹.
+  const { institution, listing } = useDealroomListing()
+  const fallbackInstitution = institution || "매도자"
+  // 약어 (이니셜) — 한글 첫 글자
+  const initials = (fallbackInstitution.match(/[가-힣A-Za-z]/)?.[0] ?? "매").charAt(0)
+  // 마스킹된 담당자 표기 — 실제 담당자명은 NDA/LOI 단계에서만 공개
+  const contactLabel = `${fallbackInstitution} 담당자`
+  // listing 의 마지막 갱신일 또는 등록일을 부가정보로
+  const updatedAt =
+    typeof listing?.updated_at === "string" ? listing.updated_at :
+    typeof listing?.created_at === "string" ? listing.created_at :
+    null
   return (
     <article
       style={{
@@ -1707,25 +1880,32 @@ function CounterpartySidePanel() {
             flexShrink: 0,
           }}
         >
-          <span style={{ color: MCK.paper }}>매</span>
+          <span style={{ color: MCK.paper }}>{initials}</span>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.005em" }}>
-            ○○은행 김 팀장
+            {contactLabel}
           </div>
           <div style={{ fontSize: 11, color: MCK.textMuted, fontWeight: 600 }}>
-            매도자 · ○○은행
+            매도자 · {fallbackInstitution}
           </div>
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, paddingTop: 10, borderTop: `1px solid ${MCK.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Phone size={11} style={{ color: MCK.electric }} />
-          <span style={{ fontSize: 11, fontWeight: 700, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>02-****-0000</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>
+            연락처 비공개
+          </span>
         </div>
         <div style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 500, lineHeight: 1.5 }}>
-          연락처는 LOI 승인 후 공개됩니다.
+          담당자 실명·전화·이메일은 LOI 승인 후 공개됩니다.
         </div>
+        {updatedAt && (
+          <div style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 500 }}>
+            매물 최종 갱신 · {String(updatedAt).slice(0, 10)}
+          </div>
+        )}
       </div>
     </article>
   )
