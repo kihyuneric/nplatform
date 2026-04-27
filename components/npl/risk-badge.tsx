@@ -28,7 +28,9 @@ export function RiskGradeBadge({
   showLabel = false,
   className = "",
 }: RiskGradeBadgeProps) {
-  const colors = riskPalette[grade]
+  // 안전 fallback — 미지의 등급(예: "S")이 들어와도 undefined.bg 로 인한 크래시 방지.
+  const safeGrade = (grade in riskPalette ? grade : "C") as RiskGrade
+  const colors = riskPalette[safeGrade]
 
   const sizeCls = {
     sm: "text-[0.6875rem] w-6 h-6",
@@ -45,13 +47,13 @@ export function RiskGradeBadge({
           color: colors.fg,
           border: `1.5px solid ${colors.border}`,
         }}
-        aria-label={`리스크 등급 ${grade} - ${RISK_LABEL[grade]}`}
+        aria-label={`리스크 등급 ${safeGrade} - ${RISK_LABEL[safeGrade]}`}
       >
-        {grade}
+        {safeGrade}
       </div>
       {showLabel && (
         <span className="text-[0.8125rem] font-semibold" style={{ color: colors.fg }}>
-          {RISK_LABEL[grade]}
+          {RISK_LABEL[safeGrade]}
         </span>
       )}
     </div>

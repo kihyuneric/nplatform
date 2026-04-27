@@ -28,6 +28,46 @@ import { MCK, MCK_FONTS } from "@/lib/mck-design"
 const COLLATERAL_OPTIONS = ["전체", "아파트", "오피스텔", "상가", "토지", "빌라", "기타"] as const
 const REGION_OPTIONS = ["전체", "서울", "경기", "인천", "부산", "대구", "광주", "대전", "울산", "세종", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"] as const
 
+// ─── 영어 코드 → 한글 라벨 매핑 (API 가 APARTMENT 등 enum 으로 응답하는 경우) ───
+const COLLATERAL_CODE_MAP: Record<string, CollateralType> = {
+  APARTMENT:    "아파트",
+  OFFICETEL:    "오피스텔",
+  COMMERCIAL:   "상가",
+  STORE:        "상가",
+  RETAIL:       "상가",
+  LAND:         "토지",
+  VILLA:        "빌라",
+  HOUSE:        "빌라",
+  ETC:          "기타",
+  OTHER:        "기타",
+  // 한글이 그대로 오는 경우 — 안전 패스스루
+  아파트: "아파트", 오피스텔: "오피스텔", 상가: "상가",
+  토지: "토지",   빌라: "빌라",   기타: "기타",
+}
+
+function normalizeCollateralType(raw: unknown): CollateralType {
+  if (typeof raw !== "string" || !raw) return "기타"
+  const upper = raw.toUpperCase()
+  if (COLLATERAL_CODE_MAP[upper]) return COLLATERAL_CODE_MAP[upper]
+  if (COLLATERAL_CODE_MAP[raw]) return COLLATERAL_CODE_MAP[raw]
+  // partial match — "근린상가/사무실" → "상가"
+  if (raw.includes("아파트")) return "아파트"
+  if (raw.includes("오피스텔")) return "오피스텔"
+  if (raw.includes("상가") || raw.includes("점포") || raw.includes("근린"))
+    return "상가"
+  if (raw.includes("토지") || raw.includes("대지")) return "토지"
+  if (raw.includes("빌라") || raw.includes("주택") || raw.includes("다세대"))
+    return "빌라"
+  return "기타"
+}
+
+const RISK_VALID = new Set<RiskGrade>(["A", "B", "C", "D", "E"])
+function normalizeRiskGrade(raw: unknown): RiskGrade {
+  if (typeof raw !== "string") return "C"
+  const upper = raw.toUpperCase()
+  return RISK_VALID.has(upper as RiskGrade) ? (upper as RiskGrade) : "C"
+}
+
 // ─── ListingCard 어댑터 ───
 function toCardProps(raw: Record<string, unknown>) {
   const l = raw as Record<string, any>
@@ -46,32 +86,36 @@ function toCardProps(raw: Record<string, unknown>) {
     estLow && estHigh ? Math.round((estLow + estHigh) / 2)
     : askMin && askMax ? Math.round((askMin + askMax) / 2)
     : l.asking_price ? (l.asking_price as number)
+    : (l.minimum_bid as number) ? (l.minimum_bid as number)
     : Math.round(principal * 0.7)
 
-  const discount = principal > 0
-    ? Math.round((1 - askingMid / principal) * 1000) / 10
-    : 0
+  const discount =
+    typeof l.discount_rate === "number" && l.discount_rate > 0
+      ? l.discount_rate
+      : principal > 0
+        ? Math.round((1 - askingMid / principal) * 1000) / 10
+        : 0
 
   let region = ""
   if (l.location_city || l.location_district) {
     region = [l.location_city, l.location_district].filter(Boolean).join(" ")
   } else if (l.collateral_region || l.location_detail) {
     region = [l.collateral_region, l.location_detail].filter(Boolean).join(" ")
+  } else if (l.sido || l.sigungu) {
+    region = [l.sido, l.sigungu].filter(Boolean).join(" ")
   } else if (typeof l.address === "string" && l.address) {
     region = l.address.split(/\s+/).slice(0, 2).join(" ")
-  } else if (l.sido) {
-    region = String(l.sido)
   }
 
   return {
     id: String(l.id),
     code: String(l.id).slice(0, 8).toUpperCase(),
-    collateralType: ((l.collateral_type as string) ?? "기타") as CollateralType,
+    collateralType: normalizeCollateralType(l.collateral_type),
     region,
     outstandingAmount: principal,
     askingPrice: askingMid,
     discountRate: discount,
-    riskGrade: ((l.risk_grade as string) ?? (l.ai_grade as string) ?? "C") as RiskGrade,
+    riskGrade: normalizeRiskGrade(l.risk_grade ?? l.ai_grade),
     deadline: (l.deadline as string) ?? new Date(Date.now() + 7 * 24 * 3600_000).toISOString(),
     viewCount: (l.interest_count as number) ?? (l.view_count as number),
   }

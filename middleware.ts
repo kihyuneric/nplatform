@@ -166,9 +166,17 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ── 3.6. Auth-required routes: /my/* requires real Supabase session OR dev-bypass ──
-  // All feature pages (/analysis, /deals, etc.) are publicly browsable.
-  const AUTH_REQUIRED = ['/my']
+  // ── 3.6. Auth-required routes: only sensitive sub-paths require login ──
+  // 정책 변경 (2026-04-27): /my 대시보드는 비로그인 시 샘플(체험) 데이터를 표시하므로
+  // 미들웨어 redirect 에서 제외. 단, 본인 식별이 필수인 정산/실명/결제/세금/API
+  // 키 등 고민감 sub-path 만 로그인 강제.
+  const AUTH_REQUIRED = [
+    '/my/billing',     // 결제·크레딧 (실 결제 내역)
+    '/my/settlements', // 정산
+    '/my/kyc',         // KYC 실명/사업자
+    '/my/privacy',     // PII 열람 로그
+    '/my/developer',   // API 키
+  ]
   if (!isApi && isPathMatch(pathname, AUTH_REQUIRED) && process.env.NODE_ENV !== 'development') {
     const hasSupabaseSession = request.cookies.getAll().some(
       c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')

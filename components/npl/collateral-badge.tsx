@@ -30,8 +30,10 @@ export function CollateralBadge({
   showIcon = true,
   className = "",
 }: CollateralBadgeProps) {
-  const color = collateralPalette[type]
-  const Icon = ICON[type]
+  // 안전 fallback — 알 수 없는 type 이 들어와도 'undefined Icon' 으로 인한 React 렌더 에러 방지.
+  const safeType = (type in collateralPalette ? type : "기타") as CollateralType
+  const color = collateralPalette[safeType]
+  const Icon = ICON[safeType] ?? Box
 
   const sizeCls =
     size === "sm"
@@ -48,7 +50,7 @@ export function CollateralBadge({
       }}
     >
       {showIcon && <Icon className={size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"} />}
-      {type}
+      {safeType}
     </span>
   )
 }

@@ -258,12 +258,13 @@ export default function MyDashboardPage() {
   const QUICK_LINKS = getQuickLinks(role, roleSubtype)
   const badge = roleBadge(role, roleSubtype)
 
-  // KPI Grid
+  // KPI Grid — API 응답이 부분적으로 비어있어도 크래시 없도록 모든 접근을 nullish-safe 로
+  const safeBalance = Number(profile?.credit_balance ?? 0).toLocaleString("ko-KR")
   const KPI_ITEMS: MckKpiItem[] = [
-    { label: "관심 매물", value: stats.favoritesCount, hint: "Favorites" },
-    { label: "활성 거래", value: stats.activeDealsCount, hint: "Deal Rooms", accent: stats.activeDealsCount > 0 },
-    { label: "AI 분석", value: stats.analysesCount, hint: "Reports" },
-    { label: "크레딧", value: `${profile.credit_balance.toLocaleString("ko-KR")} C`, hint: "Balance" },
+    { label: "관심 매물", value: stats?.favoritesCount ?? 0, hint: "Favorites" },
+    { label: "활성 거래", value: stats?.activeDealsCount ?? 0, hint: "Deal Rooms", accent: (stats?.activeDealsCount ?? 0) > 0 },
+    { label: "AI 분석", value: stats?.analysesCount ?? 0, hint: "Reports" },
+    { label: "크레딧", value: `${safeBalance} C`, hint: "Balance" },
   ]
 
   // Loading 상태
