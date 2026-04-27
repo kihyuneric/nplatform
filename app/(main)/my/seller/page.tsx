@@ -307,9 +307,9 @@ export default function SellerDashboardPage() {
                       <td className={DS.table.cellMuted + " tabular-nums"}>{l.date}</td>
                       <td className={DS.table.cell}>
                         <div className="flex items-center gap-1.5">
-                          {/* Phase G6 · 매도자 본인 매물 상세/편집 링크 연결 */}
+                          {/* SoT — 매물 상세는 항상 딜룸으로 (?listingId 쿼리) */}
                           <Link
-                            href={`/exchange/listings/${l.id}`}
+                            href={`/deals/dealroom?listingId=${encodeURIComponent(l.id)}`}
                             className={DS.text.link + " text-[0.8125rem]"}
                           >
                             상세

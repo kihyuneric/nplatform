@@ -226,12 +226,25 @@ export default function AdminListingEditPage() {
             {title} <span className="text-[var(--color-text-muted)]">· {id}</span>
           </p>
         </div>
-        <Link
-          href="/admin/listings"
-          className="inline-flex items-center gap-1 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-3 py-1.5 text-[0.75rem] font-semibold text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" /> 목록으로
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* SoT — 매물 상세는 항상 딜룸. 관리자가 편집 결과를 바로 미리보기 가능 */}
+          {id && (
+            <Link
+              href={`/deals/dealroom?listingId=${encodeURIComponent(id)}`}
+              target="_blank"
+              rel="noopener"
+              className="inline-flex items-center gap-1 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-3 py-1.5 text-[0.75rem] font-semibold text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]"
+            >
+              딜룸 미리보기 ↗
+            </Link>
+          )}
+          <Link
+            href="/admin/listings"
+            className="inline-flex items-center gap-1 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-3 py-1.5 text-[0.75rem] font-semibold text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> 목록으로
+          </Link>
+        </div>
       </div>
 
       {/* Admin Review Block */}

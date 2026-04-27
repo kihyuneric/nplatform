@@ -33,6 +33,7 @@ import DS from "@/lib/design-system"
 import { riskPalette } from "@/lib/design-tokens"
 import { MckPageShell, MckPageHeader, MckKpiGrid } from "@/components/mck"
 import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
+import { useListing, getListingTitle, getListingRegion, getListingInstitution, getListingAppraisal } from "@/lib/hooks/use-listing"
 import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/unified-report/types"
 import {
   SPECIAL_CONDITIONS_V2,
@@ -196,6 +197,7 @@ const T: Record<Lang, Dict> = {
 export default function UnifiedReportPage() {
   const params = useSearchParams()
   const id = params?.get("id") ?? null
+  const listingId = params?.get("listingId") ?? null
   const [report, setReport] = useState<UnifiedAnalysisReport | null>(null)
   const [error, setError] = useState<string | null>(null)
   // Phase G7+ v3 — 사이트 자체 번역기능 사용으로 다국어 토글 제거 · 한국어 단일
@@ -203,6 +205,9 @@ export default function UnifiedReportPage() {
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const t = T[lang]
+
+  // SoT — listingId 가 있으면 매물 raw 데이터 fetch (assetTitle 등 헤더 메타 동기화)
+  const { listing } = useListing(listingId, { allowDemo: false })
 
   // SSR 시 document 미존재 — Portal 은 mount 이후에만 렌더
   useEffect(() => { setMounted(true) }, [])
@@ -265,12 +270,19 @@ export default function UnifiedReportPage() {
   const vScore = summary.verdictScore ?? 0
   const vGrade = verdictScoreToGrade(vScore)
 
+  // SoT — listing 이 있으면 매물 메타로 헤더 표기 override (input.* 는 분석 input 데이터)
+  const displayTitle = listing ? getListingTitle(listing) : input.assetTitle
+  const displayRegion = listing ? getListingRegion(listing) : input.region
+  const displayInstitution = listing ? getListingInstitution(listing) : ""
+  const displayAppraisal = listing ? getListingAppraisal(listing) : input.appraisalValue
+  const safeFileTitle = (displayTitle || "Report").replace(/\s+/g, "_").slice(0, 40)
+
   // ── PDF / Viewer 액션 핸들러 ────────────────────────────────
   const handlePdfFull = () => {
     if (typeof window !== "undefined") {
       document.documentElement.setAttribute("lang", lang)
       document.body.classList.remove("print-summary")
-      document.title = `NPL_Report_${input.assetTitle.replace(/\s+/g, "_").slice(0, 40)}_${lang.toUpperCase()}`
+      document.title = `NPL_Report_${safeFileTitle}_${lang.toUpperCase()}`
       window.print()
     }
   }
@@ -278,7 +290,7 @@ export default function UnifiedReportPage() {
     if (typeof window !== "undefined") {
       document.documentElement.setAttribute("lang", lang)
       document.body.classList.add("print-summary")
-      document.title = `NPL_Summary_${input.assetTitle.replace(/\s+/g, "_").slice(0, 40)}_${lang.toUpperCase()}`
+      document.title = `NPL_Summary_${safeFileTitle}_${lang.toUpperCase()}`
       window.print()
       setTimeout(() => document.body.classList.remove("print-summary"), 500)
     }
@@ -295,8 +307,8 @@ export default function UnifiedReportPage() {
           { label: "분석 보고서" },
         ]}
         eyebrow="NPLATFORM · INVESTMENT MEMORANDUM · CONFIDENTIAL"
-        title={input.assetTitle}
-        subtitle={`${input.region} · ${input.propertyCategory} · ${t.appraisal} ${fmtKRW(input.appraisalValue)}원${
+        title={displayTitle}
+        subtitle={`${[displayRegion, input.propertyCategory, displayInstitution].filter(Boolean).join(" · ")} · ${t.appraisal} ${fmtKRW(displayAppraisal)}원${
           (input.additionalAddresses?.length ?? 0) > 0
             ? ` · 포트폴리오 ${(input.additionalAddresses?.length ?? 0) + 1}건 (추가 주소 ${input.additionalAddresses?.length ?? 0}건)`
             : ""

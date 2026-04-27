@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   ArrowLeft, ArrowRight, Download, TrendingUp, TrendingDown,
@@ -18,16 +18,23 @@ import { riskPalette } from "@/lib/design-tokens"
 import { generateProfitabilityPdf } from "@/lib/npl/profitability/pdf-export"
 import { loadKoreanFont } from "@/lib/npl/korean-font"
 import type { ProfitabilityResult, ScenarioResult, DistributionRow, RiskGrade } from "@/lib/npl/profitability/types"
+import { useListing, getListingTitle, getListingRegion, getListingInstitution } from "@/lib/hooks/use-listing"
 
 // ─── 메인 ──────────────────────────────────────────────────────────────────
 
 export default function ProfitabilityResultPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const queryListingId = searchParams?.get("listingId") ?? null
   const [result, setResult] = useState<ProfitabilityResult | null>(null)
   const [activeTab, setActiveTab] = useState<string>("overview")
   const [exporting, setExporting] = useState(false)
   const [isDemo, setIsDemo] = useState(false)
-  const [listingId, setListingId] = useState<string | null>(null)
+  const [storageListingId, setStorageListingId] = useState<string | null>(null)
+
+  // SoT — ?listingId 우선, 없으면 sessionStorage 의 _listingId
+  const listingId = queryListingId ?? storageListingId
+  const { listing } = useListing(listingId, { allowDemo: false })
 
   const handleExportPDF = useCallback(async () => {
     if (!result || exporting) return
@@ -53,16 +60,21 @@ export default function ProfitabilityResultPage() {
       try {
         const parsed = JSON.parse(stored)
         setIsDemo(!!parsed._demo)
-        setListingId(parsed._listingId ?? null)
+        setStorageListingId(parsed._listingId ?? null)
         setResult(parsed)
       } catch {
         router.push("/analysis/profitability")
       }
     } else {
       // 결과가 없으면 분석 페이지로 이동 (샘플 버튼 제공)
-      router.push("/analysis/profitability?empty=1")
+      // 단 ?listingId= 가 있으면 그 매물로 분석을 새로 시작하도록 라우팅
+      if (queryListingId) {
+        router.push(`/analysis/profitability?listingId=${encodeURIComponent(queryListingId)}&autoRun=1`)
+      } else {
+        router.push("/analysis/profitability?empty=1")
+      }
     }
-  }, [router])
+  }, [router, queryListingId])
 
   if (!result) {
     return (
@@ -116,15 +128,23 @@ export default function ProfitabilityResultPage() {
                 </span>
                 <span className={DS.badge.info}>{dealLabel}</span>
               </div>
-              <h1 className={DS.header.title}>{maskInstitutionName(result.input.bond.institutionName)} — {result.input.bond.debtorName}</h1>
+              <h1 className={DS.header.title}>
+                {listing
+                  ? getListingTitle(listing)
+                  : `${maskInstitutionName(result.input.bond.institutionName)} — ${result.input.bond.debtorName}`}
+              </h1>
               <div className="flex items-center gap-3 mt-1 flex-wrap">
-                {result.input.bond.bondId && (
+                {(listingId || result.input.bond.bondId) && (
                   <span className="flex items-center gap-1 text-xs font-mono text-[var(--color-text-tertiary)]">
                     <FileText className="w-3 h-3" />
-                    채권번호: <strong className="text-[var(--color-text-secondary)]">{result.input.bond.bondId}</strong>
+                    {listingId ? '매물ID' : '채권번호'}: <strong className="text-[var(--color-text-secondary)]">{listingId ? String(listingId).slice(0, 8).toUpperCase() : result.input.bond.bondId}</strong>
                   </span>
                 )}
-                <p className={DS.header.subtitle + " !mt-0"}>{result.input.collateral.address} · {result.input.collateral.propertyType}</p>
+                <p className={DS.header.subtitle + " !mt-0"}>
+                  {listing
+                    ? `${getListingRegion(listing)} · ${getListingInstitution(listing) || '매도자'}`
+                    : `${result.input.collateral.address} · ${result.input.collateral.propertyType}`}
+                </p>
               </div>
             </div>
             <button
@@ -237,8 +257,9 @@ function NextStepsBar({ result, listingId }: { result: ProfitabilityResult; list
     show: boolean
   }[] = [
     {
-      href: listingId ? `/exchange/${listingId}` : '#',
-      label: listingId ? '매물 상세로' : '매물에서 시작',
+      // 매물 SoT — 매물 진입은 항상 딜룸으로 (매물 상세 = 딜룸)
+      href: listingId ? `/deals/dealroom?listingId=${encodeURIComponent(listingId)}` : '/exchange',
+      label: listingId ? '매물 딜룸으로' : '매물에서 시작',
       sub: listingId ? '분석 근거 매물 확인' : '거래소에서 대상 매물 선택',
       tone: 'neutral',
       show: true,
@@ -251,14 +272,14 @@ function NextStepsBar({ result, listingId }: { result: ProfitabilityResult; list
       show: true,
     },
     {
-      href: '/analysis/copilot' + (listingId ? `?listing=${listingId}` : ''),
+      href: '/analysis/copilot' + (listingId ? `?listingId=${encodeURIComponent(listingId)}` : ''),
       label: 'AI 컨설턴트',
       sub: '자연어로 리스크 질의',
       tone: 'neutral',
       show: true,
     },
     {
-      href: listingId ? `/deals?listing=${listingId}` : '/deals',
+      href: listingId ? `/deals/dealroom?listingId=${encodeURIComponent(listingId)}` : '/deals',
       label: '딜룸 신청',
       sub: grade === 'A' ? 'A등급 · 우선협상 권장' : grade === 'B' ? 'B등급 · 검토 권장' : '상세 심사 필요',
       tone: promoteDealroom ? 'success' : 'warn',

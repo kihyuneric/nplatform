@@ -210,7 +210,8 @@ export default function AgreementsPage() {
                 return (
                   <Link
                     key={row.id}
-                    href={`/exchange/${row.listing_id}`}
+                    /* SoT — 매물 상세는 항상 딜룸 (?listingId 쿼리) */
+                    href={`/deals/dealroom?listingId=${encodeURIComponent(row.listing_id)}`}
                     style={{
                       display: "grid",
                       gridTemplateColumns: "80px 1fr 200px 140px 140px 110px",

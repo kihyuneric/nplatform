@@ -870,7 +870,8 @@ export default function PortfolioPage() {
                         <div className="mt-3 pt-3 border-t border-[var(--color-border-subtle)] flex items-center justify-between">
                           <span className={DS.text.captionLight}>{item.daysWatched}일째 관심</span>
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                            <Link href={`/exchange/${item.id}`}>
+                            {/* SoT — 매물 상세는 항상 딜룸 (?listingId 쿼리) */}
+                            <Link href={`/deals/dealroom?listingId=${encodeURIComponent(item.id)}`}>
                               <button className={DS.text.link + " text-[0.8125rem]"}>상세보기</button>
                             </Link>
                             <button onClick={() => removeItem(item.id)} aria-label="삭제" className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-stone-100/10 transition-all">

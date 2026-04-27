@@ -13569,3 +13569,1865 @@ Import trace for requested module:
 ./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
 ./node_modules/@sentry/node/build/cjs/index.js
 ./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@opentelemetry.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\_not-found\page.js:887:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\_not-found\page.js:890:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@opentelemetry.js'
+}
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@opentelemetry.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1693:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1696:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@opentelemetry.js',
+  page: '/my'
+}
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⨯ Error: Cannot find module './58548.js'
+Require stack:
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\require.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\load-components.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\utils.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\options.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\index.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\parse-module.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\get-page-static-info.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\start-server.js
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:400)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:445) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ GET /_next/static/webpack/2c70b6d610190bb8.webpack.hot-update.json 500 in 34063ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /my 500 in 32861ms
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@opentelemetry.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1693:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1696:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@opentelemetry.js',
+  page: '/my'
+}
+ ⨯ Error: Cannot find module './58548.js'
+Require stack:
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\require.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\load-components.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\utils.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\options.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\index.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\parse-module.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\get-page-static-info.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\start-server.js
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:400)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:445) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ GET /my 500 in 773ms
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@opentelemetry.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1693:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1696:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@opentelemetry.js',
+  page: '/my'
+}
+ ⨯ Error: Cannot find module './58548.js'
+Require stack:
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\require.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\load-components.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\utils.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\options.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\index.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\parse-module.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\get-page-static-info.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\start-server.js
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:400)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:445) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ GET /my 500 in 930ms
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/notifications/route.ts
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/my/dashboard/route.ts
+ GET /api/v1/nav-config 200 in 25040ms
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/my/dashboard/route.ts
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@tanstack.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:211:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:119:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:118:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:170:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1693:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1696:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@tanstack.js',
+  page: '/my'
+}
+ GET /api/v1/my/dashboard 401 in 27651ms
+ GET /api/v1/banners?position=my-top 200 in 27680ms
+ GET /api/v1/notifications 200 in 27603ms
+ GET /api/v1/admin/site-settings 200 in 27691ms
+ ⨯ Error: Cannot find module './58548.js'
+Require stack:
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\api\v1\banners\route.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\require.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\load-components.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\utils.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\options.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\index.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\parse-module.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\get-page-static-info.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\start-server.js
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:211:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:119:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:118:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:170:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:400)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:445) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ GET /my 500 in 17855ms
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@tanstack.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:211:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:119:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:118:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:170:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1693:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1696:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@tanstack.js',
+  page: '/my'
+}
+ ⨯ Error: Cannot find module './58548.js'
+Require stack:
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\api\v1\banners\route.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\require.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\load-components.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\utils.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\options.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\index.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\parse-module.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\get-page-static-info.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\start-server.js
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:211:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:119:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:118:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:170:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:400)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:445) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ GET /my 500 in 12156ms
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@tanstack.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:211:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:119:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:118:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:170:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1693:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1696:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@tanstack.js',
+  page: '/my'
+}
+ ⨯ Error: Cannot find module './58548.js'
+Require stack:
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\api\v1\banners\route.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\require.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\load-components.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\utils.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\options.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\index.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\parse-module.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\get-page-static-info.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\start-server.js
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:211:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:119:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:118:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:170:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:400)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:445) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ GET /my 500 in 491ms
+ GET /api/v1/nav-config 200 in 203ms
+ GET /api/v1/my/dashboard 401 in 299ms
+ GET /api/v1/banners?position=my-top 200 in 521ms
+ GET /api/v1/admin/site-settings 200 in 523ms
+ GET /api/v1/notifications 200 in 326ms
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@tanstack.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\_not-found\page.js:887:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\_not-found\page.js:890:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@tanstack.js'
+}
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@tanstack.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1693:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1696:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@tanstack.js',
+  page: '/my'
+}
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⨯ Error: Cannot find module './58548.js'
+Require stack:
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\require.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\load-components.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\utils.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\options.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\index.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\parse-module.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\get-page-static-info.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\start-server.js
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:400)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:445) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ GET /_next/static/webpack/2c70b6d610190bb8.webpack.hot-update.json 500 in 16065ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /my 500 in 6738ms
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@tanstack.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1693:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1696:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@tanstack.js',
+  page: '/my'
+}
+ ⨯ Error: Cannot find module './58548.js'
+Require stack:
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\require.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\load-components.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\utils.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\options.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\index.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\parse-module.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\get-page-static-info.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\start-server.js
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:400)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:445) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ GET /my 500 in 408ms
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@tanstack.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1693:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1696:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@tanstack.js',
+  page: '/my'
+}
+ ⨯ Error: Cannot find module './58548.js'
+Require stack:
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\require.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\load-components.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\utils.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\options.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\index.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\parse-module.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\get-page-static-info.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\start-server.js
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:400)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:445) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ GET /my 500 in 404ms
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@tanstack.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:206:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:114:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:113:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:165:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\_not-found\page.js:887:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\_not-found\page.js:890:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@tanstack.js'
+}
+ GET /_next/static/css/app/layout.css?v=1777294195511 500 in 103ms
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/notifications/route.ts
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/my/dashboard/route.ts
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ GET /api/v1/nav-config 200 in 23116ms
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@tanstack.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:211:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:119:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:118:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:170:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1693:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1696:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@tanstack.js',
+  page: '/my'
+}
+ GET /api/v1/my/dashboard 401 in 23817ms
+ ⨯ Error: Cannot find module './58548.js'
+Require stack:
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\api\v1\banners\route.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\require.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\load-components.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\utils.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\options.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\index.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\parse-module.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\get-page-static-info.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\start-server.js
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:211:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:119:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:118:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:170:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:400)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:445) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ GET /api/v1/banners?position=my-top 200 in 23898ms
+ GET /api/v1/notifications 200 in 22157ms
+ GET /api/v1/admin/site-settings 200 in 23871ms
+ GET /my 500 in 15953ms
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@tanstack.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:211:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:119:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:118:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:170:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1693:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\(main)\my\page.js:1696:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@tanstack.js',
+  page: '/my'
+}
+ ⨯ Error: Cannot find module './58548.js'
+Require stack:
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\api\v1\banners\route.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\require.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\load-components.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\utils.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\options.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\swc\index.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\parse-module.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\build\analysis\get-page-static-info.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\node_modules\next\dist\server\lib\start-server.js
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:211:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:119:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:118:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:170:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:400)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\pages\_document.js:1:445) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ GET /my 500 in 358ms
+ ⨯ Error: ENOENT: no such file or directory, open 'C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\vendor-chunks\@tanstack.js'
+    at __webpack_require__.f.require (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:211:28)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:119:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:118:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\webpack-runtime.js:170:22)
+    at <unknown> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\_not-found\page.js:887:47)
+    at Object.<anonymous> (C:\Users\82106\Desktop\nplatform\.claude\worktrees\silly-brahmagupta-527262\.next\server\app\_not-found\page.js:890:3) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\82106\\Desktop\\nplatform\\.claude\\worktrees\\silly-brahmagupta-527262\\.next\\server\\vendor-chunks\\@tanstack.js'
+}
+ GET /_next/static/css/app/layout.css?v=1777294195511 500 in 86ms
+ GET /api/v1/nav-config 200 in 232ms
+ GET /api/v1/my/dashboard 401 in 400ms
+ GET /api/v1/banners?position=my-top 200 in 405ms
+ GET /api/v1/admin/site-settings 200 in 422ms
+ GET /api/v1/notifications 200 in 414ms
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/api-error.ts
+./app/api/v1/admin/site-settings/route.ts
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+ ⚠ Next.js can't recognize the exported `runtime` field in "/twitter-image/route", it may be re-exported from another file. The default config will be used instead.
+ ⚠ ./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js

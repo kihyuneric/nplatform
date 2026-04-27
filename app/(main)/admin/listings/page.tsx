@@ -310,7 +310,8 @@ export default function AdminListingsPage() {
                 <a href={`/admin/listings/${v}/edit`} className={`${DS.button.secondary} ${DS.button.sm}`}>
                   편집
                 </a>
-                <a href={`/exchange/${v}`} target="_blank" rel="noopener noreferrer" className={`${DS.text.link} text-[0.8125rem]`}>상세 ↗</a>
+                {/* SoT — 상세 = 딜룸 (?listingId 단일 진입) */}
+                <a href={`/deals/dealroom?listingId=${encodeURIComponent(v)}`} target="_blank" rel="noopener noreferrer" className={`${DS.text.link} text-[0.8125rem]`}>상세 ↗</a>
               </div>
             )},
           ]}
