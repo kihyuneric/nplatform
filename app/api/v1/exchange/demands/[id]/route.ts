@@ -77,19 +77,50 @@ export async function GET(
   }
 }
 
-// ─── PATCH: Update demand (owner only) ──────────────────────
+// ─── PATCH: Update demand (owner / admin only) ──────────────
+//   - body 의 화이트리스트 필드만 적용
+//   - 관리자(쿠키 dev_user.role === 'ADMIN'/'SUPER_ADMIN')는 status / is_public 추가 권한
+//   - 본인(buyer_id 일치)도 PATCH 가능
+//   * mock 환경에서는 dev_user 쿠키 / Bearer 토큰을 통해 식별
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
-    const body = await request.json()
+    const body = await request.json() as Record<string, unknown>
+
+    // 간단한 식별 — dev_user 쿠키 또는 Authorization 헤더에서 user.role 추출
+    const cookie = request.cookies.get('dev_user_active')?.value
+    const auth = request.headers.get('authorization') ?? ''
+    const isAdmin =
+      auth.toLowerCase().includes('admin') ||
+      cookie === 'admin' ||
+      cookie === 'super_admin'
+
+    // 일반 필드 화이트리스트 (본인 + 관리자 공통)
+    const ALLOWED_FIELDS = new Set([
+      'collateral_types', 'regions',
+      'min_amount', 'max_amount',
+      'target_discount_rate', 'recovery_period',
+      'investment_experience', 'urgency',
+      'description',
+    ])
+    const ADMIN_FIELDS = new Set(['status', 'is_public'])
+
+    const patch: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(body)) {
+      if (ALLOWED_FIELDS.has(k)) {
+        patch[k] = v
+      } else if (isAdmin && ADMIN_FIELDS.has(k)) {
+        patch[k] = v
+      }
+    }
 
     const updated = {
       ...MOCK_DEMAND,
       id,
-      ...body,
+      ...patch,
       updated_at: new Date().toISOString(),
     }
 

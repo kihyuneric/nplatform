@@ -178,8 +178,15 @@ function MobileDrawer({
         {/* Drawer header */}
         <div className="flex items-center justify-between px-5 h-14 border-b border-[var(--color-border-subtle)] flex-shrink-0">
           <Link href="/" className="flex items-center gap-2.5" onClick={onClose}>
-            <div className="w-7 h-7 bg-[var(--color-brand-dark)] rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-black text-xs tracking-tighter">N</span>
+            <div
+              className="w-7 h-7 flex items-center justify-center flex-shrink-0"
+              style={{
+                background: "#2251FF",
+                borderTop: "2px solid #00A9F4",
+                boxShadow: "0 3px 8px rgba(34, 81, 255, 0.40)",
+              }}
+            >
+              <span className="text-white font-black text-sm tracking-tighter">N</span>
             </div>
             <span className="font-black text-[var(--color-nav-text)] text-sm tracking-tight">
               NPL<span className="font-light text-[var(--color-nav-text-dim)]">atform</span>
@@ -423,10 +430,17 @@ export function Navigation() {
       >
         <div className="max-w-[1440px] mx-auto flex h-16 items-center justify-between px-6 lg:px-8">
 
-          {/* ── Logo ─────────────────────────────────────── */}
+          {/* ── Logo — Electric Blue 강조 (McKinsey cobalt) ─────────── */}
           <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-            <div className="w-8 h-8 bg-[var(--color-brand-dark)] rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-[var(--color-brand-mid)] transition-colors">
-              <span className="text-white font-black text-sm tracking-tighter">N</span>
+            <div
+              className="w-8 h-8 flex items-center justify-center flex-shrink-0 transition-colors"
+              style={{
+                background: "#2251FF",
+                borderTop: "2px solid #00A9F4",
+                boxShadow: "0 4px 10px rgba(34, 81, 255, 0.40)",
+              }}
+            >
+              <span className="text-white font-black text-base tracking-tighter">N</span>
             </div>
             <div className="hidden sm:block">
               <span className="font-black text-[var(--color-nav-text)] text-base tracking-tight">NPL</span>

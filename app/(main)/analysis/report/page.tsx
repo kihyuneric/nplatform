@@ -30,6 +30,8 @@ import {
 } from "lucide-react"
 import DS from "@/lib/design-system"
 import { riskPalette } from "@/lib/design-tokens"
+import { MckPageShell, MckPageHeader, MckKpiGrid } from "@/components/mck"
+import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
 import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/unified-report/types"
 import {
   SPECIAL_CONDITIONS_V2,
@@ -233,12 +235,17 @@ export default function UnifiedReportPage() {
 
   if (!report) {
     return (
-      <div className={DS.page.wrapper}>
-        <div className={`${DS.page.container} py-20 text-center`}>
-          <div className="inline-block w-8 h-8 border-2 border-[var(--color-brand-mid)] border-t-transparent rounded-full animate-spin" />
-          <p className="mt-4 text-sm text-[var(--color-text-secondary)]">리포트 로딩 중…</p>
+      <MckPageShell variant="tint">
+        <div className="max-w-[1280px] mx-auto" style={{ padding: "80px 24px", textAlign: "center" }}>
+          <div
+            className="inline-block w-8 h-8 rounded-full animate-spin"
+            style={{ border: `2px solid ${MCK.electric}`, borderTopColor: "transparent" }}
+          />
+          <p style={{ marginTop: 16, fontSize: 13, color: MCK.textSub, fontWeight: 600 }}>
+            리포트 로딩 중…
+          </p>
         </div>
-      </div>
+      </MckPageShell>
     )
   }
 
@@ -249,158 +256,153 @@ export default function UnifiedReportPage() {
       ? profitability.valuation.expectedBidRatio * 100
       : report.bidRecommendation?.base.bidRatioPercent ?? 0
 
+  // ── AI 투자 등급 (Detail Stats Row · KPI 그리드에서만 사용) ──────
+  const vScore = summary.verdictScore ?? 0
+  const vGrade = verdictScoreToGrade(vScore)
+
+  // ── PDF / Viewer 액션 핸들러 ────────────────────────────────
+  const handlePdfFull = () => {
+    if (typeof window !== "undefined") {
+      document.documentElement.setAttribute("lang", lang)
+      document.body.classList.remove("print-summary")
+      document.title = `NPL_Report_${input.assetTitle.replace(/\s+/g, "_").slice(0, 40)}_${lang.toUpperCase()}`
+      window.print()
+    }
+  }
+  const handlePdfSummary = () => {
+    if (typeof window !== "undefined") {
+      document.documentElement.setAttribute("lang", lang)
+      document.body.classList.add("print-summary")
+      document.title = `NPL_Summary_${input.assetTitle.replace(/\s+/g, "_").slice(0, 40)}_${lang.toUpperCase()}`
+      window.print()
+      setTimeout(() => document.body.classList.remove("print-summary"), 500)
+    }
+  }
+
   return (
-    <div className={DS.page.wrapper}>
+    <MckPageShell variant="tint">
 
-      {/* ── 헤더 · McKinsey editorial: 단색 deepest navy + 1pt brass accent (Phase G7+ v2) ── */}
-      <section
-        className="relative overflow-hidden border-b border-[var(--color-border-subtle)]"
-        style={{ background: "var(--color-brand-deep)" }}
-      >
-        {/* brass thin accent line — McKinsey editorial signature */}
-        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #003A70 40%, #003A70 60%, transparent)" }} />
-        <div className={`${DS.page.container} py-8 text-white`}>
-          {/* 상단 액션 바 — 좌: 뒤로 / 우: PDF Full + PDF Summary + Viewer */}
-          <div className="flex items-center justify-between gap-3 mb-4 no-print flex-wrap">
-            <Link
-              href="/analysis"
-              className="inline-flex items-center gap-1 text-xs opacity-80 hover:opacity-100"
+      {/* ── McKinsey Hero Header (자발적 경매 dashboard 패턴) ──────────── */}
+      <MckPageHeader
+        breadcrumbs={[
+          { label: "분석", href: "/analysis" },
+          { label: "NPL 수익성 분석", href: "/analysis/profitability" },
+          { label: "분석 보고서" },
+        ]}
+        eyebrow="NPLATFORM · INVESTMENT MEMORANDUM · CONFIDENTIAL"
+        title={input.assetTitle}
+        subtitle={`${input.region} · ${input.propertyCategory} · ${t.appraisal} ${fmtKRW(input.appraisalValue)}원${
+          (input.additionalAddresses?.length ?? 0) > 0
+            ? ` · 포트폴리오 ${(input.additionalAddresses?.length ?? 0) + 1}건 (추가 주소 ${input.additionalAddresses?.length ?? 0}건)`
+            : ""
+        }`}
+        actions={
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <button
+              type="button"
+              onClick={handlePdfFull}
+              className="no-print"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "9px 16px",
+                fontSize: 12, fontWeight: 800,
+                background: MCK.ink, color: MCK.paper,
+                border: "none",
+                borderTop: `2px solid ${MCK.electric}`,
+                letterSpacing: "-0.01em", cursor: "pointer",
+              }}
+              title={t.pdfFull}
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> {t.back}
-            </Link>
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* PDF 다운로드 — Full Ver. */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (typeof window !== "undefined") {
-                    document.documentElement.setAttribute("lang", lang)
-                    document.body.classList.remove("print-summary")
-                    document.title = `NPL_Report_${input.assetTitle.replace(/\s+/g, "_").slice(0, 40)}_${lang.toUpperCase()}`
-                    window.print()
-                  }
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/95 hover:bg-white text-[#0A1628] text-[0.6875rem] font-bold transition-colors shadow-sm"
-                title={t.pdfFull}
-              >
-                <Download className="w-3.5 h-3.5" />
-                {t.pdfFull}
-              </button>
-
-              {/* PDF 다운로드 — 1Page Summary */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (typeof window !== "undefined") {
-                    document.documentElement.setAttribute("lang", lang)
-                    document.body.classList.add("print-summary")
-                    document.title = `NPL_Summary_${input.assetTitle.replace(/\s+/g, "_").slice(0, 40)}_${lang.toUpperCase()}`
-                    window.print()
-                    setTimeout(() => document.body.classList.remove("print-summary"), 500)
-                  }
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold transition-colors shadow-sm"
-                style={{ backgroundColor: "#003A70", color: "#FFFFFF" }}
-                title={t.pdfSummary}
-              >
-                <FileTextIcon className="w-3.5 h-3.5" />
-                {t.pdfSummary}
-              </button>
-
-              {/* Viewer — 1Page Summary 미리보기 (선택 언어로 번역) */}
-              <button
-                type="button"
-                onClick={() => setSummaryOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold transition-colors border border-white/40 hover:bg-white/10"
-                style={{ color: "#FFFFFF" }}
-                title={t.viewer}
-              >
-                <Eye className="w-3.5 h-3.5" />
-                {t.viewer}
-              </button>
-            </div>
+              <Download size={14} /> {t.pdfFull}
+            </button>
+            <button
+              type="button"
+              onClick={handlePdfSummary}
+              className="no-print"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "9px 16px",
+                fontSize: 12, fontWeight: 800,
+                background: MCK.paper, color: MCK.ink,
+                border: `1px solid ${MCK.ink}`,
+                letterSpacing: "-0.01em", cursor: "pointer",
+              }}
+              title={t.pdfSummary}
+            >
+              <FileTextIcon size={14} /> {t.pdfSummary}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSummaryOpen(true)}
+              className="no-print"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "9px 16px",
+                fontSize: 12, fontWeight: 700,
+                background: MCK.paper, color: MCK.ink,
+                border: `1px solid ${MCK.borderStrong}`,
+                letterSpacing: "-0.01em", cursor: "pointer",
+              }}
+              title={t.viewer}
+            >
+              <Eye size={14} /> {t.viewer}
+            </button>
           </div>
+        }
+      />
 
-          <div className="flex items-start justify-between flex-wrap gap-3">
-            <div>
-              {/* McKinsey-style brand bar — small caps, brass, confidential */}
-              <div className="flex items-center gap-2 mb-2">
-                <span
-                  className="text-[0.625rem] tracking-[0.22em] font-bold"
-                  style={{ color: "#003A70" }}
-                >
-                  NPLATFORM
-                </span>
-                <span className="text-[0.625rem] tracking-[0.18em] opacity-70">·</span>
-                <span className="text-[0.625rem] tracking-[0.22em] opacity-90 font-semibold">
-                  CONFIDENTIAL — INVESTMENT MEMORANDUM
-                </span>
-              </div>
-              <div className="w-12 h-[1px] mb-2.5" style={{ background: "#003A70" }} />
-              <h1
-                className="text-[1.625rem] font-black tracking-tight leading-tight"
-                style={{ fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: "-0.01em" }}
-              >
-                {input.assetTitle}
-              </h1>
-              <p className="text-[0.8125rem] opacity-90 mt-1">
-                {input.region} · {input.propertyCategory} · {t.appraisal} {fmtKRW(input.appraisalValue)}
-              </p>
-              {/* Phase G7+ 다수 주소 — 포트폴리오·복합 담보 시 추가 주소 행 노출 */}
-              {(input.additionalAddresses?.length ?? 0) > 0 && (
-                <details className="mt-1.5 group">
-                  <summary className="text-[0.6875rem] opacity-90 cursor-pointer select-none inline-flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    <span className="font-semibold">
-                      포트폴리오 {(input.additionalAddresses?.length ?? 0) + 1}건
-                    </span>
-                    <span className="opacity-70">— 추가 주소 {input.additionalAddresses?.length ?? 0}건 보기</span>
-                  </summary>
-                  <ul className="mt-1 ml-4 list-disc text-[0.6875rem] opacity-90 space-y-0.5">
-                    {(input.additionalAddresses ?? []).map((addr, idx) => (
-                      <li key={`hdr-extra-${idx}`}>{addr}</li>
-                    ))}
-                  </ul>
-                </details>
-              )}
-            </div>
-            {/* AI 투자 등급 카드 — 백색 배경 · 가시성 우선 (Phase G7+ v2) */}
-            {(() => {
-              const vScore = summary.verdictScore ?? 0
-              const vGrade = verdictScoreToGrade(vScore)
-              const gradeFg = {
-                A: "#0A1628",
-                B: "#0A1628",
-                C: "#003A70",
-                D: "#A53F8A",
-              }[vGrade]
-              return (
-                <div
-                  className="px-5 py-3 rounded-xl text-center shadow-md"
-                  style={{ background: "#FFFFFF", border: "2px solid #003A70" }}
-                >
-                  <div className="text-[0.625rem] mb-0.5 font-semibold tracking-wider uppercase" style={{ color: "#0A1628", opacity: 0.7 }}>
-                    {t.aiGrade}
-                  </div>
-                  <div className="text-4xl font-black leading-none" style={{ color: gradeFg }}>
-                    {vGrade}
-                  </div>
-                  <div className="text-[0.6875rem] mt-1.5 font-bold" style={{ color: "#0A1628" }}>
-                    {vScore.toFixed(1)}
-                    <span style={{ opacity: 0.65 }}> · {summary.verdict}</span>
-                  </div>
-                </div>
-              )
-            })()}
-          </div>
-
-          {error && (
-            <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-stone-100/20 text-stone-900 text-[0.6875rem]">
-              <AlertTriangle className="w-3 h-3" /> {error} (샘플로 대체 표시)
-            </div>
-          )}
+      {/* ── Hero KPI strip · DARK · 자발적 경매와 동일 패턴 ─────────── */}
+      <section style={{ background: MCK.paper, paddingBottom: 32 }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 24px" }}>
+          <MckKpiGrid
+            variant="dark"
+            items={[
+              {
+                label: t.aiGrade,
+                value: vGrade,
+                hint: `${vScore.toFixed(1)}점 · ${summary.verdict}`,
+              },
+              {
+                label: "예측 회수율",
+                value: pct(summary.predictedRecovery),
+                hint: `신뢰도 ${Math.round(recovery.confidence * 100)}%`,
+              },
+              {
+                label: "리스크 등급",
+                value: `${summary.riskGrade}`,
+                hint: `${summary.riskScore}점 · ${risk.level}`,
+              },
+              {
+                label: "AI 투자 의견",
+                value: summary.verdict,
+                hint: summary.verdict === "BUY" ? "권고" : summary.verdict === "HOLD" ? "관망" : "회피",
+              },
+            ]}
+          />
         </div>
       </section>
+
+      {error && (
+        <section style={{ background: MCK.paper, paddingBottom: 16 }}>
+          <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 24px" }}>
+            <div
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "8px 14px",
+                fontSize: 11, fontWeight: 700,
+                background: MCK.paperTint,
+                color: MCK.textSub,
+                border: `1px solid ${MCK.border}`,
+                borderLeft: `3px solid ${MCK.electric}`,
+              }}
+            >
+              <AlertTriangle size={12} style={{ color: MCK.electric }} /> {error} (샘플로 대체 표시)
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* (사용자 요청 — AI 투자 등급 large chip 삭제 · 동일 정보가 Detail Stats Row · KPI 그리드에 중복 표시) */}
 
       {/* ── 1Page Summary Viewer 모달 (선택 언어로 번역) ── */}
       {summaryOpen && (
@@ -430,70 +432,95 @@ export default function UnifiedReportPage() {
         </section>
       )}
 
-      {/* ── 1. KPI 요약 ─────────────────────────────── */}
-      <section className={`${DS.page.container} py-6`}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KpiCard
-            icon={TrendingUp}
-            label="예측 회수율"
-            value={pct(summary.predictedRecovery)}
-            sub={`신뢰도 ${Math.round(recovery.confidence * 100)}%`}
-            tint="#051C2C"
-          />
-          <KpiCard
-            icon={Shield}
-            label="리스크 등급"
-            value={`${summary.riskGrade} · ${summary.riskScore}점`}
-            sub={risk.level}
-            tint={rp.fg}
-          />
-          <KpiCard
-            icon={Target}
-            label="금융기관 NPL 매각가"
-            value={
-              profitability
-                ? fmtKRW(profitability.acquisition.purchasePrice) + "원"
-                : fmtKRW(summary.recommendedBidPrice) + "원"
-            }
-            sub={
-              profitability
-                ? `ROI ${(profitability.investment.roi * 100).toFixed(2)}%`
-                : `낙찰가율 ${kpiBidRatioPct.toFixed(1)}%`
-            }
-            tint="#2E75B6"
-          />
-          <div>
-            <KpiCard
-              icon={Gavel}
-              label="AI 투자 의견"
-              value={summary.verdict}
-              sub={summary.verdict === "BUY" ? "권고" : summary.verdict === "HOLD" ? "관망" : "회피"}
-              tint={summary.verdict === "BUY" ? "#051C2C" : summary.verdict === "HOLD" ? "#051C2C" : "#A53F8A"}
-            />
-            <VerdictCriteriaToggle
-              predictedRecovery={recovery.predictedRecoveryRate}
-              riskScore={summary.riskScore}
-              recommendedRoi={profitability?.strategies.recommended.roi ?? 0}
-              bankSalePrice={profitability?.acquisition.purchasePrice ?? 0}
-              totalBondAmount={input.totalBondAmount}
-            />
-          </div>
-        </div>
-
-        {/* McKinsey-style "Key Takeaway" box — brass left accent + serif italic */}
+      {/* ── 1. Detail Stats Row · 금융기관 NPL 매각가 + ROI · Verdict criteria ── */}
+      <section className={`${DS.page.container}`} style={{ paddingBottom: 24 }}>
         <div
-          className="mt-4 p-4 rounded-md bg-white border border-[var(--color-border-subtle)] shadow-[0_1px_2px_rgba(10,22,40,0.04)]"
-          style={{ borderLeft: "4px solid #003A70" }}
+          style={{
+            background: MCK.paper,
+            border: `1px solid ${MCK.border}`,
+            borderTop: `2px solid ${MCK.electric}`,
+            padding: 20,
+          }}
         >
-          <div className="text-[0.625rem] tracking-[0.22em] font-bold mb-1.5" style={{ color: "#003A70" }}>
-            KEY TAKEAWAY
+          <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 12 }}>
+            ACQUISITION ECONOMICS · 매각·취득 핵심 지표
           </div>
-          <p
-            className="text-[0.9375rem] text-[#0A1628] leading-relaxed font-medium"
-            style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+          <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 16, marginBottom: 16 }}>
+            <div
+              style={{
+                padding: "14px 16px",
+                background: MCK.paperTint,
+                border: `1px solid ${MCK.border}`,
+                borderTop: `2px solid ${MCK.electric}`,
+              }}
+            >
+              <div style={{ ...MCK_TYPE.label, color: MCK.textMuted, marginBottom: 6 }}>
+                금융기관 NPL 매각가
+              </div>
+              <div
+                style={{
+                  fontFamily: MCK_FONTS.serif,
+                  fontSize: 22, fontWeight: 800,
+                  color: MCK.ink,
+                  letterSpacing: "-0.015em",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {profitability
+                  ? fmtKRW(profitability.acquisition.purchasePrice)
+                  : fmtKRW(summary.recommendedBidPrice)}
+                <span style={{ fontSize: 13, color: MCK.textMuted, fontWeight: 600, marginLeft: 4 }}>원</span>
+              </div>
+              <div style={{ fontSize: 11, color: MCK.textSub, fontWeight: 600, marginTop: 6 }}>
+                {profitability
+                  ? `ROI ${(profitability.investment.roi * 100).toFixed(2)}%`
+                  : `낙찰가율 ${kpiBidRatioPct.toFixed(1)}%`}
+              </div>
+            </div>
+            <div
+              style={{
+                padding: "14px 16px",
+                background: MCK.paperTint,
+                border: `1px solid ${MCK.border}`,
+                borderTop: `2px solid ${MCK.electric}`,
+              }}
+            >
+              <div style={{ ...MCK_TYPE.label, color: MCK.textMuted, marginBottom: 6 }}>
+                AI Verdict 기준 · 클릭 펼침
+              </div>
+              <VerdictCriteriaToggle
+                predictedRecovery={recovery.predictedRecoveryRate}
+                riskScore={summary.riskScore}
+                recommendedRoi={profitability?.strategies.recommended.roi ?? 0}
+                bankSalePrice={profitability?.acquisition.purchasePrice ?? 0}
+                totalBondAmount={input.totalBondAmount}
+              />
+            </div>
+          </div>
+
+          {/* Key Takeaway · McKinsey serif quote */}
+          <div
+            style={{
+              padding: "16px 20px",
+              background: MCK.inkDeep,
+              borderTop: `3px solid ${MCK.electric}`,
+            }}
           >
-            {summary.tldr}
-          </p>
+            <div style={{ ...MCK_TYPE.eyebrow, color: MCK.cyan, marginBottom: 8 }}>
+              KEY TAKEAWAY
+            </div>
+            <p
+              style={{
+                fontFamily: MCK_FONTS.serif,
+                fontSize: 16, fontWeight: 700,
+                color: MCK.paper,
+                lineHeight: 1.55,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {summary.tldr}
+            </p>
+          </div>
         </div>
 
         {/* 채권잔액 breakdown — 원금 + 미수이자 + 연체이자 (Phase G7+ — 4-컬럼) */}
@@ -713,8 +740,8 @@ export default function UnifiedReportPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {risk.factors.map((f) => {
             const score = Math.max(0, Math.min(100, f.score))
-            // 점수 → 색상: ≥75 녹(positive) / ≥50 brass / <50 amber-red
-            const barColor = score >= 75 ? '#10B981' : score >= 50 ? '#003A70' : '#DC2626'
+            // 점수 → 색상 (McKinsey monochrome progression): ≥75 ink / ≥50 electric / <50 magenta
+            const barColor = score >= 75 ? MCK.ink : score >= 50 ? MCK.electric : MCK.greyDark
             return (
               <div
                 key={f.category}
@@ -797,23 +824,30 @@ export default function UnifiedReportPage() {
         caption={`${marketOutlook.horizonMonths}개월 · 신뢰도 ${Math.round(marketOutlook.confidence * 100)}%`}
       >
         <div
-          className="rounded-xl p-4 mb-3 border flex items-start gap-3"
+          className="p-4 mb-3 border flex items-start gap-3"
           style={{
             background:
               marketOutlook.outlook === "BULLISH"
-                ? "rgba(5, 28, 44,0.08)"
+                ? "rgba(34, 81, 255, 0.08)"
                 : marketOutlook.outlook === "BEARISH"
-                ? "rgba(165, 63, 138,0.08)"
-                : "rgba(100,116,139,0.08)",
+                ? "rgba(74, 74, 74, 0.10)"
+                : "rgba(113, 128, 150, 0.08)",
             borderColor:
               marketOutlook.outlook === "BULLISH"
-                ? "rgba(5, 28, 44,0.25)"
+                ? "rgba(34, 81, 255, 0.30)"
                 : marketOutlook.outlook === "BEARISH"
-                ? "rgba(165, 63, 138,0.25)"
-                : "rgba(100,116,139,0.25)",
+                ? "rgba(74, 74, 74, 0.30)"
+                : "rgba(113, 128, 150, 0.25)",
+            borderTop: `2px solid ${
+              marketOutlook.outlook === "BULLISH"
+                ? MCK.electric
+                : marketOutlook.outlook === "BEARISH"
+                ? MCK.greyDark
+                : MCK.textMuted
+            }`,
           }}
         >
-          <MapPin className="w-5 h-5 shrink-0 mt-0.5" style={{ color: marketOutlook.outlook === "BULLISH" ? "#051C2C" : marketOutlook.outlook === "BEARISH" ? "#A53F8A" : "#64748B" }} />
+          <MapPin className="w-5 h-5 shrink-0 mt-0.5" style={{ color: marketOutlook.outlook === "BULLISH" ? MCK.electric : marketOutlook.outlook === "BEARISH" ? MCK.greyDark : MCK.textMuted }} />
           <div className="flex-1 min-w-0">
             <div className="text-[0.8125rem] font-bold text-[var(--color-text-primary)] mb-1">
               {marketOutlook.outlook === "BULLISH" ? "상승 추세" : marketOutlook.outlook === "BEARISH" ? "하락 추세" : "중립"}
@@ -851,24 +885,53 @@ export default function UnifiedReportPage() {
         </Section>
       )}
 
-      {/* ── AI 총평 · editorial single-tone navy ── */}
-      <section className={`${DS.page.container} mb-12`}>
-        <div className="rounded-xl text-white p-5 relative overflow-hidden" style={{ background: "var(--color-brand-deep)" }}>
-          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #2251FF 40%, #2251FF 60%, transparent)" }} />
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4" />
-            <span className="text-[0.6875rem] uppercase tracking-wider font-semibold opacity-90">
-              {t.aiSummary}
-            </span>
+      {/* ── AI 총평 · Deep Navy Editorial Panel (자발적 경매와 동일 임팩트 톤) ── */}
+      <section className={`${DS.page.container}`} style={{ marginBottom: 48 }}>
+        <div
+          style={{
+            background: MCK.inkDeep,
+            borderTop: `3px solid ${MCK.electric}`,
+            padding: "24px 28px",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              ...MCK_TYPE.eyebrow,
+              color: MCK.cyan,
+              marginBottom: 10,
+              display: "inline-flex", alignItems: "center", gap: 6,
+            }}
+          >
+            <Sparkles size={12} />
+            {t.aiSummary}
           </div>
-          <p className="text-[0.875rem] leading-relaxed">{report.executiveSummary}</p>
-          <div className="mt-4 flex items-center gap-2 text-[0.6875rem] opacity-80">
-            <span>{t.generatedAt} · {new Date(report.createdAt).toLocaleString("ko-KR")}</span>
+          <p
+            style={{
+              fontFamily: MCK_FONTS.serif,
+              fontSize: 16, fontWeight: 700,
+              color: MCK.paper,
+              lineHeight: 1.65,
+              letterSpacing: "-0.005em",
+            }}
+          >
+            {report.executiveSummary}
+          </p>
+          <div
+            style={{
+              marginTop: 16,
+              fontSize: 11, color: "rgba(255, 255, 255, 0.7)",
+              fontWeight: 600,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {t.generatedAt} · {new Date(report.createdAt).toLocaleString("ko-KR")}
           </div>
           <PromptToggle report={report} promptLabel={t.promptLabel} />
         </div>
       </section>
-    </div>
+    </MckPageShell>
   )
 }
 
@@ -886,20 +949,31 @@ function KpiCard({
 }: { icon: React.ElementType; label: string; value: string; sub: string; tint: string }) {
   return (
     <div
-      className="relative rounded-md bg-white border border-[var(--color-border-subtle)] px-3.5 py-3 shadow-[0_1px_2px_rgba(10,22,40,0.04)]"
-      style={{ borderTop: "2px solid #003A70" }}
+      style={{
+        background: MCK.paper,
+        border: `1px solid ${MCK.border}`,
+        borderTop: `2px solid ${MCK.electric}`,
+        padding: "12px 14px",
+      }}
     >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[0.625rem] text-[#0A1628] tracking-[0.14em] font-bold uppercase opacity-65">{label}</span>
-        <Icon className="w-3.5 h-3.5" style={{ color: tint }} />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <span style={{ ...MCK_TYPE.label, color: MCK.textSub }}>{label}</span>
+        <Icon size={14} style={{ color: tint }} />
       </div>
       <div
-        className="text-[1.375rem] font-black tabular-nums leading-none mb-1.5"
-        style={{ color: "#0A1628", fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: "-0.015em" }}
+        style={{
+          fontFamily: MCK_FONTS.serif,
+          fontSize: 22, fontWeight: 800,
+          color: MCK.ink,
+          fontVariantNumeric: "tabular-nums",
+          letterSpacing: "-0.015em",
+          lineHeight: 1,
+          marginBottom: 6,
+        }}
       >
         {value}
       </div>
-      <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] font-medium">{sub}</div>
+      <div style={{ fontSize: 11, color: MCK.textMuted, fontWeight: 600 }}>{sub}</div>
     </div>
   )
 }
@@ -926,56 +1000,102 @@ function Section({
 }) {
   return (
     <section className={`${DS.page.container} mt-8`}>
-      <div className="mb-4">
-        {exhibit != null && (
+      <div
+        style={{
+          background: MCK.paper,
+          border: `1px solid ${MCK.border}`,
+          borderTop: `2px solid ${MCK.electric}`,
+          padding: 24,
+        }}
+      >
+        {/* Header */}
+        <header style={{ marginBottom: 18 }}>
+          {exhibit != null && (
+            <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 6 }}>
+              EXHIBIT {exhibit}
+            </div>
+          )}
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <h2
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                fontFamily: MCK_FONTS.serif,
+                fontSize: 18, fontWeight: 800,
+                color: MCK.ink,
+                letterSpacing: "-0.015em",
+                lineHeight: 1.25,
+              }}
+            >
+              <Icon size={16} style={{ color: MCK.electric }} />
+              {title}
+            </h2>
+            {caption && (
+              <span style={{ fontSize: 11, color: MCK.textSub, fontWeight: 600 }}>
+                {caption}
+              </span>
+            )}
+          </div>
+          <div style={{ marginTop: 10, height: 1, background: MCK.border }} />
+        </header>
+
+        {/* SO WHAT takeaway · Deep Navy 임팩트 */}
+        {takeaway && (
           <div
-            className="text-[0.625rem] font-bold tracking-[0.18em] mb-1.5"
-            style={{ color: "#003A70" }}
+            style={{
+              marginBottom: 16,
+              padding: "12px 16px",
+              background: MCK.inkDeep,
+              borderTop: `2px solid ${MCK.electric}`,
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 12,
+            }}
           >
-            EXHIBIT {exhibit}
+            <span
+              style={{
+                ...MCK_TYPE.eyebrow,
+                color: MCK.cyan,
+                marginTop: 2,
+                flexShrink: 0,
+              }}
+            >
+              SO WHAT
+            </span>
+            <p
+              style={{
+                fontFamily: MCK_FONTS.serif,
+                fontSize: 14, fontWeight: 700,
+                color: MCK.paper,
+                lineHeight: 1.55,
+                letterSpacing: "-0.005em",
+              }}
+            >
+              {takeaway}
+            </p>
           </div>
         )}
-        <div className="flex items-baseline justify-between gap-3 flex-wrap">
-          <h2
-            className="font-black text-[#0A1628] flex items-center gap-2 text-[1.0625rem] leading-tight"
-            style={{ fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: "-0.005em" }}
+
+        {children}
+
+        {source && (
+          <p
+            style={{
+              marginTop: 14,
+              paddingTop: 10,
+              borderTop: `1px dashed ${MCK.border}`,
+              fontSize: 11,
+              color: MCK.textMuted,
+              fontStyle: "italic",
+              letterSpacing: "-0.005em",
+            }}
           >
-            <Icon className="w-4 h-4" style={{ color: "#003A70" }} />
-            {title}
-          </h2>
-          {caption && (
-            <span className="text-[0.6875rem] text-[var(--color-text-tertiary)]">{caption}</span>
-          )}
-        </div>
-        <div className="mt-2.5 h-[1px]" style={{ background: "#003A70" }} />
-      </div>
-      {takeaway && (
-        <div
-          className="mb-4 px-4 py-3 rounded-md flex items-start gap-2.5"
-          style={{
-            background: "rgba(184,146,75,0.06)",
-            borderLeft: "3px solid #003A70",
-          }}
-        >
-          <span
-            className="text-[0.625rem] font-bold tracking-[0.18em] mt-[2px] shrink-0"
-            style={{ color: "#003A70" }}
-          >
-            SO WHAT
-          </span>
-          <p className="text-[0.8125rem] text-[#0A1628] leading-relaxed font-medium">
-            {takeaway}
+            <span style={{ fontWeight: 700, fontStyle: "normal", color: MCK.ink, marginRight: 4 }}>
+              Source:
+            </span>
+            {source}
           </p>
-        </div>
-      )}
-      {children}
-      {source && (
-        <p
-          className="mt-3 text-[0.6875rem] text-[var(--color-text-tertiary)] italic pt-2 border-t border-dashed border-[var(--color-border-subtle)]"
-        >
-          <span className="font-bold not-italic" style={{ color: "#0A1628" }}>Source:</span> {source}
-        </p>
-      )}
+        )}
+      </div>
     </section>
   )
 }
@@ -986,24 +1106,61 @@ function FactorCard({
   rank: number; weight: string; name: string; score: number; primary: string;
   lines: string[]; formula?: string
 }) {
-  const tint = score >= 75 ? "#051C2C" : score >= 55 ? "#051C2C" : "#A53F8A"
+  // McKinsey monochrome — 점수에 따라 ink (강)/electric (중)/textSub (약) 단계 표현
+  const tint = score >= 75 ? MCK.ink : score >= 55 ? MCK.electric : MCK.textSub
   return (
-    <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[0.625rem] text-[var(--color-text-tertiary)] font-semibold">
+    <div
+      style={{
+        background: MCK.paper,
+        border: `1px solid ${MCK.border}`,
+        borderTop: `2px solid ${tint}`,
+        padding: 16,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <span style={{ ...MCK_TYPE.label, color: MCK.textMuted }}>
           팩터 {rank} · 가중치 {weight}
         </span>
-        <span className="text-lg font-black tabular-nums" style={{ color: tint }}>{score}</span>
+        <span
+          style={{
+            fontFamily: MCK_FONTS.serif,
+            fontSize: 18, fontWeight: 800,
+            color: tint,
+            fontVariantNumeric: "tabular-nums",
+            letterSpacing: "-0.015em",
+          }}
+        >
+          {score}
+        </span>
       </div>
-      <div className="text-[0.8125rem] font-bold text-[var(--color-text-primary)] mb-1">{name}</div>
-      <div className="text-[0.9375rem] font-black tabular-nums mb-2" style={{ color: tint }}>{primary}</div>
-      <div className="h-1.5 bg-[var(--color-border-subtle)] rounded-full overflow-hidden mb-2.5">
-        <div className="h-full rounded-full transition-all" style={{ width: `${score}%`, background: tint }} />
+      <div style={{ fontSize: 13, fontWeight: 700, color: MCK.ink, marginBottom: 4, letterSpacing: "-0.005em" }}>
+        {name}
       </div>
-      <ul className="space-y-0.5 mb-2">
+      <div
+        style={{
+          fontFamily: MCK_FONTS.serif,
+          fontSize: 15, fontWeight: 800,
+          color: tint,
+          fontVariantNumeric: "tabular-nums",
+          letterSpacing: "-0.01em",
+          marginBottom: 8,
+        }}
+      >
+        {primary}
+      </div>
+      <div style={{ height: 4, background: MCK.paperDeep, overflow: "hidden", marginBottom: 10 }}>
+        <div style={{ height: "100%", width: `${score}%`, background: tint, transition: "width 0.5s ease" }} />
+      </div>
+      <ul style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 8 }}>
         {lines.map((l, i) => (
-          <li key={i} className="text-[0.6875rem] text-[var(--color-text-secondary)] flex items-start gap-1">
-            <span className="mt-1 w-1 h-1 rounded-full bg-[var(--color-text-tertiary)] shrink-0" />
+          <li
+            key={i}
+            style={{
+              display: "flex", alignItems: "flex-start", gap: 4,
+              fontSize: 11, color: MCK.textSub, lineHeight: 1.55,
+            }}
+          >
+            <span style={{ marginTop: 6, width: 4, height: 4, borderRadius: "50%", background: MCK.textMuted, flexShrink: 0 }} />
             {l}
           </li>
         ))}
@@ -1024,31 +1181,47 @@ function FormulaToggle({
 }: {
   formula: string
   label?: string
-  tint?: { color: string; border: string } // 컬러 커스터마이즈 (risk 섹션 등)
+  tint?: { color: string; border: string }
 }) {
   const [open, setOpen] = useState(false)
-  const color = tint?.color ?? "var(--color-text-tertiary)"
-  const border = tint?.border ?? "var(--color-border-subtle)"
+  const color = tint?.color ?? MCK.electricDark
+  const border = tint?.border ?? MCK.border
   return (
-    <div className="mt-2 pt-2 border-t border-dashed" style={{ borderColor: border }}>
+    <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px dashed ${border}` }}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 text-[0.625rem] font-bold px-2 py-1 rounded-md border transition-colors hover:bg-[var(--color-surface-muted)]"
-        style={{ color, borderColor: border }}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 4,
+          padding: "4px 8px",
+          fontSize: 10, fontWeight: 800,
+          color, background: "transparent",
+          border: `1px solid ${border}`,
+          cursor: "pointer",
+          letterSpacing: "0.04em",
+          transition: "background 0.15s",
+        }}
         aria-expanded={open}
       >
-        <Sigma className="w-3 h-3" />
+        <Sigma size={11} />
         {label}
-        <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
+        <ChevronRight
+          size={11}
+          style={{ transition: "transform 0.15s", transform: open ? "rotate(90deg)" : "none" }}
+        />
       </button>
       {open && (
         <pre
-          className="mt-2 text-[0.75rem] font-cjk-mono leading-relaxed whitespace-pre-wrap rounded-lg p-3 border"
+          className="font-cjk-mono"
           style={{
-            color: tint?.color ?? "var(--color-text-secondary)",
-            borderColor: 'rgba(10,22,40,0.10)',
-            background: 'rgba(10,22,40,0.04)',
+            marginTop: 8,
+            padding: 12,
+            fontSize: 12,
+            lineHeight: 1.55,
+            whiteSpace: "pre-wrap",
+            color: tint?.color ?? MCK.textSub,
+            background: MCK.paperTint,
+            border: `1px solid ${MCK.border}`,
           }}
         >
           {formula}
@@ -1087,7 +1260,7 @@ function VerdictCriteriaToggle({
   })
   const verdictGrade = verdictScoreToGrade(r.totalScore)
   const verdictColor =
-    r.verdict === "BUY" ? "#051C2C" : r.verdict === "HOLD" ? "#051C2C" : "#A53F8A"
+    r.verdict === "BUY" ? MCK.electricDark : r.verdict === "HOLD" ? MCK.ink : MCK.greyDark
   const salePriceRatio = totalBondAmount > 0 ? bankSalePrice / totalBondAmount : 1
   const discountRatio  = 1 - salePriceRatio
 
@@ -1182,19 +1355,19 @@ function VerdictCriteriaToggle({
             </div>
             <ul className="space-y-0.5 text-[var(--color-text-secondary)]">
               <li>
-                <span className="font-bold" style={{ color: "var(--color-positive)" }}>A</span>
+                <span className="font-bold" style={{ color: MCK.electricDark }}>A</span>
                 {" · "}총점 ≥ 85  (최상위 BUY · 권고)
               </li>
               <li>
-                <span className="font-bold" style={{ color: "var(--color-positive)" }}>B</span>
+                <span className="font-bold" style={{ color: MCK.electric }}>B</span>
                 {" · "}75 ≤ 총점 &lt; 85  (BUY · 권고)
               </li>
               <li>
-                <span className="font-bold" style={{ color: "var(--color-warning)" }}>C</span>
+                <span className="font-bold" style={{ color: MCK.ink }}>C</span>
                 {" · "}55 ≤ 총점 &lt; 75  (HOLD · 관망)
               </li>
               <li>
-                <span className="font-bold" style={{ color: "var(--color-danger)" }}>D</span>
+                <span className="font-bold" style={{ color: MCK.greyDark }}>D</span>
                 {" · "}총점 &lt; 55  (AVOID · 회피)
               </li>
             </ul>
@@ -1341,32 +1514,46 @@ function PromptToggle({ report, promptLabel }: { report: UnifiedAnalysisReport; 
 
 function RecoveryBar({ predicted, lower, upper }: { predicted: number; lower: number; upper: number }) {
   const scale = (v: number) => Math.max(0, Math.min(100, v))
-  // McKinsey 네이비 + 브래스 — 흰 배경에서도 가시성 확보 (사용자 요청 2026-04-26)
+  // McKinsey monochrome — 신뢰구간(electric) + 예측치 마커(ink)
   return (
     <div
-      className="relative h-7 rounded-full overflow-hidden"
-      style={{ backgroundColor: 'rgba(10,22,40,0.08)', border: '1px solid rgba(10,22,40,0.12)' }}
+      className="relative"
+      style={{
+        height: 28,
+        background: MCK.paperDeep,
+        border: `1px solid ${MCK.border}`,
+        overflow: "hidden",
+      }}
     >
-      {/* 신뢰구간 밴드 (brass tint) */}
+      {/* 신뢰구간 밴드 — electric 그라데이션 */}
       <div
         className="absolute top-0 h-full"
         style={{
           left: `${scale(lower)}%`,
           width: `${Math.max(scale(upper - lower), 0.5)}%`,
-          background: 'linear-gradient(90deg, rgba(184,146,75,0.55) 0%, rgba(184,146,75,0.85) 100%)',
+          background: `linear-gradient(90deg, rgba(34, 81, 255, 0.30) 0%, rgba(34, 81, 255, 0.65) 100%)`,
         }}
       />
-      {/* 예측치 마커 (navy ink) */}
+      {/* 예측치 마커 — ink 4px line */}
       <div
         className="absolute top-0 h-full"
         style={{
           left: `calc(${scale(predicted)}% - 2px)`,
           width: 4,
-          backgroundColor: '#0A1628',
-          boxShadow: '0 0 0 1px #FFFFFF',
+          background: MCK.ink,
+          boxShadow: `0 0 0 1px ${MCK.paper}`,
         }}
       />
-      <div className="absolute inset-0 flex items-center justify-between px-3 text-[0.625rem] font-bold tabular-nums" style={{ color: '#0A1628' }}>
+      <div
+        className="absolute inset-0 flex items-center justify-between"
+        style={{
+          padding: "0 12px",
+          fontSize: 10, fontWeight: 800,
+          color: MCK.ink,
+          fontVariantNumeric: "tabular-nums",
+          letterSpacing: "0.04em",
+        }}
+      >
         <span>0%</span>
         <span>100%</span>
       </div>
@@ -1556,41 +1743,63 @@ function SpecialConditionsV2Section({
 }
 
 function SeverityPill({ severity }: { severity: "LOW" | "MEDIUM" | "HIGH" }) {
+  // McKinsey monochrome — neutral / electric / charcoal grey (no magenta)
   const map = {
-    LOW: { bg: "rgba(5, 28, 44,0.15)", fg: "#051C2C" },
-    MEDIUM: { bg: "rgba(5, 28, 44,0.15)", fg: "#051C2C" },
-    HIGH: { bg: "rgba(165, 63, 138,0.15)", fg: "#A53F8A" },
+    LOW:    { bg: MCK.paperTint, fg: MCK.textSub, border: MCK.border },
+    MEDIUM: { bg: "rgba(34, 81, 255, 0.10)", fg: MCK.electricDark, border: "rgba(34, 81, 255, 0.35)" },
+    HIGH:   { bg: "rgba(26, 26, 26, 0.08)", fg: MCK.greyDarkest, border: "rgba(26, 26, 26, 0.35)" },
   }
   const s = map[severity]
   return (
-    <span className="text-[0.625rem] font-bold px-1.5 py-0.5 rounded" style={{ background: s.bg, color: s.fg }}>
+    <span
+      style={{
+        display: "inline-flex", alignItems: "center",
+        padding: "2px 8px",
+        fontSize: 10, fontWeight: 800,
+        background: s.bg, color: s.fg,
+        border: `1px solid ${s.border}`,
+        letterSpacing: "0.04em",
+      }}
+    >
       {severity}
     </span>
   )
 }
 
 function SeverityDot({ severity }: { severity: "INFO" | "WARNING" | "DANGER" | "CRITICAL" }) {
+  // McKinsey monochrome progression: textMuted (info) → electric → ink → magenta (critical)
   const color =
-    severity === "CRITICAL" ? "#A53F8A"
-    : severity === "DANGER" ? "#051C2C"
-    : severity === "WARNING" ? "#051C2C"
-    : "#051C2C"
-  return <span className="shrink-0 w-2 h-2 rounded-full mt-1.5" style={{ background: color }} />
+    severity === "CRITICAL" ? MCK.greyDark
+    : severity === "DANGER" ? MCK.ink
+    : severity === "WARNING" ? MCK.electric
+    : MCK.textMuted
+  return <span style={{ flexShrink: 0, width: 8, height: 8, borderRadius: "50%", background: color, marginTop: 6 }} />
 }
 
 function StatRow({ k, v }: { k: string; v: string }) {
   return (
-    <div className="flex justify-between text-[0.6875rem]">
-      <dt className="text-[var(--color-text-tertiary)]">{k}</dt>
-      <dd className="font-semibold tabular-nums text-[var(--color-text-primary)]">{v}</dd>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 11 }}>
+      <dt style={{ color: MCK.textMuted, fontWeight: 600 }}>{k}</dt>
+      <dd
+        style={{
+          fontFamily: MCK_FONTS.serif,
+          fontWeight: 800,
+          fontVariantNumeric: "tabular-nums",
+          color: MCK.ink,
+          letterSpacing: "-0.005em",
+        }}
+      >
+        {v}
+      </dd>
     </div>
   )
 }
 
 function TrendArrow({ t }: { t: "UP" | "DOWN" | "FLAT" }) {
-  if (t === "UP") return <ChevronRight className="w-3.5 h-3.5 -rotate-45 text-stone-900 dark:text-stone-900" />
-  if (t === "DOWN") return <ChevronRight className="w-3.5 h-3.5 rotate-45 text-stone-900 dark:text-stone-900" />
-  return <ChevronRight className="w-3.5 h-3.5 text-[var(--color-text-tertiary)]" />
+  // McKinsey monochrome: UP=electric (positive trend) · DOWN=greyDark (negative) · FLAT=muted
+  if (t === "UP") return <ChevronRight className="w-3.5 h-3.5 -rotate-45" style={{ color: MCK.electric }} />
+  if (t === "DOWN") return <ChevronRight className="w-3.5 h-3.5 rotate-45" style={{ color: MCK.greyDark }} />
+  return <ChevronRight className="w-3.5 h-3.5" style={{ color: MCK.textMuted }} />
 }
 
 // ─── 통계 패널 ────────────────────────────────────────────────
@@ -1757,7 +1966,7 @@ function AuctionCaseTable({ cases, showAddress = false }: { cases: Array<{ caseN
               <td className="py-1.5 pr-2 text-right tabular-nums">{c.durationDays}일</td>
               <td className="py-1.5 pr-2 text-right tabular-nums">{fmtKRW(c.appraisalValue)}</td>
               <td className="py-1.5 pr-2 text-right tabular-nums font-semibold">{fmtKRW(c.salePrice)}</td>
-              <td className="py-1.5 pr-2 text-right tabular-nums font-semibold" style={{ color: c.bidRatio >= 80 ? "#051C2C" : c.bidRatio >= 65 ? "#051C2C" : "#A53F8A" }}>
+              <td className="py-1.5 pr-2 text-right tabular-nums font-semibold" style={{ color: c.bidRatio >= 80 ? "#051C2C" : c.bidRatio >= 65 ? "#051C2C" : MCK.greyDark }}>
                 {pct(c.bidRatio)}
               </td>
               <td className="py-1.5 text-right tabular-nums">{c.bidderCount}명</td>
@@ -1902,7 +2111,7 @@ function RegistryPanel({
                   <td className="py-1.5 px-2 text-right tabular-nums bg-stone-100/60 dark:bg-stone-100/5 text-[var(--color-text-secondary)]">
                     {krw(r.buyerAssumeAmount)}
                   </td>
-                  <td className="py-1.5 px-2 text-center" style={{ color: r.extinguished === "소멸" ? "var(--color-text-tertiary)" : r.extinguished === "인수" ? "#A53F8A" : "var(--color-text-tertiary)", fontWeight: r.extinguished === "인수" ? 700 : 500 }}>
+                  <td className="py-1.5 px-2 text-center" style={{ color: r.extinguished === "소멸" ? "var(--color-text-tertiary)" : r.extinguished === "인수" ? MCK.greyDark : "var(--color-text-tertiary)", fontWeight: r.extinguished === "인수" ? 700 : 500 }}>
                     {r.extinguished}
                   </td>
                 </tr>
@@ -2273,7 +2482,7 @@ function ProfitabilitySections({
           <MetricCard
             label="현재 채권잔액"
             value={krwWon(claim.currentBondBalance)}
-            tint="#A53F8A"
+            tint={MCK.greyDark}
             sub="원금 + 현재 누적 연체이자"
           />
           <MaxBondMultiplierCard
@@ -2417,7 +2626,7 @@ function ProfitabilitySections({
           <MetricCard
             label="예상 낙찰가"
             value={krwWon(valuation.expectedBidPrice)}
-            tint="#A53F8A"
+            tint={MCK.greyDark}
             sub="감정가 × 낙찰가율"
           />
         </div>
@@ -2487,15 +2696,17 @@ function ProfitabilitySections({
 
         {/* 예상 회차 안내 배너 — 회차 변경 시 질권대출 이자일수·ROI 재계산됨 */}
         <div
-          className="rounded-lg border p-3 mb-3 text-[0.75rem] leading-relaxed"
+          className="border p-3 mb-3 text-[0.75rem] leading-relaxed"
           style={{
-            borderColor: predictedRound > 1 ? 'rgba(184,146,75,0.45)' : 'rgba(10,22,40,0.12)',
-            background: predictedRound > 1 ? 'rgba(184,146,75,0.08)' : 'rgba(10,22,40,0.03)',
+            // McKinsey 옅은 블루 — predictedRound > 1 일 때 light electric tint, 아니면 paperTint
+            borderColor: predictedRound > 1 ? 'rgba(34, 81, 255, 0.30)' : 'rgba(10,22,40,0.12)',
+            background: predictedRound > 1 ? 'rgba(34, 81, 255, 0.06)' : 'rgba(10,22,40,0.03)',
+            borderLeft: `3px solid ${predictedRound > 1 ? MCK.electric : MCK.border}`,
             color: 'var(--color-text-secondary)',
           }}
         >
           <div className="flex items-start gap-2">
-            <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: predictedRound > 1 ? '#003A70' : '#0A1628' }} />
+            <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: predictedRound > 1 ? MCK.electric : '#0A1628' }} />
             <div>
               {predictedRound === 1 ? (
                 <>
@@ -2645,39 +2856,99 @@ function ProfitabilitySections({
         takeaway="동일 자산에 대한 3단계 매입가 시나리오 — 자본 여력·리스크 선호도에 따라 선택. 권고가는 ROI 15% + 리스크 중립 기준."
         source="NPLATFORM 매입가 추천 모델 v2 (낙찰가율 ± 1σ 분포 가중)">
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 12 }}>
           {[strategies.conservative, strategies.recommended, strategies.aggressive].map((s) => {
             const isRec = s.strategy === "RECOMMENDED"
-            // 권고 표시 임계값: RECOMMENDED 컬럼 OR 매입·낙찰 성공 확률 ≥ 50% (사용자 요청 2026-04-26)
+            // 권고 표시 임계값: RECOMMENDED 컬럼 OR 매입·낙찰 성공 확률 ≥ 50%
             const showRecBadge = isRec || s.winProbability >= 0.5
-            const tint = s.strategy === "CONSERVATIVE" ? "#64748B" : s.strategy === "RECOMMENDED" ? "#051C2C" : "#A53F8A"
+            // McKinsey 블루 계열 progression (보수적 → 권고 → 공격적)
+            //   Conservative: cyan #00A9F4 (옅은 sky — 안정)
+            //   Recommended:  electric #2251FF (대표 권고 — primary blue)
+            //   Aggressive:   ink #051C2C (deep navy — 공격적·진한 톤)
+            const tint = s.strategy === "CONSERVATIVE"
+              ? MCK.cyan
+              : s.strategy === "RECOMMENDED"
+              ? MCK.electric
+              : MCK.ink
             return (
               <div
                 key={s.strategy}
-                className={`rounded-xl p-4 border-2 ${isRec ? "shadow-lg" : ""}`}
-                style={{ borderColor: tint + "55", background: isRec ? tint + "0D" : "var(--color-surface-elevated)" }}
+                style={{
+                  // RECOMMENDED 는 옅은 electric blue tint 로 시각적 강조 (McKinsey 블루계열)
+                  background: isRec ? "rgba(34, 81, 255, 0.05)" : MCK.paper,
+                  border: `1px solid ${isRec ? "rgba(34, 81, 255, 0.25)" : MCK.border}`,
+                  borderTop: `${isRec ? 3 : 2}px solid ${tint}`,
+                  padding: 18,
+                  display: "flex",
+                  flexDirection: "column",
+                  position: "relative",
+                  boxShadow: isRec ? "0 6px 18px rgba(34, 81, 255, 0.14)" : "none",
+                }}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[0.8125rem] font-bold" style={{ color: tint }}>{s.label}</span>
+                {/* Header: label + AI 권고 badge */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <span
+                    style={{
+                      fontFamily: MCK_FONTS.serif,
+                      fontSize: 14, fontWeight: 800,
+                      color: tint,
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {s.label}
+                  </span>
                   {showRecBadge && (
                     <span
-                      className="text-[0.625rem] px-2 py-0.5 rounded font-black tracking-wider"
-                      style={{ backgroundColor: "#0A1628", color: "#FFFFFF", letterSpacing: "0.06em" }}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "3px 8px",
+                        fontSize: 9, fontWeight: 800,
+                        // AI 권고 badge — McKinsey blue (electric) 솔리드
+                        background: MCK.electric,
+                        color: MCK.paper,
+                        borderTop: `2px solid ${MCK.electric}`,
+                        letterSpacing: "0.06em", textTransform: "uppercase",
+                      }}
                     >
                       AI 권고
                     </span>
                   )}
                 </div>
-                <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] mb-3 leading-relaxed">
+
+                {/* Subtitle */}
+                <div style={{ fontSize: 11, color: MCK.textMuted, marginBottom: 12, lineHeight: 1.55 }}>
                   {s.description}
                 </div>
-                <div className="text-2xl font-black tabular-nums mb-0.5 text-[var(--color-text-primary)]">
+
+                {/* Hero price */}
+                <div
+                  style={{
+                    fontFamily: MCK_FONTS.serif,
+                    fontSize: 22, fontWeight: 800,
+                    color: MCK.ink,
+                    fontVariantNumeric: "tabular-nums",
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1.05,
+                    marginBottom: 4,
+                  }}
+                >
                   {krwWon(s.purchasePrice)}
                 </div>
-                <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] mb-3">
+
+                {/* Hero hint */}
+                <div
+                  style={{
+                    fontSize: 11, color: MCK.textSub, fontWeight: 600,
+                    marginBottom: 14,
+                    paddingBottom: 12,
+                    borderBottom: `1px solid ${MCK.border}`,
+                  }}
+                >
                   매입률 {(s.purchaseRate * 100).toFixed(0)}% · 낙찰가율 {(s.assumedBidRatio * 100).toFixed(1)}%
                 </div>
-                <dl className="space-y-0.5 mb-2">
+
+                {/* Stats list */}
+                <dl style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12, flex: 1 }}>
                   <StatRow k="예상 낙찰가" v={krwWon(s.expectedBidPrice)} />
                   <StatRow k="2질권자 배당" v={krwWon(s.secondPledgeeAmount)} />
                   <StatRow k="투자 에쿼티" v={krwWon(s.totalEquity)} />
@@ -2685,35 +2956,59 @@ function ProfitabilitySections({
                   <StatRow k="ROI / 연환산" v={`${(s.roi * 100).toFixed(1)}% / ${(s.annualizedRoi * 100).toFixed(1)}%`} />
                   <StatRow k="매입·낙찰 성공 확률" v={`${(s.winProbability * 100).toFixed(1)}%`} />
                 </dl>
-                {/* 매입·낙찰 성공 확률 계산식 (정규분포 기반 P(실낙찰가율 ≥ 가정치)) */}
-                <div className="mb-2">
-                  <FormulaToggle
-                    label="확률 계산식"
-                    formula={[
-                      `매입·낙찰 성공 확률 = P(실낙찰가율 ≥ 가정 낙찰가율)`,
-                      ``,
-                      `  · 가정 낙찰가율   = ${(s.assumedBidRatio * 100).toFixed(1)}%`,
-                      `  · 분포 가정       = N(μ = 83.5%, σ = 2.0%p)  · 지역 12M 낙찰가율 분포 추정`,
-                      `  · z = (가정 − μ) / σ = (${(s.assumedBidRatio * 100).toFixed(1)} − 83.5) / 2.0 = ${(((s.assumedBidRatio * 100) - 83.5) / 2.0).toFixed(2)}`,
-                      `  · P  = 1 − Φ(z) = ${(s.winProbability * 100).toFixed(1)}%   (Φ = 표준정규 누적분포)`,
-                      ``,
-                      `해석 · 가정 낙찰가율이 분포 평균보다 낮을수록 P 가 커지며 (실낙찰가율이 가정치 이상일 확률 ↑),`,
-                      `      가정 낙찰가율이 분포 평균보다 높을수록 P 가 작아진다 (입찰 경쟁 강화 → 낙찰 실패 위험 ↑).`,
-                    ].join('\n')}
-                  />
-                </div>
+
+                {/* 확률 계산식 toggle */}
+                <FormulaToggle
+                  label="확률 계산식"
+                  formula={[
+                    `매입·낙찰 성공 확률 = P(실낙찰가율 ≥ 가정 낙찰가율)`,
+                    ``,
+                    `  · 가정 낙찰가율   = ${(s.assumedBidRatio * 100).toFixed(1)}%`,
+                    `  · 분포 가정       = N(μ = 83.5%, σ = 2.0%p)  · 지역 12M 낙찰가율 분포 추정`,
+                    `  · z = (가정 − μ) / σ = (${(s.assumedBidRatio * 100).toFixed(1)} − 83.5) / 2.0 = ${(((s.assumedBidRatio * 100) - 83.5) / 2.0).toFixed(2)}`,
+                    `  · P  = 1 − Φ(z) = ${(s.winProbability * 100).toFixed(1)}%   (Φ = 표준정규 누적분포)`,
+                    ``,
+                    `해석 · 가정 낙찰가율이 분포 평균보다 낮을수록 P 가 커지며 (실낙찰가율이 가정치 이상일 확률 ↑),`,
+                    `      가정 낙찰가율이 분포 평균보다 높을수록 P 가 작아진다 (입찰 경쟁 강화 → 낙찰 실패 위험 ↑).`,
+                  ].join('\n')}
+                />
+
+                {/* Risk warning */}
                 {s.riskWarning && (
-                  <div className="mt-2 pt-2 border-t border-[var(--color-border-subtle)] flex items-start gap-1.5">
-                    <AlertTriangle className="w-3 h-3 mt-0.5 text-stone-900 shrink-0" />
-                    <p className="text-[0.625rem] text-stone-900 dark:text-stone-900 leading-relaxed">{s.riskWarning}</p>
+                  <div
+                    style={{
+                      marginTop: 10,
+                      paddingTop: 10,
+                      borderTop: `1px dashed ${MCK.border}`,
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 6,
+                    }}
+                  >
+                    <AlertTriangle size={11} style={{ marginTop: 2, color: MCK.greyDark, flexShrink: 0 }} />
+                    <p style={{ fontSize: 10, color: MCK.textSub, lineHeight: 1.55 }}>
+                      {s.riskWarning}
+                    </p>
                   </div>
                 )}
               </div>
             )
           })}
         </div>
-        <div className="mt-3 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
-          <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{strategies.narrative}</p>
+
+        {/* Narrative footer */}
+        <div
+          style={{
+            marginTop: 12,
+            padding: "12px 14px",
+            background: MCK.paperTint,
+            border: `1px solid ${MCK.border}`,
+            borderLeft: `3px solid ${MCK.electric}`,
+          }}
+        >
+          <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.6 }}>
+            {strategies.narrative}
+          </p>
         </div>
       </Section>
 
@@ -3084,15 +3379,37 @@ function KvRow({ k, v, last }: { k: string; v: string; last?: boolean }) {
 
 function MetricCard({ label, value, sub, tint }: { label: string; value: string; sub?: string; tint: string }) {
   return (
-    <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
-      <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mb-1">{label}</div>
-      <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: tint }}>{value}</div>
-      {sub && <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-1">{sub}</div>}
+    <div
+      style={{
+        background: MCK.paper,
+        border: `1px solid ${MCK.border}`,
+        borderTop: `2px solid ${tint}`,
+        padding: 12,
+      }}
+    >
+      <div style={{ ...MCK_TYPE.label, color: MCK.textMuted, marginBottom: 6 }}>{label}</div>
+      <div
+        style={{
+          fontFamily: MCK_FONTS.serif,
+          fontSize: 17, fontWeight: 800,
+          color: tint,
+          fontVariantNumeric: "tabular-nums",
+          letterSpacing: "-0.015em",
+          lineHeight: 1.15,
+        }}
+      >
+        {value}
+      </div>
+      {sub && (
+        <div style={{ fontSize: 11, color: MCK.textMuted, marginTop: 6, fontWeight: 600 }}>
+          {sub}
+        </div>
+      )}
     </div>
   )
 }
 
-// ─── 민감도 히트맵 ───────────────────────────────────────
+// ─── 민감도 히트맵 (McKinsey monochrome — charcoal grey loss · electric profit) ──
 function SensitivityHeatmap({ s }: { s: NplProfitabilityBlock["sensitivity"] }) {
   const allRois = s.grid.flat().map(c => c.roi)
   const minRoi = Math.min(...allRois)
@@ -3100,21 +3417,37 @@ function SensitivityHeatmap({ s }: { s: NplProfitabilityBlock["sensitivity"] }) 
   const colorFor = (roi: number) => {
     if (roi < 0) {
       const t = Math.min(1, Math.abs(roi) / Math.max(1, Math.abs(minRoi)))
-      return `rgba(165, 63, 138, ${0.15 + t * 0.5})`
+      return `rgba(74, 74, 74, ${0.15 + t * 0.55})`   // charcoal grey for losses (McKinsey 공식 톤)
     }
     const t = Math.min(1, roi / Math.max(1, maxRoi))
-    return `rgba(5, 28, 44, ${0.1 + t * 0.55})`
+    return `rgba(34, 81, 255, ${0.10 + t * 0.55})`    // electric blue for profits
   }
 
   return (
-    <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
-      <div className="overflow-x-auto">
-        <table className="w-full text-[0.75rem]">
+    <div
+      style={{
+        background: MCK.paper,
+        border: `1px solid ${MCK.border}`,
+        borderTop: `2px solid ${MCK.electric}`,
+        padding: 16,
+      }}
+    >
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
           <thead>
-            <tr>
-              <th className="py-1.5 px-2 text-left text-[0.625rem] text-[var(--color-text-tertiary)]">매입률 \ 낙찰가율</th>
+            <tr style={{ background: MCK.paperTint }}>
+              <th style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, color: MCK.textSub, fontWeight: 800, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                매입률 \ 낙찰가율
+              </th>
               {s.bidRatioAxis.map(br => (
-                <th key={br} className="py-1.5 px-1 text-center text-[0.6875rem] font-semibold text-[var(--color-text-primary)] tabular-nums">
+                <th
+                  key={br}
+                  style={{
+                    padding: "8px 4px", textAlign: "center",
+                    fontSize: 11, fontWeight: 700, color: MCK.ink,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
                   {(br * 100).toFixed(0)}%
                 </th>
               ))}
@@ -3123,16 +3456,28 @@ function SensitivityHeatmap({ s }: { s: NplProfitabilityBlock["sensitivity"] }) 
           <tbody>
             {s.purchaseRateAxis.map((pr, ri) => (
               <tr key={pr}>
-                <td className="py-1.5 px-2 text-right text-[0.6875rem] font-semibold text-[var(--color-text-primary)] tabular-nums border-r border-[var(--color-border-subtle)]">
+                <td
+                  style={{
+                    padding: "8px 10px", textAlign: "right",
+                    fontSize: 11, fontWeight: 700, color: MCK.ink,
+                    fontVariantNumeric: "tabular-nums",
+                    borderRight: `1px solid ${MCK.border}`,
+                  }}
+                >
                   {(pr * 100).toFixed(0)}%
                 </td>
                 {s.grid[ri].map(cell => (
                   <td
                     key={`${cell.purchaseRate}-${cell.bidRatio}`}
-                    className="py-2 px-1 text-center tabular-nums font-bold"
                     style={{
+                      padding: "10px 4px", textAlign: "center",
+                      fontFamily: MCK_FONTS.serif,
+                      fontVariantNumeric: "tabular-nums",
+                      fontWeight: 800,
+                      fontSize: 12,
                       background: colorFor(cell.roi),
-                      color: cell.roi < 0 ? "#7F1D1D" : "#064E3B",
+                      color: cell.roi < 0 ? MCK.greyDarkest : MCK.ink,
+                      letterSpacing: "-0.01em",
                     }}
                   >
                     {cell.roi.toFixed(1)}%
@@ -3143,17 +3488,33 @@ function SensitivityHeatmap({ s }: { s: NplProfitabilityBlock["sensitivity"] }) 
           </tbody>
         </table>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-3 text-[0.625rem] text-[var(--color-text-tertiary)]">
-        <span className="inline-flex items-center gap-1">
-          <span className="w-3 h-3 rounded" style={{ background: "rgba(165, 63, 138,0.5)" }} /> 손실 구간
+      <div
+        style={{
+          marginTop: 12,
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 12,
+          fontSize: 11, color: MCK.textSub, fontWeight: 600,
+        }}
+      >
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 12, height: 12, background: "rgba(74, 74, 74, 0.55)" }} /> 손실 구간
         </span>
-        <span className="inline-flex items-center gap-1">
-          <span className="w-3 h-3 rounded" style={{ background: "rgba(5, 28, 44,0.55)" }} /> 이익 구간
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 12, height: 12, background: "rgba(34, 81, 255, 0.55)" }} /> 이익 구간
         </span>
         <span>· ROI 범위: {minRoi.toFixed(1)}% ~ {maxRoi.toFixed(1)}%</span>
         <span>· 손익분기: {s.breakEvenRoi.toFixed(1)}%</span>
       </div>
-      <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed mt-3 pt-3 border-t border-[var(--color-border-subtle)]">
+      <p
+        style={{
+          marginTop: 12,
+          paddingTop: 12,
+          borderTop: `1px solid ${MCK.border}`,
+          fontSize: 12, color: MCK.textSub, lineHeight: 1.6,
+        }}
+      >
         {s.narrative}
       </p>
     </div>
@@ -3167,31 +3528,63 @@ function MonteCarloPanel({ mc }: { mc: NplProfitabilityBlock["monteCarlo"] }) {
     <div className="space-y-3">
       {/* KPI 4-cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <MetricCard label="평균 ROI" value={`${mc.meanRoi.toFixed(2)}%`} tint="#051C2C" sub={`표준편차 ${mc.stdRoi.toFixed(2)}%p`} />
+        <MetricCard label="평균 ROI" value={`${mc.meanRoi.toFixed(2)}%`} tint={MCK.electric} sub={`표준편차 ${mc.stdRoi.toFixed(2)}%p`} />
         <MetricCard
           label="손실 확률 (ROI<0)"
           value={`${mc.lossProbability.toFixed(2)}%`}
-          tint={mc.lossProbability < 10 ? "#051C2C" : mc.lossProbability < 25 ? "#051C2C" : "#A53F8A"}
+          tint={mc.lossProbability < 10 ? MCK.electric : mc.lossProbability < 25 ? MCK.ink : MCK.greyDark}
           sub={`VaR 95% ${mc.valueAtRisk95.toFixed(2)}%`}
         />
-        <MetricCard label="중앙값 (P50)" value={`${mc.percentiles.p50.toFixed(2)}%`} tint="#2E75B6" sub={`${mc.trials.toLocaleString()}회 시뮬`} />
-        <MetricCard label="평균 회수 기간" value={`${Math.round(mc.meanHoldingDays)}일`} tint="#051C2C" sub={`연환산 기준 ${(365 / Math.max(1, mc.meanHoldingDays)).toFixed(2)}x`} />
+        <MetricCard label="중앙값 (P50)" value={`${mc.percentiles.p50.toFixed(2)}%`} tint={MCK.ink} sub={`${mc.trials.toLocaleString()}회 시뮬`} />
+        <MetricCard label="평균 회수 기간" value={`${Math.round(mc.meanHoldingDays)}일`} tint={MCK.electric} sub={`연환산 기준 ${(365 / Math.max(1, mc.meanHoldingDays)).toFixed(2)}x`} />
       </div>
 
-      {/* Percentile 막대 분포 */}
-      <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
-        <div className="text-[0.75rem] font-bold text-[var(--color-text-primary)] mb-3">백분위 분포 (P10 ~ P90)</div>
-        <div className="grid grid-cols-5 gap-2 text-center">
+      {/* Percentile 막대 분포 — McKinsey monochrome (worst→best gradient) */}
+      <div
+        style={{
+          background: MCK.paper,
+          border: `1px solid ${MCK.border}`,
+          borderTop: `2px solid ${MCK.electric}`,
+          padding: 16,
+        }}
+      >
+        <div
+          style={{
+            ...MCK_TYPE.eyebrow,
+            color: MCK.electric,
+            marginBottom: 12,
+          }}
+        >
+          백분위 분포 (P10 ~ P90)
+        </div>
+        <div className="grid grid-cols-5" style={{ gap: 8, textAlign: "center" }}>
           {[
-            { k: "P10", v: mc.percentiles.p10, tint: "#A53F8A" },
-            { k: "P25", v: mc.percentiles.p25, tint: "#051C2C" },
-            { k: "P50", v: mc.percentiles.p50, tint: "#2E75B6" },
-            { k: "P75", v: mc.percentiles.p75, tint: "#051C2C" },
-            { k: "P90", v: mc.percentiles.p90, tint: "#064E3B" },
+            { k: "P10", v: mc.percentiles.p10, tint: MCK.greyDark },
+            { k: "P25", v: mc.percentiles.p25, tint: MCK.textSub },
+            { k: "P50", v: mc.percentiles.p50, tint: MCK.electric },
+            { k: "P75", v: mc.percentiles.p75, tint: MCK.ink },
+            { k: "P90", v: mc.percentiles.p90, tint: MCK.electricDark },
           ].map(p => (
-            <div key={p.k} className="rounded-lg p-2 border" style={{ borderColor: p.tint + "40", background: p.tint + "0A" }}>
-              <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">{p.k}</div>
-              <div className="text-[1rem] font-black tabular-nums" style={{ color: p.tint }}>
+            <div
+              key={p.k}
+              style={{
+                padding: 10,
+                background: MCK.paperTint,
+                border: `1px solid ${MCK.border}`,
+                borderTop: `2px solid ${p.tint}`,
+              }}
+            >
+              <div style={{ ...MCK_TYPE.label, color: MCK.textMuted }}>{p.k}</div>
+              <div
+                style={{
+                  fontFamily: MCK_FONTS.serif,
+                  fontSize: 16, fontWeight: 800,
+                  color: p.tint,
+                  fontVariantNumeric: "tabular-nums",
+                  letterSpacing: "-0.015em",
+                  marginTop: 4,
+                }}
+              >
                 {p.v.toFixed(1)}%
               </div>
             </div>
@@ -3201,42 +3594,83 @@ function MonteCarloPanel({ mc }: { mc: NplProfitabilityBlock["monteCarlo"] }) {
 
       {/* 히스토그램 */}
       {mc.histogram.length > 0 && (
-        <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
-          <div className="text-[0.75rem] font-bold text-[var(--color-text-primary)] mb-3">수익률 히스토그램 (ROI %)</div>
-          <div className="flex items-end gap-[2px] h-32">
+        <div
+          style={{
+            background: MCK.paper,
+            border: `1px solid ${MCK.border}`,
+            borderTop: `2px solid ${MCK.electric}`,
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              ...MCK_TYPE.eyebrow,
+              color: MCK.electric,
+              marginBottom: 12,
+            }}
+          >
+            수익률 히스토그램 (ROI %)
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 128 }}>
             {mc.histogram.map((h, i) => {
               const height = Math.max(2, (h.count / maxCount) * 100)
               const mid = (h.from + h.to) / 2
-              const color = mid < 0 ? "#A53F8A" : mid < 10 ? "#051C2C" : "#051C2C"
+              const color = mid < 0 ? MCK.greyDark : MCK.electric
               return (
                 <div
                   key={i}
-                  className="flex-1 min-w-[2px] rounded-t transition-all"
-                  style={{ height: `${height}%`, background: color, opacity: 0.7 + (h.count / maxCount) * 0.3 }}
+                  className="transition-all"
+                  style={{
+                    flex: 1,
+                    minWidth: 2,
+                    height: `${height}%`,
+                    background: color,
+                    opacity: 0.75 + (h.count / maxCount) * 0.25,
+                  }}
                   title={`${h.bucket} · ${h.count}회`}
                 />
               )
             })}
           </div>
-          <div className="flex items-center justify-between text-[0.625rem] text-[var(--color-text-tertiary)] mt-2 tabular-nums">
+          <div
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              marginTop: 8,
+              fontSize: 11, color: MCK.textMuted,
+              fontVariantNumeric: "tabular-nums", fontWeight: 600,
+            }}
+          >
             <span>{mc.histogram[0]?.from.toFixed(0)}%</span>
-            <span className="font-semibold">ROI 분포 · {mc.trials.toLocaleString()} trials</span>
+            <span style={{ fontWeight: 800, color: MCK.textSub }}>
+              ROI 분포 · {mc.trials.toLocaleString()} trials
+            </span>
             <span>{mc.histogram[mc.histogram.length - 1]?.to.toFixed(0)}%</span>
           </div>
         </div>
       )}
 
       {/* 가정·내러티브 */}
-      <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
-        <div className="text-[0.75rem] font-bold text-[var(--color-text-primary)] mb-2">입력 분포 가정</div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-[0.6875rem] mb-3">
+      <div
+        style={{
+          background: MCK.paper,
+          border: `1px solid ${MCK.border}`,
+          borderTop: `2px solid ${MCK.electric}`,
+          padding: 16,
+        }}
+      >
+        <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 10 }}>
+          입력 분포 가정
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5" style={{ gap: 8, marginBottom: 12 }}>
           <KvInline k="낙찰가율 μ" v={`${(mc.assumptions.bidRatioMean * 100).toFixed(1)}%`} />
           <KvInline k="낙찰가율 σ" v={`${(mc.assumptions.bidRatioStd * 100).toFixed(1)}%p`} />
           <KvInline k="유찰 λ" v={mc.assumptions.failedBidLambda.toFixed(2)} />
           <KvInline k="연체이자 jitter" v={`±${(mc.assumptions.delinquencyInterestJitter * 100).toFixed(0)}%`} />
           <KvInline k="경매비용 jitter" v={`±${(mc.assumptions.executionCostJitter * 100).toFixed(0)}%`} />
         </div>
-        <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{mc.narrative}</p>
+        <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.6 }}>
+          {mc.narrative}
+        </p>
       </div>
     </div>
   )
@@ -3244,9 +3678,25 @@ function MonteCarloPanel({ mc }: { mc: NplProfitabilityBlock["monteCarlo"] }) {
 
 function KvInline({ k, v }: { k: string; v: string }) {
   return (
-    <div className="rounded-md bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] px-2 py-1.5">
-      <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">{k}</div>
-      <div className="text-[0.8125rem] font-bold tabular-nums text-[var(--color-text-primary)]">{v}</div>
+    <div
+      style={{
+        padding: "8px 10px",
+        background: MCK.paperTint,
+        border: `1px solid ${MCK.border}`,
+      }}
+    >
+      <div style={{ ...MCK_TYPE.label, color: MCK.textMuted }}>{k}</div>
+      <div
+        style={{
+          fontSize: 13, fontWeight: 800,
+          color: MCK.ink,
+          fontVariantNumeric: "tabular-nums",
+          letterSpacing: "-0.005em",
+          marginTop: 2,
+        }}
+      >
+        {v}
+      </div>
     </div>
   )
 }
@@ -3369,7 +3819,7 @@ function EvidenceTabs({
                 <MetricCard label="감정가" value={krwWon(evidence.expectedBid.appraisalValue)} tint="#1B3A5C" />
                 <MetricCard label="AI 시세" value={krwWon(evidence.expectedBid.aiMarketValue)} tint="#2E75B6" sub={evidence.expectedBid.calculatedAt} />
                 <MetricCard label="낙찰가율" value={`${evidence.expectedBid.bidRatioPercent.toFixed(1)}%`} tint="#051C2C" />
-                <MetricCard label="예상 낙찰가" value={krwWon(evidence.expectedBid.expectedBidPrice)} tint="#A53F8A" />
+                <MetricCard label="예상 낙찰가" value={krwWon(evidence.expectedBid.expectedBidPrice)} tint={MCK.greyDark} />
               </div>
             )}
             <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{evidence.expectedBid.narrative}</p>
@@ -3398,7 +3848,7 @@ function EvidenceTabs({
                       <td className="py-1.5 pr-2 text-[var(--color-text-tertiary)]">{r.scope}</td>
                       <td className="py-1.5 pr-2 text-[var(--color-text-primary)]">{r.region}</td>
                       <td className="py-1.5 pr-2 text-right tabular-nums">{r.periodMonths}M</td>
-                      <td className="py-1.5 pr-2 text-right tabular-nums font-bold" style={{ color: r.ratioPercent >= 80 ? "#051C2C" : r.ratioPercent >= 65 ? "#051C2C" : "#A53F8A" }}>
+                      <td className="py-1.5 pr-2 text-right tabular-nums font-bold" style={{ color: r.ratioPercent >= 80 ? "#051C2C" : r.ratioPercent >= 65 ? "#051C2C" : MCK.greyDark }}>
                         {r.ratioPercent.toFixed(1)}%
                       </td>
                       <td className="py-1.5 text-right tabular-nums text-[var(--color-text-tertiary)]">{r.sampleSize}건</td>
@@ -3428,7 +3878,7 @@ function EvidenceTabs({
               <MetricCard label="평균 소요" value={`${evidence.auctionCases.averageDurationDays}일`} tint="#1B3A5C" />
               <MetricCard label="평균 감정가" value={krwWon(evidence.auctionCases.averageAppraisalValue)} tint="#2E75B6" />
               <MetricCard label="평균 낙찰가" value={krwWon(evidence.auctionCases.averageSalePrice)} tint="#051C2C" />
-              <MetricCard label="평균 낙찰가율" value={`${evidence.auctionCases.averageBidRatio.toFixed(1)}%`} tint="#A53F8A" />
+              <MetricCard label="평균 낙찰가율" value={`${evidence.auctionCases.averageBidRatio.toFixed(1)}%`} tint={MCK.greyDark} />
             </div>
             {evidence.auctionCases.sameAddress.length > 0 && (
               <EvidenceCaseTable title="동일 주소" cases={evidence.auctionCases.sameAddress} />
@@ -3485,7 +3935,7 @@ function EvidenceTabs({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <MetricCard label="1질권자 (질권대출기관)" value={krwWon(evidence.distributionRef.firstPledgee)} tint="#2E75B6" />
-              <MetricCard label="2질권자 (투자자)" value={krwWon(evidence.distributionRef.secondPledgee)} tint="#A53F8A" />
+              <MetricCard label="2질권자 (투자자)" value={krwWon(evidence.distributionRef.secondPledgee)} tint={MCK.greyDark} />
             </div>
             <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">
               {evidence.distributionRef.summary}
@@ -3530,7 +3980,7 @@ function EvidenceCaseTable({
               <td className="py-1.5 pr-2 text-right tabular-nums">{c.durationDays}일</td>
               <td className="py-1.5 pr-2 text-right tabular-nums">{krwWon(c.appraisalValue)}</td>
               <td className="py-1.5 pr-2 text-right tabular-nums font-semibold">{krwWon(c.salePrice)}</td>
-              <td className="py-1.5 text-right tabular-nums font-bold" style={{ color: c.bidRatio >= 80 ? "#051C2C" : c.bidRatio >= 65 ? "#051C2C" : "#A53F8A" }}>
+              <td className="py-1.5 text-right tabular-nums font-bold" style={{ color: c.bidRatio >= 80 ? "#051C2C" : c.bidRatio >= 65 ? "#051C2C" : MCK.greyDark }}>
                 {c.bidRatio.toFixed(1)}%
               </td>
             </tr>
@@ -3620,15 +4070,15 @@ function SummaryPrintable({
       {/* Header — McKinsey editorial: small caps brand bar + serif title + cobalt accent */}
       <div className="pb-4 mb-5 border-b" style={{ borderColor: "rgba(10,22,40,0.15)" }}>
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-[0.5625rem] tracking-[0.24em] font-bold" style={{ color: "#003A70" }}>
+          <span className="text-[0.5625rem] tracking-[0.24em] font-bold" style={{ color: MCK.electric }}>
             NPLATFORM
           </span>
           <span className="text-[0.5625rem] tracking-[0.18em] opacity-60">·</span>
           <span className="text-[0.5625rem] tracking-[0.22em] font-semibold" style={{ color: "rgba(10,22,40,0.75)" }}>
-            CONFIDENTIAL — INVESTMENT MEMORANDUM
+            INVESTMENT MEMORANDUM · CONFIDENTIAL
           </span>
         </div>
-        <div className="w-10 h-[1px] mb-2.5" style={{ background: "#003A70" }} />
+        <div className="w-10 h-[1px] mb-2.5" style={{ background: MCK.electric }} />
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1
@@ -3652,7 +4102,7 @@ function SummaryPrintable({
           {/* AI 등급 카드 — McKinsey deep navy + serif numerals */}
           <div
             className="px-4 py-2.5 rounded-md text-center shrink-0 shadow-[0_1px_3px_rgba(10,22,40,0.12)]"
-            style={{ backgroundColor: "#051C2C", color: "#FFFFFF", borderTop: "3px solid #003A70" }}
+            style={{ backgroundColor: "#051C2C", color: "#FFFFFF", borderTop: "3px solid #2251FF" }}
           >
             <div className="text-[0.5625rem] tracking-[0.18em] opacity-80 font-bold">{t.aiGrade}</div>
             <div
@@ -3689,7 +4139,7 @@ function SummaryPrintable({
       <div className="mb-4">
         <div className="flex items-baseline justify-between mb-1.5">
           <div className="flex items-baseline gap-2">
-            <span className="text-[0.5625rem] tracking-[0.22em] font-bold" style={{ color: "#003A70" }}>
+            <span className="text-[0.5625rem] tracking-[0.22em] font-bold" style={{ color: MCK.electric }}>
               EXHIBIT A
             </span>
             <span
@@ -3700,7 +4150,7 @@ function SummaryPrintable({
             </span>
           </div>
         </div>
-        <div className="h-[1px] mb-2.5" style={{ background: "#003A70" }} />
+        <div className="h-[1px] mb-2.5" style={{ background: MCK.electric }} />
         <div className="grid grid-cols-4 gap-2">
           <SummaryAmount label={t.principal} value={fmtKRW(principal)} />
           <SummaryAmount label={t.unpaidInterest} value={unpaidInt > 0 ? fmtKRW(unpaidInt) : "—"} />
@@ -3712,7 +4162,7 @@ function SummaryPrintable({
       {/* AI 총평 — McKinsey "Executive Summary" 박스: deep navy + 좌측 cobalt 4pt 액센트 */}
       <div
         className="mb-4 p-4 rounded-md relative"
-        style={{ backgroundColor: "#051C2C", color: "#FFFFFF", borderLeft: "4px solid #003A70" }}
+        style={{ backgroundColor: "#051C2C", color: "#FFFFFF", borderLeft: "4px solid #2251FF" }}
       >
         <div className="text-[0.5625rem] tracking-[0.22em] font-bold mb-2" style={{ color: "#6FB8E6" }}>
           EXECUTIVE SUMMARY
@@ -3729,7 +4179,7 @@ function SummaryPrintable({
       <div className="mb-4">
         <div className="flex items-baseline justify-between mb-1.5">
           <div className="flex items-baseline gap-2">
-            <span className="text-[0.5625rem] tracking-[0.22em] font-bold" style={{ color: "#003A70" }}>
+            <span className="text-[0.5625rem] tracking-[0.22em] font-bold" style={{ color: MCK.electric }}>
               EXHIBIT B
             </span>
             <span
@@ -3743,11 +4193,11 @@ function SummaryPrintable({
             {t.riskModelCaption}
           </span>
         </div>
-        <div className="h-[1px] mb-2.5" style={{ background: "#003A70" }} />
+        <div className="h-[1px] mb-2.5" style={{ background: MCK.electric }} />
         <div className="grid grid-cols-2 gap-2">
           {risk.factors.map((f) => {
             const score = Math.max(0, Math.min(100, f.score))
-            const barColor = score >= 75 ? "#0A1628" : score >= 50 ? "#003A70" : "#A53F8A"
+            const barColor = score >= 75 ? "#0A1628" : score >= 50 ? MCK.electric : MCK.greyDark
             return (
               <div
                 key={f.category}
@@ -3782,7 +4232,7 @@ function SummaryPrintable({
         <span>
           {t.generatedAt} · {new Date(report.createdAt).toLocaleString("ko-KR")}
         </span>
-        <span style={{ color: "#003A70", fontWeight: 700 }}>NPLATFORM · TransFarmer Inc.</span>
+        <span style={{ color: MCK.electric, fontWeight: 700 }}>NPLATFORM · TransFarmer Inc.</span>
       </div>
     </div>
   )
@@ -3803,10 +4253,10 @@ function SummaryStat({
     <div
       className="px-2.5 py-2.5 rounded-md"
       style={{
-        backgroundColor: accent ? "#003A70" : "#FFFFFF",
+        backgroundColor: accent ? MCK.electric : "#FFFFFF",
         color: accent ? "#FFFFFF" : "#0A1628",
         border: accent ? "none" : "1px solid rgba(10,22,40,0.12)",
-        borderTop: accent ? "3px solid #051C2C" : "2px solid #003A70",
+        borderTop: accent ? "3px solid #051C2C" : "2px solid #2251FF",
       }}
     >
       <div className="text-[0.5625rem] tracking-[0.16em] font-bold opacity-75 mb-1">{label}</div>
@@ -3829,7 +4279,7 @@ function SummaryAmount({ label, value, accent = false }: { label: string; value:
         backgroundColor: accent ? "#051C2C" : "#FFFFFF",
         color: accent ? "#FFFFFF" : "#0A1628",
         border: accent ? "none" : "1px solid rgba(10,22,40,0.12)",
-        borderTop: accent ? "none" : "2px solid #003A70",
+        borderTop: accent ? "none" : "2px solid #2251FF",
       }}
     >
       <div className="text-[0.5625rem] tracking-[0.16em] opacity-75 font-bold mb-1">{label}</div>

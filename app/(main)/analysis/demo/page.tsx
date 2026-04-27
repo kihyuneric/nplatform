@@ -20,7 +20,7 @@ import {
   MckPageHeader,
   MckSection,
   MckCard,
-  MckCta,
+  MckKpiGrid,
   MckBadge,
   MckDemoBanner,
 } from "@/components/mck"
@@ -113,42 +113,63 @@ export default function AnalysisDemoPage() {
           { label: "분석", href: "/analysis" },
           { label: "샘플 결과 보기" },
         ]}
-        eyebrow="Demo · Sample Workbook"
+        eyebrow="Demo · Sample Workbook · 4개 핵심 결과 미리보기"
         title="NPL 수익성 분석 · 실제 결과 화면 체험"
         subtitle="감정가 12억원 강남구 아파트 NPL 딜을 기준으로 AI가 사전 분석한 결과입니다. 실제 분석과 동일한 차트·배당표·AI 의견을 확인할 수 있습니다."
         actions={
-          <div className="flex items-center gap-2 shrink-0">
-            <MckBadge tone="brass" outlined icon={<Zap size={11} />}>
-              데모 체험
-            </MckBadge>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <button
+              type="button"
+              onClick={handleViewDemo}
+              disabled={loading}
+              style={{
+                padding: "9px 16px",
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: "-0.01em",
+                background: MCK.ink,
+                color: MCK.paper,
+                border: "none",
+                borderTop: `2px solid ${MCK.electric}`,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                cursor: loading ? "wait" : "pointer",
+                opacity: loading ? 0.7 : 1,
+              }}
+            >
+              {loading ? "로딩 중…" : "전체 결과 보기"} <ArrowRight size={14} />
+            </button>
+            <span
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "9px 14px",
+                fontSize: 11, fontWeight: 800,
+                background: "rgba(34, 81, 255, 0.10)",
+                color: MCK.electricDark,
+                border: "1px solid rgba(34, 81, 255, 0.35)",
+                letterSpacing: "0.06em", textTransform: "uppercase",
+              }}
+            >
+              <Zap size={12} /> 데모 체험
+            </span>
           </div>
         }
       />
 
-      {/* Highlights */}
-      <MckSection eyebrow="Highlights · 4 modules" title="이 데모로 확인할 수 있는 것">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {HIGHLIGHTS.map((h) => {
-            const Icon = h.icon
-            return (
-              <MckCard key={h.title} icon={Icon} eyebrow={h.title}>
-                <div
-                  style={{
-                    fontFamily: MCK_FONTS.serif,
-                    ...MCK_TYPE.kpi,
-                    color: MCK.ink,
-                  }}
-                >
-                  {h.value}
-                </div>
-                <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.5 }}>
-                  {h.desc}
-                </p>
-              </MckCard>
-            )
-          })}
+      {/* ── Highlights · DARK KPI strip · /exchange 매물탐색 패턴 ──────── */}
+      <section style={{ background: MCK.paper, paddingBottom: 32 }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 24px" }}>
+          <MckKpiGrid
+            variant="dark"
+            items={HIGHLIGHTS.map(h => ({
+              label: h.title,
+              value: h.value,
+              hint: h.desc,
+            }))}
+          />
         </div>
-      </MckSection>
+      </section>
 
       {/* 기본 정보 */}
       <MckSection
@@ -223,61 +244,106 @@ export default function AnalysisDemoPage() {
         </div>
       </MckSection>
 
-      {/* CTA */}
+      {/* ── CTA · Deep Navy Editorial 패널 (하단 풋터) ─────────────────── */}
       <MckSection>
         <div
           style={{
-            background: MCK.ink,
-            borderTop: `2.5px solid ${MCK.brass}`,
-            padding: "32px 28px",
+            background: MCK.inkDeep,
+            borderTop: `3px solid ${MCK.electric}`,
+            padding: "36px 28px",
             textAlign: "center",
-            color: MCK.paper,
           }}
         >
           <div
             style={{
-              fontSize: 11,
-              fontWeight: 800,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: MCK.brassLight,
+              ...MCK_TYPE.eyebrow,
+              color: MCK.cyan,
               marginBottom: 10,
             }}
           >
-            Full Workbook
+            FULL WORKBOOK
           </div>
           <h3
             style={{
               fontFamily: MCK_FONTS.serif,
               color: MCK.paper,
-              fontSize: 22,
+              fontSize: 24,
               fontWeight: 800,
               letterSpacing: "-0.02em",
-              marginBottom: 6,
+              marginBottom: 8,
+              lineHeight: 1.25,
             }}
           >
             차트 · 배당표 · AI 투자의견 · Monte Carlo
           </h3>
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.78)", marginBottom: 22 }}>
+          <p
+            style={{
+              fontSize: 13,
+              color: "rgba(255, 255, 255, 0.75)",
+              marginBottom: 26,
+              lineHeight: 1.5,
+            }}
+          >
             위 데이터로 계산된 실제 분석 결과를 확인하세요.
           </p>
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            <MckCta
-              label={loading ? "로딩 중…" : "전체 분석 결과 보기"}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            {/* Primary — Electric Blue 솔리드 (다크 배경 위 최강 가시성) */}
+            <button
+              type="button"
               onClick={handleViewDemo}
-              variant="primary"
-              size="md"
-              centered={false}
               disabled={loading}
-              iconRight={<ArrowRight size={16} />}
-            />
-            <MckCta
-              label="직접 분석하기"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "13px 26px",
+                fontSize: 14,
+                fontWeight: 800,
+                letterSpacing: "-0.01em",
+                background: MCK.electric,
+                color: MCK.paper,
+                border: `1px solid ${MCK.electric}`,
+                cursor: loading ? "wait" : "pointer",
+                opacity: loading ? 0.7 : 1,
+                boxShadow: "0 8px 24px rgba(34, 81, 255, 0.45)",
+                fontFamily: MCK_FONTS.serif,
+              }}
+            >
+              <span style={{ color: MCK.paper }}>
+                {loading ? "로딩 중…" : "전체 분석 결과 보기"}
+              </span>
+              <ArrowRight size={16} style={{ color: MCK.paper }} />
+            </button>
+
+            {/* Secondary — White 솔리드 + ink text (다크 배경 위 명확한 분리) */}
+            <a
               href="/analysis/profitability"
-              variant="secondary"
-              size="md"
-              centered={false}
-            />
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "13px 26px",
+                fontSize: 14,
+                fontWeight: 800,
+                letterSpacing: "-0.01em",
+                background: MCK.paper,
+                color: MCK.ink,
+                border: `1px solid ${MCK.paper}`,
+                textDecoration: "none",
+                fontFamily: MCK_FONTS.serif,
+              }}
+            >
+              <Zap size={15} style={{ color: MCK.electric }} />
+              <span style={{ color: MCK.ink }}>직접 분석하기</span>
+            </a>
           </div>
         </div>
       </MckSection>

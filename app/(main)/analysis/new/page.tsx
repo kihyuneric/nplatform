@@ -33,6 +33,7 @@ import {
   useUnifiedFormState,
 } from "@/components/npl/unified-listing-form"
 import { buildReportFromInput } from "@/lib/npl/unified-report/sample"
+import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
 
 type Step = 1 | 2 | 3
 
@@ -159,28 +160,53 @@ export default function NewNplAnalysisPage() {
   }
 
   return (
-    <div className={DS.page.wrapper}>
-      {/* Header */}
-      <div className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] px-6 py-8">
+    <div style={{ background: MCK.paperDeep, minHeight: "100vh" }}>
+      {/* Header — McKinsey editorial */}
+      <div style={{ background: MCK.paper, borderBottom: `1px solid ${MCK.border}`, padding: "32px 24px" }}>
         <div className="max-w-3xl mx-auto">
           <Link
             href="/analysis"
-            className={`inline-flex items-center gap-2 ${DS.text.link} text-[0.8125rem] mb-4`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 13,
+              fontWeight: 700,
+              color: MCK.electricDark,
+              textDecoration: "none",
+              marginBottom: 16,
+              letterSpacing: "-0.005em",
+            }}
           >
             <ArrowLeft className="h-4 w-4" />
             분석 목록으로
           </Link>
-          <h1 className={DS.header.title}>새 NPL 분석</h1>
-          <p className={DS.header.subtitle}>
+          <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 6 }}>
+            NPL ANALYSIS · 통합 입력 폼
+          </div>
+          <h1
+            style={{
+              fontFamily: MCK_FONTS.serif,
+              fontSize: 28,
+              fontWeight: 800,
+              color: MCK.ink,
+              letterSpacing: "-0.02em",
+              lineHeight: 1.2,
+              marginBottom: 6,
+            }}
+          >
+            새 NPL 분석
+          </h1>
+          <p style={{ fontSize: 13, color: MCK.textSub, lineHeight: 1.55, fontWeight: 500 }}>
             AI가 30초 안에 투자 적합성을 분석합니다 · 거래소 매물등록과 동일한 통합 입력 폼
           </p>
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)]">
-        <div className="max-w-3xl mx-auto px-6 py-4">
-          <div className="flex items-center gap-0">
+      {/* Progress Bar — McKinsey wizard stepper */}
+      <div style={{ background: MCK.paper, borderBottom: `1px solid ${MCK.border}` }}>
+        <div className="max-w-3xl mx-auto" style={{ padding: "16px 24px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
             {STEPS.map((label, i) => {
               const idx = i + 1
               const done = step > idx
@@ -192,35 +218,43 @@ export default function NewNplAnalysisPage() {
                 >
                   <div className="flex items-center gap-2 shrink-0">
                     <div
-                      className={`h-7 w-7 rounded-full flex items-center justify-center text-[0.6875rem] font-bold transition-all ${
-                        done
-                          ? "bg-[var(--color-positive)] text-white"
-                          : active
-                          ? "bg-[var(--color-brand-dark)] text-white"
-                          : "bg-[var(--color-surface-sunken)] text-[var(--color-text-muted)]"
-                      }`}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontFamily: MCK_FONTS.serif,
+                        fontSize: 12,
+                        fontWeight: 800,
+                        background: done ? MCK.electric : active ? MCK.ink : MCK.paperTint,
+                        color: done || active ? MCK.paper : MCK.textMuted,
+                        border: done || active ? "none" : `1px solid ${MCK.border}`,
+                        transition: "all 0.15s",
+                        letterSpacing: "-0.01em",
+                      }}
                     >
                       {done ? <Check className="h-3.5 w-3.5" /> : idx}
                     </div>
                     <span
-                      className={`text-[0.8125rem] font-medium ${
-                        active
-                          ? "text-[var(--color-brand-dark)]"
-                          : done
-                          ? "text-[var(--color-positive)]"
-                          : "text-[var(--color-text-muted)]"
-                      }`}
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: active ? MCK.ink : done ? MCK.electricDark : MCK.textMuted,
+                        letterSpacing: "-0.005em",
+                      }}
                     >
                       {label}
                     </span>
                   </div>
                   {i < STEPS.length - 1 && (
                     <div
-                      className={`flex-1 h-0.5 mx-3 ${
-                        done
-                          ? "bg-[var(--color-positive)]"
-                          : "bg-[var(--color-border-subtle)]"
-                      }`}
+                      style={{
+                        flex: 1,
+                        height: 1,
+                        margin: "0 12px",
+                        background: done ? MCK.electric : MCK.border,
+                      }}
                     />
                   )}
                 </div>
@@ -231,13 +265,33 @@ export default function NewNplAnalysisPage() {
       </div>
 
       {/* Form Body */}
-      <div className="max-w-3xl mx-auto px-6 py-8">
+      <div className="max-w-3xl mx-auto" style={{ padding: "32px 24px" }}>
         {/* Step 1 — 기본·채권·담보 (분석 전용 메타 + 통합 폼 상단부) */}
         {step === 1 && (
-          <div className={`${DS.card.base} ${DS.card.paddingLarge} space-y-5`}>
+          <div
+            style={{
+              background: MCK.paper,
+              border: `1px solid ${MCK.border}`,
+              borderTop: `2px solid ${MCK.electric}`,
+              padding: 28,
+              display: "flex",
+              flexDirection: "column",
+              gap: 20,
+            }}
+          >
             <div>
-              <p className={DS.header.eyebrow}>Step 1</p>
-              <h2 className={DS.text.sectionTitle}>기본 · 채권 · 담보 정보</h2>
+              <p style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 6 }}>STEP 1</p>
+              <h2
+                style={{
+                  fontFamily: MCK_FONTS.serif,
+                  fontSize: 20,
+                  fontWeight: 800,
+                  color: MCK.ink,
+                  letterSpacing: "-0.015em",
+                }}
+              >
+                기본 · 채권 · 담보 정보
+              </h2>
             </div>
 
             {/* 분석 메타 (통합 폼에 없는 필드) */}
@@ -273,11 +327,31 @@ export default function NewNplAnalysisPage() {
 
         {/* Step 2 — 추가 점검 요약 카드 */}
         {step === 2 && (
-          <div className={`${DS.card.base} ${DS.card.paddingLarge} space-y-4`}>
+          <div
+            style={{
+              background: MCK.paper,
+              border: `1px solid ${MCK.border}`,
+              borderTop: `2px solid ${MCK.electric}`,
+              padding: 28,
+              display: "flex",
+              flexDirection: "column",
+              gap: 16,
+            }}
+          >
             <div>
-              <p className={DS.header.eyebrow}>Step 2</p>
-              <h2 className={DS.text.sectionTitle}>입력 내용 확인</h2>
-              <p className="text-[0.75rem] text-[var(--color-text-muted)] mt-1">
+              <p style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 6 }}>STEP 2</p>
+              <h2
+                style={{
+                  fontFamily: MCK_FONTS.serif,
+                  fontSize: 20,
+                  fontWeight: 800,
+                  color: MCK.ink,
+                  letterSpacing: "-0.015em",
+                }}
+              >
+                입력 내용 확인
+              </h2>
+              <p style={{ fontSize: 12, color: MCK.textMuted, marginTop: 4, lineHeight: 1.55 }}>
                 아래 요약을 확인하고 이상이 없으면 다음 단계로 진행하세요.
                 수정이 필요하면 이전 버튼을 눌러 돌아가세요.
               </p>
@@ -335,31 +409,81 @@ export default function NewNplAnalysisPage() {
         {/* Step 3 — AI 분석 시작 */}
         {step === 3 && (
           <div
-            className={`${DS.card.base} ${DS.card.paddingLarge} text-center space-y-6`}
+            style={{
+              background: MCK.paper,
+              border: `1px solid ${MCK.border}`,
+              borderTop: `2px solid ${MCK.electric}`,
+              padding: 28,
+              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              gap: 24,
+            }}
           >
-            <p className={DS.header.eyebrow}>Step 3</p>
-            <h2 className={DS.text.sectionTitle}>AI 분석 준비 완료</h2>
-
-            <div className="w-20 h-20 bg-[var(--color-brand-dark)] rounded-full flex items-center justify-center mx-auto shadow-[var(--shadow-lg)]">
-              <Brain className="h-10 w-10 text-white" />
+            <div>
+              <p style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 6 }}>STEP 3</p>
+              <h2
+                style={{
+                  fontFamily: MCK_FONTS.serif,
+                  fontSize: 20,
+                  fontWeight: 800,
+                  color: MCK.ink,
+                  letterSpacing: "-0.015em",
+                }}
+              >
+                AI 분석 준비 완료
+              </h2>
             </div>
 
-            <div className="space-y-1">
-              <p className={DS.text.body}>
+            <div
+              style={{
+                width: 80,
+                height: 80,
+                background: MCK.inkDeep,
+                borderTop: `3px solid ${MCK.electric}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto",
+                boxShadow: "0 8px 24px rgba(34, 81, 255, 0.18)",
+              }}
+            >
+              <Brain className="h-10 w-10" style={{ color: MCK.cyan }} />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <p style={{ fontSize: 14, color: MCK.ink, fontWeight: 600, lineHeight: 1.55 }}>
                 입력된 정보를 바탕으로 AI가 종합 분석을 시작합니다.
               </p>
               <div
-                className={`flex items-center justify-center gap-1.5 ${DS.text.caption}`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  fontSize: 11,
+                  color: MCK.textMuted,
+                  fontWeight: 600,
+                }}
               >
                 <Clock className="h-3.5 w-3.5" />
                 <span>예상 소요시간: 약 30초</span>
               </div>
             </div>
 
-            <div className="bg-[var(--color-brand-mid)]/5 border border-[var(--color-brand-mid)]/20 rounded-xl p-4 text-left space-y-1.5">
-              <p className="text-[0.75rem] font-semibold text-[var(--color-brand-dark)]">
-                분석 항목
-              </p>
+            <div
+              style={{
+                background: MCK.paperTint,
+                border: `1px solid ${MCK.border}`,
+                borderLeft: `3px solid ${MCK.electric}`,
+                padding: 16,
+                textAlign: "left",
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+              }}
+            >
+              <p style={{ ...MCK_TYPE.eyebrow, color: MCK.electric }}>분석 항목</p>
               {[
                 "리스크 등급 산정",
                 "예상 수익률 계산",
@@ -368,50 +492,76 @@ export default function NewNplAnalysisPage() {
               ].map((item) => (
                 <div
                   key={item}
-                  className="flex items-center gap-2 text-[0.8125rem] text-[var(--color-brand-mid)]"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 13,
+                    color: MCK.textSub,
+                    fontWeight: 600,
+                  }}
                 >
-                  <Check className="h-3.5 w-3.5 text-[var(--color-brand-bright)]" />
+                  <Check className="h-3.5 w-3.5" style={{ color: MCK.electric, flexShrink: 0 }} />
                   <span>{item}</span>
                 </div>
               ))}
             </div>
 
             {error && (
-              <div className="p-3 bg-stone-100/10 border border-stone-300/20 rounded-xl text-[0.8125rem] text-stone-900">
+              <div
+                style={{
+                  padding: 12,
+                  background: MCK.paperTint,
+                  border: `1px solid ${MCK.border}`,
+                  borderLeft: `3px solid ${MCK.greyDark}`,
+                  fontSize: 13,
+                  color: MCK.greyDark,
+                  textAlign: "left",
+                  fontWeight: 600,
+                }}
+              >
                 {error}
               </div>
             )}
 
             {loading ? (
-              <div className="space-y-3">
-                <div className="flex items-center justify-center gap-2 text-[var(--color-brand-mid)]">
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    color: MCK.electricDark,
+                  }}
+                >
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  <span className="text-[0.875rem] font-medium">
-                    AI 분석 진행 중...
-                  </span>
+                  <span style={{ fontSize: 14, fontWeight: 700 }}>AI 분석 진행 중...</span>
                 </div>
-                <div className="space-y-2">
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, textAlign: "left" }}>
                   {ANALYSIS_STEPS.map((s, i) => (
                     <div
                       key={s}
-                      className={`flex items-center gap-2 text-[0.8125rem] transition-all duration-300 ${
-                        i <= analysisStep ? "opacity-100" : "opacity-25"
-                      }`}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        fontSize: 13,
+                        opacity: i <= analysisStep ? 1 : 0.3,
+                        transition: "opacity 0.3s",
+                      }}
                     >
                       {i < analysisStep ? (
-                        <Check className="h-3.5 w-3.5 text-[var(--color-positive)] shrink-0" />
+                        <Check className="h-3.5 w-3.5 shrink-0" style={{ color: MCK.electric }} />
                       ) : i === analysisStep ? (
-                        <Loader2 className="h-3.5 w-3.5 text-[var(--color-brand-mid)] animate-spin shrink-0" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" style={{ color: MCK.electric }} />
                       ) : (
-                        <div className="h-3.5 w-3.5 rounded-full border border-[var(--color-border-subtle)] shrink-0" />
+                        <div
+                          className="h-3.5 w-3.5 shrink-0"
+                          style={{ borderRadius: "50%", border: `1px solid ${MCK.border}` }}
+                        />
                       )}
-                      <span
-                        className={
-                          i <= analysisStep
-                            ? "text-[var(--color-text-primary)]"
-                            : "text-[var(--color-text-muted)]"
-                        }
-                      >
+                      <span style={{ color: i <= analysisStep ? MCK.ink : MCK.textMuted, fontWeight: 600 }}>
                         {s}
                       </span>
                     </div>
@@ -421,9 +571,25 @@ export default function NewNplAnalysisPage() {
             ) : (
               <button
                 onClick={handleAnalyze}
-                className={`${DS.button.primary} ${DS.button.lg} w-full`}
+                style={{
+                  width: "100%",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  padding: "14px 24px",
+                  background: MCK.ink,
+                  color: MCK.paper,
+                  border: "none",
+                  borderTop: `2.5px solid ${MCK.electric}`,
+                  fontSize: 14,
+                  fontWeight: 800,
+                  letterSpacing: "-0.01em",
+                  cursor: "pointer",
+                  boxShadow: "0 6px 18px rgba(34, 81, 255, 0.18)",
+                }}
               >
-                <Brain className="h-6 w-6" />
+                <Brain className="h-5 w-5" />
                 AI 분석 시작
               </button>
             )}
@@ -431,9 +597,24 @@ export default function NewNplAnalysisPage() {
         )}
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between mt-6">
+        <div className="flex justify-between" style={{ marginTop: 24 }}>
           {step > 1 ? (
-            <button onClick={handleBack} className={DS.button.secondary}>
+            <button
+              onClick={handleBack}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "10px 18px",
+                background: MCK.paper,
+                color: MCK.ink,
+                border: `1px solid ${MCK.ink}`,
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: "-0.005em",
+                cursor: "pointer",
+              }}
+            >
               <ArrowLeft className="h-4 w-4" />
               이전
             </button>
@@ -441,7 +622,23 @@ export default function NewNplAnalysisPage() {
             <div />
           )}
           {step < 3 && (
-            <button onClick={handleNext} className={DS.button.primary}>
+            <button
+              onClick={handleNext}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "10px 22px",
+                background: MCK.ink,
+                color: MCK.paper,
+                border: "none",
+                borderTop: `2px solid ${MCK.electric}`,
+                fontSize: 13,
+                fontWeight: 800,
+                letterSpacing: "-0.01em",
+                cursor: "pointer",
+              }}
+            >
               다음
               <ArrowRight className="h-4 w-4" />
             </button>
@@ -462,16 +659,20 @@ function Row({
   emphasize?: boolean
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-1.5 border-b border-[var(--color-border-subtle)] last:border-b-0">
-      <dt className="text-[0.75rem] text-[var(--color-text-muted)] font-medium">
-        {label}
-      </dt>
+    <div
+      className="flex items-center justify-between gap-3 last:border-b-0"
+      style={{ padding: "8px 0", borderBottom: `1px solid ${MCK.border}` }}
+    >
+      <dt style={{ fontSize: 12, color: MCK.textMuted, fontWeight: 600 }}>{label}</dt>
       <dd
-        className={`tabular-nums ${
-          emphasize
-            ? "text-[0.9375rem] font-bold text-stone-900 dark:text-stone-900"
-            : "text-[var(--color-text-primary)]"
-        }`}
+        style={{
+          fontFamily: emphasize ? MCK_FONTS.serif : "inherit",
+          fontSize: emphasize ? 15 : 13,
+          fontWeight: emphasize ? 800 : 600,
+          color: emphasize ? MCK.ink : MCK.textSub,
+          fontVariantNumeric: "tabular-nums",
+          letterSpacing: emphasize ? "-0.01em" : "-0.005em",
+        }}
       >
         {value}
       </dd>

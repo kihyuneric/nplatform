@@ -423,19 +423,20 @@ function DealHeader({
         </div>
         )}
 
-        {/* title + AI badge — enlarged */}
+        {/* title + AI badge — McKinsey 절제: 페이지 h2(진행중 딜룸 ~28px)보다 작은 본문 h3 톤 */}
         {!hideTitle && (
-        <div className="flex items-start justify-between gap-6 mb-8" style={{ flexWrap: "wrap" }}>
+        <div className="flex items-start justify-between gap-4 mb-6" style={{ flexWrap: "wrap" }}>
           <h1
             style={{
               color: MCK.ink,
-              fontSize: "clamp(2.25rem, 4.2vw, 3.25rem)",
-              fontWeight: 800,
-              letterSpacing: "-0.025em",
-              lineHeight: 1.1,
+              fontSize: "clamp(1.125rem, 1.6vw, 1.375rem)",   // 18 → 22px
+              fontWeight: 700,
+              letterSpacing: "-0.015em",
+              lineHeight: 1.25,
               flex: "1 1 auto",
               wordBreak: "keep-all",
               fontFamily: 'Georgia, "Times New Roman", serif',
+              margin: 0,
             }}
           >
             {deal.title}
@@ -444,19 +445,18 @@ function DealHeader({
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: 8,
-              padding: "10px 20px",
+              gap: 6,
+              padding: "5px 12px",
               background: MCK.paper,
-              border: `2px solid ${MCK.brass}`,
-              borderRadius: 999,
-              fontSize: 14,
+              border: `1px solid ${MCK.brass}`,
+              fontSize: 11,
               fontWeight: 800,
               color: MCK.brassDark,
               flexShrink: 0,
-              boxShadow: "0 1px 3px rgba(184, 146, 75, 0.15)",
+              letterSpacing: "0.02em",
             }}
           >
-            <Sparkles size={16} style={{ color: MCK.brass }} />
+            <Sparkles size={12} style={{ color: MCK.brass }} />
             <span style={{ color: MCK.brassDark }}>{aiGradeBadge}</span>
           </div>
         </div>
@@ -1137,7 +1137,8 @@ export function DealGate({
         <div style={{ flex: 1, height: 1.5, background: MCK.brass }} />
       </div>
 
-      {/* 좌측 CTA 버튼 — 모달 트리거 (ctaLabel 가 있을 때만) */}
+      {/* 좌측 게이트 CTA — McKinsey 외곽선 버튼 (mck-cta-dark 글로벌 흰색 강제 룰 회피)
+          흰 배경 + 검정 외곽선 + 검정 글씨 + 상단 cobalt accent strip */}
       {ctaLabel && onCtaClick && (
         <div
           style={{
@@ -1150,25 +1151,23 @@ export function DealGate({
           <button
             type="button"
             onClick={onCtaClick}
-            className="mck-cta-dark"
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: 8,
-              padding: "11px 22px",
-              background: MCK.paper,
-              border: `1.5px solid ${MCK.ink}`,
-              borderTop: `2px solid ${MCK.brass}`,
-              color: MCK.ink,
-              fontSize: 12.5,
+              padding: "10px 20px",
+              background: "#FFFFFF",
+              border: "1px solid #0A1628",
+              borderTop: "2px solid #2251FF",
+              color: "#0A1628",
+              fontSize: 12,
               fontWeight: 800,
-              letterSpacing: "-0.01em",
+              letterSpacing: "-0.005em",
               cursor: "pointer",
-              boxShadow: "0 2px 8px rgba(10,22,40,0.08)",
             }}
           >
-            <span style={{ color: MCK.ink }}>{ctaLabel}</span>
-            <ChevronRight size={14} style={{ color: MCK.ink }} />
+            <span style={{ color: "#0A1628" }}>{ctaLabel}</span>
+            <ChevronRight size={13} style={{ color: "#0A1628" }} />
           </button>
         </div>
       )}

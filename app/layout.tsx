@@ -69,20 +69,14 @@ export const metadata: Metadata = {
     siteName: 'NPLatform',
     locale: 'ko_KR',
     type: 'website',
-    images: [
-      {
-        url: `${SITE_URL}/og-image.png`,
-        width: 1200,
-        height: 630,
-        alt: 'NPLatform - AI 기반 NPL 투자 분석 플랫폼',
-      },
-    ],
+    // OG 이미지는 app/opengraph-image.tsx (1200×630 dynamic ImageResponse) 가
+    // 자동 주입됩니다. 명시 images 배열을 두면 file convention 이 무시되므로 제거.
   },
   twitter: {
     card: 'summary_large_image',
     title: 'NPLatform - AI 기반 NPL 투자 분석 플랫폼',
     description: 'AI가 분석하는 NPL 투자. 전국 NPL 매물 검색, AI 등급 평가, 수익률 시뮬레이션.',
-    images: [`${SITE_URL}/og-image.png`],
+    // Twitter 이미지는 app/twitter-image.tsx 가 자동 주입.
   },
   alternates: {
     canonical: SITE_URL,

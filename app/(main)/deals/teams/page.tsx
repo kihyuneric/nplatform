@@ -10,16 +10,16 @@ import {
   Lock,
   ChevronRight,
   Award,
+  Clock,
+  Sparkles,
+  Zap,
+  Eye,
 } from "lucide-react"
 import Link from "next/link"
 import {
   MckPageShell,
   MckPageHeader,
   MckKpiGrid,
-  MckCard,
-  MckSection,
-  MckCta,
-  MckBadge,
   MckEmptyState,
   MckDemoBanner,
 } from "@/components/mck"
@@ -124,23 +124,13 @@ const SAMPLE_TEAMS: Team[] = [
   },
 ]
 
-const STATUS_TONE: Record<
-  TeamStatus,
-  "neutral" | "brass" | "ink" | "blue" | "positive" | "warning" | "danger"
-> = {
-  모집중: "brass",
-  모집완료: "neutral",
-  운용중: "blue",
-  상환완료: "positive",
-  취소: "danger",
-}
-
+// Card top accent color · McKinsey monochrome (electric/ink/grey)
 const STATUS_BAR_COLOR: Record<TeamStatus, string> = {
-  모집중: MCK.brass,
-  모집완료: MCK.textMuted,
-  운용중: MCK.blue,
-  상환완료: MCK.positive,
-  취소: MCK.danger,
+  모집중: MCK.electric,        // McKinsey blue (active)
+  모집완료: MCK.textMuted,     // grey (waiting)
+  운용중: MCK.ink,              // ink (in-progress)
+  상환완료: MCK.ink,            // ink (done — 절제된 톤)
+  취소: MCK.greyDark,           // charcoal (cancelled)
 }
 
 type FilterTab = "전체" | "내 팀" | "공개 모집 중" | "완료"
@@ -210,34 +200,65 @@ export default function TeamsPage() {
           { label: "딜룸", href: "/deals" },
           { label: "공동투자팀" },
         ]}
-        eyebrow="Co-Investment Platform"
+        eyebrow="Co-Investment Platform · 팀 단위 NPL 분산 투자"
         title="공동투자팀"
         subtitle="여러 투자자와 함께 NPL 포트폴리오를 구성하고 분산 투자하세요. 리드 인베스터가 딜을 주관하고, 공동 참여자는 정해진 지분만큼 분배합니다."
         actions={
-          <MckCta
-            label="새 팀 만들기"
-            href="/deals/teams/new"
-            variant="primary"
-            size="md"
-            centered={false}
-            iconRight={<Plus size={16} style={{ color: MCK.paper }} />}
-          />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <Link
+              href="/deals/teams/new"
+              style={{
+                padding: "9px 16px",
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: "-0.01em",
+                background: MCK.ink,
+                color: MCK.paper,
+                border: "none",
+                borderTop: `2px solid ${MCK.electric}`,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                textDecoration: "none",
+              }}
+            >
+              새 팀 만들기 <Plus size={14} />
+            </Link>
+            <Link
+              href="/deals"
+              style={{
+                padding: "9px 16px",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "-0.01em",
+                background: MCK.paper,
+                color: MCK.ink,
+                border: `1px solid ${MCK.ink}`,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                textDecoration: "none",
+              }}
+            >
+              <ChevronRight size={14} style={{ transform: "rotate(180deg)" }} /> 딜룸
+            </Link>
+          </div>
         }
       />
 
-      {/* KPI Strip */}
-      <section
-        className="max-w-[1280px] mx-auto"
-        style={{ padding: "32px 24px 0" }}
-      >
-        <MckKpiGrid
-          items={[
-            { label: "활성 팀", value: `${activeCount}개`, hint: "운용·모집 합계", accent: true },
-            { label: "모집 중", value: `${recruitingCount}개`, hint: "참여 가능" },
-            { label: "총 참여자", value: `${totalMembers}명`, hint: "누적 참여 인원" },
-            { label: "평균 수익률", value: `${avgReturn}%`, hint: "포트폴리오 평균" },
-          ]}
-        />
+      {/* ── KPI strip · DARK · 거래소 매물탐색 패턴 ─────────────────────── */}
+      <section style={{ background: MCK.paper, paddingBottom: 32 }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 24px" }}>
+          <MckKpiGrid
+            variant="dark"
+            items={[
+              { label: "활성 팀", value: `${activeCount}개`, hint: "운용·모집 합계" },
+              { label: "모집 중", value: `${recruitingCount}개`, hint: "참여 가능" },
+              { label: "총 참여자", value: `${totalMembers}명`, hint: "누적 참여 인원" },
+              { label: "평균 수익률", value: `${avgReturn}%`, hint: "포트폴리오 평균" },
+            ]}
+          />
+        </div>
       </section>
 
       {/* Filter + Search */}
@@ -350,6 +371,7 @@ export default function TeamsPage() {
             variant="info"
           />
         ) : (
+          // Team Cards · DemandCard 톤 정합 (paper + electric top + Deep Navy 3-col 임팩트)
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((team) => {
               const progress = Math.min(
@@ -358,274 +380,351 @@ export default function TeamsPage() {
               )
               const isRecruiting = team.status === "모집중"
               const accent = STATUS_BAR_COLOR[team.status]
+              const remaining = Math.max(0, team.target_amount - team.raised_amount)
+              const coCount = team.co_count ?? Math.max(0, team.member_count - 1)
 
               return (
-                <Link
+                <article
                   key={team.id}
-                  href={`/deals/teams/${team.id}`}
-                  style={{ textDecoration: "none" }}
+                  style={{
+                    background: MCK.paper,
+                    border: `1px solid ${MCK.border}`,
+                    borderTop: `2px solid ${accent}`,
+                    padding: 20,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 14,
+                    transition: "box-shadow 0.15s ease, transform 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = "0 12px 32px rgba(10,22,40,0.10)"
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = "none"
+                  }}
                 >
-                  <article
-                    style={{
-                      background: MCK.paper,
-                      border: `1px solid ${MCK.border}`,
-                      borderTop: `2px solid ${accent}`,
-                      padding: 20,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 12,
-                      height: "100%",
-                      transition: "border-color 0.15s",
-                    }}
-                  >
-                    {/* Title + status */}
-                    <div
+                  {/* Badges row — status + 공동 인원 + 비공개 */}
+                  <div className="flex items-center" style={{ gap: 6, flexWrap: "wrap" }}>
+                    <span
                       style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        justifyContent: "space-between",
-                        gap: 8,
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "3px 8px",
+                        fontSize: 10, fontWeight: 800,
+                        background: isRecruiting ? "rgba(34, 81, 255, 0.10)" : MCK.paperTint,
+                        color: isRecruiting ? MCK.electricDark : MCK.textSub,
+                        border: `1px solid ${isRecruiting ? "rgba(34, 81, 255, 0.35)" : MCK.border}`,
+                        letterSpacing: "0.06em", textTransform: "uppercase",
                       }}
+                    >
+                      <Users size={10} /> {team.status}
+                    </span>
+                    <span
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 3,
+                        padding: "3px 8px",
+                        fontSize: 10, fontWeight: 700,
+                        background: MCK.paper,
+                        color: MCK.textSub,
+                        border: `1px solid ${MCK.border}`,
+                      }}
+                    >
+                      <Award size={10} /> 공동 {coCount}개사
+                    </span>
+                    {team.is_private && (
+                      <span
+                        style={{
+                          marginLeft: "auto",
+                          display: "inline-flex", alignItems: "center", gap: 3,
+                          padding: "3px 7px",
+                          fontSize: 10, fontWeight: 700,
+                          color: MCK.textMuted,
+                          border: `1px solid ${MCK.border}`,
+                          letterSpacing: "0.04em", textTransform: "uppercase",
+                        }}
+                      >
+                        <Lock size={9} /> 비공개
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Eyebrow + Title */}
+                  <div>
+                    <p style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 6 }}>
+                      CO-INVESTMENT TEAM · {team.investment_type ?? "공동 투자"}
+                    </p>
+                    <Link
+                      href={`/deals/teams/${team.id}`}
+                      style={{ textDecoration: "none" }}
                     >
                       <h3
                         style={{
-                          ...MCK_TYPE.h3,
                           fontFamily: MCK_FONTS.serif,
                           color: MCK.ink,
-                          flex: 1,
-                          margin: 0,
-                          lineHeight: 1.3,
+                          fontSize: 16,
+                          fontWeight: 800,
+                          letterSpacing: "-0.015em",
+                          lineHeight: 1.35,
+                          marginBottom: 6,
                         }}
                       >
                         {team.name}
                       </h3>
-                      <div
+                    </Link>
+                    {team.description && (
+                      <p
                         style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "flex-end",
-                          gap: 4,
-                          flexShrink: 0,
-                        }}
-                      >
-                        <MckBadge tone={STATUS_TONE[team.status]}>
-                          {team.status}
-                        </MckBadge>
-                        {team.is_private && (
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 2,
-                              fontSize: 10,
-                              color: MCK.textMuted,
-                              fontWeight: 600,
-                            }}
-                          >
-                            <Lock size={9} /> 비공개
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    <p
-                      style={{
-                        ...MCK_TYPE.bodySm,
-                        color: MCK.textSub,
-                        lineHeight: 1.55,
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                        margin: 0,
-                      }}
-                    >
-                      {team.description}
-                    </p>
-
-                    {/* Linked listing */}
-                    {team.listing_title && (
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          padding: "8px 10px",
-                          background: MCK.paperTint,
-                          border: `1px solid ${MCK.border}`,
-                        }}
-                      >
-                        <Building2 size={12} style={{ color: MCK.brassDark, flexShrink: 0 }} />
-                        <span
-                          style={{
-                            fontSize: 11,
-                            color: MCK.ink,
-                            fontWeight: 600,
-                            letterSpacing: "0.01em",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {team.listing_title}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Leader + co-investors */}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        fontSize: 11,
-                      }}
-                    >
-                      {team.leader_name ? (
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 4,
-                            color: MCK.ink,
-                            fontWeight: 700,
-                          }}
-                        >
-                          <Award size={12} style={{ color: MCK.brassDark }} />
-                          {team.leader_name}
-                        </span>
-                      ) : team.investment_type ? (
-                        <span style={{ color: MCK.textSub, fontWeight: 600 }}>
-                          {team.investment_type}
-                        </span>
-                      ) : null}
-                      <span
-                        style={{
-                          color: MCK.textMuted,
-                          fontWeight: 600,
-                          marginLeft: "auto",
-                        }}
-                      >
-                        공동 {team.co_count ?? team.member_count - 1}개사
-                      </span>
-                    </div>
-
-                    {/* Progress */}
-                    <div>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          fontSize: 10,
-                          color: MCK.textSub,
-                          fontWeight: 600,
-                          marginBottom: 6,
-                          letterSpacing: "0.02em",
-                        }}
-                      >
-                        <span>목표 {formatKRW(team.target_amount)}</span>
-                        <span>
-                          현재 {formatKRW(team.raised_amount)} ({Math.round(progress)}%)
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          height: 4,
-                          background: MCK.paperDeep,
-                          border: `1px solid ${MCK.border}`,
+                          fontSize: 12, color: MCK.textSub, lineHeight: 1.55,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
                           overflow: "hidden",
                         }}
                       >
-                        <div
-                          style={{
-                            height: "100%",
-                            width: `${progress}%`,
-                            background: accent,
-                            transition: "width 0.4s",
-                          }}
-                        />
-                      </div>
-                    </div>
+                        {team.description}
+                      </p>
+                    )}
+                  </div>
 
-                    {/* Footer */}
+                  {/* Linked listing chip */}
+                  {team.listing_title && (
                     <div
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "space-between",
-                        paddingTop: 12,
-                        borderTop: `1px solid ${MCK.border}`,
-                        marginTop: "auto",
+                        gap: 8,
+                        padding: "8px 10px",
+                        background: MCK.paperTint,
+                        border: `1px solid ${MCK.border}`,
+                        borderLeft: `2px solid ${MCK.electric}`,
                       }}
                     >
+                      <Building2 size={12} style={{ color: MCK.electric, flexShrink: 0 }} />
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: MCK.ink,
+                          fontWeight: 700,
+                          letterSpacing: "0.01em",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {team.listing_title}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Metrics 3-col panel — Deep Navy + Electric top + Cyan 강조 (DemandCard 동일) */}
+                  <div
+                    style={{
+                      background: MCK.inkDeep,
+                      borderTop: `3px solid ${MCK.electric}`,
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 1fr",
+                    }}
+                  >
+                    <div style={{ padding: "12px 14px", borderRight: "1px solid rgba(255, 255, 255, 0.12)" }}>
+                      <p style={{ ...MCK_TYPE.label, color: "rgba(255, 255, 255, 0.65)", marginBottom: 4 }}>목표</p>
+                      <p style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.paper, letterSpacing: "-0.015em", lineHeight: 1.05, fontVariantNumeric: "tabular-nums" }}>
+                        {formatKRW(team.target_amount)}
+                      </p>
+                    </div>
+                    <div style={{ padding: "12px 14px", borderRight: "1px solid rgba(255, 255, 255, 0.12)" }}>
+                      <p style={{ ...MCK_TYPE.label, color: "rgba(255, 255, 255, 0.65)", marginBottom: 4 }}>모집</p>
+                      <p style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.paper, letterSpacing: "-0.015em", lineHeight: 1.05, fontVariantNumeric: "tabular-nums" }}>
+                        {formatKRW(team.raised_amount)}
+                      </p>
+                    </div>
+                    <div style={{ padding: "12px 14px" }}>
+                      <p style={{ ...MCK_TYPE.label, color: MCK.cyan, marginBottom: 4 }}>예상 수익률</p>
+                      <p style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.cyan, letterSpacing: "-0.015em", lineHeight: 1.05, fontVariantNumeric: "tabular-nums" }}>
+                        {team.return_rate ?? 0}%
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "baseline",
+                        marginBottom: 4,
+                      }}
+                    >
+                      <span style={{ ...MCK_TYPE.label, color: MCK.textSub }}>모집 진행률</span>
+                      <span
+                        style={{
+                          fontSize: 11, fontWeight: 800, color: MCK.electricDark,
+                          fontVariantNumeric: "tabular-nums", letterSpacing: "0.02em",
+                        }}
+                      >
+                        {Math.round(progress)}%
+                      </span>
+                    </div>
+                    <div style={{ height: 4, background: MCK.paperDeep, overflow: "hidden" }}>
+                      <div
+                        style={{
+                          height: "100%",
+                          width: `${progress}%`,
+                          background: MCK.electric,
+                          transition: "width 0.4s",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ flex: 1 }} />
+
+                  {/* Footer Stats — leader + 잔여 */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 14,
+                      flexWrap: "wrap",
+                      paddingBottom: 14,
+                      borderBottom: `1px solid ${MCK.border}`,
+                    }}
+                  >
+                    {team.leader_name ? (
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 5,
+                          fontSize: 12,
+                          fontWeight: 800,
+                          color: MCK.ink,
+                        }}
+                      >
+                        <Award size={13} style={{ color: MCK.electric }} />
+                        {team.leader_name}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 12, color: MCK.textSub, fontWeight: 700 }}>
+                        리드 인베스터 미정
+                      </span>
+                    )}
+                    {isRecruiting && remaining > 0 && (
                       <span
                         style={{
                           display: "inline-flex",
                           alignItems: "center",
                           gap: 4,
                           fontSize: 12,
-                          color: MCK.positive,
-                          fontWeight: 800,
-                          fontFamily: MCK_FONTS.serif,
-                          fontVariantNumeric: "tabular-nums",
-                        }}
-                      >
-                        <TrendingUp size={12} />
-                        예상 {team.return_rate ?? 0}%
-                      </span>
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 4,
-                          fontSize: 11,
+                          color: MCK.textSub,
                           fontWeight: 700,
-                          color: isRecruiting ? MCK.brassDark : MCK.textSub,
-                          letterSpacing: "0.04em",
-                          textTransform: "uppercase",
                         }}
                       >
-                        {isRecruiting ? "참여하기" : "상세보기"}
-                        <ChevronRight size={12} />
+                        <Clock size={12} /> 잔여 {formatKRW(remaining)}
                       </span>
-                    </div>
-                  </article>
-                </Link>
+                    )}
+                  </div>
+
+                  {/* CTAs · DemandCard 패턴 (paper outline + sky-blue primary) */}
+                  <div className="flex" style={{ gap: 8 }}>
+                    <Link
+                      href={`/deals/teams/${team.id}`}
+                      style={{
+                        flex: 1,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
+                        padding: "10px 12px",
+                        fontSize: 12,
+                        fontWeight: 800,
+                        background: MCK.paper,
+                        color: MCK.ink,
+                        border: `1px solid ${MCK.ink}`,
+                        cursor: "pointer",
+                        letterSpacing: "-0.01em",
+                        textDecoration: "none",
+                      }}
+                    >
+                      <Eye size={13} /> 상세 보기
+                    </Link>
+                    <Link
+                      href={isRecruiting ? `/deals/teams/${team.id}?join=1` : `/deals/teams/${team.id}`}
+                      style={{
+                        flex: 1,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
+                        padding: "10px 12px",
+                        fontSize: 12,
+                        fontWeight: 800,
+                        background: "#A8CDE8",                              /* McKinsey soft sky blue */
+                        color: MCK.ink,
+                        borderTop: `2px solid ${MCK.electric}`,
+                        border: "1px solid #7FA8C8",
+                        letterSpacing: "-0.01em",
+                        textDecoration: "none",
+                        boxShadow: "0 4px 12px rgba(34, 81, 255, 0.10)",
+                      }}
+                    >
+                      {isRecruiting ? (
+                        <><Zap size={13} style={{ color: MCK.ink }} /> 참여하기</>
+                      ) : (
+                        <><TrendingUp size={13} style={{ color: MCK.ink }} /> 운용 현황</>
+                      )}
+                    </Link>
+                  </div>
+                </article>
               )
             })}
           </div>
         )}
       </section>
 
-      {/* My team participation summary */}
-      <MckSection
-        eyebrow="My Participation"
-        title="내 팀 참여 현황"
-        subtitle="현재 참여 중인 공동투자팀 요약. 자세한 손익은 각 팀 상세 페이지에서 확인하세요."
-        divider
-      >
-        <MckKpiGrid
-          items={[
-            {
-              label: "참여 중인 팀",
-              value: `${teams.filter((t) => !DONE_STATUSES.includes(t.status)).length}개`,
-              hint: "활성 + 운용 중",
-            },
-            {
-              label: "총 투자 참여금",
-              value: formatKRW(totalParticipated),
-              hint: "누적 출자액",
-              accent: true,
-            },
-            {
-              label: "평균 예상 수익률",
-              value: `${avgReturn}%`,
-              hint: "전체 팀 평균",
-            },
-          ]}
-        />
-      </MckSection>
+      {/* ── My team participation summary · DARK strip · McKinsey blue ─── */}
+      <section style={{ background: MCK.paperTint, paddingTop: 32, paddingBottom: 32 }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 24px" }}>
+          <header style={{ marginBottom: 18, paddingBottom: 14, borderBottom: `1px solid ${MCK.border}` }}>
+            <div className="flex items-center gap-2" style={{ marginBottom: 6 }}>
+              <span style={{ width: 18, height: 1.5, background: MCK.electric, display: "inline-block" }} />
+              <span style={{ ...MCK_TYPE.eyebrow, color: MCK.electric }}>MY PARTICIPATION · 내 활동 요약</span>
+            </div>
+            <h2
+              style={{
+                fontFamily: MCK_FONTS.serif,
+                color: MCK.ink,
+                ...MCK_TYPE.h2,
+                marginBottom: 4,
+              }}
+            >
+              내 팀 참여 현황
+            </h2>
+            <p style={{ color: MCK.textSub, ...MCK_TYPE.bodySm }}>
+              현재 참여 중인 공동투자팀 요약. 자세한 손익은 각 팀 상세 페이지에서 확인하세요.
+            </p>
+          </header>
+          <MckKpiGrid
+            variant="dark"
+            items={[
+              {
+                label: "참여 중인 팀",
+                value: `${teams.filter((t) => !DONE_STATUSES.includes(t.status)).length}개`,
+                hint: "활성 + 운용 중",
+              },
+              {
+                label: "총 투자 참여금",
+                value: formatKRW(totalParticipated),
+                hint: "누적 출자액",
+              },
+              {
+                label: "평균 예상 수익률",
+                value: `${avgReturn}%`,
+                hint: "전체 팀 평균",
+              },
+            ]}
+          />
+        </div>
+      </section>
     </MckPageShell>
   )
 }

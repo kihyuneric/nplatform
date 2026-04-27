@@ -69,12 +69,13 @@ const C = {
   bg2: _MCK.paper,
   bg3: _MCK.paperTint,
   bg4: _MCK.border,
-  em:  _MCK.brassDark,    // green → brass (단일 악센트)
-  emL: _MCK.brassDark,
+  // 완성도 progression: McKinsey monochrome (electric → grey scale, no rainbow)
+  em:  _MCK.electric,        // ≥90% — primary highlight
+  emL: _MCK.electricDark,
   blue:  _MCK.ink,
   blueL: _MCK.ink,
-  amber: _MCK.warning,
-  rose:  _MCK.danger,
+  amber: _MCK.greyMid,       // 50-89% — medium grey (no amber/yellow)
+  rose:  _MCK.greyDark,      // <50% — charcoal grey (no red/magenta)
   teal:  _MCK.ink,
   lt3: _MCK.inkMid,
   lt4: _MCK.textSub,
@@ -452,7 +453,7 @@ export default function SellWizardPage() {
             style={{
               backgroundColor: C.bg2,
               border: `1px solid ${C.bg4}`,
-              borderRadius: 14,
+              borderTop: `2px solid ${_MCK.electric}`,
               padding: 28,
             }}
           >
@@ -499,17 +500,18 @@ export default function SellWizardPage() {
               <button
                 onClick={() => {
                   setStep(s => Math.max(1, s - 1))
-                  // Phase H5 · step 이동 시 새 step 콘텐츠 상단으로 스크롤
                   window.scrollTo({ top: 0, behavior: "smooth" })
                 }}
                 disabled={step === 1}
                 style={{
-                  padding: "10px 18px", borderRadius: 10,
-                  backgroundColor: "transparent", color: step === 1 ? C.bg4 : C.lt3,
-                  fontSize: 12, fontWeight: 600,
-                  border: `1px solid ${C.bg4}`,
+                  padding: "10px 18px",
+                  backgroundColor: _MCK.paper,
+                  color: step === 1 ? C.bg4 : _MCK.ink,
+                  fontSize: 13, fontWeight: 700,
+                  border: `1px solid ${step === 1 ? C.bg4 : _MCK.ink}`,
                   cursor: step === 1 ? "not-allowed" : "pointer",
                   display: "inline-flex", alignItems: "center", gap: 6,
+                  letterSpacing: "-0.005em",
                 }}
               >
                 <ChevronLeft size={14} /> 이전
@@ -519,18 +521,19 @@ export default function SellWizardPage() {
                   onClick={() => {
                     if (!canProceed) return
                     setStep(s => s + 1)
-                    // Phase H5 · step 이동 시 새 step 콘텐츠 상단으로 스크롤
                     window.scrollTo({ top: 0, behavior: "smooth" })
                   }}
                   disabled={!canProceed}
                   style={{
-                    padding: "11px 20px", borderRadius: 10,
-                    backgroundColor: canProceed ? "#0A1628" : C.bg4,
-                    color: canProceed ? "#FFFFFF" : C.lt4,
-                    fontSize: 12, fontWeight: 800,
-                    border: canProceed ? "1px solid #0A1628" : "none",
+                    padding: "11px 22px",
+                    backgroundColor: canProceed ? _MCK.ink : C.bg4,
+                    color: canProceed ? _MCK.paper : C.lt4,
+                    fontSize: 13, fontWeight: 800,
+                    border: "none",
+                    borderTop: canProceed ? `2px solid ${_MCK.electric}` : "none",
                     cursor: canProceed ? "pointer" : "not-allowed",
                     display: "inline-flex", alignItems: "center", gap: 6,
+                    letterSpacing: "-0.01em",
                   }}
                 >
                   다음 단계 <ChevronRight size={14} />
@@ -538,7 +541,17 @@ export default function SellWizardPage() {
               ) : (
                 <div>
                   {submitError && (
-                    <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, backgroundColor: `${C.rose}14`, border: "1px solid rgba(165, 63, 138, 0.4)", color: C.rose, fontSize: 11, fontWeight: 600 }}>
+                    <div
+                      style={{
+                        marginBottom: 10,
+                        padding: "8px 12px",
+                        backgroundColor: _MCK.paperTint,
+                        border: `1px solid ${_MCK.border}`,
+                        borderLeft: `3px solid ${_MCK.greyDark}`,
+                        color: _MCK.greyDark,
+                        fontSize: 11, fontWeight: 700,
+                      }}
+                    >
                       {submitError}
                     </div>
                   )}
@@ -546,13 +559,16 @@ export default function SellWizardPage() {
                     onClick={handleSubmit}
                     disabled={submitting}
                     style={{
-                      padding: "11px 22px", borderRadius: 10,
-                      backgroundColor: submitting ? C.bg4 : "#0A1628",
-                      color: submitting ? C.lt4 : "#FFFFFF",
-                      fontSize: 12, fontWeight: 800,
-                      border: submitting ? "none" : "1px solid #0A1628",
+                      padding: "12px 24px",
+                      backgroundColor: submitting ? C.bg4 : _MCK.ink,
+                      color: submitting ? C.lt4 : _MCK.paper,
+                      fontSize: 13, fontWeight: 800,
+                      border: "none",
+                      borderTop: submitting ? "none" : `2.5px solid ${_MCK.electric}`,
                       cursor: submitting ? "not-allowed" : "pointer",
                       display: "inline-flex", alignItems: "center", gap: 6,
+                      letterSpacing: "-0.01em",
+                      boxShadow: submitting ? "none" : "0 6px 18px rgba(34, 81, 255, 0.18)",
                     }}
                   >
                     {submitting ? (
@@ -567,21 +583,42 @@ export default function SellWizardPage() {
           </motion.div>
 
           <aside style={{ display: "flex", flexDirection: "column", gap: 14, position: "sticky", top: 96 }}>
-            <div style={{ padding: 18, borderRadius: 14, backgroundColor: C.bg2, border: `1px solid ${C.bg4}` }}>
-              <div style={{ fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 10 }}>
+            <div
+              style={{
+                padding: 18,
+                backgroundColor: C.bg2,
+                border: `1px solid ${C.bg4}`,
+                borderTop: `2px solid ${_MCK.electric}`,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 10, color: _MCK.electric, fontWeight: 800,
+                  letterSpacing: "0.06em", textTransform: "uppercase",
+                  marginBottom: 10,
+                }}
+              >
                 실시간 자료 완성도
               </div>
               <CompletenessBadge score={completeness} size="md" />
-              <div style={{ marginTop: 14, height: 6, backgroundColor: C.bg4, borderRadius: 999, overflow: "hidden" }}>
+              <div
+                style={{
+                  marginTop: 14,
+                  height: 6,
+                  backgroundColor: _MCK.paperDeep,
+                  overflow: "hidden",
+                }}
+              >
                 <div
                   style={{
-                    height: "100%", width: `${Math.max(0, Math.min(100, completeness))}%`,
+                    height: "100%",
+                    width: `${Math.max(0, Math.min(100, completeness))}%`,
                     backgroundColor: completeness >= 90 ? C.em : completeness >= 50 ? C.amber : C.rose,
                     transition: "width 0.3s ease",
                   }}
                 />
               </div>
-              <div style={{ marginTop: 8, fontSize: 10, color: C.lt4, lineHeight: 1.5 }}>
+              <div style={{ marginTop: 8, fontSize: 11, color: C.lt4, lineHeight: 1.55, fontWeight: 600 }}>
                 {completeness >= 90
                   ? "핵심 자료 완비 — 프리미엄 노출 무료 적용"
                   : completeness >= 50
@@ -591,18 +628,42 @@ export default function SellWizardPage() {
             </div>
 
             {feeEstimate && (
-              <div style={{ padding: 18, borderRadius: 14, backgroundColor: C.bg2, border: `1px solid ${C.bg4}` }}>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 10 }}>
+              <div
+                style={{
+                  padding: 18,
+                  backgroundColor: C.bg2,
+                  border: `1px solid ${C.bg4}`,
+                  borderTop: `2px solid ${_MCK.electric}`,
+                }}
+              >
+                <div
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    fontSize: 10, color: _MCK.electric, fontWeight: 800,
+                    letterSpacing: "0.06em", textTransform: "uppercase",
+                    marginBottom: 10,
+                  }}
+                >
                   <Calculator size={13} /> 매각자 수수료 견적
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.lt4, marginBottom: 3 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.lt4, marginBottom: 4, fontWeight: 600 }}>
                   <span>실효 요율</span>
-                  <span style={{ color: C.emL, fontWeight: 700 }}>{(feeEstimate.totalRate * 100).toFixed(2)}%</span>
+                  <span style={{ color: _MCK.electricDark, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+                    {(feeEstimate.totalRate * 100).toFixed(2)}%
+                  </span>
                 </div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: "var(--color-text-primary)", letterSpacing: "-0.01em" }}>
+                <div
+                  style={{
+                    fontFamily: MCK_FONTS.serif,
+                    fontSize: 20, fontWeight: 800,
+                    color: _MCK.ink,
+                    letterSpacing: "-0.015em",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
                   {formatKRW(feeEstimate.totalFee)}
                 </div>
-                <div style={{ marginTop: 8, fontSize: 9, color: C.lt4, lineHeight: 1.5 }}>
+                <div style={{ marginTop: 8, fontSize: 10, color: C.lt4, lineHeight: 1.55, fontWeight: 500 }}>
                   기본 {(feeEstimate.baseRate * 100).toFixed(2)}% · 상한 0.9% 적용 · 에스크로 0.3% 별도
                 </div>
               </div>
@@ -610,14 +671,16 @@ export default function SellWizardPage() {
 
             <div
               style={{
-                padding: "14px 16px", borderRadius: 14,
-                backgroundColor: "var(--color-positive-bg)", border: `1px solid ${C.em}33`,
+                padding: "14px 16px",
+                backgroundColor: _MCK.paperTint,
+                border: `1px solid ${_MCK.border}`,
+                borderLeft: `3px solid ${_MCK.electric}`,
                 display: "flex", gap: 10, alignItems: "flex-start",
               }}
             >
-              <ShieldCheck size={16} color={C.emL} style={{ marginTop: 1, flexShrink: 0 }} />
-              <div style={{ fontSize: 11, color: C.lt3, lineHeight: 1.55 }}>
-                제출 시 <strong style={{ color: "var(--color-text-primary)" }}>자동 마스킹 파이프라인</strong>이 실행되어
+              <ShieldCheck size={16} color={_MCK.electric} style={{ marginTop: 1, flexShrink: 0 }} />
+              <div style={{ fontSize: 11, color: C.lt3, lineHeight: 1.55, fontWeight: 500 }}>
+                제출 시 <strong style={{ color: _MCK.ink, fontWeight: 800 }}>자동 마스킹 파이프라인</strong>이 실행되어
                 채무자 식별정보 · 상세 지번 · 동/호수가 자동으로 가려집니다.
                 마스킹 결과는 DPO 검수 후 L0 공개됩니다.
               </div>
@@ -1583,14 +1646,16 @@ function Step6Review({
     } catch (err) {
       console.warn("[sell→analysis] sessionStorage write failed:", err)
     }
+    // ⚡ autoRun=1 — 분석 위저드를 우회하고, prefill 로 바로 분석 API 를 호출 → 보고서 화면으로 직진
     const qs = new URLSearchParams()
+    qs.set("autoRun", "1")
+    qs.set("from", "listing")
     if (state.appraisal_value > 0) qs.set("appraisal", String(state.appraisal_value))
     if (state.senior_claims_total > 0) qs.set("senior", String(state.senior_claims_total))
     if (state.region_city || state.region_district) {
       qs.set("address", encodeURIComponent(`${state.region_city} ${state.region_district}`.trim()))
     }
-    const query = qs.toString()
-    router.push(`/analysis/profitability${query ? `?${query}` : ""}`)
+    router.push(`/analysis/profitability?${qs.toString()}`)
   }, [state, router])
 
   return (

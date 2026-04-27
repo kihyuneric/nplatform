@@ -36,6 +36,7 @@ const segmentLabels: Record<string, string> = {
   // 딜룸
   marketplace: '거래소',
   deals: '딜룸',
+  dealroom: '딜룸',  // /deals/dealroom → "딜룸 > 딜룸" (시안 딜룸 페이지)
   matching: '매칭',
   calendar: '캘린더',
   'co-invest': '공동투자',

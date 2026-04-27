@@ -38,6 +38,7 @@ import {
 } from "@/lib/taxonomy"
 import { MckPageShell, MckPageHeader, MckDemoBanner, MckBadge, MckKpiGrid } from "@/components/mck"
 import { MCK, MCK_FONTS } from "@/lib/mck-design"
+import { OwnerEditButton } from "@/components/edit/owner-edit-button"
 
 /* ═══════════════════════════════════════════════════════════
    DESIGN TOKENS — McKinsey 절제된 모노크로 (ink + brass + paper)
@@ -1279,30 +1280,30 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
           </div>
         </div>
 
-        {/* Sub metrics row — McKinsey Deep Navy panel + white text (impact 강조) */}
+        {/* Sub metrics row — 흰 바탕 + 검정 글씨 (사용자 요청, 원래 톤 복귀)
+            상단 electric accent strip 만 유지 → McKinsey 톤 시그니처 보존 */}
         <div
           style={{
-            background: "#051C2C",                                /* MCK.inkDeep */
+            background: "#FFFFFF",
             borderTop: "3px solid #2251FF",                       /* MCK.electric accent strip */
-            padding: "14px 16px 12px",
-            margin: "0 -16px",                                    /* card padding bleed */
+            padding: "14px 0 12px",
           }}
         >
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-            <SubMetricDark label="채권잔액" value={principal} />
-            <SubMetricDark label="감정가" value={appraisal} />
-            <SubMetricDark label="할인율" value={`${item.discount_rate.toFixed(1)}%`} cyan />
+            <SubMetric label="채권잔액" value={principal} />
+            <SubMetric label="감정가" value={appraisal} />
+            <SubMetric label="할인율" value={`${item.discount_rate.toFixed(1)}%`} brass />
           </div>
           <div
             style={{
               marginTop: 10, paddingTop: 10,
-              borderTop: "1px dashed rgba(255, 255, 255, 0.18)",
+              borderTop: "1px dashed rgba(5, 28, 44, 0.14)",
               display: "flex", justifyContent: "space-between",
               fontSize: 10,
             }}
           >
-            <span style={{ color: "rgba(255, 255, 255, 0.65)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.10em" }}>예상 절감액</span>
-            <span style={{ color: "#FFFFFF", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{savings}</span>
+            <span style={{ color: "rgba(5, 28, 44, 0.65)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.10em" }}>예상 절감액</span>
+            <span style={{ color: "#0A1628", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{savings}</span>
           </div>
         </div>
 
@@ -1319,27 +1320,34 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
 
         <InlineProvidedChips fields={item.provided} />
 
-        {/* CTA — ink 검정 + 흰 글씨 + sharp edge
-            child span/svg에 inline color 명시 → globals.css mck-paper 자식 ink 변환 회피 */}
+        {/* CTA — McKinsey soft sky blue + deep navy 텍스트 (사용자 첨부 톤) */}
         <Link
           href={`/exchange/${item.id}`}
           style={{
             marginTop: 4,
             padding: "11px 14px",
-            borderRadius: 0,
-            backgroundColor: "#0A1628",
-            color: "#FFFFFF",
+            borderRadius: 4,
             fontSize: 12, fontWeight: 800,
             textAlign: "center",
             display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6,
             letterSpacing: "0.04em",
-            border: "1px solid #0A1628",
           }}
-          className="mck-cta-dark"
+          className="mck-cta-sky"
         >
-          <span style={{ color: "#FFFFFF" }}>딜룸 입장 · 상세</span>
-          <ArrowRight size={14} style={{ color: "#FFFFFF" }} />
+          <span>딜룸 입장 · 상세</span>
+          <ArrowRight size={14} />
         </Link>
+
+        {/* 관리자 / 매도자(본인) 만 노출 — OwnerEditButton 자체에서 권한 체크 */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
+          <OwnerEditButton
+            resourceType="listing"
+            resourceId={item.id}
+            ownerId={null}
+            compact
+            label="편집"
+          />
+        </div>
       </div>
     </motion.article>
   )
@@ -1364,23 +1372,25 @@ function SubMetric({ label, value, brass }: { label: string; value: string; bras
   )
 }
 
-/** SubMetric dark variant — McKinsey navy panel 위 흰 글씨 (할인율 = cyan 강조) */
-function SubMetricDark({ label, value, cyan }: { label: string; value: string; cyan?: boolean }) {
+/** SubMetric dark variant — McKinsey navy panel: 라벨/값 모두 흰색 (사용자 요청) */
+function SubMetricDark({ label, value, cyan: _cyan }: { label: string; value: string; cyan?: boolean }) {
   return (
     <div>
-      <div style={{
-        fontSize: 9, fontWeight: 700,
-        color: cyan ? "#00A9F4" : "rgba(255, 255, 255, 0.65)",
-        textTransform: "uppercase",
-        letterSpacing: "0.12em",
-        marginBottom: 4,
-      }}>
+      <div
+        style={{
+          fontSize: 9, fontWeight: 800,
+          color: "#FFFFFF",
+          textTransform: "uppercase",
+          letterSpacing: "0.14em",
+          marginBottom: 4,
+        }}
+      >
         {label}
       </div>
       <div style={{
         fontSize: 16, fontWeight: 800,
         fontFamily: "Georgia, 'Times New Roman', 'Noto Serif KR', serif",
-        color: cyan ? "#00A9F4" : "#FFFFFF",
+        color: "#FFFFFF",
         letterSpacing: "-0.015em",
         fontVariantNumeric: "tabular-nums",
         lineHeight: 1.05,

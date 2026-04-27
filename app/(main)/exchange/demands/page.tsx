@@ -14,6 +14,7 @@ import {
   MckDemoBanner, MckBadge,
 } from '@/components/mck'
 import { MCK, MCK_FONTS, MCK_TYPE, formatKRW } from '@/lib/mck-design'
+import { OwnerEditButton } from '@/components/edit/owner-edit-button'
 
 /* ═══════════════════════════════════════════════════════════
    Types
@@ -272,7 +273,7 @@ export default function DemandsPage() {
   const kpiItems = [
     { label: '등록된 수요', value: loading ? '—' : `${total}건`, hint: 'Buyer Demand' },
     { label: '긴급 수요', value: loading ? '—' : `${urgentCount}건`, hint: 'URGENT · HIGH' },
-    { label: '평균 희망가', value: loading || demands.length === 0 ? '—' : formatKRW(avgAmount), hint: 'AVG mid-band', accent: true },
+    { label: '평균 희망가', value: loading || demands.length === 0 ? '—' : formatKRW(avgAmount), hint: 'AVG mid-band' },
   ]
 
   // ── Header actions ───────────────────────────────────────────
@@ -342,9 +343,9 @@ export default function DemandsPage() {
           </Link>
         </div>
 
-        {/* KPI grid */}
+        {/* KPI grid — McKinsey Deep Navy variant (매물 탐색 대시보드와 동일 톤) */}
         <div style={{ marginBottom: 32 }}>
-          <MckKpiGrid items={kpiItems} />
+          <MckKpiGrid variant="dark" items={kpiItems} />
         </div>
 
         {/* Filter bar */}
@@ -890,7 +891,7 @@ export default function DemandsPage() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   DemandCard — McKinsey white-paper style
+   DemandCard — 자발적 경매 BidCard 톤 정합 (McKinsey 화이트 페이퍼 + Deep Navy 임팩트 패널)
 ═══════════════════════════════════════════════════════════ */
 function DemandCard({
   demand: d,
@@ -906,206 +907,267 @@ function DemandCard({
   const hasMatches = d.matching_count > 0
   const avg = Math.round((d.min_amount + d.max_amount) / 2)
   const ageDays = Math.max(0, Math.floor((Date.now() - new Date(d.created_at).getTime()) / 86400000))
+  const isUrgent = d.urgency === 'URGENT'
 
   return (
     <article
       style={{
         background: MCK.paper,
         border: `1px solid ${MCK.border}`,
-        borderTop: `2px solid ${urg.color}`,
+        // 자발적 경매와 동일 — urgent 도 monochromatic ink, 그 외는 electric blue
+        borderTop: `2px solid ${isUrgent ? MCK.ink : MCK.electric}`,
+        padding: 20,
         display: 'flex',
         flexDirection: 'column',
+        gap: 14,
+        transition: 'box-shadow 0.15s ease, transform 0.15s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = '0 12px 32px rgba(10,22,40,0.10)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = 'none'
       }}
     >
-      {/* Header strip */}
-      <div
-        style={{
-          padding: '12px 16px',
-          background: MCK.paperTint,
-          borderBottom: `1px solid ${MCK.border}`,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div
+      {/* Badges row */}
+      <div className="flex items-center" style={{ gap: 6, flexWrap: 'wrap' }}>
+        <span
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            padding: '3px 8px',
+            fontSize: 10, fontWeight: 800,
+            background: isUrgent ? MCK.ink : 'rgba(34, 81, 255, 0.10)',
+            color: isUrgent ? MCK.paper : '#1A47CC',
+            border: `1px solid ${isUrgent ? MCK.ink : 'rgba(34, 81, 255, 0.35)'}`,
+            letterSpacing: '0.06em', textTransform: 'uppercase',
+          }}
+        >
+          <UrgIcon size={10} /> {urg.label}
+        </span>
+        {d.collateral_types.slice(0, 2).map(ct => (
+          <span
+            key={ct}
             style={{
-              width: 28, height: 28,
-              background: `${urg.color}1A`,
-              border: `1px solid ${urg.color}55`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              display: 'inline-flex', alignItems: 'center', gap: 3,
+              padding: '3px 8px',
+              fontSize: 10, fontWeight: 700,
+              background: MCK.paper,
+              color: MCK.textSub,
+              border: `1px solid ${MCK.border}`,
             }}
           >
-            <UrgIcon size={14} color={urg.color} />
-          </div>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: MCK.ink, letterSpacing: '-0.01em' }}>
-              {urg.label} 매수 수요
-            </div>
-            <div style={{ fontSize: 10, color: MCK.textMuted, marginTop: 1 }}>
-              등록 {ageDays === 0 ? '오늘' : `${ageDays}일 전`}
-            </div>
-          </div>
-        </div>
-        {hasMatches ? (
-          <Link
-            href="/deals/matching"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 5,
-              padding: '3px 9px',
-              background: MCK.positiveBg,
-              border: `1px solid ${MCK.positive}55`,
-              color: MCK.positive,
-              fontSize: 10, fontWeight: 800,
-              letterSpacing: '0.04em',
-              textDecoration: 'none',
-            }}
-          >
+            <Building2 size={10} />{ct}
+          </span>
+        ))}
+        <span style={{ marginLeft: 'auto' }}>
+          {hasMatches ? (
+            <Link
+              href="/deals/matching"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                padding: '3px 9px',
+                background: 'rgba(34, 81, 255, 0.10)',
+                border: `1px solid rgba(34, 81, 255, 0.35)`,
+                color: '#1A47CC',
+                fontSize: 10, fontWeight: 800,
+                letterSpacing: '0.04em', textTransform: 'uppercase',
+                textDecoration: 'none',
+              }}
+            >
+              <span
+                style={{
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: MCK.electric, display: 'inline-block',
+                }}
+              />
+              매칭 {d.matching_count}
+            </Link>
+          ) : (
             <span
               style={{
-                width: 6, height: 6, borderRadius: '50%',
-                background: MCK.positive, display: 'inline-block',
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                padding: '3px 8px',
+                fontSize: 10, fontWeight: 700,
+                color: MCK.textMuted,
+                border: `1px solid ${MCK.border}`,
+                letterSpacing: '0.04em', textTransform: 'uppercase',
               }}
-            />
-            LIVE · 매칭 {d.matching_count}
-          </Link>
-        ) : (
-          <span style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-            {formatDate(d.created_at)}
-          </span>
-        )}
+            >
+              <Clock size={10} /> {ageDays === 0 ? '오늘' : `${ageDays}일 전`}
+            </span>
+          )}
+        </span>
       </div>
 
-      {/* Body */}
-      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
-        {/* Region + collateral title */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: MCK.textMuted, marginBottom: 6 }}>
-            <MapPin size={11} style={{ color: MCK.brassDark }} />
-            <span>{d.regions.slice(0, 3).join(' · ')}{d.regions.length > 3 ? ` +${d.regions.length - 3}` : ''}</span>
-          </div>
-          <div
+      {/* Eyebrow + Title (담보 종류 희망) */}
+      <div>
+        <p
+          style={{
+            ...MCK_TYPE.eyebrow,
+            color: MCK.electric,
+            marginBottom: 6,
+          }}
+        >
+          BUYER DEMAND · {formatDate(d.created_at)}
+        </p>
+        <Link href={`/exchange/demands/${d.id}`} style={{ textDecoration: 'none' }}>
+          <h3
             style={{
               fontFamily: MCK_FONTS.serif,
-              fontSize: 15, fontWeight: 700, color: MCK.ink,
-              letterSpacing: '-0.015em', lineHeight: 1.35,
+              color: MCK.ink,
+              fontSize: 16,
+              fontWeight: 800,
+              letterSpacing: '-0.015em',
+              lineHeight: 1.35,
+              marginBottom: 6,
             }}
           >
             {d.collateral_types.slice(0, 2).join(' · ')}
             {d.collateral_types.length > 2 ? ` 외 ${d.collateral_types.length - 2}종` : ''} 희망
-          </div>
+          </h3>
+        </Link>
+        <div className="flex items-center" style={{ gap: 6 }}>
+          <MapPin size={12} style={{ color: MCK.textMuted, flexShrink: 0 }} />
+          <span style={{ fontSize: 12, color: MCK.textSub, fontWeight: 500 }}>
+            {d.regions.slice(0, 3).join(' · ')}
+            {d.regions.length > 3 ? ` +${d.regions.length - 3}` : ''}
+          </span>
         </div>
+      </div>
 
-        {/* Key figures */}
-        <div
+      {/* Metrics 3-col panel — 자발적 경매와 동일: Deep Navy + Electric top + 흰 Georgia 16px + Cyan 강조 */}
+      <div
+        style={{
+          background: MCK.inkDeep,
+          borderTop: `3px solid ${MCK.electric}`,
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr 1fr',
+        }}
+      >
+        <div style={{ padding: '12px 14px', borderRight: '1px solid rgba(255, 255, 255, 0.12)' }}>
+          <p style={{ ...MCK_TYPE.label, color: 'rgba(255, 255, 255, 0.65)', marginBottom: 4 }}>최소</p>
+          <p style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.paper, letterSpacing: '-0.015em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>
+            {formatKRW(d.min_amount)}
+          </p>
+        </div>
+        <div style={{ padding: '12px 14px', borderRight: '1px solid rgba(255, 255, 255, 0.12)' }}>
+          <p style={{ ...MCK_TYPE.label, color: 'rgba(255, 255, 255, 0.65)', marginBottom: 4 }}>최대</p>
+          <p style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.paper, letterSpacing: '-0.015em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>
+            {formatKRW(d.max_amount)}
+          </p>
+        </div>
+        <div style={{ padding: '12px 14px' }}>
+          <p style={{ ...MCK_TYPE.label, color: MCK.cyan, marginBottom: 4 }}>평균 희망가</p>
+          <p style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.cyan, letterSpacing: '-0.015em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>
+            {formatKRW(avg)}
+          </p>
+        </div>
+      </div>
+
+      {/* Memo (선택) */}
+      {d.memo && (
+        <p
           style={{
-            padding: '12px 14px',
-            background: MCK.paperTint,
-            border: `1px solid ${MCK.border}`,
+            fontSize: 12, lineHeight: 1.55, color: MCK.textSub,
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
           }}
         >
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <DemandFigure label="최소" value={formatKRW(d.min_amount)} tone="neutral" />
-            <DemandFigure label="최대" value={formatKRW(d.max_amount)} tone="em" />
-          </div>
-          <div
-            style={{
-              marginTop: 10, paddingTop: 10,
-              borderTop: `1px dashed ${MCK.border}`,
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              fontSize: 10, color: MCK.textMuted,
-            }}
-          >
-            <span style={{ ...MCK_TYPE.label }}>평균 희망가</span>
-            <span
-              style={{
-                fontFamily: MCK_FONTS.serif,
-                color: MCK.ink, fontWeight: 800, fontSize: 13,
-                fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em',
-              }}
-            >
-              {formatKRW(avg)}
-            </span>
-          </div>
-        </div>
+          {d.memo}
+        </p>
+      )}
 
-        {/* Collateral chips */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-          {d.collateral_types.map(ct => (
-            <span
-              key={ct}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 3,
-                padding: '3px 8px',
-                fontSize: 10, fontWeight: 700, lineHeight: 1.3,
-                background: 'rgba(184, 146, 75, 0.10)',
-                color: MCK.brassDark,
-                border: `1px solid ${MCK.brass}33`,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <Building2 size={10} />{ct}
-            </span>
-          ))}
-        </div>
+      <div style={{ flex: 1 }} />
 
-        {/* Memo */}
-        {d.memo && (
-          <p
-            style={{
-              fontSize: 12, lineHeight: 1.55, color: MCK.textSub,
-              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
-            {d.memo}
-          </p>
-        )}
+      {/* Footer Stats — 자발적 경매와 동일 톤 */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 14,
+          flexWrap: 'wrap',
+          paddingBottom: 14,
+          borderBottom: `1px solid ${MCK.border}`,
+        }}
+      >
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+            fontSize: 12,
+            fontWeight: 800,
+            color: MCK.ink,
+          }}
+        >
+          <Clock size={13} />
+          {ageDays === 0 ? '오늘 등록' : `${ageDays}일 전 등록`}
+        </span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: MCK.textSub, fontWeight: 700 }}>
+          <Sparkles size={12} /> 매칭 {d.matching_count}건
+        </span>
+      </div>
 
-        <div style={{ flex: 1 }} />
+      {/* CTAs — 자발적 경매와 동일: 흰 outline + soft sky blue */}
+      <div className="flex" style={{ gap: 8 }}>
+        <button
+          onClick={(e) => { e.stopPropagation(); onRunMatching(d.id) }}
+          disabled={matching}
+          style={{
+            flex: 1,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            padding: '10px 12px',
+            fontSize: 12,
+            fontWeight: 800,
+            background: MCK.paper,
+            color: MCK.ink,
+            border: `1px solid ${MCK.ink}`,
+            cursor: matching ? 'wait' : 'pointer',
+            opacity: matching ? 0.6 : 1,
+            letterSpacing: '-0.01em',
+          }}
+          aria-label="AI 매칭 실행"
+        >
+          {matching ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+          AI 매칭
+        </button>
+        <Link
+          href={`/exchange/demands/${d.id}`}
+          style={{
+            flex: 1,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            padding: '10px 12px',
+            fontSize: 12,
+            fontWeight: 800,
+            background: '#A8CDE8',                              /* McKinsey soft sky blue */
+            color: MCK.ink,
+            borderTop: `2px solid ${MCK.electric}`,
+            border: '1px solid #7FA8C8',
+            borderRadius: 4,
+            letterSpacing: '-0.01em',
+            textDecoration: 'none',
+            boxShadow: '0 4px 12px rgba(34, 81, 255, 0.10)',
+          }}
+        >
+          <Zap size={13} style={{ color: MCK.ink }} /> 제안 보내기
+        </Link>
+      </div>
 
-        {/* CTAs */}
-        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-          <button
-            onClick={(e) => { e.stopPropagation(); onRunMatching(d.id) }}
-            disabled={matching}
-            style={{
-              flex: '0 0 auto',
-              padding: '10px 12px',
-              background: MCK.paperTint,
-              border: `1px solid ${MCK.border}`,
-              color: MCK.ink,
-              fontSize: 11, fontWeight: 700,
-              display: 'inline-flex', alignItems: 'center', gap: 5,
-              cursor: matching ? 'wait' : 'pointer',
-              opacity: matching ? 0.6 : 1,
-            }}
-            aria-label="AI 매칭 실행"
-          >
-            {matching ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-            AI 매칭
-          </button>
-          <Link
-            href={`/exchange/demands/${d.id}`}
-            style={{
-              flex: 1,
-              padding: '10px 14px',
-              background: MCK.ink,
-              color: MCK.paper,
-              fontSize: 12, fontWeight: 700,
-              textAlign: 'center',
-              display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: 6,
-              letterSpacing: '-0.01em',
-              borderTop: `2px solid ${MCK.brass}`,
-              textDecoration: 'none',
-            }}
-          >
-            <Zap size={13} />
-            <span>제안 보내기</span>
-          </Link>
-        </div>
+      {/* 관리자 / 매수자 본인 편집 — 자체 권한 체크로 비대상자에게는 미노출 */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+        <OwnerEditButton
+          resourceType="demand"
+          resourceId={d.id}
+          ownerId={(d as { buyer_id?: string }).buyer_id ?? null}
+          compact
+          label="편집"
+        />
       </div>
     </article>
   )

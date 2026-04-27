@@ -88,14 +88,28 @@ export function InlineDealRoom({
     }
   }
 
+  // McKinsey 화이트 페이퍼 토큰 (deal-flow-view 와 동일 팔레트)
+  const M = {
+    ink:        "#0A1628",
+    paper:      "#FFFFFF",
+    paperTint:  "#FAFBFC",
+    electric:   "#2251FF",
+    electricDark: "#1A47CC",
+    border:     "rgba(10, 22, 40, 0.10)",
+    borderStrong: "rgba(10, 22, 40, 0.18)",
+    textSub:    "#4A5568",
+    textMuted:  "#718096",
+    positive:   "#0F766E",
+  } as const
+
   return (
     <section
-      className="rounded-2xl overflow-hidden"
+      className="overflow-hidden"
       style={{
-        background: "linear-gradient(180deg, #0F1E35 0%, #122843 100%)",
-        border: "1px solid rgba(46, 117, 182, 0.32)",
-        boxShadow: "0 8px 32px rgba(27, 58, 92, 0.20)",
-        color: "var(--fg-on-brand)",
+        background: M.paper,
+        border: `1px solid ${M.border}`,
+        borderTop: `2px solid ${M.electric}`,
+        color: M.ink,
       }}
       aria-label="인라인 딜룸"
     >
@@ -103,23 +117,37 @@ export function InlineDealRoom({
         className="flex items-center justify-between gap-3 flex-wrap"
         style={{
           padding: "14px 18px",
-          borderBottom: "1px solid rgba(46, 117, 182, 0.24)",
+          borderBottom: `1px solid ${M.border}`,
+          background: M.paperTint,
         }}
       >
-        <h3 className="font-black inline-flex items-center gap-2" style={{ fontSize: 14 }}>
-          <MessageSquare size={16} style={{ color: "var(--color-brand-bright)" }} />
+        <h3
+          className="inline-flex items-center gap-2"
+          style={{
+            fontSize: 13,
+            fontWeight: 800,
+            color: M.ink,
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            letterSpacing: "-0.005em",
+          }}
+        >
+          <MessageSquare size={14} style={{ color: M.electric }} />
           인라인 딜룸
         </h3>
         <div
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold"
+          className="inline-flex items-center gap-1.5"
           style={{
             fontSize: 10,
-            backgroundColor: "rgba(5, 28, 44, 0.16)",
-            color: "var(--color-positive)",
-            border: "1px solid rgba(5, 28, 44, 0.36)",
+            fontWeight: 800,
+            padding: "3px 8px",
+            background: M.paper,
+            color: M.electricDark,
+            border: `1px solid ${M.electric}`,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
           }}
         >
-          <Wifi size={11} />
+          <Wifi size={11} style={{ color: M.electric }} />
           실시간 연결
         </div>
       </header>
@@ -130,7 +158,8 @@ export function InlineDealRoom({
           className="flex flex-col"
           style={{
             minHeight: 360,
-            borderRight: "1px solid rgba(46, 117, 182, 0.24)",
+            borderRight: `1px solid ${M.border}`,
+            background: M.paper,
           }}
         >
           {/* 메시지 리스트 */}
@@ -142,21 +171,20 @@ export function InlineDealRoom({
             {messages.length === 0 ? (
               <li className="h-full min-h-[240px] flex flex-col items-center justify-center gap-2 text-center">
                 <div
-                  className="w-10 h-10 rounded-2xl inline-flex items-center justify-center"
+                  className="w-10 h-10 inline-flex items-center justify-center"
                   style={{
-                    backgroundColor: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: M.paperTint,
+                    border: `1px solid ${M.border}`,
                   }}
                 >
-                  <MessageSquare size={18} style={{ color: "rgba(255,255,255,0.4)" }} />
+                  <MessageSquare size={18} style={{ color: M.textMuted }} />
                 </div>
                 <div
-                  className="font-semibold"
-                  style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}
+                  style={{ fontSize: 12, color: M.textSub, fontWeight: 700 }}
                 >
                   아직 메시지가 없습니다
                 </div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
+                <div style={{ fontSize: 11, color: M.textMuted }}>
                   첫 메시지를 보내 대화를 시작하세요
                 </div>
               </li>
@@ -167,29 +195,30 @@ export function InlineDealRoom({
                     {!m.mine && (
                       <div
                         className="mb-0.5"
-                        style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}
+                        style={{ fontSize: 10, color: M.textMuted, fontWeight: 700, letterSpacing: "0.02em" }}
                       >
                         {m.author}
                       </div>
                     )}
                     <div
-                      className="rounded-2xl px-3 py-2 leading-relaxed break-words"
+                      className="px-3 py-2 leading-relaxed break-words"
                       style={{
                         fontSize: 13,
-                        backgroundColor: m.mine
-                          ? "var(--color-brand-bright)"
-                          : "rgba(255,255,255,0.06)",
-                        color: m.mine ? "var(--fg-on-brand)" : "var(--fg-on-brand)",
+                        background: m.mine ? M.ink : M.paperTint,
+                        color: m.mine ? M.paper : M.ink,
                         border: m.mine
-                          ? "1px solid rgba(46, 117, 182, 0.6)"
-                          : "1px solid rgba(255,255,255,0.08)",
+                          ? `1px solid ${M.ink}`
+                          : `1px solid ${M.border}`,
+                        borderTop: m.mine
+                          ? `2px solid ${M.electric}`
+                          : `1px solid ${M.border}`,
                       }}
                     >
                       {m.body}
                     </div>
                     <div
                       className="text-right mt-0.5"
-                      style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}
+                      style={{ fontSize: 10, color: M.textMuted, fontVariantNumeric: "tabular-nums" }}
                     >
                       {m.sentAt}
                     </div>
@@ -205,21 +234,22 @@ export function InlineDealRoom({
             className="flex items-center gap-2"
             style={{
               padding: "10px 12px",
-              borderTop: "1px solid rgba(46, 117, 182, 0.24)",
-              backgroundColor: "rgba(0,0,0,0.12)",
+              borderTop: `1px solid ${M.border}`,
+              background: M.paperTint,
             }}
           >
             <button
               type="button"
-              className="w-9 h-9 rounded-xl inline-flex items-center justify-center transition-colors"
+              className="w-9 h-9 inline-flex items-center justify-center transition-colors"
               style={{
-                backgroundColor: "transparent",
-                color: "rgba(255,255,255,0.5)",
+                background: "transparent",
+                color: M.textMuted,
+                border: `1px solid ${M.border}`,
               }}
               aria-label="파일 첨부"
               disabled={!canSend}
             >
-              <Paperclip size={16} />
+              <Paperclip size={16} style={{ color: M.textMuted }} />
             </button>
             <input
               type="text"
@@ -227,55 +257,67 @@ export function InlineDealRoom({
               onChange={(e) => setDraft(e.target.value)}
               placeholder={canSend ? "메시지를 입력하세요…" : "로그인 후 메시지 전송이 가능합니다"}
               disabled={!canSend || sending}
-              className="flex-1 rounded-xl outline-none transition-colors"
+              className="flex-1 outline-none transition-colors"
               style={{
                 padding: "9px 14px",
                 fontSize: 13,
-                backgroundColor: "rgba(255,255,255,0.04)",
-                color: "var(--fg-on-brand)",
-                border: "1px solid rgba(255,255,255,0.10)",
+                background: M.paper,
+                color: M.ink,
+                border: `1px solid ${M.borderStrong}`,
               }}
             />
             <button
               type="submit"
               disabled={!canSend || sending || !draft.trim()}
-              className="w-9 h-9 rounded-xl inline-flex items-center justify-center transition-colors disabled:opacity-40"
+              className="w-9 h-9 inline-flex items-center justify-center transition-colors disabled:opacity-40"
               style={{
-                backgroundColor: "var(--color-brand-bright)",
-                color: "var(--fg-on-brand)",
+                background: M.ink,
+                color: M.paper,
+                borderTop: `2px solid ${M.electric}`,
               }}
               aria-label="메시지 전송"
             >
-              <Send size={16} />
+              <Send size={16} style={{ color: M.paper }} />
             </button>
           </form>
         </div>
 
         {/* ── 우측: 상대방 정보 ── */}
-        <div className="p-4 space-y-3">
+        <div
+          className="p-4 space-y-3"
+          style={{ background: M.paper }}
+        >
           <div
-            className="inline-flex items-center gap-1.5 font-semibold"
-            style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}
+            className="inline-flex items-center gap-1.5"
+            style={{
+              fontSize: 11,
+              color: M.ink,
+              fontWeight: 800,
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              letterSpacing: "-0.005em",
+            }}
           >
-            <Star size={12} style={{ color: "var(--color-brand-bright)" }} />
+            <Star size={12} style={{ color: M.electric }} />
             상대방 정보
           </div>
 
           {/* 프로필 카드 */}
           <div
-            className="rounded-xl p-3.5"
+            className="p-3.5"
             style={{
-              backgroundColor: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: M.paperTint,
+              border: `1px solid ${M.border}`,
+              borderTop: `2px solid ${M.electric}`,
             }}
           >
             <div className="flex items-center gap-3">
               <div
-                className="w-11 h-11 rounded-full inline-flex items-center justify-center font-black"
+                className="w-11 h-11 inline-flex items-center justify-center font-black"
                 style={{
                   fontSize: 16,
-                  background: "linear-gradient(135deg, #2E75B6, #1B3A5C)",
-                  color: "var(--fg-on-brand)",
+                  background: M.ink,
+                  color: M.paper,
+                  border: `1px solid ${M.ink}`,
                 }}
                 aria-hidden
               >
@@ -284,13 +326,13 @@ export function InlineDealRoom({
               <div className="min-w-0">
                 <div
                   className="font-black truncate"
-                  style={{ fontSize: 13, color: "var(--fg-on-brand)" }}
+                  style={{ fontSize: 13, color: M.ink, letterSpacing: "-0.01em" }}
                 >
                   {counterpart.name}
                 </div>
                 <div
                   className="font-semibold"
-                  style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}
+                  style={{ fontSize: 11, color: M.textSub, letterSpacing: "-0.005em" }}
                 >
                   {counterpart.role}
                   {showOrg && counterpart.organization && (
@@ -302,17 +344,20 @@ export function InlineDealRoom({
 
             {/* 연락처 */}
             <div
-              className="mt-3 rounded-lg inline-flex items-center gap-2 w-full"
+              className="mt-3 inline-flex items-center gap-2 w-full"
               style={{
                 padding: "8px 10px",
-                backgroundColor: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: M.paper,
+                border: `1px solid ${M.border}`,
                 fontSize: 12,
-                color: "rgba(255,255,255,0.75)",
+                color: M.textSub,
               }}
             >
-              <Phone size={12} style={{ color: "rgba(255,255,255,0.55)" }} />
-              <span className="font-mono tabular-nums">
+              <Phone size={12} style={{ color: M.electric }} />
+              <span
+                className="font-mono tabular-nums"
+                style={{ color: M.ink, fontWeight: 700, letterSpacing: "0.01em" }}
+              >
                 {maskPhone(counterpart.phone, tier)}
               </span>
             </div>
@@ -328,22 +373,27 @@ export function InlineDealRoom({
               input?.focus()
             }}
             disabled={!canSend}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl font-black transition-opacity disabled:opacity-40"
+            className="w-full inline-flex items-center justify-center gap-2 transition-opacity disabled:opacity-40"
             style={{
               padding: "11px 14px",
-              fontSize: 13,
-              backgroundColor: "var(--color-brand-bright)",
-              color: "var(--fg-on-brand)",
+              fontSize: 12,
+              fontWeight: 800,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              background: M.ink,
+              color: M.paper,
+              border: `1px solid ${M.ink}`,
+              borderTop: `2px solid ${M.electric}`,
             }}
           >
-            <Send size={14} />
-            메시지 보내기
+            <Send size={14} style={{ color: M.paper }} />
+            <span style={{ color: M.paper }}>메시지 보내기</span>
           </button>
 
           {!canSend && (
             <p
               className="leading-relaxed"
-              style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}
+              style={{ fontSize: 11, color: M.textMuted, letterSpacing: "-0.005em" }}
             >
               개인인증(L1) 완료 후 실시간 채팅으로 매도자와 직접 협상할 수 있습니다.
             </p>

@@ -13,7 +13,6 @@ import {
   MckSection,
   MckCard,
   MckKpiGrid,
-  MckCta,
   MckBadge,
   MckDemoBanner,
   type MckKpiItem,
@@ -180,35 +179,58 @@ export default function AnalysisDashboard() {
           { label: "분석", href: "/analysis" },
           { label: "분석 대시보드" },
         ]}
-        eyebrow="Insights · Analytics Cockpit"
+        eyebrow="Insights · Analytics Cockpit · 플랫폼 운영 지표"
         title="인사이트 · 분석 대시보드"
         subtitle="NPL 수익성 분석 · 경매 분석 · AI 컨설턴트 — 모든 분석 도구를 한 곳에서 관리하고 실행합니다."
         actions={
-          <div className="flex items-center gap-2 shrink-0">
-            <MckCta
-              label="데모 체험"
-              href="/analysis/demo"
-              variant="secondary"
-              size="sm"
-              centered={false}
-              iconRight={<Zap size={14} />}
-            />
-            <MckCta
-              label="분석 시작"
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <Link
               href="/analysis/profitability"
-              variant="primary"
-              size="sm"
-              centered={false}
-              iconRight={<TrendingUp size={14} />}
-            />
+              style={{
+                padding: "9px 16px",
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: "-0.01em",
+                background: MCK.ink,
+                color: MCK.paper,
+                border: "none",
+                borderTop: `2px solid ${MCK.brass}`,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                textDecoration: "none",
+              }}
+            >
+              분석 시작 <TrendingUp size={14} />
+            </Link>
+            <Link
+              href="/analysis/demo"
+              style={{
+                padding: "9px 16px",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "-0.01em",
+                background: MCK.paper,
+                color: MCK.ink,
+                border: `1px solid ${MCK.ink}`,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                textDecoration: "none",
+              }}
+            >
+              <Zap size={14} /> 데모 체험
+            </Link>
           </div>
         }
       />
 
-      {/* KPI strip */}
-      <MckSection eyebrow="Key Metrics" title="플랫폼 운영 지표">
-        <MckKpiGrid items={KPI_ITEMS} />
-      </MckSection>
+      {/* ── KPI strip · DARK · 거래소 매물탐색과 동일 패턴 ─────────── */}
+      <section style={{ background: MCK.paper, paddingBottom: 32 }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 24px" }}>
+          <MckKpiGrid variant="dark" items={KPI_ITEMS} />
+        </div>
+      </section>
 
       {/* Toolkit */}
       <MckSection
@@ -284,17 +306,18 @@ export default function AnalysisDashboard() {
                       gap: 6,
                       padding: "10px 14px",
                       marginTop: 8,
-                      background: MCK.paper,
-                      border: `1px solid ${MCK.brass}`,
-                      color: MCK.brassDark,
-                      fontSize: 11,
+                      background: "#A8CDE8",                              /* McKinsey soft sky blue (수요 분석과 동일) */
+                      color: MCK.ink,
+                      border: "1px solid #7FA8C8",
+                      borderTop: `2px solid ${MCK.electric}`,
+                      fontSize: 12,
                       fontWeight: 800,
-                      letterSpacing: "0.04em",
-                      textTransform: "uppercase",
+                      letterSpacing: "-0.01em",
                       textDecoration: "none",
+                      boxShadow: "0 4px 12px rgba(34, 81, 255, 0.10)",
                     }}
                   >
-                    <Zap size={12} />
+                    <Zap size={13} style={{ color: MCK.ink }} />
                     {tool.demoLabel}
                   </Link>
                 )}
@@ -304,102 +327,245 @@ export default function AnalysisDashboard() {
         </div>
       </MckSection>
 
-      {/* Recent analyses */}
-      <MckSection
-        eyebrow="Recent · last 30 days"
-        title="최근 분석 내역"
-        subtitle="최근 실행한 분석 결과를 빠르게 다시 열람할 수 있습니다."
-        rightActions={
-          <Link
-            href="/my/portfolio"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              color: MCK.blue,
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: "0.01em",
-              textDecoration: "none",
-            }}
-          >
-            전체 보기 <ArrowRight size={12} />
-          </Link>
-        }
+      {/* ── 최근 분석 내역 (딜룸 ACTIVE PIPELINE 리스트 패턴) ─────────── */}
+      <section
+        className="max-w-[1280px] mx-auto"
+        style={{ padding: "32px 24px 16px" }}
       >
-        <div
+        <header
           style={{
-            background: MCK.paper,
-            border: `1px solid ${MCK.border}`,
-            borderTop: `2px solid ${MCK.brass}`,
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            gap: 16,
+            marginBottom: 18,
+            flexWrap: "wrap",
+            paddingBottom: 14,
+            borderBottom: `1px solid ${MCK.border}`,
           }}
         >
-          {recent.map((r, i) => (
-            <Link
-              key={r.id}
-              href={r.href}
+          <div>
+            <div className="flex items-center gap-2" style={{ marginBottom: 6 }}>
+              <span style={{ width: 18, height: 1.5, background: MCK.electric, display: "inline-block" }} />
+              <span style={{ color: MCK.electric, ...MCK_TYPE.eyebrow }}>RECENT PIPELINE · 최근 30일</span>
+            </div>
+            <h2
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 16,
-                padding: "16px 20px",
-                borderBottom: i < recent.length - 1 ? `1px solid ${MCK.border}` : "none",
-                textDecoration: "none",
-                transition: "background 0.15s",
+                fontFamily: MCK_FONTS.serif,
+                color: MCK.ink,
+                ...MCK_TYPE.h2,
+                marginBottom: 4,
               }}
-              className="hover:bg-[#FAFBFC]"
             >
-              <span
-                style={{
-                  width: 32,
-                  height: 32,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: MCK.paperTint,
-                  border: `1px solid ${MCK.borderStrong}`,
-                  fontSize: 12,
-                  fontWeight: 800,
-                  color: MCK.ink,
-                  fontFamily: MCK_FONTS.serif,
-                  flexShrink: 0,
-                }}
-              >
-                {r.grade}
-              </span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p
+              최근 분석 내역
+            </h2>
+            <p style={{ color: MCK.textSub, ...MCK_TYPE.bodySm }}>
+              최근 실행한 분석 결과를 빠르게 다시 열람하고 보고서로 이동할 수 있습니다.
+            </p>
+          </div>
+          <div className="flex items-center" style={{ gap: 12, flexWrap: "wrap" }}>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: MCK.textMuted,
+                fontVariantNumeric: "tabular-nums",
+                letterSpacing: "0.04em",
+              }}
+            >
+              TOTAL · {recent.length}건
+            </span>
+            <Link
+              href="/my/portfolio"
+              style={{
+                padding: "8px 14px",
+                fontSize: 12,
+                fontWeight: 800,
+                background: MCK.paper,
+                color: MCK.ink,
+                border: `1px solid ${MCK.borderStrong}`,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                textDecoration: "none",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              전체 보기 <ArrowRight size={12} />
+            </Link>
+          </div>
+        </header>
+
+        {recent.length === 0 ? (
+          <div
+            style={{
+              padding: "40px 20px",
+              textAlign: "center",
+              background: MCK.paper,
+              border: `1px solid ${MCK.border}`,
+              borderTop: `2px solid ${MCK.electric}`,
+            }}
+          >
+            <p style={{ fontSize: 13, color: MCK.textSub, lineHeight: 1.55 }}>
+              아직 분석 결과가 없습니다.<br />상단 [분석 시작] 으로 첫 분석을 실행하세요.
+            </p>
+          </div>
+        ) : (
+          <div
+            style={{
+              border: `1px solid ${MCK.border}`,
+              borderTop: `2px solid ${MCK.electric}`,
+              background: MCK.paper,
+            }}
+          >
+            {/* List header — 딜룸 동일 grid columns */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "92px 1fr 132px 130px 110px 24px",
+                gap: 12,
+                padding: "10px 14px",
+                background: MCK.paperTint,
+                borderBottom: `1px solid ${MCK.border}`,
+                fontSize: 10,
+                fontWeight: 800,
+                color: MCK.textSub,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              <span style={{ textAlign: "center" }}>Grade</span>
+              <span>Asset</span>
+              <span>Type</span>
+              <span>Date</span>
+              <span style={{ textAlign: "right" }}>ROI</span>
+              <span />
+            </div>
+
+            {recent.map((r, idx) => {
+              const isLast = idx === recent.length - 1
+              return (
+                <Link
+                  key={r.id}
+                  href={r.href}
+                  className="mck-analysis-row"
                   style={{
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: MCK.ink,
-                    marginBottom: 2,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
+                    display: "grid",
+                    gridTemplateColumns: "92px 1fr 132px 130px 110px 24px",
+                    gap: 12,
+                    alignItems: "center",
+                    padding: "12px 14px",
+                    textDecoration: "none",
+                    background: MCK.paper,
+                    borderBottom: isLast ? "none" : `1px solid ${MCK.border}`,
+                    borderLeft: "3px solid transparent",
+                    transition: "background 0.15s ease, border-left-color 0.15s ease",
                   }}
                 >
-                  {r.title}
-                </p>
-                <p style={{ fontSize: 11, color: MCK.textMuted, fontWeight: 500 }}>
-                  {r.type} · {r.date}
-                </p>
-              </div>
-              <span
-                style={{
-                  fontSize: 14,
-                  fontWeight: 800,
-                  color: MCK.ink,
-                  fontFamily: MCK_FONTS.serif,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {r.roi}
-              </span>
-              <ChevronRight size={16} style={{ color: MCK.textMuted, flexShrink: 0 }} />
-            </Link>
-          ))}
-        </div>
+                  {/* GRADE — Georgia serif chip */}
+                  <div style={{ textAlign: "center" }}>
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 38,
+                        height: 24,
+                        background: MCK.paperTint,
+                        border: `1px solid ${MCK.borderStrong}`,
+                        fontSize: 12,
+                        fontWeight: 800,
+                        color: MCK.ink,
+                        fontFamily: MCK_FONTS.serif,
+                        letterSpacing: "-0.01em",
+                      }}
+                    >
+                      {r.grade}
+                    </span>
+                  </div>
+
+                  {/* ASSET — Georgia serif title + subtle hint */}
+                  <div style={{ minWidth: 0 }}>
+                    <p
+                      style={{
+                        fontFamily: MCK_FONTS.serif,
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: MCK.ink,
+                        marginBottom: 2,
+                        letterSpacing: "-0.01em",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {r.title}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: 11,
+                        color: MCK.textMuted,
+                        fontWeight: 500,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      ID · {r.id}
+                    </p>
+                  </div>
+
+                  {/* TYPE */}
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: MCK.textSub,
+                      fontWeight: 600,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      margin: 0,
+                    }}
+                  >
+                    {r.type}
+                  </p>
+
+                  {/* DATE */}
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: MCK.textSub,
+                      fontWeight: 600,
+                      fontVariantNumeric: "tabular-nums",
+                      margin: 0,
+                    }}
+                  >
+                    {r.date}
+                  </p>
+
+                  {/* ROI — right-aligned Georgia serif */}
+                  <p
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 800,
+                      color: MCK.electricDark,
+                      fontFamily: MCK_FONTS.serif,
+                      fontVariantNumeric: "tabular-nums",
+                      letterSpacing: "-0.01em",
+                      textAlign: "right",
+                      margin: 0,
+                    }}
+                  >
+                    {r.roi}
+                  </p>
+
+                  {/* Chevron */}
+                  <ChevronRight size={14} style={{ color: MCK.textMuted, flexShrink: 0 }} />
+                </Link>
+              )
+            })}
+          </div>
+        )}
 
         {/* Notice */}
         <div
@@ -408,13 +574,13 @@ export default function AnalysisDashboard() {
             display: "flex",
             alignItems: "flex-start",
             gap: 10,
-            background: MCK.paper,
+            background: MCK.paperTint,
             border: `1px solid ${MCK.border}`,
-            borderLeft: `3px solid ${MCK.brass}`,
+            borderLeft: `3px solid ${MCK.electric}`,
             padding: "14px 16px",
           }}
         >
-          <AlertCircle size={16} style={{ color: MCK.brassDark, marginTop: 2, flexShrink: 0 }} />
+          <AlertCircle size={16} style={{ color: MCK.electric, marginTop: 2, flexShrink: 0 }} />
           <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.55 }}>
             <strong style={{ color: MCK.ink }}>계약서 생성</strong> 기능을 통해 등기부등본·채권자료를 업로드하면 NPL 계약서가 자동 생성됩니다.
             OCR 인식 → 계약서 생성 → AI 검토를 하나의 워크플로로 처리할 수 있습니다.
@@ -422,7 +588,15 @@ export default function AnalysisDashboard() {
             <MckBadge tone="brass" size="sm">v2 베타</MckBadge>
           </p>
         </div>
-      </MckSection>
+
+        {/* row hover style — 딜룸 동일 sky-blue tint + electric left border */}
+        <style jsx>{`
+          :global(.mck-analysis-row:hover) {
+            background: rgba(168, 205, 232, 0.30) !important;
+            border-left-color: ${MCK.electric} !important;
+          }
+        `}</style>
+      </section>
 
       <div style={{ height: 32 }} />
     </MckPageShell>

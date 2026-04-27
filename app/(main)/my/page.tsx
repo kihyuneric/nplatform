@@ -1,13 +1,13 @@
 "use client"
 
 /**
- * /my — 내 정보 대시보드 (v5 · 2026-04-26 McKinsey re-skin)
+ * /my — 내 정보 대시보드 (v5.1 · 2026-04-27 NDA/LOI per-listing model)
  *
  * 변경 사항:
  *   - 다크 테마 → McKinsey 화이트 페이퍼 (MCK.paper / Georgia serif)
  *   - 체험 모드 강화: API 실패 시 SAMPLE_* 데이터로 자동 fallback + MckDemoBanner
  *   - MckPageShell · MckPageHeader · MckKpiGrid · MckCard · MckSection · MckCta · MckBadge
- *   - 4-step tier funnel (L0→L3) brass/ink 색
+ *   - 투자자 인증(1회 · 계정) + NDA/LOI(매물별) 분리 모델 — Tier 노출 제거
  *   - 역할(SELLER/INVESTOR_GENERAL/INVESTOR_PRO/PARTNER/PROFESSIONAL)별 QuickLinks 유지
  */
 
@@ -16,13 +16,12 @@ import Link from "next/link"
 import {
   ShieldCheck, UserCheck, Briefcase, FileSignature,
   Building2, TrendingUp, Clock, ChevronRight,
-  Lock, CheckCircle2, Sparkles, BarChart3, Target,
-  ArrowRight, Handshake, FileSearch,
-  Activity, Bell, Users2, Gift, Code,
+  CheckCircle2, Sparkles, BarChart3, Target,
+  ArrowRight, Handshake,
+  Bell, Gift, Code,
   GraduationCap, Banknote, Store, Crown,
 } from "lucide-react"
 import type { AccessTier } from "@/lib/access-tier"
-import { TIER_META } from "@/lib/access-tier"
 import {
   MckPageShell,
   MckPageHeader,
@@ -146,15 +145,14 @@ type QuickLink = {
   label: string
   desc: string
   icon: typeof UserCheck
-  tierRequired?: string
   highlight?: boolean
 }
 
 const COMMON_LINKS: QuickLink[] = [
-  { href: "/my/verify",       label: "본인인증",      desc: "L0 → L1 승격",         icon: UserCheck,     tierRequired: "L1", highlight: true },
-  { href: "/my/agreements",   label: "계약 관리",     desc: "NDA · LOI 이력",       icon: FileSignature },
-  { href: "/my/privacy",      label: "개인정보 설정", desc: "PII 열람 로그 · 파기", icon: ShieldCheck },
-  { href: "/my/notifications",label: "알림 설정",     desc: "이메일 · 푸시 · 매칭", icon: Bell },
+  { href: "/my/kyc",          label: "투자자 인증",   desc: "사업자등록증 · 명함 · 본인",  icon: UserCheck, highlight: true },
+  { href: "/my/agreements",   label: "계약 관리",     desc: "NDA · LOI 이력",              icon: FileSignature },
+  { href: "/my/privacy",      label: "개인정보 설정", desc: "PII 열람 로그 · 파기",        icon: ShieldCheck },
+  { href: "/my/notifications",label: "알림 설정",     desc: "이메일 · 푸시 · 매칭",        icon: Bell },
 ]
 const SELLER_LINKS: QuickLink[] = [
   { href: "/my/seller",     label: "내 매물",       desc: "등록한 매물 관리",       icon: Building2, highlight: true },
@@ -162,14 +160,14 @@ const SELLER_LINKS: QuickLink[] = [
   { href: "/my/billing",    label: "정산 · 수수료", desc: "매각 수수료 내역",       icon: Banknote },
 ]
 const INVESTOR_GENERAL_LINKS: QuickLink[] = [
-  { href: "/my/portfolio",     label: "투자 포트폴리오", desc: "체결 · 실사 중 매물", icon: TrendingUp, highlight: true },
-  { href: "/my/kyc",           label: "전문투자자 KYC",  desc: "L1 → L2 승격",        icon: Briefcase, tierRequired: "L2" },
-  { href: "/exchange/demands", label: "매수 수요 등록",  desc: "AI 매물 매칭",        icon: Target },
-  { href: "/my/billing",       label: "결제 · 구독",     desc: "요금제 · 수수료 내역",icon: Banknote },
+  { href: "/my/portfolio",     label: "투자 포트폴리오", desc: "체결 · 실사 중 매물",   icon: TrendingUp, highlight: true },
+  { href: "/my/kyc",           label: "전문투자자 자격", desc: "전문투자자 자격 증빙",  icon: Briefcase },
+  { href: "/exchange/demands", label: "매수 수요 등록",  desc: "AI 매물 매칭",          icon: Target },
+  { href: "/my/billing",       label: "결제 · 구독",     desc: "요금제 · 수수료 내역",  icon: Banknote },
 ]
 const INVESTOR_PRO_LINKS: QuickLink[] = [
   { href: "/my/portfolio",     label: "포트폴리오 분석", desc: "IRR · 배당 실적",     icon: BarChart3, highlight: true },
-  { href: "/my/kyc",           label: "전문투자자 KYC",  desc: "L2/L3 권한 관리",     icon: Crown },
+  { href: "/my/kyc",           label: "전문투자자 자격", desc: "전문투자자 권한 관리",icon: Crown },
   { href: "/exchange/demands", label: "매수 수요 · PNR", desc: "우선협상권 요청",     icon: Target },
   { href: "/my/developer",     label: "API 키 · 웹훅",   desc: "기관 시스템 연동",    icon: Code },
 ]
@@ -248,9 +246,6 @@ export default function MyDashboardPage() {
   const recentAnalyses = dashboardData?.recentAnalyses ?? (isSample ? SAMPLE_RECENT_ANALYSES : [])
   const recentNotifications = dashboardData?.recentNotifications ?? (isSample ? SAMPLE_RECENT_NOTIFICATIONS : [])
 
-  const tierOrder: AccessTier[] = ["L0", "L1", "L2", "L3"]
-  const currentIdx = tierOrder.indexOf(profile.current_tier)
-
   // ?role=SELLER&subtype=FINANCIAL_INSTITUTION 으로 프리뷰에서 역할 시연 가능
   const [roleOverride, setRoleOverride] = useState<{ role: string | null; subtype: string | null }>({ role: null, subtype: null })
   useEffect(() => {
@@ -309,8 +304,8 @@ export default function MyDashboardPage() {
         actions={
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <MckBadge tone={badge.tone} size="md">{badge.label}</MckBadge>
-            <MckBadge tone={profile.current_tier === "L0" ? "neutral" : "ink"} outlined size="md">
-              현재 티어 · {profile.current_tier}
+            <MckBadge tone={profile.identity_verified ? "ink" : "neutral"} outlined size="md">
+              {profile.identity_verified ? "투자자 인증 완료" : "투자자 인증 대기"}
             </MckBadge>
           </div>
         }
@@ -322,95 +317,147 @@ export default function MyDashboardPage() {
           <MckKpiGrid items={KPI_ITEMS} />
         </div>
 
-        {/* ── 2. Tier Funnel ─────────────────────────────────── */}
+        {/* ── 2. 투자자 인증 + 매물별 계약 안내 ─────────────────────
+            투자자 인증은 1회 (계정 단위) · NDA / LOI 는 채권 매물별로 별도 진행
+        ────────────────────────────────────────────────────── */}
         <section
           style={{
             background: MCK.paper,
             border: `1px solid ${MCK.border}`,
-            borderTop: `2px solid ${MCK.brass}`,
+            borderTop: `2px solid ${MCK.electric}`,
             padding: 28,
             marginBottom: 32,
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 16 }}>
             <div>
-              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark, marginBottom: 8 }}>
-                Access Tier · L0 → L3
+              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 8 }}>
+                계약 진행 안내
               </div>
               <h2 style={{ ...MCK_TYPE.h2, fontFamily: MCK_FONTS.serif, color: MCK.ink, marginBottom: 6 }}>
-                {TIER_META[profile.current_tier].label}
+                투자자 인증 · NDA · LOI
               </h2>
-              <p style={{ ...MCK_TYPE.bodySm, color: MCK.textSub, maxWidth: 540 }}>
-                {TIER_META[profile.current_tier].description}
+              <p style={{ ...MCK_TYPE.bodySm, color: MCK.textSub, maxWidth: 640 }}>
+                투자자 인증은 계정 단위 1회로 완료됩니다. NDA(비밀유지계약)와 LOI(매수의향서)는
+                <strong style={{ color: MCK.ink, fontWeight: 800 }}> 채권 매물별로 각각 체결·제출</strong>해야 하며, 매각사 승인 후 실사 단계로 진입합니다.
               </p>
             </div>
-            <MckCta
-              label={profile.current_tier === "L3" ? "권한 관리" : "다음 단계로 업그레이드"}
-              href={profile.current_tier === "L3" ? "/my/kyc" : "/my/verify"}
-              variant="primary"
-              size="md"
-              centered={false}
-            />
+            <Link
+              href="/my/agreements"
+              className="mck-cta-dark"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "12px 20px", fontSize: 13, fontWeight: 800,
+                background: MCK.ink, color: MCK.paper,
+                borderTop: `2px solid ${MCK.electric}`,
+                textDecoration: "none", letterSpacing: "-0.01em",
+                boxShadow: "0 4px 12px rgba(10, 22, 40, 0.18)",
+              }}
+            >
+              <span style={{ color: MCK.paper }}>계약 관리 가기</span>
+              <ChevronRight size={14} style={{ color: MCK.paper }} />
+            </Link>
           </div>
 
-          {/* 4-step funnel */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0, marginTop: 8 }}>
-            {tierOrder.map((tier, i) => {
-              const achieved = i <= currentIdx
-              const isCurrent = i === currentIdx
-              const meta = TIER_META[tier]
-              return (
-                <div
-                  key={tier}
-                  style={{
-                    padding: "18px 16px",
-                    borderTop: achieved ? `3px solid ${MCK.brass}` : `3px solid ${MCK.border}`,
-                    borderRight: i < 3 ? `1px solid ${MCK.border}` : "none",
-                    background: isCurrent ? MCK.paperTint : MCK.paper,
-                    position: "relative",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                    <div
-                      style={{
-                        width: 28, height: 28,
-                        background: achieved ? MCK.ink : MCK.paperTint,
-                        border: `1px solid ${achieved ? MCK.ink : MCK.border}`,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {achieved ? <CheckCircle2 size={14} color={MCK.brass} /> : <Lock size={12} color={MCK.textMuted} />}
-                    </div>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 800,
-                        letterSpacing: "0.06em",
-                        color: achieved ? MCK.brassDark : MCK.textMuted,
-                      }}
-                    >
-                      {tier}
-                    </span>
+          {/* 2-card layout: 1회 인증 + 매물별 계약 */}
+          <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
+            {/* Card A — 투자자 인증 (1회 · 계정 단위) */}
+            <article style={{
+              background: MCK.paperTint,
+              border: `1px solid ${MCK.border}`,
+              borderTop: `2px solid ${MCK.electric}`,
+              padding: "22px 24px",
+              display: "flex", flexDirection: "column", gap: 12,
+            }}>
+              <div className="flex items-center gap-3">
+                <span style={{
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 38, height: 38,
+                  background: "rgba(34, 81, 255, 0.08)",
+                  border: "1px solid rgba(34, 81, 255, 0.20)",
+                }}>
+                  <CheckCircle2 size={18} style={{ color: MCK.electric }} />
+                </span>
+                <div>
+                  <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 3 }}>
+                    1회 인증 · 계정 단위
                   </div>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: achieved ? MCK.ink : MCK.textMuted,
-                      letterSpacing: "-0.01em",
-                      marginBottom: 4,
-                      fontFamily: MCK_FONTS.serif,
-                    }}
-                  >
-                    {meta.shortLabel}
-                  </div>
-                  <div style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 500, lineHeight: 1.4 }}>
-                    {meta.description.split(".")[0]}
-                  </div>
+                  <h3 style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.01em" }}>
+                    투자자 인증
+                  </h3>
                 </div>
-              )
-            })}
+              </div>
+              <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.6, fontWeight: 500 }}>
+                사업자등록증 · 명함 · 본인인증을 1회 제출하면 계정에 영구 적용됩니다.
+                인증 완료 시 모든 매물의 기본 정보 열람 권한이 즉시 활성화됩니다.
+              </p>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <Link href="/my/kyc" style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "8px 14px", fontSize: 11, fontWeight: 700,
+                  background: MCK.paper, color: MCK.ink,
+                  border: `1px solid ${MCK.borderStrong}`,
+                  textDecoration: "none",
+                }}>
+                  인증 관리
+                  <ChevronRight size={12} style={{ color: MCK.electric }} />
+                </Link>
+              </div>
+            </article>
+
+            {/* Card B — NDA / LOI (매물별) */}
+            <article style={{
+              background: MCK.paperTint,
+              border: `1px solid ${MCK.border}`,
+              borderTop: `2px solid ${MCK.electric}`,
+              padding: "22px 24px",
+              display: "flex", flexDirection: "column", gap: 12,
+            }}>
+              <div className="flex items-center gap-3">
+                <span style={{
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 38, height: 38,
+                  background: "rgba(34, 81, 255, 0.08)",
+                  border: "1px solid rgba(34, 81, 255, 0.20)",
+                }}>
+                  <Handshake size={18} style={{ color: MCK.electric }} />
+                </span>
+                <div>
+                  <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 3 }}>
+                    매물별 진행
+                  </div>
+                  <h3 style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.01em" }}>
+                    NDA · LOI 체결
+                  </h3>
+                </div>
+              </div>
+              <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.6, fontWeight: 500 }}>
+                관심 매물에 진입하면 해당 채권에 대한 NDA(비밀유지) → LOI(매수의향) 흐름이 표시됩니다.
+                매물마다 매각사 승인이 필요하며, NDA 승인 시 검증 데이터 열람이 가능합니다.
+              </p>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <Link href="/my/agreements" style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "8px 14px", fontSize: 11, fontWeight: 700,
+                  background: MCK.paper, color: MCK.ink,
+                  border: `1px solid ${MCK.borderStrong}`,
+                  textDecoration: "none",
+                }}>
+                  계약 이력 보기
+                  <ChevronRight size={12} style={{ color: MCK.electric }} />
+                </Link>
+                <Link href="/exchange" style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "8px 14px", fontSize: 11, fontWeight: 700,
+                  background: MCK.paper, color: MCK.ink,
+                  border: `1px solid ${MCK.borderStrong}`,
+                  textDecoration: "none",
+                }}>
+                  매물 탐색
+                  <ChevronRight size={12} style={{ color: MCK.electric }} />
+                </Link>
+              </div>
+            </article>
           </div>
         </section>
 
@@ -630,24 +677,6 @@ export default function MyDashboardPage() {
                   <div style={{ fontSize: 11, color: MCK.textSub, lineHeight: 1.5 }}>
                     {link.desc}
                   </div>
-                  {link.tierRequired && (
-                    <span
-                      style={{
-                        position: "absolute",
-                        top: 18,
-                        right: 18,
-                        fontSize: 9,
-                        fontWeight: 800,
-                        padding: "2px 6px",
-                        background: `${MCK.brass}1F`,
-                        color: MCK.brassDark,
-                        border: `1px solid ${MCK.brass}55`,
-                        letterSpacing: "0.04em",
-                      }}
-                    >
-                      → {link.tierRequired}
-                    </span>
-                  )}
                 </Link>
               )
             })}

@@ -27,9 +27,9 @@ export function MckDemoBanner({
         position: sticky ? "sticky" : "relative",
         top: 0,
         zIndex: 30,
-        background: MCK.ink,
-        borderTop: `2px solid ${MCK.brass}`,
-        borderBottom: `1px solid rgba(184, 146, 75, 0.35)`,
+        background: "#A8CDE8",                                 /* McKinsey soft sky blue (첨부 톤) */
+        borderTop: `2px solid ${MCK.electric}`,                /* cobalt blue accent strip */
+        borderBottom: `1px solid rgba(34, 81, 255, 0.20)`,
       }}
     >
       <div
@@ -44,12 +44,12 @@ export function MckDemoBanner({
         }}
       >
         <div style={{ display: "inline-flex", alignItems: "center", gap: 10, flex: "1 1 auto", minWidth: 0 }}>
-          <Sparkles size={14} style={{ color: MCK.brassLight, flexShrink: 0 }} />
+          <Sparkles size={14} style={{ color: MCK.electric, flexShrink: 0 }} />
           <span
             style={{
               fontSize: 12,
-              fontWeight: 600,
-              color: MCK.paper,
+              fontWeight: 700,
+              color: MCK.ink,                                  /* deep navy on soft sky */
               letterSpacing: "0.01em",
             }}
           >
@@ -71,7 +71,7 @@ export function MckDemoBanner({
             letterSpacing: "0.04em",
             textTransform: "uppercase",
             flexShrink: 0,
-            border: `1px solid ${MCK.cyan}`,
+            border: `1px solid ${MCK.electric}`,
           }}
         >
           {ctaLabel}

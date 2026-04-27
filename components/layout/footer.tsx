@@ -18,8 +18,6 @@ const COMPANY_LINKS = [
   { href: '/about', label: '플랫폼 소개' },
   { href: '/notices', label: '공지사항' },
   { href: '/support', label: '고객센터' },
-  { href: '/partner', label: '파트너 신청' },
-  { href: '/developer', label: '개발자 API' },
   { href: '/guide', label: '이용 가이드' },
 ]
 
@@ -34,7 +32,7 @@ export function Footer() {
       .catch(() => {})
   }, [])
 
-  const companyName = settings?.companyName || '트랜스파머(주) | TransFarmer Inc.'
+  const companyName = settings?.companyName || '트랜스파머(주) | Transfarmer Inc.'
   const siteDescription = settings?.siteDescription || '금융기관과 투자자를 직접 연결하는 NPL 거래 플랫폼'
   const businessNumber = settings?.businessNumber || '507-87-02631'
   const ceoName = settings?.ceoName || '김기현'
@@ -42,8 +40,8 @@ export function Footer() {
   const companyAddress2 = settings?.companyAddress2 || '서울 종로구 서린동 154-1, 스타트업빌리지 5층'
   const contactPhone = settings?.contactPhone || '02-555-2822'
   const contactEmail = settings?.contactEmail || 'ceo@transfarmer.co.kr'
-  const dpoName = settings?.dpoName || '김기현'
-  const dpoEmail = settings?.dpoEmail || 'kh.kim@transfarmer.co.kr'
+  const dpoName = settings?.dpoName || '박성필'
+  const dpoEmail = settings?.dpoEmail || 'sp.park@transfarmer.co.kr'
 
   return (
     <footer
@@ -59,10 +57,17 @@ export function Footer() {
 
           {/* Column 1 — Brand */}
           <div className="flex flex-col gap-4">
-            {/* Logo */}
+            {/* Logo — Electric Blue 강조 (McKinsey cobalt) */}
             <Link href="/" className="flex items-center gap-2.5 group w-fit">
-              <div className="w-8 h-8 bg-[var(--color-brand-dark)] rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-[var(--color-brand-deep)] transition-colors">
-                <span className="text-white font-black text-sm tracking-tighter">N</span>
+              <div
+                className="w-8 h-8 flex items-center justify-center flex-shrink-0 transition-colors"
+                style={{
+                  background: "#2251FF",
+                  borderTop: "2px solid #00A9F4",
+                  boxShadow: "0 4px 10px rgba(34, 81, 255, 0.40)",
+                }}
+              >
+                <span className="text-white font-black text-base tracking-tighter">N</span>
               </div>
               <div>
                 <span className="font-black text-white text-base tracking-tight">NPL</span>
@@ -82,7 +87,7 @@ export function Footer() {
 
             {/* Brief description */}
             <p className="text-xs text-[var(--color-text-muted)] leading-relaxed max-w-xs">
-              정보의 비대칭 속에서 금융기관과 투자자를 직접 연결합니다. NPL 매물 탐색부터 거래 완결까지 — AI가 지원하는 국내 최초 NPL 거래 플랫폼입니다.
+              정보의 비대칭 속에서 금융기관과 투자자를 직접 연결합니다. NPL 매물 탐색부터 거래 완결까지 — 국내 최초 AI 기반 NPL 거래 플랫폼입니다.
             </p>
           </div>
 
@@ -175,7 +180,7 @@ export function Footer() {
                 </a>
               </p>
               <p className="text-[11px] text-[var(--color-text-muted)]">
-                통신판매중개업 신고번호: 제2026-서울-0000호
+                통신판매중개업 신고번호: 2026-강원춘천-0136
               </p>
             </div>
           </div>
@@ -193,9 +198,9 @@ export function Footer() {
             <ComplianceBadge label="에스크로 자금보호" />
           </div>
           <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed max-w-4xl">
-            NPLatform은 금융감독원 · 금융위원회의 개인정보 · 채무자정보 보호 지침에 따라 모든 매물 데이터에 대해
-            자동 마스킹 파이프라인을 운영하며, 담보 부동산 정보는 공개하되 채무자 개인정보는 4단계 접근 통제
-            (L0 공개 / L1 본인인증 / L2 NDA · 전문투자자 / L3 LOI · 승인) 모델로 보호합니다.
+            NPLatform(엔플랫폼)은 금융감독원 · 금융위원회의 개인정보 · 채무자정보 보호 지침에 따라 모든 매물 데이터에 대해
+            자동 마스킹 파이프라인을 운영하며, 담보 부동산 정보, 채권 정보는 4단계 접근 통제
+            (공개 / 투자기관 인증 / NDA 체결 / LOI · 승인) 모델로 보호합니다.
             등기부등본 · 권리관계 요약 등 추가 자료는 금융기관 정보 제공 수준에 따라 다를 수 있습니다.
           </p>
           <p className="mt-3 text-[11px] text-[var(--color-text-muted)] leading-relaxed max-w-4xl">
@@ -208,14 +213,14 @@ export function Footer() {
         <div className="mt-12 pt-6 border-t border-[var(--color-brand-deep)]/40 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
             <p className="text-xs text-[var(--color-text-muted)]">
-              &copy; 2026 트랜스파머(주) TransFarmer Inc. All rights reserved.
+              &copy; 2026 트랜스파머(주) Transfarmer Inc. All rights reserved.
             </p>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <Link
                 href="/terms/service"
                 className="text-xs text-[var(--color-text-muted)] hover:text-white transition-colors"
               >
-                이용약관
+                서비스 이용약관
               </Link>
               <span className="text-[var(--color-border-subtle)] text-xs">|</span>
               <Link
@@ -223,6 +228,13 @@ export function Footer() {
                 className="text-xs text-[var(--color-text-muted)] hover:text-white transition-colors"
               >
                 개인정보처리방침
+              </Link>
+              <span className="text-[var(--color-border-subtle)] text-xs">|</span>
+              <Link
+                href="/terms/email-policy"
+                className="text-xs text-[var(--color-text-muted)] hover:text-white transition-colors"
+              >
+                이메일 무단수집거부
               </Link>
             </div>
           </div>
@@ -242,23 +254,23 @@ export function Footer() {
   )
 }
 
-// ─── Compliance badge · McKinsey mono editorial ──────────────────────────────
-// 모든 뱃지 동일 톤 (이전: emerald/amber/blue 컬러 prop → 모두 brass + 흰톤)
+// ─── Compliance badge · McKinsey Sky Blue editorial ──────────────────────────
+// 모든 뱃지 sky blue 컬러로 통일 — 가독성 ↑ + 컴플라이언스 시그니처
 function ComplianceBadge({ label }: { label: string; color?: string }) {
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-semibold"
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold"
       style={{
-        background: "transparent",
-        color: "rgba(255, 255, 255, 0.78)",
-        border: "1px solid rgba(255, 255, 255, 0.16)",
+        background: "rgba(168, 205, 232, 0.18)",
+        color: "#A8CDE8",
+        border: "1px solid rgba(168, 205, 232, 0.45)",
         borderRadius: 0,
         letterSpacing: "0.02em",
       }}
     >
       <span
         className="w-1 h-1 inline-block"
-        style={{ background: "var(--color-editorial-gold, #2251FF)" }}
+        style={{ background: "#A8CDE8" }}
       />
       {label}
     </span>

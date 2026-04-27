@@ -49,8 +49,10 @@ const C = {
   inkDeep: "#051C2C",
   paper: "#FFFFFF",
   paperTint: "#FAFBFC",
-  cobalt: "#003A70",
-  cobaltLight: "#6FB8E6",
+  /** 맥킨지 시그니처 cobalt → electric blue 로 통일 */
+  cobalt: "#2251FF",
+  cobaltDark: "#1A47CC",
+  cobaltLight: "#A8CDE8",
   border: "rgba(10, 22, 40, 0.10)",
   borderStrong: "rgba(10, 22, 40, 0.18)",
   textSub: "#4A5568",
@@ -77,13 +79,15 @@ function StatusChip({ status }: { status: ApprovalStatus }) {
     <span
       className="inline-flex items-center gap-1"
       style={{
-        fontSize: 10.5,
+        fontSize: 10,
         fontWeight: 800,
-        letterSpacing: "0.04em",
-        padding: "3px 8px",
+        letterSpacing: "0.05em",
+        textTransform: "uppercase",
+        padding: "3px 7px",
         background: m.bg,
         color: m.fg,
-        borderRadius: 999,
+        border: `1px solid ${m.fg === "#475569" ? "rgba(71, 85, 105, 0.35)" : m.fg}`,
+        borderRadius: 0,
       }}
     >
       {m.icon}
@@ -365,8 +369,10 @@ export function InvestorVerifyModal({ open, onClose, state, onSubmit }: Investor
                 gap: 6,
               }}
             >
-              <Upload size={12} />
-              {state.status === "rejected" ? "재제출" : "추가 자료 제출"}
+              <Upload size={12} style={{ color: C.paper }} />
+              <span style={{ color: C.paper }}>
+                {state.status === "rejected" ? "재제출" : "추가 자료 제출"}
+              </span>
             </button>
           )}
         </>
@@ -499,8 +505,10 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
                 gap: 6,
               }}
             >
-              <FileSignature size={12} />
-              {state.status === "rejected" ? "재서명 · 재제출" : "전자서명 · NDA 제출"}
+              <FileSignature size={12} style={{ color: C.paper }} />
+              <span style={{ color: C.paper }}>
+                {state.status === "rejected" ? "재서명 · 재제출" : "전자서명 · NDA 제출"}
+              </span>
             </button>
           )}
         </>
@@ -523,8 +531,8 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
         </div>
       </section>
 
-      {/* NDA 핵심 조항 요약 (전문투자자 확인 항목 제거) */}
-      <section style={{ marginBottom: 18 }}>
+      {/* NDA 핵심 조항 요약 */}
+      <section style={{ marginBottom: 16 }}>
         <h3
           style={{
             fontSize: 11.5, fontWeight: 800, color: C.ink,
@@ -539,6 +547,68 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
           <li>• NDA 위반 시 손해 배상 + 개인정보보호법·신용정보법 책임</li>
           <li>• 본 NDA 유효기간 3년, 비밀유지 의무는 그 후에도 지속</li>
         </ul>
+      </section>
+
+      {/* NDA 6조항 전문 (스크롤 박스) */}
+      <section style={{ marginBottom: 16 }}>
+        <h3 style={{ fontSize: 11.5, fontWeight: 800, color: C.ink, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10 }}>
+          NDA 조항 (전문)
+        </h3>
+        <div style={{
+          background: C.paperTint,
+          border: `1px solid ${C.border}`,
+          borderTop: `2px solid ${C.cobalt}`,
+          padding: "14px 16px",
+          maxHeight: 220,
+          overflowY: "auto",
+        }}>
+          <dl style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 11.5, color: C.textSub, lineHeight: 1.55 }}>
+            {[
+              ["1조 (비밀정보의 정의)", "본 NDA 체결 후 열람 가능한 매물 상세 정보(등기부등본 원본, 임대차 계약 상세, 현장사진, 재무제표, 채무자 관련 정보 일체)는 비밀정보로 규정한다."],
+              ["2조 (비밀 유지 의무)", "수령자는 비밀정보를 NPL 투자 검토 목적으로만 사용하며, 제3자에게 누설·복제·배포하지 않는다. 단, 투자 자문 법인·법무법인 등 법적 보호 관계에 있는 전문가는 예외로 한다."],
+              ["3조 (개인정보 보호)", "열람한 정보 중 개인정보보호법 · 신용정보법에 따라 보호되는 정보는 수령자의 책임 하에 안전하게 관리하며, 검토 종료 후 즉시 파기한다."],
+              ["4조 (열람 이력 로깅)", "모든 열람 행위는 PII Access Log에 기록되며, 비정상 접근 패턴(대량 다운로드, 반복 조회 등)은 DPO에게 자동 통보되어 조사 대상이 된다."],
+              ["5조 (위반 시 책임)", "본 NDA 위반 시 NPLatform 및 매도자에게 발생한 모든 손해를 배상하며, 개인정보보호법 · 신용정보법 위반 시 관련 법령에 따른 형사 · 민사 책임을 진다."],
+              ["6조 (유효 기간)", "본 NDA는 체결일로부터 3년간 유효하며, 이후에도 비밀정보에 대한 비밀 유지 의무는 계속 유지된다."],
+            ].map(([title, body]) => (
+              <div key={title}>
+                <dt style={{ fontWeight: 800, color: C.ink, marginBottom: 3 }}>{title}</dt>
+                <dd>{body}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      {/* 동의 체크 + 전자 서명 입력 */}
+      <section style={{ marginBottom: 18 }}>
+        <label className="flex items-start gap-2 mb-3" style={{ cursor: "pointer" }}>
+          <input type="checkbox" style={{ marginTop: 3, accentColor: C.cobalt }} />
+          <span style={{ fontSize: 12, color: C.ink, fontWeight: 700, lineHeight: 1.5 }}>
+            위 NDA 조항을 모두 읽고 동의합니다
+          </span>
+        </label>
+        <div>
+          <label style={{ display: "block", fontSize: 10, fontWeight: 800, color: C.textSub, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>
+            전자 서명 — 서명자 성명 <span style={{ color: C.cobalt }}>*</span>
+          </label>
+          <input
+            type="text"
+            placeholder="본인의 성명을 정확히 입력하세요"
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              fontSize: 13,
+              background: C.paper,
+              color: C.ink,
+              border: `1px solid ${C.borderStrong}`,
+              outline: "none",
+            }}
+          />
+          <p style={{ fontSize: 10, color: C.textMuted, lineHeight: 1.5, marginTop: 6 }}>
+            전자서명법에 따른 공인인증서 기반 서명이 아닌 간이 서명입니다. 실계약 시 별도의 공인 전자서명이 요구됩니다.
+          </p>
+        </div>
       </section>
 
       {/* 매각사 승인 진행 */}
@@ -670,8 +740,10 @@ export function LoiModal({
                 gap: 6,
               }}
             >
-              <FileCheck size={12} />
-              {state.status === "rejected" ? "재제출" : "LOI 제출"}
+              <FileCheck size={12} style={{ color: C.paper }} />
+              <span style={{ color: C.paper }}>
+                {state.status === "rejected" ? "재제출" : "LOI 제출"}
+              </span>
             </button>
           )}
         </>
@@ -696,7 +768,7 @@ export function LoiModal({
         </div>
       </section>
 
-      {/* 매수 희망가 입력 */}
+      {/* 매수 희망가 입력 + 풀 신청 폼 (자금 조달 / 실사 기간 / 인수 주체 / 메시지) */}
       {canSubmit && (
         <section style={{ marginBottom: 18 }}>
           <h3
@@ -705,9 +777,9 @@ export function LoiModal({
               letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8,
             }}
           >
-            매수 희망가 (LOI)
+            제안 가격
           </h3>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-1">
             <input
               type="number"
               value={price}
@@ -728,8 +800,103 @@ export function LoiModal({
             />
             <span style={{ fontSize: 12, fontWeight: 700, color: C.textSub }}>원</span>
           </div>
-          <p style={{ fontSize: 10.5, fontWeight: 500, color: C.textMuted, marginTop: 6 }}>
-            LOI 는 법적 구속력이 없는 매수의향서입니다. 매각사 승인 후 협상 단계로 진입합니다.
+          <div className="flex items-center justify-between" style={{ marginTop: 6 }}>
+            <span style={{ fontSize: 10.5, color: C.textMuted, fontWeight: 600 }}>
+              매각희망가 {formatKRW(askingPrice)}원 기준
+            </span>
+            <span style={{
+              fontSize: 11, fontWeight: 800, fontVariantNumeric: "tabular-nums",
+              color: price < askingPrice ? "#1A47CC" : C.textMuted,
+            }}>
+              매각희망가 대비 {askingPrice > 0 ? (((price - askingPrice) / askingPrice) * 100).toFixed(1) : "0.0"}%
+            </span>
+          </div>
+
+          {/* 자금 조달 계획 */}
+          <h4 style={{ fontSize: 11.5, fontWeight: 800, color: C.ink, letterSpacing: "0.06em", textTransform: "uppercase", marginTop: 18, marginBottom: 10 }}>
+            자금 조달 계획
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            {[
+              { v: "CASH",      label: "자기 자본 100%",  desc: "승인 확률 높음" },
+              { v: "LEVERAGED", label: "금융 차입 병행",   desc: "LTV 50~70%" },
+              { v: "FUND",      label: "펀드 출자",       desc: "LP 확약서 첨부" },
+            ].map(o => (
+              <label key={o.v} className="cursor-pointer" style={{
+                padding: "10px 12px",
+                background: C.paper,
+                border: `1px solid ${C.borderStrong}`,
+                borderTop: `2px solid ${C.cobalt}`,
+                display: "flex", flexDirection: "column", gap: 3,
+              }}>
+                <input type="radio" name="loi-funding" value={o.v} style={{ display: "none" }} />
+                <span style={{ fontSize: 12, fontWeight: 800, color: C.ink, letterSpacing: "-0.005em" }}>{o.label}</span>
+                <span style={{ fontSize: 10, color: C.textMuted, fontWeight: 600 }}>{o.desc}</span>
+              </label>
+            ))}
+          </div>
+
+          {/* 실사 · 계약 체결 기간 */}
+          <h4 style={{ fontSize: 11.5, fontWeight: 800, color: C.ink, letterSpacing: "0.06em", textTransform: "uppercase", marginTop: 18, marginBottom: 8 }}>
+            실사 · 계약 체결 기간
+          </h4>
+          <div className="grid grid-cols-4 gap-2 mb-1">
+            {["14일", "30일", "45일", "60일"].map(d => (
+              <label key={d} className="cursor-pointer" style={{
+                padding: "10px 12px",
+                background: C.paper,
+                border: `1px solid ${C.borderStrong}`,
+                fontSize: 12, fontWeight: 800, color: C.ink,
+                textAlign: "center",
+                letterSpacing: "-0.005em",
+              }}>
+                <input type="radio" name="loi-duration" value={d} style={{ display: "none" }} />
+                {d}
+              </label>
+            ))}
+          </div>
+          <p style={{ fontSize: 10, color: C.textMuted, fontWeight: 500 }}>
+            짧은 기간일수록 매도자 승인 가능성이 높아집니다.
+          </p>
+
+          {/* 인수 주체 */}
+          <h4 style={{ fontSize: 11.5, fontWeight: 800, color: C.ink, letterSpacing: "0.06em", textTransform: "uppercase", marginTop: 18, marginBottom: 8 }}>
+            인수 주체
+          </h4>
+          <input
+            type="text"
+            placeholder="예: ○○자산운용 NPL 1호 펀드"
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              fontSize: 12.5,
+              color: C.ink, background: C.paper,
+              border: `1px solid ${C.borderStrong}`,
+              outline: "none",
+            }}
+          />
+
+          {/* 매도자에게 전달할 메시지 */}
+          <h4 style={{ fontSize: 11.5, fontWeight: 800, color: C.ink, letterSpacing: "0.06em", textTransform: "uppercase", marginTop: 18, marginBottom: 8 }}>
+            매도자에게 전달할 메시지
+          </h4>
+          <textarea
+            rows={3}
+            placeholder="인수 배경 · 추가 조건 · 실사 요구사항 등을 자유롭게 기재해주세요."
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              fontSize: 12.5,
+              color: C.ink, background: C.paper,
+              border: `1px solid ${C.borderStrong}`,
+              outline: "none", resize: "none",
+              fontFamily: "inherit",
+            }}
+          />
+
+          <p style={{ fontSize: 10.5, fontWeight: 500, color: C.textMuted, marginTop: 12, lineHeight: 1.55 }}>
+            LOI 는 법적 구속력이 없는 의향서이지만, 매도자가 승인한 후 본 계약 협상 단계로 진입하면
+            에스크로 입금 및 계약금 몰취 조건이 적용될 수 있습니다.
           </p>
         </section>
       )}

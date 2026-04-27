@@ -13,22 +13,19 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import {
-  ArrowRight,
   Bell,
-  FileText,
-  HandshakeIcon,
   CheckCircle2,
   Briefcase,
   Building2,
   Plus,
   Inbox,
+  Sparkles,
 } from "lucide-react"
 import Link from "next/link"
 import {
   MckPageShell,
   MckPageHeader,
   MckKpiGrid,
-  MckCta,
   MckBadge,
   MckEmptyState,
   MckDemoBanner,
@@ -40,18 +37,19 @@ import { type DealStage } from "@/lib/deal-constants"
 
 interface DealStageConfig {
   label: string
-  color: string
-  icon: typeof Bell
+  tone: "neutral" | "brass" | "ink" | "blue" | "positive" | "warning" | "danger"
 }
 
+// McKinsey 절제된 모노크로 progression — neutral (초기) → blue (중기) → ink (후기)
+// /deals/page.tsx 의 ACTIVE PIPELINE 리스트와 동일한 톤 체계.
 const STAGE_CONFIG: Record<DealStage, DealStageConfig> = {
-  INTEREST:      { label: "관심표명", color: MCK.textMuted,  icon: Bell },
-  NDA:           { label: "NDA",      color: MCK.blue,       icon: FileText },
-  DUE_DILIGENCE: { label: "실사",     color: MCK.brassDark,  icon: Briefcase },
-  NEGOTIATION:   { label: "오퍼",     color: MCK.warning,    icon: HandshakeIcon },
-  CONTRACT:      { label: "계약",     color: MCK.ink,        icon: CheckCircle2 },
-  SETTLEMENT:    { label: "잔금",     color: MCK.blue,       icon: ArrowRight },
-  COMPLETED:     { label: "완료",     color: MCK.positive,   icon: CheckCircle2 },
+  INTEREST:      { label: "관심표명", tone: "neutral" },
+  NDA:           { label: "NDA",      tone: "neutral" },
+  DUE_DILIGENCE: { label: "실사",     tone: "blue" },
+  NEGOTIATION:   { label: "오퍼",     tone: "blue" },
+  CONTRACT:      { label: "계약",     tone: "ink" },
+  SETTLEMENT:    { label: "잔금",     tone: "ink" },
+  COMPLETED:     { label: "완료",     tone: "ink" },
 }
 
 interface Deal {
@@ -163,41 +161,11 @@ const SAMPLE_DEALS: Deal[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────
 
-function daysUntil(dateStr: string): number {
-  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000)
-}
-
-function deadlineBadge(
-  dateStr: string,
-): { text: string; tone: "neutral" | "brass" | "warning" | "danger" } {
-  const d = daysUntil(dateStr)
-  if (d < 0) return { text: `D+${Math.abs(d)}`, tone: "danger" }
-  if (d <= 3) return { text: `D-${d}`, tone: "warning" }
-  if (d <= 7) return { text: `D-${d}`, tone: "brass" }
-  return { text: `D-${d}`, tone: "neutral" }
-}
-
 function isThisMonth(dateStr?: string): boolean {
   if (!dateStr) return false
   const d = new Date(dateStr)
   const now = new Date()
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
-}
-
-function riskBadgeProps(amount: number): {
-  label: "HIGH" | "MID" | "LOW"
-  tone: "danger" | "warning" | "positive"
-} {
-  if (amount >= 3_000_000_000) return { label: "HIGH", tone: "danger" }
-  if (amount >= 1_000_000_000) return { label: "MID", tone: "warning" }
-  return { label: "LOW", tone: "positive" }
-}
-
-function riskBorderColor(deal: Deal): string {
-  if (deal.current_stage === "COMPLETED") return MCK.positive
-  if (deal.amount >= 3_000_000_000) return MCK.danger
-  if (deal.amount >= 1_000_000_000) return MCK.warning
-  return MCK.positive
 }
 
 // ─── Main Component ───────────────────────────────────────────
@@ -332,51 +300,79 @@ export default function DealsDashboardPage() {
           { label: "딜룸", href: "/deals" },
           { label: "대시보드" },
         ]}
-        eyebrow="Deal Pipeline"
+        eyebrow="Deal Pipeline · 진행 중 거래 현황"
         title="딜룸 대시보드"
         subtitle={`현재 ${totalActive}건이 진행 중이며, 누적 ${completedCount}건이 완료되었습니다 (이번달 ${completedThisMonthCount}건). 단계별 진행 상황과 마감 기한을 한 화면에서 점검하세요.`}
         actions={
-          <MckCta
-            label="새 딜 시작"
-            href="/exchange"
-            variant="primary"
-            size="md"
-            centered={false}
-            iconRight={<Plus size={16} style={{ color: MCK.paper }} />}
-          />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <Link
+              href="/exchange"
+              style={{
+                padding: "9px 16px",
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: "-0.01em",
+                background: MCK.ink,
+                color: MCK.paper,
+                border: "none",
+                borderTop: `2px solid ${MCK.brass}`,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              새 딜 시작 <Plus size={14} />
+            </Link>
+            <Link
+              href="/deals"
+              style={{
+                padding: "9px 16px",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "-0.01em",
+                background: MCK.paper,
+                color: MCK.ink,
+                border: `1px solid ${MCK.ink}`,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <Sparkles size={14} /> 딜룸 목록
+            </Link>
+          </div>
         }
       />
 
-      {/* KPI Strip */}
-      <section
-        className="max-w-[1280px] mx-auto"
-        style={{ padding: "32px 24px 0" }}
-      >
-        <MckKpiGrid
-          items={[
-            {
-              label: "진행중 딜",
-              value: String(totalActive),
-              hint: "전체 거래",
-              accent: true,
-            },
-            {
-              label: "총 거래금액",
-              value: formatKRW(totalAmount),
-              hint: "포트폴리오 합계",
-            },
-            {
-              label: "완료 딜",
-              value: String(completedCount),
-              hint: `이번달 ${completedThisMonthCount}건`,
-            },
-            {
-              label: "평균 진행률",
-              value: `${avgProgress}%`,
-              hint: "전체 평균",
-            },
-          ]}
-        />
+      {/* ── KPI strip · DARK · McKinsey impact (거래소와 동일 패턴) ─────────── */}
+      <section style={{ background: MCK.paper, paddingBottom: 32 }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 24px" }}>
+          <MckKpiGrid
+            variant="dark"
+            items={[
+              {
+                label: "진행중 딜",
+                value: `${totalActive}건`,
+                hint: "전체 거래",
+              },
+              {
+                label: "총 거래금액",
+                value: formatKRW(totalAmount),
+                hint: "포트폴리오 합계",
+              },
+              {
+                label: "완료 딜",
+                value: `${completedCount}건`,
+                hint: `이번달 ${completedThisMonthCount}건`,
+              },
+              {
+                label: "평균 진행률",
+                value: `${avgProgress}%`,
+                hint: "전체 평균",
+              },
+            ]}
+          />
+        </div>
       </section>
 
       {/* Buy/Sell tab */}
@@ -580,47 +576,83 @@ export default function DealsDashboardPage() {
             </div>
           </section>
 
-          {/* Filter pills + List */}
+          {/* ── ACTIVE PIPELINE 리스트 (/deals 와 동일 패턴) ───────────────── */}
           <section
             id="list"
             className="max-w-[1280px] mx-auto"
-            style={{ padding: "20px 24px 32px" }}
+            style={{ padding: "24px 24px 32px" }}
           >
-            <div
+            <header
               style={{
                 display: "flex",
-                gap: 6,
+                alignItems: "flex-end",
+                justifyContent: "space-between",
+                gap: 16,
+                marginBottom: 18,
                 flexWrap: "wrap",
-                marginBottom: 14,
+                paddingBottom: 14,
+                borderBottom: `1px solid ${MCK.border}`,
               }}
             >
-              {DASHBOARD_FILTERS.map((f) => {
-                const active = dashboardFilter === f
-                return (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => setDashboardFilter(f)}
-                    style={{
-                      padding: "7px 14px",
-                      fontSize: 12,
-                      fontWeight: 700,
-                      letterSpacing: "0.02em",
-                      background: active ? MCK.ink : "transparent",
-                      color: active ? MCK.paper : MCK.textSub,
-                      border: `1px solid ${active ? MCK.ink : MCK.border}`,
-                      borderTop: active
-                        ? `2px solid ${MCK.brass}`
-                        : `1px solid ${MCK.border}`,
-                      cursor: "pointer",
-                      transition: "all 0.15s",
-                    }}
-                  >
-                    {f}
-                  </button>
-                )
-              })}
-            </div>
+              <div>
+                <div className="flex items-center gap-2" style={{ marginBottom: 6 }}>
+                  <span style={{ width: 18, height: 1.5, background: MCK.brass, display: "inline-block" }} />
+                  <span style={{ color: MCK.brassDark, ...MCK_TYPE.eyebrow }}>ACTIVE PIPELINE</span>
+                </div>
+                <h2
+                  style={{
+                    fontFamily: MCK_FONTS.serif,
+                    color: MCK.ink,
+                    ...MCK_TYPE.h2,
+                    marginBottom: 4,
+                  }}
+                >
+                  {dashboardFilter === "완료 딜" ? "완료 딜" : dashboardFilter === "진행중" ? "진행중 딜" : "전체 딜"}
+                </h2>
+                <p style={{ color: MCK.textSub, ...MCK_TYPE.bodySm }}>
+                  딜을 클릭하면 해당 딜룸으로 이동합니다. 단계·기관·진행률을 한 줄에서 확인하세요.
+                </p>
+              </div>
+              <div className="flex items-center" style={{ gap: 12, flexWrap: "wrap" }}>
+                {/* 필터 pills */}
+                <div style={{ display: "inline-flex", border: `1px solid ${MCK.borderStrong}`, background: MCK.paper }}>
+                  {DASHBOARD_FILTERS.map((f) => {
+                    const active = dashboardFilter === f
+                    return (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => setDashboardFilter(f)}
+                        style={{
+                          padding: "8px 14px",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          letterSpacing: "0.02em",
+                          background: active ? MCK.ink : MCK.paper,
+                          color: active ? MCK.paper : MCK.textSub,
+                          border: "none",
+                          cursor: "pointer",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {f}
+                      </button>
+                    )
+                  })}
+                </div>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: MCK.textMuted,
+                    fontVariantNumeric: "tabular-nums",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  TOTAL · {dashboardDeals.length}건
+                </span>
+              </div>
+            </header>
 
             {dashboardDeals.length === 0 ? (
               <MckEmptyState
@@ -634,180 +666,170 @@ export default function DealsDashboardPage() {
             ) : (
               <div
                 style={{
-                  background: MCK.paper,
                   border: `1px solid ${MCK.border}`,
                   borderTop: `2px solid ${MCK.brass}`,
+                  background: MCK.paper,
                 }}
               >
-                {/* Table header */}
+                {/* List header */}
                 <div
-                  className="grid"
                   style={{
-                    gridTemplateColumns: "auto 2fr 1.2fr 1fr 80px 1.2fr",
-                    columnGap: 16,
-                    padding: "12px 20px",
-                    borderBottom: `1px solid ${MCK.border}`,
+                    display: "grid",
+                    gridTemplateColumns: "92px 1fr 132px 130px 110px 24px",
+                    gap: 12,
+                    padding: "10px 14px",
                     background: MCK.paperTint,
+                    borderBottom: `1px solid ${MCK.border}`,
+                    fontSize: 10,
+                    fontWeight: 800,
+                    color: MCK.textSub,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
                   }}
                 >
-                  {["위험", "매물명", "금액", "기관", "마감", "다음 단계"].map(
-                    (h) => (
-                      <span
-                        key={h}
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 700,
-                          color: MCK.textSub,
-                          letterSpacing: "0.06em",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {h}
-                      </span>
-                    ),
-                  )}
+                  <span style={{ textAlign: "center" }}>Stage</span>
+                  <span>Listing</span>
+                  <span>Amount</span>
+                  <span>Counterparty</span>
+                  <span>Progress</span>
+                  <span />
                 </div>
 
                 {dashboardDeals.map((deal, idx) => {
-                  const config = STAGE_CONFIG[deal.current_stage]
-                  const dl = deadlineBadge(deal.deadline)
-                  const risk = riskBadgeProps(deal.amount)
-                  const borderLeft = riskBorderColor(deal)
+                  const cfg = STAGE_CONFIG[deal.current_stage]
                   const isLast = idx === dashboardDeals.length - 1
                   return (
                     <Link
                       key={deal.id}
                       href={`/deals/${deal.id}`}
-                      className="grid items-center mck-deal-row"
+                      className="mck-deal-row"
                       style={{
-                        gridTemplateColumns:
-                          "auto 2fr 1.2fr 1fr 80px 1.2fr",
-                        columnGap: 16,
-                        padding: "14px 20px",
-                        borderBottom: isLast
-                          ? "none"
-                          : `1px solid ${MCK.border}`,
-                        borderLeft: `3px solid ${borderLeft}`,
+                        display: "grid",
+                        gridTemplateColumns: "92px 1fr 132px 130px 110px 24px",
+                        gap: 12,
+                        alignItems: "center",
+                        padding: "12px 14px",
                         textDecoration: "none",
-                        transition: "background 0.15s",
+                        background: MCK.paper,
+                        borderBottom: isLast ? "none" : `1px solid ${MCK.border}`,
+                        borderLeft: "3px solid transparent",
+                        transition: "background 0.15s ease, border-left-color 0.15s ease",
                       }}
                     >
-                      <MckBadge tone={risk.tone} size="sm">
-                        {risk.label}
-                      </MckBadge>
-
+                      <div style={{ textAlign: "center" }}>
+                        <MckBadge tone={cfg.tone} size="sm">{cfg.label}</MckBadge>
+                      </div>
                       <div style={{ minWidth: 0 }}>
-                        <div
+                        <p
                           style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
+                            fontFamily: MCK_FONTS.serif,
+                            fontSize: 14,
+                            fontWeight: 700,
+                            color: MCK.ink,
                             marginBottom: 2,
+                            letterSpacing: "-0.01em",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
                           }}
                         >
-                          <p
-                            style={{
-                              fontSize: 13,
-                              fontWeight: 700,
-                              color: MCK.ink,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              margin: 0,
-                              letterSpacing: "-0.01em",
-                            }}
-                          >
-                            {deal.listing_name}
-                          </p>
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 4,
-                              padding: "2px 7px",
-                              fontSize: 10,
-                              fontWeight: 700,
-                              color: config.color,
-                              background: `${config.color}14`,
-                              border: `1px solid ${config.color}55`,
-                              flexShrink: 0,
-                              letterSpacing: "0.02em",
-                            }}
-                          >
-                            <span
-                              style={{
-                                width: 5,
-                                height: 5,
-                                borderRadius: "50%",
-                                background: config.color,
-                                display: "inline-block",
-                              }}
-                            />
-                            {config.label}
-                          </span>
-                        </div>
-                        {deal.asset_type && (
-                          <p
-                            style={{
-                              fontSize: 11,
-                              color: MCK.textMuted,
-                              fontWeight: 500,
-                              margin: 0,
-                            }}
-                          >
-                            {deal.asset_type} · {deal.location}
-                            {deal.current_stage === "COMPLETED" &&
-                              deal.completed_at && (
-                                <> · 완료일 {deal.completed_at}</>
-                              )}
-                          </p>
-                        )}
+                          {deal.listing_name}
+                        </p>
+                        <p
+                          style={{
+                            fontSize: 11,
+                            color: MCK.textMuted,
+                            fontWeight: 500,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {deal.asset_type && deal.location
+                            ? `${deal.asset_type} · ${deal.location}${
+                                deal.current_stage === "COMPLETED" && deal.completed_at
+                                  ? ` · 완료일 ${deal.completed_at}`
+                                  : ""
+                              }`
+                            : deal.counterparty_masked}
+                        </p>
                       </div>
-
-                      <span
+                      <p
                         style={{
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: 800,
-                          color: MCK.brassDark,
+                          color: MCK.ink,
                           fontFamily: MCK_FONTS.serif,
                           fontVariantNumeric: "tabular-nums",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
+                          margin: 0,
                         }}
                       >
                         {formatKRW(deal.amount)}
-                      </span>
-
-                      <span
+                      </p>
+                      <p
                         style={{
-                          fontSize: 12,
+                          fontSize: 11,
                           color: MCK.textSub,
                           fontWeight: 600,
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
+                          margin: 0,
                         }}
                       >
                         {deal.counterparty_masked}
-                      </span>
-
-                      <MckBadge tone={dl.tone} size="sm">
-                        {dl.text}
-                      </MckBadge>
-
-                      <span
-                        style={{
-                          fontSize: 11,
-                          color: MCK.textSub,
-                          fontWeight: 500,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {deal.next_action}
-                      </span>
+                      </p>
+                      <div className="flex items-center" style={{ gap: 8 }}>
+                        <div
+                          style={{
+                            flex: 1,
+                            height: 3,
+                            background: MCK.border,
+                            position: "relative",
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              height: "100%",
+                              width: `${deal.progress}%`,
+                              background: MCK.brass,
+                            }}
+                          />
+                        </div>
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 800,
+                            color: MCK.textSub,
+                            fontVariantNumeric: "tabular-nums",
+                            minWidth: 28,
+                            textAlign: "right",
+                          }}
+                        >
+                          {deal.progress}%
+                        </span>
+                      </div>
+                      {deal.notification ? (
+                        <span style={{ position: "relative", display: "inline-block", width: 14, height: 14 }}>
+                          <Bell size={12} style={{ color: MCK.textMuted }} />
+                          <span
+                            style={{
+                              position: "absolute",
+                              top: -2,
+                              right: -2,
+                              width: 6,
+                              height: 6,
+                              borderRadius: "50%",
+                              background: MCK.danger,
+                            }}
+                          />
+                        </span>
+                      ) : (
+                        <span style={{ width: 14, height: 14, display: "inline-block" }} />
+                      )}
                     </Link>
                   )
                 })}
@@ -837,10 +859,11 @@ export default function DealsDashboardPage() {
             )}
           </section>
 
-          {/* row hover style */}
+          {/* row hover — McKinsey sky blue tint + electric left border */}
           <style jsx>{`
             :global(.mck-deal-row:hover) {
-              background: ${MCK.paperTint};
+              background: rgba(168, 205, 232, 0.30) !important;
+              border-left-color: ${MCK.electric} !important;
             }
           `}</style>
         </>

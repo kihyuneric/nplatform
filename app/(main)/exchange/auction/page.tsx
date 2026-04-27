@@ -456,10 +456,14 @@ function BidCard({ item, onBid }: { item: BidItem; onBid: (item: BidItem) => voi
   const ddayNum = parseInt(dday.replace("D-", ""), 10)
   const ddayUrgent = ddayNum <= 1
   const isUrgent = item.status === "마감임박"
-  const bidRateRaw = (item.minimumBid / item.principal) * 100
-  // 진행 바는 100% 상한 · 표기 숫자도 100% 상한 (실제 비율이 100%를 넘어도 시각적 100%)
+  // 최저입찰가는 채권원금 상한 (사용자 요청 — DB 이상값 방어)
+  const minimumBidCapped = Math.min(item.minimumBid, item.principal)
+  const bidRateRaw = (minimumBidCapped / item.principal) * 100
+  // 진행 바는 100% 상한 · 표기 숫자도 100% 상한
   const bidRatePct = Math.min(100, bidRateRaw).toFixed(1)
   const bidRateBar = Math.min(100, bidRateRaw)
+  // 할인율 = (1 - 최저입찰가/채권원금) × 100 (음수는 0으로 클램프)
+  const discountRate = Math.max(0, (1 - minimumBidCapped / item.principal) * 100)
   const riskTone = RISK_TONE[item.riskGrade] ?? "warning"
 
   return (
@@ -571,16 +575,13 @@ function BidCard({ item, onBid }: { item: BidItem; onBid: (item: BidItem) => voi
         <div style={{ padding: "12px 14px", borderRight: "1px solid rgba(255, 255, 255, 0.12)" }}>
           <p style={{ ...MCK_TYPE.label, color: "rgba(255, 255, 255, 0.65)", marginBottom: 4 }}>최저입찰가</p>
           <p style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.paper, letterSpacing: "-0.015em", lineHeight: 1.05, fontVariantNumeric: "tabular-nums" }}>
-            {formatKRW(item.minimumBid)}
+            {formatKRW(minimumBidCapped)}
           </p>
         </div>
         <div style={{ padding: "12px 14px" }}>
-          <p style={{ ...MCK_TYPE.label, color: MCK.cyan, marginBottom: 4, display: "inline-flex", alignItems: "center", gap: 3 }}>
-            <Sparkles size={9} style={{ color: MCK.cyan }} />
-            AI예가
-          </p>
+          <p style={{ ...MCK_TYPE.label, color: MCK.cyan, marginBottom: 4 }}>할인율</p>
           <p style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.cyan, letterSpacing: "-0.015em", lineHeight: 1.05, fontVariantNumeric: "tabular-nums" }}>
-            {formatKRW(item.aiEstimate)}
+            {discountRate.toFixed(1)}%
           </p>
         </div>
       </div>
@@ -687,16 +688,17 @@ function BidCard({ item, onBid }: { item: BidItem; onBid: (item: BidItem) => voi
             padding: "10px 12px",
             fontSize: 12,
             fontWeight: 800,
-            background: MCK.ink,
-            color: MCK.paper,
-            borderTop: `2px solid ${MCK.brass}`,
-            border: "none",
+            background: "#A8CDE8",                              /* McKinsey soft sky blue (사용자 첨부 톤) */
+            color: MCK.ink,                                     /* deep navy 텍스트 */
+            borderTop: `2px solid ${MCK.electric}`,             /* cobalt blue accent */
+            border: "1px solid #7FA8C8",
+            borderRadius: 4,
             cursor: "pointer",
             letterSpacing: "-0.01em",
-            boxShadow: "0 4px 12px rgba(10,22,40,0.18)",
+            boxShadow: "0 4px 12px rgba(34, 81, 255, 0.10)",
           }}
         >
-          <Gavel size={13} /> 입찰 참여
+          <Gavel size={13} style={{ color: MCK.ink }} /> 입찰 참여
         </button>
       </div>
     </article>

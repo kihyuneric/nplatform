@@ -11,8 +11,10 @@ import {
 import { NumberInput } from "@/components/ui/number-input"
 import { krwLong } from "@/lib/format"
 import { COLLATERAL_CATEGORIES, REGIONS } from "@/lib/taxonomy"
+import { BondOcrUploader, type BondOcrExtracted } from "@/components/npl/bond-ocr-uploader"
+import Link from "next/link"
 import {
-  MckPageShell, MckPageHeader, MckSection, MckCard, MckBadge, MckDemoBanner,
+  MckPageShell, MckPageHeader, MckSection, MckCard, MckKpiGrid, MckBadge, MckDemoBanner,
 } from "@/components/mck"
 import { MCK, MCK_FONTS, MCK_TYPE, formatKRW } from "@/lib/mck-design"
 import type {
@@ -153,6 +155,17 @@ export default function ProfitabilityPage() {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [isSample, setIsSample] = useState(false)
+
+  // ⚡ autoRun=1 — 매물 등록(/exchange/sell) 에서 넘어왔을 때 위저드 우회 모드
+  const [autoRunMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false
+    return new URLSearchParams(window.location.search).get("autoRun") === "1"
+  })
+  const [autoRunArmed, setAutoRunArmed] = useState(false)
+  const [autoRunStatus, setAutoRunStatus] = useState<"prefilling" | "running" | "error" | null>(
+    autoRunMode ? "prefilling" : null,
+  )
+  const [autoRunError, setAutoRunError] = useState<string | null>(null)
 
   // 폼 상태
   const [dealStructure] = useState<DealStructure>("LOAN_SALE")
@@ -323,8 +336,17 @@ export default function ProfitabilityPage() {
       }
 
       sessionStorage.removeItem("listing-analysis-prefill")
+
+      // ⚡ autoRun=1 인 경우, prefill 적용 직후 다음 렌더에서 handleSubmit 자동 호출
+      if (autoRunMode) {
+        setAutoRunArmed(true)
+      }
     } catch (err) {
       console.warn("[analysis] listing prefill parse failed:", err)
+      if (autoRunMode) {
+        setAutoRunStatus("error")
+        setAutoRunError("매물 정보를 불러오지 못했습니다. 위저드를 사용해 직접 입력해 주세요.")
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -338,6 +360,36 @@ export default function ProfitabilityPage() {
       default: return false
     }
   }, [step, bond, collateral, rights, loanSaleTerms])
+
+  // ⚡ autoRun 트리거 — prefill effect 가 setAutoRunArmed(true) 한 다음 렌더에서
+  //    React state(bond/collateral/...) 가 모두 업데이트된 상태이므로 handleSubmit 안전.
+  //    필수 필드가 비어 있으면 reasonable defaults 로 채워 서버 검증을 통과시킴.
+  useEffect(() => {
+    if (!autoRunArmed) return
+    setAutoRunArmed(false)
+    setAutoRunStatus("running")
+
+    // 필수 필드 디폴트 보강 — prefill 에 없을 수 있는 항목
+    if (!bond.debtorName) {
+      setBond(p => ({ ...p, debtorName: p.debtorType === "CORPORATE" ? "법인 채무자" : "채무자" }))
+    }
+    if (!bond.defaultStartDate) {
+      const today = new Date().toISOString().slice(0, 10)
+      setBond(p => ({ ...p, defaultStartDate: today }))
+    }
+    if (!collateral.appraisalDate) {
+      const today = new Date().toISOString().slice(0, 10)
+      setCollateral(p => ({ ...p, appraisalDate: today }))
+    }
+    if (rights.mortgageAmount <= 0 && collateral.appraisalValue > 0) {
+      // 근저당 채권최고액 미입력 시 감정가의 80% 로 추정 (임시값)
+      setRights(p => ({ ...p, mortgageAmount: Math.round(collateral.appraisalValue * 0.8) }))
+    }
+    // 다음 microtask 에서 submit (state 보강 반영 후)
+    const t = setTimeout(() => { handleSubmit() }, 30)
+    return () => clearTimeout(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRunArmed])
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -387,130 +439,318 @@ export default function ProfitabilityPage() {
       router.push("/analysis/profitability/result")
     } catch (err: any) {
       console.error(err)
-      alert(err.message || "분석 중 오류가 발생했습니다. 다시 시도해주세요.")
+      if (autoRunMode) {
+        setAutoRunStatus("error")
+        setAutoRunError(err?.message || "분석 중 오류가 발생했습니다. 위저드를 사용해 직접 입력해 주세요.")
+      } else {
+        alert(err.message || "분석 중 오류가 발생했습니다. 다시 시도해주세요.")
+      }
     } finally {
       setLoading(false)
     }
   }
 
   const headerActions = (
-    <button
-      type="button"
-      onClick={loadSample}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "10px 16px",
-        background: MCK.paper,
-        color: MCK.ink,
-        border: `1px solid ${MCK.ink}`,
-        borderTop: `2px solid ${MCK.brass}`,
-        fontSize: 12,
-        fontWeight: 800,
-        letterSpacing: "-0.01em",
-        cursor: "pointer",
-      }}
-    >
-      <FileText size={14} style={{ color: MCK.ink }} />
-      샘플 데이터로 시작
-    </button>
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+      <button
+        type="button"
+        onClick={loadSample}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "9px 16px",
+          fontSize: 12, fontWeight: 800,
+          letterSpacing: "-0.01em",
+          background: MCK.ink,
+          color: MCK.paper,
+          border: "none",
+          borderTop: `2px solid ${MCK.electric}`,
+          cursor: "pointer",
+        }}
+      >
+        <FileText size={14} /> 샘플 데이터로 시작
+      </button>
+      <Link
+        href="/analysis/demo"
+        style={{
+          padding: "9px 16px",
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: "-0.01em",
+          background: MCK.paper,
+          color: MCK.ink,
+          border: `1px solid ${MCK.ink}`,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          textDecoration: "none",
+        }}
+      >
+        <Info size={14} /> 데모 결과 미리보기
+      </Link>
+    </div>
   )
 
-  return (
-    <MckPageShell variant="tint">
-      <MckPageHeader
-        breadcrumbs={[
-          { label: "홈", href: "/" },
-          { label: "분석", href: "/analysis" },
-          { label: "NPL 분석" },
-        ]}
-        eyebrow="NPL ANALYSIS"
-        title="NPL 수익성 분석"
-        subtitle="채권·담보물 데이터를 입력하면 결정론적 모델이 매입 수익률·IRR·회수 시나리오를 자동 산출합니다."
-        actions={headerActions}
-      />
-
-      {isSample && (
-        <div className="max-w-[1280px] mx-auto" style={{ padding: "16px 24px 0" }}>
+  // ⚡ autoRun 모드 — 위저드 UI 를 가리고 풀스크린 로딩 오버레이만 표시.
+  //    분석이 완료되면 handleSubmit() 내부에서 router.push 로 결과 페이지로 이동.
+  if (autoRunMode && autoRunStatus !== "error") {
+    return (
+      <MckPageShell variant="tint">
+        <MckPageHeader
+          breadcrumbs={[
+            { label: "홈", href: "/" },
+            { label: "분석", href: "/analysis" },
+            { label: "NPL 수익성 분석" },
+          ]}
+          eyebrow="NPL ANALYSIS · Auto-run from listing"
+          title="매물 정보로 보고서를 생성하고 있습니다"
+          subtitle="등록한 매물 데이터를 기반으로 결정론적 모델이 매입 수익률·IRR·회수 시나리오를 자동 산출합니다."
+        />
+        <div className="max-w-[1280px] mx-auto" style={{ padding: "48px 24px 80px" }}>
           <div
             style={{
               background: MCK.paper,
               border: `1px solid ${MCK.border}`,
-              borderTop: `2px solid ${MCK.brass}`,
+              borderTop: `2px solid ${MCK.electric}`,
+              padding: "64px 40px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 18,
+              textAlign: "center",
+            }}
+          >
+            <Loader2 size={36} className="animate-spin" style={{ color: MCK.electric }} />
+            <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric }}>
+              {autoRunStatus === "running" ? "Profitability engine running" : "Preparing analysis"}
+            </div>
+            <h2 style={{ ...MCK_TYPE.h2, fontFamily: MCK_FONTS.serif, color: MCK.ink, letterSpacing: "-0.02em" }}>
+              {autoRunStatus === "running" ? "수익성 모델 계산 중…" : "매물 데이터를 불러오는 중…"}
+            </h2>
+            <p style={{ ...MCK_TYPE.bodySm, color: MCK.textSub, maxWidth: 520 }}>
+              결과 보고서가 준비되는 즉시 자동으로 이동합니다 (보통 5초 미만).
+              잠시만 기다려 주세요.
+            </p>
+            <div style={{ display: "flex", gap: 8, marginTop: 6, flexWrap: "wrap", justifyContent: "center" }}>
+              <MckBadge tone="ink" size="sm">Step 1 · prefill ✓</MckBadge>
+              <MckBadge tone={autoRunStatus === "running" ? "ink" : "neutral"} size="sm">
+                Step 2 · model {autoRunStatus === "running" ? "running" : "queued"}
+              </MckBadge>
+              <MckBadge tone="neutral" size="sm">Step 3 · report</MckBadge>
+            </div>
+          </div>
+        </div>
+      </MckPageShell>
+    )
+  }
+
+  // ⚡ autoRun 실패 시 — 위저드 fallback. 사용자가 직접 보강 후 제출 가능.
+  // (autoRunStatus === "error" 면 일반 위저드 렌더로 fallthrough)
+
+  return (
+    <MckPageShell variant="tint">
+      {autoRunMode && autoRunStatus === "error" && autoRunError && (
+        <div className="max-w-[1280px] mx-auto" style={{ padding: "16px 24px 0" }}>
+          <div style={{
+            display: "flex", gap: 12, alignItems: "flex-start",
+            background: "rgba(34, 81, 255, 0.04)",
+            border: `1px solid ${MCK.electric}`,
+            borderLeft: `3px solid ${MCK.electric}`,
+            padding: "12px 16px",
+            fontSize: 12,
+            color: MCK.ink,
+          }}>
+            <Info size={14} style={{ color: MCK.electric, marginTop: 2, flexShrink: 0 }} />
+            <div>
+              <div style={{ fontWeight: 800, marginBottom: 4 }}>자동 분석에 실패했습니다</div>
+              <div style={{ color: MCK.textSub }}>{autoRunError}</div>
+            </div>
+          </div>
+        </div>
+      )}
+      <MckPageHeader
+        breadcrumbs={[
+          { label: "홈", href: "/" },
+          { label: "분석", href: "/analysis" },
+          { label: "NPL 수익성 분석" },
+        ]}
+        eyebrow={`NPL ANALYSIS · 4-step Wizard · Step ${step} of ${STEPS.length} · ${STEPS[step - 1]?.label ?? ""}`}
+        title="NPL 수익성 분석"
+        subtitle="채권·담보물·권리관계·딜 조건을 4단계로 입력하면 결정론적 모델이 매입 수익률·IRR·회수 시나리오를 자동 산출합니다."
+        actions={headerActions}
+      />
+
+      {/* ── Wizard Progress · DARK KPI strip ─────────────────────────── */}
+      <section style={{ background: MCK.paper, paddingBottom: 24 }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 24px" }}>
+          <MckKpiGrid
+            variant="dark"
+            items={[
+              {
+                label: "현재 단계",
+                value: `${step} / ${STEPS.length}`,
+                hint: STEPS[step - 1]?.label ?? "—",
+              },
+              {
+                label: "완료 단계",
+                value: `${step - 1}건`,
+                hint: step > 1 ? "이미 입력 완료" : "첫 단계 시작",
+              },
+              {
+                label: "진행률",
+                value: `${Math.round(((step - 1) / STEPS.length) * 100)}%`,
+                hint: "기준 단계 수 대비",
+              },
+              {
+                label: "예상 소요",
+                value: "< 3분",
+                hint: "분석 실행 후 < 30초",
+              },
+            ]}
+          />
+        </div>
+      </section>
+
+      {isSample && (
+        <div className="max-w-[1280px] mx-auto" style={{ padding: "0 24px 8px" }}>
+          <div
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              background: MCK.paperTint,
+              border: `1px solid ${MCK.border}`,
+              borderLeft: `3px solid ${MCK.electric}`,
               padding: "10px 14px",
               fontSize: 12,
               color: MCK.textSub,
+              flexWrap: "wrap",
             }}
           >
-            <MckBadge tone="brass">샘플</MckBadge>
-            <span style={{ marginLeft: 8 }}>
-              샘플 데이터가 입력되었습니다. 내용을 수정하거나 바로 분석을 실행해보세요.
+            <span
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "2px 8px",
+                fontSize: 10, fontWeight: 800,
+                background: "rgba(34, 81, 255, 0.10)",
+                color: MCK.electricDark,
+                border: "1px solid rgba(34, 81, 255, 0.35)",
+                letterSpacing: "0.06em", textTransform: "uppercase",
+              }}
+            >
+              샘플
             </span>
+            샘플 데이터가 입력되었습니다. 내용을 수정하거나 바로 분석을 실행해보세요.
           </div>
         </div>
       )}
 
-      {/* Step Indicator */}
-      <div className="max-w-[1280px] mx-auto" style={{ padding: "20px 24px 0" }}>
+      {/* ── Step Indicator · McKinsey editorial wizard stepper ─────────── */}
+      <div className="max-w-[1280px] mx-auto" style={{ padding: "8px 24px 0" }}>
         <div
           style={{
             background: MCK.paper,
             border: `1px solid ${MCK.border}`,
-            borderTop: `2px solid ${MCK.brass}`,
-            padding: "16px 20px",
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            overflowX: "auto",
+            borderTop: `2px solid ${MCK.electric}`,
+            padding: "18px 22px",
           }}
         >
-          {STEPS.map((s, idx) => {
-            const isActive = s.id === step
-            const isDone = s.id < step
-            return (
-              <div key={s.id} className="flex items-center">
-                <button
-                  onClick={() => s.id < step && setStep(s.id)}
-                  disabled={s.id > step}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "6px 10px",
-                    background: isActive ? MCK.ink : "transparent",
-                    color: isActive ? MCK.paper : isDone ? MCK.positive : MCK.textMuted,
-                    border: isActive ? `1px solid ${MCK.ink}` : `1px solid transparent`,
-                    cursor: s.id <= step ? "pointer" : "not-allowed",
-                  }}
-                >
-                  <div
+          <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 12 }}>
+            WIZARD STEPS · 4단계 입력
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              overflowX: "auto",
+            }}
+          >
+            {STEPS.map((s, idx) => {
+              const isActive = s.id === step
+              const isDone = s.id < step
+              return (
+                <div key={s.id} className="flex items-center">
+                  <button
+                    onClick={() => s.id < step && setStep(s.id)}
+                    disabled={s.id > step}
                     style={{
-                      width: 24,
-                      height: 24,
-                      display: "flex",
+                      display: "inline-flex",
                       alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 11,
-                      fontWeight: 800,
-                      background: isActive ? MCK.brass : isDone ? MCK.positive : MCK.paperDeep,
-                      color: isActive ? MCK.ink : isDone ? MCK.paper : MCK.textMuted,
-                      border: isActive ? "none" : `1px solid ${MCK.border}`,
+                      gap: 10,
+                      padding: "8px 12px",
+                      background: isActive ? MCK.inkDeep : isDone ? MCK.paperTint : "transparent",
+                      color: isActive ? MCK.paper : isDone ? MCK.ink : MCK.textMuted,
+                      border: isActive
+                        ? `1px solid ${MCK.inkDeep}`
+                        : isDone
+                        ? `1px solid ${MCK.border}`
+                        : `1px solid transparent`,
+                      borderTop: isActive
+                        ? `2px solid ${MCK.electric}`
+                        : isDone
+                        ? `2px solid ${MCK.electric}`
+                        : "1px solid transparent",
+                      cursor: s.id <= step ? "pointer" : "not-allowed",
+                      transition: "all 0.15s",
                     }}
                   >
-                    {isDone ? <CheckCircle2 size={14} /> : s.id}
-                  </div>
-                  <div className="hidden sm:block" style={{ textAlign: "left" }}>
-                    <div style={{ fontSize: 12, fontWeight: 700 }}>{s.label}</div>
-                    <div style={{ fontSize: 10, opacity: 0.7 }}>{s.desc}</div>
-                  </div>
-                </button>
-                {idx < STEPS.length - 1 && (
-                  <ChevronRight size={14} style={{ color: MCK.textMuted, margin: "0 4px" }} />
-                )}
-              </div>
-            )
-          })}
+                    {/* Numerical chip — Georgia serif */}
+                    <div
+                      style={{
+                        width: 28,
+                        height: 28,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontFamily: MCK_FONTS.serif,
+                        fontSize: 13,
+                        fontWeight: 800,
+                        background: isActive ? MCK.electric : isDone ? MCK.electric : MCK.paper,
+                        color: isActive ? MCK.paper : isDone ? MCK.paper : MCK.textMuted,
+                        border: isActive ? "none" : isDone ? "none" : `1px solid ${MCK.borderStrong}`,
+                        letterSpacing: "-0.01em",
+                      }}
+                    >
+                      {isDone ? <CheckCircle2 size={15} /> : s.id}
+                    </div>
+                    {/* Label */}
+                    <div className="hidden sm:block" style={{ textAlign: "left" }}>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 800,
+                          letterSpacing: "-0.005em",
+                        }}
+                      >
+                        {s.label}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          opacity: isActive ? 0.85 : 0.7,
+                          fontWeight: 600,
+                          marginTop: 1,
+                        }}
+                      >
+                        {s.desc}
+                      </div>
+                    </div>
+                  </button>
+                  {idx < STEPS.length - 1 && (
+                    <div
+                      style={{
+                        flex: "0 0 auto",
+                        width: 24,
+                        height: 1,
+                        background: isDone ? MCK.electric : MCK.border,
+                        margin: "0 6px",
+                      }}
+                    />
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
 
@@ -549,7 +789,7 @@ export default function ProfitabilityPage() {
         </AnimatePresence>
       </div>
 
-      {/* Bottom Navigation */}
+      {/* ── Bottom Navigation · McKinsey wizard footer ─────────────────── */}
       <div
         style={{
           position: "fixed",
@@ -557,13 +797,13 @@ export default function ProfitabilityPage() {
           left: 0,
           right: 0,
           background: MCK.paper,
-          borderTop: `2px solid ${MCK.brass}`,
+          borderTop: `2px solid ${MCK.electric}`,
           padding: "14px 24px",
           zIndex: 20,
-          boxShadow: "0 -4px 12px rgba(10,22,40,0.06)",
+          boxShadow: "0 -4px 16px rgba(5, 28, 44, 0.10)",
         }}
       >
-        <div className="max-w-[1280px] mx-auto flex items-center justify-between">
+        <div className="max-w-[1280px] mx-auto flex items-center justify-between" style={{ gap: 12, flexWrap: "wrap" }}>
           <button
             onClick={() => setStep(s => Math.max(1, s - 1))}
             disabled={step === 1}
@@ -579,14 +819,46 @@ export default function ProfitabilityPage() {
               fontWeight: 700,
               opacity: step === 1 ? 0.4 : 1,
               cursor: step === 1 ? "not-allowed" : "pointer",
+              letterSpacing: "-0.005em",
             }}
           >
             <ArrowLeft size={14} /> 이전
           </button>
 
-          <span style={{ fontSize: 12, color: MCK.textMuted, fontWeight: 600 }}>
-            {step} / {STEPS.length}
-          </span>
+          {/* Center progress chip */}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: MCK_FONTS.serif,
+                fontSize: 14,
+                fontWeight: 800,
+                color: MCK.ink,
+                fontVariantNumeric: "tabular-nums",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {step}
+              <span style={{ color: MCK.textMuted, fontWeight: 600, margin: "0 4px" }}>/</span>
+              {STEPS.length}
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                color: MCK.textSub,
+                fontWeight: 700,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+              }}
+            >
+              {STEPS[step - 1]?.label ?? ""}
+            </span>
+          </div>
 
           {step < STEPS.length ? (
             <button
@@ -600,11 +872,12 @@ export default function ProfitabilityPage() {
                 background: MCK.ink,
                 color: MCK.paper,
                 border: "none",
-                borderTop: `2px solid ${MCK.brass}`,
+                borderTop: `2px solid ${MCK.electric}`,
                 fontSize: 13,
                 fontWeight: 800,
-                opacity: !canNext() ? 0.4 : 1,
+                opacity: !canNext() ? 0.45 : 1,
                 cursor: !canNext() ? "not-allowed" : "pointer",
+                letterSpacing: "-0.01em",
               }}
             >
               다음 <ArrowRight size={14} />
@@ -617,15 +890,17 @@ export default function ProfitabilityPage() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
-                padding: "10px 22px",
+                padding: "12px 28px",
                 background: MCK.ink,
                 color: MCK.paper,
                 border: "none",
-                borderTop: `2px solid ${MCK.brass}`,
+                borderTop: `2.5px solid ${MCK.electric}`,
                 fontSize: 13,
                 fontWeight: 800,
-                opacity: loading || !canNext() ? 0.4 : 1,
+                opacity: loading || !canNext() ? 0.45 : 1,
                 cursor: loading || !canNext() ? "not-allowed" : "pointer",
+                letterSpacing: "-0.01em",
+                boxShadow: "0 6px 18px rgba(34, 81, 255, 0.18)",
               }}
             >
               {loading ? (
@@ -649,20 +924,49 @@ function Step1BondInfo({ value, onChange }: {
 }) {
   const update = (patch: Partial<BondInfo>) => onChange({ ...value, ...patch })
 
+  // OCR 추출 결과를 채권 폼 필드로 매핑
+  const handleOcrExtract = (extracted: BondOcrExtracted) => {
+    const patch: Partial<BondInfo> = {}
+    if (extracted.debtorName) patch.debtorName = extracted.debtorName
+    if (extracted.caseNumber) patch.auctionCaseNo = extracted.caseNumber
+    if (extracted.loanPrincipal != null) {
+      patch.originalPrincipal = extracted.loanPrincipal
+      patch.remainingPrincipal = extracted.loanPrincipal
+    }
+    if (extracted.normalRate != null) {
+      // OCR 응답이 0~1 (소수) 또는 0~100 (퍼센트) 둘 다 가능 — 0~1이면 *100
+      patch.interestRate = extracted.normalRate <= 1 ? extracted.normalRate * 100 : extracted.normalRate
+    }
+    if (extracted.overdueRate != null) {
+      patch.penaltyRate = extracted.overdueRate <= 1 ? extracted.overdueRate * 100 : extracted.overdueRate
+    }
+    if (extracted.delinquencyStartDate) patch.defaultStartDate = extracted.delinquencyStartDate
+    onChange({ ...value, ...patch })
+  }
+
   return (
     <div className="max-w-3xl mx-auto" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <header>
         <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
-          <span style={{ width: 18, height: 1.5, background: MCK.brass }} />
-          <span style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark }}>STEP 01</span>
+          <span style={{ width: 18, height: 1.5, background: MCK.electric }} />
+          <span style={{ ...MCK_TYPE.eyebrow, color: MCK.electric }}>STEP 01</span>
         </div>
         <h2 style={{ ...MCK_TYPE.h2, fontFamily: MCK_FONTS.serif, color: MCK.ink, marginBottom: 6 }}>
           채권 기본정보
         </h2>
         <p style={{ ...MCK_TYPE.body, color: MCK.textSub }}>
-          채권기관, 채무자, 대출 조건을 입력하세요.
+          채권기관, 채무자, 대출 조건을 입력하세요. OCR로 채권소개서 PDF/이미지를 업로드하면 주요 필드가 자동 추출됩니다.
         </p>
       </header>
+
+      {/* OCR 자동 추출 (채권소개서) */}
+      <BondOcrUploader
+        onExtracted={handleOcrExtract}
+        defaultDocType="bond"
+        hideDocTypeSelector
+        title="OCR · 채권소개서 자동 추출"
+        description="채권소개서·명세서 PDF/이미지를 업로드하면 채무자명·사건번호·원금·금리·연체시작일이 자동으로 추출되어 폼에 채워집니다."
+      />
 
       {/* 채권 번호 */}
       <MckCard eyebrow="채권 번호">
@@ -784,20 +1088,39 @@ function Step2Collateral({ value, onChange }: {
     update({ propertyTypeMajor: major, propertyType: firstDetail as CollateralType })
   }
 
+  // OCR (감정평가서) 추출 결과를 담보 폼 필드로 매핑
+  const handleOcrExtract = (extracted: BondOcrExtracted) => {
+    const patch: Partial<CollateralInfo> = {}
+    if (extracted.appraisalValue != null) patch.appraisalValue = extracted.appraisalValue
+    if (extracted.appraisalDate) patch.appraisalDate = extracted.appraisalDate
+    if (extracted.buildingArea != null) patch.area = extracted.buildingArea
+    if (extracted.address) patch.address = extracted.address
+    onChange({ ...value, ...patch })
+  }
+
   return (
     <div className="max-w-3xl mx-auto" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <header>
         <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
-          <span style={{ width: 18, height: 1.5, background: MCK.brass }} />
-          <span style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark }}>STEP 02</span>
+          <span style={{ width: 18, height: 1.5, background: MCK.electric }} />
+          <span style={{ ...MCK_TYPE.eyebrow, color: MCK.electric }}>STEP 02</span>
         </div>
         <h2 style={{ ...MCK_TYPE.h2, fontFamily: MCK_FONTS.serif, color: MCK.ink, marginBottom: 6 }}>
           담보물 정보
         </h2>
         <p style={{ ...MCK_TYPE.body, color: MCK.textSub }}>
-          담보물의 소재지, 유형, 감정가를 입력하세요.
+          담보물의 소재지, 유형, 감정가를 입력하세요. OCR로 감정평가서를 업로드하면 감정가·면적·주소가 자동 추출됩니다.
         </p>
       </header>
+
+      {/* OCR 자동 추출 (감정평가서) */}
+      <BondOcrUploader
+        onExtracted={handleOcrExtract}
+        defaultDocType="appraisal"
+        hideDocTypeSelector
+        title="OCR · 감정평가서 자동 추출"
+        description="감정평가서 PDF/이미지를 업로드하면 감정가·기준일·면적·주소가 자동으로 추출되어 폼에 채워집니다."
+      />
 
       <MckCard>
         <h3 style={cardSubTitleStyle}>소재지</h3>
@@ -953,8 +1276,8 @@ function Step3Rights({ value, onChange }: {
     <div className="max-w-3xl mx-auto" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <header>
         <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
-          <span style={{ width: 18, height: 1.5, background: MCK.brass }} />
-          <span style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark }}>STEP 03</span>
+          <span style={{ width: 18, height: 1.5, background: MCK.electric }} />
+          <span style={{ ...MCK_TYPE.eyebrow, color: MCK.electric }}>STEP 03</span>
         </div>
         <h2 style={{ ...MCK_TYPE.h2, fontFamily: MCK_FONTS.serif, color: MCK.ink, marginBottom: 6 }}>
           권리관계
@@ -1061,8 +1384,8 @@ function Step4DealTerms({ dealStructure, loanSaleTerms, debtAssumptionTerms, auc
     <div className="max-w-3xl mx-auto" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <header>
         <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
-          <span style={{ width: 18, height: 1.5, background: MCK.brass }} />
-          <span style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark }}>STEP 04</span>
+          <span style={{ width: 18, height: 1.5, background: MCK.electric }} />
+          <span style={{ ...MCK_TYPE.eyebrow, color: MCK.electric }}>STEP 04</span>
         </div>
         <h2 style={{ ...MCK_TYPE.h2, fontFamily: MCK_FONTS.serif, color: MCK.ink, marginBottom: 6 }}>
           {isLoanSale ? "론세일 조건" : "채무인수 조건"}

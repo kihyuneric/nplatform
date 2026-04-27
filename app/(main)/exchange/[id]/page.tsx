@@ -1,19 +1,17 @@
-"use client"
-
 /**
- * /exchange/[id] — 자산 상세 페이지 (DR-15 · 2026-04-21 · DR-22 · 2026-04-26)
+ * /exchange/[id] — 시안 단계 통일: 모든 딜룸 진입을 /deals/dealroom 로 라우트
  *
- * Next.js page.tsx 는 whitelist 된 named export 만 허용하므로 본문은
- * components/asset-detail/asset-detail-view.tsx 로 분리되어 있습니다.
+ * 진입 경로:
+ *   1. 거래소 매물 탐색 → 딜룸 입장 클릭
+ *   2. 새 탭에서 열기 (target="_blank")
+ *   3. /deals/[id] 레거시 redirect
  *
- * DR-22 (2026-04-26): 거래소 매물 탐색 → 딜룸 입장 / 새 탭에서 열기 / /deals/[id] 리다이렉트
- *   세 진입 경로 모두 동일한 Deal Flow Funnel UI 로 통일.
- *   `dealFlowMode={true}` 를 항상 활성화 — Section 01 Free Preview / 4-step funnel /
- *   확대된 헤더 카드 + 좌(내용)/우(다음 단계) 레이아웃 노출.
+ * 모든 경로가 동일한 풀 시안 딜룸(/deals/dealroom) UI 를 보여줍니다.
+ * 실제 구현 단계에서 backend listing_id 별 분기로 전환 예정.
  */
 
-import { AssetDetailView } from "@/components/asset-detail/asset-detail-view"
+import { redirect } from "next/navigation"
 
 export default function ListingDetailPage() {
-  return <AssetDetailView dealFlowMode />
+  redirect("/deals/dealroom")
 }

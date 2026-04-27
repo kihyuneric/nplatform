@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { logger } from '@/lib/logger'
 
-/* 매칭 가중치 (인라인 정의) */
+/* 매칭 가중치 (인라인 정의) — 합계 1.00 */
 const MATCHING_WEIGHTS = {
-  collateral: 0.35,
-  region:     0.25,
-  amount:     0.20,
-  discount:   0.15,
-  avoidance:  0.05,
+  collateral: 0.40,  // 담보유형 일치 — 가장 중요 (불일치 시 거래 불가)
+  region:     0.25,  // 지역 선호도
+  amount:     0.20,  // 금액 범위
+  discount:   0.15,  // 할인율 만족도
 } as const
 
 // ─── Types ────────────────────────────────────────────────────
@@ -145,14 +144,12 @@ export async function POST(req: NextRequest) {
         const regionScore = scoreRegion(seller.region, buyer.region)
         const amountScore = scoreAmount(seller.amount, buyer.budget)
         const discountScore = scoreDiscount(seller.discount, buyer.minDiscount)
-        const avoidanceScore = 75 // default
 
         const factors: MatchFactor[] = [
           { name: "담보유형", score: collateralScore, weight: MATCHING_WEIGHTS.collateral },
           { name: "지역",     score: regionScore,     weight: MATCHING_WEIGHTS.region },
           { name: "금액대",   score: amountScore,     weight: MATCHING_WEIGHTS.amount },
           { name: "할인율",   score: discountScore,   weight: MATCHING_WEIGHTS.discount },
-          { name: "회피조건", score: avoidanceScore,  weight: MATCHING_WEIGHTS.avoidance },
         ]
 
         const total = computeTotalScore(factors)

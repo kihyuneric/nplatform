@@ -1,10 +1,31 @@
 "use client"
 
+/**
+ * OfferCard / OfferForm — McKinsey 톤으로 재편 (DR-6 · 2026-04-26)
+ *
+ * - 사각 모서리(0px) + 2px 상단 strip = McKinsey 시그니처
+ * - 상태별 알록달록 색상 제거 → 전부 ink/electric/positive(수락만) 단색계
+ * - 모든 텍스트/버튼 색상은 inline 토큰으로 강제(글로벌 CSS 충돌 방지)
+ */
+
 import { useState } from "react"
 import { Check, X, RotateCcw, DollarSign, Calendar, CreditCard, FileText } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { formatKRW } from "@/lib/constants"
 import { cn } from "@/lib/utils"
+
+// ─── McKinsey 팔레트 (deal-flow-view 와 동일) ────────────────────────────
+const M = {
+  ink:          "#0A1628",
+  paper:        "#FFFFFF",
+  paperTint:    "#FAFBFC",
+  electric:     "#2251FF",
+  electricDark: "#1A47CC",
+  border:       "rgba(10, 22, 40, 0.10)",
+  borderStrong: "rgba(10, 22, 40, 0.18)",
+  textSub:      "#4A5568",
+  textMuted:    "#718096",
+  positive:     "#0F766E",
+} as const
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -26,42 +47,52 @@ interface OfferCardProps {
   onCounter?: (counterOffer: { amount: number; conditions: string }) => void
 }
 
-// ─── Shared theme-adaptive form classes ──────────────────
-// 라이트·다크 모드 모두 CSS 토큰 기반으로 대응 + 모바일 터치 타겟 44px 확보
-
+// ─── Form 공통 ───────────────────────────────────────────
 const FIELD_BASE =
-  "w-full rounded-md border bg-[var(--color-surface-overlay)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] border-[var(--color-border-subtle)] outline-none transition-colors focus:border-[var(--color-brand-bright)] focus:ring-2 focus:ring-[var(--color-brand-bright)]/20 disabled:cursor-not-allowed disabled:opacity-50"
-
-const INPUT_CLS = cn(FIELD_BASE, "h-10")
+  "w-full px-3 outline-none transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+const INPUT_CLS = cn(FIELD_BASE, "h-10 text-sm")
 const INPUT_SM_CLS = cn(FIELD_BASE, "h-9 text-sm")
-const TEXTAREA_CLS = cn(FIELD_BASE, "resize-none min-h-[60px]")
+const TEXTAREA_CLS = cn(FIELD_BASE, "py-2 resize-none min-h-[60px] text-sm")
 
-// ─── Helpers ─────────────────────────────────────────────
+const fieldStyle: React.CSSProperties = {
+  background: M.paper,
+  color: M.ink,
+  border: `1px solid ${M.borderStrong}`,
+  fontSize: 13,
+}
 
-const STATUS_STYLES: Record<
+// ─── Status 토큰 (단색계) ────────────────────────────────
+const STATUS_TOKENS: Record<
   OfferStatus,
-  { border: string; badge: string; label: string }
+  { topAccent: string; badgeBg: string; badgeFg: string; badgeBorder: string; label: string }
 > = {
   pending: {
-    border: "border-[var(--color-brand-bright)]",
-    badge:
-      "bg-[var(--color-brand-bright)]/12 text-[var(--color-brand-bright)]",
-    label: "검토 중",
+    topAccent:   M.electric,
+    badgeBg:     M.paper,
+    badgeFg:     M.electricDark,
+    badgeBorder: M.electric,
+    label:       "검토 중",
   },
   accepted: {
-    border: "border-[var(--color-positive)]",
-    badge: "bg-[var(--color-positive)]/12 text-[var(--color-positive)]",
-    label: "수락됨",
+    topAccent:   M.positive,
+    badgeBg:     M.paper,
+    badgeFg:     M.positive,
+    badgeBorder: M.positive,
+    label:       "수락됨",
   },
   rejected: {
-    border: "border-[var(--color-danger)]",
-    badge: "bg-[var(--color-danger)]/12 text-[var(--color-danger)]",
-    label: "거절됨",
+    topAccent:   M.textMuted,
+    badgeBg:     M.paper,
+    badgeFg:     M.textMuted,
+    badgeBorder: M.borderStrong,
+    label:       "거절됨",
   },
   countered: {
-    border: "border-[var(--color-warning)]",
-    badge: "bg-[var(--color-warning)]/12 text-[var(--color-warning)]",
-    label: "역제안",
+    topAccent:   M.ink,
+    badgeBg:     M.paper,
+    badgeFg:     M.ink,
+    badgeBorder: M.ink,
+    label:       "역제안",
   },
 }
 
@@ -78,7 +109,7 @@ export function OfferCard({
   const [counterAmount, setCounterAmount] = useState("")
   const [counterConditions, setCounterConditions] = useState("")
 
-  const style = STATUS_STYLES[offer.status]
+  const tokens = STATUS_TOKENS[offer.status]
 
   const handleCounterSubmit = () => {
     const amount = parseInt(counterAmount.replace(/[^0-9]/g, ""), 10)
@@ -91,113 +122,211 @@ export function OfferCard({
 
   return (
     <div
-      className={cn(
-        "rounded-xl border-2 p-3 sm:p-4 space-y-3 bg-[var(--color-surface-elevated)]",
-        style.border
-      )}
+      className="p-3 sm:p-4 space-y-3"
+      style={{
+        background: M.paper,
+        border: `1px solid ${M.border}`,
+        borderTop: `2px solid ${tokens.topAccent}`,
+        color: M.ink,
+      }}
     >
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <DollarSign className="w-4 h-4 text-[var(--color-brand-bright)] shrink-0" />
-          <span className="text-sm font-semibold text-[var(--color-text-primary)] truncate">
+          <DollarSign size={14} style={{ color: M.electric }} className="shrink-0" />
+          <span
+            className="truncate"
+            style={{
+              fontSize: 13,
+              fontWeight: 800,
+              color: M.ink,
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              letterSpacing: "-0.005em",
+            }}
+          >
             {isMine ? "내 오퍼" : "상대방 오퍼"}
           </span>
         </div>
         <span
-          className={cn(
-            "text-xs font-medium px-2 py-0.5 rounded-full shrink-0",
-            style.badge
-          )}
+          className="shrink-0 inline-flex items-center"
+          style={{
+            fontSize: 10,
+            fontWeight: 800,
+            padding: "3px 8px",
+            background: tokens.badgeBg,
+            color: tokens.badgeFg,
+            border: `1px solid ${tokens.badgeBorder}`,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+          }}
         >
-          {style.label}
+          {tokens.label}
         </span>
       </div>
 
       {/* Offer Details */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-[var(--color-text-secondary)] flex items-center gap-1 shrink-0">
-            <DollarSign className="w-3 h-3" /> 제안금액
+        <div
+          className="flex items-center justify-between gap-3"
+          style={{
+            padding: "10px 12px",
+            background: M.paperTint,
+            border: `1px solid ${M.border}`,
+          }}
+        >
+          <span
+            className="inline-flex items-center gap-1.5 shrink-0"
+            style={{ fontSize: 11, color: M.textSub, fontWeight: 700, letterSpacing: "0.02em", textTransform: "uppercase" }}
+          >
+            <DollarSign size={12} style={{ color: M.electric }} /> 제안금액
           </span>
-          <span className="text-base sm:text-lg font-bold text-[var(--color-text-primary)] text-right">
+          <span
+            className="text-right tabular-nums"
+            style={{
+              fontSize: 16,
+              fontWeight: 800,
+              color: M.ink,
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              letterSpacing: "-0.01em",
+            }}
+          >
             {formatKRW(offer.amount)}
           </span>
         </div>
 
         {offer.conditions && (
-          <div className="flex items-start justify-between gap-3">
-            <span className="text-xs text-[var(--color-text-secondary)] flex items-center gap-1 shrink-0">
-              <FileText className="w-3 h-3" /> 조건
+          <div className="flex items-start justify-between gap-3 px-1">
+            <span
+              className="inline-flex items-center gap-1.5 shrink-0"
+              style={{ fontSize: 11, color: M.textMuted, fontWeight: 700 }}
+            >
+              <FileText size={11} style={{ color: M.textMuted }} /> 조건
             </span>
-            <span className="text-sm text-[var(--color-text-secondary)] text-right break-words">
+            <span
+              className="text-right break-words"
+              style={{ fontSize: 12, color: M.textSub, lineHeight: 1.5 }}
+            >
               {offer.conditions}
             </span>
           </div>
         )}
 
         {offer.payment_method && (
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-[var(--color-text-secondary)] flex items-center gap-1 shrink-0">
-              <CreditCard className="w-3 h-3" /> 결제방식
+          <div className="flex items-center justify-between gap-3 px-1">
+            <span
+              className="inline-flex items-center gap-1.5 shrink-0"
+              style={{ fontSize: 11, color: M.textMuted, fontWeight: 700 }}
+            >
+              <CreditCard size={11} style={{ color: M.textMuted }} /> 결제방식
             </span>
-            <span className="text-sm text-[var(--color-text-secondary)] text-right">
+            <span className="text-right" style={{ fontSize: 12, color: M.textSub }}>
               {offer.payment_method}
             </span>
           </div>
         )}
 
         {offer.valid_until && (
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-[var(--color-text-secondary)] flex items-center gap-1 shrink-0">
-              <Calendar className="w-3 h-3" /> 유효기간
+          <div className="flex items-center justify-between gap-3 px-1">
+            <span
+              className="inline-flex items-center gap-1.5 shrink-0"
+              style={{ fontSize: 11, color: M.textMuted, fontWeight: 700 }}
+            >
+              <Calendar size={11} style={{ color: M.textMuted }} /> 유효기간
             </span>
-            <span className="text-sm text-[var(--color-text-secondary)] text-right">
+            <span
+              className="text-right tabular-nums"
+              style={{ fontSize: 12, color: M.textSub }}
+            >
               {offer.valid_until}
             </span>
           </div>
         )}
       </div>
 
-      {/* Action Buttons (수락/거절/역제안) — 모바일에서는 2열 그리드 */}
+      {/* Action Buttons (수락/거절/역제안) */}
       {!isMine && offer.status === "pending" && (
-        <div className="grid grid-cols-3 gap-2 pt-1 sm:flex sm:gap-2">
+        <div className="grid grid-cols-3 gap-2 pt-1">
           {onAccept && (
-            <Button
-              size="sm"
+            <button
+              type="button"
               onClick={onAccept}
-              className="w-full sm:flex-1 bg-[var(--color-positive)] hover:brightness-110 text-white text-xs h-9"
+              className="inline-flex items-center justify-center gap-1.5 transition-opacity hover:opacity-90"
+              style={{
+                padding: "9px 10px",
+                background: M.positive,
+                color: M.paper,
+                border: `1px solid ${M.positive}`,
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+              }}
             >
-              <Check className="w-3.5 h-3.5 mr-1" /> 수락
-            </Button>
+              <Check size={13} style={{ color: M.paper }} />
+              <span style={{ color: M.paper }}>수락</span>
+            </button>
           )}
           {onReject && (
-            <Button
-              size="sm"
-              variant="outline"
+            <button
+              type="button"
               onClick={onReject}
-              className="w-full sm:flex-1 bg-transparent border-[var(--color-danger)]/40 text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 text-xs h-9"
+              className="inline-flex items-center justify-center gap-1.5 transition-colors hover:bg-[rgba(10,22,40,0.04)]"
+              style={{
+                padding: "9px 10px",
+                background: M.paper,
+                color: M.ink,
+                border: `1px solid ${M.borderStrong}`,
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+              }}
             >
-              <X className="w-3.5 h-3.5 mr-1" /> 거절
-            </Button>
+              <X size={13} style={{ color: M.ink }} />
+              <span style={{ color: M.ink }}>거절</span>
+            </button>
           )}
           {onCounter && (
-            <Button
-              size="sm"
-              variant="outline"
+            <button
+              type="button"
               onClick={() => setShowCounterForm((v) => !v)}
-              className="w-full sm:flex-1 bg-transparent border-[var(--color-warning)]/40 text-[var(--color-warning)] hover:bg-[var(--color-warning)]/10 text-xs h-9"
+              className="inline-flex items-center justify-center gap-1.5 transition-opacity hover:opacity-90"
+              style={{
+                padding: "9px 10px",
+                background: M.ink,
+                color: M.paper,
+                border: `1px solid ${M.ink}`,
+                borderTop: `2px solid ${M.electric}`,
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+              }}
             >
-              <RotateCcw className="w-3.5 h-3.5 mr-1" /> 역제안
-            </Button>
+              <RotateCcw size={13} style={{ color: M.paper }} />
+              <span style={{ color: M.paper }}>역제안</span>
+            </button>
           )}
         </div>
       )}
 
       {/* Counter-Offer Form */}
       {showCounterForm && (
-        <div className="space-y-2 pt-2 border-t border-[var(--color-border-subtle)]">
-          <p className="text-xs font-medium text-[var(--color-text-secondary)]">
+        <div
+          className="space-y-2 pt-3"
+          style={{ borderTop: `1px solid ${M.border}` }}
+        >
+          <p
+            className="inline-flex items-center gap-1.5"
+            style={{
+              fontSize: 11,
+              fontWeight: 800,
+              color: M.ink,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+            }}
+          >
+            <RotateCcw size={11} style={{ color: M.electric }} />
             역제안 작성
           </p>
           <input
@@ -206,6 +335,7 @@ export function OfferCard({
             value={counterAmount}
             onChange={(e) => setCounterAmount(e.target.value)}
             className={INPUT_SM_CLS}
+            style={fieldStyle}
           />
           <textarea
             placeholder="조건 (선택)"
@@ -213,23 +343,43 @@ export function OfferCard({
             onChange={(e) => setCounterConditions(e.target.value)}
             rows={2}
             className={TEXTAREA_CLS}
+            style={fieldStyle}
           />
           <div className="flex flex-col sm:flex-row gap-2">
-            <Button
-              size="sm"
+            <button
+              type="button"
               onClick={handleCounterSubmit}
-              className="w-full sm:flex-1 text-xs h-9 bg-[var(--color-warning)] hover:brightness-110 text-white"
+              className="w-full sm:flex-1 inline-flex items-center justify-center gap-1.5 transition-opacity hover:opacity-90"
+              style={{
+                padding: "9px 10px",
+                background: M.ink,
+                color: M.paper,
+                border: `1px solid ${M.ink}`,
+                borderTop: `2px solid ${M.electric}`,
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+              }}
             >
-              역제안 보내기
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
+              <span style={{ color: M.paper }}>역제안 보내기</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setShowCounterForm(false)}
-              className="w-full sm:w-auto text-xs h-9 text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)]"
+              className="w-full sm:w-auto inline-flex items-center justify-center transition-colors hover:bg-[rgba(10,22,40,0.04)]"
+              style={{
+                padding: "9px 14px",
+                background: M.paper,
+                color: M.textSub,
+                border: `1px solid ${M.border}`,
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.02em",
+              }}
             >
               취소
-            </Button>
+            </button>
           </div>
         </div>
       )}
@@ -263,21 +413,35 @@ export function OfferForm({ onSubmit, onCancel }: OfferFormProps) {
 
   return (
     <div
-      className={cn(
-        "space-y-3 p-3 sm:p-4 rounded-xl border-2",
-        "bg-[var(--color-surface-elevated)]",
-        "border-[var(--color-brand-bright)]/40"
-      )}
+      className="space-y-3 p-3 sm:p-4"
+      style={{
+        background: M.paper,
+        border: `1px solid ${M.border}`,
+        borderTop: `2px solid ${M.electric}`,
+        color: M.ink,
+      }}
     >
-      <p className="text-sm font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
-        <DollarSign className="w-4 h-4 text-[var(--color-brand-bright)]" />
+      <p
+        className="inline-flex items-center gap-2"
+        style={{
+          fontSize: 13,
+          fontWeight: 800,
+          color: M.ink,
+          fontFamily: 'Georgia, "Times New Roman", serif',
+          letterSpacing: "-0.005em",
+        }}
+      >
+        <DollarSign size={14} style={{ color: M.electric }} />
         오퍼 보내기
       </p>
 
       <div className="space-y-3">
         <div>
-          <label className="text-xs font-medium text-[var(--color-text-secondary)] mb-1.5 block">
-            제안금액 (원) <span className="text-[var(--color-danger)]">*</span>
+          <label
+            className="block mb-1.5"
+            style={{ fontSize: 11, color: M.textSub, fontWeight: 700, letterSpacing: "0.02em", textTransform: "uppercase" }}
+          >
+            제안금액 (원) <span style={{ color: M.electric }}>*</span>
           </label>
           <input
             inputMode="numeric"
@@ -285,10 +449,14 @@ export function OfferForm({ onSubmit, onCancel }: OfferFormProps) {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             className={INPUT_CLS}
+            style={fieldStyle}
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-[var(--color-text-secondary)] mb-1.5 block">
+          <label
+            className="block mb-1.5"
+            style={{ fontSize: 11, color: M.textSub, fontWeight: 700, letterSpacing: "0.02em", textTransform: "uppercase" }}
+          >
             조건
           </label>
           <textarea
@@ -297,10 +465,14 @@ export function OfferForm({ onSubmit, onCancel }: OfferFormProps) {
             onChange={(e) => setConditions(e.target.value)}
             rows={2}
             className={TEXTAREA_CLS}
+            style={fieldStyle}
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-[var(--color-text-secondary)] mb-1.5 block">
+          <label
+            className="block mb-1.5"
+            style={{ fontSize: 11, color: M.textSub, fontWeight: 700, letterSpacing: "0.02em", textTransform: "uppercase" }}
+          >
             결제방식
           </label>
           <input
@@ -308,35 +480,61 @@ export function OfferForm({ onSubmit, onCancel }: OfferFormProps) {
             value={paymentMethod}
             onChange={(e) => setPaymentMethod(e.target.value)}
             className={INPUT_CLS}
+            style={fieldStyle}
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-[var(--color-text-secondary)] mb-1.5 block">
+          <label
+            className="block mb-1.5"
+            style={{ fontSize: 11, color: M.textSub, fontWeight: 700, letterSpacing: "0.02em", textTransform: "uppercase" }}
+          >
             유효기간
           </label>
           <input
             type="date"
             value={validUntil}
             onChange={(e) => setValidUntil(e.target.value)}
-            className={cn(INPUT_CLS, "[color-scheme:light] dark:[color-scheme:dark]")}
+            className={cn(INPUT_CLS, "[color-scheme:light]")}
+            style={fieldStyle}
           />
         </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2 pt-1">
-        <Button
+        <button
+          type="button"
           onClick={handleSubmit}
-          className="w-full sm:flex-1 h-10 bg-[var(--color-brand-bright)] hover:brightness-110 text-white text-sm font-semibold"
+          className="w-full sm:flex-1 inline-flex items-center justify-center transition-opacity hover:opacity-90"
+          style={{
+            padding: "11px 14px",
+            background: M.ink,
+            color: M.paper,
+            border: `1px solid ${M.ink}`,
+            borderTop: `2px solid ${M.electric}`,
+            fontSize: 12,
+            fontWeight: 800,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+          }}
         >
-          오퍼 제출
-        </Button>
-        <Button
-          variant="ghost"
+          <span style={{ color: M.paper }}>오퍼 제출</span>
+        </button>
+        <button
+          type="button"
           onClick={onCancel}
-          className="w-full sm:w-auto h-10 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)]"
+          className="w-full sm:w-auto inline-flex items-center justify-center transition-colors hover:bg-[rgba(10,22,40,0.04)]"
+          style={{
+            padding: "11px 18px",
+            background: M.paper,
+            color: M.textSub,
+            border: `1px solid ${M.border}`,
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: "0.02em",
+          }}
         >
           취소
-        </Button>
+        </button>
       </div>
     </div>
   )

@@ -819,17 +819,19 @@ export function ChatWidget() {
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none"
+            className="mck-cta-dark fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center focus-visible:ring-2 focus-visible:ring-[#2251FF] focus-visible:ring-offset-2 focus-visible:outline-none"
             style={{
-              background: "linear-gradient(135deg, #1B3A5C, #2E75B6)",
+              background: "#2251FF",
+              borderTop: "2px solid #00A9F4",
+              boxShadow: "0 8px 24px rgba(34, 81, 255, 0.45)",
             }}
-            aria-label="AI 에이전트 열기"
+            aria-label="AI 컨설턴트 열기"
           >
             <motion.div
               animate={{ scale: [1, 1.12, 1] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             >
-              <Bot className="h-7 w-7 text-white" />
+              <Bot className="h-7 w-7" style={{ color: "#FFFFFF" }} />
             </motion.div>
           </motion.button>
         )}
@@ -845,30 +847,61 @@ export function ChatWidget() {
             exit={{ opacity: 0, y: 40, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
             className={cn(
-              "fixed z-50 flex flex-col overflow-hidden rounded-2xl border bg-[var(--color-surface-overlay)] shadow-2xl",
+              "fixed z-50 flex flex-col overflow-hidden bg-white shadow-2xl",
               // Desktop
               "bottom-6 right-6 h-[600px] w-[400px]",
               // Mobile: full-screen
-              "max-sm:inset-0 max-sm:h-full max-sm:w-full max-sm:rounded-none"
+              "max-sm:inset-0 max-sm:h-full max-sm:w-full"
             )}
+            style={{
+              border: "1px solid rgba(5, 28, 44, 0.10)",
+              borderTop: "2px solid #2251FF",
+              borderRadius: 0,
+              boxShadow: "0 20px 50px -10px rgba(5, 28, 44, 0.40)",
+            }}
           >
-            {/* Header */}
+            {/* Header — McKinsey Deep Navy + electric blue accent */}
             <div
-              className="flex items-center justify-between px-4 py-3"
+              className="mck-cta-dark flex items-center justify-between px-4 py-3"
               style={{
-                background: "linear-gradient(135deg, #1B3A5C, #2E75B6)",
+                background: "#0A1628",
+                borderBottom: "2px solid #2251FF",
               }}
             >
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-                  <Bot className="h-5 w-5 text-white" />
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex h-9 w-9 items-center justify-center"
+                  style={{
+                    background: "#2251FF",
+                    borderTop: "2px solid #00A9F4",
+                  }}
+                >
+                  <Bot className="h-5 w-5" style={{ color: "#FFFFFF" }} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold leading-none text-white">
-                    NPL AI Agent
+                  <h3
+                    className="leading-none"
+                    style={{
+                      fontFamily: 'Georgia, "Times New Roman", serif',
+                      fontSize: 15,
+                      fontWeight: 800,
+                      color: "#FFFFFF",
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    <span style={{ color: "#FFFFFF" }}>NPLatform AI 컨설턴트</span>
                   </h3>
-                  <p className="mt-0.5 text-[11px] text-white/70">
-                    투자 분석 도우미
+                  <p
+                    className="mt-1"
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 800,
+                      color: "#00A9F4",
+                      letterSpacing: "0.10em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    <span style={{ color: "#00A9F4" }}>NPL Investment Advisor</span>
                   </p>
                 </div>
               </div>
@@ -876,19 +909,21 @@ export function ChatWidget() {
                 {messages.length > 0 && (
                   <button
                     onClick={handleClearHistory}
-                    className="rounded-full p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none"
+                    className="p-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-[#2251FF] focus-visible:ring-offset-2 focus-visible:outline-none"
+                    style={{ color: "rgba(255, 255, 255, 0.75)", background: "transparent" }}
                     aria-label="대화 초기화"
                     title="대화 초기화"
                   >
-                    <RotateCcw className="h-4 w-4" />
+                    <RotateCcw className="h-4 w-4" style={{ color: "rgba(255, 255, 255, 0.75)" }} />
                   </button>
                 )}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="rounded-full p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none"
+                  className="p-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-[#2251FF] focus-visible:ring-offset-2 focus-visible:outline-none"
+                  style={{ color: "rgba(255, 255, 255, 0.75)", background: "transparent" }}
                   aria-label="닫기"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-5 w-5" style={{ color: "rgba(255, 255, 255, 0.75)" }} />
                 </button>
               </div>
             </div>
@@ -897,27 +932,56 @@ export function ChatWidget() {
             <ScrollArea ref={scrollRef} className="flex-1 px-4 py-3">
               {showWelcome && (
                 <div className="mb-4 space-y-3">
-                  {/* Welcome bubble */}
+                  {/* Welcome bubble — McKinsey paper card */}
                   <div className="flex items-start gap-2">
-                    <Avatar className="h-7 w-7 shrink-0">
-                      <AvatarFallback className="bg-[#2E75B6] text-[10px] text-white">
-                        AI
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="rounded-2xl rounded-tl-sm bg-[var(--color-surface-elevated)] px-3 py-2 text-sm shadow-sm">
+                    <div
+                      className="mck-cta-dark flex h-8 w-8 shrink-0 items-center justify-center"
+                      style={{
+                        background: "#2251FF",
+                        borderTop: "2px solid #00A9F4",
+                        fontSize: 10,
+                        fontWeight: 800,
+                        color: "#FFFFFF",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      <span style={{ color: "#FFFFFF" }}>AI</span>
+                    </div>
+                    <div
+                      style={{
+                        background: "#FFFFFF",
+                        border: "1px solid rgba(5, 28, 44, 0.10)",
+                        borderTop: "2px solid #2251FF",
+                        padding: "10px 14px",
+                        fontSize: 13,
+                        color: "#0A1628",
+                        lineHeight: 1.55,
+                        fontWeight: 500,
+                      }}
+                    >
                       {welcomeMessage}
                     </div>
                   </div>
 
-                  {/* Quick prompts */}
-                  <div className="flex flex-wrap gap-2 pl-9">
+                  {/* Quick prompts — McKinsey outline pills (sharp corner) */}
+                  <div className="flex flex-wrap gap-2 pl-10">
                     {quickPrompts.map((qp) => (
                       <button
                         key={qp.label}
                         onClick={() => sendMessage(qp.label)}
-                        className="flex items-center gap-1.5 rounded-full border bg-[var(--color-surface-elevated)] px-3 py-1.5 text-xs font-medium text-[var(--color-brand-dark)] shadow-sm transition-colors hover:bg-[#2E75B6] hover:text-white focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none"
+                        className="flex items-center gap-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-[#2251FF] focus-visible:ring-offset-2 focus-visible:outline-none"
+                        style={{
+                          padding: "7px 12px",
+                          background: "#FFFFFF",
+                          color: "#0A1628",
+                          border: "1px solid rgba(5, 28, 44, 0.20)",
+                          borderTop: "2px solid #2251FF",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          letterSpacing: "-0.005em",
+                        }}
                       >
-                        <qp.icon className="h-3.5 w-3.5" />
+                        <qp.icon className="h-3.5 w-3.5" style={{ color: "#2251FF" }} />
                         {qp.label}
                       </button>
                     ))}
@@ -936,11 +1000,12 @@ export function ChatWidget() {
                     )}
                   >
                     {msg.role === "assistant" && (
-                      <Avatar className="mr-2 mt-0.5 h-7 w-7 shrink-0">
-                        <AvatarFallback className="bg-[#2E75B6] text-[10px] text-white">
-                          AI
-                        </AvatarFallback>
-                      </Avatar>
+                      <div
+                        className="mck-cta-dark mr-2 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center"
+                        style={{ background: "#2251FF", borderTop: "2px solid #00A9F4", fontSize: 9, fontWeight: 800, color: "#FFFFFF" }}
+                      >
+                        <span style={{ color: "#FFFFFF" }}>AI</span>
+                      </div>
                     )}
                     <div
                       className={cn(
@@ -958,11 +1023,24 @@ export function ChatWidget() {
                       )}
                       <div
                         className={cn(
-                          "inline-block rounded-2xl px-3 py-2 text-sm leading-relaxed",
-                          msg.role === "user"
-                            ? "rounded-tr-sm bg-[#2E75B6] text-white"
-                            : "rounded-tl-sm bg-[var(--color-surface-elevated)] text-foreground shadow-sm"
+                          "inline-block px-3 py-2 text-sm leading-relaxed",
+                          msg.role === "user" ? "mck-cta-dark" : ""
                         )}
+                        style={
+                          msg.role === "user"
+                            ? {
+                                background: "#0A1628",
+                                color: "#FFFFFF",
+                                border: "1px solid #0A1628",
+                                borderTop: "2px solid #2251FF",
+                              }
+                            : {
+                                background: "#FFFFFF",
+                                color: "#0A1628",
+                                border: "1px solid rgba(5, 28, 44, 0.10)",
+                                borderTop: "2px solid #2251FF",
+                              }
+                        }
                       >
                         {msg.content.split("\n").map((line, i) => (
                           <React.Fragment key={i}>
@@ -985,12 +1063,20 @@ export function ChatWidget() {
                 {/* Typing indicator (hide when streaming is active) */}
                 {isTyping && !messages.some((m) => m.isStreaming) && (
                   <div className="flex items-start">
-                    <Avatar className="mr-2 mt-0.5 h-7 w-7 shrink-0">
-                      <AvatarFallback className="bg-[#2E75B6] text-[10px] text-white">
-                        AI
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="rounded-2xl rounded-tl-sm bg-[var(--color-surface-elevated)] px-3 py-2 shadow-sm">
+                    <div
+                      className="mck-cta-dark mr-2 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center"
+                      style={{ background: "#2251FF", borderTop: "2px solid #00A9F4", fontSize: 9, fontWeight: 800, color: "#FFFFFF" }}
+                    >
+                      <span style={{ color: "#FFFFFF" }}>AI</span>
+                    </div>
+                    <div
+                      style={{
+                        background: "#FFFFFF",
+                        border: "1px solid rgba(5, 28, 44, 0.10)",
+                        borderTop: "2px solid #2251FF",
+                        padding: "10px 14px",
+                      }}
+                    >
                       <TypingIndicator />
                     </div>
                   </div>
@@ -998,10 +1084,14 @@ export function ChatWidget() {
               </div>
             </ScrollArea>
 
-            {/* Input bar */}
+            {/* Input bar — McKinsey paper + electric accent */}
             <form
               onSubmit={handleSubmit}
-              className="flex items-center gap-2 border-t bg-[var(--color-surface-elevated)] px-3 py-2"
+              className="flex items-center gap-2 px-3 py-3"
+              style={{
+                background: "#F8FAFC",
+                borderTop: "1px solid rgba(5, 28, 44, 0.10)",
+              }}
             >
               <input
                 ref={inputRef}
@@ -1009,21 +1099,36 @@ export function ChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="메시지를 입력하세요..."
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none rounded"
+                className="flex-1 outline-none focus-visible:ring-2 focus-visible:ring-[#2251FF] focus-visible:ring-offset-1 focus-visible:outline-none"
+                style={{
+                  padding: "9px 12px",
+                  fontSize: 13,
+                  background: "#FFFFFF",
+                  color: "#0A1628",
+                  border: "1px solid rgba(5, 28, 44, 0.20)",
+                  letterSpacing: "-0.005em",
+                }}
                 disabled={isTyping}
               />
               <button
                 type="submit"
                 disabled={!input.trim() || isTyping}
                 className={cn(
-                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-[#2E75B6] focus-visible:ring-offset-2 focus-visible:outline-none",
-                  input.trim() && !isTyping
-                    ? "bg-[#2E75B6] text-white hover:bg-[var(--color-brand-dark)]"
-                    : "bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)]"
+                  "flex h-9 w-9 shrink-0 items-center justify-center transition-colors focus-visible:ring-2 focus-visible:ring-[#2251FF] focus-visible:ring-offset-1 focus-visible:outline-none",
+                  input.trim() && !isTyping ? "mck-cta-dark" : ""
                 )}
+                style={{
+                  background: input.trim() && !isTyping ? "#0A1628" : "rgba(5, 28, 44, 0.10)",
+                  borderTop: input.trim() && !isTyping ? "2px solid #2251FF" : "2px solid rgba(5, 28, 44, 0.10)",
+                  color: input.trim() && !isTyping ? "#FFFFFF" : "rgba(5, 28, 44, 0.45)",
+                  cursor: input.trim() && !isTyping ? "pointer" : "not-allowed",
+                }}
                 aria-label="전송"
               >
-                <Send className="h-4 w-4" />
+                <Send
+                  className="h-4 w-4"
+                  style={{ color: input.trim() && !isTyping ? "#FFFFFF" : "rgba(5, 28, 44, 0.45)" }}
+                />
               </button>
             </form>
           </motion.div>
