@@ -2988,7 +2988,6 @@ function FullAiInvestmentAnalysisCard() {
 
   // AI 투자 등급 점수 — 보고서 결과 우선, 없으면 listing 기반 동적 산출
   // LTV = (선순위 채권최고액 + 대출원금) / 감정가 — getListingLtv() SoT 사용
-  const reportVerdict = reportSnapshot?.summary?.verdict
   const reportVerdictScore = reportSnapshot?.summary?.verdictScore
   const reportRiskGrade = reportSnapshot?.summary?.riskGrade
   const reportRecoveryRate = reportSnapshot?.summary?.predictedRecovery
@@ -3008,7 +3007,7 @@ function FullAiInvestmentAnalysisCard() {
     ) * 10
   ) / 10
   const aiGrade = reportRiskGrade ?? (aiScore >= 80 ? "A" : aiScore >= 65 ? "B" : aiScore >= 50 ? "C" : "D")
-  const verdict = reportVerdict ?? (aiScore >= 70 ? "BUY" : aiScore >= 55 ? "HOLD" : "AVOID")
+  // 매입·낙찰 성공 확률은 아래에서 계산되므로 verdict 도 거기서 함께 결정 (동적).
 
   // 매입·낙찰 성공 확률 — 다중 팩터 가중 합산
   //   · 낙찰가율 적정성 (낙찰가율 70% 부근에서 최고 — 너무 낮으면 유찰, 너무 높으면 마진↓)
@@ -3022,6 +3021,18 @@ function FullAiInvestmentAnalysisCard() {
   const successProbability = Math.round(
     Math.min(95, Math.max(20, bidRatioFitScore + bidderFactor + ltvFactor + roiFactor))
   )
+
+  /* AI 투자 의견 (verdict) — 사용자 정책:
+     ROI ≥ 30% AND 매입·낙찰 성공확률 ≥ 50% → BUY
+     ROI ≥ 15% OR  성공확률 ≥ 35%          → HOLD
+     그 외                                    → AVOID
+     보고서가 있으면 보고서의 verdict 우선. */
+  const computedVerdict = (roi >= 30 && successProbability >= 50)
+    ? "BUY"
+    : (roi >= 15 || successProbability >= 35)
+      ? "HOLD"
+      : "AVOID"
+  const verdict = reportSnapshot?.summary?.verdict ?? computedVerdict
 
   // KRW 포맷
   const fmtKRW = (n: number) => `${n.toLocaleString("ko-KR")}원`
