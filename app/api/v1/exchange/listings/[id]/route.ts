@@ -4,6 +4,27 @@ import { logger } from '@/lib/logger'
 import { getById, update } from "@/lib/data-layer"
 import { getAuthUser } from '@/lib/auth/get-user'
 import { sanitizeInput } from '@/lib/sanitize'
+import {
+  JONGNO_HONGJI_LISTING_ID,
+  JONGNO_HONGJI_DETAIL,
+  JONGNO_HONGJI_COMPARABLES,
+  JONGNO_HONGJI_COMPARABLES_SUMMARY,
+  JONGNO_HONGJI_AUCTION_STATS,
+  JONGNO_HONGJI_EXPECTED_BID,
+  JONGNO_HONGJI_RECOVERY,
+} from '@/lib/samples/jongno-hongji-land-npl'
+
+/** sample-id 별 rich detail 머지 매핑 — listings.ts row 의 lite version 을 보강 */
+const RICH_SAMPLE_DETAILS: Record<string, Record<string, unknown>> = {
+  [JONGNO_HONGJI_LISTING_ID]: {
+    ...JONGNO_HONGJI_DETAIL,
+    comparable_transactions: JONGNO_HONGJI_COMPARABLES,
+    comparable_summary: JONGNO_HONGJI_COMPARABLES_SUMMARY,
+    auction_bid_stats: JONGNO_HONGJI_AUCTION_STATS,
+    expected_bid_methods: JONGNO_HONGJI_EXPECTED_BID,
+    recovery_summary: JONGNO_HONGJI_RECOVERY,
+  },
+}
 
 // ─── GET /api/v1/exchange/listings/[id] ───────────────────
 
@@ -31,7 +52,13 @@ export async function GET(
       // view count increment is best-effort
     }
 
-    return NextResponse.json({ data, _source })
+    // Sample-id 보강: 채권자/채무자/실거래/낙찰통계 등 rich detail 머지
+    const richExtension = RICH_SAMPLE_DETAILS[id]
+    const merged = richExtension
+      ? { ...(data as Record<string, unknown>), ...richExtension }
+      : data
+
+    return NextResponse.json({ data: merged, _source })
   } catch (err) {
     logger.error("[exchange/listings/[id]] GET error:", { error: err })
     return NextResponse.json(

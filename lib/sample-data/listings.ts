@@ -160,4 +160,29 @@ export const SAMPLE_LISTINGS: SampleListing[] = [
   { id: 'lst-w03', seller_id: 'user-s4', institution: 'SBI저축은행', title: '경기 광주시 창고 NPL', listing_type: 'NPL', collateral_type: '창고', address: '경기 광주시 오포읍 능평로 120', principal_amount: 10 * 억, appraised_value: 15 * 억, ltv_ratio: 66.7, risk_grade: 'C', status: 'ACTIVE', visibility: 'PUBLIC', description: '오포읍 물류창고 2,200㎡. 주거지역 인접.', deadline: '2026-08-01', delinquency_months: 24, area_sqm: 2200, debtor_count: 1, created_at: '2026-03-05' },
   { id: 'lst-w04', seller_id: 'user-s1', institution: '한국자산관리공사', title: '충남 당진시 창고 NPL', listing_type: 'NPL', collateral_type: '창고', address: '충남 당진시 송악읍 산업로 80', principal_amount: 30 * 억, appraised_value: 45 * 억, ltv_ratio: 66.7, risk_grade: 'C', status: 'ACTIVE', visibility: 'MEMBERS', description: '당진 산업단지 대형 물류창고 7,000㎡.', deadline: '2026-06-30', delinquency_months: 18, area_sqm: 7000, debtor_count: 1, created_at: '2026-01-15' },
   { id: 'lst-w05', seller_id: 'user-s2', institution: '유암코', title: '경기 파주시 창고 NPL', listing_type: 'NPL', collateral_type: '창고', address: '경기 파주시 월롱면 엘지로 55', principal_amount: 22 * 억, appraised_value: 32 * 억, ltv_ratio: 68.8, risk_grade: 'C', status: 'EXPIRED', visibility: 'PUBLIC', description: '파주 물류센터 4,800㎡. 계약 만료.', deadline: '2026-03-01', delinquency_months: 26, area_sqm: 4800, debtor_count: 1, created_at: '2025-11-20' },
+
+  // ── 신규 사례 등록 (사용자 제공 실 데이터 기반 — 채권자/채무자 마스킹) ─────
+  // 종로 홍지동 토지 NPL — 회수율 280% 매력적 사례, 분석 보고서 사례용
+  {
+    id: 'lst-jongno-hongji',
+    seller_id: 'user-s1',
+    institution: '○○대부 (마스킹)',
+    title: '종로구 홍지동 토지 NPL · 8필지 일괄',
+    listing_type: 'NPL',
+    collateral_type: '토지',
+    address: '서울특별시 종로구 홍지동 76-1번지 외 7필지(81-1, 81-4, 81-6, 81-7, 82, 83, 76-30)',
+    principal_amount: 1_648_045_960,        // 대출원금
+    appraised_value: 6_673_016_000,         // 감정가(법사가)
+    ltv_ratio: 60.12,
+    risk_grade: 'A',
+    status: 'ACTIVE',
+    visibility: 'PUBLIC',
+    description:
+      '서울 종로구 홍지동 76-1 외 7필지(81-1, 81-4, 81-6, 81-7, 82, 83, 76-30) 일괄매각. 총 연면적 5,193㎡(제1종일반주거지역). 채권최고액 23.64억, 1순위 농협은행. AI 시세 74.9억(감정가의 112%). 인근 1km 실거래 평균 m²당 273만원. 예상낙찰가 47.6억(감정가 71.4%) 기준 회수율 약 280%로 매우 매력적.',
+    deadline: '2026-05-30',
+    delinquency_months: 2,                  // 원금 연체시작 2026-03-03 → 2개월
+    area_sqm: 5193,
+    debtor_count: 1,
+    created_at: '2026-04-23',
+  },
 ]

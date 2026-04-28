@@ -44,6 +44,8 @@ import {
   type SpecialConditionDefV2,
 } from "@/lib/npl/unified-report/types"
 import { buildSampleReport } from "@/lib/npl/unified-report/sample"
+import { buildJongnoSampleReport } from "@/lib/npl/unified-report/sample-jongno"
+import { JONGNO_HONGJI_LISTING_ID } from "@/lib/samples/jongno-hongji-land-npl"
 import { buildNplProfitability } from "@/lib/npl/unified-report/profitability"
 import {
   computeCollateralFactor,
@@ -236,16 +238,26 @@ export default function UnifiedReportPage() {
             // (위저드 흐름 거치도록 안내)
           }
         }
-        // 우선순위 3 — ?listingId 가 있으면 useAnalysisReport 형태의 KPI 조회
+        // 우선순위 3 — listingId 가 사례 사전 빌드된 매물(종로 홍지동 등)이면 전용 빌더
+        if (listingId === JONGNO_HONGJI_LISTING_ID) {
+          setReport(buildJongnoSampleReport())
+          return
+        }
+        // 우선순위 4 — ?listingId 가 있으면 useAnalysisReport 형태의 KPI 조회
         // (라우터에서 이미 useListing 으로 listing 메타 표기 중. 본문은 sample 유지)
         // → 사용자가 위저드 실행하기 전 미리 보기 모드
         setReport(buildSampleReport())
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err))
-        setReport(buildSampleReport())
+        // 사례 매물이면 우선 종로용 빌더, 아니면 기본 sample
+        if (listingId === JONGNO_HONGJI_LISTING_ID) {
+          setReport(buildJongnoSampleReport())
+        } else {
+          setReport(buildSampleReport())
+        }
       }
     })()
-  }, [id])
+  }, [id, listingId])
 
   if (!report) {
     return (

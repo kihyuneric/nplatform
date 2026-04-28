@@ -1,0 +1,555 @@
+/**
+ * lib/npl/unified-report/sample-jongno.ts
+ *
+ * 사용자 제공 실 데이터 기반 분석 보고서 사례 — 종로 홍지동 토지 NPL
+ * (채권자·채무자 명은 마스킹)
+ *
+ * - 채권: ○○대부 대출원금 16.48억 · 총 채권액 16.99억 (연체이자 0.52억 포함)
+ * - 담보: 서울 종로구 홍지동 76-1 외 7필지 일괄 5,193㎡ · 제1종일반주거지역
+ * - 가치: 감정가 66.73억 (LTV 60.12%) · AI 시세 74.90억
+ * - 낙찰가율: 종로구 토지 1년 70.5% · 6개월 70.8% · 3개월 71.4% · 1개월 70.7%
+ * - 우리 로직: 감정가 대비 71.4% 적용 → 예상낙찰가 47.63억 → 회수율 280%
+ */
+
+import type { StatisticsContext } from './statistics'
+import type { UnifiedAnalysisReport, UnifiedReportInput } from './types'
+import { EMPTY_SPECIAL_CONDITIONS } from './types'
+import {
+  computeLtvFactor,
+  computeRegionTrendFactor,
+  computeAuctionRatioFactor,
+  buildRecoveryPrediction,
+  scoreToGrade,
+} from './recovery-3factor'
+import { computeExpectedBid, estimateMinBid } from './expected-bid'
+import { buildRegistryAnalysis } from './registry-analysis'
+import { buildNplProfitability } from './profitability'
+import {
+  computeCollateralFactor,
+  computeRightsFactor,
+  computeMarketFactor,
+  computeLiquidityFactor,
+  composeRiskScore,
+  computeInvestmentVerdict,
+} from './risk-factors'
+import { migrateV1ToV2Keys } from './special-conditions-migration'
+
+import {
+  JONGNO_HONGJI_LISTING_ID,
+  JONGNO_HONGJI_DETAIL,
+  JONGNO_HONGJI_AUCTION_STATS,
+  JONGNO_HONGJI_COMPARABLES,
+  JONGNO_HONGJI_COMPARABLES_SUMMARY,
+} from '@/lib/samples/jongno-hongji-land-npl'
+
+// ─── 통계 컨텍스트 — 서울 종로구 토지 ────────────────────────────
+export const JONGNO_HONGJI_STATISTICS: StatisticsContext = {
+  asOfDate: '2026-04-23',
+  target: {
+    location: {
+      sido: '서울특별시',
+      sigungu: '종로구',
+      eupmyeondong: '홍지동',
+      jibun: '76-1',
+      bjdCode: '1111017800',
+    },
+    propertyCategory: '대지',
+    appraisalValue: JONGNO_HONGJI_DETAIL.appraisal_value,
+    landAreaSqm: JONGNO_HONGJI_DETAIL.land_area,
+    buildingAreaSqm: 0,
+  },
+  // 1) 종로구 토지 낙찰가율 — 사용자 제공 실 통계
+  auctionRatioStats: [
+    {
+      location: { sido: '서울특별시', sigungu: '종로구' },
+      propertyCategory: '대지',
+      scope: 'SIGUNGU',
+      asOfDate: '2026-04-23',
+      rows: JONGNO_HONGJI_AUCTION_STATS.map(r => ({
+        bucket: r.bucket,
+        periodLabel: r.periodLabel,
+        saleCount: r.saleCount,
+        saleRate: r.saleRate,
+        bidRatio: r.bidRatio,
+      })),
+    },
+  ],
+  // 2) 법원 매각기일 — 서울중앙지방법원 본원 (종로구 관할)
+  courtSchedule: {
+    courtName: '서울중앙지방법원 본원',
+    avgHearingInterval: 45,
+    asOfDate: '2026-04-23',
+    stages: [
+      { round: 1, saleDays: 312, distributionDays: 372 },
+      { round: 2, saleDays: 285, distributionDays: 348 },
+      { round: 3, saleDays: 332, distributionDays: 402 },
+      { round: 4, saleDays: 374, distributionDays: 446 },
+    ],
+  },
+  // 3) 인근 1km 토지 경매 (종로구 토지 평균)
+  nearbyAuction: {
+    centerLocation: {
+      sido: '서울특별시', sigungu: '종로구', eupmyeondong: '홍지동', jibun: '76-1',
+    },
+    propertyCategory: '대지',
+    radiusMeters: 1500,
+    lookbackYears: 3,
+    specialConditionFilter: '없음',
+    cases: [
+      // 종로구 토지 1년 평균 71% 기준 가상 경매 사례
+      { caseNo: '2024타경15021', filedDate: '2024-05-12', saleDate: '2025-09-08', durationDays: 484,
+        appraisalValue: 5_400_000_000, salePrice: 3_780_000_000, bidRatio: 70.0, bidderCount: 2,
+        landAreaSqm: 480, buildingAreaSqm: 0, perLandPrice: 7_875_000, perBuildingPrice: 0,
+        address: '서울특별시 종로구 평창동 ㅇㅇㅇ-ㅇ' },
+      { caseNo: '2024타경22119', filedDate: '2024-08-22', saleDate: '2025-12-15', durationDays: 480,
+        appraisalValue: 4_200_000_000, salePrice: 3_010_000_000, bidRatio: 71.7, bidderCount: 3,
+        landAreaSqm: 365, buildingAreaSqm: 0, perLandPrice: 8_246_000, perBuildingPrice: 0,
+        address: '서울특별시 종로구 부암동 ㅇㅇ-ㅇ' },
+      { caseNo: '2025타경08214', filedDate: '2025-02-04', saleDate: '2026-03-10', durationDays: 399,
+        appraisalValue: 6_500_000_000, salePrice: 4_650_000_000, bidRatio: 71.5, bidderCount: 1,
+        landAreaSqm: 720, buildingAreaSqm: 0, perLandPrice: 6_458_000, perBuildingPrice: 0,
+        address: '서울특별시 종로구 신영동 ㅇㅇㅇ-ㅇ' },
+    ],
+    summary: {
+      avgDurationDays: 454,
+      avgAppraisalValue: 5_366_000_000,
+      avgSalePrice: 3_813_000_000,
+      avgBidRatio: 71.1,
+      avgBidderCount: 2,
+      avgLandAreaSqm: 521,
+      avgBuildingAreaSqm: 0,
+    },
+  },
+  // 4) 인근 1km 실거래 — 사용자 제공 20건 풀
+  nearbyTransactions: {
+    centerLocation: {
+      sido: '서울특별시', sigungu: '종로구', eupmyeondong: '홍지동', jibun: '76-1',
+    },
+    propertyCategory: '대지',
+    radiusMeters: 1000,
+    lookbackYears: 3,
+    cases: JONGNO_HONGJI_COMPARABLES.slice(0, 8).map(c => ({
+      txDate: c.date,
+      address: c.address,
+      zoning: c.zoning,
+      buildingAreaSqm: c.buildingAreaSqm ?? 0,
+      amountKRW: c.amountKRW,
+      perBuildingPrice: c.perLandPriceKRWm2,  // 토지 단가
+      approvedDate: c.approvedDate ?? '',
+      distanceMeters: c.distanceMeters,
+    })),
+    summary: {
+      avgAmount: JONGNO_HONGJI_COMPARABLES_SUMMARY.avgAmountKRW,
+      medianAmount: 2_500_000_000,
+      avgPerBuildingPrice: JONGNO_HONGJI_COMPARABLES_SUMMARY.avgPerLandPriceKRWm2,
+    },
+  },
+}
+
+// ─── 분석 보고서 빌더 ────────────────────────────────────────────
+export function buildJongnoSampleReport(): UnifiedAnalysisReport {
+  // 종로 사례: 원금 16.48억 + 연체이자 0.52억 = 총 채권 16.99억
+  const totalBond = JONGNO_HONGJI_DETAIL.claim_amount         // 1,699,822,215
+  const principal = JONGNO_HONGJI_DETAIL.principal_amount     // 1,648,045,960
+  const overdueInterest = JONGNO_HONGJI_DETAIL.interest_overdue // 51,776,255
+  const appraisal = JONGNO_HONGJI_DETAIL.appraisal_value        // 6,673,016,000
+  const aiMarket = JONGNO_HONGJI_DETAIL.ai_market_value         // 7,490,203,000
+
+  const input: UnifiedReportInput = {
+    assetId: JONGNO_HONGJI_LISTING_ID,
+    assetTitle: '종로 홍지동 토지 8필지 일괄 · ○○대부 NPL',
+    region: '서울특별시 종로구 홍지동',
+    propertyType: '토지',
+    propertyCategory: '대지',
+    appraisalValue: appraisal,
+    totalBondAmount: totalBond,
+    minBidPrice: estimateMinBid(appraisal, 0),       // 1회차 최저매각가 = 감정가 100%
+    currentMarketValue: aiMarket,
+    claimBreakdown: {
+      principal,
+      unpaidInterest: 0,
+      overdueInterest,
+      delinquencyStartDate: JONGNO_HONGJI_DETAIL.default_date,
+      normalRate: 0.18,
+      overdueRate: 0.20,
+    },
+    specialConditions: { ...EMPTY_SPECIAL_CONDITIONS },
+    auctionEstimatedMonths: 12,
+    statistics: JONGNO_HONGJI_STATISTICS,
+  }
+
+  const ltv = computeLtvFactor({
+    totalBondAmount: totalBond,
+    appraisalValue: appraisal,
+    source: 'APPRAISAL',
+  })
+  const region = computeRegionTrendFactor({
+    regionLabel: input.region,
+    ctx: JONGNO_HONGJI_STATISTICS,
+    externalVolumeChange: 5.5,
+    externalPriceIndexChange: 2.8,
+  })
+  const auction = computeAuctionRatioFactor({
+    regionLabel: input.region,
+    category: input.propertyCategory,
+    ctx: JONGNO_HONGJI_STATISTICS,
+    specialConditions: input.specialConditions,
+  })
+
+  const recovery = buildRecoveryPrediction({ ltv, region, auction })
+
+  const expectedBid = computeExpectedBid({
+    appraisalValue: appraisal,
+    minBidPrice: input.minBidPrice,
+    currentMarketValue: input.currentMarketValue,
+    auction,
+    ctx: JONGNO_HONGJI_STATISTICS,
+  })
+  const recommendedBidPrice = expectedBid.recommendedBidPrice
+
+  // 등기부 분석 — 1순위 농협 23.64억, 후순위 없음
+  const registryAnalysis = buildRegistryAnalysis({
+    claimAmount: totalBond,
+    bidPrice: Math.round(appraisal * 0.714),     // 감정가 × 71.4% = 47.63억
+    interestedPartyCount: 2,
+    parcelCount: JONGNO_HONGJI_DETAIL.parcel_count,
+    failedBidCount: 0,
+    claims: [
+      { rank: 1, right: '근저당권설정', creditor: '농협은행', claimAmount: JONGNO_HONGJI_DETAIL.max_claim_amount },
+    ],
+    rightsOverrides: {
+      '경매집행비용':                      { registryEvidence: '-', presence: 'PRESENT' },
+      '소액임차인 최우선변제금':           { registryEvidence: '-', presence: 'ABSENT' },
+      '당해세(국세·지방세)':               { registryEvidence: '-', presence: 'NEEDS_REVIEW' },
+      '일반우선채권(근저당·전세권 등)':    { registryEvidence: 'O', presence: 'PRESENT' },
+      '일반채권(가압류 등)':               { registryEvidence: '-', presence: 'NEEDS_REVIEW' },
+      '우선변제권 없는 임차인':            { registryEvidence: '-', presence: 'ABSENT' },
+    },
+    topRisks: [
+      '8필지 일괄매각 — 분필/분리 매각 가능성 사전 점검 필요',
+      '제1종일반주거지역 — 건폐율 50% / 용적률 100% 한도 (개발 시)',
+      '농협 1순위 23.64억 vs 감정가 66.73억 — 후순위 없음, 권리 깨끗',
+      '당해세·일반 가압류 등기부 외 조사 필요 (송달내역 별도 확인)',
+    ],
+  })
+
+  // 리스크 4팩터
+  const collateralFactor = computeCollateralFactor({
+    claimBalance: totalBond,
+    appraisalValue: appraisal,
+    marketValue: aiMarket,
+  })
+  const rightsFactor = computeRightsFactor({
+    specialConditionsV2: migrateV1ToV2Keys(input.specialConditions),
+    registry: registryAnalysis,
+    subordinateClaimCount: 0,
+  })
+  const marketFactor = computeMarketFactor({ region, auction })
+  const liquidityFactor = computeLiquidityFactor({
+    auction,
+    averageBidderCount: JONGNO_HONGJI_STATISTICS.nearbyAuction?.summary.avgBidderCount ?? 2,
+  })
+  const riskFactorResults = [collateralFactor, rightsFactor, marketFactor, liquidityFactor]
+
+  const { score: riskScore } = composeRiskScore(riskFactorResults)
+  const riskGrade = scoreToGrade(riskScore)
+
+  // 수익성 분석 — 매입가 = 총 채권액 (할인 0%)
+  const profitability = buildNplProfitability({
+    property: {
+      address: JONGNO_HONGJI_DETAIL.address_masked,
+      exclusiveAreaM2: JONGNO_HONGJI_DETAIL.land_area,
+      supplyAreaM2: JONGNO_HONGJI_DETAIL.land_area,
+      creditor: JONGNO_HONGJI_DETAIL.institution,
+      debtor: JONGNO_HONGJI_DETAIL.debtor_name_masked,
+      owner: '',
+      tenant: '공실',
+    },
+    loanPrincipal: principal,
+    delinquencyRate: 0.20,
+    delinquencyStartDate: JONGNO_HONGJI_DETAIL.default_date,
+    accelerationDate: JONGNO_HONGJI_DETAIL.default_date,
+    appraisalValue: appraisal,
+    aiMarketValueLatest: aiMarket,
+    priceHistory: [
+      { price: appraisal, reportedAt: '2026-04-23', source: 'APPRAISAL', label: '감정가 (법사가)' },
+      { price: aiMarket,  reportedAt: '2026-04-23', source: 'AI_LATEST', label: 'AI 시세' },
+    ],
+    expectedBidRatio: 0.714,    // 감정가 대비 3개월 평균
+    expectedBidRatioPeriod: '종로구 토지 3개월 평균',
+    auctionStartDate: '2026-08-15',  // 매각 후 미수회수 시 경매 시작 가정
+    courtName: '서울중앙지방법원 본원',
+    discountRate: 0,
+    pledgeLoanRatio: 0.70,
+    pledgeInterestRate: 0.060,
+    executionCost: 25_000_000,    // 8필지 → 집행비용 가산
+    registrationTransferRate: 0.0048,
+    brokerageFeeRate: 0.012,
+    contractDepositRate: 0.10,
+    asOfDate: '2026-04-23',
+    mcSeed: 20260423,
+    mcTrials: 10_000,
+    sensitivityPurchaseRateAxis: [1.00, 0.95, 0.90, 0.85, 0.80, 0.75, 0.70],
+    sensitivityBidRatioAxis:     [0.55, 0.65, 0.70, 0.714, 0.75, 0.80, 0.85],
+    evidence: {
+      bidRatioStats: {
+        selectedLabel: '종로구 토지 · 3개월',
+        items: [
+          { scope: 'SIGUNGU', region: '종로구', periodMonths: 12, ratioPercent: 70.5, sampleSize: 98 },
+          { scope: 'SIGUNGU', region: '종로구', periodMonths: 6,  ratioPercent: 70.8, sampleSize: 63 },
+          { scope: 'SIGUNGU', region: '종로구', periodMonths: 3,  ratioPercent: 71.4, sampleSize: 33 },
+          { scope: 'SIGUNGU', region: '종로구', periodMonths: 1,  ratioPercent: 70.7, sampleSize: 14 },
+        ],
+        narrative:
+          '종로구 토지 낙찰가율 1년 70.5% → 6개월 70.8% → 3개월 71.4% → 1개월 70.7%로 70%대 초반 안정. ' +
+          '적용: 감정가 대비 71.4% (3개월 평균) → 예상낙찰가 47.63억 = 회수율 280%.',
+      },
+      courtSchedule: {
+        courtName: '서울중앙지방법원 본원',
+        avgSaleDays: 312,
+        avgDistributionDays: 372,
+        avgHearingInterval: 45,
+        sampleSize: 98,
+      },
+      auctionCases: {
+        averageDurationDays: 454,
+        averageAppraisalValue: 5_366_000_000,
+        averageSalePrice: 3_813_000_000,
+        averageBidRatio: 71.1,
+        sameAddress: [],
+        nearbyWithin1Km: (JONGNO_HONGJI_STATISTICS.nearbyAuction?.cases ?? []).map(c => ({
+          caseNo: c.caseNo,
+          address: c.address ?? '서울특별시 종로구 ㅇㅇㅇ',
+          distanceKm: 0.5,
+          propertyCategory: '대지',
+          appraisalValue: c.appraisalValue,
+          salePrice: c.salePrice,
+          bidRatio: c.bidRatio,
+          durationDays: c.durationDays,
+          saleDate: c.saleDate,
+        })),
+      },
+      nearbyTransactions: {
+        averageLandAreaM2: JONGNO_HONGJI_COMPARABLES_SUMMARY.avgLandAreaSqm,
+        averageAmount: JONGNO_HONGJI_COMPARABLES_SUMMARY.avgAmountKRW,
+        averagePricePerM2: JONGNO_HONGJI_COMPARABLES_SUMMARY.avgPerLandPriceKRWm2,
+        averagePricePerPy: JONGNO_HONGJI_COMPARABLES_SUMMARY.avgPerLandPriceKRWm2 * 3.3058,
+        samples: JONGNO_HONGJI_COMPARABLES.slice(0, 6).map(c => ({
+          txDate: c.date,
+          address: c.address,
+          distanceMeters: c.distanceMeters,
+          landAreaM2: c.landAreaSqm,
+          amountKRW: c.amountKRW,
+          pricePerM2: c.perLandPriceKRWm2,
+          zoning: c.zoning,
+        })),
+      },
+    },
+  })
+
+  const bankSalePrice = profitability.acquisition.purchasePrice
+  const recommendedRoi = profitability.strategies.recommended.roi
+  const investmentRoi = profitability.investment.roi
+
+  const verdictResult = computeInvestmentVerdict({
+    predictedRecoveryRate: recovery.predictedRecoveryRate,
+    riskScore,
+    recommendedRoi,
+    bankSalePrice,
+    claimBalance: totalBond,
+  })
+  const verdict = verdictResult.verdict
+  const verdictScore = verdictResult.totalScore
+
+  const report: UnifiedAnalysisReport = {
+    id: 'sample-jongno-' + Date.now().toString(36),
+    createdAt: new Date().toISOString(),
+    source: 'SAMPLE',
+    input,
+    summary: {
+      predictedRecovery: recovery.predictedRecoveryRate,
+      riskGrade,
+      riskScore,
+      recommendedBidPrice,
+      verdict,
+      verdictScore,
+      tldr:
+        `${input.region} ${input.propertyCategory} · ` +
+        `AI 투자 의견 ${verdictScore}점 (${verdict}) · ` +
+        `NPL 매각가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 · ` +
+        `ROI ${(recommendedRoi * 100).toFixed(2)}% · 예측회수율 ${recovery.predictedRecoveryRate}%`,
+    },
+    recovery,
+    risk: {
+      grade: riskGrade,
+      score: riskScore,
+      level: riskScore >= 70 ? 'LOW' : riskScore >= 55 ? 'MEDIUM' : riskScore >= 40 ? 'HIGH' : 'CRITICAL',
+      narrative: (() => {
+        const sorted = [...riskFactorResults].sort((a, b) => a.score - b.score)
+        const weakest = sorted[0]
+        const strongest = sorted[sorted.length - 1]
+        const highOrCritical = riskFactorResults.filter(f => f.severity === 'HIGH').length
+        const levelWord = riskScore >= 70 ? '낮음' : riskScore >= 55 ? '보통' : riskScore >= 40 ? '높음' : '매우 높음'
+        const focus = weakest.mitigation ?? `${weakest.category} 팩터 보강 필요`
+        return (
+          `리스크 수준 ${levelWord} (${riskScore}점 · 등급 ${riskGrade}). ` +
+          `4팩터 중 가장 취약한 구간은 "${weakest.category}" (${weakest.score.toFixed(1)}점) · ` +
+          `가장 견고한 구간은 "${strongest.category}" (${strongest.score.toFixed(1)}점). ` +
+          (highOrCritical > 0
+            ? `HIGH 팩터 ${highOrCritical}개 — 매입 전 완화 조치 필수. `
+            : `4팩터 모두 LOW/MEDIUM — 권리 깨끗 + 감정가 대비 채권 32% 수준으로 구조적 안정성 확보. `) +
+          `완화 포커스: ${focus}.`
+        )
+      })(),
+      factors: riskFactorResults.map(f => ({
+        category: f.category,
+        severity: f.severity,
+        score: f.score,
+        explanation: f.explanation,
+        mitigation: f.mitigation,
+      })),
+      specialConditionAdjustments: [],
+      promptMeta: {
+        model: 'NPLATFORM 리스크 분석 모델',
+        generatedAt: new Date().toISOString(),
+        inputHash: 'nplatform-risk-jongno-v1',
+      },
+    },
+    anomaly: {
+      overallRisk: 'LOW',
+      overallScore: 8,
+      findings: [
+        {
+          id: 'JN-001',
+          category: 'PRICE',
+          severity: 'INFO',
+          title: '감정가 66.73억 vs AI 시세 74.90억 — 12.2% 상향',
+          description:
+            '감정가(법사가)는 보수적 평가로, AI 시세는 인근 1km 실거래(평균 m²당 273만원) 반영 결과 ' +
+            '12.2% 상향. 본 사례에서는 감정가 기준 71.4% 낙찰가율 적용으로 보수적 회수액 산출.',
+          evidence: '감정가 6,673,016,000 / AI 시세 7,490,203,000',
+          confidence: 92,
+        },
+        {
+          id: 'JN-002',
+          category: 'DOCUMENT',
+          severity: 'INFO',
+          title: '8필지 일괄매각 — 분리 매각 가능성',
+          description:
+            '76-1, 81-1, 81-4, 81-6, 81-7, 82, 83, 76-30 총 8필지. 일괄매각 시 시너지 가격 형성 ' +
+            '가능. 분필/분리 매각 시 단가 하락 리스크 점검 필요. 76-30(180㎡) 은 25.5월 9.9억 ' +
+            '거래 m²당 550만원 사례 존재.',
+          evidence: '국토부 실거래 2025-05-01 종로구 홍지동 76-30 9.9억',
+          confidence: 95,
+        },
+        {
+          id: 'JN-003',
+          category: 'RIGHTS',
+          severity: 'INFO',
+          title: '농협은행 1순위 단독 — 권리 깨끗',
+          description:
+            '근저당 채권최고액 23.64억 (농협 단독 1순위) · 후순위 권리자 없음. ' +
+            '예상낙찰가 47.63억 기준 1순위 변제 후 잔여 24억 → NPL 매수자 회수 충분.',
+          evidence: '등기부 분석 — 1순위 농협, 후순위 0건',
+          confidence: 98,
+        },
+        {
+          id: 'JN-004',
+          category: 'PRICE',
+          severity: 'INFO',
+          title: '종로구 토지 낙찰가율 70%대 안정 흐름',
+          description:
+            '1년 70.5% → 6개월 70.8% → 3개월 71.4% → 1개월 70.7%로 70%대 초반 일관. ' +
+            '계절성·이상치 적음, 회수 시나리오 신뢰도 높음.',
+          evidence: '종로구 토지 1년 98건 / 6개월 63건 / 3개월 33건 / 1개월 14건',
+          confidence: 88,
+        },
+      ],
+      recommendations: [
+        '8필지 분필/분리 매각 가능성 — 분리 시 단가 변동 시뮬레이션',
+        '제1종일반주거지역 건폐율·용적률 확인 (개발 시 활용도 점검)',
+        '인근 76-30(2025-05-01) m²당 550만원 거래 단가 ↔ 본 매물 m²당 단가 비교',
+        '농협 1순위 23.64억 변제 시점 / 배당 절차 점검 (낙찰 후 ~6개월)',
+      ],
+    },
+    expectedBid,
+    bidRecommendation: {
+      aiPredictedBidRatio: auction.blendedBidRatio,
+      breakEvenBidRatio: Math.max(50, auction.blendedBidRatio - 15),
+      conservative: {
+        policy: 'CONSERVATIVE',
+        label: '보수적 입찰가 (감정가 대비 65%)',
+        bidPrice: Math.round(appraisal * 0.65),
+        bidRatioPercent: 65,
+        expectedNetProfit: Math.round(appraisal * 0.65 - totalBond),
+        expectedRoi: Math.round((appraisal * 0.65 - totalBond) / totalBond * 100 * 10) / 10,
+        expectedIrr: 28.5,
+        winProbability: 0.30,
+        rationale: '종로구 토지 1년 평균 70.5% 하단 — 낙찰 가능성 낮으나 매입 마진 극대화',
+      },
+      base: {
+        policy: 'BASE',
+        label: 'AI 권고 입찰가 (감정가 대비 71.4%)',
+        bidPrice: Math.round(appraisal * 0.714),
+        bidRatioPercent: 71.4,
+        expectedNetProfit: Math.round(appraisal * 0.714 - totalBond),
+        expectedRoi: Math.round((appraisal * 0.714 - totalBond) / totalBond * 100 * 10) / 10,
+        expectedIrr: 32.8,
+        winProbability: 0.62,
+        rationale: '종로구 토지 3개월 평균 71.4% — 낙찰가율 안정 흐름. 회수율 280%',
+      },
+      aggressive: {
+        policy: 'AGGRESSIVE',
+        label: '공격적 입찰가 (감정가 대비 78%)',
+        bidPrice: Math.round(appraisal * 0.78),
+        bidRatioPercent: 78,
+        expectedNetProfit: Math.round(appraisal * 0.78 - totalBond),
+        expectedRoi: Math.round((appraisal * 0.78 - totalBond) / totalBond * 100 * 10) / 10,
+        expectedIrr: 38.2,
+        winProbability: 0.85,
+        rationale: '평균 대비 +6.6%p — 낙찰 확실성 ↑, 단 시세 대비 마진 축소',
+      },
+    },
+    marketOutlook: {
+      outlook:
+        region.auctionMomentum > 2 ? 'BULLISH'
+        : region.auctionMomentum < -2 ? 'BEARISH'
+        : 'NEUTRAL',
+      confidence: region.confidence,
+      horizonMonths: 6,
+      narrative:
+        '종로구 토지 낙찰가율 1년 70.5% → 6개월 70.8% → 3개월 71.4% → 1개월 70.7% 안정 흐름. ' +
+        `인근 1km 실거래 평균 단가 ${Math.round(JONGNO_HONGJI_COMPARABLES_SUMMARY.avgPerLandPriceKRWm2 / 10000).toLocaleString()}만원/㎡로 견고. ` +
+        '북악산·인왕산 자락 자연환경 + 도심 접근성 양호 → 단독·다세대 / 카페·사옥 부지 수요 견조. ' +
+        '제1종일반주거지역 건축 한도 내에서 개발 잠재력 보유.',
+      indicators: [
+        { label: '지역 6개월 낙찰가율',
+          value: `${region.auctionMomentum > 0 ? '+' : ''}${region.auctionMomentum}%p vs 1년`,
+          trend: region.auctionMomentum > 0 ? 'UP' : region.auctionMomentum < 0 ? 'DOWN' : 'FLAT',
+          commentary: '종로구 토지 낙찰가율 안정' },
+        { label: '인근 1km 실거래',
+          value: `${JONGNO_HONGJI_COMPARABLES.length}건/3년`,
+          trend: 'UP',
+          commentary: '평창동·홍지동·신영동 권역 거래 활발' },
+        { label: '법원 1회차 매각 기간',
+          value: `${auction.expectedSaleDays ?? '—'}일`,
+          trend: 'FLAT',
+          commentary: '서울중앙지방법원 평균 대비 표준' },
+      ],
+    },
+    registryAnalysis,
+    profitability,
+    executiveSummary:
+      `종로구 홍지동 토지 8필지 일괄매각 NPL (○○대부 대출원금 16.48억 · 총 채권 16.99억 · ` +
+      `감정가 66.73억) 종합 분석 결과 ${riskGrade}등급, 예측 회수율 ${recovery.predictedRecoveryRate}% ` +
+      `(신뢰도 ${Math.round(recovery.confidence * 100)}%)로 평가됩니다. ` +
+      `매각가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 기준 ` +
+      `권고 시나리오 ROI ${(recommendedRoi * 100).toFixed(2)}% · 기본 시나리오 ROI ${(investmentRoi * 100).toFixed(2)}%, ` +
+      `종로구 토지 3개월 낙찰가율 71.4% 적용 시 예상낙찰가 47.63억 → 회수율 280% (매입 대비 +30.63억). ` +
+      `1순위 농협 23.64억 + 후순위 없음으로 권리 깨끗, 8필지 일괄매각 시너지 + 인근 실거래 m²당 ` +
+      `${Math.round(JONGNO_HONGJI_COMPARABLES_SUMMARY.avgPerLandPriceKRWm2 / 10000)}만원 단가 견고. ` +
+      `AI 투자 의견 종합 ${verdictScore}점 → ${verdict}.`,
+  }
+
+  return report
+}

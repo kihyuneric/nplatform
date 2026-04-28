@@ -64,6 +64,7 @@ interface RecentItem {
 }
 
 const RECENT_FALLBACK: RecentItem[] = [
+  { id: "r0", type: "NPL 수익성 분석", title: "종로구 홍지동 토지 8필지 · ○○대부", grade: "A", roi: "180.2%", date: "2026-04-23", href: "/analysis/report?listingId=lst-jongno-hongji" },
   { id: "r1", type: "NPL 수익성 분석", title: "강남 역삼동 아파트 · 우리은행", grade: "A", roi: "18.4%", date: "2026-04-13", href: "/analysis/report" },
   { id: "r2", type: "경매 분석", title: "분당 오피스텔 · 낙찰가 3.5억", grade: "B", roi: "14.2%", date: "2026-04-12", href: "/analysis/simulator" },
   { id: "r3", type: "NPL 수익성 분석", title: "해운대 상가 · 하나에프앤아이", grade: "B", roi: "16.8%", date: "2026-04-10", href: "/analysis/report" },
