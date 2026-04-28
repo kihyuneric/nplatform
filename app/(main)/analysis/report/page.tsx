@@ -102,11 +102,14 @@ function buildRiskFactorFormula(
         marketValue: input.currentMarketValue ?? input.appraisalValue,
       }).formula
     case "권리관계":
+      // subordinateClaimCount 는 input.subordinateClaimCount(있으면) 또는
+      // registry.rights.items 에서 후순위 근저당 자동 카운트 (없으면 0).
       return computeRightsFactor({
         specialConditionsV2:
           input.specialConditionsV2 ?? migrateV1ToV2Keys(input.specialConditions),
         registry,
-        subordinateClaimCount: 1,
+        subordinateClaimCount:
+          (input as { subordinateClaimCount?: number }).subordinateClaimCount ?? 0,
       }).formula
     case "시장":
       return computeMarketFactor({ region, auction }).formula

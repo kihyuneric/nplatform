@@ -295,8 +295,10 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     appraisalValue: appraisal,
     marketValue: aiMarket,
   })
+  // 권리관계 팩터 — input.specialConditionsV2 우선 사용 (현재 사례: 'senior_registry_rights')
+  // 종로 사례: 1순위 농협 근저당만 존재 → 후순위·기타 없음.
   const rightsFactor = computeRightsFactor({
-    specialConditionsV2: migrateV1ToV2Keys(input.specialConditions),
+    specialConditionsV2: input.specialConditionsV2 ?? migrateV1ToV2Keys(input.specialConditions),
     registry: registryAnalysis,
     subordinateClaimCount: 0,
   })
