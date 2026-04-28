@@ -14,12 +14,12 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import {
-  ShieldCheck, UserCheck, Briefcase, FileSignature,
+  ShieldCheck, UserCheck, FileSignature,
   Building2, TrendingUp, Clock, ChevronRight,
   CheckCircle2, Sparkles, BarChart3, Target,
   ArrowRight, Handshake,
-  Bell, Gift, Code,
-  GraduationCap, Banknote, Store, Crown,
+  Bell, Gift, Code, MessageCircle,
+  GraduationCap, Banknote, Store,
 } from "lucide-react"
 import type { AccessTier } from "@/lib/access-tier"
 import {
@@ -149,25 +149,26 @@ type QuickLink = {
 }
 
 const COMMON_LINKS: QuickLink[] = [
-  { href: "/my/kyc",          label: "투자자 인증",   desc: "사업자등록증 · 명함 · 본인",  icon: UserCheck, highlight: true },
+  { href: "/my/kyc",          label: "투자자 인증",   desc: "사업자등록증 · 명함 업로드",  icon: UserCheck, highlight: true },
   { href: "/my/agreements",   label: "계약 관리",     desc: "NDA · LOI 이력",              icon: FileSignature },
   { href: "/my/privacy",      label: "개인정보 설정", desc: "PII 열람 로그 · 파기",        icon: ShieldCheck },
   { href: "/my/notifications",label: "알림 설정",     desc: "이메일 · 푸시 · 매칭",        icon: Bell },
+  { href: "/my/inquiries",    label: "문의 내역",     desc: "고객센터 문의 · 답변",        icon: MessageCircle },
 ]
 const SELLER_LINKS: QuickLink[] = [
   { href: "/my/seller",     label: "내 매물",       desc: "등록한 매물 관리",       icon: Building2, highlight: true },
   { href: "/exchange/sell", label: "매물 등록",     desc: "단건 · OCR · CSV 대량",  icon: Store },
   { href: "/my/billing",    label: "정산 · 수수료", desc: "매각 수수료 내역",       icon: Banknote },
 ]
+// '전문투자자 자격' 카드 제거 — KYC 는 사업자등록증·명함 업로드만 담당하며 관리자 승인.
+// 빈 자리는 COMMON_LINKS 의 '문의 내역' 카드로 자동 채워짐 (8 카드 그대로 유지).
 const INVESTOR_GENERAL_LINKS: QuickLink[] = [
   { href: "/my/portfolio",     label: "투자 포트폴리오", desc: "체결 · 실사 중 매물",   icon: TrendingUp, highlight: true },
-  { href: "/my/kyc",           label: "전문투자자 자격", desc: "전문투자자 자격 증빙",  icon: Briefcase },
   { href: "/exchange/demands", label: "매수 수요 등록",  desc: "AI 매물 매칭",          icon: Target },
   { href: "/my/billing",       label: "결제 · 구독",     desc: "요금제 · 수수료 내역",  icon: Banknote },
 ]
 const INVESTOR_PRO_LINKS: QuickLink[] = [
   { href: "/my/portfolio",     label: "포트폴리오 분석", desc: "IRR · 배당 실적",     icon: BarChart3, highlight: true },
-  { href: "/my/kyc",           label: "전문투자자 자격", desc: "전문투자자 권한 관리",icon: Crown },
   { href: "/exchange/demands", label: "매수 수요 · PNR", desc: "우선협상권 요청",     icon: Target },
   { href: "/my/developer",     label: "API 키 · 웹훅",   desc: "기관 시스템 연동",    icon: Code },
 ]
