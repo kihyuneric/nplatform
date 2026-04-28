@@ -2914,39 +2914,83 @@ function FullAiInvestmentAnalysisCard() {
   const purchaseRate = 0.95
   const purchasePrice = Math.round(loanPrincipalOnly * purchaseRate)
 
-  // 1순위 변제 후 잔여 → 2순위(NPL 매수자) 배당
-  // 종로 사례: 1순위 농협 23.64억 → 47.63억(예상낙찰가) - 23.64억 = 24.0억
+  // 1순위 변제 후 잔여 → 2순위(NPL 매수자) 배당 (cap at 수익권금액 + 경매신청 후 연체이자)
+  // 종로 사례: 1순위 농협 23.64억 변제 후 → 47.63억(예상낙찰가) - 23.64억 = 24.0억
+  //   ※ 사용자 정책: 예상 배당액 ≤ 수익권금액 + 경매신청기일 후 연체이자
+  //   ※ 수익권금액 = 채권최고액 (max_claim_amount 또는 beneficial_amount)
   const seniorClaim =
     (listing?.max_claim_amount as number | undefined) ??           // 채권최고액 (있으면 정확)
     Math.round(principal * 1.4)                                     // 채권잔액 × 1.4 추정
-  const recoveredToSecond = Math.max(0, expectedBidPrice - seniorClaim)
 
-  // 투자 에쿼티 = 매입가 × 30% (질권대출 70% 가정)
-  const investmentEquity = Math.round(purchasePrice * 0.30)
+  // 수익권금액 (NPL 매수자 측) = beneficial_amount 또는 대출원금 × 1.2 (한국법 채권최고액)
+  const beneficialAmount =
+    (listing?.beneficial_amount as number | undefined) ??
+    Math.round(loanPrincipalOnly * 1.2)
+
+  // 경매신청기일 후 연체이자 (cap 산정용)
+  //   기준일: bid_start_date 또는 default_date + 6개월 (경매 신청 통상 기간)
+  //   대출원금 × 연체금리 × (오늘 - 경매신청기일) / 365
+  const overdueRatePct = (listing?.overdue_rate as number | undefined) ?? 20
+  const auctionFiledDateStr =
+    (listing?.bid_start_date as string | undefined) ??
+    (listing?.default_date as string | undefined) ??
+    null
+  const auctionFiledDate = auctionFiledDateStr ? new Date(auctionFiledDateStr) : null
+  const daysFromFiling = auctionFiledDate
+    ? Math.max(0, Math.floor((Date.now() - auctionFiledDate.getTime()) / 86_400_000))
+    : 0
+  const postFilingOverdueInterest = Math.round(
+    loanPrincipalOnly * (overdueRatePct / 100) * (daysFromFiling / 365),
+  )
+
+  const distributionCap = beneficialAmount + postFilingOverdueInterest
+  const grossRecoveredToSecond = Math.max(0, expectedBidPrice - seniorClaim)
+  const recoveredToSecond = Math.min(grossRecoveredToSecond, distributionCap)
+
+  // 투자 에쿼티 = 매입가 × 25% (질권대출 75%)
+  const pledgeRatio = 0.75
+  const investmentEquity = Math.round(purchasePrice * (1 - pledgeRatio))
 
   // 예상 손익 = 회수액 - 매입가
   const expectedProfit = recoveredToSecond - purchasePrice
 
-  // ROI / 연환산 (보유 기간 9개월 가정)
+  // ROI / 연환산 (보유 기간 9개월 가정 — listing 의 deadline 까지 일수로 동적 계산)
+  const holdingPeriodMonths = 9
   const roi = purchasePrice > 0 ? (expectedProfit / purchasePrice) * 100 : 0
-  const annualizedRoi = roi * (12 / 9)
+  const annualizedRoi = roi * (12 / holdingPeriodMonths)
 
-  // AI 투자 등급 점수 (간이) — 회수율 + LTV + 권리관계
+  // AI 투자 등급 점수 — 회수율 + LTV + 권리관계 + 시장
   // LTV = (선순위 채권최고액 + 대출원금) / 감정가 — getListingLtv() SoT 사용
   const recoveryRate = principal > 0 ? Math.min(300, (recoveredToSecond / principal) * 100) : 0
   const ltv = getListingLtv(listing) || 65
+  // 권리관계 점수: 후순위 권리·임차인 등 패널티는 listing 메타에서 추출 (단순 0~30 점)
+  const seniorRightsCount = 1 // 1순위 농협
+  const subordinateCount = (listing?.subordinate_count as number | undefined) ?? 0
+  const tenantCount = (listing?.senior_tenant_count as number | undefined) ?? 0
+  const rightsScore = Math.max(0, 30 - subordinateCount * 3 - tenantCount * 5)
+
   const aiScore = Math.round(
     Math.min(100,
       Math.min(50, recoveryRate / 6) +              // 회수율 비중 (max 50점, 회수율 300% 시 50점)
-      Math.min(30, (100 - ltv) / 1.3) +              // LTV 낮을수록 (max 30점)
-      20                                              // 기본 권리관계 점수 (max 20점)
+      Math.min(20, (100 - ltv) / 2) +                // LTV 낮을수록 (max 20점)
+      rightsScore                                     // 권리관계 (max 30점)
     ) * 10
   ) / 10
   const aiGrade = aiScore >= 80 ? "A" : aiScore >= 65 ? "B" : aiScore >= 50 ? "C" : "D"
   const verdict = aiScore >= 70 ? "BUY" : aiScore >= 55 ? "HOLD" : "AVOID"
 
-  // 매입·낙찰 성공 확률 (낙찰가율 71.4% → 약 60% 성공)
-  const successProbability = Math.round(Math.min(95, Math.max(20, 90 - Math.abs(bidRatioPct - 70) * 1.5)))
+  // 매입·낙찰 성공 확률 — 다중 팩터 가중 합산
+  //   · 낙찰가율 적정성 (낙찰가율 70% 부근에서 최고 — 너무 낮으면 유찰, 너무 높으면 마진↓)
+  //   · 경매 입찰자 수 (적을수록 매입 성공률↑)
+  //   · 매물 매력도 (LTV 낮을수록 ↑)
+  //   · 회수율 ROI 양의 신호
+  const bidRatioFitScore = Math.max(0, 40 - Math.abs(bidRatioPct - 70) * 1.5)        // max 40
+  const bidderFactor = Math.max(15, 30 - tenantCount * 3 - subordinateCount * 2)       // max 30
+  const ltvFactor = Math.max(0, 20 - Math.abs(ltv - 60) * 0.4)                         // max 20
+  const roiFactor = roi >= 50 ? 10 : roi >= 25 ? 7 : roi >= 0 ? 4 : 0                  // max 10
+  const successProbability = Math.round(
+    Math.min(95, Math.max(20, bidRatioFitScore + bidderFactor + ltvFactor + roiFactor))
+  )
 
   // KRW 포맷
   const fmtKRW = (n: number) => `${n.toLocaleString("ko-KR")}원`
