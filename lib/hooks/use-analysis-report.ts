@@ -164,5 +164,6 @@ export function formatKrwShort(amount: number): string {
 
 export function formatKrwFull(amount: number): string {
   if (!Number.isFinite(amount) || amount <= 0) return '—'
-  return `${amount.toLocaleString('ko-KR')}원`
+  // 원 단위는 정수만 — 소숫점이 있어도 반올림하여 표시 (사용자 정책)
+  return `${Math.round(amount).toLocaleString('ko-KR')}원`
 }
