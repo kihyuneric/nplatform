@@ -194,7 +194,13 @@ export default function DealRoomPage() {
           { label: listingCode ? `딜룸 #${listingCode}` : "진행중 딜" },
         ]}
         eyebrow="DEAL ROOMS · NEGOTIATION DESK"
-        title={listingLoading ? "딜룸 로딩 중…" : `${listingTitle} · 딜룸`}
+        title={
+          listingLoading
+            ? "딜룸 로딩 중…"
+            : listing
+              ? `${listingTitle} · 딜룸`     // 매물 있음 → "노원구 상계동 아파트 · 딜룸"
+              : "딜룸"                       // 매물 없음(listingId 미제공) → 그냥 "딜룸"
+        }
         subtitle={
           listingLoading
             ? "매물 정보를 불러오고 있습니다."
@@ -1184,7 +1190,8 @@ function SummaryViewerHeader() {
         1PAGE SUMMARY — VIEWER
       </div>
       <h3 style={{ fontFamily: MCK_FONTS.serif, fontSize: 22, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.015em" }}>
-        {title} · 딜룸 요약
+        {/* 매물 없으면 그냥 '딜룸 요약', 있으면 '<매물명> · 딜룸 요약' */}
+        {listing ? `${title} · 딜룸 요약` : '딜룸 요약'}
       </h3>
       {subtitleParts.length > 0 && (
         <div style={{ fontSize: 12, color: MCK.textSub, marginTop: 6, fontWeight: 500 }}>
