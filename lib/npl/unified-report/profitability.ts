@@ -1046,9 +1046,8 @@ function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
   const fmtPct = (n: number) => (n >= 0 ? `+${n.toFixed(1)}%` : `${n.toFixed(1)}%`)
 
   // Phase G7+ — 매입 base 라벨 (사용자 정책: 대출원금 vs 채권잔액)
+  // 라벨에 풀 단어(`대출원금` / `채권잔액`)를 그대로 사용 (사용자 요청 2026-04-28).
   const baseLabel = args.acquisitionBaseLabel ?? '대출원금'
-  // 라벨 내 짧은 약칭 ('원금' / '잔액')
-  const baseShort = baseLabel === '채권잔액' ? '잔액' : '원금'
 
   const conservativeDesc = hasBankSale
     ? `금융기관 매각가 대비 ${fmtPct(ratioDeltaPct(conservativeRate, anchor))} 매입 (${baseLabel} ${(conservativeRate * 100).toFixed(1)}%) · 낙찰가율 ${(conservativeBidRatio * 100).toFixed(1)}% 가정 — 하락 방어`
@@ -1060,17 +1059,19 @@ function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
 
   const aggressiveDesc = hasBankSale
     ? `금융기관 매각가 대비 ${fmtPct(ratioDeltaPct(aggressiveRate, anchor))} 프리미엄 매입 (${baseLabel} ${(aggressiveRate * 100).toFixed(1)}%) · 낙찰가율 ${(aggressiveBidRatio * 100).toFixed(1)}% 가정 — 상승 포지셔닝`
-    : `${baseLabel} ${(aggressiveRate * 100).toFixed(0)}% ${baseShort} 전액 매입 · 낙찰가율 ${(aggressiveBidRatio * 100).toFixed(1)}% 가정 — 상승 포지셔닝`
+    : `${baseLabel} ${(aggressiveRate * 100).toFixed(0)}% 전액 매입 · 낙찰가율 ${(aggressiveBidRatio * 100).toFixed(1)}% 가정 — 상승 포지셔닝`
 
   const conservativeLabel = hasBankSale
     ? `보수적 매입 (${fmtPct(ratioDeltaPct(conservativeRate, anchor))})`
-    : `보수적 매입 (${baseShort} ${(conservativeRate * 100).toFixed(0)}%)`
+    : `보수적 매입 (${baseLabel} ${(conservativeRate * 100).toFixed(0)}%)`
+  // 사용자 정책 (2026-04-28): 중간(RECOMMENDED) 컬럼은 '표준 매입' (AI 권고 X).
+  // AI 권고 badge 는 카드별 ROI ≥ 30% AND 성공확률 ≥ 50% 충족 시 화면에서 표시.
   const recommendedLabel = hasBankSale
-    ? `AI 권고 매입 (매각가)`
-    : `AI 권고 매입 (${baseShort} ${(recommendedRate * 100).toFixed(0)}%)`
+    ? `표준 매입 (매각가)`
+    : `표준 매입 (${baseLabel} ${(recommendedRate * 100).toFixed(0)}%)`
   const aggressiveLabel = hasBankSale
     ? `공격적 매입 (${fmtPct(ratioDeltaPct(aggressiveRate, anchor))})`
-    : `공격적 매입 (${baseShort} ${(aggressiveRate * 100).toFixed(0)}%)`
+    : `공격적 매입 (${baseLabel} ${(aggressiveRate * 100).toFixed(0)}%)`
 
   const conservative: PurchaseStrategyScenario = {
     strategy: 'CONSERVATIVE',

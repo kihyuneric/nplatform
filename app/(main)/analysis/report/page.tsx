@@ -862,6 +862,8 @@ export default function UnifiedReportPage() {
           initialDebtorType={
             input.debtorType === 'CORPORATE' ? 'CORPORATE' : 'INDIVIDUAL'
           }
+          /* 사용자 정책 (2026-04-28): 최초 대출원금 — 수익권 base 표시용 */
+          initialPrincipal={input.claimBreakdown?.initialPrincipal}
         />
       )}
 
@@ -2384,9 +2386,12 @@ function extractInitialInputs(
 function ProfitabilitySections({
   block,
   initialDebtorType = 'INDIVIDUAL',
+  initialPrincipal,
 }: {
   block: NplProfitabilityBlock
   initialDebtorType?: 'INDIVIDUAL' | 'CORPORATE'
+  /** 최초 대출원금 (사용자 정책) — 수익권 base · 보고서 카드 sub 표시 */
+  initialPrincipal?: number
 }) {
   const [edit, setEdit] = useState<EditableInputs>(() =>
     extractInitialInputs(block, initialDebtorType),
@@ -2537,6 +2542,12 @@ function ProfitabilitySections({
             value={edit.loanPrincipal}
             onChange={(v) => setEdit({ ...edit, loanPrincipal: v })}
             tint="#1B3A5C"
+            sub={
+              /* 최초 대출원금 표시 — 사용자 정책: 일부 상환된 경우 ≠ 현재 대출원금 */
+              (initialPrincipal && initialPrincipal > 0)
+                ? `최초 대출원금 ${krwWon(initialPrincipal)}`
+                : undefined
+            }
           />
           <EditablePercentCard
             label="연체금리 (연)"
@@ -2553,12 +2564,15 @@ function ProfitabilitySections({
           <MaxBondMultiplierCard
             label="수익권 금액 (공부상 채권최고액)"
             multiplier={edit.maxBondMultiplier}
-            principal={edit.loanPrincipal}
+            /* 사용자 정책: 수익권 base = 최초 대출원금 우선 (없으면 현재 대출원금) */
+            principal={(initialPrincipal && initialPrincipal > 0) ? initialPrincipal : edit.loanPrincipal}
+            baseLabel={(initialPrincipal && initialPrincipal > 0) ? '최초 대출원금' : '대출원금'}
             amount={claim.maximumBondAmount}
             onMultiplierChange={(m) => setEdit({ ...edit, maxBondMultiplier: m })}
             onAmountChange={(amt) => {
-              if (edit.loanPrincipal > 0) {
-                const m = Math.max(1.10, Math.min(1.40, amt / edit.loanPrincipal))
+              const base = (initialPrincipal && initialPrincipal > 0) ? initialPrincipal : edit.loanPrincipal
+              if (base > 0) {
+                const m = Math.max(1.10, Math.min(1.40, amt / base))
                 setEdit({ ...edit, maxBondMultiplier: m })
               }
             }}
@@ -3108,13 +3122,15 @@ function ProfitabilitySections({
 //   입력 중에도 천단위 콤마(,)를 유지해 가독성 강화
 //   "1000000" → "1,000,000" (onChange 시 실시간 포맷)
 function EditableMoneyCard({
-  label, value, onChange, tint, hint,
+  label, value, onChange, tint, hint, sub,
 }: {
   label: string
   value: number
   onChange: (v: number) => void
   tint: string
   hint?: string
+  /** 카드 하단 보조 텍스트 (예: '최초 대출원금 17.00억') */
+  sub?: string
 }) {
   const [raw, setRaw] = useState<string>(value > 0 ? value.toLocaleString("ko-KR") : "")
   useEffect(() => {
@@ -3156,6 +3172,7 @@ function EditableMoneyCard({
         }}
       />
       {hint && <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-1">{hint}</div>}
+      {sub && <div className="text-[0.625rem] tabular-nums mt-1" style={{ color: 'rgba(10,22,40,0.50)' }}>{sub}</div>}
     </div>
   )
 }
@@ -3205,10 +3222,11 @@ function EditablePercentCard({
 }
 
 /**
- * 수익권 금액 (공부상 채권최고액) 입력 카드 — Phase G6 (2026-04-26).
- *   · 슬라이더: 대출원금 × 110% ~ 140% (한국 표준 1.2x · 1%p 단위)
- *   · 직접 금액 입력: 자동으로 (금액 / 대출원금) 비율 계산해 슬라이더 동기화
- *   · 기본값: 1.20 (원금 × 1.2)
+ * 수익권 금액 (공부상 채권최고액) 입력 카드 — Phase G6 (2026-04-26 → G7+ 2026-04-28).
+ *   · 슬라이더: base × 110% ~ 140% (1차 근저당 표준)
+ *   · base 우선순위: 최초 대출원금 (있으면) → 현재 대출원금 (fallback)
+ *   · 직접 금액 입력: 자동으로 (금액 / base) 비율 계산해 슬라이더 동기화
+ *   · 기본값: 1.20 (base × 1.2)
  *   · 엔진의 maxBondMultiplier 로 흘러 채권최고액·근저당권이전비용 자동 재계산
  */
 function MaxBondMultiplierCard({
@@ -3218,13 +3236,16 @@ function MaxBondMultiplierCard({
   amount,
   onMultiplierChange,
   onAmountChange,
+  baseLabel = '대출원금',
 }: {
   label: string
   multiplier: number      // 1.10 ~ 1.40
-  principal: number       // 대출원금
-  amount: number          // 채권최고액 = 원금 × multiplier
+  principal: number       // base (= 최초 대출원금 우선, 없으면 현재 대출원금)
+  amount: number          // 채권최고액 = base × multiplier
   onMultiplierChange: (m: number) => void
   onAmountChange: (amt: number) => void
+  /** base 라벨 — '최초 대출원금' OR '대출원금'. 사용자가 호출 시 명시. */
+  baseLabel?: string
 }) {
   const pct = Math.round(multiplier * 100)
   const [raw, setRaw] = useState<string>(amount > 0 ? amount.toLocaleString('ko-KR') : '')
@@ -3242,7 +3263,7 @@ function MaxBondMultiplierCard({
         {krwWon(amount)}
       </div>
       <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-0.5">
-        대출원금 × <b className="tabular-nums">{pct}%</b>  (1차 근저당 표준 110~140%)
+        {baseLabel} × <b className="tabular-nums">{pct}%</b>  (1차 근저당 표준 110~140%)
       </div>
 
       {/* 슬라이더: 110% ~ 140% (1%p 단위) */}

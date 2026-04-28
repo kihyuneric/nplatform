@@ -188,7 +188,8 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     minBidPrice: estimateMinBid(appraisal, 0),       // 1회차 최저매각가 = 감정가 100%
     currentMarketValue: aiMarket,
     claimBreakdown: {
-      principal: loanPrincipal,                       // 대출원금만 16.48억
+      initialPrincipal: JONGNO_HONGJI_DETAIL.initial_principal,  // 최초 대출원금 17억
+      principal: loanPrincipal,                                   // 현재 대출원금 16.48억
       unpaidInterest: 0,
       overdueInterest,
       delinquencyStartDate: JONGNO_HONGJI_DETAIL.default_date,
@@ -376,8 +377,8 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     pledgeInterestRate: 0.065,     // 6.5%
     executionCost: 10_000_000,     // 경매비용 1,000만원 기준 (사용자 정책)
     /* 수익권금액 = 23.8억 (사용자 제공 실측).
-       maxBondMultiplier 는 loanPrincipal(대출원금 16.48억) 기준 → 23.8 / 16.48 = 1.444 */
-    maxBondMultiplier: JONGNO_HONGJI_DETAIL.beneficial_amount / loanPrincipal,
+       사용자 정책: 수익권 base = 최초 대출원금 (17억) → 23.8 / 17.0 = 1.40 (140%) */
+    maxBondMultiplier: JONGNO_HONGJI_DETAIL.beneficial_amount / JONGNO_HONGJI_DETAIL.initial_principal,
     registrationTransferRate: 0.0048,
     brokerageFeeRate: 0.012,
     contractDepositRate: 0.10,
