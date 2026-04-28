@@ -2916,6 +2916,12 @@ function FullAiInvestmentAnalysisCard() {
     (listing?.loan_balance as number | undefined) ??
     Math.round(principal * 0.97)            // 채권잔액의 97% (연체이자 약 3%)
 
+  // 매각 기준 (사용자 정책):
+  //   discount_basis = 'CLAIM_BALANCE' → 매입 base = 채권잔액 (원금+연체이자)
+  //   discount_basis = 'PRINCIPAL'     → 매입 base = 대출원금
+  const discountBasis = (listing?.discount_basis as string | undefined) ?? 'PRINCIPAL'
+  const acquisitionBase = discountBasis === 'CLAIM_BALANCE' ? principal : loanPrincipalOnly
+
   // 낙찰가율·예상낙찰가 — 보고서 결과 우선, 없으면 listing 메타에서 추출
   const expectedBidMethods = listing?.expected_bid_methods as
     | { byAppraisalRatio?: { bidRatioPct?: number; expectedBid?: number } }
@@ -2929,9 +2935,11 @@ function FullAiInvestmentAnalysisCard() {
     expectedBidMethods?.byAppraisalRatio?.expectedBid ??
     Math.round(appraisal * (bidRatioPct / 100))
 
-  // 매입률 95% (대출원금 95%) — 권고 시나리오
-  const purchaseRate = 0.95
-  const purchasePrice = Math.round(loanPrincipalOnly * purchaseRate)
+  // 매입률 — 권고 시나리오 (95% — 향후 listing.purchase_rate 로 자동화 가능)
+  // base = discount_basis 정책에 따라 대출원금 또는 채권잔액
+  const purchaseRate = (listing?.recommended_purchase_rate as number | undefined) ?? 0.95
+  const purchasePrice = Math.round(acquisitionBase * purchaseRate)
+  const baseLabel = discountBasis === 'CLAIM_BALANCE' ? '채권잔액' : '대출원금'
 
   // 1순위 변제 후 잔여 → 2순위(NPL 매수자) 배당 (cap at 수익권금액 + 경매신청 후 연체이자)
   // 종로 사례: 1순위 농협 23.64억 변제 후 → 47.63억(예상낙찰가) - 23.64억 = 24.0억
@@ -3078,11 +3086,11 @@ function FullAiInvestmentAnalysisCard() {
         </div>
       </div>
 
-      {/* AI 권고 매입 — white inset card */}
+      {/* AI 권고 매입 — base 가 대출원금/채권잔액 정책에 따라 동적 */}
       <div style={{ backgroundColor: "#FFFFFF", border: "1px solid rgba(5, 28, 44, 0.10)", borderLeft: `3px solid ${MCK.electric}`, padding: 14, marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
           <span style={{ fontSize: 11, fontWeight: 800, color: MCK.electricDark, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-            AI 권고 매입 (원금 {Math.round(purchaseRate * 100)}%)
+            AI 권고 매입 ({baseLabel} {Math.round(purchaseRate * 100)}%)
           </span>
           <span style={{
             display: "inline-flex", alignItems: "center",
@@ -3094,13 +3102,13 @@ function FullAiInvestmentAnalysisCard() {
           </span>
         </div>
         <p style={{ fontSize: 11, color: "rgba(5, 28, 44, 0.65)", lineHeight: 1.55, marginBottom: 10 }}>
-          대출원금 {Math.round(purchaseRate * 100)}% 매입 (-{((1 - purchaseRate) * 100).toFixed(1)}%) · 기준 낙찰가율 {bidRatioPct.toFixed(1)}%
+          {baseLabel} {Math.round(purchaseRate * 100)}% 매입 ({purchaseRate < 1 ? `-${((1 - purchaseRate) * 100).toFixed(1)}%` : '동일가'}) · 기준 낙찰가율 {bidRatioPct.toFixed(1)}%
         </p>
         <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 24, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.025em", lineHeight: 1, marginBottom: 4 }}>
           {fmtKRW(purchasePrice)}
         </div>
         <div style={{ fontSize: 10, color: "rgba(5, 28, 44, 0.55)", fontWeight: 600 }}>
-          매입률 {Math.round(purchaseRate * 100)}% · 낙찰가율 {bidRatioPct.toFixed(1)}%
+          매입률 {Math.round(purchaseRate * 100)}% · 낙찰가율 {bidRatioPct.toFixed(1)}% · base = {baseLabel}
         </div>
       </div>
 

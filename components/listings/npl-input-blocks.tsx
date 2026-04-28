@@ -432,23 +432,24 @@ export function DebtorOwnerSameToggle({
   )
 }
 
-/** ─── 5. 매각 희망가 · 할인율 · 원금 통합 블록 ─────────────────
+/** ─── 5. 매각 희망가 · 할인율 · 기준 통합 블록 ─────────────────
  *
- * 목표가(매각희망가) ↔ 할인율 양방향 동기.
- *   · `askingPrice` / `onAskingPriceChange` 가 주어지면 금액 필드도 편집 가능
- *     (SELL Step3 통합 UI — "매각희망가" + "할인율" + "원금 참조"를 한 블록으로)
- *   · 미주어지면 기존 동작(할인율만 편집 · 금액은 원금×(1−할인율) 파생 표시)
+ * 매각 기준 (NPLatform 정책 · 사용자 선택):
+ *   - 'PRINCIPAL'     : 대출원금 대비 할인율 → 매각가 = 원금 × (1 − 할인율)
+ *   - 'CLAIM_BALANCE' : 대출잔액(원금+연체이자) 대비 할인율 → 매각가 = 잔액 × (1 − 할인율)
  *
- * 수식:
- *   목표 매각가 = 원금 × (1 − 할인율)
- *   할인율     = (원금 − 목표 매각가) / 원금
- *   금액 입력 시 할인율 자동 갱신 · 할인율 입력 시 금액 자동 갱신.
- *   두 onChange 모두 주어지면 동기 dispatch → 상위 reducer 에서 일관 유지.
+ * 매도자가 두 기준 중 하나를 선택하고 할인율을 입력하면 매각가가 자동 계산됩니다.
+ * 잔액 100% 매각 케이스 = CLAIM_BALANCE + 0% 할인 (NPL 시장에서 흔한 케이스).
  */
+export type DiscountBasis = 'PRINCIPAL' | 'CLAIM_BALANCE'
+
 export function DesiredSaleDiscountInput({
   value,
   onChange,
   principal,
+  claimBalance,
+  discountBasis = 'PRINCIPAL',
+  onDiscountBasisChange,
   askingPrice,
   onAskingPriceChange,
   disabled,
@@ -456,6 +457,10 @@ export function DesiredSaleDiscountInput({
   value: number // 0~1 (할인율 소수)
   onChange: (v: number) => void
   principal: number
+  /** 채권잔액(원금+연체이자) — discountBasis='CLAIM_BALANCE' 일 때 base */
+  claimBalance?: number
+  discountBasis?: DiscountBasis
+  onDiscountBasisChange?: (b: DiscountBasis) => void
   /** 양방향 동기용 — 지정 시 금액 필드 편집 가능 */
   askingPrice?: number
   onAskingPriceChange?: (v: number) => void
@@ -463,16 +468,19 @@ export function DesiredSaleDiscountInput({
 }) {
   const editablePrice = typeof askingPrice === "number" && typeof onAskingPriceChange === "function"
   const discountDisplay = value > 0 ? (value * 100).toFixed(1).replace(/\.0$/, "") : ""
-  // 목표가: askingPrice props 있으면 그대로, 없으면 원금 기반 파생
-  const derivedFromDiscount = Math.max(0, Math.round(principal * (1 - value)))
+  // base = 매각 기준에 따라
+  const base = discountBasis === 'CLAIM_BALANCE' ? (claimBalance ?? principal) : principal
+  const baseLabel = discountBasis === 'CLAIM_BALANCE' ? '대출잔액' : '대출원금'
+  // 목표가: askingPrice props 있으면 그대로, 없으면 base 기반 파생
+  const derivedFromDiscount = Math.max(0, Math.round(base * (1 - value)))
   const targetSalePrice = editablePrice ? Math.max(0, Math.round(askingPrice as number)) : derivedFromDiscount
 
   // 할인율 입력 → 금액 자동 계산 (양방향 모드)
   const handleDiscountChange = (pct: number) => {
     const nextDiscount = Math.min(1, Math.max(0, pct / 100))
     onChange(nextDiscount)
-    if (editablePrice && principal > 0) {
-      onAskingPriceChange!(Math.max(0, Math.round(principal * (1 - nextDiscount))))
+    if (editablePrice && base > 0) {
+      onAskingPriceChange!(Math.max(0, Math.round(base * (1 - nextDiscount))))
     }
   }
 
@@ -480,20 +488,34 @@ export function DesiredSaleDiscountInput({
   const handleAskingPriceChange = (nextPrice: number) => {
     if (!editablePrice) return
     onAskingPriceChange!(Math.max(0, nextPrice))
-    if (principal > 0) {
-      const nextDiscount = Math.max(0, Math.min(1, (principal - nextPrice) / principal))
+    if (base > 0) {
+      const nextDiscount = Math.max(0, Math.min(1, (base - nextPrice) / base))
       onChange(nextDiscount)
     }
   }
+
+  // base 변경 시 매각가 재계산 (할인율 유지)
+  const handleBasisChange = (next: DiscountBasis) => {
+    if (!onDiscountBasisChange) return
+    onDiscountBasisChange(next)
+    if (editablePrice) {
+      const nextBase = next === 'CLAIM_BALANCE' ? (claimBalance ?? principal) : principal
+      if (nextBase > 0) {
+        onAskingPriceChange!(Math.max(0, Math.round(nextBase * (1 - value))))
+      }
+    }
+  }
+
+  const canSwitchBasis = !!onDiscountBasisChange && typeof claimBalance === 'number' && claimBalance > 0
 
   return (
     <div className={BLOCK}>
       <BlockHeader
         icon={<Percent className="w-4 h-4" />}
-        title="매각 희망가 (대출원금 대비 할인율)"
+        title={`매각 희망가 (${baseLabel} 대비 할인율)`}
         subtitle={editablePrice
-          ? "목표 매각가 또는 할인율 중 한 쪽 입력 시 나머지 자동 계산"
-          : "채권자 제시 매각가 — 원금 대비 x% 할인 입력"}
+          ? "기준(원금/잔액) 선택 + 목표가 또는 할인율 한 쪽 입력 시 나머지 자동 계산"
+          : `채권자 제시 매각가 — ${baseLabel} 대비 x% 할인 입력`}
         right={
           <div className="text-right">
             <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">
@@ -501,18 +523,56 @@ export function DesiredSaleDiscountInput({
             </div>
             <div className="text-[0.875rem] font-bold text-stone-900 dark:text-stone-900 tabular-nums">
               {editablePrice
-                ? `${Math.max(0, Math.round(principal - targetSalePrice)).toLocaleString("ko-KR")}원`
+                ? `${Math.max(0, Math.round(base - targetSalePrice)).toLocaleString("ko-KR")}원`
                 : `${targetSalePrice.toLocaleString("ko-KR")}원`}
             </div>
           </div>
         }
       />
+
+      {/* 매각 기준 선택 (사용자 정책: 원금 vs 잔액) */}
+      {canSwitchBasis && (
+        <div className="mb-3 flex gap-2">
+          {([
+            { v: 'PRINCIPAL',     label: '대출원금 기준',     hint: `${principal.toLocaleString('ko-KR')}원` },
+            { v: 'CLAIM_BALANCE', label: '대출잔액 기준',     hint: `${(claimBalance ?? principal).toLocaleString('ko-KR')}원 (원금+연체이자)` },
+          ] as { v: DiscountBasis; label: string; hint: string }[]).map(opt => {
+            const active = discountBasis === opt.v
+            return (
+              <button
+                key={opt.v}
+                type="button"
+                onClick={() => handleBasisChange(opt.v)}
+                disabled={disabled}
+                className="flex-1 text-left px-3 py-2 rounded-md transition-colors"
+                style={{
+                  background: active ? '#0A1628' : '#FFFFFF',
+                  color: active ? '#FFFFFF' : '#0A1628',
+                  border: active ? '1px solid #0A1628' : '1px solid rgba(10,22,40,0.20)',
+                  borderTop: active ? '2px solid #2251FF' : '1px solid rgba(10,22,40,0.20)',
+                  fontSize: 12,
+                  fontWeight: active ? 800 : 600,
+                }}
+              >
+                <div style={{ color: active ? '#FFFFFF' : '#0A1628' }}>{opt.label}</div>
+                <div style={{
+                  fontSize: 10,
+                  color: active ? 'rgba(255,255,255,0.75)' : 'rgba(10,22,40,0.55)',
+                  fontVariantNumeric: 'tabular-nums',
+                  marginTop: 2,
+                }}>{opt.hint}</div>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-3">
         {/* 1. 매각 희망가 (목표 매각가) */}
         <Field
           label="매각 희망가"
           required={editablePrice}
-          hint={editablePrice ? "매수자에게 공개되는 가격" : "원금 × (1 − 할인율)"}
+          hint={editablePrice ? "매수자에게 공개되는 가격" : `${baseLabel} × (1 − 할인율)`}
         >
           {editablePrice ? (
             <NumberInput
@@ -530,7 +590,7 @@ export function DesiredSaleDiscountInput({
         </Field>
 
         {/* 2. 할인율 */}
-        <Field label="할인율" hint="0% 입력 시 원금 전액 매각가로 간주">
+        <Field label="할인율" hint={`0% 입력 시 ${baseLabel} 전액 매각가로 간주`}>
           <div className="relative">
             <input
               type="text"
@@ -550,10 +610,10 @@ export function DesiredSaleDiscountInput({
           </div>
         </Field>
 
-        {/* 3. 대출원금 (참조) */}
-        <Field label="대출원금 (참조)" hint="채권잔액 블록의 원금 자동 연동">
+        {/* 3. 매각 기준 base (참조) */}
+        <Field label={`${baseLabel} (참조)`} hint="채권 정보 블록 자동 연동">
           <div className="w-full rounded-lg bg-[var(--color-surface-base)]/60 border border-dashed border-[var(--color-border-subtle)] px-3 py-2 text-[0.8125rem] text-[var(--color-text-tertiary)] tabular-nums">
-            {principal > 0 ? `${principal.toLocaleString("ko-KR")}원` : "원금 미입력"}
+            {base > 0 ? `${base.toLocaleString("ko-KR")}원` : `${baseLabel} 미입력`}
           </div>
         </Field>
       </div>

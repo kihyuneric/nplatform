@@ -108,12 +108,19 @@ export const JONGNO_HONGJI_DETAIL = {
   monthly_rent: 0,
   vacancy_status: '해당사항 없음',
 
-  /* 매각 조건 */
+  /* 매각 조건
+     ⚠ 매각 기준 정책 (NPLatform):
+     - discount_basis = 'CLAIM_BALANCE' → 매각가 = 채권잔액(대출원금+연체이자) × (1 - discount_rate/100)
+     - discount_basis = 'PRINCIPAL'     → 매각가 = 대출원금 × (1 - discount_rate/100)
+     본 사례: 대출잔액의 100% 매각 (할인 0%) → asking_price = 1,699,822,215
+  */
+  discount_basis: 'CLAIM_BALANCE' as const,
+  sale_discount_rate: 0,                      // 할인율 0% (= 잔액 100% 매각)
   asking_price_min: 1_699_822_215,
   asking_price_max: 1_699_822_215,
   asking_price: 1_699_822_215,
   minimum_bid: 1_699_822_215,                // 최저매각가
-  sale_terms: "'26.5월내 매각, 일괄매각방식",
+  sale_terms: "'26.5월내 매각, 일괄매각방식 · 대출잔액 100% 기준",
   contract_amount: 169_982_222,              // 계약금 10%
   contract_date: '2026-05-30',
   closing_date: '2026-06-30',                // 잔금일

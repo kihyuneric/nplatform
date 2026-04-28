@@ -312,7 +312,13 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
   const { score: riskScore } = composeRiskScore(riskFactorResults)
   const riskGrade = scoreToGrade(riskScore)
 
-  // 수익성 분석 — 매입가 = 총 채권액 (할인 0%)
+  // 수익성 분석 — 매각 기준에 따라 매입가 base 결정 (사용자 정책)
+  //   discount_basis === 'CLAIM_BALANCE' → 매입가 = 채권잔액 × (1 - discountRate)
+  //   discount_basis === 'PRINCIPAL'    → 매입가 = 대출원금  × (1 - discountRate)
+  // 본 사례: 대출잔액 100% 매각 → discountRate=0, base=totalBond(채권잔액 16.99억)
+  const discountBasis = JONGNO_HONGJI_DETAIL.discount_basis      // 'CLAIM_BALANCE'
+  const saleDiscountRate = JONGNO_HONGJI_DETAIL.sale_discount_rate / 100  // 0
+  const acquisitionBase = discountBasis === 'CLAIM_BALANCE' ? totalBond : loanPrincipal
   const profitability = buildNplProfitability({
     property: {
       address: JONGNO_HONGJI_DETAIL.address_masked,
@@ -323,10 +329,11 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
       owner: '',
       tenant: '없음',                          // 임차인 없음 (선순위 임차인 0건 · 보증금 0)
     },
-    loanPrincipal,                              // 대출원금 16.48억 (연체이자 미포함)
-    /* 대출금리 18.00% / 연체금리 20.00% — 사용자 제공 실 데이터.
-       대출금리는 input.claimBreakdown.normalRate(0.18) 에 보존,
-       연체금리는 delinquencyRate 로 직접 입력. */
+    /* 매입가 base = 사용자 정책에 따라 잔액 또는 원금.
+       buildNplProfitability 가 loanPrincipal 을 매입가 base 로 사용하므로
+       잔액 기준 매각인 경우 acquisitionBase 를 전달. */
+    loanPrincipal: acquisitionBase,
+    /* 대출금리 18.00% / 연체금리 20.00% — 사용자 제공 실 데이터. */
     delinquencyRate: 0.20,
     delinquencyStartDate: JONGNO_HONGJI_DETAIL.default_date,
     accelerationDate: JONGNO_HONGJI_DETAIL.default_date,
@@ -340,14 +347,13 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     expectedBidRatioPeriod: '종로구 토지 3개월 평균',
     auctionStartDate: '2026-08-15',  // 매각 후 미수회수 시 경매 시작 가정
     courtName: '서울중앙지방법원 본원',
-    discountRate: 0,
+    discountRate: saleDiscountRate,           // 0 (= 100% 매입)
     pledgeLoanRatio: 0.75,         // 개인 채무자 75% (법인 70%)
     pledgeInterestRate: 0.065,     // 6.5%
     executionCost: 10_000_000,     // 경매비용 1,000만원 기준 (사용자 정책)
-    /* 수익권금액 = 23.8억 (사용자 제공 실측, beneficial_amount).
-       기본 = 대출원금 × 1.2 = 19.78억 → override 로 23.8억 적용.
-       multiplier = 23.8 / 16.48 = 1.444. */
-    maxBondMultiplier: JONGNO_HONGJI_DETAIL.beneficial_amount / loanPrincipal,
+    /* 수익권금액 = 23.8억 (사용자 제공 실측).
+       maxBondMultiplier 는 acquisitionBase 기준이므로 23.8억 / acquisitionBase 로 override. */
+    maxBondMultiplier: JONGNO_HONGJI_DETAIL.beneficial_amount / acquisitionBase,
     registrationTransferRate: 0.0048,
     brokerageFeeRate: 0.012,
     contractDepositRate: 0.10,
