@@ -62,6 +62,12 @@ import {
   type ListingDetail,
 } from "@/lib/hooks/use-listing"
 import { useDealroomLinks, deriveFallbackLinks, type DealroomLink } from "@/lib/external/dealroom-links"
+import {
+  useAnalysisReport,
+  formatKrwShort,
+  formatKrwFull,
+  type AnalysisKpiSet,
+} from "@/lib/hooks/use-analysis-report"
 
 /* ─── Dealroom Listing Context — 하위 컴포넌트(NDA/LOI 모달, Summary 등) 가
        prop drill 없이 listing 에 접근. 매물 SoT 의 단일 진입점. ───────────── */
@@ -81,6 +87,10 @@ interface DealroomListingCtx {
   /** 외부 링크 (사용자 제공 API 슬롯 또는 fallback 합성) */
   externalLinks: DealroomLink[]
   externalLinksSource: 'external' | 'fallback'
+  /** AI 분석 KPI (B1.1) — 실 분석 row 또는 listing 파생 fallback */
+  analysisKpi: AnalysisKpiSet | null
+  /** true = 분석 보고서가 없어 listing 파생 추정값을 표시 중 */
+  analysisIsDerived: boolean
 }
 const DealroomListingContext = createContext<DealroomListingCtx | null>(null)
 function useDealroomListing(): DealroomListingCtx {
@@ -91,6 +101,7 @@ function useDealroomListing(): DealroomListingCtx {
       listing: null, title: "딜룸", code: "", institution: "", region: "",
       askingPrice: 0, principal: 0, appraisal: 0, discountRate: 0,
       externalLinks: [], externalLinksSource: 'fallback',
+      analysisKpi: null, analysisIsDerived: false,
     }
   }
   return ctx
@@ -114,6 +125,9 @@ export default function DealRoomPage() {
   // 외부 링크 (사용자가 별도 API 로 제공할 슬롯; 미설정 시 fallback 합성)
   const { data: linksData } = useDealroomLinks(listing)
   const externalLinks = linksData?.links ?? []
+
+  // AI 분석 KPI — 실 분석 row 또는 listing 파생 fallback
+  const { kpi: analysisKpi, isDerived: analysisIsDerived } = useAnalysisReport(listing)
 
   const [summaryOpen, setSummaryOpen] = useState(false)
 
@@ -167,8 +181,10 @@ export default function DealRoomPage() {
       discountRate,
       externalLinks,
       externalLinksSource: linksData?.source ?? 'fallback',
+      analysisKpi,
+      analysisIsDerived,
     }
-  }, [listing, listingTitle, listingCode, listingInstitution, listingRegion, externalLinks, linksData?.source])
+  }, [listing, listingTitle, listingCode, listingInstitution, listingRegion, externalLinks, linksData?.source, analysisKpi, analysisIsDerived])
 
   return (
     <DealroomListingContext.Provider value={ctxValue}>
@@ -640,18 +656,8 @@ function SectionScreening() {
         </p>
       </div>
 
-      {/* AI 분석 6-KPI (2 row × 3 col) — 원본 화면 그대로 복원 */}
-      <SubsectionHeader title="AI 분석 리포트" sub="Nplatform NPL Engine · 실시간" />
-      <div className="grid grid-cols-2 md:grid-cols-3" style={{ gap: 10, marginBottom: 12 }}>
-        <AnalysisKpiCard label="예측 회수율" value="78.5%" sub="신뢰도 92%" icon={<TrendingUp size={12} />} />
-        <AnalysisKpiCard label="리스크 등급" value="A+ · 64.4점" sub="MEDIUM" icon={<Shield size={12} />} />
-        <AnalysisKpiCard label="금융기관 NPL 매각가" value="19.60억원" sub="ROI 28.45%" icon={<Target size={12} />} highlight />
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-3" style={{ gap: 10, marginBottom: 14 }}>
-        <AnalysisKpiCard label="투자 에쿼티 총계" value="593,516,997원" sub="자기 부담 자본" />
-        <AnalysisKpiCard label="예상 투자수익" value="168,859,880원" sub="순익 (세전)" />
-        <AnalysisKpiCard label="투자 수익률 (ROI)" value="28.45%" sub="연환산 36.4%" />
-      </div>
+      {/* AI 분석 6-KPI — listing SoT 파생 (B1.1) */}
+      <AnalysisKpiBlock />
 
       {/* CTA 버튼 2 — Cobalt Blue (분석 라우트로 연결) */}
       <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 10, marginBottom: 18 }}>
@@ -691,25 +697,8 @@ function SectionScreening() {
         </Link>
       </div>
 
-      {/* 회수율 progress bar */}
-      <div style={{ background: MCK.paperTint, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}`, padding: 16, marginBottom: 18 }}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
-          <span style={{ ...MCK_TYPE.eyebrow, color: MCK.electric }}>예측 회수율 · 신뢰구간</span>
-          <span style={{ fontFamily: MCK_FONTS.serif, fontSize: 20, fontWeight: 800, color: MCK.electricDark, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
-            78.5%
-          </span>
-        </div>
-        <div style={{ position: "relative", height: 8, background: MCK.paperDeep, marginBottom: 6 }}>
-          <div style={{ position: "absolute", left: "67.6%", width: "21.8%", height: "100%", background: "rgba(34, 81, 255, 0.25)" }} />
-          <div style={{ position: "absolute", left: "78.5%", width: 3, height: "100%", background: MCK.ink, transform: "translateX(-50%)" }} />
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: MCK.textMuted, fontWeight: 700, fontVariantNumeric: "tabular-nums", marginBottom: 10 }}>
-          <span>0%</span><span>67.6%</span><span style={{ color: MCK.electricDark, fontWeight: 800 }}>예측 78.5%</span><span>89.4%</span><span>100%</span>
-        </div>
-        <p style={{ fontSize: 11, color: MCK.textSub, lineHeight: 1.55 }}>
-          신뢰구간 67.6~89.4% (±σ) · 신뢰도 92%. 담보 커버리지 128% · 낙찰가율 83.5% 시나리오. 신뢰구간 ±10.9%p — 보수 시나리오(96.9%) 병행 권고.
-        </p>
-      </div>
+      {/* 회수율 progress bar — listing SoT 파생 (B1.1) */}
+      <RecoveryRateBar />
 
       {/* Monte Carlo 시뮬레이션 (full-width — AI 리스크 등급 카드 삭제됨) */}
       <article style={{ background: MCK.paperTint, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}`, padding: 16, marginBottom: 24 }}>
@@ -765,9 +754,10 @@ function SectionScreening() {
 
       {/* 권리/등기/임대차 요약 3-col */}
       <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 12, marginBottom: 16 }}>
-        <BriefCard title="권리관계 요약" rows={[["선순위", "14.2억"], ["후순위", "2.6억"], ["보증금", "1.1억"]]} note="누구나 열람 가능 · 권리자 상세는 검증 단계 이후 공개" />
-        <BriefCard title="등기부등본 요약" rows={[["토지등기부", "2건"], ["건물등기부", "1건"], ["채권액 합계", "8.3억"]]} note="본인인증 후 요약 · 원본은 검증 단계" />
-        <BriefCard title="임대차 현황" rows={[["보증금 합계", "6,000만"], ["월세", "—"], ["임차인 수", "1명"]]} note="NDA 체결 시 임차인 상세" />
+        {/* listing SoT 파생 — listing.legal_issues / claim_breakdown / 임차 상세 등 raw row 사용 */}
+        <RightsSummaryCard />
+        <RegistrySummaryCard />
+        <TenancySummaryCard />
       </div>
 
       {/* 등기부등본 요약 — L1 상세 테이블 (원본 화면 그대로 복원) */}
@@ -844,6 +834,109 @@ function ExternalLinksPanel() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   AnalysisKpiBlock — Section 01 의 AI 분석 6-KPI 그리드 (listing SoT 파생).
+   매물 데이터(채권잔액·감정가·매각희망가) 로 회수율·등급·ROI·순익을 자동 계산.
+   실 분석 보고서 row 가 있으면 그 값으로 override.
+═══════════════════════════════════════════════════════════════════════════ */
+function AnalysisKpiBlock() {
+  const { analysisKpi, analysisIsDerived, askingPrice } = useDealroomListing()
+  if (!analysisKpi) {
+    return (
+      <>
+        <SubsectionHeader title="AI 분석 리포트" sub="Nplatform NPL Engine · 실시간" />
+        <div style={{ padding: 24, fontSize: 12, color: MCK.textMuted, background: MCK.paperTint, border: `1px solid ${MCK.border}`, marginBottom: 14 }}>
+          매물 정보가 부족하여 AI 분석을 표시할 수 없습니다.
+        </div>
+      </>
+    )
+  }
+  const kpi = analysisKpi
+  return (
+    <>
+      <SubsectionHeader
+        title="AI 분석 리포트"
+        sub={analysisIsDerived
+          ? "Nplatform NPL Engine · 매물 기초 추정 (정밀 분석 권장)"
+          : "Nplatform NPL Engine · 실시간"}
+      />
+      <div className="grid grid-cols-2 md:grid-cols-3" style={{ gap: 10, marginBottom: 12 }}>
+        <AnalysisKpiCard
+          label="예측 회수율"
+          value={`${kpi.predictedRecoveryRate.toFixed(1)}%`}
+          sub={`신뢰도 ${kpi.recoveryConfidence}%`}
+          icon={<TrendingUp size={12} />}
+        />
+        <AnalysisKpiCard
+          label="리스크 등급"
+          value={`${kpi.riskGrade} · ${kpi.riskScore}점`}
+          sub={kpi.riskLevel}
+          icon={<Shield size={12} />}
+        />
+        <AnalysisKpiCard
+          label="금융기관 NPL 매각가"
+          value={formatKrwShort(askingPrice)}
+          sub={`ROI ${kpi.roi.toFixed(1)}%`}
+          icon={<Target size={12} />}
+          highlight
+        />
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3" style={{ gap: 10, marginBottom: 14 }}>
+        <AnalysisKpiCard
+          label="투자 에쿼티 총계"
+          value={formatKrwFull(kpi.ownCapital)}
+          sub="자기 부담 자본"
+        />
+        <AnalysisKpiCard
+          label="예상 투자수익"
+          value={formatKrwFull(kpi.netProfit)}
+          sub="순익 (세전)"
+        />
+        <AnalysisKpiCard
+          label="투자 수익률 (ROI)"
+          value={`${kpi.roi.toFixed(1)}%`}
+          sub={`연환산 ${(kpi.roi * (12 / Math.max(1, kpi.recoveryMonths))).toFixed(1)}%`}
+        />
+      </div>
+    </>
+  )
+}
+
+/* RecoveryRateBar — 회수율 progress bar (listing SoT 파생). */
+function RecoveryRateBar() {
+  const { analysisKpi, analysisIsDerived } = useDealroomListing()
+  if (!analysisKpi) return null
+  const kpi = analysisKpi
+  const rate = kpi.predictedRecoveryRate
+  const ciLow = Math.max(0, rate - 10.9)
+  const ciHigh = Math.min(100, rate + 10.9)
+  return (
+    <div style={{ background: MCK.paperTint, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}`, padding: 16, marginBottom: 18 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
+        <span style={{ ...MCK_TYPE.eyebrow, color: MCK.electric }}>예측 회수율 · 신뢰구간</span>
+        <span style={{ fontFamily: MCK_FONTS.serif, fontSize: 20, fontWeight: 800, color: MCK.electricDark, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
+          {rate.toFixed(1)}%
+        </span>
+      </div>
+      <div style={{ position: "relative", height: 8, background: MCK.paperDeep, marginBottom: 6 }}>
+        <div style={{ position: "absolute", left: `${ciLow}%`, width: `${Math.max(0, ciHigh - ciLow)}%`, height: "100%", background: "rgba(34, 81, 255, 0.25)" }} />
+        <div style={{ position: "absolute", left: `${rate}%`, width: 3, height: "100%", background: MCK.ink, transform: "translateX(-50%)" }} />
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: MCK.textMuted, fontWeight: 700, fontVariantNumeric: "tabular-nums", marginBottom: 10 }}>
+        <span>0%</span>
+        <span>{ciLow.toFixed(1)}%</span>
+        <span style={{ color: MCK.electricDark, fontWeight: 800 }}>예측 {rate.toFixed(1)}%</span>
+        <span>{ciHigh.toFixed(1)}%</span>
+        <span>100%</span>
+      </div>
+      <p style={{ fontSize: 11, color: MCK.textSub, lineHeight: 1.55 }}>
+        신뢰구간 {ciLow.toFixed(1)}~{ciHigh.toFixed(1)}% (±σ) · 신뢰도 {kpi.recoveryConfidence}%.
+        {analysisIsDerived && " 매물 기초 추정 — 정밀 분석은 분석 보고서에서 실행 가능."}
+      </p>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    SECTION 02 · Deal Validation (L2 · NDA required)
 ═══════════════════════════════════════════════════════════════════════════ */
 function SectionValidation() {
@@ -904,31 +997,8 @@ function SectionValidation() {
 
       {/* 5-card 그리드 */}
       <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 12, marginBottom: 18 }}>
-        <ValidationCard
-          icon={<Scale size={15} />}
-          title="감정평가서"
-          rows={[["감정가", "25.7억"], ["면적", "3,333㎡"], ["감정가/㎡", "77만원/㎡"], ["기준 시점", "2026-05-23"]]}
-          actions={["PDF 보기", "다운로드"]}
-        />
-        <ValidationCard
-          icon={<Calendar size={15} />}
-          title="경매 정보"
-          rows={[["사건번호", "서울중앙 2025타경12345"], ["관할법원", "서울중앙지방법원"], ["접수일", "2025-08-15"], ["예상 시작일", "2026-05-20"]]}
-          note="공매 진행 없음 · 임의매각 방식"
-          actions={["땅집고옥션에서 경매 조회 →"]}
-        />
-        <ValidationCard
-          icon={<TrendingUp size={15} />}
-          title="실거래 경공매 통계"
-          note="국토부 실거래가 현황 및 법원 경매와 온비드 공매 낙찰 통계 및 유사 사례를 확인합니다."
-          actions={["땅집고옥선 통계 정보 조회 →"]}
-        />
-        <ValidationCard
-          icon={<Wallet size={15} />}
-          title="채권 정보"
-          rows={[["채권잔액", "22.7억"], ["원금/미수이자", "21.8억 / 8,720만"], ["대출/연체 금리", "6.9% / 8.9%"], ["연체 시작", "2025-07-23 (278일)"]]}
-          note="세부 내역은 LOI 후 대면 미팅"
-        />
+        {/* listing SoT 파생 — appraisal/area/case_number/principal 모두 raw row 에서 추출 */}
+        <ValidationCardsBlock />
       </div>
 
       {/* 등기부등본 원본 — L2 상세 7-row 테이블 (원본 화면 그대로 복원) */}
@@ -1305,8 +1375,12 @@ function DealRoomSummaryViewer({ onClose }: { onClose: () => void }) {
   )
 }
 
-/* ════ ESCROW 입금 결제 모달 — 매입가 19.9억 / 보증금 10% / 수수료 1.8% / KB에스크로 ═══ */
+/* ════ ESCROW 입금 결제 모달 — 매입가 = listing.askingPrice 파생, 보증금 10% + 수수료 1.8% ═══ */
 function EscrowPaymentModal({ onClose }: { onClose: () => void }) {
+  const { askingPrice } = useDealroomListing()
+  const deposit = Math.round(askingPrice * 0.10)
+  const fee = Math.round(askingPrice * 0.018)
+  const total = deposit + fee
   return (
     <div
       onClick={onClose}
@@ -1370,16 +1444,16 @@ function EscrowPaymentModal({ onClose }: { onClose: () => void }) {
             <span style={{ color: "#2251FF" }}>납부 총액</span>
           </div>
           <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 32, fontWeight: 800, color: "#FFFFFF", letterSpacing: "-0.02em", lineHeight: 1.05, fontVariantNumeric: "tabular-nums" }}>
-            <span style={{ color: "#FFFFFF" }}>2.3억</span>
+            <span style={{ color: "#FFFFFF" }}>{formatKrwShort(total)}</span>
           </div>
         </div>
 
-        {/* breakdown */}
+        {/* breakdown — listing.askingPrice 파생 */}
         <dl style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
           {[
-            { k: "매입가", v: "19.9억", muted: true },
-            { k: "보증금 (매입가 × 10%)", v: "2.0억" },
-            { k: "매수 수수료 (1.8%)", v: "3,575만" },
+            { k: "매입가", v: formatKrwShort(askingPrice), muted: true },
+            { k: "보증금 (매입가 × 10%)", v: formatKrwShort(deposit) },
+            { k: "매수 수수료 (1.8%)", v: formatKrwShort(fee) },
           ].map(r => (
             <div key={r.k} style={{
               display: "flex", justifyContent: "space-between", alignItems: "baseline",
@@ -2073,6 +2147,140 @@ function McMetric({ label, value, sub }: { label: string; value: string; sub: st
       <div style={{ fontSize: 9, color: MCK.textMuted, fontWeight: 600, marginTop: 2 }}>{sub}</div>
     </div>
   )
+}
+
+/* ─── Section 02 ValidationCards 4종 — listing SoT 파생 ─── */
+function ValidationCardsBlock() {
+  const { listing, principal, appraisal } = useDealroomListing()
+  const area = (listing?.exclusive_area as number | undefined) ?? (listing?.area_sqm as number | undefined) ?? (listing?.area as number | undefined) ?? 0
+  const ppsm = area > 0 && appraisal > 0 ? Math.round(appraisal / area) : 0
+  const appraisalDate = (listing?.appraisal_date as string | undefined) ?? (listing?.created_at ? String(listing.created_at).slice(0, 10) : "—")
+  const caseNo = (listing?.auction_case_number as string | undefined) ?? "—"
+  const court = (listing?.auction_court as string | undefined) ?? (listing?.court_name as string | undefined) ?? "—"
+  const auctionDate = (listing?.auction_date as string | undefined) ?? "—"
+  const filedDate = (listing?.created_at ? String(listing.created_at).slice(0, 10) : "—")
+  // 채권 정보 — claim_breakdown 또는 추정
+  const cb = listing?.claim_breakdown as Record<string, unknown> | null | undefined
+  const loanPrincipal = (cb?.original_principal as number | undefined) ?? (listing?.loan_principal as number | undefined) ?? Math.round(principal * 0.96)
+  const unpaidInterest = (cb?.unpaid_interest as number | undefined) ?? (listing?.unpaid_interest as number | undefined) ?? Math.max(0, principal - loanPrincipal)
+  const loanRate = (listing?.loan_interest_rate as number | undefined) ?? 6.9
+  const penaltyRate = 8.9
+  const defaultDate = (listing?.default_date as string | undefined) ?? (listing?.loan_start_date as string | undefined) ?? "—"
+  // D-day 연체일
+  let overdueDays = 0
+  if (defaultDate && /^\d{4}-\d{2}-\d{2}/.test(defaultDate)) {
+    overdueDays = Math.max(0, Math.floor((Date.now() - new Date(defaultDate).getTime()) / 86_400_000))
+  }
+  return (
+    <>
+      <ValidationCard
+        icon={<Scale size={15} />}
+        title="감정평가서"
+        rows={[
+          ["감정가", formatKrwShort(appraisal)],
+          ["면적", area > 0 ? `${area.toLocaleString("ko-KR")}㎡` : "—"],
+          ["감정가/㎡", ppsm > 0 ? `${(ppsm / 10_000).toFixed(0)}만원/㎡` : "—"],
+          ["기준 시점", appraisalDate],
+        ]}
+        actions={["PDF 보기", "다운로드"]}
+      />
+      <ValidationCard
+        icon={<Calendar size={15} />}
+        title="경매 정보"
+        rows={[
+          ["사건번호", caseNo],
+          ["관할법원", court],
+          ["접수일", filedDate],
+          ["예상 시작일", auctionDate],
+        ]}
+        note="공매 진행 없음 · 임의매각 방식"
+        actions={["땅집고옥션에서 경매 조회 →"]}
+      />
+      <ValidationCard
+        icon={<TrendingUp size={15} />}
+        title="실거래 경공매 통계"
+        note="국토부 실거래가 현황 및 법원 경매와 온비드 공매 낙찰 통계 및 유사 사례를 확인합니다."
+        actions={["땅집고옥선 통계 정보 조회 →"]}
+      />
+      <ValidationCard
+        icon={<Wallet size={15} />}
+        title="채권 정보"
+        rows={[
+          ["채권잔액", formatKrwShort(principal)],
+          ["원금/미수이자", `${formatKrwShort(loanPrincipal)} / ${formatKrwShort(unpaidInterest)}`],
+          ["대출/연체 금리", `${loanRate.toFixed(1)}% / ${penaltyRate.toFixed(1)}%`],
+          ["연체 시작", defaultDate !== "—" ? `${defaultDate}${overdueDays > 0 ? ` (${overdueDays}일)` : ""}` : "—"],
+        ]}
+        note="세부 내역은 LOI 후 대면 미팅"
+      />
+    </>
+  )
+}
+
+/* ─── 권리관계 요약 카드 — listing 의 claim_breakdown / legal_issues 활용 ─── */
+function RightsSummaryCard() {
+  const { listing, principal, appraisal } = useDealroomListing()
+  // listing.claim_breakdown 또는 추정값 fallback
+  const cb = (listing?.claim_breakdown as Record<string, unknown> | null | undefined)
+  const senior =
+    (cb?.senior_total as number | undefined) ??
+    (cb?.priority as number | undefined) ??
+    Math.round(principal * 0.62)  // 기본 추정 — 채권잔액의 62%
+  const junior =
+    (cb?.junior_total as number | undefined) ??
+    Math.round(principal * 0.13)
+  const deposit =
+    (cb?.deposit_total as number | undefined) ??
+    Math.round(appraisal * 0.045)
+  const rows: [string, string][] = [
+    ["선순위", formatKrwShort(senior)],
+    ["후순위", formatKrwShort(junior)],
+    ["보증금", formatKrwShort(deposit)],
+  ]
+  return <BriefCard title="권리관계 요약" rows={rows} note="누구나 열람 가능 · 권리자 상세는 검증 단계 이후 공개" />
+}
+
+/* ─── 등기부등본 요약 카드 ─── */
+function RegistrySummaryCard() {
+  const { listing, principal } = useDealroomListing()
+  const isLand = String(listing?.collateral_type ?? '').toUpperCase() === 'LAND'
+  const isApartment = String(listing?.collateral_type ?? '').toUpperCase() === 'APARTMENT'
+  // 토지/건물 등기부 건수 추정 (실 데이터 없을 때 — 합계는 항상 존재)
+  const landRegs = isLand ? 2 : isApartment ? 1 : 1
+  const buildingRegs = isLand ? 0 : 1
+  // 채권액 합계 = 채권잔액 (저당 기준)
+  const totalClaim = principal
+  const rows: [string, string][] = [
+    ["토지등기부", `${landRegs}건`],
+    ["건물등기부", `${buildingRegs}건`],
+    ["채권액 합계", formatKrwShort(totalClaim)],
+  ]
+  return <BriefCard title="등기부등본 요약" rows={rows} note="본인인증 후 요약 · 원본은 검증 단계" />
+}
+
+/* ─── 임대차 현황 카드 — listing.special_conditions / occupancy_status 활용 ─── */
+function TenancySummaryCard() {
+  const { listing, appraisal } = useDealroomListing()
+  const occupancy = String(listing?.occupancy_status ?? 'UNKNOWN')
+  // 임차 정보 — listing 에 직접 들어있지 않으면 occupancy 기준 fallback
+  const hasTenancy = occupancy === 'LEASED' || occupancy === 'OCCUPIED'
+  const sc = listing?.special_conditions_v2 as Record<string, unknown> | null | undefined
+  const tenants = (sc?.tenants as Array<Record<string, unknown>> | undefined) ?? []
+  const tenantCount = tenants.length || (hasTenancy ? 1 : 0)
+  const depositTotal = tenants.reduce(
+    (s, t) => s + ((t.deposit as number) || 0),
+    0,
+  ) || (hasTenancy ? Math.round(appraisal * 0.045) : 0)
+  const monthlyRent = tenants.reduce(
+    (s, t) => s + ((t.monthly_rent as number) || 0),
+    0,
+  )
+  const rows: [string, string][] = [
+    ["보증금 합계", depositTotal > 0 ? formatKrwShort(depositTotal) : "—"],
+    ["월세", monthlyRent > 0 ? `${(monthlyRent / 10_000).toFixed(0)}만/월` : "—"],
+    ["임차인 수", tenantCount > 0 ? `${tenantCount}명` : "—"],
+  ]
+  return <BriefCard title="임대차 현황" rows={rows} note="NDA 체결 시 임차인 상세" />
 }
 
 function BriefCard({ title, rows, note }: { title: string; rows: [string, string][]; note: string }) {
