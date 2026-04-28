@@ -128,7 +128,8 @@ export const JONGNO_HONGJI_STATISTICS: StatisticsContext = {
     propertyCategory: '대지',
     radiusMeters: 1000,
     lookbackYears: 3,
-    cases: JONGNO_HONGJI_COMPARABLES.slice(0, 8).map(c => ({
+    // 전체 20건 (3년 이내 · 1km 이내) — 사용자 제공 실거래 풀 그대로
+    cases: JONGNO_HONGJI_COMPARABLES.map(c => ({
       txDate: c.date,
       address: c.address,
       zoning: c.zoning,
@@ -209,13 +210,45 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
 
   const recovery = buildRecoveryPrediction({ ltv, region, auction })
 
-  const expectedBid = computeExpectedBid({
+  // 사용자 제공 정확한 3-방식 예상낙찰가 (computeExpectedBid override)
+  //   감정가 대비 71.4%      → 4,762,922,125 원   ← 선택 (대지 기준 로직)
+  //   최저입찰가 대비 117.5%  → 6,272,287,466 원
+  //   AI 시세 대비 99.7%     → 7,467,900,320 원
+  const computedExpectedBid = computeExpectedBid({
     appraisalValue: appraisal,
     minBidPrice: input.minBidPrice,
     currentMarketValue: input.currentMarketValue,
     auction,
     ctx: JONGNO_HONGJI_STATISTICS,
   })
+  const expectedBid = {
+    ...computedExpectedBid,
+    appraisal: {
+      ...computedExpectedBid.appraisal,
+      ratioPercent: 71.4,
+      expectedBidPrice: 4_762_922_125,
+      note: '대지 기준 예상 낙찰가 산정 로직 · 종로구 토지 3개월 평균 71.4% · 추천값',
+    },
+    minBid: {
+      ...computedExpectedBid.minBid,
+      ratioPercent: 117.5,
+      expectedBidPrice: 6_272_287_466,
+      note: '최저입찰가(1회 유찰 후 감정가 80%) 대비 117.5% — 유찰 후 반등 시나리오',
+    },
+    market: {
+      ...computedExpectedBid.market,
+      baselineAmount: aiMarket,
+      ratioPercent: 99.7,
+      expectedBidPrice: 7_467_900_320,
+      note: `AI 시세 ${(aiMarket / 100_000_000).toFixed(2)}억 대비 99.7% — 인근 1km 실거래 ${JONGNO_HONGJI_COMPARABLES.length}건 기반`,
+    },
+    recommendedBidPrice: 4_762_922_125,
+    narrative:
+      `대지 기준 예상 낙찰가 산정 로직 적용 결과, '감정가 대비 낙찰가율 71.4%' 기반 ` +
+      `예상낙찰가 4,762,922,125원을 추천합니다. ` +
+      `최저입찰가(${input.minBidPrice?.toLocaleString('ko-KR') ?? '—'}원) 대비 117.5%, ` +
+      `AI 시세(${aiMarket.toLocaleString('ko-KR')}원) 대비 99.7% 수준입니다.`,
+  }
   const recommendedBidPrice = expectedBid.recommendedBidPrice
 
   // 등기부 분석 — 1순위 농협 23.64억, 후순위 없음
@@ -229,18 +262,18 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
       { rank: 1, right: '근저당권설정', creditor: '농협은행', claimAmount: JONGNO_HONGJI_DETAIL.max_claim_amount },
     ],
     rightsOverrides: {
-      '경매집행비용':                      { registryEvidence: '-', presence: 'PRESENT' },
+      // 사용자 확정: 선순위 근저당(농협 1건) 외 권리관계 없음 — 모두 ABSENT
+      '경매집행비용':                      { registryEvidence: '-', presence: 'ABSENT' },
       '소액임차인 최우선변제금':           { registryEvidence: '-', presence: 'ABSENT' },
-      '당해세(국세·지방세)':               { registryEvidence: '-', presence: 'NEEDS_REVIEW' },
-      '일반우선채권(근저당·전세권 등)':    { registryEvidence: 'O', presence: 'PRESENT' },
-      '일반채권(가압류 등)':               { registryEvidence: '-', presence: 'NEEDS_REVIEW' },
+      '당해세(국세·지방세)':               { registryEvidence: '-', presence: 'ABSENT' },
+      '일반우선채권(근저당·전세권 등)':    { registryEvidence: 'O', presence: 'PRESENT' },  // 농협 1순위 단독
+      '일반채권(가압류 등)':               { registryEvidence: '-', presence: 'ABSENT' },
       '우선변제권 없는 임차인':            { registryEvidence: '-', presence: 'ABSENT' },
     },
     topRisks: [
       '8필지 일괄매각 — 분필/분리 매각 가능성 사전 점검 필요',
       '제1종일반주거지역 — 건폐율 50% / 용적률 100% 한도 (개발 시)',
-      '농협 1순위 23.64억 vs 감정가 66.73억 — 후순위 없음, 권리 깨끗',
-      '당해세·일반 가압류 등기부 외 조사 필요 (송달내역 별도 확인)',
+      '농협 1순위 근저당 23.64억 단독 (후순위·기타 권리 없음 — 권리 깨끗)',
     ],
   })
 
@@ -278,6 +311,9 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
       tenant: '없음',                          // 임차인 없음 (선순위 임차인 0건 · 보증금 0)
     },
     loanPrincipal,                              // 대출원금 16.48억 (연체이자 미포함)
+    /* 대출금리 18.00% / 연체금리 20.00% — 사용자 제공 실 데이터.
+       대출금리는 input.claimBreakdown.normalRate(0.18) 에 보존,
+       연체금리는 delinquencyRate 로 직접 입력. */
     delinquencyRate: 0.20,
     delinquencyStartDate: JONGNO_HONGJI_DETAIL.default_date,
     accelerationDate: JONGNO_HONGJI_DETAIL.default_date,
