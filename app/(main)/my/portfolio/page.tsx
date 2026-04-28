@@ -249,24 +249,29 @@ function ComparisonTab({ watchlist, investments }: { watchlist: WatchItem[]; inv
 
   const selectedItems = pool.filter((p) => selected.has(p.id))
 
-  // Fetch profitability for newly selected items
+  // Fetch profitability KPI for newly selected items
+  // Phase 4 의 /api/v1/analysis/listing/[id] 사용 (ROI 직접, IRR 은 roi + recoveryMonths 로 연환산)
   useEffect(() => {
-    selected.forEach((id) => {
+    selected.forEach(async (id) => {
       if (profitMap[id]) return
-      fetch(`/api/v1/npl/profitability?listing_id=${id}`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.baseScenario?.metrics) {
-            setProfitMap((prev) => ({
-              ...prev,
-              [id]: {
-                roi: data.baseScenario.metrics.roi ?? null,
-                irr: data.baseScenario.metrics.irr ?? null,
-              },
-            }))
-          }
-        })
-        .catch(() => { /* keep empty */ })
+      try {
+        const r = await fetch(`/api/v1/analysis/listing/${encodeURIComponent(id)}`)
+        if (!r.ok) return
+        const data = await r.json()
+        const kpi = data?.data?.kpi
+        if (!kpi) return
+        const roi: number = typeof kpi.roi === "number" ? kpi.roi : 0
+        const months: number = typeof kpi.recoveryMonths === "number" && kpi.recoveryMonths > 0 ? kpi.recoveryMonths : 12
+        // 연환산 IRR ≈ (1 + roi/100)^(12/months) - 1, 백분율로 환산
+        const annualized = (Math.pow(1 + roi / 100, 12 / months) - 1) * 100
+        setProfitMap((prev) => ({
+          ...prev,
+          [id]: {
+            roi,
+            irr: Math.round(annualized * 10) / 10,
+          },
+        }))
+      } catch { /* keep empty */ }
     })
   }, [selected, profitMap])
 
@@ -469,16 +474,19 @@ function SimulationTab({ watchlist, investments }: { watchlist: WatchItem[]; inv
       const defaultPurchase = Math.round(found.principalWan * (1 - found.discount / 100))
       setParams((prev) => ({ ...prev, purchasePrice: defaultPurchase }))
     }
-    // Try fetching profitability from API
+    // Phase 4 의 /api/v1/analysis/listing/[id] 사용 — IRR 은 roi + recoveryMonths 연환산
     setApiLoading(true)
     setApiResult(null)
-    fetch(`/api/v1/npl/profitability?listing_id=${selectedId}`)
+    fetch(`/api/v1/analysis/listing/${encodeURIComponent(selectedId)}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.baseScenario?.metrics) {
+        const kpi = data?.data?.kpi
+        if (kpi && typeof kpi.roi === "number") {
+          const months = typeof kpi.recoveryMonths === "number" && kpi.recoveryMonths > 0 ? kpi.recoveryMonths : 12
+          const annualized = (Math.pow(1 + kpi.roi / 100, 12 / months) - 1) * 100
           setApiResult({
-            roi: data.baseScenario.metrics.roi,
-            irr: data.baseScenario.metrics.irr,
+            roi: kpi.roi,
+            irr: Math.round(annualized * 10) / 10,
           })
         }
       })
