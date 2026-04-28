@@ -241,9 +241,12 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     },
     minBid: {
       ...computedExpectedBid.minBid,
+      // 최저입찰가 = 감정가 × 0.8² = 감정가 × 0.64 (2회 유찰 기준)
+      // 종로: 6,673,016,000 × 0.64 = 4,270,730,240 원
+      baselineAmount: Math.round(appraisal * 0.64),
       ratioPercent: 117.5,
       expectedBidPrice: 6_272_287_466,
-      note: '최저입찰가(1회 유찰 후 감정가 80%) 대비 117.5% — 유찰 후 반등 시나리오',
+      note: '최저입찰가(2회 유찰 후 감정가 60% 수준) 대비 117.5% — 유찰 후 반등 시나리오',
     },
     market: {
       ...computedExpectedBid.market,
