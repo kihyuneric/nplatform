@@ -349,11 +349,13 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
       owner: '',
       tenant: '없음',                          // 임차인 없음 (선순위 임차인 0건 · 보증금 0)
     },
-    /* 매입가 base = 사용자 정책에 따라 잔액 또는 원금.
-       buildNplProfitability 가 loanPrincipal 을 매입가 base 로 사용하므로
-       잔액 기준 매각인 경우 acquisitionBase 를 전달.
-       acquisitionBaseLabel 은 라벨/설명에서 '원금' vs '잔액' 표기 결정. */
-    loanPrincipal: acquisitionBase,
+    /* 채권 정보 분리 (사용자 정책 2026-04-28):
+       · loanPrincipal           = 실 대출원금 (16.48억) — 카드/표시용
+       · acquisitionBaseAmount   = 매입 base (잔액 매각이면 채권잔액 17.29억)
+       · acquisitionBaseLabel    = '채권잔액' or '대출원금'
+       매입가 = acquisitionBaseAmount × (1 − discountRate) */
+    loanPrincipal,                                         // 실 대출원금 16.48억
+    acquisitionBaseAmount: acquisitionBase,                 // 매입가 base = 17.29억 (잔액)
     acquisitionBaseLabel: discountBasis === 'CLAIM_BALANCE' ? '채권잔액' : '대출원금',
     /* 대출금리 18.00% / 연체금리 20.00% — 사용자 제공 실 데이터. */
     delinquencyRate: 0.20,
@@ -374,8 +376,8 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     pledgeInterestRate: 0.065,     // 6.5%
     executionCost: 10_000_000,     // 경매비용 1,000만원 기준 (사용자 정책)
     /* 수익권금액 = 23.8억 (사용자 제공 실측).
-       maxBondMultiplier 는 acquisitionBase 기준이므로 23.8억 / acquisitionBase 로 override. */
-    maxBondMultiplier: JONGNO_HONGJI_DETAIL.beneficial_amount / acquisitionBase,
+       maxBondMultiplier 는 loanPrincipal(대출원금 16.48억) 기준 → 23.8 / 16.48 = 1.444 */
+    maxBondMultiplier: JONGNO_HONGJI_DETAIL.beneficial_amount / loanPrincipal,
     registrationTransferRate: 0.0048,
     brokerageFeeRate: 0.012,
     contractDepositRate: 0.10,

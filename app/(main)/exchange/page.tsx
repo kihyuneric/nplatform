@@ -393,12 +393,17 @@ export default function ExchangePage() {
             ctRaw === 'COMMERCIAL' || ctRaw === 'STORE' || ctRaw === 'RETAIL' ? 'COMMERCIAL' :
             ctRaw === 'APARTMENT' || ctRaw === 'OFFICETEL' || ctRaw === 'VILLA' || ctRaw === 'HOUSE' ? 'RESIDENTIAL' :
             'ETC'
-          // institution kind (간이) — 필요 시 향후 institution_type 으로 정밀화
+          // institution kind — institution_type 우선, 없으면 institution 명에서 추론
+          //   MONEY_LENDER (대부업체) / AMC (자산관리) / SAVINGS_BANK (저축은행) / BANK (은행)
+          const instType = String(r.institution_type ?? '').toUpperCase()
+          const instName = String(r.institution ?? r.institution_name ?? '')
           const inst_kind: CardListing['inst_kind'] =
-            (r.institution_type === 'AMC' ? 'AMC' :
-             r.institution_type === 'SAVINGS_BANK' ? 'SAVINGS_BANK' :
-             r.institution_type === 'BANK' ? 'BANK' :
-             'BANK')
+            instType === 'AMC' ? 'AMC' :
+            instType === 'SAVINGS_BANK' ? 'SAVINGS_BANK' :
+            instType === 'MONEY_LENDER' || instType === 'LENDER' || instName.includes('대부') ? 'MONEY_LENDER' :
+            instType === 'MUTUAL_CREDIT' ? 'MUTUAL_CREDIT' :
+            instType === 'BANK' ? 'BANK' :
+            'BANK'
           // sale_method
           const sm = String(r.sale_method ?? '').toUpperCase()
           const sale_method: CardListing['sale_method'] =

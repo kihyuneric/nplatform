@@ -33,6 +33,7 @@ const FEATURED_SAMPLE_LISTINGS: Record<string, unknown>[] = [
     location_district: JONGNO_HONGJI_DETAIL.location_district,
     institution: JONGNO_HONGJI_DETAIL.institution,
     institution_name: JONGNO_HONGJI_DETAIL.institution_name,
+    institution_type: JONGNO_HONGJI_DETAIL.institution_type,    // MONEY_LENDER 라벨링
     creditor_institution: JONGNO_HONGJI_DETAIL.institution,
     // 채권잔액 = 대출원금 + 연체이자 = 1,699,822,215 (UI 라벨 "채권 잔액")
     principal_amount: JONGNO_HONGJI_DETAIL.claim_amount,

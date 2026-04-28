@@ -523,11 +523,18 @@ export interface ProfitabilityInput {
   strategyAggressiveBidDelta?: number
   /**
    * 매입 base 표시 라벨 (Phase G7+ 2026-04-28 — 사용자 정책):
-   *   - '대출원금'   : default · 전통적 NPL 매각 (loanPrincipal = 대출원금)
-   *   - '채권잔액'   : 잔액 100% 매각 등 (loanPrincipal = 잔액 — 매도자 정책)
+   *   - '대출원금'   : default · 전통적 NPL 매각
+   *   - '채권잔액'   : 잔액 100% 매각 등
    * 라벨/설명 문자열에서 '원금' 대신 사용. 미지정 시 '대출원금'.
    */
   acquisitionBaseLabel?: '대출원금' | '채권잔액'
+  /**
+   * 매입 base 금액 override (Phase G7+ 2026-04-28).
+   * 미지정 시 loanPrincipal 사용 (legacy).
+   * 매입가 = acquisitionBaseAmount × (1 − discountRate) 로 계산.
+   * '잔액 매각' 케이스: loanPrincipal 은 실 대출원금, acquisitionBaseAmount 는 채권잔액.
+   */
+  acquisitionBaseAmount?: number
 }
 
 // ────────────────────────────────────────────────────────────
@@ -628,9 +635,12 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   }
 
   // ─── [3] 매입일정/매입가 ──────────────────────────────────
+  // 매입 base = acquisitionBaseAmount (있으면, 채권잔액) 또는 loanPrincipal (대출원금)
+  // 사용자 정책: '잔액 매각' 케이스는 loanPrincipal=실 대출원금 + acquisitionBaseAmount=채권잔액
+  const acquisitionBase = input.acquisitionBaseAmount ?? input.loanPrincipal
   const purchaseDate = input.purchaseDateOverride ?? addDays(today, purchaseLeadDays)
   const balancePaymentDate = input.balancePaymentDateOverride ?? addDays(purchaseDate, balancePaymentLeadDays)
-  const purchasePrice = Math.round(input.loanPrincipal * (1 - discountRate))
+  const purchasePrice = Math.round(acquisitionBase * (1 - discountRate))
   const pledgeLoanAmount = Math.round(purchasePrice * pledgeLoanRatio)
   const pledgeLoanPeriodDays = Math.max(0, daysBetween(balancePaymentDate, distributionDate))
   const pledgeInterestTotal = Math.round(
@@ -810,6 +820,7 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
     bankSalePrice: hasBankSalePrice ? (input.bankSalePrice as number) : undefined,
     bankSaleAnchorRate: bankSaleAnchorRate ?? undefined,
     acquisitionBaseLabel: input.acquisitionBaseLabel,
+    acquisitionBaseAmount: input.acquisitionBaseAmount,
   })
 
   // ─── 민감도 분석 (매입률 × 낙찰가율 → ROI) ──────────────
@@ -931,6 +942,8 @@ interface StrategyArgs {
   bankSaleAnchorRate?: number
   /** 매입 base 표시 라벨 (Phase G7+ 사용자 정책: '대출원금' OR '채권잔액') */
   acquisitionBaseLabel?: '대출원금' | '채권잔액'
+  /** 매입 base 금액 override (Phase G7+ — 잔액 매각 케이스: 채권잔액). 미지정 시 loanPrincipal 사용. */
+  acquisitionBaseAmount?: number
 }
 
 function computeScenario(
@@ -946,7 +959,9 @@ function computeScenario(
   roi: number
   annualizedRoi: number
 } {
-  const purchasePrice = Math.round(args.loanPrincipal * purchaseRate)
+  // 매입 base = acquisitionBaseAmount (있으면, 채권잔액) 또는 loanPrincipal (대출원금)
+  const acqBase = args.acquisitionBaseAmount ?? args.loanPrincipal
+  const purchasePrice = Math.round(acqBase * purchaseRate)
   const pledgeLoanAmount = Math.round(purchasePrice * args.pledgeLoanRatio)
   const pledgeInterestTotal = Math.round(
     pledgeLoanAmount * args.pledgeInterestRate * args.pledgeLoanPeriodDays / 365,

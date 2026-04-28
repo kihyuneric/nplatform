@@ -2918,7 +2918,7 @@ function ProfitabilitySections({
         icon={Target}
         caption="보수적 · 권고 · 공격적 매입 시나리오 병렬 비교"
         exhibit={8}
-        takeaway="동일 자산에 대한 3단계 매입가 시나리오 — 자본 여력·리스크 선호도에 따라 선택. 권고가는 ROI 15% + 리스크 중립 기준."
+        takeaway="동일 자산에 대한 3단계 매입가 시나리오 — 자본 여력·리스크 선호도에 따라 선택. 권고가는 ROI 30% + 리스크 중립 기준."
         source="NPLATFORM 매입가 추천 모델 v2 (낙찰가율 ± 1σ 분포 가중)">
 
         <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 12 }}>

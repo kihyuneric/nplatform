@@ -28,10 +28,13 @@ export const JONGNO_HONGJI_DETAIL = {
   visibility: 'PUBLIC',
   disclosure_level: 'TEASER',
 
-  /* 채권 기본 정보 */
-  institution: '○○대부 (마스킹)',
-  institution_name: '○○대부 (마스킹)',
-  institution_type: 'LENDER',
+  /* 채권 기본 정보 — 마스킹 정책:
+     실명 '주식회사 에이에프투자대부' 의 앞 5글자 '주식회사 에' 를 'OOOOO' 로 마스킹.
+     기관 유형 = MONEY_LENDER (대부업체) — UI 카드/뱃지에 '대부업체' 라벨 노출. */
+  institution: 'OOOOO이에프투자대부',
+  institution_name: 'OOOOO이에프투자대부',
+  institution_type: 'MONEY_LENDER',            // taxonomy.ts SELLER_INSTITUTIONS = '대부업체'
+  institution_category_label: '대부업체',       // UI 표시용 한글 라벨
   /** 실 채권자 명: 주식회사 에이에프투자대부 (NDA/L2 후 노출) */
   creditor_real_name: '주식회사 에이에프투자대부',
   reference_date: '2026-04-28',           // 채권잔액·이자 계산 기준일
