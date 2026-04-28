@@ -376,7 +376,7 @@ export default function AnalysisDashboard() {
               TOTAL · {recent.length}건
             </span>
             <Link
-              href="/my/portfolio"
+              href="/my/portfolio/analytics"
               style={{
                 padding: "8px 14px",
                 fontSize: 12,
@@ -391,7 +391,7 @@ export default function AnalysisDashboard() {
                 letterSpacing: "-0.01em",
               }}
             >
-              전체 보기 <ArrowRight size={12} />
+              마이페이지에서 전체 보기 <ArrowRight size={12} />
             </Link>
           </div>
         </header>

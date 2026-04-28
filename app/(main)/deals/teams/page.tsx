@@ -14,8 +14,10 @@ import {
   Sparkles,
   Zap,
   Eye,
+  Edit,
 } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/components/auth/auth-provider"
 import {
   MckPageShell,
   MckPageHeader,
@@ -674,6 +676,10 @@ export default function TeamsPage() {
                       )}
                     </Link>
                   </div>
+                  {/* 팀 리더 본인 / 관리자 — 편집 진입점 */}
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                    <TeamEditAccess teamId={team.id} leaderId={(team as { leader_id?: string }).leader_id ?? null} />
+                  </div>
                 </article>
               )
             })}
@@ -726,5 +732,40 @@ export default function TeamsPage() {
         </div>
       </section>
     </MckPageShell>
+  )
+}
+
+/* ─── 팀 편집 진입 — 리더 본인 또는 관리자만 노출 ─────────────────── */
+function TeamEditAccess({ teamId, leaderId }: { teamId: string; leaderId: string | null }) {
+  const { user } = useAuth()
+  if (!user) return null
+  const role = String(user.role ?? "")
+  const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN"
+  const isLeader = leaderId && String(user.id) === String(leaderId)
+  if (!isAdmin && !isLeader) return null
+
+  // admin → /admin/teams/[id]/edit (TODO 구축), leader → /deals/teams/[id]/edit
+  const href = isAdmin ? `/admin/teams/${teamId}/edit` : `/deals/teams/${teamId}/edit`
+
+  return (
+    <Link
+      href={href}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 4,
+        padding: "5px 10px",
+        fontSize: 10, fontWeight: 800,
+        background: isAdmin ? "#0A1628" : "#FFFFFF",
+        color: isAdmin ? "#FFFFFF" : "#0A1628",
+        border: `1px solid ${isAdmin ? "#0A1628" : "#2251FF"}`,
+        borderTop: "2px solid #2251FF",
+        textDecoration: "none",
+        letterSpacing: "0.04em",
+      }}
+    >
+      <Edit size={10} style={{ color: isAdmin ? "#FFFFFF" : "#0A1628" }} />
+      <span style={{ color: isAdmin ? "#FFFFFF" : "#0A1628" }}>
+        {isAdmin ? "관리자 편집" : "팀 편집"}
+      </span>
+    </Link>
   )
 }

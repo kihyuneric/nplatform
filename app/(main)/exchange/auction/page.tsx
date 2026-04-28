@@ -18,6 +18,7 @@ import {
 import { formatTimeLeft, REGION_SHORT_LIST, SELLER_INSTITUTIONS } from "@/lib/taxonomy"
 import { maskInstitutionName } from "@/lib/mask"
 import { MCK, MCK_FONTS, MCK_TYPE, formatKRW as mckFormatKRW } from "@/lib/mck-design"
+import { OwnerEditButton } from "@/components/edit/owner-edit-button"
 import {
   MckPageShell,
   MckPageHeader,
@@ -658,7 +659,7 @@ function BidCard({ item, onBid }: { item: BidItem; onBid: (item: BidItem) => voi
       {/* CTAs */}
       <div className="flex" style={{ gap: 8 }}>
         <Link
-          href={`/exchange/${item.id}`}
+          href={`/deals/dealroom?listingId=${encodeURIComponent(item.id)}`}
           style={{
             flex: 1,
             display: "inline-flex",
@@ -700,6 +701,16 @@ function BidCard({ item, onBid }: { item: BidItem; onBid: (item: BidItem) => voi
         >
           <Gavel size={13} style={{ color: MCK.ink }} /> 입찰 참여
         </button>
+      </div>
+      {/* 관리자 / 매도자(본인)만 노출 — 자발적 경매 매물 편집 (listing 편집 페이지 재사용) */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+        <OwnerEditButton
+          resourceType="listing"
+          resourceId={item.id}
+          ownerId={(item as { seller_id?: string }).seller_id ?? null}
+          compact
+          label="편집"
+        />
       </div>
     </article>
   )
