@@ -37,6 +37,9 @@ const pctFromString = (v: unknown): number => {
 }
 
 // 시트 1 라벨 → 출력 필드 매핑 (부분일치 · 정확도 우선)
+//
+// ⚠️ 순서 중요 : 첫 일치 항목이 break 되므로 *더 구체적인* 라벨이 먼저 와야 함.
+//    예) "최초대출원금" 은 "대출원금" 보다 먼저, "할인율A/B" 는 "할인율" 보다 먼저.
 const FIELD_MAP: Array<{
   match: string                  // 라벨에 포함된 키워드 (정규화 후 비교)
   field: string                  // 출력 필드명
@@ -58,12 +61,16 @@ const FIELD_MAP: Array<{
   { match: "채무자유형",   field: "debtor_type" },
   { match: "채무자·소유자", field: "debtor_owner_same" },
   { match: "동일여부",     field: "debtor_owner_same" },
-  // 채권
-  { match: "대출원금",     field: "loan_principal",  type: "krw" },
-  { match: "미수이자",     field: "unpaid_interest", type: "krw" },
-  { match: "연체시작일",   field: "delinquency_start_date", type: "date" },
-  { match: "정상금리",     field: "normal_rate",     type: "pct" },
-  { match: "연체금리",     field: "overdue_rate",    type: "pct" },
+  // 채권 — v3.2 신규 필드 우선 (구체 → 일반)
+  { match: "최초대출원금",  field: "initial_principal", type: "krw" },
+  { match: "대출원금",      field: "loan_principal",    type: "krw" },
+  { match: "미수이자",      field: "unpaid_interest",   type: "krw" },
+  { match: "연체이자",      field: "overdue_interest",  type: "krw" },
+  { match: "채권잔액",      field: "claim_balance",     type: "krw" },  // 자동계산 셀
+  { match: "수익권금액",    field: "beneficial_amount", type: "krw" },  // 자동계산 셀
+  { match: "연체시작일",    field: "delinquency_start_date", type: "date" },
+  { match: "정상금리",      field: "normal_rate",       type: "pct" },
+  { match: "연체금리",      field: "overdue_rate",      type: "pct" },
   // 감정·시세
   { match: "감정가",       field: "appraisal_value", type: "krw" },
   { match: "감정평가일자", field: "appraisal_date",  type: "date" },
@@ -72,15 +79,26 @@ const FIELD_MAP: Array<{
   { match: "시세산출근거", field: "market_price_note" },
   { match: "경매개시결정일", field: "auction_start_date", type: "date" },
   { match: "공매개시일",   field: "public_sale_start_date", type: "date" },
-  // 권리·임차
+  // 권리·임차 — v3.2 신규 (1순위 권리자/채권최고액 + LTV 자동계산)
+  { match: "1순위권리자",   field: "rights_priority_1" },
+  { match: "1순위채권최고액", field: "max_claim_amount", type: "krw" },
   { match: "선순위채권총액", field: "senior_total",  type: "krw" },
+  { match: "ltv",           field: "ltv",           type: "pct" },     // 자동계산 셀
   { match: "후순위채권건수", field: "subordinate_count", type: "number" },
   { match: "임차보증금총액", field: "lease_deposit", type: "krw" },
   { match: "월세총액",     field: "lease_monthly", type: "krw" },
   { match: "임차인수",     field: "tenant_count",  type: "number" },
-  // 매각가·방식
+  // 매각가·방식 — v3.2 신규 (매각 기준 + 할인율 A/B + 매각가 옵션 A/B + 계약금)
+  { match: "매각기준",        field: "discount_basis" },
+  { match: "할인율a",         field: "discount_rate_principal", type: "pct" },
+  { match: "할인율·대출원금", field: "discount_rate_principal", type: "pct" },
+  { match: "할인율b",         field: "discount_rate_balance",   type: "pct" },
+  { match: "할인율·채권잔액", field: "discount_rate_balance",   type: "pct" },
+  { match: "매각가옵션a",     field: "sale_price_principal", type: "krw" },  // 자동계산
+  { match: "매각가옵션b",     field: "sale_price_balance",   type: "krw" },  // 자동계산
   { match: "매각희망가",   field: "asking_price",   type: "krw" },
-  { match: "할인율",       field: "discount_rate",  type: "pct" },
+  { match: "계약금",        field: "contract_amount", type: "krw" },        // 자동계산
+  { match: "할인율",       field: "discount_rate",  type: "pct" },          // legacy fallback
   { match: "매각방식·엔플랫폼", field: "sale_method_nplatform" },
   { match: "매각방식·경매", field: "sale_method_auction" },
   { match: "매각방식·공매", field: "sale_method_public" },
@@ -155,6 +173,18 @@ const DEBTOR_TYPE_MAP: Record<string, string> = {
   "corporate": "CORPORATE", "corporate(법인)": "CORPORATE", "법인": "CORPORATE",
 }
 
+const DISCOUNT_BASIS_MAP: Record<string, string> = {
+  "principal": "PRINCIPAL",
+  "대출원금": "PRINCIPAL",
+  "대출원금기준": "PRINCIPAL",
+  "대출원금기준(principal)": "PRINCIPAL",
+  "claim_balance": "CLAIM_BALANCE",
+  "claimbalance": "CLAIM_BALANCE",
+  "채권잔액": "CLAIM_BALANCE",
+  "채권잔액기준": "CLAIM_BALANCE",
+  "채권잔액기준(claim_balance)": "CLAIM_BALANCE",
+}
+
 /** 정규화: 공백/괄호 내 부가설명 제거 후 매핑 검색 */
 function normalizeMap(value: string, table: Record<string, string>): string {
   const normFull = norm(value)                           // 전체 정규화
@@ -210,6 +240,9 @@ function parseSheet1(sheet: XLSX.WorkSheet): { fields: Record<string, unknown>; 
   }
   if (fields.debtor_type) {
     fields.debtor_type = normalizeMap(String(fields.debtor_type), DEBTOR_TYPE_MAP)
+  }
+  if (fields.discount_basis) {
+    fields.discount_basis = normalizeMap(String(fields.discount_basis), DISCOUNT_BASIS_MAP)
   }
   // 매각 방식 ON/OFF 체크 (행별 O/X)
   if (fields.sale_method_nplatform !== undefined) {
