@@ -6,14 +6,14 @@ import Link from "next/link"
 import {
   CreditCard, Download, Plus, Receipt, Coins, Ticket,
   RefreshCw, Crown, Zap, Building2, CheckCircle2,
-  AlertTriangle, Clock, Loader2, ExternalLink,
+  AlertTriangle, Clock, Loader2, ExternalLink, LayoutDashboard,
 } from "lucide-react"
 import { useSubscription, getPlanInfo, isPlanHigher } from "@/hooks/useSubscription"
 import CheckoutModal, { type CheckoutPlan } from "@/components/payment/CheckoutModal"
 import { useAuth } from "@/components/auth/auth-provider"
 import { createClient } from "@/lib/supabase/client"
 import DS, { formatKRW } from "@/lib/design-system"
-import { MckPageShell, MckPageHeader } from "@/components/mck"
+import { MckPageShell, MckPageHeader, MckTabBar } from "@/components/mck"
 import { MCK } from "@/lib/mck-design"
 
 // ─── 탭 ─────────────────────────────────────────────
@@ -332,19 +332,20 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
         )}
 
         {/* 탭 */}
-        <div className={DS.tabs.list}>
-          {TABS.map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 text-[0.8125rem] font-medium py-2 rounded-lg transition-all ${
-                activeTab === tab ? DS.tabs.active : DS.tabs.trigger
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+        <MckTabBar
+          notSticky
+          eyebrow="SECTION"
+          eyebrowIcon={<LayoutDashboard size={12} style={{ color: MCK.electric }} />}
+          tabs={TABS.map(t => ({
+            id: t,
+            label: t,
+            count: t === "인보이스" ? invoices.length
+                  : t === "크레딧" ? (credits?.balance ?? 0)
+                  : undefined,
+          }))}
+          active={activeTab}
+          onChange={(id) => setActiveTab(id as Tab)}
+        />
 
         {/* ─── 구독 탭 ─── */}
         {activeTab === '구독' && (

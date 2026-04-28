@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Users, TrendingUp, Wallet, Copy, Download, Medal, Crown, Star, Trophy, Loader2 } from 'lucide-react'
+import { Users, TrendingUp, Wallet, Copy, Download, Medal, Crown, Star, Trophy, Loader2, LayoutDashboard } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import DS, { formatKRW } from '@/lib/design-system'
-import { MckPageShell, MckPageHeader } from '@/components/mck'
+import { MckPageShell, MckPageHeader, MckTabBar } from '@/components/mck'
 import { MCK, MCK_FONTS, MCK_TYPE } from '@/lib/mck-design'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/components/auth/auth-provider'
@@ -366,6 +366,14 @@ export default function PartnerDashboardPage() {
         }
       />
 
+      <MckTabBar
+        eyebrow="SECTION"
+        eyebrowIcon={<LayoutDashboard size={12} style={{ color: MCK.electric }} />}
+        tabs={visibleTabs.map(t => ({ id: t.id, label: t.label }))}
+        active={tab}
+        onChange={setTab}
+      />
+
       <div className={DS.page.container + " py-6 " + DS.page.sectionGap}>
         {/* Stats Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -375,16 +383,6 @@ export default function PartnerDashboardPage() {
               <div className={DS.stat.value}>{s.value}</div>
               <div className={DS.stat.sub}>{s.label}</div>
             </div>
-          ))}
-        </div>
-
-        {/* Tab Bar */}
-        <div className={DS.tabs.list + ' overflow-x-auto'}>
-          {visibleTabs.map((t) => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`shrink-0 ${tab === t.id ? DS.tabs.active : DS.tabs.trigger}`}>
-              {t.label}
-            </button>
           ))}
         </div>
 

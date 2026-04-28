@@ -6,10 +6,13 @@ import {
   Heart, Trash2, TrendingUp, MapPin, Building2,
   BarChart3, Wallet, ArrowRight, ChevronRight, Sparkles,
   AlertTriangle, Target, Percent, Calculator, Shield,
-  CheckSquare, Square, RefreshCw, ChevronDown,
+  CheckSquare, Square, RefreshCw, ChevronDown, Layers,
 } from "lucide-react"
 import DS, { formatKRW } from "@/lib/design-system"
-import { MckPageShell, MckPageHeader, MckBadge } from "@/components/mck"
+import {
+  MckPageShell, MckPageHeader, MckBadge,
+  MckTabBar, MckViewToggle, type MckViewMode,
+} from "@/components/mck"
 import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
 
 const 억 = 100_000_000
@@ -798,6 +801,7 @@ export default function PortfolioPage() {
   const [tab, setTab] = useState<Tab>("관심 매물")
   const [items, setItems] = useState<WatchItem[]>([])
   const [sortBy, setSortBy] = useState("latest")
+  const [view, setView] = useState<MckViewMode>("grid")
 
   // Sync watchlist from API to local state
   useEffect(() => {
@@ -842,36 +846,20 @@ export default function PortfolioPage() {
         }
       />
 
-      {/* Tab bar — McKinsey editorial */}
-      <div className="max-w-[1280px] mx-auto" style={{ padding: "0 24px", marginTop: -8 }}>
-        <div style={{
-          background: MCK.paper, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}`,
-          padding: "8px 12px",
-          display: "flex", flexWrap: "wrap", gap: 4,
-        }}>
-          {TABS.map((t) => {
-            const active = tab === t
-            return (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                style={{
-                  padding: "8px 14px",
-                  fontSize: 12, fontWeight: 800,
-                  background: active ? MCK.ink : "transparent",
-                  color: active ? MCK.paper : MCK.ink,
-                  border: "none",
-                  borderTop: active ? `2px solid ${MCK.electric}` : "2px solid transparent",
-                  cursor: "pointer",
-                  letterSpacing: "0.02em",
-                }}
-              >
-                <span style={{ color: active ? MCK.paper : MCK.ink }}>{t}</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      <MckTabBar
+        eyebrow="VIEW"
+        eyebrowIcon={<Layers size={12} style={{ color: MCK.electric }} />}
+        tabs={TABS.map(t => ({
+          id: t,
+          label: t,
+          count: t === "관심 매물" ? items.length
+                : t === "투자 현황" ? investments.length
+                : undefined,
+        }))}
+        active={tab}
+        onChange={(id) => setTab(id as Tab)}
+        actions={tab === "관심 매물" ? <MckViewToggle value={view} onChange={setView} size="sm" /> : null}
+      />
 
       {/* 체험 모드 배너 — 실제 watchlist 데이터가 없어 ACTIVE 매물 6건을 샘플로 표시 중 */}
       {isSample && (
@@ -941,57 +929,189 @@ export default function PortfolioPage() {
                   <Building2 className="h-4 w-4" /> 매물 탐색하기 <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
+            ) : view === "list" ? (
+              <section style={{ background: MCK.paper, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}` }}>
+                <header style={{
+                  display: "grid",
+                  gridTemplateColumns: "70px 1fr 110px 110px 90px 100px 100px",
+                  gap: 12,
+                  padding: "12px 18px",
+                  background: "#F8FAFC",
+                  borderBottom: `1px solid ${MCK.border}`,
+                  fontSize: 9, fontWeight: 800, color: MCK.textSub,
+                  letterSpacing: "0.10em", textTransform: "uppercase",
+                }}>
+                  <span>유형</span><span>매물 / 지역</span>
+                  <span style={{ textAlign: "right" }}>채권금액</span>
+                  <span style={{ textAlign: "right" }}>할인율</span>
+                  <span>등급</span>
+                  <span>관심일</span>
+                  <span style={{ textAlign: "right" }}>액션</span>
+                </header>
+                {sorted.map((item, i) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "70px 1fr 110px 110px 90px 100px 100px",
+                      gap: 12,
+                      padding: "14px 18px",
+                      borderBottom: i < sorted.length - 1 ? `1px solid ${MCK.border}` : "none",
+                      alignItems: "center",
+                      fontSize: 12,
+                    }}
+                  >
+                    <span style={{
+                      width: "fit-content", padding: "3px 8px",
+                      background: "rgba(34, 81, 255, 0.08)", color: MCK.electricDark,
+                      border: `1px solid rgba(34, 81, 255, 0.30)`,
+                      fontSize: 10, fontWeight: 800, letterSpacing: "0.04em",
+                    }}>{item.type}</span>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 13, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {item.title}
+                      </div>
+                      <div style={{ fontSize: 11, color: MCK.textMuted, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                        <MapPin size={10} /> {item.region}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right", fontFamily: MCK_FONTS.serif, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>
+                      {fmt(item.currentPrice)}
+                    </div>
+                    <div style={{ textAlign: "right", fontWeight: 800, color: MCK.electricDark, fontVariantNumeric: "tabular-nums" }}>
+                      -{item.discount}%
+                    </div>
+                    <div style={{ fontWeight: 800, color: MCK.ink }}>{item.grade}</div>
+                    <div style={{ color: MCK.textMuted, fontVariantNumeric: "tabular-nums" }}>
+                      {item.daysWatched}일째
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 4 }}>
+                      <Link
+                        href={`/deals/dealroom?listingId=${encodeURIComponent(item.id)}`}
+                        className="mck-cta-dark"
+                        style={{
+                          padding: "6px 10px", fontSize: 10, fontWeight: 800,
+                          background: MCK.ink, color: MCK.paper,
+                          borderTop: `2px solid ${MCK.electric}`,
+                          textDecoration: "none",
+                        }}
+                      >
+                        <span style={{ color: MCK.paper }}>상세 ↗</span>
+                      </Link>
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        aria-label="삭제"
+                        style={{
+                          padding: "6px 8px",
+                          background: MCK.paper, color: MCK.textMuted,
+                          border: `1px solid ${MCK.borderStrong}`, cursor: "pointer",
+                        }}
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </section>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {sorted.map((item) => {
-                  const cfg = TYPE_ACCENT[item.type] ?? { bg: "bg-[var(--color-surface-overlay)]", text: "text-[var(--color-text-secondary)]", bar: "bg-gray-400" }
                   const isUp = item.changePercent > 0
                   const isDown = item.changePercent < 0
                   return (
-                    <div key={item.id} className={DS.card.interactive + " group overflow-hidden flex flex-col"}>
-                      <div className="h-24 bg-gradient-to-br from-[#0A1628] to-[#2251FF] flex items-center justify-center relative">
-                        <Building2 className="w-9 h-9 text-white/20" />
-                        <div className="absolute top-2.5 left-2.5">
-                          <span className={`text-[0.6875rem] font-semibold px-2 py-0.5 rounded-md ${cfg.bg} ${cfg.text}`}>{item.type}</span>
-                        </div>
-                        <div className="absolute top-2.5 right-2.5">
-                          <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-md ${isUp ? "bg-stone-100/90 text-white" : isDown ? "bg-stone-100/90 text-white" : "bg-white/15 text-white"}`}>
-                            {isUp ? "+" : ""}{item.changePercent !== 0 ? `${item.changePercent}%` : "변동없음"}
-                          </span>
-                        </div>
-                        <div className="absolute bottom-2.5 right-2.5">
-                          <span className="text-[0.6875rem] font-bold bg-white/90 text-[#0A1628] px-2 py-0.5 rounded-md">{item.grade}</span>
-                        </div>
+                    <article
+                      key={item.id}
+                      style={{
+                        background: MCK.paper,
+                        border: `1px solid ${MCK.border}`,
+                        borderTop: `2px solid ${MCK.electric}`,
+                        display: "flex", flexDirection: "column",
+                        minHeight: 280,
+                      }}
+                    >
+                      {/* Top strip — 거래소 discover 카드 톤 */}
+                      <div style={{
+                        padding: "12px 16px",
+                        background: "#F8FAFC",
+                        borderBottom: `1px solid ${MCK.border}`,
+                        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                      }}>
+                        <span style={{
+                          padding: "3px 9px",
+                          background: "rgba(34, 81, 255, 0.08)", color: MCK.electricDark,
+                          border: `1px solid rgba(34, 81, 255, 0.30)`,
+                          fontSize: 10, fontWeight: 800, letterSpacing: "0.04em",
+                        }}>{item.type}</span>
+                        <span style={{
+                          fontSize: 10, fontWeight: 800,
+                          color: isUp ? "#047857" : isDown ? "#B91C1C" : MCK.textMuted,
+                          padding: "3px 8px",
+                          background: isUp ? "rgba(16,185,129,0.10)" : isDown ? "rgba(220,38,38,0.10)" : "rgba(10,22,40,0.04)",
+                          border: `1px solid ${isUp ? "rgba(16,185,129,0.30)" : isDown ? "rgba(220,38,38,0.30)" : MCK.border}`,
+                        }}>
+                          {isUp ? "▲" : isDown ? "▼" : "—"} {item.changePercent !== 0 ? `${Math.abs(item.changePercent)}%` : "변동없음"}
+                        </span>
                       </div>
-                      <div className="flex flex-col flex-1 p-4">
-                        <div className="flex items-center gap-1 mb-1">
-                          <MapPin className="w-3 h-3 text-[var(--color-text-muted)]" />
-                          <span className={DS.text.captionLight}>{item.region}</span>
+
+                      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
+                        <div style={{ fontSize: 11, color: MCK.textMuted, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          <MapPin size={11} /> {item.region}
                         </div>
-                        <p className={DS.text.cardSubtitle + " leading-snug line-clamp-2"}>{item.title}</p>
-                        <div className="mt-3 flex items-end justify-between">
+                        <h4 style={{ fontFamily: MCK_FONTS.serif, fontSize: 15, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.01em", lineHeight: 1.3 }}>
+                          {item.title}
+                        </h4>
+
+                        <div style={{ marginTop: "auto", display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "flex-end" }}>
                           <div>
-                            <p className={DS.text.captionLight + " mb-0.5"}>채권금액</p>
-                            <p className={DS.text.metricMedium}>{fmt(item.currentPrice)}</p>
+                            <div style={{ fontSize: 9, color: MCK.textMuted, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>채권금액</div>
+                            <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 18, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+                              {fmt(item.currentPrice)}
+                            </div>
                           </div>
-                          <span className="text-[0.8125rem] font-bold px-2.5 py-1.5 rounded-none bg-stone-100/10 text-stone-900">
-                            -{item.discount}%
-                          </span>
+                          <span style={{
+                            padding: "5px 10px",
+                            background: "rgba(34, 81, 255, 0.10)",
+                            color: MCK.electricDark,
+                            fontSize: 12, fontWeight: 800,
+                            border: `1px solid rgba(34,81,255,0.20)`,
+                            letterSpacing: "-0.01em",
+                          }}>-{item.discount}%</span>
                         </div>
-                        <div className="mt-3 pt-3 border-t border-[var(--color-border-subtle)] flex items-center justify-between">
-                          <span className={DS.text.captionLight}>{item.daysWatched}일째 관심</span>
-                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                            {/* SoT — 매물 상세는 항상 딜룸 (?listingId 쿼리) */}
-                            <Link href={`/deals/dealroom?listingId=${encodeURIComponent(item.id)}`}>
-                              <button className={DS.text.link + " text-[0.8125rem]"}>상세보기</button>
+
+                        <div style={{ paddingTop: 10, borderTop: `1px solid ${MCK.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                          <span style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 600 }}>
+                            {item.grade} · {item.daysWatched}일째 관심
+                          </span>
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <Link
+                              href={`/deals/dealroom?listingId=${encodeURIComponent(item.id)}`}
+                              className="mck-cta-dark"
+                              style={{
+                                display: "inline-flex", alignItems: "center", gap: 4,
+                                padding: "7px 12px", fontSize: 11, fontWeight: 800,
+                                background: MCK.ink, color: MCK.paper,
+                                borderTop: `2px solid ${MCK.electric}`,
+                                textDecoration: "none",
+                              }}
+                            >
+                              <span style={{ color: MCK.paper }}>상세 ↗</span>
                             </Link>
-                            <button onClick={() => removeItem(item.id)} aria-label="삭제" className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-stone-100/10 transition-all">
-                              <Trash2 className="w-3.5 h-3.5" />
+                            <button
+                              onClick={() => removeItem(item.id)}
+                              aria-label="관심 해제"
+                              style={{
+                                padding: "7px 8px",
+                                background: MCK.paper, color: MCK.textMuted,
+                                border: `1px solid ${MCK.borderStrong}`,
+                                cursor: "pointer",
+                              }}
+                            >
+                              <Trash2 size={11} />
                             </button>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </article>
                   )
                 })}
               </div>

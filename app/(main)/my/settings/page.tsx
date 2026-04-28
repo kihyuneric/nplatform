@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
-import { User, Shield, Bell, RefreshCw, Trash2, Camera, CheckCircle2, AlertCircle, Monitor, Clock, Lock, Smartphone, Key, Loader2 } from "lucide-react"
+import { User, Shield, Bell, RefreshCw, Trash2, Camera, CheckCircle2, AlertCircle, Monitor, Clock, Lock, Smartphone, Key, Loader2, LayoutDashboard } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import DS, { formatKRW } from "@/lib/design-system"
-import { MckPageShell, MckPageHeader } from "@/components/mck"
+import { MckPageShell, MckPageHeader, MckTabBar } from "@/components/mck"
+import { MCK } from "@/lib/mck-design"
 
 const TABS = ["기본 정보", "보안", "알림 설정", "역할 전환", "계정 관리"] as const
 type Tab = typeof TABS[number]
@@ -214,19 +215,15 @@ export default function SettingsPage() {
         subtitle="기본 정보 / 보안 / 알림 채널 / 역할 / 계정 관리를 한 화면에서 처리합니다."
       />
 
+      <MckTabBar
+        eyebrow="SECTION"
+        eyebrowIcon={<LayoutDashboard size={12} style={{ color: MCK.electric }} />}
+        tabs={TABS.map(t => ({ id: t, label: t }))}
+        active={activeTab}
+        onChange={(id) => setActiveTab(id as Tab)}
+      />
+
       <div className={DS.page.container + " py-6 space-y-5"}>
-        {/* Tab bar */}
-        <div className={DS.tabs.list + " overflow-x-auto"}>
-          {TABS.map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`shrink-0 ${activeTab === tab ? DS.tabs.active : DS.tabs.trigger}`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
 
         {/* 기본 정보 */}
         {activeTab === "기본 정보" && (

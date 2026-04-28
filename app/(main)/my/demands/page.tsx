@@ -12,10 +12,11 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import {
   Plus, Edit, Target, Building2, MapPin, TrendingUp, Clock,
-  ArrowRight, AlertCircle,
+  ArrowRight, AlertCircle, Filter,
 } from "lucide-react"
 import {
-  MckPageShell, MckPageHeader, MckCard, MckBadge, MckEmptyState, MckDemoBanner,
+  MckPageShell, MckPageHeader, MckBadge, MckEmptyState, MckDemoBanner,
+  MckTabBar, MckViewToggle, type MckViewMode,
 } from "@/components/mck"
 import { MCK, MCK_FONTS, MCK_TYPE, formatKRW } from "@/lib/mck-design"
 
@@ -73,10 +74,14 @@ const SAMPLE: DemandRow[] = [
   },
 ]
 
+type StatusFilter = "ALL" | "ACTIVE" | "PAUSED" | "CLOSED"
+
 export default function MyDemandsPage() {
   const [rows, setRows] = useState<DemandRow[]>(SAMPLE)
   const [loading, setLoading] = useState(true)
   const [isSample, setIsSample] = useState(true)
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL")
+  const [view, setView] = useState<MckViewMode>("list")
 
   useEffect(() => {
     let cancelled = false
@@ -103,6 +108,15 @@ export default function MyDemandsPage() {
     paused: rows.filter((r) => r.status === "PAUSED").length,
     proposals: rows.reduce((s, r) => s + (r.proposal_count ?? 0), 0),
   }
+
+  const filteredRows = statusFilter === "ALL" ? rows : rows.filter(r => r.status === statusFilter)
+
+  const TABS = [
+    { id: "ALL", label: "전체", count: stats.total },
+    { id: "ACTIVE", label: "활성", count: stats.active },
+    { id: "PAUSED", label: "일시중지", count: stats.paused },
+    { id: "CLOSED", label: "종료", count: rows.filter(r => r.status === "CLOSED").length },
+  ] as const
 
   return (
     <MckPageShell variant="tint">
@@ -142,6 +156,15 @@ export default function MyDemandsPage() {
         }
       />
 
+      <MckTabBar
+        eyebrow="STATUS"
+        eyebrowIcon={<Filter size={12} style={{ color: MCK.electric }} />}
+        tabs={TABS}
+        active={statusFilter}
+        onChange={(id) => setStatusFilter(id as StatusFilter)}
+        actions={<MckViewToggle value={view} onChange={setView} size="sm" />}
+      />
+
       <div className="max-w-[1280px] mx-auto" style={{ padding: "32px 24px 80px", display: "flex", flexDirection: "column", gap: 24 }}>
         {/* KPI strip */}
         <div className="grid grid-cols-2 md:grid-cols-4" style={{ gap: 12 }}>
@@ -167,17 +190,92 @@ export default function MyDemandsPage() {
         {/* List */}
         {loading ? (
           <div style={{ padding: 60, textAlign: "center", fontSize: 12, color: MCK.textMuted }}>매수 수요 불러오는 중...</div>
-        ) : rows.length === 0 ? (
+        ) : filteredRows.length === 0 ? (
           <MckEmptyState
             icon={Target}
-            title="등록된 매수 수요가 없습니다"
-            description="매수 수요를 등록하면 매도자가 적합한 매물을 직접 제안합니다."
-            actionLabel="신규 등록"
-            actionHref="/exchange/demands/new"
+            title={statusFilter === "ALL" ? "등록된 매수 수요가 없습니다" : "조건에 맞는 매수 수요가 없습니다"}
+            description={statusFilter === "ALL"
+              ? "매수 수요를 등록하면 매도자가 적합한 매물을 직접 제안합니다."
+              : "다른 상태 탭을 선택해 보세요."}
+            actionLabel={statusFilter === "ALL" ? "신규 등록" : undefined}
+            actionHref={statusFilter === "ALL" ? "/exchange/demands/new" : undefined}
           />
+        ) : view === "grid" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{ gap: 16 }}>
+            {filteredRows.map((row) => {
+              const urgency = URGENCY_META[row.urgency] ?? URGENCY_META.MEDIUM
+              const status = STATUS_META[row.status] ?? STATUS_META.ACTIVE
+              return (
+                <article
+                  key={row.id}
+                  style={{
+                    background: MCK.paper,
+                    border: `1px solid ${MCK.border}`,
+                    borderTop: `2px solid ${MCK.electric}`,
+                    padding: 20,
+                    display: "flex", flexDirection: "column", gap: 12,
+                    minHeight: 280,
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <MckBadge tone={status.tone} size="sm">{status.label}</MckBadge>
+                    <MckBadge tone={urgency.tone} size="sm">{urgency.label}</MckBadge>
+                  </div>
+                  <h3 style={{ fontFamily: MCK_FONTS.serif, fontSize: 17, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.01em" }}>
+                    {row.collateral_types.slice(0, 2).join(" · ")}
+                    {row.collateral_types.length > 2 && ` 외 ${row.collateral_types.length - 2}종`}
+                  </h3>
+                  <div style={{ fontSize: 11, color: MCK.textMuted, marginTop: -6 }}>
+                    ID · {row.id.slice(0, 8).toUpperCase()} · 등록 {String(row.created_at).slice(0, 10)}
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, fontSize: 11 }}>
+                    <Field icon={<MapPin size={11} />} label="지역" value={row.regions.join(", ")} />
+                    <Field icon={<Clock size={11} />} label="목표 할인율" value={`${row.target_discount_rate}%↑`} />
+                    <Field icon={<TrendingUp size={11} />} label="금액" value={`${formatKRW(row.min_amount)}~${formatKRW(row.max_amount)}`} />
+                    <Field icon={<AlertCircle size={11} />} label="제안" value={`${row.proposal_count ?? 0}건`} />
+                  </div>
+                  {row.description && (
+                    <p style={{ fontSize: 11, color: MCK.textSub, lineHeight: 1.55, flex: 1 }}>
+                      {row.description}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2" style={{ marginTop: "auto", paddingTop: 10, borderTop: `1px solid ${MCK.border}` }}>
+                    <Link
+                      href={`/exchange/demands/${row.id}/edit`}
+                      style={{
+                        flex: 1,
+                        display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4,
+                        padding: "8px 12px", fontSize: 11, fontWeight: 800,
+                        background: MCK.paper, color: MCK.ink,
+                        border: `1px solid ${MCK.borderStrong}`,
+                        borderTop: `2px solid ${MCK.electric}`,
+                        textDecoration: "none",
+                      }}
+                    >
+                      <Edit size={11} /> 편집
+                    </Link>
+                    <Link
+                      href={`/exchange/demands/${row.id}`}
+                      className="mck-cta-dark"
+                      style={{
+                        flex: 1,
+                        display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4,
+                        padding: "8px 12px", fontSize: 11, fontWeight: 800,
+                        background: MCK.ink, color: MCK.paper,
+                        borderTop: `2px solid ${MCK.electric}`,
+                        textDecoration: "none",
+                      }}
+                    >
+                      <span style={{ color: MCK.paper }}>상세 ↗</span>
+                    </Link>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
         ) : (
           <section style={{ background: MCK.paper, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}` }}>
-            {rows.map((row, i) => {
+            {filteredRows.map((row, i) => {
               const urgency = URGENCY_META[row.urgency] ?? URGENCY_META.MEDIUM
               const status = STATUS_META[row.status] ?? STATUS_META.ACTIVE
               return (
@@ -195,11 +293,11 @@ export default function MyDemandsPage() {
                         <MckBadge tone={status.tone} size="sm">{status.label}</MckBadge>
                         <MckBadge tone={urgency.tone} size="sm">{urgency.label}</MckBadge>
                       </div>
-                      <h3 style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.01em" }}>
+                      <h3 style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.01em", marginBottom: 2 }}>
                         {row.collateral_types.slice(0, 2).join(" · ")}
                         {row.collateral_types.length > 2 && ` 외 ${row.collateral_types.length - 2}종`}
                       </h3>
-                      <div style={{ fontSize: 11, color: MCK.textMuted, marginTop: 2 }}>
+                      <div style={{ fontSize: 11, color: MCK.textMuted }}>
                         ID · {row.id.slice(0, 8).toUpperCase()} · 등록 {String(row.created_at).slice(0, 10)}
                       </div>
                     </div>
@@ -272,6 +370,21 @@ export default function MyDemandsPage() {
               )
             })}
           </section>
+        )}
+
+        {/* helper note */}
+        {filteredRows.length > 0 && (
+          <div
+            style={{
+              padding: "14px 18px",
+              background: "rgba(34, 81, 255, 0.04)",
+              border: `1px solid ${MCK.border}`,
+              borderLeft: `3px solid ${MCK.electric}`,
+              fontSize: 11, color: MCK.textSub, lineHeight: 1.6,
+            }}
+          >
+            매수 수요는 매도자에게만 공개됩니다. 활성 상태일 때만 매칭 엔진이 매물 후보를 추천하며, 일시중지 시 새로운 제안 수신이 잠시 멈춥니다.
+          </div>
         )}
       </div>
     </MckPageShell>

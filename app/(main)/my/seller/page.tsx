@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Plus, Heart, Gavel, CheckCircle2, TrendingUp, Package, Download, Loader2 } from 'lucide-react'
+import { Plus, Heart, Gavel, CheckCircle2, TrendingUp, Package, Download, Loader2, LayoutDashboard } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import DS, { formatKRW } from '@/lib/design-system'
-import { MckPageShell, MckPageHeader } from '@/components/mck'
+import { MckPageShell, MckPageHeader, MckTabBar } from '@/components/mck'
 import { MCK, MCK_FONTS, MCK_TYPE } from '@/lib/mck-design'
 
 // Data hook for seller dashboard
@@ -242,6 +242,20 @@ export default function SellerDashboardPage() {
         }
       />
 
+      <MckTabBar
+        eyebrow="SECTION"
+        eyebrowIcon={<LayoutDashboard size={12} style={{ color: MCK.electric }} />}
+        tabs={TABS.map(t => ({
+          id: t.id,
+          label: t.label,
+          count: t.id === 'listings' ? sellerStats.total
+                : t.id === 'billing' ? settlements.length
+                : undefined,
+        }))}
+        active={tab}
+        onChange={setTab}
+      />
+
       <div className={DS.page.container + " py-6 " + DS.page.sectionGap}>
         {/* Stats Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -251,16 +265,6 @@ export default function SellerDashboardPage() {
               <div className={DS.stat.value}>{s.value}</div>
               <div className={DS.stat.sub}>{s.label}</div>
             </div>
-          ))}
-        </div>
-
-        {/* Tab Bar */}
-        <div className={DS.tabs.list}>
-          {TABS.map((t) => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex-1 ${tab === t.id ? DS.tabs.active : DS.tabs.trigger}`}>
-              {t.label}
-            </button>
           ))}
         </div>
 

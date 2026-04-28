@@ -17,8 +17,10 @@ import {
   FileSignature, FileText, CheckCircle2, Clock, XCircle, AlertCircle,
   Filter, Loader2,
 } from "lucide-react"
-import { MckPageShell, MckPageHeader } from "@/components/mck"
-import { MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
+import {
+  MckPageShell, MckPageHeader, MckTabBar, MckViewToggle, type MckViewMode,
+} from "@/components/mck"
+import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
 
 const INK = "#0A1628"
 const PAPER = "#FFFFFF"
@@ -77,6 +79,7 @@ export default function AgreementsPage() {
   const [agreements, setAgreements] = useState<AgreementRow[]>(SAMPLE_AGREEMENTS)
   const [loadingData, setLoadingData] = useState(true)
   const [isSample, setIsSample] = useState(true)
+  const [view, setView] = useState<MckViewMode>("list")
 
   useEffect(() => {
     const load = async () => {
@@ -188,6 +191,23 @@ export default function AgreementsPage() {
         subtitle="체결한 NDA(비밀유지계약) 및 제출한 LOI(매수의향서) 이력을 한 곳에서 확인합니다. 모든 계약은 전자서명법에 따라 5년간 보관됩니다."
       />
 
+      <MckTabBar
+        eyebrow="FILTER"
+        eyebrowIcon={<Filter size={12} style={{ color: MCK.electric }} />}
+        tabs={FILTERS.map(f => ({
+          id: f.key,
+          label: f.label,
+          count: f.key === "ALL" ? agreements.length
+                : f.key === "NDA" ? agreements.filter(a => a.type === "NDA").length
+                : f.key === "LOI" ? agreements.filter(a => a.type === "LOI").length
+                : f.key === "REJECTED" ? agreements.filter(a => a.status === "REJECTED" || a.status === "EXPIRED").length
+                : agreements.filter(a => a.status === f.key).length,
+        }))}
+        active={filter}
+        onChange={(id) => setFilter(id as typeof FILTERS[number]["key"])}
+        actions={<MckViewToggle value={view} onChange={setView} size="sm" />}
+      />
+
       <section style={{ padding: "32px 24px 80px" }}>
         <div className="max-w-[1280px] mx-auto">
           {/* Loading */}
@@ -228,33 +248,94 @@ export default function AgreementsPage() {
             <StatCard label="체결 완료" value={stats.signed} icon={CheckCircle2} highlight />
           </div>
 
-          {/* Filters */}
-          <div className="flex items-center flex-wrap" style={{ gap: 6, marginBottom: 16 }}>
-            <Filter size={14} style={{ color: ELECTRIC, marginRight: 4 }} />
-            {FILTERS.map(f => {
-              const active = filter === f.key
-              return (
-                <button
-                  key={f.key}
-                  onClick={() => setFilter(f.key)}
-                  className={active ? "mck-cta-dark" : ""}
-                  style={{
-                    padding: "7px 14px",
-                    fontSize: 11, fontWeight: active ? 800 : 700,
-                    background: active ? INK : PAPER,
-                    color: active ? PAPER : INK,
-                    border: active ? `1px solid ${INK}` : `1px solid ${BORDER_STRONG}`,
-                    borderTop: active ? `2px solid ${ELECTRIC}` : `1px solid ${BORDER_STRONG}`,
-                    cursor: "pointer", letterSpacing: "-0.005em",
-                  }}
-                >
-                  <span style={{ color: active ? PAPER : INK }}>{f.label}</span>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Table */}
+          {/* Table or grid */}
+          {view === "grid" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{ gap: 14, marginBottom: 24 }}>
+              {rows.length === 0 ? (
+                <div style={{
+                  gridColumn: "1 / -1",
+                  padding: 60, textAlign: "center", fontSize: 12, color: INK_MUTED,
+                  background: PAPER, border: `1px solid ${BORDER}`,
+                }}>
+                  해당 조건의 계약 이력이 없습니다.
+                </div>
+              ) : rows.map(row => {
+                const meta = STATUS_META[row.status]
+                const Icon = meta.icon
+                return (
+                  <Link
+                    key={row.id}
+                    href={`/deals/dealroom?listingId=${encodeURIComponent(row.listing_id)}`}
+                    style={{
+                      background: PAPER,
+                      border: `1px solid ${BORDER}`,
+                      borderTop: `2px solid ${ELECTRIC}`,
+                      padding: 18,
+                      display: "flex", flexDirection: "column", gap: 10,
+                      textDecoration: "none", color: INK,
+                      minHeight: 200,
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span style={{
+                        padding: "3px 9px",
+                        background: row.type === "NDA" ? "rgba(34, 81, 255, 0.08)" : "rgba(0, 169, 244, 0.10)",
+                        color: row.type === "NDA" ? ELECTRIC_DARK : "#0075B0",
+                        fontSize: 10, fontWeight: 800,
+                        border: `1px solid ${row.type === "NDA" ? "rgba(34, 81, 255, 0.30)" : "rgba(0, 169, 244, 0.35)"}`,
+                        letterSpacing: "0.04em",
+                      }}>{row.type}</span>
+                      <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "3px 8px",
+                        background: meta.bg, color: meta.color,
+                        border: `1px solid ${meta.border}`,
+                        fontSize: 10, fontWeight: 800,
+                        letterSpacing: "0.04em",
+                      }}>
+                        <Icon size={10} style={{ color: meta.color }} /> {meta.label}
+                      </span>
+                    </div>
+                    <h4 style={{ fontFamily: MCK_FONTS.serif, fontSize: 15, fontWeight: 800, color: INK, letterSpacing: "-0.01em", lineHeight: 1.3 }}>
+                      {row.collateral}
+                    </h4>
+                    <div style={{ fontSize: 11, color: INK_MID, fontWeight: 600 }}>
+                      {row.counterparty}
+                    </div>
+                    <div style={{
+                      paddingTop: 8, marginTop: "auto",
+                      borderTop: `1px solid ${BORDER}`,
+                      display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 8,
+                    }}>
+                      <div>
+                        <div style={{ fontSize: 9, color: INK_MUTED, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                          {row.amount ? "금액" : "체결일"}
+                        </div>
+                        <div style={{
+                          fontFamily: MCK_FONTS.serif, fontSize: 14, fontWeight: 800,
+                          color: row.amount ? INK : INK_MID,
+                          fontVariantNumeric: "tabular-nums",
+                        }}>
+                          {row.amount ? formatKRW(row.amount) : row.signed_at}
+                        </div>
+                      </div>
+                      <span
+                        className="mck-cta-dark"
+                        style={{
+                          padding: "6px 12px",
+                          background: ELECTRIC, color: "#FFFFFF",
+                          fontSize: 11, fontWeight: 800,
+                          borderTop: `2px solid ${ELECTRIC_DARK}`,
+                        }}
+                      >
+                        <span style={{ color: "#FFFFFF" }}>딜룸 ↗</span>
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          ) : (
           <section
             className="mck-paper"
             style={{
@@ -415,6 +496,7 @@ export default function AgreementsPage() {
               })
             )}
           </section>
+          )}
 
           {/* Notice */}
           <div

@@ -2,12 +2,12 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react"
 import Link from "next/link"
-import { Bell, CheckCheck, Check, Trash2, Clock, FileText, Gavel, Shield, TrendingUp, ChevronRight } from "lucide-react"
+import { Bell, CheckCheck, Check, Trash2, Clock, FileText, Gavel, Shield, TrendingUp, ChevronRight, Filter } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import DS from "@/lib/design-system"
-import { MckPageShell, MckPageHeader } from "@/components/mck"
+import { MckPageShell, MckPageHeader, MckTabBar } from "@/components/mck"
 import { MCK } from "@/lib/mck-design"
 
 type NotificationType = "contract" | "listing" | "analysis" | "system"
@@ -224,28 +224,21 @@ export default function NotificationsPage() {
           <Link href="/deals/matching" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>AI 매칭 →</Link>
         </div>
 
-        {/* Filter tabs */}
-        <div className={DS.tabs.list}>
-          {FILTER_TABS.map(tab => {
-            const unread = tab.value === "all" ? 0 : items.filter(n => n.type === tab.value && !n.is_read).length
-            return (
-              <button
-                key={tab.value}
-                onClick={() => { setActiveTab(tab.value as any); setSelectedIds(new Set()) }}
-                className={`flex-1 flex items-center justify-center gap-1.5 ${
-                  activeTab === tab.value ? DS.tabs.active : DS.tabs.trigger
-                }`}
-              >
-                {tab.label}
-                {unread > 0 && (
-                  <span className="h-4 min-w-4 flex items-center justify-center rounded-none bg-stone-100/10 text-[var(--color-danger)] text-[0.6875rem] font-bold px-1">
-                    {unread}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
+        {/* Filter tabs — McKinsey sticky tab bar */}
+        <MckTabBar
+          notSticky
+          eyebrow="CATEGORY"
+          eyebrowIcon={<Filter size={12} style={{ color: MCK.electric }} />}
+          tabs={FILTER_TABS.map(t => ({
+            id: t.value,
+            label: t.label,
+            count: t.value === "all"
+              ? items.filter(n => !n.is_read).length || undefined
+              : items.filter(n => n.type === t.value && !n.is_read).length || undefined,
+          }))}
+          active={activeTab}
+          onChange={(id) => { setActiveTab(id as "all" | NotificationType); setSelectedIds(new Set()) }}
+        />
 
         {/* Batch bar */}
         {selectedIds.size > 0 && (
