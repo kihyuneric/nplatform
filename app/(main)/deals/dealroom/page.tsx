@@ -70,6 +70,7 @@ import {
 } from "@/lib/hooks/use-analysis-report"
 import { useDealOffers, type DealOffer, type OfferStatus } from "@/lib/hooks/use-deal-offers"
 import { useDealMessages, useSendDealMessage, type DealMessage } from "@/lib/hooks/use-deal-messages"
+import { startInicisCheckout } from "@/components/payment/inicis-checkout-client"
 
 /* ─── Dealroom Listing Context — 하위 컴포넌트(NDA/LOI 모달, Summary 등) 가
        prop drill 없이 listing 에 접근. 매물 SoT 의 단일 진입점. ───────────── */
@@ -1330,10 +1331,39 @@ function DealRoomSummaryViewer({ onClose }: { onClose: () => void }) {
 
 /* ════ ESCROW 입금 결제 모달 — 매입가 = listing.askingPrice 파생, 보증금 10% + 수수료 1.8% ═══ */
 function EscrowPaymentModal({ onClose }: { onClose: () => void }) {
-  const { askingPrice } = useDealroomListing()
+  const { listing, title, askingPrice } = useDealroomListing()
   const deposit = Math.round(askingPrice * 0.10)
   const fee = Math.round(askingPrice * 0.018)
   const total = deposit + fee
+  const [paying, setPaying] = useState(false)
+  const [payError, setPayError] = useState<string | null>(null)
+
+  async function handleStartPayment() {
+    setPaying(true)
+    setPayError(null)
+    // listing 이 없으면 결제 진행 불가
+    if (!listing) {
+      setPayError('매물 정보를 확인할 수 없습니다.')
+      setPaying(false)
+      return
+    }
+    // dev/demo 환경에서 buyername/email 임시 — 실 환경은 user.profile 에서
+    const buyerName = '매수자'
+    const buyerEmail = 'buyer@nplatform.co.kr'
+    const result = await startInicisCheckout({
+      type: 'ESCROW_DEPOSIT',
+      amount: total,
+      productName: `${title} · 보증금 ${formatKrwShort(deposit)} + 수수료 ${formatKrwShort(fee)}`,
+      listingId: String(listing.id),
+      buyername: buyerName,
+      buyeremail: buyerEmail,
+    })
+    if (!result.ok) {
+      setPayError(result.error ?? '결제 시작 실패')
+      setPaying(false)
+    }
+    // 성공 시 INIStdPay popup 이 뜨고 returnUrl 로 redirect → 별도 처리 불필요
+  }
   return (
     <div
       onClick={onClose}
@@ -1441,21 +1471,47 @@ function EscrowPaymentModal({ onClose }: { onClose: () => void }) {
           ※ 보증금은 현장 계약 체결 후 잔금(90%) 납부 시 충당됩니다. 계약 불발 시 귀책 여부에 따라 몰취될 수 있습니다.
         </p>
 
-        {/* CTA */}
+        {payError && (
+          <div style={{
+            marginBottom: 14, padding: "10px 14px",
+            background: "rgba(220, 38, 38, 0.06)",
+            border: "1px solid rgba(220, 38, 38, 0.30)",
+            borderLeft: "3px solid #DC2626",
+            fontSize: 12, color: "#991B1B",
+          }}>
+            {payError}
+          </div>
+        )}
+
+        {/* CTA — 이니시스 표준결제창 호출 (Phase 3.3) */}
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", paddingTop: 14, borderTop: `1px solid ${MCK.border}` }}>
-          <button type="button" onClick={onClose} style={{
+          <button type="button" onClick={onClose} disabled={paying} style={{
             padding: "10px 18px", fontSize: 12, fontWeight: 700,
-            background: MCK.paper, color: MCK.ink, border: `1px solid ${MCK.borderStrong}`, cursor: "pointer",
+            background: MCK.paper, color: MCK.ink, border: `1px solid ${MCK.borderStrong}`,
+            cursor: paying ? "not-allowed" : "pointer",
+            opacity: paying ? 0.5 : 1,
           }}>
             닫기
           </button>
-          <button type="button" onClick={onClose} className="mck-cta-dark" style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            padding: "10px 18px", fontSize: 12, fontWeight: 800,
-            background: MCK.electric, color: "#FFFFFF", border: `1px solid ${MCK.electric}`, cursor: "pointer",
-          }}>
+          <button
+            type="button"
+            onClick={handleStartPayment}
+            disabled={paying}
+            className="mck-cta-dark"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "10px 18px", fontSize: 12, fontWeight: 800,
+              background: MCK.electric, color: "#FFFFFF", border: `1px solid ${MCK.electric}`,
+              borderTop: `2px solid ${MCK.electricDark}`,
+              cursor: paying ? "wait" : "pointer",
+              opacity: paying ? 0.7 : 1,
+              boxShadow: "0 4px 12px rgba(34, 81, 255, 0.30)",
+            }}
+          >
             <Wallet size={13} style={{ color: "#FFFFFF" }} />
-            <span style={{ color: "#FFFFFF" }}>가상계좌로 입금하기</span>
+            <span style={{ color: "#FFFFFF" }}>
+              {paying ? '결제창 여는 중...' : `${formatKrwShort(total)} 결제하기`}
+            </span>
           </button>
         </div>
       </article>
