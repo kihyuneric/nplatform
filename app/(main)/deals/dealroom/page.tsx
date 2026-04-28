@@ -59,6 +59,8 @@ import {
   getListingAskingPrice,
   getListingPrincipal,
   getListingAppraisal,
+  getListingLtv,
+  getListingLtvNumerator,
   type ListingDetail,
 } from "@/lib/hooks/use-listing"
 import { useDealroomLinks, deriveFallbackLinks, type DealroomLink } from "@/lib/external/dealroom-links"
@@ -2930,8 +2932,9 @@ function FullAiInvestmentAnalysisCard() {
   const annualizedRoi = roi * (12 / 9)
 
   // AI 투자 등급 점수 (간이) — 회수율 + LTV + 권리관계
+  // LTV = (선순위 채권최고액 + 대출원금) / 감정가 — getListingLtv() SoT 사용
   const recoveryRate = principal > 0 ? Math.min(300, (recoveredToSecond / principal) * 100) : 0
-  const ltv = (listing?.ltv_ratio as number | undefined) ?? (listing?.ltv as number | undefined) ?? 65
+  const ltv = getListingLtv(listing) || 65
   const aiScore = Math.round(
     Math.min(100,
       Math.min(50, recoveryRate / 6) +              // 회수율 비중 (max 50점, 회수율 300% 시 50점)

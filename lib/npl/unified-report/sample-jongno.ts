@@ -149,19 +149,20 @@ export const JONGNO_HONGJI_STATISTICS: StatisticsContext = {
 
 // ─── 분석 보고서 빌더 ────────────────────────────────────────────
 export function buildJongnoSampleReport(): UnifiedAnalysisReport {
-  // 종로 사례:
-  //   대출원금          16.48억 (loan_principal_only)
-  //   + 연체이자        0.52억
-  //   = 채권잔액(총채권) 16.99억 (claim_amount)
-  //   + 선순위 농협(채권최고액) 23.64억
-  //   = LTV 분자(전체 채권)    40.63억
-  //   감정가              66.73억
-  //   → LTV = 40.63 / 66.73 = 60.86%
+  // 종로 사례 — LTV 정의 (사용자 정책):
+  //   LTV = (선순위 채권최고액 + 대출원금) / 감정가
+  //   ※ 대출잔액(원금+연체이자)이 아닌 '대출원금'만 합산
+  //
+  //   선순위 농협 채권최고액   23.64억 (max_claim_amount)
+  //   + 본 NPL 대출원금       16.48억 (loan_principal_only)
+  //   = LTV 분자              40.12억
+  //   감정가                  66.73억
+  //   → LTV = 40.12 / 66.73 = 60.12%   (사용자 제공 LTV 와 일치)
   const loanPrincipal = JONGNO_HONGJI_DETAIL.loan_principal_only    // 1,648,045,960 (대출원금만)
   const overdueInterest = JONGNO_HONGJI_DETAIL.interest_overdue     // 51,776,255
-  const totalBond = JONGNO_HONGJI_DETAIL.claim_amount               // 1,699,822,215 (채권잔액)
-  const seniorClaim = JONGNO_HONGJI_DETAIL.max_claim_amount         // 2,364,000,000 (1순위 농협)
-  const totalClaimsAtCollateral = totalBond + seniorClaim           // 4,063,822,215 (LTV 분자)
+  const totalBond = JONGNO_HONGJI_DETAIL.claim_amount               // 1,699,822,215 (채권잔액 = 원금+연체이자)
+  const seniorClaim = JONGNO_HONGJI_DETAIL.max_claim_amount         // 2,364,000,000 (1순위 농협 채권최고액)
+  const ltvNumerator = seniorClaim + loanPrincipal                  // 4,012,045,960 (LTV 분자)
   const appraisal = JONGNO_HONGJI_DETAIL.appraisal_value            // 6,673,016,000
   const aiMarket = JONGNO_HONGJI_DETAIL.ai_market_value             // 7,490,203,000
 
@@ -188,10 +189,10 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     statistics: JONGNO_HONGJI_STATISTICS,
   }
 
-  // LTV 는 본 NPL 채권 + 선순위 채권 합산 기준
-  // (NPL 매수자가 부담해야 할 전체 권리관계 가중치)
+  // LTV = (선순위 채권최고액 + 대출원금) / 감정가
+  //   분자에 대출잔액(원금+연체이자)이 아닌 '대출원금'만 합산 (사용자 정책)
   const ltv = computeLtvFactor({
-    totalBondAmount: totalClaimsAtCollateral,
+    totalBondAmount: ltvNumerator,
     appraisalValue: appraisal,
     source: 'APPRAISAL',
   })
@@ -278,9 +279,10 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
   })
 
   // 리스크 4팩터
-  // 담보가치 LTV 도 NPL 채권 + 선순위 합산 기준 (NPL 매수자 부담 전체 권리)
+  // 담보가치 LTV = (선순위 채권최고액 + 대출원금) / min(감정가, AI시세)
+  //   사용자 정책: 대출잔액이 아닌 대출원금만 합산
   const collateralFactor = computeCollateralFactor({
-    claimBalance: totalClaimsAtCollateral,
+    claimBalance: ltvNumerator,
     appraisalValue: appraisal,
     marketValue: aiMarket,
   })
@@ -589,8 +591,9 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     profitability,
     executiveSummary:
       `종로구 홍지동 토지 8필지 일괄매각 NPL (○○대부 대출원금 16.48억 · 채권잔액 16.99억 · ` +
-      `1순위 농협 채권최고액 23.64억 · 합계 40.63억 · 감정가 66.73억) 종합 분석 결과 ` +
-      `${riskGrade}등급, LTV ${(totalClaimsAtCollateral / appraisal * 100).toFixed(1)}% (NPL+선순위 합산 기준), ` +
+      `1순위 농협 채권최고액 23.64억 · LTV 분자(원금+선순위) 40.12억 · 감정가 66.73억) ` +
+      `종합 분석 결과 ${riskGrade}등급, LTV ${(ltvNumerator / appraisal * 100).toFixed(2)}% ` +
+      `(채권최고액+대출원금 합산 기준), ` +
       `예측 회수율 ${recovery.predictedRecoveryRate}% (신뢰도 ${Math.round(recovery.confidence * 100)}%). ` +
       `매각가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 기준 ` +
       `권고 시나리오 ROI ${(recommendedRoi * 100).toFixed(2)}% · 기본 시나리오 ROI ${(investmentRoi * 100).toFixed(2)}%. ` +

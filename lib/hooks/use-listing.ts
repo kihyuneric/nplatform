@@ -277,6 +277,56 @@ export function getListingTitle(l: ListingDetail | null | undefined): string {
   return [region, collateral].filter(Boolean).join(' ')
 }
 
+/**
+ * getListingLtv — LTV 계산의 단일 진원지(SoT).
+ *
+ * 정의 (NPLatform 공식 정책):
+ *   LTV = (선순위 채권최고액 + 대출원금) / min(감정가, AI시세)
+ *   ※ 대출잔액(원금+연체이자)이 아닌 '대출원금'만 합산.
+ *   ※ 선순위 권리가 없으면 senior=0 으로 계산.
+ *
+ * 우선순위:
+ *   1) listing.ltv_ratio (사전 저장값) — 원천 데이터 신뢰
+ *   2) listing.ltv (이형 키)
+ *   3) (max_claim_amount + loan_principal_only) / appraisal_value 계산
+ *   4) (loan_principal_only + 0) / appraisal_value (선순위 미제공 시)
+ *   5) 0
+ */
+export function getListingLtv(l: ListingDetail | null | undefined): number {
+  if (!l) return 0
+  if (typeof l.ltv_ratio === 'number' && l.ltv_ratio > 0) return l.ltv_ratio
+  if (typeof l.ltv === 'number' && l.ltv > 0) return l.ltv
+  const senior =
+    (l.max_claim_amount as number | undefined) ??
+    (l.senior_claim_max as number | undefined) ??
+    0
+  const principal =
+    (l.loan_principal_only as number | undefined) ??
+    (l.loan_principal as number | undefined) ??
+    (l.loan_balance as number | undefined) ??
+    (getListingPrincipal(l) > 0 ? Math.round(getListingPrincipal(l) * 0.97) : 0) // 채권잔액의 97% 추정
+  const appraisal = getListingAppraisal(l)
+  const market = (l.ai_market_value as number | undefined) ?? appraisal
+  const basis = Math.min(appraisal || 0, market || appraisal || 0)
+  if (basis <= 0) return 0
+  return Math.round(((senior + principal) / basis) * 10000) / 100  // 소수 2자리
+}
+
+/** LTV 분자 (선순위 채권최고액 + 대출원금) — 표시·계산용 */
+export function getListingLtvNumerator(l: ListingDetail | null | undefined): number {
+  if (!l) return 0
+  const senior =
+    (l.max_claim_amount as number | undefined) ??
+    (l.senior_claim_max as number | undefined) ??
+    0
+  const principal =
+    (l.loan_principal_only as number | undefined) ??
+    (l.loan_principal as number | undefined) ??
+    (l.loan_balance as number | undefined) ??
+    Math.round(getListingPrincipal(l) * 0.97)
+  return senior + principal
+}
+
 export function getListingCode(l: ListingDetail | null | undefined): string {
   if (!l) return ''
   if (typeof l.code === 'string' && l.code) return l.code
