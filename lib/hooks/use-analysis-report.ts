@@ -23,6 +23,7 @@ import {
   getListingAskingPrice,
 } from '@/lib/hooks/use-listing'
 import { buildJongnoSampleReport } from '@/lib/npl/unified-report/sample-jongno'
+import { buildListingReport } from '@/lib/npl/unified-report/from-listing'
 import { JONGNO_HONGJI_LISTING_ID } from '@/lib/samples/jongno-hongji-land-npl'
 import type { UnifiedAnalysisReport } from '@/lib/npl/unified-report/types'
 
@@ -181,8 +182,15 @@ export function useAnalysisReport(
       )
       const real = r.data?.kpi
       if (real) return { kpi: { ...real, source: 'real' } }
-      // 2) 실 데이터 없으면 listing 파생 fallback
-      return { kpi: deriveFallbackKpi(listing) }
+      // 2) listing-driven generic builder — 매물 raw 데이터 그대로 반영 (Phase G7+ 2026-04-29)
+      //    deriveFallbackKpi 보다 정밀: profitability 엔진 + 4팩터 리스크 + Monte Carlo 모두 실행
+      try {
+        const listingReport = buildListingReport(listing)
+        return { kpi: { ...reportToKpi(listingReport), source: 'derived' } }
+      } catch (e) {
+        console.warn('[useAnalysisReport] buildListingReport 실패, deriveFallbackKpi fallback:', e)
+        return { kpi: deriveFallbackKpi(listing) }
+      }
     },
     enabled,
     staleTime: 5 * 60_000,
@@ -192,9 +200,21 @@ export function useAnalysisReport(
 
   // Hook 의 첫 렌더에 listing 만 있으면 즉시 KPI 노출 — query 데이터 도착 대기 X.
   //   · 사례 빌드된 매물이면 보고서 KPI (정밀)
-  //   · 그 외 listing 의 derived fallback
+  //   · 그 외 listing-driven generic builder (Phase G7+ 2026-04-29) — 정밀
+  //   · 빌더 실패 시 derived fallback
   const sampleSync = listing ? getSampleReportKpi(listing.id) : null
-  const fallback = sampleSync ?? (listing ? deriveFallbackKpi(listing) : null)
+  const listingDrivenSync = (() => {
+    if (!listing || sampleSync) return null
+    try {
+      return { ...reportToKpi(buildListingReport(listing)), source: 'derived' as const }
+    } catch {
+      return null
+    }
+  })()
+  const fallback =
+    sampleSync ??
+    listingDrivenSync ??
+    (listing ? deriveFallbackKpi(listing) : null)
   const kpi = query.data?.kpi ?? fallback
 
   return {

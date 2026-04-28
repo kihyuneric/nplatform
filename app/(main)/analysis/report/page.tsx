@@ -45,6 +45,7 @@ import {
 } from "@/lib/npl/unified-report/types"
 import { buildSampleReport } from "@/lib/npl/unified-report/sample"
 import { buildJongnoSampleReport } from "@/lib/npl/unified-report/sample-jongno"
+import { buildListingReport } from "@/lib/npl/unified-report/from-listing"
 import { JONGNO_HONGJI_LISTING_ID } from "@/lib/samples/jongno-hongji-land-npl"
 import { buildNplProfitability } from "@/lib/npl/unified-report/profitability"
 import {
@@ -253,21 +254,29 @@ export default function UnifiedReportPage() {
             // (위저드 흐름 거치도록 안내)
           }
         }
-        // 우선순위 4 — ?listingId 가 있으면 useAnalysisReport 형태의 KPI 조회
-        // (라우터에서 이미 useListing 으로 listing 메타 표기 중. 본문은 sample 유지)
-        // → 사용자가 위저드 실행하기 전 미리 보기 모드
+        // 우선순위 4 — listing 이 있으면 listing-driven generic builder 사용
+        //   사용자 정책 (2026-04-29): 매물 raw 데이터 → 자동으로 보고서 생성
+        //   (사용자가 위저드 실행하기 전 미리 보기 + 매물 수정 시 자동 갱신)
+        if (listing && listing.id) {
+          setReport(buildListingReport(listing))
+          return
+        }
+        // 우선순위 5 — listing 도 없으면 (URL 파라미터만 있고 fetch 실패 시)
+        //   기존 잠실 sample 로 fallback (체험용 미리보기)
         setReport(buildSampleReport())
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err))
-        // 사례 매물이면 우선 종로용 빌더, 아니면 기본 sample
+        // 사례 매물이면 우선 종로용 빌더, 아니면 listing-driven, 마지막은 sample
         if (listingId === JONGNO_HONGJI_LISTING_ID) {
           setReport(buildJongnoSampleReport())
+        } else if (listing && listing.id) {
+          setReport(buildListingReport(listing))
         } else {
           setReport(buildSampleReport())
         }
       }
     })()
-  }, [id, listingId])
+  }, [id, listingId, listing])
 
   if (!report) {
     return (
