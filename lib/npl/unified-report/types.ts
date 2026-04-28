@@ -840,6 +840,15 @@ export interface UnifiedReportInput {
   auctionEstimatedMonths?: number
   /** 통계 컨텍스트 — 지역/주소지/용도별 실데이터 묶음 */
   statistics: StatisticsContext
+
+  /* ─── Phase G7+ 2026-04-28 — 매각 기준·매입 base 정책 ───────────────────────
+   * 사용자 정책: NPL 매각이 대출원금 기준 vs 채권잔액 기준 둘 중 하나로 진행.
+   * report 의 3-단계 매입가 시나리오 (보수적/표준/공격적) 라벨·금액이 이 base 를 따름.
+   */
+  /** 매입 base 라벨 ('대출원금' OR '채권잔액'). 시나리오 라벨/설명 전반에 사용. */
+  acquisitionBaseLabel?: '대출원금' | '채권잔액'
+  /** 매입 base 금액 — 'CLAIM_BALANCE' 매각 시 채권잔액. 미지정 시 totalBondAmount. */
+  acquisitionBaseAmount?: number
 }
 
 export interface UnifiedAnalysisReport {

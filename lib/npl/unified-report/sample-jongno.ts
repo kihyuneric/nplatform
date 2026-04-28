@@ -177,6 +177,11 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
   const appraisal = JONGNO_HONGJI_DETAIL.appraisal_value            // 6,673,016,000
   const aiMarket = JONGNO_HONGJI_DETAIL.ai_market_value             // 7,490,203,000
 
+  // ── 매각 기준 (사용자 정책) — 채권잔액 vs 대출원금
+  const discountBasis = JONGNO_HONGJI_DETAIL.discount_basis      // 'CLAIM_BALANCE'
+  const saleDiscountRate = JONGNO_HONGJI_DETAIL.sale_discount_rate / 100  // 0
+  const acquisitionBase = discountBasis === 'CLAIM_BALANCE' ? totalBond : loanPrincipal
+
   const input: UnifiedReportInput = {
     assetId: JONGNO_HONGJI_LISTING_ID,
     assetTitle: '종로 홍지동 토지 8필지 일괄 · ○○대부 NPL',
@@ -187,6 +192,10 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     totalBondAmount: totalBond,
     minBidPrice: estimateMinBid(appraisal, 0),       // 1회차 최저매각가 = 감정가 100%
     currentMarketValue: aiMarket,
+    /* 매각 기준 (사용자 정책 2026-04-28):
+       종로 사례 = 채권잔액 100% 매각 → label='채권잔액', amount=totalBond */
+    acquisitionBaseLabel: discountBasis === 'CLAIM_BALANCE' ? '채권잔액' : '대출원금',
+    acquisitionBaseAmount: acquisitionBase,
     claimBreakdown: {
       initialPrincipal: JONGNO_HONGJI_DETAIL.initial_principal,  // 최초 대출원금 17억
       principal: loanPrincipal,                                   // 현재 대출원금 16.48억
@@ -333,13 +342,8 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
   const { score: riskScore } = composeRiskScore(riskFactorResults)
   const riskGrade = scoreToGrade(riskScore)
 
-  // 수익성 분석 — 매각 기준에 따라 매입가 base 결정 (사용자 정책)
-  //   discount_basis === 'CLAIM_BALANCE' → 매입가 = 채권잔액 × (1 - discountRate)
-  //   discount_basis === 'PRINCIPAL'    → 매입가 = 대출원금  × (1 - discountRate)
-  // 본 사례: 대출잔액 100% 매각 → discountRate=0, base=totalBond(채권잔액 16.99억)
-  const discountBasis = JONGNO_HONGJI_DETAIL.discount_basis      // 'CLAIM_BALANCE'
-  const saleDiscountRate = JONGNO_HONGJI_DETAIL.sale_discount_rate / 100  // 0
-  const acquisitionBase = discountBasis === 'CLAIM_BALANCE' ? totalBond : loanPrincipal
+  // 수익성 분석 — 매각 기준에 따라 매입가 base 결정 (사용자 정책).
+  //   discountBasis / acquisitionBase / saleDiscountRate 는 위에서 이미 선언됨.
   const profitability = buildNplProfitability({
     property: {
       address: JONGNO_HONGJI_DETAIL.address_masked,

@@ -862,8 +862,15 @@ export default function UnifiedReportPage() {
           initialDebtorType={
             input.debtorType === 'CORPORATE' ? 'CORPORATE' : 'INDIVIDUAL'
           }
-          /* 사용자 정책 (2026-04-28): 최초 대출원금 — 수익권 base 표시용 */
+          /* 사용자 정책 (2026-04-28): 최초 대출원금 — 수익권 base */
           initialPrincipal={input.claimBreakdown?.initialPrincipal}
+          /* 매입 base — 잔액 매각이면 채권잔액, 원금 매각이면 대출원금 */
+          acquisitionBaseAmount={
+            (input as { acquisitionBaseAmount?: number }).acquisitionBaseAmount
+          }
+          acquisitionBaseLabel={
+            (input as { acquisitionBaseLabel?: '대출원금' | '채권잔액' }).acquisitionBaseLabel
+          }
         />
       )}
 
@@ -2387,11 +2394,17 @@ function ProfitabilitySections({
   block,
   initialDebtorType = 'INDIVIDUAL',
   initialPrincipal,
+  acquisitionBaseAmount,
+  acquisitionBaseLabel,
 }: {
   block: NplProfitabilityBlock
   initialDebtorType?: 'INDIVIDUAL' | 'CORPORATE'
   /** 최초 대출원금 (사용자 정책) — 수익권 base · 보고서 카드 sub 표시 */
   initialPrincipal?: number
+  /** 매입 base 금액 (잔액 매각 시 채권잔액). 미지정 시 loanPrincipal 사용 */
+  acquisitionBaseAmount?: number
+  /** 매입 base 라벨 ('대출원금' / '채권잔액'). 미지정 시 '대출원금' */
+  acquisitionBaseLabel?: '대출원금' | '채권잔액'
 }) {
   const [edit, setEdit] = useState<EditableInputs>(() =>
     extractInitialInputs(block, initialDebtorType),
@@ -2433,6 +2446,11 @@ function ProfitabilitySections({
           tenant: initial.property.tenant,
         },
         loanPrincipal: edit.loanPrincipal,
+        /* 사용자 정책 (2026-04-28): 최초 대출원금 → 수익권 base. */
+        initialPrincipal,
+        /* 매입가 base — 잔액 매각이면 채권잔액, 원금 매각이면 대출원금. */
+        acquisitionBaseAmount,
+        acquisitionBaseLabel,
         delinquencyRate: edit.delinquencyRate,
         delinquencyStartDate: edit.delinquencyStartDate,
         // 기한이익상실 = 연체시작일 + 60일 (사용자 규약)
@@ -2477,7 +2495,7 @@ function ProfitabilitySections({
     } catch {
       return initial
     }
-  }, [edit, initial, courtName, effectivePredictedSaleDate, predictedRound])
+  }, [edit, initial, courtName, effectivePredictedSaleDate, predictedRound, initialPrincipal, acquisitionBaseAmount, acquisitionBaseLabel])
 
   const { property, claim, acquisition, valuation, schedule, distribution, investment, strategies, sensitivity, monteCarlo } = live
 

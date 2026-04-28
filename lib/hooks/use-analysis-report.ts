@@ -7,10 +7,11 @@
  *   매물(listingId) → 분석 위저드 / autoRun → /api/v1/npl/profitability 응답 →
  *   딜룸 헤더 / Section 01 AI 분석 KPI / Section 03 가격 오퍼 등에서 동기 표시.
  *
- * 정책:
- *   - 분석 보고서가 없으면 listing 의 기초 수치(채권잔액 / 감정가 / LTV)로 fallback
- *     계산 (낙찰가율 70%, 회수율 = 감정가 × 낙찰가율 / 채권잔액)
- *   - 외부 시세/실거래 API 가 연결되면 fallback 값을 더 정확한 통계로 override
+ * 정책 (Phase G7+ 2026-04-28 갱신):
+ *   1) listingId 가 사례 사전 빌드된 매물(종로 등)이면 buildXxxSampleReport()
+ *      의 strategies.recommended 결과 사용 → NPL 분석 보고서 와 100% 동기.
+ *   2) 실 분석 row 가 있으면 그 값 사용 (사용자 위저드/autoRun 결과)
+ *   3) 둘 다 없으면 listing 의 기초 수치로 derived fallback 계산
  */
 
 import { useQuery } from '@tanstack/react-query'
@@ -21,6 +22,9 @@ import {
   getListingAppraisal,
   getListingAskingPrice,
 } from '@/lib/hooks/use-listing'
+import { buildJongnoSampleReport } from '@/lib/npl/unified-report/sample-jongno'
+import { JONGNO_HONGJI_LISTING_ID } from '@/lib/samples/jongno-hongji-land-npl'
+import type { UnifiedAnalysisReport } from '@/lib/npl/unified-report/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -95,6 +99,47 @@ export function deriveFallbackKpi(listing: ListingDetail): AnalysisKpiSet {
   }
 }
 
+// ─── 사례 사전 빌드된 매물(종로 등) → KPI 매핑 ────────────────────────────
+//   buildXxxSampleReport().profitability.strategies.recommended 의 결과를
+//   AnalysisKpiSet 형식으로 변환 → 딜룸 헤더 / Section 01 KPI 와 보고서가 100% 동기.
+function reportToKpi(report: UnifiedAnalysisReport): AnalysisKpiSet {
+  const summary = report.summary
+  const recommended = report.profitability?.strategies?.recommended
+  const recovery = report.recovery
+  return {
+    predictedRecoveryRate: summary.predictedRecovery,
+    recoveryConfidence: Math.round((recovery?.confidence ?? 0.85) * 100),
+    riskGrade: summary.riskGrade,
+    riskScore: summary.riskScore,
+    riskLevel: summary.riskScore >= 70
+      ? 'LOW'
+      : summary.riskScore >= 55
+        ? 'MEDIUM'
+        : summary.riskScore >= 40
+          ? 'HIGH'
+          : 'CRITICAL',
+    roi: recommended ? Number((recommended.roi * 100).toFixed(1)) : 0,
+    netProfit: recommended?.expectedNetProfit ?? 0,
+    ownCapital: recommended?.totalEquity ?? 0,
+    recoveryMonths: 9,                                              // 보유 기간 가정
+    expectedBidRatio: recommended?.assumedBidRatio
+      ? Number((recommended.assumedBidRatio * 100).toFixed(1))
+      : 70,
+    source: 'real',                                                 // 보고서 = 정밀
+  }
+}
+
+function getSampleReportKpi(listingId: string | null | undefined): AnalysisKpiSet | null {
+  try {
+    if (listingId === JONGNO_HONGJI_LISTING_ID) {
+      return reportToKpi(buildJongnoSampleReport())
+    }
+  } catch (e) {
+    console.warn('[useAnalysisReport] sample report fallback:', e)
+  }
+  return null
+}
+
 // ─── Hook ─────────────────────────────────────────────────────────────────
 
 interface AnalysisApiResponse {
@@ -120,14 +165,17 @@ export function useAnalysisReport(
     queryKey: ['analysis-report', listingId],
     queryFn: async () => {
       if (!listing) return { kpi: null }
-      // 실 분석 row 시도 — 사용자가 위저드/자동 실행으로 생성한 결과
+      // 0) 사례 사전 빌드된 매물(종로 등) — 보고서 엔진과 100% 동기
+      const sampleKpi = getSampleReportKpi(listingId)
+      if (sampleKpi) return { kpi: sampleKpi }
+      // 1) 실 분석 row 시도 — 사용자가 위저드/자동 실행으로 생성한 결과
       const r = await fetchSafe<AnalysisApiResponse>(
         `/api/v1/analysis/listing/${listingId}`,
         { fallback: { data: undefined }, retries: 0 },
       )
       const real = r.data?.kpi
       if (real) return { kpi: { ...real, source: 'real' } }
-      // 실 데이터 없으면 listing 파생 fallback
+      // 2) 실 데이터 없으면 listing 파생 fallback
       return { kpi: deriveFallbackKpi(listing) }
     },
     enabled,
@@ -136,8 +184,11 @@ export function useAnalysisReport(
     retry: 0,
   })
 
-  // Hook 의 첫 렌더에 listing 만 있으면 즉시 derived KPI 를 노출 — query 데이터 도착 대기 X
-  const fallback = listing ? deriveFallbackKpi(listing) : null
+  // Hook 의 첫 렌더에 listing 만 있으면 즉시 KPI 노출 — query 데이터 도착 대기 X.
+  //   · 사례 빌드된 매물이면 보고서 KPI (정밀)
+  //   · 그 외 listing 의 derived fallback
+  const sampleSync = listing ? getSampleReportKpi(listing.id) : null
+  const fallback = sampleSync ?? (listing ? deriveFallbackKpi(listing) : null)
   const kpi = query.data?.kpi ?? fallback
 
   return {
