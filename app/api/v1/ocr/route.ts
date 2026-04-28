@@ -10,6 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { validateOcrResult } from '@/lib/ocr/validate'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -336,12 +337,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // ── Validate + score (Phase 6) ──────────────────────────────
+    // 인식된 필드의 형식·범위 검증 + 신뢰도 점수 산출.
+    // 사용자가 폼에 적용하기 전 의심 필드 (flagged) 검토 가능.
+    const validation = validateOcrResult(data, docType)
+
     return NextResponse.json({
       success: true,
       doc_type: docType,
       file_name: file.name,
       file_type: ext,
-      data,
+      data: validation.corrected,
+      raw_data: data,
+      validation: {
+        fields: validation.fields,
+        flagged: validation.flagged,
+        overall_confidence: validation.overallConfidence,
+      },
     })
   } catch (err) {
     console.error('[OCR] error', err)

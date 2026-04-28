@@ -79,6 +79,10 @@ export function BondOcrUploader({
   const [fileName, setFileName] = useState<string | null>(null)
   const [preview, setPreview] = useState<BondOcrExtracted | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Phase 6 — 신뢰도 + flagged 정보
+  const [overallConfidence, setOverallConfidence] = useState<number | null>(null)
+  const [flagged, setFlagged] = useState<string[]>([])
+  const [fieldWarnings, setFieldWarnings] = useState<Record<string, string>>({})
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   async function handleFile(file: File) {
@@ -91,6 +95,9 @@ export function BondOcrUploader({
     setLoading(true)
     setError(null)
     setPreview(null)
+    setOverallConfidence(null)
+    setFlagged([])
+    setFieldWarnings({})
 
     const fd = new FormData()
     fd.append("file", file)
@@ -104,7 +111,27 @@ export function BondOcrUploader({
       }
       const extracted = mapOcrResponse(json, docType)
       setPreview(extracted)
-      toast.success("OCR 추출 완료 — 내용을 확인 후 [폼에 적용]을 눌러주세요")
+      // Phase 6 — 검증 결과 표시
+      const v = json?.validation as { overall_confidence?: number; flagged?: string[]; fields?: Record<string, { warning?: string }> } | undefined
+      if (v) {
+        setOverallConfidence(typeof v.overall_confidence === 'number' ? v.overall_confidence : null)
+        setFlagged(Array.isArray(v.flagged) ? v.flagged : [])
+        const warnings: Record<string, string> = {}
+        if (v.fields) {
+          for (const [k, fv] of Object.entries(v.fields)) {
+            if (fv?.warning) warnings[k] = fv.warning
+          }
+        }
+        setFieldWarnings(warnings)
+      }
+      const conf = v?.overall_confidence
+      if (typeof conf === 'number' && conf >= 80) {
+        toast.success(`OCR 추출 완료 (신뢰도 ${conf}%) — 검토 후 적용`)
+      } else if (typeof conf === 'number') {
+        toast.warning(`OCR 추출 완료 (신뢰도 ${conf}%) — 의심 필드 검토 필수`)
+      } else {
+        toast.success("OCR 추출 완료 — 내용을 확인 후 [폼에 적용]을 눌러주세요")
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "OCR 처리 중 오류"
       setError(msg)
@@ -210,12 +237,53 @@ export function BondOcrUploader({
       {/* 미리보기 & 적용 */}
       {preview && (
         <div className="mt-3 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
-          <div className="flex items-start gap-1.5 mb-2">
-            <CheckCircle2 className="w-4 h-4 mt-0.5 text-stone-900 shrink-0" />
-            <span className="text-[0.75rem] font-semibold text-[var(--color-text-primary)]">
-              추출된 필드 미리보기
-            </span>
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="flex items-start gap-1.5">
+              <CheckCircle2 className="w-4 h-4 mt-0.5 text-stone-900 shrink-0" />
+              <span className="text-[0.75rem] font-semibold text-[var(--color-text-primary)]">
+                추출된 필드 미리보기
+              </span>
+            </div>
+            {/* Phase 6 — 신뢰도 배지 */}
+            {overallConfidence != null && (
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "3px 8px",
+                fontSize: 9, fontWeight: 800,
+                background: overallConfidence >= 80 ? "rgba(16, 185, 129, 0.12)"
+                          : overallConfidence >= 60 ? "rgba(34, 81, 255, 0.10)"
+                          : "rgba(255, 140, 0, 0.10)",
+                color: overallConfidence >= 80 ? "#047857"
+                     : overallConfidence >= 60 ? "#1A47CC"
+                     : "#A53F00",
+                border: `1px solid ${overallConfidence >= 80 ? "rgba(16, 185, 129, 0.35)"
+                                  : overallConfidence >= 60 ? "rgba(34, 81, 255, 0.30)"
+                                  : "rgba(255, 140, 0, 0.35)"}`,
+                letterSpacing: "0.04em",
+              }}>
+                신뢰도 {overallConfidence}%
+              </span>
+            )}
           </div>
+          {/* Phase 6 — flagged 필드 안내 */}
+          {flagged.length > 0 && (
+            <div style={{
+              marginBottom: 10, padding: "6px 10px",
+              background: "rgba(255, 140, 0, 0.08)",
+              border: "1px solid rgba(255, 140, 0, 0.30)",
+              borderLeft: "3px solid #FF8C00",
+              fontSize: 10, color: "#A53F00", lineHeight: 1.5,
+            }}>
+              ⚠ 사용자 검토가 필요한 필드: <strong>{flagged.join(", ")}</strong>
+              <ul style={{ marginTop: 4, paddingLeft: 14 }}>
+                {flagged.slice(0, 3).map((f) => (
+                  fieldWarnings[f]
+                    ? <li key={f}><strong>{f}</strong>: {fieldWarnings[f]}</li>
+                    : null
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[0.6875rem] text-[var(--color-text-secondary)]">
             {previewRows(preview).map(([k, v]) => (
               <div key={k} className="flex items-center justify-between">
