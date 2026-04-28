@@ -127,11 +127,14 @@ function templateToFormPatch(fields: TemplateFields): Partial<UnifiedFormState> 
   }
 
   // 채권 (Phase G7+ — overdue_interest 추가)
+  // Phase G7+ v3.3 (2026-04-29) — 최초 대출원금 (initialPrincipal) 추가
   if (
     fields.loan_principal || fields.unpaid_interest || fields.overdue_interest ||
-    fields.delinquency_start_date || fields.normal_rate || fields.overdue_rate
+    fields.delinquency_start_date || fields.normal_rate || fields.overdue_rate ||
+    fields.initial_principal
   ) {
     patch.claim = {
+      initialPrincipal: num(fields.initial_principal) || num(fields.loan_principal),
       principal: num(fields.loan_principal),
       unpaidInterest: num(fields.unpaid_interest),
       overdueInterest: num(fields.overdue_interest),
@@ -178,8 +181,28 @@ function templateToFormPatch(fields: TemplateFields): Partial<UnifiedFormState> 
   if (fields.asking_price) {
     patch.askingPrice = num(fields.asking_price)
   }
-  if (fields.discount_rate) {
+  // Phase G7+ v3.3 (2026-04-29) — 매각 기준 + A/B 할인율 분리
+  //   discount_basis (PRINCIPAL/CLAIM_BALANCE) 가 있으면 그에 맞는 할인율 우선 적용.
+  if (fields.discount_basis === 'PRINCIPAL' || fields.discount_basis === 'CLAIM_BALANCE') {
+    patch.discountBasis = fields.discount_basis
+  }
+  if (fields.discount_rate_principal != null) {
+    // 원금 기준 할인율 우선
+    patch.desiredSaleDiscount = pctOrFraction(fields.discount_rate_principal)
+    if (!patch.discountBasis) patch.discountBasis = 'PRINCIPAL'
+  } else if (fields.discount_rate_balance != null) {
+    patch.desiredSaleDiscount = pctOrFraction(fields.discount_rate_balance)
+    if (!patch.discountBasis) patch.discountBasis = 'CLAIM_BALANCE'
+  } else if (fields.discount_rate) {
     patch.desiredSaleDiscount = pctOrFraction(fields.discount_rate)
+  }
+  // 수익권 금액 (적용값 직접 입력 우선 — OCR parser 가 자동값과 병합 후 단일 키로 응답)
+  if (fields.beneficial_amount != null) {
+    patch.maximumBondAmount = num(fields.beneficial_amount)
+  }
+  // 1순위 채권최고액 (collateralAmount = 근저당 설정금액)
+  if (fields.max_claim_amount != null) {
+    patch.collateralAmount = num(fields.max_claim_amount)
   }
 
   // 매각방식

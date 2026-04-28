@@ -556,6 +556,67 @@ export async function PATCH(request: NextRequest) {
 
     const result = await update('deal_listings', id, changes)
 
+    // Phase G7+ 2026-04-29 — 매물 수정 → 분석 row 자동 재계산 (사용자 정책)
+    //   "매물 수정 시 분석/보고서/딜룸 모두 자동 갱신" — 채권/감정가/할인율 등 핵심 필드가
+    //   변경되면 buildListingReport 로 보고서를 재생성, 가장 최근 분석 row 를 update.
+    //   실패 시 PATCH 자체는 성공 처리 (분석은 재생성 위저드/PUT 으로 보정 가능)
+    try {
+      if (result._source === 'supabase') {
+        const supabase = await createClient()
+        // 1) 최신 listing row 조회 (변경 적용 후 상태)
+        const { data: freshListing } = await supabase
+          .from('npl_listings')
+          .select('*')
+          .eq('id', id)
+          .single()
+        if (freshListing) {
+          const listingForReport = freshListing as unknown as import('@/lib/hooks/use-listing').ListingDetail
+          const unifiedReport = buildListingReport(listingForReport)
+          // 2) 해당 매물의 가장 최근 분석 row update — 없으면 INSERT
+          const { data: existingAnalysis } = await supabase
+            .from('npl_ai_analyses')
+            .select('id, user_id')
+            .eq('listing_id', id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+
+          if (existingAnalysis?.id) {
+            await supabase
+              .from('npl_ai_analyses')
+              .update({
+                grade: unifiedReport.summary.riskGrade,
+                risk_score: unifiedReport.summary.riskScore,
+                recommendation:
+                  unifiedReport.summary.verdict === 'BUY' ? 'BUY'
+                  : unifiedReport.summary.verdict === 'HOLD' ? 'HOLD'
+                  : 'AVOID',
+                unified_report: unifiedReport,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', existingAnalysis.id)
+          } else if (freshListing.seller_id) {
+            // 분석 row 가 없으면 새로 INSERT (POST 시 실패했거나 legacy 매물)
+            await supabase
+              .from('npl_ai_analyses')
+              .insert({
+                user_id: freshListing.seller_id,
+                listing_id: id,
+                grade: unifiedReport.summary.riskGrade,
+                risk_score: unifiedReport.summary.riskScore,
+                recommendation:
+                  unifiedReport.summary.verdict === 'BUY' ? 'BUY'
+                  : unifiedReport.summary.verdict === 'HOLD' ? 'HOLD'
+                  : 'AVOID',
+                unified_report: unifiedReport,
+              })
+          }
+        }
+      }
+    } catch (analysisErr) {
+      logger.warn('[exchange/listings] PATCH 분석 자동 재계산 실패 (non-fatal):', { error: analysisErr })
+    }
+
     return NextResponse.json({
       data: result.data,
       _source: result._source,
