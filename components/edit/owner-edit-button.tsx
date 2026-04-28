@@ -130,9 +130,8 @@ export function OwnerEditButton({
       }}
     >
       <Icon size={compact ? 12 : 14} style={{ color: isAdmin ? '#FFFFFF' : '#0A1628' }} />
-      {!compact && (
-        <span style={{ color: isAdmin ? '#FFFFFF' : '#0A1628' }}>{computedLabel}</span>
-      )}
+      {/* compact 모드여도 라벨 항상 노출 — 아이콘만 보이는 미스 어포던스 방지 */}
+      <span style={{ color: isAdmin ? '#FFFFFF' : '#0A1628' }}>{computedLabel}</span>
     </Link>
   )
 }
