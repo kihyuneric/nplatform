@@ -522,7 +522,9 @@ export function DesiredSaleDiscountInput({
     }
   }
 
-  const canSwitchBasis = !!onDiscountBasisChange && typeof claimBalance === 'number' && claimBalance > 0
+  // 매각 기준 토글은 onDiscountBasisChange 콜백만 있으면 항상 노출
+  // (claimBalance 가 0 이어도 사용자가 폼 상단에서 채권 정보를 입력하기 전에 미리 기준 선택 가능)
+  const canSwitchBasis = !!onDiscountBasisChange
 
   return (
     <div className={BLOCK}>
@@ -530,7 +532,9 @@ export function DesiredSaleDiscountInput({
         icon={<Percent className="w-4 h-4" />}
         title={`매각 희망가 (${baseLabel} 대비 할인율)`}
         subtitle={editablePrice
-          ? "기준(원금/잔액) 선택 + 목표가 또는 할인율 한 쪽 입력 시 나머지 자동 계산"
+          ? canSwitchBasis
+            ? "아래 기준(원금/잔액) 선택 후 목표가 또는 할인율 입력 시 나머지 자동 계산"
+            : "목표가 또는 할인율 한 쪽 입력 시 나머지 자동 계산"
           : `채권자 제시 매각가 — ${baseLabel} 대비 x% 할인 입력`}
         right={
           <div className="text-right">
@@ -550,8 +554,20 @@ export function DesiredSaleDiscountInput({
       {canSwitchBasis && (
         <div className="mb-3 flex gap-2">
           {([
-            { v: 'PRINCIPAL',     label: '대출원금 기준',     hint: `${principal.toLocaleString('ko-KR')}원` },
-            { v: 'CLAIM_BALANCE', label: '대출잔액 기준',     hint: `${(claimBalance ?? principal).toLocaleString('ko-KR')}원 (원금+연체이자)` },
+            {
+              v: 'PRINCIPAL',
+              label: '대출원금 기준',
+              hint: principal > 0
+                ? `${principal.toLocaleString('ko-KR')}원`
+                : '채권 정보 블록에서 대출원금 입력 필요',
+            },
+            {
+              v: 'CLAIM_BALANCE',
+              label: '대출잔액 기준',
+              hint: (claimBalance ?? 0) > 0
+                ? `${(claimBalance ?? principal).toLocaleString('ko-KR')}원 (원금+연체이자)`
+                : '채권 정보 블록에서 원금+연체이자 입력 필요',
+            },
           ] as { v: DiscountBasis; label: string; hint: string }[]).map(opt => {
             const active = discountBasis === opt.v
             return (

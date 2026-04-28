@@ -535,6 +535,12 @@ export interface ProfitabilityInput {
    * '잔액 매각' 케이스: loanPrincipal 은 실 대출원금, acquisitionBaseAmount 는 채권잔액.
    */
   acquisitionBaseAmount?: number
+  /**
+   * 최초 대출원금 (Phase G7+ 2026-04-28).
+   * 수익권 금액 (채권최고액) 산정 base — 일부 상환된 경우 loanPrincipal < initialPrincipal.
+   * 미지정 시 loanPrincipal 사용 (legacy).
+   */
+  initialPrincipal?: number
 }
 
 // ────────────────────────────────────────────────────────────
@@ -578,7 +584,14 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   }
 
   // ─── [2] 채권 ─────────────────────────────────────────────
-  const maximumBondAmount = Math.round(input.loanPrincipal * maxBondMultiplier)
+  // 수익권 금액(채권최고액) base — 사용자 정책 (2026-04-28):
+  //   1) input.initialPrincipal (최초 대출원금) — 우선
+  //   2) input.loanPrincipal (현재 대출원금) — fallback (legacy)
+  const initialPrincipalForBond =
+    (input.initialPrincipal && input.initialPrincipal > 0)
+      ? input.initialPrincipal
+      : input.loanPrincipal
+  const maximumBondAmount = Math.round(initialPrincipalForBond * maxBondMultiplier)
   // 기한이익상실일: 지정 없으면 연체시작 + 60일 (한국 금융관행)
   const accelerationDate =
     input.accelerationDate ?? addDays(input.delinquencyStartDate, accelerationOffsetDays)

@@ -2603,43 +2603,82 @@ function ValidationCardsBlock() {
   )
 }
 
-/* ─── 권리관계 요약 카드 — listing 의 claim_breakdown / legal_issues 활용 ─── */
+/* ─── 권리관계 요약 카드 — listing 의 max_claim_amount / 권리 정보 활용 ───
+ * 사용자 정책 (2026-04-28): listing 의 실제 권리 정보만 사용 (추정 X).
+ *   · 선순위 = listing.max_claim_amount (= 1순위 채권최고액)
+ *   · 후순위 = listing.subordinate_count 기반 (없으면 0건)
+ *   · 보증금 = listing.deposit (없으면 0)
+ * 정보 미제공 시 '매각사 정보 미제공' 표시.
+ */
 function RightsSummaryCard() {
-  const { listing, principal, appraisal } = useDealroomListing()
-  // listing.claim_breakdown 또는 추정값 fallback
-  const cb = (listing?.claim_breakdown as Record<string, unknown> | null | undefined)
-  const senior =
-    (cb?.senior_total as number | undefined) ??
-    (cb?.priority as number | undefined) ??
-    Math.round(principal * 0.62)  // 기본 추정 — 채권잔액의 62%
-  const junior =
-    (cb?.junior_total as number | undefined) ??
-    Math.round(principal * 0.13)
-  const deposit =
-    (cb?.deposit_total as number | undefined) ??
-    Math.round(appraisal * 0.045)
+  const { listing } = useDealroomListing()
+  const senior = listing?.max_claim_amount as number | undefined
+  const subordinateCount = (listing?.subordinate_count as number | undefined) ?? 0
+  const subordinateAmount = listing?.subordinate_total_amount as number | undefined
+  const deposit = listing?.deposit as number | undefined
+  const seniorRightsLabel = (listing?.rights_priority_1 as string | undefined)
+
   const rows: [string, string][] = [
-    ["선순위", formatKrwShort(senior)],
-    ["후순위", formatKrwShort(junior)],
-    ["보증금", formatKrwShort(deposit)],
+    [
+      "선순위",
+      senior && senior > 0
+        ? `${formatKrwShort(senior)}${seniorRightsLabel ? ` (${seniorRightsLabel})` : ""}`
+        : "—",
+    ],
+    [
+      "후순위",
+      subordinateCount === 0
+        ? "없음"
+        : subordinateAmount && subordinateAmount > 0
+          ? `${formatKrwShort(subordinateAmount)} (${subordinateCount}건)`
+          : `${subordinateCount}건`,
+    ],
+    [
+      "임차인 보증금",
+      deposit && deposit > 0 ? formatKrwShort(deposit) : "없음",
+    ],
   ]
-  return <BriefCard title="권리관계 요약" rows={rows} note="누구나 열람 가능 · 권리자 상세는 검증 단계 이후 공개" />
+  return (
+    <BriefCard
+      title="권리관계 요약"
+      rows={rows}
+      note={senior ? "선순위 채권최고액 기준 · 후순위·기타는 등기부 검증 필수" : "매각사 정보 미제공 — 등기부등본 직접 검증 필요"}
+    />
+  )
 }
 
-/* ─── 등기부등본 요약 카드 ─── */
+/* ─── 등기부등본 요약 카드 ───
+ * listing 에 registry_summary 가 있으면 그 데이터 사용,
+ * 없으면 '매각사 정보 미제공' 안내 (사용자 정책 2026-04-28).
+ */
 function RegistrySummaryCard() {
   const { listing, principal } = useDealroomListing()
-  const isLand = String(listing?.collateral_type ?? '').toUpperCase() === 'LAND'
-  const isApartment = String(listing?.collateral_type ?? '').toUpperCase() === 'APARTMENT'
-  // 토지/건물 등기부 건수 추정 (실 데이터 없을 때 — 합계는 항상 존재)
-  const landRegs = isLand ? 2 : isApartment ? 1 : 1
-  const buildingRegs = isLand ? 0 : 1
-  // 채권액 합계 = 채권잔액 (저당 기준)
-  const totalClaim = principal
+  const registrySummary = listing?.registry_summary as Record<string, unknown> | null | undefined
+  const hasRegistry = registrySummary && typeof registrySummary === 'object'
+    && Object.keys(registrySummary).length > 0
+
+  if (!hasRegistry) {
+    return (
+      <BriefCard
+        title="등기부등본 요약"
+        rows={[
+          ["토지등기부", "—"],
+          ["건물등기부", "—"],
+          ["채권액 합계", "—"],
+        ]}
+        note="매각사 정보 미제공 — NDA 체결 후 등기부등본 원본을 통한 정밀 검증 권장"
+      />
+    )
+  }
+
+  // registry_summary 가 있을 때 실제 값 사용
+  const landRegs = (registrySummary.land_registrations as number | undefined) ?? 0
+  const buildingRegs = (registrySummary.building_registrations as number | undefined) ?? 0
+  const totalClaim = (registrySummary.total_claim as number | undefined) ?? principal
   const rows: [string, string][] = [
-    ["토지등기부", `${landRegs}건`],
-    ["건물등기부", `${buildingRegs}건`],
-    ["채권액 합계", formatKrwShort(totalClaim)],
+    ["토지등기부", landRegs > 0 ? `${landRegs}건` : "—"],
+    ["건물등기부", buildingRegs > 0 ? `${buildingRegs}건` : "—"],
+    ["채권액 합계", totalClaim > 0 ? formatKrwShort(totalClaim) : "—"],
   ]
   return <BriefCard title="등기부등본 요약" rows={rows} note="본인인증 후 요약 · 원본은 검증 단계" />
 }
@@ -2690,7 +2729,12 @@ function BriefCard({ title, rows, note }: { title: string; rows: [string, string
 
 /* 등기부등본 요약 — L1 상세 테이블 (collapsible · 디폴트 접힘) */
 function RegistrySummaryTable() {
+  const { listing } = useDealroomListing()
   const [expanded, setExpanded] = useState(true)
+  const registrySummary = listing?.registry_summary as Record<string, unknown> | null | undefined
+  const registryRows = (registrySummary?.entries as Array<Record<string, unknown>> | undefined) ?? []
+  const hasData = registryRows.length > 0
+
   return (
     <article style={{ background: MCK.paper, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}`, padding: 16, marginBottom: 12 }}>
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: expanded ? 12 : 0, flexWrap: "wrap", gap: 8 }}>
@@ -2711,58 +2755,52 @@ function RegistrySummaryTable() {
       </header>
 
       {expanded && (
-        <>
-          {/* 탭 */}
-          <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${MCK.border}`, marginBottom: 10 }}>
-            <button type="button" style={{
-              padding: "6px 14px", fontSize: 11, fontWeight: 800,
-              background: "transparent", color: MCK.ink, cursor: "pointer",
-              border: "none", borderBottom: `2px solid ${MCK.electric}`,
-              display: "inline-flex", alignItems: "center", gap: 4,
-            }}>
-              토지등기부 <span style={{ fontSize: 9, color: MCK.electricDark, fontWeight: 700 }}>2</span>
-            </button>
-            <button type="button" style={{
-              padding: "6px 14px", fontSize: 11, fontWeight: 600,
-              background: "transparent", color: MCK.textMuted, cursor: "pointer",
-              border: "none", borderBottom: `2px solid transparent`,
-              display: "inline-flex", alignItems: "center", gap: 4,
-            }}>
-              건물등기부 <span style={{ fontSize: 9, color: MCK.textMuted, fontWeight: 700 }}>1</span>
-            </button>
-          </div>
-
-          {/* 테이블 헤더 */}
+        !hasData ? (
           <div style={{
-            display: "grid", gridTemplateColumns: "70px 90px 110px 1fr 120px",
-            gap: 10, padding: "6px 4px", borderBottom: `1px solid ${MCK.border}`,
-            fontSize: 9, fontWeight: 800, color: MCK.textSub,
-            letterSpacing: "0.06em", textTransform: "uppercase",
+            padding: "24px 16px",
+            background: MCK.paperTint,
+            border: `1px dashed ${MCK.border}`,
+            textAlign: "center",
           }}>
-            <span>구분</span>
-            <span>접수일</span>
-            <span>권리종류</span>
-            <span>권리자</span>
-            <span style={{ textAlign: "right" }}>채권금액</span>
+            <p style={{ fontSize: 12, fontWeight: 700, color: MCK.ink, marginBottom: 4 }}>
+              매각사 정보 미제공
+            </p>
+            <p style={{ fontSize: 11, color: MCK.textSub, lineHeight: 1.55 }}>
+              본 매물에 대한 등기부등본 요약 데이터가 매각사로부터 제공되지 않았습니다.
+              <br />NDA 체결 후 등기부등본 원본을 통한 직접 검증을 권장합니다.
+            </p>
           </div>
-
-          {[
-            { gubun: "1(을21)", date: "2021.06.18", kind: "근저당권", who: "●●●●●행", amt: "36.0억" },
-            { gubun: "2(을23)", date: "2024.10.25", kind: "근저당권", who: "●●●●", amt: "9.6억" },
-          ].map((r, i, arr) => (
-            <div key={r.gubun} style={{
+        ) : (
+          <>
+            {/* 테이블 헤더 */}
+            <div style={{
               display: "grid", gridTemplateColumns: "70px 90px 110px 1fr 120px",
-              gap: 10, alignItems: "center", padding: "10px 4px",
-              borderBottom: i < arr.length - 1 ? `1px solid ${MCK.border}` : "none",
+              gap: 10, padding: "6px 4px", borderBottom: `1px solid ${MCK.border}`,
+              fontSize: 9, fontWeight: 800, color: MCK.textSub,
+              letterSpacing: "0.06em", textTransform: "uppercase",
             }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>{r.gubun}</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: MCK.textSub, fontVariantNumeric: "tabular-nums" }}>{r.date}</span>
-              <span style={{ fontSize: 11, fontWeight: 800, color: MCK.ink }}>{r.kind}</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: MCK.textSub, fontVariantNumeric: "tabular-nums" }}>{r.who}</span>
-              <span style={{ textAlign: "right", fontFamily: MCK_FONTS.serif, fontSize: 13, fontWeight: 800, color: MCK.electricDark, fontVariantNumeric: "tabular-nums" }}>{r.amt}</span>
+              <span>구분</span>
+              <span>접수일</span>
+              <span>권리종류</span>
+              <span>권리자</span>
+              <span style={{ textAlign: "right" }}>채권금액</span>
             </div>
-          ))}
-        </>
+
+            {registryRows.map((r, i) => (
+              <div key={String(r.gubun ?? i)} style={{
+                display: "grid", gridTemplateColumns: "70px 90px 110px 1fr 120px",
+                gap: 10, alignItems: "center", padding: "10px 4px",
+                borderBottom: i < registryRows.length - 1 ? `1px solid ${MCK.border}` : "none",
+              }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>{String(r.gubun ?? '—')}</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: MCK.textSub, fontVariantNumeric: "tabular-nums" }}>{String(r.date ?? '—')}</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: MCK.ink }}>{String(r.kind ?? '—')}</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: MCK.textSub, fontVariantNumeric: "tabular-nums" }}>{String(r.who ?? '—')}</span>
+                <span style={{ textAlign: "right", fontFamily: MCK_FONTS.serif, fontSize: 13, fontWeight: 800, color: MCK.electricDark, fontVariantNumeric: "tabular-nums" }}>{String(r.amount ?? '—')}</span>
+              </div>
+            ))}
+          </>
+        )
       )}
     </article>
   )
@@ -2770,7 +2808,14 @@ function RegistrySummaryTable() {
 
 /* 등기부등본 원본 — L2 상세 7-row 테이블 (collapsible · 디폴트 접힘) */
 function RegistryFullTable() {
+  const { listing } = useDealroomListing()
   const [expanded, setExpanded] = useState(true)
+  const registryFull = listing?.registry_full as Record<string, unknown> | null | undefined
+  const registryRows = (registryFull?.entries as Array<Record<string, unknown>> | undefined) ?? []
+  const hasData = registryRows.length > 0
+  const totalClaim = (registryFull?.total_claim as number | undefined)
+  const inquiryDate = (registryFull?.inquired_at as string | undefined)
+
   return (
     <article style={{ background: MCK.paper, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}`, padding: 16, marginBottom: 18 }}>
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: expanded ? 12 : 0, flexWrap: "wrap", gap: 8 }}>
@@ -2790,7 +2835,24 @@ function RegistryFullTable() {
         </button>
       </header>
 
-      {expanded && (
+      {expanded && !hasData && (
+        <div style={{
+          padding: "32px 18px",
+          background: MCK.paperTint,
+          border: `1px dashed ${MCK.border}`,
+          textAlign: "center",
+        }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: MCK.ink, marginBottom: 6 }}>
+            매각사 정보 미제공
+          </p>
+          <p style={{ fontSize: 11, color: MCK.textSub, lineHeight: 1.6 }}>
+            본 매물의 등기부등본 원본 데이터가 매각사로부터 제공되지 않았습니다.
+            <br />NDA 체결 후 인터넷등기소(IROS) 또는 토지·건물 등기부 직접 발급으로 검증해 주세요.
+          </p>
+        </div>
+      )}
+
+      {expanded && hasData && (
         <>
           {/* 다운로드 버튼 2개 */}
           <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
@@ -2830,9 +2892,9 @@ function RegistryFullTable() {
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "8px 4px 6px" }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: MCK.ink }}>
-              채권액합계 <span style={{ fontFamily: MCK_FONTS.serif, fontWeight: 800, color: MCK.electricDark, fontVariantNumeric: "tabular-nums", marginLeft: 4 }}>8,300,117,337원</span>
+              채권액합계 <span style={{ fontFamily: MCK_FONTS.serif, fontWeight: 800, color: MCK.electricDark, fontVariantNumeric: "tabular-nums", marginLeft: 4 }}>{totalClaim ? formatKrwShort(totalClaim) : "—"}</span>
             </div>
-            <div style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 600 }}>열람 2026.04.05</div>
+            <div style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 600 }}>{inquiryDate ? `열람 ${inquiryDate}` : ""}</div>
           </div>
 
           {/* 테이블 헤더 */}
@@ -2849,24 +2911,16 @@ function RegistryFullTable() {
             <span style={{ textAlign: "right" }}>채권금액</span>
           </div>
 
-          {[
-            { gubun: "1(갑30)", date: "2021.06.18", kind: "소유권이전(매매)", who: "●●●●●이원퍼스트", amt: "—", muted: true },
-            { gubun: "2(을21)", date: "2021.06.18", kind: "근저당권설정", who: "●●●●●행", amt: "3,600,000,000원" },
-            { gubun: "3(갑31)", date: "2024.10.15", kind: "가압류", who: "●●", amt: "654,000,000원" },
-            { gubun: "4(갑32)", date: "2024.10.23", kind: "압류", who: "●●●●", amt: "—", muted: true },
-            { gubun: "5(을23)", date: "2024.10.25", kind: "근저당권설정", who: "●●●●", amt: "960,000,000원" },
-            { gubun: "6(갑33)", date: "2025.01.08", kind: "압류", who: "●●●●●무서장", amt: "—", muted: true },
-            { gubun: "7(갑34)", date: "2025.05.09", kind: "임의경매개시결정", who: "●●●●●행", amt: "청구금액 3,086,117,337원", small: true },
-          ].map((r, i, arr) => (
-            <div key={r.gubun} style={{
+          {registryRows.map((r, i) => (
+            <div key={String(r.gubun ?? i)} style={{
               display: "grid", gridTemplateColumns: "70px 90px 130px 1fr 150px",
               gap: 10, alignItems: "center", padding: "9px 4px",
-              borderBottom: i < arr.length - 1 ? `1px solid ${MCK.border}` : "none",
+              borderBottom: i < registryRows.length - 1 ? `1px solid ${MCK.border}` : "none",
             }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>{r.gubun}</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: MCK.textSub, fontVariantNumeric: "tabular-nums" }}>{r.date}</span>
-              <span style={{ fontSize: 11, fontWeight: 800, color: MCK.ink }}>{r.kind}</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: MCK.textSub, fontVariantNumeric: "tabular-nums" }}>{r.who}</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>{String(r.gubun ?? '—')}</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: MCK.textSub, fontVariantNumeric: "tabular-nums" }}>{String(r.date ?? '—')}</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: MCK.ink }}>{String(r.kind ?? '—')}</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: MCK.textSub, fontVariantNumeric: "tabular-nums" }}>{String(r.who ?? '—')}</span>
               <span style={{
                 textAlign: "right",
                 fontFamily: MCK_FONTS.serif,
@@ -2874,7 +2928,7 @@ function RegistryFullTable() {
                 fontWeight: 800,
                 color: r.muted ? MCK.textMuted : MCK.electricDark,
                 fontVariantNumeric: "tabular-nums",
-              }}>{r.amt}</span>
+              }}>{String(r.amount ?? '—')}</span>
             </div>
           ))}
         </>
@@ -2944,10 +2998,16 @@ function FullAiInvestmentAnalysisCard() {
     ((listing?.recommended_purchase_rate as number | undefined) != null
       ? (1 - (listing!.recommended_purchase_rate as number)) * 100
       : 5)
-  const purchaseRate = Math.max(0, Math.min(1, 1 - saleDiscountRatePct / 100))
-  const purchasePrice = Math.round(acquisitionBase * purchaseRate)
   const baseLabel = discountBasis === 'CLAIM_BALANCE' ? '채권잔액' : '대출원금'
   const baseHint  = discountBasis === 'CLAIM_BALANCE' ? '원금+연체이자' : '원금만'
+
+  /* 보고서 strategies.recommended 가 있으면 그대로 사용 (NPL 분석 보고서와 동기화).
+     없으면 listing 메타로 동적 계산 (fallback). */
+  const reportRecommended = reportSnapshot?.profitability?.strategies?.recommended
+  const purchaseRate = reportRecommended?.purchaseRate
+    ?? Math.max(0, Math.min(1, 1 - saleDiscountRatePct / 100))
+  const purchasePrice = reportRecommended?.purchasePrice
+    ?? Math.round(acquisitionBase * purchaseRate)
 
   // 1순위 변제 후 잔여 → 2순위(NPL 매수자) 배당 (cap at 수익권금액 + 경매신청 후 연체이자)
   // 종로 사례: 1순위 농협 23.64억 변제 후 → 47.63억(예상낙찰가) - 23.64억 = 24.0억
@@ -2978,21 +3038,27 @@ function FullAiInvestmentAnalysisCard() {
     loanPrincipalOnly * (overdueRatePct / 100) * (daysFromFiling / 365),
   )
 
+  /* 회수액·에쿼티·손익·ROI 모두 보고서 우선 (없으면 listing 메타 fallback) */
   const distributionCap = beneficialAmount + postFilingOverdueInterest
   const grossRecoveredToSecond = Math.max(0, expectedBidPrice - seniorClaim)
-  const recoveredToSecond = Math.min(grossRecoveredToSecond, distributionCap)
+  const recoveredToSecond = reportRecommended?.secondPledgeeAmount
+    ?? Math.min(grossRecoveredToSecond, distributionCap)
 
-  // 투자 에쿼티 = 매입가 × 25% (질권대출 75%)
-  const pledgeRatio = 0.75
-  const investmentEquity = Math.round(purchasePrice * (1 - pledgeRatio))
+  // 투자 에쿼티 = 매입가 × 25% (질권대출 75%) — 보고서 우선
+  const investmentEquity = reportRecommended?.totalEquity
+    ?? Math.round(purchasePrice * 0.25)
 
-  // 예상 손익 = 회수액 - 매입가
-  const expectedProfit = recoveredToSecond - purchasePrice
+  // 예상 손익 — 보고서 우선
+  const expectedProfit = reportRecommended?.expectedNetProfit
+    ?? (recoveredToSecond - purchasePrice)
 
-  // ROI / 연환산 (보유 기간 9개월 가정 — listing 의 deadline 까지 일수로 동적 계산)
-  const holdingPeriodMonths = 9
-  const roi = purchasePrice > 0 ? (expectedProfit / purchasePrice) * 100 : 0
-  const annualizedRoi = roi * (12 / holdingPeriodMonths)
+  // ROI / 연환산 — 보고서 우선
+  const roi = (reportRecommended?.roi != null)
+    ? reportRecommended.roi * 100
+    : (investmentEquity > 0 ? (expectedProfit / investmentEquity) * 100 : 0)
+  const annualizedRoi = (reportRecommended?.annualizedRoi != null)
+    ? reportRecommended.annualizedRoi * 100
+    : roi * (12 / 9)
 
   // AI 투자 등급 점수 — 보고서 결과 우선, 없으면 listing 기반 동적 산출
   // LTV = (선순위 채권최고액 + 대출원금) / 감정가 — getListingLtv() SoT 사용
@@ -3017,18 +3083,17 @@ function FullAiInvestmentAnalysisCard() {
   const aiGrade = reportRiskGrade ?? (aiScore >= 80 ? "A" : aiScore >= 65 ? "B" : aiScore >= 50 ? "C" : "D")
   // 매입·낙찰 성공 확률은 아래에서 계산되므로 verdict 도 거기서 함께 결정 (동적).
 
-  // 매입·낙찰 성공 확률 — 다중 팩터 가중 합산
-  //   · 낙찰가율 적정성 (낙찰가율 70% 부근에서 최고 — 너무 낮으면 유찰, 너무 높으면 마진↓)
-  //   · 경매 입찰자 수 (적을수록 매입 성공률↑)
-  //   · 매물 매력도 (LTV 낮을수록 ↑)
-  //   · 회수율 ROI 양의 신호
+  // 매입·낙찰 성공 확률 — 보고서의 winProbability(0~1) 우선, 없으면 다중 팩터 산출
   const bidRatioFitScore = Math.max(0, 40 - Math.abs(bidRatioPct - 70) * 1.5)        // max 40
   const bidderFactor = Math.max(15, 30 - tenantCount * 3 - subordinateCount * 2)       // max 30
   const ltvFactor = Math.max(0, 20 - Math.abs(ltv - 60) * 0.4)                         // max 20
   const roiFactor = roi >= 50 ? 10 : roi >= 25 ? 7 : roi >= 0 ? 4 : 0                  // max 10
-  const successProbability = Math.round(
+  const fallbackSuccessProb = Math.round(
     Math.min(95, Math.max(20, bidRatioFitScore + bidderFactor + ltvFactor + roiFactor))
   )
+  const successProbability = reportRecommended?.winProbability != null
+    ? Math.round(reportRecommended.winProbability * 100)
+    : fallbackSuccessProb
 
   /* AI 투자 의견 (verdict) — 사용자 정책:
      ROI ≥ 30% AND 매입·낙찰 성공확률 ≥ 50% → BUY

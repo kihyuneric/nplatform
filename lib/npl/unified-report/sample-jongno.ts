@@ -352,10 +352,13 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     },
     /* 채권 정보 분리 (사용자 정책 2026-04-28):
        · loanPrincipal           = 실 대출원금 (16.48억) — 카드/표시용
+       · initialPrincipal        = 최초 대출원금 (17억) — 수익권 base
        · acquisitionBaseAmount   = 매입 base (잔액 매각이면 채권잔액 17.29억)
        · acquisitionBaseLabel    = '채권잔액' or '대출원금'
-       매입가 = acquisitionBaseAmount × (1 − discountRate) */
+       매입가  = acquisitionBaseAmount × (1 − discountRate)
+       채권최고액 = initialPrincipal × maxBondMultiplier (= 17 × 1.4 = 23.8억) */
     loanPrincipal,                                         // 실 대출원금 16.48억
+    initialPrincipal: JONGNO_HONGJI_DETAIL.initial_principal,  // 최초 대출원금 17억
     acquisitionBaseAmount: acquisitionBase,                 // 매입가 base = 17.29억 (잔액)
     acquisitionBaseLabel: discountBasis === 'CLAIM_BALANCE' ? '채권잔액' : '대출원금',
     /* 대출금리 18.00% / 연체금리 20.00% — 사용자 제공 실 데이터. */
