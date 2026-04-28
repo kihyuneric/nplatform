@@ -104,12 +104,16 @@ export function OwnerEditButton({
         borderTop: '2px solid #2251FF',
       }
 
+  // .mck-paper *  의 ink color 강제 override 우회 — 관리자 톤(짙은 배경)에서는
+  // mck-cta-dark 클래스로 흰색 글씨 보장. 자식 span 에도 explicit color 부여.
+  const wrapperClass = [isAdmin ? 'mck-cta-dark' : '', className].filter(Boolean).join(' ')
+
   return (
     <Link
       href={href}
       title={computedLabel}
       aria-label={computedLabel}
-      className={className}
+      className={wrapperClass}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -121,11 +125,14 @@ export function OwnerEditButton({
         textDecoration: 'none',
         cursor: 'pointer',
         transition: 'box-shadow 120ms ease, transform 120ms ease',
+        boxShadow: isAdmin ? '0 4px 12px rgba(10, 22, 40, 0.20)' : '0 2px 6px rgba(34, 81, 255, 0.15)',
         ...tone,
       }}
     >
-      <Icon size={compact ? 12 : 14} />
-      {!compact && <span>{computedLabel}</span>}
+      <Icon size={compact ? 12 : 14} style={{ color: isAdmin ? '#FFFFFF' : '#0A1628' }} />
+      {!compact && (
+        <span style={{ color: isAdmin ? '#FFFFFF' : '#0A1628' }}>{computedLabel}</span>
+      )}
     </Link>
   )
 }

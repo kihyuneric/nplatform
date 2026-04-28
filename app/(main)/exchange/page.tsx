@@ -1457,15 +1457,13 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
           <ArrowRight size={14} />
         </Link>
 
-        {/* 관리자 / 매도자(본인) 만 노출 — OwnerEditButton 자체에서 권한 체크
-            ownerId === user.id 일 때 매도자에게 "편집" 버튼이 노출됨. */}
+        {/* 관리자 / 매도자(본인) 만 노출 — 라벨을 명시 표기.
+            ADMIN 이면 "관리자 편집", SELLER 본인이면 "매물 편집" 으로 자동 분기 (컴포넌트 내부) */}
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
           <OwnerEditButton
             resourceType="listing"
             resourceId={item.id}
             ownerId={item.seller_id ?? null}
-            compact
-            label="편집"
           />
         </div>
       </div>

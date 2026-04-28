@@ -37,7 +37,9 @@ export interface DealroomLink {
 }
 
 // ─── Fallback 합성 (외부 API 미연동 시) ─────────────────────────
-function deriveFallbackLinks(listing: ListingDetail): DealroomLink[] {
+// 동기 함수 — listing 만 있으면 즉시 안전한 placeholder 링크를 만들 수 있어,
+// React Query 데이터 도착 전에도 ExternalLinksPanel 이 즉시 렌더 가능.
+export function deriveFallbackLinks(listing: ListingDetail): DealroomLink[] {
   const region = getListingRegion(listing)
   const title = getListingTitle(listing)
   const query = encodeURIComponent(`${region} ${title}`.trim() || (listing.address ?? ''))

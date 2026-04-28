@@ -337,18 +337,23 @@ export default function AgreementsPage() {
                     }}>
                       <Icon size={11} style={{ color: meta.color }} /> {meta.label}
                     </span>
-                    {/* 명시적 상세 진입 버튼 — 행 전체가 Link 이지만 시각적 어포던스 보강 */}
-                    <span style={{
-                      justifySelf: "end",
-                      display: "inline-flex", alignItems: "center", gap: 4,
-                      padding: "5px 10px",
-                      background: ELECTRIC,
-                      color: "#FFFFFF",
-                      fontSize: 10, fontWeight: 800,
-                      letterSpacing: "0.04em",
-                      borderTop: `2px solid ${ELECTRIC_DARK}`,
-                    }}>
-                      딜룸 ↗
+                    {/* 명시적 상세 진입 버튼 — 행 전체가 Link 이지만 시각적 어포던스 보강.
+                        mck-cta-dark 클래스로 .mck-paper * 의 ink color override 를 우회 → 흰 글씨 보장. */}
+                    <span
+                      className="mck-cta-dark"
+                      style={{
+                        justifySelf: "end",
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "6px 12px",
+                        background: ELECTRIC,
+                        color: "#FFFFFF",
+                        fontSize: 11, fontWeight: 800,
+                        letterSpacing: "0.04em",
+                        borderTop: `2px solid ${ELECTRIC_DARK}`,
+                        boxShadow: "0 2px 6px rgba(34, 81, 255, 0.30)",
+                      }}
+                    >
+                      <span style={{ color: "#FFFFFF" }}>딜룸 ↗</span>
                     </span>
                   </Link>
                 )

@@ -61,7 +61,7 @@ import {
   getListingAppraisal,
   type ListingDetail,
 } from "@/lib/hooks/use-listing"
-import { useDealroomLinks, type DealroomLink } from "@/lib/external/dealroom-links"
+import { useDealroomLinks, deriveFallbackLinks, type DealroomLink } from "@/lib/external/dealroom-links"
 
 /* ─── Dealroom Listing Context — 하위 컴포넌트(NDA/LOI 모달, Summary 등) 가
        prop drill 없이 listing 에 접근. 매물 SoT 의 단일 진입점. ───────────── */
@@ -771,10 +771,18 @@ function SectionScreening() {
   )
 }
 
-/* External link card grid — listing-derived links. 사용자 API 미설정 시 fallback. */
+/* External link card grid — listing-derived links. 사용자 API 미설정 시 fallback.
+   useQuery 데이터 도착 전이라도 listing 만 있으면 즉시 fallback 링크를 동기 계산해
+   첫 렌더에 패널이 보이도록 처리. */
 function ExternalLinksPanel() {
-  const { externalLinks, externalLinksSource } = useDealroomListing()
-  if (externalLinks.length === 0) return null
+  const { externalLinks, externalLinksSource, listing } = useDealroomListing()
+  // 동기 fallback — query 가 아직 데이터를 안 준 경우에도 즉시 표시
+  const linksToRender = useMemo(() => {
+    if (externalLinks.length > 0) return externalLinks
+    if (listing) return deriveFallbackLinks(listing)
+    return []
+  }, [externalLinks, listing])
+  if (linksToRender.length === 0) return null
   return (
     <div style={{
       background: MCK.paper,
@@ -804,7 +812,7 @@ function ExternalLinksPanel() {
         </span>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: 8 }}>
-        {externalLinks.map((link) => (
+        {linksToRender.map((link) => (
           <Link
             key={link.kind + link.href}
             href={link.href}
