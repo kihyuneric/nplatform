@@ -185,6 +185,16 @@ export function NplUnifiedForm({
         debtorOwnerSame={state.debtorOwnerSame}
         desiredSaleDiscount={state.desiredSaleDiscount}
         principal={state.claim.principal}
+        /* 채권잔액 = 원금 + 미수이자 + 연체이자 — 매각 기준 토글에 사용 */
+        claimBalance={
+          state.claim.principal +
+          (state.claim.unpaidInterest ?? 0) +
+          (state.claim.overdueInterest ?? 0)
+        }
+        discountBasis={state.discountBasis}
+        onDiscountBasisChange={(b) =>
+          dispatch({ type: "PATCH", patch: { discountBasis: b } })
+        }
         onRights={(patch) => dispatch({ type: "SET_RIGHTS", patch })}
         onLease={(patch) => dispatch({ type: "SET_LEASE", patch })}
         onDebtorOwnerSame={(v) =>
@@ -193,7 +203,11 @@ export function NplUnifiedForm({
         onDesiredSaleDiscount={(v) =>
           dispatch({ type: "PATCH", patch: { desiredSaleDiscount: v } })
         }
-        showDiscount={mode !== "ANALYSIS"}
+        /* 양방향 동기 — ANALYSIS 모드도 매각가 입력 가능 (사용자 정책) */
+        askingPrice={state.askingPrice}
+        onAskingPriceChange={(v) => dispatch({ type: "PATCH", patch: { askingPrice: v } })}
+        /* 매물 등록 + NPL 분석 모두 노출 (사용자 정책 2026-04-28) */
+        showDiscount
       />
 
       {/* 8. 특수조건 V2 18항목 × 3-버킷 — 3모드 공통 (Phase G1/G2) */}

@@ -1124,12 +1124,19 @@ function Step3({
         />
       </div>
 
-      {/* 매각희망가 · 할인율 · 원금 통합 블록 + 매각방식 */}
+      {/* 매각희망가 · 할인율 · 원금/잔액 기준 통합 블록 + 매각방식 */}
       <div style={{ marginTop: 16 }}>
         <DesiredSaleDiscountInput
           value={state.desiredSaleDiscount}
           onChange={(v) => dispatch({ type: "PATCH", patch: { desiredSaleDiscount: v } })}
           principal={state.claim.principal}
+          claimBalance={
+            state.claim.principal +
+            (state.claim.unpaidInterest ?? 0) +
+            (state.claim.overdueInterest ?? 0)
+          }
+          discountBasis={state.discountBasis}
+          onDiscountBasisChange={(b) => dispatch({ type: "PATCH", patch: { discountBasis: b } })}
           askingPrice={state.askingPrice}
           onAskingPriceChange={(v) => dispatch({ type: "PATCH", patch: { askingPrice: v } })}
         />

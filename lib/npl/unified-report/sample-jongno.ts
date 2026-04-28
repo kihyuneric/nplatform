@@ -351,8 +351,10 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     },
     /* 매입가 base = 사용자 정책에 따라 잔액 또는 원금.
        buildNplProfitability 가 loanPrincipal 을 매입가 base 로 사용하므로
-       잔액 기준 매각인 경우 acquisitionBase 를 전달. */
+       잔액 기준 매각인 경우 acquisitionBase 를 전달.
+       acquisitionBaseLabel 은 라벨/설명에서 '원금' vs '잔액' 표기 결정. */
     loanPrincipal: acquisitionBase,
+    acquisitionBaseLabel: discountBasis === 'CLAIM_BALANCE' ? '채권잔액' : '대출원금',
     /* 대출금리 18.00% / 연체금리 20.00% — 사용자 제공 실 데이터. */
     delinquencyRate: 0.20,
     delinquencyStartDate: JONGNO_HONGJI_DETAIL.default_date,
@@ -623,21 +625,22 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
           trend: 'UP',
           commentary: '평창동·홍지동·신영동 권역 거래 활발' },
         { label: '법원 1회차 매각 기간',
-          value: `${auction.expectedSaleDays ?? '—'}일`,
+          // 사용자 제공 실측 — 종로구 토지 평균 1차 매각 315일 (courtSchedule stages[0])
+          value: `${JONGNO_HONGJI_STATISTICS.courtSchedule?.stages[0]?.saleDays ?? auction.expectedSaleDays ?? '—'}일`,
           trend: 'FLAT',
-          commentary: '서울중앙지방법원 평균 대비 표준' },
+          commentary: '서울중앙지방법원 본원 종로구 토지 평균 (사용자 제공 실측)' },
       ],
     },
     registryAnalysis,
     profitability,
     executiveSummary:
       `종로구 홍지동 토지 8필지 일괄매각 NPL (○○대부 대출원금 16.48억 · 채권잔액 17.29억 · ` +
-      `1순위 농협 채권최고액 23.64억 · LTV 분자(원금+선순위) 40.12억 · 감정가 66.73억) ` +
+      `1순위 농협 채권최고액 23.64억 · 권리관계 합계(원금+선순위) 40.12억 · 감정가 66.73억) ` +
       `종합 분석 결과 ${riskGrade}등급, LTV ${(ltvNumerator / appraisal * 100).toFixed(2)}% ` +
       `(채권최고액+대출원금 합산 기준), ` +
       `예측 회수율 ${recovery.predictedRecoveryRate}% (신뢰도 ${Math.round(recovery.confidence * 100)}%). ` +
       `매입가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 (= 채권잔액 100% 매각) 기준 ` +
-      `권고 시나리오 ROI ${(recommendedRoi * 100).toFixed(2)}% · 기본 시나리오 ROI ${(investmentRoi * 100).toFixed(2)}%. ` +
+      `보수적/권고/공격적 시나리오 ROI ${(profitability.strategies.conservative.roi * 100).toFixed(1)}% / ${(profitability.strategies.recommended.roi * 100).toFixed(1)}% / ${(profitability.strategies.aggressive.roi * 100).toFixed(1)}%. ` +
       `종로구 토지 3개월 낙찰가율 71.4% 적용 시 예상낙찰가 47.63억 → ` +
       `1순위 농협 23.64억 변제 후 NPL 회수액 약 23.99억 (NPL 채권잔액 대비 ${((4_762_922_125 - 2_364_000_000) / totalBond * 100).toFixed(1)}%, ` +
       `매입 대비 +${Math.round((4_762_922_125 - 2_364_000_000 - totalBond) / 100_000_000 * 10) / 10}억). ` +

@@ -15,6 +15,7 @@ import {
   DesiredSaleDiscountInput,
   LeaseSummaryBlock,
   RightsSummaryBlock,
+  type DiscountBasis,
 } from "@/components/listings/npl-input-blocks"
 import type {
   LeaseSummary,
@@ -27,6 +28,10 @@ export function RightsSection({
   debtorOwnerSame,
   desiredSaleDiscount,
   principal,
+  /** 채권잔액 (= 원금 + 연체이자 + 미수이자) — 매각 기준 토글에 필요 */
+  claimBalance,
+  discountBasis,
+  onDiscountBasisChange,
   onRights,
   onLease,
   onDebtorOwnerSame,
@@ -46,6 +51,9 @@ export function RightsSection({
   debtorOwnerSame: boolean
   desiredSaleDiscount: number
   principal: number
+  claimBalance?: number
+  discountBasis?: DiscountBasis
+  onDiscountBasisChange?: (b: DiscountBasis) => void
   onRights: (patch: Partial<RightsSummary>) => void
   onLease: (patch: Partial<LeaseSummary>) => void
   onDebtorOwnerSame: (v: boolean) => void
@@ -77,6 +85,9 @@ export function RightsSection({
           value={desiredSaleDiscount}
           onChange={onDesiredSaleDiscount}
           principal={principal}
+          claimBalance={claimBalance}
+          discountBasis={discountBasis}
+          onDiscountBasisChange={onDiscountBasisChange}
           askingPrice={askingPrice}
           onAskingPriceChange={onAskingPriceChange}
           disabled={disabled}

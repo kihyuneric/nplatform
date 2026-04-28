@@ -2924,8 +2924,11 @@ function ProfitabilitySections({
         <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 12 }}>
           {[strategies.conservative, strategies.recommended, strategies.aggressive].map((s) => {
             const isRec = s.strategy === "RECOMMENDED"
-            // 권고 표시 임계값: RECOMMENDED 컬럼 OR 매입·낙찰 성공 확률 ≥ 50%
-            const showRecBadge = isRec || s.winProbability >= 0.5
+            // AI 권고 badge 정책 (사용자 정책 2026-04-28):
+            //   ROI ≥ 30% AND 매입·낙찰 성공확률 ≥ 50%
+            //   (RECOMMENDED 컬럼 자체는 시각적 강조만, badge 는 조건 충족 시에만)
+            const roiPct = s.roi * 100
+            const showRecBadge = roiPct >= 30 && s.winProbability >= 0.5
             // McKinsey 블루 계열 progression (보수적 → 권고 → 공격적)
             //   Conservative: cyan #00A9F4 (옅은 sky — 안정)
             //   Recommended:  electric #2251FF (대표 권고 — primary blue)

@@ -109,6 +109,15 @@ export interface UnifiedFormState {
   lease: LeaseSummary
   debtorOwnerSame: boolean
   desiredSaleDiscount: number
+  /**
+   * 매각 기준 (Phase G7+ 2026-04-28):
+   * - 'PRINCIPAL'     : 대출원금 대비 할인율 → 매각가 = 원금 × (1 − 할인율)
+   * - 'CLAIM_BALANCE' : 대출잔액(원금+연체이자) 대비 할인율 → 매각가 = 잔액 × (1 − 할인율)
+   *
+   * 매도자가 두 기준 중 하나를 선택하고 할인율을 입력하면 매각가가 자동 계산됩니다.
+   * 잔액 100% 매각 케이스 = 'CLAIM_BALANCE' + 0% 할인.
+   */
+  discountBasis: 'PRINCIPAL' | 'CLAIM_BALANCE'
 
   // 담보 가격 (공개 필드)
   askingPrice: number

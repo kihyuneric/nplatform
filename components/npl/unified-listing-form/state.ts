@@ -101,6 +101,9 @@ export function makeInitialState(mode: FormMode): UnifiedFormState {
     lease: { totalDeposit: 0, totalMonthlyRent: 0, tenantCount: 0 },
     debtorOwnerSame: false,
     desiredSaleDiscount: 0,
+    /* 기본 매각 기준: 대출원금 (전통적 NPL 매각 관행).
+       매도자가 폼에서 '대출잔액' 으로 토글 가능. */
+    discountBasis: 'PRINCIPAL',
 
     askingPrice: 0,
     collateralAmount: 0,
