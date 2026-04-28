@@ -100,12 +100,18 @@ export function deriveFallbackKpi(listing: ListingDetail): AnalysisKpiSet {
 }
 
 // ─── 사례 사전 빌드된 매물(종로 등) → KPI 매핑 ────────────────────────────
-//   buildXxxSampleReport().profitability.strategies.recommended 의 결과를
-//   AnalysisKpiSet 형식으로 변환 → 딜룸 헤더 / Section 01 KPI 와 보고서가 100% 동기.
+//   사용자 정책 (2026-04-28 v2):
+//   - 딜룸 'AI 분석 리포트' KPI = 금융기관 NPL 매각가 기준 (3-strategy 중 가장 ROI 낮은 시나리오)
+//   - 즉, aggressive 시나리오 (채권잔액 100% 매입) 사용 → 보수적 KPI
+//   - Monte Carlo / 회수기간도 보고서 monteCarlo / schedule 결과 그대로 사용
 function reportToKpi(report: UnifiedAnalysisReport): AnalysisKpiSet {
   const summary = report.summary
-  const recommended = report.profitability?.strategies?.recommended
+  // 사용자 정책: 가장 보수적인 ROI = aggressive (= 금융기관 매각가 100% 매입)
+  const baseScenario = report.profitability?.strategies?.aggressive
   const recovery = report.recovery
+  // 회수 기간 = 보고서 schedule.totalDurationDays 우선, 없으면 강결합 fallback (9개월)
+  const totalDurationDays = report.profitability?.schedule?.totalDurationDays ?? 270
+  const recoveryMonths = Math.max(1, Math.round(totalDurationDays / 30))
   return {
     predictedRecoveryRate: summary.predictedRecovery,
     recoveryConfidence: Math.round((recovery?.confidence ?? 0.85) * 100),
@@ -118,14 +124,14 @@ function reportToKpi(report: UnifiedAnalysisReport): AnalysisKpiSet {
         : summary.riskScore >= 40
           ? 'HIGH'
           : 'CRITICAL',
-    roi: recommended ? Number((recommended.roi * 100).toFixed(1)) : 0,
-    netProfit: recommended?.expectedNetProfit ?? 0,
-    ownCapital: recommended?.totalEquity ?? 0,
-    recoveryMonths: 9,                                              // 보유 기간 가정
-    expectedBidRatio: recommended?.assumedBidRatio
-      ? Number((recommended.assumedBidRatio * 100).toFixed(1))
+    roi: baseScenario ? Number((baseScenario.roi * 100).toFixed(1)) : 0,
+    netProfit: baseScenario?.expectedNetProfit ?? 0,
+    ownCapital: baseScenario?.totalEquity ?? 0,
+    recoveryMonths,
+    expectedBidRatio: baseScenario?.assumedBidRatio
+      ? Number((baseScenario.assumedBidRatio * 100).toFixed(1))
       : 70,
-    source: 'real',                                                 // 보고서 = 정밀
+    source: 'real',
   }
 }
 

@@ -711,16 +711,8 @@ function SectionScreening() {
       {/* 회수율 progress bar — listing SoT 파생 (B1.1) */}
       <RecoveryRateBar />
 
-      {/* Monte Carlo 시뮬레이션 (full-width — AI 리스크 등급 카드 삭제됨) */}
-      <article style={{ background: MCK.paperTint, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}`, padding: 16, marginBottom: 24 }}>
-        <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 6 }}>Monte Carlo 시뮬레이션</div>
-        <div style={{ fontSize: 11, color: MCK.textMuted, fontWeight: 600, marginBottom: 10 }}>10,000회 시뮬 · 정규분포 · Poisson</div>
-        <div className="grid grid-cols-3" style={{ gap: 8 }}>
-          <McMetric label="평균 ROI" value="23.30%" sub="σ 5.30%p" />
-          <McMetric label="손실 확률" value="0.20%" sub="VaR 12.7%" />
-          <McMetric label="회수 기간" value="338일" sub="연환산 1.08x" />
-        </div>
-      </article>
+      {/* Monte Carlo 시뮬레이션 — 보고서 동기화 (full-width) */}
+      <MonteCarloBlock />
 
       {/* ── AI 분석 리포트 밑 · 투자 분석 + 수수료 (매칭 수요 + 제공 자료 삭제) ─ */}
       <SubsectionHeader title="투자 분석" sub="Nplatform NPL Engine · 실시간" />
@@ -2425,6 +2417,64 @@ function McMetric({ label, value, sub }: { label: string; value: string; sub: st
   )
 }
 
+/* ─── Monte Carlo 블록 — 보고서 reportSnapshot.profitability.monteCarlo 와 동기화 ─── */
+function MonteCarloBlock() {
+  const { listing } = useDealroomListing()
+  const listingId = listing?.id ?? null
+
+  // 보고서 엔진 호출 — Monte Carlo / 회수기간 모두 보고서 결과 사용 (사용자 정책)
+  const reportSnapshot = useMemo(() => {
+    try {
+      if (listingId === JONGNO_HONGJI_LISTING_ID) {
+        return buildJongnoSampleReport()
+      }
+    } catch (e) {
+      console.warn("[MonteCarloBlock] report fallback:", e)
+    }
+    return null
+  }, [listingId])
+
+  const mc = reportSnapshot?.profitability?.monteCarlo
+  const totalDurationDays = reportSnapshot?.profitability?.schedule?.totalDurationDays
+  const baseAnnualDays = 365
+
+  // 보고서 결과 우선 — MonteCarloResult 의 필드명에 맞춰 매핑
+  //   meanRoi/stdRoi/lossProbability 는 이미 % 단위 (소수 X)
+  //   valueAtRisk95 도 % 단위
+  const meanRoi = mc?.meanRoi ?? null
+  const stdRoi = mc?.stdRoi ?? null
+  const lossProb = mc?.lossProbability ?? null
+  const var95 = mc?.valueAtRisk95 ?? null
+  const recoveryDays = mc?.meanHoldingDays ?? totalDurationDays ?? null
+  const annualizedFactor = recoveryDays && recoveryDays > 0 ? baseAnnualDays / recoveryDays : null
+
+  return (
+    <article style={{ background: MCK.paperTint, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}`, padding: 16, marginBottom: 24 }}>
+      <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 6 }}>Monte Carlo 시뮬레이션</div>
+      <div style={{ fontSize: 11, color: MCK.textMuted, fontWeight: 600, marginBottom: 10 }}>
+        {mc?.trials ? `${mc.trials.toLocaleString('ko-KR')}회 시뮬 · 낙찰가율 정규분포·유찰 Poisson·비용 jitter 반영` : '10,000회 시뮬 · 정규분포 · Poisson'}
+      </div>
+      <div className="grid grid-cols-3" style={{ gap: 8 }}>
+        <McMetric
+          label="평균 ROI"
+          value={meanRoi != null ? `${meanRoi.toFixed(2)}%` : '—'}
+          sub={stdRoi != null ? `σ ${stdRoi.toFixed(2)}%p` : '—'}
+        />
+        <McMetric
+          label="손실 확률"
+          value={lossProb != null ? `${lossProb.toFixed(2)}%` : '—'}
+          sub={var95 != null ? `VaR 95% ${var95.toFixed(1)}%` : '—'}
+        />
+        <McMetric
+          label="회수 기간"
+          value={recoveryDays != null ? `${recoveryDays.toLocaleString('ko-KR')}일` : '—'}
+          sub={annualizedFactor != null ? `연환산 ${annualizedFactor.toFixed(2)}x` : '—'}
+        />
+      </div>
+    </article>
+  )
+}
+
 /* ─── Section 03 가격 오퍼 라운드 표 — useDealOffers hook (B1.3) ─── */
 const OFFER_STATUS_META: Record<OfferStatus, { label: string; bg: string; fg: string; isDark: boolean }> = {
   PENDING:    { label: "응답 대기",  bg: "rgba(34, 81, 255, 0.10)", fg: "#1A47CC",   isDark: false },
@@ -3001,9 +3051,10 @@ function FullAiInvestmentAnalysisCard() {
   const baseLabel = discountBasis === 'CLAIM_BALANCE' ? '채권잔액' : '대출원금'
   const baseHint  = discountBasis === 'CLAIM_BALANCE' ? '원금+연체이자' : '원금만'
 
-  /* 보고서 strategies.recommended 가 있으면 그대로 사용 (NPL 분석 보고서와 동기화).
-     없으면 listing 메타로 동적 계산 (fallback). */
-  const reportRecommended = reportSnapshot?.profitability?.strategies?.recommended
+  /* 사용자 정책 (2026-04-28 v2): 딜룸 카드는 가장 ROI 낮은 시나리오(=금융기관 매각가 기준).
+     aggressive = 채권잔액 100% 매입 = 매각희망가 그대로 = 보수적 KPI.
+     보고서가 없으면 listing 메타로 동적 계산 (fallback). */
+  const reportRecommended = reportSnapshot?.profitability?.strategies?.aggressive
   const purchaseRate = reportRecommended?.purchaseRate
     ?? Math.max(0, Math.min(1, 1 - saleDiscountRatePct / 100))
   const purchasePrice = reportRecommended?.purchasePrice
@@ -3170,23 +3221,25 @@ function FullAiInvestmentAnalysisCard() {
         </div>
       </div>
 
-      {/* AI 권고 매입 — base 가 대출원금/채권잔액 정책에 따라 동적 */}
+      {/* 금융기관 매각가 기준 — aggressive 시나리오 (가장 보수적 ROI 표시) */}
       <div style={{ backgroundColor: "#FFFFFF", border: "1px solid rgba(5, 28, 44, 0.10)", borderLeft: `3px solid ${MCK.electric}`, padding: 14, marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
           <span style={{ fontSize: 11, fontWeight: 800, color: MCK.electricDark, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-            AI 권고 매입 ({baseLabel} {Math.round(purchaseRate * 100)}%)
+            금융기관 매각가 기준 ({baseLabel} {Math.round(purchaseRate * 100)}%)
           </span>
-          <span style={{
-            display: "inline-flex", alignItems: "center",
-            padding: "2px 8px", fontSize: 9, fontWeight: 800,
-            background: MCK.electric, color: MCK.paper,
-            letterSpacing: "0.06em", textTransform: "uppercase",
-          }}>
-            <span style={{ color: MCK.paper }}>AI 권고</span>
-          </span>
+          {roi >= 30 && (
+            <span style={{
+              display: "inline-flex", alignItems: "center",
+              padding: "2px 8px", fontSize: 9, fontWeight: 800,
+              background: MCK.electric, color: MCK.paper,
+              letterSpacing: "0.06em", textTransform: "uppercase",
+            }}>
+              <span style={{ color: MCK.paper }}>AI 권고</span>
+            </span>
+          )}
         </div>
         <p style={{ fontSize: 11, color: "rgba(5, 28, 44, 0.65)", lineHeight: 1.55, marginBottom: 10 }}>
-          {baseLabel} {Math.round(purchaseRate * 100)}% 매입 ({purchaseRate < 1 ? `-${((1 - purchaseRate) * 100).toFixed(1)}%` : '동일가'}) · 기준 낙찰가율 {bidRatioPct.toFixed(1)}%
+          {baseLabel} {Math.round(purchaseRate * 100)}% 매입 ({purchaseRate < 1 ? `-${((1 - purchaseRate) * 100).toFixed(1)}%` : '동일가'}) · 기준 낙찰가율 {bidRatioPct.toFixed(1)}% · 가장 보수적 시나리오 ROI 표시
         </p>
         <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 24, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.025em", lineHeight: 1, marginBottom: 4 }}>
           {fmtKRW(purchasePrice)}
