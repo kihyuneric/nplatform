@@ -167,7 +167,7 @@ export default function AdminDemandsPage() {
             <button
               key={d.id}
               onClick={() => openMatches(d)}
-              className="npl-surface-card text-left rounded-xl p-4 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-hover)]"
+              className="npl-surface-card text-left rounded-none p-4 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-hover)]"
             >
               <div className="flex items-baseline justify-between gap-2 mb-2">
                 <strong className="text-sm font-bold text-[var(--color-text-primary)] truncate">
@@ -247,7 +247,7 @@ export default function AdminDemandsPage() {
             {matches.map((m, idx) => (
               <div
                 key={`${m.listing?.id ?? idx}`}
-                className="npl-surface-card-raised rounded-xl p-4"
+                className="npl-surface-card-raised rounded-none p-4"
               >
                 <div className="flex items-baseline justify-between gap-3 mb-2">
                   <strong className="text-sm font-bold text-[var(--color-text-primary)] truncate">

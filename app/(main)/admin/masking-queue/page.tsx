@@ -23,7 +23,7 @@ const C = {
   bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
   bg3: "#0A1628", bg4: "#0F1F35",
   em: "#051C2C", emL: "#051C2C",
-  blue: "#2E75B6", blueL: "#051C2C",
+  blue: "#2251FF", blueL: "#051C2C",
   amber: "#051C2C", rose: "#A53F8A", purple: "#051C2C",
   lt3: "#64748B", lt4: "#475569",
 }
@@ -51,7 +51,7 @@ interface QueueItem {
 const FALLBACK_QUEUE: QueueItem[] = []
 
 const CATEGORY_META: Record<DocCategory, { label: string; color: string }> = {
-  REGISTRY:  { label: "등기·권리",  color: "#2E75B6" },
+  REGISTRY:  { label: "등기·권리",  color: "#2251FF" },
   APPRAISAL: { label: "감정평가서", color: "var(--color-text-primary)" },
   LEASE:     { label: "임대차",    color: "var(--color-text-primary)" },
   DEBTOR:    { label: "채무자",    color: "var(--color-danger)" },
@@ -60,7 +60,7 @@ const CATEGORY_META: Record<DocCategory, { label: string; color: string }> = {
 
 const STATUS_META: Record<QueueStatus, { label: string; color: string; icon: React.ElementType }> = {
   PENDING:   { label: "대기",     color: "var(--color-text-primary)", icon: Clock },
-  REVIEWING: { label: "검토 중",  color: "#2E75B6", icon: Eye },
+  REVIEWING: { label: "검토 중",  color: "#2251FF", icon: Eye },
   APPROVED:  { label: "승인",     color: "var(--color-text-primary)", icon: CheckCircle2 },
   REJECTED:  { label: "반려",     color: "var(--color-danger)", icon: XCircle },
 }

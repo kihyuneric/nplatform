@@ -239,7 +239,7 @@ export default function NotificationsPage() {
 
         {/* Batch bar */}
         {selectedIds.size > 0 && (
-          <div className="flex items-center gap-3 bg-stone-100/10 border border-stone-300/20 rounded-xl px-4 py-2.5">
+          <div className="flex items-center gap-3 bg-stone-100/10 border border-stone-300/20 rounded-none px-4 py-2.5">
             <span className={DS.text.bodyMedium + " !text-[var(--color-brand-mid)]"}>{selectedIds.size}개 선택됨</span>
             <div className="h-4 w-px bg-[var(--color-border-subtle)]" />
             <button onClick={deleteSelected} className="flex items-center gap-1 text-[0.8125rem] text-[var(--color-danger)] hover:text-stone-900 transition-colors">
@@ -270,7 +270,7 @@ export default function NotificationsPage() {
                     const card = (
                       <div
                         onClick={() => markRead(n.id)}
-                        className={`group relative flex items-start gap-3 rounded-xl px-4 py-3.5 cursor-pointer transition-all ${
+                        className={`group relative flex items-start gap-3 rounded-none px-4 py-3.5 cursor-pointer transition-all ${
                           !n.is_read
                             ? DS.card.base + " border-l-2 !border-l-[var(--color-brand-mid)] pl-[14px]"
                             : "bg-[var(--color-surface-base)] hover:bg-[var(--color-surface-elevated)]"

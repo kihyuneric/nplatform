@@ -29,7 +29,7 @@ const C = {
   bg4: "var(--color-bg-elevated, #0F1F35)",
   em:     "var(--color-positive)",
   emL:    "var(--color-positive)",
-  blue:   "var(--color-brand-dark)",
+  blue:   "#0A1628",
   blueL:  "var(--color-brand-bright)",
   amber:  "var(--color-warning)",
   rose:   "var(--color-danger)",

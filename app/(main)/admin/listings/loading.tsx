@@ -10,7 +10,7 @@ export default function Loading() {
             <SkeletonPulse key={i} height={32} width={70 + i * 8} rounded="full" />
           ))}
         </div>
-        <div className="rounded-xl border bg-card">
+        <div className="rounded-none border bg-card">
           <div className="flex items-center gap-4 px-4 py-3 border-b bg-[var(--color-surface-sunken)]">
             {Array.from({ length: 6 }).map((_, i) => (
               <SkeletonPulse key={i} height={12} className="flex-1" />

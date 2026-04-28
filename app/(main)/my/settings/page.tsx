@@ -427,7 +427,7 @@ export default function SettingsPage() {
               <button
                 key={r.id}
                 onClick={() => setActiveRole(r.id)}
-                className={`w-full flex items-center justify-between rounded-xl border p-4 text-left transition-all ${
+                className={`w-full flex items-center justify-between rounded-none border p-4 text-left transition-all ${
                   activeRole === r.id
                     ? "border-[var(--color-brand-bright)] bg-stone-100/10"
                     : DS.card.base + " hover:bg-[var(--color-surface-sunken)]"
@@ -453,7 +453,7 @@ export default function SettingsPage() {
                 데이터 내보내기
               </button>
             </div>
-            <div className="bg-stone-100/10 border border-stone-300/20 rounded-xl p-5">
+            <div className="bg-stone-100/10 border border-stone-300/20 rounded-none p-5">
               <div className="flex items-start gap-2 mb-3">
                 <AlertCircle className="h-4 w-4 text-[var(--color-danger)] mt-0.5 shrink-0" />
                 <div>

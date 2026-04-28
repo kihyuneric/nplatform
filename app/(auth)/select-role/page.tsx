@@ -221,28 +221,28 @@ export default function SelectRolePage() {
       <Link
         href="/"
         aria-label="NPLatform 홈으로"
-        className="flex items-center gap-2.5 mb-10 hover:opacity-80 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-brand-dark)] rounded-lg"
+        className="flex items-center gap-2.5 mb-10 hover:opacity-80 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0A1628] rounded-lg"
       >
-        <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-dark)] flex items-center justify-center shadow-md">
+        <div className="w-9 h-9 rounded-none bg-[#0A1628] flex items-center justify-center shadow-md">
           <span className="text-white font-black text-base">N</span>
         </div>
-        <span className="text-2xl font-black text-[var(--color-brand-deep)] tracking-tight">NPLatform</span>
+        <span className="text-2xl font-black text-[#0A1628] tracking-tight">NPLatform</span>
       </Link>
 
       {/* Stage indicator */}
       <div className="flex items-center gap-2 mb-5 text-xs font-semibold tracking-normal">
-        <span className={`px-2.5 py-1 rounded-full ${stage === 1 ? 'bg-[var(--color-brand-dark)] text-white' : 'bg-[#E2E8F0] text-[#64748B]'}`}>
+        <span className={`px-2.5 py-1 rounded-full ${stage === 1 ? 'bg-[#0A1628] text-white' : 'bg-[#E2E8F0] text-[#64748B]'}`}>
           1. 역할 선택
         </span>
         <span className="text-[#94A3B8]">·</span>
-        <span className={`px-2.5 py-1 rounded-full ${stage === 2 ? 'bg-[var(--color-brand-dark)] text-white' : 'bg-[#E2E8F0] text-[#64748B]'}`}>
+        <span className={`px-2.5 py-1 rounded-full ${stage === 2 ? 'bg-[#0A1628] text-white' : 'bg-[#E2E8F0] text-[#64748B]'}`}>
           2. 세부 유형
         </span>
       </div>
 
       {/* Heading */}
       <div className="text-center mb-8 max-w-xl">
-        <h1 className="text-3xl font-black text-[var(--color-brand-deep)] tracking-normal mb-3">
+        <h1 className="text-3xl font-black text-[#0A1628] tracking-normal mb-3">
           {stage === 1 ? '어떤 목적으로 사용하실 건가요?' : '세부 유형을 선택해주세요'}
         </h1>
         <p className="text-[#64748B] text-base tracking-normal">
@@ -264,29 +264,29 @@ export default function SelectRolePage() {
               <button
                 key={role.id}
                 onClick={() => handlePrimaryPick(role)}
-                className={`relative text-left rounded-2xl p-6 border-2 cursor-pointer transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2E75B6] ${
+                className={`relative text-left rounded-none p-6 border-2 cursor-pointer transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2251FF] ${
                   isSelected
-                    ? 'border-[#2E75B6] bg-[#EFF6FF]'
-                    : 'border-[#E2E8F0] bg-white hover:border-[#2E75B6] hover:bg-[#EFF6FF]'
+                    ? 'border-[#2251FF] bg-[#EFF6FF]'
+                    : 'border-[#E2E8F0] bg-white hover:border-[#2251FF] hover:bg-[#EFF6FF]'
                 }`}
               >
                 {isSelected && (
-                  <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-[#2E75B6] flex items-center justify-center">
+                  <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-[#2251FF] flex items-center justify-center">
                     <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
                   </div>
                 )}
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${isSelected ? 'bg-[#DBEAFE]' : 'bg-[#F1F5F9]'}`}>
-                  <Icon className={`w-5 h-5 ${isSelected ? 'text-[#2E75B6]' : 'text-[#94A3B8]'}`} />
+                <div className={`w-11 h-11 rounded-none flex items-center justify-center mb-4 ${isSelected ? 'bg-[#DBEAFE]' : 'bg-[#F1F5F9]'}`}>
+                  <Icon className={`w-5 h-5 ${isSelected ? 'text-[#2251FF]' : 'text-[#94A3B8]'}`} />
                 </div>
-                <p className={`text-lg font-black tracking-normal mb-0.5 ${isSelected ? 'text-[var(--color-brand-dark)]' : 'text-[var(--color-brand-deep)]'}`}>
+                <p className={`text-lg font-black tracking-normal mb-0.5 ${isSelected ? 'text-[#0A1628]' : 'text-[#0A1628]'}`}>
                   {role.label}
                 </p>
-                <p className={`text-xs font-semibold mb-3 tracking-normal ${isSelected ? 'text-[#2E75B6]' : 'text-[#94A3B8]'}`}>
+                <p className={`text-xs font-semibold mb-3 tracking-normal ${isSelected ? 'text-[#2251FF]' : 'text-[#94A3B8]'}`}>
                   {role.subtitle}
                 </p>
                 <p className="text-sm text-[#64748B] leading-relaxed tracking-normal">{role.desc}</p>
                 {role.needsSubtype && (
-                  <p className="mt-3 text-[11px] font-semibold text-[#2E75B6] tracking-normal inline-flex items-center gap-1">
+                  <p className="mt-3 text-[11px] font-semibold text-[#2251FF] tracking-normal inline-flex items-center gap-1">
                     세부 유형 선택 필요 <ArrowRight className="w-3 h-3" />
                   </p>
                 )}
@@ -305,21 +305,21 @@ export default function SelectRolePage() {
               <button
                 key={opt.id}
                 onClick={() => setSelectedSubtype(opt)}
-                className={`relative text-left rounded-2xl p-5 border-2 cursor-pointer transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2E75B6] ${
+                className={`relative text-left rounded-none p-5 border-2 cursor-pointer transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2251FF] ${
                   isSelected
-                    ? 'border-[#2E75B6] bg-[#EFF6FF]'
-                    : 'border-[#E2E8F0] bg-white hover:border-[#2E75B6] hover:bg-[#EFF6FF]'
+                    ? 'border-[#2251FF] bg-[#EFF6FF]'
+                    : 'border-[#E2E8F0] bg-white hover:border-[#2251FF] hover:bg-[#EFF6FF]'
                 }`}
               >
                 {isSelected && (
-                  <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-[#2E75B6] flex items-center justify-center">
+                  <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-[#2251FF] flex items-center justify-center">
                     <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
                   </div>
                 )}
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${isSelected ? 'bg-[#DBEAFE]' : 'bg-[#F1F5F9]'}`}>
-                  <Icon className={`w-5 h-5 ${isSelected ? 'text-[#2E75B6]' : 'text-[#94A3B8]'}`} />
+                <div className={`w-10 h-10 rounded-none flex items-center justify-center mb-3 ${isSelected ? 'bg-[#DBEAFE]' : 'bg-[#F1F5F9]'}`}>
+                  <Icon className={`w-5 h-5 ${isSelected ? 'text-[#2251FF]' : 'text-[#94A3B8]'}`} />
                 </div>
-                <p className={`text-base font-black tracking-normal mb-1 ${isSelected ? 'text-[var(--color-brand-dark)]' : 'text-[var(--color-brand-deep)]'}`}>
+                <p className={`text-base font-black tracking-normal mb-1 ${isSelected ? 'text-[#0A1628]' : 'text-[#0A1628]'}`}>
                   {opt.label}
                 </p>
                 <p className="text-sm text-[#64748B] leading-relaxed tracking-normal">{opt.sample}</p>
@@ -334,7 +334,7 @@ export default function SelectRolePage() {
         {stage === 2 && (
           <button
             onClick={handleBack}
-            className="inline-flex items-center gap-1.5 text-sm text-[#64748B] hover:text-[var(--color-brand-dark)] tracking-normal"
+            className="inline-flex items-center gap-1.5 text-sm text-[#64748B] hover:text-[#0A1628] tracking-normal"
           >
             <ArrowLeft className="w-4 h-4" /> 역할 다시 선택
           </button>
@@ -342,7 +342,7 @@ export default function SelectRolePage() {
         <button
           onClick={handleSubmit}
           disabled={!canSubmit || loading}
-          className="w-full bg-[var(--color-brand-dark)] text-white py-4 rounded-xl text-lg font-bold tracking-normal transition-all hover:bg-[#2E75B6] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full bg-[#0A1628] text-white py-4 rounded-none text-lg font-bold tracking-normal transition-all hover:bg-[#2251FF] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {loading
             ? <><Loader2 className="w-4 h-4 animate-spin" /> 설정 중...</>

@@ -97,7 +97,7 @@ export default function AdminSidebar() {
           </SheetTrigger>
           <SheetContent side="left" className="w-[88vw] max-w-72 p-0 overflow-y-auto">
             <div className="p-3 border-b border-[var(--color-border-subtle)]">
-              <span className="text-sm font-bold text-[var(--color-brand-dark)]">관리자</span>
+              <span className="text-sm font-bold text-[#0A1628]">관리자</span>
             </div>
             <MenuList onNavigate={() => setMobileOpen(false)} />
           </SheetContent>
@@ -116,7 +116,7 @@ export default function AdminSidebar() {
         )}
       >
         <div className="flex items-center justify-between p-3 border-b border-[var(--color-border-subtle)]">
-          {!collapsed && <span className="text-sm font-bold text-[var(--color-brand-dark)]">관리자</span>}
+          {!collapsed && <span className="text-sm font-bold text-[#0A1628]">관리자</span>}
           <button
             className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-[var(--color-surface-overlay)] transition-colors"
             onClick={() => setCollapsed(!collapsed)}

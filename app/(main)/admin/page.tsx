@@ -373,7 +373,7 @@ export default function AdminDashboardPage() {
                     href={link.href}
                     className={`${DS.card.interactive} flex flex-col items-center justify-center gap-2 py-4 px-2 group`}
                   >
-                    <Icon size={20} className="text-[var(--color-brand-mid)] group-hover:text-[var(--color-brand-dark)] transition-colors" />
+                    <Icon size={20} className="text-[var(--color-brand-mid)] group-hover:text-[#0A1628] transition-colors" />
                     <span className={`${DS.text.micro} group-hover:text-[var(--color-text-primary)] transition-colors text-center leading-tight`}>
                       {link.label}
                     </span>

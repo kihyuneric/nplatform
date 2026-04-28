@@ -492,7 +492,7 @@ export default function AdminSettingsPage() {
         {tab === "수수료 설정" && (
           <div className="space-y-5">
             {/* 규제 안내 */}
-            <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border border-stone-300/30 bg-stone-100/5`}>
+            <div className={`flex items-start gap-3 px-4 py-3 rounded-none border border-stone-300/30 bg-stone-100/5`}>
               <span className="text-stone-900 text-sm mt-0.5">⚠️</span>
               <div>
                 <p className="text-xs font-bold text-stone-900 mb-0.5">규제 준수 고지</p>
@@ -626,7 +626,7 @@ export default function AdminSettingsPage() {
                   ].map(k => {
                     const Icon = k.icon
                     return (
-                      <div key={k.label} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-3">
+                      <div key={k.label} className="rounded-none border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-3">
                         <div className="flex items-center gap-1.5 mb-1.5">
                           <Icon className="w-3 h-3" style={{ color: k.color }} />
                           <span className="text-[0.65rem] font-bold text-[var(--color-text-muted)]">{k.label}</span>

@@ -26,7 +26,7 @@ const C = {
   bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
   bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--layer-border-strong)",
   em: "var(--color-positive)", emL: "var(--color-positive)",
-  blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
+  blue: "#0A1628", blueL: "var(--color-brand-bright)",
   amber: "var(--color-warning)", rose: "var(--color-danger)", purple: "#051C2C",
   lt1: "var(--fg-strong)", lt2: "var(--fg-default)",
   lt3: "var(--fg-muted)", lt4: "var(--fg-subtle)",
@@ -54,14 +54,14 @@ interface AdminAgreementRow {
 const FALLBACK_ROWS: AdminAgreementRow[] = []
 
 const TYPE_META: Record<DocType, { color: string }> = {
-  NDA: { color: "#2E75B6" },
+  NDA: { color: "#2251FF" },
   LOI: { color: "var(--color-text-primary)" },
 }
 
 const STATUS_META: Record<DocStatus, { label: string; color: string; icon: React.ElementType }> = {
   PENDING:   { label: "검토 중",  color: "var(--color-text-primary)", icon: Clock },
   APPROVED:  { label: "승인",    color: "var(--color-text-primary)", icon: CheckCircle2 },
-  SIGNED:    { label: "체결",    color: "#2E75B6", icon: CheckCircle2 },
+  SIGNED:    { label: "체결",    color: "#2251FF", icon: CheckCircle2 },
   REJECTED:  { label: "거절",    color: "var(--color-danger)", icon: XCircle },
   EXPIRED:   { label: "만료",    color: "#64748B", icon: XCircle },
   WITHDRAWN: { label: "철회",    color: "#475569", icon: XCircle },
@@ -415,9 +415,9 @@ export default function AdminAgreementsPage() {
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 4,
                         padding: "5px 10px", borderRadius: 6,
-                        backgroundColor: selectedId === row.id ? "#2E75B61F" : C.bg3,
-                        color: selectedId === row.id ? "#2E75B6" : C.lt4,
-                        border: `1px solid ${selectedId === row.id ? "#2E75B644" : C.bg4}`,
+                        backgroundColor: selectedId === row.id ? "#2251FF1F" : C.bg3,
+                        color: selectedId === row.id ? "#2251FF" : C.lt4,
+                        border: `1px solid ${selectedId === row.id ? "#2251FF44" : C.bg4}`,
                         fontSize: 10, fontWeight: 700, cursor: "pointer",
                         width: "fit-content",
                       }}

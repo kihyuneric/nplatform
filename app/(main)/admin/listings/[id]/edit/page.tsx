@@ -166,7 +166,7 @@ export default function AdminListingEditPage() {
   if (fetchState === "forbidden") {
     return (
       <div className="max-w-5xl mx-auto p-6">
-        <div className="rounded-xl border border-stone-300/40 bg-stone-100/10 p-4">
+        <div className="rounded-none border border-stone-300/40 bg-stone-100/10 p-4">
           <div className="flex items-start gap-2">
             <ShieldAlert className="w-5 h-5 text-stone-900 mt-0.5" />
             <div>
@@ -182,7 +182,7 @@ export default function AdminListingEditPage() {
   if (fetchState === "notfound") {
     return (
       <div className="max-w-5xl mx-auto p-6">
-        <div className="rounded-xl border border-stone-300/40 bg-stone-100/10 p-4">
+        <div className="rounded-none border border-stone-300/40 bg-stone-100/10 p-4">
           <div className="font-bold text-stone-900 dark:text-stone-900">매물을 찾을 수 없습니다</div>
           <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">ID: <code>{id}</code></p>
           <Link
@@ -199,7 +199,7 @@ export default function AdminListingEditPage() {
   if (fetchState === "error") {
     return (
       <div className="max-w-5xl mx-auto p-6">
-        <div className="rounded-xl border border-stone-300/40 bg-stone-100/10 p-4">
+        <div className="rounded-none border border-stone-300/40 bg-stone-100/10 p-4">
           <div className="font-bold text-stone-900 dark:text-stone-900">조회 실패</div>
           <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">{fetchError}</p>
         </div>
@@ -248,7 +248,7 @@ export default function AdminListingEditPage() {
       </div>
 
       {/* Admin Review Block */}
-      <div className="rounded-xl border border-stone-300/30 bg-stone-100/5 p-4 space-y-3">
+      <div className="rounded-none border border-stone-300/30 bg-stone-100/5 p-4 space-y-3">
         <div className="flex items-center gap-2">
           <ShieldAlert className="w-4 h-4 text-stone-900" />
           <h3 className="text-[0.8125rem] font-bold text-[var(--color-text-primary)]">관리자 리뷰 · 상태 변경</h3>
@@ -302,7 +302,7 @@ export default function AdminListingEditPage() {
 
       {/* Phase G7+ · 자발적 경매 일정 패널 (관리자 — 진행 중인 경매 일정 직접 조정) */}
       {hasAuctionSchedule && (
-        <div className="rounded-xl border border-stone-300/30 bg-stone-100/5 p-5">
+        <div className="rounded-none border border-stone-300/30 bg-stone-100/5 p-5">
           <div className="flex items-center gap-2 mb-3">
             <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-stone-100/15">
               <span aria-hidden className="text-stone-900 dark:text-stone-900 text-sm">⚖</span>
@@ -351,7 +351,7 @@ export default function AdminListingEditPage() {
       <NplUnifiedForm mode="SELL" state={state} dispatch={dispatch} />
 
       {/* Save bar */}
-      <div className="sticky bottom-4 z-10 rounded-xl border border-stone-300/30 bg-[var(--color-surface-elevated)]/95 backdrop-blur p-4 flex items-center justify-between shadow-lg">
+      <div className="sticky bottom-4 z-10 rounded-none border border-stone-300/30 bg-[var(--color-surface-elevated)]/95 backdrop-blur p-4 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-2 text-[0.75rem]">
           {preflightError ? (
             <>

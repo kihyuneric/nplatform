@@ -15,7 +15,7 @@ export default function Loading() {
         </div>
 
         {/* Table */}
-        <div className="rounded-xl border bg-card">
+        <div className="rounded-none border bg-card">
           <div className="px-4 py-3 border-b">
             <SkeletonPulse height={18} width={120} />
           </div>

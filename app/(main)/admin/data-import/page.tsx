@@ -297,7 +297,7 @@ export default function AdminDataImportPage() {
                 {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />}
                 <span className={`px-3 py-1 rounded-full text-[0.75rem] font-medium transition-colors ${
                   isActive
-                    ? "bg-[var(--color-brand-dark)] text-white"
+                    ? "bg-[#0A1628] text-white"
                     : done
                     ? "bg-stone-100/10 text-stone-900 border border-stone-300/20"
                     : "bg-[var(--color-surface-sunken)] text-[var(--color-text-muted)]"
@@ -354,7 +354,7 @@ export default function AdminDataImportPage() {
                   onDragLeave={() => setDragOver(false)}
                   onDrop={onDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  className={`${DS.card.base} border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                  className={`${DS.card.base} border-2 border-dashed rounded-none p-12 flex flex-col items-center justify-center cursor-pointer transition-colors ${
                     dragOver ? "border-[var(--color-brand-mid)] bg-stone-100/10" : "border-[var(--color-border-default)] hover:border-[var(--color-border-strong)]"
                   }`}
                 >

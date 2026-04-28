@@ -212,7 +212,7 @@ export default function AdminIntegrationsPage() {
                   onClick={() => setActiveGroup(isExpanded ? null : group.id)}
                   className="w-full flex items-center gap-4 p-5 text-left"
                 >
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `color-mix(in srgb, ${group.color} 15%, transparent)` }}>
+                  <div className="w-10 h-10 rounded-none flex items-center justify-center shrink-0" style={{ background: `color-mix(in srgb, ${group.color} 15%, transparent)` }}>
                     <Icon className="w-5 h-5" style={{ color: group.color }} />
                   </div>
                   <div className="flex-1 min-w-0">

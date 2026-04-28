@@ -192,7 +192,7 @@ export default function AdminPipelinePage() {
                   onClick={() => trigger(mode)}
                   disabled={isRunning || isDisabled}
                   className={cn(
-                    "relative flex flex-col items-start gap-1.5 p-4 rounded-xl border text-left transition-all",
+                    "relative flex flex-col items-start gap-1.5 p-4 rounded-none border text-left transition-all",
                     isDisabled
                       ? "border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] opacity-40 cursor-not-allowed"
                       : isRunning

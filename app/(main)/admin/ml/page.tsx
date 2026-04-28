@@ -252,7 +252,7 @@ export default function AdminMLPage() {
           <div className="space-y-4">
 
           {/* ── AI 투자 분석 입력 데이터 명세 ────────────────────── */}
-          <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-sm">
+          <div className="rounded-none border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-sm">
             <div className="px-5 py-4 border-b border-[var(--color-border-subtle)] flex items-center gap-2">
               <Target className="w-4 h-4 text-[var(--color-brand-mid)]" />
               <h2 className={DS.text.bodyBold}>AI 투자 분석 입력 데이터 명세</h2>

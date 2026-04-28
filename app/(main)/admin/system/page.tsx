@@ -27,7 +27,7 @@ export default function AdminSystemPage() {
       {/* Header */}
       <div className={`${DS.card.base} rounded-none border-x-0 border-t-0 px-6 py-6`}>
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--color-brand-dark)] text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-none bg-[#0A1628] text-white">
             <Database className="h-7 w-7" />
           </div>
           <div>

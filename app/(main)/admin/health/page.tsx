@@ -148,7 +148,7 @@ export default function AdminHealthPage() {
 
         {/* Overall status banner */}
         <div className={cn(
-          "rounded-xl p-4 border flex items-center gap-3",
+          "rounded-none p-4 border flex items-center gap-3",
           overallStatus === "healthy" ? "bg-stone-100/10 border-stone-300/20" :
           overallStatus === "degraded" ? "bg-stone-100/10 border-stone-300/20" :
           "bg-stone-100/10 border-stone-300/20"

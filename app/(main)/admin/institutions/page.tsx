@@ -24,7 +24,7 @@ const C = {
   bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
   bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--color-bg-elevated, #0F1F35)",
   em: "var(--color-positive)", emL: "var(--color-positive)",
-  blue: "var(--color-brand-dark)", blueL: "var(--color-brand-bright)",
+  blue: "#0A1628", blueL: "var(--color-brand-bright)",
   amber: "var(--color-warning)", rose: "var(--color-danger)", purple: "#051C2C",
   lt3: "var(--color-text-muted)", lt4: "var(--color-text-muted)",
 }
@@ -53,7 +53,7 @@ interface Institution {
 const FALLBACK_INSTITUTIONS: Institution[] = []
 
 const TYPE_META: Record<InstType, { label: string; color: string }> = {
-  BANK:    { label: "은행",      color: "#2E75B6" },
+  BANK:    { label: "은행",      color: "#2251FF" },
   CAPITAL: { label: "캐피탈",    color: "var(--color-text-primary)" },
   AMC:     { label: "AMC",      color: "var(--color-text-primary)" },
   INSURER: { label: "보험",      color: "var(--color-text-primary)" },

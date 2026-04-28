@@ -80,7 +80,7 @@ function ConfigCard({
   }
 
   return (
-    <div className={`rounded-xl border transition-colors ${isDirty ? 'border-stone-300/60 bg-amber-950/20' : 'border-gray-800 bg-gray-900/60'}`}>
+    <div className={`rounded-none border transition-colors ${isDirty ? 'border-stone-300/60 bg-amber-950/20' : 'border-gray-800 bg-gray-900/60'}`}>
       <div className="p-5">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div>
@@ -223,7 +223,7 @@ export default function RuntimeConfigPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-stone-100/20 border border-stone-300/30 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-none bg-stone-100/20 border border-stone-300/30 flex items-center justify-center">
             <Sliders className="w-5 h-5 text-stone-900" />
           </div>
           <div>
@@ -249,7 +249,7 @@ export default function RuntimeConfigPage() {
       </div>
 
       {/* Notice */}
-      <div className="flex items-start gap-3 bg-stone-100/20 border border-stone-300/30 rounded-xl p-4 mb-6">
+      <div className="flex items-start gap-3 bg-stone-100/20 border border-stone-300/30 rounded-none p-4 mb-6">
         <AlertCircle className="w-4 h-4 text-stone-900 shrink-0 mt-0.5" />
         <p className="text-xs text-stone-900 leading-relaxed">
           변경사항은 <strong>즉시 DB에 저장</strong>되며, 각 서버 인스턴스의 5분 캐시 만료 후 자동으로 적용됩니다.

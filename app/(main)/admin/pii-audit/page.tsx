@@ -36,7 +36,7 @@ const C = {
   bg0: "#030810", bg1: "#050D1A", bg2: "#080F1E",
   bg3: "#0A1628", bg4: "#0F1F35",
   em: "#051C2C", emL: "#051C2C",
-  blue: "#2E75B6", blueL: "#051C2C",
+  blue: "#2251FF", blueL: "#051C2C",
   amber: "#051C2C", rose: "#A53F8A", purple: "#051C2C",
   lt3: "#64748B", lt4: "#475569",
 }
@@ -69,11 +69,11 @@ const SEV_META: Record<Severity, { label: string; color: string; bg: string }> =
 }
 
 const TIER_COLOR: Record<AuditTier, string> = {
-  L1: "#2E75B6", L2: "#051C2C", L3: "#051C2C",
+  L1: "#2251FF", L2: "#051C2C", L3: "#051C2C",
 }
 
 const ACTION_META: Record<AuditAction, { label: string; color: string }> = {
-  VIEW:           { label: "열람",         color: "#2E75B6" },
+  VIEW:           { label: "열람",         color: "#2251FF" },
   DOWNLOAD:       { label: "다운로드",     color: "var(--color-text-primary)" },
   MASKED_REVEAL:  { label: "마스킹 해제",  color: "var(--color-text-primary)" },
   DATAROOM_ENTER: { label: "데이터룸 입장", color: "var(--color-text-primary)" },

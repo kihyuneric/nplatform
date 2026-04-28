@@ -140,7 +140,7 @@ function ContentEditorModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className={`${DS.card.elevated} w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl`}>
+      <div className={`${DS.card.elevated} w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-none shadow-2xl`}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border-subtle)]">
           <h2 className={DS.text.cardTitle}>{isNew ? `새 ${tab} 작성` : `${tab} 수정`}</h2>

@@ -141,10 +141,10 @@ export default function BillingPage() {
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,'Pretendard',sans-serif;padding:48px;color:#111827;background:#fff;font-size:14px;line-height:1.6}
 .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px}
-.brand{font-size:26px;font-weight:800;color:#1B3A5C;letter-spacing:-0.5px}
+.brand{font-size:26px;font-weight:800;color:#0A1628;letter-spacing:-0.5px}
 .brand-sub{font-size:12px;color:#6b7280;margin-top:6px}
 .title-block{text-align:right}
-.inv-title{font-size:32px;font-weight:700;color:#1B3A5C}
+.inv-title{font-size:32px;font-weight:700;color:#0A1628}
 .inv-meta{font-size:12px;color:#6b7280;margin-top:4px}
 .divider{border:none;border-top:2px solid #e5e7eb;margin:28px 0}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:32px}
@@ -156,7 +156,7 @@ th{background:#f8fafc;padding:10px 14px;text-align:left;font-size:11px;font-weig
 td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
 .text-right{text-align:right}
 .total-label{font-weight:600}
-.total-grand{font-size:16px;font-weight:700;color:#1B3A5C}
+.total-grand{font-size:16px;font-weight:700;color:#0A1628}
 .note{background:#f8fafc;border-radius:10px;padding:16px;margin-top:24px;font-size:12px;color:#6b7280}
 .badge{display:inline-block;background:#ecfdf5;color:#065f46;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px}
 .footer{margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb;text-align:center;font-size:11px;color:#9ca3af}
@@ -460,14 +460,14 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                           <td className={DS.table.cell + " text-center"}>
                             {inv.pdf_url ? (
                               <a href={inv.pdf_url} target="_blank" rel="noopener noreferrer"
-                                className="text-[var(--color-brand-mid)] hover:text-[var(--color-brand-dark)]">
+                                className="text-[var(--color-brand-mid)] hover:text-[#0A1628]">
                                 <Download className="h-4 w-4 mx-auto" />
                               </a>
                             ) : (
                               <button
                                 onClick={generateInvoiceDraft}
                                 title="인보이스 초안 인쇄"
-                                className="text-[var(--color-brand-mid)] hover:text-[var(--color-brand-dark)] mx-auto flex"
+                                className="text-[var(--color-brand-mid)] hover:text-[#0A1628] mx-auto flex"
                               >
                                 <ExternalLink className="h-4 w-4" />
                               </button>

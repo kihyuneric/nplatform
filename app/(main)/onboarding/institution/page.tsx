@@ -146,7 +146,7 @@ export default function InstitutionOnboardingPage() {
     <div className="min-h-screen bg-[var(--color-surface-base)]">
 
       {/* Hero banner */}
-      <div className="bg-gradient-to-br from-[#1B3A5C] to-[#2E75B6] text-white">
+      <div className="bg-gradient-to-br from-[#0A1628] to-[#2251FF] text-white">
         <div className={`${DS.page.container} py-12`}>
           <div className="flex items-center gap-3 mb-4">
             <Building2 className="h-8 w-8 text-stone-900" />
@@ -164,7 +164,7 @@ export default function InstitutionOnboardingPage() {
               { label: "전담 매니저", value: "1:1" },
               { label: "심사 기간", value: "1~2일" },
             ].map(s => (
-              <div key={s.label} className="bg-white/10 rounded-xl px-5 py-3 text-center">
+              <div key={s.label} className="bg-white/10 rounded-none px-5 py-3 text-center">
                 <p className="text-white/60 text-xs">{s.label}</p>
                 <p className="text-white font-bold text-xl mt-0.5">{s.value}</p>
               </div>
@@ -355,7 +355,7 @@ export default function InstitutionOnboardingPage() {
                 입력하신 이메일로 접수 확인 메일이 발송됩니다.<br />
                 영업일 <strong>1~2일</strong> 이내 담당자가 연락드립니다.
               </p>
-              <div className="bg-stone-100/10 rounded-xl p-4 border border-stone-300/20">
+              <div className="bg-stone-100/10 rounded-none p-4 border border-stone-300/20">
                 <p className="text-stone-900 text-sm font-semibold">🎉 승인 즉시 6개월 수수료 면제 자동 적용</p>
               </div>
               <div className="flex gap-2 justify-center">

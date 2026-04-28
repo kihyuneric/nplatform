@@ -549,7 +549,7 @@ function KpiTile({ label, value, hint, icon: Icon, tone }: {
     warn:    "text-stone-900",
   }
   return (
-    <div className="rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] p-3">
+    <div className="rounded-none bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] p-3">
       <div className="flex items-center gap-1.5 mb-1">
         <Icon className={`w-3.5 h-3.5 ${toneCls[tone]}`} />
         <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--color-text-tertiary)]">{label}</span>
@@ -570,7 +570,7 @@ function MatchCard({ match: m, onOpen, onOpenDealroom, onDismiss }: {
   const gs = GRADE_STYLE[m.grade]
   const ss = STATUS_STYLE[m.status]
   return (
-    <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-3 hover:border-[var(--color-brand-mid)]/30 transition-colors">
+    <div className="rounded-none border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-3 hover:border-[var(--color-brand-mid)]/30 transition-colors">
       <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr_auto] gap-3 items-center">
         {/* Score ring */}
         <div className="flex items-center gap-2.5">

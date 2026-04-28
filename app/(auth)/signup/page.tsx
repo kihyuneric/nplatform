@@ -102,23 +102,23 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
                   done
-                    ? 'bg-[#2E75B6] text-white shadow-md shadow-[#2E75B6]/30'
+                    ? 'bg-[#2251FF] text-white shadow-md shadow-[#2251FF]/30'
                     : active
-                    ? 'bg-[var(--color-brand-deep)] text-white shadow-lg shadow-[var(--color-brand-deep)]/25 ring-4 ring-[var(--color-brand-deep)]/10'
+                    ? 'bg-[#0A1628] text-white shadow-lg shadow-[#0A1628]/25 ring-4 ring-[#0A1628]/10'
                     : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)]'
                 }`}
               >
                 {done ? <CheckCircle2 className="w-4 h-4" /> : step}
               </div>
               <span className={`text-[10px] font-medium hidden sm:block transition-colors ${
-                active ? 'text-[var(--color-text-primary)]' : done ? 'text-[#2E75B6]' : 'text-[var(--color-text-muted)]'
+                active ? 'text-[var(--color-text-primary)]' : done ? 'text-[#2251FF]' : 'text-[var(--color-text-muted)]'
               }`}>
                 {STEP_LABELS[i]}
               </span>
             </div>
             {i < total - 1 && (
               <div className={`flex-1 h-0.5 mx-2 mb-4 rounded-full transition-all duration-500 ${
-                done ? 'bg-[#2E75B6]' : 'bg-[var(--color-surface-overlay)]'
+                done ? 'bg-[#2251FF]' : 'bg-[var(--color-surface-overlay)]'
               }`} />
             )}
           </div>
@@ -170,7 +170,7 @@ function LeftPanelContent({ step, role }: { step: number; role: string }) {
     return (
       <div className="space-y-8">
         <div>
-          <p className="text-xs font-bold text-[#2E75B6] uppercase tracking-[0.2em] mb-3">NPL Investment Platform</p>
+          <p className="text-xs font-bold text-[#2251FF] uppercase tracking-[0.2em] mb-3">NPL Investment Platform</p>
           <h2 className="text-4xl font-black leading-tight tracking-tight text-white">
             시작하세요
           </h2>
@@ -184,9 +184,9 @@ function LeftPanelContent({ step, role }: { step: number; role: string }) {
             { icon: Trophy, label: 'NPL 전문 플랫폼',   sub: '국내 최다 NPL 데이터베이스' },
             { icon: Zap,    label: '24시간 실거래',     sub: '실시간 매물 업데이트' },
           ].map(({ icon: Icon, label, sub }) => (
-            <div key={label} className="flex items-center gap-4 p-3.5 rounded-2xl bg-white/5 border border-white/8">
-              <div className="w-9 h-9 rounded-xl bg-[#2E75B6]/20 border border-[#2E75B6]/30 flex items-center justify-center shrink-0">
-                <Icon className="w-4 h-4 text-[#2E75B6]" />
+            <div key={label} className="flex items-center gap-4 p-3.5 rounded-none bg-white/5 border border-white/8">
+              <div className="w-9 h-9 rounded-none bg-[#2251FF]/20 border border-[#2251FF]/30 flex items-center justify-center shrink-0">
+                <Icon className="w-4 h-4 text-[#2251FF]" />
               </div>
               <div>
                 <p className="text-sm font-semibold text-white/90">{label}</p>
@@ -204,23 +204,23 @@ function LeftPanelContent({ step, role }: { step: number; role: string }) {
     return (
       <div className="space-y-6">
         <div>
-          <p className="text-xs font-bold text-[#2E75B6] uppercase tracking-[0.2em] mb-3">회원 유형 선택</p>
+          <p className="text-xs font-bold text-[#2251FF] uppercase tracking-[0.2em] mb-3">회원 유형 선택</p>
           <h2 className="text-3xl font-black leading-tight tracking-tight text-white">
             {benefits.title}
           </h2>
         </div>
         <div className="space-y-3">
           {benefits.items.map((item, i) => (
-            <div key={i} className="flex items-start gap-3 p-3.5 rounded-2xl bg-white/5 border border-white/8">
-              <div className="mt-0.5 w-5 h-5 rounded-full bg-[#2E75B6]/20 border border-[#2E75B6]/30 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-3 h-3 text-[#2E75B6]" />
+            <div key={i} className="flex items-start gap-3 p-3.5 rounded-none bg-white/5 border border-white/8">
+              <div className="mt-0.5 w-5 h-5 rounded-full bg-[#2251FF]/20 border border-[#2251FF]/30 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-3 h-3 text-[#2251FF]" />
               </div>
               <p className="text-sm text-white/80 leading-relaxed">{item}</p>
             </div>
           ))}
         </div>
-        <div className="p-4 rounded-2xl bg-[#2E75B6]/10 border border-[#2E75B6]/20">
-          <p className="text-xs text-[#2E75B6] font-semibold mb-1">가입 즉시 지급</p>
+        <div className="p-4 rounded-none bg-[#2251FF]/10 border border-[#2251FF]/20">
+          <p className="text-xs text-[#2251FF] font-semibold mb-1">가입 즉시 지급</p>
           <p className="text-2xl font-black text-white">50 크레딧</p>
           <p className="text-xs text-white/40 mt-0.5">AI 분석 50회 무료 이용</p>
         </div>
@@ -232,7 +232,7 @@ function LeftPanelContent({ step, role }: { step: number; role: string }) {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-bold text-[#2E75B6] uppercase tracking-[0.2em] mb-3">서류 제출</p>
+        <p className="text-xs font-bold text-[#2251FF] uppercase tracking-[0.2em] mb-3">서류 제출</p>
         <h2 className="text-3xl font-black leading-tight tracking-tight text-white">
           안전한<br />데이터 보호
         </h2>
@@ -243,9 +243,9 @@ function LeftPanelContent({ step, role }: { step: number; role: string }) {
           { icon: Lock,   title: '접근 제어',     desc: '승인된 담당자만 열람 가능' },
           { icon: CheckCircle2, title: '즉시 삭제', desc: '심사 완료 후 원본 데이터 즉시 파기' },
         ].map(({ icon: Icon, title, desc }) => (
-          <div key={title} className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white/5 border border-white/8">
-            <div className="w-9 h-9 rounded-xl bg-[#2E75B6]/20 border border-[#2E75B6]/30 flex items-center justify-center shrink-0">
-              <Icon className="w-4 h-4 text-[#2E75B6]" />
+          <div key={title} className="flex items-start gap-3.5 p-3.5 rounded-none bg-white/5 border border-white/8">
+            <div className="w-9 h-9 rounded-none bg-[#2251FF]/20 border border-[#2251FF]/30 flex items-center justify-center shrink-0">
+              <Icon className="w-4 h-4 text-[#2251FF]" />
             </div>
             <div>
               <p className="text-sm font-semibold text-white/90">{title}</p>
@@ -492,21 +492,21 @@ export default function SignupPage() {
     return (
       <div className="min-h-screen flex">
         {/* Left panel */}
-        <div className="hidden xl:flex xl:w-[420px] 2xl:w-[480px] shrink-0 flex-col justify-between p-10 2xl:p-12 bg-[var(--color-brand-deepest)] text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#2E75B6]/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-72 h-72 bg-[var(--color-brand-dark)]/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
+        <div className="hidden xl:flex xl:w-[420px] 2xl:w-[480px] shrink-0 flex-col justify-between p-10 2xl:p-12 bg-[#0A1628] text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#2251FF]/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-[#0A1628]/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
           <Link
             href="/"
             aria-label="NPLatform 홈으로"
-            className="relative flex items-center gap-2.5 rounded-lg hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2E75B6]"
+            className="relative flex items-center gap-2.5 rounded-lg hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2251FF]"
           >
-            <div className="w-9 h-9 rounded-xl bg-[#2E75B6] flex items-center justify-center shadow-lg shadow-[#2E75B6]/30">
+            <div className="w-9 h-9 rounded-none bg-[#2251FF] flex items-center justify-center shadow-lg shadow-[#2251FF]/30">
               <span className="text-white font-black text-base tracking-tight">N</span>
             </div>
             <span className="text-xl font-bold tracking-tight">NPLatform</span>
           </Link>
           <div className="relative space-y-4">
-            <p className="text-xs font-bold text-[#2E75B6] uppercase tracking-[0.2em]">가입 완료</p>
+            <p className="text-xs font-bold text-[#2251FF] uppercase tracking-[0.2em]">가입 완료</p>
             <h2 className="text-4xl font-black leading-tight text-white">환영합니다!</h2>
             <p className="text-white/50 text-sm leading-relaxed">이메일 인증 후 NPLatform의 모든 기능을 이용하실 수 있습니다.</p>
           </div>
@@ -516,8 +516,8 @@ export default function SignupPage() {
         {/* Right panel */}
         <div className="flex flex-1 items-center justify-center px-6 py-12 bg-white">
           <div className="w-full max-w-[400px] text-center space-y-6">
-            <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-[var(--color-brand-deep)]/10 to-[#2E75B6]/10 flex items-center justify-center ring-8 ring-[var(--color-brand-deep)]/5">
-              <Mail className="h-9 w-9 text-[var(--color-brand-deep)]" />
+            <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-[#0A1628]/10 to-[#2251FF]/10 flex items-center justify-center ring-8 ring-[#0A1628]/5">
+              <Mail className="h-9 w-9 text-[#0A1628]" />
             </div>
             <div className="space-y-2">
               <h2 className="text-2xl font-bold text-gray-900">이메일을 확인해주세요</h2>
@@ -527,20 +527,20 @@ export default function SignupPage() {
               </p>
             </div>
             {bonusCredited && (
-              <div className="flex items-center justify-center gap-2.5 py-3 px-4 rounded-2xl bg-stone-100 border border-stone-300">
+              <div className="flex items-center justify-center gap-2.5 py-3 px-4 rounded-none bg-stone-100 border border-stone-300">
                 <CheckCircle2 className="h-4 w-4 text-stone-900 shrink-0" />
                 <span className="text-sm font-semibold text-stone-900">50 크레딧이 지급되었습니다!</span>
               </div>
             )}
-            <div className="bg-gray-50 rounded-2xl p-4 text-sm text-gray-500 space-y-1.5 text-left">
-              <p className="flex items-center gap-2"><span className="text-[#2E75B6]">&#9679;</span>이메일의 인증 링크를 클릭하여 가입을 완료해주세요.</p>
-              <p className="flex items-center gap-2"><span className="text-[#2E75B6]">&#9679;</span>이메일이 도착하지 않았다면 스팸 폴더를 확인해주세요.</p>
+            <div className="bg-gray-50 rounded-none p-4 text-sm text-gray-500 space-y-1.5 text-left">
+              <p className="flex items-center gap-2"><span className="text-[#2251FF]">&#9679;</span>이메일의 인증 링크를 클릭하여 가입을 완료해주세요.</p>
+              <p className="flex items-center gap-2"><span className="text-[#2251FF]">&#9679;</span>이메일이 도착하지 않았다면 스팸 폴더를 확인해주세요.</p>
             </div>
             <div className="space-y-2.5">
               <button
                 onClick={handleResendEmail}
                 disabled={resending || resendCooldown > 0}
-                className="w-full h-12 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                className="w-full h-12 rounded-none border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {resending ? (
                   <><Loader2 className="h-4 w-4 animate-spin" />발송 중...</>
@@ -551,7 +551,7 @@ export default function SignupPage() {
                 )}
               </button>
               <Link href="/login">
-                <button className="w-full h-12 rounded-xl bg-[var(--color-brand-deep)] hover:bg-[var(--color-brand-dark)] text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[var(--color-brand-deep)]/20">
+                <button className="w-full h-12 rounded-none bg-[#0A1628] hover:bg-[#0A1628] text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#0A1628]/20">
                   로그인 페이지로 이동 <ArrowRight className="h-4 w-4" />
                 </button>
               </Link>
@@ -568,20 +568,20 @@ export default function SignupPage() {
     <div className="min-h-screen flex">
 
       {/* ── LEFT PANEL ─────────────────────────────────────────────────────── */}
-      <div className="hidden xl:flex xl:w-[420px] 2xl:w-[480px] shrink-0 flex-col justify-between p-10 2xl:p-12 bg-[var(--color-brand-deepest)] text-white relative overflow-hidden">
+      <div className="hidden xl:flex xl:w-[420px] 2xl:w-[480px] shrink-0 flex-col justify-between p-10 2xl:p-12 bg-[#0A1628] text-white relative overflow-hidden">
 
         {/* Atmosphere orbs */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#2E75B6]/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-[var(--color-brand-dark)]/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
-        <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-[#2E75B6]/8 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#2251FF]/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-[#0A1628]/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
+        <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-[#2251FF]/8 rounded-full blur-2xl pointer-events-none" />
 
         {/* Logo — 클릭 시 홈 이동 */}
         <Link
           href="/"
           aria-label="NPLatform 홈으로"
-          className="relative flex items-center gap-2.5 rounded-lg hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2E75B6]"
+          className="relative flex items-center gap-2.5 rounded-lg hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2251FF]"
         >
-          <div className="w-9 h-9 rounded-xl bg-[#2E75B6] flex items-center justify-center shadow-lg shadow-[#2E75B6]/30">
+          <div className="w-9 h-9 rounded-none bg-[#2251FF] flex items-center justify-center shadow-lg shadow-[#2251FF]/30">
             <span className="text-white font-black text-base tracking-tight">N</span>
           </div>
           <span className="text-xl font-bold tracking-tight">NPLatform</span>
@@ -596,7 +596,7 @@ export default function SignupPage() {
         <div className="relative">
           <p className="text-sm text-white/50">
             이미 계정이 있으신가요?{' '}
-            <Link href="/login" className="text-white font-semibold hover:text-[#2E75B6] transition-colors underline underline-offset-2">
+            <Link href="/login" className="text-white font-semibold hover:text-[#2251FF] transition-colors underline underline-offset-2">
               로그인
             </Link>
           </p>
@@ -610,12 +610,12 @@ export default function SignupPage() {
         <Link
           href="/"
           aria-label="NPLatform 홈으로"
-          className="flex items-center gap-2 mb-8 lg:hidden hover:opacity-80 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-brand-deep)] rounded-lg"
+          className="flex items-center gap-2 mb-8 lg:hidden hover:opacity-80 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0A1628] rounded-lg"
         >
-          <div className="w-8 h-8 rounded-xl bg-[var(--color-brand-deep)] flex items-center justify-center">
+          <div className="w-8 h-8 rounded-none bg-[#0A1628] flex items-center justify-center">
             <span className="text-white font-black text-sm">N</span>
           </div>
-          <span className="text-lg font-bold text-[var(--color-brand-deep)]">NPLatform</span>
+          <span className="text-lg font-bold text-[#0A1628]">NPLatform</span>
         </Link>
 
         <div className="w-full max-w-[400px] mx-auto">
@@ -650,7 +650,7 @@ export default function SignupPage() {
                   value={form.email}
                   onChange={(e) => updateField('email', e.target.value)}
                   disabled={loading}
-                  className={`input-enhanced h-12 rounded-xl ${errors.email ? 'error' : ''}`}
+                  className={`input-enhanced h-12 rounded-none ${errors.email ? 'error' : ''}`}
                 />
                 {errors.email && <p className="text-xs text-stone-900 flex items-center gap-1"><span>&#9679;</span>{errors.email}</p>}
               </div>
@@ -667,7 +667,7 @@ export default function SignupPage() {
                     value={form.password}
                     onChange={(e) => updateField('password', e.target.value)}
                     disabled={loading}
-                    className={`input-enhanced h-12 rounded-xl pr-11 ${errors.password ? 'error' : ''}`}
+                    className={`input-enhanced h-12 rounded-none pr-11 ${errors.password ? 'error' : ''}`}
                   />
                   <button
                     type="button"
@@ -694,7 +694,7 @@ export default function SignupPage() {
                     value={form.passwordConfirm}
                     onChange={(e) => updateField('passwordConfirm', e.target.value)}
                     disabled={loading}
-                    className={`input-enhanced h-12 rounded-xl pr-11 ${errors.passwordConfirm ? 'error' : ''}`}
+                    className={`input-enhanced h-12 rounded-none pr-11 ${errors.passwordConfirm ? 'error' : ''}`}
                   />
                   <button
                     type="button"
@@ -713,14 +713,14 @@ export default function SignupPage() {
 
               <button
                 type="submit"
-                className="w-full h-12 rounded-xl bg-[var(--color-brand-deep)] hover:bg-[var(--color-brand-dark)] text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-[var(--color-brand-deep)]/20 hover:shadow-xl active:scale-[0.99] mt-2"
+                className="w-full h-12 rounded-none bg-[#0A1628] hover:bg-[#0A1628] text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0A1628]/20 hover:shadow-xl active:scale-[0.99] mt-2"
               >
                 다음 단계 <ArrowRight className="h-4 w-4" />
               </button>
 
               <p className="text-center text-sm text-gray-400">
                 이미 계정이 있으신가요?{' '}
-                <Link href="/login" className="font-semibold text-[#2E75B6] hover:text-[var(--color-brand-deep)] transition-colors">
+                <Link href="/login" className="font-semibold text-[#2251FF] hover:text-[#0A1628] transition-colors">
                   로그인
                 </Link>
               </p>
@@ -744,18 +744,18 @@ export default function SignupPage() {
                         key={value}
                         type="button"
                         onClick={() => updateField('role', value)}
-                        className={`group rounded-2xl p-3.5 text-left border transition-all duration-200 ${
+                        className={`group rounded-none p-3.5 text-left border transition-all duration-200 ${
                           selected
-                            ? 'border-[var(--color-brand-dark)] bg-[#EFF6FF] ring-2 ring-[var(--color-brand-dark)]/20'
+                            ? 'border-[#0A1628] bg-[#EFF6FF] ring-2 ring-[#0A1628]/20'
                             : 'border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-gray-50'
                         }`}
                       >
                         <div className={`w-7 h-7 rounded-lg flex items-center justify-center mb-2 transition-colors ${
-                          selected ? 'bg-[var(--color-brand-dark)] shadow-md shadow-[var(--color-brand-dark)]/30' : 'bg-gray-200 group-hover:bg-gray-300'
+                          selected ? 'bg-[#0A1628] shadow-md shadow-[#0A1628]/30' : 'bg-gray-200 group-hover:bg-gray-300'
                         }`}>
                           <Icon className={`w-3.5 h-3.5 ${selected ? 'text-white' : 'text-gray-500'}`} />
                         </div>
-                        <p className={`text-xs font-bold leading-tight ${selected ? 'text-[var(--color-brand-deep)]' : 'text-gray-700'}`}>
+                        <p className={`text-xs font-bold leading-tight ${selected ? 'text-[#0A1628]' : 'text-gray-700'}`}>
                           {label}
                         </p>
                         <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">{desc}</p>
@@ -771,19 +771,19 @@ export default function SignupPage() {
                     <button
                       type="button"
                       onClick={() => updateField('role', r.value)}
-                      className={`w-full group rounded-2xl p-3.5 text-left border transition-all duration-200 flex items-center gap-3 ${
+                      className={`w-full group rounded-none p-3.5 text-left border transition-all duration-200 flex items-center gap-3 ${
                         selected
-                          ? 'border-[var(--color-brand-dark)] bg-[#EFF6FF] ring-2 ring-[var(--color-brand-dark)]/20'
+                          ? 'border-[#0A1628] bg-[#EFF6FF] ring-2 ring-[#0A1628]/20'
                           : 'border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-gray-50'
                       }`}
                     >
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                        selected ? 'bg-[var(--color-brand-dark)] shadow-md shadow-[var(--color-brand-dark)]/30' : 'bg-gray-200 group-hover:bg-gray-300'
+                        selected ? 'bg-[#0A1628] shadow-md shadow-[#0A1628]/30' : 'bg-gray-200 group-hover:bg-gray-300'
                       }`}>
                         <r.icon className={`w-3.5 h-3.5 ${selected ? 'text-white' : 'text-gray-500'}`} />
                       </div>
                       <div>
-                        <p className={`text-xs font-bold ${selected ? 'text-[var(--color-brand-deep)]' : 'text-gray-700'}`}>{r.label}</p>
+                        <p className={`text-xs font-bold ${selected ? 'text-[#0A1628]' : 'text-gray-700'}`}>{r.label}</p>
                         <p className="text-[10px] text-gray-400 mt-0.5">{r.desc}</p>
                       </div>
                     </button>
@@ -802,7 +802,7 @@ export default function SignupPage() {
                   value={form.name}
                   onChange={(e) => updateField('name', e.target.value)}
                   disabled={loading}
-                  className={`input-enhanced h-12 rounded-xl ${errors.name ? 'error' : ''}`}
+                  className={`input-enhanced h-12 rounded-none ${errors.name ? 'error' : ''}`}
                 />
                 {errors.name && <p className="text-xs text-stone-900">{errors.name}</p>}
               </div>
@@ -819,7 +819,7 @@ export default function SignupPage() {
                   value={form.phone}
                   onChange={(e) => updateField('phone', e.target.value)}
                   disabled={loading}
-                  className={`input-enhanced h-12 rounded-xl ${errors.phone ? 'error' : ''}`}
+                  className={`input-enhanced h-12 rounded-none ${errors.phone ? 'error' : ''}`}
                 />
                 {errors.phone && <p className="text-xs text-stone-900">{errors.phone}</p>}
               </div>
@@ -835,7 +835,7 @@ export default function SignupPage() {
                   value={form.company_name}
                   onChange={(e) => updateField('company_name', e.target.value)}
                   disabled={loading}
-                  className="input-enhanced h-12 rounded-xl"
+                  className="input-enhanced h-12 rounded-none"
                 />
               </div>
 
@@ -850,7 +850,7 @@ export default function SignupPage() {
                   value={form.referralCode}
                   onChange={(e) => updateField('referralCode', e.target.value)}
                   disabled={loading}
-                  className="input-enhanced h-12 rounded-xl"
+                  className="input-enhanced h-12 rounded-none"
                 />
               </div>
 
@@ -858,13 +858,13 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="flex-1 h-12 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                  className="flex-1 h-12 rounded-none border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
                 >
                   이전
                 </button>
                 <button
                   type="submit"
-                  className="flex-[2] h-12 rounded-xl bg-[var(--color-brand-deep)] hover:bg-[var(--color-brand-dark)] text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-[var(--color-brand-deep)]/20 active:scale-[0.99]"
+                  className="flex-[2] h-12 rounded-none bg-[#0A1628] hover:bg-[#0A1628] text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0A1628]/20 active:scale-[0.99]"
                 >
                   다음 단계 <ArrowRight className="h-4 w-4" />
                 </button>
@@ -887,7 +887,7 @@ export default function SignupPage() {
                     {currentDocSlots.map((slot) => {
                       const uploaded = getDocumentForType(slot.type)
                       return (
-                        <div key={slot.type} className="rounded-2xl border border-gray-100 bg-gray-50 p-3.5 space-y-2.5">
+                        <div key={slot.type} className="rounded-none border border-gray-100 bg-gray-50 p-3.5 space-y-2.5">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-semibold text-gray-800">{slot.type}</span>
@@ -907,21 +907,21 @@ export default function SignupPage() {
                           </div>
 
                           {uploaded ? (
-                            <div className="flex items-center gap-3 p-2.5 bg-white rounded-xl border border-gray-100">
+                            <div className="flex items-center gap-3 p-2.5 bg-white rounded-none border border-gray-100">
                               {isImageDataUrl(uploaded.data) ? (
                                 <img src={uploaded.data} alt={uploaded.name} className="h-10 w-10 object-cover rounded-lg border border-gray-100" />
                               ) : (
-                                <div className="h-10 w-10 flex items-center justify-center bg-[var(--color-brand-deep)]/5 rounded-lg border border-[var(--color-brand-deep)]/10">
-                                  <FileText className="h-5 w-5 text-[#2E75B6]" />
+                                <div className="h-10 w-10 flex items-center justify-center bg-[#0A1628]/5 rounded-lg border border-[#0A1628]/10">
+                                  <FileText className="h-5 w-5 text-[#2251FF]" />
                                 </div>
                               )}
                               <span className="text-xs text-gray-500 truncate flex-1">{uploaded.name}</span>
                               <CheckCircle2 className="h-4 w-4 text-stone-900 shrink-0" />
                             </div>
                           ) : (
-                            <label className="flex flex-col items-center justify-center gap-1.5 py-5 border-2 border-dashed border-[var(--color-border-default)] rounded-xl cursor-pointer hover:border-[#2E75B6]/40 hover:bg-white transition-all group">
-                              <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-[#2E75B6]/10 transition-colors">
-                                <Upload className="h-4 w-4 text-gray-400 group-hover:text-[#2E75B6] transition-colors" />
+                            <label className="flex flex-col items-center justify-center gap-1.5 py-5 border-2 border-dashed border-[var(--color-border-default)] rounded-none cursor-pointer hover:border-[#2251FF]/40 hover:bg-white transition-all group">
+                              <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-[#2251FF]/10 transition-colors">
+                                <Upload className="h-4 w-4 text-gray-400 group-hover:text-[#2251FF] transition-colors" />
                               </div>
                               <span className="text-xs text-gray-400 group-hover:text-gray-600 transition-colors">클릭하여 파일 선택</span>
                               <input
@@ -946,7 +946,7 @@ export default function SignupPage() {
               )}
 
               {/* Terms */}
-              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 space-y-1.5">
+              <div className="rounded-none border border-gray-100 bg-gray-50 p-4 space-y-1.5">
                 <label className="flex items-start gap-3 cursor-pointer">
                   <Checkbox
                     checked={agreedTerms}
@@ -954,9 +954,9 @@ export default function SignupPage() {
                     className="mt-0.5"
                   />
                   <span className="text-sm text-gray-600 leading-relaxed">
-                    <Link href="/terms/service" className="font-semibold text-[#2E75B6] hover:underline">이용약관</Link>{' '}
+                    <Link href="/terms/service" className="font-semibold text-[#2251FF] hover:underline">이용약관</Link>{' '}
                     및{' '}
-                    <Link href="/terms/privacy" className="font-semibold text-[#2E75B6] hover:underline">개인정보처리방침</Link>에
+                    <Link href="/terms/privacy" className="font-semibold text-[#2251FF] hover:underline">개인정보처리방침</Link>에
                     동의합니다. <span className="text-stone-900">*</span>
                   </span>
                 </label>
@@ -964,7 +964,7 @@ export default function SignupPage() {
               </div>
 
               {generalError && (
-                <div className="flex items-center gap-2.5 rounded-xl border border-stone-300 bg-stone-100 px-4 py-3">
+                <div className="flex items-center gap-2.5 rounded-none border border-stone-300 bg-stone-100 px-4 py-3">
                   <div className="flex-shrink-0 w-4 h-4 rounded-full bg-stone-100 flex items-center justify-center">
                     <span className="text-[9px] font-bold text-stone-900">!</span>
                   </div>
@@ -976,14 +976,14 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="flex-1 h-12 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                  className="flex-1 h-12 rounded-none border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
                 >
                   이전
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-[2] h-12 rounded-xl bg-[var(--color-brand-deep)] hover:bg-[var(--color-brand-dark)] text-white font-semibold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[var(--color-brand-deep)]/20 active:scale-[0.99]"
+                  className="flex-[2] h-12 rounded-none bg-[#0A1628] hover:bg-[#0A1628] text-white font-semibold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#0A1628]/20 active:scale-[0.99]"
                 >
                   {loading ? (
                     <><Loader2 className="h-4 w-4 animate-spin" />가입 처리 중...</>
