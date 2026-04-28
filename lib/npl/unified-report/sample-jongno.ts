@@ -185,6 +185,15 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
       overdueRate: 0.20,
     },
     specialConditions: { ...EMPTY_SPECIAL_CONDITIONS },
+    /**
+     * V2 18항목 중 본 사례에 실제 해당하는 키만 체크.
+     * - 종로 사례: 농협 1순위 근저당 23.64억 존재 → 'senior_registry_rights' 체크
+     *   (감점 −50, OWNERSHIP 버킷)
+     * - 그 외 항목 모두 미체크 (당해세·임차인·맹지·위반건축물 등 없음)
+     *
+     * 권리관계 점수 = max(20, 100 − Σ감점) = max(20, 100 − 50) = 50점 (HIGH 리스크)
+     */
+    specialConditionsV2: ['senior_registry_rights'],
     auctionEstimatedMonths: 12,
     statistics: JONGNO_HONGJI_STATISTICS,
   }
@@ -333,6 +342,10 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     pledgeLoanRatio: 0.75,         // 개인 채무자 75% (법인 70%)
     pledgeInterestRate: 0.065,     // 6.5%
     executionCost: 10_000_000,     // 경매비용 1,000만원 기준 (사용자 정책)
+    /* 수익권금액 = 23.8억 (사용자 제공 실측, beneficial_amount).
+       기본 = 대출원금 × 1.2 = 19.78억 → override 로 23.8억 적용.
+       multiplier = 23.8 / 16.48 = 1.444. */
+    maxBondMultiplier: JONGNO_HONGJI_DETAIL.beneficial_amount / loanPrincipal,
     registrationTransferRate: 0.0048,
     brokerageFeeRate: 0.012,
     contractDepositRate: 0.10,
