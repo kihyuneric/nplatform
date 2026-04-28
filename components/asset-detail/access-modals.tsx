@@ -21,6 +21,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { SignaturePad } from "@/components/agreements/signature-pad"
 import {
   X, Shield, FileSignature, FileCheck, CheckCircle2, Clock, AlertCircle,
   Upload, Briefcase, FileText, Building2, ExternalLink,
@@ -456,12 +457,42 @@ export interface NdaModalProps {
   listingTitle: string
   listingId: string
   state: NdaState
-  /** NDA 전자서명 (서명 후 매각사 승인 대기) */
-  onSubmit?: () => void
+  /** NDA 전자서명 — 서명자명 + 서명 이미지 dataURL + 동의여부 포함 */
+  onSubmit?: (payload: { signerName: string; signatureDataUrl: string; clausesAccepted: boolean }) => void | Promise<void>
 }
 
 export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubmit }: NdaModalProps) {
   const canSubmit = state.status === "none" || state.status === "rejected"
+  const [agreed, setAgreed] = useState(false)
+  const [signerName, setSignerName] = useState("")
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  // 모달 열릴 때마다 reset
+  useEffect(() => {
+    if (open) {
+      setAgreed(false)
+      setSignerName("")
+      setSignatureDataUrl(null)
+      setSubmitError(null)
+    }
+  }, [open])
+
+  const formValid = agreed && signerName.trim().length >= 2 && !!signatureDataUrl
+
+  async function handleClick() {
+    if (!onSubmit || !formValid) return
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      await onSubmit({ signerName: signerName.trim(), signatureDataUrl: signatureDataUrl!, clausesAccepted: agreed })
+    } catch (e: unknown) {
+      setSubmitError(e instanceof Error ? e.message : '제출 실패')
+    } finally {
+      setSubmitting(false)
+    }
+  }
   return (
     <ModalShell
       open={open}
@@ -491,7 +522,8 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
           {canSubmit && onSubmit && (
             <button
               type="button"
-              onClick={onSubmit}
+              onClick={handleClick}
+              disabled={!formValid || submitting}
               style={{
                 padding: "10px 18px",
                 fontSize: 12,
@@ -499,7 +531,9 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
                 color: C.paper,
                 background: C.cobalt,
                 border: "none",
-                cursor: "pointer",
+                borderTop: `2px solid ${C.paper}`,
+                cursor: (!formValid || submitting) ? "not-allowed" : "pointer",
+                opacity: (!formValid || submitting) ? 0.45 : 1,
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
@@ -507,7 +541,11 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
             >
               <FileSignature size={12} style={{ color: C.paper }} />
               <span style={{ color: C.paper }}>
-                {state.status === "rejected" ? "재서명 · 재제출" : "전자서명 · NDA 제출"}
+                {submitting
+                  ? "제출 중..."
+                  : state.status === "rejected"
+                    ? "재서명 · 재제출"
+                    : "전자서명 · NDA 제출"}
               </span>
             </button>
           )}
@@ -580,21 +618,29 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
         </div>
       </section>
 
-      {/* 동의 체크 + 전자 서명 입력 */}
+      {/* 동의 체크 + 서명자명 + 전자서명 캔버스 (Phase 2.5) */}
       <section style={{ marginBottom: 18 }}>
         <label className="flex items-start gap-2 mb-3" style={{ cursor: "pointer" }}>
-          <input type="checkbox" style={{ marginTop: 3, accentColor: C.cobalt }} />
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            style={{ marginTop: 3, accentColor: C.cobalt }}
+          />
           <span style={{ fontSize: 12, color: C.ink, fontWeight: 700, lineHeight: 1.5 }}>
             위 NDA 조항을 모두 읽고 동의합니다
           </span>
         </label>
-        <div>
-          <label style={{ display: "block", fontSize: 10, fontWeight: 800, color: C.textSub, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>
-            전자 서명 — 서명자 성명 <span style={{ color: C.cobalt }}>*</span>
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: "block", fontSize: 10, fontWeight: 800, color: C.cobalt, letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>
+            서명자 성명 <span style={{ color: C.cobalt }}>*</span>
           </label>
           <input
             type="text"
+            value={signerName}
+            onChange={(e) => setSignerName(e.target.value)}
             placeholder="본인의 성명을 정확히 입력하세요"
+            disabled={submitting}
             style={{
               width: "100%",
               padding: "10px 12px",
@@ -602,13 +648,32 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
               background: C.paper,
               color: C.ink,
               border: `1px solid ${C.borderStrong}`,
+              borderTop: `2px solid ${C.cobalt}`,
               outline: "none",
             }}
           />
-          <p style={{ fontSize: 10, color: C.textMuted, lineHeight: 1.5, marginTop: 6 }}>
-            전자서명법에 따른 공인인증서 기반 서명이 아닌 간이 서명입니다. 실계약 시 별도의 공인 전자서명이 요구됩니다.
-          </p>
         </div>
+        <SignaturePad
+          width={520}
+          height={160}
+          disabled={submitting}
+          onChange={(d) => setSignatureDataUrl(d)}
+        />
+        <p style={{ fontSize: 10, color: C.textMuted, lineHeight: 1.5, marginTop: 8 }}>
+          NPLatform 자체 전자서명 — 본 서명은 PDF 본문에 임베드되어 5년간 보관됩니다.
+          IP·기기 정보가 함께 기록되어 위변조를 방지합니다.
+        </p>
+        {submitError && (
+          <div style={{
+            marginTop: 10, padding: "8px 12px",
+            background: "rgba(220, 38, 38, 0.06)",
+            border: "1px solid rgba(220, 38, 38, 0.30)",
+            borderLeft: "3px solid #DC2626",
+            fontSize: 11, color: "#991B1B",
+          }}>
+            {submitError}
+          </div>
+        )}
       </section>
 
       {/* 매각사 승인 진행 */}
@@ -673,6 +738,15 @@ export interface LoiState {
   proposedPrice?: number
 }
 
+export interface LoiSubmitPayload {
+  proposedPrice: number
+  signerName: string
+  signatureDataUrl: string
+  fundingPlan: 'CASH' | 'LEVERAGED' | 'FUND'
+  durationDays: number
+  acquisitionEntity: string
+  sellerMessage: string
+}
 export interface LoiModalProps {
   open: boolean
   onClose: () => void
@@ -680,8 +754,8 @@ export interface LoiModalProps {
   listingId: string
   askingPrice: number
   state: LoiState
-  /** LOI 제출 (제출 후 매각사 승인 대기) */
-  onSubmit?: (proposedPrice: number) => void
+  /** LOI 제출 (제출 후 매각사 승인 대기) — full payload */
+  onSubmit?: (payload: LoiSubmitPayload) => void | Promise<void>
 }
 
 function formatKRW(n: number | undefined): string {
@@ -691,11 +765,66 @@ function formatKRW(n: number | undefined): string {
   return n.toLocaleString("ko-KR")
 }
 
+const LOI_DURATION_OPTIONS: { label: string; days: number }[] = [
+  { label: '14일', days: 14 },
+  { label: '30일', days: 30 },
+  { label: '45일', days: 45 },
+  { label: '60일', days: 60 },
+]
+
 export function LoiModal({
   open, onClose, listingTitle, listingId, askingPrice, state, onSubmit,
 }: LoiModalProps) {
   const canSubmit = state.status === "none" || state.status === "rejected"
   const [price, setPrice] = useState<number>(state.proposedPrice ?? Math.round(askingPrice * 0.95))
+  const [fundingPlan, setFundingPlan] = useState<'CASH' | 'LEVERAGED' | 'FUND'>('CASH')
+  const [durationDays, setDurationDays] = useState<number>(30)
+  const [acquisitionEntity, setAcquisitionEntity] = useState('')
+  const [sellerMessage, setSellerMessage] = useState('')
+  const [signerName, setSignerName] = useState('')
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (open) {
+      setPrice(state.proposedPrice ?? Math.round(askingPrice * 0.95))
+      setFundingPlan('CASH')
+      setDurationDays(30)
+      setAcquisitionEntity('')
+      setSellerMessage('')
+      setSignerName('')
+      setSignatureDataUrl(null)
+      setSubmitError(null)
+    }
+  }, [open, state.proposedPrice, askingPrice])
+
+  const formValid =
+    price > 0 &&
+    signerName.trim().length >= 2 &&
+    !!signatureDataUrl &&
+    acquisitionEntity.trim().length >= 2
+
+  async function handleClick() {
+    if (!onSubmit || !formValid) return
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      await onSubmit({
+        proposedPrice: price,
+        signerName: signerName.trim(),
+        signatureDataUrl: signatureDataUrl!,
+        fundingPlan,
+        durationDays,
+        acquisitionEntity: acquisitionEntity.trim(),
+        sellerMessage: sellerMessage.trim(),
+      })
+    } catch (e: unknown) {
+      setSubmitError(e instanceof Error ? e.message : '제출 실패')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <ModalShell
@@ -726,7 +855,8 @@ export function LoiModal({
           {canSubmit && onSubmit && (
             <button
               type="button"
-              onClick={() => onSubmit(price)}
+              onClick={handleClick}
+              disabled={!formValid || submitting}
               style={{
                 padding: "10px 18px",
                 fontSize: 12,
@@ -734,7 +864,9 @@ export function LoiModal({
                 color: C.paper,
                 background: C.cobalt,
                 border: "none",
-                cursor: "pointer",
+                borderTop: `2px solid ${C.paper}`,
+                cursor: (!formValid || submitting) ? "not-allowed" : "pointer",
+                opacity: (!formValid || submitting) ? 0.45 : 1,
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
@@ -742,7 +874,7 @@ export function LoiModal({
             >
               <FileCheck size={12} style={{ color: C.paper }} />
               <span style={{ color: C.paper }}>
-                {state.status === "rejected" ? "재제출" : "LOI 제출"}
+                {submitting ? "제출 중..." : state.status === "rejected" ? "재제출" : "전자서명 · LOI 제출"}
               </span>
             </button>
           )}
@@ -818,22 +950,32 @@ export function LoiModal({
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             {[
-              { v: "CASH",      label: "자기 자본 100%",  desc: "승인 확률 높음" },
-              { v: "LEVERAGED", label: "금융 차입 병행",   desc: "LTV 50~70%" },
-              { v: "FUND",      label: "펀드 출자",       desc: "LP 확약서 첨부" },
-            ].map(o => (
-              <label key={o.v} className="cursor-pointer" style={{
-                padding: "10px 12px",
-                background: C.paper,
-                border: `1px solid ${C.borderStrong}`,
-                borderTop: `2px solid ${C.cobalt}`,
-                display: "flex", flexDirection: "column", gap: 3,
-              }}>
-                <input type="radio" name="loi-funding" value={o.v} style={{ display: "none" }} />
-                <span style={{ fontSize: 12, fontWeight: 800, color: C.ink, letterSpacing: "-0.005em" }}>{o.label}</span>
-                <span style={{ fontSize: 10, color: C.textMuted, fontWeight: 600 }}>{o.desc}</span>
-              </label>
-            ))}
+              { v: "CASH" as const,      label: "자기 자본 100%",  desc: "승인 확률 높음" },
+              { v: "LEVERAGED" as const, label: "금융 차입 병행",   desc: "LTV 50~70%" },
+              { v: "FUND" as const,      label: "펀드 출자",       desc: "LP 확약서 첨부" },
+            ].map(o => {
+              const active = fundingPlan === o.v
+              return (
+                <label key={o.v} className="cursor-pointer" style={{
+                  padding: "10px 12px",
+                  background: active ? "rgba(34, 81, 255, 0.08)" : C.paper,
+                  border: `1px solid ${active ? C.cobalt : C.borderStrong}`,
+                  borderTop: `2px solid ${C.cobalt}`,
+                  display: "flex", flexDirection: "column", gap: 3,
+                }}>
+                  <input
+                    type="radio"
+                    name="loi-funding"
+                    value={o.v}
+                    checked={active}
+                    onChange={() => setFundingPlan(o.v)}
+                    style={{ display: "none" }}
+                  />
+                  <span style={{ fontSize: 12, fontWeight: 800, color: C.ink, letterSpacing: "-0.005em" }}>{o.label}</span>
+                  <span style={{ fontSize: 10, color: C.textMuted, fontWeight: 600 }}>{o.desc}</span>
+                </label>
+              )
+            })}
           </div>
 
           {/* 실사 · 계약 체결 기간 */}
@@ -841,19 +983,28 @@ export function LoiModal({
             실사 · 계약 체결 기간
           </h4>
           <div className="grid grid-cols-4 gap-2 mb-1">
-            {["14일", "30일", "45일", "60일"].map(d => (
-              <label key={d} className="cursor-pointer" style={{
-                padding: "10px 12px",
-                background: C.paper,
-                border: `1px solid ${C.borderStrong}`,
-                fontSize: 12, fontWeight: 800, color: C.ink,
-                textAlign: "center",
-                letterSpacing: "-0.005em",
-              }}>
-                <input type="radio" name="loi-duration" value={d} style={{ display: "none" }} />
-                {d}
-              </label>
-            ))}
+            {LOI_DURATION_OPTIONS.map(d => {
+              const active = durationDays === d.days
+              return (
+                <label key={d.days} className="cursor-pointer" style={{
+                  padding: "10px 12px",
+                  background: active ? C.cobalt : C.paper,
+                  border: `1px solid ${active ? C.cobalt : C.borderStrong}`,
+                  fontSize: 12, fontWeight: 800, color: active ? C.paper : C.ink,
+                  textAlign: "center",
+                  letterSpacing: "-0.005em",
+                }}>
+                  <input
+                    type="radio"
+                    name="loi-duration"
+                    checked={active}
+                    onChange={() => setDurationDays(d.days)}
+                    style={{ display: "none" }}
+                  />
+                  <span style={{ color: active ? C.paper : C.ink }}>{d.label}</span>
+                </label>
+              )
+            })}
           </div>
           <p style={{ fontSize: 10, color: C.textMuted, fontWeight: 500 }}>
             짧은 기간일수록 매도자 승인 가능성이 높아집니다.
@@ -861,11 +1012,14 @@ export function LoiModal({
 
           {/* 인수 주체 */}
           <h4 style={{ fontSize: 11.5, fontWeight: 800, color: C.ink, letterSpacing: "0.06em", textTransform: "uppercase", marginTop: 18, marginBottom: 8 }}>
-            인수 주체
+            인수 주체 <span style={{ color: C.cobalt }}>*</span>
           </h4>
           <input
             type="text"
+            value={acquisitionEntity}
+            onChange={(e) => setAcquisitionEntity(e.target.value)}
             placeholder="예: ○○자산운용 NPL 1호 펀드"
+            disabled={submitting}
             style={{
               width: "100%",
               padding: "10px 12px",
@@ -881,8 +1035,11 @@ export function LoiModal({
             매도자에게 전달할 메시지
           </h4>
           <textarea
+            value={sellerMessage}
+            onChange={(e) => setSellerMessage(e.target.value)}
             rows={3}
             placeholder="인수 배경 · 추가 조건 · 실사 요구사항 등을 자유롭게 기재해주세요."
+            disabled={submitting}
             style={{
               width: "100%",
               padding: "10px 12px",
@@ -894,9 +1051,51 @@ export function LoiModal({
             }}
           />
 
+          {/* 서명자명 + 전자서명 */}
+          <h4 style={{ fontSize: 11.5, fontWeight: 800, color: C.ink, letterSpacing: "0.06em", textTransform: "uppercase", marginTop: 18, marginBottom: 8 }}>
+            서명자 성명 <span style={{ color: C.cobalt }}>*</span>
+          </h4>
+          <input
+            type="text"
+            value={signerName}
+            onChange={(e) => setSignerName(e.target.value)}
+            placeholder="본인의 성명을 정확히 입력하세요"
+            disabled={submitting}
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              fontSize: 13,
+              color: C.ink, background: C.paper,
+              border: `1px solid ${C.borderStrong}`,
+              borderTop: `2px solid ${C.cobalt}`,
+              outline: "none",
+            }}
+          />
+          <div style={{ marginTop: 14 }}>
+            <SignaturePad
+              width={520}
+              height={150}
+              disabled={submitting}
+              onChange={(d) => setSignatureDataUrl(d)}
+            />
+          </div>
+
+          {submitError && (
+            <div style={{
+              marginTop: 10, padding: "8px 12px",
+              background: "rgba(220, 38, 38, 0.06)",
+              border: "1px solid rgba(220, 38, 38, 0.30)",
+              borderLeft: "3px solid #DC2626",
+              fontSize: 11, color: "#991B1B",
+            }}>
+              {submitError}
+            </div>
+          )}
+
           <p style={{ fontSize: 10.5, fontWeight: 500, color: C.textMuted, marginTop: 12, lineHeight: 1.55 }}>
             LOI 는 법적 구속력이 없는 의향서이지만, 매도자가 승인한 후 본 계약 협상 단계로 진입하면
             에스크로 입금 및 계약금 몰취 조건이 적용될 수 있습니다.
+            본 LOI 는 NPLatform 자체 전자서명으로 PDF 화되어 5년간 보관됩니다.
           </p>
         </section>
       )}

@@ -3193,7 +3193,29 @@ function NextStepGroup({ activeKey = ACTIVE_STEP }: { activeKey?: NextStepKey } 
         listingTitle={listingTitle}
         listingId={listing ? String(listing.id) : listingCode}
         state={ndaState}
-        onSubmit={() => setOpenKey(null)}
+        onSubmit={async (payload) => {
+          // 자체 전자서명 NDA POST (Phase 2.5)
+          const r = await fetch('/api/v1/agreements', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              type: 'NDA',
+              listing_id: listing ? String(listing.id) : listingCode,
+              signer_name: payload.signerName,
+              signature_data: payload.signatureDataUrl,
+              nda_clause_version: 'v1',
+              nda_clauses_accepted: payload.clausesAccepted ? ['ALL_6_CLAUSES'] : [],
+            }),
+          })
+          if (!r.ok) {
+            const err = await r.json().catch(() => null)
+            throw new Error(err?.error?.message ?? `HTTP ${r.status}`)
+          }
+          setOpenKey(null)
+          // /my/agreements 로 이동해 결과 확인
+          router.push('/my/agreements')
+        }}
       />
       <LoiModal
         open={openKey === "loi"}
@@ -3202,7 +3224,30 @@ function NextStepGroup({ activeKey = ACTIVE_STEP }: { activeKey?: NextStepKey } 
         listingId={listing ? String(listing.id) : listingCode}
         askingPrice={askingPrice}
         state={loiState}
-        onSubmit={() => setOpenKey(null)}
+        onSubmit={async (payload) => {
+          const r = await fetch('/api/v1/agreements', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              type: 'LOI',
+              listing_id: listing ? String(listing.id) : listingCode,
+              signer_name: payload.signerName,
+              signature_data: payload.signatureDataUrl,
+              loi_amount: payload.proposedPrice,
+              loi_funding_plan: payload.fundingPlan,
+              loi_duration_days: payload.durationDays,
+              loi_acquisition_entity: payload.acquisitionEntity,
+              loi_seller_message: payload.sellerMessage,
+            }),
+          })
+          if (!r.ok) {
+            const err = await r.json().catch(() => null)
+            throw new Error(err?.error?.message ?? `HTTP ${r.status}`)
+          }
+          setOpenKey(null)
+          router.push('/my/agreements')
+        }}
       />
     </>
   )

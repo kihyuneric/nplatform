@@ -2481,13 +2481,14 @@ export function AssetDetailView({
         listingId={id}
         askingPrice={listing.asking_price}
         state={loiState}
-        onSubmit={(price) => {
+        onSubmit={(payload) => {
+          // Phase 2.5 — payload 는 { proposedPrice, signerName, signatureDataUrl, ... }
           const today = new Date().toISOString().slice(0, 10)
           setLoiState((s) => ({
             ...s,
             status: "submitted",
             submittedAt: today,
-            proposedPrice: price,
+            proposedPrice: payload.proposedPrice,
             reviewNote: "매각사 검토 대기 중",
           }))
           toast.success("LOI 를 매각사에 제출했습니다. 승인 시 협상·데이터룸이 활성화됩니다.", { duration: 3500 })

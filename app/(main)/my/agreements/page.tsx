@@ -81,18 +81,51 @@ export default function AgreementsPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        // 1. 실제 계약 이력 시도
-        const res = await fetch("/api/v1/my/agreements", { credentials: "include" })
+        // 1. 실 agreements (Phase 2 — 자체 전자서명 row)
+        const res = await fetch("/api/v1/agreements", { credentials: "include" })
         if (res.ok) {
           const json = await res.json()
           if (Array.isArray(json.data) && json.data.length > 0) {
-            setAgreements(json.data as AgreementRow[])
+            // 매물 정보 (collateral / counterparty) hydrate — listing_id 들 모아 한번에 fetch
+            const listingIds = Array.from(new Set(json.data.map((r: Record<string, unknown>) => String(r.listing_id))))
+            const titleMap: Record<string, string> = {}
+            const instMap: Record<string, string> = {}
+            await Promise.all(
+              listingIds.map(async (id) => {
+                try {
+                  const lr = await fetch(`/api/v1/exchange/listings/${encodeURIComponent(id as string)}`)
+                  if (lr.ok) {
+                    const lj = await lr.json()
+                    const row = lj?.data ?? null
+                    if (row) {
+                      titleMap[id as string] = String(row.title ?? row.address_masked ?? "매물")
+                      instMap[id as string] = String(row.creditor_institution ?? row.institution_name ?? row.institution ?? "매도자")
+                    }
+                  }
+                } catch { /* ignore */ }
+              }),
+            )
+            // API row → AgreementRow 매핑
+            const mapped: AgreementRow[] = (json.data as Array<Record<string, unknown>>).map((r) => {
+              const lid = String(r.listing_id)
+              return {
+                id: String(r.id),
+                type: r.type as DocType,
+                listing_id: lid,
+                counterparty: instMap[lid] ?? "매도자",
+                collateral: titleMap[lid] ?? "매물",
+                amount: typeof r.loi_amount === "number" ? (r.loi_amount as number) : undefined,
+                signed_at: r.signed_at ? String(r.signed_at).slice(0, 16).replace("T", " ") : "—",
+                expires_at: r.expires_at ? String(r.expires_at).slice(0, 10) : undefined,
+                status: r.status as DocStatus,
+              }
+            })
+            setAgreements(mapped)
             setIsSample(false)
             return
           }
         }
-        // 2. 비어 있으면 실제 ACTIVE 매물 4건의 UUID 로 SAMPLE 의 listing_id 를 교체 →
-        //    클릭 시 진짜 딜룸으로 진입할 수 있도록 (기존 SAMPLE 의 가짜 ID 는 DEMO_LISTING fallback 으로 떨어짐)
+        // 2. 빈 응답이면 SAMPLE 의 listing_id 를 ACTIVE 매물 UUID 로 hydrate (기존 동작)
         const lr = await fetch("/api/v1/exchange/listings?limit=4&status=ACTIVE")
         if (lr.ok) {
           const lj = await lr.json()
@@ -338,23 +371,45 @@ export default function AgreementsPage() {
                       <Icon size={11} style={{ color: meta.color }} /> {meta.label}
                     </span>
                     {/* 명시적 상세 진입 버튼 — 행 전체가 Link 이지만 시각적 어포던스 보강.
-                        mck-cta-dark 클래스로 .mck-paper * 의 ink color override 를 우회 → 흰 글씨 보장. */}
-                    <span
-                      className="mck-cta-dark"
-                      style={{
-                        justifySelf: "end",
-                        display: "inline-flex", alignItems: "center", gap: 4,
-                        padding: "6px 12px",
-                        background: ELECTRIC,
-                        color: "#FFFFFF",
-                        fontSize: 11, fontWeight: 800,
-                        letterSpacing: "0.04em",
-                        borderTop: `2px solid ${ELECTRIC_DARK}`,
-                        boxShadow: "0 2px 6px rgba(34, 81, 255, 0.30)",
-                      }}
-                    >
-                      <span style={{ color: "#FFFFFF" }}>딜룸 ↗</span>
-                    </span>
+                        UUID 형식 id 면 PDF 다운로드 링크도 제공. */}
+                    <div style={{ justifySelf: "end", display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
+                      <span
+                        className="mck-cta-dark"
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 4,
+                          padding: "6px 12px",
+                          background: ELECTRIC,
+                          color: "#FFFFFF",
+                          fontSize: 11, fontWeight: 800,
+                          letterSpacing: "0.04em",
+                          borderTop: `2px solid ${ELECTRIC_DARK}`,
+                          boxShadow: "0 2px 6px rgba(34, 81, 255, 0.30)",
+                        }}
+                      >
+                        <span style={{ color: "#FFFFFF" }}>딜룸 ↗</span>
+                      </span>
+                      {/* UUID 형식이면 실 row — PDF 다운로드 가능 */}
+                      {/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.id) && (
+                        <a
+                          href={`/api/v1/agreements/${row.id}/pdf`}
+                          target="_blank"
+                          rel="noopener"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            padding: "3px 8px",
+                            fontSize: 9, fontWeight: 700,
+                            color: ELECTRIC_DARK,
+                            background: "rgba(34, 81, 255, 0.06)",
+                            border: `1px solid rgba(34, 81, 255, 0.30)`,
+                            textDecoration: "none",
+                            letterSpacing: "0.04em",
+                          }}
+                        >
+                          PDF ↓
+                        </a>
+                      )}
+                    </div>
                   </Link>
                 )
               })
