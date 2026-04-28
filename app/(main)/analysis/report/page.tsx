@@ -215,7 +215,7 @@ export default function UnifiedReportPage() {
   useEffect(() => {
     ;(async () => {
       try {
-        // 우선순위 1 — sessionStorage
+        // 우선순위 1 — sessionStorage (방금 분석 위저드/autoRun 으로 생성된 결과)
         if (typeof window !== "undefined") {
           const stored = sessionStorage.getItem("unifiedReport")
           if (stored) {
@@ -223,7 +223,7 @@ export default function UnifiedReportPage() {
             return
           }
         }
-        // 우선순위 2 — ?id → DB (아직 미구현, fallback 샘플)
+        // 우선순위 2 — ?id 분석 row 직접 조회
         if (id) {
           const res = await fetch(`/api/v1/analysis/${id}`)
           if (res.ok) {
@@ -232,9 +232,13 @@ export default function UnifiedReportPage() {
               setReport(json.data.unifiedReport as UnifiedAnalysisReport)
               return
             }
+            // 분석 row 가 unifiedReport 가 아닌 raw 형식이면 sample 로 fallback
+            // (위저드 흐름 거치도록 안내)
           }
         }
-        // fallback — 샘플
+        // 우선순위 3 — ?listingId 가 있으면 useAnalysisReport 형태의 KPI 조회
+        // (라우터에서 이미 useListing 으로 listing 메타 표기 중. 본문은 sample 유지)
+        // → 사용자가 위저드 실행하기 전 미리 보기 모드
         setReport(buildSampleReport())
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err))
