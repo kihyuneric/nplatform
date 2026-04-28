@@ -67,7 +67,14 @@ const FIELD_MAP: Array<{
   { match: "미수이자",      field: "unpaid_interest",   type: "krw" },
   { match: "연체이자",      field: "overdue_interest",  type: "krw" },
   { match: "채권잔액",      field: "claim_balance",     type: "krw" },  // 자동계산 셀
-  { match: "수익권금액",    field: "beneficial_amount", type: "krw" },  // 자동계산 셀
+  // v3.3: 수익권 — 비율·자동값·적용값 분리
+  //   · 적용값(직접 입력) 우선, 없으면 자동값 사용 (서버에서 후처리)
+  { match: "수익권비율",       field: "beneficial_ratio",      type: "pct" },
+  { match: "수익권금액자동",   field: "beneficial_amount_auto", type: "krw" },
+  { match: "수익권금액(자동",  field: "beneficial_amount_auto", type: "krw" },
+  { match: "수익권금액(적용",  field: "beneficial_amount", type: "krw" },
+  { match: "수익권금액적용",   field: "beneficial_amount", type: "krw" },
+  { match: "수익권금액",       field: "beneficial_amount", type: "krw" },  // legacy fallback (단일 셀 v3.2)
   { match: "연체시작일",    field: "delinquency_start_date", type: "date" },
   { match: "정상금리",      field: "normal_rate",       type: "pct" },
   { match: "연체금리",      field: "overdue_rate",      type: "pct" },
@@ -244,6 +251,13 @@ function parseSheet1(sheet: XLSX.WorkSheet): { fields: Record<string, unknown>; 
   if (fields.discount_basis) {
     fields.discount_basis = normalizeMap(String(fields.discount_basis), DISCOUNT_BASIS_MAP)
   }
+  // v3.3: 수익권금액 적용값이 비어있으면 자동값으로 대체
+  //   사용자 정책: 매도자가 직접 입력하면 그 값을, 비우면 (최초원금 × 비율%) 자동값을 사용
+  if ((fields.beneficial_amount === undefined || fields.beneficial_amount === 0) && fields.beneficial_amount_auto) {
+    fields.beneficial_amount = fields.beneficial_amount_auto
+  }
+  // 임시 자동값 키는 응답에서 제거 (UI 에 노출 X · 참고용)
+  delete fields.beneficial_amount_auto
   // 매각 방식 ON/OFF 체크 (행별 O/X)
   if (fields.sale_method_nplatform !== undefined) {
     fields.sale_method_nplatform = isTrue(fields.sale_method_nplatform)
