@@ -63,8 +63,20 @@ interface RecentItem {
   roi: string; date: string; href: string
 }
 
+/**
+ * 사례 사전 빌드된 매물 — Supabase 가 실 분석 row 를 반환해도 RECENT_PIPELINE 에 항상 prepend.
+ * (사용자가 거래소·딜룸·분석 어떤 동선으로 진입해도 이 사례에 즉시 도달 가능).
+ *
+ * 1. 종로 홍지동 토지 8필지 — buildJongnoSampleReport (?listingId 분기)
+ * 2. 송파 잠실 오피스텔     — buildSampleReport (default · listingId 없음)
+ */
+const FEATURED_RECENT_ITEMS: RecentItem[] = [
+  { id: "feat-jongno",  type: "NPL 수익성 분석", title: "종로구 홍지동 토지 8필지 · ○○대부", grade: "A", roi: "180.2%", date: "2026-04-23", href: "/analysis/report?listingId=lst-jongno-hongji" },
+  { id: "feat-jamsil",  type: "NPL 수익성 분석", title: "송파 잠실 ㅇㅇㅇㅇㅇ 오피스텔 · ㅇㅇ신협", grade: "B", roi: "23.8%",  date: "2026-04-21", href: "/analysis/report" },
+]
+
 const RECENT_FALLBACK: RecentItem[] = [
-  { id: "r0", type: "NPL 수익성 분석", title: "종로구 홍지동 토지 8필지 · ○○대부", grade: "A", roi: "180.2%", date: "2026-04-23", href: "/analysis/report?listingId=lst-jongno-hongji" },
+  ...FEATURED_RECENT_ITEMS,
   { id: "r1", type: "NPL 수익성 분석", title: "강남 역삼동 아파트 · 우리은행", grade: "A", roi: "18.4%", date: "2026-04-13", href: "/analysis/report" },
   { id: "r2", type: "경매 분석", title: "분당 오피스텔 · 낙찰가 3.5억", grade: "B", roi: "14.2%", date: "2026-04-12", href: "/analysis/simulator" },
   { id: "r3", type: "NPL 수익성 분석", title: "해운대 상가 · 하나에프앤아이", grade: "B", roi: "16.8%", date: "2026-04-10", href: "/analysis/report" },
@@ -133,7 +145,13 @@ export default function AnalysisDashboard() {
               }
             }
 
-            setRecent(items.slice(0, 5))
+            // 사례 사전 빌드된 매물(종로·잠실)을 항상 최상단에 prepend — Supabase 결과가 있어도 보존.
+            // 단, 실 분석 row 가 동일 매물에 대한 결과일 수 있으므로 title 기준 중복 제거.
+            const featuredTitles = new Set(FEATURED_RECENT_ITEMS.map(f => f.title))
+            const dedupedItems = items.filter(it => !featuredTitles.has(it.title))
+            const merged = [...FEATURED_RECENT_ITEMS, ...dedupedItems]
+
+            setRecent(merged.slice(0, 7))
             setIsDemo(false)
             return
           }

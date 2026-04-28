@@ -42,11 +42,16 @@ export const JONGNO_HONGJI_DETAIL = {
   debtor_name_masked: '박**',
   debtor_changed_history: '정보없음',
 
-  /* 채권 상세 (₩) */
-  principal_amount: 1_648_045_960,          // 대출원금 = 대출잔액
-  outstanding_principal: 1_648_045_960,
-  claim_amount: 1_699_822_215,              // 총 채권액 (원금 + 연체이자 + 비용)
-  loan_balance: 1_648_045_960,              // 대출잔액
+  /* 채권 상세 (₩)
+     ⚠ 표시 규약 (NPLatform 공통): "채권잔액" = 대출원금 + 연체이자 (+비용).
+     카드/딜룸/분석은 principal_amount 를 "채권 잔액" 으로 라벨링하므로,
+     principal_amount = claim_amount = 1,699,822,215 (총 채권액) 으로 통일.
+     순수 대출원금은 loan_principal_only 에 별도 보관. */
+  principal_amount: 1_699_822_215,          // 채권잔액 (= 대출원금 + 연체이자)
+  outstanding_principal: 1_699_822_215,
+  claim_amount: 1_699_822_215,              // 총 채권액
+  loan_balance: 1_648_045_960,              // 대출잔액 (대출원금만)
+  loan_principal_only: 1_648_045_960,       // 순수 대출원금 (분석 보고서용)
   initial_principal: 17 * 억,                // 최초원금 17억
 
   /* 이자 / 비용 (₩) */

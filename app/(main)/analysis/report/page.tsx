@@ -217,7 +217,19 @@ export default function UnifiedReportPage() {
   useEffect(() => {
     ;(async () => {
       try {
-        // 우선순위 1 — sessionStorage (방금 분석 위저드/autoRun 으로 생성된 결과)
+        // 우선순위 1 — listingId 가 사례 사전 빌드된 매물(종로 홍지동 등)이면 전용 빌더
+        //   ⚠ sessionStorage / API 보다 먼저 — 사용자가 매물 단위로 진입한 의도를 우선
+        //   (이전 다른 매물 viewer 의 캐시가 새 매물에 덮어씌워지는 문제 방지)
+        if (listingId === JONGNO_HONGJI_LISTING_ID) {
+          // 종로 매물 진입 시 이전 unifiedReport 캐시는 의미 없음 — 정리해 다음 진입에서도 깨끗
+          if (typeof window !== "undefined") {
+            try { sessionStorage.removeItem("unifiedReport") } catch { /* noop */ }
+          }
+          setReport(buildJongnoSampleReport())
+          return
+        }
+
+        // 우선순위 2 — sessionStorage (방금 분석 위저드/autoRun 으로 생성된 결과)
         if (typeof window !== "undefined") {
           const stored = sessionStorage.getItem("unifiedReport")
           if (stored) {
@@ -225,7 +237,7 @@ export default function UnifiedReportPage() {
             return
           }
         }
-        // 우선순위 2 — ?id 분석 row 직접 조회
+        // 우선순위 3 — ?id 분석 row 직접 조회
         if (id) {
           const res = await fetch(`/api/v1/analysis/${id}`)
           if (res.ok) {
@@ -237,11 +249,6 @@ export default function UnifiedReportPage() {
             // 분석 row 가 unifiedReport 가 아닌 raw 형식이면 sample 로 fallback
             // (위저드 흐름 거치도록 안내)
           }
-        }
-        // 우선순위 3 — listingId 가 사례 사전 빌드된 매물(종로 홍지동 등)이면 전용 빌더
-        if (listingId === JONGNO_HONGJI_LISTING_ID) {
-          setReport(buildJongnoSampleReport())
-          return
         }
         // 우선순위 4 — ?listingId 가 있으면 useAnalysisReport 형태의 KPI 조회
         // (라우터에서 이미 useListing 으로 listing 메타 표기 중. 본문은 sample 유지)
@@ -1551,8 +1558,13 @@ function PromptToggle({ report, promptLabel }: { report: UnifiedAnalysisReport; 
 }
 
 function RecoveryBar({ predicted, lower, upper }: { predicted: number; lower: number; upper: number }) {
-  const scale = (v: number) => Math.max(0, Math.min(100, v))
-  // McKinsey monochrome — 신뢰구간(electric) + 예측치 마커(ink)
+  // 동적 max — 회수율이 100% 초과(원금 대비 매입가 할인 시 자주 발생) 인 경우에도 정상 시각화.
+  //   · 일반 케이스: 0~100% 스케일
+  //   · 고회수 케이스(예: 283%): 0~max(predicted, upper) + 10% 여유 스케일
+  const ceilTo50 = (v: number) => Math.ceil(v / 50) * 50
+  const dataMax = Math.max(100, predicted, upper, lower)
+  const axisMax = ceilTo50(dataMax * 1.05)             // 5% 여유 후 50 단위 올림
+  const scale = (v: number) => Math.max(0, Math.min(100, (v / axisMax) * 100))
   return (
     <div
       className="relative"
@@ -1563,12 +1575,23 @@ function RecoveryBar({ predicted, lower, upper }: { predicted: number; lower: nu
         overflow: "hidden",
       }}
     >
+      {/* 100% 기준선 (참조) — axisMax 가 100 초과일 때만 표시 */}
+      {axisMax > 100 && (
+        <div
+          className="absolute top-0 h-full"
+          style={{
+            left: `${(100 / axisMax) * 100}%`,
+            width: 1,
+            background: "rgba(10,22,40,0.35)",
+          }}
+        />
+      )}
       {/* 신뢰구간 밴드 — electric 그라데이션 */}
       <div
         className="absolute top-0 h-full"
         style={{
           left: `${scale(lower)}%`,
-          width: `${Math.max(scale(upper - lower), 0.5)}%`,
+          width: `${Math.max(scale(upper) - scale(lower), 0.5)}%`,
           background: `linear-gradient(90deg, rgba(34, 81, 255, 0.30) 0%, rgba(34, 81, 255, 0.65) 100%)`,
         }}
       />
@@ -1593,7 +1616,8 @@ function RecoveryBar({ predicted, lower, upper }: { predicted: number; lower: nu
         }}
       >
         <span>0%</span>
-        <span>100%</span>
+        {axisMax > 100 && <span style={{ opacity: 0.55 }}>100%</span>}
+        <span>{axisMax}%</span>
       </div>
     </div>
   )

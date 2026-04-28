@@ -171,7 +171,8 @@ export const SAMPLE_LISTINGS: SampleListing[] = [
     listing_type: 'NPL',
     collateral_type: '토지',
     address: '서울특별시 종로구 홍지동 76-1번지 외 7필지(81-1, 81-4, 81-6, 81-7, 82, 83, 76-30)',
-    principal_amount: 1_648_045_960,        // 대출원금
+    // 채권잔액 = 대출원금(1,648,045,960) + 연체이자(51,776,255) = 1,699,822,215 (UI 표시값)
+    principal_amount: 1_699_822_215,
     appraised_value: 6_673_016_000,         // 감정가(법사가)
     ltv_ratio: 60.12,
     risk_grade: 'A',
