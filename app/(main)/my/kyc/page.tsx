@@ -414,6 +414,7 @@ function KycSlotCard({
         <button
           onClick={() => !uploading && inputRef.current?.click()}
           disabled={uploading}
+          className={doc ? undefined : "mck-cta-dark"}
           style={{
             display: "inline-flex", alignItems: "center", gap: 6,
             padding: "10px 14px",
@@ -425,8 +426,10 @@ function KycSlotCard({
             cursor: uploading ? "not-allowed" : "pointer",
           }}
         >
-          {doc ? <RefreshCcw size={13} /> : <Upload size={13} />}
-          {doc ? "교체 업로드" : "업로드"}
+          {doc ? <RefreshCcw size={13} /> : <Upload size={13} color="#FFFFFF" />}
+          <span style={{ color: doc ? "#0A1628" : "#FFFFFF" }}>
+            {doc ? "교체 업로드" : "업로드"}
+          </span>
         </button>
         {doc?.data && (
           <a
