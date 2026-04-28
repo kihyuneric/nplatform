@@ -4,11 +4,13 @@
  * 사용자 제공 실 데이터 기반 분석 보고서 사례 — 종로 홍지동 토지 NPL
  * (채권자·채무자 명은 마스킹)
  *
- * - 채권: ○○대부 대출원금 16.48억 · 총 채권액 16.99억 (연체이자 0.52억 포함)
+ * 계산 기준일: 2026-04-28
+ * - 채권: ○○대부 대출원금 16.48억 + 연체이자 0.81억 = 채권잔액 17.29억 (= 매각가)
+ * - 매각: 채권잔액 100% 매각 (할인 0%) → 금융기관 NPL 매각가 = 17.29억
  * - 담보: 서울 종로구 홍지동 76-1 외 7필지 일괄 5,193㎡ · 제1종일반주거지역
- * - 가치: 감정가 66.73억 (LTV 60.12%) · AI 시세 74.90억
+ * - 가치: 감정가 66.73억 (LTV 60.12% = 선순위+원금/감정가) · AI 시세 74.90억
  * - 낙찰가율: 종로구 토지 1년 70.5% · 6개월 70.8% · 3개월 71.4% · 1개월 70.7%
- * - 우리 로직: 감정가 대비 71.4% 적용 → 예상낙찰가 47.63억 → 회수율 280%
+ * - 우리 로직: 감정가 대비 71.4% 적용 → 예상낙찰가 47.63억 → 회수율 약 275%
  */
 
 import type { StatisticsContext } from './statistics'
@@ -44,7 +46,7 @@ import {
 
 // ─── 통계 컨텍스트 — 서울 종로구 토지 ────────────────────────────
 export const JONGNO_HONGJI_STATISTICS: StatisticsContext = {
-  asOfDate: '2026-04-23',
+  asOfDate: '2026-04-28',
   target: {
     location: {
       sido: '서울특별시',
@@ -64,7 +66,7 @@ export const JONGNO_HONGJI_STATISTICS: StatisticsContext = {
       location: { sido: '서울특별시', sigungu: '종로구' },
       propertyCategory: '대지',
       scope: 'SIGUNGU',
-      asOfDate: '2026-04-23',
+      asOfDate: '2026-04-28',
       rows: JONGNO_HONGJI_AUCTION_STATS.map(r => ({
         bucket: r.bucket,
         periodLabel: r.periodLabel,
@@ -78,7 +80,7 @@ export const JONGNO_HONGJI_STATISTICS: StatisticsContext = {
   courtSchedule: {
     courtName: '서울중앙지방법원 본원',
     avgHearingInterval: 45,
-    asOfDate: '2026-04-23',
+    asOfDate: '2026-04-28',
     /* 회차별 매각/배당 평균 소요일 (사용자 제공 실측):
        1회 315일/329일 · 2회 393일/420일 · 3회 502일/521일 · 4회 610일/687일
        6회 465일/529일 · 5/7~10회 데이터 없음 (0 = 표본 부족) */
@@ -358,8 +360,8 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     appraisalValue: appraisal,
     aiMarketValueLatest: aiMarket,
     priceHistory: [
-      { price: appraisal, reportedAt: '2026-04-23', source: 'APPRAISAL', label: '감정가 (법사가)' },
-      { price: aiMarket,  reportedAt: '2026-04-23', source: 'AI_LATEST', label: 'AI 시세' },
+      { price: appraisal, reportedAt: '2026-04-28', source: 'APPRAISAL', label: '감정가 (법사가)' },
+      { price: aiMarket,  reportedAt: '2026-04-28', source: 'AI_LATEST', label: 'AI 시세' },
     ],
     expectedBidRatio: 0.714,    // 감정가 대비 3개월 평균
     expectedBidRatioPeriod: '종로구 토지 3개월 평균',
@@ -375,7 +377,7 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     registrationTransferRate: 0.0048,
     brokerageFeeRate: 0.012,
     contractDepositRate: 0.10,
-    asOfDate: '2026-04-23',
+    asOfDate: '2026-04-28',
     mcSeed: 20260423,
     mcTrials: 10_000,
     sensitivityPurchaseRateAxis: [1.00, 0.95, 0.90, 0.85, 0.80, 0.75, 0.70],

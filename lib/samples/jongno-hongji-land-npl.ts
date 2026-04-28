@@ -34,7 +34,7 @@ export const JONGNO_HONGJI_DETAIL = {
   institution_type: 'LENDER',
   /** 실 채권자 명: 주식회사 에이에프투자대부 (NDA/L2 후 노출) */
   creditor_real_name: '주식회사 에이에프투자대부',
-  reference_date: '2026-04-23',
+  reference_date: '2026-04-28',           // 채권잔액·이자 계산 기준일
 
   /* 채무자 정보 */
   debtor_type: 'INDIVIDUAL',
@@ -55,9 +55,12 @@ export const JONGNO_HONGJI_DETAIL = {
   loan_principal_only: 1_648_045_960,       // 순수 대출원금 (분석 보고서용)
   initial_principal: 17 * 억,                // 최초원금 17억
 
-  /* 이자 / 비용 (₩) — 매입 시점 누적치 */
+  /* 이자 / 비용 (₩) — 2026-04-28 기준 누적치
+     · 대출원금         1,648,045,960 (불변)
+     · 연체이자         81,273,499    (2026-04-28 기준, 연체시작 2026-03-03 이후 누적)
+     · 채권잔액         1,729,319,459 (= 매입가) */
   interest_normal: 0,                        // 정상이자
-  interest_overdue: 81_273_499,              // 연체이자 (매입시점 누적, 채권잔액 - 대출원금)
+  interest_overdue: 81_273_499,              // 연체이자 (2026-04-28 기준 누적)
   interest_unpaid: 0,                        // 미수이자
   cost_advance: 0,                           // 가지급비용
 
