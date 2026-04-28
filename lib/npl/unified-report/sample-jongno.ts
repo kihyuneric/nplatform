@@ -332,7 +332,7 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     discountRate: 0,
     pledgeLoanRatio: 0.75,         // 개인 채무자 75% (법인 70%)
     pledgeInterestRate: 0.065,     // 6.5%
-    executionCost: 25_000_000,    // 8필지 → 집행비용 가산
+    executionCost: 10_000_000,     // 경매비용 1,000만원 기준 (사용자 정책)
     registrationTransferRate: 0.0048,
     brokerageFeeRate: 0.012,
     contractDepositRate: 0.10,
