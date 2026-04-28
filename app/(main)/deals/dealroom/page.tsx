@@ -73,6 +73,9 @@ import {
 import { useDealOffers, type DealOffer, type OfferStatus } from "@/lib/hooks/use-deal-offers"
 import { useDealMessages, useSendDealMessage, type DealMessage } from "@/lib/hooks/use-deal-messages"
 import { startInicisCheckout } from "@/components/payment/inicis-checkout-client"
+// 분석 보고서 엔진 — 딜룸 AI 카드와 보고서 화면이 동일 결과 사용 (SoT)
+import { buildJongnoSampleReport } from "@/lib/npl/unified-report/sample-jongno"
+import { JONGNO_HONGJI_LISTING_ID } from "@/lib/samples/jongno-hongji-land-npl"
 
 /* ─── Dealroom Listing Context — 하위 컴포넌트(NDA/LOI 모달, Summary 등) 가
        prop drill 없이 listing 에 접근. 매물 SoT 의 단일 진입점. ───────────── */
@@ -2880,15 +2883,14 @@ function RegistryFullTable() {
   )
 }
 
-/* ════ FULL · AI 투자 분석 — Sky Blue (listing SoT 기반 동적 계산) ══════════════════
+/* ════ FULL · AI 투자 분석 — NPL 분석 보고서 엔진 (sample-jongno / sample) 동기화 ═══
  *
- * 모든 수치는 useDealroomListing()의 listing 으로부터 파생.
- * - 매입가     = listing.loan_principal_only (대출원금) × 95%   (대출원금 = 채권잔액 - 연체이자)
- * - 낙찰가율    = listing 의 expected_bid_methods.byAppraisalRatio.bidRatioPct (있으면) 또는 71.4 default
- * - 예상 낙찰가 = 감정가 × 낙찰가율
- * - ROI        = (예상 낙찰가 - 매입가) / 매입가
- *
- * listing 마다 자동으로 다른 수치 표시 — 종로/잠실/강남 무관하게 동작.
+ * 핵심 정책:
+ *   - 본 카드의 모든 수치는 NPL 분석 보고서가 사용하는 동일 엔진(buildXxxSampleReport)으로
+ *     계산해 카드 ↔ 보고서 간 결과가 100% 일치.
+ *   - listingId 가 사례 사전 빌드 매물(종로 등) 이면 전용 빌더 호출,
+ *     아니면 listing 데이터로 동적 계산 fallback.
+ *   - NEVER 하드코딩 — listing/report 가 SoT.
  * ═══════════════════════════════════════════════════════════════════════════ */
 function FullAiInvestmentAnalysisCard() {
   const { listing, principal, appraisal } = useDealroomListing()
@@ -2896,17 +2898,34 @@ function FullAiInvestmentAnalysisCard() {
   const reportHref = listingId ? `/analysis/report?listingId=${encodeURIComponent(listingId)}` : "/analysis/report"
   const analysisHref = listingId ? `/analysis?listingId=${encodeURIComponent(listingId)}` : "/analysis"
 
+  // 분석 보고서 엔진 호출 — 카드와 보고서가 동일 SoT 사용
+  const reportSnapshot = useMemo(() => {
+    try {
+      if (listingId === JONGNO_HONGJI_LISTING_ID) {
+        return buildJongnoSampleReport()
+      }
+    } catch (e) {
+      console.warn("[dealroom] report engine fallback:", e)
+    }
+    return null
+  }, [listingId])
+
   // ─ 핵심 추정치 (listing SoT 기반) ─
   const loanPrincipalOnly =
     (listing?.loan_principal_only as number | undefined) ??
     (listing?.loan_balance as number | undefined) ??
     Math.round(principal * 0.97)            // 채권잔액의 97% (연체이자 약 3%)
 
+  // 낙찰가율·예상낙찰가 — 보고서 결과 우선, 없으면 listing 메타에서 추출
   const expectedBidMethods = listing?.expected_bid_methods as
     | { byAppraisalRatio?: { bidRatioPct?: number; expectedBid?: number } }
     | undefined
-  const bidRatioPct = expectedBidMethods?.byAppraisalRatio?.bidRatioPct ?? 71.4
+  const bidRatioPct =
+    reportSnapshot?.expectedBid?.appraisal?.ratioPercent ??
+    expectedBidMethods?.byAppraisalRatio?.bidRatioPct ??
+    71.4
   const expectedBidPrice =
+    reportSnapshot?.expectedBid?.appraisal?.expectedBidPrice ??
     expectedBidMethods?.byAppraisalRatio?.expectedBid ??
     Math.round(appraisal * (bidRatioPct / 100))
 
@@ -2959,25 +2978,29 @@ function FullAiInvestmentAnalysisCard() {
   const roi = purchasePrice > 0 ? (expectedProfit / purchasePrice) * 100 : 0
   const annualizedRoi = roi * (12 / holdingPeriodMonths)
 
-  // AI 투자 등급 점수 — 회수율 + LTV + 권리관계 + 시장
+  // AI 투자 등급 점수 — 보고서 결과 우선, 없으면 listing 기반 동적 산출
   // LTV = (선순위 채권최고액 + 대출원금) / 감정가 — getListingLtv() SoT 사용
-  const recoveryRate = principal > 0 ? Math.min(300, (recoveredToSecond / principal) * 100) : 0
+  const reportVerdict = reportSnapshot?.summary?.verdict
+  const reportVerdictScore = reportSnapshot?.summary?.verdictScore
+  const reportRiskGrade = reportSnapshot?.summary?.riskGrade
+  const reportRecoveryRate = reportSnapshot?.summary?.predictedRecovery
+
+  const recoveryRate = reportRecoveryRate ??
+    (principal > 0 ? Math.min(300, (recoveredToSecond / principal) * 100) : 0)
   const ltv = getListingLtv(listing) || 65
-  // 권리관계 점수: 후순위 권리·임차인 등 패널티는 listing 메타에서 추출 (단순 0~30 점)
-  const seniorRightsCount = 1 // 1순위 농협
   const subordinateCount = (listing?.subordinate_count as number | undefined) ?? 0
   const tenantCount = (listing?.senior_tenant_count as number | undefined) ?? 0
   const rightsScore = Math.max(0, 30 - subordinateCount * 3 - tenantCount * 5)
 
-  const aiScore = Math.round(
+  const aiScore = reportVerdictScore ?? Math.round(
     Math.min(100,
       Math.min(50, recoveryRate / 6) +              // 회수율 비중 (max 50점, 회수율 300% 시 50점)
       Math.min(20, (100 - ltv) / 2) +                // LTV 낮을수록 (max 20점)
       rightsScore                                     // 권리관계 (max 30점)
     ) * 10
   ) / 10
-  const aiGrade = aiScore >= 80 ? "A" : aiScore >= 65 ? "B" : aiScore >= 50 ? "C" : "D"
-  const verdict = aiScore >= 70 ? "BUY" : aiScore >= 55 ? "HOLD" : "AVOID"
+  const aiGrade = reportRiskGrade ?? (aiScore >= 80 ? "A" : aiScore >= 65 ? "B" : aiScore >= 50 ? "C" : "D")
+  const verdict = reportVerdict ?? (aiScore >= 70 ? "BUY" : aiScore >= 55 ? "HOLD" : "AVOID")
 
   // 매입·낙찰 성공 확률 — 다중 팩터 가중 합산
   //   · 낙찰가율 적정성 (낙찰가율 70% 부근에서 최고 — 너무 낮으면 유찰, 너무 높으면 마진↓)
@@ -3194,8 +3217,22 @@ function FullMatchingDemandCard() {
   )
 }
 
-/* ════ FULL · 매수자 수수료 안내 (breakdown) ═══════════════════════════════ */
+/* ════ FULL · 매수자 수수료 안내 (listing.askingPrice 기반 동적 계산) ═══════ */
 function FullBuyerFeeCard() {
+  const { askingPrice } = useDealroomListing()
+  // 매수자 수수료 정책 (NPLatform 기본):
+  //   기본 수수료 1.5% + PNR 우선협상권 0.3% = 실효 1.8%
+  const baseFeeRate = 0.015
+  const pnrRate = 0.003
+  const effectiveRate = baseFeeRate + pnrRate
+  const baseFee = Math.round(askingPrice * baseFeeRate)
+  const pnrFee  = Math.round(askingPrice * pnrRate)
+  const totalFee = baseFee + pnrFee
+  const fmtEokOrMan = (n: number) => {
+    if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(2)}억`
+    if (n >= 10_000) return `${Math.round(n / 10_000).toLocaleString("ko-KR")}만`
+    return `${n.toLocaleString("ko-KR")}원`
+  }
   return (
     <article style={{
       background: MCK.paper,
@@ -3204,31 +3241,31 @@ function FullBuyerFeeCard() {
       padding: 18,
       marginBottom: 16,
     }}>
-      {/* 기준 거래가 / 실효 요율 / 예상 수수료 */}
+      {/* 기준 거래가 / 실효 요율 / 예상 수수료 — 모두 listing.askingPrice 파생 */}
       <div className="grid grid-cols-3" style={{ gap: 10, marginBottom: 14, paddingBottom: 14, borderBottom: `1px solid ${MCK.border}` }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 800, color: MCK.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>기준 거래가</div>
-          <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 18, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>19.9억</div>
+          <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 18, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>{fmtEokOrMan(askingPrice)}</div>
         </div>
         <div>
           <div style={{ fontSize: 10, fontWeight: 800, color: MCK.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>실효 요율</div>
-          <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 18, fontWeight: 800, color: MCK.electricDark, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>1.8%</div>
+          <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 18, fontWeight: 800, color: MCK.electricDark, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>{(effectiveRate * 100).toFixed(1)}%</div>
         </div>
         <div>
           <div style={{ fontSize: 10, fontWeight: 800, color: MCK.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>예상 수수료</div>
-          <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 18, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>3,575만</div>
+          <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 18, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>{fmtEokOrMan(totalFee)}</div>
         </div>
       </div>
 
-      {/* 분해 */}
+      {/* 분해 — askingPrice 기반 동적 */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingBottom: 6, borderBottom: `1px dashed ${MCK.border}` }}>
-          <span style={{ fontSize: 11, color: MCK.textSub, fontWeight: 600 }}>기본 수수료 (1.5%)</span>
-          <span style={{ fontFamily: MCK_FONTS.serif, fontSize: 13, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>2,979만</span>
+          <span style={{ fontSize: 11, color: MCK.textSub, fontWeight: 600 }}>기본 수수료 ({(baseFeeRate * 100).toFixed(1)}%)</span>
+          <span style={{ fontFamily: MCK_FONTS.serif, fontSize: 13, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>{fmtEokOrMan(baseFee)}</span>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-          <span style={{ fontSize: 11, color: MCK.textSub, fontWeight: 600 }}>+ 우선협상권 (PNR, 0.3%)</span>
-          <span style={{ fontFamily: MCK_FONTS.serif, fontSize: 13, fontWeight: 800, color: MCK.electricDark, fontVariantNumeric: "tabular-nums" }}>596만</span>
+          <span style={{ fontSize: 11, color: MCK.textSub, fontWeight: 600 }}>+ 우선협상권 (PNR, {(pnrRate * 100).toFixed(1)}%)</span>
+          <span style={{ fontFamily: MCK_FONTS.serif, fontSize: 13, fontWeight: 800, color: MCK.electricDark, fontVariantNumeric: "tabular-nums" }}>{fmtEokOrMan(pnrFee)}</span>
         </div>
       </div>
 
