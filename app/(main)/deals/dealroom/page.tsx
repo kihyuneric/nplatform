@@ -68,6 +68,8 @@ import {
   formatKrwFull,
   type AnalysisKpiSet,
 } from "@/lib/hooks/use-analysis-report"
+import { useDealOffers, type DealOffer, type OfferStatus } from "@/lib/hooks/use-deal-offers"
+import { useDealMessages, useSendDealMessage, type DealMessage } from "@/lib/hooks/use-deal-messages"
 
 /* ─── Dealroom Listing Context — 하위 컴포넌트(NDA/LOI 모달, Summary 등) 가
        prop drill 없이 listing 에 접근. 매물 SoT 의 단일 진입점. ───────────── */
@@ -415,9 +417,9 @@ export default function DealRoomPage() {
               <SectionExecution />
             </div>
 
-            {/* ── RIGHT — sticky 보안 채팅 + 상대방 ─────────────────── */}
+            {/* ── RIGHT — sticky 보안 채팅 + 상대방 (B2: useDealMessages 실 데이터) */}
             <div style={{ position: "sticky", top: 24, display: "flex", flexDirection: "column", gap: 12 }}>
-              <SecureChatPanel />
+              <ListingChatPanel />
               <CounterpartySidePanel />
             </div>
           </div>
@@ -1095,57 +1097,8 @@ function SectionEngagement() {
         <PriceOfferForm />
       </div>
 
-      {/* 오퍼 history table */}
-      <SubsectionHeader title="오퍼 내역" sub="3차 협상 진행" />
-      <div style={{ border: `1px solid ${MCK.border}`, background: MCK.paper }}>
-        <div
-          style={{
-            display: "grid", gridTemplateColumns: "60px 1fr 90px 90px 80px",
-            gap: 10, padding: "8px 12px",
-            background: MCK.paperTint, borderBottom: `1px solid ${MCK.border}`,
-            fontSize: 9, fontWeight: 800, color: MCK.textSub,
-            letterSpacing: "0.06em", textTransform: "uppercase",
-          }}
-        >
-          <span>차수</span>
-          <span>제출자</span>
-          <span style={{ textAlign: "right" }}>오퍼가</span>
-          <span style={{ textAlign: "right" }}>할인율</span>
-          <span style={{ textAlign: "center" }}>상태</span>
-        </div>
-        {[
-          { round: "01", from: "매수자 · ○○대부업체", price: "7.8억", discount: "35.0%", status: "거절", statusBg: MCK.paperDeep, statusFg: MCK.textSub, isDark: false },
-          { round: "02", from: "매도자 · ○○은행", price: "8.7억", discount: "27.5%", status: "응답대기", statusBg: "rgba(34, 81, 255, 0.10)", statusFg: "#1A47CC", isDark: false },
-          { round: "03", from: "매수자 · ○○대부업체", price: "8.5억", discount: "29.2%", status: "검토중", statusBg: MCK.ink, statusFg: MCK.paper, isDark: true },
-        ].map((row, idx) => (
-          <div
-            key={row.round}
-            style={{
-              display: "grid", gridTemplateColumns: "60px 1fr 90px 90px 80px",
-              gap: 10, alignItems: "center", padding: "10px 12px",
-              borderBottom: idx < 2 ? `1px solid ${MCK.border}` : "none",
-            }}
-          >
-            <span style={{ fontFamily: MCK_FONTS.serif, fontSize: 13, fontWeight: 800, color: MCK.ink }}>{row.round}</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: MCK.ink }}>{row.from}</span>
-            <span style={{ textAlign: "right", fontFamily: MCK_FONTS.serif, fontSize: 12, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>{row.price}</span>
-            <span style={{ textAlign: "right", fontFamily: MCK_FONTS.serif, fontSize: 11, fontWeight: 700, color: MCK.electricDark, fontVariantNumeric: "tabular-nums" }}>{row.discount}</span>
-            <span style={{ textAlign: "center" }}>
-              <span
-                className={row.isDark ? "mck-cta-dark" : ""}
-                style={{
-                  display: "inline-flex", alignItems: "center",
-                  padding: "2px 7px", fontSize: 8, fontWeight: 800,
-                  background: row.statusBg, color: row.statusFg,
-                  letterSpacing: "0.04em", textTransform: "uppercase",
-                }}
-              >
-                <span style={{ color: row.statusFg }}>{row.status}</span>
-              </span>
-            </span>
-          </div>
-        ))}
-      </div>
+      {/* 오퍼 history table — 실 API (B1.3) */}
+      <DealOffersTable />
     </SectionShell>
   )
 }
@@ -1539,6 +1492,265 @@ type ChatAttachment = {
   name: string
   size: number
   url: string  // URL.createObjectURL(blob)
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ListingChatPanel (B2) — listing-scoped 보안 채팅
+   · useDealMessages 로 실제 메시지 이력 polling (15s)
+   · useSendDealMessage 로 POST + 자동 invalidate
+   · 서버측 PII 자동 마스킹 (전화/주민/이메일/외부 핸들/외부 링크)
+   · masked_categories 응답 필드 → "내가 보낸 메시지가 자동 마스킹됨" toast 표시
+═══════════════════════════════════════════════════════════════════════════ */
+function ListingChatPanel() {
+  const { listing, institution } = useDealroomListing()
+  const listingId = listing ? String(listing.id) : null
+  const { data, isLoading } = useDealMessages(listingId)
+  const messages = (data?.data ?? []) as DealMessage[]
+  const isSampleSource = data?._source === 'sample'
+
+  const send = useSendDealMessage(listingId)
+
+  const [draft, setDraft] = useState("")
+  const [maskedNotice, setMaskedNotice] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const piiCheck = detectPII(draft)
+  const blocked = piiCheck.hasPhone
+
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  // 메시지 변경 시 하단으로 자동 스크롤
+  useState(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  })
+
+  async function handleSend() {
+    if (!draft.trim() || send.isPending) return
+    setError(null)
+    setMaskedNotice(null)
+    try {
+      const result = await send.mutateAsync({ body: draft })
+      setDraft("")
+      if (result.masked_categories && result.masked_categories.length > 0) {
+        const labels: Record<string, string> = {
+          phone: '전화번호', rrn: '주민번호', email: '이메일',
+          external_handle: '외부 채널 핸들', external_url: '외부 링크',
+        }
+        const cats = result.masked_categories.map((c) => labels[c] ?? c).join(', ')
+        setMaskedNotice(`자동 마스킹 적용됨: ${cats}`)
+      }
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : '메시지 전송 실패')
+    }
+  }
+
+  return (
+    <article
+      style={{
+        background: MCK.paper,
+        border: `1px solid ${MCK.border}`,
+        borderTop: `2px solid ${MCK.electric}`,
+        display: "flex", flexDirection: "column",
+        height: "calc(100vh - 200px)",
+        maxHeight: 720,
+      }}
+    >
+      {/* Header */}
+      <header
+        style={{
+          padding: "12px 14px",
+          borderBottom: `1px solid ${MCK.border}`,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: MCK.paperTint,
+        }}
+      >
+        <div>
+          <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 2 }}>
+            보안 채팅 · {institution || '매도자'}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, color: MCK.textMuted, fontWeight: 600 }}>
+            <Wifi size={10} style={{ color: '#10B981' }} />
+            <span>{isSampleSource ? "샘플 모드" : "실시간"} · 15초마다 갱신</span>
+          </div>
+        </div>
+        <span style={{
+          fontSize: 9, fontWeight: 800,
+          padding: "3px 8px",
+          background: "rgba(34, 81, 255, 0.08)",
+          color: MCK.electricDark,
+          border: "1px solid rgba(34, 81, 255, 0.30)",
+          letterSpacing: "0.06em", textTransform: "uppercase",
+        }}>
+          PII 자동 마스킹
+        </span>
+      </header>
+
+      {/* Body */}
+      <div
+        ref={scrollRef}
+        style={{ flex: 1, overflowY: "auto", padding: "14px 12px", display: "flex", flexDirection: "column", gap: 10 }}
+      >
+        {isLoading && messages.length === 0 && (
+          <div style={{ textAlign: "center", padding: 24, fontSize: 11, color: MCK.textMuted }}>
+            메시지 불러오는 중...
+          </div>
+        )}
+        {messages.map((m) => (
+          <ChatMessageBubble key={m.id} message={m} />
+        ))}
+      </div>
+
+      {/* Composer */}
+      <div style={{ padding: "10px 12px", borderTop: `1px solid ${MCK.border}`, background: MCK.paperTint }}>
+        {maskedNotice && (
+          <div style={{
+            fontSize: 10, color: MCK.electricDark, marginBottom: 6,
+            padding: "5px 8px",
+            background: "rgba(34, 81, 255, 0.08)",
+            border: "1px solid rgba(34, 81, 255, 0.30)",
+          }}>
+            {maskedNotice}
+          </div>
+        )}
+        {error && (
+          <div style={{
+            fontSize: 10, color: '#991B1B', marginBottom: 6,
+            padding: "5px 8px",
+            background: "rgba(220, 38, 38, 0.06)",
+            border: "1px solid rgba(220, 38, 38, 0.30)",
+          }}>
+            {error}
+          </div>
+        )}
+        {blocked && (
+          <div style={{
+            fontSize: 10, color: '#A53F00', marginBottom: 6,
+            padding: "5px 8px",
+            background: "rgba(255, 140, 0, 0.10)",
+            border: "1px solid rgba(255, 140, 0, 0.35)",
+          }}>
+            ⚠ 전화번호가 감지되었습니다. 서버 전송 전 자동 마스킹됩니다.
+          </div>
+        )}
+        <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault()
+                handleSend()
+              }
+            }}
+            placeholder="메시지 입력 — Cmd/Ctrl+Enter 전송 · PII 자동 마스킹"
+            rows={2}
+            style={{
+              flex: 1,
+              resize: "none",
+              padding: "8px 10px",
+              fontSize: 12,
+              fontFamily: "inherit",
+              color: MCK.ink,
+              background: MCK.paper,
+              border: `1px solid ${MCK.border}`,
+              borderTop: `2px solid ${MCK.electric}`,
+              outline: "none",
+            }}
+            disabled={send.isPending}
+          />
+          <button
+            type="button"
+            onClick={handleSend}
+            disabled={!draft.trim() || send.isPending}
+            className="mck-cta-dark"
+            style={{
+              flexShrink: 0,
+              display: "inline-flex", alignItems: "center", gap: 4,
+              padding: "8px 12px",
+              fontSize: 11, fontWeight: 800,
+              background: MCK.ink, color: MCK.paper,
+              border: "none",
+              borderTop: `2px solid ${MCK.electric}`,
+              cursor: (!draft.trim() || send.isPending) ? "not-allowed" : "pointer",
+              opacity: (!draft.trim() || send.isPending) ? 0.5 : 1,
+            }}
+          >
+            <Send size={12} style={{ color: MCK.paper }} />
+            <span style={{ color: MCK.paper }}>{send.isPending ? "전송 중" : "전송"}</span>
+          </button>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function ChatMessageBubble({ message }: { message: DealMessage }) {
+  const isSystem = message.sender_role === 'SYSTEM'
+  const isSeller = message.sender_role === 'SELLER'
+  const align = isSystem ? 'center' : isSeller ? 'flex-start' : 'flex-end'
+  const time = new Date(message.created_at).toLocaleString('ko-KR', {
+    month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
+  if (isSystem) {
+    return (
+      <div style={{
+        alignSelf: 'center',
+        maxWidth: '90%',
+        padding: '6px 12px',
+        fontSize: 10,
+        color: MCK.textMuted,
+        background: MCK.paperDeep,
+        border: `1px solid ${MCK.border}`,
+        textAlign: 'center',
+        fontWeight: 600,
+      }}>
+        {message.body}
+      </div>
+    )
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: align, gap: 3, maxWidth: '85%', alignSelf: align }}>
+      <div style={{ fontSize: 9, fontWeight: 700, color: MCK.textMuted, letterSpacing: '0.04em', padding: '0 4px' }}>
+        {message.sender_label} · {time}
+      </div>
+      <div style={{
+        padding: '8px 12px',
+        fontSize: 12,
+        lineHeight: 1.5,
+        color: isSeller ? MCK.ink : MCK.paper,
+        background: isSeller ? MCK.paperTint : MCK.electric,
+        border: isSeller ? `1px solid ${MCK.border}` : `1px solid ${MCK.electricDark}`,
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
+      }}
+      className={isSeller ? '' : 'mck-cta-dark'}
+      >
+        <span style={{ color: isSeller ? MCK.ink : MCK.paper }}>{message.body}</span>
+      </div>
+      {message.attachments && message.attachments.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 2 }}>
+          {message.attachments.map((a) => (
+            <a key={a.id} href={a.url} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '4px 8px',
+              fontSize: 10, fontWeight: 700,
+              color: MCK.electricDark,
+              background: 'rgba(34, 81, 255, 0.06)',
+              border: '1px solid rgba(34, 81, 255, 0.20)',
+              textDecoration: 'none',
+            }}>
+              <Paperclip size={10} /> {a.name} ({Math.round(a.size / 1024)} KB)
+            </a>
+          ))}
+        </div>
+      )}
+      {message.masked_categories && message.masked_categories.length > 0 && (
+        <div style={{ fontSize: 9, color: MCK.textMuted, padding: '0 4px' }}>
+          🔒 일부 정보 자동 마스킹됨
+        </div>
+      )}
+    </div>
+  )
 }
 
 function SecureChatPanel() {
@@ -2146,6 +2358,97 @@ function McMetric({ label, value, sub }: { label: string; value: string; sub: st
       </div>
       <div style={{ fontSize: 9, color: MCK.textMuted, fontWeight: 600, marginTop: 2 }}>{sub}</div>
     </div>
+  )
+}
+
+/* ─── Section 03 가격 오퍼 라운드 표 — useDealOffers hook (B1.3) ─── */
+const OFFER_STATUS_META: Record<OfferStatus, { label: string; bg: string; fg: string; isDark: boolean }> = {
+  PENDING:    { label: "응답 대기",  bg: "rgba(34, 81, 255, 0.10)", fg: "#1A47CC",   isDark: false },
+  ACCEPTED:   { label: "수락",       bg: "rgba(16, 185, 129, 0.12)", fg: "#047857",   isDark: false },
+  REJECTED:   { label: "거절",       bg: MCK.paperDeep,              fg: MCK.textSub, isDark: false },
+  COUNTERED:  { label: "검토 중",    bg: MCK.ink,                    fg: MCK.paper,   isDark: true },
+  WITHDRAWN:  { label: "철회",       bg: MCK.paperDeep,              fg: MCK.textMuted, isDark: false },
+}
+
+function DealOffersTable() {
+  const { listing } = useDealroomListing()
+  const listingId = listing ? String(listing.id) : null
+  const { data, isLoading, isError } = useDealOffers(listingId)
+  const offers = (data?.data ?? []) as DealOffer[]
+  const isSampleSource = data?._source === 'sample'
+
+  const sortedOffers = [...offers].sort((a, b) => a.round - b.round)
+  const activeRound = sortedOffers.find((o) => o.status === 'PENDING' || o.status === 'COUNTERED')?.round ?? sortedOffers.length
+  const subLabel = isLoading
+    ? "오퍼 이력 불러오는 중…"
+    : sortedOffers.length === 0
+      ? "아직 오퍼 없음"
+      : `${activeRound}차 협상 진행 ${isSampleSource ? "· 샘플" : ""}`
+
+  return (
+    <>
+      <SubsectionHeader title="오퍼 내역" sub={subLabel} />
+      <div style={{ border: `1px solid ${MCK.border}`, background: MCK.paper }}>
+        <div
+          style={{
+            display: "grid", gridTemplateColumns: "60px 1fr 110px 90px 90px",
+            gap: 10, padding: "8px 12px",
+            background: MCK.paperTint, borderBottom: `1px solid ${MCK.border}`,
+            fontSize: 9, fontWeight: 800, color: MCK.textSub,
+            letterSpacing: "0.06em", textTransform: "uppercase",
+          }}
+        >
+          <span>차수</span>
+          <span>제출자</span>
+          <span style={{ textAlign: "right" }}>오퍼가</span>
+          <span style={{ textAlign: "right" }}>할인율</span>
+          <span style={{ textAlign: "center" }}>상태</span>
+        </div>
+        {sortedOffers.length === 0 && !isLoading && (
+          <div style={{ padding: "20px 12px", textAlign: "center", fontSize: 11, color: MCK.textMuted }}>
+            {isError ? "오퍼 이력을 불러오지 못했습니다." : "아직 제출된 오퍼가 없습니다."}
+          </div>
+        )}
+        {sortedOffers.map((o, idx) => {
+          const meta = OFFER_STATUS_META[o.status] ?? OFFER_STATUS_META.PENDING
+          const last = idx === sortedOffers.length - 1
+          return (
+            <div
+              key={o.id}
+              style={{
+                display: "grid", gridTemplateColumns: "60px 1fr 110px 90px 90px",
+                gap: 10, alignItems: "center", padding: "10px 12px",
+                borderBottom: last ? "none" : `1px solid ${MCK.border}`,
+              }}
+            >
+              <span style={{ fontFamily: MCK_FONTS.serif, fontSize: 13, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>
+                {String(o.round).padStart(2, "0")}
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: MCK.ink }}>{o.from_label}</span>
+              <span style={{ textAlign: "right", fontFamily: MCK_FONTS.serif, fontSize: 12, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>
+                {formatKrwShort(o.price)}
+              </span>
+              <span style={{ textAlign: "right", fontFamily: MCK_FONTS.serif, fontSize: 11, fontWeight: 700, color: MCK.electricDark, fontVariantNumeric: "tabular-nums" }}>
+                {o.discount_rate.toFixed(1)}%
+              </span>
+              <span style={{ textAlign: "center" }}>
+                <span
+                  className={meta.isDark ? "mck-cta-dark" : ""}
+                  style={{
+                    display: "inline-flex", alignItems: "center",
+                    padding: "3px 8px", fontSize: 9, fontWeight: 800,
+                    background: meta.bg, color: meta.fg,
+                    letterSpacing: "0.04em", textTransform: "uppercase",
+                  }}
+                >
+                  <span style={{ color: meta.fg }}>{meta.label}</span>
+                </span>
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </>
   )
 }
 
