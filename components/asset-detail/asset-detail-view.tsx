@@ -1866,7 +1866,7 @@ export function AssetDetailView({
                       className="font-semibold mb-1"
                       style={{ fontSize: 11, color: C.lt3, letterSpacing: "0.04em" }}
                     >
-                      채권잔액 <span style={{ color: C.lt4 }}>(원금 + 미수이자)</span>
+                      채권잔액 <span style={{ color: C.lt4 }}>(원금 + 연체이자)</span>
                     </div>
                     <div
                       className="font-black tabular-nums"
@@ -1981,7 +1981,7 @@ export function AssetDetailView({
                     className="leading-relaxed"
                     style={{ fontSize: 11, color: C.lt3 }}
                   >
-                    채권잔액은 대출 금리와 연체 금리를 적용한 원금과 미수이자의 합계이며,
+                    채권잔액은 대출 금리와 연체 금리를 적용한 원금과 연체이자의 합계이며,
                     연체 시작일부터는 연체 금리로 산정됩니다. 채권 정보 세부 내역은 LOI 제출
                     후 금융기관 대면 미팅에서 검토될 수 있습니다.
                   </p>

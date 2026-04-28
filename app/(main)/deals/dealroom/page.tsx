@@ -620,7 +620,7 @@ function SectionScreening() {
   const askingLabel = fmtEok(askingPrice)
   const appraisalLabel = fmtEok(appraisal)
   const discountSub = discountRate > 0 ? `할인율 ↓${discountRate.toFixed(1)}%` : "—"
-  const principalSub = "채권잔액 = 원금 + 미수이자"
+  const principalSub = "채권잔액 = 원금 + 연체이자"
   const appraisalSub = "감정평가 기준"
 
   return (
@@ -2518,12 +2518,31 @@ function ValidationCardsBlock() {
   const court = (listing?.auction_court as string | undefined) ?? (listing?.court_name as string | undefined) ?? "—"
   const auctionDate = (listing?.auction_date as string | undefined) ?? "—"
   const filedDate = (listing?.created_at ? String(listing.created_at).slice(0, 10) : "—")
-  // 채권 정보 — claim_breakdown 또는 추정
+  // 채권 정보 — claim_breakdown 또는 listing row 또는 추정.
+  // 표시 규약: 채권잔액 = 원금 + 연체이자 (미수이자 아님 — 연체이자만 채권잔액에 합산).
   const cb = listing?.claim_breakdown as Record<string, unknown> | null | undefined
-  const loanPrincipal = (cb?.original_principal as number | undefined) ?? (listing?.loan_principal as number | undefined) ?? Math.round(principal * 0.96)
-  const unpaidInterest = (cb?.unpaid_interest as number | undefined) ?? (listing?.unpaid_interest as number | undefined) ?? Math.max(0, principal - loanPrincipal)
-  const loanRate = (listing?.loan_interest_rate as number | undefined) ?? 6.9
-  const penaltyRate = 8.9
+  const loanPrincipal =
+    (cb?.original_principal as number | undefined) ??
+    (cb?.principal as number | undefined) ??
+    (listing?.loan_principal_only as number | undefined) ??     // 종로 등 신규 사례 — 대출원금만
+    (listing?.loan_principal as number | undefined) ??
+    (listing?.loan_balance as number | undefined) ??
+    Math.round(principal * 0.96)
+  const overdueInterest =
+    (cb?.overdue_interest as number | undefined) ??
+    (listing?.interest_overdue as number | undefined) ??         // 종로 등 신규 사례
+    (listing?.overdue_interest as number | undefined) ??
+    (cb?.unpaid_interest as number | undefined) ??               // legacy 키 (이전 데이터 호환)
+    (listing?.unpaid_interest as number | undefined) ??
+    Math.max(0, principal - loanPrincipal)
+  const loanRate =
+    (listing?.loan_rate as number | undefined) ??
+    (listing?.loan_interest_rate as number | undefined) ??
+    6.9
+  const penaltyRate =
+    (listing?.overdue_rate as number | undefined) ??
+    (listing?.penalty_interest_rate as number | undefined) ??
+    8.9
   const defaultDate = (listing?.default_date as string | undefined) ?? (listing?.loan_start_date as string | undefined) ?? "—"
   // D-day 연체일
   let overdueDays = 0
@@ -2566,7 +2585,7 @@ function ValidationCardsBlock() {
         title="채권 정보"
         rows={[
           ["채권잔액", formatKrwShort(principal)],
-          ["원금/미수이자", `${formatKrwShort(loanPrincipal)} / ${formatKrwShort(unpaidInterest)}`],
+          ["원금/연체이자", `${formatKrwShort(loanPrincipal)} / ${formatKrwShort(overdueInterest)}`],
           ["대출/연체 금리", `${loanRate.toFixed(1)}% / ${penaltyRate.toFixed(1)}%`],
           ["연체 시작", defaultDate !== "—" ? `${defaultDate}${overdueDays > 0 ? ` (${overdueDays}일)` : ""}` : "—"],
         ]}
