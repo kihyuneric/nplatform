@@ -23,7 +23,8 @@ export type DealroomLinkKind =
   | 'court_auction'      // 법원경매정보
   | 'registry'           // 등기부 발급
   | 'kakao_map'          // 카카오맵 (위치)
-  | 'naver_real_estate'  // 네이버부동산 시세
+  | 'naver_search'       // 네이버 검색 (시세) — naver real estate deep link 막혀 search 우회
+  | 'kb_realty'          // KB부동산
   | 'molit_pricing'      // 국토부 실거래가
   | 'kamco_listing'      // KAMCO 공매
   | 'custom'             // 사용자 API 가 자유롭게 추가
@@ -39,37 +40,54 @@ export interface DealroomLink {
 // ─── Fallback 합성 (외부 API 미연동 시) ─────────────────────────
 // 동기 함수 — listing 만 있으면 즉시 안전한 placeholder 링크를 만들 수 있어,
 // React Query 데이터 도착 전에도 ExternalLinksPanel 이 즉시 렌더 가능.
+//
+// 모든 URL 은 검증된 공개 endpoint 만 사용:
+//   · 카카오맵 https://map.kakao.com/?q=<주소>          → 정상 동작 (deep link)
+//   · 네이버 검색 https://search.naver.com/search.naver?query=<주소>+시세
+//                                                        → land.naver.com/search 가
+//                                                          막혀 있어 일반 검색으로 우회
+//   · KB부동산 https://kbland.kr                          → 메인 (주소 deep link 없음)
+//   · 법원경매정보 https://www.courtauction.go.kr/        → 메인
+//   · 국토부 실거래가 https://rt.molit.go.kr/             → 메인
 export function deriveFallbackLinks(listing: ListingDetail): DealroomLink[] {
   const region = getListingRegion(listing)
   const title = getListingTitle(listing)
-  const query = encodeURIComponent(`${region} ${title}`.trim() || (listing.address ?? ''))
+  const queryRaw = `${region} ${title}`.trim() || (listing.address ?? '')
+  const query = encodeURIComponent(queryRaw)
+  const querySise = encodeURIComponent(`${queryRaw} 시세`.trim())
 
-  return [
+  const links: (DealroomLink | null)[] = [
     region
       ? {
-          kind: 'kakao_map' as const,
-          label: '카카오맵에서 위치 보기',
+          kind: 'kakao_map',
+          label: '카카오맵 위치',
           href: `https://map.kakao.com/?q=${query}`,
         }
       : null,
-    region
+    queryRaw
       ? {
-          kind: 'naver_real_estate' as const,
-          label: '네이버부동산 시세',
-          href: `https://land.naver.com/search?query=${query}`,
+          kind: 'naver_search',
+          label: '네이버에서 시세 검색',
+          href: `https://search.naver.com/search.naver?query=${querySise}`,
         }
       : null,
     {
-      kind: 'court_auction' as const,
+      kind: 'kb_realty',
+      label: 'KB부동산',
+      href: 'https://kbland.kr/',
+    },
+    {
+      kind: 'court_auction',
       label: '대법원 법원경매정보',
       href: 'https://www.courtauction.go.kr/',
     },
     {
-      kind: 'molit_pricing' as const,
-      label: '국토부 실거래가 공개시스템',
+      kind: 'molit_pricing',
+      label: '국토부 실거래가',
       href: 'https://rt.molit.go.kr/',
     },
-  ].filter(Boolean) as DealroomLink[]
+  ]
+  return links.filter((l): l is DealroomLink => l !== null)
 }
 
 // ─── Hook ─────────────────────────────────────────────────────
