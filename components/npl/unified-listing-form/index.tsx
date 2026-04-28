@@ -164,10 +164,11 @@ export function NplUnifiedForm({
         onChange={(patch) => dispatch({ type: "SET_CLAIM", patch })}
       />
 
-      {/* 5-1. 수익권 금액 — 채권잔액 바로 아래 (3모드 공통, Phase G6) */}
+      {/* 5-1. 수익권 금액 — 최초 대출원금의 110~140% (3모드 공통, Phase G7+) */}
       <MaxBondAmountSection
         value={state.maximumBondAmount}
         onChange={(v) => dispatch({ type: "PATCH", patch: { maximumBondAmount: v } })}
+        initialPrincipal={state.claim.initialPrincipal}
         askingPrice={state.askingPrice}
         principal={state.claim.principal}
       />

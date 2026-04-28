@@ -1,13 +1,15 @@
 "use client"
 
 /**
- * MaxBondAmountSection — 수익권 금액 (최고가 매수신고가의 110~140%) 공용 섹션.
+ * MaxBondAmountSection — 수익권 금액 (최초 대출원금의 110~140%) 공용 섹션.
  *
- * Phase G6 — 매물등록 / 자발적경매 / NPL분석 3모드 공통.
+ * Phase G7+ 갱신 (2026-04-28):
+ *   사용자 정책 — 수익권 = 최초 대출원금의 채권최고액.
  *
  * 기준가(basePrice) chain:
- *   1. askingPrice  — 매각희망가 (입력 시 우선)
- *   2. principal    — 대출원금 (fallback)
+ *   1. initialPrincipal — 최초 대출원금 (사용자 정책 우선)
+ *   2. askingPrice      — 매각희망가 (fallback)
+ *   3. principal        — 현재 대출원금 (마지막 fallback)
  */
 
 import { MaxBondAmountBlock } from "@/components/listings/npl-input-blocks"
@@ -15,12 +17,14 @@ import { MaxBondAmountBlock } from "@/components/listings/npl-input-blocks"
 export function MaxBondAmountSection({
   value,
   onChange,
+  initialPrincipal,
   askingPrice,
   principal,
   disabled,
 }: {
   value: number
   onChange: (v: number) => void
+  initialPrincipal?: number
   askingPrice: number
   principal: number
   disabled?: boolean
@@ -29,6 +33,7 @@ export function MaxBondAmountSection({
     <MaxBondAmountBlock
       value={value}
       onChange={onChange}
+      initialPrincipal={initialPrincipal}
       askingPrice={askingPrice}
       principal={principal}
       disabled={disabled}

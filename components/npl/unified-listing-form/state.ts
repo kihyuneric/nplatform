@@ -80,7 +80,8 @@ export function makeInitialState(mode: FormMode): UnifiedFormState {
     debtorType: "",
 
     claim: {
-      principal: 0,
+      initialPrincipal: 0,        // 최초 대출원금 (수익권 base)
+      principal: 0,               // 현재 대출원금 (잔존)
       unpaidInterest: 0,
       overdueInterest: 0,
       delinquencyStartDate: "",

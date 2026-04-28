@@ -743,7 +743,14 @@ export interface UnifiedReportSummary {
  * — 연체시작일·정상금리·연체금리로 연체이자 실시간 재계산도 가능 (참고용).
  */
 export interface ClaimBreakdown {
-  /** 대출원금 (원) */
+  /**
+   * 최초 대출원금 (원) — Phase G7+ 2026-04-28 신규.
+   * 대출 약정 시점의 최초 원금. 수익권 금액(채권최고액 = 최초 원금 × 1.10~1.40)
+   * 산정의 base. 일부 상환 시 현재 대출원금(`principal`) 과 다를 수 있음.
+   * 미입력 시 `principal` 을 fallback 으로 사용.
+   */
+  initialPrincipal?: number
+  /** 대출원금 (원) — 현재 잔존 원금 (일부 상환된 경우 < initialPrincipal) */
   principal: number
   /** 미수이자 — 과거 이미 발생한 정상이자 누적 (원) */
   unpaidInterest: number

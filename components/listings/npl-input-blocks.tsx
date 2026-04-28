@@ -216,7 +216,23 @@ export function ClaimBreakdownBlock({
       />
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="대출원금" required>
+        <Field
+          label="최초 대출원금"
+          hint="대출 약정 시점 원금 — 수익권 금액(채권최고액) 산정 base"
+        >
+          <NumberInput
+            value={value.initialPrincipal ?? 0}
+            onChange={(n) => set("initialPrincipal", n)}
+            placeholder="0"
+            suffix="원"
+            disabled={disabled}
+          />
+        </Field>
+        <Field
+          label="대출원금 (현재)"
+          required
+          hint="일부 상환된 경우 최초 대출원금 < 현재 대출원금"
+        >
           <NumberInput
             value={value.principal}
             onChange={(n) => set("principal", n)}
@@ -621,33 +637,42 @@ export function DesiredSaleDiscountInput({
   )
 }
 
-/** ─── 5-1. 수익권 금액 (최고가 매수신고가의 110~140% 한도) ─────────────
+/** ─── 5-1. 수익권 금액 (최초 대출원금의 110~140% 한도) ─────────────
  *
- * Phase G6 신규 — NPL 수익권 최대 회수 한도.
- *   · 최고가 매수신고가(=매각가) 대비 110~140% 사이 슬라이더 입력
- *   · 직접 금액 입력도 허용 (역방향 — multiplier 자동 재계산)
- *   · 0 입력 시 분석 리포트 기본값(원금 × 130%) fallback
+ * Phase G6 → G7+ 갱신 (2026-04-28): 사용자 정책 — 수익권 = 최초 대출원금의 채권최고액.
  *
- * 매각가가 입력되지 않은 단계에서도 "원금 기준 110~140%" 로 표시 가능하도록
- * `basePrice` (= askingPrice or principal) 를 fallback chain 으로 사용.
+ * 우선순위:
+ *   1) initialPrincipal (최초 대출원금) — 사용자 입력 우선
+ *   2) askingPrice (매각희망가) — 미입력 시 fallback
+ *   3) principal (현재 대출원금) — 마지막 fallback
+ *
+ * 슬라이더: 110~140% 사이 (한국 표준 1.2x · 1%p 단위)
  */
 export function MaxBondAmountBlock({
   value,
   onChange,
+  initialPrincipal,
   askingPrice,
   principal,
   disabled,
 }: {
-  /** 0 = 미설정 (리포트에서 기본값 130% 적용) */
+  /** 0 = 미설정 (리포트에서 기본값 120% 적용) */
   value: number
   onChange: (v: number) => void
-  /** 매각희망가 — 우선 기준 */
+  /** 최초 대출원금 — 우선 기준 (사용자 정책) */
+  initialPrincipal?: number
+  /** 매각희망가 — 2차 fallback */
   askingPrice: number
-  /** 매각희망가 미입력 시 fallback */
+  /** 현재 대출원금 — 최종 fallback */
   principal: number
   disabled?: boolean
 }) {
-  const basePrice = askingPrice > 0 ? askingPrice : principal
+  // 사용자 정책: 수익권 base = 최초 대출원금 우선, 없으면 매각희망가, 그것도 없으면 현재 대출원금
+  const basePrice = (initialPrincipal && initialPrincipal > 0)
+    ? initialPrincipal
+    : askingPrice > 0
+      ? askingPrice
+      : principal
   const multiplier = basePrice > 0 && value > 0 ? value / basePrice : 1.20
   const displayMultiplier = Math.min(1.40, Math.max(1.10, multiplier))
   const sliderValue = Math.round(displayMultiplier * 100) // 110~140
@@ -669,8 +694,12 @@ export function MaxBondAmountBlock({
     <div className={BLOCK}>
       <BlockHeader
         icon={<TrendingUp className="w-4 h-4" />}
-        title="수익권 금액 (최고가 매수신고가 110~140% 한도)"
-        subtitle="NPL 매수자 회수 상한 — 슬라이더 또는 금액 직접 입력. 0 입력 시 리포트 기본값 120% 적용"
+        title="수익권 금액 (최초 대출원금의 110~140%)"
+        subtitle={
+          (initialPrincipal && initialPrincipal > 0)
+            ? `최초 대출원금 ${initialPrincipal.toLocaleString('ko-KR')}원 기준 채권최고액 한도`
+            : "최초 대출원금 미입력 시 매각희망가/현재 원금 fallback"
+        }
         right={
           <div className="text-right">
             <div className="text-[0.625rem] text-[var(--color-text-tertiary)]">현재 비율</div>
