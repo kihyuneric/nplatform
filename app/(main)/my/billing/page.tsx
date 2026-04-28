@@ -13,6 +13,8 @@ import CheckoutModal, { type CheckoutPlan } from "@/components/payment/CheckoutM
 import { useAuth } from "@/components/auth/auth-provider"
 import { createClient } from "@/lib/supabase/client"
 import DS, { formatKRW } from "@/lib/design-system"
+import { MckPageShell, MckPageHeader } from "@/components/mck"
+import { MCK } from "@/lib/mck-design"
 
 // ─── 탭 ─────────────────────────────────────────────
 
@@ -246,26 +248,41 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
 
   if (loading) {
     return (
-      <div className={DS.page.wrapper + " flex items-center justify-center"}>
-        <Loader2 className="h-8 w-8 animate-spin text-[var(--color-brand-mid)]" />
-      </div>
+      <MckPageShell variant="tint">
+        <MckPageHeader
+          breadcrumbs={[{ label: "마이", href: "/my" }, { label: "결제·크레딧" }]}
+          eyebrow="MY · BILLING"
+          title="결제 · 구독"
+          subtitle="결제 / 구독 정보를 불러오는 중..."
+        />
+        <div className="max-w-[1280px] mx-auto" style={{ padding: "60px 24px", textAlign: "center", color: MCK.textMuted, fontSize: 12 }}>
+          <Loader2 className="h-8 w-8 animate-spin inline-block" style={{ color: MCK.electric }} />
+        </div>
+      </MckPageShell>
     )
   }
 
   return (
-    <div className={DS.page.wrapper}>
-      {/* 헤더 */}
-      <div className={DS.page.container + " " + DS.page.paddingTop}>
-        <div className={DS.header.wrapper}>
-          <p className={DS.header.eyebrow}>마이페이지</p>
-          <div className="flex items-center gap-3">
-            <h1 className={DS.header.title}>결제 · 구독</h1>
-            <span className={`${DS.text.label} px-3 py-1 rounded-full ${statusCfg.bg} ${statusCfg.color} border border-current/20`}>
-              {subscription?.plan_name ?? 'FREE'} · {statusCfg.label}
-            </span>
-          </div>
-        </div>
-      </div>
+    <MckPageShell variant="tint">
+      <MckPageHeader
+        breadcrumbs={[{ label: "마이", href: "/my" }, { label: "결제·크레딧" }]}
+        eyebrow="MY · BILLING"
+        title="결제 · 구독"
+        subtitle="구독 플랜 / 크레딧 충전 / 결제 이력 / 인보이스를 한 화면에서 관리합니다."
+        actions={
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "6px 12px",
+            fontSize: 11, fontWeight: 800,
+            background: subscription?.status === 'active' ? "rgba(16, 185, 129, 0.10)" : "rgba(34, 81, 255, 0.06)",
+            color: subscription?.status === 'active' ? "#047857" : MCK.electricDark,
+            border: `1px solid ${subscription?.status === 'active' ? "rgba(16, 185, 129, 0.30)" : "rgba(34, 81, 255, 0.20)"}`,
+            letterSpacing: "0.06em", textTransform: "uppercase",
+          }}>
+            {subscription?.plan_name ?? 'FREE'} · {statusCfg.label}
+          </span>
+        }
+      />
 
       <div className={DS.page.container + " py-6 space-y-5"}>
 
@@ -278,7 +295,7 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                   <Crown className="h-4 w-4 text-stone-900" />
                   <span className="text-white font-semibold">{subscription.plan_name} 플랜</span>
                   {subscription.cancel_at_period_end && (
-                    <span className="text-[0.6875rem] text-stone-900 bg-stone-100/20 px-2 py-0.5 rounded-full">기간 만료 시 해지</span>
+                    <span className="text-[0.6875rem] text-stone-900 bg-stone-100/20 px-2 py-0.5 rounded-none">기간 만료 시 해지</span>
                   )}
                 </div>
                 {subscription.price_monthly > 0 ? (
@@ -372,8 +389,8 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                     <div>
                       <div className="flex items-center gap-2">
                         <span className={DS.text.cardSubtitle}>{plan.name}</span>
-                        {isCurrent && <span className="text-[0.6875rem] bg-[var(--color-brand-mid)] text-white px-2 py-0.5 rounded-full font-bold">현재</span>}
-                        {plan.popular && !isCurrent && <span className="text-[0.6875rem] bg-stone-100/15 text-stone-900 px-2 py-0.5 rounded-full font-bold">인기</span>}
+                        {isCurrent && <span className="text-[0.6875rem] bg-[#2251FF] text-white px-2 py-0.5 rounded-none font-bold">현재</span>}
+                        {plan.popular && !isCurrent && <span className="text-[0.6875rem] bg-stone-100/15 text-stone-900 px-2 py-0.5 rounded-none font-bold">인기</span>}
                       </div>
                       <p className={DS.text.caption + " mt-0.5"}>{plan.desc}</p>
                     </div>
@@ -451,7 +468,7 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                       const sc = INV_STATUS[inv.status] ?? { label: inv.status, color: 'text-[var(--color-text-muted)]' }
                       return (
                         <tr key={inv.id} className={DS.table.row}>
-                          <td className={DS.table.cell + " font-mono text-[var(--color-brand-mid)]"}>{inv.invoice_number}</td>
+                          <td className={DS.table.cell + " font-mono text-[#2251FF]"}>{inv.invoice_number}</td>
                           <td className={DS.table.cell + " text-right font-medium"}>{formatKRW(inv.total)}</td>
                           <td className={DS.table.cell + " text-center"}>
                             <span className={`text-[0.8125rem] font-medium ${sc.color}`}>{sc.label}</span>
@@ -460,14 +477,14 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                           <td className={DS.table.cell + " text-center"}>
                             {inv.pdf_url ? (
                               <a href={inv.pdf_url} target="_blank" rel="noopener noreferrer"
-                                className="text-[var(--color-brand-mid)] hover:text-[#0A1628]">
+                                className="text-[#2251FF] hover:text-[#0A1628]">
                                 <Download className="h-4 w-4 mx-auto" />
                               </a>
                             ) : (
                               <button
                                 onClick={generateInvoiceDraft}
                                 title="인보이스 초안 인쇄"
-                                className="text-[var(--color-brand-mid)] hover:text-[#0A1628] mx-auto flex"
+                                className="text-[#2251FF] hover:text-[#0A1628] mx-auto flex"
                               >
                                 <ExternalLink className="h-4 w-4" />
                               </button>
@@ -507,9 +524,9 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                     <span className={DS.text.caption}>이번 달 사용</span>
                     <span className={DS.text.caption}>{credits.used_this_month} / {credits.monthly_grant} 크레딧</span>
                   </div>
-                  <div className="h-2 bg-[var(--color-surface-sunken)] rounded-full overflow-hidden">
+                  <div className="h-2 bg-[var(--color-surface-sunken)] rounded-none overflow-hidden">
                     <div
-                      className="h-full bg-[var(--color-brand-mid)] rounded-full transition-all"
+                      className="h-full bg-[#2251FF] rounded-none transition-all"
                       style={{ width: `${Math.min(100, (credits.used_this_month / credits.monthly_grant) * 100)}%` }}
                     />
                   </div>
@@ -525,7 +542,7 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
               </div>
               {creditTxLoading ? (
                 <div className="flex justify-center py-10">
-                  <Loader2 className="h-5 w-5 animate-spin text-[var(--color-brand-mid)]" />
+                  <Loader2 className="h-5 w-5 animate-spin text-[#2251FF]" />
                 </div>
               ) : (
               <div className={DS.table.wrapper}>
@@ -683,7 +700,7 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
                           <td className={DS.table.cell}>{row.benefit}</td>
                           <td className={DS.table.cellMuted + " tabular-nums"}>{row.usedAt}</td>
                           <td className={DS.table.cell}>
-                            <span className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-bold ${cls}`}>{row.status}</span>
+                            <span className={`text-[0.6875rem] px-2 py-0.5 rounded-none font-bold ${cls}`}>{row.status}</span>
                           </td>
                         </tr>
                       )
@@ -716,6 +733,6 @@ td{padding:12px 14px;border-bottom:1px solid #f3f4f6;font-size:14px}
         customerName={userName}
         customerEmail={userEmail}
       />
-    </div>
+    </MckPageShell>
   )
 }

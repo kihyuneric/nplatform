@@ -9,6 +9,8 @@ import {
   CheckSquare, Square, RefreshCw, ChevronDown,
 } from "lucide-react"
 import DS, { formatKRW } from "@/lib/design-system"
+import { MckPageShell, MckPageHeader, MckBadge } from "@/components/mck"
+import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
 
 const 억 = 100_000_000
 
@@ -278,8 +280,8 @@ function ComparisonTab({ watchlist, investments }: { watchlist: WatchItem[]; inv
   if (pool.length === 0) {
     return (
       <div className={DS.empty.wrapper}>
-        <div className="w-20 h-20 rounded-2xl bg-[var(--color-surface-sunken)] flex items-center justify-center mb-6 border border-[var(--color-border-subtle)]">
-          <BarChart3 className="w-9 h-9 text-[var(--color-brand-mid)]" />
+        <div className="w-20 h-20 rounded-none bg-[var(--color-surface-sunken)] flex items-center justify-center mb-6 border border-[var(--color-border-subtle)]">
+          <BarChart3 className="w-9 h-9 text-[#2251FF]" />
         </div>
         <h3 className={DS.empty.title}>비교할 매물이 없습니다</h3>
         <p className={DS.empty.description}>관심 매물 또는 투자 현황에 매물을 추가하면 비교 분석이 가능합니다.</p>
@@ -295,7 +297,7 @@ function ComparisonTab({ watchlist, investments }: { watchlist: WatchItem[]; inv
       {/* Selection pool */}
       <div className={DS.card.elevated + " " + DS.card.paddingLarge}>
         <div className="flex items-center gap-2 mb-1">
-          <CheckSquare className="w-4 h-4 text-[var(--color-brand-mid)]" />
+          <CheckSquare className="w-4 h-4 text-[#2251FF]" />
           <p className={DS.text.label + " !mb-0"}>매물 선택 (최대 4개)</p>
         </div>
         <p className={DS.text.captionLight + " mb-4"}>
@@ -310,16 +312,16 @@ function ComparisonTab({ watchlist, investments }: { watchlist: WatchItem[]; inv
                 key={item.id}
                 onClick={() => toggleSelect(item.id)}
                 disabled={disabled}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-none border text-left transition-all
                   ${isSelected
-                    ? "border-[var(--color-brand-mid)] bg-[var(--color-brand-dark)]/10"
+                    ? "border-[#2251FF] bg-[#0A1628]/10"
                     : disabled
                       ? "border-[var(--color-border-subtle)] opacity-40 cursor-not-allowed"
-                      : "border-[var(--color-border-subtle)] hover:border-[var(--color-brand-mid)]/50 hover:bg-[var(--color-surface-elevated)]"
+                      : "border-[var(--color-border-subtle)] hover:border-[#2251FF]/50 hover:bg-[var(--color-surface-elevated)]"
                   }`}
               >
                 {isSelected
-                  ? <CheckSquare className="w-4 h-4 shrink-0 text-[var(--color-brand-mid)]" />
+                  ? <CheckSquare className="w-4 h-4 shrink-0 text-[#2251FF]" />
                   : <Square className="w-4 h-4 shrink-0 text-[var(--color-text-muted)]" />
                 }
                 <div className="min-w-0 flex-1">
@@ -343,7 +345,7 @@ function ComparisonTab({ watchlist, investments }: { watchlist: WatchItem[]; inv
       ) : (
         <div className={DS.card.elevated + " " + DS.card.paddingLarge + " overflow-x-auto"}>
           <div className="flex items-center gap-2 mb-4">
-            <Shield className="w-4 h-4 text-[var(--color-brand-mid)]" />
+            <Shield className="w-4 h-4 text-[#2251FF]" />
             <p className={DS.text.label + " !mb-0"}>KPI 비교</p>
           </div>
           <table className="w-full text-[0.8125rem]">
@@ -516,8 +518,8 @@ function SimulationTab({ watchlist, investments }: { watchlist: WatchItem[]; inv
   if (pool.length === 0) {
     return (
       <div className={DS.empty.wrapper}>
-        <div className="w-20 h-20 rounded-2xl bg-[var(--color-surface-sunken)] flex items-center justify-center mb-6 border border-[var(--color-border-subtle)]">
-          <Calculator className="w-9 h-9 text-[var(--color-brand-mid)]" />
+        <div className="w-20 h-20 rounded-none bg-[var(--color-surface-sunken)] flex items-center justify-center mb-6 border border-[var(--color-border-subtle)]">
+          <Calculator className="w-9 h-9 text-[#2251FF]" />
         </div>
         <h3 className={DS.empty.title}>시뮬레이션할 매물이 없습니다</h3>
         <p className={DS.empty.description}>관심 매물 또는 투자 현황에 매물을 추가하면 수익 시뮬레이션이 가능합니다.</p>
@@ -533,14 +535,14 @@ function SimulationTab({ watchlist, investments }: { watchlist: WatchItem[]; inv
       {/* Listing selector */}
       <div className={DS.card.elevated + " " + DS.card.paddingLarge}>
         <div className="flex items-center gap-2 mb-4">
-          <Calculator className="w-4 h-4 text-[var(--color-brand-mid)]" />
+          <Calculator className="w-4 h-4 text-[#2251FF]" />
           <p className={DS.text.label + " !mb-0"}>매물 선택</p>
         </div>
         <div className="relative">
           <select
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
-            className="w-full appearance-none px-4 py-3 pr-10 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] text-[0.9375rem] focus:outline-none focus:border-[var(--color-brand-mid)] transition-colors"
+            className="w-full appearance-none px-4 py-3 pr-10 rounded-none border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] text-[0.9375rem] focus:outline-none focus:border-[#2251FF] transition-colors"
           >
             <option value="">-- 매물을 선택하세요 --</option>
             {pool.map((p) => (
@@ -569,7 +571,7 @@ function SimulationTab({ watchlist, investments }: { watchlist: WatchItem[]; inv
                   inputMode="numeric"
                   value={params.purchasePrice ? params.purchasePrice.toLocaleString('ko-KR') : ''}
                   onChange={(e) => setParams((p) => ({ ...p, purchasePrice: parseInt(e.target.value.replace(/[^0-9]/g, ''), 10) || 0 }))}
-                  className="w-full px-3 py-2.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] text-[0.9375rem] focus:outline-none focus:border-[var(--color-brand-mid)] transition-colors"
+                  className="w-full px-3 py-2.5 rounded-none border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] text-[0.9375rem] focus:outline-none focus:border-[#2251FF] transition-colors"
                 />
                 <p className={DS.text.captionLight + " mt-1"}>{fmt(params.purchasePrice * 10000)}</p>
               </div>
@@ -581,7 +583,7 @@ function SimulationTab({ watchlist, investments }: { watchlist: WatchItem[]; inv
                   min={1}
                   max={150}
                   onChange={(e) => setParams((p) => ({ ...p, targetRecovery: parseFloat(e.target.value) || 85 }))}
-                  className="w-full px-3 py-2.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] text-[0.9375rem] focus:outline-none focus:border-[var(--color-brand-mid)] transition-colors"
+                  className="w-full px-3 py-2.5 rounded-none border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] text-[0.9375rem] focus:outline-none focus:border-[#2251FF] transition-colors"
                 />
                 <p className={DS.text.captionLight + " mt-1"}>채권액 대비 {params.targetRecovery}% 회수</p>
               </div>
@@ -593,7 +595,7 @@ function SimulationTab({ watchlist, investments }: { watchlist: WatchItem[]; inv
                   min={1}
                   max={120}
                   onChange={(e) => setParams((p) => ({ ...p, holdingMonths: parseInt(e.target.value) || 24 }))}
-                  className="w-full px-3 py-2.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] text-[0.9375rem] focus:outline-none focus:border-[var(--color-brand-mid)] transition-colors"
+                  className="w-full px-3 py-2.5 rounded-none border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] text-[0.9375rem] focus:outline-none focus:border-[#2251FF] transition-colors"
                 />
                 <p className={DS.text.captionLight + " mt-1"}>{(params.holdingMonths / 12).toFixed(1)}년</p>
               </div>
@@ -611,12 +613,12 @@ function SimulationTab({ watchlist, investments }: { watchlist: WatchItem[]; inv
               <div key={card.label} className={DS.card.elevated + " p-4"}>
                 {apiLoading && (
                   <div className="flex items-center gap-1 mb-2">
-                    <RefreshCw className="w-3 h-3 text-[var(--color-brand-mid)] animate-spin" />
+                    <RefreshCw className="w-3 h-3 text-[#2251FF] animate-spin" />
                     <span className={DS.text.captionLight}>API 조회 중</span>
                   </div>
                 )}
                 <div className="flex items-center gap-2 mb-2">
-                  <card.icon className="w-4 h-4 text-[var(--color-brand-mid)]" />
+                  <card.icon className="w-4 h-4 text-[#2251FF]" />
                   <span className={DS.text.caption}>{card.label}</span>
                 </div>
                 <p className={`text-xl font-bold tabular-nums ${card.positive === true ? "text-[var(--color-positive)]" : card.positive === false ? "text-[var(--color-danger)]" : "text-[var(--color-text-primary)]"}`}>
@@ -660,7 +662,7 @@ function InvestmentTab({ watchlist, investments, kpis, loading }: {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <RefreshCw className="w-6 h-6 text-[var(--color-brand-mid)] animate-spin" />
+        <RefreshCw className="w-6 h-6 text-[#2251FF] animate-spin" />
       </div>
     )
   }
@@ -668,8 +670,8 @@ function InvestmentTab({ watchlist, investments, kpis, loading }: {
   if (investments.length === 0) {
     return (
       <div className={DS.empty.wrapper}>
-        <div className="w-20 h-20 rounded-2xl bg-[var(--color-surface-sunken)] flex items-center justify-center mb-6 border border-[var(--color-border-subtle)]">
-          <BarChart3 className="w-9 h-9 text-[var(--color-brand-mid)]" />
+        <div className="w-20 h-20 rounded-none bg-[var(--color-surface-sunken)] flex items-center justify-center mb-6 border border-[var(--color-border-subtle)]">
+          <BarChart3 className="w-9 h-9 text-[#2251FF]" />
         </div>
         <h3 className={DS.empty.title}>아직 투자한 매물이 없습니다</h3>
         <p className={DS.empty.description}>NPL 거래소에서 매물에 투자해 보세요.</p>
@@ -755,7 +757,7 @@ function InvestmentTab({ watchlist, investments, kpis, loading }: {
             <div className="space-y-2.5 flex-1">
               {donutData.map((seg) => (
                 <div key={seg.label} className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: seg.color }} />
+                  <span className="w-2.5 h-2.5 rounded-none shrink-0" style={{ background: seg.color }} />
                   <span className={DS.text.body + " flex-1"}>{seg.label}</span>
                   <span className={DS.text.bodyBold + " tabular-nums"}>{seg.pct}%</span>
                 </div>
@@ -816,47 +818,58 @@ export default function PortfolioPage() {
   const totalValue = items.reduce((s, i) => s + i.currentPrice, 0)
 
   return (
-    <div className={DS.page.wrapper}>
-      {/* 1. Header */}
-      <div className={DS.page.container + " " + DS.page.paddingTop}>
-        <div className={DS.header.wrapper}>
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Wallet className="w-4 h-4 text-[var(--color-brand-mid)]" />
-                <span className={DS.header.eyebrow + " !mb-0"}>My Portfolio</span>
+    <MckPageShell variant="tint">
+      <MckPageHeader
+        breadcrumbs={[{ label: "마이", href: "/my" }, { label: "관심매물·포트폴리오" }]}
+        eyebrow="MY · PORTFOLIO"
+        title="내 포트폴리오"
+        subtitle="관심 매물과 투자 현황을 한눈에 확인하세요. 매물 비교 · 수익 시뮬레이션도 지원합니다."
+        actions={
+          <div className="flex items-center gap-4 flex-wrap">
+            <div style={{ textAlign: "right" }}>
+              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 2 }}>관심 매물</div>
+              <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 22, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+                {summary.watchlistCount}건
               </div>
-              <h1 className={DS.header.title}>내 포트폴리오</h1>
-              <p className={DS.header.subtitle}>관심 매물과 투자 현황을 한눈에 확인하세요</p>
             </div>
-            <div className="flex gap-6 shrink-0">
-              <div>
-                <p className={DS.text.caption + " mb-0.5"}>관심 매물</p>
-                <p className={DS.text.metricLarge}>{summary.watchlistCount}건</p>
-              </div>
-              <div>
-                <p className={DS.text.caption + " mb-0.5"}>총 관심 채권액</p>
-                <p className={DS.text.metricLarge}>{fmt(summary.watchlistTotal)}</p>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 2 }}>총 관심 채권액</div>
+              <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 22, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+                {fmt(summary.watchlistTotal)}
               </div>
             </div>
           </div>
+        }
+      />
 
-          {/* Tab bar */}
-          <div className="flex items-center gap-0 mt-7 border-t border-[var(--color-border-subtle)] pt-4">
-            {TABS.map((t) => (
+      {/* Tab bar — McKinsey editorial */}
+      <div className="max-w-[1280px] mx-auto" style={{ padding: "0 24px", marginTop: -8 }}>
+        <div style={{
+          background: MCK.paper, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}`,
+          padding: "8px 12px",
+          display: "flex", flexWrap: "wrap", gap: 4,
+        }}>
+          {TABS.map((t) => {
+            const active = tab === t
+            return (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`px-4 py-2.5 text-[0.8125rem] font-medium border-b-2 -mb-px transition-all ${
-                  tab === t
-                    ? "text-[var(--color-brand-dark)] border-[var(--color-brand-mid)] font-semibold"
-                    : "text-[var(--color-text-tertiary)] border-transparent hover:text-[var(--color-text-primary)]"
-                }`}
+                style={{
+                  padding: "8px 14px",
+                  fontSize: 12, fontWeight: 800,
+                  background: active ? MCK.ink : "transparent",
+                  color: active ? MCK.paper : MCK.ink,
+                  border: "none",
+                  borderTop: active ? `2px solid ${MCK.electric}` : "2px solid transparent",
+                  cursor: "pointer",
+                  letterSpacing: "0.02em",
+                }}
               >
-                {t}
+                <span style={{ color: active ? MCK.paper : MCK.ink }}>{t}</span>
               </button>
-            ))}
-          </div>
+            )
+          })}
         </div>
       </div>
 
@@ -915,12 +928,12 @@ export default function PortfolioPage() {
 
             {watchlistLoading ? (
               <div className="flex items-center justify-center py-20">
-                <RefreshCw className="w-6 h-6 text-[var(--color-brand-mid)] animate-spin" />
+                <RefreshCw className="w-6 h-6 text-[#2251FF] animate-spin" />
               </div>
             ) : sorted.length === 0 ? (
               <div className={DS.empty.wrapper}>
-                <div className="w-20 h-20 rounded-2xl bg-[var(--color-surface-sunken)] flex items-center justify-center mb-6 border border-[var(--color-border-subtle)]">
-                  <Building2 className="w-9 h-9 text-[var(--color-brand-mid)]" />
+                <div className="w-20 h-20 rounded-none bg-[var(--color-surface-sunken)] flex items-center justify-center mb-6 border border-[var(--color-border-subtle)]">
+                  <Building2 className="w-9 h-9 text-[#2251FF]" />
                 </div>
                 <h3 className={DS.empty.title}>아직 관심 매물이 없습니다</h3>
                 <p className={DS.empty.description}>NPL 매물에서 관심 있는 매물을 저장하세요.</p>
@@ -936,7 +949,7 @@ export default function PortfolioPage() {
                   const isDown = item.changePercent < 0
                   return (
                     <div key={item.id} className={DS.card.interactive + " group overflow-hidden flex flex-col"}>
-                      <div className="h-24 bg-gradient-to-br from-[var(--color-brand-dark)] to-[var(--color-brand-mid)] flex items-center justify-center relative">
+                      <div className="h-24 bg-gradient-to-br from-[#0A1628] to-[#2251FF] flex items-center justify-center relative">
                         <Building2 className="w-9 h-9 text-white/20" />
                         <div className="absolute top-2.5 left-2.5">
                           <span className={`text-[0.6875rem] font-semibold px-2 py-0.5 rounded-md ${cfg.bg} ${cfg.text}`}>{item.type}</span>
@@ -947,7 +960,7 @@ export default function PortfolioPage() {
                           </span>
                         </div>
                         <div className="absolute bottom-2.5 right-2.5">
-                          <span className="text-[0.6875rem] font-bold bg-white/90 text-[var(--color-brand-dark)] px-2 py-0.5 rounded-md">{item.grade}</span>
+                          <span className="text-[0.6875rem] font-bold bg-white/90 text-[#0A1628] px-2 py-0.5 rounded-md">{item.grade}</span>
                         </div>
                       </div>
                       <div className="flex flex-col flex-1 p-4">
@@ -961,7 +974,7 @@ export default function PortfolioPage() {
                             <p className={DS.text.captionLight + " mb-0.5"}>채권금액</p>
                             <p className={DS.text.metricMedium}>{fmt(item.currentPrice)}</p>
                           </div>
-                          <span className="text-[0.8125rem] font-bold px-2.5 py-1.5 rounded-xl bg-stone-100/10 text-stone-900">
+                          <span className="text-[0.8125rem] font-bold px-2.5 py-1.5 rounded-none bg-stone-100/10 text-stone-900">
                             -{item.discount}%
                           </span>
                         </div>
@@ -1006,6 +1019,6 @@ export default function PortfolioPage() {
           <SimulationTab watchlist={items} investments={investments} />
         )}
       </div>
-    </div>
+    </MckPageShell>
   )
 }

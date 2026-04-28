@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth/auth-provider"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import DS, { formatKRW } from "@/lib/design-system"
+import { MckPageShell, MckPageHeader } from "@/components/mck"
 
 const TABS = ["기본 정보", "보안", "알림 설정", "역할 전환", "계정 관리"] as const
 type Tab = typeof TABS[number]
@@ -205,14 +206,13 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className={DS.page.wrapper}>
-      {/* Header */}
-      <div className={DS.page.container + " " + DS.page.paddingTop}>
-        <div className={DS.header.wrapper}>
-          <p className={DS.header.eyebrow}>마이페이지</p>
-          <h1 className={DS.header.title}>계정 설정</h1>
-        </div>
-      </div>
+    <MckPageShell variant="tint">
+      <MckPageHeader
+        breadcrumbs={[{ label: "마이", href: "/my" }, { label: "설정" }]}
+        eyebrow="MY · SETTINGS"
+        title="계정 설정"
+        subtitle="기본 정보 / 보안 / 알림 채널 / 역할 / 계정 관리를 한 화면에서 처리합니다."
+      />
 
       <div className={DS.page.container + " py-6 space-y-5"}>
         {/* Tab bar */}
@@ -234,10 +234,10 @@ export default function SettingsPage() {
             {/* Avatar */}
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-[var(--color-brand-mid)] to-stone-100 flex items-center justify-center text-white text-[1.1875rem] font-bold">
+                <div className="h-16 w-16 rounded-none bg-gradient-to-br from-[#2251FF] to-stone-100 flex items-center justify-center text-white text-[1.1875rem] font-bold">
                   {form.name[0] ?? "?"}
                 </div>
-                <button className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-default)] flex items-center justify-center text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
+                <button className="absolute -bottom-1 -right-1 h-6 w-6 rounded-none bg-[var(--color-surface-elevated)] border border-[var(--color-border-default)] flex items-center justify-center text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
                   <Camera className="h-3 w-3" />
                 </button>
               </div>
@@ -325,7 +325,7 @@ export default function SettingsPage() {
                     <p className={DS.text.caption + " mt-0.5"}>앱 인증기로 추가 보안을 설정합니다</p>
                   </div>
                 </div>
-                <span className="bg-stone-100/10 text-stone-900 text-[0.8125rem] font-medium px-3 py-1 rounded-full border border-stone-300/20">활성</span>
+                <span className="bg-stone-100/10 text-stone-900 text-[0.8125rem] font-medium px-3 py-1 rounded-none border border-stone-300/20">활성</span>
               </div>
             </div>
 
@@ -340,7 +340,7 @@ export default function SettingsPage() {
                     <div>
                       <p className={DS.text.bodyBold + " flex items-center gap-2"}>
                         {h.device}
-                        {h.current && <span className="text-[0.6875rem] bg-stone-100/10 text-stone-900 px-2 py-0.5 rounded-full border border-stone-300/20">현재</span>}
+                        {h.current && <span className="text-[0.6875rem] bg-stone-100/10 text-stone-900 px-2 py-0.5 rounded-none border border-stone-300/20">현재</span>}
                       </p>
                       <p className={DS.text.captionLight + " mt-0.5"}>{h.ip} · {h.time}</p>
                     </div>
@@ -384,11 +384,11 @@ export default function SettingsPage() {
                         role="switch"
                         aria-checked={enabled}
                         onClick={() => handleToggleNotif(n.id)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 ${
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-none border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 ${
                           enabled ? "bg-stone-100" : "bg-[var(--color-surface-overlay)]"
                         }`}
                       >
-                        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${enabled ? "translate-x-5" : "translate-x-0"}`} />
+                        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-none bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${enabled ? "translate-x-5" : "translate-x-0"}`} />
                       </button>
                     </div>
                     {/* Channel chips */}
@@ -398,7 +398,7 @@ export default function SettingsPage() {
                           <button
                             key={ch}
                             onClick={() => handleToggleChannel(n.id, ch)}
-                            className={`flex items-center gap-1 text-[0.6875rem] font-medium px-2 py-1 rounded-full border transition-all ${
+                            className={`flex items-center gap-1 text-[0.6875rem] font-medium px-2 py-1 rounded-none border transition-all ${
                               channels[ch]
                                 ? 'bg-stone-100/10 border-stone-300/20 text-stone-900'
                                 : 'bg-[var(--color-surface-sunken)] border-[var(--color-border-subtle)] text-[var(--color-text-muted)]'
@@ -437,7 +437,7 @@ export default function SettingsPage() {
                   <p className={DS.text.cardSubtitle}>{r.label}</p>
                   <p className={DS.text.caption + " mt-0.5"}>{r.desc}</p>
                 </div>
-                {activeRole === r.id && <CheckCircle2 className="h-5 w-5 text-[var(--color-brand-mid)] shrink-0" />}
+                {activeRole === r.id && <CheckCircle2 className="h-5 w-5 text-[#2251FF] shrink-0" />}
               </button>
             ))}
           </div>
@@ -468,6 +468,6 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
-    </div>
+    </MckPageShell>
   )
 }

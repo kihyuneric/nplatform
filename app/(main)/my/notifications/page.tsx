@@ -7,6 +7,8 @@ import { useAuth } from "@/components/auth/auth-provider"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import DS from "@/lib/design-system"
+import { MckPageShell, MckPageHeader } from "@/components/mck"
+import { MCK } from "@/lib/mck-design"
 
 type NotificationType = "contract" | "listing" | "analysis" | "system"
 
@@ -157,53 +159,61 @@ export default function NotificationsPage() {
 
   if (!user) {
     return (
-      <div className={DS.page.wrapper + " flex flex-col items-center justify-center py-20"}>
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--color-surface-sunken)] border border-[var(--color-border-subtle)] mb-5">
-          <Bell className="h-9 w-9 text-[var(--color-text-muted)]" />
+      <MckPageShell variant="tint">
+        <MckPageHeader
+          breadcrumbs={[{ label: "마이", href: "/my" }, { label: "알림" }]}
+          eyebrow="MY · NOTIFICATIONS"
+          title="알림"
+          subtitle="알림을 확인하려면 로그인해주세요."
+        />
+        <div className="max-w-[1280px] mx-auto" style={{ padding: "60px 24px", textAlign: "center" }}>
+          <Link href="/login" className={DS.button.primary}>로그인</Link>
         </div>
-        <h2 className={DS.text.cardTitle + " mb-1"}>로그인이 필요합니다</h2>
-        <p className={DS.text.caption + " mb-5"}>알림을 확인하려면 로그인해주세요</p>
-        <Link href="/login" className={DS.button.primary}>
-          로그인
-        </Link>
-      </div>
+      </MckPageShell>
     )
   }
 
   if (loading) {
     return (
-      <div className={DS.page.wrapper + " flex flex-col items-center justify-center py-20"}>
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-border-default)] border-t-[var(--color-brand-mid)]" />
-        <p className={DS.text.caption + " mt-4"}>알림을 불러오는 중...</p>
-      </div>
+      <MckPageShell variant="tint">
+        <MckPageHeader
+          breadcrumbs={[{ label: "마이", href: "/my" }, { label: "알림" }]}
+          eyebrow="MY · NOTIFICATIONS"
+          title="알림"
+          subtitle="불러오는 중..."
+        />
+        <div className="max-w-[1280px] mx-auto" style={{ padding: "60px 24px", textAlign: "center", color: MCK.textMuted, fontSize: 12 }}>
+          <div className="h-8 w-8 animate-spin inline-block" style={{ border: `2px solid ${MCK.border}`, borderTopColor: MCK.electric }} />
+        </div>
+      </MckPageShell>
     )
   }
 
   return (
-    <div className={DS.page.wrapper}>
-      {/* Header */}
-      <div className={DS.page.container + " " + DS.page.paddingTop}>
-        <div className={DS.header.wrapper}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h1 className={DS.header.title}>알림</h1>
-              {unreadCount > 0 && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-danger)] px-1.5 text-[0.6875rem] font-bold text-white">
-                  {unreadCount}
-                </span>
-              )}
-            </div>
-            <button
-              onClick={markAllRead}
-              disabled={unreadCount === 0}
-              className={DS.button.ghost + " disabled:opacity-30 disabled:cursor-not-allowed"}
-            >
-              <CheckCheck className="h-3.5 w-3.5" />
-              모두 읽음 처리
-            </button>
-          </div>
-        </div>
-      </div>
+    <MckPageShell variant="tint">
+      <MckPageHeader
+        breadcrumbs={[{ label: "마이", href: "/my" }, { label: "알림" }]}
+        eyebrow="MY · NOTIFICATIONS"
+        title={unreadCount > 0 ? `알림 (${unreadCount} 안 읽음)` : "알림"}
+        subtitle="시스템·거래·매물·분석 알림을 한 화면에서 관리합니다."
+        actions={
+          <button
+            onClick={markAllRead}
+            disabled={unreadCount === 0}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "9px 14px",
+              fontSize: 12, fontWeight: 700,
+              background: MCK.paper, color: MCK.ink,
+              border: `1px solid ${MCK.borderStrong}`,
+              cursor: unreadCount === 0 ? "not-allowed" : "pointer",
+              opacity: unreadCount === 0 ? 0.4 : 1,
+            }}
+          >
+            <CheckCheck size={13} /> 모두 읽음 처리
+          </button>
+        }
+      />
 
       <div className={DS.page.container + " py-5 space-y-4"}>
         {/* Cross-links */}
@@ -228,7 +238,7 @@ export default function NotificationsPage() {
               >
                 {tab.label}
                 {unread > 0 && (
-                  <span className="h-4 min-w-4 flex items-center justify-center rounded-full bg-stone-100/10 text-[var(--color-danger)] text-[0.6875rem] font-bold px-1">
+                  <span className="h-4 min-w-4 flex items-center justify-center rounded-none bg-stone-100/10 text-[var(--color-danger)] text-[0.6875rem] font-bold px-1">
                     {unread}
                   </span>
                 )}
@@ -240,7 +250,7 @@ export default function NotificationsPage() {
         {/* Batch bar */}
         {selectedIds.size > 0 && (
           <div className="flex items-center gap-3 bg-stone-100/10 border border-stone-300/20 rounded-none px-4 py-2.5">
-            <span className={DS.text.bodyMedium + " !text-[var(--color-brand-mid)]"}>{selectedIds.size}개 선택됨</span>
+            <span className={DS.text.bodyMedium + " !text-[#2251FF]"}>{selectedIds.size}개 선택됨</span>
             <div className="h-4 w-px bg-[var(--color-border-subtle)]" />
             <button onClick={deleteSelected} className="flex items-center gap-1 text-[0.8125rem] text-[var(--color-danger)] hover:text-stone-900 transition-colors">
               <Trash2 className="h-3.5 w-3.5" /> 삭제
@@ -251,7 +261,7 @@ export default function NotificationsPage() {
         {/* Notification list */}
         {filtered.length === 0 ? (
           <div className={DS.empty.wrapper}>
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-surface-sunken)] border border-[var(--color-border-subtle)] mb-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-none bg-[var(--color-surface-sunken)] border border-[var(--color-border-subtle)] mb-4">
               <Bell className="h-7 w-7 text-[var(--color-text-muted)]" />
             </div>
             <p className={DS.empty.title}>알림이 없습니다</p>
@@ -272,7 +282,7 @@ export default function NotificationsPage() {
                         onClick={() => markRead(n.id)}
                         className={`group relative flex items-start gap-3 rounded-none px-4 py-3.5 cursor-pointer transition-all ${
                           !n.is_read
-                            ? DS.card.base + " border-l-2 !border-l-[var(--color-brand-mid)] pl-[14px]"
+                            ? DS.card.base + " border-l-2 !border-l-[#2251FF] pl-[14px]"
                             : "bg-[var(--color-surface-base)] hover:bg-[var(--color-surface-elevated)]"
                         } ${isSelected ? "ring-1 ring-[var(--color-brand-bright)]" : ""}`}
                       >
@@ -283,14 +293,14 @@ export default function NotificationsPage() {
                           onClick={e => { e.preventDefault(); e.stopPropagation(); toggleSelect(n.id) }}
                         >
                           <div className={`h-4 w-4 rounded border-2 flex items-center justify-center transition-colors ${
-                            isSelected ? "bg-[var(--color-brand-mid)] border-[var(--color-brand-mid)]" : "border-[var(--color-border-default)] group-hover:border-[var(--color-border-strong)]"
+                            isSelected ? "bg-[#2251FF] border-[#2251FF]" : "border-[var(--color-border-default)] group-hover:border-[var(--color-border-strong)]"
                           }`}>
                             {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
                           </div>
                         </button>
 
                         {/* Icon */}
-                        <div className={`shrink-0 flex h-9 w-9 items-center justify-center rounded-full ${meta.bg} border border-[var(--color-border-subtle)]`}>
+                        <div className={`shrink-0 flex h-9 w-9 items-center justify-center rounded-none ${meta.bg} border border-[var(--color-border-subtle)]`}>
                           <Icon className={`h-4 w-4 ${meta.color}`} />
                         </div>
 
@@ -300,7 +310,7 @@ export default function NotificationsPage() {
                             <h3 className={`text-[0.8125rem] font-semibold leading-tight ${!n.is_read ? "text-[var(--color-text-primary)]" : "text-[var(--color-text-secondary)]"}`}>
                               {n.title}
                             </h3>
-                            {!n.is_read && <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-brand-mid)] shrink-0" />}
+                            {!n.is_read && <span className="h-1.5 w-1.5 rounded-none bg-[#2251FF] shrink-0" />}
                           </div>
                           <p className={DS.text.captionLight + " mt-0.5 line-clamp-2 leading-relaxed"}>{n.message}</p>
                           <span className={DS.text.micro + " mt-1.5 flex items-center gap-1"}>
@@ -323,6 +333,6 @@ export default function NotificationsPage() {
           </div>
         )}
       </div>
-    </div>
+    </MckPageShell>
   )
 }

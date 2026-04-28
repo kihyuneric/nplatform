@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { Users, TrendingUp, Wallet, Copy, Download, Medal, Crown, Star, Trophy, Loader2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import DS, { formatKRW } from '@/lib/design-system'
+import { MckPageShell, MckPageHeader } from '@/components/mck'
+import { MCK, MCK_FONTS, MCK_TYPE } from '@/lib/mck-design'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/components/auth/auth-provider'
 import { toast } from 'sonner'
@@ -230,7 +232,7 @@ function usePartnerData() {
       const finalBoard = realBoard.length > 0
         ? realBoard
         : totalReferrals > 0
-          ? [{ rank: 1, name: userName, refs: totalReferrals, earn: formatKRW(totalEarnings), Icon: Trophy, cls: 'text-[var(--color-brand-mid)]', isMe: true }]
+          ? [{ rank: 1, name: userName, refs: totalReferrals, earn: formatKRW(totalEarnings), Icon: Trophy, cls: 'text-[#2251FF]', isMe: true }]
           : []
 
       setData({
@@ -287,26 +289,31 @@ export default function PartnerDashboardPage() {
 
   if (loading) {
     return (
-      <div className={DS.page.wrapper}>
-        <div className={DS.page.container + " " + DS.page.paddingTop}>
-          <div className="flex items-center justify-center py-24">
-            <Loader2 className="h-6 w-6 animate-spin text-[var(--color-brand-mid)]" />
-            <span className="ml-3 text-[var(--color-text-muted)]">파트너 데이터를 불러오는 중...</span>
-          </div>
+      <MckPageShell variant="tint">
+        <MckPageHeader
+          breadcrumbs={[{ label: "마이", href: "/my" }, { label: "파트너 관리" }]}
+          eyebrow="MY · PARTNER"
+          title="파트너 대시보드"
+          subtitle="파트너 데이터 불러오는 중..."
+        />
+        <div className="max-w-[1280px] mx-auto" style={{ padding: "60px 24px", textAlign: "center", color: MCK.textMuted, fontSize: 12 }}>
+          <Loader2 className="h-6 w-6 animate-spin inline-block mr-2" style={{ color: MCK.electric }} />
+          파트너 데이터를 불러오는 중...
         </div>
-      </div>
+      </MckPageShell>
     )
   }
 
   if (!user) {
     return (
-      <div className={DS.page.wrapper}>
-        <div className={DS.page.container + " " + DS.page.paddingTop}>
-          <div className="text-center py-24">
-            <p className={DS.text.body}>로그인이 필요합니다.</p>
-          </div>
-        </div>
-      </div>
+      <MckPageShell variant="tint">
+        <MckPageHeader
+          breadcrumbs={[{ label: "마이", href: "/my" }, { label: "파트너 관리" }]}
+          eyebrow="MY · PARTNER"
+          title="파트너 대시보드"
+          subtitle="로그인이 필요합니다."
+        />
+      </MckPageShell>
     )
   }
 
@@ -315,7 +322,7 @@ export default function PartnerDashboardPage() {
   const referralLink = `https://nplatform.co.kr/join?ref=${d.referralCode}`
 
   const stats = [
-    { label: '총 추천', value: `${d.totalReferrals.toLocaleString()}명`, icon: Users, color: 'text-[var(--color-brand-mid)]' },
+    { label: '총 추천', value: `${d.totalReferrals.toLocaleString()}명`, icon: Users, color: 'text-[#2251FF]' },
     { label: '이번달 추천', value: `${d.monthlyReferrals.toLocaleString()}명`, icon: TrendingUp, color: 'text-[var(--color-positive)]' },
     { label: '누적 정산', value: formatKRW(d.totalEarnings), icon: Wallet, color: 'text-stone-900' },
     { label: '추천 전환율', value: `${d.conversionRate}%`, icon: TrendingUp, color: 'text-stone-900' },
@@ -329,35 +336,35 @@ export default function PartnerDashboardPage() {
   }
 
   return (
-    <div className={DS.page.wrapper}>
-      {/* Header */}
-      <div className={DS.page.container + " " + DS.page.paddingTop}>
-        <div className={DS.header.wrapper}>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div>
-              <p className={DS.header.eyebrow}>마이페이지</p>
-              <h1 className={DS.header.title}>파트너 대시보드</h1>
-              <p className={DS.header.subtitle}>{d.partnerTier} · 파트너 점수 {d.partnerScore}점</p>
+    <MckPageShell variant="tint">
+      <MckPageHeader
+        breadcrumbs={[{ label: "마이", href: "/my" }, { label: "파트너 관리" }]}
+        eyebrow="MY · PARTNER"
+        title="파트너 대시보드"
+        subtitle={`${d.partnerTier} · 파트너 점수 ${d.partnerScore}점`}
+        actions={
+          <div className="flex flex-wrap gap-5">
+            <div style={{ textAlign: "right" }}>
+              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 2 }}>추천 코드</div>
+              <div style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 800, color: MCK.ink, letterSpacing: "0.04em" }}>
+                {d.referralCode}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-4">
-              <div className="text-center">
-                <div className={DS.text.caption}>추천 코드</div>
-                <div className="text-stone-900 font-bold text-[0.9375rem] font-mono">{d.referralCode}</div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 2 }}>이번달 추천</div>
+              <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 18, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+                {d.monthlyReferrals}명
               </div>
-              <div className="w-px bg-[var(--color-border-subtle)]" />
-              <div className="text-center">
-                <div className={DS.text.caption}>이번달 추천</div>
-                <div className={DS.text.metricMedium}>{d.monthlyReferrals}명</div>
-              </div>
-              <div className="w-px bg-[var(--color-border-subtle)]" />
-              <div className="text-center">
-                <div className={DS.text.caption}>미지급 정산</div>
-                <div className={DS.text.metricMedium + " !text-[var(--color-positive)]"}>{formatKRW(d.pendingPayout)}</div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 2 }}>미지급 정산</div>
+              <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 18, fontWeight: 800, color: MCK.positive, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+                {formatKRW(d.pendingPayout)}
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className={DS.page.container + " py-6 " + DS.page.sectionGap}>
         {/* Stats Strip */}
@@ -417,7 +424,7 @@ export default function PartnerDashboardPage() {
                         <tr key={i} className={DS.table.row}>
                           <td className={DS.table.cell + " font-medium"}>{r.name}</td>
                           <td className={DS.table.cellMuted + " tabular-nums"}>{r.joined}</td>
-                          <td className={DS.table.cell}><span className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-bold ${STATUS_CLR[r.status] ?? 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]'}`}>{r.status}</span></td>
+                          <td className={DS.table.cell}><span className={`text-[0.6875rem] px-2 py-0.5 rounded-none font-bold ${STATUS_CLR[r.status] ?? 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]'}`}>{r.status}</span></td>
                           <td className={DS.table.cell + " tabular-nums font-semibold"}>{r.payout}</td>
                         </tr>
                       ))}
@@ -446,7 +453,7 @@ export default function PartnerDashboardPage() {
                 <XAxis dataKey="month" tick={{ fill: 'var(--color-text-tertiary)', fontSize: 12 }} />
                 <YAxis tickFormatter={(v) => `${(v / 10000).toFixed(0)}만`} tick={{ fill: 'var(--color-text-tertiary)', fontSize: 11 }} />
                 <Tooltip formatter={(v: number) => [`₩${v.toLocaleString()}`, '수익']} contentStyle={{ background: 'var(--color-surface-elevated)', border: '1px solid var(--color-border-subtle)', borderRadius: 8, color: 'var(--color-text-primary)' }} />
-                <Bar dataKey="amount" fill="var(--color-brand-mid)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="amount" fill="#2251FF" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
             )}
@@ -468,14 +475,14 @@ export default function PartnerDashboardPage() {
                   // Mock earned amounts
                   const earned = [840000, 250000, 90000, 60000, 0][i] ?? 0
                   return (
-                    <div key={rev.id} className="flex items-start gap-4 p-4 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-sunken)] transition-colors">
-                      <div className={`w-2 self-stretch rounded-full ${rev.color}`} />
+                    <div key={rev.id} className="flex items-start gap-4 p-4 rounded-none border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-sunken)] transition-colors">
+                      <div className={`w-2 self-stretch rounded-none ${rev.color}`} />
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <p className={DS.text.cardSubtitle}>{rev.label}</p>
                           <div className="text-right">
                             <p className="text-[0.6875rem] text-[var(--color-text-muted)] mb-0.5">수익률</p>
-                            <p className="text-[0.8125rem] font-bold text-[var(--color-brand-mid)]">{rev.rate}</p>
+                            <p className="text-[0.8125rem] font-bold text-[#2251FF]">{rev.rate}</p>
                           </div>
                         </div>
                         <p className={DS.text.caption}>{rev.desc}</p>
@@ -507,8 +514,8 @@ export default function PartnerDashboardPage() {
                       <span className={DS.text.body + ' text-[0.75rem]'}>{item.label}</span>
                       <span className={DS.text.bodyBold + ' tabular-nums text-[0.75rem]'}>{item.pct}%</span>
                     </div>
-                    <div className="h-2 rounded-full bg-[var(--color-surface-sunken)] overflow-hidden">
-                      <div className={`h-full rounded-full ${item.color}`} style={{ width: `${item.pct}%` }} />
+                    <div className="h-2 rounded-none bg-[var(--color-surface-sunken)] overflow-hidden">
+                      <div className={`h-full rounded-none ${item.color}`} style={{ width: `${item.pct}%` }} />
                     </div>
                   </div>
                 ))}
@@ -578,8 +585,8 @@ export default function PartnerDashboardPage() {
                           <span className={`font-bold tabular-nums ${p.rank <= 3 ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-tertiary)]'}`}>{p.rank}</span>
                         </div>
                       </td>
-                      <td className={DS.table.cell + ` font-medium ${p.isMe ? '!text-[var(--color-brand-mid)]' : ''}`}>
-                        {p.name}{p.isMe && <span className="text-[0.6875rem] text-[var(--color-brand-mid)] ml-1">(나)</span>}
+                      <td className={DS.table.cell + ` font-medium ${p.isMe ? '!text-[#2251FF]' : ''}`}>
+                        {p.name}{p.isMe && <span className="text-[0.6875rem] text-[#2251FF] ml-1">(나)</span>}
                       </td>
                       <td className={DS.table.cell + " tabular-nums"}>{p.refs.toLocaleString()}명</td>
                       <td className={DS.table.cell + " tabular-nums font-semibold"}>{p.earn}</td>
@@ -591,6 +598,6 @@ export default function PartnerDashboardPage() {
           </div>
         )}
       </div>
-    </div>
+    </MckPageShell>
   )
 }

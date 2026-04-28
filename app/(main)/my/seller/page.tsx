@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { Plus, Heart, Gavel, CheckCircle2, TrendingUp, Package, Download, Loader2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import DS, { formatKRW } from '@/lib/design-system'
+import { MckPageShell, MckPageHeader } from '@/components/mck'
+import { MCK, MCK_FONTS, MCK_TYPE } from '@/lib/mck-design'
 
 // Data hook for seller dashboard
 interface SellerListing {
@@ -133,9 +135,9 @@ function SellerSettingToggle({ id, label, desc, defaultOn }: { id: string; label
         role="switch"
         aria-checked={on}
         onClick={() => setOn(prev => !prev)}
-        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${on ? 'bg-stone-100' : 'bg-[var(--color-surface-overlay)]'}`}
+        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-none border-2 border-transparent transition-colors duration-200 ease-in-out ${on ? 'bg-stone-100' : 'bg-[var(--color-surface-overlay)]'}`}
       >
-        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${on ? 'translate-x-5' : 'translate-x-0'}`} />
+        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-none bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${on ? 'translate-x-5' : 'translate-x-0'}`} />
       </button>
     </div>
   )
@@ -147,7 +149,7 @@ export default function SellerDashboardPage() {
 
   // Map real data to display format
   const STATS = [
-    { label: '등록 매물', value: sellerStats.total, icon: Package, color: 'text-[var(--color-brand-mid)]' },
+    { label: '등록 매물', value: sellerStats.total, icon: Package, color: 'text-[#2251FF]' },
     { label: '진행 중 경매', value: sellerStats.liveAuction, icon: Gavel, color: 'text-stone-900' },
     { label: '관심 수신', value: sellerStats.interests, icon: Heart, color: 'text-stone-900' },
     { label: '완료 거래', value: sellerStats.completed, icon: CheckCircle2, color: 'text-[var(--color-positive)]' },
@@ -199,44 +201,46 @@ export default function SellerDashboardPage() {
 
   if (sellerLoading) {
     return (
-      <div className={DS.page.wrapper}>
-        <div className={DS.page.container + ' ' + DS.page.paddingTop}>
-          <div className="flex items-center justify-center py-24">
-            <Loader2 className="h-6 w-6 animate-spin text-[var(--color-brand-mid)]" />
-            <span className="ml-3 text-[var(--color-text-muted)]">매도자 데이터를 불러오는 중...</span>
-          </div>
+      <MckPageShell variant="tint">
+        <MckPageHeader
+          breadcrumbs={[{ label: "마이", href: "/my" }, { label: "매도자 관리" }]}
+          eyebrow="MY · SELLER"
+          title="매도자 대시보드"
+          subtitle="매물 관리·정산 데이터를 불러오고 있습니다."
+        />
+        <div className="max-w-[1280px] mx-auto" style={{ padding: "60px 24px", textAlign: "center", color: MCK.textMuted, fontSize: 12 }}>
+          <Loader2 className="h-6 w-6 animate-spin inline-block mr-2" style={{ color: MCK.electric }} />
+          매도자 데이터를 불러오는 중...
         </div>
-      </div>
+      </MckPageShell>
     )
   }
 
   return (
-    <div className={DS.page.wrapper}>
-      {/* Header */}
-      <div className={DS.page.container + " " + DS.page.paddingTop}>
-        <div className={DS.header.wrapper}>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div>
-              <p className={DS.header.eyebrow}>마이페이지</p>
-              <h1 className={DS.header.title}>매도자 대시보드</h1>
-              <p className={DS.header.subtitle}>(주)한국자산신탁AMC · Gold Seller</p>
-            </div>
-            <div className="flex flex-wrap gap-4">
-              {[
-                ['등록 매물', `${sellerStats.total}건`, ''],
-                ['진행중', `${sellerStats.active}건`, '!text-[var(--color-brand-mid)]'],
-                ['완료', `${sellerStats.completed}건`, '!text-[var(--color-positive)]'],
-                ['이번달 정산', billing.monthSettlement > 0 ? formatKRW(billing.monthSettlement) : '—', '!text-stone-900'],
-              ].map(([lbl, val, cls]) => (
-                <div key={lbl} className="text-center">
-                  <div className={DS.text.caption}>{lbl}</div>
-                  <div className={DS.text.metricMedium + " " + cls}>{val}</div>
+    <MckPageShell variant="tint">
+      <MckPageHeader
+        breadcrumbs={[{ label: "마이", href: "/my" }, { label: "매도자 관리" }]}
+        eyebrow="MY · SELLER"
+        title="매도자 대시보드"
+        subtitle="등록한 매물 / 진행 중 경매 / 정산을 한 화면에서 관리합니다."
+        actions={
+          <div className="flex flex-wrap gap-5">
+            {[
+              ['등록 매물', `${sellerStats.total}건`],
+              ['진행중', `${sellerStats.active}건`],
+              ['완료', `${sellerStats.completed}건`],
+              ['이번달 정산', billing.monthSettlement > 0 ? formatKRW(billing.monthSettlement) : '—'],
+            ].map(([lbl, val]) => (
+              <div key={lbl} style={{ textAlign: "right" }}>
+                <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 2 }}>{lbl}</div>
+                <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 18, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+                  {val}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className={DS.page.container + " py-6 " + DS.page.sectionGap}>
         {/* Stats Strip */}
@@ -291,11 +295,11 @@ export default function SellerDashboardPage() {
                       <td className={DS.table.cell}><span className="font-medium">{l.name}</span><span className={"block text-[0.6875rem] text-[var(--color-text-muted)]"}>{l.id}</span></td>
                       <td className={DS.table.cell + " font-semibold tabular-nums"}>{l.claim}</td>
                       <td className={DS.table.cell + " " + (GRADE_CLR[l.grade] ?? 'text-[var(--color-text-tertiary)]')}>{l.grade}</td>
-                      <td className={DS.table.cell}><span className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-bold ${STATUS_CLR[l.status] ?? 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]'}`}>{l.status}</span></td>
+                      <td className={DS.table.cell}><span className={`text-[0.6875rem] px-2 py-0.5 rounded-none font-bold ${STATUS_CLR[l.status] ?? 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]'}`}>{l.status}</span></td>
                       <td className={DS.table.cell + " tabular-nums"}>
                         {l.bidEndDate ? (
                           <span className={`inline-flex items-center gap-1 text-[0.75rem] ${l.auctionLive ? 'text-stone-900 dark:text-stone-900 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
-                            {l.auctionLive && <span className="w-1.5 h-1.5 rounded-full bg-stone-100 animate-pulse" />}
+                            {l.auctionLive && <span className="w-1.5 h-1.5 rounded-none bg-stone-100 animate-pulse" />}
                             <Gavel className="h-3 w-3" />
                             {new Date(l.bidEndDate).toLocaleDateString('ko-KR')}
                           </span>
@@ -344,7 +348,7 @@ export default function SellerDashboardPage() {
                   <XAxis dataKey="month" tick={{ fill: 'var(--color-text-tertiary)', fontSize: 12 }} />
                   <YAxis tick={{ fill: 'var(--color-text-tertiary)', fontSize: 11 }} />
                   <Tooltip contentStyle={{ background: 'var(--color-surface-elevated)', border: '1px solid var(--color-border-subtle)', borderRadius: 8, color: 'var(--color-text-primary)' }} />
-                  <Bar dataKey="views" fill="var(--color-brand-mid)" radius={[4, 4, 0, 0]} name="조회수" />
+                  <Bar dataKey="views" fill="#2251FF" radius={[4, 4, 0, 0]} name="조회수" />
                   <Bar dataKey="interests" fill="#ec4899" radius={[4, 4, 0, 0]} name="관심수" />
                 </BarChart>
               </ResponsiveContainer>
@@ -420,7 +424,7 @@ export default function SellerDashboardPage() {
                           <td className={DS.table.cellMuted + ' tabular-nums text-[var(--color-danger)]'}>-{fmtKRW(row.commission)}</td>
                           <td className={DS.table.cell + ' tabular-nums font-semibold text-[var(--color-positive)]'}>{fmtKRW(row.net_amount)}</td>
                           <td className={DS.table.cell}>
-                            <span className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-bold ${statusCls}`}>{statusLabel}</span>
+                            <span className={`text-[0.6875rem] px-2 py-0.5 rounded-none font-bold ${statusCls}`}>{statusLabel}</span>
                           </td>
                         </tr>
                       )
@@ -497,6 +501,6 @@ export default function SellerDashboardPage() {
           </div>
         )}
       </div>
-    </div>
+    </MckPageShell>
   )
 }
