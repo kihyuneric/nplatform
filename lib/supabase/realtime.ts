@@ -7,7 +7,12 @@ import { useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 
-type Table = 'npl_listings' | 'deals' | 'notifications' | 'organization_members'
+type Table =
+  | 'npl_listings'
+  | 'npl_ai_analyses'        // Phase G7+ 2026-04-29 — 분석 row 실시간 동기 (보고서 ↔ 딜룸)
+  | 'deals'
+  | 'notifications'
+  | 'organization_members'
 type EventType = 'INSERT' | 'UPDATE' | 'DELETE' | '*'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -110,5 +115,34 @@ export function useNewListingsRealtime(
     table: 'npl_listings',
     filter: 'status=eq.ACTIVE',
     onInsert: onNew,
+  })
+}
+
+// ── Phase G7+ 2026-04-29 ─────────────────────────────────────────────────
+// 매물 1건 + 그 매물의 분석 row 변경을 동시에 구독.
+// 보고서 / 딜룸 페이지에서 사용 — 매물 업데이트 OR 분석 업데이트 즉시 UI 반영.
+//
+// 사용:
+//   useListingAndAnalysisRealtime(listingId, () => queryClient.invalidateQueries(['listing', listingId]))
+
+export function useListingAndAnalysisRealtime(
+  listingId: string | null | undefined,
+  onAnyChange: () => void,
+) {
+  // 매물 자체 update 구독
+  useRealtimeSubscription<Record<string, unknown>>({
+    table: 'npl_listings',
+    filter: listingId ? `id=eq.${listingId}` : undefined,
+    enabled: !!listingId,
+    onUpdate: onAnyChange,
+  })
+  // 해당 매물의 분석 row INSERT/UPDATE/DELETE 구독
+  useRealtimeSubscription<Record<string, unknown>>({
+    table: 'npl_ai_analyses',
+    filter: listingId ? `listing_id=eq.${listingId}` : undefined,
+    enabled: !!listingId,
+    onInsert: onAnyChange,
+    onUpdate: onAnyChange,
+    onDelete: onAnyChange,
   })
 }

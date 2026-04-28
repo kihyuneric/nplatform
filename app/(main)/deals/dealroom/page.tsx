@@ -22,9 +22,11 @@
  */
 
 import Link from "next/link"
-import { createContext, useContext, useState, useRef, useMemo } from "react"
+import { createContext, useContext, useState, useRef, useMemo, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
 import { motion } from "framer-motion"
+import { useListingAndAnalysisRealtime } from "@/lib/supabase/realtime"
 import {
   ArrowRight, ArrowLeft, FileText, MessageSquare,
   Lock, CheckCircle2, Wifi, Send, Paperclip, Bell, Eye,
@@ -136,6 +138,15 @@ export default function DealRoomPage() {
 
   // AI 분석 KPI — 실 분석 row 또는 listing 파생 fallback
   const { kpi: analysisKpi, isDerived: analysisIsDerived } = useAnalysisReport(listing)
+
+  // Phase G7+ 2026-04-29 — Supabase Realtime 자동 동기화
+  //   매물 또는 분석 row 가 다른 사용자/세션에서 변경되면 React Query 캐시 무효화 → UI 자동 갱신
+  const queryClient = useQueryClient()
+  const handleRealtimeChange = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['listing', listingId] })
+    queryClient.invalidateQueries({ queryKey: ['analysis-report', listingId] })
+  }, [queryClient, listingId])
+  useListingAndAnalysisRealtime(listingId, handleRealtimeChange)
 
   const [summaryOpen, setSummaryOpen] = useState(false)
 

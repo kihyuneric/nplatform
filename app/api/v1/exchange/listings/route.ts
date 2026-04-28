@@ -10,6 +10,7 @@ import { notifyAction } from "@/lib/action-notify"
 import { error as apiError, validationError } from "@/lib/api-response"
 import { parsePagination } from "@/lib/api-helpers"
 import { JONGNO_HONGJI_DETAIL } from '@/lib/samples/jongno-hongji-land-npl'
+import { buildListingReport } from '@/lib/npl/unified-report/from-listing'
 
 /**
  * 거래소 리스트 응답에 항상 노출할 Featured 샘플 사례.
@@ -443,6 +444,36 @@ export async function POST(request: NextRequest) {
 
     // Attach listing_number to response data
     const responseData: Record<string, unknown> = { ...(result.data as Record<string, unknown>), listing_number }
+
+    // Phase G7+ 2026-04-29 — listing → 자동 분석 row 생성 (사용자 정책: "매물등록 → NPL 분석 자동")
+    //   buildListingReport 가 실 listing 필드 기반으로 보고서를 생성 → npl_ai_analyses 에 저장.
+    //   이후 보고서/딜룸은 listing 변경 → 분석 row update 로 자동 동기화.
+    //   실패 시 매물 등록 자체는 성공 처리 (분석은 사후 위저드/edit 으로 보정 가능)
+    try {
+      if (result._source === 'supabase' && responseData.id) {
+        const supabase = await createClient()
+        const listingForReport = {
+          ...listing,
+          id: String(responseData.id),
+        } as unknown as import('@/lib/hooks/use-listing').ListingDetail
+        const unifiedReport = buildListingReport(listingForReport)
+        await supabase
+          .from('npl_ai_analyses')
+          .insert({
+            user_id: userId,
+            listing_id: responseData.id,
+            grade: unifiedReport.summary.riskGrade,
+            risk_score: unifiedReport.summary.riskScore,
+            recommendation:
+              unifiedReport.summary.verdict === 'BUY' ? 'BUY'
+              : unifiedReport.summary.verdict === 'HOLD' ? 'HOLD'
+              : 'AVOID',
+            unified_report: unifiedReport,
+          })
+      }
+    } catch (analysisErr) {
+      logger.warn('[exchange/listings] auto-analysis insert failed (non-fatal):', { error: analysisErr })
+    }
 
     // Send notification for new listing
     await notifyAction('NEW_LISTING', {

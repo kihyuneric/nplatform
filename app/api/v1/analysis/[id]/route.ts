@@ -81,6 +81,169 @@ export async function GET(
   }
 }
 
+// PUT / PATCH - Update analysis (Phase G7+ 2026-04-29)
+//   사용자 정책: 보고서 수정 시 영구 저장 → 딜룸 자동 동기화
+//   허용 필드: grade, risk_score, recommendation, bid_rate_stats, court_info,
+//             similar_cases, transaction_cases, risk_factors, unifiedReport (보고서 전체 JSON)
+//   소유자 검증 후 npl_ai_analyses row 갱신.
+async function handleUpdate(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const supabase = await createClient()
+
+    // Auth check
+    let userId = 'anonymous'
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) userId = user.id
+    } catch { /* no auth */ }
+
+    if (userId === 'anonymous') {
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
+        { status: 401 }
+      )
+    }
+
+    let body: Record<string, unknown>
+    try {
+      body = await request.json() as Record<string, unknown>
+    } catch {
+      return NextResponse.json(
+        { error: { code: 'INVALID_BODY', message: 'Request body must be valid JSON' } },
+        { status: 400 }
+      )
+    }
+
+    // 소유자 검증
+    const { data: existing, error: fetchError } = await supabase
+      .from('npl_ai_analyses')
+      .select('id, user_id, listing_id')
+      .eq('id', id)
+      .single()
+
+    if (fetchError || !existing) {
+      return NextResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'Analysis not found' } },
+        { status: 404 }
+      )
+    }
+    if (existing.user_id !== userId) {
+      return NextResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'You can only edit your own analyses' } },
+        { status: 403 }
+      )
+    }
+
+    // 화이트리스트 (사용자가 수정 가능한 필드만)
+    const ALLOWED_FIELDS = [
+      'grade',
+      'risk_score',
+      'recommendation',
+      'bid_rate_stats',
+      'court_info',
+      'similar_cases',
+      'transaction_cases',
+      'risk_factors',
+      // 통합 보고서 JSON (UnifiedAnalysisReport 전체) — JSONB 컬럼
+      'unified_report',
+    ] as const
+
+    const changes: Record<string, unknown> = {}
+    for (const field of ALLOWED_FIELDS) {
+      if (body[field] !== undefined) changes[field] = body[field]
+    }
+
+    // grade 검증
+    if (changes.grade !== undefined) {
+      const validGrades = ['A', 'A+', 'B+', 'B', 'B-', 'C', 'C+', 'D', 'F']
+      if (!validGrades.includes(String(changes.grade))) {
+        return NextResponse.json(
+          { error: { code: 'INVALID_GRADE', message: `grade must be one of: ${validGrades.join(', ')}` } },
+          { status: 400 }
+        )
+      }
+    }
+    // risk_score 검증
+    if (changes.risk_score !== undefined) {
+      const score = Number(changes.risk_score)
+      if (Number.isNaN(score) || score < 0 || score > 100) {
+        return NextResponse.json(
+          { error: { code: 'INVALID_RISK_SCORE', message: 'risk_score must be between 0 and 100' } },
+          { status: 400 }
+        )
+      }
+      changes.risk_score = score
+    }
+
+    if (Object.keys(changes).length === 0) {
+      return NextResponse.json(
+        { error: { code: 'NO_FIELDS', message: 'No updatable fields provided' } },
+        { status: 400 }
+      )
+    }
+
+    changes.updated_at = new Date().toISOString()
+
+    const { data: updated, error: updateError } = await supabase
+      .from('npl_ai_analyses')
+      .update(changes)
+      .eq('id', id)
+      .select(`
+        *,
+        npl_listings (
+          id,
+          title,
+          collateral_type,
+          listing_type,
+          address_masked,
+          sido,
+          sigungu,
+          claim_amount,
+          discount_rate,
+          status,
+          thumbnail_url
+        )
+      `)
+      .single()
+
+    if (updateError) {
+      return NextResponse.json(
+        { error: { code: 'UPDATE_ERROR', message: updateError.message } },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      data: updated,
+      message: 'Analysis updated successfully',
+    })
+  } catch (err) {
+    logger.error('[analysis] PUT error:', { error: err })
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  return handleUpdate(request, ctx)
+}
+
+export async function PATCH(
+  request: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  return handleUpdate(request, ctx)
+}
+
 // DELETE - Remove analysis (ownership check)
 export async function DELETE(
   _request: NextRequest,

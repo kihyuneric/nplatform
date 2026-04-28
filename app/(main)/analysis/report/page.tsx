@@ -18,9 +18,11 @@
  *   8. AI 총평
  */
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { useSearchParams } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
+import { useListingAndAnalysisRealtime } from "@/lib/supabase/realtime"
 import Link from "next/link"
 import {
   ArrowLeft, Sparkles, TrendingUp, Shield, AlertTriangle, Target,
@@ -214,6 +216,15 @@ export default function UnifiedReportPage() {
 
   // SoT — listingId 가 있으면 매물 raw 데이터 fetch (assetTitle 등 헤더 메타 동기화)
   const { listing } = useListing(listingId, { allowDemo: false })
+
+  // Phase G7+ 2026-04-29 — Realtime 자동 동기화
+  //   매물 OR 분석 row 가 다른 사용자/세션에서 변경 → React Query 캐시 invalidate → useEffect 재실행 → 보고서 자동 갱신
+  const queryClient = useQueryClient()
+  const handleRealtimeChange = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['listing', listingId] })
+    queryClient.invalidateQueries({ queryKey: ['analysis-report', listingId] })
+  }, [queryClient, listingId])
+  useListingAndAnalysisRealtime(listingId, handleRealtimeChange)
 
   // SSR 시 document 미존재 — Portal 은 mount 이후에만 렌더
   useEffect(() => { setMounted(true) }, [])
