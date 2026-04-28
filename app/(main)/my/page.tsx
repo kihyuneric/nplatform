@@ -312,11 +312,14 @@ export default function MyDashboardPage() {
         }
       />
 
-      <div className="max-w-[1280px] mx-auto" style={{ padding: "32px 24px 80px" }}>
-        {/* ── 1. KPI 라인 ─────────────────────────────────────── */}
-        <div style={{ marginBottom: 32 }}>
-          <MckKpiGrid items={KPI_ITEMS} />
+      {/* ── 1. KPI strip · DARK · McKinsey impact (거래소 정합) ───── */}
+      <section style={{ background: MCK.paper, paddingBottom: 32 }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 24px" }}>
+          <MckKpiGrid variant="dark" items={KPI_ITEMS} />
         </div>
+      </section>
+
+      <div className="max-w-[1280px] mx-auto" style={{ padding: "0 24px 80px" }}>
 
         {/* ── 2. 투자자 인증 + 매물별 계약 안내 ─────────────────────
             투자자 인증은 1회 (계정 단위) · NDA / LOI 는 채권 매물별로 별도 진행
@@ -619,13 +622,13 @@ export default function MyDashboardPage() {
           </section>
         )}
 
-        {/* ── 5. Quick Links Grid (역할별) ─────────────────────── */}
+        {/* ── 5. Quick Links Grid · McKinsey Sky Blue 톤 (라이트블루 시그니처) ─────── */}
         <section style={{ marginBottom: 32 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
             <div>
               <div className="flex items-center gap-2" style={{ marginBottom: 6 }}>
-                <span style={{ width: 18, height: 1.5, background: MCK.brass, display: "inline-block" }} />
-                <span style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark }}>Quick Menu · {badge.label}</span>
+                <span style={{ width: 18, height: 1.5, background: MCK.electric, display: "inline-block" }} />
+                <span style={{ ...MCK_TYPE.eyebrow, color: MCK.electric }}>Quick Menu · {badge.label}</span>
               </div>
               <h2 style={{ ...MCK_TYPE.h3, fontFamily: MCK_FONTS.serif, color: MCK.ink }}>
                 빠른 메뉴
@@ -637,8 +640,9 @@ export default function MyDashboardPage() {
               display: "grid",
               gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
               gap: 0,
-              border: `1px solid ${MCK.border}`,
-              background: MCK.paper,
+              border: "1px solid #7FA8C8",                       /* sky blue stroke */
+              background: "#A8CDE8",                              /* sky blue tint - McKinsey signature */
+              borderTop: `2px solid ${MCK.electric}`,             /* electric blue cobalt accent */
             }}
           >
             {QUICK_LINKS.map((link, i) => {
@@ -650,32 +654,34 @@ export default function MyDashboardPage() {
                   style={{
                     display: "block",
                     padding: 22,
-                    borderRight: (i + 1) % 4 !== 0 ? `1px solid ${MCK.border}` : "none",
-                    borderTop: i >= 4 ? `1px solid ${MCK.border}` : link.highlight ? `2px solid ${MCK.brass}` : "none",
+                    borderRight: (i + 1) % 4 !== 0 ? "1px solid rgba(255,255,255,0.55)" : "none",
+                    borderTop: i >= 4 ? "1px solid rgba(255,255,255,0.55)" : link.highlight ? `2px solid ${MCK.electric}` : "none",
                     textDecoration: "none",
-                    background: MCK.paper,
+                    background: link.highlight ? "rgba(255, 255, 255, 0.42)" : "transparent",
                     position: "relative",
                     transition: "background 120ms ease",
                   }}
+                  className="hover:!bg-white/30"
                 >
                   <div
                     style={{
                       width: 36,
                       height: 36,
-                      background: link.highlight ? MCK.ink : MCK.paperTint,
-                      border: `1px solid ${link.highlight ? MCK.ink : MCK.border}`,
+                      background: link.highlight ? MCK.electric : "rgba(255, 255, 255, 0.55)",
+                      border: `1px solid ${link.highlight ? MCK.electric : "#7FA8C8"}`,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       marginBottom: 14,
+                      boxShadow: link.highlight ? "0 4px 10px rgba(34, 81, 255, 0.30)" : "none",
                     }}
                   >
-                    <Icon size={16} color={link.highlight ? MCK.brassLight : MCK.ink} />
+                    <Icon size={16} color={link.highlight ? "#FFFFFF" : MCK.electricDark} />
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: MCK.ink, marginBottom: 4, fontFamily: MCK_FONTS.serif, letterSpacing: "-0.01em" }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: MCK.ink, marginBottom: 4, fontFamily: MCK_FONTS.serif, letterSpacing: "-0.01em" }}>
                     {link.label}
                   </div>
-                  <div style={{ fontSize: 11, color: MCK.textSub, lineHeight: 1.5 }}>
+                  <div style={{ fontSize: 11, color: "rgba(5, 28, 44, 0.65)", lineHeight: 1.5, fontWeight: 500 }}>
                     {link.desc}
                   </div>
                 </Link>
@@ -699,7 +705,7 @@ export default function MyDashboardPage() {
             style={{
               background: MCK.paper,
               border: `1px solid ${MCK.border}`,
-              borderTop: `2px solid ${MCK.brass}`,
+              borderTop: `2px solid ${MCK.electric}`,
               padding: 24,
               display: "flex",
               alignItems: "center",
@@ -709,18 +715,34 @@ export default function MyDashboardPage() {
             }}
           >
             <div>
-              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.brassDark, marginBottom: 6 }}>Account · History</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: MCK.ink, fontFamily: MCK_FONTS.serif }}>
+              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 6 }}>Account · History</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: MCK.ink, fontFamily: MCK_FONTS.serif, letterSpacing: "-0.01em" }}>
                 전체 활동 이력 · PII 열람 로그
               </div>
             </div>
-            <MckCta
-              label="활동 이력 보기"
+            {/* 직접 ink-dark 인라인 스타일 — MckCta 의 색상 누락 이슈 우회 */}
+            <Link
               href="/my/privacy"
-              variant="secondary"
-              size="md"
-              centered={false}
-            />
+              className="mck-cta-dark"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "11px 20px",
+                fontSize: 13,
+                fontWeight: 800,
+                background: MCK.ink,
+                color: MCK.paper,
+                border: "none",
+                borderTop: `2px solid ${MCK.electric}`,
+                letterSpacing: "-0.01em",
+                textDecoration: "none",
+                boxShadow: "0 4px 12px rgba(10, 22, 40, 0.18)",
+              }}
+            >
+              <span style={{ color: MCK.paper }}>활동 이력 보기</span>
+              <ChevronRight size={14} style={{ color: MCK.paper }} />
+            </Link>
           </div>
         )}
       </div>
