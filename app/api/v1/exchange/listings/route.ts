@@ -9,6 +9,109 @@ import { sanitizeInput } from "@/lib/sanitize"
 import { notifyAction } from "@/lib/action-notify"
 import { error as apiError, validationError } from "@/lib/api-response"
 import { parsePagination } from "@/lib/api-helpers"
+import { JONGNO_HONGJI_DETAIL } from '@/lib/samples/jongno-hongji-land-npl'
+
+/**
+ * 거래소 리스트 응답에 항상 노출할 Featured 샘플 사례.
+ *
+ * - Supabase 연동 환경(_source='supabase')에서도 list 결과 최상단에 prepend
+ * - listings/[id] route 의 RICH_SAMPLE_DETAILS 와 짝이 됨
+ * - 카드 그리드/표 모두에 정상 노출되도록 main 컬럼만 제공 (rich detail 은 detail GET 에서 머지)
+ */
+const FEATURED_SAMPLE_LISTINGS: Record<string, unknown>[] = [
+  {
+    id: JONGNO_HONGJI_DETAIL.id,
+    seller_id: JONGNO_HONGJI_DETAIL.seller_id,
+    title: JONGNO_HONGJI_DETAIL.title,
+    listing_type: 'NPL',
+    collateral_type: JONGNO_HONGJI_DETAIL.collateral_type,
+    address: JONGNO_HONGJI_DETAIL.address,
+    address_masked: JONGNO_HONGJI_DETAIL.address_masked,
+    sido: JONGNO_HONGJI_DETAIL.sido,
+    sigungu: JONGNO_HONGJI_DETAIL.sigungu,
+    location_city: JONGNO_HONGJI_DETAIL.location_city,
+    location_district: JONGNO_HONGJI_DETAIL.location_district,
+    institution: JONGNO_HONGJI_DETAIL.institution,
+    institution_name: JONGNO_HONGJI_DETAIL.institution_name,
+    creditor_institution: JONGNO_HONGJI_DETAIL.institution,
+    principal_amount: JONGNO_HONGJI_DETAIL.principal_amount,
+    claim_amount: JONGNO_HONGJI_DETAIL.claim_amount,
+    appraised_value: JONGNO_HONGJI_DETAIL.appraisal_value,
+    appraisal_value: JONGNO_HONGJI_DETAIL.appraisal_value,
+    asking_price_min: JONGNO_HONGJI_DETAIL.asking_price_min,
+    asking_price_max: JONGNO_HONGJI_DETAIL.asking_price_max,
+    asking_price: JONGNO_HONGJI_DETAIL.asking_price,
+    minimum_bid: JONGNO_HONGJI_DETAIL.minimum_bid,
+    ai_estimate_low: JONGNO_HONGJI_DETAIL.ai_estimate_low,
+    ai_estimate_high: JONGNO_HONGJI_DETAIL.ai_estimate_high,
+    discount_rate: 0,                    // 매각가 = 채권액 (할인 0)
+    risk_grade: 'A',
+    ai_grade: 'A',
+    ltv_ratio: JONGNO_HONGJI_DETAIL.ltv_ratio,
+    ltv: JONGNO_HONGJI_DETAIL.ltv,
+    status: 'ACTIVE',
+    visibility: 'PUBLIC',
+    is_featured: true,
+    featured: true,
+    description: JONGNO_HONGJI_DETAIL.description,
+    deadline: JONGNO_HONGJI_DETAIL.deadline,
+    delinquency_months: 2,
+    area_sqm: JONGNO_HONGJI_DETAIL.area_sqm,
+    land_area: JONGNO_HONGJI_DETAIL.land_area,
+    debtor_count: 1,
+    debtor_type: JONGNO_HONGJI_DETAIL.debtor_type,
+    bid_start_date: JONGNO_HONGJI_DETAIL.bid_start_date,
+    bid_end_date: JONGNO_HONGJI_DETAIL.bid_end_date,
+    min_bid_price: JONGNO_HONGJI_DETAIL.min_bid_price,
+    view_count: JONGNO_HONGJI_DETAIL.view_count,
+    interest_count: JONGNO_HONGJI_DETAIL.interest_count,
+    created_at: JONGNO_HONGJI_DETAIL.created_at,
+    updated_at: JONGNO_HONGJI_DETAIL.updated_at,
+    /** 카드/표 컴포넌트에서 sample 임을 인지할 수 있도록 hint */
+    _featured_sample: true,
+  },
+]
+
+/**
+ * 필터 조건에 맞는 featured sample 만 반환.
+ * 실 매물과 검색·정렬·필터를 일관되게 적용.
+ */
+function filterFeaturedSamples(opts: {
+  collateralType?: string | null
+  collateralRegion?: string | null
+  sido?: string | null
+  riskGrade?: string | null
+  status?: string | null
+  visibility?: string | null
+  searchQuery?: string
+  priceMin?: number | null
+  priceMax?: number | null
+  sellerId?: string | null
+  exclude?: string | null
+}): Record<string, unknown>[] {
+  return FEATURED_SAMPLE_LISTINGS.filter(s => {
+    if (opts.exclude && s.id === opts.exclude) return false
+    if (opts.collateralType && s.collateral_type !== opts.collateralType) return false
+    if (opts.collateralRegion) {
+      const region = String(s.location_city ?? s.sido ?? '')
+      if (!region.includes(opts.collateralRegion)) return false
+    }
+    if (opts.sido && s.sido !== opts.sido) return false
+    if (opts.riskGrade && s.risk_grade !== opts.riskGrade) return false
+    if (opts.status && s.status !== opts.status) return false
+    if (opts.visibility && s.visibility !== opts.visibility) return false
+    if (opts.sellerId && s.seller_id !== opts.sellerId) return false
+    if (typeof opts.priceMin === 'number' && Number(s.principal_amount ?? 0) < opts.priceMin) return false
+    if (typeof opts.priceMax === 'number' && Number(s.principal_amount ?? 0) > opts.priceMax) return false
+    if (opts.searchQuery) {
+      const q = opts.searchQuery.toLowerCase()
+      const fields = [s.title, s.institution, s.address, s.location_city, s.location_district, s.collateral_type, s.description]
+      const matches = fields.some(f => typeof f === 'string' && f.toLowerCase().includes(q))
+      if (!matches) return false
+    }
+    return true
+  })
+}
 
 // ─── Zod schema for POST body ─────────────────────────────
 const COLLATERAL_TYPES = ['아파트','오피스텔','다세대','단독주택','상가','오피스','토지','공장','호텔','기타'] as const
@@ -224,9 +327,32 @@ export async function GET(request: NextRequest) {
       return { ...row, images: images && images.length > 0 ? images : undefined }
     })
 
+    // ── Featured Sample 합성 ──
+    // Supabase 연동/샘플 모드 무관하게, 사례 사전 빌드된 매물(종로 등) 을 항상 1페이지 최상단 노출.
+    // 단, 같은 ID 가 이미 result 에 있으면(향후 실 DB 적재 시) skip — 중복 방지.
+    const existingIds = new Set(normalizedData.map(r => String((r as Record<string, unknown>).id)))
+    const featuredFiltered = filterFeaturedSamples({
+      collateralType: collateral_type,
+      collateralRegion: collateral_region,
+      sido: searchParams.get('sido'),
+      riskGrade: risk_grade,
+      status,
+      visibility,
+      searchQuery: searchQuery || undefined,
+      priceMin: price_min ? Number(price_min) : null,
+      priceMax: price_max ? Number(price_max) : null,
+      sellerId: sellerIdParam,
+      exclude,
+    }).filter(s => !existingIds.has(String(s.id)))
+
+    const finalData = page === 1
+      ? [...featuredFiltered, ...normalizedData].slice(0, limit)
+      : normalizedData
+    const finalTotal = filteredTotal + featuredFiltered.length
+
     const headers = result._source === 'supabase' ? listingCacheHeaders() : undefined
     return NextResponse.json(
-      { data: normalizedData, total: filteredTotal, totalPages, page, _source: result._source },
+      { data: finalData, total: finalTotal, totalPages: Math.ceil(finalTotal / limit) || 1, page, _source: result._source },
       { headers }
     )
   } catch (err) {
