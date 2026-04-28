@@ -168,6 +168,8 @@ export default function SupportPage() {
 
   const handleSubmit = async () => {
     if (!form.category || !form.title || !form.content) return
+
+    // 1) 백오피스 추적용 — 실패해도 사용자 경험 유지
     try {
       await fetch('/api/v1/support', {
         method: 'POST',
@@ -175,8 +177,30 @@ export default function SupportPage() {
         body: JSON.stringify(form),
       })
     } catch {
-      /* swallow — UX still confirms submission */
+      /* swallow */
     }
+
+    // 2) biz@transfarmer.co.kr 로 사용자 메일 클라이언트 연결
+    //    - 본인 메일 주소·발송 이력이 사용자 측에 남도록 직접 발송 형태로 유도
+    //    - mailto 한도(약 2000자) 고려해 본문 trim
+    const subject = `[NPLatform 1:1 문의 · ${form.category}] ${form.title}`
+    const body = [
+      `문의 유형: ${form.category}`,
+      `제목: ${form.title}`,
+      "",
+      "내용:",
+      form.content,
+      "",
+      "---",
+      "본 메일은 NPLatform 1:1 문의하기에서 자동 작성되었습니다.",
+    ].join("\n")
+    const mailto = `mailto:biz@transfarmer.co.kr?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+
+    if (typeof window !== "undefined") {
+      // 새 창/탭이 아니라 메일 클라이언트로 직접 연결
+      window.location.href = mailto
+    }
+
     setSubmitted(true)
     setTimeout(() => {
       setSubmitted(false)
@@ -328,19 +352,22 @@ export default function SupportPage() {
           }}
         >
           <MckCard icon={Mail} title="이메일 문의" accent={MCK.brass}>
-            <p
+            <a
+              href="mailto:biz@transfarmer.co.kr"
               style={{
                 fontFamily: MCK_FONTS.mono,
                 color: MCK.blue,
                 fontSize: 14,
                 fontWeight: 700,
                 margin: 0,
+                textDecoration: "none",
+                display: "inline-block",
               }}
             >
-              support@nplatform.co.kr
-            </p>
+              biz@transfarmer.co.kr
+            </a>
             <p style={{ ...MCK_TYPE.bodySm, color: MCK.textMuted, margin: 0 }}>
-              24시간 접수 · 영업일 1~2일 내 답변
+              24시간 접수 · 영업일 1~2일 내 답변 · 클릭 시 메일 앱 실행
             </p>
           </MckCard>
 
@@ -374,7 +401,7 @@ export default function SupportPage() {
           <MckEmptyState
             icon={CheckCircle2}
             title="문의가 접수되었습니다"
-            description="영업일 기준 1~2일 내 답변드리겠습니다. 등록하신 이메일을 확인해 주세요."
+            description="biz@transfarmer.co.kr 로 메일이 작성되었습니다. 메일 앱에서 발송을 완료해 주세요. 영업일 기준 1~2일 내 답변드립니다."
             variant="info"
           />
         ) : (

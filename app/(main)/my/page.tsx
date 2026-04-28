@@ -14,7 +14,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import {
-  ShieldCheck, UserCheck, FileSignature,
+  UserCheck, FileSignature,
   Building2, TrendingUp, Clock, ChevronRight,
   CheckCircle2, Sparkles, BarChart3, Target,
   ArrowRight, Handshake,
@@ -151,7 +151,6 @@ type QuickLink = {
 const COMMON_LINKS: QuickLink[] = [
   { href: "/my/kyc",          label: "투자자 인증",   desc: "사업자등록증 · 명함 업로드",  icon: UserCheck, highlight: true },
   { href: "/my/agreements",   label: "계약 관리",     desc: "NDA · LOI 이력",              icon: FileSignature },
-  { href: "/my/privacy",      label: "개인정보 설정", desc: "PII 열람 로그 · 파기",        icon: ShieldCheck },
   { href: "/my/notifications",label: "알림 설정",     desc: "이메일 · 푸시 · 매칭",        icon: Bell },
   { href: "/my/inquiries",    label: "문의 내역",     desc: "고객센터 문의 · 답변",        icon: MessageCircle },
 ]
@@ -691,8 +690,8 @@ export default function MyDashboardPage() {
           </div>
         </section>
 
-        {/* ── 6. Footer CTA ─────────────────────────────────── */}
-        {isSample ? (
+        {/* ── 6. Footer CTA — 비로그인 안내만 ─────────────────────────────────── */}
+        {isSample && (
           <MckEmptyState
             icon={Sparkles}
             title="실제 데이터로 NPLatform을 경험하세요"
@@ -701,50 +700,6 @@ export default function MyDashboardPage() {
             actionHref="/login"
             variant="demo"
           />
-        ) : (
-          <div
-            style={{
-              background: MCK.paper,
-              border: `1px solid ${MCK.border}`,
-              borderTop: `2px solid ${MCK.electric}`,
-              padding: 24,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: 16,
-            }}
-          >
-            <div>
-              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 6 }}>Account · History</div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: MCK.ink, fontFamily: MCK_FONTS.serif, letterSpacing: "-0.01em" }}>
-                전체 활동 이력 · PII 열람 로그
-              </div>
-            </div>
-            {/* 직접 ink-dark 인라인 스타일 — MckCta 의 색상 누락 이슈 우회 */}
-            <Link
-              href="/my/privacy"
-              className="mck-cta-dark"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "11px 20px",
-                fontSize: 13,
-                fontWeight: 800,
-                background: MCK.ink,
-                color: MCK.paper,
-                border: "none",
-                borderTop: `2px solid ${MCK.electric}`,
-                letterSpacing: "-0.01em",
-                textDecoration: "none",
-                boxShadow: "0 4px 12px rgba(10, 22, 40, 0.18)",
-              }}
-            >
-              <span style={{ color: MCK.paper }}>활동 이력 보기</span>
-              <ChevronRight size={14} style={{ color: MCK.paper }} />
-            </Link>
-          </div>
         )}
       </div>
     </MckPageShell>
