@@ -63,15 +63,15 @@ export const TEXT = {
   /** 11px, 600 — 작은 메타 데이터 */
   micro: 'text-[0.6875rem] font-semibold text-[var(--color-text-muted)]',
 
-  // ─ 데이터/숫자 ─
+  // ─ 데이터/숫자 (Georgia serif, McKinsey editorial 톤) ─
   /** 40px, 800 — 대형 KPI 숫자 */
-  metricHero: 'text-[2.5rem] font-extrabold text-[var(--color-text-primary)] tabular-nums leading-none',
+  metricHero: "text-[2.5rem] font-extrabold text-[#0A1628] tabular-nums leading-none [font-family:Georgia,'Times_New_Roman',serif] tracking-[-0.03em]",
   /** 26px, 700 — 중형 데이터 숫자 */
-  metricLarge: 'text-[1.625rem] font-bold text-[var(--color-text-primary)] tabular-nums leading-none',
+  metricLarge: "text-[1.625rem] font-extrabold text-[#0A1628] tabular-nums leading-none [font-family:Georgia,'Times_New_Roman',serif] tracking-[-0.02em]",
   /** 19px, 600 — 소형 데이터 숫자 */
-  metricMedium: 'text-[1.1875rem] font-semibold text-[var(--color-text-primary)] tabular-nums',
+  metricMedium: "text-[1.1875rem] font-extrabold text-[#0A1628] tabular-nums [font-family:Georgia,'Times_New_Roman',serif] tracking-[-0.015em]",
   /** 15px, 700 — 카드 내 인라인 숫자 */
-  metricSmall: 'text-[0.9375rem] font-bold text-[var(--color-text-primary)] tabular-nums',
+  metricSmall: 'text-[0.9375rem] font-extrabold text-[#0A1628] tabular-nums',
 
   // ─ 링크 ─
   /** 기본 링크 */
@@ -89,46 +89,48 @@ export const TEXT = {
   warning: 'text-[var(--color-warning)]',
 } as const
 
-// ── 카드 ─────────────────────────────────────────────────────────────────────
+// ── 카드 (McKinsey White Paper) ──────────────────────────────────────────────
+// sharp corners (rounded-none) + paper bg + electric blue top accent (2px)
+// 거래소 (/exchange) 와 정합되는 시그니처 톤
 export const CARD = {
-  /** 기본 카드 (흰 배경, 미세 그림자) */
-  base: 'bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl shadow-[var(--shadow-sm)]',
+  /** 기본 카드 (흰 배경, 1px hairline) */
+  base: 'bg-white border border-[rgba(5,28,44,0.10)]',
   /** 인터랙티브 카드 (호버 효과) */
-  interactive: 'bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer',
-  /** 강조 카드 (큰 그림자) */
-  elevated: 'bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-2xl shadow-[var(--shadow-md)]',
-  /** 히어로 카드 (가장 큰 그림자, 가장 큰 radius) */
-  hero: 'bg-[var(--color-surface-elevated)] border border-[var(--color-border-default)] rounded-2xl shadow-[var(--shadow-xl)] p-8',
-  /** 평면 카드 (그림자 없음) */
-  flat: 'bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-xl',
-  /** 브랜드 다크 카드 */
-  dark: 'bg-[var(--color-brand-dark)] text-white rounded-xl shadow-[var(--shadow-brand)]',
-  /** 글래스모피즘 */
-  glass: 'bg-white/60 backdrop-blur-xl border border-white/20 rounded-xl',
+  interactive: 'bg-white border border-[rgba(5,28,44,0.10)] hover:shadow-[0_12px_24px_-8px_rgba(5,28,44,0.15),0_4px_8px_-2px_rgba(5,28,44,0.08)] transition-shadow duration-200 cursor-pointer',
+  /** 강조 카드 (electric blue top accent — 시그니처) */
+  elevated: 'bg-white border border-[rgba(5,28,44,0.10)] border-t-2 border-t-[#2251FF] shadow-[0_8px_18px_-6px_rgba(5,28,44,0.08)]',
+  /** 히어로 카드 (가장 강조 — electric top + 그림자) */
+  hero: 'bg-white border border-[rgba(5,28,44,0.10)] border-t-[3px] border-t-[#2251FF] shadow-[0_12px_24px_-8px_rgba(5,28,44,0.15)] p-8',
+  /** 평면 카드 (그림자 없음, paper-tint 배경) */
+  flat: 'bg-[#F8FAFC] border border-[rgba(5,28,44,0.10)]',
+  /** 브랜드 다크 카드 (ink + electric top) */
+  dark: 'bg-[#0A1628] text-white border-t-2 border-t-[#2251FF] shadow-[0_8px_24px_rgba(10,22,40,0.20)]',
+  /** 글래스모피즘 (라이트 배경 호환) */
+  glass: 'bg-white/70 backdrop-blur-xl border border-white/30',
   /** 카드 내부 패딩 */
   padding: 'p-5 sm:p-6',
   paddingCompact: 'p-4',
   paddingLarge: 'p-6 sm:p-8',
 } as const
 
-// ── 버튼 ─────────────────────────────────────────────────────────────────────
+// ── 버튼 (McKinsey sharp + ink/electric) ─────────────────────────────────────
 export const BUTTON = {
-  /** Primary: 진한 네이비, 흰 텍스트 */
-  primary: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-brand-dark)] text-white text-[0.8125rem] font-semibold rounded-lg shadow-[var(--shadow-brand)] hover:bg-[var(--color-brand-mid)] hover:shadow-[var(--shadow-brand-lg)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150 relative overflow-hidden',
-  /** Secondary: 흰 배경, 테두리 */
-  secondary: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-surface-elevated)] text-[var(--color-brand-dark)] text-[0.8125rem] font-semibold rounded-lg border border-[var(--color-border-default)] shadow-[var(--shadow-xs)] hover:bg-[var(--color-surface-sunken)] hover:border-[var(--color-border-strong)] transition-all duration-150 relative overflow-hidden',
-  /** Ghost: 텍스트만 */
-  ghost: 'inline-flex items-center justify-center gap-2 px-4 py-2 text-[var(--color-text-secondary)] text-[0.8125rem] font-medium rounded-lg hover:bg-[var(--color-surface-sunken)] hover:text-[var(--color-text-primary)] transition-all duration-150',
-  /** Accent: 에메랄드 */
-  accent: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-positive)] text-white text-[0.8125rem] font-semibold rounded-lg shadow-[var(--shadow-sm)] hover:bg-emerald-600 hover:-translate-y-0.5 transition-all duration-150',
+  /** Primary: ink dark + electric top accent (deep navy CTA) */
+  primary: 'mck-cta-dark inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0A1628] text-white text-[0.8125rem] font-bold border-t-2 border-t-[#2251FF] shadow-[0_4px_12px_rgba(10,22,40,0.20)] hover:shadow-[0_6px_16px_rgba(34,81,255,0.30)] transition-shadow duration-150',
+  /** Secondary: paper + ink border */
+  secondary: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white text-[#0A1628] text-[0.8125rem] font-bold border border-[#0A1628] hover:bg-[#F8FAFC] transition-colors duration-150',
+  /** Ghost: 텍스트만, hover 시 paper-tint */
+  ghost: 'inline-flex items-center justify-center gap-2 px-4 py-2 text-[#0A1628] text-[0.8125rem] font-medium hover:bg-[#F8FAFC] transition-colors duration-150',
+  /** Accent: positive (emerald) */
+  accent: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-positive)] text-white text-[0.8125rem] font-bold border-t-2 border-t-[#34D399] hover:opacity-90 transition-opacity duration-150',
   /** Danger: 레드 */
-  danger: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-danger)] text-white text-[0.8125rem] font-semibold rounded-lg shadow-[var(--shadow-sm)] hover:bg-red-600 transition-all duration-150',
+  danger: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-danger)] text-white text-[0.8125rem] font-bold hover:opacity-90 transition-opacity duration-150',
   /** 작은 버튼 */
-  sm: 'text-[0.75rem] px-3 py-1.5 rounded-md',
+  sm: 'text-[0.75rem] px-3 py-1.5',
   /** 큰 버튼 */
-  lg: 'text-[0.9375rem] px-7 py-3.5 rounded-xl',
+  lg: 'text-[0.9375rem] px-7 py-3.5',
   /** 아이콘 버튼 */
-  icon: 'inline-flex items-center justify-center w-11 h-11 rounded-lg hover:bg-[var(--color-surface-sunken)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors',
+  icon: 'inline-flex items-center justify-center w-11 h-11 hover:bg-[#F8FAFC] text-[rgba(5,28,44,0.55)] hover:text-[#0A1628] transition-colors',
 } as const
 
 // ── 배지 ─────────────────────────────────────────────────────────────────────
@@ -143,57 +145,56 @@ export const BADGE = {
     `inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.6875rem] font-bold border ${bg} ${text} ${border}`,
 } as const
 
-// ── 통계 카드 ────────────────────────────────────────────────────────────────
+// ── 통계 카드 (McKinsey paper + electric top) ────────────────────────────────
 export const STAT = {
-  /** 통계 카드 래퍼 */
-  card: 'bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-xl p-5 shadow-[var(--shadow-sm)]',
-  /** 통계 라벨 */
-  label: 'text-[0.6875rem] font-bold text-[var(--color-text-tertiary)] uppercase mb-1',
-  /** 통계 값 */
-  value: 'text-[1.625rem] font-bold text-[var(--color-text-primary)] tabular-nums leading-none',
+  /** 통계 카드 래퍼 — paper + 1px hairline + electric top accent */
+  card: 'bg-white border border-[rgba(5,28,44,0.10)] border-t-2 border-t-[#2251FF] p-5 shadow-[0_4px_10px_-2px_rgba(5,28,44,0.06)]',
+  /** 통계 라벨 — electric blue eyebrow */
+  label: "text-[0.6875rem] font-extrabold text-[#2251FF] uppercase tracking-[0.10em] mb-1",
+  /** 통계 값 — Georgia serif, ink, tabular-nums */
+  value: "text-[1.625rem] font-extrabold text-[#0A1628] tabular-nums leading-none [font-family:Georgia,'Times_New_Roman',serif] tracking-[-0.02em]",
   /** 통계 보조 텍스트 */
-  sub: 'text-[0.8125rem] text-[var(--color-text-muted)] mt-1',
+  sub: 'text-[0.8125rem] text-[rgba(5,28,44,0.55)] mt-1',
 } as const
 
-// ── 입력/폼 ──────────────────────────────────────────────────────────────────
-// 입력 텍스트 색상은 반드시 명시적(text-slate-900)으로 둬서
-// 다크모드/OS 기본 스타일 때문에 흰색으로 보이지 않도록 방지.
+// ── 입력/폼 (McKinsey sharp + electric focus) ────────────────────────────────
 export const INPUT = {
-  base: 'w-full px-4 py-2.5 bg-white border border-[var(--color-border-default)] rounded-lg text-[0.9375rem] !text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-bright)] focus:border-transparent transition-all',
-  label: 'text-[0.8125rem] font-semibold text-[var(--color-text-primary)] mb-1.5',
-  helper: 'text-[0.75rem] text-[var(--color-text-muted)] mt-1',
+  base: "w-full px-4 py-2.5 bg-white border border-[rgba(5,28,44,0.20)] text-[0.9375rem] !text-[#0A1628] placeholder:text-[rgba(5,28,44,0.35)] focus:outline-none focus:border-[#2251FF] focus:border-t-2 focus:shadow-[0_0_0_3px_rgba(34,81,255,0.12)] transition-shadow",
+  label: "text-[0.6875rem] font-extrabold text-[#2251FF] uppercase tracking-[0.10em] mb-1.5",
+  helper: 'text-[0.75rem] text-[rgba(5,28,44,0.45)] mt-1',
   error: 'text-[0.75rem] text-[var(--color-danger)] mt-1',
 } as const
 
-// ── 테이블 ───────────────────────────────────────────────────────────────────
+// ── 테이블 (McKinsey paper + ink) ────────────────────────────────────────────
 export const TABLE = {
-  wrapper: 'overflow-x-auto rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]',
-  header: 'text-[0.6875rem] font-bold text-[var(--color-text-tertiary)] uppercase bg-[var(--color-surface-sunken)]',
+  wrapper: 'overflow-x-auto border border-[rgba(5,28,44,0.10)] border-t-2 border-t-[#2251FF] bg-white',
+  header: "text-[0.6875rem] font-extrabold text-[rgba(5,28,44,0.55)] uppercase tracking-[0.10em] bg-[#F8FAFC]",
   headerCell: 'px-4 py-3 text-left',
-  row: 'border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-sunken)] transition-colors',
-  cell: 'px-4 py-3.5 text-[0.8125rem] text-[var(--color-text-primary)]',
-  cellMuted: 'px-4 py-3.5 text-[0.8125rem] text-[var(--color-text-tertiary)]',
+  row: 'border-b border-[rgba(5,28,44,0.08)] hover:bg-[#F8FAFC] transition-colors',
+  cell: 'px-4 py-3.5 text-[0.8125rem] text-[#0A1628]',
+  cellMuted: 'px-4 py-3.5 text-[0.8125rem] text-[rgba(5,28,44,0.55)]',
 } as const
 
-// ── 탭 ───────────────────────────────────────────────────────────────────────
+// ── 탭 (McKinsey ink+paper) ──────────────────────────────────────────────────
 export const TABS = {
-  /** 탭 리스트 래퍼 */
-  list: 'flex gap-1 p-1 bg-[var(--color-surface-sunken)] rounded-xl',
+  /** 탭 리스트 래퍼 — paper card + electric top */
+  list: "flex gap-1 p-2 bg-white border border-[rgba(5,28,44,0.10)] border-t-2 border-t-[#2251FF]",
   /** 비활성 탭 */
-  trigger: 'px-4 py-2 text-[0.8125rem] font-medium text-[var(--color-text-tertiary)] rounded-lg transition-all hover:text-[var(--color-text-primary)] hover:bg-white/50',
-  /** 활성 탭 */
-  active: 'px-4 py-2 text-[0.8125rem] font-semibold text-[var(--color-brand-dark)] bg-white rounded-lg shadow-[var(--shadow-sm)]',
+  trigger: 'px-4 py-2 text-[0.8125rem] font-bold text-[rgba(5,28,44,0.55)] hover:text-[#0A1628] hover:bg-[#F8FAFC] transition-colors',
+  /** 활성 탭 — ink + paper text + electric top */
+  active: "px-4 py-2 text-[0.8125rem] font-extrabold text-white bg-[#0A1628] border-t-2 border-t-[#2251FF]",
 } as const
 
-// ── 페이지 헤더 ──────────────────────────────────────────────────────────────
+// ── 페이지 헤더 (McKinsey editorial — 거래소 정합) ───────────────────────────
 export const HEADER = {
-  /** 페이지 헤더 래퍼 (히어로 없는 일반 페이지) */
-  wrapper: 'pb-6 border-b border-[var(--color-border-subtle)] mb-8',
-  /** 아이브로우 (카테고리 표시) */
-  eyebrow: 'text-[0.6875rem] font-bold text-[var(--color-brand-mid)] uppercase tracking-wider mb-2',
-  /** 제목 + 설명 */
-  title: TEXT.pageTitle,
-  subtitle: 'text-[1.0625rem] text-[var(--color-text-secondary)] mt-2 max-w-2xl leading-relaxed',
+  /** 페이지 헤더 래퍼 — paper, hairline bottom, generous padding */
+  wrapper: 'pb-6 border-b border-[rgba(5,28,44,0.08)] mb-6',
+  /** 아이브로우 — electric blue, uppercase, wide tracking */
+  eyebrow: "text-[0.6875rem] font-extrabold text-[#2251FF] uppercase tracking-[0.10em] mb-2",
+  /** 제목 — Georgia serif, ink, 큰 letter-spacing */
+  title: "text-[2.25rem] font-extrabold text-[#0A1628] leading-tight tracking-[-0.025em] [font-family:Georgia,'Times_New_Roman',serif]",
+  /** 설명 */
+  subtitle: 'text-[0.9375rem] text-[rgba(5,28,44,0.55)] mt-2 max-w-2xl leading-relaxed',
 } as const
 
 // ── 필터 바 ──────────────────────────────────────────────────────────────────
