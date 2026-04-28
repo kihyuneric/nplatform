@@ -43,10 +43,11 @@ export function MckPageHeader({
       }}
     >
       <div className="max-w-[1280px] mx-auto" style={{ padding: "32px 24px 36px" }}>
-        {/* Breadcrumb */}
+        {/* Breadcrumb (인쇄 시 숨김 — PDF 깔끔) */}
         {breadcrumbs && breadcrumbs.length > 0 && (
           <nav
             aria-label="breadcrumb"
+            className="no-print"
             style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14, flexWrap: "wrap" }}
           >
             {breadcrumbs.map((crumb, i) => {

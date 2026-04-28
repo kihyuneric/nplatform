@@ -586,28 +586,6 @@ export default function AnalysisDashboard() {
           </div>
         )}
 
-        {/* Notice */}
-        <div
-          style={{
-            marginTop: 16,
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 10,
-            background: MCK.paperTint,
-            border: `1px solid ${MCK.border}`,
-            borderLeft: `3px solid ${MCK.electric}`,
-            padding: "14px 16px",
-          }}
-        >
-          <AlertCircle size={16} style={{ color: MCK.electric, marginTop: 2, flexShrink: 0 }} />
-          <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.55 }}>
-            <strong style={{ color: MCK.ink }}>계약서 생성</strong> 기능을 통해 등기부등본·채권자료를 업로드하면 NPL 계약서가 자동 생성됩니다.
-            OCR 인식 → 계약서 생성 → AI 검토를 하나의 워크플로로 처리할 수 있습니다.
-            {" "}
-            <MckBadge tone="brass" size="sm">v2 베타</MckBadge>
-          </p>
-        </div>
-
         {/* row hover style — 딜룸 동일 sky-blue tint + electric left border */}
         <style jsx>{`
           :global(.mck-analysis-row:hover) {

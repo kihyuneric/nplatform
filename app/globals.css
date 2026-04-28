@@ -2052,6 +2052,8 @@ button[role="switch"][data-state="unchecked"] {
   header.sticky,
   footer,
   nav[aria-label="Breadcrumb"],
+  nav[aria-label="breadcrumb"],     /* MckPageHeader 의 소문자 */
+  nav[aria-label="서브 메뉴"],       /* DynamicSubNav (분석 대시보드 등 탭) */
   [class*="MobileTabBar"],
   [class*="ChatWidget"],
   .no-print,

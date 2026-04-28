@@ -25,7 +25,7 @@ export function DynamicSubNav({ pageKey }: Props) {
   if (items.length === 0) return null
 
   return (
-    <div className="border-b bg-[var(--color-surface-elevated)] sticky top-16 z-30">
+    <div className="border-b bg-[var(--color-surface-elevated)] sticky top-16 z-30 no-print">
       <div className="container mx-auto px-4">
         <nav className="flex gap-1 overflow-x-auto py-2 scrollbar-hide" aria-label="서브 메뉴">
           {items.map((item, idx) => {
