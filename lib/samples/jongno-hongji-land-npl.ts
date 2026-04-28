@@ -44,19 +44,20 @@ export const JONGNO_HONGJI_DETAIL = {
 
   /* 채권 상세 (₩)
      ⚠ 표시 규약 (NPLatform 공통): "채권잔액" = 대출원금 + 연체이자 (+비용).
-     카드/딜룸/분석은 principal_amount 를 "채권 잔액" 으로 라벨링하므로,
-     principal_amount = claim_amount = 1,699,822,215 (총 채권액) 으로 통일.
-     순수 대출원금은 loan_principal_only 에 별도 보관. */
-  principal_amount: 1_699_822_215,          // 채권잔액 (= 대출원금 + 연체이자)
-  outstanding_principal: 1_699_822_215,
-  claim_amount: 1_699_822_215,              // 총 채권액
+     사용자 정책 (2026-04-28 갱신): 매입 시점 기준 채권잔액 = 1,729,319,459
+     · 대출원금                  = 1,648,045,960
+     · 연체이자 (매입시점까지 누적) = 81,273,499
+     · 채권잔액                  = 1,729,319,459 (= 매입가) */
+  principal_amount: 1_729_319_459,          // 채권잔액 = 매입가
+  outstanding_principal: 1_729_319_459,
+  claim_amount: 1_729_319_459,              // 총 채권액
   loan_balance: 1_648_045_960,              // 대출잔액 (대출원금만)
   loan_principal_only: 1_648_045_960,       // 순수 대출원금 (분석 보고서용)
   initial_principal: 17 * 억,                // 최초원금 17억
 
-  /* 이자 / 비용 (₩) */
+  /* 이자 / 비용 (₩) — 매입 시점 누적치 */
   interest_normal: 0,                        // 정상이자
-  interest_overdue: 51_776_255,              // 연체이자 (2026-04-30 기준)
+  interest_overdue: 81_273_499,              // 연체이자 (매입시점 누적, 채권잔액 - 대출원금)
   interest_unpaid: 0,                        // 미수이자
   cost_advance: 0,                           // 가지급비용
 
@@ -116,12 +117,12 @@ export const JONGNO_HONGJI_DETAIL = {
   */
   discount_basis: 'CLAIM_BALANCE' as const,
   sale_discount_rate: 0,                      // 할인율 0% (= 잔액 100% 매각)
-  asking_price_min: 1_699_822_215,
-  asking_price_max: 1_699_822_215,
-  asking_price: 1_699_822_215,
-  minimum_bid: 1_699_822_215,                // 최저매각가
+  asking_price_min: 1_729_319_459,
+  asking_price_max: 1_729_319_459,
+  asking_price: 1_729_319_459,
+  minimum_bid: 1_729_319_459,                // 최저매각가
   sale_terms: "'26.5월내 매각, 일괄매각방식 · 대출잔액 100% 기준",
-  contract_amount: 169_982_222,              // 계약금 10%
+  contract_amount: 172_931_946,              // 계약금 10%
   contract_date: '2026-05-30',
   closing_date: '2026-06-30',                // 잔금일
 
@@ -144,11 +145,13 @@ export const JONGNO_HONGJI_DETAIL = {
     '서울 종로구 홍지동 76-1 외 7필지(81-1, 81-4, 81-6, 81-7, 82, 83, 76-30) 일괄매각.',
     '총 연면적 5,193㎡(제1종일반주거지역). 8필지 중 76-30 (180㎡) 은 25.5월 9.9억 거래 — m²당 550만원.',
     '',
-    '【채권 구조】 대출원금 16.48억(최초 17억) · 연체이자 0.52억 · 총 채권액 16.99억 · 채권최고액 23.64억(농협 1순위). 연체금리 20% / 대출금리 18%.',
+    '【채권 구조】 대출원금 16.48억(최초 17억) · 연체이자 0.81억(매입시점) · 채권잔액 17.29억 · 채권최고액 23.64억(농협 1순위). 연체금리 20% / 대출금리 18%.',
+    '',
+    '【매각 조건】 대출잔액 100% 매각 (할인율 0%). 매입가 = 17.29억.',
     '',
     '【가치 평가】 감정가 66.73억(LTV 60.12%) · AI 시세 74.90억(감정가 대비 112%) · 인근 1km 토지 실거래 평균 m²당 273만원.',
     '',
-    '【예상 회수】 종로구 토지 1년 평균 낙찰가율 70.5%, 6개월 70.8%, 3개월 71.4%, 1개월 70.7%. 감정가 기준 71.4% 적용 시 예상낙찰가 47.63억 · 회수율 약 280%.',
+    '【예상 회수】 종로구 토지 1년 평균 낙찰가율 70.5%, 6개월 70.8%, 3개월 71.4%, 1개월 70.7%. 감정가 기준 71.4% 적용 시 예상낙찰가 47.63억 · 회수율 약 275%.',
   ].join('\n'),
 } as const
 
@@ -237,7 +240,7 @@ export const JONGNO_HONGJI_RECOVERY = {
   expectedBid: JONGNO_HONGJI_EXPECTED_BID.byAppraisalRatio.expectedBid,
   totalClaim: JONGNO_HONGJI_DETAIL.claim_amount,
   /** 회수율 = 예상낙찰가 / 총 채권액 */
-  recoveryRate: Math.round((4_762_922_125 / 1_699_822_215) * 1000) / 10, // 280.2%
+  recoveryRate: Math.round((JONGNO_HONGJI_EXPECTED_BID.byAppraisalRatio.expectedBid / JONGNO_HONGJI_DETAIL.claim_amount) * 1000) / 10,
   /** 매각가 (희망가) 대비 회수금 차익 */
-  expectedNetProfit: 4_762_922_125 - 1_699_822_215,                       // 30.63억
+  expectedNetProfit: JONGNO_HONGJI_EXPECTED_BID.byAppraisalRatio.expectedBid - JONGNO_HONGJI_DETAIL.claim_amount,
 }

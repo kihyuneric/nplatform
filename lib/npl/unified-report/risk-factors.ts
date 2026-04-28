@@ -306,36 +306,108 @@ export function computeMarketFactor(args: {
 }
 
 // ─── 유동성 ─────────────────────────────────────────────────
-//  100 − max(0, 매각일수 − 180) × 0.2, 하한 40
+//  지역·물건 통계만으로 유동성 산정 (사용자 정책 v2 · 2026-04-28).
+//
+//  입력 데이터 (외부 변수 의존 없음 — 통계 그 자체만 활용):
+//    A) 낙찰가율 통계 (period × bidRatio × saleRate × saleCount):
+//         · 1년 / 6개월 / 3개월 / 1개월 평균 낙찰가율 + 낙찰률 + 낙찰건수
+//    B) 매각 평균 소요일 (회차별):
+//         · 1회차 ~ 10회차 (0=표본 부족)
+//    C) 배당 평균 소요일 (회차별):
+//         · 1회차 ~ 10회차 (0=표본 부족)
+//
+//  스코어 산출 (3 sub-factor 가중 합산):
+//    [1] 낙찰률 (saleRate)         → max 35점 — 높을수록 매각 성공률 高
+//        · ≥ 25% → 35 / ≥ 18% → 28 / ≥ 12% → 20 / ≥ 8% → 12 / 그 외 → 5
+//    [2] 1차 매각기간 (saleDays_1) → max 35점 — 짧을수록 자금 회전 高
+//        · ≤ 200일 → 35 / ≤ 280 → 28 / ≤ 350 → 20 / ≤ 450 → 12 / 그 외 → 5
+//    [3] 1차 배당까지 (distDays_1) → max 30점 — 짧을수록 현금화 가까움
+//        · ≤ 220일 → 30 / ≤ 320 → 22 / ≤ 400 → 15 / ≤ 500 → 9 / 그 외 → 4
+//    합계 = max 100, min 14, 표시 [40, 100] 클램프 (사용자 비교 가능 범위 보장)
 export function computeLiquidityFactor(args: {
   auction: AuctionRatioFactor
+  /** @deprecated v2: 입찰자 수 사용 안 함 (통계 일관 정책) */
   averageBidderCount?: number
+  /** 회차별 매각 평균 소요일 (1차 = stages[0].saleDays) */
+  courtSaleDaysByRound?: number[]
+  /** 회차별 배당 평균 소요일 (1차 = stages[0].distributionDays) */
+  courtDistributionDaysByRound?: number[]
+  /** 1년 평균 낙찰률 % (saleRate) — 없으면 auction.regionMedianBidRatio 의 동반 stat 추정 어렵 → 14% default */
+  oneYearSaleRatePct?: number
+  /** 1년 평균 낙찰건수 (saleCount) */
+  oneYearSaleCount?: number
 }): RiskFactorResult {
-  const { auction, averageBidderCount = 1 } = args
-  const saleDays = auction.expectedSaleDays ?? 240
-  const daysPenalty = Math.max(0, saleDays - 180) * 0.2
-  const bidderBonus = Math.min(8, Math.max(0, averageBidderCount - 1) * 2)
-  const raw = 100 - daysPenalty + bidderBonus
+  const {
+    auction,
+    courtSaleDaysByRound,
+    courtDistributionDaysByRound,
+    oneYearSaleRatePct = 14,
+    oneYearSaleCount = 0,
+  } = args
+
+  // 1차 매각/배당 일수 — courtSchedule stages 우선, 없으면 auction.expectedSaleDays
+  const sale1 = (courtSaleDaysByRound?.[0] && courtSaleDaysByRound[0] > 0)
+    ? courtSaleDaysByRound[0]
+    : (auction.expectedSaleDays ?? 350)
+  const dist1 = (courtDistributionDaysByRound?.[0] && courtDistributionDaysByRound[0] > 0)
+    ? courtDistributionDaysByRound[0]
+    : sale1 + 30   // 매각 후 약 30일 후 배당 통상
+
+  // [1] 낙찰률 sub-score
+  const sr = oneYearSaleRatePct
+  const saleRateScore = sr >= 25 ? 35 : sr >= 18 ? 28 : sr >= 12 ? 20 : sr >= 8 ? 12 : 5
+
+  // [2] 1차 매각기간 sub-score
+  const saleDaysScore = sale1 <= 200 ? 35 : sale1 <= 280 ? 28 : sale1 <= 350 ? 20 : sale1 <= 450 ? 12 : 5
+
+  // [3] 1차 배당기간 sub-score
+  const distDaysScore = dist1 <= 220 ? 30 : dist1 <= 320 ? 22 : dist1 <= 400 ? 15 : dist1 <= 500 ? 9 : 4
+
+  const raw = saleRateScore + saleDaysScore + distDaysScore   // [14, 100]
   const score = Math.round(clamp(raw, 40, 100) * 10) / 10
 
+  // 표본 충실도 안내 (낙찰건수가 너무 적으면 신뢰도 낮음)
+  const sampleNote = oneYearSaleCount >= 30
+    ? `(연간 ${oneYearSaleCount}건 — 표본 충분)`
+    : oneYearSaleCount >= 10
+      ? `(연간 ${oneYearSaleCount}건 — 표본 보통)`
+      : oneYearSaleCount > 0
+        ? `(연간 ${oneYearSaleCount}건 — 표본 적음)`
+        : '(표본 데이터 부족 — default 적용)'
+
   const formula =
-    `유동성 점수 = 100 − max(0, 매각일수 − 180) × 0.2 + 입찰자보너스  · 하한 40\n\n` +
-    `[1] 매각일수 = ${saleDays}일 (${auction.courtName ?? '관할법원'} 1회차 평균)\n` +
-    `[2] 일수 감점 = max(0, ${saleDays} − 180) × 0.2 = ${daysPenalty.toFixed(2)}\n` +
-    `[3] 입찰자보너스 = min(8, max(0, ${averageBidderCount} − 1) × 2) = ${bidderBonus.toFixed(2)}\n\n` +
-    `유동성 점수 = 100 − ${daysPenalty.toFixed(2)} + ${bidderBonus.toFixed(2)}\n` +
-    `         = ${score}점`
+    `유동성 점수 = 낙찰률 + 1차 매각기간 + 1차 배당기간 (3 sub-factor 합산, 하한 40)\n` +
+    `  ※ 지역 경매 통계만으로 산정 (외부 변수 의존 X · v2)\n\n` +
+    `[1] 낙찰률 (1년 평균 ${sr.toFixed(1)}%) → ${saleRateScore}점 ` +
+        `${sr >= 25 ? '(≥25% 매우 활발)' : sr >= 18 ? '(≥18% 활발)' : sr >= 12 ? '(≥12% 보통)' : sr >= 8 ? '(≥8% 저조)' : '(<8% 매우 저조)'}\n` +
+    `[2] 1차 매각 평균 ${sale1}일 → ${saleDaysScore}점 ` +
+        `${sale1 <= 200 ? '(빠름)' : sale1 <= 280 ? '(평균)' : sale1 <= 350 ? '(다소 느림)' : sale1 <= 450 ? '(느림)' : '(매우 느림)'}\n` +
+    `[3] 1차 배당까지 평균 ${dist1}일 → ${distDaysScore}점 ` +
+        `${dist1 <= 220 ? '(빠름)' : dist1 <= 320 ? '(평균)' : dist1 <= 400 ? '(다소 느림)' : dist1 <= 500 ? '(느림)' : '(매우 느림)'}\n\n` +
+    `합계 = ${saleRateScore} + ${saleDaysScore} + ${distDaysScore} = ${raw}점 (raw)\n` +
+    `유동성 점수 = max(40, min(100, ${raw})) = ${score}점\n` +
+    `${sampleNote}`
 
   return {
     category: '유동성',
     score,
     severity: severityOf(score),
-    explanation: `${auction.courtName ?? '관할법원'} 1회차 평균 ${saleDays}일 · 평균 입찰자 ${averageBidderCount}명`,
-    mitigation: saleDays > 300
-      ? '매각 장기화 가능성 — 질권 이자 부담 감안해 단기 유동화 루트 병행'
-      : '매각 기간 업계 평균권 — 표준 자금 계획 적용 가능',
+    explanation: `${auction.courtName ?? '관할법원'} 낙찰률 ${sr.toFixed(1)}% · 1차 매각 ${sale1}일 · 1차 배당 ${dist1}일`,
+    mitigation: score >= 70
+      ? '경매 활성도 양호 — 표준 자금 계획 적용 가능'
+      : score >= 55
+        ? '평균 매각 기간 — 질권 이자 부담 보완 검토'
+        : '매각 장기화·낙찰률 부진 가능성 — 단기 유동화 루트 병행 또는 매입가 하향 협상',
     formula,
-    inputs: { 매각일수: saleDays, 평균입찰자수: averageBidderCount, 일수감점: daysPenalty, 입찰자보너스: bidderBonus },
+    inputs: {
+      낙찰률: sr,
+      낙찰건수: oneYearSaleCount,
+      '1차매각일수': sale1,
+      '1차배당일수': dist1,
+      '낙찰률점수': saleRateScore,
+      '매각기간점수': saleDaysScore,
+      '배당기간점수': distDaysScore,
+    },
   }
 }
 

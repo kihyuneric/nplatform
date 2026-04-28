@@ -2935,11 +2935,19 @@ function FullAiInvestmentAnalysisCard() {
     expectedBidMethods?.byAppraisalRatio?.expectedBid ??
     Math.round(appraisal * (bidRatioPct / 100))
 
-  // 매입률 — 권고 시나리오 (95% — 향후 listing.purchase_rate 로 자동화 가능)
-  // base = discount_basis 정책에 따라 대출원금 또는 채권잔액
-  const purchaseRate = (listing?.recommended_purchase_rate as number | undefined) ?? 0.95
+  // 매입률 — listing.sale_discount_rate (% 할인) 우선 사용 → (1 − rate/100) 매입률
+  //   · sale_discount_rate=0  → purchaseRate=1.0 (100% 매입, 종로 사례)
+  //   · sale_discount_rate=5  → purchaseRate=0.95 (5% 할인 매입)
+  //   · 정보 없으면 default 0.95
+  const saleDiscountRatePct =
+    (listing?.sale_discount_rate as number | undefined) ??
+    ((listing?.recommended_purchase_rate as number | undefined) != null
+      ? (1 - (listing!.recommended_purchase_rate as number)) * 100
+      : 5)
+  const purchaseRate = Math.max(0, Math.min(1, 1 - saleDiscountRatePct / 100))
   const purchasePrice = Math.round(acquisitionBase * purchaseRate)
   const baseLabel = discountBasis === 'CLAIM_BALANCE' ? '채권잔액' : '대출원금'
+  const baseHint  = discountBasis === 'CLAIM_BALANCE' ? '원금+연체이자' : '원금만'
 
   // 1순위 변제 후 잔여 → 2순위(NPL 매수자) 배당 (cap at 수익권금액 + 경매신청 후 연체이자)
   // 종로 사례: 1순위 농협 23.64억 변제 후 → 47.63억(예상낙찰가) - 23.64억 = 24.0억
@@ -3119,7 +3127,7 @@ function FullAiInvestmentAnalysisCard() {
           {fmtKRW(purchasePrice)}
         </div>
         <div style={{ fontSize: 10, color: "rgba(5, 28, 44, 0.55)", fontWeight: 600 }}>
-          매입률 {Math.round(purchaseRate * 100)}% · 낙찰가율 {bidRatioPct.toFixed(1)}% · base = {baseLabel}
+          매입률 {Math.round(purchaseRate * 100)}% · 낙찰가율 {bidRatioPct.toFixed(1)}% · base = {baseLabel} ({baseHint})
         </div>
       </div>
 

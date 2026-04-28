@@ -74,16 +74,25 @@ export const JONGNO_HONGJI_STATISTICS: StatisticsContext = {
       })),
     },
   ],
-  // 2) 법원 매각기일 — 서울중앙지방법원 본원 (종로구 관할)
+  // 2) 법원 매각기일 — 서울중앙지방법원 본원 (종로구 관할 · 사용자 제공 실 데이터)
   courtSchedule: {
     courtName: '서울중앙지방법원 본원',
     avgHearingInterval: 45,
     asOfDate: '2026-04-23',
+    /* 회차별 매각/배당 평균 소요일 (사용자 제공 실측):
+       1회 315일/329일 · 2회 393일/420일 · 3회 502일/521일 · 4회 610일/687일
+       6회 465일/529일 · 5/7~10회 데이터 없음 (0 = 표본 부족) */
     stages: [
-      { round: 1, saleDays: 312, distributionDays: 372 },
-      { round: 2, saleDays: 285, distributionDays: 348 },
-      { round: 3, saleDays: 332, distributionDays: 402 },
-      { round: 4, saleDays: 374, distributionDays: 446 },
+      { round: 1,  saleDays: 315, distributionDays: 329 },
+      { round: 2,  saleDays: 393, distributionDays: 420 },
+      { round: 3,  saleDays: 502, distributionDays: 521 },
+      { round: 4,  saleDays: 610, distributionDays: 687 },
+      { round: 5,  saleDays: 0,   distributionDays: 0   },
+      { round: 6,  saleDays: 465, distributionDays: 529 },
+      { round: 7,  saleDays: 0,   distributionDays: 0   },
+      { round: 8,  saleDays: 0,   distributionDays: 0   },
+      { round: 9,  saleDays: 0,   distributionDays: 0   },
+      { round: 10, saleDays: 0,   distributionDays: 0   },
     ],
   },
   // 3) 인근 1km 토지 경매 (종로구 토지 평균)
@@ -159,8 +168,8 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
   //   감정가                  66.73억
   //   → LTV = 40.12 / 66.73 = 60.12%   (사용자 제공 LTV 와 일치)
   const loanPrincipal = JONGNO_HONGJI_DETAIL.loan_principal_only    // 1,648,045,960 (대출원금만)
-  const overdueInterest = JONGNO_HONGJI_DETAIL.interest_overdue     // 51,776,255
-  const totalBond = JONGNO_HONGJI_DETAIL.claim_amount               // 1,699,822,215 (채권잔액 = 원금+연체이자)
+  const overdueInterest = JONGNO_HONGJI_DETAIL.interest_overdue     // 81,273,499 (매입시점)
+  const totalBond = JONGNO_HONGJI_DETAIL.claim_amount               // 1,729,319,459 (채권잔액 = 원금+연체이자)
   const seniorClaim = JONGNO_HONGJI_DETAIL.max_claim_amount         // 2,364,000,000 (1순위 농협 채권최고액)
   const ltvNumerator = seniorClaim + loanPrincipal                  // 4,012,045,960 (LTV 분자)
   const appraisal = JONGNO_HONGJI_DETAIL.appraisal_value            // 6,673,016,000
@@ -306,9 +315,15 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     subordinateClaimCount: 0,
   })
   const marketFactor = computeMarketFactor({ region, auction })
+  // 유동성 v2 — 사용자 제공 종로구 토지 통계만으로 산정 (외부 변수 의존 X)
   const liquidityFactor = computeLiquidityFactor({
     auction,
-    averageBidderCount: JONGNO_HONGJI_STATISTICS.nearbyAuction?.summary.avgBidderCount ?? 2,
+    courtSaleDaysByRound:
+      JONGNO_HONGJI_STATISTICS.courtSchedule?.stages.map(s => s.saleDays) ?? [],
+    courtDistributionDaysByRound:
+      JONGNO_HONGJI_STATISTICS.courtSchedule?.stages.map(s => s.distributionDays) ?? [],
+    oneYearSaleRatePct: JONGNO_HONGJI_AUCTION_STATS.find(s => s.bucket === '12M')?.saleRate ?? 14.3,
+    oneYearSaleCount: JONGNO_HONGJI_AUCTION_STATS.find(s => s.bucket === '12M')?.saleCount ?? 98,
   })
   const riskFactorResults = [collateralFactor, rightsFactor, marketFactor, liquidityFactor]
 
@@ -614,16 +629,16 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     registryAnalysis,
     profitability,
     executiveSummary:
-      `종로구 홍지동 토지 8필지 일괄매각 NPL (○○대부 대출원금 16.48억 · 채권잔액 16.99억 · ` +
+      `종로구 홍지동 토지 8필지 일괄매각 NPL (○○대부 대출원금 16.48억 · 채권잔액 17.29억 · ` +
       `1순위 농협 채권최고액 23.64억 · LTV 분자(원금+선순위) 40.12억 · 감정가 66.73억) ` +
       `종합 분석 결과 ${riskGrade}등급, LTV ${(ltvNumerator / appraisal * 100).toFixed(2)}% ` +
       `(채권최고액+대출원금 합산 기준), ` +
       `예측 회수율 ${recovery.predictedRecoveryRate}% (신뢰도 ${Math.round(recovery.confidence * 100)}%). ` +
-      `매각가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 기준 ` +
+      `매입가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 (= 채권잔액 100% 매각) 기준 ` +
       `권고 시나리오 ROI ${(recommendedRoi * 100).toFixed(2)}% · 기본 시나리오 ROI ${(investmentRoi * 100).toFixed(2)}%. ` +
       `종로구 토지 3개월 낙찰가율 71.4% 적용 시 예상낙찰가 47.63억 → ` +
-      `1순위 농협 23.64억 변제 후 NPL 회수액 약 23.99억 (NPL 채권잔액 대비 ${((4_762_922_125 - 2_364_000_000) / 1_699_822_215 * 100).toFixed(1)}%, ` +
-      `매입 대비 +${Math.round((4_762_922_125 - 2_364_000_000 - 1_699_822_215) / 100_000_000 * 10) / 10}억). ` +
+      `1순위 농협 23.64억 변제 후 NPL 회수액 약 23.99억 (NPL 채권잔액 대비 ${((4_762_922_125 - 2_364_000_000) / totalBond * 100).toFixed(1)}%, ` +
+      `매입 대비 +${Math.round((4_762_922_125 - 2_364_000_000 - totalBond) / 100_000_000 * 10) / 10}억). ` +
       `2순위 권리자 부재로 권리 깨끗, 8필지 일괄매각 시너지 + 인근 실거래 m²당 ` +
       `${Math.round(JONGNO_HONGJI_COMPARABLES_SUMMARY.avgPerLandPriceKRWm2 / 10000)}만원 단가 견고. ` +
       `AI 투자 의견 종합 ${verdictScore}점 → ${verdict}.`,
