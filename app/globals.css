@@ -2015,10 +2015,10 @@ button[role="switch"][data-state="unchecked"] {
    PRINT · NPL 분석 보고서 PDF 다운로드 최적화 (Full + Summary)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Default page size · A4 portrait + 12mm margin ──────────────────── */
+/* ── Default page size · A4 portrait + 8mm margin (좁게 — 화면과 가까이) ─────── */
 @page {
   size: A4;
-  margin: 12mm 10mm;
+  margin: 8mm 8mm;
 }
 
 /* ── 화면 전용 visibility (.print-summary-only 는 인쇄 시에만 표시) ── */
@@ -2028,7 +2028,7 @@ button[role="switch"][data-state="unchecked"] {
    FULL REPORT 인쇄 모드 (window.print without body.print-summary)
    - 화면의 paper + electric + Deep Navy 색상 전부 보존
    - 글로벌 nav/sidebar 숨김
-   - section 단위 break 제어
+   - section 단위 break 제어 (orphan heading만 방지, 강제 break-inside 최소화)
    ═══════════════════════════════════════════════════════════════════════ */
 @media print {
   /* ★ 핵심 — 모든 요소의 background/color 강제 보존 (Chrome/Safari/Firefox) */
@@ -2048,10 +2048,6 @@ button[role="switch"][data-state="unchecked"] {
   }
 
   /* 글로벌 layout chrome 숨김 — Section 의 <header> 는 보존 */
-  /*  · Navigation: <header class="sticky top-0..."> */
-  /*  · Footer:     <footer> */
-  /*  · BreadcrumbNav: <nav aria-label="Breadcrumb"> */
-  /*  · Chat widget / Mobile tab bar / Tour overlay: fixed positioning */
   header[class*="sticky"],
   header.sticky,
   footer,
@@ -2084,27 +2080,43 @@ button[role="switch"][data-state="unchecked"] {
   canvas, svg, img { max-width: 100% !important; height: auto !important; }
 
   /* ── 페이지 break 제어 ─────────────────────────────────── */
+  /* 명시적 페이지 break 만 강제 — auto break-inside 는 브라우저에 위임 */
   .pdf-page-break { page-break-before: always !important; break-before: page !important; }
 
-  /* Section 컴포넌트 + 카드는 페이지 중간에 잘리지 않도록 */
-  section,
+  /* 카드/article 는 가급적 분할 X (단, 강제 X — 콘텐츠 큼직한 경우 분할 허용) */
   article,
   .pdf-avoid-break {
-    break-inside: avoid !important;
+    break-inside: avoid-page !important;
     page-break-inside: avoid !important;
   }
+  /* section 은 자유 분할 허용 — 너무 강제 시 빈 공간 다발 발생 */
+  section { break-inside: auto !important; page-break-inside: auto !important; }
 
   /* h1, h2, h3 다음 콘텐츠와 함께 유지 (orphan heading 방지) */
   h1, h2, h3 {
     break-after: avoid !important;
     page-break-after: avoid !important;
+    orphans: 3;
+    widows: 3;
   }
+
+  /* 단락 / 표 — 고아 줄 최소화 */
+  p, li, td { orphans: 2; widows: 2; }
+  table { break-inside: auto !important; }
+  tr    { break-inside: avoid !important; page-break-inside: avoid !important; }
 
   /* 그림자 제거 (인쇄 품질) — 단 background-color 는 유지 */
   * {
     box-shadow: none !important;
     text-shadow: none !important;
   }
+
+  /* 화면 전용 padding/margin 거대값 → 인쇄 시 축소 */
+  .print-compact,
+  .py-12, .py-10, .py-8 { padding-top: 12px !important; padding-bottom: 12px !important; }
+  .my-12, .my-10, .my-8 { margin-top: 12px !important; margin-bottom: 12px !important; }
+  /* 섹션 사이 간격 축소 (max-w-* 안의 padding 류 — 화면 24px → 인쇄 8px) */
+  [class*="px-24"], [class*="px-12"], [class*="px-8"] { padding-left: 8px !important; padding-right: 8px !important; }
 
   /* ── 인터랙티브 입력 요소 인쇄 정합 ───────────────────── */
   input[type="date"], input[type="text"], input[type="number"],
@@ -2128,50 +2140,67 @@ button[role="switch"][data-state="unchecked"] {
   /* 외부 링크 URL 표시 X (인쇄 시 깔끔) */
   a[href]::after { content: none !important; }
 
-  /* 폰트 크기 12pt 기본 (PDF 가독성) */
-  body { font-size: 11pt !important; line-height: 1.5 !important; }
-  h1 { font-size: 22pt !important; }
-  h2 { font-size: 16pt !important; }
-  h3 { font-size: 13pt !important; }
+  /* 폰트 크기 — 가독성 + 페이지 효율 (10pt 기본) */
+  body { font-size: 10pt !important; line-height: 1.45 !important; }
+  h1 { font-size: 20pt !important; }
+  h2 { font-size: 14pt !important; }
+  h3 { font-size: 12pt !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   1Page SUMMARY 인쇄 모드 (body.print-summary 활성)
-   - .print-summary-only 는 React Portal 로 body 직속에 렌더됨
-   - 본문(main) + 기타 형제 요소를 display:none 으로 완전히 제거 → 1페이지만 출력
-   - 이전 visibility:hidden 방식은 레이아웃이 유지되어 빈 페이지가 함께 출력되는 버그
+   1Page SUMMARY 인쇄 모드 (body.print-summary 활성) — 1페이지 강제, 빈 페이지 0
    ═══════════════════════════════════════════════════════════════════════ */
 @media print {
-  /* body 직속 children 중 .print-summary-only 만 남기고 모두 제거 */
+  /* body 직속 children 중 .print-summary-only 만 남기고 모두 제거 (display:none 완전 제거) */
   body.print-summary > *:not(.print-summary-only) {
     display: none !important;
   }
-  /* .print-summary-only 자체와 그 자손 — 일반 흐름으로 표시 */
+  /* .print-summary-only 자체 — 1페이지에 fit, 어떤 자손도 page break 발생 X */
   body.print-summary .print-summary-only {
     display: block !important;
     position: static !important;
     width: 100% !important;
+    height: auto !important;
     background: #FFFFFF !important;
+    /* break 안 함 강제 (트레일링 페이지 방지) */
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    break-after: avoid-page !important;
+    page-break-after: avoid !important;
   }
   body.print-summary .print-summary-only * {
     visibility: visible !important;
+    /* 어떤 자손도 페이지 break 트리거 X */
+    break-before: avoid !important;
+    break-after: avoid !important;
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
   }
   body.print-summary .summary-printable {
     width: 100% !important;
+    /* A4 portrait 가용 영역 (210 × 297mm − 양쪽 6mm 마진) */
+    max-height: 285mm !important;
+    overflow: hidden !important;
+    padding: 6mm !important;
+    box-sizing: border-box !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
-    padding: 8mm !important;
-    /* 1 페이지 강제 — 내용이 넘쳐도 잘라냄 */
-    max-height: 100vh !important;
-    overflow: hidden !important;
   }
-  /* Summary 페이지 — A4 portrait */
+  /* 마지막 자식이 만든 trailing margin/padding 제거 — 빈 페이지 원인 제거 */
+  body.print-summary .summary-printable > *:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  /* Summary 페이지 — A4 portrait, 마진 좁게 */
   body.print-summary {
     background: #FFFFFF !important;
     margin: 0 !important;
     padding: 0 !important;
+    /* body 자체도 1페이지 fit — 트레일링 빈 페이지 0 */
+    max-height: 297mm !important;
+    overflow: hidden !important;
   }
-  /* Summary 출력 시에도 색상 보존 */
+  /* 색상 보존 */
   body.print-summary *,
   body.print-summary *::before,
   body.print-summary *::after {
@@ -2179,11 +2208,14 @@ button[role="switch"][data-state="unchecked"] {
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
+  /* @page Summary 전용 — 마진 더 좁게 + 1페이지 명시 */
+  body.print-summary {
+    page: summary;
+  }
 }
-
-/* @page: Summary 시 margin 더 좁게 */
-body.print-summary {
-  /* @page selector inside body — 일부 브라우저만 지원하지만 안전 */
+@page summary {
+  size: A4;
+  margin: 6mm;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────

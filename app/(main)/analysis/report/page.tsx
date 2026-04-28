@@ -304,19 +304,35 @@ export default function UnifiedReportPage() {
   const safeFileTitle = (displayTitle || "Report").replace(/\s+/g, "_").slice(0, 40)
 
   // ── PDF / Viewer 액션 핸들러 ────────────────────────────────
+  // 파일명 언어 suffix 결정 — document.documentElement.lang 우선 (브라우저 번역 시 자동 변경됨)
+  //   ko/ko-KR  → kor
+  //   en/en-US  → eng
+  //   ja/ja-JP  → jap
+  //   기타       → 첫 2글자 소문자
+  const getLangSuffix = (): string => {
+    if (typeof window === "undefined") return "kor"
+    const docLang = (document.documentElement.lang ?? lang ?? "ko").toLowerCase()
+    if (docLang.startsWith("ko")) return "kor"
+    if (docLang.startsWith("en")) return "eng"
+    if (docLang.startsWith("ja")) return "jap"
+    if (docLang.startsWith("zh")) return "chi"
+    return docLang.slice(0, 3)
+  }
   const handlePdfFull = () => {
     if (typeof window !== "undefined") {
-      document.documentElement.setAttribute("lang", lang)
+      // 브라우저 번역 사용자가 우선이므로 문서 lang 은 덮어쓰지 않음
+      // (document.documentElement.lang 은 브라우저/사용자가 관리)
       document.body.classList.remove("print-summary")
-      document.title = `NPL_Report_${safeFileTitle}_${lang.toUpperCase()}`
+      const suffix = getLangSuffix()
+      document.title = `NPL_Report_${safeFileTitle}_${suffix}`
       window.print()
     }
   }
   const handlePdfSummary = () => {
     if (typeof window !== "undefined") {
-      document.documentElement.setAttribute("lang", lang)
       document.body.classList.add("print-summary")
-      document.title = `NPL_Summary_${safeFileTitle}_${lang.toUpperCase()}`
+      const suffix = getLangSuffix()
+      document.title = `NPL_Summary_${safeFileTitle}_${suffix}`
       window.print()
       setTimeout(() => document.body.classList.remove("print-summary"), 500)
     }
