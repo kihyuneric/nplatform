@@ -615,7 +615,10 @@ function fmtEok(v: number): string {
 
 function SectionScreening() {
   // SoT — listing 에서 핵심 지표 파생 (하드코딩 없음)
-  const { principal, askingPrice, appraisal, discountRate } = useDealroomListing()
+  const { listing, principal, askingPrice, appraisal, discountRate } = useDealroomListing()
+  const listingId = listing?.id ?? null
+  const reportHref = listingId ? `/analysis/report?listingId=${encodeURIComponent(listingId)}` : "/analysis/report"
+  const analysisHref = listingId ? `/analysis?listingId=${encodeURIComponent(listingId)}` : "/analysis"
   const principalLabel = fmtEok(principal)
   const askingLabel = fmtEok(askingPrice)
   const appraisalLabel = fmtEok(appraisal)
@@ -662,9 +665,9 @@ function SectionScreening() {
       {/* AI 분석 6-KPI — listing SoT 파생 (B1.1) */}
       <AnalysisKpiBlock />
 
-      {/* CTA 버튼 2 — Cobalt Blue (분석 라우트로 연결) */}
+      {/* CTA 버튼 2 — Cobalt Blue (분석 라우트로 연결, 현재 매물 listingId 전달) */}
       <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 10, marginBottom: 18 }}>
-        <Link href="/analysis/report" className="mck-cta-dark" style={{
+        <Link href={reportHref} className="mck-cta-dark" style={{
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
           padding: "13px 18px", fontSize: 12, fontWeight: 800,
           background: "#1A47CC",
@@ -681,7 +684,7 @@ function SectionScreening() {
           </span>
           <ArrowRight size={13} style={{ color: "#FFFFFF" }} />
         </Link>
-        <Link href="/analysis" className="mck-cta-dark" style={{
+        <Link href={analysisHref} className="mck-cta-dark" style={{
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
           padding: "13px 18px", fontSize: 12, fontWeight: 800,
           background: "#1A47CC",
@@ -2875,8 +2878,77 @@ function RegistryFullTable() {
   )
 }
 
-/* ════ FULL · AI 투자 분석 — Sky Blue (첨부 5 스타일 통일) ══════════════════ */
+/* ════ FULL · AI 투자 분석 — Sky Blue (listing SoT 기반 동적 계산) ══════════════════
+ *
+ * 모든 수치는 useDealroomListing()의 listing 으로부터 파생.
+ * - 매입가     = listing.loan_principal_only (대출원금) × 95%   (대출원금 = 채권잔액 - 연체이자)
+ * - 낙찰가율    = listing 의 expected_bid_methods.byAppraisalRatio.bidRatioPct (있으면) 또는 71.4 default
+ * - 예상 낙찰가 = 감정가 × 낙찰가율
+ * - ROI        = (예상 낙찰가 - 매입가) / 매입가
+ *
+ * listing 마다 자동으로 다른 수치 표시 — 종로/잠실/강남 무관하게 동작.
+ * ═══════════════════════════════════════════════════════════════════════════ */
 function FullAiInvestmentAnalysisCard() {
+  const { listing, principal, appraisal } = useDealroomListing()
+  const listingId = listing?.id ?? null
+  const reportHref = listingId ? `/analysis/report?listingId=${encodeURIComponent(listingId)}` : "/analysis/report"
+  const analysisHref = listingId ? `/analysis?listingId=${encodeURIComponent(listingId)}` : "/analysis"
+
+  // ─ 핵심 추정치 (listing SoT 기반) ─
+  const loanPrincipalOnly =
+    (listing?.loan_principal_only as number | undefined) ??
+    (listing?.loan_balance as number | undefined) ??
+    Math.round(principal * 0.97)            // 채권잔액의 97% (연체이자 약 3%)
+
+  const expectedBidMethods = listing?.expected_bid_methods as
+    | { byAppraisalRatio?: { bidRatioPct?: number; expectedBid?: number } }
+    | undefined
+  const bidRatioPct = expectedBidMethods?.byAppraisalRatio?.bidRatioPct ?? 71.4
+  const expectedBidPrice =
+    expectedBidMethods?.byAppraisalRatio?.expectedBid ??
+    Math.round(appraisal * (bidRatioPct / 100))
+
+  // 매입률 95% (대출원금 95%) — 권고 시나리오
+  const purchaseRate = 0.95
+  const purchasePrice = Math.round(loanPrincipalOnly * purchaseRate)
+
+  // 1순위 변제 후 잔여 → 2순위(NPL 매수자) 배당
+  // 종로 사례: 1순위 농협 23.64억 → 47.63억(예상낙찰가) - 23.64억 = 24.0억
+  const seniorClaim =
+    (listing?.max_claim_amount as number | undefined) ??           // 채권최고액 (있으면 정확)
+    Math.round(principal * 1.4)                                     // 채권잔액 × 1.4 추정
+  const recoveredToSecond = Math.max(0, expectedBidPrice - seniorClaim)
+
+  // 투자 에쿼티 = 매입가 × 30% (질권대출 70% 가정)
+  const investmentEquity = Math.round(purchasePrice * 0.30)
+
+  // 예상 손익 = 회수액 - 매입가
+  const expectedProfit = recoveredToSecond - purchasePrice
+
+  // ROI / 연환산 (보유 기간 9개월 가정)
+  const roi = purchasePrice > 0 ? (expectedProfit / purchasePrice) * 100 : 0
+  const annualizedRoi = roi * (12 / 9)
+
+  // AI 투자 등급 점수 (간이) — 회수율 + LTV + 권리관계
+  const recoveryRate = principal > 0 ? Math.min(300, (recoveredToSecond / principal) * 100) : 0
+  const ltv = (listing?.ltv_ratio as number | undefined) ?? (listing?.ltv as number | undefined) ?? 65
+  const aiScore = Math.round(
+    Math.min(100,
+      Math.min(50, recoveryRate / 6) +              // 회수율 비중 (max 50점, 회수율 300% 시 50점)
+      Math.min(30, (100 - ltv) / 1.3) +              // LTV 낮을수록 (max 30점)
+      20                                              // 기본 권리관계 점수 (max 20점)
+    ) * 10
+  ) / 10
+  const aiGrade = aiScore >= 80 ? "A" : aiScore >= 65 ? "B" : aiScore >= 50 ? "C" : "D"
+  const verdict = aiScore >= 70 ? "BUY" : aiScore >= 55 ? "HOLD" : "AVOID"
+
+  // 매입·낙찰 성공 확률 (낙찰가율 71.4% → 약 60% 성공)
+  const successProbability = Math.round(Math.min(95, Math.max(20, 90 - Math.abs(bidRatioPct - 70) * 1.5)))
+
+  // KRW 포맷
+  const fmtKRW = (n: number) => `${n.toLocaleString("ko-KR")}원`
+  const fmtKRWSigned = (n: number) => `${n >= 0 ? "+" : ""}${n.toLocaleString("ko-KR")}원`
+
   return (
     <article style={{
       backgroundColor: "#A8CDE8",
@@ -2909,7 +2981,7 @@ function FullAiInvestmentAnalysisCard() {
         <div style={{ backgroundColor: "#FFFFFF", border: "1px solid rgba(5, 28, 44, 0.10)", borderTop: `2px solid ${MCK.electric}`, padding: 14 }}>
           <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electricDark, marginBottom: 6 }}>AI 투자 의견</div>
           <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 32, fontWeight: 800, color: MCK.electric, lineHeight: 1, letterSpacing: "-0.025em", marginBottom: 4 }}>
-            BUY
+            {verdict}
           </div>
           <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(5, 28, 44, 0.65)" }}>
             권고
@@ -2919,14 +2991,14 @@ function FullAiInvestmentAnalysisCard() {
           <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electricDark, marginBottom: 6 }}>AI 투자 등급</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
             <span style={{ fontFamily: MCK_FONTS.serif, fontSize: 32, fontWeight: 800, color: MCK.ink, lineHeight: 1, letterSpacing: "-0.025em" }}>
-              A
+              {aiGrade}
             </span>
             <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(5, 28, 44, 0.65)" }}>
-              89.4점 · BUY
+              {aiScore.toFixed(1)}점 · {verdict}
             </span>
           </div>
           <div style={{ position: "relative", height: 6, background: "rgba(5, 28, 44, 0.08)", marginBottom: 4 }}>
-            <div style={{ position: "absolute", left: 0, width: "89.4%", height: "100%", background: MCK.electric }} />
+            <div style={{ position: "absolute", left: 0, width: `${aiScore}%`, height: "100%", background: MCK.electric }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "rgba(5, 28, 44, 0.50)", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
             <span>0</span>
@@ -2936,11 +3008,11 @@ function FullAiInvestmentAnalysisCard() {
         </div>
       </div>
 
-      {/* AI 권고 매입 (원금 95%) — white inset card */}
+      {/* AI 권고 매입 — white inset card */}
       <div style={{ backgroundColor: "#FFFFFF", border: "1px solid rgba(5, 28, 44, 0.10)", borderLeft: `3px solid ${MCK.electric}`, padding: 14, marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
           <span style={{ fontSize: 11, fontWeight: 800, color: MCK.electricDark, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-            AI 권고 매입 (원금 95%)
+            AI 권고 매입 (원금 {Math.round(purchaseRate * 100)}%)
           </span>
           <span style={{
             display: "inline-flex", alignItems: "center",
@@ -2952,25 +3024,25 @@ function FullAiInvestmentAnalysisCard() {
           </span>
         </div>
         <p style={{ fontSize: 11, color: "rgba(5, 28, 44, 0.65)", lineHeight: 1.55, marginBottom: 10 }}>
-          대출원금 95% 매입 (-5.0%) · 기준 낙찰가율 83.5%
+          대출원금 {Math.round(purchaseRate * 100)}% 매입 (-{((1 - purchaseRate) * 100).toFixed(1)}%) · 기준 낙찰가율 {bidRatioPct.toFixed(1)}%
         </p>
         <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 24, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.025em", lineHeight: 1, marginBottom: 4 }}>
-          1,862,000,000원
+          {fmtKRW(purchasePrice)}
         </div>
         <div style={{ fontSize: 10, color: "rgba(5, 28, 44, 0.55)", fontWeight: 600 }}>
-          매입률 95% · 낙찰가율 83.5%
+          매입률 {Math.round(purchaseRate * 100)}% · 낙찰가율 {bidRatioPct.toFixed(1)}%
         </div>
       </div>
 
-      {/* 6 metrics — white inset cards */}
+      {/* 6 metrics — white inset cards (listing SoT 파생) */}
       <div className="grid grid-cols-2 md:grid-cols-3" style={{ gap: 8, marginBottom: 14 }}>
         {[
-          { l: "예상 낙찰가", v: "2,338,000,000원", s: "" },
-          { l: "2질권자 배당", v: "849,258,576원", s: "" },
-          { l: "투자 에쿼티", v: "571,368,997원", s: "" },
-          { l: "예상 손익", v: "+277,889,579원", s: "", positive: true },
-          { l: "ROI / 연환산", v: "48.6% / 66.2%", s: "" },
-          { l: "매입·낙찰 성공 확률", v: "50.0%", s: "" },
+          { l: "예상 낙찰가", v: fmtKRW(expectedBidPrice) },
+          { l: "2순위 배당", v: fmtKRW(recoveredToSecond) },
+          { l: "투자 에쿼티", v: fmtKRW(investmentEquity) },
+          { l: "예상 손익", v: fmtKRWSigned(expectedProfit), positive: expectedProfit >= 0 },
+          { l: "ROI / 연환산", v: `${roi.toFixed(1)}% / ${annualizedRoi.toFixed(1)}%` },
+          { l: "매입·낙찰 성공 확률", v: `${successProbability.toFixed(1)}%` },
         ].map(m => (
           <div key={m.l} style={{ padding: 10, backgroundColor: "#FFFFFF", border: "1px solid rgba(5, 28, 44, 0.10)", borderTop: `2px solid ${MCK.electric}` }}>
             <div style={{ fontSize: 9, color: "rgba(5, 28, 44, 0.55)", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
@@ -3000,7 +3072,7 @@ function FullAiInvestmentAnalysisCard() {
           </span>
         </div>
         <div style={{ position: "relative", height: 6, background: "rgba(5, 28, 44, 0.10)", marginBottom: 4 }}>
-          <div style={{ position: "absolute", left: 0, width: "50%", height: "100%", background: MCK.electric }} />
+          <div style={{ position: "absolute", left: 0, width: `${successProbability}%`, height: "100%", background: MCK.electric }} />
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "rgba(5, 28, 44, 0.55)", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
           <span>0%</span>
@@ -3009,9 +3081,9 @@ function FullAiInvestmentAnalysisCard() {
         </div>
       </div>
 
-      {/* CTA — AI 컨설턴트(분석) / NPL 분석 보고서 */}
+      {/* CTA — AI 컨설턴트(분석) / NPL 분석 보고서 (현재 매물 listingId 전달) */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingTop: 12, borderTop: "1px solid rgba(5, 28, 44, 0.12)" }}>
-        <Link href="/analysis" className="mck-cta-dark" style={{
+        <Link href={analysisHref} className="mck-cta-dark" style={{
           display: "inline-flex", alignItems: "center", gap: 6,
           padding: "9px 16px", fontSize: 11, fontWeight: 800,
           background: MCK.electric, color: MCK.paper, border: `1px solid ${MCK.electric}`,
@@ -3021,7 +3093,7 @@ function FullAiInvestmentAnalysisCard() {
           <MessageSquare size={12} style={{ color: MCK.paper }} />
           <span style={{ color: MCK.paper }}>AI 컨설턴트에게 질문</span>
         </Link>
-        <Link href="/analysis/report" style={{
+        <Link href={reportHref} style={{
           display: "inline-flex", alignItems: "center", gap: 6,
           padding: "9px 16px", fontSize: 11, fontWeight: 700,
           background: MCK.paper, color: MCK.ink, border: `1px solid ${MCK.ink}`,

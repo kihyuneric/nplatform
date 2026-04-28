@@ -3907,7 +3907,12 @@ function EvidenceTabs({
                 <tbody>
                   {evidence.bidRatioStats.items.map((r, i) => (
                     <tr key={i} className="border-b border-[var(--color-border-subtle)]">
-                      <td className="py-1.5 pr-2 text-[var(--color-text-tertiary)]">{r.scope}</td>
+                      <td className="py-1.5 pr-2 text-[var(--color-text-tertiary)]">{
+                        r.scope === "SIGUNGU" ? "시·군·구"
+                        : r.scope === "EUPMYEONDONG" ? "읍·면·동"
+                        : r.scope === "SIDO" ? "시·도"
+                        : r.scope
+                      }</td>
                       <td className="py-1.5 pr-2 text-[var(--color-text-primary)]">{r.region}</td>
                       <td className="py-1.5 pr-2 text-right tabular-nums">{r.periodMonths}M</td>
                       <td className="py-1.5 pr-2 text-right tabular-nums font-bold" style={{ color: r.ratioPercent >= 80 ? "#051C2C" : r.ratioPercent >= 65 ? "#051C2C" : MCK.greyDark }}>
