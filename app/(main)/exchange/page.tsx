@@ -329,10 +329,12 @@ export default function ExchangePage() {
 
   // ── Real listings data ──────────────────────────────────────
   // SoT 흐름 정합: 실제 API listings 를 가져와 CardListing 으로 매핑.
-  // API 가 비어있거나 실패하면 MOCK fallback (체험 모드 배너 노출).
-  const [listings, setListings] = useState<CardListing[]>(MOCK)
+  // 사용자 정책 (2026-04-29): 초기 MOCK 깜박임 제거 — fetch 전에는 빈 배열 + 로딩 상태.
+  //   API 실패/빈 응답 시에만 MOCK fallback (체험 모드 배너 노출).
+  //   limit 도 200 으로 상향 — 53+ 매물 1페이지에 표시.
+  const [listings, setListings] = useState<CardListing[]>([])
   const [listingsLoading, setListingsLoading] = useState(true)
-  const [isDemoMode, setIsDemoMode] = useState(true)
+  const [isDemoMode, setIsDemoMode] = useState(false)
   const [demoDismissed, setDemoDismissed] = useState(false)
   const [totalListings, setTotalListings] = useState<number | null>(null)
 
@@ -340,14 +342,18 @@ export default function ExchangePage() {
     let cancelled = false
     ;(async () => {
       try {
-        const r = await fetch('/api/v1/exchange/listings?limit=50&status=ACTIVE', { credentials: 'include' })
+        // limit=200: 거래소는 53+ 활성 매물을 1페이지에 모두 표시 (필터·정렬은 client 측).
+        //   status=ACTIVE 만 (SOLD/IN_DEAL/DRAFT 제외) — 거래 가능 매물 전수.
+        const r = await fetch('/api/v1/exchange/listings?limit=200&status=ACTIVE', { credentials: 'include' })
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
         const d = await r.json()
         if (cancelled) return
         if (typeof d.total === 'number') setTotalListings(d.total)
         const rows: Array<Record<string, unknown>> = Array.isArray(d.data) ? d.data : []
         if (rows.length === 0) {
-          // 실 데이터 없음 — MOCK 유지
+          // 실 데이터 없음 → MOCK fallback (체험 모드)
+          setListings(MOCK)
+          setIsDemoMode(true)
           return
         }
         // API row → CardListing 매핑 (필드 변형 흡수)
@@ -461,6 +467,11 @@ export default function ExchangePage() {
         setIsDemoMode(false)  // 실 데이터 사용 — 데모 배너 자동 해제
       } catch (err) {
         console.warn('[exchange] listings fetch failed → MOCK fallback', err)
+        if (!cancelled) {
+          // fetch 실패 시에만 MOCK 노출
+          setListings(MOCK)
+          setIsDemoMode(true)
+        }
       } finally {
         if (!cancelled) setListingsLoading(false)
       }
@@ -629,7 +640,15 @@ export default function ExchangePage() {
           <MckKpiGrid
             variant="dark"
             items={[
-              { label: tr("전체 매물"), value: totalListings != null ? `${totalListings}건` : `${listings.length}건`, hint: isDemoMode ? tr("샘플 데이터") : tr("실시간 집계") },
+              {
+                label: tr("전체 매물"),
+                value: listingsLoading
+                  ? '—'
+                  : totalListings != null
+                    ? `${totalListings}건`
+                    : `${listings.length}건`,
+                hint: listingsLoading ? tr("로딩 중") : isDemoMode ? tr("샘플 데이터") : tr("실시간 집계"),
+              },
               { label: tr("평균 할인율"), value: "31.2%", hint: tr("채권잔액 대비") },
               { label: tr("평균 자료 완성도"), value: "7.6 / 10", hint: tr("자료 제공 지수") },
               { label: tr("참여 기관"), value: "12곳", hint: tr("은행 · AMC · 저축은행") },
