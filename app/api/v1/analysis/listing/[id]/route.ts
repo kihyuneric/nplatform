@@ -232,8 +232,64 @@ export async function GET(
       .maybeSingle()
 
     if (!aErr && existing) {
-      const kpi = mapAnalysisRowToKpi(existing as Record<string, unknown>)
-      if (kpi) return NextResponse.json({ data: { kpi }, _source: 'real' })
+      // Phase G7+ 2026-04-29 — unified_report JSONB 우선 사용
+      //   buildListingReport / 사용자 위저드 / PUT API 로 저장된 보고서 전체를 반환.
+      //   client 측 (useAnalysisReport · /analysis/report · /deals/dealroom) 에서 KPI · 본문 모두 재구성 가능.
+      const row = existing as Record<string, unknown>
+      const unifiedReport = row.unified_report ?? null
+      // KPI: unified_report 가 있으면 그 안의 summary 우선, 없으면 legacy 컬럼에서 유추
+      let kpi: AnalysisKpiSet | null = null
+      if (unifiedReport && typeof unifiedReport === 'object') {
+        // unified_report.summary.* 에서 KPI 추출
+        const ur = unifiedReport as {
+          summary?: {
+            predictedRecovery?: number
+            riskGrade?: string
+            riskScore?: number
+          }
+          recovery?: { confidence?: number }
+          profitability?: {
+            schedule?: { totalDurationDays?: number }
+            strategies?: {
+              aggressive?: {
+                roi?: number
+                expectedNetProfit?: number
+                totalEquity?: number
+                assumedBidRatio?: number
+              }
+            }
+          }
+        }
+        const summary = ur.summary
+        const aggressive = ur.profitability?.strategies?.aggressive
+        const totalDurationDays = ur.profitability?.schedule?.totalDurationDays ?? 270
+        if (summary) {
+          const score = summary.riskScore ?? 0
+          kpi = {
+            predictedRecoveryRate: summary.predictedRecovery ?? 0,
+            recoveryConfidence: Math.round((ur.recovery?.confidence ?? 0.85) * 100),
+            riskGrade: summary.riskGrade ?? 'B',
+            riskScore: score,
+            riskLevel: score >= 70 ? 'LOW' : score >= 55 ? 'MEDIUM' : score >= 40 ? 'HIGH' : 'CRITICAL',
+            roi: aggressive ? Number((aggressive.roi! * 100).toFixed(1)) : 0,
+            netProfit: aggressive?.expectedNetProfit ?? 0,
+            ownCapital: aggressive?.totalEquity ?? 0,
+            recoveryMonths: Math.max(1, Math.round(totalDurationDays / 30)),
+            expectedBidRatio: aggressive?.assumedBidRatio
+              ? Number((aggressive.assumedBidRatio * 100).toFixed(1))
+              : 70,
+            source: 'real',
+          }
+        }
+      }
+      // Fallback: legacy 컬럼 매핑
+      if (!kpi) kpi = mapAnalysisRowToKpi(row)
+      if (kpi) {
+        return NextResponse.json({
+          data: { kpi, unifiedReport },
+          _source: 'real',
+        })
+      }
     }
 
     // 2. listing 정보 조회 (admin 으로 RLS 우회 — KPI 추정용)

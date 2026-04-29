@@ -225,6 +225,83 @@ export function useAnalysisReport(
   }
 }
 
+// ─── useUnifiedReport — 보고서 전체 (KPI 외 본문 블록까지) 가져오는 hook ───
+//   Phase G7+ 2026-04-29 — 사용자 정책 "보고서 수정 → 딜룸 자동 동기화" 충족.
+//
+// 우선순위:
+//   1) Jongno 샘플 → buildJongnoSampleReport (사례 사전 빌드)
+//   2) DB 의 unified_report (PUT API · 매물 PATCH 자동 재계산으로 저장된 최신 버전)
+//   3) buildListingReport(listing) — 매물 raw 데이터 기반 즉석 계산 (하드코딩 X)
+//   4) null (listing 미존재 시)
+
+export interface UseUnifiedReportResult {
+  report: UnifiedAnalysisReport | null
+  isLoading: boolean
+  source: 'sample' | 'db' | 'listing-driven' | 'none'
+}
+
+interface UnifiedReportApiResponse {
+  data?: {
+    unifiedReport?: UnifiedAnalysisReport | null
+  }
+}
+
+export function useUnifiedReport(
+  listing: ListingDetail | null,
+  opts?: { enabled?: boolean },
+): UseUnifiedReportResult {
+  const enabled = opts?.enabled !== false && !!listing
+  const listingId = listing?.id
+
+  const query = useQuery<{ report: UnifiedAnalysisReport | null; source: UseUnifiedReportResult['source'] }, Error>({
+    queryKey: ['unified-report', listingId],
+    queryFn: async () => {
+      if (!listing) return { report: null, source: 'none' }
+      // 1) Jongno 샘플
+      if (listingId === JONGNO_HONGJI_LISTING_ID) {
+        return { report: buildJongnoSampleReport(), source: 'sample' as const }
+      }
+      // 2) DB 저장 본 (PUT/PATCH 으로 영구 저장된 가장 최신 보고서)
+      const r = await fetchSafe<UnifiedReportApiResponse>(
+        `/api/v1/analysis/listing/${listingId}`,
+        { fallback: { data: undefined }, retries: 0 },
+      )
+      const dbReport = r.data?.unifiedReport ?? null
+      if (dbReport) return { report: dbReport, source: 'db' as const }
+      // 3) listing-driven 즉석 계산
+      try {
+        return { report: buildListingReport(listing), source: 'listing-driven' as const }
+      } catch (e) {
+        console.warn('[useUnifiedReport] buildListingReport 실패:', e)
+        return { report: null, source: 'none' as const }
+      }
+    },
+    enabled,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    retry: 0,
+  })
+
+  // 동기 fallback (첫 렌더에 query 미도착 시) — Jongno OR listing-driven
+  const syncFallback = (() => {
+    if (!listing) return { report: null, source: 'none' as const }
+    if (listing.id === JONGNO_HONGJI_LISTING_ID) {
+      return { report: buildJongnoSampleReport(), source: 'sample' as const }
+    }
+    try {
+      return { report: buildListingReport(listing), source: 'listing-driven' as const }
+    } catch {
+      return { report: null, source: 'none' as const }
+    }
+  })()
+
+  return {
+    report: query.data?.report ?? syncFallback.report,
+    isLoading: query.isLoading,
+    source: query.data?.source ?? syncFallback.source,
+  }
+}
+
 // ─── Display formatters ─────────────────────────────────────────────────────
 
 export function formatKrwShort(amount: number): string {

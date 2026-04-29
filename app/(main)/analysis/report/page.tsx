@@ -265,6 +265,21 @@ export default function UnifiedReportPage() {
             // (위저드 흐름 거치도록 안내)
           }
         }
+        // 우선순위 3.5 — listingId 가 있으면 DB 에 저장된 unified_report 우선 조회
+        //   사용자 정책 (2026-04-29): PUT API · 매물 PATCH 자동 재계산으로 저장된 보고서가 있으면
+        //   재계산하지 않고 그대로 사용 → 사용자 수정 사항 노출 보장.
+        if (listingId) {
+          try {
+            const res = await fetch(`/api/v1/analysis/listing/${listingId}`)
+            if (res.ok) {
+              const json = await res.json()
+              if (json?.data?.unifiedReport) {
+                setReport(json.data.unifiedReport as UnifiedAnalysisReport)
+                return
+              }
+            }
+          } catch { /* fall through to listing-driven fallback */ }
+        }
         // 우선순위 4 — listing 이 있으면 listing-driven generic builder 사용
         //   사용자 정책 (2026-04-29): 매물 raw 데이터 → 자동으로 보고서 생성
         //   (사용자가 위저드 실행하기 전 미리 보기 + 매물 수정 시 자동 갱신)

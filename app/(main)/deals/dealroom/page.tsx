@@ -68,6 +68,7 @@ import {
 import { useDealroomLinks, deriveFallbackLinks, type DealroomLink } from "@/lib/external/dealroom-links"
 import {
   useAnalysisReport,
+  useUnifiedReport,
   formatKrwShort,
   formatKrwFull,
   type AnalysisKpiSet,
@@ -77,6 +78,7 @@ import { useDealMessages, useSendDealMessage, type DealMessage } from "@/lib/hoo
 import { startInicisCheckout } from "@/components/payment/inicis-checkout-client"
 // 분석 보고서 엔진 — 딜룸 AI 카드와 보고서 화면이 동일 결과 사용 (SoT)
 import { buildJongnoSampleReport } from "@/lib/npl/unified-report/sample-jongno"
+import { buildListingReport } from "@/lib/npl/unified-report/from-listing"
 import { JONGNO_HONGJI_LISTING_ID } from "@/lib/samples/jongno-hongji-land-npl"
 
 /* ─── Dealroom Listing Context — 하위 컴포넌트(NDA/LOI 모달, Summary 등) 가
@@ -2431,19 +2433,10 @@ function McMetric({ label, value, sub }: { label: string; value: string; sub: st
 /* ─── Monte Carlo 블록 — 보고서 reportSnapshot.profitability.monteCarlo 와 동기화 ─── */
 function MonteCarloBlock() {
   const { listing } = useDealroomListing()
-  const listingId = listing?.id ?? null
 
-  // 보고서 엔진 호출 — Monte Carlo / 회수기간 모두 보고서 결과 사용 (사용자 정책)
-  const reportSnapshot = useMemo(() => {
-    try {
-      if (listingId === JONGNO_HONGJI_LISTING_ID) {
-        return buildJongnoSampleReport()
-      }
-    } catch (e) {
-      console.warn("[MonteCarloBlock] report fallback:", e)
-    }
-    return null
-  }, [listingId])
+  // Phase G7+ 2026-04-29 — 통합 보고서 SoT
+  //   1) Jongno 샘플 / 2) DB unified_report / 3) listing-driven 즉석 계산
+  const { report: reportSnapshot } = useUnifiedReport(listing)
 
   const mc = reportSnapshot?.profitability?.monteCarlo
   const totalDurationDays = reportSnapshot?.profitability?.schedule?.totalDurationDays
@@ -3013,17 +3006,9 @@ function FullAiInvestmentAnalysisCard() {
   const reportHref = listingId ? `/analysis/report?listingId=${encodeURIComponent(listingId)}` : "/analysis/report"
   const analysisHref = listingId ? `/analysis?listingId=${encodeURIComponent(listingId)}` : "/analysis"
 
-  // 분석 보고서 엔진 호출 — 카드와 보고서가 동일 SoT 사용
-  const reportSnapshot = useMemo(() => {
-    try {
-      if (listingId === JONGNO_HONGJI_LISTING_ID) {
-        return buildJongnoSampleReport()
-      }
-    } catch (e) {
-      console.warn("[dealroom] report engine fallback:", e)
-    }
-    return null
-  }, [listingId])
+  // Phase G7+ 2026-04-29 — 카드와 보고서가 동일 SoT (DB unified_report 우선)
+  //   1) Jongno 샘플 / 2) DB 저장본 (PUT/PATCH) / 3) listing-driven 즉석 계산
+  const { report: reportSnapshot } = useUnifiedReport(listing)
 
   // ─ 핵심 추정치 (listing SoT 기반) ─
   const loanPrincipalOnly =

@@ -450,7 +450,10 @@ export async function POST(request: NextRequest) {
     //   이후 보고서/딜룸은 listing 변경 → 분석 row update 로 자동 동기화.
     //   실패 시 매물 등록 자체는 성공 처리 (분석은 사후 위저드/edit 으로 보정 가능)
     try {
-      if (result._source === 'supabase' && responseData.id) {
+      // 익명·sample 모드는 npl_ai_analyses.user_id NOT NULL FK 충돌 방지를 위해 skip.
+      //   - 실 supabase 인증 사용자가 매물 등록 시에만 자동 분석 row 생성
+      //   - 비인증 모드 (sample/mock) 에서는 listing-driven builder 가 client 측 hook 에서 즉시 작동
+      if (result._source === 'supabase' && responseData.id && userId !== 'anonymous') {
         const supabase = await createClient()
         const listingForReport = {
           ...listing,
