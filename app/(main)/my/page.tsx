@@ -267,6 +267,26 @@ export default function MyDashboardPage() {
     { label: "크레딧", value: `${safeBalance} C`, hint: "Balance" },
   ]
 
+  // Phase G7+ 2026-04-29 (Phase 4) — Hero "Next Action" CTA
+  //   사용자가 지금 해야 할 단 한 가지 — 미인증 → 미확인 알림 → 진행 딜룸 → 거래소 순.
+  const nextAction = (() => {
+    if (!profile?.identity_verified) {
+      return { label: "본인인증 완료하기", href: "/my/settings?tab=verify", reason: "1분이면 충분합니다" }
+    }
+    if (!profile?.qualified_investor) {
+      return { label: "투자자 인증 완료하기", href: "/my/settings?tab=kyc", reason: "사업자등록증·명함만 있으면 됩니다" }
+    }
+    const unread = stats?.unreadNotifications ?? 0
+    if (unread > 0) {
+      return { label: `미확인 알림 ${unread}건 확인`, href: "/my/inbox?tab=alerts", reason: "새 거래·매물 소식이 도착했습니다" }
+    }
+    const active = stats?.activeDealsCount ?? 0
+    if (active > 0) {
+      return { label: `진행 중 딜룸 ${active}건 보기`, href: "/my/deals", reason: "다음 액션이 대기 중입니다" }
+    }
+    return { label: "거래소 둘러보기", href: "/exchange", reason: "지금 53건의 매물이 활성화되어 있습니다" }
+  })()
+
   // Loading 상태
   if (loading) {
     return (
@@ -319,7 +339,72 @@ export default function MyDashboardPage() {
         </div>
       </section>
 
-      <div className="max-w-[1280px] mx-auto" style={{ padding: "0 24px 80px" }}>
+      {/* Phase G7+ 2026-04-29 (Phase 4) — Hero "다음 액션" CTA */}
+      <section style={{ background: MCK.paperTint, padding: "20px 0", borderBottom: `1px solid ${MCK.border}` }}>
+        <div className="max-w-[1280px] mx-auto" style={{ padding: "0 24px" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 16,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: MCK.electric,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  marginBottom: 4,
+                }}
+              >
+                ⚡ 다음 액션
+              </div>
+              <h2
+                style={{
+                  fontFamily: MCK_FONTS.serif,
+                  fontSize: 22,
+                  fontWeight: 700,
+                  color: MCK.ink,
+                  marginBottom: 4,
+                  lineHeight: 1.3,
+                }}
+              >
+                {nextAction.label}
+              </h2>
+              <p style={{ fontSize: 13, color: MCK.textSub }}>{nextAction.reason}</p>
+            </div>
+            <Link
+              href={nextAction.href}
+              className="mck-cta-dark"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "14px 24px",
+                fontSize: 14,
+                fontWeight: 800,
+                background: MCK.ink,
+                color: MCK.paper,
+                borderTop: `2px solid ${MCK.electric}`,
+                textDecoration: "none",
+                letterSpacing: "-0.01em",
+                boxShadow: "0 4px 12px rgba(10, 22, 40, 0.18)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <span style={{ color: MCK.paper }}>바로가기</span>
+              <ChevronRight size={16} style={{ color: MCK.paper }} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-[1280px] mx-auto" style={{ padding: "32px 24px 80px" }}>
 
         {/* ── 2. 투자자 인증 + 매물별 계약 안내 ─────────────────────
             투자자 인증은 1회 (계정 단위) · NDA / LOI 는 채권 매물별로 별도 진행

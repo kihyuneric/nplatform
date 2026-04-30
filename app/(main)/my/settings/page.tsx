@@ -1,26 +1,60 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { User, Shield, Bell, RefreshCw, Trash2, Camera, CheckCircle2, AlertCircle, Monitor, Clock, Lock, Smartphone, Key, Loader2, LayoutDashboard } from "lucide-react"
+import { User, Shield, Bell, RefreshCw, Trash2, Camera, CheckCircle2, AlertCircle, Monitor, Clock, Lock, Smartphone, Key, Loader2, ChevronRight, BadgeCheck, Building2, GraduationCap, FileLock2, ArrowUpRight } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import DS, { formatKRW } from "@/lib/design-system"
-import { MckPageShell, MckPageHeader, MckTabBar } from "@/components/mck"
+import { MckPageShell, MckPageHeader } from "@/components/mck"
 import { MCK } from "@/lib/mck-design"
 
-const TABS = ["기본 정보", "보안", "알림 설정", "역할 전환", "계정 관리"] as const
+// Phase G7+ 2026-04-29 (My_Page_Restructure_Plan_2026Q2 Phase 2-B):
+//   설정 사이드바 통합 — 기존 5개 탭 + 5개 신규 인증·기관 진입 카드
+const TABS = [
+  "기본 정보",
+  "본인인증",
+  "사업자·투자자 인증",
+  "전문가 인증",
+  "기관 계정",
+  "보안",
+  "알림 설정",
+  "역할 전환",
+  "개인정보 (관리자)",
+  "계정 관리",
+] as const
 type Tab = typeof TABS[number]
 
 const SETTINGS_TAB_MAP: Record<string, Tab> = {
   profile: "기본 정보",
+  verify: "본인인증",
+  kyc: "사업자·투자자 인증",
+  professional: "전문가 인증",
+  organization: "기관 계정",
   security: "보안",
+  alerts: "알림 설정",
   notifications: "알림 설정",
   notification: "알림 설정",
   role: "역할 전환",
+  privacy: "개인정보 (관리자)",
   account: "계정 관리",
   delete: "계정 관리",
+}
+
+// 사이드바 항목 메타 (아이콘·설명·링크용 외부 라우트)
+const SIDEBAR_META: Record<Tab, { icon: typeof User; desc?: string; legacyHref?: string }> = {
+  "기본 정보":              { icon: User },
+  "본인인증":               { icon: BadgeCheck,    desc: "휴대폰 · 실명 인증 (L0 → L1)", legacyHref: "/my/verify" },
+  "사업자·투자자 인증":     { icon: FileLock2,     desc: "사업자등록증 · 명함 (KYC)",     legacyHref: "/my/kyc" },
+  "전문가 인증":            { icon: GraduationCap, desc: "변호사 · 감정평가사 등 자격 인증", legacyHref: "/my/professional" },
+  "기관 계정":              { icon: Building2,     desc: "기관 멤버 초대 · 권한 관리",     legacyHref: "/my/organization" },
+  "보안":                   { icon: Shield },
+  "알림 설정":              { icon: Bell },
+  "역할 전환":              { icon: RefreshCw },
+  "개인정보 (관리자)":      { icon: FileLock2,     desc: "PII Access Log · 파기 요청",   legacyHref: "/my/privacy" },
+  "계정 관리":              { icon: Trash2 },
 }
 
 const LOGIN_HISTORY = [
@@ -215,15 +249,57 @@ export default function SettingsPage() {
         subtitle="기본 정보 / 보안 / 알림 채널 / 역할 / 계정 관리를 한 화면에서 처리합니다."
       />
 
-      <MckTabBar
-        eyebrow="SECTION"
-        eyebrowIcon={<LayoutDashboard size={12} style={{ color: MCK.electric }} />}
-        tabs={TABS.map(t => ({ id: t, label: t }))}
-        active={activeTab}
-        onChange={(id) => setActiveTab(id as Tab)}
-      />
+      {/* Phase G7+ 2026-04-29 — 사이드바 레이아웃 (10개 섹션 통합) */}
+      <div
+        className={DS.page.container + " py-6"}
+        style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 24 }}
+      >
+        <aside
+          style={{
+            position: "sticky",
+            top: 16,
+            alignSelf: "start",
+            background: MCK.paper,
+            border: `1px solid ${MCK.border}`,
+            borderRadius: 4,
+            padding: 8,
+            maxHeight: "calc(100vh - 32px)",
+            overflowY: "auto",
+          }}
+        >
+          <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {TABS.map((t) => {
+              const meta = SIDEBAR_META[t]
+              const Icon = meta.icon
+              const isActive = activeTab === t
+              return (
+                <button
+                  key={t}
+                  onClick={() => setActiveTab(t)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "10px 12px",
+                    background: isActive ? MCK.electric : "transparent",
+                    color: isActive ? MCK.paper : MCK.ink,
+                    border: 0,
+                    borderRadius: 4,
+                    cursor: "pointer",
+                    fontSize: 13,
+                    fontWeight: isActive ? 700 : 500,
+                    textAlign: "left",
+                  }}
+                >
+                  <Icon size={14} />
+                  <span>{t}</span>
+                </button>
+              )
+            })}
+          </nav>
+        </aside>
 
-      <div className={DS.page.container + " py-6 space-y-5"}>
+        <div className="space-y-5">
 
         {/* 기본 정보 */}
         {activeTab === "기본 정보" && (
@@ -464,6 +540,50 @@ export default function SettingsPage() {
             </div>
           </div>
         )}
+
+        {/* Phase G7+ — 인증·기관·개인정보 5개 신규 섹션 (기존 라우트로 이동) */}
+        {(["본인인증", "사업자·투자자 인증", "전문가 인증", "기관 계정", "개인정보 (관리자)"] as Tab[])
+          .filter((t) => activeTab === t)
+          .map((t) => {
+            const meta = SIDEBAR_META[t]
+            const Icon = meta.icon
+            return (
+              <div key={t} className={DS.card.elevated + " " + DS.card.paddingLarge}>
+                <div className="flex items-start gap-3 mb-4">
+                  <div
+                    style={{
+                      width: 40, height: 40, borderRadius: 4,
+                      background: MCK.paperTint,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Icon size={20} style={{ color: MCK.electric }} />
+                  </div>
+                  <div>
+                    <h3 className={DS.text.cardTitle}>{t}</h3>
+                    {meta.desc && (
+                      <p className={DS.text.caption + " mt-1"}>{meta.desc}</p>
+                    )}
+                  </div>
+                </div>
+                {meta.legacyHref && (
+                  <Link
+                    href={meta.legacyHref}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded text-[0.8125rem] font-semibold transition-colors"
+                    style={{
+                      background: MCK.electric,
+                      color: MCK.paper,
+                    }}
+                  >
+                    {t} 페이지로 이동
+                    <ArrowUpRight size={14} />
+                  </Link>
+                )}
+              </div>
+            )
+          })}
+        </div>
       </div>
     </MckPageShell>
   )
