@@ -161,7 +161,25 @@ const nextConfig = {
       { source: '/settings/coupons', destination: '/my/billing', permanent: true },
       { source: '/settings/security', destination: '/my/settings', permanent: true },
       { source: '/settings/:path*', destination: '/my/settings', permanent: true },
-      { source: '/notifications', destination: '/my/notifications', permanent: true },
+
+      // Phase G7+ 2026-04-29 (My_Page_Restructure_Plan_2026Q2 Phase 3-A) ──────
+      // 알림센터 통합: /my/notifications · /my/notices · /my/inquiries → /my/inbox?tab=...
+      { source: '/notifications', destination: '/my/inbox?tab=alerts', permanent: true },
+      { source: '/my/notifications', destination: '/my/inbox?tab=alerts', permanent: true },
+      { source: '/my/notifications/:path*', destination: '/my/inbox?tab=alerts', permanent: true },
+      { source: '/my/notices', destination: '/my/inbox?tab=notices', permanent: true },
+      { source: '/my/notices/:path*', destination: '/my/inbox?tab=notices', permanent: true },
+      { source: '/my/inquiries', destination: '/my/inbox?tab=inquiries', permanent: true },
+      { source: '/my/inquiries/:path*', destination: '/my/inbox?tab=inquiries', permanent: true },
+
+      // Phase G7+ Phase 3-B: 삭제·이전 라우트
+      // /my/listings → /my/seller (매물 관리 일원화)
+      { source: '/my/listings', destination: '/my/seller', permanent: true },
+      { source: '/my/listings/:id', destination: '/my/seller', permanent: true },
+      // /my/listings/:id/edit 는 그대로 유지 (서비스 편집 핵심 — Phase 후속에서 /my/seller/:id/edit 으로 이전)
+      // /my/developer 삭제 (용도 불명 + 운영 위험) → /my 로 이동
+      { source: '/my/developer', destination: '/my', permanent: true },
+      { source: '/my/developer/:path*', destination: '/my', permanent: true },
 
       // Admin sub-page consolidation → parent tab pages
       { source: '/admin/analytics/cohort', destination: '/admin/analytics?tab=cohort', permanent: true },
