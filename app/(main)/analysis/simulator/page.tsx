@@ -411,6 +411,133 @@ export default function AuctionSimulatorV27Page() {
     }))
   }, [bestRow, fullInputs, mode])
 
+  // ── 인사이트 자동 메시지 (auctionprofit 정합) ──────────────────────
+  // 최적 입찰가 기준으로 자동 분석 메시지 생성 — 이자커버율·세금구조·중과세 등.
+  const insights = useMemo(() => {
+    const list: Array<{ kind: 'good' | 'warn' | 'danger'; title: string; detail: string }> = []
+    if (!bestRow) return list
+
+    const bid = bestRow.bidPrice
+    const interest = bestRow.holdingInterest
+    const tax = bestRow.tax
+    const profit = bestRow.netProfit
+    const roi = bestRow.roi
+
+    // 1) 이자 커버율 — 월세 수익 / 월 이자 비용
+    if (overview.rentEnabled && overview.monthlyRent > 0 && interest > 0) {
+      const monthlyInterest = interest / Math.max(1, fullInputs.holdingMonths)
+      const cover = (overview.monthlyRent / monthlyInterest) * 100
+      if (cover >= 100) {
+        list.push({
+          kind: 'good',
+          title: '이자 부담 낮음 — 안정적 구조',
+          detail: `월세 수익(${fmt(overview.monthlyRent)}천원) 이 월 이자비용(${fmt(Math.round(monthlyInterest))}천원) 의 ${cover.toFixed(0)}% 를 커버합니다.`,
+        })
+      } else if (cover >= 60) {
+        list.push({
+          kind: 'warn',
+          title: '적정 수준이나 금리 상승 시나리오 검토 권장',
+          detail: `이자 커버율 ${cover.toFixed(0)}%. 금리 +1%p 상승 시 즉시 점검 필요.`,
+        })
+      } else {
+        list.push({
+          kind: 'danger',
+          title: '수익률 위험 — 월세로 이자 미충당',
+          detail: `이자 커버율 ${cover.toFixed(0)}% 미만. 임대 효율 낮음 — 월세 인상 또는 단축 보유 검토.`,
+        })
+      }
+    }
+
+    // 2) 세금 비중
+    const taxRatio = (tax / Math.max(1, profit + tax)) * 100
+    if (taxRatio < 25) {
+      list.push({
+        kind: 'good',
+        title: '양도소득세 최적화 완료 — 기본 누진세율 적용 중',
+        detail: `세금 비중 ${taxRatio.toFixed(1)}%. 보유기간 ${fullInputs.holdingMonths}개월로 단기 중과세 회피.`,
+      })
+    } else if (taxRatio < 45) {
+      list.push({
+        kind: 'warn',
+        title: '세금 비중 적정 수준 — 현재 구조 유지 권장',
+        detail: `세금 비중 ${taxRatio.toFixed(1)}%. 비용 처리 항목 점검으로 추가 절감 여지 존재.`,
+      })
+    } else {
+      const need = fullInputs.holdingMonths < 24 ? '24개월 이상 보유 시 기본세율' : '세무 전문가 상담'
+      list.push({
+        kind: 'danger',
+        title: `세금 비중 과다 (${taxRatio.toFixed(1)}%) — ${need}`,
+        detail: `보유기간 ${fullInputs.holdingMonths}개월 + 매도가 ${fmt(overview.salePrice)}천원. 단기 중과세 적용 가능.`,
+      })
+    }
+
+    // 3) 보유기간 권고
+    if (fullInputs.holdingMonths < 12) {
+      list.push({
+        kind: 'danger',
+        title: `단기 보유 (70% 중과세) — 12개월 이상 보유 권장`,
+        detail: `현재 ${fullInputs.holdingMonths}개월. 보유기간 12개월 이상으로 70% → 60% 중과세 회피.`,
+      })
+    } else if (fullInputs.holdingMonths < 24) {
+      list.push({
+        kind: 'warn',
+        title: `60% 중과세 적용 중 — 24개월 이상 보유 시 기본세율`,
+        detail: `현재 ${fullInputs.holdingMonths}개월. 24개월 이상으로 누진세율 적용 가능.`,
+      })
+    } else {
+      list.push({
+        kind: 'good',
+        title: '기본세율 적용 — 세금 최적화 완료',
+        detail: `보유기간 ${fullInputs.holdingMonths}개월 = 24개월 이상. 양도소득세 누진세 적용.`,
+      })
+    }
+
+    // 4) ROI 종합 평가
+    if (roi >= 0.30) {
+      list.push({
+        kind: 'good',
+        title: '투자 적합 — 안정적 수익 기대 가능',
+        detail: `최적 입찰가 ${fmt(bid)}천원 기준 ROI ${(roi * 100).toFixed(1)}% · 순이익 ${fmt(Math.round(profit))}천원.`,
+      })
+    } else if (roi >= 0.15) {
+      list.push({
+        kind: 'warn',
+        title: '수익성과 낙찰 가능성의 균형점',
+        detail: `ROI ${(roi * 100).toFixed(1)}% — 적정 수준. 낙찰가율 ${((bid / Math.max(1, overview.appraised)) * 100).toFixed(1)}% 검토.`,
+      })
+    } else {
+      list.push({
+        kind: 'danger',
+        title: '수익률 부족 — 입찰가 조정 권장',
+        detail: `ROI ${(roi * 100).toFixed(1)}%. 손익분기 입찰가 ${breakevenBid ? fmt(breakevenBid) : '—'}천원 이하 검토.`,
+      })
+    }
+
+    return list
+  }, [bestRow, overview, fullInputs, mode, breakevenBid])
+
+  // ── 모드 비교 (개인 vs 매매사업자) ─────────────────────────────────
+  const modeComparison = useMemo(() => {
+    if (!bestRow) return null
+    const otherMode: V27Mode = mode === '개인' ? '매매사업자' : '개인'
+    const otherRow = calcRow(bestRow.bidPrice, fullInputs, otherMode)
+    const profitDiff = bestRow.netProfit - otherRow.netProfit
+    const roiDiff = bestRow.roi - otherRow.roi
+    return {
+      currentMode: mode,
+      otherMode,
+      currentRoi: bestRow.roi,
+      otherRoi: otherRow.roi,
+      currentProfit: bestRow.netProfit,
+      otherProfit: otherRow.netProfit,
+      currentTax: bestRow.tax,
+      otherTax: otherRow.tax,
+      profitDiff,
+      roiDiff,
+      betterMode: profitDiff >= 0 ? mode : otherMode,
+    }
+  }, [bestRow, fullInputs, mode])
+
   // ── 액션 ──────────────────────────────────────────────────────
   const applyPreset = (key: string) => {
     const p = V27_PRESETS[key]
@@ -715,7 +842,12 @@ export default function AuctionSimulatorV27Page() {
           <KpiCard label="최고 순이익" value={bestRow ? `${fmt(Math.round(bestRow.netProfit))}` : "-"} sub="천원" tone="success" />
           <KpiCard label="손익분기 입찰가" value={breakevenBid ? `${fmt(breakevenBid)}` : "-"} sub="천원" tone="muted" />
           <KpiCard label="최적 낙찰가율" value={appraisedRate ? `${appraisedRate}%` : "-"} sub="감정가 대비" tone="muted" />
-          <KpiCard label={`목표 ${targetRoi}% 기준`} value={targetBid ? `${fmt(targetBid)}` : "불가"} sub="최대 입찰가(천원)" tone="info" />
+          <KpiCard
+            label={`목표 ${targetRoi}% 기준`}
+            value={targetBid ? `${fmt(targetBid)}` : "불가"}
+            sub={targetBid && selectedBid === targetBid ? "✓ 선택됨 · 최대 입찰가" : "최대 입찰가(천원)"}
+            tone={targetBid && selectedBid === targetBid ? "success" : targetBid ? "info" : "danger"}
+          />
         </section>
 
         {/* 물건 개요 */}
@@ -832,20 +964,23 @@ export default function AuctionSimulatorV27Page() {
             </div>
           </div>
 
-          {/* 목표 ROI */}
+          {/* 목표 ROI — 셀 클릭 시 KPI 즉시 반영 (auctionprofit 정합) */}
           <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)]">
             <label className={DS.text.label + " block mb-2"}>
               목표 수익률 설정 — 역산 최대 입찰가 계산
+              <span className="ml-2 text-[10px] font-normal text-[var(--color-text-muted)]">
+                · 셀 클릭 → KPI 카드 즉시 반영
+              </span>
             </label>
             <div className="flex flex-wrap gap-2">
               {ROI_TARGETS.map((t) => (
                 <button
                   key={t}
                   onClick={() => setTargetRoi(t)}
-                  className={`px-2.5 py-1 text-[12px] rounded-md border ${
+                  className={`px-2.5 py-1 text-[12px] rounded-md border transition-all ${
                     targetRoi === t
-                      ? "bg-[var(--color-brand-mid)] text-white border-[var(--color-brand-mid)]"
-                      : "bg-[var(--color-surface-overlay)] text-[var(--color-text-primary)] border-[var(--color-border-subtle)] hover:border-[var(--color-brand-mid)]/40"
+                      ? "bg-[#1B3A5C] text-white border-[#1B3A5C] shadow-sm"
+                      : "bg-[var(--color-surface-overlay)] text-[var(--color-text-primary)] border-[var(--color-border-subtle)] hover:border-[#1B3A5C]/60 hover:bg-[#1B3A5C]/5"
                   }`}
                 >
                   {t}%
@@ -853,22 +988,46 @@ export default function AuctionSimulatorV27Page() {
               ))}
             </div>
             <div className="mt-3 grid sm:grid-cols-7 gap-2">
-              {roiTable.map(({ target, bid }) => (
-                <div
-                  key={target}
-                  className={`p-2 rounded-md border text-center ${
-                    bid
-                      ? "bg-stone-100/5 border-stone-300/20"
-                      : "bg-stone-100/5 border-stone-300/20"
-                  }`}
-                >
-                  <div className="text-[10px] text-[var(--color-text-muted)]">목표 {target}%</div>
-                  <div className={`text-[12px] font-bold ${bid ? "text-stone-900" : "text-stone-900"}`}>
-                    {bid ? fmt(bid) : "불가"}
-                  </div>
-                </div>
-              ))}
+              {roiTable.map(({ target, bid }) => {
+                const isActive = target === targetRoi
+                const isAchievable = !!bid
+                return (
+                  <button
+                    key={target}
+                    type="button"
+                    onClick={() => {
+                      setTargetRoi(target)
+                      if (bid) setSelectedBid(bid)
+                    }}
+                    disabled={!isAchievable}
+                    className={`p-2 rounded-md border text-center transition-all ${
+                      isActive && isAchievable
+                        ? "bg-[#1B3A5C] border-[#1B3A5C] shadow-md"
+                        : isAchievable
+                          ? "bg-white border-[var(--color-border-subtle)] hover:border-[#1B3A5C]/60 hover:bg-[#1B3A5C]/5 cursor-pointer"
+                          : "bg-stone-100/30 border-stone-200 cursor-not-allowed opacity-60"
+                    }`}
+                    title={isAchievable ? `목표 ${target}% — 클릭하면 KPI에 반영` : "달성 불가"}
+                  >
+                    <div className={`text-[10px] ${isActive && isAchievable ? "text-white/80" : "text-[var(--color-text-muted)]"}`}>
+                      {isAchievable ? "✅" : "❌"} 목표 {target}%
+                    </div>
+                    <div className={`text-[12px] font-bold tabular-nums ${
+                      isActive && isAchievable ? "text-white" : isAchievable ? "text-[#1B3A5C]" : "text-stone-400"
+                    }`}>
+                      {bid ? fmt(bid) : "불가"}
+                    </div>
+                  </button>
+                )
+              })}
             </div>
+            {targetBid && (
+              <p className="mt-3 text-[11px] text-[var(--color-text-muted)]">
+                💡 목표 <strong className="text-[#1B3A5C]">{targetRoi}%</strong> 달성 가능한 최대 입찰가 ={" "}
+                <strong className="text-[#1B3A5C] tabular-nums">{fmt(targetBid)}</strong> 천원.
+                위 KPI · 시뮬레이션 테이블 행이 자동 강조됩니다.
+              </p>
+            )}
           </div>
         </section>
 
@@ -1040,6 +1199,150 @@ export default function AuctionSimulatorV27Page() {
                 </table>
                 <p className="mt-3 text-[10px] text-[var(--color-text-muted)]">
                   최적 입찰가({bestRow ? fmt(bestRow.bidPrice) : "-"}천원) 고정 · 각 셀은 해당 조건에서의 ROI
+                </p>
+              </div>
+            ) : (
+              <p className="text-[12px] text-[var(--color-text-muted)]">계산 중…</p>
+            )}
+          </div>
+        </section>
+
+        {/* 인사이트 + 모드 비교 (auctionprofit 정합) */}
+        <section className="grid lg:grid-cols-2 gap-6">
+          {/* 인사이트 */}
+          <div className={DS.card.base + " p-5"}>
+            <h2 className="text-[13px] font-bold tracking-wider text-[var(--color-text-muted)] mb-1">
+              💡 인사이트 — 자동 진단
+            </h2>
+            <p className="text-[10px] text-[var(--color-text-muted)] mb-4">
+              최적 입찰가 기준으로 이자커버율·세금구조·보유기간 자동 분석
+            </p>
+            {insights.length === 0 ? (
+              <p className="text-[12px] text-[var(--color-text-muted)]">계산 중…</p>
+            ) : (
+              <div className="space-y-2">
+                {insights.map((ins, i) => {
+                  const tone =
+                    ins.kind === 'good'
+                      ? { bg: '#ECFDF5', border: '#10B981', dot: '#10B981', label: '양호' }
+                      : ins.kind === 'warn'
+                        ? { bg: '#FFFBEB', border: '#F59E0B', dot: '#F59E0B', label: '주의' }
+                        : { bg: '#FEF2F2', border: '#EF4444', dot: '#EF4444', label: '위험' }
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        background: tone.bg,
+                        borderLeft: `3px solid ${tone.border}`,
+                        padding: '12px 14px',
+                        borderRadius: 4,
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span
+                          className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                          style={{ background: tone.dot, color: 'white' }}
+                        >
+                          ● {tone.label}
+                        </span>
+                        <strong className="text-[12px] text-[#0A1628]">{ins.title}</strong>
+                      </div>
+                      <p className="text-[11px] text-[#475569] leading-relaxed">{ins.detail}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* 모드 비교 (개인 vs 매매사업자) */}
+          <div className={DS.card.base + " p-5"}>
+            <h2 className="text-[13px] font-bold tracking-wider text-[var(--color-text-muted)] mb-1">
+              ⚡ 모드 비교 — 개인 vs 매매사업자
+            </h2>
+            <p className="text-[10px] text-[var(--color-text-muted)] mb-4">
+              동일 입찰가({bestRow ? fmt(bestRow.bidPrice) : '—'}천원) 기준으로 두 모드의 세후 수익 비교
+            </p>
+            {modeComparison ? (
+              <div className="space-y-3">
+                {/* 권장 모드 배지 */}
+                <div
+                  style={{
+                    background: '#1B3A5C',
+                    color: 'white',
+                    padding: '12px 14px',
+                    borderRadius: 4,
+                    fontSize: 13,
+                  }}
+                >
+                  <div className="text-[10px] opacity-80 mb-0.5">📌 권장 모드</div>
+                  <div className="font-bold">
+                    <strong className="text-[15px]">{modeComparison.betterMode}</strong>
+                    <span className="ml-2 text-[11px] opacity-80">
+                      {modeComparison.profitDiff !== 0
+                        ? `(${modeComparison.profitDiff > 0 ? '+' : ''}${fmt(Math.round(Math.abs(modeComparison.profitDiff)))}천원 ${modeComparison.profitDiff > 0 ? '유리' : '불리'})`
+                        : '(동일)'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 비교 표 */}
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="p-2 rounded border border-stone-200 bg-stone-50">
+                    <div className="text-[10px] text-[var(--color-text-muted)] mb-1">구분</div>
+                    <div className="text-[11px] font-bold">현재 모드</div>
+                    <div className="text-[10px] text-[var(--color-text-muted)] mt-2 mb-1">{modeComparison.currentMode}</div>
+                  </div>
+                  <div
+                    className={`p-2 rounded border ${
+                      modeComparison.currentMode === modeComparison.betterMode
+                        ? 'border-[#10B981] bg-[#10B981]/5'
+                        : 'border-stone-200'
+                    }`}
+                  >
+                    <div className="text-[10px] text-[var(--color-text-muted)] mb-1">ROI</div>
+                    <div className="text-[12px] font-bold tabular-nums">
+                      {(modeComparison.currentRoi * 100).toFixed(1)}%
+                    </div>
+                    <div className="text-[10px] text-[var(--color-text-muted)] mt-2 mb-1">순이익</div>
+                    <div className="text-[11px] font-bold tabular-nums">
+                      {fmt(Math.round(modeComparison.currentProfit))}
+                    </div>
+                  </div>
+                  <div
+                    className={`p-2 rounded border ${
+                      modeComparison.otherMode === modeComparison.betterMode
+                        ? 'border-[#10B981] bg-[#10B981]/5'
+                        : 'border-stone-200'
+                    }`}
+                  >
+                    <div className="text-[10px] text-[var(--color-text-muted)] mb-1">{modeComparison.otherMode}</div>
+                    <div className="text-[12px] font-bold tabular-nums">
+                      {(modeComparison.otherRoi * 100).toFixed(1)}%
+                    </div>
+                    <div className="text-[10px] text-[var(--color-text-muted)] mt-2 mb-1">순이익</div>
+                    <div className="text-[11px] font-bold tabular-nums">
+                      {fmt(Math.round(modeComparison.otherProfit))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 모드 전환 CTA */}
+                <button
+                  onClick={() => setMode(modeComparison.otherMode)}
+                  className="w-full py-2 text-[12px] font-semibold rounded border transition-colors"
+                  style={{
+                    background: 'white',
+                    color: '#1B3A5C',
+                    border: '1px solid #1B3A5C',
+                  }}
+                >
+                  → {modeComparison.otherMode}로 전환
+                </button>
+
+                <p className="text-[10px] text-[var(--color-text-muted)]">
+                  세금 차이 ({fmt(Math.round(Math.abs(modeComparison.currentTax - modeComparison.otherTax)))}천원) 가
+                  순이익 격차의 주요 원인입니다.
                 </p>
               </div>
             ) : (
