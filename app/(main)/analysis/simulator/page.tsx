@@ -13,6 +13,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { useTranslation } from "@/lib/hooks/use-translate"
 import {
   ArrowLeft,
   Calculator,
@@ -65,6 +66,13 @@ import {
   v27Fmt as fmt,
   v27FmtPct as fmtPct,
 } from "@/lib/auction-calculator/v27"
+
+// ── 레이아웃 토큰 (하드코딩 금지) ────────────────────────────────────
+//   차트 영역 높이 — ReferenceLine 라벨이 0% Y-tick 과 겹치지 않도록 충분 확보.
+//   ResponsiveContainer 가 width 100% 이지만 height 는 컨테이너 높이로 결정됨.
+const CHART_HEIGHT_PX = 460  // selectedBid 강조 라벨 + 목표ROI 보조 라벨 동시 표시 가능
+const PIE_HEIGHT_PX   = 320
+const SENSITIVITY_MIN_HEIGHT_PX = 220
 
 // ── 기본 입력값 ─────────────────────────────────────────────────────
 const DEFAULT_MODE_COSTS: Record<V27Mode, Pick<V27Input, "otherCost" | "evictionCost" | "loanRatio" | "annualRate" | "prepayPenaltyRate" | "holdingMonths">> = {
@@ -254,6 +262,7 @@ function verdictStyle(v: V27Verdict): string {
 // ── 메인 ──────────────────────────────────────────────────────────
 export default function AuctionSimulatorV27Page() {
   const searchParams = useSearchParams()
+  const { t: tr } = useTranslation()
 
   const [mode, setMode] = useState<V27Mode>("개인")
   const [overview, setOverview] = useState<OverviewInputs>(DEFAULT_OVERVIEW)
@@ -855,9 +864,9 @@ export default function AuctionSimulatorV27Page() {
           >
             <div className="flex flex-wrap items-center gap-6">
               <div>
-                <div className="text-[10px] opacity-80 font-bold tracking-wider">📌 선택된 입찰가</div>
+                <div className="text-[10px] opacity-80 font-bold tracking-wider">📌 {tr("선택된 입찰가")}</div>
                 <div className="text-[20px] font-black tabular-nums">
-                  {fmt(activeRow.bidPrice)} <span className="text-[12px] font-semibold opacity-80">천원</span>
+                  {fmt(activeRow.bidPrice)} <span className="text-[12px] font-semibold opacity-80">{tr("천원")}</span>
                 </div>
               </div>
               <div>
@@ -867,22 +876,22 @@ export default function AuctionSimulatorV27Page() {
                 </div>
               </div>
               <div>
-                <div className="text-[10px] opacity-80 font-bold tracking-wider">순이익</div>
+                <div className="text-[10px] opacity-80 font-bold tracking-wider">{tr("순이익")}</div>
                 <div className="text-[18px] font-black tabular-nums">
-                  {fmt(Math.round(activeRow.netProfit))} <span className="text-[10px] opacity-80">천원</span>
+                  {fmt(Math.round(activeRow.netProfit))} <span className="text-[10px] opacity-80">{tr("천원")}</span>
                 </div>
               </div>
               <div>
-                <div className="text-[10px] opacity-80 font-bold tracking-wider">낙찰가율</div>
+                <div className="text-[10px] opacity-80 font-bold tracking-wider">{tr("낙찰가율")}</div>
                 <div className="text-[18px] font-black tabular-nums">
                   {overview.appraised > 0 ? ((activeRow.bidPrice / overview.appraised) * 100).toFixed(1) : '-'}%
                 </div>
               </div>
               {targetBid === activeRow.bidPrice && (
                 <div>
-                  <div className="text-[10px] opacity-80 font-bold tracking-wider">목표 ROI</div>
+                  <div className="text-[10px] opacity-80 font-bold tracking-wider">{tr("목표")} ROI</div>
                   <div className="text-[14px] font-black px-2 py-1 rounded bg-[#10B981]">
-                    ✅ {targetRoi}% 역산
+                    ✅ {targetRoi}% {tr("역산")}
                   </div>
                 </div>
               )}
@@ -891,7 +900,7 @@ export default function AuctionSimulatorV27Page() {
               onClick={() => setSelectedBid(null)}
               className="text-[11px] font-semibold px-3 py-1.5 rounded border border-white/40 text-white hover:bg-white/10"
             >
-              선택 해제
+              {tr("선택 해제")}
             </button>
           </section>
         )}
@@ -1040,9 +1049,9 @@ export default function AuctionSimulatorV27Page() {
           {/* 목표 ROI — 셀 클릭 시 KPI 즉시 반영 (auctionprofit 정합) */}
           <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)]">
             <label className={DS.text.label + " block mb-2"}>
-              목표 수익률 설정 — 역산 최대 입찰가 계산
+              {tr("목표 수익률 설정 — 역산 최대 입찰가 계산")}
               <span className="ml-2 text-[10px] font-normal text-[var(--color-text-muted)]">
-                · 셀 클릭 → 차트·KPI·테이블 즉시 반영
+                · {tr("셀 클릭 → 차트·KPI·테이블 즉시 반영")}
               </span>
             </label>
             <div className="flex flex-wrap gap-2">
@@ -1090,15 +1099,15 @@ export default function AuctionSimulatorV27Page() {
                           ? "bg-white border-[var(--color-border-subtle)] hover:border-[#1B3A5C]/60 hover:bg-[#1B3A5C]/5 cursor-pointer"
                           : "bg-stone-100/30 border-stone-200 cursor-not-allowed opacity-60"
                     }`}
-                    title={isAchievable ? `목표 ${target}% — 클릭하면 KPI에 반영` : "달성 불가"}
+                    title={isAchievable ? `${tr("목표")} ${target}% — ${tr("클릭하면 KPI에 반영")}` : tr("달성 불가")}
                   >
                     <div className={`text-[10px] ${isActive && isAchievable ? "text-white/80" : "text-[var(--color-text-muted)]"}`}>
-                      {isAchievable ? "✅" : "❌"} 목표 {target}%
+                      {isAchievable ? "✅" : "❌"} {tr("목표")} {target}%
                     </div>
                     <div className={`text-[12px] font-bold tabular-nums ${
                       isActive && isAchievable ? "text-white" : isAchievable ? "text-[#1B3A5C]" : "text-stone-400"
                     }`}>
-                      {bid ? fmt(bid) : "불가"}
+                      {bid ? fmt(bid) : tr("불가")}
                     </div>
                   </button>
                 )
@@ -1106,9 +1115,9 @@ export default function AuctionSimulatorV27Page() {
             </div>
             {targetBid && (
               <p className="mt-3 text-[11px] text-[var(--color-text-muted)]">
-                💡 목표 <strong className="text-[#1B3A5C]">{targetRoi}%</strong> 달성 가능한 최대 입찰가 ={" "}
-                <strong className="text-[#1B3A5C] tabular-nums">{fmt(targetBid)}</strong> 천원.
-                위 KPI · 시뮬레이션 테이블 행이 자동 강조됩니다.
+                💡 {tr("목표")} <strong className="text-[#1B3A5C]">{targetRoi}%</strong> {tr("달성 가능한 최대 입찰가")} ={" "}
+                <strong className="text-[#1B3A5C] tabular-nums">{fmt(targetBid)}</strong> {tr("천원")}.{" "}
+                {tr("위 KPI · 시뮬레이션 테이블 행이 자동 강조됩니다.")}
               </p>
             )}
           </div>
@@ -1117,13 +1126,13 @@ export default function AuctionSimulatorV27Page() {
         {/* 차트 */}
         <section className={DS.card.base + " p-5"}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[13px] font-bold tracking-wider text-[var(--color-text-muted)]">📈 입찰가별 수익률 · 순이익</h2>
+            <h2 className="text-[13px] font-bold tracking-wider text-[var(--color-text-muted)]">📈 {tr("입찰가별 수익률 · 순이익")}</h2>
             {isSelectionActive && (
               <button
                 onClick={() => setSelectedBid(null)}
                 className="text-[10px] font-semibold px-2 py-1 rounded border border-[#1B3A5C] text-[#1B3A5C] hover:bg-[#1B3A5C]/5"
               >
-                선택 해제
+                {tr("선택 해제")}
               </button>
             )}
           </div>
@@ -1132,11 +1141,11 @@ export default function AuctionSimulatorV27Page() {
               className="mb-3 p-2.5 rounded text-[11px]"
               style={{ background: '#EFF6FF', border: '1px solid #3B82F6', color: '#1E3A8A' }}
             >
-              📌 <strong>선택된 입찰가 {fmt(activeRow.bidPrice)} 천원</strong> 기준으로 차트·비용구조·민감도·인사이트가 갱신되었습니다.
-              {targetBid === activeRow.bidPrice && ` (목표 ${targetRoi}% 역산)`}
+              📌 <strong>{tr("선택된 입찰가")} {fmt(activeRow.bidPrice)} {tr("천원")}</strong> {tr("기준으로 차트·비용구조·민감도·인사이트가 갱신되었습니다.")}
+              {targetBid === activeRow.bidPrice && ` (${tr("목표")} ${targetRoi}% ${tr("역산")})`}
             </div>
           )}
-          <div className="h-72">
+          <div style={{ height: CHART_HEIGHT_PX }}>
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
@@ -1166,7 +1175,7 @@ export default function AuctionSimulatorV27Page() {
                     strokeWidth={2}
                     strokeDasharray="4 4"
                     label={{
-                      value: `선택 ${fmt(selectedBid)}`,
+                      value: `${tr("선택")} ${fmt(selectedBid)}`,
                       position: 'top',
                       fill: '#1B3A5C',
                       fontSize: 10,
@@ -1193,7 +1202,7 @@ export default function AuctionSimulatorV27Page() {
                     strokeWidth={1}
                     strokeDasharray="3 3"
                     label={{
-                      value: `목표 ${targetRoi}%`,
+                      value: `${tr("목표")} ${targetRoi}%`,
                       position: 'top',
                       fill: '#F59E0B',
                       fontSize: 9,
@@ -1279,10 +1288,10 @@ export default function AuctionSimulatorV27Page() {
           {/* 비용 구조 */}
           <div className={DS.card.base + " p-5"}>
             <h2 className="text-[13px] font-bold tracking-wider text-[var(--color-text-muted)] mb-4">
-              🍩 비용 구조 ({isSelectionActive && activeRow ? `선택 ${fmt(activeRow.bidPrice)}` : '최적 입찰가'} 기준)
+              🍩 {tr("비용 구조")} ({isSelectionActive && activeRow ? `${tr("선택")} ${fmt(activeRow.bidPrice)}` : tr("최적 입찰가")} {tr("기준")})
             </h2>
             {costBreakdown.length > 0 ? (
-              <div className="h-64">
+              <div style={{ height: PIE_HEIGHT_PX }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -1322,7 +1331,7 @@ export default function AuctionSimulatorV27Page() {
           {/* 민감도 */}
           <div className={DS.card.base + " p-5"}>
             <h2 className="text-[13px] font-bold tracking-wider text-[var(--color-text-muted)] mb-4">
-              🔥 민감도 분석 — 대출비율 × 보유기간
+              🔥 {tr("민감도 분석")} — {tr("대출비율")} × {tr("보유기간")}
             </h2>
             {bestRow ? (
               <div className={DS.table.wrapper}>
@@ -1365,10 +1374,10 @@ export default function AuctionSimulatorV27Page() {
           {/* 인사이트 */}
           <div className={DS.card.base + " p-5"}>
             <h2 className="text-[13px] font-bold tracking-wider text-[var(--color-text-muted)] mb-1">
-              💡 인사이트 — 자동 진단
+              💡 {tr("인사이트")} — {tr("자동 진단")}
             </h2>
             <p className="text-[10px] text-[var(--color-text-muted)] mb-4">
-              최적 입찰가 기준으로 이자커버율·세금구조·보유기간 자동 분석
+              {tr("최적 입찰가 기준으로 이자커버율·세금구조·보유기간 자동 분석")}
             </p>
             {insights.length === 0 ? (
               <p className="text-[12px] text-[var(--color-text-muted)]">계산 중…</p>
@@ -1377,10 +1386,10 @@ export default function AuctionSimulatorV27Page() {
                 {insights.map((ins, i) => {
                   const tone =
                     ins.kind === 'good'
-                      ? { bg: '#ECFDF5', border: '#10B981', dot: '#10B981', label: '양호' }
+                      ? { bg: '#ECFDF5', border: '#10B981', dot: '#10B981', label: tr('양호') }
                       : ins.kind === 'warn'
-                        ? { bg: '#FFFBEB', border: '#F59E0B', dot: '#F59E0B', label: '주의' }
-                        : { bg: '#FEF2F2', border: '#EF4444', dot: '#EF4444', label: '위험' }
+                        ? { bg: '#FFFBEB', border: '#F59E0B', dot: '#F59E0B', label: tr('주의') }
+                        : { bg: '#FEF2F2', border: '#EF4444', dot: '#EF4444', label: tr('위험') }
                   return (
                     <div
                       key={i}
@@ -1398,9 +1407,9 @@ export default function AuctionSimulatorV27Page() {
                         >
                           ● {tone.label}
                         </span>
-                        <strong className="text-[12px] text-[#0A1628]">{ins.title}</strong>
+                        <strong className="text-[12px] text-[#0A1628]">{tr(ins.title)}</strong>
                       </div>
-                      <p className="text-[11px] text-[#475569] leading-relaxed">{ins.detail}</p>
+                      <p className="text-[11px] text-[#475569] leading-relaxed">{tr(ins.detail)}</p>
                     </div>
                   )
                 })}
@@ -1411,10 +1420,10 @@ export default function AuctionSimulatorV27Page() {
           {/* 모드 비교 (개인 vs 매매사업자) */}
           <div className={DS.card.base + " p-5"}>
             <h2 className="text-[13px] font-bold tracking-wider text-[var(--color-text-muted)] mb-1">
-              ⚡ 모드 비교 — 개인 vs 매매사업자
+              ⚡ {tr("모드 비교")} — {tr("개인")} vs {tr("매매사업자")}
             </h2>
             <p className="text-[10px] text-[var(--color-text-muted)] mb-4">
-              동일 입찰가({bestRow ? fmt(bestRow.bidPrice) : '—'}천원) 기준으로 두 모드의 세후 수익 비교
+              {tr("동일 입찰가")}({bestRow ? fmt(bestRow.bidPrice) : '—'}{tr("천원")}) {tr("기준으로 두 모드의 세후 수익 비교")}
             </p>
             {modeComparison ? (
               <div className="space-y-3">
@@ -1428,13 +1437,13 @@ export default function AuctionSimulatorV27Page() {
                     fontSize: 13,
                   }}
                 >
-                  <div className="text-[10px] opacity-80 mb-0.5">📌 권장 모드</div>
+                  <div className="text-[10px] opacity-80 mb-0.5">📌 {tr("권장 모드")}</div>
                   <div className="font-bold">
-                    <strong className="text-[15px]">{modeComparison.betterMode}</strong>
+                    <strong className="text-[15px]">{tr(modeComparison.betterMode)}</strong>
                     <span className="ml-2 text-[11px] opacity-80">
                       {modeComparison.profitDiff !== 0
-                        ? `(${modeComparison.profitDiff > 0 ? '+' : ''}${fmt(Math.round(Math.abs(modeComparison.profitDiff)))}천원 ${modeComparison.profitDiff > 0 ? '유리' : '불리'})`
-                        : '(동일)'}
+                        ? `(${modeComparison.profitDiff > 0 ? '+' : ''}${fmt(Math.round(Math.abs(modeComparison.profitDiff)))}${tr("천원")} ${modeComparison.profitDiff > 0 ? tr('유리') : tr('불리')})`
+                        : `(${tr("동일")})`}
                     </span>
                   </div>
                 </div>
@@ -1442,9 +1451,9 @@ export default function AuctionSimulatorV27Page() {
                 {/* 비교 표 */}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="p-2 rounded border border-stone-200 bg-stone-50">
-                    <div className="text-[10px] text-[var(--color-text-muted)] mb-1">구분</div>
-                    <div className="text-[11px] font-bold">현재 모드</div>
-                    <div className="text-[10px] text-[var(--color-text-muted)] mt-2 mb-1">{modeComparison.currentMode}</div>
+                    <div className="text-[10px] text-[var(--color-text-muted)] mb-1">{tr("구분")}</div>
+                    <div className="text-[11px] font-bold">{tr("현재 모드")}</div>
+                    <div className="text-[10px] text-[var(--color-text-muted)] mt-2 mb-1">{tr(modeComparison.currentMode)}</div>
                   </div>
                   <div
                     className={`p-2 rounded border ${
@@ -1457,7 +1466,7 @@ export default function AuctionSimulatorV27Page() {
                     <div className="text-[12px] font-bold tabular-nums">
                       {(modeComparison.currentRoi * 100).toFixed(1)}%
                     </div>
-                    <div className="text-[10px] text-[var(--color-text-muted)] mt-2 mb-1">순이익</div>
+                    <div className="text-[10px] text-[var(--color-text-muted)] mt-2 mb-1">{tr("순이익")}</div>
                     <div className="text-[11px] font-bold tabular-nums">
                       {fmt(Math.round(modeComparison.currentProfit))}
                     </div>
@@ -1469,11 +1478,11 @@ export default function AuctionSimulatorV27Page() {
                         : 'border-stone-200'
                     }`}
                   >
-                    <div className="text-[10px] text-[var(--color-text-muted)] mb-1">{modeComparison.otherMode}</div>
+                    <div className="text-[10px] text-[var(--color-text-muted)] mb-1">{tr(modeComparison.otherMode)}</div>
                     <div className="text-[12px] font-bold tabular-nums">
                       {(modeComparison.otherRoi * 100).toFixed(1)}%
                     </div>
-                    <div className="text-[10px] text-[var(--color-text-muted)] mt-2 mb-1">순이익</div>
+                    <div className="text-[10px] text-[var(--color-text-muted)] mt-2 mb-1">{tr("순이익")}</div>
                     <div className="text-[11px] font-bold tabular-nums">
                       {fmt(Math.round(modeComparison.otherProfit))}
                     </div>
@@ -1490,12 +1499,11 @@ export default function AuctionSimulatorV27Page() {
                     border: '1px solid #1B3A5C',
                   }}
                 >
-                  → {modeComparison.otherMode}로 전환
+                  → {tr(modeComparison.otherMode)}{tr("로 전환")}
                 </button>
 
                 <p className="text-[10px] text-[var(--color-text-muted)]">
-                  세금 차이 ({fmt(Math.round(Math.abs(modeComparison.currentTax - modeComparison.otherTax)))}천원) 가
-                  순이익 격차의 주요 원인입니다.
+                  {tr("세금 차이")} ({fmt(Math.round(Math.abs(modeComparison.currentTax - modeComparison.otherTax)))}{tr("천원")}) {tr("가 순이익 격차의 주요 원인입니다.")}
                 </p>
               </div>
             ) : (
@@ -1732,6 +1740,8 @@ function RentIncomeCalculator({
   activeRow: V27RowResult | null
   onRentEnable: (rent: number) => void
 }) {
+  const { t: tr } = useTranslation()
+
   // 평당 월세 기본값 — 부동산 유형별 시장 평균 추정 (천원/평)
   const DEFAULTS: Record<string, { low: number; mid: number; high: number }> = {
     "근린상가":      { low: 60,  mid: 100, high: 160 },
@@ -1767,13 +1777,13 @@ function RentIncomeCalculator({
     <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)]">
       <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
         <label className={DS.text.label + " block"}>
-          🏢 임대수익 계산기 — {propertyType}
+          🏢 {tr("임대수익 계산기")} — {tr(propertyType)}
           <span className="ml-2 text-[10px] font-normal text-[var(--color-text-muted)]">
-            · 평당 월세 → 월수익·연간 수익률 자동 산정
+            · {tr("평당 월세 → 월수익·연간 수익률 자동 산정")}
           </span>
         </label>
         <div className="flex items-center gap-1 text-[11px]">
-          <span className="text-[var(--color-text-muted)]">단위:</span>
+          <span className="text-[var(--color-text-muted)]">{tr("단위")}:</span>
           {(["천원", "만원"] as const).map((u) => (
             <button
               key={u}
@@ -1784,7 +1794,7 @@ function RentIncomeCalculator({
                   : "bg-white text-[var(--color-text-muted)] border-stone-200 hover:border-[#1B3A5C]/40"
               }`}
             >
-              {u}/평
+              {tr(u)}/{tr("평")}
             </button>
           ))}
         </div>
@@ -1798,7 +1808,7 @@ function RentIncomeCalculator({
         ] as const).map((row) => (
           <div key={row.label} className="space-y-1">
             <label className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
-              {row.label} 평당월세 ({unit}/평)
+              {tr(row.label)} {tr("평당월세")} ({tr(unit)}/{tr("평")})
             </label>
             <input
               type="number"
@@ -1831,19 +1841,19 @@ function RentIncomeCalculator({
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: r.color }}>
-                  ● {r.label}
+                  ● {tr(r.label)}
                 </span>
                 {isApplied && (
                   <span className="text-[9px] font-bold px-1.5 py-0.5 rounded text-white" style={{ background: r.color }}>
-                    ✓ 적용중
+                    ✓ {tr("적용중")}
                   </span>
                 )}
               </div>
-              <div className="text-[10px] text-[var(--color-text-muted)] mb-0.5">월 수익</div>
+              <div className="text-[10px] text-[var(--color-text-muted)] mb-0.5">{tr("월 수익")}</div>
               <div className="text-[14px] font-black tabular-nums text-[var(--color-text-primary)]">
-                {fmt(r.month)} <span className="text-[10px] opacity-60">천원</span>
+                {fmt(r.month)} <span className="text-[10px] opacity-60">{tr("천원")}</span>
               </div>
-              <div className="text-[10px] text-[var(--color-text-muted)] mt-1.5 mb-0.5">연간 수익률</div>
+              <div className="text-[10px] text-[var(--color-text-muted)] mt-1.5 mb-0.5">{tr("연간 수익률")}</div>
               <div className="text-[12px] font-bold tabular-nums" style={{ color: r.color }}>
                 {realInvest > 0 ? `${r.yield.toFixed(2)}%` : "—"}
               </div>
@@ -1853,8 +1863,8 @@ function RentIncomeCalculator({
       </div>
 
       <p className="mt-2 text-[10px] text-[var(--color-text-muted)] leading-relaxed">
-        💡 카드 클릭 → 월세수익 반영 자동 활성화 + 해당 값 적용. 실투자금({realInvest > 0 ? fmt(realInvest) : '—'}천원) 대비 연환산.
-        전용면적 {area || 0}㎡ ({pyeong.toFixed(1)}평) 기준.
+        💡 {tr("카드 클릭 → 월세수익 반영 자동 활성화 + 해당 값 적용. 실투자금")}({realInvest > 0 ? fmt(realInvest) : '—'}{tr("천원")}) {tr("대비 연환산.")}{" "}
+        {tr("전용면적")} {area || 0}㎡ ({pyeong.toFixed(1)}{tr("평")}) {tr("기준")}.
       </p>
     </div>
   )

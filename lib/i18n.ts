@@ -538,6 +538,79 @@ Object.assign(STATIC_DICT.en, {
   '예상시세': 'Expected Market Value', '낮음': 'Low', '중간': 'Medium', '높음': 'High',
   '투자 추천': 'Recommended', '투자 검토': 'Under Review', '투자 위험': 'Risky',
   '투자 부적합': 'Not Suitable', '입찰가율': 'Bid Rate %',
+  // ── Auction Simulator (Phase G7+ 2026-04-29) ──────────────
+  '경매 수익률 분석기': 'Auction ROI Analyzer',
+  '입찰가별 수익률 · 순이익': 'ROI · Net Profit by Bid Price',
+  '비용 구조': 'Cost Breakdown', '민감도 분석': 'Sensitivity Analysis',
+  '대출비율': 'Loan Ratio', '보유기간': 'Holding Period',
+  '인사이트': 'Insights', '자동 진단': 'Auto Diagnostic',
+  '최적 입찰가 기준으로 이자커버율·세금구조·보유기간 자동 분석':
+    'Auto-analyzed against optimal bid: interest coverage, tax structure, holding period',
+  '모드 비교': 'Mode Comparison',
+  '동일 입찰가': 'Same Bid Price',
+  '기준으로 두 모드의 세후 수익 비교': 'compares after-tax profit between both modes',
+  '권장 모드': 'Recommended Mode',
+  '구분': 'Category', '현재 모드': 'Current Mode',
+  '유리': 'better', '불리': 'worse', '동일': 'equal',
+  '로 전환': ' Switch',
+  '세금 차이': 'Tax Difference',
+  '가 순이익 격차의 주요 원인입니다.': ' is the main driver of the profit gap.',
+  '선택된 입찰가': 'Selected Bid', '천원': '₩K',
+  '기준으로 차트·비용구조·민감도·인사이트가 갱신되었습니다.':
+    ' — chart, cost structure, sensitivity, and insights have been updated.',
+  '목표': 'Target', '역산': 'Reverse',
+  '선택 해제': 'Clear Selection', '기준': 'baseline',
+  '선택': 'Selected', '최적 입찰가': 'Optimal Bid',
+  '목표 수익률 설정 — 역산 최대 입찰가 계산':
+    'Target ROI Setting — Reverse Max Bid Calculation',
+  '셀 클릭 → 차트·KPI·테이블 즉시 반영':
+    'Click cell → instantly reflected in chart, KPI, and table',
+  '클릭하면 KPI에 반영': 'Click to apply to KPI',
+  '달성 불가': 'Unachievable', '불가': 'N/A',
+  '달성 가능한 최대 입찰가': 'achievable max bid',
+  '위 KPI · 시뮬레이션 테이블 행이 자동 강조됩니다.':
+    'KPI cards and simulation table rows above are auto-highlighted.',
+  '양호': 'Good', '주의': 'Caution', '위험': 'Risk',
+  // 인사이트 자동 메시지
+  '이자 부담 낮음 — 안정적 구조': 'Low Interest Burden — Stable Structure',
+  '적정 수준이나 금리 상승 시나리오 검토 권장':
+    'Adequate but rate-rise scenario recommended',
+  '수익률 위험 — 월세로 이자 미충당':
+    'ROI Risk — Rent Insufficient to Cover Interest',
+  '양도소득세 최적화 완료 — 기본 누진세율 적용 중':
+    'Capital Gains Tax Optimized — Base Progressive Rate Applied',
+  '세금 비중 적정 수준 — 현재 구조 유지 권장':
+    'Tax Burden Adequate — Maintain Current Structure',
+  '단기 보유 (70% 중과세) — 12개월 이상 보유 권장':
+    'Short-Term (70% Heavy Tax) — Hold ≥12 Months Recommended',
+  '60% 중과세 적용 중 — 24개월 이상 보유 시 기본세율':
+    '60% Heavy Tax Applied — ≥24 Months for Base Rate',
+  '기본세율 적용 — 세금 최적화 완료':
+    'Base Rate Applied — Tax Optimization Complete',
+  '투자 적합 — 안정적 수익 기대 가능':
+    'Investment Suitable — Stable Returns Expected',
+  '수익성과 낙찰 가능성의 균형점':
+    'Balance Point of Profitability and Win Probability',
+  '수익률 부족 — 입찰가 조정 권장':
+    'Insufficient ROI — Bid Adjustment Recommended',
+  // 임대수익 계산기
+  '임대수익 계산기': 'Rental Income Calculator',
+  '평당 월세 → 월수익·연간 수익률 자동 산정':
+    'Rent/Pyeong → Auto-calc Monthly Income & Annual Yield',
+  '단위': 'Unit', '평': 'pyeong', '평당월세': 'Rent/Pyeong',
+  '하한': 'Low', '일반': 'Mid', '상한': 'High',
+  '월 수익': 'Monthly Income', '연간 수익률': 'Annual Yield',
+  '적용중': 'Applied',
+  '카드 클릭 → 월세수익 반영 자동 활성화 + 해당 값 적용. 실투자금':
+    'Card click → auto-enable rent income reflection + apply value. Real investment',
+  '대비 연환산.': ' annualized.',
+  '전용면적': 'Exclusive Area',
+  // Property types
+  '근린상가': 'Neighborhood Retail', '사무실/사무소': 'Office',
+  '지식산업센터': 'Knowledge Industry Center', '기타 건물': 'Other Building',
+  // Modes
+  '개인': 'Individual', '매매사업자': 'Real Estate Business',
+  '만원': '10K KRW',
   // ── Deal stages ────────────────────────────────────────────
   '초기 협의': 'Initial Discussion', 'NDA 체결': 'NDA Signed', 'LOI 제출': 'LOI Submitted',
   '실사 진행': 'Due Diligence', '계약 체결': 'Contract Signed', '클로징': 'Closing',
