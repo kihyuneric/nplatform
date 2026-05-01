@@ -385,23 +385,32 @@ export default function AuctionSimulatorV27Page() {
     [fullInputs, mode],
   )
 
-  // 비용 구조 파이
-  const costBreakdown = useMemo(() => {
-    if (!bestRow) return []
-    return [
-      { name: "이전비용", value: Math.max(0, Math.round(bestRow.transferCost)) },
-      { name: "보유이자", value: Math.max(0, Math.round(bestRow.holdingInterest)) },
-      { name: "세금", value: Math.max(0, Math.round(bestRow.tax)) },
-      { name: "기타+명도", value: Math.max(0, Math.round(bestRow.misc + bestRow.eviction)) },
-      { name: "중개수수료", value: Math.max(0, Math.round(bestRow.brokerFee)) },
-      { name: "중도상환", value: Math.max(0, Math.round(bestRow.prepayPenalty)) },
-    ].filter((c) => c.value > 0)
-  }, [bestRow])
+  // selectedBid 가 있으면 그 행을, 없으면 bestRow 를 활성 행으로 사용 (auctionprofit "셀 클릭 → 자동 적용")
+  // 차트·PieChart·민감도·인사이트 모두 이 activeRow 기준으로 계산.
+  const selectedRow = useMemo(() => {
+    if (selectedBid == null) return null
+    return simRows.find((r) => r.bidPrice === selectedBid) ?? calcRow(selectedBid, fullInputs, mode)
+  }, [selectedBid, simRows, fullInputs, mode])
+  const activeRow = selectedRow ?? bestRow
+  const isSelectionActive = selectedBid != null && selectedRow != null
 
-  // 민감도 — 최적 입찰가 고정, 대출비율 × 보유기간
+  // 비용 구조 파이 — activeRow 기준 (선택 시 자동 갱신)
+  const costBreakdown = useMemo(() => {
+    if (!activeRow) return []
+    return [
+      { name: "이전비용", value: Math.max(0, Math.round(activeRow.transferCost)) },
+      { name: "보유이자", value: Math.max(0, Math.round(activeRow.holdingInterest)) },
+      { name: "세금", value: Math.max(0, Math.round(activeRow.tax)) },
+      { name: "기타+명도", value: Math.max(0, Math.round(activeRow.misc + activeRow.eviction)) },
+      { name: "중개수수료", value: Math.max(0, Math.round(activeRow.brokerFee)) },
+      { name: "중도상환", value: Math.max(0, Math.round(activeRow.prepayPenalty)) },
+    ].filter((c) => c.value > 0)
+  }, [activeRow])
+
+  // 민감도 — activeRow 기준 (선택 시 자동 갱신)
   const sensitivityGrid = useMemo(() => {
-    if (!bestRow) return []
-    const bid = bestRow.bidPrice
+    if (!activeRow) return []
+    const bid = activeRow.bidPrice
     return SENS_LOAN.map((lr) => ({
       lr,
       cells: SENS_HOLD.map((hm) => ({
@@ -409,19 +418,19 @@ export default function AuctionSimulatorV27Page() {
         roi: calcRow(bid, { ...fullInputs, loanRatio: lr, holdingMonths: hm }, mode).roi,
       })),
     }))
-  }, [bestRow, fullInputs, mode])
+  }, [activeRow, fullInputs, mode])
 
   // ── 인사이트 자동 메시지 (auctionprofit 정합) ──────────────────────
-  // 최적 입찰가 기준으로 자동 분석 메시지 생성 — 이자커버율·세금구조·중과세 등.
+  // activeRow 기준 자동 분석 — selectedBid 가 있으면 그 행, 없으면 bestRow.
   const insights = useMemo(() => {
     const list: Array<{ kind: 'good' | 'warn' | 'danger'; title: string; detail: string }> = []
-    if (!bestRow) return list
+    if (!activeRow) return list
 
-    const bid = bestRow.bidPrice
-    const interest = bestRow.holdingInterest
-    const tax = bestRow.tax
-    const profit = bestRow.netProfit
-    const roi = bestRow.roi
+    const bid = activeRow.bidPrice
+    const interest = activeRow.holdingInterest
+    const tax = activeRow.tax
+    const profit = activeRow.netProfit
+    const roi = activeRow.roi
 
     // 1) 이자 커버율 — 월세 수익 / 월 이자 비용
     if (overview.rentEnabled && overview.monthlyRent > 0 && interest > 0) {
@@ -514,29 +523,29 @@ export default function AuctionSimulatorV27Page() {
     }
 
     return list
-  }, [bestRow, overview, fullInputs, mode, breakevenBid])
+  }, [activeRow, overview, fullInputs, mode, breakevenBid])
 
-  // ── 모드 비교 (개인 vs 매매사업자) ─────────────────────────────────
+  // ── 모드 비교 (개인 vs 매매사업자) — activeRow 기준 (선택 시 자동 갱신) ───
   const modeComparison = useMemo(() => {
-    if (!bestRow) return null
+    if (!activeRow) return null
     const otherMode: V27Mode = mode === '개인' ? '매매사업자' : '개인'
-    const otherRow = calcRow(bestRow.bidPrice, fullInputs, otherMode)
-    const profitDiff = bestRow.netProfit - otherRow.netProfit
-    const roiDiff = bestRow.roi - otherRow.roi
+    const otherRow = calcRow(activeRow.bidPrice, fullInputs, otherMode)
+    const profitDiff = activeRow.netProfit - otherRow.netProfit
+    const roiDiff = activeRow.roi - otherRow.roi
     return {
       currentMode: mode,
       otherMode,
-      currentRoi: bestRow.roi,
+      currentRoi: activeRow.roi,
       otherRoi: otherRow.roi,
-      currentProfit: bestRow.netProfit,
+      currentProfit: activeRow.netProfit,
       otherProfit: otherRow.netProfit,
-      currentTax: bestRow.tax,
+      currentTax: activeRow.tax,
       otherTax: otherRow.tax,
       profitDiff,
       roiDiff,
       betterMode: profitDiff >= 0 ? mode : otherMode,
     }
-  }, [bestRow, fullInputs, mode])
+  }, [activeRow, fullInputs, mode])
 
   // ── 액션 ──────────────────────────────────────────────────────
   const applyPreset = (key: string) => {
@@ -835,6 +844,58 @@ export default function AuctionSimulatorV27Page() {
 
       {/* 본문 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {/* 선택 입찰가 강조 배너 (auctionprofit "셀 클릭 → KPI 즉시 반영") */}
+        {isSelectionActive && activeRow && (
+          <section
+            className="rounded-md p-4 flex items-center justify-between gap-4 flex-wrap"
+            style={{
+              background: 'linear-gradient(135deg, #1B3A5C 0%, #2E75B6 100%)',
+              color: 'white',
+            }}
+          >
+            <div className="flex flex-wrap items-center gap-6">
+              <div>
+                <div className="text-[10px] opacity-80 font-bold tracking-wider">📌 선택된 입찰가</div>
+                <div className="text-[20px] font-black tabular-nums">
+                  {fmt(activeRow.bidPrice)} <span className="text-[12px] font-semibold opacity-80">천원</span>
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] opacity-80 font-bold tracking-wider">ROI</div>
+                <div className="text-[18px] font-black tabular-nums">
+                  {(activeRow.roi * 100).toFixed(1)}%
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] opacity-80 font-bold tracking-wider">순이익</div>
+                <div className="text-[18px] font-black tabular-nums">
+                  {fmt(Math.round(activeRow.netProfit))} <span className="text-[10px] opacity-80">천원</span>
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] opacity-80 font-bold tracking-wider">낙찰가율</div>
+                <div className="text-[18px] font-black tabular-nums">
+                  {overview.appraised > 0 ? ((activeRow.bidPrice / overview.appraised) * 100).toFixed(1) : '-'}%
+                </div>
+              </div>
+              {targetBid === activeRow.bidPrice && (
+                <div>
+                  <div className="text-[10px] opacity-80 font-bold tracking-wider">목표 ROI</div>
+                  <div className="text-[14px] font-black px-2 py-1 rounded bg-[#10B981]">
+                    ✅ {targetRoi}% 역산
+                  </div>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setSelectedBid(null)}
+              className="text-[11px] font-semibold px-3 py-1.5 rounded border border-white/40 text-white hover:bg-white/10"
+            >
+              선택 해제
+            </button>
+          </section>
+        )}
+
         {/* KPI */}
         <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <KpiCard label="최적 입찰가" value={bestRow ? `${fmt(bestRow.bidPrice)}` : "-"} sub="천원" tone="primary" />
@@ -958,11 +1019,23 @@ export default function AuctionSimulatorV27Page() {
                   <NumField label="시작(개월)" value={overview.rentStartMonth} onChange={(v) => updOverview("rentStartMonth", v)} unit="개월" />
                 </div>
               )}
-              {!overview.rentEnabled && RENT_PROPERTY_TYPES.includes(overview.propertyType) && (
-                <p className="text-[11px] text-[var(--color-text-muted)] mt-1">상가·사무실은 월세 수익 반영 권장</p>
-              )}
             </div>
           </div>
+
+          {/* 임대수익 계산기 — 근린상가·사무실/사무소 자동 노출 (auctionprofit 정합) */}
+          {(overview.rentEnabled || RENT_PROPERTY_TYPES.includes(overview.propertyType)) && (
+            <RentIncomeCalculator
+              propertyType={overview.propertyType}
+              area={overview.area}
+              monthlyRent={overview.monthlyRent}
+              rentEnabled={overview.rentEnabled}
+              activeRow={activeRow}
+              onRentEnable={(rent) => {
+                updOverview("rentEnabled", true)
+                updOverview("monthlyRent", rent)
+              }}
+            />
+          )}
 
           {/* 목표 ROI — 셀 클릭 시 KPI 즉시 반영 (auctionprofit 정합) */}
           <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)]">
@@ -1033,7 +1106,26 @@ export default function AuctionSimulatorV27Page() {
 
         {/* 차트 */}
         <section className={DS.card.base + " p-5"}>
-          <h2 className="text-[13px] font-bold tracking-wider text-[var(--color-text-muted)] mb-4">📈 입찰가별 수익률 · 순이익</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-[13px] font-bold tracking-wider text-[var(--color-text-muted)]">📈 입찰가별 수익률 · 순이익</h2>
+            {isSelectionActive && (
+              <button
+                onClick={() => setSelectedBid(null)}
+                className="text-[10px] font-semibold px-2 py-1 rounded border border-[#1B3A5C] text-[#1B3A5C] hover:bg-[#1B3A5C]/5"
+              >
+                선택 해제
+              </button>
+            )}
+          </div>
+          {isSelectionActive && activeRow && (
+            <div
+              className="mb-3 p-2.5 rounded text-[11px]"
+              style={{ background: '#EFF6FF', border: '1px solid #3B82F6', color: '#1E3A8A' }}
+            >
+              📌 <strong>선택된 입찰가 {fmt(activeRow.bidPrice)} 천원</strong> 기준으로 차트·비용구조·민감도·인사이트가 갱신되었습니다.
+              {targetBid === activeRow.bidPrice && ` (목표 ${targetRoi}% 역산)`}
+            </div>
+          )}
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
@@ -1047,6 +1139,49 @@ export default function AuctionSimulatorV27Page() {
                   labelFormatter={(v: number) => `입찰가 ${fmt(v)} 천원`}
                 />
                 <ReferenceLine yAxisId="left" y={0} stroke="rgba(255,255,255,0.3)" strokeDasharray="3 3" />
+                {/* 선택된 입찰가 — 세로 강조선 */}
+                {selectedBid != null && (
+                  <ReferenceLine
+                    yAxisId="left"
+                    x={selectedBid}
+                    stroke="#1B3A5C"
+                    strokeWidth={2}
+                    strokeDasharray="4 4"
+                    label={{
+                      value: `선택 ${fmt(selectedBid)}`,
+                      position: 'top',
+                      fill: '#1B3A5C',
+                      fontSize: 10,
+                      fontWeight: 700,
+                    }}
+                  />
+                )}
+                {/* 최적 입찰가 — 세로 강조선 (selection 없을 때만) */}
+                {selectedBid == null && bestRow && (
+                  <ReferenceLine
+                    yAxisId="left"
+                    x={bestRow.bidPrice}
+                    stroke="#10B981"
+                    strokeWidth={1.5}
+                    strokeDasharray="2 2"
+                  />
+                )}
+                {/* 목표ROI 역산 입찰가 — 보조선 */}
+                {targetBid && targetBid !== selectedBid && (
+                  <ReferenceLine
+                    yAxisId="left"
+                    x={targetBid}
+                    stroke="#F59E0B"
+                    strokeWidth={1}
+                    strokeDasharray="3 3"
+                    label={{
+                      value: `목표 ${targetRoi}%`,
+                      position: 'top',
+                      fill: '#F59E0B',
+                      fontSize: 9,
+                    }}
+                  />
+                )}
                 <Bar yAxisId="right" dataKey="netProfit" fill="#4fc3f7" opacity={0.35} />
                 <Line yAxisId="left" type="monotone" dataKey="roi" stroke="#00c896" strokeWidth={2.5} dot={{ r: 3 }} />
               </ComposedChart>
@@ -1126,7 +1261,7 @@ export default function AuctionSimulatorV27Page() {
           {/* 비용 구조 */}
           <div className={DS.card.base + " p-5"}>
             <h2 className="text-[13px] font-bold tracking-wider text-[var(--color-text-muted)] mb-4">
-              🍩 비용 구조 (최적 입찰가 기준)
+              🍩 비용 구조 ({isSelectionActive && activeRow ? `선택 ${fmt(activeRow.bidPrice)}` : '최적 입찰가'} 기준)
             </h2>
             {costBreakdown.length > 0 ? (
               <div className="h-64">
@@ -1198,7 +1333,7 @@ export default function AuctionSimulatorV27Page() {
                   </tbody>
                 </table>
                 <p className="mt-3 text-[10px] text-[var(--color-text-muted)]">
-                  최적 입찰가({bestRow ? fmt(bestRow.bidPrice) : "-"}천원) 고정 · 각 셀은 해당 조건에서의 ROI
+                  {isSelectionActive && activeRow ? '선택' : '최적'} 입찰가({activeRow ? fmt(activeRow.bidPrice) : "-"}천원) 고정 · 각 셀은 해당 조건에서의 ROI
                 </p>
               </div>
             ) : (
@@ -1556,6 +1691,153 @@ function RateGuideModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
       </div>
+    </div>
+  )
+}
+
+// ── 임대수익 계산기 (auctionprofit "임대수익 계산기" 정합) ────────────────
+//   근린상가·사무실/사무소 등 임대 가능 부동산에 자동 노출.
+//   평당 월세 (하한/일반/상한) → 월수익·연간 수익률 자동 계산.
+//   카드 클릭 시 본 시뮬레이터의 monthlyRent 에 반영 + rentEnabled 자동 활성.
+function RentIncomeCalculator({
+  propertyType,
+  area,
+  monthlyRent,
+  rentEnabled,
+  activeRow,
+  onRentEnable,
+}: {
+  propertyType: string
+  area: number
+  monthlyRent: number
+  rentEnabled: boolean
+  activeRow: V27RowResult | null
+  onRentEnable: (rent: number) => void
+}) {
+  // 평당 월세 기본값 — 부동산 유형별 시장 평균 추정 (천원/평)
+  const DEFAULTS: Record<string, { low: number; mid: number; high: number }> = {
+    "근린상가":      { low: 60,  mid: 100, high: 160 },
+    "사무실/사무소": { low: 50,  mid: 80,  high: 120 },
+    "지식산업센터":  { low: 40,  mid: 65,  high: 90  },
+    "기타 건물":     { low: 30,  mid: 50,  high: 80  },
+  }
+  const def = DEFAULTS[propertyType] ?? { low: 30, mid: 60, high: 100 }
+
+  const [unit, setUnit] = useState<"천원" | "만원">("천원")
+  const [low, setLow] = useState<number>(def.low)
+  const [mid, setMid] = useState<number>(def.mid)
+  const [high, setHigh] = useState<number>(def.high)
+
+  useEffect(() => {
+    setLow(def.low); setMid(def.mid); setHigh(def.high)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propertyType])
+
+  const pyeong = area > 0 ? area / 3.3058 : 0
+  const factor = unit === "만원" ? 10 : 1
+
+  const monthLow  = Math.round(low  * factor * pyeong)
+  const monthMid  = Math.round(mid  * factor * pyeong)
+  const monthHigh = Math.round(high * factor * pyeong)
+
+  const realInvest = activeRow?.realInvest ?? 0
+  const yieldLow   = realInvest > 0 ? ((monthLow  * 12) / realInvest) * 100 : 0
+  const yieldMid   = realInvest > 0 ? ((monthMid  * 12) / realInvest) * 100 : 0
+  const yieldHigh  = realInvest > 0 ? ((monthHigh * 12) / realInvest) * 100 : 0
+
+  return (
+    <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)]">
+      <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+        <label className={DS.text.label + " block"}>
+          🏢 임대수익 계산기 — {propertyType}
+          <span className="ml-2 text-[10px] font-normal text-[var(--color-text-muted)]">
+            · 평당 월세 → 월수익·연간 수익률 자동 산정
+          </span>
+        </label>
+        <div className="flex items-center gap-1 text-[11px]">
+          <span className="text-[var(--color-text-muted)]">단위:</span>
+          {(["천원", "만원"] as const).map((u) => (
+            <button
+              key={u}
+              onClick={() => setUnit(u)}
+              className={`px-2 py-0.5 rounded border ${
+                unit === u
+                  ? "bg-[#1B3A5C] text-white border-[#1B3A5C]"
+                  : "bg-white text-[var(--color-text-muted)] border-stone-200 hover:border-[#1B3A5C]/40"
+              }`}
+            >
+              {u}/평
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        {([
+          { label: "하한", v: low,  set: setLow  },
+          { label: "일반", v: mid,  set: setMid  },
+          { label: "상한", v: high, set: setHigh },
+        ] as const).map((row) => (
+          <div key={row.label} className="space-y-1">
+            <label className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+              {row.label} 평당월세 ({unit}/평)
+            </label>
+            <input
+              type="number"
+              value={row.v}
+              onChange={(e) => row.set(parseFloat(e.target.value) || 0)}
+              className={DS.input.base + " text-[12px] tabular-nums"}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        {([
+          { label: "하한", month: monthLow,  yield: yieldLow,  color: "#94A3B8" },
+          { label: "일반", month: monthMid,  yield: yieldMid,  color: "#1B3A5C" },
+          { label: "상한", month: monthHigh, yield: yieldHigh, color: "#10B981" },
+        ] as const).map((r) => {
+          const isApplied = monthlyRent === r.month && rentEnabled
+          return (
+            <button
+              key={r.label}
+              type="button"
+              onClick={() => onRentEnable(r.month)}
+              className="p-3 rounded text-left transition-all border-2 hover:shadow-md cursor-pointer"
+              style={{
+                borderColor: isApplied ? r.color : "#E5E7EB",
+                background: isApplied ? `${r.color}10` : "white",
+                boxShadow: isApplied ? `0 4px 12px ${r.color}30` : undefined,
+              }}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: r.color }}>
+                  ● {r.label}
+                </span>
+                {isApplied && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded text-white" style={{ background: r.color }}>
+                    ✓ 적용중
+                  </span>
+                )}
+              </div>
+              <div className="text-[10px] text-[var(--color-text-muted)] mb-0.5">월 수익</div>
+              <div className="text-[14px] font-black tabular-nums text-[var(--color-text-primary)]">
+                {fmt(r.month)} <span className="text-[10px] opacity-60">천원</span>
+              </div>
+              <div className="text-[10px] text-[var(--color-text-muted)] mt-1.5 mb-0.5">연간 수익률</div>
+              <div className="text-[12px] font-bold tabular-nums" style={{ color: r.color }}>
+                {realInvest > 0 ? `${r.yield.toFixed(2)}%` : "—"}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      <p className="mt-2 text-[10px] text-[var(--color-text-muted)] leading-relaxed">
+        💡 카드 클릭 → 월세수익 반영 자동 활성화 + 해당 값 적용. 실투자금({realInvest > 0 ? fmt(realInvest) : '—'}천원) 대비 연환산.
+        전용면적 {area || 0}㎡ ({pyeong.toFixed(1)}평) 기준.
+      </p>
     </div>
   )
 }
