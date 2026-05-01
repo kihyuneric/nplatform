@@ -181,6 +181,15 @@ const nextConfig = {
       { source: '/my/developer', destination: '/my', permanent: true },
       { source: '/my/developer/:path*', destination: '/my', permanent: true },
 
+      // Phase G7+ 2026-04-29 — Admin 6-Zone 체계화 (24 → 6)
+      // 시스템 Zone 통합: data-import / data-sync / health / runtime-config → 통합 진입점
+      { source: '/admin/data-import',     destination: '/admin/pipeline',  permanent: true },
+      { source: '/admin/data-import/:p*', destination: '/admin/pipeline',  permanent: true },
+      { source: '/admin/data-sync',       destination: '/admin/pipeline',  permanent: true },
+      { source: '/admin/data-sync/:p*',   destination: '/admin/pipeline',  permanent: true },
+      { source: '/admin/health',          destination: '/admin/system',    permanent: true },
+      { source: '/admin/runtime-config',  destination: '/admin/system?tab=runtime', permanent: true },
+
       // Admin sub-page consolidation → parent tab pages
       { source: '/admin/analytics/cohort', destination: '/admin/analytics?tab=cohort', permanent: true },
       { source: '/admin/analytics/funnel', destination: '/admin/analytics?tab=funnel', permanent: true },
