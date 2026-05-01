@@ -121,17 +121,24 @@ export interface MyNavItem {
   visible: (f: EffectiveRoleFlags) => boolean
   /** 정렬 순서 */
   order: number
+  /**
+   * 활성 상태 매칭 prefix 추가 — Zone macro 가 sub-feature 라우트도 active 로 표시.
+   * 예: 거래 macro 의 매칭 prefix = ['/my/deals', '/my/agreements', '/my/demands']
+   */
+  matchPaths?: readonly string[]
 }
 
 /**
- * 마이페이지 메뉴 카탈로그 (SSoT).
+ * 마이페이지 메뉴 카탈로그 (SSoT) — v2 (2026-04-29 · McKinsey 3-Zone).
  *
- * 사용자 정책 (2026-04-29):
- *   대시보드/내딜룸/계약/포트폴리오/결제/알림/설정 = 모든 역할
- *   매수수요 = 대부업체·AMC·일반·파트너·BUYER (금융기관 X · 전문가 X)
- *   매도자 = 모든 매도자 권한 보유자 (institution / money_lender / amc / general / partner)
- *   파트너 = PARTNER 만
- *   관리자/슈퍼관리자 = 위 모든 메뉴 + 개인정보(설정 내부 탭)
+ * MECE 인지 구역:
+ *   1. 진입 — 대시보드
+ *   2. 활동 (Activity) — 거래 (딜룸·계약·매수수요)
+ *   3. 보유 (Holdings) — 자산 (내 매물·관심매물·포트폴리오)
+ *   4. 소통 — 알림센터 (알림·공지·문의)
+ *   5. 계정 — 설정 (인증·기관·보안·결제·파트너·알림설정)
+ *
+ * 회원당 평균 4~5개 메뉴 노출 (역할에 따라).
  */
 export const MY_NAV_CATALOG: readonly MyNavItem[] = [
   {
@@ -142,61 +149,34 @@ export const MY_NAV_CATALOG: readonly MyNavItem[] = [
   },
   {
     href: '/my/deals',
-    label: '내 딜룸',
+    label: '거래',
+    // 거래 = 딜룸/계약/매수수요. 매수수요는 일부 역할에 한정되지만
+    //   딜룸·계약은 모든 역할이 사용 → 거래 macro 는 모두에게 노출.
     visible: () => true,
+    matchPaths: ['/my/deals', '/my/agreements', '/my/demands'],
     order: 20,
   },
   {
-    href: '/my/demands',
-    label: '매수 수요',
-    visible: (f) =>
-      f.isAdmin || f.isMoneyLender || f.isAMC || f.isGeneral ||
-      f.isPartner || f.isBuyer,
-    order: 30,
-  },
-  {
-    href: '/my/agreements',
-    label: '계약 관리',
-    visible: () => true,
-    order: 40,
-  },
-  {
-    href: '/my/seller',
-    label: '매도자 관리',
-    visible: (f) => f.isAdmin || f.isSeller,
-    order: 50,
-  },
-  {
-    href: '/my/portfolio',
-    label: '관심매물·포트폴리오',
+    href: '/my/assets',
+    label: '자산',
+    // 자산 = 내 매물(매도자) + 관심매물(포트폴리오).
     visible: (f) =>
       f.isAdmin || f.isInstitution || f.isMoneyLender || f.isAMC ||
-      f.isGeneral || f.isPartner || f.isBuyer,
-    order: 60,
-  },
-  {
-    href: '/my/partner',
-    label: '파트너 관리',
-    visible: (f) => f.isAdmin || f.isPartner,
-    order: 70,
-  },
-  {
-    href: '/my/billing',
-    label: '결제·크레딧',
-    visible: () => true,
-    order: 80,
+      f.isGeneral || f.isPartner || f.isBuyer || f.isSeller,
+    matchPaths: ['/my/assets', '/my/seller', '/my/portfolio'],
+    order: 30,
   },
   {
     href: '/my/inbox',
     label: '알림센터',
     visible: () => true,
-    order: 90,
+    order: 40,
   },
   {
     href: '/my/settings',
     label: '설정',
     visible: () => true,
-    order: 100,
+    order: 50,
   },
 ] as const
 
@@ -228,9 +208,13 @@ export const SETTINGS_TABS: readonly SettingsTabItem[] = [
   { key: 'kyc',          label: '사업자·투자자 인증',  visible: () => true,             order: 30 },
   { key: 'professional', label: '전문가 인증',         visible: (f) => f.isAdmin || f.isProfessional, order: 40 },
   { key: 'organization', label: '기관 계정',           visible: (f) => f.isAdmin || f.isInstitution || f.isAMC, order: 50 },
+  // v2 (2026-04-29): 결제·파트너·알림설정 도 설정 사이드바로 흡수
+  { key: 'billing',      label: '결제·크레딧',         visible: () => true,             order: 55 },
+  { key: 'partner',      label: '파트너 관리',         visible: (f) => f.isAdmin || f.isPartner, order: 58 },
   { key: 'alerts',       label: '알림 환경설정',       visible: () => true,             order: 60 },
   { key: 'security',     label: '보안',                visible: () => true,             order: 70 },
   { key: 'privacy',      label: '개인정보 (관리자)',   visible: (f) => f.isAdmin,       order: 80 },
+  { key: 'role',         label: '역할 전환',           visible: () => true,             order: 90 },
   { key: 'delete',       label: '계정 삭제',           visible: () => true,             order: 99 },
 ] as const
 
@@ -254,3 +238,73 @@ export const INBOX_TABS = [
   { key: 'inquiries', label: '문의',     order: 30 },
 ] as const
 export type InboxTabKey = typeof INBOX_TABS[number]['key']
+
+/**
+ * v2 (2026-04-29) — Zone macro 별 sub-tab 카탈로그.
+ * 사용자 정책: 거래(활동) · 자산(보유) macro 안에 sub-feature 들이 모임.
+ */
+export interface ZoneTabItem {
+  key: string
+  label: string
+  href: string
+  visible: (f: EffectiveRoleFlags) => boolean
+  order: number
+}
+
+/** 거래 (Activity) Zone 의 3-탭 — 딜룸·계약·매수수요 */
+export const DEALS_ZONE_TABS: readonly ZoneTabItem[] = [
+  {
+    key: 'rooms', label: '딜룸',
+    href: '/my/deals',
+    visible: () => true,
+    order: 10,
+  },
+  {
+    key: 'agreements', label: '계약',
+    href: '/my/agreements',
+    visible: () => true,
+    order: 20,
+  },
+  {
+    key: 'demands', label: '매수 수요',
+    href: '/my/demands',
+    visible: (f) =>
+      f.isAdmin || f.isMoneyLender || f.isAMC || f.isGeneral ||
+      f.isPartner || f.isBuyer,
+    order: 30,
+  },
+] as const
+
+/** 자산 (Holdings) Zone 의 2-탭 — 내 매물·관심매물 */
+export const ASSETS_ZONE_TABS: readonly ZoneTabItem[] = [
+  {
+    key: 'seller', label: '내 매물',
+    href: '/my/seller',
+    visible: (f) => f.isAdmin || f.isSeller,
+    order: 10,
+  },
+  {
+    key: 'portfolio', label: '관심매물·포트폴리오',
+    href: '/my/portfolio',
+    visible: (f) =>
+      f.isAdmin || f.isInstitution || f.isMoneyLender || f.isAMC ||
+      f.isGeneral || f.isPartner || f.isBuyer,
+    order: 20,
+  },
+] as const
+
+export function getDealsZoneTabs(input: {
+  roles: readonly UserRole[]
+  institutionType?: InstitutionTypeCode | null
+}): ZoneTabItem[] {
+  const flags = computeEffectiveRoles(input)
+  return DEALS_ZONE_TABS.filter((t) => t.visible(flags)).sort((a, b) => a.order - b.order)
+}
+
+export function getAssetsZoneTabs(input: {
+  roles: readonly UserRole[]
+  institutionType?: InstitutionTypeCode | null
+}): ZoneTabItem[] {
+  const flags = computeEffectiveRoles(input)
+  return ASSETS_ZONE_TABS.filter((t) => t.visible(flags)).sort((a, b) => a.order - b.order)
+}

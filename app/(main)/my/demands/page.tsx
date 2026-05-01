@@ -18,6 +18,7 @@ import {
   MckPageShell, MckPageHeader, MckBadge, MckEmptyState, MckDemoBanner,
   MckTabBar, MckViewToggle, type MckViewMode,
 } from "@/components/mck"
+import { MyZoneTabs } from "@/components/my/my-zone-tabs"
 import { MCK, MCK_FONTS, MCK_TYPE, formatKRW } from "@/lib/mck-design"
 
 interface DemandRow {
@@ -155,6 +156,8 @@ export default function MyDemandsPage() {
           </Link>
         }
       />
+
+      <MyZoneTabs zone="deals" />
 
       <MckTabBar
         eyebrow="STATUS"

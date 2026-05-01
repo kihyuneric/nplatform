@@ -6,6 +6,7 @@ import { Plus, Heart, Gavel, CheckCircle2, TrendingUp, Package, Download, Loader
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import DS, { formatKRW } from '@/lib/design-system'
 import { MckPageShell, MckPageHeader, MckTabBar } from '@/components/mck'
+import { MyZoneTabs } from '@/components/my/my-zone-tabs'
 import { MCK, MCK_FONTS, MCK_TYPE } from '@/lib/mck-design'
 
 // Data hook for seller dashboard
@@ -241,6 +242,8 @@ export default function SellerDashboardPage() {
           </div>
         }
       />
+
+      <MyZoneTabs zone="assets" />
 
       <MckTabBar
         eyebrow="SECTION"

@@ -20,6 +20,7 @@ import {
 import {
   MckPageShell, MckPageHeader, MckTabBar, MckViewToggle, type MckViewMode,
 } from "@/components/mck"
+import { MyZoneTabs } from "@/components/my/my-zone-tabs"
 import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
 
 const INK = "#0A1628"
@@ -190,6 +191,8 @@ export default function AgreementsPage() {
         title="계약 관리"
         subtitle="체결한 NDA(비밀유지계약) 및 제출한 LOI(매수의향서) 이력을 한 곳에서 확인합니다. 모든 계약은 전자서명법에 따라 5년간 보관됩니다."
       />
+
+      <MyZoneTabs zone="deals" />
 
       <MckTabBar
         eyebrow="FILTER"

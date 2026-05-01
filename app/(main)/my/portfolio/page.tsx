@@ -13,6 +13,7 @@ import {
   MckPageShell, MckPageHeader, MckBadge,
   MckTabBar, MckViewToggle, type MckViewMode,
 } from "@/components/mck"
+import { MyZoneTabs } from "@/components/my/my-zone-tabs"
 import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
 
 const 억 = 100_000_000
@@ -845,6 +846,8 @@ export default function PortfolioPage() {
           </div>
         }
       />
+
+      <MyZoneTabs zone="assets" />
 
       <MckTabBar
         eyebrow="VIEW"

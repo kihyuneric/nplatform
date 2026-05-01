@@ -17,6 +17,7 @@ import {
 import {
   MckPageShell, MckPageHeader, MckBadge, MckEmptyState, MckDemoBanner,
 } from "@/components/mck"
+import { MyZoneTabs } from '@/components/my/my-zone-tabs'
 import { MCK, MCK_FONTS, MCK_TYPE, formatKRW } from "@/lib/mck-design"
 import { useAuth } from "@/components/auth/auth-provider"
 
@@ -150,6 +151,8 @@ export default function MyDealsPage() {
           </Link>
         }
       />
+
+      <MyZoneTabs zone="deals" />
 
       <div className="max-w-[1280px] mx-auto" style={{ padding: "32px 24px 80px", display: "flex", flexDirection: "column", gap: 20 }}>
         {/* Filters */}

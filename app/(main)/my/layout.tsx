@@ -39,7 +39,7 @@ export default async function MyLayout({ children }: { children: React.ReactNode
 
   return (
     <>
-      <SubNav items={items.map(({ href, label }) => ({ href, label }))} />
+      <SubNav items={items.map(({ href, label, matchPaths }) => ({ href, label, matchPaths }))} />
       <BannerSlot position="my-top" className="mx-auto max-w-7xl px-4 pt-4" />
       {children}
     </>

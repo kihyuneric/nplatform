@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { User, Shield, Bell, RefreshCw, Trash2, Camera, CheckCircle2, AlertCircle, Monitor, Clock, Lock, Smartphone, Key, Loader2, ChevronRight, BadgeCheck, Building2, GraduationCap, FileLock2, ArrowUpRight } from "lucide-react"
+import { User, Shield, Bell, RefreshCw, Trash2, Camera, CheckCircle2, AlertCircle, Monitor, Clock, Lock, Smartphone, Key, Loader2, ChevronRight, BadgeCheck, Building2, GraduationCap, FileLock2, ArrowUpRight, CreditCard, Handshake } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
@@ -11,14 +11,16 @@ import DS, { formatKRW } from "@/lib/design-system"
 import { MckPageShell, MckPageHeader } from "@/components/mck"
 import { MCK } from "@/lib/mck-design"
 
-// Phase G7+ 2026-04-29 (My_Page_Restructure_Plan_2026Q2 Phase 2-B):
-//   설정 사이드바 통합 — 기존 5개 탭 + 5개 신규 인증·기관 진입 카드
+// Phase G7+ 2026-04-29 (My_Page_Restructure_Plan v2 — 5-Zone):
+//   설정 사이드바 통합 — 기존 5개 탭 + 7개 신규 (인증 3 · 기관 · 결제 · 파트너 · 개인정보)
 const TABS = [
   "기본 정보",
   "본인인증",
   "사업자·투자자 인증",
   "전문가 인증",
   "기관 계정",
+  "결제·크레딧",
+  "파트너 관리",
   "보안",
   "알림 설정",
   "역할 전환",
@@ -33,6 +35,8 @@ const SETTINGS_TAB_MAP: Record<string, Tab> = {
   kyc: "사업자·투자자 인증",
   professional: "전문가 인증",
   organization: "기관 계정",
+  billing: "결제·크레딧",
+  partner: "파트너 관리",
   security: "보안",
   alerts: "알림 설정",
   notifications: "알림 설정",
@@ -50,6 +54,8 @@ const SIDEBAR_META: Record<Tab, { icon: typeof User; desc?: string; legacyHref?:
   "사업자·투자자 인증":     { icon: FileLock2,     desc: "사업자등록증 · 명함 (KYC)",     legacyHref: "/my/kyc" },
   "전문가 인증":            { icon: GraduationCap, desc: "변호사 · 감정평가사 등 자격 인증", legacyHref: "/my/professional" },
   "기관 계정":              { icon: Building2,     desc: "기관 멤버 초대 · 권한 관리",     legacyHref: "/my/organization" },
+  "결제·크레딧":            { icon: CreditCard,    desc: "결제 수단 · 크레딧 잔액 · 인보이스", legacyHref: "/my/billing" },
+  "파트너 관리":            { icon: Handshake,     desc: "자문사 사건 의뢰 · 수임 · 정산",  legacyHref: "/my/partner" },
   "보안":                   { icon: Shield },
   "알림 설정":              { icon: Bell },
   "역할 전환":              { icon: RefreshCw },
@@ -541,8 +547,8 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Phase G7+ — 인증·기관·개인정보 5개 신규 섹션 (기존 라우트로 이동) */}
-        {(["본인인증", "사업자·투자자 인증", "전문가 인증", "기관 계정", "개인정보 (관리자)"] as Tab[])
+        {/* Phase G7+ v2 — 인증·기관·결제·파트너·개인정보 7개 신규 섹션 (기존 라우트로 이동) */}
+        {(["본인인증", "사업자·투자자 인증", "전문가 인증", "기관 계정", "결제·크레딧", "파트너 관리", "개인정보 (관리자)"] as Tab[])
           .filter((t) => activeTab === t)
           .map((t) => {
             const meta = SIDEBAR_META[t]
