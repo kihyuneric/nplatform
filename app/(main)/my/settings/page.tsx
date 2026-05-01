@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { User, Shield, Bell, RefreshCw, Trash2, Camera, CheckCircle2, AlertCircle, Monitor, Clock, Lock, Smartphone, Key, Loader2, ChevronRight, BadgeCheck, Building2, GraduationCap, FileLock2, ArrowUpRight, CreditCard, Handshake } from "lucide-react"
+import { User, Shield, Bell, RefreshCw, Trash2, Camera, CheckCircle2, AlertCircle, Monitor, Clock, Lock, Smartphone, Key, Loader2, Building2, FileLock2, ArrowUpRight, CreditCard, Handshake } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
@@ -11,29 +11,26 @@ import DS, { formatKRW } from "@/lib/design-system"
 import { MckPageShell, MckPageHeader } from "@/components/mck"
 import { MCK } from "@/lib/mck-design"
 
-// Phase G7+ 2026-04-29 (My_Page_Restructure_Plan v2 — 5-Zone):
-//   설정 사이드바 통합 — 기존 5개 탭 + 7개 신규 (인증 3 · 기관 · 결제 · 파트너 · 개인정보)
+// Phase G7+ 2026-04-29 v3 (사용자 정책):
+//   "사업자등록증·명함만 받으면 됨" → 본인인증 / 전문가 인증 삭제
+//   개인정보 (관리자) → 관리자 페이지에서만 접근 → 마이페이지 제거
+//   "기관 계정 작동하는 샘플 필요" → /my/organization 샘플 모드 별도 구현
 const TABS = [
   "기본 정보",
-  "본인인증",
   "사업자·투자자 인증",
-  "전문가 인증",
   "기관 계정",
   "결제·크레딧",
   "파트너 관리",
   "보안",
   "알림 설정",
   "역할 전환",
-  "개인정보 (관리자)",
   "계정 관리",
 ] as const
 type Tab = typeof TABS[number]
 
 const SETTINGS_TAB_MAP: Record<string, Tab> = {
   profile: "기본 정보",
-  verify: "본인인증",
   kyc: "사업자·투자자 인증",
-  professional: "전문가 인증",
   organization: "기관 계정",
   billing: "결제·크레딧",
   partner: "파트너 관리",
@@ -42,7 +39,6 @@ const SETTINGS_TAB_MAP: Record<string, Tab> = {
   notifications: "알림 설정",
   notification: "알림 설정",
   role: "역할 전환",
-  privacy: "개인정보 (관리자)",
   account: "계정 관리",
   delete: "계정 관리",
 }
@@ -50,16 +46,13 @@ const SETTINGS_TAB_MAP: Record<string, Tab> = {
 // 사이드바 항목 메타 (아이콘·설명·링크용 외부 라우트)
 const SIDEBAR_META: Record<Tab, { icon: typeof User; desc?: string; legacyHref?: string }> = {
   "기본 정보":              { icon: User },
-  "본인인증":               { icon: BadgeCheck,    desc: "휴대폰 · 실명 인증 (L0 → L1)", legacyHref: "/my/verify" },
-  "사업자·투자자 인증":     { icon: FileLock2,     desc: "사업자등록증 · 명함 (KYC)",     legacyHref: "/my/kyc" },
-  "전문가 인증":            { icon: GraduationCap, desc: "변호사 · 감정평가사 등 자격 인증", legacyHref: "/my/professional" },
-  "기관 계정":              { icon: Building2,     desc: "기관 멤버 초대 · 권한 관리",     legacyHref: "/my/organization" },
-  "결제·크레딧":            { icon: CreditCard,    desc: "결제 수단 · 크레딧 잔액 · 인보이스", legacyHref: "/my/billing" },
-  "파트너 관리":            { icon: Handshake,     desc: "자문사 사건 의뢰 · 수임 · 정산",  legacyHref: "/my/partner" },
+  "사업자·투자자 인증":     { icon: FileLock2,  desc: "사업자등록증 · 명함 (인증 1회)",    legacyHref: "/my/kyc" },
+  "기관 계정":              { icon: Building2,  desc: "회사·팀 기관에 개인 계정 연결 + 멤버 관리", legacyHref: "/my/organization" },
+  "결제·크레딧":            { icon: CreditCard, desc: "결제 수단 · 크레딧 잔액 · 인보이스", legacyHref: "/my/billing" },
+  "파트너 관리":            { icon: Handshake,  desc: "자문사 사건 의뢰 · 수임 · 정산",    legacyHref: "/my/partner" },
   "보안":                   { icon: Shield },
   "알림 설정":              { icon: Bell },
   "역할 전환":              { icon: RefreshCw },
-  "개인정보 (관리자)":      { icon: FileLock2,     desc: "PII Access Log · 파기 요청",   legacyHref: "/my/privacy" },
   "계정 관리":              { icon: Trash2 },
 }
 
@@ -547,8 +540,8 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Phase G7+ v2 — 인증·기관·결제·파트너·개인정보 7개 신규 섹션 (기존 라우트로 이동) */}
-        {(["본인인증", "사업자·투자자 인증", "전문가 인증", "기관 계정", "결제·크레딧", "파트너 관리", "개인정보 (관리자)"] as Tab[])
+        {/* Phase G7+ v3 — 인증·기관·결제·파트너 4개 신규 섹션 (기존 라우트로 이동) */}
+        {(["사업자·투자자 인증", "기관 계정", "결제·크레딧", "파트너 관리"] as Tab[])
           .filter((t) => activeTab === t)
           .map((t) => {
             const meta = SIDEBAR_META[t]

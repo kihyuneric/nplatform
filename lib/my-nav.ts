@@ -202,18 +202,18 @@ export interface SettingsTabItem {
   order: number
 }
 
+// v3 (2026-04-29 사용자 정책):
+//   본인인증 / 전문가 인증 → 삭제 (사업자등록증·명함만 받으면 충분)
+//   개인정보 (관리자) → 마이페이지에서 제거 (관리자 페이지에서만 접근)
+//   기관 계정은 모든 회원에게 노출 (개인 회원도 향후 기관 가입 가능)
 export const SETTINGS_TABS: readonly SettingsTabItem[] = [
   { key: 'profile',      label: '프로필',              visible: () => true,             order: 10 },
-  { key: 'verify',       label: '본인인증',            visible: () => true,             order: 20 },
   { key: 'kyc',          label: '사업자·투자자 인증',  visible: () => true,             order: 30 },
-  { key: 'professional', label: '전문가 인증',         visible: (f) => f.isAdmin || f.isProfessional, order: 40 },
-  { key: 'organization', label: '기관 계정',           visible: (f) => f.isAdmin || f.isInstitution || f.isAMC, order: 50 },
-  // v2 (2026-04-29): 결제·파트너·알림설정 도 설정 사이드바로 흡수
+  { key: 'organization', label: '기관 계정',           visible: () => true,             order: 50 },
   { key: 'billing',      label: '결제·크레딧',         visible: () => true,             order: 55 },
   { key: 'partner',      label: '파트너 관리',         visible: (f) => f.isAdmin || f.isPartner, order: 58 },
   { key: 'alerts',       label: '알림 환경설정',       visible: () => true,             order: 60 },
   { key: 'security',     label: '보안',                visible: () => true,             order: 70 },
-  { key: 'privacy',      label: '개인정보 (관리자)',   visible: (f) => f.isAdmin,       order: 80 },
   { key: 'role',         label: '역할 전환',           visible: () => true,             order: 90 },
   { key: 'delete',       label: '계정 삭제',           visible: () => true,             order: 99 },
 ] as const

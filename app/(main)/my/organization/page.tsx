@@ -67,6 +67,49 @@ const STATUS_META: Record<MemberStatus, { label: string; badge: string }> = {
   REMOVED:   { label: "제거됨",   badge: "bg-slate-500/10 text-slate-400 border-slate-500/20" },
 }
 
+/* ── 샘플 모드 데이터 (DB 빈 상태에서도 UI 시연) ────────────── */
+//   사용자 정책 (2026-04-29): "기관 계정은 결국 같은 회사나 팀 기관의 계정에
+//     개인 계정이 연결되는 건데... 샘플이라도 좋으니 작동이 되게 해줘"
+const SAMPLE_ORG: Organization = {
+  id: "sample-org-001",
+  name: "(주)트랜스파머 데모",
+  business_no: "123-45-67890",
+  inst_type: "AMC",
+  grade: "S",
+  status: "ACTIVE",
+  contact_email: "biz@transfarmer.co.kr",
+  contact_phone: "02-1234-5678",
+  max_members: 20,
+  created_at: "2026-01-15",
+}
+const SAMPLE_MEMBERS: OrgMember[] = [
+  {
+    id: "sm-1", user_id: "u-1", name: "김매도", email: "ceo@transfarmer.co.kr",
+    role: "MASTER", department: "경영실", job_title: "대표이사",
+    status: "ACTIVE", created_at: "2026-01-15", approved_at: "2026-01-15",
+  },
+  {
+    id: "sm-2", user_id: "u-2", name: "이운영", email: "ops@transfarmer.co.kr",
+    role: "MANAGER", department: "운영팀", job_title: "팀장",
+    status: "ACTIVE", created_at: "2026-01-20", approved_at: "2026-01-20",
+  },
+  {
+    id: "sm-3", user_id: "u-3", name: "박분석", email: "analyst@transfarmer.co.kr",
+    role: "MEMBER", department: "투자분석", job_title: "선임",
+    status: "ACTIVE", created_at: "2026-02-05", approved_at: "2026-02-05",
+  },
+  {
+    id: "sm-4", user_id: "u-4", name: "최투자", email: "junior@transfarmer.co.kr",
+    role: "MEMBER", department: "투자분석", job_title: "주임",
+    status: "ACTIVE", created_at: "2026-03-10", approved_at: "2026-03-10",
+  },
+  {
+    id: "sm-5", user_id: "u-5", name: "신입사원", email: "new@transfarmer.co.kr",
+    role: "MEMBER", department: "투자분석", job_title: "신입",
+    status: "PENDING", created_at: "2026-04-25", approved_at: null,
+  },
+]
+
 /* ── Component ──────────────────────────────────────────────── */
 export default function OrganizationPage() {
   const [org, setOrg] = useState<Organization | null>(null)
@@ -74,6 +117,16 @@ export default function OrganizationPage() {
   const [loading, setLoading] = useState(true)
   const [myRole, setMyRole] = useState<MemberRole>("MEMBER")
   const [tab, setTab] = useState<"members" | "invite" | "settings">("members")
+  const [isSample, setIsSample] = useState(false)
+
+  // 샘플 모드 fallback — 실 데이터 없으면 데모 표시
+  const enterSampleMode = () => {
+    setOrg(SAMPLE_ORG)
+    setMembers(SAMPLE_MEMBERS)
+    setMyRole("MASTER")  // 샘플에서는 풀 권한으로 모든 기능 시연 가능
+    setIsSample(true)
+    setLoading(false)
+  }
 
   // Load org + members on mount
   useEffect(() => {
@@ -81,7 +134,7 @@ export default function OrganizationPage() {
       try {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user) { setLoading(false); return }
+        if (!user) { enterSampleMode(); return }
 
         // 1. Find user's org_id from organization_members
         const { data: myMembership } = await supabase
@@ -93,7 +146,7 @@ export default function OrganizationPage() {
           .limit(1)
           .single()
 
-        if (!myMembership?.org_id) { setLoading(false); return }
+        if (!myMembership?.org_id) { enterSampleMode(); return }
 
         const orgId = myMembership.org_id
         setMyRole(myMembership.role as MemberRole)
@@ -151,11 +204,13 @@ export default function OrganizationPage() {
           )
         }
       } catch (err) {
-        console.warn("[org] load failed:", err)
+        console.warn("[org] load failed → sample mode:", err)
+        enterSampleMode()
       } finally {
         setLoading(false)
       }
     })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Invite form
@@ -172,6 +227,7 @@ export default function OrganizationPage() {
     setMembers(prev => prev.map(m =>
       m.id === memberId ? { ...m, status: "ACTIVE", approved_at: now.slice(0, 10) } : m
     ))
+    if (isSample) { toast.info("샘플 모드 — 변경은 화면에만 반영됩니다"); return }
     try {
       const supabase = createClient()
       await supabase
@@ -192,6 +248,7 @@ export default function OrganizationPage() {
     setMembers(prev => prev.map(m =>
       m.id === memberId ? { ...m, status: "REMOVED" } : m
     ))
+    if (isSample) { toast.info("샘플 모드 — 변경은 화면에만 반영됩니다"); return }
     try {
       const supabase = createClient()
       await supabase
@@ -210,6 +267,29 @@ export default function OrganizationPage() {
   const handleInvite = async () => {
     if (!inviteEmail || !org) return
     setInviting(true)
+    // 샘플 모드 — 초대 이메일을 PENDING 멤버로 즉시 추가 (시각적 피드백)
+    if (isSample) {
+      setMembers(prev => [
+        ...prev,
+        {
+          id: `sm-new-${Date.now()}`,
+          user_id: `u-new-${Date.now()}`,
+          name: inviteEmail.split('@')[0] ?? '신규 멤버',
+          email: inviteEmail.trim().toLowerCase(),
+          role: inviteRole,
+          department: inviteDept || null,
+          job_title: null,
+          status: "PENDING",
+          created_at: new Date().toISOString().slice(0, 10),
+          approved_at: null,
+        },
+      ])
+      toast.success(`샘플 모드 — ${inviteEmail} 을 PENDING 으로 추가했습니다`)
+      setInviteEmail("")
+      setInviteDept("")
+      setInviting(false)
+      return
+    }
     try {
       const supabase = createClient()
       // Insert invitation record
@@ -240,6 +320,7 @@ export default function OrganizationPage() {
   const handleRoleChange = async (memberId: string, newRole: MemberRole) => {
     const prev = members.find(m => m.id === memberId)?.role
     setMembers(prevList => prevList.map(m => m.id === memberId ? { ...m, role: newRole } : m))
+    if (isSample) { toast.info("샘플 모드 — 변경은 화면에만 반영됩니다"); return }
     try {
       const supabase = createClient()
       await supabase
@@ -284,13 +365,40 @@ export default function OrganizationPage() {
 
   return (
     <div className={DS.page.wrapper}>
+      {/* 샘플 모드 배너 */}
+      {isSample && (
+        <div
+          style={{
+            background: "#FFF8E6",
+            borderBottom: "1px solid #FACC15",
+            padding: "10px 24px",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: 1280,
+              margin: "0 auto",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 13,
+              color: "#854D0E",
+            }}
+          >
+            <AlertCircle size={14} />
+            <strong>샘플 모드</strong>
+            <span>— 실제 기관 미연결. 데모 데이터로 기능을 시연합니다 (변경은 화면에만 반영).</span>
+          </div>
+        </div>
+      )}
+
       {/* Page header */}
       <div className={`${DS.card.base} rounded-none border-x-0 border-t-0 px-6 py-5`}>
         <div className="flex items-center gap-3 mb-1">
           <Building2 size={18} className="text-[var(--color-brand-mid)]" />
           <h1 className={DS.text.pageSubtitle}>기관 통합 계정</h1>
         </div>
-        <p className={DS.text.body}>기관 구성원을 초대하고 역할별 접근 권한을 관리합니다</p>
+        <p className={DS.text.body}>회사·팀 기관 계정에 개인 계정을 연결하고, 멤버 초대·권한·정산을 관리합니다.</p>
       </div>
 
       <div className={`${DS.page.container} ${DS.page.paddingTop} pb-16`}>
