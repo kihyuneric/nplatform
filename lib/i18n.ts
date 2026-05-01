@@ -611,6 +611,15 @@ Object.assign(STATIC_DICT.en, {
   // Modes
   '개인': 'Individual', '매매사업자': 'Real Estate Business',
   '만원': '10K KRW',
+  // ── Chat / Deal Room (Phase G7+ 2026-04-29) ─────────────
+  '메시지 입력…': 'Type a message…',
+  '온라인': 'Online', '오프라인': 'Offline',
+  '채팅 메시지': 'Chat messages',
+  '아직 메시지가 없습니다. 첫 메시지를 보내 협상을 시작하세요.':
+    'No messages yet. Send the first message to start negotiation.',
+  '공유된 문서가 없습니다': 'No shared documents',
+  '문서': 'Documents', '열기': 'Open', '메시지 전송': 'Send message',
+  '매도자 담당자': 'Seller Contact', '매수자 담당자': 'Buyer Contact',
   // ── Deal stages ────────────────────────────────────────────
   '초기 협의': 'Initial Discussion', 'NDA 체결': 'NDA Signed', 'LOI 제출': 'LOI Submitted',
   '실사 진행': 'Due Diligence', '계약 체결': 'Contract Signed', '클로징': 'Closing',

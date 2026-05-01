@@ -112,6 +112,74 @@ const FIELD_MAP: Array<{
   { match: "매각방식·기타", field: "sale_method_other_flag" },
   { match: "매각방식기타상세", field: "sale_method_other" },
   { match: "희망수수료율", field: "seller_fee_rate", type: "pct" },
+
+  // ── Phase G7+ 2026-04-29 — 자유 형식 Excel·문서용 별칭 보강 ────────
+  //   매도사 자체 양식, 채권 소개서, 감정평가서 양식 등에서 자주 등장하는 표기 변형.
+  //   순서: 정확 매칭 → 약식 별칭 (구체→일반)
+  // 기관·매도자
+  { match: "채권자명",       field: "institution_name" },
+  { match: "매도기관",       field: "institution_name" },
+  { match: "매도자",         field: "institution_name" },
+  { match: "채권자",         field: "institution_name" },
+  { match: "기관종류",       field: "institution_type" },
+  { match: "기관구분",       field: "institution_type" },
+  // 담보·주소
+  { match: "물건종류",       field: "collateral_type" },
+  { match: "물건종별",       field: "collateral_type" },
+  { match: "담보유형",       field: "collateral_type" },
+  { match: "용도",           field: "collateral_type" },
+  { match: "주소",           field: "address" },
+  { match: "소재지",         field: "address" },
+  { match: "물건소재지",     field: "address" },
+  { match: "광역시",         field: "sido" },
+  { match: "시·도",          field: "sido" },
+  { match: "전용",           field: "exclusive_area",   type: "number" },
+  { match: "면적",           field: "exclusive_area",   type: "number" },
+  { match: "사용승인일",     field: "build_year" },
+  { match: "준공",           field: "build_year" },
+  // 채권
+  { match: "원금",           field: "loan_principal",   type: "krw" },
+  { match: "대출금액",       field: "loan_principal",   type: "krw" },
+  { match: "최초실행금액",   field: "initial_principal", type: "krw" },
+  { match: "약정원금",       field: "initial_principal", type: "krw" },
+  { match: "이자",           field: "unpaid_interest",  type: "krw" },
+  { match: "지연이자",       field: "overdue_interest", type: "krw" },
+  { match: "연체분",         field: "overdue_interest", type: "krw" },
+  { match: "잔액",           field: "claim_balance",    type: "krw" },
+  { match: "채권액",         field: "claim_balance",    type: "krw" },
+  { match: "채권총액",       field: "claim_balance",    type: "krw" },
+  { match: "기한이익상실일", field: "delinquency_start_date", type: "date" },
+  { match: "연체개시",       field: "delinquency_start_date", type: "date" },
+  { match: "약정금리",       field: "normal_rate",      type: "pct" },
+  { match: "기본금리",       field: "normal_rate",      type: "pct" },
+  // 감정·시세
+  { match: "감정평가액",     field: "appraisal_value",  type: "krw" },
+  { match: "공시지가",       field: "appraisal_value",  type: "krw" },
+  { match: "감정",           field: "appraisal_value",  type: "krw" },
+  { match: "감정일",         field: "appraisal_date",   type: "date" },
+  { match: "평가일",         field: "appraisal_date",   type: "date" },
+  { match: "시세",           field: "current_market_value", type: "krw" },
+  { match: "예상시세",       field: "current_market_value", type: "krw" },
+  { match: "예상가",         field: "current_market_value", type: "krw" },
+  { match: "경매개시일",     field: "auction_start_date", type: "date" },
+  { match: "사건번호",       field: "case_number" },
+  // 권리
+  { match: "선순위",         field: "senior_total",     type: "krw" },
+  { match: "선순위합계",     field: "senior_total",     type: "krw" },
+  { match: "근저당",         field: "max_claim_amount", type: "krw" },
+  { match: "채권최고액",     field: "max_claim_amount", type: "krw" },
+  { match: "1순위",          field: "rights_priority_1" },
+  { match: "후순위",         field: "subordinate_count", type: "number" },
+  // 임차
+  { match: "임차보증금",     field: "lease_deposit",    type: "krw" },
+  { match: "보증금",         field: "lease_deposit",    type: "krw" },
+  { match: "월세",           field: "lease_monthly",    type: "krw" },
+  { match: "임대료",         field: "lease_monthly",    type: "krw" },
+  // 매각
+  { match: "희망가",         field: "asking_price",     type: "krw" },
+  { match: "매각가",         field: "asking_price",     type: "krw" },
+  { match: "예상매각가",     field: "asking_price",     type: "krw" },
+  { match: "수수료",         field: "seller_fee_rate",  type: "pct" },
 ]
 
 function parseValue(raw: unknown, type: string | undefined): unknown {
@@ -206,12 +274,82 @@ function normalizeMap(value: string, table: Record<string, string>): string {
   return value
 }
 
-// 시트 1 파싱 — A열 라벨 매칭 → B열 값
-function parseSheet1(sheet: XLSX.WorkSheet): { fields: Record<string, unknown>; warnings: string[] } {
+// ─── Generic Excel 스캐너 (Phase G7+ 2026-04-29) ─────────────────────
+// 자유 형식 Excel 도 인식: NPLatform 템플릿 + 임의 매도자 시트 + 양식 변형 모두 대응.
+//
+// 전략:
+//   1) 모든 시트의 모든 셀 순회 (rectangular grid 가정)
+//   2) 각 셀의 텍스트가 FIELD_MAP 의 label 과 매칭되면 인접 셀 (right → below → diag)에서 값 추출
+//   3) 빈 값/매칭 라벨 자체는 건너뜀
+//   4) 동일 필드 중복 매칭 시 첫 번째 값 우선 (시트 1·상단 셀 우선 자연스러움)
+//   5) 라벨 매칭은 정규화 후 contains/포함 — 띄어쓰기·괄호·'(원)' 같은 단위 무시
+function scanGenericSheet(sheet: XLSX.WorkSheet, accumulator: Record<string, unknown>): void {
   const rows: unknown[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" })
+
+  // 보조: 이미 채워진 필드는 덮어쓰지 않음 (시트 우선순위)
+  const setIfEmpty = (key: string, value: unknown, type: string | undefined) => {
+    if (accumulator[key] !== undefined && accumulator[key] !== "") return
+    const parsed = parseValue(value, type)
+    if (parsed === null || parsed === "" || parsed === 0) {
+      // 0 은 숫자 필드에서 fallback 으로 부적절 — 스킵
+      if (type === "krw" || type === "number" || type === "pct") return
+    }
+    if (parsed === null || parsed === "") return
+    accumulator[key] = parsed
+  }
+
+  for (let r = 0; r < rows.length; r++) {
+    const row = rows[r]
+    if (!Array.isArray(row)) continue
+
+    for (let c = 0; c < row.length; c++) {
+      const cell = row[c]
+      if (cell === null || cell === undefined || cell === "") continue
+      const text = norm(cell)
+      if (!text || text.length < 2) continue
+
+      // FIELD_MAP 매칭 (구체→일반 순서로 첫 매치 채택)
+      for (const m of FIELD_MAP) {
+        if (!text.includes(norm(m.match))) continue
+
+        // 후보 값 셀: (1) 우측, (2) 아래, (3) 우하단, (4) 같은 행 다음 비어있지 않은 셀
+        const candidates: unknown[] = []
+        if (row[c + 1] !== undefined) candidates.push(row[c + 1])
+        if (rows[r + 1]?.[c] !== undefined) candidates.push(rows[r + 1][c])
+        if (rows[r + 1]?.[c + 1] !== undefined) candidates.push(rows[r + 1][c + 1])
+        // 같은 행 내 다음 비어있지 않은 셀 (NPLatform 템플릿: 라벨 다음 colon/단위 셀이 비어있을 수 있음)
+        for (let cc = c + 1; cc < row.length; cc++) {
+          if (row[cc] !== "" && row[cc] !== null && row[cc] !== undefined) {
+            candidates.push(row[cc]); break
+          }
+        }
+
+        for (const cand of candidates) {
+          if (cand === null || cand === undefined || cand === "") continue
+          // 숫자 필드: 숫자 추출 가능해야 채택
+          if (m.type === "krw" || m.type === "number" || m.type === "pct") {
+            const candText = String(cand).replace(/[^\d.\-]/g, "")
+            if (!candText || isNaN(Number(candText))) continue
+          }
+          setIfEmpty(m.field, cand, m.type)
+          break
+        }
+        break  // 한 셀당 하나의 필드만 매칭
+      }
+    }
+  }
+}
+
+// 시트 1 파싱 — generic 스캐너 + 후처리 (정규화)
+function parseSheet1(sheet: XLSX.WorkSheet): { fields: Record<string, unknown>; warnings: string[] } {
   const fields: Record<string, unknown> = {}
   const warnings: string[] = []
 
+  // ── 1. Generic 스캐너 (자유형식 Excel 호환) ────────────────
+  scanGenericSheet(sheet, fields)
+
+  // ── 2. (호환) 기존 A열-B열 직선 매핑 — 위에서 못 잡은 값 보강
+  const rows: unknown[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" })
   for (const row of rows) {
     if (!Array.isArray(row) || row.length < 2) continue
     const labelRaw = row[0]
@@ -219,13 +357,13 @@ function parseSheet1(sheet: XLSX.WorkSheet): { fields: Record<string, unknown>; 
     if (!labelRaw) continue
     const label = norm(labelRaw)
     if (!label) continue
-
-    // FIELD_MAP 와 부분일치
     for (const m of FIELD_MAP) {
       if (label.includes(norm(m.match))) {
-        const parsed = parseValue(valueRaw, m.type)
-        if (parsed !== null && parsed !== "") {
-          fields[m.field] = parsed
+        if (fields[m.field] === undefined) {
+          const parsed = parseValue(valueRaw, m.type)
+          if (parsed !== null && parsed !== "") {
+            fields[m.field] = parsed
+          }
         }
         break
       }
@@ -402,6 +540,21 @@ export async function POST(req: NextRequest) {
 
     const allWarnings: string[] = []
     const fieldsResult = sheet1 ? parseSheet1(sheet1) : { fields: {}, warnings: ["시트 1 (기본정보) 미발견"] }
+
+    // ── Phase G7+ 2026-04-29 — 자유 형식 Excel 보강 스캔 ──────
+    // 사용자 정책: "Excel 템플릿이나 비슷한 유형의 자료를 첨부하면 매물등록·NPL 분석 폼의
+    //   항목과 비슷한 영역에 자동으로 기입되고 편집·수정할 수 있게"
+    // → 표준 시트 외의 모든 시트도 generic 스캔으로 보강 (이미 채워진 필드는 보존)
+    for (const sheetName of workbook.SheetNames) {
+      if (["1_기본정보", "2_특수조건V2", "3_필요서류_사진"].includes(sheetName)) continue
+      const extra = workbook.Sheets[sheetName]
+      if (!extra) continue
+      try {
+        scanGenericSheet(extra, fieldsResult.fields)
+      } catch (e) {
+        allWarnings.push(`시트 "${sheetName}" 스캔 실패`)
+      }
+    }
     const v2Result = sheet2 ? parseSheet2(sheet2) : { specialConditionsV2: [], warnings: ["시트 2 (특수조건) 미발견"] }
     const docResult = sheet3
       ? parseSheet3(sheet3)

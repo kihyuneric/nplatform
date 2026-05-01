@@ -23,6 +23,7 @@ import { createPortal } from "react-dom"
 import { useSearchParams } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { useListingAndAnalysisRealtime } from "@/lib/supabase/realtime"
+import { getLocale } from "@/lib/i18n"
 import Link from "next/link"
 import {
   ArrowLeft, Sparkles, TrendingUp, Shield, AlertTriangle, Target,
@@ -339,35 +340,55 @@ export default function UnifiedReportPage() {
   const safeFileTitle = (displayTitle || "Report").replace(/\s+/g, "_").slice(0, 40)
 
   // ── PDF / Viewer 액션 핸들러 ────────────────────────────────
-  // 파일명 언어 suffix 결정 — document.documentElement.lang 우선 (브라우저 번역 시 자동 변경됨)
-  //   ko/ko-KR  → kor
-  //   en/en-US  → eng
-  //   ja/ja-JP  → jap
-  //   기타       → 첫 2글자 소문자
-  const getLangSuffix = (): string => {
-    if (typeof window === "undefined") return "kor"
-    const docLang = (document.documentElement.lang ?? lang ?? "ko").toLowerCase()
-    if (docLang.startsWith("ko")) return "kor"
-    if (docLang.startsWith("en")) return "eng"
-    if (docLang.startsWith("ja")) return "jap"
-    if (docLang.startsWith("zh")) return "chi"
-    return docLang.slice(0, 3)
+  // 파일명 언어 자체로 표기 (사용자 정책 2026-04-29):
+  //   한국어 → "NPL_분석보고서_제목_전체.pdf" / "NPL_분석보고서_제목_요약.pdf"
+  //   영어   → "NPL_Report_Title_Full.pdf"   / "NPL_Report_Title_Summary.pdf"
+  //   일본어 → "NPL_分析レポート_タイトル_全体.pdf" / "NPL_分析レポート_タイトル_要約.pdf"
+  //   중국어 → "NPL_分析报告_标题_完整.pdf" / "NPL_分析报告_标题_摘要.pdf"
+  // 우선순위: document.documentElement.lang (브라우저 번역 자동 반영) > lang state.
+  type PdfLangSet = {
+    code: string
+    reportLabel: string
+    fullLabel: string
+    summaryLabel: string
+  }
+  const getPdfLangSet = (): PdfLangSet => {
+    // 우선순위: 명시 locale (i18n setLocale) > document.documentElement.lang (브라우저 자동번역) > "ko"
+    let raw = "ko"
+    if (typeof window !== "undefined") {
+      try { raw = getLocale() ?? raw } catch { /* noop */ }
+      const docLang = document.documentElement.lang
+      if (raw === "ko" && docLang) raw = docLang
+    }
+    const docLang = raw.toLowerCase()
+    if (docLang.startsWith("ko")) {
+      return { code: "ko", reportLabel: "NPL_분석보고서", fullLabel: "전체", summaryLabel: "요약" }
+    }
+    if (docLang.startsWith("en")) {
+      return { code: "en", reportLabel: "NPL_Report",       fullLabel: "Full", summaryLabel: "Summary" }
+    }
+    if (docLang.startsWith("ja")) {
+      return { code: "ja", reportLabel: "NPL_分析レポート",  fullLabel: "全体", summaryLabel: "要約" }
+    }
+    if (docLang.startsWith("zh")) {
+      return { code: "zh", reportLabel: "NPL_分析报告",      fullLabel: "完整", summaryLabel: "摘要" }
+    }
+    // fallback — 영어
+    return { code: "en", reportLabel: "NPL_Report", fullLabel: "Full", summaryLabel: "Summary" }
   }
   const handlePdfFull = () => {
     if (typeof window !== "undefined") {
-      // 브라우저 번역 사용자가 우선이므로 문서 lang 은 덮어쓰지 않음
-      // (document.documentElement.lang 은 브라우저/사용자가 관리)
       document.body.classList.remove("print-summary")
-      const suffix = getLangSuffix()
-      document.title = `NPL_Report_${safeFileTitle}_${suffix}`
+      const ls = getPdfLangSet()
+      document.title = `${ls.reportLabel}_${safeFileTitle}_${ls.fullLabel}`
       window.print()
     }
   }
   const handlePdfSummary = () => {
     if (typeof window !== "undefined") {
       document.body.classList.add("print-summary")
-      const suffix = getLangSuffix()
-      document.title = `NPL_Summary_${safeFileTitle}_${suffix}`
+      const ls = getPdfLangSet()
+      document.title = `${ls.reportLabel}_${safeFileTitle}_${ls.summaryLabel}`
       window.print()
       setTimeout(() => document.body.classList.remove("print-summary"), 500)
     }
