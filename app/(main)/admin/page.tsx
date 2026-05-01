@@ -34,6 +34,14 @@ interface DashboardStats {
   activePartners: number
 }
 
+interface ZoneCounts {
+  operations?: number
+  revenue?: number
+  content?: number
+  compliance?: number
+  system?: number
+}
+
 interface RecentUser {
   name: string
   email: string
@@ -53,24 +61,33 @@ function useAdminDashboard() {
     activeDeals: 0, monthlyRevenue: 0, activeProfessionals: 0, activePartners: 0,
   })
   const [recentUsers, setRecentUsers] = useState<RecentUser[]>([])
+  const [zoneCounts, setZoneCounts] = useState<ZoneCounts>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/v1/admin/dashboard')
-      .then(r => r.json())
-      .then(d => {
-        if (d.stats) setStats(d.stats)
-        else setStats(MOCK_STATS) // fallback when API returns no stats
-        if (d.recentUsers) setRecentUsers(d.recentUsers)
-      })
-      .catch(() => {
-        // API unavailable — use mock fallback so dashboard is never empty
-        setStats(MOCK_STATS)
-      })
-      .finally(() => setLoading(false))
+    let cancelled = false
+    const load = () => {
+      fetch('/api/v1/admin/dashboard')
+        .then(r => r.json())
+        .then(d => {
+          if (cancelled) return
+          if (d.stats) setStats(d.stats)
+          else setStats(MOCK_STATS)
+          if (d.recentUsers) setRecentUsers(d.recentUsers)
+          if (d.zoneCounts) setZoneCounts(d.zoneCounts)
+        })
+        .catch(() => {
+          if (!cancelled) setStats(MOCK_STATS)
+        })
+        .finally(() => { if (!cancelled) setLoading(false) })
+    }
+    load()
+    // 60초마다 자동 새로고침 (실시간 운영센터)
+    const id = setInterval(load, 60_000)
+    return () => { cancelled = true; clearInterval(id) }
   }, [])
 
-  return { stats, recentUsers, loading }
+  return { stats, recentUsers, zoneCounts, loading }
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -126,8 +143,44 @@ const tooltipStyle = {
 /* ------------------------------------------------------------------ */
 
 export default function AdminDashboardPage() {
-  const { stats, recentUsers, loading } = useAdminDashboard()
+  const { stats, recentUsers, zoneCounts, loading } = useAdminDashboard()
   const [now, setNow] = useState("")
+
+  // Pending Tasks — Zone 별로 처리해야 할 작업 카드 (운영센터 핵심)
+  const pendingTasks = [
+    {
+      key: "approvals",
+      label: "회원 KYC 승인",
+      count: stats.pendingApprovals,
+      href: "/admin/users?filter=pending",
+      tone: stats.pendingApprovals > 5 ? "danger" : stats.pendingApprovals > 0 ? "warn" : "ok",
+      hint: stats.pendingApprovals > 0 ? "신원 확인 대기" : "전체 처리 완료",
+    },
+    {
+      key: "listings",
+      label: "매물 검토",
+      count: stats.pendingReviews,
+      href: "/admin/listings?filter=review",
+      tone: stats.pendingReviews > 10 ? "danger" : stats.pendingReviews > 0 ? "warn" : "ok",
+      hint: stats.pendingReviews > 0 ? "심사 대기 중" : "검토 대기 없음",
+    },
+    {
+      key: "compliance",
+      label: "보안·컴플라이언스",
+      count: zoneCounts.compliance ?? 0,
+      href: "/admin/masking-queue",
+      tone: (zoneCounts.compliance ?? 0) > 0 ? "warn" : "ok",
+      hint: (zoneCounts.compliance ?? 0) > 0 ? "마스킹·PII 검토 필요" : "이슈 없음",
+    },
+    {
+      key: "deals",
+      label: "활성 딜룸",
+      count: stats.activeDeals,
+      href: "/admin/deals",
+      tone: "info",
+      hint: "진행 중인 거래 모니터링",
+    },
+  ] as const
 
   // Derive chart/table data from API
   const recentMembers = recentUsers.map(u => ({
@@ -188,6 +241,50 @@ export default function AdminDashboardPage() {
           <Link href="/services/experts" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>전문가 →</Link>
           <Link href="/analysis" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>분석 허브 →</Link>
           <Link href="/admin/coupons" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>쿠폰 관리 →</Link>
+        </div>
+
+        {/* ── 오늘의 처리 대기 (Pending Tasks Operation Cockpit) ── */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <p className={`${DS.text.label} text-[var(--color-brand-mid)]`}>오늘의 처리 대기</p>
+            <span className={`${DS.text.micro} text-[var(--color-text-muted)]`}>60초마다 자동 새로고침</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {pendingTasks.map((task) => {
+              const palette = task.tone === "danger"
+                ? { bg: "#FEF2F2", border: "#EF4444", text: "#991B1B", dot: "#EF4444" }
+                : task.tone === "warn"
+                  ? { bg: "#FFFBEB", border: "#F59E0B", text: "#92400E", dot: "#F59E0B" }
+                  : task.tone === "info"
+                    ? { bg: "#EFF6FF", border: "#3B82F6", text: "#1E40AF", dot: "#3B82F6" }
+                    : { bg: "#ECFDF5", border: "#10B981", text: "#065F46", dot: "#10B981" }
+              return (
+                <Link
+                  key={task.key}
+                  href={task.href}
+                  className="block p-4 rounded-md transition-all hover:shadow-md"
+                  style={{
+                    background: palette.bg,
+                    borderLeft: `4px solid ${palette.border}`,
+                    border: `1px solid ${palette.border}40`,
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span style={{ fontSize: 11, fontWeight: 700, color: palette.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: 99, background: palette.dot, marginRight: 6, verticalAlign: "middle" }} />
+                      {task.label}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 28, fontWeight: 900, color: palette.text, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                    {task.count}
+                  </div>
+                  <div style={{ fontSize: 11, color: palette.text, opacity: 0.8, marginTop: 4 }}>
+                    {task.hint} →
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
         </div>
 
         {/* ── KPI STRIP ── */}

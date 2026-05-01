@@ -16,9 +16,10 @@
  * 각 Zone 은 collapsible group — 펼쳐서 sub-page 노출.
  */
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useQuery } from "@tanstack/react-query"
 import {
   LayoutDashboard, Users, Building2, FileText, Settings, BarChart3,
   CreditCard, GraduationCap, Megaphone, Server, Cable,
@@ -125,14 +126,52 @@ function getActiveLabel(pathname: string | null): string {
   return match?.label ?? "관리자"
 }
 
+// 펜딩 카운트 hook — /api/v1/admin/dashboard 의 zoneCounts 사용 (60초 캐시)
+function useZoneCounts(): Record<string, number> {
+  const { data } = useQuery({
+    queryKey: ["admin-zone-counts"],
+    queryFn: async () => {
+      const r = await fetch("/api/v1/admin/dashboard")
+      if (!r.ok) return {}
+      const j = await r.json()
+      return (j.zoneCounts ?? {}) as Record<string, number>
+    },
+    staleTime: 60_000,
+    refetchInterval: 120_000,
+    refetchOnWindowFocus: true,
+  })
+  return data ?? {}
+}
+
+function ZoneBadge({ count }: { count: number }) {
+  if (!count || count <= 0) return null
+  const display = count > 99 ? "99+" : String(count)
+  return (
+    <span
+      className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+      style={{
+        background: "#EF4444",
+        color: "white",
+        minWidth: 20,
+        textAlign: "center",
+        lineHeight: "14px",
+      }}
+    >
+      {display}
+    </span>
+  )
+}
+
 function ZoneGroup({
   zone,
   collapsed,
   onNavigate,
+  pendingCount,
 }: {
   zone: AdminZone
   collapsed: boolean
   onNavigate?: () => void
+  pendingCount: number
 }) {
   const pathname = usePathname() ?? ""
   const ZoneIcon = zone.icon
@@ -140,7 +179,11 @@ function ZoneGroup({
   // Zone 안에 sub-item 이 active 이면 자동 펼침
   const hasActive = zone.items.some((i) => pathname === i.href || pathname.startsWith(i.href + "/"))
   const isZoneActive = zone.href ? pathname === zone.href : hasActive
-  const [open, setOpen] = useState<boolean>(hasActive)
+  const [open, setOpen] = useState<boolean>(hasActive || pendingCount > 0)
+  // 펜딩이 새로 생기면 자동 펼침
+  useEffect(() => {
+    if (pendingCount > 0 && !hasActive) setOpen(true)
+  }, [pendingCount, hasActive])
 
   // Zone 단일 진입 (sub-items 없음) — 단순 링크
   if (zone.items.length === 0 && zone.href) {
@@ -158,6 +201,7 @@ function ZoneGroup({
       >
         <ZoneIcon className="h-4 w-4 shrink-0" />
         {!collapsed && <span className="truncate flex-1">{zone.label}</span>}
+        {!collapsed && <ZoneBadge count={pendingCount} />}
       </Link>
     )
   }
@@ -182,6 +226,7 @@ function ZoneGroup({
             <span className="truncate flex-1 text-left text-[11px] uppercase tracking-wider">
               {zone.label}
             </span>
+            <ZoneBadge count={pendingCount} />
             {open ? <ChevronDown className="h-3 w-3 opacity-60" /> : <ChevronRight className="h-3 w-3 opacity-60" />}
           </>
         )}
@@ -236,10 +281,17 @@ function ZoneGroup({
 }
 
 function MenuList({ collapsed = false, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
+  const counts = useZoneCounts()
   return (
     <nav className="p-2 space-y-2">
       {ADMIN_ZONES.map((zone) => (
-        <ZoneGroup key={zone.key} zone={zone} collapsed={collapsed} onNavigate={onNavigate} />
+        <ZoneGroup
+          key={zone.key}
+          zone={zone}
+          collapsed={collapsed}
+          onNavigate={onNavigate}
+          pendingCount={counts[zone.key] ?? 0}
+        />
       ))}
     </nav>
   )

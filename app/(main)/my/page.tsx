@@ -267,14 +267,11 @@ export default function MyDashboardPage() {
     { label: "크레딧", value: `${safeBalance} C`, hint: "Balance" },
   ]
 
-  // Phase G7+ 2026-04-29 (Phase 4) — Hero "Next Action" CTA
-  //   사용자가 지금 해야 할 단 한 가지 — 미인증 → 미확인 알림 → 진행 딜룸 → 거래소 순.
+  // Phase G7+ 2026-04-29 (Phase 4) — Hero "Next Action" + 보조 Quick Actions
+  //   주(主) 액션 1개 + 빠르게 자주 쓰는 보조 액션 3개를 chip 으로 노출.
   const nextAction = (() => {
     if (!profile?.identity_verified) {
-      return { label: "본인인증 완료하기", href: "/my/settings?tab=verify", reason: "1분이면 충분합니다" }
-    }
-    if (!profile?.qualified_investor) {
-      return { label: "투자자 인증 완료하기", href: "/my/settings?tab=kyc", reason: "사업자등록증·명함만 있으면 됩니다" }
+      return { label: "사업자·투자자 인증 완료하기", href: "/my/settings?tab=kyc", reason: "사업자등록증·명함만 있으면 됩니다" }
     }
     const unread = stats?.unreadNotifications ?? 0
     if (unread > 0) {
@@ -282,27 +279,59 @@ export default function MyDashboardPage() {
     }
     const active = stats?.activeDealsCount ?? 0
     if (active > 0) {
-      return { label: `진행 중 딜룸 ${active}건 보기`, href: "/my/deals", reason: "다음 액션이 대기 중입니다" }
+      return { label: `진행 중 거래 ${active}건 보기`, href: "/my/deals", reason: "다음 액션이 대기 중입니다" }
     }
-    return { label: "거래소 둘러보기", href: "/exchange", reason: "지금 53건의 매물이 활성화되어 있습니다" }
+    return { label: "거래소 둘러보기", href: "/exchange", reason: "53건의 활성 매물에서 새로운 기회를 찾아보세요" }
   })()
 
-  // Loading 상태
+  // 보조 빠른 액션 chip (항상 노출 · 자주 쓰는 3개 — 역할별 동적)
+  const quickActionChips: Array<{ label: string; href: string; icon: typeof Sparkles }> = [
+    { label: "거래소", href: "/exchange", icon: Building2 },
+    { label: "내 거래", href: "/my/deals", icon: Handshake },
+    { label: "관심매물", href: "/my/portfolio", icon: TrendingUp },
+    { label: "알림센터", href: "/my/inbox", icon: Bell },
+  ]
+
+  // Loading 상태 — shimmer skeleton (Phase G7+ 최고수준 UX)
   if (loading) {
     return (
       <MckPageShell variant="tint">
+        <style>{`
+          @keyframes shimmer { 0% { background-position: -200px 0 } 100% { background-position: calc(200px + 100%) 0 } }
+          .skel { background: linear-gradient(90deg, ${MCK.border}33 0%, ${MCK.border}88 50%, ${MCK.border}33 100%); background-size: 200px 100%; animation: shimmer 1.4s infinite linear; border-radius: 4px; }
+        `}</style>
         <MckPageHeader
           breadcrumbs={[{ label: "마이", href: "/my" }, { label: "대시보드" }]}
           eyebrow="My NPLatform"
           title="내 정보"
-          subtitle="잠시만 기다려 주세요…"
+          subtitle="실시간 데이터를 불러오고 있습니다…"
         />
-        <main className="max-w-[1280px] mx-auto" style={{ padding: "32px 24px 80px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 0, border: `1px solid ${MCK.border}` }}>
+        <main className="max-w-[1280px] mx-auto" style={{ padding: "24px 24px 80px" }}>
+          {/* KPI strip skeleton */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} style={{ background: MCK.paper, padding: "18px 20px", borderRight: i < 4 ? `1px solid ${MCK.border}` : "none" }}>
-                <div style={{ height: 10, width: "60%", background: MCK.border, marginBottom: 8 }} />
-                <div style={{ height: 24, width: "70%", background: MCK.border }} />
+              <div key={i} style={{ background: MCK.paper, padding: 20, border: `1px solid ${MCK.border}` }}>
+                <div className="skel" style={{ height: 10, width: "60%", marginBottom: 10 }} />
+                <div className="skel" style={{ height: 28, width: "75%", marginBottom: 6 }} />
+                <div className="skel" style={{ height: 8, width: "40%" }} />
+              </div>
+            ))}
+          </div>
+          {/* Hero CTA skeleton */}
+          <div style={{ background: MCK.paperTint, padding: 24, marginBottom: 24, border: `1px solid ${MCK.border}` }}>
+            <div className="skel" style={{ height: 10, width: 80, marginBottom: 8 }} />
+            <div className="skel" style={{ height: 28, width: "50%", marginBottom: 6 }} />
+            <div className="skel" style={{ height: 12, width: "30%" }} />
+          </div>
+          {/* Section skeleton */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            {[1, 2].map((i) => (
+              <div key={i} style={{ background: MCK.paper, padding: 24, border: `1px solid ${MCK.border}`, height: 240 }}>
+                <div className="skel" style={{ height: 14, width: "40%", marginBottom: 16 }} />
+                <div className="skel" style={{ height: 10, width: "90%", marginBottom: 8 }} />
+                <div className="skel" style={{ height: 10, width: "70%", marginBottom: 8 }} />
+                <div className="skel" style={{ height: 10, width: "85%", marginBottom: 8 }} />
+                <div className="skel" style={{ height: 10, width: "60%" }} />
               </div>
             ))}
           </div>
@@ -400,6 +429,37 @@ export default function MyDashboardPage() {
               <span style={{ color: MCK.paper }}>바로가기</span>
               <ChevronRight size={16} style={{ color: MCK.paper }} />
             </Link>
+          </div>
+
+          {/* 보조 빠른 액션 chip — 자주 쓰는 4개 (역할별 동적) */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
+            {quickActionChips.map((chip) => {
+              const Icon = chip.icon
+              return (
+                <Link
+                  key={chip.href}
+                  href={chip.href}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 12px",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    background: MCK.paper,
+                    color: MCK.ink,
+                    border: `1px solid ${MCK.border}`,
+                    borderRadius: 99,
+                    textDecoration: "none",
+                    transition: "all 0.15s",
+                  }}
+                  className="hover:border-[#1B3A5C] hover:bg-[#1B3A5C]/5"
+                >
+                  <Icon size={12} />
+                  <span>{chip.label}</span>
+                </Link>
+              )
+            })}
           </div>
         </div>
       </section>

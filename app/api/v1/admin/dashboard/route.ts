@@ -156,6 +156,38 @@ export async function GET() {
       ai: process.env.OPENAI_API_KEY ? 'configured' as const : 'not_configured' as const,
     }
 
+    // ── Phase G7+ 2026-04-29 — Zone 별 펜딩 카운트 (사이드바 배지용) ──
+    const [
+      maskingPending,
+      piiAuditFlags,
+      pendingAgreements,
+      pendingMatching,
+      pendingDemands,
+    ] = await Promise.all([
+      safeCount(supabase, 'masking_review_queue', (q) => q.eq('status', 'PENDING')),
+      safeCount(supabase, 'pii_audit_logs', (q) => q.eq('severity', 'HIGH').gte('created_at', monthStart.toISOString())),
+      safeCount(supabase, 'agreements', (q) => q.in('status', ['PENDING', 'AWAITING_SIGNATURE'])),
+      safeCount(supabase, 'matching_results', (q) => q.eq('status', 'PENDING_REVIEW')),
+      safeCount(supabase, 'demand_surveys', (q) => q.eq('status', 'NEW')),
+    ])
+    const zoneCounts = {
+      // 거래 운영 — 검토·승인 대기 합계
+      operations:
+        (pendingApprovals ?? 0) +
+        (pendingReviews ?? 0) +
+        (pendingAgreements ?? 0) +
+        (pendingMatching ?? 0) +
+        (pendingDemands ?? 0),
+      // 수익·실적 — 별도 펜딩 없음 (정상 운영)
+      revenue: 0,
+      // 콘텐츠 — 단일 진입 (배지 없음)
+      content: 0,
+      // 보안·컴플라이언스 — 마스킹 + PII 감사
+      compliance: (maskingPending ?? 0) + (piiAuditFlags ?? 0),
+      // 시스템 — 시스템 헬스 이슈 (현재 고정 0, 추후 monitoring 연동)
+      system: 0,
+    }
+
     _source = anyReal ? 'supabase' : undefined
     _mock = !anyReal
 
@@ -163,6 +195,7 @@ export async function GET() {
       stats,
       recentUsers,
       systemStatus,
+      zoneCounts,
       _source,
       _mock,
     })
@@ -178,6 +211,7 @@ export async function GET() {
         storage: 'unknown',
         ai: 'not_configured',
       },
+      zoneCounts: { operations: 8, revenue: 0, content: 0, compliance: 2, system: 0 },
       _mock: true,
     })
   }
