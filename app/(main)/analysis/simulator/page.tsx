@@ -1042,7 +1042,7 @@ export default function AuctionSimulatorV27Page() {
             <label className={DS.text.label + " block mb-2"}>
               목표 수익률 설정 — 역산 최대 입찰가 계산
               <span className="ml-2 text-[10px] font-normal text-[var(--color-text-muted)]">
-                · 셀 클릭 → KPI 카드 즉시 반영
+                · 셀 클릭 → 차트·KPI·테이블 즉시 반영
               </span>
             </label>
             <div className="flex flex-wrap gap-2">
@@ -1070,7 +1070,17 @@ export default function AuctionSimulatorV27Page() {
                     type="button"
                     onClick={() => {
                       setTargetRoi(target)
-                      if (bid) setSelectedBid(bid)
+                      if (bid != null) {
+                        // 정확한 역산 입찰가는 grid 에 없을 수 있으므로
+                        // simRows 중 bid 이하 최대값으로 snap (목표 ROI 보장).
+                        const candidates = simRows
+                          .map((r) => r.bidPrice)
+                          .filter((b) => b <= bid)
+                        const snapped = candidates.length > 0
+                          ? Math.max(...candidates)
+                          : bid
+                        setSelectedBid(snapped)
+                      }
                     }}
                     disabled={!isAchievable}
                     className={`p-2 rounded-md border text-center transition-all ${
@@ -1129,8 +1139,16 @@ export default function AuctionSimulatorV27Page() {
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                <XAxis dataKey="bid" tick={{ fontSize: 10 }} tickFormatter={(v: number) => fmt(v)} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
+                {/* XAxis 를 number 모드로 — ReferenceLine x={selectedBid} 가 그리드 외 값에서도 동작 */}
+                <XAxis
+                  type="number"
+                  dataKey="bid"
+                  domain={['dataMin', 'dataMax']}
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={(v: number) => fmt(v)}
+                  allowDecimals={false}
+                />
                 <YAxis yAxisId="left" tick={{ fontSize: 10 }} tickFormatter={(v: number) => `${v}%`} />
                 <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} tickFormatter={(v: number) => fmt(v)} />
                 <Tooltip
@@ -1138,7 +1156,7 @@ export default function AuctionSimulatorV27Page() {
                   formatter={(value: number, name: string) => [name === "roi" ? `${value.toFixed(1)}%` : `${fmt(value)} 천원`, name === "roi" ? "수익률" : "순이익"]}
                   labelFormatter={(v: number) => `입찰가 ${fmt(v)} 천원`}
                 />
-                <ReferenceLine yAxisId="left" y={0} stroke="rgba(255,255,255,0.3)" strokeDasharray="3 3" />
+                <ReferenceLine yAxisId="left" y={0} stroke="rgba(0,0,0,0.3)" strokeDasharray="3 3" />
                 {/* 선택된 입찰가 — 세로 강조선 */}
                 {selectedBid != null && (
                   <ReferenceLine
