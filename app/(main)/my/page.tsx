@@ -8,7 +8,7 @@
  *   - 체험 모드 강화: API 실패 시 SAMPLE_* 데이터로 자동 fallback + MckDemoBanner
  *   - MckPageShell · MckPageHeader · MckKpiGrid · MckCard · MckSection · MckCta · MckBadge
  *   - 투자자 인증(1회 · 계정) + NDA/LOI(매물별) 분리 모델 — Tier 노출 제거
- *   - 역할(SELLER/INVESTOR_GENERAL/INVESTOR_PRO/PARTNER/PROFESSIONAL)별 QuickLinks 유지
+ *   - 역할(SELLER/INVESTOR_GENERAL/INVESTOR_PRO/PARTNER)별 QuickLinks 유지 (3-role)
  */
 
 import { useState, useEffect } from "react"
@@ -19,7 +19,7 @@ import {
   CheckCircle2, Sparkles, BarChart3, Target,
   ArrowRight, Handshake,
   Bell, Gift, Code, MessageCircle,
-  GraduationCap, Banknote, Store,
+  Banknote, Store,
 } from "lucide-react"
 import type { AccessTier } from "@/lib/access-tier"
 import {
@@ -176,19 +176,12 @@ const PARTNER_LINKS: QuickLink[] = [
   { href: "/my/partner/payouts", label: "정산 내역",       desc: "월별 리퍼럴 커미션",     icon: Banknote },
   { href: "/my/developer",       label: "API 연동",        desc: "개발자 문서 · 키 관리",  icon: Code },
 ]
-const PROFESSIONAL_LINKS: QuickLink[] = [
-  { href: "/my/professional", label: "전문가 프로필", desc: "분야 · 경력 · 노출 관리",  icon: GraduationCap, highlight: true },
-  { href: "/my/organization", label: "소속 기관",     desc: "기관 정보 · 인증",         icon: Building2 },
-  { href: "/my/agreements",   label: "수주 · 계약",   desc: "의뢰받은 실사 건",         icon: Handshake },
-]
-
 function getQuickLinks(role?: string | null, subtype?: string | null): QuickLink[] {
   const r = (role ?? "").toUpperCase()
   const s = (subtype ?? "").toUpperCase()
   if (s === "PRO_CORP" || s === "PRO_INDIVIDUAL" || r === "INSTITUTION") return [...INVESTOR_PRO_LINKS, ...COMMON_LINKS]
   if (r === "SELLER")       return [...SELLER_LINKS, ...COMMON_LINKS]
   if (r === "PARTNER")      return [...PARTNER_LINKS, ...COMMON_LINKS]
-  if (r === "PROFESSIONAL") return [...PROFESSIONAL_LINKS, ...COMMON_LINKS]
   return [...INVESTOR_GENERAL_LINKS, ...COMMON_LINKS]
 }
 
@@ -204,7 +197,6 @@ function roleBadge(role?: string | null, subtype?: string | null): { label: stri
   if (r === "INVESTOR" || r === "BUYER") return { label: "일반 투자그룹", tone: "blue" }
   if (r === "INSTITUTION")  return { label: "전문 투자그룹", tone: "ink" }
   if (r === "PARTNER")      return { label: "파트너",      tone: "ink" }
-  if (r === "PROFESSIONAL") return { label: "전문가",      tone: "ink" }
   if (r === "ADMIN" || r === "SUPER_ADMIN") return { label: "관리자", tone: "ink" }
   return { label: "무료 체험", tone: "neutral" }
 }

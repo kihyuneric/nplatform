@@ -7,7 +7,7 @@
  *
  * 24개 평면 메뉴 → 6개 macro Zone 으로 묶음 (MECE):
  *   1. 대시보드 — 진입
- *   2. 거래 운영 (Operations) — 회원/매물/딜룸/매칭/수요/기관/전문가
+ *   2. 거래 운영 (Operations) — 회원/매물/딜룸/매칭/수요/기관
  *   3. 수익·실적 (Revenue & Performance) — 결제/쿠폰/펀널/분석
  *   4. 콘텐츠 (Content) — 공지/배너/뉴스
  *   5. 보안·컴플라이언스 (Compliance) — 보안/PII/마스킹
@@ -22,7 +22,7 @@ import { usePathname } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import {
   LayoutDashboard, Users, Building2, FileText, Settings, BarChart3,
-  CreditCard, GraduationCap, Megaphone, Server, Cable,
+  CreditCard, Megaphone, Server, Cable,
   ChevronLeft, Menu, BrainCircuit, ShieldCheck, Eye, Landmark, FileSignature, Tag,
   Workflow, TrendingUp, Target, ShoppingCart, ChevronRight, ChevronDown,
 } from "lucide-react"
@@ -66,7 +66,6 @@ const ADMIN_ZONES: AdminZone[] = [
       { href: "/admin/matching",     label: "AI 매칭",      icon: Target },
       { href: "/admin/demands",      label: "매수자 수요",  icon: ShoppingCart },
       { href: "/admin/institutions", label: "매도 기관",    icon: Landmark },
-      { href: "/admin/experts",      label: "전문가·파트너", icon: GraduationCap },
     ],
   },
   // Zone 2 — 수익·실적

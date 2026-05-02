@@ -4,15 +4,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  Building2, Users, Scale, Handshake, Check, Loader2, ArrowLeft, ArrowRight,
+  Building2, Users, Handshake, Check, Loader2, ArrowLeft, ArrowRight,
   Landmark, Banknote, PieChart, Briefcase, Zap, Star,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
 // ── Stage 1: 주 역할 ───────────────────────────────────
-// 요금제(pricing)와 완전 동기화: 매각사 / 투자그룹 / 전문가 / 파트너
+// 요금제(pricing)와 완전 동기화: 매각사 / 투자그룹 / 파트너 (3-role)
 // 매각사·투자그룹은 서브타입 선택(Stage 2)을 통해 세분화합니다.
-type PrimaryRoleId = 'SELLER' | 'INVESTOR_GROUP' | 'PROFESSIONAL' | 'PARTNER'
+type PrimaryRoleId = 'SELLER' | 'INVESTOR_GROUP' | 'PARTNER'
 
 interface PrimaryRole {
   id: PrimaryRoleId
@@ -39,14 +39,6 @@ const PRIMARY_ROLES: PrimaryRole[] = [
     icon: Users,
     desc: 'NPL 매수·경매 참여·부동산 매입을 집행합니다. 활동량에 따라 일반/전문으로 구분됩니다.',
     needsSubtype: true,
-  },
-  {
-    id: 'PROFESSIONAL',
-    label: '전문가',
-    subtitle: '법무사 · 세무사 · 중개사',
-    icon: Scale,
-    desc: '딜룸에서 전문 서비스를 제공하고 수수료를 정산합니다.',
-    needsSubtype: false,
   },
   {
     id: 'PARTNER',
@@ -146,7 +138,6 @@ const REDIRECT_MAP: Record<string, string> = {
   INSTITUTION: '/institution/dashboard',
   INVESTOR: '/',
   BUYER: '/buyer/dashboard',
-  PROFESSIONAL: '/professional/my/dashboard',
   PARTNER: '/partner/dashboard',
 }
 
