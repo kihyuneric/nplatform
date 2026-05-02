@@ -185,6 +185,11 @@ function ZoneGroup({
     if (pendingCount > 0 && !hasActive) setOpen(true)
   }, [pendingCount, hasActive])
 
+  // 모든 Zone 라벨 통일 스타일 (Phase G7+ v2 — 사용자 정합 2026-04-29)
+  //   단일/그룹 Zone 모두 동일한 폰트 사이즈·웨이트로 통일.
+  //   text-[13px] · font-semibold · 일반 케이스 (uppercase 제거)
+  const zoneLabelClass = "truncate flex-1 text-left text-[13px] font-semibold tracking-tight"
+
   // Zone 단일 진입 (sub-items 없음) — 단순 링크
   if (zone.items.length === 0 && zone.href) {
     return (
@@ -192,15 +197,15 @@ function ZoneGroup({
         href={zone.href}
         onClick={onNavigate}
         className={cn(
-          "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+          "flex items-center gap-2.5 rounded-lg px-3 py-2 transition-colors",
           isZoneActive
-            ? "bg-[#1B3A5C] text-white font-semibold"
-            : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] font-medium"
+            ? "bg-[#1B3A5C] text-white"
+            : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)]"
         )}
         title={collapsed ? zone.label : undefined}
       >
         <ZoneIcon className="h-4 w-4 shrink-0" />
-        {!collapsed && <span className="truncate flex-1">{zone.label}</span>}
+        {!collapsed && <span className={zoneLabelClass}>{zone.label}</span>}
         {!collapsed && <ZoneBadge count={pendingCount} />}
       </Link>
     )
@@ -213,17 +218,17 @@ function ZoneGroup({
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+          "w-full flex items-center gap-2.5 rounded-lg px-3 py-2 transition-colors",
           hasActive
-            ? "text-[#1B3A5C] font-bold"
-            : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] font-semibold"
+            ? "text-[#1B3A5C]"
+            : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)]"
         )}
         title={collapsed ? zone.label : undefined}
       >
         <ZoneIcon className="h-4 w-4 shrink-0" />
         {!collapsed && (
           <>
-            <span className="truncate flex-1 text-left text-[11px] uppercase tracking-wider">
+            <span className={zoneLabelClass}>
               {zone.label}
             </span>
             <ZoneBadge count={pendingCount} />

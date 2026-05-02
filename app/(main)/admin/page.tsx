@@ -100,18 +100,17 @@ const KYC_LABEL: Record<string, string> = {
 
 const signupData: { day: string; 신규가입: number }[] = [] // Populated from API if available
 
+// Phase G7+ 2026-04-29 — 6-Zone 구조와 정합 + 실제 admin 페이지 존재 여부 검증
 const quickLinks = [
-  { label: "회원관리",     href: "/admin/users",        icon: Users       },
-  { label: "매물관리",     href: "/admin/listings",     icon: Building2   },
-  { label: "거래모니터링", href: "/admin/deals",        icon: Activity    },
-  { label: "결제관리",     href: "/admin/billing",      icon: CreditCard  },
-  { label: "수수료·인보이스", href: "/admin/commissions", icon: Handshake  },
-  { label: "데이터 동기화",  href: "/admin/data-sync",   icon: Server      },
-  { label: "데이터 임포트",  href: "/admin/data-import", icon: Upload      },
-  { label: "콘텐츠관리",   href: "/admin/content",      icon: FileText    },
-  { label: "전문가관리",   href: "/admin/experts",      icon: GraduationCap },
-  { label: "CMS 편집",     href: "/admin/cms",          icon: Image       },
-  { label: "설정",         href: "/admin/settings",     icon: Settings    },
+  { label: "회원관리",       href: "/admin/users",        icon: Users       },
+  { label: "매물관리",       href: "/admin/listings",     icon: Building2   },
+  { label: "딜룸 모니터링",   href: "/admin/deals",        icon: Activity    },
+  { label: "NDA·LOI",        href: "/admin/agreements",   icon: FileText    },
+  { label: "결제·정산",       href: "/admin/billing",      icon: CreditCard  },
+  { label: "콘텐츠 관리",    href: "/admin/content",      icon: FileText    },
+  { label: "전문가·파트너",  href: "/admin/experts",      icon: GraduationCap },
+  { label: "데이터 파이프라인", href: "/admin/pipeline",   icon: Server      },
+  { label: "사이트 설정",    href: "/admin/settings",     icon: Settings    },
   { label: "AI · ML",      href: "/admin/ml",           icon: Code        },
 ]
 
@@ -232,15 +231,14 @@ export default function AdminDashboardPage() {
 
       <div className={`${DS.page.container} ${DS.page.paddingTop} ${DS.page.sectionGap} pb-10`}>
 
-        {/* ── Quick Navigation ── */}
+        {/* ── Quick Navigation — 실제 사이트 메뉴와 정합 (TopBar: 거래소·딜룸·분석·공지/문의·마이) ── */}
         <div className="flex items-center gap-3 flex-wrap">
           <span className={`${DS.text.micro} text-[var(--color-text-muted)] mr-1`}>바로가기:</span>
-          <Link href="/exchange" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>매물 거래소 →</Link>
-          <Link href="/deals" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>활성 거래 →</Link>
-          <Link href="/services/community" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>커뮤니티 →</Link>
-          <Link href="/services/experts" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>전문가 →</Link>
-          <Link href="/analysis" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>분석 허브 →</Link>
-          <Link href="/admin/coupons" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>쿠폰 관리 →</Link>
+          <Link href="/exchange" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>거래소 →</Link>
+          <Link href="/deals" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>딜룸 →</Link>
+          <Link href="/analysis" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>분석 대시보드 →</Link>
+          <Link href="/notices" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>공지/문의 →</Link>
+          <Link href="/my" className={`${DS.button.ghost} gap-1.5 text-[0.8125rem]`}>마이 페이지 →</Link>
         </div>
 
         {/* ── 오늘의 처리 대기 (Pending Tasks Operation Cockpit) ── */}

@@ -7,7 +7,8 @@ import { toast } from "sonner"
 import DS, { formatDate } from "@/lib/design-system"
 import { createClient } from "@/lib/supabase/client"
 
-const TABS = ["공지사항", "배너 관리", "뉴스 관리", "가이드", "강좌"] as const
+// Phase G7+ 2026-04-29 — 강좌 탭 삭제 (사용 안 함). 배너 카테고리 확대 (위치별 분류).
+const TABS = ["공지사항", "배너 관리", "뉴스 관리", "가이드"] as const
 type Tab = typeof TABS[number]
 
 /* ── Supabase row types ─────────────────────────────────────────── */
@@ -30,10 +31,18 @@ interface CommunityPost {
 
 /* ── Status / category filters ──────────────────────────────────── */
 const NOTICE_CATEGORIES = ["공지사항", "안내", "이벤트", "점검"]
-const BANNER_CATEGORIES = ["배너"]
+// 배너 — 위치별 분류 (사용자 정책: 배너관리 최적화)
+//   각 위치마다 노출 영역·치수·정책이 다름 → 카테고리 단일에서 위치별로 확대
+const BANNER_CATEGORIES = [
+  "메인 히어로",      // 홈 메인 상단 (1280×400)
+  "거래소 상단",      // /exchange 상단 (1280×120)
+  "분석 사이드",      // /analysis 우측 사이드 (300×600)
+  "마이페이지 배너",  // /my 상단 (1280×120)
+  "공지 배너",        // /notices 상단 (1280×120)
+  "프로모션",         // 결제·이벤트 (모든 페이지)
+]
 const NEWS_CATEGORIES = ["뉴스", "분석", "리포트"]
 const GUIDE_CATEGORIES = ["가이드", "입문", "경매", "실사", "법률", "재무"]
-const COURSE_CATEGORIES = ["강좌", "교육"]
 
 function categoryListForTab(tab: Tab): string[] {
   switch (tab) {
@@ -41,7 +50,6 @@ function categoryListForTab(tab: Tab): string[] {
     case "배너 관리": return BANNER_CATEGORIES
     case "뉴스 관리": return NEWS_CATEGORIES
     case "가이드": return GUIDE_CATEGORIES
-    case "강좌": return COURSE_CATEGORIES
   }
 }
 
@@ -64,7 +72,8 @@ const TAB_MAP: Record<string, Tab> = {
   "banners": "배너 관리",
   "news": "뉴스 관리",
   "guide": "가이드",
-  "courses": "강좌",
+  // courses → guide (강좌 탭 제거 후 가이드로 redirect)
+  "courses": "가이드",
 }
 
 interface EditorState {
@@ -365,11 +374,10 @@ export default function AdminContentPage() {
   /* ── Render table rows per tab ────────────────────────────────── */
   function renderHeaders(): string[] {
     switch (tab) {
-      case "공지사항": return ["제목", "카테고리", "날짜", "상태", "조회수", "액션"]
-      case "배너 관리": return ["제목", "태그", "상태", "날짜", "액션"]
-      case "뉴스 관리": return ["제목", "카테고리", "날짜", "공개여부", "조회수", "액션"]
-      case "가이드": return ["제목", "카테고리", "작성일", "공개여부", "조회수", "액션"]
-      case "강좌": return ["제목", "카테고리", "조회수", "좋아요", "공개여부", "액션"]
+      case "공지사항":   return ["제목", "카테고리", "날짜", "상태", "조회수", "액션"]
+      case "배너 관리":  return ["제목", "위치", "상태", "날짜", "액션"]
+      case "뉴스 관리":  return ["제목", "카테고리", "날짜", "공개여부", "조회수", "액션"]
+      case "가이드":     return ["제목", "카테고리", "작성일", "공개여부", "조회수", "액션"]
     }
   }
 
@@ -410,28 +418,51 @@ export default function AdminContentPage() {
           </tr>
         )
 
-      case "배너 관리":
+      case "배너 관리": {
+        // 배너 위치별 권장 치수 (사용자 정책: 배너관리 최적화)
+        const POSITION_DIMS: Record<string, string> = {
+          "메인 히어로":      "1280×400",
+          "거래소 상단":      "1280×120",
+          "분석 사이드":      "300×600",
+          "마이페이지 배너":  "1280×120",
+          "공지 배너":        "1280×120",
+          "프로모션":         "1280×200",
+        }
+        const dim = POSITION_DIMS[p.category] ?? "—"
         return (
           <tr key={p.id} className={DS.table.row}>
-            <td className={`${DS.table.cell} font-medium max-w-[260px] truncate`}>{p.title}</td>
-            <td className={DS.table.cellMuted}>
-              {p.tags?.map(t => (
-                <span key={t} className={`${DS.badge.inline("bg-[var(--color-surface-overlay)]", "text-[var(--color-text-secondary)]", "border-[var(--color-border-subtle)]")} mr-1`}>{t}</span>
-              ))}
+            <td className={`${DS.table.cell} font-medium max-w-[260px] truncate`}>
+              {p.title}
+              {p.tags && p.tags.length > 0 && (
+                <span className="ml-2 text-[0.625rem] text-[var(--color-text-muted)]">
+                  · {p.tags.slice(0, 2).join(', ')}
+                </span>
+              )}
+            </td>
+            <td className={DS.table.cell}>
+              <div className="flex flex-col gap-0.5">
+                <span className={DS.badge.inline("bg-[#1B3A5C]/10", "text-[#1B3A5C]", "border-[#1B3A5C]/20")}>
+                  {p.category || "위치 미지정"}
+                </span>
+                <span className="text-[0.625rem] text-[var(--color-text-muted)] font-mono">
+                  권장 {dim}
+                </span>
+              </div>
             </td>
             <td className={DS.table.cell}>{statusBadge}</td>
             <td className={`${DS.table.cellMuted} text-[0.75rem]`}>{p.created_at ? formatDate(p.created_at) : "-"}</td>
             <td className={DS.table.cell}>
               <div className="flex gap-2">
                 <button onClick={() => openEdit(p)} className={DS.button.icon} title="수정"><Edit2 size={13} /></button>
-                <button onClick={() => toggleStatus(p)} className={DS.button.icon}>
+                <button onClick={() => toggleStatus(p)} className={DS.button.icon} title={isPublished ? "비공개 처리" : "노출"}>
                   {isPublished ? <EyeOff size={13} /> : <Eye size={13} />}
                 </button>
-                <button onClick={() => deletePost(p)} className={DS.button.icon}><Trash2 size={13} /></button>
+                <button onClick={() => deletePost(p)} className={DS.button.icon} title="삭제"><Trash2 size={13} /></button>
               </div>
             </td>
           </tr>
         )
+      }
 
       case "뉴스 관리":
         return (
@@ -477,27 +508,6 @@ export default function AdminContentPage() {
           </tr>
         )
 
-      case "강좌":
-        return (
-          <tr key={p.id} className={DS.table.row}>
-            <td className={`${DS.table.cell} font-medium`}>{p.title}</td>
-            <td className={DS.table.cell}>
-              <span className={DS.badge.inline("bg-stone-100/10", "text-stone-900", "border-stone-300/20")}>{p.category}</span>
-            </td>
-            <td className={`${DS.table.cell} font-mono`}>{p.views.toLocaleString()}</td>
-            <td className={`${DS.table.cell} font-mono`}>{p.likes.toLocaleString()}</td>
-            <td className={DS.table.cell}>{statusBadge}</td>
-            <td className={DS.table.cell}>
-              <div className="flex gap-2">
-                <button onClick={() => openEdit(p)} className={DS.button.icon} title="수정"><Edit2 size={13} /></button>
-                <button onClick={() => toggleStatus(p)} className={DS.button.icon}>
-                  {isPublished ? <EyeOff size={13} /> : <Eye size={13} />}
-                </button>
-                <button onClick={() => deletePost(p)} className={DS.button.icon}><Trash2 size={13} /></button>
-              </div>
-            </td>
-          </tr>
-        )
     }
   }
 
@@ -517,7 +527,7 @@ export default function AdminContentPage() {
           <FileText size={18} className="text-[var(--color-brand-mid)]" />
           <h1 className={DS.text.pageSubtitle}>콘텐츠 관리</h1>
         </div>
-        <p className={DS.text.body}>공지사항, 배너, 뉴스, 가이드, 강좌 관리</p>
+        <p className={DS.text.body}>공지사항 · 배너 · 뉴스 · 가이드 통합 관리</p>
       </div>
 
       <div className={`${DS.page.container} ${DS.page.paddingTop} ${DS.page.sectionGap} pb-10`}>
