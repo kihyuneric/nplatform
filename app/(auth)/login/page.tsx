@@ -13,7 +13,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Eye, EyeOff, Loader2, MessageCircle, ArrowRight, ShieldCheck } from 'lucide-react'
+import { Eye, EyeOff, Loader2, ArrowRight, ShieldCheck } from 'lucide-react'
 
 const INK = '#0A1628'
 const PAPER = '#FFFFFF'
@@ -36,18 +36,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleSocialLogin = async (provider: 'kakao' | 'google') => {
-    try {
-      const supabase = createClient()
-      await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
-      })
-    } catch {
-      setError('소셜 로그인은 현재 사용할 수 없습니다. 아이디/비밀번호로 로그인해주세요.')
-    }
-  }
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -63,8 +51,8 @@ export default function LoginPage() {
     // Dev bypass
     const devCreds: Record<string, { role: string; name: string; tier: string }> = {
       'admin|admin': { role: 'SUPER_ADMIN', name: '관리자', tier: 'L3' },
-      'demo|demo':   { role: 'BUYER_INDV', name: '데모 사용자', tier: 'L1' },
-      'seller|seller': { role: 'SELLER', name: '매도자 데모', tier: 'L1' },
+      'demo|demo':   { role: 'BUYER_INDV', name: '매입사 데모', tier: 'L1' },
+      'seller|seller': { role: 'SELLER', name: '매각사 데모', tier: 'L1' },
     }
     const devKey = `${email.trim().toLowerCase()}|${password}`
     const devMatch = devCreds[devKey]
@@ -282,63 +270,6 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* Social — sharp tonal */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 22 }}>
-              <button
-                type="button"
-                onClick={() => handleSocialLogin('kakao')}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  height: 44,
-                  background: '#FEE500', color: '#3A1D1D',
-                  border: '1px solid rgba(0,0,0,0.05)',
-                  fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                }}
-              >
-                <MessageCircle size={14} /> 카카오로 계속하기
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSocialLogin('google')}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  height: 44,
-                  background: PAPER, color: INK,
-                  border: `1px solid ${BORDER_STRONG}`,
-                  fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
-                  <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908C16.658 14.148 17.64 11.84 17.64 9.2z" fill="#4285F4"/>
-                  <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
-                  <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-                  <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-                </svg>
-                Google 로 계속하기
-              </button>
-              <button
-                type="button"
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  height: 44,
-                  background: '#03C75A', color: PAPER,
-                  border: '1px solid #03C75A',
-                  fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                }}
-              >
-                <span style={{ fontWeight: 900, fontSize: 14, color: PAPER }}>N</span> 네이버로 계속하기
-              </button>
-            </div>
-
-            {/* Divider — McKinsey thin rule */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-              <div style={{ flex: 1, height: 1, background: BORDER }} />
-              <span style={{ fontSize: 9, fontWeight: 800, color: INK_MUTED, letterSpacing: '0.16em', textTransform: 'uppercase' }}>
-                또는 이메일로 로그인
-              </span>
-              <div style={{ flex: 1, height: 1, background: BORDER }} />
-            </div>
-
             {/* Form */}
             <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
@@ -463,8 +394,8 @@ export default function LoginPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 11, color: INK }}>
                   {[
                     { id: 'admin',  pw: 'admin',  label: '관리자 (SUPER_ADMIN)' },
-                    { id: 'demo',   pw: 'demo',   label: '투자자 (BUYER)' },
-                    { id: 'seller', pw: 'seller', label: '매도자 (SELLER)' },
+                    { id: 'demo',   pw: 'demo',   label: '매입사 (BUYER)' },
+                    { id: 'seller', pw: 'seller', label: '매각사 (SELLER)' },
                   ].map((c) => (
                     <button
                       key={c.id}
