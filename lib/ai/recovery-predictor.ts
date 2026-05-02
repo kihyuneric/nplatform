@@ -54,12 +54,17 @@ export interface PredictionResult {
   /** 유사 과거 사례 */
   similarCases: SimilarCase[]
 
-  /** 모델 메타데이터 */
+  /** 모델 메타데이터 — 정적 placeholder. 실측 메트릭은 getDynamicModelMetadata() */
   model: {
     version: string
-    trainingSamples: number
-    accuracy: { mape: number; rmse: number; r2: number }
-    lastTrainedAt: string
+    trainingSamples: number | null
+    accuracy: {
+      mape: number | null
+      rmse: number | null
+      r2: number | null
+    }
+    lastTrainedAt: string | null
+    note?: string
   }
 }
 
@@ -358,14 +363,27 @@ export function predictRecovery(input: PredictionInput): PredictionResult {
     grade,
     featureImportance,
     similarCases,
+    // 정적 메타 — predictRecovery 는 동기 함수이므로 placeholder 만 반환.
+    // 정확한 trainingSamples / accuracy 는 lib/ai/training/recovery-backtest.ts
+    // 의 getDynamicModelMetadata() 를 호출하여 받아야 함 (Supabase 비동기).
+    // KB 본계약 보고서 / IR 자료에서는 dynamic 메타를 반드시 사용.
     model: {
-      version: "3.0.0-gb6",
-      trainingSamples: 12847,
-      accuracy: { mape: 11.3, rmse: 0.072, r2: 0.847 },
-      lastTrainedAt: "2026-04-01T00:00:00Z",
+      version: "3.0.0-gb6-static",
+      trainingSamples: null,           // 동적 산출 필요 — getDynamicModelMetadata
+      accuracy: {
+        mape: null,                    // 임의값 제거 — 실측 백테스트 결과로만 산출
+        rmse: null,
+        r2: null,
+      },
+      lastTrainedAt: null,             // 정적 트리는 학습 개념 부재
+      note: 'sync placeholder — getDynamicModelMetadata() 로 실측 메트릭 조회',
     },
   }
 }
+
+// ─── 동적 메타 export — 호출처가 비동기 환경 (API/Cron) 일 때 사용 ──
+export { getDynamicModelMetadata, runRecoveryBacktest } from './training/recovery-backtest'
+export type { ModelMetadata, BacktestMetrics, BacktestSample } from './training/recovery-backtest'
 
 // ═══════════════════════════════════════════════════════════════
 // v2: Claude LLM 하이브리드 예측
