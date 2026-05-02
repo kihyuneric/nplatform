@@ -5,7 +5,7 @@
  *
  * 디자인 원칙:
  *   1. Pyramid Principle — 결론부터 (각 역할의 핵심 가치 1줄 → 단계별 분해)
- *   2. MECE — 7개 역할 (금융기관 / 대부업체 / AMC / 개인 / 파트너 / 전문가 / 관리자)
+ *   2. MECE — 6개 역할 (금융기관 / 대부업체 / AMC / 개인 / 파트너 / 관리자)
  *   3. Action-oriented — "5 단계로 시작하기" 형식
  *   4. Visual scaffolding — 스크린 mockup 으로 어디를 클릭하는지 직관
  */
@@ -14,7 +14,7 @@ import { useState } from "react"
 import Link from "next/link"
 import {
   ArrowRight, ChevronDown, ChevronRight, CheckCircle2,
-  Building2, Briefcase, Users, UserCircle, Handshake, GraduationCap, Shield,
+  Building2, Briefcase, Users, UserCircle, Handshake, Shield,
   Compass, FileText, BarChart3, MessageCircle, CreditCard, Bell, Settings,
   Sparkles, Search, Upload, Eye, FileSignature, Target, TrendingUp,
   ShoppingCart, Calculator,
@@ -62,12 +62,6 @@ const ROLES: Role[] = [
     tagline: "사건 수임률 ↑ + 정산 자동화",
     audience: "법무법인 · 회계법인 · 부동산 자문사",
     color: "#8B5CF6",
-  },
-  {
-    key: "professional", label: "전문가", icon: GraduationCap,
-    tagline: "전문 자격 인증 → 의뢰 자동 라우팅",
-    audience: "변호사 · 감정평가사 · 공인중개사 · 세무사",
-    color: "#EC4899",
   },
   {
     key: "admin", label: "관리자", icon: Shield,
@@ -303,42 +297,6 @@ const WORKFLOWS: GuideWorkflow[] = [
       { label: "의뢰함", href: "/my/partner", icon: Briefcase },
       { label: "딜룸", href: "/my/deals", icon: MessageCircle },
       { label: "정산 내역", href: "/my/settings?tab=billing", icon: CreditCard },
-    ],
-  },
-
-  // ── 전문가 ────────────────────────────────────────
-  {
-    roleKey: "professional",
-    steps: [
-      {
-        num: 1, title: "전문 자격 인증",
-        desc: "변호사 등록증 / 감정평가사 자격증 / 공인중개사 면허 등 자격 서류 업로드. 자격증 인증 후 의뢰 라우팅 활성화.",
-        cta: { label: "자격 인증", href: "/my/settings?tab=kyc" },
-      },
-      {
-        num: 2, title: "전문 분야 + 활동 지역 설정",
-        desc: "예: '경매 전문 변호사 · 서울·경기' → 해당 지역 NPL 의뢰 자동 매칭. 지역·분야 다중 선택 가능.",
-      },
-      {
-        num: 3, title: "의뢰 응답 + 자문료 안내",
-        desc: "의뢰자 자문 요청 → 알림 → 자문료 견적 응답 (시간당·건당·정액). 자문료는 의뢰자가 ESCROW 입금.",
-      },
-      {
-        num: 4, title: "딜룸 합류 + 권리분석 보고서 작성",
-        desc: "딜룸 채팅으로 의뢰자와 직접 소통. 권리분석 보고서 PDF 업로드 → 의뢰자 검토.",
-      },
-      {
-        num: 5, title: "별점 + 후기 + 정산",
-        desc: "자문 완료 → 의뢰자 별점·후기 → 정산. 평균 4.5+ 시 '인증 전문가' 배지 + 검색 우선순위 ↑.",
-      },
-    ],
-    faqs: [
-      { q: "의뢰는 어떻게 들어오나요?", a: "지역+분야 매칭으로 자동 라우팅. 일반적으로 전문가 1인당 월 5~15건 의뢰." },
-      { q: "별점이 낮으면?", a: "평균 4.0 미만 시 라우팅 우선순위 하락. 3.5 미만이 3건 이상 누적되면 자격 재검토." },
-    ],
-    quickActions: [
-      { label: "의뢰 응답", href: "/my/partner", icon: MessageCircle },
-      { label: "전문가 프로필", href: "/services/experts", icon: GraduationCap },
     ],
   },
 
