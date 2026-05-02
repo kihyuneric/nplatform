@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/client"
 import { deductCredits, calculateFee } from "@/lib/billing"
 import { onSubscriptionConverted, onDealCompleted, onConsultationCompleted } from "@/lib/referral-events"
 import { logAudit } from "@/lib/security/audit-logger"
+import { generateAndStoreDealCommission } from "@/lib/commission/generate"
 
 // ─── 과금 이벤트 트리거 ────────────────────────────────
 // 서비스 사용 시 자동으로 크레딧 차감 + 청구서 생성 + 추천 수익 연동
@@ -31,73 +32,69 @@ export async function onAIServiceUsed(params: {
 }
 
 /**
- * 딜 브릿지 거래 완료 시 수수료 처리
+ * 딜 브릿지 거래 완료 시 수수료 처리 (P0-2 · 2026-05-02)
+ *
+ * 단일 진실 원천 (SSoT): `lib/commission/generate.ts` 의 `generateAndStoreDealCommission()`
+ * 호출 후 추천 수익·감사 로그 부수 효과만 추가.
+ *
+ * - 중복 청구 방지 (deal_commissions 에 이미 row 가 있으면 skip)
+ * - winning_bid·buyer·seller 자동 추론 (court_auction_listings → deal_listings → members)
+ * - 인보이스 양면 자동 발행 (commission_invoices)
  */
 export async function onDealSettlement(params: {
   dealId: string
-  buyerId: string
-  sellerId: string
-  agreedPrice: number
+  buyerId?: string
+  sellerId?: string
+  agreedPrice?: number
   buyerTenantId?: string
   sellerTenantId?: string
 }) {
-  const { dealId, buyerId, sellerId, agreedPrice, buyerTenantId, sellerTenantId } = params
+  const { dealId, buyerId, sellerId, agreedPrice } = params
   const supabase = createClient()
 
-  // 매수자 수수료
-  const buyerFee = await calculateFee({
-    feeType: "deal_buyer_commission",
-    baseAmount: agreedPrice,
-    tenantId: buyerTenantId,
+  // 단일 SSoT 함수 호출 — admin/webhook 과 동일 로직
+  const result = await generateAndStoreDealCommission(supabase, {
+    dealId,
+    winningBid: agreedPrice,
+    buyerId: buyerId ?? null,
+    sellerId: sellerId ?? null,
+    chargedTo: 'SPLIT',
   })
 
-  // 매도자 수수료
-  const sellerFee = await calculateFee({
-    feeType: "deal_seller_commission",
-    baseAmount: agreedPrice,
-    tenantId: sellerTenantId,
-  })
-
-  // 청구서 생성
-  if (buyerFee.fee > 0) {
-    await supabase.from("invoices").insert({
-      user_id: buyerId,
-      tenant_id: buyerTenantId,
-      invoice_type: "DEAL_COMMISSION",
-      amount: buyerFee.fee,
-      tax_amount: Math.round(buyerFee.fee * 0.1), // 부가세 10%
-      total_amount: Math.round(buyerFee.fee * 1.1),
-      description: `딜 브릿지 거래 수수료 (매수) - ${(agreedPrice / 100000000).toFixed(1)}억원 × ${buyerFee.rate}%`,
-      metadata: { deal_id: dealId, agreed_price: agreedPrice, rate: buyerFee.rate },
-    })
-  }
-
-  if (sellerFee.fee > 0) {
-    await supabase.from("invoices").insert({
-      user_id: sellerId,
-      tenant_id: sellerTenantId,
-      invoice_type: "DEAL_COMMISSION",
-      amount: sellerFee.fee,
-      tax_amount: Math.round(sellerFee.fee * 0.1),
-      total_amount: Math.round(sellerFee.fee * 1.1),
-      description: `딜 브릿지 거래 수수료 (매도) - ${(agreedPrice / 100000000).toFixed(1)}억원 × ${sellerFee.rate}%`,
-      metadata: { deal_id: dealId, agreed_price: agreedPrice, rate: sellerFee.rate },
-    })
+  if (!result.ok) {
+    if (result.skipped === 'already_exists') {
+      // 이미 처리됨 — 정상 시나리오
+      return { ok: true, skipped: 'already_exists' as const }
+    }
+    return { ok: false, error: result.error ?? result.reason ?? result.skipped }
   }
 
   // 추천 수익 연동 (매수자/매도자 각각)
-  const totalPlatformFee = buyerFee.fee + sellerFee.fee
-  await onDealCompleted(buyerId, totalPlatformFee)
-  await onDealCompleted(sellerId, totalPlatformFee)
+  const totalPlatformFee = result.commission!.commission_amount
+  if (buyerId) await onDealCompleted(buyerId, totalPlatformFee)
+  if (sellerId) await onDealCompleted(sellerId, totalPlatformFee)
 
   // 감사 로그
-  await logAudit({
-    user_id: buyerId,
-    action: "DEAL_COMPLETE",
-    resource_type: "deal",
-    resource_id: dealId,
-    details: { agreed_price: agreedPrice, buyer_fee: buyerFee.fee, seller_fee: sellerFee.fee },
-  })
+  if (buyerId) {
+    await logAudit({
+      user_id: buyerId,
+      action: "DEAL_COMPLETE",
+      resource_type: "deal",
+      resource_id: dealId,
+      details: {
+        agreed_price: agreedPrice,
+        commission_amount: result.commission!.commission_amount,
+        buyer_amount: result.commission!.buyer_amount,
+        seller_amount: result.commission!.seller_amount,
+        invoices_issued: result.invoices?.length ?? 0,
+      },
+    })
+  }
+
+  // calculateFee unused import warning 방지 — 외부 fee_settings 테이블 룩업이 필요한 곳에서 별도 사용
+  void calculateFee
+
+  return { ok: true, commission: result.commission, invoices: result.invoices }
 }
 
 /**

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getSupabaseAdmin } from '@/lib/supabase/server'
 import { getAuthUserWithRole } from '@/lib/auth/get-user'
 import { apiError } from '@/lib/api-error'
 import { sendEmail } from '@/lib/email/email-service'
 import { dealStageEmail } from '@/lib/email/templates'
+import { generateAndStoreDealCommission } from '@/lib/commission/generate'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,12 +56,36 @@ export async function PATCH(
         .in('status', ['dispute', 'pending', 'reviewing'])
     }
 
+    // ─── 거래 완료 시 수수료 + 인보이스 자동 생성 (P0-2 · 2026-05-02) ───
+    // service_role 권한으로 deal_commissions / commission_invoices 양면 발행
+    let commissionResult: Awaited<ReturnType<typeof generateAndStoreDealCommission>> | null = null
+    if (body.stage === 'completed') {
+      try {
+        const adminClient = getSupabaseAdmin()
+        commissionResult = await generateAndStoreDealCommission(adminClient, { dealId: id })
+        if (!commissionResult.ok && !commissionResult.skipped) {
+          console.error('[admin/deals/[id] PATCH] commission generation failed:', commissionResult.error)
+        }
+      } catch (err) {
+        // 수수료 생성 실패가 stage 변경 자체를 막지 않도록 격리
+        console.error('[admin/deals/[id] PATCH] commission generation error:', err)
+      }
+    }
+
     // Fire-and-forget: notify all deal participants by email
     void notifyDealParticipants(supabase, id, body.stage)
 
     return NextResponse.json({
       success: true,
       message: body.stage === 'completed' ? '거래 완료 처리됨' : '거래 단계 업데이트 완료',
+      ...(commissionResult?.ok ? {
+        commission: commissionResult.commission,
+        invoices: commissionResult.invoices,
+      } : {}),
+      ...(commissionResult?.skipped ? {
+        commission_skipped: commissionResult.skipped,
+        commission_reason: commissionResult.reason,
+      } : {}),
     })
   } catch (error) {
     console.error('[admin/deals/[id] PATCH]', error)
