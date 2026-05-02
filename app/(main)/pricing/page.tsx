@@ -1,480 +1,297 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import Link from 'next/link'
+/**
+ * /pricing — 요금제 정책 (McKinsey v2 · 2026-04-29)
+ *
+ * 사용자 정책 (정합 명령):
+ *   1. 가입 수수료 — 모두 6개월 무료 (Free 6 Months)
+ *   2. 거래 수수료 — 평소대로 수취 (체결 시점)
+ *   3. 우회 거래 발견 시 평생 이용 금지 (NDA·LOI 본문에 명시)
+ *   4. 첫 가입 시 구독·결제 불필요
+ *   5. 회원 유형 단순화 — 매각사 / 투자그룹 (매입사) / 무료체험
+ *      → 일반 투자그룹 + 전문 투자그룹 = 투자그룹(매입사) 단일화
+ *   6. IT 기능보다 거래 기능 중심
+ *
+ * McKinsey 원칙:
+ *   - Pyramid Principle: 결론 우선 (6개월 무료 + 거래 수수료만)
+ *   - MECE: 3개 유형 (매각사 / 투자그룹 / 무료체험)
+ *   - Quantified: 수수료율 정량 표기
+ *   - Visual: 비교 표 + 거래 흐름 + 우회 거래 경고
+ */
+
+import Link from "next/link"
 import {
-  CheckCircle2, X, ArrowRight, Building2, Users, Shield,
-  Sparkles, Calculator, ChevronDown, ChevronUp, Star, Zap,
-  TrendingUp, Lock, FileText, MessageSquare,
-} from 'lucide-react'
-import DS from '@/lib/design-system'
+  Sparkles, Building2, TrendingUp, Crown, ArrowRight,
+  Check, X, ShieldCheck, AlertTriangle, Gavel,
+  CreditCard, Calendar, Lock, Briefcase,
+} from "lucide-react"
+import { MckPageShell, MckPageHeader } from "@/components/mck"
+import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
 
-// ── 거래 수수료 (성공보수 기반) ────────────────────────
-const FEE_TABLE = [
-  {
-    type: 'NPL 매도자',
-    icon: Building2,
-    color: 'var(--color-brand-mid)',
-    rate: '≤ 0.9%',
-    base: '채권 매각 대금 기준',
-    highlight: '6개월 무료 온보딩',
-    note: '금융기관·캐피탈·저축은행 등 첫 가입 기관 6개월 수수료 면제',
-  },
-  {
-    type: 'NPL 매수자',
-    icon: TrendingUp,
-    color: 'var(--color-positive)',
-    rate: '1.5%',
-    base: '채권 매입가 기준',
-    highlight: '+ 0.3% 우선협상권',
-    note: '우선협상권(Priority Negotiation Right) 선택 시 0.3% 추가, 경쟁 입찰 없이 독점 협상 진행',
-  },
-  {
-    type: '부동산 매도자',
-    icon: Building2,
-    color: 'var(--color-info)',
-    rate: '≤ 0.9%',
-    base: '매각 대금 기준',
-    highlight: '6개월 무료 온보딩',
-    note: '부동산 매물 등록 최초 6개월 수수료 면제',
-  },
-  {
-    type: '부동산 매수자',
-    icon: Users,
-    color: 'var(--color-warning)',
-    rate: '≤ 0.9%',
-    base: '매입가 기준',
-    highlight: '멤버십 할인 적용',
-    note: 'L2 멤버십 보유 시 수수료 0.1%p 추가 할인',
-  },
-]
-
-// ── 역할 기반 요금제 ───────────────────────────────────
-// 무료(기본) / 매각사 · 일반 투자그룹 · 전문 투자그룹
-// 각 그룹은 대상·수수료·기능·온보딩 혜택이 다릅니다.
-type PlanId = 'free' | 'seller' | 'general' | 'pro'
-
-interface SellerSubtype {
-  key: string; label: string; sample: string
-}
-
-interface MembershipPlan {
-  id: PlanId
-  name: string
-  nameEn: string
-  icon: typeof Users
-  price: number
-  priceLabel: string
-  cadence: string
+// ─── 3개 유형 ─────────────────────────────────────────────────────
+interface Plan {
+  key: string
+  label: string
   audience: string
-  audienceSubtitle: string
-  subtypes?: SellerSubtype[]
-  feeSummary: string
-  popular: boolean
-  color: string
-  features: Array<{ text: string; ok: boolean }>
-  ctaHref: string
+  signupFee: string
+  signupFeeNote: string
+  txFee: string
+  txFeeNote: string
+  highlights: string[]
   ctaLabel: string
+  ctaHref: string
+  color: string
+  icon: typeof Building2
+  recommended?: boolean
 }
 
-const MEMBERSHIP_PLANS: MembershipPlan[] = [
+const PLANS: Plan[] = [
   {
-    id: 'free',
-    name: '무료 체험',
-    nameEn: 'Free',
-    icon: Users,
-    price: 0,
-    priceLabel: '무료',
-    cadence: '가입 후 바로 이용',
-    audience: '모든 방문자',
-    audienceSubtitle: '거래소 탐색 · 요금/가격 이해를 위한 공개 플랜',
-    feeSummary: '거래 발생 시 표준 수수료 · 할인 없음',
-    popular: false,
-    color: 'var(--color-text-muted)',
-    features: [
-      { text: '매물 탐색·시세 조회 (L0 공개 수준)', ok: true },
-      { text: 'AI 분석 체험 5회/월', ok: true },
-      { text: '딜룸 1개 (개인 기록용)', ok: true },
-      { text: '입찰·매수 제안 제출', ok: false },
-      { text: '우선협상권(PNR) 이용', ok: false },
-      { text: '수수료 할인', ok: false },
+    key: "trial",
+    label: "무료 체험",
+    audience: "처음 NPLatform 을 둘러보는 분 — 모든 회원 자동 적용",
+    signupFee: "₩0",
+    signupFeeNote: "가입 후 6개월 무료",
+    txFee: "—",
+    txFeeNote: "거래 체결 시 정상 수수료 적용",
+    highlights: [
+      "거래소 53+ 매물 전체 열람",
+      "AI 분석 보고서 무제한 생성",
+      "딜룸·NDA·LOI 무제한 체결",
+      "6개월 후 자동으로 정식 회원으로 전환",
     ],
-    ctaHref: '/exchange',
-    ctaLabel: '거래소 둘러보기',
+    ctaLabel: "지금 무료 시작",
+    ctaHref: "/onboarding",
+    color: "#10B981",
+    icon: Sparkles,
   },
   {
-    id: 'seller',
-    name: '매각사',
-    nameEn: 'Seller',
+    key: "seller",
+    label: "매각사",
+    audience: "은행 · 저축은행 · AMC · 대부업체 · 캐피탈 · 보험사",
+    signupFee: "₩2,000,000",
+    signupFeeNote: "연 1회 / 가입 후 6개월 무료 적용",
+    txFee: "0.3%~0.9%",
+    txFeeNote: "전속 0.3% / 비전속 0.5~0.9%",
+    highlights: [
+      "매물 무제한 등록 (Excel·OCR·폼)",
+      "PII 자동 마스킹 + 등기부 NDA 제어",
+      "Pool Sale (대량 매각) 전용 도구",
+      "전속 등록 시 조선일보 땅집고 보도 지원",
+      "기관 통합 계정 — 멤버 무제한 초대",
+    ],
+    ctaLabel: "매각사 시작하기",
+    ctaHref: "/onboarding?role=seller",
+    color: "#1B3A5C",
     icon: Building2,
-    price: 0,
-    priceLabel: '첫 6개월 무료',
-    cadence: '온보딩 이후 월 ₩0 (수수료 기반)',
-    audience: '매물을 올리는 기관',
-    audienceSubtitle: 'NPL · 부동산 포트폴리오를 플랫폼으로 유통하는 공급자',
-    subtypes: [
-      { key: 'bank', label: '금융기관', sample: '은행 · 저축은행 · 캐피탈 · 보험사' },
-      { key: 'loan', label: '대부업체', sample: '등록대부업자 · NPL 매매업자' },
-      { key: 'am', label: '자산운용사', sample: 'AMC · 사모펀드 · REITs' },
-      { key: 'corp', label: '일반 법인', sample: '건설사 · 시행사 · 일반 기업' },
-    ],
-    feeSummary: 'NPL 매도 ≤0.9% · 부동산 매도 ≤0.9% (6개월 무료)',
-    popular: false,
-    color: 'var(--color-brand-mid)',
-    features: [
-      { text: '매물 대량 등록 + OCR 자동 파싱', ok: true },
-      { text: '딜룸 무제한 · 서명·에스크로 완결', ok: true },
-      { text: '매각가 시세 가이던스 + AI 리포트', ok: true },
-      { text: '정산·세금계산서 자동 발행', ok: true },
-      { text: '기관 인증 배지 부여 (매각사 전용)', ok: true },
-      { text: '전담 어카운트 매니저 + SLA 99.9%', ok: true },
-    ],
-    ctaHref: '/contact',
-    ctaLabel: '매각사 온보딩 문의',
+    recommended: true,
   },
   {
-    id: 'general',
-    name: '일반 투자그룹',
-    nameEn: 'General Investor',
-    icon: Zap,
-    price: 300000,
-    priceLabel: '₩300,000',
-    cadence: '/월 (VAT 별도)',
-    audience: '활발한 개인/기업 투자자',
-    audienceSubtitle: '월 1~5건 NPL 매수 또는 부동산 매입을 실행하는 투자그룹',
-    subtypes: [
-      { key: 'corp', label: '기업 회원', sample: '법인 · 투자조합 · 가족법인' },
-      { key: 'indiv', label: '개인 회원', sample: '전문 투자자 기준 미달 활성 투자자' },
+    key: "buyer",
+    label: "투자그룹 (매입사)",
+    audience: "AMC · 대부업체 · 사모AMC · 투자운용사 · 개인 매수자 · 법인 매수자",
+    signupFee: "₩1,500,000",
+    signupFeeNote: "연 1회 / 가입 후 6개월 무료 적용",
+    txFee: "1.0%~2.0%",
+    txFeeNote: "낙찰가 또는 양도가 기준",
+    highlights: [
+      "AI 매칭 — 관심 조건 매물 자동 추천",
+      "분석 보고서 + Monte Carlo 시뮬레이션",
+      "공동투자팀 (4~10명) 구성 가능",
+      "ESCROW 보증금 + 자동 정산",
+      "권리분석·실사 자문사 자동 라우팅",
     ],
-    feeSummary: 'NPL 매수 1.5% · 부동산 매수 0.9% (-0.05%p 할인)',
-    popular: true,
-    color: 'var(--color-positive)',
-    features: [
-      { text: '무제한 매물·시세·AI 분석', ok: true },
-      { text: '경매 분석기 고급 + 시뮬레이터', ok: true },
-      { text: '딜룸 10개 + 전자계약/NDA 관리', ok: true },
-      { text: '우선협상권(PNR) 0.3% 이용', ok: true },
-      { text: '법률 RAG 검색·판례 기본', ok: true },
-      { text: '수수료 0.05%p 할인', ok: true },
-    ],
-    ctaHref: '/my/billing',
-    ctaLabel: '일반 투자그룹 시작',
-  },
-  {
-    id: 'pro',
-    name: '전문 투자그룹',
-    nameEn: 'Pro Investor',
-    icon: Star,
-    price: 1000000,
-    priceLabel: '₩1,000,000',
-    cadence: '/월 (VAT 별도)',
-    audience: '대량 매입·풀세일·인수 전문',
-    audienceSubtitle: '월 6건 이상 또는 풀(Pool) 단위 매입을 집행하는 전문그룹',
-    subtypes: [
-      { key: 'corp', label: '기업 회원', sample: '자산운용사 · 사모펀드 · 전문법인' },
-      { key: 'indiv', label: '개인 회원', sample: '자본시장법 상 전문 투자자' },
-    ],
-    feeSummary: 'NPL 매수 1.5% · 부동산 매수 0.9% (-0.1%p 할인)',
-    popular: false,
-    color: 'var(--color-brand-mid)',
-    features: [
-      { text: '무제한 AI 분석 + 애널리스트 리포트', ok: true },
-      { text: 'NBI 가격지수 전체 + 풀세일 집계', ok: true },
-      { text: '딜룸 무제한 + 대량 매수 제안 엔진', ok: true },
-      { text: '우선협상권(PNR) + 독점협상 예약', ok: true },
-      { text: '법률 RAG + 판례 DB + 전문가 리뷰', ok: true },
-      { text: '수수료 0.1%p 할인 + 분기 볼륨 리베이트', ok: true },
-    ],
-    ctaHref: '/my/billing',
-    ctaLabel: '전문 투자그룹 시작',
+    ctaLabel: "투자그룹 시작하기",
+    ctaHref: "/onboarding?role=buyer",
+    color: "#2E75B6",
+    icon: TrendingUp,
   },
 ]
 
-const FAQ_ITEMS = [
-  {
-    q: '수수료는 언제 발생하나요?',
-    a: '거래가 최종 성사(계약 완료)된 시점에만 수수료가 발생합니다. 매물 조회·분석·AI 매칭 등의 과정은 무료이며, 실제 거래 체결 시에만 정산됩니다.',
-  },
-  {
-    q: '금융기관 6개월 무료 온보딩은 어떻게 신청하나요?',
-    a: '금융기관(은행, 캐피탈, 저축은행, AMC 등)은 영업팀에 문의하시면 법인 인증 후 즉시 6개월 무료 온보딩 혜택이 적용됩니다. 온보딩 기간 동안 모든 거래에 수수료가 면제됩니다.',
-  },
-  {
-    q: '우선협상권(PNR)이란 무엇인가요?',
-    a: '우선협상권(Priority Negotiation Right)은 매물에 대해 다른 투자자보다 먼저 독점적으로 협상할 수 있는 권리입니다. 경쟁 없이 원하는 조건으로 협상 테이블에 앉을 수 있습니다. NPL 매수자 수수료 1.5%에 0.3%를 추가해 이용 가능합니다.',
-  },
-  {
-    q: '역할 요금제와 거래 수수료는 별도인가요?',
-    a: '네, 완전히 별도입니다. 역할 요금제(매각사/일반·전문 투자그룹)는 플랫폼 기능(AI 분석, 딜룸, 법률 검색 등)에 대한 이용료이고, 거래 수수료는 실제 거래 성사 시 발생하는 성공보수입니다. 무료 체험으로도 시세·공개 매물 탐색이 가능하며, 매수 제안·입찰은 일반/전문 투자그룹에서 제공됩니다.',
-  },
-  {
-    q: '일반 투자그룹과 전문 투자그룹의 차이는 무엇인가요?',
-    a: '일반 투자그룹은 월 1~5건의 매수를 진행하는 활성 투자자(기업/개인)이며 수수료 0.05%p 할인이 적용됩니다. 전문 투자그룹은 월 6건 이상 또는 풀(Pool) 단위 매입을 집행하는 전문법인/자본시장법 상 전문투자자로, 0.1%p 할인 + 분기 볼륨 리베이트 + 풀세일 엔진이 제공됩니다.',
-  },
-  {
-    q: '매각사는 어떤 회원이 가입할 수 있나요?',
-    a: '매각사는 매물을 올리는 공급자를 위한 요금제이며, 금융기관(은행·저축은행·캐피탈·보험), 대부업체(등록대부업자), 자산운용사(AMC·사모펀드·REITs), 일반 법인(건설사·시행사 등) 네 가지 유형으로 세분화됩니다. 모든 매각사는 첫 6개월간 수수료가 면제됩니다.',
-  },
+// ─── 거래 흐름 (4-step) ──────────────────────────────────────────
+const FLOW_STEPS = [
+  { step: 1, label: "가입", desc: "6개월 무료 — 결제 정보 입력 불필요" },
+  { step: 2, label: "탐색·등록", desc: "매물 검색 / AI 매칭 / 매물 등록" },
+  { step: 3, label: "협상", desc: "NDA → 실사 → LOI → 본계약" },
+  { step: 4, label: "정산", desc: "체결 시점 거래 수수료만 청구" },
 ]
 
-// ── 수수료 계산기 ──────────────────────────────────────
-function FeeCalculator() {
-  const [dealType, setDealType] = useState<'npl-seller' | 'npl-buyer' | 're-seller' | 're-buyer'>('npl-buyer')
-  const [amount, setAmount] = useState('')
-  const [withPNR, setWithPNR] = useState(false)
-  const [membership, setMembership] = useState<'free' | 'l1' | 'l2'>('free')
-
-  const numAmount = Number(amount.replace(/,/g, '')) || 0
-
-  const baseRate = {
-    'npl-seller': 0.009,
-    'npl-buyer': 0.015,
-    're-seller': 0.009,
-    're-buyer': 0.009,
-  }[dealType]
-
-  const pnrRate = (dealType === 'npl-buyer' && withPNR) ? 0.003 : 0
-  const discountRate = { free: 0, l1: 0.0005, l2: 0.001 }[membership]
-  const effectiveRate = Math.max(0, baseRate + pnrRate - discountRate)
-  const fee = Math.round(numAmount * effectiveRate)
-
-  const fmt = (n: number) => n.toLocaleString('ko-KR')
-
-  return (
-    <div className={`${DS.card.elevated} p-5`}>
-      <div className="flex items-center gap-2 mb-5">
-        <Calculator className="w-5 h-5 text-[var(--color-brand-mid)]" />
-        <h3 className={DS.text.cardSubtitle}>수수료 계산기</h3>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className={`${DS.input.label} mb-1.5`}>거래 유형</label>
-          <select
-            value={dealType}
-            onChange={e => setDealType(e.target.value as typeof dealType)}
-            className={DS.input.base}
-          >
-            <option value="npl-seller">NPL 매도자</option>
-            <option value="npl-buyer">NPL 매수자</option>
-            <option value="re-seller">부동산 매도자</option>
-            <option value="re-buyer">부동산 매수자</option>
-          </select>
-        </div>
-        <div>
-          <label className={`${DS.input.label} mb-1.5`}>거래 금액 (원)</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="1,000,000,000"
-            value={amount}
-            onChange={e => setAmount(e.target.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ','))}
-            className={DS.input.base}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-        <div>
-          <label className={`${DS.input.label} mb-1.5`}>멤버십</label>
-          <select
-            value={membership}
-            onChange={e => setMembership(e.target.value as 'free' | 'l1' | 'l2')}
-            className={DS.input.base}
-          >
-            <option value="free">기본 (할인 없음)</option>
-            <option value="l1">L1 (-0.05%p)</option>
-            <option value="l2">L2 (-0.1%p)</option>
-          </select>
-        </div>
-        {dealType === 'npl-buyer' && (
-          <div className="flex items-center gap-3 pt-6">
-            <button
-              type="button"
-              onClick={() => setWithPNR(!withPNR)}
-              className={`w-11 h-6 rounded-full transition-colors ${withPNR ? 'bg-[var(--color-positive)]' : 'bg-[var(--color-surface-sunken)] border border-[var(--color-border-default)]'}`}
-            >
-              <span className={`block w-5 h-5 rounded-full bg-white shadow transition-transform mx-0.5 ${withPNR ? 'translate-x-5' : 'translate-x-0'}`} />
-            </button>
-            <span className={DS.text.body}>우선협상권 (+0.3%)</span>
-          </div>
-        )}
-      </div>
-
-      {numAmount > 0 && (
-        <div className="rounded-xl border border-[var(--color-border-default)] bg-[var(--color-surface-sunken)] p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className={DS.text.caption}>적용 수수료율</span>
-            <span className={`${DS.text.bodyBold} text-[var(--color-brand-mid)]`}>{(effectiveRate * 100).toFixed(2)}%</span>
-          </div>
-          <div className="flex items-center justify-between mb-3">
-            <span className={DS.text.caption}>거래 금액</span>
-            <span className={DS.text.body}>₩{fmt(numAmount)}</span>
-          </div>
-          <div className="h-px bg-[var(--color-border-subtle)] mb-3" />
-          <div className="flex items-center justify-between">
-            <span className={DS.text.bodyBold}>예상 수수료</span>
-            <span className="text-[1.5rem] font-extrabold text-[var(--color-positive)] tabular-nums">
-              ₩{fmt(fee)}
-            </span>
-          </div>
-          {discountRate > 0 && (
-            <p className={`${DS.text.micro} text-[var(--color-positive)] mt-1 text-right`}>
-              멤버십 할인 ₩{fmt(Math.round(numAmount * discountRate))} 적용됨
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function FaqItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <div className="border-b border-[var(--color-border-subtle)] last:border-b-0">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left"
-      >
-        <span className={`${DS.text.bodyBold} pr-4`}>{q}</span>
-        {open ? <ChevronUp className="w-4 h-4 shrink-0 text-[var(--color-brand-mid)]" /> : <ChevronDown className="w-4 h-4 shrink-0 text-[var(--color-text-muted)]" />}
-      </button>
-      {open && (
-        <div className="px-5 pb-4">
-          <p className={`${DS.text.body} text-[var(--color-text-secondary)]`}>{a}</p>
-        </div>
-      )}
-    </div>
-  )
+// ─── 우회 거래 경고 정책 ───────────────────────────────────────
+const ANTI_BYPASS = {
+  title: "엔플랫폼 우회 거래 절대 금지 정책",
+  rules: [
+    "NDA·LOI 체결 후 매각사·투자그룹·자문사가 NPLatform 외부에서 단독 계약 시 — 사이트 평생 이용 금지",
+    "NDA·LOI 본문에 'NPLatform 을 통해서만 거래한다' 조항이 명시되어 있습니다",
+    "우회 거래 발견 시 — (1) 거래 수수료 사후 청구 + (2) 손해배상 청구 + (3) 영구 회원 자격 박탈",
+    "내부 신고 포상금 제도 운영 — 우회 거래 제보 시 발견된 거래 수수료의 30% 지급",
+  ],
 }
 
 export default function PricingPage() {
   return (
-    <div className={DS.page.wrapper}>
-      <div className={`${DS.page.container} ${DS.page.paddingTop} pb-20`}>
+    <MckPageShell variant="tint">
+      <MckPageHeader
+        breadcrumbs={[{ label: "홈", href: "/" }, { label: "요금제" }]}
+        eyebrow="PRICING · 요금제"
+        title="가입 후 6개월 무료 — 거래 시점에만 수수료"
+        subtitle="구독·정기 결제 없음. 가입 즉시 모든 기능 사용 가능. 거래가 체결될 때만 수수료를 받습니다."
+      />
 
-        {/* ── Hero ── */}
-        <div className={DS.header.wrapper}>
-          <p className={DS.header.eyebrow}>Pricing</p>
-          <h1 className={DS.header.title}>성공할 때만 수수료</h1>
-          <p className={`${DS.header.subtitle} max-w-lg`}>
-            거래가 성사될 때만 수수료가 발생합니다. 월정액 없이 시작하고, 성공할수록 더 큰 가치를 누리세요.
-          </p>
-        </div>
-
-        {/* ── 거래 수수료 테이블 ── */}
-        <section className="mb-12">
-          <h2 className={`${DS.text.sectionTitle} mb-2`}>거래 수수료</h2>
-          <p className={`${DS.text.captionLight} mb-6`}>모든 수수료는 거래 성사 시 1회 정산됩니다.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {FEE_TABLE.map((row) => {
-              const Icon = row.icon
-              return (
-                <div key={row.type} className={`${DS.card.elevated} p-5`}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `color-mix(in srgb, ${row.color} 15%, transparent)` }}>
-                      <Icon className="w-4 h-4" style={{ color: row.color }} />
-                    </div>
-                    <span className={DS.text.label}>{row.type}</span>
-                  </div>
-                  <p className="text-[2rem] font-extrabold leading-none tabular-nums mb-1" style={{ color: row.color }}>
-                    {row.rate}
-                  </p>
-                  <p className={`${DS.text.micro} mb-3`}>{row.base}</p>
-                  <div className="rounded-lg px-2.5 py-1.5 mb-3 text-center text-[0.7rem] font-bold" style={{ background: `color-mix(in srgb, ${row.color} 15%, transparent)`, color: row.color }}>
-                    {row.highlight}
-                  </div>
-                  <p className={`${DS.text.micro} leading-relaxed`}>{row.note}</p>
-                </div>
-              )
-            })}
+      <div className="max-w-[1280px] mx-auto" style={{ padding: "24px 16px 80px" }}>
+        {/* ── 핵심 메시지 ─ */}
+        <section
+          style={{
+            background: `linear-gradient(135deg, ${MCK.ink} 0%, ${MCK.inkMid} 100%)`,
+            color: MCK.paper,
+            padding: "32px 24px",
+            marginBottom: 32,
+            borderRadius: 4,
+          }}
+        >
+          <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 12 }}>
+            한 줄 요약
           </div>
-        </section>
-
-        {/* ── 수수료 계산기 ── */}
-        <section className="mb-12 max-w-2xl">
-          <FeeCalculator />
-        </section>
-
-        {/* ── 역할별 요금제 ── */}
-        <section className="mb-12">
-          <h2 className={`${DS.text.sectionTitle} mb-2`}>역할별 요금제</h2>
-          <p className={`${DS.text.captionLight} mb-6`}>
-            플랫폼 이용 목적에 맞는 역할을 선택하세요. 매각사는 첫 6개월 무료, 투자그룹은 활동량에 따라 일반/전문으로 구분됩니다.
+          <h1
+            style={{
+              fontFamily: MCK_FONTS.serif,
+              fontSize: "clamp(20px, 4vw, 32px)",
+              fontWeight: 700,
+              lineHeight: 1.4,
+              marginBottom: 12,
+            }}
+          >
+            모든 회원 <span style={{ color: MCK.electric }}>가입 후 6개월 무료</span>.
+            <br />
+            거래가 <strong>체결될 때만</strong> 거래 수수료가 청구됩니다.
+          </h1>
+          <p style={{ fontSize: "clamp(13px, 2vw, 15px)", opacity: 0.9, lineHeight: 1.6 }}>
+            결제 정보 입력 없이 가입 즉시 거래소·딜룸·분석·NDA·LOI 모든 기능 무제한 사용 가능합니다.
+            <br />
+            거래가 성사된 시점에만 매각가·낙찰가 기준으로 수수료를 청구합니다.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {MEMBERSHIP_PLANS.map((plan) => {
+        </section>
+
+        {/* ── 3개 유형 비교 카드 ─ */}
+        <section style={{ marginBottom: 40 }}>
+          <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 8 }}>
+            3 PLAN TYPES · 회원 유형
+          </div>
+          <h2
+            style={{
+              fontFamily: MCK_FONTS.serif,
+              fontSize: "clamp(20px, 3vw, 26px)",
+              fontWeight: 700,
+              color: MCK.ink,
+              marginBottom: 20,
+            }}
+          >
+            당신의 유형을 선택하세요
+          </h2>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 16,
+            }}
+          >
+            {PLANS.map((plan) => {
               const Icon = plan.icon
               return (
                 <div
-                  key={plan.id}
-                  className={`${DS.card.elevated} p-5 flex flex-col relative ${plan.popular ? 'ring-2 ring-[var(--color-positive)]' : ''}`}
+                  key={plan.key}
+                  style={{
+                    background: MCK.paper,
+                    border: plan.recommended ? `2px solid ${plan.color}` : `1px solid ${MCK.border}`,
+                    borderTop: `6px solid ${plan.color}`,
+                    padding: 24,
+                    borderRadius: 4,
+                    position: "relative",
+                    boxShadow: plan.recommended ? `0 8px 24px ${plan.color}25` : undefined,
+                  }}
                 >
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-[var(--color-positive)] text-white text-[0.65rem] font-black tracking-wide whitespace-nowrap">
-                      추천 플랜
+                  {plan.recommended && (
+                    <div
+                      style={{
+                        position: "absolute", top: -10, right: 16,
+                        background: plan.color, color: "white",
+                        padding: "4px 10px", fontSize: 10, fontWeight: 800,
+                        borderRadius: 99, letterSpacing: "0.05em",
+                      }}
+                    >
+                      RECOMMENDED
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `color-mix(in srgb, ${plan.color} 15%, transparent)` }}>
-                      <Icon className="w-4 h-4" style={{ color: plan.color }} />
-                    </div>
-                    <div>
-                      <p className={DS.text.bodyBold}>{plan.name}</p>
-                      <p className={DS.text.micro}>{plan.nameEn}</p>
-                    </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                    <Icon size={24} style={{ color: plan.color }} />
+                    <h3 style={{ fontFamily: MCK_FONTS.serif, fontSize: 20, fontWeight: 800, color: MCK.ink }}>
+                      {plan.label}
+                    </h3>
                   </div>
-
-                  <p className="text-[1.75rem] font-extrabold leading-none mb-0.5" style={{ color: plan.color }}>
-                    {plan.priceLabel}
+                  <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.5, marginBottom: 16, minHeight: 36 }}>
+                    {plan.audience}
                   </p>
-                  <p className={`${DS.text.micro} mb-3`}>{plan.cadence}</p>
 
-                  <div className="mb-3">
-                    <p className={`${DS.text.label} mb-0.5`}>{plan.audience}</p>
-                    <p className={`${DS.text.micro} leading-relaxed`}>{plan.audienceSubtitle}</p>
-                  </div>
-
-                  {plan.subtypes && plan.subtypes.length > 0 && (
-                    <div className="mb-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-sunken)] p-2.5">
-                      <p className={`${DS.text.micro} font-bold mb-1.5 text-[var(--color-text-primary)]`}>대상 회원 유형</p>
-                      <ul className="space-y-1">
-                        {plan.subtypes.map((st) => (
-                          <li key={st.key} className="flex items-start gap-2 text-[0.7rem]">
-                            <span className="inline-block w-1 h-1 rounded-full bg-[var(--color-brand-mid)] mt-1.5 shrink-0" />
-                            <span>
-                              <span className="font-semibold text-[var(--color-text-primary)]">{st.label}</span>
-                              <span className="text-[var(--color-text-muted)]"> · {st.sample}</span>
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
+                  {/* 수수료 표 */}
+                  <div
+                    style={{
+                      background: MCK.paperTint,
+                      border: `1px solid ${MCK.border}`,
+                      padding: 14,
+                      borderRadius: 4,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, color: plan.color, marginBottom: 2, letterSpacing: "0.05em" }}>
+                        가입 수수료
+                      </div>
+                      <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 22, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>
+                        {plan.signupFee}
+                        {plan.key !== "trial" && (
+                          <span style={{ fontSize: 12, fontWeight: 600, color: MCK.textMuted, marginLeft: 6 }}>/ 연</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 10, color: MCK.textMuted, marginTop: 2 }}>
+                        {plan.signupFeeNote}
+                      </div>
                     </div>
-                  )}
-
-                  <div className="mb-3 rounded-lg px-2.5 py-1.5 text-center text-[0.7rem] font-bold" style={{ background: `color-mix(in srgb, ${plan.color} 15%, transparent)`, color: plan.color }}>
-                    {plan.feeSummary}
+                    <div style={{ paddingTop: 10, borderTop: `1px solid ${MCK.border}` }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, color: plan.color, marginBottom: 2, letterSpacing: "0.05em" }}>
+                        거래 수수료
+                      </div>
+                      <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 22, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>
+                        {plan.txFee}
+                      </div>
+                      <div style={{ fontSize: 10, color: MCK.textMuted, marginTop: 2 }}>
+                        {plan.txFeeNote}
+                      </div>
+                    </div>
                   </div>
 
-                  <ul className="space-y-2 mb-5">
-                    {plan.features.map((f, i) => (
-                      <li key={i} className={`flex items-start gap-2 text-[0.8rem] ${f.ok ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] line-through'}`}>
-                        {f.ok
-                          ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[var(--color-positive)] mt-0.5" />
-                          : <X className="w-3.5 h-3.5 shrink-0 text-[var(--color-text-muted)] mt-0.5" />}
-                        <span>{f.text}</span>
+                  {/* 핵심 포함 기능 */}
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
+                    {plan.highlights.map((h, i) => (
+                      <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: MCK.ink, lineHeight: 1.5 }}>
+                        <Check size={12} style={{ color: plan.color, flexShrink: 0, marginTop: 3 }} />
+                        <span>{h}</span>
                       </li>
                     ))}
                   </ul>
 
+                  {/* CTA */}
                   <Link
                     href={plan.ctaHref}
-                    className={`${plan.popular ? DS.button.accent : DS.button.secondary} w-full justify-center text-center mt-auto`}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                      padding: "12px 16px",
+                      background: plan.color, color: "white",
+                      fontWeight: 800, fontSize: 13,
+                      textDecoration: "none", borderRadius: 4,
+                    }}
                   >
-                    {plan.ctaLabel}
-                    <ArrowRight className="w-4 h-4" />
+                    {plan.ctaLabel} <ArrowRight size={14} />
                   </Link>
                 </div>
               )
@@ -482,102 +299,202 @@ export default function PricingPage() {
           </div>
         </section>
 
-        {/* ── 금융기관 온보딩 배너 ── */}
-        <section className="mb-12">
-          <div className="rounded-2xl border border-[var(--color-brand-mid)]/30 bg-gradient-to-r from-[var(--color-brand-dark)] to-[var(--color-brand-mid)]/20 p-8">
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-              <div className="flex items-center gap-4 flex-1">
-                <div className="w-14 h-14 rounded-2xl bg-[var(--color-brand-mid)]/20 flex items-center justify-center shrink-0">
-                  <Building2 className="w-7 h-7 text-[var(--color-brand-mid)]" />
+        {/* ── 거래 흐름 (4-Step) ─ */}
+        <section style={{ marginBottom: 40 }}>
+          <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 8 }}>
+            HOW IT WORKS · 거래 흐름
+          </div>
+          <h2 style={{ fontFamily: MCK_FONTS.serif, fontSize: "clamp(20px, 3vw, 26px)", fontWeight: 700, color: MCK.ink, marginBottom: 20 }}>
+            가입 → 거래 → 정산 — 4 단계
+          </h2>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 12,
+            }}
+          >
+            {FLOW_STEPS.map((s) => (
+              <div
+                key={s.step}
+                style={{
+                  background: MCK.paper,
+                  border: `1px solid ${MCK.border}`,
+                  borderLeft: `3px solid ${MCK.electric}`,
+                  padding: 20,
+                  borderRadius: 4,
+                }}
+              >
+                <div
+                  style={{
+                    width: 36, height: 36, background: MCK.ink, color: "white",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800,
+                    borderRadius: "50%", marginBottom: 10,
+                  }}
+                >
+                  {s.step}
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-[var(--color-brand-mid)] uppercase tracking-wider mb-1">금융기관 특별 혜택</p>
-                  <h3 className="text-xl font-extrabold text-[var(--color-text-primary)] mb-1">첫 6개월 수수료 완전 무료</h3>
-                  <p className={DS.text.captionLight}>
-                    은행, 캐피탈, 저축은행, AMC 등 금융기관 대상. 법인 인증 후 즉시 적용.
-                  </p>
-                </div>
+                <h3 style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 700, color: MCK.ink, marginBottom: 4 }}>
+                  {s.label}
+                </h3>
+                <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.5 }}>{s.desc}</p>
               </div>
-              <Link href="/contact" className={`${DS.button.accent} shrink-0`}>
-                영업팀 문의 <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* ── 기능 비교표 ── */}
-        <section className="mb-12">
-          <h2 className={`${DS.text.sectionTitle} mb-6`}>역할별 기능 비교</h2>
-          <div className={DS.table.wrapper}>
-            <table className="w-full text-[0.8125rem]">
-              <thead className={DS.table.header}>
-                <tr>
-                  <th className={DS.table.headerCell}>기능</th>
-                  <th className={`${DS.table.headerCell} text-center`}>무료</th>
-                  <th className={`${DS.table.headerCell} text-center`}>매각사</th>
-                  <th className={`${DS.table.headerCell} text-center`}>일반 투자그룹</th>
-                  <th className={`${DS.table.headerCell} text-center`}>전문 투자그룹</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { feature: '매물 탐색', free: '공개 L0', seller: '본인 등록물 + 전체', general: '무제한', pro: '무제한' },
-                  { feature: '매물 등록', free: false, seller: '대량 + OCR', general: false, pro: false },
-                  { feature: '매수 제안·입찰', free: false, seller: false, general: true, pro: true },
-                  { feature: 'AI 분석', free: '5회/월', seller: '매물당 자동 발급', general: '무제한', pro: '무제한 + 애널리스트' },
-                  { feature: '경매 분석기', free: '기본', seller: '매각 관점', general: '고급 + 시뮬레이터', pro: '고급 + 풀세일' },
-                  { feature: '딜룸', free: '1개', seller: '무제한', general: '10개', pro: '무제한' },
-                  { feature: '우선협상권(PNR)', free: false, seller: '—', general: true, pro: true },
-                  { feature: '법률 RAG', free: false, seller: true, general: true, pro: '+ 판례 DB' },
-                  { feature: '수수료', free: '표준', seller: 'NPL/부동산 매도 ≤0.9%', general: 'NPL 매수 1.5% · -0.05%p', pro: 'NPL 매수 1.5% · -0.1%p' },
-                  { feature: '온보딩 혜택', free: '—', seller: '첫 6개월 무료', general: '—', pro: '분기 볼륨 리베이트' },
-                  { feature: '전담 매니저', free: false, seller: true, general: false, pro: true },
-                ].map((row, i) => (
-                  <tr key={i} className={DS.table.row}>
-                    <td className={`${DS.table.cell} font-medium`}>{row.feature}</td>
-                    {(['free', 'seller', 'general', 'pro'] as const).map((col) => {
-                      const val = (row as Record<string, unknown>)[col]
-                      return (
-                        <td key={col} className={`${DS.table.cell} text-center`}>
-                          {val === true
-                            ? <CheckCircle2 className="w-4 h-4 text-[var(--color-positive)] mx-auto" />
-                            : val === false
-                            ? <X className="w-4 h-4 text-[var(--color-text-muted)] mx-auto" />
-                            : <span className={DS.text.caption}>{String(val)}</span>}
-                        </td>
-                      )
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* ── FAQ ── */}
-        <section className="mb-12 max-w-2xl">
-          <h2 className={`${DS.text.sectionTitle} mb-6`}>자주 묻는 질문</h2>
-          <div className={DS.card.base}>
-            {FAQ_ITEMS.map((item, i) => (
-              <FaqItem key={i} q={item.q} a={item.a} />
             ))}
           </div>
         </section>
 
-        {/* ── 문의 CTA ── */}
-        <section className="text-center">
-          <div className={`${DS.card.flat} inline-flex flex-col items-center gap-3 px-10 py-8`}>
-            <MessageSquare className="w-8 h-8 text-[var(--color-brand-mid)]" />
-            <p className={DS.text.sectionTitle}>더 궁금한 점이 있으신가요?</p>
-            <p className={DS.text.captionLight}>영업팀이 최적의 수수료 조건을 안내해 드립니다.</p>
-            <div className="flex gap-3 mt-1">
-              <Link href="/contact" className={DS.button.primary}>영업팀 문의</Link>
-              <Link href="/exchange" className={DS.button.secondary}>거래소 둘러보기</Link>
+        {/* ── 우회 거래 절대 금지 정책 ─ */}
+        <section
+          style={{
+            background: "#FEF2F2",
+            border: `2px solid #EF4444`,
+            padding: 24,
+            marginBottom: 40,
+            borderRadius: 4,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
+            <AlertTriangle size={28} style={{ color: "#EF4444", flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#991B1B", letterSpacing: "0.05em", marginBottom: 4 }}>
+                ⚠ ANTI-BYPASS POLICY · 우회 거래 절대 금지
+              </div>
+              <h2 style={{ fontFamily: MCK_FONTS.serif, fontSize: "clamp(18px, 3vw, 22px)", fontWeight: 800, color: "#991B1B", lineHeight: 1.4 }}>
+                {ANTI_BYPASS.title}
+              </h2>
             </div>
+          </div>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+            {ANTI_BYPASS.rules.map((rule, i) => (
+              <li
+                key={i}
+                style={{
+                  display: "flex", alignItems: "flex-start", gap: 10,
+                  fontSize: 13, color: "#7F1D1D", lineHeight: 1.6,
+                  padding: 12, background: "white", borderRadius: 4,
+                  borderLeft: "3px solid #EF4444",
+                }}
+              >
+                <Lock size={14} style={{ color: "#EF4444", flexShrink: 0, marginTop: 3 }} />
+                <span>
+                  <strong style={{ color: "#991B1B" }}>{i + 1}.</strong> {rule}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p
+            style={{
+              marginTop: 16, padding: 12,
+              background: "#7F1D1D", color: "white", fontSize: 12, lineHeight: 1.6,
+              borderRadius: 4, fontWeight: 600,
+            }}
+          >
+            ⚖ 본 정책은 NDA·LOI 본문에 자동 삽입되며, 양 당사자가 전자서명한 시점부터 효력을 가집니다.
+            법적 강제력은 없지만, 위반 시 <strong>거래 수수료 사후 청구·손해배상 청구·영구 회원 자격 박탈</strong>의
+            근거가 됩니다.
+          </p>
+        </section>
+
+        {/* ── FAQ ─ */}
+        <section style={{ marginBottom: 40 }}>
+          <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 8 }}>
+            FAQ · 자주 묻는 질문
+          </div>
+          <h2 style={{ fontFamily: MCK_FONTS.serif, fontSize: "clamp(20px, 3vw, 26px)", fontWeight: 700, color: MCK.ink, marginBottom: 20 }}>
+            궁금하신 점
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {[
+              {
+                q: "정말 처음 6개월 동안 결제 없이 사용 가능한가요?",
+                a: "네 — 결제 정보를 전혀 입력하지 않으셔도 됩니다. 가입 즉시 모든 기능 (거래소·딜룸·분석·NDA·LOI) 무제한 사용 가능. 6개월 후 자동으로 정식 회원 (가입 수수료 부과)으로 전환되며, 사전에 이메일로 안내드립니다.",
+              },
+              {
+                q: "거래 수수료는 언제 청구되나요?",
+                a: "본계약 체결 + ESCROW 잔금 정산 시점에만 청구됩니다. NDA·LOI 단계에서는 수수료가 부과되지 않습니다. 매각사는 전속 0.3% / 비전속 0.5~0.9%, 투자그룹은 1.0~2.0% (낙찰가 기준).",
+              },
+              {
+                q: "투자그룹 (매입사) 은 어떤 분들인가요?",
+                a: "AMC · 대부업체 · 사모AMC · 투자운용사 · 개인 매수자 · 법인 매수자 등 NPL 또는 부동산을 매입하는 모든 투자자. 이전에는 일반 투자그룹·전문 투자그룹으로 나뉘었으나 단일화했습니다.",
+              },
+              {
+                q: "NDA·LOI 체결 후 NPLatform 외부에서 단독 계약하면 어떻게 되나요?",
+                a: "사이트 평생 이용 금지 + 거래 수수료 사후 청구 + 손해배상 청구. NDA·LOI 본문에 'NPLatform 을 통해서만 거래한다' 조항이 명시되어 있어 양 당사자가 서명한 시점부터 효력 발생.",
+              },
+              {
+                q: "가입 수수료 이외에 추가 비용이 있나요?",
+                a: "선택 옵션만 — Pool Sale 대량 매각, 권리분석 자문사 자문료, 공동투자팀 구성비 등은 거래별로 별도 정산. 모든 비용은 거래 시점에 사전 안내됩니다.",
+              },
+              {
+                q: "회사가 망하면 데이터는 어떻게 되나요?",
+                a: "전자서명법에 따라 모든 NDA·LOI·계약 PDF는 5년간 별도 안전 보관. Supabase (서울 리전) 및 추가 백업 보관소에 다중 저장. 회원 자체 다운로드도 언제든 가능.",
+              },
+            ].map((faq, i) => (
+              <details
+                key={i}
+                style={{
+                  background: MCK.paper,
+                  border: `1px solid ${MCK.border}`,
+                  padding: 16,
+                  borderRadius: 4,
+                }}
+              >
+                <summary style={{ cursor: "pointer", fontSize: 14, fontWeight: 700, color: MCK.ink, listStyle: "none" }}>
+                  Q. {faq.q}
+                </summary>
+                <p style={{ marginTop: 10, fontSize: 13, color: MCK.textSub, lineHeight: 1.7 }}>
+                  <strong style={{ color: MCK.ink }}>A. </strong>
+                  {faq.a}
+                </p>
+              </details>
+            ))}
           </div>
         </section>
 
+        {/* ── 최종 CTA ─ */}
+        <section
+          style={{
+            background: MCK.ink,
+            color: MCK.paper,
+            padding: "32px 24px",
+            borderRadius: 4,
+            textAlign: "center",
+          }}
+        >
+          <h2 style={{ fontFamily: MCK_FONTS.serif, fontSize: "clamp(22px, 4vw, 28px)", fontWeight: 700, marginBottom: 12 }}>
+            지금 바로 시작하세요 — 6개월 동안 무료
+          </h2>
+          <p style={{ fontSize: "clamp(13px, 2vw, 15px)", opacity: 0.85, marginBottom: 24, lineHeight: 1.6 }}>
+            결제 정보 입력 없이 가입 즉시 모든 기능 사용 가능
+          </p>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+            <Link
+              href="/onboarding"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "14px 28px", fontSize: 15, fontWeight: 800,
+                background: MCK.electric, color: "white",
+                textDecoration: "none", borderRadius: 4,
+              }}
+            >
+              무료 시작 <ArrowRight size={16} />
+            </Link>
+            <Link
+              href="/guide"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "14px 28px", fontSize: 15, fontWeight: 800,
+                background: "transparent", color: MCK.paper,
+                border: `1px solid ${MCK.paper}40`,
+                textDecoration: "none", borderRadius: 4,
+              }}
+            >
+              가이드 먼저 보기
+            </Link>
+          </div>
+        </section>
       </div>
-    </div>
+    </MckPageShell>
   )
 }
