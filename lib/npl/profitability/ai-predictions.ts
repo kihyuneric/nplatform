@@ -15,75 +15,81 @@ import type {
 } from './types'
 import { runMonteCarlo, type MonteCarloInput } from '@/lib/ai/monte-carlo'
 import { runDeterministicAnalysis } from './engine'
+import {
+  getRegionBidRate,
+  getPropertyTypeAdjustment,
+  STATIC_REGION_BID_RATES,
+} from '@/lib/ai/training/bid-rate-stats'
 
 // ─── 1. 낙찰가율 예측 ─────────────────────────────────────────────────────
-
-/** 지역별 평균 낙찰가율 (통계 기반 기본값) */
-const REGION_BID_RATES: Record<string, number> = {
-  '서울': 82,
-  '경기': 75,
-  '인천': 72,
-  '부산': 70,
-  '대구': 68,
-  '대전': 67,
-  '광주': 65,
-  '울산': 66,
-  '세종': 78,
-  '강원': 60,
-  '충북': 62,
-  '충남': 63,
-  '전북': 58,
-  '전남': 56,
-  '경북': 60,
-  '경남': 64,
-  '제주': 72,
-}
-
-/** 담보물 유형별 낙찰가율 보정 */
-const PROPERTY_TYPE_ADJUSTMENTS: Record<string, number> = {
-  '아파트': 5,
-  '오피스텔': 0,
-  '빌라': -3,
-  '상가': -5,
-  '토지': -8,
-  '기타': -10,
-}
+//
+// P0-5 (2026-05-03): 정적 룩업 → 동적 평균 산출로 전환.
+// `lib/ai/training/bid-rate-stats.ts` 가 npl_cases.actual_bid_price 실측을
+// 24시간 캐시로 평균 내고, 데이터 부족 시 fallback 정적 룩업 자동 사용.
+//
+// 정적 fallback 은 STATIC_REGION_BID_RATES / STATIC_PROPERTY_TYPE_ADJUSTMENTS 로
+// re-export 됨 — 동일 정책을 한 곳에서 관리.
 
 /**
- * 낙찰가율 예측
+ * 낙찰가율 예측 (P0-5 · 동적 평균 + 정적 fallback)
  *
  * 통계 기반 앙상블:
- * - 지역별 평균 낙찰가율
- * - 담보물 유형 보정
+ * - 지역별 평균 낙찰가율 — npl_cases.actual_bid_price 실측 24h 캐시 평균
+ *   (sample < 10건이면 정적 fallback 룩업)
+ * - 담보물 유형 보정 — 위와 동일
  * - 감정가 대비 시세 비율 보정
  * - 선순위 부담 보정
+ *
+ * supabase 인자 미지원 환경 (예: 단순 Excel export) 을 위해 옵셔널 처리.
  */
 export async function predictBidRatio(
   collateral: CollateralInfo,
-  rights: RightsAnalysis
+  rights: RightsAnalysis,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase?: any,
 ): Promise<BidRatioPrediction> {
-  // 지역 추출 (주소에서 시/도)
   const region = extractRegion(collateral.address)
-  const baseBidRate = REGION_BID_RATES[region] ?? 68
 
-  // 유형 보정
-  const typeAdjust = PROPERTY_TYPE_ADJUSTMENTS[collateral.propertyType] ?? 0
+  // ── 동적 산출 시도 ──────────────────────────────────────
+  let baseBidRate: number
+  let typeAdjust: number
+  let isDynamic = false
+  let dynamicSampleCount = 0
 
-  // 시세 대비 감정가 비율 보정
+  if (supabase) {
+    try {
+      const [regionResult, typeResult] = await Promise.all([
+        getRegionBidRate(supabase, region),
+        getPropertyTypeAdjustment(supabase, collateral.propertyType),
+      ])
+      baseBidRate = regionResult.bidRate
+      typeAdjust = typeResult.adjustment
+      isDynamic = regionResult.isDynamic && typeResult.isDynamic
+      dynamicSampleCount = regionResult.sampleCount + typeResult.sampleCount
+    } catch {
+      // DB 에러 → fallback
+      baseBidRate = STATIC_REGION_BID_RATES[region] ?? 68
+      typeAdjust = staticPropertyAdjustment(collateral.propertyType)
+    }
+  } else {
+    // supabase 없는 환경 → 정적 룩업
+    baseBidRate = STATIC_REGION_BID_RATES[region] ?? 68
+    typeAdjust = staticPropertyAdjustment(collateral.propertyType)
+  }
+
+  // ── 보정 ────────────────────────────────────────────────
   let marketAdjust = 0
   if (collateral.currentMarketValue && collateral.appraisalValue > 0) {
     const ratio = collateral.currentMarketValue / collateral.appraisalValue
     marketAdjust = ratio > 1.1 ? 5 : ratio < 0.9 ? -5 : 0
   }
 
-  // 선순위 부담 보정
   const seniorTotal = rights.seniorClaims.reduce((s, c) => s + c.amount, 0)
   const seniorRatio = collateral.appraisalValue > 0
     ? seniorTotal / collateral.appraisalValue
     : 0
   const seniorAdjust = seniorRatio > 0.7 ? -8 : seniorRatio > 0.5 ? -4 : 0
 
-  // 임차인 리스크 보정
   const seniorTenants = rights.tenants.filter(t => t.priority === 'SENIOR')
   const tenantAdjust = seniorTenants.length > 2 ? -5 : seniorTenants.length > 0 ? -2 : 0
 
@@ -91,8 +97,11 @@ export async function predictBidRatio(
     baseBidRate + typeAdjust + marketAdjust + seniorAdjust + tenantAdjust
   ))
 
-  const stdDev = 8 // 표준편차 약 8%p
-  const confidence = 0.7 // 통계 모델 기본 신뢰도
+  // 동적 산출 시 신뢰도 상승 (sample 30+ 이면 0.85, 10~30 이면 0.78)
+  const stdDev = isDynamic ? 6 : 8
+  const confidence = isDynamic && dynamicSampleCount > 60 ? 0.85
+                   : isDynamic ? 0.78
+                   : 0.7
 
   return {
     predicted,
@@ -100,8 +109,8 @@ export async function predictBidRatio(
     lowerBound: Math.max(20, predicted - stdDev * 1.65),
     upperBound: Math.min(130, predicted + stdDev * 1.65),
     factors: [
-      { name: `지역(${region})`, impact: baseBidRate - 68 },
-      { name: `유형(${collateral.propertyType})`, impact: typeAdjust },
+      { name: `지역(${region})${isDynamic ? ' · 실측' : ''}`, impact: baseBidRate - 68 },
+      { name: `유형(${collateral.propertyType})${isDynamic ? ' · 실측' : ''}`, impact: typeAdjust },
       { name: '시세보정', impact: marketAdjust },
       { name: '선순위부담', impact: seniorAdjust },
       { name: '임차인리스크', impact: tenantAdjust },
@@ -109,8 +118,19 @@ export async function predictBidRatio(
   }
 }
 
+// ─── helpers ─────────────────────────────────────────────────
+function staticPropertyAdjustment(propertyType: string): number {
+  // 정적 정합 — bid-rate-stats 의 STATIC_PROPERTY_TYPE_ADJUSTMENTS 와 동일 정책
+  const STATIC: Record<string, number> = {
+    '아파트': 5, '오피스텔': 0, '빌라': -3,
+    '상가': -5, '토지': -8, '기타': -10,
+  }
+  const matched = Object.keys(STATIC).find(k => propertyType.includes(k))
+  return matched ? STATIC[matched]! : 0
+}
+
 function extractRegion(address: string): string {
-  for (const region of Object.keys(REGION_BID_RATES)) {
+  for (const region of Object.keys(STATIC_REGION_BID_RATES)) {
     if (address.includes(region)) return region
   }
   return '서울' // fallback
