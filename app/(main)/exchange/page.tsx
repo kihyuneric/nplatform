@@ -39,6 +39,7 @@ import {
 import { MckPageShell, MckPageHeader, MckDemoBanner, MckBadge, MckKpiGrid } from "@/components/mck"
 import { MCK, MCK_FONTS } from "@/lib/mck-design"
 import { OwnerEditButton } from "@/components/edit/owner-edit-button"
+import { EXCHANGE_DEMO_LISTINGS, DEMO_SELLER_ID as DEMO_SELLER_ID_FROM_SAMPLES } from "@/lib/samples/exchange-demo-listings"
 
 /* ═══════════════════════════════════════════════════════════
    DESIGN TOKENS — McKinsey 절제된 모노크로 (ink + brass + paper)
@@ -100,133 +101,11 @@ interface CardListing {
   view_count: number   // 공개 리스트 누적 조회수 (L0)
 }
 
-// 데모 모드 매각사 UUID — CLAUDE.md 의 dev SELLER (김매도) 와 일치.
-// 로그인 시 해당 user.id 와 일치하는 매물 카드에서 OwnerEditButton 노출.
-const DEMO_SELLER_ID = "00000000-0000-0000-0000-000000000001"
-
-const MOCK: CardListing[] = [
-  {
-    id: "npl-2026-0412", seller_id: DEMO_SELLER_ID,
-    institution: "우리은행", inst_kind: "BANK", listing_category: "NPL",
-    region: "서울 강남구", regionCode: "SEOUL",
-    collateral: "아파트", collateralMajor: "RESIDENTIAL",
-    outstanding_principal: 1_200_000_000, asking_price: 850_000_000,
-    appraisal_value: 1_020_000_000, discount_rate: 29.2,
-    ai_grade: "A", data_completeness: 9, access_tier_required: "L0",
-    provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: false },
-    sale_method: "NPLATFORM", created_days_ago: 2, view_count: 412,
-  },
-  {
-    id: "npl-2026-0411", institution: "한국자산관리공사", inst_kind: "AMC", listing_category: "NPL",
-    region: "경기 성남시", regionCode: "GYEONGGI",
-    collateral: "사무실/사무소", collateralMajor: "COMMERCIAL",
-    outstanding_principal: 3_800_000_000, asking_price: 2_600_000_000,
-    appraisal_value: 3_100_000_000, discount_rate: 31.6,
-    ai_grade: "A", data_completeness: 10, access_tier_required: "L0",
-    provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: true },
-    sale_method: "AUCTION", created_days_ago: 1, view_count: 1083,
-  },
-  {
-    id: "npl-2026-0410", institution: "대신F&I", inst_kind: "AMC", listing_category: "NPL",
-    region: "부산 해운대구", regionCode: "BUSAN",
-    collateral: "근린시설/상가", collateralMajor: "COMMERCIAL",
-    outstanding_principal: 780_000_000, asking_price: 510_000_000,
-    appraisal_value: 640_000_000, discount_rate: 34.6,
-    ai_grade: "B", data_completeness: 6, access_tier_required: "L0",
-    provided: { appraisal: true, registry: true, rights: false, lease: false, site_photos: true, financials: false },
-    sale_method: "NPLATFORM", created_days_ago: 4, view_count: 238,
-  },
-  {
-    id: "npl-2026-0409", institution: "신한은행", inst_kind: "BANK", listing_category: "NPL",
-    region: "서울 서초구", regionCode: "SEOUL",
-    collateral: "오피스텔(업무용)", collateralMajor: "COMMERCIAL",
-    outstanding_principal: 5_200_000_000, asking_price: 4_100_000_000,
-    appraisal_value: 4_600_000_000, discount_rate: 21.2,
-    ai_grade: "A", data_completeness: 10, access_tier_required: "L0",
-    provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: true },
-    sale_method: "NPLATFORM", created_days_ago: 1, view_count: 893,
-  },
-  {
-    id: "npl-2026-0408", institution: "국민은행", inst_kind: "BANK", listing_category: "NPL",
-    region: "서울 마포구", regionCode: "SEOUL",
-    collateral: "오피스텔(주거용)", collateralMajor: "RESIDENTIAL",
-    outstanding_principal: 1_800_000_000, asking_price: 1_280_000_000,
-    appraisal_value: 1_520_000_000, discount_rate: 28.9,
-    ai_grade: "A", data_completeness: 8, access_tier_required: "L0",
-    provided: { appraisal: true, registry: true, rights: true, lease: false, site_photos: true, financials: false },
-    sale_method: "NPLATFORM", created_days_ago: 3, view_count: 521,
-  },
-  {
-    id: "npl-2026-0407", institution: "연합자산관리", inst_kind: "AMC", listing_category: "NPL",
-    region: "인천 남동구", regionCode: "INCHEON",
-    collateral: "대지", collateralMajor: "LAND",
-    outstanding_principal: 950_000_000, asking_price: 620_000_000,
-    appraisal_value: 780_000_000, discount_rate: 34.7,
-    ai_grade: "B", data_completeness: 5, access_tier_required: "L0",
-    provided: { appraisal: true, registry: false, rights: false, lease: false, site_photos: false, financials: false },
-    sale_method: "PUBLIC", created_days_ago: 6, view_count: 156,
-  },
-  {
-    id: "npl-2026-0406", institution: "하나은행", inst_kind: "BANK", listing_category: "NPL",
-    region: "대전 유성구", regionCode: "DAEJEON",
-    collateral: "아파트", collateralMajor: "RESIDENTIAL",
-    outstanding_principal: 420_000_000, asking_price: 280_000_000,
-    appraisal_value: 360_000_000, discount_rate: 33.3,
-    ai_grade: "B", data_completeness: 7, access_tier_required: "L0",
-    provided: { appraisal: true, registry: true, rights: true, lease: false, site_photos: false, financials: false },
-    sale_method: "NPLATFORM", created_days_ago: 2, view_count: 302,
-  },
-  {
-    id: "npl-2026-0405", institution: "IBK기업은행", inst_kind: "BANK", listing_category: "NPL",
-    region: "경기 용인시", regionCode: "GYEONGGI",
-    collateral: "근린시설/상가", collateralMajor: "COMMERCIAL",
-    outstanding_principal: 2_100_000_000, asking_price: 1_450_000_000,
-    appraisal_value: 1_700_000_000, discount_rate: 30.9,
-    ai_grade: "A", data_completeness: 8, access_tier_required: "L0",
-    provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: false, financials: false },
-    sale_method: "NPLATFORM", created_days_ago: 3, view_count: 674,
-  },
-  {
-    id: "npl-2026-0404", institution: "키움상호저축은행", inst_kind: "SAVINGS_BANK", listing_category: "NPL",
-    region: "대구 수성구", regionCode: "DAEGU",
-    collateral: "아파트", collateralMajor: "RESIDENTIAL",
-    outstanding_principal: 640_000_000, asking_price: 420_000_000,
-    appraisal_value: 520_000_000, discount_rate: 34.3,
-    ai_grade: "C", data_completeness: 4, access_tier_required: "L0",
-    provided: { appraisal: false, registry: true, rights: false, lease: false, site_photos: false, financials: false },
-    sale_method: "NPLATFORM", created_days_ago: 5, view_count: 189,
-  },
-  {
-    id: "npl-2026-0403", institution: "우리금융F&I", inst_kind: "AMC", listing_category: "NPL",
-    region: "서울 영등포구", regionCode: "SEOUL",
-    collateral: "상업용빌딩(통건물)", collateralMajor: "COMMERCIAL",
-    outstanding_principal: 4_100_000_000, asking_price: 2_950_000_000,
-    appraisal_value: 3_550_000_000, discount_rate: 28.0,
-    ai_grade: "A", data_completeness: 9, access_tier_required: "L0",
-    provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: false },
-    sale_method: "AUCTION", created_days_ago: 2, view_count: 945,
-  },
-  {
-    id: "npl-2026-0402", institution: "신한은행", inst_kind: "BANK", listing_category: "NPL",
-    region: "서울 송파구", regionCode: "SEOUL",
-    collateral: "아파트", collateralMajor: "RESIDENTIAL",
-    outstanding_principal: 1_550_000_000, asking_price: 1_050_000_000,
-    appraisal_value: 1_280_000_000, discount_rate: 32.3,
-    ai_grade: "A", data_completeness: 10, access_tier_required: "L0",
-    provided: { appraisal: true, registry: true, rights: true, lease: true, site_photos: true, financials: true },
-    sale_method: "NPLATFORM", created_days_ago: 1, view_count: 761,
-  },
-  {
-    id: "npl-2026-0401", institution: "새마을금고", inst_kind: "MUTUAL_CREDIT", listing_category: "NPL",
-    region: "경기 수원시", regionCode: "GYEONGGI",
-    collateral: "근린시설/상가", collateralMajor: "COMMERCIAL",
-    outstanding_principal: 890_000_000, asking_price: 590_000_000,
-    appraisal_value: 730_000_000, discount_rate: 33.7,
-    ai_grade: "B", data_completeness: 7, access_tier_required: "L0",
-    provided: { appraisal: true, registry: true, rights: false, lease: true, site_photos: false, financials: false },
-    sale_method: "NPLATFORM", created_days_ago: 4, view_count: 287,
-  },
-]
+// MOCK 12건은 lib/samples/exchange-demo-listings.ts 로 추출 (P0-3 · 2026-05-02)
+// — 페이지에 하드코딩 금지 정책. 데모 시드 갱신 시 본 파일은 손대지 않고 lib/samples 만 수정.
+const DEMO_SELLER_ID = DEMO_SELLER_ID_FROM_SAMPLES
+// 페이지 내 사용처는 기존 변수명 그대로 유지 — 시그니처 변경 최소화
+const MOCK: CardListing[] = EXCHANGE_DEMO_LISTINGS as unknown as CardListing[]
 
 /* ═══════════════════════════════════════════════════════════
    HELPERS
