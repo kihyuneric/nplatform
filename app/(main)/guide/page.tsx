@@ -231,8 +231,8 @@ const WORKFLOWS: GuideWorkflow[] = [
     roleKey: "individual",
     steps: [
       {
-        num: 1, title: "본인 인증 + KYC",
-        desc: "휴대폰 인증 → 사업자등록증 또는 명함 업로드 (개인 투자자도 가능). 1~2 영업일 내 승인.",
+        num: 1, title: "사업자등록증/명함 인증 (필수)",
+        desc: "회원가입 후 사업자등록증 또는 명함을 업로드하셔야 사이트 사용이 가능합니다. 운영팀 검증 1~2 영업일 → 검증 통과 시 6개월 무료 + 모든 기능 (거래소 · 딜룸 · 분석 · NDA · LOI) 사용 권한 부여.",
         cta: { label: "인증 시작", href: "/my/settings?tab=kyc" },
       },
       {

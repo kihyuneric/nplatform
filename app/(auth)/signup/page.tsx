@@ -1,969 +1,596 @@
 'use client'
 
+/**
+ * /signup — McKinsey White Paper · Electric Blue accent (v3 · 2026-04-29)
+ *
+ * 사용자 정합 정책:
+ *   - /login 과 동일한 2-panel 디자인 (좌: ink hero + KPI / 우: paper form)
+ *   - 회원 유형 3개 (매각사 · 매입사 · 파트너)
+ *   - 가입 후 사업자등록증/명함 인증 → 6개월 무료 안내
+ *   - 단일 폼 (1-step) 으로 단순화 — 인증 서류는 가입 후 마이페이지에서 업로드
+ */
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
-  Loader2, CheckCircle2, Mail, RefreshCw, Upload, X, FileText,
-  Building2, User, Briefcase, TrendingUp, Shield, Eye, EyeOff,
-  ArrowRight, Banknote, Lock, Trophy, Zap,
+  Eye, EyeOff, Loader2, Banknote, TrendingUp, User as UserIcon,
+  CheckCircle2, ArrowRight, ShieldCheck,
 } from 'lucide-react'
 
-// ─── Types & constants (unchanged logic) ────────────────────────────────────
+const INK = '#0A1628'
+const PAPER = '#FFFFFF'
+const PAPER_TINT = '#F8FAFC'
+const ELECTRIC = '#2251FF'
+const ELECTRIC_DARK = '#1A47CC'
+const CYAN = '#00A9F4'
+const SKY = '#A8CDE8'
+const INK_MID = 'rgba(5, 28, 44, 0.65)'
+const INK_MUTED = 'rgba(5, 28, 44, 0.45)'
+const BORDER = 'rgba(5, 28, 44, 0.10)'
+const BORDER_STRONG = 'rgba(5, 28, 44, 0.20)'
+const DANGER = '#9F1239'
+const DANGER_BG = 'rgba(225, 29, 72, 0.06)'
 
-// Phase G7+ 2026-04-29 — 사용자 정합 정책: 5개 → 3개 역할로 단순화
-//   매도자 → 매각사 / 매수자 → 매입사 / 파트너 (전문가·기관 제거)
+// ─── 회원 유형 (3개 — 매각사 · 매입사 · 파트너) ─────────────
 const SIGNUP_ROLES = [
-  { value: 'SELLER',  label: '매각사',  icon: Banknote,    desc: '매물 등록 및 매각 (은행·저축은행·AMC·대부업체·캐피탈·보험사)' },
-  { value: 'BUYER',   label: '매입사',  icon: TrendingUp,  desc: '매물 탐색 및 입찰 (자산가·법인·대부업체·AMC·투자운용사)' },
-  { value: 'PARTNER', label: '파트너',  icon: User,        desc: '딜 소싱·자문·연결 (자문사·법무법인·회계법인)' },
+  {
+    value: 'SELLER',
+    label: '매각사',
+    desc: '은행 · 저축은행 · AMC · 대부업체 · 캐피탈 · 보험사',
+    icon: Banknote,
+  },
+  {
+    value: 'BUYER',
+    label: '매입사',
+    desc: '자산가 · 법인 · 대부업체 · AMC · 투자운용사',
+    icon: TrendingUp,
+  },
+  {
+    value: 'PARTNER',
+    label: '파트너',
+    desc: '자문사 · 법무법인 · 회계법인',
+    icon: UserIcon,
+  },
 ] as const
-
-interface DocumentSlot {
-  type: string
-  required: boolean
-}
-
-interface UploadedDocument {
-  type: string
-  name: string
-  data: string
-}
-
-const ROLE_DOCUMENTS: Record<string, DocumentSlot[]> = {
-  SELLER: [
-    { type: '사업자등록증', required: true },
-    { type: '담당자 명함', required: true },
-    { type: '금융기관 인가증', required: false },  // 비금융 매각사 (대부업체 등) 도 가능
-  ],
-  BUYER: [
-    { type: '사업자등록증 또는 신분증 사본', required: true },
-    { type: '담당자 명함 (법인)', required: false },
-  ],
-  PARTNER: [
-    { type: '사업자등록증', required: true },
-    { type: '자격증 사본 (법무법인 · 회계법인 등)', required: false },
-    { type: '담당자 명함', required: false },
-  ],
-}
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024
-
-const STEP_LABELS = ['계정 정보', '프로필 설정', '서류 제출']
-
-const ROLE_BENEFITS: Record<string, { title: string; items: string[] }> = {
-  SELLER: {
-    title: '매각사 혜택',
-    items: [
-      '매물 무제한 등록 (Excel · OCR · 폼)',
-      'PII 자동 마스킹 + 등기부 NDA 제어',
-      '전속 등록 시 땅집고옥션 투자자 12,000명 대상 마케팅 지원',
-    ],
-  },
-  BUYER: {
-    title: '매입사 혜택',
-    items: [
-      'AI 매칭 — 관심 조건 매물 자동 추천',
-      '분석 보고서 + Monte Carlo 시뮬레이션',
-      '공동투자팀 (4–10명) 구성 가능',
-    ],
-  },
-  PARTNER: {
-    title: '파트너 혜택',
-    items: [
-      '딜 소싱 커미션 수취 (자문료 별도)',
-      '권리분석 · 실사 자동 라우팅으로 수임률 ↑',
-      '전용 파트너 대시보드 + 정산 자동화',
-    ],
-  },
-}
-
-// ─── Step indicator ───────────────────────────────────────────────────────────
-
-function StepIndicator({ current, total }: { current: number; total: number }) {
-  return (
-    <div className="flex items-center w-full mb-8">
-      {Array.from({ length: total }).map((_, i) => {
-        const step = i + 1
-        const done = step < current
-        const active = step === current
-        return (
-          <div key={i} className="flex items-center flex-1 last:flex-none">
-            <div className="flex flex-col items-center gap-1.5">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
-                  done
-                    ? 'bg-[#2251FF] text-white shadow-md shadow-[#2251FF]/30'
-                    : active
-                    ? 'bg-[#0A1628] text-white shadow-lg shadow-[#0A1628]/25 ring-4 ring-[#0A1628]/10'
-                    : 'bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)]'
-                }`}
-              >
-                {done ? <CheckCircle2 className="w-4 h-4" /> : step}
-              </div>
-              <span className={`text-[10px] font-medium hidden sm:block transition-colors ${
-                active ? 'text-[var(--color-text-primary)]' : done ? 'text-[#2251FF]' : 'text-[var(--color-text-muted)]'
-              }`}>
-                {STEP_LABELS[i]}
-              </span>
-            </div>
-            {i < total - 1 && (
-              <div className={`flex-1 h-0.5 mx-2 mb-4 rounded-full transition-all duration-500 ${
-                done ? 'bg-[#2251FF]' : 'bg-[var(--color-surface-overlay)]'
-              }`} />
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// ─── Password strength indicator ─────────────────────────────────────────────
-
-function PasswordStrength({ password }: { password: string }) {
-  const checks = [
-    password.length >= 8,
-    /[A-Z]/.test(password),
-    /[0-9]/.test(password),
-    /[^A-Za-z0-9]/.test(password),
-  ]
-  const score = checks.filter(Boolean).length
-  const colors = ['bg-stone-100', 'bg-stone-100', 'bg-stone-100', 'bg-stone-100']
-  const labels = ['취약', '보통', '양호', '강력']
-
-  if (!password) return null
-  return (
-    <div className="space-y-1.5 mt-2">
-      <div className="flex gap-1">
-        {[0, 1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className={`flex-1 h-1 rounded-full transition-all duration-300 ${
-              i < score ? colors[score - 1] : 'bg-[var(--color-surface-overlay)]'
-            }`}
-          />
-        ))}
-      </div>
-      <p className={`text-xs font-medium ${
-        score <= 1 ? 'text-stone-900' : score === 2 ? 'text-stone-900' : score === 3 ? 'text-stone-900' : 'text-stone-900'
-      }`}>
-        비밀번호 강도: {labels[score - 1] || '취약'}
-      </p>
-    </div>
-  )
-}
-
-// ─── Left panel content per step ─────────────────────────────────────────────
-
-function LeftPanelContent({ step, role }: { step: number; role: string }) {
-  if (step === 1) {
-    return (
-      <div className="space-y-8">
-        <div>
-          <p className="text-xs font-bold text-[#2251FF] uppercase tracking-[0.2em] mb-3">NPL Investment Platform</p>
-          <h2 className="text-4xl font-black leading-tight tracking-tight text-white">
-            시작하세요
-          </h2>
-          <p className="text-white/50 mt-3 text-sm leading-relaxed">
-            국내 최대 NPL 투자 플랫폼에서<br />새로운 투자 기회를 만나보세요
-          </p>
-        </div>
-        <div className="space-y-4">
-          {[
-            { icon: Lock,   label: '금융보안원 인증',   sub: '금융기관 수준 보안 체계' },
-            { icon: Trophy, label: 'NPL 전문 플랫폼',   sub: '국내 최다 NPL 데이터베이스' },
-            { icon: Zap,    label: '24시간 실거래',     sub: '실시간 매물 업데이트' },
-          ].map(({ icon: Icon, label, sub }) => (
-            <div key={label} className="flex items-center gap-4 p-3.5 rounded-none bg-white/5 border border-white/8">
-              <div className="w-9 h-9 rounded-none bg-[#2251FF]/20 border border-[#2251FF]/30 flex items-center justify-center shrink-0">
-                <Icon className="w-4 h-4 text-[#2251FF]" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white/90">{label}</p>
-                <p className="text-xs text-white/40 mt-0.5">{sub}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (step === 2) {
-    const benefits = ROLE_BENEFITS[role] || ROLE_BENEFITS['BUYER']
-    return (
-      <div className="space-y-6">
-        <div>
-          <p className="text-xs font-bold text-[#2251FF] uppercase tracking-[0.2em] mb-3">회원 유형 선택</p>
-          <h2 className="text-3xl font-black leading-tight tracking-tight text-white">
-            {benefits.title}
-          </h2>
-        </div>
-        <div className="space-y-3">
-          {benefits.items.map((item, i) => (
-            <div key={i} className="flex items-start gap-3 p-3.5 rounded-none bg-white/5 border border-white/8">
-              <div className="mt-0.5 w-5 h-5 rounded-full bg-[#2251FF]/20 border border-[#2251FF]/30 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-3 h-3 text-[#2251FF]" />
-              </div>
-              <p className="text-sm text-white/80 leading-relaxed">{item}</p>
-            </div>
-          ))}
-        </div>
-        <div className="p-4 rounded-none bg-[#2251FF]/10 border border-[#2251FF]/20">
-          <p className="text-xs text-[#2251FF] font-semibold mb-1">가입 즉시 지급</p>
-          <p className="text-2xl font-black text-white">50 크레딧</p>
-          <p className="text-xs text-white/40 mt-0.5">AI 분석 50회 무료 이용</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Step 3
-  return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-xs font-bold text-[#2251FF] uppercase tracking-[0.2em] mb-3">서류 제출</p>
-        <h2 className="text-3xl font-black leading-tight tracking-tight text-white">
-          안전한<br />데이터 보호
-        </h2>
-      </div>
-      <div className="space-y-3">
-        {[
-          { icon: Shield, title: '군사급 암호화', desc: 'AES-256 암호화로 모든 문서 보호' },
-          { icon: Lock,   title: '접근 제어',     desc: '승인된 담당자만 열람 가능' },
-          { icon: CheckCircle2, title: '즉시 삭제', desc: '심사 완료 후 원본 데이터 즉시 파기' },
-        ].map(({ icon: Icon, title, desc }) => (
-          <div key={title} className="flex items-start gap-3.5 p-3.5 rounded-none bg-white/5 border border-white/8">
-            <div className="w-9 h-9 rounded-none bg-[#2251FF]/20 border border-[#2251FF]/30 flex items-center justify-center shrink-0">
-              <Icon className="w-4 h-4 text-[#2251FF]" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-white/90">{title}</p>
-              <p className="text-xs text-white/40 mt-0.5">{desc}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─── Main component ──────────────────────────────────────────────────────────
 
 export default function SignupPage() {
   const router = useRouter()
-  const supabase = createClient()
-
-  const [step, setStep] = useState(1)
-
   const [form, setForm] = useState({
-    role: 'SELLER',
-    name: '',
     email: '',
-    company_name: '',
-    phone: '',
     password: '',
     passwordConfirm: '',
-    referralCode: '',
+    name: '',
+    company: '',
+    phone: '',
+    role: 'SELLER',
   })
-  const [agreedTerms, setAgreedTerms] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [loading, setLoading] = useState(false)
-  const [generalError, setGeneralError] = useState('')
-  const [signupSuccess, setSignupSuccess] = useState(false)
-  const [bonusCredited, setBonusCredited] = useState(false)
-  const [documents, setDocuments] = useState<UploadedDocument[]>([])
+  const [agreeTerms, setAgreeTerms] = useState(false)
+  const [agreePrivacy, setAgreePrivacy] = useState(false)
+  const [agreeMarketing, setAgreeMarketing] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const currentDocSlots = ROLE_DOCUMENTS[form.role] || []
+  const update = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }))
 
-  const handleFileUpload = (docType: string, file: File) => {
-    if (file.size > MAX_FILE_SIZE) {
-      setErrors((prev) => ({ ...prev, [`doc_${docType}`]: '파일 크기는 5MB 이하여야 합니다.' }))
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+
+    if (form.password.length < 8) {
+      setError('비밀번호는 8자 이상이어야 합니다.')
       return
     }
-    const reader = new FileReader()
-    reader.onload = () => {
-      const dataUrl = reader.result as string
-      setDocuments((prev) => {
-        const filtered = prev.filter((d) => d.type !== docType)
-        return [...filtered, { type: docType, name: file.name, data: dataUrl }]
-      })
-      setErrors((prev) => {
-        const next = { ...prev }
-        delete next[`doc_${docType}`]
-        return next
-      })
+    if (form.password !== form.passwordConfirm) {
+      setError('비밀번호 확인이 일치하지 않습니다.')
+      return
     }
-    reader.readAsDataURL(file)
-  }
-
-  const removeDocument = (docType: string) => {
-    setDocuments((prev) => prev.filter((d) => d.type !== docType))
-  }
-
-  const getDocumentForType = (docType: string) => documents.find((d) => d.type === docType)
-
-  const isImageDataUrl = (data: string) => data.startsWith('data:image/')
-
-  const updateField = (field: string, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors((prev) => { const n = { ...prev }; delete n[field]; return n })
+    if (!agreeTerms || !agreePrivacy) {
+      setError('이용약관과 개인정보 수집에 동의해주세요.')
+      return
     }
-  }
 
-  const validateStep1 = (): boolean => {
-    const newErrors: Record<string, string> = {}
-    if (!form.email.trim()) {
-      newErrors.email = '이메일을 입력해주세요.'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      newErrors.email = '올바른 이메일 형식을 입력해주세요.'
-    }
-    if (!form.password) {
-      newErrors.password = '비밀번호를 입력해주세요.'
-    } else if (form.password.length < 8) {
-      newErrors.password = '비밀번호는 8자 이상이어야 합니다.'
-    }
-    if (!form.passwordConfirm) {
-      newErrors.passwordConfirm = '비밀번호 확인을 입력해주세요.'
-    } else if (form.password !== form.passwordConfirm) {
-      newErrors.passwordConfirm = '비밀번호가 일치하지 않습니다.'
-    }
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const validateStep2 = (): boolean => {
-    const newErrors: Record<string, string> = {}
-    if (!form.name.trim()) newErrors.name = '이름을 입력해주세요.'
-    if (!form.phone.trim()) newErrors.phone = '연락처를 입력해주세요.'
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const validateStep3 = (): boolean => {
-    const newErrors: Record<string, string> = {}
-    if (!agreedTerms) newErrors.terms = '이용약관에 동의해주세요.'
-    const requiredDocs = currentDocSlots.filter((s) => s.required)
-    for (const slot of requiredDocs) {
-      if (!documents.find((d) => d.type === slot.type)) {
-        newErrors[`doc_${slot.type}`] = `${slot.type}은(는) 필수 제출 서류입니다.`
-      }
-    }
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleNextStep = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (step === 1 && validateStep1()) setStep(2)
-    if (step === 2 && validateStep2()) setStep(3)
-  }
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setGeneralError('')
-    if (!validateStep3()) return
     setLoading(true)
-
     try {
-      const { error: authError } = await supabase.auth.signUp({
+      const supabase = createClient()
+      const { data, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
         options: {
           data: {
             name: form.name,
-            role: form.role,
-            company_name: form.company_name || undefined,
+            company: form.company,
             phone: form.phone,
-            referral_code: form.referralCode || undefined,
-            documents: documents.map((d) => ({ type: d.type, name: d.name })),
+            role: form.role,
+            marketing_opt_in: agreeMarketing,
           },
         },
       })
 
       if (authError) {
-        if (authError.message.includes('already registered')) {
-          setGeneralError('이미 등록된 이메일입니다.')
-        } else {
-          setGeneralError('회원가입 중 오류가 발생했습니다.')
-        }
+        setError(authError.message ?? '가입 처리 중 오류가 발생했습니다.')
+        setLoading(false)
         return
       }
 
-      try {
-        await fetch('/api/v1/users/profile', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            terms_accepted_at: new Date().toISOString(),
-            terms_version: 'v1.0',
-            privacy_accepted_at: new Date().toISOString(),
-            privacy_version: 'v1.0',
-          }),
-        })
-      } catch {
-        // Terms tracking is best-effort — don't block signup
+      // Onboarding 으로 이동 — 사업자등록증/명함 업로드 안내
+      if (data.user) {
+        router.push('/onboarding?welcome=1')
+      } else {
+        // 이메일 확인이 필요한 경우
+        router.push('/login?verify=1')
       }
-
-      try {
-        await fetch('/api/v1/billing/credits/purchase', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: 50,
-            package: 'signup_bonus',
-            description: '가입 축하 무료 크레딧',
-          }),
-        })
-        setBonusCredited(true)
-      } catch {
-        // Don't block signup on failure
-      }
-
-      for (const doc of documents) {
-        try {
-          await fetch('/api/v1/users/documents', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              user_id: form.email,
-              type: doc.type,
-              name: doc.name,
-              data: doc.data,
-            }),
-          })
-        } catch {
-          // Don't block signup on document upload failure
-        }
-      }
-
-      setSignupSuccess(true)
-    } catch {
-      setGeneralError('회원가입 중 오류가 발생했습니다.')
-    } finally {
+    } catch (err) {
+      console.error('[Signup] error:', err)
+      setError('서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.')
       setLoading(false)
     }
   }
 
-  const [resending, setResending] = useState(false)
-  const [resendCooldown, setResendCooldown] = useState(0)
-
-  const handleResendEmail = async () => {
-    if (resendCooldown > 0) return
-    setResending(true)
-    try {
-      const { error: resendError } = await supabase.auth.resend({
-        type: 'signup',
-        email: form.email,
-      })
-      if (resendError) {
-        // Fallback: silently succeed for UX
-      }
-    } catch {
-      // Best-effort resend
-    } finally {
-      setResending(false)
-      setResendCooldown(60)
-      const interval = setInterval(() => {
-        setResendCooldown((prev) => {
-          if (prev <= 1) { clearInterval(interval); return 0 }
-          return prev - 1
-        })
-      }, 1000)
-    }
+  // McKinsey input style — login 과 동일
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    height: 44,
+    padding: '10px 14px',
+    background: PAPER,
+    border: `1px solid ${BORDER_STRONG}`,
+    borderRadius: 0,
+    fontSize: 13,
+    fontWeight: 500,
+    color: INK,
+    fontVariantNumeric: 'tabular-nums',
+    outline: 'none',
+    transition: 'border-color 0.12s, box-shadow 0.12s',
   }
-
-  // ── Success screen ─────────────────────────────────────────────────────────
-
-  if (signupSuccess) {
-    return (
-      <div className="min-h-screen flex">
-        {/* Left panel */}
-        <div className="hidden xl:flex xl:w-[420px] 2xl:w-[480px] shrink-0 flex-col justify-between p-10 2xl:p-12 bg-[#0A1628] text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#2251FF]/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-72 h-72 bg-[#0A1628]/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
-          <Link
-            href="/"
-            aria-label="NPLatform 홈으로"
-            className="relative flex items-center gap-2.5 rounded-lg hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2251FF]"
-          >
-            <div className="w-9 h-9 rounded-none bg-[#2251FF] flex items-center justify-center shadow-lg shadow-[#2251FF]/30">
-              <span className="text-white font-black text-base tracking-tight">N</span>
-            </div>
-            <span className="text-xl font-bold tracking-tight">NPLatform</span>
-          </Link>
-          <div className="relative space-y-4">
-            <p className="text-xs font-bold text-[#2251FF] uppercase tracking-[0.2em]">가입 완료</p>
-            <h2 className="text-4xl font-black leading-tight text-white">환영합니다!</h2>
-            <p className="text-white/50 text-sm leading-relaxed">이메일 인증 후 NPLatform의 모든 기능을 이용하실 수 있습니다.</p>
-          </div>
-          <p className="relative text-xs text-white/20">&copy; {new Date().getFullYear()} NPLatform. All rights reserved.</p>
-        </div>
-
-        {/* Right panel */}
-        <div className="flex flex-1 items-center justify-center px-6 py-12 bg-white">
-          <div className="w-full max-w-[400px] text-center space-y-6">
-            <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-[#0A1628]/10 to-[#2251FF]/10 flex items-center justify-center ring-8 ring-[#0A1628]/5">
-              <Mail className="h-9 w-9 text-[#0A1628]" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-gray-900">이메일을 확인해주세요</h2>
-              <p className="text-sm text-gray-500">
-                <span className="font-semibold text-gray-800">{form.email}</span><br />
-                위 주소로 인증 메일을 발송했습니다.
-              </p>
-            </div>
-            {bonusCredited && (
-              <div className="flex items-center justify-center gap-2.5 py-3 px-4 rounded-none bg-stone-100 border border-stone-300">
-                <CheckCircle2 className="h-4 w-4 text-stone-900 shrink-0" />
-                <span className="text-sm font-semibold text-stone-900">50 크레딧이 지급되었습니다!</span>
-              </div>
-            )}
-            <div className="bg-gray-50 rounded-none p-4 text-sm text-gray-500 space-y-1.5 text-left">
-              <p className="flex items-center gap-2"><span className="text-[#2251FF]">&#9679;</span>이메일의 인증 링크를 클릭하여 가입을 완료해주세요.</p>
-              <p className="flex items-center gap-2"><span className="text-[#2251FF]">&#9679;</span>이메일이 도착하지 않았다면 스팸 폴더를 확인해주세요.</p>
-            </div>
-            <div className="space-y-2.5">
-              <button
-                onClick={handleResendEmail}
-                disabled={resending || resendCooldown > 0}
-                className="w-full h-12 rounded-none border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-              >
-                {resending ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" />발송 중...</>
-                ) : resendCooldown > 0 ? (
-                  <><RefreshCw className="h-4 w-4" />재발송 ({resendCooldown}초)</>
-                ) : (
-                  <><RefreshCw className="h-4 w-4" />인증 메일 재발송</>
-                )}
-              </button>
-              <Link href="/login">
-                <button className="w-full h-12 rounded-none bg-[#0A1628] hover:bg-[#0A1628] text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#0A1628]/20">
-                  로그인 페이지로 이동 <ArrowRight className="h-4 w-4" />
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+  const onFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.currentTarget.style.borderColor = ELECTRIC
+    e.currentTarget.style.borderTopColor = ELECTRIC
+    e.currentTarget.style.borderTopWidth = '2px'
+    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(34, 81, 255, 0.12)'
   }
-
-  // ── Main signup layout ─────────────────────────────────────────────────────
+  const onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.currentTarget.style.borderColor = BORDER_STRONG
+    e.currentTarget.style.borderTopWidth = '1px'
+    e.currentTarget.style.boxShadow = 'none'
+  }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex" style={{ background: PAPER }}>
+      {/* ── LEFT PANEL — only xl+ ───────────────────────────────── */}
+      <div
+        className="hidden xl:flex xl:w-[440px] 2xl:w-[500px] shrink-0 flex-col justify-between relative overflow-hidden"
+        style={{ background: INK, padding: '40px' }}
+      >
+        {/* Top accent stripes */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: ELECTRIC }} />
+        <div style={{ position: 'absolute', top: 4, left: 0, right: 0, height: 1, background: CYAN }} />
 
-      {/* ── LEFT PANEL ─────────────────────────────────────────────────────── */}
-      <div className="hidden xl:flex xl:w-[420px] 2xl:w-[480px] shrink-0 flex-col justify-between p-10 2xl:p-12 bg-[#0A1628] text-white relative overflow-hidden">
+        {/* Subtle electric glow */}
+        <div style={{ position: 'absolute', top: -120, right: -120, width: 360, height: 360, background: 'radial-gradient(circle, rgba(34,81,255,0.18) 0%, transparent 60%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -80, left: -80, width: 280, height: 280, background: 'radial-gradient(circle, rgba(0,169,244,0.10) 0%, transparent 60%)', pointerEvents: 'none' }} />
 
-        {/* Atmosphere orbs */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#2251FF]/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-[#0A1628]/30 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
-        <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-[#2251FF]/8 rounded-full blur-2xl pointer-events-none" />
-
-        {/* Logo — 클릭 시 홈 이동 */}
+        {/* Logo */}
         <Link
           href="/"
           aria-label="NPLatform 홈으로"
-          className="relative flex items-center gap-2.5 rounded-lg hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2251FF]"
+          className="relative flex items-center gap-2.5 shrink-0"
+          style={{ textDecoration: 'none' }}
         >
-          <div className="w-9 h-9 rounded-none bg-[#2251FF] flex items-center justify-center shadow-lg shadow-[#2251FF]/30">
-            <span className="text-white font-black text-base tracking-tight">N</span>
+          <div
+            style={{
+              width: 36, height: 36,
+              background: ELECTRIC,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(34, 81, 255, 0.45)',
+            }}
+          >
+            <span style={{ color: PAPER, fontWeight: 900, fontSize: 16, letterSpacing: '-0.04em' }}>N</span>
           </div>
-          <span className="text-xl font-bold tracking-tight">NPLatform</span>
+          <span style={{ color: PAPER, fontSize: 22, fontWeight: 900, letterSpacing: '-0.02em' }}>NPL</span>
+          <span style={{ color: SKY, fontSize: 22, fontWeight: 400, letterSpacing: '-0.02em', marginLeft: -7 }}>atform</span>
         </Link>
 
-        {/* Step-aware content */}
-        <div className="relative">
-          <LeftPanelContent step={step} role={form.role} />
-        </div>
-
-        {/* Bottom login link */}
-        <div className="relative">
-          <p className="text-sm text-white/50">
-            이미 계정이 있으신가요?{' '}
-            <Link href="/login" className="text-white font-semibold hover:text-[#2251FF] transition-colors underline underline-offset-2">
-              로그인
-            </Link>
-          </p>
-        </div>
-      </div>
-
-      {/* ── RIGHT PANEL ────────────────────────────────────────────────────── */}
-      <div className="flex flex-1 flex-col justify-center px-6 py-12 lg:px-16 xl:px-24 bg-white overflow-y-auto">
-
-        {/* Mobile logo — 클릭 시 홈 이동 */}
-        <Link
-          href="/"
-          aria-label="NPLatform 홈으로"
-          className="flex items-center gap-2 mb-8 lg:hidden hover:opacity-80 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0A1628] rounded-lg"
-        >
-          <div className="w-8 h-8 rounded-none bg-[#0A1628] flex items-center justify-center">
-            <span className="text-white font-black text-sm">N</span>
-          </div>
-          <span className="text-lg font-bold text-[#0A1628]">NPLatform</span>
-        </Link>
-
-        <div className="w-full max-w-[400px] mx-auto">
-
-          {/* Step indicator */}
-          <StepIndicator current={step} total={3} />
-
-          <div className="mb-7">
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-              {step === 1 ? '계정 만들기' : step === 2 ? '기본 정보 입력' : '서류 제출 및 동의'}
-            </h1>
-            <p className="mt-1.5 text-sm text-gray-400">
-              {step === 1
-                ? '이메일과 비밀번호를 입력해주세요'
-                : step === 2
-                ? '회원 유형과 기본 정보를 입력해주세요'
-                : '필수 서류를 업로드하고 약관에 동의해주세요'}
+        {/* Hero */}
+        <div className="relative" style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', color: ELECTRIC, textTransform: 'uppercase', marginBottom: 10 }}>
+              Join NPLatform
+            </div>
+            <h2 style={{ fontFamily: 'Georgia, serif', color: PAPER, fontSize: 38, fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+              사업자/명함 인증 후<br />
+              <span style={{ color: SKY }}>6개월 무료.</span>
+            </h2>
+            <p style={{ marginTop: 14, fontSize: 14, color: 'rgba(168, 205, 232, 0.80)', lineHeight: 1.5, maxWidth: 320 }}>
+              가입 후 사업자등록증 또는 명함을 업로드하시면 1~2 영업일 내 검증되어 거래소·딜룸·분석·NDA·LOI 무제한 사용 가능합니다.
             </p>
           </div>
 
-          {/* ── STEP 1 ───────────────────────────────────────────────────── */}
-          {step === 1 && (
-            <form onSubmit={handleNextStep} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
-                  이메일 <span className="text-stone-900">*</span>
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={form.email}
-                  onChange={(e) => updateField('email', e.target.value)}
-                  disabled={loading}
-                  className={`input-enhanced h-12 rounded-none ${errors.email ? 'error' : ''}`}
-                />
-                {errors.email && <p className="text-xs text-stone-900 flex items-center gap-1"><span>&#9679;</span>{errors.email}</p>}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
-                  비밀번호 <span className="text-stone-900">*</span>
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="8자 이상 입력하세요"
-                    value={form.password}
-                    onChange={(e) => updateField('password', e.target.value)}
-                    disabled={loading}
-                    className={`input-enhanced h-12 rounded-none pr-11 ${errors.password ? 'error' : ''}`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <PasswordStrength password={form.password} />
-                {errors.password && <p className="text-xs text-stone-900">{errors.password}</p>}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="passwordConfirm" className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
-                  비밀번호 확인 <span className="text-stone-900">*</span>
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="passwordConfirm"
-                    type={showPasswordConfirm ? 'text' : 'password'}
-                    placeholder="비밀번호를 다시 입력하세요"
-                    value={form.passwordConfirm}
-                    onChange={(e) => updateField('passwordConfirm', e.target.value)}
-                    disabled={loading}
-                    className={`input-enhanced h-12 rounded-none pr-11 ${errors.passwordConfirm ? 'error' : ''}`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    tabIndex={-1}
-                  >
-                    {showPasswordConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {form.passwordConfirm && form.password === form.passwordConfirm && (
-                  <p className="text-xs text-stone-900 flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3" />비밀번호가 일치합니다</p>
-                )}
-                {errors.passwordConfirm && <p className="text-xs text-stone-900">{errors.passwordConfirm}</p>}
-              </div>
-
-              <button
-                type="submit"
-                className="w-full h-12 rounded-none bg-[#0A1628] hover:bg-[#0A1628] text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0A1628]/20 hover:shadow-xl active:scale-[0.99] mt-2"
+          {/* Process steps */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0, borderTop: '1px solid rgba(255,255,255,0.10)' }}>
+            {[
+              { num: '01', label: '회원가입', desc: '이메일 + 비밀번호 + 회원 유형' },
+              { num: '02', label: '사업자/명함 인증', desc: '운영팀 검증 1~2 영업일' },
+              { num: '03', label: '6개월 무료 사용', desc: '거래 체결 시점에만 수수료' },
+            ].map((s) => (
+              <div
+                key={s.num}
+                style={{
+                  display: 'grid', gridTemplateColumns: '36px 1fr', gap: 12,
+                  padding: '14px 0',
+                  borderBottom: '1px solid rgba(255,255,255,0.10)',
+                  alignItems: 'baseline',
+                }}
               >
-                다음 단계 <ArrowRight className="h-4 w-4" />
-              </button>
+                <span style={{ fontFamily: 'Georgia, serif', fontSize: 16, fontWeight: 900, color: ELECTRIC, letterSpacing: '-0.02em' }}>
+                  {s.num}
+                </span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: PAPER, marginBottom: 2 }}>
+                    {s.label}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>
+                    {s.desc}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-              <p className="text-center text-sm text-gray-400">
-                이미 계정이 있으신가요?{' '}
-                <Link href="/login" className="font-semibold text-[#2251FF] hover:text-[#0A1628] transition-colors">
-                  로그인
-                </Link>
+        {/* Bottom — login link */}
+        <div className="relative shrink-0" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
+          이미 계정이 있으신가요?{' '}
+          <Link
+            href="/login"
+            style={{ color: PAPER, fontWeight: 800, textDecoration: 'none', borderBottom: `2px solid ${ELECTRIC}` }}
+          >
+            로그인 →
+          </Link>
+        </div>
+      </div>
+
+      {/* ── RIGHT PANEL — signup form ──────────────────────────── */}
+      <div className="flex-1 min-w-0 flex items-start justify-center" style={{ padding: '24px', background: PAPER_TINT, overflowY: 'auto' }}>
+        <div className="w-full" style={{ maxWidth: 460, paddingTop: 12 }}>
+
+          {/* Mobile/tablet logo */}
+          <Link
+            href="/"
+            aria-label="NPLatform 홈으로"
+            className="flex items-center gap-2 xl:hidden"
+            style={{ marginBottom: 20, textDecoration: 'none' }}
+          >
+            <div style={{ width: 32, height: 32, background: ELECTRIC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ color: PAPER, fontWeight: 900, fontSize: 14, letterSpacing: '-0.04em' }}>N</span>
+            </div>
+            <span style={{ color: INK, fontSize: 17, fontWeight: 900, letterSpacing: '-0.02em' }}>NPLatform</span>
+          </Link>
+
+          {/* Form panel — paper card with electric top stripe */}
+          <div
+            style={{
+              background: PAPER,
+              border: `1px solid ${BORDER}`,
+              borderTop: `2px solid ${ELECTRIC}`,
+              padding: '32px 28px',
+              boxShadow: '0 12px 24px -8px rgba(5, 28, 44, 0.10), 0 4px 8px -2px rgba(5, 28, 44, 0.06)',
+            }}
+          >
+            {/* Header */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', color: ELECTRIC, textTransform: 'uppercase', marginBottom: 8 }}>
+                Sign up
+              </div>
+              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 28, fontWeight: 900, color: INK, letterSpacing: '-0.025em', lineHeight: 1.1 }}>
+                회원가입
+              </h1>
+              <p style={{ marginTop: 8, fontSize: 13, color: INK_MID, fontWeight: 500 }}>
+                NPLatform 에 오신 것을 환영합니다
               </p>
-            </form>
-          )}
+            </div>
 
-          {/* ── STEP 2 ───────────────────────────────────────────────────── */}
-          {step === 2 && (
-            <form onSubmit={handleNextStep} className="space-y-5">
+            {error && (
+              <div
+                style={{
+                  padding: '10px 14px',
+                  background: DANGER_BG,
+                  border: `1px solid ${DANGER}`,
+                  borderLeft: `3px solid ${DANGER}`,
+                  marginBottom: 18,
+                  fontSize: 12,
+                  color: DANGER,
+                  fontWeight: 600,
+                }}
+              >
+                {error}
+              </div>
+            )}
 
-              {/* Role selection — 3개 (매각사 / 매입사 / 파트너) full-width 카드 */}
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
-                  회원 유형 <span className="text-stone-900">*</span>
-                </Label>
-                <div className="space-y-2">
-                  {SIGNUP_ROLES.map(({ value, label, icon: Icon, desc }) => {
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+              {/* Role selection */}
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>
+                  회원 유형 <span style={{ color: ELECTRIC }}>*</span>
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {SIGNUP_ROLES.map(({ value, label, desc, icon: Icon }) => {
                     const selected = form.role === value
                     return (
                       <button
                         key={value}
                         type="button"
-                        onClick={() => updateField('role', value)}
-                        className={`w-full group rounded-none p-4 text-left border transition-all duration-200 flex items-center gap-3 ${
-                          selected
-                            ? 'border-[#0A1628] bg-[#EFF6FF] ring-2 ring-[#0A1628]/20'
-                            : 'border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-white'
-                        }`}
+                        onClick={() => update('role', value)}
+                        style={{
+                          width: '100%',
+                          padding: '12px 14px',
+                          background: selected ? '#EFF6FF' : PAPER,
+                          border: `1px solid ${selected ? ELECTRIC : BORDER_STRONG}`,
+                          borderTop: selected ? `2px solid ${ELECTRIC}` : `1px solid ${BORDER_STRONG}`,
+                          borderRadius: 0,
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', gap: 12,
+                        }}
                       >
-                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                          selected ? 'bg-[#0A1628] shadow-md shadow-[#0A1628]/30' : 'bg-gray-200 group-hover:bg-gray-300'
-                        }`}>
-                          <Icon className={`w-4 h-4 ${selected ? 'text-white' : 'text-gray-500'}`} />
+                        <div
+                          style={{
+                            width: 32, height: 32,
+                            background: selected ? ELECTRIC : '#F1F5F9',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Icon size={14} style={{ color: selected ? PAPER : INK_MUTED }} />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-bold ${selected ? 'text-[#0A1628]' : 'text-gray-800'}`}>{label}</p>
-                          <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">{desc}</p>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: selected ? INK : INK }}>
+                            {label}
+                          </div>
+                          <div style={{ fontSize: 11, color: INK_MID, marginTop: 1, lineHeight: 1.4 }}>
+                            {desc}
+                          </div>
                         </div>
+                        {selected && <CheckCircle2 size={16} style={{ color: ELECTRIC, flexShrink: 0 }} />}
                       </button>
                     )
                   })}
                 </div>
               </div>
 
-              {/* Name */}
-              <div className="space-y-1.5">
-                <Label htmlFor="name" className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
-                  이름 <span className="text-stone-900">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  placeholder="홍길동"
-                  value={form.name}
-                  onChange={(e) => updateField('name', e.target.value)}
-                  disabled={loading}
-                  className={`input-enhanced h-12 rounded-none ${errors.name ? 'error' : ''}`}
+              {/* Email */}
+              <div>
+                <label htmlFor="email" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
+                  이메일 <span style={{ color: ELECTRIC }}>*</span>
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => update('email', e.target.value)}
+                  onFocus={onFocus}
+                  onBlur={onBlur}
+                  placeholder="name@company.co.kr"
+                  required
+                  style={inputStyle}
                 />
-                {errors.name && <p className="text-xs text-stone-900">{errors.name}</p>}
+              </div>
+
+              {/* Password */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label htmlFor="pw" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
+                    비밀번호 <span style={{ color: ELECTRIC }}>*</span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      id="pw"
+                      type={showPassword ? 'text' : 'password'}
+                      value={form.password}
+                      onChange={(e) => update('password', e.target.value)}
+                      onFocus={onFocus}
+                      onBlur={onBlur}
+                      placeholder="8자 이상"
+                      required
+                      style={{ ...inputStyle, paddingRight: 36 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      style={{
+                        position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                        background: 'transparent', border: 0, cursor: 'pointer',
+                        color: INK_MUTED, padding: 4,
+                      }}
+                      aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+                    >
+                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="pw2" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
+                    비밀번호 확인 <span style={{ color: ELECTRIC }}>*</span>
+                  </label>
+                  <input
+                    id="pw2"
+                    type={showPassword ? 'text' : 'password'}
+                    value={form.passwordConfirm}
+                    onChange={(e) => update('passwordConfirm', e.target.value)}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
+                    placeholder="동일 비밀번호 입력"
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+
+              {/* Name + Company */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label htmlFor="name" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
+                    이름 <span style={{ color: ELECTRIC }}>*</span>
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => update('name', e.target.value)}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
+                    placeholder="홍길동"
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="company" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
+                    회사명
+                  </label>
+                  <input
+                    id="company"
+                    type="text"
+                    value={form.company}
+                    onChange={(e) => update('company', e.target.value)}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
+                    placeholder="(주) 회사명 (선택)"
+                    style={inputStyle}
+                  />
+                </div>
               </div>
 
               {/* Phone */}
-              <div className="space-y-1.5">
-                <Label htmlFor="phone" className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
-                  연락처 <span className="text-stone-900">*</span>
-                </Label>
-                <Input
+              <div>
+                <label htmlFor="phone" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
+                  연락처 <span style={{ color: ELECTRIC }}>*</span>
+                </label>
+                <input
                   id="phone"
                   type="tel"
-                  placeholder="010-0000-0000"
                   value={form.phone}
-                  onChange={(e) => updateField('phone', e.target.value)}
-                  disabled={loading}
-                  className={`input-enhanced h-12 rounded-none ${errors.phone ? 'error' : ''}`}
-                />
-                {errors.phone && <p className="text-xs text-stone-900">{errors.phone}</p>}
-              </div>
-
-              {/* Company */}
-              <div className="space-y-1.5">
-                <Label htmlFor="company_name" className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
-                  소속 회사 <span className="text-gray-300 font-normal normal-case">(선택)</span>
-                </Label>
-                <Input
-                  id="company_name"
-                  placeholder="회사명"
-                  value={form.company_name}
-                  onChange={(e) => updateField('company_name', e.target.value)}
-                  disabled={loading}
-                  className="input-enhanced h-12 rounded-none"
+                  onChange={(e) => update('phone', e.target.value)}
+                  onFocus={onFocus}
+                  onBlur={onBlur}
+                  placeholder="010-1234-5678"
+                  required
+                  style={inputStyle}
                 />
               </div>
 
-              {/* Referral */}
-              <div className="space-y-1.5">
-                <Label htmlFor="referralCode" className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
-                  추천 코드 <span className="text-gray-300 font-normal normal-case">(선택)</span>
-                </Label>
-                <Input
-                  id="referralCode"
-                  placeholder="추천 코드를 입력하세요"
-                  value={form.referralCode}
-                  onChange={(e) => updateField('referralCode', e.target.value)}
-                  disabled={loading}
-                  className="input-enhanced h-12 rounded-none"
-                />
+              {/* 인증 안내 */}
+              <div
+                style={{
+                  background: '#EFF6FF',
+                  border: `1px solid ${ELECTRIC}40`,
+                  borderLeft: `3px solid ${ELECTRIC}`,
+                  padding: '12px 14px',
+                  fontSize: 11,
+                  color: INK_MID,
+                  lineHeight: 1.6,
+                }}
+              >
+                <ShieldCheck size={13} style={{ color: ELECTRIC, marginRight: 6, verticalAlign: 'middle' }} />
+                <strong style={{ color: INK }}>가입 후 인증 필수</strong> — 마이페이지에서 사업자등록증 또는 명함을 업로드하시면 운영팀 검증 (1~2 영업일) 후 6개월 무료로 모든 기능 사용 가능합니다.
               </div>
 
-              <div className="flex gap-2.5 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="flex-1 h-12 rounded-none border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  이전
-                </button>
-                <button
-                  type="submit"
-                  className="flex-[2] h-12 rounded-none bg-[#0A1628] hover:bg-[#0A1628] text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0A1628]/20 active:scale-[0.99]"
-                >
-                  다음 단계 <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* ── STEP 3 ───────────────────────────────────────────────────── */}
-          {step === 3 && (
-            <form onSubmit={handleSignup} className="space-y-5">
-
-              {/* Document upload */}
-              {currentDocSlots.length > 0 && (
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-xs font-semibold text-gray-500 uppercase tracking-normal">제출 서류</Label>
-                    <p className="text-xs text-gray-400 mt-1">이미지(JPG, PNG) 또는 PDF · 최대 5MB</p>
-                  </div>
-                  <div className="space-y-2">
-                    {currentDocSlots.map((slot) => {
-                      const uploaded = getDocumentForType(slot.type)
-                      return (
-                        <div key={slot.type} className="rounded-none border border-gray-100 bg-gray-50 p-3.5 space-y-2.5">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-gray-800">{slot.type}</span>
-                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                                slot.required
-                                  ? 'bg-stone-100 text-stone-900'
-                                  : 'bg-gray-100 text-gray-400'
-                              }`}>
-                                {slot.required ? '필수' : '선택'}
-                              </span>
-                            </div>
-                            {uploaded && (
-                              <button type="button" onClick={() => removeDocument(slot.type)} className="w-6 h-6 rounded-full bg-gray-200 text-gray-400 hover:bg-stone-100 hover:text-stone-900 transition-colors flex items-center justify-center">
-                                <X className="h-3 w-3" />
-                              </button>
-                            )}
-                          </div>
-
-                          {uploaded ? (
-                            <div className="flex items-center gap-3 p-2.5 bg-white rounded-none border border-gray-100">
-                              {isImageDataUrl(uploaded.data) ? (
-                                <img src={uploaded.data} alt={uploaded.name} className="h-10 w-10 object-cover rounded-lg border border-gray-100" />
-                              ) : (
-                                <div className="h-10 w-10 flex items-center justify-center bg-[#0A1628]/5 rounded-lg border border-[#0A1628]/10">
-                                  <FileText className="h-5 w-5 text-[#2251FF]" />
-                                </div>
-                              )}
-                              <span className="text-xs text-gray-500 truncate flex-1">{uploaded.name}</span>
-                              <CheckCircle2 className="h-4 w-4 text-stone-900 shrink-0" />
-                            </div>
-                          ) : (
-                            <label className="flex flex-col items-center justify-center gap-1.5 py-5 border-2 border-dashed border-[var(--color-border-default)] rounded-none cursor-pointer hover:border-[#2251FF]/40 hover:bg-white transition-all group">
-                              <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-[#2251FF]/10 transition-colors">
-                                <Upload className="h-4 w-4 text-gray-400 group-hover:text-[#2251FF] transition-colors" />
-                              </div>
-                              <span className="text-xs text-gray-400 group-hover:text-gray-600 transition-colors">클릭하여 파일 선택</span>
-                              <input
-                                type="file"
-                                accept="image/*,.pdf"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0]
-                                  if (file) handleFileUpload(slot.type, file)
-                                  e.target.value = ''
-                                }}
-                                disabled={loading}
-                              />
-                            </label>
-                          )}
-                          {errors[`doc_${slot.type}`] && <p className="text-xs text-stone-900">{errors[`doc_${slot.type}`]}</p>}
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Terms */}
-              <div className="rounded-none border border-gray-100 bg-gray-50 p-4 space-y-1.5">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <Checkbox
-                    checked={agreedTerms}
-                    onCheckedChange={(checked) => setAgreedTerms(checked as boolean)}
-                    className="mt-0.5"
+              {/* 약관 동의 */}
+              <div
+                style={{
+                  borderTop: `1px solid ${BORDER}`,
+                  paddingTop: 14,
+                  display: 'flex', flexDirection: 'column', gap: 10,
+                }}
+              >
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: INK, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={agreeTerms}
+                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                    style={{ marginTop: 2, accentColor: ELECTRIC }}
                   />
-                  <span className="text-sm text-gray-600 leading-relaxed">
-                    <Link href="/terms/service" className="font-semibold text-[#2251FF] hover:underline">이용약관</Link>{' '}
-                    및{' '}
-                    <Link href="/terms/privacy" className="font-semibold text-[#2251FF] hover:underline">개인정보처리방침</Link>에
-                    동의합니다. <span className="text-stone-900">*</span>
+                  <span>
+                    <strong>(필수)</strong>{' '}
+                    <Link href="/terms" target="_blank" style={{ color: ELECTRIC, textDecoration: 'underline' }}>이용약관</Link>
+                    에 동의합니다.
                   </span>
                 </label>
-                {errors.terms && <p className="text-xs text-stone-900 pl-7">{errors.terms}</p>}
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: INK, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={agreePrivacy}
+                    onChange={(e) => setAgreePrivacy(e.target.checked)}
+                    style={{ marginTop: 2, accentColor: ELECTRIC }}
+                  />
+                  <span>
+                    <strong>(필수)</strong>{' '}
+                    <Link href="/terms/privacy" target="_blank" style={{ color: ELECTRIC, textDecoration: 'underline' }}>개인정보 수집·이용</Link>
+                    에 동의합니다.
+                  </span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: INK_MID, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={agreeMarketing}
+                    onChange={(e) => setAgreeMarketing(e.target.checked)}
+                    style={{ marginTop: 2, accentColor: ELECTRIC }}
+                  />
+                  <span>
+                    <strong>(선택)</strong> 마케팅 · 신규 매물 알림 수신에 동의합니다.
+                  </span>
+                </label>
               </div>
 
-              {generalError && (
-                <div className="flex items-center gap-2.5 rounded-none border border-stone-300 bg-stone-100 px-4 py-3">
-                  <div className="flex-shrink-0 w-4 h-4 rounded-full bg-stone-100 flex items-center justify-center">
-                    <span className="text-[9px] font-bold text-stone-900">!</span>
-                  </div>
-                  <p className="text-sm text-stone-900">{generalError}</p>
-                </div>
-              )}
-
-              <div className="flex gap-2.5 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setStep(2)}
-                  className="flex-1 h-12 rounded-none border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  이전
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-[2] h-12 rounded-none bg-[#0A1628] hover:bg-[#0A1628] text-white font-semibold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#0A1628]/20 active:scale-[0.99]"
-                >
-                  {loading ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" />가입 처리 중...</>
-                  ) : (
-                    <>가입하기 <CheckCircle2 className="h-4 w-4" /></>
-                  )}
-                </button>
-              </div>
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  height: 48,
+                  background: loading ? INK_MUTED : INK,
+                  color: PAPER,
+                  border: 0,
+                  borderTop: `2px solid ${ELECTRIC}`,
+                  fontSize: 14,
+                  fontWeight: 800,
+                  letterSpacing: '-0.01em',
+                  cursor: loading ? 'wait' : 'pointer',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  boxShadow: loading ? 'none' : '0 4px 12px rgba(10, 22, 40, 0.18)',
+                }}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    가입 처리 중…
+                  </>
+                ) : (
+                  <>
+                    가입하기
+                    <ArrowRight size={14} />
+                  </>
+                )}
+              </button>
             </form>
-          )}
+          </div>
 
+          {/* Mobile login link */}
+          <p
+            className="xl:hidden"
+            style={{ marginTop: 20, fontSize: 12, color: INK_MID, textAlign: 'center' }}
+          >
+            이미 계정이 있으신가요?{' '}
+            <Link
+              href="/login"
+              style={{ color: ELECTRIC, fontWeight: 700, textDecoration: 'underline' }}
+            >
+              로그인
+            </Link>
+          </p>
         </div>
       </div>
     </div>

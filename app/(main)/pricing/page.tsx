@@ -45,19 +45,19 @@ const PLANS: Plan[] = [
   {
     key: "trial",
     label: "무료 체험",
-    audience: "처음 NPLatform 을 둘러보는 분 · 모든 회원 자동 적용",
+    audience: "처음 NPLatform 을 둘러보는 분 · 사업자등록증/명함 인증 후 자동 적용",
     membershipFee: "₩0",
-    membershipFeeNote: "가입 후 6개월 무료",
+    membershipFeeNote: "사업자등록증/명함 검증 후 6개월 무료",
     txFee: "—",
     txFeeNote: "거래 체결 시 정상 수수료 적용",
     highlights: [
-      "거래소 53+ 매물 전체 열람",
+      "거래소 매물 전체 열람",
       "AI 분석 보고서 무제한 생성",
       "딜룸 · NDA · LOI 무제한 체결",
       "6개월 후 자동으로 정식 회원 전환",
     ],
-    ctaLabel: "지금 무료 시작",
-    ctaHref: "/onboarding",
+    ctaLabel: "사업자등록증/명함 인증",
+    ctaHref: "/signup",
   },
   {
     key: "seller",
@@ -100,7 +100,7 @@ const PLANS: Plan[] = [
 
 // ─── 거래 흐름 ───────────────────────────────────────────────────
 const FLOW_STEPS = [
-  { step: "01", label: "가입", desc: "6개월 무료 — 결제 정보 입력 불필요" },
+  { step: "01", label: "가입 + 인증", desc: "사업자등록증/명함 업로드 → 1~2 영업일 검증 → 6개월 무료" },
   { step: "02", label: "탐색·등록", desc: "매물 검색 / AI 매칭 / 매물 등록" },
   { step: "03", label: "협상", desc: "NDA → 실사 → LOI → 본계약" },
   { step: "04", label: "정산", desc: "체결 시점에만 거래 수수료 청구" },
@@ -117,8 +117,8 @@ const ANTI_BYPASS_RULES = [
 // ─── FAQ ──────────────────────────────────────────────────────────
 const FAQS = [
   {
-    q: "정말 처음 6개월 동안 결제 없이 사용 가능한가요?",
-    a: "결제 정보를 전혀 입력하지 않으셔도 됩니다. 가입 즉시 모든 기능 (거래소 · 딜룸 · 분석 · NDA · LOI) 무제한 사용 가능. 6개월 후 자동으로 정식 회원으로 전환되며, 사전에 이메일로 안내드립니다.",
+    q: "가입만 하면 바로 사용 가능한가요?",
+    a: "회원가입 후 사업자등록증 또는 명함을 업로드하시면, 운영팀 검증 (1~2 영업일) 을 거쳐 무료 사용 권한이 부여됩니다. 검증 통과 후 6개월간 모든 기능 (거래소 · 딜룸 · 분석 · NDA · LOI) 무제한 사용 가능. 결제 정보는 입력하지 않으셔도 되며, 6개월 후 자동으로 정식 회원으로 전환되기 전 이메일로 사전 안내드립니다.",
   },
   {
     q: "거래 수수료는 언제 청구되나요?",
@@ -144,8 +144,8 @@ export default function PricingPage() {
       <MckPageHeader
         breadcrumbs={[{ label: "홈", href: "/" }, { label: "요금제" }]}
         eyebrow="PRICING"
-        title="가입 후 6개월 무료 — 거래 시점에만 수수료"
-        subtitle="구독 · 정기 결제 없음. 가입 즉시 모든 기능 사용 가능. 거래가 체결될 때만 수수료를 받습니다."
+        title="사업자/명함 인증 후 6개월 무료 — 거래 시점에만 수수료"
+        subtitle="구독 · 정기 결제 없음. 사업자등록증 또는 명함 검증 후 모든 기능 사용 가능. 거래가 체결될 때만 수수료를 받습니다."
       />
 
       <div className="max-w-[1200px] mx-auto" style={{ padding: "32px 16px 80px" }}>
@@ -174,7 +174,7 @@ export default function PricingPage() {
                 maxWidth: 900,
               }}
             >
-              모든 회원 가입 후 6개월 무료.
+              사업자/명함 인증 후 6개월 무료.
               <br />
               거래가 체결될 때만 거래 수수료가 청구됩니다.
             </h1>
@@ -186,7 +186,8 @@ export default function PricingPage() {
                 maxWidth: 720,
               }}
             >
-              결제 정보 입력 없이 가입 즉시 거래소 · 딜룸 · 분석 · NDA · LOI 모든 기능 무제한 사용.
+              회원가입 후 사업자등록증 또는 명함을 업로드하시면 1~2 영업일 내 검증되어
+              거래소 · 딜룸 · 분석 · NDA · LOI 모든 기능 무제한 사용 가능합니다.
               거래가 성사된 시점에만 매각가 · 낙찰가 기준으로 수수료를 청구합니다.
             </p>
           </div>
@@ -693,7 +694,7 @@ export default function PricingPage() {
               lineHeight: 1.3,
             }}
           >
-            6개월 동안 무료 — 결제 정보 없이 즉시 시작
+            사업자/명함 인증 후 6개월 무료 — 결제 정보 입력 불필요
           </h2>
           <p
             style={{
@@ -705,7 +706,7 @@ export default function PricingPage() {
               margin: "0 auto 28px",
             }}
           >
-            가입 즉시 거래소 · 딜룸 · 분석 · NDA · LOI 모든 기능 무제한 사용 가능
+            인증 검증 후 거래소 · 딜룸 · 분석 · NDA · LOI 모든 기능 무제한 사용 가능
           </p>
           <div
             style={{
