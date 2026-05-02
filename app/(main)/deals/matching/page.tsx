@@ -503,7 +503,7 @@ export default function MatchingPage() {
         ]}
         eyebrow="MATCHING ENGINE · 매칭 분석 결과"
         title="AI 매칭 결과"
-        subtitle="매도자-매수자 간 최적 매칭을 AI 알고리즘으로 분석합니다. 4개 핵심 지표(담보 40% · 지역 25% · 금액 20% · 할인율 15%)를 가중 평균하여 등급화합니다."
+        subtitle="매각사-매입사 간 최적 매칭을 AI 알고리즘으로 분석합니다. 4개 핵심 지표(담보 40% · 지역 25% · 금액 20% · 할인율 15%)를 가중 평균하여 등급화합니다."
         actions={headerActions}
       />
 
@@ -619,7 +619,7 @@ export default function MatchingPage() {
           <MckEmptyState
             icon={BarChart3}
             title="매칭 결과 없음"
-            description="매칭 실행 버튼을 눌러 매도자-매수자 최적 매칭을 시작하세요"
+            description="매칭 실행 버튼을 눌러 매각사-매입사 최적 매칭을 시작하세요"
             actionLabel="매칭 실행"
             onActionClick={runMatching}
           />
@@ -704,7 +704,7 @@ export default function MatchingPage() {
                     </button>
                   </div>
 
-                  {/* Eyebrow + Title (매도자 → 매수자) */}
+                  {/* Eyebrow + Title (매각사 → 매입사) */}
                   <div>
                     <p
                       style={{

@@ -34,7 +34,7 @@ interface Role {
 
 const ROLES: Role[] = [
   {
-    key: "institution", label: "금융기관 (매도자)", icon: Building2,
+    key: "institution", label: "금융기관 (매각사)", icon: Building2,
     tagline: "NPL 매각 효율 3배 — 익명 마스킹 + AI 매칭",
     audience: "은행 · 저축은행 · 캐피탈 · 보험사 · 카드사",
     color: "#1B3A5C",
@@ -52,9 +52,9 @@ const ROLES: Role[] = [
     color: "#10B981",
   },
   {
-    key: "individual", label: "일반 회원 (개인 매수자)", icon: UserCircle,
-    tagline: "10만원으로 시작하는 NPL 투자",
-    audience: "개인 투자자 · 법인 투자자",
+    key: "individual", label: "일반 회원 (자산가 및 법인 회원)", icon: UserCircle,
+    tagline: "공동투자팀 · 분석 보고서 · AI 매칭으로 시작하는 NPL 투자",
+    audience: "자산가 · 법인 매입사 · 개인 투자자",
     color: "#F59E0B",
   },
   {
@@ -86,7 +86,7 @@ interface GuideStep {
   /** 스크린 mockup 메타 — 화면의 어떤 영역을 어떻게 다루는지 시각화 */
   screen?: {
     page: string                    // "/exchange/sell" 등 표시
-    location: string                // "상단 SubNav → 매도자 관리" 등
+    location: string                // "상단 SubNav → 매각사 관리" 등
     highlight: string               // 강조할 UI 요소 (예: "[+ 신규 매물]" 버튼)
   }
 }
@@ -99,7 +99,7 @@ interface GuideWorkflow {
 }
 
 const WORKFLOWS: GuideWorkflow[] = [
-  // ── 금융기관 (매도자) ─────────────────────────────────
+  // ── 금융기관 (매각사) ─────────────────────────────────
   {
     roleKey: "institution",
     steps: [
@@ -121,8 +121,8 @@ const WORKFLOWS: GuideWorkflow[] = [
         screen: { page: "/admin/masking-queue", location: "관리자 → 보안·컴플라이언스 → 마스킹 검토", highlight: "검토 큐의 매물 카드" },
       },
       {
-        num: 4, title: "매수자 매칭 & NDA·LOI",
-        desc: "AI 매칭으로 적합 매수자 자동 추천. 관심 매수자 → NDA 전자서명 → 실사 자료 공유 → LOI 수령.",
+        num: 4, title: "매입사 매칭 & NDA·LOI",
+        desc: "AI 매칭으로 적합 매입사 자동 추천. 관심 매입사 → NDA 전자서명 → 실사 자료 공유 → LOI 수령.",
         cta: { label: "딜룸으로 이동", href: "/my/deals" },
         screen: { page: "/my/deals", location: "마이 → 거래 → 딜룸 탭", highlight: "딜룸 우측 NDA·LOI 진행 단계 카드" },
       },
@@ -175,7 +175,7 @@ const WORKFLOWS: GuideWorkflow[] = [
       },
     ],
     faqs: [
-      { q: "매도자·매수자 모드는 동시에 가능한가요?", a: "네 — 단일 계정에서 양방향 거래 가능. 각 거래마다 분리된 딜룸." },
+      { q: "매각사·매입사 모드는 동시에 가능한가요?", a: "네 — 단일 계정에서 양방향 거래 가능. 각 거래마다 분리된 딜룸." },
       { q: "수익권 금액은 어떻게 정하나요?", a: "최초 대출원금 × 110~140% 자유 설정. Excel 템플릿에서 직접 비율 입력 또는 직접 금액 입력 가능." },
     ],
     quickActions: [
@@ -208,7 +208,7 @@ const WORKFLOWS: GuideWorkflow[] = [
       },
       {
         num: 4, title: "AI 매칭 + Pool Sale",
-        desc: "여러 채권을 묶어 단일 거래로 매각 (Pool Sale). 매수자별 입찰가 비교.",
+        desc: "여러 채권을 묶어 단일 거래로 매각 (Pool Sale). 매입사별 입찰가 비교.",
       },
       {
         num: 5, title: "정산 보고서 + API 연동",
@@ -252,7 +252,7 @@ const WORKFLOWS: GuideWorkflow[] = [
       },
       {
         num: 5, title: "LOI 제출 → 본계약 → 정산",
-        desc: "매수 의향가 LOI 제출 → 매도자 승인 → ESCROW 보증금 → 본계약 → 채권 양도 + 잔금 정산.",
+        desc: "매수 의향가 LOI 제출 → 매각사 승인 → ESCROW 보증금 → 본계약 → 채권 양도 + 잔금 정산.",
       },
     ],
     faqs: [
@@ -278,7 +278,7 @@ const WORKFLOWS: GuideWorkflow[] = [
       },
       {
         num: 2, title: "사건 의뢰 수신 + 응답",
-        desc: "매도자/매수자가 자문 요청 → 알림센터로 통보 → 24시간 내 응답. 거절 시 자동으로 다음 자문사로 라우팅.",
+        desc: "매각사/매입사가 자문 요청 → 알림센터로 통보 → 24시간 내 응답. 거절 시 자동으로 다음 자문사로 라우팅.",
         cta: { label: "자문 의뢰함", href: "/my/partner" },
         screen: { page: "/my/partner", location: "마이 → 설정 → 파트너 관리 → 의뢰함", highlight: "PENDING 상태 카드" },
       },
@@ -363,7 +363,7 @@ const WORKFLOWS: GuideWorkflow[] = [
       },
       {
         num: 4, title: "매물 심사 + 활성화",
-        desc: "PENDING_REVIEW 매물 → 검토 → 활성화. 거절 시 사유 입력 → 매도자 알림.",
+        desc: "PENDING_REVIEW 매물 → 검토 → 활성화. 거절 시 사유 입력 → 매각사 알림.",
       },
       {
         num: 5, title: "콘텐츠·공지사항 발행",

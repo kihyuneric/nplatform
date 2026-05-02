@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * /my/demands — 매수자 본인의 매수 수요 관리
+ * /my/demands — 매입사 본인의 매수 수요 관리
  *
  * - 등록된 수요 목록 (활성 / 일시중지 / 종료)
  * - 신규 등록, 편집, 종료 진입점
@@ -136,7 +136,7 @@ export default function MyDemandsPage() {
         ]}
         eyebrow="MY · BUY DEMANDS"
         title="내 매수 수요"
-        subtitle="등록한 매수 수요를 관리하고 매도자가 보낸 제안을 확인합니다. 수요별로 편집·일시중지·종료가 가능합니다."
+        subtitle="등록한 매수 수요를 관리하고 매각사가 보낸 제안을 확인합니다. 수요별로 편집·일시중지·종료가 가능합니다."
         actions={
           <Link
             href="/exchange/demands/new"
@@ -175,7 +175,7 @@ export default function MyDemandsPage() {
             { l: "총 등록", v: stats.total, sub: "수요 건수" },
             { l: "활성", v: stats.active, sub: "공개 중" },
             { l: "일시중지", v: stats.paused, sub: "검토 중" },
-            { l: "받은 제안", v: stats.proposals, sub: "매도자 응답" },
+            { l: "받은 제안", v: stats.proposals, sub: "매각사 응답" },
           ].map((k) => (
             <div key={k.l} style={{
               background: MCK.paper, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}`,
@@ -198,7 +198,7 @@ export default function MyDemandsPage() {
             icon={Target}
             title={statusFilter === "ALL" ? "등록된 매수 수요가 없습니다" : "조건에 맞는 매수 수요가 없습니다"}
             description={statusFilter === "ALL"
-              ? "매수 수요를 등록하면 매도자가 적합한 매물을 직접 제안합니다."
+              ? "매수 수요를 등록하면 매각사가 적합한 매물을 직접 제안합니다."
               : "다른 상태 탭을 선택해 보세요."}
             actionLabel={statusFilter === "ALL" ? "신규 등록" : undefined}
             actionHref={statusFilter === "ALL" ? "/exchange/demands/new" : undefined}
@@ -305,7 +305,7 @@ export default function MyDemandsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {/* 편집 — 매수자 본인용 edit 페이지 */}
+                      {/* 편집 — 매입사 본인용 edit 페이지 */}
                       <Link
                         href={`/exchange/demands/${row.id}/edit`}
                         style={{
@@ -358,7 +358,7 @@ export default function MyDemandsPage() {
                       {row.proposal_count != null ? (
                         <>
                           <AlertCircle size={11} style={{ color: MCK.electric }} />
-                          매도자 제안 <strong style={{ color: MCK.ink, fontWeight: 800 }}>{row.proposal_count}건</strong>
+                          매각사 제안 <strong style={{ color: MCK.ink, fontWeight: 800 }}>{row.proposal_count}건</strong>
                         </>
                       ) : "—"}
                     </span>
@@ -386,7 +386,7 @@ export default function MyDemandsPage() {
               fontSize: 11, color: MCK.textSub, lineHeight: 1.6,
             }}
           >
-            매수 수요는 매도자에게만 공개됩니다. 활성 상태일 때만 매칭 엔진이 매물 후보를 추천하며, 일시중지 시 새로운 제안 수신이 잠시 멈춥니다.
+            매수 수요는 매각사에게만 공개됩니다. 활성 상태일 때만 매칭 엔진이 매물 후보를 추천하며, 일시중지 시 새로운 제안 수신이 잠시 멈춥니다.
           </div>
         )}
       </div>

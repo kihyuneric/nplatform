@@ -874,7 +874,7 @@ export default function LandingPage() {
     {
       icon: <MessageSquare size={20} style={{ color: MCK_ICON }} />, tag: "딜룸", tagColor: MCK_TAG_C,
       title: "딜룸 · NDA · 전자계약",
-      desc: "매도자·매수자 1:1 보안 채널. NDA 전자서명 → 권리증 공유 → LOI → 매매계약서 자동 생성까지 원스톱 체결.",
+      desc: "매각사·매입사 1:1 보안 채널. NDA 전자서명 → 권리증 공유 → LOI → 매매계약서 자동 생성까지 원스톱 체결.",
       href: "/deals", accent: MCK_TAG_C,
       meta: "진행 중 딜 68건 · 이번 주 체결 14건",
     },
@@ -1587,7 +1587,7 @@ export default function LandingPage() {
                 {
                   eyebrow: '딜룸',
                   title: '딜룸 · NDA · 전자계약',
-                  desc: '매도자·매수자 1:1 보안 채널. NDA 전자서명 → LOI → 에스크로 계약까지 원스톱 체결',
+                  desc: '매각사·매입사 1:1 보안 채널. NDA 전자서명 → LOI → 에스크로 계약까지 원스톱 체결',
                   href: '/deals',
                   icon: <MessageSquare size={16} style={{ color: '#0A1628' }} />,
                 },

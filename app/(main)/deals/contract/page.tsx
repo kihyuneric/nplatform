@@ -429,7 +429,7 @@ export default function ContractPage() {
                 <div className="w-6 h-6 rounded bg-stone-100/10 flex items-center justify-center">
                   <span className="text-[10px] font-black text-stone-900">甲</span>
                 </div>
-                매도자 (채권자)
+                매각사 (채권자)
               </h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 {([
@@ -468,7 +468,7 @@ export default function ContractPage() {
                 <div className="w-6 h-6 rounded bg-stone-100/10 flex items-center justify-center">
                   <span className="text-[10px] font-black text-stone-900">乙</span>
                 </div>
-                매수자 (양수인)
+                매입사 (양수인)
               </h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 {([

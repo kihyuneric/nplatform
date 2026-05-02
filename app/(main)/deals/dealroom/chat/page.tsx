@@ -3,16 +3,16 @@
 /**
  * /deals/dealroom/chat — 채팅 전용 풀페이지
  *
- * 좌: 매수자 리스트 (스크롤)
- * 우: 활성 매수자 채팅 thread + 자유 입력 (보내고 받기 자유롭게)
+ * 좌: 매입사 리스트 (스크롤)
+ * 우: 활성 매입사 채팅 thread + 자유 입력 (보내고 받기 자유롭게)
  *
  * 룰셋:
  *   R1~R4: 워크플로우 이벤트 자동 기록 (system 메시지)
  *   P1: 전화번호 입력 시 차단 + 경고
  *
  * 동기화:
- *   - 매도사·매수자 대시보드에서 동일 thread_id 로 조회 가능
- *   - "역할 전환" 토글: 매도자 / 매수자 시점에서 메시지를 보낼 수 있음 (시연용)
+ *   - 매도사·매입사 대시보드에서 동일 thread_id 로 조회 가능
+ *   - "역할 전환" 토글: 매각사 / 매입사 시점에서 메시지를 보낼 수 있음 (시연용)
  */
 
 import Link from "next/link"
@@ -31,7 +31,7 @@ import {
 } from "../_chat-data"
 
 export default function ChatPage() {
-  // ── 매수자 리스트 + 활성 thread ──
+  // ── 매입사 리스트 + 활성 thread ──
   const [threads, setThreads] = useState<BuyerThread[]>(INITIAL_BUYER_THREADS)
   const [activeId, setActiveId] = useState<string>(threads[0].id)
   // ── 입력 ──
@@ -55,7 +55,7 @@ export default function ChatPage() {
     const text = draft.trim()
     if (!text || blocked) return
     const author = asRole === "seller" ? "○○은행 김 팀장" : activeThread.buyerName
-    const role: "매도자" | "매수자" = asRole === "seller" ? "매도자" : "매수자"
+    const role: "매각사" | "매입사" = asRole === "seller" ? "매각사" : "매입사"
     const newMsg: ChatMessage = {
       id: Date.now(),
       type: asRole,
@@ -152,7 +152,7 @@ export default function ChatPage() {
                   }}
                 >
                   <span style={{ color: active ? MCK.paper : MCK.ink }}>
-                    {r === "seller" ? "매도자 시점" : "매수자 시점"}
+                    {r === "seller" ? "매각사 시점" : "매입사 시점"}
                   </span>
                 </button>
               )
@@ -188,7 +188,7 @@ export default function ChatPage() {
         gridTemplateColumns: "320px 1fr",
         minHeight: 0,
       }}>
-        {/* ─── LEFT · 매수자 리스트 ─────────────────────────────── */}
+        {/* ─── LEFT · 매입사 리스트 ─────────────────────────────── */}
         <aside style={{
           background: MCK.paper,
           borderRight: `1px solid ${MCK.border}`,
@@ -203,7 +203,7 @@ export default function ChatPage() {
           }}>
             <div>
               <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 2 }}>
-                매수자 채팅
+                매입사 채팅
               </div>
               <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 14, fontWeight: 800, color: MCK.ink }}>
                 {threads.length} 건 · thread 분리
@@ -352,7 +352,7 @@ export default function ChatPage() {
             </div>
             <div className="flex items-center gap-2">
               <span style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 600 }}>
-                매도사 ↔ 매수자 대시보드 동기화
+                매도사 ↔ 매입사 대시보드 동기화
               </span>
               <span style={{
                 display: "inline-flex", alignItems: "center", gap: 3,
@@ -363,13 +363,13 @@ export default function ChatPage() {
                 letterSpacing: "0.06em", textTransform: "uppercase",
               }}>
                 <span style={{ color: asRole === "seller" ? "#1A47CC" : "#0075B0" }}>
-                  내 시점 · {asRole === "seller" ? "매도자" : "매수자"}
+                  내 시점 · {asRole === "seller" ? "매각사" : "매입사"}
                 </span>
               </span>
             </div>
           </div>
 
-          {/* Messages — system 메시지 제외, 매도자/매수자 대화만 표시 */}
+          {/* Messages — system 메시지 제외, 매각사/매입사 대화만 표시 */}
           <div ref={messagesRef} style={{
             flex: 1,
             padding: "20px 24px",
@@ -419,7 +419,7 @@ export default function ChatPage() {
               value={draft}
               onChange={e => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`${activeThread.buyerName} 에게 ${asRole === "seller" ? "매도자" : "매수자"} 시점에서 메시지… (Enter 전송 · 전화번호 차단)`}
+              placeholder={`${activeThread.buyerName} 에게 ${asRole === "seller" ? "매각사" : "매입사"} 시점에서 메시지… (Enter 전송 · 전화번호 차단)`}
               autoFocus
               style={{
                 flex: 1, padding: "11px 14px", fontSize: 13,
@@ -461,7 +461,7 @@ export default function ChatPage() {
           }}>
             <Lock size={11} style={{ color: MCK.electric }} />
             <span style={{ fontSize: 10, color: MCK.textSub, fontWeight: 600 }}>
-              <strong style={{ color: MCK.ink, fontWeight: 800 }}>NDA 범위</strong> 내 열람 · 매도사·매수자 대시보드에서 조회 가능 · 워크플로우 자동 기록 · 전화번호 차단.
+              <strong style={{ color: MCK.ink, fontWeight: 800 }}>NDA 범위</strong> 내 열람 · 매도사·매입사 대시보드에서 조회 가능 · 워크플로우 자동 기록 · 전화번호 차단.
             </span>
           </div>
         </main>

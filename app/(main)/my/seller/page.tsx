@@ -204,14 +204,14 @@ export default function SellerDashboardPage() {
     return (
       <MckPageShell variant="tint">
         <MckPageHeader
-          breadcrumbs={[{ label: "마이", href: "/my" }, { label: "매도자 관리" }]}
+          breadcrumbs={[{ label: "마이", href: "/my" }, { label: "매각사 관리" }]}
           eyebrow="MY · SELLER"
-          title="매도자 대시보드"
+          title="매각사 대시보드"
           subtitle="매물 관리·정산 데이터를 불러오고 있습니다."
         />
         <div className="max-w-[1280px] mx-auto" style={{ padding: "60px 24px", textAlign: "center", color: MCK.textMuted, fontSize: 12 }}>
           <Loader2 className="h-6 w-6 animate-spin inline-block mr-2" style={{ color: MCK.electric }} />
-          매도자 데이터를 불러오는 중...
+          매각사 데이터를 불러오는 중...
         </div>
       </MckPageShell>
     )
@@ -220,9 +220,9 @@ export default function SellerDashboardPage() {
   return (
     <MckPageShell variant="tint">
       <MckPageHeader
-        breadcrumbs={[{ label: "마이", href: "/my" }, { label: "매도자 관리" }]}
+        breadcrumbs={[{ label: "마이", href: "/my" }, { label: "매각사 관리" }]}
         eyebrow="MY · SELLER"
-        title="매도자 대시보드"
+        title="매각사 대시보드"
         subtitle="등록한 매물 / 진행 중 경매 / 정산을 한 화면에서 관리합니다."
         actions={
           <div className="flex flex-wrap gap-5">
@@ -467,10 +467,10 @@ export default function SellerDashboardPage() {
             <div className={DS.card.elevated + ' ' + DS.card.padding + ' space-y-4'}>
               <h2 className={DS.text.cardTitle}>매물 공개 설정</h2>
               {[
-                { id: 'auto_approve', label: '신규 관심 자동 승인', desc: '매수자의 관심 신청을 자동으로 수락합니다', defaultOn: true },
+                { id: 'auto_approve', label: '신규 관심 자동 승인', desc: '매입사의 관심 신청을 자동으로 수락합니다', defaultOn: true },
                 { id: 'show_price', label: '가격 공개', desc: '채권 금액을 목록에서 공개합니다', defaultOn: true },
                 { id: 'show_contact', label: '연락처 공개 (L1 이상)', desc: 'L1 이상 투자자에게 담당자 연락처를 공개합니다', defaultOn: false },
-                { id: 'allow_negotiation', label: '가격 협상 허용', desc: '매수자의 가격 협상 요청을 허용합니다', defaultOn: true },
+                { id: 'allow_negotiation', label: '가격 협상 허용', desc: '매입사의 가격 협상 요청을 허용합니다', defaultOn: true },
               ].map(s => (
                 <SellerSettingToggle key={s.id} {...s} />
               ))}
@@ -479,8 +479,8 @@ export default function SellerDashboardPage() {
             <div className={DS.card.elevated + ' ' + DS.card.padding + ' space-y-4'}>
               <h2 className={DS.text.cardTitle}>알림 설정</h2>
               {[
-                { id: 'notif_interest', label: '관심 수신 알림', desc: '매수자가 매물에 관심을 등록하면 알림을 받습니다', defaultOn: true },
-                { id: 'notif_inquiry', label: '문의 알림', desc: '매수자가 문의를 남기면 알림을 받습니다', defaultOn: true },
+                { id: 'notif_interest', label: '관심 수신 알림', desc: '매입사가 매물에 관심을 등록하면 알림을 받습니다', defaultOn: true },
+                { id: 'notif_inquiry', label: '문의 알림', desc: '매입사가 문의를 남기면 알림을 받습니다', defaultOn: true },
                 { id: 'notif_deal', label: '거래 진행 알림', desc: '거래 단계가 변경될 때 알림을 받습니다', defaultOn: true },
                 { id: 'notif_settlement', label: '정산 알림', desc: '정산 처리 시 이메일·SMS를 받습니다', defaultOn: true },
               ].map(s => (

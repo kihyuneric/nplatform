@@ -39,7 +39,7 @@ export interface ChatDocument {
 
 export interface ChatPartner {
   name: string
-  role: string           // 예: "매도자 담당자"
+  role: string           // 예: "매각사 담당자"
   online: boolean
   avatar?: string        // 이니셜 텍스트 또는 이미지 URL
 }

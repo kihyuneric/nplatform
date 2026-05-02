@@ -368,7 +368,7 @@ export default function SellWizardPage() {
         ]}
         eyebrow="Listing Wizard · L0 → L3 자동 구성"
         title="매물 등록 마법사"
-        subtitle="필수 5항목(L0)만 입력하면 즉시 공개 가능하며, 선택 5항목을 추가할수록 자료 완성도와 매수자 매칭률이 높아집니다. 모든 개인정보는 자동 마스킹 파이프라인으로 처리됩니다."
+        subtitle="필수 5항목(L0)만 입력하면 즉시 공개 가능하며, 선택 5항목을 추가할수록 자료 완성도와 매입사 매칭률이 높아집니다. 모든 개인정보는 자동 마스킹 파이프라인으로 처리됩니다."
         actions={
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
             <Link
@@ -623,7 +623,7 @@ export default function SellWizardPage() {
                   ? "핵심 자료 완비 — 프리미엄 노출 무료 적용"
                   : completeness >= 50
                   ? "기본 자료 충족 — 추가 자료 권장"
-                  : "자료 부족 — 매수자 실사 부담 증가"}
+                  : "자료 부족 — 매입사 실사 부담 증가"}
               </div>
             </div>
 
@@ -1186,7 +1186,7 @@ function Step3({
                 )}
               </div>
               <p style={{ fontSize: 11, color: C.lt4, lineHeight: 1.5 }}>
-                매물 등록 직후 자발적 경매방을 자동 생성합니다. 종료일까지 입찰 진행 후 최고가 매수자와 자동 매칭.
+                매물 등록 직후 자발적 경매방을 자동 생성합니다. 종료일까지 입찰 진행 후 최고가 매입사와 자동 매칭.
               </p>
             </div>
           </label>
@@ -1239,7 +1239,7 @@ function Step3({
             </div>
           </div>
           <div style={{ textAlign: "right", fontSize: 11, color: C.lt4 }}>
-            매수자 절감액 (채권잔액 기준)
+            매입사 절감액 (채권잔액 기준)
             <br />
             <strong style={{ color: C.emL, fontSize: 13 }}>{formatKRW(claimBalance - state.askingPrice)}</strong>
           </div>
@@ -1397,7 +1397,7 @@ function Step4BondRights({
         <AlertCircle size={14} color={C.blueL} style={{ marginTop: 1, flexShrink: 0 }} />
         <div style={{ fontSize: 11, color: C.lt3, lineHeight: 1.55 }}>
           이 정보들은 <strong style={{ color: "var(--color-text-primary)" }}>NPL 수익성 분석</strong>(ROI, IRR, 배당표 시뮬레이션)에 직접 사용됩니다.
-          입력하지 않으면 매수자가 별도 분석해야 하므로 매칭률이 낮아질 수 있습니다.
+          입력하지 않으면 매입사가 별도 분석해야 하므로 매칭률이 낮아질 수 있습니다.
         </div>
       </div>
     </>
@@ -1715,7 +1715,7 @@ function Step6Review({
         <ReviewRow label="자료 완성도" accent>{completeness}/100 점</ReviewRow>
         {feeEstimate && (
           <>
-            <ReviewRow label="예상 수수료 (매도자)" accent>
+            <ReviewRow label="예상 수수료 (매각사)" accent>
               {formatKRW(feeEstimate.totalFee)} ({(feeEstimate.totalRate * 100).toFixed(2)}%)
             </ReviewRow>
             <div
@@ -1725,7 +1725,7 @@ function Step6Review({
               }}
             >
               <div style={{ fontSize: 10, color: C.lt3, fontWeight: 700, marginBottom: 8 }}>
-                📋 매도자 수수료 항목 상세
+                📋 매각사 수수료 항목 상세
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.lt4 }}>
@@ -1757,7 +1757,7 @@ function Step6Review({
                 </div>
               </div>
               <div style={{ marginTop: 10, fontSize: 10, color: C.lt4, lineHeight: 1.5 }}>
-                ※ 거래 성사 시에만 청구되며 에스크로로 정산됩니다. 매수자 수수료(NPL 1.5% + 우선협상권 0.3% · 부동산 0.9%)는 매수자 부담입니다.
+                ※ 거래 성사 시에만 청구되며 에스크로로 정산됩니다. 매입사 수수료(NPL 1.5% + 우선협상권 0.3% · 부동산 0.9%)는 매입사 부담입니다.
               </div>
             </div>
           </>

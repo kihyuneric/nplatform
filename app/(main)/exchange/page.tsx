@@ -71,7 +71,7 @@ const V = {
 ═══════════════════════════════════════════════════════════ */
 interface CardListing {
   id: string
-  /** 매도자(매각사) 사용자 ID — OwnerEditButton 권한 매칭용. 없으면 관리자만 편집 가능 */
+  /** 매각사(매각사) 사용자 ID — OwnerEditButton 권한 매칭용. 없으면 관리자만 편집 가능 */
   seller_id?: string | null
   institution: string
   inst_kind: keyof typeof SELLER_INSTITUTIONS  // BANK / SAVINGS_BANK / MUTUAL_CREDIT / AMC / MONEY_LENDER
@@ -100,7 +100,7 @@ interface CardListing {
   view_count: number   // 공개 리스트 누적 조회수 (L0)
 }
 
-// 데모 모드 매도자 UUID — CLAUDE.md 의 dev SELLER (김매도) 와 일치.
+// 데모 모드 매각사 UUID — CLAUDE.md 의 dev SELLER (김매도) 와 일치.
 // 로그인 시 해당 user.id 와 일치하는 매물 카드에서 OwnerEditButton 노출.
 const DEMO_SELLER_ID = "00000000-0000-0000-0000-000000000001"
 
@@ -1481,7 +1481,7 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
           <ArrowRight size={14} />
         </Link>
 
-        {/* 관리자 / 매도자(본인) 만 노출 — 라벨을 명시 표기.
+        {/* 관리자 / 매각사(본인) 만 노출 — 라벨을 명시 표기.
             ADMIN 이면 "관리자 편집", SELLER 본인이면 "매물 편집" 으로 자동 분기 (컴포넌트 내부) */}
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
           <OwnerEditButton

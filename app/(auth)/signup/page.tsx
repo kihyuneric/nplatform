@@ -15,12 +15,12 @@ import {
 
 // ─── Types & constants (unchanged logic) ────────────────────────────────────
 
+// Phase G7+ 2026-04-29 — 사용자 정합 정책: 5개 → 3개 역할로 단순화
+//   매도자 → 매각사 / 매수자 → 매입사 / 파트너 (전문가·기관 제거)
 const SIGNUP_ROLES = [
-  { value: 'BUYER',        label: '매수자',   icon: TrendingUp,  desc: '매물 탐색 및 입찰' },
-  { value: 'SELLER',       label: '매도자',   icon: Banknote,    desc: '매물 등록 및 매각' },
-  { value: 'PROFESSIONAL', label: '전문가',   icon: Briefcase,   desc: '법률·세무·감정 자문' },
-  { value: 'PARTNER',      label: '파트너',   icon: User,        desc: '딜 소싱 및 연결' },
-  { value: 'BUYER_INST',   label: '기관',     icon: Building2,   desc: '대부업체 매입' },
+  { value: 'SELLER',  label: '매각사',  icon: Banknote,    desc: '매물 등록 및 매각 (은행·저축은행·AMC·대부업체·캐피탈·보험사)' },
+  { value: 'BUYER',   label: '매입사',  icon: TrendingUp,  desc: '매물 탐색 및 입찰 (자산가·법인·대부업체·AMC·투자운용사)' },
+  { value: 'PARTNER', label: '파트너',  icon: User,        desc: '딜 소싱·자문·연결 (자문사·법무법인·회계법인)' },
 ] as const
 
 interface DocumentSlot {
@@ -35,28 +35,19 @@ interface UploadedDocument {
 }
 
 const ROLE_DOCUMENTS: Record<string, DocumentSlot[]> = {
-  BUYER: [
-    { type: '사업자등록증', required: false },
-    { type: '신분증 사본', required: true },
-  ],
   SELLER: [
     { type: '사업자등록증', required: true },
-    { type: '금융기관 인가증', required: true },
-    { type: '담당자 명함', required: false },
+    { type: '담당자 명함', required: true },
+    { type: '금융기관 인가증', required: false },  // 비금융 매각사 (대부업체 등) 도 가능
   ],
-  PROFESSIONAL: [
-    { type: '자격증 사본', required: true },
-    { type: '사업자등록증', required: false },
-    { type: '명함', required: false },
+  BUYER: [
+    { type: '사업자등록증 또는 신분증 사본', required: true },
+    { type: '담당자 명함 (법인)', required: false },
   ],
   PARTNER: [
-    { type: '신분증 사본', required: true },
-    { type: '명함', required: false },
-  ],
-  BUYER_INST: [
     { type: '사업자등록증', required: true },
-    { type: '금융기관 인가증', required: false },
-    { type: '신분증 사본', required: true },
+    { type: '자격증 사본 (법무법인 · 회계법인 등)', required: false },
+    { type: '담당자 명함', required: false },
   ],
 }
 
@@ -65,25 +56,29 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024
 const STEP_LABELS = ['계정 정보', '프로필 설정', '서류 제출']
 
 const ROLE_BENEFITS: Record<string, { title: string; items: string[] }> = {
-  BUYER: {
-    title: '매수자 혜택',
-    items: ['전국 NPL 매물 실시간 열람', 'AI 기반 수익성 분석 리포트', '입찰 전략 자동 시뮬레이션'],
-  },
   SELLER: {
-    title: '매도자 혜택',
-    items: ['매물 즉시 등록 및 노출', '검증된 매수자 네트워크 접근', '딜클로징 전문가 지원'],
+    title: '매각사 혜택',
+    items: [
+      '매물 무제한 등록 (Excel · OCR · 폼)',
+      'PII 자동 마스킹 + 등기부 NDA 제어',
+      '전속 등록 시 땅집고옥션 투자자 12,000명 대상 마케팅 지원',
+    ],
   },
-  PROFESSIONAL: {
-    title: '전문가 혜택',
-    items: ['법률·세무 자문 의뢰 수주', '전문가 프로필 노출', '수임 사례 포트폴리오 관리'],
+  BUYER: {
+    title: '매입사 혜택',
+    items: [
+      'AI 매칭 — 관심 조건 매물 자동 추천',
+      '분석 보고서 + Monte Carlo 시뮬레이션',
+      '공동투자팀 (4–10명) 구성 가능',
+    ],
   },
   PARTNER: {
     title: '파트너 혜택',
-    items: ['딜 소싱 커미션 수취', '대부업체 네트워크 접근', '전용 파트너 대시보드'],
-  },
-  BUYER_INST: {
-    title: '대부업체 혜택',
-    items: ['대형 포트폴리오 일괄 열람', '전용 리서치 리포트 제공', '기관 전담 매니저 배정'],
+    items: [
+      '딜 소싱 커미션 수취 (자문료 별도)',
+      '권리분석 · 실사 자동 라우팅으로 수임률 ↑',
+      '전용 파트너 대시보드 + 정산 자동화',
+    ],
   },
 }
 
@@ -267,7 +262,7 @@ export default function SignupPage() {
   const [step, setStep] = useState(1)
 
   const [form, setForm] = useState({
-    role: 'BUYER',
+    role: 'SELLER',
     name: '',
     email: '',
     company_name: '',
@@ -731,64 +726,38 @@ export default function SignupPage() {
           {step === 2 && (
             <form onSubmit={handleNextStep} className="space-y-5">
 
-              {/* Role selection */}
+              {/* Role selection — 3개 (매각사 / 매입사 / 파트너) full-width 카드 */}
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-gray-500 uppercase tracking-normal">
                   회원 유형 <span className="text-stone-900">*</span>
                 </Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {SIGNUP_ROLES.slice(0, 4).map(({ value, label, icon: Icon, desc }) => {
+                <div className="space-y-2">
+                  {SIGNUP_ROLES.map(({ value, label, icon: Icon, desc }) => {
                     const selected = form.role === value
                     return (
                       <button
                         key={value}
                         type="button"
                         onClick={() => updateField('role', value)}
-                        className={`group rounded-none p-3.5 text-left border transition-all duration-200 ${
+                        className={`w-full group rounded-none p-4 text-left border transition-all duration-200 flex items-center gap-3 ${
                           selected
                             ? 'border-[#0A1628] bg-[#EFF6FF] ring-2 ring-[#0A1628]/20'
-                            : 'border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-gray-50'
+                            : 'border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-white'
                         }`}
                       >
-                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center mb-2 transition-colors ${
+                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                           selected ? 'bg-[#0A1628] shadow-md shadow-[#0A1628]/30' : 'bg-gray-200 group-hover:bg-gray-300'
                         }`}>
-                          <Icon className={`w-3.5 h-3.5 ${selected ? 'text-white' : 'text-gray-500'}`} />
+                          <Icon className={`w-4 h-4 ${selected ? 'text-white' : 'text-gray-500'}`} />
                         </div>
-                        <p className={`text-xs font-bold leading-tight ${selected ? 'text-[#0A1628]' : 'text-gray-700'}`}>
-                          {label}
-                        </p>
-                        <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">{desc}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-bold ${selected ? 'text-[#0A1628]' : 'text-gray-800'}`}>{label}</p>
+                          <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">{desc}</p>
+                        </div>
                       </button>
                     )
                   })}
                 </div>
-                {/* 5th role — full width */}
-                {(() => {
-                  const r = SIGNUP_ROLES[4]
-                  const selected = form.role === r.value
-                  return (
-                    <button
-                      type="button"
-                      onClick={() => updateField('role', r.value)}
-                      className={`w-full group rounded-none p-3.5 text-left border transition-all duration-200 flex items-center gap-3 ${
-                        selected
-                          ? 'border-[#0A1628] bg-[#EFF6FF] ring-2 ring-[#0A1628]/20'
-                          : 'border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                        selected ? 'bg-[#0A1628] shadow-md shadow-[#0A1628]/30' : 'bg-gray-200 group-hover:bg-gray-300'
-                      }`}>
-                        <r.icon className={`w-3.5 h-3.5 ${selected ? 'text-white' : 'text-gray-500'}`} />
-                      </div>
-                      <div>
-                        <p className={`text-xs font-bold ${selected ? 'text-[#0A1628]' : 'text-gray-700'}`}>{r.label}</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{r.desc}</p>
-                      </div>
-                    </button>
-                  )
-                })()}
               </div>
 
               {/* Name */}

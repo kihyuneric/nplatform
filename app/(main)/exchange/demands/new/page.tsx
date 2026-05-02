@@ -50,7 +50,7 @@ export default function NewDemandPage() {
   const [reMinArea, setReMinArea] = useState('')
   const [reMaxArea, setReMaxArea] = useState('')
 
-  // Phase G7+ · 매수자 엑셀 OCR 업로드
+  // Phase G7+ · 매입사 엑셀 OCR 업로드
   const [parsing, setParsing] = useState(false)
   const [parsePreview, setParsePreview] = useState<{
     fields: Record<string, unknown>
@@ -214,7 +214,7 @@ export default function NewDemandPage() {
       {/* Form */}
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
 
-        {/* Phase G7+ · 매수자 엑셀 템플릿 다운로드/업로드 배너 */}
+        {/* Phase G7+ · 매입사 엑셀 템플릿 다운로드/업로드 배너 */}
         <div className="rounded-xl p-5 border border-stone-300/40 bg-gradient-to-br from-sky-500/8 to-sky-500/0">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex-1 min-w-0">
@@ -228,13 +228,13 @@ export default function NewDemandPage() {
                 </span>
               </div>
               <p className="text-xs text-[var(--color-text-tertiary)] leading-relaxed">
-                매수자 요구사항 엑셀(드롭다운+체크) 업로드 시 폼이 자동으로 채워집니다.
+                매입사 요구사항 엑셀(드롭다운+체크) 업로드 시 폼이 자동으로 채워집니다.
                 관심 지역·담보·수익률·회피 조건까지 한 번에.
               </p>
             </div>
             <div className="flex gap-2 items-center">
               <a
-                href="/templates/NPLatform_매수자_요구사항_템플릿.xlsx"
+                href="/templates/NPLatform_매입사_요구사항_템플릿.xlsx"
                 download
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-stone-300/40 text-stone-900 dark:text-stone-900 text-xs font-bold hover:bg-stone-100/10 transition-colors"
               >
@@ -657,14 +657,14 @@ export default function NewDemandPage() {
         </div>
       </div>
 
-      {/* Phase G7+ · 매수자 엑셀 OCR 미리보기 모달 */}
+      {/* Phase G7+ · 매입사 엑셀 OCR 미리보기 모달 */}
       <NplModal
         open={!!parsePreview}
         onOpenChange={(o) => { if (!o) setParsePreview(null) }}
         title={
           <span className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-stone-900" />
-            매수자 엑셀 파싱 결과 미리보기
+            매입사 엑셀 파싱 결과 미리보기
           </span>
         }
         description={parsePreview?.source?.fileName ?? '업로드한 요구사항을 확인하세요'}
@@ -672,10 +672,10 @@ export default function NewDemandPage() {
       >
         {parsePreview && (
           <div className="space-y-5">
-            {/* 매수자 정보 + 가격 조건 */}
+            {/* 매입사 정보 + 가격 조건 */}
             <section>
               <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)] mb-2">
-                📋 매수자 정보 + 가격 조건 ({Object.keys(parsePreview.fields).length})
+                📋 매입사 정보 + 가격 조건 ({Object.keys(parsePreview.fields).length})
               </h4>
               {Object.keys(parsePreview.fields).length === 0 ? (
                 <p className="text-[0.8125rem] text-[var(--color-text-tertiary)]">추출된 항목 없음</p>

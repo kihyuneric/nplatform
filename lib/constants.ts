@@ -16,13 +16,14 @@ export const USER_ROLES = {
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES]
 
+// Phase G7+ 2026-04-29 — 사용자 정합 정책: 매도자→매각사, 매수자→매입사
 export const ROLE_LABELS: Record<UserRole, string> = {
   SUPER_ADMIN: '최고관리자',
   ADMIN: '운영관리자',
-  SELLER: '매도자(금융기관)',
-  BUYER_INST: '기관 매수자',
-  BUYER_INDV: '개인 매수자',
-  PARTNER: '파트너(자문사)',
+  SELLER: '매각사',
+  BUYER_INST: '매입사 (법인)',
+  BUYER_INDV: '매입사 (자산가)',
+  PARTNER: '파트너 (자문사)',
   VIEWER: '일반회원',
 }
 

@@ -4,8 +4,8 @@
  * /my/deals — 사용자의 딜룸 참여 이력
  *
  * - 진행 중 / 완료 / 취소된 딜
- * - 딜룸 상세 진입 + 매도자/매수자 본인 만 편집 가능
- * - 관리자/매도자 본인은 삭제 진입점 (실 삭제 X — 상태만 ARCHIVED)
+ * - 딜룸 상세 진입 + 매각사/매입사 본인 만 편집 가능
+ * - 관리자/매각사 본인은 삭제 진입점 (실 삭제 X — 상태만 ARCHIVED)
  */
 
 import { useEffect, useState } from "react"
@@ -82,7 +82,7 @@ export default function MyDealsPage() {
     let cancelled = false
     ;(async () => {
       try {
-        // 매수자: agreements 테이블 → listing_id 별 그룹화
+        // 매입사: agreements 테이블 → listing_id 별 그룹화
         const r = await fetch("/api/v1/agreements", { credentials: "include" })
         if (r.ok) {
           const j = await r.json()
@@ -97,7 +97,7 @@ export default function MyDealsPage() {
                   title: "매물",
                   status: a.status === "APPROVED" ? "IN_PROGRESS" : "OPEN",
                   stage: `${a.type} ${a.status}`,
-                  counterparty: "매도자",
+                  counterparty: "매각사",
                   region: "—",
                   asking_price: typeof a.loi_amount === "number" ? (a.loi_amount as number) : 0,
                   updated_at: String(a.signed_at ?? a.created_at ?? ""),
@@ -138,7 +138,7 @@ export default function MyDealsPage() {
         breadcrumbs={[{ label: "마이", href: "/my" }, { label: "내 딜룸" }]}
         eyebrow="MY · DEAL ROOMS"
         title="내 딜룸"
-        subtitle="진행 중인 모든 딜을 한 화면에서 관리합니다. NDA/LOI/ESCROW 단계별 진척도와 매도자 응답을 확인하세요."
+        subtitle="진행 중인 모든 딜을 한 화면에서 관리합니다. NDA/LOI/ESCROW 단계별 진척도와 매각사 응답을 확인하세요."
         actions={
           <Link href="/exchange" style={{
             display: "inline-flex", alignItems: "center", gap: 6,
@@ -212,7 +212,7 @@ export default function MyDealsPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="flex items-center gap-2" style={{ marginBottom: 6 }}>
                       <MckBadge tone={meta.tone} size="sm">{meta.label}</MckBadge>
-                      <MckBadge tone="blue" size="sm">{row.role === "BUYER" ? "매수자" : "매도자"}</MckBadge>
+                      <MckBadge tone="blue" size="sm">{row.role === "BUYER" ? "매입사" : "매각사"}</MckBadge>
                     </div>
                     <h3 style={{ fontFamily: MCK_FONTS.serif, fontSize: 15, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.01em" }}>
                       {row.title}
@@ -225,7 +225,7 @@ export default function MyDealsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* 편집 — 매도자 본인 또는 admin 만 (매물 정보 편집 = listing 편집) */}
+                    {/* 편집 — 매각사 본인 또는 admin 만 (매물 정보 편집 = listing 편집) */}
                     {canEdit && (
                       <Link
                         href={isAdmin ? `/admin/listings/${row.id}/edit` : `/exchange/edit/${row.id}`}

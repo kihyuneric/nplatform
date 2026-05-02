@@ -649,7 +649,7 @@ export default function DemandsPage() {
         >
           <p style={{ ...MCK_TYPE.label, color: MCK.brassDark, marginBottom: 6 }}>이용 안내</p>
           <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.6 }}>
-            매수 수요 게시판은 NPL 투자자가 매수 조건을 공개하고 매도자의 제안을 받는 서비스입니다.
+            매수 수요 게시판은 NPL 투자자가 매수 조건을 공개하고 매각사의 제안을 받는 서비스입니다.
             게시된 정보는 참고용이며 실제 거래 조건은 당사자 간 협의에 따릅니다.
           </p>
         </div>
@@ -1159,7 +1159,7 @@ function DemandCard({
         </Link>
       </div>
 
-      {/* 관리자 / 매수자 본인 편집 — 자체 권한 체크로 비대상자에게는 미노출 */}
+      {/* 관리자 / 매입사 본인 편집 — 자체 권한 체크로 비대상자에게는 미노출 */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
         <OwnerEditButton
           resourceType="demand"

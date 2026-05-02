@@ -103,7 +103,7 @@ export default function AgreementsPage() {
                     const row = lj?.data ?? null
                     if (row) {
                       titleMap[id as string] = String(row.title ?? row.address_masked ?? "매물")
-                      instMap[id as string] = String(row.creditor_institution ?? row.institution_name ?? row.institution ?? "매도자")
+                      instMap[id as string] = String(row.creditor_institution ?? row.institution_name ?? row.institution ?? "매각사")
                     }
                   }
                 } catch { /* ignore */ }
@@ -116,7 +116,7 @@ export default function AgreementsPage() {
                 id: String(r.id),
                 type: r.type as DocType,
                 listing_id: lid,
-                counterparty: instMap[lid] ?? "매도자",
+                counterparty: instMap[lid] ?? "매각사",
                 collateral: titleMap[lid] ?? "매물",
                 amount: typeof r.loi_amount === "number" ? (r.loi_amount as number) : undefined,
                 signed_at: r.signed_at ? String(r.signed_at).slice(0, 16).replace("T", " ") : "—",
@@ -142,7 +142,7 @@ export default function AgreementsPage() {
             ;(lj.data as Array<Record<string, unknown>>).forEach((row) => {
               const id = String(row.id)
               titles[id] = String(row.title ?? row.address_masked ?? "매물")
-              insts[id] = String(row.creditor_institution ?? row.institution_name ?? row.institution ?? "매도자")
+              insts[id] = String(row.creditor_institution ?? row.institution_name ?? row.institution ?? "매각사")
             })
             const hydrated = SAMPLE_AGREEMENTS.map((a, idx) => {
               const realId = ids[idx % ids.length]

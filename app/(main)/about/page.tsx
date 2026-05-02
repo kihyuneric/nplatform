@@ -56,7 +56,7 @@ const PILLARS = [
 
 const FLOW_STEPS = [
   { num: 1, label: "매물 등록", desc: "Excel 템플릿·OCR·폼 — 3가지 방법 평균 8분", icon: Building2 },
-  { num: 2, label: "AI 매칭", desc: "관심 조건 + 매물 attribute → 자동 매수자 추천", icon: Target },
+  { num: 2, label: "AI 매칭", desc: "관심 조건 + 매물 attribute → 자동 매입사 추천", icon: Target },
   { num: 3, label: "딜룸 협상", desc: "NDA·실사·LOI 전자서명 + 채팅 + 문서 공유", icon: Briefcase },
   { num: 4, label: "본계약·정산", desc: "ESCROW + 잔금 정산 + 세금계산서 자동", icon: FileSignature },
 ]

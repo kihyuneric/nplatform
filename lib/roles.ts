@@ -7,13 +7,16 @@ import { createClient } from "@/lib/supabase/client"
 
 export type UserRole = "BUYER" | "SELLER" | "INSTITUTION" | "PROFESSIONAL" | "PARTNER" | "INVESTOR" | "ADMIN" | "SUPER_ADMIN"
 
+// Phase G7+ 2026-04-29 — 사용자 정합 정책: 매도자→매각사, 매수자→매입사
+//   회원가입 노출 역할은 SELLER · BUYER · PARTNER 3개로 단순화.
+//   INSTITUTION / PROFESSIONAL / INVESTOR 는 legacy 호환만 유지 (UI 미노출).
 export const ROLE_LABELS: Record<UserRole, string> = {
-  BUYER: "매수자",
-  SELLER: "매도자",
-  INSTITUTION: "금융기관",
-  PROFESSIONAL: "전문가",
+  SELLER: "매각사",
+  BUYER: "매입사",
   PARTNER: "파트너",
-  INVESTOR: "투자자",
+  INSTITUTION: "매각사 (금융기관)",   // legacy → 매각사로 통합 표기
+  PROFESSIONAL: "파트너 (전문가)",    // legacy → 파트너로 통합 표기
+  INVESTOR: "매입사 (투자자)",         // legacy → 매입사로 통합 표기
   ADMIN: "관리자",
   SUPER_ADMIN: "슈퍼관리자",
 }

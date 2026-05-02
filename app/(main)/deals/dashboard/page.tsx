@@ -80,7 +80,7 @@ const SAMPLE_DEALS: Deal[] = [
     progress: 10,
     next_action: "NDA 체결 필요",
     deadline: new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10),
-    notification: "매도자가 응답 대기 중",
+    notification: "매각사가 응답 대기 중",
     amount: 1_200_000_000,
     type: "buy",
     asset_type: "아파트",

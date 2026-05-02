@@ -36,7 +36,7 @@ export default function BulkUploadClosedPage() {
 
           <p className="text-[0.9375rem] leading-relaxed text-[var(--color-text-secondary)] mb-6">
             데이터 정제·실사 품질 통제 강화를 위해 셀프 CSV 업로드는 일시 중단합니다.
-            대량 등록(20건 이상)이 필요하신 경우 아래 고객센터로 직접 문의 주세요 — 매도자
+            대량 등록(20건 이상)이 필요하신 경우 아래 고객센터로 직접 문의 주세요 — 매각사
             매니저가 1:1 상담 후 일괄 등록을 처리해드립니다.
           </p>
 
@@ -59,7 +59,7 @@ export default function BulkUploadClosedPage() {
               02-555-2822
             </a>
             <p className="text-[0.8125rem] mt-2" style={{ color: "rgba(255,255,255,0.75)" }}>
-              평일 09:00 ~ 18:00 · 매도자 등록 전담
+              평일 09:00 ~ 18:00 · 매각사 등록 전담
             </p>
           </div>
 

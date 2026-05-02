@@ -702,7 +702,7 @@ function BidCard({ item, onBid }: { item: BidItem; onBid: (item: BidItem) => voi
           <Gavel size={13} style={{ color: MCK.ink }} /> 입찰 참여
         </button>
       </div>
-      {/* 관리자 / 매도자(본인)만 노출 — 자발적 경매 매물 편집 (listing 편집 페이지 재사용) */}
+      {/* 관리자 / 매각사(본인)만 노출 — 자발적 경매 매물 편집 (listing 편집 페이지 재사용) */}
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
         <OwnerEditButton
           resourceType="listing"

@@ -11,7 +11,7 @@
  *   ⑤ Footer CTA · Deep Navy
  *
  * LEFT:
- *   - SECTION 01 · Deal Screening (L0)  — 핵심 지표 / 마스킹 / AI 분석 / 회수율 / 리스크+MC / 권리·등기·임대차 / 매도자·매수자
+ *   - SECTION 01 · Deal Screening (L0)  — 핵심 지표 / 마스킹 / AI 분석 / 회수율 / 리스크+MC / 권리·등기·임대차 / 매각사·매입사
  *   - SECTION 02 · Deal Validation (L2) — NDA / 감정평가 / 경매·공매 / 등기 원본 / 채권 / 현장 + sidebar(AI투자분석·매칭·수수료·제공자료)
  *   - SECTION 03 · Deal Engagement (L3) — LOI / 실사 신청 / 가격 오퍼 (채팅은 RIGHT sticky 담당)
  *   - SECTION 04 · Deal Execution — 3-step closing + 최종 CTA
@@ -247,7 +247,7 @@ export default function DealRoomPage() {
         }
         actions={
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-            {/* 편집하기 — 관리자 / 매도자(본인)만 노출. ownerId 는 listing.seller_id 에서 파생. */}
+            {/* 편집하기 — 관리자 / 매각사(본인)만 노출. ownerId 는 listing.seller_id 에서 파생. */}
             {listing && (
               <OwnerEditButton
                 resourceType="dealroom"
@@ -731,7 +731,7 @@ function SectionScreening() {
       <SubsectionHeader title="투자 분석" sub="Nplatform NPL Engine · 실시간" />
       <FullAiInvestmentAnalysisCard />
 
-      <SubsectionHeader title="매수자 수수료 안내" sub="거래 성사 시에만 부과" />
+      <SubsectionHeader title="매입사 수수료 안내" sub="거래 성사 시에만 부과" />
       <FullBuyerFeeCard />
 
       {/* ── 다음 단계 cards (사용자 요청 — 기본 정보 요약 앞) ───────────── */}
@@ -1058,7 +1058,7 @@ function SectionEngagement() {
       num="03"
       eyebrow="Section 03 · LOI required"
       title="Deal Engagement — 협상·실사"
-      subtitle="LOI 제출 후 실사 일정 조율과 가격 오퍼를 진행합니다. 매도자와의 실시간 채팅은 우측에서 진행됩니다."
+      subtitle="LOI 제출 후 실사 일정 조율과 가격 오퍼를 진행합니다. 매각사와의 실시간 채팅은 우측에서 진행됩니다."
     >
       {/* ── 다음 단계 — Section 03 LOI 활성 ──────────────────────────── */}
       <NextStepGroup activeKey="loi" />
@@ -1081,7 +1081,7 @@ function SectionEngagement() {
               LOI 확인
             </div>
             <p style={{ fontSize: 12, color: MCK.ink, lineHeight: 1.5 }}>
-              제출된 인수의향서 확인 + 다운로드. 매도자 승인 후 에스크로 단계로 진행.
+              제출된 인수의향서 확인 + 다운로드. 매각사 승인 후 에스크로 단계로 진행.
             </p>
           </div>
         </div>
@@ -1130,12 +1130,12 @@ function SectionExecution() {
       title="Deal Execution — 1Day 클로징"
       subtitle="ESCROW 결제 후 24시간 내 클로징. 현장 계약 · 채권 양도 · 정산이 자동으로 이뤄집니다."
     >
-      {/* 3-step closing — ① ESCROW 입금 / ② 매도자 승인+현장 계약 / ③ 채권양도+정산 */}
+      {/* 3-step closing — ① ESCROW 입금 / ② 매각사 승인+현장 계약 / ③ 채권양도+정산 */}
       <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 12, marginBottom: 20 }}>
         {[
-          { n: "①", icon: Wallet, t: "ESCROW 입금", d: "10% 보증금 + 매수자 수수료를 KB에스크로 계좌로. 자금은 채권양도 완료 시까지 안전 보호." },
-          { n: "②", icon: FileSignature, t: "매도자 승인 및 현장 계약 진행", d: "LOI 가격 오퍼 승인 내용 기반 매매계약서 현장 작성." },
-          { n: "③", icon: CheckCircle2, t: "채권양도 + 정산", d: "에스크로 자금 매도자 정산 → 거래 종결. 분쟁 시 NPLatform 중재." },
+          { n: "①", icon: Wallet, t: "ESCROW 입금", d: "10% 보증금 + 매입사 수수료를 KB에스크로 계좌로. 자금은 채권양도 완료 시까지 안전 보호." },
+          { n: "②", icon: FileSignature, t: "매각사 승인 및 현장 계약 진행", d: "LOI 가격 오퍼 승인 내용 기반 매매계약서 현장 작성." },
+          { n: "③", icon: CheckCircle2, t: "채권양도 + 정산", d: "에스크로 자금 매각사 정산 → 거래 종결. 분쟁 시 NPLatform 중재." },
         ].map((s) => {
           const Icon = s.icon
           return (
@@ -1361,7 +1361,7 @@ function EscrowPaymentModal({ onClose }: { onClose: () => void }) {
       return
     }
     // dev/demo 환경에서 buyername/email 임시 — 실 환경은 user.profile 에서
-    const buyerName = '매수자'
+    const buyerName = '매입사'
     const buyerEmail = 'buyer@nplatform.co.kr'
     const result = await startInicisCheckout({
       type: 'ESCROW_DEPOSIT',
@@ -1533,16 +1533,16 @@ function EscrowPaymentModal({ onClose }: { onClose: () => void }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   RIGHT · Secure Chat Panel (sticky · 매수자별 thread switching)
+   RIGHT · Secure Chat Panel (sticky · 매입사별 thread switching)
    ─────────────────────────────────────────────────────────────────────────
-   매수자는 여러 명 가능 — 각 매수자별로 분리된 채팅 thread.
-   리스트에서 매수자 클릭 → 해당 thread 표시.
-   동일 정보가 매도사·매수자 대시보드에서도 조회 가능 (백엔드 thread_id 매핑).
+   매입사는 여러 명 가능 — 각 매입사별로 분리된 채팅 thread.
+   리스트에서 매입사 클릭 → 해당 thread 표시.
+   동일 정보가 매도사·매입사 대시보드에서도 조회 가능 (백엔드 thread_id 매핑).
 
    자동 기록 룰셋 (RULE_SET):
      R1. 투자자 인증 신청·승인 → system 메시지 자동 기록
      R2. NDA 전자서명 신청·체결 → system 메시지 자동 기록
-     R3. LOI 제출·매도자 승인 → system 메시지 자동 기록
+     R3. LOI 제출·매각사 승인 → system 메시지 자동 기록
      R4. ESCROW 입금·전자계약·정산 → system 메시지 자동 기록
    PII 차단 룰셋 (PII_BLOCK):
      P1. 전화번호 (010·02·031·1588 등) → 입력 차단 + 경고
@@ -1635,7 +1635,7 @@ function ListingChatPanel() {
       >
         <div>
           <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 2 }}>
-            보안 채팅 · {institution || '매도자'}
+            보안 채팅 · {institution || '매각사'}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, color: MCK.textMuted, fontWeight: 600 }}>
             <Wifi size={10} style={{ color: '#10B981' }} />
@@ -1915,7 +1915,7 @@ function SecureChatPanel() {
               NDA 체결 후 채팅이 가능합니다
             </h4>
             <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.55, marginBottom: 16 }}>
-              비밀유지계약 전자서명을 완료하시면 매도자와 보안 채팅이 활성화됩니다.
+              비밀유지계약 전자서명을 완료하시면 매각사와 보안 채팅이 활성화됩니다.
             </p>
             <button
               type="button"
@@ -2082,11 +2082,11 @@ function SecureChatPanel() {
           </span>
         </div>
         <span style={{ fontSize: 9, color: MCK.textMuted, fontWeight: 600 }}>
-          매도사·매수자 대시보드 동기화
+          매도사·매입사 대시보드 동기화
         </span>
       </div>
 
-      {/* Messages — system 메시지 제외, 매도자/매수자 대화 + 업로드 첨부 */}
+      {/* Messages — system 메시지 제외, 매각사/매입사 대화 + 업로드 첨부 */}
       <div style={{ flex: 1, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12, overflowY: "auto" }}>
         {activeThread.messages.filter(m => m.type !== "system").map(msg => <ChatBubble key={msg.id} msg={msg} />)}
 
@@ -2094,7 +2094,7 @@ function SecureChatPanel() {
         {uploads.map(att => (
           <div key={att.id} style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", maxWidth: "88%", alignSelf: "flex-end", gap: 2 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}>
-              <span style={{ fontSize: 10, fontWeight: 800, color: MCK.ink }}>나 (매수자)</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: MCK.ink }}>나 (매입사)</span>
             </div>
             <a
               href={att.url}
@@ -2206,7 +2206,7 @@ function SecureChatPanel() {
       <div style={{ padding: "8px 14px", background: MCK.paper, borderTop: `1px solid ${MCK.border}`, display: "flex", alignItems: "center", gap: 6 }}>
         <Lock size={11} style={{ color: MCK.electric }} />
         <span style={{ fontSize: 10, color: MCK.textSub, fontWeight: 600 }}>
-          <strong style={{ color: MCK.ink, fontWeight: 800 }}>NDA 범위</strong> 내 열람 · 매도사·매수자 대시보드에서 조회 가능 · 워크플로우 자동 기록 · 전화번호 차단.
+          <strong style={{ color: MCK.ink, fontWeight: 800 }}>NDA 범위</strong> 내 열람 · 매도사·매입사 대시보드에서 조회 가능 · 워크플로우 자동 기록 · 전화번호 차단.
         </span>
       </div>
     </motion.div>
@@ -2217,9 +2217,9 @@ function SecureChatPanel() {
    RIGHT · 상대방 정보 사이드 패널 (chat 아래)
 ═══════════════════════════════════════════════════════════════════════════ */
 function CounterpartySidePanel() {
-  // 매도자 정보는 매물 데이터에서 파생. NDA 체결 전까지 담당자 실명/연락처는 마스킹.
+  // 매각사 정보는 매물 데이터에서 파생. NDA 체결 전까지 담당자 실명/연락처는 마스킹.
   const { institution, listing } = useDealroomListing()
-  const fallbackInstitution = institution || "매도자"
+  const fallbackInstitution = institution || "매각사"
   // 약어 (이니셜) — 한글 첫 글자
   const initials = (fallbackInstitution.match(/[가-힣A-Za-z]/)?.[0] ?? "매").charAt(0)
   // 마스킹된 담당자 표기 — 실제 담당자명은 NDA/LOI 단계에서만 공개
@@ -2239,7 +2239,7 @@ function CounterpartySidePanel() {
       }}
     >
       <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 12 }}>
-        상대방 정보 · 매도자
+        상대방 정보 · 매각사
       </div>
       <div className="flex items-center gap-3" style={{ marginBottom: 12 }}>
         <div className="mck-cta-dark"
@@ -2257,7 +2257,7 @@ function CounterpartySidePanel() {
             {contactLabel}
           </div>
           <div style={{ fontSize: 11, color: MCK.textMuted, fontWeight: 600 }}>
-            매도자 · {fallbackInstitution}
+            매각사 · {fallbackInstitution}
           </div>
         </div>
       </div>
@@ -3056,7 +3056,7 @@ function FullAiInvestmentAnalysisCard() {
   const purchasePrice = reportRecommended?.purchasePrice
     ?? Math.round(acquisitionBase * purchaseRate)
 
-  // 1순위 변제 후 잔여 → 2순위(NPL 매수자) 배당 (cap at 수익권금액 + 경매신청 후 연체이자)
+  // 1순위 변제 후 잔여 → 2순위(NPL 매입사) 배당 (cap at 수익권금액 + 경매신청 후 연체이자)
   // 종로 사례: 1순위 농협 23.64억 변제 후 → 47.63억(예상낙찰가) - 23.64억 = 24.0억
   //   ※ 사용자 정책: 예상 배당액 ≤ 수익권금액 + 경매신청기일 후 연체이자
   //   ※ 수익권금액 = 채권최고액 (max_claim_amount 또는 beneficial_amount)
@@ -3064,7 +3064,7 @@ function FullAiInvestmentAnalysisCard() {
     (listing?.max_claim_amount as number | undefined) ??           // 채권최고액 (있으면 정확)
     Math.round(principal * 1.4)                                     // 채권잔액 × 1.4 추정
 
-  // 수익권금액 (NPL 매수자 측) = beneficial_amount 또는 대출원금 × 1.2 (한국법 채권최고액)
+  // 수익권금액 (NPL 매입사 측) = beneficial_amount 또는 대출원금 × 1.2 (한국법 채권최고액)
   const beneficialAmount =
     (listing?.beneficial_amount as number | undefined) ??
     Math.round(loanPrincipalOnly * 1.2)
@@ -3330,7 +3330,7 @@ function FullMatchingDemandCard() {
       marginBottom: 16,
     }}>
       <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.6, marginBottom: 14 }}>
-        이 매물과 조건이 일치하는 매수자 수요를 확인하세요. <strong style={{ color: MCK.ink, fontWeight: 800 }}>AI 매칭 엔진</strong>이 담보 유형·지역·가격대를 기반으로 최적 매수자를 추천합니다.
+        이 매물과 조건이 일치하는 매입사 수요를 확인하세요. <strong style={{ color: MCK.ink, fontWeight: 800 }}>AI 매칭 엔진</strong>이 담보 유형·지역·가격대를 기반으로 최적 매입사를 추천합니다.
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button type="button" style={{
@@ -3358,10 +3358,10 @@ function FullMatchingDemandCard() {
   )
 }
 
-/* ════ FULL · 매수자 수수료 안내 (listing.askingPrice 기반 동적 계산) ═══════ */
+/* ════ FULL · 매입사 수수료 안내 (listing.askingPrice 기반 동적 계산) ═══════ */
 function FullBuyerFeeCard() {
   const { askingPrice } = useDealroomListing()
-  // 매수자 수수료 정책 (NPLatform 기본):
+  // 매입사 수수료 정책 (NPLatform 기본):
   //   기본 수수료 1.5% + PNR 우선협상권 0.3% = 실효 1.8%
   const baseFeeRate = 0.015
   const pnrRate = 0.003
@@ -3411,7 +3411,7 @@ function FullBuyerFeeCard() {
       </div>
 
       {/* 안내 */}
-      {/* 매수자 수수료 안내 footer — McKinsey Sky Blue (첨부 5 스타일) */}
+      {/* 매입사 수수료 안내 footer — McKinsey Sky Blue (첨부 5 스타일) */}
       <div style={{
         padding: "12px 16px",
         backgroundColor: "#A8CDE8",
@@ -3419,7 +3419,7 @@ function FullBuyerFeeCard() {
         borderTop: `2px solid ${MCK.electric}`,
         fontSize: 11, color: MCK.ink, lineHeight: 1.55,
       }}>
-        💡 수수료는 <strong style={{ color: MCK.ink, fontWeight: 800 }}>거래 성사 시에만 부과</strong>됩니다. 에스크로 계좌로 자동 정산되며, 매도자 수수료는 별도로 처리됩니다.
+        💡 수수료는 <strong style={{ color: MCK.ink, fontWeight: 800 }}>거래 성사 시에만 부과</strong>됩니다. 에스크로 계좌로 자동 정산되며, 매각사 수수료는 별도로 처리됩니다.
       </div>
     </article>
   )
@@ -3508,7 +3508,7 @@ type NextStepConfig = {
 const NEXT_STEPS: NextStepConfig[] = [
   { key: "auth", step: "①", icon: <User size={15} />,           title: "투자자 인증",   desc: "개인/법인 투자자 자격 검증. 인증 후 검증 단계 데이터 열람 가능." },
   { key: "nda",  step: "②", icon: <FileSignature size={15} />, title: "NDA 전자서명",  desc: "비밀유지계약 전자 체결. 감정평가서 · 등기부 원본 등 검증 데이터 열람." },
-  { key: "loi",  step: "③", icon: <Award size={15} />,         title: "LOI 제출",      desc: "인수의향서 작성·제출. 매도자 승인 후 가격 오퍼 및 실사 진행." },
+  { key: "loi",  step: "③", icon: <Award size={15} />,         title: "LOI 제출",      desc: "인수의향서 작성·제출. 매각사 승인 후 가격 오퍼 및 실사 진행." },
 ]
 
 /** 현재 진행 중인 활성 단계 (시연용 — 실제 UI 에선 백엔드 state 연동)
@@ -3522,7 +3522,7 @@ function NextStepGroup({ activeKey = ACTIVE_STEP }: { activeKey?: NextStepKey } 
   const router = useRouter()
   // 매물 SoT — 모달의 listingTitle/listingId/sellerName/askingPrice 모두 listing 파생
   const { title: listingTitle, code: listingCode, institution, askingPrice, listing } = useDealroomListing()
-  const fallbackInstitution = institution || "매도자"
+  const fallbackInstitution = institution || "매각사"
   const sellerNameForModal = fallbackInstitution
 
   // 기존 access-modals 의 state 시뮬레이션 (시연용 · 신청 가능 = "none")

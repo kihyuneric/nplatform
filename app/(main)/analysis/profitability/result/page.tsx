@@ -142,7 +142,7 @@ export default function ProfitabilityResultPage() {
                 )}
                 <p className={DS.header.subtitle + " !mt-0"}>
                   {listing
-                    ? `${getListingRegion(listing)} · ${getListingInstitution(listing) || '매도자'}`
+                    ? `${getListingRegion(listing)} · ${getListingInstitution(listing) || '매각사'}`
                     : `${result.input.collateral.address} · ${result.input.collateral.propertyType}`}
                 </p>
               </div>
