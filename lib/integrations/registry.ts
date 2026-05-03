@@ -12,6 +12,17 @@
 
 export type IntegrationStatus = 'LIVE' | 'MOCK' | 'MISSING'
 
+/**
+ * Output 연결 상태 — API 키 등록 ≠ UI 사용 가능.
+ *   - CONNECTED: 사용자가 보는 UI 소비자 존재 (API 키 등록 즉시 효과)
+ *   - PARTIAL: 백엔드 fetcher 만 존재 (관리자 / cron 만 사용, 일반 UI 없음)
+ *   - PLANNED: 코드 미구현 — API 키 등록해도 효과 없음 (UI 개발 우선 필요)
+ *
+ * 사용자 정책 (2026-05-03): "API 연동만 있고 실제 아웃풋 안 되는 건 의미 없음"
+ *   PLANNED 항목은 UI 개발 후 등록 권장.
+ */
+export type OutputStatus = 'CONNECTED' | 'PARTIAL' | 'PLANNED'
+
 export type IntegrationCategory =
   | 'Translation'
   | 'AI/LLM'
@@ -35,8 +46,17 @@ export interface Integration {
   category: IntegrationCategory
   /** 우선순위 — 같은 카테고리 내 fallback 순서 (낮을수록 우선) */
   priority?: number
-  /** 현재 상태 */
+  /** API 키 등록 상태 */
   status: IntegrationStatus
+  /**
+   * UI 출력 연결 상태 (옵션 — 기본 'CONNECTED'):
+   *   - CONNECTED: 사용자 UI 소비자 존재 → 키 등록 즉시 효과
+   *   - PARTIAL:   백엔드만 존재 (cron / admin 만 사용)
+   *   - PLANNED:   UI 미구현 — 키 등록해도 효과 없음
+   */
+  outputStatus?: OutputStatus
+  /** UI 소비자 경로 또는 미구현 사유 */
+  uiConsumer?: string
   /** 필수 환경변수 (모두 등록되어야 LIVE) */
   envVars: string[]
   /** 코드 사용처 — 가장 중요한 파일 3개까지 */
@@ -66,6 +86,8 @@ export const INTEGRATIONS: Integration[] = [
     docsUrl: 'https://cloud.google.com/translate/docs/setup',
     signupUrl: 'https://console.cloud.google.com/apis/library/translate.googleapis.com',
     notes: '4단계 폴백 1차 · 한·영·일 고품질 · 사이트 전반 자동 번역 (AutoTranslateProvider)',
+    outputStatus: 'CONNECTED',
+    uiConsumer: '사이트 전체 (헤더 🌐 EN/JA 토글)',
   },
   {
     name: 'DeepL Free API',
@@ -233,7 +255,9 @@ export const INTEGRATIONS: Integration[] = [
     cost: '$0.02 / page',
     docsUrl: 'https://console.upstage.ai/docs/capabilities/document-ocr',
     signupUrl: 'https://console.upstage.ai/',
-    notes: '한글 문서 특화 OCR (98%+ 정확도) · 미연동',
+    notes: '⚠ UI 미연동 — Claude/Gemini Vision 으로 OCR 처리 중',
+    outputStatus: 'PLANNED',
+    uiConsumer: '⚠ Upstage 호출 코드 미구현. Claude/Gemini Vision 우선 사용',
   },
   {
     name: 'NAVER CLOVA OCR',
@@ -245,7 +269,9 @@ export const INTEGRATIONS: Integration[] = [
     cost: '50건/일 무료 → 그 이상 0.7원/건',
     docsUrl: 'https://www.ncloud.com/product/aiService/ocr',
     signupUrl: 'https://www.ncloud.com/',
-    notes: '한국어 최적화 · 미연동',
+    notes: '⚠ UI 미연동 — Claude/Gemini Vision 우선',
+    outputStatus: 'PLANNED',
+    uiConsumer: '⚠ CLOVA 호출 코드 미구현',
   },
 
   // ── Payment ───────────────────────────────────────────────
@@ -286,22 +312,26 @@ export const INTEGRATIONS: Integration[] = [
     category: 'Payment',
     priority: 3,
     status: 'MISSING',
+    outputStatus: 'PLANNED',
+    uiConsumer: '⚠ Toss 결제 위젯 미구현. PortOne 으로 대체 사용',
     envVars: ['TOSS_CLIENT_KEY', 'TOSS_SECRET_KEY'],
     primaryFiles: [],
     docsUrl: 'https://docs.tosspayments.com/',
     signupUrl: 'https://www.tosspayments.com/',
-    notes: '간편결제 옵션 · 미연동',
+    notes: '⚠ UI 미연동 — PortOne 이 토스카드 포함하여 대체 가능',
   },
   {
     name: 'KakaoPay',
     category: 'Payment',
     priority: 4,
     status: 'MISSING',
+    outputStatus: 'PLANNED',
+    uiConsumer: '⚠ KakaoPay 단독 결제 미구현. PortOne 으로 대체',
     envVars: ['KAKAO_PAY_ADMIN_KEY'],
     primaryFiles: [],
     docsUrl: 'https://developers.kakao.com/docs/latest/ko/kakaopay/common',
     signupUrl: 'https://developers.kakao.com/',
-    notes: '카카오페이 단독 연동 · 미연동',
+    notes: '⚠ UI 미연동 — PortOne 카카오페이 채널 사용 권장',
   },
 
   // ── Real Estate / Registry ────────────────────────────────
@@ -319,66 +349,79 @@ export const INTEGRATIONS: Integration[] = [
   },
 
   // ── Auction Data ──────────────────────────────────────────
+  // 사용자 정책 (2026-05-03): "AI 시세나 낙찰가율 정보는 개발자가 직접 붙혀줌 (이미 보유)"
+  //   → 본 항목들은 fetcher/pipeline 만 존재, 개발자가 ENV + 데이터 붙이면 LIVE 전환
   {
     name: 'MOLIT 실거래가 (국토교통부)',
     category: 'AuctionData',
     priority: 1,
     status: 'MISSING',
+    outputStatus: 'PARTIAL',
+    uiConsumer: 'lib/external-apis/molit.ts (fetcher) → /admin/data-sync (pipeline)',
     envVars: ['MOLIT_API_KEY'],
-    primaryFiles: [],
+    primaryFiles: ['lib/external-apis/molit.ts', 'lib/data-pipeline/real-transaction-fetcher.ts'],
     cost: '무료 (공공데이터포털)',
     docsUrl: 'https://www.data.go.kr/data/15058747/openapi.do',
     signupUrl: 'https://www.data.go.kr/',
-    notes: '아파트 실거래가 · NBI 인덱스 일일 자동 fetch · 미연동',
+    notes: '아파트 실거래가 fetcher 존재 · 개발자 데이터 직접 보유 시 ENV만 등록',
   },
   {
     name: '온비드 (KAMCO)',
     category: 'AuctionData',
     priority: 1,
     status: 'MISSING',
+    outputStatus: 'PARTIAL',
+    uiConsumer: '백엔드만 존재 (관리자 데이터 동기화)',
     envVars: ['ONBID_API_KEY'],
     primaryFiles: [],
     cost: '무료 (공공데이터포털)',
     docsUrl: 'https://www.data.go.kr/iim/api/selectAPIAcountView.do',
     signupUrl: 'https://www.data.go.kr/',
-    notes: '공매 자산 · NPL 회수율 (낙찰가율) 인덱스 · 미연동',
+    notes: '공매 자산 · 낙찰가율 인덱스 · 사용자가 데이터 직접 보유',
   },
   {
     name: '대법원 법원경매정보',
     category: 'AuctionData',
     priority: 2,
     status: 'MOCK',
+    outputStatus: 'PARTIAL',
+    uiConsumer: 'lib/data-pipeline/court-auction-fetcher.ts → 분석 엔진',
     envVars: ['COURT_AUCTION_API_KEY'],
     primaryFiles: ['lib/data-pipeline/court-auction-fetcher.ts'],
     cost: '비공식 크롤러 (ENV 없으면 mock)',
     docsUrl: 'https://www.courtauction.go.kr/',
-    notes: '법원 경매 데이터 · 사용자 정책: 자체 크롤러 구현됨, API 연동 불필요',
+    notes: '자체 크롤러 구현됨 · 사용자 정책: API 연동 불필요',
   },
 
   // ── Maps ──────────────────────────────────────────────────
+  // 사용자 정책 (2026-05-03): UI 미구현 → PLANNED. 지도 컴포넌트 개발 후 등록 권장.
   {
     name: '카카오맵',
     category: 'Maps',
     priority: 1,
     status: 'MISSING',
+    outputStatus: 'PLANNED',
+    uiConsumer: '⚠ 지도 UI 컴포넌트 미구현. 매물 지도 화면 개발 필요',
     envVars: ['KAKAO_MAP_JAVASCRIPT_KEY', 'KAKAO_MAP_REST_KEY'],
     primaryFiles: [],
     cost: '월 30만 호출 무료',
     docsUrl: 'https://apis.map.kakao.com/web/guide/',
     signupUrl: 'https://developers.kakao.com/',
-    notes: '매물 지도 표시 · 위치 검색 · 미연동',
+    notes: '⚠ UI 미구현 — 키 등록해도 효과 없음. 지도 화면 개발 후 등록 권장',
   },
   {
     name: '네이버 지도',
     category: 'Maps',
     priority: 2,
     status: 'MISSING',
+    outputStatus: 'PLANNED',
+    uiConsumer: '⚠ 지도 UI 컴포넌트 미구현',
     envVars: ['NAVER_MAP_CLIENT_ID', 'NAVER_MAP_CLIENT_SECRET'],
     primaryFiles: [],
     cost: '월 100만 호출 무료',
     docsUrl: 'https://api.ncloud-docs.com/docs/ai-naver-mapsstaticmap',
     signupUrl: 'https://www.ncloud.com/',
-    notes: '대체 지도 공급자 · 미연동',
+    notes: '⚠ UI 미구현 — 카카오맵 대안. 지도 화면 개발 후 등록',
   },
 
   // ── Auth & Storage ────────────────────────────────────────
@@ -432,40 +475,48 @@ export const INTEGRATIONS: Integration[] = [
     category: 'Communications',
     priority: 1,
     status: 'MISSING',
+    outputStatus: 'CONNECTED',
+    uiConsumer: '회원가입 알림 + 일일 요약 cron + 관리자 알림',
     envVars: ['SLACK_WEBHOOK_URL'],
-    primaryFiles: ['lib/notifications/slack.ts'],
+    primaryFiles: ['lib/notifications/slack.ts', 'app/api/v1/onboarding/institution/route.ts', 'app/api/v1/cron/daily-summary/route.ts'],
     cost: '무료',
     docsUrl: 'https://api.slack.com/messaging/webhooks',
-    notes: '관리자 알림·딜 알림 · 미등록 시 console.log 로 graceful fallback',
+    notes: '✅ 코드 호출처 3곳 존재 · 미등록 시 console.log fallback',
   },
   {
     name: 'SMTP Email',
     category: 'Communications',
     priority: 2,
     status: 'MISSING',
+    outputStatus: 'PLANNED',
+    uiConsumer: '⚠ 이메일 발송 코드 미구현',
     envVars: ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASSWORD'],
     primaryFiles: [],
-    notes: '인보이스·알림 이메일 · 미연동 (Sendgrid/AWS SES 등 추천)',
+    notes: '⚠ UI 미연동 · 등록해도 효과 없음. 이메일 발송 기능 개발 후 등록',
   },
   {
     name: '카카오 알림톡',
     category: 'Communications',
     priority: 3,
     status: 'MISSING',
+    outputStatus: 'PLANNED',
+    uiConsumer: '⚠ 알림톡 발송 코드 미구현',
     envVars: ['KAKAO_ALIMTALK_SENDER_KEY'],
     primaryFiles: [],
     cost: '발송 건당 9~15원',
     docsUrl: 'https://business.kakao.com/info/alimtalk/',
-    notes: '거래 알림 SMS 대체 · 미연동',
+    notes: '⚠ UI 미연동 — 거래 알림 SMS 대체 기능 미구현',
   },
   {
     name: 'Web Push (VAPID)',
     category: 'Communications',
     priority: 4,
     status: 'MISSING',
+    outputStatus: 'PLANNED',
+    uiConsumer: '⚠ Service Worker push subscription 미구현',
     envVars: ['WEB_PUSH_PUBLIC_KEY', 'WEB_PUSH_PRIVATE_KEY'],
     primaryFiles: [],
-    notes: '브라우저 푸시 알림 · 미연동 (PWA Service Worker 필요)',
+    notes: '⚠ UI 미연동 — PWA push 알림 미구현',
   },
 
   // ── Verification ──────────────────────────────────────────
@@ -474,12 +525,14 @@ export const INTEGRATIONS: Integration[] = [
     category: 'Verification',
     priority: 1,
     status: 'MISSING',
+    outputStatus: 'PLANNED',
+    uiConsumer: '⚠ 회원가입 KYC L1 단계는 현재 mock fallback 사용 중',
     envVars: ['NICE_AUTH_SITE_CODE', 'NICE_AUTH_SITE_PASSWORD'],
     primaryFiles: [],
     cost: '건당 200원 (사용량 따라 변동)',
     docsUrl: 'https://www.niceapi.co.kr/',
     signupUrl: 'https://www.niceapi.co.kr/',
-    notes: '실명인증 · 회원가입 KYC L1 · 미연동',
+    notes: '⚠ UI 호출 미구현 — 회원가입에서 mock 사용. 실 인증 필요 시 등록',
   },
 ]
 
