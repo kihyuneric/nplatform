@@ -312,34 +312,13 @@ export default function UnifiedReportPage() {
     })()
   }, [id, listingId, listing])
 
-  if (!report) {
-    return (
-      <MckPageShell variant="tint">
-        <div className="max-w-[1280px] mx-auto" style={{ padding: "80px 24px", textAlign: "center" }}>
-          <div
-            className="inline-block w-8 h-8 rounded-full animate-spin"
-            style={{ border: `2px solid ${MCK.electric}`, borderTopColor: "transparent" }}
-          />
-          <p style={{ marginTop: 16, fontSize: 13, color: MCK.textSub, fontWeight: 600 }}>
-            리포트 로딩 중…
-          </p>
-        </div>
-      </MckPageShell>
-    )
-  }
-
-  const { summary, recovery, risk, marketOutlook, profitability, input } = report
-  const rp = riskPalette[summary.riskGrade] ?? riskPalette.C
-  const kpiBidRatioPct =
-    profitability?.valuation.expectedBidRatio != null
-      ? profitability.valuation.expectedBidRatio * 100
-      : report.bidRecommendation?.base.bidRatioPercent ?? 0
-
   // ── XRF Vehicle 총평 (valuationMode === 'XRF' 일 때 NPL 총평 대체) ─────
   //   사용자 정책 (2026-05-03): XRF mode 토글 시 AI 총평도 XRF 비히클 구조 기반으로 재생성.
-  //   NPL 자체 ROI → LP 최종 ROI 관점 의사결정 (BUY/HOLD/AVOID), tier 권고, fee 분배 분석 포함.
+  //   ⚠ React Hooks Rule: useMemo 는 early return 전에 호출 — Hook 순서 일관성 유지 (#310 방지).
   const xrfSummaryData = useMemo(() => {
-    if (!profitability) return null
+    const profitability = report?.profitability
+    const input = report?.input
+    if (!profitability || !input) return null
     const result = computeXrfValuation({
       nplPurchasePriceKRW: profitability.acquisition.purchasePrice,
       nplTotalEquityKRW: profitability.investment.totalEquity,
@@ -374,7 +353,30 @@ export default function UnifiedReportPage() {
       summary: buildXrfSummary(args),
       prompt: buildXrfSummaryPrompt(args),
     }
-  }, [profitability, input.assetTitle, input.region, input.debtorType])
+  }, [report])
+
+  if (!report) {
+    return (
+      <MckPageShell variant="tint">
+        <div className="max-w-[1280px] mx-auto" style={{ padding: "80px 24px", textAlign: "center" }}>
+          <div
+            className="inline-block w-8 h-8 rounded-full animate-spin"
+            style={{ border: `2px solid ${MCK.electric}`, borderTopColor: "transparent" }}
+          />
+          <p style={{ marginTop: 16, fontSize: 13, color: MCK.textSub, fontWeight: 600 }}>
+            리포트 로딩 중…
+          </p>
+        </div>
+      </MckPageShell>
+    )
+  }
+
+  const { summary, recovery, risk, marketOutlook, profitability, input } = report
+  const rp = riskPalette[summary.riskGrade] ?? riskPalette.C
+  const kpiBidRatioPct =
+    profitability?.valuation.expectedBidRatio != null
+      ? profitability.valuation.expectedBidRatio * 100
+      : report.bidRecommendation?.base.bidRatioPercent ?? 0
 
   // ── AI 투자 등급 (Detail Stats Row · KPI 그리드에서만 사용) ──────
   const vScore = summary.verdictScore ?? 0
