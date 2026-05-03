@@ -101,30 +101,22 @@ async function fromImage(
   mime: string,
   docType: string,
 ): Promise<Record<string, unknown>> {
-  const Anthropic = (await import('@anthropic-ai/sdk')).default
-  const client = new Anthropic()
+  // 통합 LLM helper 사용 — Claude/Gemini/OpenAI 자동 폴백
+  //   ANTHROPIC_API_KEY → GEMINI_API_KEY → OPENAI_API_KEY 우선순위
+  const { llmVisionExtract } = await import('@/lib/ai/unified-llm')
   const base64 = Buffer.from(buffer).toString('base64')
 
-  const validMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'] as const
+  const validMimes = ['image/jpeg', 'image/png', 'image/webp'] as const
   type ImgMime = (typeof validMimes)[number]
   const safeMime: ImgMime = validMimes.includes(mime as ImgMime) ? (mime as ImgMime) : 'image/jpeg'
 
-  const resp = await client.messages.create({
-    model: 'claude-haiku-4-5',
-    max_tokens: 1024,
-    messages: [
-      {
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: safeMime, data: base64 } },
-          { type: 'text', text: DOC_PROMPTS[docType] ?? DOC_PROMPTS.generic },
-        ],
-      },
-    ],
+  const result = await llmVisionExtract({
+    imageBase64: base64,
+    mimeType: safeMime,
+    prompt: DOC_PROMPTS[docType] ?? DOC_PROMPTS.generic,
+    maxTokens: 1024,
   })
-
-  const text = resp.content[0].type === 'text' ? resp.content[0].text : '{}'
-  return parseJSON(text)
+  return parseJSON(result.text)
 }
 
 // ── PDF → pdf-parse → Claude ───────────────────────────────────────────────
@@ -142,24 +134,16 @@ async function fromPDF(buffer: ArrayBuffer, docType: string): Promise<Record<str
     }
   }
 
-  const Anthropic = (await import('@anthropic-ai/sdk')).default
-  const client = new Anthropic()
-  const resp = await client.messages.create({
-    model: 'claude-haiku-4-5',
-    max_tokens: 1024,
-    messages: [
-      {
-        role: 'user',
-        content: `${DOC_PROMPTS[docType] ?? DOC_PROMPTS.generic}\n\n문서 내용:\n${text.slice(0, 4000)}`,
-      },
-    ],
+  const { llmComplete } = await import('@/lib/ai/unified-llm')
+  const result = await llmComplete({
+    prompt: `${DOC_PROMPTS[docType] ?? DOC_PROMPTS.generic}\n\n문서 내용:\n${text.slice(0, 4000)}`,
+    maxTokens: 1024,
+    grade: 'fast',
   })
-
-  const responseText = resp.content[0].type === 'text' ? resp.content[0].text : '{}'
-  return parseJSON(responseText)
+  return parseJSON(result.text)
 }
 
-// ── DOCX → ZIP 파싱 → word/document.xml → Claude ──────────────────────────
+// ── DOCX → ZIP 파싱 → word/document.xml → LLM ────────────────────────────
 
 async function fromDOCX(buffer: ArrayBuffer, docType: string): Promise<Record<string, unknown>> {
   const { inflateRaw } = await import('zlib')
@@ -211,24 +195,16 @@ async function fromDOCX(buffer: ArrayBuffer, docType: string): Promise<Record<st
     return { error: 'DOCX 텍스트 추출 실패. PDF 또는 이미지로 변환 후 재시도하세요.' }
   }
 
-  const Anthropic = (await import('@anthropic-ai/sdk')).default
-  const client = new Anthropic()
-  const resp = await client.messages.create({
-    model: 'claude-haiku-4-5',
-    max_tokens: 1024,
-    messages: [
-      {
-        role: 'user',
-        content: `${DOC_PROMPTS[docType] ?? DOC_PROMPTS.generic}\n\n문서 내용:\n${xmlText.slice(0, 4000)}`,
-      },
-    ],
+  const { llmComplete } = await import('@/lib/ai/unified-llm')
+  const result = await llmComplete({
+    prompt: `${DOC_PROMPTS[docType] ?? DOC_PROMPTS.generic}\n\n문서 내용:\n${xmlText.slice(0, 4000)}`,
+    maxTokens: 1024,
+    grade: 'fast',
   })
-
-  const responseText = resp.content[0].type === 'text' ? resp.content[0].text : '{}'
-  return parseJSON(responseText)
+  return parseJSON(result.text)
 }
 
-// ── HWP → EUC-KR 텍스트 추출 시도 → Claude ────────────────────────────────
+// ── HWP → EUC-KR 텍스트 추출 시도 → LLM ──────────────────────────────────
 
 async function fromHWP(buffer: ArrayBuffer, docType: string): Promise<Record<string, unknown>> {
   // HWP5 = OLE2 Compound Document — 완전 파싱은 별도 라이브러리 필요
@@ -256,22 +232,14 @@ async function fromHWP(buffer: ArrayBuffer, docType: string): Promise<Record<str
     }
   }
 
-  const Anthropic = (await import('@anthropic-ai/sdk')).default
-  const client = new Anthropic()
-  const resp = await client.messages.create({
-    model: 'claude-haiku-4-5',
-    max_tokens: 512,
-    messages: [
-      {
-        role: 'user',
-        content: `${DOC_PROMPTS[docType] ?? DOC_PROMPTS.generic}\n\n문서 내용(부분 추출됨):\n${printable.slice(0, 2000)}`,
-      },
-    ],
+  const { llmComplete } = await import('@/lib/ai/unified-llm')
+  const result = await llmComplete({
+    prompt: `${DOC_PROMPTS[docType] ?? DOC_PROMPTS.generic}\n\n문서 내용(부분 추출됨):\n${printable.slice(0, 2000)}`,
+    maxTokens: 512,
+    grade: 'fast',
   })
-
-  const responseText = resp.content[0].type === 'text' ? resp.content[0].text : '{}'
   return {
-    ...parseJSON(responseText),
+    ...parseJSON(result.text),
     warning: 'HWP 추출은 불완전할 수 있습니다.',
   }
 }
