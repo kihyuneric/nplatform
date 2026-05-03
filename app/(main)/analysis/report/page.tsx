@@ -38,6 +38,7 @@ import { MckPageShell, MckPageHeader, MckKpiGrid } from "@/components/mck"
 import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
 import { useListing, getListingTitle, getListingRegion, getListingInstitution, getListingAppraisal } from "@/lib/hooks/use-listing"
 import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/unified-report/types"
+import XrfValuationSection from "./components/xrf-valuation-section"
 import {
   SPECIAL_CONDITIONS_V2,
   SPECIAL_CONDITION_BUCKET_LABEL,
@@ -213,6 +214,9 @@ export default function UnifiedReportPage() {
   const lang: Lang = "ko"
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  // 사용자 정책 (2026-05-03): NPL 보고서 ↔ XRF Vehicle Valuation 토글
+  //   NPL 자체 ROI vs XRF + 엔플랫폼 + 대부업체 구조 적용 후 LP 최종 ROI 비교
+  const [valuationMode, setValuationMode] = useState<'NPL' | 'XRF'>('NPL')
   const t = T[lang]
 
   // SoT — listingId 가 있으면 매물 raw 데이터 fetch (assetTitle 등 헤더 메타 동기화)
@@ -413,6 +417,49 @@ export default function UnifiedReportPage() {
         }`}
         actions={
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            {/* 사용자 정책 (2026-05-03): NPL ↔ XRF Valuation 토글 버튼.
+                NPL 자체 ROI vs XRF Vehicle (XRF + 엔플랫폼 + 대부업체) 적용 후 LP 최종 ROI */}
+            <div
+              className="no-print"
+              style={{
+                display: "inline-flex",
+                border: `1px solid ${MCK.borderStrong}`,
+                background: MCK.paper,
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setValuationMode('NPL')}
+                style={{
+                  padding: "9px 14px",
+                  fontSize: 12, fontWeight: 800,
+                  background: valuationMode === 'NPL' ? MCK.ink : MCK.paper,
+                  color: valuationMode === 'NPL' ? MCK.paper : MCK.ink,
+                  border: "none",
+                  letterSpacing: "-0.01em", cursor: "pointer",
+                }}
+                title="NPL 자체 수익성 분석"
+              >
+                NPL Valuation
+              </button>
+              <button
+                type="button"
+                onClick={() => setValuationMode('XRF')}
+                style={{
+                  padding: "9px 14px",
+                  fontSize: 12, fontWeight: 800,
+                  background: valuationMode === 'XRF' ? MCK.ink : MCK.paper,
+                  color: valuationMode === 'XRF' ? MCK.paper : MCK.ink,
+                  border: "none",
+                  borderLeft: `1px solid ${MCK.borderStrong}`,
+                  borderTop: valuationMode === 'XRF' ? `2px solid ${MCK.electric}` : 'none',
+                  letterSpacing: "-0.01em", cursor: "pointer",
+                }}
+                title="XRF Vehicle 구조 적용 후 LP 최종 ROI"
+              >
+                XRF Valuation
+              </button>
+            </div>
             <button
               type="button"
               onClick={handlePdfFull}
@@ -928,7 +975,7 @@ export default function UnifiedReportPage() {
       />
 
       {/* ── NPL 수익성 분석 (7블록 + 3단계 전략 + 민감도 + Monte Carlo + 근거) ───── */}
-      {profitability && (
+      {profitability && valuationMode === 'NPL' && (
         <ProfitabilitySections
           block={profitability}
           initialDebtorType={
@@ -944,6 +991,19 @@ export default function UnifiedReportPage() {
             (input as { acquisitionBaseLabel?: '대출원금' | '채권잔액' }).acquisitionBaseLabel
           }
         />
+      )}
+
+      {/* ── XRF Vehicle Valuation (LP 최종 ROI · XRF Foundation 구조) ───── */}
+      {profitability && valuationMode === 'XRF' && (
+        <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 24px' }}>
+          <XrfValuationSection
+            nplPurchasePriceKRW={profitability.acquisition.purchasePrice}
+            nplTotalEquityKRW={profitability.investment.totalEquity}
+            nplNetProfitKRW={profitability.investment.expectedNetProfit}
+            holdingPeriodDays={profitability.investment.holdingPeriodDays}
+            assetTitle={input.assetTitle ?? displayTitle}
+          />
+        </div>
       )}
 
       {/* ── 시장 전망 ─────────────────────────── */}
