@@ -197,8 +197,9 @@ function computeForTier(
 ): XrfValuationResult {
   const fx = input.exchangeRateKRWPerUSD ?? 1300
   const numLPs = input.numLPs ?? 100
-  // default = 'NPL_EQUITY' (기존 동작 보존). PDF 정합 pattern은 명시적 'NPL_EQUITY_PLUS_FEES' 지정 시.
-  const lpCapitalMode = input.lpCapitalMode ?? 'NPL_EQUITY'
+  // default = 'NPL_EQUITY_PLUS_FEES' (PDF Case 1 정합 — LP가 SPV 운영 fees 도 prefund).
+  //   기존 단순 모델 ('NPL_EQUITY')은 명시적 지정 시.
+  const lpCapitalMode = input.lpCapitalMode ?? 'NPL_EQUITY_PLUS_FEES'
   const fees = XRF_TIERS[tier]
 
   // 단위 변환: KRW → USD
