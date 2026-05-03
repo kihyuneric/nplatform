@@ -61,6 +61,8 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
     analysis: [
       { key: 'analysis_main',    label: '분석 대시보드', href: '/analysis',           description: '시장 통계 및 인텔리전스',    icon: 'BarChart3',  active: true, order: 1 },
       { key: 'analysis_new',     label: 'NPL 분석',      href: '/analysis/new',       description: 'AI 채권 가치 분석',          icon: 'FileSearch', active: true, order: 2 },
+      // 사용자 정책 (2026-05-03): XRF Valuation 은 분석 메뉴에서 제거.
+      //   분석 대시보드 결과 보고서(/analysis/report) 헤더의 NPL ↔ XRF 토글 버튼으로만 노출.
       { key: 'analysis_sim',     label: '경매 분석',     href: '/analysis/simulator', description: '경매 수익률 시나리오 분석',  icon: 'Calculator', active: true, order: 3 },
       { key: 'analysis_copilot', label: 'AI 컨설턴트',   href: '/analysis/copilot',   description: 'AI 투자 컨설팅 챗봇',        icon: 'Sparkles',   active: true, order: 4 },
     ],

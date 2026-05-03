@@ -200,7 +200,7 @@ export default function XrfValuationSection({
 
             <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>대부업체 (KR Servicer)</td></tr>
             <Row label="  Servicing (시장 표준 라이선스)" value={fmtUSDFull(selected.fees.servicingUSD)} note="2.0%/yr 고정 · 모든 tier 동일" />
-            <Row label="  자본금 (Day Exit 1:1 환원)" value={fmtUSDFull(selected.fees.daepuCapitalUSD)} note="순수익 무관 · Pool의 10%" last />
+            <Row label="  자본금 (Day Exit 1:1 환원)" value={fmtUSDFull(selected.daepuCapitalUSD)} note="순수익 무관 · Pool의 10% · Fee 아님" last />
           </tbody>
         </table>
       </Section>
