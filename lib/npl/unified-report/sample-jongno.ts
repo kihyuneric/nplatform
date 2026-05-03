@@ -385,7 +385,7 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     //   (보고서 page 의 EditableInputs default = 본 lock 값. 사용자 변경 시만 cascade)
     purchaseDateOverride: '2026-05-15',         // asOfDate(2026-04-28) + 17일
     balancePaymentDateOverride: '2026-06-15',   // 매입일 + 31일
-    firstSaleDateOverride: '2027-04-08',        // 587일 운용 역산 (사용자 보고서 기준)
+    firstSaleDateOverride: '2027-10-03',        // 587일 운용 역산: balancePaymentDate(2026-06-15) + 587 = distributionDate(2028-01-23) - 112(after-sale offset) = firstSale(2027-10-03)
     discountRate: saleDiscountRate,           // 0 (= 100% 매입)
     pledgeLoanRatio: 0.75,         // 개인 채무자 75% (법인 70%)
     pledgeInterestRate: 0.065,     // 6.5%
