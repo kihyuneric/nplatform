@@ -14,6 +14,13 @@ export interface MonteCarloInput {
 
   /** 수익 계산 함수 타입 */
   returnType: "NPL_RECOVERY" | "RENTAL" | "FLIP"
+
+  /**
+   * Deterministic PRNG seed (P0 보고서 정합 — 2026-05-03).
+   * 미지정 시 1 (default seed) 사용 — 동일 input → 동일 결과 보장.
+   * 사례 매물 (sample-jongno 등) 은 명시적 seed 설정으로 보고서/리스트 정합화.
+   */
+  seed?: number
 }
 
 export interface SimVariable {
@@ -73,37 +80,52 @@ export interface MonteCarloResult {
   sampleResults: { index: number; variables: Record<string, number>; return_pct: number }[]
 }
 
-// ─── 확률 분포 생성기 ────────────────────────────────────────
+// ─── Deterministic PRNG (mulberry32) ─────────────────────────
+// Math.random() 대체 — 동일 seed → 동일 시퀀스 보장 (보고서·리스트 ROI 정합)
+type Rng = () => number
+function createMulberry32(seed: number): Rng {
+  let a = seed >>> 0
+  if (a === 0) a = 1  // seed 0 은 항상 0 반환하므로 회피
+  return function rng(): number {
+    a = (a + 0x6d2b79f5) >>> 0
+    let t = a
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
 
-function boxMullerNormal(): [number, number] {
-  const u1 = Math.random()
-  const u2 = Math.random()
+// ─── 확률 분포 생성기 (PRNG 인자 받음) ────────────────────────
+
+function boxMullerNormal(rng: Rng): [number, number] {
+  const u1 = rng()
+  const u2 = rng()
   const z1 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
   const z2 = Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * Math.PI * u2)
   return [z1, z2]
 }
 
-function sampleDistribution(variable: SimVariable): number {
+function sampleDistribution(variable: SimVariable, rng: Rng): number {
   const { distribution, params } = variable
   const { mean = 0, stdDev = 1, min = 0, max = 1, mode } = params
 
   switch (distribution) {
     case "normal": {
-      const [z] = boxMullerNormal()
+      const [z] = boxMullerNormal(rng)
       return mean + z * stdDev
     }
     case "lognormal": {
-      const [z] = boxMullerNormal()
+      const [z] = boxMullerNormal(rng)
       const mu = Math.log(mean * mean / Math.sqrt(stdDev * stdDev + mean * mean))
       const sigma = Math.sqrt(Math.log(1 + (stdDev * stdDev) / (mean * mean)))
       return Math.exp(mu + sigma * z)
     }
     case "uniform": {
-      return min + Math.random() * (max - min)
+      return min + rng() * (max - min)
     }
     case "triangular": {
       const m = mode ?? (min + max) / 2
-      const u = Math.random()
+      const u = rng()
       const fc = (m - min) / (max - min)
       if (u < fc) {
         return min + Math.sqrt(u * (max - min) * (m - min))
@@ -161,11 +183,13 @@ export function runMonteCarlo(input: MonteCarloInput): MonteCarloResult {
   const results: number[] = []
   const sampleResults: MonteCarloResult["sampleResults"] = []
   const sampleInterval = Math.max(1, Math.floor(iterations / 1000))
+  // Deterministic PRNG — input.seed 또는 1 (default) 사용
+  const rng = createMulberry32(input.seed ?? 1)
 
   for (let i = 0; i < iterations; i++) {
     const vars: Record<string, number> = {}
     for (const v of input.variables) {
-      vars[v.name] = sampleDistribution(v)
+      vars[v.name] = sampleDistribution(v, rng)
     }
 
     const ret = calculateReturn(input.purchasePrice, vars, input.returnType)
