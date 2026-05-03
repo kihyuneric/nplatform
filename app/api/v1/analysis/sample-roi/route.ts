@@ -26,22 +26,22 @@ import { buildJongnoSampleReport } from '@/lib/npl/unified-report/sample-jongno'
 import { buildSampleReport } from '@/lib/npl/unified-report/sample'
 
 interface RoiBundle {
-  /** 보고서 RECENT PIPELINE / 카드에 표시할 prominent ROI (Monte Carlo 평균) */
+  /** 보고서 RECENT PIPELINE / 카드에 표시할 prominent ROI */
   primary: number | null
   /** 비교용 — 모든 ROI 후보 */
   candidates: {
-    /** monteCarlo.meanRoi — 시뮬레이션 평균 ROI (보고서 메인 표시값, % 단위) */
     monteCarloMean: number | null
-    /** strategies.recommended.roi — 권고 시나리오 ROI (비율) */
     recommendedScenario: number | null
-    /** strategies.conservative.roi — 보수적 시나리오 (비율) */
     conservativeScenario: number | null
-    /** strategies.aggressive.roi — 강세 시나리오 (비율) */
     aggressiveScenario: number | null
-    /** investment.roi — 입력 시나리오 ROI (비율) */
     investment: number | null
-    /** investment.annualizedRoi — 연환산 (참고용, 사용 금지) */
     investmentAnnualized: number | null
+  }
+  /** 디버깅용 — 보고서 페이지의 운용일수와 비교 */
+  debug: {
+    holdingPeriodDays: number | null
+    totalEquity: number | null
+    expectedNetProfit: number | null
   }
 }
 
@@ -58,6 +58,11 @@ function pickRoiBundle(report: ReturnType<typeof buildJongnoSampleReport>): RoiB
         investment: null,
         investmentAnnualized: null,
       },
+      debug: {
+        holdingPeriodDays: null,
+        totalEquity: null,
+        expectedNetProfit: null,
+      },
     }
   }
 
@@ -73,12 +78,12 @@ function pickRoiBundle(report: ReturnType<typeof buildJongnoSampleReport>): RoiB
   const investment = profitability.investment?.roi ?? null
   const annualized = profitability.investment?.annualizedRoi ?? null
 
-  // 사용자 정책 (2026-05-03 v3): 보고서 메인 표시값 = monteCarlo.meanRoi
-  // 우선순위: monteCarloMean > recommended > investment
+  // 사용자 정책 (2026-05-03 v4): 보고서 화면 ROI 카드 라벨 = "투자 수익률 (ROI)" = investment.roi
+  // 우선순위: investment > recommended > monteCarloMean
   const primary =
-    (typeof monteCarloMean === 'number' && Number.isFinite(monteCarloMean)) ? monteCarloMean
+    (typeof investment === 'number' && Number.isFinite(investment)) ? investment
     : (typeof recommended === 'number' && Number.isFinite(recommended)) ? recommended
-    : (typeof investment === 'number' && Number.isFinite(investment)) ? investment
+    : (typeof monteCarloMean === 'number' && Number.isFinite(monteCarloMean)) ? monteCarloMean
     : null
 
   return {
@@ -90,6 +95,11 @@ function pickRoiBundle(report: ReturnType<typeof buildJongnoSampleReport>): RoiB
       aggressiveScenario: aggressive,
       investment,
       investmentAnnualized: annualized,
+    },
+    debug: {
+      holdingPeriodDays: profitability.investment?.holdingPeriodDays ?? null,
+      totalEquity: profitability.investment?.totalEquity ?? null,
+      expectedNetProfit: profitability.investment?.expectedNetProfit ?? null,
     },
   }
 }
@@ -112,7 +122,7 @@ export async function GET() {
         jamsil: jamsil.candidates,
       },
       computed_at: new Date().toISOString(),
-      note: '분석 대시보드 ROI = profitability.monteCarlo.meanRoi (시뮬레이션 평균) — 보고서 메인 표시값',
+      note: '분석 대시보드 ROI = profitability.investment.roi (보고서 화면 "투자 수익률 (ROI)" 카드 = expectedNetProfit / totalEquity)',
     }, {
       headers: {
         'Cache-Control': 'public, max-age=300, s-maxage=300',
