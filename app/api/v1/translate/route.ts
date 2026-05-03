@@ -29,15 +29,35 @@ const MAX_TEXT_LENGTH = 5000
 // ─── Anthropic Claude 번역 (1차 · 가장 안정적) ──────────────
 async function claudeTranslate(texts: string[], targetLang: string): Promise<string[] | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) return null
+  if (!apiKey) {
+    console.error("[/api/v1/translate] claudeTranslate: ANTHROPIC_API_KEY missing")
+    return null
+  }
   const langName = targetLang === "en" ? "English" : "Japanese"
-  // 짧은 텍스트는 한 번에 묶어서 (배치) 비용·속도 최적화
-  const numbered = texts.map((t, i) => `[${i + 1}] ${t}`).join("\n")
-  const prompt = `You are a professional Korean→${langName} translator for a financial platform (NPL = Non-Performing Loans).
-Translate each numbered Korean line to natural ${langName}. Keep the same numbering format.
-Use formal financial terminology. Output ONLY the translations, no explanations.
 
-${numbered}`
+  // NPLatform 도메인 용어 — 영문 표기 그대로 유지 (번역 X)
+  const PRESERVE_TERMS = [
+    "NPL", "XRF", "NPLatform", "RLUSD", "USDC", "XRPL", "MPT", "AMM", "SPV",
+    "KRW", "USD", "JPY", "ROI", "IRR", "XIRR", "DPI", "TVPI", "MoM", "LP",
+    "GP", "AUM", "P&L", "EBITDA", "KYC", "AML", "MAS", "FSC", "BIS", "PE",
+    "VC", "RWA", "DD", "LOI", "NDA", "TP",
+  ]
+  const preserveNote = `IMPORTANT: Keep these terms unchanged (do NOT translate): ${PRESERVE_TERMS.join(", ")}.`
+
+  // 배치 라벨 (해시 방식 — 깨짐 방지)
+  const numbered = texts.map((t, i) => `<<${i + 1}>>${t}<</${i + 1}>>`).join("\n")
+  const prompt = `You are a professional Korean→${langName} translator for NPLatform (Non-Performing Loan trading platform).
+
+${preserveNote}
+
+Translate each Korean line to natural, formal ${langName}. Use proper financial terminology. Preserve numbers, currency symbols, and percentages exactly. Do NOT add explanations or notes.
+
+Output format: Respond with each translation wrapped in the same delimiter pattern <<N>>...<</N>>. One per line.
+
+Input:
+${numbered}
+
+Output:`
 
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -48,27 +68,41 @@ ${numbered}`
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-3-5-haiku-20241022",
+        // 최신 haiku 모델 (2025-10 출시) — 폴백 체인 제거하고 명시적 모델 명
+        model: "claude-haiku-4-5",
         max_tokens: 4000,
         messages: [{ role: "user", content: prompt }],
       }),
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "")
+      console.error(`[/api/v1/translate] Claude API error ${res.status}:`, errText.slice(0, 500))
+      return null
+    }
     const data = (await res.json()) as { content?: Array<{ text?: string }> }
     const out = data?.content?.[0]?.text ?? ""
-    if (!out) return null
-    // [N] 으로 시작하는 라인만 파싱
-    const lines = out.split(/\r?\n/).filter(l => l.trim().length > 0)
-    const result: string[] = new Array(texts.length).fill("")
-    for (const line of lines) {
-      const m = line.match(/^\[(\d+)\]\s*(.+)$/)
-      if (!m) continue
-      const idx = parseInt(m[1], 10) - 1
-      if (idx >= 0 && idx < texts.length) result[idx] = m[2].trim()
+    if (!out) {
+      console.error("[/api/v1/translate] Claude empty response")
+      return null
     }
-    // 빈 칸은 원문으로 채움
+    // <<N>>...<</N>> 패턴 파싱 (해시 방식 — 정확)
+    const result: string[] = new Array(texts.length).fill("")
+    const re = /<<(\d+)>>([\s\S]*?)<<\/(\d+)>>/g
+    let m: RegExpExecArray | null
+    while ((m = re.exec(out)) !== null) {
+      const idx = parseInt(m[1], 10) - 1
+      if (m[1] === m[3] && idx >= 0 && idx < texts.length) {
+        result[idx] = m[2].trim()
+      }
+    }
+    // 누락된 항목 — 폴백 표시 (원문 유지)
+    const missing = result.filter((r, i) => !r && texts[i]).length
+    if (missing > 0) {
+      console.warn(`[/api/v1/translate] Claude parsed ${texts.length - missing}/${texts.length} (missing ${missing})`)
+    }
     return result.map((r, i) => r || texts[i])
-  } catch {
+  } catch (err) {
+    console.error("[/api/v1/translate] Claude exception:", err)
     return null
   }
 }
@@ -133,33 +167,64 @@ function isValidTranslation(translated: string, targetLang: string): boolean {
   if (/[\uFFFD\u00C0-\u00FF]{2,}/.test(translated)) return false
   // 영어 결과에 한글 부호 (조합형 등) 또는 깨진 문자 포함 시 reject
   if (targetLang === "en" && /[\u0080-\u00BF\u0100-\u052F\u3131-\u318E\uAC00-\uD7A3]/.test(translated)) return false
-  // 동일 단어 8회 이상 반복 (예: "ツイートによる" × 20) → 깨진 응답
-  const words = translated.split(/\s+/)
-  if (words.length > 0) {
+  // 일본어 결과에 한글 섞이면 reject (영문 도메인 용어 NPL/XRF는 OK)
+  if (targetLang === "ja" && /[ㄱ-ㆎ가-힣]/.test(translated)) return false
+  // 동일 단어 4회 이상 반복 (강화: 8→4) — "Tweets by Tweets by ..." 즉시 차단
+  const words = translated.split(/\s+/).filter(w => w.length >= 2)
+  if (words.length > 4) {
     const counts = new Map<string, number>()
     for (const w of words) counts.set(w, (counts.get(w) ?? 0) + 1)
-    for (const c of counts.values()) if (c >= 8) return false
+    for (const c of counts.values()) if (c >= 4) return false
   }
-  // 동일 짧은 substring 8회 이상 반복
-  const repeat = translated.match(/(.{4,15})\1{7,}/)
+  // 동일 짧은 substring 4회 이상 반복 (강화: 7→3)
+  const repeat = translated.match(/(.{4,15})\1{3,}/)
   if (repeat) return false
+  // Google 광고/UI 응답 차단
+  if (/^(Tweets by|Click here|Translate this|Loading\.\.\.)/i.test(translated)) return false
   return true
 }
 
-// ─── 단일 텍스트 번역 (폴백 체인 — MyMemory 우선) ─────────
+// ─── 서버 in-memory 캐시 (lambda warm 동안 유지) ───────────
+const memCache = new Map<string, string>()
+const MEM_CACHE_MAX = 5000
+function memCacheGet(text: string, targetLang: string): string | null {
+  return memCache.get(`${targetLang}::${text}`) ?? null
+}
+function memCacheSet(text: string, targetLang: string, value: string) {
+  if (memCache.size >= MEM_CACHE_MAX) {
+    const keys = memCache.keys()
+    for (let i = 0; i < 10; i++) {
+      const k = keys.next().value
+      if (k) memCache.delete(k)
+    }
+  }
+  memCache.set(`${targetLang}::${text}`, value)
+}
+
+// ─── 단일 텍스트 번역 (폴백 체인 — MyMemory 우선 + cache) ───
 async function translateOne(text: string, targetLang: string): Promise<string> {
   if (!text || text.trim().length === 0) return text
   if (text.length > MAX_TEXT_LENGTH) return text
 
+  // 0차: in-memory 캐시
+  const cached = memCacheGet(text, targetLang)
+  if (cached) return cached
+
   // 1차: MyMemory (Vercel 서버리스에서 안정적)
   const m = await myMemoryTranslate(text, targetLang)
-  if (m && m !== text && isValidTranslation(m, targetLang)) return m
+  if (m && m !== text && isValidTranslation(m, targetLang)) {
+    memCacheSet(text, targetLang, m)
+    return m
+  }
 
   // 2차: Google (검증 통과 시만 채택)
   const g = await googleTranslate(text, targetLang)
-  if (g && g !== text && isValidTranslation(g, targetLang)) return g
+  if (g && g !== text && isValidTranslation(g, targetLang)) {
+    memCacheSet(text, targetLang, g)
+    return g
+  }
 
-  // 폴백: 원문
+  // 폴백: 원문 (캐시 X — 다음 요청 시 재시도 가능)
   return text
 }
 
@@ -186,20 +251,43 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 1차 · Anthropic Claude (배치 번역 — 한 번에 N개)
-    const claudeResults = await claudeTranslate(texts, targetLang)
-    let translations: string[]
-    if (claudeResults && claudeResults.length === texts.length) {
-      // Claude 응답 검증 — 깨지지 않은 라인만 채택, 나머지는 폴백
-      translations = await Promise.all(
-        claudeResults.map(async (r, i) => {
-          if (r && r !== texts[i] && isValidTranslation(r, targetLang)) return r
-          return translateOne(texts[i], targetLang)
-        }),
-      )
-    } else {
-      // Claude 키 없거나 실패 → 폴백 체인 (MyMemory → Google)
-      translations = await Promise.all(texts.map((t) => translateOne(t, targetLang)))
+    // 0차 · in-memory 캐시 hit/miss 분리
+    const needTranslate: { idx: number; text: string }[] = []
+    const cachedTranslations = new Array<string>(texts.length)
+    texts.forEach((t, i) => {
+      const c = memCacheGet(t, targetLang)
+      if (c) {
+        cachedTranslations[i] = c
+      } else {
+        needTranslate.push({ idx: i, text: t })
+      }
+    })
+
+    let translations: string[] = cachedTranslations.slice()
+
+    if (needTranslate.length > 0) {
+      // 1차 · Anthropic Claude (배치 번역)
+      const claudeInput = needTranslate.map(n => n.text)
+      const claudeResults = await claudeTranslate(claudeInput, targetLang)
+
+      if (claudeResults && claudeResults.length === claudeInput.length) {
+        // Claude 응답 검증 — 깨지지 않은 라인만 채택, 나머지는 폴백
+        const claudeFinal = await Promise.all(
+          claudeResults.map(async (r, i) => {
+            const original = claudeInput[i]
+            if (r && r !== original && isValidTranslation(r, targetLang)) {
+              memCacheSet(original, targetLang, r)
+              return r
+            }
+            return translateOne(original, targetLang)
+          }),
+        )
+        needTranslate.forEach((n, i) => { translations[n.idx] = claudeFinal[i] })
+      } else {
+        // Claude 키 없거나 실패 → 폴백 체인
+        const fallbackResults = await Promise.all(claudeInput.map(t => translateOne(t, targetLang)))
+        needTranslate.forEach((n, i) => { translations[n.idx] = fallbackResults[i] })
+      }
     }
 
     return NextResponse.json(
