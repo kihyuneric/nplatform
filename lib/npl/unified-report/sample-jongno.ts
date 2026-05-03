@@ -400,7 +400,13 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
        사용자 정책: 수익권 base = 최초 대출원금 (17억) → 23.8 / 17.0 = 1.40 (140%) */
     maxBondMultiplier: JONGNO_HONGJI_DETAIL.beneficial_amount / JONGNO_HONGJI_DETAIL.initial_principal,
     registrationTransferRate: 0.0048,
-    brokerageFeeRate: 0.012,
+    // 사용자 정책 (2026-05-03): NPL 거래수수료 1.5% (엔진 기본값과 동일).
+    //   ※ 보고서 페이지 ProfitabilitySections 의 LIVE recompute 가 EditableInputs
+    //     에 brokerageFeeRate 를 보관하지 않아 엔진 기본값(0.015)을 사용 →
+    //     builder 가 0.012 를 주입하면 sample-roi API ↔ 보고서 페이지 값이
+    //     1.5억 매입가 × 0.3%p 차이 = 약 5M 만큼 totalEquity 가 다르게 산출됨.
+    //     양쪽 정합을 위해 builder 도 0.015 로 통일.
+    brokerageFeeRate: 0.015,
     contractDepositRate: 0.10,
     asOfDate: '2026-04-28',
     mcSeed: 20260423,
