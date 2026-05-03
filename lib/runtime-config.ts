@@ -35,23 +35,31 @@ const CONFIG_ENV_MAP: Record<string, string> = {
   // AI
   'anthropic.api_key':            'ANTHROPIC_API_KEY',
   'openai.api_key':               'OPENAI_API_KEY',
+  'gemini.api_key':               'GEMINI_API_KEY',
+  'voyage.api_key':               'VOYAGE_API_KEY',
 
-  // 지도
-  'kakao-map.javascript_key':     'NEXT_PUBLIC_KAKAO_MAP_KEY',
+  // 번역
+  'google-translate.api_key':     'GOOGLE_TRANSLATE_API_KEY',
+  'deepl.api_key':                'DEEPL_API_KEY',
+
+  // 결제 (사용자 정책 2026-05-04: PortOne / Inicis / KB에스크로 만)
+  'inicis.mid':                   'INICIS_MID',
+  'inicis.sign_key':              'INICIS_SIGN_KEY',
+  'inicis.iv':                    'INICIS_IV',
+  'kb-escrow.partner_id':         'KB_ESCROW_PARTNER_ID',
+  'kb-escrow.api_key':            'KB_ESCROW_API_KEY',
+  'kb-escrow.webhook_secret':     'KB_ESCROW_WEBHOOK_SECRET',
+
+  // 등기 / 경매 데이터
+  'iros.api_key':                 'IROS_API_KEY',
+  'court-auction.api_key':        'COURT_AUCTION_API_KEY',
+
+  // Slack (관리자 알림)
+  'slack.webhook_url':            'SLACK_WEBHOOK_URL',
+
+  // 지도 (사용자 정책 2026-05-04: 카카오맵만 — 네이버 지도 사용 안 함)
+  'kakao-map.javascript_key':     'KAKAO_MAP_JAVASCRIPT_KEY',
   'kakao-map.rest_key':           'KAKAO_MAP_REST_KEY',
-  'naver-map.client_id':          'NAVER_MAP_CLIENT_ID',
-  'naver-map.client_secret':      'NAVER_MAP_CLIENT_SECRET',
-
-  // 인증
-  'nice-auth.site_code':          'NICE_SITE_CODE',
-  'nice-auth.site_password':      'NICE_SITE_PASSWORD',
-
-  // 알림
-  'kakao-alimtalk.sender_key':    'KAKAO_ALIMTALK_SENDER_KEY',
-  'smtp.host':                    'SMTP_HOST',
-  'smtp.port':                    'SMTP_PORT',
-  'smtp.user':                    'SMTP_USER',
-  'smtp.password':                'SMTP_PASSWORD',
 }
 
 // 역방향 맵: ENV_NAME → provider_id.field_key

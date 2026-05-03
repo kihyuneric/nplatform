@@ -8,21 +8,31 @@
  */
 import { NextResponse } from 'next/server'
 import { INTEGRATIONS, resolveIntegrationStatus } from '@/lib/integrations/registry'
+import { hasConfig } from '@/lib/runtime-config'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const integrations = INTEGRATIONS.map(i => {
-    const resolvedStatus = resolveIntegrationStatus(i)
-    const missingEnvVars = i.envVars.filter(v => !process.env[v])
+  // process.env + DB (api_configs) 둘 다 확인 — 관리자 UI 에서 입력한 값 반영
+  const integrations = await Promise.all(INTEGRATIONS.map(async (i) => {
+    const dbSaved = await Promise.all(i.envVars.map(v => hasConfig(v).catch(() => false)))
+    const allSaved = i.envVars.length > 0 && dbSaved.every(Boolean)
+    const missingEnvVars = i.envVars.filter((_, idx) => !dbSaved[idx])
+
+    // DB 에 저장됐으면 LIVE, 아니면 기존 status 유지
+    const baseStatus = resolveIntegrationStatus(i)
+    const resolvedStatus = allSaved ? 'LIVE' : baseStatus
+
     return {
       ...i,
       resolvedStatus,
       missingEnvVars,
       isReady: resolvedStatus === 'LIVE',
+      // 어떤 키가 DB 에서 등록됐는지 표시 (UI 에서 dot 색깔 결정)
+      savedEnvVars: i.envVars.filter((_, idx) => dbSaved[idx]),
     }
-  })
+  }))
 
   // 카테고리별 통계
   const stats = {

@@ -24,6 +24,8 @@ interface ResolvedIntegration extends Integration {
   resolvedStatus: IntegrationStatus
   missingEnvVars: string[]
   isReady: boolean
+  /** DB(api_configs) 에 등록된 ENV var 이름들 — process.env 외에 추가로 LIVE 가능 */
+  savedEnvVars?: string[]
 }
 
 interface ApiResponse {
@@ -183,6 +185,57 @@ function FilterButton({ active, label, onClick, tint }: { active: boolean; label
 function IntegrationCard({ integration }: { integration: ResolvedIntegration }) {
   const ob = outputBadge(integration.outputStatus)
   const sc = statusColor[integration.resolvedStatus]
+  const [editingEnv, setEditingEnv] = useState<string | null>(null)
+  const [draftValue, setDraftValue] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
+
+  const handleSave = async (envVar: string) => {
+    if (!draftValue.trim()) return
+    setSaving(true)
+    setFeedback(null)
+    try {
+      const res = await fetch('/api/v1/admin/integrations/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ envVar, value: draftValue.trim() }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setFeedback({ msg: `✅ 저장 완료 (${data.maskedValue}) · 새로고침 시 반영`, ok: true })
+        setDraftValue('')
+        setEditingEnv(null)
+        // 1.5초 후 페이지 reload (자동 반영 표시)
+        setTimeout(() => window.location.reload(), 1500)
+      } else {
+        setFeedback({ msg: `❌ ${data.error}`, ok: false })
+      }
+    } catch (err) {
+      setFeedback({ msg: `❌ ${err instanceof Error ? err.message : String(err)}`, ok: false })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (envVar: string) => {
+    if (!confirm(`${envVar} 키를 제거하시겠습니까?`)) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/v1/admin/integrations/save?envVar=${encodeURIComponent(envVar)}`, {
+        method: 'DELETE',
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setFeedback({ msg: '✅ 키 제거됨 · 새로고침 시 반영', ok: true })
+        setTimeout(() => window.location.reload(), 1500)
+      } else {
+        setFeedback({ msg: `❌ ${data.error}`, ok: false })
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div style={{ padding: 16, background: c.bg, border: `1px solid ${c.border}`, borderLeft: `3px solid ${sc}` }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 8 }}>
@@ -211,18 +264,96 @@ function IntegrationCard({ integration }: { integration: ResolvedIntegration }) 
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12, fontSize: 12, marginTop: 12 }}>
         {integration.envVars.length > 0 && (
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: c.textSub, marginBottom: 4 }}>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: c.textSub, marginBottom: 6 }}>
               필수 ENV ({integration.missingEnvVars.length > 0 ? `${integration.missingEnvVars.length}개 미등록` : '모두 등록됨'})
+              <span style={{ marginLeft: 8, fontSize: 9, color: c.textTertiary, fontWeight: 500 }}>
+                · 입력 시 AES-256 암호화 후 DB 저장 → 즉시 반영
+              </span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {integration.envVars.map(v => (
-                <div key={v} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
-                  <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: integration.missingEnvVars.includes(v) ? c.red : c.emerald }} />
-                  <code style={{ color: c.navy, fontFamily: 'monospace' }}>{v}</code>
-                </div>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {integration.envVars.map(v => {
+                const isMissing = integration.missingEnvVars.includes(v)
+                const isEditing = editingEnv === v
+                return (
+                  <div key={v} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11 }}>
+                    <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: isMissing ? c.red : c.emerald, flexShrink: 0 }} />
+                    <code style={{ color: c.navy, fontFamily: 'monospace', minWidth: 200, flexShrink: 0 }}>{v}</code>
+                    {isEditing ? (
+                      <>
+                        <input
+                          type="password"
+                          value={draftValue}
+                          onChange={e => setDraftValue(e.target.value)}
+                          placeholder={`${v} 값 입력`}
+                          autoFocus
+                          style={{
+                            flex: 1, padding: '4px 8px', fontSize: 11, border: `1px solid ${c.blue}`,
+                            background: c.bg, color: c.text, fontFamily: 'monospace',
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') handleSave(v)
+                            if (e.key === 'Escape') { setEditingEnv(null); setDraftValue('') }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleSave(v)}
+                          disabled={saving || !draftValue.trim()}
+                          style={{
+                            padding: '4px 10px', fontSize: 10, fontWeight: 700,
+                            background: c.emerald, color: c.bg, border: 'none', cursor: 'pointer',
+                            opacity: saving || !draftValue.trim() ? 0.5 : 1,
+                          }}
+                        >저장</button>
+                        <button
+                          type="button"
+                          onClick={() => { setEditingEnv(null); setDraftValue('') }}
+                          style={{
+                            padding: '4px 10px', fontSize: 10, fontWeight: 600,
+                            background: c.bg, color: c.textSub, border: `1px solid ${c.border}`, cursor: 'pointer',
+                          }}
+                        >취소</button>
+                      </>
+                    ) : (
+                      <>
+                        <span style={{ color: isMissing ? c.red : c.emerald, fontSize: 10, fontWeight: 600 }}>
+                          {isMissing ? '미등록' : '등록됨'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setEditingEnv(v)}
+                          style={{
+                            padding: '3px 8px', fontSize: 10, fontWeight: 600,
+                            background: c.bg, color: c.blue, border: `1px solid ${c.blue}`, cursor: 'pointer',
+                            marginLeft: 'auto',
+                          }}
+                        >{isMissing ? '+ 입력' : '✎ 수정'}</button>
+                        {!isMissing && (
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(v)}
+                            disabled={saving}
+                            style={{
+                              padding: '3px 8px', fontSize: 10, fontWeight: 600,
+                              background: c.bg, color: c.red, border: `1px solid ${c.red}`, cursor: 'pointer',
+                            }}
+                          >× 제거</button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )
+              })}
             </div>
+            {feedback && (
+              <div style={{
+                marginTop: 8, padding: '6px 10px', fontSize: 11, fontWeight: 500,
+                background: feedback.ok ? '#F0FDF4' : '#FEF2F2',
+                color: feedback.ok ? c.emerald : c.red,
+                border: `1px solid ${feedback.ok ? c.emerald : c.red}`,
+              }}>{feedback.msg}</div>
+            )}
           </div>
         )}
 

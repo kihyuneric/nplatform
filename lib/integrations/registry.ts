@@ -208,16 +208,7 @@ export const INTEGRATIONS: Integration[] = [
     docsUrl: 'https://ai.google.dev/gemini-api/docs/embeddings',
     notes: 'Voyage 대체 가능 · text-embedding-004 (768 dim · 한국어 지원)',
   },
-  {
-    name: 'Anthropic Claude Embeddings',
-    category: 'Embeddings',
-    priority: 3,
-    status: 'MISSING',
-    envVars: ['ANTHROPIC_API_KEY'],
-    primaryFiles: ['app/api/v1/rag/ingest/route.ts'],
-    cost: 'Voyage 통한 간접 사용 (Anthropic 자체 임베딩 없음)',
-    notes: 'Anthropic 은 자체 임베딩 미제공 → Voyage 권장',
-  },
+  // 사용자 정책 (2026-05-04): Anthropic 자체 임베딩 미제공 → 항목 제거.
 
   // ── OCR ───────────────────────────────────────────────────
   {
@@ -245,34 +236,8 @@ export const INTEGRATIONS: Integration[] = [
     signupUrl: 'https://aistudio.google.com/apikey',
     notes: '✨ Claude Vision 대체 · Flash 모델 무료 tier 활용 가능 · 한글 우수',
   },
-  {
-    name: 'Upstage Document AI',
-    category: 'OCR',
-    priority: 3,
-    status: 'MISSING',
-    envVars: ['UPSTAGE_API_KEY'],
-    primaryFiles: [],
-    cost: '$0.02 / page',
-    docsUrl: 'https://console.upstage.ai/docs/capabilities/document-ocr',
-    signupUrl: 'https://console.upstage.ai/',
-    notes: '⚠ UI 미연동 — Claude/Gemini Vision 으로 OCR 처리 중',
-    outputStatus: 'PLANNED',
-    uiConsumer: '⚠ Upstage 호출 코드 미구현. Claude/Gemini Vision 우선 사용',
-  },
-  {
-    name: 'NAVER CLOVA OCR',
-    category: 'OCR',
-    priority: 4,
-    status: 'MISSING',
-    envVars: ['NAVER_OCR_API_KEY', 'NAVER_OCR_INVOKE_URL'],
-    primaryFiles: [],
-    cost: '50건/일 무료 → 그 이상 0.7원/건',
-    docsUrl: 'https://www.ncloud.com/product/aiService/ocr',
-    signupUrl: 'https://www.ncloud.com/',
-    notes: '⚠ UI 미연동 — Claude/Gemini Vision 우선',
-    outputStatus: 'PLANNED',
-    uiConsumer: '⚠ CLOVA 호출 코드 미구현',
-  },
+  // 사용자 정책 (2026-05-04): Upstage / NAVER CLOVA OCR 제거.
+  //   Claude Vision + Gemini Vision 으로 충분. 추가 OCR provider 불필요.
 
   // ── Payment ───────────────────────────────────────────────
   {
@@ -308,30 +273,18 @@ export const INTEGRATIONS: Integration[] = [
     notes: '레거시 PG · 카드·계좌이체',
   },
   {
-    name: '토스페이먼츠',
+    name: 'KB에스크로 (NPL 자금 보관)',
     category: 'Payment',
     priority: 3,
     status: 'MISSING',
     outputStatus: 'PLANNED',
-    uiConsumer: '⚠ Toss 결제 위젯 미구현. PortOne 으로 대체 사용',
-    envVars: ['TOSS_CLIENT_KEY', 'TOSS_SECRET_KEY'],
+    uiConsumer: 'Phase 4 — 체결·정산 완결성 (전자계약 v2 → 에스크로 자동 송금)',
+    envVars: ['KB_ESCROW_PARTNER_ID', 'KB_ESCROW_API_KEY', 'KB_ESCROW_WEBHOOK_SECRET'],
     primaryFiles: [],
-    docsUrl: 'https://docs.tosspayments.com/',
-    signupUrl: 'https://www.tosspayments.com/',
-    notes: '⚠ UI 미연동 — PortOne 이 토스카드 포함하여 대체 가능',
-  },
-  {
-    name: 'KakaoPay',
-    category: 'Payment',
-    priority: 4,
-    status: 'MISSING',
-    outputStatus: 'PLANNED',
-    uiConsumer: '⚠ KakaoPay 단독 결제 미구현. PortOne 으로 대체',
-    envVars: ['KAKAO_PAY_ADMIN_KEY'],
-    primaryFiles: [],
-    docsUrl: 'https://developers.kakao.com/docs/latest/ko/kakaopay/common',
-    signupUrl: 'https://developers.kakao.com/',
-    notes: '⚠ UI 미연동 — PortOne 카카오페이 채널 사용 권장',
+    cost: '거래액 기준 별도 협의',
+    docsUrl: 'https://obank.kbstar.com/',
+    signupUrl: 'https://obank.kbstar.com/',
+    notes: 'NPL 거래 대금 안전 보관 + 양도 완결 시 자동 해제. KB은행 NPL 전용 에스크로 (사용자 정책 2026-05-04)',
   },
 
   // ── Real Estate / Registry ────────────────────────────────
@@ -394,7 +347,8 @@ export const INTEGRATIONS: Integration[] = [
   },
 
   // ── Maps ──────────────────────────────────────────────────
-  // 사용자 정책 (2026-05-03): UI 미구현 → PLANNED. 지도 컴포넌트 개발 후 등록 권장.
+  // 사용자 정책 (2026-05-03): 지도 UI 미구현 → 카카오맵 1종만 유지 (CLAUDE.md 명시).
+  //   네이버 지도는 NPLatform 에서 사용 안 함 (제거 2026-05-04).
   {
     name: '카카오맵',
     category: 'Maps',
@@ -407,21 +361,7 @@ export const INTEGRATIONS: Integration[] = [
     cost: '월 30만 호출 무료',
     docsUrl: 'https://apis.map.kakao.com/web/guide/',
     signupUrl: 'https://developers.kakao.com/',
-    notes: '⚠ UI 미구현 — 키 등록해도 효과 없음. 지도 화면 개발 후 등록 권장',
-  },
-  {
-    name: '네이버 지도',
-    category: 'Maps',
-    priority: 2,
-    status: 'MISSING',
-    outputStatus: 'PLANNED',
-    uiConsumer: '⚠ 지도 UI 컴포넌트 미구현',
-    envVars: ['NAVER_MAP_CLIENT_ID', 'NAVER_MAP_CLIENT_SECRET'],
-    primaryFiles: [],
-    cost: '월 100만 호출 무료',
-    docsUrl: 'https://api.ncloud-docs.com/docs/ai-naver-mapsstaticmap',
-    signupUrl: 'https://www.ncloud.com/',
-    notes: '⚠ UI 미구현 — 카카오맵 대안. 지도 화면 개발 후 등록',
+    notes: '⚠ UI 미구현 — 키 등록해도 효과 없음. CLAUDE.md 에 명시된 공식 지도 SDK',
   },
 
   // ── Auth & Storage ────────────────────────────────────────
@@ -470,6 +410,7 @@ export const INTEGRATIONS: Integration[] = [
   },
 
   // ── Communications ────────────────────────────────────────
+  // 사용자 정책 (2026-05-04): 실제 사용처 있는 Slack 만 유지. SMTP/알림톡/Web Push 제거.
   {
     name: 'Slack Webhook',
     category: 'Communications',
@@ -483,57 +424,8 @@ export const INTEGRATIONS: Integration[] = [
     docsUrl: 'https://api.slack.com/messaging/webhooks',
     notes: '✅ 코드 호출처 3곳 존재 · 미등록 시 console.log fallback',
   },
-  {
-    name: 'SMTP Email',
-    category: 'Communications',
-    priority: 2,
-    status: 'MISSING',
-    outputStatus: 'PLANNED',
-    uiConsumer: '⚠ 이메일 발송 코드 미구현',
-    envVars: ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASSWORD'],
-    primaryFiles: [],
-    notes: '⚠ UI 미연동 · 등록해도 효과 없음. 이메일 발송 기능 개발 후 등록',
-  },
-  {
-    name: '카카오 알림톡',
-    category: 'Communications',
-    priority: 3,
-    status: 'MISSING',
-    outputStatus: 'PLANNED',
-    uiConsumer: '⚠ 알림톡 발송 코드 미구현',
-    envVars: ['KAKAO_ALIMTALK_SENDER_KEY'],
-    primaryFiles: [],
-    cost: '발송 건당 9~15원',
-    docsUrl: 'https://business.kakao.com/info/alimtalk/',
-    notes: '⚠ UI 미연동 — 거래 알림 SMS 대체 기능 미구현',
-  },
-  {
-    name: 'Web Push (VAPID)',
-    category: 'Communications',
-    priority: 4,
-    status: 'MISSING',
-    outputStatus: 'PLANNED',
-    uiConsumer: '⚠ Service Worker push subscription 미구현',
-    envVars: ['WEB_PUSH_PUBLIC_KEY', 'WEB_PUSH_PRIVATE_KEY'],
-    primaryFiles: [],
-    notes: '⚠ UI 미연동 — PWA push 알림 미구현',
-  },
 
-  // ── Verification ──────────────────────────────────────────
-  {
-    name: 'NICE 본인인증',
-    category: 'Verification',
-    priority: 1,
-    status: 'MISSING',
-    outputStatus: 'PLANNED',
-    uiConsumer: '⚠ 회원가입 KYC L1 단계는 현재 mock fallback 사용 중',
-    envVars: ['NICE_AUTH_SITE_CODE', 'NICE_AUTH_SITE_PASSWORD'],
-    primaryFiles: [],
-    cost: '건당 200원 (사용량 따라 변동)',
-    docsUrl: 'https://www.niceapi.co.kr/',
-    signupUrl: 'https://www.niceapi.co.kr/',
-    notes: '⚠ UI 호출 미구현 — 회원가입에서 mock 사용. 실 인증 필요 시 등록',
-  },
+  // 사용자 정책 (2026-05-04): NICE 본인인증 제거 — 회원가입 mock 사용 중, 실 사용 안 함
 ]
 
 /** ENV 변수 등록 여부에 따라 status 동적 결정 (서버 사이드 only) */
@@ -566,14 +458,14 @@ export const CATEGORY_LABELS: Record<IntegrationCategory, string> = {
   'AI/LLM': 'AI / LLM',
   Embeddings: '임베딩 (RAG)',
   OCR: '문서 인식 (OCR)',
-  Payment: '결제',
+  Payment: '결제 / 에스크로',
   RealEstate: '부동산 / 등기',
   AuctionData: '경매 / 실거래 데이터',
   Maps: '지도',
   Auth: '인증 / DB',
   Storage: '스토리지',
   Cache: '캐시',
-  Communications: '알림 / 이메일',
-  Verification: '본인인증',
+  Communications: '알림 (Slack)',
+  Verification: '본인인증 (사용 안 함)',
   Cron: '스케줄러',
 }
