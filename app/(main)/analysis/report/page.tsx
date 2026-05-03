@@ -39,6 +39,9 @@ import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
 import { useListing, getListingTitle, getListingRegion, getListingInstitution, getListingAppraisal } from "@/lib/hooks/use-listing"
 import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/unified-report/types"
 import XrfValuationSection from "./components/xrf-valuation-section"
+import { computeXrfValuation } from "@/lib/xrf/valuation"
+import { computeFundMetrics, computeProfitAllocation } from "@/lib/xrf/metrics"
+import { buildXrfSummary, buildXrfSummaryPrompt } from "@/lib/xrf/summary"
 import {
   SPECIAL_CONDITIONS_V2,
   SPECIAL_CONDITION_BUCKET_LABEL,
@@ -331,6 +334,47 @@ export default function UnifiedReportPage() {
     profitability?.valuation.expectedBidRatio != null
       ? profitability.valuation.expectedBidRatio * 100
       : report.bidRecommendation?.base.bidRatioPercent ?? 0
+
+  // ── XRF Vehicle 총평 (valuationMode === 'XRF' 일 때 NPL 총평 대체) ─────
+  //   사용자 정책 (2026-05-03): XRF mode 토글 시 AI 총평도 XRF 비히클 구조 기반으로 재생성.
+  //   NPL 자체 ROI → LP 최종 ROI 관점 의사결정 (BUY/HOLD/AVOID), tier 권고, fee 분배 분석 포함.
+  const xrfSummaryData = useMemo(() => {
+    if (!profitability) return null
+    const result = computeXrfValuation({
+      nplPurchasePriceKRW: profitability.acquisition.purchasePrice,
+      nplTotalEquityKRW: profitability.investment.totalEquity,
+      nplNetProfitKRW: profitability.investment.expectedNetProfit,
+      holdingPeriodDays: profitability.investment.holdingPeriodDays,
+    })
+    const lpDistributionUSD = result.lpCapitalUSD + result.lpNetProfitUSD
+    const metrics = computeFundMetrics(
+      result.lpCapitalUSD,
+      lpDistributionUSD,
+      profitability.investment.holdingPeriodDays,
+    )
+    const allocation = computeProfitAllocation({
+      nplNetProfitUSD: result.nplNetProfitUSD,
+      xrfMgmtUSD: result.fees.xrfMgmtUSD,
+      xrfSetupUSD: result.fees.xrfSetupUSD,
+      xrfCarryUSD: result.fees.xrfCarryUSD,
+      platformTotalUSD: result.fees.platformTotalUSD,
+      servicingUSD: result.fees.servicingUSD,
+      lpNetProfitUSD: result.lpNetProfitUSD,
+    })
+    const args = {
+      result,
+      metrics,
+      allocation,
+      nplRoiPct: profitability.investment.roi * 100,
+      assetTitle: input.assetTitle,
+      region: input.region,
+      debtorType: input.debtorType,
+    }
+    return {
+      summary: buildXrfSummary(args),
+      prompt: buildXrfSummaryPrompt(args),
+    }
+  }, [profitability, input.assetTitle, input.region, input.debtorType])
 
   // ── AI 투자 등급 (Detail Stats Row · KPI 그리드에서만 사용) ──────
   const vScore = summary.verdictScore ?? 0
@@ -1105,7 +1149,10 @@ export default function UnifiedReportPage() {
               letterSpacing: "-0.005em",
             }}
           >
-            {report.executiveSummary}
+            {/* 사용자 정책 (2026-05-03): XRF mode 토글 시 XRF 비히클 구조 기반 총평 사용 */}
+            {valuationMode === 'XRF' && xrfSummaryData
+              ? xrfSummaryData.summary
+              : report.executiveSummary}
           </p>
           <div
             style={{
@@ -1115,9 +1162,18 @@ export default function UnifiedReportPage() {
               fontVariantNumeric: "tabular-nums",
             }}
           >
+            {valuationMode === 'XRF' ? 'XRF Vehicle Executive Summary · ' : ''}
             {t.generatedAt} · {new Date(report.createdAt).toLocaleString("ko-KR")}
           </div>
-          <PromptToggle report={report} promptLabel={t.promptLabel} />
+          {/* PromptToggle: XRF mode 일 때 XRF 전용 프롬프트, 아니면 NPL 프롬프트 */}
+          {valuationMode === 'XRF' && xrfSummaryData ? (
+            <XrfPromptToggle
+              prompt={xrfSummaryData.prompt}
+              promptLabel="XRF 비히클 총평 기준 프롬프트"
+            />
+          ) : (
+            <PromptToggle report={report} promptLabel={t.promptLabel} />
+          )}
         </div>
       </section>
     </MckPageShell>
@@ -1586,6 +1642,49 @@ function VerdictCriteriaToggle({
  *   · [리스크] 4-팩터 기준 명시 (가중치 투명 노출)
  *   · [판정 규칙] 종합점수 70 기준을 AI 투자 등급 (A~D) 에 맞춰 85/75/55 3-tier 로 정교화
  */
+/**
+ * XRF Vehicle 총평 프롬프트 토글 (NPL PromptToggle 와 동일 UX).
+ * XRF mode 일 때 NPL 프롬프트 대신 XRF 비히클 기준 프롬프트를 표시.
+ */
+function XrfPromptToggle({ prompt, promptLabel }: { prompt: string; promptLabel?: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="mt-3 pt-3 border-t border-dashed border-white/20">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="text-xs font-bold tracking-wider uppercase"
+        style={{
+          color: 'rgba(255, 255, 255, 0.85)',
+          letterSpacing: '0.06em',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+        }}
+      >
+        <span>{promptLabel ?? 'XRF 총평 기준 프롬프트'}</span>
+        <span>{open ? '−' : '+'}</span>
+      </button>
+      {open && (
+        <pre
+          className="mt-3 p-4 text-xs whitespace-pre-wrap break-words"
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            color: 'rgba(255, 255, 255, 0.92)',
+            fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+            lineHeight: 1.6,
+            maxHeight: 600,
+            overflowY: 'auto',
+          }}
+        >
+          {prompt}
+        </pre>
+      )}
+    </div>
+  )
+}
+
 function PromptToggle({ report, promptLabel }: { report: UnifiedAnalysisReport; promptLabel?: string }) {
   const [open, setOpen] = useState(false)
   const { summary, recovery, risk, marketOutlook, input, profitability } = report
