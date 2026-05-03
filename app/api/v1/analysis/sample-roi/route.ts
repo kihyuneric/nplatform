@@ -121,6 +121,10 @@ export async function GET() {
         jongno: jongno.candidates,
         jamsil: jamsil.candidates,
       },
+      debug: {
+        jongno: jongno.debug,
+        jamsil: jamsil.debug,
+      },
       computed_at: new Date().toISOString(),
       note: '분석 대시보드 ROI = profitability.investment.roi (보고서 화면 "투자 수익률 (ROI)" 카드 = expectedNetProfit / totalEquity)',
     }, {
