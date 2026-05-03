@@ -379,6 +379,13 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     expectedBidRatioPeriod: '종로구 토지 3개월 평균',
     auctionStartDate: '2026-08-15',  // 매각 후 미수회수 시 경매 시작 가정
     courtName: '서울중앙지방법원 본원',
+    // 일정 lock (2026-05-03 사용자 정책 — sample-roi ↔ 보고서 페이지 ROI 정합 보장):
+    //   채권 매입일 / 잔금일 / 1차 매각기일을 명시 → buildNplProfitability 자동 산출 vs
+    //   보고서 page live 재계산이 동일 input 사용 → ROI 일치
+    //   (보고서 page 의 EditableInputs default = 본 lock 값. 사용자 변경 시만 cascade)
+    purchaseDateOverride: '2026-05-15',         // asOfDate(2026-04-28) + 17일
+    balancePaymentDateOverride: '2026-06-15',   // 매입일 + 31일
+    firstSaleDateOverride: '2027-04-08',        // 587일 운용 역산 (사용자 보고서 기준)
     discountRate: saleDiscountRate,           // 0 (= 100% 매입)
     pledgeLoanRatio: 0.75,         // 개인 채무자 75% (법인 70%)
     pledgeInterestRate: 0.065,     // 6.5%

@@ -129,7 +129,8 @@ export async function GET() {
       note: '분석 대시보드 ROI = profitability.investment.roi (보고서 화면 "투자 수익률 (ROI)" 카드 = expectedNetProfit / totalEquity)',
     }, {
       headers: {
-        'Cache-Control': 'public, max-age=300, s-maxage=300',
+        // 디버깅 단계 — 캐시 비활성화. 안정화 후 max-age 복원.
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
       },
     })
   } catch (err) {

@@ -650,12 +650,21 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   // ─── [3] 매입일정/매입가 ──────────────────────────────────
   // 매입 base = acquisitionBaseAmount (있으면, 채권잔액) 또는 loanPrincipal (대출원금)
   // 사용자 정책: '잔액 매각' 케이스는 loanPrincipal=실 대출원금 + acquisitionBaseAmount=채권잔액
+  //
+  // 일정 cascade 안전 정합 (2026-05-03 사용자 정책):
+  //   - 매입일 변경 시 잔금일 자동 + leadDays (사용자 미명시 시)
+  //   - 잔금일이 배당기일 이후로 잡히면 → 운용일수 0 → 비현실적 ROI 방지
+  //   - effectivePledgeStartDate = max(balancePaymentDate, today) — 미래 잔금일 가정 시 today 부터 운용
+  //     (실제 매입 시점부터 질권대출 발생, 보고서 기준일 기준으로 최소 0)
   const acquisitionBase = input.acquisitionBaseAmount ?? input.loanPrincipal
   const purchaseDate = input.purchaseDateOverride ?? addDays(today, purchaseLeadDays)
   const balancePaymentDate = input.balancePaymentDateOverride ?? addDays(purchaseDate, balancePaymentLeadDays)
   const purchasePrice = Math.round(acquisitionBase * (1 - discountRate))
   const pledgeLoanAmount = Math.round(purchasePrice * pledgeLoanRatio)
-  const pledgeLoanPeriodDays = Math.max(0, daysBetween(balancePaymentDate, distributionDate))
+  // 운용일수 = 잔금납부일 ↔ 배당기일. 음수 케이스는 0 으로 clamp.
+  // 사용자가 잔금일을 distribution 후로 이동 시 운용일수 0 → 이자 0 → ROI 비정상 방지
+  const rawPledgeDays = daysBetween(balancePaymentDate, distributionDate)
+  const pledgeLoanPeriodDays = Math.max(0, rawPledgeDays)
   const pledgeInterestTotal = Math.round(
     pledgeLoanAmount * pledgeInterestRate * pledgeLoanPeriodDays / 365,
   )
