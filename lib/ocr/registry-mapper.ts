@@ -17,26 +17,11 @@
  *   - 명백히 보이는 패턴만 자동 체크 (false positive 최소화)
  */
 
-// ─── V2 18 카탈로그 (special-conditions-migration.ts 와 SSoT 정합) ──
-export type V2SpecialKey =
-  | 'site_right_unregistered'
-  | 'leasehold_only_sale'
-  | 'land_separate_registry'
-  | 'share_auction'
-  | 'senior_registry_rights'
-  | 'lien_or_statutory_easement'
-  | 'grave_base_right'
-  | 'tax_and_social_insurance'
-  | 'inherent_tax'
-  | 'wage_claim'
-  | 'disaster_compensation'
-  | 'opposable_tenant'
-  | 'lease_registration'
-  | 'code_violation'
-  | 'illegal_building'
-  | 'no_use_approval'
-  | 'farmland_qualification'
-  | 'landlocked'
+// ─── V2 18 카탈로그 — SSoT: lib/agreements/v2-catalog.ts ──────
+// P0-12 (2026-05-03): registry-mapper 와 special-conditions-migration 양쪽이
+// 동일 V2_CATALOG 임포트 — 18 키 단일 정의.
+export type { V2SpecialKey } from '@/lib/agreements/v2-catalog'
+import type { V2SpecialKey } from '@/lib/agreements/v2-catalog'
 
 // ─── 키워드 패턴 (등기부등본/표제부/갑구/을구 출현 표현) ──────────
 interface MappingRule {
