@@ -17,8 +17,10 @@ import {
   type LpCapitalMode,
   type XrfTier,
   type XrfValuationInput,
-  type XrfValuationResult,
 } from '@/lib/xrf/valuation'
+import { computeFundMetrics, computeProfitAllocation } from '@/lib/xrf/metrics'
+import { sensitivityOnHoldingDays, sensitivityOnNetProfit } from '@/lib/xrf/sensitivity'
+import { downloadXrfCsv } from '@/lib/xrf/csv-export'
 
 interface XrfValuationSectionProps {
   /** NPL purchase price (KRW) — 매입가 */
@@ -100,6 +102,56 @@ export default function XrfValuationSection({
     [input],
   )
 
+  // ── Fund Metrics (PE/VC 산업 표준: DPI / TVPI / MoM / XIRR) ──
+  const fundMetrics = useMemo(() => {
+    const lpDistributionUSD = selected.lpCapitalUSD + selected.lpNetProfitUSD
+    return computeFundMetrics(
+      selected.lpCapitalUSD,
+      lpDistributionUSD,
+      holdingPeriodDays,
+    )
+  }, [selected, holdingPeriodDays])
+
+  // ── Profit Allocation (NPL Net Profit → fees / carry / LP) ──
+  const profitAllocation = useMemo(
+    () =>
+      computeProfitAllocation({
+        nplNetProfitUSD: selected.nplNetProfitUSD,
+        xrfMgmtUSD: selected.fees.xrfMgmtUSD,
+        xrfSetupUSD: selected.fees.xrfSetupUSD,
+        xrfCarryUSD: selected.fees.xrfCarryUSD,
+        platformTotalUSD: selected.fees.platformTotalUSD,
+        servicingUSD: selected.fees.servicingUSD,
+        lpNetProfitUSD: selected.lpNetProfitUSD,
+      }),
+    [selected],
+  )
+
+  // ── Sensitivity 분석 ──
+  const holdingSensitivity = useMemo(
+    () =>
+      sensitivityOnHoldingDays(input, [
+        Math.max(30, holdingPeriodDays - 180),
+        Math.max(30, holdingPeriodDays - 90),
+        holdingPeriodDays,
+        holdingPeriodDays + 90,
+        holdingPeriodDays + 180,
+      ]),
+    [input, holdingPeriodDays],
+  )
+
+  const profitSensitivity = useMemo(
+    () => sensitivityOnNetProfit(input, [0.5, 0.75, 1.0, 1.25, 1.5]),
+    [input],
+  )
+
+  const handleCsvDownload = () => {
+    downloadXrfCsv(
+      { result: selected, metrics: fundMetrics, allocation: profitAllocation, assetTitle },
+      assetTitle ? `xrf-valuation-${assetTitle.slice(0, 20).replace(/[^a-zA-Z0-9가-힣]/g, '-')}` : 'xrf-valuation',
+    )
+  }
+
   const c = {
     navy: '#1B3A5C',
     navyDark: '#051C2C',
@@ -148,14 +200,39 @@ export default function XrfValuationSection({
         >
           XRF VALUATION · RIPPLE × XRF VEHICLE
         </div>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: c.navy, margin: 0 }}>
-          XRF Vehicle Valuation Report
-        </h1>
-        {assetTitle && (
-          <div style={{ fontSize: 13, color: c.textSub, marginTop: 4 }}>
-            {assetTitle}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+          <div style={{ flex: 1 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: c.navy, margin: 0 }}>
+              XRF Vehicle Valuation Report
+            </h1>
+            {assetTitle && (
+              <div style={{ fontSize: 13, color: c.textSub, marginTop: 4 }}>
+                {assetTitle}
+              </div>
+            )}
           </div>
-        )}
+          {/* CSV 다운로드 버튼 — LP 커뮤니케이션 / DD 자료 첨부 */}
+          <button
+            type="button"
+            onClick={handleCsvDownload}
+            className="no-print"
+            style={{
+              padding: '8px 14px',
+              fontSize: 12,
+              fontWeight: 700,
+              background: c.navy,
+              color: '#FFFFFF',
+              border: 'none',
+              borderTop: `2px solid ${c.emerald}`,
+              cursor: 'pointer',
+              letterSpacing: '-0.01em',
+              whiteSpace: 'nowrap',
+            }}
+            title="XRF Valuation 결과 CSV 다운로드 (Excel 호환)"
+          >
+            ↓ CSV 다운로드
+          </button>
+        </div>
 
         {/* REJECT 케이스: 별도 빨간 배너 */}
         {isRejected && (
@@ -305,6 +382,78 @@ export default function XrfValuationSection({
           <MetricCard label="LP Net Profit (1인당)" value={fmtUSDFull(selected.lpNetProfitPerLpUSD)} sub={`총 ${fmtUSD(selected.lpNetProfitUSD)}`} tint={c.navyDark} />
           <MetricCard label="LP ROI (절대)" value={fmtPct(selected.lpRoi)} sub={`${selected.durationYr.toFixed(2)}년 운용`} tint={tierColor[selected.tier]} />
           <MetricCard label="LP IRR (연환산)" value={`${fmtPct(selected.lpIrrYr)}/yr`} sub="단순 연환산" tint={c.navyDark} />
+        </div>
+      </Section>
+
+      {/* ───── EXHIBIT 5b — FUND METRICS (PE/VC 산업 표준) ───── */}
+      <Section title="EXHIBIT 5b · FUND METRICS (산업 표준)" caption="PE/VC 표준 지표 — DPI · TVPI · MoM · XIRR (Newton's method)">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+          <MetricCard label="DPI" value={`${fundMetrics.dpi.toFixed(3)}x`} sub="Distributions / Paid-In" tint={c.navy} />
+          <MetricCard label="TVPI" value={`${fundMetrics.tvpi.toFixed(3)}x`} sub="Total Value / Paid-In" tint={c.navyDark} />
+          <MetricCard label="MoM" value={`${fundMetrics.mom.toFixed(3)}x`} sub="Multiple of Money" tint={c.blue} />
+          <MetricCard label="Equity Multiple" value={`${fundMetrics.equityMultiple.toFixed(3)}x`} sub="LP 분배 / 출자" tint={c.navy} />
+          <MetricCard label="XIRR (복리)" value={`${fmtPct(fundMetrics.xirr)}/yr`} sub="Newton's method" tint={tierColor[selected.tier]} />
+        </div>
+        <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
+          ⓘ 단순 IRR ({fmtPct(selected.lpIrrYr)}/yr) vs XIRR ({fmtPct(fundMetrics.xirr)}/yr) 차이는 단순 연환산 vs 복리 계산의 차이입니다.
+          XIRR은 Excel XIRR 함수와 동일 알고리즘 (Newton's method).
+        </div>
+      </Section>
+
+      {/* ───── EXHIBIT 5c — PROFIT ALLOCATION 워터폴 ───── */}
+      <Section title="EXHIBIT 5c · PROFIT ALLOCATION (NPL 순수익 분배)" caption={`NPL Net Profit ${fmtUSDFull(selected.nplNetProfitUSD)} → 6개 항목 분배 (XRF · 엔플랫폼 · 대부업체 · LP)`}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: c.bgSoft, borderBottom: `2px solid ${c.border}` }}>
+              <th style={{ textAlign: 'left', padding: '10px 12px', color: c.textSub, fontWeight: 600 }}>분배 항목</th>
+              <th style={{ textAlign: 'right', padding: '10px 12px', color: c.textSub, fontWeight: 600, width: 140 }}>USD</th>
+              <th style={{ textAlign: 'right', padding: '10px 12px', color: c.textSub, fontWeight: 600, width: 100 }}>NPL profit %</th>
+              <th style={{ textAlign: 'left', padding: '10px 12px', color: c.textSub, fontWeight: 600 }}>비중 시각화</th>
+            </tr>
+          </thead>
+          <tbody>
+            {profitAllocation.items.map((item, idx) => (
+              <tr key={idx} style={{ borderBottom: idx === profitAllocation.items.length - 1 ? 'none' : '1px solid #F3F4F6' }}>
+                <td style={{ padding: '10px 12px', color: c.text, fontWeight: item.category === 'LP' ? 700 : 400 }}>
+                  <span style={{ display: 'inline-block', width: 10, height: 10, background: item.color, marginRight: 8, verticalAlign: 'middle' }} />
+                  {item.label}
+                  {item.category === 'LP' && <span style={{ marginLeft: 8, fontSize: 10, color: c.emerald, fontWeight: 700 }}>★ FINAL</span>}
+                </td>
+                <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'tabular-nums', color: c.text, fontWeight: item.category === 'LP' ? 700 : 500 }}>
+                  {fmtUSDFull(item.amountUSD)}
+                </td>
+                <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'tabular-nums', color: item.color, fontWeight: 600 }}>
+                  {fmtPct(item.pctOfNplProfit)}
+                </td>
+                <td style={{ padding: '10px 12px' }}>
+                  <div style={{ width: '100%', height: 14, background: c.bgSoft, position: 'relative' }}>
+                    <div
+                      style={{
+                        width: `${Math.min(100, item.pctOfNplProfit * 100)}%`,
+                        height: '100%',
+                        background: item.color,
+                      }}
+                    />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div style={{ marginTop: 12, padding: '10px 14px', background: c.bgSoft, borderLeft: `3px solid ${c.emerald}`, fontSize: 12, color: c.text }}>
+          <strong>해석</strong>: NPL 순수익 {fmtUSDFull(selected.nplNetProfitUSD)} 중{' '}
+          <strong style={{ color: c.emerald }}>{fmtPct(selected.lpNetProfitUSD / selected.nplNetProfitUSD)}</strong> 가 LP에게,{' '}
+          <strong style={{ color: c.navy }}>{fmtPct(selected.fees.xrfTotalUSD / selected.nplNetProfitUSD)}</strong> 가 XRF Foundation,{' '}
+          <strong style={{ color: c.amber }}>{fmtPct(selected.fees.platformTotalUSD / selected.nplNetProfitUSD)}</strong> 가 엔플랫폼,{' '}
+          <strong style={{ color: '#9CA3AF' }}>{fmtPct(selected.fees.servicingUSD / selected.nplNetProfitUSD)}</strong> 가 대부업체로 분배.
+        </div>
+      </Section>
+
+      {/* ───── EXHIBIT 5d — SENSITIVITY 분석 ───── */}
+      <Section title="EXHIBIT 5d · SENSITIVITY 분석 (단일 변수 변동)" caption="운용기간 / NPL 순수익 변동이 LP ROI · Tier 에 미치는 영향">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+          <SensitivityTable result={holdingSensitivity} baselineDays={holdingPeriodDays} />
+          <SensitivityTable result={profitSensitivity} baselineDays={holdingPeriodDays} variant="profit" />
         </div>
       </Section>
 
@@ -470,6 +619,64 @@ function CashflowRow({
       <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'tabular-nums', color: amountColor, fontWeight: bold ? 700 : 500 }}>{amountStr}</td>
       <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'tabular-nums', color: cumulative >= 0 ? '#10B981' : '#1B3A5C', fontWeight: bold ? 700 : 500 }}>{`${cumulative > 0 ? '+' : ''}${fmtUSDFull(cumulative)}`}</td>
     </tr>
+  )
+}
+
+function SensitivityTable({
+  result,
+  baselineDays,
+  variant = 'days',
+}: {
+  result: { variable: string; baselineValue: number | string; cases: { label: string; lpRoi: number; lpIrrYr: number; tier: XrfTier; lpNetProfitPerLpUSD: number }[] }
+  baselineDays: number
+  variant?: 'days' | 'profit'
+}) {
+  const tierColor: Record<XrfTier, string> = {
+    BASE: '#10B981',
+    CONSERVATIVE: '#2E75B6',
+    'SAVE-THE-DEAL': '#F59E0B',
+    REJECT: '#DC2626',
+  }
+  return (
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#1B3A5C', marginBottom: 6, letterSpacing: 0.5 }}>
+        {result.variable}
+      </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+        <thead>
+          <tr style={{ background: '#F5F7FA', borderBottom: '1px solid #E5E8EC' }}>
+            <th style={{ textAlign: 'left', padding: '6px 10px', color: '#6B7280', fontWeight: 600 }}>변동값</th>
+            <th style={{ textAlign: 'right', padding: '6px 10px', color: '#6B7280', fontWeight: 600 }}>LP ROI</th>
+            <th style={{ textAlign: 'right', padding: '6px 10px', color: '#6B7280', fontWeight: 600 }}>1인당 Net</th>
+            <th style={{ textAlign: 'center', padding: '6px 10px', color: '#6B7280', fontWeight: 600 }}>Tier</th>
+          </tr>
+        </thead>
+        <tbody>
+          {result.cases.map((cs, idx) => {
+            const isBaseline =
+              variant === 'days'
+                ? cs.label.startsWith(`${baselineDays}일`)
+                : cs.label.startsWith('100%')
+            return (
+              <tr key={idx} style={{ borderBottom: '1px solid #F3F4F6', background: isBaseline ? '#FEF9C3' : undefined }}>
+                <td style={{ padding: '6px 10px', color: '#374151', fontWeight: isBaseline ? 700 : 400 }}>
+                  {cs.label} {isBaseline && '★'}
+                </td>
+                <td style={{ padding: '6px 10px', textAlign: 'right', fontFamily: 'tabular-nums', color: tierColor[cs.tier], fontWeight: 600 }}>
+                  {(cs.lpRoi * 100).toFixed(2)}%
+                </td>
+                <td style={{ padding: '6px 10px', textAlign: 'right', fontFamily: 'tabular-nums', color: '#1B3A5C' }}>
+                  ${Math.round(cs.lpNetProfitPerLpUSD).toLocaleString('en-US')}
+                </td>
+                <td style={{ padding: '6px 10px', textAlign: 'center', color: tierColor[cs.tier], fontWeight: 700, fontSize: 11 }}>
+                  {cs.tier}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
   )
 }
 
