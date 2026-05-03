@@ -2957,13 +2957,15 @@ function ProfitabilitySections({
         </p>
       </Section>
 
-      {/* ── [4] 감정가·AI시세·낙찰가율 ─────────── */}
+      {/* ── [4] 감정가·시세·낙찰가율 ───────────
+          사용자 정책 (2026-05-03): "AI 시세" 라벨 → multi-source 통계 기반 임을 source 에 명시.
+          실제 데이터: 감정평가서 + KB부동산 + 외부 fetcher (개발자 제공) consensus. */}
       <Section
-        title="NPL 수익성 분석 · 감정가·AI 시세·낙찰가율"
+        title="NPL 수익성 분석 · 감정가·시세·낙찰가율"
         icon={BarChart3}
         caption={valuation.expectedBidRatioPeriod}
         exhibit={4}
-        source="감정평가서 + KB부동산 시세 + NPLATFORM AI 시세 (multi-source consensus)">
+        source="감정평가서 + KB부동산 시세 + 거래사례 multi-source consensus (외부 데이터 fetcher)">
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
           <EditableMoneyCard
@@ -2973,7 +2975,7 @@ function ProfitabilitySections({
             tint="#1B3A5C"
           />
           <EditableMoneyCard
-            label="AI 시세 (현재 실거래)"
+            label="시세 (실거래 consensus)"
             value={edit.aiMarketValueLatest}
             onChange={(v) => setEdit({ ...edit, aiMarketValueLatest: v })}
             tint="#2E75B6"
@@ -3391,10 +3393,12 @@ function ProfitabilitySections({
       </Section>
 
       {/* ── Monte Carlo 시뮬레이션 ───────────── */}
+      {/* 사용자 정책 (2026-05-03): "AI 시뮬레이션" 라벨 부적절 → 확률 시뮬레이션 명시.
+          mulberry32 deterministic PRNG · 정규/로그정규/균등/삼각 분포 · 수학적 모델. */}
       <Section
-        title="Monte Carlo 시뮬레이션"
+        title="확률 시뮬레이션 (Monte Carlo)"
         icon={Sigma}
-        caption={`${monteCarlo.trials.toLocaleString()}회 시뮬 · 낙찰가율 정규분포·유찰 Poisson·비용 jitter 반영`}
+        caption={`${monteCarlo.trials.toLocaleString()}회 시뮬 · 정규분포(낙찰가율)·Poisson(유찰)·jitter(비용) — 수학적 확률 모델 (LLM 사용 안 함)`}
       >
         <MonteCarloPanel mc={monteCarlo} />
       </Section>
@@ -4190,7 +4194,7 @@ function EvidenceTabs({
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <MetricCard label="감정가" value={krwWon(evidence.expectedBid.appraisalValue)} tint="#1B3A5C" />
-                <MetricCard label="AI 시세" value={krwWon(evidence.expectedBid.aiMarketValue)} tint="#2E75B6" sub={evidence.expectedBid.calculatedAt} />
+                <MetricCard label="시세" value={krwWon(evidence.expectedBid.aiMarketValue)} tint="#2E75B6" sub={`${evidence.expectedBid.calculatedAt} · 실거래 consensus`} />
                 <MetricCard label="낙찰가율" value={`${evidence.expectedBid.bidRatioPercent.toFixed(1)}%`} tint="#051C2C" />
                 <MetricCard label="예상 낙찰가" value={krwWon(evidence.expectedBid.expectedBidPrice)} tint={MCK.greyDark} />
               </div>
