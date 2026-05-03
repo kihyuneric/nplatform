@@ -326,6 +326,10 @@ export function buildSampleReport(): UnifiedAnalysisReport {
     // 경매개시 2025-10-21 (엑셀 B45) · 송파구 관할 = 서울동부지방법원 본원
     auctionStartDate: '2025-10-21',
     courtName: '서울동부지방법원 본원',
+    // 일정 lock (2026-05-03 — sample-roi ↔ 보고서 ROI 정합 보장)
+    purchaseDateOverride: '2026-05-08',         // asOfDate(2026-04-21) + 17일
+    balancePaymentDateOverride: '2026-06-08',   // 매입일 + 31일
+    firstSaleDateOverride: '2026-09-12',        // 잠실 1차 매각기일 (사용자 보고서 정합)
     // 할인율 0 = 대출원금 기준 매입 (엑셀 B30 = B15, C30 '대출원금의 X% 할인')
     discountRate: 0,
     // bankSalePrice 없음 → 3단계 전략 = 시나리오 A (원금 100/95/90)

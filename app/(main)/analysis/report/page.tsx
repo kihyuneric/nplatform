@@ -2750,17 +2750,52 @@ function ProfitabilitySections({
               <EditableDateRow
                 k="채권매입일"
                 v={edit.purchaseDate}
-                onChange={(v) => setEdit({ ...edit, purchaseDate: v })}
+                onChange={(v) => {
+                  // 사용자 정책 (2026-05-03): 매입일 변경 시 잔금일 자동 +30일 cascade.
+                  // 사용자가 잔금일을 별도 변경하지 않은 경우만 — 직접 입력한 잔금일은 보존.
+                  // (현재 잔금일이 매입일 + 30일 이라면 default 유지로 간주)
+                  const prevLeadDays = Math.round(
+                    (new Date(edit.balancePaymentDate).getTime() - new Date(edit.purchaseDate).getTime())
+                    / (24 * 60 * 60 * 1000)
+                  )
+                  const newPurchase = v
+                  const newBalance = (() => {
+                    if (prevLeadDays === 30) {
+                      // default 유지 — 매입일 + 30일 자동 갱신
+                      const d = new Date(newPurchase)
+                      d.setDate(d.getDate() + 30)
+                      return d.toISOString().slice(0, 10)
+                    }
+                    // 사용자가 별도 변경한 잔금일 — leadDays 보존하여 cascade
+                    const d = new Date(newPurchase)
+                    d.setDate(d.getDate() + Math.max(1, prevLeadDays))
+                    return d.toISOString().slice(0, 10)
+                  })()
+                  setEdit({ ...edit, purchaseDate: newPurchase, balancePaymentDate: newBalance })
+                }}
               />
               <EditableDateRow
                 k="채권잔금일"
                 v={edit.balancePaymentDate}
-                onChange={(v) => setEdit({ ...edit, balancePaymentDate: v })}
+                onChange={(v) => {
+                  // 잔금일 단독 변경 — 매입일 그대로 유지 (사용자가 의도적 조정으로 간주)
+                  setEdit({ ...edit, balancePaymentDate: v })
+                }}
                 last
               />
             </tbody>
           </table>
         </div>
+        <p
+          style={{
+            fontSize: 11,
+            color: 'var(--color-text-tertiary)',
+            marginTop: 8,
+            fontStyle: 'italic',
+          }}
+        >
+          ⓘ 채권매입일 변경 시 잔금일 자동 갱신 (현재 leadDays 유지). 잔금일 직접 변경은 매입일 보존.
+        </p>
       </Section>
 
       {/* ── [4] 감정가·AI시세·낙찰가율 ─────────── */}
