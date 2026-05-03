@@ -158,8 +158,14 @@ export const JONGNO_HONGJI_STATISTICS: StatisticsContext = {
   },
 }
 
+/**
+ * 종로 홍지동 사례 보고서 빌더.
+ *
+ * @param opts.firstSaleDateOverride 1차 매각기일 명시 (생략 시 builder 기본값 '2027-10-03').
+ *   sample-roi API 가 보고서 페이지의 effectivePredictedSaleDate 시프트를 적용하기 위해 사용.
+ */
 // ─── 분석 보고서 빌더 ────────────────────────────────────────────
-export function buildJongnoSampleReport(): UnifiedAnalysisReport {
+export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string }): UnifiedAnalysisReport {
   // 종로 사례 — LTV 정의 (사용자 정책):
   //   LTV = (선순위 채권최고액 + 대출원금) / 감정가
   //   ※ 대출잔액(원금+연체이자)이 아닌 '대출원금'만 합산
@@ -385,7 +391,7 @@ export function buildJongnoSampleReport(): UnifiedAnalysisReport {
     //   (보고서 page 의 EditableInputs default = 본 lock 값. 사용자 변경 시만 cascade)
     purchaseDateOverride: '2026-05-15',         // asOfDate(2026-04-28) + 17일
     balancePaymentDateOverride: '2026-06-15',   // 매입일 + 31일
-    firstSaleDateOverride: '2027-10-03',        // 587일 운용 역산: balancePaymentDate(2026-06-15) + 587 = distributionDate(2028-01-23) - 112(after-sale offset) = firstSale(2027-10-03)
+    firstSaleDateOverride: opts?.firstSaleDateOverride ?? '2027-10-03',        // 587일 운용 역산: balancePaymentDate(2026-06-15) + 587 = distributionDate(2028-01-23) - 112(after-sale offset) = firstSale(2027-10-03)
     discountRate: saleDiscountRate,           // 0 (= 100% 매입)
     pledgeLoanRatio: 0.75,         // 개인 채무자 75% (법인 70%)
     pledgeInterestRate: 0.065,     // 6.5%

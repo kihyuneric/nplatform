@@ -24,6 +24,7 @@
 import { NextResponse } from 'next/server'
 import { buildJongnoSampleReport } from '@/lib/npl/unified-report/sample-jongno'
 import { buildSampleReport } from '@/lib/npl/unified-report/sample'
+import { computeEffectiveFirstSaleDate } from '@/lib/npl/unified-report/auction-round'
 
 interface RoiBundle {
   /** 보고서 RECENT PIPELINE / 카드에 표시할 prominent ROI */
@@ -106,8 +107,25 @@ function pickRoiBundle(report: ReturnType<typeof buildJongnoSampleReport>): RoiB
 
 export async function GET() {
   try {
-    const jongnoReport = buildJongnoSampleReport()
-    const jamsilReport = buildSampleReport()
+    // 1차: builder 기본값으로 빌드 → firstSaleDate (1차 매각기일) + expectedBidRatio 추출
+    const jongnoBase = buildJongnoSampleReport()
+    const jamsilBase = buildSampleReport()
+
+    // 2차: 보고서 페이지 ProfitabilitySections 가 적용하는 effectivePredictedSaleDate
+    //      (= 1차 매각기일 + (predictedRound − 1) × 28일) 시프트를 동일하게 적용하여 재빌드
+    //      → API ↔ 보고서 페이지 LIVE recompute ROI 정합 (사용자 정책 2026-05-03)
+    const jongnoFirstSale = jongnoBase.profitability?.schedule.milestones.find(m => m.key === 'firstSaleDate')?.date
+    const jamsilFirstSale = jamsilBase.profitability?.schedule.milestones.find(m => m.key === 'firstSaleDate')?.date
+
+    const jongnoShifted = (jongnoFirstSale && jongnoBase.profitability)
+      ? computeEffectiveFirstSaleDate(jongnoFirstSale, jongnoBase.profitability.valuation.expectedBidRatio)
+      : undefined
+    const jamsilShifted = (jamsilFirstSale && jamsilBase.profitability)
+      ? computeEffectiveFirstSaleDate(jamsilFirstSale, jamsilBase.profitability.valuation.expectedBidRatio)
+      : undefined
+
+    const jongnoReport = jongnoShifted ? buildJongnoSampleReport({ firstSaleDateOverride: jongnoShifted }) : jongnoBase
+    const jamsilReport = jamsilShifted ? buildSampleReport({ firstSaleDateOverride: jamsilShifted }) : jamsilBase
 
     const jongno = pickRoiBundle(jongnoReport)
     const jamsil = pickRoiBundle(jamsilReport)

@@ -175,8 +175,14 @@ export const SAMPLE_STATISTICS: StatisticsContext = {
   },
 }
 
+/**
+ * 잠실 사례 보고서 빌더.
+ *
+ * @param opts.firstSaleDateOverride 1차 매각기일 명시 (생략 시 builder 기본값 '2026-09-12').
+ *   sample-roi API 가 보고서 페이지의 effectivePredictedSaleDate 시프트를 적용하기 위해 사용.
+ */
 // ─── 샘플 리포트 빌더 ────────────────────────────────────────
-export function buildSampleReport(): UnifiedAnalysisReport {
+export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): UnifiedAnalysisReport {
   // 엑셀 B15·B21·B22 기준: 원금 19.6억 + 누적 연체이자 ~2.2억 (25.07.23~26.04.21)
   const totalBond = 2_180_000_000
   // 엑셀 B36: 감정가 28.00억
@@ -329,7 +335,7 @@ export function buildSampleReport(): UnifiedAnalysisReport {
     // 일정 lock (2026-05-03 — sample-roi ↔ 보고서 ROI 정합 보장)
     purchaseDateOverride: '2026-05-08',         // asOfDate(2026-04-21) + 17일
     balancePaymentDateOverride: '2026-06-08',   // 매입일 + 31일
-    firstSaleDateOverride: '2026-09-12',        // 잠실 1차 매각기일 (사용자 보고서 정합)
+    firstSaleDateOverride: opts?.firstSaleDateOverride ?? '2026-09-12',        // 잠실 1차 매각기일 (사용자 보고서 정합)
     // 할인율 0 = 대출원금 기준 매입 (엑셀 B30 = B15, C30 '대출원금의 X% 할인')
     discountRate: 0,
     // bankSalePrice 없음 → 3단계 전략 = 시나리오 A (원금 100/95/90)
