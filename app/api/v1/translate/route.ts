@@ -181,6 +181,13 @@ function isValidTranslation(translated: string, targetLang: string): boolean {
   if (repeat) return false
   // Google 광고/UI 응답 차단
   if (/^(Tweets by|Click here|Translate this|Loading\.\.\.)/i.test(translated)) return false
+  // Google 무의미 응답 차단 ("in the middle of nowhere" 등 short Korean에 대한 Google bad translation)
+  const NONSENSE_PATTERNS = [
+    /in the middle of nowhere/i,
+    /^(yes|no|please|thank you|hello)\s*\.?\s*$/i,  // 너무 단조로운 응답
+    /^[a-z]\s*$/i,  // 단일 문자
+  ]
+  if (NONSENSE_PATTERNS.some(p => p.test(translated))) return false
   return true
 }
 
