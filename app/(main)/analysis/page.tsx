@@ -65,15 +65,26 @@ interface RecentItem {
 
 /**
  * 사례 사전 빌드된 매물 — Supabase 가 실 분석 row 를 반환해도 RECENT_PIPELINE 에 항상 prepend.
- * (사용자가 거래소·딜룸·분석 어떤 동선으로 진입해도 이 사례에 즉시 도달 가능).
+ *
+ * 사용자 정책 (2026-05-03):
+ *   ROI 는 분석 보고서와 동일한 프로젝트 ROI (연환산 X).
+ *   하드코딩 금지 — /api/v1/analysis/sample-roi 에서 동적 산출.
+ *   초기 placeholder 는 "—" — endpoint 응답 후 setRecent() 로 갱신.
  *
  * 1. 종로 홍지동 토지 8필지 — buildJongnoSampleReport (?listingId 분기)
  * 2. 송파 잠실 오피스텔     — buildSampleReport (default · listingId 없음)
  */
 const FEATURED_RECENT_ITEMS: RecentItem[] = [
-  { id: "feat-jongno",  type: "NPL 수익성 분석", title: "종로구 홍지동 토지 8필지 · ○○대부", grade: "A", roi: "180.2%", date: "2026-04-23", href: "/analysis/report?listingId=lst-jongno-hongji" },
-  { id: "feat-jamsil",  type: "NPL 수익성 분석", title: "송파 잠실 ㅇㅇㅇㅇㅇ 오피스텔 · ㅇㅇ신협", grade: "B", roi: "23.8%",  date: "2026-04-21", href: "/analysis/report" },
+  { id: "feat-jongno",  type: "NPL 수익성 분석", title: "종로구 홍지동 토지 8필지 · ○○대부", grade: "A", roi: "—", date: "2026-04-23", href: "/analysis/report?listingId=lst-jongno-hongji" },
+  { id: "feat-jamsil",  type: "NPL 수익성 분석", title: "송파 잠실 ㅇㅇㅇㅇㅇ 오피스텔 · ㅇㅇ신협", grade: "B", roi: "—",  date: "2026-04-21", href: "/analysis/report" },
 ]
+
+function formatProjectRoi(value: number | null | undefined): string {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '—'
+  // engine 출력은 비율(0.18) 또는 % (18.4) 양쪽 가능 — 1.5 초과면 % 단위로 간주.
+  const pct = Math.abs(value) > 1.5 ? value : value * 100
+  return `${pct.toFixed(1)}%`
+}
 
 const RECENT_FALLBACK: RecentItem[] = [
   ...FEATURED_RECENT_ITEMS,
@@ -97,6 +108,26 @@ export default function AnalysisDashboard() {
   const [isDemo, setIsDemo] = useState(false)
 
   useEffect(() => {
+    // 사례 매물 ROI 동적 산출 — 보고서와 동일한 프로젝트 ROI (연환산 X)
+    ;(async () => {
+      try {
+        const r = await fetch('/api/v1/analysis/sample-roi')
+        if (!r.ok) return
+        const data = await r.json() as { jongno?: number | null; jamsil?: number | null }
+        setRecent(prev => prev.map(item => {
+          if (item.id === 'feat-jongno' && data.jongno != null) {
+            return { ...item, roi: formatProjectRoi(data.jongno) }
+          }
+          if (item.id === 'feat-jamsil' && data.jamsil != null) {
+            return { ...item, roi: formatProjectRoi(data.jamsil) }
+          }
+          return item
+        }))
+      } catch {
+        /* fallback "—" 유지 */
+      }
+    })()
+
     ;(async () => {
       try {
         const stored = typeof window !== 'undefined'
@@ -112,9 +143,21 @@ export default function AnalysisDashboard() {
             const items: RecentItem[] = rows.map(r => {
               const listing = (r.npl_listings as Record<string, unknown> | null) ?? {}
               const grade = (r.ai_grade ?? r.grade ?? 'C') as string
-              const roi = r.expected_recovery_rate
-                ? `${Number(r.expected_recovery_rate).toFixed(1)}%`
-                : '—'
+              // 사용자 정책 (2026-05-03): ROI = 프로젝트 ROI (연환산 X).
+              // 컬럼 우선순위:
+              //   1. project_roi / investment_roi (보고서와 정합 — 프로젝트 누적 수익률)
+              //   2. result.investment.roi / result.strategies.recommended.roi (JSONB 결과)
+              //   3. expected_recovery_rate (회수율 — fallback, ROI 아님)
+              const result = (r.result as Record<string, unknown> | null) ?? null
+              const investmentRoi = (result?.investment as Record<string, unknown> | null)?.roi
+              const recommendedRoi = ((result?.strategies as Record<string, unknown> | null)?.recommended as Record<string, unknown> | null)?.roi
+              const roiRaw =
+                (typeof r.project_roi === 'number' ? r.project_roi : null) ??
+                (typeof r.investment_roi === 'number' ? r.investment_roi : null) ??
+                (typeof investmentRoi === 'number' ? investmentRoi : null) ??
+                (typeof recommendedRoi === 'number' ? recommendedRoi : null) ??
+                (typeof r.expected_recovery_rate === 'number' ? Number(r.expected_recovery_rate) : null)
+              const roi = formatProjectRoi(roiRaw)
               const generatedTitle = `${listing.sido ?? ''}${listing.sigungu ? ' ' + listing.sigungu : ''} ${listing.collateral_type ?? ''} NPL`.trim()
               const title = (listing.title as string | undefined)
                 ?? (generatedTitle || '분석 결과')
@@ -138,7 +181,7 @@ export default function AnalysisDashboard() {
                   type: 'NPL AI 분석',
                   title: `${input.collateralType ?? ''} · ${input.address ?? ''}`.replace(/^·\s*/, '') || '최근 분석',
                   grade: (lastResult.grade as string) ?? 'C',
-                  roi: lastResult.roi ? `${Number(lastResult.roi).toFixed(1)}%` : '—',
+                  roi: formatProjectRoi(typeof lastResult.roi === "number" ? lastResult.roi : null),
                   date: new Date().toISOString().slice(0, 10),
                   href: '/analysis/profitability/result',
                 })
@@ -170,7 +213,7 @@ export default function AnalysisDashboard() {
               type: 'NPL AI 분석',
               title: `${input.collateralType ?? ''} · ${input.address ?? ''}`.replace(/^·\s*/, '') || '최근 분석',
               grade: (lastResult.grade as string) ?? 'C',
-              roi: lastResult.roi ? `${Number(lastResult.roi).toFixed(1)}%` : '—',
+              roi: formatProjectRoi(typeof lastResult.roi === "number" ? lastResult.roi : null),
               date: new Date().toISOString().slice(0, 10),
               href: '/analysis/profitability/result',
             }, ...prev.slice(0, 4)])
