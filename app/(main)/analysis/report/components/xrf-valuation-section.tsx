@@ -524,18 +524,89 @@ export default function XrfValuationSection({
         </div>
       </Section>
 
-      {/* ───── EXHIBIT 5b — FUND METRICS (PE/VC 산업 표준) ───── */}
-      <Section title="EXHIBIT 5b · FUND METRICS (산업 표준)" caption="PE/VC 표준 지표 — DPI · TVPI · MoM · XIRR (Newton's method)">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+      {/* ───── EXHIBIT 5b — XRF Vehicle vs 산업 표준 (PE/VC NPL Fund 벤치마크) ───── */}
+      <Section
+        title="EXHIBIT 5b · FUND METRICS — XRF Vehicle vs 산업 표준"
+        caption="PE/VC 표준 지표 (DPI · TVPI · MoM · XIRR · Equity Multiple) · 본 deal vs NPL/Special-Situations 펀드 산업 벤치마크 비교"
+      >
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 16 }}>
           <MetricCard label="DPI" value={`${fundMetrics.dpi.toFixed(3)}x`} sub="Distributions / Paid-In" tint={c.navy} />
           <MetricCard label="TVPI" value={`${fundMetrics.tvpi.toFixed(3)}x`} sub="Total Value / Paid-In" tint={c.navyDark} />
           <MetricCard label="MoM" value={`${fundMetrics.mom.toFixed(3)}x`} sub="Multiple of Money" tint={c.blue} />
           <MetricCard label="Equity Multiple" value={`${fundMetrics.equityMultiple.toFixed(3)}x`} sub="LP 분배 / 출자" tint={c.navy} />
           <MetricCard label="XIRR (복리)" value={`${fmtPct(fundMetrics.xirr)}/yr`} sub="Newton's method" tint={tierColor[selected.tier]} />
         </div>
+
+        {/* 벤치마크 비교표 — XRF Vehicle vs PE/VC NPL Fund Industry Median / Top Quartile */}
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: c.bgSoft, borderBottom: `2px solid ${c.border}` }}>
+              <th style={{ textAlign: 'left', padding: '10px 12px', color: c.textSub, fontWeight: 600, width: 180 }}>Metric</th>
+              <th style={{ textAlign: 'right', padding: '10px 12px', color: c.emerald, fontWeight: 700, width: 120 }}>★ XRF Vehicle (본 deal)</th>
+              <th style={{ textAlign: 'right', padding: '10px 12px', color: c.textSub, fontWeight: 600, width: 130 }}>NPL Fund 산업 중앙값</th>
+              <th style={{ textAlign: 'right', padding: '10px 12px', color: c.textSub, fontWeight: 600, width: 120 }}>Top Quartile</th>
+              <th style={{ textAlign: 'left', padding: '10px 12px', color: c.textSub, fontWeight: 600 }}>판정 vs 산업 중앙값</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* DPI: NPL/Special-Situations 펀드 산업 median 1.20-1.40x · Top Quartile 1.60x+ */}
+            <BenchmarkRow
+              label="DPI · 분배 / 출자 비율"
+              xrf={fundMetrics.dpi}
+              median={1.30}
+              topQuartile={1.60}
+              format="x"
+              c={c}
+              note="실현된 분배 / LP 납입자본"
+            />
+            <BenchmarkRow
+              label="TVPI · 총가치 / 출자"
+              xrf={fundMetrics.tvpi}
+              median={1.40}
+              topQuartile={1.80}
+              format="x"
+              c={c}
+              note="(분배 + 잔여NAV) / LP 납입자본"
+            />
+            <BenchmarkRow
+              label="MoM · Multiple of Money"
+              xrf={fundMetrics.mom}
+              median={1.40}
+              topQuartile={1.80}
+              format="x"
+              c={c}
+              note="총회수 / 총투자 (실현+미실현)"
+            />
+            <BenchmarkRow
+              label="Equity Multiple"
+              xrf={fundMetrics.equityMultiple}
+              median={1.40}
+              topQuartile={1.80}
+              format="x"
+              c={c}
+              note="LP equity 기준 multiple"
+            />
+            <BenchmarkRow
+              label="XIRR (annualized · 복리)"
+              xrf={fundMetrics.xirr}
+              median={0.12}
+              topQuartile={0.20}
+              format="pct"
+              c={c}
+              note="LP 연환산 IRR (Newton's method)"
+              last
+            />
+          </tbody>
+        </table>
+
+        <div style={{ fontSize: 11, color: c.text, marginTop: 12, padding: '10px 14px', background: '#F0F9FF', borderLeft: `3px solid ${c.blue}`, lineHeight: 1.6 }}>
+          <strong>벤치마크 출처</strong>: NPL/Special-Situations Private Debt Fund (10년 closed-end fund) 산업 데이터 — Cambridge Associates · Preqin · ILPA Industry Reports (2020-2024 vintage average).
+          NPL 펀드는 일반 PE buyout 보다 cycle 짧고 (3-5yr) recovery-driven 이라 DPI/TVPI 수렴 속도가 빠른 특성.
+        </div>
         <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
           ⓘ 단순 IRR ({fmtPct(selected.lpIrrYr)}/yr) vs XIRR ({fmtPct(fundMetrics.xirr)}/yr) 차이는 단순 연환산 vs 복리 계산의 차이입니다.
           XIRR은 Excel XIRR 함수와 동일 알고리즘 (Newton's method).
+          XRF Vehicle 의 짧은 cycle (NPL 6-19개월) 덕분에 산업 평균 (5-10년) 대비 자본 회전율이 높은 점이 차별화 요소.
         </div>
       </Section>
 
@@ -720,6 +791,44 @@ function Row4({ label, v1, v2, note, bold, last }: { label: string; v1: string; 
       <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'tabular-nums', color: '#1B3A5C', fontWeight: bold ? 700 : 500 }}>{v1}</td>
       <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'tabular-nums', color: '#1B3A5C', fontWeight: bold ? 700 : 500 }}>{v2}</td>
       <td style={{ padding: '8px 12px', fontSize: 11, color: '#9CA3AF' }}>{note ?? ''}</td>
+    </tr>
+  )
+}
+
+/**
+ * BenchmarkRow — XRF Vehicle 의 metric 을 산업 중앙값/Top Quartile 과 비교.
+ * format='x' → multiple (1.234x), format='pct' → percentage.
+ */
+function BenchmarkRow({
+  label, xrf, median, topQuartile, format, c, note, last,
+}: {
+  label: string
+  xrf: number
+  median: number
+  topQuartile: number
+  format: 'x' | 'pct'
+  c: { emerald: string; amber: string; navy: string; textSub: string; text: string }
+  note?: string
+  last?: boolean
+}) {
+  const fmt = (v: number) => format === 'x' ? `${v.toFixed(3)}x` : `${(v * 100).toFixed(2)}%`
+  const verdict =
+    xrf >= topQuartile ? { color: c.emerald, label: '★ Top Quartile 진입 — 우수' }
+    : xrf >= median    ? { color: c.emerald, label: '✓ Median 상회 — 양호' }
+    : xrf >= median * 0.85 ? { color: c.amber, label: '~ Median 근접 — 평균 수준' }
+    : { color: '#DC2626', label: '⚠ Median 미달 — 검토 필요' }
+
+  const cellRight = { padding: '10px 12px', textAlign: 'right' as const, fontFamily: 'tabular-nums' }
+  return (
+    <tr style={{ borderBottom: last ? 'none' : '1px solid #F3F4F6' }}>
+      <td style={{ padding: '10px 12px', color: c.text, fontWeight: 500 }}>
+        {label}
+        {note && <div style={{ fontSize: 10, color: c.textSub, marginTop: 2, fontWeight: 400 }}>{note}</div>}
+      </td>
+      <td style={{ ...cellRight, color: c.emerald, fontWeight: 700, fontSize: 14 }}>{fmt(xrf)}</td>
+      <td style={{ ...cellRight, color: c.text }}>{fmt(median)}</td>
+      <td style={{ ...cellRight, color: c.text }}>{fmt(topQuartile)}+</td>
+      <td style={{ padding: '10px 12px', color: verdict.color, fontWeight: 600, fontSize: 12 }}>{verdict.label}</td>
     </tr>
   )
 }

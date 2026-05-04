@@ -1660,6 +1660,36 @@ Object.assign(STATIC_DICT.en, {
   'SAVE-THE-DEAL': 'SAVE-THE-DEAL',
   'REJECT': 'REJECT',
 
+  // ── EXHIBIT 5b · Benchmark comparison ──
+  'EXHIBIT 5b · FUND METRICS — XRF Vehicle vs 산업 표준':
+    'EXHIBIT 5b · FUND METRICS — XRF Vehicle vs Industry Benchmark',
+  'PE/VC 표준 지표 (DPI · TVPI · MoM · XIRR · Equity Multiple) · 본 deal vs NPL/Special-Situations 펀드 산업 벤치마크 비교':
+    'PE/VC standard metrics (DPI · TVPI · MoM · XIRR · Equity Multiple) · this deal vs NPL/Special-Situations fund industry benchmark',
+  'Metric': 'Metric',
+  '★ XRF Vehicle (본 deal)': '★ XRF Vehicle (this deal)',
+  'NPL Fund 산업 중앙값': 'NPL Fund Industry Median',
+  'Top Quartile': 'Top Quartile',
+  '판정 vs 산업 중앙값': 'Verdict vs Industry Median',
+
+  'DPI · 분배 / 출자 비율': 'DPI · Distributions / Paid-In ratio',
+  'TVPI · 총가치 / 출자': 'TVPI · Total Value / Paid-In',
+  'MoM · Multiple of Money': 'MoM · Multiple of Money',
+  'Equity Multiple': 'Equity Multiple',
+  'XIRR (annualized · 복리)': 'XIRR (annualized · compound)',
+
+  '실현된 분배 / LP 납입자본': 'Realized distributions / LP paid-in capital',
+  '(분배 + 잔여NAV) / LP 납입자본': '(Distributions + residual NAV) / LP paid-in capital',
+  '총회수 / 총투자 (실현+미실현)': 'Total recovery / total investment (realized + unrealized)',
+  'LP equity 기준 multiple': 'Multiple on LP equity',
+  'LP 연환산 IRR (Newton\'s method)': 'LP annualized IRR (Newton\'s method)',
+
+  '★ Top Quartile 진입 — 우수': '★ Top Quartile — Outperform',
+  '✓ Median 상회 — 양호': '✓ Above median — Solid',
+  '~ Median 근접 — 평균 수준': '~ Near median — Average',
+  '⚠ Median 미달 — 검토 필요': '⚠ Below median — Review needed',
+
+  '벤치마크 출처': 'Benchmark Source',
+
   // ── AI 총평 자주 등장하는 phrase (Google Translate 보조) ──
   'AI 투자 의견': 'AI Investment Verdict',
   '차주 유형': 'Borrower type',
