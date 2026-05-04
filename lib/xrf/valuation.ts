@@ -72,8 +72,13 @@ export interface XrfTierFees {
  *      엔 Margin:       0.4% / 0.4% / 0.4%  (★ TP defense 모든 tier 고정)
  *      엔플랫폼 합계:    2.50% / 2.25% / 2.00%
  *
- * 3) 대부업체 자본금 (daepuCapitalPct) 0.10 → 0
- *    LP 가 Pool 전체 청약 (Servicing fee 만 수령, Capital 출자 없음).
+ * 3) 대부업체 자본금 모델 (v5 — 2026-05-04 사용자 명확화):
+ *    - LP 가 Pool 100% 청약 (변경 없음)
+ *    - 그 중 10% ($67k) 는 LP → 대부업체 로 무이자 대여 (대부업법 license 자본 명목)
+ *    - 대부업체는 이 자본에 대해 어떤 수수료/매출도 받지 않음 (Capital 보관만)
+ *    - Day Exit 시 100% 환급 (LP 로 1:1 반환)
+ *    - 대부업체 수익은 Servicing Fee 2.0%/yr 뿐
+ *    daepuCapitalPct 는 표시 목적 (UI exhibit) — LP capital 계산에는 영향 없음
  */
 export const XRF_TIERS: Record<Exclude<XrfTier, 'REJECT'>, XrfTierFees> = {
   BASE: {
@@ -85,7 +90,7 @@ export const XRF_TIERS: Record<Exclude<XrfTier, 'REJECT'>, XrfTierFees> = {
     platformPmPctYr: 0.005,        // 0.5%
     platformMarginPctYr: 0.004,    // 0.4%
     servicingPctYr: 0.020,
-    daepuCapitalPct: 0,
+    daepuCapitalPct: 0.10,         // ★ v5: 대부업체 차입금 10% (LP→대부업체 무이자 대여, Day Exit 100% 환급)
     hurdlePctYr: 0.08,
   },
   CONSERVATIVE: {
@@ -97,7 +102,7 @@ export const XRF_TIERS: Record<Exclude<XrfTier, 'REJECT'>, XrfTierFees> = {
     platformPmPctYr: 0.0045,
     platformMarginPctYr: 0.004,    // 동일 (TP defense)
     servicingPctYr: 0.020,
-    daepuCapitalPct: 0,
+    daepuCapitalPct: 0.10,         // ★ v5: 대부업체 차입금 10% (LP→대부업체 무이자 대여, Day Exit 100% 환급)
     hurdlePctYr: 0.08,
   },
   'SAVE-THE-DEAL': {
@@ -109,7 +114,7 @@ export const XRF_TIERS: Record<Exclude<XrfTier, 'REJECT'>, XrfTierFees> = {
     platformPmPctYr: 0.004,
     platformMarginPctYr: 0.004,    // TP defense 고정
     servicingPctYr: 0.020,
-    daepuCapitalPct: 0,
+    daepuCapitalPct: 0.10,         // ★ v5: 대부업체 차입금 10% (LP→대부업체 무이자 대여, Day Exit 100% 환급)
     hurdlePctYr: 0.08,
   },
 }
@@ -172,13 +177,13 @@ export interface XrfValuationResult {
     selectedReason: string
   }
 
-  /** Pool 총액 (USD) — LP capital + 대부업체 자본금 */
+  /** Pool 총액 (USD) — LP 가 100% 청약 */
   poolUSD: number
-  /** LP capital 합계 (USD) */
+  /** LP capital 합계 (USD) — = poolUSD (LP가 Pool 전체 청약) */
   lpCapitalUSD: number
   /** LP 1인당 capital call (USD) */
   lpCapitalPerLpUSD: number
-  /** 대부업체 자본금 (USD) — Day Exit 1:1 환원, 수익 무관 */
+  /** 대부업체 차입금 (USD · v5 model) — LP→대부업체 무이자 대여, Day Exit 1:1 환급, 수수료 아님 */
   daepuCapitalUSD: number
   /** Pool 산정 모델 */
   lpCapitalMode: LpCapitalMode
@@ -263,12 +268,13 @@ function computeForTier(
   //   Pool = (NPL equity + 운영 fees + Hurdle 예상) × (1 + 10% working buffer)
   //   LP capital = Pool (LP가 Pool 전체 청약)
   //
-  // ⚠ 사용자 정책 (2026-05-04): 대부업체 자본금 (10%) 제거.
-  //   이전: LP 90% + 대부업체 10% (Day Exit 1:1 환원, Fee 아닌 Capital)
-  //   이후: LP 100% — 대부업체는 Servicing fee 만 수령 (Capital 출자 無)
-  //   buffer 10% 는 working capital reserve 로 LP 가 흡수.
-  //   결과: 1인당 청약액 $6,080 → $6,755 (+11.1%)
-  const WORKING_BUFFER_PCT = 0.10  // SPV 운영비·예비비 buffer (LP 가 모금)
+  // ⚠ 사용자 정책 (2026-05-04 v5): 대부업체 차입금 모델
+  //   - LP 100% 청약: Pool 전체를 LP 가 모금 ($675k 예시)
+  //   - 그 중 10% ($67k) 는 LP → 대부업체 무이자 대여 (대부업법 license capital)
+  //   - 대부업체는 Servicing Fee 만 받고, 이 차입금에 대해서는 수수료 無
+  //   - Day Exit 시 100% LP 로 환급 (1:1)
+  //   - 회계: lpCapitalUSD = poolUSD (LP 청약 전체) | daepuCapitalUSD = poolUSD × 0.10 (표시)
+  const WORKING_BUFFER_PCT = 0.10  // 대부업체 차입금 비중 — Pool 산정 buffer
   let lpFundingTargetUSD: number
   if (lpCapitalMode === 'NPL_EQUITY') {
     lpFundingTargetUSD = totalEquityUSD
@@ -278,9 +284,9 @@ function computeForTier(
     lpFundingTargetUSD = totalEquityUSD + operatingFeesUSD + hurdleEstimateUSD
   }
   const poolUSD = lpFundingTargetUSD / (1 - WORKING_BUFFER_PCT)
-  // LP가 Pool 전체 청약 (이전: poolUSD × 0.9, daepuCapitalPct 만큼 분리됐음)
+  // LP가 Pool 전체 청약
   const lpCapitalUSD = poolUSD
-  // 대부업체 자본금 (deprecated · 호환성 유지) — 항상 0
+  // 대부업체 차입금 (Pool의 10% · LP 무이자 대여 · Day Exit 1:1 환급 · 수수료 아님)
   const daepuCapitalUSD = poolUSD * fees.daepuCapitalPct
   const lpCapitalPerLpUSD = lpCapitalUSD / numLPs
 

@@ -305,16 +305,17 @@ export default function XrfValuationSection({
         </table>
       </Section>
 
-      {/* ───── EXHIBIT 2 — Pool 구조 (LP가 Pool 100% 청약 · 2026-05-04 정책 변경) ───── */}
-      <Section title="EXHIBIT 2 · POOL 구조" caption={`LP capital 모델: ${lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? 'NPL equity + Fees prefund + 10% working buffer (PDF 정합)' : 'NPL equity 만 (단순 모델)'} · LP 100%`}>
+      {/* ───── EXHIBIT 2 — Pool 구조 (LP 100% 청약 + 10% 대부업체 차입금 · v5) ───── */}
+      <Section title="EXHIBIT 2 · POOL 구조" caption={`LP capital 모델: ${lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? 'NPL equity + Fees prefund + 10% buffer (PDF 정합)' : 'NPL equity 만 (단순 모델)'} · LP 100% 청약 · 대부업체 차입금 분리`}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <tbody>
-            <Row label="Pool 총액 (= LP 청약액)" value={fmtUSDFull(selected.poolUSD)} note={lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? '= (NPL equity + Fees + Hurdle est.) × 1.111 (10% working buffer)' : '= NPL totalEquity × 1.111'} />
-            <Row label="LP capital (100% 청약)" value={fmtUSDFull(selected.lpCapitalUSD)} note={`${numLPs}명 × ${fmtUSDFull(selected.lpCapitalPerLpUSD)} (1인당)`} bold last />
+            <Row label="Pool 총액 (= LP 청약액)" value={fmtUSDFull(selected.poolUSD)} note={lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? '= (NPL equity + Fees + Hurdle est.) × 1.111' : '= NPL totalEquity × 1.111'} bold />
+            <Row label="  └ LP capital (100% 청약)" value={fmtUSDFull(selected.lpCapitalUSD)} note={`${numLPs}명 × ${fmtUSDFull(selected.lpCapitalPerLpUSD)} (1인당)`} />
+            <Row label="  └ ⓘ 대부업체 차입금 (10%)" value={fmtUSDFull(selected.daepuCapitalUSD)} note="LP→대부업체 무이자 대여 · Day Exit 1:1 환급 · 수수료 아님" last />
           </tbody>
         </table>
         <div style={{ fontSize: 10, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
-          ⓘ 사용자 정책 (2026-05-04): 대부업체 자본금 (이전 Pool의 10%) 제거 — LP가 Pool 전체 청약. 대부업체는 Servicing Fee 만 수령 (Capital 출자 없음). 10% buffer 는 SPV 운영비·예비비로 LP 가 흡수.
+          ⓘ v5 (2026-05-04): LP 가 Pool 100% 청약 ($675k 예시). 그 중 10% ($67k)는 대부업법 라이선스 명목으로 대부업체에 무이자 대여 (수수료 아닌 자본 보관). 청산 시 100% 환급되어 LP 로 반환. 대부업체 수익은 별도의 Servicing Fee 2.0%/yr.
         </div>
       </Section>
 
@@ -350,7 +351,7 @@ export default function XrfValuationSection({
           </tbody>
         </table>
         <div style={{ fontSize: 10, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
-          ⓘ 2026-05-04 v4: XRF 관리보수 0.5%/yr 모든 tier 고정 (운영비 성격) · Setup + Carry + 엔플랫폼 컴포넌트가 BASE &gt; CONSERVATIVE &gt; SAVE-THE-DEAL hierarchy 형성. XRF/엔플랫폼 수수료 tier 별 단조 감소. 0.5%p 절감분(엔플랫폼 BASE 3.0→2.5)은 LP 순수익으로 자동 흡수. 대부업체 자본 출자 폐지 (Pool 100% LP 청약).
+          ⓘ 2026-05-04 v5: XRF 관리보수 0.5%/yr 모든 tier 고정 (운영비) · Setup+Carry+엔플랫폼이 BASE&gt;CONSERVATIVE&gt;SAVE-THE-DEAL hierarchy 형성. 0.5%p 절감분(엔플랫폼 BASE 3.0→2.5)은 LP 순수익 자동 흡수. 대부업체 차입금 모델: LP 가 Pool 100% 청약 후 그 중 10%를 대부업체에 무이자 대여 → 청산 시 1:1 환급 (수수료 아님).
         </div>
       </Section>
 
@@ -367,10 +368,11 @@ export default function XrfValuationSection({
           </thead>
           <tbody>
             <CashflowRow phase="Day 0" event="LP capital call (Pool 100% 청약 송금)" amount={-selected.lpCapitalUSD} cumulative={-selected.lpCapitalUSD} negative note={`${numLPs}명 × ${fmtUSDFull(selected.lpCapitalPerLpUSD)}`} />
+            <CashflowRow phase="Day 0" event="└ 대부업체 차입금 (10%)" amount={0} cumulative={-selected.lpCapitalUSD} note={`${fmtUSDFull(selected.daepuCapitalUSD)} 무이자 대여 (Pool 내 분리 · Day Exit 환급)`} />
             <CashflowRow phase="Day 0~M3" event="XRF SPV Setup (1회)" amount={0} cumulative={-selected.lpCapitalUSD} note="prefund 차감 · LP 직접 X" />
             <CashflowRow phase="Day ~30" event="NPL 매입 + 질권대출 실행" amount={0} cumulative={-selected.lpCapitalUSD} note="Pool → NPL 매입가 funding" />
             <CashflowRow phase="운용 중" event="XRF/엔플랫폼/대부업체 fees prefund" amount={0} cumulative={-selected.lpCapitalUSD} note={`LP capital 에서 ${fmtUSDFull(selected.fees.xrfMgmtUSD + selected.fees.xrfSetupUSD + selected.fees.platformTotalUSD + selected.fees.servicingUSD)} 차감`} />
-            <CashflowRow phase={`Day ${holdingPeriodDays}`} event="법원 배당 (전액 LP 분배)" amount={selected.lpCapitalUSD + selected.lpNetProfitUSD} cumulative={selected.lpNetProfitUSD} positive note="LP capital + Net Profit (대부업체 자본 회수 없음)" />
+            <CashflowRow phase={`Day ${holdingPeriodDays}`} event="법원 배당 + 대부업체 차입금 환급 (1:1)" amount={selected.lpCapitalUSD + selected.lpNetProfitUSD} cumulative={selected.lpNetProfitUSD} positive note={`LP capital ${fmtUSDFull(selected.lpCapitalUSD)} + Net Profit ${fmtUSDFull(selected.lpNetProfitUSD)} (차입금 ${fmtUSDFull(selected.daepuCapitalUSD)} 포함 환급)`} />
             <CashflowRow phase="LP 최종" event="순수익 (RLUSD 분배)" amount={0} cumulative={selected.lpNetProfitUSD} bold positive note={`ROI ${fmtPct(selected.lpRoi)} · IRR ${fmtPct(selected.lpIrrYr)}/yr`} />
           </tbody>
         </table>
@@ -531,7 +533,7 @@ export default function XrfValuationSection({
           <br />• <strong>Vehicle Fee 산정 base</strong>: NPL 매입가 (AUM) 기준 · %/yr fees 365일 cap · Setup 1회
           <br />• <strong>Hurdle</strong>: 8%/yr × LP capital × 실제 운용기간 (NOT capped) — LP 우선 수익률
           <br />• <strong>Carry</strong>: (LP profit pre-carry − Hurdle) × tier별 Carry % (BASE 15% / CONS 10% / SAVE 5%)
-          <br />• <strong>대부업체 출자</strong>: 2026-05-04 정책 변경 — Capital 출자 없음 (Servicing Fee 2.0%/yr 만 수령) · 이전 10% Day Exit 1:1 환원 모델 폐지
+          <br />• <strong>대부업체 차입금 (v5)</strong>: LP 가 Pool 100% 청약 후 그 중 10%를 대부업체에 무이자 대여 (대부업법 license capital). 청산 시 LP 로 100% 환급. 수수료 아님 — 대부업체 수익은 별도 Servicing Fee 2.0%/yr.
           <br />• <strong>LP Capital 모델 차이</strong>:
           <br />&nbsp;&nbsp;&nbsp;&nbsp;- <em>NPL equity + Fees prefund</em>: LP가 SPV 운영 fees + Hurdle 도 prefund (PDF Case 1 패턴, 실제 SPV 운영)
           <br />&nbsp;&nbsp;&nbsp;&nbsp;- <em>NPL equity 만</em>: LP는 deal 자기자본만 모금 (단순 모델, ROI 명목상 높음)
