@@ -334,28 +334,89 @@ export default function XrfValuationSection({
           </thead>
           <tbody>
             <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>XRF Foundation (SG SPV · RWA Issuer)</td></tr>
-            <Row label="  관리보수 Mgmt (%/yr · 365일 cap)" value={fmtUSDFull(selected.fees.xrfMgmtUSD)} note="0.5%/yr 모든 tier 고정 (운영비)" />
-            <Row label="  SPV Setup (1회)" value={fmtUSDFull(selected.fees.xrfSetupUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.5% × NPL 매입가' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.4% × NPL 매입가' : '0.3% × NPL 매입가'} />
-            <Row label="  ★ Carry (성과보수 · 조건부)" value={fmtUSDFull(selected.fees.xrfCarryUSD)} note={selected.fees.xrfCarryUSD > 0 ? `LP가 Hurdle 8%/yr 달성 → 초과분 × ${tierLabel[selected.tier] === 'BASE' ? '15%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '10%' : '5%'}` : '⚠ Hurdle 8%/yr 미달 → Carry $0 (XRF 수령 없음)'} />
-            <Row label="  XRF 수수료 합계" value={fmtUSDFull(selected.fees.xrfTotalUSD)} bold last />
+            <Row label="  관리보수 Mgmt (%/yr · 365일 cap)" value={fmtUSDFull(selected.fees.xrfMgmtUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.5%/yr · 운영비' : '0.4%/yr · 운영비 (CONS/SAVE 양보)'} />
+            <Row label="  SPV Setup (1회)" value={fmtUSDFull(selected.fees.xrfSetupUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.5% × NPL 매입가' : '0.3% × NPL 매입가'} />
+            <Row label="  ★ Carry (5-tier 누진 · European Waterfall)" value={fmtUSDFull(selected.fees.xrfCarryUSD)} note={selected.fees.xrfCarryUSD > 0 ? `LP profit slice 별 marginal rate 적용 (entry ${tierLabel[selected.tier] === 'BASE' ? '15%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '10%' : '5%'})` : '⚠ Hurdle 8%/yr 미달 → Carry $0'} />
+            <Row label="  XRF 수수료 합계 (Mgmt + Setup + Carry)" value={fmtUSDFull(selected.fees.xrfTotalUSD)} bold last />
 
-            <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>Korea Operation Firm (KOF) — Korean PM/Sourcing/Valuation 서비스 · BASE 2.50% · CONS 2.25% · SAVE 2.00%/yr</td></tr>
-            <Row label="  AI Valuation (ML 가격평가)" value={fmtUSDFull(selected.fees.platformAiUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.30%/yr' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.25%/yr' : '0.20%/yr'} />
-            <Row label="  Pipeline Sourcing (딜 발굴·소싱)" value={fmtUSDFull(selected.fees.platformSourcingUSD)} note={tierLabel[selected.tier] === 'BASE' ? '1.30%/yr' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '1.15%/yr' : '1.00%/yr'} />
-            <Row label="  PM Fee (프로젝트 매니지먼트)" value={fmtUSDFull(selected.fees.platformPmUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.50%/yr' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.45%/yr' : '0.40%/yr'} />
-            <Row label="  KR Margin (TP 방어선 ≥15%)" value={fmtUSDFull(selected.fees.platformMarginUSD)} note="0.40%/yr 모든 tier 고정" />
+            <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>Korea Operation Firm (KOF) — Korean PM/Sourcing/Valuation 서비스 · BASE 2.50% · CONS 2.25% · SAVE 2.00%</td></tr>
+            <Row label="  AI Valuation (ML 가격평가)" value={fmtUSDFull(selected.fees.platformAiUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.7%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.6%' : '0.5%'} />
+            <Row label="  Pipeline Sourcing (딜 발굴·소싱)" value={fmtUSDFull(selected.fees.platformSourcingUSD)} note={tierLabel[selected.tier] === 'BASE' ? '1.0%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.9%' : '0.8%'} />
+            <Row label="  PM Fee (프로젝트 매니지먼트)" value={fmtUSDFull(selected.fees.platformPmUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.4%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.35%' : '0.3%'} />
+            <Row label="  KR Margin (TP 방어선 ≥15%)" value={fmtUSDFull(selected.fees.platformMarginUSD)} note="0.4% 모든 tier 고정" />
             <Row label="  KOF 수수료 합계" value={fmtUSDFull(selected.fees.platformTotalUSD)} bold last />
 
             <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>NPL Vehicle Company (NPL VC) — Korean NPL 라이선스 보유 · 채권 보관·회수 법인</td></tr>
-            <Row label="  Servicing Fee (시장 표준 라이선스)" value={fmtUSDFull(selected.fees.servicingUSD)} note="2.0%/yr 고정 · 모든 tier 동일 (차입금에 대한 수수료 아님)" last />
+            <Row label="  Servicing Fee (시장 표준 라이선스)" value={fmtUSDFull(selected.fees.servicingUSD)} note="2.0% × 매입가 · 모든 tier 동일 (차입금에 대한 수수료 아님)" last />
           </tbody>
         </table>
+
+        {/* ★ v7: 5-tier Carry 누진표 (European Waterfall) */}
+        <div style={{ marginTop: 16, padding: 12, background: '#F8FAFC', border: `1px solid ${c.border}`, borderRadius: 4 }}>
+          <div style={{ fontWeight: 700, color: c.navy, fontSize: 12, marginBottom: 8 }}>
+            ⓘ XRF Carry 5-tier 누진 구조 (European Waterfall · v7)
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${c.border}`, color: c.textSub }}>
+                <th style={{ textAlign: 'left', padding: '6px 8px' }}>LP gross ROI 구간 (annualized)</th>
+                <th style={{ textAlign: 'right', padding: '6px 8px' }}>BASE</th>
+                <th style={{ textAlign: 'right', padding: '6px 8px' }}>CONSERVATIVE</th>
+                <th style={{ textAlign: 'right', padding: '6px 8px' }}>SAVE-THE-DEAL</th>
+                <th style={{ textAlign: 'left', padding: '6px 8px' }}>설명</th>
+              </tr>
+            </thead>
+            <tbody style={{ fontSize: 12 }}>
+              <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
+                <td style={{ padding: '6px 8px', color: c.text }}>&lt; 8% (Hurdle)</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right' }}>0%</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right' }}>0%</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right' }}>0%</td>
+                <td style={{ padding: '6px 8px', color: c.textSub, fontSize: 11 }}>LP 우선 회수 · Carry 발생 X</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
+                <td style={{ padding: '6px 8px', color: c.text }}>8% – 20% (Entry)</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'BASE' ? 700 : 400, color: tierLabel[selected.tier] === 'BASE' ? c.emerald : c.text }}>15%</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'CONSERVATIVE' ? 700 : 400, color: tierLabel[selected.tier] === 'CONSERVATIVE' ? c.emerald : c.text }}>10%</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? 700 : 400, color: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? c.emerald : c.text }}>5%</td>
+                <td style={{ padding: '6px 8px', color: c.textSub, fontSize: 11 }}>LP 손실 없는 정도의 Carry</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
+                <td style={{ padding: '6px 8px', color: c.text }}>20% – 40%</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'BASE' ? 700 : 400, color: tierLabel[selected.tier] === 'BASE' ? c.emerald : c.text }}>20%</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'CONSERVATIVE' ? 700 : 400, color: tierLabel[selected.tier] === 'CONSERVATIVE' ? c.emerald : c.text }}>15%</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? 700 : 400, color: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? c.emerald : c.text }}>10%</td>
+                <td style={{ padding: '6px 8px', color: c.textSub, fontSize: 11 }}>20%+ profit slice</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
+                <td style={{ padding: '6px 8px', color: c.text }}>40% – 60%</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'BASE' ? 700 : 400, color: tierLabel[selected.tier] === 'BASE' ? c.emerald : c.text }}>25%</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'CONSERVATIVE' ? 700 : 400, color: tierLabel[selected.tier] === 'CONSERVATIVE' ? c.emerald : c.text }}>20%</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? 700 : 400, color: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? c.emerald : c.text }}>15%</td>
+                <td style={{ padding: '6px 8px', color: c.textSub, fontSize: 11 }}>40%+ profit slice</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '6px 8px', color: c.text }}>60%+ (Top tier)</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'BASE' ? 700 : 400, color: tierLabel[selected.tier] === 'BASE' ? c.emerald : c.text }}>30%</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'CONSERVATIVE' ? 700 : 400, color: tierLabel[selected.tier] === 'CONSERVATIVE' ? c.emerald : c.text }}>25%</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? 700 : 400, color: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? c.emerald : c.text }}>20%</td>
+                <td style={{ padding: '6px 8px', color: c.textSub, fontSize: 11 }}>고수익 deal · XRF 적정 보상</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style={{ fontSize: 11, color: c.textSub, marginTop: 8, lineHeight: 1.5 }}>
+            <strong>산정 방식 (Marginal Carry):</strong> 각 LP profit slice 를 해당 구간 rate 로 곱하여 누적 합산.
+            예: LP gross ROI 41.5% → (8-20%) slice × 15% + (20-40%) slice × 20% + (40-41.5%) slice × 25% (BASE).
+            Hurdle 8% 미달 시 모든 slice = $0 (Carry 발생 X).
+          </div>
+        </div>
+
         <div style={{ fontSize: 11, color: c.text, marginTop: 12, padding: '10px 14px', background: '#FEF3C7', borderLeft: '3px solid #F59E0B', borderRadius: 4 }}>
-          ⚠ <strong>XRF Carry 조건부 수령</strong>: XRF Foundation 의 Carry (성과보수)는 LP 가 <strong>Hurdle Rate 8%/yr × 운용기간</strong> 달성 시 그 초과분에 대해서만 수령합니다. Hurdle 미달 시 Carry = $0 (XRF 는 Mgmt + Setup 만 수령).
+          ⚠ <strong>XRF Carry 조건부 수령</strong>: LP 가 <strong>Hurdle Rate 8%/yr × 운용기간</strong> 달성 시 그 초과분에 대해서만 5-tier 누진율 적용. Hurdle 미달 시 Carry = $0 (XRF 는 Mgmt + Setup 만 수령).
           {selected.fees.xrfCarryUSD === 0 && <span style={{ color: c.amber, fontWeight: 700, marginLeft: 6 }}>← 본 deal 은 Carry 미발생 상태</span>}
         </div>
         <div style={{ fontSize: 10, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
-          ⓘ 2026-05-04 v6: 글로벌 친화 용어 — XRF Foundation (SG) · KOF (Korea Operation Firm · 舊 엔플랫폼) · NPL VC (NPL Vehicle Company · 舊 대부업체). XRF Mgmt 0.5%/yr flat · Setup+Carry+KOF 4종 = BASE&gt;CONSERVATIVE&gt;SAVE hierarchy. NPL VC 차입금 모델: LP 가 Pool 100% 청약 후 그 중 10%를 NPL VC에 무이자 대여 → 청산 시 1:1 환급.
+          ⓘ 2026-05-05 v7 (XRF_Simulator_v7.xlsx 정합): KOF 4종 (AI 0.7/0.6/0.5% · Sourcing 1.0/0.9/0.8% · PM 0.4/0.35/0.3% · Margin 0.4% flat) · NPL VC Servicing 2.0% × 매입가 (FLAT, no duration cap). XRF Carry 5-tier marginal (European Waterfall): Hurdle 8%/yr 미달 시 0, 그 외 8-20/20-40/40-60/60%+ slice 별 marginal rate 적용. NPL VC 차입금 10%: LP→NPL VC 무이자 대여 · Day Exit 100% 환급.
         </div>
       </Section>
 

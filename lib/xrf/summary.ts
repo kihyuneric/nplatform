@@ -74,17 +74,17 @@ export function buildXrfSummary(args: XrfSummaryArgs): string {
   const servicerPct = servicerItem?.pctOfNplProfit ?? 0
 
   // 핵심 문장 1: deal 정의 + NPL → XRF 변환 결과
-  //   ⚠ 사용자 정책 (2026-05-04 v6): 글로벌 친화 용어 — KOF / NPL VC 사용
-  const sent1 = `[XRF Vehicle 평가] ${assetTitle ?? '본 매물'}${region ? ` (${region})` : ''} — NPL 자체 ROI ${nplRoiPct.toFixed(2)}% 를 XRF 비히클 (XRF Foundation + Korea Operation Firm + NPL Vehicle Company) 구조에 통과시킨 결과, LP 최종 ROI ${fmtPct(result.lpRoi)} (연환산 IRR ${fmtPct(result.lpIrrYr)}) 로 산출되었습니다.`
+  //   ⚠ 사용자 정책 (2026-05-05 v7): 5-tier marginal Carry · KOF/NPL VC 글로벌 용어
+  const sent1 = `[XRF Vehicle 평가 v7] ${assetTitle ?? '본 매물'}${region ? ` (${region})` : ''} — NPL 자체 ROI ${nplRoiPct.toFixed(2)}% 를 XRF 비히클 (XRF Foundation + Korea Operation Firm + NPL Vehicle Company) 구조에 통과시킨 결과, LP 최종 ROI ${fmtPct(result.lpRoi)} (연환산 IRR ${fmtPct(result.lpIrrYr)}) 로 산출되었습니다.`
 
   // 핵심 문장 2: AUTO Tier + 의사결정
   const sent2 = `AUTO 판정은 ${tj.label} tier (${tj.reason})로, ${result.numLPs}명 LP 분할 시 Pool 100% 청약 — 1인당 ${fmtUSD(result.lpCapitalPerLpUSD)} 입금 · 순수익 ${fmtUSD(result.lpNetProfitPerLpUSD)} 예상.`
 
-  // 핵심 문장 3: Profit Allocation + Fund Metrics
-  const sent3 = `NPL 순수익 ${fmtUSD(result.nplNetProfitUSD)} 분배: LP ${fmtPct(lpPct)} · XRF Foundation ${fmtPct(xrfTotalPct)} (★ Carry는 8% Hurdle 달성 시에만 수령) · KOF ${fmtPct(platformPct)} · NPL VC Servicing ${fmtPct(servicerPct)}. Fund metrics — DPI ${metrics.dpi.toFixed(2)}x · TVPI ${metrics.tvpi.toFixed(2)}x · XIRR ${fmtPct(metrics.xirr)}.`
+  // 핵심 문장 3: Profit Allocation + Carry 5-tier 명시
+  const sent3 = `NPL 순수익 ${fmtUSD(result.nplNetProfitUSD)} 분배: LP ${fmtPct(lpPct)} · XRF Foundation ${fmtPct(xrfTotalPct)} (★ Carry 5-tier 누진 — Hurdle 8%/yr 미달 시 $0, 그 외 8-20/20-40/40-60/60%+ slice 별 marginal rate) · KOF ${fmtPct(platformPct)} · NPL VC Servicing ${fmtPct(servicerPct)} (FLAT 2% × 매입가). Fund metrics — DPI ${metrics.dpi.toFixed(2)}x · TVPI ${metrics.tvpi.toFixed(2)}x · XIRR ${fmtPct(metrics.xirr)}.`
 
-  // 핵심 문장 4: 의사결정 권고 + 차주 유형 컨텍스트
-  const sent4 = `차주 유형 ${debtorLabel} · Hurdle 8%/yr 충당분 ${fmtUSD(result.hurdleUSD)} · LP 우선 수익률 보장. **AI 투자 의견: ${tj.verdict}** — ${
+  // 핵심 문장 4: 의사결정 권고 + 차주 유형 + NPL VC 차입금 모델
+  const sent4 = `차주 유형 ${debtorLabel} · Hurdle ${fmtUSD(result.hurdleUSD)} 충당 후 잉여분에 대해서만 XRF Carry 발동 (LP 우선 수익률 보장) · NPL VC 차입금 ${fmtUSD(result.daepuCapitalUSD)} (LP 무이자 대여, Day Exit 100% 환급). **AI 투자 의견: ${tj.verdict}** — ${
     tj.verdict === 'BUY' ? 'XRF Vehicle 출시 권고, RLUSD 분배 안정성 확보 가능.'
     : tj.verdict === 'HOLD' ? 'tier별 양보 폭 협의 필요, 매력도 한계 → 기관 LP base 우선 검토.'
     : 'deal 재구조화 필요 (담보 추가·매입가 재협상·운용기간 단축 등).'

@@ -50,73 +50,136 @@ export interface XrfTierFees {
 }
 
 /**
- * 사용자 정책 (2026-05-04 v3) — 엔플랫폼 Fee 재구성 + LP 청약 구조 + Tier Gradient
+ * 사용자 정책 (2026-05-05 v7) — XRF_Simulator_v7.xlsx 정합
  *
- * 1) Korea Operation Firm (KOF · 舊 엔플랫폼) BASE Fee 재구성:
- *      AI Valuation     0.7% → 0.3%   (-0.4%/yr)
- *      Pipeline Sourcing 1.0% → 1.3%   (+0.3%/yr)
- *      PM Fee           0.85% → 0.5%  (-0.35%/yr)
- *      KR Margin        0.45% → 0.4%  (-0.05%/yr)
- *      KOF 합계          3.00% → 2.50% (-0.50%/yr)
+ * v7 핵심 변경:
+ *   1) Carry 5-tier marginal (European Waterfall) — entry rate + 누진 brackets
+ *      < 8% (Hurdle):  0% / 0% / 0%
+ *      8% – 20%:      15% / 10% / 5%   ★ entry — LP 손실 없는 정도의 Carry
+ *      20% – 40%:     20% / 15% / 10%  · 20%+ profit slice
+ *      40% – 60%:     25% / 20% / 15%  · 40%+ profit slice
+ *      60%+:          30% / 25% / 20%  · 고수익 deal 에서 XRF 적정 보상
  *
- * 2) Tier 별 수수료 hierarchy (BASE > CONS > SAVE):
- *      XRF Mgmt:        0.5% / 0.5% / 0.5%  (★ flat — 운영비 고정)
- *      XRF Setup:       0.5% / 0.4% / 0.3%
- *      XRF Carry ★:    15% / 10% / 5%      (gradient · ⚠ 8% Hurdle 미달 시 $0)
- *      KOF AI:          0.3% / 0.25% / 0.2%
- *      KOF Sourcing:    1.3% / 1.15% / 1.0%
- *      KOF PM:          0.5% / 0.45% / 0.4%
- *      KOF Margin:      0.4% / 0.4% / 0.4%  (★ TP defense 모든 tier 고정)
- *      KOF 합계:         2.50% / 2.25% / 2.00%
+ *   2) Fee 구조 v7 (사용자 정정):
+ *      XRF Mgmt:       0.5% / 0.4% / 0.4%   (★ CONS/SAVE 0.4%)
+ *      XRF Setup:      0.5% / 0.3% / 0.3%
+ *      KOF AI:         0.7% / 0.6% / 0.5%
+ *      KOF Sourcing:   1.0% / 0.9% / 0.8%
+ *      KOF PM:         0.4% / 0.35% / 0.3%
+ *      KOF KR Margin:  0.4% / 0.4% / 0.4%   (★ TP defense flat)
+ *      ─────────────────────────────────────
+ *      KOF subtotal:   2.5% / 2.25% / 2.0%
  *
- *    ⭐ XRF Carry 조건부: LP 가 Hurdle Rate 8%/yr × LP capital × 운용기간 달성 시
- *       초과분에 대해서만 적용. Hurdle 미달 시 XRF Carry = $0 (XRF는 Mgmt+Setup만 수령).
+ *   3) NPL VC Servicing FLAT 2.0% × Purchase (★ no duration cap — v7 변경)
  *
- * 3) NPL Vehicle Company (NPL VC · 舊 대부업체) — v6 (2026-05-04 사용자 명확화):
- *    - LP 가 Pool 100% 청약 (변경 없음)
- *    - 그 중 10% ($67k) 는 LP → NPL VC 로 무이자 대여 (Korea NPL license capital)
- *    - NPL VC 는 이 자본에 대해 어떤 수수료/매출도 받지 않음 (Capital 보관만)
- *    - Day Exit 시 100% 환급 (LP 로 1:1 반환)
- *    - NPL VC 수익은 Servicing Fee 2.0%/yr 뿐
- *    daepuCapitalPct 는 표시 목적 (UI exhibit) — LP capital 계산에는 영향 없음
+ *   4) NPL VC Capital (차입금) 10% — LP→NPL VC 무이자 대여 · Day Exit 100% 환급
+ *
+ *   5) XRF Fee 정의 = Mgmt + Setup + Carry (Carry 포함 all-in)
  */
+
+/** v7 Carry 5-tier marginal brackets — LP gross ROI 구간별 marginal rate */
+export interface CarryBracket {
+  /** 구간 상한 (LP gross ROI 절대값 · annualized) — null = 무제한 */
+  upperBoundRoi: number | null
+  /** 해당 구간의 marginal Carry rate */
+  ratePct: number
+}
+
+export const CARRY_BRACKETS_V7: Record<Exclude<XrfTier, 'REJECT'>, readonly CarryBracket[]> = {
+  BASE: [
+    { upperBoundRoi: 0.08, ratePct: 0.00 },  // < 8% Hurdle: no Carry
+    { upperBoundRoi: 0.20, ratePct: 0.15 },  // 8-20% slice
+    { upperBoundRoi: 0.40, ratePct: 0.20 },  // 20-40% slice
+    { upperBoundRoi: 0.60, ratePct: 0.25 },  // 40-60% slice
+    { upperBoundRoi: null, ratePct: 0.30 },  // 60%+ slice
+  ],
+  CONSERVATIVE: [
+    { upperBoundRoi: 0.08, ratePct: 0.00 },
+    { upperBoundRoi: 0.20, ratePct: 0.10 },
+    { upperBoundRoi: 0.40, ratePct: 0.15 },
+    { upperBoundRoi: 0.60, ratePct: 0.20 },
+    { upperBoundRoi: null, ratePct: 0.25 },
+  ],
+  'SAVE-THE-DEAL': [
+    { upperBoundRoi: 0.08, ratePct: 0.00 },
+    { upperBoundRoi: 0.20, ratePct: 0.05 },
+    { upperBoundRoi: 0.40, ratePct: 0.10 },
+    { upperBoundRoi: 0.60, ratePct: 0.15 },
+    { upperBoundRoi: null, ratePct: 0.20 },
+  ],
+}
+
 export const XRF_TIERS: Record<Exclude<XrfTier, 'REJECT'>, XrfTierFees> = {
   BASE: {
-    carryPct: 0.15,
-    xrfMgmtPctYr: 0.005,           // ★ v4: 0.007 → 0.005 (모든 tier 고정 — 운영비)
-    xrfSetupPct: 0.005,            // BASE
-    platformAiPctYr: 0.003,        // 0.3%
-    platformSourcingPctYr: 0.013,  // 1.3%
-    platformPmPctYr: 0.005,        // 0.5%
-    platformMarginPctYr: 0.004,    // 0.4%
+    carryPct: 0.15,                // ★ Entry rate (8-20% bracket) — 5-tier marginal 의 entry
+    xrfMgmtPctYr: 0.005,           // 0.5%
+    xrfSetupPct: 0.005,            // 0.5%
+    platformAiPctYr: 0.007,        // ★ v7: 0.3% → 0.7%
+    platformSourcingPctYr: 0.010,  // ★ v7: 1.3% → 1.0%
+    platformPmPctYr: 0.004,        // ★ v7: 0.5% → 0.4%
+    platformMarginPctYr: 0.004,    // 0.4% (TP defense flat)
     servicingPctYr: 0.020,
-    daepuCapitalPct: 0.10,         // ★ v5: 대부업체 차입금 10% (LP→대부업체 무이자 대여, Day Exit 100% 환급)
+    daepuCapitalPct: 0.10,
     hurdlePctYr: 0.08,
   },
   CONSERVATIVE: {
-    carryPct: 0.10,
-    xrfMgmtPctYr: 0.005,           // ★ v4: 0.006 → 0.005 (모든 tier 고정)
-    xrfSetupPct: 0.004,            // CONS
-    platformAiPctYr: 0.0025,
-    platformSourcingPctYr: 0.0115,
-    platformPmPctYr: 0.0045,
-    platformMarginPctYr: 0.004,    // 동일 (TP defense)
+    carryPct: 0.10,                // ★ Entry rate
+    xrfMgmtPctYr: 0.004,           // ★ v7: 0.5% → 0.4%
+    xrfSetupPct: 0.003,            // ★ v7: 0.4% → 0.3%
+    platformAiPctYr: 0.006,        // ★ v7: 0.25% → 0.6%
+    platformSourcingPctYr: 0.009,  // ★ v7: 1.15% → 0.9%
+    platformPmPctYr: 0.0035,       // ★ v7: 0.45% → 0.35%
+    platformMarginPctYr: 0.004,    // 0.4% (TP defense flat)
     servicingPctYr: 0.020,
-    daepuCapitalPct: 0.10,         // ★ v5: 대부업체 차입금 10% (LP→대부업체 무이자 대여, Day Exit 100% 환급)
+    daepuCapitalPct: 0.10,
     hurdlePctYr: 0.08,
   },
   'SAVE-THE-DEAL': {
-    carryPct: 0.05,
-    xrfMgmtPctYr: 0.005,           // SAVE (이미 0.5%)
+    carryPct: 0.05,                // ★ Entry rate
+    xrfMgmtPctYr: 0.004,           // ★ v7: 0.5% → 0.4%
     xrfSetupPct: 0.003,            // SAVE
-    platformAiPctYr: 0.002,        // 0.2%
-    platformSourcingPctYr: 0.010,  // 1.0%
-    platformPmPctYr: 0.004,
-    platformMarginPctYr: 0.004,    // TP defense 고정
+    platformAiPctYr: 0.005,        // ★ v7: 0.2% → 0.5%
+    platformSourcingPctYr: 0.008,  // ★ v7: 1.0% → 0.8%
+    platformPmPctYr: 0.003,        // ★ v7: 0.4% → 0.3%
+    platformMarginPctYr: 0.004,    // 0.4% (TP defense flat)
     servicingPctYr: 0.020,
-    daepuCapitalPct: 0.10,         // ★ v5: 대부업체 차입금 10% (LP→대부업체 무이자 대여, Day Exit 100% 환급)
+    daepuCapitalPct: 0.10,
     hurdlePctYr: 0.08,
   },
+}
+
+/**
+ * v7 European Waterfall Carry — LP profit slice 별 marginal rate 적용.
+ * @param lpCapital  LP capital total (USD)
+ * @param lpProfit   LP profit before Carry (USD)
+ * @param durationYr 운용 기간 (년)
+ * @param tier       BASE / CONSERVATIVE / SAVE-THE-DEAL
+ * @returns          Carry total (USD) — 모든 bracket 누적 합계
+ *
+ * Bracket 임계값은 capital × bracket_roi × duration (USD 환산).
+ * Hurdle 8%/yr 까지는 Carry 0 → LP 우선 수익률 보장.
+ */
+export function computeTieredCarry(
+  lpCapital: number,
+  lpProfit: number,
+  durationYr: number,
+  tier: Exclude<XrfTier, 'REJECT'>,
+): number {
+  if (lpProfit <= 0 || lpCapital <= 0) return 0
+  const brackets = CARRY_BRACKETS_V7[tier]
+  let carry = 0
+  let prevBoundUSD = 0
+  for (const bracket of brackets) {
+    const boundUSD = bracket.upperBoundRoi == null
+      ? Number.POSITIVE_INFINITY
+      : lpCapital * bracket.upperBoundRoi * durationYr
+    // 이 구간의 profit slice = MAX(0, MIN(profit, bound) - prev_bound)
+    const slice = Math.max(0, Math.min(lpProfit, boundUSD) - prevBoundUSD)
+    carry += slice * bracket.ratePct
+    prevBoundUSD = boundUSD
+    if (boundUSD >= lpProfit) break
+  }
+  return carry
 }
 
 export interface XrfValuationInput {
@@ -244,17 +307,21 @@ function computeForTier(
   const durationYrCapped = Math.min(durationYr, 1.0)
 
   // ── Vehicle Fees (Carry 제외) — base = NPL purchase price (AUM 기준) ──
+  // v7: KOF 4종 모두 % flat (no duration scaling — Excel B8/B9/B10/B11 직접)
+  // v7: NPL VC Servicing FLAT (no duration cap)
+  // v7: XRF Mgmt 만 DAYS/365 비례 (운영비 성격), Setup 1회
   const xrfMgmtUSD = purchaseUSD * fees.xrfMgmtPctYr * durationYrCapped
   const xrfSetupUSD = purchaseUSD * fees.xrfSetupPct  // 1회
 
-  const platformAiUSD = purchaseUSD * fees.platformAiPctYr * durationYrCapped
-  const platformSourcingUSD = purchaseUSD * fees.platformSourcingPctYr * durationYrCapped
-  const platformPmUSD = purchaseUSD * fees.platformPmPctYr * durationYrCapped
-  const platformMarginUSD = purchaseUSD * fees.platformMarginPctYr * durationYrCapped
+  const platformAiUSD = purchaseUSD * fees.platformAiPctYr
+  const platformSourcingUSD = purchaseUSD * fees.platformSourcingPctYr
+  const platformPmUSD = purchaseUSD * fees.platformPmPctYr
+  const platformMarginUSD = purchaseUSD * fees.platformMarginPctYr
   const platformTotalUSD =
     platformAiUSD + platformSourcingUSD + platformPmUSD + platformMarginUSD
 
-  const servicingUSD = purchaseUSD * fees.servicingPctYr * durationYrCapped
+  // v7: Servicing flat (no duration · Purchase × 2%)
+  const servicingUSD = purchaseUSD * fees.servicingPctYr
 
   // Carry 제외한 운영 fees 총합 (Pool 산정에 사용)
   const operatingFeesUSD = xrfMgmtUSD + xrfSetupUSD + platformTotalUSD + servicingUSD
@@ -293,12 +360,12 @@ function computeForTier(
   // ── LP 분배 계산 ──
   const lpProfitPreCarryUSD = nplNetProfitUSD - operatingFeesUSD
 
-  // Hurdle 8%/yr × LP capital × 실제 운용기간 (NOT capped)
+  // Hurdle 8%/yr × LP capital × 실제 운용기간 (NOT capped) — 정보용
   const hurdleUSD = lpCapitalUSD * fees.hurdlePctYr * durationYr
 
-  // Carry = 15% × max(0, LP_profit_pre_carry − Hurdle)
-  const profitAboveHurdleUSD = Math.max(0, lpProfitPreCarryUSD - hurdleUSD)
-  const xrfCarryUSD = profitAboveHurdleUSD * fees.carryPct
+  // ★ v7: 5-tier marginal Carry (European Waterfall)
+  //   Hurdle 미달 → Carry 0 / 8-20% slice → entry rate / 20-40% / 40-60% / 60%+ 누진
+  const xrfCarryUSD = computeTieredCarry(lpCapitalUSD, lpProfitPreCarryUSD, durationYr, tier)
 
   const xrfTotalUSD = xrfMgmtUSD + xrfSetupUSD + xrfCarryUSD
 
