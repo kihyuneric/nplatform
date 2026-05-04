@@ -59,10 +59,11 @@ export interface XrfTierFees {
  *      KR Margin        0.45% → 0.4%  (-0.05%/yr)
  *      엔플랫폼 합계      3.00% → 2.50% (-0.50%/yr)
  *
- * 2) ⚠ v3 (2026-05-04 사용자 피드백): tier 별 매출 hierarchy 강제 BASE > CONS > SAVE
+ * 2) ⚠ v3 (2026-05-04 사용자 피드백): tier 별 수수료 hierarchy 강제 BASE > CONS > SAVE
+ *    v4 (2026-05-04 추가): XRF 관리보수는 모든 tier 0.5% 고정 (운영비 = 고정비 성격)
  *    이전 v2 는 CONS 엔플랫폼 = BASE (Carry 만 양보) 라 매출 동일 → 사용자 지적
- *    v3 부터 모든 fee 컴포넌트가 명확한 gradient 보유:
- *      XRF Mgmt:        0.7% / 0.6% / 0.5%  (BASE > CONS > SAVE)
+ *    v3/v4 부터 hierarchy 는 Setup + Carry + 엔플랫폼 컴포넌트로 형성:
+ *      XRF Mgmt:        0.5% / 0.5% / 0.5%  (★ v4 모든 tier 고정 — 운영비 성격)
  *      XRF Setup:       0.5% / 0.4% / 0.3%
  *      XRF Carry:       15% / 10% / 5%      (이미 gradient)
  *      엔 AI:           0.3% / 0.25% / 0.2%
@@ -77,7 +78,7 @@ export interface XrfTierFees {
 export const XRF_TIERS: Record<Exclude<XrfTier, 'REJECT'>, XrfTierFees> = {
   BASE: {
     carryPct: 0.15,
-    xrfMgmtPctYr: 0.007,           // BASE
+    xrfMgmtPctYr: 0.005,           // ★ v4: 0.007 → 0.005 (모든 tier 고정 — 운영비)
     xrfSetupPct: 0.005,            // BASE
     platformAiPctYr: 0.003,        // 0.3%
     platformSourcingPctYr: 0.013,  // 1.3%
@@ -89,11 +90,11 @@ export const XRF_TIERS: Record<Exclude<XrfTier, 'REJECT'>, XrfTierFees> = {
   },
   CONSERVATIVE: {
     carryPct: 0.10,
-    xrfMgmtPctYr: 0.006,           // ★ v3: 0.005 → 0.006 (BASE 와 SAVE 사이)
-    xrfSetupPct: 0.004,            // ★ v3: 0.003 → 0.004
-    platformAiPctYr: 0.0025,       // ★ v3: 0.003 → 0.0025
-    platformSourcingPctYr: 0.0115, // ★ v3: 0.013 → 0.0115
-    platformPmPctYr: 0.0045,       // ★ v3: 0.005 → 0.0045
+    xrfMgmtPctYr: 0.005,           // ★ v4: 0.006 → 0.005 (모든 tier 고정)
+    xrfSetupPct: 0.004,            // CONS
+    platformAiPctYr: 0.0025,
+    platformSourcingPctYr: 0.0115,
+    platformPmPctYr: 0.0045,
     platformMarginPctYr: 0.004,    // 동일 (TP defense)
     servicingPctYr: 0.020,
     daepuCapitalPct: 0,
@@ -101,12 +102,12 @@ export const XRF_TIERS: Record<Exclude<XrfTier, 'REJECT'>, XrfTierFees> = {
   },
   'SAVE-THE-DEAL': {
     carryPct: 0.05,
-    xrfMgmtPctYr: 0.005,           // SAVE
+    xrfMgmtPctYr: 0.005,           // SAVE (이미 0.5%)
     xrfSetupPct: 0.003,            // SAVE
     platformAiPctYr: 0.002,        // 0.2%
     platformSourcingPctYr: 0.010,  // 1.0%
-    platformPmPctYr: 0.004,        // ★ v3: 0.005 → 0.004 (SAVE 더 양보)
-    platformMarginPctYr: 0.004,    // ★ v3: 0.003 → 0.004 (TP defense 고정)
+    platformPmPctYr: 0.004,
+    platformMarginPctYr: 0.004,    // TP defense 고정
     servicingPctYr: 0.020,
     daepuCapitalPct: 0,
     hurdlePctYr: 0.08,

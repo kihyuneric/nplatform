@@ -49,18 +49,21 @@ NPL 매입가 (AUM) × 365일 cap 기준.
 
 ## 3. 3-Tier Fee System (v2)
 
-### 3.1 XRF Foundation 보수 — tier 별 변동 (v3 hierarchy)
+### 3.1 XRF Foundation 보수 — tier 별 변동 (v4 · 관리보수 flat)
+
+> ⚠ **v4 변경 (2026-05-04 사용자 피드백)**: XRF 관리보수는 운영비 성격 → 모든 tier 0.5%/yr **고정**.
+> Hierarchy 는 Setup + Carry + 엔플랫폼 컴포넌트로 형성됨.
 
 | 항목 | BASE ★ | CONSERVATIVE | SAVE-THE-DEAL |
 |------|--------|--------------|---------------|
 | Carry (8% Hurdle 초과분) | **15%** | **10%** | **5%** |
-| 관리보수 (%/yr) | **0.7%** | **0.6%** | **0.5%** |
+| 관리보수 (%/yr) | **0.5%** | **0.5%** | **0.5%** (★ 모든 tier 고정 — 운영비) |
 | Setup (1회) | **0.5%** | **0.4%** | **0.3%** |
 
 ### 3.2 엔플랫폼 보수 — tier 별 변동 (v3 · 2026-05-04 사용자 피드백 반영)
 
-> ⚠ **v3 변경 사유**: v2 에서 CONS 엔플랫폼 = BASE (Carry 만 양보) 라 매출이 동일했음.
-> 사용자 피드백 "CONSERVATIVE 일때 매출이 BASE 보다 높아 보이는 건 이상" → 모든 fee 컴포넌트가 명확한
+> ⚠ **v3 변경 사유**: v2 에서 CONS 엔플랫폼 = BASE (Carry 만 양보) 라 수수료가 동일했음.
+> 사용자 피드백 "CONSERVATIVE 일때 수수료가 BASE 보다 높아 보이는 건 이상" → 모든 fee 컴포넌트가 명확한
 > **BASE > CONS > SAVE** gradient 갖도록 재배치.
 
 | 항목 | BASE ★ | CONSERVATIVE | SAVE-THE-DEAL |
@@ -140,24 +143,25 @@ NPL Net Profit
 - 운용기간 587일 (1.61년)
 - LP 100명 분할
 
-### v3 3-tier 비교 (Jongno · 매출 hierarchy 검증)
+### v4 3-tier 비교 (Jongno · 수수료 hierarchy 검증)
 
-| Tier | XRF 매출 | 엔플랫폼 매출 | LP ROI | 1인당 청약 |
+| Tier | XRF 수수료 | 엔플랫폼 수수료 | LP ROI | 1인당 청약 |
 |------|---------|--------------|--------|-----------|
-| **BASE ★** | **$53k** | **$33k** (2.50%/yr) | 41.71% | $7,167 |
-| **CONSERVATIVE** | **$39k** | **$30k** (2.25%/yr) | 44.58% | $7,100 |
+| **BASE ★** | **$51k** | **$33k** (2.50%/yr) | 42.19% | $7,137 |
+| **CONSERVATIVE** | **$37k** | **$30k** (2.25%/yr) | 44.84% | $7,085 |
 | **SAVE-THE-DEAL** | **$24k** | **$27k** (2.00%/yr) | 47.59% | $7,034 |
 
-> ✅ 매출 hierarchy: **BASE > CONSERVATIVE > SAVE-THE-DEAL** (모든 fee 컴포넌트)
-> ✅ Jongno BASE LP ROI 41.71% ≥ 20% → AUTO 판정 **BASE** (양보 불필요)
+> ✅ 수수료 hierarchy: **BASE > CONSERVATIVE > SAVE-THE-DEAL** (모든 fee 컴포넌트)
+> ✅ XRF 관리보수 0.5% flat (운영비) — Hierarchy 는 XRF Setup·Carry + 엔플랫폼 4종이 형성
+> ✅ Jongno BASE LP ROI 42.19% ≥ 20% → AUTO 판정 **BASE** (양보 불필요)
 
-### v3 다른 case 검증
+### v4 다른 case 검증
 
 | Case | 차주 | XRF gradient | 엔플랫폼 gradient | AUTO |
 |------|------|--------------|-------------------|------|
-| Case 1 종로 토지 | 개인 75% | $53k → $39k → $24k ✓ | $33k → $30k → $27k ✓ | BASE |
-| Case 2 잠실 오피스텔 | 개인 75% | $20k → $16k → $12k ✓ | $24k → $22k → $19k ✓ | SAVE |
-| Case 3 강남 상가 (가상) | 법인 90% | $138k → $99k → $58k ✓ | $66k → $60k → $53k ✓ | BASE |
+| Case 1 종로 토지 | 개인 75% | $51k → $37k → $24k ✓ | $33k → $30k → $27k ✓ | BASE |
+| Case 2 잠실 오피스텔 | 개인 75% | $18k → $15k → $12k ✓ | $24k → $22k → $19k ✓ | SAVE |
+| Case 3 강남 상가 (가상) | 법인 90% | $134k → $96k → $58k ✓ | $66k → $60k → $53k ✓ | BASE |
 
 ---
 

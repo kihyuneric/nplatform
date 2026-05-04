@@ -333,7 +333,7 @@ export default function XrfValuationSection({
           </thead>
           <tbody>
             <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>XRF Foundation</td></tr>
-            <Row label="  XRF 관리보수 (%/yr · 365일 cap)" value={fmtUSDFull(selected.fees.xrfMgmtUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.7%/yr' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.6%/yr' : '0.5%/yr'} />
+            <Row label="  XRF 관리보수 (%/yr · 365일 cap)" value={fmtUSDFull(selected.fees.xrfMgmtUSD)} note="0.5%/yr 모든 tier 고정 (운영비)" />
             <Row label="  XRF SPV Setup (1회)" value={fmtUSDFull(selected.fees.xrfSetupUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.5% × NPL 매입가' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.4% × NPL 매입가' : '0.3% × NPL 매입가'} />
             <Row label="  XRF Carry (8% Hurdle 초과분)" value={fmtUSDFull(selected.fees.xrfCarryUSD)} note={`Hurdle ${fmtUSDFull(selected.hurdleUSD)} 초과분 × ${tierLabel[selected.tier] === 'BASE' ? '15%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '10%' : '5%'}`} />
             <Row label="  XRF 합계" value={fmtUSDFull(selected.fees.xrfTotalUSD)} bold last />
@@ -350,7 +350,7 @@ export default function XrfValuationSection({
           </tbody>
         </table>
         <div style={{ fontSize: 10, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
-          ⓘ 2026-05-04 v3: 모든 fee 컴포넌트가 BASE &gt; CONSERVATIVE &gt; SAVE-THE-DEAL hierarchy 보유 — XRF/엔플랫폼 매출 tier 별 단조 감소. 0.5%p 절감분(엔플랫폼 BASE 3.0→2.5)은 LP 순수익으로 자동 흡수. 대부업체 자본 출자 폐지 (Pool 100% LP 청약).
+          ⓘ 2026-05-04 v4: XRF 관리보수 0.5%/yr 모든 tier 고정 (운영비 성격) · Setup + Carry + 엔플랫폼 컴포넌트가 BASE &gt; CONSERVATIVE &gt; SAVE-THE-DEAL hierarchy 형성. XRF/엔플랫폼 수수료 tier 별 단조 감소. 0.5%p 절감분(엔플랫폼 BASE 3.0→2.5)은 LP 순수익으로 자동 흡수. 대부업체 자본 출자 폐지 (Pool 100% LP 청약).
         </div>
       </Section>
 
@@ -474,9 +474,9 @@ export default function XrfValuationSection({
             <CompareRow label="LP Net Profit (1인당)" v1={fmtUSDFull(base.lpNetProfitPerLpUSD)} v2={fmtUSDFull(conservative.lpNetProfitPerLpUSD)} v3={fmtUSDFull(saveTheDeal.lpNetProfitPerLpUSD)} />
             <CompareRow label="LP ROI (절대)" v1={fmtPct(base.lpRoi)} v2={fmtPct(conservative.lpRoi)} v3={fmtPct(saveTheDeal.lpRoi)} bold />
             <CompareRow label="LP IRR (연환산)" v1={`${fmtPct(base.lpIrrYr)}/yr`} v2={`${fmtPct(conservative.lpIrrYr)}/yr`} v3={`${fmtPct(saveTheDeal.lpIrrYr)}/yr`} />
-            <CompareRow label="XRF 합계 Fee" v1={fmtUSDFull(base.fees.xrfTotalUSD)} v2={fmtUSDFull(conservative.fees.xrfTotalUSD)} v3={fmtUSDFull(saveTheDeal.fees.xrfTotalUSD)} />
-            <CompareRow label="엔플랫폼 합계 Fee" v1={fmtUSDFull(base.fees.platformTotalUSD)} v2={fmtUSDFull(conservative.fees.platformTotalUSD)} v3={fmtUSDFull(saveTheDeal.fees.platformTotalUSD)} />
-            <CompareRow label="대부업체 Servicing" v1={fmtUSDFull(base.fees.servicingUSD)} v2={fmtUSDFull(conservative.fees.servicingUSD)} v3={fmtUSDFull(saveTheDeal.fees.servicingUSD)} last />
+            <CompareRow label="XRF 수수료 합계" v1={fmtUSDFull(base.fees.xrfTotalUSD)} v2={fmtUSDFull(conservative.fees.xrfTotalUSD)} v3={fmtUSDFull(saveTheDeal.fees.xrfTotalUSD)} />
+            <CompareRow label="엔플랫폼 수수료 합계" v1={fmtUSDFull(base.fees.platformTotalUSD)} v2={fmtUSDFull(conservative.fees.platformTotalUSD)} v3={fmtUSDFull(saveTheDeal.fees.platformTotalUSD)} />
+            <CompareRow label="대부업체 Servicing 수수료" v1={fmtUSDFull(base.fees.servicingUSD)} v2={fmtUSDFull(conservative.fees.servicingUSD)} v3={fmtUSDFull(saveTheDeal.fees.servicingUSD)} last />
           </tbody>
         </table>
         <div style={{ marginTop: 12, padding: '12px 16px', background: c.bgSoft, borderLeft: `3px solid ${tierColor[selected.tier]}`, fontSize: 12, color: c.text }}>
