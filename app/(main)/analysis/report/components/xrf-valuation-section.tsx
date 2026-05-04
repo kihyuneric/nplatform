@@ -543,6 +543,50 @@ export default function XrfValuationSection({
           const benchmark = computeIndustryBenchmark(0.08, holdingPeriodDays / 365)
           return (
             <>
+              {/* Metric 정의 박스 — 각 5 metric 의 공식과 의미 */}
+              <div style={{ marginBottom: 16, padding: 14, background: '#F8FAFC', border: `1px solid ${c.border}`, borderRadius: 4 }}>
+                <div style={{ fontWeight: 700, color: c.navy, fontSize: 12, marginBottom: 10 }}>
+                  ⓘ 5 Metric 정의 (Definitions)
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: 8, fontSize: 12, lineHeight: 1.6, color: c.text }}>
+                  <div>
+                    <strong style={{ color: c.navy }}>① Net DPI (LP):</strong>{' '}
+                    <span style={{ color: c.textSub }}>= LP 분배 / LP 출자</span>{' '}
+                    <span style={{ fontStyle: 'italic', color: c.textTertiary }}>
+                      — Vehicle 모든 fee 차감 후 LP 가 실제로 받는 회수 비율 (1.0x = 원금만 회수, 1.5x = 50% 수익)
+                    </span>
+                  </div>
+                  <div>
+                    <strong style={{ color: c.navyDark }}>② Gross MoM (Asset):</strong>{' '}
+                    <span style={{ color: c.textSub }}>= NPL 회수 / NPL 매입가</span>{' '}
+                    <span style={{ fontStyle: 'italic', color: c.textTertiary }}>
+                      — 자산 (NPL deal) 자체의 gross multiple. Vehicle 구조 (XRF/KOF/NPL VC) 와 senior loan leverage 무관 — 순수 자산 성과
+                    </span>
+                  </div>
+                  <div>
+                    <strong style={{ color: c.amber }}>③ Vehicle Take-Rate:</strong>{' '}
+                    <span style={{ color: c.textSub }}>= 총 Vehicle 수수료 / NPL 자체 순수익</span>{' '}
+                    <span style={{ fontStyle: 'italic', color: c.textTertiary }}>
+                      — Vehicle 구조 (XRF + KOF + NPL VC Servicing) 가 NPL profit 에서 추출하는 비중. PE buyout fund 평균 25-30% 와 비교 가능
+                    </span>
+                  </div>
+                  <div>
+                    <strong style={{ color: tierColor[selected.tier] }}>④ XIRR (Compound):</strong>{' '}
+                    <span style={{ color: c.textSub }}>= 연환산 복리 IRR (Newton's method)</span>{' '}
+                    <span style={{ fontStyle: 'italic', color: c.textTertiary }}>
+                      — Excel XIRR 함수 동일 알고리즘. 비균등 시점 cash flow 의 내부수익률. 단순 연환산 IRR (LP ROI ÷ 운용기간) 보다 엄밀한 복리 기준 IRR
+                    </span>
+                  </div>
+                  <div>
+                    <strong style={{ color: c.emerald }}>⑤ Hurdle Spread:</strong>{' '}
+                    <span style={{ color: c.textSub }}>= XIRR − Hurdle 8%/yr</span>{' '}
+                    <span style={{ fontStyle: 'italic', color: c.textTertiary }}>
+                      — LP 우선 수익률 (Hurdle Rate) 대비 초과 수익. 양수면 XRF Carry 발동 임계 통과 · 음수면 LP 우선 회수 가능
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {/* 5개 차별화 metric 카드 */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 16 }}>
                 <MetricCard

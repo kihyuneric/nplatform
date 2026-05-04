@@ -1746,6 +1746,29 @@ Object.assign(STATIC_DICT.en, {
   'v7 부터 자산-레벨 (Gross MoM) · 비용 효율 (Take-Rate) · LP 초과수익 (Hurdle Spread) 으로 차별화':
     'v7 differentiates: asset-level (Gross MoM), cost efficiency (Take-Rate), LP excess yield (Hurdle Spread)',
 
+  // ── Metric 정의 박스 (5 metric definitions) ──
+  'ⓘ 5 Metric 정의 (Definitions)': 'ⓘ 5-Metric Definitions',
+  '① Net DPI (LP):': '① Net DPI (LP):',
+  '② Gross MoM (Asset):': '② Gross MoM (Asset):',
+  '③ Vehicle Take-Rate:': '③ Vehicle Take-Rate:',
+  '④ XIRR (Compound):': '④ XIRR (Compound):',
+  '⑤ Hurdle Spread:': '⑤ Hurdle Spread:',
+  '= LP 분배 / LP 출자': '= LP distribution / LP paid-in',
+  '— Vehicle 모든 fee 차감 후 LP 가 실제로 받는 회수 비율 (1.0x = 원금만 회수, 1.5x = 50% 수익)':
+    '— LP\'s actual return after all Vehicle fees (1.0x = principal only, 1.5x = 50% gain)',
+  '= NPL 회수 / NPL 매입가': '= NPL recovery / NPL purchase price',
+  '— 자산 (NPL deal) 자체의 gross multiple. Vehicle 구조 (XRF/KOF/NPL VC) 와 senior loan leverage 무관 — 순수 자산 성과':
+    '— Asset-level gross multiple of the NPL deal itself. Independent of Vehicle structure (XRF/KOF/NPL VC) and senior loan leverage — pure asset performance',
+  '= 총 Vehicle 수수료 / NPL 자체 순수익': '= Total Vehicle fees / NPL net profit',
+  '— Vehicle 구조 (XRF + KOF + NPL VC Servicing) 가 NPL profit 에서 추출하는 비중. PE buyout fund 평균 25-30% 와 비교 가능':
+    '— Share extracted from NPL profit by Vehicle structure (XRF + KOF + NPL VC Servicing). Comparable to typical PE buyout fund 25-30%',
+  '= 연환산 복리 IRR (Newton\'s method)': '= Annualized compound IRR (Newton\'s method)',
+  '— Excel XIRR 함수 동일 알고리즘. 비균등 시점 cash flow 의 내부수익률. 단순 연환산 IRR (LP ROI ÷ 운용기간) 보다 엄밀한 복리 기준 IRR':
+    '— Same algorithm as Excel\'s XIRR function. Internal rate of return for irregular cash flows. More rigorous than simple annualized IRR (LP ROI ÷ holding period)',
+  '= XIRR − Hurdle 8%/yr': '= XIRR − Hurdle 8%/yr',
+  '— LP 우선 수익률 (Hurdle Rate) 대비 초과 수익. 양수면 XRF Carry 발동 임계 통과 · 음수면 LP 우선 회수 가능':
+    '— Excess yield over LP priority rate (Hurdle). Positive → XRF Carry threshold cleared · Negative → LP priority recovery applies',
+
   // ── AI 총평 자주 등장하는 phrase (Google Translate 보조) ──
   'AI 투자 의견': 'AI Investment Verdict',
   '차주 유형': 'Borrower type',
