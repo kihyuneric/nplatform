@@ -1690,6 +1690,62 @@ Object.assign(STATIC_DICT.en, {
 
   '벤치마크 출처': 'Benchmark Source',
 
+  // ── EXHIBIT 5b v7 — 5 차별화 metric (수식 기반) ──
+  '자산 레벨 + LP 레벨 + Vehicle 비용 효율 — 5개 metric 모두 수식 기반 산출 · 산업 벤치마크는 Hurdle Rate × 표준 premium 으로 도출':
+    'Asset-level + LP-level + Vehicle cost efficiency — all 5 metrics formula-derived · industry benchmarks computed via Hurdle Rate × standard premium',
+  // 5 metric cards
+  'Net DPI (LP)': 'Net DPI (LP)',
+  'LP 분배 / 출자 (fee 차감 후)': 'LP distribution / paid-in (after fees)',
+  'Gross MoM (Asset)': 'Gross MoM (Asset)',
+  'NPL 회수 / 매입가 (자산 레벨)': 'NPL recovery / purchase (asset-level)',
+  'Vehicle Take-Rate': 'Vehicle Take-Rate',
+  'Vehicle 수수료 / NPL 순수익': 'Vehicle fees / NPL net profit',
+  'XIRR (Compound)': 'XIRR (Compound)',
+  'LP 복리 연환산 IRR': 'LP compound annualized IRR',
+  'Hurdle Spread': 'Hurdle Spread',
+  'XIRR − Hurdle 8%/yr': 'XIRR − Hurdle 8%/yr',
+
+  // 비교표 컬럼 + benchmark labels
+  '★ XRF Vehicle': '★ XRF Vehicle',
+  '산업 중앙값 (수식)': 'Industry Median (formula)',
+  'Top Quartile (수식)': 'Top Quartile (formula)',
+  '판정': 'Verdict',
+  'Net DPI (LP 레벨)': 'Net DPI (LP-level)',
+  '(1 + median IRR)^운용기간 = (1.12)^운용 / TopQ = (1.20)^운용':
+    '(1 + median IRR)^holding = (1.12)^holding / TopQ = (1.20)^holding',
+  '자산 레벨 — Vehicle 구조 무관': 'Asset-level — independent of Vehicle structure',
+  'XIRR (annualized)': 'XIRR (annualized)',
+  'median = Hurdle + 4% / TopQ = Hurdle + 12%': 'median = Hurdle + 4% / TopQ = Hurdle + 12%',
+  'Hurdle Spread (LP 초과)': 'Hurdle Spread (LP excess)',
+  'XIRR − Hurdle (8%/yr 우선수익률 대비)': 'XIRR − Hurdle (vs 8%/yr priority yield)',
+
+  // Take-Rate verdict box
+  'Vehicle 구조 (XRF + KOF + NPL VC) 가 NPL 자체 순수익에서 추출하는 비중':
+    'Share extracted from NPL net profit by Vehicle structure (XRF + KOF + NPL VC)',
+  '일반 PE buyout fund 의 fee load (~25-30%) 와 비교 가능. 본 Vehicle 효율':
+    'Comparable to typical PE buyout fund fee load (~25-30%). This Vehicle efficiency',
+  '✓ 효율적 (LP 친화)': '✓ Efficient (LP-friendly)',
+  '~ 평균 수준': '~ Average',
+  '⚠ 높은 수수료 부담': '⚠ High fee load',
+
+  // Benchmark formula explanation
+  '산업 벤치마크 도출 수식 (하드코딩 X)': 'Industry Benchmark Derivation (formula-based, no hardcoding)',
+  '산업 중앙값 IRR = Hurdle Rate + 4%/yr premium = 8% + 4%':
+    'Industry median IRR = Hurdle Rate + 4%/yr premium = 8% + 4%',
+  'Top Quartile IRR = Hurdle Rate + 12%/yr premium = 8% + 12%':
+    'Top Quartile IRR = Hurdle Rate + 12%/yr premium = 8% + 12%',
+  '산업 MoM (배수) = (1 + IRR) ^ 운용기간': 'Industry MoM = (1 + IRR) ^ holding period',
+  '복리 환산': 'compound conversion',
+  '출처 premium: Cambridge Associates · Preqin · ILPA Industry Reports (NPL/Special-Situations Private Debt 2020-2024 평균)':
+    'Premium source: Cambridge Associates · Preqin · ILPA Industry Reports (NPL/Special-Situations Private Debt, 2020-2024 average)',
+
+  // 5 metric 차별화 footnote
+  '5 metric 차별화': '5-metric differentiation',
+  '이전 DPI/TVPI/MoM/Equity Multiple 은 closed fund (NAV=0) 에서 모두 동일 = LP DPI':
+    'Previous DPI/TVPI/MoM/Equity Multiple all equaled LP DPI for closed funds (NAV=0)',
+  'v7 부터 자산-레벨 (Gross MoM) · 비용 효율 (Take-Rate) · LP 초과수익 (Hurdle Spread) 으로 차별화':
+    'v7 differentiates: asset-level (Gross MoM), cost efficiency (Take-Rate), LP excess yield (Hurdle Spread)',
+
   // ── AI 총평 자주 등장하는 phrase (Google Translate 보조) ──
   'AI 투자 의견': 'AI Investment Verdict',
   '차주 유형': 'Borrower type',

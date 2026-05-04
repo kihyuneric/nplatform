@@ -81,7 +81,7 @@ export function buildXrfSummary(args: XrfSummaryArgs): string {
   const sent2 = `AUTO 판정은 ${tj.label} tier (${tj.reason})로, ${result.numLPs}명 LP 분할 시 Pool 100% 청약 — 1인당 ${fmtUSD(result.lpCapitalPerLpUSD)} 입금 · 순수익 ${fmtUSD(result.lpNetProfitPerLpUSD)} 예상.`
 
   // 핵심 문장 3: Profit Allocation + Carry 5-tier 명시
-  const sent3 = `NPL 순수익 ${fmtUSD(result.nplNetProfitUSD)} 분배: LP ${fmtPct(lpPct)} · XRF Foundation ${fmtPct(xrfTotalPct)} (★ Carry 5-tier 누진 — Hurdle 8%/yr 미달 시 $0, 그 외 8-20/20-40/40-60/60%+ slice 별 marginal rate) · KOF ${fmtPct(platformPct)} · NPL VC Servicing ${fmtPct(servicerPct)} (FLAT 2% × 매입가). Fund metrics — DPI ${metrics.dpi.toFixed(2)}x · TVPI ${metrics.tvpi.toFixed(2)}x · XIRR ${fmtPct(metrics.xirr)}.`
+  const sent3 = `NPL 순수익 ${fmtUSD(result.nplNetProfitUSD)} 분배: LP ${fmtPct(lpPct)} · XRF Foundation ${fmtPct(xrfTotalPct)} (★ Carry 5-tier 누진 — Hurdle 8%/yr 미달 시 $0, 그 외 8-20/20-40/40-60/60%+ slice 별 marginal rate) · KOF ${fmtPct(platformPct)} · NPL VC Servicing ${fmtPct(servicerPct)} (FLAT 2% × 매입가). Fund metrics — Net DPI ${metrics.dpi.toFixed(3)}x · Gross MoM ${metrics.grossMomAsset.toFixed(3)}x · Vehicle Take-Rate ${(metrics.vehicleTakeRate * 100).toFixed(1)}% · XIRR ${fmtPct(metrics.xirr)} · Hurdle Spread ${(metrics.hurdleSpread * 100).toFixed(2)}%p.`
 
   // 핵심 문장 4: 의사결정 권고 + 차주 유형 + NPL VC 차입금 모델
   const sent4 = `차주 유형 ${debtorLabel} · Hurdle ${fmtUSD(result.hurdleUSD)} 충당 후 잉여분에 대해서만 XRF Carry 발동 (LP 우선 수익률 보장) · NPL VC 차입금 ${fmtUSD(result.daepuCapitalUSD)} (LP 무이자 대여, Day Exit 100% 환급). **AI 투자 의견: ${tj.verdict}** — ${
@@ -144,10 +144,11 @@ export function buildXrfSummaryPrompt(args: XrfSummaryArgs): string {
     `  - Hurdle     : ${fmtUSD(result.hurdleUSD)} (8%/yr × LP capital × 운용기간 — LP 우선 수익률)`,
     ``,
     `## [입력 5] Fund Metrics (PE/VC 산업 표준)`,
-    `  - DPI (Distributions to Paid-In) : ${metrics.dpi.toFixed(3)}x`,
-    `  - TVPI (Total Value to Paid-In)  : ${metrics.tvpi.toFixed(3)}x`,
-    `  - MoM (Multiple of Money)         : ${metrics.mom.toFixed(3)}x`,
-    `  - XIRR (Newton's method 복리)     : ${fmtPct(metrics.xirr)}`,
+    `  - Net DPI (LP 레벨)              : ${metrics.dpi.toFixed(3)}x  (LP 분배 / 출자)`,
+    `  - Gross MoM (Asset 레벨)         : ${metrics.grossMomAsset.toFixed(3)}x  (NPL 회수 / 매입가)`,
+    `  - Vehicle Take-Rate             : ${(metrics.vehicleTakeRate * 100).toFixed(1)}%  (총 fees / NPL 순수익)`,
+    `  - XIRR (compound · Newton's)     : ${fmtPct(metrics.xirr)}/yr`,
+    `  - Hurdle Spread (LP 초과)        : ${(metrics.hurdleSpread * 100).toFixed(2)}%p  (XIRR − Hurdle 8%)`,
     ``,
     `## [입력 6] AUTO Tier 판정`,
     `  - 선택된 tier : ${result.tier}`,

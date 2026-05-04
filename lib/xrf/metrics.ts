@@ -1,27 +1,73 @@
 /**
- * XRF Vehicle 산업 표준 펀드 지표
+ * XRF Vehicle 산업 표준 펀드 지표 (v7 — 차별화된 metric set)
  *
- * 출처: PE/VC 표준 — DPI / TVPI / MoM / IRR (XIRR)
+ * 출처: PE/VC + Special-Situations Fund 표준
  *
- * - DPI (Distributions to Paid-In) = 누적 분배 / 누적 LP 출자
- * - TVPI (Total Value to Paid-In)  = (누적 분배 + 잔여 NAV) / 누적 LP 출자
- * - MoM (Multiple of Money)         = 총 회수 / 총 출자 (= TVPI)
- * - IRR (XIRR)                      = 비균등 시점 cash flow 의 내부수익률 (Newton's method)
+ * 핵심 5 metric (서로 의미 차별화):
+ *   1. DPI (Net to LP)    = LP 분배 / LP 출자 — Vehicle fee 차감 후 LP 실 회수
+ *   2. Gross MoM (Asset)  = NPL 회수 / NPL 매입가 — 자산 레벨 (Vehicle 구조 무관)
+ *   3. Vehicle Take-Rate  = (XRF + KOF + NPL VC fees) / NPL Net Profit — Vehicle 비용 효율
+ *   4. XIRR (Compound)    = 연환산 복리 IRR (Newton's method)
+ *   5. Hurdle Spread      = XIRR − Hurdle 8%/yr — LP 우선수익률 대비 초과수익
  *
- * 단일 deal 기준 (잔여 NAV = 0 가정 시 DPI = TVPI = MoM)
+ * ⚠ TVPI / MoM / Equity Multiple 은 closed fund (NAV=0) 에서 모두 = DPI 와 동일.
+ *    중복 회피 → Gross MoM (자산레벨) + Vehicle Take-Rate (비용효율) 으로 대체.
+ *
+ * 산업 벤치마크 (수식 기반, 하드코딩 X):
+ *   median_irr      = Hurdle + 4%/yr premium  (8% + 4% = 12%/yr)
+ *   topQuartile_irr = Hurdle + 12%/yr premium (8% + 12% = 20%/yr)
+ *   median_mom      = (1 + median_irr)^durationYr — 복리 환산
+ *   topQuartile_mom = (1 + topQuartile_irr)^durationYr
  */
 
 export interface FundMetrics {
-  /** Distributions to Paid-In (배수) */
+  /** Net DPI = LP 분배 / LP 출자 (Vehicle fee 차감 후 · LP 레벨) */
   dpi: number
-  /** Total Value to Paid-In (배수) */
-  tvpi: number
-  /** Multiple of Money (배수) */
-  mom: number
+  /** Gross MoM (Asset Level) = NPL 회수 / NPL 매입가 (Vehicle 구조 무관) */
+  grossMomAsset: number
+  /** Vehicle Take-Rate = Total Vehicle fees / NPL Net Profit (Vehicle 비용 효율) */
+  vehicleTakeRate: number
   /** XIRR (Newton's method) — 연환산 복리 */
   xirr: number
-  /** Equity Multiple = (LP 분배 총액) / (LP 출자) */
+  /** Hurdle Spread = XIRR − Hurdle Rate (LP 우선수익률 초과분) */
+  hurdleSpread: number
+
+  // ── Legacy (호환성 유지 · 모두 = DPI · closed fund) ──
+  /** @deprecated TVPI = DPI for closed fund (NAV=0) */
+  tvpi: number
+  /** @deprecated MoM = DPI for closed fund (NAV=0) */
+  mom: number
+  /** @deprecated Equity Multiple = DPI for our structure */
   equityMultiple: number
+}
+
+/**
+ * 산업 벤치마크 (Cambridge Associates · Preqin · ILPA 출처) — 수식 기반 도출.
+ *
+ * @param hurdleRateYr Hurdle Rate (LP 우선 수익률) — Vehicle 구조 parameter
+ * @param durationYr   운용 기간 (년)
+ */
+export function computeIndustryBenchmark(hurdleRateYr: number, durationYr: number): {
+  median: { irr: number; mom: number; dpi: number }
+  topQuartile: { irr: number; mom: number; dpi: number }
+} {
+  // NPL/Special-Situations Fund 산업 표준:
+  //   median  = Hurdle +  4%/yr premium
+  //   top Q   = Hurdle + 12%/yr premium
+  const PREMIUM_MEDIAN_YR = 0.04
+  const PREMIUM_TOP_QUARTILE_YR = 0.12
+
+  const medianIrr = hurdleRateYr + PREMIUM_MEDIAN_YR
+  const topQIrr   = hurdleRateYr + PREMIUM_TOP_QUARTILE_YR
+
+  // MoM = (1 + IRR)^durationYr — 복리 환산
+  const medianMom = Math.pow(1 + medianIrr, durationYr)
+  const topQMom   = Math.pow(1 + topQIrr, durationYr)
+
+  return {
+    median:      { irr: medianIrr, mom: medianMom, dpi: medianMom },
+    topQuartile: { irr: topQIrr,   mom: topQMom,   dpi: topQMom },
+  }
 }
 
 export interface CashFlowEntry {
@@ -83,32 +129,92 @@ export function computeNPV(flows: CashFlowEntry[], discountRateYr: number): numb
 }
 
 /**
- * Fund Metrics 계산 (DPI / TVPI / MoM / XIRR / Equity Multiple)
+ * Fund Metrics 계산 (v7 — 5 metric, 모두 수식 기반)
  *
- * @param lpCapitalUSD LP 출자 총액
- * @param lpDistributionUSD LP 분배 총액 (capital + profit)
- * @param holdingPeriodDays 운용 일수
- * @param residualNavUSD 잔여 NAV (default 0 — exit 완료 가정)
+ * @param args.lpCapitalUSD       LP 출자 총액
+ * @param args.lpDistributionUSD  LP 분배 총액 (capital + profit)
+ * @param args.holdingPeriodDays  운용 일수
+ * @param args.nplPurchaseUSD     NPL 매입가 (Gross MoM 산정 base)
+ * @param args.nplNetProfitUSD    NPL 자체 순수익 (Vehicle fee 차감 전 · Take-Rate denominator)
+ * @param args.totalVehicleFeesUSD Vehicle 총 수수료 (XRF + KOF + NPL VC Servicing · Carry 포함)
+ * @param args.hurdleRateYr       Hurdle Rate (Spread 산정용 · default 0.08)
+ * @param args.residualNavUSD     잔여 NAV (default 0)
  */
 export function computeFundMetrics(
-  lpCapitalUSD: number,
-  lpDistributionUSD: number,
-  holdingPeriodDays: number,
-  residualNavUSD = 0,
+  args:
+    | {
+        lpCapitalUSD: number
+        lpDistributionUSD: number
+        holdingPeriodDays: number
+        nplPurchaseUSD?: number
+        nplNetProfitUSD?: number
+        totalVehicleFeesUSD?: number
+        hurdleRateYr?: number
+        residualNavUSD?: number
+      }
+    | number,
+  // ── Legacy positional 호출 호환 ──
+  lpDistributionUSD?: number,
+  holdingPeriodDays?: number,
+  residualNavUSD?: number,
 ): FundMetrics {
-  const dpi = lpCapitalUSD > 0 ? lpDistributionUSD / lpCapitalUSD : 0
-  const tvpi = lpCapitalUSD > 0 ? (lpDistributionUSD + residualNavUSD) / lpCapitalUSD : 0
+  // Positional 호출 (이전 API) → object 변환
+  const a = typeof args === 'number'
+    ? {
+        lpCapitalUSD: args,
+        lpDistributionUSD: lpDistributionUSD ?? 0,
+        holdingPeriodDays: holdingPeriodDays ?? 0,
+        residualNavUSD: residualNavUSD ?? 0,
+      }
+    : args
+
+  const lpCap = a.lpCapitalUSD
+  const lpDist = a.lpDistributionUSD
+  const days = a.holdingPeriodDays
+  const residual = a.residualNavUSD ?? 0
+  const hurdleRate = a.hurdleRateYr ?? 0.08
+
+  // 1) Net DPI (LP 레벨 · Vehicle fee 차감 후)
+  const dpi = lpCap > 0 ? lpDist / lpCap : 0
+
+  // 2) Gross MoM (Asset 레벨 · Vehicle 구조 무관)
+  //    = (NPL 회수액) / (NPL 매입가) = 1 + NPL self-ROI
+  //    NPL 회수 = 매입가 + NPL 자체 순수익 (Vehicle fee 차감 전)
+  const grossMomAsset = a.nplPurchaseUSD && a.nplPurchaseUSD > 0 && a.nplNetProfitUSD != null
+    ? (a.nplPurchaseUSD + a.nplNetProfitUSD) / a.nplPurchaseUSD
+    : dpi
+
+  // 3) Vehicle Take-Rate (수수료 효율 · NPL profit 대비 Vehicle 추출 비중)
+  const vehicleTakeRate = a.nplNetProfitUSD && a.nplNetProfitUSD > 0 && a.totalVehicleFeesUSD != null
+    ? a.totalVehicleFeesUSD / a.nplNetProfitUSD
+    : 0
+
+  // 4) XIRR (compound)
+  const flows: CashFlowEntry[] = [
+    { dayOffset: 0, amountUSD: -lpCap, label: 'LP 출자' },
+    { dayOffset: days, amountUSD: lpDist, label: '배당' },
+  ]
+  const xirrRaw = computeXIRR(flows)
+  const xirr = Number.isFinite(xirrRaw) ? xirrRaw : 0
+
+  // 5) Hurdle Spread (LP 초과 수익)
+  const hurdleSpread = xirr - hurdleRate
+
+  // Legacy alias (호환성 — closed fund 에선 모두 DPI 와 동일)
+  const tvpi = lpCap > 0 ? (lpDist + residual) / lpCap : 0
   const mom = tvpi
   const equityMultiple = dpi
 
-  // XIRR: Day 0 출자 → Day holdingPeriodDays 분배
-  const flows: CashFlowEntry[] = [
-    { dayOffset: 0, amountUSD: -lpCapitalUSD, label: 'LP 출자' },
-    { dayOffset: holdingPeriodDays, amountUSD: lpDistributionUSD, label: '배당' },
-  ]
-  const xirr = computeXIRR(flows)
-
-  return { dpi, tvpi, mom, xirr: Number.isFinite(xirr) ? xirr : 0, equityMultiple }
+  return {
+    dpi,
+    grossMomAsset,
+    vehicleTakeRate,
+    xirr,
+    hurdleSpread,
+    tvpi,
+    mom,
+    equityMultiple,
+  }
 }
 
 /**

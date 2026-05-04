@@ -326,11 +326,17 @@ export default function UnifiedReportPage() {
       holdingPeriodDays: profitability.investment.holdingPeriodDays,
     })
     const lpDistributionUSD = result.lpCapitalUSD + result.lpNetProfitUSD
-    const metrics = computeFundMetrics(
-      result.lpCapitalUSD,
+    const totalVehicleFeesUSD =
+      result.fees.xrfTotalUSD + result.fees.platformTotalUSD + result.fees.servicingUSD
+    const metrics = computeFundMetrics({
+      lpCapitalUSD: result.lpCapitalUSD,
       lpDistributionUSD,
-      profitability.investment.holdingPeriodDays,
-    )
+      holdingPeriodDays: profitability.investment.holdingPeriodDays,
+      nplPurchaseUSD: result.nplPurchaseUSD,
+      nplNetProfitUSD: result.nplNetProfitUSD,
+      totalVehicleFeesUSD,
+      hurdleRateYr: 0.08,
+    })
     const allocation = computeProfitAllocation({
       nplNetProfitUSD: result.nplNetProfitUSD,
       xrfMgmtUSD: result.fees.xrfMgmtUSD,
