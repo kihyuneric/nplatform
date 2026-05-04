@@ -1142,7 +1142,12 @@ export default function UnifiedReportPage() {
             <Sparkles size={12} />
             {t.aiSummary}
           </div>
+          {/* 사용자 정책 (2026-05-03): XRF mode 토글 시 XRF 비히클 구조 기반 총평 사용.
+              ⚠ key={valuationMode} — React 강제 재마운트로 AutoTranslateProvider 캐시 우회.
+                 (캐시 우회 안 하면 한글 텍스트가 swap돼도 영문 번역이 stale 유지됨) */}
           <p
+            key={`summary-${valuationMode}`}
+            data-no-translate-cache
             style={{
               fontFamily: MCK_FONTS.serif,
               fontSize: 16, fontWeight: 700,
@@ -1151,7 +1156,6 @@ export default function UnifiedReportPage() {
               letterSpacing: "-0.005em",
             }}
           >
-            {/* 사용자 정책 (2026-05-03): XRF mode 토글 시 XRF 비히클 구조 기반 총평 사용 */}
             {valuationMode === 'XRF' && xrfSummaryData
               ? xrfSummaryData.summary
               : report.executiveSummary}
