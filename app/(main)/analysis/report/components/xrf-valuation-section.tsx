@@ -319,6 +319,77 @@ export default function XrfValuationSection({
         </div>
       </Section>
 
+      {/* ───── EXHIBIT 2b — 3-Tier 정의 · 기준 (BASE/CONS/SAVE/REJECT) ───── */}
+      <Section
+        title="EXHIBIT 2b · 3-TIER SYSTEM 정의 (Tier Definitions & Criteria)"
+        caption="시뮬레이터가 BASE LP ROI 기준으로 자동 선택 — 각 tier 의 의미와 적용 조건"
+      >
+        <div style={{ display: 'grid', gridTemplateColumns: '180px 140px 1fr', gap: 0, fontSize: 13, border: `1px solid ${c.border}` }}>
+          {/* 헤더 */}
+          <div style={{ padding: '10px 12px', background: c.bgSoft, fontWeight: 700, color: c.textSub, fontSize: 12, borderBottom: `2px solid ${c.border}` }}>Tier</div>
+          <div style={{ padding: '10px 12px', background: c.bgSoft, fontWeight: 700, color: c.textSub, fontSize: 12, borderBottom: `2px solid ${c.border}` }}>발동 기준 (BASE LP ROI)</div>
+          <div style={{ padding: '10px 12px', background: c.bgSoft, fontWeight: 700, color: c.textSub, fontSize: 12, borderBottom: `2px solid ${c.border}` }}>의미 · 양보 구조 · 의사결정</div>
+
+          {/* BASE row */}
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'BASE' ? '#ECFDF5' : 'transparent', borderLeft: selected.tier === 'BASE' ? `3px solid ${c.emerald}` : '3px solid transparent' }}>
+            <div style={{ fontWeight: 800, color: c.emerald, fontSize: 14 }}>★ BASE</div>
+            <div style={{ fontSize: 11, color: c.textSub, marginTop: 2 }}>최적 · 양보 불필요</div>
+          </div>
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'BASE' ? '#ECFDF5' : 'transparent', fontWeight: 700, color: c.emerald }}>
+            ≥ 20%
+          </div>
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'BASE' ? '#ECFDF5' : 'transparent', color: c.text, lineHeight: 1.6 }}>
+            <strong>모든 주체 정상 fee 수령</strong> — XRF Carry 15% (entry) · KOF 2.50% · NPL VC Servicing 2.0% · LP ROI ≥ 20% 매력적 deal.
+            <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>RWA 즉시 출시 가능</strong> · 기관·개인 LP 모두 권고 · 표준 시나리오</span>
+          </div>
+
+          {/* CONSERVATIVE row */}
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#FEF9C3' : 'transparent', borderLeft: selected.tier === 'CONSERVATIVE' ? `3px solid ${c.amber}` : '3px solid transparent' }}>
+            <div style={{ fontWeight: 800, color: c.amber, fontSize: 14 }}>CONSERVATIVE</div>
+            <div style={{ fontSize: 11, color: c.textSub, marginTop: 2 }}>보수적 · 부분 양보</div>
+          </div>
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#FEF9C3' : 'transparent', fontWeight: 700, color: c.amber }}>
+            10% – 20%
+          </div>
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#FEF9C3' : 'transparent', color: c.text, lineHeight: 1.6 }}>
+            <strong>XRF · KOF 부분 양보</strong> — XRF Carry 10% (entry) · Mgmt 0.4% · KOF 2.25% (AI/Sourcing/PM 압축).
+            <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>RWA 출시 가능</strong> (LP 매력도 보강) · KR Margin 0.4% TP defense 유지 · NPL VC Servicing 변동 X</span>
+          </div>
+
+          {/* SAVE-THE-DEAL row */}
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#FEF2F2' : 'transparent', borderLeft: selected.tier === 'SAVE-THE-DEAL' ? `3px solid #DC2626` : '3px solid transparent' }}>
+            <div style={{ fontWeight: 800, color: '#DC2626', fontSize: 14 }}>SAVE-THE-DEAL</div>
+            <div style={{ fontSize: 11, color: c.textSub, marginTop: 2 }}>Deal 살리기 · 최대 양보</div>
+          </div>
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#FEF2F2' : 'transparent', fontWeight: 700, color: '#DC2626' }}>
+            5% – 10%
+          </div>
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#FEF2F2' : 'transparent', color: c.text, lineHeight: 1.6 }}>
+            <strong>XRF · KOF 최대 양보</strong> — XRF Carry 5% (entry) · KOF 2.00% (AI/Sourcing/PM 추가 압축) · 모든 주체 양보로 LP 매력도 회복.
+            <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>한계 매력 deal</strong> — 기관 LP 우선 검토 · 짧은 cycle · 회수율 낮은 deal 전형</span>
+          </div>
+
+          {/* REJECT row */}
+          <div style={{ padding: '14px 12px', background: '#F9FAFB' }}>
+            <div style={{ fontWeight: 800, color: '#6B7280', fontSize: 14 }}>REJECT</div>
+            <div style={{ fontSize: 11, color: c.textSub, marginTop: 2 }}>부적합 · 재구조화 필요</div>
+          </div>
+          <div style={{ padding: '14px 12px', background: '#F9FAFB', fontWeight: 700, color: '#6B7280' }}>
+            &lt; 5%
+          </div>
+          <div style={{ padding: '14px 12px', background: '#F9FAFB', color: c.textSub, lineHeight: 1.6 }}>
+            <strong>RWA 출시 부적합</strong> — 모든 주체 양보로도 LP ROI 5% 미달 · LP 손실 위험 노출.
+            <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>Deal 재구조화 필요</strong> (담보 추가 · 매입가 재협상 · 운용기간 단축 등)</span>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 12, padding: '10px 14px', background: '#F0F9FF', borderLeft: `3px solid ${c.blue}`, fontSize: 11, color: c.text, lineHeight: 1.6 }}>
+          <strong>AUTO Tier 선택 로직</strong>: 시뮬레이터는 항상 <strong>BASE tier 시뮬레이션의 LP ROI</strong> 기준으로 tier 를 결정합니다.
+          BASE 에서 LP ROI ≥ 20% 면 BASE 그대로 출시 · 10~20% 면 Carry/Fees 부분 양보 (CONS) 로 출시 · 5~10% 면 최대 양보 (SAVE) 로 deal 살리기 시도 · 5% 미만이면 REJECT (재구조화).
+          <strong> 본 매물의 AUTO 판정: <span style={{ color: tierColor[selected.tier], fontWeight: 700 }}>{tierLabel[selected.tier]}</span></strong> ({selected.autoTierResult.selectedReason || '기본 시뮬레이션'}).
+        </div>
+      </Section>
+
       {/* ───── EXHIBIT 3 — Vehicle Fee (NPL VC 자본금 제외) ───── */}
       <Section
         title={`EXHIBIT 3 · VEHICLE FEE — ${tierLabel[selected.tier]} TIER`}
@@ -526,7 +597,7 @@ export default function XrfValuationSection({
       </Section>
 
       {/* ───── EXHIBIT 6 — 3-TIER 비교 ───── */}
-      <Section title="EXHIBIT 6 · 3-TIER 비교 시뮬레이션" caption="동일 NPL deal에 BASE / CONSERVATIVE / SAVE-THE-DEAL 적용 시 LP ROI">
+      <Section title="EXHIBIT 6 · 3-TIER 비교 시뮬레이션" caption="동일 NPL deal에 BASE (LP ROI ≥ 20%) / CONSERVATIVE (10-20%) / SAVE-THE-DEAL (5-10%) 적용 시 결과 — EXHIBIT 2b 정의 참조">
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: c.bgSoft, borderBottom: `2px solid ${c.border}` }}>

@@ -1628,6 +1628,38 @@ Object.assign(STATIC_DICT.en, {
   'XRF Vehicle Executive Summary': 'XRF Vehicle Executive Summary',
   'XRF 비히클 총평 기준 프롬프트': 'XRF Vehicle Summary Prompt',
 
+  // ── EXHIBIT 2b · 3-Tier 정의 ──
+  'EXHIBIT 2b · 3-TIER SYSTEM 정의 (Tier Definitions & Criteria)':
+    'EXHIBIT 2b · 3-TIER SYSTEM Definitions (Tier Criteria & Meaning)',
+  '시뮬레이터가 BASE LP ROI 기준으로 자동 선택 — 각 tier 의 의미와 적용 조건':
+    'Simulator picks the tier automatically from BASE LP ROI — meaning and applicability of each tier',
+  '발동 기준 (BASE LP ROI)': 'Trigger criterion (BASE LP ROI)',
+  '의미 · 양보 구조 · 의사결정': 'Meaning · concession structure · decision',
+  '최적 · 양보 불필요': 'Optimal · no concession needed',
+  '보수적 · 부분 양보': 'Conservative · partial concession',
+  'Deal 살리기 · 최대 양보': 'Save the deal · maximum concession',
+  '부적합 · 재구조화 필요': 'Not suitable · restructuring required',
+  '모든 주체 정상 fee 수령': 'All parties earn standard fees',
+  '→ RWA 즉시 출시 가능 · 기관·개인 LP 모두 권고 · 표준 시나리오':
+    '→ Ready for immediate RWA launch · suitable for both institutional & retail LPs · standard scenario',
+  'XRF · KOF 부분 양보': 'XRF · KOF partial concession',
+  '→ RWA 출시 가능 (LP 매력도 보강) · KR Margin 0.4% TP defense 유지 · NPL VC Servicing 변동 X':
+    '→ RWA-launchable (LP attractiveness reinforced) · KR Margin 0.4% TP defense intact · NPL VC Servicing unchanged',
+  'XRF · KOF 최대 양보': 'XRF · KOF maximum concession',
+  '→ 한계 매력 deal — 기관 LP 우선 검토 · 짧은 cycle · 회수율 낮은 deal 전형':
+    '→ Marginal-attractiveness deal — institutional LPs to be prioritized · short cycle · typical low-recovery deal',
+  'RWA 출시 부적합': 'Not suitable for RWA launch',
+  '→ Deal 재구조화 필요 (담보 추가 · 매입가 재협상 · 운용기간 단축 등)':
+    '→ Deal restructuring required (additional collateral · purchase price renegotiation · shorter holding period)',
+  'AUTO Tier 선택 로직': 'AUTO Tier Selection Logic',
+  '본 매물의 AUTO 판정': 'AUTO Verdict for this deal',
+  '기본 시뮬레이션': 'default simulation',
+  // tier label sticker
+  '★ BASE': '★ BASE',
+  'CONSERVATIVE': 'CONSERVATIVE',
+  'SAVE-THE-DEAL': 'SAVE-THE-DEAL',
+  'REJECT': 'REJECT',
+
   // ── AI 총평 자주 등장하는 phrase (Google Translate 보조) ──
   'AI 투자 의견': 'AI Investment Verdict',
   '차주 유형': 'Borrower type',
