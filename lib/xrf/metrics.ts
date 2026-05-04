@@ -147,12 +147,12 @@ export function computeProfitAllocation(args: {
   return {
     nplNetProfitUSD: total,
     items: [
-      { label: 'XRF 관리보수', amountUSD: args.xrfMgmtUSD, pctOfNplProfit: pct(args.xrfMgmtUSD), color: '#1B3A5C', category: 'XRF' },
-      { label: 'XRF Setup (1회)', amountUSD: args.xrfSetupUSD, pctOfNplProfit: pct(args.xrfSetupUSD), color: '#2E75B6', category: 'XRF' },
-      { label: 'XRF Carry (성과)', amountUSD: args.xrfCarryUSD, pctOfNplProfit: pct(args.xrfCarryUSD), color: '#0F4C75', category: 'XRF' },
-      { label: '엔플랫폼 (4종)', amountUSD: args.platformTotalUSD, pctOfNplProfit: pct(args.platformTotalUSD), color: '#F59E0B', category: 'PLATFORM' },
-      { label: '대부업체 Servicing', amountUSD: args.servicingUSD, pctOfNplProfit: pct(args.servicingUSD), color: '#9CA3AF', category: 'SERVICER' },
-      { label: 'LP 최종 순수익', amountUSD: args.lpNetProfitUSD, pctOfNplProfit: pct(args.lpNetProfitUSD), color: '#10B981', category: 'LP' },
+      { label: 'XRF Foundation · 관리보수 (Mgmt)', amountUSD: args.xrfMgmtUSD, pctOfNplProfit: pct(args.xrfMgmtUSD), color: '#1B3A5C', category: 'XRF' },
+      { label: 'XRF Foundation · Setup (1회)', amountUSD: args.xrfSetupUSD, pctOfNplProfit: pct(args.xrfSetupUSD), color: '#2E75B6', category: 'XRF' },
+      { label: 'XRF Foundation · Carry ★ (8% Hurdle 초과분 · 미달 시 $0)', amountUSD: args.xrfCarryUSD, pctOfNplProfit: pct(args.xrfCarryUSD), color: '#0F4C75', category: 'XRF' },
+      { label: 'Korea Operation Firm (KOF) — AI/Sourcing/PM/Margin', amountUSD: args.platformTotalUSD, pctOfNplProfit: pct(args.platformTotalUSD), color: '#F59E0B', category: 'PLATFORM' },
+      { label: 'NPL Vehicle Company (NPL VC) · Servicing Fee', amountUSD: args.servicingUSD, pctOfNplProfit: pct(args.servicingUSD), color: '#9CA3AF', category: 'SERVICER' },
+      { label: 'LP 최종 순수익 (Net Profit)', amountUSD: args.lpNetProfitUSD, pctOfNplProfit: pct(args.lpNetProfitUSD), color: '#10B981', category: 'LP' },
     ],
   }
 }

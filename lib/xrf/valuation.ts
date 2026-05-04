@@ -1,20 +1,20 @@
 /**
  * XRF Valuation Engine
  *
- * NPL 자체 ROI → XRF 비히클 구조 (XRF + 엔플랫폼 + 대부업체) 적용 후 LP 최종 ROI 산출.
+ * NPL 자체 ROI → XRF 비히클 구조 (XRF Foundation + Korea Operation Firm + NPL Vehicle Company) 적용 후 LP 최종 ROI 산출.
  *
  * 출처: XRF Ripple Deck v4.0 (2026-05) — 3-tier Fee System (Pages 9-14)
  *
  * 구조:
  *   1. Pool 모델 (사용자 정책):
- *      - NPL_EQUITY: Pool = NPL totalEquity / (1 − 대부업체 자본금 비율)
+ *      - NPL_EQUITY: Pool = NPL totalEquity / (1 − NPL Vehicle Company 차입금 비율)
  *        · 단순 모델 — LP는 NPL equity 분만큼만 모금, Fees는 NPL profit 에서 차감
- *      - NPL_EQUITY_PLUS_FEES: Pool = (NPL totalEquity + 예상 Fees + 대부업체 자본금)
+ *      - NPL_EQUITY_PLUS_FEES: Pool = (NPL totalEquity + 예상 Fees + NPL VC 차입금)
  *        · PDF 정합 모델 — LP가 모든 Fees 도 prefund (실제 SPV 운영 패턴)
  *   2. Vehicle Fees (NPL purchase price 기준, 365일 cap):
- *      - XRF: 관리보수, Setup(1회), Carry(8% Hurdle 초과분)
- *      - 엔플랫폼: AI Valuation, Pipeline Sourcing, PM, KR Margin
- *      - 대부업체: Servicing 2%/yr (고정 라이선스 가치)
+ *      - XRF Foundation: 관리보수, Setup(1회), Carry(★ 8% Hurdle 초과분 — 미달 시 0)
+ *      - Korea Operation Firm (KOF · 舊 엔플랫폼): AI Valuation, Pipeline Sourcing, PM, KR Margin
+ *      - NPL Vehicle Company (NPL VC · 舊 대부업체): Servicing 2%/yr (고정 라이선스 가치)
  *   3. AUTO Tier (LP ROI 임계값):
  *      - LP ROI ≥ 20% → BASE (양보 불필요)
  *      - 10~20% → CONSERVATIVE (XRF Carry 양보)
@@ -27,57 +27,57 @@ export type XrfTier = 'BASE' | 'CONSERVATIVE' | 'SAVE-THE-DEAL' | 'REJECT'
 export type LpCapitalMode = 'NPL_EQUITY' | 'NPL_EQUITY_PLUS_FEES'
 
 export interface XrfTierFees {
-  /** 8% Hurdle 초과분에 대한 성과보수 비율 */
+  /** ⚠ XRF Carry: 8% Hurdle 초과분에 대한 성과보수. Hurdle 미달 시 Carry = $0 */
   carryPct: number
   /** XRF 관리보수 %/yr (365일 cap) */
   xrfMgmtPctYr: number
   /** XRF SPV Setup 1회 비용 비율 */
   xrfSetupPct: number
-  /** 엔플랫폼 AI Valuation %/yr */
+  /** Korea Operation Firm (KOF) — AI Valuation %/yr */
   platformAiPctYr: number
-  /** 엔플랫폼 Pipeline Sourcing %/yr */
+  /** Korea Operation Firm (KOF) — Pipeline Sourcing %/yr */
   platformSourcingPctYr: number
-  /** 엔플랫폼 PM %/yr */
+  /** Korea Operation Firm (KOF) — PM Fee %/yr */
   platformPmPctYr: number
-  /** 엔플랫폼 KR Margin (TP 방어선 ≥15%) — 모든 tier 동일 0.45% */
+  /** Korea Operation Firm (KOF) — KR Margin (TP defense ≥15%) %/yr */
   platformMarginPctYr: number
-  /** 대부업체 Servicing %/yr (고정) */
+  /** NPL Vehicle Company (NPL VC) — Servicing Fee %/yr (고정 라이선스 가치) */
   servicingPctYr: number
-  /** 대부업체 자본금 비율 (Day Exit 1:1 환원) */
+  /** NPL Vehicle Company (NPL VC) — 차입금 비율 (LP→NPL VC 무이자 대여, Day Exit 100% 환급) */
   daepuCapitalPct: number
-  /** Hurdle Rate (LP 우선 수익률) %/yr */
+  /** Hurdle Rate — LP 우선 수익률 %/yr (XRF Carry 발동 임계값) */
   hurdlePctYr: number
 }
 
 /**
  * 사용자 정책 (2026-05-04 v3) — 엔플랫폼 Fee 재구성 + LP 청약 구조 + Tier Gradient
  *
- * 1) 엔플랫폼 BASE Fee 재구성 (v2 → v3 동일):
+ * 1) Korea Operation Firm (KOF · 舊 엔플랫폼) BASE Fee 재구성:
  *      AI Valuation     0.7% → 0.3%   (-0.4%/yr)
  *      Pipeline Sourcing 1.0% → 1.3%   (+0.3%/yr)
  *      PM Fee           0.85% → 0.5%  (-0.35%/yr)
  *      KR Margin        0.45% → 0.4%  (-0.05%/yr)
- *      엔플랫폼 합계      3.00% → 2.50% (-0.50%/yr)
+ *      KOF 합계          3.00% → 2.50% (-0.50%/yr)
  *
- * 2) ⚠ v3 (2026-05-04 사용자 피드백): tier 별 수수료 hierarchy 강제 BASE > CONS > SAVE
- *    v4 (2026-05-04 추가): XRF 관리보수는 모든 tier 0.5% 고정 (운영비 = 고정비 성격)
- *    이전 v2 는 CONS 엔플랫폼 = BASE (Carry 만 양보) 라 매출 동일 → 사용자 지적
- *    v3/v4 부터 hierarchy 는 Setup + Carry + 엔플랫폼 컴포넌트로 형성:
- *      XRF Mgmt:        0.5% / 0.5% / 0.5%  (★ v4 모든 tier 고정 — 운영비 성격)
+ * 2) Tier 별 수수료 hierarchy (BASE > CONS > SAVE):
+ *      XRF Mgmt:        0.5% / 0.5% / 0.5%  (★ flat — 운영비 고정)
  *      XRF Setup:       0.5% / 0.4% / 0.3%
- *      XRF Carry:       15% / 10% / 5%      (이미 gradient)
- *      엔 AI:           0.3% / 0.25% / 0.2%
- *      엔 Sourcing:     1.3% / 1.15% / 1.0%
- *      엔 PM:           0.5% / 0.45% / 0.4%
- *      엔 Margin:       0.4% / 0.4% / 0.4%  (★ TP defense 모든 tier 고정)
- *      엔플랫폼 합계:    2.50% / 2.25% / 2.00%
+ *      XRF Carry ★:    15% / 10% / 5%      (gradient · ⚠ 8% Hurdle 미달 시 $0)
+ *      KOF AI:          0.3% / 0.25% / 0.2%
+ *      KOF Sourcing:    1.3% / 1.15% / 1.0%
+ *      KOF PM:          0.5% / 0.45% / 0.4%
+ *      KOF Margin:      0.4% / 0.4% / 0.4%  (★ TP defense 모든 tier 고정)
+ *      KOF 합계:         2.50% / 2.25% / 2.00%
  *
- * 3) 대부업체 자본금 모델 (v5 — 2026-05-04 사용자 명확화):
+ *    ⭐ XRF Carry 조건부: LP 가 Hurdle Rate 8%/yr × LP capital × 운용기간 달성 시
+ *       초과분에 대해서만 적용. Hurdle 미달 시 XRF Carry = $0 (XRF는 Mgmt+Setup만 수령).
+ *
+ * 3) NPL Vehicle Company (NPL VC · 舊 대부업체) — v6 (2026-05-04 사용자 명확화):
  *    - LP 가 Pool 100% 청약 (변경 없음)
- *    - 그 중 10% ($67k) 는 LP → 대부업체 로 무이자 대여 (대부업법 license 자본 명목)
- *    - 대부업체는 이 자본에 대해 어떤 수수료/매출도 받지 않음 (Capital 보관만)
+ *    - 그 중 10% ($67k) 는 LP → NPL VC 로 무이자 대여 (Korea NPL license capital)
+ *    - NPL VC 는 이 자본에 대해 어떤 수수료/매출도 받지 않음 (Capital 보관만)
  *    - Day Exit 시 100% 환급 (LP 로 1:1 반환)
- *    - 대부업체 수익은 Servicing Fee 2.0%/yr 뿐
+ *    - NPL VC 수익은 Servicing Fee 2.0%/yr 뿐
  *    daepuCapitalPct 는 표시 목적 (UI exhibit) — LP capital 계산에는 영향 없음
  */
 export const XRF_TIERS: Record<Exclude<XrfTier, 'REJECT'>, XrfTierFees> = {
@@ -152,18 +152,18 @@ export interface XrfFeeBreakdown {
   /** XRF 합계 (USD) */
   xrfTotalUSD: number
 
-  /** 엔플랫폼 AI Valuation (USD) */
+  /** Korea Operation Firm (KOF) — AI Valuation (USD) */
   platformAiUSD: number
-  /** 엔플랫폼 Pipeline Sourcing (USD) */
+  /** Korea Operation Firm (KOF) — Pipeline Sourcing (USD) */
   platformSourcingUSD: number
-  /** 엔플랫폼 PM (USD) */
+  /** Korea Operation Firm (KOF) — PM Fee (USD) */
   platformPmUSD: number
-  /** 엔플랫폼 KR Margin (USD) */
+  /** Korea Operation Firm (KOF) — KR Margin (USD) */
   platformMarginUSD: number
-  /** 엔플랫폼 합계 (USD) */
+  /** Korea Operation Firm (KOF) — 합계 (USD) */
   platformTotalUSD: number
 
-  /** 대부업체 Servicing (USD) */
+  /** NPL Vehicle Company (NPL VC) — Servicing Fee (USD) */
   servicingUSD: number
 }
 

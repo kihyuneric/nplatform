@@ -46,7 +46,7 @@ const tierJudgment: Record<XrfTier, { label: string; verdict: 'BUY' | 'HOLD' | '
   'SAVE-THE-DEAL': {
     label: 'SAVE-THE-DEAL',
     verdict: 'HOLD',
-    reason: '모든 주체 (XRF·엔플랫폼·대부업체) 양보 필요 · LP 한계 매력 수준',
+    reason: 'XRF Carry · KOF Fees 모두 양보 (NPL VC Servicing 만 고정) · LP 한계 매력 수준',
   },
   REJECT: {
     label: 'REJECT',
@@ -74,14 +74,14 @@ export function buildXrfSummary(args: XrfSummaryArgs): string {
   const servicerPct = servicerItem?.pctOfNplProfit ?? 0
 
   // 핵심 문장 1: deal 정의 + NPL → XRF 변환 결과
-  //   ⚠ 사용자 정책 (2026-05-04 v2): LP 가 Pool 100% 청약 · 엔플랫폼 Fee 2.5%/yr (BASE)
-  const sent1 = `[XRF Vehicle 평가 v2] ${assetTitle ?? '본 매물'}${region ? ` (${region})` : ''} — NPL 자체 ROI ${nplRoiPct.toFixed(2)}% 를 XRF 비히클 (XRF Foundation + 엔플랫폼 2.5%/yr + 대부업체 Servicing) 구조에 통과시킨 결과, LP 최종 ROI ${fmtPct(result.lpRoi)} (연환산 IRR ${fmtPct(result.lpIrrYr)}) 로 산출되었습니다.`
+  //   ⚠ 사용자 정책 (2026-05-04 v6): 글로벌 친화 용어 — KOF / NPL VC 사용
+  const sent1 = `[XRF Vehicle 평가] ${assetTitle ?? '본 매물'}${region ? ` (${region})` : ''} — NPL 자체 ROI ${nplRoiPct.toFixed(2)}% 를 XRF 비히클 (XRF Foundation + Korea Operation Firm + NPL Vehicle Company) 구조에 통과시킨 결과, LP 최종 ROI ${fmtPct(result.lpRoi)} (연환산 IRR ${fmtPct(result.lpIrrYr)}) 로 산출되었습니다.`
 
   // 핵심 문장 2: AUTO Tier + 의사결정
   const sent2 = `AUTO 판정은 ${tj.label} tier (${tj.reason})로, ${result.numLPs}명 LP 분할 시 Pool 100% 청약 — 1인당 ${fmtUSD(result.lpCapitalPerLpUSD)} 입금 · 순수익 ${fmtUSD(result.lpNetProfitPerLpUSD)} 예상.`
 
   // 핵심 문장 3: Profit Allocation + Fund Metrics
-  const sent3 = `NPL 순수익 ${fmtUSD(result.nplNetProfitUSD)} 분배: LP ${fmtPct(lpPct)} · XRF ${fmtPct(xrfTotalPct)} · 엔플랫폼 ${fmtPct(platformPct)} · 대부업체 ${fmtPct(servicerPct)}. Fund metrics — DPI ${metrics.dpi.toFixed(2)}x · TVPI ${metrics.tvpi.toFixed(2)}x · XIRR ${fmtPct(metrics.xirr)}.`
+  const sent3 = `NPL 순수익 ${fmtUSD(result.nplNetProfitUSD)} 분배: LP ${fmtPct(lpPct)} · XRF Foundation ${fmtPct(xrfTotalPct)} (★ Carry는 8% Hurdle 달성 시에만 수령) · KOF ${fmtPct(platformPct)} · NPL VC Servicing ${fmtPct(servicerPct)}. Fund metrics — DPI ${metrics.dpi.toFixed(2)}x · TVPI ${metrics.tvpi.toFixed(2)}x · XIRR ${fmtPct(metrics.xirr)}.`
 
   // 핵심 문장 4: 의사결정 권고 + 차주 유형 컨텍스트
   const sent4 = `차주 유형 ${debtorLabel} · Hurdle 8%/yr 충당분 ${fmtUSD(result.hurdleUSD)} · LP 우선 수익률 보장. **AI 투자 의견: ${tj.verdict}** — ${
@@ -112,7 +112,7 @@ export function buildXrfSummaryPrompt(args: XrfSummaryArgs): string {
     ``,
     `# 과제`,
     `아래 XRF Vehicle Valuation 결과를 종합해 LP 관점 투자 의사결정 (BUY / HOLD / AVOID) 과 근거를 3~4문장으로 제시하십시오.`,
-    `NPL 자체 ROI 가 아닌, XRF 비히클 (XRF + 엔플랫폼 + 대부업체) 구조 적용 후 LP 최종 ROI 기준으로 판단합니다.`,
+    `NPL 자체 ROI 가 아닌, XRF 비히클 (XRF + Korea Operation Firm (KOF) + NPL Vehicle Company (NPL VC)) 구조 적용 후 LP 최종 ROI 기준으로 판단합니다.`,
     ``,
     `## [입력 1] Deal 개요`,
     `  - 자산        : ${assetTitle ?? '미지정'}`,
@@ -123,19 +123,19 @@ export function buildXrfSummaryPrompt(args: XrfSummaryArgs): string {
     `  - NPL 자체 ROI: ${nplRoiPct.toFixed(2)}% (참고)`,
     ``,
     `## [입력 2] XRF Vehicle Pool 구조`,
-    `  - Pool 총액   : ${fmtUSD(result.poolUSD)} (LP 90% + 대부업체 10%)`,
+    `  - Pool 총액   : ${fmtUSD(result.poolUSD)} (LP 100% 청약, 그 중 10% 는 NPL VC 무이자 차입금)`,
     `  - LP capital  : ${fmtUSD(result.lpCapitalUSD)} (${result.numLPs}명 × ${fmtUSD(result.lpCapitalPerLpUSD)})`,
-    `  - 대부업체 자본금 : ${fmtUSD(result.daepuCapitalUSD)} (Day Exit 1:1 환원, 수익 무관)`,
+    `  - NPL Vehicle Company (NPL VC) 자본금 : ${fmtUSD(result.daepuCapitalUSD)} (Day Exit 1:1 환원, 수익 무관)`,
     `  - LP capital 모델 : ${result.lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? 'NPL equity + Fees prefund (PDF 정합)' : 'NPL equity 만 (단순)'}`,
     ``,
     `## [입력 3] Vehicle Fee 분배 — ${result.tier} tier`,
     `  XRF Foundation`,
     ...xrfItems.map(i => `    - ${i.label} : ${fmtUSD(i.amountUSD)} (NPL profit의 ${fmtPct(i.pctOfNplProfit)})`),
-    `  엔플랫폼 (KR Platform Co)`,
+    `  Korea Operation Firm (KOF · 운영 4종)`,
     `    - ${platformItem?.label} : ${fmtUSD(platformItem?.amountUSD ?? 0)} (NPL profit의 ${fmtPct(platformItem?.pctOfNplProfit ?? 0)})`,
-    `  대부업체 (KR Servicer)`,
+    `  NPL Vehicle Company (NPL VC · KR Servicer)`,
     `    - ${servicerItem?.label} : ${fmtUSD(servicerItem?.amountUSD ?? 0)} (NPL profit의 ${fmtPct(servicerItem?.pctOfNplProfit ?? 0)})`,
-    `  대부업체 자본금 (Day Exit 1:1 환원) : ${fmtUSD(result.daepuCapitalUSD)} (Fee 아닌 Capital)`,
+    `  NPL Vehicle Company (NPL VC) 자본금 (Day Exit 1:1 환원) : ${fmtUSD(result.daepuCapitalUSD)} (Fee 아닌 Capital)`,
     ``,
     `## [입력 4] LP 최종 결과`,
     `  - LP 순수익  : ${fmtUSD(result.lpNetProfitUSD)} (${fmtUSD(result.lpNetProfitPerLpUSD)}/LP)`,
@@ -157,7 +157,7 @@ export function buildXrfSummaryPrompt(args: XrfSummaryArgs): string {
     `# 출력 형식`,
     `1. 판정 (BUY / HOLD / AVOID) + 핵심 이유 1문장 (LP ROI 기준)`,
     `2. NPL → XRF 변환 효과 1문장 (NPL ROI ${nplRoiPct.toFixed(2)}% → LP ROI ${fmtPct(result.lpRoi)} 의 의미)`,
-    `3. Vehicle Fee 분배 요약 1문장 (XRF·엔플랫폼·대부업체·LP 비중)`,
+    `3. Vehicle Fee 분배 요약 1문장 (XRF·Korea Operation Firm (KOF)·NPL Vehicle Company (NPL VC)·LP 비중)`,
     `4. tier 권고 + 차주 유형 컨텍스트 1문장`,
     ``,
     `# 판정 규칙 (LP 관점)`,
@@ -170,7 +170,7 @@ export function buildXrfSummaryPrompt(args: XrfSummaryArgs): string {
     `  - LP 우선 수익률 (Hurdle 8%/yr) 충당 가능 여부`,
     `  - 365일 cap fees 가 운용기간에 미치는 영향 (단기 deal SAVE 가능성)`,
     `  - 차주 유형: 법인 90% LTV 는 fee 부담 작음 → BASE 적용 가능성↑`,
-    `  - 대부업체 자본금 10% 는 Day Exit 1:1 환원 → LP 수익에 직접 영향 없음`,
+    `  - NPL Vehicle Company (NPL VC) 자본금 10% 는 Day Exit 1:1 환원 → LP 수익에 직접 영향 없음`,
     ``,
     `# 출처 / 참조`,
     `  - XRF Ripple Deck v4.0 (2026-05) · 3-tier Fee System · MAS s.274/275 면제 SPV`,
