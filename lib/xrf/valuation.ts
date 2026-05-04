@@ -49,41 +49,63 @@ export interface XrfTierFees {
   hurdlePctYr: number
 }
 
+/**
+ * 사용자 정책 (2026-05-04) — 엔플랫폼 Fee 재구성 v2 + LP 청약 구조 변경
+ *
+ * 1) 엔플랫폼 BASE Fee 변경:
+ *      AI Valuation     0.7% → 0.3%   (-0.4%/yr)
+ *      Pipeline Sourcing 1.0% → 1.3%   (+0.3%/yr)
+ *      PM Fee           0.85% → 0.5%  (-0.35%/yr)
+ *      KR Margin        0.45% → 0.4%  (-0.05%/yr)
+ *      엔플랫폼 합계      3.00% → 2.50% (-0.50%/yr)
+ *
+ *    절감된 0.5%/yr 는 LP profit 으로 자동 흡수 (operatingFees 차감 감소
+ *    → lpProfitPreCarry 증가 → LP 최종 ROI 상승).
+ *
+ * 2) CONSERVATIVE 도 동일 패턴 (Carry 만 15→10%로 양보, 엔플랫폼 fees 동일).
+ *
+ * 3) SAVE-THE-DEAL 은 BASE 대비 추가 양보 — 엔플랫폼 0.5% 더 양보 (총 2.0%/yr).
+ *
+ * 4) 대부업체 자본금 (daepuCapitalPct) 0.10 → 0
+ *    LP 가 Pool 전체 청약 (이전: LP 90% + 대부업체 10% Day Exit 1:1 환원).
+ *    대부업체는 Servicing fee 만 수령 (Capital 출자 없음).
+ */
 export const XRF_TIERS: Record<Exclude<XrfTier, 'REJECT'>, XrfTierFees> = {
   BASE: {
     carryPct: 0.15,
     xrfMgmtPctYr: 0.007,
     xrfSetupPct: 0.005,
-    platformAiPctYr: 0.007,
-    platformSourcingPctYr: 0.010,
-    platformPmPctYr: 0.0085,
-    platformMarginPctYr: 0.0045,
+    platformAiPctYr: 0.003,        // ← 0.7 → 0.3
+    platformSourcingPctYr: 0.013,  // ← 1.0 → 1.3
+    platformPmPctYr: 0.005,        // ← 0.85 → 0.5
+    platformMarginPctYr: 0.004,    // ← 0.45 → 0.4
     servicingPctYr: 0.020,
-    daepuCapitalPct: 0.10,
+    daepuCapitalPct: 0,            // ← 0.10 → 0 (LP 가 Pool 전체 청약)
     hurdlePctYr: 0.08,
   },
   CONSERVATIVE: {
     carryPct: 0.10,
     xrfMgmtPctYr: 0.005,
     xrfSetupPct: 0.003,
-    platformAiPctYr: 0.007,
-    platformSourcingPctYr: 0.010,
-    platformPmPctYr: 0.0085,
-    platformMarginPctYr: 0.0045,
+    platformAiPctYr: 0.003,
+    platformSourcingPctYr: 0.013,
+    platformPmPctYr: 0.005,
+    platformMarginPctYr: 0.004,
     servicingPctYr: 0.020,
-    daepuCapitalPct: 0.10,
+    daepuCapitalPct: 0,
     hurdlePctYr: 0.08,
   },
   'SAVE-THE-DEAL': {
     carryPct: 0.05,
     xrfMgmtPctYr: 0.005,
     xrfSetupPct: 0.003,
-    platformAiPctYr: 0.003,
-    platformSourcingPctYr: 0.004,
-    platformPmPctYr: 0.0045,
-    platformMarginPctYr: 0.0045,
+    // SAVE-THE-DEAL: BASE 2.5% → 2.0% 추가 양보 (deal 살리기 모드)
+    platformAiPctYr: 0.002,        // 0.3 → 0.2
+    platformSourcingPctYr: 0.010,  // 1.3 → 1.0
+    platformPmPctYr: 0.005,        // 0.5 유지
+    platformMarginPctYr: 0.003,    // 0.4 → 0.3
     servicingPctYr: 0.020,
-    daepuCapitalPct: 0.10,
+    daepuCapitalPct: 0,
     hurdlePctYr: 0.08,
   },
 }
@@ -231,27 +253,30 @@ function computeForTier(
   // ── Pool 산정 (lpCapitalMode 따라 분기) ──
   //
   // NPL_EQUITY: 단순 모델
-  //   Pool = NPL equity / (1 − daepu%)
-  //   LP capital = NPL equity (LP는 deal에 필요한 자기자본만 prefund)
-  //   장점: 작은 모금액 → ROI 명목상 높음
-  //   단점: PDF Case 1 LP ROI 25% 와 차이 (실제 SPV 운영비 미반영)
+  //   Pool = NPL equity (LP는 deal에 필요한 자기자본만 prefund)
   //
   // NPL_EQUITY_PLUS_FEES: PDF 정합 모델
-  //   Pool = (NPL equity + 운영 fees + Hurdle 예상) / (1 − daepu%)
-  //   LP capital = Pool × (1 − daepu%)
-  //   장점: PDF Case 1 LP ROI 25% 패턴 정합 (실제 SPV는 fees prefund 필요)
-  //   단점: Carry는 prefund 안 함 (수익에서 차감)
+  //   Pool = (NPL equity + 운영 fees + Hurdle 예상) × (1 + 10% working buffer)
+  //   LP capital = Pool (LP가 Pool 전체 청약)
+  //
+  // ⚠ 사용자 정책 (2026-05-04): 대부업체 자본금 (10%) 제거.
+  //   이전: LP 90% + 대부업체 10% (Day Exit 1:1 환원, Fee 아닌 Capital)
+  //   이후: LP 100% — 대부업체는 Servicing fee 만 수령 (Capital 출자 無)
+  //   buffer 10% 는 working capital reserve 로 LP 가 흡수.
+  //   결과: 1인당 청약액 $6,080 → $6,755 (+11.1%)
+  const WORKING_BUFFER_PCT = 0.10  // SPV 운영비·예비비 buffer (LP 가 모금)
   let lpFundingTargetUSD: number
   if (lpCapitalMode === 'NPL_EQUITY') {
     lpFundingTargetUSD = totalEquityUSD
   } else {
-    // PDF 패턴: NPL equity + 모든 운영 fees prefund (Carry는 수익에서 차감되므로 제외)
-    // + Hurdle 예상치 buffer (LP 우선 수익률 충당)
+    // PDF 패턴: NPL equity + 모든 운영 fees prefund + Hurdle 예상치
     const hurdleEstimateUSD = totalEquityUSD * fees.hurdlePctYr * durationYr
     lpFundingTargetUSD = totalEquityUSD + operatingFeesUSD + hurdleEstimateUSD
   }
-  const poolUSD = lpFundingTargetUSD / (1 - fees.daepuCapitalPct)
-  const lpCapitalUSD = poolUSD * (1 - fees.daepuCapitalPct)
+  const poolUSD = lpFundingTargetUSD / (1 - WORKING_BUFFER_PCT)
+  // LP가 Pool 전체 청약 (이전: poolUSD × 0.9, daepuCapitalPct 만큼 분리됐음)
+  const lpCapitalUSD = poolUSD
+  // 대부업체 자본금 (deprecated · 호환성 유지) — 항상 0
   const daepuCapitalUSD = poolUSD * fees.daepuCapitalPct
   const lpCapitalPerLpUSD = lpCapitalUSD / numLPs
 
@@ -340,7 +365,7 @@ function selectAutoTier(
   if (base.lpRoi >= 0.05) {
     return {
       tier: 'SAVE-THE-DEAL',
-      reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% — 모두 양보 (XRF 5% · 엔플랫폼 1.6%) → SAVE LP ROI ${(saveTheDeal.lpRoi * 100).toFixed(2)}%`,
+      reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% — 모두 양보 (XRF Carry 5% · 엔플랫폼 2.0%/yr) → SAVE LP ROI ${(saveTheDeal.lpRoi * 100).toFixed(2)}%`,
     }
   }
   return {

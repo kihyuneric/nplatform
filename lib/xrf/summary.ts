@@ -74,12 +74,11 @@ export function buildXrfSummary(args: XrfSummaryArgs): string {
   const servicerPct = servicerItem?.pctOfNplProfit ?? 0
 
   // 핵심 문장 1: deal 정의 + NPL → XRF 변환 결과
-  //   ⚠ 사용자 정책 (2026-05-03): 한글 총평이 NPL 과 시각적으로 즉시 구분되도록
-  //       "[XRF Vehicle 평가]" 프리픽스 + "NPL → XRF 변환" 문장 구조 사용.
-  const sent1 = `[XRF Vehicle 평가] ${assetTitle ?? '본 매물'}${region ? ` (${region})` : ''} — NPL 자체 ROI ${nplRoiPct.toFixed(2)}% 를 XRF 비히클 (XRF Foundation + 엔플랫폼 + 대부업체) 구조에 통과시킨 결과, LP 최종 ROI ${fmtPct(result.lpRoi)} (연환산 IRR ${fmtPct(result.lpIrrYr)}) 로 산출되었습니다.`
+  //   ⚠ 사용자 정책 (2026-05-04 v2): LP 가 Pool 100% 청약 · 엔플랫폼 Fee 2.5%/yr (BASE)
+  const sent1 = `[XRF Vehicle 평가 v2] ${assetTitle ?? '본 매물'}${region ? ` (${region})` : ''} — NPL 자체 ROI ${nplRoiPct.toFixed(2)}% 를 XRF 비히클 (XRF Foundation + 엔플랫폼 2.5%/yr + 대부업체 Servicing) 구조에 통과시킨 결과, LP 최종 ROI ${fmtPct(result.lpRoi)} (연환산 IRR ${fmtPct(result.lpIrrYr)}) 로 산출되었습니다.`
 
   // 핵심 문장 2: AUTO Tier + 의사결정
-  const sent2 = `AUTO 판정은 ${tj.label} tier (${tj.reason})로, ${result.numLPs}명 LP 분할 시 1인당 capital call ${fmtUSD(result.lpCapitalPerLpUSD)} · 순수익 ${fmtUSD(result.lpNetProfitPerLpUSD)} 예상.`
+  const sent2 = `AUTO 판정은 ${tj.label} tier (${tj.reason})로, ${result.numLPs}명 LP 분할 시 Pool 100% 청약 — 1인당 ${fmtUSD(result.lpCapitalPerLpUSD)} 입금 · 순수익 ${fmtUSD(result.lpNetProfitPerLpUSD)} 예상.`
 
   // 핵심 문장 3: Profit Allocation + Fund Metrics
   const sent3 = `NPL 순수익 ${fmtUSD(result.nplNetProfitUSD)} 분배: LP ${fmtPct(lpPct)} · XRF ${fmtPct(xrfTotalPct)} · 엔플랫폼 ${fmtPct(platformPct)} · 대부업체 ${fmtPct(servicerPct)}. Fund metrics — DPI ${metrics.dpi.toFixed(2)}x · TVPI ${metrics.tvpi.toFixed(2)}x · XIRR ${fmtPct(metrics.xirr)}.`
