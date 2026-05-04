@@ -1480,6 +1480,210 @@ Object.assign(STATIC_DICT.ja, {
   '주소': '住所',
 })
 
+// ─── XRF Vehicle Valuation v7 (2026-05-05) — 한 → 영 사전 ─────────────
+// /analysis/report 페이지 의 XRF Valuation toggle / EXHIBIT 1~7 / 5-tier Carry / AI 총평
+Object.assign(STATIC_DICT.en, {
+  // ── Section titles ──
+  'EXHIBIT 1 · NPL → XRF 변환 투명성 (Conversion Transparency)':
+    'EXHIBIT 1 · NPL → XRF Conversion Transparency',
+  'EXHIBIT 2 · POOL 구조 (Pool Structure)':
+    'EXHIBIT 2 · POOL STRUCTURE',
+  'EXHIBIT 4 · CASH FLOW 타임라인':
+    'EXHIBIT 4 · CASH FLOW TIMELINE',
+  'EXHIBIT 5 · KEY METRICS':
+    'EXHIBIT 5 · KEY METRICS',
+  'EXHIBIT 5b · FUND METRICS (산업 표준)':
+    'EXHIBIT 5b · FUND METRICS (Industry Standard)',
+  'EXHIBIT 5c · PROFIT ALLOCATION (NPL 순수익 분배)':
+    'EXHIBIT 5c · PROFIT ALLOCATION (NPL Net Profit Distribution)',
+  'EXHIBIT 5d · SENSITIVITY 분석 (단일 변수 변동)':
+    'EXHIBIT 5d · SENSITIVITY ANALYSIS (Single-Variable Shift)',
+  'EXHIBIT 6 · 3-TIER 비교 시뮬레이션':
+    'EXHIBIT 6 · 3-TIER COMPARISON SIMULATION',
+  'EXHIBIT 7 · 입력 파라미터 (시나리오 조정)':
+    'EXHIBIT 7 · INPUT PARAMETERS (Scenario Tuning)',
+
+  // ── Pool 구조 / 차입금 ──
+  'Pool 총액 (= LP 청약액)': 'Pool Total (= LP Subscription)',
+  'LP capital (100% 청약)': 'LP capital (100% subscribed)',
+  'NPL Vehicle Company 차입금 (10%)': 'NPL Vehicle Company Loan (10%)',
+  'LP→NPL VC 무이자 대여 · Day Exit 1:1 환급 · 수수료 아님':
+    'LP→NPL VC interest-free loan · 1:1 refunded at Day Exit · not a fee',
+
+  // ── Vehicle Fee 헤더 / 라벨 ──
+  'XRF Foundation (SG SPV · RWA Issuer)': 'XRF Foundation (SG SPV · RWA Issuer)',
+  '관리보수 Mgmt (%/yr · 365일 cap)': 'Management Mgmt (%/yr · 365-day cap)',
+  '0.5%/yr · 운영비': '0.5%/yr · operating cost',
+  '0.4%/yr · 운영비 (CONS/SAVE 양보)': '0.4%/yr · operating cost (CONS/SAVE concession)',
+  'SPV Setup (1회)': 'SPV Setup (one-shot)',
+  '0.5% × NPL 매입가': '0.5% × NPL purchase price',
+  '0.3% × NPL 매입가': '0.3% × NPL purchase price',
+  '★ Carry (5-tier 누진 · European Waterfall)': '★ Carry (5-tier marginal · European Waterfall)',
+  'XRF 수수료 합계 (Mgmt + Setup + Carry)': 'XRF Total Fee (Mgmt + Setup + Carry)',
+
+  'AI Valuation (ML 가격평가)': 'AI Valuation (ML pricing engine)',
+  'Pipeline Sourcing (딜 발굴·소싱)': 'Pipeline Sourcing (deal origination)',
+  'PM Fee (프로젝트 매니지먼트)': 'PM Fee (project management)',
+  'KR Margin (TP 방어선 ≥15%)': 'KR Margin (TP defense ≥15%)',
+  'KOF 수수료 합계': 'KOF Total Fee',
+  '0.4% 모든 tier 고정': '0.4% fixed across all tiers',
+  '2.0% × 매입가 · 모든 tier 동일 (차입금에 대한 수수료 아님)':
+    '2.0% × purchase · same across all tiers (not a fee on the loan)',
+  'Servicing Fee (시장 표준 라이선스)': 'Servicing Fee (market-standard license)',
+
+  // ── 5-tier Carry table ──
+  'ⓘ XRF Carry 5-tier 누진 구조 (European Waterfall · v7)':
+    'ⓘ XRF Carry 5-tier Marginal Structure (European Waterfall · v7)',
+  'LP gross ROI 구간 (annualized)': 'LP gross ROI bracket (annualized)',
+  '< 8% (Hurdle)': '< 8% (Hurdle)',
+  'LP 우선 회수 · Carry 발생 X': 'LP priority recovery · no Carry',
+  '8% – 20% (Entry)': '8% – 20% (Entry)',
+  'LP 손실 없는 정도의 Carry': 'Loss-protected Carry rate',
+  '20% – 40%': '20% – 40%',
+  '20%+ profit slice': '20%+ profit slice',
+  '40% – 60%': '40% – 60%',
+  '40%+ profit slice': '40%+ profit slice',
+  '60%+ (Top tier)': '60%+ (Top tier)',
+  '고수익 deal · XRF 적정 보상': 'High-yield deal · fair XRF reward',
+  '설명': 'Description',
+
+  // ── XRF Carry 조건부 박스 ──
+  '⚠ XRF Carry 조건부 수령': '⚠ XRF Carry Conditional Payout',
+  'XRF Carry 조건부 수령': 'XRF Carry Conditional Payout',
+  '← 본 deal 은 Carry 미발생 상태': '← This deal currently produces no Carry',
+
+  // ── Cash Flow timeline ──
+  'LP capital call (Pool 100% 청약 송금)': 'LP capital call (Pool 100% subscription wire)',
+  '└ 대부업체 차입금 (10%)': '└ NPL VC Loan (10%)',
+  'XRF SPV Setup (1회)': 'XRF SPV Setup (one-shot)',
+  'NPL 매입 + 질권대출 실행': 'NPL purchase + pledge loan execution',
+  'XRF/KOF/NPL VC fees prefund': 'XRF/KOF/NPL VC fees prefund',
+  '법원 배당 + 대부업체 차입금 환급 (1:1)': 'Court distribution + NPL VC loan refund (1:1)',
+  '순수익 (RLUSD 분배)': 'Net Profit (RLUSD distribution)',
+  '시점': 'Phase',
+  '이벤트': 'Event',
+  'LP Cash Flow (USD)': 'LP Cash Flow (USD)',
+  '누적': 'Cumulative',
+
+  // ── KEY METRICS ──
+  'LP Capital Call (1인당)': 'LP Capital Call (per LP)',
+  'LP Net Profit (1인당)': 'LP Net Profit (per LP)',
+  'LP ROI (절대)': 'LP ROI (absolute)',
+  'LP IRR (연환산)': 'LP IRR (annualized)',
+  '단순 연환산': 'Simple annualization',
+  '운용': 'holding',
+
+  // ── Profit Allocation ──
+  'XRF Foundation · 관리보수 (Mgmt)': 'XRF Foundation · Management (Mgmt)',
+  'XRF Foundation · Setup (1회)': 'XRF Foundation · Setup (one-shot)',
+  'XRF Foundation · Carry ★ (8% Hurdle 초과분 · 미달 시 $0)':
+    'XRF Foundation · Carry ★ (above 8% Hurdle · $0 if below)',
+  'Korea Operation Firm (KOF) — AI/Sourcing/PM/Margin':
+    'Korea Operation Firm (KOF) — AI/Sourcing/PM/Margin',
+  'NPL Vehicle Company (NPL VC) · Servicing Fee':
+    'NPL Vehicle Company (NPL VC) · Servicing Fee',
+  'LP 최종 순수익 (Net Profit)': 'LP Final Net Profit',
+  '분배 항목': 'Allocation Item',
+  'NPL profit %': 'NPL profit %',
+  '비중 시각화': 'Visualization',
+
+  // ── 3-tier Compare ──
+  '엔플랫폼 수수료 합계': 'KOF Total Fee',
+  '대부업체 Servicing 수수료': 'NPL VC Servicing Fee',
+  'NPL VC Servicing 수수료': 'NPL VC Servicing Fee',
+  'AUTO 평가': 'AUTO Verdict',
+
+  // ── Summary header ──
+  'AI 총평': 'AI Executive Summary',
+  '[XRF Vehicle 평가 v7]': '[XRF Vehicle Valuation v7]',
+  '[XRF Vehicle 평가]': '[XRF Vehicle Valuation]',
+
+  // ── 평가 verdict 키워드 ──
+  '★ BASE — LP ROI': '★ BASE — LP ROI',
+  '⚠ SAVE': '⚠ SAVE',
+  'BUY': 'BUY',
+  'HOLD': 'HOLD',
+  'AVOID': 'AVOID',
+  '양보 불필요': 'no concession needed',
+  '매력적': 'attractive',
+  'RWA 출시 가능': 'RWA-ready',
+  '임계값 미달': 'below threshold',
+  '모두 양보로 LP': 'all concede → LP',
+  '회복': 'recovery',
+  '모범 사례': 'benchmark case',
+  '법인 차주 deal은 XRF 핵심 패턴': 'corporate-borrower deal is XRF signature pattern',
+  '(LP 100% Pool 청약)': '(LP 100% Pool subscription)',
+
+  // ── Footer notes ──
+  'XRF Foundation · CONFIDENTIAL · Ripple × XRF 전략 파트너십 · May 2026':
+    'XRF Foundation · CONFIDENTIAL · Ripple × XRF Strategic Partnership · May 2026',
+
+  // ── Buttons ──
+  'NPL Valuation': 'NPL Valuation',
+  'XRF Valuation': 'XRF Valuation',
+  'NPL 자체 수익성 분석': 'Standalone NPL profitability analysis',
+  'XRF Vehicle 구조 적용 후 LP 최종 ROI': 'LP final ROI after XRF Vehicle structure',
+
+  // ── Toggle / labels ──
+  'XRF Vehicle Executive Summary': 'XRF Vehicle Executive Summary',
+  'XRF 비히클 총평 기준 프롬프트': 'XRF Vehicle Summary Prompt',
+
+  // ── AI 총평 자주 등장하는 phrase (Google Translate 보조) ──
+  'AI 투자 의견': 'AI Investment Verdict',
+  '차주 유형': 'Borrower type',
+  '법인 (질권 LTV 90%)': 'Corporate (Pledge LTV 90%)',
+  '개인 (질권 LTV 75%)': 'Individual (Pledge LTV 75%)',
+  '미지정': 'Unspecified',
+  'XRF Vehicle 출시 권고': 'XRF Vehicle launch recommended',
+  'XRF Vehicle 출시 권고, RLUSD 분배 안정성 확보 가능.':
+    'XRF Vehicle launch recommended; RLUSD distribution stability achievable.',
+  'tier별 양보 폭 협의 필요, 매력도 한계 → 기관 LP base 우선 검토.':
+    'Tier-by-tier concession negotiation required; institutional LPs to be prioritized given marginal attractiveness.',
+  'deal 재구조화 필요 (담보 추가·매입가 재협상·운용기간 단축 등).':
+    'Deal restructuring required (additional collateral, purchase-price renegotiation, or shorter holding period).',
+  'XRF Carry · KOF Fees 모두 양보 (NPL VC Servicing 만 고정) · LP 한계 매력 수준':
+    'XRF Carry & KOF Fees both concede (NPL VC Servicing remains fixed) · LP marginal attractiveness',
+  'LP ROI ≥ 20% — 양보 불필요 · RWA 즉시 출시 가능':
+    'LP ROI ≥ 20% — no concession needed · ready for immediate RWA launch',
+  'XRF Carry 양보(15→10%) 적용 시 LP 매력도 회복':
+    'LP attractiveness recovers when XRF Carry concedes (15→10%)',
+  'BASE LP ROI < 5% 임계 미달 · RWA 출시 부적합':
+    'BASE LP ROI < 5% below threshold · not suitable for RWA launch',
+
+  // ── 총평 본문 phrase 보강 ──
+  '본 매물': 'this asset',
+  '구조에 통과시킨 결과': 'after passing through the structure',
+  '로 산출되었습니다': 'is derived',
+  '예상': 'expected',
+  '입금': 'deposit',
+  '순수익': 'net profit',
+  'Pool 100% 청약': '100% of Pool subscribed',
+  '명 LP 분할 시': ' LPs split, ',
+  '1인당': 'per LP',
+  'AUTO 판정은': 'AUTO Verdict is',
+  'tier (': 'tier (',
+  ')로,': '),',
+  '분배:': 'distribution:',
+  '5-tier 누진': '5-tier marginal',
+  'Hurdle 8%/yr 미달 시 $0': 'Carry $0 if below 8%/yr Hurdle',
+  '그 외 8-20/20-40/40-60/60%+ slice 별 marginal rate':
+    'else marginal rate per 8-20/20-40/40-60/60%+ slice',
+  'Hurdle': 'Hurdle',
+  '충당 후 잉여분에 대해서만 XRF Carry 발동': 'XRF Carry only triggers on the surplus above Hurdle',
+  '(LP 우선 수익률 보장)': '(LP priority yield guaranteed)',
+  '차입금': 'loan',
+  '(LP 무이자 대여, Day Exit 100% 환급)': '(LP interest-free loan, 100% refunded at Day Exit)',
+  'NPL 비히클': 'NPL Vehicle',
+  '비히클 (XRF Foundation + Korea Operation Firm + NPL Vehicle Company) 구조':
+    'Vehicle (XRF Foundation + Korea Operation Firm + NPL Vehicle Company) structure',
+  '연환산 IRR': 'annualized IRR',
+  '구조 적용 후 LP 최종 ROI': 'LP final ROI after applying the structure',
+  'NPL 자체 ROI': 'NPL self-ROI',
+  '를 XRF': ' through XRF',
+  'Fund metrics': 'Fund metrics',
+  'FLAT 2% × 매입가': 'FLAT 2% × purchase price',
+})
+
 Object.assign(STATIC_DICT.ja, {
   // 로그인 페이지
   '다시 만나서': 'おかえりなさい、',
