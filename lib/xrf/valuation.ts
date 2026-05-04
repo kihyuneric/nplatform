@@ -50,60 +50,63 @@ export interface XrfTierFees {
 }
 
 /**
- * 사용자 정책 (2026-05-04) — 엔플랫폼 Fee 재구성 v2 + LP 청약 구조 변경
+ * 사용자 정책 (2026-05-04 v3) — 엔플랫폼 Fee 재구성 + LP 청약 구조 + Tier Gradient
  *
- * 1) 엔플랫폼 BASE Fee 변경:
+ * 1) 엔플랫폼 BASE Fee 재구성 (v2 → v3 동일):
  *      AI Valuation     0.7% → 0.3%   (-0.4%/yr)
  *      Pipeline Sourcing 1.0% → 1.3%   (+0.3%/yr)
  *      PM Fee           0.85% → 0.5%  (-0.35%/yr)
  *      KR Margin        0.45% → 0.4%  (-0.05%/yr)
  *      엔플랫폼 합계      3.00% → 2.50% (-0.50%/yr)
  *
- *    절감된 0.5%/yr 는 LP profit 으로 자동 흡수 (operatingFees 차감 감소
- *    → lpProfitPreCarry 증가 → LP 최종 ROI 상승).
+ * 2) ⚠ v3 (2026-05-04 사용자 피드백): tier 별 매출 hierarchy 강제 BASE > CONS > SAVE
+ *    이전 v2 는 CONS 엔플랫폼 = BASE (Carry 만 양보) 라 매출 동일 → 사용자 지적
+ *    v3 부터 모든 fee 컴포넌트가 명확한 gradient 보유:
+ *      XRF Mgmt:        0.7% / 0.6% / 0.5%  (BASE > CONS > SAVE)
+ *      XRF Setup:       0.5% / 0.4% / 0.3%
+ *      XRF Carry:       15% / 10% / 5%      (이미 gradient)
+ *      엔 AI:           0.3% / 0.25% / 0.2%
+ *      엔 Sourcing:     1.3% / 1.15% / 1.0%
+ *      엔 PM:           0.5% / 0.45% / 0.4%
+ *      엔 Margin:       0.4% / 0.4% / 0.4%  (★ TP defense 모든 tier 고정)
+ *      엔플랫폼 합계:    2.50% / 2.25% / 2.00%
  *
- * 2) CONSERVATIVE 도 동일 패턴 (Carry 만 15→10%로 양보, 엔플랫폼 fees 동일).
- *
- * 3) SAVE-THE-DEAL 은 BASE 대비 추가 양보 — 엔플랫폼 0.5% 더 양보 (총 2.0%/yr).
- *
- * 4) 대부업체 자본금 (daepuCapitalPct) 0.10 → 0
- *    LP 가 Pool 전체 청약 (이전: LP 90% + 대부업체 10% Day Exit 1:1 환원).
- *    대부업체는 Servicing fee 만 수령 (Capital 출자 없음).
+ * 3) 대부업체 자본금 (daepuCapitalPct) 0.10 → 0
+ *    LP 가 Pool 전체 청약 (Servicing fee 만 수령, Capital 출자 없음).
  */
 export const XRF_TIERS: Record<Exclude<XrfTier, 'REJECT'>, XrfTierFees> = {
   BASE: {
     carryPct: 0.15,
-    xrfMgmtPctYr: 0.007,
-    xrfSetupPct: 0.005,
-    platformAiPctYr: 0.003,        // ← 0.7 → 0.3
-    platformSourcingPctYr: 0.013,  // ← 1.0 → 1.3
-    platformPmPctYr: 0.005,        // ← 0.85 → 0.5
-    platformMarginPctYr: 0.004,    // ← 0.45 → 0.4
+    xrfMgmtPctYr: 0.007,           // BASE
+    xrfSetupPct: 0.005,            // BASE
+    platformAiPctYr: 0.003,        // 0.3%
+    platformSourcingPctYr: 0.013,  // 1.3%
+    platformPmPctYr: 0.005,        // 0.5%
+    platformMarginPctYr: 0.004,    // 0.4%
     servicingPctYr: 0.020,
-    daepuCapitalPct: 0,            // ← 0.10 → 0 (LP 가 Pool 전체 청약)
+    daepuCapitalPct: 0,
     hurdlePctYr: 0.08,
   },
   CONSERVATIVE: {
     carryPct: 0.10,
-    xrfMgmtPctYr: 0.005,
-    xrfSetupPct: 0.003,
-    platformAiPctYr: 0.003,
-    platformSourcingPctYr: 0.013,
-    platformPmPctYr: 0.005,
-    platformMarginPctYr: 0.004,
+    xrfMgmtPctYr: 0.006,           // ★ v3: 0.005 → 0.006 (BASE 와 SAVE 사이)
+    xrfSetupPct: 0.004,            // ★ v3: 0.003 → 0.004
+    platformAiPctYr: 0.0025,       // ★ v3: 0.003 → 0.0025
+    platformSourcingPctYr: 0.0115, // ★ v3: 0.013 → 0.0115
+    platformPmPctYr: 0.0045,       // ★ v3: 0.005 → 0.0045
+    platformMarginPctYr: 0.004,    // 동일 (TP defense)
     servicingPctYr: 0.020,
     daepuCapitalPct: 0,
     hurdlePctYr: 0.08,
   },
   'SAVE-THE-DEAL': {
     carryPct: 0.05,
-    xrfMgmtPctYr: 0.005,
-    xrfSetupPct: 0.003,
-    // SAVE-THE-DEAL: BASE 2.5% → 2.0% 추가 양보 (deal 살리기 모드)
-    platformAiPctYr: 0.002,        // 0.3 → 0.2
-    platformSourcingPctYr: 0.010,  // 1.3 → 1.0
-    platformPmPctYr: 0.005,        // 0.5 유지
-    platformMarginPctYr: 0.003,    // 0.4 → 0.3
+    xrfMgmtPctYr: 0.005,           // SAVE
+    xrfSetupPct: 0.003,            // SAVE
+    platformAiPctYr: 0.002,        // 0.2%
+    platformSourcingPctYr: 0.010,  // 1.0%
+    platformPmPctYr: 0.004,        // ★ v3: 0.005 → 0.004 (SAVE 더 양보)
+    platformMarginPctYr: 0.004,    // ★ v3: 0.003 → 0.004 (TP defense 고정)
     servicingPctYr: 0.020,
     daepuCapitalPct: 0,
     hurdlePctYr: 0.08,

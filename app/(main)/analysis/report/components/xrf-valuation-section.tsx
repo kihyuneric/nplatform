@@ -333,16 +333,16 @@ export default function XrfValuationSection({
           </thead>
           <tbody>
             <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>XRF Foundation</td></tr>
-            <Row label="  XRF 관리보수 (%/yr · 365일 cap)" value={fmtUSDFull(selected.fees.xrfMgmtUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.7%/yr' : '0.5%/yr'} />
-            <Row label="  XRF SPV Setup (1회)" value={fmtUSDFull(selected.fees.xrfSetupUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.5% × NPL 매입가' : '0.3% × NPL 매입가'} />
+            <Row label="  XRF 관리보수 (%/yr · 365일 cap)" value={fmtUSDFull(selected.fees.xrfMgmtUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.7%/yr' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.6%/yr' : '0.5%/yr'} />
+            <Row label="  XRF SPV Setup (1회)" value={fmtUSDFull(selected.fees.xrfSetupUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.5% × NPL 매입가' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.4% × NPL 매입가' : '0.3% × NPL 매입가'} />
             <Row label="  XRF Carry (8% Hurdle 초과분)" value={fmtUSDFull(selected.fees.xrfCarryUSD)} note={`Hurdle ${fmtUSDFull(selected.hurdleUSD)} 초과분 × ${tierLabel[selected.tier] === 'BASE' ? '15%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '10%' : '5%'}`} />
             <Row label="  XRF 합계" value={fmtUSDFull(selected.fees.xrfTotalUSD)} bold last />
 
-            <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>엔플랫폼 (KR Platform Co) — 2026-05-04 v2 구조 (총 2.5%/yr · SAVE 2.0%/yr)</td></tr>
-            <Row label="  AI Valuation (ML 가격평가)" value={fmtUSDFull(selected.fees.platformAiUSD)} note={tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? '0.2%/yr' : '0.3%/yr'} />
-            <Row label="  Pipeline Sourcing (딜 발굴·소싱)" value={fmtUSDFull(selected.fees.platformSourcingUSD)} note={tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? '1.0%/yr' : '1.3%/yr'} />
-            <Row label="  PM Fee (프로젝트 매니지먼트)" value={fmtUSDFull(selected.fees.platformPmUSD)} note={tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? '0.5%/yr' : '0.5%/yr'} />
-            <Row label="  KR Margin (TP 방어선 ≥15%)" value={fmtUSDFull(selected.fees.platformMarginUSD)} note={tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? '0.3%/yr' : '0.4%/yr'} />
+            <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>엔플랫폼 (KR Platform Co) — 2026-05-04 v3 (BASE 2.50% · CONS 2.25% · SAVE 2.00%/yr)</td></tr>
+            <Row label="  AI Valuation (ML 가격평가)" value={fmtUSDFull(selected.fees.platformAiUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.30%/yr' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.25%/yr' : '0.20%/yr'} />
+            <Row label="  Pipeline Sourcing (딜 발굴·소싱)" value={fmtUSDFull(selected.fees.platformSourcingUSD)} note={tierLabel[selected.tier] === 'BASE' ? '1.30%/yr' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '1.15%/yr' : '1.00%/yr'} />
+            <Row label="  PM Fee (프로젝트 매니지먼트)" value={fmtUSDFull(selected.fees.platformPmUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.50%/yr' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.45%/yr' : '0.40%/yr'} />
+            <Row label="  KR Margin (TP 방어선 ≥15%)" value={fmtUSDFull(selected.fees.platformMarginUSD)} note="0.40%/yr 모든 tier 고정" />
             <Row label="  엔플랫폼 합계" value={fmtUSDFull(selected.fees.platformTotalUSD)} bold last />
 
             <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>대부업체 (KR Servicer)</td></tr>
@@ -350,7 +350,7 @@ export default function XrfValuationSection({
           </tbody>
         </table>
         <div style={{ fontSize: 10, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
-          ⓘ 2026-05-04 정책 변경: 엔플랫폼 BASE Fee 3.0%/yr → 2.5%/yr (-0.5%p) — 절감분은 LP 순수익으로 자동 흡수. 대부업체 자본금 (이전 10%) 제거 → LP가 Pool 100% 청약.
+          ⓘ 2026-05-04 v3: 모든 fee 컴포넌트가 BASE &gt; CONSERVATIVE &gt; SAVE-THE-DEAL hierarchy 보유 — XRF/엔플랫폼 매출 tier 별 단조 감소. 0.5%p 절감분(엔플랫폼 BASE 3.0→2.5)은 LP 순수익으로 자동 흡수. 대부업체 자본 출자 폐지 (Pool 100% LP 청약).
         </div>
       </Section>
 
