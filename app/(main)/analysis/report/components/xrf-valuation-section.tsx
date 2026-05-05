@@ -899,24 +899,109 @@ export default function XrfValuationSection({
 }
 
 // ─── Sub Components ───
+/**
+ * Section — McKinsey Advisory v3 스타일.
+ *   · EXHIBIT 번호 = brass gold (#B7892C) small caps eyebrow
+ *   · 본문 title  = Georgia serif 16px black
+ *   · 1pt cobalt (#2251FF) rule under title — McKinsey signature
+ *   · caption = 13px neutral gray
+ *
+ * Title 'EXHIBIT 5b · FUND METRICS' 형식을 split 하여 eyebrow + body 분리.
+ */
 function Section({ title, caption, children }: { title: string; caption?: string; children: React.ReactNode }) {
+  // 'EXHIBIT 5b · ...' → eyebrow / body split
+  const dotIndex = title.indexOf('·')
+  const eyebrow = dotIndex > 0 ? title.slice(0, dotIndex).trim() : title
+  const body = dotIndex > 0 ? title.slice(dotIndex + 1).trim() : ''
+
   return (
-    <section style={{ marginBottom: 32 }} className="xrf-section">
-      <div style={{ marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #E5E8EC' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: '#1B3A5C', letterSpacing: 1.2 }}>{title}</div>
-        {caption && <div style={{ fontSize: 12, color: '#6B7280', marginTop: 4 }}>{caption}</div>}
+    <section style={{ marginBottom: 36 }} className="xrf-section">
+      <div style={{ marginBottom: 16 }}>
+        {/* Eyebrow — brass gold, small caps */}
+        <div style={{
+          fontSize: 10,
+          fontWeight: 700,
+          color: '#B7892C',
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          marginBottom: 4,
+        }}>
+          {eyebrow}
+        </div>
+        {/* Body title — Georgia serif, deep navy */}
+        {body && (
+          <div style={{
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontSize: 18,
+            fontWeight: 700,
+            color: '#0A1628',
+            letterSpacing: '-0.005em',
+            lineHeight: 1.2,
+            marginBottom: 8,
+          }}>
+            {body}
+          </div>
+        )}
+        {/* 1pt cobalt rule — McKinsey signature */}
+        <div style={{ height: 1, background: '#2251FF', width: 40, marginBottom: 8 }} />
+        {caption && (
+          <div style={{ fontSize: 12.5, color: '#4B5563', lineHeight: 1.55, marginTop: 6 }}>
+            {caption}
+          </div>
+        )}
       </div>
       {children}
     </section>
   )
 }
 
+/**
+ * MetricCard — McKinsey KPI tile.
+ *   · 1pt cobalt top accent
+ *   · Georgia serif numerals (large)
+ *   · Tabular nums for alignment
+ *   · Subtle hover/border
+ */
 function MetricCard({ label, value, sub, tint }: { label: string; value: string; sub?: string; tint: string }) {
   return (
-    <div style={{ padding: 16, background: '#FFFFFF', border: `1px solid ${tint}`, borderTop: `3px solid ${tint}` }}>
-      <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: tint }}>{value}</div>
-      {sub && <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 4 }}>{sub}</div>}
+    <div style={{
+      padding: '16px 18px',
+      background: '#FFFFFF',
+      border: '1px solid #E5E8EC',
+      borderTop: `3px solid ${tint}`,
+      boxShadow: '0 1px 2px rgba(10, 22, 40, 0.04)',
+    }}>
+      <div style={{
+        fontSize: 10,
+        fontWeight: 700,
+        color: '#6B7280',
+        marginBottom: 10,
+        letterSpacing: '0.1em',
+        textTransform: 'uppercase',
+      }}>
+        {label}
+      </div>
+      <div style={{
+        fontFamily: 'Georgia, "Times New Roman", serif',
+        fontSize: 26,
+        fontWeight: 700,
+        color: tint,
+        fontVariantNumeric: 'tabular-nums',
+        letterSpacing: '-0.015em',
+        lineHeight: 1.05,
+      }}>
+        {value}
+      </div>
+      {sub && (
+        <div style={{
+          fontSize: 10.5,
+          color: '#9CA3AF',
+          marginTop: 6,
+          lineHeight: 1.4,
+        }}>
+          {sub}
+        </div>
+      )}
     </div>
   )
 }
