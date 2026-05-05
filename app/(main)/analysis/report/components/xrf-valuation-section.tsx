@@ -540,6 +540,7 @@ export default function XrfValuationSection({
           //   median IRR  = Hurdle (8%) + 4%/yr premium  = 12%/yr
           //   topQ IRR    = Hurdle (8%) + 12%/yr premium = 20%/yr
           //   MoM         = (1 + IRR)^durationYr (복리)
+          // 산업 벤치마크 — IRR 은 deal 무관 FIXED, MoM 은 본 deal 운용기간 복리 환산
           const benchmark = computeIndustryBenchmark(0.08, holdingPeriodDays / 365)
           return (
             <>
@@ -656,10 +657,12 @@ export default function XrfValuationSection({
               </table>
 
               <div style={{ fontSize: 11, color: c.text, marginTop: 12, padding: '10px 14px', background: '#F0F9FF', borderLeft: `3px solid ${c.blue}`, lineHeight: 1.6 }}>
-                <strong>산업 벤치마크 도출 수식 (하드코딩 X)</strong>:
-                <br />• 산업 중앙값 IRR = Hurdle Rate + 4%/yr premium = 8% + 4% = <strong>{fmtPct(benchmark.median.irr)}/yr</strong>
-                <br />• 산업 MoM (배수) = (1 + IRR) ^ 운용기간({(holdingPeriodDays/365).toFixed(2)}년) — 복리 환산
-                <br />• 출처 premium: Cambridge Associates · Preqin · ILPA Industry Reports (NPL/Special-Situations Private Debt 2020-2024 평균)
+                <strong>산업 벤치마크 도출 수식</strong> (Hurdle Rate × premium · 출처: Cambridge Associates · Preqin · ILPA · NPL/Special-Situations Private Debt 2020-2024):
+                <br />• 산업 중앙값 IRR (annualized) = Hurdle 8% + 4% premium = <strong>{fmtPct(benchmark.median.irr)}/yr</strong> ★ <em>deal 무관 FIXED</em>
+                <br />• 산업 중앙값 MoM = (1 + IRR) ^ <strong>본 deal 운용기간 ({(holdingPeriodDays/365).toFixed(2)}년)</strong> = <strong>{benchmark.median.mom.toFixed(3)}x</strong>
+              </div>
+              <div style={{ fontSize: 11, color: '#92400E', marginTop: 8, padding: '10px 14px', background: '#FFFBEB', borderLeft: `3px solid ${c.amber}`, lineHeight: 1.6 }}>
+                ⚠ <strong>중요</strong>: 산업 중앙값 <strong>MoM (배수)</strong> 은 본 deal 운용기간 ({(holdingPeriodDays/365).toFixed(2)}년) 으로 복리 환산되어 case 마다 달라집니다. 종로 (1.58년) MoM 1.196x · 잠실 (0.64년) MoM 1.076x 처럼 다른 이유는 동일한 산업 IRR 12%/yr 기준이라도 운용기간 차이로 multiple 값이 변하기 때문 (수학적으로 자연스러움). <strong>direct 비교는 IRR / Hurdle Spread (annualized) 추천</strong> — deal 무관 FIXED 라 fair.
               </div>
               <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
                 ⓘ <strong>4 metric 차별화</strong>: 이전 DPI/TVPI/MoM/Equity Multiple 은 closed fund (NAV=0) 에서 모두 동일 = LP DPI. v7 부터 자산-레벨 (Gross MoM) · LP 초과수익 (Hurdle Spread) 으로 차별화. 단순 IRR ({fmtPct(selected.lpIrrYr)}/yr) vs XIRR ({fmtPct(fundMetrics.xirr)}/yr) 차이는 단순 연환산 vs 복리 계산.
@@ -687,6 +690,26 @@ export default function XrfValuationSection({
                   <span style={{ display: 'inline-block', width: 10, height: 10, background: item.color, marginRight: 8, verticalAlign: 'middle' }} />
                   {item.label}
                   {item.category === 'LP' && <span style={{ marginLeft: 8, fontSize: 10, color: c.emerald, fontWeight: 700 }}>★ FINAL</span>}
+                  {item.category === 'XRF' && (
+                    <div style={{ fontSize: 10, color: c.textSub, marginTop: 4, marginLeft: 18, lineHeight: 1.6 }}>
+                      <div>
+                        Mgmt {fmtUSDFull(selected.fees.xrfMgmtUSD)} (고정 운영비) ·
+                        Setup {fmtUSDFull(selected.fees.xrfSetupUSD)} (1회) ·
+                        <strong style={{ color: selected.fees.xrfCarryUSD > 0 ? c.emerald : c.amber }}>
+                          {' '}Carry ★ {fmtUSDFull(selected.fees.xrfCarryUSD)}
+                        </strong>
+                      </div>
+                      {selected.fees.xrfCarryUSD > 0 ? (
+                        <div style={{ color: c.textTertiary, marginTop: 2 }}>
+                          ⓘ Carry는 LP 가 Hurdle 8%/yr 달성 시 초과분에 5-tier marginal rate 적용 (성과 조건부 지불)
+                        </div>
+                      ) : (
+                        <div style={{ color: c.amber, marginTop: 2, fontWeight: 600 }}>
+                          ⚠ Carry $0 — 본 deal LP profit 이 Hurdle 8%/yr 미달 → 산정된 Carry $0 (XRF 에 지불되지 않음)
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </td>
                 <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'tabular-nums', color: c.text, fontWeight: item.category === 'LP' ? 700 : 500 }}>
                   {fmtUSDFull(item.amountUSD)}
@@ -726,30 +749,95 @@ export default function XrfValuationSection({
         </div>
       </Section>
 
-      {/* ───── EXHIBIT 6 — 3-TIER 비교 ───── */}
-      <Section title="EXHIBIT 6 · 3-TIER 비교 시뮬레이션" caption="동일 NPL deal에 BASE (LP ROI ≥ 20%) / CONSERVATIVE (10-20%) / SAVE-THE-DEAL (5-10%) 적용 시 결과 — EXHIBIT 2b 정의 참조">
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-          <thead>
-            <tr style={{ background: c.bgSoft, borderBottom: `2px solid ${c.border}` }}>
-              <th style={{ textAlign: 'left', padding: '10px 12px', color: c.textSub, fontWeight: 600 }}>Metric</th>
-              <th style={{ textAlign: 'right', padding: '10px 12px', color: c.textSub, fontWeight: 600 }}>BASE {selected.tier === 'BASE' && '★'}</th>
-              <th style={{ textAlign: 'right', padding: '10px 12px', color: c.textSub, fontWeight: 600 }}>CONSERVATIVE {selected.tier === 'CONSERVATIVE' && '★'}</th>
-              <th style={{ textAlign: 'right', padding: '10px 12px', color: c.textSub, fontWeight: 600 }}>SAVE-THE-DEAL {selected.tier === 'SAVE-THE-DEAL' && '★'}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <CompareRow label="LP Capital Call (1인당)" v1={fmtUSDFull(base.lpCapitalPerLpUSD)} v2={fmtUSDFull(conservative.lpCapitalPerLpUSD)} v3={fmtUSDFull(saveTheDeal.lpCapitalPerLpUSD)} />
-            <CompareRow label="LP Net Profit (1인당)" v1={fmtUSDFull(base.lpNetProfitPerLpUSD)} v2={fmtUSDFull(conservative.lpNetProfitPerLpUSD)} v3={fmtUSDFull(saveTheDeal.lpNetProfitPerLpUSD)} />
-            <CompareRow label="LP ROI (절대)" v1={fmtPct(base.lpRoi)} v2={fmtPct(conservative.lpRoi)} v3={fmtPct(saveTheDeal.lpRoi)} bold />
-            <CompareRow label="LP IRR (연환산)" v1={`${fmtPct(base.lpIrrYr)}/yr`} v2={`${fmtPct(conservative.lpIrrYr)}/yr`} v3={`${fmtPct(saveTheDeal.lpIrrYr)}/yr`} />
-            <CompareRow label="XRF 수수료 합계" v1={fmtUSDFull(base.fees.xrfTotalUSD)} v2={fmtUSDFull(conservative.fees.xrfTotalUSD)} v3={fmtUSDFull(saveTheDeal.fees.xrfTotalUSD)} />
-            <CompareRow label="KOF 수수료 합계" v1={fmtUSDFull(base.fees.platformTotalUSD)} v2={fmtUSDFull(conservative.fees.platformTotalUSD)} v3={fmtUSDFull(saveTheDeal.fees.platformTotalUSD)} />
-            <CompareRow label="NPL VC Servicing 수수료" v1={fmtUSDFull(base.fees.servicingUSD)} v2={fmtUSDFull(conservative.fees.servicingUSD)} v3={fmtUSDFull(saveTheDeal.fees.servicingUSD)} last />
-          </tbody>
-        </table>
-        <div style={{ marginTop: 12, padding: '12px 16px', background: c.bgSoft, borderLeft: `3px solid ${tierColor[selected.tier]}`, fontSize: 12, color: c.text }}>
-          <strong style={{ color: tierColor[selected.tier] }}>AUTO 평가 · {tierLabel[selected.tier]}</strong> — {selected.autoTierResult.selectedReason}
-        </div>
+      {/* ───── EXHIBIT 6 — 3-TIER 비교 (AUTO 컬럼 강조 · McKinsey style) ───── */}
+      <Section title="EXHIBIT 6 · 3-TIER 비교 시뮬레이션" caption="동일 NPL deal 에 BASE (LP ROI ≥ 20%) / CONSERVATIVE (10-20%) / SAVE-THE-DEAL (5-10%) 적용 시 결과 — EXHIBIT 2b 정의 참조 · ★ AUTO 평가 tier 강조">
+        {(() => {
+          // AUTO selected tier — column highlight 처리
+          const autoCol: 1 | 2 | 3 =
+            selected.tier === 'BASE' ? 1
+            : selected.tier === 'CONSERVATIVE' ? 2
+            : selected.tier === 'SAVE-THE-DEAL' ? 3
+            : 1
+          const colorByTier: Record<XrfTier, string> = {
+            BASE: c.emerald,
+            CONSERVATIVE: c.blue,
+            'SAVE-THE-DEAL': c.amber,
+            REJECT: c.red,
+          }
+          const accentColor = colorByTier[selected.tier]
+          // 색상 별 light 배경 (AUTO 컬럼 highlight)
+          const highlightBg: Record<XrfTier, string> = {
+            BASE: '#ECFDF5',
+            CONSERVATIVE: '#EFF6FF',
+            'SAVE-THE-DEAL': '#FFFBEB',
+            REJECT: '#FEF2F2',
+          }
+          const colHighlight = highlightBg[selected.tier]
+
+          const TierHeader = ({ tier, isAuto }: { tier: XrfTier; isAuto: boolean }) => (
+            <th
+              style={{
+                textAlign: 'right',
+                padding: '12px 14px',
+                color: isAuto ? '#FFFFFF' : c.textSub,
+                fontWeight: 700,
+                fontSize: 12,
+                letterSpacing: '0.04em',
+                background: isAuto ? c.navyDark : 'transparent',
+                borderTop: isAuto ? `3px solid ${accentColor}` : 'none',
+                position: 'relative',
+              }}
+            >
+              {isAuto && <span style={{ display: 'inline-block', marginRight: 6, color: accentColor, fontSize: 14 }}>★</span>}
+              {tierLabel[tier]}
+              {isAuto && (
+                <div style={{ fontSize: 9, color: accentColor, fontWeight: 600, letterSpacing: '0.12em', marginTop: 2 }}>
+                  AUTO 평가
+                </div>
+              )}
+            </th>
+          )
+
+          return (
+            <>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: c.bgSoft, borderBottom: `2px solid ${c.border}` }}>
+                    <th style={{ textAlign: 'left', padding: '12px 14px', color: c.textSub, fontWeight: 600, fontSize: 11, letterSpacing: '0.08em' }}>METRIC</th>
+                    <TierHeader tier="BASE" isAuto={selected.tier === 'BASE'} />
+                    <TierHeader tier="CONSERVATIVE" isAuto={selected.tier === 'CONSERVATIVE'} />
+                    <TierHeader tier="SAVE-THE-DEAL" isAuto={selected.tier === 'SAVE-THE-DEAL'} />
+                  </tr>
+                </thead>
+                <tbody>
+                  <CompareRow label="LP Capital Call (1인당)" v1={fmtUSDFull(base.lpCapitalPerLpUSD)} v2={fmtUSDFull(conservative.lpCapitalPerLpUSD)} v3={fmtUSDFull(saveTheDeal.lpCapitalPerLpUSD)} highlightCol={autoCol} highlightBg={colHighlight} />
+                  <CompareRow label="LP Net Profit (1인당)" v1={fmtUSDFull(base.lpNetProfitPerLpUSD)} v2={fmtUSDFull(conservative.lpNetProfitPerLpUSD)} v3={fmtUSDFull(saveTheDeal.lpNetProfitPerLpUSD)} highlightCol={autoCol} highlightBg={colHighlight} />
+                  <CompareRow label="LP ROI (절대)" v1={fmtPct(base.lpRoi)} v2={fmtPct(conservative.lpRoi)} v3={fmtPct(saveTheDeal.lpRoi)} bold highlightCol={autoCol} highlightBg={colHighlight} accentColor={accentColor} />
+                  <CompareRow label="LP IRR (연환산)" v1={`${fmtPct(base.lpIrrYr)}/yr`} v2={`${fmtPct(conservative.lpIrrYr)}/yr`} v3={`${fmtPct(saveTheDeal.lpIrrYr)}/yr`} highlightCol={autoCol} highlightBg={colHighlight} />
+                  <CompareRow label="XRF 수수료 합계" v1={fmtUSDFull(base.fees.xrfTotalUSD)} v2={fmtUSDFull(conservative.fees.xrfTotalUSD)} v3={fmtUSDFull(saveTheDeal.fees.xrfTotalUSD)} highlightCol={autoCol} highlightBg={colHighlight} />
+                  <CompareRow label="KOF 수수료 합계" v1={fmtUSDFull(base.fees.platformTotalUSD)} v2={fmtUSDFull(conservative.fees.platformTotalUSD)} v3={fmtUSDFull(saveTheDeal.fees.platformTotalUSD)} highlightCol={autoCol} highlightBg={colHighlight} />
+                  <CompareRow label="NPL VC Servicing 수수료" v1={fmtUSDFull(base.fees.servicingUSD)} v2={fmtUSDFull(conservative.fees.servicingUSD)} v3={fmtUSDFull(saveTheDeal.fees.servicingUSD)} last highlightCol={autoCol} highlightBg={colHighlight} />
+                </tbody>
+              </table>
+              <div style={{
+                marginTop: 12,
+                padding: '14px 18px',
+                background: c.navyDark,
+                color: '#FFFFFF',
+                borderTop: `3px solid ${accentColor}`,
+                fontSize: 13,
+                lineHeight: 1.6,
+              }}>
+                <div style={{ fontSize: 10, letterSpacing: '0.18em', color: accentColor, fontWeight: 700, marginBottom: 4 }}>
+                  AUTO VERDICT · ★ {tierLabel[selected.tier]}
+                </div>
+                <div style={{ color: '#FFFFFF', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 14, fontWeight: 500 }}>
+                  {selected.autoTierResult.selectedReason}
+                </div>
+              </div>
+            </>
+          )
+        })()}
       </Section>
 
       {/* ───── EXHIBIT 7 — 입력 파라미터 ───── */}
@@ -890,14 +978,40 @@ function BenchmarkRow({
   )
 }
 
-function CompareRow({ label, v1, v2, v3, bold, last }: { label: string; v1: string; v2: string; v3: string; bold?: boolean; last?: boolean }) {
-  const cell = { padding: '8px 12px', textAlign: 'right' as const, fontFamily: 'tabular-nums', color: '#1B3A5C', fontWeight: bold ? 700 : 500 }
+function CompareRow({
+  label, v1, v2, v3, bold, last, highlightCol, highlightBg, accentColor,
+}: {
+  label: string
+  v1: string
+  v2: string
+  v3: string
+  bold?: boolean
+  last?: boolean
+  /** AUTO 평가된 컬럼 번호 (1=BASE, 2=CONS, 3=SAVE) */
+  highlightCol?: 1 | 2 | 3
+  /** highlight 컬럼 배경 색 */
+  highlightBg?: string
+  /** highlight 컬럼 강조 색 (LP ROI 등 bold 행 텍스트 색) */
+  accentColor?: string
+}) {
+  const baseCell = { padding: '10px 14px', textAlign: 'right' as const, fontFamily: 'tabular-nums', color: '#1B3A5C', fontWeight: bold ? 700 : 500 }
+  const cell = (col: 1 | 2 | 3) => {
+    const isHighlight = highlightCol === col
+    return {
+      ...baseCell,
+      background: isHighlight ? (highlightBg ?? 'transparent') : 'transparent',
+      color: isHighlight && bold && accentColor ? accentColor : baseCell.color,
+      fontWeight: isHighlight ? 700 : baseCell.fontWeight,
+      borderLeft: isHighlight ? `2px solid #FFFFFF` : 'none',
+      borderRight: isHighlight ? `2px solid #FFFFFF` : 'none',
+    }
+  }
   return (
     <tr style={{ borderBottom: last ? 'none' : '1px solid #F3F4F6' }}>
-      <td style={{ padding: '8px 12px', color: bold ? '#1B3A5C' : '#374151', fontWeight: bold ? 700 : 400 }}>{label}</td>
-      <td style={cell}>{v1}</td>
-      <td style={cell}>{v2}</td>
-      <td style={cell}>{v3}</td>
+      <td style={{ padding: '10px 14px', color: bold ? '#1B3A5C' : '#374151', fontWeight: bold ? 700 : 400 }}>{label}</td>
+      <td style={cell(1)}>{v1}</td>
+      <td style={cell(2)}>{v2}</td>
+      <td style={cell(3)}>{v3}</td>
     </tr>
   )
 }

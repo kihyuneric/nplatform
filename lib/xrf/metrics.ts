@@ -44,23 +44,32 @@ export interface FundMetrics {
 /**
  * 산업 벤치마크 (Cambridge Associates · Preqin · ILPA 출처) — 수식 기반 도출.
  *
- * @param hurdleRateYr Hurdle Rate (LP 우선 수익률) — Vehicle 구조 parameter
- * @param durationYr   운용 기간 (년)
+ * 사용자 정책 (2026-05-05): IRR (annualized) 은 deal 무관 FIXED, MoM (multiple) 은
+ * deal 운용기간에 따라 복리 환산 → 자연스럽게 변동 (note 로 명확히 표기).
+ *
+ * @param hurdleRateYr Hurdle Rate (LP 우선 수익률) — default 0.08
+ * @param durationYr   운용 기간 (년) — MoM 복리 환산 base
+ *
+ * 결과 (예: durationYr=1.58 종로):
+ *   median IRR     = 12.0%/yr  (deal 무관 고정)
+ *   topQuartile IRR= 20.0%/yr  (deal 무관 고정)
+ *   median MoM     = (1.12)^1.58 = 1.196x  (deal 운용기간 반영)
+ *   topQuartile MoM= (1.20)^1.58 = 1.333x  (deal 운용기간 반영)
  */
-export function computeIndustryBenchmark(hurdleRateYr: number, durationYr: number): {
+export function computeIndustryBenchmark(
+  hurdleRateYr: number = 0.08,
+  durationYr: number,
+): {
   median: { irr: number; mom: number; dpi: number }
   topQuartile: { irr: number; mom: number; dpi: number }
 } {
-  // NPL/Special-Situations Fund 산업 표준:
-  //   median  = Hurdle +  4%/yr premium
-  //   top Q   = Hurdle + 12%/yr premium
   const PREMIUM_MEDIAN_YR = 0.04
   const PREMIUM_TOP_QUARTILE_YR = 0.12
 
   const medianIrr = hurdleRateYr + PREMIUM_MEDIAN_YR
   const topQIrr   = hurdleRateYr + PREMIUM_TOP_QUARTILE_YR
 
-  // MoM = (1 + IRR)^durationYr — 복리 환산
+  // MoM = (1 + IRR)^durationYr — 본 deal 의 운용기간으로 복리 환산
   const medianMom = Math.pow(1 + medianIrr, durationYr)
   const topQMom   = Math.pow(1 + topQIrr, durationYr)
 
@@ -253,9 +262,14 @@ export function computeProfitAllocation(args: {
   return {
     nplNetProfitUSD: total,
     items: [
-      { label: 'XRF Foundation · 관리보수 (Mgmt)', amountUSD: args.xrfMgmtUSD, pctOfNplProfit: pct(args.xrfMgmtUSD), color: '#1B3A5C', category: 'XRF' },
-      { label: 'XRF Foundation · Setup (1회)', amountUSD: args.xrfSetupUSD, pctOfNplProfit: pct(args.xrfSetupUSD), color: '#2E75B6', category: 'XRF' },
-      { label: 'XRF Foundation · Carry ★ (8% Hurdle 초과분 · 미달 시 $0)', amountUSD: args.xrfCarryUSD, pctOfNplProfit: pct(args.xrfCarryUSD), color: '#0F4C75', category: 'XRF' },
+      // ★ v7: XRF Foundation 3 항목 (Mgmt + Setup + Carry) 통합 (사용자 요청 2026-05-05)
+      {
+        label: `XRF Foundation (Mgmt + Setup + Carry)`,
+        amountUSD: args.xrfMgmtUSD + args.xrfSetupUSD + args.xrfCarryUSD,
+        pctOfNplProfit: pct(args.xrfMgmtUSD + args.xrfSetupUSD + args.xrfCarryUSD),
+        color: '#1B3A5C',
+        category: 'XRF',
+      },
       { label: 'Korea Operation Firm (KOF) — AI/Sourcing/PM/Margin', amountUSD: args.platformTotalUSD, pctOfNplProfit: pct(args.platformTotalUSD), color: '#F59E0B', category: 'PLATFORM' },
       { label: 'NPL Vehicle Company (NPL VC) · Servicing Fee', amountUSD: args.servicingUSD, pctOfNplProfit: pct(args.servicingUSD), color: '#9CA3AF', category: 'SERVICER' },
       { label: 'LP 최종 순수익 (Net Profit)', amountUSD: args.lpNetProfitUSD, pctOfNplProfit: pct(args.lpNetProfitUSD), color: '#10B981', category: 'LP' },
