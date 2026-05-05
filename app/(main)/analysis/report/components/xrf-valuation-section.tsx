@@ -55,10 +55,17 @@ const tierLabel: Record<XrfTier, string> = {
   REJECT: 'REJECT',
 }
 
+/**
+ * McKinsey Blue 팔레트 (사용자 정책 2026-05-05 — 녹색·노란색 제거 · 블루 단색 체계)
+ *   BASE         = Cobalt #2251FF    (signature electric — 최적 deal · premium signal)
+ *   CONSERVATIVE = Steel Blue #2E75B6 (mid)
+ *   SAVE-THE-DEAL= Mid Navy #1B3A5C   (deeper · concession)
+ *   REJECT       = Red #DC2626        (critical — 유일한 비-블루 · 경고용)
+ */
 const tierColor: Record<XrfTier, string> = {
-  BASE: '#10B981',
+  BASE: '#2251FF',
   CONSERVATIVE: '#2E75B6',
-  'SAVE-THE-DEAL': '#F59E0B',
+  'SAVE-THE-DEAL': '#1B3A5C',
   REJECT: '#DC2626',
 }
 
@@ -158,18 +165,30 @@ export default function XrfValuationSection({
     )
   }
 
+  // McKinsey Blue 단색 팔레트 (2026-05-05 사용자 정책)
+  //   · 녹색 (emerald) → cobalt (signature electric)
+  //   · 노란색 (amber) → skyBlue (light blue accent)
+  //   · 변수명은 호환성 유지 — 색만 블루 계열로 교체
   const c = {
-    navy: '#1B3A5C',
-    navyDark: '#051C2C',
-    blue: '#2E75B6',
-    emerald: '#10B981',
-    amber: '#F59E0B',
-    red: '#DC2626',
+    navy: '#1B3A5C',          // mid navy
+    navyDark: '#051C2C',      // hero panel bg
+    navyDeepest: '#0A1628',   // title text
+    blue: '#2E75B6',          // steel blue (CONS)
+    cobalt: '#2251FF',        // electric (signature · BASE)
+    skyBlue: '#6FB8E6',       // accent (light highlight)
+    iceBlue: '#C7E5F0',       // soft bg
+    brass: '#B7892C',         // exhibit eyebrow only
+    emerald: '#2251FF',       // [legacy] → cobalt (LP / 양호 · 호환 변수명)
+    amber: '#6FB8E6',         // [legacy] → skyBlue (warning · 호환 변수명)
+    red: '#DC2626',           // CRITICAL only (REJECT)
     bg: '#FFFFFF',
-    bgSoft: '#F5F7FA',
-    bgRed: '#FEF2F2',
+    bgSoft: '#F5F7FA',        // table header soft gray
+    bgIce: '#EFF6FF',         // info panel · cobalt-tinted
+    bgDeep: '#F0F9FF',        // deeper info bg
+    bgRed: '#FEF2F2',         // critical bg only
     border: '#E5E8EC',
     text: '#1B3A5C',
+    textDeep: '#0A1628',
     textSub: '#6B7280',
     textTertiary: '#9CA3AF',
   }
@@ -337,27 +356,27 @@ export default function XrfValuationSection({
           <div style={{ padding: '10px 12px', background: c.bgSoft, fontWeight: 700, color: c.textSub, fontSize: 12, borderBottom: `2px solid ${c.border}` }}>의미 · 양보 구조 · 의사결정</div>
 
           {/* BASE row */}
-          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'BASE' ? '#ECFDF5' : 'transparent', borderLeft: selected.tier === 'BASE' ? `3px solid ${c.emerald}` : '3px solid transparent' }}>
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'BASE' ? '#EFF6FF' : 'transparent', borderLeft: selected.tier === 'BASE' ? `3px solid ${c.emerald}` : '3px solid transparent' }}>
             <div style={{ fontWeight: 800, color: c.emerald, fontSize: 14 }}>★ BASE</div>
             <div style={{ fontSize: 11, color: c.textSub, marginTop: 2 }}>최적 · 양보 불필요</div>
           </div>
-          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'BASE' ? '#ECFDF5' : 'transparent', fontWeight: 700, color: c.emerald }}>
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'BASE' ? '#EFF6FF' : 'transparent', fontWeight: 700, color: c.emerald }}>
             ≥ 20%
           </div>
-          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'BASE' ? '#ECFDF5' : 'transparent', color: c.text, lineHeight: 1.6 }}>
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'BASE' ? '#EFF6FF' : 'transparent', color: c.text, lineHeight: 1.6 }}>
             <strong>모든 주체 정상 fee 수령</strong> — XRF Carry 15% (entry) · KOF 2.50% · NPL VC Servicing 2.0% · LP ROI ≥ 20% 매력적 deal.
             <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>RWA 즉시 출시 가능</strong> · 기관·개인 LP 모두 권고 · 표준 시나리오</span>
           </div>
 
           {/* CONSERVATIVE row */}
-          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#FEF9C3' : 'transparent', borderLeft: selected.tier === 'CONSERVATIVE' ? `3px solid ${c.amber}` : '3px solid transparent' }}>
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#F0F9FF' : 'transparent', borderLeft: selected.tier === 'CONSERVATIVE' ? `3px solid ${c.amber}` : '3px solid transparent' }}>
             <div style={{ fontWeight: 800, color: c.amber, fontSize: 14 }}>CONSERVATIVE</div>
             <div style={{ fontSize: 11, color: c.textSub, marginTop: 2 }}>보수적 · 부분 양보</div>
           </div>
-          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#FEF9C3' : 'transparent', fontWeight: 700, color: c.amber }}>
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#F0F9FF' : 'transparent', fontWeight: 700, color: c.amber }}>
             10% – 20%
           </div>
-          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#FEF9C3' : 'transparent', color: c.text, lineHeight: 1.6 }}>
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#F0F9FF' : 'transparent', color: c.text, lineHeight: 1.6 }}>
             <strong>XRF · KOF 부분 양보</strong> — XRF Carry 10% (entry) · Mgmt 0.4% · KOF 2.25% (AI/Sourcing/PM 압축).
             <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>RWA 출시 가능</strong> (LP 매력도 보강) · KR Margin 0.4% TP defense 유지 · NPL VC Servicing 변동 X</span>
           </div>
@@ -488,7 +507,7 @@ export default function XrfValuationSection({
           </div>
         </div>
 
-        <div style={{ fontSize: 11, color: c.text, marginTop: 12, padding: '10px 14px', background: '#FEF3C7', borderLeft: '3px solid #F59E0B', borderRadius: 4 }}>
+        <div style={{ fontSize: 11, color: c.text, marginTop: 12, padding: '10px 14px', background: '#EFF6FF', borderLeft: '3px solid #2251FF', borderRadius: 4 }}>
           ⚠ <strong>XRF Carry 조건부 수령</strong>: LP 가 <strong>Hurdle Rate 8%/yr × 운용기간</strong> 달성 시 그 초과분에 대해서만 5-tier 누진율 적용. Hurdle 미달 시 Carry = $0 (XRF 는 Mgmt + Setup 만 수령).
           {selected.fees.xrfCarryUSD === 0 && <span style={{ color: c.amber, fontWeight: 700, marginLeft: 6 }}>← 본 deal 은 Carry 미발생 상태</span>}
         </div>
@@ -661,7 +680,7 @@ export default function XrfValuationSection({
                 <br />• 산업 중앙값 IRR (annualized) = Hurdle 8% + 4% premium = <strong>{fmtPct(benchmark.median.irr)}/yr</strong> ★ <em>deal 무관 FIXED</em>
                 <br />• 산업 중앙값 MoM = (1 + IRR) ^ <strong>본 deal 운용기간 ({(holdingPeriodDays/365).toFixed(2)}년)</strong> = <strong>{benchmark.median.mom.toFixed(3)}x</strong>
               </div>
-              <div style={{ fontSize: 11, color: '#92400E', marginTop: 8, padding: '10px 14px', background: '#FFFBEB', borderLeft: `3px solid ${c.amber}`, lineHeight: 1.6 }}>
+              <div style={{ fontSize: 11, color: '#1B3A5C', marginTop: 8, padding: '10px 14px', background: '#F5F7FA', borderLeft: `3px solid ${c.amber}`, lineHeight: 1.6 }}>
                 ⚠ <strong>중요</strong>: 산업 중앙값 <strong>MoM (배수)</strong> 은 본 deal 운용기간 ({(holdingPeriodDays/365).toFixed(2)}년) 으로 복리 환산되어 case 마다 달라집니다. 종로 (1.58년) MoM 1.196x · 잠실 (0.64년) MoM 1.076x 처럼 다른 이유는 동일한 산업 IRR 12%/yr 기준이라도 운용기간 차이로 multiple 값이 변하기 때문 (수학적으로 자연스러움). <strong>direct 비교는 IRR / Hurdle Spread (annualized) 추천</strong> — deal 무관 FIXED 라 fair.
               </div>
               <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
@@ -767,9 +786,9 @@ export default function XrfValuationSection({
           const accentColor = colorByTier[selected.tier]
           // 색상 별 light 배경 (AUTO 컬럼 highlight)
           const highlightBg: Record<XrfTier, string> = {
-            BASE: '#ECFDF5',
+            BASE: '#EFF6FF',
             CONSERVATIVE: '#EFF6FF',
-            'SAVE-THE-DEAL': '#FFFBEB',
+            'SAVE-THE-DEAL': '#F5F7FA',
             REJECT: '#FEF2F2',
           }
           const colHighlight = highlightBg[selected.tier]
@@ -1114,14 +1133,14 @@ function CashflowRow({
   positive?: boolean
   last?: boolean
 }) {
-  const amountColor = negative ? '#DC2626' : positive ? '#10B981' : '#9CA3AF'
+  const amountColor = negative ? '#DC2626' : positive ? '#2251FF' : '#9CA3AF'
   const amountStr = amount === 0 ? '—' : `${amount > 0 ? '+' : ''}${fmtUSDFull(amount)}`
   return (
     <tr style={{ borderBottom: last ? 'none' : '1px solid #F3F4F6', background: bold ? '#F5F7FA' : undefined }}>
       <td style={{ padding: '8px 12px', color: '#6B7280', fontWeight: 600, fontSize: 12 }}>{phase}</td>
       <td style={{ padding: '8px 12px', color: '#1B3A5C' }}>{event}{note && <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{note}</div>}</td>
       <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'tabular-nums', color: amountColor, fontWeight: bold ? 700 : 500 }}>{amountStr}</td>
-      <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'tabular-nums', color: cumulative >= 0 ? '#10B981' : '#1B3A5C', fontWeight: bold ? 700 : 500 }}>{`${cumulative > 0 ? '+' : ''}${fmtUSDFull(cumulative)}`}</td>
+      <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'tabular-nums', color: cumulative >= 0 ? '#2251FF' : '#1B3A5C', fontWeight: bold ? 700 : 500 }}>{`${cumulative > 0 ? '+' : ''}${fmtUSDFull(cumulative)}`}</td>
     </tr>
   )
 }
@@ -1136,9 +1155,9 @@ function SensitivityTable({
   variant?: 'days' | 'profit'
 }) {
   const tierColor: Record<XrfTier, string> = {
-    BASE: '#10B981',
+    BASE: '#2251FF',
     CONSERVATIVE: '#2E75B6',
-    'SAVE-THE-DEAL': '#F59E0B',
+    'SAVE-THE-DEAL': '#6FB8E6',
     REJECT: '#DC2626',
   }
   return (
@@ -1162,7 +1181,7 @@ function SensitivityTable({
                 ? cs.label.startsWith(`${baselineDays}일`)
                 : cs.label.startsWith('100%')
             return (
-              <tr key={idx} style={{ borderBottom: '1px solid #F3F4F6', background: isBaseline ? '#FEF9C3' : undefined }}>
+              <tr key={idx} style={{ borderBottom: '1px solid #F3F4F6', background: isBaseline ? '#F0F9FF' : undefined }}>
                 <td style={{ padding: '6px 10px', color: '#374151', fontWeight: isBaseline ? 700 : 400 }}>
                   {cs.label} {isBaseline && '★'}
                 </td>

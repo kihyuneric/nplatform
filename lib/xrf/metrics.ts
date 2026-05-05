@@ -270,9 +270,10 @@ export function computeProfitAllocation(args: {
         color: '#1B3A5C',
         category: 'XRF',
       },
-      { label: 'Korea Operation Firm (KOF) — AI/Sourcing/PM/Margin', amountUSD: args.platformTotalUSD, pctOfNplProfit: pct(args.platformTotalUSD), color: '#F59E0B', category: 'PLATFORM' },
+      // ★ McKinsey Blue 단색 팔레트 (2026-05-05): KOF skyBlue, LP cobalt
+      { label: 'Korea Operation Firm (KOF) — AI/Sourcing/PM/Margin', amountUSD: args.platformTotalUSD, pctOfNplProfit: pct(args.platformTotalUSD), color: '#6FB8E6', category: 'PLATFORM' },
       { label: 'NPL Vehicle Company (NPL VC) · Servicing Fee', amountUSD: args.servicingUSD, pctOfNplProfit: pct(args.servicingUSD), color: '#9CA3AF', category: 'SERVICER' },
-      { label: 'LP 최종 순수익 (Net Profit)', amountUSD: args.lpNetProfitUSD, pctOfNplProfit: pct(args.lpNetProfitUSD), color: '#10B981', category: 'LP' },
+      { label: 'LP 최종 순수익 (Net Profit)', amountUSD: args.lpNetProfitUSD, pctOfNplProfit: pct(args.lpNetProfitUSD), color: '#2251FF', category: 'LP' },
     ],
   }
 }
