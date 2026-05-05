@@ -8,19 +8,18 @@
  *    NPL Valuation / XRF Valuation 풀 구조 ·
  *    AI 총평은 NPL 모드 / XRF 모드 별도"
  *
- * XRF_Simulator_v7.xlsx Case 3 — BASE 시나리오 정합 (가상 사례):
- *   · Purchase 3,500M · LTV 0.90 (법인) · Duration 360일
- *   · Expected Bid 4,620M · Distribution Cap 4,620M · Recovery 42.0%
- *   · NPL Self-ROI 134.07% · IRR 135.93%/yr
+ * XRF_Simulator_v7.xlsx Case 3 기반 → BUY tier 보장 가상 시나리오 (2026-05-05 v3 정합):
+ *   · 매입가 28억 (대출원금 35억 × 80% · 할인 20% · creditor 부실 매각 가정)
+ *   · 감정가 65억 (LTV 54% · loanPrincipal/appraisal) · AI 시세 63억
+ *   · 1순위 우리은행 채권최고액 26억 (LTV 우대 진입)
+ *   · 강남 핵심 상권 낙찰가율 86% (프리미엄)
+ *   · pledge LTV 90% (법인 차주 우대)
+ *   · 운용기간 12개월 (2026-05-15 ~ 2027-06-15)
  *
- * 가상 시나리오:
+ * 가상 시나리오 (cosmetic):
  *   · 강남구 신사동 핵심 상권 1층 상가 (가상)
  *   · 차주: 법인 — 강남 신사동 상가 운영사 (가상)
  *   · 채권자 (가상): ◆◆◆◆◆ Capital (외국계 PE)
- *   · 1순위: 우리은행 채권최고액 33.6억 (= 28억 × 1.2)
- *   · 매입가 35억 (대출원금 100% 매각, 할인 0%)
- *   · 감정가 55억 (LTV 63.6%) · AI 시세 53억
- *   · 운용기간 12개월 · pledge LTV 90% (법인 차주 우대)
  *
  * 파일 본구조: sample-jongno.ts 패턴 미러 — buildNplProfitability /
  *   buildRegistryAnalysis 직접 호출 + 가상 schedule 명시.
@@ -61,13 +60,13 @@ const 억 = 100_000_000
 //   매력적 deal 재무 구조:
 //     · 매입 할인 20% (creditor 부실 매각 가정 — discount 20%)
 //     · 1순위 우리은행 26억 (LTV 우대)
-//     · 강남 핵심 상권 낙찰가율 90% (프리미엄)
-//     · 감정가 65억 (LTV 60% · 안전 buffer)
+//     · 강남 핵심 상권 낙찰가율 86% (프리미엄)
+//     · 감정가 65억 (LTV 54% = 대출원금 35억 / 감정가 65억 · 안전 buffer)
 const GANGNAM_LOAN_PRINCIPAL = 35 * 억       // 대출원금 35억 (= 청구권 face value)
 const GANGNAM_PURCHASE = 28 * 억              // 매입가 28억 (대출원금 80% · 할인 20%)
 const GANGNAM_OVERDUE_INTEREST = 1.4 * 억    // 가상 연체이자 1.4억
 const GANGNAM_TOTAL_BOND = GANGNAM_LOAN_PRINCIPAL + GANGNAM_OVERDUE_INTEREST  // 채권잔액 36.4억
-const GANGNAM_APPRAISAL = 65 * 억            // 감정가 65억 (LTV 56%)
+const GANGNAM_APPRAISAL = 65 * 억            // 감정가 65억 (LTV 54% — loanPrincipal/appraisal)
 const GANGNAM_AI_MARKET = 63 * 억            // AI 시세 63억
 const GANGNAM_LAND_AREA = 280                // m² (1층 상가)
 const GANGNAM_BUILDING_AREA = 230            // m²

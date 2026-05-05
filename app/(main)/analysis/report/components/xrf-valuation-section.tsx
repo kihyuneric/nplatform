@@ -381,15 +381,15 @@ export default function XrfValuationSection({
             <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>RWA 출시 가능</strong> (LP 매력도 보강) · KR Margin 0.4% TP defense 유지 · NPL VC Servicing 변동 X</span>
           </div>
 
-          {/* SAVE-THE-DEAL row */}
-          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#FEF2F2' : 'transparent', borderLeft: selected.tier === 'SAVE-THE-DEAL' ? `3px solid #DC2626` : '3px solid transparent' }}>
-            <div style={{ fontWeight: 800, color: '#DC2626', fontSize: 14 }}>SAVE-THE-DEAL</div>
+          {/* SAVE-THE-DEAL row — McKinsey 블루 단색 정합: SAVE = mid navy (tierColor['SAVE-THE-DEAL']) */}
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#F5F7FA' : 'transparent', borderLeft: selected.tier === 'SAVE-THE-DEAL' ? `3px solid ${tierColor['SAVE-THE-DEAL']}` : '3px solid transparent' }}>
+            <div style={{ fontWeight: 800, color: tierColor['SAVE-THE-DEAL'], fontSize: 14 }}>SAVE-THE-DEAL</div>
             <div style={{ fontSize: 11, color: c.textSub, marginTop: 2 }}>Deal 살리기 · 최대 양보</div>
           </div>
-          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#FEF2F2' : 'transparent', fontWeight: 700, color: '#DC2626' }}>
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#F5F7FA' : 'transparent', fontWeight: 700, color: tierColor['SAVE-THE-DEAL'] }}>
             5% – 10%
           </div>
-          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#FEF2F2' : 'transparent', color: c.text, lineHeight: 1.6 }}>
+          <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#F5F7FA' : 'transparent', color: c.text, lineHeight: 1.6 }}>
             <strong>XRF · KOF 최대 양보</strong> — XRF Carry 5% (entry) · KOF 2.00% (AI/Sourcing/PM 추가 압축) · 모든 주체 양보로 LP 매력도 회복.
             <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>한계 매력 deal</strong> — 기관 LP 우선 검토 · 짧은 cycle · 회수율 낮은 deal 전형</span>
           </div>
@@ -552,7 +552,7 @@ export default function XrfValuationSection({
       {/* ───── EXHIBIT 5b — XRF Vehicle vs 산업 표준 (5 metric · 수식 기반) ───── */}
       <Section
         title="EXHIBIT 5b · FUND METRICS — XRF Vehicle vs 산업 표준"
-        caption="자산 레벨 + LP 레벨 + Vehicle 비용 효율 — 5개 metric 모두 수식 기반 산출 · 산업 벤치마크는 Hurdle Rate × 표준 premium 으로 도출"
+        caption="자산 레벨 + LP 레벨 + 복리 IRR + Hurdle 초과 — 4 metric 모두 수식 기반 산출 · 산업 벤치마크는 Hurdle Rate × 표준 premium 으로 도출"
       >
         {(() => {
           // 산업 벤치마크 — 수식 기반 (하드코딩 X)
@@ -681,7 +681,7 @@ export default function XrfValuationSection({
                 <br />• 산업 중앙값 MoM = (1 + IRR) ^ <strong>본 deal 운용기간 ({(holdingPeriodDays/365).toFixed(2)}년)</strong> = <strong>{benchmark.median.mom.toFixed(3)}x</strong>
               </div>
               <div style={{ fontSize: 11, color: '#1B3A5C', marginTop: 8, padding: '10px 14px', background: '#F5F7FA', borderLeft: `3px solid ${c.amber}`, lineHeight: 1.6 }}>
-                ⚠ <strong>중요</strong>: 산업 중앙값 <strong>MoM (배수)</strong> 은 본 deal 운용기간 ({(holdingPeriodDays/365).toFixed(2)}년) 으로 복리 환산되어 case 마다 달라집니다. 종로 (1.58년) MoM 1.196x · 잠실 (0.64년) MoM 1.076x 처럼 다른 이유는 동일한 산업 IRR 12%/yr 기준이라도 운용기간 차이로 multiple 값이 변하기 때문 (수학적으로 자연스러움). <strong>direct 비교는 IRR / Hurdle Spread (annualized) 추천</strong> — deal 무관 FIXED 라 fair.
+                ⚠ <strong>중요</strong>: 산업 중앙값 <strong>MoM (배수)</strong> 은 본 deal 운용기간 ({(holdingPeriodDays/365).toFixed(2)}년) 으로 복리 환산되어 deal 마다 달라집니다. (1+12%)^운용연 — 짧은 deal (수개월) 은 1.05x 부근, 1년 deal 은 1.12x, 2년 deal 은 1.25x 식으로 운용기간 차이만으로 multiple 값이 변하기 때문 (수학적으로 자연스러움). <strong>deal 간 direct 비교는 IRR / Hurdle Spread (annualized) 추천</strong> — deal 무관 FIXED 라 fair.
               </div>
               <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
                 ⓘ <strong>4 metric 차별화</strong>: 이전 DPI/TVPI/MoM/Equity Multiple 은 closed fund (NAV=0) 에서 모두 동일 = LP DPI. v7 부터 자산-레벨 (Gross MoM) · LP 초과수익 (Hurdle Spread) 으로 차별화. 단순 IRR ({fmtPct(selected.lpIrrYr)}/yr) vs XIRR ({fmtPct(fundMetrics.xirr)}/yr) 차이는 단순 연환산 vs 복리 계산.
@@ -1154,10 +1154,12 @@ function SensitivityTable({
   baselineDays: number
   variant?: 'days' | 'profit'
 }) {
+  // SensitivityTable 내부 tierColor — 글로벌 tierColor 정합 (SAVE-THE-DEAL = mid navy)
+  // ⚠ 글로벌 (lines 65-70) 과 동일: BASE cobalt · CONS steel · SAVE mid navy · REJECT red
   const tierColor: Record<XrfTier, string> = {
     BASE: '#2251FF',
     CONSERVATIVE: '#2E75B6',
-    'SAVE-THE-DEAL': '#6FB8E6',
+    'SAVE-THE-DEAL': '#1B3A5C',
     REJECT: '#DC2626',
   }
   return (
