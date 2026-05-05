@@ -1150,22 +1150,82 @@ export default function UnifiedReportPage() {
           </div>
           {/* 사용자 정책 (2026-05-03): XRF mode 토글 시 XRF 비히클 구조 기반 총평 사용.
               ⚠ key={valuationMode} — React 강제 재마운트로 AutoTranslateProvider 캐시 우회.
-                 (캐시 우회 안 하면 한글 텍스트가 swap돼도 영문 번역이 stale 유지됨) */}
-          <p
+              ⚠ 2026-05-05 v8: 5단락 paragraph 구조 (\n\n 구분 → multi <p> 렌더). */}
+          <div
             key={`summary-${valuationMode}`}
             data-no-translate-cache
-            style={{
-              fontFamily: MCK_FONTS.serif,
-              fontSize: 16, fontWeight: 700,
-              color: MCK.paper,
-              lineHeight: 1.65,
-              letterSpacing: "-0.005em",
-            }}
           >
-            {valuationMode === 'XRF' && xrfSummaryData
-              ? xrfSummaryData.summary
-              : report.executiveSummary}
-          </p>
+            {(() => {
+              const summaryText = valuationMode === 'XRF' && xrfSummaryData
+                ? xrfSummaryData.summary
+                : report.executiveSummary
+              const paragraphs = summaryText.split(/\n\n+/).filter(Boolean)
+              return paragraphs.map((para, idx) => {
+                // 첫 단락 (Lead) — 더 강조 (큰 글씨 + cobalt accent eyebrow)
+                if (idx === 0) {
+                  // [BUY · BASE] prefix 추출 (eyebrow 로 분리)
+                  const eyebrowMatch = para.match(/^\[([^\]]+)\]\s*/)
+                  const eyebrow = eyebrowMatch?.[1]
+                  const body = eyebrowMatch ? para.slice(eyebrowMatch[0].length) : para
+                  return (
+                    <div key={idx} style={{ marginBottom: 14 }}>
+                      {eyebrow && (
+                        <div style={{
+                          fontSize: 10,
+                          fontWeight: 800,
+                          color: '#6FB8E6',
+                          letterSpacing: '0.18em',
+                          marginBottom: 6,
+                          textTransform: 'uppercase',
+                        }}>
+                          ★ {eyebrow}
+                        </div>
+                      )}
+                      <p style={{
+                        fontFamily: MCK_FONTS.serif,
+                        fontSize: 17, fontWeight: 700,
+                        color: MCK.paper,
+                        lineHeight: 1.55,
+                        letterSpacing: "-0.005em",
+                        margin: 0,
+                      }}>
+                        {body}
+                      </p>
+                    </div>
+                  )
+                }
+                // 마지막 단락 (Verdict / Recommendation) — accent border-left
+                if (idx === paragraphs.length - 1) {
+                  return (
+                    <p key={idx} style={{
+                      fontFamily: MCK_FONTS.serif,
+                      fontSize: 14.5, fontWeight: 600,
+                      color: MCK.paper,
+                      lineHeight: 1.65,
+                      borderLeft: '3px solid #6FB8E6',
+                      paddingLeft: 12,
+                      marginTop: 12,
+                      margin: '12px 0 0 0',
+                    }}>
+                      {para}
+                    </p>
+                  )
+                }
+                // 중간 단락 (Context · Distribution · Risk) — 일반 본문
+                return (
+                  <p key={idx} style={{
+                    fontFamily: MCK_FONTS.serif,
+                    fontSize: 14, fontWeight: 500,
+                    color: 'rgba(255, 255, 255, 0.92)',
+                    lineHeight: 1.65,
+                    margin: '10px 0 0 0',
+                  }}>
+                    {para}
+                  </p>
+                )
+              })
+            })()}
+          </div>
           <div
             style={{
               marginTop: 16,
