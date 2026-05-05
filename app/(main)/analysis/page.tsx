@@ -114,13 +114,16 @@ export default function AnalysisDashboard() {
       try {
         const r = await fetch('/api/v1/analysis/sample-roi')
         if (!r.ok) return
-        const data = await r.json() as { jongno?: number | null; jamsil?: number | null }
+        const data = await r.json() as { jongno?: number | null; jamsil?: number | null; gangnam?: number | null }
         setRecent(prev => prev.map(item => {
           if (item.id === 'feat-jongno' && data.jongno != null) {
             return { ...item, roi: formatProjectRoi(data.jongno) }
           }
           if (item.id === 'feat-jamsil' && data.jamsil != null) {
             return { ...item, roi: formatProjectRoi(data.jamsil) }
+          }
+          if (item.id === 'feat-gangnam' && data.gangnam != null) {
+            return { ...item, roi: formatProjectRoi(data.gangnam) }
           }
           return item
         }))

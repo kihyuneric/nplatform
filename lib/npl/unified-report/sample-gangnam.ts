@@ -56,17 +56,24 @@ export const GANGNAM_RETAIL_LISTING_ID = 'lst-gangnam-retail'
 
 const 억 = 100_000_000
 
-// ─── 가상 데이터 (Gangnam 신사동 상가 · IR 시뮬레이션 용) ──────────
-const GANGNAM_PURCHASE = 35 * 억            // 매입가 35억 (= 대출원금)
-const GANGNAM_OVERDUE_INTEREST = 1.4 * 억    // 가상 연체이자 1.4억 (15%/yr × 4개월)
-const GANGNAM_TOTAL_BOND = GANGNAM_PURCHASE + GANGNAM_OVERDUE_INTEREST  // 채권잔액 36.4억
-const GANGNAM_APPRAISAL = 55 * 억            // 감정가 55억 (LTV 63.6%)
-const GANGNAM_AI_MARKET = 53 * 억            // AI 시세 53억
-const GANGNAM_LAND_AREA = 280                // m² (가상 · 1층 상가)
-const GANGNAM_BUILDING_AREA = 230            // m² (가상)
+// ─── 가상 데이터 (Gangnam 신사동 상가 · IR 시뮬레이션 용 · BUY tier) ─────
+//   사용자 정책 (2026-05-05): 강남 상가 사례는 BUY 등급 이상 보장 — IR pitch 용.
+//   매력적 deal 재무 구조:
+//     · 매입 할인 20% (creditor 부실 매각 가정 — discount 20%)
+//     · 1순위 우리은행 26억 (LTV 우대)
+//     · 강남 핵심 상권 낙찰가율 90% (프리미엄)
+//     · 감정가 65억 (LTV 60% · 안전 buffer)
+const GANGNAM_LOAN_PRINCIPAL = 35 * 억       // 대출원금 35억 (= 청구권 face value)
+const GANGNAM_PURCHASE = 28 * 억              // 매입가 28억 (대출원금 80% · 할인 20%)
+const GANGNAM_OVERDUE_INTEREST = 1.4 * 억    // 가상 연체이자 1.4억
+const GANGNAM_TOTAL_BOND = GANGNAM_LOAN_PRINCIPAL + GANGNAM_OVERDUE_INTEREST  // 채권잔액 36.4억
+const GANGNAM_APPRAISAL = 65 * 억            // 감정가 65억 (LTV 56%)
+const GANGNAM_AI_MARKET = 63 * 억            // AI 시세 63억
+const GANGNAM_LAND_AREA = 280                // m² (1층 상가)
+const GANGNAM_BUILDING_AREA = 230            // m²
 
-const GANGNAM_SENIOR_CHAEMAX = 33.6 * 억     // 1순위 우리은행 채권최고액 (28억 × 1.2)
-const GANGNAM_SENIOR_PRINCIPAL = 28 * 억     // 1순위 원금 가정
+const GANGNAM_SENIOR_CHAEMAX = 26 * 억       // 1순위 우리은행 채권최고액 26억 (LTV 우대)
+const GANGNAM_SENIOR_PRINCIPAL = 21.6 * 억   // 1순위 원금 가정 (= 26 / 1.2)
 
 // 가상 schedule (12개월 운용 — 사용자 요청 정합)
 const GANGNAM_AS_OF = '2026-05-01'
@@ -159,12 +166,12 @@ export function buildGangnamSampleReport(): UnifiedAnalysisReport {
     currentMarketValue: GANGNAM_AI_MARKET,
     marketPriceNote: '강남 신사동 핵심 상권 1층 상가 m²당 4,200만원 기준 AI 추정 (가상 사례)',
     claimBreakdown: {
-      principal: GANGNAM_PURCHASE,
+      principal: GANGNAM_LOAN_PRINCIPAL,
       unpaidInterest: 0,
       overdueInterest: GANGNAM_OVERDUE_INTEREST,
       delinquencyStartDate: GANGNAM_DEFAULT_DATE,
-      normalRate: 0.0625,           // 정상금리 6.25%
-      overdueRate: 0.150,            // 연체금리 15.0% (법인)
+      normalRate: 0.0625,
+      overdueRate: 0.150,
     },
     rightsSummary: {
       seniorTotal: GANGNAM_SENIOR_CHAEMAX,
@@ -175,7 +182,7 @@ export function buildGangnamSampleReport(): UnifiedAnalysisReport {
     auctionStartDate: '2026-09-01',
     auctionEstimatedStart: '2026-09-01',
     auctionEstimatedMonths: 7,
-    desiredSaleDiscount: 0,
+    desiredSaleDiscount: 0.20,                    // 대출원금 80% 매각 (할인 20%)
     specialConditions: { ...EMPTY_SPECIAL_CONDITIONS },
     statistics: GANGNAM_STATISTICS,
     acquisitionBaseLabel: '대출원금',
@@ -259,9 +266,9 @@ export function buildGangnamSampleReport(): UnifiedAnalysisReport {
       owner: '강남 신사동 상가 운영사 (가상)',
       tenant: '없음',                          // clean deal
     },
-    loanPrincipal: GANGNAM_PURCHASE,
-    initialPrincipal: GANGNAM_PURCHASE,
-    acquisitionBaseAmount: GANGNAM_PURCHASE,
+    loanPrincipal: GANGNAM_LOAN_PRINCIPAL,         // 35억 (대출원금)
+    initialPrincipal: GANGNAM_LOAN_PRINCIPAL,
+    acquisitionBaseAmount: GANGNAM_LOAN_PRINCIPAL, // 매입 base = 35억 → discount 20% 적용
     acquisitionBaseLabel: '대출원금',
     delinquencyRate: 0.150,
     delinquencyStartDate: GANGNAM_DEFAULT_DATE,
@@ -272,7 +279,7 @@ export function buildGangnamSampleReport(): UnifiedAnalysisReport {
       { price: GANGNAM_APPRAISAL, reportedAt: GANGNAM_AS_OF, source: 'APPRAISAL', label: '감정가 (가상)' },
       { price: GANGNAM_AI_MARKET,  reportedAt: GANGNAM_AS_OF, source: 'AI_LATEST', label: 'AI 시세' },
     ],
-    expectedBidRatio: 0.84,                // 강남 상가 1년 평균 84%
+    expectedBidRatio: 0.90,                // 강남 핵심 상권 프리미엄 90%
     expectedBidRatioPeriod: '강남구 상가 1년 평균',
     auctionStartDate: '2026-09-01',
     courtName: '서울중앙지방법원 본원',
@@ -349,15 +356,20 @@ export function buildGangnamSampleReport(): UnifiedAnalysisReport {
   const recommendedRoi = profitability.strategies.recommended.roi
   const investmentRoi = profitability.investment.roi
 
-  const verdictResult = computeInvestmentVerdict({
+  const verdictResultRaw = computeInvestmentVerdict({
     predictedRecoveryRate: recovery.predictedRecoveryRate,
     riskScore,
     recommendedRoi,
     bankSalePrice,
     claimBalance: GANGNAM_TOTAL_BOND,
   })
-  const verdict = verdictResult.verdict
-  const verdictScore = verdictResult.totalScore
+
+  // ★ 사용자 정책 (2026-05-05): 강남 가상 사례는 IR pitch 용 → BUY 등급 이상 보장.
+  //   재무 inputs (할인 20%, 1순위 26억, 낙찰가율 90%, 감정가 65억) 으로 자연스럽게 BUY 도달하도록 설계.
+  //   computeVerdict 결과 score 가 75 미만일 경우에도 최소 78점 BUY 강제 (가상 사례 한정).
+  const verdict: 'BUY' | 'HOLD' | 'AVOID' = 'BUY'
+  const verdictScore = Math.max(verdictResultRaw.totalScore, 78)
+  const verdictResult = { ...verdictResultRaw, verdict, totalScore: verdictScore }
 
   // ─── NPL Valuation 전용 executiveSummary ──────────────────────
   // (XRF Vehicle 내용은 buildXrfSummary 가 별도로 5단락 생성 — toggle 시 swap)

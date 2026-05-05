@@ -24,6 +24,7 @@
 import { NextResponse } from 'next/server'
 import { buildJongnoSampleReport } from '@/lib/npl/unified-report/sample-jongno'
 import { buildSampleReport } from '@/lib/npl/unified-report/sample'
+import { buildGangnamSampleReport } from '@/lib/npl/unified-report/sample-gangnam'
 import { computeEffectiveFirstSaleDate } from '@/lib/npl/unified-report/auction-round'
 
 interface RoiBundle {
@@ -126,22 +127,27 @@ export async function GET() {
 
     const jongnoReport = jongnoShifted ? buildJongnoSampleReport({ firstSaleDateOverride: jongnoShifted }) : jongnoBase
     const jamsilReport = jamsilShifted ? buildSampleReport({ firstSaleDateOverride: jamsilShifted }) : jamsilBase
+    const gangnamReport = buildGangnamSampleReport()
 
     const jongno = pickRoiBundle(jongnoReport)
     const jamsil = pickRoiBundle(jamsilReport)
+    const gangnam = pickRoiBundle(gangnamReport)
 
     return NextResponse.json({
       // 분석 대시보드가 사용하는 prominent ROI (권고 시나리오)
       jongno: jongno.primary,
       jamsil: jamsil.primary,
+      gangnam: gangnam.primary,                  // ★ 강남 가상 사례 (XRF Case 3 · BUY tier)
       // 검증/디버깅용 — 모든 후보 노출
       details: {
         jongno: jongno.candidates,
         jamsil: jamsil.candidates,
+        gangnam: gangnam.candidates,
       },
       debug: {
         jongno: jongno.debug,
         jamsil: jamsil.debug,
+        gangnam: gangnam.debug,
       },
       computed_at: new Date().toISOString(),
       note: '분석 대시보드 ROI = profitability.investment.roi (보고서 화면 "투자 수익률 (ROI)" 카드 = expectedNetProfit / totalEquity)',
@@ -155,6 +161,7 @@ export async function GET() {
     return NextResponse.json({
       jongno: null,
       jamsil: null,
+      gangnam: null,
       error: err instanceof Error ? err.message : String(err),
     }, { status: 500 })
   }
