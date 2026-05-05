@@ -849,6 +849,15 @@ export interface UnifiedReportInput {
   acquisitionBaseLabel?: '대출원금' | '채권잔액'
   /** 매입 base 금액 — 'CLAIM_BALANCE' 매각 시 채권잔액. 미지정 시 totalBondAmount. */
   acquisitionBaseAmount?: number
+
+  /**
+   * 현장 사진 URL/라벨 배열 (Phase G7+ 2026-05-05 신규).
+   * 매물 등록 / 자발적 경매 등록 시 첨부된 사진 — 딜룸 현장사진 모듈과 동일 source.
+   * 비어있거나 미지정 시 PropertyPhotosExhibit 컴포넌트는 자동 hidden (양식 변경 없음).
+   * 실 deploy 환경에서는 storage URL (예: 'https://supabase.../listing-001-photo-1.jpg').
+   * 가상 사례에서는 placeholder label 가능 (예: '외관 1층 정면').
+   */
+  sitePhotos?: readonly string[]
 }
 
 export interface UnifiedAnalysisReport {

@@ -39,6 +39,7 @@ import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
 import { useListing, getListingTitle, getListingRegion, getListingInstitution, getListingAppraisal } from "@/lib/hooks/use-listing"
 import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/unified-report/types"
 import XrfValuationSection from "./components/xrf-valuation-section"
+import { PropertyPhotosExhibit } from "./components/property-photos-exhibit"
 import { computeXrfValuation } from "@/lib/xrf/valuation"
 import { computeFundMetrics, computeProfitAllocation } from "@/lib/xrf/metrics"
 import { buildXrfSummary, buildXrfSummaryPrompt } from "@/lib/xrf/summary"
@@ -1036,6 +1037,25 @@ export default function UnifiedReportPage() {
           input.specialConditionsV2 ?? migrateV1ToV2Keys(input.specialConditions)
         }
       />
+
+      {/* ── 현장 사진 (사용자 정책 2026-05-05): NPL/XRF 양 모드 공통 표시 ─────
+          · 사진 있을 때만 렌더링 — 없으면 컴포넌트 자체가 hidden (양식 변경 없음)
+          · listing.images (실 매물 fetch) > input.sitePhotos (sample 사례) 우선순위
+          · 딜룸 현장사진 모듈 (asset-detail-view.tsx) 과 동일 source */}
+      {(() => {
+        // images 우선순위: listing 의 images (실 데이터) > report.input.sitePhotos (가상 사례)
+        const fromListing = (listing as { images?: string[]; site_photos?: string[] } | null)?.images
+                          ?? (listing as { site_photos?: string[] } | null)?.site_photos
+        const fromInput   = (input as { sitePhotos?: readonly string[] }).sitePhotos
+        const photos = fromListing ?? fromInput ?? []
+        if (photos.length === 0) return null
+        return (
+          <PropertyPhotosExhibit
+            images={photos}
+            assetTitle={input.assetTitle ?? displayTitle}
+          />
+        )
+      })()}
 
       {/* ── NPL 수익성 분석 (7블록 + 3단계 전략 + 민감도 + Monte Carlo + 근거) ───── */}
       {profitability && valuationMode === 'NPL' && (

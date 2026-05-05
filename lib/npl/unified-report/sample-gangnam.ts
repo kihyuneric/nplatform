@@ -187,6 +187,17 @@ export function buildGangnamSampleReport(): UnifiedAnalysisReport {
     statistics: GANGNAM_STATISTICS,
     acquisitionBaseLabel: '대출원금',
     acquisitionBaseAmount: GANGNAM_PURCHASE,
+    // 가상 사례 현장 사진 (placeholder labels — 딜룸 현장사진 모듈과 동일 source)
+    //   실 deploy 시 storage URL (https://supabase.../...) 로 교체.
+    //   비어있는 sample (jongno/jamsil) 은 자동으로 hidden — 양식 변경 없음.
+    sitePhotos: [
+      '외관 정면 (1층 상가 진입로)',
+      '외관 측면 (전면 도로)',
+      '내부 1층 매장 (현재 공실)',
+      '내부 천장 · 조명 시설',
+      '도로변 진입로 · 주차장',
+      '후면 · 비상구',
+    ],
   }
 
   // ── 회수율 3-팩터 ──
