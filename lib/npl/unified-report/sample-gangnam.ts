@@ -155,7 +155,7 @@ const GANGNAM_STATISTICS: StatisticsContext = {
 export function buildGangnamSampleReport(): UnifiedAnalysisReport {
   // ── 입력 ──
   const input: UnifiedReportInput = {
-    assetTitle: '강남 신사동 상가 NPL · 가상 사례 (XRF Case 3)',
+    assetTitle: '강남 신사동 상가 NPL · XRF Case',
     region: '서울특별시 강남구 신사동 (가상)',
     propertyType: '상가',
     propertyCategory: '상가',

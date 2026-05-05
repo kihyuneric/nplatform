@@ -77,7 +77,7 @@ interface RecentItem {
 const FEATURED_RECENT_ITEMS: RecentItem[] = [
   { id: "feat-jongno",  type: "NPL 수익성 분석", title: "종로구 홍지동 토지 8필지 · ○○대부", grade: "A", roi: "—", date: "2026-04-23", href: "/analysis/report?listingId=lst-jongno-hongji" },
   { id: "feat-jamsil",  type: "NPL 수익성 분석", title: "송파 잠실 ㅇㅇㅇㅇㅇ 오피스텔 · ㅇㅇ신협", grade: "B", roi: "—",  date: "2026-04-21", href: "/analysis/report" },
-  { id: "feat-gangnam", type: "NPL 수익성 분석 (가상)", title: "강남구 신사동 상가 · 법인 90% (XRF Case 3)", grade: "A", roi: "—", date: "2026-05-05", href: "/analysis/report?listingId=lst-gangnam-retail" },
+  { id: "feat-gangnam", type: "NPL 수익성 분석 (가상)", title: "강남구 신사동 상가 · 법인 90% XRF Case", grade: "A", roi: "—", date: "2026-05-05", href: "/analysis/report?listingId=lst-gangnam-retail" },
 ]
 
 function formatProjectRoi(value: number | null | undefined): string {

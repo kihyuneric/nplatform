@@ -137,7 +137,7 @@ export async function GET() {
       // 분석 대시보드가 사용하는 prominent ROI (권고 시나리오)
       jongno: jongno.primary,
       jamsil: jamsil.primary,
-      gangnam: gangnam.primary,                  // ★ 강남 가상 사례 (XRF Case 3 · BUY tier)
+      gangnam: gangnam.primary,                  // ★ 강남 가상 사례 (XRF Case · BUY tier)
       // 검증/디버깅용 — 모든 후보 노출
       details: {
         jongno: jongno.candidates,
