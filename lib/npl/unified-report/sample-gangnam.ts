@@ -1,169 +1,539 @@
 /**
  * lib/npl/unified-report/sample-gangnam.ts
  *
- * 강남구 신사동 상가 NPL 가상 사례 (XRF Vehicle 분석용 IR 시뮬레이션)
+ * 강남구 신사동 상가 NPL 가상 사례 — 풀 분석 보고서 (XRF Vehicle 분석용)
  *
  * 사용자 요청 (2026-05-05):
- *   "엑셀에 있는 강남 상가의 사례를 가상으로 작성해줘 ·
- *    XRF Valuation 및 NPL Valuation 내용 풍부 ·
- *    투자 전제 BASE 딜로 상세 · ROI 와 XRF/KOF/NPL VC 수수료 모두 엑셀에 맞게"
+ *   "기존 Jongno 양식처럼 가상의 매입 일정·잔금일 등 모든 내용을 가상으로 작성 ·
+ *    NPL Valuation / XRF Valuation 풀 구조 ·
+ *    AI 총평은 NPL 모드 / XRF 모드 별도"
  *
- * XRF_Simulator_v7.xlsx Case 3 — BASE 시나리오 정확 재현:
+ * XRF_Simulator_v7.xlsx Case 3 — BASE 시나리오 정합 (가상 사례):
+ *   · Purchase 3,500M · LTV 0.90 (법인) · Duration 360일
+ *   · Expected Bid 4,620M · Distribution Cap 4,620M · Recovery 42.0%
+ *   · NPL Self-ROI 134.07% · IRR 135.93%/yr
  *
- * ─── 입력 (엑셀 정합) ──────────────────────────────────
- *   · Purchase price (₩M)         : 3,500   (= 매입가, 대출원금 100% 매각)
- *   · Blended LTV (corporate)      : 0.90    (법인 차주 · pledge LTV)
- *   · Duration (days)              : 360     (12개월)
- *   · Expected Auction Bid (₩M)    : 4,620   (감정가 55억 × 84% 낙찰가율)
- *   · Distribution Cap (₩M)        : 4,620   (= 청구상한)
- *   · Recovery rate (calc)         : 42.0%   = (4620 − 3500×0.90) / 3500 = 1470/3500
- *   · NPL Self-ROI (reference)     : 134.07%
+ * 가상 시나리오:
+ *   · 강남구 신사동 핵심 상권 1층 상가 (가상)
+ *   · 차주: 법인 — 강남 신사동 상가 운영사 (가상)
+ *   · 채권자 (가상): ◆◆◆◆◆ Capital (외국계 PE)
+ *   · 1순위: 우리은행 채권최고액 33.6억 (= 28억 × 1.2)
+ *   · 매입가 35억 (대출원금 100% 매각, 할인 0%)
+ *   · 감정가 55억 (LTV 63.6%) · AI 시세 53억
+ *   · 운용기간 12개월 · pledge LTV 90% (법인 차주 우대)
  *
- * ─── BASE 결과 (XRF Vehicle 적용 후) ─────────────────────
- *   · LP Capital Call (1인당)      : USD 5,694  (100명 × $5,694 = $569,400)
- *   · LP Net Profit (1인당)        : USD 3,957  (= LP ROI 69.49%)
- *   · LP ROI (절대)                : 69.49%
- *   · LP IRR (annualized · 복리)   : 70.50%/yr
+ * 파일 본구조: sample-jongno.ts 패턴 미러 — buildNplProfitability /
+ *   buildRegistryAnalysis 직접 호출 + 가상 schedule 명시.
  *
- * ─── 이해관계자 수수료 (엑셀 정합 · USD) ────────────────
- *   · XRF Foundation (Mgmt + Setup + Carry) : $138,533
- *       - XRF Mgmt (0.5%/yr × 360일 cap)    : $13,266
- *       - XRF Setup (0.5% × purchase, 1회)  : $13,461
- *       - XRF Carry (5-tier marginal)        : $111,806
- *           [8%-20%]   slice $675 × 15%  = $101
- *           [20%-40%]  slice $1,123 × 20% = $225
- *           [40%-60%]  slice $1,124 × 25% = $281
- *           [60%+]     slice $1,704 × 30% = $511
- *           × 100 LPs                     = $111,806
- *   · KOF (Korea Operation Firm)           : $67,308
- *       - AI Valuation (0.7%)             : $18,846
- *       - Pipeline Sourcing (1.0%)        : $26,923
- *       - PM Fee (0.4%)                   : $10,769
- *       - KR Margin (0.4% TP defense)     : $10,769
- *   · NPL Vehicle Company (NPL VC)         : $53,846
- *       - Servicing Fee (2.0% × purchase) : $53,846
- *       - Capital Loan (10% Pool · 무이자) : $73,000 (Day Exit 100% 환급)
- *
- * ─── 투자 전제 ─────────────────────────────────────────
- *   1) 가상 매물 — 강남구 신사동 핵심 상권 1층 상가 (가상)
- *   2) 차주 (가상): 법인 — 강남 신사동 상가 운영사
- *   3) 채권자 (가상): ◆◆◆◆◆ Capital (외국계 PE)
- *   4) 매입가 35억 = 대출원금 100% 매각 (할인 0%)
- *   5) 감정가 55억 (LTV 63.6% · 권리 깨끗)
- *   6) 12개월 운용 · pledge LTV 90% (법인 우대)
- *   7) 1순위 우리은행 채권최고액 33.6억 변제 후 NPL 회수
- *   8) AUTO 판정: BASE tier (LP ROI ≥ 20% · 양보 불필요)
+ * AI 총평:
+ *   · NPL Valuation 모드 → executiveSummary (자체 수익성 narrative)
+ *   · XRF Valuation 모드 → buildXrfSummary 가 별도로 5단락 자동 생성
  */
 
-import type { UnifiedAnalysisReport } from './types'
-import { buildReportFromInput } from './sample'
+import type { StatisticsContext } from './statistics'
+import type { UnifiedAnalysisReport, UnifiedReportInput } from './types'
+import { EMPTY_SPECIAL_CONDITIONS } from './types'
+import {
+  computeLtvFactor,
+  computeRegionTrendFactor,
+  computeAuctionRatioFactor,
+  buildRecoveryPrediction,
+  scoreToGrade,
+} from './recovery-3factor'
+import { computeExpectedBid, estimateMinBid } from './expected-bid'
+import { buildRegistryAnalysis } from './registry-analysis'
+import { buildNplProfitability } from './profitability'
+import {
+  computeCollateralFactor,
+  computeRightsFactor,
+  computeMarketFactor,
+  computeLiquidityFactor,
+  composeRiskScore,
+  computeInvestmentVerdict,
+} from './risk-factors'
 
 export const GANGNAM_RETAIL_LISTING_ID = 'lst-gangnam-retail'
 
 const 억 = 100_000_000
 
-/**
- * 강남 상가 NPL 분석 보고서 — 가상 사례 (Case 3 · XRF Simulator v7 BASE 정합).
- */
-export function buildGangnamSampleReport(): UnifiedAnalysisReport {
-  // ─── 가상 채권 정보 (엑셀 v7 Case 3 입력 정합) ──────────
-  const principal = 35 * 억              // 35억 = 매입가 = 대출원금 (할인 0%)
-  const overdueInterest = 1.4 * 억      // 가상 연체이자 1.4억 (15%/yr × 12개월 가정)
-  const appraisal = 55 * 억              // 감정가 55억 (LTV 63.6%)
-  const aiMarket = 53 * 억               // AI 시세 53억
+// ─── 가상 데이터 (Gangnam 신사동 상가 · IR 시뮬레이션 용) ──────────
+const GANGNAM_PURCHASE = 35 * 억            // 매입가 35억 (= 대출원금)
+const GANGNAM_OVERDUE_INTEREST = 1.4 * 억    // 가상 연체이자 1.4억 (15%/yr × 4개월)
+const GANGNAM_TOTAL_BOND = GANGNAM_PURCHASE + GANGNAM_OVERDUE_INTEREST  // 채권잔액 36.4억
+const GANGNAM_APPRAISAL = 55 * 억            // 감정가 55억 (LTV 63.6%)
+const GANGNAM_AI_MARKET = 53 * 억            // AI 시세 53억
+const GANGNAM_LAND_AREA = 280                // m² (가상 · 1층 상가)
+const GANGNAM_BUILDING_AREA = 230            // m² (가상)
 
-  // buildReportFromInput — 기본 분석 (recovery / risk / registry / profitability) 자동 산출
-  const report = buildReportFromInput({
-    address: '서울특별시 강남구 신사동 (가상 사례)',
-    collateralType: '상가',
-    bondNumber: 'GANGNAM-VC-2026-0501',
-    caseNumber: '서울중앙지방법원 2026타경00000 (가상)',
-    debtorType: 'CORPORATE',
-    appraisedValue: appraisal,
-    currentMarketValue: aiMarket,
-    appraisalDate: '2026-05-01',
-    marketPriceNote: '강남 신사동 핵심 상권 1층 상가 평균 m² 단가 4,200만원 기준 AI 추정 (가상)',
-    principal,
-    unpaidInterest: 0,
-    overdueInterest,
+const GANGNAM_SENIOR_CHAEMAX = 33.6 * 억     // 1순위 우리은행 채권최고액 (28억 × 1.2)
+const GANGNAM_SENIOR_PRINCIPAL = 28 * 억     // 1순위 원금 가정
+
+// 가상 schedule (12개월 운용 — 사용자 요청 정합)
+const GANGNAM_AS_OF = '2026-05-01'
+const GANGNAM_PURCHASE_DATE = '2026-05-15'    // 채권 매입 계약일
+const GANGNAM_BALANCE_DATE = '2026-06-15'      // 잔금일 (= 매입일 + 31일)
+const GANGNAM_FIRST_SALE_DATE = '2027-04-15'   // 1차 매각기일 (잔금일 + 304일)
+const GANGNAM_DISTRIBUTION_DATE = '2027-06-15' // 배당기일 (= 잔금일 + 365일)
+const GANGNAM_DEFAULT_DATE = '2025-12-01'      // 연체 시작일
+
+// 강남구 상가 낙찰가율 (가상)
+const GANGNAM_AUCTION_STATS = [
+  { bucket: '12M' as const, periodLabel: '1년 평균', saleCount: 56, saleRate: 19.8, bidRatio: 84.0 },
+  { bucket: '6M'  as const, periodLabel: '6개월 평균', saleCount: 32, saleRate: 21.5, bidRatio: 84.5 },
+  { bucket: '3M'  as const, periodLabel: '3개월 평균', saleCount: 17, saleRate: 22.8, bidRatio: 86.0 },
+  { bucket: '1M'  as const, periodLabel: '1개월 평균', saleCount: 6, saleRate: 24.1, bidRatio: 85.5 },
+]
+
+// 인근 실거래 (가상)
+const GANGNAM_COMPARABLES_AVG_PER_M2 = 42_000_000  // m²당 4,200만원 (가상)
+
+// ─── 통계 컨텍스트 (가상) ─────────────────────────────────────
+const GANGNAM_STATISTICS: StatisticsContext = {
+  asOfDate: GANGNAM_AS_OF,
+  target: {
+    location: {
+      sido: '서울특별시',
+      sigungu: '강남구',
+      eupmyeondong: '신사동',
+      jibun: '000-00',
+      bjdCode: '1168010100',
+    },
+    propertyCategory: '상가',
+    appraisalValue: GANGNAM_APPRAISAL,
+    landAreaSqm: GANGNAM_LAND_AREA,
+    buildingAreaSqm: GANGNAM_BUILDING_AREA,
+  },
+  auctionRatioStats: [
+    {
+      location: { sido: '서울특별시', sigungu: '강남구' },
+      propertyCategory: '상가',
+      scope: 'SIGUNGU',
+      asOfDate: GANGNAM_AS_OF,
+      rows: GANGNAM_AUCTION_STATS,
+    },
+  ],
+  courtSchedule: {
+    courtName: '서울중앙지방법원 본원',
+    avgHearingInterval: 35,
+    asOfDate: GANGNAM_AS_OF,
+    stages: [
+      { round: 1, saleDays: 304, distributionDays: 60 },
+      { round: 2, saleDays: 350, distributionDays: 60 },
+      { round: 3, saleDays: 392, distributionDays: 60 },
+    ],
+  },
+  sameAddressAuction: undefined,
+  nearbyAuction: {
+    centerLocation: { sido: '서울특별시', sigungu: '강남구', eupmyeondong: '신사동' },
+    propertyCategory: '상가',
+    radiusMeters: 1000,
+    lookbackYears: 3,
+    summary: {
+      avgDurationDays: 383,
+      avgAppraisalValue: 4_667_000_000,
+      avgSalePrice: 4_003_000_000,
+      avgBidRatio: 85.7,
+      avgBidderCount: 4.5,
+    },
+    cases: [
+      { caseNo: '2025타경45612', filedDate: '2024-09-08', saleDate: '2025-09-21', durationDays: 380, appraisalValue: 42 * 억, salePrice: 36 * 억, bidRatio: 85.7, bidderCount: 5 },
+      { caseNo: '2025타경50321', filedDate: '2024-09-20', saleDate: '2025-11-04', durationDays: 410, appraisalValue: 38 * 억, salePrice: 32.5 * 억, bidRatio: 85.5, bidderCount: 4 },
+      { caseNo: '2026타경10024', filedDate: '2025-02-21', saleDate: '2026-02-14', durationDays: 358, appraisalValue: 60 * 억, salePrice: 51.6 * 억, bidRatio: 86.0, bidderCount: 5 },
+    ],
+  },
+  nearbyTransactions: undefined,
+}
+
+// ─── Builder ──────────────────────────────────────────────────
+export function buildGangnamSampleReport(): UnifiedAnalysisReport {
+  // ── 입력 ──
+  const input: UnifiedReportInput = {
+    assetTitle: '강남 신사동 상가 NPL · 가상 사례 (XRF Case 3)',
+    region: '서울특별시 강남구 신사동 (가상)',
+    propertyType: '상가',
+    propertyCategory: '상가',
+    appraisalValue: GANGNAM_APPRAISAL,
+    appraisalDate: GANGNAM_AS_OF,
+    totalBondAmount: GANGNAM_TOTAL_BOND,
+    minBidPrice: estimateMinBid(GANGNAM_APPRAISAL, 0),
+    currentMarketValue: GANGNAM_AI_MARKET,
+    marketPriceNote: '강남 신사동 핵심 상권 1층 상가 m²당 4,200만원 기준 AI 추정 (가상 사례)',
     claimBreakdown: {
-      principal,
+      principal: GANGNAM_PURCHASE,
       unpaidInterest: 0,
-      overdueInterest,
-      delinquencyStartDate: '2025-12-01',
+      overdueInterest: GANGNAM_OVERDUE_INTEREST,
+      delinquencyStartDate: GANGNAM_DEFAULT_DATE,
       normalRate: 0.0625,           // 정상금리 6.25%
-      overdueRate: 0.150,            // 연체금리 15.0% (법인 더 높음)
+      overdueRate: 0.150,            // 연체금리 15.0% (법인)
     },
     rightsSummary: {
-      seniorTotal: 33.6 * 억,        // 1순위 우리은행 33.6억 (채권최고액 = 28억 × 1.2)
-      juniorTotal: 0,                 // 후순위 없음 (clean deal)
+      seniorTotal: GANGNAM_SENIOR_CHAEMAX,
+      juniorTotal: 0,
     },
+    debtorType: 'CORPORATE',
+    debtorOwnerSame: true,
     auctionStartDate: '2026-09-01',
-    desiredSaleDiscount: 0,         // 100% 매각
-    debtorOwnerSame: true,           // 채무자 = 소유자 (법인 직접 보유)
+    auctionEstimatedStart: '2026-09-01',
+    auctionEstimatedMonths: 7,
+    desiredSaleDiscount: 0,
+    specialConditions: { ...EMPTY_SPECIAL_CONDITIONS },
+    statistics: GANGNAM_STATISTICS,
+    acquisitionBaseLabel: '대출원금',
+    acquisitionBaseAmount: GANGNAM_PURCHASE,
+  }
+
+  // ── 회수율 3-팩터 ──
+  const ltv = computeLtvFactor({
+    totalBondAmount: GANGNAM_SENIOR_CHAEMAX + GANGNAM_PURCHASE,  // 권리관계 합계 = 1순위 + 본 채권
+    appraisalValue: GANGNAM_APPRAISAL,
+    source: 'APPRAISAL',
+  })
+  const region = computeRegionTrendFactor({
+    regionLabel: '서울특별시 강남구 신사동',
+    ctx: GANGNAM_STATISTICS,
+    externalVolumeChange: 5.2,       // 가상 강남 상가 거래량
+    externalPriceIndexChange: 4.8,    // 가상 가격지수
+  })
+  const auction = computeAuctionRatioFactor({
+    regionLabel: '서울특별시 강남구',
+    category: '상가',
+    ctx: GANGNAM_STATISTICS,
+    specialConditions: input.specialConditions,
+  })
+  const recovery = buildRecoveryPrediction({ ltv, region, auction })
+
+  // ── 예상낙찰가 ──
+  const expectedBid = computeExpectedBid({
+    appraisalValue: GANGNAM_APPRAISAL,
+    minBidPrice: input.minBidPrice ?? 0,
+    currentMarketValue: GANGNAM_AI_MARKET,
+    auction,
+    ctx: GANGNAM_STATISTICS,
+  })
+  const recommendedBidPrice = expectedBid.recommendedBidPrice
+
+  // ── 등기부 분석 ──
+  const registryAnalysis = buildRegistryAnalysis({
+    claimAmount: GANGNAM_TOTAL_BOND,
+    bidPrice: Math.round(GANGNAM_APPRAISAL * 0.84),  // 강남 상가 84% 낙찰가율
+    interestedPartyCount: 2,            // 채권자 + 채무자
+    parcelCount: 1,
+    failedBidCount: 0,
+    claims: [
+      { rank: 1, right: '근저당권설정', creditor: '우리은행',           claimAmount: GANGNAM_SENIOR_CHAEMAX },
+      { rank: 2, right: '근저당권설정', creditor: '◆◆◆◆◆ Capital (가상)', claimAmount: GANGNAM_PURCHASE },
+    ],
   })
 
-  // ─── BASE 시나리오 상세 executiveSummary (엑셀 v7 Case 3 정합) ────
-  // 사용자 요청 (2026-05-05): 투자 전제 BASE 딜로 상세 + 모든 이해관계자 수수료 엑셀 정합
-  const executiveSummary = [
-    `[가상 사례 · IR 시뮬레이션 — XRF Simulator v7 Case 3] 강남구 신사동 상가 NPL · BASE Deal 분석`,
-    ``,
-    `▸ 투자 전제 (Base Deal Premise)`,
-    `  · 매물       : 강남구 신사동 핵심 상권 1층 상가 1동 (가상)`,
-    `  · 차주       : 법인 (가상) · pledge LTV 90% (법인 차주 우대 적용)`,
-    `  · 채권자     : ◆◆◆◆◆ Capital (외국계 PE · 가상)`,
-    `  · 채권 내역  : 대출원금 35억 + 연체이자 1.4억 = 채권잔액 36.4억`,
-    `  · 매입가     : 35억 (대출원금 100% 매각, 할인 0%)`,
-    `  · 감정가     : 55억 (LTV 63.6% · 권리 깨끗)`,
-    `  · 1순위      : 우리은행 채권최고액 33.6억 (= 28억 × 1.2)`,
-    `  · 운용기간   : 360일 (12개월) · 매각시작 2026-09-01`,
-    ``,
-    `▸ NPL Valuation (자체 수익성)`,
-    `  · 회수율     : 42.0% = (예상낙찰가 46.2억 − 1순위 33.6억) / 매입가 35억 → NPL 회수 12.6억`,
-    `  · NPL 자체 ROI: 134.07% (XRF Simulator v7 reference)`,
-    `  · NPL IRR    : 135.93%/yr`,
-    `  · AI 등급    : ${report.summary.riskGrade}등급 · 회수율 ${report.recovery.predictedRecoveryRate.toFixed(1)}%`,
-    `  · 권리관계   : 깨끗 (2순위 권리자 부재 · 임차인 없음 · 특수조건 없음)`,
-    ``,
-    `▸ XRF Vehicle Valuation — BASE Tier (AUTO 판정)`,
-    `  · LP Capital Call (1인당) : USD 5,694 × 100 LPs = 총 USD 569,400`,
-    `  · LP Net Profit (1인당)   : USD 3,957 × 100 LPs = 총 USD 395,700`,
-    `  · LP ROI (절대)            : 69.49%`,
-    `  · LP IRR (annualized 복리) : 70.50%/yr`,
-    `  · Hurdle 8%/yr 충당 후 잉여분 5-tier marginal Carry 발동`,
-    ``,
-    `▸ 이해관계자 수수료 분배 (엑셀 v7 BASE 정합)`,
-    `  · XRF Foundation (Mgmt + Setup + Carry) : USD 138,533`,
-    `      ‒ Mgmt 0.5%/yr × 360일 cap     : USD 13,266`,
-    `      ‒ Setup 0.5% × purchase (1회)  : USD 13,461`,
-    `      ‒ Carry 5-tier marginal × 100 LPs : USD 111,806`,
-    `        [8-20%] 15% / [20-40%] 20% / [40-60%] 25% / [60%+] 30%`,
-    `  · Korea Operation Firm (KOF · 舊 엔플랫폼) : USD 67,308`,
-    `      ‒ AI Valuation (0.7%)          : USD 18,846`,
-    `      ‒ Pipeline Sourcing (1.0%)     : USD 26,923`,
-    `      ‒ PM Fee (0.4%)                : USD 10,769`,
-    `      ‒ KR Margin (0.4% TP defense)  : USD 10,769`,
-    `  · NPL Vehicle Company (NPL VC · 舊 대부업체) : USD 53,846`,
-    `      ‒ Servicing Fee 2.0% × purchase (FLAT) : USD 53,846`,
-    `      ‒ Capital Loan 10% Pool (무이자 대여)   : USD 73,000 (Day Exit 100% LP 환급)`,
-    ``,
-    `▸ 투자 의견`,
-    `  AUTO 판정 BASE tier — LP ROI 69.49% ≥ 20% · 양보 불필요 · RWA 즉시 출시 가능.`,
-    `  법인 차주 90% pledge LTV 활용 + 12개월 짧은 cycle + 강남 핵심 상권 견고 ` +
-      `→ XRF 시그너처 deal 패턴. AI 투자 의견: BUY.`,
-  ].join('\n')
+  // ── 리스크 4-팩터 ──
+  const collateralFactor = computeCollateralFactor({
+    claimBalance: GANGNAM_TOTAL_BOND,
+    appraisalValue: GANGNAM_APPRAISAL,
+    marketValue: GANGNAM_AI_MARKET,
+  })
+  const rightsFactor = computeRightsFactor({
+    specialConditionsV2: [],
+    subordinateClaimCount: 0,
+  })
+  const marketFactor = computeMarketFactor({ region, auction })
+  const liquidityFactor = computeLiquidityFactor({
+    auction,
+    averageBidderCount: GANGNAM_STATISTICS.nearbyAuction?.summary.avgBidderCount ?? 4.5,
+    courtSaleDaysByRound: GANGNAM_STATISTICS.courtSchedule?.stages.map(s => s.saleDays) ?? [],
+    courtDistributionDaysByRound: GANGNAM_STATISTICS.courtSchedule?.stages.map(s => s.distributionDays) ?? [],
+    oneYearSaleRatePct: GANGNAM_AUCTION_STATS.find(s => s.bucket === '12M')?.saleRate ?? 19.8,
+    oneYearSaleCount: GANGNAM_AUCTION_STATS.find(s => s.bucket === '12M')?.saleCount ?? 56,
+  })
+  const riskFactorResults = [collateralFactor, rightsFactor, marketFactor, liquidityFactor]
+  const { score: riskScore } = composeRiskScore(riskFactorResults)
+  const riskGrade = scoreToGrade(riskScore)
+
+  // ── 수익성 분석 (NPL 자체) — 가상 schedule 명시 ──
+  const profitability = buildNplProfitability({
+    property: {
+      address: '서울특별시 강남구 신사동 (가상)',
+      exclusiveAreaM2: GANGNAM_BUILDING_AREA,
+      supplyAreaM2: GANGNAM_BUILDING_AREA,
+      creditor: '◆◆◆◆◆ Capital (가상)',
+      debtor: '강남 신사동 상가 운영사 (가상)',
+      owner: '강남 신사동 상가 운영사 (가상)',
+      tenant: '없음',                          // clean deal
+    },
+    loanPrincipal: GANGNAM_PURCHASE,
+    initialPrincipal: GANGNAM_PURCHASE,
+    acquisitionBaseAmount: GANGNAM_PURCHASE,
+    acquisitionBaseLabel: '대출원금',
+    delinquencyRate: 0.150,
+    delinquencyStartDate: GANGNAM_DEFAULT_DATE,
+    accelerationDate: GANGNAM_DEFAULT_DATE,
+    appraisalValue: GANGNAM_APPRAISAL,
+    aiMarketValueLatest: GANGNAM_AI_MARKET,
+    priceHistory: [
+      { price: GANGNAM_APPRAISAL, reportedAt: GANGNAM_AS_OF, source: 'APPRAISAL', label: '감정가 (가상)' },
+      { price: GANGNAM_AI_MARKET,  reportedAt: GANGNAM_AS_OF, source: 'AI_LATEST', label: 'AI 시세' },
+    ],
+    expectedBidRatio: 0.84,                // 강남 상가 1년 평균 84%
+    expectedBidRatioPeriod: '강남구 상가 1년 평균',
+    auctionStartDate: '2026-09-01',
+    courtName: '서울중앙지방법원 본원',
+    // 가상 일정 lock — 12개월 운용
+    purchaseDateOverride: GANGNAM_PURCHASE_DATE,
+    balancePaymentDateOverride: GANGNAM_BALANCE_DATE,
+    firstSaleDateOverride: GANGNAM_FIRST_SALE_DATE,
+    discountRate: 0,                        // 100% 매입
+    pledgeLoanRatio: 0.90,                  // 법인 차주 90%
+    pledgeInterestRate: 0.065,              // 6.5%
+    executionCost: 12_000_000,              // 경매비용 1,200만원
+    maxBondMultiplier: 1.20,                // 채권최고액 = 원금 × 1.2
+    registrationTransferRate: 0.0048,
+    brokerageFeeRate: 0.015,                // 1.5%
+    contractDepositRate: 0.10,
+    asOfDate: GANGNAM_AS_OF,
+    mcSeed: 20260501,
+    mcTrials: 10_000,
+    sensitivityPurchaseRateAxis: [1.00, 0.95, 0.90, 0.85, 0.80, 0.75, 0.70],
+    sensitivityBidRatioAxis: [0.70, 0.78, 0.84, 0.90, 0.95, 1.00, 1.05],
+    evidence: {
+      bidRatioStats: {
+        selectedLabel: '강남구 상가 · 1년 평균',
+        items: [
+          { scope: 'SIGUNGU', region: '강남구', periodMonths: 12, ratioPercent: 84.0, sampleSize: 56 },
+          { scope: 'SIGUNGU', region: '강남구', periodMonths: 6,  ratioPercent: 84.5, sampleSize: 32 },
+          { scope: 'SIGUNGU', region: '강남구', periodMonths: 3,  ratioPercent: 86.0, sampleSize: 17 },
+          { scope: 'SIGUNGU', region: '강남구', periodMonths: 1,  ratioPercent: 85.5, sampleSize: 6 },
+        ],
+        narrative:
+          '강남구 상가 낙찰가율 1년 84.0% → 6개월 84.5% → 3개월 86.0% 안정 흐름. ' +
+          '적용: 감정가 대비 84% (1년 평균) → 예상낙찰가 46.2억.',
+      },
+      courtSchedule: {
+        courtName: '서울중앙지방법원 본원',
+        avgSaleDays: 304,
+        avgDistributionDays: 60,
+        avgHearingInterval: 35,
+        sampleSize: 56,
+      },
+      auctionCases: {
+        averageDurationDays: 383,
+        averageAppraisalValue: 4_667_000_000,
+        averageSalePrice: 4_003_000_000,
+        averageBidRatio: 85.7,
+        sameAddress: [],
+        nearbyWithin1Km: (GANGNAM_STATISTICS.nearbyAuction?.cases ?? []).map((c, i) => ({
+          caseNo: c.caseNo,
+          address: ['서울특별시 강남구 신사동 ㅇㅇㅇ', '서울특별시 강남구 신사동 ㅇㅇㅇ', '서울특별시 강남구 청담동 ㅇㅇㅇ'][i] ?? '서울특별시 강남구 신사동',
+          distanceKm: [0.3, 0.5, 0.8][i] ?? 0.5,
+          propertyCategory: '상가',
+          appraisalValue: c.appraisalValue,
+          salePrice: c.salePrice,
+          bidRatio: c.bidRatio,
+          durationDays: c.durationDays,
+          saleDate: c.saleDate,
+        })),
+      },
+      nearbyTransactions: {
+        averageLandAreaM2: 245,
+        averageAmount: 47.5 * 억,
+        averagePricePerM2: GANGNAM_COMPARABLES_AVG_PER_M2,
+        averagePricePerPy: GANGNAM_COMPARABLES_AVG_PER_M2 * 3.3058,
+        samples: [
+          { txDate: '2026-03-12', address: '서울특별시 강남구 신사동 ㅇㅇㅇ', distanceMeters: 250, landAreaM2: 280, amountKRW: 53 * 억, pricePerM2: 47_000_000, zoning: '일반상업지역' },
+          { txDate: '2026-01-08', address: '서울특별시 강남구 신사동 ㅇㅇㅇ', distanceMeters: 410, landAreaM2: 220, amountKRW: 41 * 억, pricePerM2: 42_500_000, zoning: '일반상업지역' },
+          { txDate: '2025-11-22', address: '서울특별시 강남구 청담동 ㅇㅇㅇ', distanceMeters: 720, landAreaM2: 260, amountKRW: 49 * 억, pricePerM2: 41_800_000, zoning: '일반상업지역' },
+        ],
+      },
+    },
+  })
+
+  const bankSalePrice = profitability.acquisition.purchasePrice
+  const recommendedRoi = profitability.strategies.recommended.roi
+  const investmentRoi = profitability.investment.roi
+
+  const verdictResult = computeInvestmentVerdict({
+    predictedRecoveryRate: recovery.predictedRecoveryRate,
+    riskScore,
+    recommendedRoi,
+    bankSalePrice,
+    claimBalance: GANGNAM_TOTAL_BOND,
+  })
+  const verdict = verdictResult.verdict
+  const verdictScore = verdictResult.totalScore
+
+  // ─── NPL Valuation 전용 executiveSummary ──────────────────────
+  // (XRF Vehicle 내용은 buildXrfSummary 가 별도로 5단락 생성 — toggle 시 swap)
+  const executiveSummary =
+    `[가상 사례 · 강남 신사동 상가 NPL] ` +
+    `법인 차주 · 채권자 ◆◆◆◆◆ Capital · 채권잔액 36.4억 (대출원금 35억 + 연체이자 1.4억) · ` +
+    `1순위 우리은행 채권최고액 33.6억 · 권리관계 합계 ${((GANGNAM_SENIOR_CHAEMAX + GANGNAM_PURCHASE) / 억).toFixed(1)}억 · ` +
+    `감정가 ${(GANGNAM_APPRAISAL / 억).toFixed(0)}억 (LTV ${(ltv.ltvPercent).toFixed(2)}%). ` +
+    `종합 분석 결과 ${riskGrade}등급, 예측 회수율 ${recovery.predictedRecoveryRate.toFixed(1)}% (신뢰도 ${Math.round(recovery.confidence * 100)}%). ` +
+    `매입가 ${Math.round(bankSalePrice / 억 * 10) / 10}억 (= 대출원금 100% 매각) 기준 ` +
+    `보수적/권고/공격적 시나리오 ROI ${(profitability.strategies.conservative.roi * 100).toFixed(1)}% / ${(profitability.strategies.recommended.roi * 100).toFixed(1)}% / ${(profitability.strategies.aggressive.roi * 100).toFixed(1)}% · ` +
+    `투자 ROI ${(investmentRoi * 100).toFixed(2)}% (12개월 운용). ` +
+    `강남구 상가 1년 낙찰가율 84% 적용 시 예상낙찰가 46.2억 → ` +
+    `1순위 우리은행 33.6억 변제 후 NPL 회수액 약 12.6억 (NPL 채권잔액 대비 35%). ` +
+    `2순위 권리자 부재로 권리 깨끗 · 임차인 없음 · 강남 핵심 상권 1층 상가 시너지 + ` +
+    `인근 1km 실거래 m²당 ${Math.round(GANGNAM_COMPARABLES_AVG_PER_M2 / 10000)}만원 단가 견고. ` +
+    `법인 차주 pledge LTV 90% 활용 → LP 자기자본 효율 우수. ` +
+    `AI 투자 의견 종합 ${verdictScore}점 → ${verdict}.`
+
+  const ltvNumerator = GANGNAM_SENIOR_CHAEMAX + GANGNAM_PURCHASE
 
   return {
-    ...report,
     id: 'sample-gangnam-' + Date.now().toString(36),
+    createdAt: new Date().toISOString(),
     source: 'SAMPLE',
-    input: {
-      ...report.input,
-      assetTitle: '강남구 신사동 상가 NPL · 가상 사례 (XRF Case 3 · BASE)',
-      region: '서울특별시 강남구',
-      acquisitionBaseLabel: '대출원금',
-      acquisitionBaseAmount: principal,
+    input,
+    summary: {
+      predictedRecovery: recovery.predictedRecoveryRate,
+      riskGrade,
+      riskScore,
+      recommendedBidPrice,
+      verdict,
+      verdictScore,
+      tldr:
+        `${input.region} ${input.propertyCategory} · ` +
+        `AI 투자 의견 ${verdictScore}점 (${verdict}) · ` +
+        `NPL 매각가 ${Math.round(bankSalePrice / 억 * 10) / 10}억 · ` +
+        `ROI ${(recommendedRoi * 100).toFixed(2)}% · 예측회수율 ${recovery.predictedRecoveryRate}%`,
     },
+    recovery,
+    risk: {
+      grade: riskGrade,
+      score: riskScore,
+      level: riskScore >= 70 ? 'LOW' : riskScore >= 55 ? 'MEDIUM' : riskScore >= 40 ? 'HIGH' : 'CRITICAL',
+      narrative:
+        `리스크 수준 ${riskScore >= 70 ? '낮음' : riskScore >= 55 ? '보통' : '높음'} (${riskScore}점 · 등급 ${riskGrade}). ` +
+        `LTV ${ltv.ltvPercent.toFixed(1)}% (권리관계 합계 ${(ltvNumerator / 억).toFixed(1)}억 / 감정가 ${(GANGNAM_APPRAISAL / 억).toFixed(0)}억) · ` +
+        `법인 차주 90% pledge LTV → 채권 회수 안정성 ↑. ` +
+        `2순위 권리자 부재 + 강남 핵심 상권 입지 → 4팩터 모두 LOW/MEDIUM, 구조적 안정성 확보.`,
+      factors: riskFactorResults.map(f => ({
+        category: f.category,
+        severity: f.severity,
+        score: f.score,
+        explanation: f.explanation,
+        mitigation: f.mitigation,
+      })),
+      specialConditionAdjustments: [],
+      promptMeta: {
+        model: 'NPLATFORM 리스크 분석 모델 (가상 사례)',
+        generatedAt: new Date().toISOString(),
+        inputHash: 'nplatform-risk-gangnam-v1',
+      },
+    },
+    anomaly: {
+      overallRisk: 'LOW',
+      overallScore: 12,
+      findings: [
+        {
+          id: 'GN-001',
+          category: 'PRICE',
+          severity: 'INFO',
+          title: `감정가 ${(GANGNAM_APPRAISAL / 억).toFixed(0)}억 vs AI 시세 ${(GANGNAM_AI_MARKET / 억).toFixed(0)}억 — 3.6% 하향`,
+          description:
+            '감정가는 보수적 평가로, AI 시세는 인근 1km 실거래(평균 m²당 4,200만원) 반영 결과 ' +
+            '소폭 하향. 본 사례에서는 감정가 기준 84% 낙찰가율 적용으로 회수액 산출.',
+          evidence: `감정가 ${GANGNAM_APPRAISAL.toLocaleString()} / AI 시세 ${GANGNAM_AI_MARKET.toLocaleString()}`,
+          confidence: 90,
+        },
+        {
+          id: 'GN-002',
+          category: 'RIGHTS',
+          severity: 'INFO',
+          title: '우리은행 1순위 단독 — 권리 깨끗',
+          description:
+            '근저당 채권최고액 33.6억 (우리은행 단독 1순위 · 28억 × 1.2 = 33.6억) · 후순위 권리자 없음. ' +
+            '예상낙찰가 46.2억 기준 1순위 변제 후 잔여 12.6억 → NPL 매수자 회수 충분.',
+          evidence: '등기부 분석 — 1순위 우리은행, 후순위 0건',
+          confidence: 96,
+        },
+        {
+          id: 'GN-003',
+          category: 'PRICE',
+          severity: 'INFO',
+          title: '강남구 상가 낙찰가율 84%대 안정 흐름',
+          description:
+            '1년 84.0% → 6개월 84.5% → 3개월 86.0% → 1개월 85.5%로 84-86% 일관. ' +
+            '강남 핵심 상권 입지 프리미엄 반영 — 회수 시나리오 신뢰도 높음.',
+          evidence: '강남구 상가 1년 56건 / 6개월 32건 / 3개월 17건 / 1개월 6건',
+          confidence: 85,
+        },
+        {
+          id: 'GN-004',
+          category: 'BEHAVIOR',
+          severity: 'INFO',
+          title: '법인 차주 + pledge LTV 90% — XRF Vehicle 시그너처',
+          description:
+            '법인 차주 deal 은 90% pledge LTV 적용 가능 → LP 자기자본 효율 ↑. ' +
+            '12개월 짧은 cycle + 강남 핵심 상권 → XRF Vehicle Case 3 모범 사례.',
+          evidence: 'XRF Simulator v7 Case 3 reference: NPL Self-ROI 134%',
+          confidence: 88,
+        },
+      ],
+      recommendations: [
+        '인근 1km 실거래 m²당 4,200만원 단가 ↔ 본 매물 단가 비교 (감정가 검증)',
+        '우리은행 1순위 33.6억 변제 시점 / 배당 절차 점검 (낙찰 후 ~60일)',
+        '법인 차주 신용도 점검 (재무제표 · 영업현황 · 변제 가능성)',
+        '강남 신사동 상권 임대료 시세 점검 (낙찰 후 임대 운영 시 추가 회수)',
+      ],
+    },
+    expectedBid,
+    bidRecommendation: {
+      aiPredictedBidRatio: auction.blendedBidRatio,
+      breakEvenBidRatio: Math.max(50, auction.blendedBidRatio - 15),
+      conservative: {
+        policy: 'CONSERVATIVE',
+        label: '보수적 입찰가 (감정가 대비 78%)',
+        bidPrice: Math.round(GANGNAM_APPRAISAL * 0.78),
+        bidRatioPercent: 78,
+        expectedNetProfit: Math.round(GANGNAM_APPRAISAL * 0.78 - GANGNAM_TOTAL_BOND),
+        expectedRoi: Math.round((GANGNAM_APPRAISAL * 0.78 - GANGNAM_TOTAL_BOND) / GANGNAM_TOTAL_BOND * 100 * 10) / 10,
+        expectedIrr: 22.5,
+        winProbability: 0.30,
+        rationale: '강남구 상가 1년 평균 하단 — 낙찰 가능성 낮으나 매입 마진 극대화',
+      },
+      base: {
+        policy: 'BASE',
+        label: 'AI 권고 입찰가 (감정가 대비 84%)',
+        bidPrice: Math.round(GANGNAM_APPRAISAL * 0.84),
+        bidRatioPercent: 84,
+        expectedNetProfit: Math.round(GANGNAM_APPRAISAL * 0.84 - GANGNAM_TOTAL_BOND),
+        expectedRoi: Math.round((GANGNAM_APPRAISAL * 0.84 - GANGNAM_TOTAL_BOND) / GANGNAM_TOTAL_BOND * 100 * 10) / 10,
+        expectedIrr: 28.0,
+        winProbability: 0.62,
+        rationale: '강남구 상가 1년 평균 84% — 낙찰가율 안정 흐름. 회수율 35%',
+      },
+      aggressive: {
+        policy: 'AGGRESSIVE',
+        label: '공격적 입찰가 (감정가 대비 90%)',
+        bidPrice: Math.round(GANGNAM_APPRAISAL * 0.90),
+        bidRatioPercent: 90,
+        expectedNetProfit: Math.round(GANGNAM_APPRAISAL * 0.90 - GANGNAM_TOTAL_BOND),
+        expectedRoi: Math.round((GANGNAM_APPRAISAL * 0.90 - GANGNAM_TOTAL_BOND) / GANGNAM_TOTAL_BOND * 100 * 10) / 10,
+        expectedIrr: 33.5,
+        winProbability: 0.85,
+        rationale: '평균 대비 +6%p — 낙찰 확실성 ↑, 단 시세 대비 마진 축소',
+      },
+    },
+    marketOutlook: {
+      outlook:
+        region.auctionMomentum > 2 ? 'BULLISH'
+        : region.auctionMomentum < -2 ? 'BEARISH'
+        : 'NEUTRAL',
+      confidence: region.confidence,
+      horizonMonths: 6,
+      narrative:
+        '강남구 상가 낙찰가율 1년 84.0% → 6개월 84.5% → 3개월 86.0% 안정 흐름. ' +
+        `인근 1km 실거래 평균 단가 ${Math.round(GANGNAM_COMPARABLES_AVG_PER_M2 / 10000).toLocaleString()}만원/㎡로 견고. ` +
+        '강남 핵심 상권 1층 상가 — 임대료 안정 + 매매가 견조. 일반상업지역 건축 한도 내에서 운영 잠재력.',
+      indicators: [
+        { label: '지역 6개월 낙찰가율', value: `${region.auctionMomentum > 0 ? '+' : ''}${region.auctionMomentum}%p vs 1년`, trend: region.auctionMomentum > 0 ? 'UP' : region.auctionMomentum < 0 ? 'DOWN' : 'FLAT', commentary: '강남구 상가 낙찰가율 안정' },
+        { label: '인근 1km 실거래', value: `${GANGNAM_STATISTICS.nearbyAuction?.cases.length ?? 3}건/3년`, trend: 'UP', commentary: '신사동·청담동 권역 거래 활발' },
+        { label: '법원 1회차 매각 기간', value: `${GANGNAM_STATISTICS.courtSchedule?.stages[0]?.saleDays ?? 304}일`, trend: 'FLAT', commentary: '서울중앙지방법원 본원 강남구 상가 평균 (가상)' },
+      ],
+    },
+    registryAnalysis,
+    profitability,
     executiveSummary,
   }
 }
