@@ -187,17 +187,10 @@ export function buildGangnamSampleReport(): UnifiedAnalysisReport {
     statistics: GANGNAM_STATISTICS,
     acquisitionBaseLabel: '대출원금',
     acquisitionBaseAmount: GANGNAM_PURCHASE,
-    // 가상 사례 현장 사진 (placeholder labels — 딜룸 현장사진 모듈과 동일 source)
-    //   실 deploy 시 storage URL (https://supabase.../...) 로 교체.
-    //   비어있는 sample (jongno/jamsil) 은 자동으로 hidden — 양식 변경 없음.
-    sitePhotos: [
-      '외관 정면 (1층 상가 진입로)',
-      '외관 측면 (전면 도로)',
-      '내부 1층 매장 (현재 공실)',
-      '내부 천장 · 조명 시설',
-      '도로변 진입로 · 주차장',
-      '후면 · 비상구',
-    ],
+    // 사용자 정책 (2026-05-05): 현재 버전은 실 사진 등록 미지원 → sitePhotos 비활성.
+    //   PropertyPhotosExhibit 컴포넌트는 유지 (향후 실 사진 등록 시 자동 활성화).
+    //   실 매물 deploy 시 storage URL 배열 주입 → 자동으로 EXHIBIT 노출.
+    // sitePhotos: undefined → 컴포넌트 자동 hidden (현재 양식 그대로)
   }
 
   // ── 회수율 3-팩터 ──
