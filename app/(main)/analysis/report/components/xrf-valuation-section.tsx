@@ -543,10 +543,10 @@ export default function XrfValuationSection({
           const benchmark = computeIndustryBenchmark(0.08, holdingPeriodDays / 365)
           return (
             <>
-              {/* Metric 정의 박스 — 각 5 metric 의 공식과 의미 */}
+              {/* Metric 정의 박스 — 각 4 metric 의 공식과 의미 */}
               <div style={{ marginBottom: 16, padding: 14, background: '#F8FAFC', border: `1px solid ${c.border}`, borderRadius: 4 }}>
                 <div style={{ fontWeight: 700, color: c.navy, fontSize: 12, marginBottom: 10 }}>
-                  ⓘ 5 Metric 정의 (Definitions)
+                  ⓘ 4 Metric 정의 (Definitions)
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: 8, fontSize: 12, lineHeight: 1.6, color: c.text }}>
                   <div>
@@ -564,21 +564,14 @@ export default function XrfValuationSection({
                     </span>
                   </div>
                   <div>
-                    <strong style={{ color: c.amber }}>③ Vehicle Take-Rate:</strong>{' '}
-                    <span style={{ color: c.textSub }}>= 총 Vehicle 수수료 / NPL 자체 순수익</span>{' '}
-                    <span style={{ fontStyle: 'italic', color: c.textTertiary }}>
-                      — Vehicle 구조 (XRF + KOF + NPL VC Servicing) 가 NPL profit 에서 추출하는 비중. PE buyout fund 평균 25-30% 와 비교 가능
-                    </span>
-                  </div>
-                  <div>
-                    <strong style={{ color: tierColor[selected.tier] }}>④ XIRR (Compound):</strong>{' '}
+                    <strong style={{ color: tierColor[selected.tier] }}>③ XIRR (Compound):</strong>{' '}
                     <span style={{ color: c.textSub }}>= 연환산 복리 IRR (Newton's method)</span>{' '}
                     <span style={{ fontStyle: 'italic', color: c.textTertiary }}>
                       — Excel XIRR 함수 동일 알고리즘. 비균등 시점 cash flow 의 내부수익률. 단순 연환산 IRR (LP ROI ÷ 운용기간) 보다 엄밀한 복리 기준 IRR
                     </span>
                   </div>
                   <div>
-                    <strong style={{ color: c.emerald }}>⑤ Hurdle Spread:</strong>{' '}
+                    <strong style={{ color: c.emerald }}>④ Hurdle Spread:</strong>{' '}
                     <span style={{ color: c.textSub }}>= XIRR − Hurdle 8%/yr</span>{' '}
                     <span style={{ fontStyle: 'italic', color: c.textTertiary }}>
                       — LP 우선 수익률 (Hurdle Rate) 대비 초과 수익. 양수면 XRF Carry 발동 임계 통과 · 음수면 LP 우선 회수 가능
@@ -587,8 +580,8 @@ export default function XrfValuationSection({
                 </div>
               </div>
 
-              {/* 5개 차별화 metric 카드 */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 16 }}>
+              {/* 4개 차별화 metric 카드 */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
                 <MetricCard
                   label="Net DPI (LP)"
                   value={`${fundMetrics.dpi.toFixed(3)}x`}
@@ -600,12 +593,6 @@ export default function XrfValuationSection({
                   value={`${fundMetrics.grossMomAsset.toFixed(3)}x`}
                   sub="NPL 회수 / 매입가 (자산 레벨)"
                   tint={c.navyDark}
-                />
-                <MetricCard
-                  label="Vehicle Take-Rate"
-                  value={`${(fundMetrics.vehicleTakeRate * 100).toFixed(1)}%`}
-                  sub="Vehicle 수수료 / NPL 순수익"
-                  tint={c.amber}
                 />
                 <MetricCard
                   label="XIRR (Compound)"
@@ -621,14 +608,13 @@ export default function XrfValuationSection({
                 />
               </div>
 
-              {/* 벤치마크 비교표 — 수식 기반 */}
+              {/* 벤치마크 비교표 — 수식 기반 (산업 중앙값만) */}
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: c.bgSoft, borderBottom: `2px solid ${c.border}` }}>
                     <th style={{ textAlign: 'left', padding: '10px 12px', color: c.textSub, fontWeight: 600, width: 180 }}>Metric</th>
-                    <th style={{ textAlign: 'right', padding: '10px 12px', color: c.emerald, fontWeight: 700, width: 120 }}>★ XRF Vehicle</th>
-                    <th style={{ textAlign: 'right', padding: '10px 12px', color: c.textSub, fontWeight: 600, width: 140 }}>산업 중앙값 (수식)</th>
-                    <th style={{ textAlign: 'right', padding: '10px 12px', color: c.textSub, fontWeight: 600, width: 130 }}>Top Quartile (수식)</th>
+                    <th style={{ textAlign: 'right', padding: '10px 12px', color: c.emerald, fontWeight: 700, width: 140 }}>★ XRF Vehicle</th>
+                    <th style={{ textAlign: 'right', padding: '10px 12px', color: c.textSub, fontWeight: 600, width: 160 }}>산업 중앙값 (수식)</th>
                     <th style={{ textAlign: 'left', padding: '10px 12px', color: c.textSub, fontWeight: 600 }}>판정</th>
                   </tr>
                 </thead>
@@ -637,16 +623,14 @@ export default function XrfValuationSection({
                     label="Net DPI (LP 레벨)"
                     xrf={fundMetrics.dpi}
                     median={benchmark.median.dpi}
-                    topQuartile={benchmark.topQuartile.dpi}
                     format="x"
                     c={c}
-                    note="(1 + median IRR)^운용기간 = (1.12)^운용 / TopQ = (1.20)^운용"
+                    note="(1 + median IRR)^운용기간 = (1.12)^운용"
                   />
                   <BenchmarkRow
                     label="Gross MoM (Asset)"
                     xrf={fundMetrics.grossMomAsset}
                     median={benchmark.median.mom}
-                    topQuartile={benchmark.topQuartile.mom}
                     format="x"
                     c={c}
                     note="자산 레벨 — Vehicle 구조 무관"
@@ -655,16 +639,14 @@ export default function XrfValuationSection({
                     label="XIRR (annualized)"
                     xrf={fundMetrics.xirr}
                     median={benchmark.median.irr}
-                    topQuartile={benchmark.topQuartile.irr}
                     format="pct"
                     c={c}
-                    note="median = Hurdle + 4% / TopQ = Hurdle + 12%"
+                    note="median = Hurdle + 4%"
                   />
                   <BenchmarkRow
                     label="Hurdle Spread (LP 초과)"
                     xrf={fundMetrics.hurdleSpread}
                     median={benchmark.median.irr - 0.08}
-                    topQuartile={benchmark.topQuartile.irr - 0.08}
                     format="pct"
                     c={c}
                     note="XIRR − Hurdle (8%/yr 우선수익률 대비)"
@@ -673,24 +655,14 @@ export default function XrfValuationSection({
                 </tbody>
               </table>
 
-              {/* Vehicle Take-Rate 별도 (산업 비교 ≠ 일반 multiples) */}
-              <div style={{ marginTop: 12, padding: '10px 14px', background: '#FFFBEB', borderLeft: `3px solid ${c.amber}`, fontSize: 12, color: c.text, lineHeight: 1.6 }}>
-                <strong>Vehicle Take-Rate</strong> = {(fundMetrics.vehicleTakeRate * 100).toFixed(1)}% — Vehicle 구조 (XRF + KOF + NPL VC) 가 NPL 자체 순수익에서 추출하는 비중.
-                {' '}일반 PE buyout fund 의 fee load (~25-30%) 와 비교 가능. 본 Vehicle 효율: {' '}
-                <strong style={{ color: fundMetrics.vehicleTakeRate < 0.30 ? c.emerald : fundMetrics.vehicleTakeRate < 0.40 ? c.amber : '#DC2626' }}>
-                  {fundMetrics.vehicleTakeRate < 0.30 ? '✓ 효율적 (LP 친화)' : fundMetrics.vehicleTakeRate < 0.40 ? '~ 평균 수준' : '⚠ 높은 수수료 부담'}
-                </strong>.
-              </div>
-
               <div style={{ fontSize: 11, color: c.text, marginTop: 12, padding: '10px 14px', background: '#F0F9FF', borderLeft: `3px solid ${c.blue}`, lineHeight: 1.6 }}>
                 <strong>산업 벤치마크 도출 수식 (하드코딩 X)</strong>:
                 <br />• 산업 중앙값 IRR = Hurdle Rate + 4%/yr premium = 8% + 4% = <strong>{fmtPct(benchmark.median.irr)}/yr</strong>
-                <br />• Top Quartile IRR = Hurdle Rate + 12%/yr premium = 8% + 12% = <strong>{fmtPct(benchmark.topQuartile.irr)}/yr</strong>
                 <br />• 산업 MoM (배수) = (1 + IRR) ^ 운용기간({(holdingPeriodDays/365).toFixed(2)}년) — 복리 환산
                 <br />• 출처 premium: Cambridge Associates · Preqin · ILPA Industry Reports (NPL/Special-Situations Private Debt 2020-2024 평균)
               </div>
               <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
-                ⓘ <strong>5 metric 차별화</strong>: 이전 DPI/TVPI/MoM/Equity Multiple 은 closed fund (NAV=0) 에서 모두 동일 = LP DPI. v7 부터 자산-레벨 (Gross MoM) · 비용 효율 (Take-Rate) · LP 초과수익 (Hurdle Spread) 으로 차별화. 단순 IRR ({fmtPct(selected.lpIrrYr)}/yr) vs XIRR ({fmtPct(fundMetrics.xirr)}/yr) 차이는 단순 연환산 vs 복리 계산.
+                ⓘ <strong>4 metric 차별화</strong>: 이전 DPI/TVPI/MoM/Equity Multiple 은 closed fund (NAV=0) 에서 모두 동일 = LP DPI. v7 부터 자산-레벨 (Gross MoM) · LP 초과수익 (Hurdle Spread) 으로 차별화. 단순 IRR ({fmtPct(selected.lpIrrYr)}/yr) vs XIRR ({fmtPct(fundMetrics.xirr)}/yr) 차이는 단순 연환산 vs 복리 계산.
               </div>
             </>
           )
@@ -883,16 +855,15 @@ function Row4({ label, v1, v2, note, bold, last }: { label: string; v1: string; 
 }
 
 /**
- * BenchmarkRow — XRF Vehicle 의 metric 을 산업 중앙값/Top Quartile 과 비교.
+ * BenchmarkRow — XRF Vehicle 의 metric 을 산업 중앙값과 비교.
  * format='x' → multiple (1.234x), format='pct' → percentage.
  */
 function BenchmarkRow({
-  label, xrf, median, topQuartile, format, c, note, last,
+  label, xrf, median, format, c, note, last,
 }: {
   label: string
   xrf: number
   median: number
-  topQuartile: number
   format: 'x' | 'pct'
   c: { emerald: string; amber: string; navy: string; textSub: string; text: string }
   note?: string
@@ -900,8 +871,8 @@ function BenchmarkRow({
 }) {
   const fmt = (v: number) => format === 'x' ? `${v.toFixed(3)}x` : `${(v * 100).toFixed(2)}%`
   const verdict =
-    xrf >= topQuartile ? { color: c.emerald, label: '★ Top Quartile 진입 — 우수' }
-    : xrf >= median    ? { color: c.emerald, label: '✓ Median 상회 — 양호' }
+    xrf >= median * 1.30 ? { color: c.emerald, label: '★ Median 크게 상회 — 우수' }
+    : xrf >= median       ? { color: c.emerald, label: '✓ Median 상회 — 양호' }
     : xrf >= median * 0.85 ? { color: c.amber, label: '~ Median 근접 — 평균 수준' }
     : { color: '#DC2626', label: '⚠ Median 미달 — 검토 필요' }
 
@@ -914,7 +885,6 @@ function BenchmarkRow({
       </td>
       <td style={{ ...cellRight, color: c.emerald, fontWeight: 700, fontSize: 14 }}>{fmt(xrf)}</td>
       <td style={{ ...cellRight, color: c.text }}>{fmt(median)}</td>
-      <td style={{ ...cellRight, color: c.text }}>{fmt(topQuartile)}+</td>
       <td style={{ padding: '10px 12px', color: verdict.color, fontWeight: 600, fontSize: 12 }}>{verdict.label}</td>
     </tr>
   )
