@@ -52,6 +52,7 @@ import {
 } from "@/lib/npl/unified-report/types"
 import { buildSampleReport } from "@/lib/npl/unified-report/sample"
 import { buildJongnoSampleReport } from "@/lib/npl/unified-report/sample-jongno"
+import { buildGangnamSampleReport, GANGNAM_RETAIL_LISTING_ID } from "@/lib/npl/unified-report/sample-gangnam"
 import { buildListingReport } from "@/lib/npl/unified-report/from-listing"
 import { JONGNO_HONGJI_LISTING_ID } from "@/lib/samples/jongno-hongji-land-npl"
 import { buildNplProfitability } from "@/lib/npl/unified-report/profitability"
@@ -251,6 +252,14 @@ export default function UnifiedReportPage() {
           setReport(buildJongnoSampleReport())
           return
         }
+        // 강남 상가 가상 사례 (XRF Simulator v7 Case 3 정합)
+        if (listingId === GANGNAM_RETAIL_LISTING_ID) {
+          if (typeof window !== "undefined") {
+            try { sessionStorage.removeItem("unifiedReport") } catch { /* noop */ }
+          }
+          setReport(buildGangnamSampleReport())
+          return
+        }
 
         // 우선순위 2 — sessionStorage (방금 분석 위저드/autoRun 으로 생성된 결과)
         if (typeof window !== "undefined") {
@@ -303,6 +312,8 @@ export default function UnifiedReportPage() {
         // 사례 매물이면 우선 종로용 빌더, 아니면 listing-driven, 마지막은 sample
         if (listingId === JONGNO_HONGJI_LISTING_ID) {
           setReport(buildJongnoSampleReport())
+        } else if (listingId === GANGNAM_RETAIL_LISTING_ID) {
+          setReport(buildGangnamSampleReport())
         } else if (listing && listing.id) {
           setReport(buildListingReport(listing))
         } else {
