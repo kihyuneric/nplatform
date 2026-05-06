@@ -151,7 +151,7 @@ const GANGNAM_STATISTICS: StatisticsContext = {
 }
 
 // ─── Builder ──────────────────────────────────────────────────
-export function buildGangnamSampleReport(): UnifiedAnalysisReport {
+export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string }): UnifiedAnalysisReport {
   // ── 입력 ──
   const input: UnifiedReportInput = {
     assetTitle: '강남 신사동 상가 NPL · XRF Case',
@@ -296,6 +296,7 @@ export function buildGangnamSampleReport(): UnifiedAnalysisReport {
     purchaseDateOverride: GANGNAM_PURCHASE_DATE,
     balancePaymentDateOverride: GANGNAM_BALANCE_DATE,
     courtFirstRoundSaleDays: GANGNAM_STATISTICS.courtSchedule?.stages[0]?.saleDays ?? 315,
+    ...(opts?.firstSaleDateOverride ? { firstSaleDateOverride: opts.firstSaleDateOverride } : {}),
     discountRate: 0,                        // 100% 매입
     pledgeLoanRatio: 0.90,                  // 법인 차주 90%
     pledgeInterestRate: 0.065,              // 6.5%

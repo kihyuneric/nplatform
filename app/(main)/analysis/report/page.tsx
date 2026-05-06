@@ -40,6 +40,7 @@ import { useListing, getListingTitle, getListingRegion, getListingInstitution, g
 import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/unified-report/types"
 import XrfValuationSection from "./components/xrf-valuation-section"
 import { PropertyPhotosExhibit } from "./components/property-photos-exhibit"
+import { computeEffectiveFirstSaleDate } from "@/lib/npl/unified-report/auction-round"
 import { computeXrfValuation } from "@/lib/xrf/valuation"
 import { computeFundMetrics, computeProfitAllocation } from "@/lib/xrf/metrics"
 import { buildXrfSummary, buildXrfSummaryPrompt } from "@/lib/xrf/summary"
@@ -239,18 +240,38 @@ export default function UnifiedReportPage() {
   // SSR 시 document 미존재 — Portal 은 mount 이후에만 렌더
   useEffect(() => { setMounted(true) }, [])
 
+  // ── shifted sample helper (사용자 정책 v3.1 2026-05-06):
+  //    1차 빌드 → predicted firstSaleDate 산출 → 그 값으로 재빌드 →
+  //    initial == live 보장 (AI 총평 / 3단계 panel ROI 동일)
+  //    회차당 유찰 할인율도 1차 빌드의 valuation.auctionFailureDiscountPct 사용 (지역별 통계)
+  const buildShiftedSample = useCallback(
+    (builder: (opts?: { firstSaleDateOverride?: string }) => UnifiedAnalysisReport): UnifiedAnalysisReport => {
+      const base = builder()
+      const firstSale = base.profitability?.schedule.milestones.find(m => m.key === 'firstSaleDate')?.date
+      if (!firstSale || !base.profitability) return base
+      const shifted = computeEffectiveFirstSaleDate(
+        firstSale,
+        base.profitability.valuation.expectedBidRatio,
+        base.profitability.valuation.auctionFailureDiscountPct,
+      )
+      return shifted === firstSale ? base : builder({ firstSaleDateOverride: shifted })
+    },
+    [],
+  )
+
   useEffect(() => {
     ;(async () => {
       try {
         // 우선순위 1 — listingId 가 사례 사전 빌드된 매물(종로 홍지동 등)이면 전용 빌더
         //   ⚠ sessionStorage / API 보다 먼저 — 사용자가 매물 단위로 진입한 의도를 우선
-        //   (이전 다른 매물 viewer 의 캐시가 새 매물에 덮어씌워지는 문제 방지)
+        //   사용자 정책 v3.1 (2026-05-06): initial == live 정합 보장 →
+        //     buildShiftedSample() 가 1차 빌드 → predicted shifted firstSaleDate 산출 →
+        //     그 값으로 재빌드 → AI 총평 / 3단계 panel ROI 동일.
         if (listingId === JONGNO_HONGJI_LISTING_ID) {
-          // 종로 매물 진입 시 이전 unifiedReport 캐시는 의미 없음 — 정리해 다음 진입에서도 깨끗
           if (typeof window !== "undefined") {
             try { sessionStorage.removeItem("unifiedReport") } catch { /* noop */ }
           }
-          setReport(buildJongnoSampleReport())
+          setReport(buildShiftedSample(buildJongnoSampleReport))
           return
         }
         // 강남 상가 가상 사례 (XRF Simulator v7 Case 3 정합)
@@ -258,7 +279,7 @@ export default function UnifiedReportPage() {
           if (typeof window !== "undefined") {
             try { sessionStorage.removeItem("unifiedReport") } catch { /* noop */ }
           }
-          setReport(buildGangnamSampleReport())
+          setReport(buildShiftedSample(buildGangnamSampleReport))
           return
         }
 
@@ -306,19 +327,19 @@ export default function UnifiedReportPage() {
           return
         }
         // 우선순위 5 — listing 도 없으면 (URL 파라미터만 있고 fetch 실패 시)
-        //   기존 잠실 sample 로 fallback (체험용 미리보기)
-        setReport(buildSampleReport())
+        //   기존 잠실 sample 로 fallback (체험용 미리보기) — shifted 적용
+        setReport(buildShiftedSample(buildSampleReport))
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err))
         // 사례 매물이면 우선 종로용 빌더, 아니면 listing-driven, 마지막은 sample
         if (listingId === JONGNO_HONGJI_LISTING_ID) {
-          setReport(buildJongnoSampleReport())
+          setReport(buildShiftedSample(buildJongnoSampleReport))
         } else if (listingId === GANGNAM_RETAIL_LISTING_ID) {
-          setReport(buildGangnamSampleReport())
+          setReport(buildShiftedSample(buildGangnamSampleReport))
         } else if (listing && listing.id) {
           setReport(buildListingReport(listing))
         } else {
-          setReport(buildSampleReport())
+          setReport(buildShiftedSample(buildSampleReport))
         }
       }
     })()
