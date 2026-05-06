@@ -412,6 +412,9 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
     expectedBidRatioPeriod: '서울 전체 토지 3개월 평균',
     // 회차당 유찰 할인율 (default 20%p) — 통계 매핑 가능 (지역/법원별)
     auctionFailureDiscountPct: 20,
+    // 선순위 채권 우선변제 — 1순위 농협 근저당 채권최고액 23.64억
+    seniorClaimAmount: seniorClaim,                // 2,364,000,000
+    seniorCreditorLabel: '농협은행 1순위 근저당',
     auctionStartDate: '2026-08-15',  // 매각 후 미수회수 시 경매 시작 가정
     courtName: '서울중앙지방법원 본원',
     // 일정 lock (2026-05-03 / v2 2026-05-06 — 핵심 공식 기반):

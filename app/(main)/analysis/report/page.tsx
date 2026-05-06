@@ -3238,15 +3238,16 @@ function ProfitabilitySections({
         </div>
       </Section>
 
-      {/* ── [6] 예상 배당표 ─────────────────── */}
+      {/* ── [6] 예상 배당표 — cascade (낙찰가→경매비용→선순위→NPL→1·2질권자) ─── */}
       <Section
         title="NPL 수익성 분석 · 예상 배당표"
         icon={Scale}
-        caption="채권계산서(원리금) + 경매비용 → 1·2질권자 배당"
+        caption="낙찰가 → 경매비용 → 선순위 → NPL 측 → 1·2질권자 (민사집행법 §145·§148)"
         exhibit={6}
         source="민사집행법 §145·§148 배당순위 + 채권계산서 원리금 시뮬레이션">
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+        {/* (a) 채권계산서 카드 — 이자/원리금 컨텍스트 */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
           <MetricCard
             label="채권계산서 (이자)"
             value={krwWon(distribution.bondCalcInterest)}
@@ -3259,36 +3260,91 @@ function ProfitabilitySections({
             tint="#2E75B6"
             sub={bondCalcPnIFormula}
           />
-          <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
-            <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mb-1">예상 배당액</div>
-            <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: "var(--color-positive)" }}>
-              {krwWon(distribution.expectedDistributionAmount)}
-            </div>
-            <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-1">
-              원리금 + 경매비용 ({krwMan(distribution.executionCost)})
-            </div>
-            <EditableInlineMoney
-              label="경매비용"
-              value={edit.executionCost}
-              onChange={(v) => setEdit({ ...edit, executionCost: v })}
-            />
-          </div>
-          <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
-            <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mb-1">
-              1질권자 배당액 (질권대출기관)
-            </div>
-            <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: "var(--color-brand-bright)" }}>
-              {krwWon(distribution.firstPledgeeAmount)}
-            </div>
-            <div className="text-[0.625rem] text-[var(--color-text-tertiary)] mt-2">
-              2질권자 배당액 (투자자)
-            </div>
-            <div className="text-[1rem] font-black tabular-nums leading-tight" style={{ color: "var(--color-danger)" }}>
-              {krwWon(distribution.secondPledgeeAmount)}
-            </div>
-          </div>
         </div>
-        <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
+
+        {/* (b) 배당 cascade — 7단계 흐름 */}
+        <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
+          <table className="w-full text-[0.8125rem]" style={{ borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #0A1628' }}>
+                <th className="text-left py-2.5 pl-4 pr-3 text-[0.6875rem] font-bold uppercase tracking-wider" style={{ color: '#6B7280' }}>구분</th>
+                <th className="text-left py-2.5 pr-3 text-[0.6875rem] font-bold uppercase tracking-wider" style={{ color: '#6B7280' }}>주체</th>
+                <th className="text-right py-2.5 pr-3 text-[0.6875rem] font-bold uppercase tracking-wider" style={{ color: '#6B7280' }}>차감/변제</th>
+                <th className="text-right py-2.5 pr-4 text-[0.6875rem] font-bold uppercase tracking-wider" style={{ color: '#2251FF' }}>잔여 배당가능액</th>
+              </tr>
+            </thead>
+            <tbody style={{ fontFamily: 'tabular-nums' }}>
+              {/* 1. 예상낙찰가 (시작) */}
+              <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#EFF6FF' }}>
+                <td className="py-3 pl-4 pr-3 font-bold" style={{ color: '#0A1628' }}>① 예상 낙찰가</td>
+                <td className="py-3 pr-3" style={{ color: '#6B7280' }}>법원 (시작액)</td>
+                <td className="py-3 pr-3 text-right" style={{ color: '#9CA3AF' }}>—</td>
+                <td className="py-3 pr-4 text-right font-black text-[0.9375rem]" style={{ color: '#2251FF', fontFamily: 'Georgia, serif' }}>
+                  {krwWon(valuation.expectedBidPrice)}
+                </td>
+              </tr>
+              {/* 2. 경매비용 */}
+              <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
+                <td className="py-3 pl-4 pr-3 font-semibold" style={{ color: '#0A1628' }}>② 경매비용 차감</td>
+                <td className="py-3 pr-3" style={{ color: '#6B7280' }}>집행관·법원</td>
+                <td className="py-3 pr-3 text-right" style={{ color: '#DC2626' }}>− {krwWon(distribution.executionCost)}</td>
+                <td className="py-3 pr-4 text-right font-bold" style={{ color: '#0A1628' }}>
+                  {krwWon(Math.max(0, valuation.expectedBidPrice - distribution.executionCost))}
+                </td>
+              </tr>
+              {/* 3. 선순위 채권 (있을 때만) */}
+              {distribution.seniorPayout > 0 && (
+                <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#FEF7ED' }}>
+                  <td className="py-3 pl-4 pr-3 font-semibold" style={{ color: '#0A1628' }}>③ 선순위 채권 변제</td>
+                  <td className="py-3 pr-3" style={{ color: '#6B7280' }}>{distribution.seniorCreditorLabel ?? '선순위 근저당'}</td>
+                  <td className="py-3 pr-3 text-right" style={{ color: '#DC2626' }}>− {krwWon(distribution.seniorPayout)}</td>
+                  <td className="py-3 pr-4 text-right font-bold" style={{ color: '#0A1628' }}>
+                    {krwWon(distribution.npNetDistributable)}
+                  </td>
+                </tr>
+              )}
+              {/* 4. NPL 측 배당 (실제 귀속) */}
+              <tr style={{ borderBottom: '1px solid #F3F4F6', background: 'rgba(34, 81, 255, 0.04)' }}>
+                <td className="py-3 pl-4 pr-3 font-bold" style={{ color: '#2251FF' }}>{distribution.seniorPayout > 0 ? '④' : '③'} NPL 측 배당</td>
+                <td className="py-3 pr-3" style={{ color: '#6B7280' }}>NPL 채권자 (매수자)</td>
+                <td className="py-3 pr-3 text-right text-[0.6875rem]" style={{ color: '#6B7280' }}>min(잔여, 원리금 {krwWon(distribution.bondCalcPrincipalAndInterest)})</td>
+                <td className="py-3 pr-4 text-right font-black text-[0.9375rem]" style={{ color: '#2251FF', fontFamily: 'Georgia, serif' }}>
+                  {krwWon(distribution.expectedDistributionAmount)}
+                </td>
+              </tr>
+              {/* 5. 1질권자 */}
+              <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
+                <td className="py-3 pl-4 pr-3 font-semibold" style={{ color: '#0A1628' }}>{distribution.seniorPayout > 0 ? '⑤' : '④'} 1질권자 배당</td>
+                <td className="py-3 pr-3" style={{ color: '#6B7280' }}>질권대출기관 (LTV {(edit.pledgeLoanRatio * 100).toFixed(0)}%)</td>
+                <td className="py-3 pr-3 text-right" style={{ color: '#DC2626' }}>− {krwWon(distribution.firstPledgeeAmount)}</td>
+                <td className="py-3 pr-4 text-right font-bold" style={{ color: '#0A1628' }}>
+                  {krwWon(distribution.secondPledgeeAmount)}
+                </td>
+              </tr>
+              {/* 6. 2질권자 (최종 투자자 회수) */}
+              <tr style={{ background: '#1B3A5C', color: '#FFFFFF' }}>
+                <td className="py-3 pl-4 pr-3 font-bold" style={{ color: '#FFFFFF' }}>{distribution.seniorPayout > 0 ? '⑥' : '⑤'} 2질권자 배당</td>
+                <td className="py-3 pr-3 text-[0.75rem]" style={{ color: '#C7E5F0' }}>투자자 (자기자본 회수)</td>
+                <td className="py-3 pr-3 text-right text-[0.75rem]" style={{ color: '#C7E5F0' }}>★ FINAL</td>
+                <td className="py-3 pr-4 text-right font-black text-[1rem]" style={{ color: '#6FB8E6', fontFamily: 'Georgia, serif' }}>
+                  {krwWon(distribution.secondPledgeeAmount)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* 경매비용 inline editor */}
+        <div className="mt-2 mb-3 flex items-center justify-end gap-2 text-[0.6875rem]" style={{ color: '#6B7280' }}>
+          <EditableInlineMoney
+            label="경매비용"
+            value={edit.executionCost}
+            onChange={(v) => setEdit({ ...edit, executionCost: v })}
+          />
+        </div>
+
+        {/* 해석 */}
+        <div className="rounded-xl bg-[var(--color-surface-elevated)] border-l-[3px] border-[#2251FF] border border-[var(--color-border-subtle)] p-4">
           <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{distribution.narrative}</p>
         </div>
       </Section>
@@ -4417,14 +4473,70 @@ function EvidenceTabs({
 
         {tab === "dist" && (
           <div className="space-y-3">
-            <div className="grid grid-cols-3 gap-3">
-              <MetricCard label="입찰예상가" value={krwWon(evidence.distributionRef.bidPrice)} tint="#1B3A5C" />
-              <MetricCard label="경매집행비용" value={krwWon(evidence.distributionRef.executionCost)} tint="#051C2C" />
-              <MetricCard label="본건 배당액" value={krwWon(evidence.distributionRef.distributableAmount)} tint="#051C2C" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <MetricCard label="1질권자 (질권대출기관)" value={krwWon(evidence.distributionRef.firstPledgee)} tint="#2E75B6" />
-              <MetricCard label="2질권자 (투자자)" value={krwWon(evidence.distributionRef.secondPledgee)} tint={MCK.greyDark} />
+            {/* cascade 흐름 (사용자 정책 v3 2026-05-06): 낙찰가→경매비용→선순위→NPL→1·2질권자 */}
+            <div className="rounded-md overflow-hidden" style={{ border: '1px solid #E5E8EC' }}>
+              <table className="w-full text-[0.8125rem]" style={{ borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #0A1628' }}>
+                    <th className="text-left py-2 pl-3 pr-2 text-[0.625rem] font-bold uppercase tracking-wider" style={{ color: '#6B7280' }}>구분</th>
+                    <th className="text-left py-2 pr-2 text-[0.625rem] font-bold uppercase tracking-wider" style={{ color: '#6B7280' }}>주체</th>
+                    <th className="text-right py-2 pr-2 text-[0.625rem] font-bold uppercase tracking-wider" style={{ color: '#6B7280' }}>차감/변제</th>
+                    <th className="text-right py-2 pr-3 text-[0.625rem] font-bold uppercase tracking-wider" style={{ color: '#2251FF' }}>잔여</th>
+                  </tr>
+                </thead>
+                <tbody style={{ fontFamily: 'tabular-nums' }}>
+                  <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#EFF6FF' }}>
+                    <td className="py-2 pl-3 pr-2 font-bold" style={{ color: '#0A1628' }}>① 예상 낙찰가</td>
+                    <td className="py-2 pr-2 text-[0.6875rem]" style={{ color: '#6B7280' }}>법원 (시작액)</td>
+                    <td className="py-2 pr-2 text-right text-[0.75rem]" style={{ color: '#9CA3AF' }}>—</td>
+                    <td className="py-2 pr-3 text-right font-black text-[0.875rem]" style={{ color: '#2251FF', fontFamily: 'Georgia, serif' }}>
+                      {krwWon(evidence.distributionRef.bidPrice)}
+                    </td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
+                    <td className="py-2 pl-3 pr-2 font-semibold" style={{ color: '#0A1628' }}>② 경매비용 차감</td>
+                    <td className="py-2 pr-2 text-[0.6875rem]" style={{ color: '#6B7280' }}>집행관·법원</td>
+                    <td className="py-2 pr-2 text-right text-[0.75rem]" style={{ color: '#DC2626' }}>− {krwWon(evidence.distributionRef.executionCost)}</td>
+                    <td className="py-2 pr-3 text-right font-bold" style={{ color: '#0A1628' }}>
+                      {krwWon(Math.max(0, evidence.distributionRef.bidPrice - evidence.distributionRef.executionCost))}
+                    </td>
+                  </tr>
+                  {(evidence.distributionRef.seniorPayout ?? 0) > 0 && (
+                    <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#FEF7ED' }}>
+                      <td className="py-2 pl-3 pr-2 font-semibold" style={{ color: '#0A1628' }}>③ 선순위 채권 변제</td>
+                      <td className="py-2 pr-2 text-[0.6875rem]" style={{ color: '#6B7280' }}>{evidence.distributionRef.seniorCreditorLabel ?? '선순위 근저당'}</td>
+                      <td className="py-2 pr-2 text-right text-[0.75rem]" style={{ color: '#DC2626' }}>− {krwWon(evidence.distributionRef.seniorPayout!)}</td>
+                      <td className="py-2 pr-3 text-right font-bold" style={{ color: '#0A1628' }}>
+                        {krwWon(Math.max(0, evidence.distributionRef.bidPrice - evidence.distributionRef.executionCost - (evidence.distributionRef.seniorPayout ?? 0)))}
+                      </td>
+                    </tr>
+                  )}
+                  <tr style={{ borderBottom: '1px solid #F3F4F6', background: 'rgba(34, 81, 255, 0.04)' }}>
+                    <td className="py-2 pl-3 pr-2 font-bold" style={{ color: '#2251FF' }}>{(evidence.distributionRef.seniorPayout ?? 0) > 0 ? '④' : '③'} NPL 측 배당</td>
+                    <td className="py-2 pr-2 text-[0.6875rem]" style={{ color: '#6B7280' }}>NPL 채권자 (매수자)</td>
+                    <td className="py-2 pr-2 text-right text-[0.625rem]" style={{ color: '#6B7280' }}>min(잔여, 원리금)</td>
+                    <td className="py-2 pr-3 text-right font-black text-[0.875rem]" style={{ color: '#2251FF', fontFamily: 'Georgia, serif' }}>
+                      {krwWon(evidence.distributionRef.distributableAmount)}
+                    </td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
+                    <td className="py-2 pl-3 pr-2 font-semibold" style={{ color: '#0A1628' }}>{(evidence.distributionRef.seniorPayout ?? 0) > 0 ? '⑤' : '④'} 1질권자 배당</td>
+                    <td className="py-2 pr-2 text-[0.6875rem]" style={{ color: '#6B7280' }}>질권대출기관</td>
+                    <td className="py-2 pr-2 text-right text-[0.75rem]" style={{ color: '#DC2626' }}>− {krwWon(evidence.distributionRef.firstPledgee)}</td>
+                    <td className="py-2 pr-3 text-right font-bold" style={{ color: '#0A1628' }}>
+                      {krwWon(evidence.distributionRef.secondPledgee)}
+                    </td>
+                  </tr>
+                  <tr style={{ background: '#1B3A5C', color: '#FFFFFF' }}>
+                    <td className="py-2 pl-3 pr-2 font-bold" style={{ color: '#FFFFFF' }}>{(evidence.distributionRef.seniorPayout ?? 0) > 0 ? '⑥' : '⑤'} 2질권자 배당</td>
+                    <td className="py-2 pr-2 text-[0.6875rem]" style={{ color: '#C7E5F0' }}>투자자 (자기자본 회수)</td>
+                    <td className="py-2 pr-2 text-right text-[0.6875rem]" style={{ color: '#C7E5F0' }}>★ FINAL</td>
+                    <td className="py-2 pr-3 text-right font-black text-[0.9375rem]" style={{ color: '#6FB8E6', fontFamily: 'Georgia, serif' }}>
+                      {krwWon(evidence.distributionRef.secondPledgee)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
             <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">
               {evidence.distributionRef.summary}

@@ -156,7 +156,16 @@ export interface ProfitDistributionBlock {
   bondCalcPrincipalAndInterest: number
   /** 경매비용 (원) */
   executionCost: number
-  /** 예상배당액 = 원리금 + 경매비용 */
+  /**
+   * 선순위 채권 우선변제액 (원) — 예: 1순위 농협 근저당.
+   * 사용자 정책 v3 (2026-05-06): 낙찰가 → 경매비용 차감 → 선순위 변제 → NPL 측 배당.
+   */
+  seniorPayout: number
+  /** 선순위 채권자 표시명 (예: '농협은행 1순위 근저당') */
+  seniorCreditorLabel?: string
+  /** 선순위 변제 후 NPL 측 배당가능액 = 낙찰가 − 경매비용 − 선순위 */
+  npNetDistributable: number
+  /** NPL 채권자에게 실제 귀속되는 배당액 = min(잔여, NPL 원리금) */
   expectedDistributionAmount: number
   /** 1질권자 (질권대출기관) 배당액 */
   firstPledgeeAmount: number
@@ -363,6 +372,9 @@ export interface EvidenceNavigationBlock {
   distributionRef: {
     bidPrice: number
     executionCost: number
+    /** 선순위 채권 우선변제액 (사용자 정책 v3 2026-05-06) */
+    seniorPayout?: number
+    seniorCreditorLabel?: string
     distributableAmount: number
     firstPledgee: number
     secondPledgee: number
@@ -543,6 +555,14 @@ export interface ProfitabilityInput {
   strategyConservativeBidDelta?: number
   /** 공격적 낙찰가율 증가폭 (기본 = 낙찰가율 0.7σ) */
   strategyAggressiveBidDelta?: number
+  /**
+   * 선순위 채권 우선변제액 (원) — 예: 1순위 농협 근저당 채권최고액.
+   * 사용자 정책 v3 (2026-05-06): 배당 cascade — 낙찰가 → 경매비용 차감 → 선순위 변제 → NPL 측.
+   * 미지정 시 0 (선순위 없음).
+   */
+  seniorClaimAmount?: number
+  /** 선순위 채권자 표시명 (예: '농협은행 1순위 근저당') */
+  seniorCreditorLabel?: string
   /**
    * 매입 base 표시 라벨 (Phase G7+ 2026-04-28 — 사용자 정책):
    *   - '대출원금'   : default · 전통적 NPL 매각
@@ -740,6 +760,8 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   }
 
   // ─── [6] 예상배당표 ──────────────────────────────────────
+  // 사용자 정책 v3 (2026-05-06): 배당 cascade
+  //   낙찰가 → 경매비용 차감 → 선순위 채권 변제 → NPL 측 배당 → 1·2질권자
   const bondCalcInterest = Math.round(
     input.loanPrincipal *
       input.delinquencyRate *
@@ -747,24 +769,40 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
       365,
   ) + accruedInterestAtAcceleration
   const bondCalcPrincipalAndInterest = bondCalcInterest + input.loanPrincipal
-  const expectedDistributionAmount = Math.min(
-    expectedBidPrice,
-    bondCalcPrincipalAndInterest + executionCost,
-  )
+  // [Step 1] 낙찰가 - 경매비용
+  const distributableAfterExecution = Math.max(0, expectedBidPrice - executionCost)
+  // [Step 2] 선순위 채권 변제 (우선변제권)
+  const seniorClaim = Math.max(0, input.seniorClaimAmount ?? 0)
+  const seniorPayout = Math.min(seniorClaim, distributableAfterExecution)
+  // [Step 3] NPL 측 배당가능 잔여액
+  const npNetDistributable = Math.max(0, distributableAfterExecution - seniorPayout)
+  // [Step 4] NPL 채권자(매수자)에게 실제 귀속되는 금액 — NPL 원리금 까지
+  const expectedDistributionAmount = Math.min(npNetDistributable, bondCalcPrincipalAndInterest)
+  // [Step 5] 1질권자(질권대출기관) 우선 변제 → 2질권자(투자자) 잔여
   const firstPledgeeAmount = Math.min(pledgeLoanAmount, expectedDistributionAmount)
   const secondPledgeeAmount = Math.max(0, expectedDistributionAmount - firstPledgeeAmount)
+
+  const seniorCreditorLabel = input.seniorCreditorLabel ?? (seniorClaim > 0 ? '선순위 근저당' : undefined)
 
   const distribution: ProfitDistributionBlock = {
     bondCalcInterest,
     bondCalcPrincipalAndInterest,
     executionCost,
+    seniorPayout,
+    seniorCreditorLabel,
+    npNetDistributable,
     expectedDistributionAmount,
     firstPledgeeAmount,
     secondPledgeeAmount,
-    narrative:
-      `예상낙찰가 ${fmtEok(expectedBidPrice)} 기준 배당 시 ` +
-      `1질권자(질권대출기관) ${fmtEok(firstPledgeeAmount)} 선배당 후 ` +
-      `2질권자(투자자) ${fmtEok(secondPledgeeAmount)} 배당 예상.`,
+    narrative: seniorClaim > 0
+      ? `예상낙찰가 ${fmtEok(expectedBidPrice)} → 경매비용 ${fmtEok(executionCost)} 차감 → ` +
+        `${seniorCreditorLabel ?? '선순위 채권자'} ${fmtEok(seniorPayout)} 우선 변제 → ` +
+        `NPL 측 ${fmtEok(expectedDistributionAmount)} 배당 → ` +
+        `1질권자(질권대출기관) ${fmtEok(firstPledgeeAmount)} 선배당 후 ` +
+        `2질권자(투자자) ${fmtEok(secondPledgeeAmount)} 배당 예상.`
+      : `예상낙찰가 ${fmtEok(expectedBidPrice)} 기준 배당 시 ` +
+        `1질권자(질권대출기관) ${fmtEok(firstPledgeeAmount)} 선배당 후 ` +
+        `2질권자(투자자) ${fmtEok(secondPledgeeAmount)} 배당 예상.`,
   }
 
   // ─── [7] 투입자금 및 수익분석 ────────────────────────────
@@ -953,12 +991,18 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
     distributionRef: input.evidence?.distributionRef ?? {
       bidPrice: expectedBidPrice,
       executionCost,
+      seniorPayout,
+      seniorCreditorLabel,
       distributableAmount: expectedDistributionAmount,
       firstPledgee: firstPledgeeAmount,
       secondPledgee: secondPledgeeAmount,
-      summary:
-        `본건 예상낙찰가 ${fmtEok(expectedBidPrice)}에서 집행비 ${fmtMan(executionCost)} 차감 후 ` +
-        `1질권자 ${fmtEok(firstPledgeeAmount)}·2질권자 ${fmtEok(secondPledgeeAmount)} 배당.`,
+      summary: seniorPayout > 0
+        ? `본건 예상낙찰가 ${fmtEok(expectedBidPrice)} → 집행비 ${fmtMan(executionCost)} 차감 → ` +
+          `${seniorCreditorLabel ?? '선순위'} ${fmtEok(seniorPayout)} 우선 변제 → ` +
+          `NPL 측 ${fmtEok(expectedDistributionAmount)} 배당 → ` +
+          `1질권자 ${fmtEok(firstPledgeeAmount)} · 2질권자 ${fmtEok(secondPledgeeAmount)} 분배.`
+        : `본건 예상낙찰가 ${fmtEok(expectedBidPrice)}에서 집행비 ${fmtMan(executionCost)} 차감 후 ` +
+          `1질권자 ${fmtEok(firstPledgeeAmount)}·2질권자 ${fmtEok(secondPledgeeAmount)} 배당.`,
     },
   }
 
