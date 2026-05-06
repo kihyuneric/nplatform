@@ -546,7 +546,7 @@ export interface ProfitabilityInput {
   // ── 3단계 전략 파라미터 ──────────────────────────────────
   /**
    * 금융기관 매각가 (원, 선택)
-   *  · 제공 시: 매각가를 '권고' 앵커로 사용 → 공격적 +2.5% / 권고 매각가 / 보수적 −5%
+   *  · 제공 시: 매입가를 '권고' 앵커로 사용 → 공격적 +5% / 권고 매입가 / 보수적 −5% (v3.8 ±5% 대칭)
    *  · 미제공: 대출원금을 앵커로 사용 → 공격적 100% / 권고 −5% / 보수적 −10%
    */
   bankSalePrice?: number
@@ -875,14 +875,14 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
 
   // ─── 3단계 매입 전략 (Monte Carlo 로부터 승률 파생) ───
   //
-  // 매입률 앵커 로직 — bankSalePrice 제공 여부로 분기
+  // 매입률 앵커 로직 — bankSalePrice 제공 여부로 분기 (사용자 정책 v3.8 2026-05-06)
   //
   //  (A) 금융기관 매각가 없음 → 대출원금 100% = 공격적 (원금 기준)
   //      · 공격적 100% · 권고 95% (−5%) · 보수적 90% (−10%)
-  //  (B) 금융기관 매각가 있음 → 매각가 = 권고 앵커
-  //      · 공격적 매각가 × 1.025 (+2.5%)
-  //      · 권고   매각가
-  //      · 보수적 매각가 × 0.95 (−5%)
+  //  (B) 금융기관 매각가 있음 → 매각가 (= 매입가) = 권고 앵커
+  //      · 공격적 매입가 × 1.05  (+5%) — 더 비싸게 매입 (할인 5%p 덜)
+  //      · 권고   매입가         (= 100%) — 표준
+  //      · 보수적 매입가 × 0.95  (−5%) — 더 싸게 매입 (할인 5%p 더)
   //
   const hasBankSalePrice = typeof input.bankSalePrice === 'number' && input.bankSalePrice > 0
   const bankSaleAnchorRate = hasBankSalePrice
@@ -896,7 +896,7 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
     ? (bankSaleAnchorRate as number)
     : 0.95
   const defaultAggressiveRate = hasBankSalePrice
-    ? (bankSaleAnchorRate as number) * 1.025
+    ? (bankSaleAnchorRate as number) * 1.05    // v3.8: 1.025 → 1.05 (±5% 대칭)
     : 1.00
 
   const strategyConservativeRate = input.strategyConservativeRate ?? defaultConservativeRate
@@ -1240,7 +1240,7 @@ function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
   }
 
   const anchorNote = hasBankSale
-    ? `앵커: 금융기관 매각가 ${fmtEok(args.bankSalePrice as number)} (${baseLabel} 대비 ${(anchor * 100).toFixed(1)}%) · 공격적 ×1.025 · 권고 ×1.000 · 보수적 ×0.95`
+    ? `앵커: 매입가 (할인율 반영) ${fmtEok(args.bankSalePrice as number)} (${baseLabel} 대비 ${(anchor * 100).toFixed(1)}%) · 공격적 ×1.05 · 권고 ×1.000 · 보수적 ×0.95`
     : `앵커: ${baseLabel} 100% · 공격적 100% · 권고 95% (−5%) · 보수적 90% (−10%)`
 
   return {
