@@ -240,24 +240,22 @@ export default function UnifiedReportPage() {
   // SSR 시 document 미존재 — Portal 은 mount 이후에만 렌더
   useEffect(() => { setMounted(true) }, [])
 
-  // ── shifted sample helper (사용자 정책 v3.6 — 2026-05-06: 이중 shift 버그 해결)
-  //    initial 빌드 시 firstSaleDate = 예상 매각기일 (회차 shift 적용된 값)
-  //    live recompute 가 같은 effectivePredictedSaleDate 를 다시 적용해도 (round 동일)
-  //    addDays(edit.firstSaleDate, 0) 와 동치 — 사용자 인지: edit.firstSaleDate 는
-  //    이미 N회차 시프트된 날짜로 도달, predictedSaleDateAuto 가 이 위에 +0 (round=1) 만 추가.
-  //    구현: buildShiftedSample 가 expectedBidRatio 를 100% 이상 (round=1)으로 강제 계산하지 X.
-  //    → initial 의 firstSaleDate 가 N회차 시프트된 값이므로 live 도 같은 값을 자연 유지.
-  //
-  //    ⚠ 단순화: shift 함수가 round=N 일 때 firstSaleDateOverride 적용. live 가
-  //       한 번 더 += (N-1)×28 을 추가하면 이중 shift. 따라서 shift 적용 X 가 정답.
-  //       initial 은 1회차 (auto), live 가 (N회차) shift 단독 처리 → 일관.
-  //
-  //    AI 총평 ROI 와 EXHIBIT 7 ROI 정합은 별도 문제 — 추후 ProfitabilitySections
-  //    의 live 결과를 callback prop 으로 부모에 전달해 tldr 재산출 (TODO).
+  // ── shifted sample helper (사용자 정책 v3.7 — 2026-05-06: ROI 정합)
+  //    1차 빌드 → 1회차 firstSaleDate 추출 → predicted (N회차) shift 적용 →
+  //    그 shifted 값으로 재빌드 → initial 의 모든 ROI/cascade 가 N회차 기준
+  //    이로써 ACQUISITION ECONOMICS hero · KEY TAKEAWAY · EXHIBIT 7 모두 동일 ROI 노출.
+  //    (live recompute 의 round shift 는 ProfitabilitySections useMemo 에서 별도 비활성)
   const buildShiftedSample = useCallback(
     (builder: (opts?: { firstSaleDateOverride?: string }) => UnifiedAnalysisReport): UnifiedAnalysisReport => {
-      // shift 미적용 — initial 1회차 / live N회차 (이중 shift 방지)
-      return builder()
+      const base = builder()
+      const firstSale = base.profitability?.schedule.milestones.find(m => m.key === 'firstSaleDate')?.date
+      if (!firstSale || !base.profitability) return base
+      const shifted = computeEffectiveFirstSaleDate(
+        firstSale,
+        base.profitability.valuation.expectedBidRatio,
+        base.profitability.valuation.auctionFailureDiscountPct,
+      )
+      return shifted === firstSale ? base : builder({ firstSaleDateOverride: shifted })
     },
     [],
   )
@@ -1704,7 +1702,7 @@ function VerdictCriteriaToggle({
             <ul className="space-y-1.5">
               <Row
                 label="[F1] 예측 회수율"
-                rule="0% @ 60%·100점 @ 100% (선형)"
+                rule="60% → 0점 · 100% → 44점 · 150% → 100점 (선형)"
                 current={`${predictedRecovery.toFixed(1)}%`}
                 mapped={r.components.recovery.mapped}
                 weight={r.components.recovery.weight}
@@ -1728,7 +1726,7 @@ function VerdictCriteriaToggle({
               />
               <Row
                 label="[F4] NPL 매각가 할인"
-                rule="0 @ 0%·100점 @ 15% 할인 (선형)"
+                rule="0% NEUTRAL 50점 · 15% 할인 → 100점 · −15% 프리미엄 → 0점"
                 current={`${(discountRatio * 100).toFixed(1)}% 할인 (매각가 ${Math.round(bankSalePrice / 1e8 * 10) / 10}억 / 잔액 ${Math.round(totalBondAmount / 1e8 * 10) / 10}억)`}
                 mapped={r.components.discount.mapped}
                 weight={r.components.discount.weight}
@@ -1740,22 +1738,23 @@ function VerdictCriteriaToggle({
             <div className="font-bold mb-1" style={{ color: verdictColor }}>
               AI 투자 등급 · 가중 합계
             </div>
+            {/* 사용자 정책 v3.4 (2026-05-06): A≥80 · B≥65 · C≥45 · D<45 */}
             <ul className="space-y-0.5 text-[var(--color-text-secondary)]">
               <li>
                 <span className="font-bold" style={{ color: MCK.electricDark }}>A</span>
-                {" · "}총점 ≥ 85  (최상위 BUY · 권고)
+                {" · "}총점 ≥ 80  (최상위 BUY · 권고)
               </li>
               <li>
                 <span className="font-bold" style={{ color: MCK.electric }}>B</span>
-                {" · "}75 ≤ 총점 &lt; 85  (BUY · 권고)
+                {" · "}65 ≤ 총점 &lt; 80  (BUY · 권고)
               </li>
               <li>
                 <span className="font-bold" style={{ color: MCK.ink }}>C</span>
-                {" · "}55 ≤ 총점 &lt; 75  (HOLD · 관망)
+                {" · "}45 ≤ 총점 &lt; 65  (HOLD · 관망)
               </li>
               <li>
                 <span className="font-bold" style={{ color: MCK.greyDark }}>D</span>
-                {" · "}총점 &lt; 55  (AVOID · 회피)
+                {" · "}총점 &lt; 45  (AVOID · 회피)
               </li>
             </ul>
             <div className="mt-2 text-[0.6875rem] font-cjk-mono text-[var(--color-text-tertiary)] leading-relaxed">
