@@ -174,34 +174,21 @@ export interface ComparableTransaction {
   distanceMeters: number
 }
 
+// 사용자 정책 v3 (2026-05-06): 1년 이내 · 1km 이내 실거래 4건 — 사용자 제공 통계
+//   개발자 연동 예정 — 매물 좌표 기준 반경 필터링
 export const JONGNO_HONGJI_COMPARABLES: ComparableTransaction[] = [
-  { date: '2026-03-01', address: '서울특별시 종로구 홍지동 68-3',  zoning: '제1종일반주거지역', landAreaSqm: 610.00,  amountKRW: 32.8 * 억, perLandPriceKRWm2: 5_370_000, distanceMeters: 165.7 },
-  { date: '2026-03-01', address: '서울특별시 종로구 홍지동 69-18', zoning: '제1종일반주거지역', landAreaSqm: 1174.00, amountKRW: 63.1 * 억, perLandPriceKRWm2: 5_370_000, distanceMeters: 119.5 },
-  { date: '2026-03-01', address: '서울특별시 종로구 홍지동 69-25', zoning: '제1종일반주거지역', landAreaSqm: 365.00,  amountKRW: 18.2 * 억, perLandPriceKRWm2: 4_990_000, distanceMeters: 127.0 },
-  { date: '2025-10-17', address: '서울특별시 종로구 부암동 179-20', zoning: '제1종일반주거지역', landAreaSqm: 13.00,  amountKRW: 1.2 * 억,  perLandPriceKRWm2: 9_230_000, distanceMeters: 235.4 },
-  { date: '2025-05-01', address: '서울특별시 종로구 홍지동 76-30', zoning: '제1종일반주거지역', landAreaSqm: 180.00,  amountKRW: 9.9 * 억,  perLandPriceKRWm2: 5_500_000, distanceMeters: 45.4 },
-  { date: '2025-04-09', address: '서울특별시 종로구 구기동 50-33', zoning: '제1종일반주거지역', landAreaSqm: 374.00,  amountKRW: 1.3 * 억,  perLandPriceKRWm2: 350_000, distanceMeters: 480.5 },
-  { date: '2024-12-23', address: '서울특별시 종로구 평창동 277-1', zoning: '제1종일반주거지역', landAreaSqm: 298.00,  amountKRW: 0.9 * 억,  perLandPriceKRWm2: 300_000, distanceMeters: 591.4 },
-  { date: '2024-12-23', address: '서울특별시 종로구 평창동 277-3', zoning: '제1종일반주거지역', landAreaSqm: 380.00,  amountKRW: 1.2 * 억,  perLandPriceKRWm2: 300_000, distanceMeters: 604.1 },
-  { date: '2024-11-15', address: '서울특별시 종로구 신영동 211-1', zoning: '제1종일반주거지역', landAreaSqm: 3049.00, amountKRW: 53.7 * 억, perLandPriceKRWm2: 1_760_000, distanceMeters: 138.7 },
-  { date: '2024-10-04', address: '서울특별시 종로구 홍지동 73-4',  zoning: '제1종일반주거지역', landAreaSqm: 3.00,    amountKRW: 0.2 * 억,  perLandPriceKRWm2: 6_050_000, distanceMeters: 115.5 },
-  { date: '2024-09-19', address: '서울특별시 종로구 신영동 249-4', zoning: '제1종일반주거지역', landAreaSqm: 487.00,  amountKRW: 16.6 * 억, perLandPriceKRWm2: 3_410_000, distanceMeters: 590.3 },
-  { date: '2024-08-01', address: '서울특별시 종로구 평창동 275-3', zoning: '제1종일반주거지역', landAreaSqm: 72.00,   amountKRW: 0.2 * 억,  perLandPriceKRWm2: 280_000, distanceMeters: 624.8 },
-  { date: '2024-08-01', address: '서울특별시 종로구 평창동 275-5', zoning: '제1종일반주거지역', landAreaSqm: 156.00,  amountKRW: 0.4 * 억,  perLandPriceKRWm2: 280_000, distanceMeters: 619.4 },
-  { date: '2024-08-01', address: '서울특별시 종로구 평창동 278-1', zoning: '제1종일반주거지역', landAreaSqm: 164.00,  amountKRW: 0.4 * 억,  perLandPriceKRWm2: 270_000, distanceMeters: 591.4 },
-  { date: '2024-08-01', address: '서울특별시 종로구 평창동 278-3', zoning: '제1종일반주거지역', landAreaSqm: 1104.00, amountKRW: 3.9 * 억,  perLandPriceKRWm2: 350_000, distanceMeters: 594.2 },
-  { date: '2024-08-01', address: '서울특별시 종로구 평창동 281-3', zoning: '제1종일반주거지역', landAreaSqm: 2253.00, amountKRW: 83.2 * 억, perLandPriceKRWm2: 3_690_000, distanceMeters: 536.8 },
-  { date: '2024-08-01', address: '서울특별시 종로구 평창동 281-4', zoning: '제1종일반주거지역', landAreaSqm: 210.00,  amountKRW: 7.1 * 억,  perLandPriceKRWm2: 3_370_000, distanceMeters: 522.0 },
-  { date: '2024-08-01', address: '서울특별시 종로구 평창동 281-5', zoning: '제1종일반주거지역', landAreaSqm: 284.00,  amountKRW: 1.3 * 억,  perLandPriceKRWm2: 470_000, distanceMeters: 573.1 },
-  { date: '2024-07-05', address: '서울특별시 종로구 부암동 92-11', zoning: '제1종일반주거지역', landAreaSqm: 55.00,   amountKRW: 1.5 * 억,  perLandPriceKRWm2: 2_730_000, distanceMeters: 764.3 },
-  { date: '2023-11-23', address: '서울특별시 종로구 부암동 240-6', zoning: '제1종일반주거지역', landAreaSqm: 5.00,    amountKRW: 3_000_000, perLandPriceKRWm2: 600_000, distanceMeters: 995.1 },
+  { date: '2026-03-01', address: '서울특별시 종로구 홍지동 68-3',  zoning: '제1종일반주거지역', landAreaSqm: 610.00,  amountKRW: 32.8 * 억, perLandPriceKRWm2: 5_370_000, distanceMeters: 113.9 },
+  { date: '2026-03-01', address: '서울특별시 종로구 홍지동 69-18', zoning: '제1종일반주거지역', landAreaSqm: 1174.00, amountKRW: 63.1 * 억, perLandPriceKRWm2: 5_370_000, distanceMeters: 66.1  },
+  { date: '2026-03-01', address: '서울특별시 종로구 홍지동 69-25', zoning: '제1종일반주거지역', landAreaSqm: 365.00,  amountKRW: 18.2 * 억, perLandPriceKRWm2: 4_990_000, distanceMeters: 80.1  },
+  { date: '2025-10-17', address: '서울특별시 종로구 부암동 179-20', zoning: '제1종일반주거지역', landAreaSqm: 13.00,   amountKRW: 1.2 * 억,  perLandPriceKRWm2: 9_230_000, distanceMeters: 274.4 },
 ]
 
+// 사용자 정책 v3: 1년 이내 1km 4건 평균 — 540.5㎡ / 28.8억 / 624만원/㎡
 export const JONGNO_HONGJI_COMPARABLES_SUMMARY = {
   count: JONGNO_HONGJI_COMPARABLES.length,
-  avgLandAreaSqm: 561.79,
-  avgAmountKRW: 14.9 * 억,
-  avgPerLandPriceKRWm2: 2_730_000,
+  avgLandAreaSqm: 540.5,                  // (610 + 1174 + 365 + 13) / 4 = 540.5
+  avgAmountKRW: 2_882_500_000,            // (32.8 + 63.1 + 18.2 + 1.2) / 4 ≈ 28.83억
+  avgPerLandPriceKRWm2: 6_240_000,        // 624만원/㎡ (사용자 제공 평균)
 }
 
 // ─── 3. 법원 낙찰가율 통계 (서울 종로구 토지) ────────────────────

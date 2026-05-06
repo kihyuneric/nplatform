@@ -121,37 +121,33 @@ export const JONGNO_HONGJI_STATISTICS: StatisticsContext = {
       { round: 10, saleDays: 0,   distributionDays: 0   },
     ],
   },
-  // 3) 인근 1km 토지 경매 (종로구 토지 평균)
+  // 3) 주변 3km 토지 경매 (3년 이내 · 사용자 제공 통계 — 2026-05-06 v3)
+  //    개발자 연동 예정 — 매물 지번 좌표 기준 반경 3km 내 토지 경매 낙찰사례
   nearbyAuction: {
     centerLocation: {
       sido: '서울특별시', sigungu: '종로구', eupmyeondong: '홍지동', jibun: '76-1',
     },
     propertyCategory: '대지',
-    radiusMeters: 1500,
+    radiusMeters: 3000,
     lookbackYears: 3,
     specialConditionFilter: '없음',
     cases: [
-      // 종로구 토지 1년 평균 71% 기준 가상 경매 사례
-      { caseNo: '2024타경15021', filedDate: '2024-05-12', saleDate: '2025-09-08', durationDays: 484,
-        appraisalValue: 5_400_000_000, salePrice: 3_780_000_000, bidRatio: 70.0, bidderCount: 2,
-        landAreaSqm: 480, buildingAreaSqm: 0, perLandPrice: 7_875_000, perBuildingPrice: 0,
-        address: '서울특별시 종로구 평창동 ㅇㅇㅇ-ㅇ' },
-      { caseNo: '2024타경22119', filedDate: '2024-08-22', saleDate: '2025-12-15', durationDays: 480,
-        appraisalValue: 4_200_000_000, salePrice: 3_010_000_000, bidRatio: 71.7, bidderCount: 3,
-        landAreaSqm: 365, buildingAreaSqm: 0, perLandPrice: 8_246_000, perBuildingPrice: 0,
-        address: '서울특별시 종로구 부암동 ㅇㅇ-ㅇ' },
-      { caseNo: '2025타경08214', filedDate: '2025-02-04', saleDate: '2026-03-10', durationDays: 399,
-        appraisalValue: 6_500_000_000, salePrice: 4_650_000_000, bidRatio: 71.5, bidderCount: 1,
-        landAreaSqm: 720, buildingAreaSqm: 0, perLandPrice: 6_458_000, perBuildingPrice: 0,
-        address: '서울특별시 종로구 신영동 ㅇㅇㅇ-ㅇ' },
+      { caseNo: '2021타경2807', filedDate: '2021-07-13', saleDate: '2024-10-31', durationDays: 1206,
+        appraisalValue: 2_570_000_000, salePrice: 720_000_000, bidRatio: 28.0, bidderCount: 2,
+        landAreaSqm: 5_416, buildingAreaSqm: 0, perLandPrice: 132_939, perBuildingPrice: 0,
+        address: '서울특별시 종로구 구기동 76-2', distanceMeters: 832 },
+      { caseNo: '2022타경107853', filedDate: '2022-08-10', saleDate: '2023-11-07', durationDays: 454,
+        appraisalValue: 2_050_000_000, salePrice: 790_000_000, bidRatio: 38.5, bidderCount: 2,
+        landAreaSqm: 14_248, buildingAreaSqm: 0, perLandPrice: 55_446, perBuildingPrice: 0,
+        address: '서울특별시 종로구 구기동 249', distanceMeters: 833 },
     ],
     summary: {
-      avgDurationDays: 454,
-      avgAppraisalValue: 5_366_000_000,
-      avgSalePrice: 3_813_000_000,
-      avgBidRatio: 71.1,
+      avgDurationDays: 830,
+      avgAppraisalValue: 2_310_000_000,        // (25.7 + 20.5) / 2 ≈ 23.1억
+      avgSalePrice: 755_000_000,                // (7.2 + 7.9) / 2 ≈ 7.5억
+      avgBidRatio: 33.25,                       // (28 + 38.5) / 2
       avgBidderCount: 2,
-      avgLandAreaSqm: 521,
+      avgLandAreaSqm: 9_832,                    // (5416 + 14248) / 2
       avgBuildingAreaSqm: 0,
     },
   },
@@ -685,30 +681,34 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
       horizonMonths: 6,
       narrative:
         '서울 전체 토지 3개월 평균 68.2% (SIDO scope · 적용 기준선) · 종로구 시·군·구 1년 70.5% → 3개월 71.4% 안정. ' +
-        `인근 1km 실거래 평균 단가 ${Math.round(JONGNO_HONGJI_COMPARABLES_SUMMARY.avgPerLandPriceKRWm2 / 10000).toLocaleString()}만원/㎡로 견고. ` +
+        `인근 1km 실거래 (1년 이내 4건) 평균 단가 ${Math.round(JONGNO_HONGJI_COMPARABLES_SUMMARY.avgPerLandPriceKRWm2 / 10000).toLocaleString()}만원/㎡ — 28.83억 평균 거래액으로 견고. ` +
         '북악산·인왕산 자락 자연환경 + 도심 접근성 양호 → 단독·다세대 / 카페·사옥 부지 수요 견조. ' +
-        '제1종일반주거지역 건축 한도 내에서 개발 잠재력 보유.',
+        '제1종일반주거지역 건축 한도 내에서 개발 잠재력 보유. ' +
+        '단 인근 3km 경매 사례 (구기동 28%·38.5% 평균 33.25%)는 변두리 대형 토지로 본 매물(홍지동 1.7억 채권잔액 NPL)과 입지·규모 차이가 커 직접 비교는 신중 권고.',
       indicators: [
         { label: '지역 6개월 낙찰가율',
           value: `${region.auctionMomentum > 0 ? '+' : ''}${region.auctionMomentum}%p vs 1년`,
           trend: region.auctionMomentum > 0 ? 'UP' : region.auctionMomentum < 0 ? 'DOWN' : 'FLAT',
           commentary: '종로구 토지 낙찰가율 안정' },
         { label: '인근 1km 실거래',
-          value: `${JONGNO_HONGJI_COMPARABLES.length}건/3년`,
+          value: `${JONGNO_HONGJI_COMPARABLES.length}건/1년`,
           trend: 'UP',
-          commentary: '평창동·홍지동·신영동 권역 거래 활발' },
-        { label: '법원 1회차 매각 기간',
-          // 사용자 제공 실측 — 종로구 토지 평균 1차 매각 315일 (courtSchedule stages[0])
+          commentary: '홍지동·부암동 권역 (사용자 제공 통계)' },
+        { label: '법원 1회차 매각결정기일',
           value: `${JONGNO_HONGJI_STATISTICS.courtSchedule?.stages[0]?.saleDays ?? auction.expectedSaleDays ?? '—'}일`,
           trend: 'FLAT',
-          commentary: '서울중앙지방법원 본원 종로구 토지 평균 (사용자 제공 실측)' },
+          commentary: '서울중앙지방법원 본원 종로구 토지 평균 (사용자 제공)' },
       ],
     },
     registryAnalysis,
     profitability,
-    // AI 총평 v3 (사용자 정책 2026-05-06):
-    //   서울 전체 토지 3개월 평균 68.2% (SIDO scope) · 회차당 −20%p (default · 통계 매핑) → 3회차 예상
-    //   예상낙찰가 = 감정가 66.73억 × 68.2% = 45.51억 → 회수율 263%
+    // AI 총평 v3 (사용자 정책 2026-05-06 통계 reflow):
+    //   · 낙찰가율 68.2% (서울 토지 3개월 SIDO) · 회차당 −20%p · 3회차 예상 매각
+    //   · 1회차 매각결정기일 평균 315일 (서울중앙지법 종로 토지 통계)
+    //   · 인근 1km 실거래 (1년 이내 4건) 평균 28.83억 / 624만원/㎡
+    //   · 인근 3km 경매 사례 (3년 이내 2건 — 구기동) 평균 33.25%
+    //   · 동일주소 사례 없음 (해당 기간/범위)
+    //   · 배당 cascade: 낙찰가 45.51억 → 경매비용 0.10억 → 농협 23.64억 → NPL 21.77억 → 1질권 12.97억 / 2질권 8.80억
     executiveSummary:
       `종로구 홍지동 토지 8필지 일괄매각 NPL (○○대부 대출원금 16.48억 · 채권잔액 17.29억 · ` +
       `1순위 농협 채권최고액 23.64억 · 권리관계 합계(원금+선순위) 40.12억 · 감정가 66.73억) ` +
@@ -719,11 +719,12 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
       `보수적/권고/공격적 시나리오 ROI ${(profitability.strategies.conservative.roi * 100).toFixed(1)}% / ${(profitability.strategies.recommended.roi * 100).toFixed(1)}% / ${(profitability.strategies.aggressive.roi * 100).toFixed(1)}%. ` +
       `서울 전체 토지 3개월 평균 낙찰가율 68.2% (SIDO scope · 회차당 −20%p 기준 3회차 예상) ` +
       `적용 시 예상낙찰가 ${Math.round(JONGNO_PRIMARY_BID_PRICE / 100_000_000 * 100) / 100}억 → ` +
-      `1순위 농협 23.64억 변제 후 NPL 회수액 약 ${Math.round((JONGNO_PRIMARY_BID_PRICE - 2_364_000_000) / 100_000_000 * 100) / 100}억 ` +
-      `(NPL 채권잔액 대비 ${((JONGNO_PRIMARY_BID_PRICE - 2_364_000_000) / totalBond * 100).toFixed(1)}%, ` +
-      `매입 대비 +${Math.round((JONGNO_PRIMARY_BID_PRICE - 2_364_000_000 - totalBond) / 100_000_000 * 10) / 10}억). ` +
-      `2순위 권리자 부재로 권리 깨끗, 8필지 일괄매각 시너지 + 인근 실거래 m²당 ` +
-      `${Math.round(JONGNO_HONGJI_COMPARABLES_SUMMARY.avgPerLandPriceKRWm2 / 10000)}만원 단가 견고. ` +
+      `경매비용 0.1억 차감 → 1순위 농협 23.64억 우선 변제 → NPL 측 ${Math.round((JONGNO_PRIMARY_BID_PRICE - 2_364_000_000 - 10_000_000) / 100_000_000 * 100) / 100}억 ` +
+      `(NPL 채권잔액 대비 ${((JONGNO_PRIMARY_BID_PRICE - 2_364_000_000 - 10_000_000) / totalBond * 100).toFixed(1)}%) → ` +
+      `1질권자(질권대출기관) 약 12.97억 변제 후 2질권자(투자자 회수) 약 ${Math.round((JONGNO_PRIMARY_BID_PRICE - 2_364_000_000 - 10_000_000 - 1_296_989_594) / 100_000_000 * 100) / 100}억. ` +
+      `2순위 권리자 부재로 권리 깨끗, 8필지 일괄매각 시너지 + 인근 1km 실거래 (1년 이내 4건) 평균 m²당 ` +
+      `${Math.round(JONGNO_HONGJI_COMPARABLES_SUMMARY.avgPerLandPriceKRWm2 / 10000)}만원 / 28.83억 거래액 견고. ` +
+      `인근 3km 경매 사례 (3년 이내 2건, 구기동 평균 33.25%)는 변두리 대형 토지로 본 매물과 입지 차이 — 직접 비교 신중. ` +
       `AI 투자 의견 종합 ${verdictScore}점 → ${verdict}.`,
   }
 

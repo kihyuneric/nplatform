@@ -2281,66 +2281,95 @@ function StatisticsPanel({ report }: { report: UnifiedAnalysisReport }) {
         </StatSubsection>
       )}
 
-      {/* 3. 동일 주소 */}
-      {stats.sameAddressAuction && stats.sameAddressAuction.cases.length > 0 && (
-        <StatSubsection title={`동일 주소 낙찰 사례 · ${stats.sameAddressAuction.cases.length}건`}>
-          <AuctionCaseTable cases={stats.sameAddressAuction.cases} />
-          <SummaryRow
-            label="평균"
-            fields={[
-              [`소요`, `${stats.sameAddressAuction.summary.avgDurationDays}일`],
-              [`감정가`, fmtKRW(stats.sameAddressAuction.summary.avgAppraisalValue) + "원"],
-              [`낙찰가`, fmtKRW(stats.sameAddressAuction.summary.avgSalePrice) + "원"],
-              [`낙찰가율`, pct(stats.sameAddressAuction.summary.avgBidRatio)],
-            ]}
-          />
-        </StatSubsection>
-      )}
+      {/* 3. 동일 주소 낙찰 사례 — 사용자 정책 v3 (2026-05-06): empty 상태도 노출 */}
+      {(() => {
+        const targetAddrFull = `${stats.target.location.sido} ${stats.target.location.sigungu}${stats.target.location.eupmyeondong ? ' ' + stats.target.location.eupmyeondong : ''}${stats.target.location.jibun ? ' ' + stats.target.location.jibun : ''}`
+        const sameCases = stats.sameAddressAuction?.cases ?? []
+        return (
+          <StatSubsectionWithBadges
+            title="동일 주소 낙찰 사례"
+            badges={[targetAddrFull, '전', '3년 이내']}
+          >
+            {sameCases.length === 0 ? (
+              <div className="text-center text-[0.75rem] py-8" style={{ color: '#9CA3AF' }}>
+                해당 기간/범위에 사례가 없습니다.
+              </div>
+            ) : (
+              <>
+                <AuctionCaseTable cases={sameCases} />
+                {stats.sameAddressAuction && (
+                  <SummaryRow
+                    label="평균"
+                    fields={[
+                      [`소요`, `${stats.sameAddressAuction.summary.avgDurationDays}일`],
+                      [`감정가`, fmtKRW(stats.sameAddressAuction.summary.avgAppraisalValue) + "원"],
+                      [`낙찰가`, fmtKRW(stats.sameAddressAuction.summary.avgSalePrice) + "원"],
+                      [`낙찰가율`, pct(stats.sameAddressAuction.summary.avgBidRatio)],
+                    ]}
+                  />
+                )}
+              </>
+            )}
+          </StatSubsectionWithBadges>
+        )
+      })()}
 
-      {/* 4. 인근 경매 */}
-      {stats.nearbyAuction && stats.nearbyAuction.cases.length > 0 && (
-        <StatSubsection title={`인근 ${stats.nearbyAuction.radiusMeters / 1000}km 경매 낙찰 사례 · ${stats.nearbyAuction.cases.length}건`}>
-          <AuctionCaseTable cases={stats.nearbyAuction.cases} showAddress />
-          <SummaryRow
-            label="평균"
-            fields={[
-              [`소요`, `${stats.nearbyAuction.summary.avgDurationDays}일`],
-              [`낙찰가율`, pct(stats.nearbyAuction.summary.avgBidRatio)],
-              [`입찰자`, `${stats.nearbyAuction.summary.avgBidderCount.toFixed(1)}명`],
-            ]}
-          />
-        </StatSubsection>
-      )}
+      {/* 4. 인근 경매 낙찰 사례 — 필터 배지 + 사용자 제공 통계 */}
+      {stats.nearbyAuction && stats.nearbyAuction.cases.length > 0 && (() => {
+        const targetAddrFull = `${stats.target.location.sido} ${stats.target.location.sigungu}${stats.target.location.eupmyeondong ? ' ' + stats.target.location.eupmyeondong : ''}${stats.target.location.jibun ? ' ' + stats.target.location.jibun : ''}`
+        return (
+          <StatSubsectionWithBadges
+            title="인근 주소 경매 낙찰 사례"
+            badges={[targetAddrFull, '전', '3년 이내', `주변 ${stats.nearbyAuction!.radiusMeters / 1000}km`]}
+          >
+            <AuctionCaseTable cases={stats.nearbyAuction!.cases} showAddress />
+            <SummaryRow
+              label="평균"
+              fields={[
+                [`소요`, `${stats.nearbyAuction!.summary.avgDurationDays}일`],
+                [`낙찰가율`, pct(stats.nearbyAuction!.summary.avgBidRatio)],
+                [`입찰자`, `${stats.nearbyAuction!.summary.avgBidderCount.toFixed(1)}명`],
+              ]}
+            />
+          </StatSubsectionWithBadges>
+        )
+      })()}
 
-      {/* 5. 실거래 */}
-      {stats.nearbyTransactions && stats.nearbyTransactions.cases.length > 0 && (
-        <StatSubsection title={`인근 ${stats.nearbyTransactions.radiusMeters / 1000}km 실거래 · ${stats.nearbyTransactions.cases.length}건`}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-[0.75rem]">
-              <thead>
-                <tr className="text-[var(--color-text-tertiary)] border-b border-[var(--color-border-subtle)]">
-                  <th className="text-left py-1.5 pr-2 font-medium">거래일</th>
-                  <th className="text-left py-1.5 pr-2 font-medium">주소</th>
-                  <th className="text-right py-1.5 pr-2 font-medium">면적</th>
-                  <th className="text-right py-1.5 pr-2 font-medium">금액</th>
-                  <th className="text-right py-1.5 font-medium">㎡ 단가</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.nearbyTransactions.cases.slice(0, 10).map((c, i) => (
-                  <tr key={i} className="border-b border-[var(--color-border-subtle)]">
-                    <td className="py-1.5 pr-2 text-[var(--color-text-primary)]">{c.txDate.slice(0, 10)}</td>
-                    <td className="py-1.5 pr-2 text-[var(--color-text-secondary)] truncate max-w-[220px]">{c.address}</td>
-                    <td className="py-1.5 pr-2 text-right tabular-nums">{c.buildingAreaSqm?.toFixed(1)}㎡</td>
-                    <td className="py-1.5 pr-2 text-right tabular-nums font-semibold">{fmtKRW(c.amountKRW)}</td>
-                    <td className="py-1.5 text-right tabular-nums">{c.perBuildingPrice ? fmtKRW(c.perBuildingPrice) : "—"}</td>
+      {/* 5. 인근 1km 실거래 — 필터 배지 + 사용자 제공 통계 */}
+      {stats.nearbyTransactions && stats.nearbyTransactions.cases.length > 0 && (() => {
+        const targetAddrFull = `${stats.target.location.sido} ${stats.target.location.sigungu}${stats.target.location.eupmyeondong ? ' ' + stats.target.location.eupmyeondong : ''}${stats.target.location.jibun ? ' ' + stats.target.location.jibun : ''}`
+        return (
+          <StatSubsectionWithBadges
+            title="실거래 사례"
+            badges={[targetAddrFull, '전', '1년 이내', `주변 ${stats.nearbyTransactions!.radiusMeters / 1000}km`]}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-[0.75rem]">
+                <thead>
+                  <tr className="text-[var(--color-text-tertiary)] border-b border-[var(--color-border-subtle)]">
+                    <th className="text-left py-1.5 pr-2 font-medium">거래일</th>
+                    <th className="text-left py-1.5 pr-2 font-medium">주소</th>
+                    <th className="text-right py-1.5 pr-2 font-medium">면적</th>
+                    <th className="text-right py-1.5 pr-2 font-medium">금액</th>
+                    <th className="text-right py-1.5 font-medium">㎡ 단가</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </StatSubsection>
-      )}
+                </thead>
+                <tbody>
+                  {stats.nearbyTransactions!.cases.slice(0, 10).map((c, i) => (
+                    <tr key={i} className="border-b border-[var(--color-border-subtle)]">
+                      <td className="py-1.5 pr-2 text-[var(--color-text-primary)]">{c.txDate.slice(0, 10)}</td>
+                      <td className="py-1.5 pr-2 text-[var(--color-text-secondary)] truncate max-w-[220px]">{c.address}</td>
+                      <td className="py-1.5 pr-2 text-right tabular-nums">{c.buildingAreaSqm?.toFixed(1)}㎡</td>
+                      <td className="py-1.5 pr-2 text-right tabular-nums font-semibold">{fmtKRW(c.amountKRW)}</td>
+                      <td className="py-1.5 text-right tabular-nums">{c.perBuildingPrice ? fmtKRW(c.perBuildingPrice) : "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </StatSubsectionWithBadges>
+        )
+      })()}
     </div>
   )
 }
@@ -2352,6 +2381,47 @@ function StatSubsection({ title, children }: { title: string; children: React.Re
         <BarChart3 className="w-3.5 h-3.5 text-[var(--color-brand-mid)]" />
         {title}
       </div>
+      {children}
+    </div>
+  )
+}
+
+/**
+ * StatSubsection with cobalt-tinted filter badges (사용자 정책 v3 — 2026-05-06).
+ *   · 통계 매핑 가능한 위치/기간/반경 등 필터 조건을 시각화
+ *   · 엑셀 다운로드 버튼 없음 (사용자 정책)
+ */
+function StatSubsectionWithBadges({
+  title,
+  badges,
+  children,
+}: {
+  title: string
+  badges: string[]
+  children: React.ReactNode
+}) {
+  return (
+    <div className="rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-3">
+      <div className="text-[0.875rem] font-black text-[var(--color-text-primary)] mb-2" style={{ fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: '-0.005em' }}>
+        {title}
+      </div>
+      {badges.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {badges.map((label, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center px-2.5 py-0.5 text-[0.6875rem] font-semibold rounded-full"
+              style={{
+                background: 'rgba(34, 81, 255, 0.08)',
+                color: '#2251FF',
+                border: '1px solid rgba(34, 81, 255, 0.20)',
+              }}
+            >
+              {label}
+            </span>
+          ))}
+        </div>
+      )}
       {children}
     </div>
   )
