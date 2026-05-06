@@ -484,9 +484,19 @@ export interface ProfitabilityInput {
   /** 1차 매각기일 오버라이드 (YYYY-MM-DD) — 지정 시 firstSaleOffsetDays 무시 */
   firstSaleDateOverride?: string
   // ── 경매 일정 리드타임 (법원 평균치 · 오버라이드 가능) ──
+  // 사용자 정책 (2026-05-06 v2 — 핵심 공식 fix):
+  //   예상 매각기일 = 경매개시결정일 + 315일 + 유찰횟수 × 28일
+  //   → 1차 매각기일(유찰 0회) = 경매개시 +315 = 배당요구종기(+77) +238
+  //   → 낙찰기일 = 매각기일 +28일 (←35일에서 변경)
   distributionDemandOffsetDays?: number  // 경매개시 → 배당요구종기 (기본 77)
-  firstSaleOffsetDays?: number           // 배당요구종기 → 1차 매각기일 (기본 270)
-  winBidOffsetDays?: number              // 매각기일 → 낙찰기일 (기본 35)
+  firstSaleOffsetDays?: number           // 배당요구종기 → 1차 매각기일 (기본 238 · 누적 315)
+  /**
+   * 법원/주소지별 1회차 매각 평균 소요일 (경매개시 → 1차 매각기일 cumulative).
+   * 통계 기반 동적 입력 (예: courtSchedule.stages[0].saleDays).
+   * 우선순위: courtFirstRoundSaleDays > firstSaleOffsetDays + distributionDemandOffsetDays > 315(default)
+   */
+  courtFirstRoundSaleDays?: number
+  winBidOffsetDays?: number              // 매각기일 → 낙찰기일 (기본 28)
   saleConfirmOffsetDays?: number         // 낙찰기일 → 매각결정 (기본 7)
   balanceDueOffsetDays?: number          // 매각결정 → 잔금납부 (기본 40)
   distributionOffsetDays?: number        // 잔금 → 배당기일 (기본 30)
@@ -565,9 +575,20 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   const purchaseLeadDays = input.purchaseLeadDays ?? 7
   const balancePaymentLeadDays = input.balancePaymentLeadDays ?? 30
   // 법원 평균 기일 리드타임 (오버라이드 가능)
+  // 사용자 정책 (2026-05-06 v2):
+  //   핵심 공식: 예상 매각기일 = 경매개시결정일 + 315일 + 유찰횟수 × 28일
+  //   1회차 매각 cumulative 우선순위:
+  //     1) input.courtFirstRoundSaleDays (법원/주소지별 통계 — courtSchedule.stages[0].saleDays)
+  //     2) input.firstSaleOffsetDays (직접 지정) → cumulative = distDemandOffset + firstSaleOffset
+  //     3) default 315일 (대법원 평균)
   const distributionDemandOffsetDays = input.distributionDemandOffsetDays ?? 77
-  const firstSaleOffsetDays = input.firstSaleOffsetDays ?? 270
-  const winBidOffsetDays = input.winBidOffsetDays ?? 35
+  const firstRoundCumulativeDays =
+    input.courtFirstRoundSaleDays
+    ?? (input.firstSaleOffsetDays != null
+        ? distributionDemandOffsetDays + input.firstSaleOffsetDays
+        : 315)
+  const firstSaleOffsetDays = Math.max(0, firstRoundCumulativeDays - distributionDemandOffsetDays)
+  const winBidOffsetDays = input.winBidOffsetDays ?? 28
   const saleConfirmOffsetDays = input.saleConfirmOffsetDays ?? 7
   const balanceDueOffsetDays = input.balanceDueOffsetDays ?? 40
   const distributionOffsetDays = input.distributionOffsetDays ?? 30
@@ -627,6 +648,8 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   const auctionStart = input.auctionStartDate ?? today
   const distributionDemandEnd = addDays(auctionStart, distributionDemandOffsetDays)
   const firstSaleDate = input.firstSaleDateOverride ?? addDays(distributionDemandEnd, firstSaleOffsetDays)
+  // 실제 일자 차이로 offsetFromPrevDays 재산출 — override 시 (round>1 등) 정확 표시
+  const firstSaleOffsetActual = Math.max(0, daysBetween(distributionDemandEnd, firstSaleDate))
   const winBidDate = addDays(firstSaleDate, winBidOffsetDays)
   const saleConfirmDate = addDays(winBidDate, saleConfirmOffsetDays)
   const balanceDueDate = addDays(saleConfirmDate, balanceDueOffsetDays)
@@ -639,7 +662,7 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
     milestones: [
       { key: 'auctionStart',          label: '경매개시결정일',  date: auctionStart,            note: '채권자 제공' },
       { key: 'distributionDemandEnd', label: '배당요구종기일',  date: distributionDemandEnd,   offsetFromPrevDays: distributionDemandOffsetDays },
-      { key: 'firstSaleDate',         label: '1차 매각기일',    date: firstSaleDate,           offsetFromPrevDays: firstSaleOffsetDays },
+      { key: 'firstSaleDate',         label: '1차 매각기일',    date: firstSaleDate,           offsetFromPrevDays: firstSaleOffsetActual },
       { key: 'winBidDate',            label: '낙찰기일',        date: winBidDate,              offsetFromPrevDays: winBidOffsetDays },
       { key: 'saleConfirmDate',       label: '매각결정기일',    date: saleConfirmDate,         offsetFromPrevDays: saleConfirmOffsetDays },
       { key: 'balanceDueDate',        label: '잔금납부기일',    date: balanceDueDate,          offsetFromPrevDays: balanceDueOffsetDays },

@@ -78,8 +78,8 @@ const GANGNAM_SENIOR_PRINCIPAL = 21.6 * 억   // 1순위 원금 가정 (= 26 / 1
 const GANGNAM_AS_OF = '2026-05-01'
 const GANGNAM_PURCHASE_DATE = '2026-05-15'    // 채권 매입 계약일
 const GANGNAM_BALANCE_DATE = '2026-06-15'      // 잔금일 (= 매입일 + 31일)
-const GANGNAM_FIRST_SALE_DATE = '2027-04-15'   // 1차 매각기일 (잔금일 + 304일)
-const GANGNAM_DISTRIBUTION_DATE = '2027-06-15' // 배당기일 (= 잔금일 + 365일)
+// (legacy) GANGNAM_FIRST_SALE_DATE / GANGNAM_DISTRIBUTION_DATE 상수 제거 —
+// 2026-05-06 v2: courtSchedule.stages[0].saleDays(304일) 통계 기반 자동 산출.
 const GANGNAM_DEFAULT_DATE = '2025-12-01'      // 연체 시작일
 
 // 강남구 상가 낙찰가율 (가상)
@@ -287,9 +287,12 @@ export function buildGangnamSampleReport(): UnifiedAnalysisReport {
     auctionStartDate: '2026-09-01',
     courtName: '서울중앙지방법원 본원',
     // 가상 일정 lock — 12개월 운용
+    // 2026-05-06 v2: 핵심 공식 적용 (예상 매각기일 = 경매개시 + 315 + 유찰 × 28).
+    //   서울중앙지법 강남 상가 1회차 매각 평균 = courtSchedule.stages[0].saleDays = 304일
+    //   firstSaleDateOverride 제거 → engine 자동 산출 (304일 cumulative)
     purchaseDateOverride: GANGNAM_PURCHASE_DATE,
     balancePaymentDateOverride: GANGNAM_BALANCE_DATE,
-    firstSaleDateOverride: GANGNAM_FIRST_SALE_DATE,
+    courtFirstRoundSaleDays: GANGNAM_STATISTICS.courtSchedule?.stages[0]?.saleDays ?? 315,
     discountRate: 0,                        // 100% 매입
     pledgeLoanRatio: 0.90,                  // 법인 차주 90%
     pledgeInterestRate: 0.065,              // 6.5%
@@ -316,11 +319,12 @@ export function buildGangnamSampleReport(): UnifiedAnalysisReport {
           '강남구 상가 낙찰가율 1년 84.0% → 6개월 84.5% → 3개월 86.0% 안정 흐름. ' +
           '적용: 감정가 대비 84% (1년 평균) → 예상낙찰가 46.2억.',
       },
+      // 2026-05-06 v2: 라벨 의미 정합 (1회차 매각결정기일 평균 / 배당기일 평균 / 기일 간격 28일)
       courtSchedule: {
         courtName: '서울중앙지방법원 본원',
-        avgSaleDays: 304,
-        avgDistributionDays: 60,
-        avgHearingInterval: 35,
+        avgSaleDays: 304,                  // 1회차 매각결정기일 평균 (강남 상가)
+        avgDistributionDays: 60,           // 배당기일 평균
+        avgHearingInterval: 28,            // 회차 간격 28일 (사용자 정책)
         sampleSize: 56,
       },
       auctionCases: {

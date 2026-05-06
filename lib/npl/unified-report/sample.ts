@@ -332,10 +332,14 @@ export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): Un
     // 경매개시 2025-10-21 (엑셀 B45) · 송파구 관할 = 서울동부지방법원 본원
     auctionStartDate: '2025-10-21',
     courtName: '서울동부지방법원 본원',
-    // 일정 lock (2026-05-03 — sample-roi ↔ 보고서 ROI 정합 보장)
+    // 일정 lock (2026-05-03 / v2 2026-05-06 — 핵심 공식 적용):
+    //   예상 매각기일 = 경매개시 + 315일 + 유찰 × 28일
+    //   서울동부지법 송파구 1회차 매각 평균 = courtSchedule.stages[0].saleDays = 285일
+    //   firstSaleDateOverride 제거 → engine 자동 산출 (285일 cumulative)
     purchaseDateOverride: '2026-05-08',         // asOfDate(2026-04-21) + 17일
     balancePaymentDateOverride: '2026-06-08',   // 매입일 + 31일
-    firstSaleDateOverride: opts?.firstSaleDateOverride ?? '2026-09-12',        // 잠실 1차 매각기일 (사용자 보고서 정합)
+    courtFirstRoundSaleDays: SAMPLE_STATISTICS.courtSchedule?.stages[0]?.saleDays ?? 315,
+    ...(opts?.firstSaleDateOverride ? { firstSaleDateOverride: opts.firstSaleDateOverride } : {}),
     // 할인율 0 = 대출원금 기준 매입 (엑셀 B30 = B15, C30 '대출원금의 X% 할인')
     discountRate: 0,
     // bankSalePrice 없음 → 3단계 전략 = 시나리오 A (원금 100/95/90)
@@ -363,11 +367,12 @@ export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): Un
         ],
         narrative: '송파구 오피스텔 낙찰가율 1년 82.1% → 6개월 83.8% → 3개월 83.5% → 1개월 84.2%. 80%대 초반 안정 흐름. 신천동 단독 평균 84.6%로 잠실 재건축 기대감 반영.',
       },
+      // 2026-05-06 v2: 라벨 의미 정합 (1회차 매각결정기일 평균 / 배당기일 평균 / 기일 간격 28일)
       courtSchedule: {
         courtName: '서울동부지방법원 본원',
-        avgSaleDays: 285,
-        avgDistributionDays: 355,
-        avgHearingInterval: 47,
+        avgSaleDays: 285,                  // 1회차 매각결정기일 평균 (송파)
+        avgDistributionDays: 70,           // 배당기일 평균 (잔금→배당)
+        avgHearingInterval: 28,            // 회차 간격 28일
         sampleSize: 112,
       },
       auctionCases: {

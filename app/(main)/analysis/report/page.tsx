@@ -1153,7 +1153,13 @@ export default function UnifiedReportPage() {
           icon={Database}
           caption="예상 낙찰가 / 낙찰가율 / 법원 기일 / 낙찰사례 / 실거래 / 배당표"
         >
-          <EvidenceTabs block={profitability} expectedBid={report.expectedBid} />
+          <EvidenceTabs
+            block={profitability}
+            expectedBid={report.expectedBid}
+            auctionRatioStats={report.input.statistics.auctionRatioStats}
+            target={report.input.statistics.target}
+            asOfDate={report.input.statistics.asOfDate}
+          />
         </Section>
       )}
 
@@ -3131,7 +3137,9 @@ function ProfitabilitySections({
         exhibit={5}
         source="대법원 법원경매정보 + 관할법원 평균 진행기간 통계 (2024~2025)">
 
-        {/* 사용자 조정 가능한 기준 일자 — 경매개시결정일·1차매각기일·예상매각기일 */}
+        {/* 사용자 조정 가능한 기준 일자 — 경매개시결정일·예상매각기일 (핵심 공식 v2 2026-05-06)
+            예상 매각기일 = 경매개시결정일 + 315일(법원 통계) + 유찰횟수 × 28일
+            "1차 매각기일" row 제거 — 단일 "예상 매각기일" 로 통합 */}
         <div className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden mb-3">
           <table className="w-full text-[0.75rem]">
             <tbody>
@@ -3139,23 +3147,24 @@ function ProfitabilitySections({
                 k="경매개시결정일"
                 v={edit.auctionStartDate}
                 onChange={(v) => setEdit({ ...edit, auctionStartDate: v })}
-                hint="채권자 제공·사용자 조정 가능"
-              />
-              <EditableDateRow
-                k="1차 매각기일"
-                v={edit.firstSaleDate}
-                onChange={(v) => setEdit({ ...edit, firstSaleDate: v })}
-                hint="법원 평균 +347일 (배당요구종기 +270일) · 사용자 조정 가능"
+                hint="기준일 · 채권자 제공 · 사용자 조정 가능"
               />
               <EditableDateRow
                 k={`예상 매각기일 (${predictedRound}회차)`}
                 v={effectivePredictedSaleDate}
                 onChange={(v) => setEdit({ ...edit, predictedSaleDateOverride: v })}
-                hint={
-                  predictedRound === 1
-                    ? `예상 낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% → 1회차에 낙찰 예상 (자동 계산 · 수동 조정 가능)`
-                    : `예상 낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% → ${predictedRound}회차 예상 (회차당 −20%p 할인 · 유찰당 평균 +28일 · 자동 계산 · 수동 조정 가능)`
-                }
+                hint={(() => {
+                  // 경매개시 → 예상 매각기일 cumulative 일수 (실시간 산출)
+                  const cumDays = (() => {
+                    const a = new Date(edit.auctionStartDate)
+                    const b = new Date(effectivePredictedSaleDate)
+                    return Math.round((b.getTime() - a.getTime()) / 86_400_000)
+                  })()
+                  const failedRounds = Math.max(0, predictedRound - 1)
+                  return predictedRound === 1
+                    ? `공식: 경매개시 + 315일(법원 1회차 평균) → 1회차 즉시 낙찰 예상 · 누적 +${cumDays}일 (낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% ≥ 100%)`
+                    : `공식: 경매개시 + 315일 + 유찰 ${failedRounds}회 × 28일 = +${cumDays}일 · 낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% → ${predictedRound}회차 예상 (회차당 −20%p · 자동 계산 · 수동 조정 가능)`
+                })()}
                 last
               />
             </tbody>
@@ -4249,9 +4258,16 @@ function BidBaselineTriplet({
 function EvidenceTabs({
   block,
   expectedBid,
+  auctionRatioStats,
+  target,
+  asOfDate,
 }: {
   block: NplProfitabilityBlock
   expectedBid?: UnifiedAnalysisReport["expectedBid"]
+  /** 근거 데이터 ② 경매 낙찰가율 — 시·도/시·군·구/읍·면·동 3-scope tab 매핑용 */
+  auctionRatioStats?: UnifiedAnalysisReport["input"]["statistics"]["auctionRatioStats"]
+  target?: UnifiedAnalysisReport["input"]["statistics"]["target"]
+  asOfDate?: string
 }) {
   const [tab, setTab] = useState<EvidenceTab>("bid")
   const { evidence } = block
@@ -4307,53 +4323,26 @@ function EvidenceTabs({
         )}
 
         {tab === "ratio" && (
-          <div className="space-y-3">
-            <div className="text-[0.75rem] font-semibold text-[var(--color-text-primary)]">
-              선택 기준 · {evidence.bidRatioStats.selectedLabel}
-            </div>
-            {evidence.bidRatioStats.items.length > 0 ? (
-              <table className="w-full text-[0.75rem]">
-                <thead>
-                  <tr className="text-[var(--color-text-tertiary)] border-b border-[var(--color-border-subtle)]">
-                    <th className="text-left py-1.5 pr-2 font-medium">범위</th>
-                    <th className="text-left py-1.5 pr-2 font-medium">지역</th>
-                    <th className="text-right py-1.5 pr-2 font-medium">기간</th>
-                    <th className="text-right py-1.5 pr-2 font-medium">낙찰가율</th>
-                    <th className="text-right py-1.5 font-medium">표본</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {evidence.bidRatioStats.items.map((r, i) => (
-                    <tr key={i} className="border-b border-[var(--color-border-subtle)]">
-                      <td className="py-1.5 pr-2 text-[var(--color-text-tertiary)]">{
-                        r.scope === "SIGUNGU" ? "시·군·구"
-                        : r.scope === "EUPMYEONDONG" ? "읍·면·동"
-                        : r.scope === "SIDO" ? "시·도"
-                        : r.scope
-                      }</td>
-                      <td className="py-1.5 pr-2 text-[var(--color-text-primary)]">{r.region}</td>
-                      <td className="py-1.5 pr-2 text-right tabular-nums">{r.periodMonths}M</td>
-                      <td className="py-1.5 pr-2 text-right tabular-nums font-bold" style={{ color: r.ratioPercent >= 80 ? "#051C2C" : r.ratioPercent >= 65 ? "#051C2C" : MCK.greyDark }}>
-                        {r.ratioPercent.toFixed(1)}%
-                      </td>
-                      <td className="py-1.5 text-right tabular-nums text-[var(--color-text-tertiary)]">{r.sampleSize}건</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p className="text-[0.75rem] text-[var(--color-text-tertiary)] italic">표본 데이터 없음 — API 연동 시 자동 주입.</p>
-            )}
-            <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{evidence.bidRatioStats.narrative}</p>
-          </div>
+          <BidRatioStatsBlock
+            auctionRatioStats={auctionRatioStats}
+            target={target}
+            asOfDate={asOfDate}
+            selectedLabel={evidence.bidRatioStats.selectedLabel}
+            narrative={evidence.bidRatioStats.narrative}
+            fallbackItems={evidence.bidRatioStats.items}
+          />
         )}
 
         {tab === "court" && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <MetricCard label="관할법원" value={evidence.courtSchedule.courtName} tint="#1B3A5C" />
-            <MetricCard label="1회차 매각 평균" value={`${evidence.courtSchedule.avgSaleDays}일`} tint="#2E75B6" />
-            <MetricCard label="배당 평균" value={`${evidence.courtSchedule.avgDistributionDays}일`} tint="#051C2C" />
-            <MetricCard label="기일 간격" value={`${evidence.courtSchedule.avgHearingInterval}일`} tint="#051C2C" sub={`표본 ${evidence.courtSchedule.sampleSize}건`} />
+            {/* 사용자 정책 (2026-05-06 v2):
+                · 라벨: 1회차 매각 평균 → 1회차 매각결정기일 평균 (통계 매핑 예정)
+                · 라벨: 배당 평균 → 배당기일 평균
+                · 기일 간격: 표본 sub 제거 */}
+            <MetricCard label="1회차 매각결정기일 평균" value={`${evidence.courtSchedule.avgSaleDays}일`} tint="#2E75B6" />
+            <MetricCard label="배당기일 평균" value={`${evidence.courtSchedule.avgDistributionDays}일`} tint="#051C2C" />
+            <MetricCard label="기일 간격" value={`${evidence.courtSchedule.avgHearingInterval}일`} tint="#051C2C" />
           </div>
         )}
 
@@ -4427,6 +4416,209 @@ function EvidenceTabs({
             </p>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 근거 데이터 ② 경매 낙찰가율 — 사용자 제공 통계 파일 포맷 정합 (2026-05-06)
+//   · 상단 필터 배지: 기준일 · 대상 위치 · 부동산 분류
+//   · 3-tab: 시·도 (서울 전체) / 시·군·구 (종로구 전체) / 읍·면·동 (홍지동)
+//   · 4행 테이블: 1년/6개월/3개월/1개월 평균 (낙찰건수·낙찰률·낙찰가율)
+//   · 하단: 기존 evidence narrative 유지 (선택 기준 + 해석문)
+//   · 디자인: McKinsey blue (cobalt 강조 컬럼 · brass eyebrow · 1pt rule)
+//   · auctionRatioStats 미주입 시 fallback (legacy items 표 그대로)
+// ═══════════════════════════════════════════════════════════════
+function BidRatioStatsBlock({
+  auctionRatioStats,
+  target,
+  asOfDate,
+  selectedLabel,
+  narrative,
+  fallbackItems,
+}: {
+  auctionRatioStats?: UnifiedAnalysisReport["input"]["statistics"]["auctionRatioStats"]
+  target?: UnifiedAnalysisReport["input"]["statistics"]["target"]
+  asOfDate?: string
+  selectedLabel: string
+  narrative: string
+  fallbackItems: Array<{ scope: string; region: string; periodMonths: number; ratioPercent: number; sampleSize: number }>
+}) {
+  type Scope = 'SIDO' | 'SIGUNGU' | 'EUPMYEONDONG'
+  const scopes = (auctionRatioStats ?? []).filter(s => s.rows.length > 0)
+  const initialScope: Scope =
+    scopes.find(s => s.scope === 'SIDO')?.scope as Scope
+    ?? scopes[0]?.scope as Scope
+    ?? 'SIDO'
+  const [activeScope, setActiveScope] = useState<Scope>(initialScope)
+  const active = scopes.find(s => s.scope === activeScope) ?? scopes[0]
+
+  // ── fallback: auctionRatioStats 미주입 시 legacy items 테이블 ─────
+  if (!active) {
+    return (
+      <div className="space-y-3">
+        <div className="text-[0.75rem] font-semibold text-[var(--color-text-primary)]">
+          선택 기준 · {selectedLabel}
+        </div>
+        {fallbackItems.length > 0 ? (
+          <table className="w-full text-[0.75rem]">
+            <thead>
+              <tr className="text-[var(--color-text-tertiary)] border-b border-[var(--color-border-subtle)]">
+                <th className="text-left py-1.5 pr-2 font-medium">범위</th>
+                <th className="text-left py-1.5 pr-2 font-medium">지역</th>
+                <th className="text-right py-1.5 pr-2 font-medium">기간</th>
+                <th className="text-right py-1.5 pr-2 font-medium">낙찰가율</th>
+                <th className="text-right py-1.5 font-medium">표본</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fallbackItems.map((r, i) => (
+                <tr key={i} className="border-b border-[var(--color-border-subtle)]">
+                  <td className="py-1.5 pr-2 text-[var(--color-text-tertiary)]">{
+                    r.scope === "SIGUNGU" ? "시·군·구"
+                    : r.scope === "EUPMYEONDONG" ? "읍·면·동"
+                    : r.scope === "SIDO" ? "시·도"
+                    : r.scope
+                  }</td>
+                  <td className="py-1.5 pr-2 text-[var(--color-text-primary)]">{r.region}</td>
+                  <td className="py-1.5 pr-2 text-right tabular-nums">{r.periodMonths}M</td>
+                  <td className="py-1.5 pr-2 text-right tabular-nums font-bold" style={{ color: r.ratioPercent >= 80 ? "#051C2C" : r.ratioPercent >= 65 ? "#051C2C" : MCK.greyDark }}>
+                    {r.ratioPercent.toFixed(1)}%
+                  </td>
+                  <td className="py-1.5 text-right tabular-nums text-[var(--color-text-tertiary)]">{r.sampleSize}건</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="text-[0.75rem] text-[var(--color-text-tertiary)] italic">표본 데이터 없음 — API 연동 시 자동 주입.</p>
+        )}
+        <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">{narrative}</p>
+      </div>
+    )
+  }
+
+  // ── 필터 배지 라벨 ─────────────────────────────────────────
+  const dateLabel = asOfDate
+    ? `${new Date(asOfDate).getFullYear()}년 ${new Date(asOfDate).getMonth() + 1}월 ${new Date(asOfDate).getDate()}일 기준`
+    : ''
+  const locationLabel = target
+    ? [target.location.sido?.replace('특별시', '').replace('광역시', ''), target.location.sigungu, target.location.eupmyeondong]
+        .filter(Boolean).join(' ')
+    : ''
+  const categoryLabel = target?.propertyCategory ?? ''
+
+  // ── tab 라벨 (스크린샷 정합: SIDO=서울 전체, SIGUNGU=종로구 전체, EUPMYEONDONG=홍지동) ──
+  const tabLabel: Record<Scope, string> = {
+    SIDO: target?.location.sido ? `${target.location.sido.replace('특별시', '').replace('광역시', '')} 전체` : '시·도 전체',
+    SIGUNGU: target?.location.sigungu ? `${target.location.sigungu} 전체` : '시·군·구 전체',
+    EUPMYEONDONG: target?.location.eupmyeondong ?? '읍·면·동',
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* ── 필터 배지 (기준일 · 위치 · 카테고리) ── */}
+      <div className="flex flex-wrap gap-1.5">
+        {[dateLabel, locationLabel, categoryLabel].filter(Boolean).map((label, i) => (
+          <span
+            key={i}
+            className="inline-flex items-center px-3 py-1 text-[0.6875rem] font-semibold rounded-full"
+            style={{
+              background: 'rgba(34, 81, 255, 0.08)',
+              color: '#2251FF',
+              border: '1px solid rgba(34, 81, 255, 0.20)',
+            }}
+          >
+            {label}
+          </span>
+        ))}
+      </div>
+
+      {/* ── scope 3-tab ── */}
+      <div className="flex gap-1 border-b" style={{ borderColor: '#E5E8EC' }}>
+        {(['SIDO', 'SIGUNGU', 'EUPMYEONDONG'] as Scope[]).map(scope => {
+          const stat = scopes.find(s => s.scope === scope)
+          if (!stat) return null
+          const isActive = scope === activeScope
+          return (
+            <button
+              key={scope}
+              type="button"
+              onClick={() => setActiveScope(scope)}
+              className="px-4 py-2 text-[0.8125rem] font-bold transition-colors"
+              style={{
+                background: isActive ? 'rgba(10, 22, 40, 0.04)' : 'transparent',
+                color: isActive ? '#0A1628' : '#9CA3AF',
+                borderRadius: '6px 6px 0 0',
+                borderBottom: isActive ? '2px solid #2251FF' : '2px solid transparent',
+                marginBottom: '-1px',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {tabLabel[scope]}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* ── 4-행 테이블 (기간 / 낙찰건수 / 낙찰률 / 낙찰가율) ── */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-[0.8125rem]" style={{ borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '2px solid #0A1628' }}>
+              <th className="text-left py-2.5 pl-1 pr-3 text-[0.6875rem] font-bold uppercase tracking-wider" style={{ color: '#6B7280', letterSpacing: '0.06em' }}>
+                기간
+              </th>
+              <th className="text-right py-2.5 pr-3 text-[0.6875rem] font-bold uppercase tracking-wider" style={{ color: '#6B7280', letterSpacing: '0.06em' }}>
+                낙찰건수
+              </th>
+              <th className="text-right py-2.5 pr-3 text-[0.6875rem] font-bold uppercase tracking-wider" style={{ color: '#6B7280', letterSpacing: '0.06em' }}>
+                낙찰률
+              </th>
+              <th className="text-right py-2.5 pr-1 text-[0.6875rem] font-bold uppercase tracking-wider" style={{ color: '#2251FF', letterSpacing: '0.06em' }}>
+                낙찰가율
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {active.rows.map(r => (
+              <tr key={r.bucket} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                <td className="py-3 pl-1 pr-3 font-semibold" style={{ color: '#0A1628' }}>
+                  {r.periodLabel.replace('1년간 평균', '1년 평균')}
+                </td>
+                <td className="py-3 pr-3 text-right tabular-nums font-medium" style={{ color: '#0A1628' }}>
+                  {r.saleCount}
+                </td>
+                <td className="py-3 pr-3 text-right tabular-nums font-medium" style={{ color: '#0A1628' }}>
+                  {r.saleRate.toFixed(1)}%
+                </td>
+                <td className="py-3 pr-1 text-right tabular-nums font-bold text-[0.875rem]" style={{
+                  color: r.bidRatio === 0 ? '#9CA3AF' : '#2251FF',
+                  fontFamily: 'Georgia, "Times New Roman", serif',
+                  letterSpacing: '-0.01em',
+                }}>
+                  {r.bidRatio === 0 ? '—' : `${r.bidRatio.toFixed(1)}%`}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ── 해석 (선택 기준 + narrative) ── */}
+      <div
+        className="mt-1 px-3 py-2.5 text-[0.75rem] leading-relaxed"
+        style={{
+          borderLeft: '3px solid #2251FF',
+          background: '#F8FAFC',
+          color: '#374151',
+        }}
+      >
+        <div className="text-[0.6875rem] font-bold mb-1" style={{ color: '#2251FF', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+          선택 기준 · {selectedLabel}
+        </div>
+        <p>{narrative}</p>
       </div>
     </div>
   )

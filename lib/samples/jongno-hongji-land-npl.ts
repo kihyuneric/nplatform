@@ -213,11 +213,28 @@ export interface AuctionBidRatioRow {
   bidRatio: number      // 낙찰가율 %
 }
 
+/** 종로구 전체 (시·군·구 scope) — 사용자 제공 실 통계 */
 export const JONGNO_HONGJI_AUCTION_STATS: AuctionBidRatioRow[] = [
   { bucket: '12M', periodLabel: '1년간 평균', saleCount: 98, saleRate: 14.30, bidRatio: 70.50 },
   { bucket: '6M',  periodLabel: '6개월 평균', saleCount: 63, saleRate: 15.80, bidRatio: 70.80 },
   { bucket: '3M',  periodLabel: '3개월 평균', saleCount: 33, saleRate: 16.70, bidRatio: 71.40 },
   { bucket: '1M',  periodLabel: '1개월 평균', saleCount: 14, saleRate: 15.10, bidRatio: 70.70 },
+]
+
+/** 서울 전체 (시·도 scope) — 토지 카테고리 (사용자 제공 통계 — 외부 매핑 파일 정합) */
+export const JONGNO_HONGJI_AUCTION_STATS_SIDO: AuctionBidRatioRow[] = [
+  { bucket: '12M', periodLabel: '1년간 평균', saleCount: 12, saleRate: 20.00, bidRatio: 66.90 },
+  { bucket: '6M',  periodLabel: '6개월 평균', saleCount: 7,  saleRate: 28.00, bidRatio: 59.30 },
+  { bucket: '3M',  periodLabel: '3개월 평균', saleCount: 2,  saleRate: 20.00, bidRatio: 68.20 },
+  { bucket: '1M',  periodLabel: '1개월 평균', saleCount: 1,  saleRate: 14.30, bidRatio: 103.50 },
+]
+
+/** 홍지동 (읍·면·동 scope) — 표본 부족 dong, 1년 2건 안팎 (가상 추정) */
+export const JONGNO_HONGJI_AUCTION_STATS_DONG: AuctionBidRatioRow[] = [
+  { bucket: '12M', periodLabel: '1년간 평균', saleCount: 2, saleRate: 8.00,  bidRatio: 72.10 },
+  { bucket: '6M',  periodLabel: '6개월 평균', saleCount: 1, saleRate: 9.00,  bidRatio: 71.00 },
+  { bucket: '3M',  periodLabel: '3개월 평균', saleCount: 1, saleRate: 12.00, bidRatio: 72.50 },
+  { bucket: '1M',  periodLabel: '1개월 평균', saleCount: 0, saleRate: 0.00,  bidRatio: 0.00 },
 ]
 
 // ─── 4. 예상낙찰가 산출 (3가지 방식 비교) ────────────────────────

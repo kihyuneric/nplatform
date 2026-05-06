@@ -40,6 +40,8 @@ import {
   JONGNO_HONGJI_LISTING_ID,
   JONGNO_HONGJI_DETAIL,
   JONGNO_HONGJI_AUCTION_STATS,
+  JONGNO_HONGJI_AUCTION_STATS_SIDO,
+  JONGNO_HONGJI_AUCTION_STATS_DONG,
   JONGNO_HONGJI_COMPARABLES,
   JONGNO_HONGJI_COMPARABLES_SUMMARY,
 } from '@/lib/samples/jongno-hongji-land-npl'
@@ -60,19 +62,38 @@ export const JONGNO_HONGJI_STATISTICS: StatisticsContext = {
     landAreaSqm: JONGNO_HONGJI_DETAIL.land_area,
     buildingAreaSqm: 0,
   },
-  // 1) 종로구 토지 낙찰가율 — 사용자 제공 실 통계
+  // 1) 낙찰가율 — 3-scope (시·도 / 시·군·구 / 읍·면·동) 스크린샷 포맷 정합
+  //    근거 데이터 ② 경매 낙찰가율 탭이 scope 별 tab 으로 분기 노출
   auctionRatioStats: [
+    {
+      // SIDO scope — sigungu 는 LocationKey 필수 → 빈 문자열로 설정 (전체 집계 의미)
+      location: { sido: '서울특별시', sigungu: '' },
+      propertyCategory: '대지',
+      scope: 'SIDO',
+      asOfDate: '2026-04-28',
+      rows: JONGNO_HONGJI_AUCTION_STATS_SIDO.map(r => ({
+        bucket: r.bucket, periodLabel: r.periodLabel,
+        saleCount: r.saleCount, saleRate: r.saleRate, bidRatio: r.bidRatio,
+      })),
+    },
     {
       location: { sido: '서울특별시', sigungu: '종로구' },
       propertyCategory: '대지',
       scope: 'SIGUNGU',
       asOfDate: '2026-04-28',
       rows: JONGNO_HONGJI_AUCTION_STATS.map(r => ({
-        bucket: r.bucket,
-        periodLabel: r.periodLabel,
-        saleCount: r.saleCount,
-        saleRate: r.saleRate,
-        bidRatio: r.bidRatio,
+        bucket: r.bucket, periodLabel: r.periodLabel,
+        saleCount: r.saleCount, saleRate: r.saleRate, bidRatio: r.bidRatio,
+      })),
+    },
+    {
+      location: { sido: '서울특별시', sigungu: '종로구', eupmyeondong: '홍지동' },
+      propertyCategory: '대지',
+      scope: 'EUPMYEONDONG',
+      asOfDate: '2026-04-28',
+      rows: JONGNO_HONGJI_AUCTION_STATS_DONG.map(r => ({
+        bucket: r.bucket, periodLabel: r.periodLabel,
+        saleCount: r.saleCount, saleRate: r.saleRate, bidRatio: r.bidRatio,
       })),
     },
   ],
@@ -385,13 +406,15 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
     expectedBidRatioPeriod: '종로구 토지 3개월 평균',
     auctionStartDate: '2026-08-15',  // 매각 후 미수회수 시 경매 시작 가정
     courtName: '서울중앙지방법원 본원',
-    // 일정 lock (2026-05-03 사용자 정책 — sample-roi ↔ 보고서 페이지 ROI 정합 보장):
-    //   채권 매입일 / 잔금일 / 1차 매각기일을 명시 → buildNplProfitability 자동 산출 vs
-    //   보고서 page live 재계산이 동일 input 사용 → ROI 일치
-    //   (보고서 page 의 EditableInputs default = 본 lock 값. 사용자 변경 시만 cascade)
+    // 일정 lock (2026-05-03 / v2 2026-05-06 — 핵심 공식 기반):
+    //   예상 매각기일 = 경매개시 + 315일 + 유찰 × 28일 (사용자 정책)
+    //   1회차 매각 통계: 서울중앙지법 본원 종로구 토지 = 315일 (courtSchedule.stages[0].saleDays)
+    //   firstSaleDateOverride 제거 → engine 자동 산출 (315일 cumulative)
+    //   sample-roi API 는 computeEffectiveFirstSaleDate 가 (round-1)×28 시프트 적용
     purchaseDateOverride: '2026-05-15',         // asOfDate(2026-04-28) + 17일
     balancePaymentDateOverride: '2026-06-15',   // 매입일 + 31일
-    firstSaleDateOverride: opts?.firstSaleDateOverride ?? '2027-10-03',        // 587일 운용 역산: balancePaymentDate(2026-06-15) + 587 = distributionDate(2028-01-23) - 112(after-sale offset) = firstSale(2027-10-03)
+    courtFirstRoundSaleDays: JONGNO_HONGJI_STATISTICS.courtSchedule?.stages[0]?.saleDays ?? 315,
+    ...(opts?.firstSaleDateOverride ? { firstSaleDateOverride: opts.firstSaleDateOverride } : {}),
     discountRate: saleDiscountRate,           // 0 (= 100% 매입)
     pledgeLoanRatio: 0.75,         // 개인 채무자 75% (법인 70%)
     pledgeInterestRate: 0.065,     // 6.5%
@@ -426,11 +449,15 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
           '종로구 토지 낙찰가율 1년 70.5% → 6개월 70.8% → 3개월 71.4% → 1개월 70.7%로 70%대 초반 안정. ' +
           '적용: 감정가 대비 71.4% (3개월 평균) → 예상낙찰가 47.63억 = 회수율 280%.',
       },
+      // 사용자 정책 (2026-05-06 v2):
+      //   avgSaleDays = 1회차 매각결정기일 평균 (법원/주소지별 통계 매핑 예정)
+      //   avgDistributionDays = 배당기일 평균 (잔금 후 배당까지 소요)
+      //   avgHearingInterval = 28일 (회차당 평균 유찰 + 매각기일 간격)
       courtSchedule: {
         courtName: '서울중앙지방법원 본원',
-        avgSaleDays: 312,
-        avgDistributionDays: 372,
-        avgHearingInterval: 45,
+        avgSaleDays: 315,                  // 1회차 매각결정기일 평균 (개발자 연동 예정)
+        avgDistributionDays: 70,           // 배당기일 평균 (잔금 +30 + α)
+        avgHearingInterval: 28,            // 회차 간격 28일
         sampleSize: 98,
       },
       auctionCases: {
