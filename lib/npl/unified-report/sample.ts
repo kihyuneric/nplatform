@@ -124,66 +124,55 @@ export const SAMPLE_STATISTICS: StatisticsContext = {
       { round: 10, saleDays: 729, distributionDays: 70 },
     ],
   },
-  // 3. 동일 건물(잠실시그마타워) 낙찰 사례
+  // 3. 동일 주소 낙찰 사례 (송파 신천동 7-19) — 사용자 정책 v3 (2026-05-06): 해당 사례 없음
+  //    개발자 연동 예정 — empty 상태 노출
   sameAddressAuction: {
     location: {
       sido: '서울특별시', sigungu: '송파구', eupmyeondong: '신천동', jibun: '7-19',
     },
     propertyCategory: '오피스텔',
     lookbackYears: 3,
-    cases: [
-      {
-        caseNo: '2024타경82113',
-        filedDate: '2024-03-15',
-        saleDate: '2025-10-02',
-        durationDays: 220,
-        appraisalValue: 2_980_000_000,
-        salePrice: 2_495_000_000,
-        bidRatio: 83.7,
-        bidderCount: 2,
-        landAreaSqm: 0,
-        buildingAreaSqm: 210.24,
-        perLandPrice: 0,
-        perBuildingPrice: 11_870_000,
-        address: '서울특별시 송파구 신천동 7-19 잠실시그마타워',
-      },
-    ],
+    cases: [],
     summary: {
-      avgDurationDays: 220,
-      avgAppraisalValue: 2_980_000_000,
-      avgSalePrice: 2_495_000_000,
-      avgBidRatio: 83.7,
-      avgBidderCount: 2,
+      avgDurationDays: 0,
+      avgAppraisalValue: 0,
+      avgSalePrice: 0,
+      avgBidRatio: 0,
+      avgBidderCount: 0,
       avgLandAreaSqm: 0,
-      avgBuildingAreaSqm: 210.24,
+      avgBuildingAreaSqm: 0,
     },
   },
-  // 4. 인근 1km 송파 오피스텔 경매 낙찰사례
+  // 4. 주변 3km 경매 낙찰 사례 (3년 이내 · 사용자 제공 5건 — 2026-05-06 v3)
+  //    개발자 연동 예정 — 광진구 구의동 / 송파 방이동 (사무실/사무소)
   nearbyAuction: {
     centerLocation: {
       sido: '서울특별시', sigungu: '송파구', eupmyeondong: '신천동', jibun: '7-19',
     },
     propertyCategory: '오피스텔',
-    radiusMeters: 1500,
+    radiusMeters: 3000,
     lookbackYears: 3,
     specialConditionFilter: '없음',
     cases: [
-      { caseNo: '2024타경78821', filedDate: '2024-02-19', saleDate: '2025-08-13', durationDays: 236, appraisalValue: 2_450_000_000, salePrice: 2_020_000_000, bidRatio: 82.4, bidderCount: 1, landAreaSqm: 0, buildingAreaSqm: 198.44, perLandPrice: 0, perBuildingPrice: 10_180_000, address: '서울특별시 송파구 신천동 ㅇㅇ-ㅇ' },
-      { caseNo: '2024타경82113', filedDate: '2024-03-15', saleDate: '2025-10-02', durationDays: 220, appraisalValue: 2_980_000_000, salePrice: 2_495_000_000, bidRatio: 83.7, bidderCount: 2, landAreaSqm: 0, buildingAreaSqm: 210.24, perLandPrice: 0, perBuildingPrice: 11_870_000, address: '서울특별시 송파구 잠실동 ㅇㅇㅇ-ㅇ' },
-      { caseNo: '2025타경10221', filedDate: '2025-01-08', saleDate: '2026-01-27', durationDays: 241, appraisalValue: 2_520_000_000, salePrice: 2_105_000_000, bidRatio: 83.5, bidderCount: 1, landAreaSqm: 0, buildingAreaSqm: 202.30, perLandPrice: 0, perBuildingPrice: 10_410_000, address: '서울특별시 송파구 신천동 ㅇ-ㅇㅇ' },
-      { caseNo: '2025타경14882', filedDate: '2025-04-21', saleDate: '2026-04-02', durationDays: 220, appraisalValue: 2_250_000_000, salePrice: 1_830_000_000, bidRatio: 81.3, bidderCount: 1, landAreaSqm: 0, buildingAreaSqm: 195.17, perLandPrice: 0, perBuildingPrice: 9_375_000, address: '서울특별시 송파구 잠실동 ㅇㅇ-ㅇ' },
+      { caseNo: '2024타경62537',     filedDate: '2024-10-11', saleDate: '2026-04-20', durationDays: 556,  appraisalValue: 290_000_000,    salePrice: 130_000_000,   bidRatio: 45.5, bidderCount: 1, landAreaSqm: 24.12,  buildingAreaSqm: 90.98,   perLandPrice: 5_380_000,  perBuildingPrice: 1_430_000, address: '서울특별시 광진구 구의동 546-4',  distanceMeters: 2263 },
+      { caseNo: '2023타경3753',      filedDate: '2023-12-18', saleDate: '2026-04-20', durationDays: 854,  appraisalValue: 20_000_000,     salePrice: 5_410_000,     bidRatio: 27.0, bidderCount: 1, landAreaSqm: 2.88,   buildingAreaSqm: 10.88,   perLandPrice: 1_880_000,  perBuildingPrice: 500_000,   address: '서울특별시 광진구 구의동 546-4',  distanceMeters: 2263 },
+      { caseNo: '2024타경60135 (1)', filedDate: '2024-08-20', saleDate: '2026-04-13', durationDays: 601,  appraisalValue: 20_000_000,     salePrice: 10_000_000,    bidRatio: 82.6, bidderCount: 1, landAreaSqm: 2.79,   buildingAreaSqm: 10.54,   perLandPrice: 5_040_000,  perBuildingPrice: 1_330_000, address: '서울특별시 광진구 구의동 546-4',  distanceMeters: 2263 },
+      { caseNo: '2024타경59104 (1)', filedDate: '2024-07-24', saleDate: '2026-04-13', durationDays: 628,  appraisalValue: 660_000_000,    salePrice: 520_000_000,   bidRatio: 78.9, bidderCount: 1, landAreaSqm: 12.564, buildingAreaSqm: 61.49,   perLandPrice: 40_000_000, perBuildingPrice: 8_420_000, address: '서울특별시 송파구 방이동 43',     distanceMeters: 704  },
+      { caseNo: '2024타경60135 (2)', filedDate: '2024-08-20', saleDate: '2026-04-13', durationDays: 601,  appraisalValue: 20_000_000,     salePrice: 10_000_000,    bidRatio: 80.6, bidderCount: 1, landAreaSqm: 2.72,   buildingAreaSqm: 10.26,   perLandPrice: 5_040_000,  perBuildingPrice: 1_340_000, address: '서울특별시 광진구 구의동 546-4',  distanceMeters: 2263 },
     ],
+    // 사용자 제공 평균 (2026-05-06 스크린샷): 648일 / 2.0억 / 1.4억 / 62.92% / 1명 / 9.01㎡ / 36.83㎡
     summary: {
-      avgDurationDays: 229,
-      avgAppraisalValue: 2_550_000_000,
-      avgSalePrice: 2_113_000_000,
-      avgBidRatio: 82.7,
+      avgDurationDays: 648,
+      avgAppraisalValue: 202_000_000,         // 2.0억
+      avgSalePrice: 135_082_000,              // 1.4억 평균
+      avgBidRatio: 62.92,                     // (45.5+27.0+82.6+78.9+80.6)/5
       avgBidderCount: 1,
-      avgLandAreaSqm: 0,
-      avgBuildingAreaSqm: 201.54,
+      avgLandAreaSqm: 9.01,
+      avgBuildingAreaSqm: 36.83,
     },
   },
-  // 5. 인근 1km 송파 오피스텔 실거래
+  // 5. 인근 1km 실거래 (1년 이내 · 사용자 제공 7건 — 2026-05-06 v3)
+  //    송파 방이동·신천동 일반상업지역 (개발자 연동 예정)
   nearbyTransactions: {
     centerLocation: {
       sido: '서울특별시', sigungu: '송파구', eupmyeondong: '신천동', jibun: '7-19',
@@ -192,16 +181,19 @@ export const SAMPLE_STATISTICS: StatisticsContext = {
     radiusMeters: 1000,
     lookbackYears: 1,
     cases: [
-      { txDate: '2026-02-10', address: '서울특별시 송파구 신천동 7-19', zoning: '제3종일반주거지역', buildingAreaSqm: 208.56, amountKRW: 2_580_000_000, perBuildingPrice: 12_370_000, approvedDate: '19940805', distanceMeters: 92.0 },
-      { txDate: '2025-12-18', address: '서울특별시 송파구 잠실동 310-1', zoning: '제3종일반주거지역', buildingAreaSqm: 205.12, amountKRW: 2_570_000_000, perBuildingPrice: 12_530_000, approvedDate: '19981220', distanceMeters: 412.0 },
-      { txDate: '2025-11-22', address: '서울특별시 송파구 신천동 8-3',  zoning: '제3종일반주거지역', buildingAreaSqm: 212.34, amountKRW: 2_620_000_000, perBuildingPrice: 12_340_000, approvedDate: '20010615', distanceMeters: 188.0 },
-      { txDate: '2025-09-05', address: '서울특별시 송파구 잠실동 292-4', zoning: '제3종일반주거지역', buildingAreaSqm: 207.44, amountKRW: 2_540_000_000, perBuildingPrice: 12_250_000, approvedDate: '19961014', distanceMeters: 523.0 },
-      { txDate: '2025-08-14', address: '서울특별시 송파구 신천동 12-1', zoning: '제3종일반주거지역', buildingAreaSqm: 210.00, amountKRW: 2_600_000_000, perBuildingPrice: 12_380_000, approvedDate: '20021113', distanceMeters: 268.0 },
+      { txDate: '2026-01-14', address: '서울특별시 송파구 방이동 49-15', zoning: '일반상업지역', buildingAreaSqm: 25.42,   amountKRW: 210_000_000,    perBuildingPrice: 8_220_000,  approvedDate: '20231019', distanceMeters: 978.1 },
+      { txDate: '2026-01-14', address: '서울특별시 송파구 방이동 49-15', zoning: '일반상업지역', buildingAreaSqm: 25.42,   amountKRW: 220_000_000,    perBuildingPrice: 8_580_000,  approvedDate: '20231019', distanceMeters: 978.1 },
+      { txDate: '2025-11-10', address: '서울특별시 송파구 방이동 24',    zoning: '일반상업지역', buildingAreaSqm: 2138.32, amountKRW: 21_000_000_000, perBuildingPrice: 9_820_000,  approvedDate: '19910508', distanceMeters: 396.8 },
+      { txDate: '2025-09-16', address: '서울특별시 송파구 방이동 38-7',  zoning: '일반상업지역', buildingAreaSqm: 1049.22, amountKRW: 9_080_000_000,  perBuildingPrice: 8_650_000,  approvedDate: '20011228', distanceMeters: 614.6 },
+      { txDate: '2025-09-06', address: '서울특별시 송파구 신천동 11-10', zoning: '일반상업지역', buildingAreaSqm: 32.40,   amountKRW: 250_000_000,    perBuildingPrice: 7_720_000,  approvedDate: '20010531', distanceMeters: 250.1 },
+      { txDate: '2025-05-19', address: '서울특별시 송파구 방이동 49-15', zoning: '일반상업지역', buildingAreaSqm: 25.42,   amountKRW: 250_000_000,    perBuildingPrice: 9_830_000,  approvedDate: '20231019', distanceMeters: 978.1 },
+      { txDate: '2025-05-08', address: '서울특별시 송파구 방이동 36-4',  zoning: '일반상업지역', buildingAreaSqm: 1093.26, amountKRW: 9_000_000_000,  perBuildingPrice: 8_230_000,  approvedDate: '20010110', distanceMeters: 554.3 },
     ],
+    // 사용자 제공 평균: 토지 330.26㎡ / 건물 627.05㎡ / 57.2억 / 토지단가 0.4억 / 건물단가 872만원
     summary: {
-      avgAmount: 2_582_000_000,
-      medianAmount: 2_580_000_000,
-      avgPerBuildingPrice: 12_374_000,
+      avgAmount: 5_715_714_000,             // ≈ 57.2억
+      medianAmount: 250_000_000,
+      avgPerBuildingPrice: 8_721_000,       // 872만원/㎡
     },
   },
 }
@@ -610,23 +602,29 @@ export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): Un
         `잠실역 일대 재건축·MICE 배후 수요로 중장기 상승 잠재력 보유. ` +
         `단 감정가(28억) 대비 AI 시세(25.5억) 8.9% 격차 — 보수 시나리오 병행 권고.`,
       indicators: [
-        { label: '지역 6개월 낙찰가율', value: `${region.auctionMomentum > 0 ? '+' : ''}${region.auctionMomentum}%p vs 1년`, trend: region.auctionMomentum > 0 ? 'UP' : region.auctionMomentum < 0 ? 'DOWN' : 'FLAT', commentary: '송파구 오피스텔 낙찰가율 모멘텀' },
-        { label: '인근 1km 실거래', value: `${region.transactionCount12M}건/12M`, trend: region.transactionVolumeChange > 0 ? 'UP' : 'FLAT', commentary: '잠실·신천동 오피스텔 거래 유지' },
-        { label: '법원 1회차 매각 기간', value: `${auction.expectedSaleDays ?? '—'}일`, trend: 'FLAT', commentary: '서울동부지방법원 평균 대비 표준 수준' },
+        { label: '지역 6개월 낙찰가율', value: `${region.auctionMomentum > 0 ? '+' : ''}${region.auctionMomentum}%p vs 1년`, trend: region.auctionMomentum > 0 ? 'UP' : region.auctionMomentum < 0 ? 'DOWN' : 'FLAT', commentary: '송파구 사무실 낙찰가율 모멘텀' },
+        { label: '인근 1km 실거래', value: `${SAMPLE_STATISTICS.nearbyTransactions!.cases.length}건/1년`, trend: 'UP', commentary: '송파 방이동·신천동 일반상업지역 (사용자 제공)' },
+        { label: '법원 1회차 매각결정기일', value: `${SAMPLE_STATISTICS.courtSchedule?.stages[0]?.saleDays ?? '—'}일`, trend: 'FLAT', commentary: '서울동부지법 송파 사무실 통계 (사용자 제공)' },
       ],
     },
     registryAnalysis,
     profitability,
-    // AI 총평 v3 (사용자 정책 2026-05-06):
-    //   송파 사무실 3개월 평균 75.3% · 회차당 유찰 할인율 25%p (송파 통계 매핑) → 2회차 예상
-    //   1회차 매각결정기일 평균 477일 (서울동부지법 송파 사무실 통계)
+    // AI 총평 v3 reflow (사용자 정책 2026-05-06):
+    //   · 낙찰가율 75.3% (송파 사무실 SIGUNGU 3M) · 회차당 −25%p · 2회차 예상 매각
+    //   · 1회차 매각결정기일 평균 477일 (서울동부지법 송파 사무실 통계)
+    //   · 인근 3km 경매 5건 (3년 이내) 평균 62.92% (광진/송파 사무실)
+    //   · 인근 1km 실거래 7건 (1년 이내 · 송파 방이동·신천동 일반상업지역) 평균 57.2억
+    //   · 동일주소 (신천동 7-19) 사례 없음
+    //   · 선순위 채권 없음 → 배당 cascade 단순 (낙찰가→경매비용→NPL→1·2질권자)
     executiveSummary:
       `송파구 신천동 잠실 시그마타워 오피스텔 NPL (금천신협 대출원금 19.6억 · 감정가 28억) 종합 분석 결과 ${riskGrade}등급, 예측 회수율 ${recovery.predictedRecoveryRate}%(신뢰도 ${Math.round(recovery.confidence * 100)}%)로 평가됩니다. ` +
       `금융기관 NPL 매각가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 기준 ` +
       `권고 시나리오 ROI ${(recommendedRoi * 100).toFixed(2)}% · 기본 시나리오 ROI ${(investmentRoi * 100).toFixed(2)}%, ` +
       `송파구 사무실 3개월 평균 낙찰가율 75.3% (회차당 −25%p 기준 → 2회차 예상 매각) · 특수조건 ${auction.specialConditionPenalty.toFixed(1)}%p 반영한 ${auction.adjustedBidRatio.toFixed(1)}%를 기준 입찰가율로 제시하며, ` +
       `1회차 매각결정기일 통계 477일 (서울동부지법 송파 사무실)을 적용한 운용 기간 모델 — ` +
-      `동일 건물 전회 낙찰(${SAMPLE_STATISTICS.sameAddressAuction!.summary.avgBidRatio}%)과 인근 송파 오피스텔(${SAMPLE_STATISTICS.nearbyAuction!.summary.avgBidRatio}%) 편차 고려, 보수·기준·공격 3단계 입찰 전략을 병행 권고합니다. ` +
+      `동일주소 사례 없음, 인근 3km 경매 사례 (3년 이내 5건 — 광진 구의동·송파 방이동) 평균 ${SAMPLE_STATISTICS.nearbyAuction!.summary.avgBidRatio.toFixed(1)}%, ` +
+      `인근 1km 실거래 (1년 이내 ${SAMPLE_STATISTICS.nearbyTransactions!.cases.length}건 · 송파 방이동·신천동 일반상업지역) 평균 57.2억·m²당 872만원 견고. ` +
+      `선순위 근저당 부재로 배당 cascade 단순 (낙찰가→경매비용→NPL→1·2질권자) — 보수·기준·공격 3단계 입찰 전략을 병행 권고합니다. ` +
       `AI 투자 의견 종합 점수 ${verdictScore}점 → ${verdict} (가중치: 회수율 0.35·리스크 0.25·ROI 0.25·할인 0.15).`,
   }
 

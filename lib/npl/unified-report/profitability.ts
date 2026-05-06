@@ -157,7 +157,12 @@ export interface ProfitDistributionBlock {
   /** 경매비용 (원) */
   executionCost: number
   /**
-   * 선순위 채권 우선변제액 (원) — 예: 1순위 농협 근저당.
+   * 선순위 채권 우선변제 한도 (원) — 입력 echo (live recompute 정합용).
+   * 사용자 정책 v3 (2026-05-06): page.tsx 가 본 값으로 engine 재호출 시 cascade 보존.
+   */
+  seniorClaimAmount: number
+  /**
+   * 선순위 채권 우선변제액 (실제 변제 = min(seniorClaimAmount, distributableAfterExecution)).
    * 사용자 정책 v3 (2026-05-06): 낙찰가 → 경매비용 차감 → 선순위 변제 → NPL 측 배당.
    */
   seniorPayout: number
@@ -788,6 +793,7 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
     bondCalcInterest,
     bondCalcPrincipalAndInterest,
     executionCost,
+    seniorClaimAmount: seniorClaim,
     seniorPayout,
     seniorCreditorLabel,
     npNetDistributable,

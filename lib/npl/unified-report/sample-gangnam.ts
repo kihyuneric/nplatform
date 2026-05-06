@@ -374,12 +374,12 @@ export function buildGangnamSampleReport(): UnifiedAnalysisReport {
     claimBalance: GANGNAM_TOTAL_BOND,
   })
 
-  // ★ 사용자 정책 (2026-05-05): 강남 가상 사례는 IR pitch 용 → BUY 등급 이상 보장.
-  //   재무 inputs (할인 20%, 1순위 26억, 낙찰가율 90%, 감정가 65억) 으로 자연스럽게 BUY 도달하도록 설계.
-  //   computeVerdict 결과 score 가 75 미만일 경우에도 최소 78점 BUY 강제 (가상 사례 한정).
-  const verdict: 'BUY' | 'HOLD' | 'AVOID' = 'BUY'
-  const verdictScore = Math.max(verdictResultRaw.totalScore, 78)
-  const verdictResult = { ...verdictResultRaw, verdict, totalScore: verdictScore }
+  // 사용자 정책 v3 (2026-05-06): verdict 재설계 (BUY 임계 65점) → 자연 도달 가능.
+  //   재무 inputs (할인 20%, 1순위 26억, 낙찰가율 90%, 감정가 65억) 으로 자연 BUY 도달.
+  //   override 제거 — 새 계산식으로 정상 산출.
+  const verdict: 'BUY' | 'HOLD' | 'AVOID' = verdictResultRaw.verdict
+  const verdictScore = verdictResultRaw.totalScore
+  const verdictResult = verdictResultRaw
 
   // ─── NPL Valuation 전용 executiveSummary ──────────────────────
   // (XRF Vehicle 내용은 buildXrfSummary 가 별도로 5단락 생성 — toggle 시 swap)

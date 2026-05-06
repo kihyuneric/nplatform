@@ -2882,6 +2882,9 @@ function ProfitabilitySections({
         expectedBidRatioPeriod: initial.valuation.expectedBidRatioPeriod,
         // v3 사용자 정책 (2026-05-06): 회차당 유찰 할인율(default 20%p) 통계 매핑 가능
         auctionFailureDiscountPct,
+        // 선순위 채권 cascade 보존 — initial 에서 추출 후 재주입 (live recompute 정합)
+        seniorClaimAmount: initial.distribution.seniorClaimAmount,
+        seniorCreditorLabel: initial.distribution.seniorCreditorLabel,
         auctionStartDate: edit.auctionStartDate,
         // 예상 매각기일을 1차 매각기일 자리에 주입 — 후속 모든 일정 시프트
         firstSaleDateOverride: effectivePredictedSaleDate,
@@ -3243,12 +3246,20 @@ function ProfitabilitySections({
                     return Math.round((b.getTime() - a.getTime()) / 86_400_000)
                   })()
                   const failedRounds = Math.max(0, predictedRound - 1)
-                  // v3 (사용자 정책 2026-05-06): 1회차 매각결정기일 통계 = 315일 →
-                  //   1회차 매각기일 = 315 − 7(매각결정) − 28(낙찰) = 280일
-                  //   N회차 매각기일 = 280 + (N−1) × 28
+                  // v3 (2026-05-06) 동적 통계 연동:
+                  //   1회차 매각기일 cumulative = initial firstSaleDate − auctionStart (지역/법원별 다름)
+                  //   1회차 매각결정 cumulative = 1회차 매각기일 + 낙찰(28) + 매각결정(7) = +35
+                  //   N회차 매각기일 = 1회차 매각기일 + (N−1) × 28
+                  const firstSaleDays1st = (() => {
+                    const startMs = new Date(initial.schedule.milestones[0]?.date ?? edit.auctionStartDate).getTime()
+                    const fsd = initial.schedule.milestones.find(m => m.key === 'firstSaleDate')
+                    if (!fsd) return 280
+                    return Math.round((new Date(fsd.date).getTime() - startMs) / 86_400_000)
+                  })()
+                  const courtFirstRoundSaleConfirm = firstSaleDays1st + 35
                   return predictedRound === 1
-                    ? `공식: 경매개시 + 280일 (1회차 매각결정 315 − 35) → 1회차 즉시 낙찰 예상 · 누적 +${cumDays}일 (낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% ≥ 100%)`
-                    : `공식: 경매개시 + 280일 (1회차 매각결정 315 − 35) + 유찰 ${failedRounds}회 × 28일 = +${cumDays}일 · 낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% → ${predictedRound}회차 예상 (회차당 −20%p · 자동 계산 · 수동 조정 가능)`
+                    ? `공식: 경매개시 + ${firstSaleDays1st}일 (1회차 매각결정 ${courtFirstRoundSaleConfirm} − 35) → 1회차 즉시 낙찰 예상 · 누적 +${cumDays}일 (낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% ≥ 100%)`
+                    : `공식: 경매개시 + ${firstSaleDays1st}일 (1회차 매각결정 ${courtFirstRoundSaleConfirm} − 35) + 유찰 ${failedRounds}회 × 28일 = +${cumDays}일 · 낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% → ${predictedRound}회차 예상 (회차당 −${auctionFailureDiscountPct}%p · 자동 계산 · 수동 조정 가능)`
                 })()}
                 last
               />
