@@ -187,7 +187,9 @@ export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string
     specialConditions: { ...EMPTY_SPECIAL_CONDITIONS },
     statistics: GANGNAM_STATISTICS,
     acquisitionBaseLabel: '대출원금',
-    acquisitionBaseAmount: GANGNAM_PURCHASE,
+    // 사용자 정책 v3.7 (2026-05-06): live recompute 정합 — engine 이 사용하는 base = LOAN_PRINCIPAL (35억)
+    //   매입가 = 35억 × (1 − 0.20) = 28억 (할인 20% 표시 정합)
+    acquisitionBaseAmount: GANGNAM_LOAN_PRINCIPAL,
     // 사용자 정책 (2026-05-05): 현재 버전은 실 사진 등록 미지원 → sitePhotos 비활성.
     //   PropertyPhotosExhibit 컴포넌트는 유지 (향후 실 사진 등록 시 자동 활성화).
     //   실 매물 deploy 시 storage URL 배열 주입 → 자동으로 EXHIBIT 노출.
