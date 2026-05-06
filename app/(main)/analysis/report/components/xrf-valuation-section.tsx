@@ -307,9 +307,6 @@ export default function XrfValuationSection({
               borderLeft: `3px solid ${tierColor[selected.tier]}`,
             }}
           >
-            NPL 자체 ROI <strong>{fmtPct(selected.nplRoi)}</strong> · IRR{' '}
-            <strong>{fmtPct(selected.nplRoi / selected.durationYr)}/yr</strong> →{' '}
-            XRF Vehicle 적용 →{' '}
             <strong style={{ color: tierColor[selected.tier] }}>
               {tierLabel[selected.tier]}
             </strong>{' '}
