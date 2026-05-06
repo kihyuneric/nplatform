@@ -26,6 +26,7 @@ import { buildJongnoSampleReport } from '@/lib/npl/unified-report/sample-jongno'
 import { buildSampleReport } from '@/lib/npl/unified-report/sample'
 import { buildGangnamSampleReport } from '@/lib/npl/unified-report/sample-gangnam'
 import { computeEffectiveFirstSaleDate } from '@/lib/npl/unified-report/auction-round'
+import { verdictScoreToGrade } from '@/lib/npl/unified-report/risk-factors'
 
 interface RoiBundle {
   /** 보고서 RECENT PIPELINE / 카드에 표시할 prominent ROI */
@@ -147,7 +148,14 @@ export async function GET() {
       // 분석 대시보드가 사용하는 prominent ROI (권고 시나리오)
       jongno: jongno.primary,
       jamsil: jamsil.primary,
-      gangnam: gangnam.primary,                  // ★ 강남 가상 사례 (XRF Case · BUY tier)
+      gangnam: gangnam.primary,                  // ★ 강남 가상 사례
+      // AI 투자등급 / 의견 — verdict 결과 (사용자 정책 v3.4 — investmentRoi 기준)
+      // grade = verdictScoreToGrade(verdictScore) — A≥80 · B≥65 · C≥45 · D<45
+      verdict: {
+        jongno:  { grade: verdictScoreToGrade(jongnoReport.summary.verdictScore ?? 0),  score: jongnoReport.summary.verdictScore  ?? null, verdict: jongnoReport.summary.verdict  },
+        jamsil:  { grade: verdictScoreToGrade(jamsilReport.summary.verdictScore ?? 0),  score: jamsilReport.summary.verdictScore  ?? null, verdict: jamsilReport.summary.verdict  },
+        gangnam: { grade: verdictScoreToGrade(gangnamReport.summary.verdictScore ?? 0), score: gangnamReport.summary.verdictScore ?? null, verdict: gangnamReport.summary.verdict },
+      },
       // 검증/디버깅용 — 모든 후보 노출
       details: {
         jongno: jongno.candidates,
