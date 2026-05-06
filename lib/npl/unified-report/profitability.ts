@@ -1183,7 +1183,7 @@ function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
     Math.max(0.02, Math.min(0.98, 1 - normalCdf((assumedBid - args.baseBidRatio) / bidStd)))
 
   // 라벨/설명 — 앵커가 원금(A) 인지 매각가(B)인지에 따라 분기
-  const ratioDeltaPct = (rate: number, ref: number) => ((rate - ref) * 100) // %p
+  const ratioDeltaPct = (rate: number, ref: number) => ((rate - ref) / ref * 100) // % relative to ref
   const fmtPct = (n: number) => (n >= 0 ? `+${n.toFixed(1)}%` : `${n.toFixed(1)}%`)
 
   // Phase G7+ — 매입 base 라벨 (사용자 정책: 대출원금 vs 채권잔액)
