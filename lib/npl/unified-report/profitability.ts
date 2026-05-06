@@ -927,6 +927,8 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
     appraisalValue: input.appraisalValue,
     baseBidRatio: input.expectedBidRatio,
     executionCost,
+    // 선순위 채권 cascade — 반드시 주입해야 전략 카드 배당 정합
+    seniorClaimAmount: seniorClaim,
     pledgeLoanRatio,
     pledgeInterestRate,
     pledgeLoanPeriodDays,
@@ -963,6 +965,7 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
     purchaseRateAxis: input.sensitivityPurchaseRateAxis ?? defaultPurchaseAxis,
     bidRatioAxis: input.sensitivityBidRatioAxis ?? defaultBidRatioAxis,
     executionCost,
+    seniorClaimAmount: seniorClaim,
     pledgeLoanRatio,
     pledgeInterestRate,
     pledgeLoanPeriodDays,
@@ -1075,6 +1078,11 @@ interface StrategyArgs {
   acquisitionBaseLabel?: '대출원금' | '채권잔액'
   /** 매입 base 금액 override (Phase G7+ — 잔액 매각 케이스: 채권잔액). 미지정 시 loanPrincipal 사용. */
   acquisitionBaseAmount?: number
+  /**
+   * 선순위 채권 우선변제액 (원) — cascade 정합용.
+   * 미제공 시 0 으로 처리 (선순위 없음). 반드시 buildNplProfitability 호출 시 주입.
+   */
+  seniorClaimAmount?: number
 }
 
 function computeScenario(
@@ -1107,10 +1115,12 @@ function computeScenario(
     contractDeposit + remainingBalance + registrationTransferCost + brokerageFee + pledgeInterestTotal
 
   const expectedBidPrice = Math.round(args.appraisalValue * assumedBidRatio)
-  const expectedDistributionAmount = Math.min(
-    expectedBidPrice,
-    args.bondCalcPrincipalAndInterest + args.executionCost,
-  )
+  // 배당 cascade (buildNplProfitability 메인 블록과 동일 로직 적용 — 정합 필수)
+  //   낙찰가 → 경매비용 차감 → 선순위 우선변제 → NPL 측 배당가능 → bondCalcPnI 캡 → 1질권자 → 2질권자
+  const distributableAfterExecution = Math.max(0, expectedBidPrice - args.executionCost)
+  const seniorPayout = Math.min(args.seniorClaimAmount ?? 0, distributableAfterExecution)
+  const npNetDistributable = Math.max(0, distributableAfterExecution - seniorPayout)
+  const expectedDistributionAmount = Math.min(npNetDistributable, args.bondCalcPrincipalAndInterest)
   const firstPledgeeAmount = Math.min(pledgeLoanAmount, expectedDistributionAmount)
   const secondPledgeeAmount = Math.max(0, expectedDistributionAmount - firstPledgeeAmount)
   const expectedNetProfit = secondPledgeeAmount - totalEquity
@@ -1266,9 +1276,9 @@ function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
     defaultStrategy: 'RECOMMENDED',
     narrative:
       `${anchorNote}. ` +
-      `보수적(${(conservative.roi * 100).toFixed(1)}%) · 권고(${(recommended.roi * 100).toFixed(1)}%) · ` +
+      `보수적(${(conservative.roi * 100).toFixed(1)}%) · 표준(${(recommended.roi * 100).toFixed(1)}%) · ` +
       `공격적(${(aggressive.roi * 100).toFixed(1)}%) 시나리오별 ROI를 병렬 제시합니다. ` +
-      `권고안 기준 연환산 ${(recommended.annualizedRoi * 100).toFixed(1)}% 목표이며, ` +
+      `표준 매입 기준 연환산 ${(recommended.annualizedRoi * 100).toFixed(1)}% 목표이며, ` +
       `승률은 낙찰가율 분포 N(μ=${(args.baseBidRatio * 100).toFixed(1)}%, σ=${(bidStd * 100).toFixed(1)}%p) 기반 ` +
       `P(실낙찰가율 ≥ 가정치) = 1−Φ((가정−μ)/σ) 로 산출.`,
   }
@@ -1283,6 +1293,7 @@ interface SensitivityArgs {
   purchaseRateAxis: number[]
   bidRatioAxis: number[]
   executionCost: number
+  seniorClaimAmount?: number
   pledgeLoanRatio: number
   pledgeInterestRate: number
   pledgeLoanPeriodDays: number
@@ -1302,6 +1313,7 @@ function buildSensitivityMatrix(args: SensitivityArgs): SensitivityMatrix {
           appraisalValue: args.appraisalValue,
           baseBidRatio: br,
           executionCost: args.executionCost,
+          seniorClaimAmount: args.seniorClaimAmount,
           pledgeLoanRatio: args.pledgeLoanRatio,
           pledgeInterestRate: args.pledgeInterestRate,
           pledgeLoanPeriodDays: args.pledgeLoanPeriodDays,
