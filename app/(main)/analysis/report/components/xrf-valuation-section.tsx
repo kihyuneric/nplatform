@@ -78,7 +78,8 @@ export default function XrfValuationSection({
   assetTitle,
 }: XrfValuationSectionProps) {
   const [fxRate, setFxRate] = useState(1300)
-  const [numLPs, setNumLPs] = useState(100)
+  // v9 XRFT 토큰 모델: 1 XRFT = $1,000 or $10,000 — 발행 수량 = poolUSD / xrftPriceUSD
+  const [xrftPriceUSD, setXrftPriceUSD] = useState<1000 | 10000>(1000)
   const [tierOverride, setTierOverride] = useState<Exclude<XrfTier, 'REJECT'> | undefined>(undefined)
   // v9: NPL_EQUITY 기본값 — NPL totalEquity에 deal 비용 이미 포함 → 이중 계상 방지
   const [lpCapitalMode, setLpCapitalMode] = useState<LpCapitalMode>('NPL_EQUITY')
@@ -90,7 +91,7 @@ export default function XrfValuationSection({
       nplNetProfitKRW,
       holdingPeriodDays,
       exchangeRateKRWPerUSD: fxRate,
-      numLPs,
+      numLPs: 1, // XRFT 모델: 총 단위 기준 (per-XRFT 는 컴포넌트에서 직접 계산)
       tierOverride,
       lpCapitalMode,
     }),
@@ -100,7 +101,6 @@ export default function XrfValuationSection({
       nplNetProfitKRW,
       holdingPeriodDays,
       fxRate,
-      numLPs,
       tierOverride,
       lpCapitalMode,
     ],
@@ -110,6 +110,10 @@ export default function XrfValuationSection({
     () => computeXrfValuationAllTiers(input),
     [input],
   )
+
+  // XRFT 발행 수량 + 1 XRFT당 수익 (numLPs=1 → lpNetProfitPerLpUSD = total)
+  const numXrft = Math.max(1, Math.round(selected.poolUSD / xrftPriceUSD))
+  const perXrftProfitUSD = selected.lpNetProfitUSD / numXrft
 
   // ── Fund Metrics (v7 — 5 metric, 모두 수식 기반) ──
   const fundMetrics = useMemo(() => {
@@ -367,7 +371,7 @@ export default function XrfValuationSection({
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginBottom: 16 }}>
           <tbody>
             <Row label="Pool 총액 (= LP 청약액)" value={fmtUSDFull(selected.poolUSD)} note={lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? '= NPL equity + Fees + Hurdle est. (이중계상)' : '= NPL totalEquity (deal 비용 포함 · Vehicle fees는 profit 차감)'} bold />
-            <Row label="  └ LP capital (100% 청약)" value={fmtUSDFull(selected.lpCapitalUSD)} note={`${numLPs}명 × ${fmtUSDFull(selected.lpCapitalPerLpUSD)} (1인당)`} last />
+            <Row label="  └ LP capital (XRFT 100% 청약)" value={fmtUSDFull(selected.lpCapitalUSD)} note={`${numXrft.toLocaleString('en-US')} XRFT × ${fmtUSDFull(xrftPriceUSD)}/XRFT`} last />
           </tbody>
         </table>
 
@@ -621,7 +625,7 @@ export default function XrfValuationSection({
             </tr>
           </thead>
           <tbody>
-            <CashflowRow phase="Day 0" event="LP capital call (Pool 100% 청약 송금)" amount={-selected.lpCapitalUSD} cumulative={-selected.lpCapitalUSD} negative note={`${numLPs}명 × ${fmtUSDFull(selected.lpCapitalPerLpUSD)}`} />
+            <CashflowRow phase="Day 0" event="LP capital call (XRFT 100% 청약 송금)" amount={-selected.lpCapitalUSD} cumulative={-selected.lpCapitalUSD} negative note={`${numXrft.toLocaleString('en-US')} XRFT × ${fmtUSDFull(xrftPriceUSD)}`} />
             <CashflowRow phase="Day 0~M3" event="XRF SPV Setup (1회)" amount={0} cumulative={-selected.lpCapitalUSD} note="prefund 차감 · LP 직접 X" />
             <CashflowRow phase="Day ~30" event="NPL 매입 + 질권대출 실행" amount={0} cumulative={-selected.lpCapitalUSD} note="Pool → NPL 매입가 funding" />
             <CashflowRow phase="운용 중" event="XRF/KOF/NPL VC fees prefund" amount={0} cumulative={-selected.lpCapitalUSD} note={`LP capital 에서 ${fmtUSDFull(selected.fees.xrfMgmtUSD + selected.fees.xrfSetupUSD + selected.fees.platformTotalUSD + selected.fees.servicingUSD)} 차감`} />
@@ -634,8 +638,8 @@ export default function XrfValuationSection({
       {/* ───── EXHIBIT 5 — KEY METRICS ───── */}
       <Section title="EXHIBIT 5 · KEY METRICS" caption={`AUTO Tier 자동 선택 · ${selected.autoTierResult.selectedReason}`}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-          <MetricCard label="LP Capital Call (1인당)" value={fmtUSDFull(selected.lpCapitalPerLpUSD)} sub={`${numLPs}명 · 총 ${fmtUSD(selected.lpCapitalUSD)}`} tint={c.navy} />
-          <MetricCard label="LP Net Profit (1인당)" value={fmtUSDFull(selected.lpNetProfitPerLpUSD)} sub={`총 ${fmtUSD(selected.lpNetProfitUSD)}`} tint={c.navyDark} />
+          <MetricCard label="LP Capital (1 XRFT)" value={fmtUSDFull(xrftPriceUSD)} sub={`${numXrft.toLocaleString('en-US')} XRFT · 총 ${fmtUSD(selected.poolUSD)}`} tint={c.navy} />
+          <MetricCard label="LP Net Profit (1 XRFT)" value={fmtUSDFull(perXrftProfitUSD)} sub={`총 ${fmtUSD(selected.lpNetProfitUSD)}`} tint={c.navyDark} />
           <MetricCard label="LP ROI (절대)" value={fmtPct(selected.lpRoi)} sub={`${selected.durationYr.toFixed(2)}년 운용`} tint={tierColor[selected.tier]} />
           <MetricCard label="LP IRR (연환산)" value={`${fmtPct(selected.lpIrrYr)}/yr`} sub="단순 연환산" tint={c.navyDark} />
         </div>
@@ -855,13 +859,13 @@ export default function XrfValuationSection({
       {/* ───── EXHIBIT 5d — SENSITIVITY 분석 ───── */}
       <Section title="EXHIBIT 5d · SENSITIVITY 분석 (단일 변수 변동)" caption="운용기간 / NPL 순수익 변동이 LP ROI · Tier 에 미치는 영향">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
-          <SensitivityTable result={holdingSensitivity} baselineDays={holdingPeriodDays} />
-          <SensitivityTable result={profitSensitivity} baselineDays={holdingPeriodDays} variant="profit" />
+          <SensitivityTable result={holdingSensitivity} baselineDays={holdingPeriodDays} numXrft={numXrft} />
+          <SensitivityTable result={profitSensitivity} baselineDays={holdingPeriodDays} variant="profit" numXrft={numXrft} />
         </div>
       </Section>
 
       {/* ───── EXHIBIT 6 — 3-TIER 비교 (AUTO 컬럼 강조 · McKinsey style) ───── */}
-      <Section title="EXHIBIT 6 · 3-TIER 비교 시뮬레이션" caption="동일 NPL deal 에 BASE (LP ROI ≥ 20%) / CONSERVATIVE (10-20%) / SAVE-THE-DEAL (5-10%) 적용 시 결과 — EXHIBIT 2b 정의 참조 · ★ AUTO 평가 tier 강조">
+      <Section title="EXHIBIT 6 · 3-TIER 비교 시뮬레이션" caption="동일 NPL deal 에 BASE (LP ROI ≥ 25%) / CONSERVATIVE (15-25%) / SAVE-THE-DEAL (5-15%) 적용 시 결과 — EXHIBIT 2b 정의 참조 · ★ AUTO 평가 tier 강조">
         {(() => {
           // AUTO selected tier — column highlight 처리
           const autoCol: 1 | 2 | 3 =
@@ -921,8 +925,8 @@ export default function XrfValuationSection({
                   </tr>
                 </thead>
                 <tbody>
-                  <CompareRow label="LP Capital Call (1인당)" v1={fmtUSDFull(base.lpCapitalPerLpUSD)} v2={fmtUSDFull(conservative.lpCapitalPerLpUSD)} v3={fmtUSDFull(saveTheDeal.lpCapitalPerLpUSD)} highlightCol={autoCol} highlightBg={colHighlight} />
-                  <CompareRow label="LP Net Profit (1인당)" v1={fmtUSDFull(base.lpNetProfitPerLpUSD)} v2={fmtUSDFull(conservative.lpNetProfitPerLpUSD)} v3={fmtUSDFull(saveTheDeal.lpNetProfitPerLpUSD)} highlightCol={autoCol} highlightBg={colHighlight} />
+                  <CompareRow label="XRFT 발행 수량 (1 XRFT 가격)" v1={`${numXrft.toLocaleString('en-US')} XRFT`} v2={`${numXrft.toLocaleString('en-US')} XRFT`} v3={`${numXrft.toLocaleString('en-US')} XRFT`} highlightCol={autoCol} highlightBg={colHighlight} />
+                  <CompareRow label="LP Net Profit (1 XRFT)" v1={fmtUSDFull(base.lpNetProfitUSD / numXrft)} v2={fmtUSDFull(conservative.lpNetProfitUSD / numXrft)} v3={fmtUSDFull(saveTheDeal.lpNetProfitUSD / numXrft)} highlightCol={autoCol} highlightBg={colHighlight} />
                   <CompareRow label="LP ROI (절대)" v1={fmtPct(base.lpRoi)} v2={fmtPct(conservative.lpRoi)} v3={fmtPct(saveTheDeal.lpRoi)} bold highlightCol={autoCol} highlightBg={colHighlight} accentColor={accentColor} />
                   <CompareRow label="LP IRR (연환산)" v1={`${fmtPct(base.lpIrrYr)}/yr`} v2={`${fmtPct(conservative.lpIrrYr)}/yr`} v3={`${fmtPct(saveTheDeal.lpIrrYr)}/yr`} highlightCol={autoCol} highlightBg={colHighlight} />
                   <CompareRow label="XRF 수수료 합계" v1={fmtUSDFull(base.fees.xrfTotalUSD)} v2={fmtUSDFull(conservative.fees.xrfTotalUSD)} v3={fmtUSDFull(saveTheDeal.fees.xrfTotalUSD)} highlightCol={autoCol} highlightBg={colHighlight} />
@@ -952,7 +956,7 @@ export default function XrfValuationSection({
       </Section>
 
       {/* ───── EXHIBIT 7 — 입력 파라미터 ───── */}
-      <Section title="EXHIBIT 7 · 입력 파라미터 (시나리오 조정)" caption="환율·LP 인원·tier·LP capital 모델 인터랙티브 조정 가능">
+      <Section title="EXHIBIT 7 · 입력 파라미터 (시나리오 조정)" caption="환율·XRFT 가격·tier·LP capital 모델 인터랙티브 조정 가능">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }} className="no-print">
           <Param label="USD 환율 (KRW/USD)">
             <input
@@ -962,13 +966,28 @@ export default function XrfValuationSection({
               style={inputStyle}
             />
           </Param>
-          <Param label="LP 인원 (분할)">
-            <input
-              type="number"
-              value={numLPs}
-              onChange={e => setNumLPs(Number(e.target.value) || 100)}
-              style={inputStyle}
-            />
+          <Param label={`1 XRFT 가격 (현재: $${xrftPriceUSD.toLocaleString('en-US')} · ${numXrft.toLocaleString('en-US')} XRFT 발행)`}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {([1000, 10000] as const).map(price => (
+                <button
+                  key={price}
+                  onClick={() => setXrftPriceUSD(price)}
+                  style={{
+                    flex: 1,
+                    padding: '8px 12px',
+                    border: `2px solid ${xrftPriceUSD === price ? '#2251FF' : '#E5E8EC'}`,
+                    borderRadius: 6,
+                    background: xrftPriceUSD === price ? '#EFF6FF' : '#FFFFFF',
+                    color: xrftPriceUSD === price ? '#2251FF' : '#374151',
+                    fontWeight: xrftPriceUSD === price ? 700 : 400,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ${price.toLocaleString('en-US')} / XRFT
+                </button>
+              ))}
+            </div>
           </Param>
           <Param label="Tier 강제 (없으면 AUTO)">
             <select
@@ -998,7 +1017,6 @@ export default function XrfValuationSection({
           <br />• <strong>Vehicle Fee 산정 base</strong>: NPL 매입가 (AUM) 기준 · %/yr fees 365일 cap · Setup 1회
           <br />• <strong>Hurdle</strong>: 8%/yr × LP capital × 실제 운용기간 (NOT capped) — LP 우선 수익률
           <br />• <strong>Carry</strong>: (LP profit pre-carry − Hurdle) × tier별 Carry % (BASE 15% / CONS 10% / SAVE 5%)
-          <br />• <strong>NPL VC 차입금 (v5)</strong>: LP 가 Pool 100% 청약 후 그 중 10%를 NPL VC에 무이자 대여 (대부업법 license capital). 청산 시 LP 로 100% 환급. 수수료 아님 — NPL VC 수익은 별도 Servicing Fee 2.0%/yr.
           <br />• <strong>LP Capital 모델 차이</strong>:
           <br />&nbsp;&nbsp;&nbsp;&nbsp;- <em>NPL equity + Fees prefund</em>: LP가 SPV 운영 fees + Hurdle 도 prefund (PDF Case 1 패턴, 실제 SPV 운영)
           <br />&nbsp;&nbsp;&nbsp;&nbsp;- <em>NPL equity 만</em>: LP는 deal 자기자본만 모금 (단순 모델, ROI 명목상 높음)
@@ -1241,10 +1259,12 @@ function SensitivityTable({
   result,
   baselineDays,
   variant = 'days',
+  numXrft = 1,
 }: {
   result: { variable: string; baselineValue: number | string; cases: { label: string; lpRoi: number; lpIrrYr: number; tier: XrfTier; lpNetProfitPerLpUSD: number }[] }
   baselineDays: number
   variant?: 'days' | 'profit'
+  numXrft?: number
 }) {
   // SensitivityTable 내부 tierColor — 글로벌 tierColor 정합 (SAVE-THE-DEAL = mid navy)
   // ⚠ 글로벌 (lines 65-70) 과 동일: BASE cobalt · CONS steel · SAVE mid navy · REJECT red
@@ -1264,7 +1284,7 @@ function SensitivityTable({
           <tr style={{ background: '#F5F7FA', borderBottom: '1px solid #E5E8EC' }}>
             <th style={{ textAlign: 'left', padding: '6px 10px', color: '#6B7280', fontWeight: 600 }}>변동값</th>
             <th style={{ textAlign: 'right', padding: '6px 10px', color: '#6B7280', fontWeight: 600 }}>LP ROI</th>
-            <th style={{ textAlign: 'right', padding: '6px 10px', color: '#6B7280', fontWeight: 600 }}>1인당 Net</th>
+            <th style={{ textAlign: 'right', padding: '6px 10px', color: '#6B7280', fontWeight: 600 }}>1 XRFT Net</th>
             <th style={{ textAlign: 'center', padding: '6px 10px', color: '#6B7280', fontWeight: 600 }}>Tier</th>
           </tr>
         </thead>
@@ -1283,7 +1303,7 @@ function SensitivityTable({
                   {(cs.lpRoi * 100).toFixed(2)}%
                 </td>
                 <td style={{ padding: '6px 10px', textAlign: 'right', fontFamily: 'tabular-nums', color: '#1B3A5C' }}>
-                  ${Math.round(cs.lpNetProfitPerLpUSD).toLocaleString('en-US')}
+                  ${Math.round(cs.lpNetProfitPerLpUSD / numXrft).toLocaleString('en-US')}
                 </td>
                 <td style={{ padding: '6px 10px', textAlign: 'center', color: tierColor[cs.tier], fontWeight: 700, fontSize: 11 }}>
                   {cs.tier}
