@@ -40,7 +40,6 @@ export function buildXrfCsv({ result, metrics, allocation, assetTitle }: XrfCsvI
   push(`항목,USD,비중`)
   push(`Pool 총액,${fmt(result.poolUSD)},100.00%`)
   push(`LP capital,${fmt(result.lpCapitalUSD)},${pct(result.lpCapitalUSD / result.poolUSD)}`)
-  push(`대부업체 자본금 (Day Exit 1:1),${fmt(result.daepuCapitalUSD)},${pct(result.daepuCapitalUSD / result.poolUSD)}`)
   push(`LP 1인당 capital call (${result.numLPs}명),${fmt(result.lpCapitalPerLpUSD)},`)
 
   sep('Vehicle Fee')
@@ -49,11 +48,10 @@ export function buildXrfCsv({ result, metrics, allocation, assetTitle }: XrfCsvI
   push(`XRF,SPV Setup (1회),${fmt(result.fees.xrfSetupUSD)},${pct(result.fees.xrfSetupUSD / result.nplNetProfitUSD)}`)
   push(`XRF,Carry (8% Hurdle 초과분),${fmt(result.fees.xrfCarryUSD)},${pct(result.fees.xrfCarryUSD / result.nplNetProfitUSD)}`)
   push(`XRF,합계,${fmt(result.fees.xrfTotalUSD)},${pct(result.fees.xrfTotalUSD / result.nplNetProfitUSD)}`)
-  push(`엔플랫폼,AI Valuation,${fmt(result.fees.platformAiUSD)},${pct(result.fees.platformAiUSD / result.nplNetProfitUSD)}`)
-  push(`엔플랫폼,Pipeline Sourcing,${fmt(result.fees.platformSourcingUSD)},${pct(result.fees.platformSourcingUSD / result.nplNetProfitUSD)}`)
-  push(`엔플랫폼,PM Fee,${fmt(result.fees.platformPmUSD)},${pct(result.fees.platformPmUSD / result.nplNetProfitUSD)}`)
-  push(`엔플랫폼,KR Margin (TP 방어선),${fmt(result.fees.platformMarginUSD)},${pct(result.fees.platformMarginUSD / result.nplNetProfitUSD)}`)
-  push(`엔플랫폼,합계,${fmt(result.fees.platformTotalUSD)},${pct(result.fees.platformTotalUSD / result.nplNetProfitUSD)}`)
+  push(`KOF,AI Valuation & PM (통합),${fmt(result.fees.platformAiUSD)},${pct(result.fees.platformAiUSD / result.nplNetProfitUSD)}`)
+  push(`KOF,Pipeline Sourcing,${fmt(result.fees.platformSourcingUSD)},${pct(result.fees.platformSourcingUSD / result.nplNetProfitUSD)}`)
+  push(`KOF,KR Margin (TP defense fixed),${fmt(result.fees.platformMarginUSD)},${pct(result.fees.platformMarginUSD / result.nplNetProfitUSD)}`)
+  push(`KOF,합계,${fmt(result.fees.platformTotalUSD)},${pct(result.fees.platformTotalUSD / result.nplNetProfitUSD)}`)
   push(`대부업체,Servicing,${fmt(result.fees.servicingUSD)},${pct(result.fees.servicingUSD / result.nplNetProfitUSD)}`)
 
   sep('Profit Allocation (NPL Net Profit 분배)')

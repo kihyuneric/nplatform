@@ -330,17 +330,16 @@ export default function XrfValuationSection({
         </table>
       </Section>
 
-      {/* ───── EXHIBIT 2 — Pool 구조 (LP 100% 청약 + 10% NPL VC 차입금) ───── */}
-      <Section title="EXHIBIT 2 · POOL 구조 (Pool Structure)" caption={`LP capital 모델: ${lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? 'NPL equity + Fees prefund + 10% buffer (PDF 정합)' : 'NPL equity 만 (단순 모델)'} · LP 100% 청약 · NPL VC 차입금 분리`}>
+      {/* ───── EXHIBIT 2 — Pool 구조 (LP 100% 청약) ───── */}
+      <Section title="EXHIBIT 2 · POOL 구조 (Pool Structure)" caption={`LP capital 모델: ${lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? 'NPL equity + Fees prefund + Hurdle est. (PDF 정합)' : 'NPL equity 만 (단순 모델)'} · LP 100% 청약`}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <tbody>
-            <Row label="Pool 총액 (= LP 청약액)" value={fmtUSDFull(selected.poolUSD)} note={lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? '= (NPL equity + Fees + Hurdle est.) × 1.111' : '= NPL totalEquity × 1.111'} bold />
-            <Row label="  └ LP capital (100% 청약)" value={fmtUSDFull(selected.lpCapitalUSD)} note={`${numLPs}명 × ${fmtUSDFull(selected.lpCapitalPerLpUSD)} (1인당)`} />
-            <Row label="  └ ⓘ NPL Vehicle Company 차입금 (10%)" value={fmtUSDFull(selected.daepuCapitalUSD)} note="LP→NPL VC 무이자 대여 · Day Exit 1:1 환급 · 수수료 아님" last />
+            <Row label="Pool 총액 (= LP 청약액)" value={fmtUSDFull(selected.poolUSD)} note={lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? '= NPL equity + Fees + Hurdle est.' : '= NPL totalEquity'} bold />
+            <Row label="  └ LP capital (100% 청약)" value={fmtUSDFull(selected.lpCapitalUSD)} note={`${numLPs}명 × ${fmtUSDFull(selected.lpCapitalPerLpUSD)} (1인당)`} last />
           </tbody>
         </table>
         <div style={{ fontSize: 10, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
-          ⓘ <strong>NPL Vehicle Company (NPL VC)</strong>: 한국 NPL 시장에서 부실채권을 보관·회수하는 라이선스 보유 법인 (舊 '대부업체'). LP 가 Pool 100% 청약 후 그 중 10% 를 NPL VC 에 무이자 대여 (한국 대부업법 license capital 명목 · 수수료 아닌 자본 보관). 청산 시 100% 환급되어 LP 로 반환. NPL VC 수익은 별도의 Servicing Fee 2.0%/yr.
+          ⓘ <strong>NPL Vehicle Company (NPL VC)</strong>: 한국 NPL 시장에서 부실채권을 보관·회수하는 라이선스 보유 법인. NPL totalEquity (채권계약금 + 채권잔대금) 에 이미 포함되어 별도 Capital share 없음. NPL VC 수익은 Servicing Fee 만 (BASE/CONS 2.0%, SAVE 1.5%).
         </div>
       </Section>
 
@@ -364,7 +363,7 @@ export default function XrfValuationSection({
             ≥ 20%
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'BASE' ? '#EFF6FF' : 'transparent', color: c.text, lineHeight: 1.6 }}>
-            <strong>모든 주체 정상 fee 수령</strong> — XRF Carry 15% (entry) · KOF 2.50% · NPL VC Servicing 2.0% · LP ROI ≥ 20% 매력적 deal.
+            <strong>모든 주체 정상 fee 수령</strong> — XRF Carry 15% (entry) · Mgmt 1.5% · KOF 2.50% · NPL VC Servicing 2.0% · LP ROI ≥ 20% 매력적 deal.
             <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>RWA 즉시 출시 가능</strong> · 기관·개인 LP 모두 권고 · 표준 시나리오</span>
           </div>
 
@@ -377,8 +376,8 @@ export default function XrfValuationSection({
             10% – 20%
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#F0F9FF' : 'transparent', color: c.text, lineHeight: 1.6 }}>
-            <strong>XRF · KOF 부분 양보</strong> — XRF Carry 10% (entry) · Mgmt 0.4% · KOF 2.25% (AI/Sourcing/PM 압축).
-            <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>RWA 출시 가능</strong> (LP 매력도 보강) · KR Margin 0.4% TP defense 유지 · NPL VC Servicing 변동 X</span>
+            <strong>XRF · KOF 부분 양보</strong> — XRF Carry 10% (entry) · Mgmt 1.0% · KOF 2.00% (AI&PM/Sourcing 압축).
+            <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>RWA 출시 가능</strong> (LP 매력도 보강) · KR Margin 0.4% TP defense 유지 · NPL VC Servicing 2.0% 유지</span>
           </div>
 
           {/* SAVE-THE-DEAL row — McKinsey 블루 단색 정합: SAVE = mid navy (tierColor['SAVE-THE-DEAL']) */}
@@ -390,7 +389,7 @@ export default function XrfValuationSection({
             5% – 10%
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#F5F7FA' : 'transparent', color: c.text, lineHeight: 1.6 }}>
-            <strong>XRF · KOF 최대 양보</strong> — XRF Carry 5% (entry) · KOF 2.00% (AI/Sourcing/PM 추가 압축) · 모든 주체 양보로 LP 매력도 회복.
+            <strong>XRF · KOF 최대 양보</strong> — XRF Carry 5% (entry) · Mgmt 0.5% · KOF 1.50% (AI&PM/Sourcing 추가 압축) · NPL VC Servicing 1.5% 양보.
             <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>한계 매력 deal</strong> — 기관 LP 우선 검토 · 짧은 cycle · 회수율 낮은 deal 전형</span>
           </div>
 
@@ -430,20 +429,19 @@ export default function XrfValuationSection({
           </thead>
           <tbody>
             <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>XRF Foundation (SG SPV · RWA Issuer)</td></tr>
-            <Row label="  관리보수 Mgmt (%/yr · 365일 cap)" value={fmtUSDFull(selected.fees.xrfMgmtUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.5%/yr · 운영비' : '0.4%/yr · 운영비 (CONS/SAVE 양보)'} />
-            <Row label="  SPV Setup (1회)" value={fmtUSDFull(selected.fees.xrfSetupUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.5% × NPL 매입가' : '0.3% × NPL 매입가'} />
+            <Row label="  관리보수 Mgmt (%/yr · 365일 cap)" value={fmtUSDFull(selected.fees.xrfMgmtUSD)} note={tierLabel[selected.tier] === 'BASE' ? '1.5%/yr · 운영비' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '1.0%/yr · 운영비' : '0.5%/yr · 운영비 (SAVE 최대 양보)'} />
+            <Row label="  SPV Setup (1회)" value={fmtUSDFull(selected.fees.xrfSetupUSD)} note="1.0% × NPL 매입가 · 모든 tier 동일" />
             <Row label="  ★ Carry (5-tier 누진 · European Waterfall)" value={fmtUSDFull(selected.fees.xrfCarryUSD)} note={selected.fees.xrfCarryUSD > 0 ? `LP profit slice 별 marginal rate 적용 (entry ${tierLabel[selected.tier] === 'BASE' ? '15%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '10%' : '5%'})` : '⚠ Hurdle 8%/yr 미달 → Carry $0'} />
             <Row label="  XRF 수수료 합계 (Mgmt + Setup + Carry)" value={fmtUSDFull(selected.fees.xrfTotalUSD)} bold last />
 
-            <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>Korea Operation Firm (KOF) — Korean PM/Sourcing/Valuation 서비스 · BASE 2.50% · CONS 2.25% · SAVE 2.00%</td></tr>
-            <Row label="  AI Valuation (ML 가격평가)" value={fmtUSDFull(selected.fees.platformAiUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.7%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.6%' : '0.5%'} />
-            <Row label="  Pipeline Sourcing (딜 발굴·소싱)" value={fmtUSDFull(selected.fees.platformSourcingUSD)} note={tierLabel[selected.tier] === 'BASE' ? '1.0%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.9%' : '0.8%'} />
-            <Row label="  PM Fee (프로젝트 매니지먼트)" value={fmtUSDFull(selected.fees.platformPmUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.4%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.35%' : '0.3%'} />
-            <Row label="  KR Margin (TP 방어선 ≥15%)" value={fmtUSDFull(selected.fees.platformMarginUSD)} note="0.4% 모든 tier 고정" />
+            <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>Korea Operation Firm (KOF) — Korean Sourcing/Valuation 서비스 · BASE 2.50% · CONS 2.00% · SAVE 1.50%</td></tr>
+            <Row label="  AI Valuation & PM (가격평가 + 프로젝트 관리)" value={fmtUSDFull(selected.fees.platformAiUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.5%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.4%' : '0.3%'} />
+            <Row label="  Pipeline Sourcing (딜 발굴·소싱)" value={fmtUSDFull(selected.fees.platformSourcingUSD)} note={tierLabel[selected.tier] === 'BASE' ? '1.5%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '1.2%' : '0.8%'} />
+            <Row label="  KR Margin (TP defense ★ fixed)" value={fmtUSDFull(selected.fees.platformMarginUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.5% (BASE 고정)' : '0.4% (CONS/SAVE 고정)'} />
             <Row label="  KOF 수수료 합계" value={fmtUSDFull(selected.fees.platformTotalUSD)} bold last />
 
             <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>NPL Vehicle Company (NPL VC) — Korean NPL 라이선스 보유 · 채권 보관·회수 법인</td></tr>
-            <Row label="  Servicing Fee (시장 표준 라이선스)" value={fmtUSDFull(selected.fees.servicingUSD)} note="2.0% × 매입가 · 모든 tier 동일 (차입금에 대한 수수료 아님)" last />
+            <Row label="  Servicing Fee (시장 표준 라이선스)" value={fmtUSDFull(selected.fees.servicingUSD)} note={tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? '1.5% × 매입가 (SAVE 양보)' : '2.0% × 매입가 (BASE/CONS 동일)'} last />
           </tbody>
         </table>
 
@@ -512,7 +510,7 @@ export default function XrfValuationSection({
           {selected.fees.xrfCarryUSD === 0 && <span style={{ color: c.amber, fontWeight: 700, marginLeft: 6 }}>← 본 deal 은 Carry 미발생 상태</span>}
         </div>
         <div style={{ fontSize: 10, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
-          ⓘ 2026-05-05 v7 (XRF_Simulator_v7.xlsx 정합): KOF 4종 (AI 0.7/0.6/0.5% · Sourcing 1.0/0.9/0.8% · PM 0.4/0.35/0.3% · Margin 0.4% flat) · NPL VC Servicing 2.0% × 매입가 (FLAT, no duration cap). XRF Carry 5-tier marginal (European Waterfall): Hurdle 8%/yr 미달 시 0, 그 외 8-20/20-40/40-60/60%+ slice 별 marginal rate 적용. NPL VC 차입금 10%: LP→NPL VC 무이자 대여 · Day Exit 100% 환급.
+          ⓘ 2026-05-06 v8: XRF Mgmt 1.5/1.0/0.5%/yr (365일 cap) · Setup 1.0% (1회 all-tier) · KOF 3종 (AI&PM 0.5/0.4/0.3% · Sourcing 1.5/1.2/0.8% · Margin 0.5/0.4/0.4% fixed) · NPL VC Servicing 2.0/2.0/1.5% × 매입가 (FLAT). XRF Carry 5-tier marginal (European Waterfall): Hurdle 8%/yr 미달 시 0, 그 외 8-20/20-40/40-60/60%+ slice 별 marginal rate 적용. NPL VC Capital share 제거 (채권계약금·잔대금 이미 totalEquity 포함).
         </div>
       </Section>
 
@@ -529,11 +527,10 @@ export default function XrfValuationSection({
           </thead>
           <tbody>
             <CashflowRow phase="Day 0" event="LP capital call (Pool 100% 청약 송금)" amount={-selected.lpCapitalUSD} cumulative={-selected.lpCapitalUSD} negative note={`${numLPs}명 × ${fmtUSDFull(selected.lpCapitalPerLpUSD)}`} />
-            <CashflowRow phase="Day 0" event="└ NPL VC 차입금 (10%)" amount={0} cumulative={-selected.lpCapitalUSD} note={`${fmtUSDFull(selected.daepuCapitalUSD)} 무이자 대여 (Pool 내 분리 · Day Exit 환급)`} />
             <CashflowRow phase="Day 0~M3" event="XRF SPV Setup (1회)" amount={0} cumulative={-selected.lpCapitalUSD} note="prefund 차감 · LP 직접 X" />
             <CashflowRow phase="Day ~30" event="NPL 매입 + 질권대출 실행" amount={0} cumulative={-selected.lpCapitalUSD} note="Pool → NPL 매입가 funding" />
             <CashflowRow phase="운용 중" event="XRF/KOF/NPL VC fees prefund" amount={0} cumulative={-selected.lpCapitalUSD} note={`LP capital 에서 ${fmtUSDFull(selected.fees.xrfMgmtUSD + selected.fees.xrfSetupUSD + selected.fees.platformTotalUSD + selected.fees.servicingUSD)} 차감`} />
-            <CashflowRow phase={`Day ${holdingPeriodDays}`} event="법원 배당 + NPL VC 차입금 환급 (1:1)" amount={selected.lpCapitalUSD + selected.lpNetProfitUSD} cumulative={selected.lpNetProfitUSD} positive note={`LP capital ${fmtUSDFull(selected.lpCapitalUSD)} + Net Profit ${fmtUSDFull(selected.lpNetProfitUSD)} (차입금 ${fmtUSDFull(selected.daepuCapitalUSD)} 포함 환급)`} />
+            <CashflowRow phase={`Day ${holdingPeriodDays}`} event="법원 배당" amount={selected.lpCapitalUSD + selected.lpNetProfitUSD} cumulative={selected.lpNetProfitUSD} positive note={`LP capital ${fmtUSDFull(selected.lpCapitalUSD)} + Net Profit ${fmtUSDFull(selected.lpNetProfitUSD)}`} />
             <CashflowRow phase="LP 최종" event="순수익 (RLUSD 분배)" amount={0} cumulative={selected.lpNetProfitUSD} bold positive note={`ROI ${fmtPct(selected.lpRoi)} · IRR ${fmtPct(selected.lpIrrYr)}/yr`} />
           </tbody>
         </table>

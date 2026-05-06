@@ -33,48 +33,46 @@ export interface XrfTierFees {
   xrfMgmtPctYr: number
   /** XRF SPV Setup 1회 비용 비율 */
   xrfSetupPct: number
-  /** Korea Operation Firm (KOF) — AI Valuation %/yr */
+  /** Korea Operation Firm (KOF) — AI Valuation & PM 통합 %/yr */
   platformAiPctYr: number
   /** Korea Operation Firm (KOF) — Pipeline Sourcing %/yr */
   platformSourcingPctYr: number
-  /** Korea Operation Firm (KOF) — PM Fee %/yr */
-  platformPmPctYr: number
-  /** Korea Operation Firm (KOF) — KR Margin (TP defense ≥15%) %/yr */
+  /** Korea Operation Firm (KOF) — KR Margin (TP defense ★ fixed) %/yr */
   platformMarginPctYr: number
   /** NPL Vehicle Company (NPL VC) — Servicing Fee %/yr (고정 라이선스 가치) */
   servicingPctYr: number
-  /** NPL Vehicle Company (NPL VC) — 차입금 비율 (LP→NPL VC 무이자 대여, Day Exit 100% 환급) */
-  daepuCapitalPct: number
   /** Hurdle Rate — LP 우선 수익률 %/yr (XRF Carry 발동 임계값) */
   hurdlePctYr: number
 }
 
 /**
- * 사용자 정책 (2026-05-05 v7) — XRF_Simulator_v7.xlsx 정합
+ * 사용자 정책 (2026-05-06 v8) — XRF_Simulator_v8 정합
  *
- * v7 핵심 변경:
- *   1) Carry 5-tier marginal (European Waterfall) — entry rate + 누진 brackets
+ * v8 핵심 변경:
+ *   1) Carry 5-tier marginal (European Waterfall) — entry rate + 누진 brackets (v7 동일)
  *      < 8% (Hurdle):  0% / 0% / 0%
  *      8% – 20%:      15% / 10% / 5%   ★ entry — LP 손실 없는 정도의 Carry
  *      20% – 40%:     20% / 15% / 10%  · 20%+ profit slice
  *      40% – 60%:     25% / 20% / 15%  · 40%+ profit slice
  *      60%+:          30% / 25% / 20%  · 고수익 deal 에서 XRF 적정 보상
  *
- *   2) Fee 구조 v7 (사용자 정정):
- *      XRF Mgmt:       0.5% / 0.4% / 0.4%   (★ CONS/SAVE 0.4%)
- *      XRF Setup:      0.5% / 0.3% / 0.3%
- *      KOF AI:         0.7% / 0.6% / 0.5%
- *      KOF Sourcing:   1.0% / 0.9% / 0.8%
- *      KOF PM:         0.4% / 0.35% / 0.3%
- *      KOF KR Margin:  0.4% / 0.4% / 0.4%   (★ TP defense flat)
+ *   2) Fee 구조 v8 (사용자 정정):
+ *      XRF Mgmt:       1.5% / 1.0% / 0.5%   (%/yr · 365일 cap)
+ *      XRF Setup:      1.0% / 1.0% / 1.0%   (1회)
+ *      KOF AI&PM:      0.5% / 0.4% / 0.3%   (★ PM 통합)
+ *      KOF Sourcing:   1.5% / 1.2% / 0.8%
+ *      KOF KR Margin:  0.5% / 0.4% / 0.4%   (★ TP defense fixed)
  *      ─────────────────────────────────────
- *      KOF subtotal:   2.5% / 2.25% / 2.0%
+ *      KOF subtotal:   2.5% / 2.0% / 1.5%
  *
- *   3) NPL VC Servicing FLAT 2.0% × Purchase (★ no duration cap — v7 변경)
+ *   3) NPL VC Servicing: 2.0% / 2.0% / 1.5% × Purchase
  *
- *   4) NPL VC Capital (차입금) 10% — LP→NPL VC 무이자 대여 · Day Exit 100% 환급
+ *   4) NPL VC Capital share (daepuCapitalPct) 제거
+ *      — 채권계약금+채권잔대금이 이미 NPL totalEquity에 포함 → 이중 부과 없음
  *
- *   5) XRF Fee 정의 = Mgmt + Setup + Carry (Carry 포함 all-in)
+ *   5) PM Fee (platformPmPctYr) 제거 → AI Valuation에 통합 (platformAiPctYr)
+ *
+ *   6) XRF Fee 정의 = Mgmt + Setup + Carry (Carry 포함 all-in)
  */
 
 /** v7 Carry 5-tier marginal brackets — LP gross ROI 구간별 marginal rate */
@@ -112,38 +110,32 @@ export const CARRY_BRACKETS_V7: Record<Exclude<XrfTier, 'REJECT'>, readonly Carr
 export const XRF_TIERS: Record<Exclude<XrfTier, 'REJECT'>, XrfTierFees> = {
   BASE: {
     carryPct: 0.15,                // ★ Entry rate (8-20% bracket) — 5-tier marginal 의 entry
-    xrfMgmtPctYr: 0.005,           // 0.5%
-    xrfSetupPct: 0.005,            // 0.5%
-    platformAiPctYr: 0.007,        // ★ v7: 0.3% → 0.7%
-    platformSourcingPctYr: 0.010,  // ★ v7: 1.3% → 1.0%
-    platformPmPctYr: 0.004,        // ★ v7: 0.5% → 0.4%
-    platformMarginPctYr: 0.004,    // 0.4% (TP defense flat)
-    servicingPctYr: 0.020,
-    daepuCapitalPct: 0.10,
+    xrfMgmtPctYr: 0.015,           // ★ v8: 1.5%/yr (365일 cap)
+    xrfSetupPct: 0.010,            // ★ v8: 1.0% (1회)
+    platformAiPctYr: 0.005,        // ★ v8: AI Valuation & PM 통합 0.5%
+    platformSourcingPctYr: 0.015,  // ★ v8: 1.5%
+    platformMarginPctYr: 0.005,    // ★ v8: 0.5% (TP defense fixed)
+    servicingPctYr: 0.020,         // 2.0%
     hurdlePctYr: 0.08,
   },
   CONSERVATIVE: {
     carryPct: 0.10,                // ★ Entry rate
-    xrfMgmtPctYr: 0.004,           // ★ v7: 0.5% → 0.4%
-    xrfSetupPct: 0.003,            // ★ v7: 0.4% → 0.3%
-    platformAiPctYr: 0.006,        // ★ v7: 0.25% → 0.6%
-    platformSourcingPctYr: 0.009,  // ★ v7: 1.15% → 0.9%
-    platformPmPctYr: 0.0035,       // ★ v7: 0.45% → 0.35%
-    platformMarginPctYr: 0.004,    // 0.4% (TP defense flat)
-    servicingPctYr: 0.020,
-    daepuCapitalPct: 0.10,
+    xrfMgmtPctYr: 0.010,           // ★ v8: 1.0%/yr
+    xrfSetupPct: 0.010,            // ★ v8: 1.0% (1회)
+    platformAiPctYr: 0.004,        // ★ v8: AI Valuation & PM 통합 0.4%
+    platformSourcingPctYr: 0.012,  // ★ v8: 1.2%
+    platformMarginPctYr: 0.004,    // 0.4% (TP defense fixed)
+    servicingPctYr: 0.020,         // 2.0%
     hurdlePctYr: 0.08,
   },
   'SAVE-THE-DEAL': {
     carryPct: 0.05,                // ★ Entry rate
-    xrfMgmtPctYr: 0.004,           // ★ v7: 0.5% → 0.4%
-    xrfSetupPct: 0.003,            // SAVE
-    platformAiPctYr: 0.005,        // ★ v7: 0.2% → 0.5%
-    platformSourcingPctYr: 0.008,  // ★ v7: 1.0% → 0.8%
-    platformPmPctYr: 0.003,        // ★ v7: 0.4% → 0.3%
-    platformMarginPctYr: 0.004,    // 0.4% (TP defense flat)
-    servicingPctYr: 0.020,
-    daepuCapitalPct: 0.10,
+    xrfMgmtPctYr: 0.005,           // ★ v8: 0.5%/yr
+    xrfSetupPct: 0.010,            // ★ v8: 1.0% (1회)
+    platformAiPctYr: 0.003,        // ★ v8: AI Valuation & PM 통합 0.3%
+    platformSourcingPctYr: 0.008,  // 0.8%
+    platformMarginPctYr: 0.004,    // 0.4% (TP defense fixed)
+    servicingPctYr: 0.015,         // ★ v8: 1.5%
     hurdlePctYr: 0.08,
   },
 }
@@ -215,12 +207,10 @@ export interface XrfFeeBreakdown {
   /** XRF 합계 (USD) */
   xrfTotalUSD: number
 
-  /** Korea Operation Firm (KOF) — AI Valuation (USD) */
+  /** Korea Operation Firm (KOF) — AI Valuation & PM 통합 (USD) */
   platformAiUSD: number
   /** Korea Operation Firm (KOF) — Pipeline Sourcing (USD) */
   platformSourcingUSD: number
-  /** Korea Operation Firm (KOF) — PM Fee (USD) */
-  platformPmUSD: number
   /** Korea Operation Firm (KOF) — KR Margin (USD) */
   platformMarginUSD: number
   /** Korea Operation Firm (KOF) — 합계 (USD) */
@@ -246,8 +236,6 @@ export interface XrfValuationResult {
   lpCapitalUSD: number
   /** LP 1인당 capital call (USD) */
   lpCapitalPerLpUSD: number
-  /** 대부업체 차입금 (USD · v5 model) — LP→대부업체 무이자 대여, Day Exit 1:1 환급, 수수료 아님 */
-  daepuCapitalUSD: number
   /** Pool 산정 모델 */
   lpCapitalMode: LpCapitalMode
 
@@ -307,20 +295,18 @@ function computeForTier(
   const durationYrCapped = Math.min(durationYr, 1.0)
 
   // ── Vehicle Fees (Carry 제외) — base = NPL purchase price (AUM 기준) ──
-  // v7: KOF 4종 모두 % flat (no duration scaling — Excel B8/B9/B10/B11 직접)
-  // v7: NPL VC Servicing FLAT (no duration cap)
-  // v7: XRF Mgmt 만 DAYS/365 비례 (운영비 성격), Setup 1회
+  // v8: KOF 3종 % flat (PM 통합 → AI&PM, no duration scaling)
+  // v8: NPL VC Servicing FLAT (no duration cap)
+  // v8: XRF Mgmt 만 DAYS/365 비례 (운영비 성격), Setup 1회
   const xrfMgmtUSD = purchaseUSD * fees.xrfMgmtPctYr * durationYrCapped
   const xrfSetupUSD = purchaseUSD * fees.xrfSetupPct  // 1회
 
-  const platformAiUSD = purchaseUSD * fees.platformAiPctYr
+  const platformAiUSD = purchaseUSD * fees.platformAiPctYr  // AI Valuation & PM 통합
   const platformSourcingUSD = purchaseUSD * fees.platformSourcingPctYr
-  const platformPmUSD = purchaseUSD * fees.platformPmPctYr
   const platformMarginUSD = purchaseUSD * fees.platformMarginPctYr
-  const platformTotalUSD =
-    platformAiUSD + platformSourcingUSD + platformPmUSD + platformMarginUSD
+  const platformTotalUSD = platformAiUSD + platformSourcingUSD + platformMarginUSD
 
-  // v7: Servicing flat (no duration · Purchase × 2%)
+  // v8: Servicing flat (no duration · Purchase × rate)
   const servicingUSD = purchaseUSD * fees.servicingPctYr
 
   // Carry 제외한 운영 fees 총합 (Pool 산정에 사용)
@@ -332,16 +318,12 @@ function computeForTier(
   //   Pool = NPL equity (LP는 deal에 필요한 자기자본만 prefund)
   //
   // NPL_EQUITY_PLUS_FEES: PDF 정합 모델
-  //   Pool = (NPL equity + 운영 fees + Hurdle 예상) × (1 + 10% working buffer)
+  //   Pool = NPL equity + 운영 fees + Hurdle 예상
   //   LP capital = Pool (LP가 Pool 전체 청약)
   //
-  // ⚠ 사용자 정책 (2026-05-04 v5): 대부업체 차입금 모델
-  //   - LP 100% 청약: Pool 전체를 LP 가 모금 ($675k 예시)
-  //   - 그 중 10% ($67k) 는 LP → 대부업체 무이자 대여 (대부업법 license capital)
-  //   - 대부업체는 Servicing Fee 만 받고, 이 차입금에 대해서는 수수료 無
-  //   - Day Exit 시 100% LP 로 환급 (1:1)
-  //   - 회계: lpCapitalUSD = poolUSD (LP 청약 전체) | daepuCapitalUSD = poolUSD × 0.10 (표시)
-  const WORKING_BUFFER_PCT = 0.10  // 대부업체 차입금 비중 — Pool 산정 buffer
+  // v8 변경: NPL VC Capital share (daepuCapitalPct) 제거
+  //   — 채권계약금+채권잔대금이 이미 NPL totalEquity에 포함 → 이중 부과 없음
+  //   — WORKING_BUFFER_PCT 및 poolUSD 할증 제거
   let lpFundingTargetUSD: number
   if (lpCapitalMode === 'NPL_EQUITY') {
     lpFundingTargetUSD = totalEquityUSD
@@ -350,11 +332,9 @@ function computeForTier(
     const hurdleEstimateUSD = totalEquityUSD * fees.hurdlePctYr * durationYr
     lpFundingTargetUSD = totalEquityUSD + operatingFeesUSD + hurdleEstimateUSD
   }
-  const poolUSD = lpFundingTargetUSD / (1 - WORKING_BUFFER_PCT)
+  const poolUSD = lpFundingTargetUSD
   // LP가 Pool 전체 청약
   const lpCapitalUSD = poolUSD
-  // 대부업체 차입금 (Pool의 10% · LP 무이자 대여 · Day Exit 1:1 환급 · 수수료 아님)
-  const daepuCapitalUSD = poolUSD * fees.daepuCapitalPct
   const lpCapitalPerLpUSD = lpCapitalUSD / numLPs
 
   // ── LP 분배 계산 ──
@@ -391,7 +371,6 @@ function computeForTier(
     poolUSD,
     lpCapitalUSD,
     lpCapitalPerLpUSD,
-    daepuCapitalUSD,
     lpCapitalMode,
     hurdleUSD,
     fees: {
@@ -401,7 +380,6 @@ function computeForTier(
       xrfTotalUSD,
       platformAiUSD,
       platformSourcingUSD,
-      platformPmUSD,
       platformMarginUSD,
       platformTotalUSD,
       servicingUSD,

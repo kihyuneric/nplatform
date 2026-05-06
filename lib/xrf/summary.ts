@@ -99,7 +99,7 @@ export function buildXrfSummary(args: XrfSummaryArgs): string {
   const distribution = `LP 분배 — ${result.numLPs}명 분할 시 1인당 ${fmtUSD(result.lpCapitalPerLpUSD)} 청약 · ${fmtUSD(result.lpNetProfitPerLpUSD)} net profit. NPL 순수익 ${fmtUSD(result.nplNetProfitUSD)} 분배: LP ${fmtPct(lpPct)} · XRF Foundation ${fmtPct(xrfTotalPct)} · KOF ${fmtPct(platformPct)} · NPL VC Servicing ${fmtPct(servicerPct)} (FLAT 2% × 매입가). XRF Carry: ${carryNote}.`
 
   // ─ §4 Risk / Conditional structure
-  const risk = `차주 유형 ${debtorLabel}. NPL VC 차입금 ${fmtUSD(result.daepuCapitalUSD)} 는 LP→NPL VC 무이자 대여 (Day Exit 100% LP 환급, 수수료 아닌 자본 보관). XRF Carry 는 LP 우선 수익률 (Hurdle 8%/yr) 충당 후 잉여분에만 5-tier marginal rate 발동 — 본 deal Hurdle ${result.fees.xrfCarryUSD > 0 ? '통과 (Carry 발동)' : '미달 (Carry $0)'} 상태.`
+  const risk = `차주 유형 ${debtorLabel}. NPL VC Capital share 없음 (채권계약금·잔대금 이미 NPL totalEquity 포함 · 이중 부과 제거). XRF Carry 는 LP 우선 수익률 (Hurdle 8%/yr) 충당 후 잉여분에만 5-tier marginal rate 발동 — 본 deal Hurdle ${result.fees.xrfCarryUSD > 0 ? '통과 (Carry 발동)' : '미달 (Carry $0)'} 상태.`
 
   // ─ §5 Verdict — 투자 의견 + action
   const recommendation = `투자 의견 ${tj.verdict} — ${
@@ -143,19 +143,17 @@ export function buildXrfSummaryPrompt(args: XrfSummaryArgs): string {
     `  - NPL 자체 ROI: ${nplRoiPct.toFixed(2)}% (참고)`,
     ``,
     `## [입력 2] XRF Vehicle Pool 구조`,
-    `  - Pool 총액   : ${fmtUSD(result.poolUSD)} (LP 100% 청약, 그 중 10% 는 NPL VC 무이자 차입금)`,
+    `  - Pool 총액   : ${fmtUSD(result.poolUSD)} (LP 100% 청약)`,
     `  - LP capital  : ${fmtUSD(result.lpCapitalUSD)} (${result.numLPs}명 × ${fmtUSD(result.lpCapitalPerLpUSD)})`,
-    `  - NPL Vehicle Company (NPL VC) 자본금 : ${fmtUSD(result.daepuCapitalUSD)} (Day Exit 1:1 환원, 수익 무관)`,
     `  - LP capital 모델 : ${result.lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? 'NPL equity + Fees prefund (PDF 정합)' : 'NPL equity 만 (단순)'}`,
     ``,
     `## [입력 3] Vehicle Fee 분배 — ${result.tier} tier`,
     `  XRF Foundation`,
     ...xrfItems.map(i => `    - ${i.label} : ${fmtUSD(i.amountUSD)} (NPL profit의 ${fmtPct(i.pctOfNplProfit)})`),
-    `  Korea Operation Firm (KOF · 운영 4종)`,
+    `  Korea Operation Firm (KOF · AI&PM/Sourcing/Margin 3종)`,
     `    - ${platformItem?.label} : ${fmtUSD(platformItem?.amountUSD ?? 0)} (NPL profit의 ${fmtPct(platformItem?.pctOfNplProfit ?? 0)})`,
     `  NPL Vehicle Company (NPL VC · KR Servicer)`,
     `    - ${servicerItem?.label} : ${fmtUSD(servicerItem?.amountUSD ?? 0)} (NPL profit의 ${fmtPct(servicerItem?.pctOfNplProfit ?? 0)})`,
-    `  NPL Vehicle Company (NPL VC) 자본금 (Day Exit 1:1 환원) : ${fmtUSD(result.daepuCapitalUSD)} (Fee 아닌 Capital)`,
     ``,
     `## [입력 4] LP 최종 결과`,
     `  - LP 순수익  : ${fmtUSD(result.lpNetProfitUSD)} (${fmtUSD(result.lpNetProfitPerLpUSD)}/LP)`,

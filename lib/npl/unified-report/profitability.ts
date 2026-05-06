@@ -1266,8 +1266,8 @@ function buildPurchaseStrategies(args: StrategyArgs): PurchaseStrategyTable {
   }
 
   const anchorNote = hasBankSale
-    ? `앵커: 매입가 (할인율 반영) ${fmtEok(args.bankSalePrice as number)} (${baseLabel} 대비 ${(anchor * 100).toFixed(1)}%) · 공격적 ×1.05 · 권고 ×1.000 · 보수적 ×0.95`
-    : `앵커: ${baseLabel} 100% · 공격적 100% · 권고 95% (−5%) · 보수적 90% (−10%)`
+    ? `앵커: 매입가 (할인율 반영) ${fmtEok(args.bankSalePrice as number)} (${baseLabel} 대비 ${(anchor * 100).toFixed(1)}%) · 공격적 ×1.05 · 표준 ×1.000 · 보수적 ×0.95`
+    : `앵커: ${baseLabel} 100% · 공격적 100% · 표준 95% (−5%) · 보수적 90% (−10%)`
 
   return {
     conservative,
