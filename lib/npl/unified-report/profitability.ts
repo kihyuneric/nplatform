@@ -868,6 +868,10 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   const monteCarlo = runMonteCarlo({
     trials: input.mcTrials ?? 10_000,
     seed: input.mcSeed ?? 20260421,
+    // 실제 매입가: bankSalePrice 있으면 그 값, 없으면 loanPrincipal(100%)
+    purchasePrice: typeof input.bankSalePrice === 'number' && input.bankSalePrice > 0
+      ? input.bankSalePrice
+      : input.loanPrincipal,
     loanPrincipal: input.loanPrincipal,
     appraisalValue: input.appraisalValue,
     baseBidRatio: input.expectedBidRatio,
@@ -1356,6 +1360,8 @@ function buildSensitivityMatrix(args: SensitivityArgs): SensitivityMatrix {
 interface MonteCarloArgs {
   trials: number
   seed: number
+  /** 실제 매입가 (bankSalePrice 있으면 해당 값, 없으면 loanPrincipal) */
+  purchasePrice: number
   loanPrincipal: number
   appraisalValue: number
   baseBidRatio: number
