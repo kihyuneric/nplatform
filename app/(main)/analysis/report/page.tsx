@@ -2887,11 +2887,14 @@ function ProfitabilitySections({
     () => predictedAuctionRound(edit.expectedBidRatio * 100, auctionFailureDiscountPct),
     [edit.expectedBidRatio, auctionFailureDiscountPct],
   )
+  // 사용자 정책 v3.7 (2026-05-06): edit.firstSaleDate 는 이미 buildShiftedSample 에서
+  //   N회차 shift 가 적용된 값. live 가 추가 shift 하면 이중 shift → ROI 불일치.
+  //   → 추가 shift 제거 (predictedSaleDate = edit.firstSaleDate 그대로 사용).
   const predictedSaleDateAuto = useMemo(
-    () => addDaysISO(edit.firstSaleDate, predictedSaleDateOffsetDays(predictedRound)),
-    [edit.firstSaleDate, predictedRound],
+    () => edit.firstSaleDate,
+    [edit.firstSaleDate],
   )
-  // 사용자 override 가 있으면 그 값을, 없으면 auto 를 엔진에 주입.
+  // 사용자 override 가 있으면 그 값을, 없으면 auto (= edit.firstSaleDate 자체) 를 엔진에 주입.
   const effectivePredictedSaleDate = edit.predictedSaleDateOverride || predictedSaleDateAuto
 
   // 편집된 입력으로 수익성 블록 재계산 (순수 함수)
