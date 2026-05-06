@@ -84,10 +84,11 @@ const GANGNAM_DEFAULT_DATE = '2025-12-01'      // 연체 시작일
 
 // 강남구 상가 낙찰가율 (가상)
 const GANGNAM_AUCTION_STATS = [
-  { bucket: '12M' as const, periodLabel: '1년 평균', saleCount: 56, saleRate: 19.8, bidRatio: 84.0 },
-  { bucket: '6M'  as const, periodLabel: '6개월 평균', saleCount: 32, saleRate: 21.5, bidRatio: 84.5 },
-  { bucket: '3M'  as const, periodLabel: '3개월 평균', saleCount: 17, saleRate: 22.8, bidRatio: 86.0 },
-  { bucket: '1M'  as const, periodLabel: '1개월 평균', saleCount: 6, saleRate: 24.1, bidRatio: 85.5 },
+  // 사용자 정책 v3.5 (2026-05-06): 강남구 상가 낙찰가율 55% 보수 시나리오
+  { bucket: '12M' as const, periodLabel: '1년 평균',   saleCount: 56, saleRate: 19.8, bidRatio: 55.0 },
+  { bucket: '6M'  as const, periodLabel: '6개월 평균', saleCount: 32, saleRate: 21.5, bidRatio: 54.5 },
+  { bucket: '3M'  as const, periodLabel: '3개월 평균', saleCount: 17, saleRate: 22.8, bidRatio: 55.0 },
+  { bucket: '1M'  as const, periodLabel: '1개월 평균', saleCount: 6,  saleRate: 24.1, bidRatio: 56.0 },
 ]
 
 // 인근 실거래 (가상)
@@ -138,13 +139,14 @@ const GANGNAM_STATISTICS: StatisticsContext = {
       avgDurationDays: 383,
       avgAppraisalValue: 4_667_000_000,
       avgSalePrice: 4_003_000_000,
-      avgBidRatio: 85.7,
+      avgBidRatio: 55.5,
       avgBidderCount: 4.5,
     },
     cases: [
-      { caseNo: '2025타경45612', filedDate: '2024-09-08', saleDate: '2025-09-21', durationDays: 380, appraisalValue: 42 * 억, salePrice: 36 * 억, bidRatio: 85.7, bidderCount: 5 },
-      { caseNo: '2025타경50321', filedDate: '2024-09-20', saleDate: '2025-11-04', durationDays: 410, appraisalValue: 38 * 억, salePrice: 32.5 * 억, bidRatio: 85.5, bidderCount: 4 },
-      { caseNo: '2026타경10024', filedDate: '2025-02-21', saleDate: '2026-02-14', durationDays: 358, appraisalValue: 60 * 억, salePrice: 51.6 * 억, bidRatio: 86.0, bidderCount: 5 },
+      // 강남 상가 평균 낙찰가율 55% 시나리오 — 보수 가정 (2026-05-06 v3.5)
+      { caseNo: '2025타경45612', filedDate: '2024-09-08', saleDate: '2025-09-21', durationDays: 380, appraisalValue: 42 * 억, salePrice: 23.1 * 억, bidRatio: 55.0, bidderCount: 5 },
+      { caseNo: '2025타경50321', filedDate: '2024-09-20', saleDate: '2025-11-04', durationDays: 410, appraisalValue: 38 * 억, salePrice: 20.7 * 억, bidRatio: 54.5, bidderCount: 4 },
+      { caseNo: '2026타경10024', filedDate: '2025-02-21', saleDate: '2026-02-14', durationDays: 358, appraisalValue: 60 * 억, salePrice: 33.6 * 억, bidRatio: 56.0, bidderCount: 5 },
     ],
   },
   nearbyTransactions: undefined,
@@ -225,7 +227,7 @@ export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string
   // ── 등기부 분석 ──
   const registryAnalysis = buildRegistryAnalysis({
     claimAmount: GANGNAM_TOTAL_BOND,
-    bidPrice: Math.round(GANGNAM_APPRAISAL * 0.84),  // 강남 상가 84% 낙찰가율
+    bidPrice: Math.round(GANGNAM_APPRAISAL * 0.55),  // 강남 상가 55% 낙찰가율 (v3.5 보수)
     interestedPartyCount: 2,            // 채권자 + 채무자
     parcelCount: 1,
     failedBidCount: 0,
@@ -282,8 +284,8 @@ export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string
       { price: GANGNAM_APPRAISAL, reportedAt: GANGNAM_AS_OF, source: 'APPRAISAL', label: '감정가 (가상)' },
       { price: GANGNAM_AI_MARKET,  reportedAt: GANGNAM_AS_OF, source: 'AI_LATEST', label: 'AI 시세' },
     ],
-    expectedBidRatio: 0.86,                // 사용자 정책 v3.2 (2026-05-06): 86% (was 90%)
-    expectedBidRatioPeriod: '강남구 상가 1년 평균',
+    expectedBidRatio: 0.55,                // 사용자 정책 v3.5 (2026-05-06): 55% (was 86%)
+    expectedBidRatioPeriod: '강남구 상가 평균 (보수)',
     // 사용자 정책 v3.2: 선순위 채권 제거 (우리은행 1순위 근저당 — 본 가상 사례에서 미존재)
     seniorClaimAmount: 0,
     seniorCreditorLabel: undefined,
@@ -297,7 +299,7 @@ export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string
     balancePaymentDateOverride: GANGNAM_BALANCE_DATE,
     courtFirstRoundSaleDays: GANGNAM_STATISTICS.courtSchedule?.stages[0]?.saleDays ?? 315,
     ...(opts?.firstSaleDateOverride ? { firstSaleDateOverride: opts.firstSaleDateOverride } : {}),
-    discountRate: 0,                        // 100% 매입
+    discountRate: 0.20,                     // 사용자 정책 v3.5 (2026-05-06): 대출원금 35억 → 매입가 28억 = 20% 할인
     pledgeLoanRatio: 0.90,                  // 법인 차주 90%
     pledgeInterestRate: 0.065,              // 6.5%
     executionCost: 12_000_000,              // 경매비용 1,200만원
@@ -309,19 +311,19 @@ export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string
     mcSeed: 20260501,
     mcTrials: 10_000,
     sensitivityPurchaseRateAxis: [1.00, 0.95, 0.90, 0.85, 0.80, 0.75, 0.70],
-    sensitivityBidRatioAxis: [0.70, 0.78, 0.84, 0.90, 0.95, 1.00, 1.05],
+    sensitivityBidRatioAxis: [0.40, 0.48, 0.52, 0.55, 0.62, 0.70, 0.80],
     evidence: {
       bidRatioStats: {
-        selectedLabel: '강남구 상가 · 1년 평균',
+        selectedLabel: '강남구 상가 · 보수 55%',
         items: [
-          { scope: 'SIGUNGU', region: '강남구', periodMonths: 12, ratioPercent: 84.0, sampleSize: 56 },
-          { scope: 'SIGUNGU', region: '강남구', periodMonths: 6,  ratioPercent: 84.5, sampleSize: 32 },
-          { scope: 'SIGUNGU', region: '강남구', periodMonths: 3,  ratioPercent: 86.0, sampleSize: 17 },
-          { scope: 'SIGUNGU', region: '강남구', periodMonths: 1,  ratioPercent: 85.5, sampleSize: 6 },
+          { scope: 'SIGUNGU', region: '강남구', periodMonths: 12, ratioPercent: 55.0, sampleSize: 56 },
+          { scope: 'SIGUNGU', region: '강남구', periodMonths: 6,  ratioPercent: 54.5, sampleSize: 32 },
+          { scope: 'SIGUNGU', region: '강남구', periodMonths: 3,  ratioPercent: 55.0, sampleSize: 17 },
+          { scope: 'SIGUNGU', region: '강남구', periodMonths: 1,  ratioPercent: 56.0, sampleSize: 6 },
         ],
         narrative:
-          '강남구 상가 낙찰가율 1년 84.0% → 6개월 84.5% → 3개월 86.0% 안정 흐름. ' +
-          '적용: 감정가 대비 84% (1년 평균) → 예상낙찰가 46.2억.',
+          '강남구 상가 낙찰가율 평균 55% (보수 시나리오 · 2026-05-06 v3.5). ' +
+          '적용: 감정가 65억 대비 55% → 예상낙찰가 35.75억.',
       },
       // 2026-05-06 v2: 라벨 의미 정합 (1회차 매각결정기일 평균 / 배당기일 평균 / 기일 간격 28일)
       courtSchedule: {
@@ -335,7 +337,7 @@ export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string
         averageDurationDays: 383,
         averageAppraisalValue: 4_667_000_000,
         averageSalePrice: 4_003_000_000,
-        averageBidRatio: 85.7,
+        averageBidRatio: 55.5,
         sameAddress: [],
         nearbyWithin1Km: (GANGNAM_STATISTICS.nearbyAuction?.cases ?? []).map((c, i) => ({
           caseNo: c.caseNo,
@@ -385,17 +387,21 @@ export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string
 
   // ─── NPL Valuation 전용 executiveSummary ──────────────────────
   // (XRF Vehicle 내용은 buildXrfSummary 가 별도로 5단락 생성 — toggle 시 swap)
+  // 사용자 정책 v3.5 (2026-05-06):
+  //   · 강남 상가 낙찰가율 55% (보수 시나리오 — was 86%)
+  //   · 매입 대출원금 35억 × (1 − 20% 할인) = 28억 (= GANGNAM_PURCHASE)
+  //   · 선순위 채권 없음 (cascade 단순)
+  //   · 예상낙찰가 = 65 × 0.55 = 35.75억
   const executiveSummary =
     `[가상 사례 · 강남 신사동 상가 NPL] ` +
-    `법인 차주 · 채권자 ◆◆◆◆◆ Capital · 채권잔액 36.4억 (대출원금 35억 + 연체이자 1.4억) · ` +
-    `1순위 우리은행 채권최고액 33.6억 · 권리관계 합계 ${((GANGNAM_SENIOR_CHAEMAX + GANGNAM_PURCHASE) / 억).toFixed(1)}억 · ` +
+    `법인 차주 · 채권자 ◆◆◆◆◆ Capital · 대출원금 35억 · 매입가 28억 (= 대출원금 × 80% · 할인 20%) · ` +
     `감정가 ${(GANGNAM_APPRAISAL / 억).toFixed(0)}억 (LTV ${(ltv.ltvPercent).toFixed(2)}%). ` +
     `종합 분석 결과 ${riskGrade}등급, 예측 회수율 ${recovery.predictedRecoveryRate.toFixed(1)}% (신뢰도 ${Math.round(recovery.confidence * 100)}%). ` +
-    `매입가 ${Math.round(bankSalePrice / 억 * 10) / 10}억 (= 대출원금 100% 매각) 기준 ` +
+    `매입가 ${Math.round(bankSalePrice / 억 * 10) / 10}억 (= 대출원금 80% · 할인 20%) 기준 ` +
     `보수적/권고/공격적 시나리오 ROI ${(profitability.strategies.conservative.roi * 100).toFixed(1)}% / ${(profitability.strategies.recommended.roi * 100).toFixed(1)}% / ${(profitability.strategies.aggressive.roi * 100).toFixed(1)}% · ` +
-    `투자 ROI ${(investmentRoi * 100).toFixed(2)}% (12개월 운용). ` +
-    `강남구 상가 1년 낙찰가율 84% 적용 시 예상낙찰가 46.2억 → ` +
-    `1순위 우리은행 33.6억 변제 후 NPL 회수액 약 12.6억 (NPL 채권잔액 대비 35%). ` +
+    `투입자금 ROI ${(investmentRoi * 100).toFixed(2)}% (12개월 운용). ` +
+    `강남구 상가 보수 낙찰가율 55% 적용 시 예상낙찰가 ${(GANGNAM_APPRAISAL * 0.55 / 억).toFixed(2)}억 → ` +
+    `경매비용 차감 → 선순위 채권 없음 → NPL 측 배당 → 1·2질권자 분배. ` +
     `2순위 권리자 부재로 권리 깨끗 · 임차인 없음 · 강남 핵심 상권 1층 상가 시너지 + ` +
     `인근 1km 실거래 m²당 ${Math.round(GANGNAM_COMPARABLES_AVG_PER_M2 / 10000)}만원 단가 견고. ` +
     `법인 차주 pledge LTV 90% 활용 → LP 자기자본 효율 우수. ` +
@@ -505,38 +511,39 @@ export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string
     bidRecommendation: {
       aiPredictedBidRatio: auction.blendedBidRatio,
       breakEvenBidRatio: Math.max(50, auction.blendedBidRatio - 15),
+      // 사용자 정책 v3.5 (2026-05-06): 강남 상가 보수 시나리오 — 평균 55% 기준 ±5%p
       conservative: {
         policy: 'CONSERVATIVE',
-        label: '보수적 입찰가 (감정가 대비 78%)',
-        bidPrice: Math.round(GANGNAM_APPRAISAL * 0.78),
-        bidRatioPercent: 78,
-        expectedNetProfit: Math.round(GANGNAM_APPRAISAL * 0.78 - GANGNAM_TOTAL_BOND),
-        expectedRoi: Math.round((GANGNAM_APPRAISAL * 0.78 - GANGNAM_TOTAL_BOND) / GANGNAM_TOTAL_BOND * 100 * 10) / 10,
-        expectedIrr: 22.5,
+        label: '보수적 입찰가 (감정가 대비 50%)',
+        bidPrice: Math.round(GANGNAM_APPRAISAL * 0.50),
+        bidRatioPercent: 50,
+        expectedNetProfit: Math.round(GANGNAM_APPRAISAL * 0.50 - GANGNAM_TOTAL_BOND),
+        expectedRoi: Math.round((GANGNAM_APPRAISAL * 0.50 - GANGNAM_TOTAL_BOND) / GANGNAM_TOTAL_BOND * 100 * 10) / 10,
+        expectedIrr: 10.5,
         winProbability: 0.30,
-        rationale: '강남구 상가 1년 평균 하단 — 낙찰 가능성 낮으나 매입 마진 극대화',
+        rationale: '강남구 상가 평균 하단 50% — 낙찰 가능성 낮으나 매입 마진 극대화',
       },
       base: {
         policy: 'BASE',
-        label: 'AI 권고 입찰가 (감정가 대비 84%)',
-        bidPrice: Math.round(GANGNAM_APPRAISAL * 0.84),
-        bidRatioPercent: 84,
-        expectedNetProfit: Math.round(GANGNAM_APPRAISAL * 0.84 - GANGNAM_TOTAL_BOND),
-        expectedRoi: Math.round((GANGNAM_APPRAISAL * 0.84 - GANGNAM_TOTAL_BOND) / GANGNAM_TOTAL_BOND * 100 * 10) / 10,
-        expectedIrr: 28.0,
-        winProbability: 0.62,
-        rationale: '강남구 상가 1년 평균 84% — 낙찰가율 안정 흐름. 회수율 35%',
+        label: 'AI 권고 입찰가 (감정가 대비 55%)',
+        bidPrice: Math.round(GANGNAM_APPRAISAL * 0.55),
+        bidRatioPercent: 55,
+        expectedNetProfit: Math.round(GANGNAM_APPRAISAL * 0.55 - GANGNAM_TOTAL_BOND),
+        expectedRoi: Math.round((GANGNAM_APPRAISAL * 0.55 - GANGNAM_TOTAL_BOND) / GANGNAM_TOTAL_BOND * 100 * 10) / 10,
+        expectedIrr: 15.5,
+        winProbability: 0.55,
+        rationale: '강남구 상가 평균 55% — 보수 시나리오 (사용자 정책 v3.5)',
       },
       aggressive: {
         policy: 'AGGRESSIVE',
-        label: '공격적 입찰가 (감정가 대비 90%)',
-        bidPrice: Math.round(GANGNAM_APPRAISAL * 0.90),
-        bidRatioPercent: 90,
-        expectedNetProfit: Math.round(GANGNAM_APPRAISAL * 0.90 - GANGNAM_TOTAL_BOND),
-        expectedRoi: Math.round((GANGNAM_APPRAISAL * 0.90 - GANGNAM_TOTAL_BOND) / GANGNAM_TOTAL_BOND * 100 * 10) / 10,
-        expectedIrr: 33.5,
-        winProbability: 0.85,
-        rationale: '평균 대비 +6%p — 낙찰 확실성 ↑, 단 시세 대비 마진 축소',
+        label: '공격적 입찰가 (감정가 대비 62%)',
+        bidPrice: Math.round(GANGNAM_APPRAISAL * 0.62),
+        bidRatioPercent: 62,
+        expectedNetProfit: Math.round(GANGNAM_APPRAISAL * 0.62 - GANGNAM_TOTAL_BOND),
+        expectedRoi: Math.round((GANGNAM_APPRAISAL * 0.62 - GANGNAM_TOTAL_BOND) / GANGNAM_TOTAL_BOND * 100 * 10) / 10,
+        expectedIrr: 20.5,
+        winProbability: 0.78,
+        rationale: '평균 대비 +7%p — 낙찰 확실성 ↑',
       },
     },
     marketOutlook: {

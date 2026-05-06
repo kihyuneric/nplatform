@@ -775,12 +775,18 @@ export default function UnifiedReportPage() {
           </div>
         </div>
 
-        {/* 채권잔액 breakdown — 원금 + 미수이자 + 연체이자 (Phase G7+ — 4-컬럼) */}
+        {/* 채권잔액 breakdown — 원금 + 미수이자 + 연체이자 (Phase G7+ — 4-컬럼)
+            사용자 정책 v3.5 (2026-05-06): 연체이자/채권잔액 합계는 engine 의 currentBondBalance
+            (= 원금 + accruedInterestToDate, 시간 흐름 따른 동적 누적)와 일치하도록 표시 */}
         {(input.claimBreakdown || (input.totalBondAmount > 0)) && (() => {
           const principal    = input.claimBreakdown?.principal    ?? input.totalBondAmount
           const unpaidInt    = input.claimBreakdown?.unpaidInterest ?? 0
-          const overdueInt   = input.claimBreakdown?.overdueInterest ?? 0
-          const totalBond    = input.totalBondAmount
+          // 연체이자 = engine 의 accruedInterestToDate (동적 누적) — EXHIBIT 2 와 일치
+          const overdueInt   = profitability?.claim.accruedInterestToDate
+                            ?? input.claimBreakdown?.overdueInterest
+                            ?? 0
+          // 채권잔액 합계 = engine 의 currentBondBalance — EXHIBIT 2 와 일치
+          const totalBond    = profitability?.claim.currentBondBalance ?? input.totalBondAmount
           return (
             <div className="mt-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-4">
               <div className="flex items-center gap-2 mb-3">
