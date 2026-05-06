@@ -79,7 +79,8 @@ export default function XrfValuationSection({
   const [fxRate, setFxRate] = useState(1300)
   const [numLPs, setNumLPs] = useState(100)
   const [tierOverride, setTierOverride] = useState<Exclude<XrfTier, 'REJECT'> | undefined>(undefined)
-  const [lpCapitalMode, setLpCapitalMode] = useState<LpCapitalMode>('NPL_EQUITY_PLUS_FEES')
+  // v9: NPL_EQUITY 기본값 — NPL totalEquity에 deal 비용 이미 포함 → 이중 계상 방지
+  const [lpCapitalMode, setLpCapitalMode] = useState<LpCapitalMode>('NPL_EQUITY')
 
   const input: XrfValuationInput = useMemo(
     () => ({
@@ -331,10 +332,10 @@ export default function XrfValuationSection({
       </Section>
 
       {/* ───── EXHIBIT 2 — Pool 구조 (LP 100% 청약) ───── */}
-      <Section title="EXHIBIT 2 · POOL 구조 (Pool Structure)" caption={`LP capital 모델: ${lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? 'NPL equity + Fees prefund + Hurdle est. (PDF 정합)' : 'NPL equity 만 (단순 모델)'} · LP 100% 청약`}>
+      <Section title="EXHIBIT 2 · POOL 구조 (Pool Structure)" caption={`LP capital 모델: ${lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? 'NPL equity + Fees prefund (이중계상 위험)' : 'NPL totalEquity 기준 (★ 기본값 · 이중계상 방지)'} · LP 100% 청약`}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <tbody>
-            <Row label="Pool 총액 (= LP 청약액)" value={fmtUSDFull(selected.poolUSD)} note={lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? '= NPL equity + Fees + Hurdle est.' : '= NPL totalEquity'} bold />
+            <Row label="Pool 총액 (= LP 청약액)" value={fmtUSDFull(selected.poolUSD)} note={lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? '= NPL equity + Fees + Hurdle est. (이중계상)' : '= NPL totalEquity (deal 비용 포함 · Vehicle fees는 profit 차감)'} bold />
             <Row label="  └ LP capital (100% 청약)" value={fmtUSDFull(selected.lpCapitalUSD)} note={`${numLPs}명 × ${fmtUSDFull(selected.lpCapitalPerLpUSD)} (1인당)`} last />
           </tbody>
         </table>

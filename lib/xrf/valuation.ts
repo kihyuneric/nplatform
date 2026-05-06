@@ -279,9 +279,11 @@ function computeForTier(
 ): XrfValuationResult {
   const fx = input.exchangeRateKRWPerUSD ?? 1300
   const numLPs = input.numLPs ?? 100
-  // default = 'NPL_EQUITY_PLUS_FEES' (PDF Case 1 정합 — LP가 SPV 운영 fees 도 prefund).
-  //   기존 단순 모델 ('NPL_EQUITY')은 명시적 지정 시.
-  const lpCapitalMode = input.lpCapitalMode ?? 'NPL_EQUITY_PLUS_FEES'
+  // v9 default = 'NPL_EQUITY' (이중 계상 방지 정책 2026-05-06)
+  //   NPL totalEquity 에 NPL거래수수료(1.5%) 등 deal 비용이 이미 포함 →
+  //   'NPL_EQUITY_PLUS_FEES' 로 fees 를 추가 합산하면 동일 비용이 두 번 계상됨.
+  //   Pool = NPL totalEquity only · vehicle fees 는 NPL profit 에서 차감.
+  const lpCapitalMode = input.lpCapitalMode ?? 'NPL_EQUITY'
   const fees = XRF_TIERS[tier]
 
   // 단위 변환: KRW → USD
@@ -314,12 +316,13 @@ function computeForTier(
 
   // ── Pool 산정 (lpCapitalMode 따라 분기) ──
   //
-  // NPL_EQUITY: 단순 모델
-  //   Pool = NPL equity (LP는 deal에 필요한 자기자본만 prefund)
+  // NPL_EQUITY (★ v9 기본값): 이중 계상 방지 모델
+  //   Pool = NPL totalEquity (deal 비용 포함 자기자본)
+  //   · NPL거래수수료(1.5%) 등이 이미 포함 → fees 추가 불필요
+  //   · Vehicle fees 는 NPL profit 에서 차감 (prefund 불필요)
   //
-  // NPL_EQUITY_PLUS_FEES: PDF 정합 모델
+  // NPL_EQUITY_PLUS_FEES: 참고용 (구 PDF 정합 모델 · 이중 계상 위험)
   //   Pool = NPL equity + 운영 fees + Hurdle 예상
-  //   LP capital = Pool (LP가 Pool 전체 청약)
   //
   // v8 변경: NPL VC Capital share (daepuCapitalPct) 제거
   //   — 채권계약금+채권잔대금이 이미 NPL totalEquity에 포함 → 이중 부과 없음
