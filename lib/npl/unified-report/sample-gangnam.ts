@@ -302,6 +302,10 @@ export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string
     courtFirstRoundSaleDays: GANGNAM_STATISTICS.courtSchedule?.stages[0]?.saleDays ?? 315,
     ...(opts?.firstSaleDateOverride ? { firstSaleDateOverride: opts.firstSaleDateOverride } : {}),
     discountRate: 0.20,                     // 사용자 정책 v3.5 (2026-05-06): 대출원금 35억 → 매입가 28억 = 20% 할인
+    // 사용자 정책 v3.8 (2026-05-06): 3단계 전략·MonteCarlo 가 매입가(할인율 반영, 28억) 기준 산출
+    //   bankSalePrice 미제공 시 strategies 가 loanPrincipal 35억 base 사용 → 마이너스 ROI
+    //   bankSalePrice = GANGNAM_PURCHASE (28억) → 권고 anchor 가 매입가 → 정상 ROI 분포
+    bankSalePrice: GANGNAM_PURCHASE,
     pledgeLoanRatio: 0.90,                  // 법인 차주 90%
     pledgeInterestRate: 0.065,              // 6.5%
     executionCost: 12_000_000,              // 경매비용 1,200만원
