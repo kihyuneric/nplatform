@@ -118,6 +118,11 @@ export interface ValuationAndBidRatio {
   expectedBidRatioPeriod: string
   /** 예상낙찰가 (원) = 감정가 × 낙찰가율 */
   expectedBidPrice: number
+  /**
+   * 회차당 유찰 할인율 (%p) — 회차 예측에 사용.
+   * 사용자 정책 (2026-05-06): 지역/법원별 통계 매핑 가능 (default 20).
+   */
+  auctionFailureDiscountPct?: number
 }
 
 // ─── [5] 경매진행일정 ────────────────────────────────────────
@@ -496,6 +501,13 @@ export interface ProfitabilityInput {
    * 우선순위: courtFirstRoundSaleDays > firstSaleOffsetDays + distributionDemandOffsetDays > 315(default)
    */
   courtFirstRoundSaleDays?: number
+  /**
+   * 회차당 유찰 할인율 (%p) — 한국 법원경매 표준 20%p, 지역/법원별 통계 매핑 가능.
+   * 사용자 정책 (2026-05-06): 하드코딩 금지 — 개발자가 통계 기반으로 주입.
+   * 미지정 시 DEFAULT_AUCTION_FAILURE_DISCOUNT_PCT (20).
+   * 예: 68.2% / 20%p → 3회차 · 75% / 25%p → 2회차
+   */
+  auctionFailureDiscountPct?: number
   winBidOffsetDays?: number              // 매각기일 → 낙찰기일 (기본 28)
   saleConfirmOffsetDays?: number         // 낙찰기일 → 매각결정 (기본 7)
   balanceDueOffsetDays?: number          // 매각결정 → 잔금납부 (기본 40)
@@ -724,6 +736,7 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
     expectedBidRatio: input.expectedBidRatio,
     expectedBidRatioPeriod: input.expectedBidRatioPeriod ?? '최근 3개월 낙찰가율',
     expectedBidPrice,
+    auctionFailureDiscountPct: input.auctionFailureDiscountPct,
   }
 
   // ─── [6] 예상배당표 ──────────────────────────────────────

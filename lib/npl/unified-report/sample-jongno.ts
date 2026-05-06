@@ -10,7 +10,10 @@
  * - 담보: 서울 종로구 홍지동 76-1 외 7필지 일괄 5,193㎡ · 제1종일반주거지역
  * - 가치: 감정가 66.73억 (LTV 60.12% = 선순위+원금/감정가) · AI 시세 74.90억
  * - 낙찰가율: 종로구 토지 1년 70.5% · 6개월 70.8% · 3개월 71.4% · 1개월 70.7%
- * - 우리 로직: 감정가 대비 71.4% 적용 → 예상낙찰가 47.63억 → 회수율 약 275%
+ *           서울 전체 토지 3개월 평균 68.2% (SIDO scope)
+ * - 우리 로직 (v3 2026-05-06): 서울 토지 3개월 평균 68.2% 적용
+ *   → 예상낙찰가 45.51억 → 회수율 약 263%
+ *   → 회차당 유찰 할인율 20%p (default · 통계 매핑 가능) · 68.2% → 3회차 예상
  */
 
 import type { StatisticsContext } from './statistics'
@@ -268,10 +271,10 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
 
   const recovery = buildRecoveryPrediction({ ltv, region, auction })
 
-  // 사용자 제공 정확한 3-방식 예상낙찰가 (computeExpectedBid override)
-  //   감정가 대비 71.4%      → 4,762,922,125 원   ← 선택 (대지 기준 로직)
-  //   최저입찰가 대비 117.5%  → 6,272,287,466 원
-  //   AI 시세 대비 99.7%     → 7,467,900,320 원
+  // 사용자 정책 v3 (2026-05-06): 서울 토지 3개월 평균 68.2% 적용 (SIDO scope)
+  //   감정가 대비 68.2%       → 4,550,996,912 원   ← 선택 (대지 기준 로직)
+  //   최저입찰가 대비 113.7%  → minBid 4,003,809,600 (3차 60%) × 1.137 ≈ 같은 expected
+  //   AI 시세 대비 60.8%      → 7,490,203,000 × 0.608 ≈ 4,553,963,424
   const computedExpectedBid = computeExpectedBid({
     appraisalValue: appraisal,
     minBidPrice: input.minBidPrice,
@@ -279,43 +282,46 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
     auction,
     ctx: JONGNO_HONGJI_STATISTICS,
   })
+  const JONGNO_PRIMARY_BID_RATIO = 0.682                              // 서울 전체 토지 3개월 평균
+  const JONGNO_PRIMARY_BID_PRICE = Math.round(appraisal * JONGNO_PRIMARY_BID_RATIO) // 4,550,996,912
   const expectedBid = {
     ...computedExpectedBid,
     appraisal: {
       ...computedExpectedBid.appraisal,
-      ratioPercent: 71.4,
-      expectedBidPrice: 4_762_922_125,
-      note: '대지 기준 예상 낙찰가 산정 로직 · 종로구 토지 3개월 평균 71.4% · 추천값',
+      ratioPercent: 68.2,
+      expectedBidPrice: JONGNO_PRIMARY_BID_PRICE,
+      note: '대지 기준 예상 낙찰가 산정 로직 · 서울 전체 토지 3개월 평균 68.2% · 추천값',
     },
     minBid: {
       ...computedExpectedBid.minBid,
-      // 최저입찰가 = 감정가 × 0.8² = 감정가 × 0.64 (2회 유찰 기준)
-      // 종로: 6,673,016,000 × 0.64 = 4,270,730,240 원
-      baselineAmount: Math.round(appraisal * 0.64),
-      ratioPercent: 117.5,
-      expectedBidPrice: 6_272_287_466,
-      note: '최저입찰가(2회 유찰 후 감정가 60% 수준) 대비 117.5% — 유찰 후 반등 시나리오',
+      // 3회차 시작가 = 감정가 × 0.6 (회차당 −20%p × 2회 유찰)
+      //   종로: 6,673,016,000 × 0.60 = 4,003,809,600 원
+      //   bid / minBid = 4,550,996,912 / 4,003,809,600 ≈ 113.7%
+      baselineAmount: Math.round(appraisal * 0.60),
+      ratioPercent: Math.round((JONGNO_PRIMARY_BID_PRICE / Math.round(appraisal * 0.60)) * 1000) / 10,
+      expectedBidPrice: JONGNO_PRIMARY_BID_PRICE,
+      note: '최저입찰가(3회차 시작가 = 감정가 60%) 대비 약 113.7% — 2회 유찰 후 회복 시나리오',
     },
     market: {
       ...computedExpectedBid.market,
       baselineAmount: aiMarket,
-      ratioPercent: 99.7,
-      expectedBidPrice: 7_467_900_320,
-      note: `AI 시세 ${(aiMarket / 100_000_000).toFixed(2)}억 대비 99.7% — 인근 1km 실거래 ${JONGNO_HONGJI_COMPARABLES.length}건 기반`,
+      ratioPercent: Math.round((JONGNO_PRIMARY_BID_PRICE / aiMarket) * 1000) / 10,
+      expectedBidPrice: JONGNO_PRIMARY_BID_PRICE,
+      note: `AI 시세 ${(aiMarket / 100_000_000).toFixed(2)}억 대비 약 60.8% — 인근 1km 실거래 ${JONGNO_HONGJI_COMPARABLES.length}건 기반 (감정가 대비 안정)`,
     },
-    recommendedBidPrice: 4_762_922_125,
+    recommendedBidPrice: JONGNO_PRIMARY_BID_PRICE,
     narrative:
-      `대지 기준 예상 낙찰가 산정 로직 적용 결과, '감정가 대비 낙찰가율 71.4%' 기반 ` +
-      `예상낙찰가 4,762,922,125원을 추천합니다. ` +
-      `최저입찰가(${input.minBidPrice?.toLocaleString('ko-KR') ?? '—'}원) 대비 117.5%, ` +
-      `AI 시세(${aiMarket.toLocaleString('ko-KR')}원) 대비 99.7% 수준입니다.`,
+      `대지 기준 예상 낙찰가 산정 로직 적용 결과, '감정가 대비 낙찰가율 68.2%' 기반 ` +
+      `예상낙찰가 ${JONGNO_PRIMARY_BID_PRICE.toLocaleString('ko-KR')}원을 추천합니다. ` +
+      `최저입찰가(3회차 60%) 대비 약 113.7%, ` +
+      `AI 시세(${aiMarket.toLocaleString('ko-KR')}원) 대비 약 60.8% 수준입니다.`,
   }
   const recommendedBidPrice = expectedBid.recommendedBidPrice
 
   // 등기부 분석 — 1순위 농협 23.64억, 후순위 없음
   const registryAnalysis = buildRegistryAnalysis({
     claimAmount: totalBond,
-    bidPrice: Math.round(appraisal * 0.714),     // 감정가 × 71.4% = 47.63억
+    bidPrice: JONGNO_PRIMARY_BID_PRICE,          // 감정가 × 68.2% = 45.51억 (사용자 정책 v3)
     interestedPartyCount: 2,
     parcelCount: JONGNO_HONGJI_DETAIL.parcel_count,
     failedBidCount: 0,
@@ -402,8 +408,10 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
       { price: appraisal, reportedAt: '2026-04-28', source: 'APPRAISAL', label: '감정가 (법사가)' },
       { price: aiMarket,  reportedAt: '2026-04-28', source: 'AI_LATEST', label: 'AI 시세' },
     ],
-    expectedBidRatio: 0.714,    // 감정가 대비 3개월 평균
-    expectedBidRatioPeriod: '종로구 토지 3개월 평균',
+    expectedBidRatio: 0.682,    // 사용자 정책 v3: 서울 전체 토지 3개월 평균 68.2% (SIDO)
+    expectedBidRatioPeriod: '서울 전체 토지 3개월 평균',
+    // 회차당 유찰 할인율 (default 20%p) — 통계 매핑 가능 (지역/법원별)
+    auctionFailureDiscountPct: 20,
     auctionStartDate: '2026-08-15',  // 매각 후 미수회수 시 경매 시작 가정
     courtName: '서울중앙지방법원 본원',
     // 일정 lock (2026-05-03 / v2 2026-05-06 — 핵심 공식 기반):
@@ -435,19 +443,25 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
     mcSeed: 20260423,
     mcTrials: 10_000,
     sensitivityPurchaseRateAxis: [1.00, 0.95, 0.90, 0.85, 0.80, 0.75, 0.70],
-    sensitivityBidRatioAxis:     [0.55, 0.65, 0.70, 0.714, 0.75, 0.80, 0.85],
+    sensitivityBidRatioAxis:     [0.55, 0.60, 0.65, 0.682, 0.72, 0.78, 0.85],
     evidence: {
       bidRatioStats: {
-        selectedLabel: '종로구 토지 · 3개월',
+        // 사용자 정책 v3 (2026-05-06): 서울 전체 토지 3개월 평균 68.2% 적용 (SIDO scope)
+        //   회차당 유찰 할인율 20%p (default · 통계 매핑 가능) → 68.2% < 80% < 100% → 3회차 예상
+        selectedLabel: '서울 전체 토지 · 3개월',
         items: [
-          { scope: 'SIGUNGU', region: '종로구', periodMonths: 12, ratioPercent: 70.5, sampleSize: 98 },
-          { scope: 'SIGUNGU', region: '종로구', periodMonths: 6,  ratioPercent: 70.8, sampleSize: 63 },
-          { scope: 'SIGUNGU', region: '종로구', periodMonths: 3,  ratioPercent: 71.4, sampleSize: 33 },
-          { scope: 'SIGUNGU', region: '종로구', periodMonths: 1,  ratioPercent: 70.7, sampleSize: 14 },
+          { scope: 'SIDO',    region: '서울',     periodMonths: 12, ratioPercent: 66.9, sampleSize: 12 },
+          { scope: 'SIDO',    region: '서울',     periodMonths: 6,  ratioPercent: 59.3, sampleSize: 7  },
+          { scope: 'SIDO',    region: '서울',     periodMonths: 3,  ratioPercent: 68.2, sampleSize: 2  },
+          { scope: 'SIGUNGU', region: '종로구',   periodMonths: 12, ratioPercent: 70.5, sampleSize: 98 },
+          { scope: 'SIGUNGU', region: '종로구',   periodMonths: 6,  ratioPercent: 70.8, sampleSize: 63 },
+          { scope: 'SIGUNGU', region: '종로구',   periodMonths: 3,  ratioPercent: 71.4, sampleSize: 33 },
+          { scope: 'SIGUNGU', region: '종로구',   periodMonths: 1,  ratioPercent: 70.7, sampleSize: 14 },
         ],
         narrative:
-          '종로구 토지 낙찰가율 1년 70.5% → 6개월 70.8% → 3개월 71.4% → 1개월 70.7%로 70%대 초반 안정. ' +
-          '적용: 감정가 대비 71.4% (3개월 평균) → 예상낙찰가 47.63억 = 회수율 280%.',
+          '서울 전체 토지 3개월 평균 68.2% (SIDO scope) 적용. 종로구 시·군·구 통계 (1년 70.5% → 6개월 70.8% → 3개월 71.4%) ' +
+          '대비 보수적 기준선. 회차당 유찰 할인율 20%p (default) → 68.2% < 80%(2차) → 3회차 예상 매각. ' +
+          '예상낙찰가 = 감정가 66.73억 × 68.2% = 45.51억 → 채권잔액 17.29억 대비 회수율 약 263%.',
       },
       // 사용자 정책 (2026-05-06 v2):
       //   avgSaleDays = 1회차 매각결정기일 평균 (법원/주소지별 통계 매핑 예정)
@@ -575,7 +589,7 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
           title: '감정가 66.73억 vs AI 시세 74.90억 — 12.2% 상향',
           description:
             '감정가(법사가)는 보수적 평가로, AI 시세는 인근 1km 실거래(평균 m²당 273만원) 반영 결과 ' +
-            '12.2% 상향. 본 사례에서는 감정가 기준 71.4% 낙찰가율 적용으로 보수적 회수액 산출.',
+            '12.2% 상향. 본 사례에서는 서울 전체 토지 3개월 평균 68.2% 낙찰가율(SIDO scope) 적용으로 보수적 회수액 산출.',
           evidence: '감정가 6,673,016,000 / AI 시세 7,490,203,000',
           confidence: 92,
         },
@@ -598,7 +612,7 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
           title: '농협은행 1순위 단독 — 권리 깨끗',
           description:
             '근저당 채권최고액 23.64억 (농협 단독 1순위) · 후순위 권리자 없음. ' +
-            '예상낙찰가 47.63억 기준 1순위 변제 후 잔여 24억 → NPL 매수자 회수 충분.',
+            '예상낙찰가 45.51억 기준 1순위 변제 후 잔여 21.87억 → NPL 매수자 회수 충분.',
           evidence: '등기부 분석 — 1순위 농협, 후순위 0건',
           confidence: 98,
         },
@@ -606,11 +620,11 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
           id: 'JN-004',
           category: 'PRICE',
           severity: 'INFO',
-          title: '종로구 토지 낙찰가율 70%대 안정 흐름',
+          title: '서울/종로구 토지 낙찰가율 60-70%대 안정 흐름',
           description:
-            '1년 70.5% → 6개월 70.8% → 3개월 71.4% → 1개월 70.7%로 70%대 초반 일관. ' +
-            '계절성·이상치 적음, 회수 시나리오 신뢰도 높음.',
-          evidence: '종로구 토지 1년 98건 / 6개월 63건 / 3개월 33건 / 1개월 14건',
+            '서울 전체 토지 3개월 평균 68.2% (적용 기준선, SIDO scope) · 종로구 시·군·구 1년 70.5% → 3개월 71.4% → 1개월 70.7% ' +
+            '70%대 초반 안정. 회차당 −20%p 기준 → 68.2% < 80% < 100% → 3회차 예상 매각.',
+          evidence: '서울 토지 3개월 2건 / 종로구 1년 98건 / 6개월 63건 / 3개월 33건 / 1개월 14건',
           confidence: 88,
         },
       ],
@@ -638,14 +652,14 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
       },
       base: {
         policy: 'BASE',
-        label: 'AI 권고 입찰가 (감정가 대비 71.4%)',
-        bidPrice: Math.round(appraisal * 0.714),
-        bidRatioPercent: 71.4,
-        expectedNetProfit: Math.round(appraisal * 0.714 - totalBond),
-        expectedRoi: Math.round((appraisal * 0.714 - totalBond) / totalBond * 100 * 10) / 10,
+        label: 'AI 권고 입찰가 (감정가 대비 68.2%)',
+        bidPrice: JONGNO_PRIMARY_BID_PRICE,
+        bidRatioPercent: 68.2,
+        expectedNetProfit: JONGNO_PRIMARY_BID_PRICE - totalBond,
+        expectedRoi: Math.round((JONGNO_PRIMARY_BID_PRICE - totalBond) / totalBond * 100 * 10) / 10,
         expectedIrr: 32.8,
         winProbability: 0.62,
-        rationale: '종로구 토지 3개월 평균 71.4% — 낙찰가율 안정 흐름. 회수율 280%',
+        rationale: '서울 전체 토지 3개월 평균 68.2% (SIDO scope · 회차당 −20%p → 3회차 예상). 회수율 263%',
       },
       aggressive: {
         policy: 'AGGRESSIVE',
@@ -667,7 +681,7 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
       confidence: region.confidence,
       horizonMonths: 6,
       narrative:
-        '종로구 토지 낙찰가율 1년 70.5% → 6개월 70.8% → 3개월 71.4% → 1개월 70.7% 안정 흐름. ' +
+        '서울 전체 토지 3개월 평균 68.2% (SIDO scope · 적용 기준선) · 종로구 시·군·구 1년 70.5% → 3개월 71.4% 안정. ' +
         `인근 1km 실거래 평균 단가 ${Math.round(JONGNO_HONGJI_COMPARABLES_SUMMARY.avgPerLandPriceKRWm2 / 10000).toLocaleString()}만원/㎡로 견고. ` +
         '북악산·인왕산 자락 자연환경 + 도심 접근성 양호 → 단독·다세대 / 카페·사옥 부지 수요 견조. ' +
         '제1종일반주거지역 건축 한도 내에서 개발 잠재력 보유.',
@@ -689,6 +703,9 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
     },
     registryAnalysis,
     profitability,
+    // AI 총평 v3 (사용자 정책 2026-05-06):
+    //   서울 전체 토지 3개월 평균 68.2% (SIDO scope) · 회차당 −20%p (default · 통계 매핑) → 3회차 예상
+    //   예상낙찰가 = 감정가 66.73억 × 68.2% = 45.51억 → 회수율 263%
     executiveSummary:
       `종로구 홍지동 토지 8필지 일괄매각 NPL (○○대부 대출원금 16.48억 · 채권잔액 17.29억 · ` +
       `1순위 농협 채권최고액 23.64억 · 권리관계 합계(원금+선순위) 40.12억 · 감정가 66.73억) ` +
@@ -697,9 +714,11 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
       `예측 회수율 ${recovery.predictedRecoveryRate}% (신뢰도 ${Math.round(recovery.confidence * 100)}%). ` +
       `매입가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 (= 채권잔액 100% 매각) 기준 ` +
       `보수적/권고/공격적 시나리오 ROI ${(profitability.strategies.conservative.roi * 100).toFixed(1)}% / ${(profitability.strategies.recommended.roi * 100).toFixed(1)}% / ${(profitability.strategies.aggressive.roi * 100).toFixed(1)}%. ` +
-      `종로구 토지 3개월 낙찰가율 71.4% 적용 시 예상낙찰가 47.63억 → ` +
-      `1순위 농협 23.64억 변제 후 NPL 회수액 약 23.99억 (NPL 채권잔액 대비 ${((4_762_922_125 - 2_364_000_000) / totalBond * 100).toFixed(1)}%, ` +
-      `매입 대비 +${Math.round((4_762_922_125 - 2_364_000_000 - totalBond) / 100_000_000 * 10) / 10}억). ` +
+      `서울 전체 토지 3개월 평균 낙찰가율 68.2% (SIDO scope · 회차당 −20%p 기준 3회차 예상) ` +
+      `적용 시 예상낙찰가 ${Math.round(JONGNO_PRIMARY_BID_PRICE / 100_000_000 * 100) / 100}억 → ` +
+      `1순위 농협 23.64억 변제 후 NPL 회수액 약 ${Math.round((JONGNO_PRIMARY_BID_PRICE - 2_364_000_000) / 100_000_000 * 100) / 100}억 ` +
+      `(NPL 채권잔액 대비 ${((JONGNO_PRIMARY_BID_PRICE - 2_364_000_000) / totalBond * 100).toFixed(1)}%, ` +
+      `매입 대비 +${Math.round((JONGNO_PRIMARY_BID_PRICE - 2_364_000_000 - totalBond) / 100_000_000 * 10) / 10}억). ` +
       `2순위 권리자 부재로 권리 깨끗, 8필지 일괄매각 시너지 + 인근 실거래 m²당 ` +
       `${Math.round(JONGNO_HONGJI_COMPARABLES_SUMMARY.avgPerLandPriceKRWm2 / 10000)}만원 단가 견고. ` +
       `AI 투자 의견 종합 ${verdictScore}점 → ${verdict}.`,

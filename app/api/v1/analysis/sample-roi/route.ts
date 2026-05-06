@@ -118,11 +118,21 @@ export async function GET() {
     const jongnoFirstSale = jongnoBase.profitability?.schedule.milestones.find(m => m.key === 'firstSaleDate')?.date
     const jamsilFirstSale = jamsilBase.profitability?.schedule.milestones.find(m => m.key === 'firstSaleDate')?.date
 
+    // v3 사용자 정책 (2026-05-06): 회차당 유찰 할인율(default 20%p)도 통계 매핑.
+    //   valuation.auctionFailureDiscountPct 가 주입되어 있으면 그 값으로 회차 산출.
     const jongnoShifted = (jongnoFirstSale && jongnoBase.profitability)
-      ? computeEffectiveFirstSaleDate(jongnoFirstSale, jongnoBase.profitability.valuation.expectedBidRatio)
+      ? computeEffectiveFirstSaleDate(
+          jongnoFirstSale,
+          jongnoBase.profitability.valuation.expectedBidRatio,
+          jongnoBase.profitability.valuation.auctionFailureDiscountPct,
+        )
       : undefined
     const jamsilShifted = (jamsilFirstSale && jamsilBase.profitability)
-      ? computeEffectiveFirstSaleDate(jamsilFirstSale, jamsilBase.profitability.valuation.expectedBidRatio)
+      ? computeEffectiveFirstSaleDate(
+          jamsilFirstSale,
+          jamsilBase.profitability.valuation.expectedBidRatio,
+          jamsilBase.profitability.valuation.auctionFailureDiscountPct,
+        )
       : undefined
 
     const jongnoReport = jongnoShifted ? buildJongnoSampleReport({ firstSaleDateOverride: jongnoShifted }) : jongnoBase

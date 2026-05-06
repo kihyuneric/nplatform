@@ -2642,19 +2642,23 @@ function addDaysISO(dateISO: string, days: number): string {
 }
 
 /**
- * 예상 낙찰 회차 계산 — 한국 부동산 경매 관행: 유찰 시 1회당 약 20%p 저감.
- *   · 회차 N 의 최저입찰가율 = 100% − (N−1) × 20%p
+ * 예상 낙찰 회차 계산 — 한국 부동산 경매 관행: 유찰 시 1회당 일정 %p 저감.
+ *   · 회차 N 의 최저입찰가율 = 100% − (N−1) × failureDiscountPct
  *   · 예측 낙찰가율(R) 이 최저입찰가율 이상인 가장 빠른 회차를 반환.
  *
- * 사용자 시나리오 (2026-04-26):
- *   · R = 83.5% → 1회차(min 100%) 실패 · 2회차(min 80%) 가능 → 2회차
- *   · R = 62%   → 2회차(min 80%) 실패 · 3회차(min 60%) 가능 → 3회차
+ * 사용자 정책 v3 (2026-05-06): 회차당 할인율은 지역/법원별 통계 매핑 가능 (default 20%p).
+ *
+ * 시나리오 (default 20%p):
+ *   · R = 83.5% → 1회차 실패 · 2회차(80%) 가능 → 2회차
+ *   · R = 68.2% → 1·2회차 실패 · 3회차(60%) 가능 → 3회차
+ *   · R = 62%   → 1·2회차 실패 · 3회차(60%) 가능 → 3회차
  */
-function predictedAuctionRound(bidRatioPercent: number): number {
+function predictedAuctionRound(bidRatioPercent: number, failureDiscountPct: number = 20): number {
   if (!isFinite(bidRatioPercent) || bidRatioPercent <= 0) return 1
   if (bidRatioPercent >= 100) return 1
-  // n = ceil(1 + (100 − R) / 20)
-  return Math.max(1, Math.ceil(1 + (100 - bidRatioPercent) / 20))
+  const safe = failureDiscountPct > 0 ? failureDiscountPct : 20
+  // n = ceil(1 + (100 − R) / failureDiscountPct)
+  return Math.max(1, Math.ceil(1 + (100 - bidRatioPercent) / safe))
 }
 
 /**
@@ -2754,11 +2758,17 @@ function ProfitabilitySections({
   const initial = block
   const courtName = initial.schedule.courtName
 
-  // ── 예상 매각 회차/일자 자동 계산 (낙찰가율 기준) ──
+  // ── 예상 매각 회차/일자 자동 계산 (낙찰가율 + 회차당 할인율) ──
   //   질권대출 이자일수가 회차에 따라 늘어나면서 ROI 가 자동 재계산됨.
+  //   사용자 정책 (2026-05-06): 회차당 할인율(20%p default)은 지역/법원별 통계 매핑 가능
+  //   → block.valuation.auctionFailureDiscountPct 주입 시 그 값 사용
+  const auctionFailureDiscountPct = useMemo(
+    () => initial.valuation.auctionFailureDiscountPct ?? 20,
+    [initial.valuation.auctionFailureDiscountPct],
+  )
   const predictedRound = useMemo(
-    () => predictedAuctionRound(edit.expectedBidRatio * 100),
-    [edit.expectedBidRatio],
+    () => predictedAuctionRound(edit.expectedBidRatio * 100, auctionFailureDiscountPct),
+    [edit.expectedBidRatio, auctionFailureDiscountPct],
   )
   const predictedSaleDateAuto = useMemo(
     () => addDaysISO(edit.firstSaleDate, predictedSaleDateOffsetDays(predictedRound)),
@@ -2800,6 +2810,8 @@ function ProfitabilitySections({
         priceHistory: initial.valuation.priceHistory,
         expectedBidRatio: edit.expectedBidRatio,
         expectedBidRatioPeriod: initial.valuation.expectedBidRatioPeriod,
+        // v3 사용자 정책 (2026-05-06): 회차당 유찰 할인율(default 20%p) 통계 매핑 가능
+        auctionFailureDiscountPct,
         auctionStartDate: edit.auctionStartDate,
         // 예상 매각기일을 1차 매각기일 자리에 주입 — 후속 모든 일정 시프트
         firstSaleDateOverride: effectivePredictedSaleDate,
@@ -3196,7 +3208,7 @@ function ProfitabilitySections({
               ) : (
                 <>
                   예상 낙찰가율 <b className="tabular-nums">{(edit.expectedBidRatio * 100).toFixed(1)}%</b> 가 1회차 최저입찰가율(100%) 미만이므로
-                  유찰이 예상되며, 회차당 −20%p 저감을 적용해 <b>{predictedRound}회차 매각기일</b>(최저 {(100 - (predictedRound - 1) * 20).toFixed(0)}%)에 낙찰 예상됩니다.
+                  유찰이 예상되며, 회차당 −{auctionFailureDiscountPct}%p 저감을 적용해 <b>{predictedRound}회차 매각기일</b>(최저 {Math.max(0, 100 - (predictedRound - 1) * auctionFailureDiscountPct).toFixed(0)}%)에 낙찰 예상됩니다.
                   <span className="block mt-1 text-[0.6875rem] text-[var(--color-text-tertiary)]">
                     유찰당 평균 +28일 → 질권대출 운용일수 +{(predictedRound - 1) * 28}일 → 이자비용 증가 → ROI 자동 하향 반영.
                   </span>
