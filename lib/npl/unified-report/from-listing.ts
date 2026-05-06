@@ -444,6 +444,7 @@ export function buildListingReport(
         score: f.score,
         explanation: f.explanation,
         mitigation: f.mitigation,
+        formula: f.formula,
       })),
       specialConditionAdjustments: [],
       promptMeta: {

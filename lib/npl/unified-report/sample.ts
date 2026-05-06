@@ -506,6 +506,7 @@ export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): Un
         score: f.score,
         explanation: f.explanation,
         mitigation: f.mitigation,
+        formula: f.formula,
       })),
       specialConditionAdjustments: input.specialConditions.seniorTenant
         ? [{ condition: '선순위 임차인', impact: '낙찰가율 -10%p 반영, 보증금 인수 시 추가 현금흐름 주의' }]
@@ -623,12 +624,21 @@ export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): Un
       `송파구 신천동 잠실 시그마타워 오피스텔 NPL (금천신협 대출원금 19.6억 · 감정가 28억) 종합 분석 결과 ${riskGrade}등급, 예측 회수율 ${recovery.predictedRecoveryRate}%(신뢰도 ${Math.round(recovery.confidence * 100)}%)로 평가됩니다. ` +
       `금융기관 NPL 매각가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 기준 ` +
       `권고 시나리오 ROI ${(recommendedRoi * 100).toFixed(2)}% · 기본 시나리오 ROI ${(investmentRoi * 100).toFixed(2)}%, ` +
-      `송파구 사무실 3개월 평균 낙찰가율 75.3% (회차당 −25%p 기준 → 2회차 예상 매각) · 특수조건 ${auction.specialConditionPenalty.toFixed(1)}%p 반영한 ${auction.adjustedBidRatio.toFixed(1)}%를 기준 입찰가율로 제시하며, ` +
+      `송파구 사무실 3개월 평균 낙찰가율 83.3% (회차당 −25%p 기준 → 2회차 예상 매각) · 특수조건 ${auction.specialConditionPenalty.toFixed(1)}%p 반영한 ${auction.adjustedBidRatio.toFixed(1)}%를 기준 입찰가율로 제시하며, ` +
       `1회차 매각결정기일 통계 477일 (서울동부지법 송파 사무실)을 적용한 운용 기간 모델 — ` +
       `동일주소 사례 없음, 인근 3km 경매 사례 (3년 이내 5건 — 광진 구의동·송파 방이동) 평균 ${SAMPLE_STATISTICS.nearbyAuction!.summary.avgBidRatio.toFixed(1)}%, ` +
       `인근 1km 실거래 (1년 이내 ${SAMPLE_STATISTICS.nearbyTransactions!.cases.length}건 · 송파 방이동·신천동 일반상업지역) 평균 57.2억·m²당 872만원 견고. ` +
       `선순위 근저당 부재로 배당 cascade 단순 (낙찰가→경매비용→NPL→1·2질권자) — 보수·기준·공격 3단계 입찰 전략을 병행 권고합니다. ` +
       `AI 투자 의견 종합 점수 ${verdictScore}점 → ${verdict} (가중치: 회수율 0.35·리스크 0.25·ROI 0.25·할인 0.15).`,
+    executiveSummaryEn:
+      `[Songpa-gu Sincheon-dong · Jamsil Sigma Tower Officetel NPL] Geumcheon Credit Union loan principal KRW 19.6B · appraisal KRW 28B. Analysis result: Grade ${riskGrade}, predicted recovery rate ${recovery.predictedRecoveryRate}% (confidence ${Math.round(recovery.confidence * 100)}%). ` +
+      `NPL acquisition price ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}B KRW: recommended scenario ROI ${(recommendedRoi * 100).toFixed(2)}% · base scenario ROI ${(investmentRoi * 100).toFixed(2)}%. ` +
+      `Songpa-gu office 3-month avg bid ratio 83.3% (est. round 2 at −25%p/round); adjusted for special conditions −${auction.specialConditionPenalty.toFixed(1)}%p → effective bid ratio ${auction.adjustedBidRatio.toFixed(1)}%. ` +
+      `Average 1st-round sale hearing: 477 days (Seoul East District Court · Songpa office). No same-address precedent; ` +
+      `nearby 3km auction cases (5 within 3Y — Gwangjin Guui-dong / Songpa Bangi-dong) avg ${SAMPLE_STATISTICS.nearbyAuction!.summary.avgBidRatio.toFixed(1)}%; ` +
+      `nearby 1km transactions (${SAMPLE_STATISTICS.nearbyTransactions!.cases.length} within 1Y · Songpa commercial zone) avg KRW 57.2B · KRW 8.72M/m² — robust. ` +
+      `No senior mortgage: straightforward dividend cascade (hammer → court costs → NPL → Pledge-1/2). Conservative · Base · Aggressive 3-tier bid strategy recommended. ` +
+      `AI Investment Verdict: ${verdictScore} pts → ${verdict} (weights: recovery 35% · risk 25% · ROI 25% · discount 15%).`,
   }
 
   return report
@@ -855,6 +865,7 @@ export function buildReportFromInput(overrides: BuildReportFromInputOptions): Un
         score: f.score,
         explanation: f.explanation,
         mitigation: f.mitigation,
+        formula: f.formula,
       })),
       specialConditionAdjustments,
       promptMeta: {

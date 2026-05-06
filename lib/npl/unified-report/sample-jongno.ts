@@ -582,6 +582,7 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
         score: f.score,
         explanation: f.explanation,
         mitigation: f.mitigation,
+        formula: f.formula,
       })),
       specialConditionAdjustments: [],
       promptMeta: {
@@ -739,6 +740,22 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
       `${Math.round(JONGNO_HONGJI_COMPARABLES_SUMMARY.avgPerLandPriceKRWm2 / 10000)}만원 / 28.83억 거래액 견고. ` +
       `인근 3km 경매 사례 (3년 이내 2건, 구기동 평균 33.25%)는 변두리 대형 토지로 본 매물과 입지 차이 — 직접 비교 신중. ` +
       `AI 투자 의견 종합 ${verdictScore}점 → ${verdict}.`,
+    executiveSummaryEn:
+      `[Jongno-gu Hongji-dong · 8-lot Land NPL — Bulk Auction] ○○대부 loan principal KRW 16.48B · outstanding bond KRW 17.29B · ` +
+      `NH Bank 1st-lien max claim KRW 23.64B · total encumbrances KRW 40.12B · appraisal KRW 66.73B. ` +
+      `Analysis result: Grade ${riskGrade}, LTV ${(ltvNumerator / appraisal * 100).toFixed(2)}% (1st-lien max claim + principal basis), ` +
+      `predicted recovery rate ${recovery.predictedRecoveryRate}% (confidence ${Math.round(recovery.confidence * 100)}%). ` +
+      `Acquisition price ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}B KRW (= 100% of outstanding bond): ` +
+      `conservative/recommended/aggressive scenario ROI ${(profitability.strategies.conservative.roi * 100).toFixed(1)}% / ${(profitability.strategies.recommended.roi * 100).toFixed(1)}% / ${(profitability.strategies.aggressive.roi * 100).toFixed(1)}%. ` +
+      `Seoul-wide land 3-month avg bid ratio 68.2% (est. round 3 at −20%p/round): ` +
+      `est. hammer price ${Math.round(JONGNO_PRIMARY_BID_PRICE / 100_000_000 * 100) / 100}B → ` +
+      `court costs 0.1B → NH Bank 1st-lien 23.64B repaid → NPL receives ${Math.round((JONGNO_PRIMARY_BID_PRICE - 2_364_000_000 - 10_000_000) / 100_000_000 * 100) / 100}B ` +
+      `(${((JONGNO_PRIMARY_BID_PRICE - 2_364_000_000 - 10_000_000) / totalBond * 100).toFixed(1)}% of bond) → ` +
+      `Pledge-1 (collateral lender) ~12.97B repaid → Pledge-2 (investor recovery) ~${Math.round((JONGNO_PRIMARY_BID_PRICE - 2_364_000_000 - 10_000_000 - 1_296_989_594) / 100_000_000 * 100) / 100}B. ` +
+      `Clean title (no junior claimant); 8-lot bulk sale synergy + nearby 1km transactions (4 within 1Y) avg ` +
+      `KRW ${Math.round(JONGNO_HONGJI_COMPARABLES_SUMMARY.avgPerLandPriceKRWm2 / 10000)}M/m² / KRW 28.83B — robust. ` +
+      `Note: nearby 3km auction cases (2 within 3Y, Gugi-dong avg 33.25%) are peripheral large-lot land — direct comparison requires caution. ` +
+      `AI Investment Verdict: ${verdictScore} pts → ${verdict}.`,
   }
 
   return report

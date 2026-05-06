@@ -43,7 +43,7 @@ import { PropertyPhotosExhibit } from "./components/property-photos-exhibit"
 import { computeEffectiveFirstSaleDate } from "@/lib/npl/unified-report/auction-round"
 import { computeXrfValuation } from "@/lib/xrf/valuation"
 import { computeFundMetrics, computeProfitAllocation } from "@/lib/xrf/metrics"
-import { buildXrfSummary, buildXrfSummaryPrompt } from "@/lib/xrf/summary"
+import { buildXrfSummary, buildXrfSummaryEn, buildXrfSummaryPrompt } from "@/lib/xrf/summary"
 import {
   SPECIAL_CONDITIONS_V2,
   SPECIAL_CONDITION_BUCKET_LABEL,
@@ -113,9 +113,10 @@ function buildRiskFactorFormula(
         marketValue: input.currentMarketValue ?? input.appraisalValue,
       }).formula
     case "권리관계":
-      // subordinateClaimCount 는 input.subordinateClaimCount(있으면) 또는
-      // registry.rights.items 에서 후순위 근저당 자동 카운트 (없으면 0).
-      return computeRightsFactor({
+      // f.formula 는 risk factor 생성 시점에 정확한 subordinateClaimCount 포함하여 계산된
+      // 단일 소스 — 재계산하면 subordinateClaimCount 이 input 에 없어 0으로 기본값 처리되어
+      // score(52) ≠ formula(55) 불일치 발생. f.formula (RiskFactorDetail.formula?) 우선 반환.
+      return f.formula ?? computeRightsFactor({
         specialConditionsV2:
           input.specialConditionsV2 ?? migrateV1ToV2Keys(input.specialConditions),
         registry,
@@ -223,6 +224,8 @@ export default function UnifiedReportPage() {
   // 사용자 정책 (2026-05-03): NPL 보고서 ↔ XRF Vehicle Valuation 토글
   //   NPL 자체 ROI vs XRF + 엔플랫폼 + 대부업체 구조 적용 후 LP 최종 ROI 비교
   const [valuationMode, setValuationMode] = useState<'NPL' | 'XRF'>('NPL')
+  // AI 총평 언어 토글 (KO/EN) — v9 bilingual executive summary
+  const [summaryLang, setSummaryLang] = useState<'ko' | 'en'>('ko')
   const t = T[lang]
 
   // SoT — listingId 가 있으면 매물 raw 데이터 fetch (assetTitle 등 헤더 메타 동기화)
@@ -391,6 +394,7 @@ export default function UnifiedReportPage() {
     }
     return {
       summary: buildXrfSummary(args),
+      summaryEn: buildXrfSummaryEn(args),
       prompt: buildXrfSummaryPrompt(args),
     }
   }, [report])
@@ -725,9 +729,7 @@ export default function UnifiedReportPage() {
                 <span style={{ fontSize: 13, color: MCK.textMuted, fontWeight: 600, marginLeft: 4 }}>원</span>
               </div>
               <div style={{ fontSize: 11, color: MCK.textSub, fontWeight: 600, marginTop: 6 }}>
-                {profitability
-                  ? `ROI ${(profitability.investment.roi * 100).toFixed(2)}%`
-                  : `낙찰가율 ${kpiBidRatioPct.toFixed(1)}%`}
+                {`낙찰가율 ${kpiBidRatioPct.toFixed(1)}%`}
               </div>
             </div>
             <div
@@ -1204,28 +1206,55 @@ export default function UnifiedReportPage() {
             overflow: "hidden",
           }}
         >
-          <div
-            style={{
-              ...MCK_TYPE.eyebrow,
-              color: MCK.cyan,
-              marginBottom: 10,
-              display: "inline-flex", alignItems: "center", gap: 6,
-            }}
-          >
-            <Sparkles size={12} />
-            {t.aiSummary}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div
+              style={{
+                ...MCK_TYPE.eyebrow,
+                color: MCK.cyan,
+                display: "inline-flex", alignItems: "center", gap: 6,
+              }}
+            >
+              <Sparkles size={12} />
+              {t.aiSummary}
+            </div>
+            {/* KO/EN 언어 토글 — v9 bilingual executive summary */}
+            <div style={{ display: 'flex', gap: 4 }}>
+              {(['ko', 'en'] as const).map(l => (
+                <button
+                  key={l}
+                  onClick={() => setSummaryLang(l)}
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    borderRadius: 3,
+                    border: summaryLang === l ? '1.5px solid #6FB8E6' : '1.5px solid rgba(255,255,255,0.2)',
+                    background: summaryLang === l ? 'rgba(111,184,230,0.18)' : 'transparent',
+                    color: summaryLang === l ? '#6FB8E6' : 'rgba(255,255,255,0.5)',
+                    cursor: 'pointer',
+                    textTransform: 'uppercase' as const,
+                  }}
+                >
+                  {l === 'ko' ? '한국어' : 'EN'}
+                </button>
+              ))}
+            </div>
           </div>
           {/* 사용자 정책 (2026-05-03): XRF mode 토글 시 XRF 비히클 구조 기반 총평 사용.
-              ⚠ key={valuationMode} — React 강제 재마운트로 AutoTranslateProvider 캐시 우회.
+              사용자 정책 (2026-05-06) v9: KO/EN 언어 토글 추가.
+              ⚠ key={valuationMode+summaryLang} — React 강제 재마운트로 AutoTranslateProvider 캐시 우회.
               ⚠ 2026-05-05 v8: 5단락 paragraph 구조 (\n\n 구분 → multi <p> 렌더). */}
           <div
-            key={`summary-${valuationMode}`}
+            key={`summary-${valuationMode}-${summaryLang}`}
             data-no-translate-cache
           >
             {(() => {
               const summaryText = valuationMode === 'XRF' && xrfSummaryData
-                ? xrfSummaryData.summary
-                : report.executiveSummary
+                ? (summaryLang === 'en' ? xrfSummaryData.summaryEn : xrfSummaryData.summary)
+                : (summaryLang === 'en' && report.executiveSummaryEn
+                    ? report.executiveSummaryEn
+                    : report.executiveSummary)
               const paragraphs = summaryText.split(/\n\n+/).filter(Boolean)
               return paragraphs.map((para, idx) => {
                 // 첫 단락 (Lead) — 더 강조 (큰 글씨 + cobalt accent eyebrow)

@@ -32,35 +32,39 @@ const fmtUSD = (v: number) => {
 
 const fmtPct = (v: number) => `${(v * 100).toFixed(2)}%`
 
-const tierJudgment: Record<XrfTier, { label: string; verdict: 'BUY' | 'HOLD' | 'AVOID'; reason: string }> = {
+const tierJudgment: Record<XrfTier, { label: string; verdict: 'BUY' | 'HOLD' | 'AVOID'; reason: string; reasonEn: string }> = {
   BASE: {
     label: 'BASE',
     verdict: 'BUY',
-    reason: 'LP ROI ≥ 20% — 양보 불필요 · RWA 즉시 출시 가능',
+    reason: 'LP ROI ≥ 25% — 양보 불필요 · 전체 수수료 유지 · RWA 즉시 출시 가능',
+    reasonEn: 'LP ROI ≥ 25% — no concession required · full fee structure maintained · immediate RWA launch viable',
   },
   CONSERVATIVE: {
     label: 'CONSERVATIVE',
     verdict: 'BUY',
-    reason: 'XRF Carry 양보(15→10%) 적용 시 LP 매력도 회복',
+    reason: 'XRF Carry entry 15→10% · KOF 부분 압축 적용 · LP ROI 15~25% 구간',
+    reasonEn: 'XRF Carry concession (entry 15→10%) + KOF partial compression · LP ROI 15–25% range',
   },
   'SAVE-THE-DEAL': {
     label: 'SAVE-THE-DEAL',
     verdict: 'HOLD',
-    reason: 'XRF Carry · KOF Fees 모두 양보 (NPL VC Servicing 만 고정) · LP 한계 매력 수준',
+    reason: 'XRF Carry · KOF Fees 최대 양보 · NPL VC Servicing 1.5% 양보 · LP ROI 5~15% 한계',
+    reasonEn: 'Maximum concession across XRF Carry + KOF Fees + NPL VC Servicing 1.5% · LP ROI 5–15% borderline',
   },
   REJECT: {
     label: 'REJECT',
     verdict: 'AVOID',
-    reason: 'BASE LP ROI < 5% 임계 미달 · RWA 출시 부적합',
+    reason: 'BASE LP ROI < 5% 임계 미달 · RWA 출시 부적합 · 재구조화 필요',
+    reasonEn: 'BASE LP ROI < 5% threshold breached · RWA launch not viable · deal restructuring required',
   },
 }
 
 /**
- * McKinsey-style 5단락 AI 총평 (v8 · 2026-05-05).
+ * McKinsey-style 5단락 AI 총평 (v9 · 2026-05-06).
  *   §1 Lead         — 핵심 결론 (verdict + key metric)
  *   §2 Context      — NPL → XRF 변환 결과 + 자산/LP multiple
- *   §3 Distribution — LP 청약 · 분배 구조 + Carry 발동 여부
- *   §4 Risk         — 차주 유형 · NPL VC 차입금 · Hurdle 조건
+ *   §3 Distribution — XRFT 발행 구조 · 분배 + Carry 발동 여부
+ *   §4 Risk         — 차주 유형 · Pool 구성 (NPL equity + Vehicle Fees) · Hurdle
  *   §5 Verdict      — 투자 의견 BUY/HOLD/AVOID + action call
  *
  * 단락 사이 구분자: '\n\n' (page.tsx 에서 multi-paragraph 렌더)
@@ -85,29 +89,88 @@ export function buildXrfSummary(args: XrfSummaryArgs): string {
   const hurdleSpreadPct = (metrics.hurdleSpread * 100).toFixed(2)
   const hurdleSpreadSign = metrics.hurdleSpread > 0 ? '+' : ''
 
+  // XRFT 발행 기준 Pool = NPL equity + fixed Vehicle Fees
+  const fixedFeesUSD = result.fees.xrfMgmtUSD + result.fees.xrfSetupUSD + result.fees.platformTotalUSD + result.fees.servicingUSD
+  const displayPoolUSD = result.nplTotalEquityUSD + fixedFeesUSD
+
   const carryNote = result.fees.xrfCarryUSD > 0
     ? `Carry ${fmtUSD(result.fees.xrfCarryUSD)} 발동 (Hurdle ${fmtUSD(result.hurdleUSD)} 초과분에 5-tier marginal rate 적용)`
     : `Carry 미발생 — LP profit 이 Hurdle ${fmtUSD(result.hurdleUSD)} 미달, XRF 는 Mgmt + Setup 만 수령`
 
   // ─ §1 Lead — 핵심 결론 (verdict + key metric)
-  const lead = `[${tj.verdict} · ${tj.label}] ${assetTitle ?? '본 매물'}${region ? ` (${region})` : ''} — XRF Vehicle 적용 시 LP 최종 ROI ${fmtPct(result.lpRoi)} (연환산 IRR ${fmtPct(result.lpIrrYr)}) · Hurdle Spread ${hurdleSpreadSign}${hurdleSpreadPct}%p · ${tj.label} tier AUTO 판정.`
+  const lead = `[${tj.verdict} · ${tj.label}] ${assetTitle ?? '본 매물'}${region ? ` (${region})` : ''} — XRF Vehicle 적용 시 LP 최종 ROI ${fmtPct(result.lpRoi)} (연환산 IRR ${fmtPct(result.lpIrrYr)}) · Hurdle Spread ${hurdleSpreadSign}${hurdleSpreadPct}%p · v9 기준 ${tj.label} tier AUTO 판정. (${tj.reason})`
 
   // ─ §2 Context — NPL → XRF 변환 + Fund metrics
-  const context = `NPL 자체 ROI ${nplRoiPct.toFixed(2)}% 가 XRF Vehicle 3-층 구조 (XRF Foundation + Korea Operation Firm + NPL Vehicle Company) 통과 후 LP 한정 ROI ${fmtPct(result.lpRoi)} 로 변환됨. Net DPI ${metrics.dpi.toFixed(3)}x · Gross MoM (Asset) ${metrics.grossMomAsset.toFixed(3)}x · XIRR ${fmtPct(metrics.xirr)}/yr — 자산 레벨 multiple 이 senior loan leverage 와 Vehicle fee 차감 후 LP 회수 multiple 로 산출.`
+  const context = `NPL 자체 ROI ${nplRoiPct.toFixed(2)}% 가 XRF Vehicle 3-주체 구조 (XRF Foundation + Korea Operation Firm + NPL Vehicle Company) 통과 후 LP 한정 ROI ${fmtPct(result.lpRoi)} 로 변환됨. Net DPI ${metrics.dpi.toFixed(3)}x · Gross MoM (Asset) ${metrics.grossMomAsset.toFixed(3)}x · XIRR ${fmtPct(metrics.xirr)}/yr — 자산 레벨 multiple 이 Vehicle fee 차감 후 LP 회수 multiple 로 산출.`
 
-  // ─ §3 Distribution — LP 청약 + 분배 + Carry
-  const distribution = `LP 분배 — ${result.numLPs}명 분할 시 1인당 ${fmtUSD(result.lpCapitalPerLpUSD)} 청약 · ${fmtUSD(result.lpNetProfitPerLpUSD)} net profit. NPL 순수익 ${fmtUSD(result.nplNetProfitUSD)} 분배: LP ${fmtPct(lpPct)} · XRF Foundation ${fmtPct(xrfTotalPct)} · KOF ${fmtPct(platformPct)} · NPL VC Servicing ${fmtPct(servicerPct)} (FLAT 2% × 매입가). XRF Carry: ${carryNote}.`
+  // ─ §3 Distribution — XRFT 발행 + 분배 + Carry
+  const distribution = `LP 청약 구조 (v9 XRFT 모델) — Pool ${fmtUSD(displayPoolUSD)} (NPL equity ${fmtUSD(result.nplTotalEquityUSD)} + Vehicle Fees ${fmtUSD(fixedFeesUSD)}) · LP 총 순수익 ${fmtUSD(result.lpNetProfitUSD)}. NPL 순수익 ${fmtUSD(result.nplNetProfitUSD)} 분배: LP ${fmtPct(lpPct)} · XRF Foundation ${fmtPct(xrfTotalPct)} · KOF ${fmtPct(platformPct)} · NPL VC Servicing ${fmtPct(servicerPct)} (FLAT × 매입가). XRF Carry: ${carryNote}.`
 
-  // ─ §4 Risk / Conditional structure
-  const risk = `차주 유형 ${debtorLabel}. NPL VC Capital share 없음 (채권계약금·잔대금 이미 NPL totalEquity 포함 · 이중 부과 제거). XRF Carry 는 LP 우선 수익률 (Hurdle 8%/yr) 충당 후 잉여분에만 5-tier marginal rate 발동 — 본 deal Hurdle ${result.fees.xrfCarryUSD > 0 ? '통과 (Carry 발동)' : '미달 (Carry $0)'} 상태.`
+  // ─ §4 Risk / Pool 구성 · Hurdle
+  const risk = `차주 유형 ${debtorLabel}. Pool 구성: NPL totalEquity (채권계약금+잔대금) + Vehicle Fees (Mgmt·Setup·KOF·Servicing) — NPL VC 별도 자본금 분리 없음. XRF Carry 는 LP 우선 수익률 (Hurdle 8%/yr) 충당 후 잉여분에만 5-tier marginal Carry rate 발동 — 본 deal Hurdle ${result.fees.xrfCarryUSD > 0 ? '통과 (Carry 발동)' : '미달 (Carry $0)'} 상태.`
 
   // ─ §5 Verdict — 투자 의견 + action
   const recommendation = `투자 의견 ${tj.verdict} — ${
     tj.verdict === 'BUY'
       ? `${tj.label} tier 적용 시 RWA 즉시 출시 권고. RLUSD 분배 안정성 확보 가능 · 기관·개인 LP 모두 적합.`
       : tj.verdict === 'HOLD'
-      ? `${tj.label} tier 의 양보 폭 검토 후 출시 가능. 매력도 한계 수준 → 기관 LP base 우선 검토 권고.`
+      ? `${tj.label} tier 의 최대 양보 적용 후 출시 가능. 매력도 한계 수준 → 기관 LP base 우선 검토 권고.`
       : `현 상태 RWA 출시 부적합. Deal 재구조화 필요 (담보 추가 · 매입가 재협상 · 운용기간 단축 등).`
+  }`
+
+  return [lead, context, distribution, risk, recommendation].join('\n\n')
+}
+
+/**
+ * McKinsey-style 5-paragraph AI Executive Summary in English (v9 · 2026-05-06).
+ * Mirrors buildXrfSummary() structure — for bilingual toggle display.
+ */
+export function buildXrfSummaryEn(args: XrfSummaryArgs): string {
+  const { result, metrics, allocation, nplRoiPct, assetTitle, region, debtorType } = args
+  const tj = tierJudgment[result.tier]
+  const debtorLabel =
+    debtorType === 'CORPORATE' ? 'Corporate (pledge LTV 90%)'
+    : debtorType === 'INDIVIDUAL' ? 'Individual (pledge LTV 75%)'
+    : 'Unspecified'
+
+  const lpItem = allocation.items.find(i => i.category === 'LP')
+  const xrfItems = allocation.items.filter(i => i.category === 'XRF')
+  const platformItem = allocation.items.find(i => i.category === 'PLATFORM')
+  const servicerItem = allocation.items.find(i => i.category === 'SERVICER')
+  const xrfTotalPct = xrfItems.reduce((s, i) => s + i.pctOfNplProfit, 0)
+  const lpPct = lpItem?.pctOfNplProfit ?? 0
+  const platformPct = platformItem?.pctOfNplProfit ?? 0
+  const servicerPct = servicerItem?.pctOfNplProfit ?? 0
+
+  const hurdleSpreadPct = (metrics.hurdleSpread * 100).toFixed(2)
+  const hurdleSpreadSign = metrics.hurdleSpread > 0 ? '+' : ''
+
+  const fixedFeesUSD = result.fees.xrfMgmtUSD + result.fees.xrfSetupUSD + result.fees.platformTotalUSD + result.fees.servicingUSD
+  const displayPoolUSD = result.nplTotalEquityUSD + fixedFeesUSD
+
+  const carryNote = result.fees.xrfCarryUSD > 0
+    ? `Carry triggered at ${fmtUSD(result.fees.xrfCarryUSD)} (5-tier marginal rate applied to excess above Hurdle ${fmtUSD(result.hurdleUSD)})`
+    : `No Carry triggered — LP profit below Hurdle ${fmtUSD(result.hurdleUSD)}; XRF receives Mgmt + Setup only`
+
+  // §1 Lead
+  const lead = `[${tj.verdict} · ${tj.label}] ${assetTitle ?? 'This asset'}${region ? ` (${region})` : ''} — Post-XRF Vehicle LP Final ROI: ${fmtPct(result.lpRoi)} (annualized IRR ${fmtPct(result.lpIrrYr)}) · Hurdle Spread ${hurdleSpreadSign}${hurdleSpreadPct}%p · AUTO-selected ${tj.label} tier under v9 criteria. (${tj.reasonEn})`
+
+  // §2 Context
+  const context = `Standalone NPL ROI of ${nplRoiPct.toFixed(2)}% converts to LP-level ROI of ${fmtPct(result.lpRoi)} after passing through the 3-entity XRF Vehicle structure (XRF Foundation + Korea Operation Firm + NPL Vehicle Company). Net DPI: ${metrics.dpi.toFixed(3)}x · Gross MoM (Asset): ${metrics.grossMomAsset.toFixed(3)}x · XIRR: ${fmtPct(metrics.xirr)}/yr — asset-level multiple translates to LP recovery multiple after vehicle fee deductions.`
+
+  // §3 Distribution
+  const distribution = `LP Subscription Structure (v9 XRFT Model) — Pool ${fmtUSD(displayPoolUSD)} (NPL equity ${fmtUSD(result.nplTotalEquityUSD)} + Vehicle Fees ${fmtUSD(fixedFeesUSD)}) · Total LP net profit: ${fmtUSD(result.lpNetProfitUSD)}. NPL net profit distribution: LP ${fmtPct(lpPct)} · XRF Foundation ${fmtPct(xrfTotalPct)} · KOF ${fmtPct(platformPct)} · NPL VC Servicing ${fmtPct(servicerPct)} (FLAT × purchase price). XRF Carry: ${carryNote}.`
+
+  // §4 Risk
+  const risk = `Debtor type: ${debtorLabel}. Pool composition: NPL totalEquity (contract deposit + remaining claim) + Vehicle Fees (Mgmt·Setup·KOF·Servicing) — no separate NPL VC capital carve-out. XRF Carry activates via 5-tier marginal rate only on surplus above LP priority return (Hurdle 8%/yr) — this deal: Hurdle ${result.fees.xrfCarryUSD > 0 ? 'cleared (Carry active)' : 'not met (Carry $0)'}.`
+
+  // §5 Verdict
+  const recommendation = `Investment Opinion: ${tj.verdict} — ${
+    tj.verdict === 'BUY'
+      ? `${tj.label} tier warrants immediate RWA issuance. RLUSD distribution stability achievable · suitable for both institutional and individual LPs.`
+      : tj.verdict === 'HOLD'
+      ? `${tj.label} tier maximum concessions applied — borderline attractiveness. Prioritize institutional LP base before launch.`
+      : `Current structure not viable for RWA issuance. Deal restructuring required (additional collateral · purchase price renegotiation · shorter holding period).`
   }`
 
   return [lead, context, distribution, risk, recommendation].join('\n\n')
@@ -178,10 +241,10 @@ export function buildXrfSummaryPrompt(args: XrfSummaryArgs): string {
     `3. Vehicle Fee 분배 요약 1문장 (XRF·Korea Operation Firm (KOF)·NPL Vehicle Company (NPL VC)·LP 비중)`,
     `4. tier 권고 + 차주 유형 컨텍스트 1문장`,
     ``,
-    `# 판정 규칙 (LP 관점)`,
-    `  - BUY   : LP ROI ≥ 20% (BASE tier) · DPI ≥ 1.20x · 차주 유형 무관`,
-    `  - BUY   : LP ROI ≥ 10% (CONS tier) · 양보 폭 합리적 (XRF Carry 15→10%)`,
-    `  - HOLD  : LP ROI 5~10% (SAVE tier) · 모든 주체 양보 → 기관 LP 협의 필요`,
+    `# 판정 규칙 (LP 관점) — v9 기준`,
+    `  - BUY   : LP ROI ≥ 25% (BASE tier) · DPI ≥ 1.25x · 차주 유형 무관`,
+    `  - BUY   : LP ROI ≥ 15% (CONS tier) · 양보 폭 합리적 (XRF Carry 15→10%)`,
+    `  - HOLD  : LP ROI 5~15% (SAVE tier) · 모든 주체 양보 → 기관 LP 협의 필요`,
     `  - AVOID : LP ROI < 5% (REJECT) · deal 재구조화 필수`,
     ``,
     `# 추가 고려사항`,

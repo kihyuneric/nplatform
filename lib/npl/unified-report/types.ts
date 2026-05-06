@@ -464,6 +464,8 @@ export interface RiskFactorDetail {
   score: number                   // 0~100 (높을수록 안전)
   explanation: string             // AI 생성 근거
   mitigation: string              // 완화 방안
+  /** 계산식 문자열 (buildRiskFactorFormula 재계산 없이 단일 소스 보장) */
+  formula?: string
 }
 
 export interface AiRiskGrade {
@@ -885,6 +887,8 @@ export interface UnifiedAnalysisReport {
   profitability?: NplProfitabilityBlock
   /** (legacy) 등기부 분석 (권리·배당·집행비용) — 수익성 보고서의 예상 배당표로 대체 */
   registryAnalysis?: RegistryAnalysisBlock
-  /** AI 총평 */
+  /** AI 총평 (한국어) */
   executiveSummary: string
+  /** AI Executive Summary (English) */
+  executiveSummaryEn?: string
 }

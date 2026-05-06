@@ -402,14 +402,27 @@ export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string
     `감정가 ${(GANGNAM_APPRAISAL / 억).toFixed(0)}억 (LTV ${(ltv.ltvPercent).toFixed(2)}%). ` +
     `종합 분석 결과 ${riskGrade}등급, 예측 회수율 ${recovery.predictedRecoveryRate.toFixed(1)}% (신뢰도 ${Math.round(recovery.confidence * 100)}%). ` +
     `매입가 ${Math.round(bankSalePrice / 억 * 10) / 10}억 (= 대출원금 80% · 할인 20%) 기준 ` +
-    `보수적/권고/공격적 시나리오 ROI ${(profitability.strategies.conservative.roi * 100).toFixed(1)}% / ${(profitability.strategies.recommended.roi * 100).toFixed(1)}% / ${(profitability.strategies.aggressive.roi * 100).toFixed(1)}% · ` +
-    `투입자금 ROI ${(investmentRoi * 100).toFixed(2)}% (12개월 운용). ` +
+    `보수적/권고/공격적 시나리오 ROI ${(profitability.strategies.conservative.roi * 100).toFixed(1)}% / ${(profitability.strategies.recommended.roi * 100).toFixed(1)}% / ${(profitability.strategies.aggressive.roi * 100).toFixed(1)}%. ` +
     `강남구 상가 보수 낙찰가율 55% 적용 시 예상낙찰가 ${(GANGNAM_APPRAISAL * 0.55 / 억).toFixed(2)}억 → ` +
     `경매비용 차감 → 선순위 채권 없음 → NPL 측 배당 → 1·2질권자 분배. ` +
     `2순위 권리자 부재로 권리 깨끗 · 임차인 없음 · 강남 핵심 상권 1층 상가 시너지 + ` +
     `인근 1km 실거래 m²당 ${Math.round(GANGNAM_COMPARABLES_AVG_PER_M2 / 10000)}만원 단가 견고. ` +
     `법인 차주 pledge LTV 90% 활용 → LP 자기자본 효율 우수. ` +
     `AI 투자 의견 종합 ${verdictScore}점 → ${verdict}.`
+
+  const executiveSummaryEn =
+    `[Virtual Case · Gangnam-gu Sinsa-dong Commercial NPL] ` +
+    `Corporate borrower · Lender ◆◆◆◆◆ Capital · Loan principal KRW 35B · Acquisition price KRW 28B (= 80% of principal · 20% discount) · ` +
+    `Appraisal KRW ${(GANGNAM_APPRAISAL / 억).toFixed(0)}B (LTV ${(ltv.ltvPercent).toFixed(2)}%). ` +
+    `Analysis result: Grade ${riskGrade}, predicted recovery rate ${recovery.predictedRecoveryRate.toFixed(1)}% (confidence ${Math.round(recovery.confidence * 100)}%). ` +
+    `Acquisition price ${Math.round(bankSalePrice / 억 * 10) / 10}B KRW (80% of principal · 20% discount): ` +
+    `conservative/recommended/aggressive scenario ROI ${(profitability.strategies.conservative.roi * 100).toFixed(1)}% / ${(profitability.strategies.recommended.roi * 100).toFixed(1)}% / ${(profitability.strategies.aggressive.roi * 100).toFixed(1)}%. ` +
+    `Gangnam-gu commercial conservative bid ratio 55%: est. hammer price ${(GANGNAM_APPRAISAL * 0.55 / 억).toFixed(2)}B → ` +
+    `court costs deducted → no senior claim → NPL allocation → Pledge-1/2 distribution. ` +
+    `Clean title (no junior claimant) · vacant possession · Gangnam prime commercial 1F synergy + ` +
+    `nearby 1km transactions avg KRW ${Math.round(GANGNAM_COMPARABLES_AVG_PER_M2 / 10000)}M/m² — solid. ` +
+    `Corporate pledge LTV 90% → superior LP equity efficiency. ` +
+    `AI Investment Verdict: ${verdictScore} pts → ${verdict}.`
 
   const ltvNumerator = GANGNAM_SENIOR_CHAEMAX + GANGNAM_PURCHASE
 
@@ -447,6 +460,7 @@ export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string
         score: f.score,
         explanation: f.explanation,
         mitigation: f.mitigation,
+        formula: f.formula,
       })),
       specialConditionAdjustments: [],
       promptMeta: {
@@ -570,5 +584,6 @@ export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string
     registryAnalysis,
     profitability,
     executiveSummary,
+    executiveSummaryEn,
   }
 }
