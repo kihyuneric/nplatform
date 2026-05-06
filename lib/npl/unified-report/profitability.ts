@@ -885,8 +885,13 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   //      · 보수적 매입가 × 0.95  (−5%) — 더 싸게 매입 (할인 5%p 더)
   //
   const hasBankSalePrice = typeof input.bankSalePrice === 'number' && input.bankSalePrice > 0
+  // 사용자 정책 v3.10 (2026-05-06): 앵커는 매입 base (acquisitionBaseAmount) 기준.
+  //   computeScenario 가 acqBase × purchaseRate 로 계산하므로 anchor 도 같은 base 사용 필수.
+  //   잔액 매각(Jongno): loanPrincipal=16.48억, acqBase=17.29억, bankSalePrice=17.29억
+  //     → anchor=1.0 (loanPrincipal 기준이면 1.049 → 권고 매입가 18.14억으로 잘못 계산됨)
+  const strategyAnchorBase = input.acquisitionBaseAmount ?? input.loanPrincipal
   const bankSaleAnchorRate = hasBankSalePrice
-    ? (input.bankSalePrice as number) / input.loanPrincipal
+    ? (input.bankSalePrice as number) / strategyAnchorBase
     : null
 
   const defaultConservativeRate = hasBankSalePrice
