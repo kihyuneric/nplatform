@@ -13,6 +13,7 @@
  */
 import { useMemo, useState } from 'react'
 import {
+  XRF_TIERS,
   computeXrfValuationAllTiers,
   type LpCapitalMode,
   type XrfTier,
@@ -333,12 +334,105 @@ export default function XrfValuationSection({
 
       {/* ───── EXHIBIT 2 — Pool 구조 (LP 100% 청약) ───── */}
       <Section title="EXHIBIT 2 · POOL 구조 (Pool Structure)" caption={`LP capital 모델: ${lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? 'NPL equity + Fees prefund (이중계상 위험)' : 'NPL totalEquity 기준 (★ 기본값 · 이중계상 방지)'} · LP 100% 청약`}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+
+        {/* A: NPL 입력 기준 */}
+        <div style={{ fontSize: 11, fontWeight: 700, color: c.textSub, letterSpacing: 0.5, marginBottom: 6, textTransform: 'uppercase' as const }}>NPL 입력 기준 (KRW → USD)</div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginBottom: 16 }}>
+          <thead>
+            <tr style={{ background: c.bgSoft }}>
+              <th style={{ padding: '7px 12px', textAlign: 'left', fontWeight: 700, color: c.textSub, fontSize: 11, borderBottom: `2px solid ${c.border}` }}>NPL Input</th>
+              <th style={{ padding: '7px 12px', textAlign: 'right', fontWeight: 700, color: c.textSub, fontSize: 11, borderBottom: `2px solid ${c.border}` }}>원화 (KRW)</th>
+              <th style={{ padding: '7px 12px', textAlign: 'right', fontWeight: 700, color: c.textSub, fontSize: 11, borderBottom: `2px solid ${c.border}` }}>USD 환산</th>
+              <th style={{ padding: '7px 12px', textAlign: 'left', fontWeight: 700, color: c.textSub, fontSize: 11, borderBottom: `2px solid ${c.border}` }}>비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderBottom: `1px solid ${c.border}` }}>
+              <td style={{ padding: '8px 12px', color: c.text, fontWeight: 600 }}>NPL 매입가</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right', color: c.text, fontFamily: 'monospace' }}>{fmtKRW(nplPurchasePriceKRW)}</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right', color: c.navy, fontWeight: 700, fontFamily: 'monospace' }}>{fmtUSDFull(selected.nplPurchaseUSD)}</td>
+              <td style={{ padding: '8px 12px', color: c.textSub, fontSize: 11 }}>Vehicle Fee 산정 base (AUM)</td>
+            </tr>
+            <tr>
+              <td style={{ padding: '8px 12px', color: c.text, fontWeight: 600 }}>NPL totalEquity</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right', color: c.text, fontFamily: 'monospace' }}>{fmtKRW(nplTotalEquityKRW)}</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right', color: c.cobalt, fontWeight: 700, fontFamily: 'monospace' }}>{fmtUSDFull(selected.nplTotalEquityUSD)}</td>
+              <td style={{ padding: '8px 12px', color: c.textSub, fontSize: 11 }}>NPL 자기자본 (LP funding base)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* B: Pool 구조 */}
+        <div style={{ fontSize: 11, fontWeight: 700, color: c.textSub, letterSpacing: 0.5, marginBottom: 6, textTransform: 'uppercase' as const }}>Pool 구조 (LP 청약)</div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginBottom: 16 }}>
           <tbody>
             <Row label="Pool 총액 (= LP 청약액)" value={fmtUSDFull(selected.poolUSD)} note={lpCapitalMode === 'NPL_EQUITY_PLUS_FEES' ? '= NPL equity + Fees + Hurdle est. (이중계상)' : '= NPL totalEquity (deal 비용 포함 · Vehicle fees는 profit 차감)'} bold />
             <Row label="  └ LP capital (100% 청약)" value={fmtUSDFull(selected.lpCapitalUSD)} note={`${numLPs}명 × ${fmtUSDFull(selected.lpCapitalPerLpUSD)} (1인당)`} last />
           </tbody>
         </table>
+
+        {/* C: Vehicle Fees (profit에서 차감) */}
+        <div style={{ fontSize: 11, fontWeight: 700, color: c.textSub, letterSpacing: 0.5, marginBottom: 6, textTransform: 'uppercase' as const }}>Vehicle Fees (profit에서 차감)</div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: c.bgSoft }}>
+              <th style={{ padding: '7px 12px', textAlign: 'left', fontWeight: 700, color: c.textSub, fontSize: 11, borderBottom: `2px solid ${c.border}` }}>항목</th>
+              <th style={{ padding: '7px 12px', textAlign: 'right', fontWeight: 700, color: c.textSub, fontSize: 11, borderBottom: `2px solid ${c.border}` }}>USD</th>
+              <th style={{ padding: '7px 12px', textAlign: 'left', fontWeight: 700, color: c.textSub, fontSize: 11, borderBottom: `2px solid ${c.border}` }}>비율 · 비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* XRF Foundation */}
+            <tr style={{ background: c.bgSoft }}>
+              <td colSpan={3} style={{ padding: '7px 12px', fontWeight: 700, color: c.navy, fontSize: 12, borderTop: `2px solid ${c.border}` }}>
+                XRF Foundation <span style={{ fontWeight: 400, color: c.textSub }}>(SG SPV · RWA Issuer)</span>
+              </td>
+            </tr>
+            <tr style={{ borderBottom: `1px solid ${c.border}` }}>
+              <td style={{ padding: '7px 12px 7px 24px', color: c.text }}>관리보수 Mgmt (%/yr · 365일 cap)</td>
+              <td style={{ padding: '7px 12px', textAlign: 'right', fontFamily: 'monospace', color: c.text }}>{fmtUSDFull(selected.fees.xrfMgmtUSD)}</td>
+              <td style={{ padding: '7px 12px', color: c.textSub, fontSize: 11 }}>{fmtPct(XRF_TIERS[selected.tier === 'REJECT' ? 'BASE' : selected.tier].xrfMgmtPctYr)}/yr · 운영비</td>
+            </tr>
+            <tr style={{ borderBottom: `1px solid ${c.border}` }}>
+              <td style={{ padding: '7px 12px 7px 24px', color: c.text }}>SPV Setup (1회)</td>
+              <td style={{ padding: '7px 12px', textAlign: 'right', fontFamily: 'monospace', color: c.text }}>{fmtUSDFull(selected.fees.xrfSetupUSD)}</td>
+              <td style={{ padding: '7px 12px', color: c.textSub, fontSize: 11 }}>1.0% × NPL 매입가 · 모든 tier 동일</td>
+            </tr>
+            {/* KOF */}
+            <tr style={{ background: c.bgSoft }}>
+              <td colSpan={3} style={{ padding: '7px 12px', fontWeight: 700, color: c.navy, fontSize: 12, borderTop: `2px solid ${c.border}` }}>
+                Korea Operation Firm (KOF) <span style={{ fontWeight: 400, color: c.textSub }}>— Korean Sourcing/Valuation 서비스 · BASE 2.50% · CONS 2.00% · SAVE 1.50%</span>
+              </td>
+            </tr>
+            <tr style={{ borderBottom: `1px solid ${c.border}` }}>
+              <td style={{ padding: '7px 12px 7px 24px', color: c.text }}>AI Valuation &amp; PM (가격평가 + 프로젝트 관리)</td>
+              <td style={{ padding: '7px 12px', textAlign: 'right', fontFamily: 'monospace', color: c.text }}>{fmtUSDFull(selected.fees.platformAiUSD)}</td>
+              <td style={{ padding: '7px 12px', color: c.textSub, fontSize: 11 }}>{fmtPct(XRF_TIERS[selected.tier === 'REJECT' ? 'BASE' : selected.tier].platformAiPctYr)}</td>
+            </tr>
+            <tr style={{ borderBottom: `1px solid ${c.border}` }}>
+              <td style={{ padding: '7px 12px 7px 24px', color: c.text }}>Pipeline Sourcing (딜 발굴·소싱)</td>
+              <td style={{ padding: '7px 12px', textAlign: 'right', fontFamily: 'monospace', color: c.text }}>{fmtUSDFull(selected.fees.platformSourcingUSD)}</td>
+              <td style={{ padding: '7px 12px', color: c.textSub, fontSize: 11 }}>{fmtPct(XRF_TIERS[selected.tier === 'REJECT' ? 'BASE' : selected.tier].platformSourcingPctYr)}</td>
+            </tr>
+            <tr style={{ borderBottom: `1px solid ${c.border}` }}>
+              <td style={{ padding: '7px 12px 7px 24px', color: c.text }}>KR Margin (TP defense ★ fixed)</td>
+              <td style={{ padding: '7px 12px', textAlign: 'right', fontFamily: 'monospace', color: c.text }}>{fmtUSDFull(selected.fees.platformMarginUSD)}</td>
+              <td style={{ padding: '7px 12px', color: c.textSub, fontSize: 11 }}>{fmtPct(XRF_TIERS[selected.tier === 'REJECT' ? 'BASE' : selected.tier].platformMarginPctYr)} (BASE 고정)</td>
+            </tr>
+            {/* NPL VC */}
+            <tr style={{ background: c.bgSoft }}>
+              <td colSpan={3} style={{ padding: '7px 12px', fontWeight: 700, color: c.navy, fontSize: 12, borderTop: `2px solid ${c.border}` }}>
+                NPL Vehicle Company (NPL VC) <span style={{ fontWeight: 400, color: c.textSub }}>— Korean NPL 라이선스 보유 · 채권 보관·회수 법인</span>
+              </td>
+            </tr>
+            <tr>
+              <td style={{ padding: '7px 12px 7px 24px', color: c.text }}>Servicing Fee (시장 표준 라이선스)</td>
+              <td style={{ padding: '7px 12px', textAlign: 'right', fontFamily: 'monospace', color: c.text }}>{fmtUSDFull(selected.fees.servicingUSD)}</td>
+              <td style={{ padding: '7px 12px', color: c.textSub, fontSize: 11 }}>{fmtPct(XRF_TIERS[selected.tier === 'REJECT' ? 'BASE' : selected.tier].servicingPctYr)} × 매입가 (BASE/CONS 동일)</td>
+            </tr>
+          </tbody>
+        </table>
+
         <div style={{ fontSize: 10, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
           ⓘ <strong>NPL Vehicle Company (NPL VC)</strong>: 한국 NPL 시장에서 부실채권을 보관·회수하는 라이선스 보유 법인. NPL totalEquity (채권계약금 + 채권잔대금) 에 이미 포함되어 별도 Capital share 없음. NPL VC 수익은 Servicing Fee 만 (BASE/CONS 2.0%, SAVE 1.5%).
         </div>
