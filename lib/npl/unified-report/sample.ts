@@ -469,7 +469,7 @@ export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): Un
         `${input.region} ${input.propertyCategory} · ` +
         `AI 투자 의견 ${verdictScore}점 (${verdict}) · ` +
         `NPL 매각가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 · ` +
-        `ROI ${(recommendedRoi * 100).toFixed(2)}% · 예측회수율 ${recovery.predictedRecoveryRate}%`,
+        `ROI ${(investmentRoi * 100).toFixed(2)}% · 예측회수율 ${recovery.predictedRecoveryRate}%`,
     },
     recovery,
     risk: {

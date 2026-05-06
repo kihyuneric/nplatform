@@ -240,21 +240,24 @@ export default function UnifiedReportPage() {
   // SSR 시 document 미존재 — Portal 은 mount 이후에만 렌더
   useEffect(() => { setMounted(true) }, [])
 
-  // ── shifted sample helper (사용자 정책 v3.1 2026-05-06):
-  //    1차 빌드 → predicted firstSaleDate 산출 → 그 값으로 재빌드 →
-  //    initial == live 보장 (AI 총평 / 3단계 panel ROI 동일)
-  //    회차당 유찰 할인율도 1차 빌드의 valuation.auctionFailureDiscountPct 사용 (지역별 통계)
+  // ── shifted sample helper (사용자 정책 v3.6 — 2026-05-06: 이중 shift 버그 해결)
+  //    initial 빌드 시 firstSaleDate = 예상 매각기일 (회차 shift 적용된 값)
+  //    live recompute 가 같은 effectivePredictedSaleDate 를 다시 적용해도 (round 동일)
+  //    addDays(edit.firstSaleDate, 0) 와 동치 — 사용자 인지: edit.firstSaleDate 는
+  //    이미 N회차 시프트된 날짜로 도달, predictedSaleDateAuto 가 이 위에 +0 (round=1) 만 추가.
+  //    구현: buildShiftedSample 가 expectedBidRatio 를 100% 이상 (round=1)으로 강제 계산하지 X.
+  //    → initial 의 firstSaleDate 가 N회차 시프트된 값이므로 live 도 같은 값을 자연 유지.
+  //
+  //    ⚠ 단순화: shift 함수가 round=N 일 때 firstSaleDateOverride 적용. live 가
+  //       한 번 더 += (N-1)×28 을 추가하면 이중 shift. 따라서 shift 적용 X 가 정답.
+  //       initial 은 1회차 (auto), live 가 (N회차) shift 단독 처리 → 일관.
+  //
+  //    AI 총평 ROI 와 EXHIBIT 7 ROI 정합은 별도 문제 — 추후 ProfitabilitySections
+  //    의 live 결과를 callback prop 으로 부모에 전달해 tldr 재산출 (TODO).
   const buildShiftedSample = useCallback(
     (builder: (opts?: { firstSaleDateOverride?: string }) => UnifiedAnalysisReport): UnifiedAnalysisReport => {
-      const base = builder()
-      const firstSale = base.profitability?.schedule.milestones.find(m => m.key === 'firstSaleDate')?.date
-      if (!firstSale || !base.profitability) return base
-      const shifted = computeEffectiveFirstSaleDate(
-        firstSale,
-        base.profitability.valuation.expectedBidRatio,
-        base.profitability.valuation.auctionFailureDiscountPct,
-      )
-      return shifted === firstSale ? base : builder({ firstSaleDateOverride: shifted })
+      // shift 미적용 — initial 1회차 / live N회차 (이중 shift 방지)
+      return builder()
     },
     [],
   )
