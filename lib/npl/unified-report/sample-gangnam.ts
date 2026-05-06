@@ -282,11 +282,11 @@ export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string
       { price: GANGNAM_APPRAISAL, reportedAt: GANGNAM_AS_OF, source: 'APPRAISAL', label: '감정가 (가상)' },
       { price: GANGNAM_AI_MARKET,  reportedAt: GANGNAM_AS_OF, source: 'AI_LATEST', label: 'AI 시세' },
     ],
-    expectedBidRatio: 0.90,                // 강남 핵심 상권 프리미엄 90%
+    expectedBidRatio: 0.86,                // 사용자 정책 v3.2 (2026-05-06): 86% (was 90%)
     expectedBidRatioPeriod: '강남구 상가 1년 평균',
-    // 선순위 채권 우선변제 — 1순위 우리은행 근저당 채권최고액 26억
-    seniorClaimAmount: GANGNAM_SENIOR_CHAEMAX,
-    seniorCreditorLabel: '우리은행 1순위 근저당',
+    // 사용자 정책 v3.2: 선순위 채권 제거 (우리은행 1순위 근저당 — 본 가상 사례에서 미존재)
+    seniorClaimAmount: 0,
+    seniorCreditorLabel: undefined,
     auctionStartDate: '2026-09-01',
     courtName: '서울중앙지방법원 본원',
     // 가상 일정 lock — 12개월 운용

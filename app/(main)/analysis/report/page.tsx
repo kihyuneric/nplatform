@@ -880,9 +880,11 @@ export default function UnifiedReportPage() {
             score={recovery.factors.auctionRatio.score}
             primary={`조정 ${pct(recovery.factors.auctionRatio.adjustedBidRatio)}`}
             lines={[
-              `지역 중앙값 ${pct(recovery.factors.auctionRatio.regionMedianBidRatio)} (${recovery.factors.auctionRatio.regionScope})`,
+              // 사용자 정책 v3.2 (2026-05-06): 출처/매핑 정보 명시
+              //   지역 중앙값 = auctionRatioStats[scope].rows[6M].bidRatio (또는 regionMedianOverride)
+              `지역 중앙값 ${pct(recovery.factors.auctionRatio.regionMedianBidRatio)} (${recovery.factors.auctionRatio.regionScope === 'SIDO' ? '시·도 / 서울 토지 3M' : recovery.factors.auctionRatio.regionScope === 'SIGUNGU' ? '시·군·구 6M' : recovery.factors.auctionRatio.regionScope === 'EUPMYEONDONG' ? '읍·면·동 6M' : recovery.factors.auctionRatio.regionScope}) — 근거 ② 경매 낙찰가율`,
               recovery.factors.auctionRatio.nearbyMedianBidRatio != null
-                ? `인근 중앙값 ${pct(recovery.factors.auctionRatio.nearbyMedianBidRatio)}`
+                ? `인근 중앙값 ${pct(recovery.factors.auctionRatio.nearbyMedianBidRatio)} — 근거 ④ 경매 낙찰사례 평균`
                 : "인근 경매 표본 없음",
               recovery.factors.auctionRatio.specialConditionPenalty < 0
                 ? `특수조건 ${recovery.factors.auctionRatio.specialConditionPenalty.toFixed(1)}%p 감점`
