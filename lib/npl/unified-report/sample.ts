@@ -368,7 +368,10 @@ export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): Un
     ...(opts?.firstSaleDateOverride ? { firstSaleDateOverride: opts.firstSaleDateOverride } : {}),
     // 할인율 0 = 대출원금 기준 매입 (엑셀 B30 = B15, C30 '대출원금의 X% 할인')
     discountRate: 0,
-    // bankSalePrice 없음 → 3단계 전략 = 시나리오 A (원금 100/95/90)
+    // 사용자 정책 v3.8 (2026-05-06): 3단계 전략 매입가(할인율 반영) ±5% 대칭
+    //   잠실: discount 0% → 매입가 = 대출원금 19.6억 = bankSalePrice
+    //   보수적 18.62억 (×0.95) / 권고 19.6억 (×1.0) / 공격적 20.58억 (×1.05)
+    bankSalePrice: 1_960_000_000,
     pledgeLoanRatio: 0.75,
     pledgeInterestRate: 0.065,
     executionCost: 10_000_000,

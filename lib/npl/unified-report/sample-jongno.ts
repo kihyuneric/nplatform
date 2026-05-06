@@ -419,6 +419,10 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
     // 선순위 채권 우선변제 — 1순위 농협 근저당 채권최고액 23.64억
     seniorClaimAmount: seniorClaim,                // 2,364,000,000
     seniorCreditorLabel: '농협은행 1순위 근저당',
+    // 사용자 정책 v3.8 (2026-05-06): 3단계 전략은 매입가(할인율 반영) ±5% 대칭
+    //   종로: discount 0% → 매입가 = 채권잔액 17.29억 (= totalBond) = bankSalePrice
+    //   보수적 16.43억 (×0.95) / 권고 17.29억 (×1.0) / 공격적 18.16억 (×1.05)
+    bankSalePrice: acquisitionBase,
     auctionStartDate: '2026-08-15',  // 매각 후 미수회수 시 경매 시작 가정
     courtName: '서울중앙지방법원 본원',
     // 일정 lock (2026-05-03 / v2 2026-05-06 — 핵심 공식 기반):

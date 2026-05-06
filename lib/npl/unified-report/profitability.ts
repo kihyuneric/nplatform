@@ -902,9 +902,10 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   const strategyConservativeRate = input.strategyConservativeRate ?? defaultConservativeRate
   const strategyRecommendedRate = input.strategyRecommendedRate ?? defaultRecommendedRate
   const strategyAggressiveRate = input.strategyAggressiveRate ?? defaultAggressiveRate
-  const strategyConservativeBidDelta = input.strategyConservativeBidDelta ?? derivedBidRatioStd
-  const strategyAggressiveBidDelta =
-    input.strategyAggressiveBidDelta ?? derivedBidRatioStd * 0.7
+  // 사용자 정책 v3.9 (2026-05-06): 낙찰가율은 시나리오별 변경 없음 — 예상 낙찰가율 그대로 사용
+  //   매입률만 ±5% (보수/표준/공격), 낙찰가율은 base 동일
+  const strategyConservativeBidDelta = input.strategyConservativeBidDelta ?? 0
+  const strategyAggressiveBidDelta = input.strategyAggressiveBidDelta ?? 0
 
   const strategies = buildPurchaseStrategies({
     loanPrincipal: input.loanPrincipal,
