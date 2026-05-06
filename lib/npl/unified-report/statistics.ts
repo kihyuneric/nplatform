@@ -255,3 +255,118 @@ export function medianNearbyPerBuildingPrice(stat?: NearbyTransactionStat): numb
     ? (values[mid - 1] + values[mid]) / 2
     : values[mid]
 }
+
+// ─── 사용자 정책 (2026-05-06) 추가 헬퍼 ────────────────────────
+
+/**
+ * 지역 중앙값 — SIGUNGU(시군구) 12M 우선, 없으면 SIDO(시도) 12M fallback.
+ *
+ * 사용자 정책:
+ *   · EUPMYEONDONG 은 제외 (표본 부족 위험)
+ *   · 1년 평균(12M) 고정 — 단기(3M/6M) 변동성 제거
+ *   · SIGUNGU saleCount=0 이면 데이터 없음으로 간주 → SIDO fallback
+ *
+ * 예:
+ *   종로구 대지 — SIGUNGU 표본 없음(0건) → 서울 SIDO 66.9% 사용
+ *   송파구 사무실 — SIGUNGU 12M 71.5% 사용
+ *   강남구 상가   — SIGUNGU 12M 55.0% 사용
+ */
+export function pickRegionMedian12M(
+  stats: RegionAuctionRatioStat[],
+): { value: number; scope: RegionAuctionRatioStat['scope']; sampleSize: number } | null {
+  for (const scope of ['SIGUNGU', 'SIDO'] as const) {
+    const match = stats.find(s => s.scope === scope)
+    if (!match) continue
+    const row = match.rows.find(r => r.bucket === '12M')
+    if (row && row.saleCount > 0) {
+      return { value: row.bidRatio, scope, sampleSize: row.saleCount }
+    }
+  }
+  return null
+}
+
+/**
+ * 인근 경매 낙찰가율 평균 — 1년 이내 사례 한정.
+ *
+ * 사용자 정책: 인근 중앙값은 1년 이내 경매 낙찰사례 평균.
+ *   · asOfDate 기준 12개월 이내 saleDate 사례만 포함
+ *   · 0건 이면 null 반환 → blended 가중치에서 자동 제외
+ */
+export function avgNearbyBidRatio12M(
+  stat?: NearbyAuctionStat,
+  asOfDate?: string,
+): number | null {
+  if (!stat || stat.cases.length === 0) return null
+  const baseDate = asOfDate ? new Date(asOfDate) : new Date()
+  const cutoff = new Date(baseDate)
+  cutoff.setFullYear(cutoff.getFullYear() - 1)
+  const recent = stat.cases.filter(c => new Date(c.saleDate) >= cutoff)
+  if (recent.length === 0) return null
+  const avg = recent.reduce((s, c) => s + c.bidRatio, 0) / recent.length
+  return Number(avg.toFixed(2))
+}
+
+/**
+ * 거래량 변동 + 가격지수 변동 — nearbyTransactions 에서 순수 내부 산출.
+ *
+ * 사용자 정책:
+ *   · 외부 지표(MOLIT, 한국부동산원) 없이 인근 실거래 건별 가격·날짜만 사용
+ *   · 비교 기준: 최근 6M vs 이전 6M (= 6~12M 전)
+ *
+ * 거래량 변동 (%):
+ *   recent6M_count vs prior6M_count 상대 변화율
+ *   표본이 한 쪽만 있으면 ±20 신호 (추세 방향만 반영)
+ *
+ * 가격지수 변동 (%):
+ *   perLandPrice 우선, perBuildingPrice, 없으면 단순 amountKRW 사용
+ *   recent6M 평균단가 vs prior6M 평균단가 비율
+ *   한 쪽이라도 없으면 0 (비교 불가)
+ *
+ * 표본 크기가 작으면 신호가 노이즈임. 호출자가 score 공식에서 가중치로 완충.
+ */
+export function computeVolumeAndPriceSignals(
+  ctx: StatisticsContext,
+): { volumeChange: number; priceIndexChange: number } {
+  const cases = ctx.nearbyTransactions?.cases ?? []
+  if (cases.length === 0) return { volumeChange: 0, priceIndexChange: 0 }
+
+  const now = new Date(ctx.asOfDate)
+  const cut6M = new Date(now); cut6M.setMonth(cut6M.getMonth() - 6)
+  const cut12M = new Date(now); cut12M.setFullYear(cut12M.getFullYear() - 1)
+
+  const recent = cases.filter(c => new Date(c.txDate) >= cut6M)
+  const prior  = cases.filter(c => {
+    const d = new Date(c.txDate)
+    return d >= cut12M && d < cut6M
+  })
+
+  // 거래량 변동 (%)
+  const priorCount = prior.length
+  let volumeChange: number
+  if (priorCount > 0) {
+    volumeChange = (recent.length - priorCount) / priorCount * 100
+  } else if (recent.length > 0) {
+    volumeChange = 20  // prior 없고 recent 있음 → 증가 신호 (보수 추정)
+  } else {
+    volumeChange = 0
+  }
+
+  // 단가 평균 (perLandPrice → perBuildingPrice 순)
+  const avgUnitPrice = (txs: RealEstateTransaction[]): number | null => {
+    const vals = txs
+      .map(c => c.perLandPrice ?? c.perBuildingPrice)
+      .filter((v): v is number => typeof v === 'number' && v > 0)
+    return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null
+  }
+
+  const recentAvg = avgUnitPrice(recent)
+  const priorAvg  = avgUnitPrice(prior)
+  const priceIndexChange = (recentAvg != null && priorAvg != null && priorAvg > 0)
+    ? (recentAvg - priorAvg) / priorAvg * 100
+    : 0
+
+  return {
+    volumeChange:    Number(volumeChange.toFixed(1)),
+    priceIndexChange: Number(priceIndexChange.toFixed(1)),
+  }
+}

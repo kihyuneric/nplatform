@@ -80,13 +80,17 @@ export const JONGNO_HONGJI_STATISTICS: StatisticsContext = {
       })),
     },
     {
+      // 종로구 대지 category 전용 통계 없음 (JONGNO_HONGJI_AUCTION_STATS = 전체 카테고리 합산).
+      // saleCount=0 로 표시 → engine(pickRegionMedian12M) 이 SIDO fallback.
+      // 3-tab 패널에는 표시되지만 낙찰가율 0% · 건수 0건 으로 노출.
       location: { sido: '서울특별시', sigungu: '종로구' },
       propertyCategory: '대지',
       scope: 'SIGUNGU',
       asOfDate: '2026-04-28',
       rows: JONGNO_HONGJI_AUCTION_STATS.map(r => ({
         bucket: r.bucket, periodLabel: r.periodLabel,
-        saleCount: r.saleCount, saleRate: r.saleRate, bidRatio: r.bidRatio,
+        saleCount: 0,      // 대지 category 데이터 없음 — engine SIDO fallback
+        saleRate: r.saleRate, bidRatio: 0,
       })),
     },
     {
@@ -252,25 +256,21 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
     appraisalValue: appraisal,
     source: 'APPRAISAL',
   })
+  // 사용자 정책 v4 (2026-05-06): 하드코딩 외부 지표 제거 — nearbyTransactions 자동 산출.
+  //   거래량 변동·가격지수 변동은 computeVolumeAndPriceSignals 가 4건 실거래에서 계산.
   const region = computeRegionTrendFactor({
     regionLabel: input.region,
     ctx: JONGNO_HONGJI_STATISTICS,
-    externalVolumeChange: 5.5,
-    externalPriceIndexChange: 2.8,
+    // externalVolumeChange / externalPriceIndexChange 미제공 → 내부 자동 산출
   })
-  // 사용자 정책 v3 (2026-05-06): 종로 홍지동 EUPMYEONDONG 표본 부족 (1년 1-2건) →
-  //   서울 SIDO 토지 3개월 평균 68.2% 사용 (expectedBidRatio 와 동기화).
-  //   이유: 종로구·홍지동 최근 1년 토지 낙찰 사례 부족 → 광역 통계 fallback.
+  // 사용자 정책 v4 (2026-05-06): regionMedianOverride 제거.
+  //   auctionRatioStats SIGUNGU saleCount=0 → pickRegionMedian12M 이 SIDO 12M 66.9% 자동 선택.
   const auction = computeAuctionRatioFactor({
     regionLabel: input.region,
     category: input.propertyCategory,
     ctx: JONGNO_HONGJI_STATISTICS,
     specialConditions: input.specialConditions,
-    regionMedianOverride: {
-      value: 68.2,
-      scope: 'SIDO',
-      sampleSize: JONGNO_HONGJI_AUCTION_STATS_SIDO.find(r => r.bucket === '3M')?.saleCount ?? 2,
-    },
+    // regionMedianOverride 미제공 → SIDO 12M 66.9% 자동 선택
   })
 
   const recovery = buildRecoveryPrediction({ ltv, region, auction })

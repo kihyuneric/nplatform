@@ -205,8 +205,6 @@ export function buildGangnamSampleReport(opts?: { firstSaleDateOverride?: string
   const region = computeRegionTrendFactor({
     regionLabel: '서울특별시 강남구 신사동',
     ctx: GANGNAM_STATISTICS,
-    externalVolumeChange: 5.2,       // 가상 강남 상가 거래량
-    externalPriceIndexChange: 4.8,    // 가상 가격지수
   })
   const auction = computeAuctionRatioFactor({
     regionLabel: '서울특별시 강남구',

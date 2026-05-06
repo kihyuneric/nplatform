@@ -25,10 +25,13 @@ import { SPECIAL_CONDITION_PENALTY } from './types'
 import type { StatisticsContext } from './statistics'
 import {
   pickPreferredBidRatio,
+  pickRegionMedian12M,
   computeRegionMomentum,
   medianNearbyBidRatio,
+  avgNearbyBidRatio12M,
   medianNearbyPerBuildingPrice,
   estimateSaleDays,
+  computeVolumeAndPriceSignals,
 } from './statistics'
 
 const FACTOR_WEIGHT = {
@@ -63,15 +66,24 @@ export function computeLtvFactor(args: {
 }
 
 // ─── 팩터 2 — 지역 시장 동향 ────────────────────────────────
+//
+// 사용자 정책 (2026-05-06 v4):
+//   · 거래량 변동 / 가격지수 변동은 nearbyTransactions 에서 내부 산출 (하드코딩 금지)
+//   · computeVolumeAndPriceSignals 로 recent 6M vs prior 6M 비교
+//   · 모멘텀: 낙찰가율 6M − 12M (가장 좁은 통계 scope 우선)
+//   · externalVolumeChange / externalPriceIndexChange 는 외부 API 연동 시 override 가능
+//     (연동 전까지 미제공 권장 — 하드코딩 값은 사용하지 않음)
 export function computeRegionTrendFactor(args: {
   regionLabel: string
   ctx: StatisticsContext
-  externalVolumeChange?: number   // MOLIT 등 외부 공급 지표(선택)
+  /** 외부 거래량 변동 (MOLIT API 연동 시 — 미제공 시 nearbyTransactions 에서 자동 산출) */
+  externalVolumeChange?: number
+  /** 외부 가격지수 변동 (한국부동산원 API 연동 시 — 미제공 시 nearbyTransactions 에서 자동 산출) */
   externalPriceIndexChange?: number
 }): RegionTrendFactor {
   const { regionLabel, ctx, externalVolumeChange, externalPriceIndexChange } = args
 
-  // 가장 좁은 범위의 지역 통계(또는 시군구/시도 fallback)
+  // 가장 좁은 범위의 지역 통계(또는 시군구/시도 fallback) — 모멘텀(6M−12M) 계산에 사용
   const narrowest = [...ctx.auctionRatioStats].sort((a, b) => {
     const rank = { EUPMYEONDONG: 0, SIGUNGU: 1, SIDO: 2 } as const
     return rank[a.scope] - rank[b.scope]
@@ -81,11 +93,12 @@ export function computeRegionTrendFactor(args: {
   const txCount = ctx.nearbyTransactions?.cases.length ?? 0
   const medianPrice = medianNearbyPerBuildingPrice(ctx.nearbyTransactions) ?? undefined
 
-  // 거래량 증감 — 외부 지표 우선, 없으면 내부 추정 (최근/과거 비교 어려우므로 0 처리)
-  const volumeSignal = externalVolumeChange ?? (txCount > 15 ? 5 : txCount > 5 ? 0 : -5)
-  const priceIndexSignal = externalPriceIndexChange ?? momentum
+  // 거래량 · 가격지수 신호 — 외부 API 있으면 우선, 없으면 nearbyTransactions 내부 산출
+  const derived = computeVolumeAndPriceSignals(ctx)
+  const volumeSignal     = externalVolumeChange    ?? derived.volumeChange
+  const priceIndexSignal = externalPriceIndexChange ?? derived.priceIndexChange
 
-  // 점수 산식
+  // 점수 산식: 50 + 거래량변동 × 0.35 + 가격지수변동 × 0.45 (클램프 0~100)
   const raw = 50 + volumeSignal * 0.35 + priceIndexSignal * 0.45
   const score = Math.max(0, Math.min(100, raw))
 
@@ -134,9 +147,13 @@ export function computeAuctionRatioFactor(args: {
   ctx: StatisticsContext
   specialConditions: SpecialConditions
   /**
-   * 지역 중앙값 직접 주입 (사용자 정책 v3 2026-05-06).
-   * NPL 매물의 expectedBidRatio 와 동일한 통계 source 사용 권장 — 회수율 예측 정합.
-   * 예: 종로 홍지동 토지는 EUPMYEONDONG 표본 부족 → 서울 SIDO 3개월 68.2% 사용.
+   * 지역 중앙값 직접 override (선택 — 일반적으로 미사용).
+   * 미제공 시 pickRegionMedian12M 이 자동 선택 (SIGUNGU 12M → SIDO 12M).
+   *
+   * 사용자 정책 v4 (2026-05-06): 지역 중앙값은 시군구 1년 평균 → 광역시도 fallback.
+   *   · 종로구 대지: SIGUNGU saleCount=0 → SIDO 12M 66.9% (서울 전체)
+   *   · 송파구 사무실: SIGUNGU 12M 71.5%
+   *   · 강남구 상가: SIGUNGU 12M 55.0%
    */
   regionMedianOverride?: {
     value: number
@@ -146,16 +163,19 @@ export function computeAuctionRatioFactor(args: {
 }): AuctionRatioFactor {
   const { regionLabel, category, ctx, specialConditions } = args
 
-  const pref = args.regionMedianOverride ?? pickPreferredBidRatio(ctx.auctionRatioStats, '6M')
-  const regionMedian = pref?.value ?? 75 // fallback
+  // 지역 중앙값: override 있으면 사용, 없으면 SIGUNGU 12M → SIDO 12M 자동 선택
+  const pref = args.regionMedianOverride ?? pickRegionMedian12M(ctx.auctionRatioStats)
+            ?? pickPreferredBidRatio(ctx.auctionRatioStats, '12M')   // 최종 fallback
+  const regionMedian = pref?.value ?? 75 // 데이터 전혀 없을 때 보수 fallback
   const regionScope: AuctionRatioFactor['regionScope'] = pref?.scope ?? 'FALLBACK'
   const regionSample = pref?.sampleSize ?? 0
 
-  // 동일주소 — 사용자 정책 v3 (2026-05-06): 표본 0건일 때 명시적 제외 (혼합 가중치 영향 X)
+  // 동일주소 — 표본 0건일 때 명시적 제외 (혼합 가중치 영향 X)
   const sameAddrAvg = (ctx.sameAddressAuction && ctx.sameAddressAuction.cases.length > 0)
     ? ctx.sameAddressAuction.summary.avgBidRatio
     : undefined
-  const nearbyMedian = medianNearbyBidRatio(ctx.nearbyAuction) ?? undefined
+  // 인근 중앙값 → 사용자 정책 v4 (2026-05-06): 1년 이내 경매 낙찰사례 평균 (날짜 필터 + 평균)
+  const nearbyMedian = avgNearbyBidRatio12M(ctx.nearbyAuction, ctx.asOfDate) ?? undefined
 
   // 가중 평균 — 있는 것만 섞되 합을 1로 재정규화
   const weights: { v: number; w: number }[] = [{ v: regionMedian, w: 0.5 }]
@@ -199,11 +219,11 @@ export function computeAuctionRatioFactor(args: {
     sampleSize: regionSample
       + (ctx.nearbyAuction?.cases.length ?? 0)
       + (ctx.sameAddressAuction?.cases.length ?? 0),
-    periodMonths: 6,
+    periodMonths: 12,  // 사용자 정책 v4: 지역 중앙값 = 12M(1년 평균) 기준
     regionMedianBidRatio: Number(regionMedian.toFixed(2)),
     regionScope,
     sameAddressAvgBidRatio: sameAddrAvg,
-    nearbyMedianBidRatio: nearbyMedian,
+    nearbyMedianBidRatio: nearbyMedian,  // 사용자 정책 v4: 1년 이내 경매 낙찰사례 평균
     blendedBidRatio: Number(blended.toFixed(2)),
     expectedSaleDays,
     courtName: ctx.courtSchedule?.courtName,

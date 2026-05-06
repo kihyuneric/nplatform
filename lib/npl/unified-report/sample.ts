@@ -246,8 +246,6 @@ export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): Un
   const region = computeRegionTrendFactor({
     regionLabel: input.region,
     ctx: SAMPLE_STATISTICS,
-    externalVolumeChange: 8.2,      // MOLIT API 추정
-    externalPriceIndexChange: 3.5,  // 한국부동산원 추정
   })
   const auction = computeAuctionRatioFactor({
     regionLabel: input.region,
@@ -755,8 +753,6 @@ export function buildReportFromInput(overrides: BuildReportFromInputOptions): Un
   const region = computeRegionTrendFactor({
     regionLabel: input.region,
     ctx: SAMPLE_STATISTICS,
-    externalVolumeChange: 0,
-    externalPriceIndexChange: 0,
   })
   const auction = computeAuctionRatioFactor({
     regionLabel: input.region,
