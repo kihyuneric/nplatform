@@ -521,10 +521,11 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
   const recommendedRoi = profitability.strategies.recommended.roi
   const investmentRoi = profitability.investment.roi
 
+  // 사용자 정책 v3.4 (2026-05-06): investmentRoi (투입자금 ROI) 기준
   const verdictResult = computeInvestmentVerdict({
     predictedRecoveryRate: recovery.predictedRecoveryRate,
     riskScore,
-    recommendedRoi,
+    investmentRoi,
     bankSalePrice,
     claimBalance: totalBond,
   })

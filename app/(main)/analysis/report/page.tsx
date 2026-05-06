@@ -743,7 +743,7 @@ export default function UnifiedReportPage() {
               <VerdictCriteriaToggle
                 predictedRecovery={recovery.predictedRecoveryRate}
                 riskScore={summary.riskScore}
-                recommendedRoi={profitability?.strategies.recommended.roi ?? 0}
+                investmentRoi={profitability?.investment.roi ?? 0}
                 bankSalePrice={profitability?.acquisition.purchasePrice ?? 0}
                 totalBondAmount={input.totalBondAmount}
               />
@@ -1616,13 +1616,14 @@ function FormulaToggle({
 function VerdictCriteriaToggle({
   predictedRecovery,
   riskScore,
-  recommendedRoi,
+  investmentRoi,
   bankSalePrice,
   totalBondAmount,
 }: {
   predictedRecovery: number
   riskScore: number
-  recommendedRoi: number       // 소수 (0.481)
+  /** v3.4 (2026-05-06): 투입자금 ROI (= profitability.investment.roi) */
+  investmentRoi: number       // 소수 (0.481)
   bankSalePrice: number        // 원
   totalBondAmount: number      // 원 (채권잔액)
 }) {
@@ -1631,7 +1632,7 @@ function VerdictCriteriaToggle({
   const r = computeInvestmentVerdict({
     predictedRecoveryRate: predictedRecovery,
     riskScore,
-    recommendedRoi,
+    investmentRoi,
     bankSalePrice,
     claimBalance: totalBondAmount,
   })
@@ -1709,9 +1710,9 @@ function VerdictCriteriaToggle({
                 contribution={r.components.risk.contribution}
               />
               <Row
-                label="[F3] 권고 시나리오 ROI"
-                rule="0 @ 0%·100점 @ 25% (선형)"
-                current={`${(recommendedRoi * 100).toFixed(2)}%`}
+                label="[F3] 투입자금 ROI (비선형)"
+                rule="≤5%→0 · 5-15%→0~40 · 15-25%→40~100 · ≥25%→100"
+                current={`${(investmentRoi * 100).toFixed(2)}%`}
                 mapped={r.components.roi.mapped}
                 weight={r.components.roi.weight}
                 contribution={r.components.roi.contribution}

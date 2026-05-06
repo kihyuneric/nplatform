@@ -462,7 +462,12 @@ export const VERDICT_WEIGHTS = {
 export type VerdictScoringInputs = {
   predictedRecoveryRate: number    // % (예: 107.8)
   riskScore: number                // 0~100
-  recommendedRoi: number           // 소수 (예: 0.481)
+  /**
+   * 사용자 정책 v3.4 (2026-05-06): 실제 투입자금 ROI (= profitability.investment.roi).
+   *   "NPL 수익성 분석 · 투입자금·수익" 카드의 ROI 와 동일 기준 — 투자자 관점 실제 수익률.
+   *   ※ 권고 시나리오 ROI (strategies.recommended.roi) 가 아님.
+   */
+  investmentRoi: number            // 소수 (예: 0.481)
   bankSalePrice: number            // 원
   claimBalance: number             // 원 (채권잔액)
 }
@@ -496,7 +501,7 @@ export function verdictScoreToGrade(score: number): 'A' | 'B' | 'C' | 'D' {
 }
 
 export function computeInvestmentVerdict(input: VerdictScoringInputs): VerdictScoringResult {
-  const { predictedRecoveryRate, riskScore, recommendedRoi, bankSalePrice, claimBalance } = input
+  const { predictedRecoveryRate, riskScore, investmentRoi, bankSalePrice, claimBalance } = input
 
   // ── 1. 각 팩터 0~100 정규화 (사용자 정책 v3.3 — ROI 비선형 curve) ─────────
   // 회수율: 60% → 0, 150% → 100 (spread 90 — NPL 100% 미만도 정상)
@@ -504,7 +509,7 @@ export function computeInvestmentVerdict(input: VerdictScoringInputs): VerdictSc
   const riskMapped     = clamp(riskScore, 0, 100)
   // ROI: 비선형 piecewise (낮은 ROI 강한 페널티 — 수익성 부족 deal 자연 회피)
   //      ≤5% → 0, 5-15% → 0-40, 15-25% → 40-100, ≥25% → 100
-  const roiPct = recommendedRoi * 100
+  const roiPct = investmentRoi * 100
   const roiMapped =
     roiPct <= 5 ? 0
     : roiPct < 15 ? ((roiPct - 5) / 10) * 40
@@ -533,8 +538,9 @@ export function computeInvestmentVerdict(input: VerdictScoringInputs): VerdictSc
     `    기여 = ${round1(recoveryMapped)} × ${w.recovery} = ${round1(recoveryContrib)}\n` +
     `[2] 리스크 정규화: ${round1(riskMapped)}점 (5팩터 종합 0~100)\n` +
     `    기여 = ${round1(riskMapped)} × ${w.risk} = ${round1(riskContrib)}\n` +
-    `[3] ROI 비선형 정규화: ${roiPct.toFixed(2)}% → ${round1(roiMapped)}점\n` +
+    `[3] ROI 비선형 정규화 (투입자금 ROI ${roiPct.toFixed(2)}%): → ${round1(roiMapped)}점\n` +
     `    anchor: ≤5%→0 · 5-15%→0-40 · 15-25%→40-100 · ≥25%→100 (낮은 ROI 강한 페널티)\n` +
+    `    ※ 입력: profitability.investment.roi — "NPL 수익성 분석 · 투입자금·수익" 카드와 동일\n` +
     `    기여 = ${round1(roiMapped)} × ${w.roi} = ${round1(roiContrib)}\n` +
     `[4] 할인 정규화: clamp(50 + ${(discountRatio * 100).toFixed(1)}% / 15% × 50, 0, 100) = ${round1(discountMapped)}점 (0%→50 NEUTRAL)\n` +
     `    기여 = ${round1(discountMapped)} × ${w.discount} = ${round1(discountContrib)}\n\n` +
@@ -547,7 +553,7 @@ export function computeInvestmentVerdict(input: VerdictScoringInputs): VerdictSc
     components: {
       recovery: { raw: predictedRecoveryRate, mapped: round1(recoveryMapped), contribution: round1(recoveryContrib), weight: w.recovery },
       risk:     { raw: riskScore,             mapped: round1(riskMapped),     contribution: round1(riskContrib),     weight: w.risk },
-      roi:      { raw: recommendedRoi,         mapped: round1(roiMapped),      contribution: round1(roiContrib),      weight: w.roi },
+      roi:      { raw: investmentRoi,          mapped: round1(roiMapped),      contribution: round1(roiContrib),      weight: w.roi },
       discount: { raw: discountRatio,          mapped: round1(discountMapped), contribution: round1(discountContrib), weight: w.discount },
     },
     formula,

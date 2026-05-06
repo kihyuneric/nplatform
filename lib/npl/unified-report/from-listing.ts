@@ -400,11 +400,11 @@ export function buildListingReport(
   const recommendedRoi = profitability.strategies.recommended.roi
   const aggressiveRoi = profitability.strategies.aggressive.roi
 
-  // ── 7. AI 투자 의견 ─────────────────────────────────────────
+  // ── 7. AI 투자 의견 (사용자 정책 v3.4: investmentRoi 기준) ────────
   const verdictResult = computeInvestmentVerdict({
     predictedRecoveryRate: recovery.predictedRecoveryRate,
     riskScore,
-    recommendedRoi,
+    investmentRoi: profitability.investment.roi,
     bankSalePrice,
     claimBalance: totalBond,
   })

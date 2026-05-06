@@ -441,10 +441,12 @@ export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): Un
   const recommendedRoi = profitability.strategies.recommended.roi
   const investmentRoi  = profitability.investment.roi
 
+  // 사용자 정책 v3.4 (2026-05-06): verdict 는 권고 시나리오 ROI 가 아닌
+  //   profitability.investment.roi (투입자금 ROI · "NPL 수익성 분석 · 투입자금·수익" 카드값) 기준
   const verdictResult = computeInvestmentVerdict({
     predictedRecoveryRate: recovery.predictedRecoveryRate,
     riskScore,
-    recommendedRoi,
+    investmentRoi,
     bankSalePrice,
     claimBalance: totalBond,
   })
@@ -792,10 +794,12 @@ export function buildReportFromInput(overrides: BuildReportFromInputOptions): Un
   const riskGrade = scoreToGrade(riskScore)
 
   // ── 투자 의견 ────────────────────────────────────────────────
+  // v3.4 (2026-05-06): investmentRoi 기준 (실제 투입자금 ROI). buildReportFromInput
+  //   은 fallback builder 라 strategies/investment 가 없으니 default 0.15 적용.
   const verdictResult = computeInvestmentVerdict({
     predictedRecoveryRate: recovery.predictedRecoveryRate,
     riskScore,
-    recommendedRoi: 0.15,   // 기본 기대 수익률
+    investmentRoi: 0.15,   // 기본 기대 수익률
     bankSalePrice: totalBond * (1 - (overrides.desiredSaleDiscount ?? 0)),
     claimBalance: totalBond,
   })
