@@ -3161,9 +3161,12 @@ function ProfitabilitySections({
                     return Math.round((b.getTime() - a.getTime()) / 86_400_000)
                   })()
                   const failedRounds = Math.max(0, predictedRound - 1)
+                  // v3 (사용자 정책 2026-05-06): 1회차 매각결정기일 통계 = 315일 →
+                  //   1회차 매각기일 = 315 − 7(매각결정) − 28(낙찰) = 280일
+                  //   N회차 매각기일 = 280 + (N−1) × 28
                   return predictedRound === 1
-                    ? `공식: 경매개시 + 315일(법원 1회차 평균) → 1회차 즉시 낙찰 예상 · 누적 +${cumDays}일 (낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% ≥ 100%)`
-                    : `공식: 경매개시 + 315일 + 유찰 ${failedRounds}회 × 28일 = +${cumDays}일 · 낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% → ${predictedRound}회차 예상 (회차당 −20%p · 자동 계산 · 수동 조정 가능)`
+                    ? `공식: 경매개시 + 280일 (1회차 매각결정 315 − 35) → 1회차 즉시 낙찰 예상 · 누적 +${cumDays}일 (낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% ≥ 100%)`
+                    : `공식: 경매개시 + 280일 (1회차 매각결정 315 − 35) + 유찰 ${failedRounds}회 × 28일 = +${cumDays}일 · 낙찰가율 ${(edit.expectedBidRatio * 100).toFixed(1)}% → ${predictedRound}회차 예상 (회차당 −20%p · 자동 계산 · 수동 조정 가능)`
                 })()}
                 last
               />

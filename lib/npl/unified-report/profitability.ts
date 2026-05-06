@@ -575,23 +575,30 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
   const purchaseLeadDays = input.purchaseLeadDays ?? 7
   const balancePaymentLeadDays = input.balancePaymentLeadDays ?? 30
   // 법원 평균 기일 리드타임 (오버라이드 가능)
-  // 사용자 정책 (2026-05-06 v2):
-  //   핵심 공식: 예상 매각기일 = 경매개시결정일 + 315일 + 유찰횟수 × 28일
-  //   1회차 매각 cumulative 우선순위:
-  //     1) input.courtFirstRoundSaleDays (법원/주소지별 통계 — courtSchedule.stages[0].saleDays)
-  //     2) input.firstSaleOffsetDays (직접 지정) → cumulative = distDemandOffset + firstSaleOffset
-  //     3) default 315일 (대법원 평균)
+  // 사용자 정책 (2026-05-06 v3):
+  //   courtFirstRoundSaleDays = 1회차 매각결정기일 cumulative 통계 (경매개시 → 매각결정)
+  //   ∴ 1회차 매각기일 cumulative = courtFirstRoundSaleDays − 매각결정(7) − 낙찰(28)
+  //                              = 315 − 35 = 280 일 (default)
+  //   ∴ N회차 매각기일 cumulative = 280 + (N−1) × 28
+  //   예: Jongno (courtFirstRoundSaleDays=315) · 3회차 → 280 + 56 = 336 일
   const distributionDemandOffsetDays = input.distributionDemandOffsetDays ?? 77
-  const firstRoundCumulativeDays =
-    input.courtFirstRoundSaleDays
-    ?? (input.firstSaleOffsetDays != null
-        ? distributionDemandOffsetDays + input.firstSaleOffsetDays
-        : 315)
-  const firstSaleOffsetDays = Math.max(0, firstRoundCumulativeDays - distributionDemandOffsetDays)
   const winBidOffsetDays = input.winBidOffsetDays ?? 28
   const saleConfirmOffsetDays = input.saleConfirmOffsetDays ?? 7
   const balanceDueOffsetDays = input.balanceDueOffsetDays ?? 40
   const distributionOffsetDays = input.distributionOffsetDays ?? 30
+  // 1회차 매각결정기일 cumulative (매각기일 cumulative 가 아님 — 사용자 정책 v3):
+  //   우선순위: courtFirstRoundSaleDays(통계) > firstSaleOffsetDays 역산 > 315 default
+  const firstRoundSaleConfirmCumulative =
+    input.courtFirstRoundSaleDays
+    ?? (input.firstSaleOffsetDays != null
+        ? distributionDemandOffsetDays + input.firstSaleOffsetDays + winBidOffsetDays + saleConfirmOffsetDays
+        : 315)
+  // 1회차 매각기일 cumulative = 매각결정 cumulative − (낙찰 + 매각결정) 오프셋
+  const firstRoundSaleCumulative = Math.max(
+    distributionDemandOffsetDays,
+    firstRoundSaleConfirmCumulative - winBidOffsetDays - saleConfirmOffsetDays,
+  )
+  const firstSaleOffsetDays = Math.max(0, firstRoundSaleCumulative - distributionDemandOffsetDays)
 
   // ─── [1] 물권 ─────────────────────────────────────────────
   const property: PropertyBasicInfo = {
