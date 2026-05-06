@@ -75,7 +75,7 @@ export interface XrfTierFees {
  *   6) XRF Fee 정의 = Mgmt + Setup + Carry (Carry 포함 all-in)
  */
 
-/** v7 Carry 5-tier marginal brackets — LP gross ROI 구간별 marginal rate */
+/** v9 Carry 5-tier marginal brackets — LP gross ROI 구간별 marginal rate */
 export interface CarryBracket {
   /** 구간 상한 (LP gross ROI 절대값 · annualized) — null = 무제한 */
   upperBoundRoi: number | null
@@ -83,27 +83,32 @@ export interface CarryBracket {
   ratePct: number
 }
 
+/**
+ * v9 Carry brackets (사용자 정책 2026-05-06):
+ *   Tier 기준 변경 → BASE ≥25% / CONSERVATIVE 15-25% / SAVE-THE-DEAL 5-15%
+ *   구간: < 8%(Hurdle 0%) / 8-25%(entry) / 25-40% / 40-55% / 55%+(top)
+ */
 export const CARRY_BRACKETS_V7: Record<Exclude<XrfTier, 'REJECT'>, readonly CarryBracket[]> = {
   BASE: [
     { upperBoundRoi: 0.08, ratePct: 0.00 },  // < 8% Hurdle: no Carry
-    { upperBoundRoi: 0.20, ratePct: 0.15 },  // 8-20% slice
-    { upperBoundRoi: 0.40, ratePct: 0.20 },  // 20-40% slice
-    { upperBoundRoi: 0.60, ratePct: 0.25 },  // 40-60% slice
-    { upperBoundRoi: null, ratePct: 0.30 },  // 60%+ slice
+    { upperBoundRoi: 0.25, ratePct: 0.15 },  // 8-25% entry slice
+    { upperBoundRoi: 0.40, ratePct: 0.20 },  // 25-40% slice
+    { upperBoundRoi: 0.55, ratePct: 0.25 },  // 40-55% slice
+    { upperBoundRoi: null, ratePct: 0.30 },  // 55%+ slice
   ],
   CONSERVATIVE: [
     { upperBoundRoi: 0.08, ratePct: 0.00 },
-    { upperBoundRoi: 0.20, ratePct: 0.10 },
-    { upperBoundRoi: 0.40, ratePct: 0.15 },
-    { upperBoundRoi: 0.60, ratePct: 0.20 },
-    { upperBoundRoi: null, ratePct: 0.25 },
+    { upperBoundRoi: 0.25, ratePct: 0.10 },  // 8-25% entry slice
+    { upperBoundRoi: 0.40, ratePct: 0.15 },  // 25-40% slice
+    { upperBoundRoi: 0.55, ratePct: 0.20 },  // 40-55% slice
+    { upperBoundRoi: null, ratePct: 0.25 },  // 55%+ slice
   ],
   'SAVE-THE-DEAL': [
     { upperBoundRoi: 0.08, ratePct: 0.00 },
-    { upperBoundRoi: 0.20, ratePct: 0.05 },
-    { upperBoundRoi: 0.40, ratePct: 0.10 },
-    { upperBoundRoi: 0.60, ratePct: 0.15 },
-    { upperBoundRoi: null, ratePct: 0.20 },
+    { upperBoundRoi: 0.25, ratePct: 0.05 },  // 8-25% entry slice
+    { upperBoundRoi: 0.40, ratePct: 0.10 },  // 25-40% slice
+    { upperBoundRoi: 0.55, ratePct: 0.15 },  // 40-55% slice
+    { upperBoundRoi: null, ratePct: 0.20 },  // 55%+ slice
   ],
 }
 
@@ -402,28 +407,31 @@ function computeForTier(
   }
 }
 
-/** AUTO Tier 선택: BASE → CONSERVATIVE → SAVE-THE-DEAL → REJECT */
+/**
+ * AUTO Tier 선택 (v9 기준):
+ *   BASE ≥ 25% / CONSERVATIVE 15-25% / SAVE-THE-DEAL 5-15% / REJECT < 5%
+ */
 function selectAutoTier(
   base: XrfValuationResult,
   conservative: XrfValuationResult,
   saveTheDeal: XrfValuationResult,
 ): { tier: XrfTier; reason: string } {
-  if (base.lpRoi >= 0.20) {
+  if (base.lpRoi >= 0.25) {
     return {
       tier: 'BASE',
-      reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% ≥ 20% — 양보 불필요 (RWA 출시 가능)`,
+      reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% ≥ 25% — 양보 불필요 (RWA 출시 가능)`,
     }
   }
-  if (base.lpRoi >= 0.10) {
+  if (base.lpRoi >= 0.15) {
     return {
       tier: 'CONSERVATIVE',
-      reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% — XRF Carry 양보 (15→10%) → CONSERVATIVE LP ROI ${(conservative.lpRoi * 100).toFixed(2)}%`,
+      reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% (15~25%) — XRF Carry 양보 (15→10%) → CONSERVATIVE LP ROI ${(conservative.lpRoi * 100).toFixed(2)}%`,
     }
   }
   if (base.lpRoi >= 0.05) {
     return {
       tier: 'SAVE-THE-DEAL',
-      reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% — 모두 양보 (XRF Carry 5% · 엔플랫폼 2.0%/yr) → SAVE LP ROI ${(saveTheDeal.lpRoi * 100).toFixed(2)}%`,
+      reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% (5~15%) — 모두 양보 (Carry 5% · KOF 최소) → SAVE LP ROI ${(saveTheDeal.lpRoi * 100).toFixed(2)}%`,
     }
   }
   return {

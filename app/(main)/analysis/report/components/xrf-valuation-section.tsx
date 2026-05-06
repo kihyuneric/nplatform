@@ -361,11 +361,11 @@ export default function XrfValuationSection({
             <div style={{ fontSize: 11, color: c.textSub, marginTop: 2 }}>최적 · 양보 불필요</div>
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'BASE' ? '#EFF6FF' : 'transparent', fontWeight: 700, color: c.emerald }}>
-            ≥ 20%
+            ≥ 25%
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'BASE' ? '#EFF6FF' : 'transparent', color: c.text, lineHeight: 1.6 }}>
-            <strong>모든 주체 정상 fee 수령</strong> — XRF Carry 15% (entry) · Mgmt 1.5% · KOF 2.50% · NPL VC Servicing 2.0% · LP ROI ≥ 20% 매력적 deal.
-            <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>RWA 즉시 출시 가능</strong> · 기관·개인 LP 모두 권고 · 표준 시나리오</span>
+            <strong>모든 주체 정상 fee 수령</strong> — XRF Carry 15% (entry) · Mgmt 1.5% · KOF 2.50% · NPL VC Servicing 2.0% · LP ROI ≥ 25% 매력적 deal.
+            <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>RWA 즉시 출시 가능</strong> · 기관·개인 LP 모두 적합 · 표준 시나리오</span>
           </div>
 
           {/* CONSERVATIVE row */}
@@ -374,20 +374,20 @@ export default function XrfValuationSection({
             <div style={{ fontSize: 11, color: c.textSub, marginTop: 2 }}>보수적 · 부분 양보</div>
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#F0F9FF' : 'transparent', fontWeight: 700, color: c.amber }}>
-            10% – 20%
+            15% – 25%
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#F0F9FF' : 'transparent', color: c.text, lineHeight: 1.6 }}>
             <strong>XRF · KOF 부분 양보</strong> — XRF Carry 10% (entry) · Mgmt 1.0% · KOF 2.00% (AI&PM/Sourcing 압축).
             <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>RWA 출시 가능</strong> (LP 매력도 보강) · KR Margin 0.4% TP defense 유지 · NPL VC Servicing 2.0% 유지</span>
           </div>
 
-          {/* SAVE-THE-DEAL row — McKinsey 블루 단색 정합: SAVE = mid navy (tierColor['SAVE-THE-DEAL']) */}
+          {/* SAVE-THE-DEAL row */}
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#F5F7FA' : 'transparent', borderLeft: selected.tier === 'SAVE-THE-DEAL' ? `3px solid ${tierColor['SAVE-THE-DEAL']}` : '3px solid transparent' }}>
             <div style={{ fontWeight: 800, color: tierColor['SAVE-THE-DEAL'], fontSize: 14 }}>SAVE-THE-DEAL</div>
             <div style={{ fontSize: 11, color: c.textSub, marginTop: 2 }}>Deal 살리기 · 최대 양보</div>
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#F5F7FA' : 'transparent', fontWeight: 700, color: tierColor['SAVE-THE-DEAL'] }}>
-            5% – 10%
+            5% – 15%
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#F5F7FA' : 'transparent', color: c.text, lineHeight: 1.6 }}>
             <strong>XRF · KOF 최대 양보</strong> — XRF Carry 5% (entry) · Mgmt 0.5% · KOF 1.50% (AI&PM/Sourcing 추가 압축) · NPL VC Servicing 1.5% 양보.
@@ -409,8 +409,8 @@ export default function XrfValuationSection({
         </div>
 
         <div style={{ marginTop: 12, padding: '10px 14px', background: '#F0F9FF', borderLeft: `3px solid ${c.blue}`, fontSize: 11, color: c.text, lineHeight: 1.6 }}>
-          <strong>AUTO Tier 선택 로직</strong>: 시뮬레이터는 항상 <strong>BASE tier 시뮬레이션의 LP ROI</strong> 기준으로 tier 를 결정합니다.
-          BASE 에서 LP ROI ≥ 20% 면 BASE 그대로 출시 · 10~20% 면 Carry/Fees 부분 양보 (CONS) 로 출시 · 5~10% 면 최대 양보 (SAVE) 로 deal 살리기 시도 · 5% 미만이면 REJECT (재구조화).
+          <strong>AUTO Tier 선택 로직 (v9)</strong>: 시뮬레이터는 항상 <strong>BASE tier 시뮬레이션의 LP ROI</strong> 기준으로 tier 를 결정합니다.
+          BASE 에서 LP ROI ≥ 25% 면 BASE 그대로 출시 · 15~25% 면 Carry/Fees 부분 양보 (CONS) · 5~15% 면 최대 양보 (SAVE) · 5% 미만이면 REJECT (재구조화).
           <strong> 본 매물의 AUTO 판정: <span style={{ color: tierColor[selected.tier], fontWeight: 700 }}>{tierLabel[selected.tier]}</span></strong> ({selected.autoTierResult.selectedReason || '기본 시뮬레이션'}).
         </div>
       </Section>
@@ -470,28 +470,28 @@ export default function XrfValuationSection({
                 <td style={{ padding: '6px 8px', color: c.textSub, fontSize: 11 }}>LP 우선 회수 · Carry 발생 X</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
-                <td style={{ padding: '6px 8px', color: c.text }}>8% – 20% (Entry)</td>
+                <td style={{ padding: '6px 8px', color: c.text }}>8% – 25% (Entry)</td>
                 <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'BASE' ? 700 : 400, color: tierLabel[selected.tier] === 'BASE' ? c.emerald : c.text }}>15%</td>
                 <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'CONSERVATIVE' ? 700 : 400, color: tierLabel[selected.tier] === 'CONSERVATIVE' ? c.emerald : c.text }}>10%</td>
                 <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? 700 : 400, color: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? c.emerald : c.text }}>5%</td>
                 <td style={{ padding: '6px 8px', color: c.textSub, fontSize: 11 }}>LP 손실 없는 정도의 Carry</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
-                <td style={{ padding: '6px 8px', color: c.text }}>20% – 40%</td>
+                <td style={{ padding: '6px 8px', color: c.text }}>25% – 40%</td>
                 <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'BASE' ? 700 : 400, color: tierLabel[selected.tier] === 'BASE' ? c.emerald : c.text }}>20%</td>
                 <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'CONSERVATIVE' ? 700 : 400, color: tierLabel[selected.tier] === 'CONSERVATIVE' ? c.emerald : c.text }}>15%</td>
                 <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? 700 : 400, color: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? c.emerald : c.text }}>10%</td>
-                <td style={{ padding: '6px 8px', color: c.textSub, fontSize: 11 }}>20%+ profit slice</td>
+                <td style={{ padding: '6px 8px', color: c.textSub, fontSize: 11 }}>25%+ profit slice</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
-                <td style={{ padding: '6px 8px', color: c.text }}>40% – 60%</td>
+                <td style={{ padding: '6px 8px', color: c.text }}>40% – 55%</td>
                 <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'BASE' ? 700 : 400, color: tierLabel[selected.tier] === 'BASE' ? c.emerald : c.text }}>25%</td>
                 <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'CONSERVATIVE' ? 700 : 400, color: tierLabel[selected.tier] === 'CONSERVATIVE' ? c.emerald : c.text }}>20%</td>
                 <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? 700 : 400, color: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? c.emerald : c.text }}>15%</td>
                 <td style={{ padding: '6px 8px', color: c.textSub, fontSize: 11 }}>40%+ profit slice</td>
               </tr>
               <tr>
-                <td style={{ padding: '6px 8px', color: c.text }}>60%+ (Top tier)</td>
+                <td style={{ padding: '6px 8px', color: c.text }}>55%+ (Top tier)</td>
                 <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'BASE' ? 700 : 400, color: tierLabel[selected.tier] === 'BASE' ? c.emerald : c.text }}>30%</td>
                 <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'CONSERVATIVE' ? 700 : 400, color: tierLabel[selected.tier] === 'CONSERVATIVE' ? c.emerald : c.text }}>25%</td>
                 <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? 700 : 400, color: tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? c.emerald : c.text }}>20%</td>
