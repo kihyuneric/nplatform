@@ -1401,8 +1401,8 @@ function runMonteCarlo(a: MonteCarloArgs): MonteCarloResult {
     // 이자율 jitter
     const interestRate = a.pledgeInterestRate * (1 + interestJitter * (rng() - 0.5) * 2)
 
-    // 매입률은 권고안 (100%) 기준
-    const purchasePrice = a.loanPrincipal
+    // 실제 매입가 기준 — bankSalePrice 있으면 해당 값, 없으면 loanPrincipal 100%
+    const purchasePrice = a.purchasePrice
     const pledgeLoanAmount = Math.round(purchasePrice * a.pledgeLoanRatio)
     const pledgeInterestTotal = Math.round(pledgeLoanAmount * interestRate * holdingAdj / 365)
     const contractDeposit = Math.round(purchasePrice * a.contractDepositRate)
