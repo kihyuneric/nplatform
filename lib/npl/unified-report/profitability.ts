@@ -93,6 +93,12 @@ export interface AcquisitionPlan {
   pledgeInterestTotal: number
   /** 질권대출 운용일수 = 배당기일 − 잔금일 */
   pledgeLoanPeriodDays: number
+  /**
+   * 금융기관 매각가 (원, 선택) — 3단계 전략 앵커 보존용.
+   * buildNplProfitability 에 bankSalePrice 가 전달된 경우 여기에 저장되어
+   * live 재계산 시 재전달에 사용된다.
+   */
+  bankSalePrice?: number
 }
 
 // ─── [4] 감정가 및 낙찰가율 ──────────────────────────────────
@@ -746,6 +752,10 @@ export function buildNplProfitability(input: ProfitabilityInput): NplProfitabili
     pledgeInterestRate,
     pledgeInterestTotal,
     pledgeLoanPeriodDays,
+    // live 재계산 시 3단계 전략 앵커 보존 — bankSalePrice 미제공 시 undefined
+    ...(typeof input.bankSalePrice === 'number' && input.bankSalePrice > 0
+      ? { bankSalePrice: input.bankSalePrice }
+      : {}),
   }
 
   // ─── [4] 감정가/낙찰가율 ──────────────────────────────────

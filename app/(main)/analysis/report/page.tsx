@@ -2947,6 +2947,9 @@ function ProfitabilitySections({
         executionCost: edit.executionCost,
         // 수익권 금액 (공부상 채권최고액) 승수 — 110~140% 범위
         maxBondMultiplier: edit.maxBondMultiplier,
+        // 3단계 전략 앵커 보존 — initial 에서 bankSalePrice 를 재전달해야 hasBankSalePrice=true 유지
+        // 미전달 시 fallback(90/95/100%)으로 돌아가 표준 매입이 잘못 계산됨
+        bankSalePrice: initial.acquisition.bankSalePrice,
         evidence: initial.evidence,
         asOfDate: initial.claim.calculatedAt,
         mcSeed: 20260421,
