@@ -60,37 +60,68 @@ export const SAMPLE_STATISTICS: StatisticsContext = {
     landAreaSqm: 0,                       // 오피스텔 — 대지지분 개별 표기 생략
     buildingAreaSqm: 208.56,              // 전용 208.56㎡
   },
-  // 1. 지역/기간별 낙찰가율 — 송파구 오피스텔
+  // 1. 지역/기간별 낙찰가율 — 사용자 정책 v3 (2026-05-06):
+  //    스크린샷 데이터 (서울 송파 사무실/사무소) 매핑 — 3-tab(SIDO/SIGUNGU/EUPMYEONDONG)
   auctionRatioStats: [
     {
+      // 서울 전체 사무실/사무소 (SIDO scope) — 임시 추정값 (개발자 통계 매핑 예정)
+      location: { sido: '서울특별시', sigungu: '' },
+      propertyCategory: '오피스텔',
+      scope: 'SIDO',
+      asOfDate: '2026-05-06',
+      rows: [
+        { bucket: '12M', periodLabel: '1년간 평균', saleCount: 142, saleRate: 17.8, bidRatio: 70.2 },
+        { bucket: '6M',  periodLabel: '6개월 평균', saleCount: 78,  saleRate: 16.4, bidRatio: 69.8 },
+        { bucket: '3M',  periodLabel: '3개월 평균', saleCount: 39,  saleRate: 14.2, bidRatio: 71.5 },
+        { bucket: '1M',  periodLabel: '1개월 평균', saleCount: 11,  saleRate: 6.2,  bidRatio: 72.0 },
+      ],
+    },
+    {
+      // 송파구 전체 사무실/사무소 (SIGUNGU scope) — 사용자 제공 (2026-05-06 스크린샷)
       location: { sido: '서울특별시', sigungu: '송파구' },
       propertyCategory: '오피스텔',
       scope: 'SIGUNGU',
-      asOfDate: '2026-04-21',
+      asOfDate: '2026-05-06',
       rows: [
-        { bucket: '12M', periodLabel: '1년간 평균', saleCount: 18, saleRate: 19.5, bidRatio: 82.1 },
-        { bucket: '6M',  periodLabel: '6개월 평균', saleCount: 9,  saleRate: 20.1, bidRatio: 83.8 },
-        { bucket: '3M',  periodLabel: '3개월 평균', saleCount: 4,  saleRate: 18.3, bidRatio: 83.5 },
-        { bucket: '1M',  periodLabel: '1개월 평균', saleCount: 1,  saleRate: 16.7, bidRatio: 84.2 },
+        { bucket: '12M', periodLabel: '1년간 평균', saleCount: 66, saleRate: 16.5, bidRatio: 71.5 },
+        { bucket: '6M',  periodLabel: '6개월 평균', saleCount: 36, saleRate: 15.9, bidRatio: 68.2 },
+        { bucket: '3M',  periodLabel: '3개월 평균', saleCount: 18, saleRate: 12.8, bidRatio: 75.3 },
+        { bucket: '1M',  periodLabel: '1개월 평균', saleCount: 3,  saleRate: 4.6,  bidRatio: 67.1 },
+      ],
+    },
+    {
+      // 신천동 (EUPMYEONDONG scope) — 표본 부족 dong 가상 추정
+      location: { sido: '서울특별시', sigungu: '송파구', eupmyeondong: '신천동' },
+      propertyCategory: '오피스텔',
+      scope: 'EUPMYEONDONG',
+      asOfDate: '2026-05-06',
+      rows: [
+        { bucket: '12M', periodLabel: '1년간 평균', saleCount: 8, saleRate: 12.0, bidRatio: 73.5 },
+        { bucket: '6M',  periodLabel: '6개월 평균', saleCount: 4, saleRate: 13.5, bidRatio: 72.0 },
+        { bucket: '3M',  periodLabel: '3개월 평균', saleCount: 2, saleRate: 11.2, bidRatio: 76.0 },
+        { bucket: '1M',  periodLabel: '1개월 평균', saleCount: 0, saleRate: 0,    bidRatio: 0    },
       ],
     },
   ],
   // 2. 법원 기일/배당 — 서울동부지방법원 본원 (송파구 관할)
+  // 사용자 정책 v3 (2026-05-06):
+  //   1회차 매각결정기일 평균 = 477일 (송파 사무실 — 종로 315일과 다름 · 통계 매핑)
+  //   회차 간격 28일 · 배당기일 평균 70일
   courtSchedule: {
     courtName: '서울동부지방법원 본원',
-    avgHearingInterval: 47,
-    asOfDate: '2026-04-21',
+    avgHearingInterval: 28,
+    asOfDate: '2026-05-06',
     stages: [
-      { round: 1, saleDays: 285, distributionDays: 355 },
-      { round: 2, saleDays: 266, distributionDays: 336 },
-      { round: 3, saleDays: 317, distributionDays: 395 },
-      { round: 4, saleDays: 355, distributionDays: 433 },
-      { round: 5, saleDays: 390, distributionDays: 468 },
-      { round: 6, saleDays: 484, distributionDays: 587 },
-      { round: 7, saleDays: 481, distributionDays: 581 },
-      { round: 8, saleDays: 502, distributionDays: 594 },
-      { round: 9, saleDays: 550, distributionDays: 742 },
-      { round: 10, saleDays: 579, distributionDays: 692 },
+      { round: 1, saleDays: 477, distributionDays: 70 },     // 1회차 매각결정 477일 (사용자 제공)
+      { round: 2, saleDays: 505, distributionDays: 70 },     // +28
+      { round: 3, saleDays: 533, distributionDays: 70 },
+      { round: 4, saleDays: 561, distributionDays: 70 },
+      { round: 5, saleDays: 589, distributionDays: 70 },
+      { round: 6, saleDays: 617, distributionDays: 70 },
+      { round: 7, saleDays: 645, distributionDays: 70 },
+      { round: 8, saleDays: 673, distributionDays: 70 },
+      { round: 9, saleDays: 701, distributionDays: 70 },
+      { round: 10, saleDays: 729, distributionDays: 70 },
     ],
   },
   // 3. 동일 건물(잠실시그마타워) 낙찰 사례
@@ -246,10 +277,10 @@ export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): Un
 
   // ── 등기부 분석 (잠실 시그마타워 — 금천신협 NPL) ───────────
   // 청구금액 = 채권잔액(원금+연체이자) ≈ 21.80억 (엑셀 B23)
-  // 입찰예상가 = 감정가 × 예상낙찰가율 = 28억 × 83.5% = 23.38억 (엑셀 B41)
+  // 입찰예상가 = 감정가 × 예상낙찰가율 = 28억 × 75.3% = 21.08억 (사용자 정책 v3 2026-05-06)
   const registryAnalysis = buildRegistryAnalysis({
     claimAmount: totalBond,
-    bidPrice: Math.round(appraisal * 0.835),
+    bidPrice: Math.round(appraisal * 0.753),
     interestedPartyCount: 2,            // 소유자 + 채권자
     parcelCount: 1,
     failedBidCount: 0,
@@ -326,16 +357,19 @@ export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): Un
       { price: 2_700_000_000, reportedAt: '2024-05-08', source: 'AI_PAST_1Y',  label: 'AI 시세 — 1년 전' },
       { price: 2_250_000_000, reportedAt: '2022-02-22', source: 'AI_PAST_3Y',  label: 'AI 시세 — 3년 전' },
     ],
-    // 예상낙찰가율 83.5% (엑셀 B40 — 최근 3개월 낙찰가율)
-    expectedBidRatio: 0.835,
-    expectedBidRatioPeriod: '최근 3개월 낙찰가율',
+    // 사용자 정책 v3 (2026-05-06): 송파 사무실 3개월 평균 75.3% (SIGUNGU scope)
+    expectedBidRatio: 0.753,
+    expectedBidRatioPeriod: '송파구 사무실 3개월 평균',
+    // 회차당 유찰 할인율 25%p (송파 사무실 통계 매핑 · 종로 토지 20%p 와 다름)
+    //   75.3% > 75% (= 100 − 25) → 2회차 예상 낙찰
+    auctionFailureDiscountPct: 25,
     // 경매개시 2025-10-21 (엑셀 B45) · 송파구 관할 = 서울동부지방법원 본원
     auctionStartDate: '2025-10-21',
     courtName: '서울동부지방법원 본원',
-    // 일정 lock (2026-05-03 / v2 2026-05-06 — 핵심 공식 적용):
-    //   예상 매각기일 = 경매개시 + 315일 + 유찰 × 28일
-    //   서울동부지법 송파구 1회차 매각 평균 = courtSchedule.stages[0].saleDays = 285일
-    //   firstSaleDateOverride 제거 → engine 자동 산출 (285일 cumulative)
+    // 일정 lock (2026-05-03 / v3 2026-05-06):
+    //   1회차 매각결정기일 통계 = 477일 (송파 사무실 — 종로 315일과 다름)
+    //   1회차 매각기일 cumulative = 477 − 7(매각결정) − 28(낙찰) = 442일
+    //   2회차 매각기일 = 442 + 28 = 470일 (75.3% → 2회차 예상)
     purchaseDateOverride: '2026-05-08',         // asOfDate(2026-04-21) + 17일
     balancePaymentDateOverride: '2026-06-08',   // 매입일 + 31일
     courtFirstRoundSaleDays: SAMPLE_STATISTICS.courtSchedule?.stages[0]?.saleDays ?? 315,
@@ -354,26 +388,33 @@ export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): Un
     mcTrials: 10_000,
     // 민감도 축 — 매입률 100%를 기준으로 5%p씩 할인 차감 (사용자 요청)
     sensitivityPurchaseRateAxis: [1.00, 0.95, 0.90, 0.85, 0.80, 0.75, 0.70],
-    sensitivityBidRatioAxis:     [0.55, 0.65, 0.70, 0.75, 0.80, 0.835, 0.88, 0.92],
+    sensitivityBidRatioAxis:     [0.55, 0.62, 0.67, 0.71, 0.753, 0.80, 0.85, 0.92],
     evidence: {
       bidRatioStats: {
-        selectedLabel: '송파구 오피스텔 · 3개월',
+        // 사용자 정책 v3 (2026-05-06): 송파 사무실 3개월 평균 75.3% 적용 (스크린샷 데이터)
+        //   회차당 유찰 할인율 25%p (송파 사무실 통계 매핑) → 75.3% > 75% (=100−25) → 2회차 예상
+        selectedLabel: '송파구 사무실 · 3개월',
         items: [
-          { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 12, ratioPercent: 82.1, sampleSize: 18 },
-          { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 6,  ratioPercent: 83.8, sampleSize: 9 },
-          { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 3,  ratioPercent: 83.5, sampleSize: 4 },
-          { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 1,  ratioPercent: 84.2, sampleSize: 1 },
-          { scope: 'EUPMYEONDONG', region: '송파구 신천동',     periodMonths: 12, ratioPercent: 84.6, sampleSize: 3 },
+          { scope: 'SIDO',         region: '서울',             periodMonths: 12, ratioPercent: 70.2, sampleSize: 142 },
+          { scope: 'SIDO',         region: '서울',             periodMonths: 3,  ratioPercent: 71.5, sampleSize: 39 },
+          { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 12, ratioPercent: 71.5, sampleSize: 66 },
+          { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 6,  ratioPercent: 68.2, sampleSize: 36 },
+          { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 3,  ratioPercent: 75.3, sampleSize: 18 },
+          { scope: 'SIGUNGU',      region: '송파구',           periodMonths: 1,  ratioPercent: 67.1, sampleSize: 3 },
+          { scope: 'EUPMYEONDONG', region: '송파구 신천동',     periodMonths: 12, ratioPercent: 73.5, sampleSize: 8 },
         ],
-        narrative: '송파구 오피스텔 낙찰가율 1년 82.1% → 6개월 83.8% → 3개월 83.5% → 1개월 84.2%. 80%대 초반 안정 흐름. 신천동 단독 평균 84.6%로 잠실 재건축 기대감 반영.',
+        narrative:
+          '송파구 사무실 낙찰가율 1년 71.5% → 6개월 68.2% → 3개월 75.3% → 1개월 67.1%. 70%대 변동성 있는 흐름. ' +
+          '회차당 유찰 할인율 25%p (송파 사무실 통계) 적용 시 75.3% > 75% (=100−25) → 2회차 예상 매각. ' +
+          '예상낙찰가 = 감정가 28억 × 75.3% = 21.08억.',
       },
-      // 2026-05-06 v2: 라벨 의미 정합 (1회차 매각결정기일 평균 / 배당기일 평균 / 기일 간격 28일)
+      // 사용자 정책 v3 (2026-05-06): 1회차 매각결정기일 평균 477일 (송파 사무실 통계)
       courtSchedule: {
         courtName: '서울동부지방법원 본원',
-        avgSaleDays: 285,                  // 1회차 매각결정기일 평균 (송파)
-        avgDistributionDays: 70,           // 배당기일 평균 (잔금→배당)
+        avgSaleDays: 477,                  // 1회차 매각결정기일 평균 (사용자 제공)
+        avgDistributionDays: 70,           // 배당기일 평균
         avgHearingInterval: 28,            // 회차 간격 28일
-        sampleSize: 112,
+        sampleSize: 66,
       },
       auctionCases: {
         averageDurationDays: 228,
@@ -564,8 +605,8 @@ export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): Un
       confidence: region.confidence,
       horizonMonths: 6,
       narrative:
-        `송파구 오피스텔 낙찰가율은 최근 1년 82.1% → 6개월 83.8% → 3개월 83.5% → 1개월 84.2%로 ` +
-        `80%대 초반 안정 흐름. 인근 실거래 단가(건물당 약 1,237만원/㎡) 견조하며, ` +
+        `송파구 사무실/사무소 낙찰가율 1년 71.5% → 6개월 68.2% → 3개월 75.3% → 1개월 67.1%로 ` +
+        `70%대 변동성 흐름. 회차당 유찰 할인율 25%p (송파 사무실 통계) 적용 시 75.3% → 2회차 예상 매각. ` +
         `잠실역 일대 재건축·MICE 배후 수요로 중장기 상승 잠재력 보유. ` +
         `단 감정가(28억) 대비 AI 시세(25.5억) 8.9% 격차 — 보수 시나리오 병행 권고.`,
       indicators: [
@@ -576,11 +617,15 @@ export function buildSampleReport(opts?: { firstSaleDateOverride?: string }): Un
     },
     registryAnalysis,
     profitability,
+    // AI 총평 v3 (사용자 정책 2026-05-06):
+    //   송파 사무실 3개월 평균 75.3% · 회차당 유찰 할인율 25%p (송파 통계 매핑) → 2회차 예상
+    //   1회차 매각결정기일 평균 477일 (서울동부지법 송파 사무실 통계)
     executiveSummary:
       `송파구 신천동 잠실 시그마타워 오피스텔 NPL (금천신협 대출원금 19.6억 · 감정가 28억) 종합 분석 결과 ${riskGrade}등급, 예측 회수율 ${recovery.predictedRecoveryRate}%(신뢰도 ${Math.round(recovery.confidence * 100)}%)로 평가됩니다. ` +
       `금융기관 NPL 매각가 ${Math.round(bankSalePrice / 100_000_000 * 10) / 10}억 기준 ` +
       `권고 시나리오 ROI ${(recommendedRoi * 100).toFixed(2)}% · 기본 시나리오 ROI ${(investmentRoi * 100).toFixed(2)}%, ` +
-      `지역 6개월 낙찰가율 ${SAMPLE_STATISTICS.auctionRatioStats[0].rows.find(r => r.bucket === '6M')?.bidRatio.toFixed(1)}%에 특수조건 ${auction.specialConditionPenalty.toFixed(1)}%p 반영한 ${auction.adjustedBidRatio.toFixed(1)}%를 기준 입찰가율로 제시하며, ` +
+      `송파구 사무실 3개월 평균 낙찰가율 75.3% (회차당 −25%p 기준 → 2회차 예상 매각) · 특수조건 ${auction.specialConditionPenalty.toFixed(1)}%p 반영한 ${auction.adjustedBidRatio.toFixed(1)}%를 기준 입찰가율로 제시하며, ` +
+      `1회차 매각결정기일 통계 477일 (서울동부지법 송파 사무실)을 적용한 운용 기간 모델 — ` +
       `동일 건물 전회 낙찰(${SAMPLE_STATISTICS.sameAddressAuction!.summary.avgBidRatio}%)과 인근 송파 오피스텔(${SAMPLE_STATISTICS.nearbyAuction!.summary.avgBidRatio}%) 편차 고려, 보수·기준·공격 3단계 입찰 전략을 병행 권고합니다. ` +
       `AI 투자 의견 종합 점수 ${verdictScore}점 → ${verdict} (가중치: 회수율 0.35·리스크 0.25·ROI 0.25·할인 0.15).`,
   }
