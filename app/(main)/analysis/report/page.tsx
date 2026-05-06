@@ -879,7 +879,7 @@ export default function UnifiedReportPage() {
               `\n            = ${recovery.factors.auctionRatio.blendedBidRatio.toFixed(1)}%\n` +
               `조정낙찰가율 = 혼합 + 특수조건 감점(${recovery.factors.auctionRatio.specialConditionPenalty.toFixed(1)}%p)\n` +
               `            = ${recovery.factors.auctionRatio.adjustedBidRatio.toFixed(1)}%\n\n` +
-              `점수 구간: ≥95%→100 · ≥85%→85 · ≥75%→70 · ≥65%→50\n→ 점수 ${recovery.factors.auctionRatio.score}`
+              `점수 anchor (선형 보간): 0%→0 · 65%→50 · 75%→70 · 85%→85 · 95%+→100\n→ 점수 ${recovery.factors.auctionRatio.score.toFixed(1)} (anchor 사이 선형 보간 — 하드코딩 X)`
             }
           />
         </div>
@@ -1910,12 +1910,19 @@ function PromptToggle({ report, promptLabel }: { report: UnifiedAnalysisReport; 
 }
 
 function RecoveryBar({ predicted, lower, upper }: { predicted: number; lower: number; upper: number }) {
-  // 동적 max — 회수율이 100% 초과(원금 대비 매입가 할인 시 자주 발생) 인 경우에도 정상 시각화.
-  //   · 일반 케이스: 0~100% 스케일
-  //   · 고회수 케이스(예: 283%): 0~max(predicted, upper) + 10% 여유 스케일
+  // 동적 max — 회수율이 100% 초과 케이스도 정상 시각화 (사용자 정책 v3 2026-05-06):
+  //   · 일반: 100% 이하 → axisMax 100 (타이트)
+  //   · 100% 초과 ≤ 150%: 10 단위 올림 (예: 102% → 110%)
+  //   · 150% 초과: 50 단위 올림 (예: 283% → 300%)
+  //   80% / 100% / 120% 기준선 표시 — McKinsey 회수 안정성 임계값
+  const dataMax = Math.max(predicted, upper, lower)
+  const ceilTo10 = (v: number) => Math.ceil(v / 10) * 10
   const ceilTo50 = (v: number) => Math.ceil(v / 50) * 50
-  const dataMax = Math.max(100, predicted, upper, lower)
-  const axisMax = ceilTo50(dataMax * 1.05)             // 5% 여유 후 50 단위 올림
+  const axisMax = dataMax <= 100
+    ? 100
+    : dataMax <= 150
+      ? ceilTo10(dataMax * 1.05)
+      : ceilTo50(dataMax * 1.05)
   const scale = (v: number) => Math.max(0, Math.min(100, (v / axisMax) * 100))
   return (
     <div
@@ -1927,14 +1934,25 @@ function RecoveryBar({ predicted, lower, upper }: { predicted: number; lower: nu
         overflow: "hidden",
       }}
     >
-      {/* 100% 기준선 (참조) — axisMax 가 100 초과일 때만 표시 */}
+      {/* 80% 기준선 (회수 안정성 mid 임계 — McKinsey 회수 임계값) */}
+      {axisMax > 80 && (
+        <div
+          className="absolute top-0 h-full"
+          style={{
+            left: `${(80 / axisMax) * 100}%`,
+            width: 1,
+            background: "rgba(34, 81, 255, 0.20)",
+          }}
+        />
+      )}
+      {/* 100% 기준선 (회수 안정성 BUY 임계) — 항상 표시 (range 100% 이내일 때 끝선과 겹쳐 자연 처리) */}
       {axisMax > 100 && (
         <div
           className="absolute top-0 h-full"
           style={{
             left: `${(100 / axisMax) * 100}%`,
             width: 1,
-            background: "rgba(10,22,40,0.35)",
+            background: "rgba(10,22,40,0.45)",
           }}
         />
       )}
@@ -1957,19 +1975,16 @@ function RecoveryBar({ predicted, lower, upper }: { predicted: number; lower: nu
           boxShadow: `0 0 0 1px ${MCK.paper}`,
         }}
       />
-      <div
-        className="absolute inset-0 flex items-center justify-between"
-        style={{
-          padding: "0 12px",
-          fontSize: 10, fontWeight: 800,
-          color: MCK.ink,
-          fontVariantNumeric: "tabular-nums",
-          letterSpacing: "0.04em",
-        }}
-      >
-        <span>0%</span>
-        {axisMax > 100 && <span style={{ opacity: 0.55 }}>100%</span>}
-        <span>{axisMax}%</span>
+      {/* 축 라벨 (절대 위치로 정확한 tick 위치) */}
+      <div className="absolute inset-0 pointer-events-none" style={{ fontSize: 10, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums", letterSpacing: "0.04em" }}>
+        <span style={{ position: 'absolute', left: 6, top: '50%', transform: 'translateY(-50%)' }}>0%</span>
+        {axisMax > 80 && (
+          <span style={{ position: 'absolute', left: `${(80 / axisMax) * 100}%`, top: '50%', transform: 'translate(-50%, -50%)', opacity: 0.55 }}>80%</span>
+        )}
+        {axisMax > 100 && (
+          <span style={{ position: 'absolute', left: `${(100 / axisMax) * 100}%`, top: '50%', transform: 'translate(-50%, -50%)', opacity: 0.7 }}>100%</span>
+        )}
+        <span style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)' }}>{axisMax}%</span>
       </div>
     </div>
   )
@@ -3375,7 +3390,7 @@ function ProfitabilitySections({
               </tr>
               {/* 3. 선순위 채권 (있을 때만) */}
               {distribution.seniorPayout > 0 && (
-                <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#FEF7ED' }}>
+                <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#F0F9FF' }}>
                   <td className="py-3 pl-4 pr-3 font-semibold" style={{ color: '#0A1628' }}>③ 선순위 채권 변제</td>
                   <td className="py-3 pr-3" style={{ color: '#6B7280' }}>{distribution.seniorCreditorLabel ?? '선순위 근저당'}</td>
                   <td className="py-3 pr-3 text-right" style={{ color: '#DC2626' }}>− {krwWon(distribution.seniorPayout)}</td>
@@ -4554,7 +4569,8 @@ function EvidenceTabs({
 
         {tab === "dist" && (
           <div className="space-y-3">
-            {/* cascade 흐름 (사용자 정책 v3 2026-05-06): 낙찰가→경매비용→선순위→NPL→1·2질권자 */}
+            {/* cascade 흐름 (사용자 정책 v3 2026-05-06): 낙찰가→경매비용→선순위→NPL→1·2질권자
+                EXHIBIT 6 (본문) 와 동일 — block.distribution (live 재계산) 사용 */}
             <div className="rounded-md overflow-hidden" style={{ border: '1px solid #E5E8EC' }}>
               <table className="w-full text-[0.8125rem]" style={{ borderCollapse: 'collapse' }}>
                 <thead>
@@ -4571,56 +4587,56 @@ function EvidenceTabs({
                     <td className="py-2 pr-2 text-[0.6875rem]" style={{ color: '#6B7280' }}>법원 (시작액)</td>
                     <td className="py-2 pr-2 text-right text-[0.75rem]" style={{ color: '#9CA3AF' }}>—</td>
                     <td className="py-2 pr-3 text-right font-black text-[0.875rem]" style={{ color: '#2251FF', fontFamily: 'Georgia, serif' }}>
-                      {krwWon(evidence.distributionRef.bidPrice)}
+                      {krwWon(block.valuation.expectedBidPrice)}
                     </td>
                   </tr>
                   <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
                     <td className="py-2 pl-3 pr-2 font-semibold" style={{ color: '#0A1628' }}>② 경매비용 차감</td>
                     <td className="py-2 pr-2 text-[0.6875rem]" style={{ color: '#6B7280' }}>집행관·법원</td>
-                    <td className="py-2 pr-2 text-right text-[0.75rem]" style={{ color: '#DC2626' }}>− {krwWon(evidence.distributionRef.executionCost)}</td>
+                    <td className="py-2 pr-2 text-right text-[0.75rem]" style={{ color: '#DC2626' }}>− {krwWon(block.distribution.executionCost)}</td>
                     <td className="py-2 pr-3 text-right font-bold" style={{ color: '#0A1628' }}>
-                      {krwWon(Math.max(0, evidence.distributionRef.bidPrice - evidence.distributionRef.executionCost))}
+                      {krwWon(Math.max(0, block.valuation.expectedBidPrice - block.distribution.executionCost))}
                     </td>
                   </tr>
-                  {(evidence.distributionRef.seniorPayout ?? 0) > 0 && (
-                    <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#FEF7ED' }}>
+                  {(block.distribution.seniorPayout ?? 0) > 0 && (
+                    <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#F0F9FF' }}>
                       <td className="py-2 pl-3 pr-2 font-semibold" style={{ color: '#0A1628' }}>③ 선순위 채권 변제</td>
-                      <td className="py-2 pr-2 text-[0.6875rem]" style={{ color: '#6B7280' }}>{evidence.distributionRef.seniorCreditorLabel ?? '선순위 근저당'}</td>
-                      <td className="py-2 pr-2 text-right text-[0.75rem]" style={{ color: '#DC2626' }}>− {krwWon(evidence.distributionRef.seniorPayout!)}</td>
+                      <td className="py-2 pr-2 text-[0.6875rem]" style={{ color: '#6B7280' }}>{block.distribution.seniorCreditorLabel ?? '선순위 근저당'}</td>
+                      <td className="py-2 pr-2 text-right text-[0.75rem]" style={{ color: '#DC2626' }}>− {krwWon(block.distribution.seniorPayout)}</td>
                       <td className="py-2 pr-3 text-right font-bold" style={{ color: '#0A1628' }}>
-                        {krwWon(Math.max(0, evidence.distributionRef.bidPrice - evidence.distributionRef.executionCost - (evidence.distributionRef.seniorPayout ?? 0)))}
+                        {krwWon(block.distribution.npNetDistributable)}
                       </td>
                     </tr>
                   )}
                   <tr style={{ borderBottom: '1px solid #F3F4F6', background: 'rgba(34, 81, 255, 0.04)' }}>
-                    <td className="py-2 pl-3 pr-2 font-bold" style={{ color: '#2251FF' }}>{(evidence.distributionRef.seniorPayout ?? 0) > 0 ? '④' : '③'} NPL 측 배당</td>
+                    <td className="py-2 pl-3 pr-2 font-bold" style={{ color: '#2251FF' }}>{(block.distribution.seniorPayout ?? 0) > 0 ? '④' : '③'} NPL 측 배당</td>
                     <td className="py-2 pr-2 text-[0.6875rem]" style={{ color: '#6B7280' }}>NPL 채권자 (매수자)</td>
-                    <td className="py-2 pr-2 text-right text-[0.625rem]" style={{ color: '#6B7280' }}>min(잔여, 원리금)</td>
+                    <td className="py-2 pr-2 text-right text-[0.625rem]" style={{ color: '#6B7280' }}>min(잔여, 원리금 {krwWon(block.distribution.bondCalcPrincipalAndInterest)})</td>
                     <td className="py-2 pr-3 text-right font-black text-[0.875rem]" style={{ color: '#2251FF', fontFamily: 'Georgia, serif' }}>
-                      {krwWon(evidence.distributionRef.distributableAmount)}
+                      {krwWon(block.distribution.expectedDistributionAmount)}
                     </td>
                   </tr>
                   <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
-                    <td className="py-2 pl-3 pr-2 font-semibold" style={{ color: '#0A1628' }}>{(evidence.distributionRef.seniorPayout ?? 0) > 0 ? '⑤' : '④'} 1질권자 배당</td>
+                    <td className="py-2 pl-3 pr-2 font-semibold" style={{ color: '#0A1628' }}>{(block.distribution.seniorPayout ?? 0) > 0 ? '⑤' : '④'} 1질권자 배당</td>
                     <td className="py-2 pr-2 text-[0.6875rem]" style={{ color: '#6B7280' }}>질권대출기관</td>
-                    <td className="py-2 pr-2 text-right text-[0.75rem]" style={{ color: '#DC2626' }}>− {krwWon(evidence.distributionRef.firstPledgee)}</td>
+                    <td className="py-2 pr-2 text-right text-[0.75rem]" style={{ color: '#DC2626' }}>− {krwWon(block.distribution.firstPledgeeAmount)}</td>
                     <td className="py-2 pr-3 text-right font-bold" style={{ color: '#0A1628' }}>
-                      {krwWon(evidence.distributionRef.secondPledgee)}
+                      {krwWon(block.distribution.secondPledgeeAmount)}
                     </td>
                   </tr>
                   <tr style={{ background: '#1B3A5C', color: '#FFFFFF' }}>
-                    <td className="py-2 pl-3 pr-2 font-bold" style={{ color: '#FFFFFF' }}>{(evidence.distributionRef.seniorPayout ?? 0) > 0 ? '⑥' : '⑤'} 2질권자 배당</td>
+                    <td className="py-2 pl-3 pr-2 font-bold" style={{ color: '#FFFFFF' }}>{(block.distribution.seniorPayout ?? 0) > 0 ? '⑥' : '⑤'} 2질권자 배당</td>
                     <td className="py-2 pr-2 text-[0.6875rem]" style={{ color: '#C7E5F0' }}>투자자 (자기자본 회수)</td>
                     <td className="py-2 pr-2 text-right text-[0.6875rem]" style={{ color: '#C7E5F0' }}>★ FINAL</td>
                     <td className="py-2 pr-3 text-right font-black text-[0.9375rem]" style={{ color: '#6FB8E6', fontFamily: 'Georgia, serif' }}>
-                      {krwWon(evidence.distributionRef.secondPledgee)}
+                      {krwWon(block.distribution.secondPledgeeAmount)}
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <p className="text-[0.75rem] text-[var(--color-text-secondary)] leading-relaxed">
-              {evidence.distributionRef.summary}
+              {block.distribution.narrative}
             </p>
           </div>
         )}

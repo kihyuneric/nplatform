@@ -167,12 +167,26 @@ export function computeAuctionRatioFactor(args: {
   const specialPenalty = sumSpecialConditionPenalty(specialConditions)
   const adjusted = Math.max(20, blended + specialPenalty)
 
-  let score: number
-  if (adjusted >= 95) score = 100
-  else if (adjusted >= 85) score = 85
-  else if (adjusted >= 75) score = 70
-  else if (adjusted >= 65) score = 50
-  else score = Math.max(20, 50 - (65 - adjusted))
+  // 점수 연속 piecewise 보간 (사용자 정책 v3 2026-05-06):
+  //   하드코딩 if-else 버킷 제거 → 수식 기반 연동
+  //   anchor: 0% → 0점, 65% → 50점, 75% → 70점, 85% → 85점, 95%+ → 100점
+  //   anchor 사이 선형 보간으로 연속 점수 산출.
+  const score = (() => {
+    const anchors: [number, number][] = [
+      [0, 0], [65, 50], [75, 70], [85, 85], [95, 100],
+    ]
+    if (adjusted >= 95) return 100
+    if (adjusted <= 0) return 0
+    for (let i = 0; i < anchors.length - 1; i++) {
+      const [x0, y0] = anchors[i]
+      const [x1, y1] = anchors[i + 1]
+      if (adjusted >= x0 && adjusted < x1) {
+        const t = (adjusted - x0) / (x1 - x0)
+        return y0 + t * (y1 - y0)
+      }
+    }
+    return 0
+  })()
 
   const expectedSaleDays = estimateSaleDays(ctx.courtSchedule, 0) ?? undefined
 

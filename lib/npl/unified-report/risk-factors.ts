@@ -424,32 +424,39 @@ export const RISK_FACTOR_WEIGHTS = {
 } as const satisfies Record<RiskFactorCategory, number>
 
 // ─── 투자 의견 가중 스코어링 (0~100) ─────────────────────────
-//   사용자 정책 v3 (2026-05-06): BUY 권고 가능성 확보 — 매력적 NPL deal 이
-//   "할인율 0% (대출원금 100% 매각)" 만으로 HOLD 로 가는 방어선 완화.
+//   사용자 정책 v3.1 (2026-05-06): ROI 안전 제약 + 가중치 재조정
 //
-//   팩터별 스코어링 (재설계):
+//   팩터별 스코어링:
 //     · 회수율:      60% → 0점,  100% → 44점,  150% → 100점 (선형, spread 90)
-//                    NPL 회수율은 100% 이하도 발생 → 60% 부터 점수화
 //     · 리스크:      5팩터 종합 점수 그대로 (0~100)
 //     · ROI:         0% → 0,  25% → 100점 (선형) — 매력 deal 25% ROI 정상
 //     · 할인율:      0% → 50점 (중립),  15% 할인 → 100,  −15% 프리미엄 → 0
-//                    "원금 100% 매각" (할인 0%) 을 NEUTRAL 로 처리
 //
-//   가중치 (재배분 — ROI 비중↑, 할인↓):
-//     · 회수율  0.30 (회수 가능성 — 1차 필터)
-//     · 리스크  0.20 (구조적 안전성)
-//     · ROI     0.40 (수익성 — 핵심 투자 매력도)
-//     · 할인    0.10 (매입 조건 — 보조 지표)
+//   가중치 (ROI 비중 더 강화):
+//     · 회수율  0.25
+//     · 리스크  0.20
+//     · ROI     0.45 (수익성 — 핵심 매력도)
+//     · 할인    0.10
 //
-//   판정 버킷 (BUY 권고 임계 65점으로 완화):
+//   ROI 안전 제약 (HARD FLOOR):
+//     · ROI < 8%  → 강제 AVOID (수익성 부족)
+//     · ROI < 15% → BUY 차단 (최대 HOLD)
+//
+//   판정 버킷:
 //     · ≥ 65점  BUY    (권고)
 //     · ≥ 45점  HOLD   (관망)
 //     · <  45점  AVOID  (회피)
 export const VERDICT_WEIGHTS = {
-  recovery: 0.30,
+  recovery: 0.25,
   risk:     0.20,
-  roi:      0.40,
+  roi:      0.45,
   discount: 0.10,
+} as const
+
+/** ROI 안전 제약 — 사용자 정책 v3.1 (2026-05-06) */
+export const ROI_SAFETY_FLOOR = {
+  avoidBelow: 0.08,    // ROI < 8% → 강제 AVOID
+  buyMin:     0.15,    // ROI < 15% → BUY 차단 (최대 HOLD)
 } as const
 
 export type VerdictScoringInputs = {
@@ -509,11 +516,20 @@ export function computeInvestmentVerdict(input: VerdictScoringInputs): VerdictSc
   const discountContrib = discountMapped * w.discount
   const totalScore      = round1(recoveryContrib + riskContrib + roiContrib + discountContrib)
 
-  // ── 3. 버킷 판정 (BUY 임계 65점, 사용자 정책 v3) ─────────
-  const verdict: 'BUY' | 'HOLD' | 'AVOID' =
+  // ── 3. 버킷 판정 + ROI 안전 제약 (사용자 정책 v3.1 2026-05-06) ─────
+  let verdict: 'BUY' | 'HOLD' | 'AVOID' =
     totalScore >= 65 ? 'BUY' : totalScore >= 45 ? 'HOLD' : 'AVOID'
+  let safetyNote = ''
+  // ROI 안전 floor: 낮은 ROI → BUY 차단 (수익성 부족 deal 보호)
+  if (recommendedRoi < ROI_SAFETY_FLOOR.avoidBelow) {
+    verdict = 'AVOID'
+    safetyNote = ` (★ ROI ${(recommendedRoi * 100).toFixed(1)}% < ${(ROI_SAFETY_FLOOR.avoidBelow * 100)}% → 강제 AVOID)`
+  } else if (recommendedRoi < ROI_SAFETY_FLOOR.buyMin && verdict === 'BUY') {
+    verdict = 'HOLD'
+    safetyNote = ` (★ ROI ${(recommendedRoi * 100).toFixed(1)}% < ${(ROI_SAFETY_FLOOR.buyMin * 100)}% → BUY 차단 · HOLD)`
+  }
 
-  // ── 4. 계산식 문자열 (재설계 v3) ───────────────────────────
+  // ── 4. 계산식 문자열 (재설계 v3.1) ───────────────────────────
   const formula =
     `투자 의견 점수 = Σ(팩터 정규화점수 × 가중치)\n\n` +
     `[1] 회수율 정규화: clamp((${predictedRecoveryRate.toFixed(1)} − 60) / 90 × 100, 0, 100) = ${round1(recoveryMapped)}점 (60% → 0, 150% → 100)\n` +
@@ -525,7 +541,8 @@ export function computeInvestmentVerdict(input: VerdictScoringInputs): VerdictSc
     `[4] 할인 정규화: clamp(50 + ${(discountRatio * 100).toFixed(1)}% / 15% × 50, 0, 100) = ${round1(discountMapped)}점 (0% → 50점 NEUTRAL)\n` +
     `    기여 = ${round1(discountMapped)} × ${w.discount} = ${round1(discountContrib)}\n\n` +
     `총점 = ${round1(recoveryContrib)} + ${round1(riskContrib)} + ${round1(roiContrib)} + ${round1(discountContrib)} = ${totalScore}점\n` +
-    `판정 = ≥65→BUY · ≥45→HOLD · <45→AVOID  →  ${verdict}`
+    `판정 = ≥65→BUY · ≥45→HOLD · <45→AVOID  →  ${verdict}${safetyNote}\n` +
+    `ROI 안전 제약: <8% → AVOID · <15% → HOLD 차단`
 
   return {
     verdict,
