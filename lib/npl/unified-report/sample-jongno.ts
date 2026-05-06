@@ -258,11 +258,19 @@ export function buildJongnoSampleReport(opts?: { firstSaleDateOverride?: string 
     externalVolumeChange: 5.5,
     externalPriceIndexChange: 2.8,
   })
+  // 사용자 정책 v3 (2026-05-06): 종로 홍지동 EUPMYEONDONG 표본 부족 (1년 1-2건) →
+  //   서울 SIDO 토지 3개월 평균 68.2% 사용 (expectedBidRatio 와 동기화).
+  //   이유: 종로구·홍지동 최근 1년 토지 낙찰 사례 부족 → 광역 통계 fallback.
   const auction = computeAuctionRatioFactor({
     regionLabel: input.region,
     category: input.propertyCategory,
     ctx: JONGNO_HONGJI_STATISTICS,
     specialConditions: input.specialConditions,
+    regionMedianOverride: {
+      value: 68.2,
+      scope: 'SIDO',
+      sampleSize: JONGNO_HONGJI_AUCTION_STATS_SIDO.find(r => r.bucket === '3M')?.saleCount ?? 2,
+    },
   })
 
   const recovery = buildRecoveryPrediction({ ltv, region, auction })

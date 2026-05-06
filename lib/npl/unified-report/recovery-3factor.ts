@@ -133,15 +133,28 @@ export function computeAuctionRatioFactor(args: {
   category: string
   ctx: StatisticsContext
   specialConditions: SpecialConditions
+  /**
+   * 지역 중앙값 직접 주입 (사용자 정책 v3 2026-05-06).
+   * NPL 매물의 expectedBidRatio 와 동일한 통계 source 사용 권장 — 회수율 예측 정합.
+   * 예: 종로 홍지동 토지는 EUPMYEONDONG 표본 부족 → 서울 SIDO 3개월 68.2% 사용.
+   */
+  regionMedianOverride?: {
+    value: number
+    scope: 'SIDO' | 'SIGUNGU' | 'EUPMYEONDONG'
+    sampleSize: number
+  }
 }): AuctionRatioFactor {
   const { regionLabel, category, ctx, specialConditions } = args
 
-  const pref = pickPreferredBidRatio(ctx.auctionRatioStats, '6M')
+  const pref = args.regionMedianOverride ?? pickPreferredBidRatio(ctx.auctionRatioStats, '6M')
   const regionMedian = pref?.value ?? 75 // fallback
   const regionScope: AuctionRatioFactor['regionScope'] = pref?.scope ?? 'FALLBACK'
   const regionSample = pref?.sampleSize ?? 0
 
-  const sameAddrAvg = ctx.sameAddressAuction?.summary.avgBidRatio
+  // 동일주소 — 사용자 정책 v3 (2026-05-06): 표본 0건일 때 명시적 제외 (혼합 가중치 영향 X)
+  const sameAddrAvg = (ctx.sameAddressAuction && ctx.sameAddressAuction.cases.length > 0)
+    ? ctx.sameAddressAuction.summary.avgBidRatio
+    : undefined
   const nearbyMedian = medianNearbyBidRatio(ctx.nearbyAuction) ?? undefined
 
   // 가중 평균 — 있는 것만 섞되 합을 1로 재정규화
