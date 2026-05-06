@@ -89,11 +89,12 @@ function formatProjectRoi(value: number | null | undefined): string {
   return `${pct.toFixed(1)}%`
 }
 
+// 사용자 정책 v3.7 (2026-05-06): 하드코딩 stale ROI 항목 제거
+//   기존 r1 (강남 역삼동 18.4%) · r2 (분당 오피스텔 14.2%) · r3 (해운대 상가 16.8%)
+//   → 실 sample 데이터(sample-roi API) 의 동적 ROI 와 grade 만 사용
+//   → 서초 반포동/강남 역삼동/잠실 리센츠 등은 sample 빌더 추가 시 자동 합류
 const RECENT_FALLBACK: RecentItem[] = [
   ...FEATURED_RECENT_ITEMS,
-  { id: "r1", type: "NPL 수익성 분석", title: "강남 역삼동 아파트 · 우리은행", grade: "A", roi: "18.4%", date: "2026-04-13", href: "/analysis/report" },
-  { id: "r2", type: "경매 분석", title: "분당 오피스텔 · 낙찰가 3.5억", grade: "B", roi: "14.2%", date: "2026-04-12", href: "/analysis/simulator" },
-  { id: "r3", type: "NPL 수익성 분석", title: "해운대 상가 · 하나에프앤아이", grade: "B", roi: "16.8%", date: "2026-04-10", href: "/analysis/report" },
 ]
 
 const KPI_ITEMS: MckKpiItem[] = [
