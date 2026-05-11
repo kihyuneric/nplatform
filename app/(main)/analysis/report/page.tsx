@@ -44,8 +44,8 @@ import { PropertyCollateralAnalysis } from "./components/property-collateral-ana
 import { PropertyPhotosExhibit } from "./components/property-photos-exhibit"
 import { computeEffectiveFirstSaleDate } from "@/lib/npl/unified-report/auction-round"
 import { computeXrfValuation } from "@/lib/xrf/valuation"
-import { computeFundMetrics, computeProfitAllocation } from "@/lib/xrf/metrics"
-import { buildXrfSummary, buildXrfSummaryEn, buildXrfSummaryPrompt } from "@/lib/xrf/summary"
+import { computeFundMetrics, computeProfitAllocation, computeIndustryBenchmark } from "@/lib/xrf/metrics"
+import { buildXrfSummary, buildXrfSummaryEn, buildXrfSummaryPrompt, buildXrfRwaSummary, buildXrfRwaSummaryEn } from "@/lib/xrf/summary"
 import {
   SPECIAL_CONDITIONS_V2,
   SPECIAL_CONDITION_BUCKET_LABEL,
@@ -401,6 +401,39 @@ export default function UnifiedReportPage() {
     }
   }, [report])
 
+  // ── XRF RWA 총평 (valuationMode === 'XRF_RWA' 일 때 1Page에 표시) ────────
+  const xrfRwaSummaryData = useMemo(() => {
+    const profitability = report?.profitability
+    if (!profitability) return null
+    const result = computeXrfValuation({
+      nplPurchasePriceKRW: profitability.acquisition.purchasePrice,
+      nplTotalEquityKRW:   profitability.investment.totalEquity,
+      nplNetProfitKRW:     profitability.investment.expectedNetProfit,
+      holdingPeriodDays:   profitability.investment.holdingPeriodDays,
+    })
+    const fixedFeesUSD   = result.fees.xrfMgmtUSD + result.fees.xrfSetupUSD +
+                           result.fees.platformMarginUSD + result.fees.servicingUSD
+    const displayPoolUSD = result.nplTotalEquityUSD + fixedFeesUSD
+    const rwaPriceUSD    = 1000 // default — XrfRwaSection 기본값과 동일
+    const numRwa         = Math.max(1, Math.round(displayPoolUSD / rwaPriceUSD))
+    const perRwaProfit   = result.lpNetProfitUSD / numRwa
+    const lpDistributionUSD   = result.lpCapitalUSD + result.lpNetProfitUSD
+    const totalVehicleFeesUSD = result.fees.xrfTotalUSD + result.fees.platformTotalUSD + result.fees.servicingUSD
+    const metrics  = computeFundMetrics({
+      lpCapitalUSD: result.lpCapitalUSD, lpDistributionUSD,
+      holdingPeriodDays: profitability.investment.holdingPeriodDays,
+      nplPurchaseUSD:   result.nplPurchaseUSD,
+      nplNetProfitUSD:  result.nplNetProfitUSD,
+      totalVehicleFeesUSD, hurdleRateYr: 0.08,
+    })
+    const benchmark = computeIndustryBenchmark(0.08, result.durationYr)
+    const args = { result, metrics, displayPoolUSD, numRwa, rwaPriceUSD, perRwaProfit, benchmark }
+    return {
+      summary:   buildXrfRwaSummary(args),
+      summaryEn: buildXrfRwaSummaryEn(args),
+    }
+  }, [report])
+
   if (!report) {
     return (
       <MckPageShell variant="tint">
@@ -681,6 +714,17 @@ export default function UnifiedReportPage() {
           report={report}
           lang={lang}
           onClose={() => setSummaryOpen(false)}
+          overrideSummaryKo={
+            valuationMode === 'XRF_RWA' ? xrfRwaSummaryData?.summary
+            : valuationMode === 'XRF'   ? xrfSummaryData?.summary
+            : undefined
+          }
+          overrideSummaryEn={
+            valuationMode === 'XRF_RWA' ? xrfRwaSummaryData?.summaryEn
+            : valuationMode === 'XRF'   ? xrfSummaryData?.summaryEn
+            : undefined
+          }
+          valuationMode={valuationMode}
         />
       )}
 
@@ -689,7 +733,21 @@ export default function UnifiedReportPage() {
           이전에는 visibility:hidden 만 사용해 본문 페이지 수만큼 빈 페이지가 함께 출력되는 버그. */}
       {mounted && createPortal(
         <div className="print-summary-only" aria-hidden="true">
-          <SummaryPrintable report={report} lang={lang} />
+          <SummaryPrintable
+            report={report}
+            lang={lang}
+            overrideSummaryKo={
+              valuationMode === 'XRF_RWA' ? xrfRwaSummaryData?.summary
+              : valuationMode === 'XRF'   ? xrfSummaryData?.summary
+              : undefined
+            }
+            overrideSummaryEn={
+              valuationMode === 'XRF_RWA' ? xrfRwaSummaryData?.summaryEn
+              : valuationMode === 'XRF'   ? xrfSummaryData?.summaryEn
+              : undefined
+            }
+            valuationMode={valuationMode}
+          />
         </div>,
         document.body,
       )}
@@ -5013,10 +5071,16 @@ function SummaryViewerModal({
   report,
   lang,
   onClose,
+  overrideSummaryKo,
+  overrideSummaryEn,
+  valuationMode,
 }: {
   report: UnifiedAnalysisReport
   lang: Lang
   onClose: () => void
+  overrideSummaryKo?: string
+  overrideSummaryEn?: string
+  valuationMode?: 'NPL' | 'XRF_RWA' | 'XRF'
 }) {
   const t = T[lang]
   return (
@@ -5050,7 +5114,14 @@ function SummaryViewerModal({
             <X className="w-4 h-4" style={{ color: "#0A1628" }} />
           </button>
         </div>
-        <SummaryPrintable report={report} lang={lang} viewerMode />
+        <SummaryPrintable
+          report={report}
+          lang={lang}
+          viewerMode
+          overrideSummaryKo={overrideSummaryKo}
+          overrideSummaryEn={overrideSummaryEn}
+          valuationMode={valuationMode}
+        />
       </div>
     </div>
   )
@@ -5060,13 +5131,31 @@ function SummaryPrintable({
   report,
   lang,
   viewerMode = false,
+  overrideSummaryKo,
+  overrideSummaryEn,
+  valuationMode,
 }: {
   report: UnifiedAnalysisReport
   lang: Lang
   viewerMode?: boolean
+  overrideSummaryKo?: string
+  overrideSummaryEn?: string
+  valuationMode?: 'NPL' | 'XRF_RWA' | 'XRF'
 }) {
   const t = T[lang]
   const { summary, recovery, risk, profitability, input, executiveSummary } = report
+
+  // 모드별 AI 총평 선택 — XRF 모드는 override 우선
+  const activeSummaryText =
+    lang === 'ko'
+      ? (overrideSummaryKo ?? executiveSummary)
+      : (overrideSummaryEn ?? report.executiveSummaryEn ?? executiveSummary)
+
+  // 모드 레이블 (EXECUTIVE SUMMARY 박스 상단)
+  const summaryModeLabel =
+    valuationMode === 'XRF_RWA' ? 'XRF RWA · LP 투자 총평'
+    : valuationMode === 'XRF'   ? 'XRF Admin · Vehicle 총평'
+    : 'EXECUTIVE SUMMARY'
   const vScore = summary.verdictScore ?? 0
   const vGrade = verdictScoreToGrade(vScore)
   const principal = input.claimBreakdown?.principal ?? input.totalBondAmount
@@ -5177,13 +5266,13 @@ function SummaryPrintable({
         style={{ backgroundColor: "#051C2C", color: "#FFFFFF", borderLeft: "4px solid #2251FF" }}
       >
         <div className="text-[0.5625rem] tracking-[0.22em] font-bold mb-2" style={{ color: "#6FB8E6" }}>
-          EXECUTIVE SUMMARY
+          {summaryModeLabel}
         </div>
         <p
           className="text-[0.875rem] leading-relaxed font-medium"
-          style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+          style={{ fontFamily: 'Georgia, "Times New Roman", serif', whiteSpace: 'pre-line' }}
         >
-          {executiveSummary}
+          {activeSummaryText}
         </p>
       </div>
 
