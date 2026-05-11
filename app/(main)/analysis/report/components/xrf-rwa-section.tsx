@@ -120,6 +120,13 @@ export default function XrfRwaSection({
   const numRwa = Math.max(1, Math.round(displayPoolUSD / rwaPriceUSD))
   const perRwaProfit = result.lpNetProfitUSD / numRwa
 
+  // ── ROI / IRR 보정 ─────────────────────────────────────────────────────────
+  // LP가 실제 투자하는 금액 = displayPoolUSD (nplTotalEquity + vehicle fees 선납분)
+  // 엔진의 lpRoi = lpNetProfit / lpCapital(=nplEquity only) → 분모가 작아 과대 산출됨
+  // → ROI 표시 기준을 displayPoolUSD(실제 LP 투자 총액)으로 정정
+  const displayRoi    = displayPoolUSD > 0 ? result.lpNetProfitUSD / displayPoolUSD : 0
+  const displayIrrYr  = result.durationYr > 0 ? displayRoi / result.durationYr : 0
+
   // ── Fund Metrics ───────────────────────────────────────────────────────────
   const lpDistributionUSD  = result.lpCapitalUSD + result.lpNetProfitUSD
   const totalVehicleFeesUSD = result.fees.xrfTotalUSD + result.fees.platformTotalUSD + result.fees.servicingUSD
@@ -151,7 +158,7 @@ export default function XrfRwaSection({
     ? buildXrfRwaSummary(summaryArgs)
     : buildXrfRwaSummaryEn(summaryArgs)
 
-  const verdict = result.lpRoi >= 0.15 ? 'BUY' : result.lpRoi >= 0.05 ? 'HOLD' : 'AVOID'
+  const verdict = displayRoi >= 0.15 ? 'BUY' : displayRoi >= 0.05 ? 'HOLD' : 'AVOID'
   const verdictColor = verdict === 'BUY' ? EMERALD : verdict === 'HOLD' ? AMBER : '#EF4444'
 
   return (
@@ -168,7 +175,7 @@ export default function XrfRwaSection({
           {[
             { lbl: '투자 (LP Capital)  Pool', val: fmt$(displayPoolUSD), sub: '', color: '#fff' },
             { lbl: '→', val: '', sub: '', color: EMERALD },
-            { lbl: '수익 (Net Profit)', val: fmt$(result.lpNetProfitUSD), sub: `ROI ${fmtPct(result.lpRoi)}`, color: EMERALD },
+            { lbl: '수익 (Net Profit)', val: fmt$(result.lpNetProfitUSD), sub: `ROI ${fmtPct(displayRoi)}`, color: EMERALD },
             { lbl: '⏱', val: '', sub: '', color: '#93C5FD' },
             { lbl: '기간', val: `${holdingPeriodDays}일`, sub: `${result.durationYr.toFixed(1)}년`, color: '#fff' },
           ].map(({ lbl, val, sub, color }, i) => (
@@ -189,7 +196,7 @@ export default function XrfRwaSection({
         {/* 핵심 지표 */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10 }}>
           {[
-            { l: 'LP IRR',       v: `${fmtPct1(result.lpIrrYr)}/yr` },
+            { l: 'LP IRR',       v: `${fmtPct1(displayIrrYr)}/yr` },
             { l: 'Hurdle Rate',  v: '8.00%/yr' },
             { l: 'Hurdle 금액',  v: fmt$(result.hurdleUSD) },
             { l: 'Carry',        v: result.fees.xrfCarryUSD > 0 ? fmt$(result.fees.xrfCarryUSD) : '$0 (미발생)' },
