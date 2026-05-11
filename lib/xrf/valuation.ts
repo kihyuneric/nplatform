@@ -437,24 +437,24 @@ function selectAutoTier(
   if (base.lpRoi >= 0.25) {
     return {
       tier: 'BASE',
-      reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% ≥ 25% — 양보 불필요 (RWA 출시 가능)`,
+      reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% ≥ 25% 이상 — 양보 불필요 (RWA 즉시 출시 가능)`,
     }
   }
   if (base.lpRoi >= 0.15) {
     return {
       tier: 'CONSERVATIVE',
-      reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% (15~25%) — XRF Carry 양보 (15→10%) → CONSERVATIVE LP ROI ${(conservative.lpRoi * 100).toFixed(2)}%`,
+      reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% (15% 이상 ~ 25% 미만) — XRF Carry 부분 양보 (15%→10%) → CONSERVATIVE LP ROI ${(conservative.lpRoi * 100).toFixed(2)}%`,
     }
   }
   if (base.lpRoi >= 0.05) {
     return {
       tier: 'SAVE-THE-DEAL',
-      reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% (5~15%) — 모두 양보 (Carry 5% · KOF 최소) → SAVE LP ROI ${(saveTheDeal.lpRoi * 100).toFixed(2)}%`,
+      reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% (5% 이상 ~ 15% 미만) — Carry 최대 양보 (5%) → SAVE LP ROI ${(saveTheDeal.lpRoi * 100).toFixed(2)}%`,
     }
   }
   return {
     tier: 'REJECT',
-    reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% < 5% 임계값 미달 — RWA 출시 부적합 (REJECT)`,
+    reason: `BASE LP ROI ${(base.lpRoi * 100).toFixed(2)}% — 5% 미만 임계값 미달 · RWA 출시 부적합 (REJECT)`,
   }
 }
 
