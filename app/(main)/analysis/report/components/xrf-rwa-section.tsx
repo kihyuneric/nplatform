@@ -166,7 +166,7 @@ export default function XrfRwaSection({
         {/* 투자 → 수익 → 기간 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
           {[
-            { lbl: '투자 (LP Capital)', val: fmt$(result.lpCapitalUSD), sub: `${result.nplTotalEquityUSD > 0 ? '' : ''}Pool ${fmt$(displayPoolUSD)}`, color: '#fff' },
+            { lbl: `투자 (LP Capital)  Pool ${fmt$(displayPoolUSD)}`, val: fmt$(result.lpCapitalUSD), sub: 'LP 자기자본', color: '#fff' },
             { lbl: '→', val: '', sub: '', color: EMERALD },
             { lbl: '수익 (Net Profit)', val: fmt$(result.lpNetProfitUSD), sub: `ROI ${fmtPct(result.lpRoi)}`, color: EMERALD },
             { lbl: '⏱', val: '', sub: '', color: '#93C5FD' },
@@ -227,11 +227,7 @@ export default function XrfRwaSection({
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
           <tbody>
             <TR label="NPL 자기자본 (LP funding base)" value={fmt$(result.nplTotalEquityUSD)} />
-            <TR label="  ├ XRF 관리보수 (1%/yr)" value={fmt$(result.fees.xrfMgmtUSD)} note="Pool prefund" />
-            <TR label="  ├ XRF SPV Setup (1%)" value={fmt$(result.fees.xrfSetupUSD)} note="Pool prefund" />
-            <TR label="  ├ KOF KR Margin (0.5%)" value={fmt$(result.fees.platformMarginUSD)} note="Pool prefund" />
-            <TR label="  ├ NPL VC Servicing (2%)" value={fmt$(result.fees.servicingUSD)} note="Pool prefund" />
-            <TR label="  └ AI Sourcing (1.5%)" value={fmt$(result.fees.platformAiUSD)} note="NPL profit 차감 · Pool 제외" />
+            <TR label="XRF Vehicle Fees (Pool prefund)" value={fmt$(result.fees.xrfMgmtUSD + result.fees.xrfSetupUSD + result.fees.platformMarginUSD + result.fees.servicingUSD)} note="Pool prefund" />
             <TR label="Pool 총액 (= LP 청약액)" value={fmt$(displayPoolUSD)} bold />
             <TR label="RWA 발행" value={`${numRwa.toLocaleString('en-US')} RWA × $${rwaPriceUSD.toLocaleString('en-US')}`} note={`1 RWA당 ${fmt$(perRwaProfit)}`} bold last />
           </tbody>
