@@ -235,23 +235,22 @@ export function PropertyCollateralAnalysis({ address, assetTitle }: PropertyColl
       background: '#fff',
     }}>
 
-      {/* ── 헤더 (라이트 스타일 — 리포트 섹션 맞춤) ──────────────────── */}
+      {/* ── 헤더 (네이비 — 원래 색상 유지) ──────────────────────────── */}
       <div style={{
-        background: BG_HEAD,
-        borderBottom: `1px solid ${BORDER}`,
+        background: NAVY,
         padding: '8px 14px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Sparkles size={12} color={NAVY} />
-          <span style={{ fontSize: 11, fontWeight: 700, color: NAVY, letterSpacing: '-0.01em' }}>
+          <Sparkles size={12} color={EMERALD} />
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>
             부동산 담보 가치 분석
           </span>
           {isDeterministic && (
             <span style={{
-              fontSize: 9, color: TEXT_SEC, fontWeight: 600,
-              background: '#E2E8F0', padding: '1px 6px',
-              borderRadius: 99,
+              fontSize: 9, color: EMERALD, fontWeight: 600,
+              background: `${EMERALD}22`, padding: '1px 6px',
+              borderRadius: 99, border: `1px solid ${EMERALD}44`,
             }}>
               사전 분석
             </span>
@@ -259,7 +258,7 @@ export function PropertyCollateralAnalysis({ address, assetTitle }: PropertyColl
           {(isLive || isLoading) && (
             <span style={{
               fontSize: 9, color: EMERALD, fontWeight: 600,
-              background: `${EMERALD}18`, padding: '1px 6px',
+              background: `${EMERALD}22`, padding: '1px 6px',
               borderRadius: 99, border: `1px solid ${EMERALD}44`,
             }}>
               Claude AI
@@ -272,10 +271,10 @@ export function PropertyCollateralAnalysis({ address, assetTitle }: PropertyColl
           <button
             onClick={() => setShowPrompt(s => !s)}
             style={{
-              background: 'transparent', border: `1px solid ${BORDER}`,
+              background: 'transparent', border: '1px solid #ffffff33',
               borderRadius: 5, padding: '3px 8px',
               display: 'flex', alignItems: 'center', gap: 4,
-              color: TEXT_MUT, fontSize: 10, cursor: 'pointer',
+              color: '#ffffffaa', fontSize: 10, cursor: 'pointer',
             }}
           >
             <Code2 size={9} />
@@ -287,10 +286,10 @@ export function PropertyCollateralAnalysis({ address, assetTitle }: PropertyColl
             <button
               onClick={generateLive}
               style={{
-                background: 'transparent', border: `1px solid ${NAVY}44`,
+                background: 'transparent', border: '1px solid #ffffff44',
                 borderRadius: 5, padding: '3px 8px',
                 display: 'flex', alignItems: 'center', gap: 4,
-                color: NAVY, fontSize: 10, cursor: 'pointer', fontWeight: 600,
+                color: '#ffffffcc', fontSize: 10, cursor: 'pointer', fontWeight: 600,
               }}
             >
               <RefreshCw size={9} />
@@ -301,7 +300,7 @@ export function PropertyCollateralAnalysis({ address, assetTitle }: PropertyColl
           {/* 접기/펼치기 */}
           <button
             onClick={() => setCollapsed(c => !c)}
-            style={{ background: 'transparent', border: 'none', color: TEXT_MUT, cursor: 'pointer', padding: '2px 4px' }}
+            style={{ background: 'transparent', border: 'none', color: '#ffffffaa', cursor: 'pointer', padding: '2px 4px' }}
           >
             {collapsed ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
           </button>
