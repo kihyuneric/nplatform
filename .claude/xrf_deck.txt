@@ -1,0 +1,821 @@
+
+=== Page 1 ===
+XRF FOUNDATION
+한국 NPL을 글로벌 자본시장으로 — XRPL 위에서
+전략 제안서 ·  RIPPLE × XRF
+2026년 5월 ·  v4.0  ·  대외비
+$1.2T+ 아시아 NPL,
+이제 XRPL.
+Two-Token 구조 · 싱가포르 SPV · 동적 Fee 엔진 · 검증된 자산군
+진입 가능 시장
+USD 1.2T+
+아시아 NPL · 한국 ₩80조/년
+검증된 ROI
+67.5%
+Case 1 · 19개월 cycle
+규제 해자
+9 / 9
+법적 리스크 구조적 헷지
+Kim Kihyun, Ph.D.  ·  CEO, TRANSFARMER  ·  XRF Foundation 대표 ceo@transfarmer.co.kr  ·  www.xrft.net
+
+=== Page 2 ===
+EXECUTIVE SUMMARY
+XRF를 정의하는 6가지 숫자.
+02 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  02
+한국 NPL은 30~60% IRR로 검증된 아시아 최고 자산군 — 그러나 글로벌 LP는 진입 불가.
+XRF는 XRPL 네이티브 보안토큰 + RLUSD 분배 구조 + 싱가포르 SPV로 이를 해결합니다.
+아시아 NPL TAM
+$1.2T+
+한국 ₩80조/년 · 베트남 $45B+
+LP ROI · CASE 1
+25.2%
+종로 · BASE tier · 19개월
+LP ROI · CASE 3
+46.2%
+강남 · BASE tier · 12개월
+초기 셋업 비용
+$70.5K
+법무·구조화 일체 · M1–M3
+Ripple 스택
+4 Layers
+MPT · RLUSD · ODL · 전략투자
+3년 AUM 목표
+$184M
+200건 · 50,000 LP · Y3 2028
+왜 RIPPLE × XRF 인가
+한국발 첫 RWA 레퍼런스 아키텍처 (XRPL) — 단일 통합으로 RLUSD adoption · ODL USD↔KRW 볼륨 · 아시아 RWA 청사진 동시 확보.
+
+=== Page 3 ===
+01  ·  60초 PITCH
+우리가 푸는 문제 — 다섯 줄 요약.
+03 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  03
+한국의 검증된 고수익 NPL → XRPL에서 토큰화 → RLUSD로 분배.
+동적 fee 엔진이 LP에게 매력적인 deal만 자동 선별하여 시장에 출시.
+01
+한국 NPL = 검증된 고수익 자산군.
+법인 (LTV 90%): NPL ROI 100%+ · IRR 130%+
+개인 (LTV 75%): NPL ROI 30~60% · IRR 40~50%/yr
+02
+그러나 글로벌 LP는 진입 불가.
+한국 대부업법 + 자기자본 USD 460k+ · 개인정보 접근 제약.
+실거래는 국내 대부업체 몇 곳만 가능.
+03
+XRF가 NPL을 RWA로 변환 — Two-Token Model.
+NPL Security Token (SG SPV, MAS 면제) + Stablecoin 분배 (RLUSD).
+발행과 지급의 법적 분리로 모든 규제 리스크 헷지.
+04
+동적 Fee 엔진 — 자동 tier 선택.
+BASE → CONSERVATIVE → SAVE 3-tier · LP ROI 임계값 기반 자동 선택.
+매력 없는 deal은 시뮬레이터가 자동 거부 (REJECT).
+05
+한국 PoC → 아시아 RWA 인프라.
+$1.2T+ 아시아 NPL · Ripple MOU 진행 중 · 동일 인프라 APAC 확장.
+첫 한국발 글로벌 RWA case study + Ripple 풀스택 활용.
+
+=== Page 4 ===
+02  ·  THE OPPORTUNITY
+$1.2T+ 아시아 NPL — 12~18개월의 선점 기회.
+04 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  04
+$280T
+Global Illiquid Assets
+부동산 $326T 포함 — 기관 투자 진입 불가
+$1.2T+
+Asian NPL Market
+한국 ₩80조/년 · 5년 이상 트랙 레코드
+$16T
+2030 RWA Market (BCG)
+현재 TVL $5.8B · 0.1% 미만 — 인프라 구축기
+세 가지 거시 흐름이 수렴 — 2026년이 변곡점.
+01 규제 명확화
+MAS Payment Services Act · EU MiCA · HK SFC VA 
+라이선스
+02 기관 자본 본격 진입
+BlackRock BUIDL · JP Morgan Onyx · Goldman GS 
+DAP — RWA 자금 라이브
+03 XRPL 인프라 성숙
+MPT (XLS-33) · Native AMM · RLUSD — 기관급, 
+RWA 네이티브
+XRF는 한국 — 아시아 최고 밀도의 고수익 NPL 시장 — 을 선점하고, 동일 인프라로 권역 확장합니다.
+
+=== Page 5 ===
+03  ·  NPL이란?
+한국 NPL이 어떻게 61% ROI 자산이 되는가.
+05 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  05
+1
+은행 ₩100M 대출
+부동산 담보 (₩120M)
+2
+차주 부도
+NPL 분류 — BIS 압박
+3
+60% 할인 매각
+₩60M 매각 = 40% 할인
+4
+법원 경매
+한국 법원 경매 8~12개월
+5
+낙찰 110%
+₩110M 회수 → +₩50M 이익
+THE MATH  ·  계산 예시
+은행 원래 대출 ₩100,000,000
+NPL 매수가 (60% 할인) ₩60,000,000
+매수자 부수비용 + ₩8,000,000
+실제 매수자 투입 = ₩68,000,000
+법원 경매 낙찰가 (110%) ₩110,000,000
+Net Profit + ₩42,000,000
+ROI · 8~12개월 + 61.8%
+NPL이 검증된 자산군인 이유
+① 부동산 담보 보호
+손실율 = 실물자산이 cap
+② 법원 강제집행
+한국 법원 경매 = 강제 현금화
+③ 은행 매각 의무
+BIS 비율 관리 위해 처분 압박
+④ 35,000건 데이터
+ML 가격 검증 — 과거 결과 기반
+
+=== Page 6 ===
+04  ·  TWO-TOKEN MODEL ★
+발행과 지급의 법적 분리.
+06 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  06
+“NPL의 가치는 Security Token이 담고, 수익의 안정성은 Stablecoin이 배달한다.”
+NPL을 ‘담보’로 발행되는 토큰은 Security Token 하나뿐. 분배 통화 Stablecoin은 Ripple 발행 제3자 자산이므로 MAS Stablecoin Service Provider 규제 미적용.
+NPL Security Token  ·  XRPL MPT (XLS-33)
+역할 경제적 권리 담지
+발행자 SG Pte Ltd SPV
+법적 성격 Capital Markets Product
+MAS 규제 SFA s.274 / s.275 면제
+가격 NAV (순자산가치) 변동
+담보 NPL Pool (간접)
+유통 Whitelist · Accredited Only
+표준 XRPL MPT (XLS-33)
+Stablecoin (외부)  ·  RLUSD / USDC
+역할 분배·결제 통화
+발행자 Ripple (RLUSD) / Circle (USDC)
+법적 성격 E-money / Digital Payment Token
+MAS 규제 기 승인 발행자 (XRF 책임 아님)
+가격 USD 1.00 고정 페그
+담보 발행사 자체 준비자산
+유통 공개 유통 가능
+표준 XRPL IOU
+Source — MAS Securities and Futures Act s.274 / s.275  ·  XRPL MPT (XLS-33)  ·  Ripple RLUSD documentation
+
+=== Page 7 ===
+05  ·  TARGET ARCHITECTURE
+싱가포르(자본) ↔ 한국(자산) — Master Framework로 연결.
+07 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  07
+좌측은 싱가포르(자본·토큰 발행), 우측은 한국(자산·집행). 국경을 통과하는 유일한 통로는 Master Framework Contract.
+GLOBAL ACCREDITED INVESTORS
+Non-Korea  ·  Self-custody XRPL Wallets  ·  SFA s.274 / s.275 면제
+① USD 청약 송금 ④ RLUSD / USDC 분배
+[SG]  SG Pte Ltd SPV  ·  NPL RWA Issuer
+XRPL MPT Security Token 발행 · 투자자 법적 상대방
+MPT Issuer Wallet — 3-of-5 Multi-sig
+5종 Legal Documents · Corp Sec + Nominee Director
+Accredited Investor Whitelist · MAS s.274/275 면제
+[KR]  KR Platform Co  ·  AI · 데이터 · 딜 자문
+Platform · AI Valuation · 데이터 소싱 · 파트너 인터페이스
+Retained Margin 15~25% (이전가격 방어선)
+Master Servicing Agreement → 한국 대부업체
+SG SPV와 직접 계약 금지 — 한국 규제 firewall
+✦ CROSS-BORDER  ✦ ONE INSTRUMENT — Master Framework Contract  (Loan + Performance + Service + Data)
+[KR]  대부·추심 파트너사 (기존 협력)
+NPL 매입 · 보유 · 회수 ·  자본금 10% (무이자)  ·  Step-in Right + Exclusivity + 2nd Partner
+
+=== Page 8 ===
+06  ·  LEGAL FIREWALL
+국경 간 9개 리스크 — 모두 구조적으로 헷지.
+08 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  08
+한국·싱가포르 양국의 모든 주요 규제 리스크를 사전 매핑하고 토큰 발행 전에 구조적으로 차단했습니다.
+[KR] 대한민국 ·  5개 리스크
+✓ 집합투자 (자본시장법)
+KR Platform = Partner의 유일 상대방 · 투자자 관계 없음
+✓ 유사수신·무인가 펀드모집
+한국 마케팅·청약 전면 차단 · Geofencing + 언어 격리
+✓ 특금법 (가상자산)
+KR 법인은 토큰 미취급 — 모든 토큰 활동 SG 내
+✓ 외환거래법
+SG → KR Loan 한국은행 신고 루틴화
+✓ 이전가격 (TP)
+KR Retained Margin 15~25% + 별도 TP Study
+[SG] 싱가포르 ·  4개 리스크
+✓ SCS Stablecoin 규제
+해당 없음 — 귀하는 stablecoin 발행자 아님
+✓ SFA Prospectus
+s.274 (Institutional) + s.275 (Accredited) 면제
+✓ Fund Management License (CMS)
+단일 SPV 발행은 펀드 운용 아님 — Legal Memo 확정
+✓ PSA · DPT License
+해당 없음 — 결제·암호자산 서비스 제공 아님
+결과 ·  MAS Full License 부담 없음 ·  자본 요건 없음 ·  월간 감사 없음 ·  100% 준비자산 의무 없음
+
+=== Page 9 ===
+07  ·  BUSINESS RULES ★
+차주 유형 + 회수율 + 운용기간 → LP ROI → tier.
+09 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  09
+모든 NPL이 RWA로 출시 가능한 것은 아닙니다. 시뮬레이터가 단일 LP-ROI 임계값으로 자동 판별합니다.
+01 법인 차주 (LTV 90%)
+자기자본 비중 10% → fee 부담 작음 → BASE 적용
+가능
+BASE
+02 개인 차주 (LTV 75%)
+자기자본 비중 25% → fee 부담 큼 → 양보 필요
+양보
+03 짧은 cycle deal
+운용기간 짧을수록 fee 절대값이 LP ROI 좌우
+SAVE
+04 대부업체 자본금 10%
+Day 0 prepay → Day exit 그대로 환원 (수익 무관)
+Pool
+05 시뮬레이터 자동 판별
+Tier 자동 선택 · LP 비매력 시 자동 거부
+AUTO
+AUTO TIER  ·  by LP ROI
+LP ROI ≥ 20% BASE
+10~20% CONSERVATIVE
+5~10% SAVE-THE-DEAL
+< 5% ✗ REJECT
+
+=== Page 10 ===
+08  ·  3-TIER FEE SYSTEM
+역할별 단계 양보 · TP 방어선과 Servicing은 고정.
+10 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  10
+시뮬레이터가 LP ROI 기반 tier 선택. SAVE에서는 엔플랫폼이 양보 폭을 가장 크게 가져가고, XRF는 Carry 5%를 유지 — KR Margin (TP 방어선)은 모든 tier에서 동일.
+Fee 항목 · 세부 구성
+BASE
+LP ROI ≥ 20%
+CONSERVATIVE
+10~20%
+SAVE-THE-DEAL
+5~10%
+XRF Carry (성과보수 · 8% Hurdle 초과분) 15% 10% 5%
+XRF 관리보수 (%/yr · 365일 cap) 0.7% 0.5% 0.5%
+XRF SPV · Setup (1회 · SG SPV + KYC) 0.5% 0.3% 0.3%
+엔플랫폼 · AI Valuation (ML 가격평가) 0.7% 0.7% 0.3%
+엔플랫폼 · Pipeline Sourcing (딜 발굴·소싱) 1.0% 1.0% 0.4%
+엔플랫폼 · PM Fee (프로젝트 매니지먼트) 0.85% 0.85% 0.45%
+엔플랫폼 · KR Margin — TP 방어선 ≥15% ★ 0.45% 0.45% 0.45%
+엔플랫폼 — 소계 3.0% 3.0% 1.6%
+대부업체 Servicing (시장 표준 라이선스 가치) 2.0% (고정) 2.0% (고정) 2.0% (고정)
+대부업체 자본금 — Day Exit 1:1 환원 10% (고정) 10% (고정) 10% (고정)
+Hurdle Rate (LP 우선 수익률) 8%/yr (고정) 8%/yr (고정) 8%/yr (고정)
+DESIGN PRINCIPLE  ·  누가, 어떤 순서로 양보하는가
+XRF Carry: 15% → 10% → 5% — SAVE에서도 XRF는 5% 보유.
+엔플랫폼이 SAVE 양보의 대부분 흡수 (3.0% → 1.6%) — AI / Sourcing / PM 압축.
+★ KR Margin 0.45% 모든 tier 고정 — TP 방어선 ≥15% 항상 충족 (BASE/CONS 15.0% · SAVE 28.1%).
+대부업체 Servicing 2%는 변동 없음 — 시장 표준 라이선스 가치.
+
+=== Page 11 ===
+09  ·  CASE STUDY 1
+종로구 홍지동 토지 NPL  ·  개인 75% / 19개월
+11 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  11
+NPL 자체 ROI 67.50% · IRR 42.78%/yr  ·  AUTO: BASE — XRF 비히클 LP ROI 25.2%.
+ASSET
+토지 8필지 · 종로
+PURCHASE
+₩1,729M  ·  USD 1.33M
+DURATION
+576일 ·  19개월
+LTV
+75%  ·  개인
+RECOVERY
+56.4%
+LP cash 기준
+Metric BASE  ★ CONSERVATIVE SAVE-THE-DEAL
+LP Capital Call (1인당) USD 6,810 USD 6,702 USD 6,505
+LP Net Profit (1인당) USD 2,850 USD 3,180 USD 3,860
+LP ROI ★ (절대) 25.23% 28.60% 35.75%
+LP IRR (연환산) 15.99%/yr 18.12%/yr 22.66%/yr
+XRF 매출 USD 53k USD 36k USD 9k
+엔플랫폼 매출 USD 40k USD 40k USD 21k
+대부업체 Servicing USD 27k USD 27k USD 27k
+AUTO 평가 ·  ★ BASE — LP ROI 25.23% 매력적 (양보 불필요)  ·  RWA 출시 가능
+
+=== Page 12 ===
+10  ·  CASE STUDY 2
+송파구 잠실 오피스텔 NPL  ·  개인 75% / 8개월
+12 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  12
+NPL 자체 ROI 29.24% · IRR 45.41%/yr  ·  AUTO: SAVE — 짧은 cycle, 모두 양보.
+ASSET
+오피스텔 · 잠실
+PURCHASE
+₩1,960M · USD 1.51M
+DURATION
+235일 · 8개월
+LTV
+75% · 개인
+RECOVERY
+39.6%
+LP cash 기준
+Metric BASE CONSERVATIVE SAVE-THE-DEAL  ★
+LP Capital Call (1인당) USD 6,967 USD 6,859 USD 6,649
+LP Net Profit (1인당) USD 72 USD 92 USD 138
+LP ROI ★ (절대) 6.24% 8.12% 12.47%
+LP IRR (연환산) 9.70%/yr 12.61%/yr 19.37%/yr
+XRF 매출 USD 29k USD 20k USD 8k
+엔플랫폼 매출 USD 45k USD 45k USD 24k
+대부업체 Servicing USD 30k USD 30k USD 30k
+AUTO 평가 ·  ⚠ SAVE — BASE LP ROI 6.24% 임계값 미달 → 모두 양보로 LP 12.47% 회복
+
+=== Page 13 ===
+11  ·  CASE STUDY 3
+강남구 상가 NPL (가상)  ·  법인 90% / 12개월
+13 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  13
+NPL 자체 ROI 134.2% · IRR 136.0%/yr  ·  AUTO: BASE — 법인 차주 모범 사례.
+ASSET
+상가 · 강남 (가상)
+PURCHASE
+₩3,500M · USD 2.69M
+DURATION
+360일 · 12개월
+LTV
+90% · 법인
+RECOVERY
+42.0%
+LP cash 기준
+Metric BASE  ★ CONSERVATIVE SAVE-THE-DEAL
+LP Capital Call (1인당) USD 9,067 USD 8,882 USD 8,492
+LP Net Profit (1인당) USD 4,190 USD 4,610 USD 5,510
+LP ROI ★ (절대) 46.21% 51.86% 64.84%
+LP IRR (연환산) 46.85%/yr 52.58%/yr 65.74%/yr
+XRF 매출 USD 115k USD 78k USD 16k
+엔플랫폼 매출 USD 81k USD 81k USD 43k
+대부업체 Servicing USD 54k USD 54k USD 54k
+AUTO 평가 ·  ★ BASE — LP ROI 46.21% 모범 사례 · 법인 차주 deal은 XRF 핵심 패턴
+
+=== Page 14 ===
+12  ·  3-CASE COMPARISON ★
+동일 시뮬레이터 · 동일 fee 구조 · 차주 유형 + cycle이 LP ROI 결정.
+14 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  14
+하나의 시뮬레이터, 세 가지 deal — 자동 tier 선택이 구조를 적응시킵니다.
+Case 1 · 종로 토지
+개인 75%  ·  19개월 ·  회수 56.4%
+AUTO TIER  ·  BASE ★
+LP ROI ★
+25.23%
+LP Net (100명)
+USD 285k
+XRF 매출
+USD 53k
+양보 불필요
+Case 2 · 잠실 오피스텔
+개인 75%  ·  8개월 ·  회수 39.6%
+AUTO TIER  ·  SAVE
+LP ROI ★
+12.47%
+LP Net (100명)
+USD 138k
+XRF 매출
+USD 8k
+모두 양보 필요
+Case 3 · 강남 상가 (가상)
+법인 90%  ·  12개월 ·  회수 42%
+AUTO TIER  ·  BASE ★
+LP ROI ★
+46.21%
+LP Net (100명)
+USD 419k
+XRF 매출
+USD 115k
+법인 모범 사례
+INSIGHT  ·  법인 차주 deal은 BASE에서도 매력적 ·  개인 차주는 회수율 × 운용기간으로 단계 결정.
+
+=== Page 15 ===
+13  ·  TECHNICAL EXCELLENCE
+네이티브 XRPL — 6개 표준 풀스택 활용, Ethereum-wrapper 아님.
+15 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  15
+기존 RWA 프로젝트 대부분은 Ethereum/Polygon ERC-20 wrapper 의존. XRF는 6개 XRPL 네이티브 표준 직접 구현.
+01 MPT  ·  XLS-33
+NPL Security Token 네이티브 발행
+발행 비용 ERC-20 대비 1/100  ·  10× 처리속도 ·  메타
+데이터 온체인 (IPFS 무관)
+02 AMM  ·  Native
+NPL 토큰 즉시 유동성 풀
+외부 DEX 통합 불필요 ·  XRPL 네이티브 유동성 ·  낙
+찰 시 NAV 자동 조정
+03 RLUSD  ·  Stablecoin
+분배·결제 통화
+MAS Stablecoin Service License는 Ripple 책임 ·  1초
+정산 ·  USD 1.00 페그
+04
+ODL  ·  USD↔KRW
+Cross-border corridor
+SWIFT 3일 → 5분 ·  비용 80% 절감 ·  FX 슬리피지 최
+소화
+05
+DID + Permissioned Domain  ·  
+XLS-70
+Accredited 투자자 네이티브 KYC
+온체인 KYC  ·  off-chain DB 제거 ·  자동 컴플라이언스
+06
+Multi-sig Issuer Wallet
+3-of-5 keys 발행 통제
+단일 키 리스크 제거 ·  SG 이사회 결의 → 온체인 매핑
+
+=== Page 16 ===
+14  ·  RWA BEST PRACTICE
+한국발 첫 XRPL 레퍼런스 아키텍처.
+16 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  16
+XRF는 단일 RWA 발행을 넘어 — 아시아 전역에 재현 가능한 reference architecture를 codify.
+영역 기존 RWA 프로젝트 XRF on Ripple ★
+Token Standard ERC-20 wrapper (가스비 부담) XRPL MPT 네이티브 (XLS-33)
+Stablecoin USDT/USDC 별도 통합 필요 RLUSD 네이티브 — Ripple 직접
+Cross-border SWIFT + 환전사 (3일, 비용 高) ODL — 5분, 80% 절감
+KYC / Whitelist Off-chain DB 별도 XRPL DID + Permissioned Domain
+법적 구조 BVI / Cayman SPV (불투명) Singapore Pte Ltd · MAS-exempt
+분배 수동 + Wire transfer Smart Contract + RLUSD 자동
+감사·투명성 분기별 off-chain 보고서 온체인 NAV + 실시간 풀
+REFERENCE ARCHITECTURE FOR ASIA RWA
+동일 한국 NPL deal 청사진이 베트남·일본·동남아에 그대로 적용. 한 번의 Ripple 통합으로 APAC 전역 RWA on-ramp.
+
+=== Page 17 ===
+15  ·  RIPPLE STRATEGIC INTEGRATION
+Ripple 4대 자산 풀스택 활용 — 단일 기능 사용 아님.
+17 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  17
+MPT + RLUSD + ODL + 전략투자 — XRF는 Day 1부터 Ripple 4대 pillar 동시 활용.
+01
+XRPL MPT (XLS-33)
+Native RWA
+NPL Security Token을 XRPL 네이티브
+발행. Y1: Tokens #1–10. 발행 비용
+Ethereum 1/100, 10× 처리속도.
+Y1  ·  Tokens #1–10 발행
+02
+RLUSD
+분배 통화
+Day Exit LP 분배 전량 RLUSD. 
+Stablecoin 발행 책임은 Ripple — XRF
+는 SCS License 부담 없음.
+Y3  ·  USD 250M+ 분배
+03
+ODL
+USD↔KRW corridor
+Day 0 USD→KRW (inbound). Day Exit 
+KRW→USD (outbound). SWIFT 대비
+95% 시간 / 80% 비용 절감.
+Y2  ·  분기당 USD 50M+
+04
+전략투자
++ Co-marketing
+Ripple Labs/Ventures Series A USD 5–
+10M · 아시아 기관 LP base 공유 · 일본
+/SEA rollout 공동 announce.
+Y1 Q3  ·  USD 5–10M
+단일 Ripple 통합으로 4가지 monetizable rail 확보 — 그리고 아시아 전역 RWA 청사진까지.
+
+=== Page 18 ===
+16  ·  COMPETITIVE LANDSCAPE
+오늘의 RWA 리더들 vs XRF — 차별화.
+18 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  18
+가장 많이 인용되는 RWA 플랫폼 대비 — XRF는 유일한 Asia-focused, NPL-native, XRPL-native 비히클.
+Platform Asset class Chain Stablecoin Geo focus TVL / scale Differentiator vs XRF
+Maple Finance Private credit ETH USDC US/Global $2.0B KR NPL 없음, XRPL 미사용
+Centrifuge Trade receivables ETH/Polkadot DAI Global $0.6B NPL 미초점, ERC-wrapped
+Securitize Tokenized funds ETH USDC US $1.5B+ 아시아 NPL 접근 없음
+OpenEden T-bills ETH USDC Global $0.4B 다른 자산군
+Backed Finance Equity / ETF ETH USDC EU $0.2B Equity (credit 아님)
+Ondo Finance Treasuries / RWA ETH/Solana USDC US $1.3B 미국 국채 (NPL 아님)
+XRF Foundation ★ Korean NPL → Asia ★ XRPL 네이티브 ★ RLUSD ★ Asia (KR→VN→JP) Pre-launch ★ Full-stack XRPL + MAS-
+exempt SPV
+XRF MOAT  ·  12개월 내 복제 불가능한 4가지 이유
+(1) 35,000건 한국 NPL 가치평가 데이터셋 (2) 한국 금융권 PoC 스택 (KB · NH · Toss · 
+Kbank)
+(3) 한·싱 양국 로펌 검증 MAS s.274/275 법적 구
+조
+(4) XRPL 네이티브 풀스택 (MPT + AMM + 
+RLUSD + ODL + DID)
+
+=== Page 19 ===
+17  ·  INSTITUTIONAL TRACTION
+5개 기관 검증 + Ripple MOU 진행.
+19 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  19
+초기 블록체인 프로젝트로는 이례적 — XRF는 각 구성 layer마다 기관급 검증 확보.
+VERIFIED
+KB 국민은행
+2025-09~
+여신관리부 위탁테스트 기업
+선정 · 부실채권 평가시스템 구
+축
+VERIFIED
+NH 농협중앙회
+2024–2025
+65개 지점 부실채권 분석 모델
+· 마케팅 플랫폼 PoC
+SELECTED
+Toss
+2025-10
+우수 파트너사 선정 · AI 경매
+서비스 in-app
+SELECTED
+Kbank
+2026-02~
+공동사업 파트너 선정 · AI 경
+매 + 광고/마케팅
+IN PROGRESS
+XRPL Korea / Ripple
+2026-01~
+MOU 및 글로벌 PoC 진행 · 글
+로벌 NPL RWA · 자산운용사 + 
+PE 참여
+국내 금융권이 엔진을 검증 — 다음은 글로벌 RWA leg.
+
+=== Page 20 ===
+18  ·  KOREAN POC PARTNER
+아시아프라퍼티자산운용 — PoC → 사업화 단계 확정.
+20 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  20
+단순 파일럿이 아닌 — Phase-2/3 명시적 commitment로 PoC를 deal flow로 전환.
+PARTNER PROFILE
+아시아프라퍼티자산운용
+ASIA PROPERTY ASSET MANAGEMENT
+“국내 최고의 종합 부동산 투자회사로 도약”
+전문 영역 PF · NPL · 실물부동산 · 부동산 개발
+투자 범위 시행 · 임대 · 운영
+포지션 한국 종합 부동산 투자회사
+특징 NPL 자산 운용 경험 · 기관 LP 네트워크
+PoC → 사업화 단계
+Phase 1  ·  PoC 검증 2026 Q2–Q3
+아시아프라퍼티 보유 NPL 1~2건 토큰화
+XRF 시뮬레이터로 LP ROI 검증
+Two-Token Model 실거래 적용
+첫 토큰 발행 + 첫 회수 검증
+Phase 2  ·  Joint Pipeline 2026 Q4 – 2027
+아시아프라퍼티 deal flow 활용 (월 3~5건)
+공동 LP base 구축 (기관투자자)
+공동 마케팅 — 한국 자산운용업계 신뢰 확보
+Phase 3  ·  사업화 확장 2027~
+아시아프라퍼티 NPL 펀드 + XRF 토큰 결합
+한국 PE / SWF 참여 시 reference 활용
+타 자산운용사 참여 모델 확장
+
+=== Page 21 ===
+19  ·  VIETNAM EXPANSION CONSORTIUM
+파빌리온PE + KPMG + 신량 부회장 — APAC 확장 벤치.
+21 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  21
+한국 PoC → 베트남 — 글로벌 PE + Big-4 + 금융 베테랑 동반으로 동남아 RWA 시장 공략.
+Lead Investor
+파빌리온PE
+PAVILION PRIVATE EQUITY
+한국 사모펀드 운용사 · 부동산·인프라 전문
+CONTRIBUTION
+베트남 deal sourcing · LP capital pool · 기관 네트워크
+Audit & Advisory
+KPMG
+KPMG SAMJONG ACCOUNTING
+글로벌 4대 회계법인 · 한·베 양국 사업 자문
+CONTRIBUTION
+베트남 법무·세무·이전가격 · 감사 신뢰성 · 글로벌 LP 안
+심
+Strategic Advisor
+신량 부회장
+VICE CHAIRMAN, PAVILION
+파빌리온자산운용 부회장 · 동남아 베테랑
+CONTRIBUTION
+베트남 정부·금융권 네트워크 · 현지 deal 발굴 · 전략 자
+문
+$45B+
+베트남 NPL 시장
+급성장 중
+8.0%/yr
+GDP 성장률 (2024)
+동남아 1위
+Y3+
+XRF 진출 시기
+한국 PoC 후
+RLUSD
+USD↔VND Corridor
+Ripple 공동 배포
+
+=== Page 22 ===
+20  ·  ASIA RWA NETWORK
+3개 시장 확장 로드맵 — Ripple이 인프라 rail.
+22 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  22
+한국(자산) + 베트남(차기 시장) + 싱가포르(발행) — Ripple 스택으로 연결.
+KOREA
+2026 (Y1–Y2)  ·  PoC + Reference
+PARTNERS
+XRF Foundation
+아시아프라퍼티자산운용
+Ripple (MOU)
+KB · NH · Toss · Kbank
+VIETNAM
+2027+ (Y3+)  ·  Asia Expansion
+PARTNERS
+파빌리온PE (Lead)
+KPMG (Audit)
+신량 부회장
+현지 자산운용사
+SINGAPORE HUB
+Always  ·  Issuance Layer
+PARTNERS
+SG Pte Ltd SPV
+MAS s.274/275
+RLUSD 분배
+Global LP Whitelist
+한 번의 통합으로 ·  Ripple은 아시아 전역 RWA 인프라를 확보합니다.
+
+=== Page 23 ===
+21  ·  3-YEAR FINANCIAL PROJECTIONS
+Bottom-up — 10 → 50 → 200건 · Y3 USD 184M AUM.
+23 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  23
+Run-rate 매출 = deal volume × AUM × XRF take-rate. Y2부터 EBITDA 흑자.
+Y1 · 2026
+Deals 10건
+AUM USD 6M AUM
+LPs 1,000 LPs
+Run-rate USD 0.5M 
+Revenue
+Y2 · 2027
+Deals 50건
+AUM USD 30M 
+AUMLPs 5,000 LPs
+Run-rate USD 3.5M 
+Revenue
+Y3 · 2028
+Deals 200건
+AUM USD 184M 
+AUMLPs 50,000+ LPs
+Run-rate USD 22M 
+Revenue
+P&L (USD, 보수적 추정)
+Line item Y1 · 2026 Y2 · 2027 Y3 · 2028
+Carry (Hurdle 8% 초과 15% 가중) 0.20M 1.40M 9.50M
+관리·SPV 수수료 0.10M 0.65M 4.20M
+Platform AI / sourcing fees 0.20M 1.45M 8.30M
+총매출 0.50M 3.50M 22.0M
+운영비 (1.20M) (2.40M) (8.50M)
+EBITDA (0.70M) 1.10M 13.5M
+EBITDA 마진 — 31% 61%
+
+=== Page 24 ===
+22  ·  3-YEAR ROADMAP
+한국 PoC → 아시아 Scale — 마일스톤 & 산출물.
+24 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  24
+Y1  ·  2026
+PILOT  ·  한국 PoC
+10건 · USD 6M · 1,000 LPs
+MILESTONES
+XRF Foundation 설립
+첫 NPL Pool 토큰 발행
+Ripple MOU 체결
+5~10명 청약 → 첫 회수
+Y2  ·  2027
+EXPANSION  ·  한국 Scale
+50건 · USD 30M · 5,000 LPs
+MILESTONES
+Series A USD 30M 클로징
+기관 LP 진입 시작
+Pool #5–#20 연속 발행
+베트남 확장 검토
+Y3  ·  2028 ★
+SCALE  ·  Asia Multi-Market
+200건 · USD 184M · 50,000+ LPs
+MILESTONES
+베트남 pilot 가동
+일본/싱가포르 시장 진입
+Tier-1 PE / SWF 참여
+RLUSD 누적 USD 250M+
+
+=== Page 25 ===
+23  ·  COST & TIMELINE
+Setup + Year 1 ≈ USD 70.5K — PoC 후 4~5개월 내 상용 출시.
+25 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  25
+전체 법무·구조화 셋업 비용이 중간 규모 컨설팅 1건보다 적음.
+SETUP + YEAR 1 비용
+SG Pte Ltd 설립 $3,000
+Corp Sec + Nominee Director (Y1) $4,500
+Legal Package (한·싱 로펌) $35,000
+SG 법인 은행계좌 개설 $0
+KR 외환신고·세무 자문 $8,000
+TP Study (이전가격) $12,000
+Bank & 환전 초기 $3,000
+RLUSD / USDC OTC 계좌 $0
+Miscellaneous $5,000
+TOTAL ≈ $70,500+
+POST-POC 5-PHASE TIMELINE
+1
+Legal
+한·싱 Joint Memo · 5 Legal Docs M1–M2
+2
+Setup
+SG SPV · 은행 · Multi-sig M2–M3
+3
+Pilot
+첫 NPL Pool · 첫 MPT 발행 · 5~10명 청약 M3–M4
+4
+Distribute
+첫 회수 · 첫 Stablecoin 분배 · Case Study M4–M6
+5
+Scale
+Pool #2 / #3 연속 · 기관 LP M6+
+
+=== Page 26 ===
+24  ·  USE OF PROCEEDS
+Series A USD 5–10M — 런웨이, 성장, 그리고 아시아 점프.
+26 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  26
+Ripple Ventures + Tier-1 기관 LP 공동 펀딩. 24개월 런웨이로 Y3 아시아 scale 달성.
+35%
+엔지니어링 & 제품
+XRPL 네이티브 dev · 
+MPT/AMM/RLUSD 통합 · 시뮬
+레이터 v5 · oracle
+25%
+법무 & 컴플라이언스
+TP/감사 운영 · MAS / FSC 제출 · 
+VN 컨소시엄 docs
+20%
+Deal Origination & Ops
+아시아프라퍼티 파이프라인 · 
+2nd KR 파트너 · 
+oracle/servicing 도구
+15%
+마케팅 & LP 확보
+글로벌 accredited investor 채널
+· Ripple 공동 마케팅 · IR
+5%
+운전자본 & 예비비
+FX 버퍼 · contingency · 감사
+reserve
+WHAT THIS UNLOCKS  ·  Capital → Milestones
+Y2 USD 30M  AUM
+Y1 대비 10× 성장
+베트남 pilot 가동
+Y3 첫 APAC 시장
+Y2 EBITDA 흑자
+31% 마진 run-rate
+RLUSD USD 250M+ 흐름
+Y3 누적
+
+=== Page 27 ===
+25  ·  LEADERSHIP
+금융 · 블록체인 · AI 도메인 시니어리티 — 실행 가능한 코어 팀.
+27 / 28
+XRF Foundation  ·  CONFIDENTIAL  ·  Ripple × XRF 전략 파트너십 ·  May 2026 v4.0  ·  27
+Y1 setup → Y3 아시아 scale을 안정적으로 실행할 수 있는 검증된 팀.
+CEO & Founder
+김기현 Kim Kihyun, Ph.D.
+성균관대/한양대 경영학 박사 (Ph.D.)
+前 데이터 매니지먼트 협회 한국대표
+前 삼정KPMG 전략컨설팅본부 이사
+前 삼성서울병원 정보전략실 책임
+前 삼성 오픈타이드 시니어매니저
+前 한림국제대 MBA 주임교수
+행안부 주소미래혁신포럼 위원
+인천경제자유구역청 발전자문위원회 위원
+CTO
+신연성
+포항공대 (POSTECH)
+前 데이터 매니지먼트 협회 이사
+前 (주)앤서 CTO
+前 (주)크래프트이더 연구소장
+행안부 주소미래혁신포럼 위원
+CFO
+조윤경
+북경대 (Peking University)
+前 CALYON Bank FIM 영업
+前 KB증권 해외선물 영업
+前 TV조선 · 뉴스토마토 경제부 기자
+
+=== Page 28 ===
+THE ASK 28 / 28
+Ripple × XRF
+파트너십을 시작합시다.
+01 MOU → 정식 파트너십
+진행 중인 MOU를 정식 launch-
+partner agreement로 발전
+02 RLUSD launch partner
+한국 NPL 시장 RLUSD 첫 use case · 
+Y3 누적 USD 250M+
+03 ODL Corridor
+USD↔KRW corridor · Y2부터 분기당
+USD 50M+
+04 Strategic Investment
+Ripple Labs / Ventures Series A · USD 
+5–10M
+한국 NPL을 글로벌 자본으로, 글로벌 자본을 안정적 수익으로.
+“NPL의 가치는 Security Token이 담고, 수익의 안정성은 Stablecoin이 배달한다.”
+Kim Kihyun, Ph.D.  ·  CEO, TRANSFARMER  ·  XRF Foundation 대표 ceo@transfarmer.co.kr  ·  www.xrft.net

@@ -48,31 +48,27 @@ export interface XrfTierFees {
 /**
  * 사용자 정책 (2026-05-06 v8) — XRF_Simulator_v8 정합
  *
- * v8 핵심 변경:
- *   1) Carry 5-tier marginal (European Waterfall) — entry rate + 누진 brackets (v7 동일)
+ * v9 핵심 변경 (2026-05):
+ *   1) Carry 5-tier marginal (European Waterfall) — entry rate + 누진 brackets (v7/v8 동일)
  *      < 8% (Hurdle):  0% / 0% / 0%
- *      8% – 20%:      15% / 10% / 5%   ★ entry — LP 손실 없는 정도의 Carry
- *      20% – 40%:     20% / 15% / 10%  · 20%+ profit slice
- *      40% – 60%:     25% / 20% / 15%  · 40%+ profit slice
- *      60%+:          30% / 25% / 20%  · 고수익 deal 에서 XRF 적정 보상
+ *      8% – 25%:      15% / 10% / 5%   ★ entry
+ *      25% – 40%:     20% / 15% / 10%
+ *      40% – 55%:     25% / 20% / 15%
+ *      55%+:          30% / 25% / 20%
  *
- *   2) Fee 구조 v8 (사용자 정정):
- *      XRF Mgmt:       1.5% / 1.0% / 0.5%   (%/yr · 365일 cap)
- *      XRF Setup:      1.0% / 1.0% / 1.0%   (1회)
- *      KOF AI&PM:      0.5% / 0.4% / 0.3%   (★ PM 통합)
- *      KOF Sourcing:   1.5% / 1.2% / 0.8%
- *      KOF KR Margin:  0.5% / 0.4% / 0.4%   (★ TP defense fixed)
- *      ─────────────────────────────────────
- *      KOF subtotal:   2.5% / 2.0% / 1.5%
+ *   2) Fee 구조 v9 — 전 tier 균일화:
+ *      XRF Mgmt:                    1.0% / 1.0% / 1.0%   (%/yr · 365일 cap)   ← v8: 1.5/1.0/0.5%
+ *      XRF Setup:                   1.0% / 1.0% / 1.0%   (1회 · SG SPV + KYC)  (same)
+ *      KOF AI Val & Pipeline Src:   1.5% / 1.5% / 1.5%   (통합 flat)            ← v8: 2.0/1.6/1.1%
+ *      KOF KR Margin:               0.5% / 0.5% / 0.5%   (TP defense fixed)     ← v8: 0.5/0.4/0.4%
+ *      ──────────────────────────────────────────────────
+ *      KOF subtotal:                2.0% / 2.0% / 2.0%
  *
- *   3) NPL VC Servicing: 2.0% / 2.0% / 1.5% × Purchase
+ *   3) NPL VC Servicing: 2.0% / 2.0% / 2.0% × Purchase   ← v8: 2.0/2.0/1.5%
  *
- *   4) NPL VC Capital share (daepuCapitalPct) 제거
- *      — 채권계약금+채권잔대금이 이미 NPL totalEquity에 포함 → 이중 부과 없음
+ *   4) Hurdle Rate: 8%/yr (고정) — 전 tier 동일 (same)
  *
- *   5) PM Fee (platformPmPctYr) 제거 → AI Valuation에 통합 (platformAiPctYr)
- *
- *   6) XRF Fee 정의 = Mgmt + Setup + Carry (Carry 포함 all-in)
+ *   5) platformSourcingPctYr = 0 (AI Valuation 에 통합 · platformAiPctYr = 1.5%)
  */
 
 /** v9 Carry 5-tier marginal brackets — LP gross ROI 구간별 marginal rate */
@@ -114,33 +110,33 @@ export const CARRY_BRACKETS_V7: Record<Exclude<XrfTier, 'REJECT'>, readonly Carr
 
 export const XRF_TIERS: Record<Exclude<XrfTier, 'REJECT'>, XrfTierFees> = {
   BASE: {
-    carryPct: 0.15,                // ★ Entry rate (8-20% bracket) — 5-tier marginal 의 entry
-    xrfMgmtPctYr: 0.015,           // ★ v8: 1.5%/yr (365일 cap)
-    xrfSetupPct: 0.010,            // ★ v8: 1.0% (1회)
-    platformAiPctYr: 0.005,        // ★ v8: AI Valuation & PM 통합 0.5%
-    platformSourcingPctYr: 0.015,  // ★ v8: 1.5%
-    platformMarginPctYr: 0.005,    // ★ v8: 0.5% (TP defense fixed)
-    servicingPctYr: 0.020,         // 2.0%
+    carryPct: 0.15,                // ★ Entry rate (8-25% bracket) — 5-tier marginal 의 entry
+    xrfMgmtPctYr: 0.010,           // ★ v9: 1.0%/yr flat (365일 cap)
+    xrfSetupPct: 0.010,            // 1.0% (1회 · SG SPV + KYC)
+    platformAiPctYr: 0.015,        // ★ v9: AI Valuation & Pipeline Sourcing 통합 1.5%
+    platformSourcingPctYr: 0.000,  // ★ v9: AI에 통합 → 0%
+    platformMarginPctYr: 0.005,    // 0.5% (TP defense fixed · all tiers)
+    servicingPctYr: 0.020,         // 2.0% (all tiers)
     hurdlePctYr: 0.08,
   },
   CONSERVATIVE: {
     carryPct: 0.10,                // ★ Entry rate
-    xrfMgmtPctYr: 0.010,           // ★ v8: 1.0%/yr
-    xrfSetupPct: 0.010,            // ★ v8: 1.0% (1회)
-    platformAiPctYr: 0.004,        // ★ v8: AI Valuation & PM 통합 0.4%
-    platformSourcingPctYr: 0.012,  // ★ v8: 1.2%
-    platformMarginPctYr: 0.004,    // 0.4% (TP defense fixed)
-    servicingPctYr: 0.020,         // 2.0%
+    xrfMgmtPctYr: 0.010,           // ★ v9: 1.0%/yr flat
+    xrfSetupPct: 0.010,            // 1.0% (1회)
+    platformAiPctYr: 0.015,        // ★ v9: AI Valuation & Pipeline Sourcing 통합 1.5%
+    platformSourcingPctYr: 0.000,  // ★ v9: AI에 통합 → 0%
+    platformMarginPctYr: 0.005,    // ★ v9: 0.5% (was 0.4%)
+    servicingPctYr: 0.020,         // 2.0% (all tiers)
     hurdlePctYr: 0.08,
   },
   'SAVE-THE-DEAL': {
     carryPct: 0.05,                // ★ Entry rate
-    xrfMgmtPctYr: 0.005,           // ★ v8: 0.5%/yr
-    xrfSetupPct: 0.010,            // ★ v8: 1.0% (1회)
-    platformAiPctYr: 0.003,        // ★ v8: AI Valuation & PM 통합 0.3%
-    platformSourcingPctYr: 0.008,  // 0.8%
-    platformMarginPctYr: 0.004,    // 0.4% (TP defense fixed)
-    servicingPctYr: 0.015,         // ★ v8: 1.5%
+    xrfMgmtPctYr: 0.010,           // ★ v9: 1.0%/yr flat (was 0.5%)
+    xrfSetupPct: 0.010,            // 1.0% (1회)
+    platformAiPctYr: 0.015,        // ★ v9: AI Valuation & Pipeline Sourcing 통합 1.5%
+    platformSourcingPctYr: 0.000,  // ★ v9: AI에 통합 → 0%
+    platformMarginPctYr: 0.005,    // ★ v9: 0.5% (was 0.4%)
+    servicingPctYr: 0.020,         // ★ v9: 2.0% flat (was 1.5%)
     hurdlePctYr: 0.08,
   },
 }

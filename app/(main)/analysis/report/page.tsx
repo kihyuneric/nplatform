@@ -39,6 +39,7 @@ import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
 import { useListing, getListingTitle, getListingRegion, getListingInstitution, getListingAppraisal } from "@/lib/hooks/use-listing"
 import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/unified-report/types"
 import XrfValuationSection from "./components/xrf-valuation-section"
+import XrfRwaSection from "./components/xrf-rwa-section"
 import { PropertyPhotosExhibit } from "./components/property-photos-exhibit"
 import { computeEffectiveFirstSaleDate } from "@/lib/npl/unified-report/auction-round"
 import { computeXrfValuation } from "@/lib/xrf/valuation"
@@ -223,7 +224,7 @@ export default function UnifiedReportPage() {
   const [mounted, setMounted] = useState(false)
   // 사용자 정책 (2026-05-03): NPL 보고서 ↔ XRF Vehicle Valuation 토글
   //   NPL 자체 ROI vs XRF + 엔플랫폼 + 대부업체 구조 적용 후 LP 최종 ROI 비교
-  const [valuationMode, setValuationMode] = useState<'NPL' | 'XRF'>('NPL')
+  const [valuationMode, setValuationMode] = useState<'NPL' | 'XRF_RWA' | 'XRF'>('NPL')
   // AI 총평 언어 토글 (KO/EN) — v9 bilingual executive summary
   const [summaryLang, setSummaryLang] = useState<'ko' | 'en'>('ko')
   const t = T[lang]
@@ -534,6 +535,23 @@ export default function UnifiedReportPage() {
               </button>
               <button
                 type="button"
+                onClick={() => setValuationMode('XRF_RWA')}
+                style={{
+                  padding: "9px 14px",
+                  fontSize: 12, fontWeight: 800,
+                  background: valuationMode === 'XRF_RWA' ? MCK.ink : MCK.paper,
+                  color: valuationMode === 'XRF_RWA' ? MCK.paper : MCK.ink,
+                  border: "none",
+                  borderLeft: `1px solid ${MCK.borderStrong}`,
+                  borderTop: valuationMode === 'XRF_RWA' ? `2px solid ${MCK.electric}` : 'none',
+                  letterSpacing: "-0.01em", cursor: "pointer",
+                }}
+                title="XRF RWA — LP 투자자 보고서 (수익률 · Pool · Cash Flow)"
+              >
+                XRF RWA
+              </button>
+              <button
+                type="button"
                 onClick={() => setValuationMode('XRF')}
                 style={{
                   padding: "9px 14px",
@@ -545,9 +563,9 @@ export default function UnifiedReportPage() {
                   borderTop: valuationMode === 'XRF' ? `2px solid ${MCK.electric}` : 'none',
                   letterSpacing: "-0.01em", cursor: "pointer",
                 }}
-                title="XRF Vehicle 구조 적용 후 LP 최종 ROI"
+                title="XRF Vehicle 구조 적용 후 LP 최종 ROI — 관리자용 상세 피 분석"
               >
-                XRF Valuation
+                XRF Admin
               </button>
             </div>
             <button
@@ -1105,6 +1123,17 @@ export default function UnifiedReportPage() {
           acquisitionBaseLabel={
             (input as { acquisitionBaseLabel?: '대출원금' | '채권잔액' }).acquisitionBaseLabel
           }
+        />
+      )}
+
+      {/* ── XRF RWA LP 보고서 (투자자 전용 · Pool/CashFlow/Metrics) ───── */}
+      {profitability && valuationMode === 'XRF_RWA' && (
+        <XrfRwaSection
+          nplPurchasePriceKRW={profitability.acquisition.purchasePrice}
+          nplTotalEquityKRW={profitability.investment.totalEquity}
+          nplNetProfitKRW={profitability.investment.expectedNetProfit}
+          holdingPeriodDays={profitability.investment.holdingPeriodDays}
+          assetTitle={report?.input?.assetTitle}
         />
       )}
 

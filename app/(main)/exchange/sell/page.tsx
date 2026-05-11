@@ -193,7 +193,7 @@ function toWizardState(s: UnifiedFormState, ex: WizardExtras): WizardState {
       : "",
     sale_methods: s.saleMethods as string[],
     sale_method_other: s.saleMethodOther,
-    seller_fee_rate: s.fee?.sellerRate ?? 0.005,
+    seller_fee_rate: s.fee?.sellerRate ?? 0.007,
     interest_rate: s.claim.normalRate,
     penalty_rate: s.claim.overdueRate,
     default_start_date: s.claim.delinquencyStartDate,
@@ -232,7 +232,7 @@ export default function SellWizardPage() {
   const [submitError, setSubmitError] = useState("")
 
   // Phase G5: 전속 토글을 FeeSection 내부로 이동.
-  // FeeSection 이 exclusive=true 전환 시 sellerRate < 0.005 이면 자동 보정함(onChange 경유).
+  // FeeSection 이 exclusive=true 전환 시 sellerRate < 0.007 이면 자동 보정함(onChange 경유).
   // → 별도 page 레벨 보정 로직 불필요.
 
   const wizardState = useMemo(() => toWizardState(state, extras), [state, extras])
@@ -344,7 +344,7 @@ export default function SellWizardPage() {
       addons: ["premium_listing", "dedicated_manager"],
       isInstitutional: state.institution.exclusive,
       dataCompleteness: completeness,
-      sellerRate: state.fee?.sellerRate ?? 0.005,
+      sellerRate: state.fee?.sellerRate ?? 0.007,
     })
   }, [state.askingPrice, state.institution.exclusive, completeness, state.fee?.sellerRate])
 

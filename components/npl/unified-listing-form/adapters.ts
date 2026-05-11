@@ -112,7 +112,7 @@ export function toSellListingBody(
     appraisal_value: state.appraisal.appraisalValue || undefined,
     asking_price_min: state.askingPrice,
     asking_price_max: state.askingPrice,
-    seller_fee_rate: state.fee?.sellerRate ?? 0.005,
+    seller_fee_rate: state.fee?.sellerRate ?? 0.007,
     area: extras.exclusive_area || undefined,
     additional_addresses: serializeAdditionalAddresses(state.additionalAddresses),
   }
@@ -224,7 +224,7 @@ export function toAuctionRegisterBody(
     bidding_method: extras.biddingMethod ?? "PUBLIC_COMPETITIVE",
     remarks: extras.remarks?.trim() || null,
     // 수수료율 (SELL/AUCTION 공통)
-    seller_fee_rate: state.fee?.sellerRate ?? 0.005,
+    seller_fee_rate: state.fee?.sellerRate ?? 0.007,
     // Phase G7+ — 추가 주소 (포트폴리오·복합 담보)
     additional_addresses: serializeAdditionalAddresses(state.additionalAddresses),
   }

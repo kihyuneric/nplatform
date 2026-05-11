@@ -78,8 +78,8 @@ export default function XrfValuationSection({
   assetTitle,
 }: XrfValuationSectionProps) {
   const [fxRate, setFxRate] = useState(1300)
-  // v9 XRFT 토큰 모델: 1 XRFT = $1,000 or $10,000 — 발행 수량 = poolUSD / xrftPriceUSD
-  const [xrftPriceUSD, setXrftPriceUSD] = useState<1000 | 10000>(1000)
+  // v9 RWA 토큰 모델: 1 RWA = $100, $1,000, $10,000 선택 — 발행 수량 = poolUSD / rwaPriceUSD
+  const [rwaPriceUSD, setRwaPriceUSD] = useState<100 | 1000 | 10000>(1000)
   const [tierOverride, setTierOverride] = useState<Exclude<XrfTier, 'REJECT'> | undefined>(undefined)
   // v9: NPL_EQUITY 기본값 — NPL totalEquity에 deal 비용 이미 포함 → 이중 계상 방지
   const [lpCapitalMode, setLpCapitalMode] = useState<LpCapitalMode>('NPL_EQUITY')
@@ -91,7 +91,7 @@ export default function XrfValuationSection({
       nplNetProfitKRW,
       holdingPeriodDays,
       exchangeRateKRWPerUSD: fxRate,
-      numLPs: 1, // XRFT 모델: 총 단위 기준 (per-XRFT 는 컴포넌트에서 직접 계산)
+      numLPs: 1, // RWA 모델: 총 단위 기준 (per-RWA 는 컴포넌트에서 직접 계산)
       tierOverride,
       lpCapitalMode,
     }),
@@ -111,18 +111,20 @@ export default function XrfValuationSection({
     [input],
   )
 
-  // Pool = NPL totalEquity + Vehicle Fees (fixed — Mgmt/Setup/KOF/Servicing, Carry 제외)
-  // 이것이 실제 LP 청약 총액 (XRFT 발행 base)
+  // Pool = NPL totalEquity + Vehicle Fees (fixed — Mgmt/Setup/KOF KR Margin/Servicing, Carry 제외)
+  // ★ platformAiUSD (AI Valuation & Pipeline Sourcing 1.5%) 는 NPL profit에서 차감되는 fee 이나,
+  //   LP Pool prefund 항목이 아님 → fixedFeesUSD 에서 제외 (이중 부가 방지).
+  //   (totalEquity 산정 시 이미 deal 비용 구조에 반영되어 있음)
   const fixedFeesUSD =
     selected.fees.xrfMgmtUSD +
     selected.fees.xrfSetupUSD +
-    selected.fees.platformTotalUSD +
+    selected.fees.platformMarginUSD +   // KR Margin only — AI Sourcing 1.5% 제외
     selected.fees.servicingUSD
   const displayPoolUSD = selected.nplTotalEquityUSD + fixedFeesUSD
 
-  // XRFT 발행 수량 + 1 XRFT당 수익
-  const numXrft = Math.max(1, Math.round(displayPoolUSD / xrftPriceUSD))
-  const perXrftProfitUSD = selected.lpNetProfitUSD / numXrft
+  // RWA 발행 수량 + 1 RWA당 수익
+  const numRwa = Math.max(1, Math.round(displayPoolUSD / rwaPriceUSD))
+  const perRwaProfitUSD = selected.lpNetProfitUSD / numRwa
 
   // ── Fund Metrics (v7 — 5 metric, 모두 수식 기반) ──
   const fundMetrics = useMemo(() => {
@@ -343,13 +345,13 @@ export default function XrfValuationSection({
       </Section>
 
       {/* ───── EXHIBIT 2 — Pool 구조 ───── */}
-      <Section title="EXHIBIT 2 · POOL 구조 (Pool Structure)" caption="LP capital = NPL totalEquity + Vehicle Fees · LP 100% XRFT 청약">
+      <Section title="EXHIBIT 2 · POOL 구조 (Pool Structure)" caption="LP capital = NPL totalEquity + Vehicle Fees · LP 100% RWA 청약">
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <tbody>
-            <Row label="Pool 총액 (= LP 청약액)" value={fmtUSDFull(displayPoolUSD)} note="= NPL totalEquity + Vehicle Fees (fixed)" bold />
+            <Row label="Pool 총액 (= LP 청약액)" value={fmtUSDFull(displayPoolUSD)} note="= NPL totalEquity + Vehicle Fees (Mgmt/Setup/KR Margin/Servicing) · AI Sourcing 제외" bold />
             <Row label="  ├ NPL totalEquity" value={fmtUSDFull(selected.nplTotalEquityUSD)} note="NPL 자기자본 (deal equity)" />
-            <Row label="  └ Vehicle Fees 합계" value={fmtUSDFull(fixedFeesUSD)} note={`XRF(Mgmt+Setup) ${fmtUSDFull(selected.fees.xrfMgmtUSD + selected.fees.xrfSetupUSD)} + KOF ${fmtUSDFull(selected.fees.platformTotalUSD)} + NPL VC ${fmtUSDFull(selected.fees.servicingUSD)}`} />
-            <Row label="LP capital (XRFT 100% 청약)" value={fmtUSDFull(displayPoolUSD)} note={`${numXrft.toLocaleString('en-US')} XRFT × ${fmtUSDFull(xrftPriceUSD)}/XRFT`} bold last />
+            <Row label="  └ Vehicle Fees 합계 (Pool prefund)" value={fmtUSDFull(fixedFeesUSD)} note={`XRF(Mgmt+Setup) ${fmtUSDFull(selected.fees.xrfMgmtUSD + selected.fees.xrfSetupUSD)} + KOF KR Margin ${fmtUSDFull(selected.fees.platformMarginUSD)} + NPL VC ${fmtUSDFull(selected.fees.servicingUSD)} · AI Sourcing 1.5% NPL profit 차감`} />
+            <Row label="LP capital (RWA 100% 청약)" value={fmtUSDFull(displayPoolUSD)} note={`${numRwa.toLocaleString('en-US')} RWA × ${fmtUSDFull(rwaPriceUSD)}/RWA`} bold last />
           </tbody>
         </table>
       </Section>
@@ -374,7 +376,7 @@ export default function XrfValuationSection({
             ≥ 25%
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'BASE' ? '#EFF6FF' : 'transparent', color: c.text, lineHeight: 1.6 }}>
-            <strong>모든 주체 정상 fee 수령</strong> — XRF Carry 15% (entry) · Mgmt 1.5% · KOF 2.50% · NPL VC Servicing 2.0% · LP ROI ≥ 25% 매력적 deal.
+            <strong>모든 주체 정상 fee 수령</strong> — XRF Carry 15% (entry) · Mgmt 1% · KOF 2.0% (AI&Pipeline 1.5% + Margin 0.5%) · NPL VC Servicing 2.0% · LP ROI ≥ 25% 매력적 deal.
             <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>RWA 즉시 출시 가능</strong> · 기관·개인 LP 모두 적합 · 표준 시나리오</span>
           </div>
 
@@ -387,8 +389,8 @@ export default function XrfValuationSection({
             15% – 25%
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#F0F9FF' : 'transparent', color: c.text, lineHeight: 1.6 }}>
-            <strong>XRF · KOF 부분 양보</strong> — XRF Carry 10% (entry) · Mgmt 1.0% · KOF 2.00% (AI&PM/Sourcing 압축).
-            <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>RWA 출시 가능</strong> (LP 매력도 보강) · KR Margin 0.4% TP defense 유지 · NPL VC Servicing 2.0% 유지</span>
+            <strong>XRF Carry 부분 양보</strong> — XRF Carry 10% (entry) · Mgmt 1% · KOF 2.0% · NPL VC Servicing 2.0% · Carry 양보로 LP ROI 개선.
+            <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>RWA 출시 가능</strong> (LP 매력도 보강) · Mgmt/KOF/Servicing 전 tier 균일 유지</span>
           </div>
 
           {/* SAVE-THE-DEAL row */}
@@ -400,7 +402,7 @@ export default function XrfValuationSection({
             5% – 15%
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#F5F7FA' : 'transparent', color: c.text, lineHeight: 1.6 }}>
-            <strong>XRF · KOF 최대 양보</strong> — XRF Carry 5% (entry) · Mgmt 0.5% · KOF 1.50% (AI&PM/Sourcing 추가 압축) · NPL VC Servicing 1.5% 양보.
+            <strong>XRF Carry 최대 양보</strong> — XRF Carry 5% (entry) · Mgmt 1% · KOF 2.0% · NPL VC Servicing 2.0% · Carry 만 최소화.
             <br /><span style={{ fontSize: 11, color: c.textSub }}>→ <strong>한계 매력 deal</strong> — 기관 LP 우선 검토 · 짧은 cycle · 회수율 낮은 deal 전형</span>
           </div>
 
@@ -425,6 +427,95 @@ export default function XrfValuationSection({
         </div>
       </Section>
 
+      {/* ───── EXHIBIT 2c — 수수료 구조 한눈에 보기 (v9 · 전 tier 균일화) ───── */}
+      <Section
+        title="EXHIBIT 2c · 수수료 구조 (Fee Structure Overview)"
+        caption="v9 — XRF Mgmt / KOF AI&Pipeline / KR Margin / NPL VC Servicing 전 tier 균일화 · Carry 만 tier 별 차등"
+      >
+        {(() => {
+          // 헤더 색상
+          const hBg = c.navy
+          const hText = '#FFFFFF'
+          const rowAlt = '#EFF6FF'
+          const rowBase = '#FFFFFF'
+          const accent = c.emerald
+          const accentCons = c.amber
+          const accentSave = '#6B7280'
+
+          interface FeeRow {
+            label: string
+            base: string
+            cons: string
+            save: string
+            separator?: boolean
+          }
+          const rows: FeeRow[] = [
+            { label: 'XRF Carry (entry · 8–25% bracket · profit > 8% Hurdle)', base: '15%', cons: '10%', save: '5%' },
+            { label: 'XRF 관리보수 (%/yr · 365일 cap)', base: '1%', cons: '1%', save: '1%' },
+            { label: 'XRF SPV · Setup (1회 · SG SPV + KYC)', base: '1%', cons: '1%', save: '1%' },
+            { label: '', base: '', cons: '', save: '', separator: true },
+            { label: 'KOF · AI Valuation & Pipeline Sourcing (딜 발굴·소싱)', base: '1.5%', cons: '1.5%', save: '1.5%' },
+            { label: 'KOF · KR Margin — TP 방어선 15%', base: '0.5%', cons: '0.5%', save: '0.5%' },
+            { label: 'NPL VC Servicing (시장 표준 라이선스)', base: '2.0%', cons: '2%', save: '2%' },
+            { label: 'Hurdle Rate (LP 우선 · Carry trigger)', base: '8%/yr (고정)', cons: '8%/yr (고정)', save: '8%/yr (고정)' },
+          ]
+
+          const colStyle = (val: string, color: string): React.CSSProperties => ({
+            padding: '10px 14px',
+            textAlign: 'center' as const,
+            fontWeight: val.includes('고정') ? 600 : 700,
+            fontSize: 13,
+            color: val ? color : 'transparent',
+            borderLeft: `1px solid ${c.border}`,
+          })
+
+          return (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 640 }}>
+                <thead>
+                  <tr style={{ background: hBg }}>
+                    <th style={{ padding: '12px 14px', textAlign: 'left', color: hText, fontWeight: 700, fontSize: 13 }}>
+                      Fee 항목 · 세부 구성
+                    </th>
+                    <th style={{ padding: '12px 14px', textAlign: 'center', color: hText, fontWeight: 700, fontSize: 13, borderLeft: `1px solid rgba(255,255,255,0.2)`, width: 160 }}>
+                      BASE<br /><span style={{ fontSize: 10, fontWeight: 400, opacity: 0.8 }}>LP ROI ≥ 25%</span>
+                    </th>
+                    <th style={{ padding: '12px 14px', textAlign: 'center', color: hText, fontWeight: 700, fontSize: 13, borderLeft: `1px solid rgba(255,255,255,0.2)`, width: 160 }}>
+                      CONSERVATIVE<br /><span style={{ fontSize: 10, fontWeight: 400, opacity: 0.8 }}>15~25%</span>
+                    </th>
+                    <th style={{ padding: '12px 14px', textAlign: 'center', color: hText, fontWeight: 700, fontSize: 13, borderLeft: `1px solid rgba(255,255,255,0.2)`, width: 160 }}>
+                      SAVE-THE-DEAL<br /><span style={{ fontSize: 10, fontWeight: 400, opacity: 0.8 }}>5~15%</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, i) => {
+                    if (row.separator) {
+                      return (
+                        <tr key={i}>
+                          <td colSpan={4} style={{ height: 8, background: '#F1F5F9', borderTop: `1px solid ${c.border}`, borderBottom: `1px solid ${c.border}` }} />
+                        </tr>
+                      )
+                    }
+                    const bg = i % 2 === 0 ? rowAlt : rowBase
+                    return (
+                      <tr key={i} style={{ background: bg }}>
+                        <td style={{ padding: '10px 14px', fontSize: 13, color: c.text, fontWeight: 500, borderBottom: `1px solid ${c.border}` }}>
+                          {row.label}
+                        </td>
+                        <td style={{ ...colStyle(row.base, accent), background: bg, borderBottom: `1px solid ${c.border}` }}>{row.base}</td>
+                        <td style={{ ...colStyle(row.cons, accentCons), background: bg, borderBottom: `1px solid ${c.border}` }}>{row.cons}</td>
+                        <td style={{ ...colStyle(row.save, accentSave), background: bg, borderBottom: `1px solid ${c.border}` }}>{row.save}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )
+        })()}
+      </Section>
+
       {/* ───── EXHIBIT 3 — Vehicle Fee (NPL VC 자본금 제외) ───── */}
       <Section
         title={`EXHIBIT 3 · VEHICLE FEE — ${tierLabel[selected.tier]} TIER`}
@@ -440,19 +531,18 @@ export default function XrfValuationSection({
           </thead>
           <tbody>
             <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>XRF Foundation (SG SPV · RWA Issuer)</td></tr>
-            <Row label="  관리보수 Mgmt (%/yr · 365일 cap)" value={fmtUSDFull(selected.fees.xrfMgmtUSD)} note={tierLabel[selected.tier] === 'BASE' ? '1.5%/yr · 운영비' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '1.0%/yr · 운영비' : '0.5%/yr · 운영비 (SAVE 최대 양보)'} />
-            <Row label="  SPV Setup (1회)" value={fmtUSDFull(selected.fees.xrfSetupUSD)} note="1.0% × NPL 매입가 · 모든 tier 동일" />
+            <Row label="  관리보수 Mgmt (%/yr · 365일 cap)" value={fmtUSDFull(selected.fees.xrfMgmtUSD)} note="1.0%/yr · 전 tier 균일 · 운영비" />
+            <Row label="  SPV · Setup (1회 · SG SPV + KYC)" value={fmtUSDFull(selected.fees.xrfSetupUSD)} note="1.0% × NPL 매입가 · 전 tier 동일" />
             <Row label="  ★ Carry (5-tier 누진 · European Waterfall)" value={fmtUSDFull(selected.fees.xrfCarryUSD)} note={selected.fees.xrfCarryUSD > 0 ? `LP profit slice 별 marginal rate 적용 (entry ${tierLabel[selected.tier] === 'BASE' ? '15%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '10%' : '5%'})` : '⚠ Hurdle 8%/yr 미달 → Carry $0'} />
             <Row label="  XRF 수수료 합계 (Mgmt + Setup + Carry)" value={fmtUSDFull(selected.fees.xrfTotalUSD)} bold last />
 
-            <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>Korea Operation Firm (KOF) — Korean Sourcing/Valuation 서비스 · BASE 2.50% · CONS 2.00% · SAVE 1.50%</td></tr>
-            <Row label="  AI Valuation & PM (가격평가 + 프로젝트 관리)" value={fmtUSDFull(selected.fees.platformAiUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.5%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '0.4%' : '0.3%'} />
-            <Row label="  Pipeline Sourcing (딜 발굴·소싱)" value={fmtUSDFull(selected.fees.platformSourcingUSD)} note={tierLabel[selected.tier] === 'BASE' ? '1.5%' : tierLabel[selected.tier] === 'CONSERVATIVE' ? '1.2%' : '0.8%'} />
-            <Row label="  KR Margin (TP defense ★ fixed)" value={fmtUSDFull(selected.fees.platformMarginUSD)} note={tierLabel[selected.tier] === 'BASE' ? '0.5% (BASE 고정)' : '0.4% (CONS/SAVE 고정)'} />
+            <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>Korea Operation Firm (KOF) — Korean Sourcing/Valuation 서비스 · 2.0% flat (AI&Pipeline 1.5% + KR Margin 0.5%)</td></tr>
+            <Row label="  AI Valuation & Pipeline Sourcing (딜 발굴·소싱)" value={fmtUSDFull(selected.fees.platformAiUSD)} note="1.5% flat · 전 tier 균일 · NPL profit 차감 (Pool prefund 제외)" />
+            <Row label="  KR Margin (TP defense ★ fixed)" value={fmtUSDFull(selected.fees.platformMarginUSD)} note="0.5% fixed · 전 tier 균일" />
             <Row label="  KOF 수수료 합계" value={fmtUSDFull(selected.fees.platformTotalUSD)} bold last />
 
             <tr><td colSpan={3} style={{ padding: '8px 12px', background: c.bgSoft, fontWeight: 700, color: c.navy, fontSize: 12 }}>NPL Vehicle Company (NPL VC) — Korean NPL 라이선스 보유 · 채권 보관·회수 법인</td></tr>
-            <Row label="  Servicing Fee (시장 표준 라이선스)" value={fmtUSDFull(selected.fees.servicingUSD)} note={tierLabel[selected.tier] === 'SAVE-THE-DEAL' ? '1.5% × 매입가 (SAVE 양보)' : '2.0% × 매입가 (BASE/CONS 동일)'} last />
+            <Row label="  Servicing Fee (시장 표준 라이선스)" value={fmtUSDFull(selected.fees.servicingUSD)} note="2.0% × 매입가 · 전 tier 균일" last />
           </tbody>
         </table>
 
@@ -521,7 +611,7 @@ export default function XrfValuationSection({
           {selected.fees.xrfCarryUSD === 0 && <span style={{ color: c.amber, fontWeight: 700, marginLeft: 6 }}>← 본 deal 은 Carry 미발생 상태</span>}
         </div>
         <div style={{ fontSize: 10, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
-          ⓘ 2026-05-06 v8: XRF Mgmt 1.5/1.0/0.5%/yr (365일 cap) · Setup 1.0% (1회 all-tier) · KOF 3종 (AI&PM 0.5/0.4/0.3% · Sourcing 1.5/1.2/0.8% · Margin 0.5/0.4/0.4% fixed) · NPL VC Servicing 2.0/2.0/1.5% × 매입가 (FLAT). XRF Carry 5-tier marginal (European Waterfall): Hurdle 8%/yr 미달 시 0, 그 외 8-20/20-40/40-60/60%+ slice 별 marginal rate 적용. NPL VC Capital share 제거 (채권계약금·잔대금 이미 totalEquity 포함).
+          ⓘ 2026-05 v9: XRF Mgmt 1.0%/yr flat (365일 cap · all tiers) · Setup 1.0% (1회 · SG SPV+KYC) · KOF 2종 (AI Val&Pipeline Sourcing 1.5% flat · KR Margin 0.5% fixed · all tiers) · NPL VC Servicing 2.0% flat (all tiers). XRF Carry 5-tier marginal (European Waterfall · entry BASE 15% / CONS 10% / SAVE 5%): Hurdle 8%/yr 미달 시 Carry=0 · 초과분 누진 적용. NPL VC Capital share 제거 (채권계약금·잔대금 이미 totalEquity 포함).
         </div>
       </Section>
 
@@ -537,7 +627,7 @@ export default function XrfValuationSection({
             </tr>
           </thead>
           <tbody>
-            <CashflowRow phase="Day 0" event="LP capital call (XRFT 100% 청약 송금)" amount={-selected.lpCapitalUSD} cumulative={-selected.lpCapitalUSD} negative note={`${numXrft.toLocaleString('en-US')} XRFT × ${fmtUSDFull(xrftPriceUSD)}`} />
+            <CashflowRow phase="Day 0" event="LP capital call (RWA 100% 청약 송금)" amount={-selected.lpCapitalUSD} cumulative={-selected.lpCapitalUSD} negative note={`${numRwa.toLocaleString('en-US')} RWA × ${fmtUSDFull(rwaPriceUSD)}`} />
             <CashflowRow phase="Day 0~M3" event="XRF SPV Setup (1회)" amount={0} cumulative={-selected.lpCapitalUSD} note="prefund 차감 · LP 직접 X" />
             <CashflowRow phase="Day ~30" event="NPL 매입 + 질권대출 실행" amount={0} cumulative={-selected.lpCapitalUSD} note="Pool → NPL 매입가 funding" />
             <CashflowRow phase="운용 중" event="XRF/KOF/NPL VC fees prefund" amount={0} cumulative={-selected.lpCapitalUSD} note={`LP capital 에서 ${fmtUSDFull(selected.fees.xrfMgmtUSD + selected.fees.xrfSetupUSD + selected.fees.platformTotalUSD + selected.fees.servicingUSD)} 차감`} />
@@ -550,8 +640,8 @@ export default function XrfValuationSection({
       {/* ───── EXHIBIT 5 — KEY METRICS ───── */}
       <Section title="EXHIBIT 5 · KEY METRICS" caption={`AUTO Tier 자동 선택 · ${selected.autoTierResult.selectedReason}`}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-          <MetricCard label="LP Capital (1 XRFT)" value={fmtUSDFull(xrftPriceUSD)} sub={`${numXrft.toLocaleString('en-US')} XRFT · 총 ${fmtUSD(displayPoolUSD)}`} tint={c.navy} />
-          <MetricCard label="LP Net Profit (1 XRFT)" value={fmtUSDFull(perXrftProfitUSD)} sub={`총 ${fmtUSD(selected.lpNetProfitUSD)}`} tint={c.navyDark} />
+          <MetricCard label="LP Capital (1 RWA)" value={fmtUSDFull(rwaPriceUSD)} sub={`${numRwa.toLocaleString('en-US')} RWA · 총 ${fmtUSD(displayPoolUSD)}`} tint={c.navy} />
+          <MetricCard label="LP Net Profit (1 RWA)" value={fmtUSDFull(perRwaProfitUSD)} sub={`총 ${fmtUSD(selected.lpNetProfitUSD)}`} tint={c.navyDark} />
           <MetricCard label="LP ROI (절대)" value={fmtPct(selected.lpRoi)} sub={`${selected.durationYr.toFixed(2)}년 운용`} tint={tierColor[selected.tier]} />
           <MetricCard label="LP IRR (연환산)" value={`${fmtPct(selected.lpIrrYr)}/yr`} sub="단순 연환산" tint={c.navyDark} />
         </div>
@@ -771,8 +861,8 @@ export default function XrfValuationSection({
       {/* ───── EXHIBIT 5d — SENSITIVITY 분석 ───── */}
       <Section title="EXHIBIT 5d · SENSITIVITY 분석 (단일 변수 변동)" caption="운용기간 / NPL 순수익 변동이 LP ROI · Tier 에 미치는 영향">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
-          <SensitivityTable result={holdingSensitivity} baselineDays={holdingPeriodDays} numXrft={numXrft} />
-          <SensitivityTable result={profitSensitivity} baselineDays={holdingPeriodDays} variant="profit" numXrft={numXrft} />
+          <SensitivityTable result={holdingSensitivity} baselineDays={holdingPeriodDays} numRwa={numRwa} />
+          <SensitivityTable result={profitSensitivity} baselineDays={holdingPeriodDays} variant="profit" numRwa={numRwa} />
         </div>
       </Section>
 
@@ -837,8 +927,8 @@ export default function XrfValuationSection({
                   </tr>
                 </thead>
                 <tbody>
-                  <CompareRow label="XRFT 발행 수량 (1 XRFT 가격)" v1={`${numXrft.toLocaleString('en-US')} XRFT`} v2={`${numXrft.toLocaleString('en-US')} XRFT`} v3={`${numXrft.toLocaleString('en-US')} XRFT`} highlightCol={autoCol} highlightBg={colHighlight} />
-                  <CompareRow label="LP Net Profit (1 XRFT)" v1={fmtUSDFull(base.lpNetProfitUSD / numXrft)} v2={fmtUSDFull(conservative.lpNetProfitUSD / numXrft)} v3={fmtUSDFull(saveTheDeal.lpNetProfitUSD / numXrft)} highlightCol={autoCol} highlightBg={colHighlight} />
+                  <CompareRow label="RWA 발행 수량 (1 RWA 가격)" v1={`${numRwa.toLocaleString('en-US')} RWA`} v2={`${numRwa.toLocaleString('en-US')} RWA`} v3={`${numRwa.toLocaleString('en-US')} RWA`} highlightCol={autoCol} highlightBg={colHighlight} />
+                  <CompareRow label="LP Net Profit (1 RWA)" v1={fmtUSDFull(base.lpNetProfitUSD / numRwa)} v2={fmtUSDFull(conservative.lpNetProfitUSD / numRwa)} v3={fmtUSDFull(saveTheDeal.lpNetProfitUSD / numRwa)} highlightCol={autoCol} highlightBg={colHighlight} />
                   <CompareRow label="LP ROI (절대)" v1={fmtPct(base.lpRoi)} v2={fmtPct(conservative.lpRoi)} v3={fmtPct(saveTheDeal.lpRoi)} bold highlightCol={autoCol} highlightBg={colHighlight} accentColor={accentColor} />
                   <CompareRow label="LP IRR (연환산)" v1={`${fmtPct(base.lpIrrYr)}/yr`} v2={`${fmtPct(conservative.lpIrrYr)}/yr`} v3={`${fmtPct(saveTheDeal.lpIrrYr)}/yr`} highlightCol={autoCol} highlightBg={colHighlight} />
                   <CompareRow label="XRF 수수료 합계" v1={fmtUSDFull(base.fees.xrfTotalUSD)} v2={fmtUSDFull(conservative.fees.xrfTotalUSD)} v3={fmtUSDFull(saveTheDeal.fees.xrfTotalUSD)} highlightCol={autoCol} highlightBg={colHighlight} />
@@ -868,7 +958,7 @@ export default function XrfValuationSection({
       </Section>
 
       {/* ───── EXHIBIT 7 — 입력 파라미터 ───── */}
-      <Section title="EXHIBIT 7 · 입력 파라미터 (시나리오 조정)" caption="환율·XRFT 가격·tier·LP capital 모델 인터랙티브 조정 가능">
+      <Section title="EXHIBIT 7 · 입력 파라미터 (시나리오 조정)" caption="환율·RWA 가격·tier·LP capital 모델 인터랙티브 조정 가능">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }} className="no-print">
           <Param label="USD 환율 (KRW/USD)">
             <input
@@ -878,25 +968,25 @@ export default function XrfValuationSection({
               style={inputStyle}
             />
           </Param>
-          <Param label={`1 XRFT 가격 (현재: $${xrftPriceUSD.toLocaleString('en-US')} · ${numXrft.toLocaleString('en-US')} XRFT 발행)`}>
+          <Param label={`1 RWA 단가 (현재: $${rwaPriceUSD.toLocaleString('en-US')} · ${numRwa.toLocaleString('en-US')} RWA 발행)`}>
             <div style={{ display: 'flex', gap: 8 }}>
-              {([1000, 10000] as const).map(price => (
+              {([100, 1000, 10000] as const).map(price => (
                 <button
                   key={price}
-                  onClick={() => setXrftPriceUSD(price)}
+                  onClick={() => setRwaPriceUSD(price)}
                   style={{
                     flex: 1,
                     padding: '8px 12px',
-                    border: `2px solid ${xrftPriceUSD === price ? '#2251FF' : '#E5E8EC'}`,
+                    border: `2px solid ${rwaPriceUSD === price ? '#2251FF' : '#E5E8EC'}`,
                     borderRadius: 6,
-                    background: xrftPriceUSD === price ? '#EFF6FF' : '#FFFFFF',
-                    color: xrftPriceUSD === price ? '#2251FF' : '#374151',
-                    fontWeight: xrftPriceUSD === price ? 700 : 400,
+                    background: rwaPriceUSD === price ? '#EFF6FF' : '#FFFFFF',
+                    color: rwaPriceUSD === price ? '#2251FF' : '#374151',
+                    fontWeight: rwaPriceUSD === price ? 700 : 400,
                     fontSize: 13,
                     cursor: 'pointer',
                   }}
                 >
-                  ${price.toLocaleString('en-US')} / XRFT
+                  ${price.toLocaleString('en-US')} / RWA
                 </button>
               ))}
             </div>
@@ -926,6 +1016,7 @@ export default function XrfValuationSection({
         </div>
         <div style={{ marginTop: 16, fontSize: 11, color: c.textTertiary, lineHeight: 1.7 }}>
           ⓘ <strong>모델 설명</strong>: 본 보고서는 XRF Ripple Deck v4.0 (2026-05) 의 3-tier Fee System 적용 모델 시뮬레이션입니다.
+          <br />• <strong>RWA 단가 선택</strong>: $100 / RWA · $1,000 / RWA · $10,000 / RWA — 선택값에 따라 RWA 발행 수량 및 1 RWA당 수익이 실시간 연동됩니다.
           <br />• <strong>Vehicle Fee 산정 base</strong>: NPL 매입가 (AUM) 기준 · %/yr fees 365일 cap · Setup 1회
           <br />• <strong>Hurdle</strong>: 8%/yr × LP capital × 실제 운용기간 (NOT capped) — LP 우선 수익률
           <br />• <strong>Carry</strong>: (LP profit pre-carry − Hurdle) × tier별 Carry % (BASE 15% / CONS 10% / SAVE 5%)
@@ -1171,12 +1262,12 @@ function SensitivityTable({
   result,
   baselineDays,
   variant = 'days',
-  numXrft = 1,
+  numRwa = 1,
 }: {
   result: { variable: string; baselineValue: number | string; cases: { label: string; lpRoi: number; lpIrrYr: number; tier: XrfTier; lpNetProfitPerLpUSD: number }[] }
   baselineDays: number
   variant?: 'days' | 'profit'
-  numXrft?: number
+  numRwa?: number
 }) {
   // SensitivityTable 내부 tierColor — 글로벌 tierColor 정합 (SAVE-THE-DEAL = mid navy)
   // ⚠ 글로벌 (lines 65-70) 과 동일: BASE cobalt · CONS steel · SAVE mid navy · REJECT red
@@ -1196,7 +1287,7 @@ function SensitivityTable({
           <tr style={{ background: '#F5F7FA', borderBottom: '1px solid #E5E8EC' }}>
             <th style={{ textAlign: 'left', padding: '6px 10px', color: '#6B7280', fontWeight: 600 }}>변동값</th>
             <th style={{ textAlign: 'right', padding: '6px 10px', color: '#6B7280', fontWeight: 600 }}>LP ROI</th>
-            <th style={{ textAlign: 'right', padding: '6px 10px', color: '#6B7280', fontWeight: 600 }}>1 XRFT Net</th>
+            <th style={{ textAlign: 'right', padding: '6px 10px', color: '#6B7280', fontWeight: 600 }}>1 RWA Net</th>
             <th style={{ textAlign: 'center', padding: '6px 10px', color: '#6B7280', fontWeight: 600 }}>Tier</th>
           </tr>
         </thead>
@@ -1215,7 +1306,7 @@ function SensitivityTable({
                   {(cs.lpRoi * 100).toFixed(2)}%
                 </td>
                 <td style={{ padding: '6px 10px', textAlign: 'right', fontFamily: 'tabular-nums', color: '#1B3A5C' }}>
-                  ${Math.round(cs.lpNetProfitPerLpUSD / numXrft).toLocaleString('en-US')}
+                  ${Math.round(cs.lpNetProfitPerLpUSD / numRwa).toLocaleString('en-US')}
                 </td>
                 <td style={{ padding: '6px 10px', textAlign: 'center', color: tierColor[cs.tier], fontWeight: 700, fontSize: 11 }}>
                   {cs.tier}

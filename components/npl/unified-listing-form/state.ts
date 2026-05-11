@@ -121,10 +121,10 @@ export function makeInitialState(mode: FormMode): UnifiedFormState {
 
   // 수수료율은 SELL + AUCTION 두 모드 모두에서 사용.
   //  ─ SELL    : 매도자 희망 매각 수수료율
-  //  ─ AUCTION : 자발적 경매 성사 시 매도자 부담 수수료율 (동일 0.3~0.9%)
+  //  ─ AUCTION : 자발적 경매 성사 시 매도자 부담 수수료율 (동일 0.7~0.9%)
   // ANALYSIS 는 수수료 개념 없음 → fee 미초기화.
   if (mode === "SELL" || mode === "AUCTION") {
-    base.fee = { sellerRate: 0.005 }
+    base.fee = { sellerRate: 0.007 }
   }
   if (mode === "AUCTION") {
     base.bidTerms = {

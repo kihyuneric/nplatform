@@ -31,10 +31,10 @@ export type { DealType, MembershipTier, FeeCalculationInput } from './settlement
 // ─── 매각자 상수 ────────────────────────────────────────────
 export const SELLER_FEE_CAP = 0.009         // 매각자 0.9% 상한
 export const FEE_CAP = SELLER_FEE_CAP       // 하위호환 alias
-export const SELLER_BASE_RATE = 0.005       // 0.5% 기본
+export const SELLER_BASE_RATE = 0.007       // 0.7% 기본
 export const BUYER_BASE_RATE = 0.015        // NPL 매수자 v2 기본 (호환성)
 export const BUYER_FEE_CAP = 0.018          // NPL 매수자 1.5% + PNR 0.3%
-export const INSTITUTIONAL_DISCOUNT_RATE = 0.003  // 기관 전속 0.3%
+export const INSTITUTIONAL_DISCOUNT_RATE = 0.005  // 기관 전속 0.5%
 
 // 관리자 설정 — 런타임에서 덮어씀
 export interface FeeConfig {

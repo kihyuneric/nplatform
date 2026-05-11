@@ -11,6 +11,8 @@ export interface NavSubItem {
   icon?: string
   active: boolean
   order: number
+  /** true = ADMIN / SUPER_ADMIN 만 표시. 일반 유저에게 hidden. */
+  adminOnly?: boolean
 }
 
 export interface NavCategory {
@@ -59,12 +61,12 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
       { key: 'deals_teams',     label: '팀 투자',     href: '/deals/teams',          description: '공동투자 팀 관리',                  icon: 'Users',          active: true, order: 4 },
     ],
     analysis: [
-      { key: 'analysis_main',    label: '분석 대시보드', href: '/analysis',           description: '시장 통계 및 인텔리전스',    icon: 'BarChart3',  active: true, order: 1 },
-      { key: 'analysis_new',     label: 'NPL 분석',      href: '/analysis/new',       description: 'AI 채권 가치 분석',          icon: 'FileSearch', active: true, order: 2 },
-      // 사용자 정책 (2026-05-03): XRF Valuation 은 분석 메뉴에서 제거.
-      //   분석 대시보드 결과 보고서(/analysis/report) 헤더의 NPL ↔ XRF 토글 버튼으로만 노출.
-      { key: 'analysis_sim',     label: '경매 분석',     href: '/analysis/simulator', description: '경매 수익률 시나리오 분석',  icon: 'Calculator', active: true, order: 3 },
-      { key: 'analysis_copilot', label: 'AI 컨설턴트',   href: '/analysis/copilot',   description: 'AI 투자 컨설팅 챗봇',        icon: 'Sparkles',   active: true, order: 4 },
+      { key: 'analysis_main',    label: '분석 대시보드', href: '/analysis',              description: '시장 통계 및 인텔리전스',      icon: 'BarChart3',  active: true, order: 1 },
+      { key: 'analysis_new',     label: 'NPL 분석',      href: '/analysis/new',          description: 'AI 채권 가치 분석',            icon: 'FileSearch', active: true, order: 2 },
+      { key: 'analysis_sim',     label: '경매 분석',     href: '/analysis/simulator',    description: '경매 수익률 시나리오 분석',    icon: 'Calculator', active: true, order: 3 },
+      { key: 'analysis_copilot', label: 'AI 컨설턴트',   href: '/analysis/copilot',      description: 'AI 투자 컨설팅 챗봇',          icon: 'Sparkles',   active: true, order: 4 },
+      // XRF RWA · XRF Admin 은 서브네비 미노출.
+      // → 분석 보고서(/analysis/report) 상단 토글 버튼 [NPL | XRF RWA | XRF Admin] 으로만 진입.
     ],
     services: [
       { key: 'svc_experts',   label: '전문가 찾기',   href: '/services/experts',           description: '법률·세무·부동산 전문가',    icon: 'Users',        active: true, order: 1 },
