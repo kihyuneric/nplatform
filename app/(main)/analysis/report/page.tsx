@@ -1129,17 +1129,17 @@ export default function UnifiedReportPage() {
 
       {/* ── 부동산 담보 가치 분석 (NPL 뷰 · Claude AI) ───── */}
       {valuationMode === 'NPL' && listing?.address && (
-        <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 24px 24px' }}>
+        <section className={`${DS.page.container} mt-8 pb-6`}>
           <PropertyCollateralAnalysis
             address={listing.address}
             assetTitle={input.assetTitle ?? displayTitle}
           />
-        </div>
+        </section>
       )}
 
       {/* ── XRF RWA LP 보고서 (투자자 전용 · Pool/CashFlow/Metrics) ───── */}
       {profitability && valuationMode === 'XRF_RWA' && (
-        <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 24px' }}>
+        <section className={`${DS.page.container} mt-8 pb-6`}>
           <XrfRwaSection
             nplPurchasePriceKRW={profitability.acquisition.purchasePrice}
             nplTotalEquityKRW={profitability.investment.totalEquity}
@@ -1148,12 +1148,12 @@ export default function UnifiedReportPage() {
             assetTitle={report?.input?.assetTitle}
             address={listing?.address ?? undefined}
           />
-        </div>
+        </section>
       )}
 
       {/* ── XRF Vehicle Valuation (LP 최종 ROI · XRF Foundation 구조) ───── */}
       {profitability && valuationMode === 'XRF' && (
-        <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 24px' }}>
+        <section className={`${DS.page.container} mt-8 pb-6`}>
           <XrfValuationSection
             nplPurchasePriceKRW={profitability.acquisition.purchasePrice}
             nplTotalEquityKRW={profitability.investment.totalEquity}
@@ -1162,7 +1162,7 @@ export default function UnifiedReportPage() {
             assetTitle={input.assetTitle ?? displayTitle}
             address={listing?.address ?? undefined}
           />
-        </div>
+        </section>
       )}
 
       {/* ── 시장 전망 ─────────────────────────── */}
