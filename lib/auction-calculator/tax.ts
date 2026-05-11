@@ -32,10 +32,10 @@ function getHousingAcquisitionRate(
     return { base: 0.01, edu: 0.001, agri: 0.0 }
   }
   if (price <= 900_000_000) {
-    // 6억~9억: 세율 체감 구간
-    // 세율 = (취득가액 × 2/3억 - 3) / 100
-    const rate = (price / 100_000_000 * 2 - 3) / 100
-    return { base: Math.max(0.01, Math.min(0.03, rate)), edu: 0.002, agri: 0.0 }
+    // 6억~9억: 세율 체감 구간 (지방세법 시행령)
+    // 세율(%) = 취득가액(억원) × 2/3 - 3  →  6억=1%, 9억=3% 선형 보간
+    const rate = (price / 100_000_000 * 2 / 3 - 3) / 100
+    return { base: rate, edu: 0.002, agri: 0.0 }
   }
   return { base: 0.03, edu: 0.003, agri: 0.0 }
 }

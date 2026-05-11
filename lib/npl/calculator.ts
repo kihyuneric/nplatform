@@ -150,8 +150,9 @@ export function calculateNplReturn(
   const absoluteReturn = equity > 0 ? netProfit / equity : 0;
   // 연환산수익률 = 기간수익률 × 365 / 회수기간일수
   const annualizedIrr = investmentDays > 0 ? absoluteReturn * 365 / investmentDays : 0;
-  // MOIC = 배당회수금 / (에쿼티 + 질권대출)  → 총투입 대비 회수
-  const moic = equity > 0 ? (expectedDistribution - pledgeLoan) / equity : 0;
+  // MOIC = 총회수금 / 총투입  (표준 Multiple on Invested Capital)
+  // 총투입 = 에쿼티 + 질권대출 = bondPurchasePrice + transferCost + vehicleFee + pledgeInterest = totalCost
+  const moic = totalCost > 0 ? expectedDistribution / totalCost : 0;
 
   // 손실방어 분석 (실제 선순위 채권 합계)
   const seniorBondTotal = rights

@@ -140,8 +140,8 @@ export function calcAuction(input: AuctionInput): AuctionResult {
   const annualizedRoi = holdingMonths > 0 ? roi * (12 / holdingMonths) : roi
   const bidRatio = (bidPrice / appraisalPrice) * 100
 
-  // 손익분기 매각가: 비용 전부 + 수익률 0%
-  const breakEvenPrice = totalCost + taxes.totalTransferTax
+  // 손익분기 매각가: 비용 전부 (totalCost에 이미 양도세 포함)
+  const breakEvenPrice = totalCost
 
   const metrics: ProfitMetrics = {
     grossProfit,

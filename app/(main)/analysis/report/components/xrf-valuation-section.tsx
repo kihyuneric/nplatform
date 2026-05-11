@@ -286,7 +286,7 @@ export default function XrfValuationSection({
               fontWeight: 600,
             }}
           >
-            ⚠ REJECT — BASE LP ROI {fmtPct(selected.autoTierResult.base.lpRoi)} 가 5% 임계값 미달.
+            ⚠ REJECT — BASE LP ROI {fmtPct(selected.displayRoi)} 가 5% 임계값 미달.
             본 deal 은 XRF Vehicle 출시 부적합 (3-tier 양보로도 LP 매력 회복 불가).
             <div style={{ fontSize: 11, color: c.textSub, marginTop: 6, fontWeight: 400 }}>
               참고: 시뮬레이션 시 BASE tier 기준값 표시. 실제 출시 진행 시 deal 재구조화 필요.

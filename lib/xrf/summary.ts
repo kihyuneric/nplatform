@@ -228,8 +228,9 @@ export function buildXrfRwaSummary(args: XrfRwaSummaryArgs): string {
   const beatsBenchmark  = metrics.xirr >= benchmark.median.irr
   const vehicleFeesUSD  = displayPoolUSD - result.nplTotalEquityUSD
 
-  const verdict = result.displayRoi >= 0.15 ? 'BUY' :
-                  result.displayRoi >= 0.05 ? 'HOLD' : 'AVOID'
+  const verdict = (result.tier === 'BASE' || result.tier === 'CONSERVATIVE') ? 'BUY'
+              : result.tier === 'SAVE-THE-DEAL' ? 'HOLD'
+              : 'AVOID'
 
   const carryStatus = result.fees.xrfCarryUSD > 0
     ? `Hurdle(8%/yr) 초과 달성 → Carry ${fmtUSD(result.fees.xrfCarryUSD)} 발동 (5-tier marginal rate)`
@@ -282,8 +283,9 @@ export function buildXrfRwaSummaryEn(args: XrfRwaSummaryArgs): string {
   const beatsBenchmark  = metrics.xirr >= benchmark.median.irr
   const vehicleFeesUSD  = displayPoolUSD - result.nplTotalEquityUSD
 
-  const verdict = result.displayRoi >= 0.15 ? 'BUY' :
-                  result.displayRoi >= 0.05 ? 'HOLD' : 'AVOID'
+  const verdict = (result.tier === 'BASE' || result.tier === 'CONSERVATIVE') ? 'BUY'
+              : result.tier === 'SAVE-THE-DEAL' ? 'HOLD'
+              : 'AVOID'
 
   const carryStatus = result.fees.xrfCarryUSD > 0
     ? `Hurdle (8%/yr) cleared → Carry ${fmtUSD(result.fees.xrfCarryUSD)} triggered (5-tier marginal rate)`

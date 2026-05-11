@@ -1354,6 +1354,8 @@ export default function UnifiedReportPage() {
             {(() => {
               const summaryText = valuationMode === 'XRF' && xrfSummaryData
                 ? (summaryLang === 'en' ? xrfSummaryData.summaryEn : xrfSummaryData.summary)
+                : valuationMode === 'XRF_RWA' && xrfRwaSummaryData
+                ? (summaryLang === 'en' ? xrfRwaSummaryData.summaryEn : xrfRwaSummaryData.summary)
                 : (summaryLang === 'en' && report.executiveSummaryEn
                     ? report.executiveSummaryEn
                     : report.executiveSummary)

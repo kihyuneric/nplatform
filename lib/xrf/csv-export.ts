@@ -21,6 +21,8 @@ export function buildXrfCsv({ result, metrics, allocation, assetTitle }: XrfCsvI
   const sep = (label: string) => push(`\n## ${label}`)
   const fmt = (v: number, digits = 0) => v.toLocaleString('en-US', { maximumFractionDigits: digits, minimumFractionDigits: digits })
   const pct = (v: number) => (v * 100).toFixed(2) + '%'
+  const pctOfProfit = (v: number) =>
+    result.nplNetProfitUSD > 0 ? pct(v / result.nplNetProfitUSD) : 'N/A'
 
   push(`# XRF Vehicle Valuation Report (CSV)`)
   push(`# 생성: ${new Date().toISOString().slice(0, 19).replace('T', ' ')} KST`)
@@ -44,15 +46,15 @@ export function buildXrfCsv({ result, metrics, allocation, assetTitle }: XrfCsvI
 
   sep('Vehicle Fee')
   push(`구분,항목,USD,NPL profit 대비 %`)
-  push(`XRF,관리보수 (%/yr · 365일 cap),${fmt(result.fees.xrfMgmtUSD)},${pct(result.fees.xrfMgmtUSD / result.nplNetProfitUSD)}`)
-  push(`XRF,SPV Setup (1회),${fmt(result.fees.xrfSetupUSD)},${pct(result.fees.xrfSetupUSD / result.nplNetProfitUSD)}`)
-  push(`XRF,Carry (8% Hurdle 초과분),${fmt(result.fees.xrfCarryUSD)},${pct(result.fees.xrfCarryUSD / result.nplNetProfitUSD)}`)
-  push(`XRF,합계,${fmt(result.fees.xrfTotalUSD)},${pct(result.fees.xrfTotalUSD / result.nplNetProfitUSD)}`)
-  push(`KOF,AI Valuation & PM (통합),${fmt(result.fees.platformAiUSD)},${pct(result.fees.platformAiUSD / result.nplNetProfitUSD)}`)
-  push(`KOF,Pipeline Sourcing,${fmt(result.fees.platformSourcingUSD)},${pct(result.fees.platformSourcingUSD / result.nplNetProfitUSD)}`)
-  push(`KOF,KR Margin (TP defense fixed),${fmt(result.fees.platformMarginUSD)},${pct(result.fees.platformMarginUSD / result.nplNetProfitUSD)}`)
-  push(`KOF,합계,${fmt(result.fees.platformTotalUSD)},${pct(result.fees.platformTotalUSD / result.nplNetProfitUSD)}`)
-  push(`대부업체,Servicing,${fmt(result.fees.servicingUSD)},${pct(result.fees.servicingUSD / result.nplNetProfitUSD)}`)
+  push(`XRF,관리보수 (%/yr · 365일 cap),${fmt(result.fees.xrfMgmtUSD)},${pctOfProfit(result.fees.xrfMgmtUSD)}`)
+  push(`XRF,SPV Setup (1회),${fmt(result.fees.xrfSetupUSD)},${pctOfProfit(result.fees.xrfSetupUSD)}`)
+  push(`XRF,Carry (8% Hurdle 초과분),${fmt(result.fees.xrfCarryUSD)},${pctOfProfit(result.fees.xrfCarryUSD)}`)
+  push(`XRF,합계,${fmt(result.fees.xrfTotalUSD)},${pctOfProfit(result.fees.xrfTotalUSD)}`)
+  push(`KOF,AI Valuation & PM (통합),${fmt(result.fees.platformAiUSD)},${pctOfProfit(result.fees.platformAiUSD)}`)
+  push(`KOF,Pipeline Sourcing,${fmt(result.fees.platformSourcingUSD)},${pctOfProfit(result.fees.platformSourcingUSD)}`)
+  push(`KOF,KR Margin (TP defense fixed),${fmt(result.fees.platformMarginUSD)},${pctOfProfit(result.fees.platformMarginUSD)}`)
+  push(`KOF,합계,${fmt(result.fees.platformTotalUSD)},${pctOfProfit(result.fees.platformTotalUSD)}`)
+  push(`대부업체,Servicing,${fmt(result.fees.servicingUSD)},${pctOfProfit(result.fees.servicingUSD)}`)
 
   sep('Profit Allocation (NPL Net Profit 분배)')
   push(`항목,USD,NPL profit 대비 %`)
