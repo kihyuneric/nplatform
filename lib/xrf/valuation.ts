@@ -250,10 +250,21 @@ export interface XrfValuationResult {
   lpNetProfitUSD: number
   /** LP 1인당 순수익 (USD) */
   lpNetProfitPerLpUSD: number
-  /** LP ROI (절대) */
+  /** LP ROI (절대) — 내부 계산용 (분모 = lpCapitalUSD = nplEquity only) */
   lpRoi: number
-  /** LP IRR (연환산) */
+  /** LP IRR (연환산) — 내부 계산용 */
   lpIrrYr: number
+
+  // ── 표시용 보정 ROI (LP 실제 투자 총액 기준) ───────────────────────────
+  // displayPool = nplEquity + fixedFees(Mgmt+Setup+KRMargin+Servicing) — LP가 실제 납입하는 총액
+  // displayRoi  = lpNetProfit / displayPool — 사용자에게 보여주는 정확한 ROI
+  // displayIrrYr = displayRoi / durationYr — 사용자에게 보여주는 연환산 IRR
+  /** LP 실제 납입 총액 (= nplEquity + fixedFees, 표시용 Pool) */
+  displayPoolUSD: number
+  /** LP 실 투자기준 ROI = lpNetProfit / displayPool */
+  displayRoi: number
+  /** LP 실 투자기준 연환산 IRR = displayRoi / durationYr */
+  displayIrrYr: number
 
   /** NPL 자체 ROI (참고) */
   nplRoi: number
@@ -361,6 +372,14 @@ function computeForTier(
   const lpRoi = lpCapitalUSD > 0 ? lpNetProfitUSD / lpCapitalUSD : 0
   const lpIrrYr = durationYr > 0 ? lpRoi / durationYr : lpRoi
 
+  // ── 표시용 보정 ROI (LP 실제 납입 Pool 기준) ──────────────────────────────
+  // LP Pool = NPL totalEquity + fixed fees (Mgmt·Setup·KR Margin·Servicing)
+  // platformAiUSD (AI Sourcing 1.5%) 는 NPL profit 차감이지 Pool prefund 아님 → 제외
+  const fixedFeesForDisplayUSD = xrfMgmtUSD + xrfSetupUSD + platformMarginUSD + servicingUSD
+  const displayPoolUSD = totalEquityUSD + fixedFeesForDisplayUSD
+  const displayRoi    = displayPoolUSD > 0 ? lpNetProfitUSD / displayPoolUSD : 0
+  const displayIrrYr  = durationYr > 0 ? displayRoi / durationYr : 0
+
   // NPL 자체 ROI (참고)
   const nplRoi = totalEquityUSD > 0 ? nplNetProfitUSD / totalEquityUSD : 0
 
@@ -392,6 +411,9 @@ function computeForTier(
     lpNetProfitPerLpUSD,
     lpRoi,
     lpIrrYr,
+    displayPoolUSD,
+    displayRoi,
+    displayIrrYr,
     nplRoi,
     nplNetProfitUSD,
     nplTotalEquityUSD: totalEquityUSD,

@@ -67,8 +67,8 @@ export function buildXrfCsv({ result, metrics, allocation, assetTitle }: XrfCsvI
   push(`LP 1인당 출자,${fmt(result.lpCapitalPerLpUSD)},`)
   push(`LP 순수익 총액,${fmt(result.lpNetProfitUSD)},`)
   push(`LP 1인당 순수익,${fmt(result.lpNetProfitPerLpUSD)},`)
-  push(`LP ROI (절대),${pct(result.lpRoi)},`)
-  push(`LP IRR (단순 연환산),${pct(result.lpIrrYr)},/yr`)
+  push(`LP ROI (절대 · Pool 기준),${pct(result.displayRoi)},`)
+  push(`LP IRR (단순 연환산 · Pool 기준),${pct(result.displayIrrYr)},/yr`)
   push(`Hurdle (8%/yr · LP capital × 운용기간),${fmt(result.hurdleUSD)},LP 우선 수익률`)
 
   sep('Fund Metrics (PE/VC 산업 표준)')

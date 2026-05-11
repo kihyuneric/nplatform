@@ -115,16 +115,9 @@ export default function XrfValuationSection({
     [input],
   )
 
-  // Pool = NPL totalEquity + Vehicle Fees (fixed — Mgmt/Setup/KOF KR Margin/Servicing, Carry 제외)
-  // ★ platformAiUSD (AI Valuation & Pipeline Sourcing 1.5%) 는 NPL profit에서 차감되는 fee 이나,
-  //   LP Pool prefund 항목이 아님 → fixedFeesUSD 에서 제외 (이중 부가 방지).
-  //   (totalEquity 산정 시 이미 deal 비용 구조에 반영되어 있음)
-  const fixedFeesUSD =
-    selected.fees.xrfMgmtUSD +
-    selected.fees.xrfSetupUSD +
-    selected.fees.platformMarginUSD +   // KR Margin only — AI Sourcing 1.5% 제외
-    selected.fees.servicingUSD
-  const displayPoolUSD = selected.nplTotalEquityUSD + fixedFeesUSD
+  // Pool = 엔진 계산 displayPoolUSD 사용 (NPL equity + Mgmt+Setup+KR Margin+Servicing · AI Sourcing 제외)
+  const { displayPoolUSD } = selected
+  const fixedFeesUSD = displayPoolUSD - selected.nplTotalEquityUSD  // 표시용 breakdown
 
   // RWA 발행 수량 + 1 RWA당 수익
   const numRwa = Math.max(1, Math.round(displayPoolUSD / rwaPriceUSD))
@@ -132,11 +125,11 @@ export default function XrfValuationSection({
 
   // ── Fund Metrics (v7 — 5 metric, 모두 수식 기반) ──
   const fundMetrics = useMemo(() => {
-    const lpDistributionUSD = selected.lpCapitalUSD + selected.lpNetProfitUSD
+    const lpDistributionUSD = displayPoolUSD + selected.lpNetProfitUSD
     const totalVehicleFeesUSD =
       selected.fees.xrfTotalUSD + selected.fees.platformTotalUSD + selected.fees.servicingUSD
     return computeFundMetrics({
-      lpCapitalUSD: selected.lpCapitalUSD,
+      lpCapitalUSD: displayPoolUSD,
       lpDistributionUSD,
       holdingPeriodDays,
       nplPurchaseUSD: selected.nplPurchaseUSD,
@@ -318,12 +311,12 @@ export default function XrfValuationSection({
             </strong>{' '}
             tier · LP ROI{' '}
             <strong style={{ color: tierColor[selected.tier], fontSize: 14 }}>
-              {fmtPct(selected.lpRoi)}
+              {fmtPct(selected.displayRoi)}
             </strong>
             {' · '}
             LP IRR{' '}
             <strong style={{ color: tierColor[selected.tier] }}>
-              {fmtPct(selected.lpIrrYr)}/yr
+              {fmtPct(selected.displayIrrYr)}/yr
             </strong>
           </div>
         )}
@@ -636,7 +629,7 @@ export default function XrfValuationSection({
             <CashflowRow phase="Day ~30" event="NPL 매입 + 질권대출 실행" amount={0} cumulative={-selected.lpCapitalUSD} note="Pool → NPL 매입가 funding" />
             <CashflowRow phase="운용 중" event="XRF/KOF/NPL VC fees prefund" amount={0} cumulative={-selected.lpCapitalUSD} note={`LP capital 에서 ${fmtUSDFull(selected.fees.xrfMgmtUSD + selected.fees.xrfSetupUSD + selected.fees.platformTotalUSD + selected.fees.servicingUSD)} 차감`} />
             <CashflowRow phase={`Day ${holdingPeriodDays}`} event="법원 배당" amount={selected.lpCapitalUSD + selected.lpNetProfitUSD} cumulative={selected.lpNetProfitUSD} positive note={`LP capital ${fmtUSDFull(selected.lpCapitalUSD)} + Net Profit ${fmtUSDFull(selected.lpNetProfitUSD)}`} />
-            <CashflowRow phase="LP 최종" event="순수익 (RLUSD 분배)" amount={0} cumulative={selected.lpNetProfitUSD} bold positive note={`ROI ${fmtPct(selected.lpRoi)} · IRR ${fmtPct(selected.lpIrrYr)}/yr`} />
+            <CashflowRow phase="LP 최종" event="순수익 (RLUSD 분배)" amount={0} cumulative={selected.lpNetProfitUSD} bold positive note={`ROI ${fmtPct(selected.displayRoi)} · IRR ${fmtPct(selected.displayIrrYr)}/yr`} />
           </tbody>
         </table>
       </Section>
@@ -646,8 +639,8 @@ export default function XrfValuationSection({
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
           <MetricCard label="LP Capital (1 RWA)" value={fmtUSDFull(rwaPriceUSD)} sub={`${numRwa.toLocaleString('en-US')} RWA · 총 ${fmtUSD(displayPoolUSD)}`} tint={c.navy} />
           <MetricCard label="LP Net Profit (1 RWA)" value={fmtUSDFull(perRwaProfitUSD)} sub={`총 ${fmtUSD(selected.lpNetProfitUSD)}`} tint={c.navyDark} />
-          <MetricCard label="LP ROI (절대)" value={fmtPct(selected.lpRoi)} sub={`${selected.durationYr.toFixed(2)}년 운용`} tint={tierColor[selected.tier]} />
-          <MetricCard label="LP IRR (연환산)" value={`${fmtPct(selected.lpIrrYr)}/yr`} sub="단순 연환산" tint={c.navyDark} />
+          <MetricCard label="LP ROI (절대)" value={fmtPct(selected.displayRoi)} sub={`${selected.durationYr.toFixed(2)}년 운용`} tint={tierColor[selected.tier]} />
+          <MetricCard label="LP IRR (연환산)" value={`${fmtPct(selected.displayIrrYr)}/yr`} sub="단순 연환산" tint={c.navyDark} />
         </div>
       </Section>
 
@@ -786,7 +779,7 @@ export default function XrfValuationSection({
                 ⚠ <strong>중요</strong>: 산업 중앙값 <strong>MoM (배수)</strong> 은 본 deal 운용기간 ({(holdingPeriodDays/365).toFixed(2)}년) 으로 복리 환산되어 deal 마다 달라집니다. (1+12%)^운용연 — 짧은 deal (수개월) 은 1.05x 부근, 1년 deal 은 1.12x, 2년 deal 은 1.25x 식으로 운용기간 차이만으로 multiple 값이 변하기 때문 (수학적으로 자연스러움). <strong>deal 간 direct 비교는 IRR / Hurdle Spread (annualized) 추천</strong> — deal 무관 FIXED 라 fair.
               </div>
               <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 8, fontStyle: 'italic' }}>
-                ⓘ <strong>4 metric 차별화</strong>: 이전 DPI/TVPI/MoM/Equity Multiple 은 closed fund (NAV=0) 에서 모두 동일 = LP DPI. v7 부터 자산-레벨 (Gross MoM) · LP 초과수익 (Hurdle Spread) 으로 차별화. 단순 IRR ({fmtPct(selected.lpIrrYr)}/yr) vs XIRR ({fmtPct(fundMetrics.xirr)}/yr) 차이는 단순 연환산 vs 복리 계산.
+                ⓘ <strong>4 metric 차별화</strong>: 이전 DPI/TVPI/MoM/Equity Multiple 은 closed fund (NAV=0) 에서 모두 동일 = LP DPI. v7 부터 자산-레벨 (Gross MoM) · LP 초과수익 (Hurdle Spread) 으로 차별화. 단순 IRR ({fmtPct(selected.displayIrrYr)}/yr) vs XIRR ({fmtPct(fundMetrics.xirr)}/yr) 차이는 단순 연환산 vs 복리 계산.
               </div>
             </>
           )
@@ -933,8 +926,8 @@ export default function XrfValuationSection({
                 <tbody>
                   <CompareRow label="RWA 발행 수량 (1 RWA 가격)" v1={`${numRwa.toLocaleString('en-US')} RWA`} v2={`${numRwa.toLocaleString('en-US')} RWA`} v3={`${numRwa.toLocaleString('en-US')} RWA`} highlightCol={autoCol} highlightBg={colHighlight} />
                   <CompareRow label="LP Net Profit (1 RWA)" v1={fmtUSDFull(base.lpNetProfitUSD / numRwa)} v2={fmtUSDFull(conservative.lpNetProfitUSD / numRwa)} v3={fmtUSDFull(saveTheDeal.lpNetProfitUSD / numRwa)} highlightCol={autoCol} highlightBg={colHighlight} />
-                  <CompareRow label="LP ROI (절대)" v1={fmtPct(base.lpRoi)} v2={fmtPct(conservative.lpRoi)} v3={fmtPct(saveTheDeal.lpRoi)} bold highlightCol={autoCol} highlightBg={colHighlight} accentColor={accentColor} />
-                  <CompareRow label="LP IRR (연환산)" v1={`${fmtPct(base.lpIrrYr)}/yr`} v2={`${fmtPct(conservative.lpIrrYr)}/yr`} v3={`${fmtPct(saveTheDeal.lpIrrYr)}/yr`} highlightCol={autoCol} highlightBg={colHighlight} />
+                  <CompareRow label="LP ROI (절대)" v1={fmtPct(base.displayRoi)} v2={fmtPct(conservative.displayRoi)} v3={fmtPct(saveTheDeal.displayRoi)} bold highlightCol={autoCol} highlightBg={colHighlight} accentColor={accentColor} />
+                  <CompareRow label="LP IRR (연환산)" v1={`${fmtPct(base.displayIrrYr)}/yr`} v2={`${fmtPct(conservative.displayIrrYr)}/yr`} v3={`${fmtPct(saveTheDeal.displayIrrYr)}/yr`} highlightCol={autoCol} highlightBg={colHighlight} />
                   <CompareRow label="XRF 수수료 합계" v1={fmtUSDFull(base.fees.xrfTotalUSD)} v2={fmtUSDFull(conservative.fees.xrfTotalUSD)} v3={fmtUSDFull(saveTheDeal.fees.xrfTotalUSD)} highlightCol={autoCol} highlightBg={colHighlight} />
                   <CompareRow label="KOF 수수료 합계" v1={fmtUSDFull(base.fees.platformTotalUSD)} v2={fmtUSDFull(conservative.fees.platformTotalUSD)} v3={fmtUSDFull(saveTheDeal.fees.platformTotalUSD)} highlightCol={autoCol} highlightBg={colHighlight} />
                   <CompareRow label="NPL VC Servicing 수수료" v1={fmtUSDFull(base.fees.servicingUSD)} v2={fmtUSDFull(conservative.fees.servicingUSD)} v3={fmtUSDFull(saveTheDeal.fees.servicingUSD)} last highlightCol={autoCol} highlightBg={colHighlight} />

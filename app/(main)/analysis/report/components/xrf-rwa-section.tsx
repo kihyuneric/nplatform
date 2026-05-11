@@ -113,28 +113,20 @@ export default function XrfRwaSection({
     exchangeRateKRWPerUSD: FX,
   }), [nplPurchasePriceKRW, nplTotalEquityKRW, nplNetProfitKRW, holdingPeriodDays])
 
-  // ── Pool / RWA ─────────────────────────────────────────────────────────────
-  const fixedFeesUSD = result.fees.xrfMgmtUSD + result.fees.xrfSetupUSD +
-                       result.fees.platformMarginUSD + result.fees.servicingUSD
-  const displayPoolUSD = result.nplTotalEquityUSD + fixedFeesUSD
+  // ── Pool / RWA (엔진 계산값 사용) ──────────────────────────────────────────
+  const { displayPoolUSD, displayRoi, displayIrrYr } = result
+  const fixedFeesUSD = displayPoolUSD - result.nplTotalEquityUSD  // cashflow 표시용
   const numRwa = Math.max(1, Math.round(displayPoolUSD / rwaPriceUSD))
   const perRwaProfit = result.lpNetProfitUSD / numRwa
 
-  // ── ROI / IRR 보정 ─────────────────────────────────────────────────────────
-  // LP가 실제 투자하는 금액 = displayPoolUSD (nplTotalEquity + vehicle fees 선납분)
-  // 엔진의 lpRoi = lpNetProfit / lpCapital(=nplEquity only) → 분모가 작아 과대 산출됨
-  // → ROI 표시 기준을 displayPoolUSD(실제 LP 투자 총액)으로 정정
-  const displayRoi    = displayPoolUSD > 0 ? result.lpNetProfitUSD / displayPoolUSD : 0
-  const displayIrrYr  = result.durationYr > 0 ? displayRoi / result.durationYr : 0
-
-  // ── Fund Metrics ───────────────────────────────────────────────────────────
-  const lpDistributionUSD  = result.lpCapitalUSD + result.lpNetProfitUSD
+  // ── Fund Metrics (displayPoolUSD 기준 — 실제 LP 투자 총액) ─────────────────
+  const lpDistributionUSD  = displayPoolUSD + result.lpNetProfitUSD
   const totalVehicleFeesUSD = result.fees.xrfTotalUSD + result.fees.platformTotalUSD + result.fees.servicingUSD
   const metrics = useMemo(() => computeFundMetrics({
-    lpCapitalUSD: result.lpCapitalUSD, lpDistributionUSD,
+    lpCapitalUSD: displayPoolUSD, lpDistributionUSD,
     holdingPeriodDays, nplPurchaseUSD: result.nplPurchaseUSD,
     nplNetProfitUSD: result.nplNetProfitUSD, totalVehicleFeesUSD, hurdleRateYr: 0.08,
-  }), [result, lpDistributionUSD, holdingPeriodDays, totalVehicleFeesUSD])
+  }), [result, displayPoolUSD, lpDistributionUSD, holdingPeriodDays, totalVehicleFeesUSD])
 
   const benchmark = useMemo(() => computeIndustryBenchmark(0.08, result.durationYr), [result.durationYr])
 
@@ -146,7 +138,7 @@ export default function XrfRwaSection({
       if (sensVar === 'holdingDays')   inp = { ...inp, holdingPeriodDays:   Math.round(holdingPeriodDays   * (1 + delta)) }
       if (sensVar === 'purchasePrice') inp = { ...inp, nplPurchasePriceKRW: Math.round(nplPurchasePriceKRW * (1 + delta)) }
       const r = computeXrfValuation(inp)
-      return { delta, lpRoi: r.lpRoi, lpIrrYr: r.lpIrrYr, netProfit: r.lpNetProfitUSD, isBase: delta === 0 }
+      return { delta, lpRoi: r.displayRoi, lpIrrYr: r.displayIrrYr, netProfit: r.lpNetProfitUSD, isBase: delta === 0 }
     })
   , [sensVar, nplPurchasePriceKRW, nplTotalEquityKRW, nplNetProfitKRW, holdingPeriodDays])
 
@@ -250,7 +242,7 @@ export default function XrfRwaSection({
             { phase: 'Day 0~30',  event: 'XRF SPV Setup · NPL 매입 실행',   amount: 0, cum: -result.lpCapitalUSD, note: 'Pool → NPL 매입가 funding', color: TEXT_MUT },
             { phase: '운용 중',   event: 'Vehicle fees 정산',                 amount: -(fixedFeesUSD), cum: -result.lpCapitalUSD - fixedFeesUSD, note: `AI Sourcing ${fmt$(result.fees.platformAiUSD)} NPL profit 차감`, color: AMBER },
             { phase: `Day ${holdingPeriodDays}`, event: '법원 배당 · LP 분배', amount: result.lpCapitalUSD + result.lpNetProfitUSD, cum: result.lpNetProfitUSD, note: `Capital ${fmt$(result.lpCapitalUSD)} + Profit ${fmt$(result.lpNetProfitUSD)}`, color: EMERALD },
-            { phase: 'LP 최종',   event: `순수익 RLUSD 분배 — ROI ${fmtPct(result.lpRoi)} · IRR ${fmtPct1(result.lpIrrYr)}/yr`, amount: 0, cum: result.lpNetProfitUSD, note: `1 RWA당 ${fmt$(perRwaProfit)}`, color: EMERALD, bold: true },
+            { phase: 'LP 최종',   event: `순수익 RLUSD 분배 — ROI ${fmtPct(displayRoi)} · IRR ${fmtPct1(displayIrrYr)}/yr`, amount: 0, cum: result.lpNetProfitUSD, note: `1 RWA당 ${fmt$(perRwaProfit)}`, color: EMERALD, bold: true },
           ].map(({ phase, event, amount, cum, note, color, bold }, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <div style={{ width: 72, flexShrink: 0, fontSize: 9, fontWeight: 700, color: '#fff', background: color, borderRadius: 5, padding: '3px 6px', textAlign: 'center', marginTop: 2 }}>{phase}</div>
@@ -397,7 +389,7 @@ export default function XrfRwaSection({
 
         <div style={{ marginTop: 10, padding: '6px 10px', background: '#F0F7FF', borderRadius: 6, fontSize: 10, color: TEXT_MUT }}>
           <span style={{ fontWeight: 600, color: TEXT_SEC }}>생성 기준:</span>{' '}
-          LP ROI {fmtPct(result.lpRoi)} · IRR {fmtPct1(result.lpIrrYr)}/yr · Pool {fmt$(displayPoolUSD)} · {numRwa.toLocaleString('en-US')} RWA × ${rwaPriceUSD.toLocaleString('en-US')} · Carry {result.fees.xrfCarryUSD > 0 ? `${fmt$(result.fees.xrfCarryUSD)} 발동` : '$0 미발생'}
+          LP ROI {fmtPct(displayRoi)} · IRR {fmtPct1(displayIrrYr)}/yr · Pool {fmt$(displayPoolUSD)} · {numRwa.toLocaleString('en-US')} RWA × ${rwaPriceUSD.toLocaleString('en-US')} · Carry {result.fees.xrfCarryUSD > 0 ? `${fmt$(result.fees.xrfCarryUSD)} 발동` : '$0 미발생'}
         </div>
       </Card>
     </div>

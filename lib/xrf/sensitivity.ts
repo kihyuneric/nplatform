@@ -45,8 +45,8 @@ export function sensitivityOnHoldingDays(
     const result = computeXrfValuation({ ...baseInput, holdingPeriodDays: days })
     return {
       label: `${days}일 (${(days / 365).toFixed(2)}년)`,
-      lpRoi: result.lpRoi,
-      lpIrrYr: result.lpIrrYr,
+      lpRoi: result.displayRoi,
+      lpIrrYr: result.displayIrrYr,
       tier: result.tier,
       lpNetProfitPerLpUSD: result.lpNetProfitPerLpUSD,
     }
@@ -69,8 +69,8 @@ export function sensitivityOnNetProfit(
     const result = computeXrfValuation({ ...baseInput, nplNetProfitKRW: adjustedProfitKRW })
     return {
       label: `${(mult * 100).toFixed(0)}% (${(adjustedProfitKRW / 1_000_000).toFixed(0)}M원)`,
-      lpRoi: result.lpRoi,
-      lpIrrYr: result.lpIrrYr,
+      lpRoi: result.displayRoi,
+      lpIrrYr: result.displayIrrYr,
       tier: result.tier,
       lpNetProfitPerLpUSD: result.lpNetProfitPerLpUSD,
     }
@@ -92,8 +92,8 @@ export function sensitivityOnFx(
     const result = computeXrfValuation({ ...baseInput, exchangeRateKRWPerUSD: fx })
     return {
       label: `${fx.toLocaleString()} KRW/USD`,
-      lpRoi: result.lpRoi,
-      lpIrrYr: result.lpIrrYr,
+      lpRoi: result.displayRoi,
+      lpIrrYr: result.displayIrrYr,
       tier: result.tier,
       lpNetProfitPerLpUSD: result.lpNetProfitPerLpUSD,
     }
