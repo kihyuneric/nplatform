@@ -3,18 +3,26 @@
 /**
  * PropertyCollateralAnalysis
  *
- * Claude AI 기반 부동산 담보 가치 분석 컴포넌트.
- * - 마운트 시 자동으로 AI 분석 시작 (address 있을 때)
- * - SSE 스트리밍으로 분석 내용 실시간 표시
- * - 주소는 API로만 전달 — UI에 절대 노출하지 않음
+ * 부동산 담보 가치 분석 컴포넌트.
  *
- * 사용: NPL Valuation / XRF RWA / XRF Admin 3개 뷰에 공통 삽입
+ * 동작 순서:
+ *   1. 마운트 즉시 → 결정적(Deterministic) 분석 표시 (API 키 불필요)
+ *   2. Claude API 키 연동 후 → 재생성 버튼 또는 자동으로 실시간 스트리밍 분석으로 교체
+ *
+ * "주소는 보여주지마" 정책:
+ *   - 주소는 API 전달 / deterministic 생성에만 사용
+ *   - UI에 절대 노출하지 않음
  */
 
 import { useEffect, useRef, useState } from "react"
-import { Sparkles, RefreshCw, AlertCircle, ChevronDown, ChevronUp } from "lucide-react"
+import { Sparkles, RefreshCw, ChevronDown, ChevronUp, Code2 } from "lucide-react"
+import {
+  buildDeterministicCollateral,
+  buildCollateralAnalysisPrompt,
+  COLLATERAL_SYSTEM_PROMPT,
+} from "@/lib/analysis/collateral-analysis"
 
-// ── 팔레트 (보고서 전체 디자인 시스템과 통일) ─────────────────────────────
+// ── 팔레트 ──────────────────────────────────────────────────────────────────
 const NAVY    = '#1B3A5C'
 const EMERALD = '#10B981'
 const BORDER  = '#E2E8F0'
@@ -24,71 +32,35 @@ const TEXT_PRI = '#0F172A'
 const TEXT_SEC = '#64748B'
 const TEXT_MUT = '#94A3B8'
 
-// ── 마크다운 → JSX 렌더러 (경량, 의존성 없음) ────────────────────────────
+// ── 마크다운 → JSX 경량 렌더러 ──────────────────────────────────────────────
 function renderMarkdown(text: string): React.ReactNode[] {
   const lines = text.split('\n')
   const nodes: React.ReactNode[] = []
   let i = 0
 
-  // 테이블 행 감지
   const isTableRow = (l: string) => l.trim().startsWith('|')
   const isTableSep = (l: string) => /^\|[\s\-:|]+\|/.test(l.trim())
 
   while (i < lines.length) {
     const line = lines[i]
 
-    // 빈 줄
-    if (!line.trim()) {
-      nodes.push(<div key={i} style={{ height: 6 }} />)
-      i++
-      continue
-    }
+    if (!line.trim()) { nodes.push(<div key={i} style={{ height: 6 }} />); i++; continue }
 
-    // H2 (##)
     if (line.startsWith('## ')) {
       nodes.push(
-        <h3 key={i} style={{
-          fontSize: 13, fontWeight: 800, color: NAVY,
-          margin: '18px 0 6px', paddingBottom: 6,
-          borderBottom: `2px solid ${NAVY}`,
-          letterSpacing: '-0.01em',
-        }}>
+        <h3 key={i} style={{ fontSize: 13, fontWeight: 800, color: NAVY, margin: '18px 0 6px', paddingBottom: 6, borderBottom: `2px solid ${NAVY}`, letterSpacing: '-0.01em' }}>
           {line.slice(3)}
         </h3>
-      )
-      i++
-      continue
+      ); i++; continue
     }
 
-    // H3 (###)
-    if (line.startsWith('### ')) {
-      nodes.push(
-        <h4 key={i} style={{
-          fontSize: 12, fontWeight: 700, color: NAVY,
-          margin: '12px 0 4px',
-        }}>
-          {line.slice(4)}
-        </h4>
-      )
-      i++
-      continue
-    }
-
-    // 테이블 블록 수집
     if (isTableRow(line)) {
       const tableLines: string[] = []
-      while (i < lines.length && isTableRow(lines[i])) {
-        tableLines.push(lines[i])
-        i++
-      }
-      // 헤더 행 + 구분자 제거 후 데이터 행 파싱
+      while (i < lines.length && isTableRow(lines[i])) { tableLines.push(lines[i]); i++ }
       const rows = tableLines.filter(l => !isTableSep(l))
-      const parseRow = (l: string) =>
-        l.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim())
-
+      const parseRow = (l: string) => l.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim())
       const [header, ...dataRows] = rows
       if (!header) continue
-
       const headers = parseRow(header)
       nodes.push(
         <div key={`tbl-${i}`} style={{ overflowX: 'auto', margin: '10px 0' }}>
@@ -96,11 +68,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
             <thead>
               <tr style={{ background: NAVY }}>
                 {headers.map((h, j) => (
-                  <th key={j} style={{
-                    padding: '7px 10px', color: '#fff',
-                    fontWeight: 700, textAlign: j === 0 ? 'left' : 'center',
-                    whiteSpace: 'nowrap',
-                  }}>{h}</th>
+                  <th key={j} style={{ padding: '7px 10px', color: '#fff', fontWeight: 700, textAlign: j === 0 ? 'left' : 'center', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -110,13 +78,9 @@ function renderMarkdown(text: string): React.ReactNode[] {
                 return (
                   <tr key={ri} style={{ background: ri % 2 === 0 ? '#fff' : BG_SOFT }}>
                     {cells.map((c, ci) => (
-                      <td key={ci} style={{
-                        padding: '6px 10px',
-                        color: ci === 0 ? TEXT_PRI : TEXT_SEC,
-                        fontWeight: ci === 0 ? 600 : 400,
-                        borderBottom: `1px solid ${BORDER}`,
-                        textAlign: ci === 0 ? 'left' : 'center',
-                      }}>{renderInline(c)}</td>
+                      <td key={ci} style={{ padding: '6px 10px', color: ci === 0 ? TEXT_PRI : TEXT_SEC, fontWeight: ci === 0 ? 600 : 400, borderBottom: `1px solid ${BORDER}`, textAlign: ci === 0 ? 'left' : 'center' }}>
+                        {renderInline(c)}
+                      </td>
                     ))}
                   </tr>
                 )
@@ -128,96 +92,78 @@ function renderMarkdown(text: string): React.ReactNode[] {
       continue
     }
 
-    // 불릿 (-, *)
     if (/^[-*]\s/.test(line)) {
       nodes.push(
-        <div key={i} style={{
-          display: 'flex', gap: 8, alignItems: 'flex-start',
-          marginBottom: 4, paddingLeft: 4,
-        }}>
+        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 4, paddingLeft: 4 }}>
           <span style={{ color: EMERALD, fontWeight: 900, marginTop: 1, flexShrink: 0 }}>·</span>
-          <span style={{ fontSize: 12, color: TEXT_PRI, lineHeight: 1.6 }}>
-            {renderInline(line.slice(2))}
-          </span>
+          <span style={{ fontSize: 12, color: TEXT_PRI, lineHeight: 1.6 }}>{renderInline(line.slice(2))}</span>
         </div>
-      )
-      i++
-      continue
+      ); i++; continue
     }
 
-    // 한 줄 결론 (bold 강조)
-    if (line.startsWith('**한 줄 결론**:') || line.startsWith('**한 줄 결론**: ')) {
+    if (/^\*\*한 줄 결론\*\*/.test(line)) {
       const content = line.replace(/^\*\*한 줄 결론\*\*:\s*/, '')
       nodes.push(
-        <div key={i} style={{
-          margin: '14px 0 2px',
-          padding: '10px 14px',
-          background: `${NAVY}10`,
-          borderLeft: `3px solid ${NAVY}`,
-          borderRadius: '0 6px 6px 0',
-        }}>
+        <div key={i} style={{ margin: '14px 0 2px', padding: '10px 14px', background: `${NAVY}10`, borderLeft: `3px solid ${NAVY}`, borderRadius: '0 6px 6px 0' }}>
           <span style={{ fontSize: 11, fontWeight: 700, color: NAVY }}>한 줄 결론</span>
-          <p style={{ margin: '3px 0 0', fontSize: 13, fontWeight: 700, color: TEXT_PRI, lineHeight: 1.5 }}>
-            {renderInline(content)}
-          </p>
+          <p style={{ margin: '3px 0 0', fontSize: 13, fontWeight: 700, color: TEXT_PRI, lineHeight: 1.5 }}>{renderInline(content)}</p>
         </div>
-      )
-      i++
-      continue
+      ); i++; continue
     }
 
-    // 일반 텍스트
     nodes.push(
-      <p key={i} style={{ fontSize: 12, color: TEXT_SEC, margin: '3px 0', lineHeight: 1.7 }}>
-        {renderInline(line)}
-      </p>
-    )
-    i++
+      <p key={i} style={{ fontSize: 12, color: TEXT_SEC, margin: '3px 0', lineHeight: 1.7 }}>{renderInline(line)}</p>
+    ); i++
   }
 
   return nodes
 }
 
-/** 인라인 마크다운 (bold, italic) 처리 */
 function renderInline(text: string): React.ReactNode {
   if (!text.includes('**') && !text.includes('*')) return text
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/)
   return (
     <>
       {parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
+        if (part.startsWith('**') && part.endsWith('**'))
           return <strong key={i} style={{ color: TEXT_PRI, fontWeight: 700 }}>{part.slice(2, -2)}</strong>
-        }
-        if (part.startsWith('*') && part.endsWith('*')) {
+        if (part.startsWith('*') && part.endsWith('*'))
           return <em key={i}>{part.slice(1, -1)}</em>
-        }
         return part
       })}
     </>
   )
 }
 
-// ── 컴포넌트 ──────────────────────────────────────────────────────────────
+// ── 컴포넌트 ────────────────────────────────────────────────────────────────
 
 interface PropertyCollateralAnalysisProps {
-  /** 분석할 부동산 주소 (API로만 전달, UI 미노출) */
+  /** 분석할 부동산 주소 (API·deterministic에만 사용 — UI 미노출) */
   address?: string
   assetTitle?: string
 }
 
-type Status = 'idle' | 'loading' | 'done' | 'error'
+type Status = 'deterministic' | 'loading' | 'done' | 'error'
 
-export function PropertyCollateralAnalysis({
-  address,
-  assetTitle,
-}: PropertyCollateralAnalysisProps) {
-  const [text,      setText]      = useState('')
-  const [status,    setStatus]    = useState<Status>('idle')
-  const [collapsed, setCollapsed] = useState(false)
-  const calledRef = useRef(false)
+export function PropertyCollateralAnalysis({ address, assetTitle }: PropertyCollateralAnalysisProps) {
+  const [text,           setText]           = useState('')
+  const [status,         setStatus]         = useState<Status>('deterministic')
+  const [collapsed,      setCollapsed]      = useState(false)
+  const [showPrompt,     setShowPrompt]     = useState(false)
+  const liveCalledRef = useRef(false)
 
-  const generate = async () => {
+  // ── 마운트 시 즉시 결정적 분석 표시 ──────────────────────────────────────
+  useEffect(() => {
     if (!address) return
+    const det = buildDeterministicCollateral(address, assetTitle)
+    setText(det)
+    setStatus('deterministic')
+  }, [address, assetTitle])
+
+  // ── Claude API 실시간 스트리밍 (API 키 연동 후 사용) ──────────────────────
+  const generateLive = async () => {
+    if (!address) return
+    liveCalledRef.current = true
     setStatus('loading')
     setText('')
 
@@ -248,163 +194,138 @@ export function PropertyCollateralAnalysis({
           if (raw === '[DONE]') { setStatus('done'); return }
           try {
             const parsed = JSON.parse(raw)
-            if (parsed.text) {
-              setText(prev => prev + parsed.text)
-            }
+            if (parsed.text) setText(prev => prev + parsed.text)
             if (parsed.error) {
-              // 스트림 내부 에러 (API 키 누락, 네트워크 등)
-              console.error('[Collateral] stream error:', parsed.error)
-              setStatus('error')
+              // API 키 없음 → 결정적 분석으로 복귀
+              const det = buildDeterministicCollateral(address, assetTitle)
+              setText(det)
+              setStatus('deterministic')
               await reader.cancel()
               return
             }
-          } catch {/* JSON parse error — skip */}
+          } catch {/* JSON parse error */}
         }
       }
-
       setStatus('done')
-    } catch (e) {
-      console.error('[Collateral] fetch error:', e)
-      setStatus('error')
+    } catch {
+      // 네트워크 실패 → 결정적 분석으로 복귀
+      const det = buildDeterministicCollateral(address, assetTitle)
+      setText(det)
+      setStatus('deterministic')
     }
   }
 
-  // 마운트 시 자동 실행 (address 있을 때)
-  useEffect(() => {
-    if (address && !calledRef.current) {
-      calledRef.current = true
-      generate()
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address])
-
   if (!address) return null
 
+  const isDeterministic = status === 'deterministic'
+  const isLive = status === 'done'
+  const isLoading = status === 'loading'
+
+  const prompt = buildCollateralAnalysisPrompt(address, assetTitle)
+
   return (
-    <div style={{
-      background: BG_CARD,
-      border: `1px solid ${BORDER}`,
-      borderRadius: 12,
-      marginBottom: 20,
-      overflow: 'hidden',
-    }}>
-      {/* ── 헤더 ─────────────────────────────────────────────────── */}
-      <div style={{
-        background: NAVY,
-        padding: '12px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
+    <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 12, marginBottom: 20, overflow: 'hidden' }}>
+
+      {/* ── 헤더 ──────────────────────────────────────────────────── */}
+      <div style={{ background: NAVY, padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Sparkles size={14} color={EMERALD} />
-          <span style={{ fontSize: 13, fontWeight: 800, color: '#fff', letterSpacing: '-0.01em' }}>
-            부동산 담보 가치 분석
-          </span>
-          <span style={{
-            fontSize: 10, color: `${EMERALD}`, fontWeight: 600,
-            background: `${EMERALD}22`, padding: '2px 7px', borderRadius: 99,
-            border: `1px solid ${EMERALD}44`,
-          }}>
-            Claude AI
-          </span>
+          <span style={{ fontSize: 13, fontWeight: 800, color: '#fff', letterSpacing: '-0.01em' }}>부동산 담보 가치 분석</span>
+          {isDeterministic && (
+            <span style={{ fontSize: 10, color: EMERALD, fontWeight: 600, background: `${EMERALD}22`, padding: '2px 7px', borderRadius: 99, border: `1px solid ${EMERALD}44` }}>
+              사전 분석
+            </span>
+          )}
+          {(isLive || isLoading) && (
+            <span style={{ fontSize: 10, color: EMERALD, fontWeight: 600, background: `${EMERALD}22`, padding: '2px 7px', borderRadius: 99, border: `1px solid ${EMERALD}44` }}>
+              Claude AI
+            </span>
+          )}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* 재생성 버튼 */}
-          {(status === 'done' || status === 'error') && (
+          {/* 프롬프트 보기 */}
+          <button
+            onClick={() => setShowPrompt(s => !s)}
+            style={{ background: 'transparent', border: `1px solid #ffffff33`, borderRadius: 6, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 5, color: '#ffffffaa', fontSize: 11, cursor: 'pointer' }}
+          >
+            <Code2 size={11} />
+            프롬프트
+          </button>
+          {/* Live AI 분석 (재생성) */}
+          {!isLoading && (
             <button
-              onClick={() => { calledRef.current = true; generate() }}
-              style={{
-                background: 'transparent', border: `1px solid #ffffff44`,
-                borderRadius: 6, padding: '4px 10px',
-                display: 'flex', alignItems: 'center', gap: 5,
-                color: '#ffffffcc', fontSize: 11, cursor: 'pointer',
-              }}
+              onClick={generateLive}
+              style={{ background: 'transparent', border: `1px solid #ffffff44`, borderRadius: 6, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 5, color: '#ffffffcc', fontSize: 11, cursor: 'pointer' }}
             >
               <RefreshCw size={11} />
-              재생성
+              {isDeterministic ? 'AI 실시간 분석' : '재생성'}
             </button>
           )}
           {/* 접기/펼치기 */}
-          {status === 'done' && (
-            <button
-              onClick={() => setCollapsed(c => !c)}
-              style={{
-                background: 'transparent', border: 'none',
-                color: '#ffffffaa', cursor: 'pointer', padding: 4,
-              }}
-            >
-              {collapsed
-                ? <ChevronDown size={16} />
-                : <ChevronUp   size={16} />
-              }
-            </button>
-          )}
+          <button onClick={() => setCollapsed(c => !c)} style={{ background: 'transparent', border: 'none', color: '#ffffffaa', cursor: 'pointer', padding: 4 }}>
+            {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+          </button>
         </div>
       </div>
 
-      {/* ── 본문 ─────────────────────────────────────────────────── */}
+      {/* ── 프롬프트 보기 (토글) ──────────────────────────────────── */}
+      {showPrompt && (
+        <div style={{ background: '#0F172A', padding: '14px 20px' }}>
+          <div style={{ fontSize: 10, color: '#64748B', fontWeight: 700, marginBottom: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+            System Prompt
+          </div>
+          <pre style={{ fontSize: 11, color: '#94A3B8', lineHeight: 1.7, margin: '0 0 14px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            {COLLATERAL_SYSTEM_PROMPT}
+          </pre>
+          <div style={{ fontSize: 10, color: '#64748B', fontWeight: 700, marginBottom: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+            User Prompt (주소 마스킹됨)
+          </div>
+          <pre style={{ fontSize: 11, color: '#94A3B8', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            {prompt.replace(address, '[REDACTED — 주소 비공개]')}
+          </pre>
+        </div>
+      )}
+
+      {/* ── 본문 ──────────────────────────────────────────────────── */}
       {!collapsed && (
         <div style={{ padding: '16px 20px' }}>
-
           {/* 로딩 */}
-          {status === 'loading' && !text && (
+          {isLoading && !text && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '20px 0' }}>
-              <div style={{
-                width: 18, height: 18, borderRadius: '50%',
-                border: `2px solid ${EMERALD}`,
-                borderTopColor: 'transparent',
-                animation: 'spin 0.8s linear infinite',
-              }} />
+              <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${EMERALD}`, borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
               <span style={{ fontSize: 12, color: TEXT_MUT }}>Claude AI가 담보 가치를 분석 중입니다…</span>
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
           )}
 
-          {/* 스트리밍 텍스트 */}
+          {/* 분석 텍스트 */}
           {text && (
             <div style={{ position: 'relative' }}>
               {renderMarkdown(text)}
-              {/* 스트리밍 커서 */}
-              {status === 'loading' && (
-                <span style={{
-                  display: 'inline-block', width: 2, height: 14,
-                  background: EMERALD, marginLeft: 2,
-                  animation: 'blink 0.8s step-end infinite',
-                }} />
+              {isLoading && (
+                <span style={{ display: 'inline-block', width: 2, height: 14, background: EMERALD, marginLeft: 2, animation: 'blink 0.8s step-end infinite' }} />
               )}
               <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
             </div>
           )}
 
-          {/* 에러 */}
-          {status === 'error' && !text && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '12px 14px', borderRadius: 8,
-              background: '#FEF2F2', border: '1px solid #FECACA',
-            }}>
-              <AlertCircle size={14} color="#DC2626" />
-              <span style={{ fontSize: 12, color: '#DC2626' }}>
-                분석 중 오류가 발생했습니다. 재생성 버튼을 눌러주세요.
-              </span>
-            </div>
-          )}
-
-          {/* 완료 메타 */}
-          {status === 'done' && text && (
-            <div style={{
-              marginTop: 14, paddingTop: 10,
-              borderTop: `1px solid ${BORDER}`,
-              display: 'flex', alignItems: 'center', gap: 6,
-            }}>
+          {/* 푸터 */}
+          <div style={{ marginTop: 14, paddingTop: 10, borderTop: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Sparkles size={10} color={TEXT_MUT} />
               <span style={{ fontSize: 10, color: TEXT_MUT }}>
-                Claude AI 담보 분석 · 참고용 자료 (법적 효력 없음)
+                {isDeterministic
+                  ? '사전 분석 데이터 · "AI 실시간 분석" 클릭 시 Claude AI 실시간 분석으로 전환'
+                  : 'Claude AI 담보 분석 · 참고용 자료 (법적 효력 없음)'}
               </span>
             </div>
-          )}
+            {isDeterministic && (
+              <span style={{ fontSize: 10, color: `${EMERALD}`, fontWeight: 600 }}>
+                🔑 ANTHROPIC_API_KEY 연동 후 실시간 분석 자동 전환
+              </span>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -1139,14 +1139,16 @@ export default function UnifiedReportPage() {
 
       {/* ── XRF RWA LP 보고서 (투자자 전용 · Pool/CashFlow/Metrics) ───── */}
       {profitability && valuationMode === 'XRF_RWA' && (
-        <XrfRwaSection
-          nplPurchasePriceKRW={profitability.acquisition.purchasePrice}
-          nplTotalEquityKRW={profitability.investment.totalEquity}
-          nplNetProfitKRW={profitability.investment.expectedNetProfit}
-          holdingPeriodDays={profitability.investment.holdingPeriodDays}
-          assetTitle={report?.input?.assetTitle}
-          address={listing?.address ?? undefined}
-        />
+        <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 24px' }}>
+          <XrfRwaSection
+            nplPurchasePriceKRW={profitability.acquisition.purchasePrice}
+            nplTotalEquityKRW={profitability.investment.totalEquity}
+            nplNetProfitKRW={profitability.investment.expectedNetProfit}
+            holdingPeriodDays={profitability.investment.holdingPeriodDays}
+            assetTitle={report?.input?.assetTitle}
+            address={listing?.address ?? undefined}
+          />
+        </div>
       )}
 
       {/* ── XRF Vehicle Valuation (LP 최종 ROI · XRF Foundation 구조) ───── */}
