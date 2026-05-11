@@ -248,14 +248,23 @@ export function PropertyCollateralAnalysis({
           if (raw === '[DONE]') { setStatus('done'); return }
           try {
             const parsed = JSON.parse(raw)
-            if (parsed.text)  setText(prev => prev + parsed.text)
-            if (parsed.error) throw new Error(parsed.error)
-          } catch {/* parse error — skip */}
+            if (parsed.text) {
+              setText(prev => prev + parsed.text)
+            }
+            if (parsed.error) {
+              // 스트림 내부 에러 (API 키 누락, 네트워크 등)
+              console.error('[Collateral] stream error:', parsed.error)
+              setStatus('error')
+              await reader.cancel()
+              return
+            }
+          } catch {/* JSON parse error — skip */}
         }
       }
 
       setStatus('done')
-    } catch {
+    } catch (e) {
+      console.error('[Collateral] fetch error:', e)
       setStatus('error')
     }
   }

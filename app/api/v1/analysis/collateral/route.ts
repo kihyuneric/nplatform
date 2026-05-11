@@ -4,7 +4,10 @@
  * Claude AI 기반 부동산 담보 가치 분석 (SSE 스트리밍)
  *
  * Body: { address: string, assetTitle?: string }
- * Response: text/event-stream  →  data: { text: string }\n\n  →  data: [DONE]\n\n
+ * Response: text/event-stream
+ *   data: { text: string }   — 스트리밍 텍스트 청크
+ *   data: { error: string }  — 오류 발생 시
+ *   data: [DONE]             — 완료
  *
  * ⚠ 주소는 AI 분석에만 사용되고 응답 본문에 절대 노출되지 않음.
  */
@@ -72,13 +75,6 @@ function buildUserPrompt(address: string, assetTitle?: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return NextResponse.json(
-        { error: 'AI 서비스 미설정 (ANTHROPIC_API_KEY)' },
-        { status: 503 },
-      )
-    }
-
     const body = await req.json()
     const { address, assetTitle } = body as { address?: string; assetTitle?: string }
 
@@ -86,14 +82,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '주소가 필요합니다' }, { status: 400 })
     }
 
-    const Anthropic = (await import('@anthropic-ai/sdk')).default
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
     const encoder = new TextEncoder()
+    const trimmedAddress = address.trim()
 
     const readable = new ReadableStream({
       async start(controller) {
+        const send = (payload: object) => {
+          try {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`))
+          } catch { /* controller already closed */ }
+        }
+
         try {
+          // ★ SDK 초기화를 스트림 내부에서 — ANTHROPIC_API_KEY 자동 탐지
+          const Anthropic = (await import('@anthropic-ai/sdk')).default
+          const client = new Anthropic()   // SDK가 자체적으로 env var 탐색
+
           const stream = client.messages.stream({
             model: 'claude-sonnet-4-20250514',
             max_tokens: 2500,
@@ -101,7 +105,7 @@ export async function POST(req: NextRequest) {
             messages: [
               {
                 role: 'user',
-                content: buildUserPrompt(address.trim(), assetTitle),
+                content: buildUserPrompt(trimmedAddress, assetTitle),
               },
             ],
           })
@@ -111,19 +115,19 @@ export async function POST(req: NextRequest) {
               event.type === 'content_block_delta' &&
               event.delta.type === 'text_delta'
             ) {
-              const payload = JSON.stringify({ text: event.delta.text })
-              controller.enqueue(encoder.encode(`data: ${payload}\n\n`))
+              send({ text: event.delta.text })
             }
           }
 
-          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : '분석 오류'
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ error: msg })}\n\n`),
-          )
+          console.error('[Collateral Analysis] Stream error:', msg)
+          send({ error: msg })
         } finally {
-          controller.close()
+          try {
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+            controller.close()
+          } catch { /* already closed */ }
         }
       },
     })
@@ -138,6 +142,7 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : '서버 오류'
+    console.error('[Collateral Analysis] Route error:', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
