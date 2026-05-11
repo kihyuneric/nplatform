@@ -160,13 +160,13 @@ export default function XrfRwaSection({
       {/* ── 1. LP 투자 요약 Hero ── */}
       <Card style={{ background: NAVY, border: 'none' }}>
         <div style={{ color: '#93C5FD', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', marginBottom: 12, textTransform: 'uppercase' }}>
-          XRF RWA · LP 투자 요약 · {result.tier} Tier
+          XRF RWA · LP 투자 요약
         </div>
 
         {/* 투자 → 수익 → 기간 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
           {[
-            { lbl: `투자 (LP Capital)  Pool ${fmt$(displayPoolUSD)}`, val: fmt$(result.lpCapitalUSD), sub: 'LP 자기자본', color: '#fff' },
+            { lbl: '투자 (LP Capital)  Pool', val: fmt$(displayPoolUSD), sub: '', color: '#fff' },
             { lbl: '→', val: '', sub: '', color: EMERALD },
             { lbl: '수익 (Net Profit)', val: fmt$(result.lpNetProfitUSD), sub: `ROI ${fmtPct(result.lpRoi)}`, color: EMERALD },
             { lbl: '⏱', val: '', sub: '', color: '#93C5FD' },

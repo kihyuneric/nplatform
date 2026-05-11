@@ -207,94 +207,106 @@ export interface XrfRwaSummaryArgs {
  * XRF RWA Report — LP 투자자용 AI 총평 (한국어 · 5단락)
  *
  * 구성:
- *   §1 Lead         — 핵심 결론: 얼마 투자 → 얼마 수익 (몇 일), ROI
- *   §2 Pool/RWA     — Pool 구조 + RWA 발행 + 1 RWA 당 수익
+ *   §1 Lead         — Pool 총 청약액 기준 핵심 결론: Pool → 순수익, ROI/IRR
+ *   §2 Pool/RWA     — Pool 구조(NPL 자기자본 + XRF Vehicle Fees) + RWA 발행 + 1 RWA 당 수익
  *   §3 Hurdle/Carry — Hurdle 8%/yr 충족 여부, Carry 발동 상태
  *   §4 Fund Metrics — DPI·IRR 산업 표준 대비 위치
- *   §5 Verdict      — 투자 의견 + action call (LP 관점)
+ *   §5 Verdict      — 투자 의견 BUY/HOLD/AVOID + LP 관점 액션
  */
 export function buildXrfRwaSummary(args: XrfRwaSummaryArgs): string {
   const { result, metrics, displayPoolUSD, numRwa, rwaPriceUSD, perRwaProfit, benchmark } = args
 
-  const lpRoiPct       = (result.lpRoi * 100).toFixed(2)
-  const lpIrrPct       = (result.lpIrrYr * 100).toFixed(1)
+  const lpRoiPct        = (result.lpRoi * 100).toFixed(2)
+  const lpIrrPct        = (result.lpIrrYr * 100).toFixed(1)
   const hurdleSpreadPct = (metrics.hurdleSpread * 100).toFixed(2)
   const hurdleSpreadSign = metrics.hurdleSpread > 0 ? '+' : ''
-  const days           = Math.round(result.durationYr * 365)
-  const durationYrStr  = result.durationYr.toFixed(1)
-  const xirrPct        = (metrics.xirr * 100).toFixed(1)
-  const medianIrrPct   = (benchmark.median.irr * 100).toFixed(1)
-  const topQIrrPct     = (benchmark.topQuartile.irr * 100).toFixed(1)
-  const beatsBenchmark = metrics.xirr >= benchmark.median.irr
+  const days            = Math.round(result.durationYr * 365)
+  const durationYrStr   = result.durationYr.toFixed(1)
+  const xirrPct         = (metrics.xirr * 100).toFixed(1)
+  const medianIrrPct    = (benchmark.median.irr * 100).toFixed(1)
+  const topQIrrPct      = (benchmark.topQuartile.irr * 100).toFixed(1)
+  const beatsBenchmark  = metrics.xirr >= benchmark.median.irr
+  const vehicleFeesUSD  = displayPoolUSD - result.nplTotalEquityUSD
 
-  const verdict = result.lpRoi >= 0.25 ? 'BUY' :
-                  result.lpRoi >= 0.15 ? 'BUY' :
+  const verdict = result.lpRoi >= 0.15 ? 'BUY' :
                   result.lpRoi >= 0.05 ? 'HOLD' : 'AVOID'
 
   const carryStatus = result.fees.xrfCarryUSD > 0
     ? `Hurdle(8%/yr) 초과 달성 → Carry ${fmtUSD(result.fees.xrfCarryUSD)} 발동 (5-tier marginal rate)`
-    : `Hurdle(8%/yr) 미달 → Carry $0 · XRF는 Mgmt+Setup 수수료만 수령`
+    : `Hurdle(8%/yr) 미달 → Carry $0 · XRF는 관리보수·Setup 수수료만 수령`
 
-  // §1 Lead — 핵심 수익 구조
-  const lead = `[${verdict}] LP ${fmtUSD(result.lpCapitalUSD)} 투자 시 ${days}일(${durationYrStr}년) 운용 후 순수익 ${fmtUSD(result.lpNetProfitUSD)} 확보 — LP ROI ${lpRoiPct}% · 연환산 IRR ${lpIrrPct}%/yr · Hurdle Spread ${hurdleSpreadSign}${hurdleSpreadPct}%p. XRF RWA 구조를 통한 NPL 채권 투자로 확정된 수익 구조를 제공합니다.`
+  // §1 Lead — Pool 총 청약액 기준 핵심 수익 구조
+  const lead = `[${verdict}] LP Pool 청약액 ${fmtUSD(displayPoolUSD)} 납입 시 ${days}일(${durationYrStr}년) 운용 후 순수익 ${fmtUSD(result.lpNetProfitUSD)} 확보 — LP ROI ${lpRoiPct}% · 연환산 IRR ${lpIrrPct}%/yr · Hurdle Spread ${hurdleSpreadSign}${hurdleSpreadPct}%p. XRF RWA 온체인 구조를 통해 NPL 채권 투자 수익을 RLUSD로 분배받는 확정 수익형 상품입니다.`
 
-  // §2 Pool/RWA — 발행 구조
-  const poolSection = `Pool 총액 ${fmtUSD(displayPoolUSD)} (= NPL 자기자본 ${fmtUSD(result.nplTotalEquityUSD)} + Vehicle Fees prefund ${fmtUSD(displayPoolUSD - result.nplTotalEquityUSD)}) 기준 RWA ${numRwa.toLocaleString('en-US')}개 발행 (단가 $${rwaPriceUSD.toLocaleString('en-US')}). 1 RWA당 순수익 ${fmtUSD(perRwaProfit)} — RLUSD 기반 온체인 분배로 투자금 회수까지 ${days}일 소요 예정.`
+  // §2 Pool/RWA — Pool 구조 + RWA 발행
+  const poolSection = `Pool 구조: NPL 자기자본 ${fmtUSD(result.nplTotalEquityUSD)} + XRF Vehicle Fees ${fmtUSD(vehicleFeesUSD)} = 총 ${fmtUSD(displayPoolUSD)}. 이 Pool을 기반으로 RWA ${numRwa.toLocaleString('en-US')}개 발행 (단가 $${rwaPriceUSD.toLocaleString('en-US')}) — 1 RWA당 순수익 ${fmtUSD(perRwaProfit)}, 투자금 회수까지 ${days}일 소요 예정.`
 
   // §3 Hurdle & Carry
-  const hurdleSection = `LP 우선 수익률(Hurdle) 8%/yr 기준 본 딜 누적 Hurdle 금액 ${fmtUSD(result.hurdleUSD)}. ${carryStatus}. Hurdle 미달 시 XRF Carry는 발생하지 않으며 LP 수익 전액이 보전됩니다.`
+  const hurdleSection = `LP 우선 수익률(Hurdle) 8%/yr 기준 본 딜 누적 Hurdle 금액 ${fmtUSD(result.hurdleUSD)}. ${carryStatus}. Hurdle 미달 시 XRF Carry는 발생하지 않으며 LP 수익 전액이 우선 보전됩니다.`
 
   // §4 Fund Metrics — 산업 표준 대비
-  const metricsSection = `Fund Metrics: Net DPI ${metrics.dpi.toFixed(3)}x · XIRR ${xirrPct}%/yr. 업계 중간값 IRR ${medianIrrPct}%/yr · 상위 25% ${topQIrrPct}%/yr 대비 ${beatsBenchmark ? `중간값 상회 (${hurdleSpreadSign}${(metrics.xirr - benchmark.median.irr) * 100 >= 0 ? '+' : ''}${((metrics.xirr - benchmark.median.irr) * 100).toFixed(1)}%p)` : `중간값 미달 (${((metrics.xirr - benchmark.median.irr) * 100).toFixed(1)}%p)`} · Gross MoM(Asset) ${metrics.grossMomAsset.toFixed(3)}x.`
+  const metricsSection = `Fund Metrics: Net DPI ${metrics.dpi.toFixed(3)}x · XIRR ${xirrPct}%/yr · Gross MoM(Asset) ${metrics.grossMomAsset.toFixed(3)}x. 업계 중간값 IRR ${medianIrrPct}%/yr · 상위 25% ${topQIrrPct}%/yr 대비 ${beatsBenchmark ? `중간값 상회 (${hurdleSpreadSign}${((metrics.xirr - benchmark.median.irr) * 100).toFixed(1)}%p)` : `중간값 미달 (${((metrics.xirr - benchmark.median.irr) * 100).toFixed(1)}%p)`}.`
 
   // §5 Verdict
   const verdictSection = verdict === 'BUY'
-    ? `투자 의견 BUY — LP ROI ${lpRoiPct}%는 XRF v9 기준 청약 권고 구간. 시나리오 조정(순수익/운용기간/매입가 ±20%)에서도 수익 구조가 유지되는지 감도 분석을 병행하시길 권장합니다. RWA ${numRwa.toLocaleString('en-US')}개 분산 청약으로 진입 가능.`
+    ? `투자 의견 BUY — LP ROI ${lpRoiPct}%는 XRF RWA 청약 권고 구간. Pool ${fmtUSD(displayPoolUSD)} 기준 RWA ${numRwa.toLocaleString('en-US')}개 분산 청약으로 진입 가능하며, 감도 분석(순수익/운용기간/매입가 ±20%) 병행을 권장합니다.`
     : verdict === 'HOLD'
-    ? `투자 의견 HOLD — LP ROI ${lpRoiPct}%는 수용 가능한 최소 수준. 운용기간 단축 또는 매입가 재협상으로 ROI 개선 여지를 먼저 확인하십시오. 기관 LP와의 사전 협의 후 청약 진행을 권장합니다.`
-    : `투자 의견 AVOID — LP ROI ${lpRoiPct}%는 최소 임계(5%) 미달. 현재 조건으로 RWA 출시는 부적합하며 딜 재구조화가 선행되어야 합니다.`
+    ? `투자 의견 HOLD — LP ROI ${lpRoiPct}%는 최소 수용 수준. 운용기간 단축 또는 매입가 재협상으로 ROI 개선 여지를 확인한 뒤 기관 LP 사전 협의 후 청약을 권장합니다.`
+    : `투자 의견 AVOID — LP ROI ${lpRoiPct}%는 최소 임계(5%) 미달. 현재 조건으로 RWA 출시는 부적합하며 딜 재구조화(담보 추가·매입가 재협상)가 선행되어야 합니다.`
 
   return [lead, poolSection, hurdleSection, metricsSection, verdictSection].join('\n\n')
 }
 
 /**
  * XRF RWA Report — LP 투자자용 AI 총평 (English · 5 paragraphs)
+ *
+ * Structure mirrors buildXrfRwaSummary():
+ *   §1 Lead         — Pool subscription total → net profit, ROI/IRR
+ *   §2 Pool/RWA     — Pool breakdown (NPL equity + XRF Vehicle Fees) + RWA issuance
+ *   §3 Hurdle/Carry — Hurdle 8%/yr status, Carry trigger
+ *   §4 Fund Metrics — DPI/IRR vs industry benchmarks
+ *   §5 Verdict      — BUY/HOLD/AVOID + LP action call
  */
 export function buildXrfRwaSummaryEn(args: XrfRwaSummaryArgs): string {
   const { result, metrics, displayPoolUSD, numRwa, rwaPriceUSD, perRwaProfit, benchmark } = args
 
-  const lpRoiPct       = (result.lpRoi * 100).toFixed(2)
-  const lpIrrPct       = (result.lpIrrYr * 100).toFixed(1)
+  const lpRoiPct        = (result.lpRoi * 100).toFixed(2)
+  const lpIrrPct        = (result.lpIrrYr * 100).toFixed(1)
   const hurdleSpreadPct = (metrics.hurdleSpread * 100).toFixed(2)
   const hurdleSpreadSign = metrics.hurdleSpread > 0 ? '+' : ''
-  const days           = Math.round(result.durationYr * 365)
-  const durationYrStr  = result.durationYr.toFixed(1)
-  const xirrPct        = (metrics.xirr * 100).toFixed(1)
-  const medianIrrPct   = (benchmark.median.irr * 100).toFixed(1)
-  const topQIrrPct     = (benchmark.topQuartile.irr * 100).toFixed(1)
-  const beatsBenchmark = metrics.xirr >= benchmark.median.irr
+  const days            = Math.round(result.durationYr * 365)
+  const durationYrStr   = result.durationYr.toFixed(1)
+  const xirrPct         = (metrics.xirr * 100).toFixed(1)
+  const medianIrrPct    = (benchmark.median.irr * 100).toFixed(1)
+  const topQIrrPct      = (benchmark.topQuartile.irr * 100).toFixed(1)
+  const beatsBenchmark  = metrics.xirr >= benchmark.median.irr
+  const vehicleFeesUSD  = displayPoolUSD - result.nplTotalEquityUSD
 
-  const verdict = result.lpRoi >= 0.25 ? 'BUY' :
-                  result.lpRoi >= 0.15 ? 'BUY' :
+  const verdict = result.lpRoi >= 0.15 ? 'BUY' :
                   result.lpRoi >= 0.05 ? 'HOLD' : 'AVOID'
 
   const carryStatus = result.fees.xrfCarryUSD > 0
     ? `Hurdle (8%/yr) cleared → Carry ${fmtUSD(result.fees.xrfCarryUSD)} triggered (5-tier marginal rate)`
-    : `Hurdle (8%/yr) not met → Carry $0 · XRF receives Mgmt+Setup fees only`
+    : `Hurdle (8%/yr) not met → Carry $0; XRF receives management & setup fees only`
 
-  const lead = `[${verdict}] LP capital call of ${fmtUSD(result.lpCapitalUSD)} yields net profit of ${fmtUSD(result.lpNetProfitUSD)} over ${days} days (${durationYrStr} years) — LP ROI ${lpRoiPct}% · annualized IRR ${lpIrrPct}%/yr · Hurdle Spread ${hurdleSpreadSign}${hurdleSpreadPct}%p. The XRF RWA structure provides a defined return profile via NPL debt collateral.`
+  // §1 Lead — Pool-based headline return
+  const lead = `[${verdict}] LP Pool subscription of ${fmtUSD(displayPoolUSD)} delivers net profit of ${fmtUSD(result.lpNetProfitUSD)} over ${days} days (${durationYrStr} years) — LP ROI ${lpRoiPct}% · annualized IRR ${lpIrrPct}%/yr · Hurdle Spread ${hurdleSpreadSign}${hurdleSpreadPct}%p. The XRF RWA structure converts NPL debt collateral into an on-chain, fixed-income-style product distributed via RLUSD.`
 
-  const poolSection = `Pool of ${fmtUSD(displayPoolUSD)} (NPL equity ${fmtUSD(result.nplTotalEquityUSD)} + Vehicle Fees prefund ${fmtUSD(displayPoolUSD - result.nplTotalEquityUSD)}) supports issuance of ${numRwa.toLocaleString('en-US')} RWA tokens at $${rwaPriceUSD.toLocaleString('en-US')}/RWA. Per-RWA net profit: ${fmtUSD(perRwaProfit)} — distributed on-chain via RLUSD within ${days} days.`
+  // §2 Pool/RWA — Pool composition + RWA issuance
+  const poolSection = `Pool composition: NPL equity ${fmtUSD(result.nplTotalEquityUSD)} + XRF Vehicle Fees ${fmtUSD(vehicleFeesUSD)} = total Pool ${fmtUSD(displayPoolUSD)}. This Pool backs the issuance of ${numRwa.toLocaleString('en-US')} RWA tokens at $${rwaPriceUSD.toLocaleString('en-US')}/RWA — per-RWA net profit: ${fmtUSD(perRwaProfit)}, with full redemption expected within ${days} days.`
 
-  const hurdleSection = `LP priority return (Hurdle) set at 8%/yr · total Hurdle amount for this deal: ${fmtUSD(result.hurdleUSD)}. ${carryStatus}. If Hurdle is not cleared, XRF Carry remains $0 and full LP profit is preserved.`
+  // §3 Hurdle & Carry
+  const hurdleSection = `LP priority return (Hurdle) set at 8%/yr — cumulative Hurdle for this deal: ${fmtUSD(result.hurdleUSD)}. ${carryStatus}. When Hurdle is not cleared, XRF Carry is $0 and the full LP profit distribution is preserved.`
 
-  const metricsSection = `Fund Metrics: Net DPI ${metrics.dpi.toFixed(3)}x · XIRR ${xirrPct}%/yr. Versus industry benchmarks — median IRR ${medianIrrPct}%/yr · top-quartile ${topQIrrPct}%/yr: this deal ${beatsBenchmark ? `exceeds median (${hurdleSpreadSign}${((metrics.xirr - benchmark.median.irr) * 100).toFixed(1)}%p)` : `trails median (${((metrics.xirr - benchmark.median.irr) * 100).toFixed(1)}%p)`} · Gross MoM (Asset) ${metrics.grossMomAsset.toFixed(3)}x.`
+  // §4 Fund Metrics
+  const metricsSection = `Fund Metrics: Net DPI ${metrics.dpi.toFixed(3)}x · XIRR ${xirrPct}%/yr · Gross MoM (Asset) ${metrics.grossMomAsset.toFixed(3)}x. vs. industry benchmarks — median IRR ${medianIrrPct}%/yr · top-quartile ${topQIrrPct}%/yr: this deal ${beatsBenchmark ? `exceeds the median (${hurdleSpreadSign}${((metrics.xirr - benchmark.median.irr) * 100).toFixed(1)}%p)` : `trails the median (${((metrics.xirr - benchmark.median.irr) * 100).toFixed(1)}%p)`}.`
 
+  // §5 Verdict
   const verdictSection = verdict === 'BUY'
-    ? `Investment Opinion: BUY — LP ROI ${lpRoiPct}% falls within XRF v9 subscription-recommended range. Recommend running sensitivity analysis (net profit / holding period / purchase price ±20%) before commitment. Fractional entry via ${numRwa.toLocaleString('en-US')} RWA tokens available.`
+    ? `Investment Opinion: BUY — LP ROI ${lpRoiPct}% is within the XRF RWA subscription-recommended range. Fractional entry available via ${numRwa.toLocaleString('en-US')} RWA tokens (Pool ${fmtUSD(displayPoolUSD)}). Sensitivity analysis (net profit / holding period / purchase price ±20%) is recommended before final commitment.`
     : verdict === 'HOLD'
-    ? `Investment Opinion: HOLD — LP ROI ${lpRoiPct}% is at minimum acceptable level. Explore holding period reduction or purchase price renegotiation to improve ROI before proceeding. Pre-commit with institutional LPs is advisable.`
-    : `Investment Opinion: AVOID — LP ROI ${lpRoiPct}% falls below the 5% minimum threshold. RWA issuance is not viable under current terms; deal restructuring is required.`
+    ? `Investment Opinion: HOLD — LP ROI ${lpRoiPct}% is at the minimum acceptable level. Consider shortening the holding period or renegotiating the purchase price to improve ROI. Pre-commitment with institutional LPs is advisable before launch.`
+    : `Investment Opinion: AVOID — LP ROI ${lpRoiPct}% falls below the 5% minimum threshold. RWA issuance is not viable under current terms; deal restructuring (additional collateral or purchase price renegotiation) is required.`
 
   return [lead, poolSection, hurdleSection, metricsSection, verdictSection].join('\n\n')
 }
