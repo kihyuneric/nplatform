@@ -22,6 +22,7 @@ import {
 import { computeFundMetrics, computeProfitAllocation, computeIndustryBenchmark } from '@/lib/xrf/metrics'
 import { sensitivityOnHoldingDays, sensitivityOnNetProfit } from '@/lib/xrf/sensitivity'
 import { downloadXrfCsv } from '@/lib/xrf/csv-export'
+import { PropertyCollateralAnalysis } from './property-collateral-analysis'
 
 interface XrfValuationSectionProps {
   /** NPL purchase price (KRW) — 매입가 */
@@ -34,6 +35,8 @@ interface XrfValuationSectionProps {
   holdingPeriodDays: number
   /** 매물 표시명 (헤더용) */
   assetTitle?: string
+  /** 담보 부동산 주소 (AI 분석 전달용 — UI 미노출) */
+  address?: string
 }
 
 const fmtUSD = (v: number) => {
@@ -76,6 +79,7 @@ export default function XrfValuationSection({
   nplNetProfitKRW,
   holdingPeriodDays,
   assetTitle,
+  address,
 }: XrfValuationSectionProps) {
   const [fxRate, setFxRate] = useState(1300)
   // v9 RWA 토큰 모델: 1 RWA = $100, $1,000, $10,000 선택 — 발행 수량 = poolUSD / rwaPriceUSD
@@ -1026,6 +1030,13 @@ export default function XrfValuationSection({
           <br />• 실제 deal 출시 시 SG SPV 셋업 비용·법무비·환율 변동 등이 추가 반영될 수 있습니다.
         </div>
       </Section>
+
+      {/* ── 부동산 담보 가치 분석 (Claude AI) ── */}
+      {address && (
+        <div style={{ padding: '0 0 8px' }}>
+          <PropertyCollateralAnalysis address={address} assetTitle={assetTitle} />
+        </div>
+      )}
     </div>
   )
 }

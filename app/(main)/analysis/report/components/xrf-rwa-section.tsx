@@ -20,6 +20,7 @@ import { useMemo, useState } from "react"
 import { computeXrfValuation } from "@/lib/xrf/valuation"
 import { computeFundMetrics, computeIndustryBenchmark } from "@/lib/xrf/metrics"
 import { buildXrfRwaSummary, buildXrfRwaSummaryEn } from "@/lib/xrf/summary"
+import { PropertyCollateralAnalysis } from "./property-collateral-analysis"
 
 interface XrfRwaSectionProps {
   nplPurchasePriceKRW: number
@@ -27,6 +28,8 @@ interface XrfRwaSectionProps {
   nplNetProfitKRW:     number
   holdingPeriodDays:   number
   assetTitle?:         string
+  /** 담보 부동산 주소 (AI 분석 전달용 — UI 미노출) */
+  address?:            string
 }
 
 // ── 팔레트 ────────────────────────────────────────────────────────────────
@@ -93,6 +96,7 @@ export default function XrfRwaSection({
   nplNetProfitKRW,
   holdingPeriodDays,
   assetTitle,
+  address,
 }: XrfRwaSectionProps) {
   const [rwaPriceUSD, setRwaPriceUSD] = useState<100 | 1000 | 10000>(1000)
   const [sensVar,     setSensVar]     = useState<SensVar>('netProfit')
@@ -346,7 +350,10 @@ export default function XrfRwaSection({
         </table>
       </Card>
 
-      {/* ── 7. AI 총평 ── */}
+      {/* ── 7. 부동산 담보 가치 분석 (Claude AI) ── */}
+      <PropertyCollateralAnalysis address={address} assetTitle={assetTitle} />
+
+      {/* ── 8. AI 총평 ── */}
       <Card style={{ borderColor: NAVY }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>

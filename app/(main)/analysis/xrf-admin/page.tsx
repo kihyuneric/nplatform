@@ -38,7 +38,7 @@ export default function XrfAdminPage() {
   }, [])
 
   // 샘플 데이터 준비 (강남 상가 XRF Case)
-  const { nplPurchasePriceKRW, nplTotalEquityKRW, nplNetProfitKRW, holdingPeriodDays, assetTitle } = useMemo(() => {
+  const { nplPurchasePriceKRW, nplTotalEquityKRW, nplNetProfitKRW, holdingPeriodDays, assetTitle, address } = useMemo(() => {
     const base = buildGangnamSampleReport()
     const firstSale = base.profitability?.schedule.milestones.find(m => m.key === 'firstSaleDate')?.date
     let report = base
@@ -59,6 +59,7 @@ export default function XrfAdminPage() {
       nplNetProfitKRW:     p?.investment.expectedNetProfit ?? 300_000_000,
       holdingPeriodDays:   p?.investment.holdingPeriodDays ?? 540,
       assetTitle:          report.input?.assetTitle ?? '강남구 신사동 상가',
+      address:             '서울특별시 강남구 신사동 (가상 샘플)',
     }
   }, [])
 
@@ -111,6 +112,7 @@ export default function XrfAdminPage() {
         nplNetProfitKRW={nplNetProfitKRW}
         holdingPeriodDays={holdingPeriodDays}
         assetTitle={assetTitle}
+        address={address}
       />
     </div>
   )

@@ -40,6 +40,7 @@ import { useListing, getListingTitle, getListingRegion, getListingInstitution, g
 import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/unified-report/types"
 import XrfValuationSection from "./components/xrf-valuation-section"
 import XrfRwaSection from "./components/xrf-rwa-section"
+import { PropertyCollateralAnalysis } from "./components/property-collateral-analysis"
 import { PropertyPhotosExhibit } from "./components/property-photos-exhibit"
 import { computeEffectiveFirstSaleDate } from "@/lib/npl/unified-report/auction-round"
 import { computeXrfValuation } from "@/lib/xrf/valuation"
@@ -1126,6 +1127,16 @@ export default function UnifiedReportPage() {
         />
       )}
 
+      {/* ── 부동산 담보 가치 분석 (NPL 뷰 · Claude AI) ───── */}
+      {valuationMode === 'NPL' && listing?.address && (
+        <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 24px 24px' }}>
+          <PropertyCollateralAnalysis
+            address={listing.address}
+            assetTitle={input.assetTitle ?? displayTitle}
+          />
+        </div>
+      )}
+
       {/* ── XRF RWA LP 보고서 (투자자 전용 · Pool/CashFlow/Metrics) ───── */}
       {profitability && valuationMode === 'XRF_RWA' && (
         <XrfRwaSection
@@ -1134,6 +1145,7 @@ export default function UnifiedReportPage() {
           nplNetProfitKRW={profitability.investment.expectedNetProfit}
           holdingPeriodDays={profitability.investment.holdingPeriodDays}
           assetTitle={report?.input?.assetTitle}
+          address={listing?.address ?? undefined}
         />
       )}
 
@@ -1146,6 +1158,7 @@ export default function UnifiedReportPage() {
             nplNetProfitKRW={profitability.investment.expectedNetProfit}
             holdingPeriodDays={profitability.investment.holdingPeriodDays}
             assetTitle={input.assetTitle ?? displayTitle}
+            address={listing?.address ?? undefined}
           />
         </div>
       )}
