@@ -16,10 +16,10 @@
  *      - Korea Operation Firm (KOF · 舊 엔플랫폼): AI Valuation, Pipeline Sourcing, PM, KR Margin
  *      - NPL Vehicle Company (NPL VC · 舊 대부업체): Servicing 2%/yr (고정 라이선스 가치)
  *   3. AUTO Tier (LP ROI 임계값):
- *      - LP ROI ≥ 20% → BASE (양보 불필요)
- *      - 10~20% → CONSERVATIVE (XRF Carry 양보)
- *      - 5~10% → SAVE-THE-DEAL (모두 양보)
- *      - < 5% → REJECT (RWA 출시 부적합)
+ *      - LP ROI ≥ 25% → BASE (양보 불필요)
+ *      - 15% 이상 ~ 25% 미만 → CONSERVATIVE (XRF Carry 양보)
+ *      - 5% 이상 ~ 15% 미만 → SAVE-THE-DEAL (모두 양보)
+ *      - 5% 미만 → REJECT (RWA 출시 부적합)
  */
 
 export type XrfTier = 'BASE' | 'CONSERVATIVE' | 'SAVE-THE-DEAL' | 'REJECT'

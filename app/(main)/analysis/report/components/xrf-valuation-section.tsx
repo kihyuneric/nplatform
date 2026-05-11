@@ -383,7 +383,7 @@ export default function XrfValuationSection({
             <div style={{ fontSize: 11, color: c.textSub, marginTop: 2 }}>보수적 · 부분 양보</div>
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#F0F9FF' : 'transparent', fontWeight: 700, color: c.amber }}>
-            15% – 25%
+            15% 이상 ~ 25% 미만
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'CONSERVATIVE' ? '#F0F9FF' : 'transparent', color: c.text, lineHeight: 1.6 }}>
             <strong>XRF Carry 부분 양보</strong> — XRF Carry 10% (entry) · Mgmt 1% · KOF 2.0% · NPL VC Servicing 2.0% · Carry 양보로 LP ROI 개선.
@@ -396,7 +396,7 @@ export default function XrfValuationSection({
             <div style={{ fontSize: 11, color: c.textSub, marginTop: 2 }}>Deal 살리기 · 최대 양보</div>
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#F5F7FA' : 'transparent', fontWeight: 700, color: tierColor['SAVE-THE-DEAL'] }}>
-            5% – 15%
+            5% 이상 ~ 15% 미만
           </div>
           <div style={{ padding: '14px 12px', borderBottom: `1px solid ${c.border}`, background: selected.tier === 'SAVE-THE-DEAL' ? '#F5F7FA' : 'transparent', color: c.text, lineHeight: 1.6 }}>
             <strong>XRF Carry 최대 양보</strong> — XRF Carry 5% (entry) · Mgmt 1% · KOF 2.0% · NPL VC Servicing 2.0% · Carry 만 최소화.
@@ -409,7 +409,7 @@ export default function XrfValuationSection({
             <div style={{ fontSize: 11, color: c.textSub, marginTop: 2 }}>부적합 · 재구조화 필요</div>
           </div>
           <div style={{ padding: '14px 12px', background: '#F9FAFB', fontWeight: 700, color: '#6B7280' }}>
-            &lt; 5%
+            5% 미만
           </div>
           <div style={{ padding: '14px 12px', background: '#F9FAFB', color: c.textSub, lineHeight: 1.6 }}>
             <strong>RWA 출시 부적합</strong> — 모든 주체 양보로도 LP ROI 5% 미달 · LP 손실 위험 노출.
