@@ -236,7 +236,7 @@ export function buildXrfRwaSummary(args: XrfRwaSummaryArgs): string {
     : `Hurdle(8%/yr) 미달 → Carry $0 · XRF는 관리보수·Setup 수수료만 수령`
 
   // §1 Lead — Pool 총 청약액 기준 핵심 수익 구조
-  const lead = `[${verdict}] LP Pool 청약액 ${fmtUSD(displayPoolUSD)} 납입 시 ${days}일(${durationYrStr}년) 운용 후 순수익 ${fmtUSD(result.lpNetProfitUSD)} 확보 — LP ROI ${lpRoiPct}% · 연환산 IRR ${lpIrrPct}%/yr · Hurdle Spread ${hurdleSpreadSign}${hurdleSpreadPct}%p. XRF RWA 온체인 구조를 통해 NPL 채권 투자 수익을 RLUSD로 분배받는 확정 수익형 상품입니다.`
+  const lead = `[${verdict}] LP Pool 청약액 ${fmtUSD(displayPoolUSD)} 납입 시 ${days}일(${durationYrStr}년) 운용 후 순수익 ${fmtUSD(result.lpNetProfitUSD)} 확보 — LP ROI ${lpRoiPct}% · 연환산 IRR ${lpIrrPct}%/yr · Hurdle Spread ${hurdleSpreadSign}${hurdleSpreadPct}%p. XRF RWA 온체인 구조를 통해 NPL 채권 투자 수익을 RLUSD로 분배받는 상품으로, 제반 조건·가정에 따른 예상 수익 기준입니다.`
 
   // §2 Pool/RWA — Pool 구조 + RWA 발행
   const poolSection = `Pool 구조: NPL 자기자본 ${fmtUSD(result.nplTotalEquityUSD)} + XRF Vehicle Fees ${fmtUSD(vehicleFeesUSD)} = 총 ${fmtUSD(displayPoolUSD)}. 이 Pool을 기반으로 RWA ${numRwa.toLocaleString('en-US')}개 발행 (단가 $${rwaPriceUSD.toLocaleString('en-US')}) — 1 RWA당 순수익 ${fmtUSD(perRwaProfit)}, 투자금 회수까지 ${days}일 소요 예정.`
@@ -290,7 +290,7 @@ export function buildXrfRwaSummaryEn(args: XrfRwaSummaryArgs): string {
     : `Hurdle (8%/yr) not met → Carry $0; XRF receives management & setup fees only`
 
   // §1 Lead — Pool-based headline return
-  const lead = `[${verdict}] LP Pool subscription of ${fmtUSD(displayPoolUSD)} delivers net profit of ${fmtUSD(result.lpNetProfitUSD)} over ${days} days (${durationYrStr} years) — LP ROI ${lpRoiPct}% · annualized IRR ${lpIrrPct}%/yr · Hurdle Spread ${hurdleSpreadSign}${hurdleSpreadPct}%p. The XRF RWA structure converts NPL debt collateral into an on-chain, fixed-income-style product distributed via RLUSD.`
+  const lead = `[${verdict}] LP Pool subscription of ${fmtUSD(displayPoolUSD)} delivers net profit of ${fmtUSD(result.lpNetProfitUSD)} over ${days} days (${durationYrStr} years) — LP ROI ${lpRoiPct}% · annualized IRR ${lpIrrPct}%/yr · Hurdle Spread ${hurdleSpreadSign}${hurdleSpreadPct}%p. The XRF RWA structure converts NPL debt collateral into an on-chain product distributed via RLUSD — returns are projected estimates based on assumed conditions and are not guaranteed.`
 
   // §2 Pool/RWA — Pool composition + RWA issuance
   const poolSection = `Pool composition: NPL equity ${fmtUSD(result.nplTotalEquityUSD)} + XRF Vehicle Fees ${fmtUSD(vehicleFeesUSD)} = total Pool ${fmtUSD(displayPoolUSD)}. This Pool backs the issuance of ${numRwa.toLocaleString('en-US')} RWA tokens at $${rwaPriceUSD.toLocaleString('en-US')}/RWA — per-RWA net profit: ${fmtUSD(perRwaProfit)}, with full redemption expected within ${days} days.`
