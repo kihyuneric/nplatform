@@ -107,7 +107,8 @@ function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?
    LIVE TICKER
 ═══════════════════════════════════════════════════════════════════════════ */
 // McKinsey 4-color tick (electric blue 단일 dot — rainbow X)
-const TICKS = [
+type TickItem = { t: string; v: string; c: string; icon: string }
+const DEFAULT_TICKS: TickItem[] = [
   { t: "거래완료", v: "3,847건", c: '#2251FF', icon: "✓" },
   { t: "총 거래액", v: "₩2,847억", c: '#2251FF', icon: "₩" },
   { t: "AI 분석", v: "28,391건", c: '#2251FF', icon: "⚡" },
@@ -118,8 +119,24 @@ const TICKS = [
   { t: "총 거래액", v: "₩2,847억", c: '#2251FF', icon: "₩" },
   { t: "AI 분석", v: "28,391건", c: '#2251FF', icon: "⚡" },
   { t: "등록 매물", v: "1,234건", c: '#2251FF', icon: "◉" },
-];
+]
 function LiveTicker() {
+  const [ticks, setTicks] = useState<TickItem[]>(DEFAULT_TICKS)
+
+  useEffect(() => {
+    fetch('/api/v1/platform/stats')
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { total_analyses: number; total_listings: number } | null) => {
+        if (!data) return
+        setTicks(prev => prev.map(t => {
+          if (t.t === 'AI 분석') return { ...t, v: `${data.total_analyses.toLocaleString()}건` }
+          if (t.t === '등록 매물') return { ...t, v: `${data.total_listings.toLocaleString()}건` }
+          return t
+        }))
+      })
+      .catch(() => {})
+  }, [])
+
   return (
     <div className="relative overflow-hidden" style={{ backgroundColor: 'var(--layer-2-bg)', borderTop: '1px solid var(--layer-border)' }}>
       <div className="absolute left-0 top-0 bottom-0 w-20 z-10" style={{ background: 'linear-gradient(to right, #F0F4F8, transparent)' }} />
@@ -129,7 +146,7 @@ function LiveTicker() {
         animate={{ x: ["0%", "-50%"] }}
         transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
       >
-        {TICKS.map((t, i) => (
+        {ticks.map((t, i) => (
           <div key={i} className="flex items-center gap-2.5 flex-shrink-0">
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: t.c }} />
             <span className="text-[11px] font-medium" style={{ color: 'var(--fg-muted)', letterSpacing: '0.06em' }}>{t.t}</span>

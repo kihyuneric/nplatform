@@ -13,6 +13,11 @@
  * 동기화:
  *   - 매도사·매입사 대시보드에서 동일 thread_id 로 조회 가능
  *   - "역할 전환" 토글: 매각사 / 매입사 시점에서 메시지를 보낼 수 있음 (시연용)
+ *
+ * DB 연동:
+ *   - /api/deal-rooms → 딜룸 목록 (인증 없으면 _mock: true → demo 모드 fallback)
+ *   - /api/v1/deal-rooms/[id]/messages → 메시지 조회
+ *   - POST /api/v1/deal-rooms/[id]/messages → 메시지 전송
  */
 
 import Link from "next/link"
@@ -30,28 +35,119 @@ import {
   nowHHMM,
 } from "../_chat-data"
 
+// ── DB Room 타입 ──
+interface DbRoom {
+  id: string
+  title: string
+  lastSnippet: string
+  lastTime: string
+  unread: number
+  status: 'active' | 'stalled' | 'loi-pending'
+}
+
+// ── DB Message 타입 ──
+interface DbMessage {
+  id: string
+  body: string
+  sender_role: 'BUYER' | 'SELLER' | 'SYSTEM'
+  sender_label: string
+  created_at: string
+}
+
 export default function ChatPage() {
-  // ── 매입사 리스트 + 활성 thread ──
+  // ── 실 DB 상태 ──
+  const [rooms, setRooms] = useState<DbRoom[]>([])
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(null)
+  const [dbMessages, setDbMessages] = useState<DbMessage[]>([])
+  const [isLoadingRooms, setIsLoadingRooms] = useState(true)
+  const [isDemoMode, setIsDemoMode] = useState(false)
+
+  // ── Demo 모드: 기존 INITIAL_BUYER_THREADS 기반 상태 ──
   const [threads, setThreads] = useState<BuyerThread[]>(INITIAL_BUYER_THREADS)
-  const [activeId, setActiveId] = useState<string>(threads[0].id)
+  const [activeId, setActiveId] = useState<string>(INITIAL_BUYER_THREADS[0].id)
+
   // ── 입력 ──
   const [draft, setDraft] = useState<string>("")
   const [asRole, setAsRole] = useState<"seller" | "buyer">("seller")
   const piiCheck = detectPII(draft)
   const blocked = piiCheck.hasPhone
 
-  const activeThread = threads.find(t => t.id === activeId) ?? threads[0]
   const messagesRef = useRef<HTMLDivElement>(null)
 
-  // 스레드 변경 또는 새 메시지 추가 시 스크롤 하단으로
+  // ── 실 DB: 딜룸 목록 로드 ──
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const r = await fetch('/api/deal-rooms')
+        const data = await r.json() as {
+          dealRooms: Array<{ id: string; listing?: { title?: string }; last_message?: string; updated_at: string }>
+          _mock?: boolean
+        }
+        if (data._mock || !data.dealRooms?.length) {
+          setIsDemoMode(true)
+          return
+        }
+        const mapped: DbRoom[] = data.dealRooms.map(room => ({
+          id: room.id,
+          title: room.listing?.title ?? `딜룸 #${room.id.slice(0, 8)}`,
+          lastSnippet: room.last_message ?? '',
+          lastTime: new Date(room.updated_at).toLocaleString('ko-KR'),
+          unread: 0,
+          status: 'active' as const,
+        }))
+        setRooms(mapped)
+        setActiveRoomId(mapped[0]?.id ?? null)
+        setIsDemoMode(false)
+      } catch {
+        setIsDemoMode(true)
+      } finally {
+        setIsLoadingRooms(false)
+      }
+    })()
+  }, [])
+
+  // ── 실 DB: 활성 room 변경 시 메시지 로드 ──
+  useEffect(() => {
+    if (!activeRoomId || isDemoMode) return
+    ;(async () => {
+      try {
+        const r = await fetch(`/api/v1/deal-rooms/${encodeURIComponent(activeRoomId)}/messages`)
+        const data = await r.json() as { data: DbMessage[] }
+        setDbMessages(data.data ?? [])
+      } catch {
+        setDbMessages([])
+      }
+    })()
+  }, [activeRoomId, isDemoMode])
+
+  // ── Demo 모드: 활성 thread ──
+  const activeThread = threads.find(t => t.id === activeId) ?? threads[0]
+
+  // 스크롤 하단으로
   useEffect(() => {
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight
     }
-  }, [activeThread.messages.length, activeId])
+  }, [isDemoMode ? activeThread.messages.length : dbMessages.length, isDemoMode ? activeId : activeRoomId])
 
-  // 메시지 전송 — 역할(seller/buyer) 기반으로 활성 thread 에 push
-  function sendMessage() {
+  // ── 실 DB: 메시지 전송 ──
+  async function sendMessageDb() {
+    if (!draft.trim() || !activeRoomId) return
+    try {
+      await fetch(`/api/v1/deal-rooms/${encodeURIComponent(activeRoomId)}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: draft }),
+      })
+      setDraft('')
+      const r = await fetch(`/api/v1/deal-rooms/${encodeURIComponent(activeRoomId)}/messages`)
+      const data = await r.json() as { data: DbMessage[] }
+      setDbMessages(data.data ?? [])
+    } catch { /* 에러 무시 */ }
+  }
+
+  // ── Demo 모드: 메시지 전송 (기존 로직) ──
+  function sendMessageDemo() {
     const text = draft.trim()
     if (!text || blocked) return
     const author = asRole === "seller" ? "○○은행 김 팀장" : activeThread.buyerName
@@ -78,12 +174,26 @@ export default function ChatPage() {
     setDraft("")
   }
 
+  function sendMessage() {
+    if (blocked) return
+    if (isDemoMode) {
+      sendMessageDemo()
+    } else {
+      sendMessageDb()
+    }
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
       sendMessage()
     }
   }
+
+  // ── 활성 표시 이름 (플레이스홀더용) ──
+  const activeName = isDemoMode
+    ? activeThread.buyerName
+    : (rooms.find(r => r.id === activeRoomId)?.title ?? '상대방')
 
   return (
     <div style={{
@@ -97,6 +207,20 @@ export default function ChatPage() {
       background: MCK.paperTint,
       overflow: "hidden",
     }}>
+      {/* ── Demo 모드 배너 ──────────────────────────────────────── */}
+      {isDemoMode && !isLoadingRooms && (
+        <div style={{
+          padding: "6px 18px",
+          background: "rgba(255, 140, 0, 0.10)",
+          borderBottom: "1px solid rgba(255, 140, 0, 0.35)",
+          fontSize: 11, fontWeight: 600, color: "#A53F00",
+          display: "flex", alignItems: "center", gap: 6,
+        }}>
+          <AlertCircle size={12} style={{ color: "#A53F00", flexShrink: 0 }} />
+          <span style={{ color: "#A53F00" }}>데모 모드 · 실제 딜룸 데이터가 없어 샘플 데이터로 표시됩니다. 로그인 후 실 딜룸이 연동됩니다.</span>
+        </div>
+      )}
+
       {/* ── Top bar ─────────────────────────────────────────────── */}
       <header style={{
         background: MCK.paper,
@@ -203,17 +327,97 @@ export default function ChatPage() {
           }}>
             <div>
               <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 2 }}>
-                매입사 채팅
+                {isDemoMode ? "매입사 채팅 (데모)" : "딜룸 채팅"}
               </div>
               <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 14, fontWeight: 800, color: MCK.ink }}>
-                {threads.length} 건 · thread 분리
+                {isDemoMode ? `${threads.length} 건 · thread 분리` : `${rooms.length} 건 · 딜룸`}
               </div>
             </div>
             <Bell size={14} style={{ color: MCK.textMuted }} />
           </div>
 
           <div style={{ flex: 1, overflowY: "auto" }}>
-            {threads.map(t => {
+            {/* ── 실 DB 모드: 딜룸 리스트 ── */}
+            {!isDemoMode && rooms.map(room => {
+              const isActive = room.id === activeRoomId
+              const statusColor =
+                room.status === "loi-pending" ? "#1A47CC" :
+                room.status === "active" ? "#0075B0" :
+                MCK.textMuted
+              const statusLabel =
+                room.status === "loi-pending" ? "LOI 대기" :
+                room.status === "active" ? "협의 중" :
+                "응답 지연"
+              return (
+                <button
+                  key={room.id}
+                  type="button"
+                  onClick={() => setActiveRoomId(room.id)}
+                  style={{
+                    width: "100%", textAlign: "left",
+                    padding: "14px 16px",
+                    background: isActive ? "rgba(34, 81, 255, 0.06)" : "transparent",
+                    borderLeft: isActive ? `3px solid ${MCK.electric}` : `3px solid transparent`,
+                    borderBottom: `1px solid ${MCK.border}`,
+                    cursor: "pointer",
+                    display: "flex", flexDirection: "column", gap: 5,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+                    <span style={{
+                      fontFamily: MCK_FONTS.serif,
+                      fontSize: 13, fontWeight: 800,
+                      color: MCK.ink, letterSpacing: "-0.005em",
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      flex: 1, minWidth: 0,
+                    }}>
+                      {room.title}
+                    </span>
+                    {room.unread > 0 && (
+                      <span
+                        className="mck-cta-dark"
+                        style={{
+                          display: "inline-flex", alignItems: "center", justifyContent: "center",
+                          minWidth: 18, height: 18, padding: "0 6px",
+                          fontSize: 10, fontWeight: 800,
+                          background: MCK.electric, color: MCK.paper,
+                        }}
+                      >
+                        <span style={{ color: MCK.paper }}>{room.unread}</span>
+                      </span>
+                    )}
+                  </div>
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", alignSelf: "flex-start",
+                    padding: "1px 7px", fontSize: 9, fontWeight: 800,
+                    color: statusColor,
+                    background: `${statusColor}1A`,
+                    border: `1px solid ${statusColor}40`,
+                    letterSpacing: "0.04em", textTransform: "uppercase",
+                  }}>
+                    <span style={{ color: statusColor }}>{statusLabel}</span>
+                  </span>
+                  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 6 }}>
+                    <span style={{
+                      fontSize: 11, color: MCK.textSub, fontWeight: 500,
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      flex: 1, minWidth: 0,
+                    }}>
+                      {room.lastSnippet}
+                    </span>
+                    <span style={{
+                      fontSize: 9, color: MCK.textMuted, fontWeight: 600,
+                      flexShrink: 0, fontVariantNumeric: "tabular-nums",
+                    }}>
+                      {room.lastTime}
+                    </span>
+                  </div>
+                </button>
+              )
+            })}
+
+            {/* ── Demo 모드: 기존 BUYER_THREADS 리스트 ── */}
+            {isDemoMode && threads.map(t => {
               const isActive = t.id === activeId
               const statusColor =
                 t.status === "loi-pending" ? "#1A47CC" :
@@ -341,13 +545,18 @@ export default function ChatPage() {
           }}>
             <div>
               <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 4 }}>
-                현재 스레드 · {activeThread.buyerCode}
+                {isDemoMode ? `현재 스레드 · ${activeThread.buyerCode}` : "현재 딜룸"}
               </div>
               <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.01em" }}>
-                {activeThread.buyerName}
-                <span style={{ fontSize: 11, fontWeight: 600, color: MCK.textSub, marginLeft: 8 }}>
-                  · {activeThread.institution}
-                </span>
+                {isDemoMode
+                  ? <>
+                      {activeThread.buyerName}
+                      <span style={{ fontSize: 11, fontWeight: 600, color: MCK.textSub, marginLeft: 8 }}>
+                        · {activeThread.institution}
+                      </span>
+                    </>
+                  : (rooms.find(r => r.id === activeRoomId)?.title ?? '딜룸 선택')
+                }
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -369,14 +578,78 @@ export default function ChatPage() {
             </div>
           </div>
 
-          {/* Messages — system 메시지 제외, 매각사/매입사 대화만 표시 */}
+          {/* Messages */}
           <div ref={messagesRef} style={{
             flex: 1,
             padding: "20px 24px",
             display: "flex", flexDirection: "column", gap: 14,
             overflowY: "auto",
           }}>
-            {activeThread.messages.filter(m => m.type !== "system").map(msg => (
+            {/* 실 DB 모드: DB 메시지 렌더링 */}
+            {!isDemoMode && dbMessages.map(msg => {
+              const isBuyer = msg.sender_role === 'BUYER'
+              const isSystem = msg.sender_role === 'SYSTEM'
+              const align = isBuyer ? "flex-end" : "flex-start"
+              const bubbleBg = isBuyer ? MCK.ink : MCK.paper
+              const bubbleFg = isBuyer ? MCK.paper : MCK.ink
+              const bubbleBorder = isBuyer ? MCK.ink : MCK.borderStrong
+              if (isSystem) {
+                return (
+                  <div key={msg.id} style={{
+                    alignSelf: "stretch", textAlign: "center",
+                    padding: "10px 14px",
+                    background: "rgba(34, 81, 255, 0.06)",
+                    border: "1px solid rgba(34, 81, 255, 0.20)",
+                    borderLeft: `3px solid ${MCK.electric}`,
+                  }}>
+                    <div style={{ ...MCK_TYPE.eyebrow, color: "#1A47CC", marginBottom: 3 }}>
+                      {msg.sender_label} · {new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <div style={{ fontSize: 12, color: MCK.ink, lineHeight: 1.5, fontWeight: 600 }}>{msg.body}</div>
+                  </div>
+                )
+              }
+              return (
+                <div key={msg.id} style={{
+                  display: "flex", flexDirection: "column",
+                  alignItems: align, maxWidth: "70%", alignSelf: align, gap: 3,
+                }}>
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 6, marginBottom: 2,
+                    flexDirection: isBuyer ? "row-reverse" : "row",
+                  }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: MCK.ink }}>{msg.sender_label}</span>
+                    <span style={{
+                      display: "inline-flex", alignItems: "center",
+                      padding: "1px 6px", fontSize: 9, fontWeight: 800,
+                      background: isBuyer ? "rgba(0, 169, 244, 0.12)" : "rgba(34, 81, 255, 0.10)",
+                      color: isBuyer ? "#0075B0" : "#1A47CC",
+                      border: `1px solid ${isBuyer ? "rgba(0, 169, 244, 0.35)" : "rgba(34, 81, 255, 0.30)"}`,
+                      letterSpacing: "0.04em", textTransform: "uppercase",
+                    }}>
+                      <span style={{ color: isBuyer ? "#0075B0" : "#1A47CC" }}>{isBuyer ? "매입사" : "매각사"}</span>
+                    </span>
+                  </div>
+                  <div
+                    className={isBuyer ? "mck-cta-dark" : ""}
+                    style={{
+                      padding: "10px 14px",
+                      background: bubbleBg, color: bubbleFg,
+                      border: `1px solid ${bubbleBorder}`,
+                      borderTop: isBuyer ? `2px solid ${MCK.electric}` : `1px solid ${bubbleBorder}`,
+                      fontSize: 13, lineHeight: 1.55, fontWeight: 500,
+                    }}
+                  >
+                    <span style={{ color: bubbleFg }}>{msg.body}</span>
+                  </div>
+                  <span style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 600, fontVariantNumeric: "tabular-nums", marginTop: 1 }}>
+                    {new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              )
+            })}
+            {/* Demo 모드: 기존 ChatMessage 렌더링 */}
+            {isDemoMode && activeThread.messages.filter(m => m.type !== "system").map(msg => (
               <ChatBubbleStandalone key={msg.id} msg={msg} />
             ))}
           </div>
@@ -419,7 +692,7 @@ export default function ChatPage() {
               value={draft}
               onChange={e => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`${activeThread.buyerName} 에게 ${asRole === "seller" ? "매각사" : "매입사"} 시점에서 메시지… (Enter 전송 · 전화번호 차단)`}
+              placeholder={`${activeName} 에게 ${asRole === "seller" ? "매각사" : "매입사"} 시점에서 메시지… (Enter 전송 · 전화번호 차단)`}
               autoFocus
               style={{
                 flex: 1, padding: "11px 14px", fontSize: 13,

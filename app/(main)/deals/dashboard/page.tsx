@@ -193,52 +193,48 @@ export default function DealsDashboardPage() {
         return
       }
 
-      const { data } = await supabase
-        .from("deals")
-        .select(
-          `
-          id, listing_id, current_stage, progress, next_action,
-          deadline, notification, amount, type, updated_at,
-          npl_listings(title, collateral_type, region, seller_id,
-            profiles!npl_listings_seller_id_fkey(name))
-        `,
-        )
-        .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
-        .neq("current_stage", "CANCELLED")
-        .order("updated_at", { ascending: false })
+      // deal_room_participants에서 현재 유저의 room ids 조회
+      const { data: parts } = await supabase
+        .from('deal_room_participants')
+        .select('deal_room_id')
+        .eq('user_id', user.id)
+      const participantRoomIds = (parts ?? []).map((p: { deal_room_id: string }) => p.deal_room_id)
+
+      // deal_rooms 테이블에서 조회 (직접 생성했거나 참여자인 방)
+      let query = supabase
+        .from('deal_rooms')
+        .select(`
+          id, status, created_at, updated_at, created_by,
+          npl_listings(id, title, collateral_type, region, asking_price, seller_id)
+        `)
+        .order('updated_at', { ascending: false })
         .limit(50)
+
+      if (participantRoomIds.length > 0) {
+        query = query.or(`created_by.eq.${user.id},id.in.(${participantRoomIds.join(',')})`)
+      } else {
+        query = query.eq('created_by', user.id)
+      }
+
+      const { data } = await query
 
       if (data && data.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const mapped: Deal[] = data.map((r: any) => ({
           id: String(r.id),
-          listing_name:
-            r.npl_listings?.title ??
-            `매물 #${r.listing_id?.slice(0, 8) ?? r.id.slice(0, 8)}`,
-          counterparty: r.npl_listings?.profiles?.name ?? "상대방",
-          counterparty_masked: r.npl_listings?.profiles?.name
-            ? (() => {
-                const n: string = r.npl_listings.profiles.name
-                if (n.length <= 2) return n[0] + "*"
-                return (
-                  n.slice(0, Math.ceil(n.length / 2)) +
-                  "*".repeat(Math.floor(n.length / 2))
-                )
-              })()
-            : "상대방",
-          current_stage: (r.current_stage ?? "INTEREST") as DealStage,
-          progress: r.progress ?? 0,
-          next_action: r.next_action ?? "-",
-          deadline:
-            r.deadline ??
-            new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
-          notification: r.notification ?? undefined,
-          amount: r.amount ?? 0,
-          type: r.type ?? (r.npl_listings?.seller_id === user.id ? "sell" : "buy"),
+          listing_name: r.npl_listings?.title ?? `딜룸 #${r.id.slice(0, 8)}`,
+          counterparty: '협의 중',
+          counterparty_masked: '협의 중',
+          current_stage: (r.status ?? 'INTEREST') as DealStage,
+          progress: r.status === 'COMPLETED' ? 100 : r.status === 'NEGOTIATION' ? 65 : 30,
+          next_action: r.status === 'NDA_REQUIRED' ? 'NDA 체결 필요' : '진행 중',
+          deadline: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
+          notification: undefined,
+          amount: r.npl_listings?.asking_price ?? 0,
+          type: r.npl_listings?.seller_id === user.id ? 'sell' as const : 'buy' as const,
           asset_type: r.npl_listings?.collateral_type ?? undefined,
           location: r.npl_listings?.region ?? undefined,
-          completed_at:
-            r.current_stage === "COMPLETED" ? r.updated_at : undefined,
+          completed_at: r.status === 'COMPLETED' ? r.updated_at : undefined,
         }))
         setDeals(mapped)
         setUsingDemo(false)

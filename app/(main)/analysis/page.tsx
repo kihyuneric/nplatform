@@ -97,12 +97,7 @@ const RECENT_FALLBACK: RecentItem[] = [
   ...FEATURED_RECENT_ITEMS,
 ]
 
-const KPI_ITEMS: MckKpiItem[] = [
-  { label: "AI 분석 완료", value: "28,391건", hint: "누적", accent: true },
-  { label: "평균 예측 정확도", value: "94.2%", hint: "최근 30일" },
-  { label: "이번 달 분석", value: "1,284건", hint: "MoM +18%" },
-  { label: "평균 소요 시간", value: "< 30초", hint: "리포트 생성" },
-]
+// KPI_ITEMS — 기존 상수 제거. AnalysisDashboard 내 useState 로 관리.
 
 /* ─────────────────────────────────────────────────────────────
    Page
@@ -110,8 +105,28 @@ const KPI_ITEMS: MckKpiItem[] = [
 export default function AnalysisDashboard() {
   const [recent, setRecent] = useState<RecentItem[]>(RECENT_FALLBACK)
   const [isDemo, setIsDemo] = useState(false)
+  const [kpiItems, setKpiItems] = useState<MckKpiItem[]>([
+    { label: "AI 분석 완료", value: "—", hint: "누적", accent: true },
+    { label: "평균 예측 정확도", value: "94.2%", hint: "최근 30일" },
+    { label: "이번 달 분석", value: "—", hint: "이번 달" },
+    { label: "평균 소요 시간", value: "< 30초", hint: "리포트 생성" },
+  ])
 
   useEffect(() => {
+    // KPI 통계 동적 fetch
+    ;(async () => {
+      try {
+        const r = await fetch('/api/v1/platform/stats')
+        if (!r.ok) return
+        const data = await r.json() as { total_analyses: number; monthly_analyses: number; accuracy_pct: number; avg_seconds: number }
+        setKpiItems([
+          { label: "AI 분석 완료", value: `${data.total_analyses.toLocaleString()}건`, hint: "누적", accent: true },
+          { label: "평균 예측 정확도", value: `${data.accuracy_pct.toFixed(1)}%`, hint: "최근 30일" },
+          { label: "이번 달 분석", value: `${data.monthly_analyses.toLocaleString()}건`, hint: "이번 달" },
+          { label: "평균 소요 시간", value: `< ${data.avg_seconds}초`, hint: "리포트 생성" },
+        ])
+      } catch { /* fallback 유지 */ }
+    })()
     // 사례 매물 ROI 동적 산출 — 보고서와 동일한 프로젝트 ROI (연환산 X)
     ;(async () => {
       try {
@@ -307,7 +322,7 @@ export default function AnalysisDashboard() {
       {/* ── KPI strip · DARK · 거래소 매물탐색과 동일 패턴 ─────────── */}
       <section style={{ background: MCK.paper, paddingBottom: 32 }}>
         <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 24px" }}>
-          <MckKpiGrid variant="dark" items={KPI_ITEMS} />
+          <MckKpiGrid variant="dark" items={kpiItems} />
         </div>
       </section>
 
