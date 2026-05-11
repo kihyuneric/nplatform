@@ -24,7 +24,7 @@ import {
 
 // ── 팔레트 ──────────────────────────────────────────────────────────────────
 const NAVY    = '#1B3A5C'
-const EMERALD = '#10B981'
+const EMERALD = '#2251FF'   // ← MCK Electric Blue (replaces green)
 const BORDER  = '#E2E8F0'
 const BG_SOFT = '#F8FAFC'
 const BG_HEAD = '#F1F5F9'

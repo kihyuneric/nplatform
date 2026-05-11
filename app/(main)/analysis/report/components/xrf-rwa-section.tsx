@@ -34,9 +34,9 @@ interface XrfRwaSectionProps {
 
 // ── 팔레트 ────────────────────────────────────────────────────────────────
 const NAVY    = '#1B3A5C'
-const EMERALD = '#10B981'
-const BLUE    = '#2E75B6'
-const AMBER   = '#F59E0B'
+const EMERALD = '#2251FF'   // ← MCK Electric Blue (positive / BUY signal)
+const BLUE    = '#2E75B6'   // Steel Blue
+const AMBER   = '#6FB8E6'   // ← Sky Blue (neutral / HOLD — replaces yellow)
 const BG_SOFT = '#F8FAFC'
 const BG_CARD = '#FFFFFF'
 const BORDER  = '#E2E8F0'
