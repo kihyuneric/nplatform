@@ -24,6 +24,7 @@ import {
   Brain,
   Check,
   Clock,
+  Download,
   Loader2,
 } from "lucide-react"
 import DS from "@/lib/design-system"
@@ -200,6 +201,43 @@ export default function NewNplAnalysisPage() {
           <p style={{ fontSize: 13, color: MCK.textSub, lineHeight: 1.55, fontWeight: 500 }}>
             AI가 30초 안에 투자 적합성을 분석합니다 · 거래소 매물등록과 동일한 통합 입력 폼
           </p>
+          <div style={{ marginTop: 14 }}>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const res = await fetch("/templates/NPLatform_매물등록_템플릿.xlsx")
+                  const blob = await res.blob()
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement("a")
+                  a.href = url
+                  a.download = "NPLatform_매물등록_템플릿.xlsx"
+                  document.body.appendChild(a)
+                  a.click()
+                  document.body.removeChild(a)
+                  URL.revokeObjectURL(url)
+                } catch {
+                  window.location.href = "/templates/NPLatform_매물등록_템플릿.xlsx"
+                }
+              }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "7px 14px",
+                fontSize: 12,
+                fontWeight: 700,
+                color: MCK.electricDark,
+                background: MCK.paperTint,
+                border: `1px solid ${MCK.electric}`,
+                cursor: "pointer",
+                letterSpacing: "-0.005em",
+              }}
+            >
+              <Download size={13} />
+              NPLatform 엑셀 템플릿 다운로드
+            </button>
+          </div>
         </div>
       </div>
 
