@@ -878,20 +878,35 @@ function ExcelTemplateBanner({
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <a
-            href="/templates/NPLatform_매물등록_템플릿.xlsx"
-            download
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const res = await fetch('/templates/NPLatform_매물등록_템플릿.xlsx')
+                const blob = await res.blob()
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = 'NPLatform_매물등록_템플릿.xlsx'
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+                URL.revokeObjectURL(url)
+              } catch {
+                window.location.href = '/templates/NPLatform_매물등록_템플릿.xlsx'
+              }
+            }}
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "9px 14px", borderRadius: 10,
               backgroundColor: "transparent", color: C.blueL,
               border: `1px solid ${C.blue}55`,
-              fontSize: 12, fontWeight: 700, textDecoration: "none",
+              fontSize: 12, fontWeight: 700, cursor: "pointer",
               whiteSpace: "nowrap",
             }}
           >
             <Download size={14} /> 템플릿
-          </a>
+          </button>
           <button
             type="button"
             disabled={parsing}
