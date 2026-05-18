@@ -113,7 +113,7 @@ const DEFAULT_TICKS: TickItem[] = [
   { t: "총 거래액", v: "₩2,847억", c: '#2251FF', icon: "₩" },
   { t: "AI 분석", v: "28,391건", c: '#2251FF', icon: "⚡" },
   { t: "등록 매물", v: "1,234건", c: '#2251FF', icon: "◉" },
-  { t: "협력 금융기관", v: "47개사", c: '#2251FF', icon: "🏦" },
+  { t: "협력 금융기관", v: "20개사", c: '#2251FF', icon: "🏦" },
   { t: "평균 수익률", v: "18.4%↑", c: '#2251FF', icon: "%" },
   { t: "거래완료", v: "3,847건", c: '#2251FF', icon: "✓" },
   { t: "총 거래액", v: "₩2,847억", c: '#2251FF', icon: "₩" },
@@ -871,7 +871,7 @@ export default function LandingPage() {
   // McKinsey monochrome — 모든 stats 동일 ink + electric tone (4색 제한 준수)
   const stats = [
     { label: "등록 매물", val: 1234, suffix: "건", icon: <Layers size={16} style={{ color: '#0A1628' }} />, change: "+12%", up: true, color: '#2251FF' },
-    { label: "협력 금융기관", val: 47, suffix: "개사", icon: <Building2 size={16} style={{ color: '#0A1628' }} />, change: "+4개사", up: true, color: '#2251FF' },
+    { label: "협력 금융기관", val: 20, suffix: "개사", icon: <Building2 size={16} style={{ color: '#0A1628' }} />, change: "+3개사", up: true, color: '#2251FF' },
     { label: "누적 거래액", val: 2847, suffix: "억", icon: <DollarSign size={16} style={{ color: '#0A1628' }} />, change: "+24%", up: true, color: '#2251FF' },
     { label: "AI 분석 건수", val: 28391, suffix: "건", icon: <Brain size={16} style={{ color: '#0A1628' }} />, change: "실시간", up: true, color: '#2251FF' },
   ];
@@ -1161,7 +1161,7 @@ export default function LandingPage() {
           <motion.div variants={stagger} className="grid grid-cols-2 lg:grid-cols-4 gap-px" style={{ background: 'rgba(5, 28, 44, 0.10)' }}>
             {[
               { label: '등록 매물',       value: '1,234건',   delta: '+12%',    icon: <Layers size={16} style={{ color: '#0A1628' }} /> },
-              { label: '협력 금융기관',   value: '47개사',    delta: '+4개사',  icon: <Building2 size={16} style={{ color: '#0A1628' }} /> },
+              { label: '협력 금융기관',   value: '20개사',    delta: '+3개사',  icon: <Building2 size={16} style={{ color: '#0A1628' }} /> },
               { label: '누적 거래액',     value: '2,847억',   delta: '+24%',    icon: <DollarSign size={16} style={{ color: '#0A1628' }} /> },
               { label: 'AI 분석 건수',    value: '28,391건',  delta: '실시간',  icon: <Brain size={16} style={{ color: '#0A1628' }} /> },
             ].map((s, i) => (
@@ -1743,21 +1743,22 @@ export default function LandingPage() {
                 fontWeight: 800, color: '#0A1628',
                 letterSpacing: '-0.025em', lineHeight: 1.15, marginBottom: 12,
               }}>
-                47개 금융기관이 신뢰하는 플랫폼
+                20개 협력 금융기관이 신뢰하는 플랫폼
               </h2>
               <p style={{ fontSize: 16, color: 'rgba(5, 28, 44, 0.65)', fontWeight: 500, maxWidth: 720, margin: '0 auto', lineHeight: 1.55 }}>
-                국내 주요 은행, 저축은행, 캐피탈사와 파트너십을 맺고 있습니다.
+                은행, 저축은행, 신협, 자산운용사, 대부업체와 파트너십을 맺고 있습니다.
               </p>
             </motion.header>
 
-            {/* Bank logo grid */}
+            {/* Bank logo grid — 5×4 */}
             <motion.div variants={up} custom={1} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-px mb-10"
               style={{ background: 'rgba(5, 28, 44, 0.10)' }}
             >
               {[
-                'KB국민은행', '신한은행', '우리은행', '하나은행', '농협은행',
-                '기업은행', '국민저축은행', 'OK저축은행', 'SBI저축은행', '웰컴저축은행',
-                '현대캐피탈', '롯데캐피탈', 'KB캐피탈', '신한캐피탈', '하나캐피탈',
+                'KB국민은행', '농협중앙회', '수협은행', '유암코', 'MG신용정보',
+                '수협', '신협', '산림조합', '조선일보 땅집고', '아시아프라퍼티',
+                '모아저축은행', '한국투자저축은행', '웰컴자산운용', '미래에셋자산운용', 'LF자산운용',
+                '바른NPL대부', '장림동새마을금고', '남서울새마을금고', '한남신협협동조합', '목포수협',
               ].map(name => (
                 <div key={name} style={{
                   background: '#FFFFFF',
