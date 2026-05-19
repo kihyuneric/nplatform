@@ -149,6 +149,8 @@ export function calculateNplReturn(
   // 기간수익률 = 수익금 / 에쿼티
   const absoluteReturn = equity > 0 ? netProfit / equity : 0;
   // 연환산수익률 = 기간수익률 × 365 / 회수기간일수
+  // ⚠ 단순 연환산 (Simple Annualized) — XIRR(복리) 아님. lib/xrf/metrics.ts 의 computeXIRR 과
+  //    수치가 다를 수 있음 (특히 운용기간 ≥2년 케이스). UI 라벨은 "연환산"으로 통일.
   const annualizedIrr = investmentDays > 0 ? absoluteReturn * 365 / investmentDays : 0;
   // MOIC = 총회수금 / 총투입  (표준 Multiple on Invested Capital)
   // 총투입 = 에쿼티 + 질권대출 = bondPurchasePrice + transferCost + vehicleFee + pledgeInterest = totalCost

@@ -137,6 +137,8 @@ export function calcAuction(input: AuctionInput): AuctionResult {
   const totalInvestment = bidPrice - loanAmount + taxes.totalAcquisitionTax + legalFee + auctionFee + repairCost + brokerFee
 
   const roi = totalInvestment > 0 ? (netProfit / totalInvestment) * 100 : 0
+  // ⚠ 단순 연환산 (Simple Annualized) — 복리 IRR 아님. UI 표시 라벨도 "연환산"으로 통일.
+  //    엑셀 XIRR(복리)과 직접 비교 금지. 단기 경매(<2년) 케이스에 적합.
   const annualizedRoi = holdingMonths > 0 ? roi * (12 / holdingMonths) : roi
   const bidRatio = (bidPrice / appraisalPrice) * 100
 

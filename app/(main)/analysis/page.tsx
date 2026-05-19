@@ -89,15 +89,11 @@ function formatProjectRoi(value: number | null | undefined): string {
   return `${pct.toFixed(1)}%`
 }
 
-// 사용자 정책 v3.7 (2026-05-06): 하드코딩 stale ROI 항목 제거
-//   기존 r1 (강남 역삼동 18.4%) · r2 (분당 오피스텔 14.2%) · r3 (해운대 상가 16.8%)
-//   → 실 sample 데이터(sample-roi API) 의 동적 ROI 와 grade 만 사용
-//   → 서초 반포동/강남 역삼동/잠실 리센츠 등은 sample 빌더 추가 시 자동 합류
+// RECENT_FALLBACK: 실 sample-roi API 응답이 비었을 때 노출할 featured 케이스.
+//   ROI/grade는 sample 빌더에서 동적 산출.
 const RECENT_FALLBACK: RecentItem[] = [
   ...FEATURED_RECENT_ITEMS,
 ]
-
-// KPI_ITEMS — 기존 상수 제거. AnalysisDashboard 내 useState 로 관리.
 
 /* ─────────────────────────────────────────────────────────────
    Page

@@ -184,7 +184,13 @@ export async function POST(
       created_at: new Date().toISOString(),
     }
 
-    return NextResponse.json({ data: offer, _source: 'mock' }, { status: 201 })
+    // ⚠ NOTE: 현재 deal_room_offers 테이블이 미구현 상태로, 오퍼는 영구 저장되지 않습니다.
+    //         프론트엔드는 _warning 필드로 사용자에게 데모 모드를 안내해야 합니다.
+    return NextResponse.json({
+      data: offer,
+      _source: 'mock',
+      _warning: 'NOT_PERSISTED: deal_room_offers 테이블 구현 전입니다. 오퍼는 영구 저장되지 않습니다.',
+    }, { status: 201 })
   } catch (err) {
     logger.error('[deal-rooms/[id]/offers] POST error:', { error: err })
     return NextResponse.json(

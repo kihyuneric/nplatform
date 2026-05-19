@@ -13,7 +13,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // TODO: DB insert + send confirmation email
+    // ⚠ NOTE: institution_applications 테이블 미구현 — Slack 알림만 발송됩니다.
+    //   영구 저장이 필요하면 DB 테이블·confirmation email 통합 필요.
     const applicationId = `INST-${Date.now().toString(36).toUpperCase()}`
 
     // Phase 2-G: Slack 알림 (실패해도 신청 흐름은 막지 않음 — slack.ts가 swallow)
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
         message: '온보딩 신청이 접수되었습니다. 영업일 1~2일 이내 연락드립니다.',
         estimatedApprovalDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       },
+      _warning: 'NOT_PERSISTED: institution_applications 테이블 미구현 — Slack 알림 발송됨, DB 영구 저장 X',
     }, { status: 201 })
   } catch {
     return NextResponse.json(
