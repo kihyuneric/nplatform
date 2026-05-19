@@ -1242,10 +1242,18 @@ export default function UnifiedReportPage() {
         </section>
       )}
 
-      {/* ── XRF Terminal · Bloomberg-style 케이스 스터디 (Settled Deal) ───── */}
-      {valuationMode === 'XRF_TERMINAL' && (
+      {/* ── XRF Terminal · Bloomberg-style 케이스 스터디 ───── */}
+      {valuationMode === 'XRF_TERMINAL' && profitability && (
         <section className="mt-8 pb-6">
-          <XrfTerminalSection />
+          <XrfTerminalSection
+            report={report}
+            xrfResult={computeXrfValuation({
+              nplPurchasePriceKRW: profitability.acquisition.purchasePrice,
+              nplTotalEquityKRW:   profitability.investment.totalEquity,
+              nplNetProfitKRW:     profitability.investment.expectedNetProfit,
+              holdingPeriodDays:   profitability.investment.holdingPeriodDays,
+            })}
+          />
         </section>
       )}
 

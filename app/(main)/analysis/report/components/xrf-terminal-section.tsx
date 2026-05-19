@@ -1,30 +1,29 @@
 "use client"
 
 /**
- * XRF Terminal Section — Bloomberg-style 다크 터미널 케이스 스터디 뷰
+ * XRF Terminal Section — Bloomberg-style 다크 케이스 스터디 뷰
  *
  * /analysis/report 페이지에서 valuationMode === 'XRF_TERMINAL' 일 때 렌더링.
- * 스크린샷(2026-05-19 사용자 제공) 의 "06/32 CASE 01 · SETTLED · 종로구 홍지동 토지" 화면을
- * 정밀 재현한다. 색상: 흑색 배경 + 네온 그린 (#10B981 / #34D399) 액센트.
+ * 기존 NPL Valuation / XRF RWA / XRF Admin 의 데이터(report.profitability + XrfValuationResult)
+ * 를 자동 매핑하여 동적으로 표시한다.
  *
- * 데이터는 케이스 스터디 (settled deal) 의 정적 값으로 하드코딩.
- * 추후 다른 케이스를 노출하려면 `cases` 배열에 항목을 추가하면 된다.
+ * 색상: 흑색 배경 + 네온 그린 (#10B981 / #34D399) 액센트
  */
 
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
+import type { UnifiedAnalysisReport } from "@/lib/npl/unified-report/types"
+import type { XrfValuationResult } from "@/lib/xrf/valuation"
 
 /* ─── Design tokens ──────────────────────────────────────────────────── */
 const T = {
-  bg: "#0A0E14",           // 거의 검은 본문 배경
-  bgPanel: "#0E1219",      // 패널 (살짝 밝은 톤)
-  bgHeader: "#0B0F16",     // 상단 헤더 바
-  bgRow: "#0D1118",        // 테이블 행
-  bgRowAlt: "#11151C",     // 테이블 행 (대체)
-  border: "#1A2230",       // 어두운 보더
-  borderGreen: "#10B981",  // 네온 그린 보더
+  bg: "#0A0E14",
+  bgPanel: "#0E1219",
+  bgHeader: "#0B0F16",
+  border: "#1A2230",
+  borderGreen: "#10B981",
   borderGreenDim: "rgba(16, 185, 129, 0.35)",
-  green: "#34D399",        // 메인 그린 (강조)
-  greenBright: "#10B981",  // 더 진한 그린
+  green: "#34D399",
+  greenBright: "#10B981",
   greenDim: "rgba(52, 211, 153, 0.65)",
   white: "#F4F6F8",
   textDim: "#9CA3AF",
@@ -33,103 +32,233 @@ const T = {
   warn: "#FBBF24",
 }
 
-/* ─── 케이스 스터디 데이터 (스크린샷 06/32) ──────────────────────────── */
-type CaseStudy = {
-  caseNo: string
-  pageNo: string
-  status: "SETTLED" | "ACTIVE" | "PENDING"
-  title: string
-  subtitle: string
-  oneDpuReturn: string
-  oneDpuProfit: string
-  lpRoi: string
-  duration: string
-  durationLabel: string
-  aiRisk: string
-  aiRiskLabel: string
-  // Deal parameters
-  params: { label: string; value: string; emphasis?: boolean; minus?: boolean }[]
-  lpReceipt: string
-  lpReceiptDelta: string
-  // Simulator
-  invest: string
-  receive: string
-  profitLine: string
-  tierBadge: string
-  tierNote: string
-  // Lifecycle
-  lifecycle: { label: string; date: string }[]
-  // Bottom KPI strip
-  bottom: { label: string; value: string; neg?: boolean }[]
-  // Footer
-  collateral: string
-  riskFactors: string
+/* ─── Helpers ────────────────────────────────────────────────────────── */
+
+const fmtUSD = (v: number, opts?: { withDollar?: boolean }) => {
+  const sign = v < 0 ? "-" : ""
+  const abs = Math.abs(v)
+  const s = abs.toLocaleString("en-US", { maximumFractionDigits: 0 })
+  return opts?.withDollar ? `${sign}$${s}` : `USD ${sign}${s}`
+}
+const fmtUSDk = (v: number) => {
+  const sign = v < 0 ? "-" : ""
+  const abs = Math.abs(v)
+  if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1)}M`
+  return `${sign}$${Math.round(abs / 1000).toLocaleString("en-US")}K`
+}
+const fmtPct = (v: number, digits = 1) => `${v >= 0 ? "+" : ""}${v.toFixed(digits)}%`
+const fmtDate = (iso?: string) =>
+  iso ? iso.slice(0, 7).replace("-", ".") : "—"
+
+/* 등급 → 100점 환산 (verdictScore 가 없을 때 fallback) */
+const gradeToScore = (g?: string): number => {
+  switch (g) {
+    case "A": return 92
+    case "B": return 78
+    case "C": return 62
+    case "D": return 45
+    case "E": return 25
+    default:  return 50
+  }
+}
+const scoreToRiskLabel = (s: number): { label: string; color: string } => {
+  if (s >= 75) return { label: "LOW RISK",      color: T.green }
+  if (s >= 55) return { label: "MODERATE RISK", color: T.green }
+  if (s >= 35) return { label: "ELEVATED RISK", color: T.warn  }
+  return         { label: "HIGH RISK",      color: T.red   }
 }
 
-const DEFAULT_CASE: CaseStudy = {
-  caseNo: "01",
-  pageNo: "06 / 32",
-  status: "SETTLED",
-  title: "종로구 홍지동 토지 — 아시아프라퍼티",
-  subtitle: "개인 차주 · 담보비율 75% · 토지 8필지 · 아시아프라퍼티",
-  oneDpuReturn: "$1,259",
-  oneDpuProfit: "+ $259 PROFIT",
-  lpRoi: "+25.9%",
-  duration: "502",
-  durationLabel: "NPL → SETTLEMENT",
-  aiRisk: "82",
-  aiRiskLabel: "LOW RISK",
-  params: [
-    { label: "자산 유형", value: "토지 8필지 (종로구 홍지동)" },
-    { label: "위치 / 차주", value: "서울 종로구 · 개인" },
-    { label: "질권 담보비율 (LTV)", value: "75%" },
-    { label: "매입가격", value: "USD 1,253,130" },
-    { label: "감정가", value: "USD 4,835,519" },
-    { label: "경매개시결정일 / 낙찰가율", value: "2026-08-15 · 68.2%" },
-    { label: "투자금 (LP)", value: "USD 510,353" },
-    { label: "총 회수금", value: "USD 736,789" },
-    { label: "(-) 운영비용", value: "USD 66,512", minus: true },
-    { label: "(-) 관리보수 1%", value: "USD 13,302", minus: true },
-    { label: "(-) 성과보수 15%", value: "USD 14,558", minus: true },
-  ],
-  lpReceipt: "USD 642,417",
-  lpReceiptDelta: "+ $132,064",
-  invest: "$1,000",
-  receive: "$1,259",
-  profitLine: "PROFIT: +$259 · 502D · RLUSD AUTO · 3–5 SEC",
-  tierBadge: "★ BASE TIER",
-  tierNote: "AI가 '좋은 딜'로 판단 → 운용사(XRF) 성과보수 15% 적용",
-  lifecycle: [
-    { label: "NPL 매입", date: "2026.06" },
-    { label: "AI 분석", date: "2026.05" },
-    { label: "DPU 발행", date: "2026.05" },
-    { label: "경매 낙찰", date: "2027.08" },
-    { label: "RLUSD 정산", date: "2027.10" },
-  ],
-  bottom: [
-    { label: "INVESTED", value: "$510K" },
-    { label: "RECOVERED", value: "$737K" },
-    { label: "OPERATING", value: "-$67K", neg: true },
-    { label: "XRF FEES (관리보수+성과보수)", value: "-$28K", neg: true },
-    { label: "LP RECEIVED", value: "$642K" },
-  ],
-  collateral: "토지 8필지(종로) · 감정가 USD 4,835,519 · 담보비율 60.1% · 선순위 없음",
-  riskFactors: "MODERATE: 토지 분할매각 시 유찰 가능 · 감정가 대비 68.2% 낙찰 달성",
+/* Tier note (한국어) */
+const TIER_NOTE: Record<string, string> = {
+  BASE:           "AI가 '좋은 딜'로 판단 → 운용사(XRF) 성과보수 15% 적용",
+  CONSERVATIVE:   "AI가 '보통 딜'로 판단 → 운용사 성과보수 10% (양보)",
+  "SAVE-THE-DEAL":"AI가 '한계 딜'로 판단 → 운용사 성과보수 5% (최대 양보)",
+  REJECT:         "AI '부적합' 판정 → RWA 출시 미적합 (참고용)",
+}
+
+/* Deal status 결정 — 오늘 vs 마일스톤 비교 */
+function deriveStatus(now: Date, distributionDate?: string, winBidDate?: string): "SETTLED" | "ACTIVE" | "PENDING" {
+  if (!distributionDate) return "PENDING"
+  const dist = new Date(distributionDate).getTime()
+  if (now.getTime() >= dist) return "SETTLED"
+  if (winBidDate) {
+    const win = new Date(winBidDate).getTime()
+    if (now.getTime() >= win) return "ACTIVE"
+  }
+  return "PENDING"
+}
+
+/* ─── Props ──────────────────────────────────────────────────────────── */
+
+export interface XrfTerminalSectionProps {
+  report: UnifiedAnalysisReport
+  xrfResult: XrfValuationResult
+  /** 페이지 번호 (예: "06 / 32") — 옵션 */
+  pageNo?: string
+  /** Case 번호 — 옵션 */
+  caseNo?: string
 }
 
 /* ─── Component ──────────────────────────────────────────────────────── */
 
-export default function XrfTerminalSection() {
-  const data = DEFAULT_CASE
+export default function XrfTerminalSection({
+  report,
+  xrfResult,
+  pageNo,
+  caseNo,
+}: XrfTerminalSectionProps) {
+  const data = useMemo(() => {
+    const { input, summary, profitability } = report
+    const r = xrfResult
 
-  // 헤더 라이브 ticker — XRPL/RLUSD/AI 메트릭 약간의 무빙 (UX 디테일)
-  const [aiPct] = useState(82.8)
+    // ── 기본 메타 ────────────────────────────────────────────────
+    const title = input.assetTitle || "Untitled Deal"
+    const region = input.region || ""
+    const debtorTypeLabel =
+      input.debtorType === "CORPORATE" ? "법인 차주"
+      : input.debtorType === "INDIVIDUAL" ? "개인 차주"
+      : "차주"
+    const propertyType = input.propertyType || ""
+    const ltvPct = profitability?.acquisition.pledgeLoanRatio
+      ? Math.round(profitability.acquisition.pledgeLoanRatio * 100)
+      : 0
+    const subtitleParts = [
+      debtorTypeLabel,
+      ltvPct > 0 ? `담보비율 ${ltvPct}%` : "",
+      propertyType,
+    ].filter(Boolean)
+    const subtitle = subtitleParts.join(" · ")
 
-  // 현재 시간 표시 (KST)
-  const kst = useMemo(() => {
-    const d = new Date()
-    return d.toISOString().slice(0, 10) + " KST"
-  }, [])
+    // ── 마일스톤 ────────────────────────────────────────────────
+    const milestones = profitability?.schedule.milestones ?? []
+    const m = (key: string) => milestones.find((x) => x.key === key)?.date
+    const auctionStart = m("auctionStart")
+    const winBid = m("winBidDate")
+    const distribution = m("distributionDate")
+    const purchaseDate = profitability?.acquisition.purchaseDate
+    // AI 분석 / DPU 발행 — purchaseDate 직전(-1 ~ 0개월) 으로 추정
+    const analysisDate = purchaseDate
+      ? new Date(new Date(purchaseDate).getTime() - 30 * 86400_000).toISOString().slice(0, 10)
+      : undefined
+
+    const status = deriveStatus(new Date(), distribution, winBid)
+
+    // ── KPI ────────────────────────────────────────────────────
+    const displayRoi = r.displayRoi // LP 표시 ROI (0.259 = 25.9%)
+    const dpuReturnUSD = 1000 * (1 + displayRoi) // $1,000 invest → receive
+    const dpuProfitUSD = dpuReturnUSD - 1000
+    const durationDays = profitability?.investment.holdingPeriodDays ?? Math.round(r.durationYr * 365)
+
+    const aiScore = summary.verdictScore ?? gradeToScore(summary.riskGrade)
+    const riskMeta = scoreToRiskLabel(aiScore)
+
+    // ── Deal Parameters · P&L ─────────────────────────────────
+    const fx = r.exchangeRateKRWPerUSD || 1300
+    const purchasePriceUSD = r.nplPurchaseUSD
+    const appraisalUSD = (input.appraisalValue || 0) / fx
+    const lpInvestedUSD = r.displayPoolUSD // = nplEquity + fixed fees
+    const lpReceiptUSD = r.lpCapitalUSD + r.lpNetProfitUSD
+    // 운영비용 = KOF + Servicing (Setup 은 별도)
+    const operatingUSD = r.fees.platformTotalUSD + r.fees.servicingUSD
+    const mgmtFeeUSD = r.fees.xrfMgmtUSD + r.fees.xrfSetupUSD // 관리보수 (1%/yr) + setup (1회)
+    const carryFeeUSD = r.fees.xrfCarryUSD                     // 성과보수
+    // 총 회수금 = LP 수령액 + 운영비용 + 관리보수 + 성과보수
+    const totalRecoveredUSD = lpReceiptUSD + operatingUSD + mgmtFeeUSD + carryFeeUSD
+    const lpDeltaUSD = r.lpNetProfitUSD
+    const expectedBidRatioPct = profitability?.valuation.expectedBidRatio
+      ? profitability.valuation.expectedBidRatio * 100
+      : 0
+
+    // ── Fee 라벨 % (tier 별) ────────────────────────────────────
+    const mgmtPct = r.tier === "REJECT" ? 1.0 : 1.0 // v9 flat 1.0
+    const carryPct =
+      r.tier === "BASE" ? 15
+      : r.tier === "CONSERVATIVE" ? 10
+      : r.tier === "SAVE-THE-DEAL" ? 5
+      : 0
+    const tierNote = TIER_NOTE[r.tier] || TIER_NOTE.BASE
+
+    // ── Collateral 풋터 ────────────────────────────────────────
+    const seniorTotal = input.rightsSummary?.seniorTotal ?? 0
+    const collateralLtv = appraisalUSD > 0
+      ? Math.round((purchasePriceUSD / appraisalUSD) * 1000) / 10
+      : 0
+    const collateralFooter = [
+      propertyType ? `${propertyType}(${region})` : region,
+      `감정가 USD ${(appraisalUSD).toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
+      collateralLtv > 0 ? `담보비율 ${collateralLtv.toFixed(1)}%` : "",
+      seniorTotal > 0 ? `선순위 USD ${(seniorTotal / fx).toLocaleString("en-US", { maximumFractionDigits: 0 })}` : "선순위 없음",
+    ].filter(Boolean).join(" · ")
+
+    // ── Risk Factor 메시지 ────────────────────────────────────
+    const riskFactors = (() => {
+      const base = `낙찰가율 ${expectedBidRatioPct.toFixed(1)}% 시나리오 적용`
+      if (r.tier === "BASE") return `LOW: 안정적 회수 예상 · ${base}`
+      if (r.tier === "CONSERVATIVE") return `MODERATE: 관리·성과보수 양보로 LP 목표 ROI 달성 · ${base}`
+      if (r.tier === "SAVE-THE-DEAL") return `ELEVATED: 운용사 최대 양보 후 hurdle 근접 · ${base}`
+      return `HIGH: RWA 출시 부적합 — 운용사 양보로도 hurdle 미달 · ${base}`
+    })()
+
+    return {
+      // header
+      title,
+      subtitle,
+      status,
+      caseNo: caseNo ?? "01",
+      pageNo: pageNo ?? "—",
+      // KPI
+      dpuReturnUSD,
+      dpuProfitUSD,
+      displayRoi,
+      durationDays,
+      durationLabel: status === "SETTLED" ? "NPL → SETTLED" : "NPL → SETTLEMENT",
+      aiScore,
+      riskMeta,
+      // Deal Parameters
+      assetTypeText: propertyType ? `${propertyType} (${region || "—"})` : (region || "—"),
+      locationDebtor: `${region || "—"} · ${debtorTypeLabel}`,
+      ltvPct,
+      purchasePriceUSD,
+      appraisalUSD,
+      auctionStartDate: auctionStart || "—",
+      expectedBidRatioPct,
+      lpInvestedUSD,
+      totalRecoveredUSD,
+      operatingUSD,
+      mgmtFeeUSD,
+      mgmtPct,
+      carryFeeUSD,
+      carryPct,
+      lpReceiptUSD,
+      lpDeltaUSD,
+      // Simulator
+      tier: r.tier,
+      tierNote,
+      // Lifecycle
+      lifecycle: [
+        { label: "NPL 매입",  date: fmtDate(purchaseDate) },
+        { label: "AI 분석",   date: fmtDate(analysisDate) },
+        { label: "DPU 발행",  date: fmtDate(analysisDate) },
+        { label: "경매 낙찰", date: fmtDate(winBid) },
+        { label: "RLUSD 정산", date: fmtDate(distribution) },
+      ],
+      // Bottom strip
+      bottomKpi: [
+        { label: "INVESTED", value: fmtUSDk(lpInvestedUSD) },
+        { label: "RECOVERED", value: fmtUSDk(totalRecoveredUSD) },
+        { label: "OPERATING", value: fmtUSDk(-operatingUSD), neg: true },
+        { label: "XRF FEES (관리보수+성과보수)", value: fmtUSDk(-(mgmtFeeUSD + carryFeeUSD)), neg: true },
+        { label: "LP RECEIVED", value: fmtUSDk(lpReceiptUSD) },
+      ],
+      // Footer
+      collateralFooter,
+      riskFactors,
+    }
+  }, [report, xrfResult, pageNo, caseNo])
+
+  // 헤더 ticker — 고정 (XRPL/RLUSD 메인넷 가정)
+  const aiPct = data.aiScore
+  const todayKst = useMemo(() => new Date().toISOString().slice(0, 10) + " KST", [])
 
   return (
     <section
@@ -155,9 +284,11 @@ export default function XrfTerminalSection() {
           fontSize: 11,
           fontWeight: 700,
           letterSpacing: "0.06em",
+          flexWrap: "wrap",
+          gap: 8,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 18, color: T.greenBright }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 18, color: T.greenBright, flexWrap: "wrap" }}>
           <span style={{ color: T.green, fontWeight: 800 }}>XRF TERMINAL</span>
           <span style={{ color: T.border }}>|</span>
           <span style={{ color: T.textDim }}>
@@ -173,11 +304,11 @@ export default function XrfTerminalSection() {
           </span>
         </div>
         <div style={{ color: T.greenDim, fontWeight: 700 }}>
-          CASE STUDY · {kst}
+          CASE STUDY · {todayKst}
         </div>
       </div>
 
-      {/* Sub header (CONFIDENTIAL + page no) */}
+      {/* Sub header */}
       <div
         style={{
           background: T.bg,
@@ -198,7 +329,7 @@ export default function XrfTerminalSection() {
       {/* ─── Title block ──────────────────────────── */}
       <div style={{ padding: "24px 24px 18px", borderBottom: `1px solid ${T.border}` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
-          <div>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
                 color: T.green,
@@ -253,10 +384,41 @@ export default function XrfTerminalSection() {
         }}
       >
         {[
-          { label: "1 DPU RETURN", value: data.oneDpuReturn, hint: data.oneDpuProfit, hintColor: T.green },
-          { label: "LP ROI", value: data.lpRoi, hint: "VS USD INVESTED", hintColor: T.textDim, valueColor: T.green },
-          { label: "DURATION", value: <><span>{data.duration}</span><span style={{ fontSize: 18, color: T.textDim, marginLeft: 4 }}>D</span></>, hint: data.durationLabel, hintColor: T.textDim },
-          { label: "AI RISK SCORE", value: <><span>{data.aiRisk}</span><span style={{ fontSize: 18, color: T.textDim, marginLeft: 4 }}>/100</span></>, hint: data.aiRiskLabel, hintColor: T.green },
+          {
+            label: "1 DPU RETURN",
+            value: `$${data.dpuReturnUSD.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
+            hint: `+ ${fmtUSD(data.dpuProfitUSD, { withDollar: true })} PROFIT`,
+            hintColor: T.green,
+          },
+          {
+            label: "LP ROI",
+            value: fmtPct(data.displayRoi * 100),
+            hint: "VS USD INVESTED",
+            hintColor: T.textDim,
+            valueColor: T.green,
+          },
+          {
+            label: "DURATION",
+            value: (
+              <>
+                <span>{data.durationDays}</span>
+                <span style={{ fontSize: 18, color: T.textDim, marginLeft: 4 }}>D</span>
+              </>
+            ),
+            hint: data.durationLabel,
+            hintColor: T.textDim,
+          },
+          {
+            label: "AI RISK SCORE",
+            value: (
+              <>
+                <span>{Math.round(data.aiScore)}</span>
+                <span style={{ fontSize: 18, color: T.textDim, marginLeft: 4 }}>/100</span>
+              </>
+            ),
+            hint: data.riskMeta.label,
+            hintColor: data.riskMeta.color,
+          },
         ].map((k, i) => (
           <div
             key={k.label}
@@ -313,7 +475,19 @@ export default function XrfTerminalSection() {
             DEAL PARAMETERS · P&amp;L ANALYSIS
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            {data.params.map((p, i) => (
+            {[
+              { label: "자산 유형",                   value: data.assetTypeText },
+              { label: "위치 / 차주",                  value: data.locationDebtor },
+              { label: "질권 담보비율 (LTV)",         value: data.ltvPct > 0 ? `${data.ltvPct}%` : "—" },
+              { label: "매입가격",                    value: fmtUSD(data.purchasePriceUSD) },
+              { label: "감정가",                      value: fmtUSD(data.appraisalUSD) },
+              { label: "경매개시결정일 / 낙찰가율",   value: `${data.auctionStartDate} · ${data.expectedBidRatioPct.toFixed(1)}%` },
+              { label: "투자금 (LP)",                 value: fmtUSD(data.lpInvestedUSD) },
+              { label: "총 회수금",                   value: fmtUSD(data.totalRecoveredUSD) },
+              { label: "(-) 운영비용",                value: fmtUSD(data.operatingUSD), minus: true },
+              { label: `(-) 관리보수 ${data.mgmtPct.toFixed(0)}%`,  value: fmtUSD(data.mgmtFeeUSD), minus: true },
+              { label: `(-) 성과보수 ${data.carryPct.toFixed(0)}%`, value: fmtUSD(data.carryFeeUSD), minus: true },
+            ].map((p, i, arr) => (
               <div
                 key={p.label}
                 style={{
@@ -322,7 +496,7 @@ export default function XrfTerminalSection() {
                   alignItems: "baseline",
                   padding: "9px 0",
                   borderBottom:
-                    i < data.params.length - 1
+                    i < arr.length - 1
                       ? `1px dashed ${T.border}`
                       : `1px solid ${T.borderGreenDim}`,
                   fontSize: 12.5,
@@ -351,8 +525,10 @@ export default function XrfTerminalSection() {
             >
               <span style={{ color: T.white, fontWeight: 700 }}>LP 수령액</span>
               <span style={{ color: T.green, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
-                {data.lpReceipt}{" "}
-                <span style={{ color: T.greenDim, fontWeight: 700 }}>({data.lpReceiptDelta})</span>
+                {fmtUSD(data.lpReceiptUSD)}{" "}
+                <span style={{ color: T.greenDim, fontWeight: 700 }}>
+                  (+ {fmtUSD(data.lpDeltaUSD, { withDollar: true })})
+                </span>
               </span>
             </div>
           </div>
@@ -379,7 +555,7 @@ export default function XrfTerminalSection() {
                   INVEST
                 </div>
                 <div style={{ fontSize: 26, fontWeight: 800, color: T.white, fontVariantNumeric: "tabular-nums" }}>
-                  {data.invest}
+                  $1,000
                 </div>
               </div>
               <div style={{ color: T.green, fontSize: 20 }}>→</div>
@@ -388,7 +564,7 @@ export default function XrfTerminalSection() {
                   RECEIVE
                 </div>
                 <div style={{ fontSize: 26, fontWeight: 800, color: T.green, fontVariantNumeric: "tabular-nums" }}>
-                  {data.receive}
+                  ${data.dpuReturnUSD.toLocaleString("en-US", { maximumFractionDigits: 0 })}
                 </div>
               </div>
             </div>
@@ -403,7 +579,7 @@ export default function XrfTerminalSection() {
                 fontWeight: 700,
               }}
             >
-              {data.profitLine}
+              PROFIT: +{fmtUSD(data.dpuProfitUSD, { withDollar: true })} · {data.durationDays}D · RLUSD AUTO · 3–5 SEC
             </div>
           </div>
 
@@ -420,7 +596,7 @@ export default function XrfTerminalSection() {
                 whiteSpace: "nowrap",
               }}
             >
-              {data.tierBadge}
+              ★ {data.tier} TIER
             </div>
             <div style={{ color: T.textDim, fontSize: 12, lineHeight: 1.4, flex: 1, minWidth: 0 }}>
               {data.tierNote}
@@ -473,12 +649,12 @@ export default function XrfTerminalSection() {
           borderBottom: `1px solid ${T.border}`,
         }}
       >
-        {data.bottom.map((b, i) => (
+        {data.bottomKpi.map((b, i, arr) => (
           <div
             key={b.label}
             style={{
               padding: "16px 18px",
-              borderRight: i < data.bottom.length - 1 ? `1px solid ${T.border}` : "none",
+              borderRight: i < arr.length - 1 ? `1px solid ${T.border}` : "none",
               display: "flex",
               flexDirection: "column",
               gap: 4,
@@ -516,7 +692,7 @@ export default function XrfTerminalSection() {
         <div style={{ display: "flex", gap: 8 }}>
           <span style={{ color: T.green, fontWeight: 800, letterSpacing: "0.10em" }}>COLLATERAL</span>
           <span>·</span>
-          <span>{data.collateral}</span>
+          <span>{data.collateralFooter}</span>
         </div>
         <div style={{ display: "flex", gap: 8, flex: 1, minWidth: 0 }}>
           <span style={{ color: T.green, fontWeight: 800, letterSpacing: "0.10em" }}>RISK FACTORS</span>
