@@ -284,12 +284,25 @@ export interface XrfValuationResult {
   numLPs: number
 }
 
+/**
+ * 환율 기본값 — 우선순위:
+ *   1) input.exchangeRateKRWPerUSD  (호출자 명시)
+ *   2) process.env.NEXT_PUBLIC_KRW_USD_RATE  (배포 환경변수)
+ *   3) 1300 (안전 fallback)
+ * TODO Phase 2: 한국은행 API 실시간 환율 fetch (lib/fx/rate.ts 신설)
+ */
+const DEFAULT_FX_KRW_PER_USD = (() => {
+  const envVal = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_KRW_USD_RATE : undefined
+  const n = envVal ? Number(envVal) : NaN
+  return Number.isFinite(n) && n > 0 ? n : 1300
+})()
+
 /** 단일 tier에 대한 LP 결과 산출 (AUTO 판정용 + 최종 출력) */
 function computeForTier(
   input: XrfValuationInput,
   tier: Exclude<XrfTier, 'REJECT'>,
 ): XrfValuationResult {
-  const fx = input.exchangeRateKRWPerUSD ?? 1300
+  const fx = input.exchangeRateKRWPerUSD ?? DEFAULT_FX_KRW_PER_USD
   const numLPs = input.numLPs ?? 100
   // v9 default = 'NPL_EQUITY' (이중 계상 방지 정책 2026-05-06)
   //   NPL totalEquity 에 NPL거래수수료(1.5%) 등 deal 비용이 이미 포함 →
