@@ -600,7 +600,7 @@ export default function XrfTerminalSection({
       style={{
         background: T.bg,
         color: T.white,
-        fontFamily: "'JetBrains Mono', 'Consolas', 'Menlo', monospace",
+        fontFamily: "'Pretendard Variable', 'Pretendard', 'Inter', system-ui, -apple-system, sans-serif",
         border: `1px solid ${T.borderGreen}`,
         margin: "0 24px",
         position: "relative",
@@ -677,13 +677,13 @@ export default function XrfTerminalSection({
             </div>
             <h2
               style={{
-                fontFamily: "'Inter', sans-serif",
-                fontSize: 26,
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                fontSize: 30,
                 fontWeight: 800,
                 color: T.white,
-                letterSpacing: "-0.015em",
-                lineHeight: 1.2,
-                marginBottom: 8,
+                letterSpacing: "-0.025em",
+                lineHeight: 1.15,
+                marginBottom: 10,
               }}
             >
               {data.title}
@@ -733,13 +733,14 @@ export default function XrfTerminalSection({
               {L.irr}
             </span>
             <span style={{
-              fontSize: 16,
+              fontFamily: "Georgia, 'Times New Roman', serif",
+              fontSize: 18,
               fontWeight: 800,
               color: T.greenBright,
               fontVariantNumeric: "tabular-nums",
-              letterSpacing: "-0.01em",
+              letterSpacing: "-0.015em",
             }}>
-              {fmtPct(data.lpIrrPct)}<span style={{ fontSize: 10, color: T.textMuted, marginLeft: 2 }}>/yr</span>
+              {fmtPct(data.lpIrrPct)}<span style={{ fontFamily: "'Pretendard Variable', sans-serif", fontSize: 10, color: T.textMuted, marginLeft: 3, fontWeight: 600 }}>/yr</span>
             </span>
           </div>
           <div style={{ ...kpiHintStyle, color: T.textDim, marginTop: 2 }}>{L.vsInvested}</div>
@@ -817,13 +818,16 @@ export default function XrfTerminalSection({
                   gap: 12,
                 }}
               >
-                <span style={{ color: T.textDim, letterSpacing: "-0.005em" }}>{p.label}</span>
+                <span style={{ color: T.textDim, letterSpacing: "-0.005em", fontSize: 12.5 }}>{p.label}</span>
                 <span
                   style={{
+                    fontFamily: "Georgia, 'Times New Roman', serif",
                     color: p.minus ? T.warn : T.white,
+                    fontSize: 13.5,
                     fontWeight: 700,
                     fontVariantNumeric: "tabular-nums",
                     textAlign: "right",
+                    letterSpacing: "-0.01em",
                   }}
                 >
                   {p.value}
@@ -840,10 +844,18 @@ export default function XrfTerminalSection({
                 gap: 12,
               }}
             >
-              <span style={{ color: T.white, fontWeight: 700 }}>{L.pLpReceipt}</span>
-              <span style={{ color: T.green, fontWeight: 800, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
+              <span style={{ color: T.white, fontWeight: 700, fontSize: 13 }}>{L.pLpReceipt}</span>
+              <span style={{
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                color: T.green,
+                fontSize: 16,
+                fontWeight: 800,
+                fontVariantNumeric: "tabular-nums",
+                textAlign: "right",
+                letterSpacing: "-0.015em",
+              }}>
                 {data.lpReceiptText}{" "}
-                <span style={{ color: T.greenDim, fontWeight: 700 }}>
+                <span style={{ fontFamily: "'Pretendard Variable', sans-serif", color: T.greenDim, fontWeight: 700, fontSize: 12 }}>
                   ({data.lpDeltaText})
                 </span>
               </span>
@@ -871,7 +883,7 @@ export default function XrfTerminalSection({
                 <div style={{ fontSize: 9.5, color: T.textMuted, letterSpacing: "0.10em", fontWeight: 700, marginBottom: 2 }}>
                   {L.invest}
                 </div>
-                <div style={{ fontSize: 26, fontWeight: 800, color: T.white, fontVariantNumeric: "tabular-nums" }}>
+                <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 28, fontWeight: 800, color: T.white, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
                   {data.dpuUnitDisplay}
                 </div>
               </div>
@@ -880,7 +892,7 @@ export default function XrfTerminalSection({
                 <div style={{ fontSize: 9.5, color: T.textMuted, letterSpacing: "0.10em", fontWeight: 700, marginBottom: 2 }}>
                   {L.receive}
                 </div>
-                <div style={{ fontSize: 26, fontWeight: 800, color: T.green, fontVariantNumeric: "tabular-nums" }}>
+                <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 28, fontWeight: 800, color: T.green, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
                   {data.dpuReturnDisplay}
                 </div>
               </div>
@@ -947,7 +959,14 @@ export default function XrfTerminalSection({
                   }}
                 >
                   <span style={{ color: T.textDim }}>{l.label}</span>
-                  <span style={{ color: T.white, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+                  <span style={{
+                    fontFamily: "Georgia, 'Times New Roman', serif",
+                    color: T.white,
+                    fontWeight: 700,
+                    fontVariantNumeric: "tabular-nums",
+                    fontSize: 13,
+                    letterSpacing: "-0.01em",
+                  }}>
                     {l.date}
                   </span>
                 </div>
@@ -979,11 +998,13 @@ export default function XrfTerminalSection({
           >
             <div
               style={{
-                fontSize: 22,
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                fontSize: 24,
                 fontWeight: 800,
                 color: b.neg ? T.warn : T.green,
-                lineHeight: 1.1,
+                lineHeight: 1.05,
                 fontVariantNumeric: "tabular-nums",
+                letterSpacing: "-0.02em",
               }}
             >
               {b.value}
@@ -1036,12 +1057,13 @@ const kpiLabelStyle: React.CSSProperties = {
   fontWeight: 700,
 }
 const kpiValueStyle = (color: string): React.CSSProperties => ({
-  fontSize: 30,
+  fontFamily: "Georgia, 'Times New Roman', serif",
+  fontSize: 34,
   fontWeight: 800,
   color,
-  lineHeight: 1.1,
+  lineHeight: 1.05,
   fontVariantNumeric: "tabular-nums",
-  letterSpacing: "-0.01em",
+  letterSpacing: "-0.02em",
 })
 const kpiHintStyle: React.CSSProperties = {
   fontSize: 10,

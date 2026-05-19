@@ -608,15 +608,14 @@ export default function UnifiedReportPage() {
                 style={{
                   padding: "9px 14px",
                   fontSize: 12, fontWeight: 800,
-                  background: valuationMode === 'XRF_TERMINAL' ? '#0A0E14' : MCK.paper,
-                  color: valuationMode === 'XRF_TERMINAL' ? '#34D399' : MCK.ink,
+                  background: valuationMode === 'XRF_TERMINAL' ? MCK.ink : MCK.paper,
+                  color: valuationMode === 'XRF_TERMINAL' ? MCK.paper : MCK.ink,
                   border: "none",
                   borderLeft: `1px solid ${MCK.borderStrong}`,
-                  borderTop: valuationMode === 'XRF_TERMINAL' ? `2px solid #10B981` : 'none',
+                  borderTop: valuationMode === 'XRF_TERMINAL' ? `2px solid ${MCK.electric}` : 'none',
                   letterSpacing: "-0.01em", cursor: "pointer",
-                  fontFamily: "'JetBrains Mono', 'Consolas', monospace",
                 }}
-                title="XRF 터미널 — Bloomberg-style 케이스 스터디 (Settled Deal)"
+                title="XRF 터미널 — Settled Deal 케이스 스터디"
               >
                 XRF 터미널
               </button>
@@ -673,6 +672,24 @@ export default function UnifiedReportPage() {
           </div>
         }
       />
+
+      {/* ── XRF Terminal — 전용 모드: 다른 섹션은 모두 숨김 ──────────── */}
+      {valuationMode === 'XRF_TERMINAL' && profitability && (
+        <section className="mt-8 pb-12">
+          <XrfTerminalSection
+            report={report}
+            xrfResult={computeXrfValuation({
+              nplPurchasePriceKRW: profitability.acquisition.purchasePrice,
+              nplTotalEquityKRW:   profitability.investment.totalEquity,
+              nplNetProfitKRW:     profitability.investment.expectedNetProfit,
+              holdingPeriodDays:   profitability.investment.holdingPeriodDays,
+            })}
+          />
+        </section>
+      )}
+
+      {/* ── 이하 보고서 본문 (NPL / XRF RWA / XRF Admin 모드 전용) ── */}
+      {valuationMode !== 'XRF_TERMINAL' && (<>
 
       {/* ── Hero KPI strip · DARK · 자발적 경매와 동일 패턴 ─────────── */}
       <section style={{ background: MCK.paper, paddingBottom: 32 }}>
@@ -743,7 +760,7 @@ export default function UnifiedReportPage() {
             : valuationMode === 'XRF'   ? xrfSummaryData?.summaryEn
             : undefined
           }
-          valuationMode={valuationMode === 'XRF_TERMINAL' ? 'NPL' : valuationMode}
+          valuationMode={valuationMode}
         />
       )}
 
@@ -765,7 +782,7 @@ export default function UnifiedReportPage() {
               : valuationMode === 'XRF'   ? xrfSummaryData?.summaryEn
               : undefined
             }
-            valuationMode={valuationMode === 'XRF_TERMINAL' ? 'NPL' : valuationMode}
+            valuationMode={valuationMode}
           />
         </div>,
         document.body,
@@ -1242,21 +1259,6 @@ export default function UnifiedReportPage() {
         </section>
       )}
 
-      {/* ── XRF Terminal · Bloomberg-style 케이스 스터디 ───── */}
-      {valuationMode === 'XRF_TERMINAL' && profitability && (
-        <section className="mt-8 pb-6">
-          <XrfTerminalSection
-            report={report}
-            xrfResult={computeXrfValuation({
-              nplPurchasePriceKRW: profitability.acquisition.purchasePrice,
-              nplTotalEquityKRW:   profitability.investment.totalEquity,
-              nplNetProfitKRW:     profitability.investment.expectedNetProfit,
-              holdingPeriodDays:   profitability.investment.holdingPeriodDays,
-            })}
-          />
-        </section>
-      )}
-
       {/* ── 시장 전망 ─────────────────────────── */}
       <Section
         title="시장 전망"
@@ -1482,6 +1484,8 @@ export default function UnifiedReportPage() {
           )}
         </div>
       </section>
+
+      </>)}
     </MckPageShell>
   )
 }
