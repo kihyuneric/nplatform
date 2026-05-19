@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   const incomingSecret = req.headers.get('x-cron-secret')
     ?? req.headers.get('authorization')?.replace('Bearer ', '')
   if (cronSecret && incomingSecret !== cronSecret) {
-    return NextResponse.json({ error: 'Invalid cron secret' }, { status: 401 })
+    return NextResponse.json({ error: { code: 'INVALID_SECRET', message: 'Invalid cron secret' } }, { status: 401 })
   }
 
   try {

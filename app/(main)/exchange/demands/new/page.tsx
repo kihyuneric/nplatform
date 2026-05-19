@@ -268,7 +268,7 @@ export default function NewDemandPage() {
         {/* 수요 유형 선택 */}
         <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] p-5 space-y-3">
           <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">수요 유형</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => { setDemandType('npl'); setReTypes([]); setReDealTypes([]) }}
@@ -405,7 +405,7 @@ export default function NewDemandPage() {
           <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">
             {demandType === 'realestate' ? '가격 범위' : '투자 규모'}
           </h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-[var(--color-text-muted)] mb-1">
                 {demandType === 'realestate' ? '최소 가격 (억원)' : '최소 투자금 (억원)'} <span className="text-stone-900">*</span>
@@ -460,7 +460,7 @@ export default function NewDemandPage() {
 
           {/* Real estate: 면적 */}
           {demandType === 'realestate' && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-[var(--color-text-muted)] mb-1">최소 면적 (㎡)</label>
                 <input

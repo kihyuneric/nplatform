@@ -146,14 +146,14 @@ export async function POST(req: NextRequest) {
     input = (await req.json()) as DDReportInput
   } catch {
     return new Response(
-      JSON.stringify({ error: "Invalid JSON body" }),
+      JSON.stringify({ error: { code: 'INVALID_JSON', message: 'Invalid JSON body' } }),
       { status: 400, headers: { "Content-Type": "application/json" } },
     )
   }
 
   if (!input.listingId || !input.propertyType || !input.region) {
     return new Response(
-      JSON.stringify({ error: "listingId, propertyType, region 필수" }),
+      JSON.stringify({ error: { code: 'VALIDATION_ERROR', message: 'listingId, propertyType, region 필수' } }),
       { status: 400, headers: { "Content-Type": "application/json" } },
     )
   }

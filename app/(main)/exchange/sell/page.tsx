@@ -1549,6 +1549,10 @@ function Step5Docs({
               />
 
               <button
+                type="button"
+                role="checkbox"
+                aria-checked={checked}
+                aria-label={`${it.label} — ${it.desc}`}
                 onClick={() => toggleProvided(it.key, !checked)}
                 style={{
                   display: "flex", gap: 12, alignItems: "flex-start",

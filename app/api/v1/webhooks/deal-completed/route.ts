@@ -53,20 +53,20 @@ export async function POST(req: NextRequest) {
     ?? req.headers.get('authorization')?.replace('Bearer ', '')
 
   if (webhookSecret && incomingSecret !== webhookSecret) {
-    return NextResponse.json({ error: 'Invalid webhook secret' }, { status: 401 })
+    return NextResponse.json({ error: { code: 'INVALID_SECRET', message: 'Invalid webhook secret' } }, { status: 401 })
   }
 
   let payload: DealCompletedPayload
   try {
     payload = (await req.json()) as DealCompletedPayload
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    return NextResponse.json({ error: { code: 'INVALID_JSON', message: 'Invalid JSON' } }, { status: 400 })
   }
 
   // ── 딜 ID 결정 ────────────────────────────────────────
   const dealId = payload.deal_id ?? payload.record?.id
   if (!dealId) {
-    return NextResponse.json({ error: 'deal_id required' }, { status: 400 })
+    return NextResponse.json({ error: { code: 'VALIDATION_ERROR', message: 'deal_id required' } }, { status: 400 })
   }
 
   // DB Webhook 이면 status 변경이 CLOSED/COMPLETED 인지 확인

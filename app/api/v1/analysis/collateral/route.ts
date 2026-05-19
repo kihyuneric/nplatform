@@ -13,6 +13,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -73,14 +74,22 @@ function buildUserPrompt(address: string, assetTitle?: string): string {
 **한 줄 결론**: 이 자산의 담보 가치 핵심을 한 문장으로 정리해주세요.`
 }
 
+const CollateralBodySchema = z.object({
+  address: z.string().trim().min(5, "주소는 5자 이상 필요합니다"),
+  assetTitle: z.string().optional(),
+})
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const { address, assetTitle } = body as { address?: string; assetTitle?: string }
-
-    if (!address || typeof address !== 'string' || address.trim().length < 5) {
-      return NextResponse.json({ error: '주소가 필요합니다' }, { status: 400 })
+    const raw = await req.json().catch(() => ({}))
+    const parsed = CollateralBodySchema.safeParse(raw)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: parsed.error.issues[0]?.message ?? '주소가 필요합니다' } },
+        { status: 400 }
+      )
     }
+    const { address, assetTitle } = parsed.data
 
     const encoder = new TextEncoder()
     const trimmedAddress = address.trim()

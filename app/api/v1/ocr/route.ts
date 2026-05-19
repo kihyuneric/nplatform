@@ -272,11 +272,11 @@ export async function POST(request: NextRequest) {
     const docType = (formData.get('doc_type') as string) || 'generic'
 
     if (!file) {
-      return NextResponse.json({ error: '파일이 필요합니다.' }, { status: 400 })
+      return NextResponse.json({ error: { code: 'VALIDATION_ERROR', message: '파일이 필요합니다.' } }, { status: 400 })
     }
 
     if (file.size > 20 * 1024 * 1024) {
-      return NextResponse.json({ error: '파일 크기 제한: 최대 20MB' }, { status: 400 })
+      return NextResponse.json({ error: { code: 'FILE_TOO_LARGE', message: '파일 크기 제한: 최대 20MB' } }, { status: 400 })
     }
 
     const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
@@ -300,7 +300,7 @@ export async function POST(request: NextRequest) {
       data = await fromSpreadsheet(buffer)
     } else {
       return NextResponse.json(
-        { error: '지원하지 않는 형식입니다. 지원: PDF · JPG/PNG · DOCX · HWP · CSV/XLS/XLSX' },
+        { error: { code: 'UNSUPPORTED_FORMAT', message: '지원하지 않는 형식입니다. 지원: PDF · JPG/PNG · DOCX · HWP · CSV/XLS/XLSX' } },
         { status: 400 },
       )
     }

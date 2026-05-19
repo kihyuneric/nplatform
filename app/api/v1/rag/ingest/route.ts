@@ -157,7 +157,7 @@ export async function POST(req: NextRequest) {
   const adminSecret = req.headers.get('x-admin-secret')
   const expectedSecret = process.env.ADMIN_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY
   if (expectedSecret && adminSecret !== expectedSecret) {
-    return NextResponse.json({ error: '인증 실패' }, { status: 401 })
+    return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: '인증 실패' } }, { status: 401 })
   }
 
   let body: {
@@ -170,13 +170,13 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: '잘못된 요청 형식' }, { status: 400 })
+    return NextResponse.json({ error: { code: 'INVALID_JSON', message: '잘못된 요청 형식' } }, { status: 400 })
   }
 
   const { documents, chunk_size = 500, chunk_overlap = 100, replace_existing = false } = body
 
   if (!Array.isArray(documents) || documents.length === 0) {
-    return NextResponse.json({ error: 'documents 배열이 필요합니다.' }, { status: 400 })
+    return NextResponse.json({ error: { code: 'VALIDATION_ERROR', message: 'documents 배열이 필요합니다.' } }, { status: 400 })
   }
 
   const supabase = getSupabaseAdmin()

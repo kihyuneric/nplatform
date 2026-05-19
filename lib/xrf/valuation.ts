@@ -287,22 +287,22 @@ export interface XrfValuationResult {
 /**
  * 환율 기본값 — 우선순위:
  *   1) input.exchangeRateKRWPerUSD  (호출자 명시)
- *   2) process.env.NEXT_PUBLIC_KRW_USD_RATE  (배포 환경변수)
- *   3) 1300 (안전 fallback)
- * TODO Phase 2: 한국은행 API 실시간 환율 fetch (lib/fx/rate.ts 신설)
+ *   2) lib/fx/rate.ts getKrwPerUsdSync()  (1h 캐시 — EXIM/ER-API · 비동기 prefetch 권장)
+ *   3) NEXT_PUBLIC_KRW_USD_RATE 환경변수
+ *   4) 1300 (안전 fallback)
+ *
+ * 비동기 prefetch (server 측):
+ *   import { getKrwPerUsd } from '@/lib/fx/rate'
+ *   await getKrwPerUsd()  // 캐시 워밍업 — 이후 computeXrfValuation 동기 호출 시 최신값 사용
  */
-const DEFAULT_FX_KRW_PER_USD = (() => {
-  const envVal = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_KRW_USD_RATE : undefined
-  const n = envVal ? Number(envVal) : NaN
-  return Number.isFinite(n) && n > 0 ? n : 1300
-})()
+import { getKrwPerUsdSync } from '@/lib/fx/rate'
 
 /** 단일 tier에 대한 LP 결과 산출 (AUTO 판정용 + 최종 출력) */
 function computeForTier(
   input: XrfValuationInput,
   tier: Exclude<XrfTier, 'REJECT'>,
 ): XrfValuationResult {
-  const fx = input.exchangeRateKRWPerUSD ?? DEFAULT_FX_KRW_PER_USD
+  const fx = input.exchangeRateKRWPerUSD ?? getKrwPerUsdSync()
   const numLPs = input.numLPs ?? 100
   // v9 default = 'NPL_EQUITY' (이중 계상 방지 정책 2026-05-06)
   //   NPL totalEquity 에 NPL거래수수료(1.5%) 등 deal 비용이 이미 포함 →
