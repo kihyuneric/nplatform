@@ -40,6 +40,7 @@ import { useListing, getListingTitle, getListingRegion, getListingInstitution, g
 import type { UnifiedAnalysisReport, NplProfitabilityBlock } from "@/lib/npl/unified-report/types"
 import XrfValuationSection from "./components/xrf-valuation-section"
 import XrfRwaSection from "./components/xrf-rwa-section"
+import XrfTerminalSection from "./components/xrf-terminal-section"
 import { PropertyCollateralAnalysis } from "./components/property-collateral-analysis"
 import { PropertyPhotosExhibit } from "./components/property-photos-exhibit"
 import { computeEffectiveFirstSaleDate } from "@/lib/npl/unified-report/auction-round"
@@ -225,7 +226,7 @@ export default function UnifiedReportPage() {
   const [mounted, setMounted] = useState(false)
   // 사용자 정책 (2026-05-03): NPL 보고서 ↔ XRF Vehicle Valuation 토글
   //   NPL 자체 ROI vs XRF + 엔플랫폼 + 대부업체 구조 적용 후 LP 최종 ROI 비교
-  const [valuationMode, setValuationMode] = useState<'NPL' | 'XRF_RWA' | 'XRF'>('NPL')
+  const [valuationMode, setValuationMode] = useState<'NPL' | 'XRF_RWA' | 'XRF' | 'XRF_TERMINAL'>('NPL')
   // AI 총평 언어 토글 (KO/EN) — v9 bilingual executive summary
   const [summaryLang, setSummaryLang] = useState<'ko' | 'en'>('ko')
   const t = T[lang]
@@ -601,6 +602,24 @@ export default function UnifiedReportPage() {
               >
                 XRF Admin
               </button>
+              <button
+                type="button"
+                onClick={() => setValuationMode('XRF_TERMINAL')}
+                style={{
+                  padding: "9px 14px",
+                  fontSize: 12, fontWeight: 800,
+                  background: valuationMode === 'XRF_TERMINAL' ? '#0A0E14' : MCK.paper,
+                  color: valuationMode === 'XRF_TERMINAL' ? '#34D399' : MCK.ink,
+                  border: "none",
+                  borderLeft: `1px solid ${MCK.borderStrong}`,
+                  borderTop: valuationMode === 'XRF_TERMINAL' ? `2px solid #10B981` : 'none',
+                  letterSpacing: "-0.01em", cursor: "pointer",
+                  fontFamily: "'JetBrains Mono', 'Consolas', monospace",
+                }}
+                title="XRF 터미널 — Bloomberg-style 케이스 스터디 (Settled Deal)"
+              >
+                XRF 터미널
+              </button>
             </div>
             <button
               type="button"
@@ -724,7 +743,7 @@ export default function UnifiedReportPage() {
             : valuationMode === 'XRF'   ? xrfSummaryData?.summaryEn
             : undefined
           }
-          valuationMode={valuationMode}
+          valuationMode={valuationMode === 'XRF_TERMINAL' ? 'NPL' : valuationMode}
         />
       )}
 
@@ -746,7 +765,7 @@ export default function UnifiedReportPage() {
               : valuationMode === 'XRF'   ? xrfSummaryData?.summaryEn
               : undefined
             }
-            valuationMode={valuationMode}
+            valuationMode={valuationMode === 'XRF_TERMINAL' ? 'NPL' : valuationMode}
           />
         </div>,
         document.body,
@@ -1220,6 +1239,13 @@ export default function UnifiedReportPage() {
             assetTitle={input.assetTitle ?? displayTitle}
             address={listing?.address ?? undefined}
           />
+        </section>
+      )}
+
+      {/* ── XRF Terminal · Bloomberg-style 케이스 스터디 (Settled Deal) ───── */}
+      {valuationMode === 'XRF_TERMINAL' && (
+        <section className="mt-8 pb-6">
+          <XrfTerminalSection />
         </section>
       )}
 
