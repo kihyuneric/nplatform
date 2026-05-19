@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (inviteErr) {
-      return NextResponse.json({ error: { message: inviteErr.message } }, { status: 400 })
+      return NextResponse.json({ error: { code: 'INVITE_FAILED', message: inviteErr.message } }, { status: 400 })
     }
 
     // Upsert into users table
@@ -170,7 +170,7 @@ export async function DELETE(request: NextRequest) {
     .eq('id', id)
     .eq('role', 'admin')
 
-  if (error) return NextResponse.json({ error: { message: error.message } }, { status: 400 })
+  if (error) return NextResponse.json({ error: { code: 'DB_ERROR', message: error.message } }, { status: 400 })
 
   return NextResponse.json({ data: { id, deleted: true } })
 }

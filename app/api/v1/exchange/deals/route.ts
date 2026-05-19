@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     if (!listing_id) {
       return NextResponse.json(
-        { error: { message: "listing_id는 필수입니다." } },
+        { error: { code: 'VALIDATION_ERROR', message: "listing_id는 필수입니다." } },
         { status: 400 }
       )
     }
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     logger.error("[exchange/deals] POST error:", { error: err })
     return NextResponse.json(
-      { error: { message: "딜 생성 중 오류가 발생했습니다." } },
+      { error: { code: 'INTERNAL_ERROR', message: "딜 생성 중 오류가 발생했습니다." } },
       { status: 500 }
     )
   }

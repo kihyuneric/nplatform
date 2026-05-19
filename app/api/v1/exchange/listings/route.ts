@@ -628,7 +628,7 @@ export async function PATCH(request: NextRequest) {
   } catch (err) {
     logger.error("[exchange/listings] PATCH error:", { error: err })
     return NextResponse.json(
-      { error: { message: (err instanceof Error ? err.message : 'Unknown error') || '수정 실패' } },
+      { error: { code: 'INTERNAL_ERROR', message: (err instanceof Error ? err.message : 'Unknown error') || '수정 실패' } },
       { status: 500 }
     )
   }

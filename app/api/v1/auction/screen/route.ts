@@ -6,6 +6,7 @@
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server'
+import { timingSafeEqual } from 'node:crypto'
 import { getSupabaseAdmin } from '@/lib/supabase/server'
 import {
   screenNplListing,
@@ -19,15 +20,36 @@ const DEFAULT_BATCH_SIZE = 50
 const MAX_BATCH_SIZE     = 200
 const SCREEN_TIMEOUT_MS  = 25_000   // Vercel Edge 30s 이내
 
+// ─── 보안 헬퍼 ────────────────────────────────────────────
+// timing-safe equal — 타이밍 공격 방어. 길이 다르면 false.
+function safeEq(a: string, b: string): boolean {
+  if (!a || !b) return false
+  const A = Buffer.from(a)
+  const B = Buffer.from(b)
+  if (A.length !== B.length) return false
+  return timingSafeEqual(A, B)
+}
+
+// service_role/CRON_SECRET 검증 — 둘 중 하나 일치 시 통과
+function isAdminToken(token: string): boolean {
+  return (
+    safeEq(token, process.env.SUPABASE_SERVICE_ROLE_KEY ?? '') ||
+    safeEq(token, process.env.CRON_SECRET ?? '')
+  )
+}
+
 // ─── GET — 스크리닝 현황 ──────────────────────────────────
 
 export async function GET(req: NextRequest) {
   try {
     const supabase = getSupabaseAdmin()
 
-    // 관리자 검증 (Authorization: Bearer <service_role_key> or admin session)
+    // 관리자 검증 — dual path:
+    //   1) Authorization: Bearer <service_role_key>  (서버↔서버 · cron)
+    //   2) 쿠키 세션 + users.role IN ('ADMIN','SUPER_ADMIN')  (관리자 UI)
     const authHeader = req.headers.get('authorization') ?? ''
-    const isServiceRole = authHeader.replace('Bearer ', '') === process.env.SUPABASE_SERVICE_ROLE_KEY
+    const token = authHeader.replace('Bearer ', '')
+    const isServiceRole = isAdminToken(token)
 
     if (!isServiceRole) {
       // Cookie-based session: check admin role
@@ -36,7 +58,7 @@ export async function GET(req: NextRequest) {
         const supabase = await createClient()
         const { data: { user }, error: authErr } = await supabase.auth.getUser()
         if (authErr || !user) {
-          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+          return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } }, { status: 401 })
         }
         const { data: profile } = await supabase
           .from('users')
@@ -44,10 +66,10 @@ export async function GET(req: NextRequest) {
           .eq('id', user.id)
           .single()
         if (!profile || !['ADMIN', 'SUPER_ADMIN'].includes(profile.role ?? '')) {
-          return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+          return NextResponse.json({ error: { code: 'FORBIDDEN', message: '관리자 권한이 필요합니다.' } }, { status: 403 })
         }
       } catch {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: '인증 실패' } }, { status: 401 })
       }
     }
 
@@ -97,7 +119,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     console.error('[screen GET]', err)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } },
       { status: 500 }
     )
   }
@@ -142,17 +164,13 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = getSupabaseAdmin()
 
-    // ── 인증 검증 ─────────────────────────────────────────
+    // ── 인증 검증 (timing-safe) ────────────────────────────
+    //   service_role key 또는 cron secret 일치 시 통과
     const authHeader = req.headers.get('authorization') ?? ''
     const token = authHeader.replace('Bearer ', '')
 
-    // service_role key 또는 cron secret 허용
-    const isAuthorized =
-      token === process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      token === process.env.CRON_SECRET
-
-    if (!isAuthorized) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!isAdminToken(token)) {
+      return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: '인증 토큰이 유효하지 않습니다.' } }, { status: 401 })
     }
 
     // ── 요청 파싱 ─────────────────────────────────────────

@@ -47,7 +47,7 @@ export async function GET(
         .single()
 
       if (deal && deal.buyer_id !== userId && deal.seller_id !== userId) {
-        return NextResponse.json({ error: { message: '접근 권한이 없습니다' } }, { status: 403 })
+        return NextResponse.json({ error: { code: 'FORBIDDEN', message: '접근 권한이 없습니다' } }, { status: 403 })
       }
     }
 
@@ -106,7 +106,7 @@ export async function POST(
     // Auth required for upload
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      return NextResponse.json({ error: { message: '로그인이 필요합니다' } }, { status: 401 })
+      return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다' } }, { status: 401 })
     }
 
     // Verify user is a deal participant
@@ -117,7 +117,7 @@ export async function POST(
       .single()
 
     if (deal && deal.buyer_id !== user.id && deal.seller_id !== user.id) {
-      return NextResponse.json({ error: { message: '접근 권한이 없습니다' } }, { status: 403 })
+      return NextResponse.json({ error: { code: 'FORBIDDEN', message: '접근 권한이 없습니다' } }, { status: 403 })
     }
 
     const formData = await request.formData()
@@ -127,12 +127,12 @@ export async function POST(
     const tierRequired = (formData.get('tier_required') as string) || 'L0'
 
     if (!file) {
-      return NextResponse.json({ error: { message: '파일이 필요합니다' } }, { status: 400 })
+      return NextResponse.json({ error: { code: 'VALIDATION_ERROR', message: '파일이 필요합니다' } }, { status: 400 })
     }
 
     // File size limit: 50 MB
     if (file.size > 50 * 1024 * 1024) {
-      return NextResponse.json({ error: { message: '파일 크기는 50MB를 초과할 수 없습니다' } }, { status: 400 })
+      return NextResponse.json({ error: { code: 'FILE_TOO_LARGE', message: '파일 크기는 50MB를 초과할 수 없습니다' } }, { status: 400 })
     }
 
     // Upload to Supabase Storage
@@ -203,7 +203,7 @@ export async function POST(
   } catch (err) {
     logger.error('[exchange/deals/[id]/documents] POST error:', { error: err })
     return NextResponse.json(
-      { error: { message: '문서 업로드 중 오류가 발생했습니다' } },
+      { error: { code: 'INTERNAL_ERROR', message: '문서 업로드 중 오류가 발생했습니다' } },
       { status: 500 }
     )
   }

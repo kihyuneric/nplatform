@@ -71,14 +71,14 @@ export async function POST(
     // Basic validation
     if (!body.content || typeof body.content !== 'string' || body.content.trim().length === 0) {
       return NextResponse.json(
-        { error: { message: '메시지를 입력해주세요' } },
+        { error: { code: 'VALIDATION_ERROR', message: '메시지를 입력해주세요' } },
         { status: 400 }
       )
     }
 
     if (body.content.length > 5000) {
       return NextResponse.json(
-        { error: { message: '메시지는 5000자 이내로 입력해주세요' } },
+        { error: { code: 'VALIDATION_ERROR', message: '메시지는 5000자 이내로 입력해주세요' } },
         { status: 400 }
       )
     }
@@ -126,7 +126,7 @@ export async function POST(
   } catch (err) {
     logger.error("[deals/[id]/messages] POST error:", { error: err })
     return NextResponse.json(
-      { error: { message: "메시지 전송 중 오류가 발생했습니다." } },
+      { error: { code: 'INTERNAL_ERROR', message: "메시지 전송 중 오류가 발생했습니다." } },
       { status: 500 }
     )
   }
@@ -184,7 +184,7 @@ export async function PATCH(
   } catch (err) {
     logger.error("[deals/[id]/messages] PATCH error:", { error: err })
     return NextResponse.json(
-      { error: { message: "읽음 처리 중 오류가 발생했습니다." } },
+      { error: { code: 'INTERNAL_ERROR', message: "읽음 처리 중 오류가 발생했습니다." } },
       { status: 500 }
     )
   }

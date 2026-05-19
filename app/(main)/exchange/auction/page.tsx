@@ -851,57 +851,69 @@ export default function AuctionPage() {
       let nextMyBids: MyBid[] = []
       let nextAwards: AwardResult[] = []
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (bidsRes.status === "fulfilled" && (bidsRes.value as any).data?.length) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        nextBids = (bidsRes.value as any).data.map((r: any) => ({
-          id: String(r.id),
-          title: r.title ?? "NPL 채권",
-          institution: r.seller_profiles?.name ?? "—",
-          collateralType: r.collateral_type ?? "기타",
-          location: r.region ?? "—",
-          principal: r.principal_amount ?? 0,
-          minimumBid: r.minimum_bid ?? Math.round((r.principal_amount ?? 0) * 0.7),
-          aiEstimate: r.ai_estimate ?? Math.round((r.principal_amount ?? 0) * 0.78),
-          deadline: String(r.auction_deadline ?? "").slice(0, 10),
-          bidCount: r.bid_count ?? 0,
-          viewCount: r.view_count ?? 0,
-          riskGrade: r.risk_grade ?? "C",
-          status: r.auction_status ?? "진행중",
-        }))
-      }
+      // Supabase row 타입 — 동적 join 결과는 unknown 으로 캐치 후 narrow
+      type SupaRow = Record<string, unknown>
+      type SupaListResult<T = SupaRow> = { data: T[] | null }
+      const asListResult = (v: unknown): SupaListResult => (v ?? { data: null }) as SupaListResult
+      const num = (v: unknown, fallback = 0): number => typeof v === 'number' ? v : fallback
+      const str = (v: unknown, fallback = ""): string => v == null ? fallback : String(v)
+      const get = (obj: unknown, key: string): unknown => (obj && typeof obj === 'object') ? (obj as Record<string, unknown>)[key] : undefined
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (myBidsRes.status === "fulfilled" && ((myBidsRes.value as any).data ?? []).length) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        nextMyBids = ((myBidsRes.value as any).data ?? []).map((r: any) => ({
-          id: String(r.listing_id ?? r.id),
-          title: r.npl_listings?.title ?? "NPL 채권",
-          institution: r.npl_listings?.profiles?.name ?? "—",
-          bidAmount: r.bid_amount ?? 0,
-          principal: r.npl_listings?.principal_amount ?? 0,
-          bidDate: String(r.created_at ?? "").slice(0, 10),
-          status: r.status ?? "진행중",
-          resultDate: r.result_date ? String(r.result_date).slice(0, 10) : undefined,
-        }))
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (awardsRes.status === "fulfilled" && (awardsRes.value as any).data?.length) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        nextAwards = (awardsRes.value as any).data.map((r: any) => {
-          const principal = r.npl_listings?.principal_amount ?? 0
-          const winning = r.winning_bid ?? 0
+      if (bidsRes.status === "fulfilled") {
+        const rows = asListResult(bidsRes.value).data ?? []
+        nextBids = rows.map((r): BidItem => {
+          const principal = num(r.principal_amount)
           return {
-            id: String(r.id),
-            title: r.npl_listings?.title ?? "NPL 채권",
-            institution: r.npl_listings?.profiles?.name ?? "—",
+            id: str(r.id),
+            title: str(r.title, "NPL 채권"),
+            institution: str(get(r.seller_profiles, 'name'), "—"),
+            collateralType: str(r.collateral_type, "기타"),
+            location: str(r.region, "—"),
+            principal,
+            minimumBid: num(r.minimum_bid, Math.round(principal * 0.7)),
+            aiEstimate: num(r.ai_estimate, Math.round(principal * 0.78)),
+            deadline: str(r.auction_deadline).slice(0, 10),
+            bidCount: num(r.bid_count),
+            viewCount: num(r.view_count),
+            riskGrade: str(r.risk_grade, "C") as BidItem['riskGrade'],
+            status: str(r.auction_status, "진행중") as BidItem['status'],
+          }
+        })
+      }
+
+      if (myBidsRes.status === "fulfilled") {
+        const rows = asListResult(myBidsRes.value).data ?? []
+        nextMyBids = rows.map((r): MyBid => {
+          const listing = get(r, 'npl_listings')
+          return {
+            id: str(r.listing_id ?? r.id),
+            title: str(get(listing, 'title'), "NPL 채권"),
+            institution: str(get(get(listing, 'profiles'), 'name'), "—"),
+            bidAmount: num(r.bid_amount),
+            principal: num(get(listing, 'principal_amount')),
+            bidDate: str(r.created_at).slice(0, 10),
+            status: str(r.status, "진행중") as MyBid['status'],
+            resultDate: r.result_date ? str(r.result_date).slice(0, 10) : undefined,
+          }
+        })
+      }
+
+      if (awardsRes.status === "fulfilled") {
+        const rows = asListResult(awardsRes.value).data ?? []
+        nextAwards = rows.map((r): AwardResult => {
+          const listing = get(r, 'npl_listings')
+          const principal = num(get(listing, 'principal_amount'))
+          const winning = num(r.winning_bid)
+          return {
+            id: str(r.id),
+            title: str(get(listing, 'title'), "NPL 채권"),
+            institution: str(get(get(listing, 'profiles'), 'name'), "—"),
             principal,
             winningBid: winning,
             bidRate: principal > 0 ? Math.round((winning / principal) * 1000) / 10 : 0,
-            bidCount: r.bid_count ?? 0,
-            awardDate: String(r.awarded_at ?? "").slice(0, 10),
-            collateralType: r.npl_listings?.collateral_type ?? "기타",
+            bidCount: num(r.bid_count),
+            awardDate: str(r.awarded_at).slice(0, 10),
+            collateralType: str(get(listing, 'collateral_type'), "기타"),
           }
         })
       }

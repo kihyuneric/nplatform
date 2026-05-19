@@ -27,9 +27,11 @@ export interface FundMetrics {
   grossMomAsset: number
   /** Vehicle Take-Rate = Total Vehicle fees / NPL Net Profit (Vehicle 비용 효율) */
   vehicleTakeRate: number
-  /** XIRR (Newton's method) — 연환산 복리 */
+  /** XIRR (Newton's method) — 연환산 복리. 수렴 실패 시 0 (xirrConverged=false 확인 필요) */
   xirr: number
-  /** Hurdle Spread = XIRR − Hurdle Rate (LP 우선수익률 초과분) */
+  /** XIRR 수렴 여부 — false 면 xirr/hurdleSpread 신뢰도 낮음 (UI 경고 노출 권장) */
+  xirrConverged: boolean
+  /** Hurdle Spread = XIRR − Hurdle Rate (LP 우선수익률 초과분). xirrConverged=false 시 의미 없음 */
   hurdleSpread: number
 
   // ── Legacy (호환성 유지 · 모두 = DPI · closed fund) ──
@@ -204,9 +206,10 @@ export function computeFundMetrics(
     { dayOffset: days, amountUSD: lpDist, label: '배당' },
   ]
   const xirrRaw = computeXIRR(flows)
-  const xirr = Number.isFinite(xirrRaw) ? xirrRaw : 0
+  const xirrConverged = Number.isFinite(xirrRaw)
+  const xirr = xirrConverged ? xirrRaw : 0
 
-  // 5) Hurdle Spread (LP 초과 수익)
+  // 5) Hurdle Spread (LP 초과 수익) — xirrConverged=false 시 신뢰도 낮음
   const hurdleSpread = xirr - hurdleRate
 
   // Legacy alias (호환성 — closed fund 에선 모두 DPI 와 동일)
@@ -219,6 +222,7 @@ export function computeFundMetrics(
     grossMomAsset,
     vehicleTakeRate,
     xirr,
+    xirrConverged,
     hurdleSpread,
     tvpi,
     mom,

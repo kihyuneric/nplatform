@@ -8,7 +8,7 @@ export async function GET(_req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: { message: '인증이 필요합니다.' } }, { status: 401 })
+    if (!user) return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: '인증이 필요합니다.' } }, { status: 401 })
 
     const { data: partner, error } = await supabase
       .from('partners')
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: { message: '인증이 필요합니다.' } }, { status: 401 })
+    if (!user) return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: '인증이 필요합니다.' } }, { status: 401 })
 
     const body = await req.json()
 

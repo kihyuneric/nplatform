@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } }, { status: 401 })
   }
 
   // 관리자 역할 확인
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
   const role = (profile as { role?: string } | null)?.role
   if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
-    return NextResponse.json({ error: 'Forbidden — Admin only' }, { status: 403 })
+    return NextResponse.json({ error: { code: 'FORBIDDEN', message: '관리자 권한이 필요합니다.' } }, { status: 403 })
   }
 
   // 배치 사이즈
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey) {
-    return NextResponse.json({ error: 'Service key not configured' }, { status: 500 })
+    return NextResponse.json({ error: { code: 'SERVICE_KEY_MISSING', message: 'Service key not configured' } }, { status: 500 })
   }
 
   try {

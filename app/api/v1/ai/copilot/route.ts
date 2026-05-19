@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
 import { askCopilot, streamCopilot, type CopilotRequest } from "@/lib/ai/copilot"
 
 /**
@@ -12,19 +13,25 @@ import { askCopilot, streamCopilot, type CopilotRequest } from "@/lib/ai/copilot
  * stream=true 시 Server-Sent Events 형식으로 실시간 응답
  * stream=false 시 (기본) 일반 JSON 응답
  */
+
+const CopilotBodySchema = z.object({
+  query: z.string().trim().min(1, "query 필수 (질문 텍스트)").max(4000, "질문은 4000자 이내"),
+  context: z.record(z.string(), z.unknown()).optional(),
+  stream: z.boolean().optional(),
+})
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const { query, context, stream = false } = body as CopilotRequest & { stream?: boolean }
-
-    if (!query || typeof query !== "string" || query.trim().length === 0) {
+    const raw = await req.json().catch(() => ({}))
+    const parsed = CopilotBodySchema.safeParse(raw)
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "query 필수 (질문 텍스트)" },
+        { error: { code: 'VALIDATION_ERROR', message: parsed.error.issues[0]?.message ?? '요청이 유효하지 않습니다.' } },
         { status: 400 },
       )
     }
-
-    const copilotReq: CopilotRequest = { query: query.trim(), context }
+    const { query, context, stream = false } = parsed.data
+    const copilotReq: CopilotRequest = { query, context: context as CopilotRequest['context'] }
 
     // ─── Streaming 모드 ─────────────────────────────────
     if (stream) {
@@ -66,10 +73,10 @@ export async function POST(req: NextRequest) {
       ok: true,
       data: answer,
     })
-  } catch (err: any) {
-    console.error("[Copilot API] Error:", err)
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Copilot 오류"
     return NextResponse.json(
-      { error: err.message ?? "Copilot 오류" },
+      { error: { code: 'INTERNAL_ERROR', message } },
       { status: 500 },
     )
   }

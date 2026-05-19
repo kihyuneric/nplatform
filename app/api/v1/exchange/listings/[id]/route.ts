@@ -38,7 +38,7 @@ export async function GET(
 
     if (!data) {
       return NextResponse.json(
-        { error: { message: '매물을 찾을 수 없습니다' } },
+        { error: { code: 'NOT_FOUND', message: '매물을 찾을 수 없습니다' } },
         { status: 404 }
       )
     }
@@ -62,7 +62,7 @@ export async function GET(
   } catch (err) {
     logger.error("[exchange/listings/[id]] GET error:", { error: err })
     return NextResponse.json(
-      { error: { message: "매물 상세 정보를 불러오는 중 오류가 발생했습니다." } },
+      { error: { code: 'INTERNAL_ERROR', message: "매물 상세 정보를 불러오는 중 오류가 발생했습니다." } },
       { status: 500 }
     )
   }
@@ -111,21 +111,21 @@ export async function PATCH(
       const user = await getAuthUser()
       if (!user) {
         return NextResponse.json(
-          { error: { message: '로그인이 필요합니다.' } },
+          { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } },
           { status: 401 }
         )
       }
       const existing = await getById('deal_listings', id)
       if (!existing.data) {
         return NextResponse.json(
-          { error: { message: '매물을 찾을 수 없습니다.' } },
+          { error: { code: 'NOT_FOUND', message: '매물을 찾을 수 없습니다.' } },
           { status: 404 }
         )
       }
       const ownerId = (existing.data as Record<string, unknown>).seller_id
       if (ownerId && ownerId !== user.id) {
         return NextResponse.json(
-          { error: { message: '본인의 매물만 수정할 수 있습니다.' } },
+          { error: { code: 'FORBIDDEN', message: '본인의 매물만 수정할 수 있습니다.' } },
           { status: 403 }
         )
       }
@@ -178,7 +178,7 @@ export async function PATCH(
   } catch (err) {
     logger.error("[exchange/listings/[id]] PATCH error:", { error: err })
     return NextResponse.json(
-      { error: { message: (err instanceof Error ? err.message : 'Unknown error') || '수정 실패' } },
+      { error: { code: 'INTERNAL_ERROR', message: (err instanceof Error ? err.message : 'Unknown error') || '수정 실패' } },
       { status: 500 }
     )
   }
@@ -196,14 +196,14 @@ export async function DELETE(
 
     if (!data) {
       return NextResponse.json(
-        { error: { message: '매물을 찾을 수 없습니다.' } },
+        { error: { code: 'NOT_FOUND', message: '매물을 찾을 수 없습니다.' } },
         { status: 404 }
       )
     }
 
     if ((data as Record<string, unknown>).status === 'CANCELLED') {
       return NextResponse.json(
-        { error: { message: '이미 취소된 매물입니다.' } },
+        { error: { code: 'INVALID_STATE', message: '이미 취소된 매물입니다.' } },
         { status: 400 }
       )
     }

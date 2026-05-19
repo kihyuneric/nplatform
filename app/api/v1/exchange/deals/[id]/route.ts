@@ -41,7 +41,7 @@ export async function GET(
 
     if (!data) {
       return NextResponse.json(
-        { error: { message: '거래를 찾을 수 없습니다' } },
+        { error: { code: 'NOT_FOUND', message: '거래를 찾을 수 없습니다' } },
         { status: 404 }
       )
     }
@@ -50,7 +50,7 @@ export async function GET(
   } catch (err) {
     logger.error("[exchange/deals/[id]] GET error:", { error: err })
     return NextResponse.json(
-      { error: { message: "딜 상세를 불러오는 중 오류가 발생했습니다." } },
+      { error: { code: 'INTERNAL_ERROR', message: "딜 상세를 불러오는 중 오류가 발생했습니다." } },
       { status: 500 }
     )
   }
@@ -71,7 +71,7 @@ export async function PATCH(
 
     if (!deal) {
       return NextResponse.json(
-        { error: { message: '거래를 찾을 수 없습니다' } },
+        { error: { code: 'NOT_FOUND', message: '거래를 찾을 수 없습니다' } },
         { status: 404 }
       )
     }
@@ -84,7 +84,7 @@ export async function PATCH(
       const normalizedStage = STAGE_ALIASES[requestedStage] || requestedStage
       if (!VALID_STAGES.includes(normalizedStage as DealStage)) {
         return NextResponse.json(
-          { error: { message: `유효하지 않은 단계입니다: ${requestedStage}` } },
+          { error: { code: 'VALIDATION_ERROR', message: `유효하지 않은 단계입니다: ${requestedStage}` } },
           { status: 400 }
         )
       }
@@ -187,7 +187,7 @@ export async function PATCH(
   } catch (err) {
     logger.error("[exchange/deals/[id]] PATCH error:", { error: err })
     return NextResponse.json(
-      { error: { message: (err instanceof Error ? err.message : 'Unknown error') || "딜 수정 중 오류가 발생했습니다." } },
+      { error: { code: 'INTERNAL_ERROR', message: (err instanceof Error ? err.message : 'Unknown error') || "딜 수정 중 오류가 발생했습니다." } },
       { status: 500 }
     )
   }
