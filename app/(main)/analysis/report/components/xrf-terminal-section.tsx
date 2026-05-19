@@ -434,8 +434,13 @@ export default function XrfTerminalSection({
     const fmtCcyDeltaWithDollar = (usd: number) =>
       useKRW ? `+ ${fmtKRW(usd * fx, { with원: true })}` : `+ ${fmtUSD(usd, { withDollar: true })}`
 
-    /* DPU 단위(USD 환경: $1,000 / KRW 환경: 100만원) */
-    const dpuUnitUsd = 1000
+    /* DPU 단위 — 언어별 native 단위:
+       · KRW(ko): 100만원 base
+       · USD(en/ja): $1,000 base
+       ⚠ KRW 모드에서 $1,000 × fx 로 변환하면 130만원이 되어 라벨(100만원)과 불일치.
+       그래서 각 모드에서 native 단위로 ROI 적용 — 100만 × (1+ROI) / $1,000 × (1+ROI) */
+    const dpuUnitKrw = 1_000_000       // 100만원
+    const dpuUnitUsd = 1000            // $1,000
     const dpuUnitDisplay = useKRW ? "100만원" : "$1,000"
 
     // ── 기본 메타 ────────────────────────────────────────────────
@@ -472,8 +477,11 @@ export default function XrfTerminalSection({
     // ── KPI ────────────────────────────────────────────────────
     const displayRoi = safe(r.displayRoi)
     const displayIrr = safe(r.displayIrrYr)
-    const dpuReturnUsd = dpuUnitUsd * (1 + displayRoi)
-    const dpuProfitUsd = dpuReturnUsd - dpuUnitUsd
+    // DPU 회수액 — 언어별 native 단위에 ROI 적용 (USD 변환 X)
+    const dpuReturnKrw = dpuUnitKrw * (1 + displayRoi)        // 100만원 × (1+ROI)
+    const dpuProfitKrw = dpuReturnKrw - dpuUnitKrw            // 100만원 × ROI
+    const dpuReturnUsd = dpuUnitUsd * (1 + displayRoi)        // $1,000 × (1+ROI)
+    const dpuProfitUsd = dpuReturnUsd - dpuUnitUsd            // $1,000 × ROI
     const durationDays = profitability?.investment.holdingPeriodDays ?? Math.round(r.durationYr * 365)
 
     const aiScore = summary.verdictScore ?? gradeToScore(summary.riskGrade)
@@ -559,13 +567,13 @@ export default function XrfTerminalSection({
       status,
       caseNo: caseNo ?? "01",
       pageNo: pageNo ?? "—",
-      // KPI raw
+      // KPI raw — KRW 모드는 100만원 베이스, USD 모드는 $1,000 베이스
       dpuUnitDisplay,
       dpuReturnDisplay: useKRW
-        ? fmtKRW(dpuReturnUsd * fx)
+        ? fmtKRW(dpuReturnKrw)
         : `$${dpuReturnUsd.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
       dpuProfitDisplay: useKRW
-        ? `+ ${fmtKRW(dpuProfitUsd * fx, { with원: true })} ${L.profitWord}`
+        ? `+ ${fmtKRW(dpuProfitKrw, { with원: true })} ${L.profitWord}`
         : `+ ${fmtUSD(dpuProfitUsd, { withDollar: true })} ${L.profitWord}`,
       lpRoiPct: safe(displayRoi * 100),
       lpIrrPct: safe(displayIrr * 100),
@@ -591,9 +599,9 @@ export default function XrfTerminalSection({
       carryPct,
       lpReceiptText: fmtCcy(lpReceiptUsd),
       lpDeltaText: fmtCcyDeltaWithDollar(lpDeltaUsd),
-      // Simulator
+      // Simulator profit (시뮬레이터 내부 PROFIT 라인)
       dpuProfitInline: useKRW
-        ? fmtKRW(dpuProfitUsd * fx, { with원: true })
+        ? fmtKRW(dpuProfitKrw, { with원: true })
         : fmtUSD(dpuProfitUsd, { withDollar: true }),
       tier: r.tier,
       tierNote,
