@@ -333,7 +333,7 @@ export default function NewNplAnalysisPage() {
             </div>
 
             {/* 분석 메타 (통합 폼에 없는 필드) */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className={DS.input.label}>채권 번호</label>
                 <input
