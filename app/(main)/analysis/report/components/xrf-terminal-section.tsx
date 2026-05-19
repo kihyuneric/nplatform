@@ -78,6 +78,7 @@ const DICT: Record<Lang, {
   pTotalRecovered: string
   pOperating: string
   pMgmt: (pct: number) => string
+  pSetup: (pct: number) => string
   pCarry: (pct: number) => string
   pLpReceipt: string
   // Bottom strip
@@ -137,13 +138,14 @@ const DICT: Record<Lang, {
     pLpInvested: "투자금 (LP)",
     pTotalRecovered: "총 회수금",
     pOperating: "(-) 운영비용",
-    pMgmt: (pct) => `(-) 관리보수 ${pct.toFixed(0)}%`,
+    pMgmt: (pct) => `(-) 관리보수 ${pct.toFixed(0)}% (연)`,
+    pSetup: (pct) => `(-) 셋업비 ${pct.toFixed(0)}% (1회)`,
     pCarry: (pct) => `(-) 성과보수 ${pct.toFixed(0)}%`,
     pLpReceipt: "LP 수령액",
     bInvested: "투자금",
     bRecovered: "총 회수금",
     bOperating: "운영비용",
-    bXrfFees: "XRF 보수 (관리+성과)",
+    bXrfFees: "XRF 보수 (관리+셋업+성과)",
     bLpReceived: "LP 수령액",
     collateral: "담보",
     riskFactors: "리스크 요인",
@@ -199,13 +201,14 @@ const DICT: Record<Lang, {
     pLpInvested: "LP invested",
     pTotalRecovered: "Total recovered",
     pOperating: "(-) Operating fees",
-    pMgmt: (pct) => `(-) Mgmt fee ${pct.toFixed(0)}%`,
+    pMgmt: (pct) => `(-) Mgmt fee ${pct.toFixed(0)}% p.a.`,
+    pSetup: (pct) => `(-) Setup ${pct.toFixed(0)}% (one-time)`,
     pCarry: (pct) => `(-) Carry ${pct.toFixed(0)}%`,
     pLpReceipt: "LP received",
     bInvested: "INVESTED",
     bRecovered: "RECOVERED",
     bOperating: "OPERATING",
-    bXrfFees: "XRF FEES (mgmt+carry)",
+    bXrfFees: "XRF FEES (mgmt+setup+carry)",
     bLpReceived: "LP RECEIVED",
     collateral: "COLLATERAL",
     riskFactors: "RISK FACTORS",
@@ -261,13 +264,14 @@ const DICT: Record<Lang, {
     pLpInvested: "LP 投資額",
     pTotalRecovered: "総回収額",
     pOperating: "(-) 運営費用",
-    pMgmt: (pct) => `(-) 管理報酬 ${pct.toFixed(0)}%`,
+    pMgmt: (pct) => `(-) 管理報酬 ${pct.toFixed(0)}% (年率)`,
+    pSetup: (pct) => `(-) セットアップ ${pct.toFixed(0)}% (一回)`,
     pCarry: (pct) => `(-) 成果報酬 ${pct.toFixed(0)}%`,
     pLpReceipt: "LP 受領額",
     bInvested: "投資額",
     bRecovered: "総回収額",
     bOperating: "運営費用",
-    bXrfFees: "XRF 報酬 (管理+成果)",
+    bXrfFees: "XRF 報酬 (管理+セットアップ+成果)",
     bLpReceived: "LP 受領額",
     collateral: "担保",
     riskFactors: "リスク要因",
@@ -298,8 +302,14 @@ const DICT: Record<Lang, {
 
 /* ─── Currency formatters ────────────────────────────────────────────── */
 
+/** Finite number guard — NaN/Infinity 방어 */
+function safe(v: number): number {
+  return Number.isFinite(v) ? v : 0
+}
+
 /** USD 표기: "USD 1,253,130" */
 function fmtUSD(v: number, opts?: { withDollar?: boolean }): string {
+  if (!Number.isFinite(v)) return opts?.withDollar ? "—" : "USD —"
   const sign = v < 0 ? "-" : ""
   const abs = Math.abs(v)
   const s = abs.toLocaleString("en-US", { maximumFractionDigits: 0 })
@@ -308,14 +318,17 @@ function fmtUSD(v: number, opts?: { withDollar?: boolean }): string {
 
 /** USD k 단위 표기: "$510K" */
 function fmtUSDk(v: number): string {
+  if (!Number.isFinite(v)) return "—"
   const sign = v < 0 ? "-" : ""
   const abs = Math.abs(v)
   if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1)}M`
-  return `${sign}$${Math.round(abs / 1000).toLocaleString("en-US")}K`
+  if (abs >= 1_000) return `${sign}$${Math.round(abs / 1000).toLocaleString("en-US")}K`
+  return `${sign}$${Math.round(abs).toLocaleString("en-US")}`
 }
 
 /** KRW 표기: "12.5억" / "1,234만" / "1,234원" */
 function fmtKRW(v: number, opts?: { with원?: boolean }): string {
+  if (!Number.isFinite(v)) return "—"
   const sign = v < 0 ? "-" : ""
   const abs = Math.abs(v)
   if (abs >= 100_000_000) return `${sign}${(abs / 100_000_000).toFixed(2)}억`
@@ -326,6 +339,7 @@ function fmtKRW(v: number, opts?: { with원?: boolean }): string {
 
 /** KRW k 단위 (1억 이상) */
 function fmtKRWBig(v: number): string {
+  if (!Number.isFinite(v)) return "—"
   const sign = v < 0 ? "-" : ""
   const abs = Math.abs(v)
   if (abs >= 100_000_000) return `${sign}${(abs / 100_000_000).toFixed(1)}억`
@@ -333,8 +347,9 @@ function fmtKRWBig(v: number): string {
   return `${sign}${Math.round(abs).toLocaleString("ko-KR")}원`
 }
 
-/** % */
+/** % — NaN/Infinity 방어 + 부호 표시 */
 function fmtPct(v: number, digits = 1): string {
+  if (!Number.isFinite(v)) return "—"
   return `${v >= 0 ? "+" : ""}${v.toFixed(digits)}%`
 }
 
@@ -455,8 +470,8 @@ export default function XrfTerminalSection({
     const status = deriveStatus(new Date(), distribution, winBid)
 
     // ── KPI ────────────────────────────────────────────────────
-    const displayRoi = r.displayRoi
-    const displayIrr = r.displayIrrYr
+    const displayRoi = safe(r.displayRoi)
+    const displayIrr = safe(r.displayIrrYr)
     const dpuReturnUsd = dpuUnitUsd * (1 + displayRoi)
     const dpuProfitUsd = dpuReturnUsd - dpuUnitUsd
     const durationDays = profitability?.investment.holdingPeriodDays ?? Math.round(r.durationYr * 365)
@@ -465,21 +480,34 @@ export default function XrfTerminalSection({
     const riskMeta = scoreToRiskMeta(aiScore, L.riskLabels)
 
     // ── Deal Parameters · P&L (USD 기준 계산 → 표시 변환) ──────
-    const purchasePriceUsd = r.nplPurchaseUSD
-    const appraisalUsd = (input.appraisalValue || 0) / fx
-    const lpInvestedUsd = r.displayPoolUSD
-    const lpReceiptUsd = r.lpCapitalUSD + r.lpNetProfitUSD
-    const operatingUsd = r.fees.platformTotalUSD + r.fees.servicingUSD
-    const mgmtFeeUsd = r.fees.xrfMgmtUSD + r.fees.xrfSetupUSD
-    const carryFeeUsd = r.fees.xrfCarryUSD
-    const totalRecoveredUsd = lpReceiptUsd + operatingUsd + mgmtFeeUsd + carryFeeUsd
-    const lpDeltaUsd = r.lpNetProfitUSD
+    // 사용자 정책 (2026-05-19 일관성 감사):
+    //   - 매입가/감정가/투자금/순이익 모두 computeXrfValuation 의 USD 변환값 사용
+    //   - 운영비용 = KOF Platform (AI/Sourcing/KR Margin) + Servicing
+    //   - 관리보수 = XRF Mgmt 1%/yr × 365cap
+    //   - 셋업비 = XRF Setup 1% (1회) — 별도 행 표시
+    //   - 성과보수 = XRF Carry (tier별 누진)
+    //   - 총 회수금 = totalEquity + nplNetProfit (LP 측 분배 가능 총액)
+    const purchasePriceUsd = safe(r.nplPurchaseUSD)
+    const appraisalUsd = safe((input.appraisalValue || 0) / fx)
+    const lpInvestedUsd = safe(r.displayPoolUSD)
+    const lpCapitalUsd = safe(r.lpCapitalUSD)
+    const lpNetProfitUsd = safe(r.lpNetProfitUSD)
+    const lpReceiptUsd = lpCapitalUsd + lpNetProfitUsd
+    const operatingUsd = safe(r.fees.platformTotalUSD) + safe(r.fees.servicingUSD)
+    const mgmtFeeUsd = safe(r.fees.xrfMgmtUSD)       // 분리: Mgmt 1%/yr 만
+    const setupFeeUsd = safe(r.fees.xrfSetupUSD)     // 분리: Setup 1% (1회)
+    const carryFeeUsd = safe(r.fees.xrfCarryUSD)
+    // 총 회수금 = LP capital + LP net profit + (모든 vehicle fees) = totalEquity + nplNetProfit
+    //          = LP가 받는 돈 + 모든 service fee 의 총 분배 합
+    const totalRecoveredUsd = lpReceiptUsd + operatingUsd + mgmtFeeUsd + setupFeeUsd + carryFeeUsd
+    const lpDeltaUsd = lpNetProfitUsd
     const expectedBidRatioPct = profitability?.valuation.expectedBidRatio
       ? profitability.valuation.expectedBidRatio * 100
       : 0
 
     // ── Fee % (tier 별) ────────────────────────────────────────
-    const mgmtPct = 1.0
+    const mgmtPct = 1.0    // %/yr flat (모든 tier)
+    const setupPct = 1.0   // % (1회 · 모든 tier)
     const carryPct =
       r.tier === "BASE" ? 15
       : r.tier === "CONSERVATIVE" ? 10
@@ -539,8 +567,8 @@ export default function XrfTerminalSection({
       dpuProfitDisplay: useKRW
         ? `+ ${fmtKRW(dpuProfitUsd * fx, { with원: true })} ${L.profitWord}`
         : `+ ${fmtUSD(dpuProfitUsd, { withDollar: true })} ${L.profitWord}`,
-      lpRoiPct: displayRoi * 100,
-      lpIrrPct: displayIrr * 100,
+      lpRoiPct: safe(displayRoi * 100),
+      lpIrrPct: safe(displayIrr * 100),
       durationDays,
       aiScore,
       riskMeta,
@@ -557,6 +585,8 @@ export default function XrfTerminalSection({
       operatingText: fmtCcy(operatingUsd),
       mgmtFeeText: fmtCcy(mgmtFeeUsd),
       mgmtPct,
+      setupFeeText: fmtCcy(setupFeeUsd),
+      setupPct,
       carryFeeText: fmtCcy(carryFeeUsd),
       carryPct,
       lpReceiptText: fmtCcy(lpReceiptUsd),
@@ -580,7 +610,7 @@ export default function XrfTerminalSection({
         { label: L.bInvested,   value: fmtCcyShort(lpInvestedUsd) },
         { label: L.bRecovered,  value: fmtCcyShort(totalRecoveredUsd) },
         { label: L.bOperating,  value: fmtCcyShort(-operatingUsd), neg: true },
-        { label: L.bXrfFees,    value: fmtCcyShort(-(mgmtFeeUsd + carryFeeUsd)), neg: true },
+        { label: L.bXrfFees,    value: fmtCcyShort(-(mgmtFeeUsd + setupFeeUsd + carryFeeUsd)), neg: true },
         { label: L.bLpReceived, value: fmtCcyShort(lpReceiptUsd) },
       ],
       // Footer
@@ -801,6 +831,7 @@ export default function XrfTerminalSection({
               { label: L.pTotalRecovered,        value: data.totalRecoveredText },
               { label: L.pOperating,             value: data.operatingText, minus: true },
               { label: L.pMgmt(data.mgmtPct),    value: data.mgmtFeeText, minus: true },
+              { label: L.pSetup(data.setupPct),  value: data.setupFeeText, minus: true },
               { label: L.pCarry(data.carryPct),  value: data.carryFeeText, minus: true },
             ].map((p, i, arr) => (
               <div
