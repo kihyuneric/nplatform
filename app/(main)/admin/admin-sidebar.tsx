@@ -24,7 +24,7 @@ import {
   LayoutDashboard, Users, Building2, FileText, Settings, BarChart3,
   CreditCard, Megaphone, Server, Cable,
   ChevronLeft, Menu, BrainCircuit, ShieldCheck, Eye, Landmark, FileSignature, Tag,
-  Workflow, TrendingUp, Target, ShoppingCart, ChevronRight, ChevronDown,
+  Workflow, TrendingUp, Target, ShoppingCart, ChevronRight, ChevronDown, Gauge,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -109,6 +109,7 @@ const ADMIN_ZONES: AdminZone[] = [
       { href: "/admin/integrations", label: "외부 연동",    icon: Cable },
       { href: "/admin/system",       label: "시스템 모니터", icon: Server },
       { href: "/admin/ml",           label: "AI·ML",        icon: BrainCircuit },
+      { href: "/admin/avm",          label: "AVM 검증",     icon: Gauge },
       { href: "/admin/pipeline",     label: "데이터 파이프라인", icon: Workflow },
     ],
   },

@@ -48,7 +48,8 @@ export async function POST(req: NextRequest) {
     })
 
     // Set cookies
-    response.cookies.set("dev_user_active", "true", {
+    // '1' — lib/auth/get-user.ts readDevBypass()가 기대하는 값 (로그인 페이지와 동일)
+    response.cookies.set("dev_user_active", "1", {
       path: "/",
       maxAge: 60 * 60 * 24, // 24 hours
       httpOnly: false,
