@@ -1,13 +1,14 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 엔플랫폼 테스트 시드 데이터 (2026-08-18)
 --
--- 실행 순서:
---   1) supabase/migrations/20260817_listing_marketing.sql  (테이블 생성 — 미실행 시 먼저)
---   2) 이 파일 전체를 Supabase SQL Editor 에 붙여넣고 Run
---
--- 각 섹션은 DO 블록으로 감싸 개별 실패해도 나머지는 계속 실행됩니다.
--- 참고: users 시드는 회원 목록/승인 화면 테스트용입니다. 실제 로그인 계정은
---       auth.users 에 없으므로 로그인 테스트는 회원가입 화면으로 진행해주세요.
+-- ✅ 2026-08-18 프로덕션 DB에 주입 완료 (MCP 직접 실행) — 이 파일은 기록/재실행 참고용.
+--    실행 시 실제 스키마에 맞춘 버전이 적용됨:
+--    · users.role 은 enum(user_role) — 'BUYER' 값을 ALTER TYPE 으로 추가함
+--    · npl_listings 실컬럼: land_area/building_area/loan_principal/setup_amount/
+--      proposed_sale_price/creditor_institution, collateral_type enum(APARTMENT/
+--      COMMERCIAL/LAND/FACTORY/OFFICE/VILLA/OTHER), seller_id NOT NULL
+--    · 20260817_listing_marketing.sql 마이그레이션도 함께 적용 완료
+-- 참고: users 시드는 회원 목록/승인 화면 테스트용 — auth 계정이 아니라 로그인 불가.
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- ── 1. NPL 매물 10건 (고정 UUID — listing_marketing 연동용) ──────────────────

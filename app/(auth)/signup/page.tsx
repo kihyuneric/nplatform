@@ -71,10 +71,6 @@ export default function SignupPage() {
     businessNo: '',       // 사업자등록번호 — 매각 · 매입(법인)
     buyerKind: '',        // 매입 세부유형: CORP(법인) / INDIVIDUAL(개인자산가)
     investScale: '',      // 개인자산가 — (선택) 투자 가능 규모
-    demandRegions: '',    // 가입 중 매입조건 — 지역 (쉼표 구분)
-    demandTypes: '',      // 가입 중 매입조건 — 담보유형 대분류
-    demandAmountMin: '',  // 금액대 (억)
-    demandAmountMax: '',
   })
   const [businessFile, setBusinessFile] = useState<File | null>(null)
   const [cardFile, setCardFile] = useState<File | null>(null)
@@ -148,30 +144,9 @@ export default function SignupPage() {
             business_file_name: businessFile?.name ?? null,
             card_file_name: cardFile?.name ?? null,
             marketing_opt_in: agreeMarketing,
-            // 가입 마지막 스텝 매입조건 — 승인 즉시 매칭 시작 (세션 없으면 첫 로그인 시 등록용 보관)
-            signup_demand: form.role === 'BUYER' && (form.demandRegions || form.demandTypes || form.demandAmountMin || form.demandAmountMax)
-              ? { regions: form.demandRegions, types: form.demandTypes, amount_min: form.demandAmountMin, amount_max: form.demandAmountMax }
-              : null,
           },
         },
       })
-
-      // 가입 직후 세션이 있으면 매입조건 즉시 등록 (실패해도 metadata 보관분으로 대체)
-      if (form.role === 'BUYER' && data?.session && (form.demandRegions || form.demandTypes)) {
-        fetch('/api/v1/exchange/demands', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            demand_type: 'npl',
-            collateral_types: form.demandTypes.split(',').map(s => s.trim()).filter(Boolean),
-            regions: form.demandRegions.split(',').map(s => s.trim()).filter(Boolean),
-            min_amount: form.demandAmountMin ? Number(form.demandAmountMin) : null,
-            max_amount: form.demandAmountMax ? Number(form.demandAmountMax) : null,
-            priority: 1,
-            memo: '[가입 시 등록]',
-          }),
-        }).catch(() => {})
-      }
 
       if (authError) {
         setError(authError.message ?? '가입 처리 중 오류가 발생했습니다.')
@@ -179,9 +154,13 @@ export default function SignupPage() {
         return
       }
 
-      // 승인제 — 가입 신청 후 관리자 승인 대기 화면으로 이동
+      // 가입 마지막 스텝 — 매입 회원은 기존 서비스와 동일한 매입조건 등록 화면으로 (폼 통일 · 2026-08-18)
       if (data.user) {
-        router.push('/pending-approval')
+        if (form.role === 'BUYER' && data.session) {
+          router.push('/exchange/demands/new?from=signup')
+        } else {
+          router.push('/pending-approval')
+        }
       } else {
         // 이메일 확인이 필요한 경우
         router.push('/login?verify=1')
@@ -748,32 +727,13 @@ export default function SignupPage() {
                 <strong style={{ color: INK }}>승인제 무료 가입</strong> — 가입 신청 후 관리자 승인(1~2 영업일)이 완료되어야 계정이 활성화됩니다. 첨부하신 명함·사업자등록증은 승인 심사에 사용되며, 가입과 이용은 무료입니다.
               </div>
 
-              {/* ── D2 · 매입 회원 마지막 스텝 — 매입조건 등록 (승인 즉시 매칭 시작) ── */}
+              {/* ── D2 · 매입 회원 마지막 스텝 — 가입 완료 후 기존 매입조건 등록 화면으로 이동 (폼 통일) ── */}
               {form.role === 'BUYER' && (
-                <div style={{ borderTop: `2px solid ${ELECTRIC}`, border: `1px solid ${BORDER}`, padding: '16px 16px 14px', background: PAPER }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 4 }}>매입조건 등록 — 조건에 맞는 NPL 딜만 자동매칭됩니다</div>
-                  <div style={{ fontSize: 11, color: INK_MUTED, marginBottom: 12 }}>가입 승인 즉시 매칭이 시작됩니다. 가입 후 마이페이지에서 수정·추가할 수 있습니다.</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>희망 지역</label>
-                      <input value={form.demandRegions} onChange={(e) => update('demandRegions', e.target.value)}
-                        placeholder="예: 서울, 경기 (쉼표로 구분 · 전국이면 '전국')" style={inputStyle} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>담보유형</label>
-                      <input value={form.demandTypes} onChange={(e) => update('demandTypes', e.target.value)}
-                        placeholder="예: 아파트, 근린상가, 토지 (쉼표로 구분)" style={inputStyle} />
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>금액대 최소 (억)</label>
-                        <input type="number" min={0} value={form.demandAmountMin} onChange={(e) => update('demandAmountMin', e.target.value)} placeholder="예: 10" style={inputStyle} />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>금액대 최대 (억)</label>
-                        <input type="number" min={0} value={form.demandAmountMax} onChange={(e) => update('demandAmountMax', e.target.value)} placeholder="예: 200" style={inputStyle} />
-                      </div>
-                    </div>
+                <div style={{ borderTop: `2px solid ${ELECTRIC}`, border: `1px solid ${BORDER}`, padding: '14px 16px', background: PAPER }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 4 }}>다음 단계 — 매입조건 등록</div>
+                  <div style={{ fontSize: 11, color: INK_MUTED, lineHeight: 1.6 }}>
+                    가입 완료 후 <b style={{ color: INK }}>매입조건 등록</b> 화면으로 이동합니다. 등록하신 조건에 매칭되는 NPL 딜만 선별 공개되며,
+                    조건은 마이페이지 &gt; 매입 조건에서 언제든 수정할 수 있습니다.
                   </div>
                 </div>
               )}
