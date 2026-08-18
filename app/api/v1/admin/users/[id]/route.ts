@@ -55,7 +55,7 @@ export async function PATCH(
     if (approvalStatus === 'APPROVED') {
       updateData.kyc_status = 'APPROVED'
       updateData.is_verified = true
-      if (investorTier) updateData.investor_tier = investorTier
+      // investor_tier 는 서비스 범위 밖 (컬럼 없음) — 무시
       if ((target as Record<string, unknown>).subscription_tier === 'FREE') {
         updateData.subscription_tier = 'BASIC'
       }
@@ -129,9 +129,9 @@ export async function PATCH(
         type: 'KYC',
         title: isApproved ? 'KYC 심사가 승인되었습니다 ✅' : 'KYC 심사 결과가 도착했습니다',
         body: isApproved
-          ? `투자자 등급이 ${investorTier ?? 'L1'}로 업그레이드되었습니다.`
-          : '심사 결과를 확인하고 재신청해 주세요.',
-        link: '/my/kyc',
+          ? '가입 승인이 완료되었습니다. NPL 자동매칭과 마이페이지를 이용하실 수 있습니다.'
+          : '승인 심사 결과를 확인해주세요. 자세한 내용은 1:1 문의로 안내드립니다.',
+        link: '/my',
         is_read: false,
         created_at: new Date().toISOString(),
       })
@@ -143,7 +143,7 @@ export async function PATCH(
           ...kycStatusEmail({
             name: (target.name as string) ?? '고객',
             status: isApproved ? 'APPROVED' : 'REJECTED',
-            tier: isApproved ? (investorTier ?? 'L1') : undefined,
+            tier: undefined,   // 투자자 등급 표기 제거 (서비스 범위 밖)
           }),
         }).catch((e) => console.error('[kyc email]', e))
       }

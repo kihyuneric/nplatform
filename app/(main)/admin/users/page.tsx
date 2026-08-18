@@ -183,7 +183,8 @@ async function adminAction(userId: string, action: string, value?: string): Prom
 
     switch (action) {
       case 'APPROVE_KYC':
-        body = { approval_status: 'APPROVED', investor_tier: 'L1' }
+        // 투자자 티어는 서비스에 없음 — 승인 상태만 전송 (없는 컬럼 update 로 500 나던 버그)
+        body = { approval_status: 'APPROVED' }
         break
       case 'REJECT_KYC':
         body = { approval_status: 'REJECTED' }

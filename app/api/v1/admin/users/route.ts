@@ -36,8 +36,18 @@ export async function GET(request: NextRequest) {
       .from('users')
       .select('id, email, name, role, roles, buyer_kind, admin_note, company_name, phone, is_verified, kyc_status, subscription_tier, created_at, last_login_at, login_count, credit_balance, card_file_name, card_file_url, business_file_name, business_file_url', { count: 'exact' })
 
-    if (role && role !== 'ALL') query = query.eq('role', role)
-    if (kyc && kyc !== 'ALL') query = query.eq('kyc_status', kyc)
+    // 운영진(관리자·파트너)은 회원 관리 목록에서 제외 — 회원은 매각/매입뿐 (운영설계서 §2)
+    query = query.not('role', 'in', '("SUPER_ADMIN","ADMIN","PARTNER")')
+    if (role && role !== 'ALL') {
+      // BUYER 필터는 구 세분 역할(BUYER_INST·BUYER_INDV·INVESTOR)까지 포함
+      if (role === 'BUYER') query = query.in('role', ['BUYER', 'BUYER_INST', 'BUYER_INDV', 'INVESTOR'])
+      else query = query.eq('role', role)
+    }
+    // 승인대기는 PENDING·SUBMITTED 모두
+    if (kyc && kyc !== 'ALL') {
+      if (kyc === 'PENDING') query = query.in('kyc_status', ['PENDING', 'SUBMITTED'])
+      else query = query.eq('kyc_status', kyc)
+    }
     if (search) query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,company_name.ilike.%${search}%`)
 
     const validSortCols = ['created_at', 'name', 'email', 'role', 'kyc_status', 'last_login_at']
