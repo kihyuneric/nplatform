@@ -64,6 +64,8 @@ export default function MyDashboardPage() {
   const [demandCount, setDemandCount] = useState<number | null>(null)
   const [favCount, setFavCount] = useState(0)
   const [myNda, setMyNda] = useState<NdaRequest[]>([])
+  // D4 — 이번 주 브리핑: 최근 7일 신규 등록 매물 수
+  const [newThisWeek, setNewThisWeek] = useState<number | null>(null)
 
   useEffect(() => {
     if (group !== 'BUYER' && group !== 'GUEST') return
@@ -74,6 +76,15 @@ export default function MyDashboardPage() {
       .catch(() => setDemandCount(0))
     // 관심매물 수 (자동매칭 리스트 ♥ 와 동일 저장소)
     try { setFavCount((JSON.parse(localStorage.getItem('npl_favorites') || '[]') as string[]).length) } catch { /* ignore */ }
+    // D4 — 최근 7일 신규 등록 매물
+    fetch('/api/v1/exchange/listings?limit=200', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        const list: Array<{ created_at?: string }> = Array.isArray(d?.data) ? d.data : []
+        const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000
+        setNewThisWeek(list.filter(x => x.created_at && new Date(x.created_at).getTime() >= cutoff).length)
+      })
+      .catch(() => setNewThisWeek(0))
     // 내 NDA 요청 현황
     ;(async () => {
       try {
@@ -122,6 +133,23 @@ export default function MyDashboardPage() {
         <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
           매입 조건에 맞는 NPL 딜만 자동매칭됩니다. 조건 · 관심매물 · NDA 진행을 한눈에 확인하세요.
         </p>
+      </div>
+
+      {/* D4 — 이번 주 브리핑 (알림 = 이 요약의 발송본) */}
+      <div className="flex items-center justify-between gap-4 flex-wrap px-5 py-4" style={{ background: '#0A1628', borderTop: '3px solid #2251FF' }}>
+        <div>
+          <div className="text-[11px] font-extrabold uppercase tracking-[0.14em]" style={{ color: '#00A9F4' }}>이번 주 브리핑</div>
+          <div className="mt-1 text-sm font-extrabold" style={{ color: '#FFFFFF' }}>
+            신규 등록 {newThisWeek === null ? '…' : `${newThisWeek}건`}
+            <span className="mx-2 opacity-40">·</span>
+            NDA 승인 {myNda.filter(q => q.status === '승인').length}건
+            <span className="mx-2 opacity-40">·</span>
+            검토중 {myNda.filter(q => q.status === '운영사 검토').length}건
+          </div>
+        </div>
+        <Link href="/exchange" className="px-4 py-2 text-xs font-extrabold" style={{ background: '#FFFFFF', color: '#0A1628', textDecoration: 'none' }}>
+          신규·변동 보기 <ArrowRight size={11} style={{ display: 'inline', verticalAlign: -1 }} />
+        </Link>
       </div>
 
       {/* 요약 카드 3 */}
