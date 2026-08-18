@@ -53,9 +53,20 @@ const fmtRange = (min: number | null, max: number | null) => {
   return `~${b}`
 }
 
+const PAGE_SIZE = 20
+
 export default function MyDemandsPage() {
   const [rows, setRows] = useState<DemandRow[]>([])
   const [loading, setLoading] = useState(true)
+  // D0 공통 UI — 검색 + 페이지네이션
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const q = search.trim().toLowerCase()
+  const filteredRows = q
+    ? rows.filter(r => [r.demandType, r.types.join(' '), r.regions.join(' '), r.memo, r.created].join(' ').toLowerCase().includes(q))
+    : rows
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE))
+  const paged = filteredRows.slice((Math.min(page, totalPages) - 1) * PAGE_SIZE, Math.min(page, totalPages) * PAGE_SIZE)
 
   const load = () => {
     setLoading(true)
@@ -119,6 +130,17 @@ export default function MyDemandsPage() {
         </div>
       </div>
 
+      {/* D0 공통 UI — 검색 */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <input
+          value={search}
+          onChange={e => { setSearch(e.target.value); setPage(1) }}
+          placeholder="유형 · 담보 · 지역 · 요청사항 검색..."
+          className="w-full max-w-sm px-3 py-2 text-[12.5px] font-medium border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] outline-none focus:border-[#2251FF]"
+        />
+        <span className="text-[11px] text-[var(--color-text-muted)]">{filteredRows.length}건 / 전체 {rows.length}건</span>
+      </div>
+
       <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-x-auto">
         <table className="w-full text-[12.5px]">
           <thead>
@@ -139,7 +161,7 @@ export default function MyDemandsPage() {
             {loading && (
               <tr><td colSpan={10} className="px-3 py-10 text-center text-sm text-[var(--color-text-muted)]">불러오는 중...</td></tr>
             )}
-            {!loading && rows.length === 0 && (
+            {!loading && filteredRows.length === 0 && (
               <tr>
                 <td colSpan={10} className="px-3 py-12 text-center">
                   <p className="text-sm font-bold text-[var(--color-text-primary)]">등록된 매입조건이 없습니다</p>
@@ -152,7 +174,7 @@ export default function MyDemandsPage() {
                 </td>
               </tr>
             )}
-            {rows.map(r => (
+            {paged.map(r => (
               <tr key={r.id} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] transition-colors">
                 <td className="px-3 py-2.5 tabular-nums whitespace-nowrap text-[var(--color-text-muted)]">{r.created}</td>
                 <td className="px-3 py-2.5 whitespace-nowrap">
@@ -194,6 +216,21 @@ export default function MyDemandsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* D0 공통 UI — 페이지네이션 (20건/페이지) */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between text-[12px]">
+          <span className="text-[var(--color-text-muted)]">{page} / {totalPages} 페이지</span>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+              className="px-3 py-1.5 font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)] disabled:opacity-30"
+              style={{ background: 'transparent', cursor: 'pointer' }}>이전</button>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+              className="px-3 py-1.5 font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)] disabled:opacity-30"
+              style={{ background: 'transparent', cursor: 'pointer' }}>다음</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
