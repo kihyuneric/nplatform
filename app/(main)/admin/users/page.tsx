@@ -238,8 +238,25 @@ export default function AdminUsersPage() {
   const initialTab: Tab = TAB_MAP[rawTab] ?? '전체 회원'
   const [tab, setTab] = useState<Tab>(initialTab)
   const [search, setSearch] = useState('')
-  // 명함 · 사업자등록증 첨부 뷰어 대상 회원
+  // 회원 상세 (첨부 뷰어 + 활동 요약) 대상 회원
   const [docTarget, setDocTarget] = useState<User | null>(null)
+  // D3 — 회원 활동 요약: NDA 요청 이력 (이메일 매칭)
+  const [docNda, setDocNda] = useState<Array<{ listing: string; status: string; at: string }>>([])
+  useEffect(() => {
+    if (!docTarget?.email) { setDocNda([]); return }
+    fetch('/api/v1/listing-marketing')
+      .then(r => r.json())
+      .then(d => {
+        const rows: Array<{ listing: string; status: string; at: string }> = []
+        for (const [lid, row] of Object.entries(d?.data ?? {})) {
+          for (const q of ((row as { nda_requests?: Array<{ email?: string; status: string; requested_at?: string }> }).nda_requests ?? [])) {
+            if (q.email && q.email === docTarget.email) rows.push({ listing: lid, status: q.status, at: q.requested_at?.slice(0, 10) ?? '' })
+          }
+        }
+        setDocNda(rows)
+      })
+      .catch(() => setDocNda([]))
+  }, [docTarget?.email])
   const [roleFilter, setRoleFilter] = useState('ALL')
   const [kycFilter, setKycFilter] = useState('ALL')
   const [page, setPage] = useState(1)
@@ -409,6 +426,14 @@ export default function AdminUsersPage() {
                               <XCircle size={12} />거절
                             </button>
                           )}
+                          {/* D3 — 활성 회원 차단 (승인 취소) */}
+                          {u.kyc_status === 'APPROVED' && (
+                            <button onClick={() => { if (confirm(`${u.name} 회원을 차단할까요?`)) void handleAction(u.id, 'BLOCK') }}
+                              className="text-[0.75rem] font-bold text-rose-600 hover:underline"
+                              style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
+                              차단
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -488,6 +513,26 @@ export default function AdminUsersPage() {
                   </div>
                 ))}
               </div>
+              {/* D3 — 활동 요약: NDA 요청 이력 */}
+              <div className="mt-3 border border-[var(--color-border-subtle)]">
+                <div className="px-3 py-2 text-[11px] font-bold bg-[var(--color-surface-overlay)] border-b border-[var(--color-border-subtle)] text-[var(--color-text-primary)]">
+                  활동 요약 — NDA 요청 이력 {docNda.length > 0 ? `(${docNda.length}건)` : ''}
+                </div>
+                {docNda.length === 0 ? (
+                  <p className="px-3 py-3 text-[11px] text-[var(--color-text-muted)]">NDA 요청 이력이 없습니다</p>
+                ) : (
+                  <div className="divide-y divide-[var(--color-border-subtle)]">
+                    {docNda.map((n, i) => (
+                      <div key={i} className="flex items-center justify-between px-3 py-2 text-[11.5px]">
+                        <span className="font-mono font-bold text-[var(--color-text-primary)]">{n.listing}</span>
+                        <span className="text-[var(--color-text-muted)]">{n.at}</span>
+                        <span className={`font-bold ${n.status === '승인' ? 'text-emerald-700' : n.status === '거절' ? 'text-red-700' : 'text-amber-700'}`}>{n.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="mt-3 flex items-center justify-end gap-1.5">
                 {docTarget.kyc_status !== 'APPROVED' && (
                   <button onClick={() => { void handleAction(docTarget.id, 'APPROVE_KYC'); setDocTarget(null) }}
