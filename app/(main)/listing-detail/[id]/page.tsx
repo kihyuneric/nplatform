@@ -100,6 +100,14 @@ const SPEC: { group: string; fields: { key: string; label: string; hint?: string
 
 const fmtEok = (n: unknown) => (typeof n === 'number' && n > 0 ? n.toLocaleString() : '')
 
+// 담보유형 영문 enum → 표준 양식 한글 라벨 (프리필용)
+const COLLATERAL_KO: Record<string, string> = {
+  APARTMENT: '아파트', COMMERCIAL: '상가/통건물', LAND: '토지', FACTORY: '공장/지식산업센터',
+  OFFICE: '오피스', VILLA: '다세대/빌라', OFFICETEL: '오피스텔', HOTEL: '호텔', RETAIL: '근린상가',
+  WAREHOUSE: '물류센터', BUILDING: '통건물', OTHER: '기타',
+}
+const collateralKo = (v: unknown) => { const s = String(v ?? ''); return COLLATERAL_KO[s.toUpperCase()] ?? s }
+
 // 숫자 파싱 (콤마·공백 허용) — 자동계산용
 const num = (s?: string) => {
   const n = parseFloat(String(s ?? '').replace(/[^0-9.]/g, ''))
@@ -160,18 +168,20 @@ export default function ListingDetailPage() {
         const x = list.find(l => String(l.id) === id)
         if (x) {
           const prefill: Record<string, string> = {
-            institution: String(x.institution ?? x.institution_name ?? ''),
+            institution: String(x.institution ?? x.institution_name ?? x.creditor_institution ?? ''),
+            loan_principal: fmtEok(x.loan_principal),
+            loan_balance: fmtEok(x.loan_balance ?? x.claim_amount),
             // 운영자·매각사(본인) 화면은 마스킹 없이 전체 주소 — 마스킹은 공개 리스트/NDA 전 노출에만 적용
             collateral_address: viewerMode
               ? ([x.sido, x.sigungu, x.dong].filter(Boolean).join(' ')
                   || String(x.address ?? '').split(/\s+/).slice(0, 3).join(' '))
               : (String(x.address ?? '')
                   || [x.sido, x.sigungu, x.dong].filter(Boolean).join(' ')),
-            collateral_type: String(x.collateral_type ?? ''),
+            collateral_type: collateralKo(x.collateral_type),
             appraisal_value: fmtEok(x.appraised_value ?? x.appraisal_value),
             total_claim: fmtEok(x.outstanding_principal ?? x.principal_amount ?? x.claim_amount),
-            asking_price: fmtEok(x.asking_price),
-            max_claim: fmtEok(x.max_claim ?? x.max_claim_amount),
+            asking_price: fmtEok(x.asking_price ?? x.proposed_sale_price),
+            max_claim: fmtEok(x.max_claim ?? x.max_claim_amount ?? x.setup_amount),
             exclusive_area: typeof x.building_area_m2 === 'number' ? String(x.building_area_m2)
               : typeof x.land_area_m2 === 'number' ? String(x.land_area_m2) : '',
           }

@@ -383,7 +383,7 @@ export default function ExchangePage() {
             (r.principal_amount as number) ??
             (r.claim_amount as number) ?? 0
           const appraisal = (r.appraised_value as number) ?? (r.appraisal_value as number) ?? 0
-          let asking = (r.asking_price as number) ?? 0
+          let asking = (r.asking_price as number) ?? (r.proposed_sale_price as number) ?? 0
           if (!asking) {
             const lo = r.ai_estimate_low as number | undefined
             const hi = r.ai_estimate_high as number | undefined

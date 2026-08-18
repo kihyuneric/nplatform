@@ -66,20 +66,19 @@ const STATUS_META: Record<DocStatus, { label: string; color: string; bg: string;
   EXPIRED:  { label: "만료",     color: INK_MUTED, bg: "rgba(5, 28, 44, 0.06)", border: BORDER_STRONG, icon: AlertCircle },
 }
 
+// LOI 는 서비스 범위 밖 — NDA 진행만 (운영설계서 v3 · 2026-08-18)
 const FILTERS = [
   { key: "ALL", label: "전체" },
-  { key: "NDA", label: "NDA" },
-  { key: "LOI", label: "LOI" },
-  { key: "PENDING", label: "진행 중" },
-  { key: "SIGNED", label: "체결 완료" },
-  { key: "REJECTED", label: "거절/만료" },
+  { key: "PENDING", label: "운영사 검토" },
+  { key: "APPROVED", label: "승인" },
+  { key: "REJECTED", label: "거절" },
 ] as const
 
 export default function AgreementsPage() {
   const [filter, setFilter] = useState<typeof FILTERS[number]["key"]>("ALL")
-  const [agreements, setAgreements] = useState<AgreementRow[]>(SAMPLE_AGREEMENTS)
+  const [agreements, setAgreements] = useState<AgreementRow[]>([])
   const [loadingData, setLoadingData] = useState(true)
-  const [isSample, setIsSample] = useState(true)
+  const [isSample, setIsSample] = useState(false)
   const [view, setView] = useState<MckViewMode>("list")
 
   useEffect(() => {
@@ -113,6 +112,18 @@ export default function AgreementsPage() {
               }
             }
             if (mine.length > 0) {
+              // 매물명 hydrate — UUID 대신 매물 제목 표시
+              try {
+                const lr = await fetch("/api/v1/exchange/listings?limit=200", { credentials: "include" })
+                const lj = await lr.json()
+                const titles = new Map<string, string>(
+                  (Array.isArray(lj?.data) ? lj.data : []).map((row: Record<string, unknown>) =>
+                    [String(row.id), String(row.title ?? row.address_masked ?? "")]))
+                for (const m of mine) {
+                  const t = titles.get(m.listing_id)
+                  if (t) m.collateral = t
+                }
+              } catch { /* UUID 폴백 */ }
               mine.sort((a, b) => (a.signed_at < b.signed_at ? 1 : -1))
               setAgreements(mine)
               setIsSample(false)
@@ -165,34 +176,9 @@ export default function AgreementsPage() {
             return
           }
         }
-        // 2. 빈 응답이면 SAMPLE 의 listing_id 를 ACTIVE 매물 UUID 로 hydrate (기존 동작)
-        const lr = await fetch("/api/v1/exchange/listings?limit=4&status=ACTIVE")
-        if (lr.ok) {
-          const lj = await lr.json()
-          const ids: string[] = Array.isArray(lj?.data)
-            ? lj.data.map((row: Record<string, unknown>) => String(row.id)).filter(Boolean)
-            : []
-          if (ids.length > 0) {
-            const titles: Record<string, string> = {}
-            const insts: Record<string, string> = {}
-            ;(lj.data as Array<Record<string, unknown>>).forEach((row) => {
-              const id = String(row.id)
-              titles[id] = String(row.title ?? row.address_masked ?? "매물")
-              insts[id] = String(row.creditor_institution ?? row.institution_name ?? row.institution ?? "매각사")
-            })
-            const hydrated = SAMPLE_AGREEMENTS.map((a, idx) => {
-              const realId = ids[idx % ids.length]
-              return {
-                ...a,
-                listing_id: realId,
-                collateral: titles[realId] || a.collateral,
-                counterparty: insts[realId] || a.counterparty,
-              }
-            })
-            setAgreements(hydrated)
-            setIsSample(true)
-          }
-        }
+        // 2. NDA 이력 없음 — 빈 상태 (가짜 샘플 노출 금지 · 운영설계서 §7)
+        setAgreements([])
+        setIsSample(false)
       } catch {
         // keep sample
       } finally {
@@ -204,8 +190,8 @@ export default function AgreementsPage() {
 
   const rows = useMemo(() => {
     if (filter === "ALL") return agreements
-    if (filter === "NDA" || filter === "LOI") return agreements.filter(a => a.type === filter)
     if (filter === "REJECTED") return agreements.filter(a => a.status === "REJECTED" || a.status === "EXPIRED")
+    if (filter === "APPROVED") return agreements.filter(a => a.status === "APPROVED" || a.status === "SIGNED")
     return agreements.filter(a => a.status === filter)
   }, [filter, agreements])
 
@@ -223,9 +209,9 @@ export default function AgreementsPage() {
           { label: "마이페이지", href: "/my" },
           { label: "계약 관리" },
         ]}
-        eyebrow="MY · CONTRACTS"
-        title="계약 관리"
-        subtitle="체결한 NDA(비밀유지계약) 및 제출한 LOI(매수의향서) 이력을 한 곳에서 확인합니다. 모든 계약은 전자서명법에 따라 5년간 보관됩니다."
+        eyebrow="MY · NDA"
+        title="NDA 진행"
+        subtitle="제출한 NDA(비밀유지계약)의 2단계 진행 현황입니다 — ① 전자서명 제출 → ② 운영사 검토 · 승인. 승인 즉시 해당 매물의 세부내역이 열립니다."
       />
 
       <MyZoneTabs zone="deals" />
@@ -237,9 +223,8 @@ export default function AgreementsPage() {
           id: f.key,
           label: f.label,
           count: f.key === "ALL" ? agreements.length
-                : f.key === "NDA" ? agreements.filter(a => a.type === "NDA").length
-                : f.key === "LOI" ? agreements.filter(a => a.type === "LOI").length
                 : f.key === "REJECTED" ? agreements.filter(a => a.status === "REJECTED" || a.status === "EXPIRED").length
+                : f.key === "APPROVED" ? agreements.filter(a => a.status === "APPROVED" || a.status === "SIGNED").length
                 : agreements.filter(a => a.status === f.key).length,
         }))}
         active={filter}
@@ -281,10 +266,9 @@ export default function AgreementsPage() {
 
           {/* KPI cards (4-col) */}
           <div className="grid grid-cols-2 md:grid-cols-4" style={{ gap: 12, marginBottom: 22 }}>
-            <StatCard label="NDA 체결" value={stats.nda} icon={FileSignature} />
-            <StatCard label="LOI 제출" value={stats.loi} icon={FileText} />
-            <StatCard label="진행 중" value={stats.pending} icon={Clock} />
-            <StatCard label="체결 완료" value={stats.signed} icon={CheckCircle2} highlight />
+            <StatCard label="NDA 제출" value={stats.nda} icon={FileSignature} />
+            <StatCard label="운영사 검토" value={stats.pending} icon={Clock} />
+            <StatCard label="승인 완료" value={stats.signed} icon={CheckCircle2} highlight />
           </div>
 
           {/* Table or grid */}

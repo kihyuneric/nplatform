@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/email-service'
 import { dailyDigestEmail, weeklyReportEmail } from '@/lib/email/templates'
-import { notifyUserId } from '@/lib/notify'
 
 /**
  * /api/v1/cron/digest — D5 알림 발송 (2026-08-18)
@@ -42,12 +41,8 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient()
 
-    // 수신자 — 활성(APPROVED) 회원만
-    const { data: usersData, error: usersError } = await supabase
-      .from('users')
-      .select('id, email, name, role, roles, kyc_status')
-      .eq('kyc_status', 'APPROVED')
-      .limit(500)
+    // 수신자 — 활성(APPROVED) 회원 (cron 은 세션이 없어 RLS 우회용 SECURITY DEFINER RPC 사용)
+    const { data: usersData, error: usersError } = await supabase.rpc('digest_recipients')
     if (usersError) throw usersError
     const users = (usersData ?? []) as UserRow[]
 
@@ -56,15 +51,15 @@ export async function GET(req: NextRequest) {
     const prefKey = type === 'daily' ? 'new_listing' : 'deal_update'
     const prefs = new Map<string, { enabled: boolean; email: boolean }>()
     try {
-      const { data: prefRows } = await supabase
-        .from('notification_preferences')
-        .select('user_id, enabled, email_enabled')
-        .eq('key', prefKey)
+      const { data: prefRows } = await supabase.rpc('digest_prefs', { p_key: prefKey })
       for (const p of prefRows ?? []) {
         prefs.set(p.user_id as string, { enabled: p.enabled !== false, email: p.email_enabled !== false })
       }
-    } catch { /* 테이블 미생성 시 기본값 사용 */ }
+    } catch { /* RPC 미생성 시 기본값 사용 */ }
     const prefOf = (id: string) => prefs.get(id) ?? { enabled: true, email: true }
+    // cron 용 알림 기록 — RLS 우회 RPC (실패는 무시)
+    const cronNotify = (userId: string, t: string, title: string, body: string, link: string) =>
+      supabase.rpc('digest_notify', { p_user_id: userId, p_type: t, p_title: title, p_body: body, p_link: link }).then(() => {}, () => {})
 
     if (type === 'daily') {
       // ── 매입 일일 다이제스트 ──
@@ -92,12 +87,8 @@ export async function GET(req: NextRequest) {
         if (!pref.enabled && !pref.email) { result.skipped++; continue }
         try {
           if (pref.enabled) {
-            void notifyUserId(u.id, {
-              type: 'NEW_LISTING',
-              title: `오늘의 매칭 브리핑 — 신규 ${newListings.length}건`,
-              message: highlights.map(h => `${h.region} ${h.title}`).join(' · '),
-              link: `/exchange?alert=${alertDate}`,
-            })
+            void cronNotify(u.id, 'NEW_LISTING', `오늘의 매칭 브리핑 — 신규 ${newListings.length}건`,
+              highlights.map(h => `${h.region} ${h.title}`).join(' · '), `/exchange?alert=${alertDate}`)
           }
           if (pref.email && u.email) {
             await sendEmail({ to: u.email, ...dailyDigestEmail({ name: u.name || '회원', newCount: newListings.length, highlights, alertDate }) })
@@ -134,12 +125,8 @@ export async function GET(req: NextRequest) {
         }
         try {
           if (pref.enabled) {
-            void notifyUserId(u.id, {
-              type: 'ALERT',
-              title: `주간 활동 리포트 — NDA 요청 +${nda7}`,
-              message: `관심 누적 ${interestTotal} · 상담 누적 ${consultTotal} (등록 매물 ${myIds.size}건)`,
-              link: '/my/seller',
-            })
+            void cronNotify(u.id, 'ALERT', `주간 활동 리포트 — NDA 요청 +${nda7}`,
+              `관심 누적 ${interestTotal} · 상담 누적 ${consultTotal} (등록 매물 ${myIds.size}건)`, '/my/seller')
           }
           if (pref.email && u.email) {
             await sendEmail({ to: u.email, ...weeklyReportEmail({ name: u.name || '회원', nda7, interestTotal, consultTotal, listingCount: myIds.size }) })

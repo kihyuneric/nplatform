@@ -8,6 +8,7 @@ const supportTicketSchema = z.object({
   title: z.string().min(1, '제목은 필수입니다'),
   category: z.enum([
     '서비스 이용', '인증/KYC', '거래/계약', '계정 관리', '기술 문제', '요금/결제', '기타',
+    '매물', '매각의뢰',   // 매각 회원 진행종료 요청 · 매각의뢰 문의 (2026-08-18)
   ], { errorMap: () => ({ message: '유효하지 않은 카테고리입니다.' }) }),
   priority: z.enum(['URGENT', 'HIGH', 'NORMAL', 'LOW']).default('NORMAL'),
   description: z.string().min(1, '내용은 필수입니다'),
@@ -235,6 +236,8 @@ export async function POST(req: NextRequest) {
       '기술 문제': 'TECHNICAL',
       '요금/결제': 'BILLING',
       '기타': 'OTHER',
+      '매물': 'LISTING',
+      '매각의뢰': 'LISTING',
     }
     // Map API priority values → DB CHECK constraint values
     const priorityMap: Record<string, string> = {

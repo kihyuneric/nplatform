@@ -90,6 +90,7 @@ export default function SellerMyListingsPage() {
     setEndRequested(prev => new Set(prev).add(listingId))
     fetch('/api/v1/support', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: `[진행종료 요청] ${name} (${listingId})`,
@@ -97,7 +98,16 @@ export default function SellerMyListingsPage() {
         priority: 'HIGH',
         description: `매각 회원이 매물 진행종료를 요청했습니다.\n매물: ${name}\nID: ${listingId}\n\n운영사 확인 후 매각의뢰 현황에서 종료 처리해주세요.`,
       }),
-    }).catch(() => {})
+    }).then(r => {
+      // 접수 실패 시 되돌리고 안내 — 성공처럼 보이는 조용한 실패 방지
+      if (!r.ok) {
+        setEndRequested(prev => { const n = new Set(prev); n.delete(listingId); return n })
+        alert('진행종료 요청 접수에 실패했습니다. 잠시 후 다시 시도해주세요.')
+      }
+    }).catch(() => {
+      setEndRequested(prev => { const n = new Set(prev); n.delete(listingId); return n })
+      alert('네트워크 오류 — 진행종료 요청을 다시 시도해주세요.')
+    })
   }
 
   // ── 매각 회원 직접 수정 — NPL 상태 3종 (관리자와 동일 저장소) ──

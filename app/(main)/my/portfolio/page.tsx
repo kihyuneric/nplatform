@@ -55,14 +55,22 @@ export default function PortfolioPage() {
         const byId = new Map(list.map(x => [String(x.id), x]))
         setRows(ids.filter(id => byId.has(id)).map(id => {
           const x = byId.get(id)!
+          // 담보유형 영문 enum → 한글 라벨
+          const KO: Record<string, string> = {
+            APARTMENT: '아파트', COMMERCIAL: '상가/통건물', LAND: '토지', FACTORY: '공장/지식산업센터',
+            OFFICE: '오피스', VILLA: '다세대/빌라', OTHER: '기타',
+          }
+          const region = [x.sido, x.sigungu].filter(Boolean).join(' ') || '—'
+          const addr = String(x.address_masked ?? '') || [x.sido, x.sigungu, x.dong].filter(Boolean).join(' ') || String(x.address ?? '—')
           return {
             id,
-            region: [x.sido, x.sigungu].filter(Boolean).join(' ') || '—',
-            address: [x.sido, x.sigungu, x.dong].filter(Boolean).join(' ') || String(x.address ?? '—'),
-            collateral: String(x.collateral_type ?? '—'),
+            region,
+            // 지역과 동일한 주소는 중복 표기 생략
+            address: addr === region ? '' : addr,
+            collateral: KO[String(x.collateral_type ?? '').toUpperCase()] ?? String(x.collateral_type ?? '—'),
             appraisal: Number(x.appraised_value ?? x.appraisal_value ?? 0),
             principal: Number(x.outstanding_principal ?? x.principal_amount ?? x.claim_amount ?? 0),
-            asking: Number(x.asking_price ?? 0),
+            asking: Number(x.asking_price ?? x.proposed_sale_price ?? x.minimum_bid ?? 0),
             created: x.created_at ? String(x.created_at).slice(0, 10) : '—',
           }
         }))

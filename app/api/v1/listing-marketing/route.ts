@@ -70,20 +70,26 @@ export async function PATCH(req: NextRequest) {
     // D5 — 운영사 검토 → 승인/거절 전환 건 알림 (fire-and-forget)
     if (Array.isArray(body.nda_requests)) {
       const prevById = new Map(prevNda.map(r => [r.id, r.status]))
-      for (const r of body.nda_requests as NdaReq[]) {
-        const next = r?.status
-        if (!r?.id || !next || prevById.get(r.id) === next) continue
-        if (next !== '승인' && next !== '거절') continue
-        if (r.email) {
-          void notifyByEmail(r.email, {
+      const changed = (body.nda_requests as NdaReq[]).filter(r =>
+        r?.id && (r.status === '승인' || r.status === '거절') && prevById.get(r.id) !== r.status && r.email)
+      if (changed.length > 0) {
+        // 알림에는 UUID 대신 매물명 표기
+        let listingLabel = listing_id
+        try {
+          const { data: l } = await supabase.from('npl_listings').select('title').eq('id', listing_id).maybeSingle()
+          if (l?.title) listingLabel = l.title as string
+        } catch { /* UUID 폴백 */ }
+        for (const r of changed) {
+          const next = r.status as '승인' | '거절'
+          void notifyByEmail(r.email as string, {
             type: 'CONTRACT',
-            title: next === '승인' ? `NDA 승인 완료 — ${listing_id} 상세 열람 가능` : `NDA 검토 결과 — ${listing_id} 미승인`,
+            title: next === '승인' ? `NDA 승인 완료 — ${listingLabel} 상세 열람 가능` : `NDA 검토 결과 — ${listingLabel} 미승인`,
             message: next === '승인'
               ? 'NPL 자동매칭 리스트에서 세부내역을 열람하실 수 있습니다.'
               : '추가 확인이 필요해 승인되지 않았습니다. 운영사로 문의해주세요.',
             link: '/exchange',
           })
-          void sendEmail({ to: r.email, ...ndaStatusEmail({ name: r.signer || '회원', listingNo: listing_id, status: next }) })
+          void sendEmail({ to: r.email as string, ...ndaStatusEmail({ name: r.signer || '회원', listingNo: listingLabel, status: next }) })
             .catch(() => {})
         }
       }
