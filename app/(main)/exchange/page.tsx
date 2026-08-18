@@ -244,6 +244,9 @@ export default function ExchangePage() {
   const searchParams = useSearchParams()
   const initialQ = searchParams?.get("q") || ""
   const [q, setQ] = useState(initialQ)
+  // D5 — 알림 구간 고정 링크: ?alert=YYYY-MM-DD[&until=YYYY-MM-DD] → 해당 구간 등록 건만 표시
+  const alertFrom = searchParams?.get("alert") || ""
+  const alertUntil = searchParams?.get("until") || ""
   // keep q in sync with URL changes (e.g. re-enter from home with a different query)
   useEffect(() => {
     const urlQ = searchParams?.get("q") || ""
@@ -557,6 +560,11 @@ export default function ExchangePage() {
     if (region !== "ALL") arr = arr.filter(x => x.region.startsWith(region))
     if (instType !== "ALL") arr = arr.filter(x => x.inst_kind === instType)
     if (stage !== "ALL") arr = arr.filter(x => x.sale_method === stage)
+    // D5 — 알림 구간: 기준일 이후(~until) 등록 건만
+    if (alertFrom) arr = arr.filter(x => {
+      const d = x.created_at_label ?? ""
+      return d >= alertFrom && (!alertUntil || d <= alertUntil)
+    })
 
     switch (sort) {
       case "appraisal_desc": arr.sort((a, b) => b.appraisal_value - a.appraisal_value); break
@@ -1097,6 +1105,21 @@ export default function ExchangePage() {
             </div>
           )}
 
+          {/* D5 — 알림 구간 보기 배너: 알림 링크로 진입 시 기준일 고정 표시 */}
+          {alertFrom && !guestMode && (
+            <div className="flex items-center justify-between gap-3 flex-wrap px-4 py-3 mb-4" style={{ background: "#0A1628", borderTop: "3px solid #2251FF" }}>
+              <div style={{ fontSize: 12.5, fontWeight: 800, color: "#FFFFFF" }}>
+                🔔 알림 구간 보기 — <span style={{ fontVariantNumeric: "tabular-nums" }}>{alertFrom}</span>
+                {alertUntil ? <> ~ <span style={{ fontVariantNumeric: "tabular-nums" }}>{alertUntil}</span></> : " 이후"} 등록 {filtered.length}건
+              </div>
+              <Link
+                href="/exchange"
+                style={{ padding: "6px 14px", fontSize: 11, fontWeight: 800, background: "#FFFFFF", color: "#0A1628", textDecoration: "none" }}
+              >
+                전체 보기
+              </Link>
+            </div>
+          )}
           {(visible.length === 0 && !guestMode) ? (
             <div
               style={{
@@ -1646,6 +1669,9 @@ function ListingCard({ item, index, areaUnit, fav, onToggleFav, onNda, no }: { i
           </div>
           <div style={{ fontSize: 9, color: "rgba(5, 28, 44, 0.40)", marginTop: 4, fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             {no ?? item.id} · 등록 {item.created_at_label ?? "—"}
+            {item.created_days_ago <= 3 && (
+              <span style={{ marginLeft: 5, padding: "1px 5px", fontSize: 8, fontWeight: 800, color: "#FFFFFF", background: "#2251FF", letterSpacing: "0.04em" }}>NEW</span>
+            )}
           </div>
         </div>
 
@@ -1818,6 +1844,9 @@ function ListingRow({ item, index, areaUnit, fav, onToggleFav, onNda, nplStatus,
         </div>
         <div style={{ fontSize: 10, color: V.textMuted, marginTop: 2, fontVariantNumeric: "tabular-nums", display: "flex", alignItems: "center", gap: 5 }}>
           {item.created_at_label ?? "—"}
+          {item.created_days_ago <= 3 && (
+            <span style={{ padding: "1px 5px", fontSize: 8, fontWeight: 800, color: "#FFFFFF", background: "#2251FF", letterSpacing: "0.04em" }}>NEW</span>
+          )}
           {nplStatus && (
             <span
               style={{
