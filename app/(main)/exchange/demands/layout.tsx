@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: '매수 수요 마켓 | NPLatform',
-  description: 'NPL 매수 수요 등록 및 검색. 투자자의 매수 조건을 확인하고 매칭하세요.',
+  title: '매입조건 등록 | NPLATFORM',
+  description: '지역 · 유형 · 금액대 매입조건을 등록하면 조건에 매칭되는 NPL 딜만 선별 공개됩니다.',
 }
 
 export default function DemandsLayout({ children }: { children: React.ReactNode }) {

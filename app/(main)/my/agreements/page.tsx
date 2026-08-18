@@ -490,15 +490,14 @@ export default function AgreementsPage() {
                           boxShadow: "0 2px 6px rgba(34, 81, 255, 0.30)",
                         }}
                       >
-                        <span style={{ color: "#FFFFFF" }}>딜룸 ↗</span>
+                        <span style={{ color: "#FFFFFF" }}>세부내역 ↗</span>
                       </span>
-                      {/* UUID 형식이면 실 row — PDF 다운로드 가능 */}
+                      {/* UUID 형식이면 실 row — PDF 다운로드 가능.
+                          행 전체가 <Link> 라 중첩 <a> 는 하이드레이션 오류 → button + window.open */}
                       {/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.id) && (
-                        <a
-                          href={`/api/v1/agreements/${row.id}/pdf`}
-                          target="_blank"
-                          rel="noopener"
-                          onClick={(e) => e.stopPropagation()}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(`/api/v1/agreements/${row.id}/pdf`, '_blank', 'noopener') }}
                           style={{
                             display: "inline-flex", alignItems: "center", gap: 4,
                             padding: "3px 8px",
@@ -506,12 +505,12 @@ export default function AgreementsPage() {
                             color: ELECTRIC_DARK,
                             background: "rgba(34, 81, 255, 0.06)",
                             border: `1px solid rgba(34, 81, 255, 0.30)`,
-                            textDecoration: "none",
                             letterSpacing: "0.04em",
+                            cursor: "pointer",
                           }}
                         >
                           PDF ↓
-                        </a>
+                        </button>
                       )}
                     </div>
                   </Link>

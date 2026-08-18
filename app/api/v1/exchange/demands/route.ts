@@ -102,8 +102,9 @@ export async function POST(request: NextRequest) {
 
     const resolvedRegions: string[] = regions?.length ? regions : []
 
-    if (!resolvedRegions.length || !min_amount || !max_amount) {
-      return NextResponse.json({ success: false, error: '필수 항목(지역, 투자금액)을 입력해주세요.' }, { status: 400 })
+    // 폼 정책과 일치: 지역(또는 전국)만 필수 — 금액대는 선택 (미지정 = 전체 금액대 매칭)
+    if (!resolvedRegions.length) {
+      return NextResponse.json({ success: false, error: '필수 항목(지역)을 선택해주세요.' }, { status: 400 })
     }
 
     // Calculate matching listings count (non-critical)

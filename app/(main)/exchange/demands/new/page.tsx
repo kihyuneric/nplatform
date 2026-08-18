@@ -87,7 +87,7 @@ export default function NewDemandPage() {
         if (user) {
           const meta = (user.user_metadata ?? {}) as Record<string, string>
           setContact({
-            company: meta.company ?? '',
+            company: meta.company ?? meta.company_name ?? '',   // 가입 폼은 company_name 으로 저장
             manager: meta.name ?? '',
             phone: meta.phone ?? '',
             email: user.email ?? '',
