@@ -76,7 +76,17 @@ export default function AdminInboxPage() {
     }
   }
 
-  const visible = rows.filter(r => tab === 'all' || r.kind === tab)
+  // D0 공통 UI — 검색 + 페이지네이션 (20건/페이지)
+  const PAGE_SIZE = 20
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const q = search.trim().toLowerCase()
+  const byTab = rows.filter(r => tab === 'all' || r.kind === tab)
+  const filteredRows = q
+    ? byTab.filter(r => JSON.stringify(r).toLowerCase().includes(q))
+    : byTab
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE))
+  const visible = filteredRows.slice((Math.min(page, totalPages) - 1) * PAGE_SIZE, Math.min(page, totalPages) * PAGE_SIZE)
 
   return (
     <div className="p-6 max-w-[1000px] space-y-5">
@@ -120,6 +130,17 @@ export default function AdminInboxPage() {
             {label}
           </button>
         ))}
+      </div>
+
+      {/* D0 공통 UI — 검색 */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <input
+          value={search}
+          onChange={e => { setSearch(e.target.value); setPage(1) }}
+          placeholder="제목 · 내용 · 연락처 · 상태 검색..."
+          className="w-full max-w-sm px-3 py-2 text-[12.5px] font-medium border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] outline-none focus:border-[#2251FF]"
+        />
+        <span className="text-[11px] text-[var(--color-text-muted)]">{filteredRows.length}건 / 전체 {byTab.length}건</span>
       </div>
 
       {/* 리스트 */}
@@ -182,6 +203,21 @@ export default function AdminInboxPage() {
           </div>
         ))}
       </div>
+
+      {/* D0 공통 UI — 페이지네이션 (20건/페이지) */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between text-[12px]">
+          <span className="text-[var(--color-text-muted)]">{page} / {totalPages} 페이지</span>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+              className="px-3 py-1.5 font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)] disabled:opacity-30"
+              style={{ background: 'transparent', cursor: 'pointer' }}>이전</button>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+              className="px-3 py-1.5 font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)] disabled:opacity-30"
+              style={{ background: 'transparent', cursor: 'pointer' }}>다음</button>
+          </div>
+        </div>
+      )}
 
       <p className="text-[11px] text-[var(--color-text-muted)]">
         ※ 현재 상태: {rows.filter(r => r.status === 'OPEN').length}건 접수 대기 · {rows.filter(r => r.status === 'IN_PROGRESS').length}건 처리중 · {rows.filter(r => r.status === 'RESOLVED').length}건 완료 ({statusLabel('OPEN')} 기준)
