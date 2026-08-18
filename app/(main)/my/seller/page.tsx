@@ -307,6 +307,38 @@ export default function SellerDashboardPage() {
       />
 
       <div className={DS.page.container + " py-6 " + DS.page.sectionGap}>
+        {/* D4 — 주간 활동 요약 (주간 리포트 알림 = 이 요약의 발송본) */}
+        {(() => {
+          const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000
+          let nda7 = 0, interestTotal = 0, consultTotal = 0, mkDone = 0, mkAll = 0
+          for (const l of sellerListings) {
+            const mk = marketing[l.id]
+            if (!mk) continue
+            nda7 += (mk.nda_requests ?? []).filter(q => q.requested_at && new Date(q.requested_at).getTime() >= cutoff).length
+            interestTotal += mk.interest_count ?? 0
+            consultTotal += mk.consult_count ?? 0
+            mkDone += MARKETING_CHECKLIST.filter(c => mk.checklist?.[c.key]).length
+            mkAll += MARKETING_CHECKLIST.length
+          }
+          return (
+            <div className="flex items-center justify-between gap-4 flex-wrap px-5 py-4" style={{ background: '#0A1628', borderTop: '3px solid #2251FF' }}>
+              <div>
+                <div className="text-[11px] font-extrabold uppercase tracking-[0.14em]" style={{ color: '#00A9F4' }}>주간 활동 요약</div>
+                <div className="mt-1 text-sm font-extrabold" style={{ color: '#FFFFFF' }}>
+                  NDA 요청 <span className="tabular-nums">+{nda7}</span> <span className="opacity-50 text-[11px] font-bold">(최근 7일)</span>
+                  <span className="mx-2 opacity-40">·</span>
+                  관심 누적 <span className="tabular-nums">{interestTotal}</span>
+                  <span className="mx-2 opacity-40">·</span>
+                  상담 누적 <span className="tabular-nums">{consultTotal}</span>
+                  <span className="mx-2 opacity-40">·</span>
+                  마케팅 <span className="tabular-nums">{mkDone}/{mkAll || MARKETING_CHECKLIST.length}</span> 진행
+                </div>
+              </div>
+              <span className="text-[11px] font-bold" style={{ color: 'rgba(255,255,255,0.65)' }}>주간 리포트 알림과 동일 기준</span>
+            </div>
+          )
+        })()}
+
         {/* Stats Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {STATS.map((s) => (
