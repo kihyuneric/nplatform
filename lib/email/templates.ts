@@ -201,3 +201,70 @@ export function systemNoticeEmail(opts: { name: string; title: string; body: str
     `),
   }
 }
+
+// ─── D5 · NDA 검토 결과 (승인/거절) ──────────────────────────────────────────
+export function ndaStatusEmail(opts: { name: string; listingNo: string; status: '승인' | '거절' }): { subject: string; html: string } {
+  const approved = opts.status === '승인'
+  return {
+    subject: approved
+      ? `[NPLatform] NDA 승인 완료 — ${opts.listingNo} 상세 열람이 가능합니다`
+      : `[NPLatform] NDA 검토 결과 안내 — ${opts.listingNo}`,
+    html: layout('NDA 검토 결과', `
+      <h1>NDA ${approved ? '승인 완료' : '검토 결과 안내'}</h1>
+      <p>${opts.name}님, 관리번호 <b>${opts.listingNo}</b> 매물의 NDA 전자서명 건이
+      운영사 검토 결과 <span class="badge${approved ? '' : '-amber'}">${opts.status}</span> 처리되었습니다.</p>
+      ${approved
+        ? `<p>이제 해당 매물의 세부내역(주소 · 채권 상세 · 서류)을 열람하실 수 있습니다.</p>
+           <a href="${BASE_URL}/exchange" class="btn">NPL 자동매칭에서 열람하기</a>`
+        : `<p>추가 확인이 필요한 사항이 있어 승인되지 않았습니다. 자세한 내용은 운영사로 문의해주세요.</p>`}
+      <hr class="divider" />
+      <p class="meta">본 메일은 NDA 진행상황 알림 설정에 따라 발송되었습니다.</p>
+    `),
+  }
+}
+
+// ─── D5 · 매입 회원 일일 다이제스트 (하이라이트 최대 2건 + 구간 링크) ────────
+export function dailyDigestEmail(opts: {
+  name: string
+  newCount: number
+  highlights: Array<{ title: string; region: string; amount: string }>
+  alertDate: string   // YYYY-MM-DD — 알림 기준일 (리스트 구간 고정 링크)
+}): { subject: string; html: string } {
+  const items = opts.highlights.slice(0, 2).map(h => `
+    <div class="info-row"><span class="info-label">${h.region} · ${h.title}</span><span class="info-value">${h.amount}</span></div>
+  `).join('')
+  return {
+    subject: `[NPLatform] 오늘의 매칭 브리핑 — 신규 ${opts.newCount}건`,
+    html: layout('일일 매칭 브리핑', `
+      <h1>오늘의 매칭 브리핑</h1>
+      <p>${opts.name}님, 등록하신 매입조건 기준 신규 매칭 <b>${opts.newCount}건</b>이 있습니다.</p>
+      ${items || '<p class="meta">오늘의 하이라이트가 없습니다.</p>'}
+      <a href="${BASE_URL}/exchange?alert=${opts.alertDate}" class="btn">신규 · 변동 매물 보기</a>
+      <hr class="divider" />
+      <p class="meta">링크는 알림 기준일(${opts.alertDate}) 이후 등록 건만 보여줍니다. 일일 다이제스트 알림 설정에 따라 발송되었습니다.</p>
+    `),
+  }
+}
+
+// ─── D5 · 매각 회원 주간 리포트 ──────────────────────────────────────────────
+export function weeklyReportEmail(opts: {
+  name: string
+  nda7: number
+  interestTotal: number
+  consultTotal: number
+  listingCount: number
+}): { subject: string; html: string } {
+  return {
+    subject: `[NPLatform] 주간 활동 리포트 — NDA 요청 +${opts.nda7}`,
+    html: layout('주간 활동 리포트', `
+      <h1>주간 활동 리포트</h1>
+      <p>${opts.name}님의 등록 매물 <b>${opts.listingCount}건</b>에 대한 최근 7일 활동 요약입니다.</p>
+      <div class="info-row"><span class="info-label">NDA 요청 (최근 7일)</span><span class="info-value">+${opts.nda7}건</span></div>
+      <div class="info-row"><span class="info-label">관심 누적</span><span class="info-value">${opts.interestTotal}건</span></div>
+      <div class="info-row"><span class="info-label">상담 진행 누적</span><span class="info-value">${opts.consultTotal}건</span></div>
+      <a href="${BASE_URL}/my/seller" class="btn">내 매물에서 자세히 보기</a>
+      <hr class="divider" />
+      <p class="meta">주간 리포트 알림 설정에 따라 매주 발송됩니다.</p>
+    `),
+  }
+}

@@ -38,6 +38,24 @@ alter table public.users add column if not exists buyer_kind text not null defau
 -- 회원 관리 고도화 (D3 · 2026-08-18) — 보류 사유 등 관리자 메모
 alter table public.users add column if not exists admin_note text not null default '';
 
+-- 알림 수신 설정 (D5 · 2026-08-18) — 마이페이지 설정 ↔ 다이제스트 발송 연동
+create table if not exists public.notification_preferences (
+  user_id uuid not null,
+  key text not null,                          -- new_listing / nda_update / deal_update / system
+  enabled boolean not null default true,      -- 인앱 알림
+  email_enabled boolean not null default true,
+  push_enabled boolean not null default false,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, key)
+);
+alter table public.notification_preferences enable row level security;
+drop policy if exists np_select on public.notification_preferences;
+create policy np_select on public.notification_preferences for select using (auth.uid() = user_id);
+drop policy if exists np_upsert on public.notification_preferences;
+create policy np_upsert on public.notification_preferences for insert with check (auth.uid() = user_id);
+drop policy if exists np_update on public.notification_preferences;
+create policy np_update on public.notification_preferences for update using (auth.uid() = user_id);
+
 -- 메인 히어로 PRIVATE DEAL 카드 (단일 행 id=1) — 운영자 관리자 등록/수정/삭제
 create table if not exists public.main_hero (
   id int primary key default 1,

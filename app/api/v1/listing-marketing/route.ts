@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { notifyByEmail, notifyUserId } from '@/lib/notify'
+import { sendEmail } from '@/lib/email/email-service'
+import { ndaStatusEmail } from '@/lib/email/templates'
+
+interface NdaReq { id?: string; signer?: string; email?: string; status?: string; requested_at?: string }
 
 /**
  * /api/v1/listing-marketing — 매물별 마케팅 체크리스트 · 반응 집계
@@ -44,12 +49,46 @@ export async function PATCH(req: NextRequest) {
     if (Array.isArray(body.nda_requests)) patch.nda_requests = body.nda_requests
 
     const supabase = await createClient()
+
+    // D5 — NDA 상태 변화 감지용 스냅샷 (승인/거절 전환 시 요청자에게 알림 + 메일)
+    let prevNda: NdaReq[] = []
+    if (Array.isArray(body.nda_requests)) {
+      try {
+        const { data: prev } = await supabase
+          .from('listing_marketing').select('nda_requests').eq('listing_id', listing_id).maybeSingle()
+        if (Array.isArray(prev?.nda_requests)) prevNda = prev.nda_requests as NdaReq[]
+      } catch { /* 스냅샷 실패 시 알림만 생략 */ }
+    }
+
     const { data, error } = await supabase
       .from('listing_marketing')
       .upsert(patch, { onConflict: 'listing_id' })
       .select()
       .single()
     if (error) throw error
+
+    // D5 — 운영사 검토 → 승인/거절 전환 건 알림 (fire-and-forget)
+    if (Array.isArray(body.nda_requests)) {
+      const prevById = new Map(prevNda.map(r => [r.id, r.status]))
+      for (const r of body.nda_requests as NdaReq[]) {
+        const next = r?.status
+        if (!r?.id || !next || prevById.get(r.id) === next) continue
+        if (next !== '승인' && next !== '거절') continue
+        if (r.email) {
+          void notifyByEmail(r.email, {
+            type: 'CONTRACT',
+            title: next === '승인' ? `NDA 승인 완료 — ${listing_id} 상세 열람 가능` : `NDA 검토 결과 — ${listing_id} 미승인`,
+            message: next === '승인'
+              ? 'NPL 자동매칭 리스트에서 세부내역을 열람하실 수 있습니다.'
+              : '추가 확인이 필요해 승인되지 않았습니다. 운영사로 문의해주세요.',
+            link: '/exchange',
+          })
+          void sendEmail({ to: r.email, ...ndaStatusEmail({ name: r.signer || '회원', listingNo: listing_id, status: next }) })
+            .catch(() => {})
+        }
+      }
+    }
+
     return NextResponse.json({ success: true, data })
   } catch (e) {
     const message = e instanceof Error ? e.message : 'update failed'
@@ -95,6 +134,21 @@ export async function POST(req: NextRequest) {
           updated_at: new Date().toISOString(),
         }, { onConflict: 'listing_id' })
       if (error) throw error
+
+      // D5 — 매각 회원에게 NDA 신규 요청 알림 (매물 소유자 조회 성공 시)
+      try {
+        const { data: listing } = await supabase
+          .from('npl_listings').select('seller_id, title').eq('id', listing_id).maybeSingle()
+        if (listing?.seller_id) {
+          void notifyUserId(listing.seller_id as string, {
+            type: 'CONTRACT',
+            title: `NDA 요청 접수 — ${listing.title ?? listing_id}`,
+            message: `${signer || '매입 회원'}님이 NDA 전자서명을 제출했습니다. 운영사 검토 후 진행됩니다.`,
+            link: '/my/seller',
+          })
+        }
+      } catch { /* 알림 실패는 무시 */ }
+
       return NextResponse.json({ success: true })
     }
 

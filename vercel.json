@@ -1,6 +1,14 @@
 {
   "crons": [
     {
+      "path": "/api/v1/cron/digest?type=daily",
+      "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/v1/cron/digest?type=weekly",
+      "schedule": "0 23 * * 0"
+    },
+    {
       "path": "/api/v1/cron/daily",
       "schedule": "0 0 * * *"
     },
