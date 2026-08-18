@@ -70,7 +70,7 @@ export default function MyDemandsPage() {
 
   const load = () => {
     setLoading(true)
-    fetch('/api/v1/exchange/demands?limit=100', { credentials: 'include' })
+    fetch('/api/v1/exchange/demands?limit=100&mine=1', { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
         const list: Array<Record<string, any>> = Array.isArray(d.data) ? d.data : []

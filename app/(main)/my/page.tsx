@@ -80,7 +80,7 @@ export default function MyDashboardPage() {
   useEffect(() => {
     if (group !== 'BUYER' && group !== 'GUEST') return
     // 매입 조건 수
-    fetch('/api/v1/exchange/demands?limit=100', { credentials: 'include' })
+    fetch('/api/v1/exchange/demands?limit=100&mine=1', { credentials: 'include' })
       .then(r => r.json())
       .then(d => setDemandCount(Array.isArray(d?.data) ? d.data.length : 0))
       .catch(() => setDemandCount(0))

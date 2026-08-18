@@ -606,7 +606,7 @@ export default function ExchangePage() {
   const [hasDemands, setHasDemands] = useState(false)
   useEffect(() => {
     if (authState !== 'user') { setHasDemands(false); return }
-    fetch('/api/v1/exchange/demands?limit=1', { credentials: 'include' })
+    fetch('/api/v1/exchange/demands?limit=1&mine=1', { credentials: 'include' })
       .then(r => r.json())
       .then(d => setHasDemands(Array.isArray(d?.data) && d.data.length > 0))
       .catch(() => {})

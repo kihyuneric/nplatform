@@ -32,6 +32,8 @@ type Overview = {
   demands: number | null
   interestTotal: number | null
   ndaTotal: number | null
+  ndaPending: number | null
+  openTickets: number | null
 }
 
 const fmt = (v: number | null | undefined) => (typeof v === 'number' ? v.toLocaleString() : '—')
@@ -63,7 +65,8 @@ export default function AdminDashboardPage() {
     { label: '매각의뢰 현황', value: fmt(ov?.activeListings), unit: '건', desc: '승인 매각의뢰 · 세부내역 · 마케팅', href: '/admin/listings', icon: FileText },
     { label: '매입조건 현황', value: fmt(ov?.demands), unit: '건', desc: '등록 조건 확인 → 자동매칭', href: '/admin/demands', icon: ShoppingCart },
     { label: '관심 등록', value: fmt(ov?.interestTotal), unit: '건', desc: '자동매칭 리스트 ♥ 반응 합계', href: '/admin/listings', icon: Heart },
-    { label: 'NDA 요청', value: fmt(ov?.ndaTotal), unit: '건', desc: '운영사 검토 → 승인 시 상세 공개', href: '/admin/agreements', icon: FileSignature, urgent: (ov?.ndaTotal ?? 0) > 0 },
+    { label: 'NDA 검토 대기', value: fmt(ov?.ndaPending ?? ov?.ndaTotal), unit: '건', desc: '운영사 검토 → 승인 시 상세 공개', href: '/admin/agreements', icon: FileSignature, urgent: (ov?.ndaPending ?? 0) > 0 },
+    { label: '접수함 미처리', value: fmt(ov?.openTickets), unit: '건', desc: '매각의뢰 문의 · 진행종료 요청 · 일반 문의', href: '/admin/inbox', icon: Eye, urgent: (ov?.openTickets ?? 0) > 0 },
   ]
 
   return (

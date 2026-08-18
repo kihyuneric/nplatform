@@ -37,13 +37,18 @@ function num(v: unknown): number | null {
 export async function GET() {
   const supabase = await createClient()
 
-  // ── 매물 (활성) ──
+  // ── 매물 (활성) — 정식 테이블 npl_listings 우선 (컬럼명이 테이블마다 다름) ──
   let listings: Row[] = []
-  for (const t of ['deal_listings', 'listings']) {
+  const LISTING_SOURCES: Array<[string, string]> = [
+    ['npl_listings', 'id, sido, sigungu, address, collateral_type, proposed_sale_price, loan_principal, claim_amount'],
+    ['deal_listings', 'id, sido, sigungu, address, collateral_type, asking_price, outstanding_principal, principal_amount'],
+    ['listings', 'id, sido, sigungu, address, collateral_type, asking_price, outstanding_principal, principal_amount'],
+  ]
+  for (const [t, cols] of LISTING_SOURCES) {
     const { data, error } = await supabase.from(t)
-      .select('id, sido, sigungu, address, collateral_type, asking_price, outstanding_principal, principal_amount')
+      .select(cols)
       .eq('status', 'ACTIVE').limit(500)
-    if (!error && data) { listings = data as Row[]; break }
+    if (!error && data && data.length > 0) { listings = data as Row[]; break }
   }
 
   // ── 매입조건 ──
@@ -65,8 +70,8 @@ export async function GET() {
     const region = [l.sido, l.sigungu].filter(Boolean).join(' ')
       || String(l.address ?? '').split(/\s+/).slice(0, 2).join(' ')
     const type = String(l.collateral_type ?? '')
-    const principal = num(l.outstanding_principal) ?? num(l.principal_amount)
-    const asking = num(l.asking_price) ?? (principal ? Math.round(principal * 0.7) : null)
+    const principal = num(l.outstanding_principal) ?? num(l.principal_amount) ?? num(l.loan_principal) ?? num(l.claim_amount)
+    const asking = num(l.asking_price) ?? num(l.proposed_sale_price) ?? (principal ? Math.round(principal * 0.7) : null)
     const askingEok = asking ? asking / EOK : null
 
     let matched = 0
@@ -86,12 +91,16 @@ export async function GET() {
              (ct === '아파트' && /APARTMENT/i.test(type)) ||
              (ct === '오피스텔' && /OFFICETEL/i.test(type)) ||
              (ct.includes('상가') && /(COMMERCIAL|STORE|RETAIL)/i.test(type)) ||
-             ((ct === '대지' || ct === '토지' || ct === '임야' || ct === '농지' || ct === '잡종지') && /LAND/i.test(type)))
+             (ct.includes('오피스') && /OFFICE/i.test(type)) ||
+             ((ct.includes('통건물') || ct.includes('호텔') || ct.includes('리조트') || ct.includes('빌딩')) && /(COMMERCIAL|BUILDING|HOTEL)/i.test(type)) ||
+             ((ct.includes('물류') || ct.includes('공장') || ct.includes('지식산업')) && /(FACTORY|WAREHOUSE)/i.test(type)) ||
+             ((ct === '대지' || ct === '토지' || ct === '임야' || ct === '농지' || ct === '잡종지' || ct.includes('부지')) && /LAND/i.test(type)))
       if (!typeOk) continue
 
-      // 금액대 (억원 기준 — 협의가와 겹침)
-      const min = num(d.min_amount)
-      const max = num(d.max_amount)
+      // 금액대 (억원 기준 — 협의가와 겹침) · 원 단위로 저장된 값은 억으로 정규화
+      const toEok = (v: unknown) => { const n = num(v); return n === null ? null : (n > 100_000 ? n / EOK : n) }
+      const min = toEok(d.min_amount)
+      const max = toEok(d.max_amount)
       const amountOk = askingEok === null
         || ((min === null || askingEok >= min) && (max === null || askingEok <= max))
       if (!amountOk) continue

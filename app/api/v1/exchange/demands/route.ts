@@ -14,6 +14,20 @@ export async function GET(request: NextRequest) {
     const filters: QueryFilters = { is_public: true, status: 'ACTIVE' }
     if (urgency && urgency !== '전체') filters.urgency = urgency
 
+    // ?mine=1 — 본인 조건만 (마이페이지 · 대시보드용, 운영설계서 E3: 본인 R·U·D)
+    if (searchParams.get('mine') === '1') {
+      try {
+        const { createClient } = await import('@/lib/supabase/server')
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return NextResponse.json({ ok: true, data: [], total: 0, page, limit, total_pages: 0 })
+        delete (filters as Record<string, unknown>).is_public
+        filters.user_id = user.id
+      } catch {
+        return NextResponse.json({ ok: true, data: [], total: 0, page, limit, total_pages: 0 })
+      }
+    }
+
     const { data, total, _source } = await query('demands', {
       filters,
       orderBy: 'created_at',
@@ -120,14 +134,26 @@ export async function POST(request: NextRequest) {
     const resolvedDescription = memo || description || ''
     const resolvedUrgency = urgency || 'MEDIUM'
 
+    // 소유자 식별 — 세션 user_id 저장 (마이페이지 본인 조건 조회 · RLS 수정/삭제 기준)
+    let sessionUserId: string | null = null
+    let sessionEmail: string | null = null
+    try {
+      const { createClient } = await import('@/lib/supabase/server')
+      const supabase = await createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      sessionUserId = user?.id ?? null
+      sessionEmail = user?.email ?? null
+    } catch { /* 비로그인 접수 허용 (컨시어지) */ }
+
     const { data, _source } = await insert('demands', {
-      buyer_id: 'usr-current',
+      user_id: sessionUserId,
+      buyer_id: sessionUserId ?? 'usr-current',
       buyer_name: buyer_name || '사용자',
       buyer_tier: 'BASIC',
       // Phase G7+ · 매수자 OCR 추가 필드 (있으면 저장)
       buyer_type: buyer_type || null,
       contact_phone: contact_phone || null,
-      contact_email: contact_email || null,
+      contact_email: contact_email || sessionEmail || null,
       avoid_conditions: Array.isArray(avoid_conditions) ? avoid_conditions : [],
       preferred_risk_grades: Array.isArray(preferred_risk_grades) ? preferred_risk_grades : (ai_grades || []),
       min_roi: min_roi || null,
