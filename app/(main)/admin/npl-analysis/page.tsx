@@ -63,6 +63,17 @@ export default function AdminNplAnalysisPage() {
     [rows],
   )
 
+  // D0 공통 UI — 검색 + 페이지네이션 (20건/페이지)
+  const PAGE_SIZE = 20
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const q = search.trim().toLowerCase()
+  const filtered = q
+    ? analyzed.filter(r => [r.id, r.region, r.collateral, r.a.grade, r.a.opinion].join(' ').toLowerCase().includes(q))
+    : analyzed
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paged = filtered.slice((Math.min(page, totalPages) - 1) * PAGE_SIZE, Math.min(page, totalPages) * PAGE_SIZE)
+
   return (
     <div className="p-6 space-y-5">
       {/* 헤더 */}
@@ -113,6 +124,17 @@ export default function AdminNplAnalysisPage() {
         </div>
       </div>
 
+      {/* D0 공통 UI — 검색 */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <input
+          value={search}
+          onChange={e => { setSearch(e.target.value); setPage(1) }}
+          placeholder="관리번호 · 지역 · 유형 · 등급 · 의견 검색..."
+          className="w-full max-w-sm px-3 py-2 text-[12.5px] font-medium border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] outline-none focus:border-[#2251FF]"
+        />
+        <span className="text-[11px] text-[var(--color-text-muted)]">{filtered.length}건 / 전체 {analyzed.length}건</span>
+      </div>
+
       {/* 분석 테이블 */}
       <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-x-auto">
         <table className="w-full text-[13px]">
@@ -135,10 +157,10 @@ export default function AdminNplAnalysisPage() {
             {loading && (
               <tr><td colSpan={11} className="px-4 py-10 text-center text-sm text-[var(--color-text-muted)]">분석 데이터를 불러오는 중...</td></tr>
             )}
-            {!loading && analyzed.length === 0 && (
+            {!loading && filtered.length === 0 && (
               <tr><td colSpan={11} className="px-4 py-10 text-center text-sm text-[var(--color-text-muted)]">등록된 매물이 없습니다</td></tr>
             )}
-            {analyzed.map(r => (
+            {paged.map(r => (
               <tr key={r.id} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] transition-colors">
                 <td className="px-4 py-3 font-mono text-xs font-bold text-[var(--color-text-primary)]">{r.id}</td>
                 <td className="px-4 py-3">
@@ -176,6 +198,21 @@ export default function AdminNplAnalysisPage() {
           </tbody>
         </table>
       </div>
+
+      {/* D0 공통 UI — 페이지네이션 (20건/페이지) */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between text-[12px]">
+          <span className="text-[var(--color-text-muted)]">{page} / {totalPages} 페이지</span>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+              className="px-3 py-1.5 font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)] disabled:opacity-30"
+              style={{ background: 'transparent', cursor: 'pointer' }}>이전</button>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+              className="px-3 py-1.5 font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)] disabled:opacity-30"
+              style={{ background: 'transparent', cursor: 'pointer' }}>다음</button>
+          </div>
+        </div>
+      )}
 
       <p className="text-[11px] text-[var(--color-text-muted)]">
         ※ 산식: 예상 회수액 = 감정가 × 85% · ROI = (회수액 − 협의가) ÷ 협의가 · 회수율 = 회수액 ÷ 총 채권액 · LTV = 총 채권액 ÷ 감정가. ML 모델 연동 시 자동 대체됩니다.

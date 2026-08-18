@@ -23,10 +23,21 @@ type Row = {
   created: string
 }
 
+const PAGE_SIZE = 20
+
 export default function AdminAgreementsPage() {
   const [rows, setRows] = useState<Row[]>([])
   const [mk, setMk] = useState<Record<string, ListingMarketing>>({})
   const [loading, setLoading] = useState(true)
+  // D0 공통 UI — 검색 + 페이지네이션
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const q = search.trim().toLowerCase()
+  const filtered = q
+    ? rows.filter(r => [r.id, r.region, r.collateral, mk[r.id]?.npl_status ?? '', mk[r.id]?.deal_stage ?? ''].join(' ').toLowerCase().includes(q))
+    : rows
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paged = filtered.slice((Math.min(page, totalPages) - 1) * PAGE_SIZE, Math.min(page, totalPages) * PAGE_SIZE)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [savedId, setSavedId] = useState<string | null>(null)
 
@@ -130,6 +141,17 @@ export default function AdminAgreementsPage() {
         </button>
       </div>
 
+      {/* D0 공통 UI — 검색 */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <input
+          value={search}
+          onChange={e => { setSearch(e.target.value); setPage(1) }}
+          placeholder="관리번호 · 지역 · 유형 · 상태 · 딜 단계 검색..."
+          className="w-full max-w-sm px-3 py-2 text-[12.5px] font-medium border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] outline-none focus:border-[#2251FF]"
+        />
+        <span className="text-[11px] text-[var(--color-text-muted)]">{filtered.length}건 / 전체 {rows.length}건</span>
+      </div>
+
       <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-x-auto">
         <table className="w-full text-[12.5px]">
           <thead>
@@ -148,10 +170,10 @@ export default function AdminAgreementsPage() {
             {loading && (
               <tr><td colSpan={8} className="px-3 py-10 text-center text-sm text-[var(--color-text-muted)]">불러오는 중...</td></tr>
             )}
-            {!loading && rows.length === 0 && (
+            {!loading && filtered.length === 0 && (
               <tr><td colSpan={8} className="px-3 py-12 text-center text-sm text-[var(--color-text-muted)]">활성 매물이 없습니다</td></tr>
             )}
-            {rows.map(r => {
+            {paged.map(r => {
               const m = mk[r.id]
               const stage = m?.deal_stage ?? ''
               return (
@@ -246,6 +268,21 @@ export default function AdminAgreementsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* D0 공통 UI — 페이지네이션 (20건/페이지) */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between text-[12px]">
+          <span className="text-[var(--color-text-muted)]">{page} / {totalPages} 페이지</span>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+              className="px-3 py-1.5 font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)] disabled:opacity-30"
+              style={{ background: 'transparent', cursor: 'pointer' }}>이전</button>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+              className="px-3 py-1.5 font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)] disabled:opacity-30"
+              style={{ background: 'transparent', cursor: 'pointer' }}>다음</button>
+          </div>
+        </div>
+      )}
 
       <p className="text-[11px] text-[var(--color-text-muted)]">
         ※ LOI · 플래그 · 위반확정 등 미연동 개념은 제거되었습니다. 단계 저장은 listing_marketing 테이블 생성 후 유지됩니다.
