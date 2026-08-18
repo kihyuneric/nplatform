@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
     let query = supabase
       .from('users')
-      .select('id, email, name, role, company_name, phone, is_verified, kyc_status, subscription_tier, created_at, last_login_at, login_count, credit_balance', { count: 'exact' })
+      .select('id, email, name, role, roles, buyer_kind, admin_note, company_name, phone, is_verified, kyc_status, subscription_tier, created_at, last_login_at, login_count, credit_balance, card_file_name, card_file_url, business_file_name, business_file_url', { count: 'exact' })
 
     if (role && role !== 'ALL') query = query.eq('role', role)
     if (kyc && kyc !== 'ALL') query = query.eq('kyc_status', kyc)

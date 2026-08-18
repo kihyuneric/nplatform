@@ -124,6 +124,20 @@ export default function SignupPage() {
     setLoading(true)
     try {
       const supabase = createClient()
+
+      // 첨부 실업로드 (Supabase Storage · attachments 버킷) — 실패해도 가입은 진행 (파일명만 보관)
+      const uploadFile = async (file: File | null): Promise<string | null> => {
+        if (!file) return null
+        try {
+          const safeName = file.name.replace(/[^\w.가-힣-]/g, '_').slice(0, 80)
+          const path = `signup/${crypto.randomUUID()}-${safeName}`
+          const { error: upErr } = await supabase.storage.from('attachments').upload(path, file, { upsert: false })
+          if (upErr) return null
+          return supabase.storage.from('attachments').getPublicUrl(path).data.publicUrl
+        } catch { return null }
+      }
+      const [cardUrl, businessUrl] = await Promise.all([uploadFile(cardFile), uploadFile(businessFile)])
+
       const { data, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
@@ -142,7 +156,9 @@ export default function SignupPage() {
             approval_status: 'PENDING',   // 관리자 승인 후에만 활성화 (승인제)
             message: form.message,
             business_file_name: businessFile?.name ?? null,
+            business_file_url: businessUrl,
             card_file_name: cardFile?.name ?? null,
+            card_file_url: cardUrl,
             marketing_opt_in: agreeMarketing,
           },
         },

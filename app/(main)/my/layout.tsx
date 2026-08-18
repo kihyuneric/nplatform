@@ -70,12 +70,22 @@ export default function MyLayout({ children }: { children: React.ReactNode }) {
   const [roles, setRoles] = useState<string[]>([])
   useEffect(() => {
     const cookieRole = document.cookie.match(/(?:^|; )active_role=([^;]*)/)?.[1]
-    if (cookieRole) { setRoles(getMemberRoles({ role: decodeURIComponent(cookieRole) })); return }
     ;(async () => {
       try {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
-        setRoles(getMemberRoles(user?.user_metadata as Record<string, unknown> | undefined))
+        // 세션 없음(개발 우회 등) — 쿠키 역할 폴백
+        if (!user) {
+          if (cookieRole) setRoles(getMemberRoles({ role: decodeURIComponent(cookieRole) }))
+          return
+        }
+        // DB(users.roles)가 SSoT — 관리자의 역할 겸용 저장이 즉시 반영되도록 (metadata 는 폴백)
+        let source: Record<string, unknown> | undefined = user.user_metadata as Record<string, unknown> | undefined
+        try {
+          const { data: profile } = await supabase.from('users').select('roles, role').eq('id', user.id).maybeSingle()
+          if (Array.isArray(profile?.roles) && profile.roles.length > 0) source = profile as Record<string, unknown>
+        } catch { /* metadata 폴백 */ }
+        setRoles(getMemberRoles(source))
       } catch { /* ignore */ }
     })()
   }, [])

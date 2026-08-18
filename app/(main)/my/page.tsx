@@ -42,12 +42,22 @@ export default function MyDashboardPage() {
   // D1 복수 역할 — 겸용(매각+매입) 여부: 겸용이면 리다이렉트 없이 통합 대시보드
   const [memberRoles, setMemberRoles] = useState<string[]>([])
   useEffect(() => {
-    if (cookieRole) { setMemberRoles(getMemberRoles({ role: cookieRole })); return }
     ;(async () => {
       try {
         const supabase = createClient()
         const { data: { user: authUser } } = await supabase.auth.getUser()
-        setMemberRoles(getMemberRoles(authUser?.user_metadata as Record<string, unknown> | undefined))
+        // 세션 없음(개발 우회 등) — 쿠키 역할 폴백
+        if (!authUser) {
+          if (cookieRole) setMemberRoles(getMemberRoles({ role: cookieRole }))
+          return
+        }
+        // DB(users.roles) 우선 — 관리자 역할 겸용 저장 즉시 반영 (metadata 폴백)
+        let source: Record<string, unknown> | undefined = authUser.user_metadata as Record<string, unknown> | undefined
+        try {
+          const { data: profile } = await supabase.from('users').select('roles, role').eq('id', authUser.id).maybeSingle()
+          if (Array.isArray(profile?.roles) && profile.roles.length > 0) source = profile as Record<string, unknown>
+        } catch { /* metadata 폴백 */ }
+        setMemberRoles(getMemberRoles(source))
       } catch { /* ignore */ }
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -124,9 +124,10 @@ export function DataTable<T extends Record<string, any>>({
         </div>
         {Array.from({ length: loadingRows }).map((_, i) => (
           <div key={i} className="flex gap-4 px-4 py-3.5 border-b border-[var(--color-border-subtle)]">
-            {columns.map(col => (
+            {columns.map((col, j) => (
               <div key={col.key} className="flex-1" style={col.width ? { width: col.width, flex: 'none' } : undefined}>
-                <SkeletonPulse variant="shimmer" className="h-4 rounded" style={{ width: `${60 + Math.random() * 30}%` }} />
+                {/* 결정적 폭 — Math.random() 은 SSR/CSR 하이드레이션 불일치를 일으킴 */}
+                <SkeletonPulse variant="shimmer" className="h-4 rounded" style={{ width: `${60 + ((i * 7 + j * 13) % 31)}%` }} />
               </div>
             ))}
           </div>
