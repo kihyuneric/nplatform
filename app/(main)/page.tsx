@@ -1671,12 +1671,12 @@ export default function LandingPage() {
 
             <motion.div variants={stagger} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                { tag: '금융기관', icon: <Building2 size={16} style={{ color: '#0A1628' }} />, title: 'KB국민은행 · 금융위', desc: '부실채권 분석·평가 위탁 테스트 수행', logo: 'kb-kookmin.png' },
-                { tag: '핀테크', icon: <Cpu size={16} style={{ color: '#0A1628' }} />, title: 'K뱅크 AI 경매 서비스', desc: 'AI 기반 경매 분석 서비스 런칭', logo: 'kbank.png' },
-                { tag: '언론', icon: <Globe size={16} style={{ color: '#0A1628' }} />, title: '조선일보 땅집고', desc: '경·공매 공동사업 파트너십', logo: 'ddangjipgo.png' },
-                { tag: '수상', icon: <TrendingUp size={16} style={{ color: '#0A1628' }} />, title: 'XRF 핀테크 어워드 2위', desc: '핀테크 경진 부문 준우승', logo: 'xrf.png' },
-                { tag: '수상', icon: <Star size={16} style={{ color: '#0A1628' }} />, title: '국토교통부 최우수상', desc: '부동산 데이터 활용 부문 최우수', logo: 'molit.png' },
-                { tag: '유통', icon: <Play size={16} style={{ color: '#0A1628' }} />, title: '땅집고옥션', desc: '경·공매 플랫폼 → 엔플랫폼 유입', logo: 'ddangjipgo-auction.png' },
+                { tag: '금융기관', icon: <Building2 size={16} style={{ color: '#0A1628' }} />, title: 'KB국민은행 · 금융위', desc: '부실채권 분석·평가 위탁 테스트 수행', logo: 'kb-kookmin.svg' },
+                { tag: '핀테크', icon: <Cpu size={16} style={{ color: '#0A1628' }} />, title: 'K뱅크 AI 경매 서비스', desc: 'AI 기반 경매 분석 서비스 런칭', logo: 'kbank.svg' },
+                { tag: '언론', icon: <Globe size={16} style={{ color: '#0A1628' }} />, title: '조선일보 땅집고', desc: '경·공매 공동사업 파트너십', logo: 'ddangjipgo.svg' },
+                { tag: '수상', icon: <TrendingUp size={16} style={{ color: '#0A1628' }} />, title: 'XRF 핀테크 어워드 2위', desc: '핀테크 경진 부문 준우승', logo: 'xrf.svg' },
+                { tag: '수상', icon: <Star size={16} style={{ color: '#0A1628' }} />, title: '국토교통부 최우수상', desc: '부동산 데이터 활용 부문 최우수', logo: 'molit.svg' },
+                { tag: '유통', icon: <Play size={16} style={{ color: '#0A1628' }} />, title: '땅집고옥션', desc: '경·공매 플랫폼 → 엔플랫폼 유입', logo: 'ddangjipgo-auction.svg' },
               ].map((m, i) => (
                 <motion.article key={m.title} variants={up} custom={i}
                   className="mck-paper"

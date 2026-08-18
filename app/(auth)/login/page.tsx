@@ -198,9 +198,10 @@ export default function LoginPage() {
           {/* Editorial KPI list */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0, borderTop: '1px solid rgba(255,255,255,0.10)' }}>
             {[
-              { label: '가입자', value: '12,847명' },
-              { label: '완료 거래', value: '₩128억' },
-              { label: 'AI 분석', value: '28,400건' },
+              // 실서비스 지표 톤 — 가짜 수치·AI 흔적 금지 (운영설계서 §1-2)
+              { label: '운영 방식', value: '승인제 프라이빗' },
+              { label: '정보 공개', value: 'NDA 기반' },
+              { label: '매칭', value: '조건 선별 제시' },
             ].map((kpi) => (
               <div
                 key={kpi.label}

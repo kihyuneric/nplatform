@@ -543,9 +543,11 @@ export default function ExchangePage() {
     let arr = [...listings]
     if (q) {
       const t = q.toLowerCase()
+      // 동 단위 주소(address_dong)·매물명까지 검색 — '역삼' 등 동 이름 검색 지원
       arr = arr.filter(x =>
         x.institution.toLowerCase().includes(t) ||
         x.region.toLowerCase().includes(t) ||
+        (x.address_dong ?? '').toLowerCase().includes(t) ||
         x.collateral.toLowerCase().includes(t) ||
         x.id.toLowerCase().includes(t)
       )
