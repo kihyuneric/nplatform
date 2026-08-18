@@ -115,7 +115,8 @@ export async function GET(req: NextRequest) {
       // Try Supabase tickets table
       try {
         let query = supabase.from('support_tickets').select('*', { count: 'exact' })
-        if (!isAdmin) query = query.eq('email', profile?.email || user.email)
+        // support_tickets 에는 email 컬럼이 없음 — 본인 티켓은 user_id 로 필터
+        if (!isAdmin) query = query.eq('user_id', user.id)
         if (ticketId) query = query.eq('id', ticketId)
         if (status) query = query.eq('status', status)
         if (priority) query = query.eq('priority', priority)
