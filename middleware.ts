@@ -246,7 +246,8 @@ export async function middleware(request: NextRequest) {
       "font-src 'self' data:",
       // Phase L · translate.googleapis.com 허용 (i18n 자동 번역)
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.supabase.co https://api.anthropic.com https://api.openai.com https://translate.googleapis.com",
-      "frame-ancestors 'none'",
+      // 'self' — 세부내역 우측 패널(DetailPane)이 /listing-detail 을 iframe 으로 임베드 (외부 사이트 임베드는 계속 차단)
+      "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",
       isDev ? "" : "upgrade-insecure-requests",

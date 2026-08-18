@@ -23,13 +23,13 @@ export async function notifyUserId(userId: string, payload: NotifyPayload): Prom
   if (!userId) return false
   try {
     const supabase = await createClient()
+    // 실테이블 컬럼: id, user_id, type, title, body, link, is_read, created_at (message/metadata 없음)
     const { error } = await supabase.from('notifications').insert({
       user_id: userId,
       type: payload.type,
       title: payload.title,
-      message: payload.message ?? '',
+      body: payload.message ?? '',
       link: payload.link ?? null,
-      metadata: payload.metadata ?? {},
       is_read: false,
       created_at: new Date().toISOString(),
     })

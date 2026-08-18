@@ -80,13 +80,16 @@ function AlertsView() {
     ;(async () => {
       try {
         const supabase = createClient()
+        // 실컬럼은 body — UI 필드 message 로 매핑
         const { data } = await supabase
           .from('notifications')
-          .select('id, type, title, message, is_read, created_at, link')
+          .select('id, type, title, body, is_read, created_at, link')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(100)
-        if (!cancelled && Array.isArray(data)) setItems(data as AlertRow[])
+        if (!cancelled && Array.isArray(data)) {
+          setItems((data as Array<AlertRow & { body?: string }>).map(r => ({ ...r, message: r.body ?? '' })))
+        }
       } catch (e) {
         console.warn('[inbox/alerts] fetch failed:', e)
       } finally {
