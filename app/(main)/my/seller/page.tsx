@@ -7,6 +7,7 @@ import { Plus, Heart, Gavel, CheckCircle2, TrendingUp, Package, Download, Loader
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import DS, { formatKRW } from '@/lib/design-system'
 import { maskInstitutionName } from '@/lib/mask'
+import { DetailPane } from '@/components/listing/detail-pane'
 import { MckPageShell, MckPageHeader, MckTabBar } from '@/components/mck'
 import { MyZoneTabs } from '@/components/my/my-zone-tabs'
 import { MCK, MCK_FONTS, MCK_TYPE } from '@/lib/mck-design'
@@ -157,6 +158,9 @@ export default function SellerDashboardPage() {
       .then(d => { if (d?.data) setMarketing(d.data) })
       .catch(() => {})
   }, [])
+
+  // ── 세부내역 우측 패널 (D0·D6) ──
+  const [detailTarget, setDetailTarget] = useState<string | null>(null)
 
   // ── 진행종료 요청 — 운영사 관리자 접수함으로 접수, 승인 후 종료 ──
   const [endRequested, setEndRequested] = useState<Set<string>>(new Set())
@@ -448,13 +452,14 @@ export default function SellerDashboardPage() {
                       <td className={DS.table.cellMuted + " tabular-nums"}>{l.date}</td>
                       <td className={DS.table.cell}>
                         <div className="flex items-center gap-1.5">
-                          {/* 세부내역 = NPL 상세정보 (탬플릿) — 그 안에서 수정 가능 */}
-                          <Link
-                            href={`/listing-detail/${encodeURIComponent(l.id)}`}
+                          {/* 세부내역 = NPL 상세정보 (탬플릿) — 우측 패널에서 수정 (D0·D6) */}
+                          <button
+                            onClick={() => setDetailTarget(l.id)}
                             className={DS.text.link + " text-[0.8125rem]"}
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
                           >
                             세부내역
-                          </Link>
+                          </button>
                           <span className="text-[var(--color-border-default)]">|</span>
                           {/* 진행종료 요청 — 운영사 관리자 접수함에서 승인 후 종료 */}
                           {endRequested.has(l.id) ? (
@@ -642,6 +647,11 @@ export default function SellerDashboardPage() {
           </div>
         )}
       </div>
+
+      {/* 세부내역 우측 패널 — 별도 화면 이동 없이 확인·수정 (D0·D6) */}
+      {detailTarget && (
+        <DetailPane listingId={detailTarget} onClose={() => setDetailTarget(null)} />
+      )}
     </MckPageShell>
   )
 }

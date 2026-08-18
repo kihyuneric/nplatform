@@ -9,6 +9,7 @@ import DS, { formatKRW, formatDate } from "@/lib/design-system"
 import { DataTable, type Column } from "@/components/ui/data-table"
 import { NPL_STATUSES } from "@/lib/marketing-checklist"
 import { MarketingPanel } from "@/components/admin/marketing-panel"
+import { DetailPane } from "@/components/listing/detail-pane"
 
 type ApprovalStatus = "PENDING" | "APPROVED" | "ACTIVE" | "REJECTED" | "HIDDEN" | "REPORTED"
 
@@ -66,6 +67,8 @@ export default function AdminListingsPage() {
 
   // ── 마케팅 진행 관리 모달 (매각의뢰 현황에서 직접 관리 · 2026-08-18) ──
   const [mkTarget, setMkTarget] = useState<string | null>(null)
+  // ── 세부내역 우측 패널 (D0·D6 — 별도 화면 이동 없이 확인) ──
+  const [detailTarget, setDetailTarget] = useState<string | null>(null)
 
   // ── NPL 상태 (진행중/협의중/매각완료) — 리스트 앞단 표시 + 즉시 수정 ──
   const [nplStatusMap, setNplStatusMap] = useState<Record<string, string>>({})
@@ -326,8 +329,10 @@ export default function AdminListingsPage() {
               ),
             },
             { key: 'title', label: '매물명 (클릭 시 상세)', sortable: true, render: (v, row) => (
-              // 클릭 → NPL 탬플릿 세부내역 전체
-              <a href={`/listing-detail/${encodeURIComponent(row.id)}`} className="font-medium max-w-[160px] truncate block text-[var(--color-text-primary)] hover:underline" style={{ textDecoration: 'none' }}>{v}</a>
+              // 클릭 → 우측 세부내역 패널 (D0·D6)
+              <button onClick={() => setDetailTarget(row.id)}
+                className="font-medium max-w-[160px] truncate block text-left text-[var(--color-text-primary)] hover:underline"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>{v}</button>
             )},
             { key: 'listing_type', label: '유형', sortable: true, render: (v) => <span className={DS.badge.inline("bg-stone-100/10", "text-stone-900", "border-stone-300/20")}>{v ?? "-"}</span> },
             { key: 'location', label: '소재지', render: (v) => <span className="text-[0.75rem] text-[var(--color-text-tertiary)] max-w-[120px] truncate block">{v ?? "-"}</span> },
@@ -387,8 +392,10 @@ export default function AdminListingsPage() {
                 <a href={`/admin/listings/${v}/edit`} className={`${DS.button.secondary} ${DS.button.sm}`}>
                   편집
                 </a>
-                {/* 상세 = 표준 양식 세부내역 (수정·엑셀·인쇄) */}
-                <a href={`/listing-detail/${encodeURIComponent(v)}`} className={`${DS.text.link} text-[0.8125rem]`}>세부내역</a>
+                {/* 상세 = 표준 양식 세부내역 — 우측 패널로 (D0·D6) */}
+                <button onClick={() => setDetailTarget(v)}
+                  className={`${DS.text.link} text-[0.8125rem]`}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>세부내역</button>
                 {/* 마케팅 진행 관리 — 분석 페이지에서 이동 (2026-08-18) */}
                 <button
                   onClick={() => setMkTarget(v)}
@@ -444,6 +451,11 @@ export default function AdminListingsPage() {
           </div>
         </div>
       </div>
+
+      {/* 세부내역 우측 패널 — 별도 화면 이동 없이 확인·수정 */}
+      {detailTarget && (
+        <DetailPane listingId={detailTarget} onClose={() => setDetailTarget(null)} />
+      )}
 
       {/* 마케팅 진행 관리 모달 — 체크 즉시 매각사 대시보드 공유 */}
       {mkTarget && (

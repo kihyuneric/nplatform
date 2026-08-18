@@ -26,6 +26,7 @@ import * as XLSX from "xlsx"
 import { maskInstitutionName } from "@/lib/mask"
 import { NdaModal, type NdaState } from "@/components/asset-detail"
 import { createClient } from "@/lib/supabase/client"
+import { DetailPane } from "@/components/listing/detail-pane"
 import { PLATFORM_STATS } from "@/lib/platform-stats"
 import { useMainStats } from "@/lib/hooks/use-main-stats"
 import type { AccessTier } from "@/lib/access-tier"
@@ -298,6 +299,9 @@ export default function ExchangePage() {
       })
       .catch(() => {})
   }, [])
+
+  // ── 세부내역 우측 패널 (D0·D6 — 매입 회원 열람 모드) ──
+  const [detailTarget, setDetailTarget] = useState<string | null>(null)
 
   // ── NDA 전자계약 — 리스트에서 바로 서명 (자체 NdaModal + /api/v1/nda) ──
   const [ndaTarget, setNdaTarget] = useState<CardListing | null>(null)
@@ -1178,7 +1182,7 @@ export default function ExchangePage() {
               {/* 샘플 모드 — 헤더(상단 구성 항목)는 그대로 보이고 행 내용만 블러 */}
               <div style={guestMode ? { filter: "blur(3px)", pointerEvents: "none", userSelect: "none" } : undefined} aria-hidden={guestMode}>
                 {(guestMode ? GUEST_SAMPLES : paginatedItems).map((x, i) => (
-                  <ListingRow key={x.id} item={x} index={i} areaUnit={areaUnit} fav={favorites.has(x.id)} onToggleFav={toggleFavorite} onNda={openNda} nplStatus={statusMap[x.id]} no={guestMode ? x.id : displayNo[x.id]} />
+                  <ListingRow key={x.id} item={x} index={i} areaUnit={areaUnit} fav={favorites.has(x.id)} onToggleFav={toggleFavorite} onNda={openNda} nplStatus={statusMap[x.id]} no={guestMode ? x.id : displayNo[x.id]} onOpenDetail={setDetailTarget} />
                 ))}
               </div>
             </div>
@@ -1316,6 +1320,11 @@ export default function ExchangePage() {
           )}
         </div>
       </section>
+
+      {/* ── 세부내역 우측 패널 — 매입 회원 열람 (NDA 게이트는 패널 내부에서 적용) ── */}
+      {detailTarget && (
+        <DetailPane listingId={detailTarget} viewerMode onClose={() => setDetailTarget(null)} />
+      )}
 
       {/* ── NDA 전자계약 모달 — 자체 기능 (서명패드 + /api/v1/nda 기록) ── */}
       {ndaTarget && (
@@ -1753,15 +1762,14 @@ function SubMetricDark({ label, value, cyan: _cyan }: { label: string; value: st
 /* ═══════════════════════════════════════════════════════════
    ListingRow (list/table view)
 ═══════════════════════════════════════════════════════════ */
-function ListingRow({ item, index, areaUnit, fav, onToggleFav, onNda, nplStatus, no }: { item: CardListing; index: number; areaUnit: AreaUnit; fav: boolean; onToggleFav: (id: string) => void; onNda: (item: CardListing) => void; nplStatus?: string; no?: string }) {
-  const router = useRouter()
+function ListingRow({ item, index, areaUnit, fav, onToggleFav, onNda, nplStatus, no, onOpenDetail }: { item: CardListing; index: number; areaUnit: AreaUnit; fav: boolean; onToggleFav: (id: string) => void; onNda: (item: CardListing) => void; nplStatus?: string; no?: string; onOpenDetail?: (id: string) => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.015, 0.2), duration: 0.25 }}
-      // 행 클릭 → 세부내역 (NDA 승인된 매입사만 열람 가능 · 승인 전에는 잠금 안내)
-      onClick={() => router.push(`/listing-detail/${encodeURIComponent(item.id)}?mode=view`)}
+      // 행 클릭 → 세부내역 우측 패널 (NDA 승인된 매입 회원만 열람 · 승인 전 잠금 안내)
+      onClick={() => onOpenDetail?.(item.id)}
       style={{
         display: "grid",
         gridTemplateColumns: "30px 84px 1fr 1.2fr 0.7fr 0.55fr 0.55fr 0.62fr 0.62fr 0.68fr 0.62fr 88px",
