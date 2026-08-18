@@ -29,7 +29,6 @@ import {
   Heart,
   RefreshCw,
 } from 'lucide-react'
-import { LanguageSelector } from './language-selector'
 import { t } from '@/lib/i18n'
 import { TierBadge } from '@/components/tier/tier-badge'
 import type { AccessTier } from '@/lib/access-tier'
@@ -38,14 +37,28 @@ import { NotificationCenter } from '@/components/notifications/notification-cent
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import type { Notification } from '@/lib/types'
 
-// ─── Nav items ────────────────────────────────────────────────
+// ─── Nav items — 미니멀 IA · 서브메뉴 없음 (덜 보여주는 플랫폼) ──
 const NAV_ITEMS = [
-  { href: '/exchange',  label: '거래소',     matchPaths: ['/exchange'] },
-  { href: '/deals',     label: '딜룸',       matchPaths: ['/deals'] },
-  { href: '/analysis',  label: '분석',       matchPaths: ['/analysis'] },
-  { href: '/notices',   label: '공지/문의',  matchPaths: ['/notices', '/support'] },
-  { href: '/my',        label: '마이 페이지', matchPaths: ['/my'] },
+  { href: '/exchange',             label: 'NPL 자동매칭',   matchPaths: ['/exchange'] },
+  { href: '/exchange/sell',        label: 'NPL 매각의뢰', matchPaths: ['/exchange/sell', '/exchange/ocr-register'] },
+  { href: '/exchange/demands/new', label: '매입조건 등록', matchPaths: ['/exchange/demands'] },
+  { href: '/about',                label: 'NPLATFORM',   matchPaths: ['/about', '/guide'] },
+
 ]
+
+// ─── 활성 메뉴 판정 — 가장 긴 prefix 매칭 (하위 경로 오버하이라이트 방지) ──
+function getActiveHref(pathname: string | null): string | null {
+  const path = pathname ?? ''
+  let best: { href: string; len: number } | null = null
+  for (const item of NAV_ITEMS) {
+    for (const p of item.matchPaths) {
+      if (path === p || path.startsWith(p + '/')) {
+        if (!best || p.length > best.len) best = { href: item.href, len: p.length }
+      }
+    }
+  }
+  return best?.href ?? null
+}
 
 // ─── 사용자 티어 판정 (auth user → AccessTier) ─────────────
 function resolveUserTier(user: any): AccessTier {
@@ -58,12 +71,11 @@ function resolveUserTier(user: any): AccessTier {
 }
 
 // ─── Role helpers ─────────────────────────────────────────────
+// 관리자 역할은 '운영관리자' 하나로 통일 · 회원 유형 3종 (매각/매입/파트너) + 일반회원 (2026-08-18)
 function getSwitchableRoles(userRole: string | undefined): UserRole[] {
-  if (userRole === 'SUPER_ADMIN') {
-    return ['SUPER_ADMIN', 'ADMIN', 'SELLER', 'BUYER_INST', 'BUYER_INDV', 'PARTNER', 'VIEWER']
-  }
-  if (userRole === 'ADMIN') {
-    return ['ADMIN', 'SELLER', 'BUYER_INST', 'BUYER_INDV', 'PARTNER', 'VIEWER']
+  if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') {
+    // 역할 4종만 — 운영관리자 · 운영 파트너 · 매각 회원 · 매입 회원 (2026-08-18 확정)
+    return ['ADMIN', 'PARTNER', 'SELLER', 'BUYER']
   }
   return []
 }
@@ -72,10 +84,11 @@ const ROLE_DASHBOARD: Record<string, string> = {
   SUPER_ADMIN: '/admin',
   ADMIN: '/admin',
   SELLER: '/my/seller',
-  BUYER_INST: '/exchange',
-  BUYER_INDV: '/exchange',
-  PARTNER: '/my/partner',
-  VIEWER: '/',
+  BUYER: '/my',
+  BUYER_INST: '/my',
+  BUYER_INDV: '/my',
+  PARTNER: '/admin',
+  VIEWER: '/my',
 }
 
 function switchRole(role: string) {
@@ -180,16 +193,15 @@ function MobileDrawer({
           <Link href="/" className="flex items-center gap-2.5" onClick={onClose}>
             <div
               className="w-7 h-7 flex items-center justify-center flex-shrink-0"
-              style={{
-                background: "#2251FF",
-                borderTop: "2px solid #00A9F4",
-                boxShadow: "0 3px 8px rgba(34, 81, 255, 0.40)",
-              }}
+              style={{ background: "#0A1220", border: "1px solid rgba(191, 164, 118, 0.45)" }}
             >
-              <span className="text-white font-black text-sm tracking-tighter">N</span>
+              <span style={{ color: "#BFA476", fontFamily: "Georgia, serif", fontWeight: 900, fontSize: 14, lineHeight: 1 }}>N</span>
             </div>
-            <span className="font-black text-[var(--color-nav-text)] text-sm tracking-tight">
-              NPL<span className="font-light text-[var(--color-nav-text-dim)]">atform</span>
+            <span
+              className="text-[var(--color-nav-text)]"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 15, fontWeight: 700 }}
+            >
+              nplatform
             </span>
           </Link>
           <button
@@ -205,7 +217,7 @@ function MobileDrawer({
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-0.5">
             {NAV_ITEMS.map((item) => {
-              const isActive = item.matchPaths.some(p => (pathname ?? '').startsWith(p))
+              const isActive = item.href === getActiveHref(pathname)
               return (
                 <li key={item.href}>
                   <Link
@@ -252,7 +264,7 @@ function MobileDrawer({
                 onClick={onClose}
                 className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)] hover:bg-[var(--color-nav-hover-bg)] transition-colors"
               >
-                <User className="h-4 w-4" />내 페이지
+                <User className="h-4 w-4" />마이페이지
               </Link>
               <Link
                 href="/my/notifications"
@@ -303,14 +315,13 @@ function MobileDrawer({
               {/* NX-2: 비로그인 유저 모바일 메뉴에도 테마/언어 컨트롤 제공 */}
               <div className="flex items-center justify-center gap-2 pb-2 mb-1 border-b border-[var(--color-border-subtle)]">
                 <ThemeToggle variant="icon" />
-                <LanguageSelector />
               </div>
               <Link href="/login" onClick={onClose}>
                 <Button variant="outline" className="w-full text-sm">로그인</Button>
               </Link>
               <Link href="/signup" onClick={onClose}>
                 <Button className="w-full bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-deep)] text-white text-sm font-semibold">
-                  무료 시작
+                  회원가입
                 </Button>
               </Link>
             </div>
@@ -370,7 +381,7 @@ export function Navigation() {
 
   const isNavActive = useCallback(
     (item: typeof NAV_ITEMS[number]) =>
-      item.matchPaths.some(p => (pathname ?? '').startsWith(p)),
+      item.href === getActiveHref(pathname),
     [pathname]
   )
 
@@ -432,19 +443,23 @@ export function Navigation() {
 
           {/* ── Logo — Electric Blue 강조 (McKinsey cobalt) ─────────── */}
           <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
+            {/* 브랜드 로고 — 잉크 바탕 + 골드 N (2026-08-17 아이덴티티) */}
             <div
-              className="w-8 h-8 flex items-center justify-center flex-shrink-0 transition-colors"
+              className="w-8 h-8 flex items-center justify-center flex-shrink-0"
               style={{
-                background: "#2251FF",
-                borderTop: "2px solid #00A9F4",
-                boxShadow: "0 4px 10px rgba(34, 81, 255, 0.40)",
+                background: "#0A1220",
+                border: "1px solid rgba(191, 164, 118, 0.45)",
               }}
             >
-              <span className="text-white font-black text-base tracking-tighter">N</span>
+              <span style={{ color: "#BFA476", fontFamily: "Georgia, serif", fontWeight: 900, fontSize: 17, lineHeight: 1 }}>N</span>
             </div>
             <div className="hidden sm:block">
-              <span className="font-black text-[var(--color-nav-text)] text-base tracking-tight">NPL</span>
-              <span className="font-light text-[var(--color-nav-text-dim)] text-base">atform</span>
+              <span
+                className="text-[var(--color-nav-text)]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em" }}
+              >
+                nplatform
+              </span>
             </div>
           </Link>
 
@@ -471,15 +486,7 @@ export function Navigation() {
 
           {/* ── Right area ───────────────────────────────── */}
           <div className="flex items-center gap-1">
-            {/* Search button */}
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="p-2 rounded-md text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)] hover:bg-[var(--color-nav-hover-bg)] transition-colors"
-              aria-label="검색"
-              data-tour="search"
-            >
-              <Search className="h-4 w-4" />
-            </button>
+            {/* 검색 버튼 제거 — NPL 리스트 자체 검색만 사용 (단순화, 2026-08-17) */}
 
             {/* Desktop right side */}
             <div className="hidden lg:flex items-center gap-1">
@@ -489,14 +496,14 @@ export function Navigation() {
                 <>
                   {/* Admin link */}
                   {isAdmin && (
-                    <Link href="/admin">
+                    <Link href="/my">
                       <Button
                         variant="ghost"
                         size="sm"
                         className="text-stone-900 hover:text-stone-900 hover:bg-stone-100/10 text-xs"
                       >
                         <Shield className="mr-1 h-3.5 w-3.5" />
-                        관리
+                        마이페이지
                       </Button>
                     </Link>
                   )}
@@ -514,7 +521,6 @@ export function Navigation() {
                   <ThemeToggle variant="icon" />
 
                   {/* Language selector */}
-                  <LanguageSelector />
 
                   {/* User dropdown */}
                   <DropdownMenu>
@@ -532,53 +538,31 @@ export function Navigation() {
                       <div className="px-3 py-2.5">
                         <p className="text-sm font-semibold text-[var(--color-text-primary)]">{user.name}</p>
                         <p className="text-xs text-[var(--color-text-secondary)] truncate">{user.email}</p>
+                        {/* 2026-08-18 사용자 정책: NDA 체결(L2) 티어 배지 제거 —
+                            명함·사업자등록증 확인(관리자 승인) 여부만 '자격 인증완료'로 표시 */}
                         <div className="mt-2 flex items-center gap-1.5 flex-wrap">
-                          <TierBadge tier={resolveUserTier(user)} size="sm" showLabel />
+                          {(() => {
+                            const u = user as unknown as { approval_status?: string; kyc_status?: string; identity_verified?: boolean }
+                            return (u.approval_status === 'APPROVED' || u.kyc_status === 'APPROVED' || u.identity_verified)
+                          })() ? (
+                            <Badge className="text-[10px] bg-emerald-600 hover:bg-emerald-600 text-white">자격 인증완료</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px]">인증 대기 — 명함 · 사업자등록증 확인 중</Badge>
+                          )}
                           <Badge variant="secondary" className="text-[10px]">
                             {ROLE_LABELS[(activeRole || user.role) as UserRole] || activeRole || user.role}
                           </Badge>
                         </div>
-                        {(() => {
-                          const tier = resolveUserTier(user)
-                          const next = getNextUpgradeStep(tier)
-                          if (!next || !next.href) return null
-                          return (
-                            <Link
-                              href={next.href}
-                              className="mt-2 flex items-center justify-between rounded-md px-2.5 py-1.5"
-                              style={{
-                                backgroundColor: `${TIER_META[next.nextTier].color}14`,
-                                border: `1px solid ${TIER_META[next.nextTier].color}40`,
-                              }}
-                            >
-                              <span className="text-[11px] font-semibold" style={{ color: TIER_META[next.nextTier].color }}>
-                                {next.action} → {TIER_META[next.nextTier].shortLabel} 해금
-                              </span>
-                              <span aria-hidden style={{ color: TIER_META[next.nextTier].color, fontSize: 12 }}>→</span>
-                            </Link>
-                          )
-                        })()}
                       </div>
                       <DropdownMenuSeparator />
                       <DropdownMenuGroup>
                         <DropdownMenuItem asChild>
                           <Link href="/my" className="flex items-center cursor-pointer">
                             <User className="mr-2 h-4 w-4" />
-                            내 페이지
+                            마이페이지
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href="/my/portfolio" className="flex items-center cursor-pointer">
-                            <Heart className="mr-2 h-4 w-4" />
-                            관심매물
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href="/my/settings" className="flex items-center cursor-pointer">
-                            <Settings className="mr-2 h-4 w-4" />
-                            설정
-                          </Link>
-                        </DropdownMenuItem>
+                        {/* 관심매물 · 설정 항목 제거 (2026-08-18) — 마이페이지 좌측 메뉴에서 제공 */}
                       </DropdownMenuGroup>
                       <DropdownMenuSeparator />
                       {/* Role switcher — admin only */}
@@ -616,7 +600,6 @@ export function Navigation() {
                 <>
                   {/* NX-2: 비로그인 유저에게도 테마 토글 노출 — 보편적 접근성 원칙 */}
                   <ThemeToggle variant="icon" />
-                  <LanguageSelector />
                   <Button variant="ghost" size="sm" asChild className="text-sm text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)] hover:bg-[var(--color-nav-hover-bg)]">
                     <Link href="/login">로그인</Link>
                   </Button>
@@ -625,7 +608,7 @@ export function Navigation() {
                     asChild
                     className="bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-deep)] text-white text-sm font-semibold"
                   >
-                    <Link href="/signup">무료 시작</Link>
+                    <Link href="/signup">회원가입</Link>
                   </Button>
                 </>
               )}

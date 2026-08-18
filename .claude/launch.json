@@ -1,1 +1,39 @@
-{"version":"0.0.1","configurations":[{"name":"nplatform","runtimeExecutable":"npm","runtimeArgs":["run","dev","--","--port","3001"],"port":3001}]}
+﻿{
+    "version":  "0.0.1",
+    "configurations":  [
+                           {
+                               "name":  "nplatform",
+                               "runtimeExecutable":  "npm",
+                               "runtimeArgs":  [
+                                                   "run",
+                                                   "dev",
+                                                   "--",
+                                                   "--port",
+                                                   "3001"
+                                               ],
+                               "port":  3001
+                           },
+                           {
+                               "name":  "nplavm-web",
+                               "runtimeExecutable":  "npm",
+                               "runtimeArgs":  [
+                                                   "run",
+                                                   "dev",
+                                                   "--prefix",
+                                                   "C:/Users/82106/Desktop/nplavm/web"
+                                               ],
+                               "port":  3100
+                           },
+                           {
+                               "name":  "avm-web",
+                               "runtimeExecutable":  "npm",
+                               "runtimeArgs":  [
+                                                   "run",
+                                                   "dev",
+                                                   "--prefix",
+                                                   "C:/Users/82106/Desktop/transfarmer-avm/apps/web"
+                                               ],
+                               "port":  5173
+                           }
+                       ]
+}

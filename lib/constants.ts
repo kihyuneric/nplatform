@@ -8,26 +8,28 @@ export const USER_ROLES = {
   SUPER_ADMIN: 'SUPER_ADMIN',
   ADMIN: 'ADMIN',
   SELLER: 'SELLER',
-  BUYER_INST: 'BUYER_INST',
-  BUYER_INDV: 'BUYER_INDV',
+  BUYER: 'BUYER',            // 매입 회원 (법인 · 개인 통합 — 2026-08-18 확정)
+  BUYER_INST: 'BUYER_INST',  // legacy — 기존 가입자 호환
+  BUYER_INDV: 'BUYER_INDV',  // legacy — 기존 가입자 호환
   PARTNER: 'PARTNER',
   VIEWER: 'VIEWER',
 } as const
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES]
 
-// Phase G7+ 2026-04-29 — 사용자 정합 정책: 매도자→매각사, 매수자→매입사
+// 2026-08-18 회원 유형 3종 확정: 매각 회원 · 매입 회원 · 파트너 회원 (+ 일반회원 · 관리자)
 export const ROLE_LABELS: Record<UserRole, string> = {
   SUPER_ADMIN: '최고관리자',
   ADMIN: '운영관리자',
-  SELLER: '매각사',
-  BUYER_INST: '매입사 (법인)',
-  BUYER_INDV: '매입사 (자산가)',
-  PARTNER: '파트너 (자문사)',
+  SELLER: '매각 회원',
+  BUYER: '매입 회원',
+  BUYER_INST: '매입 회원',   // legacy 표기 통합
+  BUYER_INDV: '매입 회원',   // legacy 표기 통합
+  PARTNER: '운영 파트너',     // 운영 화면 열람 전용 (등록/수정/삭제 불가 · 2026-08-18)
   VIEWER: '일반회원',
 }
 
-export const BUYER_ROLES: UserRole[] = ['BUYER_INST', 'BUYER_INDV']
+export const BUYER_ROLES: UserRole[] = ['BUYER', 'BUYER_INST', 'BUYER_INDV']
 export const ADMIN_ROLES: UserRole[] = ['SUPER_ADMIN', 'ADMIN']
 export const SELLER_ROLES: UserRole[] = ['SELLER']
 export const MFA_REQUIRED_ROLES: UserRole[] = ['SUPER_ADMIN', 'ADMIN', 'SELLER']

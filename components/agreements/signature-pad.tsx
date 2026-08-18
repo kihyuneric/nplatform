@@ -122,17 +122,33 @@ export function SignaturePad({
     onChange?.(null)
   }, [onChange])
 
-  // 초기화 — 고DPI 대응
+  // 초기화 — 고DPI 대응 + 컨테이너 반응형 (고정 px 로 모달 밖으로 잘리던 문제 수정 2026-08-18)
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const dpr = window.devicePixelRatio || 1
-    canvas.width = width * dpr
-    canvas.height = height * dpr
-    canvas.style.width = `${width}px`
-    canvas.style.height = `${height}px`
-    const ctx = canvas.getContext('2d')
-    if (ctx) ctx.scale(dpr, dpr)
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1
+      // 컨테이너 실제 폭 기준 — width prop 은 최대치로만 사용
+      const parentW = canvas.parentElement?.clientWidth || width
+      const w = Math.min(width, parentW)
+      // 기존 서명 보존 (리사이즈 시 이미지 복사)
+      const prev = document.createElement('canvas')
+      prev.width = canvas.width
+      prev.height = canvas.height
+      if (canvas.width > 0) prev.getContext('2d')?.drawImage(canvas, 0, 0)
+      canvas.width = w * dpr
+      canvas.height = height * dpr
+      canvas.style.width = '100%'
+      canvas.style.height = `${height}px`
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.scale(dpr, dpr)
+        if (prev.width > 0) ctx.drawImage(prev, 0, 0, prev.width, prev.height, 0, 0, w, height)
+      }
+    }
+    resize()
+    window.addEventListener('resize', resize)
+    return () => window.removeEventListener('resize', resize)
   }, [width, height])
 
   return (

@@ -1,15 +1,14 @@
 import type { Metadata } from 'next'
 import { QueryClient, dehydrate } from '@tanstack/react-query'
 import { BannerSlot } from '@/components/banners/banner-slot'
-import { DynamicSubNav } from '@/components/layout/dynamic-sub-nav'
 import { query } from '@/lib/data-layer'
 import { ExchangeHydration } from './exchange-hydration'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nplatform.co.kr'
 
 export const metadata: Metadata = {
-  title: '거래소 | NPLatform',
-  description: 'NPL 채권 매각·매수 거래소. 매물 탐색, 입찰 신청, 딜룸 입장까지 한 곳에서.',
+  title: 'NPL 자동매칭 | NPLatform',
+  description: '대한민국 1%를 위한 프라이빗 NPL 자동매칭. 기본 정보만 공개 — 상세는 온라인 NDA 체결 후 열립니다.',
   alternates: {
     canonical: `${SITE_URL}/exchange`,
     languages: {
@@ -78,7 +77,7 @@ export default async function ExchangeLayout({
 
   return (
     <>
-      <DynamicSubNav pageKey="exchange" />
+      {/* 서브네비 제거 — 1메뉴 1상세 정책 (2026-08-17) */}
       <BannerSlot position="exchange-top" className="mx-auto max-w-7xl px-4 pt-4" />
       <ExchangeHydration state={dehydrate(queryClient)}>
         {children}

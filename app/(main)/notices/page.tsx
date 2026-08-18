@@ -1,314 +1,281 @@
-"use client"
+'use client'
 
 /**
- * /notices — 공지사항 (McKinsey 2026-04-29)
+ * /notices — 소식 허브 (2026-08-17 재구성)
  *
- * 구조:
- *   1. 진행 중 (Pinned·Active) — 최우선 노출
- *   2. 카테고리 필터 (운영·기능·정책·보안)
- *   3. 검색 + 페이지네이션
- *   4. 공지 카드 — 제목 / 카테고리 / 일시 / 요약
+ * 3개 탭: 공지사항 · 자주하는 질문 · 1:1 문의
+ *   - 공지사항: 등록 건 없으면 빈 상태. 관리자 로그인 시 등록·수정·삭제 (/api/v1/notices CRUD)
+ *   - 자주하는 질문: 정적 FAQ 아코디언
+ *   - 1:1 문의: /api/v1/support 티켓 접수 (고객센터 기능은 1:1 문의만 유지)
  */
 
-import { useState, useEffect, useMemo } from "react"
-import Link from "next/link"
-import {
-  Megaphone, Pin, Search, Filter, Clock, ChevronRight,
-  Sparkles, ShieldCheck, Wrench, FileText, AlertCircle,
-} from "lucide-react"
-import { MckPageShell, MckPageHeader, MckEmptyState } from "@/components/mck"
-import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
-import { createClient } from "@/lib/supabase/client"
+import { useEffect, useState } from 'react'
+import { MckPageShell, MckPageHeader } from '@/components/mck'
+import { useAuth } from '@/components/auth/auth-provider'
+import { ChevronDown, Plus, Pencil, Trash2, Send, CheckCircle2 } from 'lucide-react'
 
-interface NoticeRow {
-  id: string
-  title: string
-  content: string
-  category?: string
-  pinned?: boolean
-  created_at: string
-}
+const INK = '#0A1628'
+const ELECTRIC = '#2251FF'
 
-const CATEGORIES = [
-  { key: "all",      label: "전체",       icon: Megaphone, color: "#1B3A5C" },
-  { key: "feature",  label: "신규 기능",  icon: Sparkles,  color: "#10B981" },
-  { key: "policy",   label: "정책 변경",  icon: FileText,  color: "#F59E0B" },
-  { key: "security", label: "보안",       icon: ShieldCheck, color: "#EF4444" },
-  { key: "maintenance", label: "운영·점검", icon: Wrench,    color: "#64748B" },
-] as const
+type Notice = { id: string; title: string; content: string; created_at?: string; is_pinned?: boolean }
+type Tab = 'notice' | 'faq' | 'inquiry'
 
-// 샘플 공지 — DB 비어있을 때 fallback (운영 정합 메시지)
-const SAMPLE_NOTICES: NoticeRow[] = [
-  {
-    id: "n-2026-001",
-    title: "v3.3 매물등록 Excel 템플릿 — 수익권 비율 사용자 설정 추가",
-    content: "수익권 금액의 110~140% 비율을 매각사가 직접 설정 가능합니다. 또한 수익권금액 자체도 직접 입력 가능합니다 (등기부 채권최고액 우선 시).",
-    category: "feature",
-    pinned: true,
-    created_at: "2026-04-29T10:00:00Z",
-  },
-  {
-    id: "n-2026-002",
-    title: "마이페이지 · 관리자 운영센터 v2 — 5-Zone 체계 적용",
-    content: "마이페이지 메뉴 12개 → 5개 (대시보드/거래/자산/알림센터/설정), 관리자 24개 → 6 Zone 으로 단순화. 펜딩 작업이 사이드바 배지로 자동 표시됩니다.",
-    category: "feature",
-    pinned: true,
-    created_at: "2026-04-29T08:00:00Z",
-  },
-  {
-    id: "n-2026-003",
-    title: "PDF 다운로드 — 한·영·일 언어별 파일명 자동 표기",
-    content: "NPL 분석 보고서 PDF 다운로드 시 현재 locale 에 맞는 파일명 적용 (예: NPL_분석보고서_종로_전체.pdf / NPL_Report_Jongno_Full.pdf).",
-    category: "feature",
-    pinned: false,
-    created_at: "2026-04-29T06:00:00Z",
-  },
-  {
-    id: "n-2026-004",
-    title: "OCR 자유형식 Excel 인식 — 50+ 별칭 매핑",
-    content: "NPLatform 표준 템플릿 외에도 매도사 자체 양식·채권 소개서·감정평가서 등 자유 형식 Excel 자동 인식. 채권자명/매도기관/약정원금/지연이자/근저당/채권최고액 등 50+ 별칭 추가.",
-    category: "feature",
-    pinned: false,
-    created_at: "2026-04-29T04:00:00Z",
-  },
-  {
-    id: "n-2026-005",
-    title: "개인정보보호책임자 (DPO) 변경 안내",
-    content: "개인정보보호책임자가 박성필 (sp.park@transfarmer.co.kr) 로 변경되었습니다. 개인정보 관련 문의는 신규 이메일로 부탁드립니다.",
-    category: "policy",
-    pinned: false,
-    created_at: "2026-04-29T02:00:00Z",
-  },
-  {
-    id: "n-2026-006",
-    title: "딜룸 채팅 — 영어/일본어 자동 번역 지원",
-    content: "딜룸 채팅 메시지가 사용자의 locale 에 맞춰 자동 번역됩니다. 한국어 메시지를 영어/일본어 사용자에게는 자동 번역으로 표시 (원문 토글 가능).",
-    category: "feature",
-    pinned: false,
-    created_at: "2026-04-29T01:00:00Z",
-  },
-  {
-    id: "n-2026-007",
-    title: "기관 통합 계정 — 멤버 초대 + 권한 관리 정식 출시",
-    content: "마스터 / 매니저 / 멤버 / 뷰어 4단계 권한. 같은 회사·팀의 개인 계정을 기관 계정에 연결하고, 멤버 초대·승인·역할 변경을 한 화면에서.",
-    category: "feature",
-    pinned: false,
-    created_at: "2026-04-28T18:00:00Z",
-  },
+const FAQS: { q: string; a: string }[] = [
+  { q: '회원가입은 유료인가요?', a: '아니요. 엔플랫폼은 승인제 무료 가입입니다. 가입 신청 후 관리자 승인(1~2영업일)이 완료되면 모든 기능을 무료로 이용할 수 있습니다.' },
+  { q: '왜 리스트에 일부 물건만 보이나요?', a: '엔플랫폼은 매입조건에 매칭되는 딜만 선별해 공개하는 프라이빗 플랫폼입니다. 매입조건을 등록하시면 조건에 맞는 딜을 1:1로 소개받을 수 있습니다.' },
+  { q: '물건의 정확한 주소·서류는 언제 볼 수 있나요?', a: '리스트에서는 지역·유형·면적·감정가·총 채권액·수익권금액(채권최고액)·협의가까지만 공개됩니다. 온라인 NDA 체결 후 정확한 주소·감정평가서·채권 정보·매각 기관 정보가 공개됩니다.' },
+  { q: 'NPL 매각의뢰는 어떻게 하나요?', a: '보유 부실채권·부동산 리스트를 자체 양식 또는 엔플랫폼 표준 양식으로 파일 첨부해 접수하시면, 운영진이 등록을 대행하고 민감정보를 비식별화 처리해 등재합니다.' },
+  { q: '매입조건은 여러 개 등록할 수 있나요?', a: '네. 지역·유형·면적·금액대별로 우선순위를 정해 여러 조건을 등록할 수 있으며, 우선순위 1부터 순서대로 매칭해 소개해 드립니다.' },
+  { q: '거래는 어떻게 진행되나요?', a: 'NDA·상담 요청 시 엔플랫폼이 1차 미팅을 진행하고, 이후 금융기관과의 2차 미팅·협의로 연결합니다. 가격 협의 후 매매계약 체결로 딜을 완결합니다.' },
 ]
 
-function relativeTime(s: string): string {
-  const m = Math.floor((Date.now() - new Date(s).getTime()) / 60_000)
-  if (m < 1) return "방금"
-  if (m < 60) return `${m}분 전`
-  const h = Math.floor(m / 60)
-  if (h < 24) return `${h}시간 전`
-  const d = Math.floor(h / 24)
-  if (d < 7) return `${d}일 전`
-  return new Date(s).toLocaleDateString("ko-KR")
-}
-
 export default function NoticesPage() {
-  const [notices, setNotices] = useState<NoticeRow[]>([])
+  const { user } = useAuth()
+  const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(String(user?.role ?? '').toUpperCase())
+  const [tab, setTab] = useState<Tab>('notice')
+
+  // ── 공지사항 ──
+  const [notices, setNotices] = useState<Notice[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeCat, setActiveCat] = useState<string>("all")
-  const [query, setQuery] = useState<string>("")
-  const [isSample, setIsSample] = useState(false)
+  const [editing, setEditing] = useState<Notice | null>(null)   // null=닫힘, id=''=신규
+  const [draftTitle, setDraftTitle] = useState('')
+  const [draftContent, setDraftContent] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [expanded, setExpanded] = useState<string | null>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const supabase = createClient()
-        const { data } = await supabase
-          .from("community_posts")
-          .select("id, title, content, category, pinned, created_at")
-          .eq("type", "NOTICE")
-          .order("pinned", { ascending: false })
-          .order("created_at", { ascending: false })
-          .limit(60)
-        if (cancelled) return
-        if (Array.isArray(data) && data.length > 0) {
-          setNotices(data as NoticeRow[])
-        } else {
-          setNotices(SAMPLE_NOTICES)
-          setIsSample(true)
-        }
-      } catch {
-        if (!cancelled) {
-          setNotices(SAMPLE_NOTICES)
-          setIsSample(true)
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
+  const loadNotices = () => {
+    fetch('/api/v1/notices?limit=50')
+      .then(r => r.json())
+      .then(d => setNotices((Array.isArray(d.data) ? d.data : []).map((n: Record<string, unknown>) => ({
+        id: String(n.id),
+        title: String(n.title ?? ''),
+        content: String(n.content ?? ''),
+        created_at: n.created_at ? String(n.created_at).slice(0, 10) : undefined,
+        is_pinned: !!n.is_pinned,
+      }))))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }
+  useEffect(loadNotices, [])
+
+  const openEditor = (n?: Notice) => {
+    setEditing(n ?? { id: '', title: '', content: '' })
+    setDraftTitle(n?.title ?? '')
+    setDraftContent(n?.content ?? '')
+  }
+
+  const saveNotice = async () => {
+    if (!draftTitle.trim()) return
+    setSaving(true)
+    try {
+      if (editing && editing.id) {
+        await fetch(`/api/v1/notices?id=${encodeURIComponent(editing.id)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: draftTitle.trim(), content: draftContent.trim() }),
+        })
+      } else {
+        await fetch('/api/v1/notices', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: draftTitle.trim(), content: draftContent.trim(), category: '공지' }),
+        })
       }
-    })()
-    return () => { cancelled = true }
-  }, [])
-
-  const filtered = useMemo(() => {
-    let list = notices
-    if (activeCat !== "all") list = list.filter((n) => n.category === activeCat)
-    if (query.trim()) {
-      const q = query.toLowerCase()
-      list = list.filter((n) => n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q))
+      setEditing(null)
+      loadNotices()
+    } finally {
+      setSaving(false)
     }
-    return list
-  }, [notices, activeCat, query])
+  }
 
-  const pinned = filtered.filter((n) => n.pinned)
-  const regular = filtered.filter((n) => !n.pinned)
+  const deleteNotice = async (id: string) => {
+    if (!confirm('이 공지를 삭제할까요?')) return
+    await fetch(`/api/v1/notices?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+    loadNotices()
+  }
+
+  // ── 1:1 문의 ──
+  const [inq, setInq] = useState({ name: '', phone: '', email: '', message: '' })
+  const [inqSending, setInqSending] = useState(false)
+  const [inqDone, setInqDone] = useState(false)
+
+  const submitInquiry = async () => {
+    if (!inq.name.trim() || !inq.message.trim()) return
+    setInqSending(true)
+    try {
+      await fetch('/api/v1/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: `[1:1 문의] ${inq.name}`,
+          category: '일반',
+          priority: 'MEDIUM',
+          description: [`이름: ${inq.name}`, inq.phone && `연락처: ${inq.phone}`, inq.email && `이메일: ${inq.email}`, '', inq.message].filter(Boolean).join('\n'),
+        }),
+      }).catch(() => {})
+      setInqDone(true)
+    } finally {
+      setInqSending(false)
+    }
+  }
+
+  const inputCls = 'w-full px-3 py-2.5 text-sm border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] outline-none focus:border-[#2251FF]'
 
   return (
     <MckPageShell variant="tint">
       <MckPageHeader
-        breadcrumbs={[{ label: "홈", href: "/" }, { label: "공지사항" }]}
-        eyebrow="ANNOUNCEMENTS · 공지사항"
-        title="플랫폼 공지"
-        subtitle="신규 기능 · 정책 변경 · 보안 · 운영 점검 안내를 한곳에서 확인하세요"
+        eyebrow="Announcements · 소식"
+        title="공지사항"
+        subtitle="공지사항 · 자주하는 질문 · 1:1 문의를 한곳에서."
       />
 
-      <div className="max-w-[1280px] mx-auto" style={{ padding: "24px 24px 80px" }}>
-        {/* 검색 + 카테고리 필터 */}
-        <section style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-            <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
-              <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: MCK.textMuted }} />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="공지 검색…"
-                style={{
-                  width: "100%", padding: "10px 12px 10px 36px",
-                  border: `1px solid ${MCK.border}`, borderRadius: 4,
-                  fontSize: 13, color: MCK.ink, outline: "none",
-                  background: MCK.paper,
-                }}
-              />
-            </div>
-            <span style={{ fontSize: 12, color: MCK.textSub }}>
-              총 <strong style={{ color: MCK.ink }}>{filtered.length}</strong>건
-            </span>
-          </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {CATEGORIES.map((cat) => {
-              const Icon = cat.icon
-              const isActive = cat.key === activeCat
-              return (
-                <button
-                  key={cat.key}
-                  onClick={() => setActiveCat(cat.key)}
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "8px 14px", fontSize: 12, fontWeight: 700,
-                    background: isActive ? cat.color : MCK.paper,
-                    color: isActive ? "white" : MCK.textSub,
-                    border: `1px solid ${isActive ? cat.color : MCK.border}`,
-                    borderRadius: 99, cursor: "pointer",
-                  }}
-                >
-                  <Icon size={12} />
-                  {cat.label}
-                </button>
-              )
-            })}
-          </div>
-        </section>
+      <div className="max-w-[880px] mx-auto px-6 py-10">
+        {/* 탭 */}
+        <div className="flex gap-1 mb-8 border-b border-[var(--color-border-subtle)]">
+          {([['notice', '공지사항'], ['faq', '자주하는 질문'], ['inquiry', '1:1 문의']] as [Tab, string][]).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className="px-5 py-3 text-sm font-bold transition-colors"
+              style={{
+                color: tab === key ? INK : 'var(--color-text-muted)',
+                borderBottom: tab === key ? `2px solid ${ELECTRIC}` : '2px solid transparent',
+                marginBottom: -1,
+                background: 'transparent', border: 'none', borderBottomWidth: 2, borderBottomStyle: 'solid',
+                borderBottomColor: tab === key ? ELECTRIC : 'transparent',
+                cursor: 'pointer',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
-        {/* 진행 중 (Pinned) */}
-        {pinned.length > 0 && (
-          <section style={{ marginBottom: 32 }}>
-            <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 10 }}>
-              <Pin size={11} style={{ display: "inline", marginRight: 6, verticalAlign: "middle" }} />
-              상단 고정 공지
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {pinned.map((n) => <NoticeCard key={n.id} notice={n} pinned />)}
-            </div>
-          </section>
+        {/* ── 공지사항 ── */}
+        {tab === 'notice' && (
+          <div className="space-y-3">
+            {isAdmin && (
+              <div className="flex justify-end">
+                <button
+                  onClick={() => openEditor()}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white"
+                  style={{ background: INK, borderTop: `2px solid ${ELECTRIC}`, cursor: 'pointer', border: 'none' }}
+                >
+                  <Plus size={13} /> 공지 등록
+                </button>
+              </div>
+            )}
+
+            {/* 편집 폼 (관리자) */}
+            {isAdmin && editing && (
+              <div className="p-4 border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] space-y-3" style={{ borderTop: `2px solid ${ELECTRIC}` }}>
+                <input value={draftTitle} onChange={e => setDraftTitle(e.target.value)} placeholder="공지 제목" className={inputCls} />
+                <textarea value={draftContent} onChange={e => setDraftContent(e.target.value)} placeholder="공지 내용" rows={5} className={inputCls + ' resize-y'} />
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setEditing(null)} className="px-4 py-2 text-xs font-bold border border-[var(--color-border-default)] text-[var(--color-text-secondary)]" style={{ background: 'transparent', cursor: 'pointer' }}>취소</button>
+                  <button onClick={() => void saveNotice()} disabled={saving} className="px-4 py-2 text-xs font-bold text-white" style={{ background: INK, borderTop: `2px solid ${ELECTRIC}`, border: 'none', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
+                    {saving ? '저장 중…' : editing.id ? '수정 저장' : '등록'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {loading && <p className="py-12 text-center text-sm text-[var(--color-text-muted)]">불러오는 중...</p>}
+
+            {!loading && notices.length === 0 && (
+              <div className="py-16 text-center border border-dashed border-[var(--color-border-default)]">
+                <p className="text-sm font-semibold text-[var(--color-text-secondary)]">등록된 공지가 없습니다</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">새 소식이 등록되면 이곳에 표시됩니다.</p>
+              </div>
+            )}
+
+            {notices.map(n => (
+              <div key={n.id} className="border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
+                <button
+                  onClick={() => setExpanded(expanded === n.id ? null : n.id)}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left"
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+                >
+                  <span className="min-w-0">
+                    <span className="block text-sm font-bold text-[var(--color-text-primary)]">
+                      {n.is_pinned && <span style={{ color: ELECTRIC }}>[고정] </span>}{n.title}
+                    </span>
+                    {n.created_at && <span className="block mt-0.5 text-[11px] text-[var(--color-text-muted)] tabular-nums">{n.created_at}</span>}
+                  </span>
+                  <ChevronDown size={15} style={{ flexShrink: 0, transform: expanded === n.id ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', color: 'var(--color-text-muted)' }} />
+                </button>
+                {expanded === n.id && (
+                  <div className="px-4 pb-4 text-[13px] leading-relaxed text-[var(--color-text-secondary)] whitespace-pre-wrap border-t border-[var(--color-border-subtle)] pt-3">
+                    {n.content || '내용 없음'}
+                    {isAdmin && (
+                      <div className="mt-3 flex gap-2">
+                        <button onClick={() => openEditor(n)} className="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)]" style={{ background: 'transparent', cursor: 'pointer' }}>
+                          <Pencil size={11} /> 수정
+                        </button>
+                        <button onClick={() => void deleteNotice(n.id)} className="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-bold border border-red-300 text-red-600" style={{ background: 'transparent', cursor: 'pointer' }}>
+                          <Trash2 size={11} /> 삭제
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         )}
 
-        {/* 일반 공지 */}
-        <section>
-          {pinned.length > 0 && (
-            <div style={{ ...MCK_TYPE.eyebrow, color: MCK.textMuted, marginBottom: 10 }}>
-              일반 공지
-            </div>
-          )}
-          {loading ? (
-            <p style={{ padding: 40, textAlign: "center", color: MCK.textSub }}>로딩 중…</p>
-          ) : regular.length === 0 && pinned.length === 0 ? (
-            <MckEmptyState
-              icon={Megaphone}
-              title="해당 카테고리에 공지가 없습니다"
-              description="다른 카테고리를 선택하거나 검색어를 변경해보세요"
-            />
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {regular.map((n) => <NoticeCard key={n.id} notice={n} />)}
-            </div>
-          )}
-        </section>
+        {/* ── 자주하는 질문 ── */}
+        {tab === 'faq' && (
+          <div className="space-y-3">
+            {FAQS.map((f, i) => (
+              <div key={i} className="border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
+                <button
+                  onClick={() => setExpanded(expanded === `faq-${i}` ? null : `faq-${i}`)}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left"
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+                >
+                  <span className="text-sm font-bold text-[var(--color-text-primary)]">Q. {f.q}</span>
+                  <ChevronDown size={15} style={{ flexShrink: 0, transform: expanded === `faq-${i}` ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', color: 'var(--color-text-muted)' }} />
+                </button>
+                {expanded === `faq-${i}` && (
+                  <div className="px-4 pb-4 pt-3 text-[13px] leading-relaxed text-[var(--color-text-secondary)] border-t border-[var(--color-border-subtle)]">
+                    {f.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
-        {isSample && (
-          <p style={{ marginTop: 32, padding: 14, background: "#FEF9C3", border: "1px solid #FACC15", borderRadius: 4, fontSize: 12, color: "#854D0E" }}>
-            <AlertCircle size={12} style={{ display: "inline", marginRight: 6, verticalAlign: "middle" }} />
-            <strong>샘플 모드</strong> — 운영팀 공지 DB 미연결 상태로 데모 공지를 표시합니다.
-          </p>
+        {/* ── 1:1 문의 ── */}
+        {tab === 'inquiry' && (
+          inqDone ? (
+            <div className="py-16 text-center">
+              <CheckCircle2 size={36} className="mx-auto mb-3" style={{ color: ELECTRIC }} />
+              <p className="text-base font-bold text-[var(--color-text-primary)]">문의가 접수되었습니다</p>
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">운영진이 확인 후 1~2영업일 내 연락드립니다.</p>
+            </div>
+          ) : (
+            <div className="space-y-4 max-w-[560px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input value={inq.name} onChange={e => setInq({ ...inq, name: e.target.value })} placeholder="이름 *" className={inputCls} />
+                <input value={inq.phone} onChange={e => setInq({ ...inq, phone: e.target.value })} placeholder="연락처" className={inputCls} />
+              </div>
+              <input value={inq.email} onChange={e => setInq({ ...inq, email: e.target.value })} placeholder="이메일" type="email" className={inputCls} />
+              <textarea value={inq.message} onChange={e => setInq({ ...inq, message: e.target.value })} placeholder="문의 내용 * — NPL 매각·매입·NDA 등 무엇이든 남겨주세요" rows={6} className={inputCls + ' resize-y'} />
+              <button
+                onClick={() => void submitInquiry()}
+                disabled={inqSending || !inq.name.trim() || !inq.message.trim()}
+                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-extrabold text-white"
+                style={{ background: INK, borderTop: `2px solid ${ELECTRIC}`, border: 'none', cursor: 'pointer', opacity: inqSending ? 0.6 : 1 }}
+              >
+                <Send size={14} /> {inqSending ? '접수 중…' : '문의 접수하기'}
+              </button>
+              <p className="text-[11px] text-[var(--color-text-muted)]">접수된 문의는 운영진만 열람하며, 상담 목적으로만 사용됩니다.</p>
+            </div>
+          )
         )}
       </div>
     </MckPageShell>
-  )
-}
-
-// ─── 공지 카드 ──────────────────────────────────────────────────
-function NoticeCard({ notice, pinned }: { notice: NoticeRow; pinned?: boolean }) {
-  const cat = CATEGORIES.find((c) => c.key === notice.category) ?? CATEGORIES[0]
-  const Icon = cat.icon
-  return (
-    <article
-      style={{
-        background: MCK.paper,
-        border: `1px solid ${MCK.border}`,
-        borderLeft: pinned ? `4px solid ${MCK.brass}` : `1px solid ${MCK.border}`,
-        padding: 18,
-        borderRadius: 4,
-        transition: "all 0.15s",
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 8 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-            <span
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 4,
-                fontSize: 10, fontWeight: 800, padding: "2px 8px",
-                background: `${cat.color}15`, color: cat.color,
-                borderRadius: 99, letterSpacing: "0.05em",
-              }}
-            >
-              <Icon size={10} />
-              {cat.label}
-            </span>
-            {pinned && (
-              <span style={{ fontSize: 10, color: MCK.brass, fontWeight: 700 }}>
-                <Pin size={10} style={{ display: "inline", marginRight: 2, verticalAlign: "middle" }} />
-                상단 고정
-              </span>
-            )}
-          </div>
-          <h3 style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 700, color: MCK.ink, marginBottom: 6, lineHeight: 1.3 }}>
-            {notice.title}
-          </h3>
-          <p style={{ fontSize: 13, color: MCK.textSub, lineHeight: 1.6, whiteSpace: "pre-line" }}>
-            {notice.content}
-          </p>
-        </div>
-        <span style={{ fontSize: 11, color: MCK.textMuted, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>
-          <Clock size={11} />
-          {relativeTime(notice.created_at)}
-        </span>
-      </div>
-    </article>
   )
 }

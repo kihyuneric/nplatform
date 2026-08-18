@@ -10,7 +10,8 @@ import { PageTransition } from '@/components/page-transition'
 import { OfflineBanner } from '@/components/layout/offline-banner'
 import { NavConfigProvider } from '@/components/providers/nav-config-provider'
 import { TourGuide, type TourStep } from '@/components/onboarding/tour-guide'
-import { DynamicChatWidget, DynamicCommandPalette } from '@/components/dynamic'
+import { DynamicCommandPalette } from '@/components/dynamic'
+import { InquiryWidget } from '@/components/support/inquiry-widget'
 
 const ONBOARDING_STEPS: TourStep[] = [
   {
@@ -67,14 +68,15 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       <OfflineBanner />
       <Navigation />
       <main role="main" className={`flex-1 ${isFullscreen ? '' : 'pb-20 md:pb-0'}`}>
-        {!isFullscreen && <BreadcrumbNav />}
+        {/* BreadcrumbNav 제거 — 상단 글로벌 메뉴와 중복 (1메뉴 1상세 정책) */}
         <PageTransition key={pathname}>{children}</PageTransition>
       </main>
       {!isFullscreen && <Footer />}
-      <DynamicChatWidget />
+      {/* AI 챗봇 → 1:1 문의 위젯 교체 (2026-08-18) */}
+      <InquiryWidget />
       {!isFullscreen && <MobileTabBar />}
       <DynamicCommandPalette />
-      <TourGuide steps={ONBOARDING_STEPS} tourKey="main-v1" />
+      {/* 온보딩 투어(1/3 단계 팝업) 삭제 — 불필요 (2026-08-18 사용자 지시) */}
     </div>
   )
 }

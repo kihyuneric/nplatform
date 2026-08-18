@@ -48,6 +48,7 @@ export const COLLATERAL_TYPES = {
   FOREST:             '임야',
   FACTORY_LAND:       '공장용지',
   WAREHOUSE_LAND:     '창고용지',
+  MISC_LAND:          '잡종지',
   OTHER:              '기타',
 } as const
 export type CollateralType = keyof typeof COLLATERAL_TYPES
@@ -73,6 +74,7 @@ export const COLLATERAL_OPTIONS: readonly { value: CollateralType | 'ALL'; label
   { value: 'FOREST',               label: '임야' },
   { value: 'FACTORY_LAND',         label: '공장용지' },
   { value: 'WAREHOUSE_LAND',       label: '창고용지' },
+  { value: 'MISC_LAND',            label: '잡종지' },
   { value: 'OTHER',                label: '기타' },
 ]
 
@@ -118,6 +120,7 @@ export const COLLATERAL_CATEGORIES: readonly CollateralCategory[] = [
       { value: 'FOREST',         label: '임야' },
       { value: 'FACTORY_LAND',   label: '공장용지' },
       { value: 'WAREHOUSE_LAND', label: '창고용지' },
+      { value: 'MISC_LAND',      label: '잡종지' },
     ],
   },
   {

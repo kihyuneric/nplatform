@@ -32,91 +32,46 @@ export interface NavConfig {
 
 // Page sub-nav label map for display
 export const PAGE_SUBNAV_LABELS: Record<string, string> = {
-  exchange: 'NPL 매물 서브메뉴',
-  deals: '거래 현황 서브메뉴',
-  analysis: '투자 분석 서브메뉴',
+  exchange: 'NPL 거래 서브메뉴',
   news: '공지/문의 서브메뉴',
-  services: '전문가 서비스 서브메뉴',
 }
 
 // Default navigation configuration
+// ─── B2B 프라이빗 딜 IA (2026-08) ───────────────────────────────
+// 분석·딜룸·경매·팀투자·전문가 서비스는 active:false 로 숨김 (관리자에서 복구 가능)
 export const DEFAULT_NAV_CONFIG: NavConfig = {
   updatedAt: new Date().toISOString(),
   pageSubNavs: {
     exchange: [
-      { key: 'ex_all',          label: '거래소',     href: '/exchange',                description: 'NPL 거래소 메인',          icon: 'Store',        active: true, order: 1 },
-      { key: 'ex_search',       label: '검색',       href: '/exchange/search',          description: '상세 필터 데이터 그리드',    icon: 'Search',       active: true, order: 2 },
-      { key: 'ex_bidding',      label: '자발적 경매',   href: '/exchange/auction',       description: '자발적 경매 참여',              icon: 'Gavel',        active: true, order: 3 },
-      { key: 'ex_sell',         label: '매물 등록',  href: '/exchange/sell',            description: '내 채권 매각 등록 (단건 · OCR · CSV 대량)', icon: 'PlusCircle', active: true, order: 4 },
-      { key: 'ex_demands',      label: '매수 수요',  href: '/exchange/demands',         description: '원하는 조건 등록',          icon: 'ClipboardList', active: true, order: 5 },
-      { key: 'ex_institutions', label: '참여 기관',  href: '/exchange/institutions',    description: '매각 기관 현황',            icon: 'Building2',    active: true, order: 6 },
-      { key: 'ex_fund',         label: '팀투자',     href: '/deals/teams',              description: 'NPL 공동투자 팀',           icon: 'Users',        active: true, order: 7 },
-      { key: 'ex_lender',       label: '대출',       href: '/exchange/lender',          description: '투자 자금 조달',            icon: 'Landmark',     active: true, order: 8 },
-      { key: 'ex_guide',        label: '이용 가이드', href: '/guide',                   description: 'NPL 매물 이용 가이드',      icon: 'BookOpen',     active: true, order: 9 },
-    ],
-    deals: [
-      { key: 'deals_room',      label: '딜룸',        href: '/deals',                description: '진행 중 딜 + 가장 최근 딜룸 연동',  icon: 'MessageSquare',  active: true, order: 1 },
-      { key: 'deals_dashboard', label: '대시보드',    href: '/deals/dashboard',      description: '진행중 + 이번달 완료 현황',         icon: 'LayoutDashboard', active: true, order: 2 },
-      { key: 'deals_matching',  label: 'AI 매칭',     href: '/deals/matching',       description: 'AI 기반 매물-투자자 매칭',          icon: 'Brain',          active: true, order: 3 },
-      { key: 'deals_teams',     label: '팀 투자',     href: '/deals/teams',          description: '공동투자 팀 관리',                  icon: 'Users',          active: true, order: 4 },
-    ],
-    analysis: [
-      { key: 'analysis_main',    label: '분석 대시보드', href: '/analysis',              description: '시장 통계 및 인텔리전스',      icon: 'BarChart3',  active: true, order: 1 },
-      { key: 'analysis_new',     label: 'NPL 분석',      href: '/analysis/new',          description: 'AI 채권 가치 분석',            icon: 'FileSearch', active: true, order: 2 },
-      { key: 'analysis_sim',     label: '경매 분석',     href: '/analysis/simulator',    description: '경매 수익률 시나리오 분석',    icon: 'Calculator', active: true, order: 3 },
-      { key: 'analysis_copilot', label: 'AI 컨설턴트',   href: '/analysis/copilot',      description: 'AI 투자 컨설팅 챗봇',          icon: 'Sparkles',   active: true, order: 4 },
-      // XRF RWA · XRF Admin 은 서브네비 미노출.
-      // → 분석 보고서(/analysis/report) 상단 토글 버튼 [NPL | XRF RWA | XRF Admin] 으로만 진입.
-    ],
-    services: [
-      { key: 'svc_experts',   label: '전문가 찾기',   href: '/services/experts',           description: '법률·세무·부동산 전문가',    icon: 'Users',        active: true, order: 1 },
-      { key: 'svc_register',  label: '전문가 등록',   href: '/services/experts/register',  description: '전문가로 등록',              icon: 'PlusCircle',   active: true, order: 2 },
+      { key: 'ex_all',     label: 'NPL 자동매칭',    href: '/exchange',          description: '마스킹 처리된 NPL 리스트',        icon: 'Store',         active: true, order: 1 },
+      { key: 'ex_discover',label: '부동산 급매',   href: '/exchange/discover', description: '급매 부동산 (마스킹)',            icon: 'Newspaper',     active: true, order: 2 },
+      { key: 'ex_sell',    label: 'NPL 매각의뢰',  href: '/exchange/sell',     description: '파일 업로드 → 운영진 대신 등록',  icon: 'PlusCircle',    active: true, order: 3 },
+      { key: 'ex_demands', label: '매입조건 등록', href: '/exchange/demands/new', description: '우선순위별 매입 조건 등록',        icon: 'ClipboardList', active: true, order: 4 },
+      { key: 'ex_guide',   label: '이용 가이드',   href: '/guide',             description: '이용 가이드',                     icon: 'BookOpen',      active: true, order: 5 },
+      // ── 숨김 (프라이빗 딜 전환) ──
+      { key: 'ex_search',       label: '검색',       href: '/exchange/search',       icon: 'Search',    active: false, order: 90 },
+      { key: 'ex_bidding',      label: '자발적 경매', href: '/exchange/auction',      icon: 'Gavel',     active: false, order: 91 },
+      { key: 'ex_institutions', label: '참여 기관',  href: '/exchange/institutions', icon: 'Building2', active: false, order: 92 },
+      { key: 'ex_fund',         label: '팀투자',     href: '/deals/teams',           icon: 'Users',     active: false, order: 93 },
+      { key: 'ex_lender',       label: '대출',       href: '/exchange/lender',       icon: 'Landmark',  active: false, order: 94 },
     ],
     community: [
-      { key: 'com_notices', label: '공지사항', href: '/notices', description: '플랫폼 공지',         icon: 'Bell',         active: true, order: 1 },
-      { key: 'com_support', label: '고객센터', href: '/support', description: 'FAQ · 문의 · 도움말', icon: 'LifeBuoy',     active: true, order: 2 },
+      { key: 'com_notices', label: '공지사항', href: '/notices', description: '플랫폼 공지',         icon: 'Bell',     active: true, order: 1 },
+      { key: 'com_support', label: '고객센터', href: '/support', description: 'FAQ · 문의 · 도움말', icon: 'LifeBuoy', active: true, order: 2 },
     ],
   },
   categories: [
     {
       key: 'exchange',
-      label: '거래소',
+      label: 'NPL 거래',
       href: '/exchange',
       active: true,
       order: 1,
       items: [
-        { key: 'exchange_browse', label: '거래소', href: '/exchange', description: 'NPL 거래소 메인', icon: 'Store', active: true, order: 1 },
-        { key: 'exchange_sell', label: '매물 등록', href: '/exchange/sell', description: '내 NPL 채권 매각 등록', icon: 'PlusCircle', active: true, order: 2 },
-        { key: 'exchange_demands', label: '매수 수요', href: '/exchange/demands', description: '원하는 매물 조건 등록', icon: 'ClipboardList', active: true, order: 3 },
-        { key: 'exchange_institutions', label: '참여 기관', href: '/exchange/institutions', description: '매각 기관 현황', icon: 'Building2', active: true, order: 4 },
-        { key: 'exchange_fund', label: '팀투자', href: '/deals/teams', description: 'NPL 공동투자 팀', icon: 'Users', active: true, order: 5 },
-        { key: 'exchange_lender', label: '대출 연계', href: '/exchange/lender', description: '투자 자금 조달', icon: 'Landmark', active: true, order: 6 },
-      ],
-    },
-    {
-      key: 'deals',
-      label: '딜룸',
-      href: '/deals',
-      active: true,
-      order: 2,
-      items: [
-        { key: 'deals_room',      label: '딜룸',        href: '/deals',              description: '진행 중 딜 + 가장 최근 딜룸 연동', icon: 'MessageSquare',   active: true, order: 1 },
-        { key: 'deals_dashboard', label: '대시보드',    href: '/deals/dashboard',    description: '진행중 + 이번달 완료 현황',         icon: 'LayoutDashboard', active: true, order: 2 },
-        { key: 'deals_matching',  label: 'AI 매칭',     href: '/deals/matching',     description: 'AI 기반 매물-투자자 매칭',          icon: 'Brain',           active: true, order: 3 },
-        { key: 'deals_teams',     label: '팀 투자',     href: '/deals/teams',        description: '공동투자 팀 관리',                  icon: 'Users',           active: true, order: 4 },
-      ],
-    },
-    {
-      key: 'analysis',
-      label: '분석',
-      href: '/analysis',
-      active: true,
-      order: 3,
-      items: [
-        { key: 'analysis_dashboard', label: '분석 대시보드', href: '/analysis',           description: '시장 통계 및 인텔리전스',    icon: 'BarChart3',  active: true, order: 1 },
-        { key: 'analysis_new',       label: 'NPL 분석',      href: '/analysis/new',       description: 'AI 채권 가치 분석',          icon: 'FileSearch', active: true, order: 2 },
-        { key: 'analysis_simulator', label: '경매 분석',     href: '/analysis/simulator', description: '경매 수익률 시나리오 분석',  icon: 'Calculator', active: true, order: 3 },
-        { key: 'analysis_copilot',   label: 'AI 컨설턴트',   href: '/analysis/copilot',   description: 'AI 투자 컨설팅 챗봇',        icon: 'Sparkles',   active: true, order: 4 },
+        { key: 'exchange_browse',  label: 'NPL 자동매칭',   href: '/exchange',          description: '마스킹 처리된 NPL 리스트',       icon: 'Store',         active: true, order: 1 },
+        { key: 'exchange_discover',label: '부동산 급매',  href: '/exchange/discover', description: '급매 부동산 (마스킹)',           icon: 'Newspaper',     active: true, order: 2 },
+        { key: 'exchange_sell',    label: 'NPL 매각의뢰', href: '/exchange/sell',     description: '파일 업로드 → 운영진 대신 등록', icon: 'PlusCircle',    active: true, order: 3 },
+        { key: 'exchange_demands', label: '매입조건 등록', href: '/exchange/demands/new', description: '우선순위별 매입 조건 등록',       icon: 'ClipboardList', active: true, order: 4 },
       ],
     },
     {
@@ -124,21 +79,10 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
       label: '공지/문의',
       href: '/notices',
       active: true,
-      order: 4,
+      order: 2,
       items: [
         { key: 'news_notices', label: '공지사항', href: '/notices', description: '플랫폼 공지',         icon: 'Bell',     active: true, order: 1 },
         { key: 'news_support', label: '고객센터', href: '/support', description: 'FAQ · 문의 · 도움말', icon: 'LifeBuoy', active: true, order: 2 },
-      ],
-    },
-    {
-      key: 'analysis_tools',
-      label: '분석도구',
-      href: '/analysis',
-      active: true,
-      order: 5,
-      items: [
-        { key: 'tool_simulator', label: '경매 분석', href: '/analysis/simulator', description: '경매 수익률 시나리오 분석', icon: 'Calculator', active: true, order: 1 },
-        { key: 'tool_map',       label: '지도 검색', href: '/exchange',           description: 'NPL 지도 탐색',             icon: 'Map',        active: true, order: 2 },
       ],
     },
     {
@@ -146,14 +90,40 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
       label: '마이 페이지',
       href: '/my',
       active: true,
-      order: 6,
+      order: 3,
       items: [
-        { key: 'my_dashboard',    label: '내 대시보드',   href: '/my',               description: '개인화 대시보드',          icon: 'User',       active: true, order: 1 },
-        { key: 'my_portfolio',    label: '포트폴리오',    href: '/my/portfolio',     description: '관심 매물 및 투자 현황',    icon: 'Heart',      active: true, order: 2 },
-        { key: 'my_billing',      label: '구독·결제',    href: '/my/billing',       description: '요금제 및 크레딧 관리',     icon: 'CreditCard', active: true, order: 3 },
-        { key: 'my_organization', label: '기관 계정',     href: '/my/organization',  description: '기관 멤버 관리 및 초대',    icon: 'Building2',  active: true, order: 4 },
-        { key: 'my_notifications',label: '알림',          href: '/my/notifications', description: '알림 및 키워드 설정',       icon: 'Bell',       active: true, order: 5 },
-        { key: 'my_settings',     label: '설정',          href: '/my/settings',      description: '프로필 및 보안 설정',       icon: 'Settings',   active: true, order: 6 },
+        { key: 'my_dashboard',    label: '내 대시보드', href: '/my',               description: '개인화 대시보드',       icon: 'User',     active: true, order: 1 },
+        { key: 'my_seller',       label: '내 매물',     href: '/my/seller',        description: '내 등록 매물 관리',     icon: 'Layers',   active: true, order: 2 },
+        { key: 'my_demands',      label: '내 수요',     href: '/my/demands',       description: '내 매입 조건 관리',      icon: 'ClipboardList', active: true, order: 3 },
+        { key: 'my_notifications',label: '알림',        href: '/my/notifications', description: '알림 및 키워드 설정',   icon: 'Bell',     active: true, order: 4 },
+        { key: 'my_settings',     label: '설정',        href: '/my/settings',      description: '프로필 및 보안 설정',   icon: 'Settings', active: true, order: 5 },
+      ],
+    },
+    // ── 숨김 카테고리 (프라이빗 딜 전환 — 관리자에서 재활성화 가능) ──
+    {
+      key: 'deals',
+      label: '딜룸',
+      href: '/deals',
+      active: false,
+      order: 90,
+      items: [
+        { key: 'deals_room',      label: '딜룸',     href: '/deals',           icon: 'MessageSquare',   active: false, order: 1 },
+        { key: 'deals_dashboard', label: '대시보드', href: '/deals/dashboard', icon: 'LayoutDashboard', active: false, order: 2 },
+        { key: 'deals_matching',  label: '매칭',     href: '/deals/matching',  icon: 'Brain',           active: false, order: 3 },
+        { key: 'deals_teams',     label: '팀 투자',  href: '/deals/teams',     icon: 'Users',           active: false, order: 4 },
+      ],
+    },
+    {
+      key: 'analysis',
+      label: '분석',
+      href: '/analysis',
+      active: false,
+      order: 91,
+      items: [
+        { key: 'analysis_dashboard', label: '분석 대시보드', href: '/analysis',           icon: 'BarChart3',  active: false, order: 1 },
+        { key: 'analysis_new',       label: 'NPL 분석',      href: '/analysis/new',       icon: 'FileSearch', active: false, order: 2 },
+        { key: 'analysis_simulator', label: '경매 분석',     href: '/analysis/simulator', icon: 'Calculator', active: false, order: 3 },
+        { key: 'analysis_copilot',   label: 'AI 컨설턴트',   href: '/analysis/copilot',   icon: 'Sparkles',   active: false, order: 4 },
       ],
     },
   ],

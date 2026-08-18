@@ -1,8 +1,6 @@
 "use client"
 
 import type { ReactNode } from "react"
-import Link from "next/link"
-import { ChevronRight } from "lucide-react"
 import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
 
 export interface MckBreadcrumbItem {
@@ -43,50 +41,8 @@ export function MckPageHeader({
       }}
     >
       <div className="max-w-[1280px] mx-auto" style={{ padding: "32px 24px 36px" }}>
-        {/* Breadcrumb (인쇄 시 숨김 — PDF 깔끔) */}
-        {breadcrumbs && breadcrumbs.length > 0 && (
-          <nav
-            aria-label="breadcrumb"
-            className="no-print"
-            style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14, flexWrap: "wrap" }}
-          >
-            {breadcrumbs.map((crumb, i) => {
-              const last = i === breadcrumbs.length - 1
-              return (
-                <span key={`${crumb.label}-${i}`} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  {crumb.href && !last ? (
-                    <Link
-                      href={crumb.href}
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: MCK.textSub,
-                        textDecoration: "none",
-                        letterSpacing: "0.01em",
-                      }}
-                    >
-                      {crumb.label}
-                    </Link>
-                  ) : (
-                    <span
-                      style={{
-                        fontSize: 12,
-                        fontWeight: last ? 800 : 600,
-                        color: last ? MCK.ink : MCK.textSub,
-                        letterSpacing: "0.01em",
-                      }}
-                    >
-                      {crumb.label}
-                    </span>
-                  )}
-                  {!last && (
-                    <ChevronRight size={12} style={{ color: MCK.textMuted, opacity: 0.6 }} />
-                  )}
-                </span>
-              )
-            })}
-          </nav>
-        )}
+        {/* Breadcrumb 미노출 — 상단 글로벌 메뉴와 중복 (2026-08-17 · 1메뉴 1상세 정책).
+            breadcrumbs prop 은 하위 호환을 위해 받기만 하고 렌더링하지 않는다. */}
 
         {/* Eyebrow */}
         {eyebrow && (

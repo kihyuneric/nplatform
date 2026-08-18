@@ -4,24 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { t } from '@/lib/i18n'
 
-// ─── Static link config ───────────────────────────────────────
-const SERVICE_LINKS = [
-  { href: '/exchange', label: 'NPL 매물 탐색' },
-  { href: '/exchange/sell', label: '매물 등록' },
-  { href: '/deals', label: '딜룸' },
-  { href: '/deals/matching', label: 'AI 매칭' },
-  { href: '/analysis', label: 'NPL 분석' },
-  { href: '/pricing', label: '요금제' },
-]
-
-const COMPANY_LINKS = [
-  { href: '/about', label: '플랫폼 소개' },
-  { href: '/notices', label: '공지사항' },
-  { href: '/support', label: '고객센터' },
-  { href: '/guide', label: '이용 가이드' },
-]
-
 // ─── Footer ───────────────────────────────────────────────────
+// 2026-08-18: 서비스·회사 링크 컬럼 삭제 (메인 네비와 중복) · 사업자 정보 가로형
 export function Footer() {
   const [settings, setSettings] = useState<any>(null)
 
@@ -33,11 +17,10 @@ export function Footer() {
   }, [])
 
   const companyName = settings?.companyName || '트랜스파머(주) | Transfarmer Inc.'
-  const siteDescription = settings?.siteDescription || '금융기관과 투자자를 직접 연결하는 NPL 거래 플랫폼'
+  const siteDescription = settings?.siteDescription || '대한민국 1%를 위한 프라이빗 NPL 플랫폼'
   const businessNumber = settings?.businessNumber || '507-87-02631'
   const ceoName = settings?.ceoName || '김기현'
-  const companyAddress = settings?.companyAddress || '서울 마포구 백범로31길 21, 서울창업허브 별관 108호'
-  const companyAddress2 = settings?.companyAddress2 || '서울 종로구 서린동 154-1, 스타트업빌리지 5층'
+  const companyAddress = settings?.companyAddress || '서울시 서초구 서초대로77길 55, 에이프로스퀘어 7층 KB이노베이션허브'
   const contactPhone = settings?.contactPhone || '02-555-2822'
   const contactEmail = settings?.contactEmail || 'ceo@transfarmer.co.kr'
   const dpoName = settings?.dpoName || '박성필'
@@ -50,167 +33,114 @@ export function Footer() {
       className="mt-auto border-t border-[var(--color-brand-deep)]/40 bg-[var(--color-brand-deepest)]"
       aria-label="사이트 하단 정보"
     >
-      <div className="max-w-[1440px] mx-auto px-6 lg:px-8 pt-14 pb-10">
+      <div className="max-w-[1440px] mx-auto px-6 lg:px-8 pt-8 pb-6">
 
-        {/* ── Main grid ────────────────────────────────── */}
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-3 lg:grid-cols-3">
-
-          {/* Column 1 — Brand */}
-          <div className="flex flex-col gap-4">
-            {/* Logo — Electric Blue 강조 (McKinsey cobalt) */}
-            <Link href="/" className="flex items-center gap-2.5 group w-fit">
-              <div
-                className="w-8 h-8 flex items-center justify-center flex-shrink-0 transition-colors"
-                style={{
-                  background: "#2251FF",
-                  borderTop: "2px solid #00A9F4",
-                  boxShadow: "0 4px 10px rgba(34, 81, 255, 0.40)",
-                }}
-              >
-                <span className="text-white font-black text-base tracking-tighter">N</span>
-              </div>
-              <div>
-                <span className="font-black text-white text-base tracking-tight">NPL</span>
-                <span className="font-light text-[var(--color-text-muted)] text-base">atform</span>
-              </div>
-            </Link>
-
-            {/* Tagline */}
-            <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-              {siteDescription}
-            </p>
-
-            {/* Company name */}
-            <p className="text-sm text-[var(--color-text-muted)]">
-              {companyName}
-            </p>
-
-            {/* Brief description */}
-            <p className="text-xs text-[var(--color-text-muted)] leading-relaxed max-w-xs">
-              정보의 비대칭 속에서 금융기관과 투자자를 직접 연결합니다. NPL 매물 탐색부터 거래 완결까지 — 국내 최초 AI 기반 NPL 거래 플랫폼입니다.
-            </p>
-          </div>
-
-          {/* Column 2 — Links */}
-          <div className="grid grid-cols-2 gap-8">
-            {/* 서비스 */}
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-4">
-                서비스
-              </h4>
-              <ul className="space-y-2.5">
-                {SERVICE_LINKS.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-[var(--color-text-muted)] hover:text-white transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+        {/* ── Brand — 로고 + 태그라인 한 줄 (타이트) ────── */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link href="/" className="flex items-center gap-2 group w-fit shrink-0">
+            <div
+              className="w-7 h-7 flex items-center justify-center flex-shrink-0"
+              style={{ background: "#0A1220", border: "1px solid rgba(191, 164, 118, 0.45)" }}
+            >
+              <span style={{ color: "#BFA476", fontFamily: "Georgia, serif", fontWeight: 900, fontSize: 15, lineHeight: 1 }}>N</span>
             </div>
-
-            {/* 회사 */}
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-4">
-                회사
-              </h4>
-              <ul className="space-y-2.5">
-                {COMPANY_LINKS.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-[var(--color-text-muted)] hover:text-white transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Column 3 — Legal & Contact */}
-          <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-4">
-              사업자 정보
-            </h4>
-            <div className="space-y-2">
-              <p className="text-xs text-[var(--color-text-muted)]">
-                사업자등록번호: {businessNumber}
-              </p>
-              <p className="text-xs text-[var(--color-text-muted)]">
-                대표: {ceoName}
-              </p>
-              <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-                {companyAddress}
-              </p>
-              {companyAddress2 && (
-                <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-                  {companyAddress2}
-                </p>
-              )}
-              <p className="text-xs text-[var(--color-text-muted)]">
-                Tel: <a href={`tel:${contactPhone.replace(/[^0-9]/g, '')}`} className="hover:text-white transition-colors">{contactPhone}</a>
-              </p>
-              <p className="text-xs text-[var(--color-text-muted)]">
-                Email:{' '}
-                <a
-                  href={`mailto:${contactEmail}`}
-                  className="hover:text-white transition-colors"
-                >
-                  {contactEmail}
-                </a>
-              </p>
-            </div>
-
-            {/* Legal notice */}
-            <p className="mt-6 text-[11px] text-[var(--color-text-muted)] leading-relaxed">
-              본 플랫폼은 투자 정보 제공을 목적으로 하며, 투자 결과에 대한 법적 책임을 지지 않습니다. 모든 투자 판단은 이용자 본인에게 있습니다.
-            </p>
-
-            {/* DPO / regulator contact */}
-            <div className="mt-4 space-y-1">
-              <p className="text-[11px] text-[var(--color-text-muted)]">
-                개인정보보호책임자 ({dpoName}):{' '}
-                <a href={`mailto:${dpoEmail}`} className="hover:text-white transition-colors">
-                  {dpoEmail}
-                </a>
-              </p>
-              <p className="text-[11px] text-[var(--color-text-muted)]">
-                통신판매중개업 신고번호: 2026-강원춘천-0136
-              </p>
-            </div>
-          </div>
+            <span
+              className="text-white"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 17, fontWeight: 700, letterSpacing: "-0.01em" }}
+            >
+              nplatform
+            </span>
+          </Link>
+          <p className="text-xs text-[var(--color-text-muted)]">
+            {siteDescription} · 매입조건에 매칭되는 딜만 선별하여 공개합니다.
+          </p>
         </div>
 
-        {/* ── Regulatory compliance strip · McKinsey mono editorial ─────────── */}
-        <div className="mt-10 pt-6 border-t" style={{ borderColor: "rgba(255,255,255,0.10)" }}>
-          {/* warm brass thin divider — editorial signature */}
-          <div className="mb-4" style={{ height: 1, width: 48, background: "var(--color-editorial-gold, #2251FF)" }} />
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            <ComplianceBadge label="개인정보보호법 준수" />
-            <ComplianceBadge label="신용정보법 준수" />
-            <ComplianceBadge label="전자금융거래법 준수" />
-            <ComplianceBadge label="ISMS-P 준비 중" />
-            <ComplianceBadge label="에스크로 자금보호" />
+        {/* ── 사업자 정보 — 가로형 (회사별 1줄, 타이트) ── */}
+        <div className="mt-4 pt-4 border-t" style={{ borderColor: "rgba(255,255,255,0.10)" }}>
+          <h4 className="text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+            사업자 정보
+          </h4>
+          <div className="space-y-1">
+            {/* 운영사 — 1줄 가로 나열 (모바일에서 자동 줄바꿈) */}
+            <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+              <span className="font-bold text-white/70">엔플랫폼 운영사</span>
+              <span className="mx-2 opacity-40">|</span>
+              트랜스파머(주)
+              <span className="mx-2 opacity-40">·</span>
+              대표: {ceoName}
+              <span className="mx-2 opacity-40">·</span>
+              사업자등록번호: {businessNumber}
+              <span className="mx-2 opacity-40">·</span>
+              {companyAddress}
+            </p>
+            {/* 공동운영사 — 1줄 가로 나열 */}
+            <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+              <span className="font-bold text-white/70">엔플랫폼 공동운영사</span>
+              <span className="mx-2 opacity-40">|</span>
+              (주)바른엔피엘대부
+              <span className="mx-2 opacity-40">·</span>
+              대표: 안영훈
+              <span className="mx-2 opacity-40">·</span>
+              사업자등록번호: 899-87-01356
+              <span className="mx-2 opacity-40">·</span>
+              서울특별시 강남구 영동대로 725 4층 E-04호
+            </p>
+            {/* 공동운영사 2 — 조선일보 땅집고 */}
+            <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+              <span className="font-bold text-white/70">엔플랫폼 공동운영사</span>
+              <span className="mx-2 opacity-40">|</span>
+              조선일보 땅집고(주식회사 엠딕)
+              <span className="mx-2 opacity-40">·</span>
+              대표: 유하용
+              <span className="mx-2 opacity-40">·</span>
+              사업자등록번호: 478-88-01291
+              <span className="mx-2 opacity-40">·</span>
+              서울특별시 중구 세종대로 21길 22, 2층
+            </p>
+            {/* 공동운영사 3 — 어썸공인중개사사무소 */}
+            <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+              <span className="font-bold text-white/70">엔플랫폼 공동운영사</span>
+              <span className="mx-2 opacity-40">|</span>
+              어썸공인중개사사무소
+              <span className="mx-2 opacity-40">·</span>
+              대표: 신지안
+              <span className="mx-2 opacity-40">·</span>
+              개업 등록: 11680-2022-00030
+              <span className="mx-2 opacity-40">·</span>
+              서울시 강남구 영동대로 721, 1303호
+              <span className="mx-2 opacity-40">·</span>
+              <a href="tel:050713886031" className="hover:text-white transition-colors">0507-1388-6031</a>
+            </p>
+            {/* 연락처 · 책임자 — 1줄 가로 나열 */}
+            <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+              엔플랫폼 문의: <a href={`tel:${contactPhone.replace(/[^0-9]/g, '')}`} className="hover:text-white transition-colors">{contactPhone}</a>
+              <span className="mx-2 opacity-40">·</span>
+              Email: <a href={`mailto:${contactEmail}`} className="hover:text-white transition-colors">{contactEmail}</a>
+              <span className="mx-2 opacity-40">·</span>
+              개인정보보호책임자 ({dpoName}): <a href={`mailto:${dpoEmail}`} className="hover:text-white transition-colors">{dpoEmail}</a>
+              <span className="mx-2 opacity-40">·</span>
+              통신판매중개업 신고번호: 2026-강원춘천-0136
+            </p>
           </div>
-          <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed max-w-4xl">
-            NPLatform(엔플랫폼)은 금융감독원 · 금융위원회의 개인정보 · 채무자정보 보호 지침에 따라 모든 매물 데이터에 대해
-            자동 마스킹 파이프라인을 운영하며, 담보 부동산 정보, 채권 정보는 4단계 접근 통제
-            (공개 / 투자기관 인증 / NDA 체결 / LOI · 승인) 모델로 보호합니다.
-            등기부등본 · 권리관계 요약 등 추가 자료는 금융기관 정보 제공 수준에 따라 다를 수 있습니다.
-          </p>
-          <p className="mt-3 text-[11px] text-[var(--color-text-muted)] leading-relaxed max-w-4xl">
+
+          {/* Legal notice — 면책 + 통신판매중개자 통합 1문단 (타이트) */}
+          <p className="mt-3 text-[10.5px] text-[var(--color-text-muted)] leading-relaxed max-w-5xl" style={{ opacity: 0.85 }}>
+            본 플랫폼은 NPL 정보 제공을 목적으로 하며, 투자 결과에 대한 법적 책임을 지지 않습니다. 모든 투자 판단은 이용자 본인에게 있습니다.
             ※ 본 서비스는 「전자상거래 등에서의 소비자보호에 관한 법률」상 통신판매중개자이며, 거래 당사자가 아닙니다.
-            매매 · 권리 · 의무의 당사자는 매도자(금융기관 등)와 매수자이며, 플랫폼은 중개 · 정보 제공 · 에스크로 역할만 수행합니다.
           </p>
+        </div>
+
+        {/* ── Compliance badges — 1줄 (타이트) ──────────── */}
+        <div className="mt-4 flex flex-wrap items-center gap-1.5">
+          <ComplianceBadge label="개인정보보호법 준수" />
+          <ComplianceBadge label="신용정보법 준수" />
+          <ComplianceBadge label="전자금융거래법 준수" />
+          <ComplianceBadge label="ISMS-P 준비 중" />
         </div>
 
         {/* ── Bottom bar ───────────────────────────────── */}
-        <div className="mt-12 pt-6 border-t border-[var(--color-brand-deep)]/40 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-5 pt-4 border-t border-[var(--color-brand-deep)]/40 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
             <p className="text-xs text-[var(--color-text-muted)]">
               &copy; 2026 트랜스파머(주) Transfarmer Inc. All rights reserved.

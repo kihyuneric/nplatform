@@ -1,407 +1,198 @@
-"use client"
+'use client'
 
 /**
- * /my/demands — 매입사 본인의 매수 수요 관리
+ * /my/demands — 내 매입 조건 (2026-08-18 전면 교체)
  *
- * - 등록된 수요 목록 (활성 / 일시중지 / 종료)
- * - 신규 등록, 편집, 종료 진입점
- * - 각 수요별 매칭 매물 수 표시 (Phase 5 endpoint 연계)
+ * 서비스의 매입조건 등록(/exchange/demands/new)과 1:1 동일한 필드 구성.
+ * 등록된 조건을 리스트로 보여주고 등록 · 수정 · 삭제가 바로 가능.
+ * 저장소: /api/v1/exchange/demands (매입조건 등록 폼과 동일 API)
  */
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import {
-  Plus, Edit, Target, Building2, MapPin, TrendingUp, Clock,
-  ArrowRight, AlertCircle, Filter,
-} from "lucide-react"
-import {
-  MckPageShell, MckPageHeader, MckBadge, MckEmptyState, MckDemoBanner,
-  MckTabBar, MckViewToggle, type MckViewMode,
-} from "@/components/mck"
-import { MyZoneTabs } from "@/components/my/my-zone-tabs"
-import { MCK, MCK_FONTS, MCK_TYPE, formatKRW } from "@/lib/mck-design"
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { ShoppingCart, Plus, Pencil, Trash2, RefreshCw } from 'lucide-react'
 
-interface DemandRow {
+const ELECTRIC = '#2251FF'
+
+type DemandRow = {
   id: string
-  collateral_types: string[]
+  created: string
+  demandType: string
+  types: string[]
   regions: string[]
-  min_amount: number
-  max_amount: number
-  target_discount_rate: number
-  urgency: "LOW" | "MEDIUM" | "HIGH" | "URGENT"
-  status: "ACTIVE" | "PAUSED" | "CLOSED"
-  proposal_count?: number
-  created_at: string
-  description?: string
+  landMin: number | null
+  landMax: number | null
+  bldgMin: number | null
+  bldgMax: number | null
+  amountMin: number | null
+  amountMax: number | null
+  priority: number | null
+  memo: string
 }
 
-const URGENCY_META: Record<string, { label: string; tone: "neutral" | "blue" | "ink" | "brass" }> = {
-  LOW:    { label: "여유",    tone: "neutral" },
-  MEDIUM: { label: "보통",    tone: "blue" },
-  HIGH:   { label: "급함",    tone: "brass" },
-  URGENT: { label: "매우급함", tone: "ink" },
-}
-const STATUS_META: Record<string, { label: string; tone: "ink" | "blue" | "neutral" | "brass" }> = {
-  ACTIVE: { label: "활성",     tone: "ink" },
-  PAUSED: { label: "일시중지", tone: "neutral" },
-  CLOSED: { label: "종료",     tone: "neutral" },
+const num = (v: unknown): number | null => {
+  const n = typeof v === 'string' ? Number(v) : (v as number)
+  return typeof n === 'number' && isFinite(n) && n > 0 ? n : null
 }
 
-const SAMPLE: DemandRow[] = [
-  {
-    id: "sample-d-001",
-    collateral_types: ["아파트", "오피스텔"],
-    regions: ["서울", "경기"],
-    min_amount: 500_000_000,
-    max_amount: 2_000_000_000,
-    target_discount_rate: 35,
-    urgency: "HIGH",
-    status: "ACTIVE",
-    proposal_count: 5,
-    created_at: "2026-04-18T09:00:00Z",
-    description: "서울/경기 아파트 NPL 35% 할인 매물 우선 검토.",
-  },
-  {
-    id: "sample-d-002",
-    collateral_types: ["근린시설/상가"],
-    regions: ["부산"],
-    min_amount: 800_000_000,
-    max_amount: 3_000_000_000,
-    target_discount_rate: 30,
-    urgency: "MEDIUM",
-    status: "PAUSED",
-    proposal_count: 2,
-    created_at: "2026-04-10T09:00:00Z",
-  },
-]
+const arr = (v: unknown): string[] => {
+  if (Array.isArray(v)) return v.map(String)
+  if (typeof v === 'string' && v) {
+    try { const p = JSON.parse(v); if (Array.isArray(p)) return p.map(String) } catch { /* ignore */ }
+    return v.split(',').map(s => s.trim()).filter(Boolean)
+  }
+  return []
+}
 
-type StatusFilter = "ALL" | "ACTIVE" | "PAUSED" | "CLOSED"
+const fmtRange = (min: number | null, max: number | null) => {
+  if (min === null && max === null) return '—'
+  const a = min !== null ? min.toLocaleString() : ''
+  const b = max !== null ? max.toLocaleString() : ''
+  if (min !== null && max !== null) return `${a}~${b}`
+  if (min !== null) return `${a}~`
+  return `~${b}`
+}
 
 export default function MyDemandsPage() {
-  const [rows, setRows] = useState<DemandRow[]>(SAMPLE)
+  const [rows, setRows] = useState<DemandRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [isSample, setIsSample] = useState(true)
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL")
-  const [view, setView] = useState<MckViewMode>("list")
 
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const r = await fetch("/api/v1/exchange/demands?mine=1", { credentials: "include" })
-        if (r.ok) {
-          const j = await r.json()
-          if (!cancelled && Array.isArray(j?.data) && j.data.length > 0) {
-            setRows(j.data as DemandRow[])
-            setIsSample(false)
-          }
-        }
-      } catch { /* keep sample */ } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-    return () => { cancelled = true }
-  }, [])
+  const load = () => {
+    setLoading(true)
+    fetch('/api/v1/exchange/demands?limit=100', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        const list: Array<Record<string, any>> = Array.isArray(d.data) ? d.data : []
+        setRows(list.map(x => ({
+          id: String(x.id ?? ''),
+          created: x.created_at ? String(x.created_at).slice(0, 10) : '—',
+          demandType: String(x.demand_type ?? '') === 'realestate' ? '부동산 급매' : 'NPL',
+          types: arr(x.collateral_types),
+          regions: arr(x.regions),
+          landMin: num(x.land_area_min_m2),
+          landMax: num(x.land_area_max_m2),
+          bldgMin: num(x.building_area_min_m2),
+          bldgMax: num(x.building_area_max_m2),
+          amountMin: num(x.min_amount),
+          amountMax: num(x.max_amount),
+          priority: num(x.priority),
+          memo: String(x.memo ?? '').replace(/\n?\[담당자\].*$/m, '').trim(),
+        })))
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }
+  useEffect(load, [])
 
-  const stats = {
-    total: rows.length,
-    active: rows.filter((r) => r.status === "ACTIVE").length,
-    paused: rows.filter((r) => r.status === "PAUSED").length,
-    proposals: rows.reduce((s, r) => s + (r.proposal_count ?? 0), 0),
+  const remove = (id: string) => {
+    if (!confirm('이 매입조건을 삭제할까요?')) return
+    fetch(`/api/v1/exchange/demands/${encodeURIComponent(id)}`, { method: 'DELETE' })
+      .then(() => setRows(prev => prev.filter(x => x.id !== id)))
+      .catch(() => {})
   }
 
-  const filteredRows = statusFilter === "ALL" ? rows : rows.filter(r => r.status === statusFilter)
-
-  const TABS = [
-    { id: "ALL", label: "전체", count: stats.total },
-    { id: "ACTIVE", label: "활성", count: stats.active },
-    { id: "PAUSED", label: "일시중지", count: stats.paused },
-    { id: "CLOSED", label: "종료", count: rows.filter(r => r.status === "CLOSED").length },
-  ] as const
-
   return (
-    <MckPageShell variant="tint">
-      {isSample && (
-        <MckDemoBanner
-          message="체험 모드 — 샘플 매수 수요 2건을 표시 중입니다. 신규 등록 시 실제 데이터로 전환됩니다."
-          ctaLabel="신규 등록"
-          ctaHref="/exchange/demands/new"
-        />
-      )}
-
-      <MckPageHeader
-        breadcrumbs={[
-          { label: "마이", href: "/my" },
-          { label: "매수 수요" },
-        ]}
-        eyebrow="MY · BUY DEMANDS"
-        title="내 매수 수요"
-        subtitle="등록한 매수 수요를 관리하고 매각사가 보낸 제안을 확인합니다. 수요별로 편집·일시중지·종료가 가능합니다."
-        actions={
-          <Link
-            href="/exchange/demands/new"
-            className="mck-cta-dark"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "9px 16px",
-              fontSize: 12, fontWeight: 800,
-              background: MCK.ink, color: MCK.paper,
-              borderTop: `2px solid ${MCK.electric}`,
-              textDecoration: "none",
-              boxShadow: "0 4px 12px rgba(10, 22, 40, 0.18)",
-            }}
-          >
-            <Plus size={14} style={{ color: MCK.paper }} />
-            <span style={{ color: MCK.paper }}>신규 매수 수요 등록</span>
-          </Link>
-        }
-      />
-
-      <MyZoneTabs zone="deals" />
-
-      <MckTabBar
-        eyebrow="STATUS"
-        eyebrowIcon={<Filter size={12} style={{ color: MCK.electric }} />}
-        tabs={TABS}
-        active={statusFilter}
-        onChange={(id) => setStatusFilter(id as StatusFilter)}
-        actions={<MckViewToggle value={view} onChange={setView} size="sm" />}
-      />
-
-      <div className="max-w-[1280px] mx-auto" style={{ padding: "32px 24px 80px", display: "flex", flexDirection: "column", gap: 24 }}>
-        {/* KPI strip */}
-        <div className="grid grid-cols-2 md:grid-cols-4" style={{ gap: 12 }}>
-          {[
-            { l: "총 등록", v: stats.total, sub: "수요 건수" },
-            { l: "활성", v: stats.active, sub: "공개 중" },
-            { l: "일시중지", v: stats.paused, sub: "검토 중" },
-            { l: "받은 제안", v: stats.proposals, sub: "매각사 응답" },
-          ].map((k) => (
-            <div key={k.l} style={{
-              background: MCK.paper, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}`,
-              padding: 16,
-            }}>
-              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 4 }}>{k.l}</div>
-              <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 26, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
-                {k.v}
-              </div>
-              <div style={{ fontSize: 11, color: MCK.textMuted, marginTop: 2 }}>{k.sub}</div>
-            </div>
-          ))}
+    <div className="space-y-5">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#2251FF] mb-1.5">
+            <ShoppingCart size={13} /> MY · 매입 조건
+          </div>
+          <h1 className="text-2xl font-black text-[var(--color-text-primary)]" style={{ fontFamily: 'Georgia, serif' }}>
+            내 매입 조건
+          </h1>
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+            등록한 조건에 맞는 NPL 딜만 자동매칭되어 공개됩니다. 우선순위별로 여러 개 등록할 수 있습니다.
+          </p>
         </div>
+        <div className="flex items-center gap-2">
+          <Link href="/exchange/demands/new"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold text-white"
+            style={{ background: '#0A1628', borderTop: `2px solid ${ELECTRIC}`, textDecoration: 'none' }}>
+            <Plus size={13} /> 매입조건 등록
+          </Link>
+          <button onClick={load}
+            className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)]"
+            style={{ background: 'transparent', cursor: 'pointer' }}>
+            <RefreshCw size={12} /> 새로고침
+          </button>
+        </div>
+      </div>
 
-        {/* List */}
-        {loading ? (
-          <div style={{ padding: 60, textAlign: "center", fontSize: 12, color: MCK.textMuted }}>매수 수요 불러오는 중...</div>
-        ) : filteredRows.length === 0 ? (
-          <MckEmptyState
-            icon={Target}
-            title={statusFilter === "ALL" ? "등록된 매수 수요가 없습니다" : "조건에 맞는 매수 수요가 없습니다"}
-            description={statusFilter === "ALL"
-              ? "매수 수요를 등록하면 매각사가 적합한 매물을 직접 제안합니다."
-              : "다른 상태 탭을 선택해 보세요."}
-            actionLabel={statusFilter === "ALL" ? "신규 등록" : undefined}
-            actionHref={statusFilter === "ALL" ? "/exchange/demands/new" : undefined}
-          />
-        ) : view === "grid" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{ gap: 16 }}>
-            {filteredRows.map((row) => {
-              const urgency = URGENCY_META[row.urgency] ?? URGENCY_META.MEDIUM
-              const status = STATUS_META[row.status] ?? STATUS_META.ACTIVE
-              return (
-                <article
-                  key={row.id}
-                  style={{
-                    background: MCK.paper,
-                    border: `1px solid ${MCK.border}`,
-                    borderTop: `2px solid ${MCK.electric}`,
-                    padding: 20,
-                    display: "flex", flexDirection: "column", gap: 12,
-                    minHeight: 280,
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <MckBadge tone={status.tone} size="sm">{status.label}</MckBadge>
-                    <MckBadge tone={urgency.tone} size="sm">{urgency.label}</MckBadge>
-                  </div>
-                  <h3 style={{ fontFamily: MCK_FONTS.serif, fontSize: 17, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.01em" }}>
-                    {row.collateral_types.slice(0, 2).join(" · ")}
-                    {row.collateral_types.length > 2 && ` 외 ${row.collateral_types.length - 2}종`}
-                  </h3>
-                  <div style={{ fontSize: 11, color: MCK.textMuted, marginTop: -6 }}>
-                    ID · {row.id.slice(0, 8).toUpperCase()} · 등록 {String(row.created_at).slice(0, 10)}
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, fontSize: 11 }}>
-                    <Field icon={<MapPin size={11} />} label="지역" value={row.regions.join(", ")} />
-                    <Field icon={<Clock size={11} />} label="목표 할인율" value={`${row.target_discount_rate}%↑`} />
-                    <Field icon={<TrendingUp size={11} />} label="금액" value={`${formatKRW(row.min_amount)}~${formatKRW(row.max_amount)}`} />
-                    <Field icon={<AlertCircle size={11} />} label="제안" value={`${row.proposal_count ?? 0}건`} />
-                  </div>
-                  {row.description && (
-                    <p style={{ fontSize: 11, color: MCK.textSub, lineHeight: 1.55, flex: 1 }}>
-                      {row.description}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-2" style={{ marginTop: "auto", paddingTop: 10, borderTop: `1px solid ${MCK.border}` }}>
-                    <Link
-                      href={`/exchange/demands/${row.id}/edit`}
-                      style={{
-                        flex: 1,
-                        display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4,
-                        padding: "8px 12px", fontSize: 11, fontWeight: 800,
-                        background: MCK.paper, color: MCK.ink,
-                        border: `1px solid ${MCK.borderStrong}`,
-                        borderTop: `2px solid ${MCK.electric}`,
-                        textDecoration: "none",
-                      }}
-                    >
-                      <Edit size={11} /> 편집
-                    </Link>
-                    <Link
-                      href={`/exchange/demands/${row.id}`}
-                      className="mck-cta-dark"
-                      style={{
-                        flex: 1,
-                        display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4,
-                        padding: "8px 12px", fontSize: 11, fontWeight: 800,
-                        background: MCK.ink, color: MCK.paper,
-                        borderTop: `2px solid ${MCK.electric}`,
-                        textDecoration: "none",
-                      }}
-                    >
-                      <span style={{ color: MCK.paper }}>상세 ↗</span>
-                    </Link>
-                  </div>
-                </article>
-              )
-            })}
-          </div>
-        ) : (
-          <section style={{ background: MCK.paper, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}` }}>
-            {filteredRows.map((row, i) => {
-              const urgency = URGENCY_META[row.urgency] ?? URGENCY_META.MEDIUM
-              const status = STATUS_META[row.status] ?? STATUS_META.ACTIVE
-              return (
-                <article
-                  key={row.id}
-                  style={{
-                    padding: "18px 22px",
-                    borderBottom: i < rows.length - 1 ? `1px solid ${MCK.border}` : "none",
-                    display: "flex", flexDirection: "column", gap: 12,
-                  }}
-                >
-                  <header style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                    <div>
-                      <div className="flex items-center gap-2" style={{ marginBottom: 6 }}>
-                        <MckBadge tone={status.tone} size="sm">{status.label}</MckBadge>
-                        <MckBadge tone={urgency.tone} size="sm">{urgency.label}</MckBadge>
-                      </div>
-                      <h3 style={{ fontFamily: MCK_FONTS.serif, fontSize: 16, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.01em", marginBottom: 2 }}>
-                        {row.collateral_types.slice(0, 2).join(" · ")}
-                        {row.collateral_types.length > 2 && ` 외 ${row.collateral_types.length - 2}종`}
-                      </h3>
-                      <div style={{ fontSize: 11, color: MCK.textMuted }}>
-                        ID · {row.id.slice(0, 8).toUpperCase()} · 등록 {String(row.created_at).slice(0, 10)}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {/* 편집 — 매입사 본인용 edit 페이지 */}
-                      <Link
-                        href={`/exchange/demands/${row.id}/edit`}
-                        style={{
-                          display: "inline-flex", alignItems: "center", gap: 4,
-                          padding: "7px 12px",
-                          fontSize: 11, fontWeight: 800,
-                          background: MCK.paper, color: MCK.ink,
-                          border: `1px solid ${MCK.borderStrong}`,
-                          borderTop: `2px solid ${MCK.electric}`,
-                          textDecoration: "none",
-                        }}
-                      >
-                        <Edit size={11} /> 편집
-                      </Link>
-                      {/* 상세 */}
-                      <Link
-                        href={`/exchange/demands/${row.id}`}
-                        className="mck-cta-dark"
-                        style={{
-                          display: "inline-flex", alignItems: "center", gap: 4,
-                          padding: "7px 12px",
-                          fontSize: 11, fontWeight: 800,
-                          background: MCK.ink, color: MCK.paper,
-                          border: "none",
-                          borderTop: `2px solid ${MCK.electric}`,
-                          textDecoration: "none",
-                        }}
-                      >
-                        <span style={{ color: MCK.paper }}>상세 ↗</span>
-                      </Link>
-                    </div>
-                  </header>
-
-                  {/* Conditions */}
-                  <div className="grid grid-cols-2 md:grid-cols-4" style={{ gap: 12, fontSize: 11 }}>
-                    <Field icon={<Building2 size={11} />} label="담보" value={row.collateral_types.join(", ")} />
-                    <Field icon={<MapPin size={11} />} label="지역" value={row.regions.join(", ")} />
-                    <Field icon={<TrendingUp size={11} />} label="금액" value={`${formatKRW(row.min_amount)} ~ ${formatKRW(row.max_amount)}`} />
-                    <Field icon={<Clock size={11} />} label="목표 할인율" value={`${row.target_discount_rate}%↑`} />
-                  </div>
-
-                  {row.description && (
-                    <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.55 }}>
-                      {row.description}
-                    </p>
-                  )}
-
-                  <footer className="flex items-center justify-between" style={{ paddingTop: 8, borderTop: `1px solid ${MCK.border}` }}>
-                    <span style={{ fontSize: 11, color: MCK.textMuted, display: "inline-flex", alignItems: "center", gap: 4 }}>
-                      {row.proposal_count != null ? (
-                        <>
-                          <AlertCircle size={11} style={{ color: MCK.electric }} />
-                          매각사 제안 <strong style={{ color: MCK.ink, fontWeight: 800 }}>{row.proposal_count}건</strong>
-                        </>
-                      ) : "—"}
+      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-x-auto">
+        <table className="w-full text-[12.5px]">
+          <thead>
+            <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] text-left text-[10.5px] uppercase tracking-wide text-[var(--color-text-muted)]">
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">등록일</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">우선순위</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">유형</th>
+              <th className="px-3 py-2.5 font-bold">담보유형</th>
+              <th className="px-3 py-2.5 font-bold">지역</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">토지면적(㎡)</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">건물면적(㎡)</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">금액대(억)</th>
+              <th className="px-3 py-2.5 font-bold">요청사항</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr><td colSpan={10} className="px-3 py-10 text-center text-sm text-[var(--color-text-muted)]">불러오는 중...</td></tr>
+            )}
+            {!loading && rows.length === 0 && (
+              <tr>
+                <td colSpan={10} className="px-3 py-12 text-center">
+                  <p className="text-sm font-bold text-[var(--color-text-primary)]">등록된 매입조건이 없습니다</p>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">매입조건을 등록하시면 조건에 맞는 NPL 딜만 자동매칭됩니다.</p>
+                  <Link href="/exchange/demands/new"
+                    className="inline-flex items-center gap-1.5 mt-4 px-4 py-2.5 text-xs font-extrabold text-white"
+                    style={{ background: '#0A1628', borderTop: `2px solid ${ELECTRIC}`, textDecoration: 'none' }}>
+                    매입조건 등록하기
+                  </Link>
+                </td>
+              </tr>
+            )}
+            {rows.map(r => (
+              <tr key={r.id} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] transition-colors">
+                <td className="px-3 py-2.5 tabular-nums whitespace-nowrap text-[var(--color-text-muted)]">{r.created}</td>
+                <td className="px-3 py-2.5 whitespace-nowrap">
+                  {r.priority !== null ? (
+                    <span className="inline-flex items-center justify-center w-6 h-6 text-[11px] font-black text-white" style={{ background: '#0A1628' }}>
+                      {r.priority}
                     </span>
+                  ) : '—'}
+                </td>
+                <td className="px-3 py-2.5 whitespace-nowrap font-bold text-[var(--color-text-primary)]">{r.demandType}</td>
+                <td className="px-3 py-2.5 min-w-[140px] text-[var(--color-text-primary)]">{r.types.length ? r.types.join(' · ') : '—'}</td>
+                <td className="px-3 py-2.5 min-w-[120px] text-[var(--color-text-primary)]">{r.regions.length ? r.regions.join(' · ') : '—'}</td>
+                <td className="px-3 py-2.5 tabular-nums whitespace-nowrap">{fmtRange(r.landMin, r.landMax)}</td>
+                <td className="px-3 py-2.5 tabular-nums whitespace-nowrap">{fmtRange(r.bldgMin, r.bldgMax)}</td>
+                <td className="px-3 py-2.5 tabular-nums whitespace-nowrap font-bold text-[var(--color-text-primary)]">{fmtRange(r.amountMin, r.amountMax)}</td>
+                <td className="px-3 py-2.5 min-w-[160px] max-w-[260px] text-[var(--color-text-secondary)]">
+                  <span className="line-clamp-2">{r.memo || '—'}</span>
+                </td>
+                <td className="px-3 py-2.5 whitespace-nowrap">
+                  <div className="flex items-center gap-1">
                     <Link
-                      href={`/exchange/demands/${row.id}#proposals`}
-                      style={{ fontSize: 11, fontWeight: 700, color: MCK.electricDark, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
+                      href={`/exchange/demands/${encodeURIComponent(r.id)}/edit`}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)]"
+                      style={{ textDecoration: 'none' }}
                     >
-                      받은 제안 보기 <ArrowRight size={11} />
+                      <Pencil size={11} /> 수정
                     </Link>
-                  </footer>
-                </article>
-              )
-            })}
-          </section>
-        )}
-
-        {/* helper note */}
-        {filteredRows.length > 0 && (
-          <div
-            style={{
-              padding: "14px 18px",
-              background: "rgba(34, 81, 255, 0.04)",
-              border: `1px solid ${MCK.border}`,
-              borderLeft: `3px solid ${MCK.electric}`,
-              fontSize: 11, color: MCK.textSub, lineHeight: 1.6,
-            }}
-          >
-            매수 수요는 매각사에게만 공개됩니다. 활성 상태일 때만 매칭 엔진이 매물 후보를 추천하며, 일시중지 시 새로운 제안 수신이 잠시 멈춥니다.
-          </div>
-        )}
-      </div>
-    </MckPageShell>
-  )
-}
-
-function Field({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div>
-      <div style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 800, color: MCK.electric, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>
-        {icon} {label}
-      </div>
-      <div style={{ fontSize: 12, fontWeight: 700, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>
-        {value}
+                    <button
+                      onClick={() => remove(r.id)}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold border border-rose-300 text-rose-600"
+                      style={{ background: 'transparent', cursor: 'pointer' }}
+                    >
+                      <Trash2 size={11} /> 삭제
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )

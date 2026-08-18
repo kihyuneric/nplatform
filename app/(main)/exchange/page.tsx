@@ -1,39 +1,39 @@
 ﻿"use client"
 
 /**
- * /exchange — NPL 매물 탐색 (v4 전략, 2026-04-07)
+ * /exchange — NPL 매물 탐색 (v5 프라이빗 중개, 2026-08-14)
  *
  * 설계 원칙:
- *   - 4단계 티어 모델 (L0→L3) 을 목록 단계부터 노출
- *   - 핵심 L0 필드: 채권잔액 · 매각희망가 · 할인율 · 감정가
- *   - 자료 완성도 점수(0-10) 로 매물 품질 시각화
+ *   - 바이어 노출 필드는 9개로 제한: 관리번호 · 지역 · 주소(마스킹) · 유형 ·
+ *     토지면적 · 건물면적 · 감정가 · 채권잔액 · 협의가
+ *   - 분석 지표(AI 등급 · 할인율 · 완성도)는 목록 단계에서 미노출 — NDA 후 딜룸에서만
  *   - 담보는 열고 · 사람은 가린다 (PII 마스킹 일관 적용)
  *   - 수수료 0.9% 캡 고지
  */
 
 import { useMemo, useState, useCallback, useEffect } from "react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { useTranslation } from "@/lib/hooks/use-translate"
 import {
-  Search, SlidersHorizontal, TrendingDown, Building2,
-  MapPin, ShieldCheck, ArrowRight, Sparkles, Filter,
+  Search, SlidersHorizontal, Building2,
+  MapPin, ArrowRight, Sparkles, Filter,
   LayoutGrid, List as ListIcon, Brain, Loader2, Zap,
-  Compass, Eye, Download,
+  Download, Heart, Lock as LockIcon,
 } from "lucide-react"
 import * as XLSX from "xlsx"
 import { maskInstitutionName } from "@/lib/mask"
-import { TierBadge } from "@/components/tier/tier-badge"
-import { CompletenessBadge } from "@/components/listing/completeness-badge"
+import { NdaModal, type NdaState } from "@/components/asset-detail"
+import { createClient } from "@/lib/supabase/client"
+import { PLATFORM_STATS } from "@/lib/platform-stats"
+import { useMainStats } from "@/lib/hooks/use-main-stats"
 import type { AccessTier } from "@/lib/access-tier"
 import {
   REGION_SHORT_LIST,
   SALE_METHODS,
   SELLER_INSTITUTIONS,
   LISTING_CATEGORIES,
-  formatAIGrade,
-  AI_GRADE_COLORS,
   type AIGrade,
 } from "@/lib/taxonomy"
 import { MckPageShell, MckPageHeader, MckDemoBanner, MckBadge, MckKpiGrid } from "@/components/mck"
@@ -82,8 +82,10 @@ interface CardListing {
   collateral: string       // 상세 담보 라벨 (아파트·오피스 등)
   collateralMajor: "RESIDENTIAL" | "COMMERCIAL" | "LAND" | "ETC"
   outstanding_principal: number   // 채권잔액
-  asking_price: number            // 매각희망가
+  asking_price: number            // 협의가 (구 매각희망가)
   appraisal_value: number         // 감정가
+  land_area_m2?: number           // 토지면적(㎡) — 미제공 시 "—" 표시
+  building_area_m2?: number       // 건물면적(㎡) — 미제공 시 "—" 표시
   discount_rate: number           // 할인율 (%)
   ai_grade: AIGrade
   data_completeness: number       // 0-10
@@ -99,13 +101,57 @@ interface CardListing {
   sale_method: keyof typeof SALE_METHODS  // NPLATFORM / AUCTION / PUBLIC
   created_days_ago: number
   view_count: number   // 공개 리스트 누적 조회수 (L0)
+  created_at_label?: string   // 등록일자 YYYY-MM-DD
+  address_dong?: string       // 주소 — 동 단위까지 (세부주소 제외)
+  photo_url?: string          // 대표 사진 (없으면 placeholder)
+  max_claim?: number          // 채권최고액 (근저당 설정액) — 미제공 시 '—'
 }
+
+/**
+ * 비로그인 샘플 10건 — "NPL 자동매칭 샘플" (2026-08-18)
+ * 회원가입 · 로그인 + 매입조건 등록 전에는 실데이터 대신 블러 처리된 고가 샘플 노출.
+ * 숫자는 매수자 관점에서 매력적으로(감정가 대비 낮은 협의가 · 고가 위주) 구성한 가상 값.
+ */
+const GUEST_SAMPLES: CardListing[] = ([
+  { id: 'N-01', region: '서울 강남구',   address_dong: '서울 강남구 역삼동',   collateral: '오피스 빌딩',   appraisal_value: 45_000_000_000, outstanding_principal: 28_500_000_000, max_claim: 37_050_000_000, asking_price: 19_800_000_000, land_area_m2: 1240, building_area_m2: 15800, created_at_label: '2026-08-17', created_days_ago: 1,  photo_url: 'https://picsum.photos/seed/npl-01/400/300' },
+  { id: 'N-02', region: '서울 용산구',   address_dong: '서울 용산구 한남동',   collateral: '통건물',       appraisal_value: 28_000_000_000, outstanding_principal: 17_200_000_000, max_claim: 22_360_000_000, asking_price: 15_200_000_000, land_area_m2: 660,  building_area_m2: 4200,  created_at_label: '2026-08-16', created_days_ago: 2,  photo_url: 'https://picsum.photos/seed/npl-02/400/300' },
+  { id: 'N-03', region: '서울 성동구',   address_dong: '서울 성동구 성수동',   collateral: '지식산업센터', appraisal_value: 32_000_000_000, outstanding_principal: 19_800_000_000, max_claim: 25_740_000_000, asking_price: 17_600_000_000, land_area_m2: 1980, building_area_m2: 21400, created_at_label: '2026-08-15', created_days_ago: 3,  photo_url: 'https://picsum.photos/seed/npl-03/400/300' },
+  { id: 'N-04', region: '경기 성남시 분당구', address_dong: '경기 성남시 분당구 정자동', collateral: '오피스', appraisal_value: 19_000_000_000, outstanding_principal: 11_600_000_000, max_claim: 15_080_000_000, asking_price: 10_400_000_000, land_area_m2: 890,  building_area_m2: 9800,  created_at_label: '2026-08-14', created_days_ago: 4,  photo_url: 'https://picsum.photos/seed/npl-04/400/300' },
+  { id: 'N-05', region: '서울 서초구',   address_dong: '서울 서초구 서초동',   collateral: '근린상가',     appraisal_value: 12_800_000_000, outstanding_principal: 7_900_000_000,  max_claim: 10_270_000_000, asking_price: 6_900_000_000,  land_area_m2: 420,  building_area_m2: 2800,  created_at_label: '2026-08-13', created_days_ago: 5,  photo_url: 'https://picsum.photos/seed/npl-05/400/300' },
+  { id: 'N-06', region: '부산 해운대구', address_dong: '부산 해운대구 우동',   collateral: '호텔',         appraisal_value: 21_500_000_000, outstanding_principal: 13_400_000_000, max_claim: 17_420_000_000, asking_price: 11_800_000_000, land_area_m2: 1650, building_area_m2: 12600, created_at_label: '2026-08-12', created_days_ago: 6,  photo_url: 'https://picsum.photos/seed/npl-06/400/300' },
+  { id: 'N-07', region: '경기 성남시 판교', address_dong: '경기 성남시 삼평동', collateral: '물류센터',    appraisal_value: 16_500_000_000, outstanding_principal: 10_100_000_000, max_claim: 13_130_000_000, asking_price: 8_800_000_000,  land_area_m2: 5200, building_area_m2: 18900, created_at_label: '2026-08-11', created_days_ago: 7,  photo_url: 'https://picsum.photos/seed/npl-07/400/300' },
+  { id: 'N-08', region: '서울 마포구',   address_dong: '서울 마포구 상암동',   collateral: '오피스텔 통동', appraisal_value: 9_600_000_000,  outstanding_principal: 5_900_000_000,  max_claim: 7_670_000_000,  asking_price: 5_200_000_000,  land_area_m2: 380,  building_area_m2: 5400,  created_at_label: '2026-08-10', created_days_ago: 8,  photo_url: 'https://picsum.photos/seed/npl-08/400/300' },
+  { id: 'N-09', region: '인천 연수구',   address_dong: '인천 연수구 송도동',   collateral: '오피스',       appraisal_value: 14_200_000_000, outstanding_principal: 8_700_000_000,  max_claim: 11_310_000_000, asking_price: 7_800_000_000,  land_area_m2: 760,  building_area_m2: 8600,  created_at_label: '2026-08-09', created_days_ago: 9,  photo_url: 'https://picsum.photos/seed/npl-09/400/300' },
+  { id: 'N-10', region: '제주 서귀포시', address_dong: '제주 서귀포시 색달동', collateral: '리조트 부지',  appraisal_value: 8_800_000_000,  outstanding_principal: 5_400_000_000,  max_claim: 7_020_000_000,  asking_price: 4_500_000_000,  land_area_m2: 12400,                          created_at_label: '2026-08-08', created_days_ago: 10, photo_url: 'https://picsum.photos/seed/npl-10/400/300' },
+] as unknown) as CardListing[]
 
 // MOCK 12건은 lib/samples/exchange-demo-listings.ts 로 추출 (P0-3 · 2026-05-02)
 // — 페이지에 하드코딩 금지 정책. 데모 시드 갱신 시 본 파일은 손대지 않고 lib/samples 만 수정.
 const DEMO_SELLER_ID = DEMO_SELLER_ID_FROM_SAMPLES
 // 페이지 내 사용처는 기존 변수명 그대로 유지 — 시그니처 변경 최소화
-const MOCK: CardListing[] = EXCHANGE_DEMO_LISTINGS as unknown as CardListing[]
+// 데모 시드에는 면적 필드가 없음 — 목록 9필드 정책에 맞춰 페이지 단에서
+// 담보 유형별 그럴듯한 면적을 결정적으로(index seed) 보강. lib/samples 는 손대지 않음.
+const MOCK: CardListing[] = (EXCHANGE_DEMO_LISTINGS as unknown as CardListing[]).map((x, i) => {
+  const seed = (i * 7) % 12
+  const land =
+    x.collateralMajor === "LAND" ? 661.2 + seed * 86.5 :
+    x.collateralMajor === "COMMERCIAL" ? 214.8 + seed * 22.4 :
+    x.collateralMajor === "RESIDENTIAL" ? 38.2 + seed * 3.1 :
+    120.5 + seed * 9.7
+  const building =
+    x.collateralMajor === "LAND" ? undefined :
+    x.collateralMajor === "COMMERCIAL" ? 486.2 + seed * 41.3 :
+    x.collateralMajor === "RESIDENTIAL" ? 84.9 + seed * 4.6 :
+    150.3 + seed * 11.2
+  return {
+    ...x,
+    land_area_m2: x.land_area_m2 ?? Math.round(land * 10) / 10,
+    building_area_m2: x.building_area_m2 ?? (building == null ? undefined : Math.round(building * 10) / 10),
+    created_at_label: new Date(Date.now() - x.created_days_ago * 86_400_000).toISOString().slice(0, 10),
+    // 채권최고액 — 미제공 데모 시드는 채권잔액의 130% 로 결정적 보강
+    max_claim: x.max_claim ?? Math.round(x.outstanding_principal * 1.3),
+  }
+})
 
 /* ═══════════════════════════════════════════════════════════
    HELPERS
@@ -114,6 +160,19 @@ function formatKRW(n: number): string {
   if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}억`
   if (n >= 10_000) return `${(n / 10_000).toFixed(0)}만`
   return n.toLocaleString("ko-KR")
+}
+
+/** 면적 단위 토글 — 1평 = 3.3058㎡ */
+const PYEONG_M2 = 3.3058
+type AreaUnit = "m2" | "py"
+function formatArea(m2: number | undefined, unit: AreaUnit): string {
+  if (typeof m2 !== "number" || !isFinite(m2) || m2 <= 0) return "—"
+  return unit === "py" ? `${(m2 / PYEONG_M2).toFixed(1)}평` : `${m2.toFixed(1)}㎡`
+}
+
+/** 주소 마스킹 — 목록 단계는 시/군/구 + *** 만 노출 (NDA 체결 후 전체 주소 공개) */
+function maskAddress(region: string): string {
+  return region ? `${region} ***` : "***"
 }
 
 // ─── Filter Options (derived from central taxonomy) ──────────
@@ -173,7 +232,7 @@ const SALE_METHOD_FILTER: { value: string; label: string }[] = [
   { value: "ALL", label: "전체" },
   ...Object.entries(SALE_METHODS).map(([v, l]) => ({ value: v, label: l })),
 ]
-type SortKey = "recent" | "discount" | "completeness" | "principal_desc"
+type SortKey = "recent" | "appraisal_desc" | "principal_desc"
 type ViewMode = "card" | "list"
 
 /* ═══════════════════════════════════════════════════════════
@@ -196,12 +255,86 @@ export default function ExchangePage() {
   const [region, setRegion] = useState("ALL")                // 서울 / 경기 ...
   const [instType, setInstType] = useState("ALL")            // BANK / SAVINGS_BANK / ...
   const [stage, setStage] = useState("ALL")                  // NPLATFORM / AUCTION / PUBLIC
-  const [minCompleteness, setMinCompleteness] = useState(0)
   const [sort, setSort] = useState<SortKey>("recent")
+  const [areaUnit, setAreaUnit] = useState<AreaUnit>("m2")   // ㎡/평 토글 — 목록 전체 공통
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [view, setView] = useState<ViewMode>("card")
+  const [view, setView] = useState<ViewMode>("list")   // 기본 모드 = 리스트 (2026-08-15 정책)
   const [page, setPage] = useState(1)
-  const [perPage, setPerPage] = useState<number>(30) // 카드 30, 리스트 50
+  const [perPage, setPerPage] = useState<number>(50) // 카드 30, 리스트 50
+
+  // ── 관심등록 (localStorage 유지) ─────────────────────────────
+  const [favorites, setFavorites] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    try { setFavorites(new Set(JSON.parse(localStorage.getItem('npl_favorites') || '[]'))) } catch { /* ignore */ }
+  }, [])
+  const toggleFavorite = useCallback((id: string) => {
+    setFavorites(prev => {
+      const next = new Set(prev)
+      const removing = next.has(id)
+      if (removing) next.delete(id); else next.add(id)
+      try { localStorage.setItem('npl_favorites', JSON.stringify([...next])) } catch { /* ignore */ }
+      // 서버 집계 (운영사·매각사 대시보드 연동) — fire-and-forget
+      fetch('/api/v1/listing-marketing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listing_id: id, type: removing ? 'interest_remove' : 'interest' }),
+      }).catch(() => {})
+      return next
+    })
+  }, [])
+
+  // ── NPL 상태 배지 (거래중/협의중/매각완료 — 관리자·매각사 입력값) ──
+  const [statusMap, setStatusMap] = useState<Record<string, string>>({})
+  useEffect(() => {
+    fetch('/api/v1/listing-marketing')
+      .then(r => r.json())
+      .then(d => {
+        const map: Record<string, string> = {}
+        for (const [id, row] of Object.entries(d?.data ?? {})) {
+          const s = (row as { npl_status?: string })?.npl_status
+          if (s) map[id] = s
+        }
+        setStatusMap(map)
+      })
+      .catch(() => {})
+  }, [])
+
+  // ── NDA 전자계약 — 리스트에서 바로 서명 (자체 NdaModal + /api/v1/nda) ──
+  const [ndaTarget, setNdaTarget] = useState<CardListing | null>(null)
+  const [ndaStates, setNdaStates] = useState<Record<string, NdaState>>({})
+
+  const openNda = useCallback((item: CardListing) => {
+    setNdaTarget(item)
+  }, [])
+
+  const submitNda = useCallback(async (payload?: { signerName: string }) => {
+    if (!ndaTarget) return
+    const id = ndaTarget.id
+    // 자체 NDA API 에 서명 기록 (npl_ndas) — 실패해도 submitted 상태로 운영사 검토 플로우 진행
+    try {
+      await fetch('/api/v1/nda', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listing_id: id }),
+      })
+    } catch { /* ignore */ }
+    // NDA 요청 등록 — '운영사 검토' 상태로 관리자·매입사·매각사 대시보드 공유
+    fetch('/api/v1/listing-marketing', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listing_id: id, type: 'nda_request', signer: payload?.signerName ?? '' }),
+    }).catch(() => {})
+    setNdaStates(prev => ({
+      ...prev,
+      [id]: {
+        ...(prev[id] ?? { status: 'none' }),
+        status: 'submitted',
+        submittedAt: new Date().toISOString().slice(0, 10),
+        reviewNote: '운영사 확인 후 1차 미팅 안내 (영업일 1일 이내)',
+      } as NdaState,
+    }))
+    setNdaTarget(null)
+  }, [ndaTarget])
   const [aiSearchMode, setAiSearchMode] = useState(false)
   const [aiSearching, setAiSearching] = useState(false)
   const [aiRecommendation, setAiRecommendation] = useState("")
@@ -325,6 +458,12 @@ export default function ExchangePage() {
             outstanding_principal: principal,
             asking_price: asking,
             appraisal_value: appraisal,
+            land_area_m2:
+              typeof r.land_area_m2 === 'number' ? r.land_area_m2 :
+              typeof r.land_area === 'number' ? r.land_area : undefined,
+            building_area_m2:
+              typeof r.building_area_m2 === 'number' ? r.building_area_m2 :
+              typeof r.building_area === 'number' ? r.building_area : undefined,
             discount_rate: discount,
             ai_grade,
             data_completeness: Math.max(0, Math.min(10, completeness)),
@@ -340,6 +479,18 @@ export default function ExchangePage() {
             sale_method,
             created_days_ago,
             view_count: typeof r.view_count === 'number' ? r.view_count : 0,
+            created_at_label: r.created_at ? String(r.created_at).slice(0, 10) : undefined,
+            // 주소 동 단위: "시 구 동" 3토큰까지만 (세부주소 제외 정책)
+            address_dong: typeof r.address === 'string'
+              ? r.address.split(/\s+/).slice(0, 3).join(' ')
+              : [r.sido, r.sigungu, r.dong ?? r.eupmyeondong].filter(Boolean).join(' ') || undefined,
+            photo_url: Array.isArray(r.images) && r.images.length > 0
+              ? String((r.images[0] as any)?.url ?? r.images[0])
+              : typeof r.thumbnail_url === 'string' ? r.thumbnail_url : undefined,
+            max_claim:
+              typeof r.max_claim === 'number' ? r.max_claim :
+              typeof r.max_claim_amount === 'number' ? r.max_claim_amount :
+              typeof r.mortgage_amount === 'number' ? r.mortgage_amount : undefined,
           }
         })
         setListings(mapped)
@@ -402,21 +553,71 @@ export default function ExchangePage() {
     if (region !== "ALL") arr = arr.filter(x => x.region.startsWith(region))
     if (instType !== "ALL") arr = arr.filter(x => x.inst_kind === instType)
     if (stage !== "ALL") arr = arr.filter(x => x.sale_method === stage)
-    if (minCompleteness > 0) arr = arr.filter(x => x.data_completeness >= minCompleteness)
 
     switch (sort) {
-      case "discount": arr.sort((a, b) => b.discount_rate - a.discount_rate); break
-      case "completeness": arr.sort((a, b) => b.data_completeness - a.data_completeness); break
+      case "appraisal_desc": arr.sort((a, b) => b.appraisal_value - a.appraisal_value); break
       case "principal_desc": arr.sort((a, b) => b.outstanding_principal - a.outstanding_principal); break
       default: arr.sort((a, b) => a.created_days_ago - b.created_days_ago)
     }
     return arr
-  }, [q, listingCategory, collateral, collateralMinor, region, instType, stage, minCompleteness, sort, listings])
+  }, [q, listingCategory, collateral, collateralMinor, region, instType, stage, sort, listings])
+
+  // ── 관리번호 자동 채번 — 등록 오래된 순으로 N-01, N-02, … (표시용 · 내부 id 는 유지) ──
+  const displayNo = useMemo(() => {
+    const sorted = [...listings].sort((a, b) => b.created_days_ago - a.created_days_ago)
+    const m: Record<string, string> = {}
+    sorted.forEach((x, i) => { m[x.id] = `N-${String(i + 1).padStart(2, '0')}` })
+    return m
+  }, [listings])
+
+  // ── 비로그인 게이팅 — 회원가입/로그인 + 매입조건 등록 전에는 샘플만 블러 노출 ──
+  const [authState, setAuthState] = useState<'checking' | 'guest' | 'user'>('checking')
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!cancelled) setAuthState(user ? 'user' : 'guest')
+      } catch {
+        if (!cancelled) setAuthState('guest')
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
+  const guestMode = authState === 'guest'
+
+  // KPI — 운영 관리자(/admin/main-stats) 입력값 자동연동
+  const mainStats = useMainStats()
+
+  // 매입조건 보유 여부 — 있어야만 "N건 매칭" 카운트 노출 (없으면 '매입조건 등록 시 매칭 진행')
+  const [hasDemands, setHasDemands] = useState(false)
+  useEffect(() => {
+    if (authState !== 'user') { setHasDemands(false); return }
+    fetch('/api/v1/exchange/demands?limit=1', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => setHasDemands(Array.isArray(d?.data) && d.data.length > 0))
+      .catch(() => {})
+  }, [authState])
+
+  // 관심만 보기 — 하트 등록한 매물만 필터
+  const [favOnly, setFavOnly] = useState(false)
+
+  // ── 매칭 게이팅 정책 (2026-08-17) ──
+  //   기본적으로는 매입조건에 매칭되는 딜만 노출.
+  //   매칭 조건이 없는 상태(비로그인·조건 미등록)에서는 10건만 프리뷰로 공개하고
+  //   나머지는 비공개 — 리스트 하단에 안내 배너 노출.
+  const MATCH_PREVIEW_LIMIT = 10
+  const gated = !favOnly && filtered.length > MATCH_PREVIEW_LIMIT
+  const visible = useMemo(() => {
+    const base = favOnly ? filtered.filter(x => favorites.has(x.id)) : filtered
+    return favOnly ? base : base.slice(0, MATCH_PREVIEW_LIMIT)
+  }, [favOnly, filtered, favorites])
 
   // 페이지네이션 계산
-  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage))
+  const totalPages = Math.max(1, Math.ceil(visible.length / perPage))
   const safePage = Math.min(page, totalPages)
-  const paginatedItems = filtered.slice((safePage - 1) * perPage, safePage * perPage)
+  const paginatedItems = visible.slice((safePage - 1) * perPage, safePage * perPage)
 
   // 뷰 전환 시 기본 perPage 변경 + 페이지 리셋
   const handleViewChange = useCallback((v: ViewMode) => {
@@ -430,25 +631,29 @@ export default function ExchangePage() {
 
   // ── 엑셀 다운로드 ───────────────────────────────────────────
   const handleExcelDownload = useCallback(() => {
+    // 목록 노출 9필드 정책과 동일 범위만 내보냄 — 기관 실명·분석 지표는 NDA 후
     const rows = filtered.map(x => ({
-      "매물ID":       x.id,
-      "기관":         x.institution,
-      "지역":         x.region,
-      "매물 유형":    x.listing_category,
-      "담보 종류":    x.collateral,
-      "채권잔액(원)": x.outstanding_principal,
-      "매각희망가(원)": x.asking_price,
-      "감정평가액(원)": x.appraisal_value,
-      "할인율(%)":    x.discount_rate,
-      "완성도(0-10)": x.data_completeness,
-      "AI 등급":      x.ai_grade,
-      "매각 방식":    x.sale_method,
+      "관심":          favorites.has(x.id) ? "★" : "",
+      "관리번호":      displayNo[x.id] ?? x.id,
+      "내부ID":        x.id,
+      "등록일자":      x.created_at_label ?? "—",
+      "지역":          x.region,
+      "주소(동단위)":  x.address_dong ?? maskAddress(x.region),
+      "유형":          x.collateral,
+      "토지면적(㎡)":  x.land_area_m2 ?? "—",
+      "토지면적(평)":  typeof x.land_area_m2 === "number" ? Math.round((x.land_area_m2 / PYEONG_M2) * 10) / 10 : "—",
+      "건물면적(㎡)":  x.building_area_m2 ?? "—",
+      "건물면적(평)":  typeof x.building_area_m2 === "number" ? Math.round((x.building_area_m2 / PYEONG_M2) * 10) / 10 : "—",
+      "감정가(원)":    x.appraisal_value,
+      "총 채권액(원)":  x.outstanding_principal,
+      "수익권금액(채권최고액)(원)": typeof x.max_claim === "number" && x.max_claim > 0 ? x.max_claim : "—",
+      "협의가(원)":    x.asking_price,
     }))
     const ws = XLSX.utils.json_to_sheet(rows)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, "거래소 매물")
-    XLSX.writeFile(wb, `NPLatform_거래소_${new Date().toISOString().slice(0, 10)}.xlsx`)
-  }, [filtered])
+    XLSX.writeFile(wb, `NPLatform_NPL리스트_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  }, [filtered, favorites, displayNo])
 
   return (
     <MckPageShell variant="tint">
@@ -466,12 +671,11 @@ export default function ExchangePage() {
       <MckPageHeader
         breadcrumbs={[
           { label: "홈", href: "/" },
-          { label: "거래소", href: "/exchange" },
-          { label: "매물 탐색" },
+          { label: "NPL 자동매칭" },
         ]}
-        eyebrow="NPL Prime Marketplace · 검증 딜 전용"
-        title={tr("거래소")}
-        subtitle={tr("기초 정보는 투명 공개 · 개인정보는 자동 마스킹. 인증 → NDA → LOI 단계별 열람으로 규제 준수와 거래 속도를 동시에 확보합니다.")}
+        eyebrow="Private Deal · NDA 기반"
+        title={tr("NPL 자동매칭")}
+        subtitle={tr("기본 정보만 공개 — 주소 · 서류 · 상세 자료는 NDA 체결 후에 열람가능합니다.")}
         actions={
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
             <Link
@@ -490,10 +694,10 @@ export default function ExchangePage() {
                 gap: 6,
               }}
             >
-              {tr("매물 등록")} <ArrowRight size={14} />
+              {tr("NPL 매각의뢰")} <ArrowRight size={14} />
             </Link>
             <Link
-              href="/exchange/discover"
+              href="/exchange/demands/new"
               style={{
                 padding: "9px 16px",
                 fontSize: 12,
@@ -507,7 +711,7 @@ export default function ExchangePage() {
                 gap: 6,
               }}
             >
-              <Sparkles size={14} /> {tr("발견 모드")}
+              {tr("매입조건 등록")}
             </Link>
           </div>
         }
@@ -519,18 +723,11 @@ export default function ExchangePage() {
           <MckKpiGrid
             variant="dark"
             items={[
-              {
-                label: tr("전체 매물"),
-                value: listingsLoading
-                  ? '—'
-                  : totalListings != null
-                    ? `${totalListings}건`
-                    : `${listings.length}건`,
-                hint: listingsLoading ? tr("로딩 중") : isDemoMode ? tr("샘플 데이터") : tr("실시간 집계"),
-              },
-              { label: tr("평균 할인율"), value: "31.2%", hint: tr("채권잔액 대비") },
-              { label: tr("평균 자료 완성도"), value: "7.6 / 10", hint: tr("자료 제공 지수") },
-              { label: tr("참여 기관"), value: "12곳", hint: tr("은행 · AMC · 저축은행") },
+              // 운영 관리자(/admin/main-stats) 입력값 자동연동 — 메인과 동일 수치
+              { label: tr("NPL 등록 수"),       value: mainStats.nplCount,        hint: tr("실시간 집계") },
+              { label: tr("감정평가 총액"),     value: mainStats.appraisalTotal,  hint: tr("누적") },
+              { label: tr("근저당권 설정금액"), value: mainStats.mortgageTotal,   hint: tr("누적") },
+              { label: tr("참여 기관"),         value: mainStats.institutions,    hint: tr(PLATFORM_STATS.institutionsDesc) },
             ]}
           />
         </div>
@@ -547,65 +744,29 @@ export default function ExchangePage() {
       >
         <div style={{ maxWidth: 1440, margin: "0 auto", padding: "16px 24px" }}>
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            {/* Search with AI Toggle */}
+            {/* Search — 일반 검색만 (AI 검색 미노출, 2026-08 피벗) */}
             <div
               style={{
                 flex: "1 1 280px", minWidth: 240,
                 display: "flex", alignItems: "center", gap: 8,
                 padding: "9px 12px",
-                backgroundColor: aiSearchMode ? `color-mix(in srgb, ${V.purple} 6%, transparent)` : V.surfaceElevated,
-                border: `1px solid ${aiSearchMode ? `color-mix(in srgb, ${V.purple} 27%, transparent)` : V.borderSubtle}`,
+                backgroundColor: V.surfaceElevated,
+                border: `1px solid ${V.borderSubtle}`,
                 borderRadius: 10,
                 transition: "all 0.2s",
               }}
             >
-              {aiSearchMode ? (
-                <Brain size={15} color={V.purple} />
-              ) : (
-                <Search size={15} color={V.textMuted} />
-              )}
+              <Search size={15} color={V.textMuted} />
               <input
                 value={q}
                 onChange={e => { setQ(e.target.value); setPage(1) }}
-                onKeyDown={e => { if (e.key === "Enter" && aiSearchMode) handleAISearch() }}
-                placeholder={aiSearchMode ? "자연어로 검색: '강남 아파트 할인율 30% 이상'" : "기관명 · 지역 · 담보 · ID 검색"}
+                placeholder="지역 · 유형 · 관리번호 검색"
                 style={{
                   flex: 1, background: "transparent", border: "none", outline: "none",
                   color: V.textPrimary, fontSize: 13,
                 }}
               />
-              {aiSearchMode && q && (
-                <button
-                  onClick={handleAISearch}
-                  disabled={aiSearching}
-                  style={{
-                    padding: "4px 10px", borderRadius: 6,
-                    backgroundColor: V.purple, color: V.onDark,
-                    fontSize: 10, fontWeight: 700, border: "none", cursor: "pointer",
-                    display: "flex", alignItems: "center", gap: 4,
-                    opacity: aiSearching ? 0.5 : 1,
-                  }}
-                >
-                  {aiSearching ? <Loader2 size={10} style={{ animation: "spin 1s linear infinite" }} /> : <Zap size={10} />}
-                  AI
-                </button>
-              )}
             </div>
-            <button
-              onClick={() => setAiSearchMode(v => !v)}
-              style={{
-                padding: "9px 12px", borderRadius: 10,
-                backgroundColor: aiSearchMode ? `color-mix(in srgb, ${V.purple} 10%, transparent)` : V.surfaceElevated,
-                border: `1px solid ${aiSearchMode ? `color-mix(in srgb, ${V.purple} 27%, transparent)` : V.borderSubtle}`,
-                color: aiSearchMode ? V.purple : V.textMuted,
-                fontSize: 11, fontWeight: 700,
-                display: "inline-flex", alignItems: "center", gap: 5,
-                cursor: "pointer",
-              }}
-              title="AI 자연어 검색"
-            >
-              <Brain size={14} /> AI
-            </button>
 
             <button
               onClick={() => setFiltersOpen(v => !v)}
@@ -632,10 +793,49 @@ export default function ExchangePage() {
               }}
             >
               <option value="recent">{tr("최신순")}</option>
-              <option value="discount">{tr("할인율 높은순")}</option>
-              <option value="completeness">{tr("완성도 높은순")}</option>
+              <option value="appraisal_desc">{tr("감정가 큰순")}</option>
               <option value="principal_desc">{tr("채권잔액 큰순")}</option>
             </select>
+
+            {/* ㎡/평 단위 토글 — 토지/건물면적 표시 단위 (목록 전체 공통) */}
+            <div
+              role="group"
+              aria-label="면적 단위"
+              style={{
+                display: "inline-flex",
+                padding: 3,
+                backgroundColor: V.surfaceElevated,
+                border: `1px solid ${V.borderSubtle}`,
+                borderRadius: 10,
+                gap: 2,
+              }}
+            >
+              {([
+                { key: "m2" as AreaUnit, label: "㎡" },
+                { key: "py" as AreaUnit, label: "평" },
+              ]).map(({ key, label }) => {
+                const active = areaUnit === key
+                return (
+                  <button
+                    key={key}
+                    aria-pressed={active}
+                    onClick={() => setAreaUnit(key)}
+                    title="토지/건물면적 표시 단위"
+                    style={{
+                      padding: "6px 11px",
+                      borderRadius: 8,
+                      fontSize: 11, fontWeight: 700,
+                      backgroundColor: active ? V.surfaceSunken : "transparent",
+                      color: active ? V.textPrimary : V.textMuted,
+                      border: "none", cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {filtersOpen && (
@@ -646,9 +846,10 @@ export default function ExchangePage() {
               style={{
                 marginTop: 12, paddingTop: 12,
                 borderTop: `1px solid ${V.borderSubtle}`,
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: 12,
+                // 세로 스택 — 각 필터 그룹이 전체 폭 사용 (쏠림 방지)
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
               }}
             >
               <FilterGroup label={tr("매물 유형")} options={LISTING_CATEGORY_FILTER.map(o => ({ ...o, label: tr(o.label) }))} value={listingCategory} onChange={v => { setListingCategory(v); setPage(1) }} />
@@ -660,26 +861,7 @@ export default function ExchangePage() {
                 tr={tr}
               />
               <FilterGroup label={tr("지역")} options={REGION_FILTER} value={region} onChange={v => { setRegion(v); setPage(1) }} />
-              <FilterGroup label={tr("기관 유형")} options={INST_FILTER} value={instType} onChange={v => { setInstType(v); setPage(1) }} />
-              <FilterGroup label={tr("매각 방식")} options={SALE_METHOD_FILTER} value={stage} onChange={v => { setStage(v); setPage(1) }} />
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: V.textMuted, marginBottom: 6 }}>
-                  {tr("최소 자료 완성도")}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <input
-                    type="range"
-                    min={0}
-                    max={10}
-                    value={minCompleteness}
-                    onChange={e => setMinCompleteness(Number(e.target.value))}
-                    style={{ flex: 1 }}
-                  />
-                  <span style={{ color: V.positive, fontSize: 12, fontWeight: 700, minWidth: 36 }}>
-                    {minCompleteness}/10
-                  </span>
-                </div>
-              </div>
+              {/* 기관유형 · 매각방식 필터 삭제 (2026-08-17 정책 — 리스트 단계 비공개 정보) */}
             </motion.div>
           )}
         </div>
@@ -689,7 +871,7 @@ export default function ExchangePage() {
       <section>
         <div style={{ maxWidth: 1440, margin: "0 auto", padding: "32px 24px 80px" }}>
           {/* ── 활성 필터 태그 ─────────────────────────── */}
-          {(collateral !== "ALL" || collateralMinor !== "ALL" || region !== "ALL" || instType !== "ALL" || stage !== "ALL" || listingCategory !== "ALL" || minCompleteness > 0) && (
+          {(collateral !== "ALL" || collateralMinor !== "ALL" || region !== "ALL" || instType !== "ALL" || stage !== "ALL" || listingCategory !== "ALL") && (
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginBottom: 14 }}>
               <span style={{ fontSize: 10, color: V.textMuted, fontWeight: 700, marginRight: 2 }}>{tr("적용 필터:")}</span>
               {listingCategory !== "ALL" && (
@@ -729,16 +911,10 @@ export default function ExchangePage() {
                   onRemove={() => setStage("ALL")}
                 />
               )}
-              {minCompleteness > 0 && (
-                <ActiveFilterChip
-                  label={`${tr("완성도")} ${minCompleteness}+`}
-                  onRemove={() => setMinCompleteness(0)}
-                />
-              )}
               <button
                 onClick={() => {
                   setListingCategory("ALL"); setCollateral("ALL"); setCollateralMinor("ALL")
-                  setRegion("ALL"); setInstType("ALL"); setStage("ALL"); setMinCompleteness(0); setPage(1)
+                  setRegion("ALL"); setInstType("ALL"); setStage("ALL"); setPage(1)
                 }}
                 style={{
                   padding: "3px 9px", borderRadius: 999, fontSize: 10, fontWeight: 700,
@@ -759,8 +935,33 @@ export default function ExchangePage() {
               marginBottom: 20,
             }}
           >
-            <div style={{ fontSize: 13, color: V.textTertiary }}>
-              <span style={{ color: V.textPrimary, fontWeight: 700 }}>{filtered.length}</span>건 매칭
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+              {hasDemands ? (
+                <div style={{ fontSize: 13, color: V.textTertiary }}>
+                  <span style={{ color: V.textPrimary, fontWeight: 700 }}>{visible.length}</span>건 매칭
+                </div>
+              ) : (
+                // 매입조건 미등록 — 매칭 수 대신 안내 표기
+                <Link href="/exchange/demands/new" style={{ fontSize: 13, fontWeight: 700, color: "#1A47CC", textDecoration: "none" }}>
+                  매입조건 등록 시 매칭 진행
+                </Link>
+              )}
+              {/* 관심만 보기 토글 — 하트 등록 매물 리스트 */}
+              <button
+                onClick={() => { setFavOnly(v => !v); setPage(1) }}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "6px 11px", borderRadius: 10,
+                  backgroundColor: favOnly ? "rgba(225, 29, 72, 0.08)" : V.surfaceElevated,
+                  border: `1px solid ${favOnly ? "#E11D48" : V.borderSubtle}`,
+                  color: favOnly ? "#E11D48" : V.textSecondary,
+                  fontSize: 11, fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                <Heart size={12} fill={favOnly ? "#E11D48" : "none"} />
+                관심만 {favorites.size > 0 ? `(${favorites.size})` : ""}
+              </button>
             </div>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
               {/* Excel download */}
@@ -857,7 +1058,42 @@ export default function ExchangePage() {
             </div>
           )}
 
-          {filtered.length === 0 ? (
+          {/* ── 비로그인 배너 — 회원가입/로그인 + 매입조건 등록 후 실제 매칭 공개 ── */}
+          {guestMode && (
+            <div
+              style={{
+                display: "flex", alignItems: "flex-start", gap: 12,
+                padding: "16px 18px", marginBottom: 16,
+                background: "#0A1628", borderTop: "3px solid #2251FF",
+              }}
+            >
+              <LockIcon size={15} style={{ color: "#00A9F4", flexShrink: 0, marginTop: 2 }} />
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 14, fontWeight: 800, color: "#FFFFFF", wordBreak: "keep-all" }}>
+                  회원가입 · 로그인 후 매입조건을 등록하셔야 실제 NPL 자동매칭 정보가 공개됩니다
+                </p>
+                <p style={{ marginTop: 4, fontSize: 12, color: "rgba(255,255,255,0.70)" }}>
+                  아래 리스트는 이해를 돕기 위한 NPL 자동매칭 샘플입니다. 가입은 무료 (관리자 승인제)
+                </p>
+                <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <Link href="/login?redirect=/exchange"
+                    style={{ padding: "8px 16px", fontSize: 12, fontWeight: 800, background: "#FFFFFF", color: "#0A1628", textDecoration: "none" }}>
+                    로그인
+                  </Link>
+                  <Link href="/signup"
+                    style={{ padding: "8px 16px", fontSize: 12, fontWeight: 700, background: "transparent", color: "#FFFFFF", border: "1px solid rgba(255,255,255,0.35)", textDecoration: "none" }}>
+                    회원가입
+                  </Link>
+                  <Link href="/exchange/demands/new"
+                    style={{ padding: "8px 16px", fontSize: 12, fontWeight: 800, background: "#2251FF", color: "#FFFFFF", textDecoration: "none" }}>
+                    매입조건 등록
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {(visible.length === 0 && !guestMode) ? (
             <div
               style={{
                 padding: "80px 24px", textAlign: "center",
@@ -865,18 +1101,40 @@ export default function ExchangePage() {
               }}
             >
               <Filter size={32} color={V.textMuted} style={{ margin: "0 auto 12px" }} />
-              <div style={{ fontSize: 14, color: V.textTertiary }}>검색 조건에 맞는 매물이 없습니다</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: V.textPrimary, marginBottom: 6 }}>
+                현재 매수조건에 적합한 NPL 리스트는 없습니다
+              </div>
+              <div style={{ fontSize: 12.5, color: V.textTertiary, marginBottom: 16 }}>
+                매입조건을 등록·수정하시면 조건에 맞는 딜이 공개됩니다.
+              </div>
+              <Link
+                href="/exchange/demands/new"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "11px 20px",
+                  background: "#0A1628", color: "#FFFFFF",
+                  borderTop: "2px solid #2251FF",
+                  fontSize: 12.5, fontWeight: 800, textDecoration: "none",
+                }}
+              >
+                매입조건 등록하기 <ArrowRight size={13} />
+              </Link>
             </div>
-          ) : view === "card" ? (
+          ) : (
+          <div style={{ position: "relative" }}>
+          {view === "card" ? (
             <div
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
                 gap: 18,
+                // 샘플 모드 — 카드 전체 블러 (카드형은 헤더 없음)
+                ...(guestMode ? { filter: "blur(3px)", pointerEvents: "none", userSelect: "none" } : {}),
               }}
+              aria-hidden={guestMode}
             >
-              {paginatedItems.map((x, i) => (
-                <ListingCard key={x.id} item={x} index={i} />
+              {(guestMode ? GUEST_SAMPLES : paginatedItems).map((x, i) => (
+                <ListingCard key={x.id} item={x} index={i} areaUnit={areaUnit} fav={favorites.has(x.id)} onToggleFav={toggleFavorite} onNda={openNda} no={guestMode ? x.id : displayNo[x.id]} />
               ))}
             </div>
           ) : (
@@ -892,10 +1150,9 @@ export default function ExchangePage() {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1.4fr 1.4fr 0.9fr 0.9fr 0.9fr 0.7fr 0.7fr 0.6fr",
-                  gap: 12,
-                  padding: "12px 18px",
-                  minWidth: 820,
+                  gridTemplateColumns: "30px 84px 1fr 1.2fr 0.7fr 0.55fr 0.55fr 0.62fr 0.62fr 0.68fr 0.62fr 88px",
+                  gap: 8,
+                  padding: "10px 14px",
                   backgroundColor: V.surfaceSunken,
                   borderBottom: `1px solid ${V.borderSubtle}`,
                   fontSize: 10,
@@ -905,23 +1162,90 @@ export default function ExchangePage() {
                   letterSpacing: "0.05em",
                 }}
               >
-                <div>매물 / 기관</div>
-                <div>지역 · 담보</div>
-                <div style={{ textAlign: "right" }}>채권잔액</div>
-                <div style={{ textAlign: "right" }}>매각희망가</div>
-                <div style={{ textAlign: "right" }}>할인율</div>
-                <div style={{ textAlign: "center" }}>완성도</div>
-                <div style={{ textAlign: "center" }}>등급</div>
-                <div></div>
+                <div>관심</div>
+                <div>사진</div>
+                <div>관리번호 · 등록일</div>
+                <div>지역 · 주소</div>
+                <div>유형</div>
+                <div>토지면적</div>
+                <div>건물면적</div>
+                <div>감정가</div>
+                <div>총 채권액</div>
+                <div style={{ lineHeight: 1.3 }}>수익권금액<br /><span style={{ fontWeight: 600, opacity: 0.75 }}>(채권최고액)</span></div>
+                <div>협의가</div>
+                <div>NDA</div>
               </div>
-              {paginatedItems.map((x, i) => (
-                <ListingRow key={x.id} item={x} index={i} />
-              ))}
+              {/* 샘플 모드 — 헤더(상단 구성 항목)는 그대로 보이고 행 내용만 블러 */}
+              <div style={guestMode ? { filter: "blur(3px)", pointerEvents: "none", userSelect: "none" } : undefined} aria-hidden={guestMode}>
+                {(guestMode ? GUEST_SAMPLES : paginatedItems).map((x, i) => (
+                  <ListingRow key={x.id} item={x} index={i} areaUnit={areaUnit} fav={favorites.has(x.id)} onToggleFav={toggleFavorite} onNda={openNda} nplStatus={statusMap[x.id]} no={guestMode ? x.id : displayNo[x.id]} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 샘플 워터마크 — 블러 위 중앙 라벨 */}
+          {guestMode && (
+            <div
+              style={{
+                position: "absolute", inset: 0,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                pointerEvents: "none",
+              }}
+            >
+              <span
+                style={{
+                  padding: "12px 26px",
+                  background: "rgba(10, 22, 40, 0.88)",
+                  borderTop: "3px solid #2251FF",
+                  color: "#FFFFFF",
+                  fontSize: 16, fontWeight: 800, letterSpacing: "0.02em",
+                  boxShadow: "0 16px 40px -8px rgba(5, 28, 44, 0.45)",
+                }}
+              >
+                NPL 자동매칭 샘플
+              </span>
+            </div>
+          )}
+          </div>
+          )}
+
+          {/* ── 매칭 게이팅 안내 — 10건 프리뷰 이후 비공개 ── */}
+          {gated && (
+            <div
+              style={{
+                marginTop: 20,
+                padding: "36px 24px",
+                textAlign: "center",
+                backgroundColor: "#0A1628",
+                borderTop: "3px solid #2251FF",
+              }}
+            >
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.16em", color: "#00A9F4", textTransform: "uppercase", marginBottom: 10 }}>
+                Private Deal · 선별 공개
+              </div>
+              <p style={{ fontFamily: "Georgia, serif", fontSize: "clamp(1.1rem, 2.4vw, 1.5rem)", fontWeight: 800, color: "#FFFFFF", letterSpacing: "-0.015em", lineHeight: 1.35, wordBreak: "keep-all" }}>
+                매입조건에 매칭되지 않는 NPL 딜은 공개되지 않습니다.
+              </p>
+              <p style={{ marginTop: 8, fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
+                매입조건을 등록하시면 조건에 맞는 딜만 선별하여 1:1 로 공개해 드립니다.
+              </p>
+              <Link
+                href="/exchange/demands/new"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  marginTop: 18, padding: "12px 24px",
+                  background: "#2251FF", color: "#FFFFFF",
+                  fontSize: 13, fontWeight: 800, textDecoration: "none",
+                }}
+              >
+                매입조건 등록하기 <ArrowRight size={14} />
+              </Link>
             </div>
           )}
 
           {/* ── Pagination ────────────────────────────── */}
-          {filtered.length > 0 && (
+          {visible.length > 0 && !gated && (
             <div
               style={{
                 marginTop: 24,
@@ -950,7 +1274,7 @@ export default function ExchangePage() {
                   ))}
                 </select>
                 <span style={{ fontSize: 11, color: V.textTertiary }}>
-                  총 {filtered.length}건 중 {(safePage - 1) * perPage + 1}–{Math.min(safePage * perPage, filtered.length)}
+                  총 {visible.length}건 중 {(safePage - 1) * perPage + 1}–{Math.min(safePage * perPage, visible.length)}
                 </span>
               </div>
 
@@ -992,6 +1316,19 @@ export default function ExchangePage() {
           )}
         </div>
       </section>
+
+      {/* ── NDA 전자계약 모달 — 자체 기능 (서명패드 + /api/v1/nda 기록) ── */}
+      {ndaTarget && (
+        <NdaModal
+          open={!!ndaTarget}
+          onClose={() => setNdaTarget(null)}
+          // NDA 는 관리번호 기준 — 다른 명칭 표기 없음 (2026-08-18 사용자 정책)
+          listingTitle={`관리번호 ${displayNo[ndaTarget.id] ?? ndaTarget.id}`}
+          listingId={displayNo[ndaTarget.id] ?? ndaTarget.id}
+          state={ndaStates[ndaTarget.id] ?? ({ status: 'none' } as NdaState)}
+          onSubmit={submitNda}
+        />
+      )}
     </MckPageShell>
   )
 }
@@ -1048,8 +1385,9 @@ function FilterGroup({
   onChange: (v: string) => void
 }) {
   return (
-    <div>
-      <div style={{ fontSize: 11, fontWeight: 700, color: V.textMuted, marginBottom: 6 }}>{label}</div>
+    // 라벨 좌측 고정폭 + 칩 우측 흐름 — 전체 폭 사용으로 쏠림 방지
+    <div style={{ display: "grid", gridTemplateColumns: "88px 1fr", gap: 10, alignItems: "start" }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: V.textMuted, paddingTop: 6 }}>{label}</div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         {options.map(op => {
           const active = op.value === value
@@ -1090,9 +1428,10 @@ function CollateralFilterGroup({
   const minorOptions = major !== "ALL" ? COLLATERAL_MINOR_MAP[major] : null
 
   return (
-    <div style={{ gridColumn: minorOptions ? "span 2" : "span 1" }}>
-      {/* 대분류 */}
-      <div style={{ fontSize: 11, fontWeight: 700, color: V.textMuted, marginBottom: 6 }}>{_tr ? _tr("담보 유형") : "담보 유형"}</div>
+    // 라벨 좌측 고정폭 + 칩 우측 흐름 (FilterGroup 과 동일 정렬)
+    <div style={{ display: "grid", gridTemplateColumns: "88px 1fr", gap: 10, alignItems: "start" }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: V.textMuted, paddingTop: 6 }}>{_tr ? _tr("담보 유형") : "담보 유형"}</div>
+      <div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         {COLLATERAL_MAJOR_FILTER.map(op => {
           const active = op.value === major
@@ -1168,6 +1507,7 @@ function CollateralFilterGroup({
           })}
         </div>
       )}
+      </div>
     </div>
   )
 }
@@ -1175,23 +1515,22 @@ function CollateralFilterGroup({
 /* ═══════════════════════════════════════════════════════════
    ListingCard
 ═══════════════════════════════════════════════════════════ */
-function ListingCard({ item, index }: { item: CardListing; index: number }) {
+function ListingCard({ item, index, areaUnit, fav, onToggleFav, onNda, no }: { item: CardListing; index: number; areaUnit: AreaUnit; fav: boolean; onToggleFav: (id: string) => void; onNda: (item: CardListing) => void; no?: string }) {
+  const router = useRouter()
   const principal = formatKRW(item.outstanding_principal)
   const asking = formatKRW(item.asking_price)
   const appraisal = formatKRW(item.appraisal_value)
-  const savings = formatKRW(item.outstanding_principal - item.asking_price)
-
-  const gradeMeta = AI_GRADE_COLORS[item.ai_grade] ?? AI_GRADE_COLORS.C
-  const saleMethodLabel = SALE_METHODS[item.sale_method]
-  const instLabel = SELLER_INSTITUTIONS[item.inst_kind]
+  const landArea = formatArea(item.land_area_m2, areaUnit)
+  const buildingArea = formatArea(item.building_area_m2, areaUnit)
 
   /*
-    McKinsey Editorial Card v5 — White Paper + Ink + 1-point Brass Accent
+    McKinsey Editorial Card v6 — White Paper + Ink + 1-point Accent
     원칙: 색을 채우지 않는다. typography hierarchy 로 위계.
     - 카드 자체 = 흰 종이 (#FFFFFF, 다크 모드도 동일 — .mck-paper escape)
     - 본문 = ink (#0A1628) + 회색 단계 (#3A4A5C, #6B7280)
-    - 강조 = size + weight (색 ≠ 강조). 매각희망가 1점만 brass.
+    - 강조 = size + weight (색 ≠ 강조). 협의가 1점만 hero.
     - sharp edge (radius 0), 1px hairline, 검정 CTA + 흰 글씨
+    - 노출 필드 9개 고정: 관리번호·지역·주소(마스킹)·유형·토지/건물면적·감정가·채권잔액·협의가
   */
   return (
     <motion.article
@@ -1199,6 +1538,8 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.03, 0.3), duration: 0.4 }}
+      // 카드 클릭 → 세부내역 (NDA 승인된 매입사만 열람 가능)
+      onClick={() => router.push(`/listing-detail/${encodeURIComponent(item.id)}?mode=view`)}
       style={{
         backgroundColor: "#FFFFFF",
         border: "1px solid rgba(5, 28, 44, 0.10)",
@@ -1208,6 +1549,7 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
         display: "flex",
         flexDirection: "column",
         boxShadow: "0 12px 24px -8px rgba(5, 28, 44, 0.15), 0 4px 8px -2px rgba(5, 28, 44, 0.08)",
+        cursor: "pointer",
       }}
     >
       {/* Header strip — institution + tier */}
@@ -1240,69 +1582,76 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
               {maskInstitutionName(item.institution)}
             </div>
             <div style={{ fontSize: 9, color: "rgba(5, 28, 44, 0.50)", marginTop: 2, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.10em" }}>
-              {instLabel} · D-{7 - item.created_days_ago}
+              NDA 체결 후 실명 공개
             </div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span
             style={{
-              display: "inline-flex", alignItems: "center", gap: 3,
-              fontSize: 10, color: "rgba(5, 28, 44, 0.55)", fontVariantNumeric: "tabular-nums", fontWeight: 600,
+              fontSize: 9, color: "rgba(5, 28, 44, 0.45)", fontWeight: 700,
+              textTransform: "uppercase", letterSpacing: "0.12em", whiteSpace: "nowrap",
             }}
-            title="누적 조회수"
           >
-            <Eye size={11} /> {item.view_count.toLocaleString()}
+            Private Deal
           </span>
-          <TierBadge tier={item.access_tier_required} variant="soft" size="xs" />
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onToggleFav(item.id) }}
+            aria-label={fav ? "관심 해제" : "관심 등록"}
+            style={{ background: "transparent", border: 0, cursor: "pointer", padding: 2, lineHeight: 0 }}
+          >
+            <Heart size={16} fill={fav ? "#E11D48" : "none"} color={fav ? "#E11D48" : "rgba(5, 28, 44, 0.40)"} />
+          </button>
         </div>
+      </div>
+
+      {/* 사진 — 대표 이미지 (없으면 placeholder) */}
+      <div style={{ height: 140, backgroundColor: "#F1F4F7", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderBottom: "1px solid rgba(5, 28, 44, 0.08)" }}>
+        {item.photo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <div style={{ textAlign: "center", color: "rgba(5, 28, 44, 0.35)" }}>
+            <Building2 size={24} style={{ margin: "0 auto 4px" }} />
+            <div style={{ fontSize: 10, fontWeight: 600 }}>사진 준비중</div>
+          </div>
+        )}
       </div>
 
       {/* Body */}
       <div style={{ padding: "18px 16px 14px", display: "flex", flexDirection: "column", gap: 14 }}>
-        {/* Title row */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 10, color: "rgba(5, 28, 44, 0.55)", marginBottom: 6, display: "flex", alignItems: "center", gap: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.10em" }}>
-              <MapPin size={10} /> {item.region} · {item.collateral}
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: "#0A1628", letterSpacing: "-0.012em", lineHeight: 1.25 }}>
-              {saleMethodLabel} · {item.collateral} 담보
-            </div>
-            <div style={{ fontSize: 9, color: "rgba(5, 28, 44, 0.40)", marginTop: 4, fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              {item.id}
-            </div>
+        {/* Title row — 지역 · 유형 · 주소(마스킹) · 관리번호 */}
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 10, color: "rgba(5, 28, 44, 0.55)", marginBottom: 6, display: "flex", alignItems: "center", gap: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.10em" }}>
+            <MapPin size={10} /> {item.region}
           </div>
-          {/* AI 등급 = 옅은 McKinsey Electric Blue 배경 + electricDark 글씨 (가독성 ↑) */}
+          <div style={{ fontSize: 15, fontWeight: 800, color: "#0A1628", letterSpacing: "-0.012em", lineHeight: 1.25 }}>
+            {item.collateral} 담보
+          </div>
           <div
-            style={{
-              padding: "4px 9px", borderRadius: 0,
-              backgroundColor: "rgba(34, 81, 255, 0.10)",   /* MCK.electricSoft */
-              color: "#1A47CC",                              /* MCK.electricDark — WCAG AA on soft blue */
-              fontSize: 10, fontWeight: 800,
-              border: "1px solid rgba(34, 81, 255, 0.35)",
-              whiteSpace: "nowrap",
-              cursor: "help",
-              letterSpacing: "0.06em",
-            }}
-            title={`AI 종합 등급 · Nplatform NPL Engine v2\n· 담보가치/채권비율 35%\n· 지역시장 동향 25%\n· 채무자 신용 20%\n· 경매 낙찰가율 15%\n→ 회수율 예측 기반: S≥85% · A+≥75% · A≥65% · B≥55% · C<55%`}
+            style={{ fontSize: 11, color: "rgba(5, 28, 44, 0.55)", marginTop: 4, fontWeight: 600 }}
+            title="세부주소는 NDA 체결 후 공개"
           >
-            AI · {(String(item.ai_grade ?? '').toUpperCase().replace(/^AI\s*/i, '').replace(/\s*등급$/, '') || '-')}등급
+            {item.address_dong ?? maskAddress(item.region)}
+          </div>
+          <div style={{ fontSize: 9, color: "rgba(5, 28, 44, 0.40)", marginTop: 4, fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            {no ?? item.id} · 등록 {item.created_at_label ?? "—"}
           </div>
         </div>
 
-        {/* HERO 숫자 = 매각희망가 (큰 ink 검정) */}
+        {/* HERO 숫자 = 협의가 (큰 ink 검정) */}
         <div>
           <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(5, 28, 44, 0.55)", textTransform: "uppercase", letterSpacing: "0.16em", marginBottom: 4 }}>
-            매각희망가
+            협의가
           </div>
           <div style={{ fontSize: 28, fontWeight: 800, color: "#0A1628", letterSpacing: "-0.02em", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
             {asking}
           </div>
         </div>
 
-        {/* Sub metrics row — 흰 바탕 + 검정 글씨 (사용자 요청, 원래 톤 복귀)
-            상단 electric accent strip 만 유지 → McKinsey 톤 시그니처 보존 */}
+        {/* Sub metrics — 감정가 · 채권잔액 · 토지/건물면적 (2×2)
+            상단 electric accent strip 유지 → McKinsey 톤 시그니처 보존 */}
         <div
           style={{
             background: "#FFFFFF",
@@ -1310,42 +1659,21 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
             padding: "14px 0 12px",
           }}
         >
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-            <SubMetric label="채권잔액" value={principal} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <SubMetric label="감정가" value={appraisal} />
-            <SubMetric label="할인율" value={`${item.discount_rate.toFixed(1)}%`} brass />
-          </div>
-          <div
-            style={{
-              marginTop: 10, paddingTop: 10,
-              borderTop: "1px dashed rgba(5, 28, 44, 0.14)",
-              display: "flex", justifyContent: "space-between",
-              fontSize: 10,
-            }}
-          >
-            <span style={{ color: "rgba(5, 28, 44, 0.65)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.10em" }}>예상 절감액</span>
-            <span style={{ color: "#0A1628", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{savings}</span>
+            <SubMetric label="총 채권액" value={principal} />
+            <SubMetric label="토지면적" value={landArea} />
+            <SubMetric label="건물면적" value={buildingArea} />
           </div>
         </div>
 
-        {/* Completeness — outline */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, paddingTop: 4 }}>
-          <CompletenessBadge score={item.data_completeness} size="sm" />
-          <span
-            title="자료 완성도 = 필수 5 + 선택 5 항목 가점 평가"
-            style={{ fontSize: 10, color: "rgba(5, 28, 44, 0.55)", cursor: "help", fontWeight: 600, letterSpacing: "0.04em" }}
-          >
-            산정 기준 ⓘ
-          </span>
-        </div>
-
-        <InlineProvidedChips fields={item.provided} />
-
-        {/* CTA — 딜룸 입장. /exchange/[id] 가 /deals/dealroom?listingId=... 로 redirect.
+        {/* CTA — 관심 등록 · NDA 요청. /deals/dealroom?listingId=... 에 NDA 플로우 존재.
             ListingCard CTA 자체도 명시적으로 listingId 쿼리를 넘겨 딜룸 SoT 흐름을 보장. */}
-        <Link
-          href={`/deals/dealroom?listingId=${encodeURIComponent(item.id)}`}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onNda(item) }}
           style={{
+            width: "100%", border: "none", cursor: "pointer",
             marginTop: 4,
             padding: "11px 14px",
             borderRadius: 4,
@@ -1356,9 +1684,9 @@ function ListingCard({ item, index }: { item: CardListing; index: number }) {
           }}
           className="mck-cta-sky"
         >
-          <span>딜룸 입장 · 상세</span>
+          <span>NDA 요청</span>
           <ArrowRight size={14} />
-        </Link>
+        </button>
 
         {/* 관리자 / 매각사(본인) 만 노출 — 라벨을 명시 표기.
             ADMIN 이면 "관리자 편집", SELLER 본인이면 "매물 편집" 으로 자동 분기 (컴포넌트 내부) */}
@@ -1422,178 +1750,144 @@ function SubMetricDark({ label, value, cyan: _cyan }: { label: string; value: st
   )
 }
 
-function InlineProvidedChips({ fields }: { fields: CardListing["provided"] }) {
-  const items: Array<[keyof CardListing["provided"], string]> = [
-    ["appraisal", "감정평가"],
-    ["registry", "등기"],
-    ["rights", "권리"],
-    ["lease", "임차"],
-    ["site_photos", "사진"],
-    ["financials", "재무"],
-  ]
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-      {items.map(([k, label]) => {
-        const ok = fields[k]
-        return (
-          <span
-            key={k}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 3,
-              padding: "2px 7px", borderRadius: 4,
-              fontSize: 10, fontWeight: 600, lineHeight: 1.3,
-              backgroundColor: ok ? `color-mix(in srgb, ${V.positive} 10%, transparent)` : `color-mix(in srgb, ${V.textMuted} 8%, transparent)`,
-              color: ok ? V.positive : V.textTertiary,
-              border: `1px solid ${ok ? `color-mix(in srgb, ${V.positive} 25%, transparent)` : `color-mix(in srgb, ${V.textMuted} 18%, transparent)`}`,
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span>{ok ? "✓" : "·"}</span>
-            {label}
-          </span>
-        )
-      })}
-    </div>
-  )
-}
-
 /* ═══════════════════════════════════════════════════════════
    ListingRow (list/table view)
 ═══════════════════════════════════════════════════════════ */
-function ListingRow({ item, index }: { item: CardListing; index: number }) {
-  const gradeMeta = AI_GRADE_COLORS[item.ai_grade] ?? AI_GRADE_COLORS.C
-  const providedCount = Object.values(item.provided).filter(Boolean).length
-
+function ListingRow({ item, index, areaUnit, fav, onToggleFav, onNda, nplStatus, no }: { item: CardListing; index: number; areaUnit: AreaUnit; fav: boolean; onToggleFav: (id: string) => void; onNda: (item: CardListing) => void; nplStatus?: string; no?: string }) {
+  const router = useRouter()
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.015, 0.2), duration: 0.25 }}
+      // 행 클릭 → 세부내역 (NDA 승인된 매입사만 열람 가능 · 승인 전에는 잠금 안내)
+      onClick={() => router.push(`/listing-detail/${encodeURIComponent(item.id)}?mode=view`)}
       style={{
         display: "grid",
-        gridTemplateColumns: "1.4fr 1.4fr 0.9fr 0.9fr 0.9fr 0.7fr 0.7fr 0.6fr",
-        gap: 12,
-        padding: "14px 18px",
-        minWidth: 820,
+        gridTemplateColumns: "30px 84px 1fr 1.2fr 0.7fr 0.55fr 0.55fr 0.62fr 0.62fr 0.68fr 0.62fr 88px",
+        gap: 8,
+        padding: "9px 14px",
         borderBottom: `1px solid ${V.borderSubtle}`,
         alignItems: "center",
-        fontSize: 12,
+        fontSize: 11.5,
+        cursor: "pointer",
       }}
     >
-      {/* 매물 / 기관 */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-        <div
-          style={{
-            width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-            backgroundColor: V.surfaceSunken,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >
-          <Building2 size={14} color={V.textMuted} />
+      {/* 관심등록 */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onToggleFav(item.id) }}
+        aria-label={fav ? "관심 해제" : "관심 등록"}
+        style={{ background: "transparent", border: 0, cursor: "pointer", padding: 4, lineHeight: 0 }}
+      >
+        <Heart size={16} fill={fav ? "#E11D48" : "none"} color={fav ? "#E11D48" : V.textMuted} />
+      </button>
+
+      {/* 사진 — 육안 식별 가능한 크기 */}
+      <div
+        style={{
+          width: 82, height: 60, borderRadius: 8, overflow: "hidden", flexShrink: 0,
+          backgroundColor: V.surfaceSunken,
+          border: `1px solid ${V.borderSubtle}`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}
+      >
+        {item.photo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <div style={{ textAlign: "center", color: V.textMuted }}>
+            <Building2 size={20} style={{ margin: "0 auto 2px" }} />
+            <div style={{ fontSize: 9, fontWeight: 600 }}>사진 준비중</div>
+          </div>
+        )}
+      </div>
+
+      {/* 관리번호 (N-XX 자동 채번) · 등록일자 · NPL 상태 */}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: V.textPrimary, fontFamily: "monospace", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={item.id}>
+          {no ?? item.id}
         </div>
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{ fontSize: 12, fontWeight: 700, color: V.textPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-            title="NDA 체결 후 실명 공개"
-          >
-            {maskInstitutionName(item.institution)}
-          </div>
-          <div style={{ fontSize: 10, color: V.textMuted, fontFamily: "monospace", marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
-            <span>{item.id}</span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }} title="누적 조회수">
-              <Eye size={10} /> {item.view_count.toLocaleString()}
+        <div style={{ fontSize: 10, color: V.textMuted, marginTop: 2, fontVariantNumeric: "tabular-nums", display: "flex", alignItems: "center", gap: 5 }}>
+          {item.created_at_label ?? "—"}
+          {nplStatus && (
+            <span
+              style={{
+                padding: "1px 6px", fontSize: 9, fontWeight: 800, whiteSpace: "nowrap",
+                background: nplStatus === "매각완료" ? "rgba(5,150,105,0.10)" : nplStatus === "협의중" ? "rgba(217,119,6,0.10)" : "rgba(34,81,255,0.10)",
+                color: nplStatus === "매각완료" ? "#059669" : nplStatus === "협의중" ? "#B45309" : "#1A47CC",
+                border: `1px solid ${nplStatus === "매각완료" ? "rgba(5,150,105,0.35)" : nplStatus === "협의중" ? "rgba(217,119,6,0.35)" : "rgba(34,81,255,0.35)"}`,
+              }}
+            >
+              {nplStatus}
             </span>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* 지역 · 담보 */}
+      {/* 지역 · 주소(동단위) */}
       <div style={{ minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, color: V.textPrimary, fontWeight: 600 }}>
-          <MapPin size={11} color={V.textMuted} /> {item.region}
+        <div style={{ display: "flex", alignItems: "center", gap: 4, color: V.textPrimary, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <MapPin size={11} color={V.textMuted} style={{ flexShrink: 0 }} /> {item.region}
         </div>
-        <div style={{ fontSize: 10, color: V.textMuted, marginTop: 2 }}>
-          {item.collateral} · {SALE_METHODS[item.sale_method]}
+        <div style={{ fontSize: 10, color: V.textMuted, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title="세부주소는 NDA 체결 후 공개">
+          {item.address_dong ?? maskAddress(item.region)}
         </div>
+      </div>
+
+      {/* 유형 — 별도 컬럼 */}
+      <div style={{ color: V.textPrimary, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        {item.collateral}
+      </div>
+
+      {/* 토지면적 */}
+      <div style={{ color: V.textPrimary, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+        {formatArea(item.land_area_m2, areaUnit)}
+      </div>
+
+      {/* 건물면적 */}
+      <div style={{ color: V.textPrimary, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+        {formatArea(item.building_area_m2, areaUnit)}
+      </div>
+
+      {/* 감정가 */}
+      <div style={{ color: V.textPrimary, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+        {formatKRW(item.appraisal_value)}
       </div>
 
       {/* 채권잔액 */}
-      <div style={{ textAlign: "right", color: V.textPrimary, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+      <div style={{ color: V.textPrimary, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
         {formatKRW(item.outstanding_principal)}
       </div>
 
-      {/* 매각희망가 */}
-      <div style={{ textAlign: "right", color: V.positive, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+      {/* 채권최고액 */}
+      <div style={{ color: V.textPrimary, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+        {typeof item.max_claim === "number" && item.max_claim > 0 ? formatKRW(item.max_claim) : "—"}
+      </div>
+
+      {/* 협의가 */}
+      <div style={{ color: V.positive, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
         {formatKRW(item.asking_price)}
       </div>
 
-      {/* 할인율 */}
-      <div style={{ textAlign: "right" }}>
-        <span
+      {/* CTA — 관심 등록 · NDA 요청 (딜룸 SoT 흐름: 매물 ID 기반 직진) */}
+      <div>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onNda(item) }}
           style={{
             display: "inline-flex", alignItems: "center", gap: 3,
-            color: V.positive, fontWeight: 700,
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          <TrendingDown size={12} />
-          {item.discount_rate.toFixed(1)}%
-        </span>
-      </div>
-
-      {/* 완성도 */}
-      <div style={{ textAlign: "center" }}>
-        <span
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 3,
-            padding: "3px 8px", borderRadius: 999,
-            fontSize: 11, fontWeight: 700,
-            backgroundColor: item.data_completeness >= 8 ? `color-mix(in srgb, ${V.positive} 12%, transparent)` : item.data_completeness >= 5 ? `color-mix(in srgb, ${V.warning} 12%, transparent)` : `color-mix(in srgb, ${V.danger} 12%, transparent)`,
-            color: item.data_completeness >= 8 ? V.positive : item.data_completeness >= 5 ? V.warning : V.danger,
-            border: `1px solid ${item.data_completeness >= 8 ? `color-mix(in srgb, ${V.positive} 27%, transparent)` : item.data_completeness >= 5 ? `color-mix(in srgb, ${V.warning} 27%, transparent)` : `color-mix(in srgb, ${V.danger} 27%, transparent)`}`,
-          }}
-          title={`자료 완성도 ${item.data_completeness}/10 · 필수 5 + 선택 5 항목 평가 (제공 ${providedCount}/6 서류 포함)`}
-        >
-          {item.data_completeness}/10
-        </span>
-      </div>
-
-      {/* AI 등급 */}
-      <div style={{ textAlign: "center" }}>
-        <span
-          style={{
-            display: "inline-block",
-            padding: "3px 9px",
-            borderRadius: 6,
-            backgroundColor: gradeMeta.bg,
-            color: gradeMeta.text,
-            fontSize: 11, fontWeight: 800,
-            border: `1px solid ${gradeMeta.border}`,
-            whiteSpace: "nowrap",
-            cursor: "help",
-          }}
-          title={`AI 종합 등급 · Nplatform NPL Engine v2\n· 담보가치/채권비율 35%\n· 지역시장 동향 25%\n· 채무자 신용 20%\n· 경매 낙찰가율 15%\n→ 회수율 예측 기반: S≥85% · A+≥75% · A≥65% · B≥55% · C<55%`}
-        >
-          {formatAIGrade(item.ai_grade)}
-        </span>
-      </div>
-
-      {/* CTA — 딜룸 SoT 흐름: 매물 ID 기반 직진 */}
-      <div style={{ textAlign: "right" }}>
-        <Link
-          href={`/deals/dealroom?listingId=${encodeURIComponent(item.id)}`}
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 4,
-            padding: "7px 12px",
+            padding: "7px 10px",
             borderRadius: 8,
             backgroundColor: V.positive,
             color: V.onPositive,
             fontSize: 11, fontWeight: 800,
             whiteSpace: "nowrap",
+            border: "none", cursor: "pointer",
           }}
         >
-          상세 <ArrowRight size={12} />
-        </Link>
+          NDA 요청 <ArrowRight size={11} />
+        </button>
       </div>
     </motion.div>
   )

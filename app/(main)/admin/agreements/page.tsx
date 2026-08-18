@@ -1,534 +1,255 @@
-"use client"
+'use client'
 
 /**
- * /admin/agreements — NDA / LOI 운영 대시보드 (관리자용)
+ * /admin/agreements — NDA · 딜 진행 관리 (2026-08-17 전면 교체)
  *
- * 플랫폼 전체에서 체결된 NDA·LOI를 모니터링하고,
- * 비우회(non-circumvention) 위반 의심 패턴을 자동 플래그한다.
- *
- * 위반 사례 예시:
- *   - NDA 체결 후 매물 외부 채널 직접 거래 흔적
- *   - 동일 IP에서 매도자/매수자 양측 NDA 체결 시도
- *   - LOI 승인 직후 거래 취소 + 외부 계약 체결
+ * 정책:
+ *   - LOI · 플래그 · 위반확정 등 미연동 개념 제거
+ *   - 매물별 딜 진행 단계: 관심등록 → 실사진행 → 가격협의 → 최종계약
+ *   - 관리자가 직접 등록·수정 (클릭 즉시 저장) → 매각사 대시보드에 공유
+ *   - NDA 요청·관심 집계는 listing_marketing 자동 연동 값 표시
  */
 
-import { useState, useMemo, useEffect, useCallback } from "react"
-import Link from "next/link"
-import { motion } from "framer-motion"
-import {
-  ChevronLeft, FileSignature, FileText, AlertTriangle,
-  CheckCircle2, Clock, XCircle, Search, Filter, Flag,
-  TrendingUp, ShieldAlert, Eye, Loader2,
-} from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+import { useEffect, useState } from 'react'
+import { FileSignature, RefreshCw, CheckCircle2 } from 'lucide-react'
+import { DEAL_STAGES, NPL_STATUSES, NDA_REQUEST_STATUSES, type ListingMarketing, type NdaRequest } from '@/lib/marketing-checklist'
 
-const C = {
-  bg0: "var(--color-bg-deepest, #030810)", bg1: "var(--color-bg-deep, #050D1A)", bg2: "var(--color-bg-base, #080F1E)",
-  bg3: "var(--color-bg-base, #0A1628)", bg4: "var(--layer-border-strong)",
-  em: "var(--color-positive)", emL: "var(--color-positive)",
-  blue: "#0A1628", blueL: "var(--color-brand-bright)",
-  amber: "var(--color-warning)", rose: "var(--color-danger)", purple: "#051C2C",
-  lt1: "var(--fg-strong)", lt2: "var(--fg-default)",
-  lt3: "var(--fg-muted)", lt4: "var(--fg-subtle)",
-}
+const ELECTRIC = '#2251FF'
 
-type DocType = "NDA" | "LOI"
-type DocStatus = "PENDING" | "APPROVED" | "SIGNED" | "REJECTED" | "EXPIRED" | "WITHDRAWN"
-type FlagSeverity = "NONE" | "WATCH" | "SUSPECT" | "VIOLATION"
-
-interface AdminAgreementRow {
+type Row = {
   id: string
-  type: DocType
-  listing_id: string
+  region: string
   collateral: string
-  buyer: string
-  buyer_tier: "L1" | "L2" | "L3"
-  seller: string
-  amount?: number
-  signed_at: string
-  status: DocStatus
-  flag: FlagSeverity
-  flag_reason?: string
+  created: string
 }
-
-const FALLBACK_ROWS: AdminAgreementRow[] = []
-
-const TYPE_META: Record<DocType, { color: string }> = {
-  NDA: { color: "#2251FF" },
-  LOI: { color: "var(--color-text-primary)" },
-}
-
-const STATUS_META: Record<DocStatus, { label: string; color: string; icon: React.ElementType }> = {
-  PENDING:   { label: "검토 중",  color: "var(--color-text-primary)", icon: Clock },
-  APPROVED:  { label: "승인",    color: "var(--color-text-primary)", icon: CheckCircle2 },
-  SIGNED:    { label: "체결",    color: "#2251FF", icon: CheckCircle2 },
-  REJECTED:  { label: "거절",    color: "var(--color-danger)", icon: XCircle },
-  EXPIRED:   { label: "만료",    color: "#64748B", icon: XCircle },
-  WITHDRAWN: { label: "철회",    color: "#475569", icon: XCircle },
-}
-
-const FLAG_META: Record<FlagSeverity, { label: string; color: string }> = {
-  NONE:      { label: "정상",   color: "var(--color-text-primary)" },
-  WATCH:     { label: "관찰",   color: "var(--color-text-primary)" },
-  SUSPECT:   { label: "의심",   color: "#F97316" },
-  VIOLATION: { label: "위반",   color: "var(--color-danger)" },
-}
-
-const FILTERS = [
-  { key: "ALL",       label: "전체" },
-  { key: "NDA",       label: "NDA" },
-  { key: "LOI",       label: "LOI" },
-  { key: "WATCH",     label: "관찰+" },
-  { key: "VIOLATION", label: "위반만" },
-] as const
 
 export default function AdminAgreementsPage() {
-  const supabase = createClient()
-  const [filter, setFilter] = useState<typeof FILTERS[number]["key"]>("ALL")
-  const [query, setQuery] = useState("")
-  const [allRows, setAllRows] = useState<AdminAgreementRow[]>(FALLBACK_ROWS)
-  const [loading, setLoading] = useState(false)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [rows, setRows] = useState<Row[]>([])
+  const [mk, setMk] = useState<Record<string, ListingMarketing>>({})
+  const [loading, setLoading] = useState(true)
+  const [savingId, setSavingId] = useState<string | null>(null)
+  const [savedId, setSavedId] = useState<string | null>(null)
 
-  const handleApproveFlag = useCallback(async (rowId: string, newFlag: FlagSeverity) => {
-    setActionLoading(rowId)
-    try {
-      const { error } = await supabase
-        .from("agreements")
-        .update({ flag_severity: newFlag, updated_at: new Date().toISOString() })
-        .eq("id", rowId)
-      if (!error) {
-        setAllRows(prev => prev.map(r => r.id === rowId ? { ...r, flag: newFlag } : r))
-      }
-    } catch { /* best-effort */ }
-    finally { setActionLoading(null) }
-  }, [supabase])
-
-  const handleApproveAgreement = useCallback(async (rowId: string, newStatus: DocStatus) => {
-    setActionLoading(rowId)
-    try {
-      const { error } = await supabase
-        .from("agreements")
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq("id", rowId)
-      if (!error) {
-        setAllRows(prev => prev.map(r => r.id === rowId ? { ...r, status: newStatus } : r))
-      }
-    } catch { /* best-effort */ }
-    finally { setActionLoading(null) }
-  }, [supabase])
-
-  const loadAgreements = useCallback(async () => {
+  const load = () => {
     setLoading(true)
+    Promise.all([
+      fetch('/api/v1/exchange/listings?limit=200&status=ACTIVE').then(r => r.json()).catch(() => ({})),
+      fetch('/api/v1/listing-marketing').then(r => r.json()).catch(() => ({})),
+    ]).then(([ld, md]) => {
+      const list: Array<Record<string, any>> = Array.isArray(ld.data) ? ld.data : []
+      setRows(list.map(x => ({
+        id: String(x.id),
+        region: [x.sido, x.sigungu].filter(Boolean).join(' ') || String(x.address ?? '').split(/\s+/).slice(0, 2).join(' ') || '—',
+        collateral: String(x.collateral_type ?? '—'),
+        created: x.created_at ? String(x.created_at).slice(0, 10) : '—',
+      })))
+      if (md?.data) setMk(md.data)
+    }).finally(() => setLoading(false))
+  }
+  useEffect(load, [])
+
+  // 공용 저장 — 상태 · 매칭날짜 등 필드 단위 PATCH (낙관적 업데이트)
+  const saveField = async (listingId: string, patch: Partial<ListingMarketing>) => {
+    setSavingId(listingId)
+    setSavedId(null)
+    setMk(prev => ({
+      ...prev,
+      [listingId]: { ...(prev[listingId] ?? { listing_id: listingId, checklist: {}, consult_count: 0, interest_count: 0, nda_count: 0 }), ...patch },
+    }))
     try {
-      const { data } = await supabase
-        .from("agreements")
-        .select("id, doc_type, listing_id, collateral_desc, buyer_id, buyer_tier, seller_name, amount, signed_at, status, flag_severity, flag_reason")
-        .order("signed_at", { ascending: false })
-        .limit(50)
-      if (data && data.length > 0) {
-        setAllRows(data.map(r => ({
-          id: String(r.id),
-          type: (r.doc_type ?? "NDA") as DocType,
-          listing_id: r.listing_id ?? "",
-          collateral: r.collateral_desc ?? "",
-          buyer: r.buyer_id ?? "",
-          buyer_tier: (r.buyer_tier ?? "L1") as AdminAgreementRow["buyer_tier"],
-          seller: r.seller_name ?? "",
-          amount: r.amount ?? undefined,
-          signed_at: (r.signed_at ?? "").slice(0, 16).replace("T", " "),
-          status: (r.status ?? "PENDING") as DocStatus,
-          flag: (r.flag_severity ?? "NONE") as FlagSeverity,
-          flag_reason: r.flag_reason ?? undefined,
-        })))
-      }
-    } catch { /* keep fallback */ }
-    finally { setLoading(false) }
-  }, [])
+      await fetch('/api/v1/listing-marketing', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listing_id: listingId, ...patch }),
+      })
+      setSavedId(listingId)
+      setTimeout(() => setSavedId(s => (s === listingId ? null : s)), 1800)
+    } finally {
+      setSavingId(null)
+    }
+  }
 
-  useEffect(() => { loadAgreements() }, [loadAgreements])
+  // NDA 요청 상태 변경 — 운영사 검토 → 승인/거절 (승인 시 매입사 세부내역 열람 오픈)
+  const setNdaStatus = async (listingId: string, requestId: string, status: string) => {
+    const current = mk[listingId]?.nda_requests ?? []
+    const next: NdaRequest[] = current.map(q =>
+      q.id === requestId ? { ...q, status, decided_at: new Date().toISOString() } : q
+    )
+    await saveField(listingId, { nda_requests: next })
+  }
 
-  const rows = useMemo(() => {
-    return allRows.filter(r => {
-      if (filter === "NDA" || filter === "LOI") {
-        if (r.type !== filter) return false
-      } else if (filter === "WATCH") {
-        if (r.flag === "NONE") return false
-      } else if (filter === "VIOLATION") {
-        if (r.flag !== "VIOLATION") return false
-      }
-      if (query) {
-        const q = query.toLowerCase()
-        if (
-          !r.collateral.toLowerCase().includes(q) &&
-          !r.buyer.toLowerCase().includes(q) &&
-          !r.seller.toLowerCase().includes(q)
-        ) return false
-      }
-      return true
-    })
-  }, [allRows, filter, query])
-
-  const stats = useMemo(() => ({
-    total: allRows.length,
-    nda: allRows.filter(r => r.type === "NDA").length,
-    loi: allRows.filter(r => r.type === "LOI").length,
-    flagged: allRows.filter(r => r.flag !== "NONE").length,
-    violations: allRows.filter(r => r.flag === "VIOLATION").length,
-  }), [allRows])
-
-  const firstViolation = useMemo(() => allRows.find(r => r.flag === "VIOLATION"), [allRows])
+  const setStage = async (listingId: string, stage: string) => {
+    const current = mk[listingId]?.deal_stage ?? ''
+    const next = current === stage ? '' : stage   // 같은 단계 다시 클릭 = 해제
+    // 매칭 시작(단계 첫 등록) 시 매칭날짜 자동 기록 — 매입사 알림은 이 날짜 이후 건만 발송 기준
+    const autoMatchedAt = next && !mk[listingId]?.matched_at ? new Date().toISOString().slice(0, 10) : undefined
+    setSavingId(listingId)
+    setSavedId(null)
+    // 낙관적 업데이트
+    setMk(prev => ({
+      ...prev,
+      [listingId]: {
+        ...(prev[listingId] ?? { listing_id: listingId, checklist: {}, consult_count: 0, interest_count: 0, nda_count: 0 }),
+        deal_stage: next,
+        ...(autoMatchedAt ? { matched_at: autoMatchedAt } : {}),
+      },
+    }))
+    try {
+      await fetch('/api/v1/listing-marketing', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listing_id: listingId, deal_stage: next, ...(autoMatchedAt ? { matched_at: autoMatchedAt } : {}) }),
+      })
+      setSavedId(listingId)
+      setTimeout(() => setSavedId(s => (s === listingId ? null : s)), 1800)
+    } finally {
+      setSavingId(null)
+    }
+  }
 
   return (
-    <main style={{ backgroundColor: C.bg0, color: "#E2E8F0", minHeight: "100vh" }}>
-      <section style={{ borderBottom: `1px solid ${C.bg4}`, backgroundColor: C.bg1 }}>
-        <div style={{ maxWidth: 1480, margin: "0 auto", padding: "24px 24px 20px" }}>
-          <Link
-            href="/admin"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              fontSize: 12, color: C.lt4, fontWeight: 600, textDecoration: "none",
-            }}
-          >
-            <ChevronLeft size={14} /> 관리자
-          </Link>
-        </div>
-      </section>
-
-      <section style={{ maxWidth: 1480, margin: "0 auto", padding: "32px 24px 80px" }}>
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          style={{ marginBottom: 28 }}
-        >
-          <div style={{ fontSize: 11, color: C.emL, fontWeight: 800, letterSpacing: "0.1em", marginBottom: 8 }}>
-            ADMIN · CONTRACTS
+    <div className="p-6 max-w-[1150px] space-y-5">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#2251FF] mb-1.5">
+            <FileSignature size={13} /> NDA · 계약
           </div>
-          <h1 style={{ fontSize: 32, fontWeight: 900, color: C.lt1, letterSpacing: "-0.02em", marginBottom: 8 }}>
-            NDA · LOI 모니터링
+          <h1 className="text-2xl font-black text-[var(--color-text-primary)]" style={{ fontFamily: 'Georgia, serif' }}>
+            NDA · 계약
           </h1>
-          <p style={{ fontSize: 13, color: C.lt4, lineHeight: 1.6, maxWidth: 720 }}>
-            플랫폼 전체에서 체결된 비밀유지계약 및 매수의향서 현황을 모니터링하고,
-            비우회(non-circumvention) 조항 위반 의심 패턴을 실시간으로 탐지합니다.
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+            단계를 클릭하면 즉시 저장되고 매각사 대시보드에 공유됩니다. (다시 클릭 = 해제)
           </p>
-        </motion.div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 mb-6">
-          <StatCard label="총 계약" value={stats.total} color={C.blue} icon={FileSignature} />
-          <StatCard label="NDA" value={stats.nda} color={C.blueL} icon={FileSignature} />
-          <StatCard label="LOI" value={stats.loi} color={C.purple} icon={FileText} />
-          <StatCard label="플래그" value={stats.flagged} color={C.amber} icon={Flag} />
-          <StatCard label="위반 확정" value={stats.violations} color={C.rose} icon={ShieldAlert} />
         </div>
+        <button
+          onClick={load}
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)]"
+          style={{ background: 'transparent', cursor: 'pointer' }}
+        >
+          <RefreshCw size={12} /> 새로고침
+        </button>
+      </div>
 
-        {/* Loading indicator */}
-        {loading && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, color: C.lt4, fontSize: 11 }}>
-            <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
-            계약 데이터를 불러오는 중...
-          </div>
-        )}
-
-        {/* Violation banner — dynamic from DB */}
-        {firstViolation && (
-          <div
-            style={{
-              padding: "14px 18px", borderRadius: 12,
-              backgroundColor: `${C.rose}0F`, border: "1px solid rgba(165, 63, 138, 0.4)",
-              marginBottom: 18,
-              display: "flex", gap: 12, alignItems: "center",
-            }}
-          >
-            <ShieldAlert size={18} color={C.rose} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: C.lt1, marginBottom: 2 }}>
-                비우회 조항 위반 확정: {firstViolation.buyer}
-              </div>
-              <div style={{ fontSize: 11, color: C.lt4 }}>
-                {firstViolation.listing_id} ({firstViolation.collateral}) — {firstViolation.flag_reason ?? "위반 확정"}. 위약금 청구 + 영구 정지 조치 필요.
-              </div>
-            </div>
-            <button
-              style={{
-                padding: "8px 14px", borderRadius: 8,
-                backgroundColor: "rgba(165, 63, 138, 0.1)", color: C.rose,
-                border: "1px solid rgba(165, 63, 138, 0.4)",
-                fontSize: 11, fontWeight: 800, cursor: "pointer",
-              }}
-            >
-              법무팀 에스컬레이션
-            </button>
-          </div>
-        )}
-
-        {/* Search + filter */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-          <div
-            style={{
-              display: "flex", alignItems: "center", gap: 8, flex: "1 1 280px",
-              padding: "9px 13px", borderRadius: 10,
-              backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
-            }}
-          >
-            <Search size={14} color={C.lt4} />
-            <input
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="매물 · 매수자 · 매도자 검색"
-              style={{
-                flex: 1, background: "none", border: "none", outline: "none",
-                color: C.lt1, fontSize: 12,
-              }}
-            />
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-            <Filter size={13} color={C.lt4} />
-            {FILTERS.map(f => {
-              const active = filter === f.key
+      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-x-auto">
+        <table className="w-full text-[12.5px]">
+          <thead>
+            <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] text-left text-[10.5px] uppercase tracking-wide text-[var(--color-text-muted)]">
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">관리번호</th>
+              <th className="px-3 py-2.5 font-bold">지역 · 유형</th>
+              <th className="px-2 py-2.5 font-bold whitespace-nowrap">관심</th>
+              <th className="px-2 py-2.5 font-bold whitespace-nowrap">NDA 요청</th>
+              <th className="px-2 py-2.5 font-bold whitespace-nowrap">상담</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">NPL 상태</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">매칭날짜</th>
+              <th className="px-3 py-2.5 font-bold min-w-[300px]">딜 진행 단계 (클릭 = 등록/수정)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr><td colSpan={8} className="px-3 py-10 text-center text-sm text-[var(--color-text-muted)]">불러오는 중...</td></tr>
+            )}
+            {!loading && rows.length === 0 && (
+              <tr><td colSpan={8} className="px-3 py-12 text-center text-sm text-[var(--color-text-muted)]">활성 매물이 없습니다</td></tr>
+            )}
+            {rows.map(r => {
+              const m = mk[r.id]
+              const stage = m?.deal_stage ?? ''
               return (
-                <button
-                  key={f.key}
-                  onClick={() => setFilter(f.key)}
-                  style={{
-                    padding: "6px 12px", borderRadius: 999,
-                    fontSize: 11, fontWeight: 700,
-                    backgroundColor: active ? "var(--color-positive-bg)" : C.bg2,
-                    color: active ? C.emL : C.lt4,
-                    border: `1px solid ${active ? C.em : C.bg4}`,
-                    cursor: "pointer",
-                  }}
-                >
-                  {f.label}
-                </button>
+                <tr key={r.id} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] transition-colors">
+                  <td className="px-3 py-2.5 font-mono text-[11px] font-bold text-[var(--color-text-primary)] whitespace-nowrap">{r.id}</td>
+                  <td className="px-3 py-2.5 min-w-[150px]">
+                    <div className="font-semibold text-[var(--color-text-primary)]">{r.region}</div>
+                    <div className="text-[11px] text-[var(--color-text-muted)]">{r.collateral} · {r.created}</div>
+                  </td>
+                  <td className="px-2 py-2.5 tabular-nums font-bold">{m?.interest_count ?? 0}</td>
+                  {/* NDA 요청 — 건수 + 요청별 운영사 검토 → 승인/거절 (승인 = 매입사 세부내역 열람 오픈) */}
+                  <td className="px-2 py-2.5">
+                    <div className="tabular-nums font-bold">{m?.nda_requests?.length ?? m?.nda_count ?? 0}</div>
+                    {(m?.nda_requests ?? []).map(q => (
+                      <div key={q.id} className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[11px] font-semibold text-[var(--color-text-primary)] whitespace-nowrap" title={q.email || ''}>
+                          {q.signer || q.email || '무기명'}
+                        </span>
+                        <span className="text-[10px] text-[var(--color-text-muted)] tabular-nums whitespace-nowrap">
+                          {q.requested_at?.slice(5, 10)}
+                        </span>
+                        <select
+                          value={q.status}
+                          onChange={e => void setNdaStatus(r.id, q.id, e.target.value)}
+                          disabled={savingId === r.id}
+                          className="px-1.5 py-0.5 text-[10.5px] font-bold border bg-[var(--color-surface-elevated)]"
+                          style={{
+                            cursor: 'pointer',
+                            color: q.status === '승인' ? '#047857' : q.status === '거절' ? '#9F1239' : '#A53F00',
+                            borderColor: q.status === '승인' ? 'rgba(16,185,129,0.45)' : q.status === '거절' ? 'rgba(225,29,72,0.45)' : 'rgba(255,140,0,0.45)',
+                          }}
+                        >
+                          {NDA_REQUEST_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                    ))}
+                  </td>
+                  <td className="px-2 py-2.5 tabular-nums font-bold">{m?.consult_count ?? 0}</td>
+                  {/* NPL 상태 — 거래중/협의중/매각완료 */}
+                  <td className="px-3 py-2.5 whitespace-nowrap">
+                    <select
+                      value={m?.npl_status ?? ''}
+                      onChange={e => void saveField(r.id, { npl_status: e.target.value })}
+                      disabled={savingId === r.id}
+                      className="px-2 py-1.5 text-[11.5px] font-bold border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)]"
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <option value="">— 상태</option>
+                      {NPL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </td>
+                  {/* 매칭날짜 — 이후 업데이트 알림 기준점 */}
+                  <td className="px-3 py-2.5 whitespace-nowrap">
+                    <input
+                      type="date"
+                      value={m?.matched_at ?? ''}
+                      onChange={e => void saveField(r.id, { matched_at: e.target.value })}
+                      disabled={savingId === r.id}
+                      className="px-2 py-1 text-[11.5px] font-semibold border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] tabular-nums"
+                    />
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {DEAL_STAGES.map((s, i) => {
+                        const active = stage === s
+                        const passed = stage !== '' && DEAL_STAGES.indexOf(stage as typeof DEAL_STAGES[number]) > i
+                        return (
+                          <button
+                            key={s}
+                            onClick={() => void setStage(r.id, s)}
+                            disabled={savingId === r.id}
+                            className="px-2.5 py-1.5 text-[11px] font-bold transition-colors"
+                            style={{
+                              background: active ? '#0A1628' : passed ? 'rgba(34, 81, 255, 0.10)' : 'transparent',
+                              color: active ? '#FFFFFF' : passed ? '#1A47CC' : 'var(--color-text-secondary)',
+                              border: active ? '1px solid #0A1628' : '1px solid var(--color-border-default)',
+                              borderTop: active ? `2px solid ${ELECTRIC}` : undefined,
+                              cursor: 'pointer',
+                              opacity: savingId === r.id ? 0.6 : 1,
+                            }}
+                          >
+                            {i + 1}. {s}
+                          </button>
+                        )
+                      })}
+                      {savedId === r.id && <CheckCircle2 size={14} className="text-emerald-600" />}
+                    </div>
+                  </td>
+                </tr>
               )
             })}
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto">
-        <section
-          style={{
-            backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
-            borderRadius: 14, overflow: "hidden", minWidth: 760,
-          }}
-        >
-          <header
-            style={{
-              display: "grid",
-              gridTemplateColumns: "60px 1fr 130px 130px 130px 100px 100px",
-              padding: "13px 18px",
-              fontSize: 10, color: C.lt4, fontWeight: 700,
-              borderBottom: `1px solid ${C.bg4}`,
-              backgroundColor: C.bg3,
-            }}
-          >
-            <span>유형</span>
-            <span>매물 / 양 당사자</span>
-            <span>금액</span>
-            <span>일시</span>
-            <span>상태</span>
-            <span>플래그</span>
-            <span>작업</span>
-          </header>
-          {rows.length === 0 ? (
-            <div style={{ padding: 60, textAlign: "center", fontSize: 12, color: C.lt4 }}>
-              {loading ? "계약 데이터를 불러오는 중입니다..." : allRows.length === 0 ? "체결된 계약이 없습니다." : "해당 조건의 계약이 없습니다."}
-            </div>
-          ) : (
-            rows.map((row, i) => {
-              const stat = STATUS_META[row.status]
-              const StatIcon = stat.icon
-              const flag = FLAG_META[row.flag]
-              return (
-                <div
-                  key={row.id}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "60px 1fr 130px 130px 130px 100px 100px",
-                    padding: "16px 18px",
-                    borderBottom: i < rows.length - 1 ? `1px solid ${C.bg4}` : "none",
-                    fontSize: 11, color: C.lt1,
-                    alignItems: "center",
-                    backgroundColor: row.flag === "VIOLATION" ? `${C.rose}08` :
-                                     row.flag === "SUSPECT" ? `${C.amber}08` :
-                                     "transparent",
-                  }}
-                >
-                  <span
-                    style={{
-                      padding: "3px 7px", borderRadius: 4,
-                      backgroundColor: `${TYPE_META[row.type].color}1F`,
-                      color: TYPE_META[row.type].color,
-                      border: `1px solid ${TYPE_META[row.type].color}44`,
-                      fontSize: 9, fontWeight: 800,
-                      width: "fit-content",
-                    }}
-                  >
-                    {row.type}
-                  </span>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 800, marginBottom: 3 }}>{row.collateral}</div>
-                    <div style={{ fontSize: 9, color: C.lt4 }}>
-                      <b style={{ color: "#cbd5e1" }}>{row.buyer}</b> ({row.buyer_tier}) → {row.seller}
-                    </div>
-                    {row.flag_reason && (
-                      <div style={{ fontSize: 9, color: flag.color, marginTop: 4, fontWeight: 700 }}>
-                        ⚠ {row.flag_reason}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ fontWeight: 800, color: row.amount ? C.emL : C.lt4 }}>
-                    {row.amount ? formatKRW(row.amount) : "—"}
-                  </div>
-                  <div style={{ fontSize: 10, color: C.lt4 }}>{row.signed_at}</div>
-                  <span
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: 4,
-                      padding: "4px 9px", borderRadius: 999,
-                      backgroundColor: `${stat.color}1A`, color: stat.color,
-                      border: `1px solid ${stat.color}44`,
-                      fontSize: 9, fontWeight: 800,
-                      width: "fit-content",
-                    }}
-                  >
-                    <StatIcon size={10} /> {stat.label}
-                  </span>
-                  <span
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: 4,
-                      padding: "4px 9px", borderRadius: 999,
-                      backgroundColor: `${flag.color}1A`, color: flag.color,
-                      border: `1px solid ${flag.color}44`,
-                      fontSize: 9, fontWeight: 800,
-                      width: "fit-content",
-                    }}
-                  >
-                    <Flag size={10} /> {flag.label}
-                  </span>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <button
-                      onClick={() => setSelectedId(selectedId === row.id ? null : row.id)}
-                      style={{
-                        display: "inline-flex", alignItems: "center", gap: 4,
-                        padding: "5px 10px", borderRadius: 6,
-                        backgroundColor: selectedId === row.id ? "#2251FF1F" : C.bg3,
-                        color: selectedId === row.id ? "#2251FF" : C.lt4,
-                        border: `1px solid ${selectedId === row.id ? "#2251FF44" : C.bg4}`,
-                        fontSize: 10, fontWeight: 700, cursor: "pointer",
-                        width: "fit-content",
-                      }}
-                    >
-                      <Eye size={11} /> {selectedId === row.id ? "닫기" : "상세"}
-                    </button>
-                    {row.flag === "NONE" && row.status !== "REJECTED" && (
-                      <button
-                        onClick={() => handleApproveFlag(row.id, "WATCH")}
-                        disabled={actionLoading === row.id}
-                        style={{
-                          display: "inline-flex", alignItems: "center", gap: 4,
-                          padding: "4px 8px", borderRadius: 6,
-                          backgroundColor: "rgba(5, 28, 44,0.08)", color: C.amber,
-                          border: "1px solid rgba(5, 28, 44,0.3)",
-                          fontSize: 9, fontWeight: 700, cursor: "pointer",
-                          width: "fit-content", opacity: actionLoading === row.id ? 0.5 : 1,
-                        }}
-                      >
-                        <Flag size={10} /> 관찰 표시
-                      </button>
-                    )}
-                    {row.status === "PENDING" && (
-                      <button
-                        onClick={() => handleApproveAgreement(row.id, "APPROVED")}
-                        disabled={actionLoading === row.id}
-                        style={{
-                          display: "inline-flex", alignItems: "center", gap: 4,
-                          padding: "4px 8px", borderRadius: 6,
-                          backgroundColor: "rgba(5, 28, 44,0.08)", color: C.em,
-                          border: "1px solid rgba(5, 28, 44,0.3)",
-                          fontSize: 9, fontWeight: 700, cursor: "pointer",
-                          width: "fit-content", opacity: actionLoading === row.id ? 0.5 : 1,
-                        }}
-                      >
-                        <CheckCircle2 size={10} /> 승인
-                      </button>
-                    )}
-                  </div>
-                  {/* Expandable detail row */}
-                  {selectedId === row.id && (
-                    <div
-                      style={{
-                        gridColumn: "1 / -1", marginTop: 8, padding: "10px 14px",
-                        borderRadius: 8, backgroundColor: C.bg4,
-                        border: `1px solid ${C.bg3}`, fontSize: 10, color: C.lt4,
-                        lineHeight: 1.7,
-                      }}
-                    >
-                      <b style={{ color: C.lt1 }}>ID:</b> {row.id} &nbsp;|&nbsp;
-                      <b style={{ color: C.lt1 }}>매물:</b> {row.listing_id || "—"} &nbsp;|&nbsp;
-                      <b style={{ color: C.lt1 }}>등급:</b> {row.buyer_tier} &nbsp;|&nbsp;
-                      {row.flag_reason && <><b style={{ color: C.amber }}>사유:</b> {row.flag_reason}</>}
-                    </div>
-                  )}
-                </div>
-              )
-            })
-          )}
-        </section>
-        </div>
-
-        <div
-          style={{
-            marginTop: 20, padding: "14px 16px", borderRadius: 12,
-            backgroundColor: "rgba(45, 116, 182, 0.04)", border: "1px solid rgba(45, 116, 182, 0.2)",
-            display: "flex", gap: 10, alignItems: "flex-start",
-          }}
-        >
-          <ShieldAlert size={16} color={C.blueL} style={{ marginTop: 1, flexShrink: 0 }} />
-          <div style={{ fontSize: 11, color: C.lt3, lineHeight: 1.55 }}>
-            비우회(non-circumvention) 위반 탐지는 ① 동일 IP/디바이스 다중 NDA, ② LOI 승인 후 즉시 철회 + 외부 거래 흔적,
-            ③ 매도·매수 양측 동일 사업자 등록번호 등을 자동 분석합니다. 위반 확정 시 NDA 약관에 따른 위약금(거래액의 30%) 청구가 가능합니다.
-          </div>
-        </div>
-      </section>
-    </main>
-  )
-}
-
-function StatCard({
-  label, value, color, icon: Icon,
-}: { label: string; value: number; color: string; icon: React.ElementType }) {
-  return (
-    <div
-      style={{
-        padding: 18, borderRadius: 12,
-        backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
-        display: "flex", alignItems: "center", gap: 14,
-      }}
-    >
-      <div
-        style={{
-          width: 40, height: 40, borderRadius: 10,
-          backgroundColor: `${color}1F`, border: `1px solid ${color}44`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <Icon size={18} color={color} />
+          </tbody>
+        </table>
       </div>
-      <div>
-        <div style={{ fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 2 }}>{label}</div>
-        <div style={{ fontSize: 22, fontWeight: 900, color: C.lt1 }}>{value}</div>
-      </div>
+
+      <p className="text-[11px] text-[var(--color-text-muted)]">
+        ※ LOI · 플래그 · 위반확정 등 미연동 개념은 제거되었습니다. 단계 저장은 listing_marketing 테이블 생성 후 유지됩니다.
+      </p>
     </div>
   )
-}
-
-function formatKRW(n: number): string {
-  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(2)}억원`
-  if (n >= 10_000) return `${(n / 10_000).toFixed(0)}만원`
-  return `${n.toLocaleString("ko-KR")}원`
 }

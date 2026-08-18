@@ -1,17 +1,17 @@
 "use client"
 
 /**
- * AdminSidebar — McKinsey 6-Zone 체계 (Phase G7+ 2026-04-29).
+ * AdminSidebar — 프라이빗 NPL 딜 중개 피벗 (2026-08-14).
  *
- * 사용자 정책: "필요 없는 기능 삭제 + 관리자 관리를 체계화 — 너무 많아"
- *
- * 24개 평면 메뉴 → 6개 macro Zone 으로 묶음 (MECE):
+ * 관리자 메뉴 슬림다운 — 핵심 운영만 노출 (페이지 자체는 유지, 메뉴만 숨김):
  *   1. 대시보드 — 진입
- *   2. 거래 운영 (Operations) — 회원/매물/딜룸/매칭/수요/기관
- *   3. 수익·실적 (Revenue & Performance) — 결제/쿠폰/펀널/분석
- *   4. 콘텐츠 (Content) — 공지/배너/뉴스
- *   5. 보안·컴플라이언스 (Compliance) — 보안/PII/마스킹
- *   6. 시스템 (System) — 설정/연동/AI·ML/파이프라인/헬스/런타임
+ *   2. 거래 운영 (Operations) — 회원/매물/매수 수요/매칭/NDA·계약/매도 기관
+ *   3. 보안·마스킹 (Compliance) — 마스킹 검토/PII 감사/보안 정책
+ *   4. 정산 (Revenue) — 결제·정산
+ *   5. 시스템 (System) — 사이트 설정/콘텐츠
+ *
+ * 메뉴에서 제거 (페이지는 유지): 딜룸, 쿠폰, Deal Funnel, 분석,
+ * 외부 연동, 시스템 모니터, AI·ML, 데이터 파이프라인.
  *
  * 각 Zone 은 collapsible group — 펼쳐서 sub-page 노출.
  */
@@ -21,10 +21,10 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import {
-  LayoutDashboard, Users, Building2, FileText, Settings, BarChart3,
-  CreditCard, Megaphone, Server, Cable,
-  ChevronLeft, Menu, BrainCircuit, ShieldCheck, Eye, Landmark, FileSignature, Tag,
-  Workflow, TrendingUp, Target, ShoppingCart, ChevronRight, ChevronDown,
+  LayoutDashboard, Users, Building2, FileText, Settings,
+  CreditCard, Megaphone, Server,
+  ChevronLeft, Menu, ShieldCheck, Eye, Landmark, FileSignature,
+  Target, ShoppingCart, ChevronRight, ChevronDown, Inbox,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -44,74 +44,22 @@ interface AdminZone {
   items: AdminMenuItem[]
 }
 
+/**
+ * 초간단 관리자 메뉴 (2026-08-17) — 접이식 그룹 없이 평평한 필수 7개.
+ * 운영 루프: 승인 → 매물 → 수요 → NDA → 마케팅 체크 → 메인 지표.
+ * (매칭·기관·마스킹·보안·콘텐츠 등 페이지는 보존 — URL 직접 접근 가능)
+ */
 const ADMIN_ZONES: AdminZone[] = [
-  // 진입 (단일 항목 — Zone 라벨 자체가 링크)
-  {
-    key: "dashboard",
-    label: "대시보드",
-    icon: LayoutDashboard,
-    href: "/admin",
-    items: [],
-  },
-  // Zone 1 — 거래 운영
-  {
-    key: "operations",
-    label: "거래 운영",
-    icon: Building2,
-    items: [
-      { href: "/admin/users",        label: "회원",         icon: Users },
-      { href: "/admin/listings",     label: "매물",         icon: FileText },
-      { href: "/admin/deals",        label: "딜룸",         icon: Building2 },
-      { href: "/admin/agreements",   label: "NDA·LOI",      icon: FileSignature },
-      { href: "/admin/matching",     label: "AI 매칭",      icon: Target },
-      { href: "/admin/demands",      label: "매수자 수요",  icon: ShoppingCart },
-      { href: "/admin/institutions", label: "매도 기관",    icon: Landmark },
-    ],
-  },
-  // Zone 2 — 수익·실적
-  {
-    key: "revenue",
-    label: "수익·실적",
-    icon: TrendingUp,
-    items: [
-      { href: "/admin/billing",     label: "결제·정산",    icon: CreditCard },
-      { href: "/admin/coupons",     label: "쿠폰",         icon: Tag },
-      { href: "/admin/deal-funnel", label: "Deal Funnel",  icon: TrendingUp },
-      { href: "/admin/analytics",   label: "분석",         icon: BarChart3 },
-    ],
-  },
-  // Zone 3 — 콘텐츠
-  {
-    key: "content",
-    label: "콘텐츠",
-    icon: Megaphone,
-    href: "/admin/content",
-    items: [],
-  },
-  // Zone 4 — 보안·컴플라이언스
-  {
-    key: "compliance",
-    label: "보안·컴플라이언스",
-    icon: ShieldCheck,
-    items: [
-      { href: "/admin/security",       label: "보안 정책",    icon: ShieldCheck },
-      { href: "/admin/pii-audit",      label: "PII 감사",     icon: Eye },
-      { href: "/admin/masking-queue",  label: "마스킹 검토",  icon: ShieldCheck },
-    ],
-  },
-  // Zone 5 — 시스템
-  {
-    key: "system",
-    label: "시스템",
-    icon: Server,
-    items: [
-      { href: "/admin/settings",     label: "사이트 설정",  icon: Settings },
-      { href: "/admin/integrations", label: "외부 연동",    icon: Cable },
-      { href: "/admin/system",       label: "시스템 모니터", icon: Server },
-      { href: "/admin/ml",           label: "AI·ML",        icon: BrainCircuit },
-      { href: "/admin/pipeline",     label: "데이터 파이프라인", icon: Workflow },
-    ],
-  },
+  { key: "dashboard",  label: "대시보드",        icon: LayoutDashboard, href: "/admin",              items: [] },
+  { key: "inbox",      label: "접수함",          icon: Inbox,           href: "/admin/inbox",        items: [] },
+  { key: "users",      label: "회원 승인",       icon: Users,           href: "/admin/users",        items: [] },
+  { key: "listings",   label: "매각의뢰 현황",   icon: FileText,        href: "/admin/listings",     items: [] },
+  { key: "demands",    label: "매입조건 현황",   icon: ShoppingCart,    href: "/admin/demands",      items: [] },
+  { key: "agreements", label: "NDA · 계약",      icon: FileSignature,   href: "/admin/agreements",   items: [] },
+  { key: "analysis",   label: "NPL 수익률 분석", icon: Eye,             href: "/admin/npl-analysis", items: [] },
+  { key: "highlights", label: "메인 하이라이트", icon: Megaphone,       href: "/admin/highlights",   items: [] },
+  { key: "press",      label: "언론보도",        icon: FileText,        href: "/admin/press",        items: [] },
+  { key: "mainstats",  label: "메인 지표 입력",  icon: Settings,        href: "/admin/main-stats",   items: [] },
 ]
 
 function getActiveLabel(pathname: string | null): string {

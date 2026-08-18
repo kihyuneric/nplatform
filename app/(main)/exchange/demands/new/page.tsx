@@ -1,121 +1,162 @@
 'use client'
 
-import { useState, useRef } from 'react'
+/**
+ * /exchange/demands/new — 매입조건 등록 (2026-08 피벗)
+ *
+ * 정책:
+ *   - 조건당 4개 필드만: 지역 · 유형 · 금액대 · 요청사항
+ *   - 우선순위에 따라 조건 여러 개 등록 가능 (조건 1 = 우선순위 1)
+ *   - 조건 추가 / 삭제 / 순서 변경(▲▼)
+ *   - 제출 시 조건별로 1건씩 API 등록 (priority 포함)
+ */
+
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Send, CheckCircle2, Info, Building2, Gavel, Download, Upload, Sparkles, Loader2 } from 'lucide-react'
+import { ArrowLeft, Send, CheckCircle2, Info, Building2, Gavel, Plus, Trash2, ChevronUp, ChevronDown, Lock } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import { CommaNumberInput } from '@/components/ui/comma-number-input'
-import { NplModal, NplModalFooter } from '@/components/design-system'
-import { Button } from '@/components/ui/button'
+import { MckPageHeader } from '@/components/mck/page-header'
 
-const COLLATERAL_OPTIONS = ['아파트', '상가', '토지', '오피스텔', '기타']
-const RE_TYPE_OPTIONS = ['아파트', '오피스텔', '상가', '단독주택', '토지', '기타']
-const RE_DEAL_OPTIONS = ['매매', '전세', '월세']
-const REGION_OPTIONS = ['서울', '경기', '인천', '부산', '대구', '대전', '광주', '울산', '세종', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주']
-const AI_GRADES = ['A', 'B', 'C', 'D', 'E']
-const AUCTION_STAGES = ['1차', '2차', '이후']
-const PURPOSE_OPTIONS = [
-  { value: 'personal', label: '개인투자' },
-  { value: 'corporate', label: '법인투자' },
-  { value: 'fund', label: '펀드' },
-]
+// 담보유형·지역 — NPL 리스트와 동일한 중앙 택소노미 사용 (SSoT)
+import { COLLATERAL_CATEGORIES, REGION_SHORT_LIST } from '@/lib/taxonomy'
+
+const REGION_OPTIONS = REGION_SHORT_LIST
+
+/** 1평 = 3.3058㎡ */
+const PYEONG_TO_M2 = 3.3058
+type AreaUnit = 'm2' | 'pyeong'
+const round2 = (n: number) => Math.round(n * 100) / 100
+/** 표시 단위 값 → ㎡ (저장 단위) */
+const toM2 = (value: string, unit: AreaUnit): number | null => {
+  if (value.trim() === '') return null
+  const n = Number(value)
+  if (!Number.isFinite(n)) return null
+  return unit === 'pyeong' ? round2(n * PYEONG_TO_M2) : round2(n)
+}
+/** 단위 토글 시 표시 값 변환 */
+const convertDisplay = (value: string, from: AreaUnit, to: AreaUnit): string => {
+  if (value.trim() === '' || from === to) return value
+  const n = Number(value)
+  if (!Number.isFinite(n)) return value
+  return String(to === 'pyeong' ? round2(n / PYEONG_TO_M2) : round2(n * PYEONG_TO_M2))
+}
+
+type DemandCondition = {
+  demandType: 'npl' | 'realestate'
+  collateralTypes: string[]
+  nationwide: boolean
+  regions: string[]
+  landMin: string      // 토지면적 (표시 단위 기준)
+  landMax: string
+  bldgMin: string      // 건물면적 (표시 단위 기준)
+  bldgMax: string
+  amountMin: string   // 억원
+  amountMax: string   // 억원
+  memo: string
+}
+
+const emptyCondition = (): DemandCondition => ({
+  demandType: 'npl',
+  collateralTypes: [],
+  nationwide: false,
+  regions: [],
+  landMin: '',
+  landMax: '',
+  bldgMin: '',
+  bldgMax: '',
+  amountMin: '',
+  amountMax: '',
+  memo: '',
+})
 
 export default function NewDemandPage() {
   const router = useRouter()
+  const [conditions, setConditions] = useState<DemandCondition[]>([emptyCondition()])
+
+  // ── 로그인 상태 + 담당자 정보 (회원가입 정보 자동 기입 · 수정 가능) ──
+  const [authState, setAuthState] = useState<'checking' | 'guest' | 'user'>('checking')
+  const [contact, setContact] = useState({ company: '', manager: '', phone: '', email: '' })
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (cancelled) return
+        if (user) {
+          const meta = (user.user_metadata ?? {}) as Record<string, string>
+          setContact({
+            company: meta.company ?? '',
+            manager: meta.name ?? '',
+            phone: meta.phone ?? '',
+            email: user.email ?? '',
+          })
+          setAuthState('user')
+        } else {
+          setAuthState('guest')
+        }
+      } catch {
+        if (!cancelled) setAuthState('guest')
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
+  // 면적 표시 단위 — 폼 전체 공통 (㎡ ↔ 평 전환 시 입력값 자동 환산)
+  const [areaUnit, setAreaUnit] = useState<AreaUnit>('m2')
+  const switchAreaUnit = (unit: AreaUnit) => {
+    if (unit === areaUnit) return
+    setConditions(prev => prev.map(c => ({
+      ...c,
+      landMin: convertDisplay(c.landMin, areaUnit, unit),
+      landMax: convertDisplay(c.landMax, areaUnit, unit),
+      bldgMin: convertDisplay(c.bldgMin, areaUnit, unit),
+      bldgMax: convertDisplay(c.bldgMax, areaUnit, unit),
+    })))
+    setAreaUnit(unit)
+  }
+  const unitLabel = areaUnit === 'm2' ? '㎡' : '평'
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [agreed, setAgreed] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-
-  // Demand type
-  const [demandType, setDemandType] = useState<'npl' | 'realestate'>('npl')
-
-  // Common
-  const [purpose, setPurpose] = useState('')
-  const [minAmount, setMinAmount] = useState('')
-  const [maxAmount, setMaxAmount] = useState('')
-  const [nationwide, setNationwide] = useState(false)
-  const [regions, setRegions] = useState<string[]>([])
-  const [memo, setMemo] = useState('')
-
-  // NPL specific
-  const [collateralTypes, setCollateralTypes] = useState<string[]>([])
-  const [targetReturn, setTargetReturn] = useState('')
-  const [aiGrades, setAiGrades] = useState<string[]>([])
-  const [auctionStages, setAuctionStages] = useState<string[]>([])
-
-  // Real estate specific
-  const [reTypes, setReTypes] = useState<string[]>([])
-  const [reDealTypes, setReDealTypes] = useState<string[]>([])
-  const [reMinArea, setReMinArea] = useState('')
-  const [reMaxArea, setReMaxArea] = useState('')
-
-  // Phase G7+ · 매입사 엑셀 OCR 업로드
-  const [parsing, setParsing] = useState(false)
-  const [parsePreview, setParsePreview] = useState<{
-    fields: Record<string, unknown>
-    regions: string[]
-    collateralTypes: string[]
-    avoidConditions: string[]
-    warnings: string[]
-    source?: { fileName?: string }
-  } | null>(null)
-  const [parseError, setParseError] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setParsing(true)
-    setParseError(null)
-    try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await fetch('/api/v1/ocr/parse-buyer-template', { method: 'POST', body: fd })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json?.error?.message || '파싱 실패')
-      setParsePreview(json.data)
-    } catch (err) {
-      setParseError(err instanceof Error ? err.message : '엑셀 파싱 실패')
-    } finally {
-      setParsing(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-    }
-  }
-
-  const applyExcelData = () => {
-    if (!parsePreview) return
-    const f = parsePreview.fields
-    if (f.min_principal)  setMinAmount(String(f.min_principal))
-    else if (f.min_amount) setMinAmount(String(f.min_amount))
-    if (f.max_principal)  setMaxAmount(String(f.max_principal))
-    else if (f.max_amount) setMaxAmount(String(f.max_amount))
-    if (f.min_roi_pct || f.min_roi) setTargetReturn(String(f.min_roi_pct ?? f.min_roi))
-    if (parsePreview.regions.length > 0) {
-      setRegions(parsePreview.regions.map(r => r.replace(/특별시$|광역시$|특별자치시$|특별자치도$|도$/, '')))
-    }
-    if (parsePreview.collateralTypes.length > 0) setCollateralTypes(parsePreview.collateralTypes)
-    if (f.preferred_risk_grades && Array.isArray(f.preferred_risk_grades)) {
-      setAiGrades(f.preferred_risk_grades as string[])
-    }
-    setParsePreview(null)
-  }
 
   const toggle = <T extends string>(list: T[], val: T): T[] =>
     list.includes(val) ? list.filter(x => x !== val) : [...list, val]
 
   const clearError = (key: string) => setErrors(prev => { const n = { ...prev }; delete n[key]; return n })
 
+  const updateCondition = (idx: number, patch: Partial<DemandCondition>) => {
+    setConditions(prev => prev.map((c, i) => (i === idx ? { ...c, ...patch } : c)))
+  }
+
+  const addCondition = () => setConditions(prev => [...prev, emptyCondition()])
+
+  const removeCondition = (idx: number) => {
+    setConditions(prev => prev.filter((_, i) => i !== idx))
+    setErrors({})
+  }
+
+  const moveCondition = (idx: number, dir: -1 | 1) => {
+    setConditions(prev => {
+      const next = [...prev]
+      const target = idx + dir
+      if (target < 0 || target >= next.length) return prev
+      ;[next[idx], next[target]] = [next[target], next[idx]]
+      return next
+    })
+    setErrors({})
+  }
+
   const validate = () => {
     const e: Record<string, string> = {}
-    if (!purpose) e.purpose = '투자 목적을 선택해주세요'
-    if (demandType === 'npl' && collateralTypes.length === 0) e.collateralTypes = '담보 유형을 선택해주세요'
-    if (demandType === 'realestate' && reTypes.length === 0) e.reTypes = '부동산 유형을 선택해주세요'
-    if (demandType === 'realestate' && reDealTypes.length === 0) e.reDealTypes = '거래 유형을 선택해주세요'
-    if (!minAmount) e.minAmount = '최소 투자금을 입력해주세요'
-    if (!maxAmount) e.maxAmount = '최대 투자금을 입력해주세요'
-    if (minAmount && maxAmount && Number(minAmount) > Number(maxAmount)) e.maxAmount = '최대 금액은 최소 금액 이상이어야 합니다'
-    if (!nationwide && regions.length === 0) e.regions = '지역을 선택하거나 전국을 체크해주세요'
+    conditions.forEach((c, i) => {
+      if (c.collateralTypes.length === 0) e[`types_${i}`] = '유형을 선택해주세요'
+      if (!c.nationwide && c.regions.length === 0) e[`regions_${i}`] = '지역을 선택하거나 전국을 체크해주세요'
+      if (c.landMin && c.landMax && Number(c.landMin) > Number(c.landMax)) e[`land_${i}`] = '최대 면적은 최소 면적 이상이어야 합니다'
+      if (c.bldgMin && c.bldgMax && Number(c.bldgMin) > Number(c.bldgMax)) e[`bldg_${i}`] = '최대 면적은 최소 면적 이상이어야 합니다'
+      if (c.amountMin && c.amountMax && Number(c.amountMin) > Number(c.amountMax)) e[`amount_${i}`] = '최대 금액은 최소 금액 이상이어야 합니다'
+    })
     if (!agreed) e.agreed = '개인정보 처리에 동의해주세요'
     return e
   }
@@ -126,55 +167,59 @@ export default function NewDemandPage() {
     setErrors({})
     setSubmitting(true)
     try {
-      const body: Record<string, unknown> = {
-        demand_type: demandType,
-        purpose,
-        min_amount: Number(minAmount) * 100000000,
-        max_amount: Number(maxAmount) * 100000000,
-        regions: nationwide ? ['전국'] : regions,
-        memo,
-      }
-      if (demandType === 'npl') {
-        Object.assign(body, {
-          collateral_types: collateralTypes,
-          target_return: targetReturn,
-          ai_grades: aiGrades,
-          auction_stages: auctionStages,
-        })
-      } else {
-        Object.assign(body, {
-          re_types: reTypes,
-          re_deal_types: reDealTypes,
-          re_min_area: reMinArea,
-          re_max_area: reMaxArea,
-        })
-      }
-      let apiSuccess = false
+      let okCount = 0
       let errorMessage: string | null = null
-      try {
-        const res = await fetch('/api/v1/exchange/demands', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        })
-        if (res.ok) {
-          const json = await res.json().catch(() => ({}))
-          // API 응답 형식: { success: true, data: {...} } 또는 { data: {...} }
-          apiSuccess = (json as { success?: boolean })?.success === true
-            || ((json as { data?: unknown })?.data != null)
-        } else {
-          const data = await res.json().catch(() => ({}))
-          errorMessage = (data as { error?: { message?: string } })?.error?.message
-            ?? `등록 실패 (HTTP ${res.status})`
+      for (let i = 0; i < conditions.length; i++) {
+        const c = conditions[i]
+        const body: Record<string, unknown> = {
+          demand_type: c.demandType,
+          collateral_types: c.collateralTypes,
+          regions: c.nationwide ? ['전국'] : c.regions,
+          land_area_min_m2: toM2(c.landMin, areaUnit),
+          land_area_max_m2: toM2(c.landMax, areaUnit),
+          building_area_min_m2: toM2(c.bldgMin, areaUnit),
+          building_area_max_m2: toM2(c.bldgMax, areaUnit),
+          min_amount: c.amountMin ? Number(c.amountMin) : null,   // 억원
+          max_amount: c.amountMax ? Number(c.amountMax) : null,   // 억원
+          priority: i + 1,
+          memo: (() => {
+            const base = conditions.length > 1 ? `[우선순위 ${i + 1}] ${c.memo}`.trim() : c.memo
+            // 담당자 정보 — 운영자 매수 수요 리스트에서 바로 확인
+            const contactLine = [contact.company, contact.manager, contact.phone, contact.email].filter(Boolean).join(' · ')
+            return contactLine ? `${base}${base ? '\n' : ''}[담당자] ${contactLine}` : base
+          })(),
+          company_name: contact.company || null,
+          manager_name: contact.manager || null,
+          contact_phone: contact.phone || null,
+          contact_email: contact.email || null,
         }
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('[Demand new] network error:', err)
-        errorMessage = '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+        try {
+          const res = await fetch('/api/v1/exchange/demands', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          })
+          if (res.ok) {
+            const json = await res.json().catch(() => ({}))
+            const ok = (json as { success?: boolean })?.success === true
+              || ((json as { data?: unknown })?.data != null)
+            if (ok) okCount++
+          } else {
+            const data = await res.json().catch(() => ({}))
+            errorMessage = (data as { error?: { message?: string } })?.error?.message
+              ?? `등록 실패 (HTTP ${res.status})`
+          }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error('[Demand new] network error:', err)
+          errorMessage = '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+        }
       }
-      if (apiSuccess) {
+      if (okCount === conditions.length) {
         setSubmitted(true)
         setTimeout(() => router.push('/exchange/demands'), 2500)
+      } else if (okCount > 0) {
+        alert(`${conditions.length}건 중 ${okCount}건 등록 완료. 나머지는 다시 시도해주세요.${errorMessage ? `\n(${errorMessage})` : ''}`)
       } else {
         alert(errorMessage ?? '등록에 실패했습니다. 다시 시도해주세요.')
       }
@@ -190,8 +235,8 @@ export default function NewDemandPage() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-positive)]/10">
             <CheckCircle2 className="h-8 w-8 text-[var(--color-positive)]" />
           </div>
-          <h2 className="text-xl font-bold text-[var(--color-text-primary)]">수요 등록 완료!</h2>
-          <p className="text-sm text-gray-500">AI가 매칭 결과를 분석 중입니다.</p>
+          <h2 className="text-xl font-bold text-[var(--color-text-primary)]">매입조건 {conditions.length}건 등록 완료!</h2>
+          <p className="text-sm text-gray-500">조건에 맞는 물건이 나오면 우선순위에 따라 담당자가 연락드립니다.</p>
         </div>
       </div>
     )
@@ -199,405 +244,352 @@ export default function NewDemandPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-surface-overlay)]">
-      {/* Header */}
-      <div className="bg-[var(--color-brand-deepest)] text-white px-6 py-8">
-        <div className="max-w-2xl mx-auto">
-          <Link href="/exchange/demands" className="inline-flex items-center gap-1.5 text-sm text-stone-900 hover:text-white transition-colors mb-4">
-            <ArrowLeft className="h-4 w-4" />
-            매수 수요 마켓으로 돌아가기
-          </Link>
-          <h1 className="text-2xl font-bold tracking-normal">매수 수요 등록</h1>
-          <p className="mt-1 text-sm text-stone-900 tracking-normal">원하는 조건을 등록하면 AI가 매칭해드립니다</p>
-        </div>
-      </div>
+      {/* ── 표준 페이지 헤더 (전 메뉴 공통 포맷) ── */}
+      <MckPageHeader
+        eyebrow="Private Deal · NDA 기반"
+        title="매입조건 등록"
+        subtitle="지역 · 유형 · 금액대만 알려주세요 — 우선순위별로 조건을 여러 개 등록할 수 있습니다."
+        actions={
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            <Link
+              href="/exchange"
+              style={{
+                padding: '9px 16px', fontSize: 12, fontWeight: 800, letterSpacing: '-0.01em',
+                background: '#0A1628', color: '#FFFFFF', border: 'none', borderTop: '2px solid #2251FF',
+                display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none',
+              }}
+            >
+              NPL 자동매칭
+            </Link>
+            <Link
+              href="/exchange/sell"
+              style={{
+                padding: '9px 16px', fontSize: 12, fontWeight: 700, letterSpacing: '-0.01em',
+                background: '#FFFFFF', color: '#0A1628', border: '1px solid #0A1628',
+                display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none',
+              }}
+            >
+              NPL 매각의뢰
+            </Link>
+          </div>
+        }
+      />
 
       {/* Form */}
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
 
-        {/* Phase G7+ · 매입사 엑셀 템플릿 다운로드/업로드 배너 */}
-        <div className="rounded-xl p-5 border border-stone-300/40 bg-gradient-to-br from-sky-500/8 to-sky-500/0">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-4 h-4 text-stone-900" />
-                <strong className="text-sm font-bold text-[var(--color-text-primary)]">
-                  엑셀 1번에 자동 작성
-                </strong>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-stone-100/15 text-stone-900 dark:text-stone-900">
-                  OCR 자동 채우기
+        {/* ── 로그인 필요 배너 — 매입사 회원 전용 ── */}
+        {authState === 'guest' && (
+          <div
+            className="flex items-start gap-3 p-4"
+            style={{ background: '#0A1628', borderTop: '3px solid #2251FF' }}
+          >
+            <Lock className="h-4 w-4 shrink-0 mt-0.5" style={{ color: '#00A9F4' }} />
+            <div className="flex-1">
+              <p className="text-sm font-extrabold" style={{ color: '#FFFFFF' }}>
+                매입조건 등록은 매입 회원 가입 후 로그인하셔야 가능합니다
+              </p>
+              <p className="mt-1 text-xs" style={{ color: 'rgba(255,255,255,0.70)' }}>
+                로그인하시면 회사명 · 담당자명 · 연락처 · 이메일이 자동으로 기입됩니다. 가입은 무료 (관리자 승인제)
+              </p>
+              <div className="mt-3 flex gap-2">
+                <Link href="/login?redirect=/exchange/demands/new"
+                  className="px-4 py-2 text-xs font-extrabold"
+                  style={{ background: '#FFFFFF', color: '#0A1628', textDecoration: 'none' }}>
+                  로그인
+                </Link>
+                <Link href="/signup"
+                  className="px-4 py-2 text-xs font-bold"
+                  style={{ background: 'transparent', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.35)', textDecoration: 'none' }}>
+                  매입 회원가입
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── 담당자 정보 — 회원가입 정보 자동 기입 (수정 가능) ── */}
+        <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] overflow-hidden">
+          <div className="px-5 py-3 border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)]">
+            <span className="text-sm font-bold text-[var(--color-text-primary)]">담당자 정보</span>
+            {authState === 'user' && (
+              <span className="ml-2 text-[11px] font-semibold text-[var(--color-brand-bright)]">회원가입 정보 자동 기입 — 수정 가능</span>
+            )}
+          </div>
+          <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {([
+              ['company', '회사명(기관명)', '예: OO자산운용'],
+              ['manager', '담당자명', '예: 홍길동'],
+              ['phone', '연락처', '예: 010-0000-0000'],
+              ['email', '이메일', '예: name@company.co.kr'],
+            ] as const).map(([key, label, ph]) => (
+              <div key={key}>
+                <div className="text-xs font-bold text-[var(--color-text-secondary)] mb-1.5">{label}</div>
+                <input
+                  value={contact[key]}
+                  onChange={e => setContact(prev => ({ ...prev, [key]: e.target.value }))}
+                  placeholder={ph}
+                  className="w-full px-3 py-2.5 text-sm font-medium rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-bright)]"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {conditions.map((c, idx) => (
+          <div key={idx} className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] overflow-hidden">
+            {/* 조건 헤더 — 우선순위 + 순서/삭제 컨트롤 */}
+            <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)]">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[var(--color-brand-bright)] text-white text-xs font-extrabold">
+                  {idx + 1}
+                </span>
+                <span className="text-sm font-bold text-[var(--color-text-primary)]">
+                  우선순위 {idx + 1}{idx === 0 ? ' (최우선)' : ''}
                 </span>
               </div>
-              <p className="text-xs text-[var(--color-text-tertiary)] leading-relaxed">
-                매입사 요구사항 엑셀(드롭다운+체크) 업로드 시 폼이 자동으로 채워집니다.
-                관심 지역·담보·수익률·회피 조건까지 한 번에.
-              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => moveCondition(idx, -1)}
+                  disabled={idx === 0}
+                  className="p-1.5 rounded-md text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)] disabled:opacity-30"
+                  aria-label="우선순위 올리기"
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveCondition(idx, 1)}
+                  disabled={idx === conditions.length - 1}
+                  className="p-1.5 rounded-md text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)] disabled:opacity-30"
+                  aria-label="우선순위 내리기"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+                {conditions.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeCondition(idx)}
+                    className="p-1.5 rounded-md text-[var(--color-text-muted)] hover:text-red-600 hover:bg-red-50"
+                    aria-label="조건 삭제"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="flex gap-2 items-center">
-              <a
-                href="/templates/NPLatform_매입사_요구사항_템플릿.xlsx"
-                download
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-stone-300/40 text-stone-900 dark:text-stone-900 text-xs font-bold hover:bg-stone-100/10 transition-colors"
-              >
-                <Download className="w-3.5 h-3.5" /> 템플릿
-              </a>
-              <button
-                type="button"
-                disabled={parsing}
-                onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-stone-100 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-colors"
-              >
-                {parsing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                {parsing ? '파싱 중...' : '엑셀 업로드'}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                onChange={handleExcelUpload}
-                className="hidden"
-              />
-            </div>
-          </div>
-          {parseError && (
-            <div className="mt-3 p-2 rounded-lg bg-stone-100/10 border border-stone-300/30 text-xs text-stone-900 dark:text-stone-900">
-              ⚠ {parseError}
-            </div>
-          )}
-        </div>
 
-        {/* 수요 유형 선택 */}
-        <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] p-5 space-y-3">
-          <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">수요 유형</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => { setDemandType('npl'); setReTypes([]); setReDealTypes([]) }}
-              className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
-                demandType === 'npl'
-                  ? 'border-[var(--color-brand-bright)] bg-[var(--color-brand-bright)]/5'
-                  : 'border-[var(--color-border-subtle)] hover:border-[var(--color-border-subtle)]'
-              }`}
-            >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${demandType === 'npl' ? 'bg-[var(--color-brand-bright)]' : 'bg-[var(--color-surface-overlay)]'}`}>
-                <Gavel className={`w-4 h-4 ${demandType === 'npl' ? 'text-white' : 'text-[var(--color-text-muted)]'}`} />
-              </div>
-              <div>
-                <p className={`text-sm font-semibold ${demandType === 'npl' ? 'text-[var(--color-brand-mid)]' : 'text-[var(--color-text-secondary)]'}`}>NPL 채권</p>
-                <p className="text-xs text-[var(--color-text-muted)]">부실채권 매수 수요</p>
-              </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => { setDemandType('realestate'); setCollateralTypes([]); setAiGrades([]); setAuctionStages([]) }}
-              className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
-                demandType === 'realestate'
-                  ? 'border-stone-300 bg-stone-100/10'
-                  : 'border-[var(--color-border-subtle)] hover:border-[var(--color-border-subtle)]'
-              }`}
-            >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${demandType === 'realestate' ? 'bg-stone-100' : 'bg-[var(--color-surface-overlay)]'}`}>
-                <Building2 className={`w-4 h-4 ${demandType === 'realestate' ? 'text-white' : 'text-[var(--color-text-muted)]'}`} />
-              </div>
-              <div>
-                <p className={`text-sm font-semibold ${demandType === 'realestate' ? 'text-stone-900' : 'text-[var(--color-text-secondary)]'}`}>부동산</p>
-                <p className="text-xs text-[var(--color-text-muted)]">일반 부동산 매물 수요</p>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* Section 1 — 기본 조건 */}
-        <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] p-5 space-y-5">
-          <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">기본 조건</h2>
-
-          {/* 투자 목적 */}
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">
-              투자 목적 <span className="text-stone-900">*</span>
-            </label>
-            <select
-              value={purpose}
-              onChange={e => { setPurpose(e.target.value); clearError('purpose') }}
-              className={`input-enhanced w-full${errors.purpose ? ' error' : ''}`}
-            >
-              <option value="">선택하세요</option>
-              {PURPOSE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-            {errors.purpose && <p className="text-xs text-stone-900 mt-1">{errors.purpose}</p>}
-          </div>
-
-          {/* NPL: 담보 유형 */}
-          {demandType === 'npl' && (
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
-                원하는 담보 유형 <span className="text-stone-900">*</span>
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {COLLATERAL_OPTIONS.map(opt => (
-                  <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={collateralTypes.includes(opt)}
-                      onChange={() => { setCollateralTypes(toggle(collateralTypes, opt)); clearError('collateralTypes') }}
-                      className="rounded border-[var(--color-border-subtle)] text-[var(--color-brand-bright)] focus:ring-[var(--color-brand-bright)]"
-                    />
-                    <span className={`text-sm px-2 py-0.5 rounded-md border transition-colors ${collateralTypes.includes(opt) ? 'border-[var(--color-brand-bright)] bg-[var(--color-brand-bright)]/10 text-[var(--color-brand-bright)]' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
-                      {opt}
-                    </span>
-                  </label>
-                ))}
-              </div>
-              {errors.collateralTypes && <p className="text-xs text-stone-900 mt-1">{errors.collateralTypes}</p>}
-            </div>
-          )}
-
-          {/* Real estate: 부동산 유형 + 거래 유형 */}
-          {demandType === 'realestate' && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
-                  부동산 유형 <span className="text-stone-900">*</span>
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {RE_TYPE_OPTIONS.map(opt => (
-                    <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={reTypes.includes(opt)}
-                        onChange={() => { setReTypes(toggle(reTypes, opt)); clearError('reTypes') }}
-                        className="rounded border-[var(--color-border-subtle)] text-stone-900 focus:ring-emerald-500"
-                      />
-                      <span className={`text-sm px-2 py-0.5 rounded-md border transition-colors ${reTypes.includes(opt) ? 'border-stone-300 bg-stone-100/10 text-stone-900' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
-                        {opt}
-                      </span>
-                    </label>
+            <div className="p-5 space-y-5">
+              {/* 1. 유형 */}
+              <div className="space-y-3">
+                <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">유형</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => updateCondition(idx, { demandType: 'npl' })}
+                    className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all text-left ${
+                      c.demandType === 'npl'
+                        ? 'border-[var(--color-brand-bright)] bg-[var(--color-brand-bright)]/5'
+                        : 'border-[var(--color-border-subtle)]'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${c.demandType === 'npl' ? 'bg-[var(--color-brand-bright)]' : 'bg-[var(--color-surface-overlay)]'}`}>
+                      <Gavel className={`w-4 h-4 ${c.demandType === 'npl' ? 'text-white' : 'text-[var(--color-text-muted)]'}`} />
+                    </div>
+                    <div>
+                      <p className={`text-sm font-semibold ${c.demandType === 'npl' ? 'text-[var(--color-brand-mid)]' : 'text-[var(--color-text-secondary)]'}`}>NPL 채권</p>
+                      <p className="text-xs text-[var(--color-text-muted)]">부실채권 매입 조건</p>
+                    </div>
+                  </button>
+                  {/* 부동산 급매 — 우선 비활성화 (진행 예정) */}
+                  <button
+                    type="button"
+                    disabled
+                    aria-disabled="true"
+                    className="flex items-center gap-3 p-3.5 rounded-xl border-2 border-[var(--color-border-subtle)] text-left opacity-55 cursor-not-allowed"
+                  >
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-[var(--color-surface-overlay)]">
+                      <Building2 className="w-4 h-4 text-[var(--color-text-muted)]" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--color-text-muted)] flex items-center gap-2">
+                        부동산 급매
+                        <span className="text-[0.625rem] font-bold px-1.5 py-0.5 rounded bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border border-[var(--color-border-subtle)]">진행 예정</span>
+                      </p>
+                      <p className="text-xs text-[var(--color-text-muted)]">급매 부동산 매입 조건 — 오픈 준비 중</p>
+                    </div>
+                  </button>
+                </div>
+                {/* 담보유형 — NPL 리스트와 동일한 대분류(주거/상업·산업/토지/기타) → 상세 19종 */}
+                <div className="space-y-2.5">
+                  {COLLATERAL_CATEGORIES.map(cat => (
+                    <div key={cat.value}>
+                      <div className="text-[0.6875rem] font-bold text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
+                        {cat.label}
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {cat.items.map(item => (
+                          <label key={item.value} className="cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only"
+                              checked={c.collateralTypes.includes(item.label)}
+                              onChange={() => { updateCondition(idx, { collateralTypes: toggle(c.collateralTypes, item.label) }); clearError(`types_${idx}`) }}
+                            />
+                            <span className={`inline-block text-[0.8125rem] px-2 py-0.5 rounded-md border transition-colors ${c.collateralTypes.includes(item.label) ? 'border-[var(--color-brand-bright)] bg-[var(--color-brand-bright)]/10 text-[var(--color-brand-bright)] font-semibold' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
+                              {item.label}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
-                {errors.reTypes && <p className="text-xs text-stone-900 mt-1">{errors.reTypes}</p>}
+                {errors[`types_${idx}`] && <p className="text-xs text-red-600">{errors[`types_${idx}`]}</p>}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
-                  거래 유형 <span className="text-stone-900">*</span>
-                </label>
-                <div className="flex gap-2">
-                  {RE_DEAL_OPTIONS.map(opt => (
-                    <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={reDealTypes.includes(opt)}
-                        onChange={() => { setReDealTypes(toggle(reDealTypes, opt)); clearError('reDealTypes') }}
-                        className="rounded border-[var(--color-border-subtle)] text-stone-900 focus:ring-emerald-500"
-                      />
-                      <span className={`text-sm px-3 py-1 rounded-md border transition-colors ${reDealTypes.includes(opt) ? 'border-stone-300 bg-stone-100/10 text-stone-900' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
-                        {opt}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                {errors.reDealTypes && <p className="text-xs text-stone-900 mt-1">{errors.reDealTypes}</p>}
-              </div>
-            </>
-          )}
-        </div>
 
-        {/* Section 2 — 투자 규모 */}
-        <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">
-            {demandType === 'realestate' ? '가격 범위' : '투자 규모'}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-[var(--color-text-muted)] mb-1">
-                {demandType === 'realestate' ? '최소 가격 (억원)' : '최소 투자금 (억원)'} <span className="text-stone-900">*</span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-sm pointer-events-none select-none">₩</span>
-                <CommaNumberInput
-                  placeholder="예: 5"
-                  value={minAmount}
-                  onChange={v => { setMinAmount(v); clearError('minAmount') }}
-                  className={`input-enhanced w-full${errors.minAmount ? ' error' : ''}`}
-                  style={{ paddingLeft: '1.75rem' }}
-                />
-              </div>
-              {errors.minAmount && <p className="text-xs text-stone-900 mt-1">{errors.minAmount}</p>}
-            </div>
-            <div>
-              <label className="block text-xs text-[var(--color-text-muted)] mb-1">
-                {demandType === 'realestate' ? '최대 가격 (억원)' : '최대 투자금 (억원)'} <span className="text-stone-900">*</span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-sm pointer-events-none select-none">₩</span>
-                <CommaNumberInput
-                  placeholder="예: 20"
-                  value={maxAmount}
-                  onChange={v => { setMaxAmount(v); clearError('maxAmount') }}
-                  className={`input-enhanced w-full${errors.maxAmount ? ' error' : ''}`}
-                  style={{ paddingLeft: '1.75rem' }}
-                />
-              </div>
-              {errors.maxAmount && <p className="text-xs text-stone-900 mt-1">{errors.maxAmount}</p>}
-            </div>
-          </div>
-
-          {/* NPL: 희망 수익률 */}
-          {demandType === 'npl' && (
-            <div>
-              <label className="block text-xs text-[var(--color-text-muted)] mb-1">희망 수익률 (%)</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  placeholder="예: 15"
-                  value={targetReturn}
-                  onChange={e => setTargetReturn(e.target.value)}
-                  className="input-enhanced w-full"
-                  style={{ paddingRight: '2rem' }}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-sm pointer-events-none select-none">%</span>
-              </div>
-            </div>
-          )}
-
-          {/* Real estate: 면적 */}
-          {demandType === 'realestate' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-[var(--color-text-muted)] mb-1">최소 면적 (㎡)</label>
-                <input
-                  type="number"
-                  placeholder="예: 33"
-                  value={reMinArea}
-                  onChange={e => setReMinArea(e.target.value)}
-                  className="input-enhanced w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-[var(--color-text-muted)] mb-1">최대 면적 (㎡)</label>
-                <input
-                  type="number"
-                  placeholder="예: 115"
-                  value={reMaxArea}
-                  onChange={e => setReMaxArea(e.target.value)}
-                  className="input-enhanced w-full"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Section 3 — 지역 */}
-        <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] p-5 space-y-3">
-          <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">지역</h2>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={nationwide}
-              onChange={e => { setNationwide(e.target.checked); if (e.target.checked) setRegions([]); clearError('regions') }}
-              className="rounded border-[var(--color-border-subtle)] text-[var(--color-brand-bright)] focus:ring-[var(--color-brand-bright)]"
-            />
-            <span className="text-sm font-medium text-[var(--color-text-secondary)] tracking-normal">전국</span>
-          </label>
-          {!nationwide && (
-            <div className="flex flex-wrap gap-2 pt-1">
-              {REGION_OPTIONS.map(r => (
-                <label key={r} className="flex items-center gap-1 cursor-pointer">
+              {/* 2. 지역 */}
+              <div className="space-y-2 pt-3 border-t border-[var(--color-border-subtle)]">
+                <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">지역</h2>
+                <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={regions.includes(r)}
-                    onChange={() => { setRegions(toggle(regions, r)); clearError('regions') }}
-                    className="rounded border-gray-300 text-[var(--color-brand-bright)] focus:ring-[var(--color-brand-bright)]"
+                    checked={c.nationwide}
+                    onChange={e => { updateCondition(idx, { nationwide: e.target.checked, regions: e.target.checked ? [] : c.regions }); clearError(`regions_${idx}`) }}
+                    className="rounded border-[var(--color-border-subtle)] text-[var(--color-brand-bright)] focus:ring-[var(--color-brand-bright)]"
                   />
-                  <span className={`text-sm px-2 py-0.5 rounded-md border transition-colors ${regions.includes(r) ? 'border-[var(--color-brand-bright)] bg-[var(--color-brand-bright)]/10 text-[var(--color-brand-bright)]' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
-                    {r}
-                  </span>
+                  <span className="text-sm font-medium text-[var(--color-text-secondary)]">전국</span>
                 </label>
-              ))}
-            </div>
-          )}
-          {errors.regions && <p className="text-xs text-stone-900">{errors.regions}</p>}
-        </div>
+                {!c.nationwide && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {REGION_OPTIONS.map(r => (
+                      <label key={r} className="flex items-center gap-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={c.regions.includes(r)}
+                          onChange={() => { updateCondition(idx, { regions: toggle(c.regions, r) }); clearError(`regions_${idx}`) }}
+                          className="rounded border-gray-300 text-[var(--color-brand-bright)] focus:ring-[var(--color-brand-bright)]"
+                        />
+                        <span className={`text-sm px-2 py-0.5 rounded-md border transition-colors ${c.regions.includes(r) ? 'border-[var(--color-brand-bright)] bg-[var(--color-brand-bright)]/10 text-[var(--color-brand-bright)]' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
+                          {r}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {errors[`regions_${idx}`] && <p className="text-xs text-red-600">{errors[`regions_${idx}`]}</p>}
+              </div>
 
-        {/* Section 4 — 기타 조건 (NPL only) */}
-        {demandType === 'npl' && (
-          <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] p-5 space-y-5">
-            <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">기타 조건</h2>
-
-            {/* AI 등급 */}
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">희망 AI 등급</label>
-              <div className="flex gap-2">
-                {AI_GRADES.map(g => (
-                  <label key={g} className="flex items-center gap-1 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={aiGrades.includes(g)}
-                      onChange={() => setAiGrades(toggle(aiGrades, g))}
-                      className="sr-only"
-                    />
-                    <span className={`w-9 h-9 flex items-center justify-center rounded-lg border text-sm font-bold transition-all cursor-pointer ${
-                      aiGrades.includes(g)
-                        ? g === 'A' ? 'border-stone-300 bg-stone-100/10 text-stone-900'
-                        : g === 'B' ? 'border-stone-300 bg-stone-100/10 text-stone-900'
-                        : g === 'C' ? 'border-stone-300 bg-stone-100/10 text-stone-900'
-                        : g === 'D' ? 'border-stone-300 bg-stone-100/10 text-stone-900'
-                        : 'border-stone-300 bg-stone-100/10 text-stone-900'
-                        : 'border-[var(--color-border-subtle)] text-[var(--color-text-muted)]'
-                    }`}>
-                      {g}
-                    </span>
-                  </label>
+              {/* 3. 면적 — 토지/건물 범위 (㎡ ↔ 평 전환) */}
+              <div className="space-y-3 pt-3 border-t border-[var(--color-border-subtle)]">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">면적</h2>
+                  <div className="inline-flex rounded-lg border border-[var(--color-border-subtle)] overflow-hidden">
+                    {(['m2', 'pyeong'] as const).map(u => (
+                      <button
+                        key={u}
+                        type="button"
+                        onClick={() => switchAreaUnit(u)}
+                        className={`px-3 py-1 text-xs font-bold transition-colors ${
+                          areaUnit === u
+                            ? 'bg-[var(--color-brand-bright)] text-white'
+                            : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)]'
+                        }`}
+                      >
+                        {u === 'm2' ? '㎡' : '평'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {([
+                  ['토지면적', 'landMin', 'landMax', `land_${idx}`],
+                  ['건물면적', 'bldgMin', 'bldgMax', `bldg_${idx}`],
+                ] as const).map(([label, minKey, maxKey, errKey]) => (
+                  <div key={label}>
+                    <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">{label} 범위 ({unitLabel})</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder={`최소 (${unitLabel})`}
+                        value={c[minKey]}
+                        onChange={e => { updateCondition(idx, { [minKey]: e.target.value } as Partial<DemandCondition>); clearError(errKey) }}
+                        className="input-enhanced w-full"
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder={`최대 (${unitLabel})`}
+                        value={c[maxKey]}
+                        onChange={e => { updateCondition(idx, { [maxKey]: e.target.value } as Partial<DemandCondition>); clearError(errKey) }}
+                        className="input-enhanced w-full"
+                      />
+                    </div>
+                    {errors[errKey] && <p className="text-xs text-red-600 mt-1">{errors[errKey]}</p>}
+                  </div>
                 ))}
+                <p className="text-[0.6875rem] text-[var(--color-text-muted)]">1평 = 3.3058㎡ 기준 자동 환산 · 저장은 ㎡ 단위</p>
+              </div>
+
+              {/* 4. 금액대 */}
+              <div className="space-y-2 pt-3 border-t border-[var(--color-border-subtle)]">
+                <h2 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal">금액대 (억원)</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">최소 (억원)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-sm pointer-events-none select-none">₩</span>
+                      <CommaNumberInput
+                        placeholder="예: 5"
+                        value={c.amountMin}
+                        onChange={v => { updateCondition(idx, { amountMin: v }); clearError(`amount_${idx}`) }}
+                        className="input-enhanced w-full"
+                        style={{ paddingLeft: '1.75rem' }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">최대 (억원)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-sm pointer-events-none select-none">₩</span>
+                      <CommaNumberInput
+                        placeholder="예: 20"
+                        value={c.amountMax}
+                        onChange={v => { updateCondition(idx, { amountMax: v }); clearError(`amount_${idx}`) }}
+                        className="input-enhanced w-full"
+                        style={{ paddingLeft: '1.75rem' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                {errors[`amount_${idx}`] && <p className="text-xs text-red-600">{errors[`amount_${idx}`]}</p>}
+              </div>
+
+              {/* 4. 요청사항 */}
+              <div className="pt-3 border-t border-[var(--color-border-subtle)]">
+                <label className="block text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-normal mb-1.5">요청사항</label>
+                <textarea
+                  rows={3}
+                  placeholder="원하는 조건을 자유롭게 기술해주세요. (예: 권리관계 단순한 물건 선호, 임차인 없는 물건 우대 등)"
+                  value={c.memo}
+                  onChange={e => updateCondition(idx, { memo: e.target.value })}
+                  className="input-enhanced w-full resize-none"
+                />
               </div>
             </div>
-
-            {/* 경매 단계 */}
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">선호 경매 단계</label>
-              <div className="flex gap-2">
-                {AUCTION_STAGES.map(s => (
-                  <label key={s} className="flex items-center gap-1 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={auctionStages.includes(s)}
-                      onChange={() => setAuctionStages(toggle(auctionStages, s))}
-                      className="rounded border-[var(--color-border-subtle)] text-[var(--color-brand-bright)] focus:ring-[var(--color-brand-bright)]"
-                    />
-                    <span className={`text-sm px-3 py-1 rounded-md border transition-colors tracking-normal ${auctionStages.includes(s) ? 'border-[var(--color-brand-bright)] bg-[var(--color-brand-bright)]/10 text-[var(--color-brand-bright)]' : 'border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]'}`}>
-                      {s}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* 메모 */}
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">메모</label>
-              <textarea
-                rows={4}
-                placeholder="원하는 NPL 조건을 자유롭게 기술해주세요. (예: 권리관계 단순한 물건 선호, 임차인 없는 물건 우대 등)"
-                value={memo}
-                onChange={e => setMemo(e.target.value)}
-                className="input-enhanced w-full resize-none"
-              />
-              <p className="text-xs text-[var(--color-text-muted)] mt-1">상세한 설명을 작성할수록 더 정확한 AI 매칭 결과를 받을 수 있습니다.</p>
-            </div>
           </div>
-        )}
+        ))}
 
-        {/* Section 4 — 메모 (real estate) */}
-        {demandType === 'realestate' && (
-          <div className="card-interactive rounded-xl bg-[var(--color-surface-elevated)] p-5">
-            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">메모</label>
-            <textarea
-              rows={4}
-              placeholder="원하는 부동산 조건을 자유롭게 기술해주세요. (예: 역세권 선호, 주차 필수, 남향 우대 등)"
-              value={memo}
-              onChange={e => setMemo(e.target.value)}
-              className="input-enhanced w-full resize-none"
-            />
-          </div>
-        )}
+        {/* 조건 추가 */}
+        <button
+          type="button"
+          onClick={addCondition}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 border-dashed border-[var(--color-brand-bright)]/40 text-sm font-bold text-[var(--color-brand-bright)] hover:bg-[var(--color-brand-bright)]/5 transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          추가 조건 등록 (우선순위 {conditions.length + 1})
+        </button>
 
         {/* 안내 배너 */}
         <div className="flex items-start gap-3 rounded-xl bg-stone-100/10 border border-stone-300/20 p-4">
@@ -605,9 +597,9 @@ export default function NewDemandPage() {
           <div className="text-sm text-[var(--color-text-secondary)]">
             <p className="font-medium tracking-normal">등록 안내</p>
             <ul className="mt-1 list-disc pl-4 space-y-0.5 text-xs text-[var(--color-text-muted)]">
-              <li>등록된 수요는 AI 분석을 통해 매물과 자동 매칭됩니다.</li>
-              <li>개인정보(이름, 연락처)는 마스킹 처리되어 보호됩니다.</li>
-              <li>등록 후 언제든 수정 또는 비공개 전환이 가능합니다.</li>
+              <li>조건 1(최우선)부터 순서대로 매칭하여 맞는 물건을 소개해드립니다.</li>
+              <li>등록된 조건은 외부에 공개되지 않으며, 운영진만 열람합니다.</li>
+              <li>등록 후 언제든 수정 또는 삭제가 가능합니다.</li>
             </ul>
           </div>
         </div>
@@ -626,20 +618,17 @@ export default function NewDemandPage() {
               <span className="text-[var(--color-brand-bright)] underline cursor-pointer">개인정보 처리방침</span>에 동의합니다.
             </span>
           </label>
-          {errors.agreed && <p className="text-xs text-stone-900">{errors.agreed}</p>}
+          {errors.agreed && <p className="text-xs text-red-600">{errors.agreed}</p>}
 
           <div className="flex items-center justify-end gap-3">
-            <Link href="/exchange/demands" className="px-5 py-2.5 rounded-lg border border-[var(--color-border-subtle)] text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] transition-colors tracking-normal">
+            <Link href="/exchange" className="px-5 py-2.5 rounded-lg border border-[var(--color-border-subtle)] text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] transition-colors tracking-normal">
               취소
             </Link>
             <button
               onClick={handleSubmit}
-              disabled={submitting}
-              className={`inline-flex items-center gap-2 disabled:opacity-60 text-white px-8 py-2.5 rounded-lg text-sm font-semibold transition-colors tracking-normal ${
-                demandType === 'realestate'
-                  ? 'bg-stone-100 hover:bg-stone-100'
-                  : 'bg-[var(--color-brand-bright)] hover:bg-[var(--color-brand-dark)]'
-              }`}
+              disabled={submitting || authState === 'guest'}
+              title={authState === 'guest' ? '매입사 회원가입 후 로그인하시면 등록할 수 있습니다' : undefined}
+              className="inline-flex items-center gap-2 disabled:opacity-60 text-white px-8 py-2.5 rounded-lg text-sm font-semibold transition-colors tracking-normal bg-[var(--color-brand-bright)] hover:bg-[var(--color-brand-dark)]"
             >
               {submitting ? (
                 <>
@@ -649,116 +638,13 @@ export default function NewDemandPage() {
               ) : (
                 <>
                   <Send className="h-4 w-4" />
-                  수요 등록하기
+                  매입조건 {conditions.length}건 등록하기
                 </>
               )}
             </button>
           </div>
         </div>
       </div>
-
-      {/* Phase G7+ · 매입사 엑셀 OCR 미리보기 모달 */}
-      <NplModal
-        open={!!parsePreview}
-        onOpenChange={(o) => { if (!o) setParsePreview(null) }}
-        title={
-          <span className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-stone-900" />
-            매입사 엑셀 파싱 결과 미리보기
-          </span>
-        }
-        description={parsePreview?.source?.fileName ?? '업로드한 요구사항을 확인하세요'}
-        size="lg"
-      >
-        {parsePreview && (
-          <div className="space-y-5">
-            {/* 매입사 정보 + 가격 조건 */}
-            <section>
-              <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)] mb-2">
-                📋 매입사 정보 + 가격 조건 ({Object.keys(parsePreview.fields).length})
-              </h4>
-              {Object.keys(parsePreview.fields).length === 0 ? (
-                <p className="text-[0.8125rem] text-[var(--color-text-tertiary)]">추출된 항목 없음</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-                  {Object.entries(parsePreview.fields).map(([k, v]) => (
-                    <div key={k} className="flex items-baseline justify-between gap-2 px-3 py-2 rounded-lg bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)]">
-                      <span className="text-[0.6875rem] font-semibold text-[var(--color-text-tertiary)]">{k}</span>
-                      <span className="text-[0.8125rem] font-bold text-[var(--color-text-primary)] truncate text-right tabular-nums">{String(v)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* 관심 지역 */}
-            <section>
-              <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)] mb-2">
-                📍 관심 지역 ({parsePreview.regions.length})
-              </h4>
-              {parsePreview.regions.length === 0 ? (
-                <p className="text-[0.8125rem] text-[var(--color-text-tertiary)]">전체 지역</p>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {parsePreview.regions.map(r => (
-                    <span key={r} className="text-[0.75rem] font-semibold px-2 py-1 rounded-md bg-stone-100/10 text-stone-900 dark:text-stone-900 border border-stone-300/30">{r}</span>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* 담보 종류 */}
-            <section>
-              <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)] mb-2">
-                🏠 관심 담보 종류 ({parsePreview.collateralTypes.length})
-              </h4>
-              {parsePreview.collateralTypes.length === 0 ? (
-                <p className="text-[0.8125rem] text-[var(--color-text-tertiary)]">전체 담보</p>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {parsePreview.collateralTypes.map(c => (
-                    <span key={c} className="text-[0.75rem] font-semibold px-2 py-1 rounded-md bg-stone-100/10 text-stone-900 dark:text-stone-900 border border-stone-300/30">{c}</span>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* 회피 조건 */}
-            <section>
-              <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)] mb-2">
-                🚫 회피 조건 ({parsePreview.avoidConditions.length}/18)
-              </h4>
-              {parsePreview.avoidConditions.length === 0 ? (
-                <p className="text-[0.8125rem] text-[var(--color-text-tertiary)]">제한 없음 — 모든 매물 후보</p>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {parsePreview.avoidConditions.map(k => (
-                    <span key={k} className="text-[0.6875rem] font-semibold px-2 py-1 rounded-md bg-stone-100/10 text-stone-900 dark:text-stone-900 border border-stone-300/30">{k}</span>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* 안내 */}
-            {parsePreview.warnings.length > 0 && (
-              <section>
-                <h4 className="text-[0.875rem] font-bold text-stone-900 dark:text-stone-900 mb-2">
-                  ⚠ 안내 ({parsePreview.warnings.length}건)
-                </h4>
-                <ul className="space-y-1">
-                  {parsePreview.warnings.map((w, i) => (
-                    <li key={i} className="text-[0.75rem] text-stone-900 dark:text-stone-900">· {w}</li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </div>
-        )}
-        <NplModalFooter>
-          <Button variant="ghost" onClick={() => setParsePreview(null)}>취소</Button>
-          <Button onClick={applyExcelData}>적용하기 (폼 자동 채우기)</Button>
-        </NplModalFooter>
-      </NplModal>
     </div>
   )
 }

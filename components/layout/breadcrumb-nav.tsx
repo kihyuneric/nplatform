@@ -7,7 +7,10 @@ import { Home, ChevronRight } from 'lucide-react'
 const segmentLabels: Record<string, string> = {
   // 거래소
   market: '거래소',
-  exchange: '거래소',
+  exchange: 'NPL 자동매칭',
+  sell: 'NPL 매각의뢰',
+  demands: '매입조건',
+  discover: '부동산 급매',
   search: '검색',
   map: '지도',
   bidding: '입찰',

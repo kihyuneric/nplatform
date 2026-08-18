@@ -1,1147 +1,163 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useMemo } from "react"
-import Link from "next/link"
-import {
-  Heart, Trash2, TrendingUp, MapPin, Building2,
-  BarChart3, Wallet, ArrowRight, ChevronRight, Sparkles,
-  AlertTriangle, Target, Percent, Calculator, Shield,
-  CheckSquare, Square, RefreshCw, ChevronDown, Layers,
-} from "lucide-react"
-import DS, { formatKRW } from "@/lib/design-system"
-import {
-  MckPageShell, MckPageHeader, MckBadge,
-  MckTabBar, MckViewToggle, type MckViewMode,
-} from "@/components/mck"
-import { MyZoneTabs } from "@/components/my/my-zone-tabs"
-import { MCK, MCK_FONTS, MCK_TYPE } from "@/lib/mck-design"
+/**
+ * /my/portfolio — 관심매물 (2026-08-18 전면 교체)
+ *
+ * NPL 자동매칭 리스트에서 ♥ 관심 등록한 매물 리스트.
+ * 저장소: localStorage 'npl_favorites' (자동매칭 페이지와 동일 키) + 실매물 데이터 대조.
+ */
 
-const 억 = 100_000_000
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Heart, ArrowRight, RefreshCw, Trash2 } from 'lucide-react'
 
-interface WatchItem {
+const ELECTRIC = '#2251FF'
+
+type FavRow = {
   id: string
-  title: string
-  type: string
   region: string
-  currentPrice: number
-  changePercent: number
-  discount: number
-  daysWatched: number
-  grade: string
+  address: string
+  collateral: string
+  appraisal: number
+  principal: number
+  asking: number
+  created: string
 }
 
-interface PortfolioInvestment {
-  id: string
-  listingId: string
-  title: string
-  collateralType: string
-  region: string
-  investedAmount: number
-  appraisedValue: number
-  discountRate: number
-  expectedReturn: number
-  actualReturn: number | null
-  roi: number | null
-  status: "IN_PROGRESS" | "COMPLETED" | "RECOVERING"
-  progress: number
-  investedAt: string
-  completedAt: string | null
-  grade: string
-}
+const fmtEok = (v: number) => (v > 0 ? `${(v / 100000000).toFixed(1)}억` : '—')
 
-interface PortfolioKPIs {
-  totalInvested: number
-  activeCount: number
-  completedCount: number
-  totalExpectedReturn: number
-  totalActualReturn: number
-  averageDiscountRate: number
-  averageRoi: number
-  winRate: number
-}
-
-// 영문 collateral_type → 한글 라벨 (TYPE_ACCENT 와 정합)
-const COLLATERAL_LABEL: Record<string, string> = {
-  APARTMENT: "아파트", OFFICETEL: "오피스텔", COMMERCIAL: "상가",
-  STORE: "상가", RETAIL: "상가", LAND: "토지", VILLA: "빌라",
-  HOUSE: "빌라", FACTORY: "공장", OFFICE: "오피스",
-}
-
-// Watchlist hook — /api/v1/my/portfolio
-//   API 가 비었거나 비로그인이면 실제 ACTIVE 매물 6건을 fetch 해 샘플로 표시 →
-//   사용자가 '관심 매물' 동선·딜룸 상세 진입 흐름을 즉시 검증 가능.
-function useWatchlistData() {
-  const [watchlist, setWatchlist] = useState<WatchItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isSample, setIsSample] = useState(false)
-  const [summary, setSummary] = useState({ totalInvestment: 0, watchlistCount: 0, watchlistTotal: 0, activeDealsCount: 0 })
-
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        // 1. 실제 watchlist 먼저 시도
-        const r = await fetch("/api/v1/my/portfolio", { credentials: "include" })
-        if (r.ok) {
-          const data = await r.json()
-          if (Array.isArray(data?.watchlist) && data.watchlist.length > 0) {
-            if (!cancelled) {
-              setWatchlist(
-                data.watchlist.map((w: Record<string, unknown>) => ({
-                  id: w.listing_id as string,
-                  title: w.title as string,
-                  type: w.type as string,
-                  region: w.region as string,
-                  currentPrice: w.currentPrice as number,
-                  changePercent: 0,
-                  discount: w.discount as number,
-                  daysWatched: w.daysWatched as number,
-                  grade: w.grade as string,
-                }))
-              )
-              if (data.summary) setSummary(data.summary)
-            }
-            return
-          }
-        }
-
-        // 2. 비어있으면 실제 ACTIVE 매물에서 샘플 6건 가져오기 (딜룸 상세 진입 검증용)
-        const sr = await fetch("/api/v1/exchange/listings?limit=6&status=ACTIVE")
-        if (sr.ok) {
-          const sd = await sr.json()
-          const rows: Array<Record<string, unknown>> = Array.isArray(sd?.data) ? sd.data : []
-          if (!cancelled && rows.length > 0) {
-            const sampled: WatchItem[] = rows.map((row, idx) => {
-              const r = row as Record<string, any>
-              const principal =
-                (r.principal_amount as number) ??
-                (r.claim_amount as number) ??
-                (r.outstanding_principal as number) ?? 0
-              const appraisal = (r.appraised_value as number) ?? (r.appraisal_value as number) ?? 0
-              const ctRaw = String(r.collateral_type ?? "").toUpperCase()
-              const type = COLLATERAL_LABEL[ctRaw] || (typeof r.collateral_type === "string" ? r.collateral_type : "기타")
-              const region =
-                [r.sido, r.sigungu].filter(Boolean).join(" ") ||
-                (typeof r.address_masked === "string" ? r.address_masked : "")
-              return {
-                id: String(r.id),
-                title: String(r.title ?? region ?? "매물"),
-                type,
-                region,
-                currentPrice: appraisal || principal,
-                changePercent: 0,
-                discount: typeof r.discount_rate === "number" ? r.discount_rate : 0,
-                daysWatched: idx + 1,
-                grade: String(r.risk_grade ?? r.ai_grade ?? "B"),
-              }
-            })
-            setWatchlist(sampled)
-            setIsSample(true)
-            // 요약 카드 — 샘플 기준 합계 노출
-            setSummary({
-              totalInvestment: 0,
-              watchlistCount: sampled.length,
-              watchlistTotal: sampled.reduce((s, w) => s + (w.currentPrice || 0), 0),
-              activeDealsCount: 0,
-            })
-          }
-        }
-      } catch {
-        // 네트워크 오류 무시 — 빈 상태 유지
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-    return () => { cancelled = true }
-  }, [])
-
-  return { watchlist, loading, summary, setWatchlist, isSample }
-}
-
-// Buyer portfolio hook — /api/v1/buyer/portfolio
-function useBuyerPortfolio() {
-  const [investments, setInvestments] = useState<PortfolioInvestment[]>([])
-  const [kpis, setKpis] = useState<PortfolioKPIs | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch("/api/v1/buyer/portfolio")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.data) setInvestments(data.data)
-        if (data.kpis) setKpis(data.kpis)
-      })
-      .catch(() => {
-        setInvestments([])
-      })
-      .finally(() => setLoading(false))
-  }, [])
-
-  return { investments, kpis, loading }
-}
-
-const TYPE_ACCENT: Record<string, { bg: string; text: string; bar: string }> = {
-  아파트:   { bg: "bg-stone-100/10",    text: "text-stone-900",    bar: "bg-stone-100" },
-  상가:     { bg: "bg-stone-100/10",   text: "text-stone-900",   bar: "bg-stone-100" },
-  오피스텔: { bg: "bg-stone-100/10",  text: "text-stone-900",  bar: "bg-stone-100" },
-  토지:     { bg: "bg-stone-100/10", text: "text-stone-900", bar: "bg-stone-100" },
-  오피스:   { bg: "bg-stone-100/10",  text: "text-stone-900",  bar: "bg-stone-100" },
-}
-
-const fmt = (v: number) =>
-  v >= 억 ? `${(v / 억).toFixed(1)}억` : `${(v / 10000).toFixed(0)}만원`
-
-const TABS = ["관심 매물", "투자 현황", "비교 분석", "수익 시뮬레이션"] as const
-type Tab = (typeof TABS)[number]
-
-// ─── Comparison Tab ────────────────────────────────────────────────────────────
-interface CompareItem {
-  id: string
-  title: string
-  principal_amount: number
-  discount_rate: number
-  collateral_type: string
-  region: string
-  grade: string
-  roi?: number | null
-  irr?: number | null
-}
-
-function ComparisonTab({ watchlist, investments }: { watchlist: WatchItem[]; investments: PortfolioInvestment[] }) {
-  const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [profitMap, setProfitMap] = useState<Record<string, { roi: number; irr: number }>>({})
-
-  // Merge watchlist + investments into a unified pool
-  const pool: CompareItem[] = useMemo(() => {
-    const fromWatch: CompareItem[] = watchlist.map((w) => ({
-      id: w.id,
-      title: w.title,
-      principal_amount: w.currentPrice,
-      discount_rate: w.discount,
-      collateral_type: w.type,
-      region: w.region,
-      grade: w.grade,
-    }))
-    const fromInv: CompareItem[] = investments.map((i) => ({
-      id: i.id,
-      title: i.title,
-      principal_amount: i.investedAmount,
-      discount_rate: i.discountRate,
-      collateral_type: i.collateralType,
-      region: i.region,
-      grade: i.grade,
-      roi: i.roi,
-    }))
-    // Deduplicate by id
-    const seen = new Set<string>()
-    return [...fromWatch, ...fromInv].filter((x) => {
-      if (seen.has(x.id)) return false
-      seen.add(x.id)
-      return true
-    })
-  }, [watchlist, investments])
-
-  const toggleSelect = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else if (next.size < 4) {
-        next.add(id)
-      }
-      return next
-    })
-  }
-
-  const selectedItems = pool.filter((p) => selected.has(p.id))
-
-  // Fetch profitability KPI for newly selected items
-  // Phase 4 의 /api/v1/analysis/listing/[id] 사용 (ROI 직접, IRR 은 roi + recoveryMonths 로 연환산)
-  useEffect(() => {
-    selected.forEach(async (id) => {
-      if (profitMap[id]) return
-      try {
-        const r = await fetch(`/api/v1/analysis/listing/${encodeURIComponent(id)}`)
-        if (!r.ok) return
-        const data = await r.json()
-        const kpi = data?.data?.kpi
-        if (!kpi) return
-        const roi: number = typeof kpi.roi === "number" ? kpi.roi : 0
-        const months: number = typeof kpi.recoveryMonths === "number" && kpi.recoveryMonths > 0 ? kpi.recoveryMonths : 12
-        // 연환산 IRR ≈ (1 + roi/100)^(12/months) - 1, 백분율로 환산
-        const annualized = (Math.pow(1 + roi / 100, 12 / months) - 1) * 100
-        setProfitMap((prev) => ({
-          ...prev,
-          [id]: {
-            roi,
-            irr: Math.round(annualized * 10) / 10,
-          },
-        }))
-      } catch { /* keep empty */ }
-    })
-  }, [selected, profitMap])
-
-  if (pool.length === 0) {
-    return (
-      <div className={DS.empty.wrapper}>
-        <div className="w-20 h-20 rounded-none bg-[var(--color-surface-sunken)] flex items-center justify-center mb-6 border border-[var(--color-border-subtle)]">
-          <BarChart3 className="w-9 h-9 text-[#2251FF]" />
-        </div>
-        <h3 className={DS.empty.title}>비교할 매물이 없습니다</h3>
-        <p className={DS.empty.description}>관심 매물 또는 투자 현황에 매물을 추가하면 비교 분석이 가능합니다.</p>
-        <Link href="/exchange" className={DS.button.primary + " mt-6"}>
-          <Building2 className="h-4 w-4" /> 매물 탐색하기 <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Selection pool */}
-      <div className={DS.card.elevated + " " + DS.card.paddingLarge}>
-        <div className="flex items-center gap-2 mb-1">
-          <CheckSquare className="w-4 h-4 text-[#2251FF]" />
-          <p className={DS.text.label + " !mb-0"}>매물 선택 (최대 4개)</p>
-        </div>
-        <p className={DS.text.captionLight + " mb-4"}>
-          {selected.size === 0 ? "비교할 매물을 선택하세요" : `${selected.size}개 선택됨`}
-        </p>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {pool.map((item) => {
-            const isSelected = selected.has(item.id)
-            const disabled = !isSelected && selected.size >= 4
-            return (
-              <button
-                key={item.id}
-                onClick={() => toggleSelect(item.id)}
-                disabled={disabled}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-none border text-left transition-all
-                  ${isSelected
-                    ? "border-[#2251FF] bg-[#0A1628]/10"
-                    : disabled
-                      ? "border-[var(--color-border-subtle)] opacity-40 cursor-not-allowed"
-                      : "border-[var(--color-border-subtle)] hover:border-[#2251FF]/50 hover:bg-[var(--color-surface-elevated)]"
-                  }`}
-              >
-                {isSelected
-                  ? <CheckSquare className="w-4 h-4 shrink-0 text-[#2251FF]" />
-                  : <Square className="w-4 h-4 shrink-0 text-[var(--color-text-muted)]" />
-                }
-                <div className="min-w-0 flex-1">
-                  <p className={DS.text.bodyBold + " truncate text-[0.8125rem]"}>{item.title}</p>
-                  <p className={DS.text.captionLight + " truncate"}>{item.region} · {item.collateral_type}</p>
-                </div>
-                <span className="shrink-0 text-[0.6875rem] font-bold px-1.5 py-0.5 bg-[var(--color-surface-sunken)] rounded">
-                  {item.grade}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* KPI Comparison Table */}
-      {selectedItems.length === 0 ? (
-        <div className={DS.card.elevated + " p-8 text-center"}>
-          <p className={DS.text.captionLight}>비교할 매물을 선택하세요</p>
-        </div>
-      ) : (
-        <div className={DS.card.elevated + " " + DS.card.paddingLarge + " overflow-x-auto"}>
-          <div className="flex items-center gap-2 mb-4">
-            <Shield className="w-4 h-4 text-[#2251FF]" />
-            <p className={DS.text.label + " !mb-0"}>KPI 비교</p>
-          </div>
-          <table className="w-full text-[0.8125rem]">
-            <thead>
-              <tr className="border-b border-[var(--color-border-subtle)]">
-                <th className="text-left py-2 px-3 text-[var(--color-text-muted)] font-medium w-32">항목</th>
-                {selectedItems.map((item) => (
-                  <th key={item.id} className="text-center py-2 px-3 text-[var(--color-text-primary)] font-semibold min-w-[140px]">
-                    <span className="block truncate max-w-[160px] mx-auto">{item.title}</span>
-                    <span className="block text-[0.6875rem] font-normal text-[var(--color-text-muted)] mt-0.5">{item.region}</span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                {
-                  label: "채권금액",
-                  render: (item: CompareItem) => fmt(item.principal_amount),
-                  highlight: (vals: number[]) => vals.indexOf(Math.max(...vals)),
-                  vals: (item: CompareItem) => item.principal_amount,
-                },
-                {
-                  label: "할인율",
-                  render: (item: CompareItem) => `${item.discount_rate.toFixed(1)}%`,
-                  highlight: (vals: number[]) => vals.indexOf(Math.max(...vals)),
-                  vals: (item: CompareItem) => item.discount_rate,
-                },
-                {
-                  label: "담보 유형",
-                  render: (item: CompareItem) => item.collateral_type,
-                  highlight: () => -1,
-                  vals: () => 0,
-                },
-                {
-                  label: "지역",
-                  render: (item: CompareItem) => item.region,
-                  highlight: () => -1,
-                  vals: () => 0,
-                },
-                {
-                  label: "등급",
-                  render: (item: CompareItem) => item.grade,
-                  highlight: () => -1,
-                  vals: () => 0,
-                },
-                {
-                  label: "ROI (%)",
-                  render: (item: CompareItem) => {
-                    const p = profitMap[item.id]
-                    const v = p?.roi ?? (item.roi != null ? item.roi : null)
-                    return v != null ? `${v.toFixed(1)}%` : "—"
-                  },
-                  highlight: (vals: number[]) => vals.some((v) => v > 0) ? vals.indexOf(Math.max(...vals)) : -1,
-                  vals: (item: CompareItem) => profitMap[item.id]?.roi ?? item.roi ?? 0,
-                },
-                {
-                  label: "IRR (%)",
-                  render: (item: CompareItem) => {
-                    const p = profitMap[item.id]
-                    const v = p?.irr ?? null
-                    return v != null ? `${v.toFixed(1)}%` : "—"
-                  },
-                  highlight: (vals: number[]) => vals.some((v) => v > 0) ? vals.indexOf(Math.max(...vals)) : -1,
-                  vals: (item: CompareItem) => profitMap[item.id]?.irr ?? 0,
-                },
-              ].map((row) => {
-                const numVals = selectedItems.map(row.vals)
-                const bestIdx = row.highlight(numVals)
-                return (
-                  <tr key={row.label} className="border-b border-[var(--color-border-subtle)] last:border-0">
-                    <td className="py-2.5 px-3 text-[var(--color-text-muted)] font-medium whitespace-nowrap">{row.label}</td>
-                    {selectedItems.map((item, idx) => (
-                      <td
-                        key={item.id}
-                        className={`py-2.5 px-3 text-center font-semibold tabular-nums
-                          ${idx === bestIdx ? "text-[var(--color-positive)]" : "text-[var(--color-text-primary)]"}`}
-                      >
-                        {row.render(item)}
-                      </td>
-                    ))}
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Simulation Tab ───────────────────────────────────────────────────────────
-interface SimParams {
-  purchasePrice: number   // 만원
-  targetRecovery: number  // %
-  holdingMonths: number
-}
-
-function SimulationTab({ watchlist, investments }: { watchlist: WatchItem[]; investments: PortfolioInvestment[] }) {
-  const pool: { id: string; title: string; principalWan: number; discount: number }[] = useMemo(() => {
-    const from = watchlist.map((w) => ({
-      id: w.id,
-      title: w.title,
-      principalWan: Math.round(w.currentPrice / 10000),
-      discount: w.discount,
-    }))
-    const fromInv = investments.map((i) => ({
-      id: i.id,
-      title: i.title,
-      principalWan: Math.round(i.investedAmount / 10000),
-      discount: i.discountRate,
-    }))
-    const seen = new Set<string>()
-    return [...from, ...fromInv].filter((x) => { if (seen.has(x.id)) return false; seen.add(x.id); return true })
-  }, [watchlist, investments])
-
-  const [selectedId, setSelectedId] = useState<string>("")
-  const [params, setParams] = useState<SimParams>({ purchasePrice: 0, targetRecovery: 85, holdingMonths: 24 })
-  const [apiResult, setApiResult] = useState<{ roi: number; irr: number } | null>(null)
-  const [apiLoading, setApiLoading] = useState(false)
-
-  // When a listing is selected, prefill purchasePrice from pool
-  useEffect(() => {
-    if (!selectedId) return
-    const found = pool.find((p) => p.id === selectedId)
-    if (found) {
-      const defaultPurchase = Math.round(found.principalWan * (1 - found.discount / 100))
-      setParams((prev) => ({ ...prev, purchasePrice: defaultPurchase }))
-    }
-    // Phase 4 의 /api/v1/analysis/listing/[id] 사용 — IRR 은 roi + recoveryMonths 연환산
-    setApiLoading(true)
-    setApiResult(null)
-    fetch(`/api/v1/analysis/listing/${encodeURIComponent(selectedId)}`)
-      .then((r) => r.json())
-      .then((data) => {
-        const kpi = data?.data?.kpi
-        if (kpi && typeof kpi.roi === "number") {
-          const months = typeof kpi.recoveryMonths === "number" && kpi.recoveryMonths > 0 ? kpi.recoveryMonths : 12
-          const annualized = (Math.pow(1 + kpi.roi / 100, 12 / months) - 1) * 100
-          setApiResult({
-            roi: kpi.roi,
-            irr: Math.round(annualized * 10) / 10,
-          })
-        }
-      })
-      .catch(() => { /* use local calc */ })
-      .finally(() => setApiLoading(false))
-  }, [selectedId, pool])
-
-  // Local calculation
-  const localCalc = useMemo(() => {
-    const purchaseAmt = params.purchasePrice * 10000
-    if (purchaseAmt <= 0) return null
-    const recoveryAmt = purchaseAmt * (params.targetRecovery / 100)
-    const profit = recoveryAmt - purchaseAmt
-    const roi = (profit / purchaseAmt) * 100
-    const irr = params.holdingMonths > 0 ? (roi / params.holdingMonths) * 12 : 0
-    const recoveryPeriod = roi <= 0 ? params.holdingMonths : params.holdingMonths
-    return { roi, irr, profit, recoveryAmt, recoveryPeriod }
-  }, [params])
-
-  const displayRoi = apiResult?.roi ?? localCalc?.roi ?? 0
-  const displayIrr = apiResult?.irr ?? localCalc?.irr ?? 0
-  const displayProfit = localCalc?.profit ?? 0
-  const displayPeriod = params.holdingMonths
-
-  const selected = pool.find((p) => p.id === selectedId)
-
-  if (pool.length === 0) {
-    return (
-      <div className={DS.empty.wrapper}>
-        <div className="w-20 h-20 rounded-none bg-[var(--color-surface-sunken)] flex items-center justify-center mb-6 border border-[var(--color-border-subtle)]">
-          <Calculator className="w-9 h-9 text-[#2251FF]" />
-        </div>
-        <h3 className={DS.empty.title}>시뮬레이션할 매물이 없습니다</h3>
-        <p className={DS.empty.description}>관심 매물 또는 투자 현황에 매물을 추가하면 수익 시뮬레이션이 가능합니다.</p>
-        <Link href="/exchange" className={DS.button.primary + " mt-6"}>
-          <Building2 className="h-4 w-4" /> 매물 탐색하기 <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Listing selector */}
-      <div className={DS.card.elevated + " " + DS.card.paddingLarge}>
-        <div className="flex items-center gap-2 mb-4">
-          <Calculator className="w-4 h-4 text-[#2251FF]" />
-          <p className={DS.text.label + " !mb-0"}>매물 선택</p>
-        </div>
-        <div className="relative">
-          <select
-            value={selectedId}
-            onChange={(e) => setSelectedId(e.target.value)}
-            className="w-full appearance-none px-4 py-3 pr-10 rounded-none border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] text-[0.9375rem] focus:outline-none focus:border-[#2251FF] transition-colors"
-          >
-            <option value="">-- 매물을 선택하세요 --</option>
-            {pool.map((p) => (
-              <option key={p.id} value={p.id}>{p.title}</option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)] pointer-events-none" />
-        </div>
-        {selected && (
-          <p className={DS.text.captionLight + " mt-2"}>
-            채권금액 {fmt(selected.principalWan * 10000)} · 할인율 {selected.discount}%
-          </p>
-        )}
-      </div>
-
-      {selectedId && (
-        <>
-          {/* Parameters */}
-          <div className={DS.card.elevated + " " + DS.card.paddingLarge}>
-            <p className={DS.text.label + " mb-4"}>시뮬레이션 파라미터</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              <div>
-                <label className={DS.text.caption + " block mb-1.5"}>매입가격 (만원)</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={params.purchasePrice ? params.purchasePrice.toLocaleString('ko-KR') : ''}
-                  onChange={(e) => setParams((p) => ({ ...p, purchasePrice: parseInt(e.target.value.replace(/[^0-9]/g, ''), 10) || 0 }))}
-                  className="w-full px-3 py-2.5 rounded-none border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] text-[0.9375rem] focus:outline-none focus:border-[#2251FF] transition-colors"
-                />
-                <p className={DS.text.captionLight + " mt-1"}>{fmt(params.purchasePrice * 10000)}</p>
-              </div>
-              <div>
-                <label className={DS.text.caption + " block mb-1.5"}>목표 회수율 (%)</label>
-                <input
-                  type="number"
-                  value={params.targetRecovery}
-                  min={1}
-                  max={150}
-                  onChange={(e) => setParams((p) => ({ ...p, targetRecovery: parseFloat(e.target.value) || 85 }))}
-                  className="w-full px-3 py-2.5 rounded-none border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] text-[0.9375rem] focus:outline-none focus:border-[#2251FF] transition-colors"
-                />
-                <p className={DS.text.captionLight + " mt-1"}>채권액 대비 {params.targetRecovery}% 회수</p>
-              </div>
-              <div>
-                <label className={DS.text.caption + " block mb-1.5"}>보유기간 (개월)</label>
-                <input
-                  type="number"
-                  value={params.holdingMonths}
-                  min={1}
-                  max={120}
-                  onChange={(e) => setParams((p) => ({ ...p, holdingMonths: parseInt(e.target.value) || 24 }))}
-                  className="w-full px-3 py-2.5 rounded-none border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] text-[0.9375rem] focus:outline-none focus:border-[#2251FF] transition-colors"
-                />
-                <p className={DS.text.captionLight + " mt-1"}>{(params.holdingMonths / 12).toFixed(1)}년</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Results */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              { icon: Percent, label: "ROI", value: `${displayRoi.toFixed(1)}%`, positive: displayRoi > 0, sub: apiResult ? "API 기반" : "로컬 계산" },
-              { icon: TrendingUp, label: "IRR (연환산)", value: `${displayIrr.toFixed(1)}%`, positive: displayIrr > 0, sub: `보유기간 ${params.holdingMonths}개월 기준` },
-              { icon: Wallet, label: "예상 수익금액", value: displayProfit >= 0 ? `+${fmt(displayProfit)}` : fmt(displayProfit), positive: displayProfit >= 0, sub: "회수액 - 매입액, 세전" },
-              { icon: RefreshCw, label: "회수기간", value: `${displayPeriod}개월`, positive: null, sub: `${(displayPeriod / 12).toFixed(1)}년` },
-            ].map((card) => (
-              <div key={card.label} className={DS.card.elevated + " p-4"}>
-                {apiLoading && (
-                  <div className="flex items-center gap-1 mb-2">
-                    <RefreshCw className="w-3 h-3 text-[#2251FF] animate-spin" />
-                    <span className={DS.text.captionLight}>API 조회 중</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 mb-2">
-                  <card.icon className="w-4 h-4 text-[#2251FF]" />
-                  <span className={DS.text.caption}>{card.label}</span>
-                </div>
-                <p className={`text-xl font-bold tabular-nums ${card.positive === true ? "text-[var(--color-positive)]" : card.positive === false ? "text-[var(--color-danger)]" : "text-[var(--color-text-primary)]"}`}>
-                  {card.value}
-                </p>
-                <p className={DS.text.captionLight + " mt-1"}>{card.sub}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Calculation note */}
-          <div className={DS.card.dark + " p-4"}>
-            <div className="flex items-start gap-2">
-              <Sparkles className="w-4 h-4 text-stone-900 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-[0.8125rem] font-semibold text-white mb-1">계산 기준</p>
-                <p className="text-[0.75rem] text-white/70 leading-relaxed">
-                  ROI = (회수금액 - 매입가격) ÷ 매입가격 × 100<br />
-                  IRR (근사) = ROI ÷ 보유기간(개월) × 12<br />
-                  회수금액 = 매입가격 × 목표 회수율 / 100<br />
-                  {apiResult && "* API 기반 ROI/IRR은 시뮬레이션 엔진 결과입니다."}
-                </p>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-// ─── Investment Overview Tab ──────────────────────────────────────────────────
-function InvestmentTab({ watchlist, investments, kpis, loading }: {
-  watchlist: WatchItem[]
-  investments: PortfolioInvestment[]
-  kpis: PortfolioKPIs | null
-  loading: boolean
-}) {
-  const fmt2 = (v: number) => v >= 억 ? `${(v / 억).toFixed(1)}억` : `${(v / 10000).toFixed(0)}만원`
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <RefreshCw className="w-6 h-6 text-[#2251FF] animate-spin" />
-      </div>
-    )
-  }
-
-  if (investments.length === 0) {
-    return (
-      <div className={DS.empty.wrapper}>
-        <div className="w-20 h-20 rounded-none bg-[var(--color-surface-sunken)] flex items-center justify-center mb-6 border border-[var(--color-border-subtle)]">
-          <BarChart3 className="w-9 h-9 text-[#2251FF]" />
-        </div>
-        <h3 className={DS.empty.title}>아직 투자한 매물이 없습니다</h3>
-        <p className={DS.empty.description}>NPL 거래소에서 매물에 투자해 보세요.</p>
-        <Link href="/exchange" className={DS.button.primary + " mt-6"}>
-          <Building2 className="h-4 w-4" /> 매물 탐색하기 <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
-    )
-  }
-
-  // Donut chart data from investments
-  const donutData = (() => {
-    const typeMap: Record<string, number> = {}
-    const total = investments.reduce((s, i) => s + i.investedAmount, 0)
-    investments.forEach((i) => {
-      const t = i.collateralType || "기타"
-      typeMap[t] = (typeMap[t] || 0) + i.investedAmount
-    })
-    const COLORS = ["#051C2C", "#051C2C", "#051C2C", "#051C2C", "#A53F8A", "#051C2C"]
-    return Object.entries(typeMap)
-      .sort(([, a], [, b]) => b - a)
-      .map(([label, value], i) => ({
-        label,
-        pct: total > 0 ? Math.round((value / total) * 100) : 0,
-        color: COLORS[i % COLORS.length],
-      }))
-  })()
-
-  const r = 40, cx = 50, cy = 50, stroke = 14
-  let cumulativePct = 0
-  const circumference = 2 * Math.PI * r
-
-  const STATUS_LABEL: Record<string, string> = {
-    IN_PROGRESS: "진행 중",
-    COMPLETED: "완료",
-    RECOVERING: "회수 중",
-  }
-  const STATUS_COLOR: Record<string, string> = {
-    IN_PROGRESS: "bg-stone-100/10 text-stone-900",
-    COMPLETED: "bg-stone-100/10 text-stone-900",
-    RECOVERING: "bg-stone-100/10 text-stone-900",
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* KPI strip */}
-      {kpis && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[
-            { label: "총 투자금액", value: fmt2(kpis.totalInvested) },
-            { label: "평균 할인율", value: `${kpis.averageDiscountRate.toFixed(1)}%` },
-            { label: "평균 ROI", value: `${kpis.averageRoi.toFixed(1)}%` },
-            { label: "승률", value: `${kpis.winRate.toFixed(0)}%` },
-          ].map((k) => (
-            <div key={k.label} className={DS.card.elevated + " p-4"}>
-              <p className={DS.text.caption + " mb-1"}>{k.label}</p>
-              <p className={DS.text.metricMedium}>{k.value}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Donut chart */}
-        <div className={DS.card.elevated + " " + DS.card.paddingLarge}>
-          <p className={DS.text.label + " mb-5"}>포트폴리오 구성 (유형별)</p>
-          <div className="flex items-center gap-6">
-            <svg viewBox="0 0 100 100" className="w-36 h-36 shrink-0 -rotate-90">
-              {donutData.map((seg) => {
-                const dash = (seg.pct / 100) * circumference
-                const segOffset = -((cumulativePct / 100) * circumference)
-                cumulativePct += seg.pct
-                return (
-                  <circle key={seg.label} cx={cx} cy={cy} r={r}
-                    fill="none" stroke={seg.color} strokeWidth={stroke}
-                    strokeDasharray={`${dash} ${circumference}`}
-                    strokeDashoffset={segOffset}
-                  />
-                )
-              })}
-              <circle cx={cx} cy={cy} r={r - stroke / 2 - 2} fill="var(--color-surface-elevated)" />
-            </svg>
-            <div className="space-y-2.5 flex-1">
-              {donutData.map((seg) => (
-                <div key={seg.label} className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-none shrink-0" style={{ background: seg.color }} />
-                  <span className={DS.text.body + " flex-1"}>{seg.label}</span>
-                  <span className={DS.text.bodyBold + " tabular-nums"}>{seg.pct}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Investments list */}
-        <div className={DS.card.elevated + " overflow-hidden"}>
-          <p className={DS.text.label + " p-5 pb-3"}>투자 목록</p>
-          <div className="divide-y divide-[var(--color-border-subtle)] max-h-80 overflow-y-auto">
-            {investments.map((inv) => (
-              <div key={inv.id} className="flex items-center gap-3 px-5 py-3">
-                <div className="flex-1 min-w-0">
-                  <p className={DS.text.bodyBold + " truncate text-[0.8125rem]"}>{inv.title}</p>
-                  <p className={DS.text.captionLight + " truncate"}>{inv.region} · {inv.investedAt}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className={DS.text.metricSmall}>{fmt2(inv.investedAmount)}</p>
-                  <span className={`text-[0.6875rem] font-bold px-1.5 py-0.5 rounded ${STATUS_COLOR[inv.status] ?? "bg-gray-500/10 text-gray-400"}`}>
-                    {STATUS_LABEL[inv.status] ?? inv.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Main PortfolioPage ────────────────────────────────────────────────────────
 export default function PortfolioPage() {
-  const { watchlist, loading: watchlistLoading, summary, setWatchlist, isSample } = useWatchlistData()
-  const { investments, kpis, loading: investLoading } = useBuyerPortfolio()
-  const [tab, setTab] = useState<Tab>("관심 매물")
-  const [items, setItems] = useState<WatchItem[]>([])
-  const [sortBy, setSortBy] = useState("latest")
-  const [view, setView] = useState<MckViewMode>("grid")
+  const [favIds, setFavIds] = useState<string[]>([])
+  const [rows, setRows] = useState<FavRow[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Sync watchlist from API to local state
-  useEffect(() => {
-    if (watchlist.length > 0) setItems(watchlist)
-  }, [watchlist])
+  const load = () => {
+    setLoading(true)
+    let ids: string[] = []
+    try { ids = JSON.parse(localStorage.getItem('npl_favorites') || '[]') } catch { /* ignore */ }
+    setFavIds(ids)
+    if (ids.length === 0) { setRows([]); setLoading(false); return }
+    fetch('/api/v1/exchange/listings?limit=200', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        const list: Array<Record<string, any>> = Array.isArray(d.data) ? d.data : []
+        const byId = new Map(list.map(x => [String(x.id), x]))
+        setRows(ids.filter(id => byId.has(id)).map(id => {
+          const x = byId.get(id)!
+          return {
+            id,
+            region: [x.sido, x.sigungu].filter(Boolean).join(' ') || '—',
+            address: [x.sido, x.sigungu, x.dong].filter(Boolean).join(' ') || String(x.address ?? '—'),
+            collateral: String(x.collateral_type ?? '—'),
+            appraisal: Number(x.appraised_value ?? x.appraisal_value ?? 0),
+            principal: Number(x.outstanding_principal ?? x.principal_amount ?? x.claim_amount ?? 0),
+            asking: Number(x.asking_price ?? 0),
+            created: x.created_at ? String(x.created_at).slice(0, 10) : '—',
+          }
+        }))
+      })
+      .catch(() => setRows([]))
+      .finally(() => setLoading(false))
+  }
+  useEffect(load, [])
 
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id))
-    setWatchlist((prev: WatchItem[]) => prev.filter((i) => i.id !== id))
+  const remove = (id: string) => {
+    const next = favIds.filter(x => x !== id)
+    setFavIds(next)
+    setRows(prev => prev.filter(r => r.id !== id))
+    try { localStorage.setItem('npl_favorites', JSON.stringify(next)) } catch { /* ignore */ }
+    // 관심 카운터 감소 — 운영사·매각사 대시보드 집계 연동
+    fetch('/api/v1/listing-marketing', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listing_id: id, type: 'interest_remove' }),
+    }).catch(() => {})
   }
 
-  const sorted = [...items].sort((a, b) => {
-    if (sortBy === "discount") return b.discount - a.discount
-    if (sortBy === "change") return Math.abs(b.changePercent) - Math.abs(a.changePercent)
-    return a.daysWatched - b.daysWatched
-  })
-
-  const totalValue = items.reduce((s, i) => s + i.currentPrice, 0)
-
   return (
-    <MckPageShell variant="tint">
-      <MckPageHeader
-        breadcrumbs={[{ label: "마이", href: "/my" }, { label: "관심매물·포트폴리오" }]}
-        eyebrow="MY · PORTFOLIO"
-        title="내 포트폴리오"
-        subtitle="관심 매물과 투자 현황을 한눈에 확인하세요. 매물 비교 · 수익 시뮬레이션도 지원합니다."
-        actions={
-          <div className="flex items-center gap-4 flex-wrap">
-            <div style={{ textAlign: "right" }}>
-              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 2 }}>관심 매물</div>
-              <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 22, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
-                {summary.watchlistCount}건
-              </div>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ ...MCK_TYPE.eyebrow, color: MCK.electric, marginBottom: 2 }}>총 관심 채권액</div>
-              <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 22, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
-                {fmt(summary.watchlistTotal)}
-              </div>
-            </div>
+    <div className="space-y-5">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#2251FF] mb-1.5">
+            <Heart size={13} /> MY · 관심매물
           </div>
-        }
-      />
-
-      <MyZoneTabs zone="assets" />
-
-      <MckTabBar
-        eyebrow="VIEW"
-        eyebrowIcon={<Layers size={12} style={{ color: MCK.electric }} />}
-        tabs={TABS.map(t => ({
-          id: t,
-          label: t,
-          count: t === "관심 매물" ? items.length
-                : t === "투자 현황" ? investments.length
-                : undefined,
-        }))}
-        active={tab}
-        onChange={(id) => setTab(id as Tab)}
-        actions={tab === "관심 매물" ? <MckViewToggle value={view} onChange={setView} size="sm" /> : null}
-      />
-
-      {/* 체험 모드 배너 — 실제 watchlist 데이터가 없어 ACTIVE 매물 6건을 샘플로 표시 중 */}
-      {isSample && (
-        <div className={DS.page.container}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              padding: "10px 16px",
-              background: "rgba(34, 81, 255, 0.06)",
-              border: "1px solid rgba(34, 81, 255, 0.30)",
-              borderLeft: "3px solid #2251FF",
-              borderRadius: 0,
-              fontSize: 12,
-              color: "#0A1628",
-              marginTop: 12,
-            }}
-          >
-            <span>
-              <strong style={{ fontWeight: 800 }}>체험 모드</strong> — 실제 관심 매물이 없어
-              현재 거래 중인 매물 6건을 샘플로 표시합니다. 카드의 <strong>상세보기</strong> 를 누르면 매물별 딜룸으로 진입합니다.
-            </span>
-            <Link href="/exchange" className="text-[0.75rem] font-bold underline" style={{ color: "#1A47CC" }}>
-              거래소에서 관심 추가 →
-            </Link>
-          </div>
+          <h1 className="text-2xl font-black text-[var(--color-text-primary)]" style={{ fontFamily: 'Georgia, serif' }}>
+            관심매물
+          </h1>
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+            NPL 자동매칭 리스트에서 ♥ 관심 등록한 매물입니다.
+          </p>
         </div>
-      )}
-
-      {/* Content */}
-      <div className={DS.page.container + " py-6"}>
-
-        {/* Tab 1 — Watchlist */}
-        {tab === "관심 매물" && (
-          <>
-            <div className="flex items-center justify-between mb-5">
-              <div className={DS.tabs.list}>
-                {[{ value: "latest", label: "최신순" }, { value: "discount", label: "할인율순" }, { value: "change", label: "변동순" }].map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setSortBy(opt.value)}
-                    className={sortBy === opt.value ? DS.tabs.active : DS.tabs.trigger}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-              <span className={DS.text.caption + " " + DS.card.base + " px-3 py-1.5"}>
-                {sorted.length}건
-              </span>
-            </div>
-
-            {watchlistLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <RefreshCw className="w-6 h-6 text-[#2251FF] animate-spin" />
-              </div>
-            ) : sorted.length === 0 ? (
-              <div className={DS.empty.wrapper}>
-                <div className="w-20 h-20 rounded-none bg-[var(--color-surface-sunken)] flex items-center justify-center mb-6 border border-[var(--color-border-subtle)]">
-                  <Building2 className="w-9 h-9 text-[#2251FF]" />
-                </div>
-                <h3 className={DS.empty.title}>아직 관심 매물이 없습니다</h3>
-                <p className={DS.empty.description}>NPL 매물에서 관심 있는 매물을 저장하세요.</p>
-                <Link href="/exchange" className={DS.button.primary + " mt-6"}>
-                  <Building2 className="h-4 w-4" /> 매물 탐색하기 <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            ) : view === "list" ? (
-              <section style={{ background: MCK.paper, border: `1px solid ${MCK.border}`, borderTop: `2px solid ${MCK.electric}` }}>
-                <header style={{
-                  display: "grid",
-                  gridTemplateColumns: "70px 1fr 110px 110px 90px 100px 100px",
-                  gap: 12,
-                  padding: "12px 18px",
-                  background: "#F8FAFC",
-                  borderBottom: `1px solid ${MCK.border}`,
-                  fontSize: 9, fontWeight: 800, color: MCK.textSub,
-                  letterSpacing: "0.10em", textTransform: "uppercase",
-                }}>
-                  <span>유형</span><span>매물 / 지역</span>
-                  <span style={{ textAlign: "right" }}>채권금액</span>
-                  <span style={{ textAlign: "right" }}>할인율</span>
-                  <span>등급</span>
-                  <span>관심일</span>
-                  <span style={{ textAlign: "right" }}>액션</span>
-                </header>
-                {sorted.map((item, i) => (
-                  <div
-                    key={item.id}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "70px 1fr 110px 110px 90px 100px 100px",
-                      gap: 12,
-                      padding: "14px 18px",
-                      borderBottom: i < sorted.length - 1 ? `1px solid ${MCK.border}` : "none",
-                      alignItems: "center",
-                      fontSize: 12,
-                    }}
-                  >
-                    <span style={{
-                      width: "fit-content", padding: "3px 8px",
-                      background: "rgba(34, 81, 255, 0.08)", color: MCK.electricDark,
-                      border: `1px solid rgba(34, 81, 255, 0.30)`,
-                      fontSize: 10, fontWeight: 800, letterSpacing: "0.04em",
-                    }}>{item.type}</span>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 13, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {item.title}
-                      </div>
-                      <div style={{ fontSize: 11, color: MCK.textMuted, display: "inline-flex", alignItems: "center", gap: 3 }}>
-                        <MapPin size={10} /> {item.region}
-                      </div>
-                    </div>
-                    <div style={{ textAlign: "right", fontFamily: MCK_FONTS.serif, fontWeight: 800, color: MCK.ink, fontVariantNumeric: "tabular-nums" }}>
-                      {fmt(item.currentPrice)}
-                    </div>
-                    <div style={{ textAlign: "right", fontWeight: 800, color: MCK.electricDark, fontVariantNumeric: "tabular-nums" }}>
-                      -{item.discount}%
-                    </div>
-                    <div style={{ fontWeight: 800, color: MCK.ink }}>{item.grade}</div>
-                    <div style={{ color: MCK.textMuted, fontVariantNumeric: "tabular-nums" }}>
-                      {item.daysWatched}일째
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 4 }}>
-                      <Link
-                        href={`/deals/dealroom?listingId=${encodeURIComponent(item.id)}`}
-                        className="mck-cta-dark"
-                        style={{
-                          padding: "6px 10px", fontSize: 10, fontWeight: 800,
-                          background: MCK.ink, color: MCK.paper,
-                          borderTop: `2px solid ${MCK.electric}`,
-                          textDecoration: "none",
-                        }}
-                      >
-                        <span style={{ color: MCK.paper }}>상세 ↗</span>
-                      </Link>
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        aria-label="삭제"
-                        style={{
-                          padding: "6px 8px",
-                          background: MCK.paper, color: MCK.textMuted,
-                          border: `1px solid ${MCK.borderStrong}`, cursor: "pointer",
-                        }}
-                      >
-                        <Trash2 size={11} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </section>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {sorted.map((item) => {
-                  const isUp = item.changePercent > 0
-                  const isDown = item.changePercent < 0
-                  return (
-                    <article
-                      key={item.id}
-                      style={{
-                        background: MCK.paper,
-                        border: `1px solid ${MCK.border}`,
-                        borderTop: `2px solid ${MCK.electric}`,
-                        display: "flex", flexDirection: "column",
-                        minHeight: 280,
-                      }}
-                    >
-                      {/* Top strip — 거래소 discover 카드 톤 */}
-                      <div style={{
-                        padding: "12px 16px",
-                        background: "#F8FAFC",
-                        borderBottom: `1px solid ${MCK.border}`,
-                        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
-                      }}>
-                        <span style={{
-                          padding: "3px 9px",
-                          background: "rgba(34, 81, 255, 0.08)", color: MCK.electricDark,
-                          border: `1px solid rgba(34, 81, 255, 0.30)`,
-                          fontSize: 10, fontWeight: 800, letterSpacing: "0.04em",
-                        }}>{item.type}</span>
-                        <span style={{
-                          fontSize: 10, fontWeight: 800,
-                          color: isUp ? "#047857" : isDown ? "#B91C1C" : MCK.textMuted,
-                          padding: "3px 8px",
-                          background: isUp ? "rgba(16,185,129,0.10)" : isDown ? "rgba(220,38,38,0.10)" : "rgba(10,22,40,0.04)",
-                          border: `1px solid ${isUp ? "rgba(16,185,129,0.30)" : isDown ? "rgba(220,38,38,0.30)" : MCK.border}`,
-                        }}>
-                          {isUp ? "▲" : isDown ? "▼" : "—"} {item.changePercent !== 0 ? `${Math.abs(item.changePercent)}%` : "변동없음"}
-                        </span>
-                      </div>
-
-                      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
-                        <div style={{ fontSize: 11, color: MCK.textMuted, display: "inline-flex", alignItems: "center", gap: 4 }}>
-                          <MapPin size={11} /> {item.region}
-                        </div>
-                        <h4 style={{ fontFamily: MCK_FONTS.serif, fontSize: 15, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.01em", lineHeight: 1.3 }}>
-                          {item.title}
-                        </h4>
-
-                        <div style={{ marginTop: "auto", display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "flex-end" }}>
-                          <div>
-                            <div style={{ fontSize: 9, color: MCK.textMuted, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>채권금액</div>
-                            <div style={{ fontFamily: MCK_FONTS.serif, fontSize: 18, fontWeight: 800, color: MCK.ink, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
-                              {fmt(item.currentPrice)}
-                            </div>
-                          </div>
-                          <span style={{
-                            padding: "5px 10px",
-                            background: "rgba(34, 81, 255, 0.10)",
-                            color: MCK.electricDark,
-                            fontSize: 12, fontWeight: 800,
-                            border: `1px solid rgba(34,81,255,0.20)`,
-                            letterSpacing: "-0.01em",
-                          }}>-{item.discount}%</span>
-                        </div>
-
-                        <div style={{ paddingTop: 10, borderTop: `1px solid ${MCK.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                          <span style={{ fontSize: 10, color: MCK.textMuted, fontWeight: 600 }}>
-                            {item.grade} · {item.daysWatched}일째 관심
-                          </span>
-                          <div style={{ display: "flex", gap: 6 }}>
-                            <Link
-                              href={`/deals/dealroom?listingId=${encodeURIComponent(item.id)}`}
-                              className="mck-cta-dark"
-                              style={{
-                                display: "inline-flex", alignItems: "center", gap: 4,
-                                padding: "7px 12px", fontSize: 11, fontWeight: 800,
-                                background: MCK.ink, color: MCK.paper,
-                                borderTop: `2px solid ${MCK.electric}`,
-                                textDecoration: "none",
-                              }}
-                            >
-                              <span style={{ color: MCK.paper }}>상세 ↗</span>
-                            </Link>
-                            <button
-                              onClick={() => removeItem(item.id)}
-                              aria-label="관심 해제"
-                              style={{
-                                padding: "7px 8px",
-                                background: MCK.paper, color: MCK.textMuted,
-                                border: `1px solid ${MCK.borderStrong}`,
-                                cursor: "pointer",
-                              }}
-                            >
-                              <Trash2 size={11} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </article>
-                  )
-                })}
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Tab 2 — Investment overview */}
-        {tab === "투자 현황" && (
-          <InvestmentTab
-            watchlist={items}
-            investments={investments}
-            kpis={kpis}
-            loading={investLoading}
-          />
-        )}
-
-        {/* Tab 3 — Comparison */}
-        {tab === "비교 분석" && (
-          <ComparisonTab watchlist={items} investments={investments} />
-        )}
-
-        {/* Tab 4 — Simulation */}
-        {tab === "수익 시뮬레이션" && (
-          <SimulationTab watchlist={items} investments={investments} />
-        )}
+        <div className="flex items-center gap-2">
+          <Link href="/exchange"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold text-white"
+            style={{ background: '#0A1628', borderTop: `2px solid ${ELECTRIC}`, textDecoration: 'none' }}>
+            NPL 자동매칭 <ArrowRight size={13} />
+          </Link>
+          <button onClick={load}
+            className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)]"
+            style={{ background: 'transparent', cursor: 'pointer' }}>
+            <RefreshCw size={12} /> 새로고침
+          </button>
+        </div>
       </div>
-    </MckPageShell>
+
+      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-x-auto">
+        <table className="w-full text-[12.5px]">
+          <thead>
+            <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] text-left text-[10.5px] uppercase tracking-wide text-[var(--color-text-muted)]">
+              <th className="px-3 py-2.5 font-bold">지역 · 주소</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">유형</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">감정가</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">총 채권액</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">협의가</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">등록일</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr><td colSpan={7} className="px-3 py-10 text-center text-sm text-[var(--color-text-muted)]">불러오는 중...</td></tr>
+            )}
+            {!loading && rows.length === 0 && (
+              <tr>
+                <td colSpan={7} className="px-3 py-12 text-center">
+                  <Heart size={22} className="mx-auto mb-2 text-[var(--color-text-muted)]" />
+                  <p className="text-sm font-bold text-[var(--color-text-primary)]">관심 등록한 매물이 없습니다</p>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">NPL 자동매칭 리스트에서 ♥ 를 눌러 관심 매물을 등록하세요.</p>
+                </td>
+              </tr>
+            )}
+            {rows.map(r => (
+              <tr key={r.id} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] transition-colors">
+                <td className="px-3 py-2.5 min-w-[160px]">
+                  <div className="font-semibold text-[var(--color-text-primary)]">{r.region}</div>
+                  <div className="text-[11px] text-[var(--color-text-muted)]">{r.address}</div>
+                </td>
+                <td className="px-3 py-2.5 whitespace-nowrap">{r.collateral}</td>
+                <td className="px-3 py-2.5 tabular-nums font-semibold whitespace-nowrap">{fmtEok(r.appraisal)}</td>
+                <td className="px-3 py-2.5 tabular-nums font-semibold whitespace-nowrap">{fmtEok(r.principal)}</td>
+                <td className="px-3 py-2.5 tabular-nums font-extrabold whitespace-nowrap" style={{ color: '#1A47CC' }}>{fmtEok(r.asking)}</td>
+                <td className="px-3 py-2.5 tabular-nums whitespace-nowrap text-[var(--color-text-muted)]">{r.created}</td>
+                <td className="px-3 py-2.5 whitespace-nowrap">
+                  <div className="flex items-center gap-1.5">
+                    <Link href="/exchange" className="text-[11px] font-bold text-[#2251FF]" style={{ textDecoration: 'none' }}>
+                      리스트에서 보기
+                    </Link>
+                    <button
+                      onClick={() => remove(r.id)}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold border border-rose-300 text-rose-600"
+                      style={{ background: 'transparent', cursor: 'pointer' }}
+                    >
+                      <Trash2 size={11} /> 해제
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }

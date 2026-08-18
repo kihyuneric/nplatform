@@ -191,7 +191,7 @@ export default function LoginPage() {
               <span style={{ color: SKY }}>반갑습니다.</span>
             </h2>
             <p style={{ marginTop: 14, fontSize: 14, color: 'rgba(168, 205, 232, 0.80)', lineHeight: 1.5, maxWidth: 320 }}>
-              AI 기반 NPL 거래 플랫폼 — 매물 탐색부터 거래 완결까지 단일 화면.
+              대한민국 1%를 위한 프라이빗 NPL 플랫폼 — 조건 등록부터 클로징까지.
             </p>
           </div>
 
@@ -268,6 +268,57 @@ export default function LoginPage() {
               <p style={{ marginTop: 8, fontSize: 13, color: INK_MID, fontWeight: 500 }}>
                 NPLatform 에 오신 것을 환영합니다
               </p>
+            </div>
+
+            {/* ── 소셜 간편 로그인 (카카오 / 네이버) — signup 과 동일 ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const supabase = createClient()
+                  supabase.auth.signInWithOAuth({
+                    provider: 'kakao' as 'kakao',
+                    options: { redirectTo: `${window.location.origin}/my` },
+                  }).then(({ error: e }) => { if (e) setError('카카오 로그인이 아직 설정되지 않았습니다.') })
+                }}
+                style={{
+                  width: '100%', height: 44,
+                  background: '#FEE500', color: '#191600',
+                  border: 0, borderRadius: 0,
+                  fontSize: 13, fontWeight: 800,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{ fontSize: 15 }}>💬</span> 카카오로 로그인
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const supabase = createClient()
+                  supabase.auth.signInWithOAuth({
+                    provider: 'naver' as unknown as 'kakao',
+                    options: { redirectTo: `${window.location.origin}/my` },
+                  }).then(({ error: e }) => { if (e) setError('네이버 로그인이 아직 설정되지 않았습니다.') })
+                }}
+                style={{
+                  width: '100%', height: 44,
+                  background: '#03C75A', color: '#FFFFFF',
+                  border: 0, borderRadius: 0,
+                  fontSize: 13, fontWeight: 800,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{ fontWeight: 900 }}>N</span> 네이버로 로그인
+              </button>
+            </div>
+
+            {/* divider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+              <span style={{ flex: 1, height: 1, background: BORDER }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: INK_MUTED, letterSpacing: '0.04em' }}>또는 이메일로 로그인</span>
+              <span style={{ flex: 1, height: 1, background: BORDER }} />
             </div>
 
             {/* Form */}

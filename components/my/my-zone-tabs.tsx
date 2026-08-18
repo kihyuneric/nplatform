@@ -31,6 +31,10 @@ export function MyZoneTabs({
     tabs ??
     (zone === 'deals' ? DEALS_ZONE_TABS : zone === 'assets' ? ASSETS_ZONE_TABS : [])
 
+  // 2026-08-18 사용자 정책: 마이페이지는 좌측 메뉴(app/(main)/my/layout.tsx)로 통일 —
+  // 기존 상단 가로 탭은 중복이라 렌더하지 않음.
+  if (pathname.startsWith('/my')) return null
+
   if (!items || items.length === 0) return null
 
   return (

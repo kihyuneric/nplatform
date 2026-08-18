@@ -44,14 +44,14 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'NPLatform - 국내 최초 AI 기반 NPL 투자 분석 플랫폼',
+    default: 'NPLatform - 대한민국 1%를 위한 프라이빗 NPL 플랫폼',
     template: '%s | NPLatform',
   },
   description:
-    'NPLatform은 AI가 분석하는 NPL(부실채권) 투자 분석 및 거래 플랫폼입니다. 전국 NPL 매물 검색, AI 등급 평가, 낙찰가율 예측, 수익률 시뮬레이션까지 한 곳에서.',
+    'NPLatform은 대한민국 1%를 위한 프라이빗 NPL·급매 플랫폼입니다. 금융기관 부실채권과 급매물을 NDA 기반 최소 정보 · 1:1 매칭으로 연결합니다.',
   keywords: [
-    'NPL', '부실채권', '경매', 'NPL 투자', '부동산 경매', 'AI 분석',
-    '낙찰가율', '채권 투자', '법원경매', '투자 분석 플랫폼',
+    'NPL', '부실채권', 'NPL 매각', 'NPL 매입', '급매',
+    '채권 양수도', 'NDA', '프라이빗 딜', 'B2B 플랫폼',
   ],
   authors: [{ name: 'NPLatform', url: SITE_URL }],
   creator: 'NPLatform',
@@ -62,9 +62,9 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true },
   },
   openGraph: {
-    title: 'NPLatform - 국내 최초 AI 기반 NPL 투자 분석 플랫폼',
+    title: 'NPLatform - 대한민국 1%를 위한 프라이빗 NPL 플랫폼',
     description:
-      'AI가 분석하는 NPL 투자. 전국 NPL 매물 검색, AI 등급 평가, 수익률 시뮬레이션까지 한 곳에서.',
+      '금융기관 부실채권과 급매물을 NDA 기반 최소 정보 · 1:1 매칭으로 연결합니다.',
     url: SITE_URL,
     siteName: 'NPLatform',
     locale: 'ko_KR',
@@ -74,8 +74,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'NPLatform - AI 기반 NPL 투자 분석 플랫폼',
-    description: 'AI가 분석하는 NPL 투자. 전국 NPL 매물 검색, AI 등급 평가, 수익률 시뮬레이션.',
+    title: 'NPLatform - 대한민국 1%를 위한 프라이빗 NPL 플랫폼',
+    description: '금융기관 부실채권과 급매물을 NDA 기반 1:1 매칭으로 연결합니다.',
     // Twitter 이미지는 app/twitter-image.tsx 가 자동 주입.
   },
   alternates: {
@@ -97,7 +97,7 @@ const organizationJsonLd = {
   url: SITE_URL,
   logo: `${SITE_URL}/logo.png`,
   description:
-    '국내 최초 AI 기반 NPL(부실채권) 투자 분석 및 거래 플랫폼. 전국 NPL 매물 검색, AI 등급 평가, 수익률 시뮬레이션.',
+    '대한민국 1%를 위한 프라이빗 NPL·급매 플랫폼. NDA 기반 최소 정보 · 1:1 매칭.',
   contactPoint: {
     '@type': 'ContactPoint',
     contactType: 'customer service',
@@ -112,7 +112,7 @@ const websiteJsonLd = {
   '@type': 'WebSite',
   name: 'NPLatform',
   url: SITE_URL,
-  description: 'AI 기반 NPL 투자 분석 및 거래 플랫폼',
+  description: '대한민국 1%를 위한 프라이빗 NPL 플랫폼',
   inLanguage: ['ko', 'en', 'ja'],
   potentialAction: {
     '@type': 'SearchAction',

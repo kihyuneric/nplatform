@@ -49,46 +49,28 @@ interface NavGroup {
   items: NavItem[]
 }
 
+// ─── 미니멀 IA (2026-08 피벗) — 분석·딜룸·경매 숨김 ──────────
 const NAV_GROUPS: NavGroup[] = [
   {
-    group: '거래소',
+    group: '거래',
     items: [
-      { label: '매물 탐색', icon: Search, href: '/exchange' },
-      { label: '자발적 경매', icon: Gavel, href: '/exchange/auction' },
-      { label: '매물 등록', icon: PlusCircle, href: '/exchange/sell' },
-      { label: '매수 수요', icon: Users, href: '/exchange/demands' },
+      { label: 'NPL 자동매칭', icon: Search, href: '/exchange' },
+      { label: 'NPL 매각의뢰', icon: PlusCircle, href: '/exchange/sell' },
+      { label: '매입조건 등록', icon: Users, href: '/exchange/demands/new' },
     ],
   },
   {
-    group: '딜룸',
+    group: '소개',
     items: [
-      { label: '딜룸', icon: MessageSquare, href: '/deals' },
-      { label: '대시보드', icon: Briefcase, href: '/deals/dashboard' },
-      { label: 'AI 매칭', icon: TrendingUp, href: '/deals/matching' },
-      { label: '팀 투자', icon: Building2, href: '/deals/teams' },
-    ],
-  },
-  {
-    group: '분석',
-    items: [
-      { label: '분석 대시보드', icon: BarChart2, href: '/analysis' },
-      { label: 'NPL 분석', icon: FileText, href: '/analysis/new' },
-      { label: '경매 분석', icon: BarChart2, href: '/analysis/simulator' },
-      { label: 'AI 컨설턴트', icon: FileText, href: '/analysis/copilot' },
-    ],
-  },
-  {
-    group: '공지/문의',
-    items: [
-      { label: '공지사항', icon: FileText, href: '/notices' },
-      { label: '고객센터', icon: MessageSquare, href: '/support' },
+      { label: 'NPLATFORM', icon: FileText, href: '/about' },
+
     ],
   },
   {
     group: '마이 페이지',
     items: [
       { label: '대시보드', icon: User, href: '/my' },
-      { label: '포트폴리오', icon: Briefcase, href: '/my/portfolio' },
+      { label: '내 매물', icon: Briefcase, href: '/my/seller' },
       { label: '설정', icon: Settings, href: '/my/settings' },
     ],
   },
@@ -97,8 +79,8 @@ const NAV_GROUPS: NavGroup[] = [
 // ─── Quick Actions ───────────────────────────────────────────────────────────
 
 const QUICK_ACTIONS = [
-  { label: '매물 등록', href: '/exchange/sell', icon: PlusCircle },
-  { label: '전문가', href: '/services/experts', icon: Users },
+  { label: 'NPL 매각의뢰', href: '/exchange/sell', icon: PlusCircle },
+  { label: '매입조건 등록', href: '/exchange/demands/new', icon: Users },
   { label: '대시보드', href: '/my', icon: User },
 ]
 
@@ -362,28 +344,10 @@ export function MobileDrawer({ open, onClose, user }: MobileDrawerProps) {
               </div>
             </div>
 
-            {/* Language selector + Footer */}
+            {/* Footer — 언어 선택 제거 (한국어 전용, 2026-08-17) */}
             <div className="border-t border-white/10 px-5 py-3 pb-safe-bottom">
-              <div className="flex items-center justify-center gap-1 mb-2">
-                <Globe className="h-3.5 w-3.5 text-white/40" />
-                {LANGUAGES.map((lang) => (
-                  <button
-                    key={lang.code}
-                    type="button"
-                    onClick={() => handleLangChange(lang.code)}
-                    className={cn(
-                      'rounded px-2 py-1 text-xs transition-colors',
-                      currentLang === lang.code
-                        ? 'bg-white/20 text-white font-semibold'
-                        : 'text-white/40 hover:text-white/60'
-                    )}
-                  >
-                    {lang.label}
-                  </button>
-                ))}
-              </div>
               <p className="text-center text-[10px] text-white/30">
-                NPLatform v12.0 &copy; 2025
+                NPLatform v12.0 &copy; 2026
               </p>
             </div>
           </motion.div>

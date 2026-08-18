@@ -1,47 +1,125 @@
-import type { Metadata } from "next"
-import { SubNav } from '@/components/layout/sub-nav'
-import { BannerSlot } from '@/components/banners/banner-slot'
-import { getEffectiveRoles } from '@/lib/auth/get-effective-roles'
-import { getMyNavItems } from '@/lib/my-nav'
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nplatform.co.kr'
-
-export const metadata: Metadata = {
-  title: "마이 페이지 | NPLatform",
-  description: "내 거래, 관심 매물, 포트폴리오, 결제 내역을 한 눈에 확인하세요.",
-  alternates: {
-    canonical: `${SITE_URL}/my`,
-    languages: {
-      'ko': `${SITE_URL}/my`,
-      'en': `${SITE_URL}/en/my`,
-      'ja': `${SITE_URL}/ja/my`,
-    },
-  },
-}
+'use client'
 
 /**
- * 마이페이지 SubNav — Phase G7+ 2026-04-29.
+ * /my 공통 레이아웃 — 좌측 메뉴 + 우측 콘텐츠 (2026-08-18 사용자 정책)
  *
- * SSoT: lib/my-nav.ts MY_NAV_CATALOG (10개 메뉴)
- *
- * 역할 기반 동적 노출:
- *   · 모든 회원: 대시보드 / 내 딜룸 / 계약 / 포트폴리오 / 결제 / 알림 / 설정 (7개 default)
- *   · 매수자/일반/대부업체/AMC/파트너: + 매수 수요 (8개)
- *   · 매도자 (institution/money_lender/AMC/general/partner): + 매도자 관리
- *   · PARTNER: + 파트너 관리
- *   · ADMIN/SUPER_ADMIN: 모든 메뉴
- *
- * 라우트는 server-side 에서 effective role flags 산출 후 필터링됨.
+ * 모든 마이페이지가 동일 구성: 왼쪽 고정 메뉴, 오른쪽 대시보드·리스트·내용.
+ * 디폴트(/my)는 대시보드. 기존 상단 가로 탭(MyZoneTabs)은 비활성화됨.
  */
-export default async function MyLayout({ children }: { children: React.ReactNode }) {
-  const { roles, institutionType } = await getEffectiveRoles()
-  const items = getMyNavItems({ roles, institutionType })
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import {
+  LayoutDashboard, Building2, ShoppingCart, FileSignature,
+  Heart, Bell, Settings, User,
+} from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import { getMemberRoles } from '@/lib/member-roles'
+
+type MenuItem = { href: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }
+
+const COMMON_TOP: MenuItem[] = [
+  { href: '/my', label: '대시보드', icon: LayoutDashboard, exact: true },
+]
+const SELLER_MENU: MenuItem[] = [
+  { href: '/my/seller', label: '내 매물', icon: Building2 },
+]
+const BUYER_MENU: MenuItem[] = [
+  { href: '/my/demands',    label: '매입 조건',  icon: ShoppingCart },
+  { href: '/my/portfolio',  label: '관심매물',   icon: Heart },
+]
+const COMMON_BOTTOM: MenuItem[] = [
+  // /my/notifications 는 /my/inbox 로 리다이렉트 — 활성 하이라이트를 위해 inbox 직접 링크
+  { href: '/my/inbox',    label: '알림센터', icon: Bell },
+  { href: '/my/settings', label: '설정 (회원정보 수정)', icon: Settings },
+]
+// 파트너(자문사) — 운영관리자와 동일 화면 열람 전용 링크
+const PARTNER_MENU: MenuItem[] = [
+  { href: '/admin',              label: '운영 대시보드 (열람)', icon: LayoutDashboard },
+  { href: '/admin/listings',     label: '매각의뢰 현황 (열람)', icon: Building2 },
+  { href: '/admin/demands',      label: '매입조건 현황 (열람)', icon: ShoppingCart },
+  { href: '/admin/agreements',   label: 'NDA · 딜 진행 (열람)', icon: FileSignature },
+  { href: '/admin/npl-analysis', label: 'NPL 수익률 분석 (열람)', icon: Heart },
+]
+
+/**
+ * 역할별 메뉴 (D1 복수 역할 · 2026-08-18)
+ * - 메뉴 = 보유 역할의 **합집합** — 매각+매입 겸용이면 내 매물 + 매입 조건 + 관심매물 모두 노출
+ * - 매각: 내 매물 / 매입·일반: 매입 조건 · 관심매물 / 파트너: 운영 화면 열람 전용
+ */
+function menuForRoles(roles: string[]): MenuItem[] {
+  if (roles.includes('PARTNER') && !roles.includes('SELLER') && !roles.includes('BUYER')) {
+    return [...COMMON_TOP, ...PARTNER_MENU, ...COMMON_BOTTOM]
+  }
+  const hasSeller = roles.includes('SELLER')
+  const hasBuyer = roles.includes('BUYER') || roles.includes('VIEWER')
+  if (!hasSeller && !hasBuyer) return [...COMMON_TOP, ...SELLER_MENU, ...BUYER_MENU, ...COMMON_BOTTOM]  // 관리자 등 — 전체
+  return [
+    ...COMMON_TOP,
+    ...(hasSeller ? SELLER_MENU : []),
+    ...(hasBuyer ? BUYER_MENU : []),
+    ...COMMON_BOTTOM,
+  ]
+}
+
+export default function MyLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname() ?? ''
+
+  // 보유 역할 확인 (복수 가능) — 역할 전환 쿠키 우선, 없으면 metadata.roles 합집합
+  const [roles, setRoles] = useState<string[]>([])
+  useEffect(() => {
+    const cookieRole = document.cookie.match(/(?:^|; )active_role=([^;]*)/)?.[1]
+    if (cookieRole) { setRoles(getMemberRoles({ role: decodeURIComponent(cookieRole) })); return }
+    ;(async () => {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        setRoles(getMemberRoles(user?.user_metadata as Record<string, unknown> | undefined))
+      } catch { /* ignore */ }
+    })()
+  }, [])
+  const MENU = menuForRoles(roles)
 
   return (
-    <>
-      <SubNav items={items.map(({ href, label, matchPaths }) => ({ href, label, matchPaths }))} />
-      <BannerSlot position="my-top" className="mx-auto max-w-7xl px-4 pt-4" />
-      {children}
-    </>
+    <div className="max-w-[1440px] mx-auto px-4 lg:px-6 py-6">
+      <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-5 items-start">
+        {/* ── 좌측 메뉴 ── */}
+        <aside
+          className="md:sticky md:top-16 bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)]"
+          style={{ borderTop: '3px solid #2251FF' }}
+        >
+          <div className="px-3 py-2.5 border-b border-[var(--color-border-subtle)] flex items-center gap-2">
+            <User size={13} className="text-[#2251FF]" />
+            <span className="text-[12px] font-black text-[var(--color-text-primary)]">마이페이지</span>
+          </div>
+          <nav className="p-2 flex md:flex-col gap-1 overflow-x-auto">
+            {MENU.map(m => {
+              const active = m.exact ? pathname === m.href : (pathname === m.href || pathname.startsWith(m.href + '/'))
+              const Icon = m.icon
+              return (
+                <Link
+                  key={m.href}
+                  href={m.href}
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-[13px] font-semibold whitespace-nowrap transition-colors"
+                  style={{
+                    background: active ? '#0A1628' : 'transparent',
+                    color: active ? '#FFFFFF' : 'var(--color-text-secondary)',
+                    borderLeft: active ? '3px solid #2251FF' : '3px solid transparent',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Icon size={14} className="shrink-0" />
+                  {m.label}
+                </Link>
+              )
+            })}
+          </nav>
+        </aside>
+
+        {/* ── 우측 콘텐츠 — 대시보드 · 리스트 · 내용 ── */}
+        <div className="min-w-0">{children}</div>
+      </div>
+    </div>
   )
 }

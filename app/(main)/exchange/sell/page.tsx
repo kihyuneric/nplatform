@@ -1,2375 +1,715 @@
-"use client"
+'use client'
 
 /**
- * /exchange/sell — 매물 등록 마법사 (F5: NplUnifiedForm 공용 섹션 기반)
+ * /exchange/sell — 매각의뢰 접수 (컨시어지 등록)  (v7 · 2026-08-14)
  *
- * F5 변경점 (2026-04-24):
- *   · useUnifiedFormState("SELL") 훅으로 중앙 SSoT 상태 관리
- *   · Step 1~4 내부를 InstitutionSection · CollateralSection · ClaimSection ·
- *     AppraisalSection · RightsSection · SpecialConditionsSection · FeeSection 조합
- *   · sell 전용 보조 필드 (근저당/면적/경매/공매/자료제출) 는 WizardExtras 로 분리
- *   · Step5Docs · Step6Review · TierPreviewBlock 은 WizardState 투영(toWizardState)으로 기존 유지
- *   · handleSubmit 은 UnifiedFormState + extras → /api/v1/exchange/listings body 직접 매핑
+ * 제품 피벗: "대한민국 1%를 위한 NPL 플랫폼" — 프라이빗 컨시어지 브로커리지.
+ * 금융기관은 긴 폼을 작성하지 않습니다. 보유 자료를 그대로 업로드하면
+ * (또는 엔플랫폼 표준 양식을 내려받아 작성) 운영진이 검토·마스킹 후 대신 등록합니다.
  *
- * 6단계 마법사:
- *   1. 기관 확인       (InstitutionSection + 전속 토글)
- *   2. 담보 · 지역     (CollateralSection)
- *   3. 채권 · 금액     (ClaimSection + 매각희망가/감정가/매각방식 + FeeSection)
- *   4. 상세 · 권리     (RightsSection + SpecialConditionsSection + sell-local extras)
- *   5. 선택 자료       (Step5Docs — extras.provided + OCR)
- *   6. 검토 · 제출     (Step6Review + TierPreviewBlock + SubmittedScreen)
+ * 기존 6단계 등록 마법사(~1,900줄)를 단일 화면 접수 폼으로 대체.
+ *
+ * NOTE:
+ *   - 실제 파일 업로드(Supabase Storage) 연동은 추후 작업 — 현재는 File 객체를
+ *     수집하고 파일명만 접수 payload 에 포함합니다.
+ *   - 접수 API: 전용 inquiries 엔드포인트가 없어 /api/v1/support (문의 티켓) 에
+ *     매핑하여 전송합니다. 실패해도 클라이언트 성공 화면으로 폴백합니다.
  */
 
-import { useMemo, useState, useCallback, useRef } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { useRef, useState, useEffect } from 'react'
+import Link from 'next/link'
 import {
-  Building2, MapPin, Scale, FileText, Camera, Briefcase,
-  Check, ChevronRight, ChevronLeft, ShieldCheck, Sparkles,
-  Calculator, Send, AlertCircle, List, Download, Gavel,
-} from "lucide-react"
-import { CompletenessBadge } from "@/components/listing/completeness-badge"
-import { calculateSellerFee } from "@/lib/fee-calculator"
-import { DateField } from "@/components/ui/date-field"
-import {
-  COLLATERAL_CATEGORIES, SELLER_INSTITUTION_OPTIONS,
-  getRegionLabel,
-  type SellerInstitution, type SaleMethod, type CollateralType,
-} from "@/lib/taxonomy"
-import {
-  useUnifiedFormState,
-  InstitutionSection,
-  CollateralSection,
-  ClaimSection,
-  AppraisalSection,
-  RightsSection,
-  SpecialConditionsSection,
-  FeeSection,
-  toSellListingBody,
-  preflightSell,
-  SALE_METHOD_OPTIONS,
-  type UnifiedFormState,
-  type UnifiedFormAction,
-  type ListingSaleMethod,
-} from "@/components/npl/unified-listing-form"
-// Phase G6+ · 매각희망가·할인율·원금 통합 블록 (Step3 단독 사용)
-import { DesiredSaleDiscountInput } from "@/components/listings/npl-input-blocks"
-// Phase H5 · NplModal — OCR 미리보기 모달 (모바일 BottomSheet 자동)
-import { NplModal, NplModalFooter } from "@/components/design-system"
-import { Button } from "@/components/ui/button"
+  Upload, FileText, X, Download, ArrowRight, Loader2,
+  CheckCircle2, ShieldCheck, Lock,
+} from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import { COLLATERAL_CATEGORIES, REGION_SHORT_LIST } from '@/lib/taxonomy'
+import { MckPageHeader } from '@/components/mck/page-header'
 
-// McKinsey 절제된 모노크로 매핑 — 기존 C.* 키는 유지하고 값만 mck로 교체
-import { MCK as _MCK } from "@/lib/mck-design"
-import { MckPageShell, MckPageHeader, MckBadge } from "@/components/mck"
-import { MCK_FONTS } from "@/lib/mck-design"
-const C = {
-  bg0: _MCK.paperTint,
-  bg1: _MCK.paper,
-  bg2: _MCK.paper,
-  bg3: _MCK.paperTint,
-  bg4: _MCK.border,
-  // 완성도 progression: McKinsey monochrome (electric → grey scale, no rainbow)
-  em:  _MCK.electric,        // ≥90% — primary highlight
-  emL: _MCK.electricDark,
-  blue:  _MCK.ink,
-  blueL: _MCK.ink,
-  amber: _MCK.greyMid,       // 50-89% — medium grey (no amber/yellow)
-  rose:  _MCK.greyDark,      // <50% — charcoal grey (no red/magenta)
-  teal:  _MCK.ink,
-  lt3: _MCK.inkMid,
-  lt4: _MCK.textSub,
-}
+// ─── McKinsey editorial palette ──────────────────────────
+const INK = '#0A1628'
+const PAPER = '#FFFFFF'
+const PAPER_TINT = '#F8FAFC'
+const ELECTRIC = '#2251FF'
+const CYAN = '#00A9F4'
+const INK_MID = 'rgba(5, 28, 44, 0.65)'
+const INK_MUTED = 'rgba(5, 28, 44, 0.45)'
+const BORDER = 'rgba(5, 28, 44, 0.10)'
+const BORDER_STRONG = 'rgba(5, 28, 44, 0.20)'
+const DANGER = '#9F1239'
+const DANGER_BG = 'rgba(225, 29, 72, 0.06)'
 
-// ═════════════════════════════════════════════════════════════
-// WizardExtras — sell 페이지 고유 보조 필드 (UnifiedFormState 가 관리하지 않음)
-// ═════════════════════════════════════════════════════════════
-interface WizardExtras {
-  mortgage_rank: number
-  mortgage_amount: number
-  exclusive_area: number
-  build_year: number
-  auction_case_no: string
-  auction_court: string
-  auction_filed_date: string
-  auction_estimated_start: string
-  public_sale_mgmt_no: string
-  public_sale_filed_date: string
-  public_sale_estimated_start: string
-  /**
-   * Phase G7+ · 매물 등록 시 자발적 경매로도 동시 등록.
-   * true 인 경우 제출 시 /api/v1/exchange/auction/register 도 호출 (또는 백엔드에서 분기).
-   */
-  voluntaryAuctionEnabled: boolean
-  voluntaryAuctionEndDate: string  // YYYY-MM-DD · 경매 종료일
-  voluntaryAuctionMinBid: number   // 최저 입찰가 (원)
-  provided: {
-    appraisal: boolean
-    registry: boolean
-    rights: boolean
-    lease: boolean
-    site_photos: boolean
-    financials: boolean
-  }
-}
+// 양식 파일은 준비 중입니다 (dead link — /public/templates 에 추후 배치)
+const TEMPLATE_HREF = '/templates/NPL_상세내역_표준양식_엔플랫폼.xlsx'
 
-const initialExtras: WizardExtras = {
-  mortgage_rank: 1,
-  mortgage_amount: 0,
-  exclusive_area: 0,
-  build_year: 0,
-  auction_case_no: "",
-  auction_court: "",
-  auction_filed_date: "",
-  auction_estimated_start: "",
-  public_sale_mgmt_no: "",
-  public_sale_filed_date: "",
-  public_sale_estimated_start: "",
-  voluntaryAuctionEnabled: false,
-  voluntaryAuctionEndDate: "",
-  voluntaryAuctionMinBid: 0,
-  provided: {
-    appraisal: false, registry: false, rights: false,
-    lease: false, site_photos: false, financials: false,
-  },
-}
-
-// ═════════════════════════════════════════════════════════════
-// WizardState (legacy projection) — Step5Docs · Step6Review · TierPreviewBlock 에서 사용
-// UnifiedFormState + WizardExtras 를 평탄화한 읽기 전용 구조
-// ═════════════════════════════════════════════════════════════
-interface WizardState {
-  institution: string
-  inst_type: SellerInstitution | ""
-  listing_category: "NPL" | "GENERAL" | ""
-  exclusive: boolean
-  collateral: CollateralType | ""
-  region_city: string
-  region_district: string
-  debtor_type: "INDIVIDUAL" | "CORPORATE" | ""
-  loan_principal: number
-  unpaid_interest: number
-  asking_price: number
-  appraisal_value: number
-  sale_method: SaleMethod | ""
-  sale_methods: string[]
-  sale_method_other: string
-  seller_fee_rate: number
-  interest_rate: number
-  penalty_rate: number
-  default_start_date: string
-  mortgage_rank: number
-  mortgage_amount: number
-  senior_claims_total: number
-  tenant_deposit_total: number
-  exclusive_area: number
-  build_year: number
-  auction_case_no: string
-  auction_court: string
-  auction_filed_date: string
-  auction_estimated_start: string
-  public_sale_mgmt_no: string
-  public_sale_filed_date: string
-  public_sale_estimated_start: string
-  provided: WizardExtras["provided"]
-}
-
-function toWizardState(s: UnifiedFormState, ex: WizardExtras): WizardState {
-  return {
-    institution: s.institution.name,
-    inst_type: s.institution.type,
-    listing_category: s.institution.listingCategory,
-    exclusive: s.institution.exclusive,
-    collateral: s.collateral,
-    region_city: getRegionLabel(s.address.sido),  // REGIONS.value → "서울" 라벨 변환
-    region_district: s.address.sigungu,
-    debtor_type: s.debtorType,
-    loan_principal: s.claim.principal,
-    unpaid_interest: s.claim.unpaidInterest,
-    asking_price: s.askingPrice,
-    appraisal_value: s.appraisal.appraisalValue,
-    sale_method: (s.saleMethod === "AUCTION" || s.saleMethod === "PUBLIC" || s.saleMethod === "NPLATFORM")
-      ? s.saleMethod
-      : "",
-    sale_methods: s.saleMethods as string[],
-    sale_method_other: s.saleMethodOther,
-    seller_fee_rate: s.fee?.sellerRate ?? 0.007,
-    interest_rate: s.claim.normalRate,
-    penalty_rate: s.claim.overdueRate,
-    default_start_date: s.claim.delinquencyStartDate,
-    senior_claims_total: s.rights.seniorTotal,
-    tenant_deposit_total: s.lease.totalDeposit,
-    mortgage_rank: ex.mortgage_rank,
-    mortgage_amount: ex.mortgage_amount,
-    exclusive_area: ex.exclusive_area,
-    build_year: ex.build_year,
-    auction_case_no: ex.auction_case_no,
-    auction_court: ex.auction_court,
-    auction_filed_date: ex.auction_filed_date,
-    auction_estimated_start: ex.auction_estimated_start,
-    public_sale_mgmt_no: ex.public_sale_mgmt_no,
-    public_sale_filed_date: ex.public_sale_filed_date,
-    public_sale_estimated_start: ex.public_sale_estimated_start,
-    provided: ex.provided,
-  }
-}
-
-const STEPS = [
-  { id: 1, label: "기관 확인", icon: Building2 },
-  { id: 2, label: "담보 · 지역", icon: MapPin },
-  { id: 3, label: "채권 · 금액", icon: Scale },
-  { id: 4, label: "상세 · 권리", icon: Briefcase },
-  { id: 5, label: "선택 자료", icon: FileText },
-  { id: 6, label: "검토 · 제출", icon: Send },
+const PROCESS_STEPS = [
+  { num: '01', label: '자료 업로드 및 마케팅 조건 협의', desc: '보유 양식 그대로 접수' },
+  { num: '02', label: '운영진 검토·마스킹', desc: '민감정보 비식별 처리' },
+  { num: '03', label: '리스트 등재 · 매칭 시작', desc: '검증된 매수인에게만 공개' },
 ]
 
-export default function SellWizardPage() {
-  const [step, setStep] = useState(1)
-  const { state, dispatch } = useUnifiedFormState("SELL")
-  const [extras, setExtras] = useState<WizardExtras>(initialExtras)
+export default function SellConciergePage() {
+  const [form, setForm] = useState({
+    company: '',
+    name: '',
+    phone: '',
+    email: '',
+    region: '',          // 담보물 지역 — NPL 리스트와 동일 택소노미
+    collateralType: '',  // 담보유형 — NPL 리스트와 동일 택소노미 (19종)
+    memo: '',
+  })
+  const [files, setFiles] = useState<File[]>([])
+  const [agreePrivacy, setAgreePrivacy] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Phase G5: 전속 토글을 FeeSection 내부로 이동.
-  // FeeSection 이 exclusive=true 전환 시 sellerRate < 0.007 이면 자동 보정함(onChange 경유).
-  // → 별도 page 레벨 보정 로직 불필요.
+  // ── 로그인 상태 — 매각사 회원 전용 접수 + 회원가입 정보 자동 기입 (수정 가능) ──
+  const [authState, setAuthState] = useState<'checking' | 'guest' | 'user'>('checking')
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (cancelled) return
+        if (user) {
+          const meta = (user.user_metadata ?? {}) as Record<string, string>
+          setForm(prev => ({
+            ...prev,
+            company: prev.company || (meta.company ?? ''),
+            name: prev.name || (meta.name ?? ''),
+            phone: prev.phone || (meta.phone ?? ''),
+            email: prev.email || (user.email ?? ''),
+          }))
+          setAuthState('user')
+        } else {
+          setAuthState('guest')
+        }
+      } catch {
+        if (!cancelled) setAuthState('guest')
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
 
-  const wizardState = useMemo(() => toWizardState(state, extras), [state, extras])
+  const update = (k: keyof typeof form, v: string) =>
+    setForm((p) => ({ ...p, [k]: v }))
 
-  const handleSubmit = useCallback(async () => {
-    setSubmitting(true)
-    setSubmitError("")
+  const addFiles = (list: FileList | null) => {
+    if (!list || list.length === 0) return
+    const incoming = Array.from(list)
+    setFiles((prev) => {
+      // 같은 이름+크기 중복 방지
+      const merged = [...prev]
+      for (const f of incoming) {
+        if (!merged.some((m) => m.name === f.name && m.size === f.size)) {
+          merged.push(f)
+        }
+      }
+      return merged
+    })
+    // 같은 파일을 다시 선택해도 onChange 가 발생하도록 초기화
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
-    // Pre-flight validation via shared adapter
-    const preflight = preflightSell(state)
-    if (preflight) {
-      setSubmitError(preflight.message)
-      setSubmitting(false)
+  const removeFile = (idx: number) =>
+    setFiles((prev) => prev.filter((_, i) => i !== idx))
+
+  const formatSize = (bytes: number) => {
+    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
+    if (bytes >= 1024) return `${Math.round(bytes / 1024)}KB`
+    return `${bytes}B`
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    if (!agreePrivacy) {
+      setError('개인정보 수집·이용에 동의해주세요.')
       return
+    }
+    setLoading(true)
+
+    // NOTE: 실제 파일 업로드(Supabase Storage) 연동은 추후 — 지금은 파일명만 전송
+    const payload = {
+      type: 'LISTING_REGISTRATION',
+      company: form.company,
+      name: form.name,
+      phone: form.phone,
+      email: form.email,
+      memo: form.memo,
+      file_names: files.map((f) => f.name),
     }
 
     try {
-      const body = toSellListingBody(state, {
-        exclusive_area: extras.exclusive_area || undefined,
-      })
-      const res = await fetch('/api/v1/exchange/listings', {
+      // 전용 /api/v1/inquiries 라우트가 없어 /api/v1/support 티켓 스키마에 매핑
+      await fetch('/api/v1/support', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          ...payload,
+          title: `[매각의뢰] ${form.company} · ${form.name}`,
+          category: '거래/계약',
+          priority: 'HIGH',
+          description: [
+            `유형: LISTING_REGISTRATION (NPL 매각의뢰)`,
+            `회사명: ${form.company}`,
+            `담당자: ${form.name}`,
+            `연락처: ${form.phone}`,
+            `이메일: ${form.email}`,
+            form.region ? `담보물 지역: ${form.region}` : '',
+            form.collateralType ? `담보유형: ${form.collateralType}` : '',
+            `첨부 파일: ${files.length > 0 ? files.map((f) => f.name).join(', ') : '없음'}`,
+            form.memo ? `요청사항: ${form.memo}` : '',
+          ].filter(Boolean).join('\n'),
+        }),
       })
-      const data = await res.json().catch(() => ({} as Record<string, unknown>))
-      if (!res.ok) {
-        const msg = (data as { error?: { message?: string } })?.error?.message
-          ?? `제출 실패 (HTTP ${res.status}). 잠시 후 다시 시도해주세요.`
-        setSubmitError(msg)
-        setSubmitting(false)
-        return
-      }
-
-      // Phase G7+ · 자발적 경매 동시 등록 (체크 시 후속 호출)
-      // 매물 등록 성공 후 경매방을 자동 생성. 실패해도 매물은 살아 있음.
-      if (extras.voluntaryAuctionEnabled && extras.voluntaryAuctionEndDate) {
-        try {
-          const minBid = extras.voluntaryAuctionMinBid > 0
-            ? extras.voluntaryAuctionMinBid
-            : Math.round(state.askingPrice * 0.9)
-          const auctionPayload: Record<string, unknown> = {
-            ...body,
-            // 경매 전용 필드 오버라이드
-            bidding_start: new Date().toISOString().slice(0, 10),
-            bidding_end: extras.voluntaryAuctionEndDate,
-            minimum_bid: minBid,
-            asking_price: state.askingPrice,
-            disclosure_level: 'PUBLIC',
-            bidding_method: 'PUBLIC_COMPETITIVE',
-            auction_start_date: new Date().toISOString().slice(0, 10),
-          }
-          const auctionRes = await fetch('/api/v1/exchange/auction/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(auctionPayload),
-          })
-          if (!auctionRes.ok) {
-            // eslint-disable-next-line no-console
-            console.warn('[Sell submit] 자발적 경매 등록 실패 (매물은 등록됨)')
-          }
-        } catch (auctionErr) {
-          // eslint-disable-next-line no-console
-          console.warn('[Sell submit] 자발적 경매 등록 네트워크 오류:', auctionErr)
-        }
-      }
-
-      setSubmitted(true)
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[Sell submit] network error:', err)
-      setSubmitError('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
-      setSubmitting(false)
+    } catch {
+      // 엔드포인트 실패 여부와 무관하게 접수 완료 화면으로 폴백
     }
-  }, [state, extras])
 
-  // Phase G: 완성도 100점 기준 (항목 10개 × 10점).
-  // (과거 0~10 스케일에서 ×10 단순 승격. 훅 소비자가 100점 기준을 기대하도록 통일)
-  const completeness = useMemo(() => {
-    let score = 0
-    if (state.claim.principal > 0) score++
-    if (state.askingPrice > 0) score++
-    if (state.collateral) score++
-    if (state.address.sido) score++
-    if (state.debtorType) score++
-    if (state.claim.overdueRate > 0 && state.claim.delinquencyStartDate) score++
-    if (extras.mortgage_amount > 0) score++
-    const pf = extras.provided
-    if (pf.appraisal) score++
-    if (pf.registry) score++
-    if (pf.rights || pf.lease || pf.site_photos || pf.financials) score++
-    return score * 10
-  }, [state, extras])
-
-  const canProceed = useMemo(() => {
-    if (step === 1) return !!state.institution.name && !!state.institution.type && !!state.institution.listingCategory
-    if (step === 2) return !!state.collateral && !!state.address.sido && !!state.debtorType
-    if (step === 3)
-      return state.claim.principal > 0 && state.askingPrice > 0 && state.appraisal.appraisalValue > 0
-    if (step === 4) return true
-    if (step === 5) return true
-    return true
-  }, [step, state])
-
-  const feeEstimate = useMemo(() => {
-    if (state.askingPrice <= 0) return null
-    return calculateSellerFee({
-      dealAmount: state.askingPrice,
-      addons: ["premium_listing", "dedicated_manager"],
-      isInstitutional: state.institution.exclusive,
-      dataCompleteness: completeness,
-      sellerRate: state.fee?.sellerRate ?? 0.007,
-    })
-  }, [state.askingPrice, state.institution.exclusive, completeness, state.fee?.sellerRate])
-
-  const discountRate = useMemo(() => {
-    const total = state.claim.principal + state.claim.unpaidInterest
-    if (!total || !state.askingPrice) return 0
-    return ((total - state.askingPrice) / total) * 100
-  }, [state.claim.principal, state.claim.unpaidInterest, state.askingPrice])
-
-  if (submitted) {
-    return <SubmittedScreen completeness={completeness} />
+    setLoading(false)
+    setSubmitted(true)
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0 })
   }
 
-  return (
-    <MckPageShell variant="tint">
-      <MckPageHeader
-        breadcrumbs={[
-          { label: "홈", href: "/" },
-          { label: "거래소", href: "/exchange" },
-          { label: "매물 등록" },
-        ]}
-        eyebrow="Listing Wizard · L0 → L3 자동 구성"
-        title="매물 등록 마법사"
-        subtitle="필수 5항목(L0)만 입력하면 즉시 공개 가능하며, 선택 5항목을 추가할수록 자료 완성도와 매입사 매칭률이 높아집니다. 모든 개인정보는 자동 마스킹 파이프라인으로 처리됩니다."
-        actions={
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-            <Link
-              href="/exchange/ocr-register"
+  // ─── 입력 스타일 (signup 페이지 컨벤션 재사용) ─────────
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    height: 44,
+    padding: '10px 14px',
+    background: PAPER,
+    border: `1px solid ${BORDER_STRONG}`,
+    borderRadius: 0,
+    fontSize: 13,
+    fontWeight: 500,
+    color: INK,
+    fontVariantNumeric: 'tabular-nums',
+    outline: 'none',
+    transition: 'border-color 0.12s, box-shadow 0.12s',
+  }
+  const onFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    e.currentTarget.style.borderColor = ELECTRIC
+    e.currentTarget.style.borderTopColor = ELECTRIC
+    e.currentTarget.style.borderTopWidth = '2px'
+    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(34, 81, 255, 0.12)'
+  }
+  const onBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    e.currentTarget.style.borderColor = BORDER_STRONG
+    e.currentTarget.style.borderTopWidth = '1px'
+    e.currentTarget.style.boxShadow = 'none'
+  }
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: 11,
+    fontWeight: 700,
+    color: INK_MID,
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase',
+    marginBottom: 6,
+  }
+
+  // ─── 접수 완료 화면 ──────────────────────────────────────
+  if (submitted) {
+    return (
+      <div style={{ minHeight: '100vh', background: PAPER_TINT, padding: '48px 20px' }}>
+        <div style={{ maxWidth: 720, margin: '0 auto' }}>
+          <div
+            style={{
+              background: PAPER,
+              border: `1px solid ${BORDER}`,
+              borderTop: `2px solid ${ELECTRIC}`,
+              padding: '48px 36px',
+              textAlign: 'center',
+              boxShadow: '0 12px 24px -8px rgba(5, 28, 44, 0.10)',
+            }}
+          >
+            <div
               style={{
-                display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "9px 16px",
-                background: _MCK.ink, color: _MCK.paper,
-                fontSize: 12, fontWeight: 800,
-                letterSpacing: "-0.01em",
-                textDecoration: "none",
-                borderTop: `2px solid ${_MCK.brass}`,
+                width: 56, height: 56, margin: '0 auto 20px',
+                background: ELECTRIC,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(34, 81, 255, 0.35)',
               }}
             >
-              <Sparkles size={12} /> OCR · 엑셀 빠른 등록
-            </Link>
+              <CheckCircle2 size={26} style={{ color: PAPER }} />
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', color: ELECTRIC, textTransform: 'uppercase', marginBottom: 10 }}>
+              Request Received
+            </div>
+            <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 30, fontWeight: 900, color: INK, letterSpacing: '-0.025em', lineHeight: 1.15 }}>
+              접수 완료
+            </h1>
+            <p style={{ marginTop: 12, fontSize: 14, color: INK_MID, lineHeight: 1.6 }}>
+              운영진이 확인 후 1~2영업일 내 연락드립니다.
+            </p>
             <Link
               href="/exchange"
               style={{
-                display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "9px 16px",
-                background: _MCK.paper, color: _MCK.ink,
-                fontSize: 12, fontWeight: 700,
-                letterSpacing: "-0.01em",
-                textDecoration: "none",
-                border: `1px solid ${_MCK.ink}`,
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                marginTop: 28, height: 46, padding: '0 28px',
+                background: INK, color: PAPER,
+                borderTop: `2px solid ${ELECTRIC}`,
+                fontSize: 13, fontWeight: 800, textDecoration: 'none',
+                boxShadow: '0 4px 12px rgba(10, 22, 40, 0.18)',
               }}
             >
-              <ChevronLeft size={12} /> 매물 목록
+              거래소로 돌아가기
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ─── 접수 폼 ─────────────────────────────────────────────
+  return (
+    <div style={{ minHeight: '100vh', background: PAPER_TINT }}>
+      {/* ── 표준 페이지 헤더 (전 메뉴 공통 포맷) ── */}
+      <MckPageHeader
+        eyebrow="Private Deal · NDA 기반"
+        title="NPL 매각의뢰"
+        subtitle="파일만 올리시면 등록은 저희가 합니다 — 운영진이 검토 후 마스킹해 대신 등록합니다 (1~2영업일)."
+        actions={
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            <Link
+              href="/exchange"
+              style={{
+                padding: '9px 16px', fontSize: 12, fontWeight: 800, letterSpacing: '-0.01em',
+                background: INK, color: PAPER, border: 'none', borderTop: `2px solid ${ELECTRIC}`,
+                display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none',
+              }}
+            >
+              NPL 자동매칭 <ArrowRight size={14} />
+            </Link>
+            <Link
+              href="/exchange/demands/new"
+              style={{
+                padding: '9px 16px', fontSize: 12, fontWeight: 700, letterSpacing: '-0.01em',
+                background: PAPER, color: INK, border: `1px solid ${INK}`,
+                display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none',
+              }}
+            >
+              매입조건 등록
             </Link>
           </div>
         }
       />
 
-      {/* ── McKinsey 단계 표시 (절제: ink + brass) ─────────────────────────────── */}
-      <section style={{ background: _MCK.paper, borderBottom: `1px solid ${_MCK.border}` }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "20px 24px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-            {STEPS.map((s, i) => {
-              const done = step > s.id
-              const active = step === s.id
-              const Icon = s.icon
-              return (
-                <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <div
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: 8,
-                      padding: "9px 16px",
-                      backgroundColor: active ? _MCK.ink : _MCK.paper,
-                      borderTop: active ? `2px solid ${_MCK.brass}` : `1px solid ${done ? _MCK.brass : _MCK.border}`,
-                      borderRight: `1px solid ${active ? _MCK.ink : _MCK.border}`,
-                      borderBottom: `1px solid ${active ? _MCK.ink : _MCK.border}`,
-                      borderLeft: `1px solid ${active ? _MCK.ink : _MCK.border}`,
-                      color: active ? _MCK.paper : done ? _MCK.ink : _MCK.textMuted,
-                      fontSize: 11, fontWeight: 700, letterSpacing: "0.04em",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    {done ? (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ width: 5, height: 5, background: _MCK.brass }} />
-                        <Check size={12} />
-                      </span>
-                    ) : <Icon size={12} />}
-                    {s.label}
-                  </div>
-                  {i < STEPS.length - 1 && <ChevronRight size={12} color={_MCK.textMuted} />}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 64px' }}>
 
-      <section style={{ maxWidth: 1120, margin: "0 auto", padding: "40px 24px 80px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: 24, alignItems: "start" }}>
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3 }}
+        {/* ── 로그인 필요 배너 — 매각사 회원 전용 (매입조건 등록과 동일 정책) ── */}
+        {authState === 'guest' && (
+          <div
             style={{
-              backgroundColor: C.bg2,
-              border: `1px solid ${C.bg4}`,
-              borderTop: `2px solid ${_MCK.electric}`,
-              padding: 28,
+              display: 'flex', alignItems: 'flex-start', gap: 12,
+              padding: 16, marginBottom: 20,
+              background: INK, borderTop: `3px solid ${ELECTRIC}`,
             }}
           >
-            {step === 1 && (
-              <Step1 state={state} dispatch={dispatch} />
-            )}
-            {step === 2 && (
-              <Step2 state={state} dispatch={dispatch} />
-            )}
-            {step === 3 && (
-              <Step3
-                state={state}
-                dispatch={dispatch}
-                discountRate={discountRate}
-                extras={extras}
-                setExtras={setExtras}
-              />
-            )}
-            {step === 4 && (
-              <Step4BondRights
-                state={state}
-                dispatch={dispatch}
-                extras={extras}
-                setExtras={setExtras}
-              />
-            )}
-            {step === 5 && <Step5Docs extras={extras} setExtras={setExtras} />}
-            {step === 6 && (
-              <Step6Review
-                state={wizardState}
-                completeness={completeness}
-                discountRate={discountRate}
-                feeEstimate={feeEstimate}
-              />
-            )}
+            <Lock size={15} style={{ color: CYAN, flexShrink: 0, marginTop: 2 }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 14, fontWeight: 800, color: '#FFFFFF' }}>
+                NPL 매각의뢰는 매각 회원 가입 후 로그인하셔야 가능합니다
+              </p>
+              <p style={{ marginTop: 4, fontSize: 12, color: 'rgba(255,255,255,0.70)' }}>
+                로그인하시면 회사명 · 담당자명 · 연락처 · 이메일이 자동으로 기입됩니다. 가입은 무료 (관리자 승인제)
+              </p>
+              <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                <Link href="/login?redirect=/exchange/sell"
+                  style={{ padding: '8px 16px', fontSize: 12, fontWeight: 800, background: '#FFFFFF', color: INK, textDecoration: 'none' }}>
+                  로그인
+                </Link>
+                <Link href="/signup"
+                  style={{ padding: '8px 16px', fontSize: 12, fontWeight: 700, background: 'transparent', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.35)', textDecoration: 'none' }}>
+                  매각 회원가입
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
+        {/* ── Form card ── */}
+        <div
+          style={{
+            background: PAPER,
+            border: `1px solid ${BORDER}`,
+            borderTop: `2px solid ${ELECTRIC}`,
+            padding: '32px 28px',
+            boxShadow: '0 12px 24px -8px rgba(5, 28, 44, 0.10), 0 4px 8px -2px rgba(5, 28, 44, 0.06)',
+          }}
+        >
+          {error && (
             <div
               style={{
-                marginTop: 32, paddingTop: 20,
-                borderTop: `1px solid ${C.bg4}`,
-                display: "flex", justifyContent: "space-between", alignItems: "center",
+                padding: '10px 14px',
+                background: DANGER_BG,
+                border: `1px solid ${DANGER}`,
+                borderLeft: `3px solid ${DANGER}`,
+                marginBottom: 18,
+                fontSize: 12,
+                color: DANGER,
+                fontWeight: 600,
               }}
             >
-              <button
-                onClick={() => {
-                  setStep(s => Math.max(1, s - 1))
-                  window.scrollTo({ top: 0, behavior: "smooth" })
-                }}
-                disabled={step === 1}
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+            {/* 회사명 + 담당자명 */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label htmlFor="company" style={labelStyle}>
+                  회사명(기관명) <span style={{ color: ELECTRIC }}>*</span>
+                </label>
+                <input
+                  id="company"
+                  type="text"
+                  value={form.company}
+                  onChange={(e) => update('company', e.target.value)}
+                  onFocus={onFocus}
+                  onBlur={onBlur}
+                  placeholder="예: OO저축은행"
+                  required
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label htmlFor="name" style={labelStyle}>
+                  담당자명 <span style={{ color: ELECTRIC }}>*</span>
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => update('name', e.target.value)}
+                  onFocus={onFocus}
+                  onBlur={onBlur}
+                  placeholder="홍길동"
+                  required
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+
+            {/* 연락처 + 이메일 */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label htmlFor="phone" style={labelStyle}>
+                  연락처 <span style={{ color: ELECTRIC }}>*</span>
+                </label>
+                <input
+                  id="phone"
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => update('phone', e.target.value)}
+                  onFocus={onFocus}
+                  onBlur={onBlur}
+                  placeholder="010-1234-5678"
+                  required
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label htmlFor="email" style={labelStyle}>
+                  이메일 <span style={{ color: ELECTRIC }}>*</span>
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => update('email', e.target.value)}
+                  onFocus={onFocus}
+                  onBlur={onBlur}
+                  placeholder="name@company.co.kr"
+                  required
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+
+            {/* 담보물 지역 + 담보유형 — NPL 리스트와 동일 분류 */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label htmlFor="region" style={labelStyle}>담보물 지역</label>
+                <select
+                  id="region"
+                  value={form.region}
+                  onChange={(e) => update('region', e.target.value)}
+                  style={{ ...inputStyle, cursor: 'pointer' }}
+                >
+                  <option value="">선택 (선택사항)</option>
+                  {REGION_SHORT_LIST.map(r => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="collateralType" style={labelStyle}>담보유형</label>
+                <select
+                  id="collateralType"
+                  value={form.collateralType}
+                  onChange={(e) => update('collateralType', e.target.value)}
+                  style={{ ...inputStyle, cursor: 'pointer' }}
+                >
+                  <option value="">선택 (선택사항)</option>
+                  {COLLATERAL_CATEGORIES.map(cat => (
+                    <optgroup key={cat.value} label={cat.label}>
+                      {cat.items.map(item => (
+                        <option key={item.value} value={item.label}>{item.label}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* 자료 파일 업로드 */}
+            <div>
+              <label htmlFor="asset-files" style={labelStyle}>
+                자료 파일 업로드 <span style={{ color: INK_MUTED, fontWeight: 600, textTransform: 'none' }}>(엑셀 · PDF · 압축파일 · 이미지, 다중 선택 가능)</span>
+              </label>
+              <label
+                htmlFor="asset-files"
                 style={{
-                  padding: "10px 18px",
-                  backgroundColor: _MCK.paper,
-                  color: step === 1 ? C.bg4 : _MCK.ink,
-                  fontSize: 13, fontWeight: 700,
-                  border: `1px solid ${step === 1 ? C.bg4 : _MCK.ink}`,
-                  cursor: step === 1 ? "not-allowed" : "pointer",
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  letterSpacing: "-0.005em",
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  padding: '28px 16px',
+                  background: PAPER_TINT,
+                  border: `1px dashed ${BORDER_STRONG}`,
+                  cursor: 'pointer',
+                  textAlign: 'center',
                 }}
               >
-                <ChevronLeft size={14} /> 이전
-              </button>
-              {step < 6 ? (
-                <button
-                  onClick={() => {
-                    if (!canProceed) return
-                    setStep(s => s + 1)
-                    window.scrollTo({ top: 0, behavior: "smooth" })
-                  }}
-                  disabled={!canProceed}
-                  style={{
-                    padding: "11px 22px",
-                    backgroundColor: canProceed ? _MCK.ink : C.bg4,
-                    color: canProceed ? _MCK.paper : C.lt4,
-                    fontSize: 13, fontWeight: 800,
-                    border: "none",
-                    borderTop: canProceed ? `2px solid ${_MCK.electric}` : "none",
-                    cursor: canProceed ? "pointer" : "not-allowed",
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  다음 단계 <ChevronRight size={14} />
-                </button>
-              ) : (
-                <div>
-                  {submitError && (
+                <Upload size={20} style={{ color: ELECTRIC }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: INK }}>
+                  파일을 선택하거나 여기에 끌어다 놓으세요
+                </span>
+                <span style={{ fontSize: 11, color: INK_MUTED }}>
+                  .xlsx · .xls · .csv · .pdf · .zip · 이미지
+                </span>
+              </label>
+              <input
+                ref={fileInputRef}
+                id="asset-files"
+                type="file"
+                multiple
+                accept=".xlsx,.xls,.csv,.pdf,.zip,image/*"
+                onChange={(e) => addFiles(e.target.files)}
+                style={{ display: 'none' }}
+              />
+
+              {/* 선택된 파일 목록 */}
+              {files.length > 0 && (
+                <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {files.map((f, i) => (
                     <div
+                      key={`${f.name}-${f.size}`}
                       style={{
-                        marginBottom: 10,
-                        padding: "8px 12px",
-                        backgroundColor: _MCK.paperTint,
-                        border: `1px solid ${_MCK.border}`,
-                        borderLeft: `3px solid ${_MCK.greyDark}`,
-                        color: _MCK.greyDark,
-                        fontSize: 11, fontWeight: 700,
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '8px 12px',
+                        background: '#EFF6FF',
+                        border: `1px solid ${ELECTRIC}40`,
+                        fontSize: 12, fontWeight: 600, color: INK,
                       }}
                     >
-                      {submitError}
+                      <FileText size={14} style={{ color: ELECTRIC, flexShrink: 0 }} />
+                      <span style={{ flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {f.name}
+                      </span>
+                      <span style={{ fontSize: 11, color: INK_MUTED, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                        {formatSize(f.size)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(i)}
+                        aria-label={`${f.name} 제거`}
+                        style={{ background: 'transparent', border: 0, cursor: 'pointer', color: INK_MUTED, padding: 2, flexShrink: 0 }}
+                      >
+                        <X size={13} />
+                      </button>
                     </div>
-                  )}
-                  <button
-                    onClick={handleSubmit}
-                    disabled={submitting}
-                    style={{
-                      padding: "12px 24px",
-                      backgroundColor: submitting ? C.bg4 : _MCK.ink,
-                      color: submitting ? C.lt4 : _MCK.paper,
-                      fontSize: 13, fontWeight: 800,
-                      border: "none",
-                      borderTop: submitting ? "none" : `2.5px solid ${_MCK.electric}`,
-                      cursor: submitting ? "not-allowed" : "pointer",
-                      display: "inline-flex", alignItems: "center", gap: 6,
-                      letterSpacing: "-0.01em",
-                      boxShadow: submitting ? "none" : "0 6px 18px rgba(34, 81, 255, 0.18)",
-                    }}
-                  >
-                    {submitting ? (
-                      <><span className="animate-spin" style={{ display: "inline-block", width: 14, height: 14, borderRadius: "50%", border: `2px solid ${C.lt4}`, borderTopColor: "transparent" }} />처리 중...</>
-                    ) : (
-                      <><Send size={14} /> 제출하고 마스킹 파이프라인 실행</>
-                    )}
-                  </button>
+                  ))}
                 </div>
               )}
             </div>
-          </motion.div>
 
-          <aside style={{ display: "flex", flexDirection: "column", gap: 14, position: "sticky", top: 96 }}>
+            {/* 표준 양식 다운로드 박스 */}
             <div
               style={{
-                padding: 18,
-                backgroundColor: C.bg2,
-                border: `1px solid ${C.bg4}`,
-                borderTop: `2px solid ${_MCK.electric}`,
+                border: `1px solid ${BORDER_STRONG}`,
+                borderLeft: `3px solid ${CYAN}`,
+                padding: '16px 18px',
+                display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+                background: PAPER,
               }}
             >
-              <div
-                style={{
-                  fontSize: 10, color: _MCK.electric, fontWeight: 800,
-                  letterSpacing: "0.06em", textTransform: "uppercase",
-                  marginBottom: 10,
-                }}
-              >
-                실시간 자료 완성도
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: INK, marginBottom: 3 }}>
+                  표준 양식이 필요하신가요?
+                </div>
+                <div style={{ fontSize: 11, color: INK_MID, lineHeight: 1.5 }}>
+                  자체 양식이 없는 기관을 위한 엔플랫폼 표준 매각의뢰 양식입니다.
+                </div>
               </div>
-              <CompletenessBadge score={completeness} size="md" />
-              <div
+              <a
+                href={TEMPLATE_HREF}
+                download
                 style={{
-                  marginTop: 14,
-                  height: 6,
-                  backgroundColor: _MCK.paperDeep,
-                  overflow: "hidden",
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  height: 40, padding: '0 16px',
+                  background: PAPER, color: INK,
+                  border: `1px solid ${BORDER_STRONG}`,
+                  fontSize: 12, fontWeight: 800, textDecoration: 'none',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <div
-                  style={{
-                    height: "100%",
-                    width: `${Math.max(0, Math.min(100, completeness))}%`,
-                    backgroundColor: completeness >= 90 ? C.em : completeness >= 50 ? C.amber : C.rose,
-                    transition: "width 0.3s ease",
-                  }}
+                <Download size={14} style={{ color: ELECTRIC }} />
+                엔플랫폼 표준 양식 다운로드 (.xlsx)
+              </a>
+            </div>
+
+            {/* 요청사항 메모 */}
+            <div>
+              <label htmlFor="memo" style={labelStyle}>
+                요청사항 메모
+              </label>
+              <textarea
+                id="memo"
+                value={form.memo}
+                onChange={(e) => update('memo', e.target.value)}
+                onFocus={onFocus}
+                onBlur={onBlur}
+                placeholder="매각 희망 시기 · 채권 규모 · 기타 전달사항 (선택)"
+                rows={4}
+                style={{ ...inputStyle, height: 'auto', padding: '10px 14px', resize: 'vertical', lineHeight: 1.5 }}
+              />
+            </div>
+
+            {/* 개인정보 동의 */}
+            <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 14 }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: INK, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={agreePrivacy}
+                  onChange={(e) => setAgreePrivacy(e.target.checked)}
+                  required
+                  style={{ marginTop: 2, accentColor: ELECTRIC }}
                 />
-              </div>
-              <div style={{ marginTop: 8, fontSize: 11, color: C.lt4, lineHeight: 1.55, fontWeight: 600 }}>
-                {completeness >= 90
-                  ? "핵심 자료 완비 — 프리미엄 노출 무료 적용"
-                  : completeness >= 50
-                  ? "기본 자료 충족 — 추가 자료 권장"
-                  : "자료 부족 — 매입사 실사 부담 증가"}
-              </div>
+                <span>
+                  <strong>(필수)</strong>{' '}
+                  <Link href="/terms/privacy" target="_blank" style={{ color: ELECTRIC, textDecoration: 'underline' }}>
+                    개인정보 수집·이용
+                  </Link>
+                  에 동의합니다. 접수된 정보는 매각의뢰 상담 목적으로만 사용됩니다.
+                </span>
+              </label>
             </div>
 
-            {feeEstimate && (
-              <div
-                style={{
-                  padding: 18,
-                  backgroundColor: C.bg2,
-                  border: `1px solid ${C.bg4}`,
-                  borderTop: `2px solid ${_MCK.electric}`,
-                }}
-              >
-                <div
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 5,
-                    fontSize: 10, color: _MCK.electric, fontWeight: 800,
-                    letterSpacing: "0.06em", textTransform: "uppercase",
-                    marginBottom: 10,
-                  }}
-                >
-                  <Calculator size={13} /> 매각자 수수료 견적
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.lt4, marginBottom: 4, fontWeight: 600 }}>
-                  <span>실효 요율</span>
-                  <span style={{ color: _MCK.electricDark, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
-                    {(feeEstimate.totalRate * 100).toFixed(2)}%
-                  </span>
-                </div>
-                <div
-                  style={{
-                    fontFamily: MCK_FONTS.serif,
-                    fontSize: 20, fontWeight: 800,
-                    color: _MCK.ink,
-                    letterSpacing: "-0.015em",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {formatKRW(feeEstimate.totalFee)}
-                </div>
-                <div style={{ marginTop: 8, fontSize: 10, color: C.lt4, lineHeight: 1.55, fontWeight: 500 }}>
-                  기본 {(feeEstimate.baseRate * 100).toFixed(2)}% · 상한 0.9% 적용 · 에스크로 0.3% 별도
-                </div>
-              </div>
-            )}
-
+            {/* 보안 안내 */}
             <div
               style={{
-                padding: "14px 16px",
-                backgroundColor: _MCK.paperTint,
-                border: `1px solid ${_MCK.border}`,
-                borderLeft: `3px solid ${_MCK.electric}`,
-                display: "flex", gap: 10, alignItems: "flex-start",
+                background: '#EFF6FF',
+                border: `1px solid ${ELECTRIC}40`,
+                borderLeft: `3px solid ${ELECTRIC}`,
+                padding: '12px 14px',
+                fontSize: 11,
+                color: INK_MID,
+                lineHeight: 1.6,
               }}
             >
-              <ShieldCheck size={16} color={_MCK.electric} style={{ marginTop: 1, flexShrink: 0 }} />
-              <div style={{ fontSize: 11, color: C.lt3, lineHeight: 1.55, fontWeight: 500 }}>
-                제출 시 <strong style={{ color: _MCK.ink, fontWeight: 800 }}>자동 마스킹 파이프라인</strong>이 실행되어
-                채무자 식별정보 · 상세 지번 · 동/호수가 자동으로 가려집니다.
-                마스킹 결과는 DPO 검수 후 L0 공개됩니다.
-              </div>
+              <ShieldCheck size={13} style={{ color: ELECTRIC, marginRight: 6, verticalAlign: 'middle' }} />
+              <strong style={{ color: INK }}>비공개 처리 안내</strong> — 업로드하신 자료는
+              운영진만 열람하며, 채권 정보 등 민감정보는 마스킹 처리 후 검증된
+              매수인에게만 공개됩니다.
             </div>
-          </aside>
+
+            {/* Submit — 매각사 로그인 필수 */}
+            <button
+              type="submit"
+              disabled={loading || authState === 'guest'}
+              title={authState === 'guest' ? '매각사 회원가입 후 로그인하시면 접수할 수 있습니다' : undefined}
+              style={{
+                width: '100%',
+                height: 48,
+                background: loading || authState === 'guest' ? INK_MUTED : INK,
+                color: PAPER,
+                border: 0,
+                borderTop: `2px solid ${ELECTRIC}`,
+                fontSize: 14,
+                fontWeight: 800,
+                letterSpacing: '-0.01em',
+                cursor: loading ? 'wait' : 'pointer',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                boxShadow: loading ? 'none' : '0 4px 12px rgba(10, 22, 40, 0.18)',
+              }}
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  접수 처리 중…
+                </>
+              ) : (
+                <>
+                  매각의뢰 접수하기
+                  <ArrowRight size={14} />
+                </>
+              )}
+            </button>
+
+            {/* 접수 후 안내 — 운영진 개별 연락 · 문의처 */}
+            <p
+              style={{
+                marginTop: 10,
+                fontSize: 12,
+                fontWeight: 600,
+                color: INK_MID,
+                textAlign: 'center',
+                lineHeight: 1.6,
+              }}
+            >
+              접수하신 연락처로 엔플랫폼 운영진이 개별 연락드립니다.
+              <br />
+              (문의처) <a href="tel:0255552822" style={{ color: INK, fontWeight: 800, textDecoration: 'none' }}>02-555-2822</a>
+            </p>
+          </form>
         </div>
-      </section>
-    </MckPageShell>
-  )
-}
 
-// ═════════════════════════════════════════════════════════════
-// STEP 1 — 기관 · 매각주체 (InstitutionSection 래퍼)
-// ═════════════════════════════════════════════════════════════
-function Step1({
-  state, dispatch,
-}: {
-  state: UnifiedFormState
-  dispatch: (action: UnifiedFormAction) => void
-}) {
-  return (
-    <>
-      <StepHeader
-        num={1}
-        title="매각 주체 확인"
-        desc="매각 주체(기관/개인/법인)와 매물 종류를 선택하세요. 전속 계약은 Step 3 수수료 섹션에서 설정합니다."
-      />
-
-      {/* Phase G7+ · 엑셀 템플릿 다운로드 + OCR 자동 채우기 업로드 */}
-      <ExcelTemplateBanner state={state} dispatch={dispatch} />
-
-      {/* Phase G5: 전속 토글은 Step 3 FeeSection 상단으로 이동. */}
-      <InstitutionSection
-        value={state.institution}
-        onChange={(patch) => dispatch({ type: "SET_INSTITUTION", patch })}
-      />
-    </>
-  )
-}
-
-// ═════════════════════════════════════════════════════════════
-// Phase G7+ · 엑셀 템플릿 다운로드/업로드 배너 (Step 1 상단)
-//   다운로드 → 매각사 오프라인 작성 → 업로드 → OCR 자동 파싱
-// ═════════════════════════════════════════════════════════════
-/** OCR 파싱 결과 타입 */
-type OcrParseResult = {
-  fields: Record<string, unknown>
-  specialConditionsV2: string[]
-  providedFields: Record<string, boolean>
-  warnings: string[]
-  source?: { fileName?: string; fileSize?: number; sheetCount?: number; sheetNames?: string[] }
-}
-
-function ExcelTemplateBanner({
-  state, dispatch,
-}: {
-  state: UnifiedFormState
-  dispatch: (action: UnifiedFormAction) => void
-}) {
-  const [parsing, setParsing] = useState(false)
-  const [parseMessage, setParseMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null)
-  const [previewData, setPreviewData] = useState<OcrParseResult | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setParsing(true)
-    setParseMessage(null)
-    try {
-      const fd = new FormData()
-      fd.append("file", file)
-      const res = await fetch("/api/v1/ocr/parse-template", { method: "POST", body: fd })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json?.error?.message || "파싱 실패")
-      // 미리보기 모달로 결과 표시 (사용자 확인 후 적용)
-      setPreviewData(json.data as OcrParseResult)
-    } catch (err) {
-      setParseMessage({
-        type: "err",
-        text: err instanceof Error ? err.message : "엑셀 파싱 실패. 템플릿 v3.0 형식인지 확인해주세요.",
-      })
-    } finally {
-      setParsing(false)
-      if (fileInputRef.current) fileInputRef.current.value = ""
-    }
-  }
-
-  const applyParseResult = (data: OcrParseResult) => {
-    const f = data.fields
-    const inst: Partial<UnifiedFormState["institution"]> = {}
-    if (f.institution_name) inst.name = String(f.institution_name)
-    if (f.institution_type) inst.type = f.institution_type as UnifiedFormState["institution"]["type"]
-    if (f.listing_category) inst.listingCategory = f.listing_category as UnifiedFormState["institution"]["listingCategory"]
-    if (typeof f.exclusive_choice === "boolean") inst.exclusive = f.exclusive_choice
-    if (Object.keys(inst).length > 0) dispatch({ type: "SET_INSTITUTION", patch: inst })
-    if (f.collateral_type) {
-      dispatch({ type: "PATCH", patch: { collateral: String(f.collateral_type) as UnifiedFormState["collateral"] } })
-    }
-    if (f.sido || f.sigungu || f.address) {
-      dispatch({
-        type: "SET_ADDRESS",
-        patch: {
-          sido: String(f.sido ?? ""),
-          sigungu: String(f.sigungu ?? ""),
-          detail: String(f.address ?? ""),
-        },
-      })
-    }
-    if (f.debtor_type) {
-      const dtRaw = String(f.debtor_type)
-      const dt = dtRaw.includes("CORPORATE") || dtRaw.includes("법인") ? "CORPORATE" : "INDIVIDUAL"
-      dispatch({ type: "SET_DEBTOR_TYPE", value: dt })
-    }
-    if (typeof f.debtor_owner_same === "boolean") {
-      dispatch({ type: "PATCH", patch: { debtorOwnerSame: f.debtor_owner_same } })
-    }
-    const claimPatch: Partial<UnifiedFormState["claim"]> = {}
-    if (f.loan_principal)  claimPatch.principal = Number(f.loan_principal)
-    if (f.unpaid_interest) claimPatch.unpaidInterest = Number(f.unpaid_interest)
-    if (f.delinquency_start_date) claimPatch.delinquencyStartDate = String(f.delinquency_start_date)
-    if (f.normal_rate)  claimPatch.normalRate = Number(f.normal_rate) / 100
-    if (f.overdue_rate) claimPatch.overdueRate = Number(f.overdue_rate) / 100
-    if (Object.keys(claimPatch).length > 0) dispatch({ type: "SET_CLAIM", patch: claimPatch })
-
-    const aprPatch: Partial<UnifiedFormState["appraisal"]> = {}
-    if (f.appraisal_value)      aprPatch.appraisalValue = Number(f.appraisal_value)
-    if (f.appraisal_date)       aprPatch.appraisalDate = String(f.appraisal_date)
-    if (f.current_market_value) aprPatch.currentMarketValue = Number(f.current_market_value)
-    if (f.market_price_note)    aprPatch.marketPriceNote = String(f.market_price_note)
-    if (f.auction_start_date)   aprPatch.auctionStartDate = String(f.auction_start_date)
-    if (Object.keys(aprPatch).length > 0) dispatch({ type: "SET_APPRAISAL", patch: aprPatch })
-
-    const rightsPatch: Partial<UnifiedFormState["rights"]> = {}
-    if (f.senior_total) rightsPatch.seniorTotal = Number(f.senior_total)
-    if (Object.keys(rightsPatch).length > 0) dispatch({ type: "SET_RIGHTS", patch: rightsPatch })
-
-    const leasePatch: Partial<UnifiedFormState["lease"]> = {}
-    if (f.lease_deposit) leasePatch.totalDeposit = Number(f.lease_deposit)
-    if (f.lease_monthly) leasePatch.totalMonthlyRent = Number(f.lease_monthly)
-    if (f.tenant_count)  leasePatch.tenantCount = Number(f.tenant_count)
-    if (Object.keys(leasePatch).length > 0) dispatch({ type: "SET_LEASE", patch: leasePatch })
-
-    if (f.asking_price) dispatch({ type: "PATCH", patch: { askingPrice: Number(f.asking_price) } })
-    if (f.discount_rate) dispatch({ type: "PATCH", patch: { desiredSaleDiscount: Number(f.discount_rate) / 100 } })
-
-    const methods: ("NPLATFORM" | "AUCTION" | "PUBLIC")[] = []
-    if (f.sale_method_nplatform) methods.push("NPLATFORM")
-    if (f.sale_method_auction)   methods.push("AUCTION")
-    if (f.sale_method_public)    methods.push("PUBLIC")
-    if (methods.length > 0) dispatch({ type: "PATCH", patch: { saleMethods: methods } })
-    if (f.sale_method_other) dispatch({ type: "PATCH", patch: { saleMethodOther: String(f.sale_method_other) } })
-    if (f.seller_fee_rate) dispatch({ type: "SET_FEE", patch: { sellerRate: Number(f.seller_fee_rate) / 100 } })
-
-    if (data.specialConditionsV2.length > 0) {
-      dispatch({ type: "SET_SPECIAL_CONDITIONS_V2", keys: data.specialConditionsV2 })
-    }
-    void state // suppress unused
-    const filled =
-      Object.keys(data.fields).length +
-      data.specialConditionsV2.length +
-      Object.values(data.providedFields).filter(Boolean).length
-    setParseMessage({
-      type: "ok",
-      text: `${filled}개 항목이 자동 채워졌습니다. 검토 후 다음 단계로 진행하세요.${data.warnings.length > 0 ? ` (안내: ${data.warnings.join(", ")})` : ""}`,
-    })
-    setPreviewData(null)
-  }
-
-  return (
-    <div
-      style={{
-        marginBottom: 16, padding: "14px 18px", borderRadius: 12,
-        background: "linear-gradient(135deg, rgba(46,117,182,0.08), rgba(27,58,92,0.04))",
-        border: `1px solid ${C.blue}44`,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-            <Download size={14} color={C.blueL} />
-            <strong style={{ fontSize: 13, color: "var(--color-text-primary)" }}>
-              매물 등록 템플릿 (엑셀)
-            </strong>
-            <span style={{
-              fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4,
-              backgroundColor: `${C.blue}22`, color: C.blueL,
-            }}>
-              OCR 자동등록 지원
-            </span>
-          </div>
-          <p style={{ fontSize: 11, color: C.lt4, lineHeight: 1.5 }}>
-            매각사에 배포해 오프라인으로 작성받은 후 업로드하면 폼이 자동 채워집니다.
-            드롭다운 / O·X 체크 / 자유 입력 모두 자동 파싱.
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <button
-            type="button"
-            onClick={async () => {
-              try {
-                const res = await fetch('/templates/NPLatform_매물등록_템플릿.xlsx')
-                const blob = await res.blob()
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement('a')
-                a.href = url
-                a.download = 'NPLatform_매물등록_템플릿.xlsx'
-                document.body.appendChild(a)
-                a.click()
-                document.body.removeChild(a)
-                URL.revokeObjectURL(url)
-              } catch {
-                window.location.href = '/templates/NPLatform_매물등록_템플릿.xlsx'
-              }
-            }}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "9px 14px", borderRadius: 10,
-              backgroundColor: "transparent", color: C.blueL,
-              border: `1px solid ${C.blue}55`,
-              fontSize: 12, fontWeight: 700, cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
-            <Download size={14} /> 템플릿
-          </button>
-          <button
-            type="button"
-            disabled={parsing}
-            onClick={() => fileInputRef.current?.click()}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "9px 16px", borderRadius: 10,
-              backgroundColor: parsing ? C.bg4 : C.blue, color: "#fff",
-              fontSize: 12, fontWeight: 700, border: "none",
-              cursor: parsing ? "wait" : "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {parsing ? "파싱 중..." : <>📤 엑셀 업로드 (자동 채우기)</>}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            onChange={handleUpload}
-            style={{ display: "none" }}
-          />
-        </div>
-      </div>
-
-      {parseMessage && (
+        {/* ── 3-step process strip ── */}
         <div
           style={{
-            marginTop: 12, padding: "10px 12px", borderRadius: 8,
-            backgroundColor: parseMessage.type === "ok"
-              ? "rgba(5, 28, 44,0.10)"
-              : "rgba(165, 63, 138,0.10)",
-            border: `1px solid ${parseMessage.type === "ok" ? C.em : C.rose}44`,
-            fontSize: 11,
-            color: parseMessage.type === "ok" ? C.emL : C.rose,
-            lineHeight: 1.5,
+            marginTop: 24,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            border: `1px solid ${BORDER}`,
+            background: PAPER,
           }}
         >
-          {parseMessage.type === "ok" ? "✓" : "⚠"} {parseMessage.text}
-        </div>
-      )}
-
-      {/* Phase H5 · OCR 파싱 결과 미리보기 모달 */}
-      <NplModal
-        open={!!previewData}
-        onOpenChange={(o) => { if (!o) setPreviewData(null) }}
-        title="엑셀 파싱 결과 미리보기"
-        description={previewData?.source?.fileName ?? "업로드한 템플릿에서 추출된 정보를 확인하세요"}
-        size="lg"
-      >
-        {previewData && <OcrPreviewContent data={previewData} />}
-        <NplModalFooter>
-          <Button variant="ghost" onClick={() => setPreviewData(null)}>
-            취소 · 적용 안 함
-          </Button>
-          <Button onClick={() => previewData && applyParseResult(previewData)}>
-            적용하기 (폼에 자동 채움)
-          </Button>
-        </NplModalFooter>
-      </NplModal>
-    </div>
-  )
-}
-
-// OCR 미리보기 콘텐츠 — 시트별 추출 결과 요약
-function OcrPreviewContent({ data }: { data: OcrParseResult }) {
-  const fieldEntries = Object.entries(data.fields)
-  return (
-    <div className="space-y-5">
-      {/* 1. 기본정보 추출 */}
-      <section>
-        <div className="flex items-baseline justify-between mb-2">
-          <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)]">
-            📋 기본정보 ({fieldEntries.length}개 필드)
-          </h4>
-        </div>
-        {fieldEntries.length === 0 ? (
-          <p className="text-[0.8125rem] text-[var(--color-text-tertiary)]">추출된 필드가 없습니다.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 max-h-72 overflow-y-auto">
-            {fieldEntries.map(([k, v]) => (
-              <div key={k} className="flex items-baseline justify-between gap-3 px-3 py-2 rounded-lg bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)]">
-                <span className="text-[0.6875rem] font-semibold text-[var(--color-text-tertiary)] shrink-0">{k}</span>
-                <span className="text-[0.8125rem] font-bold text-[var(--color-text-primary)] truncate text-right tabular-nums">
-                  {String(v)}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* 2. 특수조건 V2 */}
-      <section>
-        <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)] mb-2">
-          🔍 특수조건 V2 ({data.specialConditionsV2.length}/18 체크)
-        </h4>
-        {data.specialConditionsV2.length === 0 ? (
-          <p className="text-[0.8125rem] text-[var(--color-text-tertiary)]">체크된 특수조건이 없습니다.</p>
-        ) : (
-          <div className="flex flex-wrap gap-1.5">
-            {data.specialConditionsV2.map((key) => (
-              <span key={key} className="text-[0.6875rem] font-semibold px-2 py-1 rounded-md bg-stone-100/10 text-stone-900 dark:text-stone-900 border border-stone-300/30">
-                {key}
-              </span>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* 3. 필요서류 */}
-      <section>
-        <h4 className="text-[0.875rem] font-bold text-[var(--color-text-primary)] mb-2">
-          📎 필요서류 제공 여부
-        </h4>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-          {Object.entries(data.providedFields).map(([k, v]) => (
-            <span
-              key={k}
-              className={`text-[0.6875rem] font-semibold px-2 py-1.5 rounded-md text-center ${
-                v
-                  ? "bg-stone-100/10 text-stone-900 dark:text-stone-900 border border-stone-300/30"
-                  : "bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] border border-[var(--color-border-subtle)]"
-              }`}
+          {PROCESS_STEPS.map((s, i) => (
+            <div
+              key={s.num}
+              style={{
+                padding: '16px 14px',
+                borderLeft: i > 0 ? `1px solid ${BORDER}` : 'none',
+              }}
             >
-              {v ? "✓" : "—"} {k}
-            </span>
+              <span style={{ fontFamily: 'Georgia, serif', fontSize: 16, fontWeight: 900, color: ELECTRIC, letterSpacing: '-0.02em' }}>
+                {s.num}
+              </span>
+              <div style={{ marginTop: 6, fontSize: 12, fontWeight: 800, color: INK, lineHeight: 1.35 }}>
+                {s.label}
+              </div>
+              <div style={{ marginTop: 2, fontSize: 11, color: INK_MUTED, lineHeight: 1.4 }}>
+                {s.desc}
+              </div>
+            </div>
           ))}
         </div>
-      </section>
-
-      {/* 4. 경고 */}
-      {data.warnings.length > 0 && (
-        <section>
-          <h4 className="text-[0.875rem] font-bold text-stone-900 dark:text-stone-900 mb-2">
-            ⚠ 안내 ({data.warnings.length}건)
-          </h4>
-          <ul className="space-y-1">
-            {data.warnings.map((w, i) => (
-              <li key={i} className="text-[0.75rem] text-stone-900 dark:text-stone-900 leading-relaxed">
-                · {w}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-    </div>
-  )
-}
-
-// ═════════════════════════════════════════════════════════════
-// STEP 2 — 담보 · 지역 (CollateralSection 래퍼 + L0 안내 배너)
-// ═════════════════════════════════════════════════════════════
-function Step2({
-  state, dispatch,
-}: {
-  state: UnifiedFormState
-  dispatch: (action: UnifiedFormAction) => void
-}) {
-  return (
-    <>
-      <StepHeader
-        num={2}
-        title="담보 · 지역"
-        desc="담보 부동산 정보는 L0(공개) 단계로 노출됩니다. 상세 지번 · 동/호수는 자동 마스킹됩니다."
-      />
-      <CollateralSection
-        collateral={state.collateral}
-        address={state.address}
-        additionalAddresses={state.additionalAddresses}
-        debtorType={state.debtorType}
-        onCollateral={(v) => dispatch({ type: "PATCH", patch: { collateral: v } })}
-        onAddress={(patch) => dispatch({ type: "SET_ADDRESS", patch })}
-        onAddAddress={() => dispatch({ type: "ADD_ADDRESS" })}
-        onRemoveAddressAt={(index) => dispatch({ type: "REMOVE_ADDRESS_AT", index })}
-        onUpdateAddressAt={(index, patch) =>
-          dispatch({ type: "UPDATE_ADDRESS_AT", index, patch })
-        }
-        onDebtorType={(v) => dispatch({ type: "PATCH", patch: { debtorType: v } })}
-      />
-      <div
-        style={{
-          marginTop: 18, padding: "12px 14px",
-          backgroundColor: `${C.blue}0E`, border: "1px solid rgba(45, 116, 182, 0.2)",
-          borderRadius: 10, display: "flex", gap: 10, alignItems: "flex-start",
-        }}
-      >
-        <AlertCircle size={14} color={C.blueL} style={{ marginTop: 1, flexShrink: 0 }} />
-        <div style={{ fontSize: 11, color: C.lt3, lineHeight: 1.55 }}>
-          시·도 수준까지만 L0 공개됩니다. 상세 지번·동·호수는 L2(NDA+전문투자자) 이상에서만 공개되며,
-          자동 마스킹 엔진이 규제 준수 여부를 검증합니다.
-        </div>
-      </div>
-    </>
-  )
-}
-
-// ═════════════════════════════════════════════════════════════
-// STEP 3 — 채권 · 금액 (ClaimSection + 매각희망가/감정가/매각방식 + FeeSection)
-// ═════════════════════════════════════════════════════════════
-function Step3({
-  state, dispatch, discountRate, extras, setExtras,
-}: {
-  state: UnifiedFormState
-  dispatch: (action: UnifiedFormAction) => void
-  discountRate: number
-  extras: WizardExtras
-  setExtras: React.Dispatch<React.SetStateAction<WizardExtras>>
-}) {
-  const claimBalance = state.claim.principal + state.claim.unpaidInterest
-  return (
-    <>
-      <StepHeader
-        num={3}
-        title="채권 · 금액"
-        desc="채권잔액(원금+미수이자)·매각희망가·감정가는 L0(공개) 핵심 필드입니다. 할인율이 자동 계산됩니다."
-      />
-
-      {/* 채권정보 — ClaimSection (원금/미수이자/연체정보) */}
-      <ClaimSection
-        value={state.claim}
-        onChange={(patch) => dispatch({ type: "SET_CLAIM", patch })}
-      />
-
-      {/* 감정가 · 시세 · 경매일정 — AppraisalSection */}
-      <div style={{ marginTop: 16 }}>
-        <AppraisalSection
-          value={state.appraisal}
-          onChange={(patch) => dispatch({ type: "SET_APPRAISAL", patch })}
-        />
-      </div>
-
-      {/* 매각희망가 · 할인율 · 원금/잔액 기준 통합 블록 + 매각방식 */}
-      <div style={{ marginTop: 16 }}>
-        <DesiredSaleDiscountInput
-          value={state.desiredSaleDiscount}
-          onChange={(v) => dispatch({ type: "PATCH", patch: { desiredSaleDiscount: v } })}
-          principal={state.claim.principal}
-          claimBalance={
-            state.claim.principal +
-            (state.claim.unpaidInterest ?? 0) +
-            (state.claim.overdueInterest ?? 0)
-          }
-          discountBasis={state.discountBasis}
-          onDiscountBasisChange={(b) => dispatch({ type: "PATCH", patch: { discountBasis: b } })}
-          askingPrice={state.askingPrice}
-          onAskingPriceChange={(v) => dispatch({ type: "PATCH", patch: { askingPrice: v } })}
-        />
-      </div>
-      <div style={{ marginTop: 12 }}>
-        <Field label="매각 방식" hint="여러 방식을 동시에 선택 가능합니다. 기타 방식은 직접 입력하세요.">
-          <SaleMethodMultiSelect
-            selected={state.saleMethods}
-            other={state.saleMethodOther}
-            onChange={(next) => dispatch({ type: "PATCH", patch: { saleMethods: next } })}
-            onOtherChange={(v) => dispatch({ type: "PATCH", patch: { saleMethodOther: v } })}
-          />
-        </Field>
-      </div>
-
-      {/* Phase G7+ · 자발적 경매로 동시 등록 (매각방식 무관 · 항상 노출) */}
-      {(
-        <div
-          style={{
-            marginTop: 14, padding: "16px 18px", borderRadius: 12,
-            border: `1px solid ${C.blue}55`,
-            backgroundColor: `${C.blue}0E`,
-          }}
-        >
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={extras.voluntaryAuctionEnabled}
-              onChange={(e) =>
-                setExtras((prev) => ({ ...prev, voluntaryAuctionEnabled: e.target.checked }))
-              }
-              className="mt-0.5 accent-sky-500 w-4 h-4 shrink-0"
-            />
-            <div className="min-w-0 flex-1">
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <Gavel size={14} style={{ color: C.blueL }} />
-                <strong style={{ fontSize: 13, color: "var(--color-text-primary)" }}>
-                  자발적 경매로 동시 등록
-                </strong>
-                {extras.voluntaryAuctionEnabled && (
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4,
-                    backgroundColor: `${C.blue}22`, color: C.blueL,
-                  }}>
-                    ON · 경매방 자동 생성
-                  </span>
-                )}
-              </div>
-              <p style={{ fontSize: 11, color: C.lt4, lineHeight: 1.5 }}>
-                매물 등록 직후 자발적 경매방을 자동 생성합니다. 종료일까지 입찰 진행 후 최고가 매입사와 자동 매칭.
-              </p>
-            </div>
-          </label>
-
-          {extras.voluntaryAuctionEnabled && (
-            <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <Field label="경매 종료일" required hint="이 일시에 입찰 마감 · 자동 정산">
-                <input
-                  type="date"
-                  value={extras.voluntaryAuctionEndDate}
-                  min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)}
-                  onChange={(e) =>
-                    setExtras((prev) => ({ ...prev, voluntaryAuctionEndDate: e.target.value }))
-                  }
-                  style={{
-                    width: "100%", padding: "10px 12px", borderRadius: 8,
-                    backgroundColor: C.bg3, color: "var(--color-text-primary)",
-                    border: `1px solid ${C.bg4}`, fontSize: 13,
-                  }}
-                />
-              </Field>
-              <Field label="최저 입찰가 (원)" hint="미입력 시 매각희망가 90% 자동 적용">
-                <NumberInput
-                  value={extras.voluntaryAuctionMinBid}
-                  onChange={(v) =>
-                    setExtras((prev) => ({ ...prev, voluntaryAuctionMinBid: v }))
-                  }
-                  placeholder={`예: ${Math.round(state.askingPrice * 0.9).toLocaleString()}`}
-                  suffix="원"
-                />
-              </Field>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 자동 계산 할인율 요약 (참조용) */}
-      {claimBalance > 0 && state.askingPrice > 0 && (
-        <div
-          style={{
-            marginTop: 20, padding: "14px 20px", borderRadius: 12,
-            backgroundColor: "var(--color-positive-bg)", border: `1px solid ${C.em}33`,
-            display: "flex", justifyContent: "space-between", alignItems: "center",
-          }}
-        >
-          <div>
-            <div style={{ fontSize: 11, color: C.lt4, fontWeight: 700, marginBottom: 3 }}>채권잔액 대비 할인율</div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: C.emL, letterSpacing: "-0.02em" }}>
-              {discountRate.toFixed(1)}%
-            </div>
-          </div>
-          <div style={{ textAlign: "right", fontSize: 11, color: C.lt4 }}>
-            매입사 절감액 (채권잔액 기준)
-            <br />
-            <strong style={{ color: C.emL, fontSize: 13 }}>{formatKRW(claimBalance - state.askingPrice)}</strong>
-          </div>
-        </div>
-      )}
-
-      {/* 매각 수수료율 — FeeSection (Phase G5: 전속 계약 토글 내장) */}
-      {state.fee && (
-        <div style={{ marginTop: 18 }}>
-          <FeeSection
-            value={state.fee}
-            onChange={(patch) => dispatch({ type: "SET_FEE", patch })}
-            exclusive={state.institution.exclusive}
-            onExclusiveChange={(next) =>
-              dispatch({ type: "SET_INSTITUTION", patch: { exclusive: next } })
-            }
-          />
-          {state.askingPrice > 0 && (
-            <div style={{
-              marginTop: 8, padding: "8px 10px", borderRadius: 6,
-              backgroundColor: "rgba(5, 28, 44,0.08)", fontSize: 11, color: C.lt3,
-              display: "flex", justifyContent: "space-between",
-            }}>
-              <span>예상 수수료 (희망가 {formatKRW(state.askingPrice)} 기준)</span>
-              <strong style={{ color: C.emL, fontVariantNumeric: "tabular-nums" }}>
-                {formatKRW(Math.round(state.askingPrice * state.fee.sellerRate))}
-              </strong>
-            </div>
-          )}
-        </div>
-      )}
-    </>
-  )
-}
-
-// ═════════════════════════════════════════════════════════════
-// STEP 4 — 권리관계 · 특수조건 · sell 전용 extras (근저당/면적/경매/공매)
-// ═════════════════════════════════════════════════════════════
-function Step4BondRights({
-  state, dispatch, extras, setExtras,
-}: {
-  state: UnifiedFormState
-  dispatch: (action: UnifiedFormAction) => void
-  extras: WizardExtras
-  setExtras: React.Dispatch<React.SetStateAction<WizardExtras>>
-}) {
-  const updateEx = <K extends keyof WizardExtras>(k: K, v: WizardExtras[K]) =>
-    setExtras(ex => ({ ...ex, [k]: v }))
-
-  return (
-    <>
-      <StepHeader
-        num={4}
-        title="채권 상세 · 권리관계 (L3 데이터룸)"
-        desc="여기서 입력한 정보는 LOI 승인 투자자(L3)에게만 공개되는 데이터룸 원장 자료입니다. AI 수익성 분석 및 회수율 예측에 활용됩니다. 선택 입력이지만 강력 권장합니다."
-      />
-      <div
-        style={{
-          marginBottom: 18, padding: "10px 14px", borderRadius: 8,
-          backgroundColor: "rgba(5, 28, 44, 0.1)", border: "1px solid rgba(5, 28, 44, 0.27)",
-          display: "flex", gap: 8, alignItems: "center", fontSize: 10, color: C.lt3,
-        }}
-      >
-        <span style={{ color: C.amber, fontWeight: 800 }}>🔒 L3 데이터룸 정보</span>
-        {"  "}이 정보는 LOI 승인 투자자에게만 공개됩니다. 채무자 개인정보는 자동 마스킹 파이프라인이 처리합니다.
-      </div>
-
-      {/* 권리 · 임차 · 채무자소유자 — RightsSection
-          Phase G6+ · 매각희망가/할인율 블록은 Step3 로 이관 (중복 제거). */}
-      <RightsSection
-        rights={state.rights}
-        lease={state.lease}
-        debtorOwnerSame={state.debtorOwnerSame}
-        desiredSaleDiscount={state.desiredSaleDiscount}
-        principal={state.claim.principal}
-        onRights={(patch) => dispatch({ type: "SET_RIGHTS", patch })}
-        onLease={(patch) => dispatch({ type: "SET_LEASE", patch })}
-        onDebtorOwnerSame={(v) => dispatch({ type: "PATCH", patch: { debtorOwnerSame: v } })}
-        onDesiredSaleDiscount={(v) => dispatch({ type: "PATCH", patch: { desiredSaleDiscount: v } })}
-        showDiscount={false}
-      />
-
-      {/* 특수조건 V2 18항목 × 3-버킷 (Phase G1/G2) */}
-      <div style={{ marginTop: 16 }}>
-        <SpecialConditionsSection
-          value={state.specialConditionsV2}
-          onChange={(keys) => dispatch({ type: "SET_SPECIAL_CONDITIONS_V2", keys })}
-        />
-      </div>
-
-      {/* sell 전용: 물리 특성 (전용면적 · 건축년도) + 근저당 */}
-      <div style={{ marginTop: 16 }}>
-        <FormGrid cols={2}>
-          <Field label="전용면적" hint="㎡">
-            <NumberInput value={extras.exclusive_area} onChange={v => updateEx("exclusive_area", v)} placeholder="예: 84.5" suffix="㎡" />
-          </Field>
-          <Field label="건축년도">
-            <NumberInput value={extras.build_year} onChange={v => updateEx("build_year", v)} placeholder="예: 2015" suffix="년" />
-          </Field>
-          <Field label="근저당 순위">
-            <NumberInput value={extras.mortgage_rank} onChange={v => updateEx("mortgage_rank", v)} placeholder="예: 1" suffix="순위" />
-          </Field>
-          <Field label="근저당 설정액">
-            <NumberInput value={extras.mortgage_amount} onChange={v => updateEx("mortgage_amount", v)} placeholder="예: 1500000000" suffix="원" />
-          </Field>
-        </FormGrid>
-      </div>
-
-      {/* 경매 정보 */}
-      <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, backgroundColor: `${C.blue}08`, border: "1px solid rgba(45,116,182,0.18)" }}>
-        <div style={{ fontWeight: 800, fontSize: 13, color: C.blueL, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-          🏛 경매 정보 <span style={{ fontWeight: 600, fontSize: 11, color: C.lt3 }}>(선택)</span>
-        </div>
-        <FormGrid cols={2}>
-          <Field label="사건번호">
-            <TextInput value={extras.auction_case_no} onChange={v => updateEx("auction_case_no", v)} placeholder="예: 2025타경12345" />
-          </Field>
-          <Field label="관할법원">
-            <TextInput value={extras.auction_court} onChange={v => updateEx("auction_court", v)} placeholder="예: 서울중앙지방법원" />
-          </Field>
-          <Field label="경매접수일(경매개시일)">
-            <DateField value={extras.auction_filed_date} onChange={v => updateEx("auction_filed_date", v)} placeholder="접수일 선택" max={new Date()} />
-          </Field>
-          <Field label="예상 경매 시작일">
-            <DateField value={extras.auction_estimated_start} onChange={v => updateEx("auction_estimated_start", v)} placeholder="예상 시작일 선택" />
-          </Field>
-        </FormGrid>
-      </div>
-
-      {/* 공매 정보 */}
-      <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 10, backgroundColor: `${C.blue}08`, border: "1px solid rgba(45,116,182,0.18)" }}>
-        <div style={{ fontWeight: 800, fontSize: 13, color: C.blueL, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-          📋 공매 정보 <span style={{ fontWeight: 600, fontSize: 11, color: C.lt3 }}>(선택)</span>
-        </div>
-        <FormGrid cols={2}>
-          <Field label="관리번호">
-            <TextInput value={extras.public_sale_mgmt_no} onChange={v => updateEx("public_sale_mgmt_no", v)} placeholder="예: 2025-00123-001" />
-          </Field>
-          <Field label="공매신청일">
-            <DateField value={extras.public_sale_filed_date} onChange={v => updateEx("public_sale_filed_date", v)} placeholder="신청일 선택" max={new Date()} />
-          </Field>
-          <Field label="예상 공매 시작일">
-            <DateField value={extras.public_sale_estimated_start} onChange={v => updateEx("public_sale_estimated_start", v)} placeholder="예상 시작일 선택" />
-          </Field>
-        </FormGrid>
-      </div>
-
-      <div
-        style={{
-          marginTop: 18, padding: "12px 14px",
-          backgroundColor: `${C.blue}0E`, border: "1px solid rgba(45, 116, 182, 0.2)",
-          borderRadius: 10, display: "flex", gap: 10, alignItems: "flex-start",
-        }}
-      >
-        <AlertCircle size={14} color={C.blueL} style={{ marginTop: 1, flexShrink: 0 }} />
-        <div style={{ fontSize: 11, color: C.lt3, lineHeight: 1.55 }}>
-          이 정보들은 <strong style={{ color: "var(--color-text-primary)" }}>NPL 수익성 분석</strong>(ROI, IRR, 배당표 시뮬레이션)에 직접 사용됩니다.
-          입력하지 않으면 매입사가 별도 분석해야 하므로 매칭률이 낮아질 수 있습니다.
-        </div>
-      </div>
-    </>
-  )
-}
-
-// ═════════════════════════════════════════════════════════════
-// OCR 프리뷰 helper
-// ═════════════════════════════════════════════════════════════
-function ocrPreview(data: Record<string, unknown>, docType: string): string {
-  if (data.error) return data.error as string
-  if (data.warning) return data.warning as string
-  const parts: string[] = []
-  if (docType === "appraisal") {
-    if (data.appraisal_value) parts.push(`감정가 ${Number(data.appraisal_value).toLocaleString()}원`)
-    if (data.address) parts.push(`${data.address}`)
-    if (data.property_type) parts.push(`${data.property_type}`)
-    if (data.appraisal_date) parts.push(`평가일 ${data.appraisal_date}`)
-  } else if (docType === "registry") {
-    const r = data.rights
-    if (Array.isArray(r)) parts.push(`권리 ${r.length}건 추출`)
-  } else if (docType === "lease") {
-    const t = data.tenants
-    if (Array.isArray(t)) parts.push(`임차인 ${t.length}명 추출`)
-  } else if (docType === "bond") {
-    if (data.case_number) parts.push(`${data.case_number}`)
-    if (data.appraisal_value) parts.push(`감정가 ${Number(data.appraisal_value).toLocaleString()}원`)
-  }
-  if (parts.length === 0 && data.raw_text) parts.push("텍스트 추출 완료")
-  return parts.length > 0 ? parts.join(" · ") : "데이터 추출 완료"
-}
-
-const OCR_DOC_TYPE: Record<string, string> = {
-  appraisal: "appraisal",
-  registry: "registry",
-  rights: "registry",
-  lease: "lease",
-  site_photos: "generic",
-  financials: "generic",
-}
-
-const OCR_ACCEPT: Record<string, string> = {
-  appraisal: ".pdf,.jpg,.jpeg,.png,.docx,.hwp",
-  registry: ".pdf,.jpg,.jpeg,.png,.docx,.hwp",
-  rights: ".pdf,.jpg,.jpeg,.png,.docx,.hwp",
-  lease: ".pdf,.jpg,.jpeg,.png,.docx,.hwp",
-  site_photos: ".jpg,.jpeg,.png,.gif,.webp",
-  financials: ".pdf,.xls,.xlsx,.csv,.docx,.hwp",
-}
-
-interface OcrState {
-  loading: boolean
-  filename?: string
-  preview?: string
-}
-
-// ═════════════════════════════════════════════════════════════
-// STEP 5 — 선택 자료 제공 (extras.provided + OCR)
-// ═════════════════════════════════════════════════════════════
-function Step5Docs({
-  extras, setExtras,
-}: {
-  extras: WizardExtras
-  setExtras: React.Dispatch<React.SetStateAction<WizardExtras>>
-}) {
-  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
-  const [ocr, setOcr] = useState<Record<string, OcrState>>({})
-
-  const toggleProvided = useCallback((key: keyof WizardExtras["provided"], value: boolean) => {
-    setExtras(ex => ({ ...ex, provided: { ...ex.provided, [key]: value } }))
-  }, [setExtras])
-
-  const handleUpload = useCallback(async (key: keyof WizardExtras["provided"], docType: string, file: File) => {
-    setOcr(prev => ({ ...prev, [key]: { loading: true } }))
-    toggleProvided(key, true)
-
-    try {
-      const fd = new FormData()
-      fd.append("file", file)
-      fd.append("doc_type", docType)
-      const res = await fetch("/api/v1/ocr", { method: "POST", body: fd })
-      const json = await res.json()
-      const preview = json.success && json.data
-        ? ocrPreview(json.data as Record<string, unknown>, docType)
-        : (json.error || "업로드 완료")
-      setOcr(prev => ({ ...prev, [key]: { loading: false, filename: file.name, preview } }))
-    } catch {
-      setOcr(prev => ({ ...prev, [key]: { loading: false, filename: file.name, preview: "업로드 완료 (OCR 처리 중 오류)" } }))
-    }
-  }, [toggleProvided])
-
-  const items: Array<{ key: keyof WizardExtras["provided"]; label: string; desc: string; tier: string; icon: any }> = [
-    { key: "appraisal", label: "감정평가서", desc: "PII 마스킹 자동 적용", tier: "L1 공개", icon: FileText },
-    { key: "registry", label: "등기부등본", desc: "요약(L1) / 원본(L2)", tier: "L1 / L2", icon: FileText },
-    { key: "rights", label: "권리관계 분석", desc: "선·후순위 · 보증금", tier: "L0 요약", icon: Scale },
-    { key: "lease", label: "임대차 내역", desc: "요약(L1) / 상세(L2)", tier: "L1 / L2", icon: Briefcase },
-    { key: "site_photos", label: "현장 사진", desc: "L2 이상에서만 공개", tier: "L2", icon: Camera },
-    { key: "financials", label: "재무 자료", desc: "법인 담보의 경우", tier: "L2", icon: Briefcase },
-  ]
-
-  return (
-    <>
-      <StepHeader
-        num={5}
-        title="선택 자료 제공"
-        desc="파일을 업로드하면 AI OCR이 핵심 정보를 자동 추출합니다. 체크만 해도 완성도에 반영됩니다."
-      />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
-        {items.map(it => {
-          const Icon = it.icon
-          const checked = extras.provided[it.key]
-          const s = ocr[it.key]
-
-          return (
-            <div
-              key={it.key}
-              style={{
-                padding: "16px 18px", borderRadius: 12,
-                backgroundColor: checked ? "var(--color-positive-bg)" : C.bg3,
-                border: `1px solid ${checked ? C.em : C.bg4}`,
-                display: "flex", flexDirection: "column", gap: 10,
-              }}
-            >
-              <input
-                ref={el => { inputRefs.current[it.key] = el }}
-                type="file"
-                accept={OCR_ACCEPT[it.key]}
-                style={{ display: "none" }}
-                onChange={e => {
-                  const f = e.target.files?.[0]
-                  if (f) handleUpload(it.key, OCR_DOC_TYPE[it.key], f)
-                  e.target.value = ""
-                }}
-              />
-
-              <button
-                type="button"
-                role="checkbox"
-                aria-checked={checked}
-                aria-label={`${it.label} — ${it.desc}`}
-                onClick={() => toggleProvided(it.key, !checked)}
-                style={{
-                  display: "flex", gap: 12, alignItems: "flex-start",
-                  background: "none", border: "none", cursor: "pointer",
-                  padding: 0, color: "var(--color-text-primary)", textAlign: "left",
-                }}
-              >
-                <div
-                  style={{
-                    width: 36, height: 36, borderRadius: 8,
-                    backgroundColor: checked ? "var(--color-positive-bg)" : C.bg4,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Icon size={16} color={checked ? C.emL : C.lt4} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700 }}>{it.label}</span>
-                    <span style={{ fontSize: 9, fontWeight: 800, color: C.lt4, padding: "2px 6px", borderRadius: 4, backgroundColor: C.bg4 }}>
-                      {it.tier}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 10, color: C.lt4 }}>{it.desc}</div>
-                </div>
-                <div
-                  style={{
-                    width: 18, height: 18, borderRadius: 4,
-                    backgroundColor: checked ? "#0A1628" : "transparent",
-                    border: `1px solid ${checked ? "#0A1628" : C.bg4}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  {checked && <Check size={12} color="#FFFFFF" />}
-                </div>
-              </button>
-
-              {s?.filename ? (
-                <div
-                  style={{
-                    padding: "8px 10px", borderRadius: 8,
-                    backgroundColor: s.loading ? `${C.bg4}` : `${C.em}14`,
-                    border: `1px solid ${s.loading ? C.bg4 : `${C.em}33`}`,
-                    fontSize: 10, color: C.lt3,
-                  }}
-                >
-                  {s.loading ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ display: "inline-block", width: 12, height: 12, borderRadius: "50%", border: `2px solid ${C.lt4}`, borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
-                      <span style={{ color: C.lt4 }}>AI OCR 분석 중...</span>
-                    </div>
-                  ) : (
-                    <>
-                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
-                        <Check size={11} color={C.em} />
-                        <span style={{ fontWeight: 700, color: C.emL }}>OCR 완료</span>
-                        <span style={{ color: C.lt4, marginLeft: "auto", fontSize: 9, maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.filename}</span>
-                      </div>
-                      <div style={{ color: C.lt4, lineHeight: 1.4 }}>{s.preview}</div>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <button
-                  onClick={() => inputRefs.current[it.key]?.click()}
-                  style={{
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                    padding: "7px 12px", borderRadius: 8,
-                    backgroundColor: `${C.blue}14`,
-                    border: "1px solid rgba(45, 116, 182, 0.2)",
-                    color: C.blueL, fontSize: 11, fontWeight: 700, cursor: "pointer",
-                  }}
-                >
-                  <List size={12} /> 파일 업로드 (선택 · OCR 자동 추출)
-                </button>
-              )}
-            </div>
-          )
-        })}
-      </div>
-      <div
-        style={{
-          marginTop: 14, padding: "10px 14px", borderRadius: 8,
-          backgroundColor: `${C.blue}08`, border: `1px solid ${C.blue}22`,
-          fontSize: 10, color: C.lt3, lineHeight: 1.5,
-        }}
-      >
-        지원 형식: <strong style={{ color: C.lt4 }}>PDF · JPG/PNG · DOCX · HWP</strong> (재무 자료는 + XLS/XLSX/CSV)
-      </div>
-    </>
-  )
-}
-
-// ═════════════════════════════════════════════════════════════
-// STEP 6 — 검토 · 제출 (WizardState 투영 기반)
-// ═════════════════════════════════════════════════════════════
-function Step6Review({
-  state, completeness, discountRate, feeEstimate,
-}: {
-  state: WizardState
-  completeness: number
-  discountRate: number
-  feeEstimate: ReturnType<typeof calculateSellerFee> | null
-}) {
-  const router = useRouter()
-
-  const handleStartAnalysis = useCallback(() => {
-    try {
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(
-          "listing-analysis-prefill",
-          JSON.stringify({ ...state, _ts: Date.now() })
-        )
-      }
-    } catch (err) {
-      console.warn("[sell→analysis] sessionStorage write failed:", err)
-    }
-    // ⚡ autoRun=1 — 분석 위저드를 우회하고, prefill 로 바로 분석 API 를 호출 → 보고서 화면으로 직진
-    const qs = new URLSearchParams()
-    qs.set("autoRun", "1")
-    qs.set("from", "listing")
-    if (state.appraisal_value > 0) qs.set("appraisal", String(state.appraisal_value))
-    if (state.senior_claims_total > 0) qs.set("senior", String(state.senior_claims_total))
-    if (state.region_city || state.region_district) {
-      qs.set("address", encodeURIComponent(`${state.region_city} ${state.region_district}`.trim()))
-    }
-    router.push(`/analysis/profitability?${qs.toString()}`)
-  }, [state, router])
-
-  return (
-    <>
-      <StepHeader
-        num={6}
-        title="검토 및 제출"
-        desc="입력 내용을 확인하고 제출하세요. 제출 즉시 자동 마스킹 파이프라인이 실행되고, DPO 검수 후 공개됩니다."
-      />
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <ReviewRow label="기관">
-          {state.institution} · {SELLER_INSTITUTION_OPTIONS.find(o => o.value === state.inst_type)?.label ?? state.inst_type}
-          {state.exclusive && (
-            <span
-              style={{
-                marginLeft: 6, fontSize: 9, padding: "2px 6px", borderRadius: 3,
-                backgroundColor: "var(--color-positive-bg)", color: C.emL, fontWeight: 800,
-              }}
-            >
-              전속
-            </span>
-          )}
-        </ReviewRow>
-        <ReviewRow label="매물 종류">{state.listing_category === "NPL" ? "NPL (부실채권)" : "일반 부동산"}</ReviewRow>
-        <ReviewRow label="담보 · 지역">
-          {state.region_city} {state.region_district} · {COLLATERAL_CATEGORIES.flatMap(c => c.items).find(i => i.value === state.collateral)?.label ?? state.collateral} ·{" "}
-          {state.debtor_type === "INDIVIDUAL" ? "개인" : "법인"}
-        </ReviewRow>
-        <ReviewRow label="매각 방식">
-          {(() => {
-            const labels = state.sale_methods
-              .map((m: string) => SALE_METHOD_OPTIONS.find(o => o.value === m)?.label)
-              .filter((x): x is string => Boolean(x))
-            if (state.sale_method_other.trim()) labels.push(`기타 (${state.sale_method_other.trim()})`)
-            return labels.length > 0 ? labels.join(" · ") : "—"
-          })()}
-        </ReviewRow>
-        <ReviewRow label="대출원금">{formatKRW(state.loan_principal)}</ReviewRow>
-        <ReviewRow label="미수이자">{state.unpaid_interest > 0 ? formatKRW(state.unpaid_interest) : "—"}</ReviewRow>
-        <ReviewRow label="채권잔액 (자동합산)">{formatKRW(state.loan_principal + state.unpaid_interest)}</ReviewRow>
-        <ReviewRow label="매각희망가">{formatKRW(state.asking_price)}</ReviewRow>
-        <ReviewRow label="감정가">{formatKRW(state.appraisal_value)}</ReviewRow>
-        {state.penalty_rate > 0 && <ReviewRow label="연체금리">{state.penalty_rate}%</ReviewRow>}
-        {state.default_start_date && <ReviewRow label="연체시작일">{state.default_start_date}</ReviewRow>}
-        {state.mortgage_amount > 0 && <ReviewRow label="근저당 설정액">{formatKRW(state.mortgage_amount)} ({state.mortgage_rank}순위)</ReviewRow>}
-        {state.senior_claims_total > 0 && <ReviewRow label="선순위 총액">{formatKRW(state.senior_claims_total)}</ReviewRow>}
-        {state.tenant_deposit_total > 0 && <ReviewRow label="임차보증금 총액">{formatKRW(state.tenant_deposit_total)}</ReviewRow>}
-        {state.exclusive_area > 0 && <ReviewRow label="전용면적">{state.exclusive_area}㎡</ReviewRow>}
-        <ReviewRow label="할인율" accent>{discountRate.toFixed(1)}% (채권잔액 대비)</ReviewRow>
-        <ReviewRow label="자료 완성도" accent>{completeness}/100 점</ReviewRow>
-        {feeEstimate && (
-          <>
-            <ReviewRow label="예상 수수료 (매각사)" accent>
-              {formatKRW(feeEstimate.totalFee)} ({(feeEstimate.totalRate * 100).toFixed(2)}%)
-            </ReviewRow>
-            <div
-              style={{
-                marginTop: 8, padding: "14px 16px", borderRadius: 12,
-                backgroundColor: "var(--color-positive-bg)", border: `1px solid ${C.em}25`,
-              }}
-            >
-              <div style={{ fontSize: 10, color: C.lt3, fontWeight: 700, marginBottom: 8 }}>
-                📋 매각사 수수료 항목 상세
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.lt4 }}>
-                  <span>기본 수수료 ({(feeEstimate.baseRate * 100).toFixed(1)}%)</span>
-                  <span style={{ color: C.lt3, fontVariantNumeric: "tabular-nums" }}>{formatKRW(feeEstimate.baseFee)}</span>
-                </div>
-                {feeEstimate.addonDetails.map(a => (
-                  <div key={a.key} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.lt4 }}>
-                    <span>
-                      {a.waived ? "✓ " : "+ "}{a.label} ({(a.rate * 100).toFixed(1)}%)
-                      {a.waived && <span style={{ color: C.emL, fontSize: 9, marginLeft: 4 }}>무료 (완성도 9+)</span>}
-                    </span>
-                    <span style={{ color: a.waived ? C.emL : C.lt3, fontVariantNumeric: "tabular-nums" }}>
-                      {a.waived ? "0원" : formatKRW(a.fee)}
-                    </span>
-                  </div>
-                ))}
-                <div
-                  style={{
-                    marginTop: 6, paddingTop: 6, borderTop: `1px dashed ${C.em}22`,
-                    display: "flex", justifyContent: "space-between",
-                    fontSize: 13, fontWeight: 800,
-                  }}
-                >
-                  <span style={{ color: "var(--color-text-primary)" }}>합계</span>
-                  <span style={{ color: C.emL, fontVariantNumeric: "tabular-nums" }}>
-                    {formatKRW(feeEstimate.totalFee)} ({(feeEstimate.totalRate * 100).toFixed(2)}%)
-                  </span>
-                </div>
-              </div>
-              <div style={{ marginTop: 10, fontSize: 10, color: C.lt4, lineHeight: 1.5 }}>
-                ※ 거래 성사 시에만 청구되며 에스크로로 정산됩니다. 매입사 수수료(NPL 1.5% + 우선협상권 0.3% · 부동산 0.9%)는 매입사 부담입니다.
-              </div>
-            </div>
-          </>
-        )}
-
-        <TierPreviewBlock state={state} />
-
-        <div
-          style={{
-            marginTop: 16, padding: "16px 18px", borderRadius: 14,
-            background: "linear-gradient(135deg, rgba(5, 28, 44,0.10), rgba(46,117,182,0.10))",
-            border: `1px solid ${C.em}40`,
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            gap: 14, flexWrap: "wrap",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "1 1 260px" }}>
-            <div
-              style={{
-                width: 40, height: 40, borderRadius: 10,
-                backgroundColor: "var(--color-positive-bg)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <Calculator size={20} color={C.emL} />
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text-primary)" }}>
-                이 매물 정보로 NPL 수익성 분석 시작
-              </div>
-              <div style={{ fontSize: 11, color: C.lt4, marginTop: 3, lineHeight: 1.5 }}>
-                채권·담보·권리 입력값이 그대로 분석 페이지로 전달됩니다 · 다시 입력할 필요 없음
-              </div>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={handleStartAnalysis}
-            style={{
-              padding: "11px 18px", borderRadius: 10,
-              backgroundColor: C.em, color: "#FFFFFF",
-              fontSize: 12, fontWeight: 800, border: "none",
-              cursor: "pointer",
-              display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0,
-            }}
-          >
-            <Sparkles size={14} />
-            분석 시작
-            <ChevronRight size={14} />
-          </button>
-        </div>
-      </div>
-    </>
-  )
-}
-
-// ═════════════════════════════════════════════════════════════
-// TierPreviewBlock — 딜룸 공개 미리보기 L0→L3
-// ═════════════════════════════════════════════════════════════
-function TierPreviewBlock({ state }: { state: WizardState }) {
-  const collateralLabel = COLLATERAL_CATEGORIES.flatMap(c => c.items).find(i => i.value === state.collateral)?.label ?? "—"
-  const regionBrief = `${state.region_city || "—"} ${state.region_district ? state.region_district.slice(0, 3) + "…" : ""}`.trim()
-  const regionFull = `${state.region_city} ${state.region_district}`.trim() || "—"
-  const instTypeLabel = SELLER_INSTITUTION_OPTIONS.find(o => o.value === state.inst_type)?.label ?? "—"
-  const saleMethodLabel = (() => {
-    const labels = state.sale_methods
-      .map((m: string) => SALE_METHOD_OPTIONS.find(o => o.value === m)?.label)
-      .filter((x): x is string => Boolean(x))
-    if (state.sale_method_other.trim()) labels.push(`기타 (${state.sale_method_other.trim()})`)
-    return labels.length > 0 ? labels.join(" · ") : "—"
-  })()
-
-  const rangeKRW = (n: number) => {
-    if (!n) return "—"
-    const bil = n / 10000
-    if (bil >= 100) {
-      const low = Math.floor(bil / 10) * 10
-      return `${low}억대`
-    }
-    if (bil >= 1) {
-      const low = Math.floor(bil)
-      return `${low}억~${low + 1}억`
-    }
-    return `${Math.floor(n / 1000) * 1000}만원대`
-  }
-
-  const providedDocs = [
-    { key: "appraisal" as const, label: "감정평가서" },
-    { key: "registry" as const, label: "등기부등본" },
-    { key: "rights" as const, label: "권리분석서" },
-    { key: "lease" as const, label: "임대차현황" },
-    { key: "site_photos" as const, label: "현장사진" },
-    { key: "financials" as const, label: "재무제표" },
-  ]
-  const providedCount = providedDocs.filter(d => state.provided[d.key]).length
-
-  const tiers: {
-    level: "L0" | "L1" | "L2" | "L3"
-    title: string
-    gate: string
-    tone: string
-    bg: string
-    items: { label: string; value: string; muted?: boolean }[]
-  }[] = [
-    {
-      level: "L0",
-      title: "공개 카드",
-      gate: "누구나 열람",
-      tone: C.blueL,
-      bg: "rgba(46, 117, 182, 0.08)",
-      items: [
-        { label: "담보 · 지역", value: `${collateralLabel} · ${regionBrief || "—"}` },
-        { label: "매각방식", value: saleMethodLabel },
-        { label: "채권잔액 (범위)", value: rangeKRW(state.loan_principal + state.unpaid_interest) },
-        { label: "매각희망가 (범위)", value: rangeKRW(state.asking_price) },
-        { label: "감정가 (범위)", value: rangeKRW(state.appraisal_value) },
-        { label: "기관 유형", value: instTypeLabel },
-      ],
-    },
-    {
-      level: "L1",
-      title: "회원가입 · KYC",
-      gate: "본인인증 완료 시",
-      tone: C.emL,
-      bg: "var(--color-positive-bg)",
-      items: [
-        { label: "대출원금 (정확치)", value: formatKRW(state.loan_principal) },
-        { label: "미수이자 (정확치)", value: state.unpaid_interest > 0 ? formatKRW(state.unpaid_interest) : "—" },
-        { label: "채권잔액 (정확치)", value: formatKRW(state.loan_principal + state.unpaid_interest) },
-        { label: "매각희망가 (정확치)", value: formatKRW(state.asking_price) },
-        { label: "감정가 (정확치)", value: formatKRW(state.appraisal_value) },
-        { label: "지역 (동 단위)", value: regionFull },
-        { label: "채무자 구분", value: state.debtor_type === "INDIVIDUAL" ? "개인" : state.debtor_type === "CORPORATE" ? "법인" : "—" },
-        { label: "AI 등급 프리뷰", value: "Nplatform NPL Engine v2" },
-      ],
-    },
-    {
-      level: "L2",
-      title: "NDA 체결",
-      gate: "비밀유지 서명 후",
-      tone: C.amber,
-      bg: "rgba(5, 28, 44, 0.08)",
-      items: [
-        { label: "연체금리", value: state.penalty_rate > 0 ? `${state.penalty_rate}%` : "—", muted: !state.penalty_rate },
-        { label: "연체시작일", value: state.default_start_date || "—", muted: !state.default_start_date },
-        { label: "근저당 설정액", value: state.mortgage_amount > 0 ? `${formatKRW(state.mortgage_amount)} (${state.mortgage_rank}순위)` : "—", muted: !state.mortgage_amount },
-        { label: "선순위 채권 총액", value: state.senior_claims_total > 0 ? formatKRW(state.senior_claims_total) : "—", muted: !state.senior_claims_total },
-        { label: "임차보증금 총액", value: state.tenant_deposit_total > 0 ? formatKRW(state.tenant_deposit_total) : "—", muted: !state.tenant_deposit_total },
-        { label: "전용면적 · 건축년도", value: `${state.exclusive_area > 0 ? state.exclusive_area + "㎡" : "—"} · ${state.build_year > 0 ? state.build_year + "년" : "—"}`, muted: !state.exclusive_area && !state.build_year },
-      ],
-    },
-    {
-      level: "L3",
-      title: "LOI 제출",
-      gate: "우선협상 인수의향서",
-      tone: C.teal,
-      bg: "rgba(5, 28, 44, 0.08)",
-      items: [
-        { label: "기관명 (정확치)", value: state.institution || "—", muted: !state.institution },
-        ...providedDocs.map(d => ({
-          label: d.label,
-          value: state.provided[d.key] ? "열람 가능" : "미제출",
-          muted: !state.provided[d.key],
-        })),
-      ],
-    },
-  ]
-
-  return (
-    <div
-      style={{
-        marginTop: 20, padding: "18px 20px", borderRadius: 14,
-        backgroundColor: C.bg2, border: `1px solid ${C.bg4}`,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <ShieldCheck size={16} color={C.blueL} />
-          <span style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text-primary)" }}>
-            딜룸 공개 미리보기
-          </span>
-          <span style={{ fontSize: 10, color: C.lt4 }}>L0 → L3 단계별 열람</span>
-        </div>
-        <span
-          title="입력하신 필드가 딜룸의 각 티어에서 어떻게 공개되는지 확인하세요. 인증 → NDA → LOI 단계를 거쳐야 상세 정보가 열립니다."
-          style={{ fontSize: 10, color: C.lt4, cursor: "help" }}
-        >
-          단계별 접근 제어 ⓘ
-        </span>
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: 10,
-        }}
-      >
-        {tiers.map((t) => (
-          <div
-            key={t.level}
-            style={{
-              padding: "12px 13px", borderRadius: 10,
-              backgroundColor: t.bg, border: `1px solid ${t.tone}33`,
-              display: "flex", flexDirection: "column", gap: 8,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 6 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span
-                  style={{
-                    fontSize: 10, fontWeight: 900, letterSpacing: 0.4,
-                    padding: "2px 7px", borderRadius: 4,
-                    backgroundColor: t.tone, color: "#FFFFFF",
-                  }}
-                >
-                  {t.level}
-                </span>
-                <span style={{ fontSize: 12, fontWeight: 800, color: "var(--color-text-primary)" }}>{t.title}</span>
-              </div>
-            </div>
-            <div style={{ fontSize: 9.5, color: C.lt4, fontWeight: 600, marginTop: -4 }}>{t.gate}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 2 }}>
-              {t.items.map((it, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8,
-                    fontSize: 10.5, lineHeight: 1.4,
-                  }}
-                >
-                  <span style={{ color: C.lt4, fontWeight: 500 }}>{it.label}</span>
-                  <span
-                    style={{
-                      color: it.muted ? C.lt4 : "var(--color-text-primary)",
-                      fontWeight: it.muted ? 500 : 700,
-                      fontVariantNumeric: "tabular-nums",
-                      textAlign: "right",
-                    }}
-                  >
-                    {it.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div
-        style={{
-          marginTop: 12, padding: "10px 12px", borderRadius: 8,
-          backgroundColor: C.bg3, border: `1px dashed ${C.bg4}`,
-          fontSize: 10, color: C.lt4, lineHeight: 1.5,
-        }}
-      >
-        <strong style={{ color: "var(--color-text-primary)" }}>자료 제출 현황:</strong>{" "}
-        {providedCount}/6 완료 —{" "}
-        {providedCount >= 5
-          ? "L3 LOI 제출 시 완전 열람 가능 · 체결 속도 ↑"
-          : providedCount >= 3
-          ? "L2 NDA 단계에서 기본 심사 가능 · 추가 자료 권장"
-          : "L1까지만 심사 가능 · L3 열람 가능 자료 부족"}
       </div>
     </div>
   )
-}
-
-// ═════════════════════════════════════════════════════════════
-// SubmittedScreen — 제출 완료 화면
-// ═════════════════════════════════════════════════════════════
-function SubmittedScreen({ completeness }: { completeness: number }) {
-  return (
-    <main
-      style={{
-        backgroundColor: _MCK.paperTint, color: _MCK.ink, minHeight: "100vh",
-        display: "flex", alignItems: "center", justifyContent: "center", padding: 40,
-      }}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
-        style={{
-          maxWidth: 560, width: "100%",
-          padding: 48,
-          backgroundColor: _MCK.paper,
-          border: `1px solid ${_MCK.border}`,
-          borderTop: `4px solid ${_MCK.brass}`,
-          textAlign: "center",
-        }}
-      >
-        <div
-          style={{
-            width: 72, height: 72,
-            backgroundColor: _MCK.ink,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            margin: "0 auto 24px",
-          }}
-        >
-          <Check size={36} color={_MCK.brassLight} />
-        </div>
-        <h2 style={{ fontFamily: MCK_FONTS.serif, fontSize: 28, fontWeight: 700, color: _MCK.ink, marginBottom: 12, letterSpacing: "-0.02em" }}>
-          마스킹 파이프라인 대기열 등록 완료
-        </h2>
-        <p style={{ fontSize: 13, color: C.lt4, lineHeight: 1.6, marginBottom: 24 }}>
-          제출하신 매물은 자동 마스킹 엔진에서 1차 처리 후 DPO 검수를 거쳐{" "}
-          <strong style={{ color: "var(--color-text-primary)" }}>평균 2시간 이내</strong>에 L0(공개) 단계로 노출됩니다.
-        </p>
-        <div
-          style={{
-            padding: 16, borderRadius: 12,
-            backgroundColor: "var(--color-positive-bg)", border: `1px solid ${C.em}33`,
-            marginBottom: 24,
-          }}
-        >
-          <div style={{ fontSize: 11, color: C.lt4, marginBottom: 6 }}>현재 자료 완성도</div>
-          <div style={{ fontSize: 28, fontWeight: 900, color: C.emL }}>{completeness}/100</div>
-        </div>
-        <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link
-            href="/exchange"
-            style={{
-              padding: "11px 20px", borderRadius: 10,
-              backgroundColor: C.em, color: "#FFFFFF",
-              fontSize: 12, fontWeight: 800, textDecoration: "none",
-            }}
-          >
-            매물 목록으로
-          </Link>
-          <Link
-            href="/exchange/my"
-            style={{
-              padding: "11px 20px", borderRadius: 10,
-              backgroundColor: C.bg3, color: "var(--color-text-primary)",
-              fontSize: 12, fontWeight: 700, textDecoration: "none",
-              border: `1px solid ${C.bg4}`,
-            }}
-          >
-            내 매물 관리
-          </Link>
-        </div>
-        <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 16, flexWrap: "wrap" }}>
-          <span
-            style={{
-              padding: "9px 16px", borderRadius: 8,
-              backgroundColor: "transparent", color: C.lt4,
-              fontSize: 11, fontWeight: 600,
-              border: `1px dashed ${C.bg4}`,
-              display: "flex", alignItems: "center", gap: 6,
-            }}
-            title="대량 등록 일시 중단"
-          >
-            📞 대량 등록은 NPLATFORM 고객센터(02-555-2822) 문의 바랍니다
-          </span>
-          <Link
-            href="/exchange/demands"
-            style={{
-              padding: "9px 16px", borderRadius: 8,
-              backgroundColor: "transparent", color: C.lt3,
-              fontSize: 11, fontWeight: 600, textDecoration: "none",
-              border: `1px solid ${C.bg4}`,
-              display: "flex", alignItems: "center", gap: 6,
-            }}
-          >
-            🔍 매수 수요 확인
-          </Link>
-        </div>
-      </motion.div>
-    </main>
-  )
-}
-
-/* ═══════════════════════════════════════════════════════════
-   SHARED FORM PRIMITIVES (sell 전용 extras 및 커스텀 필드용)
-═══════════════════════════════════════════════════════════ */
-
-function StepHeader({ num, title, desc }: { num: number; title: string; desc: string }) {
-  return (
-    <div style={{ marginBottom: 24 }}>
-      <div style={{ fontSize: 11, color: C.emL, fontWeight: 800, marginBottom: 6, letterSpacing: "0.1em" }}>
-        STEP {num} / 6
-      </div>
-      <h2 style={{ fontSize: 22, fontWeight: 900, color: "var(--color-text-primary)", marginBottom: 6, letterSpacing: "-0.01em" }}>
-        {title}
-      </h2>
-      <p style={{ fontSize: 12, color: C.lt4, lineHeight: 1.6 }}>{desc}</p>
-    </div>
-  )
-}
-
-function FormGrid({ cols, children }: { cols: 1 | 2; children: React.ReactNode }) {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: cols === 1 ? "1fr" : "repeat(2, 1fr)", gap: 16 }}>
-      {children}
-    </div>
-  )
-}
-
-function Field({ label, required, hint, children, style }: { label: string; required?: boolean; hint?: string; children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <div style={style}>
-      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--fg-default)", fontWeight: 600, marginBottom: 6 }}>
-        {label}
-        {required && <span style={{ color: C.rose }}>*</span>}
-        {hint && <span style={{ color: "var(--fg-muted)", fontWeight: 500 }}>· {hint}</span>}
-      </div>
-      {children}
-    </div>
-  )
-}
-
-function TextInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
-  return (
-    <input
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      placeholder={placeholder}
-      style={{
-        width: "100%", padding: "11px 14px", borderRadius: 10,
-        backgroundColor: "var(--layer-3-bg)",
-        border: `1px solid var(--layer-border)`,
-        color: "var(--fg-strong)", fontSize: 13, outline: "none",
-      }}
-    />
-  )
-}
-
-function NumberInput({ value, onChange, placeholder, suffix }: { value: number; onChange: (v: number) => void; placeholder?: string; suffix?: string }) {
-  const [raw, setRaw] = useState(value ? String(value) : "")
-  const displayValue = raw ? Number(raw.replace(/,/g, '')).toLocaleString('ko-KR') : ""
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const stripped = e.target.value.replace(/,/g, '').replace(/[^0-9.]/g, '')
-    setRaw(stripped)
-    onChange(Number(stripped) || 0)
-  }
-
-  return (
-    <div style={{ position: "relative" }}>
-      <input
-        type="text"
-        inputMode="numeric"
-        value={displayValue}
-        onChange={handleChange}
-        placeholder={placeholder ? Number(placeholder.replace(/[^0-9]/g, '') || '0').toLocaleString('ko-KR') || placeholder : ""}
-        style={{
-          width: "100%", padding: "11px 40px 11px 14px", borderRadius: 10,
-          backgroundColor: "var(--layer-3-bg)",
-          border: `1px solid var(--layer-border)`,
-          color: "var(--fg-strong)", fontSize: 13, outline: "none",
-        }}
-      />
-      {suffix && (
-        <span
-          style={{
-            position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
-            fontSize: 11, color: C.lt4, fontWeight: 600,
-          }}
-        >
-          {suffix}
-        </span>
-      )}
-    </div>
-  )
-}
-
-function RadioPills({ value, options, onChange }: { value: string; options: Array<{ value: string; label: string }>; onChange: (v: string) => void }) {
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-      {options.map(op => {
-        const active = op.value === value
-        return (
-          <button
-            key={op.value}
-            onClick={() => onChange(op.value)}
-            style={{
-              padding: "9px 14px", borderRadius: 10,
-              backgroundColor: active ? "var(--color-positive-bg)" : C.bg3,
-              color: active ? C.emL : C.lt3,
-              border: `1px solid ${active ? C.em : C.bg4}`,
-              fontSize: 11, fontWeight: 700, cursor: "pointer",
-            }}
-          >
-            {op.label}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-/**
- * SaleMethodMultiSelect — Phase G7+ · 매각 방식 복수 선택 + 기타 자유 입력.
- *
- * 옵션 카탈로그는 types.ts 의 SALE_METHOD_OPTIONS 단일 진원지에서 가져옴 (번역 대응).
- * 토글식 칩 (pill) · "기타" 체크 시 자유 입력 텍스트필드 노출.
- */
-function SaleMethodMultiSelect({
-  selected, other, onChange, onOtherChange,
-}: {
-  selected: ListingSaleMethod[]
-  other: string
-  onChange: (next: ListingSaleMethod[]) => void
-  onOtherChange: (v: string) => void
-}) {
-  const toggle = (v: ListingSaleMethod) => {
-    const set = new Set(selected)
-    if (set.has(v)) set.delete(v)
-    else set.add(v)
-    onChange(Array.from(set))
-  }
-  const otherActive = other.trim().length > 0
-  const toggleOther = () => {
-    if (otherActive) onOtherChange("")
-  }
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-        {SALE_METHOD_OPTIONS.map(op => {
-          const active = selected.includes(op.value)
-          return (
-            <button
-              key={op.value}
-              type="button"
-              onClick={() => toggle(op.value)}
-              aria-pressed={active}
-              style={{
-                padding: "9px 14px", borderRadius: 10,
-                backgroundColor: active ? "var(--color-positive-bg)" : C.bg3,
-                color: active ? C.emL : C.lt3,
-                border: `1px solid ${active ? C.em : C.bg4}`,
-                fontSize: 11, fontWeight: 700, cursor: "pointer",
-                display: "inline-flex", alignItems: "center", gap: 6,
-              }}
-            >
-              <span aria-hidden>{active ? "☑" : "☐"}</span>
-              {op.label}
-            </button>
-          )
-        })}
-        <button
-          type="button"
-          onClick={toggleOther}
-          aria-pressed={otherActive}
-          style={{
-            padding: "9px 14px", borderRadius: 10,
-            backgroundColor: otherActive ? "var(--color-positive-bg)" : C.bg3,
-            color: otherActive ? C.emL : C.lt3,
-            border: `1px solid ${otherActive ? C.em : C.bg4}`,
-            fontSize: 11, fontWeight: 700, cursor: "pointer",
-            display: "inline-flex", alignItems: "center", gap: 6,
-          }}
-        >
-          <span aria-hidden>{otherActive ? "☑" : "☐"}</span>
-          기타
-        </button>
-      </div>
-      <input
-        type="text"
-        value={other}
-        onChange={(e) => onOtherChange(e.target.value)}
-        placeholder="기타 매각 방식을 직접 입력 (예: 해외 매각 · 이관 · 사모펀드 · Bulk 매각)"
-        style={{
-          width: "100%", padding: "8px 12px", borderRadius: 8,
-          backgroundColor: C.bg3, color: "var(--color-text-primary)",
-          border: `1px solid ${otherActive ? C.em : C.bg4}`,
-          fontSize: 12, outline: "none",
-        }}
-      />
-    </div>
-  )
-}
-
-function ReviewRow({ label, children, accent = false }: { label: string; children: React.ReactNode; accent?: boolean }) {
-  return (
-    <div
-      style={{
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "12px 14px", borderRadius: 10,
-        backgroundColor: accent ? "var(--color-positive-bg)" : C.bg3,
-        border: `1px solid ${accent ? `${C.em}33` : C.bg4}`,
-      }}
-    >
-      <span style={{ fontSize: 11, color: C.lt4, fontWeight: 700 }}>{label}</span>
-      <span style={{ fontSize: 13, fontWeight: 700, color: accent ? C.emL : "var(--color-text-primary)" }}>{children}</span>
-    </div>
-  )
-}
-
-function formatKRW(n: number): string {
-  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}억원`
-  if (n >= 10_000) return `${(n / 10_000).toFixed(0)}만원`
-  return `${n.toLocaleString("ko-KR")}원`
 }

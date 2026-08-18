@@ -66,13 +66,13 @@ const C = {
   dangerBg: "rgba(185, 28, 28, 0.10)",
 } as const
 
-/** 작은 상태 칩 — submitted/pending/approved/rejected */
-function StatusChip({ status }: { status: ApprovalStatus }) {
+/** 작은 상태 칩 — submitted/pending/approved/rejected (단계별 라벨 오버라이드 지원) */
+function StatusChip({ status, noneLabel, approvedLabel }: { status: ApprovalStatus; noneLabel?: string; approvedLabel?: string }) {
   const map: Record<ApprovalStatus, { label: string; bg: string; fg: string; icon: React.ReactNode }> = {
-    none:      { label: "미제출",   bg: "rgba(148, 163, 184, 0.18)", fg: "#475569", icon: <AlertCircle size={11} /> },
+    none:      { label: noneLabel ?? "미제출", bg: "rgba(148, 163, 184, 0.18)", fg: "#475569", icon: <AlertCircle size={11} /> },
     submitted: { label: "제출 완료", bg: C.positiveBg,                fg: C.positive, icon: <CheckCircle2 size={11} /> },
     pending:   { label: "검토 중",   bg: C.warnBg,                    fg: C.warn,    icon: <Clock size={11} /> },
-    approved:  { label: "승인 완료", bg: C.positiveBg,                fg: C.positive, icon: <CheckCircle2 size={11} /> },
+    approved:  { label: approvedLabel ?? "승인 완료", bg: C.positiveBg,           fg: C.positive, icon: <CheckCircle2 size={11} /> },
     rejected:  { label: "반려됨",    bg: C.dangerBg,                  fg: C.danger,  icon: <AlertCircle size={11} /> },
   }
   const m = map[status]
@@ -101,7 +101,7 @@ function StatusChip({ status }: { status: ApprovalStatus }) {
 function ApprovalTimeline({
   steps,
 }: {
-  steps: { label: string; status: ApprovalStatus; meta?: string }[]
+  steps: { label: string; status: ApprovalStatus; meta?: string; noneLabel?: string; approvedLabel?: string }[]
 }) {
   return (
     <ol className="space-y-3">
@@ -130,7 +130,7 @@ function ApprovalTimeline({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: C.ink }}>{s.label}</span>
-                <StatusChip status={s.status} />
+                <StatusChip status={s.status} noneLabel={s.noneLabel} approvedLabel={s.approvedLabel} />
               </div>
               {s.meta && (
                 <p style={{ fontSize: 11, fontWeight: 500, color: C.textMuted, marginTop: 2 }}>
@@ -498,7 +498,7 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
       open={open}
       onClose={onClose}
       title="NDA 체결"
-      subtitle={`본 채권 “${listingTitle}” 에 대한 비밀유지계약(NDA)을 전자서명합니다. NDA 는 채권마다 매각사 승인이 필요합니다.`}
+      subtitle={`본 채권 “${listingTitle}” 에 대한 비밀유지계약(NDA)을 엔플랫폼(트랜스파머 주식회사)과 전자서명합니다. NDA 는 채권마다 운영사 엔플랫폼(트랜스파머 주식회사)의 승인이 필요합니다.`}
       icon={<FileSignature size={18} />}
       trackingHref="/my/agreements"
       trackingLabel="마이 페이지에서 NDA 진행 현황 확인"
@@ -565,7 +565,7 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
             대상 채권
           </div>
           <div style={{ fontSize: 13.5, fontWeight: 800, color: C.ink, marginBottom: 2 }}>{listingTitle}</div>
-          <div style={{ fontSize: 11, fontWeight: 500, color: C.textMuted }}>딜 ID · {listingId}</div>
+          <div style={{ fontSize: 11, fontWeight: 500, color: C.textMuted }}>관리번호 · {listingId}</div>
         </div>
       </section>
 
@@ -580,10 +580,12 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
           NDA 핵심 조항
         </h3>
         <ul className="space-y-1.5" style={{ fontSize: 11.5, color: C.textSub, lineHeight: 1.5 }}>
-          <li>• 비밀정보(등기부 원본·임대차 상세·현장사진·재무제표·채무자 정보)는 NPL 투자 검토 목적으로만 사용</li>
+          <li>• 모든 채권정보(채권 상세내역 · 담보물 정보 · 권리관계 · 현황 등)는 비식별화(마스킹)하여 제공됩니다</li>
+          <li>• 해당 정보는 NPL 투자 검토 목적으로만 사용 가능합니다</li>
           <li>• 모든 열람 행위는 PII Access Log 기록, 비정상 접근 시 DPO 자동 통보</li>
           <li>• NDA 위반 시 손해 배상 + 개인정보보호법·신용정보법 책임</li>
-          <li>• 본 NDA 유효기간 3년, 비밀유지 의무는 그 후에도 지속</li>
+          <li>• 본 NDA 유효기간 1년, 비밀유지 의무는 그 후에도 지속</li>
+          <li>• 계약 상대방: 엔플랫폼(트랜스파머 주식회사)</li>
         </ul>
       </section>
 
@@ -602,12 +604,13 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
         }}>
           <dl style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 11.5, color: C.textSub, lineHeight: 1.55 }}>
             {[
-              ["1조 (비밀정보의 정의)", "본 NDA 체결 후 열람 가능한 매물 상세 정보(등기부등본 원본, 임대차 계약 상세, 현장사진, 재무제표, 채무자 관련 정보 일체)는 비밀정보로 규정한다."],
-              ["2조 (비밀 유지 의무)", "수령자는 비밀정보를 NPL 투자 검토 목적으로만 사용하며, 제3자에게 누설·복제·배포하지 않는다. 단, 투자 자문 법인·법무법인 등 법적 보호 관계에 있는 전문가는 예외로 한다."],
+              ["0조 (계약 당사자)", "본 NDA는 수령자와 엔플랫폼(트랜스파머 주식회사) 간에 체결되며, 승인 권한은 운영사 엔플랫폼에 있다."],
+              ["1조 (비밀정보의 정의)", "본 NDA 체결 후 제공되는 모든 채권정보(채권 상세내역, 담보물 정보, 권리관계, 현황 등 일체)는 비밀정보로 규정하며, 비식별화(마스킹)하여 제공된다."],
+              ["2조 (비밀 유지 의무)", "수령자는 비밀정보를 NPL 투자 검토 목적으로만 사용할 수 있으며, 제3자에게 누설·복제·배포하지 않는다. 단, 투자 자문 법인·법무법인 등 법적 보호 관계에 있는 전문가는 예외로 한다."],
               ["3조 (개인정보 보호)", "열람한 정보 중 개인정보보호법 · 신용정보법에 따라 보호되는 정보는 수령자의 책임 하에 안전하게 관리하며, 검토 종료 후 즉시 파기한다."],
               ["4조 (열람 이력 로깅)", "모든 열람 행위는 PII Access Log에 기록되며, 비정상 접근 패턴(대량 다운로드, 반복 조회 등)은 DPO에게 자동 통보되어 조사 대상이 된다."],
               ["5조 (위반 시 책임)", "본 NDA 위반 시 NPLatform 및 매도자에게 발생한 모든 손해를 배상하며, 개인정보보호법 · 신용정보법 위반 시 관련 법령에 따른 형사 · 민사 책임을 진다."],
-              ["6조 (유효 기간)", "본 NDA는 체결일로부터 3년간 유효하며, 이후에도 비밀정보에 대한 비밀 유지 의무는 계속 유지된다."],
+              ["6조 (유효 기간)", "본 NDA는 체결일로부터 1년간 유효하며, 이후에도 비밀정보에 대한 비밀 유지 의무는 계속 유지된다."],
             ].map(([title, body]) => (
               <div key={title}>
                 <dt style={{ fontWeight: 800, color: C.ink, marginBottom: 3 }}>{title}</dt>
@@ -676,7 +679,7 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
         )}
       </section>
 
-      {/* 매각사 승인 진행 */}
+      {/* 운영사 승인 진행 — 매각사 승인 단계 제거 (2026-08-18) */}
       <section style={{ marginBottom: 18 }}>
         <h3
           style={{
@@ -684,8 +687,9 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
             letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10,
           }}
         >
-          진행 상황 — 매각사 검토
+          진행 상황
         </h3>
+        {/* 2026-08-18 사용자 정책: 2단계로 단순화 — NDA 전자서명 → 운영사 검토 및 승인 완료 */}
         <ApprovalTimeline
           steps={[
             {
@@ -693,24 +697,21 @@ export function NdaModal({ open, onClose, listingTitle, listingId, state, onSubm
               status:
                 state.status === "none" ? "none" :
                 state.status === "rejected" ? "submitted" : "submitted",
-              meta: state.submittedAt ? `제출 ${state.submittedAt}` : "전자서명 후 매각사로 즉시 전송",
+              meta: state.submittedAt ? `제출 ${state.submittedAt}` : "전자서명 후 엔플랫폼으로 즉시 전송",
             },
             {
-              label: `매각사 검토 (${state.sellerName ?? "매각사"})`,
+              label: "운영사 검토 및 승인 완료",
+              // 이 단계는 제출 개념이 아니므로 미승인 / 승인 완료로 표기
+              noneLabel: "미승인",
               status:
                 state.status === "approved" ? "approved" :
                 state.status === "rejected" ? "rejected" :
                 state.status === "submitted" || state.status === "pending" ? "pending" : "none",
-              meta: state.reviewedAt
-                ? `검토 ${state.reviewedAt}${state.reviewNote ? ` — ${state.reviewNote}` : ""}`
-                : state.reviewNote,
-            },
-            {
-              label: "NDA 승인 완료",
-              status: state.status === "approved" ? "approved" : "none",
               meta: state.status === "approved"
-                ? "L2 자료 열람 권한 부여 — 감정평가서 · 현장사진 · 채권 정보"
-                : "승인 후 L2 자료 열람 가능",
+                ? "승인 완료 — 상세 자료 열람 가능"
+                : state.reviewedAt
+                  ? `검토 ${state.reviewedAt}${state.reviewNote ? ` — ${state.reviewNote}` : ""}`
+                  : "엔플랫폼(트랜스파머 주식회사) 검토 후 승인 시 상세 자료 열람 가능",
             },
           ]}
         />

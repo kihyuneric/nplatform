@@ -59,7 +59,7 @@ const SAMPLE_AGREEMENTS: AgreementRow[] = [
 ]
 
 const STATUS_META: Record<DocStatus, { label: string; color: string; bg: string; border: string; icon: React.ElementType }> = {
-  PENDING:  { label: "검토 중",   color: "#A53F00", bg: "rgba(255, 140, 0, 0.10)", border: "rgba(255, 140, 0, 0.35)", icon: Clock },
+  PENDING:  { label: "운영사 검토", color: "#A53F00", bg: "rgba(255, 140, 0, 0.10)", border: "rgba(255, 140, 0, 0.35)", icon: Clock },
   APPROVED: { label: "승인",     color: "#047857", bg: "rgba(16, 185, 129, 0.10)", border: "rgba(16, 185, 129, 0.35)", icon: CheckCircle2 },
   SIGNED:   { label: "체결 완료", color: ELECTRIC_DARK, bg: "rgba(34, 81, 255, 0.10)", border: "rgba(34, 81, 255, 0.30)", icon: CheckCircle2 },
   REJECTED: { label: "거절",     color: "#9F1239", bg: "rgba(225, 29, 72, 0.10)", border: "rgba(225, 29, 72, 0.35)", icon: XCircle },
@@ -85,6 +85,42 @@ export default function AgreementsPage() {
   useEffect(() => {
     const load = async () => {
       try {
+        // 0. NDA 요청 진행상황 (listing_marketing.nda_requests) — 내 계정 이메일 매칭
+        //    운영사 검토 → 승인/거절 상태가 관리자 승인과 실시간 공유된다.
+        try {
+          const { createClient } = await import("@/lib/supabase/client")
+          const supabase = createClient()
+          const { data: { user } } = await supabase.auth.getUser()
+          const email = user?.email ?? ""
+          if (email) {
+            const mr = await fetch("/api/v1/listing-marketing")
+            const mj = await mr.json()
+            const rowsMap: Record<string, { nda_requests?: Array<Record<string, string>> }> = mj?.data ?? {}
+            const mine: AgreementRow[] = []
+            for (const [lid, row] of Object.entries(rowsMap)) {
+              for (const q of row?.nda_requests ?? []) {
+                if (q.email !== email) continue
+                mine.push({
+                  id: String(q.id),
+                  type: "NDA",
+                  listing_id: lid,
+                  counterparty: "엔플랫폼(트랜스파머 주식회사)",
+                  collateral: lid,
+                  signed_at: q.requested_at ? String(q.requested_at).slice(0, 16).replace("T", " ") : "—",
+                  expires_at: q.status === "승인" && q.decided_at ? `${Number(String(q.decided_at).slice(0, 4)) + 1}${String(q.decided_at).slice(4, 10)}` : undefined,
+                  status: q.status === "승인" ? "APPROVED" : q.status === "거절" ? "REJECTED" : "PENDING",
+                })
+              }
+            }
+            if (mine.length > 0) {
+              mine.sort((a, b) => (a.signed_at < b.signed_at ? 1 : -1))
+              setAgreements(mine)
+              setIsSample(false)
+              return
+            }
+          }
+        } catch { /* ignore — 아래 단계로 폴백 */ }
+
         // 1. 실 agreements (Phase 2 — 자체 전자서명 row)
         const res = await fetch("/api/v1/agreements", { credentials: "include" })
         if (res.ok) {
@@ -268,7 +304,7 @@ export default function AgreementsPage() {
                 return (
                   <Link
                     key={row.id}
-                    href={`/deals/dealroom?listingId=${encodeURIComponent(row.listing_id)}`}
+                    href={`/listing-detail/${encodeURIComponent(row.listing_id)}?mode=view`}
                     style={{
                       background: PAPER,
                       border: `1px solid ${BORDER}`,
@@ -383,7 +419,7 @@ export default function AgreementsPage() {
                   <Link
                     key={row.id}
                     /* SoT — 매물 상세는 항상 딜룸 (?listingId 쿼리) */
-                    href={`/deals/dealroom?listingId=${encodeURIComponent(row.listing_id)}`}
+                    href={`/listing-detail/${encodeURIComponent(row.listing_id)}?mode=view`}
                     style={{
                       display: "grid",
                       gridTemplateColumns: "80px 1fr 200px 140px 140px 110px 90px",

@@ -7,7 +7,7 @@ const PROVIDER_ID = 'site_settings'
 
 const DEFAULT_SETTINGS: Record<string, string> = {
   siteName: 'NPLatform',
-  siteDescription: '금융기관과 투자자를 직접 연결하는 NPL 거래 플랫폼',
+  siteDescription: '대한민국 1%를 위한 프라이빗 NPL 플랫폼',
   contactPhone: '02-555-2822',
   contactEmail: 'ceo@transfarmer.co.kr',
   dpoName: '박성필',
@@ -18,8 +18,8 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   snsInstagram: '',
   businessNumber: '507-87-02631',
   ceoName: '김기현',
-  companyAddress: '서울 마포구 백범로31길 21, 서울창업허브 별관 108호',
-  companyAddress2: '서울 종로구 서린동 154-1, 스타트업빌리지 5층',
+  companyAddress: '서울시 서초구 서초대로77길 55, 에이프로스퀘어 7층 KB이노베이션허브',
+  companyAddress2: '',
   companyName: '트랜스파머(주) | TransFarmer Inc.',
   companyNameKo: '트랜스파머(주)',
   companyNameEn: 'TransFarmer Inc.',
@@ -28,6 +28,20 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   noticeBanner: 'true',
   registration: 'true',
   maintenance: 'false',
+  // 메인 수기 지표 — 운영 관리자가 /admin/main-stats 에서 입력
+  mainViewableNpl: '10',    // 열람 가능한 NPL (건)
+  mainNewThisWeek: '3',     // 이번 주 신규 (건)
+  mainStatsPeriod: '',      // 기준 시기 라벨 (예: 2026년 8월 3주) — 비우면 '이번 주'
+  // 메인 KPI · 라이브 티커 · NPL 자동매칭 KPI 자동연동 (2026-08-18)
+  statNplCount: '789개',
+  statAppraisalTotal: '5조 7,111억',
+  statMortgageTotal: '1조 4,573억',
+  statPrincipalTotal: '1조 2,144억',
+  statInstitutions: '75곳',
+  statSellers: '60개사',
+  statBuyers: '180개사',
+  statInvestors: '340명',
+  statSuccess: '120건',
 }
 
 export async function GET() {

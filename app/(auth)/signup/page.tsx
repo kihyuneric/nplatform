@@ -5,18 +5,21 @@
  *
  * 사용자 정합 정책:
  *   - /login 과 동일한 2-panel 디자인 (좌: ink hero + KPI / 우: paper form)
- *   - 회원 유형 3개 (매각사 · 매입사 · 파트너)
- *   - 가입 후 사업자등록증/명함 인증 → 6개월 무료 안내
- *   - 단일 폼 (1-step) 으로 단순화 — 인증 서류는 가입 후 마이페이지에서 업로드
+ *   - 회원 유형 4개 (매각사 · 매입사 · 투자자 · 관리자/파트너)
+ *   - 카카오/네이버 소셜 간편가입 + 이메일 가입
+ *   - 직책 · 명함/사업자등록증 첨부 · 요청사항 필드
+ *   - 첨부 서류는 운영팀 검증 → 6개월 무료 안내
  */
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { SELLER_INSTITUTION_OPTIONS } from '@/lib/taxonomy'
 import {
-  Eye, EyeOff, Loader2, Banknote, TrendingUp, User as UserIcon,
-  CheckCircle2, ArrowRight, ShieldCheck,
+  Eye, EyeOff, Loader2, Banknote, User as UserIcon,
+  CheckCircle2, ArrowRight, ShieldCheck, Building2, Wallet,
+  Upload, X, FileText,
 } from 'lucide-react'
 
 const INK = '#0A1628'
@@ -33,26 +36,22 @@ const BORDER_STRONG = 'rgba(5, 28, 44, 0.20)'
 const DANGER = '#9F1239'
 const DANGER_BG = 'rgba(225, 29, 72, 0.06)'
 
-// ─── 회원 유형 (3개 — 매각사 · 매입사 · 파트너) ─────────────
+// ─── 회원 유형 3종 (2026-08-18 확정) — 매각 회원 · 매입 회원 · 파트너 회원 ──
+// 매입 회원은 법인·개인 통합 (기존 BUYER_INST/BUYER_INDV 가입자는 호환 유지)
 const SIGNUP_ROLES = [
   {
     value: 'SELLER',
-    label: '매각사',
+    label: '매각 회원',
     desc: '은행 · 저축은행 · AMC · 대부업체 · 캐피탈 · 보험사',
     icon: Banknote,
   },
   {
     value: 'BUYER',
-    label: '매입사',
-    desc: '자산가 · 법인 · 대부업체 · AMC · 투자운용사',
-    icon: TrendingUp,
+    label: '매입 회원',
+    desc: '법인 · 대부업체 · AMC · 투자운용사 · 개인 자산가 · 개인 투자자',
+    icon: Building2,
   },
-  {
-    value: 'PARTNER',
-    label: '파트너',
-    desc: '자문사 · 법무법인 · 회계법인',
-    icon: UserIcon,
-  },
+  // 파트너 회원 — 우선 삭제 (2026-08-18 사용자 지시)
 ] as const
 
 export default function SignupPage() {
@@ -63,15 +62,45 @@ export default function SignupPage() {
     passwordConfirm: '',
     name: '',
     company: '',
+    title: '',
     phone: '',
+    message: '',
     role: 'SELLER',
+    institutionType: '',  // 매각사 기관 유형 — NPL 리스트와 동일 택소노미
+    // D2 가입 분기 (2026-08-18)
+    businessNo: '',       // 사업자등록번호 — 매각 · 매입(법인)
+    buyerKind: '',        // 매입 세부유형: CORP(법인) / INDIVIDUAL(개인자산가)
+    investScale: '',      // 개인자산가 — (선택) 투자 가능 규모
+    demandRegions: '',    // 가입 중 매입조건 — 지역 (쉼표 구분)
+    demandTypes: '',      // 가입 중 매입조건 — 담보유형 대분류
+    demandAmountMin: '',  // 금액대 (억)
+    demandAmountMax: '',
   })
+  const [businessFile, setBusinessFile] = useState<File | null>(null)
+  const [cardFile, setCardFile] = useState<File | null>(null)
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [agreePrivacy, setAgreePrivacy] = useState(false)
   const [agreeMarketing, setAgreeMarketing] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // ─── 소셜 로그인 (카카오 / 네이버) — provider 는 Supabase 대시보드에서 활성화 필요 ──
+  const handleSocial = async (provider: 'kakao' | 'naver') => {
+    setError('')
+    try {
+      const supabase = createClient()
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: provider as 'kakao',
+        options: { redirectTo: `${window.location.origin}/onboarding?welcome=1` },
+      })
+      if (oauthError) {
+        setError(`${provider === 'kakao' ? '카카오' : '네이버'} 로그인이 아직 설정되지 않았습니다.`)
+      }
+    } catch {
+      setError('소셜 로그인에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.')
+    }
+  }
 
   const update = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }))
 
@@ -85,6 +114,10 @@ export default function SignupPage() {
     }
     if (form.password !== form.passwordConfirm) {
       setError('비밀번호 확인이 일치하지 않습니다.')
+      return
+    }
+    if (form.role === 'BUYER' && !form.buyerKind) {
+      setError('매입 세부유형(법인 / 개인자산가)을 선택해주세요.')
       return
     }
     if (!agreeTerms || !agreePrivacy) {
@@ -102,12 +135,43 @@ export default function SignupPage() {
           data: {
             name: form.name,
             company: form.company,
+            title: form.title,
             phone: form.phone,
             role: form.role,
+            roles: [form.role],           // D1 복수 역할 — 가입 시 1개, 이후 역할 추가 신청 가능
+            buyer_kind: form.role === 'BUYER' ? form.buyerKind : null,   // CORP / INDIVIDUAL
+            business_no: form.businessNo || null,
+            invest_scale: form.role === 'BUYER' && form.buyerKind === 'INDIVIDUAL' ? form.investScale : null,
+            institution_type: form.role === 'SELLER' ? form.institutionType : null,
+            approval_status: 'PENDING',   // 관리자 승인 후에만 활성화 (승인제)
+            message: form.message,
+            business_file_name: businessFile?.name ?? null,
+            card_file_name: cardFile?.name ?? null,
             marketing_opt_in: agreeMarketing,
+            // 가입 마지막 스텝 매입조건 — 승인 즉시 매칭 시작 (세션 없으면 첫 로그인 시 등록용 보관)
+            signup_demand: form.role === 'BUYER' && (form.demandRegions || form.demandTypes || form.demandAmountMin || form.demandAmountMax)
+              ? { regions: form.demandRegions, types: form.demandTypes, amount_min: form.demandAmountMin, amount_max: form.demandAmountMax }
+              : null,
           },
         },
       })
+
+      // 가입 직후 세션이 있으면 매입조건 즉시 등록 (실패해도 metadata 보관분으로 대체)
+      if (form.role === 'BUYER' && data?.session && (form.demandRegions || form.demandTypes)) {
+        fetch('/api/v1/exchange/demands', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            demand_type: 'npl',
+            collateral_types: form.demandTypes.split(',').map(s => s.trim()).filter(Boolean),
+            regions: form.demandRegions.split(',').map(s => s.trim()).filter(Boolean),
+            min_amount: form.demandAmountMin ? Number(form.demandAmountMin) : null,
+            max_amount: form.demandAmountMax ? Number(form.demandAmountMax) : null,
+            priority: 1,
+            memo: '[가입 시 등록]',
+          }),
+        }).catch(() => {})
+      }
 
       if (authError) {
         setError(authError.message ?? '가입 처리 중 오류가 발생했습니다.')
@@ -115,9 +179,9 @@ export default function SignupPage() {
         return
       }
 
-      // Onboarding 으로 이동 — 사업자등록증/명함 업로드 안내
+      // 승인제 — 가입 신청 후 관리자 승인 대기 화면으로 이동
       if (data.user) {
-        router.push('/onboarding?welcome=1')
+        router.push('/pending-approval')
       } else {
         // 이메일 확인이 필요한 경우
         router.push('/login?verify=1')
@@ -199,20 +263,20 @@ export default function SignupPage() {
               Join NPLatform
             </div>
             <h2 style={{ fontFamily: 'Georgia, serif', color: PAPER, fontSize: 38, fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-              사업자/명함 인증 후<br />
-              <span style={{ color: SKY }}>6개월 무료.</span>
+              승인제 멤버십.<br />
+              <span style={{ color: SKY }}>가입은 무료.</span>
             </h2>
             <p style={{ marginTop: 14, fontSize: 14, color: 'rgba(168, 205, 232, 0.80)', lineHeight: 1.5, maxWidth: 320 }}>
-              가입 후 사업자등록증 또는 명함을 업로드하시면 1~2 영업일 내 검증되어 거래소·딜룸·분석·NDA·LOI 무제한 사용 가능합니다.
+              아무나 들어올 수 없습니다. 명함·사업자등록증 기반으로 관리자가 승인한 회원만 활성화됩니다. 가입과 이용은 무료입니다.
             </p>
           </div>
 
           {/* Process steps */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0, borderTop: '1px solid rgba(255,255,255,0.10)' }}>
             {[
-              { num: '01', label: '회원가입', desc: '이메일 + 비밀번호 + 회원 유형' },
-              { num: '02', label: '사업자/명함 인증', desc: '운영팀 검증 1~2 영업일' },
-              { num: '03', label: '6개월 무료 사용', desc: '거래 체결 시점에만 수수료' },
+              { num: '01', label: '가입 신청', desc: '유형 선택 + 정보 입력 + 명함/사업자등록증 첨부' },
+              { num: '02', label: '관리자 승인', desc: '심사 1~2 영업일 · 승인 시 계정 활성화' },
+              { num: '03', label: '무료 이용', desc: 'NPL 자동매칭 · NDA · 매입조건 등록' },
             ].map((s) => (
               <div
                 key={s.num}
@@ -291,6 +355,45 @@ export default function SignupPage() {
               </p>
             </div>
 
+            {/* ─── 소셜 간편가입 (카카오 / 네이버) ─────────────────── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
+              <button
+                type="button"
+                onClick={() => handleSocial('kakao')}
+                style={{
+                  width: '100%', height: 44,
+                  background: '#FEE500', color: '#191600',
+                  border: 0, borderRadius: 0,
+                  fontSize: 13, fontWeight: 800,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{ fontSize: 15 }}>💬</span> 카카오로 3초 시작
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSocial('naver')}
+                style={{
+                  width: '100%', height: 44,
+                  background: '#03C75A', color: '#FFFFFF',
+                  border: 0, borderRadius: 0,
+                  fontSize: 13, fontWeight: 800,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{ fontWeight: 900 }}>N</span> 네이버로 시작
+              </button>
+            </div>
+
+            {/* divider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+              <span style={{ flex: 1, height: 1, background: BORDER }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: INK_MUTED, letterSpacing: '0.04em' }}>또는 이메일로 가입</span>
+              <span style={{ flex: 1, height: 1, background: BORDER }} />
+            </div>
+
             {error && (
               <div
                 style={{
@@ -358,7 +461,70 @@ export default function SignupPage() {
                     )
                   })}
                 </div>
+
+                {/* 매각사 전용 — 기관 유형 (NPL 리스트와 동일 분류) */}
+                {form.role === 'SELLER' && (
+                  <div style={{ marginTop: 10 }}>
+                    <label htmlFor="institutionType" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
+                      기관 유형 <span style={{ color: ELECTRIC }}>*</span>
+                    </label>
+                    <select
+                      id="institutionType"
+                      value={form.institutionType}
+                      onChange={(e) => update('institutionType', e.target.value)}
+                      required
+                      style={{ ...inputStyle, cursor: 'pointer' }}
+                    >
+                      <option value="">기관 유형을 선택하세요</option>
+                      {SELLER_INSTITUTION_OPTIONS.filter(o => o.value !== 'ALL').map(o => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* ── D2 가입 분기 — 매입 회원 세부유형 (법인 / 개인자산가) ── */}
+                {form.role === 'BUYER' && (
+                  <div style={{ marginTop: 10 }}>
+                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
+                      매입 세부유형 <span style={{ color: ELECTRIC }}>*</span>
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      {([['CORP', '법인', '법인 · 대부업체 · AMC · 투자운용사'], ['INDIVIDUAL', '개인자산가', '개인 자산가 · 개인 투자자']] as const).map(([v, label, desc]) => (
+                        <button key={v} type="button" onClick={() => update('buyerKind', v)}
+                          style={{
+                            padding: '10px 12px', textAlign: 'left', cursor: 'pointer',
+                            background: form.buyerKind === v ? 'rgba(34,81,255,0.06)' : PAPER,
+                            border: `1px solid ${form.buyerKind === v ? ELECTRIC : BORDER_STRONG}`,
+                          }}>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: form.buyerKind === v ? ELECTRIC_DARK : INK }}>{label}</div>
+                          <div style={{ fontSize: 10.5, color: INK_MUTED, marginTop: 2 }}>{desc}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* 사업자등록번호 — 매각 · 매입(법인) 필수 / 개인자산가는 투자 규모(선택) */}
+              {(form.role === 'SELLER' || (form.role === 'BUYER' && form.buyerKind === 'CORP')) && (
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
+                    사업자등록번호 <span style={{ color: ELECTRIC }}>*</span>
+                  </label>
+                  <input value={form.businessNo} onChange={(e) => update('businessNo', e.target.value)}
+                    placeholder="000-00-00000" required style={inputStyle} />
+                </div>
+              )}
+              {form.role === 'BUYER' && form.buyerKind === 'INDIVIDUAL' && (
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
+                    투자 가능 규모 <span style={{ color: INK_MUTED, textTransform: 'none' }}>(선택)</span>
+                  </label>
+                  <input value={form.investScale} onChange={(e) => update('investScale', e.target.value)}
+                    placeholder="예: 30억 내외" style={inputStyle} />
+                </div>
+              )}
 
               {/* Email */}
               <div>
@@ -463,21 +629,106 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              {/* Phone */}
+              {/* 직책 + 연락처 */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label htmlFor="title" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
+                    직책
+                  </label>
+                  <input
+                    id="title"
+                    type="text"
+                    value={form.title}
+                    onChange={(e) => update('title', e.target.value)}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
+                    placeholder="예: 팀장 (선택)"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="phone" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
+                    연락처 <span style={{ color: ELECTRIC }}>*</span>
+                  </label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => update('phone', e.target.value)}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
+                    placeholder="010-1234-5678"
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+
+              {/* 서류 첨부 — 명함 · 사업자등록증 */}
               <div>
-                <label htmlFor="phone" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
-                  연락처 <span style={{ color: ELECTRIC }}>*</span>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>
+                  서류 첨부 <span style={{ color: INK_MUTED, fontWeight: 600 }}>(명함 · 사업자등록증)</span>
                 </label>
-                <input
-                  id="phone"
-                  type="tel"
-                  value={form.phone}
-                  onChange={(e) => update('phone', e.target.value)}
-                  onFocus={onFocus}
-                  onBlur={onBlur}
-                  placeholder="010-1234-5678"
-                  required
-                  style={inputStyle}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  {([
+                    { key: 'card' as const, label: '명함', file: cardFile, set: setCardFile },
+                    { key: 'business' as const, label: '사업자등록증', file: businessFile, set: setBusinessFile },
+                  ]).map(({ key, label, file, set }) => (
+                    <div key={key}>
+                      <label
+                        htmlFor={`file-${key}`}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          height: 44, padding: '0 12px',
+                          background: file ? '#EFF6FF' : PAPER,
+                          border: `1px solid ${file ? ELECTRIC : BORDER_STRONG}`,
+                          borderTop: file ? `2px solid ${ELECTRIC}` : `1px solid ${BORDER_STRONG}`,
+                          cursor: 'pointer',
+                          fontSize: 12, fontWeight: 600, color: file ? INK : INK_MID,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {file ? <FileText size={14} style={{ color: ELECTRIC, flexShrink: 0 }} /> : <Upload size={14} style={{ color: INK_MUTED, flexShrink: 0 }} />}
+                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {file ? file.name : label}
+                        </span>
+                        {file && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); set(null) }}
+                            style={{ marginLeft: 'auto', background: 'transparent', border: 0, cursor: 'pointer', color: INK_MUTED, padding: 2, flexShrink: 0 }}
+                            aria-label={`${label} 제거`}
+                          >
+                            <X size={13} />
+                          </button>
+                        )}
+                      </label>
+                      <input
+                        id={`file-${key}`}
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) => set(e.target.files?.[0] ?? null)}
+                        style={{ display: 'none' }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 요청사항 */}
+              <div>
+                <label htmlFor="message" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>
+                  요청사항
+                </label>
+                <textarea
+                  id="message"
+                  value={form.message}
+                  onChange={(e) => update('message', e.target.value)}
+                  onFocus={onFocus as any}
+                  onBlur={onBlur as any}
+                  placeholder="관심 분야 · 매각/매입 니즈 · 문의사항 (선택)"
+                  rows={3}
+                  style={{ ...inputStyle, height: 'auto', padding: '10px 14px', resize: 'vertical', lineHeight: 1.5 }}
                 />
               </div>
 
@@ -494,8 +745,38 @@ export default function SignupPage() {
                 }}
               >
                 <ShieldCheck size={13} style={{ color: ELECTRIC, marginRight: 6, verticalAlign: 'middle' }} />
-                <strong style={{ color: INK }}>가입 후 인증 필수</strong> — 마이페이지에서 사업자등록증 또는 명함을 업로드하시면 운영팀 검증 (1~2 영업일) 후 6개월 무료로 모든 기능 사용 가능합니다.
+                <strong style={{ color: INK }}>승인제 무료 가입</strong> — 가입 신청 후 관리자 승인(1~2 영업일)이 완료되어야 계정이 활성화됩니다. 첨부하신 명함·사업자등록증은 승인 심사에 사용되며, 가입과 이용은 무료입니다.
               </div>
+
+              {/* ── D2 · 매입 회원 마지막 스텝 — 매입조건 등록 (승인 즉시 매칭 시작) ── */}
+              {form.role === 'BUYER' && (
+                <div style={{ borderTop: `2px solid ${ELECTRIC}`, border: `1px solid ${BORDER}`, padding: '16px 16px 14px', background: PAPER }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 4 }}>매입조건 등록 — 조건에 맞는 NPL 딜만 자동매칭됩니다</div>
+                  <div style={{ fontSize: 11, color: INK_MUTED, marginBottom: 12 }}>가입 승인 즉시 매칭이 시작됩니다. 가입 후 마이페이지에서 수정·추가할 수 있습니다.</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>희망 지역</label>
+                      <input value={form.demandRegions} onChange={(e) => update('demandRegions', e.target.value)}
+                        placeholder="예: 서울, 경기 (쉼표로 구분 · 전국이면 '전국')" style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>담보유형</label>
+                      <input value={form.demandTypes} onChange={(e) => update('demandTypes', e.target.value)}
+                        placeholder="예: 아파트, 근린상가, 토지 (쉼표로 구분)" style={inputStyle} />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>금액대 최소 (억)</label>
+                        <input type="number" min={0} value={form.demandAmountMin} onChange={(e) => update('demandAmountMin', e.target.value)} placeholder="예: 10" style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: INK_MID, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>금액대 최대 (억)</label>
+                        <input type="number" min={0} value={form.demandAmountMax} onChange={(e) => update('demandAmountMax', e.target.value)} placeholder="예: 200" style={inputStyle} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* 약관 동의 */}
               <div

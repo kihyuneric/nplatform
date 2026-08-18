@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { User, Shield, Bell, RefreshCw, Trash2, Camera, CheckCircle2, AlertCircle, Monitor, Clock, Lock, Smartphone, Key, Loader2, Building2, FileLock2, ArrowUpRight, CreditCard, Handshake } from "lucide-react"
+import { User, Shield, Bell, Trash2, Camera, CheckCircle2, AlertCircle, Monitor, Clock, Lock, Smartphone, Key, Loader2, FileLock2, ArrowUpRight } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
@@ -11,49 +11,20 @@ import DS, { formatKRW } from "@/lib/design-system"
 import { MckPageShell, MckPageHeader } from "@/components/mck"
 import { MCK } from "@/lib/mck-design"
 
-// Phase G7+ 2026-04-29 v3 (사용자 정책):
-//   "사업자등록증·명함만 받으면 됨" → 본인인증 / 전문가 인증 삭제
-//   개인정보 (관리자) → 관리자 페이지에서만 접근 → 마이페이지 제거
-//   "기관 계정 작동하는 샘플 필요" → /my/organization 샘플 모드 별도 구현
+// 2026-08-18 사용자 정책: 설정은 마이페이지 안에서 회원가입 정보 수정만 담당.
+//   보안 · 알림 · 계정 관리 · 인증 서류 등 나머지 탭 전부 삭제 — 단일 화면.
 const TABS = [
-  "기본 정보",
-  "사업자·투자자 인증",
-  "기관 계정",
-  "결제·크레딧",
-  "파트너 관리",
-  "보안",
-  "알림 설정",
-  "역할 전환",
-  "계정 관리",
+  "회원정보 수정",
 ] as const
 type Tab = typeof TABS[number]
 
 const SETTINGS_TAB_MAP: Record<string, Tab> = {
-  profile: "기본 정보",
-  kyc: "사업자·투자자 인증",
-  organization: "기관 계정",
-  billing: "결제·크레딧",
-  partner: "파트너 관리",
-  security: "보안",
-  alerts: "알림 설정",
-  notifications: "알림 설정",
-  notification: "알림 설정",
-  role: "역할 전환",
-  account: "계정 관리",
-  delete: "계정 관리",
+  profile: "회원정보 수정",
 }
 
 // 사이드바 항목 메타 (아이콘·설명·링크용 외부 라우트)
 const SIDEBAR_META: Record<Tab, { icon: typeof User; desc?: string; legacyHref?: string }> = {
-  "기본 정보":              { icon: User },
-  "사업자·투자자 인증":     { icon: FileLock2,  desc: "사업자등록증 · 명함 (인증 1회)",    legacyHref: "/my/kyc" },
-  "기관 계정":              { icon: Building2,  desc: "회사·팀 기관에 개인 계정 연결 + 멤버 관리", legacyHref: "/my/organization" },
-  "결제·크레딧":            { icon: CreditCard, desc: "결제 수단 · 크레딧 잔액 · 인보이스", legacyHref: "/my/billing" },
-  "파트너 관리":            { icon: Handshake,  desc: "자문사 사건 의뢰 · 수임 · 정산",    legacyHref: "/my/partner" },
-  "보안":                   { icon: Shield },
-  "알림 설정":              { icon: Bell },
-  "역할 전환":              { icon: RefreshCw },
-  "계정 관리":              { icon: Trash2 },
+  "회원정보 수정": { icon: User, desc: "회원가입 시 입력한 정보를 수정합니다" },
 }
 
 const LOGIN_HISTORY = [
@@ -63,26 +34,18 @@ const LOGIN_HISTORY = [
 ]
 
 const NOTIF_SETTINGS = [
-  { id: "new_listing",  label: "새 매물 등록",       desc: "관심 조건에 맞는 매물이 등록될 때" },
-  { id: "price_change", label: "매물 가격 변동",      desc: "관심 매물의 가격이 변경될 때" },
-  { id: "deal_update",  label: "거래 상태 변경",      desc: "진행 중인 거래의 상태가 변경될 때" },
-  { id: "report_done",  label: "분석 리포트 완료",    desc: "요청한 분석 리포트가 완료될 때" },
-  { id: "system",       label: "시스템 공지",         desc: "점검, 업데이트 등 시스템 안내" },
-]
-
-const ROLES = [
-  { id: "INVESTOR", label: "투자자", desc: "NPL 매물 검색 · 분석 · 입찰" },
-  { id: "SELLER",   label: "매각자", desc: "NPL 매물 등록 · 관리" },
-  { id: "LENDER",   label: "대주단", desc: "자금 공급 · 펀딩" },
-  { id: "PARTNER",  label: "파트너", desc: "중개 · 법무 · 감정 서비스" },
+  { id: "new_listing", label: "매칭 NPL 등록",     desc: "등록한 매입조건에 맞는 NPL 딜이 등록될 때" },
+  { id: "nda_update",  label: "NDA 진행상황",      desc: "NDA 요청이 운영사 검토를 거쳐 승인 · 거절될 때" },
+  { id: "deal_update", label: "딜 진행 단계 변경",  desc: "관심등록 · 실사진행 · 가격협의 · 최종계약 단계가 변경될 때" },
+  { id: "system",      label: "시스템 공지",        desc: "점검, 업데이트 등 시스템 안내" },
 ]
 
 export default function SettingsPage() {
   const { user } = useAuth()
   const searchParams = useSearchParams()
-  const initialTab = SETTINGS_TAB_MAP[searchParams?.get("tab") ?? ""] ?? "기본 정보"
+  const initialTab = SETTINGS_TAB_MAP[searchParams?.get("tab") ?? ""] ?? "회원정보 수정"
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
-  const [form, setForm] = useState({ name: "", email: "", phone: "", bio: "" })
+  const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", title: "" })
   const [profileLoading, setProfileLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [notifToggles, setNotifToggles] = useState<Record<string, boolean>>(
@@ -94,7 +57,6 @@ export default function SettingsPage() {
   )
   const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" })
   const [pwSaving, setPwSaving] = useState(false)
-  const [activeRole, setActiveRole] = useState("INVESTOR")
 
   // Load user profile + notification preferences from Supabase on mount
   useEffect(() => {
@@ -111,12 +73,28 @@ export default function SettingsPage() {
           .eq("id", user.id)
           .single()
 
+        // 회원가입 시 저장된 auth 메타데이터 (회사명 · 직책)
+        let meta: Record<string, string> = {}
+        try {
+          const { data: { user: authUser } } = await supabase.auth.getUser()
+          meta = (authUser?.user_metadata ?? {}) as Record<string, string>
+        } catch { /* ignore */ }
+
         if (data && !error) {
           setForm({
-            name: data.name ?? "",
+            name: data.name ?? meta.name ?? "",
             email: data.email ?? "",
-            phone: data.phone ?? "",
-            bio: "",
+            phone: data.phone ?? meta.phone ?? "",
+            company: (data as { company_name?: string }).company_name ?? meta.company ?? "",
+            title: meta.title ?? "",
+          })
+        } else {
+          setForm({
+            name: meta.name ?? user.name ?? "",
+            email: user.email ?? "",
+            phone: meta.phone ?? user.phone ?? "",
+            company: meta.company ?? "",
+            title: meta.title ?? "",
           })
         }
       } catch {
@@ -125,7 +103,8 @@ export default function SettingsPage() {
           name: user.name ?? "",
           email: user.email ?? "",
           phone: user.phone ?? "",
-          bio: "",
+          company: "",
+          title: "",
         })
       } finally {
         setProfileLoading(false)
@@ -210,11 +189,19 @@ export default function SettingsPage() {
         .update({
           name: form.name,
           phone: form.phone,
+          company_name: form.company,
         })
         .eq("id", user.id)
 
+      // auth 메타데이터도 동기화 — 매입조건 등록 자동 기입 등에서 사용
+      try {
+        await supabase.auth.updateUser({
+          data: { name: form.name, phone: form.phone, company: form.company, title: form.title },
+        })
+      } catch { /* ignore */ }
+
       if (error) throw error
-      toast.success("프로필이 저장되었습니다.")
+      toast.success("회원정보가 저장되었습니다.")
     } catch (err: any) {
       toast.error(err?.message ?? "프로필 저장에 실패했습니다.")
     } finally {
@@ -242,10 +229,10 @@ export default function SettingsPage() {
   return (
     <MckPageShell variant="tint">
       <MckPageHeader
-        breadcrumbs={[{ label: "마이", href: "/my" }, { label: "설정" }]}
+        breadcrumbs={[{ label: "마이페이지", href: "/my" }, { label: "설정" }]}
         eyebrow="MY · SETTINGS"
-        title="계정 설정"
-        subtitle="기본 정보 / 보안 / 알림 채널 / 역할 / 계정 관리를 한 화면에서 처리합니다."
+        title="설정"
+        subtitle="회원가입 시 입력한 정보를 수정합니다."
       />
 
       {/* Phase G7+ 2026-04-29 — 사이드바 레이아웃 (10개 섹션 통합) */}
@@ -300,8 +287,8 @@ export default function SettingsPage() {
 
         <div className="space-y-5">
 
-        {/* 기본 정보 */}
-        {activeTab === "기본 정보" && (
+        {/* 회원정보 수정 — 회원가입 정보 (이름 · 이메일 · 연락처 · 회사명 · 직책) */}
+        {activeTab === "회원정보 수정" && (
           <div className={DS.card.elevated + " " + DS.card.paddingLarge + " space-y-5"}>
             {/* Avatar */}
             <div className="flex items-center gap-4">
@@ -321,9 +308,11 @@ export default function SettingsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
-                { label: "이름", key: "name", type: "text" },
-                { label: "이메일", key: "email", type: "email" },
-                { label: "전화번호", key: "phone", type: "tel" },
+                { label: "이름 (담당자명)", key: "name", type: "text" },
+                { label: "이메일", key: "email", type: "email", readOnly: true },
+                { label: "전화번호 (연락처)", key: "phone", type: "tel" },
+                { label: "회사명 (기관명)", key: "company", type: "text" },
+                { label: "직책", key: "title", type: "text" },
               ].map(f => (
                 <div key={f.key}>
                   <label className={DS.input.label}>{f.label}</label>
@@ -331,20 +320,12 @@ export default function SettingsPage() {
                     type={f.type}
                     value={form[f.key as keyof typeof form]}
                     onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                    className={DS.input.base}
+                    readOnly={f.readOnly}
+                    className={DS.input.base + (f.readOnly ? " opacity-60 cursor-not-allowed" : "")}
+                    title={f.readOnly ? "이메일(로그인 계정)은 변경할 수 없습니다" : undefined}
                   />
                 </div>
               ))}
-              <div className="sm:col-span-2">
-                <label className={DS.input.label}>소개</label>
-                <textarea
-                  value={form.bio}
-                  onChange={e => setForm(prev => ({ ...prev, bio: e.target.value }))}
-                  placeholder="간단한 소개를 입력해주세요"
-                  rows={3}
-                  className={DS.input.base + " resize-none"}
-                />
-              </div>
             </div>
 
             <div className="flex justify-end">
@@ -353,18 +334,14 @@ export default function SettingsPage() {
                 {saving ? "저장 중..." : "저장"}
               </button>
             </div>
-          </div>
-        )}
 
-        {/* 보안 */}
-        {activeTab === "보안" && (
-          <div className="space-y-4">
-            {/* 비밀번호 변경 */}
-            <div className={DS.card.elevated + " " + DS.card.padding}>
-              <h3 className={DS.text.cardTitle + " mb-4 flex items-center gap-2"}>
+            {/* ── 비밀번호 변경 — 이메일 가입 회원용 (2026-08-18 복원) ── */}
+            <div className="pt-5 border-t border-[var(--color-border-subtle)]">
+              <h3 className={DS.text.cardTitle + " mb-1 flex items-center gap-2"}>
                 <Lock className="h-4 w-4 text-[var(--color-text-tertiary)]" /> 비밀번호 변경
               </h3>
-              <div className="space-y-3">
+              <p className={DS.text.caption + " mb-3"}>이메일로 가입하신 경우 비밀번호를 변경할 수 있습니다. (카카오·네이버 로그인은 해당 없음)</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
                   { label: "현재 비밀번호", key: "current" },
                   { label: "새 비밀번호", key: "next" },
@@ -380,208 +357,17 @@ export default function SettingsPage() {
                     />
                   </div>
                 ))}
-                <button onClick={handleSavePw} disabled={pwSaving} className={DS.button.primary + " disabled:opacity-50 flex items-center gap-2"}>
+              </div>
+              <div className="flex justify-end mt-3">
+                <button onClick={handleSavePw} disabled={pwSaving} className={DS.button.secondary + " disabled:opacity-50 flex items-center gap-2"}>
                   {pwSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {pwSaving ? "변경 중..." : "변경"}
+                  {pwSaving ? "변경 중..." : "비밀번호 변경"}
                 </button>
               </div>
             </div>
-
-            {/* MFA */}
-            <div className={DS.card.elevated + " " + DS.card.padding}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Smartphone className="h-4 w-4 text-[var(--color-text-tertiary)]" />
-                  <div>
-                    <p className={DS.text.cardSubtitle}>2단계 인증 (MFA)</p>
-                    <p className={DS.text.caption + " mt-0.5"}>앱 인증기로 추가 보안을 설정합니다</p>
-                  </div>
-                </div>
-                <span className="bg-stone-100/10 text-stone-900 text-[0.8125rem] font-medium px-3 py-1 rounded-none border border-stone-300/20">활성</span>
-              </div>
-            </div>
-
-            {/* 로그인 기록 */}
-            <div className={DS.card.elevated + " " + DS.card.padding}>
-              <h3 className={DS.text.cardTitle + " mb-3 flex items-center gap-2"}>
-                <Monitor className="h-4 w-4 text-[var(--color-text-tertiary)]" /> 로그인 기록
-              </h3>
-              <div className="space-y-2">
-                {LOGIN_HISTORY.map(h => (
-                  <div key={h.id} className={"flex items-center justify-between py-2 border-b border-[var(--color-border-subtle)] last:border-0"}>
-                    <div>
-                      <p className={DS.text.bodyBold + " flex items-center gap-2"}>
-                        {h.device}
-                        {h.current && <span className="text-[0.6875rem] bg-stone-100/10 text-stone-900 px-2 py-0.5 rounded-none border border-stone-300/20">현재</span>}
-                      </p>
-                      <p className={DS.text.captionLight + " mt-0.5"}>{h.ip} · {h.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 
-        {/* 알림 설정 */}
-        {activeTab === "알림 설정" && (
-          <div className="space-y-4">
-            {/* 알림 채널 범례 */}
-            <div className={DS.card.elevated + " " + DS.card.padding}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className={DS.text.cardSubtitle}>알림 설정</h3>
-                {!notifLoaded && <Loader2 className="h-4 w-4 animate-spin text-[var(--color-text-muted)]" />}
-              </div>
-              <p className={DS.text.caption}>각 알림 유형별로 수신 여부와 채널(인앱·이메일·푸시)을 설정합니다. 변경 사항은 자동 저장됩니다.</p>
-              <div className="flex items-center gap-4 mt-3 text-[0.75rem] text-[var(--color-text-muted)]">
-                <span className="flex items-center gap-1.5"><Bell className="h-3.5 w-3.5" />인앱</span>
-                <span className="flex items-center gap-1.5"><Monitor className="h-3.5 w-3.5" />이메일</span>
-                <span className="flex items-center gap-1.5"><Smartphone className="h-3.5 w-3.5" />푸시</span>
-              </div>
-            </div>
-
-            <div className={DS.card.elevated + " divide-y divide-[var(--color-border-subtle)]"}>
-              {NOTIF_SETTINGS.map(n => {
-                const channels = notifChannels[n.id] ?? { email: true, inapp: true, push: false }
-                const enabled = notifToggles[n.id] ?? true
-                return (
-                  <div key={n.id} className={`px-5 py-4 transition-opacity ${!enabled ? 'opacity-50' : ''}`}>
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <p className={DS.text.bodyBold}>{n.label}</p>
-                        <p className={DS.text.caption + " mt-0.5"}>{n.desc}</p>
-                      </div>
-                      {/* Main toggle */}
-                      <button
-                        role="switch"
-                        aria-checked={enabled}
-                        onClick={() => handleToggleNotif(n.id)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-none border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 ${
-                          enabled ? "bg-stone-100" : "bg-[var(--color-surface-overlay)]"
-                        }`}
-                      >
-                        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-none bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${enabled ? "translate-x-5" : "translate-x-0"}`} />
-                      </button>
-                    </div>
-                    {/* Channel chips */}
-                    {enabled && (
-                      <div className="flex items-center gap-2 mt-2.5">
-                        {(['inapp', 'email', 'push'] as const).map(ch => (
-                          <button
-                            key={ch}
-                            onClick={() => handleToggleChannel(n.id, ch)}
-                            className={`flex items-center gap-1 text-[0.6875rem] font-medium px-2 py-1 rounded-none border transition-all ${
-                              channels[ch]
-                                ? 'bg-stone-100/10 border-stone-300/20 text-stone-900'
-                                : 'bg-[var(--color-surface-sunken)] border-[var(--color-border-subtle)] text-[var(--color-text-muted)]'
-                            }`}
-                          >
-                            {ch === 'inapp' && <Bell className="h-3 w-3" />}
-                            {ch === 'email' && <Monitor className="h-3 w-3" />}
-                            {ch === 'push' && <Smartphone className="h-3 w-3" />}
-                            {ch === 'inapp' ? '인앱' : ch === 'email' ? '이메일' : '푸시'}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* 역할 전환 */}
-        {activeTab === "역할 전환" && (
-          <div className="space-y-3">
-            <p className={DS.text.caption}>현재 활성 역할에 따라 화면 구성이 달라집니다.</p>
-            {ROLES.map(r => (
-              <button
-                key={r.id}
-                onClick={() => setActiveRole(r.id)}
-                className={`w-full flex items-center justify-between rounded-none border p-4 text-left transition-all ${
-                  activeRole === r.id
-                    ? "border-[var(--color-brand-bright)] bg-stone-100/10"
-                    : DS.card.base + " hover:bg-[var(--color-surface-sunken)]"
-                }`}
-              >
-                <div>
-                  <p className={DS.text.cardSubtitle}>{r.label}</p>
-                  <p className={DS.text.caption + " mt-0.5"}>{r.desc}</p>
-                </div>
-                {activeRole === r.id && <CheckCircle2 className="h-5 w-5 text-[#2251FF] shrink-0" />}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* 계정 관리 */}
-        {activeTab === "계정 관리" && (
-          <div className="space-y-3">
-            <div className={DS.card.elevated + " " + DS.card.padding}>
-              <h3 className={DS.text.cardSubtitle + " mb-1"}>데이터 내보내기</h3>
-              <p className={DS.text.caption + " mb-3"}>내 활동 데이터를 CSV 파일로 다운로드합니다.</p>
-              <button className={DS.button.secondary}>
-                데이터 내보내기
-              </button>
-            </div>
-            <div className="bg-stone-100/10 border border-stone-300/20 rounded-none p-5">
-              <div className="flex items-start gap-2 mb-3">
-                <AlertCircle className="h-4 w-4 text-[var(--color-danger)] mt-0.5 shrink-0" />
-                <div>
-                  <h3 className="text-[var(--color-danger)] font-semibold text-[0.8125rem]">계정 삭제</h3>
-                  <p className={DS.text.caption + " mt-0.5"}>모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.</p>
-                </div>
-              </div>
-              <button className={DS.button.danger}>
-                계정 삭제 요청
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Phase G7+ v3 — 인증·기관·결제·파트너 4개 신규 섹션 (기존 라우트로 이동) */}
-        {(["사업자·투자자 인증", "기관 계정", "결제·크레딧", "파트너 관리"] as Tab[])
-          .filter((t) => activeTab === t)
-          .map((t) => {
-            const meta = SIDEBAR_META[t]
-            const Icon = meta.icon
-            return (
-              <div key={t} className={DS.card.elevated + " " + DS.card.paddingLarge}>
-                <div className="flex items-start gap-3 mb-4">
-                  <div
-                    style={{
-                      width: 40, height: 40, borderRadius: 4,
-                      background: MCK.paperTint,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Icon size={20} style={{ color: MCK.electric }} />
-                  </div>
-                  <div>
-                    <h3 className={DS.text.cardTitle}>{t}</h3>
-                    {meta.desc && (
-                      <p className={DS.text.caption + " mt-1"}>{meta.desc}</p>
-                    )}
-                  </div>
-                </div>
-                {meta.legacyHref && (
-                  <Link
-                    href={meta.legacyHref}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded text-[0.8125rem] font-semibold transition-colors"
-                    style={{
-                      background: MCK.electric,
-                      color: MCK.paper,
-                    }}
-                  >
-                    {t} 페이지로 이동
-                    <ArrowUpRight size={14} />
-                  </Link>
-                )}
-              </div>
-            )
-          })}
         </div>
       </div>
     </MckPageShell>

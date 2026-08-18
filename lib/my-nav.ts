@@ -129,16 +129,15 @@ export interface MyNavItem {
 }
 
 /**
- * 마이페이지 메뉴 카탈로그 (SSoT) — v2 (2026-04-29 · McKinsey 3-Zone).
+ * 마이페이지 메뉴 카탈로그 (SSoT) — v3 (2026-08-14 · 프라이빗 NPL 딜 중개 피벗).
  *
- * MECE 인지 구역:
+ * 슬림 구성 (분석/AI 기능 제거):
  *   1. 진입 — 대시보드
- *   2. 활동 (Activity) — 거래 (딜룸·계약·매수수요)
- *   3. 보유 (Holdings) — 자산 (내 매물·관심매물·포트폴리오)
- *   4. 소통 — 알림센터 (알림·공지·문의)
- *   5. 계정 — 설정 (인증·기관·보안·결제·파트너·알림설정)
- *
- * 회원당 평균 4~5개 메뉴 노출 (역할에 따라).
+ *   2. 매도 — 내 매물
+ *   3. 매수 — 매입 조건
+ *   4. 계약 — NDA·계약
+ *   5. 소통 — 알림센터
+ *   6. 계정 — 설정
  */
 export const MY_NAV_CATALOG: readonly MyNavItem[] = [
   {
@@ -148,35 +147,37 @@ export const MY_NAV_CATALOG: readonly MyNavItem[] = [
     order: 10,
   },
   {
-    href: '/my/deals',
-    label: '거래',
-    // 거래 = 딜룸/계약/매수수요. 매수수요는 일부 역할에 한정되지만
-    //   딜룸·계약은 모든 역할이 사용 → 거래 macro 는 모두에게 노출.
-    visible: () => true,
-    matchPaths: ['/my/deals', '/my/agreements', '/my/demands'],
+    href: '/my/seller',
+    label: '내 매물',
+    visible: (f) => f.isAdmin || f.isSeller,
+    matchPaths: ['/my/seller', '/my/assets', '/my/listings'],
     order: 20,
   },
   {
-    href: '/my/assets',
-    label: '자산',
-    // 자산 = 내 매물(매도자) + 관심매물(포트폴리오).
+    href: '/my/demands',
+    label: '매입 조건',
     visible: (f) =>
-      f.isAdmin || f.isInstitution || f.isMoneyLender || f.isAMC ||
-      f.isGeneral || f.isPartner || f.isBuyer || f.isSeller,
-    matchPaths: ['/my/assets', '/my/seller', '/my/portfolio'],
+      f.isAdmin || f.isMoneyLender || f.isAMC || f.isGeneral ||
+      f.isPartner || f.isBuyer,
     order: 30,
+  },
+  {
+    href: '/my/agreements',
+    label: 'NDA·계약',
+    visible: () => true,
+    order: 40,
   },
   {
     href: '/my/inbox',
     label: '알림센터',
     visible: () => true,
-    order: 40,
+    order: 50,
   },
   {
     href: '/my/settings',
     label: '설정',
     visible: () => true,
-    order: 50,
+    order: 60,
   },
 ] as const
 
@@ -251,45 +252,31 @@ export interface ZoneTabItem {
   order: number
 }
 
-/** 거래 (Activity) Zone 의 3-탭 — 딜룸·계약·매수수요 */
+/** 거래 (Activity) Zone 탭 — NDA·계약 / 매입 조건 (딜룸·포트폴리오 제거, 2026-08-14 피벗) */
 export const DEALS_ZONE_TABS: readonly ZoneTabItem[] = [
   {
-    key: 'rooms', label: '딜룸',
-    href: '/my/deals',
+    key: 'agreements', label: 'NDA·계약',
+    href: '/my/agreements',
     visible: () => true,
     order: 10,
   },
   {
-    key: 'agreements', label: '계약',
-    href: '/my/agreements',
-    visible: () => true,
-    order: 20,
-  },
-  {
-    key: 'demands', label: '매수 수요',
+    key: 'demands', label: '매입 조건',
     href: '/my/demands',
     visible: (f) =>
       f.isAdmin || f.isMoneyLender || f.isAMC || f.isGeneral ||
       f.isPartner || f.isBuyer,
-    order: 30,
+    order: 20,
   },
 ] as const
 
-/** 자산 (Holdings) Zone 의 2-탭 — 내 매물·관심매물 */
+/** 자산 (Holdings) Zone 탭 — 내 매물 단일 (2026-08-14 피벗) */
 export const ASSETS_ZONE_TABS: readonly ZoneTabItem[] = [
   {
     key: 'seller', label: '내 매물',
     href: '/my/seller',
     visible: (f) => f.isAdmin || f.isSeller,
     order: 10,
-  },
-  {
-    key: 'portfolio', label: '관심매물·포트폴리오',
-    href: '/my/portfolio',
-    visible: (f) =>
-      f.isAdmin || f.isInstitution || f.isMoneyLender || f.isAMC ||
-      f.isGeneral || f.isPartner || f.isBuyer,
-    order: 20,
   },
 ] as const
 

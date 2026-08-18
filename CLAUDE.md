@@ -1,149 +1,43 @@
-# NPLatform 프로젝트 가이드
+# NPLatform(엔플랫폼) 프로젝트 가이드
 
-## 프로젝트 개요
-NPLatform — AI 기반 NPL(부실채권) 투자 분석 및 거래 플랫폼
-(주)트랜스파머 | TransFarmer Inc.
+## 정체성 (2026-08 피벗 — 이전 Phase 계획 전면 폐기)
+대한민국 1%를 위한 프라이빗 NPL·급매 중개 플랫폼. (주)트랜스파머.
+**철학: 공개하지 않는 것이 기능이다. 단순함이 곧 강력함이다.**
+- 시장에 내놓기 전에, 조건이 맞는 매수자에게만 조용히 전달한다
+- 리스트는 제한 12필드만 공개, 상세는 온라인 NDA 후
+- 분석·AI는 운영자 내부 도구로만 (공개 화면 노출 금지)
 
 ## 기술 스택
-- Next.js 15.3 (App Router) + React 19 + TypeScript 5
-- shadcn/ui + Tailwind CSS + Framer Motion
-- Recharts (차트) + Kakao Maps SDK (지도)
-- Supabase (PostgreSQL + RLS + Realtime + Auth)
-- jsPDF + xlsx + html2canvas (내보내기)
-- Claude API (AI 분석/매칭/챗봇)
+- Next.js 15.3 (App Router) + React 19 + TS · Supabase (eqvpubntalikjxcjhpln, ap-northeast-2)
+- 배포: Vercel `transfarmer/nplatform-private` — GitHub 미연동, `npx vercel deploy --prod --yes`
+- 로컬 프로덕션 빌드는 `NODE_OPTIONS=--max-old-space-size=8192` 필요
 
-## Supabase
-- Project ID: eqvpubntalikjxcjhpln
-- Region: ap-northeast-2
-- Dev user: 00000000-0000-0000-0000-000000000001 (김매도, SELLER)
-
-## 현재 상태 (2026-04-03 기준)
-- 283 pages, 242 API routes, 16 DB migrations, 216 components
-- 빌드: ✅ Compiled successfully
-- 글로벌 기술 수준: 53.6/100 (목표: 75/100 by Q4 2026)
-- 상세 스펙: docs/NPLatform_종합기술계획서_2026.md
-
-## 디자인 시스템
-- Primary: #1B3A5C (네이비)
-- Accent: #10B981 (에메랄드)
-- Secondary: #2E75B6 (블루)
-- 히어로 그라데이션: linear-gradient(135deg, #1B3A5C, #2E75B6)
-
-## 컨벤션
-- "use client" 모든 인터랙티브 페이지
-- API: /api/v1/... 패턴, createClient from @/lib/supabase/server
-- 에러 응답: { error: { code, message } }
-- 금액: formatKRW (억/만원), 날짜: ko-KR
-- Mock 데이터 fallback 패턴 (API 실패 시 mock 사용)
-
----
-
-## 글로벌 기술 수준 평가 (2026-04-03)
-
-| 영역 | 현재 | 글로벌 최고 | 비고 |
-|------|------|-----------|------|
-| AI/ML 통합 | 65/100 | 95 | Claude API 연동, RAG 구현 |
-| 데이터 파이프라인 | 60/100 | 90 | pgvector RAG, 실시간 데이터 부족 |
-| 보안/컴플라이언스 | 70/100 | 95 | RLS, JWT, MFA 구현 |
-| UX/성능 | 68/100 | 92 | PWA, 반응형, SSR |
-| 금융 도메인 | 55/100 | 88 | NPL 분석, 경매 시뮬레이터 |
-| API 설계 | 72/100 | 90 | RESTful, 표준화 |
-| 실시간 기능 | 45/100 | 90 | Supabase Realtime, WebSocket 미완 |
-| 테스트/품질 | 34/100 | 88 | 테스트 커버리지 부족 |
-| 도메인 데이터 | 30/100 | 85 | 실제 NPL 데이터 없음 |
-| ML 모델 | 35/100 | 90 | 규칙 기반, 실제 ML 미구현 |
-| **종합** | **53.6/100** | **92.5** | |
-
----
-
-## 개발 Phase 지침 (SSoT)
-
-> **모든 개발은 `docs/NPLatform_Development_Phases_Plan.md` v2 를 단일 지침으로 따릅니다.**
-> 테마: **Deal Flow 극대화 — 공급→발견→분석→협상→체결→정산 병목 제거**
-> 지시 방식: `Phase 1 진행해줘` · `Phase 1-B 해줘` · `Phase 2-A, 2-B 병렬`
-> legacy 문자 코드(A~EE) 비활성 — 번호 Phase 만 사용
-
-### Phase 1 (Q2 2026 · 지금) — Deal Flow 가시성 & P0 UX 정합성
-- [ ] 1-A 메인 페이지 거래 중심 재구성 (거래소/딜룸 강조 · 디자인 톤 유지)
-- [ ] 1-B 거래소 > 매수 수요 카드/리스트 거래소 수준 DS 적용
-- [ ] 1-C 커뮤니티 > NPL 뉴스 3-tier 네비 구조 복원
-- [x] 1-D AI Copilot SSE 스트리밍 UI (content 키 / tool_start / error)
-- [ ] 1-E 결제 통합 테스트 Suite (토스/PortOne/Inicis)
-- [ ] 1-F Deal Flow Funnel 대시보드 (Admin)
-- [ ] 1-G 글로벌 네비게이션 3-tier 전수 점검
-- [ ] 1-H P0 버그 rolling fix
-
-### Phase 2 (Q2-Q3) — 공급·발견 병목 제거
-- OCR 95% · KAMCO/MOLIT API · 법원경매 크롤러 · 탐색 UX · AI 추천 · Bulk Upload
-
-### Phase 3 (Q3) — 분석·협상 효율화
-- 리포트 SSE · Copilot tool use · 시뮬 v2 · RAG 5,000건 · NDA 자동 · VDR
-
-### Phase 4 (Q3-Q4) — 체결·정산 완결성
-- 전자계약 v2 · KB에스크로 · PNR 과금 · 세금계산서 · Pool Sale · 분쟁 해결
-
-### Phase 5 (Q4-Q1'27) — 데이터·ML 가속화
-- LightGBM · WebSocket 입찰 · Vitest 80% · Playwright · Sentry · Fraud Detection
-
-### Phase 6 (Q1-Q2'27) — B2B · 글로벌 확장
-- Enterprise API · Data Subscription · 모바일 앱 · i18n · SOC2 · 멀티테넌시
-
-### 3-tier 네비게이션 규약 ⭐
-모든 `(main)` 라우트 준수:
+## 서비스 구조 (이것이 전부 — 추가 금지 원칙)
 ```
-TopBar: 거래소 | 딜룸 | 분석 | 커뮤니티 | 마이  (고정)
-SubNav: 섹션 탭/사이드 (섹션별)
-Breadcrumb: 섹션 > 하위 > 현재
-Content
+메뉴: NPL 리스트 | NPL 매각의뢰 | 매입조건 등록 | 서비스 소개 | 공지사항
+회원: 매각사/매입사/투자자/파트너 · 승인제 무료 가입 (PENDING → 관리자 승인)
+루프: 매각의뢰(파일 컨시어지) → 운영자 등록·비식별화 → 리스트(10건 게이팅)
+      → 매입조건 실매칭 → 관심/NDA 전자서명 → 딜 4단계(관심등록→실사→가격협의→최종계약)
+관리자(/admin 8메뉴): 대시보드·접수함·회원 승인·매물·매수 수요·딜 진행·분석 마케팅·메인 지표
 ```
-위반 = P0 버그 (Phase 1-G 처리)
+상세 운영: `docs/OPERATIONS.md` (SSoT) · 접근권한 정책: `docs/npl-intake-template-fields.md`
 
----
+## SSoT 파일 (값 수정은 여기서만)
+- `lib/platform-stats.ts` 공식 지표 · `lib/taxonomy.ts` 담보유형/지역/기관
+- `lib/marketing-checklist.ts` 마케팅 8채널·딜 단계 · `lib/my-nav.ts` 마이 IA
+- 핵심 API: `/api/v1/matching/summary`(실매칭) · `/api/v1/admin/overview`(운영 지표) · `/api/v1/listing-marketing`(체크리스트·집계·단계)
 
-## 최근 주요 변경 이력
+## 컨벤션·주의
+- "use client" 인터랙티브 페이지 · API `/api/v1/...` · 에러 `{ error: { code, message } }`
+- 리스트/폼 신규 UI는 왼쪽 정렬 · ㎡/평 전환 · McKinsey 에디토리얼 톤(잉크+일렉트릭 블루, 브랜드는 골드 nplatform)
+- **PowerShell로 한글 파일 수정 금지 조건**: 반드시 `[IO.File]::ReadAllText/WriteAllText` + `UTF8Encoding(false)` (Get/Set-Content는 CP949 손상 사고 전력)
+- dev 서버 HMR이 구버전을 오래 물고 있는 패턴 있음 — 검증은 typecheck + 프로덕션 빌드 기준
+- typecheck 시 `.next/types` 에러는 무시 (레거시 캐시)
 
-### Sprint 1-5 완료 항목
-- Supabase Auth + RLS 16개 마이그레이션
-- NPL 분석 엔진 (규칙 기반 + Claude AI)
-- 경매 시뮬레이터, OCR 문서인식
-- 딜룸 (채팅+문서+계약+실사 통합)
-- PWA + Service Worker + 오프라인 지원
-- 관리자 패널 (회원/매물/결제/시스템 통합)
-- pgvector RAG 법률 검색 (016 마이그레이션)
-- 경쟁사 브랜드 제거 (땅집고옥션 → NPLatform)
+## 폐기 개념 (복원 금지)
+딜룸·거래소·경매(자발/법원)·공개 AI 분석·Copilot·LOI·플래그·위반확정·긴급수준·정산·팀투자·커뮤니티·다국어·신고접수.
+레거시 페이지 파일은 보존하되 메뉴 미노출 + 허브 URL은 redirect 처리.
 
----
-
-## URL 구조 (현재)
-
-```
-/                     메인 랜딩
-/(main)/
-  page.tsx            대시보드
-  listings/           매물 목록/지도
-  market/             시세/입찰
-  npl-analysis/       NPL 분석
-  deal-rooms/         딜룸
-  statistics/         통계
-  tools/              도구 (경매시뮬, OCR, 계약서)
-  admin/              관리자
-  analysis/           분석 + AI Copilot
-/api/v1/
-  copilot/            AI 챗봇
-  rag/ingest|search   RAG 법률 검색
-  listings/           매물 CRUD
-  payments/           결제
-  users/              회원
-  statistics/         통계
-```
-
-## 환경변수 (필수)
-```
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY
-ANTHROPIC_API_KEY
-VOYAGE_API_KEY          # RAG 임베딩 (voyage-multilingual-2)
-ADMIN_SECRET            # RAG ingest 보호
-NEXT_PUBLIC_BASE_URL    # 서버사이드 RAG 호출용
-```
+## 보류 이슈
+- `listing_marketing` 테이블: Supabase 관리 API 타임아웃으로 미생성 — `supabase/migrations/20260817_listing_marketing.sql` SQL Editor 수동 실행 필요
+- Supabase provider(카카오/네이버) 대시보드 활성화, SUPABASE_SERVICE_ROLE_KEY 새 Vercel 프로젝트에 미등록

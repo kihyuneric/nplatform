@@ -5,12 +5,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Home, Search, Brain, Menu, X,
-  Gavel, Settings, LogIn, Upload,
-  User, BarChart3, Users,
+  Home, Search, Menu, X,
+  Settings, LogIn, Upload,
+  User, Users,
   Handshake, FileText,
-  Heart, Wallet, ClipboardList, Calculator,
-  Archive, TrendingUp,
+  Wallet, ClipboardList,
   Bell, Newspaper, MessageSquare,
 } from 'lucide-react'
 import { useScrollDirection } from '@/hooks/use-scroll-direction'
@@ -27,30 +26,30 @@ interface TabItem {
 
 const DEFAULT_TABS: TabItem[] = [
   { label: '홈', href: '/', icon: Home },
-  { label: '거래소', href: '/exchange', icon: Search },
-  { label: '딜룸', href: '/deals', icon: Handshake },
-  { label: '분석', href: '/analysis', icon: Brain },
+  { label: 'NPL 자동매칭', href: '/exchange', icon: Search },
+  { label: '매각의뢰', href: '/exchange/sell', icon: Upload },
+  { label: '매입조건 등록', href: '/exchange/demands/new', icon: Handshake },
   { label: '더보기', icon: Menu, action: 'more' },
 ]
-const DEFAULT_TABS_I18N = ['mobile.home', 'mobile.listings', 'mobile.deals', 'mobile.insights', 'mobile.more']
+const DEFAULT_TABS_I18N = ['mobile.home', 'mobile.listings', 'mobile.listProperty', 'mobile.myDeals', 'mobile.more']
 
 const SELLER_TABS: TabItem[] = [
   { label: '홈', href: '/', icon: Home },
-  { label: '매물등록', href: '/exchange/sell', icon: FileText },
-  { label: '내거래', href: '/deals', icon: ClipboardList },
-  { label: '분석', href: '/analysis', icon: Brain },
+  { label: '매각의뢰', href: '/exchange/sell', icon: FileText },
+  { label: '내 매물', href: '/my/seller', icon: ClipboardList },
+  { label: '매입조건 등록', href: '/exchange/demands/new', icon: Handshake },
   { label: '더보기', icon: Menu, action: 'more' },
 ]
-const SELLER_TABS_I18N = ['mobile.home', 'mobile.listProperty', 'mobile.myDeals', 'mobile.insights', 'mobile.more']
+const SELLER_TABS_I18N = ['mobile.home', 'mobile.listProperty', 'mobile.myDeals', 'mobile.listings', 'mobile.more']
 
 const PARTNER_TABS: TabItem[] = [
   { label: '홈', href: '/', icon: Home },
+  { label: 'NPL 자동매칭', href: '/exchange', icon: Search },
   { label: '추천', href: '/my/partner', icon: Users },
   { label: '수익', href: '/my/partner', icon: Wallet },
-  { label: '분석', href: '/analysis', icon: Brain },
   { label: '더보기', icon: Menu, action: 'more' },
 ]
-const PARTNER_TABS_I18N = ['mobile.home', 'mobile.referrals', 'mobile.earnings', 'mobile.insights', 'mobile.more']
+const PARTNER_TABS_I18N = ['mobile.home', 'mobile.listings', 'mobile.referrals', 'mobile.earnings', 'mobile.more']
 
 function getActiveRole(): string {
   if (typeof document === 'undefined') return 'default'
@@ -69,44 +68,24 @@ function getTabsI18NForRole(role: string): string[] {
   return DEFAULT_TABS_I18N
 }
 
-// ─── More Menu Sections ────────────────────────────────────────
+// ─── More Menu Sections — B2B 프라이빗 딜 IA (분석·경매·팀투자 숨김) ──
 const MORE_SECTIONS = [
   {
-    title: '거래소',
+    title: '거래',
     titleKey: 'nav.listings',
     items: [
-      { label: '매물 탐색', labelKey: 'nav.nplSearch', href: '/exchange', icon: Search },
-      { label: '자발적 경매', labelKey: 'nav.auction', href: '/exchange/auction', icon: Gavel },
-      { label: '매물 등록', labelKey: 'nav.listProperty', href: '/exchange/sell', icon: FileText },
-      { label: '매수 수요', labelKey: 'nav.buyerDemands', href: '/exchange/demands', icon: Users },
+      { label: 'NPL 자동매칭', labelKey: 'nav.nplSearch', href: '/exchange', icon: Search },
+      { label: 'NPL 매각의뢰', labelKey: 'nav.listProperty', href: '/exchange/sell', icon: FileText },
+      { label: '매입조건 등록', labelKey: 'nav.buyerDemands', href: '/exchange/demands/new', icon: Users },
     ],
   },
   {
-    title: '딜룸',
-    titleKey: 'nav.deals',
-    items: [
-      { label: '딜룸', labelKey: 'nav.dealsRoom', href: '/deals', icon: MessageSquare },
-      { label: '대시보드', labelKey: 'nav.dealsDashboard', href: '/deals/dashboard', icon: ClipboardList },
-      { label: 'AI 매칭', labelKey: 'nav.aiMatching', href: '/deals/matching', icon: TrendingUp },
-      { label: '팀 투자', labelKey: 'nav.teamInvest', href: '/deals/teams', icon: Users },
-    ],
-  },
-  {
-    title: '분석',
-    titleKey: 'nav.insights',
-    items: [
-      { label: '분석 대시보드', labelKey: 'nav.analysisDashboard', href: '/analysis', icon: BarChart3 },
-      { label: 'NPL 분석', labelKey: 'nav.nplAnalysis', href: '/analysis/new', icon: FileText },
-      { label: '경매 분석', labelKey: 'nav.simulator', href: '/analysis/simulator', icon: Calculator },
-      { label: 'AI 컨설턴트', labelKey: 'nav.copilot', href: '/analysis/copilot', icon: Brain },
-    ],
-  },
-  {
-    title: '공지/문의',
+    title: '소개 · 문의',
     titleKey: 'nav.community',
     items: [
-      { label: '공지사항', labelKey: 'nav.notices', href: '/notices', icon: Bell },
-      { label: '고객센터', labelKey: 'nav.support', href: '/support', icon: MessageSquare },
+      { label: 'NPLATFORM', labelKey: 'nav.about', href: '/about', icon: Newspaper },
+
+      { label: '1:1 문의', labelKey: 'nav.support', href: '/notices', icon: MessageSquare },
     ],
   },
   {
@@ -114,7 +93,7 @@ const MORE_SECTIONS = [
     titleKey: 'nav.myInfo',
     items: [
       { label: '대시보드', labelKey: 'mobile.myPage', href: '/my', icon: User },
-      { label: '포트폴리오', labelKey: 'nav.portfolio', href: '/my/portfolio', icon: Heart },
+      { label: '내 매물', labelKey: 'nav.myListings', href: '/my/seller', icon: ClipboardList },
       { label: '설정', labelKey: 'nav.settings', href: '/my/settings', icon: Settings },
     ],
   },

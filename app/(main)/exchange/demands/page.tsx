@@ -303,15 +303,15 @@ export default function DemandsPage() {
 
   return (
     <MckPageShell variant="tint">
-      {isDemo && <MckDemoBanner message="체험 모드 — 샘플 매수 수요 데이터를 표시 중입니다." />}
+      {isDemo && <MckDemoBanner message="체험 모드 — 샘플 매입 조건 데이터를 표시 중입니다." />}
 
       <MckPageHeader
         breadcrumbs={[
           { label: '거래소', href: '/exchange' },
-          { label: '매수 수요' },
+          { label: '매입 조건' },
         ]}
         eyebrow="BUYER DEMAND BOARD"
-        title="매수 수요"
+        title="매입 조건"
         subtitle="매수 의향이 있는 투자자들의 NPL 매수 조건을 확인하고 직접 제안을 보내세요"
         actions={headerActions}
       />
@@ -438,7 +438,7 @@ export default function DemandsPage() {
           <MckEmptyState
             icon={Search}
             title="등록된 수요가 없습니다"
-            description="첫 번째 매수 수요를 등록하고 AI 매칭을 받아보세요"
+            description="첫 번째 매입 조건를 등록하고 AI 매칭을 받아보세요"
             actionLabel="수요 등록하기"
             onActionClick={() => setShowModal(true)}
           />
@@ -649,7 +649,7 @@ export default function DemandsPage() {
         >
           <p style={{ ...MCK_TYPE.label, color: MCK.brassDark, marginBottom: 6 }}>이용 안내</p>
           <p style={{ fontSize: 12, color: MCK.textSub, lineHeight: 1.6 }}>
-            매수 수요 게시판은 NPL 투자자가 매수 조건을 공개하고 매각사의 제안을 받는 서비스입니다.
+            매입 조건 게시판은 NPL 투자자가 매수 조건을 공개하고 매각사의 제안을 받는 서비스입니다.
             게시된 정보는 참고용이며 실제 거래 조건은 당사자 간 협의에 따릅니다.
           </p>
         </div>
@@ -680,7 +680,7 @@ export default function DemandsPage() {
               {/* Modal header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
                 <h2 style={{ fontFamily: MCK_FONTS.serif, ...MCK_TYPE.h2, color: MCK.ink }}>
-                  매수 수요 등록
+                  매입 조건 등록
                 </h2>
                 <button
                   onClick={() => setShowModal(false)}

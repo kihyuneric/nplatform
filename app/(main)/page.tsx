@@ -11,10 +11,8 @@ import {
   Layers, RefreshCw, ArrowUpRight, Cpu, Globe, MapPin,
   Play, ChevronUp,
 } from "lucide-react";
-import { TrustBelt } from "./_landing/trust-belt";
-import { AIRecommendations } from "./_landing/ai-recommendations";
 import { ExchangePreview } from "./_landing/exchange-preview";
-import { DealRoomPreview } from "./_landing/dealroom-preview";
+import { useMainStats } from "@/lib/hooks/use-main-stats";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    DESIGN TOKENS — NQ 재설계 (2026-04-20)
@@ -108,34 +106,20 @@ function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?
 ═══════════════════════════════════════════════════════════════════════════ */
 // McKinsey 4-color tick (electric blue 단일 dot — rainbow X)
 type TickItem = { t: string; v: string; c: string; icon: string }
-const DEFAULT_TICKS: TickItem[] = [
-  { t: "거래완료", v: "3,847건", c: '#2251FF', icon: "✓" },
-  { t: "총 거래액", v: "₩2,847억", c: '#2251FF', icon: "₩" },
-  { t: "AI 분석", v: "28,391건", c: '#2251FF', icon: "⚡" },
-  { t: "등록 매물", v: "1,234건", c: '#2251FF', icon: "◉" },
-  { t: "협력 금융기관", v: "50개사", c: '#2251FF', icon: "🏦" },
-  { t: "평균 수익률", v: "18.4%↑", c: '#2251FF', icon: "%" },
-  { t: "거래완료", v: "3,847건", c: '#2251FF', icon: "✓" },
-  { t: "총 거래액", v: "₩2,847억", c: '#2251FF', icon: "₩" },
-  { t: "AI 분석", v: "28,391건", c: '#2251FF', icon: "⚡" },
-  { t: "등록 매물", v: "1,234건", c: '#2251FF', icon: "◉" },
-]
 function LiveTicker() {
-  const [ticks, setTicks] = useState<TickItem[]>(DEFAULT_TICKS)
-
-  useEffect(() => {
-    fetch('/api/v1/platform/stats')
-      .then(r => r.ok ? r.json() : null)
-      .then((data: { total_analyses: number; total_listings: number } | null) => {
-        if (!data) return
-        setTicks(prev => prev.map(t => {
-          if (t.t === 'AI 분석') return { ...t, v: `${data.total_analyses.toLocaleString()}건` }
-          if (t.t === '등록 매물') return { ...t, v: `${data.total_listings.toLocaleString()}건` }
-          return t
-        }))
-      })
-      .catch(() => {})
-  }, [])
+  // 운영 관리자(/admin/main-stats) 입력값 자동연동 — 저장 즉시 메인 티커 반영
+  const stats = useMainStats()
+  const base: TickItem[] = [
+    { t: "NPL 등록", v: stats.nplCount, c: '#2251FF', icon: "◉" },
+    { t: "감정평가 총액", v: stats.appraisalTotal, c: '#2251FF', icon: "₩" },
+    { t: "근저당권 설정금액", v: stats.mortgageTotal, c: '#2251FF', icon: "🔒" },
+    { t: "대출원금 총액", v: stats.loanPrincipalTotal, c: '#2251FF', icon: "₩" },
+    { t: "매각사", v: stats.sellers, c: '#2251FF', icon: "🏦" },
+    { t: "매입사", v: stats.buyers, c: '#2251FF', icon: "🤝" },
+    { t: "투자자", v: stats.investors, c: '#2251FF', icon: "◆" },
+    { t: "성공사례", v: stats.successCases, c: '#2251FF', icon: "✓" },
+  ]
+  const ticks: TickItem[] = [...base, ...base]
 
   return (
     <div className="relative overflow-hidden" style={{ backgroundColor: 'var(--layer-2-bg)', borderTop: '1px solid var(--layer-border)' }}>
@@ -160,7 +144,155 @@ function LiveTicker() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LIVE CAROUSEL · 자발적 경매 ↔ NPL 분석 보고서
+   PRIVATE DEAL CARD · 마스킹된 NPL 미리보기 + NDA 오픈 구조
+   - 공개 정보: 관리번호 · 지역 · 유형 · 면적 · 감정가 · 채권잔액 · 협의가
+   - 그 외는 잠금 (NDA 체결 후 열람)
+═══════════════════════════════════════════════════════════════════════════ */
+type HeroCard = {
+  no: string
+  tag: string
+  title: string
+  address: string
+  appraisal: string
+  principal: string
+  max_claim: string
+  asking: string
+}
+
+const HERO_DEFAULT: HeroCard = {
+  no: 'N-01',
+  tag: 'PRIVATE · NPL',
+  title: '서울 종로구 · 토지',
+  address: '서울 종로구 홍지동 *** · 토지 5,193㎡',
+  appraisal: '66.7',
+  principal: '17.0',
+  max_claim: '23.8',
+  asking: '17.0',
+}
+
+function PrivateDealCard() {
+  // 운영자 관리자(/admin/highlights)에서 등록·수정·삭제 — 없으면 기본 카드
+  const [hero, setHero] = useState<HeroCard>(HERO_DEFAULT)
+  useEffect(() => {
+    fetch('/api/v1/hero-card')
+      .then(r => r.json())
+      .then(d => { if (d?.data) setHero({ ...HERO_DEFAULT, ...d.data }) })
+      .catch(() => {})
+  }, [])
+  return (
+    <div className="relative w-full max-w-[440px] mx-auto select-none">
+      <div
+        className="mck-paper relative overflow-hidden"
+        style={{
+          backgroundColor: '#FFFFFF',
+          border: '1px solid rgba(5, 28, 44, 0.10)',
+          borderTop: '3px solid #00A9F4',
+          boxShadow: '0 24px 48px -12px rgba(5, 28, 44, 0.30), 0 8px 16px -4px rgba(5, 28, 44, 0.15)',
+          borderRadius: 0,
+        }}
+      >
+        {/* header — private deal badge */}
+        <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid rgba(5, 28, 44, 0.10)', backgroundColor: '#FAFBFC' }}>
+          <div className="flex items-center gap-2">
+            <Lock size={11} style={{ color: '#00A9F4' }} />
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.16em]" style={{ color: '#00A9F4' }}>
+              PRIVATE DEAL · NDA 필요
+            </span>
+          </div>
+          <span className="text-[10px] font-bold uppercase tracking-[0.10em]" style={{ color: 'rgba(5, 28, 44, 0.55)' }}>
+            {hero.no}
+          </span>
+        </div>
+
+        <div className="px-5 py-4 flex flex-col gap-4">
+          {/* 공개 필드 — 최소 정보 */}
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.10em] mb-1.5 font-bold" style={{ color: '#2251FF' }}>
+              {hero.tag}
+            </div>
+            <h3 style={{
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontSize: 18, fontWeight: 800, color: '#0A1628',
+              letterSpacing: '-0.015em', lineHeight: 1.3, marginBottom: 4,
+            }}>
+              {hero.title}
+            </h3>
+            <div className="flex items-center gap-1 text-[11px]" style={{ color: 'rgba(5, 28, 44, 0.55)', fontWeight: 600 }}>
+              <MapPin size={11} /> {hero.address}
+            </div>
+          </div>
+
+          {/* 핵심 4지표 — 감정가 · 대출잔액 · 채권최고액 · 협의가 */}
+          <div
+            className="mck-cta-dark"
+            style={{
+              backgroundColor: '#051C2C',
+              borderTop: '3px solid #2251FF',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+            }}
+          >
+            {[
+              { k: '감정가', v: hero.appraisal, u: '억' },
+              { k: '총 채권액', v: hero.principal, u: '억' },
+              { k: '수익권금액', k2: '(채권최고액)', v: hero.max_claim, u: '억' },
+              { k: '협의가', v: hero.asking, u: '억', hl: true },
+            ].map((m: { k: string; k2?: string; v: string; u: string; hl?: boolean }) => (
+              <div key={m.k} style={{ padding: '12px 14px', borderRight: '1px solid rgba(255,255,255,0.12)' }}>
+                <div className="text-[9px] font-bold uppercase tracking-[0.10em] mb-1" style={{ color: m.hl ? '#00A9F4' : 'rgba(255,255,255,0.65)', lineHeight: 1.3 }}>
+                  {m.k}
+                  {m.k2 && <span style={{ fontWeight: 600, opacity: 0.8, marginLeft: 3 }}>{m.k2}</span>}
+                </div>
+                <div className="text-base font-extrabold tabular-nums" style={{ color: m.hl ? '#00A9F4' : '#FFFFFF', fontFamily: 'Georgia, serif', letterSpacing: '-0.015em' }}>
+                  <span style={{ color: m.hl ? '#00A9F4' : '#FFFFFF' }}>{m.v}</span>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>{m.u}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 잠금 필드 — NDA 후 공개 */}
+          <div>
+            <div className="text-[9px] font-bold uppercase tracking-[0.10em] mb-2" style={{ color: 'rgba(5, 28, 44, 0.55)' }}>NDA 체결 후 공개</div>
+            <div className="space-y-1.5">
+              {['정확한 주소 · 감정평가서', '채권 정보', '매각 기관 정보'].map(row => (
+                <div
+                  key={row}
+                  className="flex items-center justify-between px-3 py-2"
+                  style={{ backgroundColor: '#FAFBFC', border: '1px solid rgba(5, 28, 44, 0.06)' }}
+                >
+                  <span className="text-[11px] font-semibold" style={{ color: 'rgba(5, 28, 44, 0.45)', filter: 'blur(0px)' }}>{row}</span>
+                  <Lock size={11} style={{ color: 'rgba(5, 28, 44, 0.35)' }} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <Link
+            href="/exchange"
+            className="mck-cta-dark py-3 px-4 text-center font-extrabold text-xs transition-all hover:opacity-90 flex items-center justify-between"
+            style={{
+              backgroundColor: '#0A1628',
+              color: '#FFFFFF',
+              border: '1px solid #0A1628',
+              borderTop: '2px solid #00A9F4',
+              borderRadius: 0,
+              letterSpacing: '0.04em',
+              textDecoration: 'none',
+            }}
+          >
+            <span style={{ color: '#FFFFFF' }}>관심 등록 · NDA 요청</span>
+            <ArrowRight size={13} style={{ color: '#FFFFFF' }} />
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIVE CAROUSEL · 자발적 경매 ↔ NPL 분석 보고서 (legacy — hero 미사용)
    - 단순 opacity crossfade (no float animation, no AnimatePresence wait mode)
    - 두 카드 항상 stack 렌더 → 하나는 absolute positioning + opacity 토글
    - 안정적 가시성 보장
@@ -866,7 +998,50 @@ function Sparkline({ color = C.em }: { color?: string }) {
 /* ═══════════════════════════════════════════════════════════════════════════
    MAIN PAGE
 ═══════════════════════════════════════════════════════════════════════════ */
+/* ─── 메인 수기 지표 (운영 관리자 입력 · /admin/main-stats) ─────────── */
+function HeroManualStats() {
+  const [stats, setStats] = useState<{ viewable: string; fresh: string; period: string } | null>(null)
+  useEffect(() => {
+    fetch('/api/v1/admin/site-settings')
+      .then(r => r.json())
+      .then(d => {
+        const s = d?.data ?? {}
+        setStats({
+          viewable: String(s.mainViewableNpl ?? '10'),
+          fresh: String(s.mainNewThisWeek ?? '3'),
+          period: String(s.mainStatsPeriod ?? ''),
+        })
+      })
+      .catch(() => setStats({ viewable: '10', fresh: '3', period: '' }))
+  }, [])
+  if (!stats) return null
+  const periodLabel = stats.period || '이번 주'
+  return (
+    <div className="flex flex-wrap items-center gap-3" style={{ marginBottom: '1.5rem' }}>
+      {[
+        { k: '열람 가능한 NPL', v: `${stats.viewable}건` },
+        { k: `${periodLabel} 신규`, v: `+${stats.fresh}건` },
+      ].map(c => (
+        <div
+          key={c.k}
+          style={{
+            display: 'inline-flex', alignItems: 'baseline', gap: 8,
+            padding: '10px 16px',
+            background: 'rgba(191, 164, 118, 0.08)',
+            border: '1px solid rgba(191, 164, 118, 0.40)',
+          }}
+        >
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#BFA476', letterSpacing: '0.06em' }}>{c.k}</span>
+          <span style={{ fontFamily: 'Georgia, serif', fontSize: 20, fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums' }}>{c.v}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function LandingPage() {
+  // 메인 KPI — 운영 관리자(/admin/main-stats) 입력값 자동연동
+  const mainStats = useMainStats()
 
   // McKinsey monochrome — 모든 stats 동일 ink + electric tone (4색 제한 준수)
   const stats = [
@@ -890,8 +1065,8 @@ export default function LandingPage() {
     },
     {
       icon: <MessageSquare size={20} style={{ color: MCK_ICON }} />, tag: "딜룸", tagColor: MCK_TAG_C,
-      title: "딜룸 · NDA · 전자계약",
-      desc: "매각사·매입사 1:1 보안 채널. NDA 전자서명 → 권리증 공유 → LOI → 매매계약서 자동 생성까지 원스톱 체결.",
+      title: "딜룸 · 온라인 NDA",
+      desc: "매각사·매입사 1:1 보안 채널. 온라인 NDA 체결 → 권리증 공유 → LOI → 매매계약까지 원스톱 진행.",
       href: "/deals", accent: MCK_TAG_C,
       meta: "진행 중 딜 68건 · 이번 주 체결 14건",
     },
@@ -934,7 +1109,7 @@ export default function LandingPage() {
     },
     {
       n: "02", t: "NDA · 실사",
-      d: "NDA 전자서명(L2) 후 채권자료·권리관계 열람. 딜룸 채팅으로 보안 협상.",
+      d: "온라인 NDA 체결 후 채권자료·권리관계 열람. 딜룸 채팅으로 보안 협상.",
       icon: <Shield size={16} />, sla: "실사 3일",
     },
     {
@@ -1026,7 +1201,7 @@ export default function LandingPage() {
                       color: '#00A9F4',
                     }}
                   >
-                    Korea NPL Exchange · LIVE
+                    대한민국 1%를 위한 NPL 플랫폼
                   </span>
                 </div>
               </motion.div>
@@ -1045,9 +1220,9 @@ export default function LandingPage() {
                   marginBottom: '1.5rem',
                 }}
               >
-                NPL 딜이 모이는 곳
+                그들만의 리그,
                 <br />
-                거래가 시작되는 곳
+                NPL 딜이 열리는 곳
               </motion.h1>
 
               {/* Subtitle — single sentence, McKinsey concise (마침표/쉼표 제거) */}
@@ -1064,13 +1239,15 @@ export default function LandingPage() {
                   letterSpacing: '-0.005em',
                 }}
               >
-                매각사와 투자자가 직접 만나는 NPL 거래소
+                금융기관 부실채권과 급매물을 검증된 매입사·투자자에게만
                 <br />
                 <span style={{ color: '#FFFFFF', fontWeight: 700 }}>
-                  탐색 · 실사 · 계약 · 정산
+                  NDA 기반 · 최소 정보 · 1:1 매칭
                 </span>
-                {' '}을 한 플랫폼에서
+                {' '}으로 연결합니다
               </motion.p>
+
+              {/* 수기 지표 칩 삭제 — 2026-08-17 사용자 지시 (관리자 입력 페이지는 유지) */}
 
               {/* CTAs — Paper primary + Cyan outline secondary */}
               <motion.div variants={up} custom={3} className="flex flex-col sm:flex-row gap-3" style={{ marginBottom: '2rem' }}>
@@ -1102,7 +1279,7 @@ export default function LandingPage() {
                   }}
                 >
                   <Search size={15} style={{ color: '#0A1628' }} />
-                  <span style={{ color: '#0A1628' }}>매물 탐색하기</span>
+                  <span style={{ color: '#0A1628' }}>NPL 자동매칭 클릭</span>
                   <ArrowRight size={15} style={{ color: '#0A1628' }} />
                 </Link>
                 <Link
@@ -1131,19 +1308,15 @@ export default function LandingPage() {
                   }}
                 >
                   <Building2 size={14} style={{ color: '#00A9F4' }} />
-                  <span style={{ color: '#00A9F4' }}>매물 등록하기</span>
+                  <span style={{ color: '#00A9F4' }}>NPL 매각의뢰</span>
                 </Link>
               </motion.div>
 
-              {/* AI Search */}
-              <motion.div variants={up} custom={4}>
-                <AISearch />
-              </motion.div>
             </motion.div>
 
-            {/* ── RIGHT — LIVE Carousel (자발적 경매 ↔ NPL 분석) ──────── */}
+            {/* ── RIGHT — 프라이빗 딜 카드 (마스킹 + NDA) ──────── */}
             <div className="hidden lg:flex justify-center w-full">
-              <LiveCarousel />
+              <PrivateDealCard />
             </div>
           </div>
         </div>
@@ -1153,17 +1326,18 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          STATS BAR · 4개 핵심 지표 (1,234 등록 / 47 금융기관 / 2,847억 / 28,391 AI)
+          STATS BAR · NPL 4대 지표 (등록 수 / 감정가 총액 / 근저당 설정액 / 대출원금)
           McKinsey White Paper · 4-card grid · electric blue 액센트
+          ※ placeholder 수치 — 실제 값 확정 시 교체
       ══════════════════════════════════════════════════════════════════ */}
       <section style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid rgba(5, 28, 44, 0.10)', borderBottom: '1px solid rgba(5, 28, 44, 0.10)', padding: '3.5rem 0' }}>
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={stagger} className="grid grid-cols-2 lg:grid-cols-4 gap-px" style={{ background: 'rgba(5, 28, 44, 0.10)' }}>
             {[
-              { label: '등록 매물',       value: '1,234건',   delta: '+12%',    icon: <Layers size={16} style={{ color: '#0A1628' }} /> },
-              { label: '협력 금융기관',   value: '50개사',    delta: '+5개사',  icon: <Building2 size={16} style={{ color: '#0A1628' }} /> },
-              { label: '누적 거래액',     value: '2,847억',   delta: '+24%',    icon: <DollarSign size={16} style={{ color: '#0A1628' }} /> },
-              { label: 'AI 분석 건수',    value: '28,391건',  delta: '실시간',  icon: <Brain size={16} style={{ color: '#0A1628' }} /> },
+              { label: 'NPL 등록 수',       value: mainStats.nplCount,           delta: '실시간', icon: <Layers size={16} style={{ color: '#0A1628' }} /> },
+              { label: '감정평가 총액',     value: mainStats.appraisalTotal,     delta: '누적',   icon: <Building2 size={16} style={{ color: '#0A1628' }} /> },
+              { label: '근저당권 설정금액', value: mainStats.mortgageTotal,      delta: '누적',   icon: <ShieldCheck size={16} style={{ color: '#0A1628' }} /> },
+              { label: '대출원금 총액',     value: mainStats.loanPrincipalTotal, delta: '누적',   icon: <DollarSign size={16} style={{ color: '#0A1628' }} /> },
             ].map((s, i) => (
               <motion.div key={s.label} variants={up} custom={i} className="relative p-6"
                 style={{
@@ -1198,8 +1372,8 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          EXCHANGE PREVIEW · 거래소 미리보기 (4 listing cards)
-          기존 _landing/exchange-preview.tsx 컴포넌트 재사용
+          이번주 하이라이트 NPL 8건 — KPI 바로 아래 배치 (2026-08-18)
+          운영자 관리자(/admin/highlights) CRUD 연동 · 이미지 중심 카드 8개
       ══════════════════════════════════════════════════════════════════ */}
       <ExchangePreview />
 
@@ -1213,7 +1387,7 @@ export default function LandingPage() {
               <div className="flex items-center justify-center gap-2 mb-3">
                 <span style={{ width: 18, height: 1.5, background: '#2251FF', display: 'inline-block' }} />
                 <span style={{ fontSize: 11, fontWeight: 800, color: '#2251FF', letterSpacing: '0.10em', textTransform: 'uppercase' }}>
-                  거래 프로세스
+                  엔플랫폼 프로세스
                 </span>
               </div>
               <h2 style={{
@@ -1222,26 +1396,25 @@ export default function LandingPage() {
                 fontWeight: 800, color: '#0A1628',
                 letterSpacing: '-0.025em', lineHeight: 1.15, marginBottom: 12,
               }}>
-                4단계로 완결되는 거래
+                엔플랫폼 3단계 프로세스
               </h2>
               <p style={{ fontSize: 16, color: 'rgba(5, 28, 44, 0.65)', fontWeight: 500, maxWidth: 720, margin: '0 auto', lineHeight: 1.55 }}>
-                탐색 · 실사 · 계약 · 정산. AI 가 각 단계를 자동화합니다.
+                매각 의뢰 · 마케팅 매칭 · 거래 성사. 공급과 수요를 1:1로 연결합니다.
               </p>
             </motion.header>
 
-            {/* Timeline — 4 steps with connector line + electric blue active state */}
+            {/* Timeline — 3 steps with connector line + electric blue active state */}
             <motion.div variants={up} custom={1}
-              className="grid grid-cols-2 md:grid-cols-4 mb-12"
-              style={{ gap: 0, position: 'relative', maxWidth: 980, margin: '0 auto 3rem' }}
+              className="grid grid-cols-3 mb-12"
+              style={{ gap: 0, position: 'relative', maxWidth: 860, margin: '0 auto 3rem' }}
             >
               {/* connector line — McKinsey 남색 단일 라인 (전체 연결) */}
-              <div className="hidden md:block" style={{ position: 'absolute', top: 24, left: '12.5%', right: '12.5%', height: 2, background: '#0A1628', zIndex: 0 }} />
+              <div className="hidden md:block" style={{ position: 'absolute', top: 24, left: '16.6%', right: '16.6%', height: 2, background: '#0A1628', zIndex: 0 }} />
 
               {[
-                { n: '01', en: 'SCREENING' },
-                { n: '02', en: 'VALIDATION' },
-                { n: '03', en: 'ENGAGEMENT' },
-                { n: '04', en: 'EXECUTION' },
+                { n: '01', en: 'REQUEST' },
+                { n: '02', en: 'MARKETING · MATCHING' },
+                { n: '03', en: 'CLOSING' },
               ].map((s) => (
                 <div key={s.n} style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
@@ -1276,13 +1449,12 @@ export default function LandingPage() {
               ))}
             </motion.div>
 
-            {/* Step description cards (smaller, beneath timeline) */}
-            <motion.div variants={stagger} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Step description cards (smaller, beneath timeline) — 서비스 소개와 동일 3단계 */}
+            <motion.div variants={stagger} className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { en: 'SCREENING',   t: '탐색 · 발견',     d: '매물 공개 + AI 자동 분석. 본인인증으로 매물·리포트 즉시 열람.',           meta: '리포트 30초' },
-                { en: 'VALIDATION',  t: 'NDA · 실사',      d: 'NDA 전자서명 후 채권자료·권리관계 열람. 딜룸 채팅으로 보안 협상.',       meta: '실사 3일' },
-                { en: 'ENGAGEMENT',  t: '오퍼 · 계약',     d: '오퍼 제출 → 협상 → 전자계약서 자동 생성 → 양 당사자 서명.',              meta: '협상 5일' },
-                { en: 'EXECUTION',   t: '에스크로 · 정산', d: '에스크로 대금 지급 → 채권양도 등기 → 정산 완결. 분쟁 시 중재 지원.',     meta: '당일 클로징' },
+                { en: 'REQUEST',              t: '매각 의뢰 · 등록',  d: '매각사가 보유 리스트를 파일로 첨부해 의뢰하면, 엔플랫폼이 수수료 협의 후 등록을 대행하고 민감정보를 비식별화해 등재합니다.', meta: '등록 대행 · 비식별화' },
+                { en: 'MARKETING · MATCHING', t: '마케팅 · 매칭',     d: '매입사 Pool·보유 플랫폼·언론 채널로 마케팅하고, 검증된 매입사의 매입조건에 맞는 물건만 선별해 1:1 로 제시합니다.',        meta: '1:1 선별 제시' },
+                { en: 'CLOSING',              t: '미팅 · 거래 성사',  d: 'NDA·상담 요청 고객은 엔플랫폼이 1차 미팅을 진행하고, 금융기관과의 2차 미팅·협의로 연결해 거래를 완결합니다.',            meta: 'Deal Closing' },
               ].map((s, i) => (
                 <motion.article key={s.en} variants={up} custom={i}
                   className="mck-paper"
@@ -1321,200 +1493,116 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          DEAL ROOM PREVIEW · 보안 협상 채널 미리보기
-          기존 _landing/dealroom-preview.tsx 컴포넌트 재사용
+          BRAND IDENTITY · 브랜드 정체성 선언 (2026-08-17)
+          다크 잉크 바탕 + 골드 세로 라인 — 조용한 한 문장
       ══════════════════════════════════════════════════════════════════ */}
-      <DealRoomPreview />
-
-      {/* ══════════════════════════════════════════════════════════════════
-          ① USER TYPES · 누구를 위한 플랫폼인가
-          매각사 + 투자자 2-col McKinsey editorial
-      ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid rgba(5, 28, 44, 0.10)', padding: '6rem 0' }}>
-        <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div variants={stagger}>
-            {/* Section header */}
-            <motion.header variants={up} custom={0} className="mb-12 text-center">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <span style={{ width: 18, height: 1.5, background: '#2251FF', display: 'inline-block' }} />
-                <span style={{ fontSize: 11, fontWeight: 800, color: '#2251FF', letterSpacing: '0.10em', textTransform: 'uppercase' }}>
-                  누구를 위한 플랫폼인가
-                </span>
-              </div>
-              <h2 style={{
-                fontFamily: 'Georgia, "Times New Roman", serif',
-                fontSize: 'clamp(2rem, 4vw, 3rem)',
-                fontWeight: 800,
-                color: '#0A1628',
-                letterSpacing: '-0.025em',
-                lineHeight: 1.15,
-                marginBottom: 12,
-              }}>
-                매각사와 투자자 모두를 위한
-              </h2>
-              <p style={{ fontSize: 16, color: 'rgba(5, 28, 44, 0.65)', fontWeight: 500, maxWidth: 720, margin: '0 auto', lineHeight: 1.55 }}>
-                4단계 통합 워크플로 — 탐색·실사·계약·정산이 하나의 프로세스로.
-              </p>
-            </motion.header>
-
-            <motion.div variants={stagger} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {[
-                {
-                  eyebrow: '매각사 · 금융기관',
-                  title: '금융기관 (매각사)',
-                  desc: 'NPL 매물을 디지털로 등록하고 전국 검증된 투자자에게 노출하세요. AI 가격 산정, 입찰 관리, 딜룸 협상까지 자동화합니다.',
-                  bullets: [
-                    '매물 일괄 등록 및 관리',
-                    '실시간 입찰 모니터링',
-                    'AI 가격 자동 산정',
-                    '딜룸 문서 관리',
-                    '전자계약 원스톱',
-                  ],
-                  cta: '매물 등록하고 딜룸 시작',
-                  href: '/exchange/sell',
-                  icon: <Building2 size={18} style={{ color: '#2251FF' }} />,
-                },
-                {
-                  eyebrow: '대부업체 · 투자자',
-                  title: '대부업체 / 투자자',
-                  desc: '전국 NPL 매물을 AI 분석으로 평가하고 수익률을 시뮬레이션하세요. 검증된 매물만, 직거래로 더 높은 수익을 실현합니다.',
-                  bullets: [
-                    '30+ 조건 통합 검색',
-                    'AI 리스크 등급 분석',
-                    '수익률 시뮬레이션',
-                    '실시간 경쟁 입찰',
-                    'AI 컨설턴트 상담',
-                  ],
-                  cta: '거래소에서 매물 탐색',
-                  href: '/exchange',
-                  icon: <Search size={18} style={{ color: '#2251FF' }} />,
-                },
-              ].map((c, i) => (
-                <motion.article
-                  key={c.title}
-                  variants={up}
-                  custom={i}
-                  className="mck-paper"
-                  style={{
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid rgba(5, 28, 44, 0.10)',
-                    borderTop: '2px solid #2251FF',
-                    borderRadius: 0,
-                    padding: '32px 32px 28px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 18,
-                    boxShadow: '0 12px 24px -8px rgba(5, 28, 44, 0.10), 0 4px 8px -2px rgba(5, 28, 44, 0.05)',
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      width: 40, height: 40, background: 'rgba(34, 81, 255, 0.08)', border: '1px solid rgba(34, 81, 255, 0.20)',
-                    }}>
-                      {c.icon}
-                    </span>
-                    <div>
-                      <div style={{ fontSize: 10, fontWeight: 800, color: '#2251FF', letterSpacing: '0.10em', textTransform: 'uppercase', marginBottom: 3 }}>
-                        {c.eyebrow}
-                      </div>
-                      <h3 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 22, fontWeight: 800, color: '#0A1628', letterSpacing: '-0.015em', lineHeight: 1.2 }}>
-                        {c.title}
-                      </h3>
-                    </div>
-                  </div>
-                  <p style={{ fontSize: 14, color: 'rgba(5, 28, 44, 0.65)', lineHeight: 1.6, fontWeight: 500 }}>
-                    {c.desc}
-                  </p>
-                  <ul style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 0', borderTop: '1px solid rgba(5, 28, 44, 0.08)', borderBottom: '1px solid rgba(5, 28, 44, 0.08)' }}>
-                    {c.bullets.map(b => (
-                      <li key={b} className="flex items-center gap-2" style={{ fontSize: 13, color: '#0A1628', fontWeight: 600 }}>
-                        <CheckCircle2 size={14} style={{ color: '#2251FF', flexShrink: 0 }} />
-                        {b}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link href={c.href} style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '13px 18px',
-                    background: '#0A1628', color: '#FFFFFF',
-                    borderTop: '2px solid #2251FF',
-                    fontSize: 13, fontWeight: 800, letterSpacing: '-0.005em',
-                    textDecoration: 'none',
-                    boxShadow: '0 4px 12px -2px rgba(10, 22, 40, 0.20)',
-                  }} className="mck-cta-dark">
-                    <span style={{ color: '#FFFFFF' }}>{c.cta}</span>
-                    <ArrowRight size={14} style={{ color: '#FFFFFF' }} />
-                  </Link>
-                </motion.article>
-              ))}
-            </motion.div>
-          </motion.div>
-        </Reveal>
+      <section style={{ background: '#0A1220', padding: '6rem 0', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        {/* 골드 세로 라인 + 은은한 광 */}
+        <div
+          style={{
+            width: 3, height: 88,
+            background: '#BFA476',
+            margin: '0 auto 32px',
+            boxShadow: '0 0 40px 8px rgba(191, 164, 118, 0.28)',
+          }}
+        />
+        <p
+          style={{
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontSize: 'clamp(1.4rem, 3.2vw, 2.2rem)',
+            fontWeight: 700,
+            color: '#F4EFE6',
+            letterSpacing: '-0.015em',
+            lineHeight: 1.5,
+            maxWidth: 760,
+            margin: '0 auto',
+            padding: '0 24px',
+            wordBreak: 'keep-all',
+          }}
+        >
+          시장에 내놓기 전에,
+          <br />
+          조건이 맞는 매수자에게만 조용히 전달합니다.
+        </p>
+        <div
+          style={{
+            marginTop: 28,
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: '0.30em',
+            textTransform: 'lowercase',
+            color: '#BFA476',
+            fontFamily: 'Georgia, serif',
+          }}
+        >
+          nplatform
+        </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          ② WHY NPLATFORM (1차) · NPL 거래의 새로운 표준
-          3-card editorial: 거래 효율 · 47개 금융기관 · 보안 PII
+          SUCCESS STORIES · 성공사례 (NPL / 급매 경험 제공)
+          ※ placeholder — 실제 사례 확정 시 교체
       ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ backgroundColor: '#F8FAFC', padding: '6rem 0' }}>
+      <section style={{ backgroundColor: '#F8FAFC', padding: '6rem 0', borderTop: '1px solid rgba(5, 28, 44, 0.10)' }}>
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={stagger}>
             <motion.header variants={up} custom={0} className="mb-12 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <span style={{ width: 18, height: 1.5, background: '#2251FF', display: 'inline-block' }} />
                 <span style={{ fontSize: 11, fontWeight: 800, color: '#2251FF', letterSpacing: '0.10em', textTransform: 'uppercase' }}>
-                  Why NPLatform
+                  Success Stories · 성공사례
                 </span>
               </div>
               <h2 style={{
                 fontFamily: 'Georgia, "Times New Roman", serif',
                 fontSize: 'clamp(2rem, 4vw, 3rem)',
-                fontWeight: 800,
-                color: '#0A1628',
-                letterSpacing: '-0.025em',
-                lineHeight: 1.15,
-                marginBottom: 12,
+                fontWeight: 800, color: '#0A1628',
+                letterSpacing: '-0.025em', lineHeight: 1.15, marginBottom: 12,
               }}>
-                NPL 거래의 새로운 표준
+                엔플랫폼에서 완결된 딜
               </h2>
               <p style={{ fontSize: 16, color: 'rgba(5, 28, 44, 0.65)', fontWeight: 500, maxWidth: 720, margin: '0 auto', lineHeight: 1.55 }}>
-                데이터 · AI · 컴플라이언스. 한 플랫폼에서.
+                매각사와 매입사가 직접 만나 완결한 실제 거래 경험.
               </p>
             </motion.header>
 
             <motion.div variants={stagger} className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 {
-                  eyebrow: '거래 효율',
-                  title: '더 빠른 클로징',
-                  desc: '평균 6개월 → 2주 이내. AI 분석·자동 매칭·전자계약으로 거래 마찰 제거.',
-                  stats: [
-                    '평균 14일 낙찰',
-                    'NPL 수수료 (0.3~1.5%) / 부동산 수수료 (~0.9% 이내)',
-                    '매각사 NPL 등록비 6개월 무료',
+                  tag: 'NPL',
+                  title: '대구 공장 NPL',
+                  quote: '조건에 맞는 매입사만 선별해 소개받아 협상이 빨랐습니다. 채권잔액 전액으로 매각을 완결했습니다.',
+                  metrics: [
+                    { k: '총 채권액', v: '39억' },
+                    { k: '매각가', v: '39억' },
+                    { k: '소요기간', v: '33일' },
                   ],
-                  icon: <Zap size={18} style={{ color: '#0A1628' }} />,
+                  who: '매각 기관',
                 },
                 {
-                  eyebrow: '100여개 금융기관',
-                  title: '금융기관 NPL 직거래',
-                  desc: '100여개 기관이 직접 매각. 중간 유통 없이 LLR 회수율 극대화.',
-                  stats: ['중간 유통 0', '기관 KYC 완료', '공개 입찰 + 프라이빗 협상'],
-                  icon: <Building2 size={18} style={{ color: '#0A1628' }} />,
+                  tag: 'NPL',
+                  title: '서울 오피스텔 통건물+유치권 NPL',
+                  quote: '유치권이 걸린 통건물이었지만, 검증된 매입사 매칭으로 채권잔액을 넘는 가격에 낙찰됐습니다.',
+                  metrics: [
+                    { k: '총 채권액', v: '90억' },
+                    { k: '낙찰가', v: '130억' },
+                    { k: '소요기간', v: '21일' },
+                  ],
+                  who: '매각 기관',
                 },
                 {
-                  eyebrow: '보안 · PII',
-                  title: '기관급 컴플라이언스',
-                  desc: 'NDA / LOI 단계별 접근통제. 담보 및 개인정보는 자동 마스킹.',
-                  stats: ['금감원·신용정보법 준수', '자동 PII 마스킹', '감사로그 영구 보관'],
-                  icon: <ShieldCheck size={18} style={{ color: '#0A1628' }} />,
+                  tag: 'NPL',
+                  title: '한남동 통건물 NPL',
+                  quote: '서울 사옥을 찾던 중 감정가 100억 건물을 60억에 낙찰받았습니다. 현재 시세는 120억 수준 — 걱정했던 명도 문제까지 깔끔하게 해결되어 법인 자산에 큰 도움이 됐습니다.',
+                  metrics: [
+                    { k: '감정가', v: '100억' },
+                    { k: '낙찰가', v: '60억' },
+                    { k: '소요기간', v: '21일' },
+                  ],
+                  who: '법인고객',
                 },
               ].map((c, i) => (
-                <motion.article
-                  key={c.title}
-                  variants={up}
-                  custom={i}
+                <motion.article key={c.title} variants={up} custom={i}
                   className="mck-paper"
                   style={{
                     backgroundColor: '#FFFFFF',
@@ -1522,39 +1610,31 @@ export default function LandingPage() {
                     borderTop: '2px solid #2251FF',
                     borderRadius: 0,
                     padding: '28px 26px',
-                    display: 'flex', flexDirection: 'column', gap: 14,
+                    display: 'flex', flexDirection: 'column', gap: 16,
                     boxShadow: '0 8px 18px -6px rgba(5, 28, 44, 0.10)',
                   }}
                 >
-                  <div className="flex items-center gap-2">
-                    {/* Sky blue 칩 (첨부 2 스타일) — #A8CDE8 + ink 검정 아이콘 + 1px 7FA8C8 border */}
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      width: 38, height: 38,
-                      background: '#A8CDE8',
-                      border: '1px solid #7FA8C8',
-                      borderTop: '2px solid #2251FF',
-                    }}>
-                      {c.icon}
-                    </span>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: '#1A47CC', letterSpacing: '0.10em', textTransform: 'uppercase' }}>
-                      {c.eyebrow}
-                    </div>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: '#1A47CC', letterSpacing: '0.10em', textTransform: 'uppercase' }}>
+                    {c.tag}
                   </div>
                   <h3 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 20, fontWeight: 800, color: '#0A1628', letterSpacing: '-0.015em', lineHeight: 1.2 }}>
                     {c.title}
                   </h3>
-                  <p style={{ fontSize: 13, color: 'rgba(5, 28, 44, 0.65)', lineHeight: 1.6, fontWeight: 500 }}>
-                    {c.desc}
+                  {/* flex:1 — 인용문 길이가 달라도 지표·출처 줄이 세 카드 동일 높이에 정렬 */}
+                  <p style={{ fontSize: 13, color: 'rgba(5, 28, 44, 0.72)', lineHeight: 1.65, fontWeight: 500, fontStyle: 'italic', flex: 1 }}>
+                    “{c.quote}”
                   </p>
-                  <ul style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 12, borderTop: '1px dashed rgba(5, 28, 44, 0.14)' }}>
-                    {c.stats.map(s => (
-                      <li key={s} className="flex items-center gap-2" style={{ fontSize: 12, color: '#0A1628', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                        <span style={{ width: 4, height: 4, background: '#2251FF', flexShrink: 0 }} />
-                        {s}
-                      </li>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, paddingTop: 14, borderTop: '1px solid rgba(5, 28, 44, 0.10)' }}>
+                    {c.metrics.map(m => (
+                      <div key={m.k}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(5, 28, 44, 0.55)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{m.k}</div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: '#0A1628', fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums' }}>{m.v}</div>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(5, 28, 44, 0.55)', letterSpacing: '0.02em' }}>
+                    — {c.who}
+                  </div>
                 </motion.article>
               ))}
             </motion.div>
@@ -1563,165 +1643,98 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          ③ TRADE INFRASTRUCTURE · 거래의 모든 것, 한 곳에
-          6-card editorial: 거래소·딜룸·경쟁 입찰·체결 보호·AI 분석·AI Copilot
+          MEDIA & AWARDS · 언론 보도 · 수상 · 검증된 실적 (강조)
+          ※ placeholder — 실제 문구/링크 확정 시 교체
       ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ backgroundColor: '#FFFFFF', padding: '6rem 0' }}>
+      <section style={{ backgroundColor: '#F8FAFC', padding: '5rem 0', borderBottom: '1px solid rgba(5, 28, 44, 0.10)' }}>
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={stagger}>
-            <motion.header variants={up} custom={0} className="mb-12 text-center">
+            <motion.header variants={up} custom={0} className="mb-10 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <span style={{ width: 18, height: 1.5, background: '#2251FF', display: 'inline-block' }} />
                 <span style={{ fontSize: 11, fontWeight: 800, color: '#2251FF', letterSpacing: '0.10em', textTransform: 'uppercase' }}>
-                  Trade Infrastructure · 거래 인프라
+                  As Featured · 언론 · 수상
                 </span>
               </div>
               <h2 style={{
                 fontFamily: 'Georgia, "Times New Roman", serif',
-                fontSize: 'clamp(2rem, 4vw, 3rem)',
-                fontWeight: 800,
-                color: '#0A1628',
-                letterSpacing: '-0.025em',
-                lineHeight: 1.15,
-                marginBottom: 12,
+                fontSize: 'clamp(1.8rem, 3.6vw, 2.6rem)',
+                fontWeight: 800, color: '#0A1628',
+                letterSpacing: '-0.025em', lineHeight: 1.15, marginBottom: 12,
               }}>
-                거래의 모든 것, 한 곳에
+                시장이 검증한 실적
               </h2>
-              <p style={{ fontSize: 16, color: 'rgba(5, 28, 44, 0.65)', fontWeight: 500, maxWidth: 720, margin: '0 auto', lineHeight: 1.55 }}>
-                거래소 · 딜룸 · 계약 · 에스크로 · AI 분석.
+              <p style={{ fontSize: 15, color: 'rgba(5, 28, 44, 0.65)', fontWeight: 500, maxWidth: 680, margin: '0 auto', lineHeight: 1.55 }}>
+                금융기관·언론·정부가 함께한 트랙 레코드.
               </p>
             </motion.header>
 
-            <motion.div variants={stagger} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <motion.div variants={stagger} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                {
-                  eyebrow: '거래소',
-                  title: 'NPL 매물 거래소',
-                  desc: '금융기관의 라이브 NPL 매물. 채권잔액·매각희망가·할인율·담보LTV 30+ 조건 필터 + 자연어 검색으로 즉시 매칭',
-                  href: '/exchange',
-                  icon: <Search size={16} style={{ color: '#0A1628' }} />,
-                },
-                {
-                  eyebrow: '딜룸',
-                  title: '딜룸 · NDA · 전자계약',
-                  desc: '매각사·매입사 1:1 보안 채널. NDA 전자서명 → LOI → 에스크로 계약까지 원스톱 체결',
-                  href: '/deals',
-                  icon: <MessageSquare size={16} style={{ color: '#0A1628' }} />,
-                },
-                {
-                  eyebrow: '자발적 경매',
-                  title: '실시간 경쟁 입찰 (NPL/부동산)',
-                  desc: '공개 경쟁 입찰 + 프라이빗 협상. 자동 입찰 에이전트로 가격 상한·기준일만 설정하면 조건 맞는 매물 자동 응찰',
-                  href: '/exchange/auction',
-                  icon: <Gavel size={16} style={{ color: '#0A1628' }} />,
-                },
-                {
-                  eyebrow: '체결 보호',
-                  title: '에스크로 · PII 마스킹',
-                  desc: '대금은 에스크로 계좌로, 개인정보는 접근통제로. 안전한 체결을 위한 2중 안전장치',
-                  href: '/deals',
-                  icon: <Shield size={16} style={{ color: '#0A1628' }} />,
-                },
-                {
-                  eyebrow: 'NPL 분석',
-                  title: 'AI 딜 분석 리포트',
-                  desc: '감정가·배당요구·권리분석·수익률·회수 확률까지 27초 내 자동 리포트. 거래 결정을 빠르게, 리스크를 명확하게',
-                  href: '/analysis/report',
-                  icon: <Brain size={16} style={{ color: '#0A1628' }} />,
-                },
-                {
-                  eyebrow: 'AI 컨설턴트',
-                  title: 'AI 거래 어시스턴트',
-                  desc: '"이 매물 수익률 15% 가능해?" 처럼 대화하듯 물어보세요. 매물·시세·판례 DB 를 실시간 조회하는 거래 도우미',
-                  href: '/analysis',
-                  icon: <Sparkles size={16} style={{ color: '#0A1628' }} />,
-                },
-              ].map((c, i) => (
-                <motion.article key={c.title} variants={up} custom={i}
+                { tag: '금융기관', icon: <Building2 size={16} style={{ color: '#0A1628' }} />, title: 'KB국민은행 · 금융위', desc: '부실채권 분석·평가 위탁 테스트 수행', logo: 'kb-kookmin.png' },
+                { tag: '핀테크', icon: <Cpu size={16} style={{ color: '#0A1628' }} />, title: 'K뱅크 AI 경매 서비스', desc: 'AI 기반 경매 분석 서비스 런칭', logo: 'kbank.png' },
+                { tag: '언론', icon: <Globe size={16} style={{ color: '#0A1628' }} />, title: '조선일보 땅집고', desc: '경·공매 공동사업 파트너십', logo: 'ddangjipgo.png' },
+                { tag: '수상', icon: <TrendingUp size={16} style={{ color: '#0A1628' }} />, title: 'XRF 핀테크 어워드 2위', desc: '핀테크 경진 부문 준우승', logo: 'xrf.png' },
+                { tag: '수상', icon: <Star size={16} style={{ color: '#0A1628' }} />, title: '국토교통부 최우수상', desc: '부동산 데이터 활용 부문 최우수', logo: 'molit.png' },
+                { tag: '유통', icon: <Play size={16} style={{ color: '#0A1628' }} />, title: '땅집고옥션', desc: '경·공매 플랫폼 → 엔플랫폼 유입', logo: 'ddangjipgo-auction.png' },
+              ].map((m, i) => (
+                <motion.article key={m.title} variants={up} custom={i}
                   className="mck-paper"
                   style={{
-                    display: 'flex', flexDirection: 'column', gap: 12,
                     backgroundColor: '#FFFFFF',
                     border: '1px solid rgba(5, 28, 44, 0.10)',
                     borderTop: '2px solid #2251FF',
                     borderRadius: 0,
-                    padding: '22px 22px 0',
+                    padding: '20px 20px',
+                    display: 'flex', alignItems: 'flex-start', gap: 14,
                     boxShadow: '0 6px 14px -4px rgba(5, 28, 44, 0.08)',
-                    height: '100%',
-                    overflow: 'hidden',
                   }}
                 >
-                  <div className="flex items-center gap-2">
-                    {/* Sky blue chip — 첨부 2 톤 일치 */}
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      width: 36, height: 36,
-                      background: '#A8CDE8', border: '1px solid #7FA8C8',
-                      borderTop: '2px solid #2251FF',
-                    }}>
-                      {c.icon}
-                    </span>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: '#1A47CC', letterSpacing: '0.10em', textTransform: 'uppercase' }}>
-                      {c.eyebrow}
+                  {/* 로고 슬롯 — /public/images/logos/{파일명} 배치 시 각사 로고 표시, 없으면 아이콘 */}
+                  <span style={{
+                    position: 'relative',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: 44, height: 44, flexShrink: 0,
+                    background: '#A8CDE8', border: '1px solid #7FA8C8', borderTop: '2px solid #2251FF',
+                    overflow: 'hidden',
+                  }}>
+                    {m.icon}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`/images/logos/${m.logo}`}
+                      alt=""
+                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: 5, background: '#FFFFFF', opacity: 0 }}
+                      onLoad={e => { (e.currentTarget as HTMLImageElement).style.opacity = '1' }}
+                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                    />
+                  </span>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 9, fontWeight: 800, color: '#1A47CC', letterSpacing: '0.10em', textTransform: 'uppercase', marginBottom: 4 }}>
+                      {m.tag}
                     </div>
+                    <h3 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 16, fontWeight: 800, color: '#0A1628', letterSpacing: '-0.01em', lineHeight: 1.25, marginBottom: 4 }}>
+                      {m.title}
+                    </h3>
+                    <p style={{ fontSize: 12, color: 'rgba(5, 28, 44, 0.65)', lineHeight: 1.5, fontWeight: 500 }}>
+                      {m.desc}
+                    </p>
                   </div>
-                  <h3 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 17, fontWeight: 800, color: '#0A1628', letterSpacing: '-0.01em', lineHeight: 1.25 }}>
-                    {c.title}
-                  </h3>
-                  <p style={{ fontSize: 12, color: 'rgba(5, 28, 44, 0.65)', lineHeight: 1.55, fontWeight: 500, flex: 1, paddingBottom: 14 }}>
-                    {c.desc}
-                  </p>
-                  {/* Deep Navy CTA — 첨부 색 (매물 등록하고 딜룸 시작 동일 톤) */}
-                  <Link
-                    href={c.href}
-                    className="mck-cta-dark"
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6,
-                      margin: '0 -22px',
-                      padding: '14px 22px',
-                      background: '#0A1628', color: '#FFFFFF',
-                      borderTop: '2px solid #2251FF',
-                      fontSize: 12, fontWeight: 800, letterSpacing: '-0.005em',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    <span style={{ color: '#FFFFFF' }}>자세히 보기</span>
-                    <ArrowRight size={13} style={{ color: '#FFFFFF' }} />
-                  </Link>
                 </motion.article>
               ))}
-            </motion.div>
-
-            {/* CTA 2버튼 — AI 분석 체험 + 요금제 보기 (Why 2차에서 이동) */}
-            <motion.div variants={up} custom={6} className="flex flex-wrap items-center justify-center gap-3" style={{ marginTop: 36 }}>
-              <Link href="/analysis/report" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '12px 22px',
-                background: '#0A1628', color: '#FFFFFF',
-                borderTop: '2px solid #2251FF',
-                fontSize: 13, fontWeight: 800, letterSpacing: '-0.005em',
-                textDecoration: 'none',
-                boxShadow: '0 4px 12px rgba(10, 22, 40, 0.20)',
-              }} className="mck-cta-dark">
-                <Brain size={14} style={{ color: '#FFFFFF' }} />
-                <span style={{ color: '#FFFFFF' }}>AI 분석 체험</span>
-                <ArrowRight size={13} style={{ color: '#FFFFFF' }} />
-              </Link>
-              <Link href="/pricing" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '12px 22px',
-                background: '#FFFFFF', color: '#0A1628',
-                border: '1px solid #0A1628',
-                fontSize: 13, fontWeight: 700, letterSpacing: '-0.005em',
-                textDecoration: 'none',
-              }}>
-                요금제 보기 <ArrowRight size={13} />
-              </Link>
             </motion.div>
           </motion.div>
         </Reveal>
       </section>
 
+      {/* DEAL ROOM PREVIEW — 프라이빗 딜 전환으로 미노출 (2026-08-14) */}
+
+      {/* USER TYPES (누구를 위한 플랫폼인가) 섹션 삭제 — 2026-08-17 사용자 지시 */}
+      {/* WHY NPLATFORM 섹션 삭제 (2026-08-17 사용자 지시) */}
+
+      {/* HOW WE PROTECT (지키는 방식) 섹션 삭제 — 2026-08-17 사용자 지시 */}
+
+
+      {/* LEADERSHIP & PARTNERS (경영진·파트너) 섹션 삭제 — 2026-08-17 사용자 지시 */}
 
       {/* ══════════════════════════════════════════════════════════════════
           PARTNER INSTITUTIONS · 47개 금융기관이 신뢰하는 플랫폼
@@ -1833,7 +1846,7 @@ export default function LandingPage() {
               marginBottom: 4, maxWidth: 600, marginLeft: 'auto', marginRight: 'auto',
             }} className="mck-cta-dark">
               <span style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
-                금융기관의 라이브 매물과 활성 딜룸에서 직접 거래를 시작하세요.
+                물건을 내놓거나, 매입 조건을 등록하세요. 나머지는 저희가 합니다.
               </span>
             </motion.p>
             <motion.p variants={up} custom={3} style={{
@@ -1841,12 +1854,12 @@ export default function LandingPage() {
               marginBottom: 20,
             }} className="mck-cta-dark">
               <span style={{ color: '#00A9F4' }}>
-                회원가입 즉시 · 매물 탐색 · 딜룸 협상 · 전자계약
+                등록 · 매칭 · NDA · 실사 · 클로징
               </span>
             </motion.p>
 
             <motion.div variants={up} custom={4} className="flex flex-wrap items-center justify-center gap-3">
-              <Link href="/exchange" style={{
+              <Link href="/exchange/sell" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 padding: '14px 28px',
                 background: '#2251FF', color: '#FFFFFF',
@@ -1855,11 +1868,11 @@ export default function LandingPage() {
                 textDecoration: 'none',
                 boxShadow: '0 8px 24px rgba(34, 81, 255, 0.45)',
               }} className="mck-cta-dark">
-                <Search size={15} style={{ color: '#FFFFFF' }} />
-                <span style={{ color: '#FFFFFF' }}>매물 탐색하기</span>
+                <Building2 size={15} style={{ color: '#FFFFFF' }} />
+                <span style={{ color: '#FFFFFF' }}>NPL 매각의뢰</span>
                 <ArrowRight size={15} style={{ color: '#FFFFFF' }} />
               </Link>
-              <Link href="/exchange/sell" style={{
+              <Link href="/exchange/demands/new" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 padding: '14px 28px',
                 background: 'transparent', color: '#FFFFFF',
@@ -1867,8 +1880,8 @@ export default function LandingPage() {
                 fontSize: 14, fontWeight: 700, letterSpacing: '-0.005em',
                 textDecoration: 'none',
               }} className="mck-cta-dark">
-                <Building2 size={15} style={{ color: '#FFFFFF' }} />
-                <span style={{ color: '#FFFFFF' }}>매물 등록하기</span>
+                <Search size={15} style={{ color: '#FFFFFF' }} />
+                <span style={{ color: '#FFFFFF' }}>매입조건 등록</span>
               </Link>
             </motion.div>
           </motion.div>

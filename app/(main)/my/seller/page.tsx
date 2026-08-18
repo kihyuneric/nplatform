@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { MARKETING_CHECKLIST, NPL_STATUSES, type ListingMarketing as MkRow } from '@/lib/marketing-checklist'
 import Link from 'next/link'
 import { Plus, Heart, Gavel, CheckCircle2, TrendingUp, Package, Download, Loader2, LayoutDashboard } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import DS, { formatKRW } from '@/lib/design-system'
+import { maskInstitutionName } from '@/lib/mask'
 import { MckPageShell, MckPageHeader, MckTabBar } from '@/components/mck'
 import { MyZoneTabs } from '@/components/my/my-zone-tabs'
 import { MCK, MCK_FONTS, MCK_TYPE } from '@/lib/mck-design'
@@ -13,6 +15,7 @@ import { MCK, MCK_FONTS, MCK_TYPE } from '@/lib/mck-design'
 interface SellerListing {
   id: string; title: string; claim_amount: number; ai_grade: string | null
   status: string; interest_count: number; view_count: number; created_at: string
+  address: string   // 주소 상세 — 매각사 본인 매물이므로 마스킹 없이 표시
   /** Phase G7+ · 자발적 경매 진행 정보 (매물 row 에서 직접 파생) */
   bid_start_date: string | null
   bid_end_date: string | null
@@ -50,6 +53,8 @@ function useSellerData() {
           interest_count: (l.interest_count as number) || 0,
           view_count: (l.view_count as number) || 0,
           created_at: l.created_at as string,
+          // 본인 매물 — 전체 주소 우선 (마스킹은 공개 리스트에만 적용)
+          address: (l.address as string) || [l.sido, l.sigungu, l.dong].filter(Boolean).join(' ') || '',
           // Phase G7+ · 자발적 경매 진행 정보
           bid_start_date: (l.bid_start_date as string) ?? null,
           bid_end_date:   (l.bid_end_date   as string) ?? null,
@@ -114,10 +119,6 @@ const STATUS_CLR: Record<string, string> = {
   '초안': 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]',
   '완료': 'bg-stone-100/10 text-stone-900 border border-stone-300/20',
 }
-const GRADE_CLR: Record<string, string> = {
-  'A+': 'text-stone-900 font-bold', 'A': 'text-stone-900 font-bold',
-  'B+': 'text-stone-900 font-bold', 'B': 'text-stone-900 font-bold',
-}
 const TABS = [
   { id: 'listings', label: '매물 관리' }, { id: 'analytics', label: '분석' },
   { id: 'billing', label: '정산 관리' }, { id: 'settings', label: '설정' },
@@ -148,6 +149,54 @@ export default function SellerDashboardPage() {
   const { listings: sellerListings, settlements, loading: sellerLoading, stats: sellerStats, billing } = useSellerData()
   const [tab, setTab] = useState('listings')
 
+  // ── 마케팅 진행 · 반응 집계 (운영사 관리자에서 입력 → 여기 공유) ──
+  const [marketing, setMarketing] = useState<Record<string, MkRow>>({})
+  useEffect(() => {
+    fetch('/api/v1/listing-marketing')
+      .then(r => r.json())
+      .then(d => { if (d?.data) setMarketing(d.data) })
+      .catch(() => {})
+  }, [])
+
+  // ── 진행종료 요청 — 운영사 관리자 접수함으로 접수, 승인 후 종료 ──
+  const [endRequested, setEndRequested] = useState<Set<string>>(new Set())
+  const requestEnd = (listingId: string, name: string) => {
+    if (!confirm(`"${name}" 매물의 진행종료를 요청할까요?\n운영사 승인 후 종료 처리됩니다.`)) return
+    setEndRequested(prev => new Set(prev).add(listingId))
+    fetch('/api/v1/support', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: `[진행종료 요청] ${name} (${listingId})`,
+        category: '매물',
+        priority: 'HIGH',
+        description: `매각사가 매물 진행종료를 요청했습니다.\n매물: ${name}\nID: ${listingId}\n\n운영사 확인 후 매각의뢰 현황에서 거절(비활성화) 또는 매각완료 처리해주세요.`,
+      }),
+    }).catch(() => {})
+  }
+
+  // 매각사 직접 수정 — NPL 상태 (관리자와 동일 저장소)
+  const saveMk = (listingId: string, patch: Partial<MkRow>) => {
+    setMarketing(prev => ({
+      ...prev,
+      [listingId]: { ...(prev[listingId] ?? { listing_id: listingId, checklist: {}, consult_count: 0, interest_count: 0, nda_count: 0 }), ...patch },
+    }))
+    fetch('/api/v1/listing-marketing', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listing_id: listingId, ...patch }),
+    }).catch(() => {})
+  }
+
+  // ── 실매칭 엔진 v1 — 매입조건(지역·유형·금액대) 실제 대조 결과 ──
+  const [matchMap, setMatchMap] = useState<Record<string, number>>({})
+  useEffect(() => {
+    fetch('/api/v1/matching/summary')
+      .then(r => r.json())
+      .then(d => { if (d?.data?.perListing) setMatchMap(d.data.perListing) })
+      .catch(() => {})
+  }, [])
+
   // Map real data to display format
   const STATS = [
     { label: '등록 매물', value: sellerStats.total, icon: Package, color: 'text-[#2251FF]' },
@@ -155,21 +204,15 @@ export default function SellerDashboardPage() {
     { label: '관심 수신', value: sellerStats.interests, icon: Heart, color: 'text-stone-900' },
     { label: '완료 거래', value: sellerStats.completed, icon: CheckCircle2, color: 'text-[var(--color-positive)]' },
   ]
-  // Phase G7+ · 자발적 경매 진행 정보를 LISTINGS row 에 포함
-  const LISTINGS = sellerListings.map(l => {
-    const auctionLive = l.bid_end_date ? new Date(l.bid_end_date).getTime() > Date.now() : false
-    return {
-      id: l.id,
-      name: l.title,
-      claim: formatClaim(l.claim_amount),
-      grade: l.ai_grade || '-',
-      status: STATUS_MAP[l.status] || l.status,
-      interests: l.interest_count || 0,
-      date: l.created_at?.slice(0, 10) || '-',
-      bidEndDate: l.bid_end_date,
-      auctionLive,
-    }
-  })
+  const LISTINGS = sellerListings.map(l => ({
+    id: l.id,
+    name: l.title,
+    address: l.address,
+    claim: formatClaim(l.claim_amount),
+    status: STATUS_MAP[l.status] || l.status,
+    interests: l.interest_count || 0,
+    date: l.created_at?.slice(0, 10) || '-',
+  }))
   // Phase J · 매물 등록일 기준 월별 집계 차트 (실데이터 파생)
   const CHART = (() => {
     const monthlyMap = new Map<string, { views: number; interests: number }>()
@@ -286,12 +329,11 @@ export default function SellerDashboardPage() {
               <table className="w-full">
                 <thead>
                   <tr className={DS.table.header}>
-                    <th className={DS.table.headerCell}>매물명</th>
+                    <th className={DS.table.headerCell}>매물명 · 주소</th>
                     <th className={DS.table.headerCell}>채권액</th>
-                    <th className={DS.table.headerCell}>AI등급</th>
                     <th className={DS.table.headerCell}>상태</th>
-                    <th className={DS.table.headerCell}>경매 종료일</th>
-                    <th className={DS.table.headerCell}>관심수</th>
+                    <th className={DS.table.headerCell}>매칭 매입사</th>
+                    <th className={DS.table.headerCell}>마케팅 진행 현황</th>
                     <th className={DS.table.headerCell}>등록일</th>
                     <th className={DS.table.headerCell}>액션</th>
                   </tr>
@@ -299,41 +341,133 @@ export default function SellerDashboardPage() {
                 <tbody>
                   {LISTINGS.map((l) => (
                     <tr key={l.id} className={DS.table.row}>
-                      <td className={DS.table.cell}><span className="font-medium">{l.name}</span><span className={"block text-[0.6875rem] text-[var(--color-text-muted)]"}>{l.id}</span></td>
-                      <td className={DS.table.cell + " font-semibold tabular-nums"}>{l.claim}</td>
-                      <td className={DS.table.cell + " " + (GRADE_CLR[l.grade] ?? 'text-[var(--color-text-tertiary)]')}>{l.grade}</td>
-                      <td className={DS.table.cell}><span className={`text-[0.6875rem] px-2 py-0.5 rounded-none font-bold ${STATUS_CLR[l.status] ?? 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]'}`}>{l.status}</span></td>
-                      <td className={DS.table.cell + " tabular-nums"}>
-                        {l.bidEndDate ? (
-                          <span className={`inline-flex items-center gap-1 text-[0.75rem] ${l.auctionLive ? 'text-stone-900 dark:text-stone-900 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
-                            {l.auctionLive && <span className="w-1.5 h-1.5 rounded-none bg-stone-100 animate-pulse" />}
-                            <Gavel className="h-3 w-3" />
-                            {new Date(l.bidEndDate).toLocaleDateString('ko-KR')}
-                          </span>
-                        ) : (
-                          <span className="text-[0.6875rem] text-[var(--color-text-muted)]">—</span>
-                        )}
+                      {/* 매물명 + 주소 상세 — 본인 매물이므로 마스킹 없이 표시 */}
+                      <td className={DS.table.cell}>
+                        <span className="font-medium">{l.name}</span>
+                        <span className={"block text-[0.6875rem] text-[var(--color-text-muted)]"}>{l.address || l.id}</span>
                       </td>
-                      <td className={DS.table.cell + " tabular-nums"}><span className="flex items-center gap-1"><Heart className="h-3 w-3 text-stone-900" />{l.interests}</span></td>
+                      <td className={DS.table.cell + " font-semibold tabular-nums"}>{l.claim}</td>
+                      {/* 상태 — 진행중/협의중/매각완료 3개 중 하나만 (매각사 직접 수정) */}
+                      <td className={DS.table.cell}>
+                        <select
+                          value={marketing[l.id]?.npl_status || '진행중'}
+                          onChange={e => saveMk(l.id, { npl_status: e.target.value })}
+                          className="px-2 py-1 text-[0.75rem] font-bold border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)]"
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {NPL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </td>
+                      {/* ── 매칭 매입사 (placeholder) + 마케팅 진행 (운영사 입력 실데이터) ── */}
+                      {(() => {
+                        // 실매칭 값 우선 — 매입조건 실데이터가 있으면 그 결과, 없으면 placeholder
+                        const seed = String(l.id).split('').reduce((a, ch) => a + ch.charCodeAt(0), 0)
+                        const real = matchMap[l.id]
+                        const matched = typeof real === 'number' ? real : ((seed + 210) % 30) + 15
+                        const isReal = typeof real === 'number'
+                        const mk = marketing[l.id]
+                        const done = MARKETING_CHECKLIST.filter(c => mk?.checklist?.[c.key])
+                        return (
+                          <>
+                            <td className={DS.table.cell}>
+                              <div className="min-w-[92px]">
+                                <div className="flex items-baseline gap-1">
+                                  <b className="text-lg tabular-nums text-[var(--color-text-primary)]">{matched}</b>
+                                  <span className="text-[0.6875rem] text-[var(--color-text-muted)]">개사</span>
+                                </div>
+                                <span className="block text-[0.625rem] text-[var(--color-text-muted)]">
+                                  매입조건 일치{isReal ? ' · 실시간' : ''}
+                                </span>
+                                {/* 매칭 상세 링크 삭제 (2026-08-18 사용자 지시) */}
+                              </div>
+                            </td>
+                            <td className={DS.table.cell}>
+                              <div className="min-w-[250px] space-y-1.5">
+                                {/* 매칭 등록일 — 운영사가 매칭 진행 시 자동 기록 (읽기 전용) */}
+                                {mk?.matched_at && (
+                                  <div className="text-[0.6875rem]">
+                                    <span className="text-[var(--color-text-muted)]">매칭 등록일 </span>
+                                    <b className="tabular-nums text-[var(--color-text-primary)]">{mk.matched_at}</b>
+                                    <span className="ml-1 text-[0.625rem] text-[var(--color-text-muted)]">(운영사 자동 기록)</span>
+                                  </div>
+                                )}
+                                {/* 딜 진행 단계 — 운영사가 등록·수정 (관심등록→실사진행→가격협의→최종계약) */}
+                                {mk?.deal_stage ? (
+                                  <div className="text-[0.6875rem]">
+                                    <span className="text-[var(--color-text-muted)]">진행 단계 </span>
+                                    <b className="px-1.5 py-0.5 text-white text-[0.625rem]" style={{ background: '#0A1628' }}>{mk.deal_stage}</b>
+                                  </div>
+                                ) : null}
+                                {/* 반응 집계 — 자동 연동 (관심·NDA) + 운영사 입력 (상담) */}
+                                <div className="flex items-center gap-3 text-[0.6875rem]">
+                                  <span className="text-[var(--color-text-muted)]">관심 <b className="tabular-nums text-[var(--color-text-primary)]">{mk?.interest_count ?? 0}</b></span>
+                                  <span className="text-[var(--color-text-muted)]">NDA 요청 <b className="tabular-nums text-[var(--color-text-primary)]">{mk?.nda_requests?.length ?? mk?.nda_count ?? 0}</b></span>
+                                  <span className="text-[var(--color-text-muted)]">상담 진행 <b className="tabular-nums text-[var(--color-text-primary)]">{mk?.consult_count ?? 0}</b></span>
+                                </div>
+                                {/* NDA 진행상황 — 운영사 검토/승인/거절 (관리자 승인과 실시간 공유) */}
+                                {(mk?.nda_requests ?? []).length > 0 && (
+                                  <div className="space-y-0.5">
+                                    {(mk?.nda_requests ?? []).map(q => (
+                                      <div key={q.id} className="flex items-center gap-1.5 text-[0.6563rem]">
+                                        <span
+                                          className="px-1.5 py-0.5 font-bold text-[0.5938rem] whitespace-nowrap"
+                                          style={{
+                                            color: q.status === '승인' ? '#047857' : q.status === '거절' ? '#9F1239' : '#A53F00',
+                                            background: q.status === '승인' ? 'rgba(16,185,129,0.10)' : q.status === '거절' ? 'rgba(225,29,72,0.10)' : 'rgba(255,140,0,0.10)',
+                                            border: `1px solid ${q.status === '승인' ? 'rgba(16,185,129,0.35)' : q.status === '거절' ? 'rgba(225,29,72,0.35)' : 'rgba(255,140,0,0.35)'}`,
+                                          }}
+                                        >
+                                          {q.status}
+                                        </span>
+                                        <span className="text-[var(--color-text-muted)]">
+                                          {q.signer || '무기명'} · {q.requested_at?.slice(5, 10)}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {/* 마케팅 체크리스트 진행 상태 */}
+                                <div className="text-[0.625rem] font-bold text-[var(--color-text-muted)]">
+                                  마케팅 {done.length}/{MARKETING_CHECKLIST.length} 진행
+                                </div>
+                                <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+                                  {MARKETING_CHECKLIST.map(c => {
+                                    const ok = !!mk?.checklist?.[c.key]
+                                    return (
+                                      <span key={c.key} className={`text-[0.6563rem] ${ok ? 'text-[var(--color-text-primary)] font-semibold' : 'text-[var(--color-text-muted)]'}`}>
+                                        {ok ? '✓' : '·'} {c.label.replace('땅집고옥션 ', '땅옥 ').replace('엔플랫폼 ', '엔플 ')}
+                                      </span>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            </td>
+                          </>
+                        )
+                      })()}
                       <td className={DS.table.cellMuted + " tabular-nums"}>{l.date}</td>
                       <td className={DS.table.cell}>
                         <div className="flex items-center gap-1.5">
-                          {/* SoT — 매물 상세는 항상 딜룸으로 (?listingId 쿼리) */}
+                          {/* 세부내역 = NPL 상세정보 (탬플릿) — 그 안에서 수정 가능 */}
                           <Link
-                            href={`/deals/dealroom?listingId=${encodeURIComponent(l.id)}`}
+                            href={`/listing-detail/${encodeURIComponent(l.id)}`}
                             className={DS.text.link + " text-[0.8125rem]"}
                           >
-                            상세
+                            세부내역
                           </Link>
                           <span className="text-[var(--color-border-default)]">|</span>
-                          <Link
-                            href={`/my/listings/${l.id}/edit`}
-                            className={DS.text.caption + " hover:text-[var(--color-text-primary)] transition-colors"}
-                          >
-                            수정
-                          </Link>
-                          <span className="text-[var(--color-border-default)]">|</span>
-                          <button className="text-[0.8125rem] text-[var(--color-danger)] hover:text-stone-900 transition-colors cursor-pointer">종료</button>
+                          {/* 진행종료 요청 — 운영사 관리자 접수함에서 승인 후 종료 */}
+                          {endRequested.has(l.id) ? (
+                            <span className="text-[0.75rem] font-bold text-amber-700">종료 요청됨 (운영사 승인 대기)</span>
+                          ) : (
+                            <button
+                              onClick={() => requestEnd(l.id, l.name)}
+                              className="text-[0.8125rem] text-[var(--color-danger)] hover:underline transition-colors cursor-pointer"
+                              style={{ background: 'transparent', border: 'none', padding: 0 }}
+                            >
+                              진행종료 요청
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
