@@ -35,6 +35,9 @@ create policy lm_update on public.listing_marketing for update using (true);
 alter table public.users add column if not exists roles jsonb not null default '[]'::jsonb;      -- 예: ["SELLER","BUYER"]
 alter table public.users add column if not exists buyer_kind text not null default '';           -- CORP(법인) / INDIVIDUAL(개인자산가)
 
+-- 회원 관리 고도화 (D3 · 2026-08-18) — 보류 사유 등 관리자 메모
+alter table public.users add column if not exists admin_note text not null default '';
+
 -- 메인 히어로 PRIVATE DEAL 카드 (단일 행 id=1) — 운영자 관리자 등록/수정/삭제
 create table if not exists public.main_hero (
   id int primary key default 1,

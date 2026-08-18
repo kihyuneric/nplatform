@@ -30,6 +30,9 @@ interface User {
   business_file_name?: string | null
   card_file_url?: string | null
   business_file_url?: string | null
+  // D3 — 회원 관리 고도화
+  admin_note?: string | null
+  roles?: string[] | null
 }
 
 // 회원 유형 3종 (2026-08-18 확정) — 매각 회원 · 매입 회원 · 파트너 회원 (+일반회원)
@@ -43,7 +46,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 // 상태 — 기본 승인대기 · 승인 시 활성 · 거절 (2026-08-18)
 const KYC_LABEL: Record<string, string> = {
-  APPROVED: '활성', SUBMITTED: '승인대기', PENDING: '승인대기', REJECTED: '거절',
+  APPROVED: '활성', SUBMITTED: '승인대기', PENDING: '승인대기', REJECTED: '거절', WITHDRAWN: '탈퇴',
 }
 
 const ROLE_BADGE: Record<string, string> = {
@@ -242,6 +245,20 @@ export default function AdminUsersPage() {
   const [docTarget, setDocTarget] = useState<User | null>(null)
   // D3 — 회원 활동 요약: NDA 요청 이력 (이메일 매칭)
   const [docNda, setDocNda] = useState<Array<{ listing: string; status: string; at: string }>>([])
+  // D3 — 회원 상세: 매입조건 이력 + 역할 편집 상태
+  const [docDemands, setDocDemands] = useState<Array<Record<string, unknown>>>([])
+  const [docRoles, setDocRoles] = useState<string[]>([])
+  useEffect(() => {
+    if (!docTarget) { setDocDemands([]); setDocRoles([]); return }
+    // 현재 역할 — roles 배열 우선, 없으면 단일 role 폴백 (구 매입 역할 BUYER 로 정규화)
+    const norm = (r: string) => (r.startsWith('BUYER') || r === 'INVESTOR' || r === 'VIEWER') ? 'BUYER' : r
+    const base = (docTarget.roles?.length ? docTarget.roles : [docTarget.role]).map(norm)
+    setDocRoles(Array.from(new Set(base)).filter(r => r === 'SELLER' || r === 'BUYER'))
+    fetch(`/api/v1/admin/users/${docTarget.id}`)
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d?.demands)) setDocDemands(d.demands) })
+      .catch(() => setDocDemands([]))
+  }, [docTarget])
   useEffect(() => {
     if (!docTarget?.email) { setDocNda([]); return }
     fetch('/api/v1/listing-marketing')
@@ -402,6 +419,7 @@ export default function AdminUsersPage() {
                         <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full border ${
                           u.kyc_status === 'APPROVED' ? 'text-emerald-700 border-emerald-300 bg-emerald-50' :
                           u.kyc_status === 'REJECTED' ? 'text-red-700 border-red-300 bg-red-50' :
+                          u.kyc_status === 'WITHDRAWN' ? 'text-stone-500 border-stone-300 bg-stone-50' :
                           'text-amber-700 border-amber-300 bg-amber-50'
                         }`}>
                           {KYC_LABEL[u.kyc_status] || '승인대기'}
@@ -409,10 +427,10 @@ export default function AdminUsersPage() {
                       </td>
                       <td className={DS.table.cell}>
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          {/* 명함 · 사업자등록증 첨부 뷰어 */}
+                          {/* 회원 상세 — 첨부 뷰어 · NDA/매입조건 이력 · 역할 관리 · 계정 관리 */}
                           <button onClick={() => setDocTarget(u)}
                             className={`${DS.button.secondary} ${DS.button.sm}`}>
-                            첨부
+                            상세
                           </button>
                           {u.kyc_status !== 'APPROVED' && (
                             <button onClick={() => handleAction(u.id, 'APPROVE_KYC')}
@@ -476,7 +494,7 @@ export default function AdminUsersPage() {
             >
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <div className="text-[14px] font-black text-[var(--color-text-primary)]">가입 첨부 확인 — {docTarget.name}</div>
+                  <div className="text-[14px] font-black text-[var(--color-text-primary)]">회원 상세 — {docTarget.name}</div>
                   <div className="text-[11px] text-[var(--color-text-muted)]">{docTarget.company_name || '—'} · {ROLE_LABEL[docTarget.role] || docTarget.role} · {docTarget.email}</div>
                 </div>
                 <button onClick={() => setDocTarget(null)} aria-label="닫기"
@@ -533,19 +551,109 @@ export default function AdminUsersPage() {
                 )}
               </div>
 
-              <div className="mt-3 flex items-center justify-end gap-1.5">
-                {docTarget.kyc_status !== 'APPROVED' && (
-                  <button onClick={() => { void handleAction(docTarget.id, 'APPROVE_KYC'); setDocTarget(null) }}
-                    className={`${DS.button.accent} ${DS.button.sm}`}>
-                    <CheckCircle size={12} />승인 (활성화)
-                  </button>
+              {/* D3 — 매입조건 이력 */}
+              <div className="mt-3 border border-[var(--color-border-subtle)]">
+                <div className="px-3 py-2 text-[11px] font-bold bg-[var(--color-surface-overlay)] border-b border-[var(--color-border-subtle)] text-[var(--color-text-primary)]">
+                  매입조건 이력 {docDemands.length > 0 ? `(${docDemands.length}건)` : ''}
+                </div>
+                {docDemands.length === 0 ? (
+                  <p className="px-3 py-3 text-[11px] text-[var(--color-text-muted)]">등록된 매입조건이 없습니다</p>
+                ) : (
+                  <div className="divide-y divide-[var(--color-border-subtle)]">
+                    {docDemands.map((d, i) => {
+                      const regions = Array.isArray(d.regions) ? (d.regions as string[]).join('·') : String(d.regions ?? '')
+                      const types = Array.isArray(d.collateral_types) ? (d.collateral_types as string[]).join('·') : String(d.collateral_types ?? '')
+                      const fmt = (v: unknown) => typeof v === 'number' && v > 0 ? (v >= 100000000 ? `${(v / 100000000).toFixed(0)}억` : `${(v / 10000).toFixed(0)}만`) : ''
+                      const amount = [fmt(d.min_amount), fmt(d.max_amount)].filter(Boolean).join('~')
+                      return (
+                        <div key={String(d.id ?? i)} className="px-3 py-2 text-[11.5px]">
+                          <span className="font-bold text-[var(--color-text-primary)]">{regions || '지역 무관'}</span>
+                          {types && <span className="ml-1.5 text-[var(--color-text-muted)]">{types}</span>}
+                          {amount && <span className="ml-1.5 tabular-nums text-[var(--color-text-muted)]">{amount}</span>}
+                          <span className="float-right text-[var(--color-text-muted)]">{String(d.created_at ?? '').slice(0, 10)}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
                 )}
-                {docTarget.kyc_status !== 'REJECTED' && (
-                  <button onClick={() => { void handleAction(docTarget.id, 'REJECT_KYC'); setDocTarget(null) }}
-                    className={`${DS.button.danger} ${DS.button.sm}`}>
-                    <XCircle size={12} />거절
+              </div>
+
+              {/* D3 — 역할 관리 (매각+매입 겸용 가능) */}
+              <div className="mt-3 border border-[var(--color-border-subtle)]">
+                <div className="px-3 py-2 text-[11px] font-bold bg-[var(--color-surface-overlay)] border-b border-[var(--color-border-subtle)] text-[var(--color-text-primary)]">역할 관리 — 겸용 가능</div>
+                <div className="flex items-center gap-2 px-3 py-2.5">
+                  {(['SELLER', 'BUYER'] as const).map(r => {
+                    const on = docRoles.includes(r)
+                    return (
+                      <button key={r}
+                        onClick={() => setDocRoles(prev => on ? prev.filter(x => x !== r) : [...prev, r])}
+                        className={`px-3 py-1.5 text-[11px] font-bold border ${on ? 'text-white' : 'text-[var(--color-text-muted)]'}`}
+                        style={{ background: on ? '#0A1628' : 'transparent', borderColor: on ? '#0A1628' : 'var(--color-border-default)', cursor: 'pointer' }}>
+                        {on ? '✓ ' : ''}{r === 'SELLER' ? '매각 회원' : '매입 회원'}
+                      </button>
+                    )
+                  })}
+                  <button
+                    onClick={() => {
+                      if (docRoles.length === 0) { toast.error('역할을 1개 이상 선택해주세요'); return }
+                      void handleAction(docTarget.id, 'SET_ROLES', docRoles.join(','))
+                    }}
+                    className={`${DS.button.secondary} ${DS.button.sm} ml-auto`}>
+                    역할 저장
                   </button>
-                )}
+                </div>
+              </div>
+
+              {/* D3 — 보류 사유 메모 */}
+              {docTarget.admin_note && (
+                <div className="mt-3 px-3 py-2 text-[11.5px] font-bold text-amber-800 bg-amber-50 border border-amber-200">
+                  {docTarget.admin_note}
+                </div>
+              )}
+
+              <div className="mt-3 flex items-center justify-between gap-1.5 flex-wrap">
+                {/* D3 — 계정 관리 액션 */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    onClick={() => {
+                      const reason = prompt('보류 사유를 입력해주세요 (회원 상태는 승인대기로 유지됩니다)')
+                      if (reason === null) return
+                      void handleAction(docTarget.id, 'HOLD', reason)
+                      setDocTarget(null)
+                    }}
+                    className={`${DS.button.secondary} ${DS.button.sm}`}>
+                    보류 (사유 메모)
+                  </button>
+                  <button
+                    onClick={() => { if (confirm(`${docTarget.email} 로 비밀번호 재설정 메일을 발송할까요?`)) void handleAction(docTarget.id, 'RESET_PASSWORD') }}
+                    className={`${DS.button.secondary} ${DS.button.sm}`}>
+                    비밀번호 초기화
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!confirm(`${docTarget.name} 회원을 탈퇴 처리할까요?\n계정이 잠기며 로그인할 수 없게 됩니다.`)) return
+                      void handleAction(docTarget.id, 'WITHDRAW')
+                      setDocTarget(null)
+                    }}
+                    className="text-[0.75rem] font-bold text-rose-600 hover:underline px-2 py-1"
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                    탈퇴 처리
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {docTarget.kyc_status !== 'APPROVED' && (
+                    <button onClick={() => { void handleAction(docTarget.id, 'APPROVE_KYC'); setDocTarget(null) }}
+                      className={`${DS.button.accent} ${DS.button.sm}`}>
+                      <CheckCircle size={12} />승인 (활성화)
+                    </button>
+                  )}
+                  {docTarget.kyc_status !== 'REJECTED' && (
+                    <button onClick={() => { void handleAction(docTarget.id, 'REJECT_KYC'); setDocTarget(null) }}
+                      className={`${DS.button.danger} ${DS.button.sm}`}>
+                      <XCircle size={12} />거절
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
