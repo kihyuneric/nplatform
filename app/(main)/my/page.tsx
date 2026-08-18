@@ -54,11 +54,21 @@ export default function MyDashboardPage() {
   }, [])
   const isDual = memberRoles.includes('SELLER') && memberRoles.includes('BUYER')
 
-  // 매각 전용 → 내 매물 대시보드 · 관리자/파트너 → 운영 대시보드 (겸용은 이동 안 함)
+  // 관리자/파트너 → 운영 대시보드 (매각 회원도 대시보드는 여기 — 내 매물과 별개 메뉴, 운영설계서 §8)
   useEffect(() => {
-    if (group === 'SELLER' && !isDual) router.replace('/my/seller')
-    else if (group === 'ADMIN' || group === 'PARTNER') router.replace('/admin')
-  }, [group, isDual, router])
+    if (group === 'ADMIN' || group === 'PARTNER') router.replace('/admin')
+  }, [group, router])
+
+  // 매각 역할 보유 시 — 내 매물 수 (대시보드 카드)
+  const isSellerish = group === 'SELLER' || isDual || memberRoles.includes('SELLER')
+  const [sellerCount, setSellerCount] = useState<number | null>(null)
+  useEffect(() => {
+    if (!isSellerish) return
+    fetch('/api/v1/exchange/listings?limit=100&seller_id=me')
+      .then(r => r.json())
+      .then(d => setSellerCount(Array.isArray(d?.data) ? d.data.length : 0))
+      .catch(() => setSellerCount(0))
+  }, [isSellerish])
 
   // ── 매입사 · 일반회원 대시보드 — 실데이터 요약 ──
   const [demandCount, setDemandCount] = useState<number | null>(null)
@@ -105,7 +115,7 @@ export default function MyDashboardPage() {
     })()
   }, [group])
 
-  if ((group === 'SELLER' && !isDual) || group === 'ADMIN' || group === 'PARTNER') {
+  if (group === 'ADMIN' || group === 'PARTNER') {
     return (
       <div className="py-16 text-center text-sm text-[var(--color-text-muted)]">
         <Loader2 size={16} className="animate-spin mx-auto mb-2" /> 대시보드로 이동 중...
@@ -113,12 +123,20 @@ export default function MyDashboardPage() {
     )
   }
 
+  // 매각 단독 회원 — 매입 관련 카드 없이 내 매물 중심 (운영설계서 §8)
+  const sellerOnly = group === 'SELLER' && !isDual
+
   const CARDS = [
-    // 겸용(매각+매입) 회원 — 내 매물 카드 함께 노출 (D1 복수 역할)
-    ...(isDual ? [{ label: '내 매물', value: '보기', desc: '매각의뢰 매물 현황 · 마케팅 · NDA', href: '/my/seller', icon: Search }] : []),
-    { label: '매입 조건', value: demandCount === null ? '…' : `${demandCount}건`, desc: '우선순위별 조건 관리 · 수정', href: '/my/demands', icon: ClipboardList },
-    { label: '관심매물', value: `${favCount}건`, desc: '자동매칭 리스트에서 ♥ 등록한 매물', href: '/my/portfolio', icon: Heart },
-    { label: 'NDA 진행', value: `${myNda.length}건`, desc: myNda.length > 0 ? `승인 ${myNda.filter(q => q.status === '승인').length} · 검토중 ${myNda.filter(q => q.status === '운영사 검토').length}` : 'NDA 요청 내역 없음', href: '/my/agreements', icon: FileSignature },
+    // 매각 역할 보유 — 내 매물 카드 (매각 단독 · 겸용 공통)
+    ...((sellerOnly || isDual) ? [{ label: '내 매물', value: sellerCount === null ? '…' : `${sellerCount}건`, desc: '매각의뢰 매물 상태 · 매칭 · 마케팅 진행', href: '/my/seller', icon: Search }] : []),
+    ...(!sellerOnly ? [
+      { label: '매입 조건', value: demandCount === null ? '…' : `${demandCount}건`, desc: '우선순위별 조건 관리 · 수정', href: '/my/demands', icon: ClipboardList },
+      { label: '관심매물', value: `${favCount}건`, desc: '자동매칭 리스트에서 ♥ 등록한 매물', href: '/my/portfolio', icon: Heart },
+      { label: 'NDA 진행', value: `${myNda.length}건`, desc: myNda.length > 0 ? `승인 ${myNda.filter(q => q.status === '승인').length} · 검토중 ${myNda.filter(q => q.status === '운영사 검토').length}` : 'NDA 요청 내역 없음', href: '/my/agreements', icon: FileSignature },
+    ] : [
+      { label: '알림센터', value: '보기', desc: '매칭 · NDA · 상담 진행 알림 확인', href: '/my/inbox', icon: ClipboardList },
+      { label: '설정', value: '수정', desc: '회원정보 수정 · 비밀번호 변경', href: '/my/settings', icon: Heart },
+    ]),
   ]
 
   return (
@@ -131,11 +149,14 @@ export default function MyDashboardPage() {
           대시보드
         </h1>
         <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-          매입 조건에 맞는 NPL 딜만 자동매칭됩니다. 조건 · 관심매물 · NDA 진행을 한눈에 확인하세요.
+          {sellerOnly
+            ? '매각의뢰 매물의 진행 현황을 한눈에 확인하세요. 주간 활동 요약은 내 매물에서 제공됩니다.'
+            : '매입 조건에 맞는 NPL 딜만 자동매칭됩니다. 조건 · 관심매물 · NDA 진행을 한눈에 확인하세요.'}
         </p>
       </div>
 
-      {/* D4 — 이번 주 브리핑 (알림 = 이 요약의 발송본) */}
+      {/* D4 — 이번 주 브리핑 (매입 기준 · 알림 = 이 요약의 발송본) */}
+      {!sellerOnly && (
       <div className="flex items-center justify-between gap-4 flex-wrap px-5 py-4" style={{ background: '#0A1628', borderTop: '3px solid #2251FF' }}>
         <div>
           <div className="text-[11px] font-extrabold uppercase tracking-[0.14em]" style={{ color: '#00A9F4' }}>이번 주 브리핑</div>
@@ -151,6 +172,7 @@ export default function MyDashboardPage() {
           신규·변동 보기 <ArrowRight size={11} style={{ display: 'inline', verticalAlign: -1 }} />
         </Link>
       </div>
+      )}
 
       {/* 요약 카드 3 */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-px" style={{ background: 'rgba(5, 28, 44, 0.10)', border: '1px solid rgba(5, 28, 44, 0.10)' }}>
@@ -172,15 +194,17 @@ export default function MyDashboardPage() {
         })}
       </div>
 
-      {/* NPL 자동매칭 바로가기 */}
-      <Link href="/exchange"
+      {/* 하단 바로가기 — 매각 단독: 새 매물 등록 / 그 외: NPL 자동매칭 */}
+      <Link href={sellerOnly ? '/exchange/sell' : '/exchange'}
         className="flex items-center justify-between px-5 py-4"
         style={{ background: '#0A1628', borderTop: `3px solid ${ELECTRIC}`, textDecoration: 'none' }}>
         <div className="flex items-center gap-3">
           <Search size={16} style={{ color: '#00A9F4' }} />
           <div>
-            <div className="text-sm font-extrabold" style={{ color: '#FFFFFF' }}>NPL 자동매칭</div>
-            <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.65)' }}>등록한 매입 조건에 맞는 딜 확인하기</div>
+            <div className="text-sm font-extrabold" style={{ color: '#FFFFFF' }}>{sellerOnly ? 'NPL 매각의뢰' : 'NPL 자동매칭'}</div>
+            <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.65)' }}>
+              {sellerOnly ? '새 매물 등록으로 매각의뢰 시작하기' : '등록한 매입 조건에 맞는 딜 확인하기'}
+            </div>
           </div>
         </div>
         <ArrowRight size={15} style={{ color: '#FFFFFF' }} />
