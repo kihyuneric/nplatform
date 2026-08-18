@@ -144,14 +144,15 @@ export default function SellConciergePage() {
     }
 
     try {
-      // 전용 /api/v1/inquiries 라우트가 없어 /api/v1/support 티켓 스키마에 매핑
-      await fetch('/api/v1/support', {
+      // 접수함 티켓으로 접수 — 카테고리 '매각의뢰' (운영자 접수함 분류 기준)
+      const res = await fetch('/api/v1/support', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...payload,
           title: `[매각의뢰] ${form.company} · ${form.name}`,
-          category: '거래/계약',
+          category: '매각의뢰',
           priority: 'HIGH',
           description: [
             `유형: LISTING_REGISTRATION (NPL 매각의뢰)`,
@@ -166,8 +167,21 @@ export default function SellConciergePage() {
           ].filter(Boolean).join('\n'),
         }),
       })
+      if (!res.ok) {
+        // 실패를 성공처럼 보여주지 않는다 — 원인 안내 후 재시도 유도
+        const data = await res.json().catch(() => ({}))
+        setError(
+          res.status === 401
+            ? '로그인 후 접수할 수 있습니다. 로그인해주세요.'
+            : ((data as { error?: { message?: string } })?.error?.message ?? `접수에 실패했습니다 (HTTP ${res.status}). 잠시 후 다시 시도해주세요.`),
+        )
+        setLoading(false)
+        return
+      }
     } catch {
-      // 엔드포인트 실패 여부와 무관하게 접수 완료 화면으로 폴백
+      setError('네트워크 오류 — 잠시 후 다시 시도해주세요.')
+      setLoading(false)
+      return
     }
 
     setLoading(false)
