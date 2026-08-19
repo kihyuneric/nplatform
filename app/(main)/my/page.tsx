@@ -69,14 +69,33 @@ export default function MyDashboardPage() {
     if (group === 'ADMIN' || group === 'PARTNER') router.replace('/admin')
   }, [group, router])
 
-  // 매각 역할 보유 시 — 내 매물 수 (대시보드 카드)
+  // 매각 역할 보유 시 — 내 매물 수 + 주간 활동 요약 (겸용 회원은 매입 브리핑과 함께 표시)
   const isSellerish = group === 'SELLER' || isDual || memberRoles.includes('SELLER')
   const [sellerCount, setSellerCount] = useState<number | null>(null)
+  const [sellerWeekly, setSellerWeekly] = useState<{ nda7: number; interest: number; consult: number } | null>(null)
   useEffect(() => {
     if (!isSellerish) return
     fetch('/api/v1/exchange/listings?limit=100&seller_id=me')
       .then(r => r.json())
-      .then(d => setSellerCount(Array.isArray(d?.data) ? d.data.length : 0))
+      .then(async d => {
+        const list: Array<{ id?: string }> = Array.isArray(d?.data) ? d.data : []
+        setSellerCount(list.length)
+        // 내 매물의 반응 집계 — 매각 주간 요약 (내 매물 화면과 동일 기준)
+        try {
+          const mine = new Set(list.map(x => String(x.id)))
+          const mk = await fetch('/api/v1/listing-marketing').then(r => r.json())
+          const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000
+          let nda7 = 0, interest = 0, consult = 0
+          for (const [lid, row] of Object.entries(mk?.data ?? {})) {
+            if (!mine.has(lid)) continue
+            const r2 = row as { interest_count?: number; consult_count?: number; nda_requests?: Array<{ requested_at?: string }> }
+            interest += r2.interest_count ?? 0
+            consult += r2.consult_count ?? 0
+            nda7 += (r2.nda_requests ?? []).filter(q => q.requested_at && new Date(q.requested_at).getTime() >= cutoff).length
+          }
+          setSellerWeekly({ nda7, interest, consult })
+        } catch { /* 요약 실패 시 카드만 */ }
+      })
       .catch(() => setSellerCount(0))
   }, [isSellerish])
 
@@ -169,15 +188,38 @@ export default function MyDashboardPage() {
         <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
           {sellerOnly
             ? '매각의뢰 매물의 진행 현황을 한눈에 확인하세요. 주간 활동 요약은 내 매물에서 제공됩니다.'
-            : '매입 조건에 맞는 NPL 딜만 자동매칭됩니다. 조건 · 관심매물 · NDA 진행을 한눈에 확인하세요.'}
+            : isDual
+              ? '매각 · 매입 겸용 회원입니다. 매각(내 매물 반응)과 매입(신규 매칭·NDA) 현황을 함께 확인하세요.'
+              : '매입 조건에 맞는 NPL 딜만 자동매칭됩니다. 조건 · 관심매물 · NDA 진행을 한눈에 확인하세요.'}
         </p>
       </div>
+
+      {/* 겸용 회원(매각+매입) — 매각 주간 활동 요약을 매입 브리핑과 나란히 (운영설계서 §4-2 겸용) */}
+      {isDual && (
+        <div className="flex items-center justify-between gap-4 flex-wrap px-5 py-4" style={{ background: '#0A1628', borderTop: '3px solid #BFA476' }}>
+          <div>
+            <div className="text-[11px] font-extrabold uppercase tracking-[0.14em]" style={{ color: '#BFA476' }}>매각 · 주간 활동 요약</div>
+            <div className="mt-1 text-sm font-extrabold" style={{ color: '#FFFFFF' }}>
+              등록 매물 {sellerCount === null ? '…' : `${sellerCount}건`}
+              <span className="mx-2 opacity-40">·</span>
+              NDA 요청 +{sellerWeekly?.nda7 ?? 0} <span className="opacity-50 text-[11px] font-bold">(최근 7일)</span>
+              <span className="mx-2 opacity-40">·</span>
+              관심 {sellerWeekly?.interest ?? 0}
+              <span className="mx-2 opacity-40">·</span>
+              상담 {sellerWeekly?.consult ?? 0}
+            </div>
+          </div>
+          <Link href="/my/seller" className="px-4 py-2 text-xs font-extrabold" style={{ background: '#FFFFFF', color: '#0A1628', textDecoration: 'none' }}>
+            내 매물 보기 <ArrowRight size={11} style={{ display: 'inline', verticalAlign: -1 }} />
+          </Link>
+        </div>
+      )}
 
       {/* D4 — 이번 주 브리핑 (매입 기준 · 알림 = 이 요약의 발송본) */}
       {!sellerOnly && (
       <div className="flex items-center justify-between gap-4 flex-wrap px-5 py-4" style={{ background: '#0A1628', borderTop: '3px solid #2251FF' }}>
         <div>
-          <div className="text-[11px] font-extrabold uppercase tracking-[0.14em]" style={{ color: '#00A9F4' }}>이번 주 브리핑</div>
+          <div className="text-[11px] font-extrabold uppercase tracking-[0.14em]" style={{ color: '#00A9F4' }}>{isDual ? '매입 · 이번 주 브리핑' : '이번 주 브리핑'}</div>
           <div className="mt-1 text-sm font-extrabold" style={{ color: '#FFFFFF' }}>
             신규 등록 {newThisWeek === null ? '…' : `${newThisWeek}건`}
             <span className="mx-2 opacity-40">·</span>
