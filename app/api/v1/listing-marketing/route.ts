@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notifyByEmail, notifyUserId } from '@/lib/notify'
 import { sendEmail } from '@/lib/email/email-service'
 import { ndaStatusEmail } from '@/lib/email/templates'
+import { buildNdaText, TERMS_VERSION } from '@/lib/nda-terms'
 
 interface NdaReq { id?: string; signer?: string; user_id?: string; email?: string; status?: string; requested_at?: string }
 
@@ -140,14 +141,47 @@ export async function POST(req: NextRequest) {
         .eq('listing_id', listing_id)
         .maybeSingle()
       const reqs: unknown[] = Array.isArray(existing?.nda_requests) ? existing.nda_requests : []
+      const requestId = crypto.randomUUID()
+      const agreedAt = new Date().toISOString()
       reqs.push({
-        id: crypto.randomUUID(),
+        id: requestId,
         signer,
         user_id: userId,   // 회원 Key — 열람권·회원 이력의 기준
         email,             // 표시·레거시 폴백용
-        requested_at: new Date().toISOString(),
+        requested_at: agreedAt,
         status: '운영사 검토',
       })
+
+      // 체결 문서 보관 (2026-08-19)
+      //   서명 시점의 NDA 전문을 그대로 남긴다 — 나중에 약관이 바뀌어도 체결본은 불변.
+      //   운영관리자와 체결 당사자가 이 레코드로 열람하고 PDF 로 보관한다.
+      try {
+        const { data: lst } = await supabase
+          .from('npl_listings').select('listing_no').eq('id', listing_id).maybeSingle()
+        const { data: prof } = await supabase
+          .from('users').select('company_name').eq('id', userId).maybeSingle()
+        const listingNo = String(lst?.listing_no ?? '')
+        await supabase.from('nda_documents').insert({
+          request_id: requestId,
+          listing_id,
+          listing_no: listingNo || null,
+          user_id: userId,
+          signer,
+          email,
+          agreed_at: agreedAt,
+          terms_version: TERMS_VERSION,
+          content_text: buildNdaText({
+            listingNo: listingNo || '(관리번호 미정)',
+            signer: signer || '(서명자 미기재)',
+            email,
+            agreedAt,
+            company: (prof?.company_name as string) || undefined,
+          }),
+        })
+      } catch (e) {
+        // 문서 저장 실패가 NDA 접수 자체를 막지는 않는다 (접수는 계속 진행)
+        console.error('nda_documents insert failed:', e)
+      }
       const { error } = await supabase
         .from('listing_marketing')
         .upsert({

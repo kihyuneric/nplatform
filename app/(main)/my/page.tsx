@@ -185,6 +185,8 @@ export default function MyDashboardPage() {
       { label: '매입 조건', value: demandCount === null ? '…' : `${demandCount}건`, desc: '우선순위별 조건 관리 · 수정', href: '/my/demands', icon: ClipboardList },
       { label: '관심매물', value: `${favCount}건`, desc: '자동매칭 리스트에서 ♥ 등록한 매물', href: '/my/portfolio', icon: Heart },
       { label: 'NDA 진행', value: `${myNda.length}건`, desc: myNda.length > 0 ? `승인 ${myNda.filter(q => q.status === '승인').length} · 검토중 ${myNda.filter(q => q.status === '운영사 검토').length}` : 'NDA 요청 내역 없음', href: '/my/agreements', icon: FileSignature },
+      // 체결 문서 보관함 — 전문 열람 · PDF 저장/보관 (2026-08-19)
+      { label: '내 NDA 문서', value: '보기', desc: '체결한 비밀유지계약서 열람 · PDF 보관', href: '/my/nda', icon: FileSignature },
     ] : [
       { label: '알림센터', value: '보기', desc: '매칭 · NDA · 상담 진행 알림 확인', href: '/my/inbox', icon: ClipboardList },
       { label: '설정', value: '수정', desc: '회원정보 수정 · 비밀번호 변경', href: '/my/settings', icon: Heart },

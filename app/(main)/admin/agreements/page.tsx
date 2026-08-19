@@ -11,12 +11,13 @@
  */
 
 import { useEffect, useState } from 'react'
-import { FileSignature, RefreshCw, CheckCircle2 } from 'lucide-react'
+import { FileSignature, RefreshCw, CheckCircle2, FileText } from 'lucide-react'
 import { DEAL_STAGES, NPL_STATUSES, NDA_REQUEST_STATUSES, type ListingMarketing, type NdaRequest } from '@/lib/marketing-checklist'
 import { MemberPane } from '@/components/admin/member-pane'
 import { ReactionsPane } from '@/components/admin/reactions-pane'
 import { buildListingNoMap } from '@/lib/listing-no'
 import { MemberFilterBar, useMemberFilter } from '@/components/admin/member-filter-bar'
+import { NdaDocumentPane, type NdaDocument } from '@/components/nda/nda-document-pane'
 
 const ELECTRIC = '#2251FF'
 
@@ -61,6 +62,22 @@ export default function AdminAgreementsPage() {
   // 매물 반응 상세 (관리번호 클릭) — 2026-08-19
   const [reactionTarget, setReactionTarget] = useState<string | null>(null)
   const [savedId, setSavedId] = useState<string | null>(null)
+  // NDA 체결 문서 뷰어 (2026-08-19)
+  const [ndaDoc, setNdaDoc] = useState<NdaDocument | null>(null)
+  const openNdaDoc = async (requestId: string) => {
+    try {
+      const r = await fetch(`/api/v1/nda/documents?request=${encodeURIComponent(requestId)}`, { credentials: 'include' })
+      const d = await r.json()
+      const doc = Array.isArray(d?.data) ? d.data[0] : null
+      if (!doc) {
+        alert('이 요청의 체결 문서가 없습니다.\n(문서 보관 기능 도입 이전에 접수된 건일 수 있습니다)')
+        return
+      }
+      setNdaDoc(doc as NdaDocument)
+    } catch {
+      alert('NDA 문서를 불러오지 못했습니다.')
+    }
+  }
 
   const load = () => {
     setLoading(true)
@@ -298,6 +315,15 @@ export default function AdminAgreementsPage() {
                         >
                           {NDA_REQUEST_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
+                        {/* 체결 문서 열람 — 전문 확인 · PDF 저장/보관 (2026-08-19) */}
+                        <button
+                          onClick={() => void openNdaDoc(q.id)}
+                          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10.5px] font-bold border border-[var(--color-border-default)] text-[#1A47CC]"
+                          style={{ background: 'var(--color-surface-elevated)', cursor: 'pointer' }}
+                          title="체결된 NDA 문서 보기 (PDF 저장·보관)"
+                        >
+                          <FileText size={10} /> 문서
+                        </button>
                       </div>
                     ))}
                   </td>
@@ -379,6 +405,7 @@ export default function AdminAgreementsPage() {
       </p>
 
       {/* 회원 상세 패널 — NDA 요청 → 요청 회원 정보 직결 */}
+      {ndaDoc && <NdaDocumentPane doc={ndaDoc} isAdmin onClose={() => setNdaDoc(null)} onChanged={() => void openNdaDoc(ndaDoc.request_id)} />}
       {memberTarget && <MemberPane userId={memberTarget} onClose={() => setMemberTarget(null)} />}
 
       {/* 매물 반응 상세 — 이 매물의 매칭 매입회원·NDA·관심 */}
