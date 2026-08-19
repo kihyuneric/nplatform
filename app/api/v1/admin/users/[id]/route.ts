@@ -62,6 +62,8 @@ export async function PATCH(
     } else if (approvalStatus === 'REJECTED') {
       updateData.kyc_status = 'REJECTED'
     } else if (approvalStatus === 'BLOCKED') {
+      updateData.kyc_status = 'BLOCKED'
+      updateData.is_verified = false
       updateData.locked_until = new Date(Date.now() + 365 * 86400000).toISOString()
     } else if (action === 'APPROVE_KYC') {
       updateData.kyc_status = 'APPROVED'
@@ -69,6 +71,8 @@ export async function PATCH(
     } else if (action === 'REJECT_KYC') {
       updateData.kyc_status = 'REJECTED'
     } else if (action === 'BLOCK') {
+      updateData.kyc_status = 'BLOCKED'
+      updateData.is_verified = false
       updateData.locked_until = new Date(Date.now() + 365 * 86400000).toISOString()
     } else if (action === 'HOLD') {
       // D3 — 보류: 승인대기 유지 + 사유 메모 (admin_note 컬럼 미생성 시 메모 없이 처리)
@@ -111,8 +115,8 @@ export async function PATCH(
       delete updateData.roles
       ;({ error: updateError } = await supabase.from('users').update(updateData).eq('id', id))
     }
-    // 폴백 2 — kyc_status 'WITHDRAWN' 제약 위반: REJECTED 로 재시도
-    if (updateError && updateData.kyc_status === 'WITHDRAWN') {
+    // 폴백 2 — kyc_status 'WITHDRAWN'/'BLOCKED' 제약 위반: REJECTED 로 재시도
+    if (updateError && (updateData.kyc_status === 'WITHDRAWN' || updateData.kyc_status === 'BLOCKED')) {
       updateData.kyc_status = 'REJECTED'
       ;({ error: updateError } = await supabase.from('users').update(updateData).eq('id', id))
     }
@@ -177,7 +181,7 @@ export async function GET(
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('users')
-      .select('id, email, name, role, company_name, phone, is_verified, kyc_status, subscription_tier, created_at, last_login_at, login_count, credit_balance')
+      .select('id, email, name, role, roles, buyer_kind, admin_note, company_name, phone, is_verified, kyc_status, subscription_tier, created_at, last_login_at, login_count, credit_balance, card_file_name, card_file_url, business_file_name, business_file_url')
       .eq('id', id)
       .single()
 
@@ -195,7 +199,62 @@ export async function GET(
       }
     } catch { /* demands 조회 실패는 상세 표시만 생략 */ }
 
-    return NextResponse.json({ user: data, demands })
+    // 회원 활동 전체 — 리스트에서 회원으로 바로 연결되는 통합 뷰 (2026-08-19)
+    //   매물(매각) · NDA 요청(매입) · 관심매물(매입) · 문의
+    const listingTitle: Record<string, string> = {}
+    let listings: unknown[] = []
+    let ndaList: Array<Record<string, unknown>> = []
+    let favorites: unknown[] = []
+    let tickets: unknown[] = []
+
+    try {
+      const { data: myListings } = await supabase
+        .from('npl_listings')
+        .select('id, title, status, claim_amount, created_at, sido, sigungu')
+        .eq('seller_id', id)
+        .order('created_at', { ascending: false })
+        .limit(50)
+      listings = myListings ?? []
+    } catch { /* 무시 */ }
+
+    try {
+      const { data: lm } = await supabase.from('listing_marketing').select('listing_id, nda_requests')
+      const ids: string[] = []
+      for (const row of lm ?? []) {
+        const reqs = Array.isArray(row.nda_requests) ? row.nda_requests as Array<Record<string, unknown>> : []
+        for (const q of reqs) {
+          const mine = q.user_id ? q.user_id === id : (!!q.email && q.email === data.email)
+          if (mine) {
+            ndaList.push({ listing_id: row.listing_id, status: q.status, requested_at: q.requested_at, signer: q.signer })
+            ids.push(String(row.listing_id))
+          }
+        }
+      }
+      const { data: favRows } = await supabase.from('user_favorites').select('listing_id, created_at').eq('user_id', id).limit(50)
+      favorites = favRows ?? []
+      for (const f of favRows ?? []) ids.push(String(f.listing_id))
+
+      // 매물명 조인 — UUID 대신 이름으로 표시
+      const uniq = Array.from(new Set(ids)).filter(Boolean)
+      if (uniq.length > 0) {
+        const { data: titles } = await supabase.from('npl_listings').select('id, title').in('id', uniq)
+        for (const t of titles ?? []) listingTitle[t.id as string] = String(t.title ?? '')
+      }
+      ndaList = ndaList.map(n => ({ ...n, listing_title: listingTitle[String(n.listing_id)] ?? '' }))
+      favorites = (favorites as Array<Record<string, unknown>>).map(f => ({ ...f, listing_title: listingTitle[String(f.listing_id)] ?? '' }))
+    } catch { /* 무시 */ }
+
+    try {
+      const { data: tk } = await supabase
+        .from('support_tickets')
+        .select('id, title, status, category, created_at')
+        .eq('user_id', id)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      tickets = tk ?? []
+    } catch { /* 무시 */ }
+
+    return NextResponse.json({ user: data, demands, listings, nda: ndaList, favorites, tickets })
   } catch (error) {
     console.error('[admin/users/[id] GET]', error)
     return apiError('INTERNAL_ERROR', '조회 실패', 500)

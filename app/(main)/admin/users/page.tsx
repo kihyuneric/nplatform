@@ -46,7 +46,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 // 상태 — 기본 승인대기 · 승인 시 활성 · 거절 (2026-08-18)
 const KYC_LABEL: Record<string, string> = {
-  APPROVED: '활성', SUBMITTED: '승인대기', PENDING: '승인대기', REJECTED: '거절', WITHDRAWN: '탈퇴',
+  APPROVED: '활성', SUBMITTED: '승인대기', PENDING: '승인대기', REJECTED: '거절', BLOCKED: '차단', WITHDRAWN: '탈퇴',
 }
 
 const ROLE_BADGE: Record<string, string> = {
@@ -72,7 +72,7 @@ const TIER_LABEL: Record<string, string> = {
 
 // 회원 유형 3종 + 일반회원 — 매각 회원 / 매입 회원 / 파트너 회원 / 일반회원 (2026-08-18)
 const ROLE_OPTIONS = ['ALL', 'SELLER', 'BUYER'] as const   // 역할 4종 확정 — 회원은 매각/매입만 (2026-08-18)
-const KYC_OPTIONS = ['ALL', 'PENDING', 'SUBMITTED', 'APPROVED', 'REJECTED'] as const
+const KYC_OPTIONS = ['ALL', 'PENDING', 'APPROVED', 'REJECTED', 'BLOCKED'] as const
 
 // KYC 심사 · 역할 관리 탭 삭제 — 승인 흐름만 (2026-08-18)
 const TABS = ['전체 회원', '승인 대기', '승인', '거절'] as const
@@ -428,7 +428,7 @@ export default function AdminUsersPage() {
                               className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full border ${
                                 u.kyc_status === 'APPROVED' ? 'text-emerald-700 border-emerald-300 bg-emerald-50' :
                                 u.kyc_status === 'REJECTED' ? 'text-red-700 border-red-300 bg-red-50' :
-                                u.kyc_status === 'WITHDRAWN' ? 'text-stone-500 border-stone-300 bg-stone-50' :
+                                u.kyc_status === 'WITHDRAWN' || u.kyc_status === 'BLOCKED' ? 'text-stone-600 border-stone-400 bg-stone-100' :
                                 isHold ? 'text-orange-800 border-orange-400 bg-orange-50' :
                                 'text-amber-700 border-amber-300 bg-amber-50'
                               }`}>
@@ -449,21 +449,22 @@ export default function AdminUsersPage() {
                             className={`${DS.button.secondary} ${DS.button.sm} shrink-0`}>
                             상세
                           </button>
+                          {/* 상태별 가능한 전이만 노출 (운영설계서 §5 상태 기계)
+                              승인대기·보류 → [승인] [거절] / 활성 → [차단] / 거절·탈퇴 → [승인](복구) */}
                           {u.kyc_status !== 'APPROVED' && (
                             <button onClick={() => handleAction(u.id, 'APPROVE_KYC')}
                               className={`${DS.button.accent} ${DS.button.sm} shrink-0`}>
-                              <CheckCircle size={12} />승인
+                              <CheckCircle size={12} />{u.kyc_status === 'REJECTED' || u.kyc_status === 'WITHDRAWN' ? '승인(복구)' : '승인'}
                             </button>
                           )}
-                          {u.kyc_status !== 'REJECTED' && u.kyc_status !== 'APPROVED' && (
-                            <button onClick={() => handleAction(u.id, 'REJECT_KYC')}
+                          {(u.kyc_status === 'PENDING' || u.kyc_status === 'SUBMITTED') && (
+                            <button onClick={() => { if (confirm(`${u.name} 회원의 가입을 거절할까요?`)) void handleAction(u.id, 'REJECT_KYC') }}
                               className={`${DS.button.danger} ${DS.button.sm} shrink-0`}>
                               <XCircle size={12} />거절
                             </button>
                           )}
-                          {/* 활성 회원 — 차단만 (거절 버튼은 승인 전 단계 전용) */}
                           {u.kyc_status === 'APPROVED' && (
-                            <button onClick={() => { if (confirm(`${u.name} 회원을 차단할까요?`)) void handleAction(u.id, 'BLOCK') }}
+                            <button onClick={() => { if (confirm(`${u.name} 회원을 차단할까요?\n로그인과 서비스 이용이 중지됩니다.`)) void handleAction(u.id, 'BLOCK') }}
                               className={`${DS.button.danger} ${DS.button.sm} shrink-0`}>
                               차단
                             </button>
@@ -657,16 +658,23 @@ export default function AdminUsersPage() {
                   </button>
                 </div>
                 <div className="flex items-center gap-1.5">
+                  {/* 상태 기계와 동일 규칙 — 승인대기·보류: 승인/거절 · 활성: 차단 · 거절/탈퇴: 승인(복구) */}
                   {docTarget.kyc_status !== 'APPROVED' && (
                     <button onClick={() => { void handleAction(docTarget.id, 'APPROVE_KYC'); setDocTarget(null) }}
                       className={`${DS.button.accent} ${DS.button.sm}`}>
-                      <CheckCircle size={12} />승인 (활성화)
+                      <CheckCircle size={12} />{docTarget.kyc_status === 'REJECTED' || docTarget.kyc_status === 'WITHDRAWN' ? '승인 (복구)' : '승인 (활성화)'}
                     </button>
                   )}
-                  {docTarget.kyc_status !== 'REJECTED' && (
-                    <button onClick={() => { void handleAction(docTarget.id, 'REJECT_KYC'); setDocTarget(null) }}
+                  {(docTarget.kyc_status === 'PENDING' || docTarget.kyc_status === 'SUBMITTED') && (
+                    <button onClick={() => { if (confirm(`${docTarget.name} 회원의 가입을 거절할까요?`)) { void handleAction(docTarget.id, 'REJECT_KYC'); setDocTarget(null) } }}
                       className={`${DS.button.danger} ${DS.button.sm}`}>
                       <XCircle size={12} />거절
+                    </button>
+                  )}
+                  {docTarget.kyc_status === 'APPROVED' && (
+                    <button onClick={() => { if (confirm(`${docTarget.name} 회원을 차단할까요?`)) { void handleAction(docTarget.id, 'BLOCK'); setDocTarget(null) } }}
+                      className={`${DS.button.danger} ${DS.button.sm}`}>
+                      차단
                     </button>
                   )}
                 </div>

@@ -7,12 +7,12 @@
  *   - 정산 관리 · 분석 · 설정 탭, 가짜 계좌/사업자 정보 전부 삭제 (서비스 범위 밖)
  *   - 이 화면 = 내 매물: 주간 활동 요약 + 매물 표 (검색·페이지네이션 D0)
  *   - 표 컬럼: 매물명·주소(본인 매물 — 마스킹 없음) / 채권액 / 상태(진행중·협의중·매각완료)
- *             / 매칭 매입사(실매칭) / 마케팅 진행 현황(운영사 입력 연동) / 등록일 / 액션
+ *             / 매칭 매입사(실매칭) / 반응 현황(관심·NDA·상담) / 등록일 / 액션
  *   - 액션: 세부내역(우측 패널) | 진행종료 요청(운영사 승인 후 종료)
  */
 
 import { useState, useEffect, useMemo } from 'react'
-import { MARKETING_CHECKLIST, NPL_STATUSES, type ListingMarketing as MkRow } from '@/lib/marketing-checklist'
+import { NPL_STATUSES, type ListingMarketing as MkRow } from '@/lib/marketing-checklist'
 import Link from 'next/link'
 import { Plus, Loader2 } from 'lucide-react'
 import DS from '@/lib/design-system'
@@ -135,16 +135,15 @@ export default function SellerMyListingsPage() {
   // ── D4 — 주간 활동 요약 (주간 리포트 알림과 동일 기준) ──
   const weekly = useMemo(() => {
     const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000
-    let nda7 = 0, interestTotal = 0, consultTotal = 0, mkDone = 0
+    let nda7 = 0, interestTotal = 0, consultTotal = 0
     for (const l of listings) {
       const mk = marketing[l.id]
       if (!mk) continue
       nda7 += (mk.nda_requests ?? []).filter(q => q.requested_at && new Date(q.requested_at).getTime() >= cutoff).length
       interestTotal += mk.interest_count ?? 0
       consultTotal += mk.consult_count ?? 0
-      mkDone += MARKETING_CHECKLIST.filter(c => mk.checklist?.[c.key]).length
     }
-    return { nda7, interestTotal, consultTotal, mkDone }
+    return { nda7, interestTotal, consultTotal }
   }, [listings, marketing])
 
   // ── D0 — 검색 + 페이지네이션 ──
@@ -181,7 +180,7 @@ export default function SellerMyListingsPage() {
         breadcrumbs={[{ label: '마이페이지', href: '/my' }, { label: '내 매물' }]}
         eyebrow="MY · SELLER"
         title="내 매물"
-        subtitle="매각의뢰 매물의 상태 · 매칭 · 마케팅 진행 현황을 확인합니다. 세부내역과 진행종료 요청은 액션에서 처리합니다."
+        subtitle="매각의뢰 매물의 상태 · 매칭 · 반응(관심 · NDA · 상담) 현황을 확인합니다. 세부내역과 진행종료 요청은 액션에서 처리합니다."
         actions={
           <div className="flex flex-wrap gap-5">
             {[
@@ -212,8 +211,6 @@ export default function SellerMyListingsPage() {
               관심 누적 <span className="tabular-nums">{weekly.interestTotal}</span>
               <span className="mx-2 opacity-40">·</span>
               상담 누적 <span className="tabular-nums">{weekly.consultTotal}</span>
-              <span className="mx-2 opacity-40">·</span>
-              마케팅 항목 <span className="tabular-nums">{weekly.mkDone}건</span> 진행
             </div>
           </div>
           <span className="text-[11px] font-bold" style={{ color: 'rgba(255,255,255,0.65)' }}>주간 리포트 알림과 동일 기준</span>
@@ -249,7 +246,7 @@ export default function SellerMyListingsPage() {
                   <th className={DS.table.headerCell}>채권액</th>
                   <th className={DS.table.headerCell}>상태</th>
                   <th className={DS.table.headerCell}>매칭 매입사</th>
-                  <th className={DS.table.headerCell}>마케팅 진행 현황</th>
+                  <th className={DS.table.headerCell}>반응 현황 (관심 · NDA · 상담)</th>
                   <th className={DS.table.headerCell}>등록일</th>
                   <th className={DS.table.headerCell}>액션</th>
                 </tr>
@@ -264,16 +261,19 @@ export default function SellerMyListingsPage() {
                 )}
                 {paged.map(l => {
                   const mk = marketing[l.id]
-                  const done = MARKETING_CHECKLIST.filter(c => mk?.checklist?.[c.key])
                   const matched = matchMap[l.id]
                   return (
                     <tr key={l.id} className={DS.table.row}>
-                      {/* 매물명 + 전체 주소 — 본인 매물이므로 마스킹 없음 */}
+                      {/* 매물명 + 주소 — 한 줄 고정(전체는 마우스오버), 본인 매물이라 마스킹 없음 */}
                       <td className={DS.table.cell}>
-                        <span className="font-medium">{l.title}</span>
-                        <span className="block text-[0.6875rem] text-[var(--color-text-muted)]">{l.address || l.id}</span>
+                        <div className="max-w-[260px]">
+                          <span className="block font-medium truncate" title={l.title}>{l.title}</span>
+                          <span className="block text-[0.6875rem] text-[var(--color-text-muted)] truncate" title={l.address || l.id}>
+                            {l.address || l.id}
+                          </span>
+                        </div>
                       </td>
-                      <td className={DS.table.cell + ' font-semibold tabular-nums'}>{formatClaim(l.claim_amount)}</td>
+                      <td className={DS.table.cell + ' font-semibold tabular-nums whitespace-nowrap text-right'}>{formatClaim(l.claim_amount)}</td>
                       {/* 상태 — 진행중 / 협의중 / 매각완료 3종만 */}
                       <td className={DS.table.cell}>
                         <select
@@ -285,41 +285,34 @@ export default function SellerMyListingsPage() {
                           {NPL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                       </td>
-                      {/* 매칭 매입사 — 실매칭 결과만 (매입조건 실데이터 대조) */}
-                      <td className={DS.table.cell}>
+                      {/* 매칭 매입사 — 실매칭 결과 (한 줄) */}
+                      <td className={DS.table.cell + ' whitespace-nowrap'}>
                         {typeof matched === 'number' ? (
-                          <div className="min-w-[80px]">
-                            <div className="flex items-baseline gap-1">
-                              <b className="text-lg tabular-nums text-[var(--color-text-primary)]">{matched}</b>
-                              <span className="text-[0.6875rem] text-[var(--color-text-muted)]">개사</span>
-                            </div>
-                            <span className="block text-[0.625rem] text-[var(--color-text-muted)]">매입조건 일치 · 실시간</span>
-                          </div>
+                          <span className="inline-flex items-baseline gap-1">
+                            <b className="text-[0.9375rem] tabular-nums text-[var(--color-text-primary)]">{matched}</b>
+                            <span className="text-[0.6875rem] text-[var(--color-text-muted)]">개사</span>
+                          </span>
                         ) : (
                           <span className="text-[0.6875rem] text-[var(--color-text-muted)]">대조 중</span>
                         )}
                       </td>
-                      {/* 마케팅 진행 현황 — 운영사 입력 실데이터 연동 */}
+                      {/* 반응 현황 — 관심 · NDA · 상담 (한 줄 정렬) */}
                       <td className={DS.table.cell}>
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
+                          {/* 핵심 3지표 먼저, 고정 간격 */}
+                          <div className="flex items-center gap-3 text-[0.6875rem] whitespace-nowrap">
+                            <span className="text-[var(--color-text-muted)]">관심 <b className="tabular-nums text-[var(--color-text-primary)]">{mk?.interest_count ?? 0}</b></span>
+                            <span className="text-[var(--color-text-muted)]">NDA <b className="tabular-nums text-[var(--color-text-primary)]">{mk?.nda_requests?.length ?? mk?.nda_count ?? 0}</b></span>
+                            <span className="text-[var(--color-text-muted)]">상담 <b className="tabular-nums text-[var(--color-text-primary)]">{mk?.consult_count ?? 0}</b></span>
+                            {mk?.deal_stage && (
+                              <b className="px-1.5 py-0.5 text-white text-[0.625rem]" style={{ background: '#0A1628' }}>{mk.deal_stage}</b>
+                            )}
+                          </div>
                           {mk?.matched_at && (
-                            <div className="text-[0.6875rem]">
-                              <span className="text-[var(--color-text-muted)]">매칭 등록일 </span>
-                              <b className="tabular-nums text-[var(--color-text-primary)]">{mk.matched_at}</b>
-                              <span className="ml-1 text-[0.625rem] text-[var(--color-text-muted)]">(운영사 자동 기록)</span>
+                            <div className="text-[0.625rem] text-[var(--color-text-muted)] whitespace-nowrap">
+                              매칭 등록일 <b className="tabular-nums">{mk.matched_at}</b>
                             </div>
                           )}
-                          {mk?.deal_stage ? (
-                            <div className="text-[0.6875rem]">
-                              <span className="text-[var(--color-text-muted)]">진행 단계 </span>
-                              <b className="px-1.5 py-0.5 text-white text-[0.625rem]" style={{ background: '#0A1628' }}>{mk.deal_stage}</b>
-                            </div>
-                          ) : null}
-                          <div className="flex items-center gap-3 text-[0.6875rem]">
-                            <span className="text-[var(--color-text-muted)]">관심 <b className="tabular-nums text-[var(--color-text-primary)]">{mk?.interest_count ?? 0}</b></span>
-                            <span className="text-[var(--color-text-muted)]">NDA 요청 <b className="tabular-nums text-[var(--color-text-primary)]">{mk?.nda_requests?.length ?? mk?.nda_count ?? 0}</b></span>
-                            <span className="text-[var(--color-text-muted)]">상담 진행 <b className="tabular-nums text-[var(--color-text-primary)]">{mk?.consult_count ?? 0}</b></span>
-                          </div>
                           {(mk?.nda_requests ?? []).length > 0 && (
                             <div className="space-y-0.5">
                               {(mk?.nda_requests ?? []).map(nq => (
@@ -341,41 +334,31 @@ export default function SellerMyListingsPage() {
                               ))}
                             </div>
                           )}
-                          <div className="text-[0.625rem] font-bold text-[var(--color-text-muted)]">
-                            마케팅 {done.length}/{MARKETING_CHECKLIST.length} 진행
-                          </div>
-                          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
-                            {MARKETING_CHECKLIST.map(c => {
-                              const ok = !!mk?.checklist?.[c.key]
-                              return (
-                                <span key={c.key} className={`text-[0.6563rem] ${ok ? 'text-[var(--color-text-primary)] font-semibold' : 'text-[var(--color-text-muted)]'}`}>
-                                  {ok ? '✓' : '·'} {c.label.replace('땅집고옥션 ', '땅옥 ').replace('엔플랫폼 ', '엔플 ')}
-                                </span>
-                              )
-                            })}
-                          </div>
+                          {/* 마케팅 8채널 체크리스트 제거 (2026-08-19 사용자 지시) —
+                              매각 회원에게는 관심 · NDA 요청 · 상담 진행이 핵심 */}
                         </div>
                       </td>
-                      <td className={DS.table.cellMuted + ' tabular-nums'}>{l.created_at?.slice(0, 10) || '-'}</td>
+                      {/* 등록일 — 한 줄 고정 (날짜가 세로로 쪼개지지 않도록) */}
+                      <td className={DS.table.cellMuted + ' tabular-nums whitespace-nowrap'}>{l.created_at?.slice(0, 10) || '-'}</td>
                       <td className={DS.table.cell}>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 whitespace-nowrap">
                           <button
                             onClick={() => setDetailTarget(l.id)}
-                            className={DS.text.link + ' text-[0.8125rem]'}
+                            className={DS.text.link + ' text-[0.75rem]'}
                             style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
                           >
                             세부내역
                           </button>
                           <span className="text-[var(--color-border-default)]">|</span>
                           {endRequested.has(l.id) ? (
-                            <span className="text-[0.75rem] font-bold text-amber-700">종료 요청됨 (운영사 승인 대기)</span>
+                            <span className="text-[0.6875rem] font-bold text-amber-700">종료 요청됨</span>
                           ) : (
                             <button
                               onClick={() => requestEnd(l.id, l.title)}
-                              className="text-[0.8125rem] text-[var(--color-danger)] hover:underline transition-colors cursor-pointer"
+                              className="text-[0.75rem] text-[var(--color-danger)] hover:underline transition-colors cursor-pointer"
                               style={{ background: 'transparent', border: 'none', padding: 0 }}
                             >
-                              진행종료 요청
+                              진행종료
                             </button>
                           )}
                         </div>

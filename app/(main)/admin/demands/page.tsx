@@ -13,6 +13,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ShoppingCart, RefreshCw, Pencil, Trash2 } from 'lucide-react'
+import { MemberPane } from '@/components/admin/member-pane'
 
 type DemandRow = {
   id: string
@@ -28,6 +29,7 @@ type DemandRow = {
   amountMax: number | null
   priority: number | null
   memo: string
+  userId: string   // 등록 회원 Key — 클릭 시 회원 상세
   contact: string   // 담당자 (회사명 · 담당자명 · 연락처 · 이메일) — 등록 폼 담당자 정보 연동
 }
 
@@ -59,6 +61,8 @@ const PAGE_SIZE = 20
 export default function AdminDemandsPage() {
   const [rows, setRows] = useState<DemandRow[]>([])
   const [loading, setLoading] = useState(true)
+  // 회원 상세 패널 — 리스트에서 바로 회원 정보로 (2026-08-19)
+  const [memberTarget, setMemberTarget] = useState<string | null>(null)
   // D0 공통 UI — 검색 + 페이지네이션
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
@@ -90,6 +94,7 @@ export default function AdminDemandsPage() {
         }
         setRows(list.map(x => ({
           id: String(x.id ?? ''),
+          userId: String(x.user_id ?? ''),
           created: x.created_at ? String(x.created_at).slice(0, 10) : '—',
           demandType: String(x.demand_type ?? '') === 'realestate' ? '부동산 급매' : 'NPL',
           types: arr(x.collateral_types),
@@ -189,8 +194,20 @@ export default function AdminDemandsPage() {
                 <td className="px-3 py-2 tabular-nums whitespace-nowrap text-[12px]">{fmtRange(r.landMin, r.landMax, '')} / {fmtRange(r.bldgMin, r.bldgMax, '')}</td>
                 <td className="px-3 py-2 tabular-nums whitespace-nowrap font-bold text-[var(--color-text-primary)]">{fmtRange(r.amountMin, r.amountMax, '')}</td>
                 {/* 담당자 — 등록 폼의 회사명 · 담당자명 · 연락처 · 이메일 연동 */}
+                {/* 담당자 = 등록 회원 — 클릭 시 회원 상세(연락처·활동) 패널 */}
                 <td className="px-3 py-2 max-w-[170px] text-[var(--color-text-primary)]">
-                  <span className="line-clamp-2 text-[12px]">{r.contact || '—'}</span>
+                  {r.userId ? (
+                    <button
+                      onClick={() => setMemberTarget(r.userId)}
+                      className="text-left text-[12px] font-semibold text-[#1A47CC] hover:underline line-clamp-2"
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                      title="회원 정보 보기"
+                    >
+                      {r.contact || '회원 정보'}
+                    </button>
+                  ) : (
+                    <span className="line-clamp-2 text-[12px]">{r.contact || '—'}</span>
+                  )}
                 </td>
                 <td className="px-3 py-2 max-w-[200px] text-[var(--color-text-secondary)]">
                   <span className="line-clamp-2">{r.memo || '—'}</span>
@@ -240,8 +257,11 @@ export default function AdminDemandsPage() {
       )}
 
       <p className="text-[11px] text-[var(--color-text-muted)]">
-        ※ AI 매칭 · 긴급수준 등 미연동 항목은 제거되었습니다. 매칭은 실매칭 엔진(지역·유형·금액대 대조)이 자동 수행합니다.
+        ※ 담당자를 클릭하면 등록 회원의 연락처 · 매입조건 · NDA · 관심매물 이력을 바로 확인할 수 있습니다.
       </p>
+
+      {/* 회원 상세 패널 — 매입조건 → 회원 정보 직결 */}
+      {memberTarget && <MemberPane userId={memberTarget} onClose={() => setMemberTarget(null)} />}
     </div>
   )
 }

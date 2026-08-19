@@ -10,6 +10,7 @@
 
 import { useEffect, useState } from 'react'
 import { Newspaper, RefreshCw, Plus, Trash2, Save, CheckCircle2, AlertTriangle, ExternalLink } from 'lucide-react'
+import { ImageInput } from '@/components/admin/image-input'
 
 const ELECTRIC = '#2251FF'
 
@@ -135,29 +136,20 @@ export default function AdminPressPage() {
             <div key={r.id ?? `new-${idx}`}
               className="border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-3"
               style={{ borderLeft: `3px solid ${ELECTRIC}` }}>
-              <div className="grid grid-cols-1 md:grid-cols-[88px_1fr_1.2fr_auto] gap-2 items-start">
-                {/* 썸네일 미리보기 + 이미지 URL */}
-                <div>
-                  <div className="w-[88px] h-[64px] flex items-center justify-center overflow-hidden bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)]">
-                    {r.photo_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={r.photo_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-[9px] font-bold text-[var(--color-text-muted)]">사진 없음</span>
-                    )}
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1.2fr_auto] gap-2 items-start">
                 <div className="space-y-1.5">
                   <div>
                     <div className="text-[9.5px] font-bold text-[var(--color-text-muted)] mb-0.5">제목</div>
                     <input value={r.title} onChange={e => update(idx, { title: e.target.value })}
                       placeholder="기사 제목" className={inputCls} />
                   </div>
-                  <div>
-                    <div className="text-[9.5px] font-bold text-[var(--color-text-muted)] mb-0.5">썸네일 이미지 URL</div>
-                    <input value={r.photo_url ?? ''} onChange={e => update(idx, { photo_url: e.target.value })}
-                      placeholder="https:// 이미지 주소 (선택)" className={inputCls} />
-                  </div>
+                  {/* 썸네일 — URL 또는 파일 직접 첨부 (2026-08-19) */}
+                  <ImageInput
+                    label="썸네일 (URL 또는 파일 첨부)"
+                    value={r.photo_url ?? ''}
+                    onChange={url => update(idx, { photo_url: url })}
+                    previewHeight={64}
+                  />
                 </div>
                 <div>
                   <div className="text-[9.5px] font-bold text-[var(--color-text-muted)] mb-0.5">URL (새창으로 열림)</div>

@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from 'react'
 import { Sparkles, RefreshCw, Plus, Trash2, Save, CheckCircle2, AlertTriangle, Building2 } from 'lucide-react'
+import { ImageInput } from '@/components/admin/image-input'
 
 const ELECTRIC = '#2251FF'
 
@@ -283,27 +284,17 @@ export default function AdminHighlightsPage() {
             <div key={r.id ?? `new-${idx}`}
               className="border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]"
               style={{ borderTop: `3px solid ${ELECTRIC}` }}>
-              {/* 이미지 미리보기 */}
-              <div className="flex gap-3 p-3 border-b border-[var(--color-border-subtle)]">
-                <div className="w-[120px] h-[90px] shrink-0 flex items-center justify-center overflow-hidden bg-[var(--color-surface-overlay)] border border-[var(--color-border-subtle)]">
-                  {r.photo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={r.photo_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-center text-[var(--color-text-muted)]">
-                      <Building2 size={20} className="mx-auto" />
-                      <div className="text-[9px] font-bold mt-1">사진 없음</div>
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <div className="text-[10px] font-bold text-[var(--color-text-muted)]">이미지 URL (카드의 주 이미지)</div>
-                  <input value={r.photo_url} onChange={e => update(idx, { photo_url: e.target.value })}
-                    placeholder="https:// 이미지 주소" className={inputCls} />
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <input value={r.no} onChange={e => update(idx, { no: e.target.value })} placeholder="관리번호 (N-01)" className={inputCls} />
-                    <input value={r.category} onChange={e => update(idx, { category: e.target.value })} placeholder="유형 (토지)" className={inputCls} />
-                  </div>
+              {/* 이미지 — URL 입력 또는 파일 직접 첨부 (2026-08-19) */}
+              <div className="p-3 border-b border-[var(--color-border-subtle)] space-y-2">
+                <ImageInput
+                  label="카드 이미지 (URL 또는 파일 첨부)"
+                  value={r.photo_url}
+                  onChange={url => update(idx, { photo_url: url })}
+                  previewHeight={90}
+                />
+                <div className="grid grid-cols-2 gap-1.5">
+                  <input value={r.no} onChange={e => update(idx, { no: e.target.value })} placeholder="관리번호 (N-01)" className={inputCls} />
+                  <input value={r.category} onChange={e => update(idx, { category: e.target.value })} placeholder="유형 (토지)" className={inputCls} />
                 </div>
               </div>
 

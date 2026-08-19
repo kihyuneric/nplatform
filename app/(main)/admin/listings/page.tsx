@@ -10,6 +10,7 @@ import { DataTable, type Column } from "@/components/ui/data-table"
 import { NPL_STATUSES } from "@/lib/marketing-checklist"
 import { MarketingPanel } from "@/components/admin/marketing-panel"
 import { DetailPane } from "@/components/listing/detail-pane"
+import { MemberPane } from "@/components/admin/member-pane"
 
 type ApprovalStatus = "PENDING" | "APPROVED" | "ACTIVE" | "REJECTED" | "HIDDEN" | "REPORTED"
 
@@ -23,6 +24,7 @@ interface AdminListing {
   ai_grade?: string
   status: ApprovalStatus
   created_at: string
+  seller_id?: string | null
   seller_name?: string
   // Phase G7+ · 자발적 경매 진행 정보
   bid_end_date?: string | null
@@ -69,6 +71,8 @@ export default function AdminListingsPage() {
   const [mkTarget, setMkTarget] = useState<string | null>(null)
   // ── 세부내역 우측 패널 (D0·D6 — 별도 화면 이동 없이 확인) ──
   const [detailTarget, setDetailTarget] = useState<string | null>(null)
+  // 회원 상세 패널 — 매각 회원 클릭 시 (2026-08-19)
+  const [memberTarget, setMemberTarget] = useState<string | null>(null)
 
   // ── NPL 상태 (진행중/협의중/매각완료) — 리스트 앞단 표시 + 즉시 수정 ──
   const [nplStatusMap, setNplStatusMap] = useState<Record<string, string>>({})
@@ -140,6 +144,7 @@ export default function AdminListingsPage() {
         ai_grade: d.ai_grade as string | undefined,
         status: (d.status as ApprovalStatus) || 'PENDING',
         created_at: d.created_at as string,
+        seller_id: (d.seller_id as string) ?? null,
         seller_name: d.seller_id ? (sellerMap[d.seller_id as string] ?? '(연결 회원 없음)') : '(미연결)',
       }))
       setListings(mapped)
@@ -348,10 +353,19 @@ export default function AdminListingsPage() {
                 <span className="block text-[0.6875rem] text-[var(--color-text-muted)] truncate">
                   {row.listing_type ? `${row.listing_type} · ` : ''}{row.location ?? ''}
                 </span>
-                {/* R7 — 매각 회원(소유자) 표시: 회원 Key 연동 확인용 */}
-                <span className="block text-[0.6563rem] text-[var(--color-text-muted)] truncate" title={row.seller_name ?? ''}>
-                  매각 {row.seller_name ?? '(미연결)'}
-                </span>
+                {/* 매각 회원 — 클릭 시 회원 상세(연락처·활동) 패널 */}
+                {row.seller_id ? (
+                  <button
+                    onClick={e => { e.stopPropagation(); setMemberTarget(row.seller_id as string) }}
+                    className="block text-[0.6563rem] text-[#1A47CC] font-semibold truncate hover:underline text-left w-full"
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                    title="매각 회원 정보 보기"
+                  >
+                    매각 {row.seller_name ?? '회원'}
+                  </button>
+                ) : (
+                  <span className="block text-[0.6563rem] text-[var(--color-text-muted)] truncate">매각 (미연결)</span>
+                )}
               </div>
             )},
             { key: 'bond_amount', label: '채권액', sortable: true, render: (v) => <span className="font-mono whitespace-nowrap">{v ? formatKRW(v) : "-"}</span> },
@@ -459,6 +473,9 @@ export default function AdminListingsPage() {
       {detailTarget && (
         <DetailPane listingId={detailTarget} onClose={() => setDetailTarget(null)} />
       )}
+
+      {/* 회원 상세 패널 — 매각의뢰 → 매각 회원 정보 직결 */}
+      {memberTarget && <MemberPane userId={memberTarget} onClose={() => setMemberTarget(null)} />}
 
       {/* 마케팅 진행 관리 모달 — 체크 즉시 매각사 대시보드 공유 */}
       {mkTarget && (

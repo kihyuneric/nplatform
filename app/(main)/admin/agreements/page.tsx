@@ -13,6 +13,7 @@
 import { useEffect, useState } from 'react'
 import { FileSignature, RefreshCw, CheckCircle2 } from 'lucide-react'
 import { DEAL_STAGES, NPL_STATUSES, NDA_REQUEST_STATUSES, type ListingMarketing, type NdaRequest } from '@/lib/marketing-checklist'
+import { MemberPane } from '@/components/admin/member-pane'
 
 const ELECTRIC = '#2251FF'
 
@@ -39,6 +40,8 @@ export default function AdminAgreementsPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paged = filtered.slice((Math.min(page, totalPages) - 1) * PAGE_SIZE, Math.min(page, totalPages) * PAGE_SIZE)
   const [savingId, setSavingId] = useState<string | null>(null)
+  // 회원 상세 패널 — NDA 요청 회원 클릭 시 (2026-08-19)
+  const [memberTarget, setMemberTarget] = useState<string | null>(null)
   const [savedId, setSavedId] = useState<string | null>(null)
 
   const load = () => {
@@ -189,9 +192,21 @@ export default function AdminAgreementsPage() {
                     <div className="tabular-nums font-bold">{m?.nda_requests?.length ?? m?.nda_count ?? 0}</div>
                     {(m?.nda_requests ?? []).map(q => (
                       <div key={q.id} className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[11px] font-semibold text-[var(--color-text-primary)] whitespace-nowrap" title={q.email || ''}>
-                          {q.signer || q.email || '무기명'}
-                        </span>
+                        {/* NDA 요청 회원 — 클릭 시 회원 상세(연락처·활동) 패널 */}
+                        {q.user_id ? (
+                          <button
+                            onClick={() => setMemberTarget(q.user_id as string)}
+                            className="text-[11px] font-semibold text-[#1A47CC] whitespace-nowrap hover:underline"
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                            title={`${q.email || ''} — 회원 정보 보기`}
+                          >
+                            {q.signer || q.email || '요청 회원'}
+                          </button>
+                        ) : (
+                          <span className="text-[11px] font-semibold text-[var(--color-text-primary)] whitespace-nowrap" title={q.email || ''}>
+                            {q.signer || q.email || '무기명'}
+                          </span>
+                        )}
                         <span className="text-[10px] text-[var(--color-text-muted)] tabular-nums whitespace-nowrap">
                           {q.requested_at?.slice(5, 10)}
                         </span>
@@ -285,8 +300,11 @@ export default function AdminAgreementsPage() {
       )}
 
       <p className="text-[11px] text-[var(--color-text-muted)]">
-        ※ LOI · 플래그 · 위반확정 등 미연동 개념은 제거되었습니다. 단계 저장은 listing_marketing 테이블 생성 후 유지됩니다.
+        ※ NDA 요청자 이름을 클릭하면 요청 회원의 연락처 · 매입조건 · 관심매물 이력을 바로 확인할 수 있습니다.
       </p>
+
+      {/* 회원 상세 패널 — NDA 요청 → 요청 회원 정보 직결 */}
+      {memberTarget && <MemberPane userId={memberTarget} onClose={() => setMemberTarget(null)} />}
     </div>
   )
 }
