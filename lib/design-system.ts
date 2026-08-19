@@ -146,6 +146,37 @@ export const BADGE = {
   /** 인라인 배지 (Tailwind) */
   inline: (bg: string, text: string, border: string) =>
     `inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.6875rem] font-bold border ${bg} ${text} ${border}`,
+
+  /**
+   * 고정폭 배지 — 표의 한 컬럼에 들어가는 상태·구분 배지 (2026-08-19)
+   *
+   * 글자수가 달라도(활성 / 승인대기 / 매각의뢰) 폭·높이가 같아야
+   * 배지 열과 그 옆 텍스트의 시작선이 모든 행에서 일치한다.
+   * 크기는 여기서만 정하고 색은 호출부에서 넘긴다.
+   */
+  fixed: (tone: string, w: 'sm' | 'md' = 'md') =>
+    `inline-flex items-center justify-center ${w === 'sm' ? 'w-[52px]' : 'w-[68px]'} h-[20px] ` +
+    `text-[0.6563rem] font-extrabold rounded-full border whitespace-nowrap ${tone}`,
+} as const
+
+// ── 세그먼트 버튼 (접수 / 처리중 / 완료 처럼 나란한 상태 전환) ────────────────
+export const SEGMENT = {
+  /** 그룹 래퍼 */
+  group: 'inline-flex items-center gap-1 flex-shrink-0',
+  /**
+   * 버튼 1개 — 모든 버튼이 같은 폭·높이.
+   * 선택 상태는 **색으로만** 표현한다. 테두리 두께를 바꾸면 박스 크기가 변해
+   * 행의 수평선이 무너지므로, 강조는 inset box-shadow 로 준다.
+   */
+  item: 'inline-flex items-center justify-center w-[46px] h-[24px] text-[0.6563rem] font-bold border',
+  /** 선택/비선택 인라인 스타일 */
+  style: (active: boolean, accent = '#2251FF') => ({
+    background: active ? '#0A1628' : 'transparent',
+    color: active ? '#FFFFFF' : 'var(--color-text-secondary)',
+    borderColor: active ? '#0A1628' : 'var(--color-border-default)',
+    boxShadow: active ? `inset 0 2px 0 0 ${accent}` : 'none',
+    cursor: 'pointer',
+  }),
 } as const
 
 // ── 통계 카드 (McKinsey paper + electric top) ────────────────────────────────

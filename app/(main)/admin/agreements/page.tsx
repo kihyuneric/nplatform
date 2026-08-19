@@ -36,6 +36,7 @@ export default function AdminAgreementsPage() {
   const [rows, setRows] = useState<Row[]>([])
   const [mk, setMk] = useState<Record<string, ListingMarketing>>({})
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   // D0 공통 UI — 검색 + 페이지네이션
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
@@ -63,9 +64,22 @@ export default function AdminAgreementsPage() {
 
   const load = () => {
     setLoading(true)
+    setLoadError('')
+    // 실패를 삼키지 않는다 — 응답 코드까지 화면에 보여야 원인을 알 수 있다 (2026-08-19)
+    const getJson = async (url: string) => {
+      const r = await fetch(url, { credentials: 'include' })
+      if (!r.ok) {
+        throw new Error(
+          r.status === 401 ? '로그인이 만료되었습니다. 다시 로그인해주세요.'
+          : r.status === 403 ? '이 화면을 볼 권한이 없습니다. (운영관리자 전용)'
+          : `데이터를 불러오지 못했습니다 (${r.status})`
+        )
+      }
+      return r.json()
+    }
     Promise.all([
-      fetch('/api/v1/exchange/listings?limit=200&status=ACTIVE').then(r => r.json()).catch(() => ({})),
-      fetch('/api/v1/listing-marketing').then(r => r.json()).catch(() => ({})),
+      getJson('/api/v1/exchange/listings?limit=200&status=ACTIVE'),
+      getJson('/api/v1/listing-marketing'),
     ]).then(async ([ld, md]) => {
       const list: Array<Record<string, any>> = Array.isArray(ld.data) ? ld.data : []
       // 관리번호 N26-1 — 전 화면 공통 규칙 (2026-08-19)
@@ -92,7 +106,8 @@ export default function AdminAgreementsPage() {
         sellerName: x.seller_id ? (sellerMap[x.seller_id as string] ?? '(연결 회원 없음)') : '(미연결)',
       })))
       if (md?.data) setMk(md.data)
-    }).finally(() => setLoading(false))
+    }).catch((e: Error) => setLoadError(e.message || '알 수 없는 오류'))
+      .finally(() => setLoading(false))
   }
   useEffect(load, [])
 
@@ -180,6 +195,17 @@ export default function AdminAgreementsPage() {
 
 
       {memberFilter && <MemberFilterBar userId={memberFilter} count={filtered.length} unit="건" onOpenMember={setMemberTarget} />}
+
+      {/* 조회 실패를 조용히 넘기지 않는다 (2026-08-19) */}
+      {loadError && (
+        <div className="flex items-center gap-3 px-3 py-2.5 border" style={{ borderColor: 'rgba(225,29,72,0.4)', background: 'rgba(225,29,72,0.06)' }}>
+          <span className="text-[12.5px] font-bold text-[#9F1239]">{loadError}</span>
+          <button onClick={load} className="ml-auto px-2.5 py-1 text-[11px] font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)]"
+            style={{ background: 'var(--color-surface-elevated)', cursor: 'pointer' }}>
+            다시 시도
+          </button>
+        </div>
+      )}
 
       {/* D0 공통 UI — 검색 */}
       <div className="flex items-center gap-3 flex-wrap">

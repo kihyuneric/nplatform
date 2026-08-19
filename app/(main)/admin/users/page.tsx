@@ -457,13 +457,14 @@ export default function AdminUsersPage() {
                           return (
                             <span
                               title={isHold ? (u.admin_note ?? '') : undefined}
-                              className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full border ${
+                              /* 고정폭 배지 — '활성'(2자)과 '승인대기'(4자)의 폭을 맞춰 열을 정렬 (2026-08-19) */
+                              className={DS.badge.fixed(
                                 u.kyc_status === 'APPROVED' ? 'text-emerald-700 border-emerald-300 bg-emerald-50' :
                                 u.kyc_status === 'REJECTED' ? 'text-red-700 border-red-300 bg-red-50' :
                                 u.kyc_status === 'WITHDRAWN' || u.kyc_status === 'BLOCKED' ? 'text-stone-600 border-stone-400 bg-stone-100' :
                                 isHold ? 'text-orange-800 border-orange-400 bg-orange-50' :
                                 'text-amber-700 border-amber-300 bg-amber-50'
-                              }`}>
+                              )}>
                               {isHold ? '보류' : (KYC_LABEL[u.kyc_status] || '승인대기')}
                             </span>
                           )
@@ -475,31 +476,37 @@ export default function AdminUsersPage() {
                         )}
                       </td>
                       <td className={DS.table.cell}>
-                        {/* 관리 — 한 줄 고정 정렬 (쫀쫀·타이트 2026-08-19): 상세 | 승인 | 거절 | 차단 */}
-                        <div className="flex items-center gap-1 whitespace-nowrap">
+                        {/* 관리 — 3칸 고정 슬롯 (2026-08-19)
+                            버튼마다 글자수가 달라도 폭이 같고, 없는 액션은 빈 칸으로 자리를 지킨다.
+                            → 모든 행에서 [상세][1차 액션][2차 액션] 열이 정확히 같은 x 에 선다. */}
+                        <div className="grid grid-cols-3 gap-1 w-[186px]">
                           <button onClick={() => setDocTarget(u)}
-                            className={`${DS.button.secondary} ${DS.button.sm} shrink-0`}>
+                            className={`${DS.button.secondary} ${DS.button.sm} justify-center w-full`}>
                             상세
                           </button>
+
                           {/* 상태별 가능한 전이만 노출 (운영설계서 §5 상태 기계)
-                              승인대기·보류 → [승인] [거절] / 활성 → [차단] / 거절·탈퇴 → [승인](복구) */}
-                          {u.kyc_status !== 'APPROVED' && (
+                              승인대기·보류 → [승인][거절] / 활성 → [차단] / 거절·탈퇴 → [복구] */}
+                          {u.kyc_status !== 'APPROVED' ? (
                             <button onClick={() => handleAction(u.id, 'APPROVE_KYC')}
-                              className={`${DS.button.accent} ${DS.button.sm} shrink-0`}>
-                              <CheckCircle size={12} />{u.kyc_status === 'REJECTED' || u.kyc_status === 'WITHDRAWN' ? '승인(복구)' : '승인'}
+                              title={u.kyc_status === 'REJECTED' || u.kyc_status === 'WITHDRAWN' ? '승인하여 계정을 복구합니다' : '가입을 승인합니다'}
+                              className={`${DS.button.accent} ${DS.button.sm} justify-center w-full`}>
+                              <CheckCircle size={12} />{u.kyc_status === 'REJECTED' || u.kyc_status === 'WITHDRAWN' ? '복구' : '승인'}
                             </button>
-                          )}
-                          {(u.kyc_status === 'PENDING' || u.kyc_status === 'SUBMITTED') && (
-                            <button onClick={() => { if (confirm(`${u.name} 회원의 가입을 거절할까요?`)) void handleAction(u.id, 'REJECT_KYC') }}
-                              className={`${DS.button.danger} ${DS.button.sm} shrink-0`}>
-                              <XCircle size={12} />거절
-                            </button>
-                          )}
-                          {u.kyc_status === 'APPROVED' && (
+                          ) : (
                             <button onClick={() => { if (confirm(`${u.name} 회원을 차단할까요?\n로그인과 서비스 이용이 중지됩니다.`)) void handleAction(u.id, 'BLOCK') }}
-                              className={`${DS.button.danger} ${DS.button.sm} shrink-0`}>
+                              className={`${DS.button.danger} ${DS.button.sm} justify-center w-full`}>
                               차단
                             </button>
+                          )}
+
+                          {(u.kyc_status === 'PENDING' || u.kyc_status === 'SUBMITTED') ? (
+                            <button onClick={() => { if (confirm(`${u.name} 회원의 가입을 거절할까요?`)) void handleAction(u.id, 'REJECT_KYC') }}
+                              className={`${DS.button.danger} ${DS.button.sm} justify-center w-full`}>
+                              <XCircle size={12} />거절
+                            </button>
+                          ) : (
+                            <span aria-hidden />   /* 빈 슬롯 — 열 정렬 유지 */
                           )}
                         </div>
                       </td>

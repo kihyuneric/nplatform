@@ -198,8 +198,9 @@ export default function AdminInboxPage() {
               className="w-full flex items-center gap-3 px-4 py-3 text-left"
               style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
             >
+              {/* 구분 태그 — 글자수와 무관하게 같은 폭. 제목 시작선이 모든 행에서 일치한다 (2026-08-19) */}
               <span
-                className="flex-shrink-0 px-2 py-0.5 text-[10px] font-extrabold"
+                className="flex-shrink-0 inline-flex items-center justify-center w-[58px] h-[20px] text-[10px] font-extrabold"
                 style={{
                   background: t.kind === '매각의뢰' ? '#0A1628' : 'rgba(34, 81, 255, 0.10)',
                   color: t.kind === '매각의뢰' ? '#FFFFFF' : '#1A47CC',
@@ -218,12 +219,15 @@ export default function AdminInboxPage() {
                     key={s.key}
                     onClick={() => void setStatus(t.id, s.key)}
                     disabled={savingId === t.id}
-                    className="px-2 py-1 text-[10.5px] font-bold"
+                    /* 3버튼 모두 같은 폭·높이. 선택 상태는 색으로만 표현하고
+                       테두리 두께를 바꾸지 않는다 — 선택 시 크기가 변해 줄이 무너지던 문제 수정 (2026-08-19) */
+                    className="inline-flex items-center justify-center w-[46px] h-[24px] text-[10.5px] font-bold"
                     style={{
                       background: t.status === s.key ? '#0A1628' : 'transparent',
                       color: t.status === s.key ? '#FFFFFF' : 'var(--color-text-secondary)',
-                      border: '1px solid var(--color-border-default)',
-                      borderTop: t.status === s.key ? `2px solid ${ELECTRIC}` : undefined,
+                      border: '1px solid',
+                      borderColor: t.status === s.key ? '#0A1628' : 'var(--color-border-default)',
+                      boxShadow: t.status === s.key ? `inset 0 2px 0 0 ${ELECTRIC}` : 'none',
                       cursor: 'pointer',
                       opacity: savingId === t.id ? 0.6 : 1,
                     }}

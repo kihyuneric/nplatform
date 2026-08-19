@@ -1371,7 +1371,7 @@ export default function ExchangePage() {
 
       {/* ── 세부내역 우측 패널 — 매입 회원 열람 (NDA 게이트는 패널 내부에서 적용) ── */}
       {detailTarget && (
-        <DetailPane listingId={detailTarget} viewerMode onClose={() => setDetailTarget(null)} />
+        <DetailPane listingId={detailTarget} listingNo={displayNo[detailTarget]} viewerMode onClose={() => setDetailTarget(null)} />
       )}
 
       {/* ── NDA 전자계약 모달 — 자체 기능 (서명패드 + /api/v1/nda 기록) ── */}

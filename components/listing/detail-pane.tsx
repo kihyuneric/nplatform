@@ -10,20 +10,37 @@
  * 로직 중복 없이 동일 기능 제공. 헤더에서 새 탭 전체 화면도 열 수 있음.
  */
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { X, ExternalLink } from 'lucide-react'
 
 export function DetailPane({
   listingId,
+  listingNo,
   viewerMode = false,
   onClose,
 }: {
   listingId: string
+  /** 관리번호 (N26-1). 넘기지 않으면 이 컴포넌트가 직접 조회한다. */
+  listingNo?: string | null
   /** 매입 회원 열람 모드 (NDA 게이트 · 기관/담당자 제외) */
   viewerMode?: boolean
   onClose: () => void
 }) {
   const src = `/listing-detail/${encodeURIComponent(listingId)}${viewerMode ? '?mode=view' : ''}`
+
+  // 헤더에 UUID 가 그대로 노출되던 문제 수정 — 관리번호로 표시 (2026-08-19)
+  const [no, setNo] = useState<string>(listingNo ?? '')
+  useEffect(() => {
+    if (listingNo) { setNo(listingNo); return }
+    let alive = true
+    import('@/lib/supabase/client')
+      .then(({ createClient }) =>
+        createClient().from('npl_listings').select('listing_no').eq('id', listingId).maybeSingle()
+      )
+      .then(({ data }) => { if (alive && data?.listing_no) setNo(String(data.listing_no)) })
+      .catch(() => { /* 조회 실패 시 번호 없이 표시 */ })
+    return () => { alive = false }
+  }, [listingId, listingNo])
 
   // ESC 로 닫기 + 배경 스크롤 잠금
   useEffect(() => {
@@ -49,7 +66,7 @@ export function DetailPane({
         <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border-subtle)] shrink-0">
           <div>
             <div className="text-[13px] font-black text-[var(--color-text-primary)]">NPL 세부내역</div>
-            <div className="text-[11px] font-mono text-[var(--color-text-muted)]">{listingId}</div>
+            <div className="text-[11px] font-mono font-bold text-[#1A47CC]">{no || '관리번호 확인 중…'}</div>
           </div>
           <div className="flex items-center gap-1.5">
             <a href={src} target="_blank" rel="noopener noreferrer"

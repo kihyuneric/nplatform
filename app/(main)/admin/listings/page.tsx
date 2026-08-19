@@ -63,6 +63,7 @@ export default function AdminListingsPage() {
 
   const [listings, setListings] = useState<AdminListing[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [activeTab, setActiveTab] = useState("all")
   const [search, setSearch] = useState("")
   const [typeFilter, setTypeFilter] = useState("all")
@@ -134,6 +135,7 @@ export default function AdminListingsPage() {
 
   const fetchListings = useCallback(async () => {
     setLoading(true)
+    setLoadError('')
     try {
       const supabase = createClient()
       let query = supabase.from("npl_listings").select("id, listing_no, title, collateral_type, sido, sigungu, claim_amount, ai_grade, status, created_at, seller_id", { count: "exact" })
@@ -144,7 +146,9 @@ export default function AdminListingsPage() {
       // 구분 필터 (NPL / 부동산 급매) — 미지정 데이터는 NPL 로 간주하므로 NPL 은 무필터
       if (typeFilter === "REALESTATE") query = query.eq("listing_category", "GENERAL")
       query = query.range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1).order("created_at", { ascending: false })
-      const { data, count } = await query
+      const { data, count, error } = await query
+      // 조회 실패를 조용히 넘기면 '로딩 후 빈 화면'이 되어 원인을 알 수 없다 (2026-08-19)
+      if (error) throw new Error(error.message || '매물 조회에 실패했습니다')
 
       // R7 — 매각 회원(seller_id) 이름·회사 조인: 운영자가 소유 회원을 키로 추적
       const sellerIds = Array.from(new Set((data || []).map((d: Record<string, unknown>) => d.seller_id).filter(Boolean))) as string[]
@@ -172,6 +176,8 @@ export default function AdminListingsPage() {
       }))
       setListings(mapped)
       setTotal(count ?? 0)
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : '매물 조회에 실패했습니다')
     } finally {
       setLoading(false)
     }
@@ -299,6 +305,16 @@ export default function AdminListingsPage() {
             </button>
           ))}
         </div>
+
+        {loadError && (
+          <div className="flex items-center gap-3 px-3 py-2.5 border" style={{ borderColor: 'rgba(225,29,72,0.4)', background: 'rgba(225,29,72,0.06)' }}>
+            <span className="text-[12.5px] font-bold text-[#9F1239]">{loadError}</span>
+            <button onClick={() => void fetchListings()} className="ml-auto px-2.5 py-1 text-[11px] font-bold border border-[var(--color-border-default)]"
+              style={{ background: 'var(--color-surface-elevated)', cursor: 'pointer' }}>
+              다시 시도
+            </button>
+          </div>
+        )}
 
         {/* 회원 Key 기준 조회 중임을 명시 (2026-08-19) */}
         {memberFilter && (
@@ -520,7 +536,7 @@ export default function AdminListingsPage() {
 
       {/* 세부내역 우측 패널 — 별도 화면 이동 없이 확인·수정 */}
       {detailTarget && (
-        <DetailPane listingId={detailTarget} onClose={() => setDetailTarget(null)} />
+        <DetailPane listingId={detailTarget} listingNo={listings.find(l => l.id === detailTarget)?.listing_no} onClose={() => setDetailTarget(null)} />
       )}
 
       {/* 회원 상세 패널 — 매각의뢰 → 매각 회원 정보 직결 */}

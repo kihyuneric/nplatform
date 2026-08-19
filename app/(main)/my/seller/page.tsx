@@ -22,6 +22,7 @@ import { MCK, MCK_FONTS, MCK_TYPE } from '@/lib/mck-design'
 
 interface SellerListing {
   id: string
+  listing_no: string   // 관리번호 N26-1 (2026-08-19)
   title: string
   claim_amount: number
   interest_count: number
@@ -44,6 +45,7 @@ function useSellerListings() {
       .then(d => {
         if (d.data) setListings(d.data.map((l: Record<string, unknown>) => ({
           id: l.id as string,
+          listing_no: (l.listing_no as string) || '',
           title: (l.title as string) || `매물 ${l.id}`,
           claim_amount: (l.principal_amount as number) || (l.claim_amount as number) || 0,
           interest_count: (l.interest_count as number) || 0,
@@ -85,7 +87,7 @@ export default function SellerMyListingsPage() {
 
   // ── 진행종료 요청 — 운영사 접수함 접수 → 승인 후 종료 ──
   const [endRequested, setEndRequested] = useState<Set<string>>(new Set())
-  const requestEnd = (listingId: string, name: string) => {
+  const requestEnd = (listingId: string, name: string, listingNo: string) => {
     if (!confirm(`"${name}" 매물의 진행종료를 요청할까요?\n운영사 승인 후 종료 처리됩니다.`)) return
     setEndRequested(prev => new Set(prev).add(listingId))
     // 매물 상태로도 기록 — 새로고침·재로그인 후에도 "종료 요청중" 유지 (2026-08-19)
@@ -95,7 +97,7 @@ export default function SellerMyListingsPage() {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        title: `[진행종료 요청] ${name} (${listingId})`,
+        title: `[진행종료 요청] ${listingNo || '관리번호 미정'} · ${name}`,   // UUID 대신 관리번호 (2026-08-19)
         category: '매물',
         priority: 'HIGH',
         description: `매각 회원이 매물 진행종료를 요청했습니다.\n매물: ${name}\nID: ${listingId}\n\n운영사 확인 후 매각의뢰 현황에서 종료 처리해주세요.`,
@@ -153,7 +155,7 @@ export default function SellerMyListingsPage() {
   const [page, setPage] = useState(1)
   const q = search.trim().toLowerCase()
   const filtered = q
-    ? listings.filter(l => [l.title, l.address, l.id, statusOf(l.id)].join(' ').toLowerCase().includes(q))
+    ? listings.filter(l => [l.title, l.address, l.listing_no, statusOf(l.id)].join(' ').toLowerCase().includes(q))
     : listings
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
@@ -269,9 +271,13 @@ export default function SellerMyListingsPage() {
                       {/* 매물명 + 주소 — 한 줄 고정(전체는 마우스오버), 본인 매물이라 마스킹 없음 */}
                       <td className={DS.table.cell}>
                         <div className="max-w-[260px]">
+                          {/* 관리번호 — 운영자와 같은 번호로 소통 (2026-08-19) */}
+                          {l.listing_no && (
+                            <span className="block font-mono text-[0.6563rem] font-bold text-[#1A47CC]">{l.listing_no}</span>
+                          )}
                           <span className="block font-medium truncate" title={l.title}>{l.title}</span>
-                          <span className="block text-[0.6875rem] text-[var(--color-text-muted)] truncate" title={l.address || l.id}>
-                            {l.address || l.id}
+                          <span className="block text-[0.6875rem] text-[var(--color-text-muted)] truncate" title={l.address}>
+                            {l.address || '주소 미등록'}
                           </span>
                         </div>
                       </td>
@@ -358,7 +364,7 @@ export default function SellerMyListingsPage() {
                             <span className="text-[0.6875rem] font-bold text-amber-700">종료 요청중</span>
                           ) : (
                             <button
-                              onClick={() => requestEnd(l.id, l.title)}
+                              onClick={() => requestEnd(l.id, l.title, l.listing_no)}
                               className="text-[0.75rem] text-[var(--color-danger)] hover:underline transition-colors cursor-pointer"
                               style={{ background: 'transparent', border: 'none', padding: 0 }}
                             >
@@ -392,7 +398,7 @@ export default function SellerMyListingsPage() {
 
       {/* 세부내역 우측 패널 — 별도 화면 이동 없음 (D0·D6) */}
       {detailTarget && (
-        <DetailPane listingId={detailTarget} onClose={() => setDetailTarget(null)} />
+        <DetailPane listingId={detailTarget} listingNo={listings.find(l => l.id === detailTarget)?.listing_no} onClose={() => setDetailTarget(null)} />
       )}
     </MckPageShell>
   )
