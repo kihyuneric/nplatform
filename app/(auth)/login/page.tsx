@@ -48,12 +48,14 @@ export default function LoginPage() {
       PROFESSIONAL: '/my/professional', PARTNER: '/my/partner', VIEWER: '/',
     }
 
-    // Dev bypass
-    const devCreds: Record<string, { role: string; name: string; tier: string }> = {
-      'admin|admin': { role: 'SUPER_ADMIN', name: '관리자', tier: 'L3' },
-      'demo|demo':   { role: 'BUYER_INDV', name: '매입사 데모', tier: 'L1' },
-      'seller|seller': { role: 'SELLER', name: '매각사 데모', tier: 'L1' },
-    }
+    // Dev bypass — 개발 환경 전용. 프로덕션에서는 실세션 없이 화면만 열려
+    // 모든 목록이 빈 값으로 보이는 함정이 되므로 완전 차단 (2026-08-19)
+    const devCreds: Record<string, { role: string; name: string; tier: string }> =
+      process.env.NODE_ENV === 'production' ? {} : {
+        'admin|admin': { role: 'SUPER_ADMIN', name: '관리자', tier: 'L3' },
+        'demo|demo':   { role: 'BUYER_INDV', name: '매입사 데모', tier: 'L1' },
+        'seller|seller': { role: 'SELLER', name: '매각사 데모', tier: 'L1' },
+      }
     const devKey = `${email.trim().toLowerCase()}|${password}`
     const devMatch = devCreds[devKey]
     if (devMatch) {
@@ -429,7 +431,8 @@ export default function LoginPage() {
                 )}
               </button>
 
-              {/* Dev creds — McKinsey sky-blue editorial card */}
+              {/* Dev creds — 개발 환경 전용 카드 (프로덕션 미노출) */}
+              {process.env.NODE_ENV !== 'production' && (
               <div style={{
                 marginTop: 14,
                 padding: '14px 16px',
@@ -469,6 +472,7 @@ export default function LoginPage() {
                   ))}
                 </div>
               </div>
+              )}
             </form>
 
             {/* Footer link */}

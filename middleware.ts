@@ -150,7 +150,9 @@ export async function middleware(request: NextRequest) {
   // (`dev_user_active=1` set by login page on admin/admin) so that
   // every feature can be verified without real auth during the
   // current verification phase.
-  const hasDevBypass = request.cookies.get('dev_user_active')?.value === '1'
+  // dev 우회는 개발 환경 전용 — 프로덕션에서는 실세션만 인정 (2026-08-19)
+  const hasDevBypass = process.env.NODE_ENV !== 'production'
+    && request.cookies.get('dev_user_active')?.value === '1'
 
   if (!isApi && isPathMatch(pathname, ['/admin']) && process.env.NODE_ENV !== 'development') {
     const hasSupabaseSession = request.cookies.getAll().some(

@@ -139,11 +139,9 @@ export default function AdminDemandsPage() {
             <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] text-left text-[10.5px] uppercase tracking-wide text-[var(--color-text-muted)]">
               <th className="px-3 py-2.5 font-bold whitespace-nowrap">등록일</th>
               <th className="px-3 py-2.5 font-bold whitespace-nowrap">우선순위</th>
-              <th className="px-3 py-2.5 font-bold whitespace-nowrap">유형</th>
               <th className="px-3 py-2.5 font-bold">담보유형</th>
               <th className="px-3 py-2.5 font-bold">지역</th>
-              <th className="px-3 py-2.5 font-bold whitespace-nowrap">토지면적(㎡)</th>
-              <th className="px-3 py-2.5 font-bold whitespace-nowrap">건물면적(㎡)</th>
+              <th className="px-3 py-2.5 font-bold whitespace-nowrap">면적 토지/건물(㎡)</th>
               <th className="px-3 py-2.5 font-bold whitespace-nowrap">금액대(억)</th>
               <th className="px-3 py-2.5 font-bold">담당자</th>
               <th className="px-3 py-2.5 font-bold">요청사항</th>
@@ -172,11 +170,9 @@ export default function AdminDemandsPage() {
                     </span>
                   ) : '—'}
                 </td>
-                <td className="px-3 py-2.5 whitespace-nowrap font-bold text-[var(--color-text-primary)]">{r.demandType}</td>
                 <td className="px-3 py-2.5 text-[var(--color-text-primary)]"><span className="block max-w-[130px] truncate" title={r.types.join(' · ')}>{r.types.length ? r.types.join(' · ') : '—'}</span></td>
                 <td className="px-3 py-2.5 text-[var(--color-text-primary)]"><span className="block max-w-[110px] truncate" title={r.regions.join(' · ')}>{r.regions.length ? r.regions.join(' · ') : '—'}</span></td>
-                <td className="px-3 py-2.5 tabular-nums whitespace-nowrap">{fmtRange(r.landMin, r.landMax, '')}</td>
-                <td className="px-3 py-2.5 tabular-nums whitespace-nowrap">{fmtRange(r.bldgMin, r.bldgMax, '')}</td>
+                <td className="px-3 py-2.5 tabular-nums whitespace-nowrap text-[12px]">{fmtRange(r.landMin, r.landMax, '')} / {fmtRange(r.bldgMin, r.bldgMax, '')}</td>
                 <td className="px-3 py-2.5 tabular-nums whitespace-nowrap font-bold text-[var(--color-text-primary)]">{fmtRange(r.amountMin, r.amountMax, '')}</td>
                 {/* 담당자 — 등록 폼의 회사명 · 담당자명 · 연락처 · 이메일 연동 */}
                 <td className="px-3 py-2.5 max-w-[170px] text-[var(--color-text-primary)]">
