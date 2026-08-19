@@ -14,6 +14,22 @@ export async function GET(request: NextRequest) {
     const filters: QueryFilters = { is_public: true, status: 'ACTIVE' }
     if (urgency && urgency !== '전체') filters.urgency = urgency
 
+    // ?all=1 — 운영관리자 전체 조회 (매입조건 현황: 비공개 조건도 포함, 운영설계서 E3 관리자 R)
+    if (searchParams.get('all') === '1') {
+      try {
+        const { createClient } = await import('@/lib/supabase/server')
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: me } = await supabase.from('users').select('role').eq('id', user.id).maybeSingle()
+          if (me && ['ADMIN', 'SUPER_ADMIN', 'PARTNER'].includes(String(me.role))) {
+            delete (filters as Record<string, unknown>).is_public
+            delete (filters as Record<string, unknown>).status
+          }
+        }
+      } catch { /* 권한 확인 실패 시 공개분만 */ }
+    }
+
     // ?mine=1 — 본인 조건만 (마이페이지 · 대시보드용, 운영설계서 E3: 본인 R·U·D)
     if (searchParams.get('mine') === '1') {
       try {

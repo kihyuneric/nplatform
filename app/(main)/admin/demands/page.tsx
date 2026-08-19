@@ -75,7 +75,7 @@ export default function AdminDemandsPage() {
 
   const load = () => {
     setLoading(true)
-    fetch('/api/v1/exchange/demands?limit=200')
+    fetch('/api/v1/exchange/demands?limit=200&all=1', { credentials: 'include' })
       .then(r => r.json())
       .then(async d => {
         const list: Array<Record<string, any>> = Array.isArray(d.data) ? d.data : []
