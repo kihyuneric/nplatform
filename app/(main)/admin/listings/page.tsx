@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import Link from "next/link"
 import { Search, ChevronLeft, ChevronRight, Download, Trash2, CheckCheck, EyeOff } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
-import DS, { formatKRW, formatDate } from "@/lib/design-system"
+import DS, { formatKRW, formatDate, SEGMENT } from "@/lib/design-system"
 import { DataTable, type Column } from "@/components/ui/data-table"
 import { NPL_STATUSES } from "@/lib/marketing-checklist"
 import { MarketingPanel } from "@/components/admin/marketing-panel"
@@ -71,6 +71,14 @@ export default function AdminListingsPage() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+
+  /**
+   * 보기 방식 (2026-08-19)
+   *   'row'    — 건별 (기존): 매물 한 건이 한 행. 승인·거절 등 처리에 적합.
+   *   'member' — 회원별: 매각 회원을 앞에 한 번만 두고 그 회원의 매물을 옆에 나열.
+   *              "이 회원이 무엇을 얼마나 맡겼는지"를 한눈에 본다.
+   */
+  const [groupMode, setGroupMode] = useState<'row' | 'member'>('row')
 
   // ── 마케팅 진행 관리 모달 (매각의뢰 현황에서 직접 관리 · 2026-08-18) ──
   const [mkTarget, setMkTarget] = useState<string | null>(null)
@@ -188,6 +196,23 @@ export default function AdminListingsPage() {
   useEffect(() => { fetchListings() }, [fetchListings])
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+
+  // 회원별 보기용 그룹핑 — 매물이 많은 회원부터, 회원 안에서는 최신 등록순
+  const grouped = useMemo(() => {
+    const map = new Map<string, { sellerId: string | null; sellerName: string; items: AdminListing[] }>()
+    for (const l of listings) {
+      const key = l.seller_id ?? '__none__'
+      if (!map.has(key)) {
+        map.set(key, {
+          sellerId: l.seller_id ?? null,
+          sellerName: l.seller_name || '(미연결)',
+          items: [],
+        })
+      }
+      map.get(key)!.items.push(l)
+    }
+    return [...map.values()].sort((a, b) => b.items.length - a.items.length)
+  }, [listings])
 
   const toggleSelect = (id: string) =>
     setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
@@ -315,7 +340,8 @@ export default function AdminListingsPage() {
       </div>
 
       <div className={`${DS.page.container} ${DS.page.paddingTop} ${DS.page.sectionGap} pb-10`}>
-        {/* ── Tabs ── */}
+        {/* ── Tabs + 보기 전환 ── */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className={`${DS.tabs.list} w-fit`}>
           {TABS.map(t => (
             <button
@@ -326,6 +352,22 @@ export default function AdminListingsPage() {
               {t.label}
             </button>
           ))}
+        </div>
+
+          {/* 건별 ↔ 회원별 — 같은 폭·높이의 세그먼트 (2026-08-19) */}
+          <div className={SEGMENT.group}>
+            {([['row', '건별'], ['member', '회원별']] as const).map(([k, label]) => (
+              <button
+                key={k}
+                onClick={() => setGroupMode(k)}
+                className={`${SEGMENT.item} w-[58px]`}
+                style={SEGMENT.style(groupMode === k)}
+                title={k === 'member' ? '매각 회원을 앞에 두고 그 회원의 매물을 옆에 보여줍니다' : '매물 한 건이 한 행'}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {loadError && (
@@ -385,7 +427,88 @@ export default function AdminListingsPage() {
           </div>
         )}
 
-        {/* ── Table ── */}
+        {/* ── 회원별 보기 (2026-08-19) ──
+            매각의뢰는 "매각 회원에게 딸려 오는 정보"다.
+            건별로 흩어 놓으면 같은 회원의 매물이 여기저기 나타나 파악이 안 되므로,
+            회원을 한 번만 세로로 병합해 앞에 두고 그 회원의 매물을 옆에 나열한다. */}
+        {groupMode === 'member' ? (
+          <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-x-auto">
+            <table className="w-full text-[12.5px]">
+              <thead>
+                <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] text-left text-[10.5px] uppercase tracking-wide text-[var(--color-text-muted)]">
+                  <th className="px-3 py-2 font-bold w-[220px]">매각 회원</th>
+                  <th className="px-3 py-2 font-bold whitespace-nowrap">관리번호</th>
+                  <th className="px-3 py-2 font-bold">매물명 · 소재지</th>
+                  <th className="px-3 py-2 font-bold whitespace-nowrap">채권액</th>
+                  <th className="px-3 py-2 font-bold whitespace-nowrap">상태</th>
+                  <th className="px-3 py-2 font-bold whitespace-nowrap">등록일</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && (
+                  <tr><td colSpan={6} className="px-3 py-10 text-center text-sm text-[var(--color-text-muted)]">불러오는 중...</td></tr>
+                )}
+                {!loading && grouped.length === 0 && (
+                  <tr><td colSpan={6} className="px-3 py-12 text-center text-sm text-[var(--color-text-muted)]">매각의뢰가 없습니다</td></tr>
+                )}
+                {grouped.map(g => g.items.map((row, i) => (
+                  <tr key={row.id} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)]">
+                    {/* 회원 셀 — 그룹의 첫 행에서만 그리고 세로로 병합 */}
+                    {i === 0 && (
+                      <td rowSpan={g.items.length} className="px-3 py-2 align-top border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)]">
+                        {g.sellerId ? (
+                          <button
+                            onClick={() => setMemberTarget(g.sellerId as string)}
+                            className="block w-full text-left text-[12.5px] font-bold text-[#1A47CC] hover:underline"
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                            title="회원 정보 · 활동 이력 보기"
+                          >
+                            {g.sellerName}
+                          </button>
+                        ) : (
+                          <span className="text-[12.5px] text-[var(--color-text-muted)]">{g.sellerName}</span>
+                        )}
+                        <span className="mt-1 inline-flex items-center gap-1 text-[10.5px] font-bold text-[var(--color-text-secondary)]">
+                          매물 {g.items.length}건
+                        </span>
+                        {g.sellerId && (
+                          <a
+                            href={`/admin/listings?user=${encodeURIComponent(g.sellerId)}`}
+                            className="mt-1 block text-[10.5px] font-bold text-[#1A47CC]"
+                            style={{ textDecoration: 'none' }}
+                          >
+                            이 회원만 보기 →
+                          </a>
+                        )}
+                      </td>
+                    )}
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <button
+                        onClick={() => setDetailTarget(row.id)}
+                        className="font-mono text-[11px] font-bold text-[#1A47CC] hover:underline"
+                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                      >
+                        {row.listing_no ?? '—'}
+                      </button>
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className="block max-w-[260px] truncate font-medium text-[var(--color-text-primary)]" title={row.title}>{row.title}</span>
+                      <span className="block text-[10.5px] text-[var(--color-text-muted)] truncate">{row.location}</span>
+                    </td>
+                    <td className="px-3 py-2 tabular-nums whitespace-nowrap font-semibold">{row.bond_amount ? formatKRW(row.bond_amount) : '—'}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <span className={`${DS.badge.fixed(STATUS_CONFIG[row.status]?.cls ?? '')}`}>
+                        {STATUS_CONFIG[row.status]?.label ?? '검토대기'}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 tabular-nums whitespace-nowrap text-[var(--color-text-secondary)]">{row.created_at?.slice(0, 10)}</td>
+                  </tr>
+                )))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+        /* ── Table ── */
         <DataTable<AdminListing>
           columns={[
             {
@@ -536,6 +659,7 @@ export default function AdminListingsPage() {
           rowKey={(row) => row.id}
           emptyState={<span className={DS.text.caption}>매물 데이터가 없습니다</span>}
         />
+        )}
 
         {/* ── Pagination (server-side) ── */}
         <div className={`flex items-center justify-between ${DS.text.caption}`}>
