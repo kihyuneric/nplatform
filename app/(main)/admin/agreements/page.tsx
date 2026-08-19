@@ -156,14 +156,14 @@ export default function AdminAgreementsPage() {
         <table className="w-full text-[12.5px]">
           <thead>
             <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] text-left text-[10.5px] uppercase tracking-wide text-[var(--color-text-muted)]">
-              <th className="px-3 py-2.5 font-bold whitespace-nowrap">관리번호</th>
-              <th className="px-3 py-2.5 font-bold">지역 · 유형</th>
+              <th className="px-3 py-2 font-bold whitespace-nowrap">관리번호</th>
+              <th className="px-3 py-2 font-bold">지역 · 유형</th>
               <th className="px-2 py-2.5 font-bold whitespace-nowrap">관심</th>
               <th className="px-2 py-2.5 font-bold whitespace-nowrap">NDA 요청</th>
               <th className="px-2 py-2.5 font-bold whitespace-nowrap">상담</th>
-              <th className="px-3 py-2.5 font-bold whitespace-nowrap">NPL 상태</th>
-              <th className="px-3 py-2.5 font-bold whitespace-nowrap">매칭날짜</th>
-              <th className="px-3 py-2.5 font-bold ">딜 진행 단계 (클릭 = 등록/수정)</th>
+              <th className="px-3 py-2 font-bold whitespace-nowrap">NPL 상태</th>
+              <th className="px-3 py-2 font-bold whitespace-nowrap">매칭날짜</th>
+              <th className="px-3 py-2 font-bold ">딜 진행 단계 (클릭 = 등록/수정)</th>
             </tr>
           </thead>
           <tbody>
@@ -178,8 +178,8 @@ export default function AdminAgreementsPage() {
               const stage = m?.deal_stage ?? ''
               return (
                 <tr key={r.id} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] transition-colors">
-                  <td className="px-3 py-2.5 font-mono text-[11px] font-bold text-[var(--color-text-primary)] whitespace-nowrap">{r.id}</td>
-                  <td className="px-3 py-2.5 ">
+                  <td className="px-3 py-2 font-mono text-[11px] font-bold text-[var(--color-text-primary)] whitespace-nowrap">{r.id}</td>
+                  <td className="px-3 py-2 ">
                     <div className="font-semibold text-[var(--color-text-primary)]">{r.region}</div>
                     <div className="text-[11px] text-[var(--color-text-muted)]">{r.collateral} · {r.created}</div>
                   </td>
@@ -213,7 +213,7 @@ export default function AdminAgreementsPage() {
                   </td>
                   <td className="px-2 py-2.5 tabular-nums font-bold">{m?.consult_count ?? 0}</td>
                   {/* NPL 상태 — 거래중/협의중/매각완료 */}
-                  <td className="px-3 py-2.5 whitespace-nowrap">
+                  <td className="px-3 py-2 whitespace-nowrap">
                     <select
                       value={m?.npl_status ?? ''}
                       onChange={e => void saveField(r.id, { npl_status: e.target.value })}
@@ -226,7 +226,7 @@ export default function AdminAgreementsPage() {
                     </select>
                   </td>
                   {/* 매칭날짜 — 이후 업데이트 알림 기준점 */}
-                  <td className="px-3 py-2.5 whitespace-nowrap">
+                  <td className="px-3 py-2 whitespace-nowrap">
                     <input
                       type="date"
                       value={m?.matched_at ?? ''}
@@ -235,7 +235,7 @@ export default function AdminAgreementsPage() {
                       className="px-2 py-1 text-[11.5px] font-semibold border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] tabular-nums"
                     />
                   </td>
-                  <td className="px-3 py-2.5">
+                  <td className="px-3 py-2">
                     <div className="flex items-center gap-1 flex-wrap">
                       {DEAL_STAGES.map((s, i) => {
                         const active = stage === s

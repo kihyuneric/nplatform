@@ -398,10 +398,10 @@ export default function AdminUsersPage() {
                     <tr><td colSpan={7} className="text-center py-8"><span className={DS.text.muted}>가입한 회원이 없습니다 — 회원가입 접수 시 여기에 표시됩니다</span></td></tr>
                   ) : users.map(u => (
                     <tr key={u.id} className={DS.table.row}>
-                      <td className={`${DS.table.cell} font-semibold`}>{u.name || '—'}</td>
-                      <td className={DS.table.cell}>{u.company_name || '—'}</td>
+                      <td className={`${DS.table.cell} font-semibold whitespace-nowrap`}>{u.name || '—'}</td>
+                      <td className={DS.table.cell}><span className="block max-w-[140px] truncate" title={u.company_name ?? ''}>{u.company_name || '—'}</span></td>
                       <td className={DS.table.cell}>
-                        <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full border ${ROLE_BADGE[u.role] || 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)]'}`}>
+                        <span className={`whitespace-nowrap text-[0.6875rem] font-bold px-2 py-0.5 rounded-full border ${ROLE_BADGE[u.role] || 'bg-[var(--color-surface-overlay)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)]'}`}>
                           {ROLE_LABEL[u.role] || u.role}
                         </span>
                       </td>
@@ -415,7 +415,7 @@ export default function AdminUsersPage() {
                           <span className={DS.text.micro}>{u.phone || '—'}</span>
                         </div>
                       </td>
-                      <td className={`${DS.table.cellMuted} text-[0.75rem] font-mono`}>{u.created_at?.slice(0, 10)}</td>
+                      <td className={`${DS.table.cellMuted} text-[0.75rem] font-mono whitespace-nowrap`}>{u.created_at?.slice(0, 10)}</td>
                       {/* 상태 — 승인대기 · 활성 · 거절 · 탈퇴 + 보류(사유 메모 존재 시 구분 표시) */}
                       <td className={DS.table.cell}>
                         {(() => {
@@ -441,29 +441,28 @@ export default function AdminUsersPage() {
                         )}
                       </td>
                       <td className={DS.table.cell}>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {/* 회원 상세 — 첨부 뷰어 · NDA/매입조건 이력 · 역할 관리 · 계정 관리 */}
+                        {/* 관리 — 한 줄 고정 정렬 (쫀쫀·타이트 2026-08-19): 상세 | 승인 | 거절 | 차단 */}
+                        <div className="flex items-center gap-1 whitespace-nowrap">
                           <button onClick={() => setDocTarget(u)}
-                            className={`${DS.button.secondary} ${DS.button.sm}`}>
+                            className={`${DS.button.secondary} ${DS.button.sm} shrink-0`}>
                             상세
                           </button>
                           {u.kyc_status !== 'APPROVED' && (
                             <button onClick={() => handleAction(u.id, 'APPROVE_KYC')}
-                              className={`${DS.button.accent} ${DS.button.sm}`}>
+                              className={`${DS.button.accent} ${DS.button.sm} shrink-0`}>
                               <CheckCircle size={12} />승인
                             </button>
                           )}
-                          {u.kyc_status !== 'REJECTED' && (
+                          {u.kyc_status !== 'REJECTED' && u.kyc_status !== 'APPROVED' && (
                             <button onClick={() => handleAction(u.id, 'REJECT_KYC')}
-                              className={`${DS.button.danger} ${DS.button.sm}`}>
+                              className={`${DS.button.danger} ${DS.button.sm} shrink-0`}>
                               <XCircle size={12} />거절
                             </button>
                           )}
-                          {/* D3 — 활성 회원 차단 (승인 취소) */}
+                          {/* 활성 회원 — 차단만 (거절 버튼은 승인 전 단계 전용) */}
                           {u.kyc_status === 'APPROVED' && (
                             <button onClick={() => { if (confirm(`${u.name} 회원을 차단할까요?`)) void handleAction(u.id, 'BLOCK') }}
-                              className="text-[0.75rem] font-bold text-rose-600 hover:underline"
-                              style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
+                              className={`${DS.button.danger} ${DS.button.sm} shrink-0`}>
                               차단
                             </button>
                           )}

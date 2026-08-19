@@ -126,7 +126,8 @@ export const BUTTON = {
   /** Danger: 레드 */
   danger: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-danger)] text-white text-[0.8125rem] font-bold hover:opacity-90 transition-opacity duration-150',
   /** 작은 버튼 */
-  sm: 'text-[0.75rem] px-3 py-1.5',
+  // 표 안 액션용 컴팩트 사이즈 (쫀쫀·타이트 2026-08-19) — base 패딩을 확실히 이기도록 !important
+  sm: '!text-[0.71875rem] !px-2 !py-1 !gap-1 whitespace-nowrap',
   /** 큰 버튼 */
   lg: 'text-[0.9375rem] px-7 py-3.5',
   /** 아이콘 버튼 */
@@ -169,10 +170,11 @@ export const INPUT = {
 export const TABLE = {
   wrapper: 'overflow-x-auto border border-[rgba(5,28,44,0.10)] border-t-2 border-t-[#2251FF] bg-white',
   header: "text-[0.6875rem] font-extrabold text-[rgba(5,28,44,0.55)] uppercase tracking-[0.10em] bg-[#F8FAFC]",
-  headerCell: 'px-4 py-3 text-left',
-  row: 'border-b border-[rgba(5,28,44,0.08)] hover:bg-[#F8FAFC] transition-colors',
-  cell: 'px-4 py-3.5 text-[0.8125rem] text-[#0A1628]',
-  cellMuted: 'px-4 py-3.5 text-[0.8125rem] text-[rgba(5,28,44,0.55)]',
+  // 쫀쫀·타이트 밀도 (2026-08-19) — 셀 세로 패딩 축소 + 상단 정렬로 행 높이 일관
+  headerCell: 'px-3 py-2 text-left whitespace-nowrap',
+  row: 'border-b border-[rgba(5,28,44,0.08)] hover:bg-[#F8FAFC] transition-colors align-top',
+  cell: 'px-3 py-2 text-[0.8125rem] text-[#0A1628] align-middle',
+  cellMuted: 'px-3 py-2 text-[0.8125rem] text-[rgba(5,28,44,0.55)] align-middle',
 } as const
 
 // ── 탭 (McKinsey ink+paper) ──────────────────────────────────────────────────

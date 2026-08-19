@@ -114,7 +114,7 @@ export default function PortfolioPage() {
             NPL 자동매칭 <ArrowRight size={13} />
           </Link>
           <button onClick={load}
-            className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)]"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)]"
             style={{ background: 'transparent', cursor: 'pointer' }}>
             <RefreshCw size={12} /> 새로고침
           </button>
@@ -136,13 +136,13 @@ export default function PortfolioPage() {
         <table className="w-full text-[12.5px]">
           <thead>
             <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] text-left text-[10.5px] uppercase tracking-wide text-[var(--color-text-muted)]">
-              <th className="px-3 py-2.5 font-bold">지역 · 주소</th>
-              <th className="px-3 py-2.5 font-bold whitespace-nowrap">유형</th>
-              <th className="px-3 py-2.5 font-bold whitespace-nowrap">감정가</th>
-              <th className="px-3 py-2.5 font-bold whitespace-nowrap">총 채권액</th>
-              <th className="px-3 py-2.5 font-bold whitespace-nowrap">협의가</th>
-              <th className="px-3 py-2.5 font-bold whitespace-nowrap">등록일</th>
-              <th className="px-3 py-2.5 font-bold whitespace-nowrap">관리</th>
+              <th className="px-3 py-2 font-bold">지역 · 주소</th>
+              <th className="px-3 py-2 font-bold whitespace-nowrap">유형</th>
+              <th className="px-3 py-2 font-bold whitespace-nowrap">감정가</th>
+              <th className="px-3 py-2 font-bold whitespace-nowrap">총 채권액</th>
+              <th className="px-3 py-2 font-bold whitespace-nowrap">협의가</th>
+              <th className="px-3 py-2 font-bold whitespace-nowrap">등록일</th>
+              <th className="px-3 py-2 font-bold whitespace-nowrap">관리</th>
             </tr>
           </thead>
           <tbody>
@@ -160,16 +160,16 @@ export default function PortfolioPage() {
             )}
             {paged.map(r => (
               <tr key={r.id} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] transition-colors">
-                <td className="px-3 py-2.5 min-w-[160px]">
+                <td className="px-3 py-2 min-w-[160px]">
                   <div className="font-semibold text-[var(--color-text-primary)]">{r.region}</div>
                   <div className="text-[11px] text-[var(--color-text-muted)]">{r.address}</div>
                 </td>
-                <td className="px-3 py-2.5 whitespace-nowrap">{r.collateral}</td>
-                <td className="px-3 py-2.5 tabular-nums font-semibold whitespace-nowrap">{fmtEok(r.appraisal)}</td>
-                <td className="px-3 py-2.5 tabular-nums font-semibold whitespace-nowrap">{fmtEok(r.principal)}</td>
-                <td className="px-3 py-2.5 tabular-nums font-extrabold whitespace-nowrap" style={{ color: '#1A47CC' }}>{fmtEok(r.asking)}</td>
-                <td className="px-3 py-2.5 tabular-nums whitespace-nowrap text-[var(--color-text-muted)]">{r.created}</td>
-                <td className="px-3 py-2.5 whitespace-nowrap">
+                <td className="px-3 py-2 whitespace-nowrap">{r.collateral}</td>
+                <td className="px-3 py-2 tabular-nums font-semibold whitespace-nowrap">{fmtEok(r.appraisal)}</td>
+                <td className="px-3 py-2 tabular-nums font-semibold whitespace-nowrap">{fmtEok(r.principal)}</td>
+                <td className="px-3 py-2 tabular-nums font-extrabold whitespace-nowrap" style={{ color: '#1A47CC' }}>{fmtEok(r.asking)}</td>
+                <td className="px-3 py-2 tabular-nums whitespace-nowrap text-[var(--color-text-muted)]">{r.created}</td>
+                <td className="px-3 py-2 whitespace-nowrap">
                   <div className="flex items-center gap-1.5">
                     <Link href="/exchange" className="text-[11px] font-bold text-[#2251FF]" style={{ textDecoration: 'none' }}>
                       리스트에서 보기
