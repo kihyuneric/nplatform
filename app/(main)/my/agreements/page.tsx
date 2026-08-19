@@ -91,14 +91,17 @@ export default function AgreementsPage() {
           const supabase = createClient()
           const { data: { user } } = await supabase.auth.getUser()
           const email = user?.email ?? ""
-          if (email) {
+          const uid = user?.id ?? ""
+          if (uid || email) {
             const mr = await fetch("/api/v1/listing-marketing")
             const mj = await mr.json()
             const rowsMap: Record<string, { nda_requests?: Array<Record<string, string>> }> = mj?.data ?? {}
             const mine: AgreementRow[] = []
             for (const [lid, row] of Object.entries(rowsMap)) {
               for (const q of row?.nda_requests ?? []) {
-                if (q.email !== email) continue
+                // 회원 Key 우선 (구 데이터 이메일 폴백)
+                const isMine = q.user_id ? q.user_id === uid : (!!q.email && q.email === email)
+                if (!isMine) continue
                 mine.push({
                   id: String(q.id),
                   type: "NDA",

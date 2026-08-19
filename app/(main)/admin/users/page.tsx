@@ -261,20 +261,22 @@ export default function AdminUsersPage() {
       .catch(() => setDocDemands([]))
   }, [docTarget])
   useEffect(() => {
-    if (!docTarget?.email) { setDocNda([]); return }
+    if (!docTarget?.id) { setDocNda([]); return }
     fetch('/api/v1/listing-marketing')
       .then(r => r.json())
       .then(d => {
         const rows: Array<{ listing: string; status: string; at: string }> = []
         for (const [lid, row] of Object.entries(d?.data ?? {})) {
-          for (const q of ((row as { nda_requests?: Array<{ email?: string; status: string; requested_at?: string }> }).nda_requests ?? [])) {
-            if (q.email && q.email === docTarget.email) rows.push({ listing: lid, status: q.status, at: q.requested_at?.slice(0, 10) ?? '' })
+          for (const q of ((row as { nda_requests?: Array<{ user_id?: string; email?: string; status: string; requested_at?: string }> }).nda_requests ?? [])) {
+            // 회원 Key 매칭 우선 — 구 데이터만 이메일 폴백 (2026-08-19)
+            const mine = q.user_id ? q.user_id === docTarget.id : (!!q.email && q.email === docTarget.email)
+            if (mine) rows.push({ listing: lid, status: q.status, at: q.requested_at?.slice(0, 10) ?? '' })
           }
         }
         setDocNda(rows)
       })
       .catch(() => setDocNda([]))
-  }, [docTarget?.email])
+  }, [docTarget?.id, docTarget?.email])
   const [roleFilter, setRoleFilter] = useState('ALL')
   const [kycFilter, setKycFilter] = useState('ALL')
   const [page, setPage] = useState(1)

@@ -4,7 +4,7 @@ import { notifyByEmail, notifyUserId } from '@/lib/notify'
 import { sendEmail } from '@/lib/email/email-service'
 import { ndaStatusEmail } from '@/lib/email/templates'
 
-interface NdaReq { id?: string; signer?: string; email?: string; status?: string; requested_at?: string }
+interface NdaReq { id?: string; signer?: string; user_id?: string; email?: string; status?: string; requested_at?: string }
 
 /**
  * /api/v1/listing-marketing — 매물별 마케팅 체크리스트 · 반응 집계
@@ -71,7 +71,7 @@ export async function PATCH(req: NextRequest) {
     if (Array.isArray(body.nda_requests)) {
       const prevById = new Map(prevNda.map(r => [r.id, r.status]))
       const changed = (body.nda_requests as NdaReq[]).filter(r =>
-        r?.id && (r.status === '승인' || r.status === '거절') && prevById.get(r.id) !== r.status && r.email)
+        r?.id && (r.status === '승인' || r.status === '거절') && prevById.get(r.id) !== r.status && (r.user_id || r.email))
       if (changed.length > 0) {
         // 알림에는 UUID 대신 매물명 표기
         let listingLabel = listing_id
@@ -81,16 +81,21 @@ export async function PATCH(req: NextRequest) {
         } catch { /* UUID 폴백 */ }
         for (const r of changed) {
           const next = r.status as '승인' | '거절'
-          void notifyByEmail(r.email as string, {
+          const payload = {
             type: 'CONTRACT',
             title: next === '승인' ? `NDA 승인 완료 — ${listingLabel} 상세 열람 가능` : `NDA 검토 결과 — ${listingLabel} 미승인`,
             message: next === '승인'
               ? 'NPL 자동매칭 리스트에서 세부내역을 열람하실 수 있습니다.'
               : '추가 확인이 필요해 승인되지 않았습니다. 운영사로 문의해주세요.',
             link: '/exchange',
-          })
-          void sendEmail({ to: r.email as string, ...ndaStatusEmail({ name: r.signer || '회원', listingNo: listingLabel, status: next }) })
-            .catch(() => {})
+          }
+          // 알림은 회원 Key 우선 (이메일은 레거시 폴백)
+          if (r.user_id) void notifyUserId(r.user_id, payload)
+          else if (r.email) void notifyByEmail(r.email, payload)
+          if (r.email) {
+            void sendEmail({ to: r.email, ...ndaStatusEmail({ name: r.signer || '회원', listingNo: listingLabel, status: next }) })
+              .catch(() => {})
+          }
         }
       }
     }
@@ -115,9 +120,17 @@ export async function POST(req: NextRequest) {
     // NDA 전자서명 접수 → nda_requests 배열에 '운영사 검토' 상태로 등록 + 카운터 +1
     if (type === 'nda_request') {
       const signer = String(body.signer ?? '').slice(0, 80)
-      // 요청자 이메일은 서버 세션에서 확보 (매입사 열람권 매칭 키)
+      // 요청 회원 Key + 이메일 — 서버 세션에서 확보 (user_id 가 열람권·이력 판정 기준)
       let email = ''
-      try { const { data: { user } } = await supabase.auth.getUser(); email = user?.email ?? '' } catch {}
+      let userId = ''
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        email = user?.email ?? ''
+        userId = user?.id ?? ''
+      } catch { /* 비로그인 제출은 아래에서 차단 */ }
+      if (!userId) {
+        return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: 'NDA 제출은 로그인 후 가능합니다.' } }, { status: 401 })
+      }
       const { data: existing } = await supabase
         .from('listing_marketing')
         .select('nda_requests, nda_count')
@@ -127,7 +140,8 @@ export async function POST(req: NextRequest) {
       reqs.push({
         id: crypto.randomUUID(),
         signer,
-        email,
+        user_id: userId,   // 회원 Key — 열람권·회원 이력의 기준
+        email,             // 표시·레거시 폴백용
         requested_at: new Date().toISOString(),
         status: '운영사 검토',
       })

@@ -94,8 +94,14 @@ export default function MyDashboardPage() {
       .then(r => r.json())
       .then(d => setDemandCount(Array.isArray(d?.data) ? d.data.length : 0))
       .catch(() => setDemandCount(0))
-    // 관심매물 수 (자동매칭 리스트 ♥ 와 동일 저장소)
-    try { setFavCount((JSON.parse(localStorage.getItem('npl_favorites') || '[]') as string[]).length) } catch { /* ignore */ }
+    // 관심매물 수 — 회원 Key 서버 저장소 (R3), 실패 시 로컬 폴백
+    fetch('/api/v1/favorites', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        if (Array.isArray(d?.data) && d.data.length > 0) { setFavCount(d.data.length); return }
+        try { setFavCount((JSON.parse(localStorage.getItem('npl_favorites') || '[]') as string[]).length) } catch { setFavCount(0) }
+      })
+      .catch(() => { try { setFavCount((JSON.parse(localStorage.getItem('npl_favorites') || '[]') as string[]).length) } catch { setFavCount(0) } })
     // D4 — 최근 7일 신규 등록 매물
     fetch('/api/v1/exchange/listings?limit=200', { credentials: 'include' })
       .then(r => r.json())
@@ -111,13 +117,15 @@ export default function MyDashboardPage() {
         const supabase = createClient()
         const { data: { user: authUser } } = await supabase.auth.getUser()
         const email = authUser?.email ?? ''
-        if (!email) return
+        const uid = authUser?.id ?? ''
+        if (!uid) return
         const r = await fetch('/api/v1/listing-marketing')
         const d = await r.json()
         const mine: NdaRequest[] = []
         for (const row of Object.values(d?.data ?? {})) {
           for (const q of ((row as { nda_requests?: NdaRequest[] }).nda_requests ?? [])) {
-            if (q.email && q.email === email) mine.push(q)
+            // 회원 Key 우선 (구 데이터 이메일 폴백)
+            if (q.user_id ? q.user_id === uid : (!!q.email && q.email === email)) mine.push(q)
           }
         }
         setMyNda(mine)

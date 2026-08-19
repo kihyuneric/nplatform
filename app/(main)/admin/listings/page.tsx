@@ -119,6 +119,17 @@ export default function AdminListingsPage() {
       if (typeFilter === "REALESTATE") query = query.eq("listing_category", "GENERAL")
       query = query.range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1).order("created_at", { ascending: false })
       const { data, count } = await query
+
+      // R7 — 매각 회원(seller_id) 이름·회사 조인: 운영자가 소유 회원을 키로 추적
+      const sellerIds = Array.from(new Set((data || []).map((d: Record<string, unknown>) => d.seller_id).filter(Boolean))) as string[]
+      const sellerMap: Record<string, string> = {}
+      if (sellerIds.length > 0) {
+        const { data: sellers } = await supabase.from('users').select('id, name, company_name').in('id', sellerIds)
+        for (const s of sellers ?? []) {
+          sellerMap[s.id as string] = [s.name, s.company_name].filter(Boolean).join(' · ') || String(s.id).slice(0, 8)
+        }
+      }
+
       const mapped: AdminListing[] = (data || []).map((d: Record<string, unknown>) => ({
         id: d.id as string,
         title: d.title as string,
@@ -129,7 +140,7 @@ export default function AdminListingsPage() {
         ai_grade: d.ai_grade as string | undefined,
         status: (d.status as ApprovalStatus) || 'PENDING',
         created_at: d.created_at as string,
-        seller_name: d.seller_id as string | undefined,
+        seller_name: d.seller_id ? (sellerMap[d.seller_id as string] ?? '(연결 회원 없음)') : '(미연결)',
       }))
       setListings(mapped)
       setTotal(count ?? 0)
@@ -336,6 +347,10 @@ export default function AdminListingsPage() {
                   style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>{v}</button>
                 <span className="block text-[0.6875rem] text-[var(--color-text-muted)] truncate">
                   {row.listing_type ? `${row.listing_type} · ` : ''}{row.location ?? ''}
+                </span>
+                {/* R7 — 매각 회원(소유자) 표시: 회원 Key 연동 확인용 */}
+                <span className="block text-[0.6563rem] text-[var(--color-text-muted)] truncate" title={row.seller_name ?? ''}>
+                  매각 {row.seller_name ?? '(미연결)'}
                 </span>
               </div>
             )},

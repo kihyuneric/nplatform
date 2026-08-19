@@ -32,7 +32,9 @@ export type NdaRequestStatus = typeof NDA_REQUEST_STATUSES[number]
 export interface NdaRequest {
   id: string
   signer: string         // 서명자 성명
-  email?: string         // 요청자 계정 이메일 (매입사 열람권 매칭 키)
+  /** 요청 회원 Key — 열람권·이력 판정의 기준 (2026-08-19 도입) */
+  user_id?: string
+  email?: string         // 레거시 폴백 (user_id 없는 구 데이터용)
   requested_at: string   // ISO
   status: string         // 운영사 검토 / 승인 / 거절
   decided_at?: string

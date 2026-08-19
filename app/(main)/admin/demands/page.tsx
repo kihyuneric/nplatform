@@ -73,8 +73,21 @@ export default function AdminDemandsPage() {
     setLoading(true)
     fetch('/api/v1/exchange/demands?limit=200')
       .then(r => r.json())
-      .then(d => {
+      .then(async d => {
         const list: Array<Record<string, any>> = Array.isArray(d.data) ? d.data : []
+        // R7 — 등록 회원(user_id) 이름·회사 조인: 폼 입력 문자열이 아닌 회원 Key 기준 표시
+        const memberMap: Record<string, string> = {}
+        const uids = Array.from(new Set(list.map(x => x.user_id).filter(Boolean))) as string[]
+        if (uids.length > 0) {
+          try {
+            const { createClient } = await import('@/lib/supabase/client')
+            const supabase = createClient()
+            const { data: members } = await supabase.from('users').select('id, name, company_name').in('id', uids)
+            for (const m of members ?? []) {
+              memberMap[m.id as string] = [m.name, m.company_name].filter(Boolean).join(' · ')
+            }
+          } catch { /* 조인 실패 시 폼 입력값 폴백 */ }
+        }
         setRows(list.map(x => ({
           id: String(x.id ?? ''),
           created: x.created_at ? String(x.created_at).slice(0, 10) : '—',
@@ -88,8 +101,9 @@ export default function AdminDemandsPage() {
           amountMin: num(x.min_amount),
           amountMax: num(x.max_amount),
           priority: num(x.priority),
-          // 담당자 정보 — 구조화 필드 우선, 없으면 memo 의 [담당자] 라인에서 추출
-          contact: [x.company_name, x.manager_name, x.contact_phone, x.contact_email].filter(Boolean).join(' · ')
+          // 담당자 — 회원 Key 조인 우선(회원명 · 회사), 없으면 폼 입력값 → memo 폴백
+          contact: (x.user_id && memberMap[x.user_id])
+            || [x.company_name, x.manager_name, x.contact_phone, x.contact_email].filter(Boolean).join(' · ')
             || (String(x.memo ?? '').match(/\[담당자\]\s*(.+)/)?.[1] ?? ''),
           memo: String(x.memo ?? '').replace(/\n?\[담당자\].*$/m, '').trim(),
         })))

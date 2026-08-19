@@ -36,6 +36,30 @@ export default function AdminInboxPage() {
   const [tab, setTab] = useState<'all' | '매각의뢰' | '1:1 문의'>('all')
   const [expanded, setExpanded] = useState<string | null>(null)
   const [savingId, setSavingId] = useState<string | null>(null)
+  // R4 — 매각의뢰 → 매물 전환 (접수 회원이 seller_id 로 연결)
+  const [convertingId, setConvertingId] = useState<string | null>(null)
+  const convertToListing = async (ticketId: string, title: string) => {
+    if (!confirm(`"${title}" 접수 건을 매물로 전환할까요?\n접수 회원이 매물 소유자로 연결되고 검토대기 상태로 생성됩니다.`)) return
+    setConvertingId(ticketId)
+    try {
+      const r = await fetch('/api/v1/admin/listings/from-ticket', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticket_id: ticketId, title }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (r.ok && d.success) {
+        alert('매물로 전환 완료 — 매각의뢰 현황에서 검토·승인할 수 있습니다.')
+        load()
+      } else {
+        alert(d?.error?.message ?? '전환에 실패했습니다.')
+      }
+    } catch {
+      alert('네트워크 오류 — 잠시 후 다시 시도해주세요.')
+    } finally {
+      setConvertingId(null)
+    }
+  }
 
   const load = () => {
     setLoading(true)
@@ -196,8 +220,26 @@ export default function AdminInboxPage() {
               <ChevronDown size={14} style={{ flexShrink: 0, transform: expanded === t.id ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', color: 'var(--color-text-muted)' }} />
             </button>
             {expanded === t.id && (
-              <div className="px-4 pb-4 pt-2 text-[12.5px] leading-relaxed text-[var(--color-text-secondary)] whitespace-pre-wrap border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)]">
-                {t.description || '내용 없음'}
+              <div className="px-4 pb-4 pt-2 border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)]">
+                <div className="text-[12.5px] leading-relaxed text-[var(--color-text-secondary)] whitespace-pre-wrap">
+                  {t.description || '내용 없음'}
+                </div>
+                {/* R4 — 매각의뢰를 매물로 전환 (seller_id = 접수 회원 Key) */}
+                {t.kind === '매각의뢰' && (
+                  <div className="mt-3 flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => void convertToListing(t.id, t.title)}
+                      disabled={convertingId === t.id}
+                      className="px-3 py-1.5 text-[11.5px] font-extrabold text-white"
+                      style={{ background: '#0A1628', borderTop: `2px solid ${ELECTRIC}`, border: 'none', cursor: 'pointer', opacity: convertingId === t.id ? 0.6 : 1 }}
+                    >
+                      {convertingId === t.id ? '전환 중…' : '매물로 전환 (매각 회원 연결)'}
+                    </button>
+                    <span className="text-[11px] text-[var(--color-text-muted)]">
+                      접수 회원이 매물 소유자(seller)로 연결되고, 검토대기 매물로 생성됩니다.
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -44,8 +44,22 @@ export default function PortfolioPage() {
 
   const load = () => {
     setLoading(true)
-    let ids: string[] = []
-    try { ids = JSON.parse(localStorage.getItem('npl_favorites') || '[]') } catch { /* ignore */ }
+    ;(async () => {
+      // 관심 목록 — 회원 Key 서버 저장소 우선 (R3), 실패 시 로컬 폴백
+      let ids: string[] = []
+      try {
+        const r = await fetch('/api/v1/favorites', { credentials: 'include' })
+        const d = await r.json()
+        if (Array.isArray(d?.data)) ids = d.data
+      } catch { /* ignore */ }
+      if (ids.length === 0) {
+        try { ids = JSON.parse(localStorage.getItem('npl_favorites') || '[]') } catch { /* ignore */ }
+      }
+      loadRows(ids)
+    })()
+  }
+
+  const loadRows = (ids: string[]) => {
     setFavIds(ids)
     if (ids.length === 0) { setRows([]); setLoading(false); return }
     fetch('/api/v1/exchange/listings?limit=200', { credentials: 'include' })
@@ -84,13 +98,10 @@ export default function PortfolioPage() {
     const next = favIds.filter(x => x !== id)
     setFavIds(next)
     setRows(prev => prev.filter(r => r.id !== id))
-    try { localStorage.setItem('npl_favorites', JSON.stringify(next)) } catch { /* ignore */ }
-    // 관심 카운터 감소 — 운영사·매각사 대시보드 집계 연동
-    fetch('/api/v1/listing-marketing', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ listing_id: id, type: 'interest_remove' }),
-    }).catch(() => {})
+    // 회원 Key 서버 저장소에서 해제 (관심 카운터도 서버에서 함께 감소)
+    fetch(`/api/v1/favorites?listing_id=${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'include' })
+      .then(r => { if (!r.ok) { try { localStorage.setItem('npl_favorites', JSON.stringify(next)) } catch { /* ignore */ } } })
+      .catch(() => { try { localStorage.setItem('npl_favorites', JSON.stringify(next)) } catch { /* ignore */ } })
   }
 
   return (

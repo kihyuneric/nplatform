@@ -1,223 +1,92 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+
+/**
+ * /api/v1/favorites — 관심매물 (회원 Key 연동 · R3 · 2026-08-19)
+ *
+ * GET                        → { data: string[] }  본인 관심 매물 id 목록
+ * POST { listing_id }        → 등록 (+ 매물 관심 카운터 +1)
+ * DELETE ?listing_id=...     → 해제 (+ 카운터 -1)
+ * POST { migrate: string[] } → localStorage 이관 (중복은 무시)
+ *
+ * 저장소: public.user_favorites (user_id × listing_id) — 기기가 바뀌어도 유지되고
+ *        운영자는 회원별 관심 이력을 키로 추적할 수 있다.
+ */
 
 export const dynamic = 'force-dynamic'
 
-// Mock store for fallback
-const MOCK_FAVORITES = [
-  {
-    id: 'fav-001',
-    listing_id: 'lst-001',
-    folder_name: '기본',
-    memo: null,
-    price_at_save: 3500000000,
-    created_at: '2026-03-01T09:00:00Z',
-    listing: {
-      id: 'lst-001',
-      title: '서울 강남구 역삼동 오피스텔 NPL',
-      address_masked: '서울특별시 강남구 역삼동 ***',
-      collateral_type: 'OFFICE',
-      claim_amount: 3500000000,
-      appraised_value: 4800000000,
-      ai_grade: 'A',
-      status: 'ACTIVE',
-    },
-  },
-]
+async function getUser() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  return { supabase, user }
+}
 
-// GET: List user's favorites with joined listing data
 export async function GET() {
-  // ── Supabase-first ──
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json(
-        { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } },
-        { status: 401 }
-      )
-    }
-
+    const { supabase, user } = await getUser()
+    if (!user) return NextResponse.json({ data: [] })
     const { data, error } = await supabase
-      .from('favorites')
-      .select(`
-        id,
-        listing_id,
-        folder_name,
-        memo,
-        price_at_save,
-        created_at,
-        listing:npl_listings (
-          id,
-          title,
-          address_masked,
-          collateral_type,
-          claim_amount,
-          appraised_value,
-          ai_grade,
-          status
-        )
-      `)
+      .from('user_favorites')
+      .select('listing_id')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-
-    if (error) {
-      // DB error → mock fallback
-      return NextResponse.json({ data: MOCK_FAVORITES, _mock: true })
-    }
-
-    return NextResponse.json({ data: data || [] })
+    if (error) throw error
+    return NextResponse.json({ data: (data ?? []).map(r => r.listing_id as string) })
   } catch {
-    // Supabase not available → mock fallback
-    return NextResponse.json({ data: MOCK_FAVORITES, _mock: true })
+    return NextResponse.json({ data: [] })
   }
 }
 
-// POST: Toggle favorite (add or remove)
-export async function POST(request: NextRequest) {
-  let body: { listing_id?: string }
+export async function POST(req: NextRequest) {
   try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: { code: 'BAD_REQUEST', message: 'Invalid JSON body' } },
-      { status: 400 }
-    )
-  }
+    const { supabase, user } = await getUser()
+    if (!user) return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } }, { status: 401 })
+    const body = await req.json()
 
-  const { listing_id } = body
-  if (!listing_id) {
-    return NextResponse.json(
-      { error: { code: 'BAD_REQUEST', message: 'listing_id is required' } },
-      { status: 400 }
-    )
-  }
-
-  // ── Supabase-first ──
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json(
-        { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } },
-        { status: 401 }
-      )
+    // localStorage 이관 — 기존 관심 목록 일괄 등록
+    if (Array.isArray(body.migrate)) {
+      const rows = (body.migrate as unknown[])
+        .map(String).filter(Boolean).slice(0, 200)
+        .map(listing_id => ({ user_id: user.id, listing_id }))
+      if (rows.length === 0) return NextResponse.json({ success: true, migrated: 0 })
+      const { error } = await supabase.from('user_favorites').upsert(rows, { onConflict: 'user_id,listing_id', ignoreDuplicates: true })
+      if (error) throw error
+      return NextResponse.json({ success: true, migrated: rows.length })
     }
 
-    // Check if already favorited
-    const { data: existing, error: checkError } = await supabase
-      .from('favorites')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('listing_id', listing_id)
-      .maybeSingle()
+    const listing_id = String(body.listing_id ?? '')
+    if (!listing_id) return NextResponse.json({ error: { code: 'BAD_REQUEST', message: 'listing_id required' } }, { status: 400 })
 
-    if (checkError) {
-      // DB error → mock toggle
-      const mockIdx = MOCK_FAVORITES.findIndex((f) => f.listing_id === listing_id)
-      if (mockIdx >= 0) {
-        MOCK_FAVORITES.splice(mockIdx, 1)
-        return NextResponse.json({ data: { favorited: false, listing_id }, _mock: true })
-      }
-      return NextResponse.json({ data: { favorited: true, listing_id }, _mock: true })
-    }
+    const { error } = await supabase
+      .from('user_favorites')
+      .upsert({ user_id: user.id, listing_id }, { onConflict: 'user_id,listing_id', ignoreDuplicates: true })
+    if (error) throw error
 
-    if (existing) {
-      // Already favorited → unfavorite (delete)
-      const { error: deleteError } = await supabase
-        .from('favorites')
-        .delete()
-        .eq('id', existing.id)
-        .eq('user_id', user.id)
-
-      if (deleteError) {
-        return NextResponse.json(
-          { error: { code: 'INTERNAL_ERROR', message: deleteError.message } },
-          { status: 500 }
-        )
-      }
-
-      return NextResponse.json({ data: { favorited: false, listing_id } })
-    } else {
-      // Not favorited → insert
-      const { error: insertError } = await supabase
-        .from('favorites')
-        .insert({ user_id: user.id, listing_id })
-
-      if (insertError) {
-        return NextResponse.json(
-          { error: { code: 'INTERNAL_ERROR', message: insertError.message } },
-          { status: 500 }
-        )
-      }
-
-      return NextResponse.json({ data: { favorited: true, listing_id } })
-    }
-  } catch {
-    // Supabase not available → mock toggle
-    const mockIdx = MOCK_FAVORITES.findIndex((f) => f.listing_id === listing_id)
-    if (mockIdx >= 0) {
-      MOCK_FAVORITES.splice(mockIdx, 1)
-      return NextResponse.json({ data: { favorited: false, listing_id }, _mock: true })
-    }
-    return NextResponse.json({ data: { favorited: true, listing_id }, _mock: true })
+    // 매물 관심 카운터 (매각 회원·운영자 집계와 공유)
+    void supabase.rpc('increment_listing_metric', { p_listing_id: listing_id, p_field: 'interest', p_delta: 1 })
+    return NextResponse.json({ success: true })
+  } catch (e) {
+    return NextResponse.json({ error: { code: 'FAVORITE_FAILED', message: (e as { message?: string })?.message ?? 'failed' } }, { status: 500 })
   }
 }
 
-// DELETE: Remove a favorite by id or listing_id
-export async function DELETE(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const id = searchParams.get('id')
-  const listing_id = searchParams.get('listing_id')
-
-  if (!id && !listing_id) {
-    return NextResponse.json(
-      { error: { code: 'BAD_REQUEST', message: 'id 또는 listing_id가 필요합니다.' } },
-      { status: 400 }
-    )
-  }
-
-  // ── Supabase-first ──
+export async function DELETE(req: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { supabase, user } = await getUser()
+    if (!user) return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } }, { status: 401 })
+    const listing_id = req.nextUrl.searchParams.get('listing_id') ?? ''
+    if (!listing_id) return NextResponse.json({ error: { code: 'BAD_REQUEST', message: 'listing_id required' } }, { status: 400 })
 
-    if (!user) {
-      return NextResponse.json(
-        { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.' } },
-        { status: 401 }
-      )
-    }
-
-    let query = supabase
-      .from('favorites')
+    const { error } = await supabase
+      .from('user_favorites')
       .delete()
       .eq('user_id', user.id)
+      .eq('listing_id', listing_id)
+    if (error) throw error
 
-    if (id) {
-      query = query.eq('id', id)
-    } else {
-      query = query.eq('listing_id', listing_id as string)
-    }
-
-    const { error } = await query
-
-    if (error) {
-      return NextResponse.json(
-        { error: { code: 'INTERNAL_ERROR', message: error.message } },
-        { status: 500 }
-      )
-    }
-
+    void supabase.rpc('increment_listing_metric', { p_listing_id: listing_id, p_field: 'interest', p_delta: -1 })
     return NextResponse.json({ success: true })
-  } catch {
-    // Supabase not available → mock
-    const mockIdx = id
-      ? MOCK_FAVORITES.findIndex((f) => f.id === id)
-      : MOCK_FAVORITES.findIndex((f) => f.listing_id === listing_id)
-    if (mockIdx >= 0) MOCK_FAVORITES.splice(mockIdx, 1)
-    return NextResponse.json({ success: true, _mock: true })
+  } catch (e) {
+    return NextResponse.json({ error: { code: 'FAVORITE_FAILED', message: (e as { message?: string })?.message ?? 'failed' } }, { status: 500 })
   }
 }

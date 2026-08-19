@@ -266,23 +266,43 @@ export default function ExchangePage() {
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState<number>(50) // 카드 30, 리스트 50
 
-  // ── 관심등록 (localStorage 유지) ─────────────────────────────
+  // ── 관심등록 — 회원 Key 서버 저장 (R3 · 2026-08-19) ───────────
+  //    로그인 시: /api/v1/favorites (user_id × listing_id) · 기기 바뀌어도 유지
+  //    비로그인:  localStorage 임시 보관 → 로그인 후 자동 이관
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
   useEffect(() => {
-    try { setFavorites(new Set(JSON.parse(localStorage.getItem('npl_favorites') || '[]'))) } catch { /* ignore */ }
+    let local: string[] = []
+    try { local = JSON.parse(localStorage.getItem('npl_favorites') || '[]') } catch { /* ignore */ }
+    ;(async () => {
+      try {
+        // 로컬에 남은 관심이 있으면 서버로 이관 후 서버 목록을 사용
+        if (local.length > 0) {
+          const mig = await fetch('/api/v1/favorites', {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ migrate: local }),
+          })
+          if (mig.ok) { try { localStorage.removeItem('npl_favorites') } catch { /* ignore */ } }
+        }
+        const r = await fetch('/api/v1/favorites', { credentials: 'include' })
+        const d = await r.json()
+        if (Array.isArray(d?.data) && d.data.length > 0) { setFavorites(new Set(d.data)); return }
+      } catch { /* 서버 실패 시 로컬 폴백 */ }
+      setFavorites(new Set(local))
+    })()
   }, [])
   const toggleFavorite = useCallback((id: string) => {
     setFavorites(prev => {
       const next = new Set(prev)
       const removing = next.has(id)
       if (removing) next.delete(id); else next.add(id)
-      try { localStorage.setItem('npl_favorites', JSON.stringify([...next])) } catch { /* ignore */ }
-      // 서버 집계 (운영사·매각사 대시보드 연동) — fire-and-forget
-      fetch('/api/v1/listing-marketing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listing_id: id, type: removing ? 'interest_remove' : 'interest' }),
-      }).catch(() => {})
+      // 서버 저장 (회원 Key) — 실패 시 로컬 폴백
+      const req = removing
+        ? fetch(`/api/v1/favorites?listing_id=${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'include' })
+        : fetch('/api/v1/favorites', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ listing_id: id }) })
+      req.then(r => {
+        if (!r.ok) { try { localStorage.setItem('npl_favorites', JSON.stringify([...next])) } catch { /* ignore */ } }
+      }).catch(() => { try { localStorage.setItem('npl_favorites', JSON.stringify([...next])) } catch { /* ignore */ } })
       return next
     })
   }, [])

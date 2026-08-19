@@ -147,12 +147,21 @@ export default function ListingDetailPage() {
       // 열람 모드 — 내 계정의 NDA 요청이 '승인' 상태인지 확인
       if (viewerMode) {
         let email = ''
+        let uid = ''
         try {
           const supabase = createClient()
-          const { data: { user } } = await supabase.auth.getUser()
+          // 세션 조회가 지연돼도 화면이 '불러오는 중'에 갇히지 않도록 5초 타임아웃
+          const res = await Promise.race([
+            supabase.auth.getUser(),
+            new Promise<null>(resolve => setTimeout(() => resolve(null), 5000)),
+          ])
+          const user = (res as { data?: { user?: { id?: string; email?: string } } } | null)?.data?.user
           email = user?.email ?? ''
+          uid = user?.id ?? ''
         } catch { /* ignore */ }
-        const mine = email ? ndaRequests.filter(q => q.email && q.email === email) : []
+        // 열람권 판정 — 회원 Key 우선, 구 데이터는 이메일 폴백 (2026-08-19)
+        const mine = ndaRequests.filter(q =>
+          (uid && q.user_id === uid) || (!q.user_id && email && q.email === email))
         const approved = mine.some(q => q.status === '승인')
         if (!cancelled) {
           setViewerAccess(approved ? 'approved' : 'locked')
