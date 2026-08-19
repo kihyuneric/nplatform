@@ -12,6 +12,8 @@
 import { useEffect, useState } from 'react'
 import { Inbox, RefreshCw, ChevronDown } from 'lucide-react'
 
+type ConvertForm = { title: string; sido: string; sigungu: string; address: string; collateralType: string; claimEok: string }
+
 const ELECTRIC = '#2251FF'
 
 type Ticket = {
@@ -36,16 +38,29 @@ export default function AdminInboxPage() {
   const [tab, setTab] = useState<'all' | '매각의뢰' | '1:1 문의'>('all')
   const [expanded, setExpanded] = useState<string | null>(null)
   const [savingId, setSavingId] = useState<string | null>(null)
-  // R4 — 매각의뢰 → 매물 전환 (접수 회원이 seller_id 로 연결)
+  // R4 — 매각의뢰 → 매물 전환 (접수 회원이 seller_id 로 연결) + 입력 폼 (2026-08-19)
   const [convertingId, setConvertingId] = useState<string | null>(null)
-  const convertToListing = async (ticketId: string, title: string) => {
-    if (!confirm(`"${title}" 접수 건을 매물로 전환할까요?\n접수 회원이 매물 소유자로 연결되고 검토대기 상태로 생성됩니다.`)) return
+  const [convertForm, setConvertForm] = useState<Record<string, ConvertForm>>({})
+  const formOf = (id: string, defaultTitle: string): ConvertForm =>
+    convertForm[id] ?? { title: defaultTitle.replace('[매각의뢰] ', ''), sido: '', sigungu: '', address: '', collateralType: 'OTHER', claimEok: '' }
+  const setForm = (id: string, patch: Partial<ConvertForm>, defaultTitle: string) =>
+    setConvertForm(prev => ({ ...prev, [id]: { ...formOf(id, defaultTitle), ...patch } }))
+  const convertToListing = async (ticketId: string, title: string, form: ConvertForm) => {
+    if (!form.title.trim()) { alert('매물명을 입력해주세요.'); return }
     setConvertingId(ticketId)
     try {
       const r = await fetch('/api/v1/admin/listings/from-ticket', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticket_id: ticketId, title }),
+        body: JSON.stringify({
+          ticket_id: ticketId,
+          title: form.title.trim(),
+          sido: form.sido.trim(),
+          sigungu: form.sigungu.trim(),
+          address: form.address.trim(),
+          collateral_type: form.collateralType,
+          claim_amount: form.claimEok ? Math.round(Number(form.claimEok) * 100000000) : 0,
+        }),
       })
       const d = await r.json().catch(() => ({}))
       if (r.ok && d.success) {
@@ -224,22 +239,39 @@ export default function AdminInboxPage() {
                 <div className="text-[12.5px] leading-relaxed text-[var(--color-text-secondary)] whitespace-pre-wrap">
                   {t.description || '내용 없음'}
                 </div>
-                {/* R4 — 매각의뢰를 매물로 전환 (seller_id = 접수 회원 Key) */}
-                {t.kind === '매각의뢰' && (
-                  <div className="mt-3 flex items-center gap-2 flex-wrap">
-                    <button
-                      onClick={() => void convertToListing(t.id, t.title)}
-                      disabled={convertingId === t.id}
-                      className="px-3 py-1.5 text-[11.5px] font-extrabold text-white"
-                      style={{ background: '#0A1628', borderTop: `2px solid ${ELECTRIC}`, border: 'none', cursor: 'pointer', opacity: convertingId === t.id ? 0.6 : 1 }}
-                    >
-                      {convertingId === t.id ? '전환 중…' : '매물로 전환 (매각 회원 연결)'}
-                    </button>
-                    <span className="text-[11px] text-[var(--color-text-muted)]">
-                      접수 회원이 매물 소유자(seller)로 연결되고, 검토대기 매물로 생성됩니다.
-                    </span>
-                  </div>
-                )}
+                {/* R4 — 매각의뢰를 매물로 전환 (seller_id = 접수 회원 Key) + 값 입력 (2026-08-19) */}
+                {t.kind === '매각의뢰' && (() => {
+                  const f = formOf(t.id, t.title)
+                  const inp = 'px-2 py-1.5 text-[12px] border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] outline-none focus:border-[#2251FF] w-full'
+                  return (
+                    <div className="mt-3 p-3 border border-[var(--color-border-default)]" style={{ borderTop: `2px solid ${ELECTRIC}` }}>
+                      <div className="text-[11.5px] font-extrabold text-[var(--color-text-primary)] mb-2">매물로 전환 — 등록 정보 입력</div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <input value={f.title} onChange={e => setForm(t.id, { title: e.target.value }, t.title)} placeholder="매물명 *" className={inp} />
+                        <select value={f.collateralType} onChange={e => setForm(t.id, { collateralType: e.target.value }, t.title)} className={inp}>
+                          {[['OFFICE','오피스'],['COMMERCIAL','상가/통건물'],['APARTMENT','아파트'],['VILLA','다세대/빌라'],['FACTORY','공장/지식산업센터'],['LAND','토지'],['OTHER','기타']].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+                        </select>
+                        <input value={f.sido} onChange={e => setForm(t.id, { sido: e.target.value }, t.title)} placeholder="시도 (예: 서울)" className={inp} />
+                        <input value={f.sigungu} onChange={e => setForm(t.id, { sigungu: e.target.value }, t.title)} placeholder="시군구 (예: 강남구)" className={inp} />
+                        <input value={f.address} onChange={e => setForm(t.id, { address: e.target.value }, t.title)} placeholder="주소 (동·번지)" className={inp} />
+                        <input value={f.claimEok} onChange={e => setForm(t.id, { claimEok: e.target.value }, t.title)} placeholder="채권액 (억원)" type="number" min={0} className={inp} />
+                      </div>
+                      <div className="mt-2 flex items-center gap-2 flex-wrap">
+                        <button
+                          onClick={() => void convertToListing(t.id, t.title, f)}
+                          disabled={convertingId === t.id}
+                          className="px-3 py-1.5 text-[11.5px] font-extrabold text-white"
+                          style={{ background: '#0A1628', borderTop: `2px solid ${ELECTRIC}`, border: 'none', cursor: 'pointer', opacity: convertingId === t.id ? 0.6 : 1 }}
+                        >
+                          {convertingId === t.id ? '전환 중…' : '이 값으로 매물 생성'}
+                        </button>
+                        <span className="text-[11px] text-[var(--color-text-muted)]">
+                          접수 회원이 매물 소유자(seller)로 연결되고, 검토대기 상태로 생성됩니다.
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             )}
           </div>
