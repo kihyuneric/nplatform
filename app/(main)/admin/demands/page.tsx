@@ -173,16 +173,16 @@ export default function AdminDemandsPage() {
                   ) : '—'}
                 </td>
                 <td className="px-3 py-2.5 whitespace-nowrap font-bold text-[var(--color-text-primary)]">{r.demandType}</td>
-                <td className="px-3 py-2.5 min-w-[140px] text-[var(--color-text-primary)]">{r.types.length ? r.types.join(' · ') : '—'}</td>
-                <td className="px-3 py-2.5 min-w-[120px] text-[var(--color-text-primary)]">{r.regions.length ? r.regions.join(' · ') : '—'}</td>
+                <td className="px-3 py-2.5 text-[var(--color-text-primary)]"><span className="block max-w-[130px] truncate" title={r.types.join(' · ')}>{r.types.length ? r.types.join(' · ') : '—'}</span></td>
+                <td className="px-3 py-2.5 text-[var(--color-text-primary)]"><span className="block max-w-[110px] truncate" title={r.regions.join(' · ')}>{r.regions.length ? r.regions.join(' · ') : '—'}</span></td>
                 <td className="px-3 py-2.5 tabular-nums whitespace-nowrap">{fmtRange(r.landMin, r.landMax, '')}</td>
                 <td className="px-3 py-2.5 tabular-nums whitespace-nowrap">{fmtRange(r.bldgMin, r.bldgMax, '')}</td>
                 <td className="px-3 py-2.5 tabular-nums whitespace-nowrap font-bold text-[var(--color-text-primary)]">{fmtRange(r.amountMin, r.amountMax, '')}</td>
                 {/* 담당자 — 등록 폼의 회사명 · 담당자명 · 연락처 · 이메일 연동 */}
-                <td className="px-3 py-2.5 min-w-[150px] max-w-[220px] text-[var(--color-text-primary)]">
+                <td className="px-3 py-2.5 max-w-[170px] text-[var(--color-text-primary)]">
                   <span className="line-clamp-2 text-[12px]">{r.contact || '—'}</span>
                 </td>
-                <td className="px-3 py-2.5 min-w-[180px] max-w-[280px] text-[var(--color-text-secondary)]">
+                <td className="px-3 py-2.5 max-w-[200px] text-[var(--color-text-secondary)]">
                   <span className="line-clamp-2">{r.memo || '—'}</span>
                 </td>
                 <td className="px-3 py-2.5 whitespace-nowrap">

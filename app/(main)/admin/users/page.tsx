@@ -373,7 +373,8 @@ export default function AdminUsersPage() {
 
             {/* Table */}
             <div className={DS.table.wrapper}>
-              <table className="w-full min-w-[860px]">
+              {/* 고정 min-width 제거 — 좁은 화면에서 가로 스크롤 대신 셀이 유연하게 축소 (2026-08-19) */}
+              <table className="w-full">
                 <thead>
                   <tr className={DS.table.header}>
                     <th className={DS.table.headerCell}>이름</th>
@@ -405,9 +406,9 @@ export default function AdminUsersPage() {
                         </span>
                       </td>
                       <td className={DS.table.cell}>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 min-w-0">
                           <Mail size={11} className="text-[var(--color-text-muted)] shrink-0" />
-                          <span className={DS.text.caption}>{u.email}</span>
+                          <span className={DS.text.caption + ' truncate max-w-[180px]'} title={u.email}>{u.email}</span>
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <Phone size={11} className="text-[var(--color-text-muted)] shrink-0" />

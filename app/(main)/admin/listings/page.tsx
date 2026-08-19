@@ -328,43 +328,40 @@ export default function AdminListingsPage() {
                 </select>
               ),
             },
+            // 한 화면 최적화 (2026-08-19) — 유형·소재지는 매물명 아래로, 기관·담당자·연락처 3컬럼 → 1컬럼
             { key: 'title', label: '매물명 (클릭 시 상세)', sortable: true, render: (v, row) => (
-              // 클릭 → 우측 세부내역 패널 (D0·D6)
-              <button onClick={() => setDetailTarget(row.id)}
-                className="font-medium max-w-[160px] truncate block text-left text-[var(--color-text-primary)] hover:underline"
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>{v}</button>
+              <div className="max-w-[170px]">
+                <button onClick={() => setDetailTarget(row.id)}
+                  className="font-medium truncate block text-left text-[var(--color-text-primary)] hover:underline w-full"
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>{v}</button>
+                <span className="block text-[0.6875rem] text-[var(--color-text-muted)] truncate">
+                  {row.listing_type ? `${row.listing_type} · ` : ''}{row.location ?? ''}
+                </span>
+              </div>
             )},
-            { key: 'listing_type', label: '유형', sortable: true, render: (v) => <span className={DS.badge.inline("bg-stone-100/10", "text-stone-900", "border-stone-300/20")}>{v ?? "-"}</span> },
-            { key: 'location', label: '소재지', render: (v) => <span className="text-[0.75rem] text-[var(--color-text-tertiary)] max-w-[120px] truncate block">{v ?? "-"}</span> },
-            { key: 'bond_amount', label: '채권액', sortable: true, render: (v) => <span className="font-mono">{v ? formatKRW(v) : "-"}</span> },
-            // 세부내역(NPL 탬플릿) 기반 — 기관명 · 담당자(직책) · 연락처
+            { key: 'bond_amount', label: '채권액', sortable: true, render: (v) => <span className="font-mono whitespace-nowrap">{v ? formatKRW(v) : "-"}</span> },
+            // 세부내역(NPL 탬플릿) 기반 — 채권기관 · 담당자 · 연락처 (한 컬럼 스택)
             {
-              key: '_institution', label: '기관명', render: (_v, row) => (
-                <span className="text-[0.75rem] font-semibold max-w-[110px] truncate block">{contactMap[row.id]?.institution || '—'}</span>
-              ),
-            },
-            {
-              key: '_manager', label: '담당자', render: (_v, row) => {
+              key: '_contact', label: '채권기관 · 담당자', render: (_v, row) => {
                 const c = contactMap[row.id]
                 return (
-                  <span className="text-[0.75rem] block">
-                    {c?.manager || '—'}
-                    {c?.title && <span className="block text-[0.6875rem] text-[var(--color-text-muted)]">{c.title}</span>}
-                  </span>
+                  <div className="text-[0.75rem] max-w-[135px]">
+                    <span className="font-semibold truncate block">{c?.institution || '—'}</span>
+                    <span className="block text-[0.6875rem] text-[var(--color-text-muted)] truncate">
+                      {c?.manager || '—'}{c?.title ? ` (${c.title})` : ''}
+                    </span>
+                    {c?.phone && <span className="block text-[0.6563rem] font-mono text-[var(--color-text-muted)]">{c.phone}</span>}
+                  </div>
                 )
               },
-            },
-            {
-              key: '_phone', label: '연락처', render: (_v, row) => (
-                <span className="text-[0.75rem] font-mono">{contactMap[row.id]?.phone || '—'}</span>
-              ),
             },
             { key: 'status', label: '상태', sortable: true, render: (v: ApprovalStatus) => {
               const s = STATUS_CONFIG[v]; return s ? <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full border ${s.cls}`}>{s.label}</span> : null
             }},
             { key: 'created_at', label: '등록일', sortable: true, render: (v) => <span className="text-[0.75rem] text-[var(--color-text-tertiary)]">{v ? new Date(v).toLocaleDateString("ko-KR") : "-"}</span> },
             { key: 'id', label: '액션', render: (v, row) => (
-              <div className="flex items-center gap-1.5 flex-wrap">
+              // 세로 2단 스택 — 가로 폭 최소화 (한 화면 최적화 2026-08-19)
+              <div className="flex flex-col items-start gap-1">
                 {/* 검토대기 디폴트 — 승인/거절 버튼으로 활성화·비활성화 */}
                 {row.status !== 'ACTIVE' && row.status !== 'APPROVED' && (
                   <button
@@ -382,28 +379,19 @@ export default function AdminListingsPage() {
                     거절
                   </button>
                 )}
-                <button
-                  onClick={() => { if (confirm('삭제하시겠습니까?')) handleRowAction(v, 'delete') }}
-                  className={`${DS.button.danger} ${DS.button.sm}`}
-                >
-                  삭제
-                </button>
-                {/* Phase G6 · 관리자 편집 페이지 링크 */}
-                <a href={`/admin/listings/${v}/edit`} className={`${DS.button.secondary} ${DS.button.sm}`}>
-                  편집
-                </a>
-                {/* 상세 = 표준 양식 세부내역 — 우측 패널로 (D0·D6) */}
-                <button onClick={() => setDetailTarget(v)}
-                  className={`${DS.text.link} text-[0.8125rem]`}
-                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>세부내역</button>
-                {/* 마케팅 진행 관리 — 분석 페이지에서 이동 (2026-08-18) */}
-                <button
-                  onClick={() => setMkTarget(v)}
-                  className={`${DS.text.link} text-[0.8125rem]`}
-                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
-                >
-                  마케팅
-                </button>
+                {/* 삭제·편집 버튼 목록에서 제거 (한 화면 최적화) — 편집은 세부내역 패널에서, 종료는 거절로 */}
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setDetailTarget(v)}
+                    className={`${DS.text.link} text-[0.75rem] whitespace-nowrap`}
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>세부내역</button>
+                  <button
+                    onClick={() => setMkTarget(v)}
+                    className={`${DS.text.link} text-[0.75rem] whitespace-nowrap`}
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                  >
+                    마케팅
+                  </button>
+                </div>
               </div>
             )},
           ]}

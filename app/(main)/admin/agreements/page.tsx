@@ -163,7 +163,7 @@ export default function AdminAgreementsPage() {
               <th className="px-2 py-2.5 font-bold whitespace-nowrap">상담</th>
               <th className="px-3 py-2.5 font-bold whitespace-nowrap">NPL 상태</th>
               <th className="px-3 py-2.5 font-bold whitespace-nowrap">매칭날짜</th>
-              <th className="px-3 py-2.5 font-bold min-w-[300px]">딜 진행 단계 (클릭 = 등록/수정)</th>
+              <th className="px-3 py-2.5 font-bold ">딜 진행 단계 (클릭 = 등록/수정)</th>
             </tr>
           </thead>
           <tbody>
@@ -179,7 +179,7 @@ export default function AdminAgreementsPage() {
               return (
                 <tr key={r.id} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] transition-colors">
                   <td className="px-3 py-2.5 font-mono text-[11px] font-bold text-[var(--color-text-primary)] whitespace-nowrap">{r.id}</td>
-                  <td className="px-3 py-2.5 min-w-[150px]">
+                  <td className="px-3 py-2.5 ">
                     <div className="font-semibold text-[var(--color-text-primary)]">{r.region}</div>
                     <div className="text-[11px] text-[var(--color-text-muted)]">{r.collateral} · {r.created}</div>
                   </td>

@@ -301,7 +301,7 @@ export default function SellerMyListingsPage() {
                       </td>
                       {/* 마케팅 진행 현황 — 운영사 입력 실데이터 연동 */}
                       <td className={DS.table.cell}>
-                        <div className="min-w-[250px] space-y-1.5">
+                        <div className="space-y-1.5">
                           {mk?.matched_at && (
                             <div className="text-[0.6875rem]">
                               <span className="text-[var(--color-text-muted)]">매칭 등록일 </span>
