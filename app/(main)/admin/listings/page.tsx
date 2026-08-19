@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import DS, { formatKRW, formatDate, SEGMENT } from "@/lib/design-system"
 import { DataTable, type Column } from "@/components/ui/data-table"
-import { NPL_STATUSES } from "@/lib/marketing-checklist"
+import { NPL_STATUSES, topDealStage, type ListingMarketing } from "@/lib/marketing-checklist"
 import { MarketingPanel } from "@/components/admin/marketing-panel"
 import { DetailPane } from "@/components/listing/detail-pane"
 import { MemberPane } from "@/components/admin/member-pane"
@@ -93,6 +93,8 @@ export default function AdminListingsPage() {
 
   // ── NPL 상태 (진행중/협의중/매각완료) — 리스트 앞단 표시 + 즉시 수정 ──
   const [nplStatusMap, setNplStatusMap] = useState<Record<string, string>>({})
+  // 마케팅 원본 (NDA 요청 배열 포함) — 딜 단계 요약 표시에 사용 (2026-08-19)
+  const [mkMap, setMkMap] = useState<Record<string, ListingMarketing>>({})
   // 세부내역(NPL 탬플릿)의 기관명 · 담당자명 · 직책 · 연락처 — 리스트에 기본 표시
   const [contactMap, setContactMap] = useState<Record<string, { institution: string; manager: string; title: string; phone: string }>>({})
   // 진행종료 요청·확정 (2026-08-19) — 매각 회원 요청을 운영자가 승인
@@ -127,6 +129,7 @@ export default function AdminListingsPage() {
             }
           }
         }
+        setMkMap((d?.data ?? {}) as Record<string, ListingMarketing>)
         setNplStatusMap(m)
         setContactMap(c)
         setEndMap(e)
@@ -560,6 +563,26 @@ export default function AdminListingsPage() {
               </div>
             )},
             { key: 'bond_amount', label: '채권액', sortable: true, render: (v) => <span className="font-mono whitespace-nowrap">{v ? formatKRW(v) : "-"}</span> },
+            // 딜 단계는 NDA 요청 건별로 관리되므로, 매물에는 가장 앞선 단계를 요약 표시 (2026-08-19)
+            {
+              key: '_stage', label: '딜 단계', render: (_v, row) => {
+                const stage = topDealStage(mkMap[row.id]?.nda_requests)
+                const n = (mkMap[row.id]?.nda_requests ?? []).length
+                return stage ? (
+                  <div className="whitespace-nowrap">
+                    <span className="inline-flex items-center justify-center h-[20px] px-2 text-[0.6563rem] font-extrabold text-white"
+                      style={{ background: '#0A1628', boxShadow: 'inset 0 2px 0 0 #2251FF' }}>
+                      {stage}
+                    </span>
+                    {n > 1 && <span className="ml-1 text-[0.6563rem] text-[var(--color-text-muted)]">외 {n - 1}건</span>}
+                  </div>
+                ) : (
+                  <span className="text-[0.6875rem] text-[var(--color-text-muted)] whitespace-nowrap">
+                    {n > 0 ? `NDA ${n}건 · 단계 미등록` : '—'}
+                  </span>
+                )
+              },
+            },
             // 세부내역(NPL 탬플릿) 기반 — 채권기관 · 담당자 · 연락처 (한 컬럼 스택)
             {
               key: '_contact', label: '채권기관 · 담당자', render: (_v, row) => {

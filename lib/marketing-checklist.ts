@@ -38,6 +38,19 @@ export interface NdaRequest {
   requested_at: string   // ISO
   status: string         // 운영사 검토 / 승인 / 거절
   decided_at?: string
+  /**
+   * 딜 진행 단계 — NDA 요청 **건별**로 관리한다 (2026-08-19).
+   * 한 매물에 여러 매입 회원이 붙으므로, 매물 단위 단계로는
+   * "누가 어디까지 갔는지" 구분할 수 없다.
+   * (매물 단위 deal_stage 는 이 값들 중 가장 앞선 단계를 요약 표시하는 용도로만 남긴다)
+   */
+  deal_stage?: string
+}
+
+/** 딜 단계 진행도 — 큰 값일수록 더 진행된 상태 (매물 요약 표시에 사용) */
+export const dealStageRank = (s?: string): number => {
+  const i = (DEAL_STAGES as readonly string[]).indexOf(String(s ?? ''))
+  return i < 0 ? -1 : i
 }
 
 export interface ListingMarketing {
@@ -65,3 +78,17 @@ export const emptyMarketing = (id: string): ListingMarketing => ({
   interest_count: 0,
   nda_count: 0,
 })
+
+/**
+ * 매물의 대표 딜 단계 — 그 매물의 NDA 요청들 중 **가장 앞선 단계** (2026-08-19)
+ * 매각의뢰 현황처럼 매물 단위로 보여줄 때 사용한다.
+ */
+export const topDealStage = (reqs: NdaRequest[] | undefined | null): string => {
+  let best = ''
+  let rank = -1
+  for (const q of reqs ?? []) {
+    const r = dealStageRank(q.deal_stage)
+    if (r > rank) { rank = r; best = q.deal_stage ?? '' }
+  }
+  return best
+}
