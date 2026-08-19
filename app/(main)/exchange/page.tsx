@@ -301,7 +301,12 @@ export default function ExchangePage() {
         ? fetch(`/api/v1/favorites?listing_id=${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'include' })
         : fetch('/api/v1/favorites', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ listing_id: id }) })
       req.then(r => {
-        if (!r.ok) { try { localStorage.setItem('npl_favorites', JSON.stringify([...next])) } catch { /* ignore */ } }
+        if (!r.ok) {
+          try { localStorage.setItem('npl_favorites', JSON.stringify([...next])) } catch { /* ignore */ }
+          // 로그인·권한 문제는 조용히 넘기지 않고 안내 (2026-08-19)
+          if (r.status === 401) alert('관심매물 저장은 로그인 후 가능합니다.')
+          else if (r.status === 403) alert('현재 계정 상태로는 관심매물을 저장할 수 없습니다. 운영사로 문의해주세요.')
+        }
       }).catch(() => { try { localStorage.setItem('npl_favorites', JSON.stringify([...next])) } catch { /* ignore */ } })
       return next
     })

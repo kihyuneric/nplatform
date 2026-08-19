@@ -78,15 +78,28 @@ export default function AdminListingsPage() {
   const [nplStatusMap, setNplStatusMap] = useState<Record<string, string>>({})
   // 세부내역(NPL 탬플릿)의 기관명 · 담당자명 · 직책 · 연락처 — 리스트에 기본 표시
   const [contactMap, setContactMap] = useState<Record<string, { institution: string; manager: string; title: string; phone: string }>>({})
+  // 진행종료 요청·확정 (2026-08-19) — 매각 회원 요청을 운영자가 승인
+  const [endMap, setEndMap] = useState<Record<string, { requested?: string | null; ended?: string | null }>>({})
+  const confirmEnd = (id: string) => {
+    if (!confirm('이 매물의 진행종료를 확정할까요?\n매각 회원 화면에 "종료됨"으로 표시됩니다.')) return
+    setEndMap(prev => ({ ...prev, [id]: { ...prev[id], ended: new Date().toISOString() } }))
+    fetch('/api/v1/listing-marketing', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listing_id: id, ended_at: new Date().toISOString() }),
+    }).then(r => { if (r.ok) toast.success('진행종료 확정') ; else toast.error('처리 실패') })
+      .catch(() => toast.error('네트워크 오류'))
+  }
   useEffect(() => {
     fetch('/api/v1/listing-marketing')
       .then(r => r.json())
       .then(d => {
         const m: Record<string, string> = {}
         const c: Record<string, { institution: string; manager: string; title: string; phone: string }> = {}
+        const e: Record<string, { requested?: string | null; ended?: string | null }> = {}
         for (const [id, row] of Object.entries(d?.data ?? {})) {
-          const r2 = row as { npl_status?: string; detail?: Record<string, string> }
+          const r2 = row as { npl_status?: string; detail?: Record<string, string>; end_requested_at?: string | null; ended_at?: string | null }
           if (r2.npl_status) m[id] = r2.npl_status
+          if (r2.end_requested_at || r2.ended_at) e[id] = { requested: r2.end_requested_at, ended: r2.ended_at }
           const det = r2.detail ?? {}
           if (det.institution || det.manager_name || det.manager_phone) {
             c[id] = {
@@ -99,6 +112,7 @@ export default function AdminListingsPage() {
         }
         setNplStatusMap(m)
         setContactMap(c)
+        setEndMap(e)
       })
       .catch(() => {})
   }, [])
@@ -409,6 +423,16 @@ export default function AdminListingsPage() {
                   </button>
                 )}
                 {/* 삭제·편집 버튼 목록에서 제거 (한 화면 최적화) — 편집은 세부내역 패널에서, 종료는 거절로 */}
+                {/* 진행종료 — 매각 회원 요청 시 확정 버튼 노출 (2026-08-19) */}
+                {endMap[v]?.ended ? (
+                  <span className="text-[0.6563rem] font-bold text-stone-600 whitespace-nowrap">종료됨</span>
+                ) : endMap[v]?.requested ? (
+                  <button onClick={() => confirmEnd(v)}
+                    className="text-[0.6875rem] font-extrabold text-amber-700 hover:underline whitespace-nowrap"
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
+                    종료 요청 → 확정하기
+                  </button>
+                ) : null}
                 <div className="flex items-center gap-2">
                   <button onClick={() => setDetailTarget(v)}
                     className={`${DS.text.link} text-[0.75rem] whitespace-nowrap`}

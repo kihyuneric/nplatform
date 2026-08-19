@@ -88,6 +88,8 @@ export default function SellerMyListingsPage() {
   const requestEnd = (listingId: string, name: string) => {
     if (!confirm(`"${name}" 매물의 진행종료를 요청할까요?\n운영사 승인 후 종료 처리됩니다.`)) return
     setEndRequested(prev => new Set(prev).add(listingId))
+    // 매물 상태로도 기록 — 새로고침·재로그인 후에도 "종료 요청중" 유지 (2026-08-19)
+    saveMk(listingId, { end_requested_at: new Date().toISOString() })
     fetch('/api/v1/support', {
       method: 'POST',
       credentials: 'include',
@@ -350,8 +352,10 @@ export default function SellerMyListingsPage() {
                             세부내역
                           </button>
                           <span className="text-[var(--color-border-default)]">|</span>
-                          {endRequested.has(l.id) ? (
-                            <span className="text-[0.6875rem] font-bold text-amber-700">종료 요청됨</span>
+                          {mk?.ended_at ? (
+                            <span className="text-[0.6875rem] font-bold text-stone-600">종료됨</span>
+                          ) : (endRequested.has(l.id) || mk?.end_requested_at) ? (
+                            <span className="text-[0.6875rem] font-bold text-amber-700">종료 요청중</span>
                           ) : (
                             <button
                               onClick={() => requestEnd(l.id, l.title)}

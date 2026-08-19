@@ -47,6 +47,9 @@ export async function PATCH(req: NextRequest) {
     if (typeof body.matched_at === 'string') patch.matched_at = body.matched_at || null
     if (body.detail && typeof body.detail === 'object') patch.detail = body.detail
     if (Array.isArray(body.nda_requests)) patch.nda_requests = body.nda_requests
+    // 진행종료 — 요청(매각 회원) / 확정(운영자) (2026-08-19)
+    if ('end_requested_at' in body) patch.end_requested_at = body.end_requested_at || null
+    if ('ended_at' in body) patch.ended_at = body.ended_at || null
 
     const supabase = await createClient()
 

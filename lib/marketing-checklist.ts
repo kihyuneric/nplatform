@@ -41,6 +41,10 @@ export interface NdaRequest {
 }
 
 export interface ListingMarketing {
+  /** 진행종료 요청 시각 (매각 회원 요청) — 운영자 승인 전까지 "종료 요청중" (2026-08-19) */
+  end_requested_at?: string | null
+  /** 진행종료 확정 시각 (운영자 승인) */
+  ended_at?: string | null
   listing_id: string
   checklist: Record<string, boolean>
   consult_count: number

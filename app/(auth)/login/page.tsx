@@ -97,17 +97,28 @@ export default function LoginPage() {
         return
       }
 
-      let userRole: string | undefined = authData.user?.user_metadata?.role
-      if (!userRole) {
-        try {
-          const { data: profile } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', authData.user.id)
-            .single()
-          userRole = profile?.role
-        } catch { /* lookup failed */ }
-      }
+      // 회원 상태 확인 — 차단·탈퇴·거절 계정은 로그인 즉시 세션 종료 (2026-08-19 보안)
+      let userRole: string | undefined
+      try {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role, kyc_status')
+          .eq('id', authData.user.id)
+          .single()
+        const status = String(profile?.kyc_status ?? '')
+        if (status === 'BLOCKED' || status === 'WITHDRAWN' || status === 'REJECTED') {
+          await supabase.auth.signOut()
+          setError(
+            status === 'BLOCKED' ? '차단된 계정입니다. 운영사로 문의해주세요.'
+            : status === 'WITHDRAWN' ? '탈퇴 처리된 계정입니다. 재가입이 필요합니다.'
+            : '가입이 승인되지 않은 계정입니다. 운영사로 문의해주세요.',
+          )
+          setLoading(false)
+          return
+        }
+        userRole = profile?.role
+      } catch { /* 프로필 조회 실패 시 metadata 폴백 */ }
+      if (!userRole) userRole = authData.user?.user_metadata?.role
       if (!userRole) { router.push('/select-role'); return }
 
       document.cookie = `active_role=${userRole};path=/;max-age=${60 * 60 * 24 * 30};SameSite=Lax`
