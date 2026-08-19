@@ -14,7 +14,10 @@
  */
 
 const RESEND_API_URL = 'https://api.resend.com/emails'
-const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL ?? 'NPLatform <no-reply@nplatform.kr>'
+// 발신 주소 — 운영 도메인 기준 (2026-08-19). 환경변수로 덮어쓸 수 있음.
+const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL ?? 'NPLATFORM <biz@transfarmer.co.kr>'
+// 회신 주소 — 회원 문의가 운영 메일함으로 돌아오도록
+const REPLY_TO = process.env.RESEND_REPLY_TO ?? 'biz@transfarmer.co.kr'
 
 export interface SendEmailOptions {
   to: string | string[]
@@ -61,7 +64,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<EmailResult> {
         to: Array.isArray(opts.to) ? opts.to : [opts.to],
         subject: opts.subject,
         html: opts.html,
-        reply_to: opts.replyTo,
+        reply_to: opts.replyTo ?? REPLY_TO,
         cc: opts.cc,
         bcc: opts.bcc,
         tags: opts.tags,
