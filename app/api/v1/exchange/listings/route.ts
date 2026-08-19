@@ -356,6 +356,27 @@ export async function GET(request: NextRequest) {
       : normalizedData
     const finalTotal = filteredTotal + featuredFiltered.length
 
+    // 매각 회원 이름을 서버에서 조인 (2026-08-19)
+    //   NDA·계약 등 관리 화면이 브라우저에서 Supabase 를 다시 호출하면,
+    //   번들에 NEXT_PUBLIC_SUPABASE_* 가 없을 때 응답이 오지 않아 화면이 멈춘다.
+    const sellerIds = Array.from(
+      new Set(finalData.map(r => (r as Record<string, unknown>).seller_id).filter(Boolean)),
+    ) as string[]
+    if (sellerIds.length > 0) {
+      try {
+        const sb = await createClient()
+        const { data: sellers } = await sb.from('users').select('id, name, company_name').in('id', sellerIds)
+        const map: Record<string, string> = {}
+        for (const s of sellers ?? []) {
+          map[s.id as string] = [s.name, s.company_name].filter(Boolean).join(' · ') || String(s.id).slice(0, 8)
+        }
+        for (const r of finalData as Array<Record<string, unknown>>) {
+          const k = r.seller_id as string
+          if (k) r.seller_name = map[k] ?? '(연결 회원 없음)'
+        }
+      } catch { /* 조인 실패해도 목록 자체는 내려준다 */ }
+    }
+
     const headers = result._source === 'supabase' ? listingCacheHeaders() : undefined
     return NextResponse.json(
       { data: finalData, total: finalTotal, totalPages: Math.ceil(finalTotal / limit) || 1, page, _source: result._source },

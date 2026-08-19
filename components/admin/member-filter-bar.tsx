@@ -13,7 +13,6 @@
 
 import { useEffect, useState } from 'react'
 import { UserCheck, X } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 
 /** URL 의 ?user= 값을 읽는다 (마운트 후 1회 · 뒤로가기 대응) */
 export function useMemberFilter(): string {
@@ -40,17 +39,17 @@ export function MemberFilterBar({
 }) {
   const [label, setLabel] = useState('')
 
+  // 회원명은 서버 API 로 조회 (브라우저 Supabase 설정에 의존하지 않는다 · 2026-08-19)
   useEffect(() => {
     let alive = true
-    createClient()
-      .from('users')
-      .select('id, name, company_name, email')
-      .eq('id', userId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!alive || !data) return
-        setLabel([data.company_name, data.name, data.email].filter(Boolean).join(' · '))
+    fetch(`/api/v1/admin/users/${encodeURIComponent(userId)}`, { credentials: 'include' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        const u = d?.user
+        if (!alive || !u) return
+        setLabel([u.company_name, u.name, u.email].filter(Boolean).join(' · '))
       })
+      .catch(() => { /* 이름을 못 가져와도 필터 자체는 동작한다 */ })
     return () => { alive = false }
   }, [userId])
 

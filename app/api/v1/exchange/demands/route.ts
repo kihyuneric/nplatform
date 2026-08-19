@@ -57,6 +57,31 @@ export async function GET(request: NextRequest) {
       offset: (page - 1) * limit,
     })
 
+    // 등록 회원(매입 회원) 정보를 서버에서 조인해 함께 내려준다 (2026-08-19)
+    //   화면이 브라우저에서 Supabase 를 다시 호출하면, 번들에 NEXT_PUBLIC_SUPABASE_* 가
+    //   없을 때 응답이 오지 않아 "불러오는 중"에서 멈춘다. 조인을 서버로 옮겨 그 의존을 없앤다.
+    const rows = (data ?? []) as Array<Record<string, unknown>>
+    const uids = Array.from(new Set(rows.map(r => r.user_id).filter(Boolean))) as string[]
+    if (uids.length > 0) {
+      try {
+        const { createClient } = await import('@/lib/supabase/server')
+        const sb = await createClient()
+        const { data: members } = await sb.from('users').select('id, name, company_name, phone, email').in('id', uids)
+        const map: Record<string, { label: string; sub: string }> = {}
+        for (const m of members ?? []) {
+          map[m.id as string] = {
+            label: [m.company_name, m.name].filter(Boolean).join(' · ') || String(m.id).slice(0, 8),
+            sub: [m.phone, m.email].filter(Boolean).join(' · '),
+          }
+        }
+        for (const r of rows) {
+          const k = r.user_id as string
+          r.member_label = (k && map[k]?.label) || ''
+          r.member_contact = (k && map[k]?.sub) || ''
+        }
+      } catch { /* 조인 실패해도 목록 자체는 내려준다 */ }
+    }
+
     return NextResponse.json({
       ok: true,
       data,

@@ -33,11 +33,13 @@ export function DetailPane({
   useEffect(() => {
     if (listingNo) { setNo(listingNo); return }
     let alive = true
-    import('@/lib/supabase/client')
-      .then(({ createClient }) =>
-        createClient().from('npl_listings').select('listing_no').eq('id', listingId).maybeSingle()
-      )
-      .then(({ data }) => { if (alive && data?.listing_no) setNo(String(data.listing_no)) })
+    // 서버 API 로 조회 — 브라우저 Supabase 설정에 의존하지 않는다 (2026-08-19)
+    fetch(`/api/v1/exchange/listings/${encodeURIComponent(listingId)}`, { credentials: 'include' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        const v = d?.data?.listing_no
+        if (alive && v) setNo(String(v))
+      })
       .catch(() => { /* 조회 실패 시 번호 없이 표시 */ })
     return () => { alive = false }
   }, [listingId, listingNo])

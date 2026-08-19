@@ -18,6 +18,7 @@ import { computeAnalysis, fmtEok } from './_analysis'
 
 type Row = {
   id: string
+  no: string   // 관리번호 N26-1 (2026-08-19)
   region: string
   collateral: string
   appraisal: number     // 감정가
@@ -42,6 +43,7 @@ export default function AdminNplAnalysisPage() {
           const principal = Number(x.outstanding_principal ?? x.principal_amount ?? x.claim_amount ?? 0)
           return {
             id: String(x.id),
+            no: String(x.listing_no ?? ''),
             region: [x.sido, x.sigungu].filter(Boolean).join(' ') || String(x.address ?? '').split(/\s+/).slice(0, 2).join(' ') || '—',
             collateral: String(x.collateral_type ?? '기타'),
             appraisal: Number(x.appraised_value ?? x.appraisal_value ?? 0),
@@ -69,7 +71,7 @@ export default function AdminNplAnalysisPage() {
   const [page, setPage] = useState(1)
   const q = search.trim().toLowerCase()
   const filtered = q
-    ? analyzed.filter(r => [r.id, r.region, r.collateral, r.a.grade, r.a.opinion].join(' ').toLowerCase().includes(q))
+    ? analyzed.filter(r => [r.no, r.region, r.collateral, r.a.grade, r.a.opinion].join(' ').toLowerCase().includes(q))
     : analyzed
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paged = filtered.slice((Math.min(page, totalPages) - 1) * PAGE_SIZE, Math.min(page, totalPages) * PAGE_SIZE)
@@ -162,7 +164,7 @@ export default function AdminNplAnalysisPage() {
             )}
             {paged.map(r => (
               <tr key={r.id} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] transition-colors">
-                <td className="px-4 py-3 font-mono text-xs font-bold text-[var(--color-text-primary)]">{r.id}</td>
+                <td className="px-4 py-3 font-mono text-xs font-bold text-[#1A47CC]">{r.no || '—'}</td>
                 <td className="px-4 py-3">
                   <div className="font-semibold text-[var(--color-text-primary)]">{r.region}</div>
                   <div className="text-[11px] text-[var(--color-text-muted)]">{r.collateral} · 등록 {r.created}</div>

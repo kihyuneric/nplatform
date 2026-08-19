@@ -137,28 +137,29 @@ export default function AdminListingsPage() {
     setLoading(true)
     setLoadError('')
     try {
-      const supabase = createClient()
-      let query = supabase.from("npl_listings").select("id, listing_no, title, collateral_type, sido, sigungu, claim_amount, ai_grade, status, created_at, seller_id", { count: "exact" })
-      if (memberFilter) query = query.eq("seller_id", memberFilter)   // 회원 Key 기준 조회
-      if (search) query = query.ilike("title", `%${search}%`)
-      if (activeTab === "REJECTED") query = query.in("status", ["REJECTED", "HIDDEN"])
-      else if (activeTab !== "all") query = query.eq("status", activeTab === "APPROVED" ? "ACTIVE" : activeTab)
-      // 구분 필터 (NPL / 부동산 급매) — 미지정 데이터는 NPL 로 간주하므로 NPL 은 무필터
-      if (typeFilter === "REALESTATE") query = query.eq("listing_category", "GENERAL")
-      query = query.range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1).order("created_at", { ascending: false })
-      const { data, count, error } = await query
-      // 조회 실패를 조용히 넘기면 '로딩 후 빈 화면'이 되어 원인을 알 수 없다 (2026-08-19)
-      if (error) throw new Error(error.message || '매물 조회에 실패했습니다')
+      // 서버 API 로 조회 (2026-08-19)
+      //   브라우저에서 직접 Supabase 를 호출하던 방식은 NEXT_PUBLIC_SUPABASE_* 가
+      //   번들에 없으면 응답이 오지 않아 화면이 "불러오는 중"에서 멈췄다.
+      const qs = new URLSearchParams({
+        page: String(page), limit: String(PAGE_SIZE), tab: activeTab, type: typeFilter,
+      })
+      if (search) qs.set('search', search)
+      if (memberFilter) qs.set('user', memberFilter)
 
-      // R7 — 매각 회원(seller_id) 이름·회사 조인: 운영자가 소유 회원을 키로 추적
-      const sellerIds = Array.from(new Set((data || []).map((d: Record<string, unknown>) => d.seller_id).filter(Boolean))) as string[]
-      const sellerMap: Record<string, string> = {}
-      if (sellerIds.length > 0) {
-        const { data: sellers } = await supabase.from('users').select('id, name, company_name').in('id', sellerIds)
-        for (const s of sellers ?? []) {
-          sellerMap[s.id as string] = [s.name, s.company_name].filter(Boolean).join(' · ') || String(s.id).slice(0, 8)
-        }
+      const res = await fetch(`/api/v1/admin/listings?${qs}`, {
+        credentials: 'include',
+        signal: AbortSignal.timeout(20000),   // 무한 로딩 방지
+      })
+      if (!res.ok) {
+        throw new Error(
+          res.status === 401 ? '로그인이 만료되었습니다. 다시 로그인해주세요.'
+          : res.status === 403 ? '이 화면을 볼 권한이 없습니다. (운영관리자 전용)'
+          : `매물 목록을 불러오지 못했습니다 (${res.status})`
+        )
       }
+      const json = await res.json()
+      const data: Record<string, unknown>[] = Array.isArray(json.data) ? json.data : []
+      const count: number = json.total ?? 0
 
       const mapped: AdminListing[] = (data || []).map((d: Record<string, unknown>) => ({
         id: d.id as string,
@@ -172,7 +173,7 @@ export default function AdminListingsPage() {
         status: (d.status as ApprovalStatus) || 'PENDING',
         created_at: d.created_at as string,
         seller_id: (d.seller_id as string) ?? null,
-        seller_name: d.seller_id ? (sellerMap[d.seller_id as string] ?? '(연결 회원 없음)') : '(미연결)',
+        seller_name: (d.seller_name as string) ?? '(미연결)',   // 서버에서 조인해 내려준 값
       }))
       setListings(mapped)
       setTotal(count ?? 0)

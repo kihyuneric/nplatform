@@ -80,22 +80,10 @@ export default function AdminAgreementsPage() {
     Promise.all([
       getJson('/api/v1/exchange/listings?limit=200&status=ACTIVE'),
       getJson('/api/v1/listing-marketing'),
-    ]).then(async ([ld, md]) => {
+    ]).then(([ld, md]) => {
       const list: Array<Record<string, any>> = Array.isArray(ld.data) ? ld.data : []
       // 관리번호 N26-1 — 전 화면 공통 규칙 (2026-08-19)
       const noMap = buildListingNoMap(list.map(x => ({ id: String(x.id), listing_no: x.listing_no, created_at: x.created_at })))
-      // 매각 회원(seller_id) 조인 — NDA·계약 화면에서 "누구 매물인지" 즉시 파악 (2026-08-19)
-      const sellerMap: Record<string, string> = {}
-      const sids = Array.from(new Set(list.map(x => x.seller_id).filter(Boolean))) as string[]
-      if (sids.length > 0) {
-        try {
-          const { createClient } = await import('@/lib/supabase/client')
-          const { data: sellers } = await createClient().from('users').select('id, name, company_name').in('id', sids)
-          for (const s of sellers ?? []) {
-            sellerMap[s.id as string] = [s.name, s.company_name].filter(Boolean).join(' · ') || String(s.id).slice(0, 8)
-          }
-        } catch { /* 조인 실패 시 미연결 표기 */ }
-      }
       setRows(list.map(x => ({
         id: String(x.id),
         no: noMap[String(x.id)] ?? '—',
@@ -103,7 +91,7 @@ export default function AdminAgreementsPage() {
         collateral: String(x.collateral_type ?? '—'),
         created: x.created_at ? String(x.created_at).slice(0, 10) : '—',
         sellerId: (x.seller_id as string) ?? null,
-        sellerName: x.seller_id ? (sellerMap[x.seller_id as string] ?? '(연결 회원 없음)') : '(미연결)',
+        sellerName: (x.seller_name as string) || '(미연결)',   // 서버 조인 결과
       })))
       if (md?.data) setMk(md.data)
     }).catch((e: Error) => setLoadError(e.message || '알 수 없는 오류'))
