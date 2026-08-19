@@ -5,7 +5,7 @@
  *
  * 정책:
  *   - 공개 화면에서는 분석·AI등급 미노출. 분석은 운영자 관리자페이지에서만.
- *   - 등록된 NPL 리스트 전건에 대해 AI 등급 · 예상 ROI · 회수율 · LTV 자동 산출.
+ *   - 등록된 NPL 리스트 전건에 대해 AI 등급 · 예상 ROI · 예상 IRR · LTV 자동 산출.
  *   - 행 클릭 → /admin/npl-analysis/[id] 상세 분석 페이지.
  *   - 산식은 규칙 기반(플랫폼 표준). 실제 ML 모델 연동 시 API 값으로 대체.
  */
@@ -88,7 +88,7 @@ export default function AdminNplAnalysisPage() {
             NPL 수익률 분석
           </h1>
           <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-            매각의뢰된 전건 자동 수익률 분석 — AI 등급 · 예상 ROI · 회수율 · LTV. 외부에는 노출되지 않습니다.
+            매각의뢰된 전건 자동 수익률 분석 — AI 등급 · 예상 ROI · 예상 IRR · LTV. 외부에는 노출되지 않습니다.
           </p>
         </div>
         <div className="flex items-center gap-3 pt-2">
@@ -99,7 +99,7 @@ export default function AdminNplAnalysisPage() {
           <button
             onClick={() => {
               const rows2 = analyzed.map(r => ({
-                '관리번호': r.id,
+                '관리번호': r.no || r.id,
                 '지역': r.region,
                 '유형': r.collateral,
                 '등록일': r.created,
@@ -108,7 +108,7 @@ export default function AdminNplAnalysisPage() {
                 '협의가(원)': r.asking,
                 'AI 등급': r.a.grade,
                 '예상 ROI(%)': r.a.roi,
-                '회수율(%)': r.a.recoveryRate,
+                '예상 IRR(%)': r.a.irr,
                 'LTV(%)': r.a.ltv,
                 '의견': r.a.opinion,
               }))
@@ -149,7 +149,7 @@ export default function AdminNplAnalysisPage() {
               <th className="px-4 py-2.5 font-bold">협의가</th>
               <th className="px-4 py-2.5 font-bold">AI 등급</th>
               <th className="px-4 py-2.5 font-bold">예상 ROI</th>
-              <th className="px-4 py-2.5 font-bold">회수율</th>
+              <th className="px-4 py-2.5 font-bold whitespace-nowrap">예상 IRR</th>
               <th className="px-4 py-2.5 font-bold">LTV</th>
               <th className="px-4 py-2.5 font-bold">의견</th>
               <th className="px-4 py-2.5" />
@@ -180,7 +180,7 @@ export default function AdminNplAnalysisPage() {
                 <td className={`px-4 py-3 tabular-nums font-extrabold ${r.a.roi >= 25 ? 'text-emerald-600' : r.a.roi >= 0 ? 'text-[var(--color-text-primary)]' : 'text-red-600'}`}>
                   {r.a.roi > 0 ? '+' : ''}{r.a.roi}%
                 </td>
-                <td className="px-4 py-3 tabular-nums font-semibold">{r.a.recoveryRate}%</td>
+                <td className={`px-4 py-3 tabular-nums font-bold whitespace-nowrap ${r.a.irr >= 20 ? 'text-emerald-600' : r.a.irr >= 0 ? 'text-[var(--color-text-primary)]' : 'text-red-600'}`}>{r.a.irr > 0 ? '+' : ''}{r.a.irr}%</td>
                 <td className="px-4 py-3 tabular-nums font-semibold">{r.a.ltv}%</td>
                 <td className="px-4 py-3">
                   <span className={`text-[11px] font-extrabold px-2 py-0.5 border ${r.a.opinion === 'BUY' ? 'text-emerald-700 border-emerald-300 bg-emerald-50' : r.a.opinion === 'HOLD' ? 'text-amber-700 border-amber-300 bg-amber-50' : 'text-red-700 border-red-300 bg-red-50'}`}>
@@ -188,9 +188,12 @@ export default function AdminNplAnalysisPage() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right">
+                  {/* 상세 분석 = 기존 엔플랫폼 수익성분석 리포트 (2026-08-19)
+                      별도 간이 화면을 두지 않고, 이미 쓰던 통합 리포트로 바로 연결한다. */}
                   <Link
-                    href={`/admin/npl-analysis/${encodeURIComponent(r.id)}`}
+                    href={`/analysis/report?listingId=${encodeURIComponent(r.id)}`}
                     className="inline-flex items-center gap-1 text-xs font-bold text-[#2251FF] hover:underline"
+                    title={`${r.no || '이 매물'} 수익성분석 리포트`}
                   >
                     상세 분석 <ArrowUpRight size={12} />
                   </Link>
@@ -217,7 +220,7 @@ export default function AdminNplAnalysisPage() {
       )}
 
       <p className="text-[11px] text-[var(--color-text-muted)]">
-        ※ 산식: 예상 회수액 = 감정가 × 85% · ROI = (회수액 − 협의가) ÷ 협의가 · 회수율 = 회수액 ÷ 총 채권액 · LTV = 총 채권액 ÷ 감정가. ML 모델 연동 시 자동 대체됩니다.
+        ※ 산식: 예상 회수액 = 감정가 × 85% · ROI = (회수액 − 협의가) ÷ 협의가 · 예상 IRR = (회수액 ÷ 협의가)^(1/1.5) − 1 (보유 18개월 가정) · LTV = 총 채권액 ÷ 감정가. ML 모델 연동 시 자동 대체됩니다.
       </p>
     </div>
   )

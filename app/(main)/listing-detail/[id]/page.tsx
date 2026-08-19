@@ -18,7 +18,6 @@ import Link from 'next/link'
 import { useParams, useSearchParams } from 'next/navigation'
 import * as XLSX from 'xlsx'
 import { ArrowLeft, Save, Download, Printer, CheckCircle2, Lock } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import type { NdaRequest } from '@/lib/marketing-checklist'
 
 /** 매입사 열람 모드에서 제외되는 필드 — 채권기관 · 담당자 식별 정보 */
@@ -161,15 +160,13 @@ export default function ListingDetailPage() {
         let email = ''
         let uid = ''
         try {
-          const supabase = createClient()
-          // 세션 조회가 지연돼도 화면이 '불러오는 중'에 갇히지 않도록 5초 타임아웃
-          const res = await Promise.race([
-            supabase.auth.getUser(),
-            new Promise<null>(resolve => setTimeout(() => resolve(null), 5000)),
-          ])
-          const user = (res as { data?: { user?: { id?: string; email?: string } } } | null)?.data?.user
-          email = user?.email ?? ''
-          uid = user?.id ?? ''
+          // 서버 API 로 조회 (브라우저 Supabase 설정에 의존하지 않는다 · 2026-08-19)
+          const r = await fetch('/api/v1/auth/me', { credentials: 'include' })
+          if (r.ok) {
+            const d = await r.json()
+            email = d?.user?.email ?? ''
+            uid = d?.user?.id ?? ''
+          }
         } catch { /* ignore */ }
         // 열람권 판정 — 회원 Key 우선, 구 데이터는 이메일 폴백 (2026-08-19)
         const mine = ndaRequests.filter(q =>
@@ -182,23 +179,26 @@ export default function ListingDetailPage() {
       }
 
       // 편집 권한 판정 — 운영자 / 본인 매물 매각 회원 / 그 외 (2026-08-19)
+      //   서버 API 로 판정한다. 브라우저 Supabase 로 조회하던 방식은
+      //   NEXT_PUBLIC_SUPABASE_* 가 번들에 없으면 응답이 오지 않아
+      //   운영관리자인데도 계속 '읽기 전용'에 머물렀다.
       if (!viewerMode) {
         try {
-          const supabase = createClient()
-          const res = await Promise.race([
-            supabase.auth.getUser(),
-            new Promise<null>(resolve => setTimeout(() => resolve(null), 5000)),
-          ])
-          const me = (res as { data?: { user?: { id?: string } } } | null)?.data?.user
-          if (me?.id) {
-            const [{ data: prof }, { data: listing }] = await Promise.all([
-              supabase.from('users').select('role').eq('id', me.id).maybeSingle(),
-              supabase.from('npl_listings').select('seller_id').eq('id', id).maybeSingle(),
-            ])
-            const role = String(prof?.role ?? '')
-            if (['ADMIN', 'SUPER_ADMIN'].includes(role)) setEditRole('admin')
-            else if (listing?.seller_id && listing.seller_id === me.id) setEditRole('seller')
-            else setEditRole('readonly')
+          const r = await fetch('/api/v1/auth/me', { credentials: 'include' })
+          if (r.ok) {
+            const d = await r.json()
+            const me = d?.user ?? d?.data ?? d
+            const role = String(me?.role ?? '')
+            const uid = String(me?.id ?? '')
+            if (['ADMIN', 'SUPER_ADMIN'].includes(role)) {
+              if (!cancelled) setEditRole('admin')
+            } else if (uid) {
+              // 본인 매물인지 확인 — 매각 회원은 자기 매물만 수정
+              const lr = await fetch(`/api/v1/exchange/listings/${encodeURIComponent(id)}`, { credentials: 'include' })
+              const ld = lr.ok ? await lr.json() : null
+              const sellerId = String(ld?.data?.seller_id ?? '')
+              if (!cancelled) setEditRole(sellerId && sellerId === uid ? 'seller' : 'readonly')
+            }
           }
         } catch { /* 판정 실패 시 읽기 전용 유지 */ }
       }

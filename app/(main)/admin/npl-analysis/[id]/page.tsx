@@ -153,7 +153,7 @@ export default function AdminNplAnalysisDetailPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-[var(--color-border-subtle)]">
         {([
           ['예상 ROI', `${a.roi > 0 ? '+' : ''}${a.roi}%`],
-          ['예상 회수율', `${a.recoveryRate}%`],
+          ['예상 IRR', `${a.irr > 0 ? '+' : ''}${a.irr}% (보유 ${a.holdingYears}년 가정)`],
           ['LTV', `${a.ltv}%`],
           ['할인율', `${a.discount}%`],
         ] as [string, string][]).map(([k, v]) => (
@@ -169,7 +169,7 @@ export default function AdminNplAnalysisDetailPage() {
       {/* 산출 근거 */}
       <div className="p-4 border border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] text-xs text-[var(--color-text-secondary)] leading-relaxed">
         <b className="text-[var(--color-text-primary)]">산출 근거 (규칙 기반 v1)</b> — 예상 회수액 {fmtEok(a.expectedRecovery)} = 감정가 {fmtEok(appraisal)} × 85% (경매 평균 낙찰가율 가정) ·
-        ROI = (회수액 − 협의가 {fmtEok(asking)}) ÷ 협의가 · 회수율 = 회수액 ÷ 채권잔액 {fmtEok(principal)} · LTV = 채권잔액 ÷ 감정가
+        ROI = (회수액 − 협의가 {fmtEok(asking)}) ÷ 협의가 · 예상 IRR = (회수액 ÷ 협의가)^(1/1.5) − 1 · LTV = 채권잔액 ÷ 감정가 (채권잔액 {fmtEok(principal)})
       </div>
 
       {/* 전체 필드 — 관리자는 마스킹 없이 전부 열람 */}
