@@ -57,6 +57,25 @@ const PAGE_SIZE = 20
 
 export default function MyDemandsPage() {
   const [rows, setRows] = useState<DemandRow[]>([])
+  // 조건별 자동매칭 결과 (2026-08-19) — 매입 회원 핵심 기능
+  const [matchCount, setMatchCount] = useState<Record<string, number>>({})
+  const [matchListings, setMatchListings] = useState<Record<string, Array<Record<string, unknown>>>>({})
+  const [matchTarget, setMatchTarget] = useState<string | null>(null)
+  useEffect(() => {
+    fetch('/api/v1/matching/by-demand?mine=1', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        const counts: Record<string, number> = {}
+        const lists: Record<string, Array<Record<string, unknown>>> = {}
+        for (const [id, v] of Object.entries(d?.data ?? {})) {
+          const val = v as { count: number; listings: Array<Record<string, unknown>> }
+          counts[id] = val.count
+          lists[id] = val.listings ?? []
+        }
+        setMatchCount(counts); setMatchListings(lists)
+      })
+      .catch(() => {})
+  }, [])
   const [loading, setLoading] = useState(true)
   // D0 공통 UI — 검색 + 페이지네이션
   const [search, setSearch] = useState('')
@@ -151,6 +170,7 @@ export default function MyDemandsPage() {
               <th className="px-3 py-2 font-bold">지역</th>
               <th className="px-3 py-2 font-bold whitespace-nowrap">면적 토지/건물(㎡)</th>
               <th className="px-3 py-2 font-bold whitespace-nowrap">금액대(억)</th>
+              <th className="px-3 py-2 font-bold whitespace-nowrap">자동매칭</th>
               <th className="px-3 py-2 font-bold">요청사항</th>
               <th className="px-3 py-2 font-bold whitespace-nowrap">관리</th>
             </tr>
@@ -187,6 +207,24 @@ export default function MyDemandsPage() {
                 <td className="px-3 py-2 tabular-nums whitespace-nowrap">{fmtRange(r.landMin, r.landMax)}</td>
                 <td className="px-3 py-2 tabular-nums whitespace-nowrap">{fmtRange(r.bldgMin, r.bldgMax)}</td>
                 <td className="px-3 py-2 tabular-nums whitespace-nowrap font-bold text-[var(--color-text-primary)]">{fmtRange(r.amountMin, r.amountMax)}</td>
+                {/* 자동매칭 — 이 조건에 맞는 매물 수 → 클릭 시 해당 매물만 보기 (2026-08-19) */}
+                <td className="px-3 py-2 whitespace-nowrap">
+                  {matchCount[r.id] === undefined ? (
+                    <span className="text-[11px] text-[var(--color-text-muted)]">대조 중…</span>
+                  ) : matchCount[r.id] === 0 ? (
+                    <span className="text-[11px] text-[var(--color-text-muted)]">매칭 0건</span>
+                  ) : (
+                    <button
+                      onClick={() => setMatchTarget(r.id)}
+                      className="inline-flex items-baseline gap-1 hover:underline"
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                      title="매칭된 매물 보기"
+                    >
+                      <b className="text-[15px] tabular-nums" style={{ color: '#1A47CC' }}>{matchCount[r.id]}</b>
+                      <span className="text-[11px] text-[var(--color-text-muted)]">건 보기</span>
+                    </button>
+                  )}
+                </td>
                 <td className="px-3 py-2 max-w-[200px] text-[var(--color-text-secondary)]">
                   <span className="line-clamp-2">{r.memo || '—'}</span>
                 </td>
@@ -225,6 +263,49 @@ export default function MyDemandsPage() {
             <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
               className="px-3 py-1.5 font-bold border border-[var(--color-border-default)] text-[var(--color-text-primary)] disabled:opacity-30"
               style={{ background: 'transparent', cursor: 'pointer' }}>다음</button>
+          </div>
+        </div>
+      )}
+
+      {/* 조건별 자동매칭 결과 패널 (2026-08-19) */}
+      {matchTarget && (
+        <div className="fixed inset-0 z-[300] flex justify-end" style={{ background: 'rgba(5,28,44,0.45)' }} onClick={() => setMatchTarget(null)}>
+          <div className="h-full w-full md:w-[560px] md:max-w-[90vw] overflow-y-auto bg-[var(--color-surface-elevated)]"
+            style={{ borderLeft: '3px solid #2251FF' }} onClick={e => e.stopPropagation()}>
+            <div className="sticky top-0 flex items-center justify-between px-4 py-3 border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
+              <div>
+                <div className="text-[10px] font-extrabold uppercase tracking-[0.12em]" style={{ color: '#2251FF' }}>자동매칭 결과</div>
+                <div className="text-[14px] font-black text-[var(--color-text-primary)]">
+                  이 조건에 맞는 NPL {matchCount[matchTarget] ?? 0}건
+                </div>
+              </div>
+              <button onClick={() => setMatchTarget(null)} aria-label="닫기"
+                className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>✕</button>
+            </div>
+            <div className="p-3 space-y-1.5">
+              {(matchListings[matchTarget] ?? []).length === 0 ? (
+                <p className="py-8 text-center text-[12px] text-[var(--color-text-muted)]">매칭된 매물이 없습니다.</p>
+              ) : (matchListings[matchTarget] ?? []).map((l, i) => {
+                const eok = (v: unknown) => typeof v === 'number' && v > 0 ? `${(v / 100000000).toFixed(1)}억` : '—'
+                return (
+                  <Link key={String(l.id ?? i)} href={`/listing-detail/${encodeURIComponent(String(l.id))}?mode=view`}
+                    className="block px-3 py-2 border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)]"
+                    style={{ textDecoration: 'none' }}>
+                    <div className="text-[12.5px] font-bold text-[var(--color-text-primary)] truncate">{String(l.title ?? '')}</div>
+                    <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[var(--color-text-muted)] tabular-nums">
+                      <span>{String(l.region ?? '')}</span>
+                      <span>채권 {eok(l.claim_amount)}</span>
+                      <span>협의가 {eok(l.asking_price)}</span>
+                    </div>
+                  </Link>
+                )
+              })}
+              <Link href="/exchange" className="block mt-2 px-3 py-2 text-center text-[12px] font-extrabold text-white"
+                style={{ background: '#0A1628', borderTop: '2px solid #2251FF', textDecoration: 'none' }}>
+                NPL 자동매칭 전체 보기
+              </Link>
+            </div>
           </div>
         </div>
       )}
