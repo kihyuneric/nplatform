@@ -415,16 +415,29 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td className={`${DS.table.cellMuted} text-[0.75rem] font-mono`}>{u.created_at?.slice(0, 10)}</td>
-                      {/* 상태 — 기본 승인대기 · 승인 클릭 시 활성 · 거절 */}
+                      {/* 상태 — 승인대기 · 활성 · 거절 · 탈퇴 + 보류(사유 메모 존재 시 구분 표시) */}
                       <td className={DS.table.cell}>
-                        <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full border ${
-                          u.kyc_status === 'APPROVED' ? 'text-emerald-700 border-emerald-300 bg-emerald-50' :
-                          u.kyc_status === 'REJECTED' ? 'text-red-700 border-red-300 bg-red-50' :
-                          u.kyc_status === 'WITHDRAWN' ? 'text-stone-500 border-stone-300 bg-stone-50' :
-                          'text-amber-700 border-amber-300 bg-amber-50'
-                        }`}>
-                          {KYC_LABEL[u.kyc_status] || '승인대기'}
-                        </span>
+                        {(() => {
+                          const isHold = (u.kyc_status === 'PENDING' || u.kyc_status === 'SUBMITTED') && (u.admin_note ?? '').startsWith('[보류]')
+                          return (
+                            <span
+                              title={isHold ? (u.admin_note ?? '') : undefined}
+                              className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full border ${
+                                u.kyc_status === 'APPROVED' ? 'text-emerald-700 border-emerald-300 bg-emerald-50' :
+                                u.kyc_status === 'REJECTED' ? 'text-red-700 border-red-300 bg-red-50' :
+                                u.kyc_status === 'WITHDRAWN' ? 'text-stone-500 border-stone-300 bg-stone-50' :
+                                isHold ? 'text-orange-800 border-orange-400 bg-orange-50' :
+                                'text-amber-700 border-amber-300 bg-amber-50'
+                              }`}>
+                              {isHold ? '보류' : (KYC_LABEL[u.kyc_status] || '승인대기')}
+                            </span>
+                          )
+                        })()}
+                        {(u.admin_note ?? '').startsWith('[보류]') && (u.kyc_status === 'PENDING' || u.kyc_status === 'SUBMITTED') && (
+                          <span className="block mt-0.5 text-[0.625rem] text-orange-700 max-w-[180px] truncate" title={u.admin_note ?? ''}>
+                            {(u.admin_note ?? '').replace('[보류] ', '')}
+                          </span>
+                        )}
                       </td>
                       <td className={DS.table.cell}>
                         <div className="flex items-center gap-1.5 flex-wrap">
