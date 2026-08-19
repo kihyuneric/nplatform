@@ -11,7 +11,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Send, CheckCircle2, Info, Building2, Gavel, Plus, Trash2, ChevronUp, ChevronDown, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -73,6 +73,48 @@ const emptyCondition = (): DemandCondition => ({
 export default function NewDemandPage() {
   const router = useRouter()
   const [conditions, setConditions] = useState<DemandCondition[]>([emptyCondition()])
+
+  // ── 수정 모드 (2026-08-19 통합) — ?edit=<id> 로 진입하면 이 폼이 곧 수정 폼 ──
+  //    등록·수정·가입 스텝이 제각각이던 레거시 화면을 이 폼 하나로 통일한다.
+  const editParams = useSearchParams()
+  const editId = editParams?.get('edit') ?? ''
+  const isEdit = !!editId
+  const [editLoading, setEditLoading] = useState(isEdit)
+  useEffect(() => {
+    if (!editId) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const r = await fetch(`/api/v1/exchange/demands/${encodeURIComponent(editId)}`, { credentials: 'include' })
+        const d = await r.json().catch(() => ({}))
+        const x = (d?.data ?? d) as Record<string, unknown>
+        if (!x || cancelled) return
+        const arr = (v: unknown): string[] => Array.isArray(v) ? v.map(String)
+          : (typeof v === 'string' && v ? (() => { try { const p = JSON.parse(v); return Array.isArray(p) ? p.map(String) : v.split(',').map(s => s.trim()) } catch { return v.split(',').map(s => s.trim()) } })() : [])
+        const regions = arr(x.regions)
+        const eok = (v: unknown) => {
+          const n = typeof v === 'string' ? Number(v) : (v as number)
+          if (!n || !isFinite(n) || n <= 0) return ''
+          return String(n > 100000 ? Math.round(n / 100000000) : n)
+        }
+        setConditions([{
+          demandType: String(x.demand_type ?? 'npl') === 'realestate' ? 'realestate' : 'npl',
+          collateralTypes: arr(x.collateral_types),
+          nationwide: regions.includes('전국'),
+          regions: regions.filter(r => r !== '전국'),
+          landMin: x.land_area_min_m2 ? String(x.land_area_min_m2) : '',
+          landMax: x.land_area_max_m2 ? String(x.land_area_max_m2) : '',
+          bldgMin: x.building_area_min_m2 ? String(x.building_area_min_m2) : '',
+          bldgMax: x.building_area_max_m2 ? String(x.building_area_max_m2) : '',
+          amountMin: eok(x.min_amount),
+          amountMax: eok(x.max_amount),
+          memo: String(x.memo ?? x.description ?? '').replace(/\n?\[담당자\].*$/m, '').trim(),
+        }])
+      } catch { /* 조회 실패 시 빈 폼 */ }
+      finally { if (!cancelled) setEditLoading(false) }
+    })()
+    return () => { cancelled = true }
+  }, [editId])
 
   // ── 로그인 상태 + 담당자 정보 (회원가입 정보 자동 기입 · 수정 가능) ──
   const [authState, setAuthState] = useState<'checking' | 'guest' | 'user'>('checking')
@@ -194,11 +236,15 @@ export default function NewDemandPage() {
           contact_email: contact.email || null,
         }
         try {
-          const res = await fetch('/api/v1/exchange/demands', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-          })
+          // 수정 모드면 PATCH, 아니면 신규 등록 (2026-08-19 통합)
+          const res = await fetch(
+            isEdit ? `/api/v1/exchange/demands/${encodeURIComponent(editId)}` : '/api/v1/exchange/demands',
+            {
+              method: isEdit ? 'PATCH' : 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+            })
           if (res.ok) {
             const json = await res.json().catch(() => ({}))
             const ok = (json as { success?: boolean })?.success === true
@@ -217,7 +263,8 @@ export default function NewDemandPage() {
       }
       if (okCount === conditions.length) {
         setSubmitted(true)
-        setTimeout(() => router.push('/exchange/demands'), 2500)
+        // 등록·수정 후에는 마이페이지 매입 조건으로 (레거시 게시판 이동 제거 · 2026-08-19)
+        setTimeout(() => router.push('/my/demands'), 2000)
       } else if (okCount > 0) {
         alert(`${conditions.length}건 중 ${okCount}건 등록 완료. 나머지는 다시 시도해주세요.${errorMessage ? `\n(${errorMessage})` : ''}`)
       } else {
@@ -247,7 +294,7 @@ export default function NewDemandPage() {
       {/* ── 표준 페이지 헤더 (전 메뉴 공통 포맷) ── */}
       <MckPageHeader
         eyebrow="Private Deal · NDA 기반"
-        title="매입조건 등록"
+        title={isEdit ? "매입조건 수정" : "매입조건 등록"}
         subtitle="지역 · 유형 · 금액대만 알려주세요 — 우선순위별로 조건을 여러 개 등록할 수 있습니다."
         actions={
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
@@ -638,7 +685,7 @@ export default function NewDemandPage() {
               ) : (
                 <>
                   <Send className="h-4 w-4" />
-                  매입조건 {conditions.length}건 등록하기
+                  {isEdit ? "이 조건 수정 저장" : `매입조건 ${conditions.length}건 등록하기`}
                 </>
               )}
             </button>
