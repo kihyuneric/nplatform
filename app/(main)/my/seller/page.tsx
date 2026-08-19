@@ -349,24 +349,36 @@ export default function SellerMyListingsPage() {
                       {/* 등록일 — 한 줄 고정 (날짜가 세로로 쪼개지지 않도록) */}
                       <td className={DS.table.cellMuted + ' tabular-nums whitespace-nowrap'}>{l.created_at?.slice(0, 10) || '-'}</td>
                       <td className={DS.table.cell}>
-                        <div className="flex items-center gap-1.5 whitespace-nowrap">
+                        {/* 액션 — 3칸 고정 슬롯: 모든 행에서 버튼 폭·위치가 같다 (2026-08-19) */}
+                        <div className="grid grid-cols-3 gap-1 w-[192px]">
                           <button
                             onClick={() => setDetailTarget(l.id)}
-                            className={DS.text.link + ' text-[0.75rem]'}
-                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                            className={`${DS.button.secondary} ${DS.button.sm} justify-center w-full`}
                           >
                             세부내역
                           </button>
-                          <span className="text-[var(--color-border-default)]">|</span>
+
+                          {/* 매각 회원이 직접 매물 정보를 수정 (2026-08-19 추가) */}
                           {mk?.ended_at ? (
-                            <span className="text-[0.6875rem] font-bold text-stone-600">종료됨</span>
+                            <span aria-hidden />
+                          ) : (
+                            <Link
+                              href={`/exchange/edit/${encodeURIComponent(l.id)}`}
+                              className={`${DS.button.secondary} ${DS.button.sm} justify-center w-full`}
+                              style={{ textDecoration: 'none' }}
+                            >
+                              수정
+                            </Link>
+                          )}
+
+                          {mk?.ended_at ? (
+                            <span className="inline-flex items-center justify-center text-[0.6875rem] font-bold text-stone-600">종료됨</span>
                           ) : (endRequested.has(l.id) || mk?.end_requested_at) ? (
-                            <span className="text-[0.6875rem] font-bold text-amber-700">종료 요청중</span>
+                            <span className="inline-flex items-center justify-center text-[0.6875rem] font-bold text-amber-700">요청중</span>
                           ) : (
                             <button
                               onClick={() => requestEnd(l.id, l.title, l.listing_no)}
-                              className="text-[0.75rem] text-[var(--color-danger)] hover:underline transition-colors cursor-pointer"
-                              style={{ background: 'transparent', border: 'none', padding: 0 }}
+                              className={`${DS.button.danger} ${DS.button.sm} justify-center w-full`}
                             >
                               진행종료
                             </button>

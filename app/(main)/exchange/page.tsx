@@ -1680,6 +1680,15 @@ function ListingCard({ item, index, areaUnit, fav, onToggleFav, onNda, no }: { i
       <div style={{ padding: "12px 14px 12px", display: "flex", flexDirection: "column", gap: 9 }}>
         {/* Title row — 지역 · 유형 · 주소(마스킹) · 관리번호 */}
         <div style={{ minWidth: 0 }}>
+          {/* 관리번호 우선 — 모든 소통이 이 번호 기준이므로 카드 최상단에 둔다 (2026-08-19) */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
+            <span style={{ fontFamily: "monospace", fontSize: 11.5, fontWeight: 800, color: "#1A47CC", letterSpacing: "0.02em" }}>
+              {no ?? item.id}
+            </span>
+            {item.created_days_ago <= 3 && (
+              <span className="npl-badge-new" style={{ padding: "2px 6px", fontSize: 9.5, fontWeight: 900, letterSpacing: "0.06em", lineHeight: 1.2, borderRadius: 2 }}>NEW</span>
+            )}
+          </div>
           <div style={{ fontSize: 10, color: "rgba(5, 28, 44, 0.55)", marginBottom: 6, display: "flex", alignItems: "center", gap: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.10em" }}>
             <MapPin size={10} /> {item.region}
           </div>
@@ -1693,10 +1702,7 @@ function ListingCard({ item, index, areaUnit, fav, onToggleFav, onNda, no }: { i
             {item.address_dong ?? maskAddress(item.region)}
           </div>
           <div style={{ fontSize: 9, color: "rgba(5, 28, 44, 0.40)", marginTop: 4, fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            {no ?? item.id} · 등록 {item.created_at_label ?? "—"}
-            {item.created_days_ago <= 3 && (
-              <span className="npl-badge-new" style={{ marginLeft: 6, padding: "2px 6px", fontSize: 10, fontWeight: 900, letterSpacing: "0.06em", lineHeight: 1.2, borderRadius: 2 }}>NEW</span>
-            )}
+            등록 {item.created_at_label ?? "—"}
           </div>
         </div>
 

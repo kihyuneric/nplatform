@@ -122,6 +122,7 @@ export default function ListingDetailPage() {
   const viewerMode = search?.get('mode') === 'view'
 
   const [detail, setDetail] = useState<Record<string, string>>({})
+  const [listingNo, setListingNo] = useState('')   // 관리번호 N26-1 (2026-08-19)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -145,6 +146,15 @@ export default function ListingDetailPage() {
         if (row?.detail && typeof row.detail === 'object') stored = row.detail
         if (Array.isArray(row?.nda_requests)) ndaRequests = row.nda_requests
       } catch { /* ignore */ }
+
+      // 관리번호 — 화면 어디서나 UUID 대신 N26-1 로 식별 (2026-08-19)
+      try {
+        const lr = await fetch(`/api/v1/exchange/listings/${encodeURIComponent(id)}`, { credentials: 'include' })
+        if (lr.ok) {
+          const ld = await lr.json()
+          if (!cancelled && ld?.data?.listing_no) setListingNo(String(ld.data.listing_no))
+        }
+      } catch { /* 번호 없이 표시 */ }
 
       // 열람 모드 — 내 계정의 NDA 요청이 '승인' 상태인지 확인
       if (viewerMode) {
@@ -279,7 +289,7 @@ export default function ListingDetailPage() {
     ws['!cols'] = [{ wch: 14 }, { wch: 26 }, { wch: 36 }, { wch: 40 }]
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, '탬플릿')
-    XLSX.writeFile(wb, `NPL_상세내역_${id}.xlsx`)
+    XLSX.writeFile(wb, `NPL_상세내역_${listingNo || id}.xlsx`)
   }
 
   return (
@@ -304,7 +314,7 @@ export default function ListingDetailPage() {
           <h1 className="mt-2 text-2xl font-black text-[var(--color-text-primary)]" style={{ fontFamily: 'Georgia, serif' }}>
             NPL 세부내역
           </h1>
-          <p className="mt-1 text-xs font-mono text-[var(--color-text-muted)]">{id}</p>
+          <p className="mt-1 text-xs font-mono font-bold text-[#1A47CC]">{listingNo || '관리번호 확인 중…'}</p>
         </div>
         {(!viewerMode || viewerAccess === 'approved') && (
         <div className="flex items-center gap-2 flex-wrap">
@@ -333,7 +343,7 @@ export default function ListingDetailPage() {
       {/* 인쇄용 타이틀 */}
       <div className="hidden print:block mb-4">
         <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 22, fontWeight: 800, color: INK }}>부실채권(NPL) 상세내역</h1>
-        <p style={{ fontSize: 11, color: '#5A6472' }}>{id} · nplatform</p>
+        <p style={{ fontSize: 11, color: '#5A6472' }}>{listingNo || id} · nplatform</p>
       </div>
 
       {loading || (viewerMode && viewerAccess === 'checking') ? (
