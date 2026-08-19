@@ -4,6 +4,13 @@ import { getAuthUserWithRole } from '@/lib/auth/get-user'
 import { apiError } from '@/lib/api-error'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+/**
+ * 인증에 따라 내용이 달라지는 응답은 절대 캐시되면 안 된다 (2026-08-19).
+ * 관리자 응답이 CDN 에 캐시돼 다른 회원에게 그대로 전달되는 사고를 막는다.
+ */
+const NO_STORE = { 'Cache-Control': 'private, no-store, max-age=0, must-revalidate' } as const
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'ADMIN', 'PARTNER']
 
@@ -57,7 +64,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ data: rows, isAdmin })
+    return NextResponse.json({ data: rows, isAdmin }, { headers: NO_STORE })
   } catch (e) {
     console.error('nda documents GET error:', e)
     return apiError('INTERNAL_ERROR', 'NDA 문서 조회에 실패했습니다.', 500)

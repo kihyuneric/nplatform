@@ -269,6 +269,25 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  /**
+   * ── 8. API 응답 캐시 금지 (2026-08-19) ──
+   *
+   * 같은 URL 이라도 로그인한 사람에 따라 내용이 달라지는 API 가 공유 캐시에 올라가면
+   * 다른 회원에게 그대로 전달된다. 실제로 운영관리자의 NDA 문서 목록이 캐시되어
+   * 매입 회원 요청에 응답되는 사고가 있었다(타인 체결 문서 노출).
+   *
+   * 라우트마다 헤더를 챙기면 언젠가 빠지므로, 관문에서 일괄 차단한다.
+   * 공개 정적 성격의 API(설정·내비 등)만 예외로 둔다.
+   */
+  if (isApi) {
+    const PUBLIC_CACHEABLE = ['/api/v1/nav-config', '/api/v1/site-settings', '/api/health']
+    const cacheable = PUBLIC_CACHEABLE.some(p => pathname.startsWith(p))
+    if (!cacheable) {
+      headers.set('Cache-Control', 'private, no-store, max-age=0, must-revalidate')
+      headers.set('Vary', 'Cookie')
+    }
+  }
+
   return response
 }
 

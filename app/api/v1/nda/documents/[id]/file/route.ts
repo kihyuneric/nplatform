@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUserWithRole } from '@/lib/auth/get-user'
 import { apiError } from '@/lib/api-error'
+import { NO_STORE } from '@/lib/api-cache'
 
 export const dynamic = 'force-dynamic'
 
