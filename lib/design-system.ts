@@ -124,7 +124,9 @@ export const BUTTON = {
   /** Accent: positive (emerald) */
   accent: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-positive)] text-white text-[0.8125rem] font-bold border-t-2 border-t-[#34D399] hover:opacity-90 transition-opacity duration-150',
   /** Danger: 레드 */
-  danger: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-danger)] text-white text-[0.8125rem] font-bold hover:opacity-90 transition-opacity duration-150',
+  // 명시 색상 — bg-[var(--color-danger)] 유틸이 생성되지 않아 '흰 글씨 + 투명 배경'으로
+  // 버튼이 보이지 않던 문제 수정 (2026-08-19)
+  danger: 'inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#B3261E] text-white text-[0.8125rem] font-bold border-t-2 border-t-[#E5484D] hover:opacity-90 transition-opacity duration-150',
   /** 작은 버튼 */
   // 표 안 액션용 컴팩트 사이즈 (쫀쫀·타이트 2026-08-19) — base 패딩을 확실히 이기도록 !important
   sm: '!text-[0.71875rem] !px-2 !py-1 !gap-1 whitespace-nowrap',
@@ -299,7 +301,7 @@ const BTN_COLORS: Record<ButtonVariant, string> = {
   secondary: 'bg-[var(--color-surface-elevated)] text-[var(--color-brand-dark)] border border-[var(--color-border-default)] shadow-[var(--shadow-xs)] hover:bg-[var(--color-surface-sunken)] hover:border-[var(--color-border-strong)]',
   ghost:     'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-sunken)] hover:text-[var(--color-text-primary)]',
   accent:    'bg-[var(--color-positive)] text-white shadow-[var(--shadow-sm)] hover:bg-emerald-600 hover:-translate-y-0.5',
-  danger:    'bg-[var(--color-danger)] text-white shadow-[var(--shadow-sm)] hover:bg-red-600',
+  danger:    'bg-[#B3261E] text-white shadow-[var(--shadow-sm)] hover:opacity-90',
 }
 
 export function button(variant: ButtonVariant, size: ButtonSize = 'md'): string {

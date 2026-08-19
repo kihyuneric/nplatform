@@ -7,6 +7,9 @@ module.exports = {
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
+    // lib/ 미포함으로 design-system.ts 의 클래스(버튼·배지·표 등)가 생성되지 않아
+    // '흰 글씨 + 투명 배경'처럼 보이지 않는 UI 가 있었음 (2026-08-19 수정)
+    "./lib/**/*.{ts,tsx}",
   ],
   theme: {
     container: {
