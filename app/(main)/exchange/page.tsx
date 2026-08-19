@@ -670,7 +670,7 @@ export default function ExchangePage() {
 
   // ── 엑셀 다운로드 ───────────────────────────────────────────
   const handleExcelDownload = useCallback(() => {
-    // 목록 노출 9필드 정책과 동일 범위만 내보냄 — 기관 실명·분석 지표는 NDA 후
+    // 목록 노출 9필드 정책과 동일 범위만 내보냄 — 채권기관·담당자 정보는 어떤 단계에서도 미공개
     const rows = filtered.map(x => ({
       "관심":          favorites.has(x.id) ? "★" : "",
       "관리번호":      displayNo[x.id] ?? x.id,
@@ -714,7 +714,7 @@ export default function ExchangePage() {
         ]}
         eyebrow="Private Deal · NDA 기반"
         title={tr("NPL 자동매칭")}
-        subtitle={tr("기본 정보만 공개 — 주소 · 서류 · 상세 자료는 NDA 체결 후에 열람가능합니다.")}
+        subtitle={tr("기본 정보만 공개 — 주소 · 서류 · 상세 자료는 NDA 승인 후 열람 가능합니다. 채권기관 · 담당자 정보는 공개되지 않습니다.")}
         actions={
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
             <Link
@@ -1636,12 +1636,12 @@ function ListingCard({ item, index, areaUnit, fav, onToggleFav, onNda, no }: { i
           <div>
             <div
               style={{ fontSize: 11, fontWeight: 700, color: "#0A1628", lineHeight: 1.2, letterSpacing: "-0.005em" }}
-              title="NDA 체결 후 실명 공개"
+              title="채권기관·담당자 정보는 공개되지 않습니다 (협의 과정에서 운영사가 연결)"
             >
               {maskInstitutionName(item.institution)}
             </div>
             <div style={{ fontSize: 9, color: "rgba(5, 28, 44, 0.50)", marginTop: 2, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.10em" }}>
-              NDA 체결 후 실명 공개
+              채권기관 비공개 (운영사 중개)
             </div>
           </div>
         </div>
@@ -1666,7 +1666,7 @@ function ListingCard({ item, index, areaUnit, fav, onToggleFav, onNda, no }: { i
       </div>
 
       {/* 사진 — 대표 이미지 (없으면 placeholder) */}
-      <div style={{ height: 140, backgroundColor: "#F1F4F7", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderBottom: "1px solid rgba(5, 28, 44, 0.08)" }}>
+      <div style={{ aspectRatio: "16 / 10", minHeight: 190, backgroundColor: "#F1F4F7", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderBottom: "1px solid rgba(5, 28, 44, 0.08)" }}>
         {item.photo_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={item.photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -1679,7 +1679,7 @@ function ListingCard({ item, index, areaUnit, fav, onToggleFav, onNda, no }: { i
       </div>
 
       {/* Body */}
-      <div style={{ padding: "18px 16px 14px", display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ padding: "12px 14px 12px", display: "flex", flexDirection: "column", gap: 9 }}>
         {/* Title row — 지역 · 유형 · 주소(마스킹) · 관리번호 */}
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 10, color: "rgba(5, 28, 44, 0.55)", marginBottom: 6, display: "flex", alignItems: "center", gap: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.10em" }}>
@@ -1690,14 +1690,14 @@ function ListingCard({ item, index, areaUnit, fav, onToggleFav, onNda, no }: { i
           </div>
           <div
             style={{ fontSize: 11, color: "rgba(5, 28, 44, 0.55)", marginTop: 4, fontWeight: 600 }}
-            title="세부주소는 NDA 체결 후 공개"
+            title="세부주소는 NDA 승인 후 공개 (채권기관·담당자 정보는 미공개)"
           >
             {item.address_dong ?? maskAddress(item.region)}
           </div>
           <div style={{ fontSize: 9, color: "rgba(5, 28, 44, 0.40)", marginTop: 4, fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             {no ?? item.id} · 등록 {item.created_at_label ?? "—"}
             {item.created_days_ago <= 3 && (
-              <span style={{ marginLeft: 5, padding: "1px 5px", fontSize: 8, fontWeight: 800, color: "#FFFFFF", background: "#2251FF", letterSpacing: "0.04em" }}>NEW</span>
+              <span className="npl-badge-new" style={{ marginLeft: 6, padding: "2px 6px", fontSize: 10, fontWeight: 900, letterSpacing: "0.06em", lineHeight: 1.2, borderRadius: 2 }}>NEW</span>
             )}
           </div>
         </div>
@@ -1707,7 +1707,7 @@ function ListingCard({ item, index, areaUnit, fav, onToggleFav, onNda, no }: { i
           <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(5, 28, 44, 0.55)", textTransform: "uppercase", letterSpacing: "0.16em", marginBottom: 4 }}>
             협의가
           </div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: "#0A1628", letterSpacing: "-0.02em", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+          <div style={{ fontSize: 23, fontWeight: 800, color: "#0A1628", letterSpacing: "-0.02em", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
             {asking}
           </div>
         </div>
@@ -1718,10 +1718,10 @@ function ListingCard({ item, index, areaUnit, fav, onToggleFav, onNda, no }: { i
           style={{
             background: "#FFFFFF",
             borderTop: "3px solid #2251FF",                       /* MCK.electric accent strip */
-            padding: "14px 0 12px",
+            padding: "10px 0 8px",
           }}
         >
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <SubMetric label="감정가" value={appraisal} />
             <SubMetric label="총 채권액" value={principal} />
             <SubMetric label="토지면적" value={landArea} />
@@ -1737,7 +1737,7 @@ function ListingCard({ item, index, areaUnit, fav, onToggleFav, onNda, no }: { i
           style={{
             width: "100%", border: "none", cursor: "pointer",
             marginTop: 4,
-            padding: "11px 14px",
+            padding: "9px 12px",
             borderRadius: 4,
             fontSize: 12, fontWeight: 800,
             textAlign: "center",
@@ -1872,7 +1872,7 @@ function ListingRow({ item, index, areaUnit, fav, onToggleFav, onNda, nplStatus,
         <div style={{ fontSize: 10, color: V.textMuted, marginTop: 2, fontVariantNumeric: "tabular-nums", display: "flex", alignItems: "center", gap: 5 }}>
           {item.created_at_label ?? "—"}
           {item.created_days_ago <= 3 && (
-            <span style={{ padding: "1px 5px", fontSize: 8, fontWeight: 800, color: "#FFFFFF", background: "#2251FF", letterSpacing: "0.04em" }}>NEW</span>
+            <span className="npl-badge-new" style={{ padding: "2px 6px", fontSize: 10, fontWeight: 900, letterSpacing: "0.06em", lineHeight: 1.2, borderRadius: 2 }}>NEW</span>
           )}
           {nplStatus && (
             <span
@@ -1894,7 +1894,7 @@ function ListingRow({ item, index, areaUnit, fav, onToggleFav, onNda, nplStatus,
         <div style={{ display: "flex", alignItems: "center", gap: 4, color: V.textPrimary, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           <MapPin size={11} color={V.textMuted} style={{ flexShrink: 0 }} /> {item.region}
         </div>
-        <div style={{ fontSize: 10, color: V.textMuted, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title="세부주소는 NDA 체결 후 공개">
+        <div style={{ fontSize: 10, color: V.textMuted, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title="세부주소는 NDA 승인 후 공개 (채권기관·담당자 정보는 미공개)">
           {item.address_dong ?? maskAddress(item.region)}
         </div>
       </div>

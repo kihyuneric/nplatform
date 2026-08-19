@@ -353,7 +353,7 @@ export default function ListingDetailPage() {
                 : '이 채권의 세부내역은 NDA 전자서명 후 운영사 승인을 거쳐 공개됩니다.'}
           </p>
           <p className="mt-1 text-[11.5px] text-[var(--color-text-muted)]">
-            승인 후에도 채권기관 · 담당자 정보는 공개되지 않습니다.
+            채권기관 · 담당자명 · 직책 · 연락처는 NDA 승인 후에도 공개되지 않으며, 협의 과정에서 운영사가 연결합니다.
           </p>
           <Link href="/exchange" className="inline-flex items-center gap-1.5 mt-6 px-5 py-2.5 text-xs font-extrabold text-white" style={{ background: INK, borderTop: `2px solid ${ELECTRIC}`, textDecoration: 'none' }}>
             NPL 자동매칭에서 NDA 요청하기
@@ -365,7 +365,7 @@ export default function ListingDetailPage() {
           <div className="grid grid-cols-[110px_170px_1fr] text-[10.5px] font-bold uppercase tracking-wide text-[var(--color-text-muted)] border-b border-[var(--color-border-default)] bg-[var(--color-surface-overlay)]">
             <div className="px-3 py-2">대분류</div>
             <div className="px-3 py-2">소분류</div>
-            <div className="px-3 py-2">{viewerMode ? '내용 — NDA 승인 열람본' : '내용 — 세부 내용은 NDA 시 제공 (클릭하여 수정)'}</div>
+            <div className="px-3 py-2">{viewerMode ? '내용 — NDA 승인 열람본' : '내용 — 세부 내용은 NDA 승인 후 제공 (클릭하여 수정)'}</div>
           </div>
           {visibleSpec.map(g => (
             g.fields.map((f, i) => (
