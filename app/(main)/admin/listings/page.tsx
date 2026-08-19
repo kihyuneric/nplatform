@@ -11,6 +11,7 @@ import { NPL_STATUSES } from "@/lib/marketing-checklist"
 import { MarketingPanel } from "@/components/admin/marketing-panel"
 import { DetailPane } from "@/components/listing/detail-pane"
 import { MemberPane } from "@/components/admin/member-pane"
+import { MemberFilterBar, useMemberFilter } from "@/components/admin/member-filter-bar"
 import { ReactionsPane } from "@/components/admin/reactions-pane"
 
 type ApprovalStatus = "PENDING" | "APPROVED" | "ACTIVE" | "REJECTED" | "HIDDEN" | "REPORTED"
@@ -25,6 +26,7 @@ interface AdminListing {
   ai_grade?: string
   status: ApprovalStatus
   created_at: string
+  listing_no?: string | null   // DB 고정 관리번호 NPL26-1 (2026-08-19)
   seller_id?: string | null
   seller_name?: string
   // Phase G7+ · 자발적 경매 진행 정보
@@ -74,6 +76,8 @@ export default function AdminListingsPage() {
   const [detailTarget, setDetailTarget] = useState<string | null>(null)
   // 회원 상세 패널 — 매각 회원 클릭 시 (2026-08-19)
   const [memberTarget, setMemberTarget] = useState<string | null>(null)
+  // 회원 Key 기준 필터 — ?user=<회원ID> · 매각 회원별 매물만 (2026-08-19)
+  const memberFilter = useMemberFilter()
   // 매물 반응 상세 (매칭 매입회원 · NDA 요청자 · 관심 회원) — 2026-08-19
   const [reactionTarget, setReactionTarget] = useState<string | null>(null)
 
@@ -132,7 +136,8 @@ export default function AdminListingsPage() {
     setLoading(true)
     try {
       const supabase = createClient()
-      let query = supabase.from("npl_listings").select("id, title, collateral_type, sido, sigungu, claim_amount, ai_grade, status, created_at, seller_id", { count: "exact" })
+      let query = supabase.from("npl_listings").select("id, listing_no, title, collateral_type, sido, sigungu, claim_amount, ai_grade, status, created_at, seller_id", { count: "exact" })
+      if (memberFilter) query = query.eq("seller_id", memberFilter)   // 회원 Key 기준 조회
       if (search) query = query.ilike("title", `%${search}%`)
       if (activeTab === "REJECTED") query = query.in("status", ["REJECTED", "HIDDEN"])
       else if (activeTab !== "all") query = query.eq("status", activeTab === "APPROVED" ? "ACTIVE" : activeTab)
@@ -153,6 +158,7 @@ export default function AdminListingsPage() {
 
       const mapped: AdminListing[] = (data || []).map((d: Record<string, unknown>) => ({
         id: d.id as string,
+        listing_no: (d.listing_no as string) ?? null,
         title: d.title as string,
         listing_type: (d.collateral_type as string) || '-',
         collateral_type: (d.collateral_type as string) || '-',
@@ -169,7 +175,7 @@ export default function AdminListingsPage() {
     } finally {
       setLoading(false)
     }
-  }, [search, activeTab, typeFilter, page])
+  }, [search, activeTab, typeFilter, page, memberFilter])
 
   useEffect(() => { fetchListings() }, [fetchListings])
 
@@ -294,6 +300,11 @@ export default function AdminListingsPage() {
           ))}
         </div>
 
+        {/* 회원 Key 기준 조회 중임을 명시 (2026-08-19) */}
+        {memberFilter && (
+          <MemberFilterBar userId={memberFilter} count={total} unit="건" onOpenMember={setMemberTarget} />
+        )}
+
         {/* ── Filters ── */}
         <div className="flex items-center gap-3">
           <div className="relative flex-1 max-w-sm">
@@ -362,8 +373,10 @@ export default function AdminListingsPage() {
               ),
             },
             // 한 화면 최적화 (2026-08-19) — 유형·소재지는 매물명 아래로, 기관·담당자·연락처 3컬럼 → 1컬럼
-            { key: 'title', label: '매물명 (클릭 시 상세)', sortable: true, render: (v, row) => (
+            { key: 'title', label: '관리번호 · 매물명 (클릭 시 상세)', sortable: true, render: (v, row) => (
               <div className="max-w-[170px]">
+                {/* 관리번호 — DB 고정값(NPL26-1) · 전 화면 동일 (2026-08-19) */}
+                <span className="block font-mono text-[0.6563rem] font-bold text-[#1A47CC]">{row.listing_no ?? '—'}</span>
                 <button onClick={() => setDetailTarget(row.id)}
                   className="font-medium truncate block text-left text-[var(--color-text-primary)] hover:underline w-full"
                   style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>{v}</button>

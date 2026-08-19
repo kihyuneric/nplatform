@@ -28,7 +28,7 @@ type Row = {
 }
 
 const emptyRow = (sort: number): Row => ({
-  no: `N-${String(sort + 1).padStart(2, '0')}`,
+  no: `NPL${String(new Date().getFullYear()).slice(2)}-${sort + 1}`,
   location: '', category: '', appraisal: '', principal: '', max_claim: '', asking: '', photo_url: '',
   sort,
   _dirty: true,
@@ -47,7 +47,7 @@ type HeroRow = {
 }
 
 const HERO_DEFAULT: HeroRow = {
-  no: 'N-01',
+  no: 'NPL26-1',
   tag: 'PRIVATE · NPL',
   title: '서울 종로구 · 토지',
   address: '서울 종로구 홍지동 *** · 토지 5,193㎡',
@@ -235,7 +235,7 @@ export default function AdminHighlightsPage() {
           <div className="grid grid-cols-2 gap-1.5">
             <div>
               <div className="text-[9.5px] font-bold text-[var(--color-text-muted)] mb-0.5">관리번호</div>
-              <input value={hero.no} onChange={e => setHero(h => ({ ...h, no: e.target.value }))} placeholder="N-01"
+              <input value={hero.no} onChange={e => setHero(h => ({ ...h, no: e.target.value }))} placeholder="NPL26-1"
                 className="w-full px-2 py-1.5 text-[12px] font-semibold border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] outline-none focus:border-[#2251FF]" />
             </div>
             <div>
@@ -293,7 +293,7 @@ export default function AdminHighlightsPage() {
                   previewHeight={90}
                 />
                 <div className="grid grid-cols-2 gap-1.5">
-                  <input value={r.no} onChange={e => update(idx, { no: e.target.value })} placeholder="관리번호 (N-01)" className={inputCls} />
+                  <input value={r.no} onChange={e => update(idx, { no: e.target.value })} placeholder="관리번호 (NPL26-1)" className={inputCls} />
                   <input value={r.category} onChange={e => update(idx, { category: e.target.value })} placeholder="유형 (토지)" className={inputCls} />
                 </div>
               </div>

@@ -60,8 +60,32 @@ export async function GET(request: NextRequest) {
     const { data, count, error } = await query
     if (error) throw error
 
+    // ── 회원 Key 기준 업무 데이터 건수 (2026-08-19) ──
+    // 회원이 승인되면 그 회원 Key 로 매각의뢰 · 매입조건 · NDA 가 붙는다.
+    // 목록에서 바로 "이 회원이 무엇을 갖고 있는지" 보이도록 집계해 내려준다.
+    const ids = (data ?? []).map(u => u.id as string)
+    const linked: Record<string, { listings: number; demands: number; nda: number }> = {}
+    for (const id of ids) linked[id] = { listings: 0, demands: 0, nda: 0 }
+    if (ids.length > 0) {
+      const [ls, ds, mk] = await Promise.all([
+        supabase.from('npl_listings').select('seller_id').in('seller_id', ids),
+        supabase.from('demands').select('user_id').in('user_id', ids),
+        // NDA 는 listing_marketing.nda_requests (jsonb 배열) 에 요청자 user_id 로 쌓인다
+        supabase.from('listing_marketing').select('nda_requests').not('nda_requests', 'is', null),
+      ])
+      for (const r of ls.data ?? []) { const k = r.seller_id as string; if (linked[k]) linked[k].listings++ }
+      for (const r of ds.data ?? []) { const k = r.user_id as string; if (linked[k]) linked[k].demands++ }
+      for (const row of mk.data ?? []) {
+        const reqs = Array.isArray(row.nda_requests) ? row.nda_requests : []
+        for (const q of reqs as Array<{ user_id?: string }>) {
+          const k = q?.user_id as string
+          if (k && linked[k]) linked[k].nda++
+        }
+      }
+    }
+
     return NextResponse.json({
-      users: data || [],
+      users: (data ?? []).map(u => ({ ...u, linked: linked[u.id as string] })),
       total: count || 0,
       page,
       limit,

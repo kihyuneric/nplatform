@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ShoppingCart, RefreshCw, Pencil, Trash2 } from 'lucide-react'
 import { MemberPane } from '@/components/admin/member-pane'
+import { MemberFilterBar, useMemberFilter } from '@/components/admin/member-filter-bar'
 
 type DemandRow = {
   id: string
@@ -30,7 +31,8 @@ type DemandRow = {
   priority: number | null
   memo: string
   userId: string   // 등록 회원 Key — 클릭 시 회원 상세
-  contact: string   // 담당자 (회사명 · 담당자명 · 연락처 · 이메일) — 등록 폼 담당자 정보 연동
+  contact: string     // 매입 회원 표시명 (회사 · 이름)
+  contactSub: string  // 회원 연락처 (전화 · 이메일)
 }
 
 const fmtRange = (min: number | null, max: number | null, unit: string) => {
@@ -67,9 +69,12 @@ export default function AdminDemandsPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const q = search.trim().toLowerCase()
+  // 회원 Key 기준 필터 — ?user=<회원ID> (2026-08-19)
+  const memberFilter = useMemberFilter()
+  const scoped = memberFilter ? rows.filter(r => r.userId === memberFilter) : rows
   const filtered = q
-    ? rows.filter(r => [r.demandType, r.types.join(' '), r.regions.join(' '), r.memo, r.contact, r.created].join(' ').toLowerCase().includes(q))
-    : rows
+    ? scoped.filter(r => [r.demandType, r.types.join(' '), r.regions.join(' '), r.memo, r.contact, r.contactSub, r.created].join(' ').toLowerCase().includes(q))
+    : scoped
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paged = filtered.slice((Math.min(page, totalPages) - 1) * PAGE_SIZE, Math.min(page, totalPages) * PAGE_SIZE)
 
@@ -80,15 +85,18 @@ export default function AdminDemandsPage() {
       .then(async d => {
         const list: Array<Record<string, any>> = Array.isArray(d.data) ? d.data : []
         // R7 — 등록 회원(user_id) 이름·회사 조인: 폼 입력 문자열이 아닌 회원 Key 기준 표시
-        const memberMap: Record<string, string> = {}
+        const memberMap: Record<string, { label: string; sub: string }> = {}
         const uids = Array.from(new Set(list.map(x => x.user_id).filter(Boolean))) as string[]
         if (uids.length > 0) {
           try {
             const { createClient } = await import('@/lib/supabase/client')
             const supabase = createClient()
-            const { data: members } = await supabase.from('users').select('id, name, company_name').in('id', uids)
+            const { data: members } = await supabase.from('users').select('id, name, company_name, phone, email').in('id', uids)
             for (const m of members ?? []) {
-              memberMap[m.id as string] = [m.name, m.company_name].filter(Boolean).join(' · ')
+              memberMap[m.id as string] = {
+                label: [m.company_name, m.name].filter(Boolean).join(' · ') || String(m.id).slice(0, 8),
+                sub: [m.phone, m.email].filter(Boolean).join(' · '),
+              }
             }
           } catch { /* 조인 실패 시 폼 입력값 폴백 */ }
         }
@@ -107,9 +115,10 @@ export default function AdminDemandsPage() {
           amountMax: num(x.max_amount),
           priority: num(x.priority),
           // 담당자 — 회원 Key 조인 우선(회원명 · 회사), 없으면 폼 입력값 → memo 폴백
-          contact: (x.user_id && memberMap[x.user_id])
+          contact: (x.user_id && memberMap[x.user_id]?.label)
             || [x.company_name, x.manager_name, x.contact_phone, x.contact_email].filter(Boolean).join(' · ')
             || (String(x.memo ?? '').match(/\[담당자\]\s*(.+)/)?.[1] ?? ''),
+          contactSub: (x.user_id && memberMap[x.user_id]?.sub) || '',
           memo: String(x.memo ?? '').replace(/\n?\[담당자\].*$/m, '').trim(),
         })))
       })
@@ -141,6 +150,9 @@ export default function AdminDemandsPage() {
         </button>
       </div>
 
+
+      {memberFilter && <MemberFilterBar userId={memberFilter} count={filtered.length} unit="건" onOpenMember={setMemberTarget} />}
+
       {/* D0 공통 UI — 검색 */}
       <div className="flex items-center gap-3 flex-wrap">
         <input
@@ -156,13 +168,13 @@ export default function AdminDemandsPage() {
         <table className="w-full text-[12.5px]">
           <thead>
             <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] text-left text-[10.5px] uppercase tracking-wide text-[var(--color-text-muted)]">
+              <th className="px-3 py-2 font-bold whitespace-nowrap">매입 회원 · 연락처</th>
               <th className="px-3 py-2 font-bold whitespace-nowrap">등록일</th>
               <th className="px-3 py-2 font-bold whitespace-nowrap">우선순위</th>
               <th className="px-3 py-2 font-bold">담보유형</th>
               <th className="px-3 py-2 font-bold">지역</th>
               <th className="px-3 py-2 font-bold whitespace-nowrap">면적 토지/건물(㎡)</th>
               <th className="px-3 py-2 font-bold whitespace-nowrap">금액대(억)</th>
-              <th className="px-3 py-2 font-bold">담당자</th>
               <th className="px-3 py-2 font-bold">요청사항</th>
               <th className="px-3 py-2 font-bold whitespace-nowrap">관리</th>
             </tr>
@@ -181,6 +193,26 @@ export default function AdminDemandsPage() {
             )}
             {paged.map(r => (
               <tr key={r.id} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] transition-colors align-top">
+                {/* 매입 회원 = 이 조건의 주인(회원 Key) — 항상 첫 컬럼 · 클릭 시 회원 상세 (2026-08-19) */}
+                <td className="px-3 py-2 max-w-[190px]">
+                  {r.userId ? (
+                    <>
+                      <button
+                        onClick={() => setMemberTarget(r.userId)}
+                        className="block w-full text-left text-[12px] font-bold text-[#1A47CC] truncate hover:underline"
+                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                        title="회원 정보 · 활동 이력 보기"
+                      >
+                        {r.contact || '회원 정보'}
+                      </button>
+                      <span className="block text-[10.5px] text-[var(--color-text-muted)] truncate" title={r.contactSub}>
+                        {r.contactSub || '연락처 미등록'}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-[12px] text-[var(--color-text-muted)]">(미연결)</span>
+                  )}
+                </td>
                 <td className="px-3 py-2 tabular-nums whitespace-nowrap text-[var(--color-text-secondary)]">{r.created}</td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {r.priority !== null ? (
@@ -193,22 +225,6 @@ export default function AdminDemandsPage() {
                 <td className="px-3 py-2 text-[var(--color-text-primary)]"><span className="block max-w-[110px] truncate" title={r.regions.join(' · ')}>{r.regions.length ? r.regions.join(' · ') : '—'}</span></td>
                 <td className="px-3 py-2 tabular-nums whitespace-nowrap text-[12px]">{fmtRange(r.landMin, r.landMax, '')} / {fmtRange(r.bldgMin, r.bldgMax, '')}</td>
                 <td className="px-3 py-2 tabular-nums whitespace-nowrap font-bold text-[var(--color-text-primary)]">{fmtRange(r.amountMin, r.amountMax, '')}</td>
-                {/* 담당자 — 등록 폼의 회사명 · 담당자명 · 연락처 · 이메일 연동 */}
-                {/* 담당자 = 등록 회원 — 클릭 시 회원 상세(연락처·활동) 패널 */}
-                <td className="px-3 py-2 max-w-[170px] text-[var(--color-text-primary)]">
-                  {r.userId ? (
-                    <button
-                      onClick={() => setMemberTarget(r.userId)}
-                      className="text-left text-[12px] font-semibold text-[#1A47CC] hover:underline line-clamp-2"
-                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
-                      title="회원 정보 보기"
-                    >
-                      {r.contact || '회원 정보'}
-                    </button>
-                  ) : (
-                    <span className="line-clamp-2 text-[12px]">{r.contact || '—'}</span>
-                  )}
-                </td>
                 <td className="px-3 py-2 max-w-[200px] text-[var(--color-text-secondary)]">
                   <span className="line-clamp-2">{r.memo || '—'}</span>
                 </td>

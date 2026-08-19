@@ -23,6 +23,7 @@ import {
   Download, Heart, Lock as LockIcon,
 } from "lucide-react"
 import * as XLSX from "xlsx"
+import { buildListingNoMap } from '@/lib/listing-no'
 import { maskInstitutionName } from "@/lib/mask"
 import { NdaModal, type NdaState } from "@/components/asset-detail"
 import { createClient } from "@/lib/supabase/client"
@@ -106,6 +107,7 @@ interface CardListing {
   address_dong?: string       // 주소 — 동 단위까지 (세부주소 제외)
   photo_url?: string          // 대표 사진 (없으면 placeholder)
   max_claim?: number          // 채권최고액 (근저당 설정액) — 미제공 시 '—'
+  listing_no?: string | null  // DB 고정 관리번호 (npl_listings.listing_no)
 }
 
 /**
@@ -474,6 +476,7 @@ export default function ExchangePage() {
             6
           return {
             id: String(r.id),
+            listing_no: (r.listing_no as string) ?? null,   // DB 고정 관리번호 (NPL26-1)
             seller_id: (r.seller_id as string) ?? null,
             institution,
             inst_kind,
@@ -601,13 +604,8 @@ export default function ExchangePage() {
     return arr
   }, [q, listingCategory, collateral, collateralMinor, region, instType, stage, sort, listings])
 
-  // ── 관리번호 자동 채번 — 등록 오래된 순으로 N-01, N-02, … (표시용 · 내부 id 는 유지) ──
-  const displayNo = useMemo(() => {
-    const sorted = [...listings].sort((a, b) => b.created_days_ago - a.created_days_ago)
-    const m: Record<string, string> = {}
-    sorted.forEach((x, i) => { m[x.id] = `N-${String(i + 1).padStart(2, '0')}` })
-    return m
-  }, [listings])
+  // ── 관리번호 자동 채번 — NPL26-1 형식 (SSoT: lib/listing-no.ts · 2026-08-19) ──
+  const displayNo = useMemo(() => buildListingNoMap(listings), [listings])
 
   // ── 비로그인 게이팅 — 회원가입/로그인 + 매입조건 등록 전에는 샘플만 블러 노출 ──
   const [authState, setAuthState] = useState<'checking' | 'guest' | 'user'>('checking')

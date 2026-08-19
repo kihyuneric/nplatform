@@ -65,10 +65,18 @@ export function MemberPane({ userId, onClose }: { userId: string; onClose: () =>
   }, [userId])
 
   const u = data?.user
-  const Section = ({ title, count, children }: { title: string; count?: number; children: React.ReactNode }) => (
+  // href 가 있으면 "이 회원 기준" 목록 화면으로 이동 (?user=<회원ID>) — 회원 Key 연동 (2026-08-19)
+  const Section = ({ title, count, href, hrefLabel, children }: {
+    title: string; count?: number; href?: string; hrefLabel?: string; children: React.ReactNode
+  }) => (
     <div className="border border-[var(--color-border-subtle)]">
-      <div className="px-3 py-1.5 text-[11px] font-bold bg-[var(--color-surface-overlay)] border-b border-[var(--color-border-subtle)] text-[var(--color-text-primary)]">
-        {title}{typeof count === 'number' ? ` (${count}건)` : ''}
+      <div className="flex items-center justify-between gap-2 px-3 py-1.5 text-[11px] font-bold bg-[var(--color-surface-overlay)] border-b border-[var(--color-border-subtle)] text-[var(--color-text-primary)]">
+        <span>{title}{typeof count === 'number' ? ` (${count}건)` : ''}</span>
+        {href && (
+          <a href={href} className="inline-flex items-center gap-1 text-[10.5px] font-bold text-[#1A47CC]" style={{ textDecoration: 'none' }}>
+            {hrefLabel ?? '목록에서 보기'} <ExternalLink size={10} />
+          </a>
+        )}
       </div>
       {children}
     </div>
@@ -162,7 +170,7 @@ export function MemberPane({ userId, onClose }: { userId: string; onClose: () =>
           )}
 
           {/* 매입조건 — 무엇을 원하는지 */}
-          <Section title="매입조건" count={data?.demands?.length}>
+          <Section title="매입조건" count={data?.demands?.length} href={`/admin/demands?user=${encodeURIComponent(userId)}`} hrefLabel="매입조건 현황">
             {!data?.demands?.length ? <Empty text="등록된 매입조건이 없습니다" /> : (
               <div className="divide-y divide-[var(--color-border-subtle)]">
                 {(data.demands as Row[]).slice(0, 8).map((d, i) => {
@@ -183,7 +191,7 @@ export function MemberPane({ userId, onClose }: { userId: string; onClose: () =>
           </Section>
 
           {/* NDA 요청 — 어떤 물건을 열람 요청했는지 */}
-          <Section title="NDA 요청" count={data?.nda?.length}>
+          <Section title="NDA 요청" count={data?.nda?.length} href={`/admin/agreements?user=${encodeURIComponent(userId)}`} hrefLabel="NDA · 계약">
             {!data?.nda?.length ? <Empty text="NDA 요청 이력이 없습니다" /> : (
               <div className="divide-y divide-[var(--color-border-subtle)]">
                 {(data.nda as Row[]).map((n, i) => (
@@ -212,7 +220,7 @@ export function MemberPane({ userId, onClose }: { userId: string; onClose: () =>
           </Section>
 
           {/* 등록 매물 (매각 회원) */}
-          <Section title="등록 매물 (매각)" count={data?.listings?.length}>
+          <Section title="등록 매물 (매각)" count={data?.listings?.length} href={`/admin/listings?user=${encodeURIComponent(userId)}`} hrefLabel="매각의뢰 현황">
             {!data?.listings?.length ? <Empty text="등록한 매물이 없습니다" /> : (
               <div className="divide-y divide-[var(--color-border-subtle)]">
                 {(data.listings as Row[]).slice(0, 10).map((l, i) => (
@@ -227,7 +235,7 @@ export function MemberPane({ userId, onClose }: { userId: string; onClose: () =>
           </Section>
 
           {/* 문의 */}
-          <Section title="문의·접수" count={data?.tickets?.length}>
+          <Section title="문의·접수" count={data?.tickets?.length} href={`/admin/inbox?user=${encodeURIComponent(userId)}`} hrefLabel="접수함">
             {!data?.tickets?.length ? <Empty text="문의 이력이 없습니다" /> : (
               <div className="divide-y divide-[var(--color-border-subtle)]">
                 {(data.tickets as Row[]).map((t, i) => (

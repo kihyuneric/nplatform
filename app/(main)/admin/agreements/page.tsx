@@ -15,14 +15,19 @@ import { FileSignature, RefreshCw, CheckCircle2 } from 'lucide-react'
 import { DEAL_STAGES, NPL_STATUSES, NDA_REQUEST_STATUSES, type ListingMarketing, type NdaRequest } from '@/lib/marketing-checklist'
 import { MemberPane } from '@/components/admin/member-pane'
 import { ReactionsPane } from '@/components/admin/reactions-pane'
+import { buildListingNoMap } from '@/lib/listing-no'
+import { MemberFilterBar, useMemberFilter } from '@/components/admin/member-filter-bar'
 
 const ELECTRIC = '#2251FF'
 
 type Row = {
   id: string
+  no: string            // 관리번호 NPL26-1 (2026-08-19)
   region: string
   collateral: string
   created: string
+  sellerId?: string | null   // 매각 회원 Key
+  sellerName?: string        // 매각 회원 표시명
 }
 
 const PAGE_SIZE = 20
@@ -35,9 +40,18 @@ export default function AdminAgreementsPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const q = search.trim().toLowerCase()
-  const filtered = q
-    ? rows.filter(r => [r.id, r.region, r.collateral, mk[r.id]?.npl_status ?? '', mk[r.id]?.deal_stage ?? ''].join(' ').toLowerCase().includes(q))
+  // 회원 Key 기준 필터 — ?user=<회원ID> (2026-08-19)
+  const memberFilter = useMemberFilter()
+  // 회원 기준 = 이 회원이 매각 회원인 매물 + 이 회원이 NDA 를 요청한 매물 (양방향)
+  const scoped = memberFilter
+    ? rows.filter(r =>
+        r.sellerId === memberFilter ||
+        (mk[r.id]?.nda_requests ?? []).some(q => q.user_id === memberFilter)
+      )
     : rows
+  const filtered = q
+    ? scoped.filter(r => [r.id, r.no, r.region, r.collateral, r.sellerName ?? '', mk[r.id]?.npl_status ?? '', mk[r.id]?.deal_stage ?? ''].join(' ').toLowerCase().includes(q))
+    : scoped
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paged = filtered.slice((Math.min(page, totalPages) - 1) * PAGE_SIZE, Math.min(page, totalPages) * PAGE_SIZE)
   const [savingId, setSavingId] = useState<string | null>(null)
@@ -52,13 +66,30 @@ export default function AdminAgreementsPage() {
     Promise.all([
       fetch('/api/v1/exchange/listings?limit=200&status=ACTIVE').then(r => r.json()).catch(() => ({})),
       fetch('/api/v1/listing-marketing').then(r => r.json()).catch(() => ({})),
-    ]).then(([ld, md]) => {
+    ]).then(async ([ld, md]) => {
       const list: Array<Record<string, any>> = Array.isArray(ld.data) ? ld.data : []
+      // 관리번호 NPL26-1 — 전 화면 공통 규칙 (2026-08-19)
+      const noMap = buildListingNoMap(list.map(x => ({ id: String(x.id), listing_no: x.listing_no, created_at: x.created_at })))
+      // 매각 회원(seller_id) 조인 — NDA·계약 화면에서 "누구 매물인지" 즉시 파악 (2026-08-19)
+      const sellerMap: Record<string, string> = {}
+      const sids = Array.from(new Set(list.map(x => x.seller_id).filter(Boolean))) as string[]
+      if (sids.length > 0) {
+        try {
+          const { createClient } = await import('@/lib/supabase/client')
+          const { data: sellers } = await createClient().from('users').select('id, name, company_name').in('id', sids)
+          for (const s of sellers ?? []) {
+            sellerMap[s.id as string] = [s.name, s.company_name].filter(Boolean).join(' · ') || String(s.id).slice(0, 8)
+          }
+        } catch { /* 조인 실패 시 미연결 표기 */ }
+      }
       setRows(list.map(x => ({
         id: String(x.id),
+        no: noMap[String(x.id)] ?? '—',
         region: [x.sido, x.sigungu].filter(Boolean).join(' ') || String(x.address ?? '').split(/\s+/).slice(0, 2).join(' ') || '—',
         collateral: String(x.collateral_type ?? '—'),
         created: x.created_at ? String(x.created_at).slice(0, 10) : '—',
+        sellerId: (x.seller_id as string) ?? null,
+        sellerName: x.seller_id ? (sellerMap[x.seller_id as string] ?? '(연결 회원 없음)') : '(미연결)',
       })))
       if (md?.data) setMk(md.data)
     }).finally(() => setLoading(false))
@@ -147,12 +178,15 @@ export default function AdminAgreementsPage() {
         </button>
       </div>
 
+
+      {memberFilter && <MemberFilterBar userId={memberFilter} count={filtered.length} unit="건" onOpenMember={setMemberTarget} />}
+
       {/* D0 공통 UI — 검색 */}
       <div className="flex items-center gap-3 flex-wrap">
         <input
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1) }}
-          placeholder="관리번호 · 지역 · 유형 · 상태 · 딜 단계 검색..."
+          placeholder="관리번호 · 매각 회원 · 지역 · 유형 · 상태 검색..."
           className="w-full max-w-sm px-3 py-2 text-[12.5px] font-medium border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] outline-none focus:border-[#2251FF]"
         />
         <span className="text-[11px] text-[var(--color-text-muted)]">{filtered.length}건 / 전체 {rows.length}건</span>
@@ -164,6 +198,7 @@ export default function AdminAgreementsPage() {
             <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-overlay)] text-left text-[10.5px] uppercase tracking-wide text-[var(--color-text-muted)]">
               <th className="px-3 py-2 font-bold whitespace-nowrap">관리번호</th>
               <th className="px-3 py-2 font-bold">지역 · 유형</th>
+              <th className="px-3 py-2 font-bold whitespace-nowrap">매각 회원</th>
               <th className="px-2 py-2.5 font-bold whitespace-nowrap">관심</th>
               <th className="px-2 py-2.5 font-bold whitespace-nowrap">NDA 요청</th>
               <th className="px-2 py-2.5 font-bold whitespace-nowrap">상담</th>
@@ -174,10 +209,10 @@ export default function AdminAgreementsPage() {
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={8} className="px-3 py-10 text-center text-sm text-[var(--color-text-muted)]">불러오는 중...</td></tr>
+              <tr><td colSpan={9} className="px-3 py-10 text-center text-sm text-[var(--color-text-muted)]">불러오는 중...</td></tr>
             )}
             {!loading && filtered.length === 0 && (
-              <tr><td colSpan={8} className="px-3 py-12 text-center text-sm text-[var(--color-text-muted)]">활성 매물이 없습니다</td></tr>
+              <tr><td colSpan={9} className="px-3 py-12 text-center text-sm text-[var(--color-text-muted)]">활성 매물이 없습니다</td></tr>
             )}
             {paged.map(r => {
               const m = mk[r.id]
@@ -190,12 +225,27 @@ export default function AdminAgreementsPage() {
                       className="font-mono text-[11px] font-bold text-[#1A47CC] hover:underline"
                       style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
                       title="이 매물의 매칭 매입회원 · NDA · 관심 보기">
-                      {r.id.slice(0, 8)}…
+                      {r.no}
                     </button>
                   </td>
                   <td className="px-3 py-2 ">
                     <div className="font-semibold text-[var(--color-text-primary)]">{r.region}</div>
                     <div className="text-[11px] text-[var(--color-text-muted)]">{r.collateral} · {r.created}</div>
+                  </td>
+                  {/* 매각 회원 — 클릭 시 회원 상세(연락처·활동) 패널 (2026-08-19) */}
+                  <td className="px-3 py-2 max-w-[150px]">
+                    {r.sellerId ? (
+                      <button
+                        onClick={() => setMemberTarget(r.sellerId as string)}
+                        className="block w-full text-left text-[11.5px] font-semibold text-[#1A47CC] truncate hover:underline"
+                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                        title={`${r.sellerName} — 매각 회원 정보 보기`}
+                      >
+                        {r.sellerName}
+                      </button>
+                    ) : (
+                      <span className="text-[11.5px] text-[var(--color-text-muted)]">(미연결)</span>
+                    )}
                   </td>
                   <td className="px-2 py-2.5 tabular-nums font-bold">{m?.interest_count ?? 0}</td>
                   {/* NDA 요청 — 건수 + 요청별 운영사 검토 → 승인/거절 (승인 = 매입사 세부내역 열람 오픈) */}

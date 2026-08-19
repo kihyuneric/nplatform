@@ -33,6 +33,8 @@ interface User {
   // D3 — 회원 관리 고도화
   admin_note?: string | null
   roles?: string[] | null
+  // 회원 Key 로 붙은 업무 데이터 건수 (2026-08-19) — 매각의뢰 · 매입조건 · NDA
+  linked?: { listings: number; demands: number; nda: number }
 }
 
 // 회원 유형 3종 (2026-08-18 확정) — 매각 회원 · 매입 회원 · 파트너 회원 (+일반회원)
@@ -383,6 +385,7 @@ export default function AdminUsersPage() {
                     <th className={DS.table.headerCell}>회사명</th>
                     <th className={DS.table.headerCell}>유형</th>
                     <th className={DS.table.headerCell}>연락처</th>
+                    <th className={DS.table.headerCell}>연동 데이터</th>
                     <th className={DS.table.headerCell}>가입일</th>
                     <th className={DS.table.headerCell}>상태</th>
                     <th className={DS.table.headerCell}>관리</th>
@@ -390,14 +393,14 @@ export default function AdminUsersPage() {
                 </thead>
                 <tbody>
                   {loading && users.length === 0 ? (
-                    <tr><td colSpan={7} className="text-center py-8"><span className={DS.text.muted}>로딩 중...</span></td></tr>
+                    <tr><td colSpan={8} className="text-center py-8"><span className={DS.text.muted}>로딩 중...</span></td></tr>
                   ) : loadError ? (
-                    <tr><td colSpan={7} className="text-center py-8">
+                    <tr><td colSpan={8} className="text-center py-8">
                       <span className="text-[13px] font-bold text-amber-700">{loadError}</span>
                       <button onClick={refetch} className="block mx-auto mt-2 text-[12px] font-bold text-[#2251FF] underline" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>다시 시도</button>
                     </td></tr>
                   ) : users.length === 0 ? (
-                    <tr><td colSpan={7} className="text-center py-8"><span className={DS.text.muted}>가입한 회원이 없습니다 — 회원가입 접수 시 여기에 표시됩니다</span></td></tr>
+                    <tr><td colSpan={8} className="text-center py-8"><span className={DS.text.muted}>가입한 회원이 없습니다 — 회원가입 접수 시 여기에 표시됩니다</span></td></tr>
                   ) : users.map(u => (
                     <tr key={u.id} className={DS.table.row}>
                       <td className={`${DS.table.cell} font-semibold whitespace-nowrap`}>{u.name || '—'}</td>
@@ -415,6 +418,35 @@ export default function AdminUsersPage() {
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <Phone size={11} className="text-[var(--color-text-muted)] shrink-0" />
                           <span className={DS.text.micro}>{u.phone || '—'}</span>
+                        </div>
+                      </td>
+                      {/* 연동 데이터 — 회원 Key 로 붙은 매각의뢰 · 매입조건 · NDA (클릭 시 해당 목록을 이 회원 기준으로 조회) */}
+                      <td className={DS.table.cell}>
+                        <div className="flex items-center gap-1">
+                          {([
+                            ['매물', u.linked?.listings ?? 0, `/admin/listings?user=${u.id}`],
+                            ['조건', u.linked?.demands ?? 0, `/admin/demands?user=${u.id}`],
+                            ['NDA', u.linked?.nda ?? 0, `/admin/agreements?user=${u.id}`],
+                          ] as const).map(([label, n, href]) => (
+                            n > 0 ? (
+                              <a
+                                key={label}
+                                href={href}
+                                title={`이 회원의 ${label} ${n}건 보기`}
+                                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[0.6563rem] font-bold border text-[#1A47CC]"
+                                style={{ textDecoration: 'none', background: 'rgba(34,81,255,0.07)', borderColor: 'rgba(34,81,255,0.4)' }}
+                              >
+                                {label}<span className="tabular-nums">{n}</span>
+                              </a>
+                            ) : (
+                              <span
+                                key={label}
+                                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[0.6563rem] font-semibold border border-[var(--color-border-subtle)] text-[var(--color-text-muted)]"
+                              >
+                                {label}0
+                              </span>
+                            )
+                          ))}
                         </div>
                       </td>
                       <td className={`${DS.table.cellMuted} text-[0.75rem] font-mono whitespace-nowrap`}>{u.created_at?.slice(0, 10)}</td>

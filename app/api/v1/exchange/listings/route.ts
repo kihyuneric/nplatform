@@ -22,6 +22,7 @@ import { buildListingReport } from '@/lib/npl/unified-report/from-listing'
 const FEATURED_SAMPLE_LISTINGS: Record<string, unknown>[] = [
   {
     id: JONGNO_HONGJI_DETAIL.id,
+    listing_no: 'NPL26-0',   // 대표 샘플 — 실 매물 채번(NPL26-1~)과 겹치지 않게 0 번 고정
     seller_id: JONGNO_HONGJI_DETAIL.seller_id,
     title: JONGNO_HONGJI_DETAIL.title,
     listing_type: 'NPL',
