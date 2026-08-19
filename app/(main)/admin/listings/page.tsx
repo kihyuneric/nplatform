@@ -11,6 +11,7 @@ import { NPL_STATUSES } from "@/lib/marketing-checklist"
 import { MarketingPanel } from "@/components/admin/marketing-panel"
 import { DetailPane } from "@/components/listing/detail-pane"
 import { MemberPane } from "@/components/admin/member-pane"
+import { ReactionsPane } from "@/components/admin/reactions-pane"
 
 type ApprovalStatus = "PENDING" | "APPROVED" | "ACTIVE" | "REJECTED" | "HIDDEN" | "REPORTED"
 
@@ -73,6 +74,8 @@ export default function AdminListingsPage() {
   const [detailTarget, setDetailTarget] = useState<string | null>(null)
   // 회원 상세 패널 — 매각 회원 클릭 시 (2026-08-19)
   const [memberTarget, setMemberTarget] = useState<string | null>(null)
+  // 매물 반응 상세 (매칭 매입회원 · NDA 요청자 · 관심 회원) — 2026-08-19
+  const [reactionTarget, setReactionTarget] = useState<string | null>(null)
 
   // ── NPL 상태 (진행중/협의중/매각완료) — 리스트 앞단 표시 + 즉시 수정 ──
   const [nplStatusMap, setNplStatusMap] = useState<Record<string, string>>({})
@@ -437,6 +440,15 @@ export default function AdminListingsPage() {
                   <button onClick={() => setDetailTarget(v)}
                     className={`${DS.text.link} text-[0.75rem] whitespace-nowrap`}
                     style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>세부내역</button>
+                  {/* 반응 — 매칭 매입회원 · NDA 요청자 · 관심 회원 (2026-08-19) */}
+                  <button
+                    onClick={() => setReactionTarget(v)}
+                    className={`${DS.text.link} text-[0.75rem] whitespace-nowrap`}
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                    title="누가 매칭·NDA·관심을 눌렀는지 보기"
+                  >
+                    반응
+                  </button>
                   <button
                     onClick={() => setMkTarget(v)}
                     className={`${DS.text.link} text-[0.75rem] whitespace-nowrap`}
@@ -500,6 +512,12 @@ export default function AdminListingsPage() {
 
       {/* 회원 상세 패널 — 매각의뢰 → 매각 회원 정보 직결 */}
       {memberTarget && <MemberPane userId={memberTarget} onClose={() => setMemberTarget(null)} />}
+
+      {/* 매물 반응 상세 — 누가 매칭·NDA·관심을 눌렀는지 → 회원 상세로 이어짐 */}
+      {reactionTarget && (
+        <ReactionsPane listingId={reactionTarget} onClose={() => setReactionTarget(null)}
+          onOpenMember={(uid) => { setReactionTarget(null); setMemberTarget(uid) }} />
+      )}
 
       {/* 마케팅 진행 관리 모달 — 체크 즉시 매각사 대시보드 공유 */}
       {mkTarget && (

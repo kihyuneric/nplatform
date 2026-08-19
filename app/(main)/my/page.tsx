@@ -101,6 +101,8 @@ export default function MyDashboardPage() {
 
   // ── 매입사 · 일반회원 대시보드 — 실데이터 요약 ──
   const [demandCount, setDemandCount] = useState<number | null>(null)
+  // 자동매칭 매물 수 (중복 제거) — 매입 대시보드 카드
+  const [matchCount, setMatchCount] = useState<number | null>(null)
   const [favCount, setFavCount] = useState(0)
   const [myNda, setMyNda] = useState<NdaRequest[]>([])
   // D4 — 이번 주 브리핑: 최근 7일 신규 등록 매물 수
@@ -113,6 +115,17 @@ export default function MyDashboardPage() {
       .then(r => r.json())
       .then(d => setDemandCount(Array.isArray(d?.data) ? d.data.length : 0))
       .catch(() => setDemandCount(0))
+    // 자동매칭 매물 수 — 조건별 결과를 매물 단위로 합산(중복 제거)
+    fetch('/api/v1/matching/by-demand?mine=1', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        const ids = new Set<string>()
+        for (const v of Object.values(d?.data ?? {})) {
+          for (const l of ((v as { listings?: Array<{ id: string }> }).listings ?? [])) ids.add(l.id)
+        }
+        setMatchCount(ids.size)
+      })
+      .catch(() => setMatchCount(0))
     // 관심매물 수 — 회원 Key 서버 저장소 (R3), 실패 시 로컬 폴백
     fetch('/api/v1/favorites', { credentials: 'include' })
       .then(r => r.json())
@@ -167,6 +180,8 @@ export default function MyDashboardPage() {
     // 매각 역할 보유 — 내 매물 카드 (매각 단독 · 겸용 공통)
     ...((sellerOnly || isDual) ? [{ label: '내 매물', value: sellerCount === null ? '…' : `${sellerCount}건`, desc: '매각의뢰 매물 상태 · 매칭 · 마케팅 진행', href: '/my/seller', icon: Search }] : []),
     ...(!sellerOnly ? [
+      // 자동매칭 — 매입 회원 핵심 (조건에 맞는 매물 전체)
+      { label: '자동매칭', value: matchCount === null ? '…' : `${matchCount}건`, desc: '내 매입조건에 맞는 NPL 매물', href: '/my/matches', icon: Search },
       { label: '매입 조건', value: demandCount === null ? '…' : `${demandCount}건`, desc: '우선순위별 조건 관리 · 수정', href: '/my/demands', icon: ClipboardList },
       { label: '관심매물', value: `${favCount}건`, desc: '자동매칭 리스트에서 ♥ 등록한 매물', href: '/my/portfolio', icon: Heart },
       { label: 'NDA 진행', value: `${myNda.length}건`, desc: myNda.length > 0 ? `승인 ${myNda.filter(q => q.status === '승인').length} · 검토중 ${myNda.filter(q => q.status === '운영사 검토').length}` : 'NDA 요청 내역 없음', href: '/my/agreements', icon: FileSignature },

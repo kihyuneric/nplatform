@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react'
 import { FileSignature, RefreshCw, CheckCircle2 } from 'lucide-react'
 import { DEAL_STAGES, NPL_STATUSES, NDA_REQUEST_STATUSES, type ListingMarketing, type NdaRequest } from '@/lib/marketing-checklist'
 import { MemberPane } from '@/components/admin/member-pane'
+import { ReactionsPane } from '@/components/admin/reactions-pane'
 
 const ELECTRIC = '#2251FF'
 
@@ -42,6 +43,8 @@ export default function AdminAgreementsPage() {
   const [savingId, setSavingId] = useState<string | null>(null)
   // 회원 상세 패널 — NDA 요청 회원 클릭 시 (2026-08-19)
   const [memberTarget, setMemberTarget] = useState<string | null>(null)
+  // 매물 반응 상세 (관리번호 클릭) — 2026-08-19
+  const [reactionTarget, setReactionTarget] = useState<string | null>(null)
   const [savedId, setSavedId] = useState<string | null>(null)
 
   const load = () => {
@@ -181,7 +184,15 @@ export default function AdminAgreementsPage() {
               const stage = m?.deal_stage ?? ''
               return (
                 <tr key={r.id} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)] transition-colors">
-                  <td className="px-3 py-2 font-mono text-[11px] font-bold text-[var(--color-text-primary)] whitespace-nowrap">{r.id}</td>
+                  {/* 관리번호 클릭 → 이 매물의 반응 상세(매칭 매입회원·NDA·관심) */}
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    <button onClick={() => setReactionTarget(r.id)}
+                      className="font-mono text-[11px] font-bold text-[#1A47CC] hover:underline"
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                      title="이 매물의 매칭 매입회원 · NDA · 관심 보기">
+                      {r.id.slice(0, 8)}…
+                    </button>
+                  </td>
                   <td className="px-3 py-2 ">
                     <div className="font-semibold text-[var(--color-text-primary)]">{r.region}</div>
                     <div className="text-[11px] text-[var(--color-text-muted)]">{r.collateral} · {r.created}</div>
@@ -305,6 +316,12 @@ export default function AdminAgreementsPage() {
 
       {/* 회원 상세 패널 — NDA 요청 → 요청 회원 정보 직결 */}
       {memberTarget && <MemberPane userId={memberTarget} onClose={() => setMemberTarget(null)} />}
+
+      {/* 매물 반응 상세 — 이 매물의 매칭 매입회원·NDA·관심 */}
+      {reactionTarget && (
+        <ReactionsPane listingId={reactionTarget} onClose={() => setReactionTarget(null)}
+          onOpenMember={(uid) => { setReactionTarget(null); setMemberTarget(uid) }} />
+      )}
     </div>
   )
 }

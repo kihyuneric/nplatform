@@ -12,7 +12,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Building2, ShoppingCart, FileSignature,
-  Heart, Bell, Settings, User,
+  Heart, Bell, Settings, User, Search,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getMemberRoles } from '@/lib/member-roles'
@@ -26,6 +26,8 @@ const SELLER_MENU: MenuItem[] = [
   { href: '/my/seller', label: '내 매물', icon: Building2 },
 ]
 const BUYER_MENU: MenuItem[] = [
+  // 자동매칭 = 매입 회원 핵심 화면 (조건에 맞는 매물 전체) — 2026-08-19 신설
+  { href: '/my/matches',    label: '자동매칭',   icon: Search },
   { href: '/my/demands',    label: '매입 조건',  icon: ShoppingCart },
   { href: '/my/portfolio',  label: '관심매물',   icon: Heart },
 ]
