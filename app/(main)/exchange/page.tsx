@@ -476,7 +476,7 @@ export default function ExchangePage() {
             6
           return {
             id: String(r.id),
-            listing_no: (r.listing_no as string) ?? null,   // DB 고정 관리번호 (NPL26-1)
+            listing_no: (r.listing_no as string) ?? null,   // DB 고정 관리번호 (N26-1)
             seller_id: (r.seller_id as string) ?? null,
             institution,
             inst_kind,
@@ -604,7 +604,7 @@ export default function ExchangePage() {
     return arr
   }, [q, listingCategory, collateral, collateralMinor, region, instType, stage, sort, listings])
 
-  // ── 관리번호 자동 채번 — NPL26-1 형식 (SSoT: lib/listing-no.ts · 2026-08-19) ──
+  // ── 관리번호 자동 채번 — N26-1 형식 (SSoT: lib/listing-no.ts · 2026-08-19) ──
   const displayNo = useMemo(() => buildListingNoMap(listings), [listings])
 
   // ── 비로그인 게이팅 — 회원가입/로그인 + 매입조건 등록 전에는 샘플만 블러 노출 ──

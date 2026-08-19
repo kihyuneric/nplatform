@@ -26,7 +26,7 @@ interface AdminListing {
   ai_grade?: string
   status: ApprovalStatus
   created_at: string
-  listing_no?: string | null   // DB 고정 관리번호 NPL26-1 (2026-08-19)
+  listing_no?: string | null   // DB 고정 관리번호 N26-1 (2026-08-19)
   seller_id?: string | null
   seller_name?: string
   // Phase G7+ · 자발적 경매 진행 정보
@@ -375,7 +375,7 @@ export default function AdminListingsPage() {
             // 한 화면 최적화 (2026-08-19) — 유형·소재지는 매물명 아래로, 기관·담당자·연락처 3컬럼 → 1컬럼
             { key: 'title', label: '관리번호 · 매물명 (클릭 시 상세)', sortable: true, render: (v, row) => (
               <div className="max-w-[170px]">
-                {/* 관리번호 — DB 고정값(NPL26-1) · 전 화면 동일 (2026-08-19) */}
+                {/* 관리번호 — DB 고정값(N26-1) · 전 화면 동일 (2026-08-19) */}
                 <span className="block font-mono text-[0.6563rem] font-bold text-[#1A47CC]">{row.listing_no ?? '—'}</span>
                 <button onClick={() => setDetailTarget(row.id)}
                   className="font-medium truncate block text-left text-[var(--color-text-primary)] hover:underline w-full"

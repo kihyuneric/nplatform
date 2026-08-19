@@ -42,7 +42,8 @@ export async function POST(req: NextRequest) {
     if (action === 'upsert') {
       const r = body.row ?? {}
       const row: Record<string, unknown> = {
-        no: String(r.no ?? '').slice(0, 20),              // 관리번호 표기 (예: N-01)
+        no: String(r.no ?? '').slice(0, 20),              // 관리번호 — 연결 매물의 listing_no (예: N26-1)
+        listing_id: r.listing_id ? String(r.listing_id) : null,   // 연결 매물 (관리번호의 출처)
         location: String(r.location ?? '').slice(0, 60),  // 지역
         category: String(r.category ?? '').slice(0, 30),  // 유형
         appraisal: String(r.appraisal ?? '').slice(0, 20),   // 감정가

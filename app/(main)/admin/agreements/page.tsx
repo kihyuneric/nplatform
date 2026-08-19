@@ -22,7 +22,7 @@ const ELECTRIC = '#2251FF'
 
 type Row = {
   id: string
-  no: string            // 관리번호 NPL26-1 (2026-08-19)
+  no: string            // 관리번호 N26-1 (2026-08-19)
   region: string
   collateral: string
   created: string
@@ -68,7 +68,7 @@ export default function AdminAgreementsPage() {
       fetch('/api/v1/listing-marketing').then(r => r.json()).catch(() => ({})),
     ]).then(async ([ld, md]) => {
       const list: Array<Record<string, any>> = Array.isArray(ld.data) ? ld.data : []
-      // 관리번호 NPL26-1 — 전 화면 공통 규칙 (2026-08-19)
+      // 관리번호 N26-1 — 전 화면 공통 규칙 (2026-08-19)
       const noMap = buildListingNoMap(list.map(x => ({ id: String(x.id), listing_no: x.listing_no, created_at: x.created_at })))
       // 매각 회원(seller_id) 조인 — NDA·계약 화면에서 "누구 매물인지" 즉시 파악 (2026-08-19)
       const sellerMap: Record<string, string> = {}

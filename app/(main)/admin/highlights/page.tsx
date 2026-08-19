@@ -23,12 +23,14 @@ type Row = {
   max_claim: string
   asking: string
   photo_url: string
+  listing_id?: string   // 연결 매물 — 관리번호·유형의 출처 (2026-08-19)
   sort: number
   _dirty?: boolean
 }
 
 const emptyRow = (sort: number): Row => ({
-  no: `NPL${String(new Date().getFullYear()).slice(2)}-${sort + 1}`,
+  no: '',   // 관리번호는 직접 쓰지 않고 매물 선택으로 채운다 (2026-08-19)
+  listing_id: '',
   location: '', category: '', appraisal: '', principal: '', max_claim: '', asking: '', photo_url: '',
   sort,
   _dirty: true,
@@ -47,7 +49,7 @@ type HeroRow = {
 }
 
 const HERO_DEFAULT: HeroRow = {
-  no: 'NPL26-1',
+  no: 'N26-1',
   tag: 'PRIVATE · NPL',
   title: '서울 종로구 · 토지',
   address: '서울 종로구 홍지동 *** · 토지 5,193㎡',
@@ -63,6 +65,26 @@ export default function AdminHighlightsPage() {
   const [savingIdx, setSavingIdx] = useState<number | null>(null)
   const [savedIdx, setSavedIdx] = useState<number | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
+
+  // 연결 가능한 매물 목록 — 관리번호는 여기서만 가져온다 (임의 입력 금지 · 2026-08-19)
+  const [listingOpts, setListingOpts] = useState<Array<{ id: string; no: string; label: string }>>([])
+  useEffect(() => {
+    fetch('/api/v1/exchange/listings?limit=200&status=ACTIVE')
+      .then(r => r.json())
+      .then(d => {
+        const list: Array<Record<string, unknown>> = Array.isArray(d?.data) ? d.data : []
+        setListingOpts(
+          list
+            .filter(x => x.listing_no)
+            .map(x => ({
+              id: String(x.id),
+              no: String(x.listing_no),
+              label: `${x.listing_no} · ${[x.sido, x.sigungu].filter(Boolean).join(' ')} · ${x.title ?? ''}`,
+            })),
+        )
+      })
+      .catch(() => {})
+  }, [])
 
   // 메인 히어로 카드 — 단일 등록/수정/삭제
   const [hero, setHero] = useState<HeroRow>(HERO_DEFAULT)
@@ -235,7 +257,7 @@ export default function AdminHighlightsPage() {
           <div className="grid grid-cols-2 gap-1.5">
             <div>
               <div className="text-[9.5px] font-bold text-[var(--color-text-muted)] mb-0.5">관리번호</div>
-              <input value={hero.no} onChange={e => setHero(h => ({ ...h, no: e.target.value }))} placeholder="NPL26-1"
+              <input value={hero.no} onChange={e => setHero(h => ({ ...h, no: e.target.value }))} placeholder="N26-1"
                 className="w-full px-2 py-1.5 text-[12px] font-semibold border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] outline-none focus:border-[#2251FF]" />
             </div>
             <div>
@@ -293,7 +315,19 @@ export default function AdminHighlightsPage() {
                   previewHeight={90}
                 />
                 <div className="grid grid-cols-2 gap-1.5">
-                  <input value={r.no} onChange={e => update(idx, { no: e.target.value })} placeholder="관리번호 (NPL26-1)" className={inputCls} />
+                  {/* 관리번호 = 연결 매물의 번호 (직접 입력하지 않는다 · 2026-08-19) */}
+                  <select
+                    value={r.listing_id ?? ''}
+                    onChange={e => {
+                      const opt = listingOpts.find(o => o.id === e.target.value)
+                      update(idx, { listing_id: e.target.value, no: opt?.no ?? '' })
+                    }}
+                    className={inputCls}
+                    title="연결할 매물을 고르면 관리번호가 자동으로 들어갑니다"
+                  >
+                    <option value="">관리번호 — 매물 선택</option>
+                    {listingOpts.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                  </select>
                   <input value={r.category} onChange={e => update(idx, { category: e.target.value })} placeholder="유형 (토지)" className={inputCls} />
                 </div>
               </div>

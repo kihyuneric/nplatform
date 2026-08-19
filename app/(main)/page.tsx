@@ -160,7 +160,7 @@ type HeroCard = {
 }
 
 const HERO_DEFAULT: HeroCard = {
-  no: 'NPL26-1',
+  no: 'N26-1',
   tag: 'PRIVATE · NPL',
   title: '서울 종로구 · 토지',
   address: '서울 종로구 홍지동 *** · 토지 5,193㎡',

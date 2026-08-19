@@ -30,14 +30,19 @@ export async function GET(request: NextRequest) {
       } catch { /* 권한 확인 실패 시 공개분만 */ }
     }
 
-    // ?mine=1 — 본인 조건만 (마이페이지 · 대시보드용, 운영설계서 E3: 본인 R·U·D)
-    if (searchParams.get('mine') === '1') {
+    // 기본값 = 본인 조건만 (2026-08-19 수정)
+    //   매입조건은 비공개 데이터다. 예전 기본값은 전체 공개분을 돌려주어
+    //   마이페이지 "내 매입조건"에 **다른 회원의 조건**이 섞여 보였다.
+    //   이제 all=1(관리자) 이 아닌 모든 호출은 로그인 회원 본인 것으로 좁힌다.
+    //   (mine=1 은 같은 동작의 명시적 별칭으로 유지)
+    if (searchParams.get('all') !== '1') {
       try {
         const { createClient } = await import('@/lib/supabase/server')
         const supabase = await createClient()
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return NextResponse.json({ ok: true, data: [], total: 0, page, limit, total_pages: 0 })
         delete (filters as Record<string, unknown>).is_public
+        delete (filters as Record<string, unknown>).status
         filters.user_id = user.id
       } catch {
         return NextResponse.json({ ok: true, data: [], total: 0, page, limit, total_pages: 0 })

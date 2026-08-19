@@ -1,13 +1,19 @@
 /**
- * 관리번호 (NPL 매물 표시 번호) — 단일 규칙 (SSoT · 2026-08-19)
+ * 관리번호 — 단일 규칙 (SSoT · 2026-08-19)
  *
- * 형식: `NPL{연도 2자리}-{일련번호}`   예) NPL26-1, NPL26-2, … NPL26-63
+ * 형식: `N{연도 2자리}-{일련번호}`   예) N26-1, N26-2, … N26-70
  *   - 연도: 매물 등록 연도의 뒤 2자리 (2026 → 26)
  *   - 일련번호: 해당 연도 내 등록순(오래된 것부터) 1,2,3… (0 패딩 없음)
  *   - 내부 id(UUID)는 그대로 두고 **표시용 번호만** 이 규칙을 따른다.
  *
- * 모든 화면(자동매칭 · 내 매물 · 관리자 · NDA · 하이라이트)이 이 함수를 사용한다.
+ * 접두사를 바꾸려면 아래 LISTING_NO_PREFIX 한 줄과
+ * DB 트리거(assign_listing_no)만 고치면 된다.
+ *
+ * 관리번호는 **매물(npl_listings)에만 존재한다.** 메인 하이라이트 등 다른 화면은
+ * 자기 번호를 새로 만들지 않고 연결된 매물의 번호를 그대로 가져다 쓴다.
  */
+
+export const LISTING_NO_PREFIX = 'N'
 
 export type ListingLike = {
   id: string
@@ -29,10 +35,16 @@ const yy = (iso?: string | null, daysAgo?: number): string => {
   return String(new Date().getFullYear()).slice(2)
 }
 
+/** 'N26-7' → { yy: '26', seq: 7 } · 형식이 아니면 null */
+const parseNo = (no: string): { yy: string; seq: number } | null => {
+  const m = new RegExp(`^${LISTING_NO_PREFIX}(\\d{2})-(\\d+)$`).exec(no)
+  return m ? { yy: m[1], seq: Number(m[2]) } : null
+}
+
 /**
- * 매물 목록 → { [id]: 'NPL26-1' }
+ * 매물 목록 → { [id]: 'N26-1' }
  *
- * 1순위: DB 의 listing_no (npl_listings.listing_no · 등록 시 트리거로 확정)
+ * 1순위: DB 의 listing_no (등록 시 트리거로 확정)
  *        → 어느 화면에서 보든 같은 매물은 같은 번호가 된다.
  * 2순위: 샘플·미채번 데이터만 화면 내 등록순으로 임시 채번한다.
  *        (이미 쓰인 번호와 겹치지 않도록 연도별 최대값 다음부터 이어붙인다)
@@ -46,8 +58,8 @@ export function buildListingNoMap(listings: ListingLike[]): Record<string, strin
     const no = (x.listing_no ?? '').trim()
     if (!no) continue
     map[x.id] = no
-    const m = /^NPL(\d{2})-(\d+)$/.exec(no)
-    if (m) seq[m[1]] = Math.max(seq[m[1]] ?? 0, Number(m[2]))
+    const p = parseNo(no)
+    if (p) seq[p.yy] = Math.max(seq[p.yy] ?? 0, p.seq)
   }
 
   // 남은 건(샘플 등)만 등록 오래된 순으로 이어서 채번
@@ -60,12 +72,12 @@ export function buildListingNoMap(listings: ListingLike[]): Record<string, strin
   for (const x of rest) {
     const y = yy(x.created_at, x.created_days_ago)
     seq[y] = (seq[y] ?? 0) + 1
-    map[x.id] = `NPL${y}-${seq[y]}`
+    map[x.id] = `${LISTING_NO_PREFIX}${y}-${seq[y]}`
   }
   return map
 }
 
 /** 단건 표시 — 맵이 없을 때의 폴백 (연도 + id 앞자리) */
 export function fallbackListingNo(x: ListingLike): string {
-  return `NPL${yy(x.created_at, x.created_days_ago)}-${String(x.id).slice(0, 4)}`
+  return `${LISTING_NO_PREFIX}${yy(x.created_at, x.created_days_ago)}-${String(x.id).slice(0, 4)}`
 }
