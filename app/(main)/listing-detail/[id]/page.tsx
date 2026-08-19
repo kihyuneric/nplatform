@@ -125,6 +125,8 @@ export default function ListingDetailPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  // 편집 권한 (2026-08-19) — 운영자: 전 필드 / 매각 회원(본인 매물): 채권기관·담당자 4필드 제외 / 그 외: 읽기
+  const [editRole, setEditRole] = useState<'admin' | 'seller' | 'readonly'>('readonly')
   // 열람 모드 접근 상태: checking → approved | locked
   const [viewerAccess, setViewerAccess] = useState<'checking' | 'approved' | 'locked'>('checking')
   const [viewerNdaStatus, setViewerNdaStatus] = useState<string>('')  // 내 NDA 요청 상태 (운영사 검토/거절/없음)
@@ -167,6 +169,28 @@ export default function ListingDetailPage() {
           setViewerAccess(approved ? 'approved' : 'locked')
           setViewerNdaStatus(mine.length > 0 ? (mine.find(q => q.status !== '거절')?.status ?? mine[mine.length - 1].status) : '')
         }
+      }
+
+      // 편집 권한 판정 — 운영자 / 본인 매물 매각 회원 / 그 외 (2026-08-19)
+      if (!viewerMode) {
+        try {
+          const supabase = createClient()
+          const res = await Promise.race([
+            supabase.auth.getUser(),
+            new Promise<null>(resolve => setTimeout(() => resolve(null), 5000)),
+          ])
+          const me = (res as { data?: { user?: { id?: string } } } | null)?.data?.user
+          if (me?.id) {
+            const [{ data: prof }, { data: listing }] = await Promise.all([
+              supabase.from('users').select('role').eq('id', me.id).maybeSingle(),
+              supabase.from('npl_listings').select('seller_id').eq('id', id).maybeSingle(),
+            ])
+            const role = String(prof?.role ?? '')
+            if (['ADMIN', 'SUPER_ADMIN'].includes(role)) setEditRole('admin')
+            else if (listing?.seller_id && listing.seller_id === me.id) setEditRole('seller')
+            else setEditRole('readonly')
+          }
+        } catch { /* 판정 실패 시 읽기 전용 유지 */ }
       }
 
       // 매물 기본값으로 빈 칸 프리필 (저장값 우선)
@@ -284,7 +308,7 @@ export default function ListingDetailPage() {
         </div>
         {(!viewerMode || viewerAccess === 'approved') && (
         <div className="flex items-center gap-2 flex-wrap">
-          {!viewerMode && (
+          {!viewerMode && editRole !== 'readonly' && (
           <button onClick={() => void save()} disabled={saving}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold text-white"
             style={{ background: INK, borderTop: `2px solid ${ELECTRIC}`, border: 'none', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
@@ -353,18 +377,30 @@ export default function ListingDetailPage() {
                   {f.label}
                 </div>
                 <div className="px-2 py-1">
-                  {viewerMode ? (
-                    <div className="px-1.5 py-1 text-[12.5px] font-medium text-[var(--color-text-primary)] tabular-nums min-h-[24px]">
-                      {cellValue(f.key) || '—'}
-                    </div>
-                  ) : (
-                  <input
-                    value={detail[f.key] ?? ''}
-                    onChange={e => setDetail(prev => ({ ...prev, [f.key]: e.target.value }))}
-                    placeholder={AUTO[f.key] ? `자동계산: ${AUTO[f.key]}` : (f.hint ?? '')}
-                    className="w-full px-1.5 py-1 text-[12.5px] font-medium bg-transparent text-[var(--color-text-primary)] outline-none border border-transparent focus:border-[#2251FF] tabular-nums"
-                  />
-                  )}
+                  {(() => {
+                    // 편집 가능 여부 — 운영자: 전 필드 / 매각 회원: 채권기관·담당자 4필드 제외 / 그 외: 읽기
+                    const canEdit = !viewerMode && (
+                      editRole === 'admin' || (editRole === 'seller' && !VIEWER_HIDDEN_KEYS.has(f.key))
+                    )
+                    if (!canEdit) {
+                      return (
+                        <div
+                          className="px-1.5 py-1 text-[12.5px] font-medium text-[var(--color-text-primary)] tabular-nums min-h-[24px]"
+                          title={!viewerMode && editRole === 'seller' && VIEWER_HIDDEN_KEYS.has(f.key) ? '운영사만 수정할 수 있는 항목입니다' : undefined}
+                        >
+                          {cellValue(f.key) || '—'}
+                        </div>
+                      )
+                    }
+                    return (
+                      <input
+                        value={detail[f.key] ?? ''}
+                        onChange={e => setDetail(prev => ({ ...prev, [f.key]: e.target.value }))}
+                        placeholder={AUTO[f.key] ? `자동계산: ${AUTO[f.key]}` : (f.hint ?? '')}
+                        className="w-full px-1.5 py-1 text-[12.5px] font-medium bg-transparent text-[var(--color-text-primary)] outline-none border border-transparent focus:border-[#2251FF] tabular-nums"
+                      />
+                    )
+                  })()}
                 </div>
               </div>
             ))
@@ -380,8 +416,11 @@ export default function ListingDetailPage() {
         )
       ) : (
       <p className="no-print mt-4 text-[11px] text-[var(--color-text-muted)]">
-        ※ 수정 후 반드시 <b>저장</b>을 누르세요. 저장된 내용은 운영자·매각사 양쪽에서 동일하게 보입니다.
-        영구 저장은 listing_marketing 테이블 생성 후 적용됩니다.
+        {editRole === 'admin'
+          ? '※ 수정 후 반드시 저장을 누르세요. 저장된 내용은 운영자·매각 회원 양쪽에서 동일하게 보입니다.'
+          : editRole === 'seller'
+            ? '※ 본인 매물의 세부내역을 직접 수정할 수 있습니다. 채권기관 · 담당자명 · 직책 · 연락처는 운영사만 수정합니다.'
+            : '※ 읽기 전용입니다. 수정 권한은 운영사와 해당 매물의 매각 회원에게 있습니다.'}
       </p>
       )}
     </div>
