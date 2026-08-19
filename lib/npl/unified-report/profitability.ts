@@ -423,6 +423,14 @@ const daysBetween = (a: string | Date, b: string | Date) => {
 
 const addDays = (date: string | Date, days: number): string => {
   const d = typeof date === 'string' ? new Date(date) : new Date(date)
+  // 잘못된 날짜(빈 문자열·미입력 매물)에서 toISOString() 이 'Invalid time value' 를 던져
+  // 보고서 생성 전체가 실패하고 샘플로 폴백되던 문제 수정 (2026-08-19).
+  // → 기준일을 오늘로 대체해 보고서는 계속 만든다.
+  if (isNaN(d.getTime())) {
+    const today = new Date()
+    today.setDate(today.getDate() + days)
+    return today.toISOString().slice(0, 10)
+  }
   d.setDate(d.getDate() + days)
   return d.toISOString().slice(0, 10)
 }

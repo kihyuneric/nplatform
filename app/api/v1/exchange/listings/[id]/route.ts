@@ -54,9 +54,26 @@ export async function GET(
 
     // Sample-id 보강: 채권자/채무자/실거래/낙찰통계 등 rich detail 머지
     const richExtension = RICH_SAMPLE_DETAILS[id]
-    const merged = richExtension
+    const merged = (richExtension
       ? { ...(data as Record<string, unknown>), ...richExtension }
-      : data
+      : { ...(data as Record<string, unknown>) }) as Record<string, unknown>
+
+    // 관리번호(N26-1) 보강 — 이 라우트는 deal_listings 를 조회하므로
+    // npl_listings 에만 있는 listing_no · seller_id 가 빠진다.
+    // 세부내역 헤더가 UUID 를 그대로 노출하던 원인 (2026-08-19)
+    if (!merged.listing_no) {
+      try {
+        const { createClient } = await import('@/lib/supabase/server')
+        const sb = await createClient()
+        const { data: npl } = await sb
+          .from('npl_listings')
+          .select('listing_no, seller_id')
+          .eq('id', id)
+          .maybeSingle()
+        if (npl?.listing_no) merged.listing_no = npl.listing_no
+        if (!merged.seller_id && npl?.seller_id) merged.seller_id = npl.seller_id
+      } catch { /* 번호 없이 내려간다 */ }
+    }
 
     return NextResponse.json({ data: merged, _source })
   } catch (err) {

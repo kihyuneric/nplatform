@@ -78,3 +78,35 @@ export async function GET(request: NextRequest) {
     return apiError('INTERNAL_ERROR', '매물 목록 조회에 실패했습니다.', 500)
   }
 }
+
+/**
+ * DELETE /api/v1/admin/listings?id=<매물ID> — 매각의뢰 삭제 (2026-08-19)
+ *
+ * 잘못 접수된 건을 목록에서 완전히 제거한다.
+ * (승인·거절 이력을 남겨야 하는 건은 삭제 대신 '거절'을 쓴다)
+ */
+export async function DELETE(request: NextRequest) {
+  const me = await getAuthUserWithRole()
+  if (!me) return apiError('UNAUTHORIZED', '로그인이 필요합니다.', 401)
+  if (!me.role || !['SUPER_ADMIN', 'ADMIN'].includes(me.role)) {
+    return apiError('FORBIDDEN', '운영관리자만 삭제할 수 있습니다.', 403)
+  }
+
+  const id = request.nextUrl.searchParams.get('id')
+  if (!id) return apiError('BAD_REQUEST', '삭제할 매물 ID가 필요합니다.', 400)
+
+  try {
+    const supabase = await createClient()
+    // 매물에 딸린 반응(관심)·마케팅 레코드부터 정리 — FK 로 막히지 않도록
+    await supabase.from('user_favorites').delete().eq('listing_id', id)
+    await supabase.from('listing_marketing').delete().eq('listing_id', id)
+
+    const { error } = await supabase.from('npl_listings').delete().eq('id', id)
+    if (error) throw error
+
+    return NextResponse.json({ ok: true })
+  } catch (e) {
+    console.error('admin listing DELETE error:', e)
+    return apiError('INTERNAL_ERROR', '매물 삭제에 실패했습니다.', 500)
+  }
+}

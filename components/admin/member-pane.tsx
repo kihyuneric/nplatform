@@ -37,6 +37,22 @@ const ROLE_KO = (r?: string, roles?: string[] | null, kind?: string | null) => {
 }
 const KYC_KO: Record<string, string> = { APPROVED: '활성', PENDING: '승인대기', SUBMITTED: '승인대기', REJECTED: '거절', WITHDRAWN: '탈퇴' }
 
+/**
+ * 매물 상태 표기 (2026-08-19)
+ * DB 의 영문 enum(ACTIVE·SOLD·DRAFT…)이 화면에 그대로 노출되고 있었다.
+ * 운영설계서의 우리말 상태로만 보여준다 — 매각의뢰 현황과 같은 용어.
+ */
+const LISTING_STATUS_KO: Record<string, string> = {
+  PENDING: '검토대기', REPORTED: '검토대기',
+  APPROVED: '승인', ACTIVE: '승인',
+  REJECTED: '거절', HIDDEN: '거절',
+  SOLD: '매각완료', IN_DEAL: '협의중', DRAFT: '작성중',
+}
+const listingStatusKo = (v: unknown) => {
+  const s = String(v ?? '').toUpperCase()
+  return LISTING_STATUS_KO[s] ?? (s ? '검토대기' : '—')
+}
+
 export function MemberPane({ userId, onClose }: { userId: string; onClose: () => void }) {
   const [data, setData] = useState<{
     user?: Member; demands?: Row[]; listings?: Row[]; nda?: Row[]; favorites?: Row[]; tickets?: Row[]
@@ -225,9 +241,13 @@ export function MemberPane({ userId, onClose }: { userId: string; onClose: () =>
               <div className="divide-y divide-[var(--color-border-subtle)]">
                 {(data.listings as Row[]).slice(0, 10).map((l, i) => (
                   <div key={i} className="flex items-center justify-between gap-2 px-3 py-1.5 text-[11.5px]">
+                    {/* 관리번호 우선 — 모든 운영이 이 번호 기준 (2026-08-19) */}
+                    {l.listing_no ? (
+                      <span className="shrink-0 font-mono text-[10.5px] font-bold text-[#1A47CC]">{String(l.listing_no)}</span>
+                    ) : null}
                     <span className="truncate text-[var(--color-text-primary)]">{String(l.title ?? l.id)}</span>
                     <span className="shrink-0 text-[var(--color-text-muted)]">{[l.sido, l.sigungu].filter(Boolean).join(' ')}</span>
-                    <span className="shrink-0 font-bold text-[var(--color-text-muted)]">{String(l.status ?? '')}</span>
+                    <span className="shrink-0 font-bold text-[var(--color-text-muted)]">{listingStatusKo(l.status)}</span>
                   </div>
                 ))}
               </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
+import Link from "next/link"
 import { Search, ChevronLeft, ChevronRight, Download, Trash2, CheckCheck, EyeOff } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { createClient } from "@/lib/supabase/client"
@@ -253,6 +254,26 @@ export default function AdminListingsPage() {
     }
   }
 
+  /**
+   * 매각의뢰 삭제 (2026-08-19)
+   * 잘못 접수된 건을 남겨두면 목록이 오염되므로 운영자가 지울 수 있어야 한다.
+   * 되돌릴 수 없으므로 관리번호를 확인시킨 뒤 진행한다.
+   */
+  const handleDeleteListing = async (id: string, no: string, title: string) => {
+    if (!confirm(`${no || '이 매물'} · ${title}\n\n정말 삭제할까요? 되돌릴 수 없습니다.\n(승인 이력을 남기려면 '거절'을 쓰세요)`)) return
+    try {
+      const r = await fetch(`/api/v1/admin/listings?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+      if (!r.ok) throw new Error(`삭제 실패 (${r.status})`)
+      toast.success('매각의뢰를 삭제했습니다')
+      void fetchListings()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : '삭제에 실패했습니다')
+    }
+  }
+
   const handleBulkApprove = () => handleBulkAction('ACTIVE', '승인')
   const handleBulkHide    = () => handleBulkAction('HIDDEN', '비공개')
   const handleBulkDelete  = () => handleBulkAction('REJECTED', '거절')
@@ -436,26 +457,43 @@ export default function AdminListingsPage() {
             }},
             { key: 'created_at', label: '등록일', sortable: true, render: (v) => <span className="text-[0.75rem] text-[var(--color-text-tertiary)]">{v ? new Date(v).toLocaleDateString("ko-KR") : "-"}</span> },
             { key: 'id', label: '액션', render: (v, row) => (
-              // 세로 2단 스택 — 가로 폭 최소화 (한 화면 최적화 2026-08-19)
-              <div className="flex flex-col items-start gap-1">
+              // 2열 고정 슬롯 — 버튼 폭이 같아 모든 행에서 열이 맞는다 (2026-08-19)
+              <div className="grid grid-cols-2 gap-1 w-[118px]">
                 {/* 검토대기 디폴트 — 승인/거절 버튼으로 활성화·비활성화 */}
-                {row.status !== 'ACTIVE' && row.status !== 'APPROVED' && (
+                {row.status !== 'ACTIVE' && row.status !== 'APPROVED' ? (
                   <button
                     onClick={() => handleRowAction(v, 'approve')}
-                    className={`${DS.button.accent} ${DS.button.sm}`}
+                    className={`${DS.button.accent} ${DS.button.sm} justify-center w-full`}
                   >
                     승인
                   </button>
-                )}
-                {row.status !== 'REJECTED' && row.status !== 'HIDDEN' && (
+                ) : <span aria-hidden />}
+                {row.status !== 'REJECTED' && row.status !== 'HIDDEN' ? (
                   <button
                     onClick={() => handleRowAction(v, 'hide')}
-                    className={`${DS.button.danger} ${DS.button.sm}`}
+                    className={`${DS.button.danger} ${DS.button.sm} justify-center w-full`}
                   >
                     거절
                   </button>
-                )}
-                {/* 삭제·편집 버튼 목록에서 제거 (한 화면 최적화) — 편집은 세부내역 패널에서, 종료는 거절로 */}
+                ) : <span aria-hidden />}
+
+                {/* 승인·거절 전 원본 정보 수정 (2026-08-19 추가) —
+                    운영사도 매각의뢰 내용을 바로잡을 수 있어야 접수 처리가 가능하다. */}
+                <Link
+                  href={`/exchange/edit/${encodeURIComponent(v)}`}
+                  className={`${DS.button.secondary} ${DS.button.sm} justify-center w-full`}
+                  style={{ textDecoration: 'none' }}
+                >
+                  수정
+                </Link>
+                <button
+                  onClick={() => handleDeleteListing(v, String(row.listing_no ?? ''), String(row.title ?? ''))}
+                  className={`${DS.button.secondary} ${DS.button.sm} justify-center w-full`}
+                  style={{ color: '#B3261E' }}
+                >
+                  삭제
+                </button>
+
                 {/* 진행종료 — 매각 회원 요청 시 확정 버튼 노출 (2026-08-19) */}
                 {endMap[v]?.ended ? (
                   <span className="text-[0.6563rem] font-bold text-stone-600 whitespace-nowrap">종료됨</span>

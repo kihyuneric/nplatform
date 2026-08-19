@@ -37,6 +37,12 @@ export function predictedSaleDateOffsetDays(round: number): number {
 /** ISO yyyy-MM-dd 에 N일 더하기 */
 export function addDaysISO(iso: string, days: number): string {
   const d = new Date(iso)
+  // 잘못된 날짜에서 예외를 던지면 보고서 생성이 통째로 실패한다 (2026-08-19)
+  if (isNaN(d.getTime())) {
+    const today = new Date()
+    today.setDate(today.getDate() + days)
+    return today.toISOString().slice(0, 10)
+  }
   d.setDate(d.getDate() + days)
   return d.toISOString().slice(0, 10)
 }

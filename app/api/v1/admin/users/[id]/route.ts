@@ -210,7 +210,7 @@ export async function GET(
     try {
       const { data: myListings } = await supabase
         .from('npl_listings')
-        .select('id, title, status, claim_amount, created_at, sido, sigungu')
+        .select('id, listing_no, title, status, claim_amount, created_at, sido, sigungu')
         .eq('seller_id', id)
         .order('created_at', { ascending: false })
         .limit(50)
@@ -237,8 +237,8 @@ export async function GET(
       // 매물명 조인 — UUID 대신 이름으로 표시
       const uniq = Array.from(new Set(ids)).filter(Boolean)
       if (uniq.length > 0) {
-        const { data: titles } = await supabase.from('npl_listings').select('id, title').in('id', uniq)
-        for (const t of titles ?? []) listingTitle[t.id as string] = String(t.title ?? '')
+        const { data: titles } = await supabase.from('npl_listings').select('id, title, listing_no').in('id', uniq)
+        for (const t of titles ?? []) listingTitle[t.id as string] = [t.listing_no, t.title].filter(Boolean).join(' · ')
       }
       ndaList = ndaList.map(n => ({ ...n, listing_title: listingTitle[String(n.listing_id)] ?? '' }))
       favorites = (favorites as Array<Record<string, unknown>>).map(f => ({ ...f, listing_title: listingTitle[String(f.listing_id)] ?? '' }))
