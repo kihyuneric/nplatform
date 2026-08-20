@@ -87,12 +87,22 @@ export const fmtSize = (n: number) =>
   n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)}MB` : `${Math.max(1, Math.round(n / 1024))}KB`
 
 /**
- * 저장 경로 — `{소유자ID}/{접수ID}/{종류}/{시각}_{파일명}`
+ * 저장 경로 — `{소유자ID}/{접수ID}/{종류}/{시각}_{안전한이름}.{확장자}`
+ *
  * 맨 앞이 소유자 ID여야 Storage 정책(본인 폴더만)이 동작한다.
+ *
+ * ⚠ 키는 **ASCII 로만** 만든다. 한글이 섞이면 Supabase Storage 가
+ *   `Invalid key` 로 업로드를 거부한다(2026-08-19 실측).
+ *   원본 파일명은 `Attachment.name` 에 따로 보관하므로 화면 표시에는 영향이 없다.
  */
 export function buildPath(ownerId: string, intakeId: string, kind: AttachmentKind, fileName: string, stamp: number): string {
-  const safe = fileName.replace(/[^\w.\-가-힣]/g, '_').slice(-80)
-  return `${ownerId}/${intakeId}/${kind}/${stamp}_${safe}`
+  const e = ext(fileName)
+  const base = fileName
+    .replace(/\.[^.]+$/, '')            // 확장자 분리
+    .replace(/[^A-Za-z0-9._-]/g, '')    // ASCII 안전 문자만 남긴다
+    .slice(0, 40)
+  const safe = base || kind             // 한글만 있던 이름이면 종류로 대체
+  return `${ownerId}/${intakeId}/${kind}/${stamp}_${safe}${e ? `.${e}` : ''}`
 }
 
 /** 대표 사진 = order 가 가장 작은 사진 */
