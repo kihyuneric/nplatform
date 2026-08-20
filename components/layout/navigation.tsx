@@ -600,7 +600,9 @@ export function Navigation() {
                 <>
                   {/* NX-2: 비로그인 유저에게도 테마 토글 노출 — 보편적 접근성 원칙 */}
                   <ThemeToggle variant="icon" />
-                  <Button variant="ghost" size="sm" asChild className="text-sm text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)] hover:bg-[var(--color-nav-hover-bg)]">
+                  {/* 로그인 — 회색(#6B7280)이라 흰 헤더에서 대비 4.83 로 흐렸다.
+                      본문색으로 올려 회원가입 버튼과 나란히 읽히게 한다 (2026-08-20) */}
+                  <Button variant="ghost" size="sm" asChild className="text-sm font-semibold text-[var(--color-nav-text)] hover:bg-[var(--color-nav-hover-bg)]">
                     <Link href="/login">로그인</Link>
                   </Button>
                   <Button
@@ -613,6 +615,28 @@ export function Navigation() {
                 </>
               )}
             </div>
+
+            {/* 모바일 — 로그인 · 회원가입 (2026-08-20)
+                승인제 서비스에서 가입이 가장 중요한 행동인데 햄버거 안에만 있어
+                모바일 방문자에게는 로고와 메뉴 버튼만 보였다. 헤더에 직접 노출한다. */}
+            {!user && (
+              <div className="flex lg:hidden items-center gap-1.5 ml-auto mr-1">
+                <Link
+                  href="/login"
+                  className="px-2 py-1.5 text-[13px] font-semibold text-[var(--color-nav-text-dim)] hover:text-[var(--color-nav-text)]"
+                  style={{ textDecoration: 'none' }}
+                >
+                  로그인
+                </Link>
+                <Link
+                  href="/signup"
+                  className="px-2.5 py-1.5 text-[13px] font-bold text-white bg-[var(--color-brand-dark)] hover:bg-[var(--color-brand-deep)]"
+                  style={{ textDecoration: 'none' }}
+                >
+                  회원가입
+                </Link>
+              </div>
+            )}
 
             {/* Mobile hamburger */}
             <button
