@@ -170,8 +170,41 @@ export async function GET() {
       safeCount(supabase, 'matching_results', (q) => q.eq('status', 'PENDING_REVIEW')),
       safeCount(supabase, 'demand_surveys', (q) => q.eq('status', 'NEW')),
     ])
+    /**
+     * ── 처리 대기 배지 (2026-08-19) — 운영기획서 v4 §2-1 ──
+     *
+     * 배지는 **내가 지금 처리해야 하는 것**에만 붙인다.
+     * 매물관리·매입조건 관리처럼 "쌓여 있는 것을 보는" 화면에는 붙이지 않는다.
+     * 아무 데나 붙으면 배지가 아무 의미도 갖지 못한다.
+     */
+    const [intakeDirect, intakeAgency, ndaPending, openTickets] = await Promise.all([
+      safeCount(supabase, 'listing_intakes', q => q.eq('mode', 'direct').eq('status', '접수')),
+      safeCount(supabase, 'listing_intakes', q => q.eq('mode', 'agency').eq('status', '접수')),
+      // NDA 검토 대기 — listing_marketing.nda_requests 안의 '운영사 검토' 건수
+      (async () => {
+        try {
+          const { data } = await supabase.from('listing_marketing').select('nda_requests').not('nda_requests', 'is', null)
+          let n = 0
+          for (const row of data ?? []) {
+            const reqs = Array.isArray(row.nda_requests) ? row.nda_requests : []
+            n += (reqs as Array<{ status?: string }>).filter(q => (q?.status ?? '운영사 검토') === '운영사 검토').length
+          }
+          return n
+        } catch { return 0 }
+      })(),
+      safeCount(supabase, 'support_tickets', q => q.in('status', ['OPEN', 'IN_PROGRESS'])),
+    ])
+
     const zoneCounts = {
-      // 거래 운영 — 검토·승인 대기 합계
+      // ── 사이드바 메뉴 키와 1:1 (admin-sidebar.tsx ADMIN_ZONES) ──
+      users: pendingApprovals ?? 0,        // 회원관리 — 승인 대기
+      intakeDir: intakeDirect ?? 0,        // 매각의뢰 관리 — 검토 대기
+      intakeAgy: intakeAgency ?? 0,        // 매물등록 대행관리 — 미처리 대행 요청
+      agreements: ndaPending ?? 0,         // NDA 관리 — 검토 대기
+      inbox: openTickets ?? 0,             // 문의 접수함 — 미처리 문의
+      // (매물관리 · 매입조건 관리 · 매칭 관리 · 콘텐츠는 배지를 붙이지 않는다)
+
+      // 거래 운영 — 검토·승인 대기 합계 (레거시 그룹 배지)
       operations:
         (pendingApprovals ?? 0) +
         (pendingReviews ?? 0) +

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { trackMatchReaction } from '@/lib/match-tracking'
 import { createClient } from '@/lib/supabase/server'
 
 /**

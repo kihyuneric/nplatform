@@ -44,6 +44,20 @@ export function DetailPane({
     return () => { alive = false }
   }, [listingId, listingNo])
 
+  /**
+   * 매칭 발송 반응 추적 — 매입 회원이 보낸 매물의 세부내역을 열었는가 (2026-08-19)
+   * 관리번호 조회와 별개 효과로 둔다. 번호를 넘겨받은 경우에도 열람은 기록해야 한다.
+   */
+  useEffect(() => {
+    if (!viewerMode || !listingId) return
+    void fetch('/api/v1/matching/track', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listing_id: listingId }),
+    }).catch(() => { /* 추적 실패가 열람을 막지 않는다 */ })
+  }, [listingId, viewerMode])
+
   // ESC 로 닫기 + 배경 스크롤 잠금
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }

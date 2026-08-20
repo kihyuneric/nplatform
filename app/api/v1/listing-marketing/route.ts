@@ -4,6 +4,7 @@ import { notifyByEmail, notifyUserId } from '@/lib/notify'
 import { sendEmail } from '@/lib/email/email-service'
 import { ndaStatusEmail } from '@/lib/email/templates'
 import { buildNdaText, TERMS_VERSION } from '@/lib/nda-terms'
+import { trackMatchReaction } from '@/lib/match-tracking'
 
 interface NdaReq { id?: string; signer?: string; user_id?: string; email?: string; status?: string; requested_at?: string }
 
@@ -151,6 +152,9 @@ export async function POST(req: NextRequest) {
         requested_at: agreedAt,
         status: '운영사 검토',
       })
+
+      // 매칭 발송 반응 추적 — 보낸 매물에 NDA 를 요청했는가 (2026-08-19)
+      void trackMatchReaction(supabase, listing_id, userId, 'nda_requested_at')
 
       // 체결 문서 보관 (2026-08-19)
       //   서명 시점의 NDA 전문을 그대로 남긴다 — 나중에 약관이 바뀌어도 체결본은 불변.
