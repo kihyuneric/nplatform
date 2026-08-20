@@ -67,6 +67,7 @@ const ADMIN_ZONES: AdminZone[] = [
   { key: "listings",   label: "매물관리",          icon: Building2,       href: "/admin/listings",         items: [] },
   // 거래
   { key: "demands",    label: "매입조건 관리",     icon: ShoppingCart,    href: "/admin/demands",          items: [] },
+  { key: "matching",   label: "NPL 매칭 관리",   icon: Target,          href: "/admin/matching",         items: [] },
   { key: "agreements", label: "NDA 관리",          icon: FileSignature,   href: "/admin/agreements",       items: [] },
   // 지원
   { key: "inbox",      label: "문의 접수함",       icon: Inbox,           href: "/admin/inbox",            items: [] },

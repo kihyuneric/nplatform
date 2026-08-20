@@ -563,6 +563,32 @@ export default function AdminListingsPage() {
               </div>
             )},
             { key: 'bond_amount', label: '채권액', sortable: true, render: (v) => <span className="font-mono whitespace-nowrap">{v ? formatKRW(v) : "-"}</span> },
+            // 반응 현황 — 관심 수 · NDA 체결 수 (운영기획서 v4 §3-4 · 2026-08-19)
+            {
+              key: '_reaction', label: '관심 · NDA', render: (_v, row) => {
+                const mk = mkMap[row.id]
+                const interest = mk?.interest_count ?? 0
+                const reqs = mk?.nda_requests ?? []
+                const approved = reqs.filter(q => q.status === '승인').length
+                return (
+                  <button
+                    onClick={e => { e.stopPropagation(); setReactionTarget(row.id) }}
+                    className="inline-flex items-center gap-2 whitespace-nowrap"
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                    title="관심 회원 · NDA 요청자 보기"
+                  >
+                    <span className="inline-flex items-center gap-0.5 text-[0.6875rem] font-bold"
+                      style={{ color: interest > 0 ? '#E11D48' : 'var(--color-text-muted)' }}>
+                      ♥ {interest}
+                    </span>
+                    <span className="inline-flex items-center gap-0.5 text-[0.6875rem] font-bold"
+                      style={{ color: approved > 0 ? '#047857' : 'var(--color-text-muted)' }}>
+                      NDA {approved}/{reqs.length}
+                    </span>
+                  </button>
+                )
+              },
+            },
             // 딜 단계는 NDA 요청 건별로 관리되므로, 매물에는 가장 앞선 단계를 요약 표시 (2026-08-19)
             {
               key: '_stage', label: '딜 단계', render: (_v, row) => {
