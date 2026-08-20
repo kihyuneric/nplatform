@@ -65,6 +65,11 @@ export async function POST(req: NextRequest) {
 
     // 매물 관심 카운터 (매각 회원·운영자 집계와 공유)
     void supabase.rpc('increment_listing_metric', { p_listing_id: listing_id, p_field: 'interest', p_delta: 1 })
+
+    // 매칭 발송 반응 추적 — 보낸 매물에 관심을 눌렀는가 (2026-08-19)
+    //   await 로 기다린다: 서버리스는 응답 직후 종료되므로 fire-and-forget 하면 기록이 끊긴다
+    await trackMatchReaction(supabase, listing_id, user.id, 'favorited_at')
+
     return NextResponse.json({ success: true })
   } catch (e) {
     return NextResponse.json({ error: { code: 'FAVORITE_FAILED', message: (e as { message?: string })?.message ?? 'failed' } }, { status: 500 })
