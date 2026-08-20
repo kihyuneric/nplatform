@@ -24,7 +24,7 @@ import {
   LayoutDashboard, Users, Building2, FileText, Settings,
   CreditCard, Megaphone, Server,
   ChevronLeft, Menu, ShieldCheck, Eye, Landmark, FileSignature,
-  Target, ShoppingCart, ChevronRight, ChevronDown, Inbox,
+  Target, ShoppingCart, ChevronRight, ChevronDown, Inbox, UploadCloud,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -49,17 +49,32 @@ interface AdminZone {
  * 운영 루프: 승인 → 매물 → 수요 → NDA → 마케팅 체크 → 메인 지표.
  * (매칭·기관·마스킹·보안·콘텐츠 등 페이지는 보존 — URL 직접 접근 가능)
  */
+/**
+ * 메뉴 구성 (2026-08-19) — 운영기획서 v4 §2-1
+ *
+ * 용어 규칙: **매각의뢰** = 관리번호 없음(등록 전) · **매물** = 관리번호 있음(등록 후).
+ * 이 규칙 때문에 '매각의뢰 관리'와 '매물관리'가 서로 다른 메뉴다.
+ *
+ * 순서는 업무가 흘러가는 순서다 — 회원 → 매물 → 거래 → 지원 → 콘텐츠.
+ */
 const ADMIN_ZONES: AdminZone[] = [
-  { key: "dashboard",  label: "대시보드",        icon: LayoutDashboard, href: "/admin",              items: [] },
-  { key: "inbox",      label: "접수함",          icon: Inbox,           href: "/admin/inbox",        items: [] },
-  { key: "users",      label: "회원 승인",       icon: Users,           href: "/admin/users",        items: [] },
-  { key: "listings",   label: "매각의뢰 현황",   icon: FileText,        href: "/admin/listings",     items: [] },
-  { key: "demands",    label: "매입조건 현황",   icon: ShoppingCart,    href: "/admin/demands",      items: [] },
-  { key: "agreements", label: "NDA · 계약",      icon: FileSignature,   href: "/admin/agreements",   items: [] },
-  { key: "analysis",   label: "NPL 수익률 분석", icon: Eye,             href: "/admin/npl-analysis", items: [] },
-  { key: "highlights", label: "메인 하이라이트", icon: Megaphone,       href: "/admin/highlights",   items: [] },
-  { key: "press",      label: "언론보도",        icon: FileText,        href: "/admin/press",        items: [] },
-  { key: "mainstats",  label: "메인 지표 입력",  icon: Settings,        href: "/admin/main-stats",   items: [] },
+  { key: "dashboard",  label: "대시보드",          icon: LayoutDashboard, href: "/admin",                  items: [] },
+  // 회원
+  { key: "users",      label: "회원관리",          icon: Users,           href: "/admin/users",            items: [] },
+  // 매물 — 등록 전(접수) → 등록 후(매물)
+  { key: "intakeDir",  label: "매각의뢰 관리",     icon: FileText,        href: "/admin/intakes/direct",   items: [] },
+  { key: "intakeAgy",  label: "매물등록 대행관리", icon: UploadCloud,     href: "/admin/intakes/agency",   items: [] },
+  { key: "listings",   label: "매물관리",          icon: Building2,       href: "/admin/listings",         items: [] },
+  // 거래
+  { key: "demands",    label: "매입조건 관리",     icon: ShoppingCart,    href: "/admin/demands",          items: [] },
+  { key: "agreements", label: "NDA 관리",          icon: FileSignature,   href: "/admin/agreements",       items: [] },
+  // 지원
+  { key: "inbox",      label: "문의 접수함",       icon: Inbox,           href: "/admin/inbox",            items: [] },
+  { key: "analysis",   label: "수익률 분석",       icon: Eye,             href: "/admin/npl-analysis",     items: [] },
+  // 콘텐츠
+  { key: "highlights", label: "메인 하이라이트",   icon: Megaphone,       href: "/admin/highlights",       items: [] },
+  { key: "press",      label: "언론보도",          icon: FileText,        href: "/admin/press",            items: [] },
+  { key: "mainstats",  label: "메인 지표",         icon: Settings,        href: "/admin/main-stats",       items: [] },
 ]
 
 function getActiveLabel(pathname: string | null): string {
